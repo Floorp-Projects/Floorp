@@ -345,28 +345,26 @@ static void NormalizeWord(const nsAString& aInput, int32_t aPos, int32_t aLen,
 //    time. It would be better if the inline spellchecker didn't require a
 //    range unless the word was misspelled. This may or may not be possible.
 
-bool mozInlineSpellWordUtil::GetNextWord(nsAString& aText,
-                                         NodeOffsetRange* aNodeOffsetRange,
-                                         bool* aSkipChecking) {
+bool mozInlineSpellWordUtil::GetNextWord(Word& aWord) {
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
           ("%s: mNextWordIndex=%d", __FUNCTION__, mNextWordIndex));
 
   if (mNextWordIndex < 0 || mNextWordIndex >= int32_t(mRealWords.Length())) {
     mNextWordIndex = -1;
-    *aSkipChecking = true;
+    aWord.mSkipChecking = true;
     return false;
   }
 
-  const RealWord& word = mRealWords[mNextWordIndex];
-  MakeNodeOffsetRangeForWord(word, aNodeOffsetRange);
+  const RealWord& realWord = mRealWords[mNextWordIndex];
+  MakeNodeOffsetRangeForWord(realWord, &aWord.mNodeOffsetRange);
   ++mNextWordIndex;
-  *aSkipChecking = !word.mCheckableWord;
-  ::NormalizeWord(mSoftText.GetValue(), word.mSoftTextOffset, word.mLength,
-                  aText);
+  aWord.mSkipChecking = !realWord.mCheckableWord;
+  ::NormalizeWord(mSoftText.GetValue(), realWord.mSoftTextOffset,
+                  realWord.mLength, aWord.mText);
 
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
           ("%s: returning: %s (skip=%d)", __FUNCTION__,
-           NS_ConvertUTF16toUTF8(aText).get(), *aSkipChecking));
+           NS_ConvertUTF16toUTF8(aWord.mText).get(), aWord.mSkipChecking));
 
   return true;
 }
