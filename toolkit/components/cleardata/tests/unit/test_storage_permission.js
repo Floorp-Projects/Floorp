@@ -145,6 +145,110 @@ add_task(async function test_removing_storage_permission_from_principal() {
   });
 });
 
+// Test that the storageAccessAPI gets removed from a base domain.
+add_task(async function test_removing_storage_permission_from_base_domainl() {
+  const uri = Services.io.newURI("https://example.net");
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
+    uri,
+    {}
+  );
+  const uriSub = Services.io.newURI("http://test.example.net");
+  const principalSub = Services.scriptSecurityManager.createContentPrincipal(
+    uriSub,
+    {}
+  );
+
+  const anotherUri = Services.io.newURI("https://example.com");
+  const anotherPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+    anotherUri,
+    {}
+  );
+
+  Services.perms.addFromPrincipal(
+    principal,
+    "storageAccessAPI",
+    Services.perms.ALLOW_ACTION
+  );
+  Services.perms.addFromPrincipal(
+    principalSub,
+    "storageAccessAPI",
+    Services.perms.ALLOW_ACTION
+  );
+  Services.perms.addFromPrincipal(
+    anotherPrincipal,
+    "storageAccessAPI",
+    Services.perms.ALLOW_ACTION
+  );
+  Assert.equal(
+    Services.perms.testExactPermissionFromPrincipal(
+      principal,
+      "storageAccessAPI"
+    ),
+    Services.perms.ALLOW_ACTION,
+    "storageAccessAPI permission has been added to the first principal"
+  );
+  Assert.equal(
+    Services.perms.testExactPermissionFromPrincipal(
+      principalSub,
+      "storageAccessAPI"
+    ),
+    Services.perms.ALLOW_ACTION,
+    "storageAccessAPI permission has been added to the subdomain principal"
+  );
+  Assert.equal(
+    Services.perms.testExactPermissionFromPrincipal(
+      anotherPrincipal,
+      "storageAccessAPI"
+    ),
+    Services.perms.ALLOW_ACTION,
+    "storageAccessAPI permission has been added to the second principal"
+  );
+
+  await new Promise(aResolve => {
+    Services.clearData.deleteDataFromBaseDomain(
+      "example.net",
+      true /* user request */,
+      Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS,
+      value => {
+        Assert.equal(value, 0);
+        aResolve();
+      }
+    );
+  });
+
+  Assert.equal(
+    Services.perms.testExactPermissionFromPrincipal(
+      principal,
+      "storageAccessAPI"
+    ),
+    Services.perms.UNKNOWN_ACTION,
+    "storageAccessAPI permission has been removed from the first principal"
+  );
+  Assert.equal(
+    Services.perms.testExactPermissionFromPrincipal(
+      principalSub,
+      "storageAccessAPI"
+    ),
+    Services.perms.UNKNOWN_ACTION,
+    "storageAccessAPI permission has been removed from the sub domain principal"
+  );
+  Assert.equal(
+    Services.perms.testExactPermissionFromPrincipal(
+      anotherPrincipal,
+      "storageAccessAPI"
+    ),
+    Services.perms.ALLOW_ACTION,
+    "storageAccessAPI permission has not been removed from the second principal"
+  );
+
+  await new Promise(aResolve => {
+    Services.clearData.deleteData(
+      Ci.nsIClearDataService.CLEAR_PERMISSIONS,
+      value => aResolve()
+    );
+  });
+});
+
 // Tests the deleteUserInteractionForClearingHistory function.
 add_task(async function test_deleteUserInteractionForClearingHistory() {
   // These should be retained.

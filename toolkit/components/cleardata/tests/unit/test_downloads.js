@@ -216,3 +216,95 @@ add_task(async function test_principal_downloads() {
   items = await list.getAll();
   Assert.equal(items.length, 0);
 });
+
+add_task(async function test_basedomain_downloads() {
+  const list = await createDownloadList();
+
+  let download = await Downloads.createDownload({
+    source: { url: "http://example.net", isPrivate: false },
+    target: { path: FileTestUtils.getTempFile(TEST_TARGET_FILE_NAME).path },
+  });
+  Assert.ok(!!download);
+  list.add(download);
+
+  download = await Downloads.createDownload({
+    source: { url: "http://test.example.net", isPrivate: false },
+    target: { path: FileTestUtils.getTempFile(TEST_TARGET_FILE_NAME).path },
+  });
+  Assert.ok(!!download);
+  list.add(download);
+
+  download = await Downloads.createDownload({
+    source: { url: "https://foo.bar.example.net", isPrivate: true },
+    target: { path: FileTestUtils.getTempFile(TEST_TARGET_FILE_NAME).path },
+  });
+  Assert.ok(!!download);
+  list.add(download);
+
+  download = await Downloads.createDownload({
+    source: { url: "http://example.com", isPrivate: false },
+    target: { path: FileTestUtils.getTempFile(TEST_TARGET_FILE_NAME).path },
+  });
+  Assert.ok(!!download);
+  list.add(download);
+
+  let items = await list.getAll();
+  Assert.equal(items.length, 4);
+
+  let view;
+  let removePromise = new Promise(resolve => {
+    view = {
+      onDownloadAdded() {},
+      onDownloadChanged() {},
+      onDownloadRemoved() {
+        resolve();
+      },
+    };
+  });
+
+  await list.addView(view);
+
+  await new Promise(resolve => {
+    Services.clearData.deleteDataFromBaseDomain(
+      "example.net",
+      true /* user request */,
+      Ci.nsIClearDataService.CLEAR_DOWNLOADS,
+      value => {
+        Assert.equal(value, 0);
+        resolve();
+      }
+    );
+  });
+
+  await removePromise;
+
+  items = await list.getAll();
+  Assert.equal(items.length, 1);
+
+  removePromise = new Promise(resolve => {
+    view = {
+      onDownloadAdded() {},
+      onDownloadChanged() {},
+      onDownloadRemoved() {
+        resolve();
+      },
+    };
+  });
+
+  await list.addView(view);
+
+  await new Promise(resolve => {
+    Services.clearData.deleteData(
+      Ci.nsIClearDataService.CLEAR_DOWNLOADS,
+      value => {
+        Assert.equal(value, 0);
+        resolve();
+      }
+    );
+  });
+
+  await removePromise;
+
+  items = await list.getAll();
+  Assert.equal(items.length, 0);
+});
