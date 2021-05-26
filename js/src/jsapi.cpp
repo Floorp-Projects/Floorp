@@ -258,6 +258,10 @@ JS_PUBLIC_API bool JS::ObjectOpResult::failCantDeleteWindowElement() {
   return fail(JSMSG_CANT_DELETE_WINDOW_ELEMENT);
 }
 
+JS_PUBLIC_API bool JS::ObjectOpResult::failCantDefineWindowNamedProperty() {
+  return fail(JSMSG_CANT_DEFINE_WINDOW_NAMED_PROPERTY);
+}
+
 JS_PUBLIC_API bool JS::ObjectOpResult::failCantDeleteWindowNamedProperty() {
   return fail(JSMSG_CANT_DELETE_WINDOW_NAMED_PROPERTY);
 }
