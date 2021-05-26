@@ -160,8 +160,10 @@ rawPackets.set(`inspect({a: 1})`, {
             }
           },
           "ownSymbols": [],
+          "privateProperties": [],
           "ownPropertiesLength": 1,
           "ownSymbolsLength": 0,
+          "privatePropertiesLength": 0,
           "safeGetterValues": {}
         }
       },
@@ -480,8 +482,10 @@ rawPackets.set(`eval throw Object`, {
           }
         },
         "ownSymbols": [],
+        "privateProperties": [],
         "ownPropertiesLength": 1,
         "ownSymbolsLength": 0,
+        "privatePropertiesLength": 0,
         "safeGetterValues": {}
       }
     },

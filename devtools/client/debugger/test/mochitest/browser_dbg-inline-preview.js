@@ -42,6 +42,7 @@ add_task(async function() {
 
   await checkInlinePreview(dbg, "classProperties", [
     { identifier: "i:", value: "2" },
+    { identifier: "self:", value: `Object { x: 1, #privateVar: 2 }` },
   ]);
 
   // Checks that open in inspector button works in inline preview

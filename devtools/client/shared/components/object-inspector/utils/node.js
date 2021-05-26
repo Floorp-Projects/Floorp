@@ -528,6 +528,7 @@ function makeNodesForProperties(objProps, parent) {
   const {
     ownProperties = {},
     ownSymbols,
+    privateProperties,
     prototype,
     safeGetterValues,
   } = objProps;
@@ -569,6 +570,31 @@ function makeNodesForProperties(objProps, parent) {
           contents: {
             value: symbolGrip,
             front: symbolFront,
+          },
+        })
+      );
+    }, this);
+  }
+
+  if (Array.isArray(privateProperties)) {
+    privateProperties.forEach((privateProperty, index) => {
+      const descriptorValue = privateProperty?.descriptor?.value;
+      const hasGrip = descriptorValue?.getGrip;
+      const privatePropertyGrip = hasGrip
+        ? descriptorValue.getGrip()
+        : descriptorValue;
+      const privatePropertyFront = hasGrip
+        ? privateProperty.descriptor.value
+        : null;
+
+      nodes.push(
+        createNode({
+          parent,
+          name: privateProperty.name,
+          path: `private-${index}`,
+          contents: {
+            value: privatePropertyGrip,
+            front: privatePropertyFront,
           },
         })
       );

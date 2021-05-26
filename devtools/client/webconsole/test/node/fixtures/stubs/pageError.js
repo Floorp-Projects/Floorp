@@ -834,8 +834,10 @@ rawPackets.set(`throw Object`, {
             }
           },
           "ownSymbols": [],
+          "privateProperties": [],
           "ownPropertiesLength": 1,
           "ownSymbolsLength": 0,
+          "privatePropertiesLength": 0,
           "safeGetterValues": {}
         }
       },
@@ -1491,8 +1493,10 @@ rawPackets.set(`Promise reject Object`, {
             }
           },
           "ownSymbols": [],
+          "privateProperties": [],
           "ownPropertiesLength": 1,
           "ownSymbolsLength": 0,
+          "privatePropertiesLength": 0,
           "safeGetterValues": {}
         }
       },

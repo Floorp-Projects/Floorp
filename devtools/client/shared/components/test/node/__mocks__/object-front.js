@@ -28,6 +28,13 @@ function ObjectFront(grip, overrides) {
         })
       );
     },
+    enumPrivateProperties: function() {
+      return Promise.resolve(
+        this.getIterator({
+          privateProperties: [],
+        })
+      );
+    },
     getPrototype: function() {
       return Promise.resolve({
         prototype: {},

@@ -41,6 +41,7 @@ function classProperties() {
     }
     breakFn() {
       let i = this.x * this.#privateVar;
+      const self = this;
       debugger;
     }
   }

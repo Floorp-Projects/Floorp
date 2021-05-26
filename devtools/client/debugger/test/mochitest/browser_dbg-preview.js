@@ -56,9 +56,7 @@ add_task(async function() {
       expression: "this",
       fields: [
         ["x", "1"],
-        // TODO: The private properties are not shown in the object preview at the moment,
-        // this should be fixed as part of Bug 1499679.
-        // ["#privateVar", "2"],
+        ["#privateVar", "2"],
       ],
     },
     { line: 51, column: 39, expression: "this.#privateVar", result: 2 },
