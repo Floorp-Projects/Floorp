@@ -128,7 +128,10 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
   }
 
   componentDidMount() {
-    this.fetchFxAFlowUri(); // Rely on shared proton in-content styling for consistency.
+    if (!this.props.skipFxA) {
+      this.fetchFxAFlowUri();
+    } // Rely on shared proton in-content styling for consistency.
+
 
     if (this.props.design === "proton") {
       const sheet = document.head.appendChild(document.createElement("link"));

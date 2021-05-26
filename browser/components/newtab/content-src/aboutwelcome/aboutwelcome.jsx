@@ -19,7 +19,9 @@ class AboutWelcome extends React.PureComponent {
   }
 
   componentDidMount() {
-    this.fetchFxAFlowUri();
+    if (!this.props.skipFxA) {
+      this.fetchFxAFlowUri();
+    }
 
     // Rely on shared proton in-content styling for consistency.
     if (this.props.design === "proton") {
