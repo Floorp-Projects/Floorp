@@ -188,13 +188,10 @@ class StyleImageRequestCleanupTask final : public mozilla::Runnable {
 // This is defined here for parallelism with LoadURI.
 void Gecko_LoadData_Drop(StyleLoadData* aData) {
   if (aData->resolved_image) {
+    // We want to dispatch this async to prevent reentrancy issues, as
+    // imgRequestProxy going away can destroy documents, etc, see bug 1677555.
     auto task = MakeRefPtr<StyleImageRequestCleanupTask>(*aData);
-    if (NS_IsMainThread()) {
-      task->Run();
-    } else {
-      // if Resolve was not called at some point, mDocGroup is not set.
-      SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
-    }
+    SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
   }
 
   // URIs are safe to refcount from any thread.
