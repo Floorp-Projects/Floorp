@@ -153,6 +153,11 @@ static ffi::WGPUTextureFormat ConvertTextureFormat(
   MOZ_CRASH("unexpected texture format enum");
 }
 
+void WebGPUChild::ConvertTextureFormatRef(const dom::GPUTextureFormat& aInput,
+                                          ffi::WGPUTextureFormat& aOutput) {
+  aOutput = ConvertTextureFormat(aInput);
+}
+
 static ffi::WGPUClient* initialize() {
   ffi::WGPUInfrastructure infra = ffi::wgpu_client_new();
   return infra.client;
@@ -392,6 +397,27 @@ RawId WebGPUChild::CommandEncoderFinish(
   // and a new command buffer ID is being created from it. Resolve the ID
   // type aliasing at the place that introduces it: `wgpu-core`.
   return aSelfId;
+}
+
+RawId WebGPUChild::RenderBundleEncoderFinish(
+    ffi::WGPURenderBundleEncoder& aEncoder, RawId aDeviceId,
+    const dom::GPURenderBundleDescriptor& aDesc) {
+  ffi::WGPURenderBundleDescriptor desc = {};
+  nsCString label;
+  if (aDesc.mLabel.WasPassed()) {
+    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
+    desc.label = label.get();
+  }
+
+  ipc::ByteBuf bb;
+  RawId id = ffi::wgpu_client_create_render_bundle(
+      mClient, &aEncoder, aDeviceId, &desc, ToFFI(&bb));
+
+  if (!SendDeviceAction(aDeviceId, std::move(bb))) {
+    MOZ_CRASH("IPC failure");
+  }
+
+  return id;
 }
 
 RawId WebGPUChild::DeviceCreateBindGroupLayout(

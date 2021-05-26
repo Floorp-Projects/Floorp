@@ -408,6 +408,11 @@ ipc::IPCResult WebGPUParent::RecvCommandBufferDestroy(RawId aSelfId) {
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUParent::RecvRenderBundleDestroy(RawId aSelfId) {
+  ffi::wgpu_server_render_bundle_drop(mContext, aSelfId);
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvQueueSubmit(
     RawId aSelfId, RawId aDeviceId, const nsTArray<RawId>& aCommandBuffers) {
   ErrorBuffer error;

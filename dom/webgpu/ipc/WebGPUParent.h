@@ -45,6 +45,7 @@ class WebGPUParent final : public PWebGPUParent {
       const dom::GPUCommandBufferDescriptor& aDesc);
   ipc::IPCResult RecvCommandEncoderDestroy(RawId aSelfId);
   ipc::IPCResult RecvCommandBufferDestroy(RawId aSelfId);
+  ipc::IPCResult RecvRenderBundleDestroy(RawId aSelfId);
   ipc::IPCResult RecvQueueSubmit(RawId aSelfId, RawId aDeviceId,
                                  const nsTArray<RawId>& aCommandBuffers);
   ipc::IPCResult RecvQueueWriteAction(RawId aSelfId, RawId aDeviceId,

@@ -56,6 +56,9 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
       RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc);
   RawId CommandEncoderFinish(RawId aSelfId, RawId aDeviceId,
                              const dom::GPUCommandBufferDescriptor& aDesc);
+  RawId RenderBundleEncoderFinish(ffi::WGPURenderBundleEncoder& aEncoder,
+                                  RawId aDeviceId,
+                                  const dom::GPURenderBundleDescriptor& aDesc);
   RawId DeviceCreateBindGroupLayout(
       RawId aSelfId, const dom::GPUBindGroupLayoutDescriptor& aDesc);
   RawId DeviceCreatePipelineLayout(
@@ -80,6 +83,9 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
 
   void RegisterDevice(RawId aId, Device* aDevice);
   void UnregisterDevice(RawId aId);
+
+  static void ConvertTextureFormatRef(const dom::GPUTextureFormat& aInput,
+                                      ffi::WGPUTextureFormat& aOutput);
 
  private:
   virtual ~WebGPUChild();

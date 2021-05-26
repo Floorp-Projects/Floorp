@@ -119,6 +119,8 @@ class Device final : public DOMEventTargetHelper {
 
   already_AddRefed<CommandEncoder> CreateCommandEncoder(
       const dom::GPUCommandEncoderDescriptor& aDesc);
+  already_AddRefed<RenderBundleEncoder> CreateRenderBundleEncoder(
+      const dom::GPURenderBundleEncoderDescriptor& aDesc);
 
   already_AddRefed<BindGroupLayout> CreateBindGroupLayout(
       const dom::GPUBindGroupLayoutDescriptor& aDesc);

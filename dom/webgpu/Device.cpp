@@ -17,6 +17,7 @@
 #include "Buffer.h"
 #include "ComputePipeline.h"
 #include "Queue.h"
+#include "RenderBundleEncoder.h"
 #include "RenderPipeline.h"
 #include "Sampler.h"
 #include "Texture.h"
@@ -163,6 +164,13 @@ already_AddRefed<CommandEncoder> Device::CreateCommandEncoder(
     const dom::GPUCommandEncoderDescriptor& aDesc) {
   RawId id = mBridge->DeviceCreateCommandEncoder(mId, aDesc);
   RefPtr<CommandEncoder> encoder = new CommandEncoder(this, mBridge, id);
+  return encoder.forget();
+}
+
+already_AddRefed<RenderBundleEncoder> Device::CreateRenderBundleEncoder(
+    const dom::GPURenderBundleEncoderDescriptor& aDesc) {
+  RefPtr<RenderBundleEncoder> encoder =
+      new RenderBundleEncoder(this, mBridge, aDesc);
   return encoder.forget();
 }
 

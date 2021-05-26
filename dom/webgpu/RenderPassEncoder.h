@@ -60,10 +60,13 @@ class RenderPassEncoder final : public ObjectBase,
   nsTArray<RefPtr<const Buffer>> mUsedBuffers;
   nsTArray<RefPtr<const RenderPipeline>> mUsedPipelines;
   nsTArray<RefPtr<const TextureView>> mUsedTextureViews;
+  nsTArray<RefPtr<const RenderBundle>> mUsedRenderBundles;
 
  public:
+  // programmable pass encoder
   void SetBindGroup(uint32_t aSlot, const BindGroup& aBindGroup,
                     const dom::Sequence<uint32_t>& aDynamicOffsets);
+  // render encoder base
   void SetPipeline(const RenderPipeline& aPipeline);
   void SetIndexBuffer(const Buffer& aBuffer,
                       const dom::GPUIndexFormat& aIndexFormat, uint64_t aOffset,
@@ -78,11 +81,14 @@ class RenderPassEncoder final : public ObjectBase,
   void DrawIndirect(const Buffer& aIndirectBuffer, uint64_t aIndirectOffset);
   void DrawIndexedIndirect(const Buffer& aIndirectBuffer,
                            uint64_t aIndirectOffset);
+  // self
   void SetViewport(float x, float y, float width, float height, float minDepth,
                    float maxDepth);
   void SetScissorRect(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
   void SetBlendConstant(const dom::DoubleSequenceOrGPUColorDict& color);
   void SetStencilReference(uint32_t reference);
+  void ExecuteBundles(
+      const dom::Sequence<OwningNonNull<RenderBundle>>& aBundles);
   void EndPass(ErrorResult& aRv);
 };
 
