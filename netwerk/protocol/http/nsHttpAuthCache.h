@@ -38,7 +38,7 @@ class nsHttpAuthIdentity {
 
   void Clear();
 
-  bool Equals(const nsHttpAuthIdentity& other) const;
+  bool Equals(const nsHttpAuthIdentity& ident) const;
   bool IsEmpty() const {
     return mUser.IsEmpty() && mPass.IsEmpty() && mDomain.IsEmpty();
   }
@@ -175,10 +175,9 @@ class nsHttpAuthCache {
   // null, then the entry is deleted.
   [[nodiscard]] nsresult SetAuthEntry(
       const nsACString& scheme, const nsACString& host, int32_t port,
-      const nsACString& directory, const nsACString& realm,
-      const nsACString& credentials, const nsACString& challenge,
-      nsACString const& originSuffix, const nsHttpAuthIdentity* ident,
-      nsISupports* metadata);
+      const nsACString& path, const nsACString& realm, const nsACString& creds,
+      const nsACString& challenge, nsACString const& originSuffix,
+      const nsHttpAuthIdentity* ident, nsISupports* metadata);
 
   void ClearAuthEntry(const nsACString& scheme, const nsACString& host,
                       int32_t port, const nsACString& realm,
