@@ -24,7 +24,7 @@ interface CreditCardsManagementInteractor {
      * Navigates to the credit card editor to add a new credit card. Called when a user
      * taps on 'Add credit card' button.
      */
-    fun onClickAddCreditCard()
+    fun onAddCreditCardClick()
 }
 
 /**
@@ -41,7 +41,7 @@ class DefaultCreditCardsManagementInteractor(
         controller.handleCreditCardClicked(creditCard)
     }
 
-    override fun onClickAddCreditCard() {
-        controller.handleAddCreditCard()
+    override fun onAddCreditCardClick() {
+        controller.handleAddCreditCardClicked()
     }
 }

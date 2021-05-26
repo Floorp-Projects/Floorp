@@ -23,9 +23,9 @@ interface CreditCardsManagementController {
     fun handleCreditCardClicked(creditCard: CreditCard)
 
     /**
-     * @see [CreditCardsManagementInteractor.onClickAddCreditCard]
+     * @see [CreditCardsManagementInteractor.onAddCreditCardClick]
      */
-    fun handleAddCreditCard()
+    fun handleAddCreditCardClicked()
 }
 
 /**
@@ -39,7 +39,7 @@ class DefaultCreditCardsManagementController(
         navigateToCreditCardEditor(creditCard)
     }
 
-    override fun handleAddCreditCard() {
+    override fun handleAddCreditCardClicked() {
         navigateToCreditCardEditor()
     }
 

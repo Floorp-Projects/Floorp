@@ -32,7 +32,7 @@ class DefaultCreditCardsManagementInteractorTest {
 
     @Test
     fun onClickAddCreditCard() {
-        interactor.onClickAddCreditCard()
-        verify { controller.handleAddCreditCard() }
+        interactor.onAddCreditCardClick()
+        verify { controller.handleAddCreditCardClicked() }
     }
 }

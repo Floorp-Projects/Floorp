@@ -64,7 +64,7 @@ class DefaultCreditCardsManagementControllerTest {
 
     @Test
     fun handleAddCreditCardClicked() {
-        controller.handleAddCreditCard()
+        controller.handleAddCreditCardClicked()
 
         verify {
             navController.navigate(
