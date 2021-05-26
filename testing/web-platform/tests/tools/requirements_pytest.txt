@@ -1,4 +1,4 @@
 pytest==6.2.4
 pytest-cov==2.12.0
 mock==4.0.3
-hypothesis==6.13.3
+hypothesis==6.13.5
