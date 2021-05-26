@@ -2230,47 +2230,46 @@ void CodeGenerator::visitBitOpI64(LBitOpI64* lir) {
 }
 
 void CodeGenerator::visitShiftI64(LShiftI64* lir) {
-  const LInt64Allocation lhs = lir->getInt64Operand(LShiftI64::Lhs);
-  LAllocation* rhs = lir->getOperand(LShiftI64::Rhs);
+  ARMRegister lhs(ToRegister64(lir->getInt64Operand(LShiftI64::Lhs)).reg, 64);
+  LAllocation* rhsAlloc = lir->getOperand(LShiftI64::Rhs);
+  ARMRegister dest(ToOutRegister64(lir).reg, 64);
 
-  MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
-
-  if (rhs->isConstant()) {
-    int32_t shift = int32_t(rhs->toConstant()->toInt64() & 0x3F);
+  if (rhsAlloc->isConstant()) {
+    int32_t shift = int32_t(rhsAlloc->toConstant()->toInt64() & 0x3F);
+    if (shift == 0) {
+      if (lhs.code() != dest.code()) {
+        masm.Mov(dest, lhs);
+      }
+    } else {
+      switch (lir->bitop()) {
+        case JSOp::Lsh:
+          masm.Lsl(dest, lhs, shift);
+          break;
+        case JSOp::Rsh:
+          masm.Asr(dest, lhs, shift);
+          break;
+        case JSOp::Ursh:
+          masm.Lsr(dest, lhs, shift);
+          break;
+        default:
+          MOZ_CRASH("Unexpected shift op");
+      }
+    }
+  } else {
+    ARMRegister rhs(ToRegister(rhsAlloc), 64);
     switch (lir->bitop()) {
       case JSOp::Lsh:
-        if (shift) {
-          masm.lshift64(Imm32(shift), ToRegister64(lhs));
-        }
+        masm.Lsl(dest, lhs, rhs);
         break;
       case JSOp::Rsh:
-        if (shift) {
-          masm.rshift64Arithmetic(Imm32(shift), ToRegister64(lhs));
-        }
+        masm.Asr(dest, lhs, rhs);
         break;
       case JSOp::Ursh:
-        if (shift) {
-          masm.rshift64(Imm32(shift), ToRegister64(lhs));
-        }
+        masm.Lsr(dest, lhs, rhs);
         break;
       default:
         MOZ_CRASH("Unexpected shift op");
     }
-    return;
-  }
-
-  switch (lir->bitop()) {
-    case JSOp::Lsh:
-      masm.lshift64(ToRegister(rhs), ToRegister64(lhs));
-      break;
-    case JSOp::Rsh:
-      masm.rshift64Arithmetic(ToRegister(rhs), ToRegister64(lhs));
-      break;
-    case JSOp::Ursh:
-      masm.rshift64(ToRegister(rhs), ToRegister64(lhs));
-      break;
-    default:
-      MOZ_CRASH("Unexpected shift op");
   }
 }
 
