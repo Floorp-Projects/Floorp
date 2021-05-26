@@ -25,6 +25,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "PrivatePropertiesIteratorActor",
+  "devtools/server/actors/object/private-properties-iterator",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "previewers",
   "devtools/server/actors/object/previewers"
 );
@@ -303,6 +309,13 @@ const proto = {
    */
   enumSymbols: function() {
     return SymbolIteratorActor(this, this.conn);
+  },
+
+  /**
+   * Creates an actor to iterate over an object private properties.
+   */
+  enumPrivateProperties: function() {
+    return PrivatePropertiesIteratorActor(this, this.conn);
   },
 
   /**
