@@ -16,6 +16,7 @@
 #include "jit/CompactBuffer.h"
 #include "jit/ICState.h"
 #include "jit/Simulator.h"
+#include "jit/TypeData.h"
 #include "js/experimental/JitInfo.h"
 #include "js/friend/XrayJitInfo.h"  // JS::XrayJitInfo
 #include "js/ScalarType.h"          // js::Scalar::Type
@@ -542,6 +543,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   uint32_t nextInstructionId_;
   uint32_t numInputOperands_;
 
+  TypeData typeData_;
+
   // The data (shapes, slot offsets, etc.) that will be stored in the ICStub.
   Vector<StubField, 8, SystemAllocPolicy> stubFields_;
   size_t stubDataSize_;
@@ -785,6 +788,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     numInputOperands_++;
     return op;
   }
+
+  TypeData typeData() const { return typeData_; }
+  void setTypeData(TypeData data) { typeData_ = data; }
 
   void trace(JSTracer* trc) override {
     // For now, assert we only GC before we append stub fields.
