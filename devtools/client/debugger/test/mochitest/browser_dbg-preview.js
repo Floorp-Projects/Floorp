@@ -46,8 +46,8 @@ add_task(async function() {
       column: 47,
       expression: "Foo.#privateStatic",
       fields: [
-        ["first", "a"],
-        ["second", "b"],
+        ["first", `"a"`],
+        ["second", `"b"`],
       ],
     },
     {
@@ -78,7 +78,8 @@ async function previews(dbg, fnName, previews) {
 async function testBucketedArray(dbg) {
   const invokeResult = invokeInTab("largeArray");
   await waitForPaused(dbg);
-  const preview = await hoverOnToken(dbg, 34, 10, "popup");
+  await tryHovering(dbg, 34, 10, "popup");
+  const preview = dbg.selectors.getPreview();
 
   is(
     preview.properties.map(p => p.name).join(" "),
