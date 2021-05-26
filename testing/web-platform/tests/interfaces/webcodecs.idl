@@ -176,7 +176,9 @@ interface EncodedAudioChunk {
   constructor(EncodedAudioChunkInit init);
   readonly attribute EncodedAudioChunkType type;
   readonly attribute unsigned long long timestamp;  // microseconds
-  readonly attribute ArrayBuffer data;
+  readonly attribute unsigned long byteLength;
+
+  undefined copyTo(ArrayBufferView dst);
 };
 
 dictionary EncodedAudioChunkInit {
@@ -196,7 +198,9 @@ interface EncodedVideoChunk {
   readonly attribute EncodedVideoChunkType type;
   readonly attribute unsigned long long timestamp;  // microseconds
   readonly attribute unsigned long long? duration;  // microseconds
-  readonly attribute ArrayBuffer data;
+  readonly attribute unsigned long byteLength;
+
+  undefined copyTo(ArrayBufferView dst);
 };
 
 dictionary EncodedVideoChunkInit {
