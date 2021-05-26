@@ -821,14 +821,20 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Trigger whichever GC or CC timer is currently active and waiting to fire.
    * Don't do this too much for initiating heavy actions, like the start of a IGC.
+   *
+   * @param aReason the reason for the GC, from js/public/GCAPI.h. Defaults to
+   * DOM_WINDOW_UTILS.
    */
-  void runNextCollectorTimer();
+  void runNextCollectorTimer([optional] in ACString aReason);
 
   /**
-   * Poke the GC, aka set a timer to run a GC soon (usually 4 seconds) if
-   * one is not set already.  This is used for testing.
+   * "Poke" the GC: set a timer to run a GC soon (usually 4 seconds), unless
+   * another GC timer has already been set. This is used for testing.
+   *
+   * @param aReason the reason for the GC, from js/public/GCAPI.h. Defaults to
+   * DOM_WINDOW_UTILS.
    */
-  void pokeGC();
+  void pokeGC([optional] in ACString aReason);
 
   /** Synthesize a simple gesture event for a window. The event types
    *  supported are: MozSwipeGestureMayStart, MozSwipeGestureStart,

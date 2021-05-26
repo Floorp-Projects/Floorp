@@ -1322,19 +1322,41 @@ nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener* aListener) {
   return NS_OK;
 }
 
+static bool ParseGCReason(const nsACString& aStr, JS::GCReason* aReason,
+                          JS::GCReason aDefault) {
+  if (aStr.IsEmpty()) {
+    *aReason = aDefault;
+    return true;
+  }
+#define CHECK_REASON(name, _)         \
+  if (aStr.EqualsIgnoreCase(#name)) { \
+    *aReason = JS::GCReason::name;    \
+    return true;                      \
+  }
+  GCREASONS(CHECK_REASON);
+  return false;
+}
+
 NS_IMETHODIMP
-nsDOMWindowUtils::RunNextCollectorTimer() {
-  nsJSContext::RunNextCollectorTimer(JS::GCReason::DOM_WINDOW_UTILS);
+nsDOMWindowUtils::RunNextCollectorTimer(const nsACString& aReason) {
+  JS::GCReason reason;
+  if (!ParseGCReason(aReason, &reason, JS::GCReason::DOM_WINDOW_UTILS)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsJSContext::RunNextCollectorTimer(reason);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::PokeGC() {
-  // This is used for debugging a case where we want nsJSEnvironment to defer to
-  // the parent process for GC scheduling; we need to use one of a few
-  // GCReasons to get that behaviour, PAGE_HIDE will do.
-  nsJSContext::PokeGC(JS::GCReason::PAGE_HIDE, nullptr);
+nsDOMWindowUtils::PokeGC(const nsACString& aReason) {
+  JS::GCReason reason;
+  if (!ParseGCReason(aReason, &reason, JS::GCReason::DOM_WINDOW_UTILS)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsJSContext::PokeGC(reason, nullptr);
 
   return NS_OK;
 }

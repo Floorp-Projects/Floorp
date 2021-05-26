@@ -146,12 +146,7 @@ class CCGCScheduler {
   void SetNeedsFullGC(bool aNeedGC = true) { mNeedsFullGC = aNeedGC; }
 
   void SetWantMajorGC(JS::GCReason aReason) {
-    if (aReason != JS::GCReason::DOM_WINDOW_UTILS ||
-        mMajorGCReason == JS::GCReason::NO_REASON) {
-      // DOM_WINDOW_UTILS is used for testing interprocess GC coordination and
-      // so should not override a pre-existing reason.
-      mMajorGCReason = aReason;
-    }
+    mMajorGCReason = aReason;
 
     // Force full GCs when called from reftests so that we collect dead zones
     // that have not been scheduled for collection.
