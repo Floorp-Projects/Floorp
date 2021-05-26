@@ -153,14 +153,21 @@
     "de": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazon-de", "ddg", "ecosia", "qwant", "wikipedia-de"
+          "google-b-m", "bing", "amazon-de", "ddg", "ecosia", "qwant", "wikipedia-de", "ebay-de"
+        ]
+      }
+    },
+    "de-AT": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-m", "bing", "amazon-de", "ddg", "ecosia", "qwant", "wikipedia-de", "ebay-at"
         ]
       }
     },
     "dsb": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazon-de", "ddg", "wikipedia-dsb"
+          "google-b-m", "bing", "amazon-de", "ddg", "wikipedia-dsb", "ebay-de"
         ]
       }
     },
@@ -174,21 +181,28 @@
     "en-AU": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazon-au", "ddg", "wikipedia"
+          "google-b-m", "bing", "amazon-au", "ddg", "wikipedia", "ebay-au"
         ]
       }
     },
     "en-CA": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazon-ca", "ddg", "wikipedia"
+          "google-b-m", "bing", "amazon-ca", "ddg", "wikipedia", "ebay-ca"
+        ]
+      }
+    },
+    "en-IE": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-m", "bing", "amazon-co-uk", "ddg", "qwant", "wikipedia", "ebay-ie"
         ]
       }
     },
     "en-GB": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazon-co-uk", "ddg", "qwant", "wikipedia"
+          "google-b-m", "bing", "amazon-co-uk", "ddg", "qwant", "wikipedia", "ebay-co-uk"
         ]
       },
       "RU": {
@@ -206,11 +220,6 @@
       "RU": {
         "visibleDefaultEngines": [
           "google-b-m", "bing", "amazondotcom", "ddg", "wikipedia", "yandex-en"
-        ]
-      },
-      "experimental-hidden": {
-        "visibleDefaultEngines": [
-          "amazon-ca", "amazon-au", "google-2018", "duckduckgo", "google"
         ]
       }
     },
@@ -245,7 +254,7 @@
     "es-ES": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "ddg", "wikipedia-es", "amazon-es"
+          "google-b-m", "bing", "ddg", "wikipedia-es", "amazon-es", "ebay-es"
         ]
       }
     },
@@ -253,11 +262,6 @@
       "default": {
         "visibleDefaultEngines": [
           "google-b-m", "bing", "amazondotcom", "ddg", "mercadolibre-mx", "wikipedia-es"
-        ]
-      },
-      "experimental-hidden": {
-        "visibleDefaultEngines": [
-          "amazon-mx"
         ]
       }
     },
@@ -296,17 +300,24 @@
         ]
       }
     },
+    "fr-BE": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-m", "bing", "ddg", "qwant", "wikipedia-fr", "ebay-befr"
+        ]
+      }
+    },
     "fr-CA": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazon-ca", "ddg", "wikipedia-fr"
+          "google-b-m", "bing", "amazon-ca", "ddg", "wikipedia-fr", "ebay-ca"
         ]
       }
     },
     "fr-FR": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "ddg", "qwant", "wikipedia-fr", "amazon-fr"
+          "google-b-m", "bing", "ddg", "qwant", "wikipedia-fr", "amazon-fr", "ebay-fr"
         ]
       }
     },
@@ -321,11 +332,6 @@
       "default": {
         "visibleDefaultEngines": [
           "google-b-m", "ddg", "wikipedia-fy-NL", "bolcom-fy-NL"
-        ]
-      },
-      "experimental-hidden": {
-        "visibleDefaultEngines": [
-          "amazon-nl"
         ]
       }
     },
@@ -388,7 +394,7 @@
     "hsb": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazon-de", "ddg", "wikipedia-hsb"
+          "google-b-m", "bing", "amazon-de", "ddg", "wikipedia-hsb", "ebay-de"
         ]
       }
     },
@@ -430,7 +436,7 @@
     "it": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "ddg", "wikipedia-it", "amazon-it"
+          "google-b-m", "bing", "ddg", "wikipedia-it", "amazon-it", "ebay-it"
         ]
       }
     },
@@ -498,7 +504,7 @@
     "lij": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazon-it", "ddg", "wikipedia-lij"
+          "google-b-m", "bing", "amazon-it", "ddg", "wikipedia-lij", "ebay-it"
         ]
       }
     },
@@ -593,10 +599,17 @@
         ]
       }
     },
+    "nl-NL": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-m", "bing", "bolcom-nl", "ddg", "wikipedia-nl", "amazon-nl", "ebay-nl"
+        ]
+      }
+    },
     "nl": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "bolcom-nl", "ddg", "wikipedia-nl", "amazon-nl"
+          "google-b-m", "bing", "bolcom-nl", "ddg", "wikipedia-nl"
         ]
       }
     },
@@ -631,7 +644,7 @@
     "pl": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "ddg", "wikipedia-pl"
+          "google-b-m", "bing", "ddg", "wikipedia-pl", "ebay-pl"
         ]
       }
     },
@@ -639,11 +652,6 @@
       "default": {
         "visibleDefaultEngines": [
           "google-b-m", "bing", "ddg", "wikipedia-pt"
-        ]
-      },
-      "experimental-hidden": {
-        "visibleDefaultEngines": [
-          "amazon-br"
         ]
       }
     },
@@ -725,7 +733,7 @@
     "sv-SE": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "prisjakt-sv-SE", "ddg", "wikipedia-sv-SE", "amazon-se"
+          "google-b-m", "prisjakt-sv-SE", "ddg", "wikipedia-sv-SE", "amazon-se", "ebay-ch"
         ]
       }
     },
@@ -846,11 +854,6 @@
       "default": {
         "visibleDefaultEngines": [
           "google-b-m", "bing", "ddg", "wikipedia-zh-TW"
-        ]
-      },
-      "experimental-hidden": {
-        "visibleDefaultEngines": [
-          "duckduckgo"
         ]
       }
     }

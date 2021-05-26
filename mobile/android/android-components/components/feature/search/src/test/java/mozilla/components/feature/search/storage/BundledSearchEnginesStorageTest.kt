@@ -50,7 +50,7 @@ class BundledSearchEnginesStorageTest {
             val engines = storage.load(RegionState.Default, Locale("de", "DE"))
             val searchEngines = engines.list
 
-            assertEquals(7, searchEngines.size)
+            assertEquals(8, searchEngines.size)
             assertContainsSearchEngine("google-b-m", searchEngines)
             assertContainsNotSearchEngine("google-2018", searchEngines)
         }
@@ -60,7 +60,7 @@ class BundledSearchEnginesStorageTest {
             val engines = storage.load(RegionState("US", "US"), Locale("de", "DE"))
             val searchEngines = engines.list
 
-            assertEquals(7, searchEngines.size)
+            assertEquals(8, searchEngines.size)
             assertContainsSearchEngine("google-b-1-m", searchEngines)
             assertContainsNotSearchEngine("google", searchEngines)
         }

@@ -114,13 +114,127 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(5, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
         assertEquals("Amazon.com.au", store.state.search.regionSearchEngines[2].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
         assertEquals("Wikipedia", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
+
+        assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
+    }
+
+    @Test
+    fun `Loads search engines for locale (en-GB)`() {
+        Locale.setDefault(Locale("en", "GB"))
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware)
+        )
+
+        assertTrue(store.state.search.regionSearchEngines.isEmpty())
+
+        store.dispatch(SearchAction.SetRegionAction(
+            RegionState("EN", "GB")
+        )).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
+        assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
+        assertTrue(store.state.search.additionalSearchEngines.isEmpty())
+
+        assertEquals(7, store.state.search.regionSearchEngines.size)
+
+        assertEquals("Google", store.state.search.regionSearchEngines[0].name)
+        assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
+        assertEquals("Amazon.co.uk", store.state.search.regionSearchEngines[2].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Qwant", store.state.search.regionSearchEngines[4].name)
+        assertEquals("Wikipedia", store.state.search.regionSearchEngines[5].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[6].name)
+
+        assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
+    }
+
+    @Test
+    fun `Loads search engines for locale (en-IE)`() {
+        Locale.setDefault(Locale("en", "IE"))
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware)
+        )
+
+        assertTrue(store.state.search.regionSearchEngines.isEmpty())
+
+        store.dispatch(SearchAction.SetRegionAction(
+            RegionState("EN", "IE")
+        )).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
+        assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
+        assertTrue(store.state.search.additionalSearchEngines.isEmpty())
+
+        assertEquals(7, store.state.search.regionSearchEngines.size)
+
+        assertEquals("Google", store.state.search.regionSearchEngines[0].name)
+        assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
+        assertEquals("Amazon.co.uk", store.state.search.regionSearchEngines[2].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Qwant", store.state.search.regionSearchEngines[4].name)
+        assertEquals("Wikipedia", store.state.search.regionSearchEngines[5].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[6].name)
+
+        assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
+    }
+
+    @Test
+    fun `Loads search engines for locale (fr-BE)`() {
+        Locale.setDefault(Locale("fr", "BE"))
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware)
+        )
+
+        assertTrue(store.state.search.regionSearchEngines.isEmpty())
+
+        store.dispatch(SearchAction.SetRegionAction(
+            RegionState("FR", "BE")
+        )).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
+        assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
+        assertTrue(store.state.search.additionalSearchEngines.isEmpty())
+
+        assertEquals(6, store.state.search.regionSearchEngines.size)
+
+        assertEquals("Google", store.state.search.regionSearchEngines[0].name)
+        assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("Qwant", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Wikipédia (fr)", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -150,13 +264,14 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(5, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
         assertEquals("Amazon.ca", store.state.search.regionSearchEngines[2].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
         assertEquals("Wikipédia (fr)", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -186,7 +301,7 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(6, store.state.search.regionSearchEngines.size)
+        assertEquals(7, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
@@ -194,6 +309,153 @@ class SearchMiddlewareTest {
         assertEquals("Qwant", store.state.search.regionSearchEngines[3].name)
         assertEquals("Wikipédia (fr)", store.state.search.regionSearchEngines[4].name)
         assertEquals("Amazon.fr", store.state.search.regionSearchEngines[5].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[6].name)
+
+        assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
+    }
+
+    @Test
+    fun `Loads search engines for locale (de-AT)`() {
+        Locale.setDefault(Locale("de", "AT"))
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware)
+        )
+
+        assertTrue(store.state.search.regionSearchEngines.isEmpty())
+
+        store.dispatch(SearchAction.SetRegionAction(
+            RegionState("DE", "AT")
+        )).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
+        assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
+        assertTrue(store.state.search.additionalSearchEngines.isEmpty())
+
+        assertEquals(8, store.state.search.regionSearchEngines.size)
+        assertEquals("Google", store.state.search.regionSearchEngines[0].name)
+        assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
+        assertEquals("Amazon.de", store.state.search.regionSearchEngines[2].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Ecosia", store.state.search.regionSearchEngines[4].name)
+        assertEquals("Qwant", store.state.search.regionSearchEngines[5].name)
+        assertEquals("Wikipedia (de)", store.state.search.regionSearchEngines[6].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[7].name)
+
+        assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
+    }
+
+    @Test
+    fun `Loads search engines for locale (DE)`() {
+        Locale.setDefault(Locale("de", "DE"))
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware)
+        )
+
+        assertTrue(store.state.search.regionSearchEngines.isEmpty())
+
+        store.dispatch(SearchAction.SetRegionAction(
+            RegionState("DE", "DE")
+        )).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
+        assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
+        assertTrue(store.state.search.additionalSearchEngines.isEmpty())
+
+        assertEquals(8, store.state.search.regionSearchEngines.size)
+        assertEquals("Google", store.state.search.regionSearchEngines[0].name)
+        assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
+        assertEquals("Amazon.de", store.state.search.regionSearchEngines[2].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Ecosia", store.state.search.regionSearchEngines[4].name)
+        assertEquals("Qwant", store.state.search.regionSearchEngines[5].name)
+        assertEquals("Wikipedia (de)", store.state.search.regionSearchEngines[6].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[7].name)
+
+        assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
+    }
+
+    @Test
+    fun `Loads search engines for locale (DSB)`() {
+        Locale.setDefault(Locale("dsb", "DE"))
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware)
+        )
+
+        assertTrue(store.state.search.regionSearchEngines.isEmpty())
+
+        store.dispatch(SearchAction.SetRegionAction(
+            RegionState("DSB", "DE")
+        )).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
+        assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
+        assertTrue(store.state.search.additionalSearchEngines.isEmpty())
+        assertEquals(6, store.state.search.regionSearchEngines.size)
+        assertEquals("Google", store.state.search.regionSearchEngines[0].name)
+        assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
+        assertEquals("Amazon.de", store.state.search.regionSearchEngines[2].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Wikipedija (dsb)", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
+
+        assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
+    }
+
+    @Test
+    fun `Loads search engines for locale (HSB)`() {
+        Locale.setDefault(Locale("hsb", "DE"))
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware)
+        )
+
+        assertTrue(store.state.search.regionSearchEngines.isEmpty())
+
+        store.dispatch(SearchAction.SetRegionAction(
+            RegionState("HSB", "DE")
+        )).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
+        assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
+        assertTrue(store.state.search.additionalSearchEngines.isEmpty())
+        assertEquals(6, store.state.search.regionSearchEngines.size)
+        assertEquals("Google", store.state.search.regionSearchEngines[0].name)
+        assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
+        assertEquals("Amazon.de", store.state.search.regionSearchEngines[2].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Wikipedija (hsb)", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -223,13 +485,14 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(5, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
         assertEquals("Wikipedia (es)", store.state.search.regionSearchEngines[3].name)
         assertEquals("Amazon.es", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -259,13 +522,14 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(5, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
         assertEquals("Wikipedia (it)", store.state.search.regionSearchEngines[3].name)
         assertEquals("Amazon.it", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -295,13 +559,14 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(5, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
         assertEquals("Amazon.it", store.state.search.regionSearchEngines[2].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
         assertEquals("Wikipedia (lij)", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -331,13 +596,50 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(5, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Prisjakt", store.state.search.regionSearchEngines[1].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
         assertEquals("Wikipedia (sv)", store.state.search.regionSearchEngines[3].name)
         assertEquals("Amazon.se", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
+
+        assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
+    }
+
+    @Test
+    fun `Loads search engines for locale (PL)`() {
+        Locale.setDefault(Locale("pl", "PL"))
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware)
+        )
+
+        assertTrue(store.state.search.regionSearchEngines.isEmpty())
+
+        store.dispatch(SearchAction.SetRegionAction(
+            RegionState("pl", "PL")
+        )).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
+        assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
+        assertTrue(store.state.search.additionalSearchEngines.isEmpty())
+
+        assertEquals(5, store.state.search.regionSearchEngines.size)
+
+        assertEquals("Google", store.state.search.regionSearchEngines[0].name)
+        assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("Wikipedia (pl)", store.state.search.regionSearchEngines[3].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[4].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
