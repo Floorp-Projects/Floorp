@@ -5,6 +5,7 @@ import platform
 import socket
 import time
 import traceback
+from typing import ClassVar, Type
 
 import mozprocess
 
@@ -21,7 +22,7 @@ class WebDriverServer(object):
     __metaclass__ = abc.ABCMeta
 
     default_base_path = "/"
-    output_handler_cls = OutputHandler
+    output_handler_cls = OutputHandler  # type: ClassVar[Type[OutputHandler]]
 
     def __init__(self, logger, binary, host="127.0.0.1", port=None,
                  base_path="", env=None, args=None):
