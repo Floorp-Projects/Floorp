@@ -332,29 +332,7 @@ HashNumber RValueAllocation::hash() const {
   return res;
 }
 
-static const char* ValTypeToString(JSValueType type) {
-  switch (type) {
-    case JSVAL_TYPE_INT32:
-      return "int32_t";
-    case JSVAL_TYPE_DOUBLE:
-      return "double";
-    case JSVAL_TYPE_STRING:
-      return "string";
-    case JSVAL_TYPE_SYMBOL:
-      return "symbol";
-    case JSVAL_TYPE_BIGINT:
-      return "BigInt";
-    case JSVAL_TYPE_BOOLEAN:
-      return "boolean";
-    case JSVAL_TYPE_OBJECT:
-      return "object";
-    case JSVAL_TYPE_MAGIC:
-      return "magic";
-    default:
-      MOZ_CRASH("no payload");
-  }
-}
-
+#ifdef JS_JITSPEW
 void RValueAllocation::dumpPayload(GenericPrinter& out, PayloadType type,
                                    Payload p) {
   switch (type) {
@@ -394,6 +372,7 @@ void RValueAllocation::dump(GenericPrinter& out) const {
     out.printf(")");
   }
 }
+#endif  // JS_JITSPEW
 
 SnapshotReader::SnapshotReader(const uint8_t* snapshots, uint32_t offset,
                                uint32_t RVATableSize, uint32_t listSize)
@@ -596,6 +575,7 @@ bool SnapshotWriter::add(const RValueAllocation& alloc) {
     offset = p->value();
   }
 
+#ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_IonSnapshots)) {
     JitSpewHeader(JitSpew_IonSnapshots);
     Fprinter& out = JitSpewPrinter();
@@ -603,6 +583,7 @@ bool SnapshotWriter::add(const RValueAllocation& alloc) {
     alloc.dump(out);
     out.printf("\n");
   }
+#endif
 
   allocWritten_++;
   writer_.writeUnsigned(offset / ALLOCATION_TABLE_ALIGNMENT);

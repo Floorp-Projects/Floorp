@@ -625,4 +625,35 @@ void jit::DisableChannel(JitSpewChannel channel) {
   LoggingBits &= ~(uint64_t(1) << uint32_t(channel));
 }
 
+const char* js::jit::ValTypeToString(JSValueType type) {
+  switch (type) {
+    case JSVAL_TYPE_DOUBLE:
+      return "Double";
+    case JSVAL_TYPE_INT32:
+      return "Int32";
+    case JSVAL_TYPE_BOOLEAN:
+      return "Boolean";
+    case JSVAL_TYPE_UNDEFINED:
+      return "Undefined";
+    case JSVAL_TYPE_NULL:
+      return "Null";
+    case JSVAL_TYPE_MAGIC:
+      return "Magic";
+    case JSVAL_TYPE_STRING:
+      return "String";
+    case JSVAL_TYPE_SYMBOL:
+      return "Symbol";
+    case JSVAL_TYPE_PRIVATE_GCTHING:
+      return "PrivateGCThing";
+    case JSVAL_TYPE_BIGINT:
+      return "BigInt";
+    case JSVAL_TYPE_OBJECT:
+      return "Object";
+    case JSVAL_TYPE_UNKNOWN:
+      return "None";
+    default:
+      MOZ_CRASH("Unknown JSValueType");
+  }
+}
+
 #endif /* JS_JITSPEW */
