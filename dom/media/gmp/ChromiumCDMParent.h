@@ -31,6 +31,11 @@ namespace gmp {
 
 class GMPContentParent;
 
+/**
+ * ChromiumCDMParent is the content process IPC actor used to communicate with a
+ * CDM in the GMP process (where ChromiumCDMChild lives). All non-static
+ * members of this class are GMP thread only.
+ */
 class ChromiumCDMParent final : public PChromiumCDMParent,
                                 public GMPCrashHelperHolder {
   friend class PChromiumCDMParent;
@@ -212,6 +217,11 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   // life time of this object, but never more than one active at once.
   uint32_t mMaxRefFrames = 0;
   ReorderQueue mReorderQueue;
+
+#ifdef DEBUG
+  // The GMP thread. Used to MOZ_ASSERT methods run on the GMP thread.
+  const nsCOMPtr<nsISerialEventTarget> mGMPThread;
+#endif
 };
 
 }  // namespace gmp
