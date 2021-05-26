@@ -40,7 +40,7 @@ TESTS = [TEST_COLD_MAIN_FF, TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]
 def parse_args():
     parser = argparse.ArgumentParser(description=DESC, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "release_channel", choices=['nightly', 'beta', 'release', 'debug'], help="the release channel to measure"
+        "release_channel", choices=CHANNEL_TO_PKG.keys(), help="the release channel to measure"
     )
     parser.add_argument(
         "test_name", choices=TESTS, help="the start up test to run; see https://wiki.mozilla.org/Performance/Fenix#Terminology for descriptions of cold/warm/hot and main/view"
@@ -59,13 +59,6 @@ def validate_args(args):
     if not args.force:
         if os.path.exists(args.path):
             raise Exception("Given `path` unexpectedly exists: pick a new path or use --force to overwrite.")
-
-
-def get_package_id(release_channel):
-    package_id = CHANNEL_TO_PKG.get(release_channel)
-    if not package_id:
-        raise Exception('this should never happen: this should be validated by argparse')
-    return package_id
 
 
 def get_activity_manager_args():
@@ -209,7 +202,7 @@ def main():
     print("Clear the onboarding experience manually, if it's desired and you haven't already done so.")
     print("\nYou can use this script to find the average from the results file: https://github.com/mozilla-mobile/perf-tools/blob/master/analyze_durations.py")
 
-    pkg_id = get_package_id(args.release_channel)
+    pkg_id = CHANNEL_TO_PKG[args.release_channel]
     start_cmd = get_start_cmd(args.test_name, pkg_id)
     measurements = measure(args.test_name, pkg_id, start_cmd, args.iter_count)
     save_measurements(args.path, measurements)
