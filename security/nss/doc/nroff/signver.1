@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: SIGNVER
 .\"    Author: [see the "Authors" section]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date:  5 June 2014
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 19 May 2021
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "SIGNVER" "1" "5 June 2014" "nss-tools" "NSS Security Tools"
+.TH "SIGNVER" "1" "19 May 2021" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -52,7 +52,7 @@ Displays all of the information in the PKCS#7 signature\&.
 Verifies the digital signature\&.
 .RE
 .PP
-\-d [sql:]\fIdirectory\fR
+\-d \fIdirectory\fR
 .RS 4
 Specify the database directory which contains the certificates and keys\&.
 .sp
@@ -62,8 +62,8 @@ key3\&.db, and
 secmod\&.db) and new SQLite databases (cert9\&.db,
 key4\&.db, and
 pkcs11\&.txt)\&. If the prefix
-\fBsql:\fR
-is not used, then the tool assumes that the given databases are in the old format\&.
+\fBdbm:\fR
+is not used, then the tool assumes that the given databases are in the SQLite format\&.
 .RE
 .PP
 \-a
@@ -101,7 +101,7 @@ option verifies that the signature in a given signature file is valid when used 
 .RS 4
 .\}
 .nf
-signver \-V \-s \fIsignature_file\fR \-i \fIsigned_file\fR \-d sql:/home/my/sharednssdb
+signver \-V \-s \fIsignature_file\fR \-i \fIsigned_file\fR \-d /home/my/sharednssdb
 
 signatureValid=yes
 .fi
@@ -207,30 +207,30 @@ database type\&. The shared database type is preferred; the legacy format is inc
 .PP
 By default, the tools (\fBcertutil\fR,
 \fBpk12util\fR,
-\fBmodutil\fR) assume that the given security databases follow the more common legacy type\&. Using the SQLite databases must be manually specified by using the
-\fBsql:\fR
+\fBmodutil\fR) assume that the given security databases use the SQLite type Using the legacy databases must be manually specified by using the
+\fBdbm:\fR
 prefix with the given security directory\&. For example:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# signver \-A \-s \fIsignature\fR \-d sql:/home/my/sharednssdb
+# signver \-A \-s \fIsignature\fR \-d dbm:/home/my/sharednssdb
 .fi
 .if n \{\
 .RE
 .\}
 .PP
-To set the shared database type as the default type for the tools, set the
+To set the legacy database type as the default type for the tools, set the
 \fBNSS_DEFAULT_DB_TYPE\fR
 environment variable to
-\fBsql\fR:
+\fBdbm\fR:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-export NSS_DEFAULT_DB_TYPE="sql"
+export NSS_DEFAULT_DB_TYPE="dbm"
 .fi
 .if n \{\
 .RE
@@ -239,8 +239,6 @@ export NSS_DEFAULT_DB_TYPE="sql"
 This line can be added to the
 ~/\&.bashrc
 file to make the change permanent for the user\&.
-.PP
-Most applications do not use the shared database by default, but they can be configured to use them\&. For example, this how\-to article covers how to configure Firefox and Thunderbird to use the new shared NSS databases:
 .sp
 .RS 4
 .ie n \{\

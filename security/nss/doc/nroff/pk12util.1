@@ -2,12 +2,12 @@
 .\"     Title: PK12UTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date:  5 October 2017
+.\"      Date: 19 May 2021
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "PK12UTIL" "1" "5 October 2017" "nss-tools" "NSS Security Tools"
+.TH "PK12UTIL" "1" "19 May 2021" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,7 +31,7 @@
 pk12util \- Export and import keys and certificate to or from a PKCS #12 file and the NSS database
 .SH "SYNOPSIS"
 .HP \w'\fBpk12util\fR\ 'u
-\fBpk12util\fR [\-i\ p12File|\-l\ p12File|\-o\ p12File] [\-d\ [sql:]directory] [\-h\ tokenname] [\-P\ dbprefix] [\-r] [\-v] [\-k\ slotPasswordFile|\-K\ slotPassword] [\-w\ p12filePasswordFile|\-W\ p12filePassword]
+\fBpk12util\fR [\-i\ p12File|\-l\ p12File|\-o\ p12File] [\-c\ keyCipher] [\-C\ certCipher] [\-d\ directory] [\-h\ tokenname] [\-m\ |\ \-\-key\-len\ keyLength] [\-M\ hashAlg] [\-n\ certname] [\-P\ dbprefix] [\-r] [\-v] [\-\-cert\-key\-len\ certKeyLength] [\-k\ slotPasswordFile|\-K\ slotPassword] [\-w\ p12filePasswordFile|\-W\ p12filePassword]
 .SH "STATUS"
 .PP
 This documentation is still work in progress\&. Please contribute to the initial review in
@@ -71,7 +71,7 @@ Specify the key encryption algorithm\&.
 Specify the certiticate encryption algorithm\&.
 .RE
 .PP
-\-d [sql:]directory
+\-d directory
 .RS 4
 Specify the database directory into which to import to or export from certificates and keys\&.
 .sp
@@ -81,8 +81,8 @@ key3\&.db, and
 secmod\&.db) and new SQLite databases (cert9\&.db,
 key4\&.db, and
 pkcs11\&.txt)\&. If the prefix
-\fBsql:\fR
-is not used, then the tool assumes that the given databases are in the old format\&.
+\fBdbm:\fR
+is not used, then the tool assumes that the given databases are in the SQLite format\&.
 .RE
 .PP
 \-h tokenname
@@ -105,7 +105,12 @@ Specify the slot\*(Aqs password\&.
 Specify the desired length of the symmetric key to be used to encrypt the private key\&.
 .RE
 .PP
-\-n | \-\-cert\-key\-len certKeyLength
+\-M hashAlg
+.RS 4
+Specify the hash algorithm used in the pkcs #12 mac\&. This algorithm also specifies the HMAC used in the prf when using pkcs #5 v2\&.
+.RE
+.PP
+\-\-cert\-key\-len certKeyLength
 .RS 4
 Specify the desired length of the symmetric key to be used to encrypt the certificates and other meta\-data\&.
 .RE
@@ -440,7 +445,7 @@ for a directory or
 \fB\-h\fR
 for a token)\&.
 .PP
-pk12util \-i p12File [\-h tokenname] [\-v] [\-d [sql:]directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
+pk12util \-i p12File [\-h tokenname] [\-v] [\-d directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
 .PP
 For example:
 .PP
@@ -450,7 +455,7 @@ For example:
 .RS 4
 .\}
 .nf
-# pk12util \-i /tmp/cert\-files/users\&.p12 \-d sql:/home/my/sharednssdb
+# pk12util \-i /tmp/cert\-files/users\&.p12 \-d /home/my/sharednssdb
 
 Enter a password which will be used to encrypt your keys\&.
 The password should be at least 8 characters long,
@@ -471,7 +476,7 @@ Using the
 \fBpk12util\fR
 command to export certificates and keys requires both the name of the certificate to extract from the database (\fB\-n\fR) and the PKCS #12\-formatted output file to write to\&. There are optional parameters that can be used to encrypt the file to protect the certificate material\&.
 .PP
-pk12util \-o p12File \-n certname [\-c keyCipher] [\-C certCipher] [\-m|\-\-key_len keyLen] [\-n|\-\-cert_key_len certKeyLen] [\-d [sql:]directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
+pk12util \-o p12File \-n certname [\-c keyCipher] [\-C certCipher] [\-m|\-\-key_len keyLen] [\-n|\-\-cert_key_len certKeyLen] [\-d directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
 .PP
 For example:
 .sp
@@ -479,7 +484,7 @@ For example:
 .RS 4
 .\}
 .nf
-# pk12util \-o certs\&.p12 \-n Server\-Cert \-d sql:/home/my/sharednssdb
+# pk12util \-o certs\&.p12 \-n Server\-Cert \-d /home/my/sharednssdb
 Enter password for PKCS12 file: 
 Re\-enter password: 
 .fi
@@ -495,7 +500,7 @@ file are not human\-readable\&. The certificates and keys in the file can be pri
 \&.p12
 file\&.
 .PP
-pk12util \-l p12File [\-h tokenname] [\-r] [\-d [sql:]directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
+pk12util \-l p12File [\-h tokenname] [\-r] [\-d directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
 .PP
 For example, this prints the default ASCII output:
 .sp
@@ -737,30 +742,30 @@ database type\&. The shared database type is preferred; the legacy format is inc
 .PP
 By default, the tools (\fBcertutil\fR,
 \fBpk12util\fR,
-\fBmodutil\fR) assume that the given security databases follow the more common legacy type\&. Using the SQLite databases must be manually specified by using the
-\fBsql:\fR
+\fBmodutil\fR) assume that the given security databases use the SQLite type Using the legacy databases must be manually specified by using the
+\fBdbm:\fR
 prefix with the given security directory\&. For example:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# pk12util \-i /tmp/cert\-files/users\&.p12 \-d sql:/home/my/sharednssdb
+# pk12util \-i /tmp/cert\-files/users\&.p12 \-d dbm:/home/my/sharednssdb
 .fi
 .if n \{\
 .RE
 .\}
 .PP
-To set the shared database type as the default type for the tools, set the
+To set the legacy database type as the default type for the tools, set the
 \fBNSS_DEFAULT_DB_TYPE\fR
 environment variable to
-\fBsql\fR:
+\fBdbm\fR:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-export NSS_DEFAULT_DB_TYPE="sql"
+export NSS_DEFAULT_DB_TYPE="dbm"
 .fi
 .if n \{\
 .RE
@@ -769,8 +774,6 @@ export NSS_DEFAULT_DB_TYPE="sql"
 This line can be set added to the
 ~/\&.bashrc
 file to make the change permanent\&.
-.PP
-Most applications do not use the shared database by default, but they can be configured to use them\&. For example, this how\-to article covers how to configure Firefox and Thunderbird to use the new shared NSS databases:
 .sp
 .RS 4
 .ie n \{\
