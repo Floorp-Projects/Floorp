@@ -158,9 +158,8 @@ add_task(async function session_storage() {
   await modifySessionStorage(browser, {});
   await TabStateFlusher.flush(browser);
   ({ storage } = JSON.parse(ss.getTabState(tab)));
-  is(
-    storage,
-    null,
+  ok(
+    storage === null || storage === undefined,
     "sessionStorage data for the entire tab has been cleared correctly"
   );
 
@@ -205,6 +204,7 @@ add_task(async function purge_domain() {
 add_task(async function respect_privacy_level() {
   let tab = BrowserTestUtils.addTab(gBrowser, URL + "&secure");
   await promiseBrowserLoaded(tab.linkedBrowser);
+  await TabStateFlusher.flush(tab.linkedBrowser);
   await promiseRemoveTabAndSessionState(tab);
 
   let [
@@ -228,6 +228,7 @@ add_task(async function respect_privacy_level() {
 
   tab = BrowserTestUtils.addTab(gBrowser, URL + "&secure");
   await promiseBrowserLoaded(tab.linkedBrowser);
+  await TabStateFlusher.flush(tab.linkedBrowser);
   await promiseRemoveTabAndSessionState(tab);
 
   [
