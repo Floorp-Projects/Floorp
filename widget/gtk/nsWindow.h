@@ -40,7 +40,6 @@
 #  include "WaylandVsyncSource.h"
 #endif
 
-#undef LOG
 #ifdef MOZ_LOGGING
 
 #  include "mozilla/Logging.h"

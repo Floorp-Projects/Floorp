@@ -58,7 +58,6 @@
 #include "nsGtkUtils.h"
 #include "nsWaylandDisplay.h"
 
-#undef LOG
 #ifdef MOZ_LOGGING
 
 #  include "mozilla/Logging.h"

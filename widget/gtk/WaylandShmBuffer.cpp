@@ -17,7 +17,6 @@
 #include "nsPrintfCString.h"
 #include "prenv.h"  // For PR_GetEnv
 
-#undef LOG
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
 #  include "mozilla/ScopeExit.h"

@@ -20,9 +20,7 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 
-// avoid redefined macro in unified build
-#undef LOG
-#define LOG(msg, ...)                        \
+#define LOGMPRIS(msg, ...)                   \
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
           ("MPRISServiceHandler=%p, " msg, this, ##__VA_ARGS__))
 
@@ -230,13 +228,13 @@ void MPRISServiceHandler::OnBusAcquiredStatic(GDBusConnection* aConnection,
 
 void MPRISServiceHandler::OnNameAcquired(GDBusConnection* aConnection,
                                          const gchar* aName) {
-  LOG("OnNameAcquired: %s", aName);
+  LOGMPRIS("OnNameAcquired: %s", aName);
   mConnection = aConnection;
 }
 
 void MPRISServiceHandler::OnNameLost(GDBusConnection* aConnection,
                                      const gchar* aName) {
-  LOG("OnNameLost: %s", aName);
+  LOGMPRIS("OnNameLost: %s", aName);
   mConnection = nullptr;
   if (!mRootRegistrationId) {
     return;
@@ -248,7 +246,7 @@ void MPRISServiceHandler::OnNameLost(GDBusConnection* aConnection,
     // Note: Most code examples in the internet probably dont't even check the
     // result here, but
     // according to the spec it _can_ return false.
-    LOG("Unable to unregister root object from within onNameLost!");
+    LOGMPRIS("Unable to unregister root object from within onNameLost!");
   }
 
   if (!mPlayerRegistrationId) {
@@ -261,14 +259,14 @@ void MPRISServiceHandler::OnNameLost(GDBusConnection* aConnection,
     // Note: Most code examples in the internet probably dont't even check the
     // result here, but
     // according to the spec it _can_ return false.
-    LOG("Unable to unregister object from within onNameLost!");
+    LOGMPRIS("Unable to unregister object from within onNameLost!");
   }
 }
 
 void MPRISServiceHandler::OnBusAcquired(GDBusConnection* aConnection,
                                         const gchar* aName) {
   GError* error = nullptr;
-  LOG("OnBusAcquired: %s", aName);
+  LOGMPRIS("OnBusAcquired: %s", aName);
 
   mRootRegistrationId = g_dbus_connection_register_object(
       aConnection, DBUS_MPRIS_OBJECT_PATH, mIntrospectionData->interfaces[0],
@@ -277,8 +275,8 @@ void MPRISServiceHandler::OnBusAcquired(GDBusConnection* aConnection,
       &error);                 /* GError** */
 
   if (mRootRegistrationId == 0) {
-    LOG("Failed at root registration: %s",
-        error ? error->message : "Unknown Error");
+    LOGMPRIS("Failed at root registration: %s",
+             error ? error->message : "Unknown Error");
     if (error) {
       g_error_free(error);
     }
@@ -292,8 +290,8 @@ void MPRISServiceHandler::OnBusAcquired(GDBusConnection* aConnection,
       &error);                 /* GError** */
 
   if (mPlayerRegistrationId == 0) {
-    LOG("Failed at object registration: %s",
-        error ? error->message : "Unknown Error");
+    LOGMPRIS("Failed at object registration: %s",
+             error ? error->message : "Unknown Error");
     if (error) {
       g_error_free(error);
     }
@@ -319,8 +317,8 @@ bool MPRISServiceHandler::Open() {
   mIntrospectionData = g_dbus_node_info_new_for_xml(introspection_xml, &error);
 
   if (!mIntrospectionData) {
-    LOG("Failed at parsing XML Interface definition: %s",
-        error ? error->message : "Unknown Error");
+    LOGMPRIS("Failed at parsing XML Interface definition: %s",
+             error ? error->message : "Unknown Error");
     if (error) {
       g_error_free(error);
     }
@@ -389,17 +387,17 @@ const char* MPRISServiceHandler::DesktopEntry() const {
 bool MPRISServiceHandler::PressKey(mozilla::dom::MediaControlKey aKey) const {
   MOZ_ASSERT(mInitialized);
   if (!IsMediaKeySupported(aKey)) {
-    LOG("%s is not supported", ToMediaControlKeyStr(aKey));
+    LOGMPRIS("%s is not supported", ToMediaControlKeyStr(aKey));
     return false;
   }
-  LOG("Press %s", ToMediaControlKeyStr(aKey));
+  LOGMPRIS("Press %s", ToMediaControlKeyStr(aKey));
   EmitEvent(aKey);
   return true;
 }
 
 void MPRISServiceHandler::SetPlaybackState(
     dom::MediaSessionPlaybackState aState) {
-  LOG("SetPlaybackState");
+  LOGMPRIS("SetPlaybackState");
   if (mPlaybackState == aState) {
     return;
   }
@@ -414,7 +412,7 @@ void MPRISServiceHandler::SetPlaybackState(
   GVariant* parameters = g_variant_new(
       "(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder, nullptr);
 
-  LOG("Emitting MPRIS property changes for 'PlaybackStatus'");
+  LOGMPRIS("Emitting MPRIS property changes for 'PlaybackStatus'");
   Unused << EmitPropertiesChangedSignal(parameters);
 }
 
@@ -446,7 +444,8 @@ void MPRISServiceHandler::SetMediaMetadata(
   // 2) MPRIS image is not being fetched, and the one in use is in the artwork
   if (!mFetchingUrl.IsEmpty()) {
     if (mozilla::dom::IsImageIn(aMetadata.mArtwork, mFetchingUrl)) {
-      LOG("No need to load MPRIS image. The one being processed is in the "
+      LOGMPRIS(
+          "No need to load MPRIS image. The one being processed is in the "
           "artwork");
       // Set MPRIS without the image first. The image will be loaded to MPRIS
       // asynchronously once it's fetched and saved into a local file
@@ -455,7 +454,7 @@ void MPRISServiceHandler::SetMediaMetadata(
     }
   } else if (!mCurrentImageUrl.IsEmpty()) {
     if (mozilla::dom::IsImageIn(aMetadata.mArtwork, mCurrentImageUrl)) {
-      LOG("No need to load MPRIS image. The one in use is in the artwork");
+      LOGMPRIS("No need to load MPRIS image. The one in use is in the artwork");
       SetMediaMetadataInternal(aMetadata, false);
       return;
     }
@@ -475,7 +474,7 @@ bool MPRISServiceHandler::EmitMetadataChanged() const {
   GVariant* parameters = g_variant_new(
       "(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder, nullptr);
 
-  LOG("Emit MPRIS property changes for 'Metadata'");
+  LOGMPRIS("Emit MPRIS property changes for 'Metadata'");
   return EmitPropertiesChangedSignal(parameters);
 }
 
@@ -503,7 +502,7 @@ void MPRISServiceHandler::LoadImageAtIndex(const size_t aIndex) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aIndex >= mMPRISMetadata.mArtwork.Length()) {
-    LOG("Stop loading image to MPRIS. No available image");
+    LOGMPRIS("Stop loading image to MPRIS. No available image");
     mImageFetchRequest.DisconnectIfExists();
     return;
   }
@@ -511,7 +510,7 @@ void MPRISServiceHandler::LoadImageAtIndex(const size_t aIndex) {
   const mozilla::dom::MediaImage& image = mMPRISMetadata.mArtwork[aIndex];
 
   if (!mozilla::dom::IsValidImageUrl(image.mSrc)) {
-    LOG("Skip the image with invalid URL. Try next image");
+    LOGMPRIS("Skip the image with invalid URL. Try next image");
     LoadImageAtIndex(mNextImageIndex++);
     return;
   }
@@ -525,7 +524,7 @@ void MPRISServiceHandler::LoadImageAtIndex(const size_t aIndex) {
       ->Then(
           AbstractThread::MainThread(), __func__,
           [this, self](const nsCOMPtr<imgIContainer>& aImage) {
-            LOG("The image is fetched successfully");
+            LOGMPRIS("The image is fetched successfully");
             mImageFetchRequest.Complete();
 
             uint32_t size = 0;
@@ -535,24 +534,24 @@ void MPRISServiceHandler::LoadImageAtIndex(const size_t aIndex) {
             nsresult rv = mozilla::dom::GetEncodedImageBuffer(
                 aImage, mMimeType, getter_AddRefs(inputStream), &size, &data);
             if (NS_FAILED(rv) || !inputStream || size == 0 || !data) {
-              LOG("Failed to get the image buffer info. Try next image");
+              LOGMPRIS("Failed to get the image buffer info. Try next image");
               LoadImageAtIndex(mNextImageIndex++);
               return;
             }
 
             if (SetImageToDisplay(data, size)) {
               mCurrentImageUrl = mFetchingUrl;
-              LOG("The MPRIS image is updated to the image from: %s",
-                  NS_ConvertUTF16toUTF8(mCurrentImageUrl).get());
+              LOGMPRIS("The MPRIS image is updated to the image from: %s",
+                       NS_ConvertUTF16toUTF8(mCurrentImageUrl).get());
             } else {
-              LOG("Failed to set image to MPRIS");
+              LOGMPRIS("Failed to set image to MPRIS");
               mCurrentImageUrl.Truncate();
             }
 
             mFetchingUrl.Truncate();
           },
           [this, self](bool) {
-            LOG("Failed to fetch image. Try next image");
+            LOGMPRIS("Failed to fetch image. Try next image");
             mImageFetchRequest.Complete();
             mFetchingUrl.Truncate();
             LoadImageAtIndex(mNextImageIndex++);
@@ -570,7 +569,7 @@ bool MPRISServiceHandler::SetImageToDisplay(const char* aImageData,
   mMPRISMetadata.mArtUrl = nsCString("file://");
   mMPRISMetadata.mArtUrl.Append(mLocalImageFile->NativePath());
 
-  LOG("The image file is created at %s", mMPRISMetadata.mArtUrl.get());
+  LOGMPRIS("The image file is created at %s", mMPRISMetadata.mArtUrl.get());
   return EmitMetadataChanged();
 }
 
@@ -580,7 +579,7 @@ bool MPRISServiceHandler::RenewLocalImageFile(const char* aImageData,
   MOZ_ASSERT(aDataSize != 0);
 
   if (!InitLocalImageFile()) {
-    LOG("Failed to create a new image");
+    LOGMPRIS("Failed to create a new image");
     return false;
   }
 
@@ -591,7 +590,7 @@ bool MPRISServiceHandler::RenewLocalImageFile(const char* aImageData,
   uint32_t written;
   nsresult rv = out->Write(aImageData, aDataSize, &written);
   if (NS_FAILED(rv) || written != aDataSize) {
-    LOG("Failed to write an image file");
+    LOGMPRIS("Failed to write an image file");
     RemoveAllLocalImages();
     return false;
   }
@@ -615,7 +614,7 @@ bool MPRISServiceHandler::InitLocalImageFile() {
   MOZ_ASSERT(!mLocalImageFile);
   nsresult rv = mLocalImageFolder->Clone(getter_AddRefs(mLocalImageFile));
   if (NS_FAILED(rv)) {
-    LOG("Failed to get the image folder");
+    LOGMPRIS("Failed to get the image folder");
     return false;
   }
 
@@ -636,13 +635,13 @@ bool MPRISServiceHandler::InitLocalImageFile() {
 
   rv = mLocalImageFile->Append(NS_ConvertUTF8toUTF16(filename));
   if (NS_FAILED(rv)) {
-    LOG("Failed to create an image filename");
+    LOGMPRIS("Failed to create an image filename");
     return false;
   }
 
   rv = mLocalImageFile->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
   if (NS_FAILED(rv)) {
-    LOG("Failed to create an image file");
+    LOGMPRIS("Failed to create an image file");
     return false;
   }
 
@@ -658,7 +657,7 @@ bool MPRISServiceHandler::InitLocalImageFolder() {
   nsresult rv = NS_GetSpecialDirectory(XRE_USER_APP_DATA_DIR,
                                        getter_AddRefs(mLocalImageFolder));
   if (NS_FAILED(rv) || !mLocalImageFolder) {
-    LOG("Failed to get the image folder");
+    LOGMPRIS("Failed to get the image folder");
     return false;
   }
 
@@ -669,14 +668,14 @@ bool MPRISServiceHandler::InitLocalImageFolder() {
 
   rv = mLocalImageFolder->Append(u"firefox-mpris"_ns);
   if (NS_FAILED(rv)) {
-    LOG("Failed to name an image folder");
+    LOGMPRIS("Failed to name an image folder");
     return false;
   }
 
   if (!LocalImageFolderExists()) {
     rv = mLocalImageFolder->Create(nsIFile::DIRECTORY_TYPE, 0700);
     if (NS_FAILED(rv)) {
-      LOG("Failed to create an image folder");
+      LOGMPRIS("Failed to create an image folder");
       return false;
     }
   }
@@ -694,11 +693,11 @@ void MPRISServiceHandler::RemoveAllLocalImages() {
   if (NS_FAILED(rv)) {
     // It's ok to fail. The next removal is called when updating the
     // media-session image, or closing the MPRIS.
-    LOG("Failed to remove images");
+    LOGMPRIS("Failed to remove images");
   }
 
-  LOG("Abandon %s",
-      mLocalImageFile ? mLocalImageFile->NativePath().get() : "nothing");
+  LOGMPRIS("Abandon %s",
+           mLocalImageFile ? mLocalImageFile->NativePath().get() : "nothing");
   mMPRISMetadata.mArtUrl.Truncate();
   mLocalImageFile = nullptr;
   mLocalImageFolder = nullptr;
@@ -777,7 +776,7 @@ void MPRISServiceHandler::SetSupportedMediaKeys(
   }
 
   if (mSupportedKeys == supportedKeys) {
-    LOG("Supported keys stay the same");
+    LOGMPRIS("Supported keys stay the same");
     return;
   }
 
@@ -789,8 +788,8 @@ void MPRISServiceHandler::SetSupportedMediaKeys(
     bool keyWasSupported = oldSupportedKeys & GetMediaKeyMask(it.first);
     bool keyIsSupported = mSupportedKeys & GetMediaKeyMask(it.first);
     if (keyWasSupported != keyIsSupported) {
-      LOG("Emit PropertiesChanged signal: %s.%s=%s", it.second.interface,
-          it.second.property, keyIsSupported ? "true" : "false");
+      LOGMPRIS("Emit PropertiesChanged signal: %s.%s=%s", it.second.interface,
+               it.second.property, keyIsSupported ? "true" : "false");
       EmitSupportedKeyChanged(it.first, keyIsSupported);
     }
   }
@@ -805,7 +804,7 @@ bool MPRISServiceHandler::EmitSupportedKeyChanged(
     mozilla::dom::MediaControlKey aKey, bool aSupported) const {
   auto it = gKeyProperty.find(aKey);
   if (it == gKeyProperty.end()) {
-    LOG("No property for %s", ToMediaControlKeyStr(aKey));
+    LOGMPRIS("No property for %s", ToMediaControlKeyStr(aKey));
     return false;
   }
 
@@ -819,15 +818,15 @@ bool MPRISServiceHandler::EmitSupportedKeyChanged(
       "(sa{sv}as)", static_cast<const gchar*>(it->second.interface), &builder,
       nullptr);
 
-  LOG("Emit MPRIS property changes for '%s.%s'", it->second.interface,
-      it->second.property);
+  LOGMPRIS("Emit MPRIS property changes for '%s.%s'", it->second.interface,
+           it->second.property);
   return EmitPropertiesChangedSignal(parameters);
 }
 
 bool MPRISServiceHandler::EmitPropertiesChangedSignal(
     GVariant* aParameters) const {
   if (!mConnection) {
-    LOG("No D-Bus Connection. Cannot emit properties changed signal");
+    LOGMPRIS("No D-Bus Connection. Cannot emit properties changed signal");
     return false;
   }
 
@@ -836,8 +835,8 @@ bool MPRISServiceHandler::EmitPropertiesChangedSignal(
           mConnection, nullptr, DBUS_MPRIS_OBJECT_PATH,
           "org.freedesktop.DBus.Properties", "PropertiesChanged", aParameters,
           &error)) {
-    LOG("Failed to emit MPRIS property changes: %s",
-        error ? error->message : "Unknown Error");
+    LOGMPRIS("Failed to emit MPRIS property changes: %s",
+             error ? error->message : "Unknown Error");
     if (error) {
       g_error_free(error);
     }
@@ -846,6 +845,8 @@ bool MPRISServiceHandler::EmitPropertiesChangedSignal(
 
   return true;
 }
+
+#undef LOGMPRIS
 
 }  // namespace widget
 }  // namespace mozilla
