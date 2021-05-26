@@ -567,7 +567,7 @@ DenseElementResult NativeObject::maybeDensifySparseElements(
     if (!IdIsIndex(iter->key(), &index)) {
       continue;
     }
-    if (iter->attributes() != JSPROP_ENUMERATE) {
+    if (iter->flags() != ShapePropertyFlags::defaultDataPropFlags) {
       // For simplicity, only densify the object if all indexed properties can
       // be converted to dense elements.
       return DenseElementResult::Incomplete;
@@ -1232,7 +1232,7 @@ bool NativeObject::reshapeForShadowedProp(JSContext* cx,
 
 static bool ChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                            HandleObject getter, HandleObject setter,
-                           unsigned attrs, PropertyResult* existing) {
+                           ShapePropertyFlags flags, PropertyResult* existing) {
   MOZ_ASSERT(existing);
 
   Rooted<GetterSetter*> gs(cx);
@@ -1258,11 +1258,11 @@ static bool ChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
 
   uint32_t slot;
   if (existing->isNativeProperty()) {
-    if (!NativeObject::changeProperty(cx, obj, id, attrs, &slot)) {
+    if (!NativeObject::changeProperty(cx, obj, id, flags, &slot)) {
       return false;
     }
   } else {
-    if (!NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT, attrs,
+    if (!NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT, flags,
                                    &slot)) {
       return false;
     }
@@ -1272,26 +1272,22 @@ static bool ChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
   return true;
 }
 
-static unsigned ComputeAttributes(const PropertyDescriptor& desc) {
+static ShapePropertyFlags ComputeShapePropertyFlags(
+    const PropertyDescriptor& desc) {
   desc.assertComplete();
 
-  unsigned attrs = 0;
-  if (!desc.configurable()) {
-    attrs |= JSPROP_PERMANENT;
-  }
-  if (desc.enumerable()) {
-    attrs |= JSPROP_ENUMERATE;
-  }
+  ShapePropertyFlags flags;
+  flags.setFlag(ShapePropertyFlag::Configurable, desc.configurable());
+  flags.setFlag(ShapePropertyFlag::Enumerable, desc.enumerable());
+
   if (desc.isDataDescriptor()) {
-    if (!desc.writable()) {
-      attrs |= JSPROP_READONLY;
-    }
+    flags.setFlag(ShapePropertyFlag::Writable, desc.writable());
   } else {
     MOZ_ASSERT(desc.isAccessorDescriptor());
-    attrs |= JSPROP_GETTER | JSPROP_SETTER;
+    flags.setFlag(ShapePropertyFlag::AccessorProperty);
   }
 
-  return attrs;
+  return flags;
 }
 
 // Whether we're adding a new property or changing an existing property (this
@@ -1322,8 +1318,8 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
   // Use dense storage for indexed properties where possible: when we have an
   // integer key with default property attributes and are either adding a new
   // property or changing a dense element.
-  unsigned attrs = ComputeAttributes(desc);
-  if (id.isInt() && attrs == JSPROP_ENUMERATE &&
+  ShapePropertyFlags flags = ComputeShapePropertyFlags(desc);
+  if (id.isInt() && flags == ShapePropertyFlags::defaultDataPropFlags &&
       (AddOrChange == IsAddOrChange::Add || existing->isDenseElement())) {
     MOZ_ASSERT(!desc.isAccessorDescriptor());
     MOZ_ASSERT(!obj->is<TypedArrayObject>());
@@ -1349,14 +1345,14 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
         return false;
       }
       uint32_t slot;
-      if (!NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT, attrs,
+      if (!NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT, flags,
                                      &slot)) {
         return false;
       }
       obj->initSlot(slot, PrivateGCThingValue(gs));
     } else {
       uint32_t slot;
-      if (!NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT, attrs,
+      if (!NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT, flags,
                                      &slot)) {
         return false;
       }
@@ -1365,17 +1361,17 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
   } else {
     if (desc.isAccessorDescriptor()) {
       if (!ChangeProperty(cx, obj, id, desc.getterObject(), desc.setterObject(),
-                          attrs, existing)) {
+                          flags, existing)) {
         return false;
       }
     } else {
       uint32_t slot;
       if (existing->isNativeProperty()) {
-        if (!NativeObject::changeProperty(cx, obj, id, attrs, &slot)) {
+        if (!NativeObject::changeProperty(cx, obj, id, flags, &slot)) {
           return false;
         }
       } else {
-        if (!NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT, attrs,
+        if (!NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT, flags,
                                        &slot)) {
           return false;
         }
@@ -1519,12 +1515,12 @@ static bool DefinePropertyIsRedundant(JSContext* cx, HandleNativeObject obj,
     }
     ShapeProperty shapeProp = prop.shapeProperty();
     if (desc.hasGetterObject() &&
-        (!(shapeProp.attributes() & JSPROP_GETTER) ||
+        (!shapeProp.isAccessorProperty() ||
          desc.getterObject() != obj->getGetter(shapeProp))) {
       return true;
     }
     if (desc.hasSetterObject() &&
-        (!(shapeProp.attributes() & JSPROP_SETTER) ||
+        (!shapeProp.isAccessorProperty() ||
          desc.setterObject() != obj->getSetter(shapeProp))) {
       return true;
     }
@@ -1973,7 +1969,7 @@ bool js::AddOrUpdateSparseElementHelper(JSContext* cx, HandleArrayObject obj,
 
   // At this point we're updating a property: See SetExistingProperty
   ShapeProperty prop = shape->property();
-  if (prop.writable() && prop.isDataProperty()) {
+  if (prop.isDataProperty() && prop.writable()) {
     obj->setSlot(prop.slot(), v);
     return true;
   }

@@ -267,7 +267,8 @@ Shape* RegExpObject::assignInitialShape(JSContext* cx,
   /* The lastIndex property alone is writable but non-configurable. */
   uint32_t slot;
   if (!NativeObject::addProperty(cx, self, cx->names().lastIndex,
-                                 LAST_INDEX_SLOT, JSPROP_PERMANENT, &slot)) {
+                                 LAST_INDEX_SLOT, {ShapePropertyFlag::Writable},
+                                 &slot)) {
     return nullptr;
   }
   MOZ_ASSERT(slot == LAST_INDEX_SLOT);

@@ -128,32 +128,78 @@ static const uint32_t SHAPE_MAXIMUM_SLOT = Bit(24) - 2;
 class Shape;
 struct StackShape;
 
+// Flags associated with each property stored in the shape tree.
+enum class ShapePropertyFlag : uint8_t {
+  // Property attributes. See also JS::PropertyAttribute.
+  Configurable = 1 << 0,
+  Enumerable = 1 << 1,
+  Writable = 1 << 2,
+
+  // Whether this is an accessor property. Accessor properties have a slot that
+  // stores a GetterSetter instance.
+  AccessorProperty = 1 << 3,
+
+  // If set, this is a custom data property. The property is exposed as a data
+  // property to JS code and PropertyDescriptor, but instead of an object slot
+  // it uses custom get/set logic.
+  //
+  // This is used to implement the special array.length and ArgumentsObject
+  // properties.
+  //
+  // This flag is deprecated (we don't want to add more uses).
+  CustomDataProperty = 1 << 4,
+};
+
+class ShapePropertyFlags : public EnumFlags<ShapePropertyFlag> {
+  using Base = EnumFlags<ShapePropertyFlag>;
+  using Base::Base;
+
+ public:
+  static const ShapePropertyFlags defaultDataPropFlags;
+
+  bool configurable() const { return hasFlag(ShapePropertyFlag::Configurable); }
+  bool enumerable() const { return hasFlag(ShapePropertyFlag::Enumerable); }
+  bool writable() const {
+    MOZ_ASSERT(isDataDescriptor());
+    return hasFlag(ShapePropertyFlag::Writable);
+  }
+
+  // Note: this returns true only for plain data properties with a slot. Returns
+  // false for custom data properties. See CustomDataProperty flag.
+  bool isDataProperty() const {
+    return !isAccessorProperty() && !isCustomDataProperty();
+  }
+  bool isAccessorProperty() const {
+    return hasFlag(ShapePropertyFlag::AccessorProperty);
+  }
+  bool isCustomDataProperty() const {
+    return hasFlag(ShapePropertyFlag::CustomDataProperty);
+  }
+
+  // Note: unlike isDataProperty, this returns true also for custom data
+  // properties.
+  bool isDataDescriptor() const { return !isAccessorProperty(); }
+};
+
+constexpr ShapePropertyFlags ShapePropertyFlags::defaultDataPropFlags = {
+    ShapePropertyFlag::Configurable, ShapePropertyFlag::Enumerable,
+    ShapePropertyFlag::Writable};
+
 // ShapeProperty contains information (attributes, slot number) for a property
 // stored in the Shape tree. Property lookups on NativeObjects return a
 // ShapeProperty.
 class ShapeProperty {
   uint32_t slot_;
-  uint8_t attrs_;
+  ShapePropertyFlags flags_;
 
  public:
-  ShapeProperty(uint8_t attrs, uint32_t slot) : slot_(slot), attrs_(attrs) {}
+  ShapeProperty(ShapePropertyFlags flags, uint32_t slot)
+      : slot_(slot), flags_(flags) {}
 
-  // Note: this returns true only for plain data properties with a slot. Returns
-  // false for custom data properties. See JSPROP_CUSTOM_DATA_PROP.
-  bool isDataProperty() const {
-    return !(attrs_ &
-             (JSPROP_GETTER | JSPROP_SETTER | JSPROP_CUSTOM_DATA_PROP));
-  }
-  bool isCustomDataProperty() const { return attrs_ & JSPROP_CUSTOM_DATA_PROP; }
-  bool isAccessorProperty() const {
-    return attrs_ & (JSPROP_GETTER | JSPROP_SETTER);
-  }
-
-  // Note: unlike isDataProperty, this returns true also for custom data
-  // properties. See JSPROP_CUSTOM_DATA_PROP.
-  bool isDataDescriptor() const {
-    return isDataProperty() || isCustomDataProperty();
-  }
+  bool isDataProperty() const { return flags_.isDataProperty(); }
+  bool isCustomDataProperty() const { return flags_.isCustomDataProperty(); }
+  bool isAccessorProperty() const { return flags_.isAccessorProperty(); }
+  bool isDataDescriptor() const { return flags_.isDataDescriptor(); }
 
   bool hasSlot() const { return !isCustomDataProperty(); }
 
@@ -163,10 +209,10 @@ class ShapeProperty {
     return slot_;
   }
 
-  uint8_t attributes() const { return attrs_; }
-  bool writable() const { return !(attrs_ & JSPROP_READONLY); }
-  bool configurable() const { return !(attrs_ & JSPROP_PERMANENT); }
-  bool enumerable() const { return attrs_ & JSPROP_ENUMERATE; }
+  ShapePropertyFlags flags() const { return flags_; }
+  bool writable() const { return flags_.writable(); }
+  bool configurable() const { return flags_.configurable(); }
+  bool enumerable() const { return flags_.enumerable(); }
 
   JS::PropertyAttributes propAttributes() const {
     JS::PropertyAttributes attrs{};
@@ -183,7 +229,7 @@ class ShapeProperty {
   }
 
   bool operator==(const ShapeProperty& other) const {
-    return slot_ == other.slot_ && attrs_ == other.attrs_;
+    return slot_ == other.slot_ && flags_ == other.flags_;
   }
   bool operator!=(const ShapeProperty& other) const {
     return !operator==(other);
@@ -194,8 +240,8 @@ class ShapePropertyWithKey : public ShapeProperty {
   PropertyKey key_;
 
  public:
-  ShapePropertyWithKey(uint8_t attrs, uint32_t slot, PropertyKey key)
-      : ShapeProperty(attrs, slot), key_(key) {}
+  ShapePropertyWithKey(ShapePropertyFlags flags, uint32_t slot, PropertyKey key)
+      : ShapeProperty(flags, slot), key_(key) {}
 
   PropertyKey key() const { return key_; }
 
@@ -214,7 +260,7 @@ class WrappedPtrOperations<ShapePropertyWithKey, Wrapper> {
   bool isDataProperty() const { return value().isDataProperty(); }
   uint32_t slot() const { return value().slot(); }
   PropertyKey key() const { return value().key(); }
-  uint8_t attributes() const { return value().attributes(); }
+  ShapePropertyFlags flags() const { return value().flags(); }
 };
 
 struct ShapeHasher : public DefaultHasher<Shape*> {
@@ -868,8 +914,8 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
  private:
   uint32_t immutableFlags;  /* immutable flags, see above */
   ObjectFlags objectFlags_; /* immutable object flags, see ObjectFlags */
-  uint8_t attrs;            /* attributes, see jsapi.h JSPROP_* */
-  uint8_t mutableFlags;     /* mutable flags, see below for defines */
+  ShapePropertyFlags propFlags;
+  uint8_t mutableFlags; /* mutable flags, see below for defines */
 
   GCPtrShape parent; /* parent node, reverse for..in order */
   friend class DictionaryShapeLink;
@@ -1085,18 +1131,19 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   bool matches(const Shape* other) const {
     return propid_.get() == other->propid_.get() &&
            matchesParamsAfterId(other->base(), other->objectFlags(),
-                                other->maybeSlot(), other->attrs);
+                                other->maybeSlot(), other->propFlags);
   }
 
   inline bool matches(const StackShape& other) const;
 
   bool matchesParamsAfterId(BaseShape* base, ObjectFlags aobjectFlags,
-                            uint32_t aslot, unsigned aattrs) const {
+                            uint32_t aslot, ShapePropertyFlags aflags) const {
     return base == this->base() && objectFlags() == aobjectFlags &&
-           matchesPropertyParamsAfterId(aslot, aattrs);
+           matchesPropertyParamsAfterId(aslot, aflags);
   }
-  bool matchesPropertyParamsAfterId(uint32_t aslot, unsigned aattrs) const {
-    return maybeSlot() == aslot && attrs == aattrs;
+  bool matchesPropertyParamsAfterId(uint32_t aslot,
+                                    ShapePropertyFlags aflags) const {
+    return maybeSlot() == aslot && propFlags == aflags;
   }
 
  private:
@@ -1112,7 +1159,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return !isCustomDataProperty();
   }
 
-  bool isCustomDataProperty() const { return attrs & JSPROP_CUSTOM_DATA_PROP; }
+  bool isCustomDataProperty() const { return propFlags.isCustomDataProperty(); }
 
  public:
   bool isEmptyShape() const {
@@ -1173,17 +1220,13 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
  public:
   ShapeProperty property() const {
     MOZ_ASSERT(!isEmptyShape());
-    return ShapeProperty(attrs, maybeSlot());
+    return ShapeProperty(propFlags, maybeSlot());
   }
 
   ShapePropertyWithKey propertyWithKey() const {
-    return ShapePropertyWithKey(attrs, maybeSlot(), propid());
+    return ShapePropertyWithKey(propFlags, maybeSlot(), propid());
   }
 
- private:
-  uint8_t attributes() const { return attrs; }
-
- public:
   uint32_t entryCount() {
     JS::AutoCheckCannotGC nogc;
     if (ShapeTable* table = maybeTable(nogc)) {
@@ -1407,16 +1450,16 @@ struct StackShape {
   jsid propid;
   uint32_t immutableFlags;
   ObjectFlags objectFlags;
-  uint8_t attrs;
+  ShapePropertyFlags propFlags;
   uint8_t mutableFlags;
 
   explicit StackShape(BaseShape* base, ObjectFlags objectFlags, jsid propid,
-                      uint32_t slot, unsigned attrs)
+                      uint32_t slot, ShapePropertyFlags propFlags)
       : base(base),
         propid(propid),
         immutableFlags(slot),
         objectFlags(objectFlags),
-        attrs(uint8_t(attrs)),
+        propFlags(propFlags),
         mutableFlags(0) {
     MOZ_ASSERT(base);
     MOZ_ASSERT(!JSID_IS_VOID(propid));
@@ -1428,12 +1471,12 @@ struct StackShape {
         propid(shape->propidRef()),
         immutableFlags(shape->immutableFlags),
         objectFlags(shape->objectFlags()),
-        attrs(shape->attrs),
+        propFlags(shape->propFlags),
         mutableFlags(shape->mutableFlags) {}
 
   bool hasMissingSlot() const { return maybeSlot() == SHAPE_INVALID_SLOT; }
 
-  bool isCustomDataProperty() const { return attrs & JSPROP_CUSTOM_DATA_PROP; }
+  bool isCustomDataProperty() const { return propFlags.isCustomDataProperty(); }
 
   uint32_t slot() const {
     MOZ_ASSERT(!hasMissingSlot());
@@ -1449,8 +1492,8 @@ struct StackShape {
   HashNumber hash() const {
     HashNumber hash = HashId(propid);
     return mozilla::AddToHash(
-        hash,
-        mozilla::HashGeneric(base, objectFlags.toRaw(), attrs, maybeSlot()));
+        hash, mozilla::HashGeneric(base, objectFlags.toRaw(), propFlags.toRaw(),
+                                   maybeSlot()));
   }
 
   // StructGCPolicy implementation.
@@ -1469,7 +1512,7 @@ class WrappedPtrOperations<StackShape, Wrapper> {
   uint32_t slot() const { return ss().slot(); }
   uint32_t maybeSlot() const { return ss().maybeSlot(); }
   uint32_t slotSpan() const { return ss().slotSpan(); }
-  uint8_t attrs() const { return ss().attrs; }
+  ShapePropertyFlags propFlags() const { return ss().propFlags; }
   ObjectFlags objectFlags() const { return ss().objectFlags; }
   jsid propid() const { return ss().propid; }
 };
@@ -1482,7 +1525,7 @@ class MutableWrappedPtrOperations<StackShape, Wrapper>
  public:
   void setSlot(uint32_t slot) { ss().setSlot(slot); }
   void setBase(BaseShape* base) { ss().base = base; }
-  void setAttrs(uint8_t attrs) { ss().attrs = attrs; }
+  void setPropFlags(ShapePropertyFlags flags) { ss().propFlags = flags; }
   void setObjectFlags(ObjectFlags objectFlags) {
     ss().objectFlags = objectFlags;
   }
@@ -1493,7 +1536,7 @@ inline Shape::Shape(const StackShape& other, uint32_t nfixed)
       propid_(other.propid),
       immutableFlags(other.immutableFlags),
       objectFlags_(other.objectFlags),
-      attrs(other.attrs),
+      propFlags(other.propFlags),
       mutableFlags(other.mutableFlags),
       parent(nullptr) {
   setNumFixedSlots(nfixed);
@@ -1508,7 +1551,7 @@ inline Shape::Shape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed)
       propid_(JSID_EMPTY),
       immutableFlags(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
       objectFlags_(objectFlags),
-      attrs(0),
+      propFlags(),
       mutableFlags(0),
       parent(nullptr) {
   MOZ_ASSERT(base);
@@ -1529,7 +1572,7 @@ inline Shape* Shape::searchLinear(jsid id) {
 inline bool Shape::matches(const StackShape& other) const {
   return propid_.get() == other.propid &&
          matchesParamsAfterId(other.base, other.objectFlags, other.maybeSlot(),
-                              other.attrs);
+                              other.propFlags);
 }
 
 MOZ_ALWAYS_INLINE bool ShapeCachePtr::search(jsid id, Shape* start,

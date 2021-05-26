@@ -635,15 +635,16 @@ bool ArgumentsObject::reifyIterator(JSContext* cx,
 
 static bool ResolveArgumentsProperty(JSContext* cx,
                                      Handle<ArgumentsObject*> obj, HandleId id,
-                                     unsigned attrs, bool* resolvedp) {
+                                     ShapePropertyFlags flags,
+                                     bool* resolvedp) {
   // Note: we don't need to call ReshapeForShadowedProp here because we're just
   // resolving an existing property instead of defining a new property.
 
   MOZ_ASSERT(id.isInt() || id.isAtom(cx->names().length) ||
              id.isAtom(cx->names().callee));
+  MOZ_ASSERT(flags.isCustomDataProperty());
 
-  attrs |= JSPROP_CUSTOM_DATA_PROP;
-  if (!NativeObject::addCustomDataProperty(cx, obj, id, attrs)) {
+  if (!NativeObject::addCustomDataProperty(cx, obj, id, flags)) {
     return false;
   }
 
@@ -669,14 +670,16 @@ bool MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  unsigned attrs = JSPROP_RESOLVING;
+  ShapePropertyFlags flags = {ShapePropertyFlag::CustomDataProperty,
+                              ShapePropertyFlag::Configurable,
+                              ShapePropertyFlag::Writable};
   if (JSID_IS_INT(id)) {
     uint32_t arg = uint32_t(JSID_TO_INT(id));
     if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg)) {
       return true;
     }
 
-    attrs |= JSPROP_ENUMERATE;
+    flags.setFlag(ShapePropertyFlag::Enumerable);
   } else if (id.isAtom(cx->names().length)) {
     if (argsobj->hasOverriddenLength()) {
       return true;
@@ -691,7 +694,7 @@ bool MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
     }
   }
 
-  return ResolveArgumentsProperty(cx, argsobj, id, attrs, resolvedp);
+  return ResolveArgumentsProperty(cx, argsobj, id, flags, resolvedp);
 }
 
 /* static */
@@ -784,14 +787,10 @@ static bool DefineMappedIndex(JSContext* cx, Handle<MappedArgumentsObject*> obj,
     }
   }
 
-  unsigned attrs = JSPROP_CUSTOM_DATA_PROP;
-  if (!configurable) {
-    attrs |= JSPROP_PERMANENT;
-  }
-  if (enumerable) {
-    attrs |= JSPROP_ENUMERATE;
-  }
-  if (!NativeObject::changeCustomDataPropAttributes(cx, obj, id, attrs)) {
+  ShapePropertyFlags flags = shapeProp.flags();
+  flags.setFlag(ShapePropertyFlag::Configurable, configurable);
+  flags.setFlag(ShapePropertyFlag::Enumerable, enumerable);
+  if (!NativeObject::changeCustomDataPropAttributes(cx, obj, id, flags)) {
     return false;
   }
 
@@ -966,14 +965,16 @@ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  unsigned attrs = JSPROP_RESOLVING;
+  ShapePropertyFlags flags = {ShapePropertyFlag::CustomDataProperty,
+                              ShapePropertyFlag::Configurable,
+                              ShapePropertyFlag::Writable};
   if (JSID_IS_INT(id)) {
     uint32_t arg = uint32_t(JSID_TO_INT(id));
     if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg)) {
       return true;
     }
 
-    attrs |= JSPROP_ENUMERATE;
+    flags.setFlag(ShapePropertyFlag::Enumerable);
   } else if (id.isAtom(cx->names().length)) {
     if (argsobj->hasOverriddenLength()) {
       return true;
@@ -982,7 +983,7 @@ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  return ResolveArgumentsProperty(cx, argsobj, id, attrs, resolvedp);
+  return ResolveArgumentsProperty(cx, argsobj, id, flags, resolvedp);
 }
 
 /* static */
