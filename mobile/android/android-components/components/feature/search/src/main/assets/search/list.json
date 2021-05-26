@@ -171,6 +171,13 @@
         ]
       }
     },
+    "en-AU": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-m", "bing", "amazon-au", "ddg", "wikipedia"
+        ]
+      }
+    },
     "en-CA": {
       "default": {
         "visibleDefaultEngines": [
@@ -286,6 +293,20 @@
       "default": {
         "visibleDefaultEngines": [
           "google-b-m", "amazondotcom", "ddg", "wikipedia-fi"
+        ]
+      }
+    },
+    "fr-CA": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-m", "bing", "amazon-ca", "ddg", "wikipedia-fr"
+        ]
+      }
+    },
+    "fr-FR": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-m", "bing", "ddg", "qwant", "wikipedia-fr", "amazon-fr"
         ]
       }
     },
