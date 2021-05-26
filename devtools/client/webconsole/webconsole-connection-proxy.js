@@ -47,7 +47,7 @@ class WebConsoleConnectionProxy {
       return this._connecter;
     }
 
-    if (!this.target.client) {
+    if (this.target.isDestroyed()) {
       return Promise.reject("target was destroyed");
     }
 
@@ -55,7 +55,6 @@ class WebConsoleConnectionProxy {
     this.target.on("navigate", this._onTabNavigated);
 
     const connection = (async () => {
-      this.client = this.target.client;
       this.webConsoleFront = await this.target.getFront("console");
 
       // There is no way to view response bodies from the Browser Console, so do
@@ -180,7 +179,7 @@ class WebConsoleConnectionProxy {
    *         A promise object that is resolved when disconnect completes.
    */
   disconnect() {
-    if (!this.client) {
+    if (!this.webConsoleFront) {
       return;
     }
 
@@ -188,7 +187,6 @@ class WebConsoleConnectionProxy {
     this.target.off("will-navigate", this._onTabWillNavigate);
     this.target.off("navigate", this._onTabNavigated);
 
-    this.client = null;
     this.webConsoleFront = null;
   }
 }

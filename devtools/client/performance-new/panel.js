@@ -15,13 +15,14 @@
  * @typedef {import("./@types/perf").PanelWindow} PanelWindow
  * @typedef {import("./@types/perf").Toolbox} Toolbox
  * @typedef {import("./@types/perf").Target} Target
+ * @typedef {import("./@types/perf").Commands} Commands
  */
 
 class PerformancePanel {
   /**
    * @param {PanelWindow} iframeWindow
    * @param {Toolbox} toolbox
-   * @param {Object} commands
+   * @param {Commands} commands
    */
   constructor(iframeWindow, toolbox, commands) {
     this.panelWin = iframeWindow;
@@ -60,7 +61,7 @@ class PerformancePanel {
     this.panelWin.gToolbox = this.toolbox;
     this.panelWin.gIsPanelDestroyed = false;
 
-    const perfFront = await this.target.client.mainRoot.getFront("perf");
+    const perfFront = await this.commands.client.mainRoot.getFront("perf");
 
     this.panelWin.gInit(perfFront, "devtools");
     return this;

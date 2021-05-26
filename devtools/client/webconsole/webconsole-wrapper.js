@@ -90,7 +90,7 @@ class WebConsoleWrapper {
           webConsoleUI,
           hud: this.hud,
           toolbox: this.toolbox,
-          client: this.webConsoleUI._commands,
+          client: this.webConsoleUI._consoleCommands,
         },
       });
 

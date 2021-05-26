@@ -387,7 +387,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         // the devtools client and also the server created in the
         // content process
         toolbox.target.on("target-destroyed", () => {
-          toolbox.target.client.close();
+          toolbox.commands.client.close();
         });
 
         return toolbox;

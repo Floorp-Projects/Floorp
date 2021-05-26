@@ -18,7 +18,7 @@ add_task(async function() {
   await pushPref("dom.serviceWorkers.idle_timeout", 1000);
   await pushPref("dom.serviceWorkers.idle_extended_timeout", 1000);
 
-  const { panel, tab, target } = await openNewTabAndApplicationPanel(TAB_URL);
+  const { panel, tab, commands } = await openNewTabAndApplicationPanel(TAB_URL);
   const doc = panel.panelWin.document;
 
   selectPage(panel, "service-workers");
@@ -46,7 +46,7 @@ add_task(async function() {
   });
   ok(true, "Worker status is 'Running'");
 
-  await unregisterAllWorkers(target.client, doc);
+  await unregisterAllWorkers(commands.client, doc);
 
   // close the tab
   info("Closing the tab.");

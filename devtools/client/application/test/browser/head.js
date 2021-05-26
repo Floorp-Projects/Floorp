@@ -101,7 +101,8 @@ async function openNewTabAndApplicationPanel(url) {
   });
   const panel = toolbox.getCurrentPanel();
   const target = toolbox.target;
-  return { panel, tab, target, toolbox };
+  const commands = toolbox.commands;
+  return { panel, tab, target, toolbox, commands };
 }
 
 async function unregisterAllWorkers(client, doc) {

@@ -10,7 +10,7 @@ add_task(async function() {
   await enableApplicationPanel();
 
   await openTabAndWaitForWorker(WORKER1_URL);
-  const { panel, tab, toolbox } = await openTabAndWaitForWorker(WORKER2_URL);
+  const { panel, tab, commands } = await openTabAndWaitForWorker(WORKER2_URL);
 
   const doc = panel.panelWin.document;
 
@@ -44,7 +44,7 @@ add_task(async function() {
   const url2El = workers[1].querySelector(".js-source-url");
   is(url2El.textContent, "debug-sw.js", "Second worker has correct URL");
 
-  await unregisterAllWorkers(toolbox.target.client, doc);
+  await unregisterAllWorkers(commands.client, doc);
 
   // close the tab
   info("Closing the tab.");
@@ -52,7 +52,7 @@ add_task(async function() {
 });
 
 async function openTabAndWaitForWorker(url) {
-  const { panel, toolbox, tab } = await openNewTabAndApplicationPanel(url);
+  const { panel, commands, tab } = await openNewTabAndApplicationPanel(url);
   const doc = panel.panelWin.document;
 
   selectPage(panel, "service-workers");
@@ -60,5 +60,5 @@ async function openTabAndWaitForWorker(url) {
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
 
-  return { panel, toolbox, tab };
+  return { panel, commands, tab };
 }
