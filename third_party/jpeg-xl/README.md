@@ -194,8 +194,14 @@ occurred while loading or encoding/decoding the image.
 
 ## License
 
-This software is available under Apache 2.0 license which can be found in the
-[LICENSE](LICENSE) file.
+This software is available under a 3-clause BSD license which can be found in
+the [LICENSE](LICENSE) file, with an "Additional IP Rights Grant" as outlined in
+the [PATENTS](PATENTS) file.
+
+Please note that the PATENTS file only mentions Google since Google is the legal
+entity receiving the Contributor License Agreements (CLA) from all contributors
+to the JPEG XL Project, including the initial main contributors to the JPEG XL
+format: Cloudinary and Google.
 
 ## Additional documentation
 
@@ -212,7 +218,7 @@ This software is available under Apache 2.0 license which can be found in the
 *   [Building on Debian](doc/developing_in_debian.md) - for experts only
 *   [Building on Windows](doc/developing_in_windows.md) - for experts only
 *   [More information on testing/build options](doc/building_and_testing.md)
-*   [Git guide for JPEG XL](doc/developing_in_gitlab.md) - for developers only
+*   [Git guide for JPEG XL](doc/developing_in_github.md) - for developers only
 *   [Building Web Assembly artifacts](doc/building_wasm.md)
 
 ### Contact

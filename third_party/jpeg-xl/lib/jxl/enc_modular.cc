@@ -1,16 +1,7 @@
-// Copyright (c) the JPEG XL Project
+// Copyright (c) the JPEG XL Project Authors. All rights reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 #include "lib/jxl/enc_modular.h"
 
@@ -302,6 +293,31 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
     : frame_dim(frame_header.ToFrameDimensions()), cparams(cparams_orig) {
   size_t num_streams =
       ModularStreamId::Num(frame_dim, frame_header.passes.num_passes);
+  if (cparams.modular_mode &&
+      cparams.quality_pair == std::pair<float, float>{100.0, 100.0}) {
+    switch (cparams.decoding_speed_tier) {
+      case 0:
+        break;
+      case 1:
+        cparams.options.wp_tree_mode = ModularOptions::TreeMode::kWPOnly;
+        break;
+      case 2: {
+        cparams.options.wp_tree_mode = ModularOptions::TreeMode::kGradientOnly;
+        cparams.options.predictor = Predictor::Gradient;
+        break;
+      }
+      case 3: {  // LZ77, no Gradient.
+        cparams.options.nb_repeats = 0;
+        cparams.options.predictor = Predictor::Gradient;
+        break;
+      }
+      default: {  // LZ77, no predictor.
+        cparams.options.nb_repeats = 0;
+        cparams.options.predictor = Predictor::Zero;
+        break;
+      }
+    }
+  }
   stream_images.resize(num_streams);
   if (cquality > 100) cquality = quality;
 
@@ -1026,7 +1042,11 @@ Status ModularFrameEncoder::EncodeGlobalInfo(BitWriter* writer,
     params.clustering = HistogramParams::ClusteringType::kFast;
     params.ans_histogram_strategy =
         HistogramParams::ANSHistogramStrategy::kApproximate;
-    params.lz77_method = HistogramParams::LZ77Method::kNone;
+    params.lz77_method = cparams.decoding_speed_tier >= 3
+                             ? (cparams.speed_tier == SpeedTier::kFalcon
+                                    ? HistogramParams::LZ77Method::kRLE
+                                    : HistogramParams::LZ77Method::kLZ77)
+                             : HistogramParams::LZ77Method::kNone;
     // Near-lossless DC, as well as modular mode, require choosing hybrid uint
     // more carefully.
     if ((!extra_dc_precision.empty() && extra_dc_precision[0] != 0) ||
@@ -1415,7 +1435,7 @@ void ModularFrameEncoder::AddVarDCTDC(const Image3F& dc, size_t group_index,
   size_t stream_id = ModularStreamId::VarDCTDC(group_index).ID(frame_dim);
   stream_options[stream_id].max_chan_size = 0xFFFFFF;
   stream_options[stream_id].predictor = Predictor::Weighted;
-  stream_options[stream_id].wp_tree_mode = ModularOptions::WPTreeMode::kWPOnly;
+  stream_options[stream_id].wp_tree_mode = ModularOptions::TreeMode::kWPOnly;
   if (cparams.speed_tier >= SpeedTier::kSquirrel) {
     stream_options[stream_id].tree_kind = ModularOptions::TreeKind::kWPFixedDC;
   }
@@ -1550,7 +1570,7 @@ void ModularFrameEncoder::AddACMetadata(size_t group_index, bool jpeg_transcode,
   const Rect r = enc_state->shared.DCGroupRect(group_index);
   size_t stream_id = ModularStreamId::ACMetadata(group_index).ID(frame_dim);
   stream_options[stream_id].max_chan_size = 0xFFFFFF;
-  stream_options[stream_id].wp_tree_mode = ModularOptions::WPTreeMode::kNoWP;
+  stream_options[stream_id].wp_tree_mode = ModularOptions::TreeMode::kNoWP;
   if (jpeg_transcode) {
     stream_options[stream_id].tree_kind =
         ModularOptions::TreeKind::kJpegTranscodeACMeta;

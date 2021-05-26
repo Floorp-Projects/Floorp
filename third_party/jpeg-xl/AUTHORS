@@ -1,0 +1,20 @@
+# List of the project authors for copyright purposes. When contributing to the
+# project add your name or your organization's name to this list. See
+# CONTRIBUTING.md for details.
+#
+# For organizations:
+#   Organization <email pattern: *@domain>
+#
+# For individuals:
+#   Name <email address>
+#
+# Please keep each list sorted. If you wish to change your email address please
+# send a pull request.
+
+# Organizations:
+Cloudinary Ltd. <*@cloudinary.com>
+Google LLC <*@google.com>
+
+# Individuals:
+Jon Sneyers <jon@cloudinary.com>
+Pieter Wuille

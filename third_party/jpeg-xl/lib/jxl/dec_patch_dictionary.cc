@@ -1,16 +1,7 @@
-// Copyright (c) the JPEG XL Project
+// Copyright (c) the JPEG XL Project Authors. All rights reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 #include "lib/jxl/dec_patch_dictionary.h"
 
@@ -48,6 +39,7 @@ constexpr int kMaxPatches = 1 << 24;
 
 Status PatchDictionary::Decode(BitReader* br, size_t xsize, size_t ysize,
                                bool* uses_extra_channels) {
+  positions_.clear();
   std::vector<uint8_t> context_map;
   ANSCode code;
   JXL_RETURN_IF_ERROR(
@@ -162,6 +154,8 @@ Status PatchDictionary::Decode(BitReader* br, size_t xsize, size_t ysize,
 }
 
 void PatchDictionary::ComputePatchCache() {
+  patch_starts_.clear();
+  sorted_patches_.clear();
   if (positions_.empty()) return;
   std::vector<std::pair<size_t, size_t>> sorted_patches_y;
   for (size_t i = 0; i < positions_.size(); i++) {

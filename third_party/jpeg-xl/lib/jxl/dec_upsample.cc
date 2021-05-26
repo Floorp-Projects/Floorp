@@ -1,16 +1,7 @@
-// Copyright (c) the JPEG XL Project
+// Copyright (c) the JPEG XL Project Authors. All rights reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 #include "lib/jxl/dec_upsample.h"
 
@@ -103,7 +94,7 @@ void Upsampler::UpsampleRect(const ImageF& src, const Rect& src_rect,
                              ssize_t image_y_offset, size_t image_ysize) const {
   if (upsampling_ == 1) return;
   JXL_ASSERT(DivCeil(dst_rect.xsize(), upsampling_) <= src_rect.xsize());
-  JXL_ASSERT(DivCeil(dst_rect.ysize(), upsampling_) <= src_rect.ysize());
+  // TODO(eustas): add proper (src|dst) ysize check that accounts for mirroring.
   if (upsampling_ == 2) {
     Upsample<2>(src, src_rect, dst, dst_rect, kernel_, image_y_offset,
                 image_ysize);
