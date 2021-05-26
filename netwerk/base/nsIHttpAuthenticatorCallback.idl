@@ -21,7 +21,7 @@ interface nsIHttpAuthenticatorCallback : nsISupports
    * @param aContinuationState
    *        Modified continuation state to be passed to caller
    */
-  void onCredsGenerated(in string aCreds,
+  void onCredsGenerated(in ACString aCreds,
                         in unsigned long aFlags,
                         in nsresult aResult,
                         in nsISupports aSessionsState,
