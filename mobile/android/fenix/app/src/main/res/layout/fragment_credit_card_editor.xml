@@ -83,6 +83,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif"
+                android:imeOptions="flagNoExtractUi"
                 android:letterSpacing="0.01"
                 android:lineSpacingExtra="8sp"
                 android:maxLines="1"
