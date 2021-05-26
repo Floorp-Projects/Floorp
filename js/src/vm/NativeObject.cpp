@@ -1291,10 +1291,6 @@ static unsigned ComputeAttributes(const PropertyDescriptor& desc) {
     attrs |= JSPROP_GETTER | JSPROP_SETTER;
   }
 
-  if (desc.resolving()) {
-    attrs |= JSPROP_RESOLVING;
-  }
-
   return attrs;
 }
 
