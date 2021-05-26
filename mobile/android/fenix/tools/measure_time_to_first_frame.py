@@ -9,17 +9,16 @@ import os
 import re
 import subprocess
 import time
-from pprint import pprint
 
-DESC = """Measures the duration from process start until the first frame is drawn
-using the "TotalTime:" field from `adb shell am start -W`. This script is a python
-reimplementation of https://medium.com/androiddevelopers/testing-app-startup-performance-36169c27ee55
-with additional functionality.
+DESC = """Measures start up durations using multiple methodologies.
 
-IMPORTANT: this method does not provide a complete picture of start up. Using
-./mach perftest (or the deprecated FNPRMS) is the preferred approach because those
-provide more comprehensive views of start up. However, this is useful for lightweight
-testing if you know exactly what you're looking for.
+IMPORTANT: each methodology provides a different picture of start up. If you're
+not sure which one to use, please ask the perf team!
+
+IMPORTANT: some tests require manual test set up! Read the output carefully.
+
+This system is temporary until mozperftest is ready (e.g. less noisy). As such,
+we try to keep this simple and avoid implementing all the things they do.
 """
 
 DEFAULT_ITER_COUNT = 25
@@ -38,13 +37,22 @@ TESTS = [TEST_COLD_MAIN_FF, TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description=DESC, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=DESC, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         "release_channel", choices=CHANNEL_TO_PKG.keys(), help="the release channel to measure"
     )
     parser.add_argument(
-        "test_name", choices=TESTS, help="the start up test to run; see https://wiki.mozilla.org/Performance/Fenix#Terminology for descriptions of cold/warm/hot and main/view"
-    )
+        "test_name", choices=TESTS, help="""the measurement methodology to use. Options:
+- {cold_main_ff}: click the app icon & get duration to first frame from 'am start -W'
+- {cold_view_ff}: send a VIEW intent & get duration to first frame from 'am start -W'
+- {cold_view_nav_start}: send a VIEW intent & get duration from logcat: START proc to PageStart
+
+Measurements to first frame are a reimplementation of
+https://medium.com/androiddevelopers/testing-app-startup-performance-36169c27ee55
+
+See https://wiki.mozilla.org/Performance/Fenix#Terminology for descriptions of cold/warm/hot and main/view""".format(
+    cold_main_ff=TEST_COLD_MAIN_FF, cold_view_ff=TEST_COLD_VIEW_FF, cold_view_nav_start=TEST_COLD_VIEW_NAV_START
+))
     parser.add_argument("path", help="the path to save the measurement results; will abort if file exists")
 
     parser.add_argument("-c", "--iter-count", default=DEFAULT_ITER_COUNT, type=int,
@@ -194,16 +202,23 @@ def save_measurements(path, measurements):
             f.write(str(measurement) + '\n')
 
 
+def print_preface_text(test_name):
+    print("To analyze the results, use this script (we recommend using the median):" +
+          "\nhttps://github.com/mozilla-mobile/perf-tools/blob/master/analyze_durations.py")
+    if test_name == TEST_COLD_MAIN_FF:
+        print("\nWARNING: you may wish to clear the onboarding experience manually.")
+    elif test_name == TEST_COLD_VIEW_FF or test_name == TEST_COLD_VIEW_NAV_START:
+        print("\nWARNING: you may wish to reduce the number of open tabs when starting this test")
+        print("as this test may leave many additional tabs open which could impact the results.")
+
+
 def main():
     args = parse_args()
     validate_args(args)
 
-    # Exceptions and script piping like these are why we prefer mozperftest. :)
-    print("Clear the onboarding experience manually, if it's desired and you haven't already done so.")
-    print("\nYou can use this script to find the average from the results file: https://github.com/mozilla-mobile/perf-tools/blob/master/analyze_durations.py")
-
     pkg_id = CHANNEL_TO_PKG[args.release_channel]
     start_cmd = get_start_cmd(args.test_name, pkg_id)
+    print_preface_text(args.test_name)
     measurements = measure(args.test_name, pkg_id, start_cmd, args.iter_count)
     save_measurements(args.path, measurements)
 
