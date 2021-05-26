@@ -9,7 +9,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import json
+import multiprocessing
 import os
+import psutil
 import textwrap
 
 from mach.base import FailedCommandError, MachError
@@ -240,11 +242,24 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
             )
             fh.write(data)
 
+        jobs = kwargs.get("jobs")
+        if not jobs:
+            # The hazard compile seems to use quite a bit more memory than a
+            # regular compile, so limit the parallelism based on available
+            # memory. 64 jobs on a 64GB machine is enough to trigger the OOM
+            # killer. 24 jobs worked.
+            cores = multiprocessing.cpu_count()
+            available = psutil.virtual_memory().available
+            mem_allowed = 2.5 * 2**30  # Allow 2.5GB per compilation unit
+            jobs = min(cores, int(available / mem_allowed))
+            jobs = max(jobs, 2)
+
         buildscript = " ".join(
             [
                 self.topsrcdir + "/mach hazards compile",
                 "--application=" + application,
                 "--haz-objdir=" + objdir,
+                "--jobs=" + jobs,
             ]
         )
         args = [
