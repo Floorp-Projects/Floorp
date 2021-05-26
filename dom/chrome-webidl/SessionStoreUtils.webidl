@@ -180,11 +180,6 @@ dictionary InputElementData {
 dictionary UpdateSessionStoreData {
   ByteString docShellCaps;
   boolean isPrivate;
-  // for sessionStorage
-  sequence<ByteString> storageOrigins;
-  sequence<DOMString> storageKeys;
-  sequence<DOMString> storageValues;
-  boolean isFullStorage;
 };
 
 [GenerateConversionToJS]

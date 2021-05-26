@@ -40,37 +40,27 @@ function UpdateSessionStoreForWindow(
   );
 }
 
-var EXPORTED_SYMBOLS = ["UpdateSessionStore", "UpdateSessionStoreForWindow"];
+function UpdateSessionStoreForStorage(
+  aBrowser,
+  aBrowsingContext,
+  aEpoch,
+  aData
+) {
+  return SessionStoreFuncInternal.updateSessionStoreForStorage(
+    aBrowser,
+    aBrowsingContext,
+    aEpoch,
+    aData
+  );
+}
+
+var EXPORTED_SYMBOLS = [
+  "UpdateSessionStore",
+  "UpdateSessionStoreForWindow",
+  "UpdateSessionStoreForStorage",
+];
 
 var SessionStoreFuncInternal = {
-  updateStorage: function SSF_updateStorage(aOrigins, aKeys, aValues) {
-    let data = {};
-    for (let i = 0; i < aOrigins.length; i++) {
-      // If the key isn't defined, then .clear() was called, and we send
-      // up null for this domain to indicate that storage has been cleared
-      // for it.
-      if (aKeys[i] == "") {
-        while (aOrigins[i + 1] == aOrigins[i]) {
-          i++;
-        }
-        data[aOrigins[i]] = null;
-      } else {
-        let hostData = {};
-        hostData[aKeys[i]] = aValues[i];
-        while (aOrigins[i + 1] == aOrigins[i]) {
-          i++;
-          hostData[aKeys[i]] = aValues[i];
-        }
-        data[aOrigins[i]] = hostData;
-      }
-    }
-    if (aOrigins.length) {
-      return data;
-    }
-
-    return null;
-  },
-
   updateSessionStore: function SSF_updateSessionStore(
     aBrowser,
     aBrowsingContext,
@@ -86,25 +76,13 @@ var SessionStoreFuncInternal = {
       currentData.isPrivate = aData.isPrivate;
     }
 
-    if (aData.isFullStorage != undefined) {
-      let storage = this.updateStorage(
-        aData.storageOrigins,
-        aData.storageKeys,
-        aData.storageValues
-      );
-      if (aData.isFullStorage) {
-        currentData.storage = storage;
-      } else {
-        currentData.storagechange = storage;
-      }
-    }
-
     SessionStore.updateSessionStoreFromTablistener(aBrowser, aBrowsingContext, {
       data: currentData,
       epoch: aEpoch,
       sHistoryNeeded: aCollectSHistory,
     });
   },
+
   updateSessionStoreForWindow: function SSF_updateSessionStoreForWindow(
     aBrowser,
     aBrowsingContext,
@@ -115,6 +93,18 @@ var SessionStoreFuncInternal = {
 
     SessionStore.updateSessionStoreFromTablistener(aBrowser, aBrowsingContext, {
       data: { windowstatechange },
+      epoch: aEpoch,
+    });
+  },
+
+  updateSessionStoreForStorage: function SSF_updateSessionStoreForWindow(
+    aBrowser,
+    aBrowsingContext,
+    aEpoch,
+    aData
+  ) {
+    SessionStore.updateSessionStoreFromTablistener(aBrowser, aBrowsingContext, {
+      data: { storage: aData },
       epoch: aEpoch,
     });
   },

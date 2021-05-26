@@ -46,6 +46,7 @@ class JSActorMessageMeta;
 struct PageUseCounters;
 class WindowSessionStoreState;
 struct WindowSessionStoreUpdate;
+class SSCacheQueryResult;
 
 /**
  * A handle in the parent process to a specific nsGlobalWindowInner object.
@@ -213,9 +214,9 @@ class WindowGlobalParent final : public WindowContext,
 
   const nsACString& GetRemoteType() override;
 
-  nsresult UpdateSessionStore(const Maybe<FormData>& aFormData,
-                              const Maybe<nsPoint>& aScrollPosition,
-                              uint32_t aEpoch);
+  nsresult WriteFormDataAndScrollToSessionStore(
+      const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
+      uint32_t aEpoch);
 
   Maybe<uint64_t> GetSingleChannelId() { return mSingleChannelId; }
 

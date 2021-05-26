@@ -67,6 +67,8 @@
 #include "nsIXPConnect.h"
 #include "nsImportModule.h"
 
+#include "mozilla/dom/PBackgroundSessionStorageCache.h"
+
 using namespace mozilla::ipc;
 using namespace mozilla::dom::ipc;
 
@@ -1244,7 +1246,7 @@ Element* WindowGlobalParent::GetRootOwnerElement() {
   return nullptr;
 }
 
-nsresult WindowGlobalParent::UpdateSessionStore(
+nsresult WindowGlobalParent::WriteFormDataAndScrollToSessionStore(
     const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
     uint32_t aEpoch) {
   if (!aFormData && !aScrollPosition) {
@@ -1342,7 +1344,8 @@ nsresult WindowGlobalParent::ResetSessionStore(uint32_t aEpoch) {
 mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateSessionStore(
     const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
     uint32_t aEpoch) {
-  if (NS_FAILED(UpdateSessionStore(aFormData, aScrollPosition, aEpoch))) {
+  if (NS_FAILED(WriteFormDataAndScrollToSessionStore(aFormData, aScrollPosition,
+                                                     aEpoch))) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Failed to update session store entry."));
   }
