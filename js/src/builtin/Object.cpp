@@ -886,11 +886,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     if (MOZ_UNLIKELY(!iter->isDataProperty())) {
       return true;
     }
-    if (iter->attributes() == JSPROP_ENUMERATE) {
-      MOZ_ASSERT(iter->writable());
-      MOZ_ASSERT(iter->configurable());
-      MOZ_ASSERT(iter->enumerable());
-    } else {
+    if (iter->flags() != ShapePropertyFlags::defaultDataPropFlags) {
       hasPropsWithNonDefaultAttrs = true;
     }
     if (!iter->enumerable()) {

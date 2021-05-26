@@ -2919,8 +2919,17 @@ static bool CloneProperties(JSContext* cx, HandleNativeObject selfHostedObject,
     if (!ids.append(props[i].key())) {
       return false;
     }
-    uint8_t propAttrs = props[i].attributes() &
-                        (JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+    ShapeProperty prop = props[i];
+    uint8_t propAttrs = 0;
+    if (prop.enumerable()) {
+      propAttrs |= JSPROP_ENUMERATE;
+    }
+    if (!prop.configurable()) {
+      propAttrs |= JSPROP_PERMANENT;
+    }
+    if (!prop.writable()) {
+      propAttrs |= JSPROP_READONLY;
+    }
     if (!attrs.append(propAttrs)) {
       return false;
     }

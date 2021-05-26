@@ -1118,11 +1118,14 @@ bool GlobalObject::addIntrinsicValue(JSContext* cx,
   RootedId id(cx, NameToId(name));
   MOZ_ASSERT(!holder->containsPure(id));
 
+  constexpr ShapePropertyFlags propFlags = {ShapePropertyFlag::Configurable,
+                                            ShapePropertyFlag::Writable};
+
   uint32_t slot = holder->slotSpan();
   RootedShape last(cx, holder->lastProperty());
   Rooted<BaseShape*> base(cx, last->base());
-  Rooted<StackShape> child(cx,
-                           StackShape(base, last->objectFlags(), id, slot, 0));
+  Rooted<StackShape> child(
+      cx, StackShape(base, last->objectFlags(), id, slot, propFlags));
   Shape* shape = cx->zone()->propertyTree().getChild(cx, last, child);
   if (!shape) {
     return false;

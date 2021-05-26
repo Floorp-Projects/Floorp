@@ -511,15 +511,15 @@ bool js::ReadPropertyDescriptors(
 
 /*** Seal and freeze ********************************************************/
 
-static unsigned GetSealedOrFrozenAttributes(unsigned attrs,
-                                            IntegrityLevel level) {
-  // Make all attributes permanent; if freezing, make data attributes
+static ShapePropertyFlags ComputeFlagsForSealOrFreeze(ShapePropertyFlags flags,
+                                                      IntegrityLevel level) {
+  // Make all properties non-configurable; if freezing, make data properties
   // read-only.
-  if (level == IntegrityLevel::Frozen &&
-      !(attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
-    return JSPROP_PERMANENT | JSPROP_READONLY;
+  flags.clearFlag(ShapePropertyFlag::Configurable);
+  if (level == IntegrityLevel::Frozen && flags.isDataDescriptor()) {
+    flags.clearFlag(ShapePropertyFlag::Writable);
   }
-  return JSPROP_PERMANENT;
+  return flags;
 }
 
 /* ES6 draft rev 29 (6 Dec 2014) 7.3.13. */
@@ -567,12 +567,12 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
                        JSID_TO_SYMBOL(child.get().propid)->isPrivateName();
       // Private fields are not visible to SetIntegrity.
       if (!isPrivate) {
-        child.setAttrs(child.attrs() |
-                       GetSealedOrFrozenAttributes(child.attrs(), level));
+        child.setPropFlags(
+            ComputeFlagsForSealOrFreeze(child.propFlags(), level));
       }
 
-      ObjectFlags flags =
-          GetObjectFlagsForNewProperty(last, child.propid(), child.attrs(), cx);
+      ObjectFlags flags = GetObjectFlagsForNewProperty(last, child.propid(),
+                                                       child.propFlags(), cx);
       child.setObjectFlags(flags);
 
       last = cx->zone()->propertyTree().getChild(cx, last, child);
@@ -1220,7 +1220,7 @@ static bool InitializePropertiesFromCompatibleNativeObject(
       child.setBase(nbase);
 
       ObjectFlags flags = GetObjectFlagsForNewProperty(shape, child.propid(),
-                                                       child.attrs(), cx);
+                                                       child.propFlags(), cx);
       child.setObjectFlags(flags);
 
       shape = cx->zone()->propertyTree().getChild(cx, shape, child);
@@ -3171,15 +3171,14 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
 
   out.printf(" (shape %p", (void*)&shape);
 
-  uint8_t attrs = prop.attributes();
-  if (attrs & JSPROP_ENUMERATE) {
-    out.put(" enumerate");
+  if (prop.enumerable()) {
+    out.put(" enumerable");
   }
-  if (attrs & JSPROP_READONLY) {
-    out.put(" readonly");
+  if (prop.configurable()) {
+    out.put(" configurable");
   }
-  if (attrs & JSPROP_PERMANENT) {
-    out.put(" permanent");
+  if (prop.isDataDescriptor() && prop.writable()) {
+    out.put(" writable");
   }
 
   if (prop.isCustomDataProperty()) {
