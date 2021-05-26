@@ -74,8 +74,8 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
    * the user's decision will be gathered in a callback and is not an actual
    * error.
    */
-  [[nodiscard]] nsresult GetCredentials(const char* challenges, bool proxyAuth,
-                                        nsCString& creds);
+  [[nodiscard]] nsresult GetCredentials(const nsACString& challenges,
+                                        bool proxyAuth, nsCString& creds);
   [[nodiscard]] nsresult GetCredentialsForChallenge(
       const nsACString& aChallenge, const nsACString& aAuthType, bool proxyAuth,
       nsIHttpAuthenticator* auth, nsCString& creds);

@@ -46,6 +46,11 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator {
 
   static already_AddRefed<nsIHttpAuthenticator> GetOrCreate();
 
+  [[nodiscard]] static nsresult ParseChallenge(
+      const nsACString& aChallenge, nsACString& realm, nsACString& domain,
+      nsACString& nonce, nsACString& opaque, bool* stale, uint16_t* algorithm,
+      uint16_t* qop);
+
  protected:
   ~nsHttpDigestAuth() = default;
 
@@ -68,12 +73,6 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator {
                                       const nsCString& http_uri_path,
                                       uint16_t algorithm, uint16_t qop,
                                       const char* body_digest, char* result);
-
-  [[nodiscard]] nsresult ParseChallenge(const char* challenge,
-                                        nsACString& realm, nsACString& domain,
-                                        nsACString& nonce, nsACString& opaque,
-                                        bool* stale, uint16_t* algorithm,
-                                        uint16_t* qop);
 
   // result is in mHashBuf
   [[nodiscard]] nsresult DigestHash(const char* buf, uint32_t len,
