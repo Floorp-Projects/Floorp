@@ -21,6 +21,7 @@
 #include "nsDragService.h"
 #include "mozwayland/mozwayland.h"
 #include "nsWaylandDisplay.h"
+#include "nsWindow.h"
 
 #include <gtk/gtk.h>
 #include <poll.h>
