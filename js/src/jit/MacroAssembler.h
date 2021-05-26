@@ -2141,46 +2141,25 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                  FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void replaceLaneInt8x16(unsigned lane, FloatRegister lhs, Register rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
-
   inline void replaceLaneInt16x8(unsigned lane, Register rhs,
                                  FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
-
-  inline void replaceLaneInt16x8(unsigned lane, FloatRegister lhs, Register rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
 
   inline void replaceLaneInt32x4(unsigned lane, Register rhs,
                                  FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void replaceLaneInt32x4(unsigned lane, FloatRegister lhs, Register rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
-
   inline void replaceLaneInt64x2(unsigned lane, Register64 rhs,
                                  FloatRegister lhsDest)
       DEFINED_ON(x86, x64, arm64);
-
-  inline void replaceLaneInt64x2(unsigned lane, FloatRegister lhs,
-                                 Register64 rhs, FloatRegister dest)
-      DEFINED_ON(arm64);
 
   inline void replaceLaneFloat32x4(unsigned lane, FloatRegister rhs,
                                    FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void replaceLaneFloat32x4(unsigned lane, FloatRegister lhs,
-                                   FloatRegister rhs, FloatRegister dest)
-      DEFINED_ON(arm64);
-
   inline void replaceLaneFloat64x2(unsigned lane, FloatRegister rhs,
                                    FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
-
-  inline void replaceLaneFloat64x2(unsigned lane, FloatRegister lhs,
-                                   FloatRegister rhs, FloatRegister dest)
-      DEFINED_ON(arm64);
 
   // Shuffle - blend and permute with immediate indices, and its many
   // specializations.  Lane values other than those mentioned are illegal.
