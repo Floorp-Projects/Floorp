@@ -78,6 +78,10 @@ using namespace mozilla::a11y;
   return [super moxRole];
 }
 
+- (NSArray*)moxLinkedUIElements {
+  return [self getRelationsByType:RelationType::LINKS_TO];
+}
+
 @end
 
 @implementation MOXSummaryAccessible

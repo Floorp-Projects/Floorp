@@ -156,6 +156,11 @@ interface nsIAccessibleRelation : nsISupports
   const unsigned long RELATION_ERRORMSG_FOR = 0x18;
 
   /**
+   * The target object is the anchor referenced by this link.
+   */
+  const unsigned long RELATION_LINKS_TO = 0x19;
+
+  /**
    * Returns the type of the relation.
    */
   readonly attribute unsigned long relationType;
