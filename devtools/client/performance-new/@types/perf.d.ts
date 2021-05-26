@@ -36,6 +36,13 @@ export interface Toolbox {
 }
 
 /**
+ * TS-TODO - Stub.
+ */
+export interface Commands {
+  client: any;
+}
+
+/**
  * The actor version of the ActorReadyGeckoProfilerInterface returns promises,
  * while if it's instantiated directly it will not return promises.
  */

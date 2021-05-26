@@ -47,5 +47,5 @@ add_task(async function() {
   // Ideally the debugger should only resolve when the worker targets have been
   // retrieved, which should be fixed by Bug 1621337 or a followup.
   info("Wait for all pending requests to settle on the DevToolsClient");
-  await toolbox.target.client.waitForRequestsToSettle();
+  await toolbox.commands.client.waitForRequestsToSettle();
 });

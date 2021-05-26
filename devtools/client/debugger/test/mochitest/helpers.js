@@ -167,7 +167,7 @@ async function waitForElementWithSelector(dbg, selector) {
 }
 
 function waitForRequestsToSettle(dbg) {
-  return dbg.toolbox.target.client.waitForRequestsToSettle();
+  return dbg.commands.client.waitForRequestsToSettle();
 }
 
 function assertClass(el, className, exists = true) {

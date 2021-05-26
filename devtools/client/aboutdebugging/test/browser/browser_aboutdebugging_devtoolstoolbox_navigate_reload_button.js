@@ -27,7 +27,7 @@ add_task(async function() {
   const toolbox = getToolbox(devtoolsWindow);
   const refreshes = Promise.all([
     toolbox.target.once("navigate"),
-    toolbox.target.client.waitForRequestsToSettle(),
+    toolbox.commands.client.waitForRequestsToSettle(),
     waitForAboutDebuggingRequests(window.AboutDebugging.store),
   ]);
   clickReload(devtoolsDocument);

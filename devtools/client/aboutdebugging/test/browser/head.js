@@ -130,7 +130,7 @@ async function closeAboutDevtoolsToolbox(
   const devtoolsBrowser = devtoolsTab.linkedBrowser;
   const devtoolsWindow = devtoolsBrowser.contentWindow;
   const toolbox = getToolbox(devtoolsWindow);
-  await toolbox.target.client.waitForRequestsToSettle();
+  await toolbox.commands.client.waitForRequestsToSettle();
 
   info("Close about:devtools-toolbox page");
   const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");

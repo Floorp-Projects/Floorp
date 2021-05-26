@@ -14,7 +14,7 @@ async function waitForUrl(url, toolbox, browserTab, win) {
         browserTab.linkedBrowser.currentURI.spec === url
     ),
     toolbox.target.once("navigate"),
-    toolbox.target.client.waitForRequestsToSettle(),
+    toolbox.commands.client.waitForRequestsToSettle(),
     waitForAboutDebuggingRequests(win.AboutDebugging.store),
   ]);
 }
