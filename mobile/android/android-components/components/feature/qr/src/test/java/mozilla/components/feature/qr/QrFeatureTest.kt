@@ -10,12 +10,12 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.qr.QrFeature.Companion.QR_FRAGMENT_TAG
-import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -52,7 +52,10 @@ class QrFeatureTest {
     @Test
     fun `feature requests camera permission if required`() {
         // Given
-        val permissionsCallback = mock<OnNeedToRequestPermissions>()
+        var callbackInvoked = false
+        val permissionsCallback: (permissions: Array<String>) -> Unit = {
+            callbackInvoked = true
+        }
         val feature = QrFeature(
             testContext,
             fragmentManager,
@@ -64,7 +67,7 @@ class QrFeatureTest {
 
         // Then
         assertFalse(scanResult)
-        verify(permissionsCallback).invoke(arrayOf(CAMERA))
+        assertTrue(callbackInvoked)
     }
 
     @Test
@@ -109,7 +112,10 @@ class QrFeatureTest {
     @Test
     fun `scan result is forwarded to caller`() {
         // Given
-        val scanResultCallback = spy(mock<OnScanResult>())
+        var scanResult: String? = null
+        val scanResultCallback: OnScanResult = { result ->
+            scanResult = result
+        }
         val feature = QrFeature(
             testContext,
             fragmentManager,
@@ -120,7 +126,7 @@ class QrFeatureTest {
         feature.scanCompleteListener.onScanComplete("result")
 
         // Then
-        verify(scanResultCallback).invoke("result")
+        assertEquals("result", scanResult)
     }
 
     @Test

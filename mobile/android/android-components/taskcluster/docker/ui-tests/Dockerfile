@@ -30,7 +30,9 @@ RUN curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud
 
 # Flank v21.05.0
 
-RUN URL_FLANK_BIN="$($CURL --silent 'https://api.github.com/repos/Flank/flank/releases/latest' | jq -r '.assets[].browser_download_url')" \
+# curl --silent 'https://api.github.com/repos/Flank/flank/releases/latest' | '
+
+RUN URL_FLANK_BIN="$($CURL --silent 'https://api.github.com/repos/Flank/flank/releases/latest' | jq -r '.assets[] | select(.browser_download_url | test("flank.jar")) .browser_download_url')" \
     && $CURL --output "${TEST_TOOLS}/flank.jar" "${URL_FLANK_BIN}" \
     && chmod +x "${TEST_TOOLS}/flank.jar"
 
