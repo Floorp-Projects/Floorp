@@ -113,8 +113,9 @@ static bool CanUseDefaultCredentials(nsIHttpAuthenticableChannel* channel,
   Unused << channel->GetURI(getter_AddRefs(uri));
 
   bool allowNonFqdn;
-  if (NS_FAILED(prefs->GetBoolPref(kAllowNonFqdn, &allowNonFqdn)))
+  if (NS_FAILED(prefs->GetBoolPref(kAllowNonFqdn, &allowNonFqdn))) {
     allowNonFqdn = false;
+  }
   if (allowNonFqdn && uri && IsNonFqdn(uri)) {
     LOG(("Host is non-fqdn, default credentials are allowed\n"));
     return true;

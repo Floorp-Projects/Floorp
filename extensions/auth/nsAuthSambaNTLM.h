@@ -42,7 +42,7 @@ class nsAuthSambaNTLM final : public nsIAuthModule {
   void Shutdown();
 
   uint8_t* mInitialMessage; /* free with free() */
-  uint32_t mInitialMessageLen;
+  uint32_t mInitialMessageLen{};
   PRProcess* mChildPID;
   PRFileDesc* mFromChildFD;
   PRFileDesc* mToChildFD;
