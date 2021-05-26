@@ -130,9 +130,11 @@ updatebot:
       needinfo: ["bugzilla@email.address", "another@example.com"]
       enabled: True
       filter: security
+      frequency: every
     - type: vendoring
       branch: master
       enabled: False
+      frequency: 2 weeks
 
 # Configuration for the automated vendoring system.
 # optional
@@ -383,6 +385,7 @@ def _schema_1():
                                 msg="Invalid filter value specified in tasks",
                             ),
                             "source-extensions": Unique([str]),
+                            "frequency": Match(r"^(every|release|[0-9]+ weeks?)$"),
                         }
                     ],
                 ),
