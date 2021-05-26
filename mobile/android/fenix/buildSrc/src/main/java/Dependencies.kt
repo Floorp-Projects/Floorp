@@ -248,8 +248,8 @@ object RepoMatching {
     /**
      * A matcher for com.google.android.* with one exception: the espresso-contrib dependency includes the
      * accessibility-test-framework dependency, which is not available in the google repo. As such, we must
-     * explicitly exclude it from this regex so it can be found on jcenter. Note that the transitive dependency
-     * com.google.guava is also not available on google's repo.
+     * explicitly exclude it from this regex so it can be found on Maven Central. Note that the transitive
+     * dependency com.google.guava is also not available on google's repo.
      */
     const val comGoogleAndroid = "com\\.google\\.android\\.(?!apps\\.common\\.testing\\.accessibility\\.framework).*"
 }

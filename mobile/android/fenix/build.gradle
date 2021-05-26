@@ -132,25 +132,6 @@ allprojects {
                 }
             }
         }
-
-        if (project.hasProperty("jcenterRepo")) {
-            maven {
-                name "BintrayJCenter"
-                url project.property("jcenterRepo")
-            }
-        } else {
-            jcenter() {
-                content {
-                    ////////////////////////////////////////////////////////////////////////////////
-                    // JCenter is going away. Please do not add any new dependencies here.
-                    // https://jfrog.com/blog/into-the-sunset-bintray-jcenter-gocenter-and-chartcenter/
-                    ////////////////////////////////////////////////////////////////////////////////
-
-                    // Fastlane
-                    // Both Screengrab and falcon are available on Maven Central
-                }
-            }
-        }
     }
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

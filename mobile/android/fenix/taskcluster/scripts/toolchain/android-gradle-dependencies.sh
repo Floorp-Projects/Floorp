@@ -19,7 +19,7 @@ pushd $PROJECT_DIR
 . taskcluster/scripts/toolchain/android-gradle-dependencies/before.sh
 
 NEXUS_PREFIX='http://localhost:8081/nexus/content/repositories'
-GRADLE_ARGS="--parallel -PgoogleRepo=$NEXUS_PREFIX/google/ -PjcenterRepo=$NEXUS_PREFIX/jcenter/ -PcentralRepo=$NEXUS_PREFIX/central/"
+GRADLE_ARGS="--parallel -PgoogleRepo=$NEXUS_PREFIX/google/ -PcentralRepo=$NEXUS_PREFIX/central/"
 # We build everything to be sure to fetch all dependencies
 ./gradlew $GRADLE_ARGS assemble assembleAndroidTest testClasses ktlint detekt
 # Some tests may be flaky, although they still download dependencies. So we let the following
