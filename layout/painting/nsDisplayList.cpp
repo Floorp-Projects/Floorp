@@ -3678,9 +3678,12 @@ AppendedBackgroundType nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
   // isolate blending to the background
   nsDisplayList bgItemList;
   // Even if we don't actually have a background color to paint, we may still
-  // need to create an item for hit testing.
+  // need to create an item for hit testing and we still need to create an item
+  // for background-color animations.
   if ((drawBackgroundColor && color != NS_RGBA(0, 0, 0, 0)) ||
-      aBuilder->IsForEventDelivery()) {
+      aBuilder->IsForEventDelivery() ||
+      EffectCompositor::HasAnimationsForCompositor(
+          aFrame, DisplayItemType::TYPE_BACKGROUND_COLOR)) {
     if (aAutoBuildingDisplayList && !*aAutoBuildingDisplayList) {
       nsPoint offset = aBuilder->GetCurrentFrame()->GetOffsetTo(aFrame);
       aAutoBuildingDisplayList->emplace(aBuilder, aFrame,
@@ -4645,7 +4648,9 @@ LayerState nsDisplayBackgroundColor::GetLayerState(
 already_AddRefed<Layer> nsDisplayBackgroundColor::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
-  if (mColor == sRGBColor()) {
+  if (mColor == sRGBColor() &&
+      !EffectCompositor::HasAnimationsForCompositor(
+          mFrame, DisplayItemType::TYPE_BACKGROUND_COLOR)) {
     return nullptr;
   }
 
@@ -4679,7 +4684,9 @@ bool nsDisplayBackgroundColor::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (mColor == sRGBColor()) {
+  if (mColor == sRGBColor() &&
+      !EffectCompositor::HasAnimationsForCompositor(
+          mFrame, DisplayItemType::TYPE_BACKGROUND_COLOR)) {
     return true;
   }
 
