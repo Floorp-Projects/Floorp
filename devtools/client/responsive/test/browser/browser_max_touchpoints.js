@@ -12,7 +12,6 @@ const TEST_DOCUMENT = `doc_with_remote_iframe_and_isolated_cross_origin_capabili
 const TEST_COM_URL = URL_ROOT_COM_SSL + TEST_DOCUMENT;
 
 addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
-  info("Toggling on touch simulation.");
   reloadOnTouchChange(true);
   info("Test initial value for maxTouchPoints.");
   is(
@@ -40,11 +39,11 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
   );
 
   info("Check maxTouchPoints override persists after reload");
-  // toggle the touch simulation since it was turned off
   await toggleTouchSimulation(ui);
-  let onViewportLoad = waitForViewportLoad(ui);
+
+  let onPageReloaded = BrowserTestUtils.browserLoaded(browser, true);
   browser.reload();
-  await onViewportLoad;
+  await onPageReloaded;
 
   is(
     await getMaxTouchPoints(browser),
@@ -56,13 +55,37 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
     "Check that maxTouchPoints persist after navigating to a page that forces the creation of a new browsing context"
   );
   const previousBrowsingContextId = browser.browsingContext.id;
-  const onPageReloaded = BrowserTestUtils.browserLoaded(browser, true);
-  onViewportLoad = waitForViewportLoad(ui);
+  onPageReloaded = BrowserTestUtils.browserLoaded(browser, true, loadedUrl =>
+    loadedUrl.includes(URL_ROOT_ORG_SSL)
+  );
+
+  // `closeRDM`, which is used later, check that the responsiveFront isn't destroyed
+  // to reset the state of the document. It might happen that the rest of the test
+  // happens so fast that the RDM ui doesn't have the time to update its responsiveFront
+  // instance (it's done onTargetAvailable), and so the one it will check is the "old" one,
+  // which is likely to be destroyed, causing the destroy method to not be fully executed
+  // as expected. In order to prevent such thing, we do wait until a new instance is
+  // put on the ui.
+  let targets = 0;
+  const expectedTargets = isFissionEnabled() ? 2 : 1;
+  const onAvailableTargetProcessed = new Promise(resolve => {
+    const off = ui.commands.targetCommand.on(
+      "processed-available-target",
+      () => {
+        targets++;
+        if (targets == expectedTargets) {
+          resolve();
+          off();
+        }
+      }
+    );
+  });
+
   BrowserTestUtils.loadURI(
     browser,
     URL_ROOT_ORG_SSL + TEST_DOCUMENT + "?crossOriginIsolated=true"
   );
-  await Promise.all([onPageReloaded, onViewportLoad]);
+  await Promise.all([onPageReloaded, onAvailableTargetProcessed]);
 
   isnot(
     browser.browsingContext.id,
@@ -77,7 +100,10 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
   );
 
   info("Check that the value is reset when closing RDM");
+  // Closing RDM trigers a reload
+  onPageReloaded = BrowserTestUtils.browserLoaded(browser, true);
   await closeRDM(tab);
+  await onPageReloaded;
 
   is(
     await getMaxTouchPoints(browser),
@@ -89,7 +115,9 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
 });
 
 function getMaxTouchPoints(browserOrBrowsingContext) {
-  return SpecialPowers.spawn(browserOrBrowsingContext, [], () => {
-    return content.navigator.maxTouchPoints;
-  });
+  return ContentTask.spawn(
+    browserOrBrowsingContext,
+    null,
+    () => content.navigator.maxTouchPoints
+  );
 }

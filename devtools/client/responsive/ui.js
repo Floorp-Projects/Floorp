@@ -802,7 +802,7 @@ class ResponsiveUI {
         this.reloadOnChange("userAgent");
     }
     if (reloadNeeded) {
-      this.reloadBrowser();
+      await this.reloadBrowser();
     }
   }
 
@@ -1041,6 +1041,11 @@ class ResponsiveUI {
 
     if (targetFront.isTopLevel) {
       this.responsiveFront = await targetFront.getFront("responsive");
+
+      if (this.destroying) {
+        return;
+      }
+
       await this.restoreActorState();
     }
   }
