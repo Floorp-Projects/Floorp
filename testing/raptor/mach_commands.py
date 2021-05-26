@@ -382,4 +382,4 @@ class MachRaptor(MachCommandBase):
         parser=create_parser,
     )
     def run_raptor_test(self, command_context, **kwargs):
-        return self.run_raptor(**kwargs)
+        return self.run_raptor(command_context, **kwargs)
