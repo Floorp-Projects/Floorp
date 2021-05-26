@@ -1564,7 +1564,18 @@ bool EditorBase::IsCutCommandEnabled() const {
   return CheckForClipboardCommandListener(nsGkAtoms::oncut, eCut);
 }
 
-NS_IMETHODIMP EditorBase::Copy() { return NS_ERROR_NOT_IMPLEMENTED; }
+NS_IMETHODIMP EditorBase::Copy() {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eCopy);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  bool actionTaken = false;
+  FireClipboardEvent(eCopy, nsIClipboard::kGlobalClipboard, &actionTaken);
+
+  return EditorBase::ToGenericNSResult(
+      actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
+}
 
 NS_IMETHODIMP EditorBase::CanCopy(bool* aCanCopy) {
   if (NS_WARN_IF(!aCanCopy)) {
