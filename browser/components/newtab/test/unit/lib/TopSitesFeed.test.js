@@ -27,6 +27,8 @@ const SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF =
 const SEARCH_SHORTCUTS_HAVE_PINNED_PREF =
   "improvesearch.topSiteSearchShortcuts.havePinned";
 const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
+const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
+const CONTILE_ENABLED_PREF = "browser.topsites.contile.enabled";
 
 function FakeTippyTopProvider() {}
 FakeTippyTopProvider.prototype = {
@@ -50,6 +52,7 @@ describe("Top Sites Feed", () => {
   let filterAdultStub;
   let shortURLStub;
   let fakePageThumbs;
+  let fetchStub;
 
   beforeEach(() => {
     globals = new GlobalOverrider();
@@ -2010,6 +2013,81 @@ describe("Top Sites Feed", () => {
       assert.equal(link.tippyTopIcon, "google.png");
       assert.equal(link.smallFavicon, "google.ico");
       assert.equal(link.url, "https://google.com");
+    });
+  });
+
+  describe("#ContileIntegration", () => {
+    beforeEach(() => {
+      // Turn on sponsored TopSites for testing
+      feed.store.state.Prefs.values[SHOW_SPONSORED_PREF] = true;
+      fetchStub = sandbox.stub();
+      globals.set("fetch", fetchStub);
+      sandbox
+        .stub(global.Services.prefs, "getBoolPref")
+        .withArgs(CONTILE_ENABLED_PREF)
+        .returns(true);
+    });
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it("should fetch sites from Contile", async () => {
+      fetchStub.resolves({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            tiles: [
+              {
+                url: "https://www.test.com",
+                image_url: "images/test-com.png",
+                click_url: "https://www.test-click.com",
+                impression_url: "https://www.test-impression.com",
+                name: "test",
+              },
+              {
+                url: "https://www.test1.com",
+                image_url: "images/test1-com.png",
+                click_url: "https://www.test1-click.com",
+                impression_url: "https://www.test1-impression.com",
+                name: "test1",
+              },
+            ],
+          }),
+      });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(fetched);
+      assert.equal(feed._contile.sites.length, 2);
+    });
+
+    it("should handle errors properly from Contile", async () => {
+      fetchStub.resolves({
+        ok: false,
+        status: 500,
+      });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(!fetched);
+      assert.ok(!feed._contile.sites.length);
+    });
+
+    it("should handle invalid payload properly from Contile", async () => {
+      fetchStub.resolves({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            unknown: [],
+          }),
+      });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(!fetched);
+      assert.ok(!feed._contile.sites.length);
     });
   });
 });
