@@ -48,9 +48,13 @@ class URLQueryStringStripper final : public nsIObserver {
 
   bool StripQueryString(nsIURI* aURI, nsCOMPtr<nsIURI>& aOutput);
 
+  bool CheckAllowList(nsIURI* aURI);
+
   void PopulateStripList();
+  void PopulateAllowList();
 
   nsTHashSet<nsString> mList;
+  nsTHashSet<nsCString> mAllowList;
 };
 
 }  // namespace mozilla

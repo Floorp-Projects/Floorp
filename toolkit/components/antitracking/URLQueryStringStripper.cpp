@@ -11,6 +11,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 
+#include "nsEffectiveTLDService.h"
 #include "nsIPrefBranch.h"
 #include "nsISupportsImpl.h"
 #include "nsIURI.h"
@@ -21,6 +22,8 @@
 namespace {
 static const char kPRefQueryStrippingList[] =
     "privacy.query_stripping.strip_list";
+static const char kPRefQueryStrippingAllowList[] =
+    "privacy.query_stripping.allow_list";
 
 mozilla::StaticRefPtr<mozilla::URLQueryStringStripper> gQueryStringStripper;
 
@@ -46,9 +49,17 @@ URLQueryStringStripper* URLQueryStringStripper::GetOrCreate() {
 
 NS_IMETHODIMP
 URLQueryStringStripper::Observe(nsISupports* aSubject, const char* aTopic,
-                                const char16_t* /*aData*/) {
+                                const char16_t* aData) {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    PopulateStripList();
+    nsDependentString data(aData);
+
+    if (data.EqualsLiteral(kPRefQueryStrippingList)) {
+      PopulateStripList();
+    }
+
+    if (data.EqualsLiteral(kPRefQueryStrippingAllowList)) {
+      PopulateAllowList();
+    }
   }
   return NS_OK;
 }
@@ -59,17 +70,26 @@ bool URLQueryStringStripper::Strip(nsIURI* aURI, nsCOMPtr<nsIURI>& aOutput) {
     return false;
   }
 
-  return GetOrCreate()->StripQueryString(aURI, aOutput);
+  RefPtr<URLQueryStringStripper> stripper = GetOrCreate();
+
+  if (stripper->CheckAllowList(aURI)) {
+    return false;
+  }
+
+  return stripper->StripQueryString(aURI, aOutput);
 }
 
 void URLQueryStringStripper::Init() {
   Preferences::AddStrongObserver(this, kPRefQueryStrippingList);
+  Preferences::AddStrongObserver(this, kPRefQueryStrippingAllowList);
 
   PopulateStripList();
+  PopulateAllowList();
 }
 
 void URLQueryStringStripper::Shutdown() {
   Preferences::RemoveObserver(this, kPRefQueryStrippingList);
+  Preferences::RemoveObserver(this, kPRefQueryStrippingAllowList);
   mList.Clear();
 }
 
@@ -120,6 +140,18 @@ bool URLQueryStringStripper::StripQueryString(nsIURI* aURI,
   return true;
 }
 
+bool URLQueryStringStripper::CheckAllowList(nsIURI* aURI) {
+  MOZ_ASSERT(aURI);
+
+  // Get the site(eTLD+1) from the URI.
+  nsAutoCString baseDomain;
+  nsresult rv =
+      nsEffectiveTLDService::GetInstance()->GetBaseDomain(aURI, 0, baseDomain);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return mAllowList.Contains(baseDomain);
+}
+
 void URLQueryStringStripper::PopulateStripList() {
   nsAutoString stripList;
   Preferences::GetString(kPRefQueryStrippingList, stripList);
@@ -129,6 +161,18 @@ void URLQueryStringStripper::PopulateStripList() {
 
   for (const nsAString& item : stripList.Split(' ')) {
     mList.Insert(item);
+  }
+}
+
+void URLQueryStringStripper::PopulateAllowList() {
+  nsAutoCString allowList;
+  Preferences::GetCString(kPRefQueryStrippingAllowList, allowList);
+  ToLowerCase(allowList);
+
+  mAllowList.Clear();
+
+  for (const nsACString& item : allowList.Split(',')) {
+    mAllowList.Insert(item);
   }
 }
 
