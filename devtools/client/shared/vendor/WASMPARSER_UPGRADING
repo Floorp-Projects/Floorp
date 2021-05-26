@@ -1,13 +1,13 @@
 # wasmparser version
 
-Current version is: 3.1.1
+Current version is: 5.1.1
 
 # Upgrade process
 
 1. Pull latest release from npm and extract WasmDis.js and WasmParser.js, e.g.
 
 ```
-curl https://registry.npmjs.org/wasmparser/-/wasmparser-3.1.1.tgz | tar -zx --strip-components 3 package/dist/cjs/{WasmDis,WasmParser}.js
+curl https://registry.npmjs.org/wasmparser/-/wasmparser-5.1.1.tgz | tar -zx --strip-components 3 package/dist/cjs/{WasmDis,WasmParser}.js
 ```
 
 2. Remove reference to source maps (last line)
