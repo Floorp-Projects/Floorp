@@ -20,11 +20,6 @@ class OriginAttributesPattern;
 
 namespace net {
 
-struct nsHttpAuthPath {
-  struct nsHttpAuthPath* mNext;
-  char mPath[1];
-};
-
 //-----------------------------------------------------------------------------
 // nsHttpAuthIdentity
 //-----------------------------------------------------------------------------
@@ -66,7 +61,6 @@ class nsHttpAuthEntry {
   const nsString& Domain() const { return mIdent.Domain(); }
   const nsString& User() const { return mIdent.User(); }
   const nsString& Pass() const { return mIdent.Password(); }
-  nsHttpAuthPath* RootPath() { return mRoot; }
 
   const nsHttpAuthIdentity& Identity() const { return mIdent; }
 
@@ -77,13 +71,12 @@ class nsHttpAuthEntry {
  private:
   nsHttpAuthEntry(const nsACString& path, const nsACString& realm,
                   const nsACString& creds, const nsACString& challenge,
-                  const nsHttpAuthIdentity* ident, nsISupports* metadata)
-      : mRoot(nullptr), mTail(nullptr) {
+                  const nsHttpAuthIdentity* ident, nsISupports* metadata) {
     DebugOnly<nsresult> rv =
         Set(path, realm, creds, challenge, ident, metadata);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
-  ~nsHttpAuthEntry();
+  ~nsHttpAuthEntry() = default;
 
   [[nodiscard]] nsresult Set(const nsACString& path, const nsACString& realm,
                              const nsACString& creds,
@@ -93,8 +86,7 @@ class nsHttpAuthEntry {
 
   nsHttpAuthIdentity mIdent;
 
-  nsHttpAuthPath* mRoot;  // root pointer
-  nsHttpAuthPath* mTail;  // tail pointer
+  nsTArray<nsCString> mPaths;
 
   nsCString mRealm;
   nsCString mCreds;
