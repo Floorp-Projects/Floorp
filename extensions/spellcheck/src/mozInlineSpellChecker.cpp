@@ -1397,7 +1397,7 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
   // see if the selection has any ranges, if not, then we can optimize checking
   // range inclusion later (we have no ranges when we are initially checking or
   // when there are no misspelled words yet).
-  int32_t originalRangeCount = mSpellCheckSelection.RangeCount();
+  const int32_t originalRangeCount = mSpellCheckSelection.RangeCount();
 
   // set the starting DOM position to be the beginning of our range
   if (nsresult rv = mWordUtil.SetPositionAndEnd(
@@ -1457,11 +1457,11 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
              NS_ConvertUTF16toUTF8(word.mText).get(),
              word.mSkipChecking ? " (not checking)" : ""));
 
-    ErrorResult erv;
     // see if there is a spellcheck range that already intersects the word
     // and remove it. We only need to remove old ranges, so don't bother if
     // there were no ranges when we started out.
     if (originalRangeCount > 0) {
+      ErrorResult erv;
       // likewise, if this word is inside new text, we won't bother testing
       if (!mStatus->GetCreatedRange() ||
           !mStatus->GetCreatedRange()->IsPointInRange(*beginNode, beginOffset,
