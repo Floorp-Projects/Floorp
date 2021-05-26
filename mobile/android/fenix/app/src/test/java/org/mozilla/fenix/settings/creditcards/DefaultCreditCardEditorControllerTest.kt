@@ -18,6 +18,7 @@ import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.utils.CreditCardNetworkType
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -85,7 +86,7 @@ class DefaultCreditCardEditorControllerTest {
             cardNumberLast4 = "1112",
             expiryMonth = 1,
             expiryYear = 2030,
-            cardType = "discover"
+            cardType = CreditCardNetworkType.DISCOVER.cardName
         )
 
         controller.handleSaveCreditCard(creditCardFields)
@@ -105,7 +106,7 @@ class DefaultCreditCardEditorControllerTest {
             cardNumberLast4 = "1112",
             expiryMonth = 1,
             expiryYear = 2034,
-            cardType = "discover"
+            cardType = CreditCardNetworkType.DISCOVER.cardName
         )
 
         controller.handleUpdateCreditCard(creditCardId, creditCardFields)

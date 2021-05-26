@@ -5,9 +5,8 @@
 package org.mozilla.fenix.settings.creditcards
 
 import androidx.annotation.VisibleForTesting
+import mozilla.components.support.utils.creditCardIIN
 
-private const val MAX_CREDIT_CARD_NUMBER_LENGTH = 19
-private const val MIN_CREDIT_CARD_NUMBER_LENGTH = 12
 // Number of last digits to be shown when credit card number is obfuscated.
 private const val LAST_VISIBLE_DIGITS_COUNT = 4
 
@@ -27,17 +26,15 @@ fun String.last4Digits(): String {
 }
 
 /**
- * Uses string size and Luhn Algorithm validation to validate a credit card number.
+ * Returns true if the provided string is a valid credit card by checking if it has a matching
+ * credit card issuer network passes the Luhn Algorithm, and false otherwise.
  */
 fun String.validateCreditCardNumber(): Boolean {
     val creditCardNumber = this.toCreditCardNumber()
 
-    if (creditCardNumber != this) return false
-
-    // credit card numbers have at least 12 digits and at most 19 digits
-    if (creditCardNumber.length < MIN_CREDIT_CARD_NUMBER_LENGTH ||
-        creditCardNumber.length > MAX_CREDIT_CARD_NUMBER_LENGTH
-    ) return false
+    if (creditCardNumber != this || creditCardNumber.creditCardIIN() == null) {
+        return false
+    }
 
     return luhnAlgorithmValidation(creditCardNumber)
 }

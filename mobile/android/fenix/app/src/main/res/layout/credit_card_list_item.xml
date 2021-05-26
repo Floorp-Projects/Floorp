@@ -10,19 +10,30 @@
     android:background="?android:attr/selectableItemBackground"
     android:minHeight="?android:attr/listPreferredItemHeight">
 
+    <ImageView
+        android:id="@+id/credit_card_logo"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        android:scaleType="fitCenter"
+        android:importantForAccessibility="no"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
     <TextView
         android:id="@+id/credit_card_number"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/saved_logins_item_margin_start"
-        android:layout_marginEnd="@dimen/saved_logins_item_margin_end"
+        android:layout_marginStart="@dimen/credit_cards_saved_cards_item_margin_start"
+        android:layout_marginEnd="@dimen/credit_cards_saved_cards_item_margin_end"
         android:ellipsize="middle"
         android:singleLine="true"
         android:textAppearance="?android:attr/textAppearanceListItem"
         android:textColor="?primaryText"
         app:layout_constraintBottom_toTopOf="@id/expiry_date"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/credit_card_logo"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="mozilla.org" />
@@ -38,7 +49,7 @@
         android:textColor="?secondaryText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/credit_card_logo"
         app:layout_constraintTop_toBottomOf="@id/credit_card_number"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="02/2022" />

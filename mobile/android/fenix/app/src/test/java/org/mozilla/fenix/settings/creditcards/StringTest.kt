@@ -42,7 +42,6 @@ class StringTest {
         val jcbCard = "3530111333300000"
         val masterCardCard = "5555555555554444"
         val visaCard = "4111111111111111"
-        val voyagerCard = "869941728035895"
 
         assertTrue(americanExpressCard.validateCreditCardNumber())
         assertTrue(dinnersClubCard.validateCreditCardNumber())
@@ -50,7 +49,6 @@ class StringTest {
         assertTrue(jcbCard.validateCreditCardNumber())
         assertTrue(masterCardCard.validateCreditCardNumber())
         assertTrue(visaCard.validateCreditCardNumber())
-        assertTrue(voyagerCard.validateCreditCardNumber())
     }
 
     @Test

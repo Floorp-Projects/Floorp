@@ -85,9 +85,5 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
     companion object {
         // Number of years to show in the expiry year dropdown.
         const val NUMBER_OF_YEARS_TO_SHOW = 10
-
-        // Placeholder for the card type. This will be replaced when we can identify the card type.
-        // This is dependent on https://github.com/mozilla-mobile/android-components/issues/9813.
-        const val CARD_TYPE_PLACEHOLDER = ""
     }
 }

@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.creditcards
 
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
+import mozilla.components.support.utils.CreditCardNetworkType
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -22,7 +23,7 @@ class CreditCardsAdapterTest {
             cardNumberLast4 = "1110",
             expiryMonth = 1,
             expiryYear = 2030,
-            cardType = "amex",
+            cardType = CreditCardNetworkType.AMEX.cardName,
             timeCreated = 1L,
             timeLastUsed = 1L,
             timeLastModified = 1L,
@@ -35,7 +36,7 @@ class CreditCardsAdapterTest {
             cardNumberLast4 = "1110",
             expiryMonth = 1,
             expiryYear = 2030,
-            cardType = "amex",
+            cardType = CreditCardNetworkType.AMEX.cardName,
             timeCreated = 1L,
             timeLastUsed = 1L,
             timeLastModified = 1L,
@@ -56,7 +57,7 @@ class CreditCardsAdapterTest {
             cardNumberLast4 = "1110",
             expiryMonth = 1,
             expiryYear = 2030,
-            cardType = "amex",
+            cardType = CreditCardNetworkType.AMEX.cardName,
             timeCreated = 1L,
             timeLastUsed = 1L,
             timeLastModified = 1L,

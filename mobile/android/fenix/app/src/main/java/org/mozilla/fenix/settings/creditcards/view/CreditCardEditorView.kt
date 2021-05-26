@@ -14,9 +14,9 @@ import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.utils.creditCardIIN
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.toEditable
-import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment.Companion.CARD_TYPE_PLACEHOLDER
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorState
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardEditorInteractor
 import org.mozilla.fenix.settings.creditcards.last4Digits
@@ -80,7 +80,7 @@ class CreditCardEditorView(
                     cardNumberLast4 = cardNumber.last4Digits(),
                     expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
                     expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
-                    cardType = CARD_TYPE_PLACEHOLDER
+                    cardType = cardNumber.creditCardIIN()?.creditCardIssuerNetwork?.name ?: ""
                 )
                 interactor.onUpdateCreditCard(state.guid, fields)
             } else {
@@ -90,7 +90,7 @@ class CreditCardEditorView(
                     cardNumberLast4 = cardNumber.last4Digits(),
                     expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
                     expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
-                    cardType = CARD_TYPE_PLACEHOLDER
+                    cardType = cardNumber.creditCardIIN()?.creditCardIssuerNetwork?.name ?: ""
                 )
                 interactor.onSaveCreditCard(fields)
             }

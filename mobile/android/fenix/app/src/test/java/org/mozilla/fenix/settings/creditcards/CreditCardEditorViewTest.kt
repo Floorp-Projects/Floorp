@@ -15,6 +15,7 @@ import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.CreditCardNetworkType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -24,7 +25,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.toEditable
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment.Companion.CARD_TYPE_PLACEHOLDER
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment.Companion.NUMBER_OF_YEARS_TO_SHOW
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardEditorInteractor
 import org.mozilla.fenix.settings.creditcards.view.CreditCardEditorView
@@ -40,11 +40,11 @@ class CreditCardEditorViewTest {
     private val creditCard = CreditCard(
         guid = "id",
         billingName = "Banana Apple",
-        encryptedCardNumber = CreditCardNumber.Encrypted("371449635398431"),
-        cardNumberLast4 = "8431",
+        encryptedCardNumber = CreditCardNumber.Encrypted("4111111111111111"),
+        cardNumberLast4 = "1111",
         expiryMonth = 5,
         expiryYear = 2030,
-        cardType = "amex",
+        cardType = CreditCardNetworkType.VISA.cardName,
         timeCreated = 1L,
         timeLastUsed = 1L,
         timeLastModified = 1L,
@@ -133,7 +133,7 @@ class CreditCardEditorViewTest {
         val calendar = Calendar.getInstance()
 
         val billingName = "Banana Apple"
-        val cardNumber = "4111111111111110"
+        val cardNumber = "2221000000000000"
         val expiryMonth = 5
         val expiryYear = calendar.get(Calendar.YEAR)
 
@@ -154,10 +154,10 @@ class CreditCardEditorViewTest {
                 NewCreditCardFields(
                     billingName = billingName,
                     plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
-                    cardNumberLast4 = "1110",
+                    cardNumberLast4 = "0000",
                     expiryMonth = expiryMonth.toLong(),
                     expiryYear = expiryYear.toLong(),
-                    cardType = CARD_TYPE_PLACEHOLDER
+                    cardType = CreditCardNetworkType.MASTERCARD.cardName
                 )
             )
         }
@@ -170,7 +170,7 @@ class CreditCardEditorViewTest {
         val calendar = Calendar.getInstance()
 
         val billingName = "Banana Apple"
-        val cardNumber = "371449635398431"
+        val cardNumber = "2720994326581252"
         val expiryMonth = 5
         val expiryYear = calendar.get(Calendar.YEAR)
 
@@ -191,10 +191,10 @@ class CreditCardEditorViewTest {
                 NewCreditCardFields(
                     billingName = billingName,
                     plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
-                    cardNumberLast4 = "8431",
+                    cardNumberLast4 = "1252",
                     expiryMonth = expiryMonth.toLong(),
                     expiryYear = expiryYear.toLong(),
-                    cardType = CARD_TYPE_PLACEHOLDER
+                    cardType = CreditCardNetworkType.MASTERCARD.cardName
                 )
             )
         }
@@ -215,7 +215,7 @@ class CreditCardEditorViewTest {
                     cardNumberLast4 = creditCard.cardNumberLast4,
                     expiryMonth = creditCard.expiryMonth,
                     expiryYear = creditCard.expiryYear,
-                    cardType = CARD_TYPE_PLACEHOLDER
+                    cardType = creditCard.cardType
                 )
             )
         }

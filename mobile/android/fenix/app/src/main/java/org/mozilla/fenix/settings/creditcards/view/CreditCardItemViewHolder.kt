@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings.creditcards.view
 import android.view.View
 import kotlinx.android.synthetic.main.credit_card_list_item.*
 import mozilla.components.concept.storage.CreditCard
+import mozilla.components.support.utils.creditCardIssuerNetwork
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementInteractor
 import org.mozilla.fenix.utils.view.ViewHolder
@@ -23,6 +24,8 @@ class CreditCardItemViewHolder(
 ) : ViewHolder(view) {
 
     fun bind(creditCard: CreditCard) {
+        credit_card_logo.setImageResource(creditCard.cardType.creditCardIssuerNetwork().icon)
+
         credit_card_number.text = creditCard.obfuscatedCardNumber
 
         bindCreditCardExpiryDate(creditCard)

@@ -10,6 +10,7 @@ import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
+import mozilla.components.support.utils.CreditCardNetworkType
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.settings.creditcards.controller.CreditCardEditorController
@@ -41,7 +42,7 @@ class DefaultCreditCardEditorInteractorTest {
             cardNumberLast4 = "1110",
             expiryMonth = 1,
             expiryYear = 2030,
-            cardType = "amex",
+            cardType = CreditCardNetworkType.AMEX.cardName,
             timeCreated = 1L,
             timeLastUsed = 1L,
             timeLastModified = 1L,
@@ -59,7 +60,7 @@ class DefaultCreditCardEditorInteractorTest {
             cardNumberLast4 = "1112",
             expiryMonth = 1,
             expiryYear = 2030,
-            cardType = "discover"
+            cardType = CreditCardNetworkType.DISCOVER.cardName
         )
         interactor.onSaveCreditCard(creditCardFields)
         verify { controller.handleSaveCreditCard(creditCardFields) }
@@ -74,7 +75,7 @@ class DefaultCreditCardEditorInteractorTest {
             cardNumberLast4 = "1112",
             expiryMonth = 1,
             expiryYear = 2034,
-            cardType = "discover"
+            cardType = CreditCardNetworkType.DISCOVER.cardName
         )
         interactor.onUpdateCreditCard(guid, creditCardFields)
         verify { controller.handleUpdateCreditCard(guid, creditCardFields) }
