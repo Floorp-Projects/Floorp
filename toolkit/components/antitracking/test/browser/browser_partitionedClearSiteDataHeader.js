@@ -216,7 +216,7 @@ function setStorageEntry(storageType, originNoSuffix, firstParty, key, value) {
   let origin = getOrigin(originNoSuffix, firstParty);
 
   if (storageType == "cookie") {
-    SiteDataTestUtils.addToCookies(origin, key, value);
+    SiteDataTestUtils.addToCookies({ origin, name: key, value });
     return;
   }
   // localStorage

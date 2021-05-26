@@ -200,6 +200,10 @@ function assertSitesListed(doc, hosts) {
   is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
 }
 
+// Counter used by addTestData to generate unique cookie names across function
+// calls.
+let cookieID = 0;
+
 async function addTestData(data) {
   let hosts = [];
 
@@ -218,7 +222,10 @@ async function addTestData(data) {
     }
 
     for (let i = 0; i < (site.cookies || 0); i++) {
-      SiteDataTestUtils.addToCookies(site.origin, Cu.now());
+      SiteDataTestUtils.addToCookies({
+        origin: site.origin,
+        name: `cookie${cookieID++}`,
+      });
     }
 
     let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
