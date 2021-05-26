@@ -4379,7 +4379,7 @@ void nsGlobalWindowInner::SetFocusedElement(Element* aElement,
     UpdateCanvasFocus(false, aElement);
     mFocusedElement = aElement;
     // TODO: Maybe this should be set on refocus too?
-    mFocusMethod = aFocusMethod & nsIFocusManager::METHOD_MASK;
+    mFocusMethod = aFocusMethod & FOCUSMETHOD_MASK;
   }
 
   if (mFocusedElement) {
@@ -4421,9 +4421,7 @@ bool nsGlobalWindowInner::TakeFocus(bool aFocus, uint32_t aFocusMethod) {
     return false;
   }
 
-  if (aFocus) {
-    mFocusMethod = aFocusMethod & nsIFocusManager::METHOD_MASK;
-  }
+  if (aFocus) mFocusMethod = aFocusMethod & FOCUSMETHOD_MASK;
 
   if (mHasFocus != aFocus) {
     mHasFocus = aFocus;
