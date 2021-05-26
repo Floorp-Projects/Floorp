@@ -519,23 +519,25 @@ NativeObject::maybeConvertToDictionaryForAdd(JSContext* cx,
   return toDictionaryMode(cx, obj);
 }
 
-static void AssertValidCustomDataProp(NativeObject* obj, unsigned attrs) {
+static void AssertValidCustomDataProp(NativeObject* obj,
+                                      ShapePropertyFlags flags) {
   // We only support custom data properties on ArrayObject and ArgumentsObject.
   // The mechanism is deprecated so we don't want to add new uses.
-  MOZ_ASSERT(attrs & JSPROP_CUSTOM_DATA_PROP);
+  MOZ_ASSERT(flags.isCustomDataProperty());
+  MOZ_ASSERT(!flags.isAccessorProperty());
   MOZ_ASSERT(obj->is<ArrayObject>() || obj->is<ArgumentsObject>());
-  MOZ_ASSERT((attrs & (JSPROP_GETTER | JSPROP_SETTER)) == 0);
 }
 
 /* static */
 bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
-                                         HandleId id, unsigned attrs) {
+                                         HandleId id,
+                                         ShapePropertyFlags flags) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
   MOZ_ASSERT(!id.isPrivateName());
   MOZ_ASSERT(!obj->containsPure(id));
 
   AutoCheckShapeConsistency check(obj);
-  AssertValidCustomDataProp(obj, attrs);
+  AssertValidCustomDataProp(obj, flags);
 
   if (!maybeConvertToDictionaryForAdd(cx, obj)) {
     return false;
@@ -545,10 +547,10 @@ bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
   RootedShape shape(cx);
   {
     RootedShape last(cx, obj->lastProperty());
-    ObjectFlags objectFlags = GetObjectFlagsForNewProperty(last, id, attrs, cx);
+    ObjectFlags objectFlags = GetObjectFlagsForNewProperty(last, id, flags, cx);
 
     Rooted<StackShape> child(cx, StackShape(last->base(), objectFlags, id,
-                                            SHAPE_INVALID_SLOT, attrs));
+                                            SHAPE_INVALID_SLOT, flags));
     shape = getChildCustomDataProperty(cx, obj, last, &child);
     if (!shape) {
       return false;
@@ -562,10 +564,10 @@ bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
 
 /* static */
 bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
-                               HandleId id, uint32_t slot, unsigned attrs,
-                               uint32_t* slotOut) {
+                               HandleId id, uint32_t slot,
+                               ShapePropertyFlags flags, uint32_t* slotOut) {
   AutoCheckShapeConsistency check(obj);
-  MOZ_ASSERT(!(attrs & JSPROP_CUSTOM_DATA_PROP),
+  MOZ_ASSERT(!flags.isCustomDataProperty(),
              "Use addCustomDataProperty for custom data properties");
 
   // The slot, if any, must be a reserved slot.
@@ -587,10 +589,10 @@ bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
 
   // Find or create a property tree node labeled by our arguments.
   RootedShape last(cx, obj->lastProperty());
-  ObjectFlags objectFlags = GetObjectFlagsForNewProperty(last, id, attrs, cx);
+  ObjectFlags objectFlags = GetObjectFlagsForNewProperty(last, id, flags, cx);
 
   Rooted<StackShape> child(
-      cx, StackShape(last->base(), objectFlags, id, slot, attrs));
+      cx, StackShape(last->base(), objectFlags, id, slot, flags));
   Shape* shape = getChildProperty(cx, obj, last, &child);
   if (!shape) {
     return false;
@@ -638,9 +640,9 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
 
   AutoCheckShapeConsistency check(obj);
 
-  constexpr unsigned attrs = JSPROP_ENUMERATE;
+  constexpr ShapePropertyFlags flags = ShapePropertyFlags::defaultDataPropFlags;
   ObjectFlags objectFlags =
-      GetObjectFlagsForNewProperty(obj->lastProperty(), id, attrs, cx);
+      GetObjectFlagsForNewProperty(obj->lastProperty(), id, flags, cx);
 
   // Fast path for non-dictionary shapes with a single child.
   do {
@@ -660,7 +662,7 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
     MOZ_ASSERT(!child->inDictionary());
 
     if (child->propidRaw() != id || child->objectFlags() != objectFlags ||
-        child->attributes() != attrs || child->base() != lastProperty->base()) {
+        child->propFlags != flags || child->base() != lastProperty->base()) {
       break;
     }
 
@@ -694,9 +696,8 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
       return false;
     }
 
-    Rooted<StackShape> child(
-        cx, StackShape(obj->lastProperty()->base(), objectFlags, id, slot,
-                       JSPROP_ENUMERATE));
+    Rooted<StackShape> child(cx, StackShape(obj->lastProperty()->base(),
+                                            objectFlags, id, slot, flags));
 
     shape = Allocate<Shape>(cx);
     if (!shape) {
@@ -725,7 +726,7 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
 
     Shape* last = obj->lastProperty();
     Rooted<StackShape> child(
-        cx, StackShape(last->base(), objectFlags, id, slot, JSPROP_ENUMERATE));
+        cx, StackShape(last->base(), objectFlags, id, slot, flags));
     shape = cx->zone()->propertyTree().inlinedGetChild(cx, last, child);
     if (!shape) {
       return false;
@@ -745,7 +746,7 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
  * Assert some invariants that should hold when changing properties. It's the
  * responsibility of the callers to ensure these hold.
  */
-static void AssertCanChangeAttrs(Shape* shape, unsigned attrs) {
+static void AssertCanChangeFlags(Shape* shape, ShapePropertyFlags flags) {
 #ifdef DEBUG
   ShapeProperty prop = shape->property();
   if (prop.configurable()) {
@@ -753,18 +754,15 @@ static void AssertCanChangeAttrs(Shape* shape, unsigned attrs) {
   }
 
   // A non-configurable property must stay non-configurable.
-  MOZ_ASSERT(attrs & JSPROP_PERMANENT);
+  MOZ_ASSERT(!flags.configurable());
 
   // Reject attempts to turn a non-configurable data property into an accessor
   // or custom data property.
-  MOZ_ASSERT_IF(
-      prop.isDataProperty(),
-      !(attrs & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_CUSTOM_DATA_PROP)));
+  MOZ_ASSERT_IF(prop.isDataProperty(), flags.isDataProperty());
 
   // Reject attempts to turn a non-configurable accessor property into a data
   // property or custom data property.
-  MOZ_ASSERT_IF(prop.isAccessorProperty(),
-                attrs & (JSPROP_GETTER | JSPROP_SETTER));
+  MOZ_ASSERT_IF(prop.isAccessorProperty(), flags.isAccessorProperty());
 #endif
 }
 
@@ -805,19 +803,19 @@ bool NativeObject::maybeToDictionaryModeForChange(JSContext* cx,
 
 /* static */
 bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
-                                  HandleId id, unsigned attrs,
+                                  HandleId id, ShapePropertyFlags flags,
                                   uint32_t* slotOut) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
 
   AutoCheckShapeConsistency check(obj);
   AssertValidArrayIndex(obj, id);
-  MOZ_ASSERT(!(attrs & JSPROP_CUSTOM_DATA_PROP),
+  MOZ_ASSERT(!flags.isCustomDataProperty(),
              "Use changeCustomDataPropAttributes for custom data properties");
 
   RootedShape shape(cx, obj->lastProperty()->search(cx, id));
   MOZ_ASSERT(shape);
 
-  AssertCanChangeAttrs(shape, attrs);
+  AssertCanChangeFlags(shape, flags);
 
   // If the caller wants to allocate a slot, but doesn't care which slot,
   // copy the existing shape's slot into slot so we can match shape, if all
@@ -825,7 +823,7 @@ bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
   uint32_t slot = shape->hasSlot() ? shape->slot() : SHAPE_INVALID_SLOT;
 
   ObjectFlags objectFlags =
-      GetObjectFlagsForNewProperty(obj->lastProperty(), id, attrs, cx);
+      GetObjectFlagsForNewProperty(obj->lastProperty(), id, flags, cx);
 
   if (shape->property().isAccessorProperty()) {
     objectFlags.setFlag(ObjectFlag::HadGetterSetterChange);
@@ -834,7 +832,7 @@ bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
   // Now that we've possibly preserved slot, check whether the property info and
   // object flags match. If so, this is a redundant "change" and we can return
   // without more work.
-  if (shape->matchesPropertyParamsAfterId(slot, attrs) &&
+  if (shape->matchesPropertyParamsAfterId(slot, flags) &&
       obj->lastProperty()->objectFlags() == objectFlags) {
     MOZ_ASSERT(slot != SHAPE_INVALID_SLOT);
     *slotOut = slot;
@@ -873,7 +871,7 @@ bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
 
     MOZ_ASSERT(shape->inDictionary());
     shape->setSlot(slot);
-    shape->attrs = uint8_t(attrs);
+    shape->propFlags = flags;
   } else {
     // Updating the last property in a non-dictionary-mode object. Find an
     // alternate shared child of the last property's previous shape.
@@ -882,7 +880,7 @@ bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
 
     // Find or create a property tree node labeled by our arguments.
     Rooted<StackShape> child(cx, StackShape(obj->lastProperty()->base(),
-                                            objectFlags, id, slot, attrs));
+                                            objectFlags, id, slot, flags));
     RootedShape parent(cx, shape->parent);
     shape = getChildProperty(cx, obj, parent, &child);
     if (!shape) {
@@ -898,25 +896,26 @@ bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
 /* static */
 bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
                                                   HandleNativeObject obj,
-                                                  HandleId id, unsigned attrs) {
+                                                  HandleId id,
+                                                  ShapePropertyFlags flags) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
 
   AutoCheckShapeConsistency check(obj);
   AssertValidArrayIndex(obj, id);
-  AssertValidCustomDataProp(obj, attrs);
+  AssertValidCustomDataProp(obj, flags);
 
   RootedShape shape(cx, obj->lastProperty()->search(cx, id));
   MOZ_ASSERT(shape);
   MOZ_ASSERT(shape->isCustomDataProperty());
 
-  AssertCanChangeAttrs(shape, attrs);
+  AssertCanChangeFlags(shape, flags);
 
   ObjectFlags objectFlags =
-      GetObjectFlagsForNewProperty(obj->lastProperty(), id, attrs, cx);
+      GetObjectFlagsForNewProperty(obj->lastProperty(), id, flags, cx);
 
   // Check whether the property info and object flags match. If so, this is a
   // redundant "change" and we can return without more work.
-  if (shape->matchesPropertyParamsAfterId(SHAPE_INVALID_SLOT, attrs) &&
+  if (shape->matchesPropertyParamsAfterId(SHAPE_INVALID_SLOT, flags) &&
       obj->lastProperty()->objectFlags() == objectFlags) {
     return true;
   }
@@ -945,7 +944,7 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
 
     MOZ_ASSERT(shape->inDictionary());
     shape->setSlot(SHAPE_INVALID_SLOT);
-    shape->attrs = uint8_t(attrs);
+    shape->propFlags = flags;
   } else {
     // Updating the last property in a non-dictionary-mode object. Find an
     // alternate shared child of the last property's previous shape.
@@ -955,7 +954,7 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
     // Find or create a property tree node labeled by our arguments.
     Rooted<StackShape> child(
         cx, StackShape(obj->lastProperty()->base(), objectFlags, id,
-                       SHAPE_INVALID_SLOT, attrs));
+                       SHAPE_INVALID_SLOT, flags));
     RootedShape parent(cx, shape->parent);
     shape = getChildCustomDataProperty(cx, obj, parent, &child);
     if (!shape) {
@@ -1618,7 +1617,7 @@ void Shape::fixupShapeTreeAfterMovingGC() {
     BaseShape* base = MaybeForwarded(key->base());
 
     StackShape lookup(base, key->objectFlags(), key->propidRef(),
-                      key->immutableFlags & Shape::SLOT_MASK, key->attrs);
+                      key->immutableFlags & Shape::SLOT_MASK, key->propFlags);
     e.rekeyFront(lookup, key);
   }
 }
@@ -1662,19 +1661,27 @@ void Shape::dump(js::GenericPrinter& out) const {
     JSID_TO_SYMBOL(propid)->dump(out);
   }
 
-  out.printf(" slot %d attrs %x ", hasSlot() ? int32_t(slot()) : -1, attrs);
+  out.printf(" slot %d propFlags %x ", hasSlot() ? int32_t(slot()) : -1,
+             propFlags.toRaw());
 
-  if (attrs) {
-    int first = 1;
+  if (!propFlags.isEmpty()) {
+    bool first = true;
+    auto dumpFlag = [&](ShapePropertyFlag flag, const char* name) {
+      if (!propFlags.hasFlag(flag)) {
+        return;
+      }
+      if (!first) {
+        out.putChar(' ');
+      }
+      out.put(name);
+      first = false;
+    };
     out.putChar('(');
-#  define DUMP_ATTR(name, display) \
-    if (attrs & JSPROP_##name) out.put(&(" " #display)[first]), first = 0
-    DUMP_ATTR(ENUMERATE, enumerate);
-    DUMP_ATTR(READONLY, readonly);
-    DUMP_ATTR(PERMANENT, permanent);
-    DUMP_ATTR(GETTER, getter);
-    DUMP_ATTR(SETTER, setter);
-#  undef DUMP_ATTR
+    dumpFlag(ShapePropertyFlag::Enumerable, "enumerable");
+    dumpFlag(ShapePropertyFlag::Configurable, "configurable");
+    dumpFlag(ShapePropertyFlag::Writable, "writable");
+    dumpFlag(ShapePropertyFlag::AccessorProperty, "accessor");
+    dumpFlag(ShapePropertyFlag::CustomDataProperty, "custom-data");
     out.putChar(')');
   }
 

@@ -3878,8 +3878,8 @@ Shape* StringObject::assignInitialShape(JSContext* cx,
   MOZ_ASSERT(obj->empty());
 
   uint32_t slot;
-  if (!NativeObject::addProperty(cx, obj, cx->names().length, LENGTH_SLOT,
-                                 JSPROP_PERMANENT | JSPROP_READONLY, &slot)) {
+  if (!NativeObject::addProperty(cx, obj, cx->names().length, LENGTH_SLOT, {},
+                                 &slot)) {
     return nullptr;
   }
   MOZ_ASSERT(slot == LENGTH_SLOT);

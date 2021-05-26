@@ -195,9 +195,8 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
   return foundShape;
 }
 
-MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(Shape* last, jsid id,
-                                                           unsigned attrs,
-                                                           JSContext* cx) {
+MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(
+    Shape* last, jsid id, ShapePropertyFlags propFlags, JSContext* cx) {
   ObjectFlags flags = last->objectFlags();
 
   uint32_t index;
@@ -207,10 +206,9 @@ MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(Shape* last, jsid id,
     flags.setFlag(ObjectFlag::HasInterestingSymbol);
   }
 
-  if ((attrs & (JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER |
-                JSPROP_CUSTOM_DATA_PROP)) &&
+  if ((!propFlags.isDataProperty() || !propFlags.writable()) &&
       last->getObjectClass() == &PlainObject::class_ &&
-      !JSID_IS_ATOM(id, cx->names().proto)) {
+      !id.isAtom(cx->names().proto)) {
     flags.setFlag(ObjectFlag::HasNonWritableOrAccessorPropExclProto);
   }
 

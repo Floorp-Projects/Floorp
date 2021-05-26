@@ -4763,13 +4763,13 @@ void ShapeSnapshot::checkSelf(JSContext* cx) const {
     // only happen for non-configurable dictionary properties.
     if (PropertyInfo(propShape) != propInfo) {
       MOZ_RELEASE_ASSERT(propShape->inDictionary());
-      MOZ_RELEASE_ASSERT(!(prop.attributes() & JSPROP_PERMANENT));
+      MOZ_RELEASE_ASSERT(prop.configurable());
       continue;
     }
 
     // Ensure ObjectFlags depending on property information are set if needed.
-    ObjectFlags expectedFlags = GetObjectFlagsForNewProperty(
-        shape_, propInfo.key, prop.attributes(), cx);
+    ObjectFlags expectedFlags =
+        GetObjectFlagsForNewProperty(shape_, propInfo.key, prop.flags(), cx);
     MOZ_RELEASE_ASSERT(expectedFlags == objectFlags_);
 
     // Accessors must have a PrivateGCThingValue(GetterSetter*) slot value.

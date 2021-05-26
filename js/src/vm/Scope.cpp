@@ -107,19 +107,20 @@ Shape* js::EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
 static Shape* NextEnvironmentShape(JSContext* cx, HandleAtom name,
                                    BindingKind bindKind, uint32_t slot,
                                    HandleShape shape) {
-  unsigned attrs = JSPROP_PERMANENT | JSPROP_ENUMERATE;
+  ShapePropertyFlags propFlags = {ShapePropertyFlag::Enumerable};
   switch (bindKind) {
     case BindingKind::Const:
     case BindingKind::NamedLambdaCallee:
-      attrs |= JSPROP_READONLY;
+      // Non-writable.
       break;
     default:
+      propFlags.setFlag(ShapePropertyFlag::Writable);
       break;
   }
 
   jsid id = NameToId(name->asPropertyName());
   Rooted<StackShape> child(
-      cx, StackShape(shape->base(), shape->objectFlags(), id, slot, attrs));
+      cx, StackShape(shape->base(), shape->objectFlags(), id, slot, propFlags));
   return cx->zone()->propertyTree().getChild(cx, shape, child);
 }
 
