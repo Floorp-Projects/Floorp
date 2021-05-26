@@ -153,6 +153,7 @@
 
       info("Test backup with tmp and backup file options, existing destination");
       let newFileContents = new TextEncoder().encode("New file contents");
+      ok(await fileExists(destFileName), `Expected ${destFileName} to exist`);
       bytesWritten =
         await IOUtils.write(destFileName, newFileContents, {
           backupFile: backupFileName,
@@ -166,6 +167,31 @@
       );
       ok(
         await fileHasTextContents(destFileName, "New file contents"),
+        "IOUtils::write can write to the destination when a temporary file is used"
+      );
+      is(
+        bytesWritten,
+        newFileContents.length,
+        "IOUtils::write IOUtils::write can move tmp file to destination after performing a backup"
+      );
+
+      info("Test backup with tmp and backup file options, existing destination and backup");
+      newFileContents = new TextEncoder().encode("Updated new file contents");
+      ok(await fileExists(destFileName), `Expected ${destFileName} to exist`);
+      ok(await fileExists(backupFileName), `Expected ${backupFileName} to exist`);
+      bytesWritten =
+        await IOUtils.write(destFileName, newFileContents, {
+          backupFile: backupFileName,
+          tmpPath: tmpFileName,
+        });
+
+      ok(!await fileExists(tmpFileName), "IOUtils::write cleans up the tmpFile");
+      ok(
+        await fileHasTextContents(backupFileName, "New file contents"),
+        "IOUtils::write can create a backup if the target file exists"
+      );
+      ok(
+        await fileHasTextContents(destFileName, "Updated new file contents"),
         "IOUtils::write can write to the destination when a temporary file is used"
       );
       is(

@@ -932,7 +932,7 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
     nsCOMPtr<nsIFile> toMove;
     MOZ_ALWAYS_SUCCEEDS(aFile->Clone(getter_AddRefs(toMove)));
 
-    bool noOverwrite = aOptions.mMode != WriteMode::Create;
+    bool noOverwrite = aOptions.mMode == WriteMode::Create;
 
     if (MoveSync(toMove, backupFile, noOverwrite).isErr()) {
       return Err(IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
