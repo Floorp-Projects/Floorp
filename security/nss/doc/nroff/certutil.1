@@ -2,12 +2,12 @@
 .\"     Title: CERTUTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date:  5 October 2017
+.\"      Date: 19 May 2021
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CERTUTIL" "1" "5 October 2017" "nss-tools" "NSS Security Tools"
+.TH "CERTUTIL" "1" "19 May 2021" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -187,6 +187,11 @@ Arguments modify a command option and are usually lower case, numbers, or symbol
 Use ASCII format or allow the use of ASCII format for input or output\&. This formatting follows RFC 1113\&. For certificate requests, ASCII output defaults to standard output unless redirected\&.
 .RE
 .PP
+\-\-simple\-self\-signed
+.RS 4
+When printing the certificate chain, don\*(Aqt search for a chain if issuer name equals to subject name\&.
+.RE
+.PP
 \-b validity\-time
 .RS 4
 Specify a time at which a certificate is required to be valid\&. Use when checking certificate validity with the
@@ -247,7 +252,7 @@ requests the legacy database
 .RE
 .sp
 If no prefix is specified the default type is retrieved from NSS_DEFAULT_DB_TYPE\&. If NSS_DEFAULT_DB_TYPE is not set then
-\fBdbm:\fR
+\fBsql:\fR
 is the default\&.
 .RE
 .PP
@@ -573,6 +578,18 @@ The contexts are the following:
 .\}
 \fBJ\fR
 (as an object signer)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBI\fR
+(as an IPSEC user)
 .RE
 .RE
 .PP
@@ -1046,6 +1063,83 @@ msTrustListSign
 critical
 .RE
 .sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+x509Any
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ipsecIKE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ipsecIKEEnd
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ipsecIKEIntermediate
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ipsecEnd
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ipsecTunnel
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ipsecUser
+.RE
+.sp
 X\&.509 certificate extensions are described in RFC 5280\&.
 .RE
 .PP
@@ -1199,7 +1293,7 @@ These databases must be created before certificates or keys can be generated\&.
 .RS 4
 .\}
 .nf
-certutil \-N \-d [sql:]directory
+certutil \-N \-d directory
 .fi
 .if n \{\
 .RE
@@ -1213,7 +1307,7 @@ A certificate request contains most or all of the information that is used to ge
 .RS 4
 .\}
 .nf
-$ certutil \-R \-k key\-type\-or\-id [\-q pqgfile|curve\-name] \-g key\-size \-s subject [\-h tokenname] \-d [sql:]directory [\-p phone] [\-o output\-file] [\-a]
+$ certutil \-R \-k key\-type\-or\-id [\-q pqgfile|curve\-name] \-g key\-size \-s subject [\-h tokenname] \-d directory [\-p phone] [\-o output\-file] [\-a]
 .fi
 .if n \{\
 .RE
@@ -1279,7 +1373,7 @@ For example:
 .RS 4
 .\}
 .nf
-$ certutil \-R \-k rsa \-g 1024 \-s "CN=John Smith,O=Example Corp,L=Mountain View,ST=California,C=US" \-d sql:$HOME/nssdb \-p 650\-555\-0123 \-a \-o cert\&.cer
+$ certutil \-R \-k rsa \-g 1024 \-s "CN=John Smith,O=Example Corp,L=Mountain View,ST=California,C=US" \-d $HOME/nssdb \-p 650\-555\-0123 \-a \-o cert\&.cer
 
 Generating key\&.  This may take a few moments\&.\&.\&.
 
@@ -1300,7 +1394,7 @@ command option\&.
 .RS 4
 .\}
 .nf
-$ certutil \-S \-k rsa|dsa|ec \-n certname \-s subject [\-c issuer |\-x] \-t trustargs \-d [sql:]directory [\-m serial\-number] [\-v valid\-months] [\-w offset\-months] [\-p phone] [\-1] [\-2] [\-3] [\-4] [\-5 keyword] [\-6 keyword] [\-7 emailAddress] [\-8 dns\-names] [\-\-extAIA] [\-\-extSIA] [\-\-extCP] [\-\-extPM] [\-\-extPC] [\-\-extIA] [\-\-extSKID]
+$ certutil \-S \-k rsa|dsa|ec \-n certname \-s subject [\-c issuer |\-x] \-t trustargs \-d directory [\-m serial\-number] [\-v valid\-months] [\-w offset\-months] [\-p phone] [\-1] [\-2] [\-3] [\-4] [\-5 keyword] [\-6 keyword] [\-7 emailAddress] [\-8 dns\-names] [\-\-extAIA] [\-\-extSIA] [\-\-extCP] [\-\-extPM] [\-\-extPC] [\-\-extIA] [\-\-extSKID]
 .fi
 .if n \{\
 .RE
@@ -1348,7 +1442,7 @@ argument)\&. The issuing certificate must be in the certificate database in the 
 .RS 4
 .\}
 .nf
-certutil \-C \-c issuer \-i cert\-request\-file \-o output\-file [\-m serial\-number] [\-v valid\-months] [\-w offset\-months] \-d [sql:]directory [\-1] [\-2] [\-3] [\-4] [\-5 keyword] [\-6 keyword] [\-7 emailAddress] [\-8 dns\-names]
+certutil \-C \-c issuer \-i cert\-request\-file \-o output\-file [\-m serial\-number] [\-v valid\-months] [\-w offset\-months] \-d directory [\-1] [\-2] [\-3] [\-4] [\-5 keyword] [\-6 keyword] [\-7 emailAddress] [\-8 dns\-names]
 .fi
 .if n \{\
 .RE
@@ -1360,7 +1454,7 @@ For example:
 .RS 4
 .\}
 .nf
-$ certutil \-C \-c "my\-ca\-cert" \-i /home/certs/cert\&.req \-o cert\&.cer \-m 010 \-v 12 \-w 1 \-d sql:$HOME/nssdb \-1 nonRepudiation,dataEncipherment \-5 sslClient \-6 clientAuth \-7 jsmith@example\&.com
+$ certutil \-C \-c "my\-ca\-cert" \-i /home/certs/cert\&.req \-o cert\&.cer \-m 010 \-v 12 \-w 1 \-d $HOME/nssdb \-1 nonRepudiation,dataEncipherment \-5 sslClient \-6 clientAuth \-7 jsmith@example\&.com
 .fi
 .if n \{\
 .RE
@@ -1376,7 +1470,7 @@ command option lists all of the certificates listed in the certificate database\
 .RS 4
 .\}
 .nf
-$ certutil \-L \-d sql:/home/my/sharednssdb
+$ certutil \-L \-d /home/my/sharednssdb
 
 Certificate Nickname                                         Trust Attributes
                                                              SSL,S/MIME,JAR/XPI
@@ -1402,7 +1496,7 @@ argument prints the certificate in ASCII format:
 .RS 4
 .\}
 .nf
-$ certutil \-L \-d sql:$HOME/nssdb \-a \-n my\-ca\-cert
+$ certutil \-L \-d $HOME/nssdb \-a \-n my\-ca\-cert
 \-\-\-\-\-BEGIN CERTIFICATE\-\-\-\-\-
 MIIB1DCCAT2gAwIBAgICDkIwDQYJKoZIhvcNAQEFBQAwFTETMBEGA1UEAxMKRXhh
 bXBsZSBDQTAeFw0xMzAzMTMxOTEwMjlaFw0xMzA2MTMxOTEwMjlaMBUxEzARBgNV
@@ -1426,7 +1520,7 @@ For a human\-readable display
 .RS 4
 .\}
 .nf
-$ certutil \-L \-d sql:$HOME/nssdb \-n my\-ca\-cert
+$ certutil \-L \-d $HOME/nssdb \-n my\-ca\-cert
 Certificate:
     Data:
         Version: 3 (0x2)
@@ -1509,7 +1603,7 @@ argument to give the path to the directory\&.
 .RS 4
 .\}
 .nf
-$ certutil \-K \-d sql:$HOME/nssdb
+$ certutil \-K \-d $HOME/nssdb
 certutil: Checking token "NSS Certificate DB" in slot "NSS User Private Key and Certificate Services                  "
 < 0> rsa      455a6673bde9375c2887ec8bf8016b3f9f35861d   Thawte Freemail Member\*(Aqs Thawte Consulting (Pty) Ltd\&. ID
 < 1> rsa      40defeeb522ade11090eacebaaf1196a172127df   Example Domain Administrator Cert
@@ -1575,7 +1669,7 @@ database\&. The path to the directory (\fB\-d\fR) is required\&.
 .RS 4
 .\}
 .nf
-$ certutil \-U \-d sql:/home/my/sharednssdb
+$ certutil \-U \-d /home/my/sharednssdb
 
     slot: NSS User Private Key and Certificate Services                  
    token: NSS Certificate DB
@@ -1599,7 +1693,7 @@ command option\&.
 .RS 4
 .\}
 .nf
-certutil \-A \-n certname \-t trustargs \-d [sql:]directory [\-a] [\-i input\-file]
+certutil \-A \-n certname \-t trustargs \-d directory [\-a] [\-i input\-file]
 .fi
 .if n \{\
 .RE
@@ -1611,7 +1705,7 @@ For example:
 .RS 4
 .\}
 .nf
-$ certutil \-A \-n "CN=My SSL Certificate" \-t ",," \-d sql:/home/my/sharednssdb \-i /home/example\-certs/cert\&.cer
+$ certutil \-A \-n "CN=My SSL Certificate" \-t ",," \-d /home/my/sharednssdb \-i /home/example\-certs/cert\&.cer
 .fi
 .if n \{\
 .RE
@@ -1629,7 +1723,7 @@ command\&. The trust arguments for certificates have the format
 .RS 4
 .\}
 .nf
-$ certutil \-E \-n "CN=John Smith Email Cert" \-t ",P," \-d sql:/home/my/sharednssdb \-i /home/example\-certs/email\&.cer
+$ certutil \-E \-n "CN=John Smith Email Cert" \-t ",P," \-d /home/my/sharednssdb \-i /home/example\-certs/email\&.cer
 .fi
 .if n \{\
 .RE
@@ -1645,7 +1739,7 @@ option\&. The only required options are to give the security database directory 
 .RS 4
 .\}
 .nf
-certutil \-D \-d [sql:]directory \-n "nickname"
+certutil \-D \-d directory \-n "nickname"
 .fi
 .if n \{\
 .RE
@@ -1657,7 +1751,7 @@ For example:
 .RS 4
 .\}
 .nf
-$ certutil \-D \-d sql:/home/my/sharednssdb \-n "my\-ssl\-cert"
+$ certutil \-D \-d /home/my/sharednssdb \-n "my\-ssl\-cert"
 .fi
 .if n \{\
 .RE
@@ -1673,7 +1767,7 @@ command option\&.
 .RS 4
 .\}
 .nf
-certutil \-V \-n certificate\-name [\-b time] [\-e] [\-u cert\-usage] \-d [sql:]directory
+certutil \-V \-n certificate\-name [\-b time] [\-e] [\-u cert\-usage] \-d directory
 .fi
 .if n \{\
 .RE
@@ -1685,7 +1779,7 @@ For example, to validate an email certificate:
 .RS 4
 .\}
 .nf
-$ certutil \-V \-n "John Smith\*(Aqs Email Cert" \-e \-u S,R \-d sql:/home/my/sharednssdb
+$ certutil \-V \-n "John Smith\*(Aqs Email Cert" \-e \-u S,R \-d /home/my/sharednssdb
 .fi
 .if n \{\
 .RE
@@ -1699,7 +1793,7 @@ The trust settings (which relate to the operations that a certificate is allowed
 .RS 4
 .\}
 .nf
-certutil \-M \-n certificate\-name \-t trust\-args \-d [sql:]directory
+certutil \-M \-n certificate\-name \-t trust\-args \-d directory
 .fi
 .if n \{\
 .RE
@@ -1711,7 +1805,7 @@ For example:
 .RS 4
 .\}
 .nf
-$ certutil \-M \-n "My CA Certificate" \-d sql:/home/my/sharednssdb \-t "CT,CT,CT"
+$ certutil \-M \-n "My CA Certificate" \-d /home/my/sharednssdb \-t "CT,CT,CT"
 .fi
 .if n \{\
 .RE
@@ -1729,7 +1823,7 @@ prints the full chain of a certificate, going from the initial CA (the root CA) 
 .RS 4
 .\}
 .nf
-$ certutil \-d sql:/home/my/sharednssdb \-O \-n "jsmith@example\&.com"
+$ certutil \-d /home/my/sharednssdb \-O \-n "jsmith@example\&.com"
 "Builtin Object Token:Thawte Personal Freemail CA" [E=personal\-freemail@thawte\&.com,CN=Thawte Personal Freemail CA,OU=Certification Services Division,O=Thawte Consulting,L=Cape Town,ST=Western Cape,C=ZA]
 
   "Thawte Personal Freemail Issuing CA \- Thawte Consulting" [CN=Thawte Personal Freemail Issuing CA,O=Thawte Consulting (Pty) Ltd\&.,C=ZA]
@@ -1748,7 +1842,7 @@ The device which stores certificates \-\- both external hardware devices and int
 .RS 4
 .\}
 .nf
-certutil \-T \-d [sql:]directory \-h token\-name \-0 security\-officer\-password
+certutil \-T \-d directory \-h token\-name \-0 security\-officer\-password
 .fi
 .if n \{\
 .RE
@@ -1760,7 +1854,7 @@ Many networks have dedicated personnel who handle changes to security tokens (th
 .RS 4
 .\}
 .nf
-$ certutil \-T \-d sql:/home/my/sharednssdb \-h nethsm \-0 secret
+$ certutil \-T \-d /home/my/sharednssdb \-h nethsm \-0 secret
 .fi
 .if n \{\
 .RE
@@ -1785,7 +1879,7 @@ command must give information about the original database and then use the stand
 .RS 4
 .\}
 .nf
-certutil \-\-upgrade\-merge \-d [sql:]directory [\-P dbprefix] \-\-source\-dir directory \-\-source\-prefix dbprefix \-\-upgrade\-id id \-\-upgrade\-token\-name name [\-@ password\-file]
+certutil \-\-upgrade\-merge \-d directory [\-P dbprefix] \-\-source\-dir directory \-\-source\-prefix dbprefix \-\-upgrade\-id id \-\-upgrade\-token\-name name [\-@ password\-file]
 .fi
 .if n \{\
 .RE
@@ -1797,7 +1891,7 @@ For example:
 .RS 4
 .\}
 .nf
-$ certutil \-\-upgrade\-merge \-d sql:/home/my/sharednssdb \-\-source\-dir /opt/my\-app/alias/ \-\-source\-prefix serverapp\- \-\-upgrade\-id 1 \-\-upgrade\-token\-name internal
+$ certutil \-\-upgrade\-merge \-d /home/my/sharednssdb \-\-source\-dir /opt/my\-app/alias/ \-\-source\-prefix serverapp\- \-\-upgrade\-id 1 \-\-upgrade\-token\-name internal
 .fi
 .if n \{\
 .RE
@@ -1811,7 +1905,7 @@ command only requires information about the location of the original database; s
 .RS 4
 .\}
 .nf
-certutil \-\-merge \-d [sql:]directory [\-P dbprefix] \-\-source\-dir directory \-\-source\-prefix dbprefix [\-@ password\-file]
+certutil \-\-merge \-d directory [\-P dbprefix] \-\-source\-dir directory \-\-source\-prefix dbprefix [\-@ password\-file]
 .fi
 .if n \{\
 .RE
@@ -1823,7 +1917,7 @@ For example:
 .RS 4
 .\}
 .nf
-$ certutil \-\-merge \-d sql:/home/my/sharednssdb \-\-source\-dir /opt/my\-app/alias/ \-\-source\-prefix serverapp\-
+$ certutil \-\-merge \-d /home/my/sharednssdb \-\-source\-dir /opt/my\-app/alias/ \-\-source\-prefix serverapp\-
 .fi
 .if n \{\
 .RE
@@ -1926,30 +2020,30 @@ database type\&. The shared database type is preferred; the legacy format is inc
 .PP
 By default, the tools (\fBcertutil\fR,
 \fBpk12util\fR,
-\fBmodutil\fR) assume that the given security databases follow the more common legacy type\&. Using the SQLite databases must be manually specified by using the
-\fBsql:\fR
+\fBmodutil\fR) assume that the given security databases use the SQLite type\&. Using the legacy databases must be manually specified by using the
+\fBdbm:\fR
 prefix with the given security directory\&. For example:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-$ certutil \-L \-d sql:/home/my/sharednssdb
+$ certutil \-L \-d dbm:/home/my/sharednssdb
 .fi
 .if n \{\
 .RE
 .\}
 .PP
-To set the shared database type as the default type for the tools, set the
+To set the legacy database type as the default type for the tools, set the
 \fBNSS_DEFAULT_DB_TYPE\fR
 environment variable to
-\fBsql\fR:
+\fBdbm\fR:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-export NSS_DEFAULT_DB_TYPE="sql"
+export NSS_DEFAULT_DB_TYPE="dbm"
 .fi
 .if n \{\
 .RE
@@ -1958,8 +2052,6 @@ export NSS_DEFAULT_DB_TYPE="sql"
 This line can be set added to the
 ~/\&.bashrc
 file to make the change permanent\&.
-.PP
-Most applications do not use the shared database by default, but they can be configured to use them\&. For example, this how\-to article covers how to configure Firefox and Thunderbird to use the new shared NSS databases:
 .sp
 .RS 4
 .ie n \{\

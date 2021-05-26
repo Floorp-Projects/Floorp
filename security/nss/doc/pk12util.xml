@@ -30,7 +30,7 @@
       <arg>-i p12File|-l p12File|-o p12File</arg>
       <arg>-c keyCipher</arg>
       <arg>-C certCipher</arg>
-      <arg>-d [sql:]directory</arg>
+      <arg>-d directory</arg>
       <arg>-h tokenname</arg>
       <arg>-m | --key-len  keyLength</arg>
       <arg>-M hashAlg</arg>
@@ -88,9 +88,9 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-d [sql:]directory</term>
+        <term>-d directory</term>
         <listitem><para>Specify the database directory into which to import to or export from certificates and keys.</para>
-	<para><command>pk12util</command> supports two types of databases: the legacy security databases (<filename>cert8.db</filename>, <filename>key3.db</filename>, and <filename>secmod.db</filename>) and new SQLite databases (<filename>cert9.db</filename>, <filename>key4.db</filename>, and <filename>pkcs11.txt</filename>). If the prefix <command>sql:</command> is not used, then the tool assumes that the given databases are in the old format.</para></listitem>
+	<para><command>pk12util</command> supports two types of databases: the legacy security databases (<filename>cert8.db</filename>, <filename>key3.db</filename>, and <filename>secmod.db</filename>) and new SQLite databases (<filename>cert9.db</filename>, <filename>key4.db</filename>, and <filename>pkcs11.txt</filename>). If the prefix <command>dbm:</command> is not used, then the tool assumes that the given databases are in the SQLite format.</para></listitem>
       </varlistentry>
 
       <varlistentry>
@@ -249,11 +249,11 @@
     <para>The most basic usage of <command>pk12util</command> for importing a certificate or key is the PKCS #12 input file (<option>-i</option>) and some way to specify the security database being accessed (either <option>-d</option> for a directory or <option>-h</option> for a token).
     </para>
     <para>
-    pk12util -i p12File [-h tokenname] [-v] [-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]
+    pk12util -i p12File [-h tokenname] [-v] [-d directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]
     </para>
     <para>For example:</para>
     <para> </para>
-    <programlisting># pk12util -i /tmp/cert-files/users.p12 -d sql:/home/my/sharednssdb
+    <programlisting># pk12util -i /tmp/cert-files/users.p12 -d /home/my/sharednssdb
 
 Enter a password which will be used to encrypt your keys.
 The password should be at least 8 characters long,
@@ -267,16 +267,16 @@ pk12util: PKCS12 IMPORT SUCCESSFUL</programlisting>
     <para><command>Exporting Keys and Certificates</command></para>
     <para>Using the <command>pk12util</command> command to export certificates and keys requires both the name of the certificate to extract from the database (<option>-n</option>) and the PKCS #12-formatted output file to write to. There are optional parameters that can be used to encrypt the file to protect the certificate material.
     </para>
-    <para>pk12util -o p12File -n certname [-c keyCipher] [-C certCipher] [-m|--key_len keyLen] [-n|--cert_key_len certKeyLen] [-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</para>
+    <para>pk12util -o p12File -n certname [-c keyCipher] [-C certCipher] [-m|--key_len keyLen] [-n|--cert_key_len certKeyLen] [-d directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</para>
     <para>For example:</para>
-    <programlisting># pk12util -o certs.p12 -n Server-Cert -d sql:/home/my/sharednssdb
+    <programlisting># pk12util -o certs.p12 -n Server-Cert -d /home/my/sharednssdb
 Enter password for PKCS12 file: 
 Re-enter password: </programlisting>
 
     <para><command>Listing Keys and Certificates</command></para>
     <para>The information in a <filename>.p12</filename> file are not human-readable. The certificates and keys in the file can be printed (listed) in a human-readable pretty-print format that shows information for every certificate and any public keys in the <filename>.p12</filename> file.
     </para>
-    <para>pk12util -l p12File [-h tokenname] [-r] [-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</para>
+    <para>pk12util -l p12File [-h tokenname] [-r] [-d directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</para>
     <para>For example, this prints the default ASCII output:</para>
     <programlisting># pk12util -l certs.p12
 
@@ -394,17 +394,16 @@ BerkleyDB. These new databases provide more accessibility and performance:</para
 
 <para>Because the SQLite databases are designed to be shared, these are the <emphasis>shared</emphasis> database type. The shared database type is preferred; the legacy format is included for backward compatibility.</para>
 
-<para>By default, the tools (<command>certutil</command>, <command>pk12util</command>, <command>modutil</command>) assume that the given security databases follow the more common legacy type. 
-Using the SQLite databases must be manually specified by using the <command>sql:</command> prefix with the given security directory. For example:</para>
+<para>By default, the tools (<command>certutil</command>, <command>pk12util</command>, <command>modutil</command>) assume that the given security databases use the SQLite type
+Using the legacy databases must be manually specified by using the <command>dbm:</command> prefix with the given security directory. For example:</para>
 
-<programlisting># pk12util -i /tmp/cert-files/users.p12 -d sql:/home/my/sharednssdb</programlisting>
+<programlisting># pk12util -i /tmp/cert-files/users.p12 -d dbm:/home/my/sharednssdb</programlisting>
 
-<para>To set the shared database type as the default type for the tools, set the <envar>NSS_DEFAULT_DB_TYPE</envar> environment variable to <envar>sql</envar>:</para>
-<programlisting>export NSS_DEFAULT_DB_TYPE="sql"</programlisting>
+<para>To set the legacy database type as the default type for the tools, set the <envar>NSS_DEFAULT_DB_TYPE</envar> environment variable to <envar>dbm</envar>:</para>
+<programlisting>export NSS_DEFAULT_DB_TYPE="dbm"</programlisting>
 
 <para>This line can be set added to the <filename>~/.bashrc</filename> file to make the change permanent.</para>
 
-<para>Most applications do not use the shared database by default, but they can be configured to use them. For example, this how-to article covers how to configure Firefox and Thunderbird to use the new shared NSS databases:</para>
 <itemizedlist>
 	<listitem>
 		<para>

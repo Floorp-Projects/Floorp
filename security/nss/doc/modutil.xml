@@ -149,14 +149,14 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-dbdir [sql:]directory</term>
+        <term>-dbdir directory</term>
 	  <listitem><para>Specify the database directory in which to access or create security module database files.</para>
-	<para><command>modutil</command> supports two types of databases: the legacy security databases (<filename>cert8.db</filename>, <filename>key3.db</filename>, and <filename>secmod.db</filename>) and new SQLite databases (<filename>cert9.db</filename>, <filename>key4.db</filename>, and <filename>pkcs11.txt</filename>). If the prefix <command>sql:</command> is not used, then the tool assumes that the given databases are in the old format.</para></listitem>
+	<para><command>modutil</command> supports two types of databases: the legacy security databases (<filename>cert8.db</filename>, <filename>key3.db</filename>, and <filename>secmod.db</filename>) and SQLite databases (<filename>cert9.db</filename>, <filename>key4.db</filename>, and <filename>pkcs11.txt</filename>). If the prefix <command>dbm:</command> is not used, then the tool assumes that the given databases are in SQLite format.</para></listitem>
       </varlistentry>
 
       <varlistentry>
         <term>--dbprefix prefix</term>
-	  <listitem><para>Specify the prefix used on the database files, such as <filename>my_</filename> for <filename>my_cert8.db</filename>. This option is provided as a special case. Changing the names of the certificate and key databases is not recommended.</para></listitem>
+	  <listitem><para>Specify the prefix used on the database files, such as <filename>my_</filename> for <filename>my_cert9.db</filename>. This option is provided as a special case. Changing the names of the certificate and key databases is not recommended.</para></listitem>
       </varlistentry>
 
       <varlistentry>
@@ -229,13 +229,13 @@
 
     <para><command>Creating Database Files</command></para>
     <para>Before any operations can be performed, there must be a set of security databases available. <command>modutil</command> can be used to create these files. The only required argument is the database that where the databases will be located.</para>
-<programlisting>modutil -create -dbdir [sql:]directory</programlisting>
+<programlisting>modutil -create -dbdir directory</programlisting>
 
 	<para><command>Adding a Cryptographic Module</command></para>
 	<para>Adding a PKCS #11 module means submitting a supporting library file, enabling its ciphers, and setting default provider status for various security mechanisms. This can be done by supplying all of the information through <command>modutil</command> directly or by running a JAR file and install script. For the most basic case, simply upload the library:</para>
 <programlisting>modutil -add modulename -libfile library-file [-ciphers cipher-enable-list] [-mechanisms mechanism-list] </programlisting>
 	<para>For example:
-<programlisting>modutil -dbdir sql:/home/my/sharednssdb -add "Example PKCS #11 Module" -libfile "/tmp/crypto.so" -mechanisms RSA:DSA:RC2:RANDOM 
+<programlisting>modutil -dbdir /home/my/sharednssdb -add "Example PKCS #11 Module" -libfile "/tmp/crypto.so" -mechanisms RSA:DSA:RC2:RANDOM 
 
 Using database directory ... 
 Module "Example PKCS #11 Module" added to database.</programlisting>
@@ -267,7 +267,7 @@ Module "Example PKCS #11 Module" added to database.</programlisting>
 } </programlisting>
 	<para>Both the install script and the required libraries must be bundled in a JAR file, which is specified with the <option>-jar</option> argument.</para>
 
-<programlisting>modutil -dbdir sql:/home/mt"jar-install-filey/sharednssdb -jar install.jar -installdir sql:/home/my/sharednssdb
+<programlisting>modutil -dbdir /home/mt"jar-install-filey/sharednssdb -jar install.jar -installdir /home/my/sharednssdb
 
 This installation JAR file was signed by: 
 ---------------------------------------------- 
@@ -304,15 +304,15 @@ Installation completed successfully </programlisting>
 
 	<para><command>Deleting a Module</command></para>
     <para>A specific PKCS #11 module can be deleted from the <filename>secmod.db</filename> database:</para>
-<programlisting>modutil -delete modulename -dbdir [sql:]directory </programlisting>
+<programlisting>modutil -delete modulename -dbdir directory </programlisting>
 
 	<para><command>Displaying Module Information</command></para>
 	<para>The <filename>secmod.db</filename> database contains information about the PKCS #11 modules that are available to an application or server to use. The list of all modules, information about specific modules, and database configuration specs for modules can all be viewed. </para>
     <para>To simply get a list of modules in the database, use the <option>-list</option> command.</para>
-<programlisting>modutil -list [modulename] -dbdir [sql:]directory </programlisting>
+<programlisting>modutil -list [modulename] -dbdir directory </programlisting>
 	<para>Listing the modules shows the module name, their status, and other associated security databases for certificates and keys. For example:</para>
    
-<programlisting>modutil -list -dbdir sql:/home/my/sharednssdb 
+<programlisting>modutil -list -dbdir /home/my/sharednssdb 
 
 Listing of PKCS #11 Modules
 -----------------------------------------------------------
@@ -329,7 +329,7 @@ Listing of PKCS #11 Modules
 	  uri: pkcs11:token=NSS%20Certificate%20DB;manufacturer=Mozilla%20Foundation;serial=0000000000000000;model=NSS%203
 -----------------------------------------------------------</programlisting>
 	<para>Passing a specific module name with the <option>-list</option> returns details information about the module itself, like supported cipher mechanisms, version numbers, serial numbers, and other information about the module and the token it is loaded on. For example:</para>
-<programlisting> modutil -list "NSS Internal PKCS #11 Module" -dbdir sql:/home/my/sharednssdb
+<programlisting> modutil -list "NSS Internal PKCS #11 Module" -dbdir /home/my/sharednssdb
 
 -----------------------------------------------------------
 Name: NSS Internal PKCS #11 Module
@@ -375,7 +375,7 @@ Default Mechanism Flags: RSA:RC2:RC4:DES:DH:SHA1:MD5:MD2:SSL:TLS:AES
   Login Type: Login required
   User Pin: Initialized</programlisting>
 	<para>A related command, <option>-rawlist</option> returns information about the database configuration for the modules. (This information can be edited by loading new specs using the <option>-rawadd</option> command.)</para>
-<programlisting> modutil -rawlist -dbdir sql:/home/my/sharednssdb
+<programlisting> modutil -rawlist -dbdir /home/my/sharednssdb
  name="NSS Internal PKCS #11 Module" parameters="configdir=. certPrefix= keyPrefix= secmod=secmod.db flags=readOnly " NSS="trustOrder=75 cipherOrder=100 slotParams={0x00000001=[slotFlags=RSA,RC4,RC2,DES,DH,SHA1,MD5,MD2,SSL,TLS,AES,RANDOM askpw=any timeout=30 ] }  Flags=internal,critical"</programlisting>
 
 	<para><command>Setting a Default Provider for Security Mechanisms</command></para>
@@ -403,11 +403,11 @@ Slot "NSS Internal Cryptographic Services                            " enabled.<
 
 	<para><command>Enabling and Verifying FIPS Compliance</command></para>
 	<para>The NSS modules can have FIPS 140-2 compliance enabled or disabled using <command>modutil</command> with the <option>-fips</option> option. For example:</para>
-<programlisting>modutil -fips true -dbdir sql:/home/my/sharednssdb/
+<programlisting>modutil -fips true -dbdir /home/my/sharednssdb/
 
 FIPS mode enabled.</programlisting>
 	<para>To verify that status of FIPS mode, run the <option>-chkfips</option> command with either a true or false flag (it doesn't matter which). The tool returns the current FIPS setting.</para>
-<programlisting>modutil -chkfips false -dbdir sql:/home/my/sharednssdb/
+<programlisting>modutil -chkfips false -dbdir /home/my/sharednssdb/
 
 FIPS mode enabled.</programlisting>
 
@@ -415,7 +415,7 @@ FIPS mode enabled.</programlisting>
 
     <para>Initializing or changing a token's password:</para>
 <programlisting>modutil -changepw tokenname [-pwfile old-password-file] [-newpwfile new-password-file] </programlisting>
-<programlisting>modutil -dbdir sql:/home/my/sharednssdb -changepw "NSS Certificate DB" 
+<programlisting>modutil -dbdir /home/my/sharednssdb -changepw "NSS Certificate DB" 
 
 Enter old password: 
 Incorrect password, try again... 
@@ -689,17 +689,16 @@ BerkleyDB. These new databases provide more accessibility and performance:</para
 
 <para>Because the SQLite databases are designed to be shared, these are the <emphasis>shared</emphasis> database type. The shared database type is preferred; the legacy format is included for backward compatibility.</para>
 
-<para>By default, the tools (<command>certutil</command>, <command>pk12util</command>, <command>modutil</command>) assume that the given security databases follow the more common legacy type. 
-Using the SQLite databases must be manually specified by using the <command>sql:</command> prefix with the given security directory. For example:</para>
+<para>By default, the tools (<command>certutil</command>, <command>pk12util</command>, <command>modutil</command>) assume that the given security databases use the SQLite type.
+Using the legacy databases must be manually specified by using the <command>dbm:</command> prefix with the given security directory. For example:</para>
 
-<programlisting>modutil -create -dbdir sql:/home/my/sharednssdb</programlisting>
+<programlisting>modutil -create -dbdir dbm:/home/my/sharednssdb</programlisting>
 
-<para>To set the shared database type as the default type for the tools, set the <envar>NSS_DEFAULT_DB_TYPE</envar> environment variable to <envar>sql</envar>:</para>
-<programlisting>export NSS_DEFAULT_DB_TYPE="sql"</programlisting>
+<para>To set the legacy database type as the default type for the tools, set the <envar>NSS_DEFAULT_DB_TYPE</envar> environment variable to <envar>dbm</envar>:</para>
+<programlisting>export NSS_DEFAULT_DB_TYPE="dbm"</programlisting>
 
 <para>This line can be added to the <filename>~/.bashrc</filename> file to make the change permanent for the user.</para>
 
-<para>Most applications do not use the shared database by default, but they can be configured to use them. For example, this how-to article covers how to configure Firefox and Thunderbird to use the new shared NSS databases:</para>
 <itemizedlist>
 	<listitem>
 		<para>
