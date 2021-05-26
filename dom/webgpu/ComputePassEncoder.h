@@ -52,8 +52,10 @@ class ComputePassEncoder final : public ObjectBase,
   nsTArray<RefPtr<const ComputePipeline>> mUsedPipelines;
 
  public:
+  // programmable pass encoder
   void SetBindGroup(uint32_t aSlot, const BindGroup& aBindGroup,
                     const dom::Sequence<uint32_t>& aDynamicOffsets);
+  // self
   void SetPipeline(const ComputePipeline& aPipeline);
   void Dispatch(uint32_t x, uint32_t y, uint32_t z);
   void DispatchIndirect(const Buffer& aIndirectBuffer,

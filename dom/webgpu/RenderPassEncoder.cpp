@@ -7,6 +7,7 @@
 #include "RenderPassEncoder.h"
 #include "BindGroup.h"
 #include "CommandEncoder.h"
+#include "RenderBundle.h"
 #include "RenderPipeline.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 
@@ -14,7 +15,8 @@ namespace mozilla {
 namespace webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(RenderPassEncoder, mParent, mUsedBindGroups,
-                          mUsedBuffers, mUsedPipelines, mUsedTextureViews)
+                          mUsedBuffers, mUsedPipelines, mUsedTextureViews,
+                          mUsedRenderBundles)
 GPU_IMPL_JS_WRAP(RenderPassEncoder)
 
 ffi::WGPURenderPass* ScopedFfiRenderTraits::empty() { return nullptr; }
@@ -245,6 +247,19 @@ void RenderPassEncoder::SetBlendConstant(
 void RenderPassEncoder::SetStencilReference(uint32_t reference) {
   if (mValid) {
     ffi::wgpu_render_pass_set_stencil_reference(mPass, reference);
+  }
+}
+
+void RenderPassEncoder::ExecuteBundles(
+    const dom::Sequence<OwningNonNull<RenderBundle>>& aBundles) {
+  if (mValid) {
+    nsTArray<ffi::WGPURenderBundleId> renderBundles(aBundles.Length());
+    for (const auto& bundle : aBundles) {
+      mUsedRenderBundles.AppendElement(bundle);
+      renderBundles.AppendElement(bundle->mId);
+    }
+    ffi::wgpu_render_pass_execute_bundles(mPass, renderBundles.Elements(),
+                                          renderBundles.Length());
   }
 }
 

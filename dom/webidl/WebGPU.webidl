@@ -170,8 +170,8 @@ interface GPUDevice: EventTarget {
 
     [NewObject]
     GPUCommandEncoder createCommandEncoder(optional GPUCommandEncoderDescriptor descriptor = {});
-    //[NewObject]
-    //GPURenderBundleEncoder createRenderBundleEncoder(GPURenderBundleEncoderDescriptor descriptor);
+    [NewObject]
+    GPURenderBundleEncoder createRenderBundleEncoder(GPURenderBundleEncoderDescriptor descriptor);
     //[NewObject]
     //GPUQuerySet createQuerySet(GPUQuerySetDescriptor descriptor);
 };
@@ -1019,7 +1019,7 @@ interface GPURenderPassEncoder {
 
     //void writeTimestamp(GPUQuerySet querySet, GPUSize32 queryIndex);
 
-    //void executeBundles(sequence<GPURenderBundle> bundles);
+    void executeBundles(sequence<GPURenderBundle> bundles);
 
     [Throws]
     void endPass();
@@ -1074,12 +1074,11 @@ dictionary GPURenderBundleEncoderDescriptor : GPUObjectDescriptorBase {
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPURenderBundleEncoder {
-    //GPURenderBundle finish(optional GPURenderBundleDescriptor descriptor = {});
+    GPURenderBundle finish(optional GPURenderBundleDescriptor descriptor = {});
 };
 GPURenderBundleEncoder includes GPUObjectBase;
-//TODO
-//GPURenderBundleEncoder includes GPUProgrammablePassEncoder;
-//GPURenderBundleEncoder includes GPURenderEncoderBase;
+GPURenderBundleEncoder includes GPUProgrammablePassEncoder;
+GPURenderBundleEncoder includes GPURenderEncoderBase;
 
 // ****************************************************************************
 // OTHER (Query, Queue, SwapChain, Device)
