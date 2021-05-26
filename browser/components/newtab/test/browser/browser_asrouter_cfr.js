@@ -114,19 +114,6 @@ function checkCFRAddonsElements(notification) {
   );
 }
 
-function checkCFRSocialTrackingProtection(notification) {
-  Assert.ok(notification.hidden === false, "Panel should be visible");
-  Assert.ok(
-    notification.getAttribute("data-notification-category") ===
-      "icon_and_message",
-    "Panel have corret data attribute"
-  );
-  Assert.ok(
-    notification.querySelector("#cfr-notification-footer-learn-more-link"),
-    "Panel should have learn more link"
-  );
-}
-
 function checkCFRTrackingProtectionMilestone(notification) {
   Assert.ok(notification.hidden === false, "Panel should be visible");
   Assert.ok(
@@ -500,49 +487,6 @@ add_task(async function test_cfr_addon_install() {
 });
 
 add_task(
-  async function test_cfr_social_tracking_protection_notification_show() {
-    // addRecommendation checks that scheme starts with http and host matches
-    let browser = gBrowser.selectedBrowser;
-    BrowserTestUtils.loadURI(browser, "http://example.com/");
-    await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
-
-    const showPanel = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
-
-    const response = await trigger_cfr_panel(browser, "example.com", {
-      action: { type: "OPEN_PROTECTION_PANEL" },
-      category: "cfrFeatures",
-      layout: "icon_and_message",
-      skip_address_bar_notifier: true,
-      use_single_secondary_button: true,
-    });
-    Assert.ok(
-      response,
-      "Should return true if addRecommendation checks were successful"
-    );
-    await showPanel;
-
-    const notification = document.getElementById(
-      "contextual-feature-recommendation-notification"
-    );
-    checkCFRSocialTrackingProtection(notification);
-
-    // Check there is a primary button and click it. It will trigger the callback.
-    Assert.ok(notification.button);
-    let hidePanel = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popuphidden"
-    );
-    document
-      .getElementById("contextual-feature-recommendation-notification")
-      .button.click();
-    await hidePanel;
-  }
-);
-
-add_task(
   async function test_cfr_tracking_protection_milestone_notification_remove() {
     await SpecialPowers.pushPrefEnv({
       set: [
@@ -587,16 +531,10 @@ add_task(
       "popuphidden"
     );
 
-    document
-      .getElementById("contextual-feature-recommendation-notification")
-      .secondaryButton.click();
+    notification.secondaryButton.click();
     await hidePanel;
-    Assert.equal(
-      PopupNotifications._currentNotifications.length,
-      0,
-      "Should have removed the notification"
-    );
     await SpecialPowers.popPrefEnv();
+    clearNotifications();
   }
 );
 
@@ -905,65 +843,4 @@ add_task(async function test_heartbeat_tactic_2() {
   document.getElementById("contextual-feature-recommendation").click();
 
   await newTabPromise;
-});
-
-add_task(async function test_cfr_tracking_protection_fingerprint_doorhanger() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [
-        "browser.newtabpage.activity-stream.asrouter.providers.cfr",
-        `{"id":"cfr","enabled":true,"type":"local","localProvider":"CFRMessageProvider","updateCycleInMs":0}`,
-      ],
-    ],
-  });
-
-  // addRecommendation checks that scheme starts with http and host matches
-  let browser = gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(browser, "http://example.com/");
-  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
-
-  const showPanel = BrowserTestUtils.waitForEvent(
-    PopupNotifications.panel,
-    "popupshown"
-  );
-
-  Services.obs.notifyObservers(
-    {
-      wrappedJSObject: {
-        // Combination of multiple content blocking events
-        // https://searchfox.org/mozilla-central/rev/2fcab997046ba9e068c5391dc7d8848e121d84f8/uriloader/base/nsIWebProgressListener.idl#340
-        event: 538091584,
-        host: "example.com",
-        browser,
-      },
-    },
-    "SiteProtection:ContentBlockingEvent"
-  );
-
-  await showPanel;
-
-  const notification = document.getElementById(
-    "contextual-feature-recommendation-notification"
-  );
-
-  checkCFRSocialTrackingProtection(notification);
-
-  Assert.ok(notification.secondaryButton);
-  let hidePanel = BrowserTestUtils.waitForEvent(
-    PopupNotifications.panel,
-    "popuphidden"
-  );
-
-  document
-    .getElementById("contextual-feature-recommendation-notification")
-    .secondaryButton.click();
-  await hidePanel;
-  Assert.equal(
-    PopupNotifications._currentNotifications.length,
-    0,
-    "Should have removed the notification"
-  );
-  // Secondary button will block the message, we need to undo
-  await ASRouter.unblockMessageById("FINGERPRINTERS_PROTECTION");
-  await SpecialPowers.popPrefEnv();
 });
