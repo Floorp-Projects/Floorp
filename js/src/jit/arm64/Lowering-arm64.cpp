@@ -140,14 +140,19 @@ template void LIRGeneratorARM64::lowerForFPU(LInstructionHelper<1, 2, 1>* ins,
                                              MDefinition* mir, MDefinition* lhs,
                                              MDefinition* rhs);
 
+// These all currently have codegen that depends on reuse but only because the
+// masm API depends on that.  We need new three-address masm APIs, for both
+// constant and variable rhs.
+//
+// MAdd => LAddI64
+// MSub => LSubI64
+// MBitAnd, MBitOr, MBitXor => LBitOpI64
 void LIRGeneratorARM64::lowerForALUInt64(
     LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
     MDefinition* mir, MDefinition* lhs, MDefinition* rhs) {
   ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-  ins->setInt64Operand(INT64_PIECES,
-                       lhs != rhs ? useInt64RegisterOrConstant(rhs)
-                                  : useInt64RegisterOrConstantAtStart(rhs));
-  defineInt64ReuseInput(ins, mir, 0);
+  ins->setInt64Operand(INT64_PIECES, useInt64RegisterOrConstantAtStart(rhs));
+  defineInt64(ins, mir);
 }
 
 void LIRGeneratorARM64::lowerForMulInt64(LMulI64* ins, MMul* mir,

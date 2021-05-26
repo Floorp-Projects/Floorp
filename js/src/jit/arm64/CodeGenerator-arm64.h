@@ -100,6 +100,8 @@ class CodeGeneratorARM64 : public CodeGeneratorShared {
                      Register output, Label* fail);
   void emitBigIntMod(LBigIntMod* ins, Register dividend, Register divisor,
                      Register output, Label* fail);
+  void emitSimpleBinaryI64(
+      LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* lir, JSOp op);
 
   ValueOperand ToValue(LInstruction* ins, size_t pos);
   ValueOperand ToTempValue(LInstruction* ins, size_t pos);
