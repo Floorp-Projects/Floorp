@@ -1,5 +1,3 @@
-// |jit-test| --scalar-replace-arguments
-
 setJitCompilerOption("baseline.warmup.trigger", 9);
 setJitCompilerOption("ion.warmup.trigger", 20);
 

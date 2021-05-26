@@ -1,4 +1,4 @@
-// |jit-test| --scalar-replace-arguments; --inlining-entry-threshold=5
+// |jit-test| --inlining-entry-threshold=5
 
 setJitCompilerOption("baseline.warmup.trigger", 9);
 setJitCompilerOption("ion.warmup.trigger", 20);
