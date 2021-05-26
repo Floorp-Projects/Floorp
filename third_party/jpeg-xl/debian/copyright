@@ -3,7 +3,7 @@ Upstream-Name: jpeg-xl
 
 Files: *
 Copyright: 2020 the JPEG XL Project
-License: Apache-2.0
+License: BSD-3-clause
 
 Files: third_party/sjpeg/*
 Copyright: 2017 Google, Inc

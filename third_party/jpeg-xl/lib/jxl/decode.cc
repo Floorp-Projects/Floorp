@@ -1,16 +1,7 @@
-// Copyright (c) the JPEG XL Project
+// Copyright (c) the JPEG XL Project Authors. All rights reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 #include "jxl/decode.h"
 
@@ -1974,10 +1965,16 @@ JxlDecoderStatus JxlDecoderFlushImage(JxlDecoder* dec) {
     return JXL_DEC_SUCCESS;
   }
 
+  // Temporarily shrink `dec->ib` to the actual size of the full image to call
+  // ConvertImageInternal.
+  size_t xsize = dec->ib->xsize();
+  size_t ysize = dec->ib->ysize();
+  dec->ib->ShrinkTo(dec->metadata.size.xsize(), dec->metadata.size.ysize());
   JxlDecoderStatus status = jxl::ConvertImageInternal(
       dec, *dec->ib, dec->image_out_format, dec->image_out_buffer,
       dec->image_out_size,
       /*out_callback=*/nullptr, /*out_opaque=*/nullptr);
+  dec->ib->ShrinkTo(xsize, ysize);
   if (status != JXL_DEC_SUCCESS) return status;
   return JXL_DEC_SUCCESS;
 }

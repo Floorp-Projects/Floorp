@@ -1,16 +1,7 @@
-// Copyright (c) the JPEG XL Project
+// Copyright (c) the JPEG XL Project Authors. All rights reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 #include "lib/jxl/enc_frame.h"
 
@@ -375,12 +366,12 @@ Status MakeFrameHeader(const CompressParams& cparams,
     }
     frame_header->blending_info.alpha_channel = index;
     frame_header->blending_info.mode =
-        ib.blend ? BlendMode::kBlend : BlendMode::kReplace;
+        ib.blend ? ib.blendmode : BlendMode::kReplace;
     // previous frames are saved with ID 1.
     frame_header->blending_info.source = 1;
     for (size_t i = 0; i < extra_channels.size(); i++) {
       frame_header->extra_channel_blending_info[i].alpha_channel = index;
-      BlendMode default_blend = BlendMode::kBlend;
+      BlendMode default_blend = ib.blendmode;
       if (extra_channels[i].type != ExtraChannel::kBlack && i != index) {
         // K needs to be blended, spot colors and other stuff gets added
         default_blend = BlendMode::kAdd;
@@ -1017,6 +1008,8 @@ Status EncodeFrame(const CompressParams& cparams_orig,
                    const ImageBundle& ib, PassesEncoderState* passes_enc_state,
                    ThreadPool* pool, BitWriter* writer, AuxOut* aux_out) {
   ib.VerifyMetadata();
+
+  passes_enc_state->special_frames.clear();
 
   CompressParams cparams = cparams_orig;
   if (cparams.progressive_dc < 0) {
