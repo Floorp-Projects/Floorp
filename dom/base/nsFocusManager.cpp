@@ -3640,7 +3640,7 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
 }
 
 uint32_t nsFocusManager::ProgrammaticFocusFlags(const FocusOptions& aOptions) {
-  uint32_t flags = 0;
+  uint32_t flags = FLAG_BYJS;
   if (aOptions.mPreventScroll) {
     flags |= FLAG_NOSCROLL;
   }

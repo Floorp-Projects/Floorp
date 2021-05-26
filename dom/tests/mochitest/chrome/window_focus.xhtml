@@ -487,7 +487,7 @@ function startTest()
   }
 
   // focus() method
-  gLastFocusMethod = 0;
+  gLastFocusMethod = fm.FLAG_BYJS;
   for (idx = kTabbableSteps; idx >= 1; idx--) {
     if ((navigator.platform.indexOf("Mac") == 0) && (idx == kBeforeTabboxIndex + 1))
       continue;
@@ -523,11 +523,10 @@ function startTest()
   // the focus() method on the legend element should focus the legend if it is
   // focusable, or the first element after the legend if it is not focusable.
   if (!gPartialTabbing) {
-    gLastFocusMethod = fm.FLAG_BYMOVEFOCUS;
+    gLastFocusMethod = fm.FLAG_BYJS;
     var legend = getById("legend");
     expectFocusShift(() => legend.focus(),
                      null, getById("t28"), true, "focus method on unfocusable legend");
-    gLastFocusMethod = 0;
     legend.tabIndex = "0";
     expectFocusShift(() => legend.focus(),
                      null, getById("legend"), true, "focus method on focusable legend");
@@ -563,7 +562,7 @@ function startTest()
   gLastFocusMethod = fm.FLAG_BYMOVEFOCUS | fm.FLAG_BYMOUSE;
   mouseOnElement(getById("ad"), getById("t29"), true, "mouse on html label with content inside");
   mouseOnElement(getById("ag"), getById("n6"), true, "mouse on html label with for attribute");
-  gLastFocusMethod = 0;
+  gLastFocusMethod = fm.FLAG_BYJS;
   expectFocusShift(() => synthesizeMouse(getById("aj"), 2, 2, { }),
                    null, getById("o9"), true, "mouse on xul label with content inside");
   expectFocusShift(() => synthesizeMouse(getById("ak"), 2, 2, { }),
@@ -571,6 +570,7 @@ function startTest()
 
   // test accesskeys that shouldn't work
   k = "o".charCodeAt(0);
+  gLastFocusMethod = fm.FLAG_BYJS;
   while (k++ < "v".charCodeAt(0)) {
     var key = String.fromCharCode(k);
     expectFocusShift(() => synthesizeKey(key, accessKeyDetails),
@@ -759,12 +759,14 @@ function startTest()
 
   // ---- tests for the FLAG_NOSWITCHFRAME flag
   getById("o5").focus();
-  gLastFocusMethod = 0;
+  gLastFocusMethod = fm.FLAG_BYJS;
   gEvents = "";
   // focus is being shifted in a child, so the focus should not change
   expectFocusShift(() => fm.setFocus(getById("t20"), fm.FLAG_NOSWITCHFRAME),
                    window, getById("o5"), false, "no switch frame focus to child");
   setFocusTo("t20", gChildWindow);
+
+  gLastFocusMethod = 0;
 
   // here, however, focus is being shifted in a parent, which will have to blur
   // the child, so the focus will always change
@@ -798,7 +800,7 @@ function startTest()
   var input2 = document.createElement("input");
   $("innerbox").appendChild(input2);
 
-  gLastFocusMethod = 0;
+  gLastFocusMethod = fm.FLAG_BYJS;
   expectFocusShift(() => input2.focus(),
                    null, input2, true, "focus on input");
   gLastFocusMethod = fm.FLAG_BYKEY;
@@ -807,7 +809,7 @@ function startTest()
 
   input1.tabIndex = 2;
   input2.tabIndex = 2;
-  gLastFocusMethod = 0;
+  gLastFocusMethod = fm.FLAG_BYJS;
   expectFocusShift(() => input2.focus(),
                    null, input2, true, "focus on input with tabindex set");
   gLastFocusMethod = fm.FLAG_BYKEY;
