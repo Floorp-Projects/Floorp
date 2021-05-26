@@ -159,8 +159,8 @@ async function setupTabs(num_tabs) {
 }
 
 function doContentRunNextCollectionTimer() {
-  content.windowUtils.pokeGC();
-  content.windowUtils.runNextCollectorTimer();
+  content.windowUtils.pokeGC("PAGE_HIDE");
+  content.windowUtils.runNextCollectorTimer("PAGE_HIDE");
 }
 
 function startNextCollection(
