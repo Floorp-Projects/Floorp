@@ -28,7 +28,7 @@ add_task(async function subDomains1() {
     Ci.nsICookiePermission.ACCESS_SESSION
   );
 
-  SiteDataTestUtils.addToCookies(originA);
+  SiteDataTestUtils.addToCookies({ origin: originA });
   await SiteDataTestUtils.addToIndexedDB(originA);
 
   let originB = "https://mozilla.org";
@@ -38,7 +38,7 @@ add_task(async function subDomains1() {
     Ci.nsICookiePermission.ACCESS_ALLOW
   );
 
-  SiteDataTestUtils.addToCookies(originB);
+  SiteDataTestUtils.addToCookies({ origin: originB });
   await SiteDataTestUtils.addToIndexedDB(originB);
 
   // Check
@@ -101,12 +101,12 @@ add_task(async function subDomains2() {
     Ci.nsICookiePermission.ACCESS_ALLOW
   );
 
-  SiteDataTestUtils.addToCookies(originA);
+  SiteDataTestUtils.addToCookies({ origin: originA });
   await SiteDataTestUtils.addToIndexedDB(originA);
 
   let originB = "https://www.mozilla.org";
 
-  SiteDataTestUtils.addToCookies(originB);
+  SiteDataTestUtils.addToCookies({ origin: originB });
   await SiteDataTestUtils.addToIndexedDB(originB);
 
   // Check
@@ -170,15 +170,15 @@ add_task(async function subDomains3() {
     "cookie",
     Ci.nsICookiePermission.ACCESS_ALLOW
   );
-  SiteDataTestUtils.addToCookies(originA);
+  SiteDataTestUtils.addToCookies({ origin: originA });
   await SiteDataTestUtils.addToIndexedDB(originA);
 
   let originB = "https://mozilla.org";
-  SiteDataTestUtils.addToCookies(originB);
+  SiteDataTestUtils.addToCookies({ origin: originB });
   await SiteDataTestUtils.addToIndexedDB(originB);
 
   let originC = "https://www.mozilla.org";
-  SiteDataTestUtils.addToCookies(originC);
+  SiteDataTestUtils.addToCookies({ origin: originC });
   await SiteDataTestUtils.addToIndexedDB(originC);
 
   // Check

@@ -33,10 +33,22 @@ add_task(function setup() {
 });
 
 add_task(async function testGetSites() {
-  SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN, "foo1", "bar1");
-  SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN, "foo2", "bar2");
+  SiteDataTestUtils.addToCookies({
+    origin: EXAMPLE_ORIGIN,
+    name: "foo1",
+    value: "bar1",
+  });
+  SiteDataTestUtils.addToCookies({
+    origin: EXAMPLE_ORIGIN,
+    name: "foo2",
+    value: "bar2",
+  });
   await SiteDataTestUtils.addToIndexedDB(EXAMPLE_ORIGIN, 4096);
-  SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN_2, "foo", "bar");
+  SiteDataTestUtils.addToCookies({
+    origin: EXAMPLE_ORIGIN_2,
+    name: "foo",
+    value: "bar",
+  });
   await SiteDataTestUtils.addToIndexedDB(EXAMPLE_ORIGIN_2, 2048);
   await SiteDataTestUtils.persist(EXAMPLE_ORIGIN_2);
 
@@ -125,10 +137,22 @@ add_task(async function testRemove() {
   let uri = Services.io.newURI(EXAMPLE_ORIGIN);
   PermissionTestUtils.add(uri, "camera", Services.perms.ALLOW_ACTION);
 
-  SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN, "foo1", "bar1");
-  SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN, "foo2", "bar2");
+  SiteDataTestUtils.addToCookies({
+    origin: EXAMPLE_ORIGIN,
+    name: "foo1",
+    value: "bar1",
+  });
+  SiteDataTestUtils.addToCookies({
+    origin: EXAMPLE_ORIGIN,
+    name: "foo2",
+    value: "bar2",
+  });
   await SiteDataTestUtils.addToIndexedDB(EXAMPLE_ORIGIN, 4096);
-  SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN_2, "foo", "bar");
+  SiteDataTestUtils.addToCookies({
+    origin: EXAMPLE_ORIGIN_2,
+    name: "foo",
+    value: "bar",
+  });
   await SiteDataTestUtils.addToIndexedDB(EXAMPLE_ORIGIN_2, 2048);
   await SiteDataTestUtils.persist(EXAMPLE_ORIGIN_2);
   await SiteDataTestUtils.addToIndexedDB(EXAMPLE_ORIGIN_3, 2048);
@@ -182,10 +206,22 @@ add_task(async function testRemoveSiteData() {
   let uri = Services.io.newURI(EXAMPLE_ORIGIN);
   PermissionTestUtils.add(uri, "camera", Services.perms.ALLOW_ACTION);
 
-  SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN, "foo1", "bar1");
-  SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN, "foo2", "bar2");
+  SiteDataTestUtils.addToCookies({
+    origin: EXAMPLE_ORIGIN,
+    name: "foo1",
+    value: "bar1",
+  });
+  SiteDataTestUtils.addToCookies({
+    origin: EXAMPLE_ORIGIN,
+    name: "foo2",
+    value: "bar2",
+  });
   await SiteDataTestUtils.addToIndexedDB(EXAMPLE_ORIGIN, 4096);
-  SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN_2, "foo", "bar");
+  SiteDataTestUtils.addToCookies({
+    origin: EXAMPLE_ORIGIN_2,
+    name: "foo",
+    value: "bar",
+  });
   await SiteDataTestUtils.addToIndexedDB(EXAMPLE_ORIGIN_2, 2048);
   await SiteDataTestUtils.persist(EXAMPLE_ORIGIN_2);
 

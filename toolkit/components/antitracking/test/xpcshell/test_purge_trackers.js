@@ -46,7 +46,7 @@ async function setupTest(aCookieBehavior) {
 add_task(async function testNotPurging() {
   await UrlClassifierTestUtils.addTestTrackers();
   setupTest(Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN);
-  SiteDataTestUtils.addToCookies(TRACKING_PAGE);
+  SiteDataTestUtils.addToCookies({ origin: TRACKING_PAGE });
 
   Services.prefs.setIntPref(
     "network.cookie.cookieBehavior",
@@ -90,7 +90,7 @@ async function testIndexedDBAndLocalStorage() {
     Services.perms.ALLOW_ACTION
   );
 
-  SiteDataTestUtils.addToCookies(BENIGN_PAGE);
+  SiteDataTestUtils.addToCookies({ origin: BENIGN_PAGE });
   for (let url of [
     TRACKING_PAGE,
     TRACKING_PAGE2,
@@ -99,7 +99,7 @@ async function testIndexedDBAndLocalStorage() {
     FOREIGN_PAGE3,
   ]) {
     SiteDataTestUtils.addToLocalStorage(url);
-    SiteDataTestUtils.addToCookies(url);
+    SiteDataTestUtils.addToCookies({ origin: url });
     await SiteDataTestUtils.addToIndexedDB(url);
   }
 
@@ -193,11 +193,11 @@ async function testBaseDomain() {
     );
 
     for (let origin of associatedOrigins) {
-      SiteDataTestUtils.addToCookies(origin);
+      SiteDataTestUtils.addToCookies({ origin });
     }
 
     // Add another tracker to verify we're actually purging.
-    SiteDataTestUtils.addToCookies(TRACKING_PAGE);
+    SiteDataTestUtils.addToCookies({ origin: TRACKING_PAGE });
 
     await PurgeTrackerService.purgeTrackingCookieJars();
 
@@ -247,10 +247,12 @@ async function testUserInteraction(ownerPage) {
     Services.perms.ALLOW_ACTION
   );
 
-  SiteDataTestUtils.addToCookies(RESOURCE_PAGE);
+  SiteDataTestUtils.addToCookies({ origin: RESOURCE_PAGE });
 
   // Add another tracker to verify we're actually purging.
-  SiteDataTestUtils.addToCookies("https://another-tracking.example.net");
+  SiteDataTestUtils.addToCookies({
+    origin: "https://another-tracking.example.net",
+  });
 
   await PurgeTrackerService.purgeTrackingCookieJars();
 
@@ -430,7 +432,7 @@ async function testExpiredInteractionPermission() {
     FOREIGN_PAGE3,
   ]) {
     SiteDataTestUtils.addToLocalStorage(url);
-    SiteDataTestUtils.addToCookies(url);
+    SiteDataTestUtils.addToCookies({ origin: url });
     await SiteDataTestUtils.addToIndexedDB(url);
   }
 

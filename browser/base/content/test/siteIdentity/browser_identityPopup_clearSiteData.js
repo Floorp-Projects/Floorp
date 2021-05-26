@@ -33,9 +33,21 @@ async function testClearing(
 
   // Add some test cookies.
   if (testCookies) {
-    SiteDataTestUtils.addToCookies(origin, "test1", "1");
-    SiteDataTestUtils.addToCookies(origin, "test2", "2");
-    SiteDataTestUtils.addToCookies(subOrigin, "test3", "1");
+    SiteDataTestUtils.addToCookies({
+      origin,
+      name: "test1",
+      value: "1",
+    });
+    SiteDataTestUtils.addToCookies({
+      origin,
+      name: "test2",
+      value: "2",
+    });
+    SiteDataTestUtils.addToCookies({
+      origin: subOrigin,
+      name: "test3",
+      value: "1",
+    });
   }
 
   await BrowserTestUtils.withNewTab(testURI, async function(browser) {

@@ -9,7 +9,7 @@ add_task(async function sanitizeStorageAccessPermissions() {
   });
 
   await SiteDataTestUtils.addToIndexedDB("https://sub.example.org");
-  await SiteDataTestUtils.addToCookies("https://example.com");
+  await SiteDataTestUtils.addToCookies({ origin: "https://example.com" });
 
   PermissionTestUtils.add(
     "https://example.org",
