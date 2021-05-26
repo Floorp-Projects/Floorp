@@ -620,13 +620,13 @@ var PKT_PANEL_OVERLAY = function(options) {
       .classList.add(`pkt_ext_container_finalstate`);
   };
   this.showStateError = function(headline, detail) {
-    document
-      .querySelector(`.pkt_ext_containersaved .pkt_ext_detail h2`)
-      .textContent(headline);
+    document.querySelector(
+      `.pkt_ext_containersaved .pkt_ext_detail h2`
+    ).textContent = headline;
 
-    document
-      .querySelector(`.pkt_ext_containersaved .pkt_ext_detail h3`)
-      .textContent(detail);
+    document.querySelector(
+      `.pkt_ext_containersaved .pkt_ext_detail h3`
+    ).textContent = detail;
 
     document
       .querySelector(`.pkt_ext_containersaved`)
