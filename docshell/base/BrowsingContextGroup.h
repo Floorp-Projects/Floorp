@@ -77,6 +77,19 @@ class BrowsingContextGroup final : public nsWrapperCache {
   void AddKeepAlive();
   void RemoveKeepAlive();
 
+  // A `KeepAlivePtr` will hold both a strong reference to the
+  // `BrowsingContextGroup` and holds a `KeepAlive`. When the pointer is
+  // dropped, it will release both the strong reference and the keepalive.
+  struct KeepAliveDeleter {
+    void operator()(BrowsingContextGroup* aPtr) {
+      if (RefPtr<BrowsingContextGroup> ptr = already_AddRefed(aPtr)) {
+        ptr->RemoveKeepAlive();
+      }
+    }
+  };
+  using KeepAlivePtr = UniquePtr<BrowsingContextGroup, KeepAliveDeleter>;
+  KeepAlivePtr MakeKeepAlivePtr();
+
   // Call when we want to check if we should suspend or resume all top level
   // contexts.
   void UpdateToplevelsSuspendedIfNeeded();
@@ -231,5 +244,17 @@ class BrowsingContextGroup final : public nsWrapperCache {
 };
 }  // namespace dom
 }  // namespace mozilla
+
+inline void ImplCycleCollectionUnlink(
+    mozilla::dom::BrowsingContextGroup::KeepAlivePtr& aField) {
+  aField = nullptr;
+}
+
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    mozilla::dom::BrowsingContextGroup::KeepAlivePtr& aField, const char* aName,
+    uint32_t aFlags = 0) {
+  CycleCollectionNoteChild(aCallback, aField.get(), aName, aFlags);
+}
 
 #endif  // !defined(mozilla_dom_BrowsingContextGroup_h)

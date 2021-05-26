@@ -272,6 +272,11 @@ void BrowsingContextGroup::RemoveKeepAlive() {
   MaybeDestroy();
 }
 
+auto BrowsingContextGroup::MakeKeepAlivePtr() -> KeepAlivePtr {
+  AddKeepAlive();
+  return KeepAlivePtr{do_AddRef(this).take()};
+}
+
 void BrowsingContextGroup::MaybeDestroy() {
   // Once there are no synced contexts referencing a `BrowsingContextGroup`, we
   // can clear subscribers and destroy this group. We only do this in the parent
