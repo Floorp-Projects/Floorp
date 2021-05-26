@@ -14,6 +14,7 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/PBackgroundSessionStorageCache.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
@@ -42,6 +43,9 @@
 #include "nsBrowserStatusFilter.h"
 #include "nsIBrowser.h"
 #include "nsTHashSet.h"
+#include "SessionStoreFunctions.h"
+#include "nsIXPConnect.h"
+#include "nsImportModule.h"
 
 #ifdef NS_PRINTING
 #  include "mozilla/embedding/printingui/PrintingParent.h"
@@ -1022,6 +1026,8 @@ void CanonicalBrowsingContext::CanonicalDiscard() {
   if (IsTop()) {
     BackgroundSessionStorageManager::RemoveManager(Id());
   }
+
+  CancelSessionStoreUpdate();
 }
 
 void CanonicalBrowsingContext::NotifyStartDelayedAutoplayMedia() {
@@ -2026,6 +2032,119 @@ void CanonicalBrowsingContext::RestoreState::Resolve() {
   mPromise = nullptr;
 }
 
+nsresult CanonicalBrowsingContext::WriteSessionStorageToSessionStore(
+    const nsTArray<SSCacheCopy>& aSesssionStorage, uint32_t aEpoch) {
+  RefPtr<WindowGlobalParent> windowParent = GetCurrentWindowGlobal();
+
+  if (!windowParent) {
+    return NS_OK;
+  }
+
+  Element* frameElement = windowParent->GetRootOwnerElement();
+  if (!frameElement) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISessionStoreFunctions> funcs =
+      do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
+  if (!funcs) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(wrapped->GetJSObjectGlobal())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Record<nsCString, Record<nsString, nsString>> storage;
+  JS::RootedValue update(jsapi.cx());
+
+  if (!aSesssionStorage.IsEmpty()) {
+    SessionStoreUtils::ConstructSessionStorageValues(this, aSesssionStorage,
+                                                     storage);
+    if (!ToJSValue(jsapi.cx(), storage, &update)) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    update.setNull();
+  }
+
+  return funcs->UpdateSessionStoreForStorage(frameElement, this, aEpoch,
+                                             update);
+}
+
+void CanonicalBrowsingContext::UpdateSessionStoreSessionStorage(
+    const std::function<void()>& aDone) {
+  using DataPromise = BackgroundSessionStorageManager::DataPromise;
+  BackgroundSessionStorageManager::GetData(
+      this, StaticPrefs::browser_sessionstore_dom_storage_limit(),
+      /* aCancelSessionStoreTiemr = */ true)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr{this}, aDone, epoch = GetSessionStoreEpoch()](
+                 const DataPromise::ResolveOrRejectValue& valueList) {
+               if (valueList.IsResolve()) {
+                 self->WriteSessionStorageToSessionStore(
+                     valueList.ResolveValue(), epoch);
+               }
+               aDone();
+             });
+}
+
+/* static */
+void CanonicalBrowsingContext::UpdateSessionStoreForStorage(
+    uint64_t aBrowsingContextId) {
+  RefPtr<CanonicalBrowsingContext> browsingContext = Get(aBrowsingContextId);
+
+  if (!browsingContext) {
+    return;
+  }
+
+  browsingContext->UpdateSessionStoreSessionStorage([]() {});
+}
+
+void CanonicalBrowsingContext::MaybeScheduleSessionStoreUpdate() {
+  if (!IsTop()) {
+    Top()->MaybeScheduleSessionStoreUpdate();
+    return;
+  }
+
+  if (IsInBFCache()) {
+    return;
+  }
+
+  if (mSessionStoreSessionStorageUpdateTimer) {
+    return;
+  }
+
+  if (StaticPrefs::browser_sessionstore_debug_no_auto_updates()) {
+    UpdateSessionStoreSessionStorage([]() {});
+    return;
+  }
+
+  auto result = NS_NewTimerWithFuncCallback(
+      [](nsITimer*, void* aClosure) {
+        auto* context = static_cast<CanonicalBrowsingContext*>(aClosure);
+        context->UpdateSessionStoreSessionStorage([]() {});
+      },
+      this, StaticPrefs::browser_sessionstore_interval(),
+      nsITimer::TYPE_ONE_SHOT,
+      "CanonicalBrowsingContext::MaybeScheduleSessionStoreUpdate");
+
+  if (result.isErr()) {
+    return;
+  }
+
+  mSessionStoreSessionStorageUpdateTimer = result.unwrap();
+}
+
+void CanonicalBrowsingContext::CancelSessionStoreUpdate() {
+  if (mSessionStoreSessionStorageUpdateTimer) {
+    mSessionStoreSessionStorageUpdateTimer->Cancel();
+    mSessionStoreSessionStorageUpdateTimer = nullptr;
+  }
+}
+
 void CanonicalBrowsingContext::SetContainerFeaturePolicy(
     FeaturePolicy* aContainerFeaturePolicy) {
   mContainerFeaturePolicy = aContainerFeaturePolicy;
@@ -2234,7 +2353,8 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CanonicalBrowsingContext, BrowsingContext,
                                    mSessionHistory, mContainerFeaturePolicy,
-                                   mCurrentBrowserParent)
+                                   mCurrentBrowserParent,
+                                   mSessionStoreSessionStorageUpdateTimer)
 
 NS_IMPL_ADDREF_INHERITED(CanonicalBrowsingContext, BrowsingContext)
 NS_IMPL_RELEASE_INHERITED(CanonicalBrowsingContext, BrowsingContext)

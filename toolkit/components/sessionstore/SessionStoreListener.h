@@ -19,8 +19,6 @@ class nsITimer;
 namespace mozilla {
 namespace dom {
 
-class StorageEvent;
-
 class ContentSessionStore {
  public:
   explicit ContentSessionStore(nsIDocShell* aDocShell);
@@ -32,31 +30,6 @@ class ContentSessionStore {
   nsCString GetDocShellCaps();
   bool IsPrivateChanged() { return mPrivateChanged; }
   bool GetPrivateModeEnabled();
-
-  // Use "mStorageStatus" to manage the status of storageChanges
-  bool IsStorageUpdated() { return mStorageStatus != NO_STORAGE; }
-  void ResetStorage() { mStorageStatus = RESET; }
-  /*
-    There are three situations we need entire session storage:
-    1. OnDocumentStart: PageLoad started
-    2. OnDocumentEnd: PageLoad completed
-    3. receive "browser:purge-sessionStorage" event
-    Use SetFullStorageNeeded() to set correct "mStorageStatus" and
-    reset the pending individual change.
-   */
-  void SetFullStorageNeeded();
-  void ResetStorageChanges();
-  // GetAndClearStorageChanges() is used for getting storageChanges.
-  // It clears the stored storage changes before returning.
-  // It will return true if it is a entire session storage.
-  // Otherwise, it will return false.
-  bool GetAndClearStorageChanges(nsTArray<nsCString>& aOrigins,
-                                 nsTArray<nsString>& aKeys,
-                                 nsTArray<nsString>& aValues);
-  // Using AppendSessionStorageChange() to append session storage change when
-  // receiving "MozSessionStorageChanged".
-  // Return true if there is a new storage change which is appended.
-  bool AppendSessionStorageChange(StorageEvent* aEvent);
 
   void SetSHistoryChanged();
   // request "collect sessionHistory" which is happened in the parent process
@@ -71,8 +44,8 @@ class ContentSessionStore {
   void OnDocumentStart();
   void OnDocumentEnd();
   bool UpdateNeeded() {
-    return mPrivateChanged || mDocCapChanged || IsStorageUpdated() ||
-           mSHistoryChanged || mSHistoryChangedFromParent;
+    return mPrivateChanged || mDocCapChanged || mSHistoryChanged ||
+           mSHistoryChangedFromParent;
   }
 
  private:
@@ -82,18 +55,8 @@ class ContentSessionStore {
   nsCOMPtr<nsIDocShell> mDocShell;
   bool mPrivateChanged;
   bool mIsPrivate;
-  enum {
-    NO_STORAGE,
-    RESET,
-    FULLSTORAGE,
-    STORAGECHANGE,
-  } mStorageStatus;
   bool mDocCapChanged;
   nsCString mDocCaps;
-  // mOrigins, mKeys, mValues are for sessionStorage partial changes
-  nsTArray<nsCString> mOrigins;
-  nsTArray<nsString> mKeys;
-  nsTArray<nsString> mValues;
   // mSHistoryChanged means there are history changes which are found
   // in the child process. The flag is set when
   //    1. webProgress changes to STATE_START
@@ -138,8 +101,6 @@ class TabListener : public nsIDOMEventListener,
   void AddEventListeners();
   void RemoveEventListeners();
   bool UpdateSessionStore(bool aIsFlush = false, bool aIsFinal = false);
-  void ResetStorageChangeListener();
-  void RemoveStorageChangeListener();
   virtual ~TabListener();
 
   nsCOMPtr<nsIDocShell> mDocShell;
@@ -148,8 +109,6 @@ class TabListener : public nsIDOMEventListener,
   bool mProgressListenerRegistered;
   bool mEventListenerRegistered;
   bool mPrefObserverRegistered;
-  bool mStorageObserverRegistered;
-  bool mStorageChangeListenerRegistered;
   // Timer used to update data
   nsCOMPtr<nsITimer> mUpdatedTimer;
   bool mTimeoutDisabled;

@@ -7,7 +7,6 @@
 #include "mozilla/dom/SessionStoreListener.h"
 #include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/SessionStoreUtilsBinding.h"
-#include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "nsGenericHTMLElement.h"
@@ -44,7 +43,6 @@ ContentSessionStore::ContentSessionStore(nsIDocShell* aDocShell)
     : mDocShell(aDocShell),
       mPrivateChanged(false),
       mIsPrivate(false),
-      mStorageStatus(NO_STORAGE),
       mDocCapChanged(false),
       mSHistoryChanged(false),
       mSHistoryChangedFromParent(false) {
@@ -104,18 +102,6 @@ bool ContentSessionStore::GetPrivateModeEnabled() {
   return mIsPrivate;
 }
 
-void ContentSessionStore::SetFullStorageNeeded() {
-  // We need the entire session storage, reset the pending individual change
-  ResetStorageChanges();
-  mStorageStatus = FULLSTORAGE;
-}
-
-void ContentSessionStore::ResetStorageChanges() {
-  mOrigins.Clear();
-  mKeys.Clear();
-  mValues.Clear();
-}
-
 void ContentSessionStore::SetSHistoryChanged() {
   mSHistoryChanged = mozilla::SessionHistoryInParent();
 }
@@ -132,15 +118,12 @@ void ContentSessionStore::OnDocumentStart() {
     mDocCapChanged = true;
   }
 
-  SetFullStorageNeeded();
-
   if (mozilla::SessionHistoryInParent()) {
     mSHistoryChanged = true;
   }
 }
 
 void ContentSessionStore::OnDocumentEnd() {
-  SetFullStorageNeeded();
   if (mozilla::SessionHistoryInParent()) {
     mSHistoryChanged = true;
   }
@@ -167,8 +150,6 @@ TabListener::TabListener(nsIDocShell* aDocShell, Element* aElement)
       mProgressListenerRegistered(false),
       mEventListenerRegistered(false),
       mPrefObserverRegistered(false),
-      mStorageObserverRegistered(false),
-      mStorageChangeListenerRegistered(false),
       mUpdatedTimer(nullptr),
       mTimeoutDisabled(false),
       mUpdateInterval(15000),
@@ -208,13 +189,6 @@ nsresult TabListener::Init() {
     mPrefObserverRegistered = true;
   }
 
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  NS_WARNING_ASSERTION(obs, "no observer service");
-  if (obs) {
-    obs->AddObserver(this, "browser:purge-sessionStorage", true);
-    mStorageObserverRegistered = true;
-  }
-
   AddEventListeners();
   return NS_OK;
 }
@@ -225,10 +199,6 @@ void TabListener::AddEventListeners() {
       eventTarget->AddSystemEventListener(u"DOMTitleChanged"_ns, this, false);
     }
     mEventListenerRegistered = true;
-
-    eventTarget->AddSystemEventListener(u"MozSessionStorageChanged"_ns, this,
-                                        false);
-    mStorageChangeListenerRegistered = true;
   }
 }
 
@@ -240,11 +210,6 @@ void TabListener::RemoveEventListeners() {
                                                false);
       }
       mEventListenerRegistered = false;
-    }
-    if (mStorageChangeListenerRegistered) {
-      eventTarget->RemoveSystemEventListener(u"MozSessionStorageChanged"_ns,
-                                             this, false);
-      mStorageChangeListenerRegistered = false;
     }
   }
 }
@@ -324,7 +289,6 @@ NS_IMETHODIMP TabListener::OnStateChange(nsIWebProgress* aWebProgress,
 
   if (aStateFlags & (nsIWebProgressListener::STATE_START)) {
     mSessionStore->OnDocumentStart();
-    ResetStorageChangeListener();
   } else if (aStateFlags & (nsIWebProgressListener::STATE_STOP)) {
     mSessionStore->OnDocumentEnd();
   }
@@ -351,24 +315,7 @@ TabListener::HandleEvent(Event* aEvent) {
 
   nsAutoString eventType;
   aEvent->GetType(eventType);
-  if (eventType.EqualsLiteral("MozSessionStorageChanged")) {
-    auto event = static_cast<StorageEvent*>(aEvent);
-    RefPtr<Storage> changingStorage = event->GetStorageArea();
-    if (!changingStorage) {
-      return NS_OK;
-    }
-    // How much data does DOMSessionStorage contain?
-    int64_t storageUsage = changingStorage->GetOriginQuotaUsage();
-    if (storageUsage > StaticPrefs::browser_sessionstore_dom_storage_limit()) {
-      RemoveStorageChangeListener();
-      mSessionStore->ResetStorageChanges();
-      mSessionStore->ResetStorage();
-      return NS_OK;
-    }
-    if (mSessionStore->AppendSessionStorageChange(event)) {
-      AddTimerForUpdate();
-    }
-  } else if (eventType.EqualsLiteral("DOMTitleChanged")) {
+  if (eventType.EqualsLiteral("DOMTitleChanged")) {
     mSessionStore->SetSHistoryChanged();
     AddTimerForUpdate();
   }
@@ -411,12 +358,6 @@ NS_IMETHODIMP TabListener::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
 
 nsresult TabListener::Observe(nsISupports* aSubject, const char* aTopic,
                               const char16_t* aData) {
-  if (!strcmp(aTopic, "browser:purge-sessionStorage")) {
-    mSessionStore->SetFullStorageNeeded();
-    AddTimerForUpdate();
-    return NS_OK;
-  }
-
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
 
@@ -496,61 +437,6 @@ int CollectPositions(BrowsingContext* aBrowsingContext,
   return aPositionDescendants[currentIdx] + 1;
 }
 
-bool ContentSessionStore::AppendSessionStorageChange(StorageEvent* aEvent) {
-  // We will collect the full SessionStore if mStorageStatus is FULLSTORAGE.
-  // These partial changes can be skipped in this case.
-  if (mStorageStatus == FULLSTORAGE) {
-    return false;
-  }
-
-  RefPtr<Storage> changingStorage = aEvent->GetStorageArea();
-  if (!changingStorage) {
-    return false;
-  }
-
-  nsCOMPtr<nsIPrincipal> storagePrincipal = changingStorage->StoragePrincipal();
-  if (!storagePrincipal) {
-    return false;
-  }
-
-  nsAutoCString origin;
-  nsresult rv = storagePrincipal->GetOrigin(origin);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  mOrigins.AppendElement(origin);
-  aEvent->GetKey(*mKeys.AppendElement());
-  aEvent->GetNewValue(*mValues.AppendElement());
-  mStorageStatus = STORAGECHANGE;
-  return true;
-}
-
-bool ContentSessionStore::GetAndClearStorageChanges(
-    nsTArray<nsCString>& aOrigins, nsTArray<nsString>& aKeys,
-    nsTArray<nsString>& aValues) {
-  MOZ_ASSERT(IsStorageUpdated());
-  bool isFullStorage = false;
-
-  if (mStorageStatus == RESET) {
-    isFullStorage = true;
-  } else if (mStorageStatus == FULLSTORAGE) {
-    MOZ_ASSERT(mDocShell);
-    SessionStoreUtils::CollectedSessionStorage(
-        nsDocShell::Cast(mDocShell)->GetBrowsingContext(), aOrigins, aKeys,
-        aValues);
-    isFullStorage = true;
-  } else if (mStorageStatus == STORAGECHANGE) {
-    aOrigins.SwapElements(mOrigins);
-    aKeys.SwapElements(mKeys);
-    aValues.SwapElements(mValues);
-  }
-
-  ResetStorageChanges();
-  mStorageStatus = NO_STORAGE;
-  return isFullStorage;
-}
-
 bool TabListener::ForceFlushFromParent(bool aIsFinal) {
   if (!XRE_IsParentProcess()) {
     return false;
@@ -610,15 +496,6 @@ bool TabListener::UpdateSessionStore(bool aIsFlush, bool aIsFinal) {
   if (mSessionStore->IsPrivateChanged()) {
     data.mIsPrivate.Construct() = mSessionStore->GetPrivateModeEnabled();
   }
-  if (mSessionStore->IsStorageUpdated()) {
-    nsTArray<nsCString> origins;
-    nsTArray<nsString> keys, values;
-    data.mIsFullStorage.Construct() =
-        mSessionStore->GetAndClearStorageChanges(origins, keys, values);
-    data.mStorageOrigins.Construct(std::move(origins));
-    data.mStorageKeys.Construct(std::move(keys));
-    data.mStorageValues.Construct(std::move(values));
-  }
 
   nsCOMPtr<nsISessionStoreFunctions> funcs =
       do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
@@ -638,33 +515,6 @@ bool TabListener::UpdateSessionStore(bool aIsFlush, bool aIsFinal) {
   return true;
 }
 
-void TabListener::ResetStorageChangeListener() {
-  if (mStorageChangeListenerRegistered) {
-    return;
-  }
-
-  nsCOMPtr<EventTarget> eventTarget = GetEventTarget();
-  if (!eventTarget) {
-    return;
-  }
-  eventTarget->AddSystemEventListener(u"MozSessionStorageChanged"_ns, this,
-                                      false);
-  mStorageChangeListenerRegistered = true;
-}
-
-void TabListener::RemoveStorageChangeListener() {
-  if (!mStorageChangeListenerRegistered) {
-    return;
-  }
-
-  nsCOMPtr<EventTarget> eventTarget = GetEventTarget();
-  if (eventTarget) {
-    eventTarget->RemoveSystemEventListener(u"MozSessionStorageChanged"_ns, this,
-                                           false);
-    mStorageChangeListenerRegistered = false;
-  }
-}
-
 void TabListener::RemoveListeners() {
   if (mProgressListenerRegistered) {
     nsCOMPtr<nsIWebProgress> webProgress = do_QueryInterface(mDocShell);
@@ -676,7 +526,7 @@ void TabListener::RemoveListeners() {
 
   RemoveEventListeners();
 
-  if (mPrefObserverRegistered || mStorageObserverRegistered) {
+  if (mPrefObserverRegistered) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (!obs) {
       return;
@@ -685,10 +535,6 @@ void TabListener::RemoveListeners() {
       obs->RemoveObserver(this, kTimeOutDisable);
       obs->RemoveObserver(this, kPrefInterval);
       mPrefObserverRegistered = false;
-    }
-    if (mStorageObserverRegistered) {
-      obs->RemoveObserver(this, "browser:purge-sessionStorage");
-      mStorageObserverRegistered = false;
     }
   }
 }

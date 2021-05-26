@@ -3791,15 +3791,7 @@ bool BrowserChild::UpdateSessionStore(bool aIsFinal) {
     privatedMode.emplace(store->GetPrivateModeEnabled());
   }
 
-  nsTArray<nsCString> origins;
-  nsTArray<nsString> keys, values;
-  bool isFullStorage = false;
-  if (store->IsStorageUpdated()) {
-    isFullStorage = store->GetAndClearStorageChanges(origins, keys, values);
-  }
-
-  Unused << SendSessionStoreUpdate(docShellCaps, privatedMode, origins, keys,
-                                   values, isFullStorage,
+  Unused << SendSessionStoreUpdate(docShellCaps, privatedMode,
                                    store->GetAndClearSHistoryChanged(),
                                    aIsFinal, mSessionStoreListener->GetEpoch());
   return true;
