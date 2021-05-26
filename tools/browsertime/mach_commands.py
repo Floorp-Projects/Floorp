@@ -155,13 +155,11 @@ host_fetches = {
 
 @CommandProvider
 class MachBrowsertime(MachCommandBase):
-    @property
     def artifact_cache_path(self):
         r"""Downloaded artifacts will be kept here."""
         # The convention is $MOZBUILD_STATE_PATH/cache/$FEATURE.
         return mozpath.join(self._mach_context.state_dir, "cache", "browsertime")
 
-    @property
     def state_path(self):
         r"""Unpacked artifacts will be kept here."""
         # The convention is $MOZBUILD_STATE_PATH/$FEATURE.
@@ -196,7 +194,7 @@ class MachBrowsertime(MachCommandBase):
 
         # Download the visualmetrics.py requirements.
         artifact_cache = ArtifactCache(
-            self.artifact_cache_path, log=self.log, skip_cache=False
+            self.artifact_cache_path(), log=self.log, skip_cache=False
         )
 
         fetches = host_fetches[host_platform()]
@@ -207,8 +205,8 @@ class MachBrowsertime(MachCommandBase):
             if fetch.get("unpack", True):
                 cwd = os.getcwd()
                 try:
-                    mkdir(self.state_path)
-                    os.chdir(self.state_path)
+                    mkdir(self.state_path())
+                    os.chdir(self.state_path())
                     self.log(
                         logging.INFO,
                         "browsertime",
@@ -220,14 +218,14 @@ class MachBrowsertime(MachCommandBase):
                         # Windows archive does not contain a subfolder
                         # so we make one for it here
                         mkdir(fetch.get("path"))
-                        os.chdir(os.path.join(self.state_path, fetch.get("path")))
+                        os.chdir(os.path.join(self.state_path(), fetch.get("path")))
                         unpack_file(archive)
-                        os.chdir(self.state_path)
+                        os.chdir(self.state_path())
                     else:
                         unpack_file(archive)
 
                     # Make sure the expected path exists after extraction
-                    path = os.path.join(self.state_path, fetch.get("path"))
+                    path = os.path.join(self.state_path(), fetch.get("path"))
                     if not os.path.exists(path):
                         raise Exception("Cannot find an extracted directory: %s" % path)
 
@@ -344,12 +342,12 @@ class MachBrowsertime(MachCommandBase):
         # script doesn't take these as configuration, so we do this (for now).
         # We should update the script itself to accept this configuration.
         path = os.environ.get("PATH", "").split(os.pathsep) if append_path else []
-        path_to_ffmpeg = mozpath.join(self.state_path, fetches["ffmpeg"]["path"])
+        path_to_ffmpeg = mozpath.join(self.state_path(), fetches["ffmpeg"]["path"])
 
         path_to_imagemagick = None
         if "ImageMagick" in fetches:
             path_to_imagemagick = mozpath.join(
-                self.state_path, fetches["ImageMagick"]["path"]
+                self.state_path(), fetches["ImageMagick"]["path"]
             )
 
         if path_to_imagemagick:
@@ -357,7 +355,7 @@ class MachBrowsertime(MachCommandBase):
             # want to ensure that our ffmpeg goes first, just in case.
             path.insert(
                 0,
-                self.state_path
+                self.state_path()
                 if host_platform().startswith("win")
                 else mozpath.join(path_to_imagemagick, "bin"),
             )  # noqa
