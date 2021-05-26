@@ -9,8 +9,12 @@
 
 requestLongerTimeout(6);
 
+const TEST_THIRD_PARTY_DOMAIN = TEST_DOMAIN_2;
+const TEST_THIRD_PARTY_SUB_DOMAIN = "http://sub1.xn--exmple-cua.test/";
+
 const TEST_URI = TEST_DOMAIN + TEST_PATH + "file_stripping.html";
-const TEST_THIRD_PARTY_URI = TEST_DOMAIN_2 + TEST_PATH + "file_stripping.html";
+const TEST_THIRD_PARTY_URI =
+  TEST_THIRD_PARTY_DOMAIN + TEST_PATH + "file_stripping.html";
 const TEST_REDIRECT_URI = TEST_DOMAIN + TEST_PATH + "redirect.sjs";
 
 const TEST_CASES = [
@@ -597,5 +601,209 @@ add_task(async function doTestsForRedirect() {
         await verifyQueryString(browser, expectedQueryString);
       });
     }
+  }
+});
+
+add_task(async function doTestForAllowList() {
+  info("Start testing query stripping allow list.");
+
+  // Enable the query stripping and set the allow list.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.query_stripping.enabled", true],
+      ["privacy.query_stripping.allow_list", "xn--exmple-cua.test"],
+    ],
+  });
+
+  const expected = "paramToStrip1=123";
+
+  // Make sure the allow list works for sites, so we will test both the domain
+  // and the sub domain.
+  for (const domain of [TEST_THIRD_PARTY_DOMAIN, TEST_THIRD_PARTY_SUB_DOMAIN]) {
+    let testURI = `${domain}${TEST_PATH}file_stripping.html`;
+    let testURIWithQueryString = `${testURI}?${expected}`;
+
+    // 1. Test the allow list for tab open.
+    info("Run tab open test.");
+
+    // Observe the channel and check if the query string is not stripped.
+    let networkPromise = observeChannel(testURI, expected);
+
+    await BrowserTestUtils.withNewTab(testURIWithQueryString, async browser => {
+      // Verify if the query string is not stripped in the new tab.
+      await verifyQueryString(browser, expected);
+    });
+
+    await networkPromise;
+
+    // 2. Test the allow list for window open
+    info("Run window open test.");
+    await BrowserTestUtils.withNewTab(TEST_URI, async browser => {
+      // Observe the channel and check if the query string is not stripped.
+      let networkPromise = observeChannel(testURI, expected);
+
+      let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, url => {
+        return url.startsWith(testURI);
+      });
+
+      await SpecialPowers.spawn(
+        browser,
+        [testURIWithQueryString],
+        async url => {
+          content.postMessage({ type: "window-open", url }, "*");
+        }
+      );
+
+      await networkPromise;
+      let newTab = await newTabPromise;
+
+      // Verify if the query string is not stripped in the new opened tab.
+      await verifyQueryString(newTab.linkedBrowser, expected);
+
+      BrowserTestUtils.removeTab(newTab);
+    });
+
+    // 3. Test the allow list for link click
+    info("Run link click test.");
+    await BrowserTestUtils.withNewTab(TEST_URI, async browser => {
+      // Observe the channel and check if the query string is not stripped.
+      let networkPromise = observeChannel(testURI, expected);
+
+      // Create the promise to wait for the location change.
+      let locationChangePromise = BrowserTestUtils.waitForLocationChange(
+        gBrowser,
+        testURIWithQueryString
+      );
+
+      await SpecialPowers.spawn(
+        browser,
+        [testURIWithQueryString],
+        async url => {
+          let link = content.document.createElement("a");
+          link.setAttribute("href", url);
+          link.textContent = "Link";
+          content.document.body.appendChild(link);
+          link.click();
+        }
+      );
+
+      await networkPromise;
+      await locationChangePromise;
+
+      // Verify the query string is not stripped in the content window.
+      await verifyQueryString(browser, expected);
+    });
+
+    // 4. Test the allow list for clicking link in an iframe.
+    info("Run link click in iframe test.");
+    await BrowserTestUtils.withNewTab(TEST_URI, async browser => {
+      // Create an iframe and wait until it has been loaded.
+      let iframeBC = await SpecialPowers.spawn(
+        browser,
+        [TEST_URI],
+        async url => {
+          let frame = content.document.createElement("iframe");
+          content.document.body.appendChild(frame);
+
+          await new Promise(done => {
+            frame.addEventListener(
+              "load",
+              function() {
+                done();
+              },
+              { capture: true, once: true }
+            );
+
+            frame.setAttribute("src", url);
+          });
+
+          return frame.browsingContext;
+        }
+      );
+
+      // Observe the channel and check if the query string is not stripped.
+      let networkPromise = observeChannel(testURI, expected);
+
+      // Create the promise to wait for the new tab.
+      let newTabPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        testURIWithQueryString
+      );
+
+      // Create a same-site link which has '_blank' as target in the iframe
+      // and click it to navigate.
+      await SpecialPowers.spawn(
+        iframeBC,
+        [testURIWithQueryString],
+        async uri => {
+          let link = content.document.createElement("a");
+          link.setAttribute("href", uri);
+          link.setAttribute("target", "_blank");
+          link.textContent = "Link";
+          content.document.body.appendChild(link);
+          link.click();
+        }
+      );
+
+      await networkPromise;
+      let newOpenedTab = await newTabPromise;
+
+      // Verify the query string is not stripped in the content window.
+      await verifyQueryString(newOpenedTab.linkedBrowser, expected);
+      BrowserTestUtils.removeTab(newOpenedTab);
+
+      // 5. Test the allow list for script navigation.
+      info("Run script navigation test.");
+      await BrowserTestUtils.withNewTab(TEST_URI, async browser => {
+        // Observe the channel and check if the query string is not stripped.
+        let networkPromise = observeChannel(testURI, expected);
+
+        // Create the promise to wait for the location change.
+        let locationChangePromise = BrowserTestUtils.waitForLocationChange(
+          gBrowser,
+          testURIWithQueryString
+        );
+
+        await SpecialPowers.spawn(
+          browser,
+          [testURIWithQueryString],
+          async url => {
+            content.postMessage({ type: "script", url }, "*");
+          }
+        );
+
+        await networkPromise;
+        await locationChangePromise;
+
+        // Verify the query string is not stripped in the content window.
+        await verifyQueryString(browser, expected);
+      });
+
+      // 6. Test the allow list for redirect.
+      info("Run redirect test.");
+      await BrowserTestUtils.withNewTab(TEST_URI, async browser => {
+        // Observe the channel and check if the query string is not stripped.
+        let networkPromise = observeChannel(testURI, expected);
+
+        // Create the promise to wait for the location change.
+        let locationChangePromise = BrowserTestUtils.waitForLocationChange(
+          gBrowser,
+          testURIWithQueryString
+        );
+
+        let testRedirectURI = `${TEST_REDIRECT_URI}?${testURI}?${expected}`;
+
+        // Trigger the redirect.
+        await SpecialPowers.spawn(browser, [testRedirectURI], async url => {
+          content.postMessage({ type: "script", url }, "*");
+        });
+
+        await networkPromise;
+        await locationChangePromise;
+
+        // Verify the query string in the content window.
+        await verifyQueryString(browser, expected);
+      });
+    });
   }
 });
