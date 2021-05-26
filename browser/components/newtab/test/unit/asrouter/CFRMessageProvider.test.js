@@ -14,8 +14,8 @@ describe("CFRMessageProvider", () => {
   beforeEach(async () => {
     messages = await CFRMessageProvider.getMessages();
   });
-  it("should have a total of 13 messages", () => {
-    assert.lengthOf(messages, 13);
+  it("should have a total of 10 messages", () => {
+    assert.lengthOf(messages, 10);
   });
   it("should have one message each for the three regular addons", () => {
     for (const id of REGULAR_IDS) {
