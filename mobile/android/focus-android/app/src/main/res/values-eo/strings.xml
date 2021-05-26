@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Forigi kaj malfermi</string>
   <string name="shortcut_erase_and_open_long_label">Forigi kaj malfermi %1$s</string>
   <string name="text_selection_search_action">Serĉi private</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s igas vin reganto.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uzu &#285;in kiel privatan retumilon:\n  "<ul>"\n    "<li>Ser&#265;i kaj retumi rekte en la programo</li>"\n    "<li>Bloki spurilojn (a&#365; &#349;an&#285;i agordojn por permesi spurilojn)</li>"\n    "<li>Forigi kuketojn kaj anka&#365; retuman kaj ser&#265;an historion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s estas farita de Mozilla. Nia misio estas stimuli sanan kaj malfermitan interreton.<br/>\n<a href="%2$s">Pli da informo</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privateco kaj sekureco</string>
   <string name="preference_privacy_and_security_summary">Spurado, kuketoj, elekto de datumoj</string>
   <string name="preference_search_summary">Difini kiel norman, aŭtomata kompletigo</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Ĉu eliri el privata retumo?</string>
   <string name="download_snackbar_finished">%1$s finiĝis</string>
   <string name="download_snackbar_open">Malfermi</string>
-  <string name="download_dialog_warning"><![CDATA["Elŝutitaj dosieroj "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne estos forigitaj</b>" kiam vi viŝas la historion de %1$s."]]></string>
-  <string name="download_dialog_title">Elŝuti dosieron</string>
-  <string name="download_dialog_action_cancel">Nuligi</string>
-  <string name="download_dialog_action_download">Elŝuti</string>
-  <string name="errorpage_title">Problemo dum ŝargado de paĝo</string>
-  <string name="errorpage_refresh">Provi denove</string>
-  <string name="error_connectionfailure_title">Ne eblas konekti</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>La retejo povas esti nuntempe ne alirebla, a&#365; tro okupata. Bonvolu klopodi denove post iom da tempo.</li>"\n        "<li>Se vi ne povas malfermi iun ajn pa&#285;on, kontrolu la datuman a&#365; sendratan konekton de via po&#349;aparato.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">La tempo por la konekto elĉerpiĝis</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Servilo ne trovita</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontrolu en la literumo de la adreso ke ne estu eraroj kiel\n          "<strong>ww</strong>".example.com anstata&#365;\n          "<strong>www</strong>.example.com</li>"\n        "<li>Se vi ne povas malfermi iun ajn pa&#285;on , kontrolu la datuman a&#365; sendratan konekton de via aparato.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">La adreso ne estas valida</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Retadresoj estas kutime &#265;i tiel skribitaj "<strong>http://www.example.com/</strong></li>"\n  "<li>"Estu certa uzi la &#285;ustajn oblikvajn strekojn (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">La paĝo malbone redirektas</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tio povas okazi kelkfoje kiam oni malebligas a&#365; rifuzas kuketojn.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">La adreso ne estis komprenita</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Vi eble bezonas instali alian programon por povi malfermi tiun &#265;i adreson.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Malsukcesa sekura konekto</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tio povus esti problemo kun la agordoj de la servilo, a&#365; iu kiu klopodas trompe &#349;ajnigi esti tiu servilo.</li>"\n  "<li>Se vi konekti&#285;is al tiu servilo en la pasinto, la eraro povas esti momenta, kaj vi povos klopodi denove poste.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Fuŝ\'</string>
-  <string name="error_generic_message">Ni ne povas ŝargi tiun ĉi paĝon pro iu kialo.</string>
-  <string name="contextmenu_open_in_app">Malfermi per programo</string>
-  <string name="contextmenu_link_share">Dividi ligilon</string>
-  <string name="contextmenu_link_copy">Kopii adreson de ligilo</string>
-  <string name="contextmenu_image_share">Dividi bildon</string>
-  <string name="contextmenu_image_copy">Kopii adreson de bildo</string>
-  <string name="contextmenu_image_save">Konservi bildon</string>
-  <string name="contextmenu_open_in_new_tab">Malfermi ligilon en nova langeto</string>
-  <string name="contextmenu_image_warning"><![CDATA["Konservitaj kaj dividitaj bildoj "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne estos forigitaj</b>" kiam vi viŝas la historion de %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Plibonigi vian privatecon</string>
   <string name="firstrun_defaultbrowser_text2">Privata retumo pli altnivela, kun blokado de reklamoj kaj aliaj enhavoj, kiuj povas spuri vin trans retejoj kaj malrapidigi la ŝargon de paĝoj.</string>
   <string name="firstrun_search_title">Via serĉo laŭ via maniero</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Viŝi retuman historion</string>
   <string name="download_firefox">Elŝuti Firefox</string>
   <string name="your_rights_content1">"%1$s estas libera kaj malfermitkoda programaro, farita de Mozilla kaj aliaj kontribuintoj. "</string>
-  <string name="your_rights_content2"><![CDATA["%1$s estas liverita al vi sub la kondiĉoj de la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Publika permesilo de Mozilla</a>" aŭ aliaj malfermitkodaj permesiloj."]]></string>
-  <string name="your_rights_content3"><![CDATA["Neniu rajto por la registritaj markoj de Mozilla Foundation aŭ de iu alia estas ceditaj al vi. Tio inkluzivas, sed ne nur tion, la nomon aŭ emblemon de Mozilla, Firefox aŭ %1$s.  Pli da informo pri registritaj markoj troveblas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#265;i tie</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Aldona fonta kodo por %1$s estas havebla sub pluraj aliaj libera kaj malfermitkodaj "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">permesiloj</a>.]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s uzas ankaŭ listojn de blokado provizitaj de Disconnect, Inc. kiel apartajn kaj sendependajn verkojn sub la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#284;enerala publika permesilo de GNU v3</a>" kiu haveblas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#265;i tie</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Nomo de uzanto</string>
   <string name="gv_prompt_password_hint">Pasvorto</string>
   <string name="gv_prompt_clear">Viŝi</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Trovi venontan rezulton</string>
   <string name="accessibility_previous_result">Trovi antaŭan rezulton</string>
   <string name="accessibility_dismiss_find_in_page">Fermi serĉon en paĝo</string>
-  <string name="http_auth_dialog_title">Aŭtentikigo postulata</string>
-  <string name="http_auth_dialog_username">Nomo de uzanto</string>
-  <string name="http_auth_dialog_password">Pasvorto</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Peti version por komputiloj</string>
   <string name="custom_tab_copy_url_action">Retadreso kopiita</string>
   <string name="preference_advanced_summary">Iloj por programistoj</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Bedaŭrinde ni havas problemojn kun tiu ĉi langeto.</string>
   <string name="tab_crash_report_description">Kiel privata retumilo, ni neniam konservis kaj do ne povas restarigi tiun ĉi langeton.</string>
   <string name="tab_crash_report_close_tab_button_label">Fermi langeton</string>
-  <string name="fatal_crash_report_title">Bedaŭrinde %1$s alfrontis problemon kaj paneis.</string>
-  <string name="fatal_crash_report_description">Kiel privata retumilo, ni neniam konservis kaj do ne povas restarigi vian lastan retuman seancon.</string>
-  <string name="fatal_crash_report_close_button_label">Fermi</string>
-  <string name="fatal_crash_report_restart_firefox_label">Restartigi %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Sendi raporton pri paneo al Mozilla</string>
 </resources>

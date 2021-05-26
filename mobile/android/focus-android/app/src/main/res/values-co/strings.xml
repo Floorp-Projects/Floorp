@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Squassà &amp; apre</string>
   <string name="shortcut_erase_and_open_long_label">Squassà è apre %1$s</string>
   <string name="text_selection_search_action">Fà una ricerca privata</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vi aiuta &#224; gard&#224; u cuntrollu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Impiegatelu cum&#8217;&#232; un navigatore privatu :\n  "<ul>"\n    "<li>Fate ricerche &#232; navigate dapoi l&#8217;appiecazione</li>"\n    "<li>Bluccate i perseguitatori (o mudific&#224; e preferenze per auturizalli)</li>"\n    "<li>Squass&#224; i canistrelli &#232; ancu e crunulogie di navigazione &#232; di ricerca</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s h&#232; sviluppatu da Mozilla. A nostra missione h&#232; d&#8217;incuragisce un Internet apertu &#232; in bella saluta.<br/>\n<a href="%2$s">Per sapene di pi&#249;</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Vita privata &amp; sicurità</string>
   <string name="preference_privacy_and_security_summary">Traccie, canistrelli, scelta di dati cullettati</string>
   <string name="preference_search_summary">Mutore predefinitu, scrittura mezu-autumatica</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Cessà a navigazione privata ?</string>
   <string name="download_snackbar_finished">%1$s compiu</string>
   <string name="download_snackbar_open">Apre</string>
-  <string name="download_dialog_warning"><![CDATA["I schedarii scaricati "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#249;n seranu micca squassati</b>" quandu a crunulogia di %1$s hè squassata."]]></string>
-  <string name="download_dialog_title">Scaricà u schedariu</string>
-  <string name="download_dialog_action_cancel">Abbandunà</string>
-  <string name="download_dialog_action_download">Scaricà</string>
-  <string name="errorpage_title">Sbagliu di caricamentu di a pagina</string>
-  <string name="errorpage_refresh">Pruvà torna</string>
-  <string name="error_connectionfailure_title">Impussibule di cunnettassi</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Forse u site h&#232; timpurariamente indispunibule o sopraccarcu. Pruvate torna da qu&#236; &#224; pocu.</li>"\n        "<li>S&#8217;ella &#249;n h&#232; mancu pussibule di navig&#224; nant&#8217;&#224; un situ, verificate a cunnessione di dati o Wi-Fi di u vostru apparechju.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Cumportu di cunnessione eccidutu</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Indirizzu intruvevule</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Verificate a sintassa di l&#8217;indirizzu per circ&#224; i sbaglii cum&#8217;&#232;\n          "<strong>ww</strong>".example.com invece di\n          "<strong>www</strong>.example.com</li>"\n        "<li>S&#8217;ella &#249;n h&#232; mancu pussibule di navig&#224; nant&#8217;&#224; un situ, verificate a cunnessione di dati o Wi-Fi di u vostru apparechju.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">L’indirizzu ùn hè accettevule</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"A sintassa di l&#8217;indirizzi web h&#232; di solitu "<strong>http://www.example.com/</strong></li>"\n  "<li>"Assicuratevvi d&#8217;impieg&#224; barre sbieche (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">A pagina ùn hè micca ridiretta currettamente</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>A causa di stu penseru p&#242; esse a disattivazione o u rifiutu di i canistrelli.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">L’indirizzu ùn hè micca statu capitu</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Forse ci h&#232; bisognu d&#8217;install&#224; un&#8217;altra appiecazione per apre stu tipu d&#8217;indirizzu.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Fiascu di a cunnessione assicurizata</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Stu penseru p&#242; pruvene di a cunfigurazione di u servitore, osinn&#242; ghj&#232;\nforse qualchissia ch&#236; prova d&#8217;impatrunissi di u servitore.</li>"\n  "<li>S&#8217;&#232; vo avete dighj&#224; riesciutu &#224; cunnettavvi &#224; stu servitore, u sbagliu p&#242;\nesse timpurariu, &#232; pudete pruv&#224; torna da qu&#236; &#224; pocu.</li>\n</ul>]]></string>
-  <string name="error_generic_title">A richiesta ùn pò riesce</string>
-  <string name="error_generic_message">Per cagione scunnisciuta, ùn pudemu caricà sta pagina.</string>
-  <string name="contextmenu_open_in_app">Apre cù un’appiecazione</string>
-  <string name="contextmenu_link_share">Sparte a leia</string>
-  <string name="contextmenu_link_copy">Cupià l’indirizzu di a leia</string>
-  <string name="contextmenu_image_share">Sparte a fiura</string>
-  <string name="contextmenu_image_copy">Cupià l’indirizzu di a fiura</string>
-  <string name="contextmenu_image_save">Arregistrà a fiura</string>
-  <string name="contextmenu_open_in_new_tab">Apre a leia in una nova unghjetta</string>
-  <string name="contextmenu_image_warning"><![CDATA[E fiure sparte o arregistrate<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#249;n seranu micca squassate</b>" quandu a crunulogia di %1$s hè squassata."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Rinfurzà a vostra vita privata</string>
   <string name="firstrun_defaultbrowser_text2">A navigazione privata passa à u livellu insù. Bluccate e publicità è altri perseguitatori chì vi spiunanu è rallentanu u caricamentu di e pagine web.</string>
   <string name="firstrun_search_title">Ricercate à a vostra manera</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Squassà a crunulogia di navigazione</string>
   <string name="download_firefox">Scaricà Firefox</string>
   <string name="your_rights_content1">%1$s hè un prugramma liberu è apertu creatu da Mozilla cù l’aiutu d’altri cuntribuenti.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s hè distribuitu sicondu i termini di a "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" è d’altre licenze di tipu fonte aperta."]]></string>
-  <string name="your_rights_content3"><![CDATA["Ùn vi hè cidutu nisunu dirittu o licenza nant’à e marche deposte di a Fundazione Mozilla o di terzi, includendu i nomi è logò di Mozilla, Firefox or %1$s. Si pò cunsultà infurmazioni cumplementarie "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">qu&#236;</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["U codice di fonte addiziunale per %1$s hè dispunibule sottu parechje "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licenze</a>" libere è fonte aperta."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s impiegheghja dinù liste di blucchime pruviste da Disconnect, Inc. cum’è creazioni indipendente sottu a licenza "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", è dispunibule "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">qu&#236;</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Nome d’utilizatore</string>
   <string name="gv_prompt_password_hint">Parolla d’entrata</string>
   <string name="gv_prompt_clear">Squassà</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Truvà u risultatu seguente</string>
   <string name="accessibility_previous_result">Truvà u risultatu precedente</string>
   <string name="accessibility_dismiss_find_in_page">Chjode a ricerca in a pagina</string>
-  <string name="http_auth_dialog_title">Autenticazione richiesta</string>
-  <string name="http_auth_dialog_username">Nome d’utilizatore</string>
-  <string name="http_auth_dialog_password">Parolla d’entrata</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Versione d’urdinatore</string>
   <string name="custom_tab_copy_url_action">Indirizzu web cupiatu</string>
   <string name="preference_advanced_summary">Attrezzi di sviluppu</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Peccatu. Avemu un penseru cù st’unghjetta.</string>
   <string name="tab_crash_report_description">Cum’è a navigazione era privata, ùn avemu micca arregistratu l’unghjetta è dunque ùn pudemu micca risturalla.</string>
   <string name="tab_crash_report_close_tab_button_label">Chjode l’unghjetta</string>
-  <string name="fatal_crash_report_title">Peccatu. %1$s hà scontru un penseru è s’hè rottu.</string>
-  <string name="fatal_crash_report_description">Cum’è a vostra ultima navigazione era privata, ùn l’avemu micca arregistrata è dunque ùn pudemu micca risturalla.</string>
-  <string name="fatal_crash_report_close_button_label">Chjode</string>
-  <string name="fatal_crash_report_restart_firefox_label">Rilancià %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Mandà un raportu di penseri à Mozilla</string>
 </resources>

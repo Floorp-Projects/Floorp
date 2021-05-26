@@ -108,26 +108,26 @@
   <string name="external_multiple_apps_matched_exit">¿Mb-ròɁ gá?</string>
   <string name="download_snackbar_finished">%1$s tèlôy</string>
   <string name="download_snackbar_open">Mb-šàlɁ lá</string>
-  <string name="download_dialog_title">B-là yêts nál</string>
-  <string name="download_dialog_action_cancel">B-láɁ=y</string>
-  <string name="download_dialog_action_download">B-là</string>
-  <string name="errorpage_title">Nà gadt lô kùe</string>
-  <string name="errorpage_refresh">Bí~rè lìy</string>
-  <string name="error_connectionfailure_title">Gadt m-tòb kí kùe</string>
-  <string name="error_timeout_title">Gàdt là nì</string>
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Ngyé-n yìb rè</string>
-  <string name="error_malformedURI_title">Ngyé-n nêt (n̆eza) ré</string>
-  <string name="error_redirectLoop_title">Kàp m-kêl leɁ=nî</string>
-  <string name="error_unsupportedprotocol_title">Ngyé-n men rè</string>
-  <string name="error_sslhandshake_title">Ngyé-n kwàɁn nàk</string>
-  <string name="error_generic_title">Oops</string>
-  <string name="error_generic_message">Gádt mdé láɁ=n yêts ré</string>
-  <string name="contextmenu_link_share">Tă~làz nêt (n̆eza)</string>
-  <string name="contextmenu_link_copy">Lí chop nêt (n̆eza)</string>
-  <string name="contextmenu_image_share">Tă~làz xá nie mbòl</string>
-  <string name="contextmenu_image_copy">Lí chop nêt (n̆eza) nà mòn</string>
-  <string name="contextmenu_image_save">Mb-lòɁ sóg lô mòn</string>
-  <string name="contextmenu_open_in_new_tab">Mb-šàlɁ lô (lawo) kúb</string>
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">M-tób kì ko lùt ta wí</string>
   <string name="firstrun_defaultbrowser_text2">Lleva la navegación privada a otro nivel. Bloquea anuncios publicitarios y otro tipo de contenido que puede rastrearte a través de los sitios y ralentizar el tiempo de descarga de las páginas.</string>
   <string name="firstrun_search_title">Kò kwàʔn lû, nêb lû</string>

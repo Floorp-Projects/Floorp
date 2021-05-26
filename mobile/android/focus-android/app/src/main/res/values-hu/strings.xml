@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Törlés és megnyitás</string>
   <string name="shortcut_erase_and_open_long_label">Törlés és a %1$s megnyitása</string>
   <string name="text_selection_search_action">Privát keresés</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">A %1$s az &#214;n kez&#233;be adja az ir&#225;ny&#237;t&#225;st.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Haszn&#225;lja priv&#225;t b&#246;ng&#233;sz&#337;k&#233;nt:\n  "<ul>"\n    "<li>Keressen &#233;s b&#246;ng&#233;sszen k&#246;zvetlen&#252;l az appban</li>"\n    "<li>Blokkolja a k&#246;vet&#337;ket (vagy friss&#237;tse a be&#225;ll&#237;t&#225;sokat az enged&#233;lyez&#233;shez)</li>"\n    "<li>T&#246;r&#246;lje a s&#252;tiket &#233;s a b&#246;ng&#233;sz&#233;si el&#337;zm&#233;nyeket is</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">A %1$s a Mozilla term&#233;ke. K&#252;ldet&#233;s&#252;nk az eg&#233;szs&#233;ges, ny&#237;lt Internet t&#225;mogat&#225;sa.<br/>\n<a href="%2$s">Tudjon meg t&#246;bbet</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Adatvédelem és biztonság</string>
   <string name="preference_privacy_and_security_summary">Követés, sütik, adatküldések</string>
   <string name="preference_search_summary">Beállítás alapértelmezettként, automatikus kiegészítés</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Kilép a privát böngészésből?</string>
   <string name="download_snackbar_finished">%1$s kész</string>
   <string name="download_snackbar_open">Megnyitás</string>
-  <string name="download_dialog_warning"><![CDATA["A letöltött fájlok "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nem ker&#252;lnek t&#246;rl&#233;sre</b>, ha törli a %1$s előzményeit.]]></string>
-  <string name="download_dialog_title">Fájl letöltése</string>
-  <string name="download_dialog_action_cancel">Mégse</string>
-  <string name="download_dialog_action_download">Letöltés</string>
-  <string name="errorpage_title">Probléma az oldal betöltése közben</string>
-  <string name="errorpage_refresh">Próbálja újra</string>
-  <string name="error_connectionfailure_title">A kapcsolódás sikertelen</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>A webhely ideiglenesen nem &#233;rhet&#337; el, vagy t&#250;l elfoglalt. Pr&#243;b&#225;lja &#250;jra n&#233;h&#225;ny pillanat m&#250;lva.</li>"\n        "<li>Ha nem t&#246;lt be egyetlen oldal sem, akkor ellen&#337;rizze a mobileszk&#246;z adat- vagy Wi-Fi kapcsolat&#225;t.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">A kapcsolat túllépte az időkorlátot</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">A kiszolgáló nem található</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Ellen&#337;rizze, hogy nem v&#233;tett g&#233;pel&#233;si hib&#225;t, p&#233;ld&#225;ul\n          "<strong>ww</strong>". example.com a\n          "<strong>www</strong>. example.com helyett</li>"\n        "<li>Ha egyetlen oldal sem t&#246;lt be, akkor ellen&#337;rizze az eszk&#246;z adat- vagy Wi-Fi kapcsolat&#225;t.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">A cím érvénytelen</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"A webc&#237;mek &#225;ltal&#225;ban &#250;gy n&#233;znek ki, mint a "<strong>http://www.example.com/</strong></li>"\n  "<li>"Gy&#337;z&#337;dj&#246;n meg r&#243;la, hogy perjeleket haszn&#225;l (teh&#225;t "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Az oldal nem megfelelően van átirányítva</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ezt a probl&#233;m&#225;t n&#233;ha a s&#252;tik letilt&#225;sa vagy elutas&#237;t&#225;sa okozza.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">A cím nem volt érthető</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Lehet, hogy egy&#233;b szoftvert kell telep&#237;tenie a c&#237;m megnyit&#225;s&#225;hoz.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">A biztonságos kapcsolat sikertelen</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ez lehet a kiszolg&#225;l&#243; be&#225;ll&#237;t&#225;si probl&#233;m&#225;ja, vagy lehet, hogy valaki megpr&#243;b&#225;lja megszem&#233;lyes&#237;teni a kiszolg&#225;l&#243;t.</li>"\n  "<li>Ha a m&#250;ltban sikeresen csatlakozott a kiszolg&#225;l&#243;hoz, akkor a hiba ideiglenes lehet, &#233;s k&#233;s&#337;bb &#250;jra megpr&#243;b&#225;lhatja.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Hoppá</string>
-  <string name="error_generic_message">Az oldal valamilyen okból nem tölthető be.</string>
-  <string name="contextmenu_open_in_app">Megnyitás alkalmazással</string>
-  <string name="contextmenu_link_share">Hivatkozás megosztása</string>
-  <string name="contextmenu_link_copy">Hivatkozás címének másolása</string>
-  <string name="contextmenu_image_share">Kép megosztása</string>
-  <string name="contextmenu_image_copy">Kép címének másolása</string>
-  <string name="contextmenu_image_save">Kép mentése</string>
-  <string name="contextmenu_open_in_new_tab">Hivatkozás megnyitása új lapon</string>
-  <string name="contextmenu_image_warning"><![CDATA["A mentett és megosztott képek "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nem ker&#252;lnek t&#246;rl&#233;sre</b>, ha törli a %1$s előzményeit.]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Tuningolja fel az adatvédelmét</string>
   <string name="firstrun_defaultbrowser_text2">Emelje a privát böngészést a következő szintre. Blokkolja a hirdetéseket, és más tartalmakat, amelyek követhetik az oldalak között, és lelassíthatják a betöltési sebességet.</string>
   <string name="firstrun_search_title">Az Ön keresése, az Ön útja</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Böngészési előzmények törlése</string>
   <string name="download_firefox">Firefox letöltése</string>
   <string name="your_rights_content1">A %1$s szabad és nyílt forráskódú szoftver, amelyet a Mozilla és más közreműködők készítenek.</string>
-  <string name="your_rights_content2"><![CDATA["A %1$s a "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>, és más nyílt forráskódú licencek feltételei szerint érhető el.]]></string>
-  <string name="your_rights_content3"><![CDATA["Nem kap semmiféle jogot vagy licencet a Mozilla Foundation vagy bármely más fél védjegyeihez, köztük a Mozilla, Firefox vagy %1$s nevekhez vagy logókhoz. További információkat "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">itt</a>" találhat."]]></string>
-  <string name="your_rights_content4"><![CDATA["További %1$s forráskód érhető el különféle szabad szoftver vagy nyílt forráskódú "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencek</a>" alatt."]]></string>
-  <string name="your_rights_content5"><![CDATA["A %1$s a Disconnect, Inc. által biztosított blokkolási listákat használ, különálló munkaként, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public Licence v3</a>" alatt, ez "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">itt</a>" érhető el."]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Felhasználónév</string>
   <string name="gv_prompt_password_hint">Jelszó</string>
   <string name="gv_prompt_clear">Törlés</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Következő találat</string>
   <string name="accessibility_previous_result">Előző találat</string>
   <string name="accessibility_dismiss_find_in_page">Kereső elrejtése</string>
-  <string name="http_auth_dialog_title">Hitelesítés szükséges</string>
-  <string name="http_auth_dialog_username">Felhasználónév</string>
-  <string name="http_auth_dialog_password">Jelszó</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Asztali oldal kérése</string>
   <string name="custom_tab_copy_url_action">URL másolva</string>
   <string name="preference_advanced_summary">Fejlesztői eszközök</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Sajnálom. Probléma van ezzel a lapon.</string>
   <string name="tab_crash_report_description">Privát böngészőként sosem mentjük el, és visszaállítani sem tudjuk ezt a lapot.</string>
   <string name="tab_crash_report_close_tab_button_label">Lap bezárása</string>
-  <string name="fatal_crash_report_title">Sajnáljuk. A %1$s problémába ütközött és összeomlott.</string>
-  <string name="fatal_crash_report_description">Privát böngészőként sosem mentjük el, és visszaállítani sem tudjuk a legutóbbi böngészési munkamenetet.</string>
-  <string name="fatal_crash_report_close_button_label">Bezárás</string>
-  <string name="fatal_crash_report_restart_firefox_label">%1$s újraindítása</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Összeomlási jelentése elküldése a Mozillának</string>
 </resources>

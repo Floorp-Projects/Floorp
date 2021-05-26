@@ -25,7 +25,7 @@
   <string name="shortcut_erase_short_label">Skrap</string>
   <string name="shortcut_erase_long_label">Skrap leesgeskiedenis</string>
   <string name="text_selection_search_action">Soek privaat</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s sit jou in beheer.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Gebruik dit as \'n private blaaier:<ul>"\n    "<li>Soek en lees in die toepassing self</li>"\n    "<li>Blokkeer naspoorbakens (of wysig instellings om te nasporing toe te laat)</li>"\n    "<li>Wis uit, om koekies sowel as soek en leesgeskiedenis te skrap</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s word geproduseer deur Mozilla. Ons doelstelling is om \'n gesonde, oop Internet moontlik te maak.<br/>\n<a href="%2$s">Leer meer</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privaatheid en sekuriteit</string>
   <string name="preference_privacy_and_security_summary">Naspoor-koekies, data keuses</string>
   <string name="preference_search_summary">Stel verstekwaardes, outovoltooi</string>
@@ -70,15 +70,15 @@
   <string name="content_description_customtab_exit">Gaan terug na vorige toep</string>
   <string name="your_rights">Jou regte</string>
   <string name="download_snackbar_open">Maak oop</string>
-  <string name="download_dialog_action_cancel">Kanselleer</string>
-  <string name="download_dialog_action_download">Laai af</string>
-  <string name="errorpage_refresh">Probeer weer</string>
+
+
+
   <string name="error_hostLookup_title">Bediener nie gevind nie</string>
-  <string name="error_malformedURI_title">Die adres is ongeldig</string>
-  <string name="error_generic_title">Oeps</string>
-  <string name="contextmenu_image_share">Deel beeld</string>
-  <string name="contextmenu_image_save">Stoor beeld</string>
-  <string name="contextmenu_open_in_new_tab">Maak skakel oop in \'n nuwe oortjie</string>
+
+
+
+
+
   <string name="firstrun_search_title">Jou soek, jou manier</string>
   <string name="firstrun_close_button">Reg so!</string>
   <string name="firstrun_next_button">Volgende</string>
@@ -93,6 +93,6 @@
   <string name="security_popup_secure_connection">Beveiligde verbinding</string>
   <string name="security_popup_insecure_connection">Onbeveiligde verbinding</string>
   <string name="security_popup_security_verified">Geverifieer deur: %1$s</string>
-  <string name="http_auth_dialog_username">Gebruikersnaam</string>
-  <string name="http_auth_dialog_password">Wagwoord</string>
+
+
 </resources>

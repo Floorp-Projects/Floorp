@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Slet og åbn</string>
   <string name="shortcut_erase_and_open_long_label">Slet og åbn %1$s</string>
   <string name="text_selection_search_action">Søg privat</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s giver dig fuld kontrol.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anvend den som privat browser:\n  "<ul>"\n    "<li>S&#248;g og surf direkte i appen</li>"\n    "<li>Bloker sporing (eller opdater indstillingerne og tillad sporing)</li>"\n    "<li>Slet fjerner cookies samt s&#248;ge- og browser-historik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s er udviklet af Mozilla. Vores form&#229;l er at fremme et sundt, &#229;bent internet.<br/>\n<a href="%2$s">L&#230;s mere</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privatliv og sikkerhed</string>
   <string name="preference_privacy_and_security_summary">Sporing, cookies, datadeling</string>
   <string name="preference_search_summary">Angiv standard, autofuldførelse</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Afslut privat browsing?</string>
   <string name="download_snackbar_finished">%1$s hentet</string>
   <string name="download_snackbar_open">Åbn</string>
-  <string name="download_dialog_warning"><![CDATA["Hentede filer "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">bliver ikke slettet,</b>" når du sletter historikken i %1$s."]]></string>
-  <string name="download_dialog_title">Hent fil</string>
-  <string name="download_dialog_action_cancel">Annuller</string>
-  <string name="download_dialog_action_download">Hent</string>
-  <string name="errorpage_title">Problem med indlæsning af side</string>
-  <string name="errorpage_refresh">Prøv igen</string>
-  <string name="error_connectionfailure_title">Ude af stand til at oprette forbindelse</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Siden kan v&#230;re midlertidigt utilg&#230;ngelig eller travlt optaget. Pr&#248;v igen om et &#248;jeblik.</li>"\n        "<li>Hvis du ikke kan indl&#230;se nogen websider overhovedet, kontroll&#233;r da din enheds data- eller wi-fi-forbindelse.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Forbindelsens tidsfrist udløb</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Serveren blev ikke fundet</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontroll&#233;r, om adressen indeholder tastefejl, fx\n          "<strong>ww</strong>".eksempel.dk i stedet for\n          "<strong>www</strong>.eksempel.dk</li>"\n        "<li>Hvis du ikke kan indl&#230;se nogen websider overhovedet, kontroll&#233;r da din enheds data- eller wi-fi-forbindelse.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Adressen er ikke gyldig</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Webadresser skrives normalt som "<strong>http://www.eksempel.dk/</strong></li>"\n  "<li>"Kontroll&#233;r at du ikke benytter divisionstegn (dvs. "<strong>/</strong>)</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Denne side viderefører ikke forespørgslen korrekt</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dette problem kan nogle gange skyldes, at cookies er sl&#229;et fra, eller modtagelse af cookies er blevet n&#230;gtet.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Adressen kunne ikke forstås</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Du er m&#229;ske n&#248;dt til at installere andet software for at &#229;bne denne adresse.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Sikker forbindelse mislykkedes</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dette kan v&#230;re et problem med serverens konfiguration,\neller det kan betyde, at nogen fors&#248;ger at give sig ud for at v&#230;re serveren.</li>"\n  "<li>Hvis du har kunnet tilg&#229; serveren tidligere kan dette problem v&#230;re midlertidigt\nog du anbefales at pr&#248;ve igen senere.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ups</string>
-  <string name="error_generic_message">Siden kan af uvisse årsager ikke indlæses.</string>
-  <string name="contextmenu_open_in_app">Åbn med app</string>
-  <string name="contextmenu_link_share">Del link</string>
-  <string name="contextmenu_link_copy">Kopier linkadresse</string>
-  <string name="contextmenu_image_share">Del billede</string>
-  <string name="contextmenu_image_copy">Kopier billedets adresse</string>
-  <string name="contextmenu_image_save">Gem billede</string>
-  <string name="contextmenu_open_in_new_tab">Åbn link i nyt faneblad</string>
-  <string name="contextmenu_image_warning"><![CDATA["Gemte og delte billeder "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">vil ikke blive slettet,</b>" når du sletter historikken i %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Styrk dit privatliv</string>
   <string name="firstrun_defaultbrowser_text2">Tag privat browsing til næste niveau. Bloker reklamer og andet indhold, der kan spore din færden på nettet og gøre det langsommere at hente sider.</string>
   <string name="firstrun_search_title">Søgning på dine præmisser</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Slet browser-historik</string>
   <string name="download_firefox">Hent Firefox</string>
   <string name="your_rights_content1">%1$s er frit og åbent software, udviklet af Mozilla og andre bidragydere.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s er tilgængelig under de vilkår der er fastsat i "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" og andre licenser til åben kildekode."]]></string>
-  <string name="your_rights_content3"><![CDATA["Du bliver ikke givet nogen ret eller licens til varemærker tilhørende Mozilla Foundation eller tredjepart, herunder navn og logo for Mozilla, Firefox og %1$s. Få flere oplysninger "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">her</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Yderligere gratis og åben kildekode til %1$s er tilgængelig under diverse "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licenser</a>.]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s benytter sig også af blokeringslister fra Disconnect, Inc. som adskilte og uafhængige værker under "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>". Listerne er tilgængelige "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">her</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Brugernavn</string>
   <string name="gv_prompt_password_hint">Adgangskode</string>
   <string name="gv_prompt_clear">Ryd</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Find næste</string>
   <string name="accessibility_previous_result">Find foregående</string>
   <string name="accessibility_dismiss_find_in_page">Deaktiver find på siden</string>
-  <string name="http_auth_dialog_title">Godkendelse påkrævet</string>
-  <string name="http_auth_dialog_username">Brugernavn</string>
-  <string name="http_auth_dialog_password">Adgangskode</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Bed om desktop-version</string>
   <string name="custom_tab_copy_url_action">URL kopieret</string>
   <string name="preference_advanced_summary">Udviklerværktøj</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Beklager, vi har et problem med denne fane.</string>
   <string name="tab_crash_report_description">Som en privat browser gemmer vi aldrig, så vi kan ikke gendanne dette faneblad.</string>
   <string name="tab_crash_report_close_tab_button_label">Luk faneblad</string>
-  <string name="fatal_crash_report_title">Beklager, %1$s fik et problem og gik ned.</string>
-  <string name="fatal_crash_report_description">Som en privat browser gemmer vi aldrig, så vi kan ikke gendanne din sidste browsing-session.</string>
-  <string name="fatal_crash_report_close_button_label">Luk</string>
-  <string name="fatal_crash_report_restart_firefox_label">Genstart %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Send fejlrapport til Mozilla</string>
 </resources>

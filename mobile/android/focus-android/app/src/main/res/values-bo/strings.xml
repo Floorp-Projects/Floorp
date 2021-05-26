@@ -121,26 +121,26 @@
   <string name="external_multiple_apps_matched_exit">གསང་རྒྱ་ནས་ཕྱིར་ཐོན་དགོས་སམ།</string>
   <string name="download_snackbar_finished">%1$s ཟིན་པ།</string>
   <string name="download_snackbar_open">ཁ་འབྱེད།</string>
-  <string name="download_dialog_warning"><![CDATA[%1$s འཚོལ་རབས་འདོར་སུབ་བྱེད་སྐབས་ཕབ་ལེན་ཟིན་པའི་ཡིག་ཆ་<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3938;&#4003;&#3928;&#3942;&#3851;&#3936;&#3921;&#3964;&#3938;&#3851;&#3942;&#3956;&#3926;&#3851;&#3928;&#3954;&#3851;&#3926;&#4017;&#3853;</b>]]></string>
-  <string name="download_dialog_title">ཡིག་ཆ་ཕབ་ལེན།</string>
-  <string name="download_dialog_action_cancel">འདོར་བ།</string>
-  <string name="download_dialog_action_download">ཕབ་ལེན།</string>
-  <string name="errorpage_title">དྲ་ངོས་སྣོན་འཇུག་གནད་དོན་འཕྲད་སོང་།</string>
-  <string name="errorpage_refresh">བསྐྱར་དུ་ཚོད་ལྟ་བྱོས།</string>
-  <string name="error_connectionfailure_title">སྦྲེལ་མི་ཐུབ་པ།</string>
-  <string name="error_timeout_title">འབྲེལ་མཐུད་དུས་ཚོད་ཡོལ་བ།</string>
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">ཞབས་ཞུ་འཕྲུལ་ཆས་མ་རྙེད།</string>
-  <string name="error_malformedURI_title">ཁ་བྱང་ནོར་འདུག</string>
-  <string name="error_sslhandshake_title">བདེ་འཇགས་འབྲེལ་བཐུད་བ་ཐུབ།</string>
-  <string name="error_generic_title">ཨ་ཁ་ཁ།</string>
-  <string name="error_generic_message">ང་ཚོས་མ་རྟོགས་པའི་གནད་དོན་ཞིག་གིས་དྲ་ངོས་སྣོན་འཇུག་མ་ཐུབ།</string>
-  <string name="contextmenu_open_in_app">མཉེན་ཆས་ཐོག་ཁ་འབྱེད།</string>
-  <string name="contextmenu_link_share">སྦྲེལ་མཐུད་མཉམ་སྤྱོད།</string>
-  <string name="contextmenu_link_copy">སྦྲེལ་མཐུད་གནས་ཡུལ་མཁོ་ཕབ་བྱེད།</string>
-  <string name="contextmenu_image_share">པར་མཉམ་སྤྱོད།</string>
-  <string name="contextmenu_image_copy">པར་གྱི་ཁ་བྱང་ཉར།</string>
-  <string name="contextmenu_image_save">པར་ཉར་གསོག</string>
-  <string name="contextmenu_image_warning"><![CDATA[%1$s འཚོལ་རབས་འདོར་སུབ་བྱེད་སྐབས་འགྲེམ་སྤེལ་དང་ཉར་ཟིན་པའི་ཡིག་ཆ་རྣམས་<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3936;&#3921;&#3964;&#3938;&#3851;&#3942;&#3956;&#3926;&#3851;&#3928;&#3954;&#3851;&#3926;&#4017;&#3853;</b>]]></string>
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">སྒེར་དབང་ཆེ་རུ་གཏོང་།</string>
   <string name="firstrun_defaultbrowser_text2">སྒེར་རྒྱ་རིམ་པ་རྗེས་མ་འཁྱེར་བ། ཁྱབ་བསྒྲགས་དང་རྗེས་འདེད་དེ་བཞིན་དྲ་ངོས་སྣོན་འགོག་གནད་ཆས་བཀག་འགོག་བྱེད།</string>
   <string name="firstrun_search_title">ཁྱོད་ཀྱི་འཚོལ་བཤེར། ཁྱོད་ཀྱི་ལམ།</string>
@@ -172,9 +172,9 @@
   <string name="accessibility_find_in_page_result">"%1$d ནང་ནས་ %1$d "</string>
   <string name="accessibility_next_result">ཤོག་ངོས་ཞོལ་མ།</string>
   <string name="accessibility_previous_result">ཤོག་ངོས་གོང་མ།</string>
-  <string name="http_auth_dialog_title">དབང་སྤྲོད་དགོས་པ།</string>
-  <string name="http_auth_dialog_username">ཐོ་མིང་།</string>
-  <string name="http_auth_dialog_password">གསང་གྲངས།</string>
+
+
+
   <string name="preference_performance_request_desktop_site">ཅོག་ངོས་དྲ་ཚིགས་རེ་ཞུ་བྱེད།</string>
   <string name="custom_tab_copy_url_action">དྲ་ཚིཊ་ཁ་བྱང་བཤུས་ཟིན།</string>
   <string name="preference_advanced_summary">གསར་སྤེལ་ལག་ཆ།</string>
@@ -201,8 +201,8 @@
   <string name="preference_exceptions_menu_remove">སྤོ་འབུད།</string>
   <string name="preference_exceptions_remove_all_button_label">དྲ་ཚིགས་ཆ་ཚང་སྤོ་འབུད།།</string>
   <string name="tab_crash_report_headline">དགོངས་དག ང་ཚོ་རེའུ་མིག་བཟོ་རྟགས་འདི་དང་གནད་དོན་འཕྲད་སོང་།</string>
-  <string name="fatal_crash_report_title">དགོངས་དག %1$s ལ་གནད་དོན་འདུག་པས་བརྡབས་སྐྱོན་ཤོར།</string>
-  <string name="fatal_crash_report_description">སྒེར་གྱི་བཤར་ཆས་ཡིན་པས་ང་ཚོས་ནམ་ཡང་ཁྱེད་ཀྱི་གླིང་མོལ་ཉར་གསོག་དང་སོར་ཆུད་མི་བྱེད།</string>
-  <string name="fatal_crash_report_close_button_label">ཁ་རྒྱག</string>
-  <string name="fatal_crash_report_restart_firefox_label">%1$s བསྐྱར་སློང་བྱེད།</string>
+
+
+
+
 </resources>

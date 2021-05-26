@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">清除並開啟</string>
   <string name="shortcut_erase_and_open_long_label">清除並開啟 %1$s</string>
   <string name="text_selection_search_action">隱私搜尋</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35731;&#24744;&#21487;&#33258;&#34892;&#25511;&#21046;&#32218;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#21487;&#30070;&#20316;&#31169;&#23494;&#28687;&#35261;&#22120;&#20351;&#29992;:\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#31243;&#24335;&#20013;&#25628;&#23563;&#12289;&#28687;&#35261;</li>"\n    "<li>&#23553;&#37782;&#36861;&#36452;&#22120;&#65288;&#20063;&#21487;&#35519;&#25972;&#35373;&#23450;&#65292;&#20801;&#35377;&#36861;&#36452;&#22120;&#65289;</li>"\n    "<li>&#28165;&#38500; Cookie&#12289;&#25628;&#23563;&#32000;&#37636;&#12289;&#19978;&#32178;&#32000;&#37636;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#26159;&#30001; Mozilla &#25152;&#25171;&#36896;&#65292;&#25105;&#20497;&#30340;&#20351;&#21629;&#26159;&#22521;&#39178;&#19968;&#20491;&#20581;&#24247;&#12289;&#38283;&#25918;&#30340;&#32178;&#38555;&#32178;&#36335;&#12290;<br/>\n<a href="%2$s">&#20102;&#35299;&#26356;&#22810;</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">隱私與安全</string>
   <string name="preference_privacy_and_security_summary">追蹤、Cookie、回報資料</string>
   <string name="preference_search_summary">設為預設瀏覽器、自動完成</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">要結束隱私瀏覽嗎？</string>
   <string name="download_snackbar_finished">%1$s 下載完成</string>
   <string name="download_snackbar_open">開啟</string>
-  <string name="download_dialog_warning"><![CDATA[清除 %1$s 紀錄時<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#23559;&#19981;&#26371;&#21034;&#38500;</b>已下載的檔案。]]></string>
-  <string name="download_dialog_title">下載檔案</string>
-  <string name="download_dialog_action_cancel">取消</string>
-  <string name="download_dialog_action_download">下載</string>
-  <string name="errorpage_title">載入頁面時發生問題</string>
-  <string name="errorpage_refresh">再試一次</string>
-  <string name="error_connectionfailure_title">無法連線</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>&#32178;&#31449;&#21487;&#33021;&#22826;&#24537;&#30860;&#25110;&#26283;&#26178;&#28961;&#27861;&#20351;&#29992;&#65292;&#35531;&#31245;&#20505;&#20877;&#35430;&#19968;&#27425;&#12290;</li><li>&#33509;&#24744;&#28961;&#27861;&#36617;&#20837;&#20219;&#20309;&#38913;&#38754;&#65292;&#35531;&#27298;&#26597;&#24744;&#30340;&#25976;&#25818;&#25110; Wi-Fi &#36899;&#32218;&#12290;</li></ul>]]></string>
-  <string name="error_timeout_title">連線逾時</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">找不到伺服器</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>"&#35531;&#27298;&#26597;&#32178;&#22336;&#26159;&#21542;&#26377;&#25171;&#37679;&#65311;&#20363;&#22914;&#25226; "<strong>www</strong>".example.com &#25171;&#25104; "<strong>ww</strong>.example.com</li><li>&#33509;&#28961;&#27861;&#36617;&#20837;&#20219;&#20309;&#32178;&#31449;&#65292;&#35531;&#27298;&#26597;&#24744;&#30340;&#32178;&#36335;&#36899;&#32218;&#29376;&#24907;&#12290;</li></ul>]]></string>
-  <string name="error_malformedURI_title">網址無效</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>"&#32178;&#22336;&#36890;&#24120;&#38263;&#24471;&#20687; "<strong>http://www.example.com/</strong>&#12290;</li><li>"&#35531;&#30906;&#23450;&#24744;&#29992;&#30340;&#26159;&#26012;&#32218;&#65288;&#20363;: "<strong>/</strong>&#65289;&#12290;</li>" "</ul>]]></string>
-  <string name="error_redirectLoop_title">頁面重新導向不正確</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>&#26377;&#26178;&#20505;&#20572;&#29992;&#25110;&#25298;&#32085;&#25509;&#21463; Cookie &#26371;&#36896;&#25104;&#27492;&#21839;&#38988;&#12290;</li>" "</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">無法理解的網址</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>&#24744;&#21487;&#33021;&#38656;&#35201;&#23433;&#35037;&#20854;&#20182;&#36575;&#39636;&#25165;&#33021;&#38283;&#21855;&#27492;&#32178;&#22336;&#12290;</li></ul>]]></string>
-  <string name="error_sslhandshake_title">安全連線失敗</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>&#21487;&#33021;&#26159;&#20282;&#26381;&#22120;&#35373;&#23450;&#21839;&#38988;&#36896;&#25104;&#65292;&#25110;&#26159;&#26377;&#20154;&#22039;&#35430;&#20605;&#35037;&#25104;&#35442;&#20282;&#26381;&#22120;&#12290;</li><li>&#33509;&#24744;&#20197;&#21069;&#21487;&#20197;&#33287;&#35442;&#20282;&#26381;&#22120;&#27491;&#24120;&#36899;&#32218;&#65292;&#37027;&#40636;&#36889;&#20491;&#37679;&#35492;&#21487;&#33021;&#21482;&#26159;&#26283;&#26178;&#30340;&#65292;&#35531;&#31245;&#20505;&#20877;&#35430;&#35430;&#30475;&#12290;</li>" "</ul>]]></string>
-  <string name="error_generic_title">糟糕</string>
-  <string name="error_generic_message">因為某些原因，我們無法載入此頁面。</string>
-  <string name="contextmenu_open_in_app">使用其他程式開啟</string>
-  <string name="contextmenu_link_share">分享鏈結</string>
-  <string name="contextmenu_link_copy">複製鏈結網址</string>
-  <string name="contextmenu_image_share">分享圖片</string>
-  <string name="contextmenu_image_copy">複製圖片網址</string>
-  <string name="contextmenu_image_save">儲存圖片</string>
-  <string name="contextmenu_open_in_new_tab">用新分頁開啟鏈結</string>
-  <string name="contextmenu_image_warning"><![CDATA[清除 %1$s 瀏覽紀錄時，將<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#26371;&#21034;&#38500;</b>儲存或分享的圖片。]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">加強您的隱私</string>
   <string name="firstrun_defaultbrowser_text2">隱私瀏覽功能變得更強大了。現在可封鎖廣告，以及其他可在不同網站間追蹤您的上網紀錄，又拖慢網頁載入的追蹤器。</string>
   <string name="firstrun_search_title">用你的方式搜尋</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">抹除瀏覽紀錄</string>
   <string name="download_firefox">下載 Firefox</string>
   <string name="your_rights_content1">%1$s 是由 Mozilla 及貢獻者所打造，自由且開放原始碼的軟體。</string>
-  <string name="your_rights_content2"><![CDATA["%1$s 依照 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" 以及其他開放原始碼授權條款提供給您。"]]></string>
-  <string name="your_rights_content3"><![CDATA["您並未被授權使用 Mozilla 基金會或任何相關部門的商標，包含但不限於 Mozilla、Firefox、%1$s 的商標。您可以在 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#36889;&#35041;</a>找到更多資訊。]]></string>
-  <string name="your_rights_content4"><![CDATA[%1$s 其他的原始碼則使用其他自由與開放原始碼的<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#25480;&#27402;&#26781;&#27454;</a>提供。]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s 還使用由 Disconnect, Inc. 提供的封鎖清單，該清單是一份依照 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" 提供的獨立作品，可在"<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#27492;&#34389;</a>取得。]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">使用者名稱</string>
   <string name="gv_prompt_password_hint">密碼</string>
   <string name="gv_prompt_clear">清除</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">尋找下一筆</string>
   <string name="accessibility_previous_result">尋找上一筆</string>
   <string name="accessibility_dismiss_find_in_page">關閉頁面搜尋</string>
-  <string name="http_auth_dialog_title">需要驗證</string>
-  <string name="http_auth_dialog_username">使用者名稱</string>
-  <string name="http_auth_dialog_password">密碼</string>
+
+
+
   <string name="preference_performance_request_desktop_site">開啟桌面版網站</string>
   <string name="custom_tab_copy_url_action">已複製網址</string>
   <string name="preference_advanced_summary">開發者工具</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">很抱歉，這個分頁有點問題。</string>
   <string name="tab_crash_report_description">作為一套隱私瀏覽器，我們不會保存上網紀錄，也無法還原此分頁。</string>
   <string name="tab_crash_report_close_tab_button_label">關閉分頁</string>
-  <string name="fatal_crash_report_title">很抱歉，%1$s 遇到問題，發生錯誤。</string>
-  <string name="fatal_crash_report_description">作為一套隱私瀏覽器，我們不會保存上網紀錄，也無法還原您先前的瀏覽階段。</string>
-  <string name="fatal_crash_report_close_button_label">關閉</string>
-  <string name="fatal_crash_report_restart_firefox_label">重新啟動 %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">傳送錯誤報告給 Mozilla</string>
 </resources>

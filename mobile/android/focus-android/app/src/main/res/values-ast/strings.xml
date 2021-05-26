@@ -26,7 +26,7 @@
   <string name="shortcut_erase_short_label">Balerar</string>
   <string name="shortcut_erase_long_label">Balerar historial de restolar</string>
   <string name="text_selection_search_action">Guetar de mou priváu</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s date\'l control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#218;salu como restolador priv&#225;u:\n  "<ul>"\n    "<li>Gueta y restola direutamente na aplicaci&#243;n</li>"\n    "<li>Bloquia los rastrexadores (o anueva los axustes pa perm&#237;tilos)</li>"\n    "<li>Balera les cookies am&#225;s del to historial de restolar y gueta</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produzlu Mozilla. La nuesa misi&#243;n ye fomentar un internet sano y abierto.<br/>\n<a href="%2$s">Deprendi mas</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privacidá y seguranza</string>
   <string name="preference_privacy_and_security_summary">Rastrexu, cookies y escoyetes de datos</string>
   <string name="preference_search_summary">Predeterminación, autocompletáu</string>
@@ -129,34 +129,34 @@
   <string name="external_multiple_apps_matched_exit">¿Colar de restolar en privao?</string>
   <string name="download_snackbar_finished">%1$s finó</string>
   <string name="download_snackbar_open">Abrir</string>
-  <string name="download_dialog_warning"><![CDATA["Los ficheros baxaos "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nun se desaniciar&#225;n</b>" cuando balerar l\'historial de %1$s."]]></string>
-  <string name="download_dialog_title">Descarga del ficheru</string>
-  <string name="download_dialog_action_cancel">Encaboxar</string>
-  <string name="download_dialog_action_download">Baxar</string>
-  <string name="errorpage_title">Problema cargando la páxina</string>
-  <string name="errorpage_refresh">Retentar</string>
-  <string name="error_connectionfailure_title">Nun pue coneutase</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Quiciabes el sitiu tea temporalmente non disponible o perocup&#225;u. Volvi tentalo nunos minutos.</li>"\n        "<li>Si nun yes a cargar p&#225;xina dala, comprueba la to conex&#243;n de datos o\'l Wi-Fi del pres&#233;u.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Escosó\'l tiempu de la conexón</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Nun s\'alcontró\'l sirvidor</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Comprueba los fallos d\'escritura na direici&#243;n como\n          "<strong>ww</strong>".example.com en cuentes de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Si nun yes a cargar p&#225;xina dala, comprueba la to conex&#243;n de datos o\'l Wi-Fi del pres&#233;u.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">La direición nun ye válida</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Davezu les direiciones web escr&#237;bense como "<strong>http://www.exemplu.com/</strong></li>"\n  "<li>"Aseg&#250;rate que tas usando les barres invert&#237;es "<strong>/</strong>.</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">La páxina nun ta redirixendo afayadizamente</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Davezu esti problema pue c&#225;usalu\'l desactivar o refugar les cookies.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Nun s\'entendió la direición</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Quiciabes precises instalar otru software p\'abrir esta direici&#243;n.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Falló la conexón segura</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Esto quiciabes seya un problema cola configuraci&#243;n del sirvidor o que\ndaqui&#233;n lu tea tentando de suplantar.</li>"\n  "<li>Si nel pas&#225;u te coneutesti a esti sirvidor con &#233;situ, quiciabes el fallu seya\ntemporal y pueas tentalo de nueves m&#225;s sero.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ups</string>
-  <string name="error_generic_message">Nun podemos cargar esta páxina por dalgún motivu</string>
-  <string name="contextmenu_link_share">Compartir enllaz</string>
-  <string name="contextmenu_link_copy">Copiar direición d\'enllaz</string>
-  <string name="contextmenu_image_share">Compartir imaxe</string>
-  <string name="contextmenu_image_copy">Copiar direición d\'imaxe</string>
-  <string name="contextmenu_image_save">Guardar imaxe</string>
-  <string name="contextmenu_open_in_new_tab">Abrir enllaz en llingüeta nueva</string>
-  <string name="contextmenu_image_warning"><![CDATA["Les imáxenes guardaes y compartíes "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nun se desaniciar&#225;n</b>" cuando baleres l\'historial de %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Potencia la to privacidá</string>
   <string name="firstrun_defaultbrowser_text2">Lleva\'l restolar en privao a un nivel meyor. Bloquia anuncios y otru conteníu que pue rastrexate nes páxines y faen lentos los tiempos de carga.</string>
   <string name="firstrun_search_title">Guetes al to xeitu</string>
@@ -177,10 +177,10 @@
   <string name="tabs_tray_action_erase">Balerar historial de restolar</string>
   <string name="download_firefox">Baxar Firefox</string>
   <string name="your_rights_content1">%1$s ye un programa de baldre y de códigu abiertu fechu por Mozilla y otros collaboradores.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s ta disponible so los términos de la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" y otres llicencies de códigu abiertu."]]></string>
-  <string name="your_rights_content3"><![CDATA["Nun tienes concedíu dengún drechu o llicencia total o parcial sobre les marques rexistraes de la Mozilla Foundation, esto inclúi los nomes y logos Mozilla, Firefox o %1$s. "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Equ&#237;</a>" pue alcontrase información adicional."]]></string>
-  <string name="your_rights_content4"><![CDATA["El códigu fonte adicional de %1$s ta disponible so otres "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">llicencies</a>" de baldre y códigu abiertu."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s tamién usa llistaos de bloquéu forníos por Disconnect, Inc. como trabayos separtaos ya independientes so la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" y disponible "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">equ&#237;</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Nome d\'usuariu</string>
   <string name="gv_prompt_password_hint">Contraseña</string>
   <string name="gv_prompt_clear">Llimpiar</string>
@@ -193,8 +193,8 @@
   <string name="find_in_page_input">Alcontrar na páxina</string>
   <string name="find_in_page_result">%1$d/%2$d</string>
   <string name="accessibility_find_in_page_result">%1$d de %2$d</string>
-  <string name="http_auth_dialog_username">Nome d\'usuariu</string>
-  <string name="http_auth_dialog_password">Contraseña</string>
+
+
   <string name="biometric_auth_new_session">Sesión</string>
   <string name="enable_search_suggestions_no">Non</string>
   <string name="enable_search_suggestions_yes">Sí</string>

@@ -26,7 +26,7 @@
   <string name="shortcut_erase_short_label">Glan</string>
   <string name="shortcut_erase_long_label">Glan an stair bhrabhsála</string>
   <string name="text_selection_search_action">Cuardach Príobháideach</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Cuireann %1$s tusa i gceannas.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#218;s&#225;id mar bhrabhs&#225;la&#237; pr&#237;obh&#225;ideach &#233;:\n  "<ul>"\n    "<li>Cuardaigh agus brabhs&#225;il go d&#237;reach san aip</li>"\n    "<li>Cuir cosc ar lorgair&#237; (n&#243; ceadaigh sna socruithe iad)</li>"\n    "<li>Scrios fian&#225;in chomh maith le do stair chuardaigh agus stair bhrabhs&#225;la</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Is &#233; Mozilla a dh&#233;anann %1$s. An misean at&#225; againn n&#225; Idirl&#237;on br&#237;omhar oscailte a choth&#250;.<br/>\n<a href="%2$s">Tuilleadh eolais</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Príobháideachas agus Slándáil</string>
   <string name="preference_privacy_and_security_summary">Lorgaireacht, fianáin, roghanna sonraí</string>
   <string name="preference_search_summary">Réamhshocrú, uathchríochnú</string>
@@ -111,34 +111,34 @@
   <string name="external_multiple_apps_matched_exit">Scoir de Bhrabhsáil Phríobháideach?</string>
   <string name="download_snackbar_finished">%1$s críochnaithe</string>
   <string name="download_snackbar_open">Oscail</string>
-  <string name="download_dialog_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">N&#237; scriostar</b>" comhaid íoslódáilte nuair a scriosann tú stair %1$s."]]></string>
-  <string name="download_dialog_title">Comhad a Íoslódáil</string>
-  <string name="download_dialog_action_cancel">Cealaigh</string>
-  <string name="download_dialog_action_download">Íoslódáil</string>
-  <string name="errorpage_title">Fadhb i rith lódáil an leathanaigh</string>
-  <string name="errorpage_refresh">Bain Triail Eile As</string>
-  <string name="error_connectionfailure_title">Ní féidir ceangal a bhunú</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>D\'fh&#233;adfadh nach bhfuil f&#225;il ar an su&#237;omh n&#243; go bhfuil s&#233; r&#243;ghn&#243;thach faoi l&#225;thair. Bain triail eile as ar ball beag.</li>"\n        "<li>Mura bhfuil t&#250; in ann leathanach ar bith a l&#243;d&#225;il, cinntigh ceangal sonra&#237; n&#243; Wi-Fi do ghl&#233;is.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Ceangal imithe thar am</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Níor aimsíodh an freastalaí</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Scr&#250;daigh an seoladh le haghaidh bot&#250;n cos&#250;il le\n          "<strong>ww</strong>".example.com in &#225;it\n          "<strong>www</strong>.example.com</li>"\n        "<li>Mura bhfuil t&#250; in ann leathanach ar bith a l&#243;d&#225;il, d&#233;an seice&#225;il ar cheangal sonra&#237; n&#243; ceangal Wi-Fi an ghl&#233;is.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Níl an seoladh bailí</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"De ghn&#225;th scr&#237;obhtar seolta&#237; Gr&#233;as&#225;in mar seo "<strong>http://www.example.com/</strong></li>"\n  "<li>"B&#237; cinnte gur tulslaiseanna at&#225; agat (.i. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Níl an leathanach ag atreorú i gceart</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Uaireanta tarla&#237;onn an fhadhb seo de bharr fian&#225;in a bheith d&#237;chumasaithe n&#243; bheith ag di&#250;lt&#250; leo.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Níor tuigeadh an seoladh</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>B\'fh&#233;idir go mbeidh ort bogearra&#237; eile a shuite&#225;il leis an seoladh seo a oscailt.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Níorbh fhéidir ceangal slán a bhunú</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>B\'fh&#233;idir gur fadhb i gcumra&#237;ocht an fhreastala&#237; at&#225; ann, n&#243; b\'fh&#233;idir\ngo bhfuil duine &#233;igin ag d&#233;anamh aithrise ar an bhfreastala&#237;.</li>"\n  "<li>M&#225; &#233;ir&#237;onn leat ceangal leis an bhfreastala&#237; seo de ghn&#225;th, b\'fh&#233;idir\ngur fadhb shealadach &#237; agus gur f&#233;idir leat iarracht a dh&#233;anamh n&#237;os d&#233;ana&#237;.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Úps</string>
-  <string name="error_generic_message">Ní féidir linn an leathanach seo a lódáil ar chúis éigin.</string>
-  <string name="contextmenu_link_share">Comhroinn an nasc</string>
-  <string name="contextmenu_link_copy">Cóipeáil seoladh an naisc</string>
-  <string name="contextmenu_image_share">Comhroinn an íomhá</string>
-  <string name="contextmenu_image_copy">Cóipeáil seoladh na híomhá</string>
-  <string name="contextmenu_image_save">Sábháil an íomhá</string>
-  <string name="contextmenu_open_in_new_tab">Oscail an nasc i gcluaisín nua</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">N&#237; scriosfar</b>" íomhánna sábháilte nó comhroinnte nuair a scriosann tú stair %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Príobháideachas praiticiúil proifisiúnta</string>
   <string name="firstrun_shortcut_title">Cuir aicearraí leis an leathanach baile</string>
   <string name="firstrun_close_button">OK, tuigim!</string>

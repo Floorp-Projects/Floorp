@@ -28,7 +28,7 @@
   <string name="shortcut_erase_long_label">Ka pakuw an dhuchlab xi in olnál jant\'oj a aliyamal</string>
   <string name="shortcut_erase_and_open_long_label">Ka pakuw ani ka japiy %1$s</string>
   <string name="text_selection_search_action">Kit alim tsinat</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ti pidh&#225;l a awiltal.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ka eyendha\' an eyendhan&#233;l abal kit tsinat tsa\'bixin:\n  "<ul>"\n    "<li>Ka aliy ani ka tsa\'biy an xeklek, ti eyendhan&#233;l</li>"\n    "<li>Ka mapchij in belil an alim (o ka t\'ojojoy max a le\' ka jila\' ka otsits)</li>"\n    "<li>Ka pakuw abal ka tixk\'a\' an tsakam tsi\'madh bok\'&#243;l ani patal axi a aliyamal ani a tsa\'biyamal</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ts\'ejkadh k\'al Mozilla. I le\' abal ka wa\'tsin jun i ebtsol&#243;m lubach ani japidh.<br/>\n<a href="%2$s">Xa exla\'yej</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Tsinataláb ani belkadhtaláb</string>
   <string name="preference_privacy_and_security_summary">Alim, cookies, a k\'al</string>
   <string name="preference_search_summary">An eyendhanél axi a takuyamal, kwetem kidhbax</string>
@@ -136,34 +136,34 @@
   <string name="external_multiple_apps_matched_exit">¿A le\' kit kalej ti tsinat tsa\'bixtaláb?</string>
   <string name="download_snackbar_finished">%1$s talbedhamej</string>
   <string name="download_snackbar_open">Ka japiy</string>
-  <string name="download_dialog_warning"><![CDATA["Axi a pa\'ba\' "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">yab ne\'ets ka pakuwat</b>" tam ka pakuw an dhuchlab axi in ulal jawa\' a tsa\'biyamal %1$s."]]></string>
-  <string name="download_dialog_title">Ka pa\'ba\'</string>
-  <string name="download_dialog_action_cancel">Ka kuba\'</string>
-  <string name="download_dialog_action_download">Ka pa\'ba\'</string>
-  <string name="errorpage_title">Yab u awil ka tejwa\'mej an xeklek</string>
-  <string name="errorpage_refresh">Ka exa\' juníl</string>
-  <string name="error_connectionfailure_title">Yab u awil ka pala\'</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>An kwene\' xeklekchik wal&#225;m tekedh eyadh (wal&#225;m yab xant\'oj). Ka exa\' ka tsa\'biy talb&#233;l.</li>"\n        "<li>Max yab u awil ka tsu\'uw ni j&#250;n i xeklek, ka met\'a\' max a pat\'alil palat ti wat\'bom k&#225;w ebtsolom.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">An k\'ij abal ka awits kit paley, taliy</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Yab elan an pat\'ál ju\'taj dheyach an xeklek</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Ka met\'a\' abal an dhuchlab alwa\' dhuchadh, yab ejtil\n          "<strong>ww</strong>".example.com ani yab ejtil\n          "<strong>www</strong>.example.com</li>"\n        "<li>Max yab u awil ka tsu\'uw ni j&#250;n i xeklek, ka met\'a\' max a pat\'alil palat ti wat\'bom k&#225;w ebtsolom.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">An dhuchlab yab alwa\'</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Abal ka ela\' an xeklek kwa\'al ka dhucha\' "<strong>http://www.example.com/</strong></li>"\n  "<li>"Ka meta\' abal a eyendhal an tsakam pelat te\' (ejt&#237;l "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">An xeklek yab k\'wajat ti elnal jant\'ini\' in tomnál</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Axe\' xi kidhabtal&#225;b pel kom a kuba\' o kom yab a bats\'uw an cookies.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Yab u exbayáb an dhuchlab</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Wal&#225;m in yejendhal ka punuw pil i eyendhan&#233;l abal ka japiy.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Yab awíts ka palan k\'anidh</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Axe\' wal&#225;l pel kom odhenek an pat\'&#225;l ju\'taj dheyach an xeklek, o wal&#225;l jita\' in ex&#225;l kin taj&#225;\' abal pel an pat\'&#225;l.</li>"\n  "<li>Max a ejtomal kit otsits al ax&#233;\' xi pat&#225;l, wal&#225;m odhenek po ne\'ets ka ts\'ejkaj, ka exa\' kit otsits talb&#233;l.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ups</string>
-  <string name="error_generic_message">Yab i ejtowal ki pa\'ba\' an xeklek.</string>
-  <string name="contextmenu_link_share">Ka buk\'uw an ts\'aj</string>
-  <string name="contextmenu_link_copy">Ka k\'ot\'biy an ts\'aj</string>
-  <string name="contextmenu_image_share">Ka buk\'uw an k\'ot\'biláb</string>
-  <string name="contextmenu_image_copy">Ka buk\'uw in ts\'ajil an k\'otbiláb</string>
-  <string name="contextmenu_image_save">Ka dheya\' an k\'ot\'biláb</string>
-  <string name="contextmenu_open_in_new_tab">Ka japiy an ts\'aj al pil i xeklek</string>
-  <string name="contextmenu_image_warning"><![CDATA["An k\'ot\'biláb axi a dheyamal, ani axi a buk\'umal "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">yab ne\'ets ka pakuwat</b>" tam ka pakuw an dhuchlab axi in ulal jawa\' a tsa\'biyamal %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Ka k\'adhbanchij in tsapik an tsinataláb</string>
   <string name="firstrun_defaultbrowser_text2">Ka ne\'dha\' ebál an tsinat tsa\'bixtaláb. Ka kuba\' an olnom ani pilchik i tejwa\'medhomtaláb axi u awil ti tsinat met\'a\' al an xeklek, ani kin t\'aja\' abal an xeklekchik yab ka dhubat tejwa\'mej.</string>
   <string name="firstrun_search_title">A alimtal jant\'in tat a le\'</string>
@@ -184,10 +184,10 @@
   <string name="tabs_tray_action_erase">Ka pakuw an dhuchlab xi in olnál jant\'oj a aliyamal</string>
   <string name="download_firefox">Ka pa\'ba\' Firefox</string>
   <string name="your_rights_content1">%1$s pel jún i eyendhanél japidh, ts\'ejkadh k\'al Mozilla ani k\'al pilchik i junkudh t\'ojnal.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s k\'wajat ts\'ejkadh k\'al in kawintal an "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" japidh jiladh k&#225;w in k\'al Mozilla "</a>" ani pil i japidh eynal káw."]]></string>
-  <string name="your_rights_content3"><![CDATA["Yab u pidhnal i walkadhtaláb in bij Fundación Mozilla, jun pejach in k\'al, in bij ani an walekláb Mozilla, Firefox ani %1$s. U awil ka ela\' axe\' tin kwentaj "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" te\' "</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Pilchik i "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" dhuchlab "</a>" axi japidh ani ts\'ejwalidh aniyej in ko\'oyal jant\'ini\' ti ts\'ejkadh abal %1$s."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s aniyej in eyendhal an kawchik abal ka kuba\' xi in k\'al Disconnect, Inc. axe\' pilchik i t\'ojláb ani "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" Japidh abal ka eyan GNU v3"</a>", axi u awil ka ela\' "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">te\'</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">In bij an eyendhom</string>
   <string name="gv_prompt_password_hint">Tsinat japixtal</string>
   <string name="gv_prompt_clear">Ka k\'wit\'iy</string>
@@ -203,9 +203,9 @@
   <string name="accessibility_next_result">Ka met\'a\' axi ne\'ets ka tejwa\'mej talbél</string>
   <string name="accessibility_previous_result">Ka met\'a\' axoi kalej ok\'ox</string>
   <string name="accessibility_dismiss_find_in_page">Ka mapuy an alim</string>
-  <string name="http_auth_dialog_title">I yejenchal kit otsits</string>
-  <string name="http_auth_dialog_username">In bij an eyendhom</string>
-  <string name="http_auth_dialog_password">Tsinat japixtal</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Ka konoy abal ka eyendha\' ta mexajil</string>
   <string name="custom_tab_copy_url_action">URL k\'ot\'bidh</string>
   <string name="preference_advanced_summary">Eyendhanél abal an ts\'ejkom</string>

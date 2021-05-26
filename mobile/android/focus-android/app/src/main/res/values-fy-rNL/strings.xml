@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Wiskje &amp; iepenje</string>
   <string name="shortcut_erase_and_open_long_label">Wiskje en %1$s iepenje</string>
   <string name="text_selection_search_action">Privee sykje</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s jout jo de kontr&#244;le.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Br&#251;k as in priveebrowser:\n  "<ul>"\n    "<li>Streekrjocht fan de app &#250;t sykje en browse</li>"\n    "<li>Trackers blokkearje (of ynstellingen bywurkje om se ta te stean)</li>"\n    "<li>Wiskjen smyt sawol cookies as syk- en navigaasjeskiednis fuort</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wurdt makke troch Mozilla. Us misje is it fersoargjen fan in s&#251;n en iepen ynternet.<br/>\n<a href="%2$s">Mear ynfo</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privacy en befeiliging</string>
   <string name="preference_privacy_and_security_summary">Folgjen, cookies, gegevenskarren</string>
   <string name="preference_search_summary">As standert ynstelle, auto-oanfolje</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Priveenavigaasje ôfslute?</string>
   <string name="download_snackbar_finished">%1$s is foltôge</string>
   <string name="download_snackbar_open">Iepenje</string>
-  <string name="download_dialog_warning"><![CDATA["Downloade bestannen "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">wurde net fuortsmiten</b>" as jo skiednis fan %1$s wiskje."]]></string>
-  <string name="download_dialog_title">Bestân downloade</string>
-  <string name="download_dialog_action_cancel">Annulearje</string>
-  <string name="download_dialog_action_download">Downloade</string>
-  <string name="errorpage_title">Probleem by it laden fan de side</string>
-  <string name="errorpage_refresh">Opnij probearje</string>
-  <string name="error_connectionfailure_title">Kin gjin ferbining meitsje</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Miskien is de website tydlik net beskikber of oerbel&#234;st. Probearje it oer inkelde mominten opnij.</li>"\n        "<li>As jo gjin inkelde side lade kinne, kontrolearje dan de gegevens- of wifi-ferbining fan jo apparaat.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">De wachttiid foar de ferbining is ferstrutsen</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Server net fûn</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontrolearje it adres op typflaters, lykas\n          "<strong>ww</strong>".example.com yn stee fan\n          "<strong>www</strong>.example.com</li>"\n        "<li>As jo gjin inkelde side lade kinne, kontrolearje dan de gegevens- of wifi-ferbining fan jo apparaat.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">It adres is net jildich</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Webadressen wurde trochgeans skreaun as "<strong>http://www.example.com/</strong></li>"\n  "<li>"Let derop dat jo foar&#250;tgeande slashes br&#251;ke (d.y. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">De side ferwiist net op in krekte wize troch</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit probleem kin somtiden feroarsake wurde troch it &#250;tskeakeljen of wegerjen fan cookies</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">It adres waard net begrepen</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Miskien moatte jo oare software ynstallearje om dit adres te iepenjen.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Befeilige ferbining mislearre</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit kin in probleem mei de serverkonfiguraasje w&#234;ze, of ien probearret\ndizze server nei te meitsjen.</li>"\n  "<li>As jo yn it ferline wol mei sukses ferbining makke hawwe mei dizze server,\ndan is de flater mooglik tydlik en kinne jo it letter nochris probearje.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Oeps</string>
-  <string name="error_generic_message">De side kin om de ien oft oare reden net laden wurde.</string>
-  <string name="contextmenu_open_in_app">Mei app iepenje</string>
-  <string name="contextmenu_link_share">Keppeling diele</string>
-  <string name="contextmenu_link_copy">Keppelingsadres kopiearje</string>
-  <string name="contextmenu_image_share">Ofbylding diele</string>
-  <string name="contextmenu_image_copy">Ofbyldingsadres kopiearje</string>
-  <string name="contextmenu_image_save">Ofbylding bewarje</string>
-  <string name="contextmenu_open_in_new_tab">Keppeling iepenje yn nij ljepblêd</string>
-  <string name="contextmenu_image_warning"><![CDATA["Bewarre en dielde ôfbyldingen "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">wurde net fuortsmiten</b>" as jo skiednis fan %1$s wiskje."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Fergrutsje jo privacy</string>
   <string name="firstrun_defaultbrowser_text2">Bring priveenavigaasje nei in heger nivo. Blokkearje advertinsjes en oare ynhâld dy\'t jo op websites folgje kinne en laadtiden fan siden ferlingje.</string>
   <string name="firstrun_search_title">Sykje op jo manier</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Navigaasjeskiednis wiskje</string>
   <string name="download_firefox">Firefox downloade</string>
   <string name="your_rights_content1">%1$s is fergese en iepenboarnesoftware makke troch Mozilla en oare meiwurkers.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s wurdt beskikber steld ûnder de betingsten fan de "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" en oare iepenboarnelisinsjes."]]></string>
-  <string name="your_rights_content3"><![CDATA["Der wurde jo gjin rjochten of lisinsjes ferliend op de hannelsmerken fan de Mozilla Foundation of iennige oare partij, mei ynbegryp fan de nammen of logo’s fan Mozilla, Firefox of %1$s. Oanfoljende ynformaasje is "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">hjir</a>" te finen."]]></string>
-  <string name="your_rights_content4"><![CDATA[Oanfoljende boarnekoade foar %1$s is beskikber ûnder ferskate oare frije en iepenboarne-<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisinsjes</a>.]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s brûkt ek blokkearlisten dy\'t troch Disconnect, Inc. beskikber steld wurde as ôfsûnderlike en ûnôfhinklike wurken ûnder de "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", en dy "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">hjir</a>" beskikber binne."]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Brûkersnamme</string>
   <string name="gv_prompt_password_hint">Wachtwurd</string>
   <string name="gv_prompt_clear">Wiskje</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Folgjende resultaat fine</string>
   <string name="accessibility_previous_result">Foarige resultaat fine</string>
   <string name="accessibility_dismiss_find_in_page">Sykje op side slute</string>
-  <string name="http_auth_dialog_title">Autentikaasje fereaske</string>
-  <string name="http_auth_dialog_username">Brûkersnamme</string>
-  <string name="http_auth_dialog_password">Wachtwurd</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Desktopwebsite opfreegje</string>
   <string name="custom_tab_copy_url_action">URL kopiearre</string>
   <string name="preference_advanced_summary">Untwikkelersark</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Sorry, wy hawwe in probleem mei dit ljepblêd.</string>
   <string name="tab_crash_report_description">As priveebrowser bewarje wy dit ljepblêd net en kinne it net werstelle.</string>
   <string name="tab_crash_report_close_tab_button_label">Ljepblêd slute</string>
-  <string name="fatal_crash_report_title">Sorry, %1$s hie in probleem en is ferûngelokke.</string>
-  <string name="fatal_crash_report_description">As priveebrowser bewarje wy de lêste sneupsesje net en kinne it net werstelle.</string>
-  <string name="fatal_crash_report_close_button_label">Slute</string>
-  <string name="fatal_crash_report_restart_firefox_label">%1$s opnij starte</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Ungelokrapport nei Mozilla ferstjoere</string>
 </resources>

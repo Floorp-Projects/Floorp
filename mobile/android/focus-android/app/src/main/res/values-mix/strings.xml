@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Stoo ra kuna</string>
   <string name="shortcut_erase_and_open_long_label">Stoo tsi kuna %1$s</string>
   <string name="text_selection_search_action">Nduku Sèè</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Kuu kuachu\'un&#241;a.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Kuu nduku seu &#241;a\'a:\n  "<ul>"\n    "<li>Nduku &#241;a kunu nu kaa ndusu\'ku</li>"\n    "<li>Kasi &#241;a kuni kunche\'e &#241;a sau)</li>"\n    "<li>Stoo cookies tsi &#241;a ndukuku sata</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla sai. Kunikue iin Internet nuna &#241;a kuu kuchu\'un ntina yivi.<br/>\n<a href="%2$s">kavi cha kutua</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Ña i\'í tsi Ña kunka vai</string>
   <string name="preference_privacy_and_security_summary">Lista ña rastreo, cookies tsi tutu</string>
   <string name="preference_search_summary">Chikai tana xina, cha ntacha\'a mií ña</string>
@@ -144,35 +144,35 @@
   <string name="external_multiple_apps_matched_exit">A keu nu nduku seu ñaa?</string>
   <string name="download_snackbar_finished">%1$s ntsinu</string>
   <string name="download_snackbar_open">Kuna</string>
-  <string name="download_dialog_warning"><![CDATA["Tutu snuù "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ma ntoi</b>" ta kuu stuu ña\'a ntsinu nuu%1$s."]]></string>
-  <string name="download_dialog_title">Snuu Tutu</string>
-  <string name="download_dialog_action_cancel">Kunchatu</string>
-  <string name="download_dialog_action_download">Snuú</string>
-  <string name="errorpage_title">Makuu kuncheu pagina yoo</string>
-  <string name="errorpage_refresh">Kitsaa tuku</string>
-  <string name="error_connectionfailure_title">Kue kuu kitsai</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Makuu kuncheu &#241;a inka nu pagina yoo . Kunchatu loxo cha kitsa tuku.</li>"\n        "<li>tatu kueku kunu ni iin p&#225;gina, Kunche&#232; a kuu kuachu\'un datos &#241;a kaa ndusu a conexi&#243;n Wi-Fi.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Ntsinu conexión</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Kòo servidor ni ntanèe</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kunchee a va\'a nchau \n          "<strong>ww</strong>".example.com a\n          "<strong>www</strong>.example.com</li>"\n        "<li>Tatu kueku kuncheu ni iin pagina, kunchee a va\'a yee conexi&#243;n a Wi-Fi &#241;a kaa ndusuku.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Va\'a ni chau pagina</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Ta kunu chau iin pagina web tsini&#241;u\'u chau&#241;a sa\'an "<strong>http://www.example.com/</strong></li>"\n  "<li>"Kunchee an\'chau uvi raya (tana &#241;o\'o "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Página yoo kueku nuna vai</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#209;a &#241;oo yaa ta stoo a kue kunu cookies.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Ma ni tsituninia direcciòn</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>"Tsini\'&#241;uu chik&#224;u inka programa tatu kunu kun&#250; direcci&#243;n y&#242;o. "</li>" \n "</ul>]]></string>
-  <string name="error_sslhandshake_title">Mani\'ku chitai\'ña</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Yee &#241;a V&#225;&#8217;&#224; nu inka pagina a inkana kuni sakue\'ena .</li>"\n  "<li>"Tatu va\'a nikitsau ta sata , chaa ntu\'u &#241;a V&#225;&#8217;&#224; yo kunchatu xoo cha kitsa tuku. "</li>\n</ul>]]></string>
-  <string name="error_generic_title">Kukanu inu</string>
-  <string name="error_generic_message">Ma ku kuncheu pagina yoo</string>
-  <string name="contextmenu_open_in_app">Kuna tsi app</string>
-  <string name="contextmenu_link_share">Kua’á direcciòn</string>
-  <string name="contextmenu_link_copy">Ntatava direcciòn</string>
-  <string name="contextmenu_image_share">Stucha tutu ntatavana</string>
-  <string name="contextmenu_image_copy">Ntatava direcciòn nu inka tutu ntatavana</string>
-  <string name="contextmenu_image_save">Chika va\'a tutu ntatavana</string>
-  <string name="contextmenu_open_in_new_tab">Kuna ña kunu kuncheu nu inka xikua</string>
-  <string name="contextmenu_image_warning"><![CDATA["Tutu ndatavana ña nchikavau tsi ña ndakuaku "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" ma ntoi"</b>ta kuu stuu ña\'a ntsinu sata %1$s.]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Saa kanu ña sèè</string>
   <string name="firstrun_defaultbrowser_text2">Nduku sèè ña kunu. Kasi tu\'un va\'a tsi siin ñaa va\'a sa\'a kue pagina.</string>
   <string name="firstrun_search_title">Nduku ña kunu, nixi kunu</string>
@@ -193,10 +193,10 @@
   <string name="tabs_tray_action_erase">Stòo ña ntukuku sata</string>
   <string name="download_firefox">Snuu Firefox</string>
   <string name="your_rights_content1">%1$s software kuachu\'un ntiina ni kuu vaa saa Mozilla tsi nivi sachu\'un chi\'an.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s kuu kuachu\'uña tsi "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licencia p&#250;blica Mozilla</a>" tsi inka licencias ña código abierto."]]></string>
-  <string name="your_rights_content3"><![CDATA["Koo licencia kuachu\'na marca Fundación Mozilla ni Firefox a inkana, tsi logotipo a sivi Mozilla, Firefox a %1$s ku ndukuku tu\'un "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">yo\'o</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Inka "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencia</a>ña código abierto tsi gratuitassani inka código fuente kuachu\'un tsi %1$s.]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s kuu kuachu\'un listas ña tsasi DIsconnect, Inc. tana inka chu\'un tsi "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licencia P&#250;blica General de GNU v3</a>", cha ku ntaneu ña "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">yo\'o</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Sivìi</string>
   <string name="gv_prompt_password_hint">Tu\'un seè</string>
   <string name="gv_prompt_clear">Stòo</string>
@@ -212,9 +212,9 @@
   <string name="accessibility_next_result">Nduku tu\'un nu\'u</string>
   <string name="accessibility_previous_result">Nduku tu\'un sata</string>
   <string name="accessibility_dismiss_find_in_page">Kasi nu ndukuku</string>
-  <string name="http_auth_dialog_title">Tsiniñu\'u kunchi\'i a vai</string>
-  <string name="http_auth_dialog_username">Sivìi</string>
-  <string name="http_auth_dialog_password">Tu\'un seè</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Kaka sitio nu escritorio</string>
   <string name="custom_tab_copy_url_action">Ndatava URL</string>
   <string name="preference_advanced_summary">Nu ndasamu</string>
@@ -246,9 +246,9 @@
   <string name="tab_crash_report_title">Vaa Xikua</string>
   <string name="tab_crash_report_description">Ña Ntukú sèè, kue nchikavai ña ntsinu tsi xikua ntsinu sata.</string>
   <string name="tab_crash_report_close_tab_button_label">Kasi xikua</string>
-  <string name="fatal_crash_report_title">Kunchatu. %1$s ye ña vaá.</string>
-  <string name="fatal_crash_report_description">Ña Ntukú sèè, kue chikavai ña ntsinu sata.</string>
-  <string name="fatal_crash_report_close_button_label">Kasi</string>
-  <string name="fatal_crash_report_restart_firefox_label">Ndakitsa%1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Tachu\'un tu\'un ña vai nu Mozilla</string>
 </resources>

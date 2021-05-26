@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Șterge și deschide</string>
   <string name="shortcut_erase_and_open_long_label">Șterge și deschide %1$s</string>
   <string name="text_selection_search_action">Caută într-un mod privat</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te pune &#238;n control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Folose&#537;te-l ca browser privat:\n  "<ul>"\n    "<li>Caut&#259; &#537;i navigheaz&#259; chiar &#238;n aplica&#539;ie</li>"\n    "<li>Blocheaz&#259; elementele de urm&#259;rire (sau actualizeaz&#259; set&#259;rile pentru a le permite)</li>"\n    "<li>&#536;terge pentru eliminarea cookie-urilor &#537;i a istoricului de c&#259;utare &#537;i de navigare</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s este produs de Mozilla. Misiunea noastr&#259; este s&#259; promov&#259;m un internet deschis &#537;i s&#259;n&#259;tos.<br/>\n<a href="%2$s">Afl&#259; mai multe</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Confidențialitate și securitate</string>
   <string name="preference_privacy_and_security_summary">Urmărire, cookie-uri, împărtășire de date</string>
   <string name="preference_search_summary">Setează motorul implicit, completarea automată</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Ieși din navigarea privată?</string>
   <string name="download_snackbar_finished">Descărcarea %1$s s-a terminat</string>
   <string name="download_snackbar_open">Deschide</string>
-  <string name="download_dialog_warning"><![CDATA["Fișierele descărcate "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nu vor fi &#537;terse</b>" la ștergerea istoricului %1$s."]]></string>
-  <string name="download_dialog_title">Descarcă fișierul</string>
-  <string name="download_dialog_action_cancel">Renunță</string>
-  <string name="download_dialog_action_download">Descarcă</string>
-  <string name="errorpage_title">Problemă la încărcarea paginii</string>
-  <string name="errorpage_refresh">Încearcă din nou</string>
-  <string name="error_connectionfailure_title">Nu se poate conecta</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Site-ul ar putea fi indisponibil temporar sau prea ocupat. &#206;ncearc&#259; din nou &#238;n c&#226;teva momente.</li>"\n        "<li>Dac&#259; nu po&#539;i s&#259; &#238;ncarci nicio pagin&#259;, verific&#259; conexiunea de date sau Wi-Fi a dispozitivului.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Conexiunea a expirat</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Server negăsit</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Verific&#259; adresa de erori de tastare cum ar fi\n          "<strong>ww</strong>".exemplu.ro &#238;n loc de\n          "<strong>www</strong>.exemplu.ro</li>"\n        "<li>Dac&#259; nu po&#539;i s&#259; &#238;ncarci nicio pagin&#259;, verific&#259; conexiunea de date sau Wi-Fi a dispozitivului.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Adresa nu este validă</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Adresele web sunt scrise de obicei ca "<strong>http://www.example.com/</strong></li>"\n  "<li>"Ai grij&#259; s&#259; folose&#537;ti slash-uri corecte (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Pagina nu redirecționează corect</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aceast&#259; problem&#259; uneori poate fi cauzat&#259; de dezactivarea sau refuzarea de a accepta cookie-uri.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Adresa nu a fost înțeleasă</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>S-ar putea s&#259; fie nevoie s&#259; instalezi alt program pentru a deschide aceast&#259; adres&#259;.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Conexiunea securizată a eșuat</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aceasta s-ar putea datora unei probleme &#238;n configura&#539;ia serverului sau\nar putea s&#259; fie cineva care &#238;ncearc&#259; s&#259; uzurpeze identitatea serverului.</li>"\n  "<li>Dac&#259; te-ai conectat cu succes &#238;n trecut la acest server, eroarea poate fi\ntemporar&#259; &#537;i po&#539;i &#238;ncerca din nou mai t&#226;rziu.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ups</string>
-  <string name="error_generic_message">Nu putem încărca această pagină dintr-un motiv oarecare.</string>
-  <string name="contextmenu_open_in_app">Deschide cu o aplicație</string>
-  <string name="contextmenu_link_share">Partajează linkul</string>
-  <string name="contextmenu_link_copy">Copiază adresa linkului</string>
-  <string name="contextmenu_image_share">Partajează imaginea</string>
-  <string name="contextmenu_image_copy">Copiază adresa imaginii</string>
-  <string name="contextmenu_image_save">Salvează imaginea</string>
-  <string name="contextmenu_open_in_new_tab">Deschide într-o filă nouă</string>
-  <string name="contextmenu_image_warning"><![CDATA["Imaginile salvate și partajate "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nu vor fi &#238;ndep&#259;rtate</b>" când ștergi istoricul %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Consolidează-ți confidențialitatea</string>
   <string name="firstrun_defaultbrowser_text2">Du navigarea privată la nivelul următor. Blochează reclamele și alte tipuri de conținut care te pot urmări pe site-uri și care îngreunează timpii de încărcare.</string>
   <string name="firstrun_search_title">Caută în felul tău</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Șterge istoricul de navigare</string>
   <string name="download_firefox">Descarcă Firefox</string>
   <string name="your_rights_content1">%1$s este un program liber și cu sursă deschisă realizat de Mozilla și alți colaboratori.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s este disponibil sub termenii "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;ei Publice Mozilla</a>" și alte licențe cu sursă deschisă."]]></string>
-  <string name="your_rights_content3"><![CDATA["Nu vi se acordă niciun drept sau licență asupra mărcilor comerciale ale Mozilla Foundation sau ale oricărei părți, inclusiv numele sau logourile Mozilla, Firefox sau %1$s. Informații suplimentare pot fi găsite "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aici</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Codul sursă suplimentar pentru %1$s este disponibil sub diferite alte "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licen&#539;e</a>" gratuite și cu sursă deschisă."]]></string>
-  <string name="your_rights_content5"><![CDATA["De asemenea, %1$s folosește lista de blocări furnizată de Disconnect Inc., ca activitate separată și independentă sub "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;a Public&#259; General&#259; GNU v3</a>", și care este disponibilă "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aici</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Utilizator</string>
   <string name="gv_prompt_password_hint">Parolă</string>
   <string name="gv_prompt_clear">Curăță</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Caută următorul rezultat</string>
   <string name="accessibility_previous_result">Caută rezultatul anterior</string>
   <string name="accessibility_dismiss_find_in_page">Anulează căutarea în pagină</string>
-  <string name="http_auth_dialog_title">Autentificare necesară</string>
-  <string name="http_auth_dialog_username">Nume de utilizator</string>
-  <string name="http_auth_dialog_password">Parolă</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Cere versiune de desktop</string>
   <string name="custom_tab_copy_url_action">URL copiat</string>
   <string name="preference_advanced_summary">Unelte dezvoltator</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Ne pare rău. Avem o problemă cu această filă.</string>
   <string name="tab_crash_report_description">Ca browser privat, nu salvăm niciodată și nu putem restaura această filă.</string>
   <string name="tab_crash_report_close_tab_button_label">Închide fila</string>
-  <string name="fatal_crash_report_title">Ne pare rău. %1$s a avut o problemă și s-a închis neașteptat.</string>
-  <string name="fatal_crash_report_description">Ca browser privat, nu salvăm niciodată și nu putem restaura ultima sesiune de navigare.</string>
-  <string name="fatal_crash_report_close_button_label">Închide</string>
-  <string name="fatal_crash_report_restart_firefox_label">Repornește %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Trimite un raport de defecțiune către Mozilla</string>
 </resources>

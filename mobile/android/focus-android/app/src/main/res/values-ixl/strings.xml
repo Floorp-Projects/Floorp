@@ -26,7 +26,7 @@
   <string name="shortcut_erase_short_label">Sojsa</string>
   <string name="shortcut_erase_long_label">Sotzsaj tachul unq\'a vee pich\'umal vete\'</string>
   <string name="text_selection_search_action">Chuk stuul sajunal</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">U %1$s ni taq\' see uva\' axh la yikun.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"B\'anb\'e uva\' axh kuxh la xaansan:\n  "<ul>"\n    "<li>Chuka as tuk\' kuxh u aplicacione\' la xaan kat axh</li>"\n    "<li>Maj ivatz unq\'a chukunaale\' (moj a\'kuxh unq\'a vee\' la k\'ule\' uve\' nasa\')</li>"\n    "<li>Sojsaj ti\' eesat unq\'a vee\' uva\' chukel tuk\' ixaansal</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">U %1$s kat cheesal ta\'n u Mozilla. Tan u qiitz\'abale\' a\'e\' uva\' la qaq\' internet uva\' b\'a\'n as jajle\'l kuxhtu\'.<br/>\n<a href="%2$s">La kuchus ka\'te</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Ye\'xhib\'il unka\'te la ootzin as tii tatine\'</string>
   <string name="preference_privacy_and_security_summary">Ka\'taj Kam ti\' atiisata\', cookies as tachul</string>
   <string name="preference_search_summary">La aaq\'kan tetz kuxhtu\', ankuxhe\' la tz\'ajsan</string>
@@ -130,34 +130,34 @@
   <string name="external_multiple_apps_matched_exit">La inch tel ch\'u\'l tu xaansab\' tetze\' uve\' tetz kuxhtu\'?</string>
   <string name="download_snackbar_finished">Ile\' kat tzojpiy u %1$se\' sti\'</string>
   <string name="download_snackbar_open">Jaja</string>
-  <string name="download_dialog_warning"><![CDATA["Jank\'al chit unq\'a vee\' eq\'omal ku\'tzan "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ye\'xh kam la sotz I</b>" tul la sojsa kaajayil unq\'a vee\' chukel tu %1$s."]]></string>
-  <string name="download_dialog_title">Eq\'o ku\'tzan unq\'a aq\'one\'</string>
-  <string name="download_dialog_action_cancel">Ya\'sa kan</string>
-  <string name="download_dialog_action_download">Eq\'o ku\' tzan</string>
-  <string name="errorpage_title">Ye\' ni tuch ik\'uchat u u\'uje uve\' nasa\' apich\'uta\'</string>
-  <string name="errorpage_refresh">B\'an unpajte</string>
-  <string name="error_connectionfailure_title">Ye\' ni tuch toke\'</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>La ib\'ane\' uva\' ye\' la uch ajajat u vaa\', kamal noonajle. La tx\'eb\' unb\'iil as la b\'an unpajte.</li>"\n        "<li>Asoj a\' chite\' ye\' nisa\' ijajat tib\', saji moj at internet tu va molob\'ale\' moj ato\'k ti\' Wi-Fi.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Kat palyu ve\'t itx\'eb\'one\' ti\' ijajata\'</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Ye\' kat ilej umaj jajon tetz</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Saji moj jit vi b\'ii yansamal toke\' echkole\' vi\'la\'\n          "<strong>ww</strong>".example.com ich\'exel ve\'t\n          "<strong>www</strong>.example.com</li>"\n        "<li>Asoj axh chit ye\' la oleb\' axh ti\' ajajat u vee\' nachuke\', pich\'u moj at internet tu va molob\'ale\' moj ato\'k q\'a ti\' Wi-Fi.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">U atinb\'ale\' vaa\' ye\' la ok tu ach</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"U tatinb\'al u web ni chit itz\'ib\'al ku\' ech kole\' "<strong>http://www.example.com/</strong></li>"\n  "<li>La chit eel ti\' jikil ti\' aq\'ol kan ixo\'l u tz\'ib\'e\', echkole\' unq\'a k\'uchuvatz ila\' (<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Uve\' nachuke\' as ye\'xh kam jit koj chit atku\'</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ni pal u vaa\' tan ti\'e\' uve\' ye\' kuxh nak\'ul unq\'a cookies.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Ye\' ni paltu atinb\'ale\' uve\' ni chukpe\'</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Kamal nisa\' uva\' la b\'anb\'e uma\'t kam uva\' la jajon.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Ye\' kat oleb\'i ti\' ijajat ti jikil</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>U vaa\' ni teq\'otzan uma\'l va\'lexh ti\' uva\' ye\' jik b\'anel tuche\' moj a\'e\' q\'a ni jalpun u tatinb\'ale\'.</li>"\n  "<li>Asoj acha\'vik kuxh ooktza\' b\'axa, as kamal cheel kuxh ye\' nisa\' ijaj tib\' la ka\'pu xamtel.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ups</string>
-  <string name="error_generic_message">At uma\'l Kam ni pale\' as ti\'kole\' uve\' ye\' ni jaje\'.</string>
-  <string name="contextmenu_link_share">La jatxb\'en u vaa\'</string>
-  <string name="contextmenu_link_copy">La eeq\'o tzan ivatz u vaa\'</string>
-  <string name="contextmenu_image_share">La jatx u vatzib\'ale\'</string>
-  <string name="contextmenu_image_copy">La eeq\'o tzan ivatz u vee\' katil lejel kat u vatzib\'ale\'</string>
-  <string name="contextmenu_image_save">La kol u vatzib\'ale\'</string>
-  <string name="contextmenu_open_in_new_tab">La jaj u vaa\' tu uma\'t tilpe\'</string>
-  <string name="contextmenu_image_warning"><![CDATA["Jank\'al unq\'a vatzib\'ale\' uve\' kolel as uve\' jatxel b\'en "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ye\'xh kam la sotzi</b>" tul uve\' la sotzsaj unq\'a vee\' chukel tu %1$se\'."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">B\'an ooksat uyak\'il u eetze\'</string>
   <string name="firstrun_defaultbrowser_text2">Eq\'o u tiinsab\' tetze\' tu uma\'t tanul. Maj ivatz unq\'a altziinaj kame\' as ka\'taj kam uve\' ye\' ni eq\'on ku\'tzan u vee\' nasa\' apich\'uta\'.</string>
   <string name="firstrun_search_title">Achukune\', uve\' nasa\'</string>
@@ -178,10 +178,10 @@
   <string name="tabs_tray_action_erase">Sojsa kaajayil unq\'a vee\' kat achukla</string>
   <string name="download_firefox">Eq\'o ku\'tzan u Firefoxe</string>
   <string name="your_rights_content1">%1$s jajle\'l kuxh u eq\'on tetze\' ta\'n u Mozilla.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s ile\' at ve\'t "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tu\'aal tan u Mozilla</a>" as unka\'te uva jajlu kan."]]></string>
-  <string name="your_rights_content3"><![CDATA["Ye\' la uch taq\'ax u tu\'aale\' te ka\'t uxhchil tetz u Nimla atinb\'ale\' Mozilla moj ka\'taj taq\'onb\'al  ech kole\' uva\' la b\'anb\'el ib\'ii texhlalil u Mozilla, Firefox moj %1$s. La lej ka\'t alb\'al isuuchil see "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tzitza\'</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Ka\'taj "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tu\'aal</a>" uva\' jajlu kan kuxhtu\' as oy kuxh unpajte uva\' la ku\' texhlale\' tetz u %1$se."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s ni b\'anb\'e tachul unq\'a majb\'al tetze\' Disconnect, Inc. eche\' unq\'a aq\'one\' uva\' jatxel as a\' kuxhe\' junal jaq\' u "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Tu\'aal tetz tenam skaajayil tetz u GNU v3</a>" as la lej "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tzitza\'</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Ab\'ii la ooksa kan</string>
   <string name="gv_prompt_password_hint">Exhlal axh kuxh la ootzin</string>
   <string name="gv_prompt_clear">Josq\'i</string>
@@ -197,9 +197,9 @@
   <string name="accessibility_next_result">Chuk u vee\' a\'n la leje\' svatz b\'en</string>
   <string name="accessibility_previous_result">Chuk u vee\' lejel kan b\'axa</string>
   <string name="accessibility_dismiss_find_in_page">Jup u vee\' nachuke\'</string>
-  <string name="http_auth_dialog_title">Ni sa\' uva\' la tiinsa</string>
-  <string name="http_auth_dialog_username">Ab\'ii la ooksa kan</string>
-  <string name="http_auth_dialog_password">Exhlal axh kuxh la ootzin</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Jaj aq\'al uva\' la eeq\'otzan svatz</string>
   <string name="custom_tab_copy_url_action">URL eq\'omal ve\'t kan ivatz</string>
   <string name="preference_advanced_summary">Aq\'onb\'al ti\' ib\'anax tuche\'</string>

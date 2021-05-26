@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Hapus &amp; buka</string>
   <string name="shortcut_erase_and_open_long_label">Hapus dan buka %1$s</string>
   <string name="text_selection_search_action">Mencari Secara Pribadi</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di setelan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga riwayat pencarian dan penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privasi &amp; Keamanan</string>
   <string name="preference_privacy_and_security_summary">Pelacakan, kuki, pilihan data</string>
   <string name="preference_search_summary">Atur baku, lengkapi otomatis</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Keluar dari Penjelajahan Pribadi?</string>
   <string name="download_snackbar_finished">%1$s selesai</string>
   <string name="download_snackbar_open">Buka</string>
-  <string name="download_dialog_warning"><![CDATA["Berkas terunduh "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapus</b>" ketika Anda menghapus riwayat %1$s."]]></string>
-  <string name="download_dialog_title">Unduh Berkas</string>
-  <string name="download_dialog_action_cancel">Batal</string>
-  <string name="download_dialog_action_download">Unduh</string>
-  <string name="errorpage_title">Bermasalah memuat laman</string>
-  <string name="errorpage_refresh">Coba Lagi</string>
-  <string name="error_connectionfailure_title">Tidak dapat tersambung</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Situs ini tidak tersedia untuk sementara atau terlalu sibuk. Coba lagi dalam beberapa saat.</li>"\n        "<li>Jika Anda tidak dapat memuat laman apapun, periksa data ponsel atau sambungan Wi-Fi Anda.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Tenggang waktu sambungan habis</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Peladen tidak ditemukan</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Periksa alamat untuk kesalahan pengetikan seperti\n          "<strong>ww</strong>".example.com alih-alih\n          "<strong>www</strong>.example.com</li>"\n        "<li>Jika Anda tidak dapat memuat laman apapun, periksa koneksi data atau Wi-Fi Anda.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Alamat tidak valid</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Alamat Web umumnya ditulis seperti "<strong>http://www.example.com/</strong></li>"\n  "<li>"Pastikan Anda menggunakan garis miring (mis. "<strong>/</strong>).</li>"\n "</ul>]]></string>
-  <string name="error_redirectLoop_title">Laman tidak teralihkan dengan benar</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Masalah ini kadangkala disebabkan karena fungsi menerima kuki dinonaktifkan atau ditolak.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Alamat tidak dipahami</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Anda mungkin perlu memasang perangkat lunak lain untuk membuka alamat ini.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Sambungan aman gagal</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Hal ini mungkin dikarenakan ada masalah terkait dengan konfigurasi server, atau bisa jadi ada seseorang mencoba untuk berkedok sebagai server.</li>"\n  "<li>Jika Anda berhasil tersambung ke server ini sebelumnya, gangguan dapat bersifat sementara, dan Anda dapat mencoba kembali nanti.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ups</string>
-  <string name="error_generic_message">Kami tidak dapat memuat laman ini karena sejumlah alasan.</string>
-  <string name="contextmenu_open_in_app">Buka dengan aplikasi</string>
-  <string name="contextmenu_link_share">Bagikan tautan</string>
-  <string name="contextmenu_link_copy">Salin alamat tautan</string>
-  <string name="contextmenu_image_share">Bagikan gambar</string>
-  <string name="contextmenu_image_copy">Salin alamat gambar</string>
-  <string name="contextmenu_image_save">Simpan gambar</string>
-  <string name="contextmenu_open_in_new_tab">Buka tautan di tab baru</string>
-  <string name="contextmenu_image_warning"><![CDATA["Gambar yang disimpan dan dibagikan "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapus</b>" ketika Anda menghapus riwayat %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Perkuat privasi Anda</string>
   <string name="firstrun_defaultbrowser_text2">Bawa penjelajahan pribadi ke tingkat berikutnya. Blokir iklan dan konten lainnya yang dapat melacak Anda di seluruh situs dan memperlambat waktu buka halaman.</string>
   <string name="firstrun_search_title">Pencarian Anda, cara Anda</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Hapus riwayat penjelajahan</string>
   <string name="download_firefox">Unduh Firefox</string>
   <string name="your_rights_content1">%1$s adalah perangkat lunak bebas dan sumber terbuka yang dibuat oleh Mozilla dan kontributor lainnya.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s tersedia untuk Anda di bawah persyaratan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Lisensi Publik Mozilla</a>" dan lisensi sumber terbuka lainnya."]]></string>
-  <string name="your_rights_content3"><![CDATA["Anda tidak diberi izin atau lisensi apa pun atas merek dagang Mozilla Foundation atau pihak mana pun, termasuk nama atau logo Mozilla, Firefox, atau %1$s. Informasi lebih lanjut bisa ditemukan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">di sini</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Kode sumber tambahan untuk %1$s tersedia dengan berbagai "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisensi</a>" bebas dan sumber terbuka lainnya."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s juga menggunakan daftar blokir yang disediakan oleh Disconnect, Inc. sebagai pekerjaan terpisah dan independen di bawah "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", dan tersedia "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">di sini</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Nama pengguna</string>
   <string name="gv_prompt_password_hint">Sandi</string>
   <string name="gv_prompt_clear">Bersihkan</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Temukan hasil selanjutnya</string>
   <string name="accessibility_previous_result">Temukan hasil sebelumnya</string>
   <string name="accessibility_dismiss_find_in_page">Tutup temukan di laman</string>
-  <string name="http_auth_dialog_title">Membutuhkan autentikasi</string>
-  <string name="http_auth_dialog_username">Nama pengguna</string>
-  <string name="http_auth_dialog_password">Sandi</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Minta situs desktop</string>
   <string name="custom_tab_copy_url_action">URL tersalin</string>
   <string name="preference_advanced_summary">Alat pengembang</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Maaf. Kami mengalami masalah dengan tab ini.</string>
   <string name="tab_crash_report_description">Sebagai peramban pribadi, kami tidak pernah menyimpan dan tidak dapat mengembalikan tab ini.</string>
   <string name="tab_crash_report_close_tab_button_label">Tutup Tab</string>
-  <string name="fatal_crash_report_title">Maaf, %1$s mengalami masalah dan mogok.</string>
-  <string name="fatal_crash_report_description">Sebagai peramban pribadi, kami tidak pernah menyimpan dan tidak dapat memulihkan sesi penjelajahan terakhir Anda.</string>
-  <string name="fatal_crash_report_close_button_label">Tutup</string>
-  <string name="fatal_crash_report_restart_firefox_label">Mulai Ulang %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Kirim laporan kerusakan ke Mozilla</string>
 </resources>

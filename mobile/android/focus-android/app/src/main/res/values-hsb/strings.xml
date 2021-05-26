@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Zhašeć a wočinić</string>
   <string name="shortcut_erase_and_open_long_label">%1$s zhašeć a wočinić</string>
   <string name="text_selection_search_action">Priwatnje pytać</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s da was kontrolu wobchowa&#263;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Wu&#382;iwaj&#263;e j&#243;n jako priwatny wobhladowak:\n  "<ul>"\n    "<li>Pytaj&#263;e a p&#345;ehladuj&#263;e direktnje w na&#322;o&#382;enju</li>"\n    "<li>Blokuj&#263;e p&#345;es&#263;&#283;howaki (abo aktualizuj&#263;e nastajenja, zo by&#353;&#263;e p&#345;es&#263;&#283;howaki dowoli&#322;)</li>"\n    "<li>Zha&#353;ej&#263;e placki a pytansku a p&#345;ehladowansku historiju</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s so wot Mozilla wuwiwa. Na&#353;a misija je sp&#283;chowanje stroweho, wotewrjeneho interneta.<br/>\n<a href="%2$s">Dal&#353;e informacije</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Priwatnosć a wěstota</string>
   <string name="preference_privacy_and_security_summary">Slědowanje, placki, datowe wuběry</string>
   <string name="preference_search_summary">Standard nastajić, awtomatiske wudospołnjenje</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Priwatny modus wopušćić?</string>
   <string name="download_snackbar_finished">%1$s dokónčeny</string>
   <string name="download_snackbar_open">Wočinić</string>
-  <string name="download_dialog_warning"><![CDATA["Sćehnjene dataje so "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">njezha&#353;eja</b>, hdyž historiju %1$s zhašeće.]]></string>
-  <string name="download_dialog_title">Dataju sćahnyć</string>
-  <string name="download_dialog_action_cancel">Přetorhnyć</string>
-  <string name="download_dialog_action_download">Sćahnyć</string>
-  <string name="errorpage_title">Zmylk při čitanju strony</string>
-  <string name="errorpage_refresh">Hišće raz spytać</string>
-  <string name="error_connectionfailure_title">Žadyn zwisk móžny</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Syd&#322;o njesteji snano nachwilu k dispoziciji abo je p&#345;e&#263;e&#382;ene. Spytaj&#263;e za ma&#322;o wokomikow hi&#353;&#263;e raz.</li>"\n        "<li>Jeli njem&#243;&#382;e&#263;e strony za&#269;ita&#263;, p&#345;epruwuj&#263;e datowy abo WLAN-zwisk wa&#353;eho mobilneho grata.</li>"\n        "</ul>]]></string>
-  <string name="error_timeout_title">Čas zwiska je překročeny</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Serwer namakany njeje</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"P&#345;epruwuj&#263;e adresu za pisanskimi zmylkami ka&#382;\n          "<strong>ww</strong>".example.com m&#283;sto\n          "<strong>www</strong>.example.com</li>"\n        "<li>Jeli njem&#243;&#382;e&#263;e strony za&#269;ita&#263;, p&#345;epruwuj&#263;e daty swojeho grata abo sw&#243;j WLAN-zwisk.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Adresa płaćiwa njeje</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Webadresy so z wa&#353;njom ka&#382; "<strong>http://www.example.com/</strong>" pisaja."</li>"\n  "<li>"Zaw&#283;s&#263;&#263;e, zo wu&#382;iwa&#263;e dopr&#283;dka nachilene nak&#243;sne smu&#382;ki (t.j. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Strona njeprawje posrědkuje</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tut&#243;n problem so druhdy p&#345;ez znjem&#243;&#382;njenje abo wotpokazowanje plackow zawinuje.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Tuta adresa njeje so zrozumiła</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Snano dyrbi&#263;e druhe programy instalowa&#263;, zo by so tuta adresa wo&#269;ini&#322;a.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Wěsty zwisk móžny njeje</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>To m&#243;h&#322;o problem z konfiguraciju serwera by&#263;, abo m&#243;h&#322;o by&#263;,\nzo n&#283;cht&#243; pospytuje serwer imitowa&#263;.</li>"\n  "<li>Jeli s&#263;e ze serwerom w za&#324;d&#378;enos&#263;i wusp&#283;&#353;nje zwjazany by&#322;, m&#243;h&#322; zmylk snano\nnachwilny by&#263; a m&#243;&#382;e&#263;e pozd&#378;i&#353;o hi&#353;&#263;e raz spyta&#263;.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Hopla</string>
-  <string name="error_generic_message">Z někajkeje přičiny njemóžemy tutu stronu začitać.</string>
-  <string name="contextmenu_open_in_app">Wočinić z</string>
-  <string name="contextmenu_link_share">Wotkaz dźělić</string>
-  <string name="contextmenu_link_copy">Wotkazowu adresu kopěrować</string>
-  <string name="contextmenu_image_share">Wobraz dźělić</string>
-  <string name="contextmenu_image_copy">Wobrazowu adresu kopěrować</string>
-  <string name="contextmenu_image_save">Wobraz składować</string>
-  <string name="contextmenu_open_in_new_tab">Wotkaz w nowym rajtarku wočinić</string>
-  <string name="contextmenu_image_warning"><![CDATA["Składowane a dźělene wobrazy "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">so njezha&#353;eja</b>, hdyž historiju %1$s zhašeće.]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Zesylńće swoju priwatnosć</string>
   <string name="firstrun_defaultbrowser_text2">Zběhńće priwatne přehladowanje na přichodnu wyšu runinu. Blokujće wabjenje a hinaši wobsah, kotryž móžeće přez sydła slědować a začitanske časy stronow podlěšić.</string>
   <string name="firstrun_search_title">Waše pytanje kaž wy jo chceće</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Přehladowansku historiju zhašeć</string>
   <string name="download_firefox">Firefox sćahnyć</string>
   <string name="your_rights_content1">%1$s je darmotna softwara wotewrjeneho žórła wot Mozilla a druhich sobuskutkowarjow.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s so pod wuměnjenjemi licency "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" a druhimi licencami wotewrjeneho žórła k dispoziciji staja."]]></string>
-  <string name="your_rights_content3"><![CDATA["Njedadźa wam žane prawa abo licency na wikowanskich znamjenjach załožby Mozilla Foundation abo třećich, inkluziwnje mjena abo loga Mozilla, Firefox abo %1$s. Dalše informacije namakaće "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tu</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Přidatny žórłowy kod za %1$s je pod wšelakich druhich swobodnych "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencach</a>" wotewrjeneho žórła k dispoziciji."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s tež blokowanske lisćiny poskićene wot Disconnect, Inc. jako separatne a njewotwisne dźěła pod licencu "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">General Public Licence v3</a>" wužiwa, kotrež su "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tu</a>" k dispoziciji."]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Wužiwarske mjeno</string>
   <string name="gv_prompt_password_hint">Hesło</string>
   <string name="gv_prompt_clear">Zhašeć</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Přichodny wuslědk namakać</string>
   <string name="accessibility_previous_result">Předchadny wuslědk namakać</string>
   <string name="accessibility_dismiss_find_in_page">Na stronje pytać znjemóžnić</string>
-  <string name="http_auth_dialog_title">Awtentifikacija trěbna</string>
-  <string name="http_auth_dialog_username">Wužiwarske mjeno</string>
-  <string name="http_auth_dialog_password">Hesło</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Desktopowe sydło požadać</string>
   <string name="custom_tab_copy_url_action">URL kopěrowany</string>
   <string name="preference_advanced_summary">Wuwiwarske nastroje</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Bohužel mamy problem z tutym rajtarkom.</string>
   <string name="tab_crash_report_description">Jako priwatny wobhladowak njeskładujemy ženje a njemóžemy tutón rajtark wobnowić.</string>
   <string name="tab_crash_report_close_tab_button_label">Rajtark začinić</string>
-  <string name="fatal_crash_report_title">Bohužel je %1$s problem měł a spadnył.</string>
-  <string name="fatal_crash_report_description">Jako priwatny wobhladowak njeskładujemy ženje a njemóžemy waše poslednje přehladowanske posedźenje wobnowić.</string>
-  <string name="fatal_crash_report_close_button_label">Začinić</string>
-  <string name="fatal_crash_report_restart_firefox_label">%1$s znowa startować</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Mozilla spadowu rozprawu pósłać</string>
 </resources>

@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Vymazať a otvoriť</string>
   <string name="shortcut_erase_and_open_long_label">Vymazať a otvoriť %1$s</string>
   <string name="text_selection_search_action">Súkromné vyhľadávanie</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s v&#225;m d&#225;va kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pou&#382;&#237;vajte ho ako s&#250;kromn&#253; prehliada&#269;:\n  "<ul>"\n    "<li>Vyh&#318;ad&#225;vajte a prehliadajte priamo prostredn&#237;ctvom aplik&#225;cie</li>"\n    "<li>Blokujte sledovacie prvky (v nastaveniach m&#244;&#382;ete sledovacie prvky povoli&#357;)</li>"\n    "<li>Vyma&#382;te cookies, hist&#243;riu vyh&#318;ad&#225;vania a prehliadania</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vyv&#237;ja Mozilla. Na&#353;a misia je podporova&#357; zdrav&#253; a otvoren&#253; internet.<br/>\n<a href="%2$s">&#270;al&#353;ie inform&#225;cie</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Súkromie a bezpečnosť</string>
   <string name="preference_privacy_and_security_summary">Sledovanie, súbory cookie, údaje o používaní</string>
   <string name="preference_search_summary">Predvolené nastavenia, automatické dopĺňanie</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Ukončiť režim Súkromné prehliadanie?</string>
   <string name="download_snackbar_finished">Preberanie súboru %1$s sa dokončilo</string>
   <string name="download_snackbar_open">Otvoriť</string>
-  <string name="download_dialog_warning"><![CDATA["Prevzaté súbory "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebud&#250; odstr&#225;nen&#233;</b>" pri vymazaní histórie prehliadania aplikácie %1$s."]]></string>
-  <string name="download_dialog_title">Prevzatie súboru</string>
-  <string name="download_dialog_action_cancel">Zrušiť</string>
-  <string name="download_dialog_action_download">Prevziať</string>
-  <string name="errorpage_title">Problém pri načítaní stránky</string>
-  <string name="errorpage_refresh">Skúsiť znova</string>
-  <string name="error_connectionfailure_title">Nie je možné sa pripojiť</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Str&#225;nka m&#244;&#382;e by&#357; do&#269;asne nedostupn&#225; alebo zanepr&#225;zdnen&#225;. Svoj pokus opakujte nesk&#244;r.</li>"\n        "<li>Ak sa ned&#225; na&#269;&#237;ta&#357; &#382;iadna str&#225;nka, skontrolujte pripojenie v&#225;&#353;ho mobiln&#233;ho zariadenia k internetu.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Čas pripojenia vypršal</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Server sa nenašiel</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Skontrolujte, &#269;i ste nezadali napr.\n          "<strong>ww</strong>".example.com namiesto\n          "<strong>www</strong>.example.com</li>"\n        "<li>Ak sa ned&#225; na&#269;&#237;ta&#357; &#382;iadna str&#225;nka, skontrolujte pripojenie v&#225;&#353;ho zariadenia k internetu.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Adresa nie je platná</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Webov&#233; adresy s&#250; zvy&#269;ajne zad&#225;van&#233; v tvare "<strong>http://www.example.com/</strong></li>"\n  "<li>"Skontrolujte, &#269;i pou&#382;&#237;vate spr&#225;vne lomky (t.j. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Stránku sa nepodarilo správne presmerovať</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tento probl&#233;m m&#244;&#382;e nasta&#357; pri nepovolen&#237; alebo odmietnut&#237; cookies.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Adresa nebola rozpoznaná</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Na otvorenie tento adresy mo&#382;no bude potrebn&#233; nain&#353;talova&#357; &#271;al&#353;&#237; softv&#233;r.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Zabezpečené pripojenie zlyhalo</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Toto m&#244;&#382;e by&#357; probl&#233;m s konfigur&#225;ciou servera alebo\n sa ho niekto sna&#382;&#237; napodobni&#357;.</li>"\n  "<li>Ak ste sa k tomuto serveru &#250;spe&#353;ne pripojili v minulosti,\n chyba m&#244;&#382;e by&#357; do&#269;asn&#225; a pokus by ste mali opakova&#357; nesk&#244;r.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ups</string>
-  <string name="error_generic_message">Z nejakého dôvodu nebolo možné načítať stránku.</string>
-  <string name="contextmenu_open_in_app">Otvoriť v aplikácii</string>
-  <string name="contextmenu_link_share">Zdieľať odkaz</string>
-  <string name="contextmenu_link_copy">Kopírovať adresu odkazu</string>
-  <string name="contextmenu_image_share">Zdieľať obrázok</string>
-  <string name="contextmenu_image_copy">Kopírovať adresu obrázku</string>
-  <string name="contextmenu_image_save">Uložiť obrázok</string>
-  <string name="contextmenu_open_in_new_tab">Otvoriť odkaz na novej karte</string>
-  <string name="contextmenu_image_warning"><![CDATA["Uložené a zdieľané obrázky "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebud&#250; vymazan&#233;</b>" pri vymazaní histórie aplikácie %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Posuňte svoje súkromie na vyššiu úroveň</string>
   <string name="firstrun_defaultbrowser_text2">Súkromné prehliadanie na úplne inej úrovni. Blokujte reklamy a ostatný obsah, ktorý vás môže sledovať naprieč stránkami.</string>
   <string name="firstrun_search_title">Prehliadanie podľa vás</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Vymazať históriu prehliadania</string>
   <string name="download_firefox">Prevziať Firefox</string>
   <string name="your_rights_content1">%1$s je slobodný a otvorený softvér od Mozilly a jej prispievateľov.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s je vám sprístupnený za podmienok licencie "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" a iných open source licencií."]]></string>
-  <string name="your_rights_content3"><![CDATA["Nie sú vám udelené žiadne práva či licencie súvisiace s ochrannými známkami Mozilla Foundation alebo akejkoľvek inej strany,vrátane názvov a log Mozilla, Firefox alebo %1$s. Ďalšie informácie nájdete "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tu</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Ďalšie zdrojové kódy aplikácie %1$s sú dostupné za podmienok iných slobodných a open source "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licenci&#237;</a>.]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s taktiež používa zoznam blokovania, ktorý poskytuje spoločnosť Disconnect ako oddelené a nezávislé dielo za podmienok licencie "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", dostupné "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tu</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Používateľské meno</string>
   <string name="gv_prompt_password_hint">Heslo</string>
   <string name="gv_prompt_clear">Vymazať</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Nájsť ďalší výsledok</string>
   <string name="accessibility_previous_result">Nájsť predchádzajúci výsledok</string>
   <string name="accessibility_dismiss_find_in_page">Zavrieť hľadanie na stránke</string>
-  <string name="http_auth_dialog_title">Vyžaduje sa overenie</string>
-  <string name="http_auth_dialog_username">Používateľské meno</string>
-  <string name="http_auth_dialog_password">Heslo</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Verzia stránky pre počítače</string>
   <string name="custom_tab_copy_url_action">Adresa bola skopírovaná</string>
   <string name="preference_advanced_summary">Vývojárske nástroje</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Ospravedlňujeme sa, no vyskytol sa problém s touto kartou.</string>
   <string name="tab_crash_report_description">Keďže sme súkromný prehliadač, nikdy neukladáme karty a nemôžeme ich tým pádom ani obnoviť.</string>
   <string name="tab_crash_report_close_tab_button_label">Zavrieť kartu</string>
-  <string name="fatal_crash_report_title">Ospravedlňujeme sa. %1$s narazil na problém a zlyhal.</string>
-  <string name="fatal_crash_report_description">Keďže sme súkromný prehliadač, nikdy neukladáme vaše relácie a nemôžeme ich tým pádom ani obnoviť.</string>
-  <string name="fatal_crash_report_close_button_label">Zavrieť</string>
-  <string name="fatal_crash_report_restart_firefox_label">Reštartovať %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Odoslať správu o zlyhaní Mozille</string>
 </resources>

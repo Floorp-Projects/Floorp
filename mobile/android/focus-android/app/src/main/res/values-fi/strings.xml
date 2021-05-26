@@ -26,7 +26,7 @@
   <string name="shortcut_erase_short_label">Tyhjennä</string>
   <string name="shortcut_erase_long_label">Tyhjennä selaushistoria</string>
   <string name="text_selection_search_action">Yksityinen haku</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s asettaa sinut ohjaimiin.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"K&#228;yt&#228; sit&#228; yksityiseen selaamiseen:\n  "<ul>"\n    "<li>Hae ja selaa suoraan ohjelmassa</li>"\n    "<li>"Est&#228; seuranta (tai muokkaa  asetuksia salliaksesi sen)"</li>"\n    "<li>Poista ev&#228;steet, haku ja selaushistoria napin painalluksella</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s on Mozillan kehitt&#228;m&#228; ohjelmisto. Teht&#228;v&#228;mme on edesauttaa tervett&#228;, avointa Internetti&#228;.<br/>\n<a href="%2$s">Lue lis&#228;&#228;</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Tietosuoja ja turvallisuus</string>
   <string name="preference_privacy_and_security_summary">Seuranta, evästeet, kerätyt tiedot</string>
   <string name="preference_search_summary">Aseta oletus, automaattinen täydennys</string>
@@ -130,34 +130,34 @@
   <string name="external_multiple_apps_matched_exit">Poistu yksityisestä selauksesta?</string>
   <string name="download_snackbar_finished">%1$s ladattiin</string>
   <string name="download_snackbar_open">Avaa</string>
-  <string name="download_dialog_warning"><![CDATA["Ladattuja tiedostoja "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ei poisteta</b>" kun tyhjennät %1$sin historian."]]></string>
-  <string name="download_dialog_title">Lataa tiedosto</string>
-  <string name="download_dialog_action_cancel">Peruuta</string>
-  <string name="download_dialog_action_download">Lataa</string>
-  <string name="errorpage_title">Sivun lataamisvirhe</string>
-  <string name="errorpage_refresh">Yritä uudestaan</string>
-  <string name="error_connectionfailure_title">Yhteyden muodostaminen epäonnistui</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sivusto voi olla v&#228;liaikaisesti saavuttamattomissa tai kovan rasituksen alaisena. Yrit&#228; hetken kuluttua uudestaan.</li>"\n        "<li>Jos mitk&#228;&#228;n sivustot eiv&#228;t toimi, tarkista laitteen datayhteyden tai langattoman verkkoyhteyden tila.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Yhteys aikakatkaistiin</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Palvelinta ei löytynyt</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Tarkista osoite kirjoitusvirheiden varalta: esim.\n          "<strong>ww</strong>".mozilla.org oikean muodon,\n          "<strong>www</strong>.mozilla.org, sijaan.</li>"\n        "<li>"Jos muutkaan sivustot eiv&#228;t toimi, tarkista laitteen datayhteyden tai langattoman verkon tila. "</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Virheellinen osoite</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Verkkosivustojen osoitteet ovat yleens&#228; muotoa "<strong>http://www.example.com/</strong></li>"\n  "<li>"Tarkista, ett&#228; k&#228;yt&#228;t kenoviivoja (eli "<strong>/</strong>-merkkej&#228;).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Sivusto ei uudelleenohjaudu asianmukaisesti</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>T&#228;m&#228;n ongelman saattaa aiheuttaa ev&#228;steiden esto tai hyv&#228;ksym&#228;tt&#228; j&#228;tt&#228;minen.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Osoitetta ei ymmärretty</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Osoitteen avaaminen voi vaatia uuden ohjelman asentamista.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Suojatun yhteyden muodostaminen epäonnistui</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ongelma voi johtua palvelimen asetuksista tai jonkin toisen\npalvelimen vilpillisest&#228; yrityksest&#228; tekeyty&#228; palvelimeksi.</li>"\n  "<li>Jos yhteyden muodostuminen palvelimeen on aiemmin onnistunut, \nvika voi olla v&#228;liaikainen. Yrit&#228; t&#228;ll&#246;in my&#246;hemmin uudestaan.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Hups</string>
-  <string name="error_generic_message">Verkkopyyntöä ei kyetä toteuttamaan.</string>
-  <string name="contextmenu_link_share">Jaa linkki</string>
-  <string name="contextmenu_link_copy">Kopioi linkin osoite</string>
-  <string name="contextmenu_image_share">Jaa kuva</string>
-  <string name="contextmenu_image_copy">Kopioi kuvan osoite</string>
-  <string name="contextmenu_image_save">Tallenna kuva</string>
-  <string name="contextmenu_open_in_new_tab">Avaa linkki uuteen välilehteen</string>
-  <string name="contextmenu_image_warning"><![CDATA["Tallennettuja ja jaettuja kuvia "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ei poisteta</b>" kun %1$sen selaushistoria tyhjennetään."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Tehosta yksityisyyttäsi</string>
   <string name="firstrun_defaultbrowser_text2">Vie yksityinen selaus uudelle tasolle. Estä mainoksia ja muuta sisältöä, jotka voivat seurata sinua eri sivustoilla ja hidastaa sivujen latausaikoja.</string>
   <string name="firstrun_search_title">Hakusi haluamallasi tavalla</string>
@@ -178,10 +178,10 @@
   <string name="tabs_tray_action_erase">Tyhjennä selaushistoria</string>
   <string name="download_firefox">Lataa Firefox</string>
   <string name="your_rights_content1">%1$s on ilmainen, avoimen lähdekoodin ohjelmisto Mozillalta ja muilta avustajilta.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s on käytettävissäsi "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" ja muiden avoimen lähdekoodin lisenssien ehdoin."]]></string>
-  <string name="your_rights_content3"><![CDATA["Sinulle ei anneta minkään muotoisia tavaramerkki- tai lisenssioikeuksia Mozilla-säätiön tai muun tahon tavaramerkkeihin, joihin lukeutuu Mozilla, Firefox tai %1$s -nimi tai -logo. Voit lukea tarkempia lisätietoja tavaramerkeistä "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">t&#228;&#228;lt&#228;</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Muita osia %1$sin lähdekoodista on saatavilla erinäisten vapaiden ja avointen lähdekoodin "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisenssien</a>" ehtojen mukaisesti."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s käyttää myös Disconnect, Inc.:n toimittamia estolistoja, jotka ovat erillisiä ja itsenäisiä "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>"-lisenssin mukaisia töitä ja ne ovat saatavilla "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">t&#228;&#228;lt&#228;</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Käyttäjätunnus</string>
   <string name="gv_prompt_password_hint">Salasana</string>
   <string name="gv_prompt_clear">Tyhjennä</string>
@@ -197,9 +197,9 @@
   <string name="accessibility_next_result">Etsi seuraava tulos</string>
   <string name="accessibility_previous_result">Etsi edellinen tulos</string>
   <string name="accessibility_dismiss_find_in_page">Sulje sivulta etsiminen</string>
-  <string name="http_auth_dialog_title">Varmentaminen vaadittu</string>
-  <string name="http_auth_dialog_username">Käyttäjätunnus</string>
-  <string name="http_auth_dialog_password">Salasana</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Sivuston työpöytäversio</string>
   <string name="custom_tab_copy_url_action">Osoite kopioitu</string>
   <string name="preference_advanced_summary">Kehittäjätyökalut</string>

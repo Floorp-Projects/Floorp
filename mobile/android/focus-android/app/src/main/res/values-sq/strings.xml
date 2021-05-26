@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Fshije &amp; hape</string>
   <string name="shortcut_erase_and_open_long_label">Fshini dhe hapni %1$s</string>
   <string name="text_selection_search_action">Kërkoni Privatisht</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s-i jua l&#235; juve kontrollin.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"P&#235;rdoreni si nj&#235; shfletues privat:\n  "<ul>"\n    "<li>B&#235;ni k&#235;rkime dhe shfletoni drejt e nga aplikacioni</li>"\n    "<li>Bllokoni gjurmues (ose p&#235;rdit&#235;soni rregullimet q&#235; t&#235; lejoni gjurmime)</li>"\n    "<li>Fshini cookies, si dhe historik k&#235;rkimesh dhe shfletimesh</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s-i prodhohet nga Mozilla. Misioni yn&#235; &#235;sht&#235; t&#235; p&#235;rkujdesemi p&#235;r nj&#235; Internet t&#235; sh&#235;ndetsh&#235;m, t&#235; hapur.<br/>\n<a href="%2$s">M&#235;soni m&#235; tep&#235;r</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privatësi &amp; Siguri</string>
   <string name="preference_privacy_and_security_summary">Gjurmim, cookies, zgjedhje mbi të dhënat</string>
   <string name="preference_search_summary">Caktoje parazgjedhje, vetëplotësim</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Të dilet nga Shfletimi Privat?</string>
   <string name="download_snackbar_finished">%1$s përfundoi</string>
   <string name="download_snackbar_open">Hape</string>
-  <string name="download_dialog_warning"><![CDATA["Kartelat e shkarkuara "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">s&#8217;do t&#235; fshihen</b>, kur të fshini historikun e %1$s-it.]]></string>
-  <string name="download_dialog_title">Shkarkoni Kartelë</string>
-  <string name="download_dialog_action_cancel">Anuloje</string>
-  <string name="download_dialog_action_download">Shkarkoje</string>
-  <string name="errorpage_title">Problem në ngarkimin e faqes</string>
-  <string name="errorpage_refresh">Riprovoni</string>
-  <string name="error_connectionfailure_title">S’arrihet të lidhet</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sajti mund t&#235; jet&#235; p&#235;rkoh&#235;sisht jasht&#235; funksionimit ose shum&#235; i z&#235;n&#235;. Riprovoni pas pak &#231;astesh.</li>"\n        "<li>N&#235;se s&#8217;jeni n&#235; gjendje t&#235; ngarkoni asnj&#235; faqe, kontrolloni lidhjen data ose Wi-Fi t&#235; pajisjes suaj celulare.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Lidhjes i mbaroi koha</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">S’u gjet shërbyes</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontrolloni adres&#235;n p&#235;r gabime shkrimi, t&#235; tilla si\n          "<strong>ww</strong>".example.com, n&#235; vend se\n          "<strong>www</strong>.example.com</li>"\n        "<li>N&#235;se s&#8217;jeni n&#235; gjendje t&#235; ngarkoni asnj&#235; faqe, kontrolloni lidhjen data ose Wi-Fi t&#235; pajisjes suaj celulare.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Adresa s’është e vlefshme</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Adresat Web zakonisht shkruhen si "<strong>http://www.example.com/</strong></li>"\n  "<li>"Sigurohuni q&#235; po p&#235;rdorni pjerr&#235;se djathtas (d.m.th. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Faqja s’ridrejton si duhet</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ndonj&#235;her&#235; ky problem mund t&#235; shkaktohet nga &#231;aktivizim apo mospranim cookie-sh.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Adresa s’u kuptua</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Mund t&#235; duhet t&#235; instaloni software tjet&#235;r q&#235; t&#235; hapni k&#235;t&#235; adres.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Lidhja e sigurt dështoi</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ky mund t&#235; jet&#235; problem i ardhur nga form&#235;simi i sh&#235;rbyesit, ose mund t&#235; b&#235;het fjal&#235; p&#235;r dik&#235; q&#235; po provon t&#235; imitoj&#235; sh&#235;rbyesin.</li>"\n  "<li>Po qe se n&#235; t&#235; kaluar&#235;n jeni lidhur me sukses te ky sh&#235;rbyes, gabimi mund t&#235; jet&#235; i p&#235;rkohsh&#235;m, dhe mund t&#235; riprovoni m&#235; von&#235;.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Hëm</string>
-  <string name="error_generic_message">Për ndonjë farë arsyeje, s’e ngarkojmë dot këtë faqe.</string>
-  <string name="contextmenu_open_in_app">Hape me aplikacion</string>
-  <string name="contextmenu_link_share">Ndani lidhje me të tjerët</string>
-  <string name="contextmenu_link_copy">Kopjo adresë lidhjeje</string>
-  <string name="contextmenu_image_share">Ndani figurë me të tjerët</string>
-  <string name="contextmenu_image_copy">Kopjo adresë figure</string>
-  <string name="contextmenu_image_save">Ruaje figurën</string>
-  <string name="contextmenu_open_in_new_tab">Hape lidhjen në skedë të re</string>
-  <string name="contextmenu_image_warning"><![CDATA["Figurat e ruajtura dhe ato të ndara me të tjerët "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">s&#8217;do t&#235; fshihen</b>, kur të fshini historikun e %1$s-it.]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Fuqizoni privatësinë tuaj</string>
   <string name="firstrun_defaultbrowser_text2">Kalojeni shfletimin privat një shkallë më sipër. Bllokoni reklama dhe lëndë tjetër që mund t’ju gjurmojë nga sajti në sajt dhe të ulë kohën e ngarkimit të faqeve.</string>
   <string name="firstrun_search_title">Kërkimi juaj, me mënyrën tuaj</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Fshi historik shfletimesh</string>
   <string name="download_firefox">Shkarkoni Firefox-in</string>
   <string name="your_rights_content1">%1$s është software i lirë dhe me burim të hapur, i krijuar nga Mozilla dhe kontribues të tjerë.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s ju jepet sipas kushteve të licencës "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" dhe të tjerash licenca me burim të hapur."]]></string>
-  <string name="your_rights_content3"><![CDATA["S’ju akordohet ndonjë e drejtë apo licencë mbi shenjat tregtare të fondacionit Mozilla Foundation apo çfarëdo pale tjetër, përfshi emrat apo logot e Mozilla-s, Firefox-it ose %1$s-it. Informacion shtesë mund të gjeni "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">k&#235;tu</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Tjetër kod burim për %1$s-in mund të kihet sipas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencash</a>" të tjera të ndryshme burimi të hapur apo të lira."]]></string>
-  <string name="your_rights_content5"><![CDATA["Veç kësaj, %1$s-i përdor lista bllokimesh të furnizuara nga Disconnect, Inc., si vepra të veçanta dhe të pavarura, licencuar sipas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", dhe gjenden "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">k&#235;tu</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Emër përdoruesi</string>
   <string name="gv_prompt_password_hint">Fjalëkalim</string>
   <string name="gv_prompt_clear">Pastroje</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Gjej përfundimin pasues</string>
   <string name="accessibility_previous_result">Gjej përfundimin e mëparshëm</string>
   <string name="accessibility_dismiss_find_in_page">Hidhe tej gjetjen në faqe</string>
-  <string name="http_auth_dialog_title">Lypset mirëfilltësim</string>
-  <string name="http_auth_dialog_username">Emër përdoruesi</string>
-  <string name="http_auth_dialog_password">Fjalëkalim</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Kërko sajtin për dekstop</string>
   <string name="custom_tab_copy_url_action">URL-ja u kopjua</string>
   <string name="preference_advanced_summary">Mjete zhvilluesi</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Na ndjeni. Po kemi një problem me këtë skedë.</string>
   <string name="tab_crash_report_description">Si një shfletues privat, nuk e ruajmë kurrë dhe nuk mund të rikthejmë këtë skedë.</string>
   <string name="tab_crash_report_close_tab_button_label">Mbylle Skedën</string>
-  <string name="fatal_crash_report_title">Na ndjeni. %1$s pati një problem dhe u vithis.</string>
-  <string name="fatal_crash_report_description">Si një shfletues privat, nuk ruajmë kurrë dhe nuk mund të rikthejmë sesionin tuaj të fundit të shfletimit.</string>
-  <string name="fatal_crash_report_close_button_label">Mbylle</string>
-  <string name="fatal_crash_report_restart_firefox_label">Rinise %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Dërgoni raport vithisje te Mozilla</string>
 </resources>

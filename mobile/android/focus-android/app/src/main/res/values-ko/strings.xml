@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">지우고 열기</string>
   <string name="shortcut_erase_and_open_long_label">%1$s 지우고 열기</string>
   <string name="text_selection_search_action">사생활 보호 검색</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#47484; &#50668;&#47084; &#44592;&#45733;&#51004;&#47196; &#49324;&#50857;&#54624; &#49688; &#51080;&#49845;&#45768;&#45796;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#44060;&#51064; &#51221;&#48372; &#48372;&#54840; &#48652;&#46972;&#50864;&#51200;&#47196; &#49324;&#50857;:\n  "<ul>"\n    "<li>&#50545;&#50640;&#49436; &#44160;&#49353; &#48143; &#48652;&#46972;&#50864;&#51669;&#54616;&#44592;</li>"\n    "<li>&#52628;&#51201;&#44592; &#52264;&#45800;(&#49444;&#51221;&#51012; &#48320;&#44221;&#54644; &#54728;&#50857;&#54624; &#49688; &#51080;&#51020;)</li>"\n    "<li>&#51064;&#53552;&#45367; &#44592;&#47197;&#51060;&#45208; &#44160;&#49353; &#44592;&#47197;, &#53216;&#53412; &#49325;&#51228;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#45716; Mozilla&#51032; &#51228;&#54408;&#51077;&#45768;&#45796;. Mozilla&#51032; &#49324;&#47749;&#51008; &#44148;&#44053;&#54616;&#44256; &#44060;&#48169;&#51201;&#51064; &#51064;&#53552;&#45367;&#51012; &#51312;&#49457;&#54616;&#45716; &#44163;&#51077;&#45768;&#45796;.<br/><a href="%2$s">&#45908; &#50508;&#50500;&#48372;&#44592;</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">개인정보 보호 및 보안</string>
   <string name="preference_privacy_and_security_summary">추적, 쿠키, 데이타 선택</string>
   <string name="preference_search_summary">기본 설정, 자동 완성</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">개인 정보 보호 브라우징을 종료할까요?</string>
   <string name="download_snackbar_finished">%1$s 다운로드됨</string>
   <string name="download_snackbar_open">열기</string>
-  <string name="download_dialog_warning"><![CDATA["다운로드된 파일은 "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"%1$s &#48169;&#47928;&#44592;&#47197;&#51012; &#49325;&#51228;&#54624; &#46412; "</b>지워집니다.]]></string>
-  <string name="download_dialog_title">파일 다운로드</string>
-  <string name="download_dialog_action_cancel">취소</string>
-  <string name="download_dialog_action_download">다운로드</string>
-  <string name="errorpage_title">페이지를 불러오는 데에 문제가 발생했습니다</string>
-  <string name="errorpage_refresh">다시 시도하기</string>
-  <string name="error_connectionfailure_title">연결할 수 없음</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>&#51060; &#49324;&#51060;&#53944;&#44032; &#54788;&#51116; &#51025;&#45813;&#54616;&#51648; &#50506;&#49845;&#45768;&#45796;. &#51104;&#49884; &#54980;&#50640; &#45796;&#49884; &#49884;&#46020;&#54644;&#48372;&#49464;&#50836;.</li>"\n        "<li>&#47564;&#50557; &#50612;&#46500; &#54168;&#51060;&#51648;&#46020; &#48520;&#47084;&#50724;&#51648; &#47803;&#54620;&#45796;&#47732;, &#44592;&#44592;&#51032; &#45936;&#51060;&#53552; &#50672;&#44208; &#49345;&#53468;&#45208; Wi-Fi &#49345;&#53468;&#47484; &#54869;&#51064;&#54644;&#51452;&#49464;&#50836;.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">연결 시간이 초과되었습니다</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">서버를 찾을 수 없습니다</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"&#51452;&#49548;&#50640;&#49436; &#45796;&#51020;&#44284; &#44057;&#51008; &#50724;&#53440;&#47484; &#54869;&#51064;&#54644;&#48372;&#49464;&#50836;\n          "<strong>www</strong>".example.com &#45824;&#49888;\n          "<strong>ww</strong>.example.com</li>"\n        "<li>&#47564;&#50557; &#50612;&#46500; &#54168;&#51060;&#51648;&#46020; &#48520;&#47084;&#50724;&#51648; &#47803;&#54620;&#45796;&#47732;, &#44592;&#44592;&#51032; &#45936;&#51060;&#53552; &#50672;&#44208; &#49345;&#53468;&#45208; Wi-Fi &#49345;&#53468;&#47484; &#54869;&#51064;&#54644;&#51452;&#49464;&#50836;.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">주소가 올바르지 않습니다</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"&#50937; &#51452;&#49548;&#45716; "<strong>http://www.example.com/</strong>&#50752; &#44057;&#51060; &#49373;&#44220;&#49845;&#45768;&#45796;.</li>"\n  "<li>&#49324;&#49440;(<strong>/</strong>)&#51012; &#51228;&#45824;&#47196; &#52452;&#45716;&#51648; &#54869;&#51064;&#54644;&#48372;&#49464;&#50836;.</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">페이지가 제대로 이동되지 않았습니다</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#51060; &#47928;&#51228;&#45716; &#48652;&#46972;&#50864;&#51200;&#50640;&#49436; &#53216;&#53412; &#51217;&#44540;&#51012; &#48520;&#44032;&#45733;&#54616;&#44172; &#54664;&#51012; &#46412; &#48156;&#49373;&#54624; &#49688; &#51080;&#49845;&#45768;&#45796;.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">인식할 수 없는 주소입니다</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#51060; &#51452;&#49548;&#47484; &#50676;&#44592; &#50948;&#54644;&#49440; &#45796;&#47480; &#54532;&#47196;&#44536;&#47016;&#51012; &#49444;&#52824;&#54644;&#50556; &#54633;&#45768;&#45796;.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">보안 연결 실패</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#51060;&#45716; &#49436;&#48260;&#51032; &#44396;&#49457;&#50640; &#47928;&#51228;&#44032; &#51080;&#44144;&#45208; &#45572;&#44400;&#44032;&#44032; &#47564;&#46304; &#44032;&#51676; &#49436;&#48260;&#47196; &#50672;&#44208;&#49884;&#53412;&#47140;&#44256; &#54624; &#46412; &#48156;&#49373;&#46112; &#49688; &#51080;&#49845;&#45768;&#45796;.</li>"\n  "<li>&#47564;&#50557; &#51060;&#51204;&#50640; &#49436;&#48260;&#50640; &#51228;&#45824;&#47196; &#50672;&#44208;&#46096;&#45912; &#51201;&#51060; &#51080;&#50632;&#45796;&#47732;, &#50640;&#47084;&#44032; &#51104;&#44624;&#46041;&#50504;&#47564; &#48156;&#49373;&#54620; &#44163;&#51068; &#54869;&#47456;&#51060; &#45458;&#49845;&#45768;&#45796;. &#45208;&#51473;&#50640; &#45796;&#49884; &#49884;&#46020;&#54644;&#48372;&#49464;&#50836;.</li>\n</ul>]]></string>
-  <string name="error_generic_title">앗! 이런</string>
-  <string name="error_generic_message">페이지를 불러오지 못했습니다.</string>
-  <string name="contextmenu_open_in_app">앱으로 열기</string>
-  <string name="contextmenu_link_share">링크 공유</string>
-  <string name="contextmenu_link_copy">링크 주소 복사</string>
-  <string name="contextmenu_image_share">이미지 공유</string>
-  <string name="contextmenu_image_copy">이미지 주소 복사</string>
-  <string name="contextmenu_image_save">이미지 저장</string>
-  <string name="contextmenu_open_in_new_tab">새 탭으로 링크 열기</string>
-  <string name="contextmenu_image_warning"><![CDATA["%1$s 기록을 지울 때 "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#51200;&#51109; &#48143; &#44277;&#50976;&#46108; &#51060;&#48120;&#51648;</b>는 삭제되지 않습니다.]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">개인정보 보호 강화하기</string>
   <string name="firstrun_defaultbrowser_text2">한 단계 높은 개인 정보 보호 브라우징을 즐겨보세요. 사이트의 경계를 넘어 개인정보를 추적하거나, 페이지 로딩 속도를 늦추는 원인이 되는 광고 및 기타 콘텐츠를 자동으로 차단해 줍니다.</string>
   <string name="firstrun_search_title">검색을 내 입맛대로</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">방문 기록 삭제</string>
   <string name="download_firefox">Firefox 다운로드</string>
   <string name="your_rights_content1">%1$s는 Mozilla와 다른 공헌자들이 만들고 배포하는 무료 오픈 소스 소프트웨어 입니다.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s는 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla &#44277;&#44060; &#46972;&#51060;&#49440;&#49828;</a>" 및 기타 다른 오픈 소스 라이선스 이용 약관에 따라 제공됩니다."]]></string>
-  <string name="your_rights_content3"><![CDATA["귀하는 Mozilla와 Firefox, %1$s 명칭이나 로고를 포함한 Mozilla 재단 및 다른 서비스 제공자 소유의 지적재산권으로 보호받는 권리나 라이선스가 부여되는 것이 아님을 인지하셔야 합니다. 추가적인 정보는 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#45796;&#51020;</a>을 참고하시기 바랍니다.]]></string>
-  <string name="your_rights_content4"><![CDATA["%1$s의 소스 코드는 기타 다양한 무료 및 오픈 소스 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#46972;&#51060;&#49440;&#49828;</a>" 계약에 따라 무료로 제공됩니다."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s는 Disconnect, Inc에서 제공하는 차단목록에서 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>"를 바탕으로 자체적으로 별도로 관리하는 차단목록을 사용합니다. 자세한 내용은 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#45796;&#51020;</a>에서 확인할 수 있습니다.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">사용자명</string>
   <string name="gv_prompt_password_hint">비밀번호</string>
   <string name="gv_prompt_clear">지우기</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">다음 결과 찾기</string>
   <string name="accessibility_previous_result">이전 결과 찾기</string>
   <string name="accessibility_dismiss_find_in_page">페이지에서 찾기 해제</string>
-  <string name="http_auth_dialog_title">인증 필요</string>
-  <string name="http_auth_dialog_username">사용자명</string>
-  <string name="http_auth_dialog_password">비밀번호</string>
+
+
+
   <string name="preference_performance_request_desktop_site">데스크톱 사이트 요청</string>
   <string name="custom_tab_copy_url_action">URL 복사됨</string>
   <string name="preference_advanced_summary">개발자 도구</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">죄송합니다. 이 탭에 문제가 있습니다.</string>
   <string name="tab_crash_report_description">사생활 보호 브라우저여서 저장하지 않았기 때문에 이 탭을 복원할 수 없습니다.</string>
   <string name="tab_crash_report_close_tab_button_label">탭 닫기</string>
-  <string name="fatal_crash_report_title">죄송합니다. %1$s에 문제가 있었고 종료됐습니다.</string>
-  <string name="fatal_crash_report_description">사생활 보호 브라우저여서 저장하지 않았기 때문에 마지막 브라우징 세션을 복원할 수 없습니다.</string>
-  <string name="fatal_crash_report_close_button_label">닫기</string>
-  <string name="fatal_crash_report_restart_firefox_label">%1$s 다시 시작</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Mozilla에 충돌 보고서 보내기</string>
 </resources>

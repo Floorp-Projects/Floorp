@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Escafar e dobrir</string>
   <string name="shortcut_erase_and_open_long_label">Escafar e dobrir %1$s</string>
   <string name="text_selection_search_action">Recèrca privada</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vos d&#242;na lo contr&#242;la.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utiliza-lo coma un navegador privat&#8239;:\n  "<ul>"\n    "<li>Recercatz e navegatz dins l&#8217;aplicacion</li>"\n    "<li>Blocatz los tra&#231;adors (se cambiatz pas lo param&#232;tre)</li>"\n    "<li>Escafatz los cookies e los istorics de rec&#232;rcas e navegacion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produch per Mozilla. N&#242;stra mission es d&#8217;encoratjar un Internet dob&#232;rt e en bona santat.<br/>\n<a href="%2$s">Ne saber mai</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Vida privada e seguretat</string>
   <string name="preference_privacy_and_security_summary">Seguiment, cookies, donadas reculhidas</string>
   <string name="preference_search_summary">Motor per defaut, autocompletacion</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Sortir de la navegacion privada ?</string>
   <string name="download_snackbar_finished">%1$s acabat</string>
   <string name="download_snackbar_open">Dobrir</string>
-  <string name="download_dialog_warning"><![CDATA["Los fichièrs telecargats "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ser&#224;n pas suprimits</b>" en netejar l’istoric de %1$s."]]></string>
-  <string name="download_dialog_title">Telecargar lo fichièr</string>
-  <string name="download_dialog_action_cancel">Anullar</string>
-  <string name="download_dialog_action_download">Telecargar</string>
-  <string name="errorpage_title">Problèma en cargar la pagina</string>
-  <string name="errorpage_refresh">Tornar ensajar</string>
-  <string name="error_connectionfailure_title">Impossible de se connectar</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Aqueste site p&#242;t &#232;sser indisponible pel moment o subrecargat. Tornatz ensajar dins una estona.</li>"\n        "<li>S&#8217;es impossible de telecargar quitament una pagina, verificatz las donadas de connexion o Wifi de v&#242;stre periferic</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">La connexion a expirat</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Impossible de trobar lo servidor</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Verificatz qu&#8217;i aja pas d&#8217;errors de sasida dins l&#8217;adre&#231;a coma\n          "<strong>ww</strong>".exemple.com al l&#242;c de \n          "<strong>www</strong>.exemple.com</li>"\n        "<li>S&#8217;es impossible de telecargar quitament una pagina, verificatz las donadas de connexion o Wifi de v&#242;stre periferic.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">L’adreça es pas valida</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Las adre&#231;as web normalament son aital "<strong>http://www.exemple.com/</strong></li>"\n  "<li>Asseguratz-vos qu&#8217;utilizetz las barras inclinadas(<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Redireccion de pagina incorrècta</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aqu&#242; poiri&#225; venir de cookies desactivats o defenduts.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">La connexion es pas estada compresa</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Benl&#232;u que vos cal installar un autre programa per dobrir aquesta adre&#231;a.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Fracàs de la connexion segura</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aqu&#242; poiri&#225; &#232;sser una probl&#232;ma amb la configuracion del servidor o de qualqu&#8217;un que se faga passar pel servidor .</li>"\n  "<li>Se vos s&#232;tz connectat sens cap de probl&#232;ma los autres c&#242;ps, l&#8217;error p&#242;t &#232;sser tempor&#224;ria e pod&#232;tz tornar ensajar mai tard.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ops</string>
-  <string name="error_generic_message">Quicòm fa qu’avèm pas pogut cargar la pagina.</string>
-  <string name="contextmenu_open_in_app">Dobrir amb una aplicacion</string>
-  <string name="contextmenu_link_share">Partejar lo ligam</string>
-  <string name="contextmenu_link_copy">Copiar l\'adreça del ligam</string>
-  <string name="contextmenu_image_share">Partejar l’imatge</string>
-  <string name="contextmenu_image_copy">Copiar l\'adreça de l’imatge</string>
-  <string name="contextmenu_image_save">Enregistrar l’imatge</string>
-  <string name="contextmenu_open_in_new_tab">Dobrir dins un onglet novèl</string>
-  <string name="contextmenu_image_warning"><![CDATA["Los imatges salvagardats o partejats "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ser&#224;n pas suprimits</b>" en netejar vòstre istoric %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Refortissètz vòstra vida privada</string>
   <string name="firstrun_defaultbrowser_text2">Passatz a un nivèl mai naut de navegacion privada. Oblidetz las reclamas e los autres contenguts que pòdon vos traçar de sites en sites e rendon pesucas las paginas.</string>
   <string name="firstrun_search_title">Recercatz de vòstre biais</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Netejar l’istoric de navegacion</string>
   <string name="download_firefox">Telecargar Firefox</string>
   <string name="your_rights_content1">%1$s es un logicial liure e dobèrt fach per Mozilla e d’autres contributors.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s es ofrit jols tèrmes de la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Lic&#233;ncia publica de Mozilla</a>" e d’autras licéncias open source."]]></string>
-  <string name="your_rights_content3"><![CDATA["Donatz pas cap de drechs o licéncia sus las marcas depausadas de la Fondacion Mozilla o de tèrces, aquò inclutz los noms e logos de Mozilla, Firefox o de %1$s. Mai d’informacions "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Lo còdi font complementari per %1$s es disponibles jos diferentas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lic&#233;ncias</a>.]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s utiliza las listas de blocatges provesidas per Disconnect, Inc coma creacion jos licéncia "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", e disponiblas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqu&#237;</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Nom d\'utilizaire</string>
   <string name="gv_prompt_password_hint">Senhal</string>
   <string name="gv_prompt_clear">Escafar</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Trobar lo resultat seguent</string>
   <string name="accessibility_previous_result">Trobar lo resultat precedent</string>
   <string name="accessibility_dismiss_find_in_page">Quitar la recèrca dins la pagina</string>
-  <string name="http_auth_dialog_title">Autentificacion requesida</string>
-  <string name="http_auth_dialog_username">Nom d’utilizaire</string>
-  <string name="http_auth_dialog_password">Senhal</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Veire version ordenador</string>
   <string name="custom_tab_copy_url_action">URL copiada</string>
   <string name="preference_advanced_summary">Aisinas pels desvolopaires</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">O planhèm, avèm de problèmas amb aqueste onglet.</string>
   <string name="tab_crash_report_description">Coma navegador privat, enregistram pas jamai res e podèm pas restablir aqueste onglet.</string>
   <string name="tab_crash_report_close_tab_button_label">Tampar l\'onglet</string>
-  <string name="fatal_crash_report_title">O planhèm. %1$s a rescontrat un problèma a a quitat de foncionar.</string>
-  <string name="fatal_crash_report_description">Coma navegador privat, enregistram pas jamai res e podèm pas restablir vòstra darrièra session.</string>
-  <string name="fatal_crash_report_close_button_label">Tampar</string>
-  <string name="fatal_crash_report_restart_firefox_label">Reaviar %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Enviar un senhalament de bug a Mozilla</string>
 </resources>

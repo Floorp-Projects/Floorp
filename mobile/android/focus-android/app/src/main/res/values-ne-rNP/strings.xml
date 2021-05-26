@@ -115,25 +115,25 @@
   <string name="external_multiple_apps_matched_exit">निजी ब्राउजिङ्ग बन्द गर्न चाहनुहुन्छ ?</string>
   <string name="download_snackbar_finished">%1$s सकियो</string>
   <string name="download_snackbar_open">खोल्नुहोस्</string>
-  <string name="download_dialog_title">डाउनलोड असफल भयो</string>
-  <string name="download_dialog_action_cancel">रद्द गर्नुहोस्</string>
-  <string name="download_dialog_action_download">डाउनलोड गर्नुहोस्</string>
-  <string name="errorpage_title">पृष्ठ लोड गर्न समस्या</string>
-  <string name="errorpage_refresh">पुनःप्रयास गर्नुहोस्</string>
-  <string name="error_connectionfailure_title">जडान गर्न असमर्थ</string>
-  <string name="error_timeout_title">जडान समय समाप्त भयो</string>
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">सर्भर फेला परेन</string>
-  <string name="error_malformedURI_title">यो ठेगाना मान्य छैन</string>
-  <string name="error_redirectLoop_title">पृष्ठ राम्रोसँग पुनः निर्देशित हुन सकिरहेको छैन</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#160;<li>&#2351;&#2379; &#2360;&#2350;&#2360;&#2381;&#2351;&#2366; &#2325;&#2361;&#2367;&#2354;&#2375; &#2325;&#2361;&#2367;&#2305; &#2313;&#2340;&#2381;&#2346;&#2344;&#2381;&#2344; &#2361;&#2369;&#2344;&#2369;&#2325;&#2379; &#2325;&#2366;&#2352;&#2339; &#2325;&#2369;&#2325;&#2367;&#2332; &#2309;&#2325;&#2381;&#2359;&#2350; &#2327;&#2366;&#2352;&#2367;&#2319;&#2325;&#2379; &#2357;&#2366; &#2360;&#2381;&#2357;&#2368;&#2325;&#2366;&#2352;&#2381;&#2344; &#2344;&#2360;&#2325;&#2367;&#2319;&#2325;&#2379;&#2354;&#2375; &#2327;&#2352;&#2381;&#2342;&#2366; &#2361;&#2369;&#2344;&#2375; &#2327;&#2352;&#2381;&#2342;&#2331;&#2404;</li>&#160;</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">यो ठेगाना बुझिएन</string>
-  <string name="error_generic_title">ओहो</string>
-  <string name="contextmenu_link_share">लिङ्क साझा गर्नुहोस्</string>
-  <string name="contextmenu_link_copy">लिङ्क ठेगाना प्रतिलिपि गर्नुहोस्</string>
-  <string name="contextmenu_image_share">तस्बिर साझेदारी गर्नुहोस</string>
-  <string name="contextmenu_image_copy">तस्बिर ठेगाना प्रतिलिपि गर्नुहोस्</string>
-  <string name="contextmenu_image_save">तस्विर सङ्ग्रह गर्नुहोस्</string>
-  <string name="contextmenu_open_in_new_tab">लिङ्कलाई नयाँ ट्याबमा खोल्नुहोस्</string>
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">आफ्नो गोपनीयताको बलियो बनाउनुहोस्</string>
   <string name="firstrun_search_title">तपाईंको खोजी, तपाईंको बाटो</string>
   <string name="firstrun_close_button">ठीक छ, थाहा पाएँ</string>
@@ -154,8 +154,8 @@
   <string name="site_security_icon_content_description">साईट सुरक्षा</string>
   <string name="preference_autocomplete_duplicate_url_error">URL पहिल्यै अवस्थित छ</string>
   <string name="find_in_page">पृष्ठमा फेला पार्नुहोस्</string>
-  <string name="http_auth_dialog_title">प्रमाणीकरण आवश्यक</string>
-  <string name="http_auth_dialog_username">प्रयोगकर्ता नाम</string>
-  <string name="http_auth_dialog_password">गोप्यशब्द</string>
+
+
+
   <string name="preference_performance_request_desktop_site">डेस्कटप साईट अनुरोध गर्नुहोस्</string>
 </resources>

@@ -26,7 +26,7 @@
   <string name="shortcut_erase_short_label">Borrar</string>
   <string name="shortcut_erase_long_label">Borrar o historial de navegación</string>
   <string name="text_selection_search_action">Busca privada</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s d&#225;lle o control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Como un navegador privado, perm&#237;telle:\n  "<ul>"\n    "<li>Buscar e navegar directamente desde o aplicativo</li>"\n    "<li>Bloquear os elementos de seguimento (ou cambiar os axustes para permitilos)</li>"\n    "<li>Eliminar as cookies e os historiais de busca e navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">O %1$s est&#225; creado por Mozilla. A nosa misi&#243;n &#233; promover unha Internet aberta e saudable.<br/>\n<a href="%2$s">M&#225;is informaci&#243;n</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privacidade e seguranza</string>
   <string name="preference_privacy_and_security_summary">Seguimento, cookies, datos recollidos</string>
   <string name="preference_search_summary">Estabelecer como predeterminado, completado automático</string>
@@ -130,34 +130,34 @@
   <string name="external_multiple_apps_matched_exit">Quere saír da navegación privada?</string>
   <string name="download_snackbar_finished">%1$s rematou</string>
   <string name="download_snackbar_open">Abrir</string>
-  <string name="download_dialog_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Non se eliminar&#225;n</b>" os ficheiros descargados cando borre o historial de %1$s."]]></string>
-  <string name="download_dialog_title">Descargar ficheiro</string>
-  <string name="download_dialog_action_cancel">Cancelar</string>
-  <string name="download_dialog_action_download">Descargar</string>
-  <string name="errorpage_title">Produciuse un problema ao cargar a páxina</string>
-  <string name="errorpage_refresh">Tentar de novo</string>
-  <string name="error_connectionfailure_title">Non é posíbel conectarse</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>O sitio poder&#237;a estar non dispo&#241;&#237;bel temporalmente ou estar demasiado saturado. Tente acceder de novo nuns minutos.</li>"\n        "<li>Se non consegue cargar algunhas p&#225;xinas, comprobe a conexi&#243;n de datos ou Wi-Fi do seu dispositivo m&#243;bil.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Tempo de espera da conexión esgotado</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Non se atopou o servidor</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Comprobe que o enderezo non conte&#241;a erros de escrita tales como\n          "<strong>ww</strong>".example.com no lugar de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Se non consegue cargar algunhas p&#225;xinas, comprobe a conexi&#243;n de datos ou Wi-Fi do seu dispositivo m&#243;bil.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">O enderezo é incorrecto</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Normalmente, os enderezos web escr&#237;bense como "<strong>http://www.exemplo.com/</strong></li>"\n  "<li>"Aseg&#250;rese de que est&#225; a usar barras inclinadas cara adiante (p. ex. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">A páxina non está a redirixir correctamente</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#193;s veces, este problema pode estar causado pola desactivaci&#243;n ou rexeitamento de aceptar cookies.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Non se entendeu o enderezo</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#201; pos&#237;bel que necesite instalar outro software para abrir este enderezo.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Fallou a conexión segura</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Isto poder&#237;a ser un problema coa configuraci&#243;n do servidor ou pode ser\nalgu&#233;n que est&#225; tentando facerse pasar polo servidor.</li>"\n  "<li>Se xa puido conectarse a este servidor de forma correcta, pode ser que o erro\nsexa temporal e pode tentalo m&#225;is tarde.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Vaites</string>
-  <string name="error_generic_message">Non é posíbel cargar esta páxina por algunha razón.</string>
-  <string name="contextmenu_link_share">Compartir ligazón</string>
-  <string name="contextmenu_link_copy">Copiar o enderezo da ligazón</string>
-  <string name="contextmenu_image_share">Compartir imaxe</string>
-  <string name="contextmenu_image_copy">Copiar o enderezo da imaxe</string>
-  <string name="contextmenu_image_save">Gardar imaxe</string>
-  <string name="contextmenu_open_in_new_tab">Abrir a ligazón nunha nova lapela</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Non se eliminar&#225;n</b>" as imaxes gardadas e compartidas cando borre o historial de %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Potencia a súa privacidade</string>
   <string name="firstrun_defaultbrowser_text2">A navegación privada pasa a un nivel superior. Bloquea anuncios e outro contido que pode facerlle un seguimento a través dos sitios e atrasar a carga das páxinas.</string>
   <string name="firstrun_search_title">As súas buscas, ao seu modo</string>
@@ -178,10 +178,10 @@
   <string name="tabs_tray_action_erase">Borrar o historial de navegación</string>
   <string name="download_firefox">Descargar o Firefox</string>
   <string name="your_rights_content1">O %1$s é un programa libre e de código aberto creado por Mozilla e outros colaboradores.</string>
-  <string name="your_rights_content2"><![CDATA["O %1$s está dispoñíbel nos termos da "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" e outras licenzas de código aberto."]]></string>
-  <string name="your_rights_content3"><![CDATA["Non se lle outorga ningún dereito nin licenza sobre as marcas rexistradas da Fundación Mozilla ou as súas filiais, incluíndo os nomes e os logos de Mozilla, Firefox ou %1$s. "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Aqu&#237;</a>" pode atopar máis información."]]></string>
-  <string name="your_rights_content4"><![CDATA["O código fonte complementario para %1$s está dispoñíbel con outras "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licenzas</a>" libres e de código aberto."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s tamén usa as listas de bloqueo fornecidas por Disconnect, Inc. como traballos separados e independentes coa "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licenza p&#250;blica xeral de GNU versi&#243;n 3 (GPL3)</a>", que está dispoñíbel "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqu&#237;</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Nome de usuario</string>
   <string name="gv_prompt_password_hint">Contrasinal</string>
   <string name="gv_prompt_clear">Borrar</string>
@@ -197,9 +197,9 @@
   <string name="accessibility_next_result">Atopar o seguinte resultado</string>
   <string name="accessibility_previous_result">Atopar o resultado anterior</string>
   <string name="accessibility_dismiss_find_in_page">Pechar a busca</string>
-  <string name="http_auth_dialog_title">Requírese autenticación</string>
-  <string name="http_auth_dialog_username">Nome de usuario</string>
-  <string name="http_auth_dialog_password">Contrasinal</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Solicitar sitio de escritorio</string>
   <string name="custom_tab_copy_url_action">Copiouse o URL</string>
   <string name="preference_advanced_summary">Ferramentas de desenvolvemento</string>

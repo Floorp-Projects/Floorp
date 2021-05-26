@@ -26,7 +26,7 @@
   <string name="shortcut_erase_short_label">Pichay</string>
   <string name="shortcut_erase_long_label">Ñawpa yaykusqa t\'aqwiriyta pichay</string>
   <string name="text_selection_search_action">Asuy mask\'ay</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s qhawaypi churasunki.</p><p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">juk asuy t\'aqwiriyjinata llamk\'ay:<ul><li>Mask\'ay chanta chiqanta t\'aqwiriy aplicaci&#243;n &#241;isqapi</li><li>Tarichiqkunata ch\'ataykuy (mana chay allinchaykunata kunanchay tarichiqkunata ju&#241;inapaq)</li><li>Pichay cookies kaqkunata wa&#241;uchinaykipaq, kay mask\'ay chanta &#241;awpa yaykusqa t\'aqwiriyjinatapis</li></ul></p><p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$sMozilla kaqwan ruwasqa kachkan. Kamachiyniykuqa kan juk allin kawsaypaq, kichasqa Internet &#241;isqata riqsichina.<br/><a href="%2$s">Aswanta yachay</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Asuy chanta Takya</string>
   <string name="preference_privacy_and_security_summary">Tarichiqkunamanta, cookies kaqkunamanta, willaykunamanta ima akllaykuna</string>
   <string name="preference_search_summary">Akllasqañajinata churay, sapanmanta junt\'achiy</string>
@@ -123,34 +123,34 @@
   <string name="external_multiple_apps_matched_exit">¿Asuy t\'aqwiriymanta lluqsinkichu?</string>
   <string name="download_snackbar_finished">%1$s tukusqa</string>
   <string name="download_snackbar_open">Kichay</string>
-  <string name="download_dialog_warning"><![CDATA["Uraykuchisqa kipukuna "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"mana raqpasqachu kanqanku "</b>" sichus ñawpa yaykusqaykita %1$s kaymanta pichanki chay."]]></string>
-  <string name="download_dialog_title">Kiputa uraykuchiy</string>
-  <string name="download_dialog_action_cancel">Tatiy</string>
-  <string name="download_dialog_action_download">Uraykuchiy</string>
-  <string name="errorpage_title">Ch\'ampa raphita chaqnanaspa</string>
-  <string name="errorpage_refresh">Watiqmanta ruway</string>
-  <string name="error_connectionfailure_title">Mana t\'inkikuyta atikunchu</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Puede que el sitio est&#233; ocupado o no est&#233; disponible temporalmente. Vuelve a intentarlo en unos minutos.</li>"\n        "<li>Si no puedes cargar ninguna p&#225;gina, comprueba la conexi&#243;n de datos o Wi-Fi de tu dispositivo.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">T\'inkiy tukukunña</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Mana jaywaqta tarikunchu</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        \n        "<li>"Qhawaykachay sichus direcci&#243;n mana ni juk pantayniyku kayjina\n          \n          "<strong>ww</strong>".example.com kayjinamanta\n          \n          "<strong>www</strong>.example.com</li>"\n        \n        "<li>Sichus ni juk raphita chaqnanay atinkichu chay, dispositivoykiqpata willaykuna t\'inkiyninta qhawaykachay mana chay Wi-Fi kaqmanta.</li>"\n      \n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Kay dirección mana allinchu</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  \n  "<li>"Web direccionesqa mana ajinachu qillqakuy yachanku "<strong/></li>"\n  \n  "<li>"Sumaqta qhawaychakuy kay wiksu siqikunawan llamk\'ayta (i.e. "<strong>/</strong>).</li></ul>]]></string>
-  <string name="error_redirectLoop_title">Kay raphi mana allintachu redireccionachkan</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  \n  "<li>Wakin kuti, ch\'ampaqa rikhurin wa&#241;uchiyrayku mana chay mana ari &#241;iqtiyki kay cookies llamk\'ayta.</li></ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Kay direccion mana jap\'iqakunchu</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  \n  "<li>Ichapis wak software &#241;isqata chantinayki tiyan kay direccionta kicharinaykipaq.</li></ul>]]></string>
-  <string name="error_sslhandshake_title">Takya t\'inkiypi pantay</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  \n  "<li>Ichapis juk pantay kanman kay yaywaq configuracionwan mana chay ichapis juk runa yaywaqta tantiyay munachkan.</li>"\n  \n  "<li>Sichus &#241;awpaqta mana ch\'ampakunayuq kay yaywaqman t\'inkikurqanki&#241;a chay, ichapis pantayqa kunanpachalla kanman chanta watiqmanta ruway atiwaq.</li></ul>]]></string>
-  <string name="error_generic_title">Uy</string>
-  <string name="error_generic_message">Imaraykuchus mana kay raphita chaqnanay atirqaykuchu.</string>
-  <string name="contextmenu_link_share">T\'inkiyta qunakuy</string>
-  <string name="contextmenu_link_copy">T\'inkiypata direccioninta kikinchay</string>
-  <string name="contextmenu_image_share">Rikch\'ayta qunakuy</string>
-  <string name="contextmenu_image_copy">Rikch\'aypata direccioninta kikinchay</string>
-  <string name="contextmenu_image_save">Rikch\'ayta jallich\'ay</string>
-  <string name="contextmenu_open_in_new_tab">T\'inkiyta kichariy juk musuq tikllapi</string>
-  <string name="contextmenu_image_warning"><![CDATA["Jallich\'asqa chanta qunakusqa rikch\'aykuna "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">mana raqpasqachu kanqanku</b>" sichus ñawpa yaykusqaykita %1$s kaymanta pichanki chay."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Asuykita kallpachay</string>
   <string name="firstrun_defaultbrowser_text2">Qhipan ñiqiman kay asuy t\'aqwiriyta apay. Willaykunata chanta wak tiyapuykunata ima ch\'ataykuy mayqinkunachus tarisuy atinkuman kitinninta chanta raphikunaqpata chaqnanayninta jayrayan ima.</string>
   <string name="firstrun_search_title">Mask\'ayniyki, munasqaykimanjina</string>
@@ -171,10 +171,10 @@
   <string name="tabs_tray_action_erase">Ñawpa yaykusqa t\'aqwiriyta pichay</string>
   <string name="download_firefox">Firefox kaqta uraykuchiy</string>
   <string name="your_rights_content1">%1$s kaqqa juk software kichasqa codigoyuqtaq chanta qhasitaq, Mozillawan chanta wak yanapaqkunawan ima paqarichisqa.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s llamk\'anapaq kachkan kay terminosmanjina kaymanta "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Tukuypaq Licencia Mozilla kaqmanta</a>" chanta wak licenciakuna kichasqa codigoyuq ima."]]></string>
-  <string name="your_rights_content3"><![CDATA["Mana ni juk derechoyuq mana chay licenciayuq kankichu kay riqsichasqa marcasman kay Mozilla Fundacionmanta nitaq wak munaq qutumanta, churaykusqa Mozilla, Firefox sutikunanmanpis rikch\'aykunanmanpis mana chay %1$s kaqmanpis. Aswan willaykunata tariwaq "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">kaypi</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Wak "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">"licencias kaqkuna "</a>" kichasqa chanta qhasi codigomanta tiyapullankutaq kay yapasqa qayariynin codigota kaypaq %1$s."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s Kaypis kay Disconnect, Inc. rikurpu ch\'atayninwan llamk\'an kay t\'aqasqa chanta sapanchasqa llamk\'anakunawanjina "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Kay tukuypaq Jatunnin Licencia jark\'ayninpi kaymanta GNU v3</a>" chantapis tariy atiwaq "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">kaypi</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Yaykuq suti</string>
   <string name="gv_prompt_password_hint">Pakasqa willay</string>
   <string name="gv_prompt_clear">Pichay</string>
@@ -184,9 +184,9 @@
   <string name="site_security_icon_content_description">Kitimanta takya</string>
   <string name="preference_autocomplete_duplicate_url_error">Kay URL kanña</string>
   <string name="find_in_page">Kay raphipi tariy</string>
-  <string name="http_auth_dialog_title">Juk autenticaciónta munakun</string>
-  <string name="http_auth_dialog_username">Yaykuq suti</string>
-  <string name="http_auth_dialog_password">Pakasqa willay</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Escritoriomanta kitita mañay</string>
   <string name="custom_tab_copy_url_action">URL kikinchasqa</string>
 </resources>

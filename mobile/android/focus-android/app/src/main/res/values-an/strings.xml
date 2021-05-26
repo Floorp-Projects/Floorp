@@ -26,7 +26,7 @@
   <string name="shortcut_erase_short_label">Borrar</string>
   <string name="shortcut_erase_long_label">Borrar l\'historial de navegación</string>
   <string name="text_selection_search_action">Buscar en privau</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te da lo control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Usa-lo como un navegador privau:\n  "<ul>"\n    "<li>Busca y navega directament en l\'app</li>"\n    "<li>Bloca los trazadors (u modifica los achustes pa permitir trackers)</li>"\n    "<li>Borra cookies, asinas como los historials de busqueda y de navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privacidat y seguranza</string>
   <string name="preference_privacy_and_security_summary">Seguimiento, cookies, trías de datos</string>
   <string name="preference_search_summary">Valors per defecto, autocompletar</string>
@@ -123,34 +123,34 @@
   <string name="external_multiple_apps_matched_exit">Salir d\'a Navegación Privada?</string>
   <string name="download_snackbar_finished">%1$s ha rematau</string>
   <string name="download_snackbar_open">Ubrir</string>
-  <string name="download_dialog_warning"><![CDATA["Los fichers descargaus "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no se detectar&#225;n</b>" quan borres l\'historial de %1$s."]]></string>
-  <string name="download_dialog_title">Descargar lo fichero</string>
-  <string name="download_dialog_action_cancel">Cancelar</string>
-  <string name="download_dialog_action_download">Descargar</string>
-  <string name="errorpage_title">Problema en cargar la pachina</string>
-  <string name="errorpage_refresh">Tornar a intentar-lo</string>
-  <string name="error_connectionfailure_title">Imposible de connectar-se</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Lo puesto ye temporalment inaccesible u masiau acupau. Torna a prebar-lo en un ratet.</li>"\n        "<li>Si no yes capable de cargar garra pachina, compreba la connexi&#243;n de datos u Wi-Fi d\'o tuyo dispositivo.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">La connexión ha caducau</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">No s\'ha trobau lo servidor</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Compreba l\'adreza, no cosa que tiengas errors como\n          "<strong>ww</strong>".eixemplo.com engu&#237;s de\n          "<strong>www</strong>.eixemplo.com</li>"\n        "<li>Si no puetz cargar garra pachina, compreba la tuya connexi&#243;n de datos u Wi-Fi.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">L\'adreza no ye valida</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Per un regular las adrezas web s\'escriben asinas: "<strong>http://www.example.com/</strong></li>"\n  "<li>"Asegura-te de que yes usando barras abocadas enta debant (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Esta pachina no ye correctament redireccionada</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Este problema puede deber-se a haber desactivau u refusau los cookies.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">No s\'ha reconoixiu l\'adreza</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Igual te cal instalar belatro software pa ubrir esta adreza.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">La connexión segura ha fallau</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Talment siga un problema d\'a configuraci&#243;n d\'o servidor, u podr&#237;a \nestar que bel&#250;n siga mirando de fer-se pasar per lo servidor.</li>"\n  "<li>Si t\'hebas connectau en o pasau a este servidor, talment se tracte \nd\'una error temporal, torna a intentar-lo dimpu&#233;s.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ui</string>
-  <string name="error_generic_message">Per bell razón no s\'ha puesto cargar esta pachina.</string>
-  <string name="contextmenu_link_share">Compartir lo vinclo</string>
-  <string name="contextmenu_link_copy">Copiar l\'adreza d\'o vinclo</string>
-  <string name="contextmenu_image_share">Compartir la imachen</string>
-  <string name="contextmenu_image_copy">Copiar l\'adreza d\'a imachen</string>
-  <string name="contextmenu_image_save">Alzar la imachen</string>
-  <string name="contextmenu_open_in_new_tab">Ubrir lo vinclo en una nueva pestanya</string>
-  <string name="contextmenu_image_warning"><![CDATA["Las imachens alzadas y compartidas "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no se borrar&#225;n</b>" quan borres l\'historial de %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Refuerza la tuya privacidat</string>
   <string name="firstrun_defaultbrowser_text2">Leva la navegación privada ta lo siguient nivel. Bloca anuncios y atros contenius que puedan seguir-te a través d\'a web y enlenteixen la carga d\'as pachinas.</string>
   <string name="firstrun_search_title">Busca a la tuya traza</string>
@@ -171,10 +171,10 @@
   <string name="tabs_tray_action_erase">Borra l\'historial de navegación</string>
   <string name="download_firefox">Baixa-te lo Firefox</string>
   <string name="your_rights_content1">%1$s ye software libre y de codigo ubierto, feito per Mozilla y atros colaboradors.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s s\'ofreix baixo los termens d\'a "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licencia Publica de Mozilla</a>" y atras licencias de codigo ubierto."]]></string>
-  <string name="your_rights_content3"><![CDATA["No tiens atorgau garra dreito u licencia sobre las marcas rechistradas d\'a Fundación Mozilla u de garra atra parte, incluyindo los nombres u logos de Mozilla, Firefox u %1$s. Puetz trobar mas información "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Lo codigo fuent adicional pa %1$s ye disponible baixo atras "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencias</a>" libres y de codigo ubierto."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s tamién fa servir listas de blocache fornidas per Disconnect, Inc. como un treballo deseparau y independient, baixo la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", y disponible "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqu&#237;</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Nombre d\'usuario</string>
   <string name="gv_prompt_password_hint">Clau</string>
   <string name="gv_prompt_clear">Borrar</string>
@@ -190,9 +190,9 @@
   <string name="accessibility_next_result">Trobar lo siguient resultau</string>
   <string name="accessibility_previous_result">Trobar lo resultau anterior</string>
   <string name="accessibility_dismiss_find_in_page">Deixar de buscar en a pachina</string>
-  <string name="http_auth_dialog_title">Ye menister que s\'autentifique</string>
-  <string name="http_auth_dialog_username">Nombre d\'usuario</string>
-  <string name="http_auth_dialog_password">Clau</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Demandar lo puesto de sobremesa</string>
   <string name="custom_tab_copy_url_action">URL copiada</string>
 </resources>

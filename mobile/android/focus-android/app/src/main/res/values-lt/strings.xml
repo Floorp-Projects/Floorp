@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Išvalyti ir atverti</string>
   <string name="shortcut_erase_and_open_long_label">Išvalyti ir atverti „%1$s“</string>
   <string name="text_selection_search_action">Ieškoti privačiai</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8222;%1$s&#8220; suteikia jums kontrol&#281;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Naudokite j&#261; kaip priva&#269;i&#261; nar&#353;ykl&#281;:\n  "<ul>"\n    "<li>Ie&#353;kokite ir nar&#353;ykite pa&#269;ioje programoje</li>"\n    "<li>Blokuokite steb&#279;jimo elementus (arba atnaujinkite nustatymus, jeigu norite juos leisti)</li>"\n    "<li>I&#353;valykite, nor&#279;dami pa&#353;alinti slapukus, paie&#353;kos ir nar&#353;ymo &#382;urnalus</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8222;%1$s&#8220; yra &#8222;Mozillos&#8220; k&#363;rinys. M&#363;s&#371; misija yra skatinti sveik&#261;, atvir&#261; internet&#261;.<br/>\n<a href="%2$s">Su&#382;inoti daugiau</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privatumas ir saugumas</string>
   <string name="preference_privacy_and_security_summary">Stebėjimas, slapukai, duomenų siuntimas</string>
   <string name="preference_search_summary">Parinkite numatytąją, automatinio užbaigimo</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Baigti privatųjį naršymą?</string>
   <string name="download_snackbar_finished">%1$s atsiųstas</string>
   <string name="download_snackbar_open">Atverti</string>
-  <string name="download_dialog_warning"><![CDATA["Atsiųsti failai "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebus pa&#353;alinti</b>" jums išvalius „%1$s“ naršymo žurnalą."]]></string>
-  <string name="download_dialog_title">Parsiųsti failą</string>
-  <string name="download_dialog_action_cancel">Atsisakyti</string>
-  <string name="download_dialog_action_download">Parsiųsti</string>
-  <string name="errorpage_title">Nepavyko įkelti tinklalapio</string>
-  <string name="errorpage_refresh">Bandyti dar kartą</string>
-  <string name="error_connectionfailure_title">Nepavyko užmegzti ryšio</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Svetain&#279; gali b&#363;ti laikinai nepasiekiama. Pabandykite &#353;iek tiek v&#279;liau.</li>"\n        "<li>Jeigu nepavyksta &#303;kelti jokio tinklalapio, patikrinkite savo &#303;renginio duomen&#371; arba belaid&#303; ry&#353;&#303;.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Ryšiui skirtas laikas baigėsi</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Nerastas serveris</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Patikrinkite, ar &#303;vestame adrese n&#279;ra klaid&#371;, pvz.:\n          "<strong>ww</strong>".example.com vietoje\n          "<strong>www</strong>.example.com</li>"\n        "<li>Jeigu nepavyksta &#303;kelti jokio tinklalapio, patikrinkite savo &#303;renginio duomen&#371; arba belaid&#303; ry&#353;&#303;.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Neteisingas adresas</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Svetaini&#371; adresai da&#382;niausiai ra&#353;omi taip: "<strong>http://www.example.com/</strong></li>"\n  "<li>"&#302;sitikinkite, kad naudojate pasviruosius br&#363;k&#353;nius (&#303; priek&#303;): "<strong>/</strong>.</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Neteisingas tinklalapio peradresavimas</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#352;i klaida gal&#279;jo &#303;vykti d&#279;l to, kad nar&#353;ykl&#279; nepriima svetain&#279;s slapuk&#371;.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Neatpažintas adresas</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Gali b&#363;ti, kad &#353;iam adresui atverti reikia &#303;diegti papildom&#261; programin&#281; &#303;rang&#261;.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Saugaus ryšio užmegzti nepavyko</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#352;i problema gali kilti d&#279;l blogai parinkt&#371; serverio parametr&#371; arba d&#279;l bandymo apsimesti kitu serveriu.</li>"\n  "<li>Jei prie &#353;io serverio s&#279;kmingai jung&#279;t&#279;s anks&#269;iau, &#353;is nesklandumas gali b&#363;ti laikinas. Bandykite prisijungti v&#279;liau.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ups</string>
-  <string name="error_generic_message">Mums nepavyko įkelti šio tinklalapio dėl nežinomos priežasties.</string>
-  <string name="contextmenu_open_in_app">Atverti programa</string>
-  <string name="contextmenu_link_share">Dalintis saitu</string>
-  <string name="contextmenu_link_copy">Kopijuoti saito adresą</string>
-  <string name="contextmenu_image_share">Dalintis paveikslu</string>
-  <string name="contextmenu_image_copy">Kopijuoti paveikslo adresą</string>
-  <string name="contextmenu_image_save">Įrašyti paveikslą</string>
-  <string name="contextmenu_open_in_new_tab">Atverti naujoje kortelėje</string>
-  <string name="contextmenu_image_warning"><![CDATA["Įrašyti ir pasidalinti paveikslai "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebus pa&#353;alinti</b>" jums išvalius „%1$s“ naršymo žurnalą."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Pagerinkite savo privatumą</string>
   <string name="firstrun_defaultbrowser_text2">Pereikite į aukštesnį privačiojo naršymo lygį. Blokuokite reklamas ir kitą jūsų naršymą galintį stebėti turinį, tuo pačiu sutrumpindami svetainių įkėlimo laiką.</string>
   <string name="firstrun_search_title">Jūsų paieška, jūsų skoniui</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Valyti naršymo žurnalą</string>
   <string name="download_firefox">Parsisiųsti „Firefox“</string>
   <string name="your_rights_content1">„%1$s“ yra laisvoji atviroji programa, kuriama „Mozillos“ ir kitų bendradarbių.</string>
-  <string name="your_rights_content2"><![CDATA["Jums leidžiama naudotis „%1$s“ programa, vadovaujantis "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#8222;Mozillos&#8220; vie&#353;&#261;ja licencija</a>" ir kitomis atviromis licencijomis."]]></string>
-  <string name="your_rights_content3"><![CDATA["Jums nėra suteikta jokių teisių ar licencijų į „Mozilla Foundation“ prekinius ženklus, ar „Mozilla“, „Firefox“, „%1$s“ pavadinimus ir logotipus. Daugiau informacijos galite rasti "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#269;ia</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Dalis „%1$s“ pirminio teksto yra pateikiama su įvairiomis kitomis laisvomis atviromis "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencijomis</a>.]]></string>
-  <string name="your_rights_content5"><![CDATA["„%1$s“ naudoja blokavimo sąrašus, kuriuos teikia „Disconnect, Inc.“, kaip atskirus ir nepriklausomus darbus vadovaujantis "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#8222;GNU General Public License v3&#8220;</a>" licencija, ir pasiekiamus "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#269;ia</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Naudotojo vardas</string>
   <string name="gv_prompt_password_hint">Slaptažodis</string>
   <string name="gv_prompt_clear">Išvalyti</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Rasti tolesnį</string>
   <string name="accessibility_previous_result">Rasti ankstesnį</string>
   <string name="accessibility_dismiss_find_in_page">Paslėpti radimo funkcijas</string>
-  <string name="http_auth_dialog_title">Reikalingas tapatumo nustatymas</string>
-  <string name="http_auth_dialog_username">Naudotojo vardas</string>
-  <string name="http_auth_dialog_password">Slaptažodis</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Prašyti ne mob. svetainės</string>
   <string name="custom_tab_copy_url_action">Adresas nukopijuotas</string>
   <string name="preference_advanced_summary">Programuotojo priemonės</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Atsiprašome. Su šia kortele yra problemų.</string>
   <string name="tab_crash_report_description">Kaip privačioji naršyklė, mes nesaugome ir negalime atkurti šios kortelės.</string>
   <string name="tab_crash_report_close_tab_button_label">Užverti kortelę</string>
-  <string name="fatal_crash_report_title">Atsiprašome. „%1$s“ susidūrė su problema ir užstrigo.</string>
-  <string name="fatal_crash_report_description">Kaip privačioji naršyklė, mes nesaugome ir negalime atkurti paskutinio naršymo seanso.</string>
-  <string name="fatal_crash_report_close_button_label">Užverti</string>
-  <string name="fatal_crash_report_restart_firefox_label">Paleisti „%1$s“ iš naujo</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Pranešti apie strigtį „Mozillai“</string>
 </resources>

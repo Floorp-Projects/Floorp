@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Kéntitani &amp; mítani</string>
   <string name="shortcut_erase_and_open_long_label">Kéntitani ka mítani %1$s</string>
   <string name="text_selection_search_action">Jirinhakuari</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s T\'uri xanhatatakurhis&#239;nka.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Eska jirikurhiparini &#250;ra:\n  "<ul>"\n    "<li>Jirinhants&#239; &#237;ni &#250;ratarakwarhu</li>"\n    "<li>Estakutiechani kwarhukua (o jimpanhiranta p&#233;kurhintskwaechani ks jiankua estakutiechani)</li>"\n    "<li>K&#233;ntita exepakwa jirinhantskwa ka miantskwa ampe</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla &#250;s&#239;nti. Eska k\'&#233;ri xurukwa s&#233;simintu &#225;nchikurhini jawaka juchaeri &#250;kwaesti.<br/>\n<a href="%2$s">S&#225;nteru jorhenani</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Kwatakwa &amp; Jískakwa</string>
   <string name="preference_privacy_and_security_summary">Estakupani, exepakwa, erakukwaecha</string>
   <string name="preference_search_summary">Pént\'ani, karakurhikwani</string>
@@ -143,35 +143,35 @@
   <string name="external_multiple_apps_matched_exit">Xipatinku Jirinhantskwarhu Wéntari?</string>
   <string name="download_snackbar_finished">%1$s k\'amakukata</string>
   <string name="download_snackbar_open">Mítani</string>
-  <string name="download_dialog_warning"><![CDATA["Patsakurhikataecha "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#225;amku k&#233;ntinhaa</b>" énkari miatskwani %1$s kéntitaka."]]></string>
-  <string name="download_dialog_title">Jatsïrakurhini patsakatani</string>
-  <string name="download_dialog_action_cancel">Áamkutaru</string>
-  <string name="download_dialog_action_download">Jatsïrakurhini</string>
-  <string name="errorpage_title">Wantanhietaeri eranharhikwa</string>
-  <string name="errorpage_refresh">Tsek\'tant\'ani</string>
-  <string name="error_connectionfailure_title">Áamku úa inchaparhatani</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Ampeka eranharhikwa kari &#250;kwa jats&#239;. S&#243;nti jimpo tsek\'unts&#239;.</li>"\n        "<li>&#201;nka noma eranharhikwa &#250;akari exeni, ch\'&#233;eti &#225;nchitakwani exe o Wi-Fi inchaparhakwani.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Yóyontasti inchaparhakuni</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Áamku exentsï marhuatspetini</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Miyurakwani exe n&#225;ntika tsijpakuni jakari &#233;ska\n          "<strong>ww</strong>".&#233;ska &#237;.com &#233;nkari\n          "<strong>www</strong>.eska &#237;.com</li>"\n        "<li>&#201;nkari &#225;amku ma &#250;ni jakiri eranharhikuni, ch\'&#233;eti &#225;nchitarakwani exe o Wi-Fi-ni.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Miyurakwa áamku sési jaki</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"K\'&#233;ri xurukwaeri miyurakwaecha &#237;s&#239; karakurhis&#239;ntiks&#239; "<strong>http://www.example.com/</strong></li>"\n  "<li>"Exe &#225;skari tentikataechani karaska (i.e. "<strong>/</strong>).</li></ul>]]></string>
-  <string name="error_redirectLoop_title">Áamku sési axanhani jaki eranharhikukwani</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#205; ts&#237;p\'akwani menhechani exepakwaecha o ampakerakwa ampe jimpos&#239;nti.</li></ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Miyurakwa áamku kurankukurhinki</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#201;nkari &#250;enkari m&#237;tani &#237;ni miyurakwani w&#233;tarhinchakari m&#225;teru &#250;ratarakwa.</li></ul>]]></string>
-  <string name="error_sslhandshake_title">Áamku ú kwatakata jasï inchaparahtani</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#205; ts&#237;p\'akwa marhuatspetieri p&#233;kurhintskwa jinkonisti, o n&#225;ntika n&#233;nima ch&#225;nakuni jaka.</li>"\n  "<li>&#201;nkari yoni &#237;s&#239; inchaparhatapkari ya, &#237; ts&#237;p\'akwa s&#243;ntituk\'uwati, ka &#250;akari ts&#233;k\'utani t&#225;ts&#239;kwa s&#225;nteru.</li></ul>]]></string>
-  <string name="error_generic_title">Uups</string>
-  <string name="error_generic_message">Ampenti jimpo enkaksï áamku únki xarhatani ini eranharhikukwani.</string>
-  <string name="contextmenu_open_in_app">Mítani jirinhatarantskwa jinkoni</string>
-  <string name="contextmenu_link_share">Miyurakwani kwankurhini</string>
-  <string name="contextmenu_link_copy">Miyurakwani p\'itani</string>
-  <string name="contextmenu_image_share">P\'itakatani kwankurhini</string>
-  <string name="contextmenu_image_copy">P\'itakataeri miyurakwani p\'itani</string>
-  <string name="contextmenu_image_save">P\'itakatani patsani</string>
-  <string name="contextmenu_open_in_new_tab">Máteru erarhukwarhu mítani</string>
-  <string name="contextmenu_image_warning"><![CDATA["Eranharhikukwaecha énkari kwánkurhika ka patsakurhiani "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#225;amkus&#239; k&#233;ntitanhaa "</b>" énkari kéntitaka%1$smiantskwani."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Jískakwa ampe winhaskuntsï</string>
   <string name="firstrun_defaultbrowser_text2">Jirikurhiparini jankwani winhaskukurhintsï. kúparhakwaechani ka máteru jatakwaechani énkaksïni estakuni ka yóntachipanka kwarhukua.</string>
   <string name="firstrun_search_title">Ch\'éeti jirinhanstkwa, ch\'éeti jánkwa</string>
@@ -192,10 +192,10 @@
   <string name="tabs_tray_action_erase">Jirinhantskwaeri míantskwa kéntitani</string>
   <string name="download_firefox">Firefox jatsïrakurhini</string>
   <string name="your_rights_content1">%1$s úratarakwa maesti énkari úaka k\'ánkurhini Mozilla ústi máteruecha jinkoni.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s úakari p\'itsikurhini jimpoka úkata jarasti "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">"Mozillaeri jinkoni "</a>" ka máteru úratarakwa úriecha."]]></string>
-  <string name="your_rights_content3"><![CDATA["Áamkuri tsïrimerakata jaki kunkurhikwa Mozilla jimpo, eska na jinteka Mozilla, Firefox o %1$s jakankurhikwaecha o mitintskwaecha. Sánteru ampe "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">ixu exentakari</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA[Sánteru ampe marhuatakwaeri %1$s exent\'akari máteru úricha<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">"jinkoni "</a>.]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s kwarhukperatichani maruatasïnti énka Disconnect, ka Inc. táchani únka ixu "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU m&#237;tikata jaka 3</a>", ka úakari exeni "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">ixu</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Jakankurhikwa</string>
   <string name="gv_prompt_password_hint">Mítintskwa</string>
   <string name="gv_prompt_clear">Ampakerani</string>
@@ -211,9 +211,9 @@
   <string name="accessibility_next_result">Máteru exentskata</string>
   <string name="accessibility_previous_result">Máteru jirinhantskwani exentsï</string>
   <string name="accessibility_dismiss_find_in_page">Mirikurhi jirinhantskwani</string>
-  <string name="http_auth_dialog_title">Mitintskwa wétarhisïnti</string>
-  <string name="http_auth_dialog_username">Jakankurhikwa</string>
-  <string name="http_auth_dialog_password">Mítintskwa</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Eranharhikwaeri kurhak\'urhikwa</string>
   <string name="custom_tab_copy_url_action">URL p\'itakata</string>
   <string name="preference_advanced_summary">Kwerari ánchitakwaecha</string>
@@ -244,9 +244,9 @@
   <string name="tab_crash_report_title">Eranharhikwa xerekurhisti</string>
   <string name="tab_crash_report_description">Éska xipatikwarhu jamani, jucha áamku patsoo o pentaaka eranharhikwani.</string>
   <string name="tab_crash_report_close_tab_button_label">Eranharhikwani míkani</string>
-  <string name="fatal_crash_report_title">Tekantsï. %1$s xerekuristi.</string>
-  <string name="fatal_crash_report_description">Éska xipatikwani jamani, jucha áamku patsanki ch\'éeti jirinhantskwa ampe.</string>
-  <string name="fatal_crash_report_close_button_label">Míkani</string>
-  <string name="fatal_crash_report_restart_firefox_label">Étskukurhint\'ani %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Mozillani ayankuni íni xerekurhikwa</string>
 </resources>

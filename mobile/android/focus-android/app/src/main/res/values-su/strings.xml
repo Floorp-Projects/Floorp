@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Pupus &amp; buka</string>
   <string name="shortcut_erase_and_open_long_label">Pupus jeung buka %1$s</string>
   <string name="text_selection_search_action">Pamaluruhan nyalindung</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s m&#233;r&#233; anjeun kadali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pak&#233; pikeun panyungsi nyalindung:\n  "<ul>"\n    "<li>Paluruh jeung sungsi langsung dina appna</li>"\n    "<li>Peungpeuk palacak (atawa apd&#233;t set&#233;lan pikeun ngaheugba&#233;keun palacak)</li>"\n    "<li>Pupus pikeun ngaleungitkeun kuki pon kitu og&#233; jujutan pamaluruhan jeung panyungsian</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dijieun ku Mozilla. Misina nya &#233;ta pikeun ngamumul&#233; Intern&#233;t nembrak anu s&#233;hat.<br/>\n<a href="%2$s">Lenyepan</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Salindungan &amp; Kaamanan</string>
   <string name="preference_privacy_and_security_summary">Palacakan, kuki, pilihan data</string>
   <string name="preference_search_summary">Setél baku, otokumplit</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Tutup Langlangan Nyamuni?</string>
   <string name="download_snackbar_finished">%1$s anggeus</string>
   <string name="download_snackbar_open">Buka</string>
-  <string name="download_dialog_warning"><![CDATA["Koropak undeuran "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">moal dipupus</b>" nalika anjeun mupus %1$s jujutan."]]></string>
-  <string name="download_dialog_title">Undeur Koropak</string>
-  <string name="download_dialog_action_cancel">Bolay</string>
-  <string name="download_dialog_action_download">Undeur</string>
-  <string name="errorpage_title">Kaca hésé dimuat</string>
-  <string name="errorpage_refresh">Pecakan Deui</string>
-  <string name="error_connectionfailure_title">Teu bisa nyambung</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Loka sigana keur teu bisa dibuka atawa keur riweuh. Pecakan sakeudeung deui.</li>"\n        "<li>Lamun teu bisa ngamuat hiji og&#233;, pariksa data pons&#233;l atawa sambungan Wi-Fi anjeun.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Sambungan beak waktu</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Server teu kapanggih</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Pariksa alamatna bisi aya salah ketik kawas\n          "<strong>ww</strong>".conto.com anu kuduna\n          "<strong>www</strong>.conto.com</li>"\n        "<li>Lamun anjeun teu bisa ngamuat kaca hiji og&#233;, pariksa data pons&#233;l atawa sambungan Wi-Fi anjeun.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Alamat teu sohéh</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Alamat raramat ilaharna ditulis siga "<strong>http://www.example.com/</strong></li>"\n  "<li>"Pastikeun anjeun mak&#233; gurat condong maju (ny.&#233;. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Kacana teu bener kaalihkeunna</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ieu masalah sakapeung mah dilantarankeun ku dipareumanna atawa ditolakna kuki.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Alamat teu kaharti</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Sigana anjeun kudu masang aplikasi s&#233;j&#233;n pikeun muka ieu alamat.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Sambungan aman teu laksana</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Ieu t&#233;h meureun disababkeun aya masalah patali jeung set&#233;lan s&#233;rver, atawa bisa wa&#233; aya jalma nu nyoba nyaru minangka server. "</li>"\n  "<li>Mun anjeun sam&#233;m&#233;hna ngahasil nyambung ka server, &#233;rorna bisa ngan saheulaaneun hungkul, anjeun k&#233; bisa mecakan deui.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Euleuh</string>
-  <string name="error_generic_message">Kami teu sanggup ngaluarkeun ieu kaca kusabab sababaraha alesan.</string>
-  <string name="contextmenu_open_in_app">Buka maké aplikasi</string>
-  <string name="contextmenu_link_share">Bagikeun tutumbu</string>
-  <string name="contextmenu_link_copy">Tiron alamat tutumbu</string>
-  <string name="contextmenu_image_share">Bagikeun gambar</string>
-  <string name="contextmenu_image_copy">Tiron alamat gambar</string>
-  <string name="contextmenu_image_save">Teundeun gambar</string>
-  <string name="contextmenu_open_in_new_tab">Buka tutumbu di tab anyar</string>
-  <string name="contextmenu_image_warning"><![CDATA["Gambar teundeunan jeung nu dibagikeun mah "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">moal dipupus</b>" nalika anjeun mupus %1$s jujutan."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Bedaskeun salindungan anjeun</string>
   <string name="firstrun_defaultbrowser_text2">Cokot langlangan nyalindung ka undakan saterusna. Peungpeuk iklan jeung kontén lianna nu bisa ngalacak anjeun di sakuliah loka sarta ngalaunan waktu muka kaca.</string>
   <string name="firstrun_search_title">Pamaluruhan anjeun, cara anjeun</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Pupus jujutan langlangan</string>
   <string name="download_firefox">Undeur Firefox</string>
   <string name="your_rights_content1">%1$s téh aplikasi bébas sarta sumber nembrak nu dijieun ku Mozilla jeung kontributor séjénna.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s dijieunna pikeun anjeun kalayan dina pasaratan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Lis&#233;nsi Umum Mozilla</a>" jeung lisénsi sumber nembrak nu séjén."]]></string>
-  <string name="your_rights_content3"><![CDATA["Anjeun teu dibéré idin atawa lisénsi nanaon kana mérek dagang Mozilla Foundation atawa pihak mana ogé, kaasup ngaran atawa logo Mozilla, Firefox, atawa %1$s. Inpormasi leuwih jero bisa dipanggihan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">di dieu</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Kodeu sumber tambahan pikeun %1$s nyangkaruk dina rupa-rupa "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lis&#233;nsi</a>" bébas jeung sumber nembrak nu séjén."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s ogé ngagunakeun daptar peungpeukan nu disayagakeun ku Disconnect, Inc. minangka hasil karya nu misah jeung indepénden di handapeun "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>, sarta sayaga<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">di dieu</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Sandiasma</string>
   <string name="gv_prompt_password_hint">Kecap sandi</string>
   <string name="gv_prompt_clear">Beresihan</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Téang hasil séjén</string>
   <string name="accessibility_previous_result">Téang hasil saméméhna</string>
   <string name="accessibility_dismiss_find_in_page">Tutup téangan dina kaca</string>
-  <string name="http_auth_dialog_title">Butuh oténtikasi</string>
-  <string name="http_auth_dialog_username">Sandiasma</string>
-  <string name="http_auth_dialog_password">Kecap sandi</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Pénta loka déstop</string>
   <string name="custom_tab_copy_url_action">URL ditiron</string>
   <string name="preference_advanced_summary">Parabot pamekar</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Hampura. Aya masalah dina ieu tab.</string>
   <string name="tab_crash_report_description">Salaku panyungsi nyamuni, tab teu kungsi disimpen sarta teu bisa dibuka ulang.</string>
   <string name="tab_crash_report_close_tab_button_label">Tutup Tab</string>
-  <string name="fatal_crash_report_title">Hampura. %1$s aya masalah tur ruksak.</string>
-  <string name="fatal_crash_report_description">Salaku panyungsi nyamuni, rintakan langlangan panungtung teu disimpen jeung teu bisa dimuat ulang.</string>
-  <string name="fatal_crash_report_close_button_label">Tutup</string>
-  <string name="fatal_crash_report_restart_firefox_label">Mimitian deui %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Kirim laporan nu ruksak ka Mozilla</string>
 </resources>

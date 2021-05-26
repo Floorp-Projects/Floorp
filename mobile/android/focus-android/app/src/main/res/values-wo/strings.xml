@@ -22,7 +22,7 @@
   <string name="shortcut_erase_short_label">Far</string>
   <string name="shortcut_erase_long_label">Far jaar-jaaru njoow gi</string>
   <string name="text_selection_search_action">Seet ci sutura</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Doonal kiy dogal ak %1$s.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"J&#235;fandikoo ko soo nammee joow ci sutura:\n  "<ul>"\n    "<li>Man ngaa seet ak di joow ci biir j&#235;fekaay bi</li>"\n    "<li>T&#233;ye toppaatekat yi (walla yeesal say jekk-jekkal ngir sa&#241;al leen)</li>"\n    "<li>Far cookies yeek jaar-jaari say ceet ak njoow</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mozilla moo defar %1$s. Sunu y&#233;ene mooy s&#224;mm w&#233;r-gi-yaram ak ubbeekug Internet.<br/>\n<a href="%2$s">G&#235;n cee xam</a></p>]]></string>
+
   <string name="preference_category_search">Seet</string>
   <string name="preference_search_engine_default">Wàccaale</string>
   <string name="preference_state_on">Taalees</string>
@@ -99,34 +99,34 @@
   <string name="external_multiple_apps_matched_exit">Génn ci Njoow gu Suturloo gi?</string>
   <string name="download_snackbar_finished">%1$s mat na</string>
   <string name="download_snackbar_open">Ubbi</string>
-  <string name="download_dialog_warning"><![CDATA["Dencukaay yees fi yebbi "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">deesu leen far</b>" soo fare jaar-jaaru %1$s."]]></string>
-  <string name="download_dialog_title">Yebbi dencukaay bi</string>
-  <string name="download_dialog_action_cancel">Neenal</string>
-  <string name="download_dialog_action_download">Yebbi</string>
-  <string name="errorpage_title">Njuumte ci yebug xët wi</string>
-  <string name="errorpage_refresh">Jéemaatal</string>
-  <string name="error_connectionfailure_title">Lonkoo gi antuwul</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Dal bi man naa ba&#241; a j&#224;ppandi walla mu yebu lu &#235;pp. J&#233;emaatal bu ci kanamee</li>"\n        "<li>So manul a yeb wenn x&#235;t xoolaatal lonkoo gu sa jumtukaay.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Àppu lonkoo gi romb na</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Giseesul joxekaay bi</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Xoolaatal m&#224;kkaan gi ndax amul njuumtey mbind niki\n          "<strong>ww</strong>".misaal.com te waroon doon\n          "<strong>www</strong>.misaal.com</li>"\n        "<li>Soo manul yeb wenn x&#235;t, xoolaatal lonkoo gu sa jumtukaay.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Màkkaan gi baxul</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Naka-jekk m&#224;kkaani web yi nii lees di binde "<strong>http://www.misaal.com/</strong></li>"\n  "<li>"W&#243;orlul ni yaa ngi j&#235;fandikoo galan yi war (c.m. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Xët wii ni muy jubluwaatalee baaxul</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Liy indi jafe-jafe gii man naa nekk ag doxadil mbaa ba&#241; a nangu cookies yi.</li>" \n"</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Màkkaan gi kenn xamuko</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n"<li>X&#233;j-na dafa laaj nga samp beneen j&#235;fekaay ngir man a ubbi gi m&#224;kkaan.</li>" \n"</ul>]]></string>
-  <string name="error_sslhandshake_title">Lonkoo gu wóor gi antuwul</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Lii man naa nekk jafe-jafe ci jekk-jekkalu joxekaay bi, walla it kenn kuy j&#233;em a dugg ci sa diggante ak joxekaay bi ci boppam.</li>"\n  "<li>Su fekkee mas ngaa lonku ci bii joxekaay jamono ci ginnaaw, Njuumte gi man naa doon lu jamonowe, kon di la digal nga j&#233;emaat ci kanam.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Oo!</string>
-  <string name="error_generic_message">Lenn tere na yebug xët wii antu.</string>
-  <string name="contextmenu_link_share">Séddoo lëkkalekaay bi</string>
-  <string name="contextmenu_link_copy">Duppi màkkaanu lëkkalekaay bi</string>
-  <string name="contextmenu_image_share">Séddoo nataal bi</string>
-  <string name="contextmenu_image_copy">Duppi màkkaanu nataal bi</string>
-  <string name="contextmenu_image_save">Denc nataal bi</string>
-  <string name="contextmenu_open_in_new_tab">Ubbi lëkkalekaay bi ci làcc wu wees</string>
-  <string name="contextmenu_image_warning"><![CDATA["Péeñ yiñ nga séddoo ak yi nga denc "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">deesu leen far</b>" soo fare jaar-jaaru %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Dooleel sa sutura</string>
   <string name="firstrun_defaultbrowser_text2">Yóbbul njoow ci sutura ci geneen tolluwaay. Téyeel siiwal yeek yeneen ëmbeef yi lay man topp ci yeneen dal yi te di yeexal yebug xët yi.</string>
   <string name="firstrun_search_title">Seet ak noo ko bëggee</string>
@@ -147,8 +147,8 @@
   <string name="tabs_tray_action_erase">Far jaar-jaaru njoow gi</string>
   <string name="download_firefox">Yebbi Firefox</string>
   <string name="your_rights_content1">%1$s jëfekaay bu amul-fay te ubbeeku la bu Mozilla ak yeneen aji-barkeelu defar.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s moo ngi jàppandi sukkandiku ci "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" ak yeneen sañali gongikuwaay yu ubbeeku."]]></string>
-  <string name="your_rights_content3"><![CDATA["Joxuñula genn yelleef walla sañal ci jëfandikoo turu Mozilla Foundation walla yu ñeneen, bokk nañ ci tur walla màndargay Mozilla, Firefox walla %1$s. Manees naa fekk yeneeni xibaar "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">fii</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Yeneen gongikuwaayu yoon yu %1$s jàppandi nañ ci ron yeneen "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">sa&#241;al</a>.]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s dafay jëfandikoo ay limi téye yu Disconnect, Inc. di jébbale ci liggéeyu boppam ci ron "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", te jàppandi "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">fii</a>.]]></string>
+
+
+
+
 </resources>

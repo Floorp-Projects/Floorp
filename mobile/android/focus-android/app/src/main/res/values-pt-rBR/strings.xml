@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Apagar e abrir</string>
   <string name="shortcut_erase_and_open_long_label">Apagar e abrir %1$s</string>
   <string name="text_selection_search_action">Pesquisa privativa</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s coloca voc&#234; no controle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Use-o como o seu navegador privativo:\n  "<ul>"\n    "<li>Pesquise e navegue direto no aplicativo</li>"\n    "<li>Bloqueie rastreadores (ou atualize as configura&#231;&#245;es para permiti-los)</li>"\n    "<li>Apague para excluir cookies assim como o hist&#243;rico de pesquisa e navega&#231;&#227;o</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#233; produzido pela Mozilla. Nossa miss&#227;o &#233; promover uma Internet saud&#225;vel e aberta.<br/>\n<a href="%2$s">Saiba mais</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privacidade e Segurança</string>
   <string name="preference_privacy_and_security_summary">Rastreamento, cookies, escolhas de dados</string>
   <string name="preference_search_summary">Definir como padrão, autocompletar</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Sair da navegação privativa?</string>
   <string name="download_snackbar_finished">%1$s finalizado</string>
   <string name="download_snackbar_open">Abrir</string>
-  <string name="download_dialog_warning"><![CDATA["Arquivos baixados "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">n&#227;o ser&#227;o deletados</b>" quando você apagar o histórico do %1$s."]]></string>
-  <string name="download_dialog_title">Baixar arquivo</string>
-  <string name="download_dialog_action_cancel">Cancelar</string>
-  <string name="download_dialog_action_download">Baixar</string>
-  <string name="errorpage_title">Problemas ao carregar a página</string>
-  <string name="errorpage_refresh">Tentar novamente</string>
-  <string name="error_connectionfailure_title">Não foi possível conectar</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>O site pode estar temporariamente indispon&#237;vel ou ocupado demais. Tente novamente em alguns instantes.</li>"\n        "<li>Se n&#227;o conseguir carregar nenhuma p&#225;gina, verifique a conex&#227;o de dados ou Wi-Fi do seu dispositivo m&#243;vel.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">A conexão expirou</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Servidor não encontrado</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Verifique se o endere&#231;o cont&#233;m erros de digita&#231;&#227;o, como\n          "<strong>ww</strong>".example.com ao inv&#233;s de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Se n&#227;o conseguir carregar nenhuma p&#225;gina, verifique a conex&#227;o de dados ou Wi-Fi de seu dispositivo.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">O endereço não é válido</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Os endere&#231;os da Web s&#227;o geralmente escritos como "<strong>http://www.example.com/</strong></li>"\n  "<li>"Certifique-se de usar barras obl&#237;quas (ex. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">A página não está sendo redirecionada corretamente</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Este problema, &#224;s vezes, pode ser causado pela desativa&#231;&#227;o ou recusa em aceitar os cookies.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">O endereço não foi compreendido</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Talvez seja necess&#225;rio instalar outro software para abrir esse endere&#231;o.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Falha na conexão segura</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Isto pode ser um problema com a configura&#231;&#227;o do servidor ou pode ser algu&#233;m tentando se passar pelo servidor.</li>"\n  "<li>Se voc&#234; se conectou a este servidor com sucesso no passado, o erro pode ser tempor&#225;rio, e voc&#234; pode tentar novamente mais tarde.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ops</string>
-  <string name="error_generic_message">Não podemos carregar esta página por algum motivo.</string>
-  <string name="contextmenu_open_in_app">Abrir com app</string>
-  <string name="contextmenu_link_share">Compartilhar link</string>
-  <string name="contextmenu_link_copy">Copiar endereço do link</string>
-  <string name="contextmenu_image_share">Compartilhar imagem</string>
-  <string name="contextmenu_image_copy">Copiar endereço da imagem</string>
-  <string name="contextmenu_image_save">Salvar imagem</string>
-  <string name="contextmenu_open_in_new_tab">Abrir link em nova aba</string>
-  <string name="contextmenu_image_warning"><![CDATA["As imagens salvas e compartilhadas "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">n&#227;o ser&#227;o exclu&#237;das</b>" ao apagar o histórico do %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Potencialize sua privacidade</string>
   <string name="firstrun_defaultbrowser_text2">Leve a navegação privativa ao próximo nível. Bloqueie propagandas e outros conteúdos que podem rastrear você entre os sites diminuir o tempo de carregamento das páginas.</string>
   <string name="firstrun_search_title">Pesquise à sua maneira</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Limpar o histórico de navegação</string>
   <string name="download_firefox">Baixar o Firefox</string>
   <string name="your_rights_content1">O %1$s é um software livre e de código aberto feita pela Mozilla e outros contribuidores.</string>
-  <string name="your_rights_content2"><![CDATA["O %1$s é disponibilizado de acordo com os termos da "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" e outras licenças de código aberto."]]></string>
-  <string name="your_rights_content3"><![CDATA["Não lhe são concedidos quaisquer direitos ou licenças sobre marcas registradas da Mozilla Foundation ou de terceiros, incluindo os nomes ou logos da Mozilla, Firefox ou %1$s. Informações adicionais podem ser encontradas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">here</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Código fonte adicionais para o %1$s estão disponíveis sobre várias outras "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licen&#231;as</a>" livres e de código aberto."]]></string>
-  <string name="your_rights_content5"><![CDATA["O %1$s também utiliza "<em xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">listas de bloqueios</em>" disponibilizadas pela Disconnect, Inc. como um trabalho independente disponibilizado "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqui</a>", sob a "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Usuário</string>
   <string name="gv_prompt_password_hint">Senha</string>
   <string name="gv_prompt_clear">Limpar</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Próximo resultado</string>
   <string name="accessibility_previous_result">Resultado anterior</string>
   <string name="accessibility_dismiss_find_in_page">Descartar localizar na página</string>
-  <string name="http_auth_dialog_title">Autenticação solicitada</string>
-  <string name="http_auth_dialog_username">Nome de usuário</string>
-  <string name="http_auth_dialog_password">Senha</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Requisitar site para desktop</string>
   <string name="custom_tab_copy_url_action">URL copiada</string>
   <string name="preference_advanced_summary">Ferramentas do desenvolvedor</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Desculpe, estamos tendo um problema com esta aba.</string>
   <string name="tab_crash_report_description">Por razões de confidencialidade, suas abas não são salvas e, consequentemente, não podem ser restauradas.</string>
   <string name="tab_crash_report_close_tab_button_label">Fechar aba</string>
-  <string name="fatal_crash_report_title">Desculpe, o %1$s teve um problema e travou.</string>
-  <string name="fatal_crash_report_description">Por razões de confidencialidade, sua última sessão de navegação não foi salva e, consequentemente, não pode ser restaurada.</string>
-  <string name="fatal_crash_report_close_button_label">Fechar</string>
-  <string name="fatal_crash_report_restart_firefox_label">Reiniciar %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Enviar relatório de travamento para a Mozilla</string>
 </resources>

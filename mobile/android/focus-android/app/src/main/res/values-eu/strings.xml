@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Ezabatu eta ireki</string>
   <string name="shortcut_erase_and_open_long_label">Ezabatu eta ireki %1$s</string>
   <string name="text_selection_search_action">Bilatu modu pribatuan</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s(e)k agintea ematen dizu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Erabili nabigatzaile pribatu gisa:\n  "<ul>"\n    "<li>Bilatu eta nabigatu aplikaziotik zuzenean</li>"\n    "<li>Blokeatu jarraipena (edo eguneratu ezarpenak jarraipena onartzeko)</li>"\n    "<li>Ezabatu cookieak eta bilaketa- eta nabigatze-historia</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mozillak egina da %1$s. Internet osasuntsu eta irekia sustatzea da gure misioa.<br/>\n<a href="%2$s">Argibide gehiago</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Pribatutasuna eta segurtasuna</string>
   <string name="preference_privacy_and_security_summary">Jarraipena, cookieak, datu-aukerak</string>
   <string name="preference_search_summary">Ezarri lehenespenak, osatze automatikoa</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Irten nabigazio pribatutik?</string>
   <string name="download_snackbar_finished">%1$s amaituta</string>
   <string name="download_snackbar_open">Ireki</string>
-  <string name="download_dialog_warning"><![CDATA["Deskargatutako fitxategiak "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ez dira ezabatuko</b>" %1$s(r)en historia ezabatzean."]]></string>
-  <string name="download_dialog_title">Deskargatu fitxategia</string>
-  <string name="download_dialog_action_cancel">Utzi</string>
-  <string name="download_dialog_action_download">Deskargatu</string>
-  <string name="errorpage_title">Arazoa orria kargatzerakoan</string>
-  <string name="errorpage_refresh">Saiatu berriro</string>
-  <string name="error_connectionfailure_title">Ezin da konektatu</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Gunea une batez desgaituta edo oso lanpetuta egon daiteke. Saiatu berriro minutu batzuen buruan.</li>"\n        "<li>Ezin baduzu beste orririk kargatu, egiaztatu zure gailu mugikorraren datu- edo WiFi-konexioa.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Konexioaren denbora-muga gainditu da</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Zerbitzaria ez da aurkitu</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Helbidea ondo begiratu mota honetako erroreak ekiditeko:\n          "<strong>ww</strong>".adibidea.eus \n          "<strong>www</strong>.adibidea.eus-en ordez</li>"\n        "<li>Ezin baduzu inolako orririk kargatu, begiratu zure gailuaren datu- edo WiFi-konexioa.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Helbidea ez da baliozkoa</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Web helbideak normalean "<strong>http://www.adibidea.eus/</strong>" formatukoak dira"</li>"\n  "<li>"Ziurtatu aurrerako barrak erabiltzen dituzula (hau da, "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Orriak ez du birbideraketa ondo egiten</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Arazo hau baliteke cookieak desgaituta eduki edo ez onartzeagatik izatea.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Ez da helbidea ulertu</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Agian bestelako softwarea instalatu behar duzu helbide hau irekitzeko.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Konexio seguruak huts egin du</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Hau zerbitzariaren konfigurazio-errore batengatik edo\nnorbait zerbitzariaren nortasuna hartzen ari delako izan daiteke.</li>"\n  "<li>Aurretik zerbitzari honetara behar bezala konektatu bazara, errorea\nbehin-behinekoa izan daiteke eta geroago saia zaitezke.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Iepa</string>
-  <string name="error_generic_message">Ezin dugu orri hau kargatu arrazoi ezezagun batengatik.</string>
-  <string name="contextmenu_open_in_app">Ireki aplikazioarekin</string>
-  <string name="contextmenu_link_share">Partekatu lotura</string>
-  <string name="contextmenu_link_copy">Kopiatu loturaren helbidea</string>
-  <string name="contextmenu_image_share">Partekatu irudia</string>
-  <string name="contextmenu_image_copy">Kopiatu irudiaren helbidea</string>
-  <string name="contextmenu_image_save">Gorde irudia</string>
-  <string name="contextmenu_open_in_new_tab">Ireki lotura fitxa berrian</string>
-  <string name="contextmenu_image_warning"><![CDATA["Deskargatutako eta partekatutako irudiak "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ez dira ezabatuko</b>" %1$s(r)en historia ezabatzean."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Indartu zure pribatutasuna</string>
   <string name="firstrun_defaultbrowser_text2">Eraman nabigatze pribatua hurrengo mailara. Blokeatu iragarkiak eta webguneetan zehar zure jarraipena egin edo orrien karga-denbora makal dezaketen edukiak.</string>
   <string name="firstrun_search_title">Bilaketa, zure erara</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Ezabatu nabigatze-historia</string>
   <string name="download_firefox">Deskargatu Firefox</string>
   <string name="your_rights_content1">Mozillak eta beste hainbat laguntzailek egindako software libre eta kode irekikoa da %1$s.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s zure eskura dago "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" eta kode irekiko beste lizentzien baldintzapean."]]></string>
-  <string name="your_rights_content3"><![CDATA["Ez zaizu inolako eskubiderik edo lizentziarik aitortzen Mozilla Fundazioaren edo bestelakoen marka erregistratuetan, Mozilla, Firefox eta %1$s izen edo logoetan barne. Argibide gehiago "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">hemen</a>" aurki daitezke."]]></string>
-  <string name="your_rights_content4"><![CDATA["%1$s aplikazioaren iturburu-kode gehigarria erabilgarri dago kode irekikoak eta libreak diren bestelako "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lizentzietan</a>.]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s aplikazioak Diskonnect, Inc.-ek emandako blokeo-zerrendak ere erabiltzen ditu, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" lizentziapeko aparteko lan independente gisa eta eskuragarri dago "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">hemen</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Erabiltzaile-izena</string>
   <string name="gv_prompt_password_hint">Pasahitza</string>
   <string name="gv_prompt_clear">Garbitu</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Bilatu hurrengo emaitza</string>
   <string name="accessibility_previous_result">Bilatu aurreko emaitza</string>
   <string name="accessibility_dismiss_find_in_page">Baztertu orrian bilatzea</string>
-  <string name="http_auth_dialog_title">Autentifikazioa beharrezkoa</string>
-  <string name="http_auth_dialog_username">Erabiltzaile-izena</string>
-  <string name="http_auth_dialog_password">Pasahitza</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Mahaigaineko gunea</string>
   <string name="custom_tab_copy_url_action">URLa kopiatu da</string>
   <string name="preference_advanced_summary">Garatzaile-tresnak</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Barkatu. Arazo bat izaten ari gara fitxa honekin.</string>
   <string name="tab_crash_report_description">Nabigatzaile pribatu gisa, inoiz ez dugu ezer gordetzen eta ezin dugu fitxa hau berreskuratu.</string>
   <string name="tab_crash_report_close_tab_button_label">Itxi fitxa</string>
-  <string name="fatal_crash_report_title">Barkatu. %1$s(e)k arazo bat izan du eta huts egin du.</string>
-  <string name="fatal_crash_report_description">Nabigatzaile pribatu gisa, inoiz ez dugu ezer gordetzen eta ezin dugu zure azken nabigazio-saioa berreskuratu.</string>
-  <string name="fatal_crash_report_close_button_label">Itxi</string>
-  <string name="fatal_crash_report_restart_firefox_label">Berrabiarazi %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Bidali hutsegite-txostena Mozillara</string>
 </resources>

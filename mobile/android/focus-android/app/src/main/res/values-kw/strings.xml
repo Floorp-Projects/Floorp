@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Dilea &amp; ygeri</string>
   <string name="shortcut_erase_and_open_long_label">Dilea hag ygeri %1$s</string>
   <string name="text_selection_search_action">Hwilas yn privedh</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Gans %1$s yth esowgh hwi ow kul maystri.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gwrewgh hy usya avel peurell brivedh:\n  "<ul>"\n    "<li>Hwilas ha peuri a-berth y\'n dowlen</li>"\n    "<li>Lettya helerghellow (po ri kummyas dhedha y\'n settyansow)</li>"\n    "<li>Dilea cookies, keffrys ha istori hwilas ha peuri</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Askorrys gans Mozilla yw %1$s. Agan amkan yw maga kesrosweyth yagh hag ygor.<br/>\n<a href="%2$s">Dyski moy</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Privetter ha sekerder</string>
   <string name="preference_privacy_and_security_summary">Helerghi, cookies, dewisyow data</string>
   <string name="preference_search_summary">Settya defowt, awto-gowlwul</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Kwytya peuri privedh?</string>
   <string name="download_snackbar_finished">%1$s gorfennys</string>
   <string name="download_snackbar_open">Ygeri</string>
-  <string name="download_dialog_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Ny vydh diles</b>" restrednow iskergys pan wrellowgh hwi dilea istori %1$s."]]></string>
-  <string name="download_dialog_title">Iskarga an restren</string>
-  <string name="download_dialog_action_cancel">Hedhi</string>
-  <string name="download_dialog_action_download">Iskarga</string>
-  <string name="errorpage_title">Kudyn ow karga an folen</string>
-  <string name="errorpage_refresh">Assaya arta</string>
-  <string name="error_connectionfailure_title">Junya a fyllis</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>An wiasva a allsa bos ankavadow rag tro po re vysi. Assayowgh arta wosa pols.</li>"\n        "<li>Mar ny yllowgh karga folen vyth, checkyowgh junyans data po Wi-Fi agas devis.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Termyn an junyans a dhiwedhas</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Ny veu an servyer kevys</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Checkyowgh an drigva rag kammwriansow kepar ha\n          "<strong>ww</strong>".ensampel.com yn le\n          "<strong>www</strong>.ensampel.com</li>"\n        "<li>Mar ny yllowgh karga folen vyth, checkyowgh junyans data po Wi-Fi agas devis.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Nyns yw da an drigva</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Trigvaow gwias yw skrifys dre vras avel "<strong>http://www.ensampel.com/</strong></li>"\n  "<li>"Surhowgh agas bos owth usya slashys war-rag (h.y. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Nyns usi an folen ow taskevarwodha yn fas</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Kaws an kudyn ma a allsa bos diallosegi po nagha cookies.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Ny veu an drigva konvedhys</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Y hallsa bos res dhywgh ynstallya medhelweyth aral rag ygeri an drigva ma.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">An junyans diogel a fyllis</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Hemm a allsa bos kudyn gans restrans an servyer, po y hallsa bos\nnebonan owth assaya omwul an servyer.</li>"\n  "<li>Mar kwrussowgh junya yn sowen dhe\'n servyer ma y\'n termyn eus\npassyes, an error a allsa bos rag pols, ha hwi a yll assaya arta termyn aral.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Oups</string>
-  <string name="error_generic_message">Ny yllyn karga an folen ma rag neb acheson.</string>
-  <string name="contextmenu_open_in_app">Ygeri gans towlen</string>
-  <string name="contextmenu_link_share">Ranna an gevren</string>
-  <string name="contextmenu_link_copy">Kopia trigva an gevren</string>
-  <string name="contextmenu_image_share">Ranna an imach</string>
-  <string name="contextmenu_image_copy">Kopia trigva an imach</string>
-  <string name="contextmenu_image_save">Gwitha an imach</string>
-  <string name="contextmenu_open_in_new_tab">Ygeri an gevren yn tabb nowydh</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Ny vydh diles</b>" imajys gwithys ha rynnys pan wrellowgh hwi dilea istori %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Kenerthowgh agas privetter</string>
   <string name="firstrun_defaultbrowser_text2">Kemerowgh peuri privedh dhe\'n nivel nessa. Lettyowgh argemynnow ha dalgh aral a yll agas helerghi a-dreus dhe wiasvaow ha lenthe karga folennow.</string>
   <string name="firstrun_search_title">Hwilas y\'gas fordh hwi</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Dilea an istori peuri</string>
   <string name="download_firefox">Iskarga Firefox</string>
   <string name="your_rights_content1">%1$s yw medhelweyth pennfenten ygor ha heb kost, gwrys gans Mozilla ha kevriysi erel.</string>
-  <string name="your_rights_content2"><![CDATA["Dyllys yw %1$s dhywgh yn-dann dermys "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Leshyans Poblek Mozilla</a>" ha leshyansow pennfenten ygor erel."]]></string>
-  <string name="your_rights_content3"><![CDATA["Nyns eus grontyes dhywgh gwiryow po leshyansow vyth dhe verkyansow kenwerth an Fondyans Mozilla po dhe neb parti aral, y\'ga mysk henwyn hag arwodhyow Mozilla, Firefox po %1$s. Y hyllir kavos kedhlow keworransel "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">omma</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Kavadow yw kod pennfenten keworransel rag %1$s yn-dann "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">leshyansow</a>" pennfenten ygor ha heb kost erel."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s a wra usya rolyow lettya provies gans Disconnect, Inc. avel gweyth diberthys hag anserghek yn-dann an "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Leshyans Poblek Ollgemmyn GNU v3</a>", kavadow "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">omma</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Hanow usyer</string>
   <string name="gv_prompt_password_hint">Ger tremena</string>
   <string name="gv_prompt_clear">Klerhe</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Ke dhe\'n nessa sewyans</string>
   <string name="accessibility_previous_result">Ke dhe\'n sewyans kens</string>
   <string name="accessibility_dismiss_find_in_page">Degea hwilas y\'n folen</string>
-  <string name="http_auth_dialog_title">Res yw gwirya</string>
-  <string name="http_auth_dialog_username">Hanow usyer</string>
-  <string name="http_auth_dialog_password">Ger tremena</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Gweles an versyon jynn-amontya</string>
   <string name="custom_tab_copy_url_action">URL kopies</string>
   <string name="preference_advanced_summary">Toulys displegya</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Diharesow. Yma kudyn gans an tabb ma.</string>
   <string name="tab_crash_report_description">Avel peurell brivedh, ny wren nevra gwitha an tabb ma ha ny yllyn y dhaskavos.</string>
   <string name="tab_crash_report_close_tab_button_label">Degea an tabb</string>
-  <string name="fatal_crash_report_title">Diharesow. Y feu kudyn gans %1$s hag ev a vommas.</string>
-  <string name="fatal_crash_report_description">Avel peurell brivedh, ny wren nevra gwitha agas esedhek peuri diwettha ha ny yllyn y dhaskavos.</string>
-  <string name="fatal_crash_report_close_button_label">Degea</string>
-  <string name="fatal_crash_report_restart_firefox_label">Dastalleth %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Danvon derivas bomm dhe Mozilla</string>
 </resources>

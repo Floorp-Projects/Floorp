@@ -123,32 +123,32 @@
   <string name="external_multiple_apps_matched_exit">¿A k’áat a jóok’oj ti’ le maan ich web chen a wóok’sal wa’a?</string>
   <string name="download_snackbar_finished">%1$s ts’óokij</string>
   <string name="download_snackbar_open">Je\'ebek</string>
-  <string name="download_dialog_warning">Le ts’íibil éemsajilo’ ma’ u túupulo’ ken túupuk le tsool ts’íib ti’ le %1$s.</string>
-  <string name="download_dialog_title">Éemsa’ak ts’íibilo’</string>
-  <string name="download_dialog_action_cancel">Ma’ u beetal</string>
-  <string name="download_dialog_action_download">Éemsa’ak</string>
-  <string name="errorpage_title">Táalamil ken kajak u chuupul le tseel weba’</string>
-  <string name="errorpage_refresh">Ka’a béetej</string>
-  <string name="error_connectionfailure_title">Ma’ u beytal u nuupul</string>
-  <string name="error_timeout_title">Ts’óok u xúupul le súutuk a pa’tik uti’al a ch’aik internet</string>
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Ma’ kaxta’ab le núukulil ku ts’a’ik internet</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n        "<li>"Ilawil wa le k&#8217;&#225;aba&#8217; ka ts&#8217;&#237;ibtiko&#8217; uts ts&#8217;&#237;ibtak, je&#8217;e beya&#8217; \n          "<strong>ww</strong>".example.com en vez de "<strong>" \n          "<strong>www</strong>.example.com</strong>" \n        "<li>Wa ma&#8217; u beytal a je&#8217;ik mix junp&#8217;&#233;el u tseel webe&#8217;, ilawil wa a n&#250;ukulila&#8217; y&#225;anti&#8217; u p&#225;ajtalil u yokoj ich internet.</li>" \n      "</li></ul>]]></string>
-  <string name="error_malformedURI_title">Le k’áaba’ ta ts’íibtiko’ ma’ utsi’</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n "<li>"Le u k&#8217;&#225;aba&#8217; web ta ts&#8217;&#237;ibtiko&#8217; suka&#8217;an u ts&#8217;&#237;ibtaj beya&#8217; "<strong>http://www.example.com/</strong></li>"\n "<li>"Ilawil wa tan a meyajtik le jach k&#8217;&#225;abeto&#8217; (je&#8217;e bey "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Le tseel weba’ ma’ tun suut tu beeli’</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n "<li>Le t&#225;alamil je&#8217;ela&#8217; y&#225;an s&#250;utuke&#8217; ku y&#250;uchuj tumen ku p&#8217;&#225;ataj ma&#8217; u meyajtal uts wa ma&#8217; u ch&#225;abal u meyajil cookies.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Ma’ u na’ataj ba’ax k’áaba’ ta ts’íibtaj</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n "<li>Kexi&#8217; wa k&#8217;&#225;abet a ts&#8217;a&#8217;ik y&#225;anal ba&#8217;il ti&#8217; a n&#250;ukulil uti&#8217;al u beytal a je&#8217;ik le tseel weba&#8217;.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">K’aschajij le nuupankil uts ka’acho’</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n "<li>Le je&#8217;ela&#8217; kexi&#8217; wa u t&#225;alamil le meyajta&#8217;al internet ti&#8217; a n&#250;ukulila&#8217;, wa kex y&#225;an m&#225;ax tun ts&#8217;&#225;akuba&#8217;aj bey u nuupankil internet ti&#8217; a n&#250;ukulila&#8217;.</li>"\n "<li>Wa ts&#8217;&#243;ok a y&#224;ax meyajtik le nuupankil internet ti&#8217; a n&#250;ukulila&#8217;, kexi&#8217; wa le t&#225;alamila&#8217; chen jun s&#250;utuk. Ju beytal a ka&#8217;a je&#8217;ik ich jun s&#250;utuk tu ka&#8217;aten.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ups</string>
-  <string name="error_generic_message">Yáan u táalamil ma’ u cha’ik a je’ik le tseel weba’.</string>
-  <string name="contextmenu_link_share">Túuxta’ak le nuupankila’</string>
-  <string name="contextmenu_link_copy">Ka’a ts’íibta’ak le k’áaba’ ti’ le nuupankila’</string>
-  <string name="contextmenu_image_share">Túuxta’ak le oochela’</string>
-  <string name="contextmenu_image_copy">Ka’a ts’íibta’ak le k’áaba’ ti’ le oochela’</string>
-  <string name="contextmenu_image_save">Táabsa’ak oochelil</string>
-  <string name="contextmenu_open_in_new_tab">Je’ebek le nuupankila’ ich jun túumben nu’ukbesaj</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Nojochkúuns a ba’il ta wóok’sal</string>
   <string name="firstrun_defaultbrowser_text2">Bis táanxil tu’ux le a maansajil ich web yéetel u ba’il a wóok’sal. Ma’ cha’ik u chíikpajal le koonol ba’alobo’ wa u láak’ ba’il ku kaxtikech ich le tseel web tu’ux ka maano’ uti’al u chaambelkúunsik a wéensik ba’alob te’ webo’.</string>
   <string name="firstrun_search_title">A kaxan ba’al, je’e bey a k’áato’</string>
@@ -169,10 +169,10 @@
   <string name="tabs_tray_action_erase">Lúubsal tuláakal tu\'ux maanech</string>
   <string name="download_firefox">Éemsa’ak Firefox</string>
   <string name="your_rights_content1">%1$s lela’ jun meyajil mina’an u wóojil jeba’antak, béeta’ab men Mozilla yéetel u láak’ muulmeyajilo’ob.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s ti’an ka ch’áabak yéetel u tsoolt’aanil "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">ku ts&#8217;&#225;abal u p&#225;ajtalil men Mozilla</a>" yéetel u láak’ páajtalilo’ob yáanti’ob u wóoj jeba’anil."]]></string>
-  <string name="your_rights_content3"><![CDATA["Ma’ u ts’áabal tojbe’enilob wa páajtalilo’ob ti’ le koonol ba’alob yáan u k’áaba’ob ich le moolayil Mozilla Foundation wa je’e ba’axak jaatsile’, mix u k’áaba’ob yéetel u yoochelo’ob Mozilla, Firefox o %1$s. Je’el u beytal u k’ajotal yaanal ba’ax "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">waye&#8217;</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["U láak’ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">p&#225;ajtalilo&#8217;ob</a>" ti’ wóoj jeba’antak bey xan xma’ boolbi’ laili’ yáanti’ob u láak’ sayab wóoj uti’al %1$s."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s laili’ ku meyajtik le toolts’ìibil uti’al ma’ meyajtak Disconnect, Inc. Bey tseelpaja’anil meyajilo’ob ku béetal tu juunalo’ob yáanal le "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Noj P&#225;ajtalil ti&#8217; tu l&#225;akal ti&#8217; GNU v3</a>", je’el u beytal a kaxtik "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">waye&#8217;</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">A k’áaba’</string>
   <string name="gv_prompt_password_hint">Wóojil</string>
   <string name="gv_prompt_clear">Púustak</string>
@@ -182,8 +182,8 @@
   <string name="site_security_icon_content_description">U jéets’elil te’e tu’uxilo’</string>
   <string name="preference_autocomplete_duplicate_url_error">Le URL yani’</string>
   <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="http_auth_dialog_username">A k’áaba’</string>
-  <string name="http_auth_dialog_password">Wóojil</string>
+
+
   <string name="enable_search_suggestion_subtitle_learnmore">K’ajóoltal u yaanali’</string>
   <string name="enable_search_suggestions_no">Ma’</string>
   <string name="enable_search_suggestions_yes">Je’ele’</string>

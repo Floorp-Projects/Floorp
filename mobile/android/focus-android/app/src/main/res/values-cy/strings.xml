@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Dileu ac agor</string>
   <string name="shortcut_erase_and_open_long_label">Dileu ac agor %1$s</string>
   <string name="text_selection_search_action">Chwilio\'n Breifat</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Gyda %1$s chi sy\'n rheoli.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ei ddefnyddio fel porwr preifat:\n  "<ul>"\n    "<li>Chwilio a phori o fewn yr ap</li>"\n    "<li>Rhwystro tracwyr (neu ddiweddaru\'r gosodiadau i ganiat&#225;u tracwyr)</li>"\n    "<li>Dileu cwcis, yn ogystal &#226; hanes chwilio a phori</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mae %1$s wedi ei gynhyrchu gan Mozilla. Ein amcan yw i hybu Rhyngrwyd iach ac agored.<br/>\n<a href="%2$s">Dysgu rhagor</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Preifatrwydd a Diogelwch</string>
   <string name="preference_privacy_and_security_summary">Tracio, mewngofnodion, dewisiadau data</string>
   <string name="preference_search_summary">Gosod y rhagosodiad, awtogwblhau</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Gadael Pori Preifat?</string>
   <string name="download_snackbar_finished">%1$s wedi gorffen</string>
   <string name="download_snackbar_open">Agor</string>
-  <string name="download_dialog_warning"><![CDATA["Ni fydd ffeiliau sydd wedi eu llwytho i lawr "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">yn cael eu dileu</b>" pan fyddwch yn dileu hanes %1$s."]]></string>
-  <string name="download_dialog_title">Llwytho\'r ffeil i lawr</string>
-  <string name="download_dialog_action_cancel">Diddymu</string>
-  <string name="download_dialog_action_download">Llwytho i Lawr</string>
-  <string name="errorpage_title">Anhawster llwytho tudalen</string>
-  <string name="errorpage_refresh">Ceisiwch eto</string>
-  <string name="error_connectionfailure_title">Methu cysylltu</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n        "<li>Mae\'n bosib fod y wefan yn brysur neu ddim ar gael. Ceisiwch eto cyn bo hir.</li>" \n        "<li>Os nad oes modd i chi lwytho unrhyw dudalennau, gwiriwch gysylltiad data neu ddiwifr eich dyfais symudol.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Daeth cyfnod y cysylltiad i ben</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Heb ganfod gweinydd</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Gwiriwch y cyfeiriad am wallau teipio megis\n          "<strong>ww</strong>".example.com yn lle\n          "<strong>www</strong>.example.com</li>"\n        "<li>Os ydych yn gallu llwytho unrhyw dudalennau, gwiriwch eich dyfais data neu wi-fi cysylltiad.</li>"\n     "</ul>]]></string>
-  <string name="error_malformedURI_title">Nid yw\'r cyfeiriad yn ddilys</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>"Fel rheol mae cyfeiriadau Gwe\'n cael eu hysgrifennu fel "<strong>http://www.example.com/</strong></li>"\n  "<li>"Gwnewch yn si&#373;r eich bod yn defnyddio blaen slaes (h.y. "<strong>/</strong>).</li>" \n"</ul>]]></string>
-  <string name="error_redirectLoop_title">Nid yw\'r dudalen yn ailgyfeirio\'n iawn</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Gall y broblem yma fod wedi ei achosi drwy anablu neu wrthod cwcis.</li>" \n"</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Heb ddeall y cyfeiriad</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Efallai bydd angen i chi osod meddalwedd arall i agor y cyfeiriad yma.</li>" \n"</ul>]]></string>
-  <string name="error_sslhandshake_title">Methodd y cysylltiad diogel</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Gall hwn fod yn anhawster gyda ffurfweddiad y gweinydd neu gall fod \nyn rhywun sy\'n ceisio dynwared y gweinydd.</li>" \n  "<li>Os ydych wedi cysylltu\'n llwyddiannus gyda\'r gweinydd yn y gorffennol, efallai \nmai gwall dros dro ydyw ac i geisio eto.</li>" \n"</ul>]]></string>
-  <string name="error_generic_title">Wps</string>
-  <string name="error_generic_message">Methu llwytho\'r dudalen am ryw reswm.</string>
-  <string name="contextmenu_open_in_app">Agor gydag ap</string>
-  <string name="contextmenu_link_share">Rhannu dolen</string>
-  <string name="contextmenu_link_copy">Copïo cyfeiriad dolen</string>
-  <string name="contextmenu_image_share">Rhannu delwedd</string>
-  <string name="contextmenu_image_copy">Copïo cyfeiriad delwedd</string>
-  <string name="contextmenu_image_save">Cadw delwedd</string>
-  <string name="contextmenu_open_in_new_tab">Agor dolen mewn tab newydd</string>
-  <string name="contextmenu_image_warning"><![CDATA["Ni fydd delweddau sydd wedi eu cadw a\'u rhannu "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">yn cael eu dileu</b>" pan fyddwch yn dileu hanes %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Cryfhewch eich preifatrwydd</string>
   <string name="firstrun_defaultbrowser_text2">Cymrwch bori preifat i\'r lefel nesaf. Rhwystrwch hysbysebion a chynnwys arall sy\'n gallu\'ch tracio ar draws wefannau ac arafu amserau llwytho tudalennau.</string>
   <string name="firstrun_search_title">Chwilio, cynhwysfawr</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Dileu hanes pori</string>
   <string name="download_firefox">Llwytho Firefox i Lawr</string>
   <string name="your_rights_content1">Mae %1$s yn feddalwedd cod agored a rhydd gan Mozilla a chyfranwyr eraill.</string>
-  <string name="your_rights_content2"><![CDATA["Mae %1$s ar gael i chi o dan delerau "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Trwydded Cyhoeddus Mozilla</a>" a thrwyddedau cod agored eraill."]]></string>
-  <string name="your_rights_content3"><![CDATA["Nid oes gennych unrhyw hawliau na thrwyddedau i nodau masnach y Mozilla Foudation nag o unrhyw barti, gan gynnwys enwau na logos Mozilla, Firefox na %1$s. Mae manylion pellach i\'w cael "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">yma</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Mae cod ffynhonnell ychwanegol ar gyfer %1$s ar gael o dan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">drwyddedau</a>" cod agored a rhydd eraill."]]></string>
-  <string name="your_rights_content5"><![CDATA["Mae %1$s hefyd yn defnyddio rhestrau rhwystro sy\'n cael eu darparu gan Disconnect, Inc. fel gwaith annibynnol ac ar wahân o dan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", ac ar gael "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">yma</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Enw Defnyddiwr</string>
   <string name="gv_prompt_password_hint">Cyfrinair</string>
   <string name="gv_prompt_clear">Clirio</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Canfod y canlyniad nesaf</string>
   <string name="accessibility_previous_result">Canfod y canlyniad blaenorol</string>
   <string name="accessibility_dismiss_find_in_page">Cau\'r canfod yn y dudalen</string>
-  <string name="http_auth_dialog_title">Angen dilysiad</string>
-  <string name="http_auth_dialog_username">Enw Defnyddiwr</string>
-  <string name="http_auth_dialog_password">Cyfrinair</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Gwefan bwrdd gwaith</string>
   <string name="custom_tab_copy_url_action">URL wedi\'i gopïo</string>
   <string name="preference_advanced_summary">Offer datblygwyr</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Ymddiheuriadau. Rydym yn cael anhawster gyda\'r tab hwn.</string>
   <string name="tab_crash_report_description">Fel porwr preifat, fyddwn ni byth yn cadw ac felly\'n methu adfer y tab hwn.</string>
   <string name="tab_crash_report_close_tab_button_label">Cau Tab</string>
-  <string name="fatal_crash_report_title">Ymddiheuriadau. Cafodd %1$s anhawster a chwalu.</string>
-  <string name="fatal_crash_report_description">Fel porwr preifat, fyddwn ni byth yn cadw ac felly\'n methu adfer eich sesiwn pori diwethaf.</string>
-  <string name="fatal_crash_report_close_button_label">Cau</string>
-  <string name="fatal_crash_report_restart_firefox_label">Ailgychwyn %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Anfon adroddiad chwalu at Mozilla</string>
 </resources>

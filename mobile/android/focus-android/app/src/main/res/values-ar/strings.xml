@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">امسح وافتح</string>
   <string name="shortcut_erase_and_open_long_label">امسح وافتح %1$s</string>
   <string name="text_selection_search_action">ابحث مع الحفاظ على الخصوصية</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1610;&#1593;&#1591;&#1610;&#1603; %1$s &#1575;&#1604;&#1583;&#1601;&#1577;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1575;&#1587;&#1578;&#1582;&#1583;&#1605;&#1607; &#1603;&#1605;&#1578;&#1589;&#1601;&#1581; &#1582;&#1575;&#1589;:\n  "<ul>"\n    "<li>&#1575;&#1576;&#1581;&#1579; &#1608;&#160;&#1578;&#1589;&#1601;&#1581; &#1605;&#1576;&#1575;&#1588;&#1585;&#1577; &#1601;&#1610; &#1575;&#1604;&#1578;&#1591;&#1576;&#1610;&#1602;</li>"\n    "<li>&#1575;&#1581;&#1580;&#1576; &#1575;&#1604;&#1605;&#1578;&#1593;&#1602;&#1576;&#1575;&#1578; (&#1571;&#1608; &#1581;&#1583;&#1617;&#1579; &#1575;&#1604;&#1573;&#1593;&#1583;&#1575;&#1583;&#1575;&#1578; &#1604;&#1604;&#1587;&#1605;&#1575;&#1581; &#1576;&#1575;&#1604;&#1605;&#1578;&#1593;&#1602;&#1576;&#1575;&#1578;)</li>"\n    "<li>&#1575;&#1605;&#1587;&#1581; &#1575;&#1604;&#1603;&#1593;&#1603;&#1575;&#1578; &#1576;&#1575;&#1604;&#1573;&#1590;&#1575;&#1601;&#1577; &#1573;&#1604;&#1609; &#1581;&#1584;&#1601; &#1578;&#1571;&#1585;&#1610;&#1582; &#1575;&#1604;&#1576;&#1581;&#1579; &#1608;&#160;&#1575;&#1604;&#1578;&#1589;&#1601;&#1581;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8207;%1$s &#1605;&#1606;&#1578;&#1580; &#1605;&#1606; &#1605;&#1608;&#1586;&#1610;&#1604;&#1575;. &#1605;&#1607;&#1605;&#1578;&#1606;&#1575; &#1578;&#1588;&#1580;&#1610;&#1593; &#1573;&#1606;&#1578;&#1585;&#1606;&#1578; &#1605;&#1601;&#1578;&#1608;&#1581; &#1608;&#160;&#1589;&#1581;&#1610;.<br/>\n<a href="%2$s">&#1575;&#1591;&#1617;&#1604;&#1593; &#1593;&#1604;&#1609; &#1575;&#1604;&#1605;&#1586;&#1610;&#1583;</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">الخصوصية والسريّة</string>
   <string name="preference_privacy_and_security_summary">التّعقّب، و الكعكات، و اختيار البيانات</string>
   <string name="preference_search_summary">الضبط كمبدئي والإكمال التلقائي</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">أتريد مغادرة التصفح الخاص؟</string>
   <string name="download_snackbar_finished">اكتمل %1$s</string>
   <string name="download_snackbar_open">افتح</string>
-  <string name="download_dialog_warning"><![CDATA["الملفات المُنزّلة "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1604;&#1606; &#1578;&#1615;&#1581;&#1584;&#1601;</b>" عندما تمسح تأريخ %1$s."]]></string>
-  <string name="download_dialog_title">نزّل ملفًا</string>
-  <string name="download_dialog_action_cancel">ألغِ</string>
-  <string name="download_dialog_action_download">نزّل</string>
-  <string name="errorpage_title">هناك مشكلة في تحميل الصفحة</string>
-  <string name="errorpage_refresh">أعِد المحاولة</string>
-  <string name="error_connectionfailure_title">تعذّر الاتصال</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>&#1602;&#1583; &#1610;&#1603;&#1608;&#1606; &#1575;&#1604;&#1605;&#1608;&#1602;&#1593; &#1594;&#1610;&#1585; &#1605;&#1578;&#1575;&#1581; &#1605;&#1572;&#1602;&#1578;&#1611;&#1575; &#1571;&#1608; &#1605;&#1588;&#1594;&#1608;&#1604;&#1611;&#1575; &#1580;&#1583;&#1611;&#1575;. &#1581;&#1575;&#1608;&#1604; &#1605;&#1580;&#1583;&#1583;&#1611;&#1575; &#1576;&#1593;&#1583; &#1602;&#1604;&#1610;&#1604;.</li>"\n        "<li>&#1573;&#1606; &#1604;&#1605; &#1578;&#1603;&#1606; &#1578;&#1587;&#1578;&#1591;&#1610;&#1593; &#1578;&#1581;&#1605;&#1610;&#1604; &#1571;&#1610; &#1589;&#1601;&#1581;&#1577;&#1548; &#1578;&#1581;&#1602;&#1602; &#1605;&#1606; &#1575;&#1578;&#1589;&#1575;&#1604; &#1580;&#1608;&#1617;&#1575;&#1604;&#1603; &#1576;&#1588;&#1576;&#1603;&#1577; &#1575;&#1604;&#1576;&#1610;&#1575;&#1606;&#1575;&#1578; &#1571;&#1608; &#1575;&#1604;&#1588;&#1576;&#1603;&#1577; &#1575;&#1604;&#1604;&#1575;&#1587;&#1604;&#1603;&#1610;&#1577;.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">انتهت مهلة الاتصال</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">الخادوم غير موجود</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"&#1578;&#1581;&#1602;&#1602; &#1605;&#1606; &#1593;&#1583;&#1605; &#1608;&#1580;&#1608;&#1583; &#1571;&#1610; &#1571;&#1582;&#1591;&#1575;&#1569; &#1601;&#1610; &#1575;&#1604;&#1593;&#1606;&#1608;&#1575;&#1606; &#1605;&#1579;&#1604;\n          &#8207;&#8234;"<strong>ww</strong>".example.com&#8236; &#1576;&#1583;&#1604;&#1611;&#1575; &#1605;&#1606;\n          &#8207;&#8234;"<strong>www</strong>.example.com&#8236;&#8207;</li>"\n        "<li>&#1573;&#1606; &#1604;&#1605; &#1578;&#1603;&#1606; &#1602;&#1575;&#1583;&#1585;&#1611;&#1575; &#1593;&#1604;&#1609; &#1578;&#1581;&#1605;&#1610;&#1604; &#1571;&#1610; &#1589;&#1601;&#1581;&#1577;&#1548; &#1578;&#1581;&#1602;&#1602; &#1605;&#1606; &#1575;&#1578;&#1589;&#1575;&#1604; &#1580;&#1607;&#1575;&#1586;&#1603; &#1576;&#1588;&#1576;&#1603;&#1577; &#1575;&#1604;&#1576;&#1610;&#1575;&#1606;&#1575;&#1578; &#1571;&#1608; &#1575;&#1604;&#1588;&#1576;&#1603;&#1577; &#1575;&#1604;&#1604;&#1575;&#1587;&#1604;&#1603;&#1610;&#1577;.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">العنوان غير صالح</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"&#1578;&#1615;&#1603;&#1578;&#1576; &#1593;&#1606;&#1575;&#1608;&#1610;&#1606; &#1575;&#1604;&#1608;&#1576; &#1593;&#1575;&#1583;&#1577; &#1593;&#1604;&#1609; &#1575;&#1604;&#1588;&#1603;&#1604; &#1575;&#1604;&#1578;&#1575;&#1604;&#1610; "<strong>&#8234;http://www.example.com/&#8236;</strong>&#8207;</li>"\n  "<li>"&#1578;&#1571;&#1603;&#1583; &#1571;&#1606;&#1603; &#1578;&#1587;&#1578;&#1582;&#1583;&#1605; &#1575;&#1604;&#1588;&#1585;&#1591;&#1577; &#1575;&#1604;&#1605;&#1575;&#1574;&#1604;&#1577; &#1573;&#1604;&#1609; &#1575;&#1604;&#1610;&#1605;&#1610;&#1606; (&#1571;&#1610; "<strong>/</strong>).</li>" \n"</ul>]]></string>
-  <string name="error_redirectLoop_title">لا تعيد الصفحة التوجيه بشكل سليم</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1587;&#1576;&#1576; &#1607;&#1584;&#1607; &#1575;&#1604;&#1605;&#1588;&#1603;&#1604;&#1577; &#1607;&#1608; &#1578;&#1593;&#1591;&#1610;&#1604; &#1575;&#1604;&#1603;&#1593;&#1603;&#1575;&#1578; &#1571;&#1608; &#1593;&#1583;&#1605; &#1602;&#1576;&#1608;&#1604;&#1607;&#1575;.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">العنوان غير مفهوم</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1602;&#1583; &#1578;&#1581;&#1578;&#1575;&#1580; &#1578;&#1606;&#1589;&#1610;&#1576; &#1576;&#1585;&#1605;&#1580;&#1610;&#1575;&#1578; &#1571;&#1582;&#1585;&#1609; &#1604;&#1601;&#1578;&#1581; &#1607;&#1584;&#1575; &#1575;&#1604;&#1593;&#1606;&#1608;&#1575;&#1606;.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">فشل الاتصال الآمن</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1602;&#1583; &#1578;&#1603;&#1608;&#1606; &#1607;&#1584;&#1607; &#1605;&#1588;&#1603;&#1604;&#1577; &#1601;&#1610; &#1573;&#1593;&#1583;&#1575;&#1583;&#1575;&#1578; &#1575;&#1604;&#1582;&#1575;&#1583;&#1608;&#1605;&#1548;\n&#1571;&#1608; &#1585;&#1576;&#1605;&#1575; &#1610;&#1581;&#1575;&#1608;&#1604; &#1588;&#1582;&#1589; &#1605;&#1575; &#1578;&#1602;&#1604;&#1610;&#1583; &#1575;&#1604;&#1582;&#1575;&#1583;&#1608;&#1605;.</li>"\n  "<li>&#1573;&#1584;&#1575; &#1603;&#1606;&#1578; &#1602;&#1583; &#1575;&#1578;&#1589;&#1604;&#1578; &#1576;&#1575;&#1604;&#1605;&#1608;&#1602;&#1593; &#1576;&#1606;&#1580;&#1575;&#1581; &#1601;&#1610; &#1575;&#1604;&#1605;&#1575;&#1590;&#1610;&#1548;\n&#1601;&#1602;&#1583; &#1610;&#1603;&#1608;&#1606; &#1575;&#1604;&#1582;&#1591;&#1571; &#1605;&#1572;&#1602;&#1578;&#1611;&#1575; &#1608;&#1610;&#1605;&#1603;&#1606;&#1603; &#1575;&#1604;&#1605;&#1581;&#1575;&#1608;&#1604;&#1577; &#1601;&#1610;&#1605;&#1575; &#1576;&#1593;&#1583;.</li>\n</ul>]]></string>
-  <string name="error_generic_title">عذرا!</string>
-  <string name="error_generic_message">تعذّر تحميل هذه الصفحة لسبب ما.</string>
-  <string name="contextmenu_open_in_app">افتح في التطبيق</string>
-  <string name="contextmenu_link_share">شارك الرابط</string>
-  <string name="contextmenu_link_copy">انسخ عنوان الرابط</string>
-  <string name="contextmenu_image_share">شارك الصورة</string>
-  <string name="contextmenu_image_copy">انسخ عنوان الصورة</string>
-  <string name="contextmenu_image_save">احفظ الصورة</string>
-  <string name="contextmenu_open_in_new_tab">افتح الرابط في لسان جديد</string>
-  <string name="contextmenu_image_warning"><![CDATA["الصور المحفوظة و المُشاركة "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1604;&#1606; &#1578;&#1615;&#1581;&#1584;&#1601;</b>" عندما تمسح تأريخ %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">حسّن خصوصيتك</string>
   <string name="firstrun_defaultbrowser_text2">انتقل بالتصفّح الخاص إلى المستوى التالي. احجب الإعلانات وغيرها من المحتويات التي تتعقبك أثناء التصفح وتأخذ من وقت تحميل الصفحات.</string>
   <string name="firstrun_search_title">تبحثُ بأسلوبك أنت</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">امسح تأريخ التصفح</string>
   <string name="download_firefox">نزّل فَيرفُكُس</string>
   <string name="your_rights_content1">%1$s برمجية حرة مفتوحة المصدر صنعتها موزيلا ومساهمين آخرين.</string>
-  <string name="your_rights_content2"><![CDATA["يُتاح لك %1$s وفق بنود "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1585;&#1582;&#1589;&#1577; &#1605;&#1608;&#1586;&#1610;&#1604;&#1575; &#1575;&#1604;&#1593;&#1575;&#1605;&#1577;</a>" وترخيصات المصادر المفتوحة الأخرى."]]></string>
-  <string name="your_rights_content3"><![CDATA["لا يعطيك هذا أي حقوق أو تراخيص للعلامات التجارية لمؤسسة موزيلا أو أي طرف آخر، متضمنًا أسماء موزيلا أو فَيَرفُكس أو %1$s أو شعاراتها. يمكنك الاطلاع على مزيد من المعلومات من "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1607;&#1606;&#1575;</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["النصوص المصدرية الإضافية لِ‍ %1$s متاحة وفق "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1585;&#1582;&#1589;</a>" البرمجيات الحرة والمفتوحة المصدر الأخرى."]]></string>
-  <string name="your_rights_content5"><![CDATA["يستخدم %1$s قوائم المنع التي توفّرها شركة Disconnect, Inc كأعمال منفصلة ومستقرّة برخصة "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1594;&#1606;&#1608; &#1575;&#1604;&#1593;&#1605;&#1608;&#1605;&#1610;&#1577; &#1575;&#1604;&#1573;&#1589;&#1583;&#1575;&#1585;&#1577; &#1575;&#1604;&#1579;&#1575;&#1604;&#1579;&#1577;</a>"، وهي متاحة "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1607;&#1606;&#1575;</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">اسم المستخدم</string>
   <string name="gv_prompt_password_hint">كلمة السر</string>
   <string name="gv_prompt_clear">امسح</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">ابحث عن النتيجة التالية</string>
   <string name="accessibility_previous_result">ابحث عن النتيجة السابقة</string>
   <string name="accessibility_dismiss_find_in_page">أخفِ لوحة البحث في الصفحة</string>
-  <string name="http_auth_dialog_title">الاستيثاق مطلوب</string>
-  <string name="http_auth_dialog_username">اسم المستخدم</string>
-  <string name="http_auth_dialog_password">كلمة السر</string>
+
+
+
   <string name="preference_performance_request_desktop_site">اطلب موقع سطح المكتب</string>
   <string name="custom_tab_copy_url_action">نُسِخَ المسار</string>
   <string name="preference_advanced_summary">أدوات المطوّرين</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">نأسف. نُواجه مشكلة مع هذا اللسان.</string>
   <string name="tab_crash_report_description">باعتبار هذا متصفح خاص، لن نحفظ هذا اللسان ولا نقدر على استعادته.</string>
   <string name="tab_crash_report_close_tab_button_label">أغلِق اللسان</string>
-  <string name="fatal_crash_report_title">نأسف. واجه %1$s مشكلة وانهار.</string>
-  <string name="fatal_crash_report_description">باعتبار هذا متصفح خاص، لن نحفظ آخر جلسة تصفّح لك ولا نقدر على استعادتها.</string>
-  <string name="fatal_crash_report_close_button_label">أغلِق</string>
-  <string name="fatal_crash_report_restart_firefox_label">أعِد تشغيل %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">أرسِل تقرير الانهيار إلى موزيلا</string>
 </resources>

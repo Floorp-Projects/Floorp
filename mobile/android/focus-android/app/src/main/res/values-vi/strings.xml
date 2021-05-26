@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Xóa &amp; mở</string>
   <string name="shortcut_erase_and_open_long_label">Xóa và mở %1$s</string>
   <string name="text_selection_search_action">Tìm kiếm riêng tư hơn</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gi&#250;p b&#7841;n ki&#7875;m so&#225;t m&#7885;i th&#7913;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"S&#7917; d&#7909;ng n&#243; nh&#432; m&#7897;t tr&#236;nh duy&#7879;t ri&#234;ng t&#432;:\n  "<ul>"\n    "<li>T&#236;m ki&#7871;m v&#224; duy&#7879;t ngay trong &#7913;ng d&#7909;ng</li>"\n    "<li>Ch&#7863;n c&#225;c tr&#236;nh theo d&#245;i (ho&#7863;c c&#7853;p nh&#7853;t c&#224;i &#273;&#7863;t &#273;&#7875; cho ph&#233;p c&#225;c tr&#236;nh theo d&#245;i)</li>"\n    "<li>X&#243;a cookie c&#361;ng nh&#432; l&#7883;ch s&#7917; t&#236;m ki&#7871;m v&#224; duy&#7879;t web khi xong phi&#234;n l&#224;m vi&#7879;c</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#273;&#432;&#7907;c s&#7843;n xu&#7845;t b&#7903;i Mozilla. Nhi&#7879;m v&#7909; c&#7911;a ch&#250;ng t&#244;i l&#224; th&#250;c &#273;&#7849;y m&#7897;t Internet l&#224;nh m&#7841;nh, c&#7903;i m&#7903;.<br/>\n<a href="%2$s">T&#236;m hi&#7875;u th&#234;m</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Riêng tư &amp; Bảo mật</string>
   <string name="preference_privacy_and_security_summary">Theo dõi, cookie, lựa chọn dữ liệu</string>
   <string name="preference_search_summary">Đặt làm mặc định, tự đồng điền</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Thoát duyệt web riêng tư?</string>
   <string name="download_snackbar_finished">Đã tải xong %1$s</string>
   <string name="download_snackbar_open">Mở</string>
-  <string name="download_dialog_warning"><![CDATA["Các tập tin đã tải "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">s&#7869; kh&#244;ng b&#7883; x&#243;a</b>" khi bạn xóa lịch sử %1$s."]]></string>
-  <string name="download_dialog_title">Tải tập tin</string>
-  <string name="download_dialog_action_cancel">Hủy bỏ</string>
-  <string name="download_dialog_action_download">Tải xuống</string>
-  <string name="errorpage_title">Gặp vấn đề khi tải trang</string>
-  <string name="errorpage_refresh">Thử lại</string>
-  <string name="error_connectionfailure_title">Không thể kết nối</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Trang web c&#243; th&#7875; t&#7841;m th&#7901;i kh&#244;ng ho&#7841;t &#273;&#7897;ng ho&#7863;c qu&#225; t&#7843;i. H&#227;y th&#7917; l&#7841;i sau v&#224;i ph&#250;t.</li>"\n        "<li>N&#7871;u b&#7841;n kh&#244;ng th&#7875; t&#7843;i b&#7845;t k&#7923; trang n&#224;o, h&#227;y ki&#7875;m tra d&#7919; li&#7879;u di &#273;&#7897;ng ho&#7863;c k&#7871;t n&#7889;i Wi-Fi.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Kết nối mất quá nhiều thời gian</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Không tìm thấy máy chủ</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Ki&#7875;m tra c&#225;c l&#7895;i &#7903; &#273;&#7883;a ch&#7881; nh&#432;\n          "<strong>ww</strong>".example.com thay v&#236; nh&#7853;p \n          "<strong>www</strong>.example.com</li>"\n        "<li>N&#7871;u b&#7841;n kh&#244;ng th&#7875; t&#7843;i b&#7845;t k&#7923; trang n&#224;o, h&#227;y ki&#7875;m tra d&#7919; li&#7879;u di &#273;&#7897;ng ho&#7863;c k&#7871;t n&#7889;i Wi-Fi c&#7911;a b&#7841;n.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Địa chỉ không hợp lệ</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#272;&#7883;a ch&#7881; web th&#432;&#7901;ng &#273;&#432;&#7907;c vi&#7871;t nh&#432;\n<strong>http://www.example.com/</strong></li>"\n  "<li>"&#272;&#7843;m b&#7843;o b&#7841;n &#273;ang s&#7917; d&#7909;ng d&#7845;u g&#7841;ch ch&#233;o (t&#7913;c l&#224; "<strong>/</strong>).\n</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Trang này không chuyển hướng đúng cách</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>V&#7845;n &#273;&#7873; n&#224;y &#273;&#244;i khi c&#243; th&#7875; l&#224; do v&#244; hi&#7879;u ho&#7863;c t&#7915; ch&#7889;i ch&#7845;p nh&#7853;n cookie.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Địa chỉ không được hỗ trợ</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>B&#7841;n c&#243; th&#7875; c&#7847;n c&#224;i &#273;&#7863;t ph&#7847;n m&#7873;m kh&#225;c &#273;&#7875; m&#7903; &#273;&#7883;a ch&#7881; n&#224;y.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Kết nối bảo mật thất bại</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#272;&#226;y c&#243; th&#7875; l&#224; s&#7921; c&#7889; v&#7899;i c&#7845;u h&#236;nh c&#7911;a m&#225;y ch&#7911; ho&#7863;c c&#243; th&#7875; l&#224; m&#7897;t ng&#432;&#7901;i c&#7889; m&#7841;o danh m&#225;y ch&#7911;.</li>"\n  "<li>N&#7871;u tr&#432;&#7899;c &#273;&#226;y b&#7841;n &#273;&#227; k&#7871;t n&#7889;i v&#7899;i m&#225;y ch&#7911; n&#224;y, l&#7895;i n&#224;y c&#243; th&#7875; l&#224; t&#7841;m th&#7901;i v&#224; b&#7841;n c&#243; th&#7875; th&#7917; l&#7841;i sau.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ôi</string>
-  <string name="error_generic_message">Chúng tôi không thể tải trang này vì một số lý do.</string>
-  <string name="contextmenu_open_in_app">Mở với ứng dụng</string>
-  <string name="contextmenu_link_share">Chia sẻ liên kết</string>
-  <string name="contextmenu_link_copy">Sao chép địa chỉ liên kết</string>
-  <string name="contextmenu_image_share">Chia sẻ hình ảnh</string>
-  <string name="contextmenu_image_copy">Sao chép địa chỉ hình ảnh</string>
-  <string name="contextmenu_image_save">Lưu hình ảnh</string>
-  <string name="contextmenu_open_in_new_tab">Mở liên kết trong thẻ mới</string>
-  <string name="contextmenu_image_warning"><![CDATA["Ảnh đã lưu và chia sẻ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">s&#7869; kh&#244;ng x&#243;a</b>" khi bạn xóa lịch sử %1$s."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Tăng quyền riêng tư của bạn</string>
   <string name="firstrun_defaultbrowser_text2">Duyệt web ở chế độ riêng tư để nâng cao bảo mật. Giúp làm giảm thời gian tải trang và chặn các quảng cáo và nội dung mà có thể theo dõi bạn trên các trang web.</string>
   <string name="firstrun_search_title">Tìm kiếm của bạn, theo cách của bạn</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Xóa lịch sử duyệt web</string>
   <string name="download_firefox">Tải Firefox</string>
   <string name="your_rights_content1">%1$s là phần mềm miễn phí và mã nguồn mở do Mozilla và các cộng tác viên khác cung cấp.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s được cung cấp cho bạn theo các điều khoản của "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">gi&#7845;y ph&#233;p Mozilla Public</a>" và các giấy phép nguồn mở khác."]]></string>
-  <string name="your_rights_content3"><![CDATA["Bạn không được cấp bất kỳ quyền hoặc giấy phép nào đối với nhãn hiệu của tổ chức Mozilla hoặc bất kỳ bên nào, bao gồm tên hoặc biểu trưng của Mozilla, Firefox hoặc %1$s. Thông tin bổ sung có thể được tìm thấy "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#7903; &#273;&#226;y</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Mã bổ sung cho %1$s có sẵn dưới nhiều loại "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">gi&#7845;y ph&#233;p</a>" tự do và nguồn mở khác nhau."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s cũng sử dụng danh sách chặn được cung cấp bởi Disconnect, Inc. là các công việc riêng biệt và độc lập theo "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" GNU General Public License v3"</a>", và có sẵn "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">" &#7903; &#273;&#226;y"</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Tên đăng nhập</string>
   <string name="gv_prompt_password_hint">Mật khẩu</string>
   <string name="gv_prompt_clear">Xóa</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Tìm kiếm kết quả tiếp theo</string>
   <string name="accessibility_previous_result">Tìm kiếm kết quả trước đó</string>
   <string name="accessibility_dismiss_find_in_page">Loại bỏ tìm kiếm trong trang</string>
-  <string name="http_auth_dialog_title">Yêu cầu xác thực</string>
-  <string name="http_auth_dialog_username">Tên đăng nhập</string>
-  <string name="http_auth_dialog_password">Mật khẩu</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Yêu cầu trang web trên máy tính</string>
   <string name="custom_tab_copy_url_action">Đã sao chép URL</string>
   <string name="preference_advanced_summary">Công cụ nhà phát triển</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Rất tiếc. Chúng tôi đã gặp sự cố với thẻ này.</string>
   <string name="tab_crash_report_description">Trong trình duyệt riêng tư, chúng tôi không bao giờ lưu và không thể khôi phục thẻ này.</string>
   <string name="tab_crash_report_close_tab_button_label">Đóng thẻ</string>
-  <string name="fatal_crash_report_title">Rất tiếc. %1$s đã gặp sự cố và đã hỏng.</string>
-  <string name="fatal_crash_report_description">Trong trình duyệt riêng tư, chúng tôi không bao giờ lưu và không thể khôi phục phiên duyệt web cuối cùng của bạn.</string>
-  <string name="fatal_crash_report_close_button_label">Đóng</string>
-  <string name="fatal_crash_report_restart_firefox_label">Khởi động lại %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Gửi báo cáo lỗi đến Mozilla</string>
 </resources>

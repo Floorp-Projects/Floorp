@@ -11,8 +11,7 @@ locales = [
   "ay",
   "az",
   "bg",
-  "bn-BD",
-  "bn-IN",
+  "bn",
   "bo",
   "bs",
   "ca",
@@ -114,4 +113,3 @@ branches = [
 [[paths]]
   reference = "app/src/main/res/values/strings.xml"
   l10n = "app/src/main/res/values-{android_locale}/strings.xml"
-

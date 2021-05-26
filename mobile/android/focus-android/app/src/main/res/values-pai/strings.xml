@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Ŕmar e sol</string>
   <string name="shortcut_erase_and_open_long_label">Ŕmar e sol %1$s</string>
   <string name="text_selection_search_action">Jabchu tpaay chŕmee</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s hay kamwi &#241;umyabuyiib m&#180;ee.</p><p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Sal amchu jabch tpay muliwu &#241;umtrcheech\n  "<ul>"\n    "<li>Aplicaci&#243;n hal mjaab sal mtrchech</li>"\n    "<li>Sal kch&#341;meech paa mtket( o janmiwuham mnyam baam mchii)</li>"\n    "<li>M&#341;mar chapayt muji&#241; hikyaaw cookies ee kur chkjkeech ee ch&#341;meech sal amchu</li>"\n  "</ul></p><p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ha Mozilla hay uchpach. Chawiwchuha inernet krryeey paa ee hi kyawa.<br/><a href="%2$s">Ch&#341;poraab</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Jabchu tpaay ŕbokjanchu</string>
   <string name="preference_privacy_and_security_summary">Kabwik chŕmeechu, cookies ee tñurya</string>
   <string name="preference_search_summary">Bu januliwu chiich, yemik maat chulwiyu</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Sal amchu jabch tpaay al chpaa?</string>
   <string name="download_snackbar_finished">%1$s byir</string>
   <string name="download_snackbar_open">Sol</string>
-  <string name="download_dialog_warning"><![CDATA["Tñur unalch hay "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">kos pokchyutema</b>" %1$s hal chkjkech ha."]]></string>
-  <string name="download_dialog_title">Tñur unal</string>
-  <string name="download_dialog_action_cancel">Tubspach</string>
-  <string name="download_dialog_action_download">Unaalch</string>
-  <string name="errorpage_title">Jachuyal jabch hay upar</string>
-  <string name="errorpage_refresh">Tkweek wiyi</string>
-  <string name="error_connectionfailure_title">Kos tublich kyaaw yutem</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Wchuhay baam kos soltem kwak o trchech kwiil kwaak. Mtkweek mwiyik joot irabum.</li>"\n        "<li>T&#241;ur &#341;mmechu &#341;itulim kos mjukewu kyaaw yutemum yuso, daat dispositiiv ikooch mwihal m&#180;uu o Wi-Fi tublich chuhal m\'uya.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Tublich chu hay kur bwiiru</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Paa kubtaar kos chyawtem</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Mt&#241;ur ch&#180;chamchu t&#241;ur kwimchuhal yok yabyuka:\n    "<strong>ww</strong>".example.com yabyutemka\n    "<strong>www</strong>.example.com</li>"\n    "<li>Kos t&#241;ur uch&#250; mjukewkyaw myutem myus, tublich chi Wi-Fi dispositiiv chpach chu mwiha.</li>\n</ul>]]></string>
-  <string name="error_malformedURI_title">Jabchu kos buyutem</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"T&#241;uur kwimchu Web ha pichtem yabyu t&#241;urb "<strong>http://www.example.com/</strong></li>"\n  "<li>"M\'uhmajanuk trchech chu &#241;um mtrech mwahay oblicua yuwu (o yabyuya "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Chyakuhay kos nyaamuham blwiytemka</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ch wupar yak yoyay chu pichtem cookies ha yu &#341;\' amchum sakyawyume.</li></ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Chyakuhay kos eebteem</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Yakuya smolhikyawa ch trchechu jkaay msol ya&#341;aalka.</li></ul>]]></string>
-  <string name="error_sslhandshake_title">Tublich chu kajanhay wupar</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ya Chajanchu paa kubtarha aay kos jantem me, o &#241;ika aay paa kubtarha uchpach kabyuya.</li>"\n  "<li>Kur raab paa kubtaar yal mchpaachum w&#180;&#341;itum myuso, ch&#180;chamchu yay ka&#341;itl kjkee &#241;ubyumyus mtkweek mwiyik.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ups</string>
-  <string name="error_generic_message">Ñukweek aaw namaan tñur ŕmrrchuya, kos jukeewchu yuu tem.</string>
-  <string name="contextmenu_open_in_app">Aplicación num msol</string>
-  <string name="contextmenu_link_share">Jabchu paa maat eecha</string>
-  <string name="contextmenu_link_copy">Tñur kwiimchu sak chpachu mtkweek mtñuri</string>
-  <string name="contextmenu_image_share">Tñurch paa eem</string>
-  <string name="contextmenu_image_copy">Tñur uchú hal mtkweek mtñuri</string>
-  <string name="contextmenu_image_save">Tñurch chgo</string>
-  <string name="contextmenu_open_in_new_tab">Tñur chmichu jkaayk msol</string>
-  <string name="contextmenu_image_warning"><![CDATA["Tñur chkwach hay ee maat emch hay "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">kos &#341;put tem a</b>" %1$s kur rabb mtñur kjkeech ha kos poktema."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Myeemik chumwiwuha ta mwiluk</string>
   <string name="firstrun_defaultbrowser_text2">Sal amchu ksool tpayha myaabraab mwaam. Cehapayt jkay knawchu ee jkay sal yak chumwiwu hal jaab wawchu t´t´orum kyakhal unuu tñur kwimch kajanha chmii chum.</string>
   <string name="firstrun_search_title">Myeemik, chmŕmeewu</string>
@@ -196,7 +196,7 @@
   <string name="tabs_tray_action_erase">Sal amchu mujiñ</string>
   <string name="download_firefox">Firefox munaal</string>
   <string name="your_rights_content1">%1$s software kos codig wiiytem solkyoha Mozilla ha ee jkay kubtar cyobchya.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s hay ch`chyaach yakyakyam ich um yak "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla ch`chyabch paa paytum wichum nyaamch</a>" ñwak jkay solrab kyom sam nyamik."]]></string>
+
   <string name="gv_prompt_username_hint">M´mulha myoka</string>
   <string name="gv_prompt_password_hint">Ŕ\' amu</string>
   <string name="gv_prompt_clear">Tkryee</string>
@@ -206,8 +206,8 @@
   <string name="find_in_page">Chŕmeechu myook</string>
   <string name="find_in_page_input">Chŕmeechu myook</string>
   <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="http_auth_dialog_username">M´mulha myoka</string>
-  <string name="http_auth_dialog_password">Ŕ\' amu</string>
+
+
   <string name="preference_performance_request_desktop_site">Trchechu mk\' kaab</string>
   <string name="custom_tab_copy_url_action">URL tñurch</string>
   <string name="preference_remote_debugging">Ñulyomuk tkryeechu USB/Wi-Fi nyaam</string>
@@ -222,9 +222,9 @@
   <string name="tab_crash_report_headline">Tuñur chmiichuhal trchech upaar um unuuch. Ñubyu kwal ibtem.</string>
   <string name="tab_crash_report_description">Ñul amchu kŕ´apchuwukyawa kos chapayt chwatem, sakyaaw kos tkweek chajaantem.</string>
   <string name="tab_crash_report_close_tab_button_label">Tñur chiichu ŕ´aap</string>
-  <string name="fatal_crash_report_title">Ñubyu kwak ibten. %1$s kos janum trcheechtem.</string>
-  <string name="fatal_crash_report_description">Ñul amchu kŕ´apchukyaawa kos chapayt kjkeech ñikakwaach sal amchu ha chkwaatem, ñwak kos chajantemi.</string>
-  <string name="fatal_crash_report_close_button_label">Ŕ´am</string>
-  <string name="fatal_crash_report_restart_firefox_label">Tkweek namaan %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Wuñparum Mozilla kwiim</string>
 </resources>

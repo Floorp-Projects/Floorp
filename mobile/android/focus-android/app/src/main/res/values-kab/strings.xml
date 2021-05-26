@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Sfeḍ &amp; Ldi</string>
   <string name="shortcut_erase_and_open_long_label">Sfeḍ sakin ldi %1$s</string>
   <string name="text_selection_search_action">Anadi uslig</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ad k-d-yefk afus ad teqqime&#7693; d aqe&#7771;&#7771;u.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Seqdec-it d iminig uslig:\n  "<ul>"\n    "<li>Nadi sakin snirem akken iwata deg usnas</li>"\n    "<li>Sew&#7717;el imesfu&#611;al (ne&#947; snifel i&#947;ewwa&#7771;en akken ad tsirge&#7693; imesfu&#947;al)</li>"\n    "<li>Sfe&#7693; inagan n tuqna akked amazray n tunigin d unadi</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s yesnulfa-t-id Mozilla. Tu&#947;da&#7789;-nne&#947; ad n&#7717;areb &#947;ef internet yeldin d tezmert-is.<br/>\n<a href="%2$s">Issin ugar</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">"Tabaḍnit  &amp; Taɣellist"</string>
   <string name="preference_privacy_and_security_summary">Aḍfaṛ, inagan n tuqqna, isefka yettwaleqḍen</string>
   <string name="preference_search_summary">Amsedday amezwer, tira tawurmant</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Ffeγ si tunigin tusligt?</string>
   <string name="download_snackbar_finished">%1$s yefuk</string>
   <string name="download_snackbar_open">Ldi</string>
-  <string name="download_dialog_warning"><![CDATA["Ifuyla i d_saliḍ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" ur k-ttru&#7717;un ara"</b>m\'ara ad tekseḍ amazray %1$s.]]></string>
-  <string name="download_dialog_title">Sider afaylu</string>
-  <string name="download_dialog_action_cancel">Sefsex</string>
-  <string name="download_dialog_action_download">Sider</string>
-  <string name="errorpage_title">Ugur deg usali n usebter</string>
-  <string name="errorpage_refresh">Σreḍ tikelt-nniḍen</string>
-  <string name="error_connectionfailure_title">Igguma ad iqqen</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Ahat asmel ulac-it akka tura ne&#947; &#947;ur-s tta&#603;ebga. &#931;re&#7693; tikelt-nni&#7693;en.</li>"\n        "<li>Ma yella ur tezmire&#7693; ara ad tinige&#7693; ar usmel, senqed tuqqna-ik n isefka n&#947; Wi-Fi n yibenk-ik.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Akud n tuqqna yezri</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Ulac aqeddac</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>"Senqed taseddast n tensa (tira n "<strong>ww</strong>".example.com deg um&#7693;iq n "<strong>www</strong>.example.com par exemple)&#160;;</li>\n<li>Ma yella ur tessaw&#7693;e&#7693; ara ad tinige&#7693; deg ismal, senqed tuqqna n isefka ne&#611; Wi-Fi n yibenk-ik.</li>\n</ul>" "]]></string>
-  <string name="error_malformedURI_title">Tansa mačči d tameγtut</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Tansiwin web ttwarunt am "<strong>http://www.example.com/</strong></li>"\n  "<li>"Wali ma yella tseqdace&#7693; amgal islacen (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Asebter ur yettuwelleh ara akken iwata</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tikwal ugur-agi itekk-d seg usensi ne&#947; tugwin n unqbal n inagan n tuqqna.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Ur nessin ara tansa</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Issefk ahat ad tesbedde&#7693; ase&#947;zan-nni&#7693;en akken ad d-ldi&#7693; tansa-agi.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Tuqqna taγelsant ur teddi ara</string>
-  <string name="error_sslhandshake_message"><![CDATA[" "<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>Ayagi yekka-d ahat seg ugur n twila n uqeddac ne&#947; amdan yetta&#603;ra&#7693;en ad yakker timagit n uqeddac.</li>"\n  "<li>Ma yella teqqne&#7693; yakan ar uqeddac-agi, ahat tucc&#7693;a d umatu kan, tzemre&#7693; ad t&#603;er&#7693;e&#7693; tikelt-nni&#7693;en ticki.</li></ul>]]></string>
-  <string name="error_generic_title">Ihuh</string>
-  <string name="error_generic_message">Ur nezmir ara ad d-nsali asebter-agi, ur neẓri ara acuγer.</string>
-  <string name="contextmenu_open_in_app">Ldi s usnas</string>
-  <string name="contextmenu_link_share">Bḍu aseγwen</string>
-  <string name="contextmenu_link_copy">Nγel tansa n useγwen</string>
-  <string name="contextmenu_image_share">Bḍu tugna</string>
-  <string name="contextmenu_image_copy">Nγel tansa n tugna</string>
-  <string name="contextmenu_image_save">Sekles tugna</string>
-  <string name="contextmenu_open_in_new_tab">Ldi aseɣwen deg iccer amaynut</string>
-  <string name="contextmenu_image_warning"><![CDATA[Tugniwin ittwaskelsen akked ittwabḍan<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"ur ttwaksent ara "</b>" m\'ara ad tekseḍ %1$samazray."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Rmed tabaḍnit inek</string>
   <string name="firstrun_defaultbrowser_text2">Iminig uslig ad yali deg uswir.Dayen ur tuγaleḍ ad twaliḍ adellel neγ imsfuγal i k-ṭṭafaren u saẓayen tulya n isemal web.</string>
   <string name="firstrun_search_title">Anadi-ik, abrid-ik</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Sfeḍ amazray n tunigin</string>
   <string name="download_firefox">Sider Firefox</string>
   <string name="your_rights_content1">"%1$s baṭṭel s waɣbalu yeldin ixeddem-it Mozilla d imettekiyen nniḍen. "</string>
-  <string name="your_rights_content2"><![CDATA[%1$s yella ddaw tiwtilin n<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Turagt tazayezt n Mozilla</a>akked turagt yeldin nniḍen.]]></string>
-  <string name="your_rights_content3"><![CDATA["UR k-netmudu ara ula d azref neγ  turagt ɣef ticṛaḍ yersen n Mozilla neɣ n wis kraḍ, am Mozilla neγ Firefox neγ ismawen %1$s akked iluguten. ugar n talγut ad t-tafeḍ di "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">dagi</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Tangalt taγbalut nniḍen i %1$s tella deg waṭas n tiγbula tilleliyen nniḍen  "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">akked turagt nni&#7693;en</a>.]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s iseqdac daγen tiggayen d tebdarin sγur Disconnect, Inc am leqdic illeli daw turagt tazirazt "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU v3</a>", aya "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">yella dagi</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Isem n useqdac</string>
   <string name="gv_prompt_password_hint">Awal uffir</string>
   <string name="gv_prompt_clear">Sfeḍ</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Af-d agmuḍ d-iteddun</string>
   <string name="accessibility_previous_result">af-d agmuḍ yezrin</string>
   <string name="accessibility_dismiss_find_in_page">Mdel anadi deg usebter</string>
-  <string name="http_auth_dialog_title">Yesra asesteb</string>
-  <string name="http_auth_dialog_username">Isem n useqdac</string>
-  <string name="http_auth_dialog_password">Awal uffir</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Suter asmel n tnarit</string>
   <string name="custom_tab_copy_url_action">Tansa URL tettwanγel</string>
   <string name="preference_advanced_summary">Ifecka n tneflit</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Nesḥasef. nesεa ugur akked iccer-agi.</string>
   <string name="tab_crash_report_description">Immi d iminig uslig, werǧin ad nsekles neɣ ad d-nner iccaren.</string>
   <string name="tab_crash_report_close_tab_button_label">Mdel Iccer</string>
-  <string name="fatal_crash_report_title">Nesḥasef. %1$s isεa ugur sakin yeɣli.</string>
-  <string name="fatal_crash_report_description">Immi d iminig uslig, werǧin ad nsekles neɣ ad d-nner tiɣimit-inek taneggarut.</string>
-  <string name="fatal_crash_report_close_button_label">Mdel</string>
-  <string name="fatal_crash_report_restart_firefox_label">Ales asenker n %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Azen aneqqis n uɣelluy i Mozilla</string>
 </resources>

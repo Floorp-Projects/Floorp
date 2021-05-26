@@ -26,7 +26,7 @@
   <string name="shortcut_erase_short_label">Pichsuña</string>
   <string name="shortcut_erase_long_label">Thaqhañ imatanak pichsuña</string>
   <string name="text_selection_search_action">Jiwasak thaqhaña</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s jumar u&#241;ja&#241;apatakiwa.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" Jumatakik thaqhtir ucht\'asim:\n  "<ul>"\n    "<li>Aka wakichawin kupixapan thaqtam</li>"\n    "<li>" Thaqtirinak jark\'antam(jan ukax uka taqhtirinak mayjt\'ayam)"</li>"\n    "<li>Uka yatiy&#228;winak thaqtir pichsum ukhamarak ukhamarak uka thaqtirinak thaqhatanaka</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozillaw wakicht\'i. Jach\'a jaya lura&#241; amtax wali suma taqinitak intirnit wakt\'aya&#241;awa.<br/>\n<a href="%2$s">Juk\'amp yati&#241;ataki</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Imantatäña ukatx jark\'atäña</string>
   <string name="preference_privacy_and_security_summary">Thaqhata, kukinaka, ukatx utjir ajllinaka</string>
   <string name="preference_search_summary">Pantjat imaña, justupach phuqhaña</string>
@@ -123,33 +123,33 @@
   <string name="external_multiple_apps_matched_exit">Uka maynitakik thaqhañat misxatati?</string>
   <string name="download_snackbar_finished">%1$s tukutawa</string>
   <string name="download_snackbar_open">Jist\'araña</string>
-  <string name="download_dialog_warning"><![CDATA["Uka apaqat luratanakax "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" janiw pichsutakaspati "</b>" kunawsatix pichsxataxa %1$s ukaniwa."]]></string>
-  <string name="download_dialog_title">Imatanak apaqaña</string>
-  <string name="download_dialog_action_cancel">Suyt\'ayaña</string>
-  <string name="download_dialog_action_download">Apaqaña</string>
-  <string name="errorpage_title">Uka llika janja phuqhañan jan walt\'awiw uñsti</string>
-  <string name="errorpage_refresh">Mayamp yant\'am</string>
-  <string name="error_connectionfailure_title">Janiw makhatañxamakiti</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>uka llika janjanakax m&#228; juk\'a pach jist\'antatawa. Mayamp ukhat yant\'ama. janitix jist\'ara&#241;jamaxchixa, uka jawsa&#241;aman u&#241;jam, ukhamarak Whiphi uchata.</li>"\n        "<li>If you are unable to load any pages, check your mobile device&#8217;s data or Wi-Fi connection.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Pachax tukusxiwa</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Tunux janiw katutakiti</string>
-  <string name="error_malformedURI_title">Janiw walikiti</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>Uka llika janjax ukham qillqata&#241;apawa<strong>http://www.example.com/</strong></li>" "<li>"um sum qillqatam u&#241;akit\'am (i.e. "<strong>/</strong>).</li></ul>]]></string>
-  <string name="error_redirectLoop_title">Aka llika janjax janiw chiqapakiti</string>
-  <string name="error_redirectLoop_message"><![CDATA[<li xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Akham jan walt\'awinakax janiw walt\'aykaspati ukhamarak yatiy&#228;winak u&#241;stayanisma</li>]]></string>
-  <string name="error_unsupportedprotocol_title">Uka llika janjax janiw amuyatakiti</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<li xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" Inas yaqha suftwar ucha&#241;ax wakischini. "</li>]]></string>
-  <string name="error_sslhandshake_title">Kunikshunaw jan walt\'awaykiti</string>
-  <string name="error_sslhandshake_message"><![CDATA[<li xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" Aka inas uka siriwiturat jan walta0wix jutchi, inas khiti uka wirituran jan walt\'aykaspati. "</li>" Jumatix pasirinx aka sirwiturar sum makhataskstaxa, uka jan walt\'awix juk\'apachakispawa, ukhamat qhipar yant\'ama. "]]></string>
-  <string name="error_generic_title">Uups</string>
-  <string name="error_generic_message">Janiw aka llika janjax phuqhachaskaspati</string>
-  <string name="contextmenu_link_share">Chhitthap ch\'iqiyaña</string>
-  <string name="contextmenu_link_copy">Llika janjar mantañakis uk waruqaña</string>
-  <string name="contextmenu_image_share">Jamuqanak ch\'iqiyaña</string>
-  <string name="contextmenu_image_copy">Jamuqan chiqañchirip waruqaña</string>
-  <string name="contextmenu_image_save">Jamuqanak imaña</string>
-  <string name="contextmenu_open_in_new_tab">Uka chhithapx machaqar jist\'araña</string>
-  <string name="contextmenu_image_warning"><![CDATA["Uka jamuqx imam "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ukat ch\'iqiyam janiw</b>" pichsuskaniti, %1$s kunawsatix apnaqatanakam pichxat ukhaxa."]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">jumankirikis uk ch\'amañcham</string>
   <string name="firstrun_defaultbrowser_text2">Uka juman thaqhatam yaqhar apam. Yatiyäwinak jark\'antam ukat yaqha utjirinak llika janjanakan jan jayarst\'añatal thaqtasmawa.</string>
   <string name="firstrun_search_title">Thaqhatam ukhamark jumankiri</string>
@@ -170,9 +170,9 @@
   <string name="tabs_tray_action_erase">Uka thaqhatanak pichsum</string>
   <string name="download_firefox">Firefox apaqaña</string>
   <string name="your_rights_content1">"%1$s Ukax inakiwa  ukhamarak uka Mozillan luratanak apaqt\'asim."</string>
-  <string name="your_rights_content2"><![CDATA["%1$s Ukax jumatakjam wakt\'ayatawa "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozillax taqinitakiwa</a>, ukhamarak yaqhanakasa.]]></string>
-  <string name="your_rights_content3"><![CDATA["Janiw kuna yäqayasiñamas iyawsatakiti ukhamarus Mozilla uka luririnak tuqisa ukhamarak yaqhasa. Firefox %1$s chimpunakas sutinakapasa. Yaqha yatiyäwinakas akawjanx "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">jikxatasirakispawa</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Yaqhanakax %1$s juk\'ampis akawjan inaskiwa, ukhamarak ukanakax "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">inakipuniwa</a>.]]></string>
+
+
+
   <string name="gv_prompt_username_hint">Suti (qillqayasita)</string>
   <string name="gv_prompt_password_hint">Chimpu</string>
   <string name="gv_prompt_clear">Pichsuña</string>
@@ -188,9 +188,9 @@
   <string name="accessibility_next_result">Ukxarukix uk jikxatam</string>
   <string name="accessibility_previous_result">Nayrir katjat jikxatam</string>
   <string name="accessibility_dismiss_find_in_page">Kutt\'añ thaqhañanxa</string>
-  <string name="http_auth_dialog_title">Uñacht\'ayasiñax wakiskiriwa</string>
-  <string name="http_auth_dialog_username">Suti (qillqayasita)</string>
-  <string name="http_auth_dialog_password">Chimpu</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Qhanankix uka llik mayiña</string>
   <string name="custom_tab_copy_url_action">URL waruqataxiwa</string>
 </resources>

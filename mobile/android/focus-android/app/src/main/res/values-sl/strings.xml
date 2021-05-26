@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Izbriši in odpri</string>
   <string name="shortcut_erase_and_open_long_label">Izbriši in odpri %1$s</string>
   <string name="text_selection_search_action">Iščite zasebno</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje nadzor v va&#353;e roke.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uporabljajte ga kot zaseben brskalnik:\n  "<ul>"\n    "<li>I&#353;&#269;ite in brskajte naravnost iz aplikacije</li>"\n    "<li>Zavra&#269;ajte sledilce (ali spremenite nastavitve zavra&#269;anja sledilcev)</li>"\n    "<li>Bri&#353;ite pi&#353;kotke ter zgodovino strani in iskanja</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s razvija Mozilla. Na&#353;e poslanstvo je spodbujati zdrav in odprt internet.<br/>\n<a href="%2$s">Ve&#269; o tem</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Zasebnost in varnost</string>
   <string name="preference_privacy_and_security_summary">Sledenje, piškotki, podatkovne možnosti</string>
   <string name="preference_search_summary">Nastavi kot privzeto, samodejno dopolni</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Končam zasebno brskanje?</string>
   <string name="download_snackbar_finished">Datoteka %1$s končana</string>
   <string name="download_snackbar_open">Odpri</string>
-  <string name="download_dialog_warning"><![CDATA["Ob izbrisu zgodovine %1$sa prenesene datoteke "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne bodo izbrisane</b>.]]></string>
-  <string name="download_dialog_title">Prenos datoteke</string>
-  <string name="download_dialog_action_cancel">Prekliči</string>
-  <string name="download_dialog_action_download">Prenesi</string>
-  <string name="errorpage_title">Napaka pri nalaganju strani</string>
-  <string name="errorpage_refresh">Poskusi znova</string>
-  <string name="error_connectionfailure_title">Povezave ni mogoče vzpostaviti</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Stran trenutno morda ni na voljo ali je preobremenjena. Poskusite znova &#269;ez nekaj trenutkov.</li>"\n        "<li>&#268;e ne morete nalo&#382;iti nobene strani, na napravi preverite povezavo z omre&#382;jem.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Povezava je potekla</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Strežnika ni mogoče najti</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Preverite naslov za tipkarske napake, na primer\n          "<strong>ww</strong>". example.com namesto\n          "<strong>www</strong>. example.com</li>"\n        "<li>&#268;e ne morete nalo&#382;iti nobene strani, na napravi preverite povezavo z omre&#382;jem.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Neveljaven naslov</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Spletne naslove se obi&#269;ajno pi&#353;e v obliki "<strong>http://www.example.com/</strong></li>"\n  "<li>"Prepri&#269;ajte se, da uporabljate po&#353;evnice naprej (t.j. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Stran se ne preusmerja pravilno</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>To te&#382;avo obi&#269;ajno povzro&#269;ajo onemogo&#269;eni ali zavrnjeni pi&#353;kotki.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Naslova ni bilo mogoče razumeti</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Za odpiranje tega naslova boste morda morali namestiti dodaten program.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Varna povezava ni uspela</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Te&#382;ava je morda v nastavitvah stre&#382;nika ali pa nekdo posku&#353;a\nta stre&#382;nik opona&#353;ati.</li>"\n  "<li>&#268;e ste se v preteklosti &#382;e uspe&#353;no povezali na ta stre&#382;nik, je morda\nnapaka za&#269;asna in lahko znova poskusite kasneje.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Ups</string>
-  <string name="error_generic_message">Iz neznanega razloga ne moremo naložiti strani.</string>
-  <string name="contextmenu_open_in_app">Odpri z aplikacijo</string>
-  <string name="contextmenu_link_share">Deli povezavo</string>
-  <string name="contextmenu_link_copy">Kopiraj naslov povezave</string>
-  <string name="contextmenu_image_share">Deli sliko</string>
-  <string name="contextmenu_image_copy">Kopiraj naslov slike</string>
-  <string name="contextmenu_image_save">Shrani sliko</string>
-  <string name="contextmenu_open_in_new_tab">Odpri povezavo v novem zavihku</string>
-  <string name="contextmenu_image_warning"><![CDATA["Ob izbrisu zgodovine %1$sa shranjene in deljene slike "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne bodo izbrisane</b>.]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Okrepite svojo zasebnost</string>
   <string name="firstrun_defaultbrowser_text2">Zasebno brskanje na višjem nivoju. Zavračajte oglase in drugo vsebino, ki vam lahko sledi prek strani, in pohitrite svoje brskanje.</string>
   <string name="firstrun_search_title">Vaše iskanje, na vaš način</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Počisti zgodovino brskanja</string>
   <string name="download_firefox">Prenesite Firefox</string>
   <string name="your_rights_content1">%1$s je brezplačna in odprtokodna programska oprema, ki jo razvija Mozilla in ostali sodelavci.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s vam je na voljo pod pogoji "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" in drugih odprtokodnih licenc."]]></string>
-  <string name="your_rights_content3"><![CDATA["Nikakršne pravice niti licence nimate za uporabo blagovnih znamk Fundacije Mozilla ali kateregakoli od izdelkov, vključno z imeni in logotipi Mozille, Firefoxa ali %1$sa. Dodatne informacije lahko najdete "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tukaj</a>.]]></string>
-  <string name="your_rights_content4"><![CDATA["Dodatna izvorna koda za %1$s je na voljo pod raznimi drugimi prostimi in odprtokodnimi "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencami</a>.]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s uporablja tudi sezname za zavračanje podjetja Disconnect Inc. kot ločena in neodvisna dela, ki so na voljo pod licenco "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tukaj</a>.]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">Uporabniško ime</string>
   <string name="gv_prompt_password_hint">Geslo</string>
   <string name="gv_prompt_clear">Počisti</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Najdi naslednji zadetek</string>
   <string name="accessibility_previous_result">Najdi prejšnji zadetek</string>
   <string name="accessibility_dismiss_find_in_page">Končaj iskanje na strani</string>
-  <string name="http_auth_dialog_title">Zahtevana je overitev</string>
-  <string name="http_auth_dialog_username">Uporabniško ime</string>
-  <string name="http_auth_dialog_password">Geslo</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Zahtevaj stran za namizja</string>
   <string name="custom_tab_copy_url_action">Spletni naslov kopiran</string>
   <string name="preference_advanced_summary">Orodja za razvijalce</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Oprostite. S tem zavihkom imamo težavo.</string>
   <string name="tab_crash_report_description">Kot zaseben brskalnik nikoli ne shranimo vaših zavihkov in ga ne moremo obnoviti.</string>
   <string name="tab_crash_report_close_tab_button_label">Zapri zavihek</string>
-  <string name="fatal_crash_report_title">Oprostite. %1$s je naletel na težavo in se sesul.</string>
-  <string name="fatal_crash_report_description">Kot zaseben brskalnik nikoli ne shranimo vaše seje in je ne moremo obnoviti.</string>
-  <string name="fatal_crash_report_close_button_label">Zapri</string>
-  <string name="fatal_crash_report_restart_firefox_label">Ponovno zaženi %1$s</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Pošlji poročilo o sesutju Mozilli</string>
 </resources>

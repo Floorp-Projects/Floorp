@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">ਮਿਟਾਓ ਤੇ ਖੋਲ੍ਹੋ</string>
   <string name="shortcut_erase_and_open_long_label">ਮਿਟਾਓ ਅਤੇ %1$s ਖੋਲ੍ਹੋ</string>
   <string name="text_selection_search_action">ਨਿੱਜੀ ਤੌਰ \'ਤੇ ਖੋਜੋ</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2596;&#2625;&#2617;&#2622;&#2593;&#2631; &#2581;&#2622;&#2604;&#2626; &#2617;&#2631;&#2592; &#2581;&#2608;&#2600; &#2610;&#2568; &#2596;&#2625;&#2622;&#2617;&#2600;&#2626;&#2672; &#2607;&#2635;&#2583; &#2581;&#2608;&#2598;&#2622; &#2617;&#2632;&#2404;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#2567;&#2616; &#2600;&#2626;&#2672; &#2600;&#2623;&#2673;&#2588;&#2624; &#2604;&#2608;&#2622;&#2570;&#2588;&#2620;&#2608; &#2598;&#2624; &#2596;&#2608;&#2637;&#2617;&#2622;&#2562; &#2613;&#2608;&#2596;&#2635;:\n  "<ul>"\n    "<li>&#2616;&#2623;&#2673;&#2599;&#2622; &#2576;&#2602; &#2613;&#2623;&#2673;&#2586;&#2635;&#2562; &#2617;&#2624; &#2610;&#2673;&#2605;&#2635; &#2596;&#2631; &#2604;&#2608;&#2622;&#2570;&#2588;&#2620; &#2581;&#2608;&#2635;</li>"\n    "<li>&#2602;&#2632;&#2652;&#2637;&#2617; &#2600;&#2673;&#2602;&#2595; &#2613;&#2622;&#2610;&#2623;&#2566;&#2562; &#2596;&#2631; &#2602;&#2622;&#2604;&#2672;&#2598;&#2624; &#2610;&#2622;&#2569; (&#2588;&#2622;&#2562; &#2602;&#2632;&#2652;&#2637;&#2617; &#2600;&#2673;&#2602;&#2595; &#2613;&#2622;&#2610;&#2623;&#2566;&#2562; &#2600;&#2626;&#2672; &#2606;&#2600;&#2588;&#2626;&#2608;&#2624; &#2598;&#2631;&#2595; &#2610;&#2568; &#2616;&#2632;&#2591;&#2623;&#2672;&#2583;&#2622;&#2562; &#2604;&#2598;&#2610;&#2635;)</li>"\n    "<li>&#2581;&#2625;&#2581;&#2624;&#2588;&#2620; &#2598;&#2631; &#2600;&#2622;&#2610; &#2600;&#2622;&#2610; &#2610;&#2673;&#2605;&#2631; &#2583;&#2575; &#2565;&#2596;&#2631; &#2604;&#2608;&#2622;&#2570;&#2588;&#2620; &#2581;&#2624;&#2596;&#2631; &#2583;&#2623;&#2566;&#2562; &#2600;&#2626;&#2672; &#2613;&#2624; &#2606;&#2623;&#2591;&#2622;&#2569;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2600;&#2626;&#2672; &#2606;&#2636;&#2588;&#2620;&#2623;&#2610;&#2622; &#2613;&#2673;&#2610;&#2635;&#2562; &#2604;&#2595;&#2622;&#2567;&#2566; &#2583;&#2623;&#2566; &#2617;&#2632;&#2404; &#2616;&#2622;&#2593;&#2622; &#2591;&#2624;&#2586;&#2622; &#2567;&#2673;&#2581; &#2616;&#2623;&#2617;&#2596;&#2606;&#2672;&#2598; &#2565;&#2596;&#2631; &#2582;&#2625;&#2673;&#2610;&#2637;&#2617;&#2631; &#2593;&#2625;&#2673;&#2610;&#2637;&#2617;&#2631; &#2567;&#2672;&#2591;&#2608;&#2600;&#2632;&#2673;&#2591; &#2600;&#2626;&#2672; &#2613;&#2599;&#2622;&#2569;&#2595;&#2622; &#2617;&#2632;&#2404;<br/>\n<a href="%2$s">&#2617;&#2635;&#2608; &#2616;&#2623;&#2673;&#2582;&#2635;</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">ਨਿੱਜੀ ਤੇ ਸੁਰੱਖਿਆ</string>
   <string name="preference_privacy_and_security_summary">ਟਰੈਕਿੰਗ, ਕੂਕੀਜ਼, ਡਾਟਾ ਚੋਣਾਂ</string>
   <string name="preference_search_summary">ਮੂਲ ਸੈੱਟ ਕਰੋ, ਆਪੇ-ਪੂਰਨ ਕਰੋ</string>
@@ -147,29 +147,29 @@
   <string name="external_multiple_apps_matched_exit">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਤੋਂ ਬਾਹਰ ਨਿਕਲਣਾ ਹੈ?</string>
   <string name="download_snackbar_finished">%1$s ਮੁਕੰਮਲ</string>
   <string name="download_snackbar_open">ਖੋਲ੍ਹੋ</string>
-  <string name="download_dialog_warning"><![CDATA["ਡਾਊਨਲੋਡ ਕੀਤੀਆਂ ਫਾਈਲਾਂ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#2606;&#2623;&#2591;&#2622; &#2598;&#2623;&#2673;&#2596;&#2624;&#2566;&#2562; &#2588;&#2622;&#2595;&#2583;&#2624;&#2566;&#2562; "</b>" ਜਦੋਂ ਤੁਸੀਂ %1$s ਇਤਿਹਾਸ ਨੂੰ ਮਿਟਾਉਂਦੇ ਹੋ।"]]></string>
-  <string name="download_dialog_title">ਫਾਈਲ ਡਾਊਨਲੋਡ ਕੀਤੀ</string>
-  <string name="download_dialog_action_cancel">ਰੱਦ ਕਰੋ</string>
-  <string name="download_dialog_action_download">ਡਾਊਨਲੋਡ</string>
-  <string name="errorpage_title">ਸਫ਼ਾ ਲੋਡ ਕਰਨ ਦੌਰਾਨ ਸਮੱਸਿਆ</string>
-  <string name="errorpage_refresh">ਫੇਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
-  <string name="error_connectionfailure_title">ਕੁਨੈਕਟ ਕਰਨ ਲਈ ਅਸਮਰੱਥ</string>
-  <string name="error_timeout_title">ਕੁਨੈਕਸ਼ਨ ਲਈ ਸਮਾਂ ਸਮਾਪਤ</string>
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">ਸਰਵਰ ਨਹੀਂ ਲੱਭਿਆ</string>
-  <string name="error_malformedURI_title">ਐਡਰੈੱਸ ਠੀਕ ਨਹੀਂ ਹੈ</string>
-  <string name="error_redirectLoop_title">ਸਫ਼ਾ ਠੀਕ ਤਰ੍ਹਾਂ ਰੀ-ਡਾਇਰੈਕਟ ਨਹੀਂ ਕੀਤਾ ਗਿਆ ਹੈ</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n "<li>&#2567;&#2617; &#2616;&#2606;&#2673;&#2616;&#2623;&#2566; &#2581;&#2625;&#2589; &#2613;&#2622;&#2608; &#2581;&#2626;&#2581;&#2624;&#2588;&#2620; &#2600;&#2626;&#2672; &#2566;&#2607;&#2635;&#2583; &#2581;&#2608;&#2600; &#2588;&#2622;&#2562; &#2610;&#2632;&#2595; &#2596;&#2635;&#2562; &#2567;&#2600;&#2581;&#2622;&#2608; &#2581;&#2608;&#2581;&#2631; &#2566; &#2616;&#2581;&#2598;&#2624; &#2617;&#2632;&#2404;</li>\n</ul>\n]]></string>
-  <string name="error_unsupportedprotocol_title">ਐਡਰੈਸ ਦੀ ਸਮਝ ਨਹੀਂ ਆਈ</string>
-  <string name="error_sslhandshake_title">ਸੁਰੱਖਿਅਤ ਕੁਨੈਕਸ਼ਨ ਫੇਲ੍ਹ ਹੋਇਆ</string>
-  <string name="error_generic_title">ਓ ਹੋ</string>
-  <string name="error_generic_message">ਅਸੀਂ ਕੁਝ ਕਾਰਣਾਂ ਲਈ ਇਸ ਸਫੇ ਨੂੰ ਲੋਡ ਨਹੀਂ ਕਰ ਸਕਦੇ।</string>
-  <string name="contextmenu_open_in_app">ਐਪ ਨਾਲ ਖੋਲ੍ਹੋ</string>
-  <string name="contextmenu_link_share">ਲਿੰਕ ਸਾਂਝਾ ਕਰੋ</string>
-  <string name="contextmenu_link_copy">ਲਿੰਕ ਦੇ ਐਡਰੈਸ ਨੂੰ ਕਾਪੀ ਕਰੋ</string>
-  <string name="contextmenu_image_share">ਚਿੱਤਰ ਸਾਂਝਾ ਕਰੋ</string>
-  <string name="contextmenu_image_copy">ਚਿੱਤਰ ਦਾ ਪਤਾ ਕਾਪੀ ਕਰੋ</string>
-  <string name="contextmenu_image_save">ਚਿੱਤਰ ਨੂੰ ਸੰਭਾਲੋ</string>
-  <string name="contextmenu_open_in_new_tab">ਨਵੀਂ ਟੈਬ ਚ ਖੋਲ੍ਹੋ</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">ਆਪਣੀ ਪਰਦੇਦਾਰੀ ਨੂੰ ਕੰਟਰੋਲ ਕਰੋ</string>
   <string name="firstrun_defaultbrowser_text2">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਨੂੰ ਅਗਲੇ ਪੱਧਰ ਤੇ ਲੈ ਜਾਓ। ਇਸ਼ਤਿਹਾਰ ਅਤੇ ਹੋਰ ਸਮੱਗਰੀ, ਜੋ ਕਿ ਤੁਹਾਨੂੰ ਸਾਈਟਾਂ ਉੱਤੇ ਟਰੈਕ ਕਰ ਅਤੇ ਸਫ਼ਾ ਲੋਡ ਕਰਨ ਨੂੰ ਹੌਲੀ ਕਰ ਸਕਦੀ ਹੈ, ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਓ।</string>
   <string name="firstrun_search_title">ਤੁਹਾਡੀ ਖੋਜ, ਤੁਹਾਡਾ ਢੰਗ</string>
@@ -188,7 +188,7 @@
   <string name="tabs_tray_action_erase">ਬਰਾਊਜ਼ ਕਰਨ ਦਾ ਅਤੀਤ ਮਿਟਾਓ</string>
   <string name="download_firefox">ਫਾਇਰਫਾਕਸ ਡਾਊਨਲੋਡ ਕਰੋ</string>
   <string name="your_rights_content1">ਮੋਜ਼ੀਲਾ ਅਤੇ ਹੋਰ ਯੋਗਦਾਨੀਆਂ ਦੁਆਰਾ ਬਣਾਏ ਗਏ %1$s ਮੁਫ਼ਤ ਅਤੇ ਓਪਨ ਸੋਰਸ ਸਾਫਟਵੇਅਰ ਹੈ।</string>
-  <string name="your_rights_content2"><![CDATA["%1$s ਤੁਹਾਨੂੰ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2606;&#2636;&#2588;&#2620;&#2624;&#2610;&#2622; &#2588;&#2600;&#2596;&#2581; &#2610;&#2616;&#2672;&#2616;</a>" ਅਤੇ ਹੋਰ ਖੁੱਲ੍ਹੇ ਵਸੀਲਿਆਂ ਦੇ ਲਸੰਸਾਂ ਦੀਆਂ ਸ਼ਰਤਾਂ ਹੇਠ ਮੁਹੱਈਆ ਕਰਵਾਇਆ ਗਿਆ ਹੈ।"]]></string>
+
   <string name="gv_prompt_username_hint">ਵਰਤੋਂਕਾਰ-ਨਾਂ</string>
   <string name="gv_prompt_password_hint">ਪਾਸਵਰਡ</string>
   <string name="gv_prompt_clear">ਸਾਫ ਕਰੋ</string>
@@ -204,9 +204,9 @@
   <string name="accessibility_next_result">ਅਗਲਾ ਨਤੀਜਾ ਲੱਭੋ</string>
   <string name="accessibility_previous_result">ਪਿਛਲਾ ਨਤੀਜਾ ਲੱਭੋ</string>
   <string name="accessibility_dismiss_find_in_page">ਸਫ਼ੇ ਵਿੱਚ ਲੱਭਣ ਨੂੰ ਖਾਰਜ ਕਰੋ</string>
-  <string name="http_auth_dialog_title">ਪ੍ਰਮਾਣਿਕਤਾ ਲੋੜੀਂਦੀ ਹੈ</string>
-  <string name="http_auth_dialog_username">ਵਰਤੋਂਕਾਰ-ਨਾਂ</string>
-  <string name="http_auth_dialog_password">ਪਾਸਵਰਡ</string>
+
+
+
   <string name="preference_performance_request_desktop_site">ਡੈਸਕਟਾਪ ਸਾਈਟ ਦੀ ਮੰਗ</string>
   <string name="custom_tab_copy_url_action">URL ਕਾਪੀ ਕੀਤਾ</string>
   <string name="preference_advanced_summary">ਡਿਵੈਲਪਰ ਟੂਲ</string>
@@ -240,9 +240,9 @@
   <string name="tab_crash_report_headline">ਅਫ਼ਸੋਸ। ਸਾਨੂੰ ਇਸ ਟੈਬ ਨਾਲ ਸਮੱਸਿਆ ਆ ਰਹੀ ਹੈ।</string>
   <string name="tab_crash_report_description">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਰ ਵਜੋਂ, ਅਸੀਂ ਇਸ ਟੈਬ ਲਈ ਕੁਝ ਨਹੀਂ ਸੰਭਾਲਿਆ ਅਤੇ ਬਹਾਲ ਨਹੀਂ ਕਰ ਸਕਦੇ ਹਾਂ।</string>
   <string name="tab_crash_report_close_tab_button_label">ਟੈਬ ਬੰਦ ਕਰੋ</string>
-  <string name="fatal_crash_report_title">ਅਫ਼ਸੋਸ। %1$s ਨੂੰ ਸਮੱਸਿਆ ਆਈ ਅਤੇ ਨਸ਼ਟ ਹੋ ਗਈ।</string>
-  <string name="fatal_crash_report_description">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਰ ਨਾਲ ਅਸੀਂ ਤੁਹਾਡੇ ਪਿਛਲੇ ਬਰਾਊਜ਼ ਕਰਨ ਵਾਲੇ ਸ਼ੈਸ਼ਨ ਨੂੰ ਕਦੇ ਵੀ ਸੰਭਾਲਦੇ ਨਹੀਂ ਹਾਂ ਅਤੇ ਬਹਾਲ ਨਹੀਂ ਕਰ ਸਕਦੇ।</string>
-  <string name="fatal_crash_report_close_button_label">ਬੰਦ ਕਰੋ</string>
-  <string name="fatal_crash_report_restart_firefox_label">%1$s ਮੁੜ-ਚਾਲੂ ਕਰੋ</string>
+
+
+
+
   <string name="crash_report_send_crash_label">ਨਸ਼ਟ ਹੋਣ ਰਿਪੋਰਟਾਂ ਮੋਜ਼ੀਲਾ ਨੂੰ ਭੇਜੋ</string>
 </resources>

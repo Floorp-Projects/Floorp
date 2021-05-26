@@ -32,7 +32,7 @@
   <string name="shortcut_erase_and_open_short_label">Poz və Aç</string>
   <string name="shortcut_erase_and_open_long_label">Poz və %1$s tətbiqini aç</string>
   <string name="text_selection_search_action">Məxfi Axtar</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s sizi idar&#601;nin ba&#351;&#305;na qoyur</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bunu m&#601;xfi s&#601;yyah olaraq i&#351;l&#601;din:\n  "<ul>"\n    "<li>Birba&#351;a t&#601;tbiqd&#601; axtar&#305;n v&#601; g&#601;zin</li>"\n    "<li>&#304;zl&#601;yicil&#601;ri &#601;ng&#601;ll&#601;yin (v&#601; ya t&#601;nziml&#601;m&#601;d&#601;n icaz&#601; verin)</li>"\n    "<li>&#199;&#601;r&#601;zl&#601;ri, axtar&#305;&#351; v&#601; g&#601;zm&#601; tarix&#231;&#601;sini silm&#601;k &#252;&#231;&#252;n pozun</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s q&#252;rurla Mozilla t&#601;r&#601;find&#601;n. Missiyam&#305;z sa&#287;lam v&#601; a&#231;&#305;q interneti t&#601;min etm&#601;kdir.<br/>\n<a href="%2$s">&#399;trafl&#305; &#246;yr&#601;n</a></p>]]></string>
+
   <string name="preference_privacy_and_security_header">Məxfilik və Təhlükəsizlik</string>
   <string name="preference_privacy_and_security_summary">İzlənmə, çərəzlər, məlumat seçimləri</string>
   <string name="preference_search_summary">Əsas olaraq qur, avto tamamlama</string>
@@ -147,35 +147,35 @@
   <string name="external_multiple_apps_matched_exit">Məxfi Səyahətdən çıxırsın?</string>
   <string name="download_snackbar_finished">%1$s endirildi</string>
   <string name="download_snackbar_open">Aç</string>
-  <string name="download_dialog_warning"><![CDATA["Endirilən fayllar %1$s tarixçəsini pozduqda belə "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinm&#601;y&#601;c&#601;kl&#601;r</b>.]]></string>
-  <string name="download_dialog_title">Fay Endir</string>
-  <string name="download_dialog_action_cancel">Ləğv et</string>
-  <string name="download_dialog_action_download">Endir</string>
-  <string name="errorpage_title">Səhifəni yükləmək mümkün olmadı</string>
-  <string name="errorpage_refresh">Təkrar Yoxla</string>
-  <string name="error_connectionfailure_title">Qoşulmaq mümkün olmadı</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sayt m&#252;v&#601;qq&#601;ti olaraq &#601;l&#231;atmaz v&#601; ya &#231;ox m&#601;&#351;&#287;ul ola bil&#601;r. Biraz sonra t&#601;krar yoxlay&#305;n.</li>"\n        "<li>&#399;g&#601;r he&#231; bir s&#601;hif&#601;ni y&#252;kl&#601;y&#601; bilmirsizs&#601;, mobil cihaz&#305;n&#305;z&#305;n internet datas&#305;n&#305; v&#601; ya Wi-Fi ba&#287;lant&#305;s&#305;n&#305; yoxlay&#305;n.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">Qoşulma müddəti bitdi</string>
+
+
+
+
+
+
+
+
+
   <string name="error_hostLookup_title">Server tapılmadı</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"&#220;nvan&#305; "<strong>www</strong>".example.com\n          yerin&#601; "<strong>ww</strong>".example.com kimi\n          yazma x&#601;talar&#305; &#252;&#231;&#252;n t&#601;krar yaxlay&#305;n"</li>"\n        "<li>&#399;g&#601;r he&#231; bir sayt&#305; y&#252;kl&#601;y&#601; bilmirsizs&#601;, cihaz&#305;n&#305;z&#305;n data v&#601; ya Wi-Fi ba&#287;lant&#305;s&#305;n&#305; yoxlay&#305;n.</li>"\n      "</ul>]]></string>
-  <string name="error_malformedURI_title">Ünvan səhvdir</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Sayt &#252;nvanlar&#305; &#601;sas&#601;n "<strong>http://www.example.com/</strong>" kimi yaz&#305;l&#305;rlar."</li>"\n  "<li>"&#399;yri k&#601;sm&#601; i&#351;ar&#601;sind&#601;n (yani "<strong>/</strong>) istifad&#601; etdiyinizd&#601;n &#601;min olun.</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">Səhifə düzgün yönləndirilmir</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Bu problem &#231;ox vaxt &#231;&#601;r&#601;zl&#601;ri qapatmaqdan v&#601; ya q&#601;bul etm&#601;yi l&#601;&#287;v etm&#601;kd&#601;n olur.</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">Ünvan başa düşülmədi</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Bu &#252;nvan&#305; a&#231;maq &#252;&#231;&#252;n ba&#351;qa bir t&#601;tbiq qurman&#305;za ehtiyyac ola bil&#601;r.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Təhlükəsiz bağlantı qurulmadı</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Bu serverin konfiqurasiyas&#305; il&#601; v&#601; ya biril&#601;rinin server&#601; h&#252;c&#252;m etm&#601;si il&#601; ba&#287;l&#305; ola bil&#601;r.</li>"\n  "<li>&#399;g&#601;r daha sonra bu server&#601; u&#287;urlu ba&#287;lana bilmi&#351;dinizs&#601;, bu x&#601;ta m&#252;v&#601;qq&#601;ti ola bil&#601;r v&#601; daha sonra t&#601;krar yoxlaya bil&#601;rsiz.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Uups</string>
-  <string name="error_generic_message">Bəzi səbəblərdən bu səhifəni yükləyə bilmirik.</string>
-  <string name="contextmenu_open_in_app">Tətbiq ilə aç</string>
-  <string name="contextmenu_link_share">Keçidi paylaş</string>
-  <string name="contextmenu_link_copy">Keçid ünvanını köçür</string>
-  <string name="contextmenu_image_share">Şəkli paylaş</string>
-  <string name="contextmenu_image_copy">Şəkil ünvanını köçür</string>
-  <string name="contextmenu_image_save">Şəkli saxla</string>
-  <string name="contextmenu_open_in_new_tab">Keçidi yeni vərəqdə aç</string>
-  <string name="contextmenu_image_warning"><![CDATA["Saxlanılan və paylaşılan şəkillər %1$s tarixini pozduqda "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinm&#601;y&#601;c&#601;kl&#601;r</b>.]]></string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <string name="firstrun_defaultbrowser_title">Məxfiliyinizi gücləndirin</string>
   <string name="firstrun_defaultbrowser_text2">Məxfi səyahəti fərqli səviyyəyə götürün. Saytlar üzərindən sizə izləyə biləcək reklam və digər məzmunları bloklayın və yüklənmə sürətini artırın.</string>
   <string name="firstrun_search_title">Sizin axtarış, sizin qaydalar</string>
@@ -196,10 +196,10 @@
   <string name="tabs_tray_action_erase">Səyahət keçmişini poz</string>
   <string name="download_firefox">Firefox Endir</string>
   <string name="your_rights_content1">%1$s Mozilla və digər töhfəverənlər tərəfindən yaradılmış azad və açıq qaynaqlı proqramdır.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" və digər açıq qaynaq lisenziyalarının şərtləri ilə təqdim edilir."]]></string>
-  <string name="your_rights_content3"><![CDATA["Sizə Mozilla Fondunun və digər tərəflərin ticari markası olan Mozilla, Firefox və ya %1$s adları və loqoları üçün heç bir hüquq və ya lisenziya verilmir. Ətraflı məlumatı "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">buradan</a>" tapa bilərsiz."]]></string>
-  <string name="your_rights_content4"><![CDATA["%1$s üçün əlavə qaynaq kodu digər bir neçə azad və açıq qaynaq "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisenziyalar&#305;</a>" ilə mövcuddur."]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s həmçinin Disconnect Inc. tərəfindən təchiz edilən qara siyahını işlədir, hansı ki, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" ilə müstəqil tərtib edilir və "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">burada</a>" mövcuddur."]]></string>
+
+
+
+
   <string name="gv_prompt_username_hint">İstifadəçi adı</string>
   <string name="gv_prompt_password_hint">Parol</string>
   <string name="gv_prompt_clear">Təmizlə</string>
@@ -215,9 +215,9 @@
   <string name="accessibility_next_result">Sonrakı nəticəni tap</string>
   <string name="accessibility_previous_result">Əvvəlki nəticəni tap</string>
   <string name="accessibility_dismiss_find_in_page">Səhifədə axtarışı qapat</string>
-  <string name="http_auth_dialog_title">Təsdiqləmə tələb edilir</string>
-  <string name="http_auth_dialog_username">İstifadəçi adı</string>
-  <string name="http_auth_dialog_password">Parol</string>
+
+
+
   <string name="preference_performance_request_desktop_site">Masaüstü saytını istə</string>
   <string name="custom_tab_copy_url_action">URL köçürüldü</string>
   <string name="preference_advanced_summary">Tərtibatçı alətləri</string>
@@ -258,9 +258,9 @@
   <string name="tab_crash_report_headline">Üzr istəyirik. Bu vərəqlə əlaqədar problemimiz var.</string>
   <string name="tab_crash_report_description">Məxfi səyyah olaraq biz heç vaxt vərəqləri saxlamırıq və bu səbəbdən də bu vərəqi bərpa edə bilməyəcik.</string>
   <string name="tab_crash_report_close_tab_button_label">Vərəqi Qapat</string>
-  <string name="fatal_crash_report_title">Üzr istəyirik. %1$s səyyahında xəta oldu və çökdü.</string>
-  <string name="fatal_crash_report_description">Məxfi səyyah olaraq sessiyalarınızı saxlamırıq və bu səbəbdən də son səyahət sessiyanızı bərpa edə bilmirik.</string>
-  <string name="fatal_crash_report_close_button_label">Qapat</string>
-  <string name="fatal_crash_report_restart_firefox_label">%1$s səyyahını yenidən başlat</string>
+
+
+
+
   <string name="crash_report_send_crash_label">Çökmə hesabatını Mozillaya göndər</string>
 </resources>
