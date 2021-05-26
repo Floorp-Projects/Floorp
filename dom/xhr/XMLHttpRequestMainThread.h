@@ -275,8 +275,9 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
                     bool aAsync, const nsAString& aUsername,
                     const nsAString& aPassword, ErrorResult& aRv) override;
 
-  nsresult Open(const nsACString& aMethod, const nsACString& aUrl, bool aAsync,
-                const nsAString& aUsername, const nsAString& aPassword);
+  void Open(const nsACString& aMethod, const nsACString& aUrl, bool aAsync,
+            const nsAString& aUsername, const nsAString& aPassword,
+            ErrorResult& aRv);
 
   virtual void SetRequestHeader(const nsACString& aName,
                                 const nsACString& aValue,
