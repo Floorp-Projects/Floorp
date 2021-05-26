@@ -7191,8 +7191,13 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam) {
       SingleTouchData touchData(
           pInputs[i].dwID,                               // aIdentifier
           ScreenIntPoint::FromUnknownPoint(touchPoint),  // aScreenPoint
-          /* radius, if known */
-          pInputs[i].dwMask & TOUCHINPUTMASKF_CONTACTAREA
+          // The contact area info cannot be trusted even when
+          // TOUCHINPUTMASKF_CONTACTAREA is set when the input source is pen,
+          // which somehow violates the API docs. (bug 1710509) Ultimately the
+          // dwFlags check will become redundant since we want to migrate to
+          // WM_POINTER for pens. (bug 1707075)
+          (pInputs[i].dwMask & TOUCHINPUTMASKF_CONTACTAREA) &&
+                  !(pInputs[i].dwFlags & TOUCHEVENTF_PEN)
               ? ScreenSize(TOUCH_COORD_TO_PIXEL(pInputs[i].cxContact) / 2,
                            TOUCH_COORD_TO_PIXEL(pInputs[i].cyContact) / 2)
               : ScreenSize(1, 1),  // aRadius
