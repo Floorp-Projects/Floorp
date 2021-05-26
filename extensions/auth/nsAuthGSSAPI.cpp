@@ -324,14 +324,15 @@ void nsAuthGSSAPI::Shutdown() {
 NS_IMPL_ISUPPORTS(nsAuthGSSAPI, nsIAuthModule)
 
 NS_IMETHODIMP
-nsAuthGSSAPI::Init(const char* serviceName, uint32_t serviceFlags,
-                   const char16_t* domain, const char16_t* username,
-                   const char16_t* password) {
+nsAuthGSSAPI::Init(const nsACString& serviceName, uint32_t serviceFlags,
+                   const nsAString& domain, const nsAString& username,
+                   const nsAString& password) {
   // we don't expect to be passed any user credentials
-  NS_ASSERTION(!domain && !username && !password, "unexpected credentials");
+  NS_ASSERTION(domain.IsEmpty() && username.IsEmpty() && password.IsEmpty(),
+               "unexpected credentials");
 
   // it's critial that the caller supply a service name to be used
-  NS_ENSURE_TRUE(serviceName && *serviceName, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(!serviceName.IsEmpty(), NS_ERROR_INVALID_ARG);
 
   LOG(("entering nsAuthGSSAPI::Init()\n"));
 

@@ -43,8 +43,8 @@ NS_IMPL_ISUPPORTS(nsHttpBasicAuth, nsIHttpAuthenticator)
 
 NS_IMETHODIMP
 nsHttpBasicAuth::ChallengeReceived(nsIHttpAuthenticableChannel* authChannel,
-                                   const char* challenge, bool isProxyAuth,
-                                   nsISupports** sessionState,
+                                   const nsACString& challenge,
+                                   bool isProxyAuth, nsISupports** sessionState,
                                    nsISupports** continuationState,
                                    bool* identityInvalid) {
   // if challenged, then the username:password that was sent must
@@ -55,42 +55,40 @@ nsHttpBasicAuth::ChallengeReceived(nsIHttpAuthenticableChannel* authChannel,
 NS_IMETHODIMP
 nsHttpBasicAuth::GenerateCredentialsAsync(
     nsIHttpAuthenticableChannel* authChannel,
-    nsIHttpAuthenticatorCallback* aCallback, const char* challenge,
-    bool isProxyAuth, const char16_t* domain, const char16_t* username,
-    const char16_t* password, nsISupports* sessionState,
+    nsIHttpAuthenticatorCallback* aCallback, const nsACString& aChallenge,
+    bool isProxyAuth, const nsAString& domain, const nsAString& username,
+    const nsAString& password, nsISupports* sessionState,
     nsISupports* continuationState, nsICancelable** aCancellable) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpBasicAuth::GenerateCredentials(
-    nsIHttpAuthenticableChannel* authChannel, const char* challenge,
-    bool isProxyAuth, const char16_t* domain, const char16_t* user,
-    const char16_t* password, nsISupports** sessionState,
-    nsISupports** continuationState, uint32_t* aFlags, char** creds)
-
-{
-  LOG(("nsHttpBasicAuth::GenerateCredentials [challenge=%s]\n", challenge));
-
-  NS_ENSURE_ARG_POINTER(creds);
+    nsIHttpAuthenticableChannel* authChannel, const nsACString& aChallenge,
+    bool isProxyAuth, const nsAString& domain, const nsAString& user,
+    const nsAString& password, nsISupports** sessionState,
+    nsISupports** continuationState, uint32_t* aFlags, nsACString& creds) {
+  LOG(("nsHttpBasicAuth::GenerateCredentials [challenge=%s]\n",
+       aChallenge.BeginReading()));
 
   *aFlags = 0;
 
   // we only know how to deal with Basic auth for http.
-  bool isBasicAuth = !nsCRT::strncasecmp(challenge, "basic", 5);
+  bool isBasicAuth = StringBeginsWith(aChallenge, "basic"_ns,
+                                      nsCaseInsensitiveCStringComparator);
   NS_ENSURE_TRUE(isBasicAuth, NS_ERROR_UNEXPECTED);
 
   // we work with UTF-8 around here
   nsAutoCString userpass;
-  CopyUTF16toUTF8(mozilla::MakeStringSpan(user), userpass);
+  CopyUTF16toUTF8(user, userpass);
   userpass.Append(':');  // always send a ':' (see bug 129565)
-  AppendUTF16toUTF8(mozilla::MakeStringSpan(password), userpass);
+  AppendUTF16toUTF8(password, userpass);
 
   nsAutoCString authString{"Basic "_ns};
   nsresult rv = Base64EncodeAppend(userpass, authString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *creds = ToNewCString(authString);
+  creds = authString;
   return NS_OK;
 }
 
