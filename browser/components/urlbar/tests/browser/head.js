@@ -7,12 +7,8 @@
 
 "use strict";
 
-let sandbox;
-
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 XPCOMUtils.defineLazyModuleGetters(this, {
+  PromptTestUtils: "resource://testing-common/PromptTestUtils.jsm",
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
@@ -29,6 +25,24 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+  const { UrlbarTestUtils: module } = ChromeUtils.import(
+    "resource://testing-common/UrlbarTestUtils.jsm"
+  );
+  module.init(this);
+  return module;
+});
+
+XPCOMUtils.defineLazyGetter(this, "SearchTestUtils", () => {
+  const { SearchTestUtils: module } = ChromeUtils.import(
+    "resource://testing-common/SearchTestUtils.jsm"
+  );
+  module.init(this);
+  return module;
+});
+
+let sandbox;
 
 /* import-globals-from head-common.js */
 Services.scriptloader.loadSubScript(
