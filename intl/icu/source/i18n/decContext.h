@@ -61,7 +61,9 @@
 /* #include <stdint.h>   */         /* C99 standard integers           */
   #endif
   #include <stdio.h>               /* for printf, etc.                */
+#ifndef __wasi__
   #include <signal.h>              /* for traps                       */
+#endif
 
   /* Extended flags setting -- set this to 0 to use only IEEE flags   */
   #if !defined(DECEXTFLAG)

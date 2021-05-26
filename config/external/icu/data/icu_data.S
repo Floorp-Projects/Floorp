@@ -13,12 +13,17 @@
 #endif
 
 .global ICU_DATA_SYMBOL
-#ifdef __APPLE__
+#if defined(__APPLE__)
 .data
 .const
+#elif defined(__wasi__)
+.section .rodata,"",@
 #else
 .section .rodata
 #endif
 .balign 16
 ICU_DATA_SYMBOL:
-    .incbin ICU_DATA_FILE
+.incbin ICU_DATA_FILE
+#ifdef __wasi__
+.size ICU_DATA_SYMBOL, . - ICU_DATA_SYMBOL
+#endif
