@@ -299,6 +299,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void UpdateSessionStoreSessionStorage(const std::function<void()>& aDone);
 
+  static void UpdateSessionStoreForStorage(uint64_t aBrowsingContextId);
+
   // Called when a BrowserParent for this BrowsingContext has been fully
   // destroyed (i.e. `ActorDestroy` was called).
   void BrowserParentDestroyed(BrowserParent* aBrowserParent,

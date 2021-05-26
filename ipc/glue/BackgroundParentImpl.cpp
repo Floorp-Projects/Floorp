@@ -1142,6 +1142,7 @@ BackgroundParentImpl::RecvRemoveBackgroundSessionStorageManager(
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvGetSessionStorageManagerData(
     const uint64_t& aTopContextId, const uint32_t& aSizeLimit,
+    const bool& aCancelSessionStoreTimer,
     GetSessionStorageManagerDataResolver&& aResolver) {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
@@ -1151,6 +1152,7 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvGetSessionStorageManagerData(
   }
 
   if (!mozilla::dom::RecvGetSessionStorageData(aTopContextId, aSizeLimit,
+                                               aCancelSessionStoreTimer,
                                                std::move(aResolver))) {
     return IPC_FAIL(this, "Couldn't get session storage data");
   }
