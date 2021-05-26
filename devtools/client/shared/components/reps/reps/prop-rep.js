@@ -24,6 +24,8 @@ define(function(require, exports, module) {
    * It's used to render object properties.
    */
   PropRep.propTypes = {
+    // Additional class to set on the key element
+    keyClassName: PropTypes.string,
     // Property name.
     name: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
     // Equal character rendered between property name and value.
@@ -51,9 +53,17 @@ define(function(require, exports, module) {
   function PropRep(props) {
     const Grip = require("devtools/client/shared/components/reps/reps/grip");
     const { Rep } = require("devtools/client/shared/components/reps/reps/rep");
-    const shouldRenderTooltip = props.shouldRenderTooltip;
 
-    let { name, mode, equal, suppressQuotes } = props;
+    let {
+      equal,
+      keyClassName,
+      mode,
+      name,
+      shouldRenderTooltip,
+      suppressQuotes,
+    } = props;
+
+    const className = `nodeName${keyClassName ? " " + keyClassName : ""}`;
 
     let key;
     // The key can be a simple string, for plain objects,
@@ -64,7 +74,7 @@ define(function(require, exports, module) {
       }
       key = span(
         {
-          className: "nodeName",
+          className,
           title: shouldRenderTooltip ? name : null,
         },
         name
@@ -72,7 +82,7 @@ define(function(require, exports, module) {
     } else {
       key = Rep({
         ...props,
-        className: "nodeName",
+        className,
         object: name,
         mode: mode || MODE.TINY,
         defaultRep: Grip,

@@ -276,8 +276,10 @@ rawPackets.set(`console.assert(false, {message: 'foobar'})`, {
               }
             },
             "ownSymbols": [],
+            "privateProperties": [],
             "ownPropertiesLength": 1,
             "ownSymbolsLength": 0,
+            "privatePropertiesLength": 0,
             "safeGetterValues": {}
           }
         },
@@ -578,8 +580,10 @@ rawPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', b
               }
             },
             "ownSymbols": [],
+            "privateProperties": [],
             "ownPropertiesLength": 3,
             "ownSymbolsLength": 0,
+            "privatePropertiesLength": 0,
             "safeGetterValues": {}
           }
         },
@@ -880,8 +884,10 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
               }
             },
             "ownSymbols": [],
+            "privateProperties": [],
             "ownPropertiesLength": 1,
             "ownSymbolsLength": 0,
+            "privatePropertiesLength": 0,
             "safeGetterValues": {}
           }
         },
@@ -1117,8 +1123,10 @@ rawPackets.set(`console.timeLog('bar') - 2`, {
               }
             },
             "ownSymbols": [],
+            "privateProperties": [],
             "ownPropertiesLength": 1,
             "ownSymbolsLength": 0,
+            "privatePropertiesLength": 0,
             "safeGetterValues": {}
           }
         },
@@ -1717,8 +1725,10 @@ rawPackets.set(`console.dir({C, M, Y, K})`, {
               }
             },
             "ownSymbols": [],
+            "privateProperties": [],
             "ownPropertiesLength": 4,
             "ownSymbolsLength": 0,
+            "privatePropertiesLength": 0,
             "safeGetterValues": {}
           }
         },
