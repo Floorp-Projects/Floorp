@@ -77,7 +77,7 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
     JS::MutableHandle<Maybe<JS::PropertyDescriptor>> aDesc) const {
   aDesc.reset();
 
-  if (!JSID_IS_STRING(aId)) {
+  if (aId.isSymbol()) {
     if (aId.isWellKnownSymbol(JS::SymbolCode::toStringTag)) {
       JS::Rooted<JSString*> toStringTagStr(
           aCx, JS_NewStringCopyZ(aCx, "WindowProperties"));
@@ -91,7 +91,7 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
       return true;
     }
 
-    // Nothing to do if we're resolving another non-string property.
+    // Nothing to do if we're resolving another symbol property.
     return true;
   }
 
@@ -104,7 +104,7 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
   }
 
   nsAutoJSString str;
-  if (!str.init(aCx, JSID_TO_STRING(aId))) {
+  if (!str.init(aCx, aId)) {
     return false;
   }
 
