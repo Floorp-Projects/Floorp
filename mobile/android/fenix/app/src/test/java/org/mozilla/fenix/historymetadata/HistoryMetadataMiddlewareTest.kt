@@ -73,9 +73,16 @@ class HistoryMetadataMiddlewareTest {
         // Now, test that we'll record metadata for the same tab after url is changed.
         store.dispatch(ContentAction.UpdateUrlAction(tab.id, "https://firefox.com")).joinBlocking()
         store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, emptyList(), currentIndex = 0)).joinBlocking()
-        verify(exactly = 2) { service.createMetadata(capture(capturedTab)) }
 
-        assertEquals(tab.id, capturedTab.captured.id)
+        val capturedTabs = mutableListOf<TabSessionState>()
+        verify(exactly = 2) { service.createMetadata(capture(capturedTabs)) }
+
+        assertEquals(2, capturedTabs.size)
+
+        capturedTabs[0].apply() {
+            assertEquals(tab.id, id)
+        }
+
         assertEquals(expectedKey, store.state.findTab(tab.id)?.historyMetadata)
     }
 

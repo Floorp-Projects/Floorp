@@ -62,7 +62,7 @@ class TrackingProtectionPanelInteractorTest {
         val interactor = TrackingProtectionPanelInteractor(
             mockk(),
             { trackingProtectionNewValue = it },
-            mockk()
+            { }
         )
         interactor.trackingProtectionToggled(true)
         assertEquals(true, trackingProtectionNewValue)

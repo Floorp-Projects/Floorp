@@ -63,7 +63,7 @@ class SyncedTabsTitleDecorationTest {
         every { viewHolder.itemViewType }.answers { ErrorViewHolder.LAYOUT_ID }
         every { viewHolder.bindingAdapterPosition }
             .answers { 1 }
-            .andThen { 0 }
+            .andThenAnswer { 0 }
 
         decoration.getItemOffsets(rect, mockk(), recyclerView, state)
 
@@ -92,7 +92,7 @@ class SyncedTabsTitleDecorationTest {
         every { viewHolder.itemViewType }.answers { ErrorViewHolder.LAYOUT_ID }
         every { viewHolder.bindingAdapterPosition }
             .answers { 1 }
-            .andThen { 0 }
+            .andThenAnswer { 0 }
 
         decoration.onDraw(canvas, recyclerView, state)
 

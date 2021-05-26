@@ -33,6 +33,5 @@ RUN URL_FLANK_BIN="$($CURL --silent 'https://api.github.com/repos/Flank/flank/re
     && $CURL --output "${TEST_TOOLS}/flank.jar" "${URL_FLANK_BIN}" \
     && chmod +x "${TEST_TOOLS}/flank.jar"
 
-
 # run-task expects to run as root
 USER root

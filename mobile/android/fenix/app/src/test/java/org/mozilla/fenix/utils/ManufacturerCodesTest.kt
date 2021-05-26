@@ -30,6 +30,7 @@ class ManufacturerCodesTest {
     private fun enableManufacturerModifications() {
         // Mocking, which might be simpler, doesn't seem to work so we use reflection.
         // Methodology via https://stackoverflow.com/a/3301720/2219998
+        manufacturerField.isAccessible = true
         val modifiers = manufacturerField.javaClass.getDeclaredField("modifiers")
         modifiers.isAccessible = true
         modifiers.setInt(manufacturerField, manufacturerField.modifiers and Modifier.FINAL.inv())

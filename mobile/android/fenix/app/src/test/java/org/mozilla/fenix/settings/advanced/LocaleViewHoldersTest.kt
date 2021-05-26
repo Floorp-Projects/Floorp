@@ -75,7 +75,7 @@ class LocaleViewHoldersTest {
         localeViewHolder.bind(otherLocale)
 
         assertEquals("Vèneto", view.locale_title_text.text)
-        assertEquals("Venitian", view.locale_subtitle_text.text)
+        assertEquals("Venetian", view.locale_subtitle_text.text)
     }
 
     @Test
