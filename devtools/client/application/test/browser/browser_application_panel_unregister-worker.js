@@ -8,7 +8,7 @@ const TAB_URL = URL_ROOT + "resources/service-workers/simple.html";
 add_task(async function() {
   await enableApplicationPanel();
 
-  const { panel, tab, target } = await openNewTabAndApplicationPanel(TAB_URL);
+  const { panel, tab, commands } = await openNewTabAndApplicationPanel(TAB_URL);
   const doc = panel.panelWin.document;
 
   selectPage(panel, "service-workers");
@@ -28,7 +28,7 @@ add_task(async function() {
   ok(true, "Service worker list is empty");
 
   // just in case cleanup
-  await unregisterAllWorkers(target.client, doc);
+  await unregisterAllWorkers(commands.client, doc);
 
   // close the tab
   info("Closing the tab.");

@@ -15,7 +15,7 @@ add_task(async function() {
     false
   );
 
-  const { panel, tab, target } = await openNewTabAndApplicationPanel(TAB_URL);
+  const { panel, tab, commands } = await openNewTabAndApplicationPanel(TAB_URL);
   const doc = panel.panelWin.document;
 
   selectPage(panel, "service-workers");
@@ -42,7 +42,7 @@ add_task(async function() {
   ok(sourceTab, "The service worker source was opened in a new tab");
 
   // clean up
-  await unregisterAllWorkers(target.client, doc);
+  await unregisterAllWorkers(commands.client, doc);
   // close the tabs
   info("Closing the tabs.");
   await BrowserTestUtils.removeTab(sourceTab);

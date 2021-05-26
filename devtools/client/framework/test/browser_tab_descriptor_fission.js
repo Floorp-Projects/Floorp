@@ -17,7 +17,7 @@ add_task(async function() {
   const tab = await addTab(EXAMPLE_COM_URI);
   const toolbox = await gDevTools.showToolboxForTab(tab);
   const target = toolbox.target;
-  const client = target.client;
+  const client = toolbox.commands.client;
 
   info("Retrieve the initial list of tab descriptors");
   const tabDescriptors = await client.mainRoot.listTabs();

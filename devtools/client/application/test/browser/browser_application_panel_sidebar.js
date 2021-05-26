@@ -11,7 +11,7 @@ add_task(async function() {
   info("Test that we are displaying correctly the sidebar");
 
   await enableApplicationPanel();
-  const { panel, tab, target } = await openNewTabAndApplicationPanel();
+  const { panel, tab, commands } = await openNewTabAndApplicationPanel();
   const doc = panel.panelWin.document;
 
   info("Waiting for the sidebar to be displayed");
@@ -23,7 +23,7 @@ add_task(async function() {
 
   // close the tab
   info("Closing the tab.");
-  await target.client.waitForRequestsToSettle();
+  await commands.client.waitForRequestsToSettle();
   await BrowserTestUtils.removeTab(tab);
 });
 
@@ -31,13 +31,13 @@ add_task(async function() {
   info("Test that we are displaying correctly the selected page - manifest");
 
   await enableApplicationPanel();
-  const { panel, tab, target } = await openNewTabAndApplicationPanel();
+  const { panel, tab, commands } = await openNewTabAndApplicationPanel();
   const doc = panel.panelWin.document;
 
   info("Select service worker page");
   selectPage(panel, "service-workers");
   await waitUntil(() => doc.querySelector(".js-service-workers-page") !== null);
-  await unregisterAllWorkers(target.client, doc);
+  await unregisterAllWorkers(commands.client, doc);
 
   info("Select manifest page in the sidebar");
   const link = doc.querySelector(".js-sidebar-manifest");
@@ -48,7 +48,7 @@ add_task(async function() {
 
   // close the tab
   info("Closing the tab.");
-  await target.client.waitForRequestsToSettle();
+  await commands.client.waitForRequestsToSettle();
   await BrowserTestUtils.removeTab(tab);
 });
 
@@ -59,7 +59,7 @@ add_task(async function() {
   const url = URL_ROOT + "resources/manifest/load-ok.html";
 
   await enableApplicationPanel();
-  const { panel, tab, target } = await openNewTabAndApplicationPanel(url);
+  const { panel, tab, commands } = await openNewTabAndApplicationPanel(url);
   const doc = panel.panelWin.document;
 
   selectPage(panel, "manifest");
@@ -77,6 +77,6 @@ add_task(async function() {
 
   // close the tab
   info("Closing the tab.");
-  await target.client.waitForRequestsToSettle();
+  await commands.client.waitForRequestsToSettle();
   await BrowserTestUtils.removeTab(tab);
 });

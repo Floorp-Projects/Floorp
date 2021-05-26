@@ -462,7 +462,7 @@ OptionsPanel.prototype = {
           // regular Firefox Profile to the Browser Toolbox profile.
           // If the preference is not updated on the regular Firefox profile, the
           // new value will be lost on the next Browser Toolbox restart.
-          const { mainRoot } = this.target.client;
+          const { mainRoot } = this.commands.client;
           const preferenceFront = await mainRoot.getFront("preference");
           preferenceFront.setBoolPref(
             "devtools.browsertoolbox.fission",

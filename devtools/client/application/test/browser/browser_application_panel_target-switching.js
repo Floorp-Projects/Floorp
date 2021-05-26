@@ -18,7 +18,7 @@ add_task(async function() {
   await enableApplicationPanel();
 
   info("Open a page that runs in the parent process");
-  const { panel, toolbox, tab } = await openNewTabAndApplicationPanel(
+  const { panel, commands, tab } = await openNewTabAndApplicationPanel(
     PARENT_PROCESS_URI
   );
   const doc = panel.panelWin.document;
@@ -36,7 +36,7 @@ add_task(async function() {
 
   // close the tab
   info("Closing the tab.");
-  await unregisterAllWorkers(toolbox.target.client, doc);
+  await unregisterAllWorkers(commands.client, doc);
   await BrowserTestUtils.removeTab(tab);
 });
 

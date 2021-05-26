@@ -13,7 +13,7 @@ add_task(async function() {
 
   await enableApplicationPanel();
 
-  const { panel, tab, target } = await openNewTabAndApplicationPanel(TAB_URL);
+  const { panel, tab, commands } = await openNewTabAndApplicationPanel(TAB_URL);
   const doc = panel.panelWin.document;
 
   selectPage(panel, "service-workers");
@@ -38,8 +38,8 @@ add_task(async function() {
   checkTelemetryEvent({ method: "start_worker" });
 
   // clean up and close the tab
-  await unregisterAllWorkers(target.client, doc);
+  await unregisterAllWorkers(commands.client, doc);
   info("Closing the tab.");
-  await target.client.waitForRequestsToSettle();
+  await commands.client.waitForRequestsToSettle();
   await BrowserTestUtils.removeTab(tab);
 });

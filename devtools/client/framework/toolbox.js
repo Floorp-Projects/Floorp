@@ -634,7 +634,7 @@ Toolbox.prototype = {
       return null;
     }
 
-    return this.target.client.getFrontByID(selectedTarget.actorID);
+    return this.commands.client.getFrontByID(selectedTarget.actorID);
   },
 
   _onToolboxStateChange(state, oldState) {
@@ -3066,7 +3066,7 @@ Toolbox.prototype = {
    * client. See the definition of the preference actor for more information.
    */
   get preferenceFront() {
-    const frontPromise = this.target.client.mainRoot.getFront("preference");
+    const frontPromise = this.commands.client.mainRoot.getFront("preference");
     frontPromise.then(front => {
       // Set the _preferenceFront property to allow the resetPreferences toolbox method
       // to cleanup the preference set when the toolbox is closed.
@@ -3676,11 +3676,7 @@ Toolbox.prototype = {
 
     // This flag will be checked by Fronts in order to decide if they should
     // skip their destroy.
-    if (this.target.client) {
-      // Note: this.target.client might be null if the target was already
-      // destroyed (eg: tab is closed during remote debugging).
-      this.target.client.isToolboxDestroy = true;
-    }
+    this.commands.client.isToolboxDestroy = true;
 
     this.off("select", this._onToolSelected);
     this.off("host-changed", this._refreshHostTitle);

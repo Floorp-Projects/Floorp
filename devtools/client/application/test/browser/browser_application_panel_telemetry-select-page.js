@@ -7,7 +7,7 @@ add_task(async function() {
   await enableApplicationPanel();
 
   const TAB_URL = URL_ROOT + "resources/service-workers/empty.html";
-  const { panel, tab, target } = await openNewTabAndApplicationPanel(TAB_URL);
+  const { panel, tab, commands } = await openNewTabAndApplicationPanel(TAB_URL);
   const doc = panel.panelWin.document;
 
   setupTelemetryTest();
@@ -21,6 +21,6 @@ add_task(async function() {
 
   // close the tab
   info("Closing the tab.");
-  await target.client.waitForRequestsToSettle();
+  await commands.client.waitForRequestsToSettle();
   await BrowserTestUtils.removeTab(tab);
 });

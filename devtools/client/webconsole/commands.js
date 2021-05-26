@@ -5,13 +5,12 @@
 "use strict";
 
 class ConsoleCommands {
-  constructor({ devToolsClient, hud }) {
-    this.devToolsClient = devToolsClient;
-    this.hud = hud;
+  constructor({ commands }) {
+    this.commands = commands;
   }
 
   getFrontByID(id) {
-    return this.devToolsClient.getFrontByID(id);
+    return this.commands.client.getFrontByID(id);
   }
 
   async evaluateJSAsync(expression, options = {}) {
@@ -22,7 +21,7 @@ class ConsoleCommands {
       selectedTargetFront,
     } = options;
 
-    let targetFront = this.hud.currentTarget;
+    let targetFront = this.commands.targetCommand.targetFront;
 
     const selectedActor =
       selectedObjectActor || selectedNodeActor || frameActor;

@@ -62,7 +62,7 @@ async function testReloadAboutDevToolsToolbox(toolId) {
   await toolbox.selectTool(toolId);
 
   info("Wait for requests to settle before reloading");
-  await toolbox.target.client.waitForRequestsToSettle();
+  await toolbox.commands.client.waitForRequestsToSettle();
 
   info("Reload about:devtools-toolbox page");
   devtoolsBrowser.reload();

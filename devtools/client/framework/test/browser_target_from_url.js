@@ -47,7 +47,7 @@ add_task(async function() {
   );
   target = await descriptor.getTarget();
   assertTarget(target, TEST_URI);
-  await target.client.close();
+  await descriptor.client.close();
 
   info("Test invalid tab id");
   try {
@@ -65,7 +65,7 @@ add_task(async function() {
   target = await descriptor.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   assertTarget(target, topWindow.location.href, true);
-  await target.client.close();
+  await descriptor.client.close();
 
   await testRemoteTCP();
   await testRemoteWebSocket();
@@ -118,12 +118,12 @@ async function testRemoteTCP() {
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   assertTarget(target, topWindow.location.href, true);
 
-  const settings = target.client._transport.connectionSettings;
+  const settings = descriptor.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");
   is(parseInt(settings.port, 10), port);
   is(settings.webSocket, false);
 
-  await target.client.close();
+  await descriptor.client.close();
 
   teardownDevToolsServer(server);
 }
@@ -141,11 +141,11 @@ async function testRemoteWebSocket() {
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   assertTarget(target, topWindow.location.href, true);
 
-  const settings = target.client._transport.connectionSettings;
+  const settings = descriptor.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");
   is(parseInt(settings.port, 10), port);
   is(settings.webSocket, true);
-  await target.client.close();
+  await descriptor.client.close();
 
   teardownDevToolsServer(server);
 }

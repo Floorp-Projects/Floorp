@@ -53,7 +53,6 @@ class DebuggerPanel {
     } = await this.panelWin.Debugger.bootstrap({
       commands: this.commands,
       resourceCommand: this.toolbox.resourceCommand,
-      devToolsClient: this.toolbox.target.client,
       workers: {
         sourceMaps: this.toolbox.sourceMapService,
         evaluationsParser: this.toolbox.parserService,
@@ -88,7 +87,7 @@ class DebuggerPanel {
       currentThreadActorID &&
       currentThreadActorID !== getCurrentThread(oldState)
     ) {
-      const threadFront = this.toolbox.target.client.getFrontByID(
+      const threadFront = this.commands.client.getFrontByID(
         currentThreadActorID
       );
       this.toolbox.selectTarget(threadFront?.targetFront.actorID);

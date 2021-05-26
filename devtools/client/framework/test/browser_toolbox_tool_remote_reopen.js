@@ -51,7 +51,7 @@ function runTools(tab) {
       ok(panel, toolId + " panel has been registered in the toolbox");
     }
 
-    const client = toolbox.target.client;
+    const client = toolbox.commands.client;
     await toolbox.destroy();
 
     // We need to check the client after the toolbox destruction.
