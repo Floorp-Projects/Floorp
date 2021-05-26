@@ -695,6 +695,15 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT void ReinitializeSelection(Element& aElement);
 
   /**
+   * Do "cut".
+   *
+   * @param aPrincipal          If you know current context is subject
+   *                            principal or system principal, set it.
+   *                            When nullptr, this checks it automatically.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult CutAsAction(nsIPrincipal* aPrincipal = nullptr);
+
+  /**
    * Do "undo" or "redo".
    *
    * @param aCount              How many count of transactions should be
