@@ -244,6 +244,9 @@ def android_toolchain(target, host, ndk, toolchain):
         if not isdir(toolchain) and host.cpu == "x86_64":
             toolchain = toolchain_format % (ndk, target_base, host_kernel, "x86")
             log.debug("Trying %s" % quote(toolchain))
+        if not isdir(toolchain) and host.kernel == "Darwin" and host.cpu == "aarch64":
+            toolchain = toolchain_format % (ndk, target_base, host_kernel, "x86_64")
+            log.debug("Trying %s" % quote(toolchain))
         if isdir(toolchain):
             return toolchain
         die("You have to specify --with-android-toolchain=" "/path/to/ndk/toolchain.")
@@ -269,6 +272,8 @@ def android_lldb_server(target, host, ndk, lldb):
 
         host_kernel = "windows" if host.kernel == "WINNT" else host.kernel.lower()
         clang_path = os.path.join(ndk, clang_format % (host_kernel, host.cpu))
+        if not isdir(clang_path) and host.kernel == "Darwin" and host.cpu == "aarch64":
+            clang_path = os.path.join(ndk, clang_format % (host_kernel, "x86_64"))
         log.debug("Listing subdirectories of %s" % quote(clang_path))
         clang_subdirs = [
             x for x in listdir(clang_path) if isdir(os.path.join(clang_path, x))
