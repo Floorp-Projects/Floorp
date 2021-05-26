@@ -162,7 +162,7 @@ class NewRenderer : public RendererEvent {
             aRenderThread.ThreadPoolLP().Raw(), &WebRenderMallocSizeOf,
             &WebRenderMallocEnclosingSizeOf, 0, compositor.get(),
             compositor->ShouldUseNativeCompositor(),
-            compositor->GetMaxUpdateRects(), compositor->UsePartialPresent(),
+            compositor->UsePartialPresent(),
             compositor->GetMaxPartialPresentRects(),
             compositor->ShouldDrawPreviousPartialPresentRegions(), mDocHandle,
             &wrRenderer, mMaxTextureSize, &errorMessage,

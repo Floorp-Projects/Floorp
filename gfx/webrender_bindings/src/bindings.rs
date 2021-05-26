@@ -1483,7 +1483,6 @@ pub extern "C" fn wr_window_new(
     document_id: u32,
     compositor: *mut c_void,
     use_native_compositor: bool,
-    max_update_rects: usize,
     use_partial_present: bool,
     max_partial_present_rects: usize,
     draw_previous_partial_present_regions: bool,
@@ -1552,7 +1551,6 @@ pub extern "C" fn wr_window_new(
 
     let compositor_config = if software {
         CompositorConfig::Native {
-            max_update_rects: 1,
             compositor: Box::new(SwCompositor::new(
                 sw_gl.unwrap(),
                 Box::new(WrCompositor(compositor)),
@@ -1561,7 +1559,6 @@ pub extern "C" fn wr_window_new(
         }
     } else if use_native_compositor {
         CompositorConfig::Native {
-            max_update_rects,
             compositor: Box::new(WrCompositor(compositor)),
         }
     } else {

@@ -878,14 +878,6 @@ bool RenderCompositorANGLE::ShouldUseNativeCompositor() {
   return UseCompositor();
 }
 
-uint32_t RenderCompositorANGLE::GetMaxUpdateRects() {
-  if (UseCompositor() &&
-      StaticPrefs::gfx_webrender_compositor_max_update_rects_AtStartup() > 0) {
-    return 1;
-  }
-  return 0;
-}
-
 void RenderCompositorANGLE::CompositorBeginFrame() {
   mDCLayerTree->CompositorBeginFrame();
 }
@@ -942,6 +934,8 @@ void RenderCompositorANGLE::AddSurface(
 
 void RenderCompositorANGLE::GetCompositorCapabilities(
     CompositorCapabilities* aCaps) {
+  RenderCompositor::GetCompositorCapabilities(aCaps);
+
   aCaps->virtual_surface_size = VIRTUAL_SURFACE_SIZE;
 }
 
