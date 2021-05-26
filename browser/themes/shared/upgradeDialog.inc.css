@@ -161,12 +161,13 @@ body.compact .items p {
   color: inherit;
 }
 
-.themes > input:enabled:hover,
+/* The selected/checked theme styling is handled on the ::before, so override
+ * the special checked colors and match those of an unchecked radio button. */
 .themes > input:enabled:checked:hover {
   background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
 }
 
-.themes > input:enabled:hover:active,
 .themes > input:enabled:checked:hover:active {
   background-color: var(--in-content-button-background-active);
 }
@@ -225,7 +226,7 @@ body.compact .items p {
 
 #secondary {
   background: none;
-  color: var(--in-content-link-color) !important;
+  color: var(--in-content-link-color);
   font-weight: normal;
 }
 
