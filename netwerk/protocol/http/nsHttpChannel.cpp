@@ -1740,59 +1740,43 @@ static void GetSTSConsoleErrorTag(uint32_t failureResult,
 }
 
 /**
- * Process a single security header. Only one type is supported: HSTS
+ * Process an HTTP Strict Transport Security (HSTS) header.
  */
-nsresult nsHttpChannel::ProcessSingleSecurityHeader(
-    uint32_t aType, nsITransportSecurityInfo* aSecInfo, uint32_t aFlags) {
-  nsHttpAtom atom;
-  switch (aType) {
-    case nsISiteSecurityService::HEADER_HSTS:
-      atom = nsHttp::ResolveAtom("Strict-Transport-Security");
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid security header type");
-      return NS_ERROR_FAILURE;
-  }
+nsresult nsHttpChannel::ProcessHSTSHeader(nsITransportSecurityInfo* aSecInfo,
+                                          uint32_t aFlags) {
+  nsHttpAtom atom(nsHttp::ResolveAtom("Strict-Transport-Security"));
 
   nsAutoCString securityHeader;
   nsresult rv = mResponseHead->GetHeader(atom, securityHeader);
-  if (NS_SUCCEEDED(rv)) {
-    nsISiteSecurityService* sss = gHttpHandler->GetSSService();
-    NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
-    // Process header will now discard the headers itself if the channel
-    // wasn't secure (whereas before it had to be checked manually)
-    OriginAttributes originAttributes;
-    if (NS_WARN_IF(!StoragePrincipalHelper::GetOriginAttributesForHSTS(
-            this, originAttributes))) {
-      return NS_ERROR_FAILURE;
-    }
-
-    uint32_t failureResult;
-    uint32_t headerSource = nsISiteSecurityService::SOURCE_ORGANIC_REQUEST;
-    rv = sss->ProcessHeader(aType, mURI, securityHeader, aSecInfo, aFlags,
-                            headerSource, originAttributes, nullptr, nullptr,
-                            &failureResult);
-    if (NS_FAILED(rv)) {
-      nsAutoString consoleErrorCategory;
-      nsAutoString consoleErrorTag;
-      switch (aType) {
-        case nsISiteSecurityService::HEADER_HSTS:
-          GetSTSConsoleErrorTag(failureResult, consoleErrorTag);
-          consoleErrorCategory = u"Invalid HSTS Headers"_ns;
-          break;
-        default:
-          return NS_ERROR_FAILURE;
-      }
-      Unused << AddSecurityMessage(consoleErrorTag, consoleErrorCategory);
-      LOG(("nsHttpChannel: Failed to parse %s header, continuing load.\n",
-           atom.get()));
-    }
-  } else {
-    if (rv != NS_ERROR_NOT_AVAILABLE) {
-      // All other errors are fatal
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
     LOG(("nsHttpChannel: No %s header, continuing load.\n", atom.get()));
+    return NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsISiteSecurityService* sss = gHttpHandler->GetSSService();
+  NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
+
+  OriginAttributes originAttributes;
+  if (NS_WARN_IF(!StoragePrincipalHelper::GetOriginAttributesForHSTS(
+          this, originAttributes))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t failureResult;
+  uint32_t headerSource = nsISiteSecurityService::SOURCE_ORGANIC_REQUEST;
+  rv = sss->ProcessHeader(nsISiteSecurityService::HEADER_HSTS, mURI,
+                          securityHeader, aSecInfo, aFlags, headerSource,
+                          originAttributes, nullptr, nullptr, &failureResult);
+  if (NS_FAILED(rv)) {
+    nsAutoString consoleErrorCategory(u"Invalid HSTS Headers"_ns);
+    nsAutoString consoleErrorTag;
+    GetSTSConsoleErrorTag(failureResult, consoleErrorTag);
+    Unused << AddSecurityMessage(consoleErrorTag, consoleErrorCategory);
+    LOG(("nsHttpChannel: Failed to parse %s header, continuing load.\n",
+         atom.get()));
   }
   return NS_OK;
 }
@@ -1839,9 +1823,12 @@ nsresult nsHttpChannel::ProcessSecurityHeaders() {
       do_QueryInterface(mSecurityInfo);
   NS_ENSURE_TRUE(transSecInfo, NS_ERROR_FAILURE);
 
-  rv = ProcessSingleSecurityHeader(nsISiteSecurityService::HEADER_HSTS,
-                                   transSecInfo, flags);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Only process HSTS headers for first-party loads. This prevents a
+  // proliferation of useless HSTS state for partitioned third parties.
+  if (!mLoadInfo->GetIsThirdPartyContextToTopWindow()) {
+    rv = ProcessHSTSHeader(transSecInfo, flags);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
