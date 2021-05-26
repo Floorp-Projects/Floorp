@@ -61,8 +61,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 
   NS_IMETHOD GetTextLength(int32_t* aCount) override;
 
-  NS_IMETHOD Copy() override;
-
   /**
    * CanDeleteSelection() returns true if `Selection` is not collapsed and
    * it's allowed to be removed.
