@@ -149,10 +149,13 @@ nsresult nsAvailableMemoryWatcher::Init() {
 // static
 VOID CALLBACK nsAvailableMemoryWatcher::LowMemoryCallback(PVOID aContext,
                                                           BOOLEAN aIsTimer) {
-  nsAvailableMemoryWatcher* watcher =
-      static_cast<nsAvailableMemoryWatcher*>(aContext);
+  RefPtr<nsAvailableMemoryWatcher> watcher =
+      already_AddRefed<nsAvailableMemoryWatcher>(
+          static_cast<nsAvailableMemoryWatcher*>(aContext));
   if (!aIsTimer) {
     MutexAutoLock lock(watcher->mMutex);
+    ::UnregisterWait(watcher->mWaitHandle);
+    watcher->mWaitHandle = nullptr;
     watcher->OnLowMemory(lock);
   }
 }
@@ -178,7 +181,12 @@ bool nsAvailableMemoryWatcher::RegisterMemoryResourceHandler() {
 
 void nsAvailableMemoryWatcher::UnregisterMemoryResourceHandler() {
   if (mWaitHandle) {
-    Unused << ::UnregisterWait(mWaitHandle);
+    bool res = ::UnregisterWait(mWaitHandle);
+    if (res || ::GetLastError() != ERROR_IO_PENDING) {
+      // We decrement the refcount only when we're sure the LowMemoryCallback()
+      // callback won't be invoked, otherwise the callback will do it
+      this->Release();
+    }
     mWaitHandle = nullptr;
   }
 
@@ -206,9 +214,17 @@ void nsAvailableMemoryWatcher::Shutdown(const MutexAutoLock&) {
 
 bool nsAvailableMemoryWatcher::ListenForLowMemory() {
   if (mLowMemoryHandle && !mWaitHandle) {
-    return ::RegisterWaitForSingleObject(
+    bool res = ::RegisterWaitForSingleObject(
         &mWaitHandle, mLowMemoryHandle, LowMemoryCallback, this, INFINITE,
         WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
+    if (res) {
+      // We bump the reference count when registering the callback to keep the
+      // object alive in case of shutdown. Note that the reference count will be
+      // decremented by the callback itself only when it gets called, if it
+      // doesn't we have to decrement it ourselves.
+      this->AddRef();
+    }
+    return res;
   }
 
   return false;
@@ -216,8 +232,6 @@ bool nsAvailableMemoryWatcher::ListenForLowMemory() {
 
 void nsAvailableMemoryWatcher::OnLowMemory(const MutexAutoLock&) {
   mUnderMemoryPressure = true;
-  ::UnregisterWait(mWaitHandle);
-  mWaitHandle = nullptr;
 
   // On Windows, memory allocations fails when the available commit space is
   // not sufficient.  It's possible that this callback function is invoked
