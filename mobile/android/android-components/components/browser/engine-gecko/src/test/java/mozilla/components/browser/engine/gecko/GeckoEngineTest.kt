@@ -294,6 +294,7 @@ class GeckoEngineTest {
 
         assertEquals(defaultSettings.trackingProtectionPolicy, TrackingProtectionPolicy.strict())
         assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+        assertEquals(contentBlockingSettings.cookieBehaviorPrivateMode, CookiePolicy.ACCEPT_NON_TRACKERS.id)
 
         try {
             engine.settings.domStorageEnabled
@@ -430,6 +431,32 @@ class GeckoEngineTest {
         engine.settings.trackingProtectionPolicy = policy
 
         verify(mockRuntime.settings.contentBlocking, never()).setCookieBehavior(
+            policy.cookiePolicy.id
+        )
+    }
+
+    @Test
+    fun `setCookieBehavior private mode is only invoked when the value is changed`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
+        whenever(mockRuntime.settings.contentBlocking.cookieBehaviorPrivateMode).thenReturn(CookieBehavior.ACCEPT_NONE)
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+        val policy = TrackingProtectionPolicy.recommended()
+
+        engine.settings.trackingProtectionPolicy = policy
+
+        verify(mockRuntime.settings.contentBlocking).setCookieBehaviorPrivateMode(
+            policy.cookiePolicy.id
+        )
+
+        reset(settings)
+
+        engine.settings.trackingProtectionPolicy = policy
+
+        verify(mockRuntime.settings.contentBlocking, never()).setCookieBehaviorPrivateMode(
             policy.cookiePolicy.id
         )
     }
@@ -578,6 +605,7 @@ class GeckoEngineTest {
         assertEquals(SafeBrowsingPolicy.RECOMMENDED.id, contentBlockingSettings.safeBrowsingCategories)
 
         assertEquals(CookiePolicy.ACCEPT_NON_TRACKERS.id, contentBlockingSettings.cookieBehavior)
+        assertEquals(CookiePolicy.ACCEPT_NON_TRACKERS.id, contentBlockingSettings.cookieBehaviorPrivateMode)
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)
         assertEquals(PreferredColorScheme.Light, engine.settings.preferredColorScheme)

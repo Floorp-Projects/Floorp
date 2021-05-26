@@ -704,6 +704,10 @@ class EngineSessionTest {
             recommendedPolicy.trackingCategories.sumBy { it.id },
             TrackingCategory.RECOMMENDED.id
         )
+
+        assertEquals(recommendedPolicy.cookiePolicy.id, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+        assertEquals(recommendedPolicy.cookiePolicyPrivateMode.id, recommendedPolicy.cookiePolicy.id)
+
         val strictPolicy = TrackingProtectionPolicy.strict()
 
         assertEquals(
@@ -712,6 +716,7 @@ class EngineSessionTest {
         )
 
         assertEquals(strictPolicy.cookiePolicy.id, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+        assertEquals(strictPolicy.cookiePolicyPrivateMode.id, strictPolicy.cookiePolicy.id)
 
         val nonePolicy = TrackingProtectionPolicy.none()
 
@@ -721,6 +726,7 @@ class EngineSessionTest {
         )
 
         assertEquals(nonePolicy.cookiePolicy.id, CookiePolicy.ACCEPT_ALL.id)
+        assertEquals(nonePolicy.cookiePolicyPrivateMode.id, CookiePolicy.ACCEPT_ALL.id)
 
         val newPolicy = TrackingProtectionPolicy.select(
             trackingCategories = arrayOf(

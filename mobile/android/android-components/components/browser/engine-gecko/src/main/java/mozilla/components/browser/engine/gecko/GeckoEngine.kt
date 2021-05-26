@@ -554,6 +554,10 @@ class GeckoEngine(
                             cookieBehavior = value.cookiePolicy.id
                         }
 
+                        if (cookieBehaviorPrivateMode != value.cookiePolicyPrivateMode.id) {
+                            cookieBehaviorPrivateMode = value.cookiePolicyPrivateMode.id
+                        }
+
                         if (cookiePurging != value.cookiePurging) {
                             setCookiePurging(value.cookiePurging)
                         }

@@ -19,6 +19,7 @@ fun TrackingProtectionPolicy.toContentBlockingSetting(
     enhancedTrackingProtectionLevel(getEtpLevel())
     antiTracking(getAntiTrackingPolicy())
     cookieBehavior(cookiePolicy.id)
+    cookieBehaviorPrivateMode(cookiePolicyPrivateMode.id)
     cookiePurging(cookiePurging)
     safeBrowsing(safeBrowsingPolicy.sumBy { it.id })
     strictSocialTrackingProtection(getStrictSocialTrackingProtection())
