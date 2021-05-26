@@ -2060,6 +2060,7 @@ ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
 
   auto newStub = new (newStubMem) ICCacheIRStub(code, stubInfo);
   writer.copyStubData(newStub->stubDataStart());
+  newStub->setTypeData(writer.typeData());
   stub->addNewStub(icEntry, newStub);
   *attached = true;
   return newStub;
