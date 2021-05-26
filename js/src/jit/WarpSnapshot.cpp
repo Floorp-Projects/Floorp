@@ -190,6 +190,14 @@ void WarpInlinedCall::dumpData(GenericPrinter& out) const {
   out.printf("    info: 0x%p\n", info_);
   cacheIRSnapshot_->dumpData(out);
 }
+
+void WarpPolymorphicTypes::dumpData(GenericPrinter& out) const {
+  out.printf("    types:\n");
+  for (auto& typeData : list_) {
+    out.printf("      %s\n", ValTypeToString(typeData.type()));
+  }
+}
+
 #endif  // JS_JITSPEW
 
 template <typename T>
@@ -295,6 +303,10 @@ void WarpBindGName::traceData(JSTracer* trc) {
 }
 
 void WarpBailout::traceData(JSTracer* trc) {
+  // No GC pointers.
+}
+
+void WarpPolymorphicTypes::traceData(JSTracer* trc) {
   // No GC pointers.
 }
 
