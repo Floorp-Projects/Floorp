@@ -595,15 +595,6 @@ bool TextEditor::IsCopyToClipboardAllowedInternal() const {
   return mUnmaskedStart <= selectionStart && UnmaskedEnd() >= selectionEnd;
 }
 
-bool TextEditor::CanDeleteSelection() const {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return false;
-  }
-
-  return IsModifiable() && !SelectionRef().IsCollapsed();
-}
-
 already_AddRefed<nsIDocumentEncoder> TextEditor::GetAndInitDocEncoder(
     const nsAString& aFormatType, uint32_t aDocumentEncoderFlags,
     const nsACString& aCharset) const {

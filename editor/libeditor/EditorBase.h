@@ -732,6 +732,18 @@ class EditorBase : public nsIEditor,
       const nsAString& aStringToInsert, nsIPrincipal* aPrincipal = nullptr);
 
   /**
+   * CanDeleteSelection() returns true if `Selection` is not collapsed and
+   * it's allowed to be removed.
+   */
+  bool CanDeleteSelection() const {
+    AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return false;
+    }
+    return IsModifiable() && !SelectionRef().IsCollapsed();
+  }
+
+  /**
    * DeleteSelectionAsAction() removes selection content or content around
    * caret with transactions.  This should be used for handling it as an
    * edit action.  If you'd like to remove selection for preparing to insert
