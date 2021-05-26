@@ -19,10 +19,13 @@ class RenderBundle final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(RenderBundle)
   GPU_DECL_JS_WRAP(RenderBundle)
 
+  RenderBundle(Device* const aParent, RawId aId);
+
+  const RawId mId;
+
  private:
-  RenderBundle() = delete;
   virtual ~RenderBundle();
-  void Cleanup() {}
+  void Cleanup();
 };
 
 }  // namespace webgpu
