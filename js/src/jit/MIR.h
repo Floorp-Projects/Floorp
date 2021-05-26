@@ -29,6 +29,7 @@
 #include "jit/JitAllocPolicy.h"
 #include "jit/MacroAssembler.h"
 #include "jit/MOpcodesGenerated.h"
+#include "jit/TypeData.h"
 #include "jit/TypePolicy.h"
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter}Op, JSJitInfo
 #include "js/HeapAPI.h"
@@ -4371,10 +4372,15 @@ class MTypeOf : public MUnaryInstruction,
     setResultType(MIRType::String);
     setMovable();
   }
+  TypeDataList observed_;
 
  public:
   INSTRUCTION_HEADER(TypeOf)
   TRIVIAL_NEW_WRAPPERS
+
+  void setObservedTypes(const TypeDataList& observed) { observed_ = observed; }
+  bool hasObservedTypes() const { return observed_.count() > 0; }
+  const TypeDataList& observedTypes() const { return observed_; }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 

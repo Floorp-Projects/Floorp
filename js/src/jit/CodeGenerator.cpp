@@ -12366,65 +12366,137 @@ class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator> {
   LTypeOfV* ins() const { return ins_; }
 };
 
+void CodeGenerator::emitTypeOfName(JSValueType type, Register output) {
+  const JSAtomState& names = gen->runtime->names();
+
+  switch (type) {
+    case JSVAL_TYPE_OBJECT:
+      masm.movePtr(ImmGCPtr(names.object), output);
+      break;
+    case JSVAL_TYPE_DOUBLE:
+    case JSVAL_TYPE_INT32:
+      masm.movePtr(ImmGCPtr(names.number), output);
+      break;
+    case JSVAL_TYPE_BOOLEAN:
+      masm.movePtr(ImmGCPtr(names.boolean), output);
+      break;
+    case JSVAL_TYPE_UNDEFINED:
+      masm.movePtr(ImmGCPtr(names.undefined), output);
+      break;
+    case JSVAL_TYPE_NULL:
+      masm.movePtr(ImmGCPtr(names.object), output);
+      break;
+    case JSVAL_TYPE_STRING:
+      masm.movePtr(ImmGCPtr(names.string), output);
+      break;
+    case JSVAL_TYPE_SYMBOL:
+      masm.movePtr(ImmGCPtr(names.symbol), output);
+      break;
+    case JSVAL_TYPE_BIGINT:
+      masm.movePtr(ImmGCPtr(names.bigint), output);
+      break;
+    default:
+      MOZ_CRASH("Unsupported JSValueType");
+  }
+}
+
+void CodeGenerator::emitTypeOfCheck(JSValueType type, Register tag,
+                                    Register output, Label* done,
+                                    Label* oolObject) {
+  if (type == JSVAL_TYPE_OBJECT) {
+    // The input may be a callable object (result is "function") or
+    // may emulate undefined (result is "undefined"). Use an OOL path.
+    masm.branchTestObject(Assembler::Equal, tag, oolObject);
+    return;
+  }
+
+  Label notMatch;
+  switch (type) {
+    case JSVAL_TYPE_DOUBLE:
+    case JSVAL_TYPE_INT32:
+      masm.branchTestNumber(Assembler::NotEqual, tag, &notMatch);
+      break;
+    case JSVAL_TYPE_BOOLEAN:
+      masm.branchTestBoolean(Assembler::NotEqual, tag, &notMatch);
+      break;
+    case JSVAL_TYPE_UNDEFINED:
+      masm.branchTestUndefined(Assembler::NotEqual, tag, &notMatch);
+      break;
+    case JSVAL_TYPE_NULL:
+      masm.branchTestNull(Assembler::NotEqual, tag, &notMatch);
+      break;
+    case JSVAL_TYPE_STRING:
+      masm.branchTestString(Assembler::NotEqual, tag, &notMatch);
+      break;
+    case JSVAL_TYPE_SYMBOL:
+      masm.branchTestSymbol(Assembler::NotEqual, tag, &notMatch);
+      break;
+    case JSVAL_TYPE_BIGINT:
+      masm.branchTestBigInt(Assembler::NotEqual, tag, &notMatch);
+      break;
+    default:
+      MOZ_CRASH("Unsupported JSValueType");
+  }
+  emitTypeOfName(type, output);
+  masm.jump(done);
+  masm.bind(&notMatch);
+}
+
 void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
   const ValueOperand value = ToValue(lir, LTypeOfV::Input);
   Register output = ToRegister(lir->output());
   Register tag = masm.extractTag(value, output);
 
-  const JSAtomState& names = gen->runtime->names();
   Label done;
 
-  // The input may be a callable object (result is "function") or may
-  // emulate undefined (result is "undefined"). Use an OOL path.
   auto* ool = new (alloc()) OutOfLineTypeOfV(lir);
   addOutOfLineCode(ool, lir->mir());
-  masm.branchTestObject(Assembler::Equal, tag, ool->entry());
 
-  Label notNumber;
-  masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
-  masm.movePtr(ImmGCPtr(names.number), output);
-  masm.jump(&done);
-  masm.bind(&notNumber);
+  const uint32_t NumTypes = 8;
+  const auto& defaultOrder = {JSVAL_TYPE_OBJECT,    JSVAL_TYPE_DOUBLE,
+                              JSVAL_TYPE_UNDEFINED, JSVAL_TYPE_NULL,
+                              JSVAL_TYPE_BOOLEAN,   JSVAL_TYPE_STRING,
+                              JSVAL_TYPE_SYMBOL,    JSVAL_TYPE_BIGINT};
+  MOZ_ASSERT(defaultOrder.size() == NumTypes);
 
-  Label notUndefined;
-  masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
-  masm.movePtr(ImmGCPtr(names.undefined), output);
-  masm.jump(&done);
-  masm.bind(&notUndefined);
+  Vector<JSValueType, NumTypes, SystemAllocPolicy> remaining;
+  MOZ_ALWAYS_TRUE(remaining.reserve(defaultOrder.size()));
+  remaining.infallibleAppend(defaultOrder.begin(), defaultOrder.end());
 
-  Label notNull;
-  masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
-  masm.movePtr(ImmGCPtr(names.object), output);
-  masm.jump(&done);
-  masm.bind(&notNull);
+  uint32_t numRemaining = remaining.length();
 
-  Label notBoolean;
-  masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
-  masm.movePtr(ImmGCPtr(names.boolean), output);
-  masm.jump(&done);
-  masm.bind(&notBoolean);
+  // Generate checks for previously observed types first.
+  // The TypeDataList is sorted by descending frequency.
+  for (auto& observed : lir->mir()->observedTypes()) {
+    JSValueType type = observed.type();
 
-  Label notString;
-  masm.branchTestString(Assembler::NotEqual, tag, &notString);
-  masm.movePtr(ImmGCPtr(names.string), output);
-  masm.jump(&done);
-  masm.bind(&notString);
+    // Unify number types.
+    if (type == JSVAL_TYPE_INT32) {
+      type = JSVAL_TYPE_DOUBLE;
+    }
 
-  Label notSymbol;
-  masm.branchTestSymbol(Assembler::NotEqual, tag, &notSymbol);
-  masm.movePtr(ImmGCPtr(names.symbol), output);
-  masm.jump(&done);
-  masm.bind(&notSymbol);
+    emitTypeOfCheck(type, tag, output, &done, ool->entry());
+    MOZ_ASSERT(std::count(remaining.begin(), remaining.end(), type) == 1);
+    remaining.eraseIfEqual(type);
+    numRemaining--;
+  }
 
-  // At this point it must be a BigInt.
+  // Generate checks for remaining types.
+  for (auto type : remaining) {
+    if (numRemaining == 1) {
+      // We can skip the check for the last remaining type.
 #ifdef DEBUG
-  Label isBigInt;
-  masm.branchTestBigInt(Assembler::Equal, tag, &isBigInt);
-  masm.assumeUnreachable("Unexpected Value type in visitTypeOfV");
-  masm.bind(&isBigInt);
+      emitTypeOfCheck(type, tag, output, &done, ool->entry());
+      masm.assumeUnreachable("Unexpected Value type in visitTypeOfV");
+#else
+      emitTypeOfName(type, output);
 #endif
-  masm.movePtr(ImmGCPtr(names.bigint), output);
-  // Fall through to |done|.
+    } else {
+      emitTypeOfCheck(type, tag, output, &done, ool->entry());
+    }
+    numRemaining--;
+  }
+  MOZ_ASSERT(numRemaining == 0);
 
   masm.bind(&done);
   masm.bind(ool->rejoin());
