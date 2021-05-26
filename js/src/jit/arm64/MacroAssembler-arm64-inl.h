@@ -135,10 +135,7 @@ void MacroAssembler::andPtr(Imm32 imm, Register dest) {
 }
 
 void MacroAssembler::and64(Imm64 imm, Register64 dest) {
-  vixl::UseScratchRegisterScope temps(this);
-  const Register scratch = temps.AcquireX().asUnsized();
-  mov(ImmWord(imm.value), scratch);
-  andPtr(scratch, dest.reg);
+  And(ARMRegister(dest.reg, 64), ARMRegister(dest.reg, 64), Operand(imm.value));
 }
 
 void MacroAssembler::and64(Register64 src, Register64 dest) {
@@ -147,17 +144,7 @@ void MacroAssembler::and64(Register64 src, Register64 dest) {
 }
 
 void MacroAssembler::or64(Imm64 imm, Register64 dest) {
-  vixl::UseScratchRegisterScope temps(this);
-  const Register scratch = temps.AcquireX().asUnsized();
-  mov(ImmWord(imm.value), scratch);
-  orPtr(scratch, dest.reg);
-}
-
-void MacroAssembler::xor64(Imm64 imm, Register64 dest) {
-  vixl::UseScratchRegisterScope temps(this);
-  const Register scratch = temps.AcquireX().asUnsized();
-  mov(ImmWord(imm.value), scratch);
-  xorPtr(scratch, dest.reg);
+  Orr(ARMRegister(dest.reg, 64), ARMRegister(dest.reg, 64), Operand(imm.value));
 }
 
 void MacroAssembler::or32(Imm32 imm, Register dest) {
@@ -228,6 +215,10 @@ void MacroAssembler::xorPtr(Register src, Register dest) {
 
 void MacroAssembler::xorPtr(Imm32 imm, Register dest) {
   Eor(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+}
+
+void MacroAssembler::xor64(Imm64 imm, Register64 dest) {
+  Eor(ARMRegister(dest.reg, 64), ARMRegister(dest.reg, 64), Operand(imm.value));
 }
 
 // ===============================================================
