@@ -47,15 +47,14 @@
 using namespace mozilla;
 using mozilla::LookAndFeel;
 
-#undef LOG
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
 #  include "nsTArray.h"
 #  include "Units.h"
 extern mozilla::LazyLogModule gWidgetLog;
-#  define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
+#  define LOGLNF(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
 #else
-#  define LOG(args)
+#  define LOGLNF(args)
 #endif /* MOZ_LOGGING */
 
 #define GDK_COLOR_TO_NS_RGB(c) \
@@ -1075,7 +1074,7 @@ void nsLookAndFeel::WithAltThemeConfigured(
   bool fellBackToDefaultTheme = false;
 
   // Try to select the opposite variant of the current theme first...
-  LOG(("    toggling gtk-application-prefer-dark-theme\n"));
+  LOGLNF(("    toggling gtk-application-prefer-dark-theme\n"));
   g_object_set(settings, "gtk-application-prefer-dark-theme",
                !mSystemTheme.mIsDark, nullptr);
   moz_gtk_refresh();
@@ -1255,8 +1254,8 @@ void nsLookAndFeel::EnsureInit() {
     mAltTheme = mSystemTheme;
   }
 
-  LOG(("System Theme: %s. Alt Theme: %s\n", mSystemTheme.mName.get(),
-       mAltTheme.mName.get()));
+  LOGLNF(("System Theme: %s. Alt Theme: %s\n", mSystemTheme.mName.get(),
+          mAltTheme.mName.get()));
 
   RecordTelemetry();
 }
@@ -1716,3 +1715,5 @@ bool nsLookAndFeel::ShouldHonorThemeScrollbarColors() {
          !WidgetUsesImage(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL) &&
          !WidgetUsesImage(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
 }
+
+#undef LOGLNF

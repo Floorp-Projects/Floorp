@@ -21,7 +21,6 @@
 #include "mozilla/WidgetUtils.h"
 #include "nsTArray.h"
 
-#undef LOG
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
 #  include "Units.h"
