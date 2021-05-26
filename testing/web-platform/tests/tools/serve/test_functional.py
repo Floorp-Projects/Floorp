@@ -68,7 +68,7 @@ def test_subprocess_exit(server_subprocesses, tempfile_name):
 
     server_subprocesses.get(True, timeout)
     subprocess = server_subprocesses.get(True, timeout)
-    subprocess.kill()
+    subprocess.stop()
 
     thread.join(timeout)
 
