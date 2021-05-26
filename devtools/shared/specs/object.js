@@ -142,6 +142,12 @@ const objectSpec = generateActorSpec({
         iterator: RetVal("propertyIterator"),
       },
     },
+    enumPrivateProperties: {
+      request: {},
+      response: {
+        iterator: RetVal("privatePropertiesIterator"),
+      },
+    },
     enumSymbols: {
       request: {},
       response: {

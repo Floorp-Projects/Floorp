@@ -44,6 +44,7 @@ DevToolsModules(
     "performance-recording.js",
     "performance.js",
     "preference.js",
+    "private-properties-iterator.js",
     "property-iterator.js",
     "reflow.js",
     "responsive.js",
