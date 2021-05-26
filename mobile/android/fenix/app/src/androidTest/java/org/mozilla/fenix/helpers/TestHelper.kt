@@ -4,12 +4,17 @@
 
 package org.mozilla.fenix.helpers
 
+import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.preference.PreferenceManager
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
@@ -152,5 +157,33 @@ object TestHelper {
                 }
             }
         }
+    }
+
+    fun createCustomTabIntent(
+        pageUrl: String,
+        customMenuItemLabel: String = "",
+        customActionButtonDescription: String = ""
+    ): Intent {
+        val appContext = InstrumentationRegistry.getInstrumentation()
+            .targetContext
+            .applicationContext
+        val pendingIntent = PendingIntent.getActivity(appContext, 0, Intent(), 0)
+        val customTabsIntent = CustomTabsIntent.Builder()
+            .addMenuItem(customMenuItemLabel, pendingIntent)
+            .setShareState(CustomTabsIntent.SHARE_STATE_ON)
+            .setActionButton(
+                createTestBitmap(),
+                customActionButtonDescription, pendingIntent, true
+            )
+            .build()
+        customTabsIntent.intent.data = Uri.parse(pageUrl)
+        return customTabsIntent.intent
+    }
+
+    private fun createTestBitmap(): Bitmap {
+        val bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(Color.GREEN)
+        return bitmap
     }
 }

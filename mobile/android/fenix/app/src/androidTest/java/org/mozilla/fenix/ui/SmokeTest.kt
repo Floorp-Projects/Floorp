@@ -9,6 +9,7 @@ import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
@@ -18,6 +19,7 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -25,11 +27,13 @@ import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.TestHelper.deleteDownloadFromStorage
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickTabCrashedRestoreButton
 import org.mozilla.fenix.ui.robots.clickUrlbar
+import org.mozilla.fenix.ui.robots.customTabScreen
 import org.mozilla.fenix.ui.robots.dismissTrackingOnboarding
 import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
@@ -52,8 +56,9 @@ class SmokeTest {
     private var recentlyClosedTabsListIdlingResource: RecyclerViewIdlingResource? = null
     private var readerViewNotification: ViewVisibilityIdlingResource? = null
     private val downloadFileName = "Globe.svg"
-    val collectionName = "First Collection"
+    private val collectionName = "First Collection"
     private var bookmarksListIdlingResource: RecyclerViewIdlingResource? = null
+    private val customMenuItem = "TestMenuItem"
 
     // This finds the dialog fragment child of the homeFragment, otherwise the awesomeBar would return null
     private fun getAwesomebarView(): View? {
@@ -66,6 +71,11 @@ class SmokeTest {
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
+
+    @get: Rule
+    val intentReceiverActivityTestRule = ActivityTestRule(
+        IntentReceiverActivity::class.java, true, false
+    )
 
     @get:Rule
     var mGrantPermissions = GrantPermissionRule.grant(
@@ -112,7 +122,7 @@ class SmokeTest {
         }
     }
 
-    // copied over from HomeScreenTest
+    // Verifies the first run onboarding screen
     @Test
     fun firstRunScreenTest() {
         homeScreen {
@@ -1226,6 +1236,55 @@ class SmokeTest {
         }.openTabCrashReporter {
             clickTabCrashedRestoreButton()
             verifyPageContent(website.content)
+        }
+    }
+
+    @Test
+    // Verifies the main menu of a custom tab with a custom menu item
+    fun customTabMenuItemsTest() {
+        val customTabPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                customTabPage.url.toString(),
+                customMenuItem
+            )
+        )
+
+        customTabScreen {
+            browserScreen {
+                verifyPageContent(customTabPage.content)
+            }
+        }.openMainMenu {
+            verifyPoweredByTextIsDisplayed()
+            verifyCustomMenuItem(customMenuItem)
+            verifyDesktopSiteButtonExists()
+            verifyFindInPageButtonExists()
+            verifyOpenInBrowserButtonExists()
+            verifyBackButtonExists()
+            verifyForwardButtonExists()
+            verifyRefreshButtonExists()
+        }
+    }
+
+    @Test
+    // The test opens a link in a custom tab then sends it to the browser
+    fun openCustomTabInBrowserTest() {
+        val customTabPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                customTabPage.url.toString()
+            )
+        )
+
+        customTabScreen {
+            browserScreen {
+                verifyPageContent(customTabPage.content)
+            }
+        }.openMainMenu {
+        }.clickOpenInBrowserButton {
+            verifyTabCounter("1")
         }
     }
 }
