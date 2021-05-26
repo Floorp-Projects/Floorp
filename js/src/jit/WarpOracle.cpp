@@ -20,6 +20,7 @@
 #include "jit/JitScript.h"
 #include "jit/JitSpewer.h"
 #include "jit/MIRGenerator.h"
+#include "jit/TypeData.h"
 #include "jit/WarpBuilder.h"
 #include "jit/WarpCacheIRTranspiler.h"
 #include "vm/BuiltinObjectKind.h"
@@ -68,6 +69,10 @@ class MOZ_STACK_CLASS WarpScriptOracle {
                                       BytecodeLocation loc, ICCacheIRStub* stub,
                                       ICFallbackStub* fallbackStub,
                                       uint8_t* stubDataCopy);
+  AbortReasonOr<bool> maybeInlinePolymorphicTypes(WarpOpSnapshotList& snapshots,
+                                                  BytecodeLocation loc,
+                                                  ICCacheIRStub* firstStub,
+                                                  ICFallbackStub* fallbackStub);
   [[nodiscard]] bool replaceNurseryPointers(ICCacheIRStub* stub,
                                             const CacheIRStubInfo* stubInfo,
                                             uint8_t* stubDataCopy);
@@ -801,13 +806,31 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
   ICCacheIRStub* stub = firstStub->toCacheIRStub();
 
-  // Don't optimize if there are other stubs with entered-count > 0. Counters
+  // Don't transpile if there are other stubs with entered-count > 0. Counters
   // are reset when a new stub is attached so this means the stub that was added
   // most recently didn't handle all cases.
   // If this code is changed, ICScript::hash may also need changing.
+  bool firstStubHandlesAllCases = true;
   for (ICStub* next = stub->next(); next; next = next->maybeNext()) {
-    if (next->enteredCount() == 0) {
-      continue;
+    if (next->enteredCount() != 0) {
+      firstStubHandlesAllCases = false;
+      break;
+    }
+  }
+
+  if (!firstStubHandlesAllCases) {
+    // In some polymorphic cases, we can generate better code than the
+    // default fallback if we know the observed types of the operands
+    // and their relative frequency.
+    if (ICSupportsPolymorphicTypeData(loc.getOp()) &&
+        fallbackStub->enteredCount() == 0) {
+      bool inlinedPolymorphicTypes = false;
+      MOZ_TRY_VAR(
+          inlinedPolymorphicTypes,
+          maybeInlinePolymorphicTypes(snapshots, loc, stub, fallbackStub));
+      if (inlinedPolymorphicTypes) {
+        return Ok();
+      }
     }
 
     [[maybe_unused]] unsigned line, column;
@@ -993,6 +1016,62 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
     return abort(AbortReason::Alloc);
   }
   fallbackStub->setUsedByTranspiler();
+  return true;
+}
+
+struct TypeFrequency {
+  TypeData typeData_;
+  uint32_t successCount_;
+  TypeFrequency(TypeData typeData, uint32_t successCount)
+      : typeData_(typeData), successCount_(successCount) {}
+
+  // Sort highest frequency first.
+  bool operator<(const TypeFrequency& other) const {
+    return other.successCount_ < successCount_;
+  }
+};
+
+AbortReasonOr<bool> WarpScriptOracle::maybeInlinePolymorphicTypes(
+    WarpOpSnapshotList& snapshots, BytecodeLocation loc,
+    ICCacheIRStub* firstStub, ICFallbackStub* fallbackStub) {
+  MOZ_ASSERT(ICSupportsPolymorphicTypeData(loc.getOp()));
+
+  // We use polymorphic type data if there are multiple active stubs,
+  // all of which have type data available.
+  Vector<TypeFrequency, 6, SystemAllocPolicy> candidates;
+  for (ICStub* stub = firstStub; !stub->isFallback();
+       stub = stub->maybeNext()) {
+    ICCacheIRStub* cacheIRStub = stub->toCacheIRStub();
+    uint32_t successCount =
+        cacheIRStub->enteredCount() - cacheIRStub->next()->enteredCount();
+    if (successCount == 0) {
+      continue;
+    }
+    TypeData types = cacheIRStub->typeData();
+    if (!types.hasData()) {
+      return false;
+    }
+    if (!candidates.append(TypeFrequency(types, successCount))) {
+      return abort(AbortReason::Alloc);
+    }
+  }
+  if (candidates.length() < 2) {
+    return false;
+  }
+
+  // Sort candidates by success frequency.
+  std::sort(candidates.begin(), candidates.end());
+
+  TypeDataList list;
+  for (auto& candidate : candidates) {
+    list.addTypeData(candidate.typeData_);
+  }
+
+  uint32_t offset = loc.bytecodeToOffset(script_);
+  if (!AddOpSnapshot<WarpPolymorphicTypes>(alloc_, snapshots, offset, list)) {
+    return abort(AbortReason::Alloc);
+  }
+
   return true;
 }
 

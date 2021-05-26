@@ -324,6 +324,8 @@ inline void ICFallbackStub::addNewStub(ICEntry* icEntry, ICCacheIRStub* stub) {
 
 AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs);
 
+bool ICSupportsPolymorphicTypeData(JSOp op);
+
 struct IonOsrTempData;
 
 extern bool DoCallFallback(JSContext* cx, BaselineFrame* frame,
