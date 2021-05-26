@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { getValue, nodeHasFullText } = require("devtools/client/shared/components/object-inspector/utils/node");
+const {
+  getValue,
+  nodeHasFullText,
+} = require("devtools/client/shared/components/object-inspector/utils/node");
 
 async function enumIndexedProperties(objectFront, start, end) {
   try {
@@ -48,6 +51,17 @@ async function enumSymbols(objectFront, start, end) {
     return response;
   } catch (e) {
     console.error("Error in enumSymbols", e);
+    return {};
+  }
+}
+
+async function enumPrivateProperties(objectFront, start, end) {
+  try {
+    const iterator = await objectFront.enumPrivateProperties();
+    const response = await iteratorSlice(iterator, start, end);
+    return response;
+  } catch (e) {
+    console.error("Error in enumPrivateProperties", e);
     return {};
   }
 }
@@ -101,6 +115,7 @@ module.exports = {
   enumEntries,
   enumIndexedProperties,
   enumNonIndexedProperties,
+  enumPrivateProperties,
   enumSymbols,
   getPrototype,
   getFullText,

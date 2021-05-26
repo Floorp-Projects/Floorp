@@ -137,6 +137,10 @@ define(function(require, exports, module) {
       propertiesLength += object.preview.ownSymbolsLength;
     }
 
+    if (object.preview && object.preview.privateProperties) {
+      propertiesLength += object.preview.privatePropertiesLength;
+    }
+
     return propertiesLength;
   }
 
@@ -204,6 +208,31 @@ define(function(require, exports, module) {
     // unquoted. Analogous for a Promise.
     const suppressQuotes = ["Proxy", "Promise"].includes(object.class);
     const propsArray = getProps(props, properties, indexes, suppressQuotes);
+
+    // Show private properties
+    if (object.preview && object.preview.privateProperties) {
+      const { privateProperties } = object.preview;
+      const length = max - indexes.length;
+
+      const privateProps = privateProperties.slice(0, length).map(item => {
+        const value = item.descriptor.value;
+        const grip = value && value.getGrip ? value.getGrip() : value;
+
+        return PropRep({
+          ...props,
+          keyClassName: "private",
+          mode: MODE.TINY,
+          name: item.name,
+          object: grip,
+          equal: ": ",
+          defaultRep: Grip,
+          title: null,
+          suppressQuotes: true,
+        });
+      });
+
+      propsArray.push(...privateProps);
+    }
 
     // Show symbols.
     if (object.preview && object.preview.ownSymbols) {

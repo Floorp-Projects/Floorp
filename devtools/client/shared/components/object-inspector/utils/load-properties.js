@@ -6,8 +6,9 @@ const {
   enumEntries,
   enumIndexedProperties,
   enumNonIndexedProperties,
-  getPrototype,
+  enumPrivateProperties,
   enumSymbols,
+  getPrototype,
   getFullText,
   getPromiseState,
   getProxySlots,
@@ -73,6 +74,10 @@ function loadItemProperties(item, client, loadedProperties, threadActorID) {
     promises.push(getPrototype(getObjectFront()));
   }
 
+  if (shouldLoadItemPrivateProperties(item, loadedProperties)) {
+    promises.push(enumPrivateProperties(getObjectFront(), start, end));
+  }
+
   if (shouldLoadItemSymbols(item, loadedProperties)) {
     promises.push(enumSymbols(getObjectFront(), start, end));
   }
@@ -99,6 +104,10 @@ function mergeResponses(responses) {
   for (const response of responses) {
     if (response.hasOwnProperty("ownProperties")) {
       data.ownProperties = { ...data.ownProperties, ...response.ownProperties };
+    }
+
+    if (response.privateProperties && response.privateProperties.length > 0) {
+      data.privateProperties = response.privateProperties;
     }
 
     if (response.ownSymbols && response.ownSymbols.length > 0) {
@@ -195,6 +204,24 @@ function shouldLoadItemSymbols(item, loadedProperties = new Map()) {
 
   return (
     value &&
+    !loadedProperties.has(item.path) &&
+    !nodeIsBucket(item) &&
+    !nodeIsMapEntry(item) &&
+    !nodeIsEntries(item) &&
+    !nodeIsDefaultProperties(item) &&
+    !nodeHasAccessors(item) &&
+    !nodeIsPrimitive(item) &&
+    !nodeIsLongString(item) &&
+    !nodeIsProxy(item)
+  );
+}
+
+function shouldLoadItemPrivateProperties(item, loadedProperties = new Map()) {
+  const value = getValue(item);
+
+  return (
+    value &&
+    value?.preview?.privatePropertiesLength &&
     !loadedProperties.has(item.path) &&
     !nodeIsBucket(item) &&
     !nodeIsMapEntry(item) &&
