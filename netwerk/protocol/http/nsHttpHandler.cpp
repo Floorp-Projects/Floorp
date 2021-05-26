@@ -2724,6 +2724,30 @@ bool nsHttpHandler::IsHttp3VersionSupported(const nsACString& version) {
   return false;
 }
 
+bool nsHttpHandler::IsHttp3SupportedByServer(
+    nsHttpResponseHead* aResponseHead) {
+  if ((aResponseHead->Version() != HttpVersion::v2_0) ||
+      (aResponseHead->Status() >= 500) || (aResponseHead->Status() == 421)) {
+    return false;
+  }
+
+  nsAutoCString altSvc;
+  Unused << aResponseHead->GetHeader(nsHttp::Alternate_Service, altSvc);
+  if (altSvc.IsEmpty() || !nsHttp::IsReasonableHeaderValue(altSvc)) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < kHttp3VersionCount; i++) {
+    nsAutoCString value(kHttp3Versions[i]);
+    value.Append("="_ns);
+    if (PL_strstr(altSvc.get(), value.get())) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 nsresult nsHttpHandler::InitiateTransaction(HttpTransactionShell* aTrans,
                                             int32_t aPriority) {
   return mConnMgr->AddTransaction(aTrans, aPriority);

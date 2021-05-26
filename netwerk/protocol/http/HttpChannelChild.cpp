@@ -489,18 +489,9 @@ void HttpChannelChild::OnStartRequest(
   }
 
   // Remember whether HTTP3 is supported
-  if (mResponseHead && (mResponseHead->Version() == HttpVersion::v2_0) &&
-      (mResponseHead->Status() < 500) && (mResponseHead->Status() != 421)) {
-    nsAutoCString altSvc;
-    Unused << mResponseHead->GetHeader(nsHttp::Alternate_Service, altSvc);
-    if (!altSvc.IsEmpty() || nsHttp::IsReasonableHeaderValue(altSvc)) {
-      for (uint32_t i = 0; i < kHttp3VersionCount; i++) {
-        if (PL_strstr(altSvc.get(), kHttp3Versions[i].get())) {
-          mSupportsHTTP3 = true;
-          break;
-        }
-      }
-    }
+  if (mResponseHead) {
+    mSupportsHTTP3 =
+        nsHttpHandler::IsHttp3SupportedByServer(mResponseHead.get());
   }
 
   DoOnStartRequest(this, nullptr);
