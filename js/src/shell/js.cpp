@@ -11367,10 +11367,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.disableBailoutLoopCheck = true;
   }
 
-  if (op.getBoolOption("scalar-replace-arguments")) {
-    jit::JitOptions.scalarReplaceArguments = true;
-  }
-
 #if defined(JS_CODEGEN_ARM)
   if (const char* str = op.getStringOption("arm-hwcap")) {
     jit::ParseARMHwCapFlags(str);
