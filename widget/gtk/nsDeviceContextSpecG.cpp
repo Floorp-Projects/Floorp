@@ -36,6 +36,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 // To check if we need to use flatpak portal for printing
 #include "nsIGIOService.h"
@@ -292,18 +293,72 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter* aPrinter,
 }
 
 void nsDeviceContextSpecGTK::StartPrintJob() {
-  GtkPrintJob* job =
-      gtk_print_job_new(mTitle.get(), mPrintSettings->GetGtkPrinter(),
-                        mGtkPrintSettings, mGtkPageSetup);
+  // When using flatpak, we have to call the Print method of the portal
+  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
+  bool shouldUsePortal;
+  giovfs->ShouldUseFlatpakPortal(&shouldUsePortal);
+  if (shouldUsePortal) {
+    GError* error = nullptr;
+    GDBusProxy* dbusProxy = g_dbus_proxy_new_for_bus_sync(
+        G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
+        "org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
+        "org.freedesktop.portal.Print", nullptr, &error);
+    if (dbusProxy == nullptr) {
+      NS_WARNING(
+          nsPrintfCString("Unable to create dbus proxy: %s", error->message)
+              .get());
+      g_error_free(error);
+      return;
+    }
+    int fd = open(mSpoolName.get(), O_RDONLY | O_CLOEXEC);
+    if (fd == -1) {
+      NS_WARNING("Failed to open spool file.");
+      return;
+    }
+    static auto s_g_unix_fd_list_new = reinterpret_cast<GUnixFDList* (*)(void)>(
+        dlsym(RTLD_DEFAULT, "g_unix_fd_list_new"));
+    NS_ASSERTION(s_g_unix_fd_list_new,
+                "Cannot find g_unix_fd_list_new function.");
 
-  if (!gtk_print_job_set_source_file(job, mSpoolName.get(), nullptr)) return;
+    GUnixFDList* fd_list = s_g_unix_fd_list_new();
+    static auto s_g_unix_fd_list_append =
+        reinterpret_cast<gint (*)(GUnixFDList*, gint, GError**)>(
+            dlsym(RTLD_DEFAULT, "g_unix_fd_list_append"));
+    int idx = s_g_unix_fd_list_append(fd_list, fd, NULL);
+    close(fd);
 
-  // Now gtk owns the print job, and will be released via our callback.
-  gtk_print_job_send(job, print_callback, mSpoolFile.forget().take(),
-                     [](gpointer aData) {
-                       auto* spoolFile = static_cast<nsIFile*>(aData);
-                       NS_RELEASE(spoolFile);
-                     });
+    // We'll pass empty options as long as we don't have token from PreparePrint
+    // dbus call (which we don't use). This unfortunatelly lead to showing
+    // gtk print dialog and also the duplex or printer specific settings
+    // is not honored, so this needs to be fixed when the portal provides
+    // more options.
+    GVariantBuilder opt_builder;
+    g_variant_builder_init(&opt_builder, G_VARIANT_TYPE_VARDICT);
+
+    g_dbus_proxy_call_with_unix_fd_list(
+        dbusProxy, "Print",
+        g_variant_new("(ssh@a{sv})", "", /* window */
+                      "Print",           /* title */
+                      idx, g_variant_builder_end(&opt_builder)),
+        G_DBUS_CALL_FLAGS_NONE, -1, fd_list, NULL,
+        NULL,      // portal result cb function
+        nullptr);  // userdata
+    g_object_unref(fd_list);
+    g_object_unref(dbusProxy);
+  } else {
+    GtkPrintJob* job =
+        gtk_print_job_new(mTitle.get(), mPrintSettings->GetGtkPrinter(),
+                          mGtkPrintSettings, mGtkPageSetup);
+
+    if (!gtk_print_job_set_source_file(job, mSpoolName.get(), nullptr)) return;
+
+    // Now gtk owns the print job, and will be released via our callback.
+    gtk_print_job_send(job, print_callback, mSpoolFile.forget().take(),
+                      [](gpointer aData) {
+                        auto* spoolFile = static_cast<nsIFile*>(aData);
+                        NS_RELEASE(spoolFile);
+                      });
+  }
 }
 
 void nsDeviceContextSpecGTK::EnumeratePrinters() {
