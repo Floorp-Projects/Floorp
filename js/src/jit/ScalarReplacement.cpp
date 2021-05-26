@@ -1399,6 +1399,14 @@ bool ArgumentsReplacer::escapes(MInstruction* ins, bool guardedForMapped) {
   JitSpewDef(JitSpew_Escape, "Check arguments object\n", ins);
   JitSpewIndent spewIndent(JitSpew_Escape);
 
+  // We can replace inlined arguments in scripts with OSR entries, but
+  // the outermost arguments object has already been allocated before
+  // we enter via OSR and can't be replaced.
+  if (ins->isCreateArgumentsObject() && graph_.osrBlock()) {
+    JitSpew(JitSpew_Escape, "Can't replace outermost OSR arguments");
+    return true;
+  }
+
   // Check all uses to see whether they can be supported without
   // allocating an ArgumentsObject.
   for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++) {
@@ -1796,8 +1804,7 @@ bool ScalarReplacement(MIRGenerator* mir, MIRGraph& graph) {
   EmulateStateOf<ObjectMemoryView> replaceObject(mir, graph);
   EmulateStateOf<ArrayMemoryView> replaceArray(mir, graph);
   bool addedPhi = false;
-  bool shouldReplaceArguments =
-      JitOptions.scalarReplaceArguments && !graph.osrBlock();
+  bool shouldReplaceArguments = JitOptions.scalarReplaceArguments;
 
   for (ReversePostorderIterator block = graph.rpoBegin();
        block != graph.rpoEnd(); block++) {
