@@ -201,6 +201,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/preference",
   },
   {
+    types: ["privatePropertiesIterator"],
+    spec: "devtools/shared/specs/private-properties-iterator",
+    front: "devtools/client/fronts/private-properties-iterator",
+  },
+  {
     types: ["propertyIterator"],
     spec: "devtools/shared/specs/property-iterator",
     front: "devtools/client/fronts/property-iterator",
