@@ -140,4 +140,39 @@ codegenTestARM64_adhoc(
 assertEq(wasmEvalText(quint64).exports.f(-37000000000n), -37000000000n*5n)
 assertEq(wasmEvalText(quint64).exports.f(42000000000n), 42000000000n*5n)
 
+// Test that add/sub/and/or/xor don't need to reuse their input register.  The
+// proof here is that the destination register does not equal any of the input
+// registers.
+//
+// We have adequate functionality tests for these elsewhere, so test only
+// codegen here.
 
+for ( [op, imm, expectVar, expectImm] of
+      [['and', 64,
+        '8a020020  and     x0, x1, x2',
+        '927a0020  and     x0, x1, #0x40'],
+       ['or', 64,
+        'aa020020  orr     x0, x1, x2',
+        'b27a0020  orr     x0, x1, #0x40'],
+       ['xor', 64,
+        'ca020020  eor     x0, x1, x2',
+        'd27a0020  eor     x0, x1, #0x40'],
+       ['add', 64,
+        '8b020020  add     x0, x1, x2',
+        '91010020  add     x0, x1, #0x40 \\(64\\)'],
+       ['sub', 64,
+        'cb020020  sub     x0, x1, x2',
+        'd1010020  sub     x0, x1, #0x40 \\(64\\)']] ) {
+    codegenTestARM64_adhoc(`
+(module
+  (func (export "f") (param i64) (param i64) (param i64) (result i64)
+    (i64.${op} (local.get 1) (local.get 2))))`,
+                           'f',
+                           expectVar);
+    codegenTestARM64_adhoc(`
+(module
+  (func (export "f") (param i64) (param i64) (result i64)
+    (i64.${op} (local.get 1) (i64.const ${imm}))))`,
+                           'f',
+                           expectImm);
+}

@@ -2112,18 +2112,42 @@ void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect64(
   }
 }
 
-void CodeGenerator::visitAddI64(LAddI64* lir) {
-  const LInt64Allocation lhs = lir->getInt64Operand(LAddI64::Lhs);
-  const LInt64Allocation rhs = lir->getInt64Operand(LAddI64::Rhs);
+void CodeGeneratorARM64::emitSimpleBinaryI64(
+    LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* lir, JSOp op) {
+  const ARMRegister dest = ARMRegister(ToOutRegister64(lir).reg, 64);
+  const ARMRegister lhs =
+      ARMRegister(ToRegister64(lir->getInt64Operand(0)).reg, 64);
+  const LInt64Allocation rhsAlloc = lir->getInt64Operand(INT64_PIECES);
+  Operand rhs;
 
-  MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
-
-  if (IsConstant(rhs)) {
-    masm.add64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
-    return;
+  if (IsConstant(rhsAlloc)) {
+    rhs = Operand(ToInt64(rhsAlloc));
+  } else {
+    rhs = Operand(ARMRegister(ToRegister64(rhsAlloc).reg, 64));
   }
+  switch (op) {
+    case JSOp::Add:
+      masm.Add(dest, lhs, rhs);
+      break;
+    case JSOp::Sub:
+      masm.Sub(dest, lhs, rhs);
+      break;
+    case JSOp::BitOr:
+      masm.Orr(dest, lhs, rhs);
+      break;
+    case JSOp::BitXor:
+      masm.Eor(dest, lhs, rhs);
+      break;
+    case JSOp::BitAnd:
+      masm.And(dest, lhs, rhs);
+      break;
+    default:
+      MOZ_CRASH("unexpected binary opcode");
+  }
+}
 
-  masm.add64(ToRegister64(rhs), ToRegister64(lhs));
+void CodeGenerator::visitAddI64(LAddI64* lir) {
+  emitSimpleBinaryI64(lir, JSOp::Add);
 }
 
 void CodeGenerator::visitClzI64(LClzI64* ins) {
@@ -2191,17 +2215,7 @@ void CodeGenerator::visitNotI64(LNotI64* lir) {
 }
 
 void CodeGenerator::visitSubI64(LSubI64* lir) {
-  const LInt64Allocation lhs = lir->getInt64Operand(LSubI64::Lhs);
-  const LInt64Allocation rhs = lir->getInt64Operand(LSubI64::Rhs);
-
-  MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
-
-  if (IsConstant(rhs)) {
-    masm.sub64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
-    return;
-  }
-
-  masm.sub64(ToRegister64(rhs), ToRegister64(lhs));
+  emitSimpleBinaryI64(lir, JSOp::Sub);
 }
 
 void CodeGenerator::visitPopcntI(LPopcntI* ins) {
@@ -2212,36 +2226,7 @@ void CodeGenerator::visitPopcntI(LPopcntI* ins) {
 }
 
 void CodeGenerator::visitBitOpI64(LBitOpI64* lir) {
-  const LInt64Allocation lhs = lir->getInt64Operand(LBitOpI64::Lhs);
-  const LInt64Allocation rhs = lir->getInt64Operand(LBitOpI64::Rhs);
-
-  MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
-
-  switch (lir->bitop()) {
-    case JSOp::BitOr:
-      if (IsConstant(rhs)) {
-        masm.or64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
-      } else {
-        masm.or64(ToRegister64(rhs), ToRegister64(lhs));
-      }
-      break;
-    case JSOp::BitXor:
-      if (IsConstant(rhs)) {
-        masm.xor64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
-      } else {
-        masm.xor64(ToRegister64(rhs), ToRegister64(lhs));
-      }
-      break;
-    case JSOp::BitAnd:
-      if (IsConstant(rhs)) {
-        masm.and64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
-      } else {
-        masm.and64(ToRegister64(rhs), ToRegister64(lhs));
-      }
-      break;
-    default:
-      MOZ_CRASH("unexpected binary opcode");
-  }
+  emitSimpleBinaryI64(lir, lir->bitop());
 }
 
 void CodeGenerator::visitShiftI64(LShiftI64* lir) {
