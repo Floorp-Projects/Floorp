@@ -6448,30 +6448,31 @@ static bool GetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifndef __wasi__
   auto getTimeZone = [](std::time_t* now) -> const char* {
     std::tm local{};
-#if defined(_WIN32)
+#  if defined(_WIN32)
     _tzset();
     if (localtime_s(&local, now) == 0) {
       return _tzname[local.tm_isdst > 0];
     }
-#else
-    tzset();
-#  if defined(HAVE_LOCALTIME_R)
-    if (localtime_r(now, &local)) {
 #  else
+    tzset();
+#    if defined(HAVE_LOCALTIME_R)
+    if (localtime_r(now, &local)) {
+#    else
     std::tm* localtm = std::localtime(now);
     if (localtm) {
       *local = *localtm;
-#  endif /* HAVE_LOCALTIME_R */
+#    endif /* HAVE_LOCALTIME_R */
 
-#  if defined(HAVE_TM_ZONE_TM_GMTOFF)
+#    if defined(HAVE_TM_ZONE_TM_GMTOFF)
       return local.tm_zone;
-#  else
+#    else
       return tzname[local.tm_isdst > 0];
-#  endif /* HAVE_TM_ZONE_TM_GMTOFF */
+#    endif /* HAVE_TM_ZONE_TM_GMTOFF */
     }
-#endif   /* _WIN32 */
+#  endif   /* _WIN32 */
     return nullptr;
   };
 
@@ -6481,7 +6482,7 @@ static bool GetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
       return ReturnStringCopy(cx, args, tz);
     }
   }
-
+#endif /* __wasi__ */
   args.rval().setUndefined();
   return true;
 }
@@ -6501,20 +6502,21 @@ static bool SetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifndef __wasi__
   auto setTimeZone = [](const char* value) {
-#if defined(_WIN32)
+#  if defined(_WIN32)
     return _putenv_s("TZ", value) == 0;
-#else
+#  else
     return setenv("TZ", value, true) == 0;
-#endif /* _WIN32 */
+#  endif /* _WIN32 */
   };
 
   auto unsetTimeZone = []() {
-#if defined(_WIN32)
+#  if defined(_WIN32)
     return _putenv_s("TZ", "") == 0;
-#else
+#  else
     return unsetenv("TZ") == 0;
-#endif /* _WIN32 */
+#  endif /* _WIN32 */
   };
 
   if (args[0].isString() && !args[0].toString()->empty()) {
@@ -6545,14 +6547,15 @@ static bool SetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-#if defined(_WIN32)
+#  if defined(_WIN32)
   _tzset();
-#else
+#  else
   tzset();
-#endif /* _WIN32 */
+#  endif /* _WIN32 */
 
   JS::ResetTimeZone();
 
+#endif /* __wasi__ */
   args.rval().setUndefined();
   return true;
 }
