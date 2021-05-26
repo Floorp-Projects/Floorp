@@ -389,7 +389,6 @@ class alignas(8) Value {
 
  public:
   constexpr Value() : asBits_(bitsFromTagAndPayload(JSVAL_TAG_UNDEFINED, 0)) {}
-  Value(const Value& v) = default;
 
  private:
   explicit constexpr Value(uint64_t asBits) : asBits_(asBits) {}
