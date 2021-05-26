@@ -67,6 +67,7 @@
 #include "mozilla/dom/Attr.h"             // for Attr
 #include "mozilla/dom/CharacterData.h"    // for CharacterData
 #include "mozilla/dom/DataTransfer.h"     // for DataTransfer
+#include "mozilla/dom/Document.h"         // for Document
 #include "mozilla/dom/DocumentInlines.h"  // for GetObservingPresShell
 #include "mozilla/dom/Element.h"          // for Element, nsINode::AsElement
 #include "mozilla/dom/EventTarget.h"      // for EventTarget
@@ -91,8 +92,8 @@
 #include "nsFrameSelection.h"          // for nsFrameSelection
 #include "nsGenericHTMLElement.h"      // for nsGenericHTMLElement
 #include "nsGkAtoms.h"                 // for nsGkAtoms, nsGkAtoms::dir
+#include "nsIClipboard.h"              // for nsIClipboard
 #include "nsIContent.h"                // for nsIContent
-#include "mozilla/dom/Document.h"      // for Document
 #include "nsIDocumentStateListener.h"  // for nsIDocumentStateListener
 #include "nsIEditActionListener.h"     // for nsIEditActionListener
 #include "nsIEditorObserver.h"         // for nsIEditorObserver
@@ -1502,9 +1503,40 @@ bool EditorBase::FireClipboardEvent(EventMessage aEventMessage,
 }
 
 NS_IMETHODIMP EditorBase::Cut() {
-  nsresult rv = MOZ_KnownLive(AsTextEditor())->CutAsAction();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "TextEditor::CutAsAction() failed");
+  nsresult rv = CutAsAction();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::CutAsAction() failed");
   return rv;
+}
+
+nsresult EditorBase::CutAsAction(nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eCut, aPrincipal);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  bool actionTaken = false;
+  if (!FireClipboardEvent(eCut, nsIClipboard::kGlobalClipboard, &actionTaken)) {
+    return EditorBase::ToGenericNSResult(
+        actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
+  }
+
+  // Dispatch "beforeinput" event after dispatching "cut" event.
+  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
+  if (NS_FAILED(rv)) {
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "MaybeDispatchBeforeInputEvent() failed");
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  // XXX This transaction name is referred by PlaceholderTransaction::Merge()
+  //     so that we need to keep using it here.
+  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::DeleteTxnName,
+                                             ScrollSelectionIntoView::Yes);
+  rv = DeleteSelectionAsSubAction(
+      eNone, IsTextEditor() ? nsIEditor::eNoStrip : nsIEditor::eStrip);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::DeleteSelectionAsSubAction(eNone) failed, but ignored");
+  return EditorBase::ToGenericNSResult(rv);
 }
 
 NS_IMETHODIMP EditorBase::CanCut(bool* aCanCut) {
