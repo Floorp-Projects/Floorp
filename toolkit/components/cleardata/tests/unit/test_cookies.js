@@ -181,16 +181,6 @@ function getTestCookieName(host, topLevelBaseDomain) {
   return `${host}_${topLevelBaseDomain}`;
 }
 
-function getTestOriginAttributes(topLevelBaseDomain, originAttributes = {}) {
-  if (!topLevelBaseDomain) {
-    return originAttributes;
-  }
-  return {
-    ...originAttributes,
-    partitionKey: `(https,${topLevelBaseDomain})`,
-  };
-}
-
 function setTestCookie({
   host,
   topLevelBaseDomain = null,
@@ -199,7 +189,7 @@ function setTestCookie({
   SiteDataTestUtils.addToCookies({
     host,
     name: getTestCookieName(host, topLevelBaseDomain),
-    originAttributes: getTestOriginAttributes(
+    originAttributes: getOAWithPartitionKey(
       topLevelBaseDomain,
       originAttributes
     ),
@@ -254,7 +244,7 @@ function testCookieExists({
     host,
     "path",
     getTestCookieName(host, topLevelBaseDomain),
-    getTestOriginAttributes(topLevelBaseDomain, originAttributes)
+    getOAWithPartitionKey(topLevelBaseDomain, originAttributes)
   );
   let message = `Cookie ${expected ? "is set" : "is not set"} for ${host}`;
   if (topLevelBaseDomain) {

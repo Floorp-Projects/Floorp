@@ -12,3 +12,13 @@ function run_test() {
   do_get_profile();
   run_next_test();
 }
+
+function getOAWithPartitionKey(topLevelBaseDomain, originAttributes = {}) {
+  if (!topLevelBaseDomain) {
+    return originAttributes;
+  }
+  return {
+    ...originAttributes,
+    partitionKey: `(https,${topLevelBaseDomain})`,
+  };
+}
