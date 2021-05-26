@@ -18,8 +18,6 @@ wptserve = pytest.importorskip("wptserve")
 
 logging.basicConfig()
 
-wptserve.logger.set_logger(logging.getLogger())
-
 here = os.path.dirname(__file__)
 doc_root = os.path.join(here, "docroot")
 
@@ -53,7 +51,7 @@ class TestUsingServer(unittest.TestCase):
                                                    use_ssl=False,
                                                    certificate=None,
                                                    doc_root=doc_root)
-        self.server.start(False)
+        self.server.start()
 
     def tearDown(self):
         self.server.stop()
@@ -93,7 +91,7 @@ class TestUsingH2Server:
                                                    certificate=os.path.join(repo_root, "tools", "certs", "web-platform.test.pem"),
                                                    handler_cls=wptserve.server.Http2WebTestRequestHandler,
                                                    http2=True)
-        self.server.start(False)
+        self.server.start()
 
         context = tls.init_context()
         context.check_hostname = False
