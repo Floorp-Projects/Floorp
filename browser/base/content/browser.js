@@ -4989,12 +4989,6 @@ var XULBrowserWindow = {
       document.getElementById("View:PageSource"),
     ]);
   },
-  get _menuItemForRepairTextEncoding() {
-    delete this._menuItemForRepairTextEncoding;
-    return (this._menuItemForRepairTextEncoding = document.getElementById(
-      "repair-text-encoding"
-    ));
-  },
 
   setDefaultStatus(status) {
     this.defaultStatus = status;
@@ -5143,18 +5137,6 @@ var XULBrowserWindow = {
         }
 
         this._updateElementsForContentType();
-
-        // Update Override Text Encoding state.
-        // Can't cache the button, because the presence of the element in the DOM
-        // may change over time.
-        let button = document.getElementById("characterencoding-button");
-        if (browser.mayEnableCharacterEncodingMenu) {
-          this._menuItemForRepairTextEncoding.removeAttribute("disabled");
-          button?.removeAttribute("disabled");
-        } else {
-          this._menuItemForRepairTextEncoding.setAttribute("disabled", "true");
-          button?.setAttribute("disabled", "true");
-        }
       }
 
       this.isBusy = false;
@@ -5271,15 +5253,6 @@ var XULBrowserWindow = {
     gTabletModePageCounter.inc();
 
     this._updateElementsForContentType();
-
-    // Unconditionally disable the Text Encoding button during load to
-    // keep the UI calm when navigating from one modern page to another and
-    // the toolbar button is visible.
-    // Can't cache the button, because the presence of the element in the DOM
-    // may change over time.
-    let button = document.getElementById("characterencoding-button");
-    this._menuItemForRepairTextEncoding.setAttribute("disabled", "true");
-    button?.setAttribute("disabled", "true");
 
     // Try not to instantiate gCustomizeMode as much as possible,
     // so don't use CustomizeMode.jsm to check for URI or customizing.
