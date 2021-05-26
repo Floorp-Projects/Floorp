@@ -704,6 +704,11 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT nsresult CutAsAction(nsIPrincipal* aPrincipal = nullptr);
 
   /**
+   * CanPaste() returns true if user can paste something at current selection.
+   */
+  virtual bool CanPaste(int32_t aClipboardType) const = 0;
+
+  /**
    * Do "undo" or "redo".
    *
    * @param aCount              How many count of transactions should be
@@ -730,6 +735,18 @@ class EditorBase : public nsIEditor,
    */
   MOZ_CAN_RUN_SCRIPT nsresult InsertTextAsAction(
       const nsAString& aStringToInsert, nsIPrincipal* aPrincipal = nullptr);
+
+  /**
+   * InsertLineBreakAsAction() is called when user inputs a line break with
+   * Enter or something.  If the instance is `HTMLEditor`, this is called
+   * when Shift + Enter or "insertlinebreak" command.
+   *
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertLineBreakAsAction(
+      nsIPrincipal* aPrincipal = nullptr) = 0;
 
   /**
    * CanDeleteSelection() returns true if `Selection` is not collapsed and
@@ -786,6 +803,44 @@ class EditorBase : public nsIEditor,
       const nsAString& aString, nsRange* aReplaceRange,
       AllowBeforeInputEventCancelable aAllowBeforeInputEventCancelable,
       nsIPrincipal* aPrincipal = nullptr);
+
+  /**
+   * Can we paste |aTransferable| or, if |aTransferable| is null, will a call
+   * to pasteTransferable later possibly succeed if given an instance of
+   * nsITransferable then? True if the doc is modifiable, and, if
+   * |aTransfeable| is non-null, we have pasteable data in |aTransfeable|.
+   */
+  virtual bool CanPasteTransferable(nsITransferable* aTransferable) = 0;
+
+  /**
+   * Paste aTransferable at Selection.
+   *
+   * @param aTransferable       Must not be nullptr.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteTransferableAsAction(
+      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr) = 0;
+
+  /**
+   * PasteAsQuotationAsAction() pastes content in clipboard as quotation.
+   * If the editor is TextEditor or in plaintext mode, will paste the content
+   * with appending ">" to start of each line.
+   * if the editor is HTMLEditor and is not in plaintext mode, will patste it
+   * into newly created blockquote element.
+   *
+   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
+   *                            nsIClipboard::kSelectionClipboard.
+   * @param aDispatchPasteEvent true if this should dispatch ePaste event
+   *                            before pasting.  Otherwise, false.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsQuotationAsAction(
+      int32_t aClipboardType, bool aDispatchPasteEvent,
+      nsIPrincipal* aPrincipal = nullptr) = 0;
 
  protected:  // May be used by friends.
   class AutoEditActionDataSetter;
@@ -2043,6 +2098,26 @@ class EditorBase : public nsIEditor,
    */
   MOZ_CAN_RUN_SCRIPT nsresult
   ReplaceSelectionAsSubAction(const nsAString& aString);
+
+  /**
+   * HandleInsertText() handles inserting text at selection.
+   *
+   * @param aEditSubAction      Must be EditSubAction::eInsertText or
+   *                            EditSubAction::eInsertTextComingFromIME.
+   * @param aInsertionString    String to be inserted at selection.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult HandleInsertText(
+      EditSubAction aEditSubAction, const nsAString& aInsertionString) = 0;
+
+  /**
+   * InsertWithQuotationsAsSubAction() inserts aQuotedText with appending ">"
+   * to start of every line.
+   *
+   * @param aQuotedText         String to insert.  This will be quoted by ">"
+   *                            automatically.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult
+  InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) = 0;
 
  protected:  // Called by helper classes.
   /**
