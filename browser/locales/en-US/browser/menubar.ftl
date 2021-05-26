@@ -166,8 +166,8 @@ menu-view-page-style-no-style =
 menu-view-page-basic-style =
     .label = Basic Page Style
     .accesskey = B
-menu-view-charset =
-    .label = Text Encoding
+menu-view-repair-text-encoding =
+    .label = Repair Text Encoding
     .accesskey = c
 
 ## These should match what Safari and other Apple applications
