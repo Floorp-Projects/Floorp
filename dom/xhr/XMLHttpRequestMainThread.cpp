@@ -169,11 +169,6 @@ static void AddLoadFlags(nsIRequest* request, nsLoadFlags newFlags) {
 }
 
 // We are in a sync event loop.
-#define NOT_CALLABLE_IN_SYNC_SEND                              \
-  if (mFlagSyncLooping || mEventDispatchingSuspended) {        \
-    return NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT; \
-  }
-
 #define NOT_CALLABLE_IN_SYNC_SEND_RV                               \
   if (mFlagSyncLooping || mEventDispatchingSuspended) {            \
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT); \
@@ -662,8 +657,8 @@ void XMLHttpRequestMainThread::SetResponseType(
   if (HasOrHasHadOwner() && mState != XMLHttpRequest_Binding::UNSENT &&
       mFlagSynchronous) {
     LogMessage("ResponseTypeSyncXHRWarning", GetOwner());
-    aRv.Throw(
-        NS_ERROR_DOM_INVALID_ACCESS_XHR_TIMEOUT_AND_RESPONSETYPE_UNSUPPORTED_FOR_SYNC);
+    aRv.ThrowInvalidAccessError(
+        "synchronous XMLHttpRequests do not support timeout and responseType");
     return;
   }
 
@@ -1386,18 +1381,15 @@ void XMLHttpRequestMainThread::Open(const nsACString& aMethod,
                                     const nsAString& aUsername,
                                     const nsAString& aPassword,
                                     ErrorResult& aRv) {
-  nsresult rv =
-      Open(aMethod, NS_ConvertUTF16toUTF8(aUrl), aAsync, aUsername, aPassword);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
+  Open(aMethod, NS_ConvertUTF16toUTF8(aUrl), aAsync, aUsername, aPassword, aRv);
 }
 
-nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
-                                        const nsACString& aUrl, bool aAsync,
-                                        const nsAString& aUsername,
-                                        const nsAString& aPassword) {
-  NOT_CALLABLE_IN_SYNC_SEND
+void XMLHttpRequestMainThread::Open(const nsACString& aMethod,
+                                    const nsACString& aUrl, bool aAsync,
+                                    const nsAString& aUsername,
+                                    const nsAString& aPassword,
+                                    ErrorResult& aRv) {
+  NOT_CALLABLE_IN_SYNC_SEND_RV
 
   // Gecko-specific
   if (!aAsync && !DontWarnAboutSyncXHR() && GetOwner() &&
@@ -1414,12 +1406,15 @@ nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
   if (!responsibleDocument) {
     // This could be because we're no longer current or because we're in some
     // non-window context...
-    nsresult rv = CheckCurrentGlobalCorrectness();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT;
+    if (NS_WARN_IF(NS_FAILED(CheckCurrentGlobalCorrectness()))) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT);
+      return;
     }
   }
-  NS_ENSURE_TRUE(mPrincipal, NS_ERROR_NOT_INITIALIZED);
+  if (!mPrincipal) {
+    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
+    return;
+  }
 
   // Gecko-specific
   if (!aAsync && responsibleDocument && GetOwner()) {
@@ -1438,9 +1433,9 @@ nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
 
   // Steps 2-4
   nsAutoCString method;
-  nsresult rv = FetchUtil::GetValidRequestMethod(aMethod, method);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  aRv = FetchUtil::GetValidRequestMethod(aMethod, method);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
   }
 
   // Steps 5-6
@@ -1460,15 +1455,19 @@ nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
   }
 
   nsCOMPtr<nsIURI> parsedURL;
-  rv = NS_NewURI(getter_AddRefs(parsedURL), aUrl, originCharset, baseURI);
+  nsresult rv =
+      NS_NewURI(getter_AddRefs(parsedURL), aUrl, originCharset, baseURI);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_MALFORMED_URI) {
-      return NS_ERROR_DOM_MALFORMED_URI;
+      aRv.Throw(NS_ERROR_DOM_MALFORMED_URI);
+      return;
     }
-    return rv;
+    aRv.Throw(rv);
+    return;
   }
   if (NS_WARN_IF(NS_FAILED(CheckCurrentGlobalCorrectness()))) {
-    return NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT);
+    return;
   }
 
   // Step 7
@@ -1499,7 +1498,9 @@ nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
     if (mResponseType != XMLHttpRequestResponseType::_empty) {
       LogMessage("ResponseTypeSyncXHRWarning", GetOwner());
     }
-    return NS_ERROR_DOM_INVALID_ACCESS_XHR_TIMEOUT_AND_RESPONSETYPE_UNSUPPORTED_FOR_SYNC;
+    aRv.ThrowInvalidAccessError(
+        "synchronous XMLHttpRequests do not support timeout and responseType");
+    return;
   }
 
   // Step 10
@@ -1532,8 +1533,6 @@ nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
     mState = XMLHttpRequest_Binding::OPENED;
     FireReadystatechangeEvent();
   }
-
-  return NS_OK;
 }
 
 void XMLHttpRequestMainThread::SetOriginAttributes(
@@ -3148,8 +3147,8 @@ void XMLHttpRequestMainThread::SetTimeout(uint32_t aTimeout, ErrorResult& aRv) {
     /* Timeout is not supported for synchronous requests with an owning window,
        per XHR2 spec. */
     LogMessage("TimeoutSyncXHRWarning", GetOwner());
-    aRv.Throw(
-        NS_ERROR_DOM_INVALID_ACCESS_XHR_TIMEOUT_AND_RESPONSETYPE_UNSUPPORTED_FOR_SYNC);
+    aRv.ThrowInvalidAccessError(
+        "synchronous XMLHttpRequests do not support timeout and responseType");
     return;
   }
 
