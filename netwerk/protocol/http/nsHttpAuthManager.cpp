@@ -58,12 +58,13 @@ nsHttpAuthManager::GetAuthIdentity(
     aPrincipal->OriginAttributesRef().CreateSuffix(originSuffix);
   }
 
-  if (!aPath.IsEmpty())
+  if (!aPath.IsEmpty()) {
     rv = auth_cache->GetAuthEntryForPath(aScheme, aHost, aPort, aPath,
                                          originSuffix, &entry);
-  else
+  } else {
     rv = auth_cache->GetAuthEntryForDomain(aScheme, aHost, aPort, aRealm,
                                            originSuffix, &entry);
+  }
 
   if (NS_FAILED(rv)) return rv;
   if (!entry) return NS_ERROR_UNEXPECTED;
