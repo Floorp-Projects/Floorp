@@ -2583,8 +2583,3 @@ pref("first-startup.timeout", 30000);
 // are expected to go away once a standardized alternative becomes
 // available.
 pref("svg.context-properties.content.allowed-domains", "profile.accounts.firefox.com,profile.stage.mozaws.net");
-
-// Preference that allows individual users to disable Firefox Translations.
-#ifdef NIGHTLY_BUILD
-  pref("extensions.translations.disabled", true);
-#endif

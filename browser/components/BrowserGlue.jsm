@@ -1975,35 +1975,6 @@ BrowserGlue.prototype = {
     });
   },
 
-  // Set up a listener to enable/disable the translation extension
-  // based on its preference.
-  _monitorTranslationsPref() {
-    const PREF = "extensions.translations.disabled";
-    const ID = "firefox-translations@mozilla.org";
-    const _checkTranslationsPref = async () => {
-      let addon = await AddonManager.getAddonByID(ID);
-      let disabled = Services.prefs.getBoolPref(PREF, false);
-      if (!addon && disabled) {
-        // not installed, bail out early.
-        return;
-      }
-      if (!disabled) {
-        // first time install of addon and install on firefox update
-        addon =
-          (await AddonManager.maybeInstallBuiltinAddon(
-            ID,
-            "0.4.0",
-            "resource://builtin-addons/translations/"
-          )) || addon;
-        await addon.enable();
-      } else if (addon) {
-        await addon.disable();
-      }
-    };
-    Services.prefs.addObserver(PREF, _checkTranslationsPref);
-    _checkTranslationsPref();
-  },
-
   _monitorHTTPSOnlyPref() {
     const PREF_ENABLED = "dom.security.https_only_mode";
     const PREF_WAS_ENABLED = "dom.security.https_only_mode_ever_enabled";
@@ -2201,9 +2172,6 @@ BrowserGlue.prototype = {
     this._monitorHTTPSOnlyPref();
     this._monitorIonPref();
     this._monitorIonStudies();
-    if (AppConstants.NIGHTLY_BUILD) {
-      this._monitorTranslationsPref();
-    }
 
     FirefoxMonitor.init();
   },
