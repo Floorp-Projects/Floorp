@@ -167,6 +167,7 @@ class EdgeDriverServer(WebDriverServer):
 class OperaDriverServer(ChromeDriverServer):
     pass
 
+
 class InternetExplorerDriverServer(WebDriverServer):
     def make_command(self):
         return [self.binary,
@@ -181,8 +182,8 @@ class SafariDriverServer(WebDriverServer):
 
 class ServoDriverServer(WebDriverServer):
     def __init__(self, logger, binary="servo", binary_args=None, host="127.0.0.1",
-                 env=None, port=None, args=None):
-        env = os.environ.copy()
+                 port=None, env=None, args=None):
+        env = env if env is not None else os.environ.copy()
         env["RUST_BACKTRACE"] = "1"
         WebDriverServer.__init__(self, logger, binary,
                                  host=host,
