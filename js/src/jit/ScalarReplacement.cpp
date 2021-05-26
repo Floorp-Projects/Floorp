@@ -1804,7 +1804,6 @@ bool ScalarReplacement(MIRGenerator* mir, MIRGraph& graph) {
   EmulateStateOf<ObjectMemoryView> replaceObject(mir, graph);
   EmulateStateOf<ArrayMemoryView> replaceArray(mir, graph);
   bool addedPhi = false;
-  bool shouldReplaceArguments = JitOptions.scalarReplaceArguments;
 
   for (ReversePostorderIterator block = graph.rpoBegin();
        block != graph.rpoEnd(); block++) {
@@ -1834,7 +1833,7 @@ bool ScalarReplacement(MIRGenerator* mir, MIRGraph& graph) {
         continue;
       }
 
-      if (shouldReplaceArguments && IsOptimizableArgumentsInstruction(*ins)) {
+      if (IsOptimizableArgumentsInstruction(*ins)) {
         ArgumentsReplacer replacer(mir, graph, *ins);
         if (replacer.escapes(*ins)) {
           continue;

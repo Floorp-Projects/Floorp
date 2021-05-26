@@ -1,4 +1,4 @@
-// |jit-test| --fast-warmup; --scalar-replace-arguments
+// |jit-test| --fast-warmup
 
 g13 = newGlobal({newCompartment: true})
 g13.parent = this;
