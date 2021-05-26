@@ -198,11 +198,13 @@ class DefaultNavigationInteractor(
             }
         }
 
-        // TODO show successful snackbar here (regardless of operation succes).
+        // TODO show successful snackbar here (regardless of operation success).
     }
 
     override fun onSyncedTabClicked(tab: SyncTab) {
         metrics.track(Event.SyncedTabOpened)
+
+        dismissTabTray()
         activity.openToBrowserAndLoad(
             searchTermOrURL = tab.active().url,
             newTab = true,
