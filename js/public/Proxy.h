@@ -517,7 +517,7 @@ inline const JS::Value& GetProxyExpando(const JSObject* obj) {
   return detail::GetProxyDataLayout(obj)->values()->expandoSlot;
 }
 
-inline JSObject* GetProxyTargetObject(JSObject* obj) {
+inline JSObject* GetProxyTargetObject(const JSObject* obj) {
   return GetProxyPrivate(obj).toObjectOrNull();
 }
 

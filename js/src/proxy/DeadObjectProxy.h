@@ -91,7 +91,7 @@ class DeadObjectProxy : public BaseProxyHandler {
   static int32_t flags(JSObject* obj) { return GetProxyPrivate(obj).toInt32(); }
 };
 
-bool IsDeadProxyObject(JSObject* obj);
+bool IsDeadProxyObject(const JSObject* obj);
 
 JS::Value DeadProxyTargetValue(ProxyObject* obj);
 

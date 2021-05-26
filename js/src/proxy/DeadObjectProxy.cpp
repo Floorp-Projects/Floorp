@@ -128,7 +128,7 @@ RegExpShared* DeadObjectProxy::regexp_toShared(JSContext* cx,
   return nullptr;
 }
 
-bool js::IsDeadProxyObject(JSObject* obj) {
+bool js::IsDeadProxyObject(const JSObject* obj) {
   return IsDerivedProxyObject(obj, &DeadObjectProxy::singleton);
 }
 

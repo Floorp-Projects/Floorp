@@ -47,6 +47,7 @@
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
 #include "js/Wrapper.h"
+#include "proxy/DeadObjectProxy.h"
 #include "util/Memory.h"
 #include "util/Text.h"
 #include "util/Windows.h"
@@ -3216,6 +3217,31 @@ void JSObject::dump(js::GenericPrinter& out) const {
   const JSClass* clasp = obj->getClass();
   out.printf("  class %p %s\n", clasp, clasp->name);
 
+  if (IsProxy(obj)) {
+    auto* handler = GetProxyHandler(obj);
+    out.printf("    handler %p", handler);
+    if (IsDeadProxyObject(obj)) {
+      out.printf(" (DeadObjectProxy)");
+    } else if (IsCrossCompartmentWrapper(obj)) {
+      out.printf(" (CCW)");
+    }
+    out.putChar('\n');
+
+    Value priv = GetProxyPrivate(obj);
+    if (!priv.isUndefined()) {
+      out.printf("    private ");
+      dumpValue(priv, out);
+      out.putChar('\n');
+    }
+
+    Value expando = GetProxyExpando(obj);
+    if (!expando.isNull()) {
+      out.printf("    expando ");
+      dumpValue(expando, out);
+      out.putChar('\n');
+    }
+  }
+
   const Shape* shape = obj->shape();
   out.printf("  shape %p\n", shape);
 
@@ -3286,7 +3312,7 @@ void JSObject::dump(js::GenericPrinter& out) const {
       out.put(" elements_maybe_in_iteration");
     }
   } else {
-    out.put(" not_native\n");
+    out.put(" not_native");
   }
   out.putChar('\n');
 
