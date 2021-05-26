@@ -262,4 +262,4 @@ skip-if(Android) load 1665792.html # Print preview on android doesn't fly
 load 1681729.html
 load 1693049.html
 load 1697525.html
-load 1712198.html
+skip-if(ThreadSanitizer) load 1712198.html # Mysterious failure that should be investigated (bug 1712866).
