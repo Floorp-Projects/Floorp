@@ -108,12 +108,17 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
                      nsRange** aRange) const;
   static already_AddRefed<nsRange> MakeRange(const NodeOffsetRange& aRange);
 
+  struct Word {
+    nsAutoString mText;
+    NodeOffsetRange mNodeOffsetRange;
+    bool mSkipChecking = false;
+  };
+
   // Moves to the the next word in the range, and retrieves it's text and range.
-  // false is returned when we are done checking.
-  // aSkipChecking will be set if the word is "special" and shouldn't be
+  // `false` is returned when we are done checking.
+  // mSkipChecking will be set if the word is "special" and shouldn't be
   // checked (e.g., an email address).
-  bool GetNextWord(nsAString& aText, NodeOffsetRange* aNodeOffsetRange,
-                   bool* aSkipChecking);
+  bool GetNextWord(Word& aWord);
 
   // Call to normalize some punctuation. This function takes an autostring
   // so we can access characters directly.
