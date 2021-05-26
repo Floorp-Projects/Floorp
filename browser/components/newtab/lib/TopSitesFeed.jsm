@@ -163,14 +163,15 @@ class ContileIntegration {
       }
 
       const body = await response.json();
-      if (Array.isArray(body)) {
-        if (body.length > MAX_NUM_SPONSORED) {
+      if (body?.tiles && Array.isArray(body.tiles)) {
+        let { tiles } = body;
+        if (tiles.length > MAX_NUM_SPONSORED) {
           Cu.reportError(
-            `Contile provided more links than permitted. (${body.length} received, limit is ${MAX_NUM_SPONSORED})`
+            `Contile provided more links than permitted. (${tiles.length} received, limit is ${MAX_NUM_SPONSORED})`
           );
-          body.length = MAX_NUM_SPONSORED;
+          tiles.length = MAX_NUM_SPONSORED;
         }
-        this._sites = body;
+        this._sites = tiles;
         return true;
       }
     } catch (error) {
@@ -1332,4 +1333,8 @@ this.TopSitesFeed = class TopSitesFeed {
 };
 
 this.DEFAULT_TOP_SITES = DEFAULT_TOP_SITES;
-const EXPORTED_SYMBOLS = ["TopSitesFeed", "DEFAULT_TOP_SITES"];
+const EXPORTED_SYMBOLS = [
+  "TopSitesFeed",
+  "DEFAULT_TOP_SITES",
+  "ContileIntegration",
+];
