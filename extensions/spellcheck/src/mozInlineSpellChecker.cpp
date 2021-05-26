@@ -1424,10 +1424,10 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
 
   while (mWordUtil.GetNextWord(word)) {
     // get the range for the current word.
-    nsINode* beginNode = word.mNodeOffsetRange.Begin().Node();
-    nsINode* endNode = word.mNodeOffsetRange.End().Node();
-    int32_t beginOffset = word.mNodeOffsetRange.Begin().Offset();
-    int32_t endOffset = word.mNodeOffsetRange.End().Offset();
+    nsINode* const beginNode = word.mNodeOffsetRange.Begin().Node();
+    nsINode* const endNode = word.mNodeOffsetRange.End().Node();
+    const int32_t beginOffset = word.mNodeOffsetRange.Begin().Offset();
+    const int32_t endOffset = word.mNodeOffsetRange.End().Offset();
 
     // see if we've done enough words in this round and run out of time.
     if (wordsChecked >= INLINESPELL_MINIMUM_WORDS_BEFORE_TIMEOUT &&
