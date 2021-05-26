@@ -62,6 +62,28 @@ describe("MultiStageAboutWelcomeProton module", () => {
         "mr1-onboarding-set-default-pin-primary-button-label"
       );
     });
+    it("should have a FxA button", async () => {
+      sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
+
+      const data = await AboutWelcomeDefaults.prepareContentForReact({
+        ...(await getData()),
+        isProton: true,
+      });
+
+      assert.notProperty(data, "skipFxA");
+      assert.property(data.screens[0].content, "secondary_button_top");
+    });
+    it("should remove the FxA button if pref disabled", async () => {
+      sandbox.stub(global.Services.prefs, "getBoolPref").returns(false);
+
+      const data = await AboutWelcomeDefaults.prepareContentForReact({
+        ...(await getData()),
+        isProton: true,
+      });
+
+      assert.property(data, "skipFxA", true);
+      assert.notProperty(data.screens[0].content, "secondary_button_top");
+    });
     it("should have an image caption", async () => {
       const data = await AboutWelcomeDefaults.prepareContentForReact({
         ...(await getData()),

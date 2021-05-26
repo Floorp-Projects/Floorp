@@ -434,7 +434,7 @@ const RULES = [
     description: "Proton Default AW content",
     getDefaults(featureConfig) {
       if (featureConfig?.isProton) {
-        return Cu.cloneInto(DEFAULT_PROTON_WELCOME_CONTENT, {});
+        return DEFAULT_PROTON_WELCOME_CONTENT;
       }
       return null;
     },
@@ -503,7 +503,7 @@ const RULES = [
   {
     description: "Default AW content",
     getDefaults() {
-      return { ...DEFAULT_WELCOME_CONTENT };
+      return DEFAULT_WELCOME_CONTENT;
     },
   },
 ];
@@ -512,7 +512,8 @@ async function getDefaults(featureConfig) {
   for (const rule of RULES) {
     const result = await rule.getDefaults(featureConfig);
     if (result) {
-      return result;
+      // Make a deep copy of the object to avoid editing the original default.
+      return Cu.cloneInto(result, {});
     }
   }
   return null;
@@ -603,15 +604,21 @@ async function prepareContentForReact(content) {
     }
   }
 
+  // Remove Firefox Accounts related UI and prevent related metrics.
+  if (!Services.prefs.getBoolPref("identity.fxaccounts.enabled", false)) {
+    delete content.screens?.find(
+      screen =>
+        screen.content?.secondary_button_top?.action?.type ===
+        "SHOW_FIREFOX_ACCOUNTS"
+    )?.content.secondary_button_top;
+    content.skipFxA = true;
+  }
+
   // Remove the English-only image caption.
   if (Services.locale.appLocaleAsBCP47.split("-")[0] !== "en") {
-    const { help_text } =
-      content.screens?.find(screen => screen.content?.help_text?.deleteIfNotEn)
-        ?.content ?? {};
-
-    if (help_text?.text) {
-      delete help_text.text;
-    }
+    delete content.screens?.find(
+      screen => screen.content?.help_text?.deleteIfNotEn
+    )?.content.help_text.text;
   }
 
   return content;
