@@ -475,19 +475,25 @@ def mozconfig_options(mozconfig, early_options, automation, help):
             add(key, value)
 
 
+@depends(check_build_environment, "--help")
+@imports(_from="os.path", _import="exists")
+def js_package(build_env, help):
+    return not exists(os.path.join(build_env.topsrcdir, "browser"))
+
+
 # Source checkout and version control integration.
 # ================================================
 
 
-@depends(check_build_environment, "MOZ_AUTOMATION", "--help")
+@depends(check_build_environment, "MOZ_AUTOMATION", js_package, "--help")
 @checking("for vcs source checkout")
 @imports("os")
-def vcs_checkout_type(build_env, automation, help):
+def vcs_checkout_type(build_env, automation, js_package, help):
     if os.path.exists(os.path.join(build_env.topsrcdir, ".hg")):
         return "hg"
     elif os.path.exists(os.path.join(build_env.topsrcdir, ".git")):
         return "git"
-    elif automation and not help:
+    elif automation and not js_package and not help:
         raise FatalCheckError(
             "unable to resolve VCS type; must run "
             "from a source checkout when MOZ_AUTOMATION "
@@ -645,9 +651,9 @@ def application(app):
 imply_option("--enable-project", application)
 
 
-@depends(check_build_environment)
-def default_project(build_env):
-    if build_env.topobjdir.endswith("/js/src"):
+@depends(check_build_environment, js_package)
+def default_project(build_env, js_package):
+    if js_package or build_env.topobjdir.endswith("/js/src"):
         return "js"
     return "browser"
 

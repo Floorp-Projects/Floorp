@@ -123,15 +123,15 @@ rsync_filter_list = """
 + /moz.configure
 + /test.mozbuild
 + /.babel-eslint.rc.js
-+ .eslintignore
-+ .eslintrc.js
-+ .flake8
-+ .gitignore
-+ .hgignore
-+ .lldbinit
-+ .prettierignore
-+ .prettierrc
-+ .ycm_extra_conf.py
++ /.eslintignore
++ /.eslintrc.js
++ /.flake8
++ /.gitignore
++ /.hgignore
++ /.lldbinit
++ /.prettierignore
++ /.prettierrc
++ /.ycm_extra_conf.py
 
 # Additional libraries (optionally) used by SpiderMonkey
 
@@ -238,18 +238,24 @@ appropriately.
 """
 
 MOZCONFIG_DEBUG_CONTENT = """\
-ac_add_options --enable-application=js
+# Much slower when running, but adds assertions that are much better for
+# developing against the JSAPI.
 ac_add_options --enable-debug
+
+# Much faster when running, worse for debugging.
 ac_add_options --enable-optimize
-ac_add_options --disable-jemalloc
+
 mk_add_options MOZ_OBJDIR=obj-debug
 """
 
 MOZCONFIG_OPT_CONTENT = """\
-ac_add_options --enable-application=js
+# Much faster when running, but very error-prone to develop against because
+# this will skip all the assertions critical to using the JSAPI properly.
 ac_add_options --disable-debug
+
+# Much faster when running, worse for debugging.
 ac_add_options --enable-optimize
-ac_add_options --disable-jemalloc
+
 mk_add_options MOZ_OBJDIR=obj-opt
 """
 

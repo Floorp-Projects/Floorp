@@ -5,8 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-@depends(target)
-def jemalloc_default(target):
+@depends(target, js_package)
+def jemalloc_default(target, js_package):
+    if js_package:
+        return False
     return target.kernel in ("Darwin", "Linux", "WINNT")
 
 
