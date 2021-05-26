@@ -293,6 +293,19 @@
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports'
       ],
+      'conditions': [
+        [ 'cc_is_clang==1', {
+          'cflags': [
+            '-no-integrated-as',
+          ],
+          'cflags_mozilla': [
+            '-no-integrated-as',
+          ],
+          'asflags_mozilla': [
+            '-no-integrated-as',
+          ],
+        }],
+      ],
     },
     {
       'target_name': 'ppc-gcm-wrap-nodepend_c_lib',

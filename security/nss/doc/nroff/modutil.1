@@ -2,12 +2,12 @@
 .\"     Title: MODUTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date:  5 October 2017
+.\"      Date: 19 May 2021
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "MODUTIL" "1" "5 October 2017" "nss-tools" "NSS Security Tools"
+.TH "MODUTIL" "1" "19 May 2021" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -188,18 +188,18 @@ Enable specific ciphers in a module that is being added to the database\&. The
 is a colon\-delimited list of cipher names\&. Enclose this list in quotation marks if it contains spaces\&.
 .RE
 .PP
-\-dbdir [sql:]directory
+\-dbdir directory
 .RS 4
 Specify the database directory in which to access or create security module database files\&.
 .sp
 \fBmodutil\fR
 supports two types of databases: the legacy security databases (cert8\&.db,
 key3\&.db, and
-secmod\&.db) and new SQLite databases (cert9\&.db,
+secmod\&.db) and SQLite databases (cert9\&.db,
 key4\&.db, and
 pkcs11\&.txt)\&. If the prefix
-\fBsql:\fR
-is not used, then the tool assumes that the given databases are in the old format\&.
+\fBdbm:\fR
+is not used, then the tool assumes that the given databases are in SQLite format\&.
 .RE
 .PP
 \-\-dbprefix prefix
@@ -207,7 +207,7 @@ is not used, then the tool assumes that the given databases are in the old forma
 Specify the prefix used on the database files, such as
 my_
 for
-my_cert8\&.db\&. This option is provided as a special case\&. Changing the names of the certificate and key databases is not recommended\&.
+my_cert9\&.db\&. This option is provided as a special case\&. Changing the names of the certificate and key databases is not recommended\&.
 .RE
 .PP
 \-installdir root\-installation\-directory
@@ -330,7 +330,7 @@ can be used to create these files\&. The only required argument is the database 
 .RS 4
 .\}
 .nf
-modutil \-create \-dbdir [sql:]directory
+modutil \-create \-dbdir directory
 .fi
 .if n \{\
 .RE
@@ -358,7 +358,7 @@ For example:
 .RS 4
 .\}
 .nf
-modutil \-dbdir sql:/home/my/sharednssdb \-add "Example PKCS #11 Module" \-libfile "/tmp/crypto\&.so" \-mechanisms RSA:DSA:RC2:RANDOM 
+modutil \-dbdir /home/my/sharednssdb \-add "Example PKCS #11 Module" \-libfile "/tmp/crypto\&.so" \-mechanisms RSA:DSA:RC2:RANDOM 
 
 Using database directory \&.\&.\&. 
 Module "Example PKCS #11 Module" added to database\&.
@@ -411,7 +411,7 @@ argument\&.
 .RS 4
 .\}
 .nf
-modutil \-dbdir sql:/home/mt"jar\-install\-filey/sharednssdb \-jar install\&.jar \-installdir sql:/home/my/sharednssdb
+modutil \-dbdir /home/mt"jar\-install\-filey/sharednssdb \-jar install\&.jar \-installdir /home/my/sharednssdb
 
 This installation JAR file was signed by: 
 \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\- 
@@ -473,7 +473,7 @@ database:
 .RS 4
 .\}
 .nf
-modutil \-delete modulename \-dbdir [sql:]directory 
+modutil \-delete modulename \-dbdir directory 
 .fi
 .if n \{\
 .RE
@@ -493,7 +493,7 @@ command\&.
 .RS 4
 .\}
 .nf
-modutil \-list [modulename] \-dbdir [sql:]directory 
+modutil \-list [modulename] \-dbdir directory 
 .fi
 .if n \{\
 .RE
@@ -505,7 +505,7 @@ Listing the modules shows the module name, their status, and other associated se
 .RS 4
 .\}
 .nf
-modutil \-list \-dbdir sql:/home/my/sharednssdb 
+modutil \-list \-dbdir /home/my/sharednssdb 
 
 Listing of PKCS #11 Modules
 \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
@@ -534,7 +534,7 @@ returns details information about the module itself, like supported cipher mecha
 .RS 4
 .\}
 .nf
- modutil \-list "NSS Internal PKCS #11 Module" \-dbdir sql:/home/my/sharednssdb
+ modutil \-list "NSS Internal PKCS #11 Module" \-dbdir /home/my/sharednssdb
 
 \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
 Name: NSS Internal PKCS #11 Module
@@ -594,7 +594,7 @@ command\&.)
 .RS 4
 .\}
 .nf
- modutil \-rawlist \-dbdir sql:/home/my/sharednssdb
+ modutil \-rawlist \-dbdir /home/my/sharednssdb
  name="NSS Internal PKCS #11 Module" parameters="configdir=\&. certPrefix= keyPrefix= secmod=secmod\&.db flags=readOnly " NSS="trustOrder=75 cipherOrder=100 slotParams={0x00000001=[slotFlags=RSA,RC4,RC2,DES,DH,SHA1,MD5,MD2,SSL,TLS,AES,RANDOM askpw=any timeout=30 ] }  Flags=internal,critical"
 .fi
 .if n \{\
@@ -688,7 +688,7 @@ option\&. For example:
 .RS 4
 .\}
 .nf
-modutil \-fips true \-dbdir sql:/home/my/sharednssdb/
+modutil \-fips true \-dbdir /home/my/sharednssdb/
 
 FIPS mode enabled\&.
 .fi
@@ -704,7 +704,7 @@ command with either a true or false flag (it doesn\*(Aqt matter which)\&. The to
 .RS 4
 .\}
 .nf
-modutil \-chkfips false \-dbdir sql:/home/my/sharednssdb/
+modutil \-chkfips false \-dbdir /home/my/sharednssdb/
 
 FIPS mode enabled\&.
 .fi
@@ -730,7 +730,7 @@ modutil \-changepw tokenname [\-pwfile old\-password\-file] [\-newpwfile new\-pa
 .RS 4
 .\}
 .nf
-modutil \-dbdir sql:/home/my/sharednssdb \-changepw "NSS Certificate DB" 
+modutil \-dbdir /home/my/sharednssdb \-changepw "NSS Certificate DB" 
 
 Enter old password: 
 Incorrect password, try again\&.\&.\&. 
@@ -1341,30 +1341,30 @@ database type\&. The shared database type is preferred; the legacy format is inc
 .PP
 By default, the tools (\fBcertutil\fR,
 \fBpk12util\fR,
-\fBmodutil\fR) assume that the given security databases follow the more common legacy type\&. Using the SQLite databases must be manually specified by using the
-\fBsql:\fR
+\fBmodutil\fR) assume that the given security databases use the SQLite type\&. Using the legacy databases must be manually specified by using the
+\fBdbm:\fR
 prefix with the given security directory\&. For example:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-modutil \-create \-dbdir sql:/home/my/sharednssdb
+modutil \-create \-dbdir dbm:/home/my/sharednssdb
 .fi
 .if n \{\
 .RE
 .\}
 .PP
-To set the shared database type as the default type for the tools, set the
+To set the legacy database type as the default type for the tools, set the
 \fBNSS_DEFAULT_DB_TYPE\fR
 environment variable to
-\fBsql\fR:
+\fBdbm\fR:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-export NSS_DEFAULT_DB_TYPE="sql"
+export NSS_DEFAULT_DB_TYPE="dbm"
 .fi
 .if n \{\
 .RE
@@ -1373,8 +1373,6 @@ export NSS_DEFAULT_DB_TYPE="sql"
 This line can be added to the
 ~/\&.bashrc
 file to make the change permanent for the user\&.
-.PP
-Most applications do not use the shared database by default, but they can be configured to use them\&. For example, this how\-to article covers how to configure Firefox and Thunderbird to use the new shared NSS databases:
 .sp
 .RS 4
 .ie n \{\

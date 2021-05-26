@@ -1521,7 +1521,7 @@ extern SECStatus BLAKE2B_MAC_HashBuf(unsigned char *output,
 /*
 ** Create a new Blake2b context
 */
-extern BLAKE2BContext *BLAKE2B_NewContext();
+extern BLAKE2BContext *BLAKE2B_NewContext(void);
 
 /*
 ** Destroy a Blake2b secure hash context.
