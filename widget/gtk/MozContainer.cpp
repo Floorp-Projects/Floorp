@@ -17,15 +17,14 @@
 #  include "maiRedundantObjectFactory.h"
 #endif
 
-#undef LOG
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
 #  include "nsTArray.h"
 #  include "Units.h"
 extern mozilla::LazyLogModule gWidgetLog;
-#  define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
+#  define LOGCONTAINER(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
 #else
-#  define LOG(args)
+#  define LOGCONTAINER(args)
 #endif /* MOZ_LOGGING */
 
 /* init methods */
@@ -155,7 +154,7 @@ void moz_container_init(MozContainer* container) {
     moz_container_wayland_init(&container->wl_container);
   }
 #endif
-  LOG(("%s [%p]\n", __FUNCTION__, (void*)container));
+  LOGCONTAINER(("%s [%p]\n", __FUNCTION__, (void*)container));
 }
 
 void moz_container_map(GtkWidget* widget) {
@@ -220,8 +219,8 @@ void moz_container_realize(GtkWidget* widget) {
 
     window = gdk_window_new(parent, &attributes, attributes_mask);
 
-    LOG(("moz_container_realize() [%p] GdkWindow %p\n", (void*)container,
-         (void*)window));
+    LOGCONTAINER(("moz_container_realize() [%p] GdkWindow %p\n",
+                  (void*)container, (void*)window));
 
     gdk_window_set_user_data(window, widget);
   } else {
@@ -239,8 +238,9 @@ void moz_container_size_allocate(GtkWidget* widget, GtkAllocation* allocation) {
 
   g_return_if_fail(IS_MOZ_CONTAINER(widget));
 
-  LOG(("moz_container_size_allocate [%p] %d,%d -> %d x %d\n", (void*)widget,
-       allocation->x, allocation->y, allocation->width, allocation->height));
+  LOGCONTAINER(("moz_container_size_allocate [%p] %d,%d -> %d x %d\n",
+                (void*)widget, allocation->x, allocation->y, allocation->width,
+                allocation->height));
 
   /* short circuit if you can */
   container = MOZ_CONTAINER(widget);
@@ -371,3 +371,5 @@ static void moz_container_add(GtkContainer* container, GtkWidget* widget) {
 void moz_container_force_default_visual(MozContainer* container) {
   container->force_default_visual = true;
 }
+
+#undef LOGCONTAINER
