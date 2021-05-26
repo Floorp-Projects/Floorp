@@ -446,8 +446,10 @@ perfdocs-verify:
     worker:
         env:
             WORKSPACE: /builds/worker/checkouts/gecko/
+            DECISION_TASK_ID: {task-reference: <decision>}
     when:
         files-changed:
+            - 'taskcluster/**'
             - '**/perftest.ini'
             - 'python/mozperftest/**'
             - 'testing/**/*.ini'

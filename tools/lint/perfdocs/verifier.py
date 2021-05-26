@@ -67,14 +67,14 @@ class Verifier(object):
     descriptions that can be used to build up a document.
     """
 
-    def __init__(self, workspace_dir):
+    def __init__(self, workspace_dir, taskgraph=None):
         """
         Initialize the Verifier.
 
         :param str workspace_dir: Path to the top-level checkout directory.
         """
         self.workspace_dir = workspace_dir
-        self._gatherer = Gatherer(workspace_dir)
+        self._gatherer = Gatherer(workspace_dir, taskgraph)
 
     def validate_descriptions(self, framework_info):
         """
