@@ -258,10 +258,6 @@ pub enum CompositorConfig {
     /// the Compositor trait, but can be significantly more power efficient on operating
     /// systems that support it.
     Native {
-        /// The maximum number of dirty rects that can be provided per compositor
-        /// surface update. If this is zero, the entire compositor surface for
-        /// a given tile will be drawn if it's dirty.
-        max_update_rects: usize,
         /// A client provided interface to a native / OS compositor.
         compositor: Box<dyn Compositor>,
     }
@@ -319,8 +315,6 @@ pub enum CompositorKind {
     },
     /// Native OS compositor.
     Native {
-        /// Maximum dirty rects per compositor surface.
-        max_update_rects: usize,
         /// The capabilities of the underlying platform.
         capabilities: CompositorCapabilities,
     },
@@ -929,6 +923,10 @@ pub struct CompositorCapabilities {
     pub virtual_surface_size: i32,
     /// Whether the compositor requires redrawing on invalidation.
     pub redraw_on_invalidation: bool,
+    /// The maximum number of dirty rects that can be provided per compositor
+    /// surface update. If this is zero, the entire compositor surface for
+    /// a given tile will be drawn if it's dirty.
+    pub max_update_rects: usize,
 }
 
 impl Default for CompositorCapabilities {
@@ -940,6 +938,9 @@ impl Default for CompositorCapabilities {
         CompositorCapabilities {
             virtual_surface_size: 0,
             redraw_on_invalidation: false,
+            // Assume compositors can do at least partial update of surfaces. If not,
+            // the native compositor should override this to be 0.
+            max_update_rects: 1,
         }
     }
 }

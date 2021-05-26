@@ -422,7 +422,6 @@ fn main() {
     let debug_flags = DebugFlags::empty();
     let compositor_config = if enable_compositor {
         webrender::CompositorConfig::Native {
-            max_update_rects: 1,
             compositor: Box::new(DirectCompositeInterface::new(window)),
         }
     } else {

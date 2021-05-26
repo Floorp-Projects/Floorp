@@ -211,14 +211,6 @@ bool RenderCompositorNative::MaybeProcessScreenshotQueue() {
   return true;
 }
 
-uint32_t RenderCompositorNative::GetMaxUpdateRects() {
-  if (ShouldUseNativeCompositor() &&
-      StaticPrefs::gfx_webrender_compositor_max_update_rects_AtStartup() > 0) {
-    return 1;
-  }
-  return 0;
-}
-
 void RenderCompositorNative::CompositorBeginFrame() {
   mAddedLayers.Clear();
   mAddedTilePixelCount = 0;

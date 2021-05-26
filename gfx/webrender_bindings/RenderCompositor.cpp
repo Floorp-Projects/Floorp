@@ -219,6 +219,15 @@ RenderCompositor::~RenderCompositor() = default;
 
 bool RenderCompositor::MakeCurrent() { return gl()->MakeCurrent(); }
 
+void RenderCompositor::GetCompositorCapabilities(
+    CompositorCapabilities* aCaps) {
+  if (StaticPrefs::gfx_webrender_compositor_max_update_rects_AtStartup() > 0) {
+    aCaps->max_update_rects = 1;
+  } else {
+    aCaps->max_update_rects = 0;
+  }
+}
+
 GLenum RenderCompositor::IsContextLost(bool aForce) {
   auto* glc = gl();
   // GetGraphicsResetStatus may trigger an implicit MakeCurrent if robustness
