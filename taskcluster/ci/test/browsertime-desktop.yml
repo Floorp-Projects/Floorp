@@ -336,7 +336,7 @@ browsertime-tp6-live-sheriffed:
             default:
                 by-test-platform:
                     (linux|windows10-64|macos)(?!.*shippable).*: []
-                    windows.*-32.*shippable.*: []
+                    windows.*-32.*: []
                     macosx1014.*: []
                     default: [autoland]
     tier: 2
