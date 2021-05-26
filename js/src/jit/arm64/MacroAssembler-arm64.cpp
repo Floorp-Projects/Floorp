@@ -3069,7 +3069,9 @@ void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
   loadConstantDouble(0, scratch);
   negateDouble(scratch);
 
-  moveDouble(lhs, output);
+  if (lhs != output) {
+    moveDouble(lhs, output);
+  }
 
   bit(ARMFPRegister(output.encoding(), vixl::VectorFormat::kFormat8B),
       ARMFPRegister(rhs.encoding(), vixl::VectorFormat::kFormat8B),
@@ -3084,7 +3086,9 @@ void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
   loadConstantFloat32(0, scratch);
   negateFloat(scratch);
 
-  moveFloat32(lhs, output);
+  if (lhs != output) {
+    moveFloat32(lhs, output);
+  }
 
   bit(ARMFPRegister(output.encoding(), vixl::VectorFormat::kFormat8B),
       ARMFPRegister(rhs.encoding(), vixl::VectorFormat::kFormat8B),

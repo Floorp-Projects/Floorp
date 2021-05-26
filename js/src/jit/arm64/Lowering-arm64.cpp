@@ -892,10 +892,9 @@ void LIRGenerator::visitCopySign(MCopySign* ins) {
     lir = new (alloc()) LCopySignF();
   }
 
-  // TODO: Are these really what we want?  Inherited from x64 / mips.
   lir->setOperand(0, useRegisterAtStart(lhs));
-  lir->setOperand(1, useRegister(rhs));
-  defineReuseInput(lir, ins, 0);
+  lir->setOperand(1, useRegisterAtStart(rhs));
+  define(lir, ins);
 }
 
 void LIRGenerator::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins) {
@@ -935,9 +934,6 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
   MOZ_ASSERT(lhs->type() == MIRType::Simd128);
   MOZ_ASSERT(rhs->type() == MIRType::Simd128);
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
-
-  // Without useRegisterAtStart, the regalloc gets confused and starts copying
-  // things redundantly.  Worth investigating further.  Also seen on x86.
 
   LAllocation lhsAlloc = useRegisterAtStart(lhs);
   LAllocation rhsAlloc = useRegisterAtStart(rhs);
@@ -1003,8 +999,8 @@ void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
 #  ifdef DEBUG
     js::wasm::ReportSimdAnalysis("shift -> constant shift");
 #  endif
-    auto* lir =
-        new (alloc()) LWasmConstantShiftSimd128(useRegister(lhs), shiftCount);
+    auto* lir = new (alloc())
+        LWasmConstantShiftSimd128(useRegisterAtStart(lhs), shiftCount);
     define(lir, ins);
     return;
   }
@@ -1090,14 +1086,17 @@ void LIRGenerator::visitWasmReplaceLaneSimd128(MWasmReplaceLaneSimd128* ins) {
   MOZ_ASSERT(ins->lhs()->type() == MIRType::Simd128);
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
 
+  // Optimal code generation reuses the lhs register because the rhs scalar is
+  // merged into a vector lhs.
+  LAllocation lhs = useRegisterAtStart(ins->lhs());
   if (ins->rhs()->type() == MIRType::Int64) {
-    auto* lir = new (alloc()) LWasmReplaceInt64LaneSimd128(
-        useRegister(ins->lhs()), useInt64Register(ins->rhs()));
-    define(lir, ins);
+    auto* lir = new (alloc())
+        LWasmReplaceInt64LaneSimd128(lhs, useInt64Register(ins->rhs()));
+    defineReuseInput(lir, ins, 0);
   } else {
-    auto* lir = new (alloc()) LWasmReplaceLaneSimd128(useRegister(ins->lhs()),
-                                                      useRegister(ins->rhs()));
-    define(lir, ins);
+    auto* lir =
+        new (alloc()) LWasmReplaceLaneSimd128(lhs, useRegister(ins->rhs()));
+    defineReuseInput(lir, ins, 0);
   }
 #else
   MOZ_CRASH("No SIMD");
@@ -1261,6 +1260,10 @@ void LIRGenerator::visitWasmReduceSimd128(MWasmReduceSimd128* ins) {
 
 void LIRGenerator::visitWasmLoadLaneSimd128(MWasmLoadLaneSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
+  // Optimal allocation here reuses the value input for the output register
+  // because codegen otherwise has to copy the input to the output; this is
+  // because load-lane is implemented as load + replace-lane.  Bug 1706106 may
+  // change all of that, so leave it alone for now.
   LUse base = useRegisterAtStart(ins->base());
   LUse inputUse = useRegisterAtStart(ins->value());
   MOZ_ASSERT(!ins->hasMemoryBase());
