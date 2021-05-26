@@ -25,6 +25,7 @@
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
 #include "jit/shared/Assembler-shared.h"
+#include "jit/TypeData.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/ArrayObject.h"
@@ -156,6 +157,11 @@ class ICStub {
   // See Bug 1494473 comment 6 for a mechanism to handle overflow if overflow
   // becomes a concern.
   uint32_t enteredCount_ = 0;
+
+  // Tracks input types for some CacheIR stubs, to help optimize
+  // polymorphic cases. Stored in the base class to make use of
+  // padding bytes.
+  TypeData typeData_;
 
   // Whether this is an ICFallbackStub or an ICCacheIRStub.
   bool isFallback_;
@@ -291,6 +297,9 @@ class ICCacheIRStub final : public ICStub {
   static constexpr size_t offsetOfNext() {
     return offsetof(ICCacheIRStub, next_);
   }
+
+  void setTypeData(TypeData data) { typeData_ = data; }
+  TypeData typeData() const { return typeData_; }
 };
 
 // Assert stub size is what we expect to catch regressions.

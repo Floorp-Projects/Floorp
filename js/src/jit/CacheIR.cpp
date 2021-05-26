@@ -4755,6 +4755,7 @@ AttachDecision TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId) {
   writer.loadConstantStringResult(
       TypeName(js::TypeOfValue(val_), cx_->names()));
   writer.returnFromIC();
+  writer.setTypeData(TypeData(JSValueType(val_.type())));
   trackAttached("Primitive");
   return AttachDecision::Attach;
 }
@@ -4767,6 +4768,7 @@ AttachDecision TypeOfIRGenerator::tryAttachObject(ValOperandId valId) {
   ObjOperandId objId = writer.guardToObject(valId);
   writer.loadTypeOfObjectResult(objId);
   writer.returnFromIC();
+  writer.setTypeData(TypeData(JSValueType(val_.type())));
   trackAttached("Object");
   return AttachDecision::Attach;
 }
