@@ -151,7 +151,7 @@ class Documentation(MachCommandBase):
         from livereload import Server
         from moztreedocs.package import create_tarball
 
-        unique_id = "%s/%s" % (self.project, str(uuid.uuid1()))
+        unique_id = "%s/%s" % (self.project(), str(uuid.uuid1()))
 
         outdir = outdir or os.path.join(self.topobjdir, "docs")
         savedir = os.path.join(outdir, fmt)
@@ -187,12 +187,12 @@ class Documentation(MachCommandBase):
             print("Generated " + write_url)
 
         if archive:
-            archive_path = os.path.join(outdir, "%s.tar.gz" % self.project)
+            archive_path = os.path.join(outdir, "%s.tar.gz" % self.project())
             create_tarball(archive_path, savedir)
             print("Archived to %s" % archive_path)
 
         if upload:
-            self._s3_upload(savedir, self.project, unique_id, self.version)
+            self._s3_upload(savedir, self.project(), unique_id, self.version())
 
         if not serve:
             index_path = os.path.join(savedir, "index.html")
@@ -210,7 +210,7 @@ class Documentation(MachCommandBase):
 
         server = Server()
 
-        sphinx_trees = self.manager.trees or {savedir: docdir}
+        sphinx_trees = self.manager().trees or {savedir: docdir}
         for _, src in sphinx_trees.items():
             run_sphinx = partial(
                 self._run_sphinx, src, savedir, fmt=fmt, jobs=jobs, verbose=verbose
@@ -253,7 +253,7 @@ class Documentation(MachCommandBase):
     ):
         import sphinx.cmd.build
 
-        config = config or self.manager.conf_py_path
+        config = config or self.manager().conf_py_path
         args = [
             "-T",
             "-b",
@@ -271,7 +271,6 @@ class Documentation(MachCommandBase):
         print(args)
         return sphinx.cmd.build.build_main(args)
 
-    @property
     def manager(self):
         if not self._manager:
             from moztreedocs import manager
@@ -282,7 +281,7 @@ class Documentation(MachCommandBase):
     def _read_project_properties(self):
         import imp
 
-        path = os.path.normpath(self.manager.conf_py_path)
+        path = os.path.normpath(self.manager().conf_py_path)
         with open(path, "r") as fh:
             conf = imp.load_module("doc_conf", fh, path, (".py", "r", imp.PY_SOURCE))
 
@@ -295,13 +294,11 @@ class Documentation(MachCommandBase):
         self._project = project
         self._version = getattr(conf, "version", None)
 
-    @property
     def project(self):
         if not self._project:
             self._read_project_properties()
         return self._project
 
-    @property
     def version(self):
         if not self._version:
             self._read_project_properties()
