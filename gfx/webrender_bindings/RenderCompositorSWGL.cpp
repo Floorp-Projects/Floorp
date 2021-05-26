@@ -259,6 +259,8 @@ LayoutDeviceIntSize RenderCompositorSWGL::GetBufferSize() {
 
 void RenderCompositorSWGL::GetCompositorCapabilities(
     CompositorCapabilities* aCaps) {
+  RenderCompositor::GetCompositorCapabilities(aCaps);
+
   // When the window contents may be damaged, we need to force a full redraw.
   aCaps->redraw_on_invalidation = true;
 }

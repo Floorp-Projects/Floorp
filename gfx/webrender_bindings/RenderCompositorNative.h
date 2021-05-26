@@ -44,7 +44,6 @@ class RenderCompositorNative : public RenderCompositor {
   LayoutDeviceIntSize GetBufferSize() override;
 
   bool ShouldUseNativeCompositor() override;
-  uint32_t GetMaxUpdateRects() override;
 
   bool SurfaceOriginIsTopLeft() override { return true; }
 
