@@ -19,6 +19,7 @@
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
+#include "mozilla/Encoding.h"  // for Encoding
 #include "mozilla/EventStates.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/mozInlineSpellChecker.h"
@@ -357,6 +358,130 @@ void HTMLEditor::PreDestroy(bool aDestroyingFrames) {
   }
 
   EditorBase::PreDestroy(aDestroyingFrames);
+}
+
+NS_IMETHODIMP HTMLEditor::GetDocumentCharacterSet(nsACString& aCharacterSet) {
+  nsresult rv = GetDocumentCharsetInternal(aCharacterSet);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::GetDocumentCharsetInternal() failed");
+  return rv;
+}
+
+NS_IMETHODIMP HTMLEditor::SetDocumentCharacterSet(
+    const nsACString& aCharacterSet) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eSetCharacterSet);
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (NS_FAILED(rv)) {
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    return EditorBase::ToGenericNSResult(rv);
+  }
+
+  RefPtr<Document> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return EditorBase::ToGenericNSResult(NS_ERROR_NOT_INITIALIZED);
+  }
+  // This method is scriptable, so add-ons could pass in something other
+  // than a canonical name.
+  const Encoding* encoding = Encoding::ForLabelNoReplacement(aCharacterSet);
+  if (!encoding) {
+    NS_WARNING("Encoding::ForLabelNoReplacement() failed");
+    return EditorBase::ToGenericNSResult(NS_ERROR_INVALID_ARG);
+  }
+  document->SetDocumentCharacterSet(WrapNotNull(encoding));
+
+  // Update META charset element.
+  if (UpdateMetaCharsetWithTransaction(*document, aCharacterSet)) {
+    return NS_OK;
+  }
+
+  // Set attributes to the created element
+  if (aCharacterSet.IsEmpty()) {
+    return NS_OK;
+  }
+
+  RefPtr<nsContentList> headElementList =
+      document->GetElementsByTagName(u"head"_ns);
+  if (NS_WARN_IF(!headElementList)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIContent> primaryHeadElement = headElementList->Item(0);
+  if (NS_WARN_IF(!primaryHeadElement)) {
+    return NS_OK;
+  }
+
+  // Create a new meta charset tag
+  Result<RefPtr<Element>, nsresult> maybeNewMetaElement =
+      CreateNodeWithTransaction(*nsGkAtoms::meta,
+                                EditorDOMPoint(primaryHeadElement, 0));
+  if (maybeNewMetaElement.isErr()) {
+    NS_WARNING(
+        "EditorBase::CreateNodeWithTransaction(nsGkAtoms::meta) failed, but "
+        "ignored");
+    return NS_OK;
+  }
+  MOZ_ASSERT(maybeNewMetaElement.inspect());
+
+  // not undoable, undo should undo CreateNodeWithTransaction().
+  DebugOnly<nsresult> rvIgnored = NS_OK;
+  rvIgnored = maybeNewMetaElement.inspect()->SetAttr(
+      kNameSpaceID_None, nsGkAtoms::httpEquiv, u"Content-Type"_ns, true);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "Element::SetAttr(nsGkAtoms::httpEquiv, Content-Type) "
+                       "failed, but ignored");
+  rvIgnored = maybeNewMetaElement.inspect()->SetAttr(
+      kNameSpaceID_None, nsGkAtoms::content,
+      u"text/html;charset="_ns + NS_ConvertASCIItoUTF16(aCharacterSet), true);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "Element::SetAttr(nsGkAtoms::content) failed, but ignored");
+  return NS_OK;
+}
+
+bool HTMLEditor::UpdateMetaCharsetWithTransaction(
+    Document& aDocument, const nsACString& aCharacterSet) {
+  // get a list of META tags
+  RefPtr<nsContentList> metaElementList =
+      aDocument.GetElementsByTagName(u"meta"_ns);
+  if (NS_WARN_IF(!metaElementList)) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < metaElementList->Length(true); ++i) {
+    RefPtr<Element> metaElement = metaElementList->Item(i)->AsElement();
+    MOZ_ASSERT(metaElement);
+
+    nsAutoString currentValue;
+    metaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, currentValue);
+
+    if (!FindInReadable(u"content-type"_ns, currentValue,
+                        nsCaseInsensitiveStringComparator)) {
+      continue;
+    }
+
+    metaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, currentValue);
+
+    constexpr auto charsetEquals = u"charset="_ns;
+    nsAString::const_iterator originalStart, start, end;
+    originalStart = currentValue.BeginReading(start);
+    currentValue.EndReading(end);
+    if (!FindInReadable(charsetEquals, start, end,
+                        nsCaseInsensitiveStringComparator)) {
+      continue;
+    }
+
+    // set attribute to <original prefix> charset=text/html
+    nsresult rv = SetAttributeWithTransaction(
+        *metaElement, *nsGkAtoms::content,
+        Substring(originalStart, start) + charsetEquals +
+            NS_ConvertASCIItoUTF16(aCharacterSet));
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBase::SetAttributeWithTransaction(nsGkAtoms::content) failed");
+    return NS_SUCCEEDED(rv);
+  }
+  return false;
 }
 
 NS_IMETHODIMP HTMLEditor::NotifySelectionChanged(Document* aDocument,

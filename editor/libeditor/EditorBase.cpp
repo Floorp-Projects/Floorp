@@ -6,7 +6,6 @@
 #include "EditorBase.h"
 
 #include "mozilla/DebugOnly.h"  // for DebugOnly
-#include "mozilla/Encoding.h"   // for Encoding
 
 #include <stdio.h>   // for nullptr, stdout
 #include <string.h>  // for strcmp
@@ -37,12 +36,13 @@
 #include "mozilla/EditorSpellCheck.h"         // for EditorSpellCheck
 #include "mozilla/EditorUtils.h"              // for various helper classes.
 #include "mozilla/EditTransactionBase.h"      // for EditTransactionBase
-#include "mozilla/EventDispatcher.h"          // for EventChainPreVisitor, etc.
-#include "mozilla/FlushType.h"                // for FlushType::Frames
-#include "mozilla/HTMLEditor.h"               // for HTMLEditor
-#include "mozilla/IMEContentObserver.h"       // for IMEContentObserver
-#include "mozilla/IMEStateManager.h"          // for IMEStateManager
-#include "mozilla/InputEventOptions.h"        // for InputEventOptions
+#include "mozilla/Encoding.h"  // for Encoding (used in Document::GetDocumentCharacterSet)
+#include "mozilla/EventDispatcher.h"     // for EventChainPreVisitor, etc.
+#include "mozilla/FlushType.h"           // for FlushType::Frames
+#include "mozilla/HTMLEditor.h"          // for HTMLEditor
+#include "mozilla/IMEContentObserver.h"  // for IMEContentObserver
+#include "mozilla/IMEStateManager.h"     // for IMEStateManager
+#include "mozilla/InputEventOptions.h"   // for InputEventOptions
 #include "mozilla/InternalMutationEvent.h"  // for NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED
 #include "mozilla/mozalloc.h"               // for operator new, etc.
 #include "mozilla/mozInlineSpellChecker.h"  // for mozInlineSpellChecker
@@ -1390,37 +1390,22 @@ NS_IMETHODIMP EditorBase::GetDocumentModified(bool* aOutDocModified) {
   return NS_OK;
 }
 
-NS_IMETHODIMP EditorBase::GetDocumentCharacterSet(nsACString& aCharset) {
-  nsresult rv = GetDocumentCharsetInternal(aCharset);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::GetDocumentCharsetInternal() failed");
-  return rv;
+NS_IMETHODIMP EditorBase::GetDocumentCharacterSet(nsACString& aCharacterSet) {
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 nsresult EditorBase::GetDocumentCharsetInternal(nsACString& aCharset) const {
-  RefPtr<Document> document = GetDocument();
+  Document* document = GetDocument();
   if (NS_WARN_IF(!document)) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_NOT_INITIALIZED;
   }
   document->GetDocumentCharacterSet()->Name(aCharset);
   return NS_OK;
 }
 
 NS_IMETHODIMP EditorBase::SetDocumentCharacterSet(
-    const nsACString& characterSet) {
-  RefPtr<Document> document = GetDocument();
-  if (NS_WARN_IF(!document)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  // This method is scriptable, so add-ons could pass in something other
-  // than a canonical name.
-  auto encoding = Encoding::ForLabelNoReplacement(characterSet);
-  if (!encoding) {
-    NS_WARNING("Encoding::ForLabelNoReplacement() failed");
-    return NS_ERROR_INVALID_ARG;
-  }
-  document->SetDocumentCharacterSet(WrapNotNull(encoding));
-  return NS_OK;
+    const nsACString& aCharacterSet) {
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 bool EditorBase::AreClipboardCommandsUnconditionallyEnabled() const {
