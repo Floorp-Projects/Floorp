@@ -26,18 +26,20 @@ class FrameworkGatherer(object):
     Abstract class for framework gatherers.
     """
 
-    def __init__(self, yaml_path, workspace_dir):
+    def __init__(self, yaml_path, workspace_dir, taskgraph={}):
         """
         Generic initialization for a framework gatherer.
         """
         self.workspace_dir = workspace_dir
         self._yaml_path = yaml_path
+        self._taskgraph = taskgraph
         self._suite_list = {}
         self._test_list = {}
         self._descriptions = {}
         self._manifest_path = ""
         self._manifest = None
         self.script_infos = {}
+        self._task_list = {}
 
     def get_manifest_path(self):
         """
@@ -123,6 +125,18 @@ class RaptorGatherer(FrameworkGatherer):
 
         return self._suite_list
 
+    def _get_ci_tasks(self):
+        for task in self._taskgraph.keys():
+            if type(self._taskgraph[task]) == dict:
+                command = self._taskgraph[task]["task"]["payload"].get("command", [])
+            else:
+                command = self._taskgraph[task].task["payload"].get("command", [])
+
+            match = re.search(r"[\s']--test[\s=](.+?)[\s']", str(command))
+            if match:
+                test = match.group(1)
+                self._task_list.setdefault(test, []).append(task)
+
     def _get_subtests_from_ini(self, manifest_path, suite_name):
         """
         Returns a list of (sub)tests from an ini file containing the test definitions.
@@ -172,6 +186,8 @@ class RaptorGatherer(FrameworkGatherer):
                 subtest_list = self._get_subtests_from_ini(manifest_path, suite_name)
                 self._test_list[suite_name].update(subtest_list)
 
+        self._get_ci_tasks()
+
         return self._test_list
 
     def build_test_description(self, title, test_description="", suite_name=""):
@@ -217,6 +233,15 @@ class RaptorGatherer(FrameworkGatherer):
                     )
                 else:
                     result += f"   * **{sub_title}**: {description[key]}\n"
+
+            if self._task_list.get(title, []):
+                result += "   * **Test Task**:\n"
+                for task in sorted(self._task_list[title]):
+                    if suite_name == "mobile" and "android" in task:
+                        result += f"      * {task}\n"
+                    elif suite_name != "mobile" and "android" not in task:
+                        result += f"      * {task}\n"
+
             result += "\n"
 
         return [result]
