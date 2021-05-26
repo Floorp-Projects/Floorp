@@ -64,10 +64,6 @@ type SecKeyCreateSignatureType =
 type SecKeyCopyAttributesType = unsafe extern "C" fn(SecKeyRef) -> CFDictionaryRef;
 type SecKeyCopyExternalRepresentationType =
     unsafe extern "C" fn(SecKeyRef, *mut CFErrorRef) -> CFDataRef;
-type SecCertificateCopyNormalizedIssuerSequenceType =
-    unsafe extern "C" fn(SecCertificateRef) -> CFDataRef;
-type SecCertificateCopyNormalizedSubjectSequenceType =
-    unsafe extern "C" fn(SecCertificateRef) -> CFDataRef;
 type SecCertificateCopyKeyType = unsafe extern "C" fn(SecCertificateRef) -> SecKeyRef;
 type SecTrustEvaluateWithErrorType =
     unsafe extern "C" fn(trust: SecTrustRef, error: *mut CFErrorRef) -> bool;
@@ -98,10 +94,6 @@ pub struct SecurityFrameworkFunctions<'a> {
     sec_key_create_signature: Symbol<'a, SecKeyCreateSignatureType>,
     sec_key_copy_attributes: Symbol<'a, SecKeyCopyAttributesType>,
     sec_key_copy_external_representation: Symbol<'a, SecKeyCopyExternalRepresentationType>,
-    sec_certificate_copy_normalized_issuer_sequence:
-        Symbol<'a, SecCertificateCopyNormalizedIssuerSequenceType>,
-    sec_certificate_copy_normalized_subject_sequence:
-        Symbol<'a, SecCertificateCopyNormalizedSubjectSequenceType>,
     sec_certificate_copy_key: Symbol<'a, SecCertificateCopyKeyType>,
     sec_trust_evaluate_with_error: Symbol<'a, SecTrustEvaluateWithErrorType>,
     sec_string_constants: BTreeMap<SecStringConstant, String>,
@@ -147,16 +139,6 @@ impl SecurityFramework {
                 let sec_key_copy_external_representation = library
                     .get::<SecKeyCopyExternalRepresentationType>(
                         b"SecKeyCopyExternalRepresentation\0",
-                    )
-                    .map_err(|_| ())?;
-                let sec_certificate_copy_normalized_issuer_sequence = library
-                    .get::<SecCertificateCopyNormalizedIssuerSequenceType>(
-                        b"SecCertificateCopyNormalizedIssuerSequence\0",
-                    )
-                    .map_err(|_| ())?;
-                let sec_certificate_copy_normalized_subject_sequence = library
-                    .get::<SecCertificateCopyNormalizedSubjectSequenceType>(
-                        b"SecCertificateCopyNormalizedSubjectSequence\0",
                     )
                     .map_err(|_| ())?;
                 let sec_certificate_copy_key = library
@@ -235,8 +217,6 @@ impl SecurityFramework {
                     sec_key_create_signature,
                     sec_key_copy_attributes,
                     sec_key_copy_external_representation,
-                    sec_certificate_copy_normalized_issuer_sequence,
-                    sec_certificate_copy_normalized_subject_sequence,
                     sec_certificate_copy_key,
                     sec_trust_evaluate_with_error,
                     sec_string_constants,
@@ -304,46 +284,6 @@ impl SecurityFramework {
                 if result.is_null() {
                     let error = CFError::wrap_under_create_rule(error);
                     error!("SecKeyCopyExternalRepresentation failed: {}", error);
-                    return Err(());
-                }
-                Ok(CFData::wrap_under_create_rule(result))
-            }),
-            None => Err(()),
-        }
-    }
-
-    /// SecCertificateCopyNormalizedIssuerSequence is available in macOS 10.12.4
-    fn sec_certificate_copy_normalized_issuer_sequence(
-        &self,
-        certificate: &SecCertificate,
-    ) -> Result<CFData, ()> {
-        match &self.rental {
-            Some(rental) => rental.rent(|framework| unsafe {
-                let result = (framework.sec_certificate_copy_normalized_issuer_sequence)(
-                    certificate.as_concrete_TypeRef(),
-                );
-                if result.is_null() {
-                    error!("SecCertificateCopyNormalizedIssuerSequence failed");
-                    return Err(());
-                }
-                Ok(CFData::wrap_under_create_rule(result))
-            }),
-            None => Err(()),
-        }
-    }
-
-    /// SecCertificateCopyNormalizedSubjectSequence is available in macOS 10.12.4
-    fn sec_certificate_copy_normalized_subject_sequence(
-        &self,
-        certificate: &SecCertificate,
-    ) -> Result<CFData, ()> {
-        match &self.rental {
-            Some(rental) => rental.rent(|framework| unsafe {
-                let result = (framework.sec_certificate_copy_normalized_subject_sequence)(
-                    certificate.as_concrete_TypeRef(),
-                );
-                if result.is_null() {
-                    error!("SecCertificateCopyNormalizedSubjectSequence failed");
                     return Err(());
                 }
                 Ok(CFData::wrap_under_create_rule(result))
@@ -470,20 +410,16 @@ impl Cert {
         let der = sec_certificate_copy_data(certificate)?;
         let der = der.bytes().to_vec();
         let id = Sha256::digest(&der).to_vec();
-        let issuer =
-            SECURITY_FRAMEWORK.sec_certificate_copy_normalized_issuer_sequence(certificate)?;
-        let serial_number = read_encoded_serial_number(&der)?;
-        let subject =
-            SECURITY_FRAMEWORK.sec_certificate_copy_normalized_subject_sequence(certificate)?;
+        let (serial_number, issuer, subject) = read_encoded_certificate_identifiers(&der)?;
         Ok(Cert {
             class: serialize_uint(CKO_CERTIFICATE)?,
             token: serialize_uint(CK_TRUE)?,
             id,
             label: label.to_string().into_bytes(),
             value: der,
-            issuer: issuer.bytes().to_vec(),
+            issuer,
             serial_number,
-            subject: subject.bytes().to_vec(),
+            subject,
         })
     }
 
