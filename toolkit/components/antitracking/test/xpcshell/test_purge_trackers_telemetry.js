@@ -60,8 +60,8 @@ add_task(async function() {
   );
 
   SiteDataTestUtils.addToLocalStorage(TRACKING_PAGE);
-  SiteDataTestUtils.addToCookies(BENIGN_PAGE);
-  SiteDataTestUtils.addToCookies(TRACKING_PAGE);
+  SiteDataTestUtils.addToCookies({ origin: BENIGN_PAGE });
+  SiteDataTestUtils.addToCookies({ origin: TRACKING_PAGE });
   await SiteDataTestUtils.addToIndexedDB(TRACKING_PAGE);
 
   let purgedHistogram = TelemetryTestUtils.getAndClearHistogram(
@@ -152,8 +152,8 @@ add_task(async function() {
 
   // Enforce deleting the same origin twice by adding two cookies and setting
   // the max number of cookies per batch to 1.
-  SiteDataTestUtils.addToCookies(TRACKING_PAGE, "cookie1");
-  SiteDataTestUtils.addToCookies(TRACKING_PAGE, "cookie2");
+  SiteDataTestUtils.addToCookies({ origin: TRACKING_PAGE, name: "cookie1" });
+  SiteDataTestUtils.addToCookies({ origin: TRACKING_PAGE, name: "cookie2" });
   Services.prefs.setIntPref("privacy.purge_trackers.max_purge_count", 1);
 
   let purgedHistogram = TelemetryTestUtils.getAndClearHistogram(

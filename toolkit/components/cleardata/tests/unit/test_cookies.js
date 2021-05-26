@@ -170,3 +170,234 @@ add_task(async function test_localfile_cookies() {
   });
   Assert.equal(Services.cookies.countCookiesFromHost(""), 0);
 });
+
+// The following tests ensure we properly clear (partitioned/unpartitioned)
+// cookies when using deleteDataFromBaseDomain and deleteDataFromHost.
+
+function getTestCookieName(host, topLevelBaseDomain) {
+  if (!topLevelBaseDomain) {
+    return host;
+  }
+  return `${host}_${topLevelBaseDomain}`;
+}
+
+function getTestOriginAttributes(topLevelBaseDomain, originAttributes = {}) {
+  if (!topLevelBaseDomain) {
+    return originAttributes;
+  }
+  return {
+    ...originAttributes,
+    partitionKey: `(https,${topLevelBaseDomain})`,
+  };
+}
+
+function setTestCookie({
+  host,
+  topLevelBaseDomain = null,
+  originAttributes = {},
+}) {
+  SiteDataTestUtils.addToCookies({
+    host,
+    name: getTestCookieName(host, topLevelBaseDomain),
+    originAttributes: getTestOriginAttributes(
+      topLevelBaseDomain,
+      originAttributes
+    ),
+  });
+}
+
+function setTestCookies() {
+  // First party cookies
+  setTestCookie({ host: "example.net" });
+  setTestCookie({ host: "test.example.net" });
+  setTestCookie({ host: "example.org" });
+
+  // Third-party partitioned cookies.
+  setTestCookie({ host: "example.com", topLevelBaseDomain: "example.net" });
+  setTestCookie({
+    host: "example.com",
+    topLevelBaseDomain: "example.net",
+    originAttributes: { userContextId: 1 },
+  });
+  setTestCookie({ host: "example.net", topLevelBaseDomain: "example.org" });
+  setTestCookie({
+    host: "test.example.net",
+    topLevelBaseDomain: "example.org",
+  });
+
+  // Ensure we have the correct cookie test state.
+  // Not using countCookiesFromHost because it doesn't see partitioned cookies.
+  testCookieExists({ host: "example.net" });
+  testCookieExists({ host: "test.example.net" });
+  testCookieExists({ host: "example.org" });
+
+  testCookieExists({ host: "example.com", topLevelBaseDomain: "example.net" });
+  testCookieExists({
+    host: "example.com",
+    topLevelBaseDomain: "example.net",
+    originAttributes: { userContextId: 1 },
+  });
+  testCookieExists({ host: "example.net", topLevelBaseDomain: "example.org" });
+  testCookieExists({
+    host: "test.example.net",
+    topLevelBaseDomain: "example.org",
+  });
+}
+
+function testCookieExists({
+  host,
+  topLevelBaseDomain = null,
+  expected = true,
+  originAttributes = {},
+}) {
+  let exists = Services.cookies.cookieExists(
+    host,
+    "path",
+    getTestCookieName(host, topLevelBaseDomain),
+    getTestOriginAttributes(topLevelBaseDomain, originAttributes)
+  );
+  let message = `Cookie ${expected ? "is set" : "is not set"} for ${host}`;
+  if (topLevelBaseDomain) {
+    message += ` partitioned under ${topLevelBaseDomain}`;
+  }
+  Assert.equal(exists, expected, message);
+  return exists;
+}
+
+/**
+ * Tests deleting (partitioned) cookies by base domain.
+ */
+add_task(async function test_baseDomain_cookies() {
+  Services.cookies.removeAll();
+  setTestCookies();
+
+  // Clear cookies of example.net including partitions.
+  await new Promise(aResolve => {
+    Services.clearData.deleteDataFromBaseDomain(
+      "example.net",
+      false,
+      Ci.nsIClearDataService.CLEAR_COOKIES,
+      aResolve
+    );
+  });
+
+  testCookieExists({ host: "example.net", expected: false });
+  testCookieExists({ host: "test.example.net", expected: false });
+  testCookieExists({ host: "example.org" });
+
+  testCookieExists({
+    host: "example.com",
+    topLevelBaseDomain: "example.net",
+    expected: false,
+  });
+  testCookieExists({
+    host: "example.com",
+    topLevelBaseDomain: "example.net",
+    originAttributes: { userContextId: 1 },
+    expected: false,
+  });
+  testCookieExists({
+    host: "example.net",
+    topLevelBaseDomain: "example.org",
+    expected: false,
+  });
+  testCookieExists({
+    host: "test.example.net",
+    topLevelBaseDomain: "example.org",
+    expected: false,
+  });
+
+  // Cleanup
+  Services.cookies.removeAll();
+});
+
+/**
+ * Tests deleting (non-partitioned) cookies by host.
+ */
+add_task(async function test_host_cookies() {
+  Services.cookies.removeAll();
+  setTestCookies();
+
+  // Clear cookies of example.net without partitions.
+  await new Promise(aResolve => {
+    Services.clearData.deleteDataFromHost(
+      "example.net",
+      false,
+      Ci.nsIClearDataService.CLEAR_COOKIES,
+      aResolve
+    );
+  });
+
+  testCookieExists({ host: "example.net", expected: false });
+  testCookieExists({ host: "test.example.net" });
+  testCookieExists({ host: "example.org" });
+  // Third-party partitioned cookies under example.net should not be cleared.
+  testCookieExists({ host: "example.com", topLevelBaseDomain: "example.net" });
+  setTestCookie({
+    host: "example.com",
+    topLevelBaseDomain: "example.net",
+    originAttributes: { userContextId: 1 },
+  });
+  // Third-party partitioned cookies of example.net should be removed, because
+  // CookieCleaner matches with host, but any partition key (oa = {}) via
+  // removeCookiesFromExactHost.
+  testCookieExists({
+    host: "example.net",
+    topLevelBaseDomain: "example.org",
+    expected: false,
+  });
+  testCookieExists({
+    host: "test.example.net",
+    topLevelBaseDomain: "example.org",
+  });
+
+  // Cleanup
+  Services.cookies.removeAll();
+});
+
+/**
+ * Tests that we correctly clear data when given a subdomain.
+ */
+add_task(async function test_baseDomain_cookies_subdomain() {
+  Services.cookies.removeAll();
+  setTestCookies();
+
+  // Clear cookies of test.example.net including partitions.
+  await new Promise(aResolve => {
+    Services.clearData.deleteDataFromBaseDomain(
+      "test.example.net",
+      false,
+      Ci.nsIClearDataService.CLEAR_COOKIES,
+      aResolve
+    );
+  });
+
+  testCookieExists({ host: "example.net", expected: false });
+  testCookieExists({ host: "test.example.net", expected: false });
+  testCookieExists({ host: "example.org" });
+
+  testCookieExists({
+    host: "example.com",
+    topLevelBaseDomain: "example.net",
+    expected: false,
+  });
+  setTestCookie({
+    host: "example.com",
+    topLevelBaseDomain: "example.net",
+    originAttributes: { userContextId: 1 },
+    expected: false,
+  });
+  testCookieExists({
+    host: "example.net",
+    topLevelBaseDomain: "example.org",
+    expected: false,
+  });
+  testCookieExists({
+    host: "test.example.net",
+    topLevelBaseDomain: "example.org",
+    expected: false,
+  });
+
+  // Cleanup
+  Services.cookies.removeAll();
+});

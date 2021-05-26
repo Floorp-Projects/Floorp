@@ -31,6 +31,53 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/tracking-db-service;1",
   "nsITrackingDBService"
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gFirstPartyIsolateUseSite",
+  "privacy.firstparty.isolate.use_site",
+  false
+);
+
+function getBaseDomainFromPartitionKey(partitionKey) {
+  if (!partitionKey?.length) {
+    return undefined;
+  }
+  if (gFirstPartyIsolateUseSite) {
+    return partitionKey;
+  }
+  let entries = partitionKey.substr(1, partitionKey.length - 2).split(",");
+  if (entries.length < 2) {
+    return undefined;
+  }
+  return entries[1];
+}
+
+/**
+ * Test if host and OriginAttributes belong to a baseDomain. Also considers
+ * partitioned storage by inspecting OriginAttributes partitionKey.
+ * @param options
+ * @param {string} options.host - Host to compare to base domain.
+ * @param {object} [options.originAttributes] - Optional origin attributes to
+ * inspect for aBaseDomain. If omitted, partitionKey will not be matched.
+ * @param {string} aBaseDomain - Domain to check for. Must be a valid, non-empty
+ * baseDomain string.
+ * @returns {boolean} Whether the host or originAttributes match the base
+ * domain.
+ */
+function hasBaseDomain({ host, originAttributes = null }, aBaseDomain) {
+  if (Services.eTLD.hasRootDomain(host, aBaseDomain)) {
+    return true;
+  }
+
+  if (!originAttributes) {
+    return false;
+  }
+
+  let partitionKeyBaseDomain = getBaseDomainFromPartitionKey(
+    originAttributes.partitionKey
+  );
+  return partitionKeyBaseDomain && partitionKeyBaseDomain == aBaseDomain;
+}
 
 // Here is a list of methods cleaners may implement. These methods must return a
 // Promise object.
@@ -82,9 +129,17 @@ const CookieCleaner = {
     return this.deleteByHost(aPrincipal.host, aPrincipal.originAttributes);
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    // TODO: Bug 1705029
-    return this.deleteByHost(aBaseDomain, {});
+  async deleteByBaseDomain(aDomain) {
+    Services.cookies.cookies
+      .filter(({ rawHost, originAttributes }) =>
+        hasBaseDomain({ host: rawHost, originAttributes }, aDomain)
+      )
+      .forEach(cookie => {
+        Services.cookies.removeCookiesFromExactHost(
+          cookie.rawHost,
+          JSON.stringify(cookie.originAttributes)
+        );
+      });
   },
 
   deleteByRange(aFrom, aTo) {
