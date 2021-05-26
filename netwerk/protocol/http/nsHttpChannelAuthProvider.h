@@ -62,8 +62,8 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
       const char* host, int32_t port, const char* dir, const char* realm,
       const char* challenge, const nsHttpAuthIdentity& ident,
       nsCOMPtr<nsISupports>& session, char** result);
-  [[nodiscard]] nsresult GetAuthenticator(const char* challenge,
-                                          nsCString& scheme,
+  [[nodiscard]] nsresult GetAuthenticator(const nsACString& aChallenge,
+                                          nsCString& authType,
                                           nsIHttpAuthenticator** auth);
   void ParseRealm(const nsACString&, nsACString& realm);
   void GetIdentityFromURI(uint32_t authFlags, nsHttpAuthIdentity&);
