@@ -1576,14 +1576,16 @@ async function waitForContextMenu(dbg) {
   const doc = dbg.toolbox.topDoc;
 
   // there are several context menus, we want the one with the menu-api
-  const popup = await waitFor(() => doc.querySelector('menupopup[menu-api="true"]'));
+  const popup = await waitFor(() =>
+    doc.querySelector('menupopup[menu-api="true"]')
+  );
 
   if (popup.state == "open") {
     return;
   }
 
   await new Promise(resolve => {
-    popup.addEventListener("popupshown", () => resolve(), {once: true});
+    popup.addEventListener("popupshown", () => resolve(), { once: true });
   });
 }
 
@@ -1596,7 +1598,7 @@ async function openContextMenuSubmenu(dbg, selector) {
   const item = findContextMenu(dbg, selector);
   const popup = item.menupopup;
   const popupshown = new Promise(resolve => {
-    popup.addEventListener("popupshown", () => resolve(), {once: true});
+    popup.addEventListener("popupshown", () => resolve(), { once: true });
   });
   item.openMenu(true);
   await popupshown;
@@ -1850,31 +1852,6 @@ async function assertPreviewTooltip(dbg, line, column, { result, expression }) {
   is(preview.expression, expression, "Preview.expression");
 }
 
-async function hoverOnToken(dbg, line, column, selector) {
-  await tryHovering(dbg, line, column, selector);
-  return dbg.selectors.getPreview();
-}
-
-function getPreviewProperty(preview, field) {
-  const { resultGrip } = preview;
-  const properties =
-    resultGrip.preview.ownProperties || resultGrip.preview.items;
-  const property = properties[field];
-  return property.value || property;
-}
-
-async function assertPreviewPopup(
-  dbg,
-  line,
-  column,
-  { field, value, expression }
-) {
-  const preview = await hoverOnToken(dbg, line, column, "popup");
-  is(`${getPreviewProperty(preview, field)}`, value, "Preview.result");
-
-  is(preview.expression, expression, "Preview.expression");
-}
-
 async function assertPreviews(dbg, previews) {
   for (const { line, column, expression, result, fields } of previews) {
     if (fields && result) {
@@ -1882,12 +1859,24 @@ async function assertPreviews(dbg, previews) {
     }
 
     if (fields) {
+      const popupEl = await tryHovering(dbg, line, column, "popup");
+      const oiNodes = Array.from(
+        popupEl.querySelectorAll(".preview-popup .node")
+      );
+
       for (const [field, value] of fields) {
-        await assertPreviewPopup(dbg, line, column, {
-          expression,
-          field,
-          value,
-        });
+        const node = oiNodes.find(
+          oiNode => oiNode.querySelector(".object-label")?.textContent === field
+        );
+        if (!node) {
+          ok(false, `The "${field}" property is not displayed in the popup`);
+        } else {
+          is(
+            node.querySelector(".objectBox").textContent,
+            value,
+            `The "${field}" property has the expected value`
+          );
+        }
       }
     } else {
       await assertPreviewTextValue(dbg, line, column, {

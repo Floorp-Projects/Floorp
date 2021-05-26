@@ -41,28 +41,3 @@ async function assertNoTooltip(dbg) {
   const el = findElement(dbg, "tooltip");
   is(el, null, "Tooltip should not exist");
 }
-
-function assertPreviewTooltip(dbg, { result, expression }) {
-  const previewEl = findElement(dbg, "tooltip");
-  is(previewEl.innerText, result, "Preview text shown to user");
-
-  const preview = dbg.selectors.getPreview();
-  is(`${preview.result}`, result, "Preview.result");
-  is(preview.updating, false, "Preview.updating");
-  is(preview.expression, expression, "Preview.expression");
-}
-
-function assertPreviewPopup(dbg, { field, value, expression }) {
-  const previewEl = findElement(dbg, "popup");
-  is(previewEl.innerText, "", "Preview text shown to user");
-
-  const preview = dbg.selectors.getPreview();
-
-  is(
-    `${preview.result.preview.ownProperties[field].value}`,
-    value,
-    "Preview.result"
-  );
-  is(preview.updating, false, "Preview.updating");
-  is(preview.expression, expression, "Preview.expression");
-}
