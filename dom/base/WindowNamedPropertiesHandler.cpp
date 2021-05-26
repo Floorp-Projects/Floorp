@@ -168,11 +168,7 @@ bool WindowNamedPropertiesHandler::defineProperty(
     JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
     JS::Handle<JS::PropertyDescriptor> aDesc,
     JS::ObjectOpResult& result) const {
-  ErrorResult rv;
-  rv.ThrowTypeError(
-      "Not allowed to define a property on the named properties object.");
-  MOZ_ALWAYS_TRUE(rv.MaybeSetPendingException(aCx));
-  return false;
+  return result.failCantDefineWindowNamedProperty();
 }
 
 bool WindowNamedPropertiesHandler::ownPropNames(
