@@ -1,12 +1,11 @@
 // META: script=/common/get-host-info.sub.js
-// META: script=./resources/checker.js
 // META: script=./resources/common.js
 // META: timeout=long
 'use strict';
 
-promise_test(async testCase => {
-  assert_true(self.crossOriginIsolated);
+assert_true(self.crossOriginIsolated);
 
+promise_test(async testCase => {
   const {iframes, windows} = await build([
     {
       id: 'cross-origin-1',

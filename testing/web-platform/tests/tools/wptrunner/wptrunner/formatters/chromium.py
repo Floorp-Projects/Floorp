@@ -5,7 +5,7 @@ from collections import defaultdict
 from mozlog.formatters import base
 
 
-class ChromiumFormatter(base.BaseFormatter):  # type: ignore
+class ChromiumFormatter(base.BaseFormatter):
     """Formatter to produce results matching the Chromium JSON Test Results format.
     https://chromium.googlesource.com/chromium/src/+/master/docs/testing/json_test_results_format.md
 
