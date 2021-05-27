@@ -178,9 +178,18 @@ const CertCleaner = {
     return this.deleteByHost(aPrincipal.host, aPrincipal.originAttributes);
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    // TODO: Bug 1709621
-    return this.deleteByHost(aBaseDomain, {});
+  async deleteByBaseDomain(aBaseDomain) {
+    let overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(
+      Ci.nsICertOverrideService
+    );
+    overrideService
+      .getOverrides()
+      .filter(({ asciiHost }) =>
+        hasBaseDomain({ host: asciiHost }, aBaseDomain)
+      )
+      .forEach(({ asciiHost, port }) =>
+        overrideService.clearValidityOverride(asciiHost, port)
+      );
   },
 
   async deleteAll() {
