@@ -59,9 +59,6 @@ nsresult NrIceStunAddr::Serialize(char* buffer, size_t buffer_size) const {
     return NS_ERROR_FAILURE;
   }
 
-  // don't serialize what will be a bad addr when we deserialize
-  toAddr->addr.addr = nullptr;
-
   return NS_OK;
 }
 
