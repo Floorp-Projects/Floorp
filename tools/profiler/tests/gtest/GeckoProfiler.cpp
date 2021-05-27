@@ -2196,94 +2196,154 @@ TEST(GeckoProfiler, CPUUsage)
 {
   const char* filters[] = {"GeckoMain"};
 
-  ASSERT_TRUE(!profiler_is_active());
-  ASSERT_TRUE(!profiler_callback_after_sampling(
-      [&](SamplingState) { ASSERT_TRUE(false); }));
+  // We want to ensure that CPU usage numbers are present whether or not we are
+  // collecting stack samples.
+  static constexpr bool scTestsWithOrWithoutStackSampling[] = {false, true};
+  for (const bool testWithNoStackSampling : scTestsWithOrWithoutStackSampling) {
+    ASSERT_TRUE(!profiler_is_active());
+    ASSERT_TRUE(!profiler_callback_after_sampling(
+        [&](SamplingState) { ASSERT_TRUE(false); }));
 
-  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
-                 ProfilerFeature::StackWalk | ProfilerFeature::CPUUtilization,
-                 filters, MOZ_ARRAY_LENGTH(filters), 0);
-  // Grab a few samples.
-  static constexpr unsigned MinSamplings = 10;
-  for (unsigned i = MinSamplings; i != 0; --i) {
-    ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
-  }
-  UniquePtr<char[]> profile = profiler_get_profile();
-  JSONOutputCheck(profile.get(), [](const Json::Value& aRoot) {
-    // Check that the "cpu" feature is present.
-    GET_JSON(meta, aRoot["meta"], Object);
-    {
-      GET_JSON(configuration, meta["configuration"], Object);
-      {
-        GET_JSON(features, configuration["features"], Array);
-        { EXPECT_JSON_ARRAY_CONTAINS(features, String, "cpu"); }
+    profiler_start(
+        PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+        ProfilerFeature::StackWalk | ProfilerFeature::CPUUtilization |
+            (testWithNoStackSampling ? ProfilerFeature::NoStackSampling : 0),
+        filters, MOZ_ARRAY_LENGTH(filters), 0);
+    // Grab a few samples, each with a different label on the stack.
+#define SAMPLE_LABEL_PREFIX "CPUUsage sample label "
+    static constexpr const char* scSampleLabels[] = {
+        SAMPLE_LABEL_PREFIX "0", SAMPLE_LABEL_PREFIX "1",
+        SAMPLE_LABEL_PREFIX "2", SAMPLE_LABEL_PREFIX "3",
+        SAMPLE_LABEL_PREFIX "4", SAMPLE_LABEL_PREFIX "5",
+        SAMPLE_LABEL_PREFIX "6", SAMPLE_LABEL_PREFIX "7",
+        SAMPLE_LABEL_PREFIX "8", SAMPLE_LABEL_PREFIX "9"};
+    static constexpr size_t scSampleLabelCount =
+        (sizeof(scSampleLabels) / sizeof(scSampleLabels[0]));
+    // We'll do two samplings for each label.
+    static constexpr size_t scMinSamplings = scSampleLabelCount * 2;
+
+    for (const char* sampleLabel : scSampleLabels) {
+      AUTO_PROFILER_LABEL(sampleLabel, OTHER);
+      ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+      // Note: There could have been a delay before this label above, where the
+      // profiler could have sampled the stack and missed the label. By forcing
+      // another sampling now, the label is guaranteed to be present.
+      ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+    }
+
+    UniquePtr<char[]> profile = profiler_get_profile();
+
+    if (testWithNoStackSampling) {
+      // If we are testing nostacksampling, we shouldn't find this label prefix
+      // in the profile.
+      EXPECT_FALSE(strstr(profile.get(), SAMPLE_LABEL_PREFIX));
+    } else {
+      // In normal sampling mode, we should find all labels.
+      for (const char* sampleLabel : scSampleLabels) {
+        EXPECT_TRUE(strstr(profile.get(), sampleLabel));
       }
     }
 
-    {
-      GET_JSON(sampleUnits, meta["sampleUnits"], Object);
+    JSONOutputCheck(profile.get(), [testWithNoStackSampling](
+                                       const Json::Value& aRoot) {
+      // Check that the "cpu" feature is present.
+      GET_JSON(meta, aRoot["meta"], Object);
       {
-        EXPECT_EQ_JSON(sampleUnits["time"], String, "ms");
-        EXPECT_EQ_JSON(sampleUnits["eventDelay"], String, "ms");
+        GET_JSON(configuration, meta["configuration"], Object);
+        {
+          GET_JSON(features, configuration["features"], Array);
+          { EXPECT_JSON_ARRAY_CONTAINS(features, String, "cpu"); }
+        }
+      }
+
+      {
+        GET_JSON(sampleUnits, meta["sampleUnits"], Object);
+        {
+          EXPECT_EQ_JSON(sampleUnits["time"], String, "ms");
+          EXPECT_EQ_JSON(sampleUnits["eventDelay"], String, "ms");
 #if defined(GP_OS_windows) || defined(GP_OS_darwin) || defined(GP_OS_linux) || \
     defined(GP_OS_android) || defined(GP_OS_freebsd)
-        // Note: The exact string is not important here.
-        EXPECT_TRUE(sampleUnits["threadCPUDelta"].isString())
-            << "There should be a sampleUnits.threadCPUDelta on this platform";
+          // Note: The exact string is not important here.
+          EXPECT_TRUE(sampleUnits["threadCPUDelta"].isString())
+              << "There should be a sampleUnits.threadCPUDelta on this "
+                 "platform";
 #else
         EXPECT_FALSE(sampleUnits.isMember("threadCPUDelta"))
             << "Unexpected sampleUnits.threadCPUDelta on this platform";;
 #endif
+        }
       }
-    }
 
-    // Check that the sample schema contains "threadCPUDelta".
-    GET_JSON(threads, aRoot["threads"], Array);
-    {
-      GET_JSON(thread0, threads[0], Object);
+      // Check that the sample schema contains "threadCPUDelta".
+      GET_JSON(threads, aRoot["threads"], Array);
       {
-        GET_JSON(samples, thread0["samples"], Object);
+        GET_JSON(thread0, threads[0], Object);
         {
-          Json::ArrayIndex threadCPUDeltaIndex = 0;
-          GET_JSON(schema, samples["schema"], Object);
+          GET_JSON(samples, thread0["samples"], Object);
           {
-            GET_JSON(index, schema["threadCPUDelta"], UInt);
-            threadCPUDeltaIndex = index.asUInt();
-          }
+            Json::ArrayIndex stackIndex = 0;
+            Json::ArrayIndex threadCPUDeltaIndex = 0;
+            GET_JSON(schema, samples["schema"], Object);
+            {
+              GET_JSON(jsonStackIndex, schema["stack"], UInt);
+              stackIndex = jsonStackIndex.asUInt();
+              GET_JSON(jsonThreadCPUDeltaIndex, schema["threadCPUDelta"], UInt);
+              threadCPUDeltaIndex = jsonThreadCPUDeltaIndex.asUInt();
+            }
 
-          unsigned threadCPUDeltaCount = 0;
-          GET_JSON(data, samples["data"], Array);
-          EXPECT_GE(data.size(), MinSamplings);
-          for (const Json::Value& sample : data) {
-            ASSERT_TRUE(sample.isArray());
-            if (sample.isValidIndex(threadCPUDeltaIndex)) {
-              if (!sample[threadCPUDeltaIndex].isNull()) {
-                EXPECT_TRUE(sample[threadCPUDeltaIndex].isUInt64());
-                ++threadCPUDeltaCount;
+            std::set<uint64_t> stackLeaves;  // To count distinct leaves.
+            unsigned threadCPUDeltaCount = 0;
+            GET_JSON(data, samples["data"], Array);
+            EXPECT_GE(data.size(), scMinSamplings);
+            for (const Json::Value& sample : data) {
+              ASSERT_TRUE(sample.isArray());
+              if (sample.isValidIndex(stackIndex)) {
+                if (!sample[stackIndex].isNull()) {
+                  GET_JSON(stack, sample[stackIndex], UInt64);
+                  stackLeaves.insert(stack.asUInt64());
+                }
+              }
+              if (sample.isValidIndex(threadCPUDeltaIndex)) {
+                if (!sample[threadCPUDeltaIndex].isNull()) {
+                  EXPECT_TRUE(sample[threadCPUDeltaIndex].isUInt64());
+                  ++threadCPUDeltaCount;
+                }
               }
             }
-          }
+
+            if (testWithNoStackSampling) {
+              // in nostacksampling mode, there should only be one kind of stack
+              // leaf (the root).
+              EXPECT_EQ(stackLeaves.size(), 1u);
+            } else {
+              // in normal sampling mode, there should be at least one kind of
+              // stack leaf for each distinct label.
+              EXPECT_GE(stackLeaves.size(), scSampleLabelCount);
+            }
 
 #if defined(GP_OS_windows) || defined(GP_OS_darwin) || defined(GP_OS_linux) || \
     defined(GP_OS_android) || defined(GP_OS_freebsd)
-          EXPECT_GE(threadCPUDeltaCount, data.size() - 1u)
-              << "There should be 'threadCPUDelta' values in all but 1 samples";
+            EXPECT_GE(threadCPUDeltaCount, data.size() - 1u)
+                << "There should be 'threadCPUDelta' values in all but 1 "
+                   "samples";
 #else
           // All "threadCPUDelta" data should be absent or null on unsupported
           // platforms.
           EXPECT_EQ(threadCPUDeltaCount, 0u);
 #endif
+          }
         }
       }
-    }
-  });
+    });
 
-  // Note: There is no non-racy way to test for SamplingState::JustStopped, as
-  // it would require coordination between `profiler_stop()` and another thread
-  // doing `profiler_callback_after_sampling()` at just the right moment.
+    // Note: There is no non-racy way to test for SamplingState::JustStopped, as
+    // it would require coordination between `profiler_stop()` and another
+    // thread doing `profiler_callback_after_sampling()` at just the right
+    // moment.
 
-  profiler_stop();
-  ASSERT_TRUE(!profiler_is_active());
-  ASSERT_TRUE(!profiler_callback_after_sampling(
-      [&](SamplingState) { ASSERT_TRUE(false); }));
+    profiler_stop();
+    ASSERT_TRUE(!profiler_is_active());
+    ASSERT_TRUE(!profiler_callback_after_sampling(
+        [&](SamplingState) { ASSERT_TRUE(false); }));
+  }
 }
