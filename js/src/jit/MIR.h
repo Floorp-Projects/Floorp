@@ -4727,35 +4727,6 @@ class MCopySign : public MBinaryInstruction, public NoTypePolicy::Data {
   ALLOW_CLONE(MCopySign)
 };
 
-// Inline implementation of atan2 (arctangent of y/x).
-class MAtan2 : public MBinaryInstruction,
-               public MixPolicy<DoublePolicy<0>, DoublePolicy<1>>::Data {
-  MAtan2(MDefinition* y, MDefinition* x)
-      : MBinaryInstruction(classOpcode, y, x) {
-    setResultType(MIRType::Double);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(Atan2)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, y), (1, x))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  bool possiblyCalls() const override { return true; }
-
-  [[nodiscard]] bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return true; }
-
-  ALLOW_CLONE(MAtan2)
-};
-
 // Inline implementation of Math.hypot().
 class MHypot : public MVariadicInstruction, public AllDoublePolicy::Data {
   MHypot() : MVariadicInstruction(classOpcode) {
@@ -5940,64 +5911,6 @@ class MConcat : public MBinaryInstruction,
   ALLOW_CLONE(MConcat)
 };
 
-class MCharCodeAt
-    : public MBinaryInstruction,
-      public MixPolicy<StringPolicy<0>, UnboxedInt32Policy<1>>::Data {
-  MCharCodeAt(MDefinition* str, MDefinition* index)
-      : MBinaryInstruction(classOpcode, str, index) {
-    setMovable();
-    setResultType(MIRType::Int32);
-  }
-
- public:
-  INSTRUCTION_HEADER(CharCodeAt)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, string), (1, index))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  virtual AliasSet getAliasSet() const override {
-    // Strings are immutable, so there is no implicit dependency.
-    return AliasSet::None();
-  }
-
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-
-  void computeRange(TempAllocator& alloc) override;
-
-  [[nodiscard]] bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return true; }
-
-  ALLOW_CLONE(MCharCodeAt)
-};
-
-class MFromCharCode : public MUnaryInstruction,
-                      public UnboxedInt32Policy<0>::Data {
-  explicit MFromCharCode(MDefinition* code)
-      : MUnaryInstruction(classOpcode, code) {
-    setMovable();
-    setResultType(MIRType::String);
-  }
-
- public:
-  INSTRUCTION_HEADER(FromCharCode)
-  TRIVIAL_NEW_WRAPPERS
-
-  virtual AliasSet getAliasSet() const override { return AliasSet::None(); }
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  [[nodiscard]] bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return true; }
-
-  ALLOW_CLONE(MFromCharCode)
-};
-
 class MStringConvertCase : public MUnaryInstruction,
                            public StringPolicy<0>::Data {
  public:
@@ -6550,75 +6463,6 @@ class MRegExp : public MNullaryInstruction {
   RegExpObject* source() const { return source_; }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool possiblyCalls() const override { return true; }
-};
-
-class MRegExpMatcher : public MTernaryInstruction,
-                       public MixPolicy<ObjectPolicy<0>, StringPolicy<1>,
-                                        UnboxedInt32Policy<2>>::Data {
- private:
-  MRegExpMatcher(MDefinition* regexp, MDefinition* string,
-                 MDefinition* lastIndex)
-      : MTernaryInstruction(classOpcode, regexp, string, lastIndex) {
-    // May be object or null.
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(RegExpMatcher)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, regexp), (1, string), (2, lastIndex))
-
-  [[nodiscard]] bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-
-  bool canRecoverOnBailout() const override { return true; }
-
-  bool possiblyCalls() const override { return true; }
-};
-
-class MRegExpSearcher : public MTernaryInstruction,
-                        public MixPolicy<ObjectPolicy<0>, StringPolicy<1>,
-                                         UnboxedInt32Policy<2>>::Data {
- private:
-  MRegExpSearcher(MDefinition* regexp, MDefinition* string,
-                  MDefinition* lastIndex)
-      : MTernaryInstruction(classOpcode, regexp, string, lastIndex) {
-    setResultType(MIRType::Int32);
-  }
-
- public:
-  INSTRUCTION_HEADER(RegExpSearcher)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, regexp), (1, string), (2, lastIndex))
-
-  [[nodiscard]] bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-
-  bool canRecoverOnBailout() const override { return true; }
-
-  bool possiblyCalls() const override { return true; }
-};
-
-class MRegExpTester : public MTernaryInstruction,
-                      public MixPolicy<ObjectPolicy<0>, StringPolicy<1>,
-                                       UnboxedInt32Policy<2>>::Data {
- private:
-  MRegExpTester(MDefinition* regexp, MDefinition* string,
-                MDefinition* lastIndex)
-      : MTernaryInstruction(classOpcode, regexp, string, lastIndex) {
-    setResultType(MIRType::Int32);
-  }
-
- public:
-  INSTRUCTION_HEADER(RegExpTester)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, regexp), (1, string), (2, lastIndex))
-
-  bool possiblyCalls() const override { return true; }
-
-  [[nodiscard]] bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return true; }
 };
 
 class MGetFirstDollarIndex : public MUnaryInstruction,
@@ -9662,32 +9506,6 @@ class MInstanceOf : public MBinaryInstruction,
   TRIVIAL_NEW_WRAPPERS
 };
 
-class MArgumentsLength : public MNullaryInstruction {
-  MArgumentsLength() : MNullaryInstruction(classOpcode) {
-    setResultType(MIRType::Int32);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(ArgumentsLength)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override {
-    // Arguments |length| cannot be mutated by Ion Code.
-    return AliasSet::None();
-  }
-
-  void computeRange(TempAllocator& alloc) override;
-
-  [[nodiscard]] bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-
-  bool canRecoverOnBailout() const override { return true; }
-};
-
 class MNewTarget : public MNullaryInstruction {
   MNewTarget() : MNullaryInstruction(classOpcode) {
     setResultType(MIRType::Value);
@@ -10479,66 +10297,6 @@ class MCallAddOrUpdateSparseElement
   bool strict() const { return strict_; }
 
   bool possiblyCalls() const override { return true; }
-};
-
-// Inline implementation of BigInt.asIntN().
-class MBigIntAsIntN
-    : public MBinaryInstruction,
-      public MixPolicy<UnboxedInt32Policy<0>, BigIntPolicy<1>>::Data {
-  MBigIntAsIntN(MDefinition* bits, MDefinition* input)
-      : MBinaryInstruction(classOpcode, bits, input) {
-    setResultType(MIRType::BigInt);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(BigIntAsIntN)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, bits), (1, input))
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  bool possiblyCalls() const override { return true; }
-
-  [[nodiscard]] bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return true; }
-
-  ALLOW_CLONE(MBigIntAsIntN)
-};
-
-// Inline implementation of BigInt.asUintN().
-class MBigIntAsUintN
-    : public MBinaryInstruction,
-      public MixPolicy<UnboxedInt32Policy<0>, BigIntPolicy<1>>::Data {
-  MBigIntAsUintN(MDefinition* bits, MDefinition* input)
-      : MBinaryInstruction(classOpcode, bits, input) {
-    setResultType(MIRType::BigInt);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(BigIntAsUintN)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, bits), (1, input))
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  bool possiblyCalls() const override { return true; }
-
-  [[nodiscard]] bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return true; }
-
-  ALLOW_CLONE(MBigIntAsUintN)
 };
 
 // Flips the input's sign bit, independently of the rest of the number's

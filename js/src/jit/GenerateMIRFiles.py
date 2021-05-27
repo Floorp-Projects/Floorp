@@ -110,6 +110,7 @@ def gen_mir_class(
     alias_set,
     possibly_calls,
     compute_range,
+    can_recover,
     clone,
 ):
     """Generates class definition for a single MIR opcode."""
@@ -212,6 +213,13 @@ def gen_mir_class(
             code += "  bool possiblyCalls() const override { return true; }\\\n"
     if compute_range:
         code += "  void computeRange(TempAllocator& alloc) override;\\\n"
+    if can_recover:
+        code += "  [[nodiscard]] bool writeRecoverData(\\\n"
+        code += "    CompactBufferWriter& writer) const override;\\\n"
+        if can_recover == "custom":
+            code += "  bool canRecoverOnBailout() const override;\\\n"
+        else:
+            code += "  bool canRecoverOnBailout() const override { return true; }\\\n"
     if clone:
         code += "  ALLOW_CLONE(" + class_name + ")\\\n"
     code += "};\\\n"
@@ -274,6 +282,9 @@ def generate_mir_header(c_out, yaml_path):
             compute_range = op.get("compute_range", None)
             assert compute_range is None or compute_range == "custom"
 
+            can_recover = op.get("can_recover", None)
+            assert can_recover is None or True or can_recover == "custom"
+
             clone = op.get("clone", None)
             assert clone is None or True
 
@@ -289,6 +300,7 @@ def generate_mir_header(c_out, yaml_path):
                 alias_set,
                 possibly_calls,
                 compute_range,
+                can_recover,
                 clone,
             )
             mir_op_classes.append(code)
