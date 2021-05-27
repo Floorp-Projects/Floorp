@@ -523,6 +523,7 @@
   padding: 0;
   width: 28em;
   background-position-x: 4px;
+  margin-inline-end: -6px;
 }
 
 .identity-popup-security-connection.identity-button:-moz-locale-dir(rtl) {
