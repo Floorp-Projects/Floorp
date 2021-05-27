@@ -584,7 +584,8 @@ child:
 
     async ClearImageCache(bool privateLoader, bool chrome);
 
-    async ClearStyleSheetCache(nsIPrincipal? aForPrincipal);
+    async ClearStyleSheetCache(nsIPrincipal? aForPrincipal,
+                               nsCString? aBaseDomain);
 
     async SetOffline(bool offline);
     async SetConnectivity(bool connectivity);

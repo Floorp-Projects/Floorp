@@ -251,17 +251,16 @@ const CSSCacheCleaner = {
       aOriginAttributes
     );
 
-    ChromeUtils.clearStyleSheetCache(httpPrincipal);
-    ChromeUtils.clearStyleSheetCache(httpsPrincipal);
+    ChromeUtils.clearStyleSheetCacheByPrincipal(httpPrincipal);
+    ChromeUtils.clearStyleSheetCacheByPrincipal(httpsPrincipal);
   },
 
   async deleteByPrincipal(aPrincipal) {
-    ChromeUtils.clearStyleSheetCache(aPrincipal);
+    ChromeUtils.clearStyleSheetCacheByPrincipal(aPrincipal);
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    // TODO: Bug 1705032
-    return this.deleteByHost(aBaseDomain, {});
+  async deleteByBaseDomain(aBaseDomain) {
+    ChromeUtils.clearStyleSheetCacheByBaseDomain(aBaseDomain);
   },
 
   async deleteAll() {

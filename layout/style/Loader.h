@@ -130,6 +130,8 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
 
   nsIPrincipal* LoaderPrincipal() const { return mLoaderPrincipal; }
 
+  nsIPrincipal* PartitionPrincipal() const { return mPartitionPrincipal; }
+
   css::SheetParsingMode ParsingMode() const { return mParsingMode; }
 
   enum { ALLOW_MEMMOVE = true };

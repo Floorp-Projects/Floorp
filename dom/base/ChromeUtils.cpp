@@ -753,9 +753,18 @@ void ChromeUtils::ClearRecentJSDevError(GlobalObject&) {
 }
 #endif  // NIGHTLY_BUILD
 
-void ChromeUtils::ClearStyleSheetCache(GlobalObject&,
-                                       nsIPrincipal* aForPrincipal) {
+void ChromeUtils::ClearStyleSheetCacheByPrincipal(GlobalObject&,
+                                                  nsIPrincipal* aForPrincipal) {
   SharedStyleSheetCache::Clear(aForPrincipal);
+}
+
+void ChromeUtils::ClearStyleSheetCacheByBaseDomain(
+    GlobalObject&, const nsACString& aBaseDomain) {
+  SharedStyleSheetCache::Clear(nullptr, &aBaseDomain);
+}
+
+void ChromeUtils::ClearStyleSheetCache(GlobalObject&) {
+  SharedStyleSheetCache::Clear();
 }
 
 #define PROCTYPE_TO_WEBIDL_CASE(_procType, _webidl) \
