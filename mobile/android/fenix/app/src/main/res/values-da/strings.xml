@@ -410,6 +410,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s på %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Betalingskort</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Adresser</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Modtagne faneblade</string>
@@ -440,9 +445,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Læs mere</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Slået fra overalt. Gå til Indstillinger for at slå beskyttelse til.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -453,6 +455,8 @@
     <string name="preferences_marketing_data">Markedsføringsdata</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Deler data om de funktioner, du bruger i %1$s, med Leanplum, vores samarbejdspartner inden for markedsføring.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Deler grundlæggende data for anvendelse med Adjust, vores samarbejdspartner inden for markedsføring.</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Undersøgelser</string>
     <!-- Summary for studies preferences -->
@@ -789,8 +793,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s slettet</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Tilføj mappe</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Bogmærke oprettet.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Bogmærke gemt!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1441,10 +1443,8 @@
     <string name="preferences_passwords_autofill">Autofyld</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synkroniser logins</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Til</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Fra</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Synkroniser logins på tværs af enheder</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Genopret forbindelse</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1545,6 +1545,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Data er krypteret</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synkroniser kort på tværs af enheder</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Synkroniser kort</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Tilføj betalingskort</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1574,6 +1576,9 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Gemte kort</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Indtast et gyldigt betalingskortnummer</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tilføj søgetjeneste</string>
@@ -1738,20 +1743,13 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Fjern</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Få det meste ud af %s.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Tryk for at se flere detaljer</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Saml de ting, der betyder noget for dig</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Saml relaterede søgninger, websteder og faneblade i grupper. Så kan du hurtigt finde dem igen.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Du er logget ind som %s i en anden version af Firefox på denne telefon. Vil du logge ind med denne konto?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Du kan nemt føje dette websted til din telefons startskærm for at have hurtig adgang til det og browse hurtigere med en app-lignende oplevelse.</string>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Naviger op</string>
 
-    </resources>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Luk</string>
+
+</resources>
