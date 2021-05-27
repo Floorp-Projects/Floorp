@@ -451,6 +451,7 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
     char string[256];
     char *username = 0;
     Data *password = 0;
+    int allow_unauthed_redirect = 0;
     nr_stun_message_attribute *attr;
     nr_transport_addr *mapped_addr = 0;
     int fail_on_error = 0;
@@ -501,10 +502,12 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
     case NR_TURN_CLIENT_MODE_ALLOCATE_REQUEST:
       fail_on_error = 1;
       compute_lt_key = 1;
-        username = ctx->auth_params.username;
-        password = &ctx->auth_params.password;
-        /* do nothing */
-        break;
+      /* Do not require mutual auth on redirect responses to Allocate requests. */
+      allow_unauthed_redirect = 1;
+      username = ctx->auth_params.username;
+      password = &ctx->auth_params.password;
+      /* do nothing */
+      break;
     case NR_TURN_CLIENT_MODE_REFRESH_REQUEST:
       fail_on_error = 1;
       compute_lt_key = 1;
@@ -568,6 +571,13 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
     r_log(NR_LOG_STUN,LOG_INFO,
           "STUN-CLIENT(%s): Received response; processing",ctx->label);
     response_matched=1;
+
+    if (allow_unauthed_redirect &&
+        nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_ERROR_CODE,
+                                      &attr) &&
+        (attr->u.error_code.number / 100 == 3)) {
+      password = 0;
+    }
 
 /* TODO: !nn! currently using password!=0 to mean that auth is required,
  * TODO: !nn! but we should probably pass that in explicitly via the
