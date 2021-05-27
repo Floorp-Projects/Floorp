@@ -1,3 +1,2 @@
 packages.txt:build/common_virtualenv_packages.txt
 python3:mozilla.pth:third_party/python/glean_parser
-set-variable MOZBUILD_VIRTUALENV=1
