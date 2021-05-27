@@ -50,7 +50,10 @@ extern mozilla::LazyLogModule gWidgetLog;
 extern mozilla::LazyLogModule gWidgetDragLog;
 extern mozilla::LazyLogModule gWidgetPopupLog;
 
-#  define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
+#  define LOG(args)                                   \
+    MOZ_LOG(IsPopup() ? gWidgetPopupLog : gWidgetLog, \
+            mozilla::LogLevel::Debug, args)
+#  define LOGW(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
 #  define LOGDRAG(args) MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, args)
 #  define LOG_POPUP(args) \
     MOZ_LOG(gWidgetPopupLog, mozilla::LogLevel::Debug, args)
@@ -58,6 +61,7 @@ extern mozilla::LazyLogModule gWidgetPopupLog;
 #else
 
 #  define LOG(args)
+#  define LOGW(args)
 #  define LOGDRAG(args)
 #  define LOG_POPUP(args)
 
@@ -611,29 +615,129 @@ class nsWindow final : public nsBaseWidget {
 
   void ApplySizeConstraints(void);
 
-  bool IsMainMenuWindow();
-  GtkWidget* ConfigureWaylandPopupWindows();
-  void PauseRemoteRenderer();
-  void HideWaylandWindow();
-  void HideWaylandTooltip();
-  void HideWaylandPopupAndAllChildren();
-  void HideAllWaylandPopups();
-  void HidePopupsOfParentWindow(nsWindow* aParentWindow);
-  void HidePopupWindowAndAllChildPopups(nsWindow* aWindow);
-  void HideToplevelWindowAndAllChildPopups(nsWindow* aWindow);
-  void CloseUntrackedWaylandPopups();
-  void ConfigureWaylandPopupHierarchy();
-  GtkWindow* GetCurrentTopmostWindow();
-  GtkWindow* GetCurrentWindow();
-  GtkWindow* GetTopmostWindow();
+  // Wayland Popup section
+  bool WaylandPopupNeedsTrackInHierarchy();
+  bool WaylandPopupIsAnchored();
+  bool WaylandPopupIsMenu();
+  bool WaylandPopupIsPermanent();
   bool IsWidgetOverflowWindow();
+  void PauseRemoteRenderer();
+  void RemovePopupFromHierarchyList();
+  void HideWaylandWindow();
+  void HideWaylandPopupWindow(bool aTemporaryHidden, bool aRemoveFromPopupList);
+  void HideWaylandToplevelWindow();
+  void WaylandPopupHideTooltips();
+  void AppendPopupToHierarchyList(nsWindow* aToplevelWindow);
+  void WaylandPopupHierarchyHideTemporary();
+  void WaylandPopupHierarchyShowTemporaryHidden();
+  void WaylandPopupHierarchyCalculatePositions();
+  bool IsInPopupHierarchy();
+  void AddWindowToPopupHierarchy();
+  void UpdateWaylandPopupHierarchy();
+  void WaylandPopupHierarchyUpdateByLayout();
+  void CloseAllPopupsBeforeRemotePopup();
+  void WaylandPopupHideClosedPopups();
+  void WaylandPopupMove(bool aUseMoveToRect);
+  nsWindow* WaylandPopupGetTopmostWindow();
+  bool IsPopupInLayoutPopupChain(nsTArray<nsIWidget*>* aLayoutWidgetHierarchy,
+                                 bool aMustMatchParent);
+  void WaylandPopupMarkAsClosed();
+  void WaylandPopupRemoveClosedPopups();
+  nsWindow* WaylandPopupFindLast(nsWindow* aPopup);
+  GtkWindow* GetCurrentTopmostWindow();
   nsCString GetWindowNodeName();
   nsCString GetPopupTypeName();
+
 #ifdef MOZ_LOGGING
   void LogPopupHierarchy();
 #endif
+
+  /*  Gkt creates popup in two incarnations - wl_subsurface and xdg_popup.
+   *  Kind of popup is choosen before GdkWindow is mapped so we can change
+   *  it only when GdkWindow is hidden.
+   *
+   *  Relevant Gtk code is at gdkwindow-wayland.c
+   *  in should_map_as_popup() and should_map_as_subsurface()
+   *
+   *  wl_subsurface:
+   *    - can't be positioned by move-to-rect
+   *    - can stand outside popup widget hierarchy (has toplevel as parent)
+   *    - don't have child popup widgets
+   *
+   *  xdg_popup:
+   *    - can be positioned by move-to-rect
+   *    - aligned in popup widget hierarchy, first one is attached to toplevel
+   *    - has child (popup) widgets
+   *
+   *  Thus we need to map Firefox popup type to desired Gtk one:
+   *
+   *  wl_subsurface:
+   *    - pernament panels
+   *
+   *  xdg_popup:
+   *    - menus
+   *    - autohide popups (hamburger menu)
+   *    - extension popups
+   *    - tooltips
+   *
+   *  We set mPopupTrackInHierarchy = false for pernament panels which
+   *  are always mapped to toplevel and painted as wl_surfaces.
+   */
+  bool mPopupTrackInHierarchy;
+  bool mPopupTrackInHierarchyConfigured;
+
+  /*  mPopupPosition is the original popup position from layout,
+   *  set by nsWindow::Move() or nsWindow::Resize().
+   */
+  GdkPoint mPopupPosition;
+
+  /*  When popup is anchored, mPopupPosition is relative to its parent popup.
+   */
+  bool mPopupAnchored;
+
+  /*  Translated mPopupPosition against parent window when it's anchored.
+   */
+  GdkPoint mTranslatedPopupPosition;
+
+  /*  Indicates that this popup matches layout setup so we can use
+   *  parent popup coordinates reliably.
+   */
+  bool mPopupMatchesLayout;
+
+  /*  Indicates that popup setup was changed and
+   *  we need to recalculate popup coordinates.
+   */
+  bool mPopupChanged;
+
+  /*  Popup is hidden only as a part of hierarchy tree update.
+   */
+  bool mPopupTemporaryHidden;
+
+  /*  Popup is going to be closed and removed.
+   */
+  bool mPopupClosed;
+
+  /* Toplevel window (first element) of linked list of wayland popups.
+   * It's nullptr if we're the toplevel.
+   */
+  RefPtr<nsWindow> mWaylandToplevel;
+
+  /* Next/Previous popups in Wayland popup hieararchy.
+   */
+  RefPtr<nsWindow> mWaylandPopupNext;
+  RefPtr<nsWindow> mWaylandPopupPrev;
+
+  /* Used by WaylandPopupMove() to track popup movement.
+   *
+   */
   nsRect mPreferredPopupRect;
   bool mPreferredPopupRectFlushed;
+
+  /* Set true when we call move-to-rect and before move-to-rect callback
+   * comes back another resize is issued. In such case we need to ignore
+   * size from move-to-rect callback callback and use size from the latest
+   * resize (mPendingSizeRect).
+   */
   bool mWaitingForMoveToRectCB;
   LayoutDeviceIntRect mPendingSizeRect;
 

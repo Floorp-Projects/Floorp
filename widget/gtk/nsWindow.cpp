@@ -336,7 +336,6 @@ static bool gBlockActivateEvent = false;
 static bool gGlobalsInitialized = false;
 static bool gRaiseWindows = true;
 static bool gUseAspectRatio = true;
-static GList* gVisibleWaylandPopupWindows = nullptr;
 static uint32_t gLastTouchID = 0;
 
 #define NS_WINDOW_TITLE_MAX_LENGTH 4095
@@ -462,6 +461,15 @@ nsWindow::nsWindow()
       mLastMotionPressure(0),
       mLastSizeMode(nsSizeMode_Normal),
       mBoundsAreValid(true),
+      mPopupTrackInHierarchy(false),
+      mPopupTrackInHierarchyConfigured(false),
+      mPopupPosition(),
+      mTranslatedPopupPosition(),
+      mPopupMatchesLayout(false),
+      mPopupChanged(false),
+      mPopupTemporaryHidden(false),
+      mPopupClosed(false),
+      mPreferredPopupRect(),
       mPreferredPopupRectFlushed(false),
       mWaitingForMoveToRectCB(false),
       mPendingSizeRect(LayoutDeviceIntRect(0, 0, 0, 0))
@@ -548,6 +556,10 @@ void nsWindow::DispatchDeactivateEvent(void) {
 }
 
 void nsWindow::DispatchResized() {
+  LOG(("nsWindow::DispatchResized() [%p] size [%d, %d]", this,
+       (int)(mBounds.width / FractionalScaleFactor()),
+       (int)(mBounds.height / FractionalScaleFactor())));
+
   mNeedsDispatchResized = false;
   if (mWidgetListener) {
     mWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
@@ -619,7 +631,6 @@ static GtkWidget* EnsureInvisibleContainer() {
 
 static void CheckDestroyInvisibleContainer() {
   MOZ_ASSERT(gInvisibleContainer, "oh, no");
-
   if (!gdk_window_peek_children(gtk_widget_get_window(gInvisibleContainer))) {
     // No children, so not in use.
     // Make sure to destroy the GtkWindow also.
@@ -698,6 +709,8 @@ void nsWindow::Destroy() {
     mWaylandVsyncSource->Shutdown();
     mWaylandVsyncSource = nullptr;
   }
+
+  RemovePopupFromHierarchyList();
 #endif
 
   // It is safe to call DestroyeCompositor several times (here and
@@ -1160,8 +1173,8 @@ void nsWindow::ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove,
   if (!mCreated) return;
 
   if (aMove || mPreferredPopupRectFlushed || hadInsaneWaylandPopupDimensions) {
-    LOG(("  Need also to move, flushed? %d, bounds were insane: %d\n",
-         mPreferredPopupRectFlushed, hadInsaneWaylandPopupDimensions));
+    LOG_POPUP(("  Need also to move, flushed: %d, bounds were insane: %d\n",
+               mPreferredPopupRectFlushed, hadInsaneWaylandPopupDimensions));
     NativeMoveResize();
   } else {
     NativeResize();
@@ -1254,124 +1267,6 @@ bool nsWindow::IsPopup() {
 
 bool nsWindow::IsWaylandPopup() { return GdkIsWaylandDisplay() && IsPopup(); }
 
-void nsWindow::HideAllWaylandPopups() {
-  LOG_POPUP(("nsWindow::HideAllWaylandPopups\n"));
-  while (gVisibleWaylandPopupWindows) {
-    nsWindow* window =
-        static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
-    LOG_POPUP(("  hidding window [%p]\n", window));
-    window->HideWaylandWindow();
-  }
-}
-
-void nsWindow::HidePopupsOfParentWindow(nsWindow* aParentWindow) {
-  LOG_POPUP(("nsWindow::HidePopupsOfParentWindow, ParentWindow [%p]\n",
-             (void*)aParentWindow));
-
-  // Check if there's tracked popup with given parent when we're requested to
-  // match it exactly.
-  GList* popup = gVisibleWaylandPopupWindows;
-  while (popup) {
-    nsWindow* window = static_cast<nsWindow*>(popup->data);
-    if (window->GetTransientForWindowIfPopup() == aParentWindow) {
-      LOG_POPUP(("  found window %p with parent %p\n", (void*)window,
-                 (void*)aParentWindow));
-      break;
-    }
-    popup = popup->next;
-  }
-  if (!popup) {
-    LOG_POPUP(("  not found a window with parent %p\n", aParentWindow));
-    return;
-  }
-
-  while (gVisibleWaylandPopupWindows) {
-    nsWindow* window =
-        static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
-    LOG_POPUP(("  hidding window [%p]\n", window));
-    window->HideWaylandWindow();
-    if (window->GetTransientForWindowIfPopup() == aParentWindow) {
-      return;
-    }
-  }
-}
-
-void nsWindow::HidePopupWindowAndAllChildPopups(nsWindow* aWindow) {
-  LOG_POPUP(("nsWindow::HidePopupWindowAndAllPopups, aWindow [%p]\n",
-             (void*)aWindow));
-  HidePopupsOfParentWindow(aWindow);
-  if (gVisibleWaylandPopupWindows &&
-      static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data) == aWindow) {
-    aWindow->HideWaylandWindow();
-  }
-}
-
-void nsWindow::HideToplevelWindowAndAllChildPopups(nsWindow* aWindow) {
-  LOG_POPUP(
-      ("nsWindow::HideWindowAndAllPopups, aWindow [%p]\n", (void*)aWindow));
-  HidePopupsOfParentWindow(aWindow);
-  aWindow->HideWaylandWindow();
-}
-
-// Hide popup nsWindows which are no longer in the nsXULPopupManager widget
-// chain list.
-void nsWindow::CloseUntrackedWaylandPopups() {
-  LOG_POPUP(("nsWindow::CloseUntrackedWaylandPopups\n"));
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  AutoTArray<nsIWidget*, 5> widgetChain;
-  pm->GetSubmenuWidgetChain(&widgetChain);
-  GList* popupList = gVisibleWaylandPopupWindows;
-  GList* lastUntrackedPopup = nullptr;
-
-  while (popupList) {
-    LOG_POPUP(("  looking for %p [nsWindow]\n", popupList->data));
-    nsWindow* waylandWnd = static_cast<nsWindow*>(popupList->data);
-    // Remove only menu popups or empty frames - they are most likely
-    // already rolledup popups
-    if (waylandWnd->IsMainMenuWindow() || !waylandWnd->GetFrame()) {
-      bool popupFound = false;
-      for (unsigned long i = 0; i < widgetChain.Length(); i++) {
-        if (waylandWnd == widgetChain[i]) {
-          LOG_POPUP(("  nsWindow [%p] is tracked\n", waylandWnd));
-          popupFound = true;
-          break;
-        }
-      }
-      if (!popupFound) {
-        LOG_POPUP(("  nsWindow [%p] not found in PopupManager\n", waylandWnd));
-        lastUntrackedPopup = popupList;
-      }
-    }
-    popupList = popupList->next;
-  }
-
-  if (lastUntrackedPopup) {
-    LOG_POPUP(("  removing untracked popups up to %p",
-               (void*)lastUntrackedPopup->data));
-    HidePopupWindowAndAllChildPopups(
-        static_cast<nsWindow*>(lastUntrackedPopup->data));
-  }
-}
-
-void nsWindow::ConfigureWaylandPopupHierarchy() {
-  LOG_POPUP(("nsWindow::ConfigureWaylandPopupHierarchy"));
-
-  if (gVisibleWaylandPopupWindows) {
-    nsWindow* topPopupWindow =
-        static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
-    if (topPopupWindow->mPopupType == ePopupTypeTooltip) {
-      LOG_POPUP(("    hidding tooltip [%p]\n", topPopupWindow));
-      topPopupWindow->HideWaylandWindow();
-    }
-  }
-
-  LOG_POPUP(("  toplevel popup is [%p]\n",
-             gVisibleWaylandPopupWindows ? gVisibleWaylandPopupWindows->data
-                                         : nullptr));
-  // We're done now.
-  // TODO - close popups from different layouts?
-}
-
 static nsMenuPopupFrame* GetMenuPopupFrame(nsIFrame* aFrame) {
   if (aFrame) {
     nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(aFrame);
@@ -1380,59 +1275,350 @@ static nsMenuPopupFrame* GetMenuPopupFrame(nsIFrame* aFrame) {
   return nullptr;
 }
 
+void nsWindow::AppendPopupToHierarchyList(nsWindow* aToplevelWindow) {
+  mWaylandToplevel = aToplevelWindow;
+
+  nsWindow* popup = aToplevelWindow;
+  while (popup && popup->mWaylandPopupNext) {
+    popup = popup->mWaylandPopupNext;
+  }
+  popup->mWaylandPopupNext = this;
+
+  mWaylandPopupPrev = popup;
+  mWaylandPopupNext = nullptr;
+  mPopupChanged = true;
+  mPopupClosed = false;
+}
+
+void nsWindow::RemovePopupFromHierarchyList() {
+  // We're already removed from the popup hierarchy
+  if (!IsInPopupHierarchy()) {
+    return;
+  }
+  mWaylandPopupPrev->mWaylandPopupNext = mWaylandPopupNext;
+  if (mWaylandPopupNext) {
+    mWaylandPopupNext->mWaylandPopupPrev = mWaylandPopupPrev;
+    mWaylandPopupNext->mPopupChanged = true;
+  }
+  mWaylandPopupNext = mWaylandPopupPrev = nullptr;
+}
+
+void nsWindow::HideWaylandWindow() {
+  LOG(("nsWindow::HideWaylandWindow: [%p]\n", this));
+  PauseRemoteRenderer();
+  gtk_widget_hide(mShell);
+}
+
+void nsWindow::WaylandPopupMarkAsClosed() {
+  LOG_POPUP(("nsWindow::WaylandPopupMarkAsClosed: [%p]\n", this));
+  mPopupClosed = true;
+  // If we have any child popup window notify it about
+  // parent switch.
+  if (mWaylandPopupNext) {
+    mWaylandPopupNext->mPopupChanged = true;
+  }
+}
+
+nsWindow* nsWindow::WaylandPopupFindLast(nsWindow* aPopup) {
+  while (aPopup && aPopup->mWaylandPopupNext) {
+    aPopup = aPopup->mWaylandPopupNext;
+  }
+  return aPopup;
+}
+
+// Hide and potentially removes popup from popup hierarchy.
+void nsWindow::HideWaylandPopupWindow(bool aTemporaryHide,
+                                      bool aRemoveFromPopupList) {
+  LOG_POPUP(("nsWindow::HideWaylandPopupWindow: [%p] remove from list %d\n",
+             this, aRemoveFromPopupList));
+  if (aRemoveFromPopupList) {
+    RemovePopupFromHierarchyList();
+  }
+  if (aTemporaryHide) {
+    if (gtk_widget_is_visible(mShell)) {
+      mPopupTemporaryHidden = true;
+      HideWaylandWindow();
+    }
+  } else {
+    mPopupTemporaryHidden = false;
+    HideWaylandWindow();
+  }
+}
+
+void nsWindow::HideWaylandToplevelWindow() {
+  LOG(("nsWindow::HideWaylandToplevelWindow: [%p]\n", this));
+  if (mWaylandPopupNext) {
+    nsWindow* popup = WaylandPopupFindLast(mWaylandPopupNext);
+    while (popup->mWaylandToplevel != nullptr) {
+      nsWindow* prev = popup->mWaylandPopupPrev;
+      popup->HideWaylandPopupWindow(/* aTemporaryHide */ false,
+                                    /* aRemoveFromPopupList */ true);
+      popup = prev;
+    }
+  }
+  HideWaylandWindow();
+}
+
+void nsWindow::WaylandPopupRemoveClosedPopups() {
+  LOG(("nsWindow::WaylandPopupRemoveClosedPopups: [%p]\n", this));
+  nsWindow* popup = this;
+  while (popup) {
+    nsWindow* next = popup->mWaylandPopupNext;
+    if (popup->mPopupClosed) {
+      popup->HideWaylandPopupWindow(/* aTemporaryHide */ false,
+                                    /* aRemoveFromPopupList */ true);
+    }
+    popup = next;
+  }
+}
+
+// Hide all tooltips except the latest one.
+void nsWindow::WaylandPopupHideTooltips() {
+  LOG_POPUP(("nsWindow::WaylandPopupHideTooltips"));
+  MOZ_ASSERT(mWaylandToplevel == nullptr, "Should be called on toplevel only!");
+
+  nsWindow* popup = mWaylandPopupNext;
+  while (popup && popup->mWaylandPopupNext) {
+    if (popup->mPopupType == ePopupTypeTooltip) {
+      LOG_POPUP(("  hidding tooltip [%p]", popup));
+      popup->WaylandPopupMarkAsClosed();
+    }
+    popup = popup->mWaylandPopupNext;
+  }
+}
+
+// We can't show popups with remote content or overflow popups
+// on top of regular ones.
+// If there's any remote popup opened, close all parent popups of it.
+void nsWindow::CloseAllPopupsBeforeRemotePopup() {
+  LOG_POPUP(("nsWindow::CloseAllPopupsBeforeRemotePopup"));
+  MOZ_ASSERT(mWaylandToplevel == nullptr, "Should be called on toplevel only!");
+
+  // Don't waste time when there's only one popup opened.
+  if (mWaylandPopupNext->mWaylandPopupNext == nullptr) {
+    return;
+  }
+
+  // Find the first opened remote content popup
+  nsWindow* remotePopup = mWaylandPopupNext;
+  while (remotePopup) {
+    if (remotePopup->HasRemoteContent() ||
+        remotePopup->IsWidgetOverflowWindow()) {
+      LOG_POPUP(("  remote popup [%p]", remotePopup));
+      break;
+    }
+    remotePopup = remotePopup->mWaylandPopupNext;
+  }
+
+  if (!remotePopup) {
+    return;
+  }
+
+  // ...hide opened popups before the remote one.
+  nsWindow* popup = mWaylandPopupNext;
+  while (popup && popup != remotePopup) {
+    LOG_POPUP(("  hidding popup [%p]", popup));
+    popup->WaylandPopupMarkAsClosed();
+    popup = popup->mWaylandPopupNext;
+  }
+}
+
+static void GetLayoutPopupWidgetChain(
+    nsTArray<nsIWidget*>* aLayoutWidgetHierarchy) {
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  pm->GetSubmenuWidgetChain(aLayoutWidgetHierarchy);
+  aLayoutWidgetHierarchy->Reverse();
+}
+
+// Compare 'this' popup position in Wayland widget hierarchy
+// (mWaylandPopupPrev/mWaylandPopupNext) with
+// 'this' popup position in layout hierarchy.
+//
+// When aMustMatchParent is true we also request
+// 'this' parents match, i.e. 'this' has the same parent in
+// both layout and widget hierarchy.
+bool nsWindow::IsPopupInLayoutPopupChain(
+    nsTArray<nsIWidget*>* aLayoutWidgetHierarchy, bool aMustMatchParent) {
+  int len = (int)aLayoutWidgetHierarchy->Length();
+  for (int i = 0; i < len; i++) {
+    if (this == (*aLayoutWidgetHierarchy)[i]) {
+      if (!aMustMatchParent) {
+        return true;
+      }
+
+      // Find correct parent popup for 'this' according to widget
+      // hierarchy. That means we need to skip closed popups.
+      nsWindow* parentPopup = nullptr;
+      if (mWaylandPopupPrev != mWaylandToplevel) {
+        parentPopup = mWaylandPopupPrev;
+        while (parentPopup != mWaylandToplevel && parentPopup->mPopupClosed) {
+          parentPopup = parentPopup->mWaylandPopupPrev;
+        }
+      }
+
+      if (i == 0) {
+        // We found 'this' popups as a first popup in layout hierarchy.
+        // It matches layout hierarchy if it's first widget also in
+        // wayland widget hierarchy (i.e. parent is null).
+        return parentPopup == nullptr;
+      }
+
+      return parentPopup == (*aLayoutWidgetHierarchy)[i - 1];
+    }
+  }
+  return false;
+}
+
+void nsWindow::WaylandPopupHierarchyUpdateByLayout() {
+  LOG_POPUP(("nsWindow::WaylandPopupHierarchyUpdateByLayout"));
+  MOZ_ASSERT(mWaylandToplevel == nullptr, "Should be called on toplevel only!");
+
+  AutoTArray<nsIWidget*, 5> layoutPopupWidgetChain;
+  GetLayoutPopupWidgetChain(&layoutPopupWidgetChain);
+
+  // Hide all popups which are not in layout popup chain
+  nsWindow* popup = mWaylandPopupNext;
+  while (popup) {
+    // Tooltips are not tracked in layout chain
+    if (!popup->mPopupClosed && popup->mPopupType != ePopupTypeTooltip) {
+      if (!popup->IsPopupInLayoutPopupChain(&layoutPopupWidgetChain,
+                                            /* aMustMatchParent */ false)) {
+        LOG_POPUP(("  hidding popup [%p]", popup));
+        popup->WaylandPopupMarkAsClosed();
+      }
+    }
+    popup = popup->mWaylandPopupNext;
+  }
+
+  // Mark popups outside of layout hierarchy to later use that information to
+  // calculate popup positions.
+  popup = mWaylandPopupNext;
+  while (popup) {
+    if (popup->mPopupType == ePopupTypeTooltip) {
+      popup->mPopupMatchesLayout = true;
+    } else if (!popup->mPopupClosed) {
+      popup->mPopupMatchesLayout =
+          popup->IsPopupInLayoutPopupChain(&layoutPopupWidgetChain, true);
+      LOG_POPUP(("  popup [%p] parent window [%p] matches layout %d\n",
+                 (void*)popup, (void*)popup->mWaylandPopupPrev,
+                 popup->mPopupMatchesLayout));
+    }
+    popup = popup->mWaylandPopupNext;
+  }
+}
+
+void nsWindow::WaylandPopupHierarchyHideTemporary() {
+  LOG_POPUP(("nsWindow::WaylandPopupHierarchyHideTemporary() [%p]", this));
+  nsWindow* popup = WaylandPopupFindLast(this);
+  while (popup) {
+    LOG_POPUP(("  temporary hidding popup [%p]", popup));
+    nsWindow* prev = popup->mWaylandPopupPrev;
+    popup->HideWaylandPopupWindow(/* aTemporaryHide */ true,
+                                  /* aRemoveFromPopupList */ false);
+    if (popup == this) {
+      break;
+    }
+    popup = prev;
+  }
+}
+
+void nsWindow::WaylandPopupHierarchyShowTemporaryHidden() {
+  LOG_POPUP(("nsWindow::WaylandPopupHierarchyShowTemporaryHidden()"));
+  nsWindow* popup = this;
+  while (popup) {
+    LOG_POPUP(("  showing temporary hidden popup [%p]", popup));
+    if (popup->mPopupTemporaryHidden) {
+      popup->mPopupTemporaryHidden = false;
+      gtk_widget_show(popup->mShell);
+    }
+    popup = popup->mWaylandPopupNext;
+  }
+}
+
+void nsWindow::WaylandPopupHierarchyCalculatePositions() {
+  LOG_POPUP(("nsWindow::WaylandPopupHierarchyCalculatePositions()"));
+
+  // Set widget hierarchy in Gtk
+  nsWindow* popup = mWaylandToplevel->mWaylandPopupNext;
+  while (popup) {
+    LOG_POPUP(("  popup [%p] set parent window [%p]", (void*)popup,
+               (void*)popup->mWaylandPopupPrev));
+    gtk_window_set_transient_for(GTK_WINDOW(popup->mShell),
+                                 GTK_WINDOW(popup->mWaylandPopupPrev->mShell));
+    popup = popup->mWaylandPopupNext;
+  }
+
+  popup = this;
+  while (popup) {
+    // Anchored window has mPopupPosition already calculated against
+    // its parent, no need to recalculate.
+    LOG_POPUP(("  popup [%p] bounds [%d, %d] -> [%d x %d]", popup,
+               (int)(popup->mBounds.x / FractionalScaleFactor()),
+               (int)(popup->mBounds.y / FractionalScaleFactor()),
+               (int)(popup->mBounds.width / FractionalScaleFactor()),
+               (int)(popup->mBounds.height / FractionalScaleFactor())));
+#ifdef MOZ_LOGGING
+    nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
+    if (popupFrame) {
+      auto pos = popupFrame->GetPosition();
+      auto size = popupFrame->GetSize();
+      int32_t p2a =
+          AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
+      LOG_POPUP(("  popup [%p] layout [%d, %d] -> [%d x %d]", popup,
+                 pos.x / p2a, pos.y / p2a, size.width / p2a,
+                 size.height / p2a));
+    }
+#endif
+    if (popup->mPopupAnchored) {
+      LOG_POPUP(("  popup [%p] is anchored", popup));
+      if (!popup->mPopupMatchesLayout) {
+        NS_WARNING("Anchored popup does not match layout!");
+      }
+      popup->mTranslatedPopupPosition = popup->mPopupPosition;
+    } else if (popup->mWaylandPopupPrev->mWaylandToplevel == nullptr) {
+      LOG_POPUP(("  popup [%p] has toplevel as parent", popup));
+      popup->mTranslatedPopupPosition = popup->mPopupPosition;
+    } else {
+      LOG_POPUP(("  popup [%p] uses transformed coordinates\n", popup));
+      popup->mTranslatedPopupPosition.x =
+          popup->mPopupPosition.x - popup->mWaylandPopupPrev->mPopupPosition.x;
+      popup->mTranslatedPopupPosition.y =
+          popup->mPopupPosition.y - popup->mWaylandPopupPrev->mPopupPosition.y;
+    }
+    LOG_POPUP(
+        ("  popup [%p] transformed popup coordinates [%d, %d] -> [%d, %d]",
+         popup, popup->mPopupPosition.x, popup->mPopupPosition.y,
+         popup->mTranslatedPopupPosition.x, popup->mTranslatedPopupPosition.y));
+    popup = popup->mWaylandPopupNext;
+  }
+}
+
 // The MenuList popups are used as dropdown menus for example in WebRTC
 // microphone/camera chooser or autocomplete widgets.
-bool nsWindow::IsMainMenuWindow() {
+bool nsWindow::WaylandPopupIsMenu() {
   nsMenuPopupFrame* menuPopupFrame = GetMenuPopupFrame(GetFrame());
   if (menuPopupFrame) {
-    // Keep this log for clarificaion for the menu entries
-    // are diagnosed.
-    //
-    // LOG_POPUP(("  nsMenuPopupFrame [%p] type: %d IsMenu: %d, IsMenuList:
-    // %d\n", menuPopupFrame, menuPopupFrame->PopupType(),
-    // menuPopupFrame->IsMenu(), menuPopupFrame->IsMenuList()));
     return mPopupType == ePopupTypeMenu && !menuPopupFrame->IsMenuList();
   }
   return false;
 }
 
-GtkWindow* nsWindow::GetTopmostWindow() {
-  nsView* view = nsView::GetViewFor(this);
-  if (view) {
-    nsView* parentView = view->GetParent();
-    if (parentView) {
-      nsIWidget* parentWidget = parentView->GetNearestWidget(nullptr);
-      if (parentWidget) {
-        nsWindow* parentnsWindow = static_cast<nsWindow*>(parentWidget);
-        LOG(("  Topmost window: %p [nsWindow]\n", parentnsWindow));
-        return GTK_WINDOW(parentnsWindow->mShell);
-      }
-    }
+bool nsWindow::WaylandPopupIsPermanent() {
+  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
+  if (!popupFrame) {
+    // We can always hide popups without frames.
+    return false;
   }
-  return nullptr;
+  return popupFrame->IsNoAutoHide();
 }
 
-GtkWindow* nsWindow::GetCurrentWindow() {
-  GtkWindow* parentGtkWindow = nullptr;
-  // get the last opened window from gVisibleWaylandPopupWindows
-  if (gVisibleWaylandPopupWindows) {
-    nsWindow* parentnsWindow =
-        static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
-    if (parentnsWindow) {
-      LOG(("  Setting parent to last opened window: %p [nsWindow]\n",
-           parentnsWindow));
-      parentGtkWindow = GTK_WINDOW(parentnsWindow->GetGtkWidget());
-    }
+bool nsWindow::WaylandPopupIsAnchored() {
+  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
+  if (!popupFrame) {
+    // We can always hide popups without frames.
+    return false;
   }
-  // get the topmost window if the last opened windows are empty
-  if (!parentGtkWindow) {
-    parentGtkWindow = GetTopmostWindow();
-  }
-  if (parentGtkWindow && GTK_IS_WINDOW(parentGtkWindow)) {
-    return GTK_WINDOW(parentGtkWindow);
-  }
-  LOG(("  Failed to get current window for %p: %p\n", this, parentGtkWindow));
-  return nullptr;
+  return popupFrame->GetAnchor() != nullptr;
 }
 
 bool nsWindow::IsWidgetOverflowWindow() {
@@ -1447,30 +1633,30 @@ bool nsWindow::IsWidgetOverflowWindow() {
 #ifdef MOZ_LOGGING
 void nsWindow::LogPopupHierarchy() {
   LOG_POPUP(("Widget Popup Hierarchy:\n"));
-  if (!gVisibleWaylandPopupWindows) {
+  if (!mWaylandToplevel->mWaylandPopupNext) {
     LOG_POPUP(("    Empty\n"));
   } else {
-    GList* top = g_list_last(gVisibleWaylandPopupWindows);
     int indent = 4;
-    while (top) {
-      nsWindow* window = static_cast<nsWindow*>(top->data);
+    nsWindow* popup = mWaylandToplevel->mWaylandPopupNext;
+    while (popup) {
       nsPrintfCString indentString("%*s", indent, " ");
-      nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(window->GetFrame());
-      LOG_POPUP(("%s %s %s nsWindow [%p] MainMenu %d ContextMenu %d\n",
-                 indentString.get(), window->GetWindowNodeName().get(),
-                 window->GetPopupTypeName().get(), window,
-                 window->IsMainMenuWindow(),
-                 popupFrame && popupFrame->IsContextMenu()));
+      nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(popup->GetFrame());
+      LOG_POPUP(
+          ("%s %s %s nsWindow [%p] Menu %d Permanent %d ContextMenu %d "
+           "Anchored %d Visible %d\n",
+           indentString.get(), popup->GetWindowNodeName().get(),
+           popup->GetPopupTypeName().get(), popup, popup->WaylandPopupIsMenu(),
+           popup->WaylandPopupIsPermanent(),
+           popupFrame && popupFrame->IsContextMenu(), popup->mPopupAnchored,
+           gtk_widget_is_visible(popup->mShell)));
       indent += 4;
-      top = top->prev;
+      popup = popup->mWaylandPopupNext;
     }
   }
 
   LOG_POPUP(("Layout Popup Hierarchy:\n"));
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   AutoTArray<nsIWidget*, 5> widgetChain;
-  pm->GetSubmenuWidgetChain(&widgetChain);
-
+  GetLayoutPopupWidgetChain(&widgetChain);
   if (widgetChain.Length() == 0) {
     LOG_POPUP(("    Empty\n"));
   } else {
@@ -1479,11 +1665,14 @@ void nsWindow::LogPopupHierarchy() {
       nsPrintfCString indentString("%*s", (int)(i + 1) * 4, " ");
       if (window) {
         nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(window->GetFrame());
-        LOG_POPUP(("%s %s %s nsWindow [%p] MainMenu %d ContextMenu %d\n",
-                   indentString.get(), window->GetWindowNodeName().get(),
-                   window->GetPopupTypeName().get(), window,
-                   window->IsMainMenuWindow(),
-                   popupFrame && popupFrame->IsContextMenu()));
+        LOG_POPUP(
+            ("%s %s %s nsWindow [%p] Menu %d Permanent %d ContextMenu %d "
+             "Anchored %d Visible %d\n",
+             indentString.get(), window->GetWindowNodeName().get(),
+             window->GetPopupTypeName().get(), window,
+             window->WaylandPopupIsMenu(), window->WaylandPopupIsPermanent(),
+             popupFrame && popupFrame->IsContextMenu(), window->mPopupAnchored,
+             gtk_widget_is_visible(window->mShell)));
       } else {
         LOG_POPUP(("%s null window\n", indentString.get()));
       }
@@ -1492,21 +1681,76 @@ void nsWindow::LogPopupHierarchy() {
 }
 #endif
 
-// Wayland keeps strong popup window hierarchy. We need to track active
-// (visible) popup windows and make sure we hide popup on the same level
-// before we open another one on that level. It means that every open
-// popup needs to have an unique parent.
+nsWindow* nsWindow::WaylandPopupGetTopmostWindow() {
+  nsView* view = nsView::GetViewFor(this);
+  if (view) {
+    nsView* parentView = view->GetParent();
+    if (parentView) {
+      nsIWidget* parentWidget = parentView->GetNearestWidget(nullptr);
+      if (parentWidget) {
+        nsWindow* parentnsWindow = static_cast<nsWindow*>(parentWidget);
+        LOG_POPUP(("  Topmost window: %p [nsWindow]\n", parentnsWindow));
+        return parentnsWindow;
+      }
+    }
+  }
+  return nullptr;
+}
 
-// TODO:
-// - Don't mix panels and menus?
-// - Connect popus with the same class only?
-// - Create all panels as 'Autohide'?
+bool nsWindow::WaylandPopupNeedsTrackInHierarchy() {
+  MOZ_RELEASE_ASSERT(!mIsDragPopup);
 
-GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
-  MOZ_ASSERT(this->mWindowType == eWindowType_popup);
+  if (mPopupTrackInHierarchyConfigured) {
+    return mPopupTrackInHierarchy;
+  }
+
+  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
+  if (!popupFrame) {
+    return false;
+  }
+  mPopupTrackInHierarchyConfigured = true;
+
+  // We have nsMenuPopupFrame so we can configure the popup now.
+  mPopupTrackInHierarchy = !WaylandPopupIsPermanent();
+  mPopupAnchored = WaylandPopupIsAnchored();
+
+  // See gdkwindow-wayland.c and
+  // should_map_as_popup()/should_map_as_subsurface()
+  GdkWindowTypeHint gtkTypeHint;
+  switch (mPopupHint) {
+    case ePopupTypeMenu:
+      // GDK_WINDOW_TYPE_HINT_POPUP_MENU is mapped as xdg_popup by default.
+      // We use this type for all menu popups.
+      gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
+      break;
+    case ePopupTypeTooltip:
+      gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
+      break;
+    default:  // popup panel type
+      // GDK_WINDOW_TYPE_HINT_UTILITY is mapped as wl_subsurface
+      // by default. It's used for panels attached to toplevel
+      // window.
+      gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
+      break;
+  }
+
+  if (!mPopupTrackInHierarchy) {
+    gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
+  }
   LOG_POPUP(
-      ("nsWindow::ConfigureWaylandPopupWindows [%p], hasRemoteContent %d\n",
-       (void*)this, this->HasRemoteContent()));
+      ("nsWindow::WaylandPopupNeedsTrackInHierarchy [%p] tracked %d anchored "
+       "%d\n",
+       (void*)this, mPopupTrackInHierarchy, mPopupAnchored));
+  gtk_window_set_type_hint(GTK_WINDOW(mShell), gtkTypeHint);
+  return mPopupTrackInHierarchy;
+}
+
+bool nsWindow::IsInPopupHierarchy() {
+  return mPopupTrackInHierarchy && mWaylandToplevel && mWaylandPopupPrev;
+}
+
+void nsWindow::AddWindowToPopupHierarchy() {
+  LOG_POPUP(("nsWindow::AddWindowToPopupHierarchy [%p]\n", (void*)this));
 #if DEBUG
   if (this->GetFrame() && this->GetFrame()->GetContent()->GetID()) {
     nsCString nodeId;
@@ -1514,58 +1758,119 @@ GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
     LOG_POPUP(("  popup node id=%s\n", nodeId.get()));
   }
 #endif
+  if (!GetFrame()) {
+    LOG_POPUP(("  Window without frame cannot be added as popup!\n"));
+    return;
+  }
+
+  // Check if we're already in the hierarchy
+  if (!IsInPopupHierarchy()) {
+    mWaylandToplevel = WaylandPopupGetTopmostWindow();
+    AppendPopupToHierarchyList(mWaylandToplevel);
+  }
+}
+
+// Wayland keeps strong popup window hierarchy. We need to track active
+// (visible) popup windows and make sure we hide popup on the same level
+// before we open another one on that level. It means that every open
+// popup needs to have an unique parent.
+void nsWindow::UpdateWaylandPopupHierarchy() {
+  LOG_POPUP(("nsWindow::UpdateWaylandPopupHierarchy [%p]\n", (void*)this));
+
+  // This popup hasn't been added to popup hierarchy yet so no need to
+  // do any configurations.
+  if (!IsInPopupHierarchy()) {
+    LOG_POPUP(("  popup [%p] isn't in hierarchy\n", (void*)this));
+    return;
+  }
 
 #ifdef MOZ_LOGGING
   LogPopupHierarchy();
+  auto printPopupHierarchy = MakeScopeExit([&] { LogPopupHierarchy(); });
 #endif
 
-  if (!GetFrame()) {
-    LOG(("  Window without frame cannot be configured.\n"));
-    return nullptr;
+  // Hide all tooltips without the last one. Tooltip can't be popup parent.
+  mWaylandToplevel->WaylandPopupHideTooltips();
+
+  // Check if we have any remote content / overflow window in hierarchy.
+  // We can't attach such widget on top of other popup.
+  mWaylandToplevel->CloseAllPopupsBeforeRemotePopup();
+
+  // Check if your popup hierarchy matches layout hierarchy.
+  // For instance we should not connect hamburger menu on top
+  // of context menu.
+  // Close all popups from different layout chains if possible.
+  mWaylandToplevel->WaylandPopupHierarchyUpdateByLayout();
+
+  // Now we have Popup hierarchy complete.
+  // Find first unchanged (and still open) popup to start with hierarchy
+  // changes.
+  nsWindow* changedPopup = mWaylandToplevel->mWaylandPopupNext;
+  while (changedPopup) {
+    // Stop when parent of this popup was changed and we need to recalc
+    // popup position.
+    if (changedPopup->mPopupChanged) {
+      break;
+    }
+    // Stop when this popup is closed.
+    if (changedPopup->mPopupClosed) {
+      break;
+    }
+    changedPopup = changedPopup->mWaylandPopupNext;
   }
 
-  // Before we do any popup hierarchy investigation, hide all popups
-  // which are closed by Gecko/JS code already. This will close menu
-  // from different levels and so on.
-  CloseUntrackedWaylandPopups();
-
-  if (gVisibleWaylandPopupWindows) {
-    // Check if we're already configured.
-    if (g_list_find(gVisibleWaylandPopupWindows, this)) {
-      LOG_POPUP(("  it's already configured, quit.\n"));
-      return GTK_WIDGET(gtk_window_get_transient_for(GTK_WINDOW(mShell)));
-    }
-
-    // If 'this' popup window has a remote content or it's overflow window
-    // we can't attach it on top of any popup but we need to attach on top
-    // of toplevel window only. In such case close all popup windows.
-    bool needsToplevelParent = (HasRemoteContent() || IsWidgetOverflowWindow());
-    if (needsToplevelParent) {
-      LOG_POPUP(
-          ("  Hiding all opened popups because the window is remote content or"
-           " overflow-widget"));
-      HideAllWaylandPopups();
-    } else {
-      ConfigureWaylandPopupHierarchy();
-    }
+  // We don't need to recompute popup positions, quit now.
+  if (!changedPopup) {
+    LOG_POPUP(("  changed Popup is null, quit.\n"));
+    return;
   }
 
-  GtkWindow* parentGtkWindow = GetCurrentWindow();
-  MOZ_RELEASE_ASSERT(parentGtkWindow, "Missing parent window!");
-  MOZ_RELEASE_ASSERT(parentGtkWindow != GTK_WINDOW(this->GetGtkWidget()),
-                     "Cannot set self as parent");
+  LOG_POPUP(("  first changed popup [%p]\n", (void*)changedPopup));
 
-  LOG_POPUP(("  Popup [%p] set parent window [%p]", (void*)this,
-             (void*)get_window_for_gtk_widget(GTK_WIDGET(parentGtkWindow))));
-  gtk_window_set_transient_for(GTK_WINDOW(mShell), GTK_WINDOW(parentGtkWindow));
+  // Hide parent popups if necessary (there are layout discontinuity)
+  // reposition the popup and show them again.
+  changedPopup->WaylandPopupHierarchyHideTemporary();
 
-  // Add current window to the visible popup list
-  gVisibleWaylandPopupWindows =
-      g_list_prepend(gVisibleWaylandPopupWindows, this);
+  nsWindow* parentOfchangedPopup = nullptr;
+  if (changedPopup->mPopupClosed) {
+    parentOfchangedPopup = changedPopup->mWaylandPopupPrev;
+  }
+  changedPopup->WaylandPopupRemoveClosedPopups();
 
-  LOG_POPUP(("nsWindow::ConfigureWaylandPopupWindows [%p] END\n", (void*)this));
+  // It's possible that changedPopup was removed from widget hierarchy,
+  // in such case use child popup of the removed one if there's any.
+  if (!changedPopup->IsInPopupHierarchy()) {
+    if (!parentOfchangedPopup || !parentOfchangedPopup->mWaylandPopupNext) {
+      LOG_POPUP(("  last popup was removed, quit.\n"));
+      return;
+    }
+    changedPopup = parentOfchangedPopup->mWaylandPopupNext;
+  }
 
-  return GTK_WIDGET(parentGtkWindow);
+  changedPopup->WaylandPopupHierarchyCalculatePositions();
+
+  // Find last popup which matches layout hierarchy.
+  nsWindow* popup = mWaylandToplevel->mWaylandPopupNext;
+  while (popup) {
+    if (!popup->mPopupMatchesLayout) {
+      break;
+    }
+    popup = popup->mWaylandPopupNext;
+  }
+
+  // We can use move_to_rect only when all popups in popup hierarchy matches
+  // layout hierarchy as move_to_rect request that parent/child
+  // popups are adjacent.
+  bool useMoveToRect = (popup == nullptr);
+  popup = changedPopup;
+  while (popup) {
+    LOG_POPUP(("  popup [%p] use move-to-rect %d\n", popup, useMoveToRect));
+    popup->WaylandPopupMove(useMoveToRect);
+    popup->mPopupChanged = false;
+    popup = popup->mWaylandPopupNext;
+  }
+
+  changedPopup->WaylandPopupHierarchyShowTemporaryHidden();
 }
 
 static void NativeMoveResizeWaylandPopupCallback(
@@ -1611,6 +1916,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
     return;
   }
 
+  // TODO: use out widget hierarchy to calculate widget position/hierarchy.
   GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
   if (!parentGtkWindow || !GTK_IS_WIDGET(parentGtkWindow)) {
     NS_WARNING("Popup has no parent!");
@@ -1651,6 +1957,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
 
   if (needsSizeUpdate) {
     LOG_POPUP(("  needSizeUpdate\n"));
+    // TODO: use correct monitor here?
     int32_t p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
     mPreferredPopupRect = nsRect(NSIntPixelsToAppUnits(newBounds.x, p2a),
                                  NSIntPixelsToAppUnits(newBounds.y, p2a),
@@ -1675,6 +1982,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
     // The newBounds are in coordinates relative to the parent window/popup.
     // The NotifyWindowMoved requires the coordinates relative to the toplevel.
     // We use the gdk_window_get_origin to get correct coordinates.
+    // TODO: anchored/unanchored
     gint x, y;
     GetWindowOrigin(gtk_widget_get_window(GTK_WIDGET(mShell)), &x, &y);
     NotifyWindowMoved(GdkCoordToDevicePixels(x), GdkCoordToDevicePixels(y));
@@ -1718,12 +2026,9 @@ static GdkGravity PopupAlignmentToGdkGravity(int8_t aAlignment) {
 
 void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
                                             GdkRectangle* aSize) {
-  LOG_POPUP(("nsWindow::NativeMoveResizeWaylandPopup [%p]\n", (void*)this));
-
-  // Available as of GTK 3.24+
-  static auto sGdkWindowMoveToRect = (void (*)(
-      GdkWindow*, const GdkRectangle*, GdkGravity, GdkGravity, GdkAnchorHints,
-      gint, gint))dlsym(RTLD_DEFAULT, "gdk_window_move_to_rect");
+  LOG_POPUP(("nsWindow::NativeMoveResizeWaylandPopup [%p] %d,%d -> %d x %d\n",
+             (void*)this, aPosition->x, aPosition->y, aSize->width,
+             aSize->height));
 
   // Compositor may be confused by windows with width/height = 0
   // and positioning such windows leads to Bug 1555866.
@@ -1733,22 +2038,55 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
     return;
   }
 
+  // Mark popup as changed as we're updating position/size.
+  mPopupChanged = true;
+
+  // Save popup position for former re-calculations when popup hierarchy
+  // is changed.
+  LOG_POPUP(("  saved popup position [%d, %d]\n", aPosition->x, aPosition->y));
+  mPopupPosition = *aPosition;
   if (aSize) {
+    LOG_POPUP(("  set size [%d, %d]\n", aSize->width, aSize->height));
     gtk_window_resize(GTK_WINDOW(mShell), aSize->width, aSize->height);
   }
 
-  GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mShell));
-
-  // Use standard gtk_window_move() instead of gdk_window_move_to_rect() when:
-  // - gdk_window_move_to_rect() is not available
-  // - the widget doesn't have a valid GdkWindow
-  if (!sGdkWindowMoveToRect || !gdkWindow) {
-    LOG_POPUP(("  use gtk_window_move(%d, %d)\n", aPosition->x, aPosition->y));
+  if (!WaylandPopupNeedsTrackInHierarchy()) {
+    LOG_POPUP(("  not tracked, move popup to [%d, %d]\n", aPosition->x,
+               aPosition->y));
     gtk_window_move(GTK_WINDOW(mShell), aPosition->x, aPosition->y);
     return;
   }
 
-  ConfigureWaylandPopupWindows();
+  // Only update setup for visible widgets - those are already tracked
+  // in layout hierarchy so we know their states from layout.
+  if (gtk_widget_is_visible(mShell)) {
+    MOZ_RELEASE_ASSERT(IsInPopupHierarchy());
+    UpdateWaylandPopupHierarchy();
+  }
+}
+
+void nsWindow::WaylandPopupMove(bool aUseMoveToRect) {
+  LOG_POPUP(("nsWindow::WaylandPopupMove [%p]\n", (void*)this));
+
+  // Available as of GTK 3.24+
+  static auto sGdkWindowMoveToRect = (void (*)(
+      GdkWindow*, const GdkRectangle*, GdkGravity, GdkGravity, GdkAnchorHints,
+      gint, gint))dlsym(RTLD_DEFAULT, "gdk_window_move_to_rect");
+
+  GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mShell));
+
+  if (!sGdkWindowMoveToRect || !gdkWindow || !aUseMoveToRect) {
+    LOG_POPUP(("  use gtk_window_move(%d, %d)\n", mTranslatedPopupPosition.x,
+               mTranslatedPopupPosition.y));
+    gtk_window_move(GTK_WINDOW(mShell), mTranslatedPopupPosition.x,
+                    mTranslatedPopupPosition.y);
+    return;
+  }
+
+  LOG_POPUP(("  original widget popup position [%d, %d]\n", mPopupPosition.x,
+             mPopupPosition.y));
+  LOG_POPUP(("  translated widget popup position [%d, %d]\n",
+             mTranslatedPopupPosition.x, mTranslatedPopupPosition.y));
 
   // Get anchor rectangle
   LayoutDeviceIntRect anchorRect(0, 0, 0, 0);
@@ -1766,19 +2104,16 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
     nsRect anchorRectAppUnits = popupFrame->GetAnchorRect();
     anchorRect = LayoutDeviceIntRect::FromUnknownRect(
         anchorRectAppUnits.ToNearestPixels(p2a));
-
 #endif
   }
-
-  LOG_POPUP(("nsWindow::NativeMoveResizeWaylandPopup [%p] calculare parents\n",
-             (void*)this));
+  LOG_POPUP(("  layout popup position [%d, %d]\n", anchorRect.x, anchorRect.y));
 
 #ifdef MOZ_WAYLAND
   bool hasAnchorRect = true;
 #endif
   if (anchorRect.width == 0) {
-    LOG_POPUP(("  No anchor rect given, use aPosition for anchor"));
-    anchorRect.SetRect(aPosition->x, aPosition->y, 1, 1);
+    LOG_POPUP(("  No anchor rect given, use position for anchor"));
+    anchorRect.SetRect(mPopupPosition.x, mPopupPosition.y, 1, 1);
 #ifdef MOZ_WAYLAND
     hasAnchorRect = false;
 #endif
@@ -1789,20 +2124,15 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   // Anchor rect is in the toplevel coordinates but we need to transfer it to
   // the coordinates relative to the popup parent for the
   // gdk_window_move_to_rect
-  int x_parent = 0, y_parent = 0;
-  GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
-  if (parentGtkWindow) {
-    LOG_POPUP(("  get coordinates of parent window [%p]\n",
-               get_window_for_gtk_widget(GTK_WIDGET(parentGtkWindow))));
-    GetWindowOrigin(gtk_widget_get_window(GTK_WIDGET(parentGtkWindow)),
-                    &x_parent, &y_parent);
-  } else {
-    LOG_POPUP(("  Missing parent window!\n"));
+  if (mWaylandPopupPrev->mWaylandToplevel != nullptr) {
+    anchorRect.x -= mWaylandPopupPrev->mPopupPosition.x;
+    anchorRect.y -= mWaylandPopupPrev->mPopupPosition.y;
   }
-  LOG_POPUP(("  x_parent    %d   y_parent    %d\n", x_parent, y_parent));
-  anchorRect.MoveBy(-x_parent, -y_parent);
+
   GdkRectangle rect = {anchorRect.x, anchorRect.y, anchorRect.width,
                        anchorRect.height};
+
+  LOG_POPUP(("  final popup position [%d, %d]\n", anchorRect.x, anchorRect.y));
 
   // Get gravity and flip type
   GdkGravity rectAnchor = GDK_GRAVITY_NORTH_WEST;
@@ -1862,7 +2192,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
         break;
     }
   }
-  if (!IsMainMenuWindow()) {
+  if (!WaylandPopupIsMenu()) {
     // we don't want to slide menus to fit the screen rather resize them
     hints = GdkAnchorHints(hints | GDK_ANCHOR_SLIDE);
   }
@@ -1875,18 +2205,14 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
         ("  temporary hide popup due to "
          "https://gitlab.gnome.org/GNOME/gtk/issues/1986\n"));
 
-    // If we're tooltip we can't have any child popup so no need
-    // to clean up them.
-    if (mPopupType != ePopupTypeTooltip) {
-      HidePopupsOfParentWindow(this);
-    }
-
     // We can't apply the hide/show workaround as 'this' is not top popup
     // window. If we hide this popup it will lead to Wayland protocol violation
     // as child window of this popup will not have correct parent after
     // the hide.
-    if (gVisibleWaylandPopupWindows->data != this) {
-      LOG_POPUP(("  can't apply window move_to_rect workaround!\n"));
+    if (mWaylandPopupNext) {
+      LOG_POPUP(
+          ("  can't apply window move_to_rect workaround, we have child "
+           "popups!\n"));
       applyGtkWorkaround = false;
     }
   }
@@ -1897,12 +2223,6 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
 
   LOG_POPUP(("  requested rect: x: %d y: %d width: %d height: %d\n", rect.x,
              rect.y, rect.width, rect.height));
-  if (aSize) {
-    LOG_POPUP(("  aSize: x%d y%d w%d h%d\n", aSize->x, aSize->y, aSize->width,
-               aSize->height));
-  } else {
-    LOG_POPUP(("  No aSize given"));
-  }
 
   // Inspired by nsMenuPopupFrame::AdjustPositionForAnchorAlign
   nsPoint cursorOffset(0, 0);
@@ -1943,7 +2263,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
                        cursorOffset.x / p2a, cursorOffset.y / p2a);
 
   // We show the popup with the same configuration so no need to call
-  // ConfigureWaylandPopupWindows() before gtk_widget_show().
+  // UpdateWaylandPopupHierarchy() before gtk_widget_show().
   if (applyGtkWorkaround) {
     gtk_widget_show(mShell);
   }
@@ -2742,7 +3062,7 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
 }
 
 void nsWindow::CaptureMouse(bool aCapture) {
-  LOG(("CaptureMouse %p\n", (void*)this));
+  LOG(("nsWindow::CaptureMouse() [%p]\n", (void*)this));
 
   if (!mGdkWindow) return;
 
@@ -2763,13 +3083,14 @@ void nsWindow::CaptureRollupEvents(nsIRollupListener* aListener,
 
   if (!mContainer) return;
 
-  LOG(("CaptureRollupEvents %p %i\n", this, int(aDoCapture)));
+  LOG(("CaptureRollupEvents() [%p] %i\n", this, int(aDoCapture)));
 
   if (aDoCapture) {
     gRollupListener = aListener;
     // Don't add a grab if a drag is in progress, or if the widget is a drag
     // feedback popup. (panels with type="drag").
-    if (!mIsDragPopup && !nsWindow::DragInProgress()) {
+    if (!GdkIsWaylandDisplay() && !mIsDragPopup &&
+        !nsWindow::DragInProgress()) {
       gtk_grab_add(GTK_WIDGET(mContainer));
       GrabPointer(GetLastUserInputTime());
     }
@@ -2780,6 +3101,7 @@ void nsWindow::CaptureRollupEvents(nsIRollupListener* aListener,
     // There may not have been a drag in process when aDoCapture was set,
     // so make sure to remove any added grab.  This is a no-op if the grab
     // was not added to this widget.
+    LOG(("  remove mContainer grab [%p]\n", this));
     gtk_grab_remove(GTK_WIDGET(mContainer));
     gRollupListener = nullptr;
   }
@@ -2914,7 +3236,6 @@ static bool ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, cairo_t* cr) {
     aRegion.Or(aRegion,
                LayoutDeviceIntRect::Truncate((float)r.x, (float)r.y,
                                              (float)r.width, (float)r.height));
-    LOG(("\t%f %f %f %f\n", r.x, r.y, r.width, r.height));
   }
 
   cairo_rectangle_list_destroy(rects);
@@ -3395,7 +3716,9 @@ void nsWindow::OnEnterNotifyEvent(GdkEventCrossing* aEvent) {
   // changed while a non-Gecko ancestor window had a pointer grab.
   DispatchMissedButtonReleases(aEvent);
 
-  if (is_parent_ungrab_enter(aEvent)) return;
+  if (is_parent_ungrab_enter(aEvent)) {
+    return;
+  }
 
   WidgetMouseEvent event(true, eMouseEnterIntoWidget, this,
                          WidgetMouseEvent::eReal);
@@ -4905,24 +5228,13 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 #endif
         }
 
-        GdkWindowTypeHint gtkTypeHint;
         if (aInitData->mIsDragPopup) {
-          gtkTypeHint = GDK_WINDOW_TYPE_HINT_DND;
+          gtk_window_set_type_hint(GTK_WINDOW(mShell),
+                                   GDK_WINDOW_TYPE_HINT_DND);
           mIsDragPopup = true;
         } else {
-          switch (mPopupHint) {
-            case ePopupTypeMenu:
-              gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
-              break;
-            case ePopupTypeTooltip:
-              gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
-              break;
-            default:
-              gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
-              break;
-          }
+          WaylandPopupNeedsTrackInHierarchy();
         }
-        gtk_window_set_type_hint(GTK_WINDOW(mShell), gtkTypeHint);
         LOG_POPUP(("nsWindow::Create() popup [%p] type %s\n", this,
                    GetPopupTypeName().get()));
         if (parentnsWindow) {
@@ -5383,7 +5695,7 @@ void nsWindow::NativeResize() {
                "Can't resize window smaller than 1x1.");
     gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
     if (mWaitingForMoveToRectCB) {
-      LOG(("Waiting for move to rect, schedulling "));
+      LOG_POPUP(("  waiting for move to rect, schedulling "));
       mPendingSizeRect = mBounds;
     }
   } else if (mContainer) {
@@ -5431,8 +5743,8 @@ void nsWindow::NativeMoveResize() {
   GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
   GdkPoint topLeft = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
 
-  LOG(("nsWindow::NativeMoveResize [%p] %d %d %d %d\n", (void*)this, topLeft.x,
-       topLeft.y, size.width, size.height));
+  LOG(("nsWindow::NativeMoveResize [%p] %d,%d -> %d x %d\n", (void*)this,
+       topLeft.x, topLeft.y, size.width, size.height));
 
   if (IsWaylandPopup()) {
     NativeMoveResizeWaylandPopup(&topLeft, &size);
@@ -5502,22 +5814,6 @@ void nsWindow::PauseRemoteRenderer() {
 #endif
 }
 
-void nsWindow::HideWaylandWindow() {
-  LOG(("nsWindow::HideWaylandWindow: [%p] %s\n", this,
-       mWindowType == eWindowType_popup ? "Popup" : "Toplevel"));
-
-  if (mWindowType == eWindowType_popup) {
-    LOG_POPUP(("nsWindow::HideWaylandWindow() [%p] Popup", this));
-    // If we're cloing popup it must be the topmost popup in popup window
-    // hierarchy.
-    MOZ_RELEASE_ASSERT(gVisibleWaylandPopupWindows->data == this);
-    gVisibleWaylandPopupWindows = g_list_delete_link(
-        gVisibleWaylandPopupWindows, gVisibleWaylandPopupWindows);
-  }
-  PauseRemoteRenderer();
-  gtk_widget_hide(mShell);
-}
-
 void nsWindow::WaylandStartVsync() {
 #ifdef MOZ_WAYLAND
   // only use for toplevel windows for now - see bug 1619246
@@ -5559,15 +5855,13 @@ void nsWindow::NativeShow(bool aAction) {
       if (mWindowType != eWindowType_invisible) {
         SetUserTimeAndStartupIDForActivatedWindow(mShell);
       }
-      // Update popup window hierarchy run-time on Wayland.
       if (IsWaylandPopup()) {
         LOG_POPUP(("nsWindow::NativeShow show Popup [%p]\n", this));
-        if (!ConfigureWaylandPopupWindows()) {
-          mNeedsShow = true;
-          return;
+        if (WaylandPopupNeedsTrackInHierarchy()) {
+          AddWindowToPopupHierarchy();
+          UpdateWaylandPopupHierarchy();
         }
       }
-
       LOG(("  calling gtk_widget_show(mShell)\n"));
       gtk_widget_show(mShell);
       if (GdkIsWaylandDisplay()) {
@@ -5586,20 +5880,22 @@ void nsWindow::NativeShow(bool aAction) {
     mPreferredPopupRect = nsRect(0, 0, 0, 0);
     mPreferredPopupRectFlushed = false;
     if (GdkIsWaylandDisplay()) {
-#ifdef MOZ_LOGGING
-      LogPopupHierarchy();
-#endif
       WaylandStopVsync();
       if (IsWaylandPopup()) {
         LOG_POPUP(("nsWindow::NativeShow hide Popup [%p]\n", this));
-
-        // Close all popups which are not tracked by layout. It may also
-        // also close 'this' popup window.
-        CloseUntrackedWaylandPopups();
-
-        HidePopupWindowAndAllChildPopups(this);
+        // We can't close tracked popups directly as they may have visible
+        // child popups. Just mark is as closed and let
+        // UpdateWaylandPopupHierarchy() do the job.
+        if (IsInPopupHierarchy()) {
+          WaylandPopupMarkAsClosed();
+          UpdateWaylandPopupHierarchy();
+        } else {
+          // Close untracked popups directly.
+          HideWaylandPopupWindow(/* aTemporaryHide */ false,
+                                 /* aRemoveFromPopupList */ true);
+        }
       } else {
-        HideToplevelWindowAndAllChildPopups(this);
+        HideWaylandToplevelWindow();
       }
     } else if (mIsTopLevel) {
       // Workaround window freezes on GTK versions before 3.21.2 by
@@ -6217,12 +6513,14 @@ void nsWindow::GrabPointer(guint32 aTime) {
   // grab.  When this window becomes visible, the grab will be
   // retried.
   if (!mHasMappedToplevel) {
-    LOG(("GrabPointer: window not visible\n"));
+    LOG(("  window not visible\n"));
     mRetryPointerGrab = true;
     return;
   }
 
-  if (!mGdkWindow) return;
+  if (!mGdkWindow) {
+    return;
+  }
 
   if (GdkIsWaylandDisplay()) {
     // Don't to the grab on Wayland as it causes a regression
@@ -7232,7 +7530,7 @@ static GdkFilterReturn popup_take_focus_filter(GdkXEvent* gdk_xevent,
 #endif /* MOZ_X11 */
 
 static gboolean key_press_event_cb(GtkWidget* widget, GdkEventKey* event) {
-  LOG(("key_press_event_cb\n"));
+  LOGW(("key_press_event_cb\n"));
 
   UpdateLastInputEventTime(event);
 
@@ -7277,7 +7575,7 @@ static gboolean key_press_event_cb(GtkWidget* widget, GdkEventKey* event) {
 }
 
 static gboolean key_release_event_cb(GtkWidget* widget, GdkEventKey* event) {
-  LOG(("key_release_event_cb\n"));
+  LOGW(("key_release_event_cb\n"));
 
   UpdateLastInputEventTime(event);
 
