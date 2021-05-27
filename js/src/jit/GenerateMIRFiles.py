@@ -99,7 +99,15 @@ mir_base_class = [
 
 
 def gen_mir_class(
-    name, operands, no_type_policy, result, guard, movable, alias_set, clone
+    name,
+    operands,
+    no_type_policy,
+    result,
+    guard,
+    movable,
+    congruent_to,
+    alias_set,
+    clone,
 ):
     """Generates class definition for a single MIR opcode."""
 
@@ -136,6 +144,7 @@ def gen_mir_class(
     named_operands = []
     if operands:
         current_oper_num = 0
+        print("{}", name)
         for oper_name in operands:
             oper = "MDefinition* " + oper_name
             mir_operands.append(oper)
@@ -170,7 +179,7 @@ def gen_mir_class(
         code += "    setMovable();\\\n"
     if result:
         code += "    setResultType(MIRType::{});\\\n".format(result)
-    code += "}}\\\n public:\\\n  INSTRUCTION_HEADER({})\\\n".format(name)
+    code += "  }}\\\n public:\\\n  INSTRUCTION_HEADER({})\\\n".format(name)
     code += "  TRIVIAL_NEW_WRAPPERS\\\n"
     if named_operands:
         code += "  NAMED_OPERANDS({})\\\n".format(", ".join(named_operands))
@@ -179,7 +188,19 @@ def gen_mir_class(
             code += "  AliasSet getAliasSet() const override;\\\n"
         else:
             assert alias_set == "none"
-            code += "  AliasSet getAliasSet() const override { return AliasSet::None(); }\\\n"
+            code += (
+                "  AliasSet getAliasSet() const override { "
+                "return AliasSet::None(); }\\\n"
+            )
+    if congruent_to:
+        if congruent_to == "custom":
+            code += "  bool congruentTo(const MDefinition* ins) const override;\\\n"
+        else:
+            assert congruent_to == "if_operands_equal"
+            code += (
+                "  bool congruentTo(const MDefinition* ins) const override { "
+                "return congruentIfOperandsEqual(ins); }\\\n"
+            )
     if clone:
         code += "  ALLOW_CLONE(" + class_name + ")\\\n"
     code += "};\\\n"
@@ -223,6 +244,13 @@ def generate_mir_header(c_out, yaml_path):
             movable = op.get("movable", None)
             assert movable is None or True
 
+            congruent_to = op.get("congruent_to", None)
+            assert (
+                congruent_to is None
+                or congruent_to == "if_operands_equal"
+                or congruent_to == "custom"
+            )
+
             alias_set = op.get("alias_set", None)
             assert alias_set is None or True or isinstance(alias_set, str)
 
@@ -230,7 +258,15 @@ def generate_mir_header(c_out, yaml_path):
             assert clone is None or True
 
             code = gen_mir_class(
-                name, operands, no_type_policy, result, guard, movable, alias_set, clone
+                name,
+                operands,
+                no_type_policy,
+                result,
+                guard,
+                movable,
+                congruent_to,
+                alias_set,
+                clone,
             )
             mir_op_classes.append(code)
 
