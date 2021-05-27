@@ -221,7 +221,7 @@ option(env="PYTHON3", nargs=1, help="Python 3 interpreter (3.6 or later)")
 option(
     env="VIRTUALENV_NAME",
     nargs=1,
-    default="init_py3",
+    default="common",
     help="Name of the in-objdir virtualenv",
 )
 
