@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # This script generates jit/MIROpsGenerated.h (list of MIR instructions)
-# from MIROps.yaml.
+# from MIROps.yaml, as well as MIR op definitions.
 
 import buildconfig
 import yaml
@@ -62,9 +62,35 @@ def load_yaml(yaml_path):
     return yaml.load(contents, OrderedLoader)
 
 
+def gen_mir_class(name, result, guard, alias_set, clone):
+    """Generates class definition for a single MIR opcode."""
+
+    class_name = "M" + name
+
+    code = "class {} : public MNullaryInstruction {{\\\n".format(class_name)
+    code += "  {}() : MNullaryInstruction(classOpcode)".format(class_name)
+    code += " {"
+    if guard:
+        code += "\\\n    setGuard();\\\n  "
+    if result:
+        code += "\\\n    setResultType(MIRType::{});\\\n  ".format(result)
+    code += "}}\\\n public:\\\n  INSTRUCTION_HEADER({})\\\n".format(name)
+    code += "  TRIVIAL_NEW_WRAPPERS\\\n"
+    if alias_set:
+        if alias_set == "custom":
+            code += "  AliasSet getAliasSet() const override;\\\n"
+        else:
+            assert alias_set == "none"
+            code += "  AliasSet getAliasSet() const override { return AliasSet::None(); }\\\n"
+    if clone:
+        code += "  ALLOW_CLONE(" + class_name + ")\\\n"
+    code += "};\\\n"
+    return code
+
+
 def generate_mir_header(c_out, yaml_path):
     """Generate MIROpsGenerated.h from MIROps.yaml. The generated file
-    has a list of MIR ops.
+    has a list of MIR ops and boilerplate for MIR op definitions.
     """
 
     data = load_yaml(yaml_path)
@@ -72,13 +98,39 @@ def generate_mir_header(c_out, yaml_path):
     # MIR_OPCODE_LIST items. Stores the name of each MIR op.
     ops_items = []
 
+    # Generated MIR op class definitions.
+    mir_op_classes = []
+
     for op in data:
         name = op["name"]
 
         ops_items.append("_({})".format(name))
 
+        gen_boilerplate = op.get("gen_boilerplate", True)
+        assert isinstance(gen_boilerplate, bool)
+
+        if gen_boilerplate:
+            result = op.get("result_type", None)
+            assert result is None or isinstance(result, str)
+
+            guard = op.get("guard", None)
+            assert guard is None or True
+
+            alias_set = op.get("alias_set", None)
+            assert alias_set is None or True or isinstance(alias_set, str)
+
+            clone = op.get("clone", None)
+            assert clone is None or True
+
+            code = gen_mir_class(name, result, guard, alias_set, clone)
+            mir_op_classes.append(code)
+
     contents = "#define MIR_OPCODE_LIST(_)\\\n"
     contents += "\\\n".join(ops_items)
+    contents += "\n\n"
+
+    contents += "#define MIR_OPCODE_CLASS_GENERATED \\\n"
+    contents += "\\\n".join(mir_op_classes)
     contents += "\n\n"
 
     generate_header(c_out, "jit_MIROpsGenerated_h", contents)
