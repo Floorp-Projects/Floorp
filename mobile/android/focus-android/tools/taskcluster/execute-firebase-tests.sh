@@ -16,7 +16,7 @@
 # and try to download the artifacts. We will exit with the actual error code later.
 set +e
 
-URL_FLANK_BIN="https://github.com/Flank/flank/releases/download/v21.03.1/flank.jar"
+URL_FLANK_BIN="https://github.com/Flank/flank/releases/download/v21.05.0/flank.jar"
 JAVA_BIN="/usr/bin/java"
 WORKDIR="/opt/focus-android"
 PATH_TOOLS="$WORKDIR/tools/taskcluster"
