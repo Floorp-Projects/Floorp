@@ -434,13 +434,19 @@ var gPrivacyPane = {
       "dom.security.https_only_mode_pbm"
     );
     let httpsOnlyRadioGroup = document.getElementById("httpsOnlyRadioGroup");
+    let httpsOnlyExceptionButton = document.getElementById(
+      "httpsOnlyExceptionButton"
+    );
 
     if (httpsOnlyOnPref) {
       httpsOnlyRadioGroup.value = "enabled";
+      httpsOnlyExceptionButton.disabled = false;
     } else if (httpsOnlyOnPBMPref) {
       httpsOnlyRadioGroup.value = "privateOnly";
+      httpsOnlyExceptionButton.disabled = true;
     } else {
       httpsOnlyRadioGroup.value = "disabled";
+      httpsOnlyExceptionButton.disabled = true;
     }
   },
 
@@ -575,6 +581,11 @@ var gPrivacyPane = {
       "cookieExceptions",
       "command",
       gPrivacyPane.showCookieExceptions
+    );
+    setEventListener(
+      "httpsOnlyExceptionButton",
+      "command",
+      gPrivacyPane.showHttpsOnlyModeExceptions
     );
     setEventListener(
       "clearDataSettings",
@@ -1846,6 +1857,24 @@ var gPrivacyPane = {
       allowVisible: true,
       prefilledHost: "",
       permissionType: "cookie",
+    };
+    gSubDialog.open(
+      "chrome://browser/content/preferences/dialogs/permissions.xhtml",
+      undefined,
+      params
+    );
+  },
+
+  /**
+   * Displays per-site preferences for HTTPS-Only Mode exceptions.
+   */
+  showHttpsOnlyModeExceptions() {
+    var params = {
+      blockVisible: false,
+      sessionVisible: true,
+      allowVisible: false,
+      prefilledHost: "",
+      permissionType: "https-only-load-insecure",
     };
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/permissions.xhtml",

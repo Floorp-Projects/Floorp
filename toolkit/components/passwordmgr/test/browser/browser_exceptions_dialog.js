@@ -70,15 +70,24 @@ add_task(async function test_block_button_with_enter_key() {
   await BrowserTestUtils.waitForEvent(dialog, "load");
   await new Promise(resolve => waitForFocus(resolve, dialog));
   let btnBlock = dialog.document.getElementById("btnBlock");
-  let btnSession = dialog.document.getElementById("btnSession");
+  let btnCookieSession = dialog.document.getElementById("btnCookieSession");
+  let btnHttpsOnlyOff = dialog.document.getElementById("btnHttpsOnlyOff");
+  let btnHttpsOnlyOffTmp = dialog.document.getElementById("btnHttpsOnlyOffTmp");
   let btnAllow = dialog.document.getElementById("btnAllow");
 
   ok(!btnBlock.hidden, "Block button is visible");
-  ok(btnSession.hidden, "Session button is not visible");
+  ok(btnCookieSession.hidden, "Cookie session button is not visible");
   ok(btnAllow.hidden, "Allow button is not visible");
+  ok(btnHttpsOnlyOff.hidden, "HTTPS-Only session button is not visible");
+  ok(btnHttpsOnlyOffTmp.hidden, "HTTPS-Only session button is not visible");
   ok(btnBlock.disabled, "Block button is initially disabled");
-  ok(btnSession.disabled, "Session button is initially disabled");
+  ok(btnCookieSession.disabled, "Cookie session button is initially disabled");
   ok(btnAllow.disabled, "Allow button is initially disabled");
+  ok(btnHttpsOnlyOff.disabled, "HTTPS-Only off-button is initially disabled");
+  ok(
+    btnHttpsOnlyOffTmp.disabled,
+    "HTTPS-Only temporary off-button is initially disabled"
+  );
 
   EventUtils.sendString(LOGIN_HOST, dialog);
 
@@ -87,12 +96,20 @@ add_task(async function test_block_button_with_enter_key() {
     "Block button is enabled after entering text in the URL input"
   );
   ok(
-    btnSession.disabled,
-    "Session button is still disabled after entering text in the URL input"
+    btnCookieSession.disabled,
+    "Cookie session button is still disabled after entering text in the URL input"
   );
   ok(
     btnAllow.disabled,
     "Allow button is still disabled after entering text in the URL input"
+  );
+  ok(
+    btnHttpsOnlyOff.disabled,
+    "HTTPS-Only off-button is still disabled after entering text in the URL input"
+  );
+  ok(
+    btnHttpsOnlyOffTmp.disabled,
+    "HTTPS-Only session off-button is still disabled after entering text in the URL input"
   );
 
   is(
