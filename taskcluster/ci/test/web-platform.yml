@@ -35,7 +35,7 @@ job-defaults:
         by-test-platform:
             android-em-7.0-x86_64-shippable(-qr)?/opt: geckoview-androidTest.apk
             android-em-7.0-x86_64(-qr)?/opt: geckoview-androidTest.apk
-            android-em-7.0-x86_64(-qr)?/debug: geckoview-androidTest.apk
+            android-em-7.0-x86_64(-qr)?/debug(-isolated-process)?: geckoview-androidTest.apk
             default: null
     python-3: true
 
