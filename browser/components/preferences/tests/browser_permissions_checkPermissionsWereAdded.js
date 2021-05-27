@@ -80,7 +80,7 @@ add_task(async function checkCookiePermissions() {
   });
   let win = gBrowser.selectedBrowser.contentWindow;
   let doc = win.document;
-  let buttonIds = ["btnBlock", "btnSession", "btnAllow"];
+  let buttonIds = ["btnBlock", "btnCookieSession", "btnAllow"];
 
   let dialog = await _checkAndOpenCookiesDialog(doc);
   _checkCookiesDialog(dialog, buttonIds);
