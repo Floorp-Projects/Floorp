@@ -55,7 +55,7 @@ void DocumentOrShadowRoot::AddSizeOfOwnedSheetArrayExcludingThis(
 
 void DocumentOrShadowRoot::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
   AddSizeOfOwnedSheetArrayExcludingThis(aSizes, mStyleSheets);
-  aSizes.mDOMOtherSize +=
+  aSizes.mDOMSizes.mDOMOtherSize +=
       mIdentifierMap.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
 }
 

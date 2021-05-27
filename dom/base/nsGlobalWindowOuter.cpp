@@ -7370,7 +7370,8 @@ nsresult nsGlobalWindowOuter::RestoreWindowState(nsISupports* aState) {
 
 void nsGlobalWindowOuter::AddSizeOfIncludingThis(
     nsWindowSizes& aWindowSizes) const {
-  aWindowSizes.mDOMOtherSize += aWindowSizes.mState.mMallocSizeOf(this);
+  aWindowSizes.mDOMSizes.mDOMOtherSize +=
+      aWindowSizes.mState.mMallocSizeOf(this);
 }
 
 uint32_t nsGlobalWindowOuter::GetAutoActivateVRDisplayID() {
