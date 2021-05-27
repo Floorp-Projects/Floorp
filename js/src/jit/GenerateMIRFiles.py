@@ -62,20 +62,118 @@ def load_yaml(yaml_path):
     return yaml.load(contents, OrderedLoader)
 
 
-def gen_mir_class(name, result, guard, alias_set, clone):
+type_policies = {
+    "Object": "ObjectPolicy",
+    "Value": "BoxPolicy",
+    "Int32": "UnboxedInt32Policy",
+    "BigInt": "BigIntPolicy",
+    "Double": "DoublePolicy",
+    "String": "StringPolicy",
+}
+
+
+def decide_type_policy(types, no_type_policy):
+    if no_type_policy:
+        return "public NoTypePolicy::Data"
+
+    if len(types) == 1:
+        return "public {}<0>::Data".format(type_policies[types[0]])
+
+    type_num = 0
+    mixed_type_policies = []
+    for mir_type in types:
+        policy = type_policies[mir_type]
+        mixed_type_policies.append("{}<{}>".format(policy, type_num))
+        type_num += 1
+
+    return "public MixPolicy<{}>::Data".format(", ".join(mixed_type_policies))
+
+
+mir_base_class = [
+    "MNullaryInstruction",
+    "MUnaryInstruction",
+    "MBinaryInstruction",
+    "MTernaryInstruction",
+    "MQuaternaryInstruction",
+]
+
+
+def gen_mir_class(
+    name, operands, no_type_policy, result, guard, movable, alias_set, clone
+):
     """Generates class definition for a single MIR opcode."""
+
+    # Generate a MIR opcode class definition.
+    # For example:
+    # class MGuardIndexIsValidUpdateOrAdd
+    #     : public MBinaryInstruction,
+    #       public MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>>::Data {
+    #  explicit MGuardIndexIsValidUpdateOrAdd(MDefinition* object,
+    #                                         MDefinition* index)
+    #     : MBinaryInstruction(classOpcode, object, index) {
+    #   setGuard();
+    #   setMovable();
+    #   setResultType(MIRType::Int32);
+    #  }
+    # public:
+    #  INSTRUCTION_HEADER(GetFrameArgument)
+    #  TRIVIAL_NEW_WRAPPERS
+    #  NAMED_OPERANDS((0, object), (1, index))
+    #  AliasSet getAliasSet() const override { return AliasSet::None(); }
+    #  bool congruentTo(const MDefinition* ins) const override {
+    #    return congruentIfOperandsEqual(ins); }
+    #  };
+    #
+
+    type_policy = ""
+    # MIR op constructor operands.
+    mir_operands = []
+    # MIR op base class constructor operands.
+    mir_base_class_operands = []
+    # Types of each constructor operand.
+    mir_types = []
+    # Items for NAMED_OPERANDS.
+    named_operands = []
+    if operands:
+        current_oper_num = 0
+        for oper_name in operands:
+            oper = "MDefinition* " + oper_name
+            mir_operands.append(oper)
+            mir_base_class_operands.append(", " + oper_name)
+            # Collect all the MIR argument types to use for determining the
+            # ops type policy.
+            mir_types.append(operands[oper_name])
+            # Collecting named operands for defining accessors.
+            named_operands.append("({}, {})".format(current_oper_num, oper_name))
+            current_oper_num += 1
+        type_policy = decide_type_policy(mir_types, no_type_policy)
 
     class_name = "M" + name
 
-    code = "class {} : public MNullaryInstruction {{\\\n".format(class_name)
-    code += "  {}() : MNullaryInstruction(classOpcode)".format(class_name)
-    code += " {"
+    assert len(mir_operands) < 5
+    base_class = mir_base_class[len(mir_operands)]
+    assert base_class
+    if base_class != "MNullaryInstruction":
+        assert type_policy
+        type_policy = ", " + type_policy
+    code = "class {} : public {}{} {{\\\n".format(class_name, base_class, type_policy)
+    code += "  explicit {}({}) : {}(classOpcode{})".format(
+        class_name,
+        ", ".join(mir_operands),
+        base_class,
+        "".join(mir_base_class_operands),
+    )
+    code += " {\\\n"
     if guard:
-        code += "\\\n    setGuard();\\\n  "
+        code += "    setGuard();\\\n"
+    if movable:
+        code += "    setMovable();\\\n"
     if result:
-        code += "\\\n    setResultType(MIRType::{});\\\n  ".format(result)
+        code += "    setResultType(MIRType::{});\\\n".format(result)
     code += "}}\\\n public:\\\n  INSTRUCTION_HEADER({})\\\n".format(name)
     code += "  TRIVIAL_NEW_WRAPPERS\\\n"
+    if named_operands:
+        code += "  NAMED_OPERANDS({})\\\n".format(", ".join(named_operands))
     if alias_set:
         if alias_set == "custom":
             code += "  AliasSet getAliasSet() const override;\\\n"
@@ -110,11 +208,20 @@ def generate_mir_header(c_out, yaml_path):
         assert isinstance(gen_boilerplate, bool)
 
         if gen_boilerplate:
+            operands = op.get("operands", None)
+            assert operands is None or isinstance(operands, OrderedDict)
+
+            no_type_policy = op.get("type_policy", None)
+            assert no_type_policy is None or no_type_policy == "none"
+
             result = op.get("result_type", None)
             assert result is None or isinstance(result, str)
 
             guard = op.get("guard", None)
             assert guard is None or True
+
+            movable = op.get("movable", None)
+            assert movable is None or True
 
             alias_set = op.get("alias_set", None)
             assert alias_set is None or True or isinstance(alias_set, str)
@@ -122,7 +229,9 @@ def generate_mir_header(c_out, yaml_path):
             clone = op.get("clone", None)
             assert clone is None or True
 
-            code = gen_mir_class(name, result, guard, alias_set, clone)
+            code = gen_mir_class(
+                name, operands, no_type_policy, result, guard, movable, alias_set, clone
+            )
             mir_op_classes.append(code)
 
     contents = "#define MIR_OPCODE_LIST(_)\\\n"

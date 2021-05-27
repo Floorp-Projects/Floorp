@@ -235,7 +235,7 @@ void LIRGenerator::visitNewStringObject(MNewStringObject* ins) {
 
 void LIRGenerator::visitInitElemGetterSetter(MInitElemGetterSetter* ins) {
   LInitElemGetterSetter* lir = new (alloc()) LInitElemGetterSetter(
-      useRegisterAtStart(ins->object()), useBoxAtStart(ins->idValue()),
+      useRegisterAtStart(ins->object()), useBoxAtStart(ins->id()),
       useRegisterAtStart(ins->value()));
   add(lir, ins);
   assignSafepoint(lir, ins);
@@ -1134,9 +1134,8 @@ void LIRGenerator::visitTypeOf(MTypeOf* ins) {
 }
 
 void LIRGenerator::visitToAsyncIter(MToAsyncIter* ins) {
-  LToAsyncIter* lir =
-      new (alloc()) LToAsyncIter(useRegisterAtStart(ins->getIterator()),
-                                 useBoxAtStart(ins->getNextMethod()));
+  LToAsyncIter* lir = new (alloc()) LToAsyncIter(
+      useRegisterAtStart(ins->iterator()), useBoxAtStart(ins->nextMethod()));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
@@ -3934,11 +3933,11 @@ void LIRGenerator::visitGetPropertyCache(MGetPropertyCache* ins) {
 }
 
 void LIRGenerator::visitBindNameCache(MBindNameCache* ins) {
-  MOZ_ASSERT(ins->environmentChain()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->envChain()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::Object);
 
-  LBindNameCache* lir = new (alloc())
-      LBindNameCache(useRegister(ins->environmentChain()), temp());
+  LBindNameCache* lir =
+      new (alloc()) LBindNameCache(useRegister(ins->envChain()), temp());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }

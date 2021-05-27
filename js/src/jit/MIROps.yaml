@@ -24,6 +24,37 @@
 #   - true (default): auto generate boilerplate for this MIR opcode
 #   - false: do not generate boilerplate for this MIR opcode
 #
+# operands
+# ========
+# A list of operands for the MIR op class constructor.
+# The operand kind is specified from the one of the kinds from 
+# the MIRType enum in IonTypes.h. The specified types for the
+# operands will decide the type policy for the instruction.
+#
+# The naming of operands is how the NAMED_OPERANDS macro will define
+# its operands.
+#
+# For example:
+#   object: Object
+#   id: Value
+#   value: Object
+# 
+# Will result in an instruction having the type policy of: 
+#   MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2>> 
+# and a named operands definition that looks like the following:
+#   NAMED_OPERANDS((0, object), (1, idValue), (2, value))
+# 
+#   - attribute not specified (default): no code generated
+#   - operand list: MIRTypes (See MIRType in jit/IonTypes.h)
+#
+# type_policy
+# ============
+# If this attribute is present, then the type policy for that opcode will be 
+# NoTypePolicy. This is used for opcode that should have no type policy.
+#   - attribute not specified (default): no code generated, type policy 
+#     is based off of operands
+#   - none: defines the type policy as opcode's NoTypePolicy
+#
 # result_type
 # ===========
 # Defines the result type of the MIR opcode.
@@ -39,6 +70,13 @@
 #   - attribute not specified (default): no code generated
 #   - true: adds setGuard to opcode constructor
 # 
+# movable
+# =======
+# Defines the movable MIR flag for movable instructions. This is used for knowing 
+# if we can hoist an instruction. 
+#   - attribute not specified (default): no code generated
+#   - true: adds setMovable call in opcode constructor
+#
 # alias_set
 # =========
 # Defines the getAliasSet function for a MIR op. The alias set is used for alias 
@@ -145,8 +183,11 @@
 - name: InitPropGetterSetter
   gen_boilerplate: false
 
-- name: InitElemGetterSetter
-  gen_boilerplate: false
+- name: InitElemGetterSetter  
+  operands:
+    object: Object
+    id: Value
+    value: Object
 
 - name: Call
   gen_boilerplate: false
@@ -323,10 +364,15 @@
   gen_boilerplate: false
 
 - name: ToAsyncIter
-  gen_boilerplate: false
+  operands:
+    iterator: Object
+    nextMethod: Value
+  result_type: Object
 
 - name: ToPropertyKeyCache
-  gen_boilerplate: false
+  operands:
+    input: Value
+  result_type: Value
 
 - name: BitAnd
   gen_boilerplate: false
@@ -518,7 +564,9 @@
   gen_boilerplate: false
 
 - name: UnaryCache
-  gen_boilerplate: false
+  operands:
+    input: Value
+  result_type: Value
 
 # Checks whether we need to fire the interrupt handler.
 - name: CheckOverRecursed
@@ -579,7 +627,9 @@
   gen_boilerplate: false
 
 - name: DynamicImport
-  gen_boilerplate: false
+  operands:
+    specifier: Value
+  result_type: Object
 
 - name: Lambda
   gen_boilerplate: false
@@ -642,7 +692,10 @@
   gen_boilerplate: false
 
 - name: KeepAliveObject
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: None
+  guard: true
 
 - name: Not
   gen_boilerplate: false
@@ -726,13 +779,20 @@
   gen_boilerplate: false
 
 - name: HomeObjectSuperBase
-  gen_boilerplate: false
+  operands:
+    homeObject: Object
+  result_type: Object
+  # May throw if [[Prototype]] is null
+  guard: true
+  alias_set: custom
 
 - name: GetPropSuperCache
   gen_boilerplate: false
 
 - name: BindNameCache
-  gen_boilerplate: false
+  operands:
+    envChain: Object
+  result_type: Object
 
 - name: CallBindVar
   gen_boilerplate: false
@@ -858,7 +918,12 @@
   gen_boilerplate: false
 
 - name: HomeObject
-  gen_boilerplate: false
+  operands:
+    function: Object
+  result_type: Object
+  movable: true
+  # A function's [[HomeObject]] is fixed.
+  alias_set: none
 
 - name: AddAndStoreSlot
   gen_boilerplate: false
@@ -870,7 +935,9 @@
   gen_boilerplate: false
 
 - name: GetNameCache
-  gen_boilerplate: false
+  operands:
+    envObj: Object
+  result_type: Value
 
 - name: CallGetIntrinsicValue
   gen_boilerplate: false
@@ -930,16 +997,26 @@
   gen_boilerplate: false
 
 - name: OptimizeSpreadCallCache
-  gen_boilerplate: false
+  operands:
+    value: Value
+  result_type: Boolean
 
 - name: IteratorMore
-  gen_boilerplate: false
+  operands:
+    iterator: Object
+  result_type: Value
 
 - name: IsNoIter
-  gen_boilerplate: false
+  operands:
+    def: Object
+  result_type: Boolean
+  type_policy: none
+  movable : true
+  alias_set: none
 
 - name: IteratorEnd
-  gen_boilerplate: false
+  operands:
+    iterator: Object
 
 - name: InCache
   gen_boilerplate: false
@@ -959,8 +1036,12 @@
 - name: InstanceOf
   gen_boilerplate: false
 
+# Implementation for instanceof operator with unknown rhs.
 - name: InstanceOfCache
-  gen_boilerplate: false
+  operands:
+    obj: Value
+    proto: Object
+  result_type: Boolean
 
 - name: ArgumentsLength
   gen_boilerplate: false
@@ -1020,7 +1101,12 @@
   gen_boilerplate: false
 
 - name: CheckReturn
-  gen_boilerplate: false
+  operands: 
+    returnValue: Value
+    thisValue: Value
+  result_type: Value
+  guard: true
+  alias_set: none
 
 - name: CheckThis
   gen_boilerplate: false
@@ -1028,11 +1114,21 @@
 - name: AsyncResolve
   gen_boilerplate: false
 
+# Returns from this function to the previous caller; this looks like a regular
+# Unary instruction and is used to lie to the MIR generator about suspending
+# ops like Yield/Await, which are emitted like returns, but MIR-Build like
+# regular instructions.
 - name: GeneratorReturn
-  gen_boilerplate: false
+  operands: 
+    input: Value
+  guard: true
+  alias_set: none
 
 - name: AsyncAwait
-  gen_boilerplate: false
+  operands: 
+    value: Value
+    generator: Object
+  result_type: Object
 
 - name: CheckThisReinit
   gen_boilerplate: false
@@ -1041,7 +1137,9 @@
   gen_boilerplate: false
 
 - name: CanSkipAwait
-  gen_boilerplate: false
+  operands: 
+    value: Value
+  result_type: Boolean
 
 - name: MaybeExtractAwaitValue
   gen_boilerplate: false
@@ -1071,22 +1169,39 @@
   gen_boilerplate: false
 
 - name: CheckClassHeritage
-  gen_boilerplate: false
+  operands: 
+    heritage: Value
+  result_type: Value
+  guard: true
 
 - name: DebugCheckSelfHosted
-  gen_boilerplate: false
+  operands: 
+    checkValue: Value
+  result_type: Value
+  guard: true
 
 - name: FinishBoundFunctionInit
-  gen_boilerplate: false
+  operands: 
+    bound: Object
+    target: Object
+    argCount: Int32
 
 - name: IsPackedArray
-  gen_boilerplate: false
+  operands: 
+    object: Object
+  result_type: Boolean
+  movable: true
+  alias_set: custom
 
 - name: GuardArrayIsPacked
   gen_boilerplate: false
 
 - name: GetPrototypeOf
-  gen_boilerplate: false
+  operands: 
+    target: Object
+  result_type: Value
+  # May throw if target is a proxy.
+  guard: true
 
 - name: ObjectWithProto
   gen_boilerplate: false
@@ -1098,10 +1213,17 @@
   gen_boilerplate: false
 
 - name: SuperFunction
-  gen_boilerplate: false
+  operands: 
+    callee: Object
+  result_type: Value
+  alias_set: custom
 
 - name: InitHomeObject
-  gen_boilerplate: false
+  operands: 
+    function: Object
+    homeObject: Value
+  result_type: Object
+  alias_set: custom
 
 - name: IsTypedArrayConstructor
   gen_boilerplate: false
@@ -1158,10 +1280,18 @@
   gen_boilerplate: false
 
 - name: WasmExtendU32Index
-  gen_boilerplate: false
+  operands:
+    input: Int32
+  result_type: Int64
+  type_policy: none
+  alias_set: none
 
 - name: WasmWrapU32Index
-  gen_boilerplate: false
+  operands:
+    input: Int64
+  result_type: Int32
+  type_policy: none
+  alias_set: none
 
 - name: WasmAddOffset
   gen_boilerplate: false
