@@ -2292,8 +2292,8 @@ bool js::IsOffThreadSourceCompressionEnabled() {
   // If we don't have concurrent execution compression will contend with
   // main-thread execution, in which case we disable. Similarly we don't want to
   // block the thread pool if it is too small.
-  return GetHelperThreadCPUCount() > 1 && GetHelperThreadCount() > 1 &&
-         CanUseExtraThreads();
+  return HelperThreadState().cpuCount > 1 &&
+         HelperThreadState().threadCount > 1 && CanUseExtraThreads();
 }
 
 bool ScriptSource::tryCompressOffThread(JSContext* cx) {

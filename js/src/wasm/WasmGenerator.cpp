@@ -27,7 +27,7 @@
 
 #include "util/Memory.h"
 #include "util/Text.h"
-#include "vm/HelperThreads.h"
+#include "vm/HelperThreadState.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
 #include "vm/TraceLoggingTypes.h"
@@ -381,12 +381,13 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   // Determine whether parallel or sequential compilation is to be used and
   // initialize the CompileTasks that will be used in either mode.
 
-  MOZ_ASSERT(GetHelperThreadCount() > 1);
+  GlobalHelperThreadState& threads = HelperThreadState();
+  MOZ_ASSERT(threads.threadCount > 1);
 
   uint32_t numTasks;
-  if (CanUseExtraThreads() && GetHelperThreadCPUCount() > 1) {
+  if (CanUseExtraThreads() && threads.cpuCount > 1) {
     parallel_ = true;
-    numTasks = 2 * GetMaxWasmCompilationThreads();
+    numTasks = 2 * threads.maxWasmCompilationThreads();
   } else {
     numTasks = 1;
   }

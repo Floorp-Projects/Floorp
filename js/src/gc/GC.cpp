@@ -1829,17 +1829,13 @@ void GCRuntime::updateHelperThreadCount() {
     return;
   }
 
-  double cpuCount = GetHelperThreadCPUCount();
+  double cpuCount = HelperThreadState().cpuCount;
   size_t target = size_t(cpuCount * helperThreadRatio.ref());
-  target = std::clamp(target, size_t(1), maxHelperThreads.ref());
+  helperThreadCount = mozilla::Clamp(target, size_t(1), maxHelperThreads.ref());
+
+  HelperThreadState().ensureThreadCount(helperThreadCount);
 
   AutoLockHelperThreadState lock;
-
-  // Attempt to create extra threads if possible. This is not supported when
-  // using an external thread pool.
-  (void) HelperThreadState().ensureThreadCount(target, lock);
-
-  helperThreadCount = std::min(target, GetHelperThreadCount());
   HelperThreadState().setGCParallelThreadCount(helperThreadCount, lock);
 }
 
