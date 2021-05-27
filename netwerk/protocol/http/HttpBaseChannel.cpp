@@ -130,7 +130,7 @@ static bool IsHeaderBlacklistedForRedirectCopy(nsHttpAtom const& aHeader) {
       if (mTarget == *aVal) {
         return 0;
       }
-      return strcmp(mTarget._val, aVal->_val);
+      return strcmp(mTarget.get(), aVal->get());
     }
   };
 
@@ -2602,7 +2602,7 @@ nsresult EnsureMIMEOfScript(HttpBaseChannel* aChannel, nsIURI* aURI,
     bool cors = false;
     nsAutoCString corsOrigin;
     nsresult rv = aResponseHead->GetHeader(
-        nsHttp::ResolveAtom("Access-Control-Allow-Origin"), corsOrigin);
+        nsHttp::ResolveAtom("Access-Control-Allow-Origin"_ns), corsOrigin);
     if (NS_SUCCEEDED(rv)) {
       if (corsOrigin.Equals("*")) {
         cors = true;
@@ -2809,7 +2809,7 @@ bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
 
   nsAutoCString corsOrigin;
   nsresult rv = mResponseHead->GetHeader(
-      nsHttp::ResolveAtom("Access-Control-Allow-Origin"), corsOrigin);
+      nsHttp::ResolveAtom("Access-Control-Allow-Origin"_ns), corsOrigin);
   if (NS_SUCCEEDED(rv)) {
     if (corsOrigin.Equals("*")) {
       return true;

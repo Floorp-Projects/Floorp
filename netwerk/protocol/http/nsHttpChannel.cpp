@@ -1747,7 +1747,7 @@ nsresult nsHttpChannel::ProcessSingleSecurityHeader(
   nsHttpAtom atom;
   switch (aType) {
     case nsISiteSecurityService::HEADER_HSTS:
-      atom = nsHttp::ResolveAtom("Strict-Transport-Security");
+      atom = nsHttp::ResolveAtom("Strict-Transport-Security"_ns);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid security header type");

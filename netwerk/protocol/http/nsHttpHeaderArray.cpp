@@ -22,7 +22,7 @@ namespace net {
 nsresult nsHttpHeaderArray::SetHeader(
     const nsACString& headerName, const nsACString& value, bool merge,
     nsHttpHeaderArray::HeaderVariety variety) {
-  nsHttpAtom header = nsHttp::ResolveAtom(PromiseFlatCString(headerName).get());
+  nsHttpAtom header = nsHttp::ResolveAtom(headerName);
   if (!header) {
     NS_WARNING("failed to resolve atom");
     return NS_ERROR_NOT_AVAILABLE;
@@ -103,7 +103,7 @@ nsresult nsHttpHeaderArray::SetHeader_internal(
 
 nsresult nsHttpHeaderArray::SetEmptyHeader(const nsACString& headerName,
                                            HeaderVariety variety) {
-  nsHttpAtom header = nsHttp::ResolveAtom(PromiseFlatCString(headerName).get());
+  nsHttpAtom header = nsHttp::ResolveAtom(headerName);
   if (!header) {
     NS_WARNING("failed to resolve atom");
     return NS_ERROR_NOT_AVAILABLE;
