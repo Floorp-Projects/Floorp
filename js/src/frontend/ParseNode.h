@@ -164,6 +164,7 @@ class FunctionBox;
   F(DefaultConstructor, ClassMethod)                             \
   F(ClassBodyScope, ClassBodyScopeNode)                          \
   F(ClassMethod, ClassMethod)                                    \
+  F(StaticClassBlock, StaticClassBlock)                          \
   F(ClassField, ClassField)                                      \
   F(ClassMemberList, ListNode)                                   \
   F(ClassNames, ClassNames)                                      \
@@ -305,7 +306,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *         that doesn't create an outer binding
  *   right: Name node for inner binding
  * ClassMemberList (ListNode)
- *   head: list of N ClassMethod or ClassField nodes
+ *   head: list of N ClassMethod, ClassField or StaticClassBlock nodes
  *   count: N >= 0
  * DefaultConstructor (ClassMethod)
  *   name: propertyName
@@ -606,6 +607,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
   MACRO(CaseClause, CaseClauseType, asCaseClause)                            \
   MACRO(ClassMethod, ClassMethodType, asClassMethod)                         \
   MACRO(ClassField, ClassFieldType, asClassField)                            \
+  MACRO(StaticClassBlock, StaticClassBlockType, asStaticClassBlock)          \
   MACRO(PropertyDefinition, PropertyDefinitionType, asPropertyDefinition)    \
   MACRO(ClassNames, ClassNamesType, asClassNames)                            \
   MACRO(ForNode, ForNodeType, asFor)                                         \
@@ -2226,6 +2228,26 @@ class ClassField : public BinaryNode {
   FunctionNode* initializer() const { return &right()->as<FunctionNode>(); }
 
   bool isStatic() const { return isStatic_; }
+};
+
+// Hold onto the function generated for a class static block like
+//
+// class A {
+//  static { /* this static block */ }
+// }
+//
+class StaticClassBlock : public UnaryNode {
+ public:
+  explicit StaticClassBlock(FunctionNode* function)
+      : UnaryNode(ParseNodeKind::StaticClassBlock, function->pn_pos, function) {
+  }
+
+  static bool test(const ParseNode& node) {
+    bool match = node.isKind(ParseNodeKind::StaticClassBlock);
+    MOZ_ASSERT_IF(match, node.is<UnaryNode>());
+    return match;
+  }
+  FunctionNode* function() const { return &kid()->as<FunctionNode>(); }
 };
 
 class PropertyDefinition : public BinaryNode {

@@ -439,6 +439,7 @@ restart:
     case ParseNodeKind::ClassBodyScope:
     case ParseNodeKind::ClassMethod:
     case ParseNodeKind::ClassField:
+    case ParseNodeKind::StaticClassBlock:
     case ParseNodeKind::ClassMemberList:
     case ParseNodeKind::ClassNames:
     case ParseNodeKind::NewTargetExpr:

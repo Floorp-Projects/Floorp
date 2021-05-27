@@ -564,6 +564,10 @@ class ParseContext : public Nestable<ParseContext> {
                                     sc_->asFunctionBox()->isSetter());
   }
 
+  bool allowReturn() const {
+    return sc_->isFunctionBox() && sc_->asFunctionBox()->allowReturn();
+  }
+
   uint32_t scriptId() const { return scriptId_; }
 
   bool computeAnnexBAppliesToLexicalFunctionInInnermostScope(

@@ -2619,6 +2619,9 @@ bool ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst) {
             return false;
           }
           members.infallibleAppend(prop);
+        } else if (item->is<StaticClassBlock>()) {
+          // StaticClassBlock* block = &item->as<StaticClassBlock>();
+          MOZ_CRASH("MG:XXX: Still have to write reflect.parse for this");
         } else if (!item->isKind(ParseNodeKind::DefaultConstructor)) {
           ClassMethod* method = &item->as<ClassMethod>();
           MOZ_ASSERT(memberList->pn_pos.encloses(method->pn_pos));

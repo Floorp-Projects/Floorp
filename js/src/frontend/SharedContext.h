@@ -400,6 +400,9 @@ class FunctionBox : public SuspendableContext {
   // Arrow function with expression body like: `() => 1`.
   bool hasExprBody_ : 1;
 
+  // Used to issue an early error in static class blocks.
+  bool allowReturn_ : 1;
+
   // Tracks if function-related fields are already copied to ScriptStencil.
   // If this field is true, modification to those fields should be synced with
   // ScriptStencil by copyUpdated* methods.
@@ -534,6 +537,8 @@ class FunctionBox : public SuspendableContext {
     MOZ_ASSERT(isArrow());
     hasExprBody_ = true;
   }
+
+  bool allowReturn() const { return allowReturn_; }
 
   bool isNamedLambda() const { return flags_.isNamedLambda(!!explicitName()); }
   bool isGetter() const { return flags_.isGetter(); }

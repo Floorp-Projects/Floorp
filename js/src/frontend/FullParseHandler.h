@@ -509,6 +509,10 @@ class FullParseHandler {
     return new_<ClassField>(name, initializer, isStatic);
   }
 
+  [[nodiscard]] StaticClassBlock* newStaticClassBlock(FunctionNodeType block) {
+    return new_<StaticClassBlock>(block);
+  }
+
   [[nodiscard]] bool addClassMemberDefinition(ListNodeType memberList,
                                               Node member) {
     MOZ_ASSERT(memberList->isKind(ParseNodeKind::ClassMemberList));
@@ -516,6 +520,7 @@ class FullParseHandler {
     MOZ_ASSERT(member->isKind(ParseNodeKind::DefaultConstructor) ||
                member->isKind(ParseNodeKind::ClassMethod) ||
                member->isKind(ParseNodeKind::ClassField) ||
+               member->isKind(ParseNodeKind::StaticClassBlock) ||
                (member->isKind(ParseNodeKind::LexicalScope) &&
                 member->as<LexicalScopeNode>().scopeBody()->is<ClassMethod>()));
 
