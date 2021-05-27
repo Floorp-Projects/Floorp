@@ -18,7 +18,7 @@
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       <ul>
         <li>A página que você está tentando ver não pode ser exibida porque a autenticidade dos dados recebidos não pôde ser comprovada.</li>
-        <li>Entre me contato com os responsáveis pelo site para informar este problema.</li>
+        <li>Entre em contato com os responsáveis pelo site para informar este problema.</li>
       </ul>
     ]]></string>
 
