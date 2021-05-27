@@ -20,6 +20,8 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import mozilla.appservices.syncmanager.SyncParams
 import mozilla.appservices.syncmanager.SyncServiceStatus
 import mozilla.components.concept.storage.KeyProvider
@@ -275,12 +277,12 @@ internal class WorkManagerSyncWorker(
     }
 
     @Suppress("ComplexMethod")
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         logger.debug("Starting sync... Tagged as: ${params.tags}")
 
         // If this is a "debouncing" sync task, and we've very recently synced successfully, skip it.
         if (isDebounced() && lastSyncedWithinStaggerBuffer()) {
-            return Result.success()
+            Result.success()
         }
 
         // Otherwise, proceed as normal and start preparing to sync.
@@ -300,13 +302,15 @@ internal class WorkManagerSyncWorker(
             engine to checkNotNull(GlobalSyncableStoreProvider.getLazyStoreWithKey(engine)) {
                 "SyncableStore missing from GlobalSyncableStoreProvider: ${engine.nativeName}"
             }
-        }.ifEmpty {
-            // Short-circuit if there are no configured stores.
-            // Don't update the "last-synced" timestamp because we haven't actually synced anything.
-            return Result.success()
         }
 
-        return doSync(syncableStores)
+        if (syncableStores.isEmpty()) {
+            // Short-circuit if there are no configured stores.
+            // Don't update the "last-synced" timestamp because we haven't actually synced anything.
+            return@withContext Result.success()
+        }
+
+        doSync(syncableStores)
     }
 
     @Suppress("LongMethod", "ComplexMethod")
