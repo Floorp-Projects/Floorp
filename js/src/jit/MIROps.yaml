@@ -100,14 +100,21 @@
 #   - none: this is the most common case, this is will set the alias set to None.
 #   - custom: custom C++ implementation in MIR.cpp
 #
-# possibly_calls [optional]
+# possibly_calls
 # ==============
 # Defines if a opcode can possibly call.
 #   - attribute not specified (default): no code generated, opcode does not call
 #   - true: possiblyCalls returns true
 #   - custom: custom C++ implementation
 #
-# clone
+# compute_range
+# =============
+# Computes and sets the range value for a MIR node, which is then used in range
+# analysis.
+#   - attribute not specified (default): no code generated, range is not set for node
+#   - custom: custom C++ implementation in RangeAnalysis.cpp
+#
+# clone 
 # =====
 # Allows cloning for that MIR op. 
 #   - attribute not specified (default): no code generated
@@ -771,8 +778,15 @@
   congruent_to: if_operands_equal
   alias_set: custom
 
+# Read the length of an array buffer view.
 - name: ArrayBufferViewLength
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: IntPtr
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  compute_range: custom
 
 - name: ArrayBufferViewByteOffset
   gen_boilerplate: false
@@ -835,8 +849,15 @@
 - name: ArrayPopShift
   gen_boilerplate: false
 
+# Array.prototype.push on a dense array. Returns the new array length.
 - name: ArrayPush
-  gen_boilerplate: false
+  operands:
+    object: Object
+    value: Value
+  result_type: Int32
+  alias_set: custom
+  compute_range: custom
+  clone: true
 
 - name: ArraySlice
   gen_boilerplate: false
