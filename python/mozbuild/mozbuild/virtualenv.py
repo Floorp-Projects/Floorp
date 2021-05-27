@@ -135,7 +135,6 @@ class VirtualenvManager(VirtualenvHelper):
             self.topsrcdir, "third_party", "python", "virtualenv", "virtualenv.py"
         )
 
-    @property
     def version_info(self):
         return eval(
             subprocess.check_output(
