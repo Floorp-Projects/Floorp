@@ -220,7 +220,7 @@ class Doctor(MachCommandBase):
 @CommandProvider
 class Clobber(MachCommandBase):
     NO_AUTO_LOG = True
-    CLOBBER_CHOICES = set(["objdir", "python", "gradle"])
+    CLOBBER_CHOICES = {"objdir", "python", "gradle"}
 
     @Command(
         "clobber",
@@ -229,10 +229,10 @@ class Clobber(MachCommandBase):
     )
     @CommandArgument(
         "what",
-        default=["objdir", "python"],
+        default=["objdir"],
         nargs="*",
         help="Target to clobber, must be one of {{{}}} (default "
-        "objdir and python).".format(", ".join(CLOBBER_CHOICES)),
+        "objdir).".format(", ".join(CLOBBER_CHOICES)),
     )
     @CommandArgument("--full", action="store_true", help="Perform a full clobber")
     def clobber(self, command_context, what, full=False):
@@ -248,23 +248,22 @@ class Clobber(MachCommandBase):
         files) are not removed by default. If you would like to remove the
         object directory in its entirety, run with `--full`.
 
-        The `python` target will clean up various generated Python files from
-        the source directory and will remove untracked files from well-known
-        directories containing Python packages. Run this to remove .pyc files,
-        compiled C extensions, etc. Note: all files not tracked or ignored by
-        version control in third_party/python will be deleted. Run the `status`
-        command of your VCS to see if any untracked files you haven't committed
-        yet will be deleted.
+        The `python` target will clean up Python's generated files (virtualenvs,
+        ".pyc", "__pycache__", etc).
 
         The `gradle` target will remove the "gradle" subdirectory of the object
         directory.
 
-        By default, the command clobbers the `objdir` and `python` targets.
+        By default, the command clobbers the `objdir` target.
         """
         what = set(what)
         invalid = what - self.CLOBBER_CHOICES
         if invalid:
-            print("Unknown clobber target(s): {}".format(", ".join(invalid)))
+            print(
+                "Unknown clobber target(s): {}. Choose from {{{}}}".format(
+                    ", ".join(invalid), ", ".join(self.CLOBBER_CHOICES)
+                )
+            )
             return 1
 
         ret = 0
@@ -300,8 +299,6 @@ class Clobber(MachCommandBase):
                     "glob:**.py[cdo]",
                     "-I",
                     "glob:**/__pycache__",
-                    "-I",
-                    "path:third_party/python/",
                 ]
             elif conditions.is_git(self):
                 cmd = [
@@ -312,11 +309,8 @@ class Clobber(MachCommandBase):
                     "-x",
                     "*.py[cdo]",
                     "*/__pycache__/*",
-                    "third_party/python/",
                 ]
             else:
-                # We don't know what is tracked/untracked if we don't have VCS.
-                # So we can't clean python/ and third_party/python/.
                 cmd = ["find", ".", "-type", "f", "-name", "*.py[cdo]", "-delete"]
                 subprocess.call(cmd, cwd=self.topsrcdir)
                 cmd = [
@@ -330,6 +324,9 @@ class Clobber(MachCommandBase):
                     "-delete",
                 ]
             ret = subprocess.call(cmd, cwd=self.topsrcdir)
+            shutil.rmtree(
+                mozpath.join(self.topobjdir, "_virtualenvs"), ignore_errors=True
+            )
 
         if "gradle" in what:
             shutil.rmtree(mozpath.join(self.topobjdir, "gradle"))
