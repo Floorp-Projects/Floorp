@@ -1500,7 +1500,6 @@ class BuildDriver(MozbuildObject):
         line_handler = line_handler or on_line
 
         append_env = dict(append_env or {})
-        append_env["MAKE"] = self._make_path()
 
         # Back when client.mk was used, `mk_add_options "export ..."` lines
         # from the mozconfig would spill into the configure environment, so
