@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.creditcards
 
 import android.view.LayoutInflater
 import android.view.View
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -14,6 +15,8 @@ import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
+import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
+import mozilla.components.service.sync.autofill.AutofillCrypto
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.utils.CreditCardNetworkType
 import org.junit.Assert.assertEquals
@@ -36,11 +39,14 @@ class CreditCardEditorViewTest {
     private lateinit var view: View
     private lateinit var interactor: CreditCardEditorInteractor
     private lateinit var creditCardEditorView: CreditCardEditorView
+    private lateinit var storage: AutofillCreditCardsAddressesStorage
+    private lateinit var crypto: AutofillCrypto
 
+    private val cardNumber = "4111111111111111"
     private val creditCard = CreditCard(
         guid = "id",
         billingName = "Banana Apple",
-        encryptedCardNumber = CreditCardNumber.Encrypted("4111111111111111"),
+        encryptedCardNumber = CreditCardNumber.Encrypted(cardNumber),
         cardNumberLast4 = "1111",
         expiryMonth = 5,
         expiryYear = 2030,
@@ -55,6 +61,11 @@ class CreditCardEditorViewTest {
     fun setup() {
         view = LayoutInflater.from(testContext).inflate(R.layout.fragment_credit_card_editor, null)
         interactor = mockk(relaxed = true)
+        storage = mockk(relaxed = true)
+        crypto = mockk(relaxed = true)
+
+        every { storage.getCreditCardCrypto() } returns crypto
+        every { crypto.decrypt(any(), any()) } returns CreditCardNumber.Plaintext(cardNumber)
 
         creditCardEditorView = spyk(CreditCardEditorView(view, interactor))
     }
@@ -87,9 +98,9 @@ class CreditCardEditorViewTest {
 
     @Test
     fun `GIVEN a credit card THEN credit card form inputs are displaying the provided credit card information`() {
-        creditCardEditorView.bind(creditCard.toCreditCardEditorState())
+        creditCardEditorView.bind(creditCard.toCreditCardEditorState(storage))
 
-        assertEquals(creditCard.encryptedCardNumber.number, view.card_number_input.text.toString())
+        assertEquals(cardNumber, view.card_number_input.text.toString())
         assertEquals(creditCard.billingName, view.name_on_card_input.text.toString())
 
         with(view.expiry_month_drop_down) {
@@ -108,7 +119,7 @@ class CreditCardEditorViewTest {
 
     @Test
     fun `GIVEN a credit card WHEN the delete card button is clicked THEN interactor is called`() {
-        creditCardEditorView.bind(creditCard.toCreditCardEditorState())
+        creditCardEditorView.bind(creditCard.toCreditCardEditorState(storage))
 
         assertEquals(View.VISIBLE, view.delete_button.visibility)
 
@@ -202,7 +213,7 @@ class CreditCardEditorViewTest {
 
     @Test
     fun `GIVEN a valid credit card WHEN the save button is clicked THEN interactor is called`() {
-        creditCardEditorView.bind(creditCard.toCreditCardEditorState())
+        creditCardEditorView.bind(creditCard.toCreditCardEditorState(storage))
 
         view.save_button.performClick()
 

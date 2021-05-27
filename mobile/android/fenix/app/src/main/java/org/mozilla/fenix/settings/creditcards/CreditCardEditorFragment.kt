@@ -49,16 +49,17 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
             showToolbar(getString(R.string.credit_cards_edit_card))
         }
 
+        val storage = requireContext().components.core.autofillStorage
         interactor = DefaultCreditCardEditorInteractor(
             controller = DefaultCreditCardEditorController(
-                storage = requireContext().components.core.autofillStorage,
+                storage = storage,
                 lifecycleScope = lifecycleScope,
                 navController = findNavController()
             )
         )
 
         creditCardEditorState =
-            args.creditCard?.toCreditCardEditorState() ?: getInitialCreditCardEditorState()
+            args.creditCard?.toCreditCardEditorState(storage) ?: getInitialCreditCardEditorState()
         creditCardEditorView = CreditCardEditorView(view, interactor)
         creditCardEditorView.bind(creditCardEditorState)
     }
