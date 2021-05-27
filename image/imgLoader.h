@@ -329,6 +329,8 @@ class imgLoader final : public imgILoader,
 
   void VerifyCacheSizes();
 
+  nsresult RemoveEntriesFromPrincipal(nsIPrincipal* aPrincipal);
+
   // The image loader maintains a hash table of all imgCacheEntries. However,
   // only some of them will be evicted from the cache: those who have no
   // imgRequestProxies watching their imgRequests.

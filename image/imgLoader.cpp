@@ -1355,6 +1355,27 @@ imgLoader::ClearCache(bool chrome) {
 }
 
 NS_IMETHODIMP
+imgLoader::RemoveEntriesFromPrincipalInAllProcesses(nsIPrincipal* aPrincipal) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+    Unused << cp->SendClearImageCacheFromPrincipal(aPrincipal);
+  }
+
+  imgLoader* loader;
+  if (aPrincipal->OriginAttributesRef().mPrivateBrowsingId ==
+      nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID) {
+    loader = imgLoader::NormalLoader();
+  } else {
+    loader = imgLoader::PrivateBrowsingLoader();
+  }
+
+  return loader->RemoveEntriesFromPrincipal(aPrincipal);
+}
+
+NS_IMETHODIMP
 imgLoader::RemoveEntriesFromPrincipal(nsIPrincipal* aPrincipal) {
   nsAutoString origin;
   nsresult rv = nsContentUtils::GetUTFOrigin(aPrincipal, origin);
