@@ -9179,12 +9179,15 @@ CSSPoint nsLayoutUtils::GetCumulativeApzCallbackTransform(nsIFrame* aFrame) {
     // Apply the callback transform for the current frame.
     applyCallbackTransformForFrame(frame);
 
-    // Keep track of whether we've encountered the RCD-RSF.
+    // Keep track of whether we've encountered the RCD-RSF's content element.
     nsPresContext* pc = frame->PresContext();
-    if (nsIScrollableFrame* scrollFrame = do_QueryFrame(frame)) {
-      if (scrollFrame->IsRootScrollFrameOfDocument() &&
-          pc->IsRootContentDocument()) {
-        seenRcdRsf = true;
+    if (pc->IsRootContentDocument()) {
+      if (PresShell* shell = pc->GetPresShell()) {
+        if (nsIFrame* rsf = shell->GetRootScrollFrame()) {
+          if (frame->GetContent() == rsf->GetContent()) {
+            seenRcdRsf = true;
+          }
+        }
       }
     }
 
