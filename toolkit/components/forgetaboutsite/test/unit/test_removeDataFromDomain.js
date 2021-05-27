@@ -474,43 +474,6 @@ async function helper_push_cleared(aBaseDomainTest) {
   Assert.ok(wasCleared, "Should have cleared push data");
 }
 
-// Cache
-function test_cache_cleared() {
-  return helper_cache_cleared(false);
-}
-
-function test_cache_cleared_base_domain() {
-  return helper_cache_cleared(true);
-}
-
-async function helper_cache_cleared(aBaseDomainTest) {
-  // Because this test is asynchronous, it should be the last test
-  Assert.ok(tests[tests.length - 1] == test_cache_cleared);
-
-  // NOTE: We could be more extensive with this test and actually add an entry
-  //       to the cache, and then make sure it is gone.  However, we trust that
-  //       the API is well tested, and that when we get the observer
-  //       notification, we have actually cleared the cache.
-  // This seems to happen asynchronously...
-  let observer = {
-    observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(observer, "cacheservice:empty-cache");
-      // Shutdown the download manager.
-      Services.obs.notifyObservers(null, "quit-application");
-      do_test_finished();
-    },
-  };
-  Services.obs.addObserver(observer, "cacheservice:empty-cache");
-
-  if (aBaseDomainTest) {
-    await ForgetAboutSite.removeDataFromBaseDomain("mozilla.org");
-  } else {
-    await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  }
-
-  do_test_pending();
-}
-
 function test_storage_cleared() {
   return helper_storage_cleared(false);
 }
@@ -605,14 +568,6 @@ var tests = [
   test_storage_cleared,
   test_storage_cleared_base_domain,
 ];
-
-// Cache
-//
-// Due to these prefs being static, setting them doesn't make a difference in time for the test
-// As we are removing AppCache in Bug 1584984 this will just be removed soon.
-if (Services.prefs.getBoolPref("browser.cache.offline.enable")) {
-  tests.push(test_cache_cleared);
-}
 
 function run_test() {
   for (let i = 0; i < tests.length; i++) {
