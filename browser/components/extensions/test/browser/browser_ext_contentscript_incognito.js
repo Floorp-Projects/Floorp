@@ -11,7 +11,7 @@ add_task(async function test_contentscript_window_open_doesnot_crash() {
     manifest: {
       content_scripts: [
         {
-          matches: ["http://example.com/*"],
+          matches: ["https://example.com/*"],
           js: ["test_window_open.js"],
         },
       ],
@@ -32,7 +32,7 @@ add_task(async function test_contentscript_window_open_doesnot_crash() {
 
   await BrowserTestUtils.openNewForegroundTab(
     winPrivate.gBrowser,
-    "http://example.com"
+    "https://example.com"
   );
   const newWinOpened = await extension.awaitMessage("window-open-called");
   ok(newWinOpened, "Content script successfully open a new window");
