@@ -1229,13 +1229,16 @@ enum class Severity {
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
 #  ifdef QM_ERROR_STACKS_ENABLED
 using ResultType = Variant<QMResult, nsresult, Nothing>;
-#  else
-using ResultType = Maybe<nsresult>;
-#  endif
 
 void LogError(const nsACString& aExpr, const ResultType& aResult,
               const nsACString& aSourceFilePath, int32_t aSourceFileLine,
-              Severity aSeverity);
+              Severity aSeverity)
+#  else
+void LogError(const nsACString& aExpr, Maybe<nsresult> aResult,
+              const nsACString& aSourceFilePath, int32_t aSourceFileLine,
+              Severity aSeverity)
+#  endif
+    ;
 #endif
 
 #ifdef DEBUG
@@ -1318,9 +1321,6 @@ MOZ_COLD void HandleError(const char* aExpr, const T& aRv,
                           const Severity aSeverity) {
 #  ifdef QM_ERROR_STACKS_ENABLED
   if constexpr (std::is_same_v<T, QMResult> || std::is_same_v<T, nsresult>) {
-#  else
-  if constexpr (std::is_same_v<T, nsresult>) {
-#  endif
     mozilla::dom::quota::LogError(nsDependentCString(aExpr), ResultType(aRv),
                                   nsDependentCString(aSourceFilePath),
                                   aSourceFileLine, aSeverity);
@@ -1329,6 +1329,17 @@ MOZ_COLD void HandleError(const char* aExpr, const T& aRv,
         nsDependentCString(aExpr), ResultType(Nothing{}),
         nsDependentCString(aSourceFilePath), aSourceFileLine, aSeverity);
   }
+#  else
+  if constexpr (std::is_same_v<T, nsresult>) {
+    mozilla::dom::quota::LogError(nsDependentCString(aExpr), Some(aRv),
+                                  nsDependentCString(aSourceFilePath),
+                                  aSourceFileLine, aSeverity);
+  } else {
+    mozilla::dom::quota::LogError(nsDependentCString(aExpr), Nothing{},
+                                  nsDependentCString(aSourceFilePath),
+                                  aSourceFileLine, aSeverity);
+  }
+#  endif
 }
 #else
 template <typename T>
