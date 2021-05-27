@@ -990,6 +990,7 @@
   <vbox>
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
+      <vbox flex="1">
       <radiogroup id="httpsOnlyRadioGroup">
         <radio id="httpsOnlyRadioEnabled"
                data-l10n-id="httpsonly-radio-enabled"
@@ -1001,6 +1002,17 @@
                data-l10n-id="httpsonly-radio-disabled"
                value="disabled"/>
       </radiogroup>
+      </vbox>
+      <vbox align="end">
+        <button id="httpsOnlyExceptionButton" is="highlightable-button" class="accessory-button" disabled="true"
+          data-l10n-id="sitedata-cookies-exceptions" search-l10n-ids="
+                        permissions-address,
+                        permissions-allow.label,
+                        permissions-remove.label,
+                        permissions-remove-all.label,
+                        permissions-exceptions-https-only-desc,
+                      " />
+      </vbox>
     </hbox>
   </vbox>
 </groupbox>

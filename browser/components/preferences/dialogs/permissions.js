@@ -24,6 +24,10 @@ const permissionExceptionsL10n = {
     window: "permissions-exceptions-saved-logins-window",
     description: "permissions-exceptions-saved-logins-desc",
   },
+  "https-only-load-insecure": {
+    window: "permissions-exceptions-https-only-window",
+    description: "permissions-exceptions-https-only-desc",
+  },
   install: {
     window: "permissions-exceptions-addons-window",
     description: "permissions-exceptions-addons-desc",
@@ -66,9 +70,11 @@ var gPermissionManager = {
     this._removeButton = document.getElementById("removePermission");
     this._removeAllButton = document.getElementById("removeAllPermissions");
 
-    this._btnSession = document.getElementById("btnSession");
+    this._btnCookieSession = document.getElementById("btnCookieSession");
     this._btnBlock = document.getElementById("btnBlock");
     this._btnAllow = document.getElementById("btnAllow");
+    this._btnHttpsOnlyOff = document.getElementById("btnHttpsOnlyOff");
+    this._btnHttpsOnlyOffTmp = document.getElementById("btnHttpsOnlyOffTmp");
 
     let permissionsText = document.getElementById("permissionsText");
 
@@ -89,7 +95,15 @@ var gPermissionManager = {
     ]);
 
     document.getElementById("btnBlock").hidden = !params.blockVisible;
-    document.getElementById("btnSession").hidden = !params.sessionVisible;
+    document.getElementById("btnCookieSession").hidden = !(
+      params.sessionVisible && this._type == "cookie"
+    );
+    document.getElementById("btnHttpsOnlyOff").hidden = !(
+      this._type == "https-only-load-insecure"
+    );
+    document.getElementById("btnHttpsOnlyOffTmp").hidden = !(
+      params.sessionVisible && this._type == "https-only-load-insecure"
+    );
     document.getElementById("btnAllow").hidden = !params.allowVisible;
 
     this.onHostInput(this._urlField);
@@ -167,26 +181,38 @@ var gPermissionManager = {
     return (
       capability == Ci.nsIPermissionManager.ALLOW_ACTION ||
       capability == Ci.nsIPermissionManager.DENY_ACTION ||
-      capability == Ci.nsICookiePermission.ACCESS_SESSION
+      capability == Ci.nsICookiePermission.ACCESS_SESSION ||
+      capability == Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW_SESSION
     );
   },
 
   _getCapabilityL10nId(capability) {
-    let stringKey = null;
+    // HTTPS-Only Mode phrases exceptions as turning it off
+    if (this._type == "https-only-load-insecure") {
+      return this._getHttpsOnlyCapabilityL10nId(capability);
+    }
+
     switch (capability) {
       case Ci.nsIPermissionManager.ALLOW_ACTION:
-        stringKey = "permissions-capabilities-listitem-allow";
-        break;
+        return "permissions-capabilities-listitem-allow";
       case Ci.nsIPermissionManager.DENY_ACTION:
-        stringKey = "permissions-capabilities-listitem-block";
-        break;
+        return "permissions-capabilities-listitem-block";
       case Ci.nsICookiePermission.ACCESS_SESSION:
-        stringKey = "permissions-capabilities-listitem-allow-session";
-        break;
+        return "permissions-capabilities-listitem-allow-session";
       default:
         throw new Error(`Unknown capability: ${capability}`);
     }
-    return stringKey;
+  },
+
+  _getHttpsOnlyCapabilityL10nId(capability) {
+    switch (capability) {
+      case Ci.nsIPermissionManager.ALLOW_ACTION:
+        return "permissions-capabilities-listitem-off";
+      case Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW_SESSION:
+        return "permissions-capabilities-listitem-off-temporarily";
+      default:
+        throw new Error(`Unknown HTTPS-Only Mode capability: ${capability}`);
+    }
   },
 
   _addPermissionToList(perm) {
@@ -376,12 +402,19 @@ var gPermissionManager = {
         document.getElementById("btnAllow").click();
       } else if (!document.getElementById("btnBlock").hidden) {
         document.getElementById("btnBlock").click();
+      } else if (!document.getElementById("btnHttpsOnlyOff").hidden) {
+        document.getElementById("btnHttpsOnlyOff").click();
       }
     }
   },
 
   onHostInput(siteField) {
-    this._btnSession.disabled = this._btnSession.hidden || !siteField.value;
+    this._btnCookieSession.disabled =
+      this._btnCookieSession.hidden || !siteField.value;
+    this._btnHttpsOnlyOff.disabled =
+      this._btnHttpsOnlyOff.hidden || !siteField.value;
+    this._btnHttpsOnlyOffTmp.disabled =
+      this._btnHttpsOnlyOffTmp.hidden || !siteField.value;
     this._btnBlock.disabled = this._btnBlock.hidden || !siteField.value;
     this._btnAllow.disabled = this._btnAllow.hidden || !siteField.value;
   },
@@ -430,7 +463,21 @@ var gPermissionManager = {
     }
 
     for (let p of this._permissionsToAdd.values()) {
-      Services.perms.addFromPrincipal(p.principal, p.type, p.capability);
+      // If this sets the HTTPS-Only exemption only for this
+      // session, then the expire-type has to be set.
+      if (
+        p.capability ==
+        Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW_SESSION
+      ) {
+        Services.perms.addFromPrincipal(
+          p.principal,
+          p.type,
+          p.capability,
+          Ci.nsIPermissionManager.EXPIRE_SESSION
+        );
+      } else {
+        Services.perms.addFromPrincipal(p.principal, p.type, p.capability);
+      }
     }
   },
 
