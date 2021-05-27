@@ -9,7 +9,6 @@
 #include "mozilla/dom/XRView.h"
 #include "mozilla/dom/XRViewport.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
-#include "mozilla/HoldDropJSObjects.h"
 #include "WebGLFramebuffer.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_webgl.h"
@@ -46,14 +45,9 @@ XRWebGLLayer::XRWebGLLayer(
       mCompositionDisabled(!aSession.IsImmersive()),
       mIgnoreDepthValues(aIgnoreDepthValues),
       mFramebuffer(std::move(aFramebuffer)),
-      mFramebufferOptions(aOptions) {
-  mozilla::HoldJSObjects(this);
-}
+      mFramebufferOptions(aOptions) {}
 
-XRWebGLLayer::~XRWebGLLayer() {
-  DeleteFramebuffer();
-  mozilla::DropJSObjects(this);
-}
+XRWebGLLayer::~XRWebGLLayer() { DeleteFramebuffer(); }
 
 void XRWebGLLayer::DeleteFramebuffer() {
   if (mFramebuffer) {

@@ -11,7 +11,6 @@
 #include "xpcpublic.h"
 
 #include "mozilla/AbstractThread.h"
-#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/extensions/StreamFilterChild.h"
 #include "mozilla/extensions/StreamFilterEvents.h"
 #include "mozilla/extensions/StreamFilterParent.h"

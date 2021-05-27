@@ -116,7 +116,6 @@ InProcessBrowserChildMessageManager::~InProcessBrowserChildMessageManager() {
     JSActorService::UnregisterChromeEventTarget(this);
   }
 
-  mAnonymousGlobalScopes.Clear();
   mozilla::DropJSObjects(this);
 }
 

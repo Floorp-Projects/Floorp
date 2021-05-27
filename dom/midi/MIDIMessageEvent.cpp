@@ -42,10 +42,7 @@ MIDIMessageEvent::MIDIMessageEvent(mozilla::dom::EventTarget* aOwner)
   mozilla::HoldJSObjects(this);
 }
 
-MIDIMessageEvent::~MIDIMessageEvent() {
-  mData = nullptr;
-  mozilla::DropJSObjects(this);
-}
+MIDIMessageEvent::~MIDIMessageEvent() { mozilla::DropJSObjects(this); }
 
 JSObject* MIDIMessageEvent::WrapObjectInternal(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {

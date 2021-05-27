@@ -6,8 +6,6 @@
 
 #include "mozilla/dom/PlacesEvent.h"
 
-#include "mozilla/HoldDropJSObjects.h"
-
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PlacesEvent)

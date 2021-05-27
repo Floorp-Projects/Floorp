@@ -19,7 +19,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/ExtensionPolicyService.h"
-#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/Result.h"
 #include "mozilla/ScopeExit.h"
@@ -2359,8 +2358,6 @@ WorkerPrivate::WorkerPrivate(
 }
 
 WorkerPrivate::~WorkerPrivate() {
-  DropJSObjects(this);
-
   mWorkerControlEventTarget->ForgetWorkerPrivate(this);
 
   // We force the hybrid event target to forget the thread when we

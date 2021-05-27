@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/PlacesWeakCallbackWrapper.h"
 
-#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
 
 namespace mozilla::dom {

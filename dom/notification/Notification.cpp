@@ -924,7 +924,6 @@ already_AddRefed<Notification> Notification::CreateInternal(
 }
 
 Notification::~Notification() {
-  mData.setUndefined();
   mozilla::DropJSObjects(this);
   AssertIsOnTargetThread();
   MOZ_ASSERT(!mWorkerRef);

@@ -47,10 +47,7 @@ MessageEvent::MessageEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                            WidgetEvent* aEvent)
     : Event(aOwner, aPresContext, aEvent), mData(JS::UndefinedValue()) {}
 
-MessageEvent::~MessageEvent() {
-  mData.setUndefined();
-  DropJSObjects(this);
-}
+MessageEvent::~MessageEvent() { DropJSObjects(this); }
 
 JSObject* MessageEvent::WrapObjectInternal(JSContext* aCx,
                                            JS::Handle<JSObject*> aGivenProto) {

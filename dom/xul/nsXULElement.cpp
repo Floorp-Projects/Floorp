@@ -1915,7 +1915,6 @@ nsresult nsXULPrototypeScript::Compile(
 
 void nsXULPrototypeScript::UnlinkJSObjects() {
   if (mScriptObject) {
-    mScriptObject = nullptr;
     mozilla::DropJSObjects(this);
   }
 }
