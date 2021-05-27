@@ -28,6 +28,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/image/ImageMemoryReporter.h"
@@ -42,6 +43,7 @@
 #include "nsICacheInfoChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIClassOfService.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsIHttpChannel.h"
@@ -1372,35 +1374,114 @@ imgLoader::RemoveEntriesFromPrincipalInAllProcesses(nsIPrincipal* aPrincipal) {
     loader = imgLoader::PrivateBrowsingLoader();
   }
 
-  return loader->RemoveEntriesFromPrincipal(aPrincipal);
+  return loader->RemoveEntriesInternal(aPrincipal, nullptr);
 }
 
 NS_IMETHODIMP
-imgLoader::RemoveEntriesFromPrincipal(nsIPrincipal* aPrincipal) {
-  nsAutoString origin;
-  nsresult rv = nsContentUtils::GetUTFOrigin(aPrincipal, origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+imgLoader::RemoveEntriesFromBaseDomainInAllProcesses(
+    const nsACString& aBaseDomain) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
+  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+    Unused << cp->SendClearImageCacheFromBaseDomain(nsCString(aBaseDomain));
+  }
+
+  return RemoveEntriesInternal(nullptr, &aBaseDomain);
+}
+
+nsresult imgLoader::RemoveEntriesInternal(nsIPrincipal* aPrincipal,
+                                          const nsACString* aBaseDomain) {
+  // Can only clear by either principal or base domain.
+  if ((!aPrincipal && !aBaseDomain) || (aPrincipal && aBaseDomain)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsAutoString origin;
+  if (aPrincipal) {
+    nsresult rv = nsContentUtils::GetUTFOrigin(aPrincipal, origin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  nsCOMPtr<nsIEffectiveTLDService> tldService;
   AutoTArray<RefPtr<imgCacheEntry>, 128> entriesToBeRemoved;
 
-  imgCacheTable& cache = GetCache(aPrincipal->IsSystemPrincipal());
+  // For base domain we only clear the non-chrome cache.
+  imgCacheTable& cache =
+      GetCache(aPrincipal && aPrincipal->IsSystemPrincipal());
   for (const auto& entry : cache) {
     const auto& key = entry.GetKey();
 
-    if (key.OriginAttributesRef() !=
-        BasePrincipal::Cast(aPrincipal)->OriginAttributesRef()) {
-      continue;
-    }
+    const bool shouldRemove = [&] {
+      if (aPrincipal) {
+        if (key.OriginAttributesRef() !=
+            BasePrincipal::Cast(aPrincipal)->OriginAttributesRef()) {
+          return false;
+        }
 
-    nsAutoString imageOrigin;
-    nsresult rv = nsContentUtils::GetUTFOrigin(key.URI(), imageOrigin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      continue;
-    }
+        nsAutoString imageOrigin;
+        nsresult rv = nsContentUtils::GetUTFOrigin(key.URI(), imageOrigin);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return false;
+        }
 
-    if (imageOrigin == origin) {
+        return imageOrigin == origin;
+      }
+
+      if (!aBaseDomain) {
+        return false;
+      }
+      // Clear by baseDomain.
+      nsAutoCString host;
+      nsresult rv = key.URI()->GetHost(host);
+      if (NS_FAILED(rv) || host.IsEmpty()) {
+        return false;
+      }
+
+      if (!tldService) {
+        tldService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+      }
+      if (NS_WARN_IF(!tldService)) {
+        return false;
+      }
+
+      bool hasRootDomain = false;
+      rv = tldService->HasRootDomain(host, *aBaseDomain, &hasRootDomain);
+      if (NS_SUCCEEDED(rv) && hasRootDomain) {
+        return true;
+      }
+
+      // If we don't get a direct base domain match, also check for cache of
+      // third parties partitioned under aBaseDomain.
+
+      // The isolation key is either just the base domain, or an origin suffix
+      // which contains the partitionKey holding the baseDomain.
+
+      if (key.IsolationKeyRef().Equals(*aBaseDomain)) {
+        return true;
+      }
+
+      // The isolation key does not match the given base domain. It may be an
+      // origin suffix. Parse it into origin attributes.
+      OriginAttributes attrs;
+      if (!attrs.PopulateFromSuffix(key.IsolationKeyRef())) {
+        // Key is not an origin suffix.
+        return false;
+      }
+
+      // Extract the base domain from the partition key and match it.
+      nsAutoString partitionKeyBaseDomain;
+      bool ok = StoragePrincipalHelper::GetBaseDomainFromPartitionKey(
+          attrs.mPartitionKey, partitionKeyBaseDomain);
+
+      return ok &&
+             NS_ConvertUTF16toUTF8(partitionKeyBaseDomain).Equals(*aBaseDomain);
+    }();
+
+    if (shouldRemove) {
       entriesToBeRemoved.AppendElement(entry.GetData());
     }
   }
@@ -1409,7 +1490,7 @@ imgLoader::RemoveEntriesFromPrincipal(nsIPrincipal* aPrincipal) {
     if (!RemoveFromCache(entry)) {
       NS_WARNING(
           "Couldn't remove an entry from the cache in "
-          "RemoveEntriesFromPrincipal()\n");
+          "RemoveEntriesInternal()\n");
     }
   }
 

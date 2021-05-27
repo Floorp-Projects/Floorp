@@ -62,6 +62,16 @@ interface imgICache : nsISupports
   void removeEntriesFromPrincipalInAllProcesses(in nsIPrincipal aPrincipal);
 
   /**
+   * Evict images from the non-chrome cache which match the the given base
+   * domain. Matching cache entries will be cleared across all origin attributes
+   * and all processes.
+   *
+   * @param aBaseDomain base domain to delete cache entries for.
+   * @throws NS_ERROR_NOT_AVAILABLE if not called in the parent process.
+   */
+  void removeEntriesFromBaseDomainInAllProcesses(in ACString aBaseDomain);
+
+  /**
    * Find Properties
    * Used to get properties such as 'type' and 'content-disposition'
    * 'type' is a nsISupportsCString containing the images' mime type such as
