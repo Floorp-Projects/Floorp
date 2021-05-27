@@ -12,6 +12,7 @@
 
 class nsISupports;
 class nsScriptObjectTracer;
+class nsCycleCollectionParticipant;
 
 namespace JS {
 class Zone;
@@ -61,11 +62,19 @@ struct HoldDropJSObjectsHelper<T, true> {
 **/
 template <class T>
 void HoldJSObjects(T* aHolder) {
+  static_assert(!std::is_base_of<nsCycleCollectionParticipant, T>::value,
+                "Don't call this on the CC participant but on the object that "
+                "it's for (in an Unlink implementation it's usually stored in "
+                "a variable named 'tmp').");
   HoldDropJSObjectsHelper<T>::Hold(aHolder);
 }
 
 template <class T>
 void DropJSObjects(T* aHolder) {
+  static_assert(!std::is_base_of<nsCycleCollectionParticipant, T>::value,
+                "Don't call this on the CC participant but on the object that "
+                "it's for (in an Unlink implementation it's usually stored in "
+                "a variable named 'tmp').");
   HoldDropJSObjectsHelper<T>::Drop(aHolder);
 }
 
