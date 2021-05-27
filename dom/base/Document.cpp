@@ -14889,7 +14889,8 @@ void Document::MaybeActiveMediaComponents() {
 }
 
 void Document::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
-  nsINode::AddSizeOfExcludingThis(aWindowSizes, &aWindowSizes.mDOMOtherSize);
+  nsINode::AddSizeOfExcludingThis(aWindowSizes,
+                                  &aWindowSizes.mDOMSizes.mDOMOtherSize);
 
   for (nsIContent* kid = GetFirstChild(); kid; kid = kid->GetNextSibling()) {
     AddSizeOfNodeTree(*kid, aWindowSizes);
@@ -14919,11 +14920,12 @@ void Document::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
     mNodeInfoManager->AddSizeOfIncludingThis(aWindowSizes);
   }
 
-  aWindowSizes.mDOMMediaQueryLists += mDOMMediaQueryLists.sizeOfExcludingThis(
-      aWindowSizes.mState.mMallocSizeOf);
+  aWindowSizes.mDOMSizes.mDOMMediaQueryLists +=
+      mDOMMediaQueryLists.sizeOfExcludingThis(
+          aWindowSizes.mState.mMallocSizeOf);
 
   for (const MediaQueryList* mql : mDOMMediaQueryLists) {
-    aWindowSizes.mDOMMediaQueryLists +=
+    aWindowSizes.mDOMSizes.mDOMMediaQueryLists +=
         mql->SizeOfExcludingThis(aWindowSizes.mState.mMallocSizeOf);
   }
 
@@ -14945,13 +14947,14 @@ void Document::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
     mResizeObserverController->AddSizeOfIncludingThis(aWindowSizes);
   }
 
-  aWindowSizes.mDOMOtherSize += mAttrStyleSheet
-                                    ? mAttrStyleSheet->DOMSizeOfIncludingThis(
-                                          aWindowSizes.mState.mMallocSizeOf)
-                                    : 0;
+  aWindowSizes.mDOMSizes.mDOMOtherSize +=
+      mAttrStyleSheet ? mAttrStyleSheet->DOMSizeOfIncludingThis(
+                            aWindowSizes.mState.mMallocSizeOf)
+                      : 0;
 
-  aWindowSizes.mDOMOtherSize += mStyledLinks.ShallowSizeOfExcludingThis(
-      aWindowSizes.mState.mMallocSizeOf);
+  aWindowSizes.mDOMSizes.mDOMOtherSize +=
+      mStyledLinks.ShallowSizeOfExcludingThis(
+          aWindowSizes.mState.mMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
@@ -14960,7 +14963,8 @@ void Document::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
 }
 
 void Document::DocAddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const {
-  aWindowSizes.mDOMOtherSize += aWindowSizes.mState.mMallocSizeOf(this);
+  aWindowSizes.mDOMSizes.mDOMOtherSize +=
+      aWindowSizes.mState.mMallocSizeOf(this);
   DocAddSizeOfExcludingThis(aWindowSizes);
 }
 
@@ -14982,19 +14986,19 @@ void Document::AddSizeOfNodeTree(nsINode& aNode, nsWindowSizes& aWindowSizes) {
   // nsINode::AddSizeOfIncludingThis() to a value in nsWindowSizes.
   switch (aNode.NodeType()) {
     case nsINode::ELEMENT_NODE:
-      aWindowSizes.mDOMElementNodesSize += nodeSize;
+      aWindowSizes.mDOMSizes.mDOMElementNodesSize += nodeSize;
       break;
     case nsINode::TEXT_NODE:
-      aWindowSizes.mDOMTextNodesSize += nodeSize;
+      aWindowSizes.mDOMSizes.mDOMTextNodesSize += nodeSize;
       break;
     case nsINode::CDATA_SECTION_NODE:
-      aWindowSizes.mDOMCDATANodesSize += nodeSize;
+      aWindowSizes.mDOMSizes.mDOMCDATANodesSize += nodeSize;
       break;
     case nsINode::COMMENT_NODE:
-      aWindowSizes.mDOMCommentNodesSize += nodeSize;
+      aWindowSizes.mDOMSizes.mDOMCommentNodesSize += nodeSize;
       break;
     default:
-      aWindowSizes.mDOMOtherSize += nodeSize;
+      aWindowSizes.mDOMSizes.mDOMOtherSize += nodeSize;
       break;
   }
 

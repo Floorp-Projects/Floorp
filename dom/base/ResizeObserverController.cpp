@@ -220,7 +220,7 @@ void ResizeObserverController::AddSizeOfIncludingThis(
   size += mResizeObservers.ShallowSizeOfExcludingThis(mallocSizeOf);
   // TODO(emilio): Measure the observers individually or something? They aren't
   // really owned by us.
-  aSizes.mDOMResizeObserverControllerSize += size;
+  aSizes.mDOMSizes.mDOMResizeObserverControllerSize += size;
 }
 
 }  // namespace mozilla::dom

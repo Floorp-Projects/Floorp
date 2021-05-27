@@ -205,6 +205,54 @@ static void ReportCount(const nsCString& aBasePath, const char* aPathTail,
                aHandleReport, aData);
 }
 
+static void ReportDOMSize(const nsCString& aBasePath,
+                          nsDOMSizes& aTotalDOMSizes,
+                          nsIHandleReportCallback* aHandleReport,
+                          nsISupports* aData, nsDOMSizes aDOMSizes) {
+#define REPORT_DOM_SIZE(_windowPath, _pathTail, _field, _desc) \
+  ReportSize(_windowPath, _pathTail, aDOMSizes._field,         \
+             nsLiteralCString(_desc), aHandleReport, aData);   \
+  aTotalDOMSizes._field += aDOMSizes._field;
+
+  REPORT_DOM_SIZE(aBasePath, "/dom/element-nodes", mDOMElementNodesSize,
+                  "Memory used by the element nodes in a window's DOM.");
+
+  REPORT_DOM_SIZE(aBasePath, "/dom/text-nodes", mDOMTextNodesSize,
+                  "Memory used by the text nodes in a window's DOM.");
+
+  REPORT_DOM_SIZE(aBasePath, "/dom/cdata-nodes", mDOMCDATANodesSize,
+                  "Memory used by the CDATA nodes in a window's DOM.");
+
+  REPORT_DOM_SIZE(aBasePath, "/dom/comment-nodes", mDOMCommentNodesSize,
+                  "Memory used by the comment nodes in a window's DOM.");
+
+  REPORT_DOM_SIZE(
+      aBasePath, "/dom/event-targets", mDOMEventTargetsSize,
+      "Memory used by the event targets table in a window's DOM, and "
+      "the objects it points to, which include XHRs.");
+
+  REPORT_DOM_SIZE(aBasePath, "/dom/performance/user-entries",
+                  mDOMPerformanceUserEntries,
+                  "Memory used for performance user entries.");
+
+  REPORT_DOM_SIZE(aBasePath, "/dom/performance/resource-entries",
+                  mDOMPerformanceResourceEntries,
+                  "Memory used for performance resource entries.");
+
+  REPORT_DOM_SIZE(aBasePath, "/dom/media-query-lists", mDOMMediaQueryLists,
+                  "Memory used by MediaQueryList objects for the window's "
+                  "document.");
+
+  REPORT_DOM_SIZE(aBasePath, "/dom/resize-observers",
+                  mDOMResizeObserverControllerSize,
+                  "Memory used for resize observers.");
+
+  REPORT_DOM_SIZE(aBasePath, "/dom/other", mDOMOtherSize,
+                  "Memory used by a window's DOM that isn't measured by the "
+                  "other 'dom/' numbers.");
+#undef REPORT_DOM_SIZE
+}
+
 static void CollectWindowReports(nsGlobalWindowInner* aWindow,
                                  nsWindowSizes* aWindowTotalSizes,
                                  nsTHashSet<uint64_t>* aGhostWindowIDs,
@@ -279,39 +327,8 @@ static void CollectWindowReports(nsGlobalWindowInner* aWindow,
   nsWindowSizes windowSizes(state);
   aWindow->AddSizeOfIncludingThis(windowSizes);
 
-  REPORT_SIZE("/dom/element-nodes", mDOMElementNodesSize,
-              "Memory used by the element nodes in a window's DOM.");
-
-  REPORT_SIZE("/dom/text-nodes", mDOMTextNodesSize,
-              "Memory used by the text nodes in a window's DOM.");
-
-  REPORT_SIZE("/dom/cdata-nodes", mDOMCDATANodesSize,
-              "Memory used by the CDATA nodes in a window's DOM.");
-
-  REPORT_SIZE("/dom/comment-nodes", mDOMCommentNodesSize,
-              "Memory used by the comment nodes in a window's DOM.");
-
-  REPORT_SIZE("/dom/event-targets", mDOMEventTargetsSize,
-              "Memory used by the event targets table in a window's DOM, and "
-              "the objects it points to, which include XHRs.");
-
-  REPORT_SIZE("/dom/performance/user-entries", mDOMPerformanceUserEntries,
-              "Memory used for performance user entries.");
-
-  REPORT_SIZE("/dom/performance/resource-entries",
-              mDOMPerformanceResourceEntries,
-              "Memory used for performance resource entries.");
-
-  REPORT_SIZE("/dom/media-query-lists", mDOMMediaQueryLists,
-              "Memory used by MediaQueryList objects for the window's "
-              "document.");
-
-  REPORT_SIZE("/dom/resize-observers", mDOMResizeObserverControllerSize,
-              "Memory used for resize observers.");
-
-  REPORT_SIZE("/dom/other", mDOMOtherSize,
-              "Memory used by a window's DOM that isn't measured by the "
-              "other 'dom/' numbers.");
+  ReportDOMSize(windowPath, aWindowTotalSizes->mDOMSizes, aHandleReport, aData,
+                windowSizes.mDOMSizes);
 
   REPORT_SIZE("/layout/style-sheets", mLayoutStyleSheetsSize,
               "Memory used by document style sheets within a window.");
@@ -562,29 +579,31 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
                           aData);
 
   REPORT("window-objects/dom/element-nodes",
-         windowTotalSizes.mDOMElementNodesSize,
+         windowTotalSizes.mDOMSizes.mDOMElementNodesSize,
          "This is the sum of all windows' 'dom/element-nodes' numbers.");
 
-  REPORT("window-objects/dom/text-nodes", windowTotalSizes.mDOMTextNodesSize,
+  REPORT("window-objects/dom/text-nodes",
+         windowTotalSizes.mDOMSizes.mDOMTextNodesSize,
          "This is the sum of all windows' 'dom/text-nodes' numbers.");
 
-  REPORT("window-objects/dom/cdata-nodes", windowTotalSizes.mDOMCDATANodesSize,
+  REPORT("window-objects/dom/cdata-nodes",
+         windowTotalSizes.mDOMSizes.mDOMCDATANodesSize,
          "This is the sum of all windows' 'dom/cdata-nodes' numbers.");
 
   REPORT("window-objects/dom/comment-nodes",
-         windowTotalSizes.mDOMCommentNodesSize,
+         windowTotalSizes.mDOMSizes.mDOMCommentNodesSize,
          "This is the sum of all windows' 'dom/comment-nodes' numbers.");
 
   REPORT("window-objects/dom/event-targets",
-         windowTotalSizes.mDOMEventTargetsSize,
+         windowTotalSizes.mDOMSizes.mDOMEventTargetsSize,
          "This is the sum of all windows' 'dom/event-targets' numbers.");
 
   REPORT("window-objects/dom/performance",
-         windowTotalSizes.mDOMPerformanceUserEntries +
-             windowTotalSizes.mDOMPerformanceResourceEntries,
+         windowTotalSizes.mDOMSizes.mDOMPerformanceUserEntries +
+             windowTotalSizes.mDOMSizes.mDOMPerformanceResourceEntries,
          "This is the sum of all windows' 'dom/performance/' numbers.");
 
-  REPORT("window-objects/dom/other", windowTotalSizes.mDOMOtherSize,
+  REPORT("window-objects/dom/other", windowTotalSizes.mDOMSizes.mDOMOtherSize,
          "This is the sum of all windows' 'dom/other' numbers.");
 
   REPORT("window-objects/layout/style-sheets",
