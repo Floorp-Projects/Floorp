@@ -123,6 +123,7 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
       hasDestructuringArgs(false),
       hasDuplicateParameters(false),
       hasExprBody_(false),
+      allowReturn_(true),
       isFunctionFieldCopiedToStencil(false),
       isInitialCompilation(isInitialCompilation),
       isStandalone(false) {}
@@ -186,9 +187,14 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
       thisBinding_ = ThisBinding::Function;
     }
 
-    if (kind == FunctionSyntaxKind::FieldInitializer) {
+    if (kind == FunctionSyntaxKind::FieldInitializer ||
+        kind == FunctionSyntaxKind::StaticClassBlock) {
       setSyntheticFunction();
       allowArguments_ = false;
+      if (kind == FunctionSyntaxKind::StaticClassBlock) {
+        allowSuperCall_ = false;
+        allowReturn_ = false;
+      }
     }
   }
 

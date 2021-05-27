@@ -657,8 +657,8 @@ class ParserAnyCharsAccess {
 };
 
 // Specify a value for an ES6 grammar parametrization.  We have no enum for
-// [Return] because its behavior is exactly equivalent to checking whether
-// we're in a function box -- easier and simpler than passing an extra
+// [Return] because its behavior is almost exactly equivalent to checking
+// whether we're in a function box -- easier and simpler than passing an extra
 // parameter everywhere.
 enum YieldHandling { YieldIsName, YieldIsKeyword };
 enum InHandling { InAllowed, InProhibited };
@@ -1223,6 +1223,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   // Parse a function body.  Pass StatementListBody if the body is a list of
   // statements; pass ExpressionBody if the body is a single expression.
+  //
+  // Don't include opening LeftCurly token when invoking.
   enum FunctionBodyType { StatementListBody, ExpressionBody };
   LexicalScopeNodeType functionBody(InHandling inHandling,
                                     YieldHandling yieldHandling,
@@ -1265,6 +1267,9 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
     // The number of static class fields.
     size_t staticFields = 0;
 
+    // The number of static blocks
+    size_t staticBlocks = 0;
+
     // The number of static class fields with computed property names.
     size_t staticFieldKeys = 0;
 
@@ -1298,6 +1303,10 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       TokenPos propNamePos, Node name, TaggedParserAtomIndex atom,
       ClassInitializedMembers& classInitializedMembers, bool isStatic,
       HasHeritage hasHeritage);
+
+  FunctionNodeType staticClassBlock(
+      ClassInitializedMembers& classInitializedMembers);
+
   FunctionNodeType synthesizeConstructor(TaggedParserAtomIndex className,
                                          TokenPos synthesizedBodyPos,
                                          HasHeritage hasHeritage);
