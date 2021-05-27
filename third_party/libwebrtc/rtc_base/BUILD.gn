@@ -1022,12 +1022,12 @@ rtc_library("rtc_base") {
     defines += [ "_CRT_NONSTDC_NO_DEPRECATE" ]
   }
 
-  #if (is_posix || is_fuchsia) {
-  #  sources += [
-  #    "ifaddrs_converter.cc",
-  #    "ifaddrs_converter.h",
-  #  ]
-  #}
+  if (is_posix || is_fuchsia) {
+    sources += [
+      "ifaddrs_converter.cc",
+      "ifaddrs_converter.h",
+    ]
+  }
 
   if (is_nacl) {
     public_deps +=  # no-presubmit-check TODO(webrtc:8603)
