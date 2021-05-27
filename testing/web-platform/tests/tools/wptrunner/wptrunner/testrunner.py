@@ -254,7 +254,7 @@ class BrowserManager(object):
 
 class _RunnerManagerState(object):
     before_init = namedtuple("before_init", [])
-    initializing = namedtuple("initializing",
+    initializing = namedtuple("initializing_browser",
                               ["test", "test_group", "group_metadata", "failure_count"])
     running = namedtuple("running", ["test", "test_group", "group_metadata"])
     restarting = namedtuple("restarting", ["test", "test_group", "group_metadata"])

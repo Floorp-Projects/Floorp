@@ -1,12 +1,11 @@
 // META: script=/common/get-host-info.sub.js
-// META: script=./resources/checker.js
 // META: script=./resources/common.js
 // META: timeout=long
 'use strict';
 
-promise_test(async testCase => {
-  assert_true(self.crossOriginIsolated);
+assert_true(self.crossOriginIsolated);
 
+promise_test(async testCase => {
   const BYTES_PER_WORKER = 10 * 1024 * 1024;
   const worker_url = await createWorker(BYTES_PER_WORKER);
   const result = await performance.measureUserAgentSpecificMemory();
@@ -19,7 +18,7 @@ promise_test(async testCase => {
     },
     {
       url: worker_url,
-      scope: 'DedicatedWorkerGlobalScope',
+      scope: 'DedicatedWindow',
       container: null,
     },
   ]);

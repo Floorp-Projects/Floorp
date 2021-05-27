@@ -66,6 +66,7 @@ def env_options():
 
 
 class EdgeBrowser(Browser):
+    used_ports = set()
     init_timeout = 60
 
     def __init__(self, logger, webdriver_binary,

@@ -1,11 +1,9 @@
-from typing import ClassVar, List, Type
-
 exit_unclean = object()
 exit_clean = object()
 
 
 class Step(object):
-    provides = []  # type: ClassVar[List[str]]
+    provides = []
 
     def __init__(self, logger):
         self.logger = logger
@@ -47,7 +45,7 @@ class Step(object):
 
 
 class StepRunner(object):
-    steps = []  # type: ClassVar[List[Type[Step]]]
+    steps = []
 
     def __init__(self, logger, state):
         """Class that runs a specified series of Steps with a common State"""
