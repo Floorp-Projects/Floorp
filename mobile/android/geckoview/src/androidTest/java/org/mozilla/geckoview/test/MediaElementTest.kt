@@ -17,9 +17,6 @@ import org.junit.Assume.assumeTrue
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.GeckoRuntimeSettings
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TEST_ENDPOINT
 
 @RunWith(AndroidJUnit4::class)
 @TimeoutMillis(45000)
@@ -200,6 +197,9 @@ class MediaElementTest : BaseSessionTest() {
     }
 
     private fun fullscreenMedia(path: String) {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
         waitUntilVideoReady(path)
         mainSession.evaluateJS("document.querySelector('video').requestFullscreen()")
         var waiting = true
@@ -217,6 +217,9 @@ class MediaElementTest : BaseSessionTest() {
 
     @Test
     fun oggPlayMedia() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
         playMedia(VIDEO_OGG_PATH)
     }
 
@@ -228,16 +231,23 @@ class MediaElementTest : BaseSessionTest() {
 
     @Test
     fun oggPauseMedia() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
         pauseMedia(VIDEO_OGG_PATH)
     }
 
     @Test
     fun oggTimeMedia() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
         timeMedia(VIDEO_OGG_PATH, 0.2)
     }
 
     @Test
     fun oggMetadataMedia() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
         val meta = waitForMetadata(VIDEO_OGG_PATH)
         assertThat("Current source is set", meta?.currentSource,
                 equalTo("$TEST_ENDPOINT/assets/www/videos/video.ogg"))
@@ -252,16 +262,22 @@ class MediaElementTest : BaseSessionTest() {
 
     @Test
     fun oggSeekMedia() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
         seekMedia(VIDEO_OGG_PATH, 2.0)
     }
 
     @Test
     fun oggFullscreenMedia() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
         fullscreenMedia(VIDEO_OGG_PATH)
     }
 
     @Test
     fun webmPlayMedia() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
         playMedia(VIDEO_WEBM_PATH)
     }
 
@@ -274,11 +290,15 @@ class MediaElementTest : BaseSessionTest() {
 
     @Test
     fun webmPauseMedia() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
         pauseMedia(VIDEO_WEBM_PATH)
     }
 
     @Test
     fun webmTimeMedia() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
         timeMedia(VIDEO_WEBM_PATH, 0.2)
     }
 
@@ -297,6 +317,8 @@ class MediaElementTest : BaseSessionTest() {
 
     @Test
     fun webmSeekMedia() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
         seekMedia(VIDEO_WEBM_PATH, 0.2)
     }
 
@@ -317,6 +339,9 @@ class MediaElementTest : BaseSessionTest() {
 
     @Test
     fun webmVolumeMedia() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
         val media = waitUntilVideoReady(VIDEO_WEBM_PATH)
         val volumeLevel = 0.5
         val volumeLevel2 = 0.75
