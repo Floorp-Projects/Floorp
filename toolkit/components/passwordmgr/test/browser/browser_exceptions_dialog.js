@@ -70,22 +70,14 @@ add_task(async function test_block_button_with_enter_key() {
   await BrowserTestUtils.waitForEvent(dialog, "load");
   await new Promise(resolve => waitForFocus(resolve, dialog));
   let btnBlock = dialog.document.getElementById("btnBlock");
-  let btnCookieSession = dialog.document.getElementById("btnCookieSession");
-  let btnHttpsOnlySession = dialog.document.getElementById(
-    "btnHttpsOnlySession"
-  );
+  let btnSession = dialog.document.getElementById("btnSession");
   let btnAllow = dialog.document.getElementById("btnAllow");
 
   ok(!btnBlock.hidden, "Block button is visible");
-  ok(btnCookieSession.hidden, "Cookie session button is not visible");
-  ok(btnHttpsOnlySession.hidden, "HTTPS-Only session button is not visible");
+  ok(btnSession.hidden, "Session button is not visible");
   ok(btnAllow.hidden, "Allow button is not visible");
   ok(btnBlock.disabled, "Block button is initially disabled");
-  ok(btnCookieSession.disabled, "Cookie session button is initially disabled");
-  ok(
-    btnHttpsOnlySession.disabled,
-    "HTTPS-Only session button is initially disabled"
-  );
+  ok(btnSession.disabled, "Session button is initially disabled");
   ok(btnAllow.disabled, "Allow button is initially disabled");
 
   EventUtils.sendString(LOGIN_HOST, dialog);
@@ -95,12 +87,8 @@ add_task(async function test_block_button_with_enter_key() {
     "Block button is enabled after entering text in the URL input"
   );
   ok(
-    btnCookieSession.disabled,
-    "Cookie session button is still disabled after entering text in the URL input"
-  );
-  ok(
-    btnHttpsOnlySession.disabled,
-    "HTTPS-Only session button is still disabled after entering text in the URL input"
+    btnSession.disabled,
+    "Session button is still disabled after entering text in the URL input"
   );
   ok(
     btnAllow.disabled,
