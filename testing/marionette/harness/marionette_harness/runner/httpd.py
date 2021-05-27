@@ -123,10 +123,10 @@ class FixtureServer(object):
             key_file=ssl_key,
         )
 
-    def start(self, block=False):
+    def start(self):
         if self.is_alive:
             return
-        self._httpd.start(block=block)
+        self._httpd.start()
 
     def wait(self):
         if not self.is_alive:
