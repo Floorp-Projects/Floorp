@@ -247,6 +247,18 @@ int TestStunServer::TryOpenListenSocket(nr_local_addr* addr, uint16_t port) {
   return 0;
 }
 
+static int addressFamilyToIpVersion(int address_family) {
+  switch (address_family) {
+    case AF_INET:
+      return NR_IPV4;
+    case AF_INET6:
+      return NR_IPV6;
+    default:
+      MOZ_CRASH();
+  }
+  return NR_IPV4;
+}
+
 int TestStunServer::Initialize(int address_family) {
   static const size_t max_addrs = 100;
   nr_local_addr addrs[max_addrs];
@@ -273,7 +285,7 @@ int TestStunServer::Initialize(int address_family) {
   }
 
   for (i = 0; i < addr_ct; ++i) {
-    if (addrs[i].addr.addr->sa_family == address_family) {
+    if (addrs[i].addr.ip_version == addressFamilyToIpVersion(address_family)) {
       break;
     }
   }
