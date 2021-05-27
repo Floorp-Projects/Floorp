@@ -2019,6 +2019,20 @@ mozilla::ipc::IPCResult ContentChild::RecvClearStyleSheetCache(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvClearImageCacheFromPrincipal(
+    nsIPrincipal* aPrincipal) {
+  imgLoader* loader;
+  if (aPrincipal->OriginAttributesRef().mPrivateBrowsingId ==
+      nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID) {
+    loader = imgLoader::NormalLoader();
+  } else {
+    loader = imgLoader::PrivateBrowsingLoader();
+  }
+
+  loader->RemoveEntriesFromPrincipal(aPrincipal);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvClearImageCache(
     const bool& privateLoader, const bool& chrome) {
   imgLoader* loader = privateLoader ? imgLoader::PrivateBrowsingLoader()
