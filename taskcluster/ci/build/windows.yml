@@ -261,6 +261,7 @@ win64-plain/debug:
             - win64-nasm
             - win64-cbindgen
             - win64-winchecksec
+            - win64-mozmake
     optimization:
         skip-unless-expanded: null
 
@@ -357,6 +358,7 @@ win64-plain/opt:
             - win64-node
             - win64-cbindgen
             - win64-winchecksec
+            - win64-mozmake
     optimization:
         skip-unless-expanded: null
 
@@ -723,6 +725,7 @@ win32-rusttests/opt:
             - win64-nasm
             - win64-node
             - win64-winchecksec
+            - win64-mozmake
     optimization:
         test-inclusive: [rusttests]
 
@@ -766,6 +769,7 @@ win32-rusttests/debug:
             - win64-nasm
             - win64-node
             - win64-winchecksec
+            - win64-mozmake
     optimization:
         test-inclusive: [rusttests]
 
@@ -806,6 +810,7 @@ win64-rusttests/opt:
             - win64-nasm
             - win64-node
             - win64-winchecksec
+            - win64-mozmake
     optimization:
         test-inclusive: [rusttests]
 
@@ -846,6 +851,7 @@ win64-rusttests/debug:
             - win64-nasm
             - win64-node
             - win64-winchecksec
+            - win64-mozmake
     optimization:
         test-inclusive: [rusttests]
 
@@ -894,6 +900,7 @@ win64-ccov/opt:
             - win64-nasm
             - win64-node
             - win64-winchecksec
+            - win64-mozmake
 
 win64-asan/debug:
     description: "Win64 Debug ASAN"
