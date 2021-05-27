@@ -2346,7 +2346,22 @@ void DocAccessible::DoARIAOwnsRelocation(LocalAccessible* aOwner) {
     // Make an attempt to create an accessible if it wasn't created yet.
     if (!child) {
       // An owned child cannot be an ancestor of the owner.
-      if (aOwner->Elm()->IsInclusiveDescendantOf(childEl)) {
+      bool ok = true;
+      bool check = true;
+      for (LocalAccessible* parent = aOwner; parent && !parent->IsDoc();
+           parent = parent->LocalParent()) {
+        if (check) {
+          if (parent->Elm()->IsInclusiveDescendantOf(childEl)) {
+            ok = false;
+            break;
+          }
+        }
+        // We need to do the DOM descendant check again whenever the DOM
+        // lineage changes. If parent is relocated, that means the next
+        // ancestor will have a different DOM lineage.
+        check = parent->IsRelocated();
+      }
+      if (!ok) {
         continue;
       }
 

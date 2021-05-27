@@ -742,6 +742,26 @@
       let evt = await evtPromise;
       is(evt.accessible.parent.name, "t11_owner");
 
+      // Test owning an ancestor which isn't created yet.
+      testAccessibleTree("t12_container", { SECTION: [ // t12_container
+        { SECTION: [ // t12b
+          { SECTION: [] }, // t12c
+        ] },
+        { SECTION: [] }, // t12d
+      ] });
+      // Owning t12a would create a cycle, so we expect it to do nothing.
+      // We own t12d so we get an event when aria-owns relocation is complete.
+      evtPromise = PromEvents.waitForEvent(EVENT_SHOW, "t12d");
+      getNode("t12c").setAttribute("aria-owns", "t12a t12d");
+      await evtPromise;
+      testAccessibleTree("t12_container", { SECTION: [ // t12_container
+        { SECTION: [ // t12b
+          { SECTION: [ // t12c
+            { SECTION: [] }, // t12d
+          ] },
+        ] },
+      ] });
+
       SimpleTest.finish();
     }
 
@@ -819,6 +839,13 @@
     <div aria-owns="t11_child" aria-label="t11_owner"></div>
   </div>
 
+  <div  id="t12_container">
+    <span id="t12a">
+      <div id="t12b" aria-owns="t12c"></div>
+    </span>
+    <div id="t12c"></div>
+    <div id="t12d"></div>
+  </div>
 </body>
 
 </html>
