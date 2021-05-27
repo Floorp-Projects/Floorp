@@ -1660,7 +1660,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       panInput.mHandledByAPZ = WillHandleInput(panInput);
       if (!panInput.mHandledByAPZ) {
         if (InputBlockState* block = mInputQueue->GetCurrentPanGestureBlock()) {
-          if (state.mHit.mTargetApzc &&
+          if (block &&
               (panInput.mType == PanGestureInput::PANGESTURE_END ||
                panInput.mType == PanGestureInput::PANGESTURE_CANCELLED)) {
             // If we've already been processing a pan gesture in an APZC but
