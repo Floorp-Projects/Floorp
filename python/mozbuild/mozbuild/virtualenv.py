@@ -135,6 +135,7 @@ class VirtualenvManager(VirtualenvHelper):
             self.topsrcdir, "third_party", "python", "virtualenv", "virtualenv.py"
         )
 
+    @property
     def version_info(self):
         return eval(
             subprocess.check_output(
@@ -282,7 +283,6 @@ class VirtualenvManager(VirtualenvHelper):
             )
 
         self.write_exe_info(python)
-        self._disable_pip_outdated_warning()
 
         return self.virtualenv_root
 
@@ -612,55 +612,6 @@ class VirtualenvManager(VirtualenvHelper):
             )
 
         return self._run_pip(args)
-
-    def _disable_pip_outdated_warning(self):
-        """Disables the pip outdated warning by changing pip's 'installer'
-
-        "pip" has behaviour to ensure that it doesn't print it's "outdated"
-        warning if it's part of a Linux distro package. This is because
-        Linux distros generally have a slightly out-of-date pip package
-        that they know to be stable, and users aren't always able to
-        (or want to) update it.
-
-        This behaviour works by checking if the "pip" installer
-        (encoded in the dist-info/INSTALLER file) is "pip" itself,
-        or a different value (e.g.: a distro).
-
-        We can take advantage of this behaviour by telling pip
-        that it was installed by "mach", so it won't print the
-        warning.
-
-        https://github.com/pypa/pip/blob/5ee933aab81273da3691c97f2a6e7016ecbe0ef9/src/pip/_internal/self_outdated_check.py#L100-L101 # noqa F401
-        """
-
-        # Defer "distutils" import until this function is called so that
-        # "mach bootstrap" doesn't fail due to Linux distro python-distutils
-        # package not being installed.
-        # By the time this function is called, "distutils" must be installed
-        # because it's needed by the "virtualenv" package.
-        from distutils import dist
-
-        distribution = dist.Distribution({"script_args": "--no-user-cfg"})
-        installer = distribution.get_command_obj("install")
-        installer.prefix = self.virtualenv_root
-        installer.finalize_options()
-
-        # Path to virtualenv's "site-packages" directory
-        site_packages = installer.install_purelib
-
-        pip_dist_info = next(
-            (
-                file
-                for file in os.listdir(site_packages)
-                if file.startswith("pip-") and file.endswith(".dist-info")
-            ),
-            None,
-        )
-        if not pip_dist_info:
-            raise Exception("Failed to find pip dist-info in new virtualenv")
-
-        with open(os.path.join(site_packages, pip_dist_info, "INSTALLER"), "w") as file:
-            file.write("mach")
 
     def _run_pip(self, args):
         env = os.environ.copy()
