@@ -7,6 +7,8 @@
 #ifndef util_EnumFlags_h
 #define util_EnumFlags_h
 
+#include "mozilla/Attributes.h"
+
 #include <initializer_list>
 #include <type_traits>
 
