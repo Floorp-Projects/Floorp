@@ -11,10 +11,12 @@
 #  error Must include QMResult.h first
 #endif
 
+#include "mozilla/Result.h"
 #ifdef QM_ERROR_STACKS_ENABLED
-#  include "mozilla/Result.h"
 #  include "mozilla/ResultVariant.h"
 #  include "nsError.h"
+#else
+#  include "mozilla/ResultExtensions.h"
 #endif
 
 namespace mozilla {
