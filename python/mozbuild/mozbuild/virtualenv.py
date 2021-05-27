@@ -292,7 +292,7 @@ class VirtualenvManager(VirtualenvHelper):
             packages = [line.rstrip().split(":") for line in fh]
         return packages
 
-    def populate(self, sitecustomize=None):
+    def populate(self, ignore_sitecustomize=False):
         """Populate the virtualenv.
 
         The manifest file consists of colon-delimited fields. The first field
@@ -336,10 +336,6 @@ class VirtualenvManager(VirtualenvHelper):
         is_thunderbird = os.path.exists(os.path.join(self.topsrcdir, "comm"))
         packages = self.packages()
         python_lib = distutils.sysconfig.get_python_lib()
-        do_close = not bool(sitecustomize)
-        sitecustomize = sitecustomize or open(
-            os.path.join(os.path.dirname(python_lib), "sitecustomize.py"), mode="w"
-        )
 
         def handle_package(package):
             if package[0] == "packages.txt":
@@ -354,7 +350,7 @@ class VirtualenvManager(VirtualenvHelper):
                     src,
                     populate_local_paths=self.populate_local_paths,
                 )
-                submanager.populate(sitecustomize=sitecustomize)
+                submanager.populate(ignore_sitecustomize=True)
             elif package[0].endswith(".pth"):
                 assert len(package) == 2
 
@@ -425,16 +421,18 @@ class VirtualenvManager(VirtualenvHelper):
                 handle_package(package)
 
         finally:
-            if do_close:
-                # This hack isn't necessary for Python 3, or for the
-                # out-of-objdir virtualenvs.
-                if self.populate_local_paths and PY2:
+            # This hack isn't necessary for Python 3, or for the
+            # out-of-objdir virtualenvs.
+            if PY2 and self.populate_local_paths and not ignore_sitecustomize:
+                with open(
+                    os.path.join(os.path.dirname(python_lib), "sitecustomize.py"),
+                    mode="w",
+                ) as sitecustomize:
                     sitecustomize.write(
                         "# Importing mach_bootstrap has the side effect of\n"
                         "# installing an import hook\n"
                         "import mach_bootstrap\n"
                     )
-                sitecustomize.close()
 
             os.environ.pop("MACOSX_DEPLOYMENT_TARGET", None)
 
