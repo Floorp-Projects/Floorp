@@ -154,23 +154,30 @@ nr_stun_message_attribute_destroy(nr_stun_message *msg, nr_stun_message_attribut
 int
 nr_stun_message_has_attribute(nr_stun_message *msg, UINT2 type, nr_stun_message_attribute **attribute)
 {
-    nr_stun_message_attribute *attr = 0;
+  nr_stun_message_attribute *attr = 0;
+  nr_stun_message_get_attribute(msg, type, 0, &attr);
 
-    if (attribute)
-        *attribute = 0;
+  if (attribute)
+    *attribute = attr;
 
-    TAILQ_FOREACH(attr, &msg->attributes, entry) {
-        if (attr->type == type)
-            break;
-    }
+  return attr ? 1 : 0;
+}
 
-    if (!attr || attr->invalid)
-        return 0;  /* does not have */
-
-    if (attribute)
+int
+nr_stun_message_get_attribute(nr_stun_message *msg, UINT2 type, UINT2 index, nr_stun_message_attribute **attribute)
+{
+  nr_stun_message_attribute *attr;
+  TAILQ_FOREACH(attr, &msg->attributes, entry) {
+    if (attr->type == type && !attr->invalid) {
+      if (!index) {
         *attribute = attr;
-
-    return 1;  /* has */
+        return 0;
+      }
+      --index;
+    }
+  }
+  *attribute = 0;
+  return R_NOT_FOUND;
 }
 
 #define NR_STUN_MESSAGE_ADD_ATTRIBUTE(__type, __code) \
