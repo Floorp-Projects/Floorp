@@ -10,7 +10,7 @@
 #include "nsHttp.h"
 #include "CacheControlParser.h"
 #include "PLDHashTable.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -24,6 +24,7 @@
 #include "nsJSUtils.h"
 #include <errno.h>
 #include <functional>
+#include "nsLiteralString.h"
 
 namespace mozilla {
 namespace net {
@@ -35,7 +36,7 @@ const nsCString kHttp3Versions[] = {"h3-27"_ns, "h3-28"_ns, "h3-29"_ns,
 
 // define storage for all atoms
 namespace nsHttp {
-#define HTTP_ATOM(_name, _value) nsHttpAtom _name(_value);
+#define HTTP_ATOM(_name, _value) nsHttpAtom _name(nsLiteralCString{_value});
 #include "nsHttpAtomList.h"
 #undef HTTP_ATOM
 }  // namespace nsHttp
@@ -48,124 +49,121 @@ enum {
 };
 #undef HTTP_ATOM
 
-// we keep a linked list of atoms allocated on the heap for easy clean up when
-// the atom table is destroyed.  The structure and value string are allocated
-// as one contiguous block.
+class nsCaseInsentitiveHashKey : public PLDHashEntryHdr {
+ public:
+  using KeyType = const nsACString&;
+  using KeyTypePointer = const nsACString*;
 
-struct HttpHeapAtom {
-  struct HttpHeapAtom* next;
-  char value[1];
+  explicit nsCaseInsentitiveHashKey(KeyTypePointer aStr) : mStr(*aStr) {
+    // take it easy just deal HashKey
+  }
+
+  nsCaseInsentitiveHashKey(const nsCaseInsentitiveHashKey&) = delete;
+  nsCaseInsentitiveHashKey(nsCaseInsentitiveHashKey&& aToMove) noexcept
+      : PLDHashEntryHdr(std::move(aToMove)), mStr(aToMove.mStr) {}
+  ~nsCaseInsentitiveHashKey() = default;
+
+  KeyType GetKey() const { return mStr; }
+  bool KeyEquals(const KeyTypePointer aKey) const {
+    return mStr.Equals(*aKey, nsCaseInsensitiveCStringComparator);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(const KeyTypePointer aKey) {
+    nsAutoCString tmKey(*aKey);
+    ToLowerCase(tmKey);
+    return mozilla::HashString(tmKey);
+  }
+  enum { ALLOW_MEMMOVE = false };
+
+  // To avoid double-counting, only measure the string if it is unshared.
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    return GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  }
+
+ private:
+  const nsCString mStr;
 };
 
-static PLDHashTable* sAtomTable;
-static struct HttpHeapAtom* sHeapAtoms = nullptr;
-static Mutex* sLock = nullptr;
+static StaticDataMutex<nsTHashtable<nsCaseInsentitiveHashKey>> sAtomTable(
+    "nsHttp::sAtomTable");
 
-HttpHeapAtom* NewHeapAtom(const char* value) {
-  int len = strlen(value);
-
-  HttpHeapAtom* a = reinterpret_cast<HttpHeapAtom*>(malloc(sizeof(*a) + len));
-  if (!a) return nullptr;
-  memcpy(a->value, value, len + 1);
-
-  // add this heap atom to the list of all heap atoms
-  a->next = sHeapAtoms;
-  sHeapAtoms = a;
-
-  return a;
-}
-
-// Hash string ignore case, based on PL_HashString
-static PLDHashNumber StringHash(const void* key) {
-  PLDHashNumber h = 0;
-  for (const char* s = reinterpret_cast<const char*>(key); *s; ++s)
-    h = AddToHash(h, nsCRT::ToLower(*s));
-  return h;
-}
-
-static bool StringCompare(const PLDHashEntryHdr* entry, const void* testKey) {
-  const void* entryKey = reinterpret_cast<const PLDHashEntryStub*>(entry)->key;
-
-  return nsCRT::strcasecmp(reinterpret_cast<const char*>(entryKey),
-                           reinterpret_cast<const char*>(testKey)) == 0;
-}
-
-static const PLDHashTableOps ops = {StringHash, StringCompare,
-                                    PLDHashTable::MoveEntryStub,
-                                    PLDHashTable::ClearEntryStub, nullptr};
+// This is set to true in DestroyAtomTable so we don't try to repopulate the
+// table if ResolveAtom gets called during shutdown for some reason.
+static Atomic<bool> sTableDestroyed{false};
 
 // We put the atoms in a hash table for speedy lookup.. see ResolveAtom.
 namespace nsHttp {
-nsresult CreateAtomTable() {
-  MOZ_ASSERT(!sAtomTable, "atom table already initialized");
 
-  if (!sLock) {
-    sLock = new Mutex("nsHttp.sLock");
+nsresult CreateAtomTable(nsTHashtable<nsCaseInsentitiveHashKey>& base) {
+  if (sTableDestroyed) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
-
-  // The initial length for this table is a value greater than the number of
-  // known atoms (NUM_HTTP_ATOMS) because we expect to encounter a few random
-  // headers right off the bat.
-  sAtomTable =
-      new PLDHashTable(&ops, sizeof(PLDHashEntryStub), NUM_HTTP_ATOMS + 10);
-
   // fill the table with our known atoms
-  const char* const atoms[] = {
-#define HTTP_ATOM(_name, _value) _name._val,
+  const nsHttpAtom* atoms[] = {
+#define HTTP_ATOM(_name, _value) &(_name),
 #include "nsHttpAtomList.h"
 #undef HTTP_ATOM
-      nullptr};
+  };
 
-  for (int i = 0; atoms[i]; ++i) {
-    auto stub =
-        static_cast<PLDHashEntryStub*>(sAtomTable->Add(atoms[i], fallible));
-    if (!stub) return NS_ERROR_OUT_OF_MEMORY;
-
-    MOZ_ASSERT(!stub->key, "duplicate static atom");
-    stub->key = atoms[i];
+  if (!base.IsEmpty()) {
+    return NS_OK;
+  }
+  for (const auto* atom : atoms) {
+    Unused << base.PutEntry(atom->val(), fallible);
   }
 
+  LOG(("Added static atoms to atomTable"));
   return NS_OK;
 }
 
-void DestroyAtomTable() {
-  delete sAtomTable;
-  sAtomTable = nullptr;
-
-  while (sHeapAtoms) {
-    HttpHeapAtom* next = sHeapAtoms->next;
-    free(sHeapAtoms);
-    sHeapAtoms = next;
-  }
-
-  delete sLock;
-  sLock = nullptr;
+nsresult CreateAtomTable() {
+  LOG(("CreateAtomTable"));
+  auto atomTable = sAtomTable.Lock();
+  return CreateAtomTable(atomTable.ref());
 }
 
-Mutex* GetLock() { return sLock; }
+void DestroyAtomTable() {
+  LOG(("DestroyAtomTable"));
+  sTableDestroyed = true;
+  auto atomTable = sAtomTable.Lock();
+  atomTable.ref().Clear();
+}
 
 // this function may be called from multiple threads
-nsHttpAtom ResolveAtom(const char* str) {
+nsHttpAtom ResolveAtom(const nsACString& str) {
   nsHttpAtom atom;
-
-  if (!str || !sAtomTable) return atom;
-
-  MutexAutoLock lock(*sLock);
-
-  auto stub = static_cast<PLDHashEntryStub*>(sAtomTable->Add(str, fallible));
-  if (!stub) return atom;  // out of memory
-
-  if (stub->key) {
-    atom._val = reinterpret_cast<const char*>(stub->key);
+  if (str.IsEmpty()) {
     return atom;
   }
 
-  // if the atom could not be found in the atom table, then we'll go
-  // and allocate a new atom on the heap.
-  HttpHeapAtom* heapAtom = NewHeapAtom(str);
-  if (!heapAtom) return atom;  // out of memory
+  auto atomTable = sAtomTable.Lock();
 
-  stub->key = atom._val = heapAtom->value;
+  if (atomTable.ref().IsEmpty()) {
+    if (sTableDestroyed) {
+      NS_WARNING("ResolveAtom called during shutdown");
+      return atom;
+    }
+
+    NS_WARNING("ResolveAtom called before CreateAtomTable");
+    if (NS_FAILED(CreateAtomTable(atomTable.ref()))) {
+      return atom;
+    }
+  }
+
+  // Check if we already have an entry in the table
+  auto* entry = atomTable.ref().GetEntry(str);
+  if (entry) {
+    atom._val = entry->GetKey();
+    return atom;
+  }
+
+  LOG(("Putting %s header into atom table", nsPromiseFlatCString(str).get()));
+  // Put the string in the table. If it works create the atom.
+  entry = atomTable.ref().PutEntry(str, fallible);
+  if (entry) {
+    atom._val = entry->GetKey();
+  }
   return atom;
 }
 
