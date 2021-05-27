@@ -69,6 +69,11 @@ if (AppConstants.MOZ_BACKGROUNDTASKS) {
   gExceptionPaths.push("resource://gre/modules/backgroundtasks/");
 }
 
+// Bug 1710546 https://bugzilla.mozilla.org/show_bug.cgi?id=1710546
+if (AppConstants.NIGHTLY_BUILD) {
+  gExceptionPaths.push("resource://builtin-addons/translations/");
+}
+
 // Each whitelist entry should have a comment indicating which file is
 // referencing the whitelisted file in a way that the test can't detect, or a
 // bug number to remove or use the file if it is indeed currently unreferenced.
