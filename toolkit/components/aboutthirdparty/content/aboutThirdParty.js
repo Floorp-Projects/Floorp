@@ -58,6 +58,9 @@ async function fetchData() {
     module.typeFlags = AboutThirdParty.lookupModuleType(
       module.dllFile?.leafName
     );
+    module.application = AboutThirdParty.lookupApplication(
+      module.dllFile?.path
+    );
   }
 
   for (const [proc, perProc] of Object.entries(data.processes)) {
@@ -166,6 +169,10 @@ function copyDataToClipboard(aData) {
     if (module.companyName) {
       copied.companyName = module.companyName;
     }
+    if (module.application) {
+      copied.applicationName = module.application.name;
+      copied.applicationPublisher = module.application.publisher;
+    }
 
     if (Array.isArray(module.events)) {
       copied.events = module.events.map(event => {
@@ -224,6 +231,18 @@ function visualizeData(aData) {
     }
 
     const modDetailContainer = newCard.querySelector(".module-details");
+
+    if (module.application) {
+      modDetailContainer.appendChild(
+        createDetailRow("third-party-detail-app", module.application.name)
+      );
+      modDetailContainer.appendChild(
+        createDetailRow(
+          "third-party-detail-publisher",
+          module.application.publisher
+        )
+      );
+    }
 
     if (module.fileVersion) {
       modDetailContainer.appendChild(
