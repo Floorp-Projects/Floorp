@@ -31,55 +31,6 @@ namespace wasm {
 
 uint32_t ObservedCPUFeatures();
 
-// Describes the JS scripted caller of a request to compile a wasm module.
-
-struct ScriptedCaller {
-  UniqueChars filename;
-  bool filenameIsURL;
-  unsigned line;
-
-  ScriptedCaller() : filenameIsURL(false), line(0) {}
-};
-
-// Describes all the parameters that control wasm compilation.
-
-struct CompileArgs;
-using MutableCompileArgs = RefPtr<CompileArgs>;
-using SharedCompileArgs = RefPtr<const CompileArgs>;
-
-struct CompileArgs : ShareableBase<CompileArgs> {
-  ScriptedCaller scriptedCaller;
-  UniqueChars sourceMapURL;
-
-  bool baselineEnabled;
-  bool ionEnabled;
-  bool craneliftEnabled;
-  bool debugEnabled;
-  bool forceTiering;
-
-  FeatureArgs features;
-
-  // CompileArgs has two constructors:
-  //
-  // - one through a factory function `build`, which checks that flags are
-  // consistent with each other.
-  // - one that gives complete access to underlying fields.
-  //
-  // You should use the first one in general, unless you have a very good
-  // reason (i.e. no JSContext around and you know which flags have been used).
-
-  static SharedCompileArgs build(JSContext* cx, ScriptedCaller&& scriptedCaller,
-                                 const FeatureOptions& options);
-
-  explicit CompileArgs(ScriptedCaller&& scriptedCaller)
-      : scriptedCaller(std::move(scriptedCaller)),
-        baselineEnabled(false),
-        ionEnabled(false),
-        craneliftEnabled(false),
-        debugEnabled(false),
-        forceTiering(false) {}
-};
-
 // Return the estimated compiled (machine) code size for the given bytecode size
 // compiled at the given tier.
 
