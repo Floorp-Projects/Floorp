@@ -8,7 +8,7 @@ import os
 import sys
 import tempfile
 import unittest
-from StringIO import StringIO
+from io import StringIO
 from os import path
 
 TELEMETRY_ROOT_PATH = path.abspath(
@@ -26,7 +26,7 @@ class TestEventDataJson(unittest.TestCase):
     maxDiff = None
 
     def test_JSON_definitions_generation(self):
-        EVENTS_YAML = """
+        EVENTS_YAML = b"""
 with.optout:
   testme1:
     objects: ["test1"]
