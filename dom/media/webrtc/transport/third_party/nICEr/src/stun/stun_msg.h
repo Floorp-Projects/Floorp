@@ -172,6 +172,8 @@ int nr_stun_message_attribute_destroy(nr_stun_message *msg, nr_stun_message_attr
 
 int nr_stun_message_has_attribute(nr_stun_message *msg, UINT2 type, nr_stun_message_attribute **attribute);
 
+int nr_stun_message_get_attribute(nr_stun_message *msg, UINT2 type, UINT2 index, nr_stun_message_attribute **attribute);
+
 int nr_stun_message_add_alternate_server_attribute(nr_stun_message *msg, nr_transport_addr *alternate_server);
 int nr_stun_message_add_error_code_attribute(nr_stun_message *msg, UINT2 number, char *reason);
 int nr_stun_message_add_fingerprint_attribute(nr_stun_message *msg);
