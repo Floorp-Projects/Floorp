@@ -435,6 +435,13 @@ function setupEnvironment() {
       ["media.getusermedia.screensharing.enabled", true],
       ["media.getusermedia.window.focus_source.enabled", false],
       ["media.recorder.audio_node.enabled", true],
+      ["media.peerconnection.ice.obfuscate_host_addresses", false],
+      ["media.peerconnection.nat_simulator.filtering_type", ""],
+      ["media.peerconnection.nat_simulator.mapping_type", ""],
+      ["media.peerconnection.nat_simulator.block_tcp", false],
+      ["media.peerconnection.nat_simulator.block_udp", false],
+      ["media.peerconnection.nat_simulator.redirect_address", ""],
+      ["media.peerconnection.nat_simulator.redirect_targets", ""],
     ],
   };
 
