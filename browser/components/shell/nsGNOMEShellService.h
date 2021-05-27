@@ -14,6 +14,8 @@
 #  include "nsGNOMEShellSearchProvider.h"
 #endif
 
+class nsIGIOService;
+
 class nsGNOMEShellService final : public nsIGNOMEShellService,
                                   public nsToolkitShellService {
  public:
@@ -30,6 +32,8 @@ class nsGNOMEShellService final : public nsIGNOMEShellService,
 
   bool KeyMatchesAppName(const char* aKeyValue) const;
   bool CheckHandlerMatchesAppName(const nsACString& handler) const;
+  bool IsDefaultForSchemeHelper(const nsACString& aScheme,
+                                nsIGIOService* giovfs) const;
 
 #ifdef MOZ_ENABLE_DBUS
   nsGNOMEShellSearchProvider mSearchProvider;
