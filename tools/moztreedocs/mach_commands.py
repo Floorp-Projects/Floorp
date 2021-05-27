@@ -20,6 +20,7 @@ from pprint import pprint
 
 from mach.registrar import Registrar
 from mozbuild.base import MachCommandBase
+from mozbuild.util import memoize
 from mach.decorators import (
     Command,
     CommandArgument,
@@ -36,13 +37,6 @@ BASE_LINK = "http://gecko-docs.mozilla.org-l1.s3-website.us-west-2.amazonaws.com
 @CommandProvider
 class Documentation(MachCommandBase):
     """Helps manage in-tree documentation."""
-
-    def __init__(self, *args, **kwargs):
-        super(Documentation, self).__init__(*args, **kwargs)
-
-        self._manager = None
-        self._project = None
-        self._version = None
 
     @Command(
         "doc",
@@ -272,12 +266,10 @@ class Documentation(MachCommandBase):
         return sphinx.cmd.build.build_main(args)
 
     def manager(self):
-        if not self._manager:
-            from moztreedocs import manager
+        from moztreedocs import manager
+        return manager
 
-            self._manager = manager
-        return self._manager
-
+    @memoize
     def _read_project_properties(self):
         import imp
 
@@ -291,18 +283,13 @@ class Documentation(MachCommandBase):
         if not project:
             project = conf.project.replace(" ", "_")
 
-        self._project = project
-        self._version = getattr(conf, "version", None)
+        return {"project": project, "version": getattr(conf, "version", None)}
 
     def project(self):
-        if not self._project:
-            self._read_project_properties()
-        return self._project
+        return self._read_project_properties()["project"]
 
     def version(self):
-        if not self._version:
-            self._read_project_properties()
-        return self._version
+        return self._read_project_properties()["version"]
 
     def _node_path(self):
         from mozbuild.nodeutil import find_node_executable
