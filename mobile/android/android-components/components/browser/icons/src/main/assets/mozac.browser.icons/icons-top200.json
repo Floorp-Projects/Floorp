@@ -13,6 +13,18 @@
     },
     {
         "domains": [
+            "amazon.ca"
+        ],
+        "image_url": "https://images-na.ssl-images-amazon.com/images/G/15/anywhere/a_smile_196x196._CB368246733_.png"
+    },
+    {
+        "domains": [
+            "amazon.cn"
+        ],
+        "image_url": "https://images-cn.ssl-images-amazon.com/images/G/28/anywhere/a_smile_196x196._CB368246750_.png"
+    },
+    {
+        "domains": [
             "amazon.co.jp"
         ],
         "image_url": "https://images-fe.ssl-images-amazon.com/images/G/09/anywhere/a_smile_196x196._CB368246755_.png"
@@ -31,9 +43,33 @@
     },
     {
         "domains": [
+            "amazon.com.au"
+        ],
+        "image_url": "https://images-na.ssl-images-amazon.com/images/G/35/anywhere/a_smile_196x196._CB368246314_.png"
+    },
+    {
+        "domains": [
+            "amazon.com.br"
+        ],
+        "image_url": "https://images-na.ssl-images-amazon.com/images/G/32/anywhere/a_smile_196x196._CB368246376_.png"
+    },
+    {
+        "domains": [
+            "amazon.com.mx"
+        ],
+        "image_url": "https://images-na.ssl-images-amazon.com/images/G/33/anywhere/a_smile_196x196._CB368246395_.png"
+    },
+    {
+        "domains": [
             "amazon.de"
         ],
         "image_url": "https://images-eu.ssl-images-amazon.com/images/G/03/anywhere/a_smile_196x196._CB368246539_.png"
+    },
+    {
+        "domains": [
+            "amazon.es"
+        ],
+        "image_url": "https://images-na.ssl-images-amazon.com/images/G/30/anywhere/a_smile_196x196._CB368246671_.png"
     },
     {
         "domains": [
