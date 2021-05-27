@@ -162,7 +162,16 @@ nsresult WebrtcTCPSocket::Open(
 
   mOpened = true;
   nsCString schemePrefix = aUseTls ? "https://"_ns : "http://"_ns;
-  nsCString spec = schemePrefix + aHost;
+  nsCString spec = schemePrefix;
+
+  bool ipv6Literal = aHost.Find(":") != kNotFound;
+  if (ipv6Literal) {
+    spec += "[";
+    spec += aHost;
+    spec += "]";
+  } else {
+    spec += aHost;
+  }
 
   nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
                     .SetSpec(spec)
