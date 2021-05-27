@@ -91,6 +91,7 @@ else
 
   CONFIGS="x64_False_x64_linux x64_True_x64_linux"
   CONFIGS="$CONFIGS x64_False_x86_linux x64_True_x86_linux"
+  CONFIGS="$CONFIGS x64_False_arm64_linux x64_True_arm64_linux"
   CONFIGS="$CONFIGS x64_False_arm_android x64_True_arm_android"
   CONFIGS="$CONFIGS x64_False_x64_android x64_True_x64_android"
   CONFIGS="$CONFIGS x64_False_x86_android x64_True_x86_android"
