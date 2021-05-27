@@ -288,6 +288,8 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         nr_socket *turn_sock;
         nr_ice_candidate *srvflx_cand=0;
 
+        r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Checking TURN server %s %s", ctx->label, ctx->turn_servers[j].turn_server.addr.fqdn, ctx->turn_servers[j].turn_server.addr.as_string);
+
         /* Skip non-UDP */
         if (ctx->turn_servers[j].turn_server.addr.protocol != IPPROTO_UDP)
           continue;
@@ -525,6 +527,8 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         nr_socket *buffered_sock;
         nr_socket *turn_sock;
         nr_ice_socket *turn_isock;
+
+        r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Checking TURN server %s %s", ctx->label, ctx->turn_servers[j].turn_server.addr.fqdn, ctx->turn_servers[j].turn_server.addr.as_string);
 
         /* Skip non-TCP */
         if (ctx->turn_servers[j].turn_server.addr.protocol != IPPROTO_TCP)
