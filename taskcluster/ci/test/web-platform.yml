@@ -55,7 +55,10 @@ web-platform-tests:
                     linux.*64(-shippable)?-qr/opt: 1
                     windows10-64(-shippable)?-qr/opt: 1
                     default: 2
-            default: default
+            default:
+                by-test-platform:
+                    android-em-7.0-x86_64/debug-isolated-process: 3
+                    default: default
     chunks:
         by-test-platform:
             android.*: 16
@@ -183,6 +186,7 @@ web-platform-tests-reftest:
             default:
                 by-test-platform:
                     linux1804-64-asan(-qr)?/opt: 2
+                    android-em-7.0-x86_64/debug-isolated-process: 3
                     default: default
     mozharness:
         extra-options:
