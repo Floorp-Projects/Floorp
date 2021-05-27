@@ -116,7 +116,7 @@ if CONFIG["MOZ_UPDATE_AGENT"]:
 DIRS += ["build"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    DIRS += ["gfx"]
+    DIRS += ["aboutthirdparty", "gfx"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     EXTRA_JS_MODULES += [
