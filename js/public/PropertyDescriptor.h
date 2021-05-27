@@ -35,8 +35,7 @@ class JS_PUBLIC_API JSTracer;
 static constexpr uint8_t JSPROP_ENUMERATE = 0x01;
 
 /**
- * The property is non-writable.  This flag is only valid when neither
- * JSPROP_GETTER nor JSPROP_SETTER is set.
+ * The property is non-writable.  This flag is only valid for data properties.
  */
 static constexpr uint8_t JSPROP_READONLY = 0x02;
 
@@ -45,18 +44,6 @@ static constexpr uint8_t JSPROP_READONLY = 0x02;
  * accessor descriptor, its getter and setter can't be changed.
  */
 static constexpr uint8_t JSPROP_PERMANENT = 0x04;
-
-/* (0x08 is unused; add to JSPROP_FLAGS_MASK if ever defined) */
-
-/** The property has a getter function. */
-static constexpr uint8_t JSPROP_GETTER = 0x10;
-
-/** The property has a setter function. */
-static constexpr uint8_t JSPROP_SETTER = 0x20;
-
-/* (0x40 and 0x80 are unused; add to JSPROP_FLAGS_MASK if ever defined) */
-
-/* (0x1000 is unused; add to JSPROP_FLAGS_MASK if ever defined) */
 
 /**
  * Resolve hooks and enumerate hooks must pass this flag when calling
@@ -70,13 +57,12 @@ static constexpr uint8_t JSPROP_SETTER = 0x20;
  * For enumerate hooks, triggering the resolve hook would be merely silly, not
  * fatal, except in some cases involving non-configurable properties.
  */
-static constexpr unsigned JSPROP_RESOLVING = 0x2000;
+static constexpr unsigned JSPROP_RESOLVING = 0x08;
 
 /* (higher flags are unused; add to JSPROP_FLAGS_MASK if ever defined) */
 
 static constexpr unsigned JSPROP_FLAGS_MASK =
-    JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_GETTER |
-    JSPROP_SETTER | JSPROP_RESOLVING;
+    JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_RESOLVING;
 
 namespace JS {
 
