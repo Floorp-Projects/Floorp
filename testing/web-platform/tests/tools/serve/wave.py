@@ -3,6 +3,7 @@
 import subprocess
 from manifest import manifest
 import localpaths
+import logging
 import os
 
 try:
@@ -12,13 +13,15 @@ except ImportError:
 
 from tools.wpt import wpt
 
+global logger
+logger = logging.getLogger("wave")
 
 def get_route_builder_func(report):
-    def get_route_builder(logger, aliases, config):
+    def get_route_builder(aliases, config=None):
         wave_cfg = None
         if config is not None and "wave" in config:
             wave_cfg = config["wave"]
-        builder = serve.get_route_builder(logger, aliases, config)
+        builder = serve.get_route_builder(aliases)
         logger.debug("Loading manifest ...")
         data = load_manifest()
         from ..wave.wave_server import WaveServer
@@ -74,7 +77,6 @@ def get_parser():
                         help="Flag for enabling the WPTReporting server")
     return parser
 
-
 def run(venv=None, **kwargs):
     if venv is not None:
         venv.start()
@@ -86,10 +88,7 @@ def run(venv=None, **kwargs):
             raise Exception("wptreport is not installed. Please install it from https://github.com/w3c/wptreport")
 
     serve.run(config_cls=ConfigBuilder,
-              route_builder=get_route_builder_func(kwargs["report"]),
-              log_handlers=None,
-              **kwargs)
-
+              route_builder=get_route_builder_func(kwargs["report"]), **kwargs)
 
 # execute wptreport version check
 def is_wptreport_installed():

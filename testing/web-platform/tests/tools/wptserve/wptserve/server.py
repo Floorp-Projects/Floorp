@@ -193,8 +193,7 @@ class WebTestServer(ThreadingMixIn, http.server.HTTPServer):
             Server.config = config
         else:
             self.logger.debug("Using default configuration")
-            with ConfigBuilder(self.logger,
-                               browser_host=server_address[0],
+            with ConfigBuilder(browser_host=server_address[0],
                                ports={"http": [self.server_address[1]]}) as config:
                 assert config["ssl_config"] is None
                 Server.config = config
@@ -230,9 +229,7 @@ class WebTestServer(ThreadingMixIn, http.server.HTTPServer):
              error.errno in self.acceptable_errors)):
             pass  # remote hang up before the result is sent
         else:
-            msg = traceback.format_exc()
-            self.logger.error("%s %s" % (type(error), error))
-            self.logger.info(msg)
+            self.logger.error(traceback.format_exc())
 
 
 class BaseWebTestRequestHandler(http.server.BaseHTTPRequestHandler):
@@ -626,7 +623,6 @@ class Http2WebTestRequestHandler(BaseWebTestRequestHandler):
             self.respond_with_error(response, e)
             response.write()
 
-
 class H2ConnectionGuard(object):
     """H2Connection objects are not threadsafe, so this keeps thread safety"""
     lock = threading.Lock()
@@ -708,6 +704,7 @@ class Http1WebTestRequestHandler(BaseWebTestRequestHandler):
             if response:
                 response.set_error(500, err)
                 response.write()
+            self.logger.error(err)
 
     def get_request_line(self):
         try:
@@ -829,7 +826,7 @@ class WebTestHttpd(object):
                                  "is something already using that port?" % port)
             raise
 
-    def start(self):
+    def start(self, block=False):
         """Start the server.
 
         :param block: True to run the server on the current thread, blocking,
@@ -837,9 +834,12 @@ class WebTestHttpd(object):
         http_type = "http2" if self.http2 else "https" if self.use_ssl else "http"
         self.logger.info("Starting %s server on %s:%s" % (http_type, self.host, self.port))
         self.started = True
-        self.server_thread = threading.Thread(target=self.httpd.serve_forever)
-        self.server_thread.setDaemon(True)  # don't hang on exit
-        self.server_thread.start()
+        if block:
+            self.httpd.serve_forever()
+        else:
+            self.server_thread = threading.Thread(target=self.httpd.serve_forever)
+            self.server_thread.setDaemon(True)  # don't hang on exit
+            self.server_thread.start()
 
     def stop(self):
         """

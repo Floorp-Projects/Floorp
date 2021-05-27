@@ -1,4 +1,3 @@
-import logging
 import os
 import pickle
 import platform
@@ -10,13 +9,10 @@ from . import serve
 from .serve import ConfigBuilder
 
 
-logger = logging.getLogger()
-
 @pytest.mark.skipif(platform.uname()[0] == "Windows",
                     reason="Expected contents are platform-dependent")
 def test_make_hosts_file_nix():
-    with ConfigBuilder(logger,
-                       ports={"http": [8000]},
+    with ConfigBuilder(ports={"http": [8000]},
                        browser_host="foo.bar",
                        alternate_hosts={"alt": "foo2.bar"},
                        subdomains={"a", "b"},
@@ -35,8 +31,7 @@ def test_make_hosts_file_nix():
 @pytest.mark.skipif(platform.uname()[0] != "Windows",
                     reason="Expected contents are platform-dependent")
 def test_make_hosts_file_windows():
-    with ConfigBuilder(logger,
-                       ports={"http": [8000]},
+    with ConfigBuilder(ports={"http": [8000]},
                        browser_host="foo.bar",
                        alternate_hosts={"alt": "foo2.bar"},
                        subdomains={"a", "b"},
@@ -58,21 +53,21 @@ def test_make_hosts_file_windows():
 
 
 def test_ws_doc_root_default():
-    with ConfigBuilder(logger) as c:
+    with ConfigBuilder() as c:
         assert c.doc_root == localpaths.repo_root
         assert c.ws_doc_root == os.path.join(localpaths.repo_root, "websockets", "handlers")
         assert c.paths["ws_doc_root"] == c.ws_doc_root
 
 
 def test_init_ws_doc_root():
-    with ConfigBuilder(logger, ws_doc_root="/") as c:
+    with ConfigBuilder(ws_doc_root="/") as c:
         assert c.doc_root == localpaths.repo_root  # check this hasn't changed
         assert c.ws_doc_root == "/"
         assert c.paths["ws_doc_root"] == c.ws_doc_root
 
 
 def test_set_ws_doc_root():
-    cb = ConfigBuilder(logger)
+    cb = ConfigBuilder()
     cb.ws_doc_root = "/"
     with cb as c:
         assert c.doc_root == localpaths.repo_root  # check this hasn't changed
@@ -82,12 +77,12 @@ def test_set_ws_doc_root():
 
 def test_pickle():
     # Ensure that the config object can be pickled
-    with ConfigBuilder(logger) as c:
+    with ConfigBuilder() as c:
         pickle.dumps(c)
 
 
 def test_alternate_host_unspecified():
-    ConfigBuilder(logger, browser_host="web-platform.test")
+    ConfigBuilder(browser_host="web-platform.test")
 
 
 @pytest.mark.parametrize("primary, alternate", [
@@ -98,7 +93,7 @@ def test_alternate_host_unspecified():
 ])
 def test_alternate_host_invalid(primary, alternate):
     with pytest.raises(ValueError):
-        ConfigBuilder(logger, browser_host=primary, alternate_hosts={"alt": alternate})
+        ConfigBuilder(browser_host=primary, alternate_hosts={"alt": alternate})
 
 @pytest.mark.parametrize("primary, alternate", [
     ("web-platform.test", "not-web-platform.test"),
@@ -106,4 +101,4 @@ def test_alternate_host_invalid(primary, alternate):
     ("web-platform-tests.dev", "web-platform-tests.live"),
 ])
 def test_alternate_host_valid(primary, alternate):
-    ConfigBuilder(logger, browser_host=primary, alternate_hosts={"alt": alternate})
+    ConfigBuilder(browser_host=primary, alternate_hosts={"alt": alternate})
