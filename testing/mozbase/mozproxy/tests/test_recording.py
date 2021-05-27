@@ -3,6 +3,9 @@ from __future__ import absolute_import, print_function
 
 import os
 
+import datetime
+from builtins import Exception
+
 import mozinfo
 import mozunit
 import requests
@@ -22,7 +25,11 @@ def get_status_code(url, playback):
 
 def test_record_and_replay(*args):
     # test setup
-    recording_file = os.path.join(here, "files", "new_recoding.zip")
+
+    basename = "recording"
+    suffix = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+    filename = "_".join([basename, suffix])
+    recording_file = os.path.join(here, "files", ".".join([filename, "zip"]))
 
     # Record part
     config = {
@@ -63,6 +70,12 @@ def test_record_and_replay(*args):
             assert get_status_code(url, playback) == 200
         finally:
             playback.stop()
+
+    # Cleanup
+    try:
+        os.remove(recording_file)
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":
