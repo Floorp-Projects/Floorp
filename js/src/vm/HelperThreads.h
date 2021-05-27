@@ -79,6 +79,10 @@ void DestroyHelperThreadsState();
 // Initialize helper threads unless already initialized.
 bool EnsureHelperThreadsInitialized();
 
+size_t GetHelperThreadCount();
+size_t GetHelperThreadCPUCount();
+size_t GetMaxWasmCompilationThreads();
+
 // This allows the JS shell to override GetCPUCount() when passed the
 // --thread-count=N option.
 bool SetFakeCPUCount(size_t count);
