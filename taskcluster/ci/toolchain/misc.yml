@@ -342,3 +342,19 @@ linux64-makecab:
             - makecab
         toolchain:
             - linux64-rust-1.47
+
+win64-mozmake:
+    description: "mozmake for Windows"
+    treeherder:
+        symbol: TW64(mozmake)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
+    worker-type: b-win2012
+    run:
+        script: build-mozmake.sh
+        toolchain-artifact: public/build/mozmake.tar.bz2
+        tooltool-downloads: internal
+    fetches:
+        fetch:
+            - gnumake
