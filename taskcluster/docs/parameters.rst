@@ -228,19 +228,6 @@ Repository Merge Day
    Don't push any results to target repositories.
 
 
-Comm Push Information
----------------------
-
-These parameters correspond to the repository and revision of the comm-central
-repository to checkout. Their meaning is the same as the corresponding
-parameters for the gecko repository above. They are optional, but if any of
-them are specified, they must all be specified.
-
-``comm_base_repository``
-``comm_head_repository``
-``comm_head_rev``
-``comm_head_ref``
-
 Code Review
 -----------
 

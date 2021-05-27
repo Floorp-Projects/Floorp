@@ -128,43 +128,5 @@ class TestParameters(unittest.TestCase):
             )
 
 
-class TestCommParameters(unittest.TestCase):
-    vals = dict(
-        list(
-            {
-                "comm_base_repository": "comm_base_repository",
-                "comm_head_ref": "comm_head_ref",
-                "comm_head_repository": "comm_head_repository",
-                "comm_head_rev": "comm_head_rev",
-            }.items()
-        )
-        + list(TestParameters.vals.items())
-    )
-
-    def test_Parameters_check(self):
-        """
-        Specifying all of the gecko and comm parameters doesn't result in an error.
-        """
-        p = Parameters(**self.vals)
-        p.check()  # should not raise
-
-    def test_Parameters_check_missing(self):
-        """
-        If any of the comm parameters are specified, all of them must be specified.
-        """
-        vals = self.vals.copy()
-        del vals["comm_base_repository"]
-        p = Parameters(**vals)
-        self.assertRaises(Exception, p.check)
-
-    def test_Parameters_check_extra(self):
-        """
-        If parameters other than the global and comm parameters are specified,
-        an error is reported.
-        """
-        p = Parameters(extra="data", **self.vals)
-        self.assertRaises(Exception, p.check)
-
-
 if __name__ == "__main__":
     main()
