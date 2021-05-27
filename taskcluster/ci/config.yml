@@ -82,6 +82,7 @@ treeherder:
         'T-Prof-gli': 'Talos performance tests with WebGL over IPC and Gecko Profiling'
         'T-swr': 'Talos performance tests with software webrender enabled'
         'tt': 'Telemetry tests'
+        'tt-fis': 'Telemetry tests with fission enabled'
         'SY': 'Are we slim yet tests by TaskCluster'
         'SY-fis': 'Are we slim yet tests by TaskCluster, fission enabled'
         'W': 'Web platform tests'

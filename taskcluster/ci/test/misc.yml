@@ -33,6 +33,17 @@ telemetry-tests-client:
     description: "Telemetry tests client run"
     suite: telemetry-tests-client
     treeherder-symbol: tt(c)
+    variants: [fission]
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*-64/debug: [trunk]
+                    linux.*-64(?:-shippable|-asan)?/opt: [trunk]
+                    windows.*-64/debug: [trunk]
+                    windows.*-64(?:-shippable)?/opt: [trunk]
+                    default: []
+            default: built-projects
     max-run-time: 1200
     tier: default
     python-3: true
