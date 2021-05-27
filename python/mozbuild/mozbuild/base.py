@@ -131,7 +131,7 @@ class MozbuildObject(ProcessExecutionMixin):
         self._topobjdir = mozpath.normsep(topobjdir) if topobjdir else topobjdir
         self._mozconfig = mozconfig
         self._config_environment = None
-        self._virtualenv_name = virtualenv_name or ("init_py3" if six.PY3 else "init")
+        self._virtualenv_name = virtualenv_name or "common"
         self._virtualenv_manager = None
 
     @classmethod
