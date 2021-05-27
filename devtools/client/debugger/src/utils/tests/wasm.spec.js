@@ -20,6 +20,16 @@ describe("wasm", () => {
       "\x03\x82\x80\x80\x80\x00\x01\x00\x06\x81\x80\x80\x80\x00\x00" +
       "\n\x89\x80\x80\x80\x00\x01\x83\x80\x80\x80\x00\x00\x01\v",
   };
+
+  // malformed binary which contains an unknown operator (\x09) which
+  // should cause the wasm parser to throw.
+  const MALFORMED_SIMPLE_WASM = {
+    binary:
+      "\x00asm\x01\x00\x00\x00\x09\x84\x80\x80\x80\x00\x01`\x00\x00" +
+      "\x03\x82\x80\x80\x80\x00\x01\x00\x06\x81\x80\x80\x80\x00\x00" +
+      "\n\x89\x80\x80\x80\x00\x01\x83\x80\x80\x80\x00\x00\x01\v",
+  };
+
   const SIMPLE_WASM_TEXT = `(module
   (func $func0
     nop
@@ -48,6 +58,15 @@ describe("wasm", () => {
       const source = makeMockWasmSourceWithContent(SIMPLE_WASM);
       const lines = renderWasmText(source.id, source.content.value);
       expect(lines.join("\n")).toEqual(SIMPLE_WASM_TEXT);
+      clearWasmStates();
+    });
+
+    it("should return error information when the parser throws", () => {
+      const source = makeMockWasmSourceWithContent(MALFORMED_SIMPLE_WASM);
+      const lines = renderWasmText(source.id, source.content.value);
+      expect(lines.join("\n")).toEqual(
+        "Error occured during wast conversion : Unknown operator: 6"
+      );
       clearWasmStates();
     });
   });
