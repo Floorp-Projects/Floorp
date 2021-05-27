@@ -262,3 +262,59 @@ class DefinitionServer {
     return definition;
   }
 }
+
+/**
+ * Creates observer that waits for and then compares all perm-changes with the observances in order.
+ * @param {Array} observances permission changes to observe (order is important)
+ * @returns {Promise} Promise object that resolves once all permission changes have been observed
+ */
+function createObserveAllPromise(observances) {
+  // Create new promise that resolves once all items
+  // in observances array have been observed.
+  return new Promise(resolve => {
+    let permObserver = {
+      observe(aSubject, aTopic, aData) {
+        if (aTopic != "perm-changed") {
+          return;
+        }
+
+        if (!observances.length) {
+          // See bug 1063410
+          return;
+        }
+
+        let permission = aSubject.QueryInterface(Ci.nsIPermission);
+        let expected = observances.shift();
+
+        info(
+          `observed perm-changed for ${permission.principal.origin} (remaining ${observances.length})`
+        );
+
+        is(aData, expected.data, "type of message should be the same");
+        for (let prop of ["type", "capability", "expireType"]) {
+          if (expected[prop]) {
+            is(
+              permission[prop],
+              expected[prop],
+              `property: "${prop}" should be equal (${permission.principal.origin})`
+            );
+          }
+        }
+
+        if (expected.origin) {
+          is(
+            permission.principal.origin,
+            expected.origin,
+            `property: "origin" should be equal (${permission.principal.origin})`
+          );
+        }
+
+        if (!observances.length) {
+          Services.obs.removeObserver(permObserver, "perm-changed");
+          executeSoon(resolve);
+        }
+      },
+    };
+    Services.obs.addObserver(permObserver, "perm-changed");
+  });
+}
