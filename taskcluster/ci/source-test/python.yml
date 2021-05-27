@@ -493,7 +493,7 @@ telemetry-integration-tests:
             source /builds/worker/scripts/xvfb.sh &&
             start_xvfb '1600x1200x24' 0 &&
             export GECKO_BINARY_PATH=$MOZ_FETCHES_DIR/firefox/firefox &&
-            python2 ./mach python-test --subsuite telemetry-integration-tests
+            ./mach python-test --subsuite telemetry-integration-tests
     fetches:
         build:
             - target.tar.bz2
