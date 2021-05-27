@@ -3282,31 +3282,6 @@ class MGuardArgumentsObjectFlags : public MUnaryInstruction,
   }
 };
 
-// Given a MIRType::Value A and a MIRType::Object B:
-// If the Value may be safely unboxed to an Object, return Object(A).
-// Otherwise, return B.
-// Used to implement return behavior for inlined constructors.
-class MReturnFromCtor : public MBinaryInstruction,
-                        public MixPolicy<BoxPolicy<0>, ObjectPolicy<1>>::Data {
-  MReturnFromCtor(MDefinition* value, MDefinition* object)
-      : MBinaryInstruction(classOpcode, value, object) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(ReturnFromCtor)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, getValue), (1, getObject))
-
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 class MToFPInstruction : public MUnaryInstruction, public ToDoublePolicy::Data {
  public:
   // Types of values which can be converted.
@@ -8949,28 +8924,6 @@ class MGuardValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-// Guard on null or undefined values.
-class MGuardNullOrUndefined : public MUnaryInstruction,
-                              public BoxInputsPolicy::Data {
-  explicit MGuardNullOrUndefined(MDefinition* val)
-      : MUnaryInstruction(classOpcode, val) {
-    setGuard();
-    setMovable();
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(GuardNullOrUndefined)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, value))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 // Guard on function flags
 class MGuardFunctionFlags : public MUnaryInstruction,
                             public SingleObjectPolicy::Data {
@@ -9424,26 +9377,6 @@ class MLoadDynamicSlot : public MUnaryInstruction, public NoTypePolicy::Data {
 #endif
 
   ALLOW_CLONE(MLoadDynamicSlot)
-};
-
-// Inline call to access a function's environment (scope chain).
-class MFunctionEnvironment : public MUnaryInstruction,
-                             public SingleObjectPolicy::Data {
-  explicit MFunctionEnvironment(MDefinition* function)
-      : MUnaryInstruction(classOpcode, function) {
-    setResultType(MIRType::Object);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(FunctionEnvironment)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, function))
-
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-
-  // A function's environment is fixed.
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 // Allocate a new BlockLexicalEnvironmentObject.
@@ -10793,46 +10726,6 @@ class MIsCrossRealmArrayConstructor : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-class MIsObject : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  explicit MIsObject(MDefinition* object)
-      : MUnaryInstruction(classOpcode, object) {
-    setResultType(MIRType::Boolean);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(IsObject)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
-
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
-class MIsNullOrUndefined : public MUnaryInstruction,
-                           public BoxInputsPolicy::Data {
-  explicit MIsNullOrUndefined(MDefinition* value)
-      : MUnaryInstruction(classOpcode, value) {
-    setResultType(MIRType::Boolean);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(IsNullOrUndefined)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, value))
-
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 class MHasClass : public MUnaryInstruction, public SingleObjectPolicy::Data {
   const JSClass* class_;
 
@@ -10976,22 +10869,6 @@ class MObjectClassToString : public MUnaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
-class MCheckThis : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  explicit MCheckThis(MDefinition* thisVal)
-      : MUnaryInstruction(classOpcode, thisVal) {
-    setGuard();
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(CheckThis)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, thisValue))
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-};
-
 class MAsyncResolve : public MBinaryInstruction,
                       public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
   AsyncFunctionResolveKind resolveKind_;
@@ -11009,23 +10886,6 @@ class MAsyncResolve : public MBinaryInstruction,
   NAMED_OPERANDS((0, generator), (1, valueOrReason))
 
   AsyncFunctionResolveKind resolveKind() { return resolveKind_; }
-};
-
-class MCheckThisReinit : public MUnaryInstruction,
-                         public BoxInputsPolicy::Data {
-  explicit MCheckThisReinit(MDefinition* thisVal)
-      : MUnaryInstruction(classOpcode, thisVal) {
-    setGuard();
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(CheckThisReinit)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, thisValue))
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-  MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
 // Allocate the generator object for a frame.
@@ -11225,27 +11085,6 @@ class MCheckIsObj : public MUnaryInstruction, public BoxInputsPolicy::Data {
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
   AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
-class MCheckObjCoercible : public MUnaryInstruction,
-                           public BoxInputsPolicy::Data {
-  explicit MCheckObjCoercible(MDefinition* toCheck)
-      : MUnaryInstruction(classOpcode, toCheck) {
-    setGuard();
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(CheckObjCoercible)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, checkValue))
-
-  AliasSet getAliasSet() const override {
-    // Throws on null or undefined.
-    return AliasSet::Store(AliasSet::ExceptionState);
-  }
-
-  MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
 class MObjectWithProto : public MUnaryInstruction,

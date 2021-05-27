@@ -77,6 +77,13 @@
 #   - attribute not specified (default): no code generated
 #   - true: adds setMovable call in opcode constructor
 #
+# folds_to
+# ========
+# The foldsTo method is used for determining if an instruction can be folded into
+# simpler instruction or for constant folding, depending on its operands.
+#   - no attribute present (default): no code generated, no constants to fold
+#   - custom: custom C++ implementation
+#
 # congruent_to
 # ============
 # Used by ValueNumbering to determine if two values are congruent.
@@ -96,7 +103,7 @@
 # clone
 # =====
 # Allows cloning for that MIR op. 
-#   - attribute not specified  (default): no code generated
+#   - attribute not specified (default): no code generated
 #   - true: allows cloning
 #
 
@@ -301,8 +308,18 @@
 - name: GuardArgumentsObjectFlags
   gen_boilerplate: false
 
+# Given a MIRType::Value A and a MIRType::Object B:
+# If the Value may be safely unboxed to an Object, return Object(A).
+# Otherwise, return B.
+# Used to implement return behavior for inlined constructors.
 - name: ReturnFromCtor
-  gen_boilerplate: false
+  operands:
+    value: Value
+    object: Object
+  result_type: Object
+  folds_to: custom
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: ToDouble
   gen_boilerplate: false
@@ -925,7 +942,14 @@
   gen_boilerplate: false
 
 - name: GuardNullOrUndefined
-  gen_boilerplate: false
+  operands:
+    value: Value
+  result_type: Value
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
+  alias_set: none
 
 - name: GuardFunctionFlags
   gen_boilerplate: false
@@ -969,8 +993,15 @@
 - name: LoadDynamicSlot
   gen_boilerplate: false
 
+# Inline call to access a function's environment (scope chain).
 - name: FunctionEnvironment
-  gen_boilerplate: false
+  operands:
+    function: Object
+  result_type: Object
+  movable: true
+  folds_to: custom
+  # A function's environment is fixed.
+  alias_set: none
 
 - name: NewLexicalEnvironmentObject
   gen_boilerplate: false
@@ -1152,10 +1183,22 @@
   gen_boilerplate: false
 
 - name: IsObject
-  gen_boilerplate: false
+  operands: 
+    object: Value
+  result_type: Boolean
+  movable: true
+  folds_to: custom
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: IsNullOrUndefined
-  gen_boilerplate: false
+  operands: 
+    value: Value
+  result_type: Boolean
+  movable: true
+  folds_to: custom
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: HasClass
   gen_boilerplate: false
@@ -1181,7 +1224,12 @@
   alias_set: none
 
 - name: CheckThis
-  gen_boilerplate: false
+  operands: 
+    thisValue: Value
+  result_type: Value
+  guard: true
+  folds_to: custom
+  alias_set: none
 
 - name: AsyncResolve
   gen_boilerplate: false
@@ -1203,7 +1251,12 @@
   result_type: Object
 
 - name: CheckThisReinit
-  gen_boilerplate: false
+  operands: 
+    thisValue: Value
+  result_type: Value
+  guard: true
+  folds_to: custom
+  alias_set: none
 
 - name: Generator
   gen_boilerplate: false
@@ -1238,7 +1291,13 @@
   gen_boilerplate: false
 
 - name: CheckObjCoercible
-  gen_boilerplate: false
+  operands: 
+    checkValue: Value
+  result_type: Value
+  guard: true
+  folds_to: custom
+  # Throws on null or undefined.
+  alias_set: custom
 
 - name: CheckClassHeritage
   operands: 

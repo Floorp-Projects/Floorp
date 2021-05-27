@@ -3102,7 +3102,7 @@ MDefinition* MBoxNonStrictThis::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MReturnFromCtor::foldsTo(TempAllocator& alloc) {
-  MDefinition* rval = getValue();
+  MDefinition* rval = value();
   if (rval->isBox()) {
     rval = rval->toBox()->input();
   }
@@ -3112,7 +3112,7 @@ MDefinition* MReturnFromCtor::foldsTo(TempAllocator& alloc) {
   }
 
   if (rval->type() != MIRType::Value) {
-    return getObject();
+    return object();
   }
 
   return this;
@@ -5507,6 +5507,10 @@ MDefinition* MCheckObjCoercible::foldsTo(TempAllocator& alloc) {
   }
 
   return input;
+}
+
+AliasSet MCheckObjCoercible::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ExceptionState);
 }
 
 AliasSet MIsPackedArray::getAliasSet() const {
