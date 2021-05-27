@@ -534,6 +534,9 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
   data->mQueuedBufferIds.pop_back();
   data->mAvailableBufferIds.push_back(bufferId);
   data->mBuffersLock.Unlock();
+  MOZ_LOG(
+      sLogger, LogLevel::Info,
+      ("PresentCallback for buffer %" PRIu64 " status=%d\n", bufferId, status));
   // copy the data
   if (status == ffi::WGPUBufferMapAsyncStatus_Success) {
     const auto bufferSize = data->mRowCount * data->mSourcePitch;
@@ -596,10 +599,13 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
   } else {
     bufferId = 0;
   }
+
   if (bufferId) {
     data->mQueuedBufferIds.insert(data->mQueuedBufferIds.begin(), bufferId);
   }
   data->mBuffersLock.Unlock();
+  MOZ_LOG(sLogger, LogLevel::Info,
+          ("RecvSwapChainPresent with buffer %" PRIu64 "\n", bufferId));
   if (!bufferId) {
     // TODO: add a warning - no buffer are available!
     return IPC_OK();

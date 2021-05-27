@@ -133,6 +133,11 @@ void CommandEncoder::CopyBufferToTexture(
         ConvertBufferCopyView(aSource), ConvertTextureCopyView(aDestination),
         ConvertExtent(aCopySize), ToFFI(&bb));
     mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
+
+    const auto& targetCanvas = aDestination.mTexture->mTargetCanvasElement;
+    if (targetCanvas) {
+      mTargetCanvases.AppendElement(targetCanvas);
+    }
   }
 }
 void CommandEncoder::CopyTextureToBuffer(
@@ -157,6 +162,11 @@ void CommandEncoder::CopyTextureToTexture(
         ConvertTextureCopyView(aSource), ConvertTextureCopyView(aDestination),
         ConvertExtent(aCopySize), ToFFI(&bb));
     mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
+
+    const auto& targetCanvas = aDestination.mTexture->mTargetCanvasElement;
+    if (targetCanvas) {
+      mTargetCanvases.AppendElement(targetCanvas);
+    }
   }
 }
 
