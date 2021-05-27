@@ -31,6 +31,7 @@
 #include "config.h"
 
 #include <stddef.h>
+#include <assert.h>
 
 #ifdef __GNUC__
 #define ATTR_ALIAS __attribute__((may_alias))
@@ -103,11 +104,11 @@
 #endif
 
 #if defined(NDEBUG) && (defined(__GNUC__) || defined(__clang__))
+#undef assert
 #define assert(x) do { if (!(x)) __builtin_unreachable(); } while (0)
 #elif defined(NDEBUG) && defined(_MSC_VER)
+#undef assert
 #define assert __assume
-#else
-#include <assert.h>
 #endif
 
 #if defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__)
@@ -161,6 +162,14 @@ static inline int clzll(const unsigned long long mask) {
 
 #ifndef __has_feature
 #define __has_feature(x) 0
+#endif
+
+#ifndef static_assert
+#define CHECK_OFFSET(type, field, name) \
+    struct check_##type##_##field { int x[(name == offsetof(type, field)) ? 1 : -1]; }
+#else
+#define CHECK_OFFSET(type, field, name) \
+    static_assert(name == offsetof(type, field), #field)
 #endif
 
 #endif /* DAV1D_COMMON_ATTRIBUTES_H */

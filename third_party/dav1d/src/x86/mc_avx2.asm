@@ -94,7 +94,7 @@ pd_0x4000:       dd 0x4000
 pq_0x40000000:   dq 0x40000000
 
 cextern mc_subpel_filters
-cextern mc_warp_filter
+cextern mc_warp_filter2
 cextern resize_filter
 
 %define subpel_filters (mangle(private_prefix %+ _mc_subpel_filters)-8)
@@ -4183,7 +4183,7 @@ ALIGN function_align
     vpbroadcastd        m14, [pw_8192]
     vpbroadcastd        m15, [pd_32768]
     pxor                m11, m11
-    lea             filterq, [mc_warp_filter]
+    lea             filterq, [mc_warp_filter2]
     lea               tmp1q, [ssq*3+3]
     add                 mxd, 512+(64<<10)
     lea               tmp2d, [alphaq*3]

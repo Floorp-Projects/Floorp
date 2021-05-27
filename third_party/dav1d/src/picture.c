@@ -194,6 +194,9 @@ int dav1d_thread_picture_alloc(Dav1dContext *const c, Dav1dFrameContext *const f
     dav1d_ref_dec(&c->itut_t35_ref);
     c->itut_t35 = NULL;
 
+    p->flags = c->frame_flags;
+    c->frame_flags = 0;
+
     p->visible = f->frame_hdr->show_frame;
     if (p->t) {
         atomic_init(&p->progress[0], 0);
@@ -254,6 +257,7 @@ void dav1d_thread_picture_ref(Dav1dThreadPicture *const dst,
     dst->t = src->t;
     dst->visible = src->visible;
     dst->progress = src->progress;
+    dst->flags = src->flags;
 }
 
 void dav1d_picture_unref_internal(Dav1dPicture *const p) {
@@ -321,4 +325,17 @@ void dav1d_thread_picture_signal(const Dav1dThreadPicture *const p,
         atomic_store(&p->progress[1], y);
     pthread_cond_broadcast(&p->t->cond);
     pthread_mutex_unlock(&p->t->lock);
+}
+
+enum Dav1dEventFlags dav1d_picture_get_event_flags(const Dav1dThreadPicture *const p) {
+    if (!p->flags)
+        return 0;
+
+    enum Dav1dEventFlags flags = 0;
+    if (p->flags & PICTURE_FLAG_NEW_SEQUENCE)
+       flags |= DAV1D_EVENT_FLAG_NEW_SEQUENCE;
+    if (p->flags & PICTURE_FLAG_NEW_OP_PARAMS_INFO)
+       flags |= DAV1D_EVENT_FLAG_NEW_OP_PARAMS_INFO;
+
+    return flags;
 }

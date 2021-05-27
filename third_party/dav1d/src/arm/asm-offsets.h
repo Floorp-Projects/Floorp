@@ -1,6 +1,5 @@
 /*
- * Copyright © 2018-2021, VideoLAN and dav1d authors
- * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2021, VideoLAN and dav1d authors
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,26 +24,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DAV1D_SRC_ITX_H
-#define DAV1D_SRC_ITX_H
+#ifndef ARM_ASM_OFFSETS_H
+#define ARM_ASM_OFFSETS_H
 
-#include <stddef.h>
+#define FGD_SEED                         0
+#define FGD_AR_COEFF_LAG                 92
+#define FGD_AR_COEFFS_Y                  96
+#define FGD_AR_COEFFS_UV                 120
+#define FGD_AR_COEFF_SHIFT               176
+#define FGD_GRAIN_SCALE_SHIFT            184
 
-#include "common/bitdepth.h"
+#define FGD_SCALING_SHIFT                88
+#define FGD_UV_MULT                      188
+#define FGD_UV_LUMA_MULT                 196
+#define FGD_UV_OFFSET                    204
+#define FGD_CLIP_TO_RESTRICTED_RANGE     216
 
-#include "src/levels.h"
-
-#define decl_itx_fn(name) \
-void (name)(pixel *dst, ptrdiff_t dst_stride, coef *coeff, int eob \
-            HIGHBD_DECL_SUFFIX)
-typedef decl_itx_fn(*itxfm_fn);
-
-typedef struct Dav1dInvTxfmDSPContext {
-    itxfm_fn itxfm_add[N_RECT_TX_SIZES][N_TX_TYPES_PLUS_LL];
-} Dav1dInvTxfmDSPContext;
-
-bitfn_decls(void dav1d_itx_dsp_init, Dav1dInvTxfmDSPContext *c, int bpc);
-bitfn_decls(void dav1d_itx_dsp_init_arm, Dav1dInvTxfmDSPContext *c, int bpc);
-bitfn_decls(void dav1d_itx_dsp_init_x86, Dav1dInvTxfmDSPContext *c, int bpc);
-
-#endif /* DAV1D_SRC_ITX_H */
+#endif /* ARM_ASM_OFFSETS_H */

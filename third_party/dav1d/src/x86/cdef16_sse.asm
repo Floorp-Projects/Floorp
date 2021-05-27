@@ -26,68 +26,98 @@
 %include "config.asm"
 %include "ext/x86/x86inc.asm"
 
-%ifn ARCH_X86_64
-SECTION_RODATA 16
+SECTION_RODATA
 
-pq_dir_shr:      dq  2,  4
-%endif
+dir_shift: times 4 dw 0x4000
+           times 4 dw 0x1000
+
+pw_128:    times 4 dw 128
+
+cextern cdef_dir_8bpc_ssse3.main
+cextern cdef_dir_8bpc_sse4.main
+cextern shufw_6543210x
 
 SECTION .text
 
-cextern cdef_dir_8bpc_ssse3
+%macro REPX 2-*
+    %xdefine %%f(x) %1
+%rep %0 - 1
+    %rotate 1
+    %%f(%1)
+%endrep
+%endmacro
+
+%macro CDEF_DIR 0
+%if ARCH_X86_64
+cglobal cdef_dir_16bpc, 4, 7, 16, src, stride, var, bdmax
+    lea             r6, [dir_shift]
+    shr         bdmaxd, 11 ; 0 for 10bpc, 1 for 12bpc
+    movddup         m7, [r6+bdmaxq*8]
+    lea             r6, [strideq*3]
+    mova            m0, [srcq+strideq*0]
+    mova            m1, [srcq+strideq*1]
+    mova            m2, [srcq+strideq*2]
+    mova            m3, [srcq+r6       ]
+    lea           srcq, [srcq+strideq*4]
+    mova            m4, [srcq+strideq*0]
+    mova            m5, [srcq+strideq*1]
+    mova            m6, [srcq+strideq*2]
+    REPX {pmulhuw x, m7}, m0, m1, m2, m3, m4, m5, m6
+    pmulhuw         m7, [srcq+r6       ]
+    pxor            m8, m8
+    packuswb        m9, m0, m1
+    packuswb       m10, m2, m3
+    packuswb       m11, m4, m5
+    packuswb       m12, m6, m7
+    REPX {psadbw x, m8}, m9, m10, m11, m12
+    packssdw        m9, m10
+    packssdw       m11, m12
+    packssdw        m9, m11
+    jmp mangle(private_prefix %+ _cdef_dir_8bpc %+ SUFFIX).main
+%else
+cglobal cdef_dir_16bpc, 2, 4, 8, 96, src, stride, var, bdmax
+    mov         bdmaxd, bdmaxm
+    LEA             r2, dir_shift
+    shr         bdmaxd, 11
+    movddup         m7, [r2+bdmaxq*8]
+    lea             r3, [strideq*3]
+    pmulhuw         m3, m7, [srcq+strideq*0]
+    pmulhuw         m4, m7, [srcq+strideq*1]
+    pmulhuw         m5, m7, [srcq+strideq*2]
+    pmulhuw         m6, m7, [srcq+r3       ]
+    movddup         m1, [r2-dir_shift+pw_128]
+    lea           srcq, [srcq+strideq*4]
+    pxor            m0, m0
+    packuswb        m2, m3, m4
+    psubw           m3, m1
+    psubw           m4, m1
+    mova    [esp+0x00], m3
+    mova    [esp+0x10], m4
+    packuswb        m3, m5, m6
+    psadbw          m2, m0
+    psadbw          m3, m0
+    psubw           m5, m1
+    psubw           m6, m1
+    packssdw        m2, m3
+    mova    [esp+0x20], m5
+    mova    [esp+0x50], m6
+    pmulhuw         m4, m7, [srcq+strideq*0]
+    pmulhuw         m5, m7, [srcq+strideq*1]
+    pmulhuw         m6, m7, [srcq+strideq*2]
+    pmulhuw         m7,     [srcq+r3       ]
+    packuswb        m3, m4, m5
+    packuswb        m1, m6, m7
+    psadbw          m3, m0
+    psadbw          m1, m0
+    packssdw        m3, m1
+    movddup         m1, [r2-dir_shift+pw_128]
+    LEA             r2, shufw_6543210x
+    jmp mangle(private_prefix %+ _cdef_dir_8bpc %+ SUFFIX).main
+%endif
+%endmacro
 
 INIT_XMM ssse3
-cglobal cdef_dir_16bpc, 2, 4, 4, 32 + 8*8, src, ss, var, bdmax
-  bsr   bdmaxd, bdmaxm
-%if ARCH_X86_64
-  movzx bdmaxq, bdmaxw
-  sub   bdmaxq, 7
-  movq      m4, bdmaxq
-%else
-  push      r4
-  sub   bdmaxd, 9
-  LEA       r4, pq_dir_shr
-  movq      m4, [r4 + bdmaxd*4]
-  pop       r4
-%endif
-  DEFINE_ARGS src, ss, var, ss3
-  lea     ss3q, [ssq*3]
-  mova      m0, [srcq + ssq*0]
-  mova      m1, [srcq + ssq*1]
-  mova      m2, [srcq + ssq*2]
-  mova      m3, [srcq + ss3q]
-  psraw     m0, m4
-  psraw     m1, m4
-  psraw     m2, m4
-  psraw     m3, m4
-  packuswb  m0, m1
-  packuswb  m2, m3
-  mova [rsp + 32 + 0*8], m0
-  mova [rsp + 32 + 2*8], m2
-  lea     srcq, [srcq + ssq*4]
-  mova      m0, [srcq + ssq*0]
-  mova      m1, [srcq + ssq*1]
-  mova      m2, [srcq + ssq*2]
-  mova      m3, [srcq + ss3q]
-  psraw     m0, m4
-  psraw     m1, m4
-  psraw     m2, m4
-  psraw     m3, m4
-  packuswb  m0, m1
-  packuswb  m2, m3
-  mova [rsp + 32 + 4*8], m0
-  mova [rsp + 32 + 6*8], m2
-  lea     srcq, [rsp + 32] ; WIN64 shadow space
-  mov      ssq, 8
-%if ARCH_X86_64
-  call mangle(private_prefix %+ _cdef_dir_8bpc %+ SUFFIX)
-%else
-  movifnidn vard, varm
-  push     eax ; align stack
-  push    vard
-  push     ssd
-  push    srcd
-  call mangle(private_prefix %+ _cdef_dir_8bpc)
-  add      esp, 0x10
-%endif
-  RET
+CDEF_DIR
+
+INIT_XMM sse4
+CDEF_DIR

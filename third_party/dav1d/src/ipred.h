@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
+ * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
@@ -71,6 +71,7 @@ typedef decl_cfl_pred_fn(*cfl_pred_fn);
 /*
  * dst[x,y] = pal[idx[x,y]]
  * - palette indices are [0-7]
+ * - only 16-byte alignment is guaranteed for idx.
  */
 #define decl_pal_pred_fn(name) \
 void (name)(pixel *dst, ptrdiff_t stride, const uint16_t *pal, \

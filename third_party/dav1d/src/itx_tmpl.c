@@ -250,7 +250,7 @@ COLD void bitfn(dav1d_itx_dsp_init)(Dav1dInvTxfmDSPContext *const c, int bpc) {
     bitfn(dav1d_itx_dsp_init_arm)(c, bpc);
 #endif
 #if ARCH_X86
-    bitfn(dav1d_itx_dsp_init_x86)(c);
+    bitfn(dav1d_itx_dsp_init_x86)(c, bpc);
 #endif
 #endif
 }

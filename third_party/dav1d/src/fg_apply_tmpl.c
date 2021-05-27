@@ -135,7 +135,7 @@ void bitfn(dav1d_apply_grain)(const Dav1dFilmGrainDSPContext *const dsp,
         assert(out->stride[1] == in->stride[1]);
         const int ss_ver = in->p.layout == DAV1D_PIXEL_LAYOUT_I420;
         const ptrdiff_t stride = out->stride[1];
-        const ptrdiff_t sz = (out->p.h * stride) >> ss_ver;
+        const ptrdiff_t sz = ((out->p.h + ss_ver) >> ss_ver) * stride;
         if (sz < 0) {
             if (!data->num_uv_points[0])
                 memcpy((uint8_t*) out->data[1] + sz - stride,

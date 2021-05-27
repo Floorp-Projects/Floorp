@@ -529,7 +529,9 @@ static void sgr_mix_c(pixel *p, const ptrdiff_t p_stride,
     }
 }
 
-COLD void bitfn(dav1d_loop_restoration_dsp_init)(Dav1dLoopRestorationDSPContext *const c, int bpc) {
+COLD void bitfn(dav1d_loop_restoration_dsp_init)(Dav1dLoopRestorationDSPContext *const c,
+                                                 const int bpc)
+{
     c->wiener[0] = c->wiener[1] = wiener_c;
     c->sgr[0] = sgr_5x5_c;
     c->sgr[1] = sgr_3x3_c;
@@ -539,9 +541,9 @@ COLD void bitfn(dav1d_loop_restoration_dsp_init)(Dav1dLoopRestorationDSPContext 
 #if ARCH_AARCH64 || ARCH_ARM
     bitfn(dav1d_loop_restoration_dsp_init_arm)(c, bpc);
 #elif ARCH_PPC64LE
-    bitfn(dav1d_loop_restoration_dsp_init_ppc)(c);
+    bitfn(dav1d_loop_restoration_dsp_init_ppc)(c, bpc);
 #elif ARCH_X86
-    bitfn(dav1d_loop_restoration_dsp_init_x86)(c);
+    bitfn(dav1d_loop_restoration_dsp_init_x86)(c, bpc);
 #endif
 #endif
 }

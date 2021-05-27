@@ -324,8 +324,8 @@ static void wiener_filter_vsx(uint8_t *p, const ptrdiff_t p_stride,
 }
 #endif
 
-COLD void bitfn(dav1d_loop_restoration_dsp_init_ppc)
-    (Dav1dLoopRestorationDSPContext *const c)
+COLD void bitfn(dav1d_loop_restoration_dsp_init_ppc)(Dav1dLoopRestorationDSPContext *const c,
+                                                     const int bpc)
 {
     const unsigned flags = dav1d_get_cpu_flags();
 

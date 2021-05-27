@@ -3316,8 +3316,10 @@ int dav1d_submit_frame(Dav1dContext *const c) {
         if (out_delayed->p.data[0]) {
             const unsigned progress = atomic_load_explicit(&out_delayed->progress[1],
                                                            memory_order_relaxed);
-            if (out_delayed->visible && progress != FRAME_ERROR)
+            if (out_delayed->visible && progress != FRAME_ERROR) {
                 dav1d_picture_ref(&c->out, &out_delayed->p);
+                c->event_flags |= dav1d_picture_get_event_flags(out_delayed);
+            }
             dav1d_thread_picture_unref(out_delayed);
         }
     } else {
@@ -3487,8 +3489,10 @@ int dav1d_submit_frame(Dav1dContext *const c) {
 
     // move f->cur into output queue
     if (c->n_fc == 1) {
-        if (f->frame_hdr->show_frame)
+        if (f->frame_hdr->show_frame) {
             dav1d_picture_ref(&c->out, &f->sr_cur.p);
+            c->event_flags |= dav1d_picture_get_event_flags(&f->sr_cur);
+        }
     } else {
         dav1d_thread_picture_ref(out_delayed, &f->sr_cur);
     }

@@ -2072,7 +2072,7 @@ cglobal fguv_32x32xn_i%1, 6, 15, 16, dst, src, stride, fg_data, w, scaling, \
 %endif
 
     sub              hb, 1+%2
-    jl %%end_y_v_overlap
+    jle %%end_y_v_overlap
 %if %2
     lea            srcq, [srcq+strideq*2]
     lea            dstq, [dstq+strideq*2]

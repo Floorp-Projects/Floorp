@@ -741,30 +741,16 @@ w_mask_fns(420, 1, 1);
 
 #undef w_mask_fns
 
-#if ARCH_X86
-#define FILTER_WARP(src, x, F, stride) \
-    (F[0] * src[x + -3 * stride] + \
-     F[4] * src[x + -2 * stride] + \
-     F[1] * src[x + -1 * stride] + \
-     F[5] * src[x + +0 * stride] + \
-     F[2] * src[x + +1 * stride] + \
-     F[6] * src[x + +2 * stride] + \
-     F[3] * src[x + +3 * stride] + \
-     F[7] * src[x + +4 * stride])
-#else
-#define FILTER_WARP(src, x, F, stride) \
-    (F[0] * src[x + -3 * stride] + \
-     F[1] * src[x + -2 * stride] + \
-     F[2] * src[x + -1 * stride] + \
-     F[3] * src[x + +0 * stride] + \
-     F[4] * src[x + +1 * stride] + \
-     F[5] * src[x + +2 * stride] + \
-     F[6] * src[x + +3 * stride] + \
-     F[7] * src[x + +4 * stride])
-#endif
-
 #define FILTER_WARP_RND(src, x, F, stride, sh) \
-    ((FILTER_WARP(src, x, F, stride) + ((1 << (sh)) >> 1)) >> (sh))
+    ((F[0] * src[x - 3 * stride] + \
+      F[1] * src[x - 2 * stride] + \
+      F[2] * src[x - 1 * stride] + \
+      F[3] * src[x + 0 * stride] + \
+      F[4] * src[x + 1 * stride] + \
+      F[5] * src[x + 2 * stride] + \
+      F[6] * src[x + 3 * stride] + \
+      F[7] * src[x + 4 * stride] + \
+      ((1 << (sh)) >> 1)) >> (sh))
 
 #define FILTER_WARP_CLIP(src, x, F, stride, sh) \
     iclip_pixel(FILTER_WARP_RND(src, x, F, stride, sh))
