@@ -64,6 +64,7 @@ const ipv6Supported = async () => {
   const pc = new RTCPeerConnection();
   const candidates = await gatherWithTimeout(pc, 2000);
   info(`baseline candidates: ${JSON.stringify(candidates)}`);
+  pc.close();
   return candidates.some(isV6HostCandidate);
 };
 
@@ -98,6 +99,7 @@ const checkSrflx = async iceServers => {
     2,
     `Should have two srflx candidates with ${context}`
   );
+  pc.close();
 };
 
 const checkNoSrflx = async iceServers => {
@@ -115,6 +117,7 @@ const checkNoSrflx = async iceServers => {
     0,
     `Should have no srflx candidates with ${context}`
   );
+  pc.close();
 };
 
 const checkRelayUdp = async iceServers => {
@@ -143,6 +146,7 @@ const checkRelayUdp = async iceServers => {
     0,
     `No TCP relay candidates should be present with ${context}`
   );
+  pc.close();
 };
 
 const checkRelayTcp = async iceServers => {
@@ -171,6 +175,7 @@ const checkRelayTcp = async iceServers => {
     0,
     `No UDP relay candidates should be present with ${context}`
   );
+  pc.close();
 };
 
 const checkRelayUdpTcp = async iceServers => {
@@ -205,6 +210,7 @@ const checkRelayUdpTcp = async iceServers => {
     1,
     `One TCP relay candidates should be present with ${context}`
   );
+  pc.close();
 };
 
 const checkNoRelay = async iceServers => {
@@ -222,4 +228,5 @@ const checkNoRelay = async iceServers => {
     0,
     `Should have no relay candidates with ${context}`
   );
+  pc.close();
 };
