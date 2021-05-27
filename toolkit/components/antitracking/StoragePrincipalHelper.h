@@ -288,6 +288,23 @@ class StoragePrincipalHelper final {
   static bool GetOriginAttributes(
       const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
       OriginAttributes& aAttributes);
+
+  /**
+   * Extract the baseDomain part of a partitionKey.
+   * Returns false if the partitionKey has an invalid format or is empty.
+   */
+  static bool GetBaseDomainFromPartitionKey(const nsAString& aPartitionKey,
+                                            nsAString& aBaseDomain);
+
+  /**
+   * Tests if a URI and a partitionKey have the same baseDomain.
+   * Also returns false if we can't get the baseDomain from the URI or the
+   * partition key is invalid.
+   */
+  static bool HasMatchingBaseDomain(nsIURI* aURI,
+                                    const nsAString& aPartitionKey);
+  static bool HasMatchingBaseDomain(const nsAString& aOrigin,
+                                    const nsAString& aPartitionKey);
 };
 
 }  // namespace mozilla
