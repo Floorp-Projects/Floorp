@@ -195,7 +195,7 @@ class Settings private constructor(
     fun shouldBlockOtherTrackers() =
             preferences.getBoolean(
                     getPreferenceKey(R.string.pref_key_privacy_block_other),
-                    false)
+                    true)
 
     fun userHasToggledSearchSuggestions(): Boolean =
             preferences.getBoolean(SearchSuggestionsPreferences.TOGGLED_SUGGESTIONS_PREF, false)
