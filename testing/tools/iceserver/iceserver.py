@@ -22,6 +22,7 @@ from string import Template
 from twisted.internet import reactor, protocol
 from twisted.internet.task import LoopingCall
 from twisted.internet.address import IPv4Address
+from twisted.internet.address import IPv6Address
 
 MAGIC_COOKIE = 0x2112A442
 
@@ -38,8 +39,9 @@ DATA_MSG = 0x007
 CREATE_PERMISSION = 0x008
 CHANNEL_BIND = 0x009
 
-IPV4 = 1
-IPV6 = 2
+# STUN spec chose silly values for these
+STUN_IPV4 = 1
+STUN_IPV6 = 2
 
 MAPPED_ADDRESS = 0x0001
 USERNAME = 0x0006
@@ -105,6 +107,13 @@ def bitwise_pack(source, dest, start_bit, num_bits):
     mask = (1 << num_bits) - 1
     dest += source & mask
     return dest
+
+
+def to_ipaddress(protocol, host, port):
+    if ":" not in host:
+        return IPv4Address(protocol, host, port)
+
+    return IPv6Address(protocol, host, port)
 
 
 class StunAttribute(object):
@@ -261,36 +270,37 @@ class StunMessage(object):
     #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     #    |                X-Address (Variable)
     #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    __xor_v4addr_fmt = [1, 1, 2, 4]
-    __xor_v6addr_fmt = [1, 1, 2, 16]
-    __xor_v4addr_size = reduce(operator.add, __xor_v4addr_fmt)
-    __xor_v6addr_size = reduce(operator.add, __xor_v6addr_fmt)
+    __v4addr_fmt = [1, 1, 2, 4]
+    __v6addr_fmt = [1, 1, 2, 16]
+    __v4addr_size = reduce(operator.add, __v4addr_fmt)
+    __v6addr_size = reduce(operator.add, __v6addr_fmt)
+
+    def add_address(self, ip_address, version, port, attr_type):
+        if version == STUN_IPV4:
+            address = pack((0, STUN_IPV4, port, ip_address), self.__v4addr_fmt)
+        elif version == STUN_IPV6:
+            address = pack((0, STUN_IPV6, port, ip_address), self.__v6addr_fmt)
+        else:
+            raise ValueError("Invalid ip version: {}".format(version))
+        self.attributes.append(StunAttribute(attr_type, address))
 
     def get_xaddr(self, ip_addr, version):
-        if version == IPV4:
+        if version == STUN_IPV4:
             return self.cookie ^ ip_addr
-        elif version == IPV6:
+        elif version == STUN_IPV6:
             return ((self.cookie << 96) + self.transaction_id) ^ ip_addr
         else:
-            raise ValueError("Invalid family: {}".format(family))
+            raise ValueError("Invalid family: {}".format(version))
 
     def get_xport(self, port):
         return (self.cookie >> 16) ^ port
 
     def add_xor_address(self, addr_port, attr_type):
         ip_address = ipaddr.IPAddress(addr_port.host)
+        version = STUN_IPV6 if ip_address.version == 6 else STUN_IPV4
+        xaddr = self.get_xaddr(int(ip_address), version)
         xport = self.get_xport(addr_port.port)
-
-        if ip_address.version == 4:
-            xaddr = self.get_xaddr(int(ip_address), IPV4)
-            xor_address = pack((0, IPV4, xport, xaddr), self.__xor_v4addr_fmt)
-        elif ip_address.version == 6:
-            xaddr = self.get_xaddr(int(ip_address), IPV6)
-            xor_address = pack((0, IPV6, xport, xaddr), self.__xor_v6addr_fmt)
-        else:
-            raise ValueError("Invalid ip version: {}".format(ip_address.version))
-
-        self.attributes.append(StunAttribute(attr_type, xor_address))
+        self.add_address(xaddr, version, xport, attr_type)
 
     def add_data(self, buf):
         self.attributes.append(StunAttribute(DATA_ATTR, buf))
@@ -306,16 +316,12 @@ class StunMessage(object):
         if not addr_attr:
             return None
 
-        padding, family, xport, xaddr = unpack(addr_attr.data, self.__xor_v4addr_fmt)
+        padding, family, xport, xaddr = unpack(addr_attr.data, self.__v4addr_fmt)
         addr_ctor = IPv4Address
-        if family == IPV6:
-            from twisted.internet.address import IPv6Address
-
-            padding, family, xport, xaddr = unpack(
-                addr_attr.data, self.__xor_v6addr_fmt
-            )
+        if family == STUN_IPV6:
+            padding, family, xport, xaddr = unpack(addr_attr.data, self.__v6addr_fmt)
             addr_ctor = IPv6Address
-        elif family != IPV4:
+        elif family != STUN_IPV4:
             raise ValueError("Invalid family: {}".format(family))
 
         return addr_ctor(
@@ -398,7 +404,7 @@ class Allocation(protocol.DatagramProtocol):
 
         # Only handles UDP allocations. Doubtful that we need more than this.
         data_indication.add_xor_address(
-            IPv4Address("UDP", host, port), XOR_PEER_ADDRESS
+            to_ipaddress("UDP", host, port), XOR_PEER_ADDRESS
         )
         data_indication.add_data(data)
 
@@ -683,7 +689,7 @@ class UdpStunHandler(protocol.DatagramProtocol):
 
     def datagramReceived(self, data, address):
         stun_handler = StunHandler(self)
-        stun_handler.data_received(data, IPv4Address("UDP", address[0], address[1]))
+        stun_handler.data_received(data, to_ipaddress("UDP", address[0], address[1]))
 
     def write(self, data, address):
         self.transport.write(bytes(data), (address.host, address.port))
