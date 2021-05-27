@@ -1404,10 +1404,6 @@ int NrUdpSocketIpc::getaddr(nr_transport_addr* addrp) {
 
   ReentrantMonitorAutoEnter mon(monitor_);
 
-  if (state_ != NR_CONNECTED) {
-    return R_INTERNAL;
-  }
-
   return nr_transport_addr_copy(addrp, &my_addr_);
 }
 
