@@ -1048,7 +1048,7 @@ class Document : public nsINode,
    */
   void SetIsInitialDocument(bool aIsInitialDocument);
 
-  void SetLoadedAsData(bool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
+  void SetLoadedAsData(bool aLoadedAsData, bool aConsiderForMemoryReporting);
 
   /**
    * Normally we assert if a runnable labeled with one DocGroup touches data
@@ -2518,6 +2518,12 @@ class Document : public nsINode,
   }
 
   bool IsLoadedAsData() { return mLoadedAsData; }
+
+  void SetAddedToMemoryReportAsDataDocument() {
+    mAddedToMemoryReportingAsDataDocument = true;
+  }
+
+  void UnregisterFromMemoryReportingForDataDocument();
 
   bool MayStartLayout() { return mMayStartLayout; }
 
@@ -4485,6 +4491,10 @@ class Document : public nsINode,
   // True if we're loaded as data and therefor has any dangerous stuff, such
   // as scripts and plugins, disabled.
   bool mLoadedAsData : 1;
+
+  // True if the document is considered for memory reporting as a
+  // data document
+  bool mAddedToMemoryReportingAsDataDocument : 1;
 
   // If true, whoever is creating the document has gotten it to the
   // point where it's safe to start layout on it.

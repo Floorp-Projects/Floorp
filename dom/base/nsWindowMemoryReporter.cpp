@@ -330,6 +330,13 @@ static void CollectWindowReports(nsGlobalWindowInner* aWindow,
   ReportDOMSize(windowPath, aWindowTotalSizes->mDOMSizes, aHandleReport, aData,
                 windowSizes.mDOMSizes);
 
+  nsCString dataDocumentPath(windowPath);
+  dataDocumentPath += "/data-documents";
+  nsWindowSizes dataDocumentSizes(state);
+  aWindow->CollectDOMSizesForDataDocuments(dataDocumentSizes);
+  ReportDOMSize(dataDocumentPath, aWindowTotalSizes->mDOMSizes, aHandleReport,
+                aData, dataDocumentSizes.mDOMSizes);
+
   REPORT_SIZE("/layout/style-sheets", mLayoutStyleSheetsSize,
               "Memory used by document style sheets within a window.");
 
