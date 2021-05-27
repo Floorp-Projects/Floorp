@@ -60,5 +60,7 @@ int nr_socket_buffered_stun_create(nr_socket *inner, int max_pending,
 int nr_socket_buffered_set_connected_to(nr_socket *sock,
     nr_transport_addr *remote_addr);
 
+int nr_socket_buffered_stun_reset(nr_socket *sock, nr_socket *new_inner);
+
 #endif
 

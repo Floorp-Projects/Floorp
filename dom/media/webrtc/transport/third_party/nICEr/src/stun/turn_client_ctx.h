@@ -38,6 +38,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _turn_client_ctx_h
 #define _turn_client_ctx_h
 
+struct nr_ice_ctx_;
+
 /*
    Represents a single set of STUN transactions, i.e.,
    Allocate, Refresh, Permission. It automatically handles
@@ -96,6 +98,12 @@ typedef struct nr_turn_client_ctx_ {
   nr_turn_stun_ctx_head stun_ctxs;
   nr_turn_permission_head permissions;
 
+  /* We need access to the socket factory to create new TCP sockets for handling
+   * STUN/300 responses. */
+  /* If we were to require TCP nr_sockets to allow multiple connect calls by
+   * disconnecting and re-connecting, we could avoid this requirement. */
+  struct nr_ice_ctx_* ctx;
+
   NR_async_cb finished_cb;
   void *cb_arg;
 
@@ -110,10 +118,11 @@ typedef struct nr_turn_client_ctx_ {
 
 extern int NR_LOG_TURN;
 
-int nr_turn_client_ctx_create(const char *label, nr_socket *sock,
-                              const char *username, Data *password,
-                              nr_transport_addr *addr,
-                              nr_turn_client_ctx **ctxp);
+int nr_turn_client_ctx_create(const char* label, nr_socket* sock,
+                              const char* username, Data* password,
+                              nr_transport_addr* addr,
+                              struct nr_ice_ctx_* ice_ctx,
+                              nr_turn_client_ctx** ctxp);
 int nr_turn_client_ctx_destroy(nr_turn_client_ctx **ctxp);
 int nr_turn_client_allocate(nr_turn_client_ctx *ctx,
                             NR_async_cb finished_cb, void *cb_arg);
