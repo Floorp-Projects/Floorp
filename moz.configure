@@ -782,13 +782,13 @@ def possible_makes(make, host):
     if make:
         candidates.append(make[0])
     if host.kernel == "WINNT":
-        candidates.extend(("make", "gmake"))
+        candidates.extend(("mozmake", "make", "gmake"))
     else:
         candidates.extend(("gmake", "make"))
     return candidates
 
 
-check_prog("GMAKE", possible_makes)
+check_prog("GMAKE", possible_makes, bootstrap="mozmake")
 
 # watchman detection
 # ==============================================================
