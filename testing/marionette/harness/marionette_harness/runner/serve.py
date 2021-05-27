@@ -75,7 +75,7 @@ class ServerProxy(multiprocessing.Process, BlockingChannel):
     def run(self):
         try:
             server = self.init_func(*self.init_args, **self.init_kwargs)
-            server.start(block=False)
+            server.start()
             self.send(("ok", ()))
 
             while True:
