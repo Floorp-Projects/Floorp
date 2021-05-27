@@ -222,7 +222,7 @@ class MachCommands(MachCommandBase):
         tests = mp.active_tests(
             filters=filters,
             disabled=False,
-            python=self.virtualenv_manager.version_info()[0],
+            python=self.virtualenv_manager.version_info[0],
             **mozinfo.info
         )
 
