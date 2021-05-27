@@ -355,14 +355,11 @@ class VirtualenvManager(VirtualenvHelper):
                     populate_local_paths=self.populate_local_paths,
                 )
                 submanager.populate(sitecustomize=sitecustomize)
-
-                return True
-
-            if package[0].endswith(".pth"):
+            elif package[0].endswith(".pth"):
                 assert len(package) == 2
 
                 if not self.populate_local_paths:
-                    return True
+                    return
 
                 path = os.path.join(self.topsrcdir, package[1])
 
@@ -372,28 +369,20 @@ class VirtualenvManager(VirtualenvHelper):
                     # to be moved around (as long as the paths relative to
                     # each other remain the same).
                     f.write("%s\n" % os.path.relpath(path, python_lib))
-                return True
-
-            if package[0] == "thunderbird":
+            elif package[0] == "thunderbird":
                 if is_thunderbird:
-                    return handle_package(package[1:])
-                else:
-                    return True
-
-            if package[0] in ("windows", "!windows"):
+                    handle_package(package[1:])
+            elif package[0] in ("windows", "!windows"):
                 for_win = not package[0].startswith("!")
                 is_win = sys.platform == "win32"
                 if is_win == for_win:
-                    return handle_package(package[1:])
-                return True
-
-            if package[0] in ("python2", "python3"):
+                    handle_package(package[1:])
+            elif package[0] in ("python2", "python3"):
                 for_python3 = package[0].endswith("3")
                 if PY3 == for_python3:
-                    return handle_package(package[1:])
-                return True
-
-            raise Exception("Unknown action: %s" % package[0])
+                    handle_package(package[1:])
+            else:
+                raise Exception("Unknown action: %s" % package[0])
 
         # We always target the OS X deployment target that Python itself was
         # built with, regardless of what's in the current environment. If we
