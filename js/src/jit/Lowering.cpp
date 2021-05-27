@@ -5994,9 +5994,16 @@ void LIRGenerator::visitWasmSelect(MWasmSelect* ins) {
     return;
   }
 
+#if defined(JS_CODEGEN_ARM64)
+  // Same issue as above
+  auto* lir = new (alloc())
+      LWasmSelect(useRegisterAtStart(ins->trueExpr()),
+                  useRegister(ins->falseExpr()), useRegister(ins->condExpr()));
+#else
   auto* lir = new (alloc())
       LWasmSelect(useRegisterAtStart(ins->trueExpr()), useAny(ins->falseExpr()),
                   useRegister(ins->condExpr()));
+#endif
 
   defineReuseInput(lir, ins, LWasmSelect::TrueExprIndex);
 }
