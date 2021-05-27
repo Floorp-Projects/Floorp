@@ -17,6 +17,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.utils.creditCardIIN
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.toEditable
+import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorState
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardEditorInteractor
 import org.mozilla.fenix.settings.creditcards.last4Digits
@@ -64,8 +65,10 @@ class CreditCardEditorView(
     }
 
     /**
-     * Saves a new credit card or updates an existing one with data from user input.
-     * @param state The state for the CreditCardEditorFragment containing all credit card data.
+     * Saves a new credit card or updates an existing one with data from the user input.
+     *
+     * @param state The state of the [CreditCardEditorFragment] containing the edited credit card
+     * information.
      */
     internal fun saveCreditCard(state: CreditCardEditorState) {
         containerView.hideKeyboard()
@@ -76,7 +79,7 @@ class CreditCardEditorView(
             if (state.isEditing) {
                 val fields = UpdatableCreditCardFields(
                     billingName = name_on_card_input.text.toString(),
-                    cardNumber = CreditCardNumber.Encrypted(cardNumber),
+                    cardNumber = CreditCardNumber.Plaintext(cardNumber),
                     cardNumberLast4 = cardNumber.last4Digits(),
                     expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
                     expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
@@ -99,6 +102,7 @@ class CreditCardEditorView(
 
     /**
      * Validates the credit card information entered by the user.
+     *
      * @return true if the credit card is valid, false otherwise.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

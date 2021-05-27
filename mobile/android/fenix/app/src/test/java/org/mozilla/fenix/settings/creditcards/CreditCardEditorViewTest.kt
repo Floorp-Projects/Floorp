@@ -222,7 +222,7 @@ class CreditCardEditorViewTest {
                 guid = creditCard.guid,
                 creditCardFields = UpdatableCreditCardFields(
                     billingName = creditCard.billingName,
-                    cardNumber = creditCard.encryptedCardNumber,
+                    cardNumber = CreditCardNumber.Plaintext(cardNumber),
                     cardNumberLast4 = creditCard.cardNumberLast4,
                     expiryMonth = creditCard.expiryMonth,
                     expiryYear = creditCard.expiryYear,
