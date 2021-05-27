@@ -367,10 +367,18 @@ async function toggleBookmarksToolbar(visible = true) {
   // Third parameter is 'persist' and true is the default.
   // Fourth parameter is 'animated' and we want no animation.
   setToolbarVisibility(bookmarksToolbar, visible, true, false);
+  if (!visible) {
+    return BrowserTestUtils.waitForMutationCondition(
+      bookmarksToolbar,
+      { attributes: true },
+      () => bookmarksToolbar.collapsed
+    );
+  }
 
-  return TestUtils.waitForCondition(() => {
-    return visible ? !bookmarksToolbar.collapsed : bookmarksToolbar.collapsed;
-  }, "waiting for toolbar to become " + (visible ? "visible" : "hidden"));
+  return BrowserTestUtils.waitForEvent(
+    bookmarksToolbar,
+    "BookmarksToolbarVisibilityUpdated"
+  );
 }
 
 async function openContextMenuInPopup(extension, selector = "body") {
