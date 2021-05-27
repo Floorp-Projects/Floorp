@@ -4666,26 +4666,46 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
                "A scrolled inner frame shouldn't have any border!");
     const LogicalMargin& padding = borderPadding;
 
-    // Scrollable flex containers have special behavior for computing their
-    // scrollable overflow [1]. They incorporate the margin-boxes of their flex
-    // items, as well as their end-edge padding area (which is adjacent to the
-    // margin-box of the last flex item in a single column flex container for
-    // example). So, we union the margin boxes of our flex items, and apply the
-    // container's padding as an inflation to that. Note that this adds padding
-    // on all sides, not just the end sides; this is fine because our flex items
-    // are placed relative to our content-box origin. The inflated bounds won't
-    // go beyond our padding-box edges on the start sides.
+    // The CSS Overflow spec [1] requires that a scrollable container's
+    // scrollable overflow should include the following areas.
+    //
+    // a) "the box's own content and padding areas": we treat the *content* as
+    // the scrolled inner frame's theoretical content-box that's intrinsically
+    // sized to the union of all the flex items' margin boxes, _without_
+    // relative positioning applied. The *padding areas* is just inflation on
+    // top of the theoretical content-box by the flex container's padding.
+    //
+    // b) "the margin areas of grid item and flex item boxes for which the box
+    // establishes a containing block": a) already includes the flex items'
+    // normal-positioned margin boxes into the scrollable overflow, but their
+    // relative-positioned margin boxes should also be included because relpos
+    // children are still flex items.
     //
     // [1] https://drafts.csswg.org/css-overflow-3/#scrollable.
-    nsRect flexItemMarginBoxBounds;
+
+    // Union of normal-positioned margin boxes for all the items.
+    nsRect itemMarginBoxes;
+    // Union of relative-positioned margin boxes for the relpos items only.
+    nsRect relPosItemMarginBoxes;
+
     for (const FlexLine& line : lines) {
       for (const FlexItem& item : line.Items()) {
-        flexItemMarginBoxBounds =
-            flexItemMarginBoxBounds.Union(item.Frame()->GetMarginRect());
+        const nsIFrame* f = item.Frame();
+        if (MOZ_UNLIKELY(f->IsRelativelyPositioned())) {
+          const nsRect marginRect = f->GetMarginRectRelativeToSelf();
+          itemMarginBoxes =
+              itemMarginBoxes.Union(marginRect + f->GetNormalPosition());
+          relPosItemMarginBoxes =
+              relPosItemMarginBoxes.Union(marginRect + f->GetPosition());
+        } else {
+          itemMarginBoxes = itemMarginBoxes.Union(f->GetMarginRect());
+        }
       }
     }
-    flexItemMarginBoxBounds.Inflate(padding.GetPhysicalMargin(wm));
-    aReflowOutput.mOverflowAreas.UnionAllWith(flexItemMarginBoxBounds);
+
+    itemMarginBoxes.Inflate(padding.GetPhysicalMargin(wm));
+    aReflowOutput.mOverflowAreas.UnionAllWith(itemMarginBoxes);
+    aReflowOutput.mOverflowAreas.UnionAllWith(relPosItemMarginBoxes);
   }
 
   // Merge overflow container bounds and status.
