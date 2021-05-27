@@ -8,9 +8,48 @@
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL", "ChannelWrapper"]);
 
+class AllowList {
+  constructor(id) {
+    this._id = id;
+  }
+
+  setShims(patterns, notHosts) {
+    this._shimPatterns = patterns;
+    this._shimMatcher = new MatchPatternSet(patterns || []);
+    this._shimNotHosts = notHosts || [];
+    return this;
+  }
+
+  setAllows(patterns, hosts) {
+    this._allowPatterns = patterns;
+    this._allowMatcher = new MatchPatternSet(patterns) || [];
+    this._allowHosts = hosts || [];
+    return this;
+  }
+
+  shims(url, topHost) {
+    return (
+      this._shimMatcher?.matches(url) && !this._shimNotHosts?.includes(topHost)
+    );
+  }
+
+  allows(url, topHost) {
+    return (
+      this._allowMatcher?.matches(url) && this._allowHosts?.includes(topHost)
+    );
+  }
+}
+
 class Manager {
   constructor() {
     this._allowLists = new Map();
+  }
+
+  _getAllowList(id) {
+    if (!this._allowLists.has(id)) {
+      this._allowLists.set(id, new AllowList(id));
+    }
+    return this._allowLists.get(id);
   }
 
   _ensureStarted() {
@@ -42,22 +81,14 @@ class Manager {
             return;
           }
           for (const allowList of this._allowLists.values()) {
-            for (const entry of allowList.values()) {
-              const { matcher, hosts, notHosts, hostOptIns } = entry;
-              if (matcher.matches(url)) {
-                if (
-                  !notHosts?.has(topHost) &&
-                  (hosts === true || hosts.has(topHost))
-                ) {
-                  this._unblockedChannelIds.add(channelId);
-                  if (hostOptIns.has(topHost)) {
-                    channel.allow(); // we just allow the request
-                  } else {
-                    channel.replace(); // we will be shimming
-                  }
-                  return;
-                }
-              }
+            if (allowList.shims(url, topHost)) {
+              this._unblockedChannelIds.add(channelId);
+              channel.replace(); // we will be shimming this request
+              return;
+            } else if (allowList.allows(url, topHost)) {
+              this._unblockedChannelIds.add(channelId);
+              channel.allow(); // we just want to allow this request
+              return;
             }
           }
           break;
@@ -86,43 +117,14 @@ class Manager {
     return this._unblockedChannelIds?.has(channelId);
   }
 
-  allow(allowListId, patterns, { hosts, notHosts, hostOptIns = [] }) {
+  allow(allowListId, patterns, hosts) {
     this._ensureStarted();
+    this._getAllowList(allowListId).setAllows(patterns, hosts);
+  }
 
-    if (!this._allowLists.has(allowListId)) {
-      this._allowLists.set(allowListId, new Map());
-    }
-    const allowList = this._allowLists.get(allowListId);
-    for (const pattern of patterns) {
-      if (!allowList.has(pattern)) {
-        allowList.set(pattern, {
-          matcher: new MatchPattern(pattern),
-          hostOptIns: new Set(),
-        });
-      }
-      const allowListPattern = allowList.get(pattern);
-      for (const host of hostOptIns) {
-        allowListPattern.hostOptIns.add(host);
-      }
-      if (!hosts) {
-        allowListPattern.hosts = true;
-      } else if (allowListPattern.hosts !== true) {
-        if (!allowListPattern.hosts) {
-          allowListPattern.hosts = new Set();
-        }
-        for (const host of hosts) {
-          allowListPattern.hosts.add(host);
-        }
-      }
-      if (notHosts) {
-        if (!allowListPattern.notHosts) {
-          allowListPattern.notHosts = new Set();
-        }
-        for (const notHost of notHosts) {
-          allowListPattern.notHosts.add(notHost);
-        }
-      }
-    }
+  shim(allowListId, patterns, notHosts) {
+    this._ensureStarted();
+    this._getAllowList(allowListId).setShims(patterns, notHosts);
   }
 
   revoke(allowListId) {
@@ -150,8 +152,11 @@ this.trackingProtection = class extends ExtensionAPI {
   getAPI(context) {
     return {
       trackingProtection: {
-        async allow(allowListId, patterns, options) {
-          manager.allow(allowListId, patterns, options);
+        async shim(allowListId, patterns, notHosts) {
+          manager.shim(allowListId, patterns, notHosts);
+        },
+        async allow(allowListId, patterns, hosts) {
+          manager.allow(allowListId, patterns, hosts);
         },
         async revoke(allowListId) {
           manager.revoke(allowListId);

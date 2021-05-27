@@ -158,13 +158,22 @@ class Shim {
     return this._allowRequestsInETP();
   }
 
-  _allowRequestsInETP() {
+  async _allowRequestsInETP() {
     const matches = this.matches.map(m => m.patterns).flat();
-    return browser.trackingProtection.allow(this.id, matches, {
-      hosts: this.hosts,
-      notHosts: this.notHosts,
-      hostOptIns: Array.from(this._hostOptIns),
-    });
+    if (matches.length) {
+      await browser.trackingProtection.shim(this.id, matches);
+    }
+
+    if (this._hostOptIns.size) {
+      const optIns = this.getApplicableOptIns();
+      if (optIns.length) {
+        await browser.trackingProtection.allow(
+          this.id,
+          this._optInPatterns,
+          Array.from(this._hostOptIns)
+        );
+      }
+    }
   }
 
   _revokeRequestsInETP() {
@@ -228,22 +237,6 @@ class Shim {
     return undefined;
   }
 
-  getAllOptIns() {
-    if (this._allOptIns) {
-      return this._allOptIns;
-    }
-    const optins = [];
-    for (const unblock of this.unblocksOnOptIn || []) {
-      if (typeof unblock === "string") {
-        optins.push(unblock);
-      } else {
-        optins.push.apply(optins, unblock.patterns);
-      }
-    }
-    this._allOptIns = optins;
-    return optins;
-  }
-
   async getApplicableOptIns() {
     if (this._applicableOptIns) {
       return this._applicableOptIns;
@@ -276,16 +269,14 @@ class Shim {
   async onUserOptIn(host) {
     const optins = await this.getApplicableOptIns();
     if (optins.length) {
-      const { matches } = this;
       this.userHasOptedIn = true;
-      const toUnblock = [...matches.map(m => m.patterns).flat(), ...optins];
-      await browser.trackingProtection.allow(this.id, toUnblock, {
-        hosts: this.hosts,
-        hostOptIns: [host],
-      });
+      this._hostOptIns.add(host);
+      await browser.trackingProtection.allow(
+        this.id,
+        optins,
+        Array.from(this._hostOptIns)
+      );
     }
-
-    this._hostOptIns.add(host);
   }
 
   hasUserOptedInAlready(host) {
@@ -325,17 +316,10 @@ class Shims {
     }
 
     const allMatchTypePatterns = new Map();
-    const allOptInPatterns = new Set();
     const allLogos = [];
     for (const shim of this.shims.values()) {
       const { logos, matches } = shim;
       allLogos.push(...logos);
-      const optins = shim.getAllOptIns();
-      if (optins.length) {
-        for (const pattern of optins || []) {
-          allOptInPatterns.add(pattern);
-        }
-      }
       for (const { patterns, types } of matches || []) {
         for (const type of types) {
           if (!allMatchTypePatterns.has(type)) {
@@ -347,11 +331,6 @@ class Shims {
           }
         }
       }
-    }
-
-    if (!allMatchTypePatterns.size) {
-      debug("Skipping shims; none enabled");
-      return;
     }
 
     if (allLogos.length) {
@@ -375,12 +354,9 @@ class Shims {
       );
     }
 
-    if (allOptInPatterns.size) {
-      browser.webRequest.onBeforeRequest.addListener(
-        this._ensureOptInRequestAllowedOnTab.bind(this),
-        { urls: Array.from(allOptInPatterns) },
-        ["blocking"]
-      );
+    if (!allMatchTypePatterns.size) {
+      debug("Skipping shims; none enabled");
+      return;
     }
 
     for (const [type, { patterns }] of allMatchTypePatterns.entries()) {
@@ -515,67 +491,6 @@ class Shims {
     }
 
     return { cancel: true };
-  }
-
-  async _ensureOptInRequestAllowedOnTab(details) {
-    await this._haveCheckedEnabledPref;
-
-    if (!this.enabled) {
-      return undefined;
-    }
-
-    // If a user has opted into allowing some tracking requests, we only
-    // want to allow them on those tabs where the opt-in should apply.
-    // This listener ensures that they are otherwise blocked.
-
-    const { frameId, requestId, tabId, url } = details;
-
-    // Ignore requests unrelated to tabs
-    if (tabId < 0) {
-      return undefined;
-    }
-
-    // We need to base our checks not on the frame's host, but the tab's.
-    const topHost = new URL((await browser.tabs.get(tabId)).url).hostname;
-
-    // Sanity check; only worry about requests ETP would actually block
-    if (!(await browser.trackingProtection.wasRequestUnblocked(requestId))) {
-      return undefined;
-    }
-
-    let userOptedIn = false;
-    for (const shim of this.shims.values()) {
-      await shim.ready;
-
-      if (!shim.enabled) {
-        continue;
-      }
-
-      if (!shim.onlyIfBlockedByETP) {
-        continue;
-      }
-
-      if (!shim.meantForHost(topHost)) {
-        continue;
-      }
-
-      if (!shim.hasUserOptedInAlready(topHost)) {
-        continue;
-      }
-
-      if (await shim.unblocksURLOnOptIn(url)) {
-        userOptedIn = true;
-        break;
-      }
-    }
-
-    // reblock the request if the user has not opted into it on the tab
-    if (!userOptedIn) {
-      return { cancel: true };
-    }
-
-    debug(`Allowing ${url} on tab ${tabId} frame ${frameId} due to opt-in`);
-    return undefined;
   }
 
   async _ensureShimForRequestOnTab(details) {
