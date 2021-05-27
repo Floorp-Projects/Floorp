@@ -7,6 +7,24 @@
 const LoginAutoComplete = Cc[
   "@mozilla.org/login-manager/autocompletesearch;1"
 ].getService(Ci.nsILoginAutoCompleteSearch).wrappedJSObject;
+// TODO: create a fake window for the test document to pass fathom.isVisible check.
+// We should consider moving these tests to mochitest because many fathom
+// signals rely on visibility, position, etc., of the test element (See Bug 1712699),
+// which is not supported in xpcshell-test.
+function makeDocumentVisibleToFathom(doc) {
+  let win = {
+    getComputedStyle() {
+      return {
+        overflow: "visible",
+        visibility: "visible",
+      };
+    },
+  };
+  Object.defineProperty(doc, "defaultView", {
+    value: win,
+  });
+  return doc;
+}
 
 function labelledByDocument() {
   let doc = MockDocument.createTestDocument(
@@ -51,13 +69,17 @@ const TESTCASES = [
     expectedResult: [true],
   },
   {
+    // TODO: Add <placeholder="confirm"> to "confirm-passowrd" password field so fathom can recognize it
+    // as a new password field. Currently, the fathom rules don't really work well in xpcshell-test
+    // because signals rely on visibility, position doesn't work. If we move this test to mochitest, we should
+    // be able to remove the interim solution (See Bug 1712699).
     description: "Basic password change form",
     document: `
       <h1>Change password</h1>
       <form>
         <label>Current Password: <input type="password" name="current-password"></label>
         <label>New Password: <input type="password" name="new-password"></label>
-        <label>Confirm Password: <input type="password" name="confirm-password"></label>
+        <label>Confirm Password: <input type="password" name="confirm-password" placeholder="confirm"></label>
         <input type="submit" value="Save">
       </form>
     `,
@@ -149,6 +171,8 @@ for (let testcase of TESTCASES) {
               "http://localhost:8080/test/",
               testcase.document
             );
+
+      document = makeDocumentVisibleToFathom(document);
 
       const results = [];
       for (let input of testcase.inputs ||
