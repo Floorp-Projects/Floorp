@@ -452,8 +452,9 @@ class WebRTCParent extends JSWindowActorParent {
           // We consider a camera active if it is active or was active within a
           // grace period of milliseconds ago.
           activeCamera = device;
-          break;
         }
+        // Only consider activity of the first (most ideal) video device
+        break;
       }
 
       for (let device of audioDevices) {
@@ -470,8 +471,9 @@ class WebRTCParent extends JSWindowActorParent {
           // We consider a microphone active if it is active or was active
           // within a grace period of milliseconds ago.
           activeMic = device;
-          break;
         }
+        // Only consider activity of the first (most ideal) audio device
+        break;
       }
     }
     if (
