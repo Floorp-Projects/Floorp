@@ -53,10 +53,6 @@ class CreditCardsSettingFragmentTest {
             creditCardsSettingFragment.getPreferenceKey(R.string.pref_key_credit_cards_manage_cards)
         )
 
-        val directions =
-            CreditCardsSettingFragmentDirections
-                .actionCreditCardsSettingFragmentToCreditCardsManagementFragment()
-
         val creditCards: List<CreditCard> = listOf(mockk(), mockk())
 
         val creditCardsState = CreditCardsListState(creditCards = creditCards)
@@ -69,10 +65,6 @@ class CreditCardsSettingFragmentTest {
 
         assertNull(manageCardsPreference?.icon)
         assertEquals(preferenceTitle, manageCardsPreference?.title)
-
-        manageCardsPreference?.performClick()
-
-        verify { navController.navigateBlockingForAsyncNavGraph(directions) }
     }
 
     @Test

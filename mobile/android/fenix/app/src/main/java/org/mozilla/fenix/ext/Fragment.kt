@@ -60,15 +60,29 @@ fun Fragment.hideToolbar() {
 }
 
 /**
- * Pops the backstack to force users to re-auth if they put the app in the background and return to it
- * while being inside the saved logins flow
+ * Pops the backstack to force users to re-auth if they put the app in the background and return to
+ * it while being inside a secured flow (e.g. logins or credit cards).
  *
- * Does nothing if the user is currently navigating to any of the [destinations] given as a parameter
- *
+ * Does nothing if the user is currently navigating to any of the [destinations] given as a
+ * parameter.
  */
-fun Fragment.redirectToReAuth(destinations: List<Int>, currentDestination: Int?) {
+fun Fragment.redirectToReAuth(
+    destinations: List<Int>,
+    currentDestination: Int?,
+    currentLocation: Int
+) {
     if (currentDestination !in destinations) {
-        findNavController().popBackStack(R.id.savedLoginsAuthFragment, false)
+        when (currentLocation) {
+            R.id.loginDetailFragment,
+            R.id.editLoginFragment,
+            R.id.savedLoginsFragment -> {
+                findNavController().popBackStack(R.id.savedLoginsAuthFragment, false)
+            }
+            R.id.creditCardEditorFragment,
+            R.id.creditCardsManagementFragment -> {
+                findNavController().popBackStack(R.id.creditCardsSettingFragment, false)
+            }
+        }
     }
 }
 

@@ -188,7 +188,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
             }
             create()
         }.show().secure(activity)
-        context.settings().incrementShowLoginsSecureWarningCount()
+        context.settings().incrementSecureWarningCount()
     }
 
     @Suppress("Deprecation") // This is only used when BiometricPrompt is unavailable

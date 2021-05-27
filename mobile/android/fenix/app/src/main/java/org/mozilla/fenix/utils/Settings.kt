@@ -249,7 +249,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         get() = loginsSecureWarningSyncCount.underMaxCount()
 
     val shouldShowSecurityPinWarning: Boolean
-        get() = loginsSecureWarningCount.underMaxCount()
+        get() = secureWarningCount.underMaxCount()
 
     var shouldShowPrivacyPopWindow by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_privacy_pop_window),
@@ -652,12 +652,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal val loginsSecureWarningCount = counterPreference(
-        appContext.getPreferenceKey(R.string.pref_key_logins_secure_warning),
+    internal val secureWarningCount = counterPreference(
+        appContext.getPreferenceKey(R.string.pref_key_secure_warning),
         maxCount = 1
     )
 
-    fun incrementShowLoginsSecureWarningCount() = loginsSecureWarningCount.increment()
+    fun incrementSecureWarningCount() = secureWarningCount.increment()
 
     fun incrementShowLoginsSecureWarningSyncCount() = loginsSecureWarningSyncCount.increment()
 

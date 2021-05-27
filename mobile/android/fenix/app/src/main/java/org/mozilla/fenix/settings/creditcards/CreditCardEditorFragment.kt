@@ -15,6 +15,7 @@ import androidx.navigation.fragment.navArgs
 import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.creditcards.controller.DefaultCreditCardEditorController
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardEditorInteractor
@@ -28,6 +29,8 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
 
     private lateinit var creditCardEditorState: CreditCardEditorState
     private lateinit var creditCardEditorView: CreditCardEditorView
+    private lateinit var menu: Menu
+
     private val args by navArgs<CreditCardEditorFragmentArgs>()
 
     /**
@@ -64,8 +67,25 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
         creditCardEditorView.bind(creditCardEditorState)
     }
 
+    /**
+     * Close any open dialogs or menus and reauthenticate if the fragment is paused and
+     * the user is not navigating to [CreditCardsManagementFragment].
+     */
+    override fun onPause() {
+        menu.close()
+
+        redirectToReAuth(
+            listOf(R.id.creditCardsManagementFragment),
+            findNavController().currentDestination?.id,
+            R.id.creditCardEditorFragment
+        )
+
+        super.onPause()
+    }
+
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.credit_card_editor, menu)
+        this.menu = menu
 
         menu.findItem(R.id.delete_credit_card_button).isVisible = isEditing
     }

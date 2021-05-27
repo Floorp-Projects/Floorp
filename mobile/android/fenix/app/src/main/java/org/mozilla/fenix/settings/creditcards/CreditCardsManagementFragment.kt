@@ -19,6 +19,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.creditcards.controller.DefaultCreditCardsManagementController
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementInteractor
@@ -73,6 +74,20 @@ class CreditCardsManagementFragment : SecureFragment() {
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.credit_cards_saved_cards))
+    }
+
+    /**
+     * When the fragment is paused, navigate back to the settings page to reauthenticate.
+     */
+    override fun onPause() {
+        // Don't redirect if the user is navigating to the credit card editor fragment.
+        redirectToReAuth(
+            listOf(R.id.creditCardEditorFragment),
+            findNavController().currentDestination?.id,
+            R.id.creditCardsManagementFragment
+        )
+
+        super.onPause()
     }
 
     /**
