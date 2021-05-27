@@ -7331,6 +7331,13 @@
   value: true
   mirror: always
 
+# If > 0, nsRefreshDriver will keep ticking this amount of milliseconds after
+# top level page load.
+- name: layout.keep_ticking_after_load_ms
+  type: uint32_t
+  value: 1000
+  mirror: always
+
 # Is layout of CSS outline-style:auto enabled?
 - name: layout.css.outline-style-auto.enabled
   type: bool
