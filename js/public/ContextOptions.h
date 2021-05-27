@@ -161,6 +161,12 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
+  bool classStaticBlocks() const { return classStaticBlocks_; }
+  ContextOptions& setClassStaticBlocks(bool enabled) {
+    classStaticBlocks_ = enabled;
+    return *this;
+  }
+
   bool topLevelAwait() const { return topLevelAwait_; }
   ContextOptions& setTopLevelAwait(bool enabled) {
     topLevelAwait_ = enabled;
@@ -278,6 +284,7 @@ class JS_PUBLIC_API ContextOptions {
   bool privateClassMethods_ : 1;
   bool ergonomicBrandChecks_ : 1;
   bool topLevelAwait_ : 1;
+  bool classStaticBlocks_ : 1;
 };
 
 JS_PUBLIC_API ContextOptions& ContextOptionsRef(JSContext* cx);
