@@ -24,6 +24,7 @@
         data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
 
   <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
     <html:link rel="localization" href="browser/preferences/permissions.ftl"/>
   </linkset>
 
@@ -46,10 +47,14 @@
     <hbox pack="end">
       <button id="btnBlock" disabled="true" data-l10n-id="permissions-block"
               oncommand="gPermissionManager.addPermission(Ci.nsIPermissionManager.DENY_ACTION);"/>
-      <button id="btnSession" disabled="true" data-l10n-id="permissions-session"
+      <button id="btnCookieSession" disabled="true" data-l10n-id="permissions-session"
               oncommand="gPermissionManager.addPermission(Ci.nsICookiePermission.ACCESS_SESSION);"/>
       <button id="btnAllow" disabled="true" data-l10n-id="permissions-allow"
               oncommand="gPermissionManager.addPermission(Ci.nsIPermissionManager.ALLOW_ACTION);"/>
+      <button id="btnHttpsOnlyOff" disabled="true" data-l10n-id="permissions-button-off"
+              oncommand="gPermissionManager.addPermission(Ci.nsIPermissionManager.ALLOW_ACTION);"/>
+      <button id="btnHttpsOnlyOffTmp" disabled="true" data-l10n-id="permissions-button-off-temporarily"
+              oncommand="gPermissionManager.addPermission(Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW_SESSION);"/>
     </hbox>
     <separator class="thin"/>
     <listheader>
