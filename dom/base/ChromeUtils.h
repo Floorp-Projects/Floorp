@@ -151,7 +151,13 @@ class ChromeUtils {
 
   static void ClearRecentJSDevError(GlobalObject& aGlobal);
 
-  static void ClearStyleSheetCache(GlobalObject&, nsIPrincipal* aForPrincipal);
+  static void ClearStyleSheetCacheByPrincipal(GlobalObject&,
+                                              nsIPrincipal* aForPrincipal);
+
+  static void ClearStyleSheetCacheByBaseDomain(GlobalObject& aGlobal,
+                                               const nsACString& aBaseDomain);
+
+  static void ClearStyleSheetCache(GlobalObject& aGlobal);
 
   static already_AddRefed<Promise> RequestPerformanceMetrics(
       GlobalObject& aGlobal, ErrorResult& aRv);

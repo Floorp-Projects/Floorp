@@ -193,9 +193,20 @@ namespace ChromeUtils {
 #endif // NIGHTLY_BUILD
 
   /**
-   * Clears the stylesheet cache.
+   * Clears the stylesheet cache by baseDomain. This includes associated
+   * state-partitioned cache.
    */
-  void clearStyleSheetCache(optional Principal? principal = null);
+  void clearStyleSheetCacheByBaseDomain(UTF8String baseDomain);
+
+  /**
+   * Clears the stylesheet cache by principal.
+   */
+  void clearStyleSheetCacheByPrincipal(Principal principal);
+
+  /**
+   * Clears the entire stylesheet cache.
+   */
+  void clearStyleSheetCache();
 
   /**
    * If the profiler is currently running and recording the current thread,

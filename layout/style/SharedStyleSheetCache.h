@@ -99,7 +99,8 @@ class SharedStyleSheetCache final : public nsIMemoryReporter {
   // be called when the document goes away, or when its principal changes.
   void UnregisterLoader(css::Loader&);
 
-  static void Clear(nsIPrincipal* aForPrincipal = nullptr);
+  static void Clear(nsIPrincipal* aForPrincipal = nullptr,
+                    const nsACString* aBaseDomain = nullptr);
 
  private:
   static already_AddRefed<SharedStyleSheetCache> Create();
