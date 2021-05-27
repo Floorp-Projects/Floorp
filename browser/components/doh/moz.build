@@ -14,5 +14,9 @@ EXTRA_JS_MODULES += [
     "TRRPerformance.jsm",
 ]
 
+TESTING_JS_MODULES += [
+    "DoHTestUtils.jsm",
+]
+
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]

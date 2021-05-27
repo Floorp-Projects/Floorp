@@ -39,7 +39,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "Config",
+  "DoHConfigController",
   "resource:///modules/DoHConfig.jsm"
 );
 
@@ -363,7 +363,7 @@ async function platform() {
 // provider if the check is successful, else null. Currently we only support
 // this for Comcast networks.
 async function providerSteering() {
-  if (!Config.providerSteering.enabled) {
+  if (!DoHConfigController.currentConfig.providerSteering.enabled) {
     return null;
   }
   const TEST_DOMAIN = "doh.test.";
@@ -371,13 +371,8 @@ async function providerSteering() {
   // Array of { name, canonicalName, uri } where name is an identifier for
   // telemetry, canonicalName is the expected CNAME when looking up doh.test,
   // and uri is the provider's DoH endpoint.
-  let steeredProviders = Config.providerSteering.providerList;
-  try {
-    steeredProviders = JSON.parse(steeredProviders);
-  } catch (e) {
-    console.log("Provider list is invalid JSON, moving on.");
-    return null;
-  }
+  let steeredProviders =
+    DoHConfigController.currentConfig.providerSteering.providerList;
 
   if (!steeredProviders || !steeredProviders.length) {
     return null;
