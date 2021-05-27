@@ -1161,7 +1161,8 @@ void MediaKeySystemAccess::NotifyObservers(nsPIDOMWindowInner* aWindow,
           NS_ConvertUTF16toUTF8(json).get());
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
-    obs->NotifyObservers(aWindow, "mediakeys-request", json.get());
+    obs->NotifyObservers(aWindow, MediaKeys::kMediaKeysRequestTopic,
+                         json.get());
   }
 }
 

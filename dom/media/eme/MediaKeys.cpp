@@ -767,7 +767,6 @@ void MediaKeys::CheckIsElementCapturePossible() {
     jw.End();
   }
 
-  constexpr const char* kMediaKeysRequestTopic = "mediakeys-request";
   MOZ_DIAGNOSTIC_ASSERT(!mCaptureCheckRequestJson.IsEmpty());
   observerService->NotifyObservers(mParent.get(), kMediaKeysRequestTopic,
                                    mCaptureCheckRequestJson.get());
