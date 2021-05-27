@@ -8,7 +8,7 @@ import os
 import sys
 import tempfile
 import unittest
-from StringIO import StringIO
+from io import StringIO
 from os import path
 
 TELEMETRY_ROOT_PATH = path.abspath(
@@ -25,7 +25,7 @@ class TestScalarDataJson(unittest.TestCase):
     maxDiff = None
 
     def test_JSON_definitions_generation(self):
-        SCALARS_YAML = """
+        SCALARS_YAML = b"""
 newscalar:
   withoptin:
     bug_numbers:
