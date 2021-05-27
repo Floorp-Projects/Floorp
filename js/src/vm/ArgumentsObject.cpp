@@ -954,8 +954,7 @@ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
       return false;
     }
 
-    unsigned attrs =
-        JSPROP_RESOLVING | JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER;
+    unsigned attrs = JSPROP_RESOLVING | JSPROP_PERMANENT;
     if (!NativeDefineAccessorProperty(cx, argsobj, id, throwTypeError,
                                       throwTypeError, attrs)) {
       return false;

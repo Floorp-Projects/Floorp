@@ -1795,11 +1795,9 @@ bool js::NativeDefineAccessorProperty(JSContext* cx, HandleNativeObject obj,
                                       HandleId id, HandleObject getter,
                                       HandleObject setter, unsigned attrs) {
   Rooted<PropertyDescriptor> desc(
-      cx,
-      PropertyDescriptor::Accessor(
-          (attrs & JSPROP_GETTER) ? mozilla::Some(getter) : mozilla::Nothing(),
-          (attrs & JSPROP_SETTER) ? mozilla::Some(setter) : mozilla::Nothing(),
-          attrs & ~(JSPROP_GETTER | JSPROP_SETTER)));
+      cx, PropertyDescriptor::Accessor(
+              getter ? mozilla::Some(getter) : mozilla::Nothing(),
+              setter ? mozilla::Some(setter) : mozilla::Nothing(), attrs));
 
   ObjectOpResult result;
   if (!NativeDefineProperty(cx, obj, id, desc, result)) {

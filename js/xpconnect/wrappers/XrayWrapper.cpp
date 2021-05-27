@@ -449,7 +449,6 @@ static bool TryResolvePropertyFromSpecs(
         RootedObject getterObj(cx, JS_GetFunctionObject(getterFun));
         RootedObject setterObj(cx);
         if (psMatch->u.accessors.setter.selfHosted.funname) {
-          MOZ_ASSERT(attrs & JSPROP_SETTER);
           JSFunction* setterFun = JS::GetSelfHostedFunction(
               cx, psMatch->u.accessors.setter.selfHosted.funname, id, 0);
           if (!setterFun) {

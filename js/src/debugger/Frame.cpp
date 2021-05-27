@@ -1676,7 +1676,7 @@ DebuggerArguments* DebuggerArguments::create(JSContext* cx, HandleObject proto,
     }
     id = INT_TO_JSID(i);
     if (!NativeDefineAccessorProperty(cx, obj, id, getobj, nullptr,
-                                      JSPROP_ENUMERATE | JSPROP_GETTER)) {
+                                      JSPROP_ENUMERATE)) {
       return nullptr;
     }
     getobj->setExtendedSlot(0, Int32Value(i));

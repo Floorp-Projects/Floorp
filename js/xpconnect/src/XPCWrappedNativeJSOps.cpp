@@ -405,7 +405,6 @@ static bool DefinePropertyIfFound(
         return false;
       }
 
-      propFlags |= JSPROP_GETTER;
       propFlags &= ~JSPROP_ENUMERATE;
 
       AutoResolveName arn(ccx, id);
@@ -480,12 +479,10 @@ static bool DefinePropertyIfFound(
 
   MOZ_ASSERT(member->IsAttribute(), "way broken!");
 
-  propFlags |= JSPROP_GETTER;
   propFlags &= ~JSPROP_READONLY;
   RootedObject funobjGetter(ccx, funval.toObjectOrNull());
   RootedObject funobjSetter(ccx);
   if (member->IsWritableAttribute()) {
-    propFlags |= JSPROP_SETTER;
     funobjSetter = funobjGetter;
   }
 
