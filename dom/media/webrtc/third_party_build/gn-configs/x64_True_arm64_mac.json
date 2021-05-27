@@ -33935,7 +33935,9 @@
                 "//rtc_base/log_sinks.h",
                 "//rtc_base/rolling_accumulator.h",
                 "//rtc_base/ssl_roots.h",
-                "//rtc_base/mac_ifaddrs_converter.cc"
+                "//rtc_base/mac_ifaddrs_converter.cc",
+                "//rtc_base/ifaddrs_converter.cc",
+                "//rtc_base/ifaddrs_converter.h"
             ],
             "type": "static_library"
         },
