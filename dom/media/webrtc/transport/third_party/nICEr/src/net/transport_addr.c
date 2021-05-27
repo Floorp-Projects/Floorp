@@ -185,6 +185,32 @@ int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, const nr_transport
     return _status;
   }
 
+int nr_transport_addr_copy_addrport(nr_transport_addr *to, const nr_transport_addr *from)
+  {
+    int r,_status;
+
+    switch (from->ip_version) {
+      case NR_IPV4:
+        memcpy(&to->u.addr4, &from->u.addr4, sizeof(to->u.addr4));
+        break;
+      case NR_IPV6:
+        memcpy(&to->u.addr6, &from->u.addr6, sizeof(to->u.addr6));
+        break;
+      default:
+        ABORT(R_BAD_ARGS);
+    }
+
+    to->ip_version = from->ip_version;
+
+    if (r=nr_transport_addr_fmt_addr_string(to)) {
+      ABORT(r);
+    }
+
+    _status=0;
+ abort:
+    return _status;
+  }
+
 /* Convenience fxn. Is this the right API?*/
 int nr_ip4_port_to_transport_addr(UINT4 ip4, UINT2 port, int protocol, nr_transport_addr *addr)
   {

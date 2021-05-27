@@ -101,6 +101,8 @@ int nr_transport_addr_is_teredo(const nr_transport_addr *addr);
 int nr_transport_addr_check_compatibility(const nr_transport_addr *addr1, const nr_transport_addr *addr2);
 int nr_transport_addr_copy(nr_transport_addr *to, const nr_transport_addr *from);
 int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, const nr_transport_addr *from);
+/* Copies _just_ the address and port (also handles IP version) */
+int nr_transport_addr_copy_addrport(nr_transport_addr *to, const nr_transport_addr *from);
 int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr);
 int nr_transport_addr_fmt_ifname_addr_string(const nr_transport_addr *addr, char *buf, int len);
 int nr_transport_addr_set_port(nr_transport_addr *addr, int port);

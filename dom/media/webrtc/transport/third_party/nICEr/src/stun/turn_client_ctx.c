@@ -216,6 +216,101 @@ abort:
   return _status;
 }
 
+static int nr_turn_stun_ctx_handle_redirect(nr_turn_stun_ctx *ctx)
+{
+  int r, _status;
+  nr_turn_client_ctx *tctx = ctx->tctx;
+  nr_stun_message_attribute *ec;
+  nr_stun_message_attribute *attr;
+  nr_transport_addr *alternate_addr = 0;
+  int index = 0;
+
+  if (ctx->stun->response->header.type != NR_STUN_MSG_ALLOCATE_ERROR_RESPONSE) {
+    r_log(NR_LOG_TURN, LOG_ERR,
+          "TURN(%s): nr_turn_stun_ctx_handle_redirect called for something "
+          "other than an Allocate error response (type=%d)",
+          tctx->label, ctx->stun->response->header.type);
+    ABORT(R_BAD_ARGS);
+  }
+
+  if (!nr_stun_message_has_attribute(ctx->stun->response,
+                                     NR_STUN_ATTR_ERROR_CODE, &ec) ||
+      (ec->u.error_code.number != 300)) {
+    r_log(NR_LOG_TURN, LOG_ERR,
+          "TURN(%s): nr_turn_stun_ctx_handle_redirect called without a "
+          "300 response",
+          tctx->label);
+    ABORT(R_BAD_ARGS);
+  }
+
+  while (!alternate_addr && !nr_stun_message_get_attribute(
+      ctx->stun->response, NR_STUN_ATTR_ALTERNATE_SERVER, index++, &attr)) {
+    alternate_addr = &attr->u.alternate_server;
+
+    // TODO: Someday we may need to handle IP version switching, but it is
+    // unclear how that is supposed to work with ICE when the IP version of
+    // the candidate's base address is fixed...
+    if (alternate_addr->ip_version != tctx->turn_server_addr.ip_version) {
+      r_log(NR_LOG_TURN, LOG_INFO,
+            "TURN(%s): nr_turn_stun_ctx_handle_redirect not trying %s, since it is a different IP version",
+            tctx->label, alternate_addr->as_string);
+      alternate_addr = 0;
+      continue;
+    }
+  }
+
+  if (!alternate_addr) {
+    /* Should we use a different error code depending on why we didn't find
+     * one? (eg; no ALTERNATE-SERVERS at all, none that we have not tried
+     * already, none that are of a compatible IP version?) */
+    r_log(NR_LOG_TURN, LOG_ERR,
+          "TURN(%s): nr_turn_stun_ctx_handle_redirect did not find a viable "
+          "ALTERNATE-SERVER",
+          tctx->label);
+    ABORT(R_FAILED);
+  }
+
+  r_log(NR_LOG_TURN, LOG_INFO,
+      "TURN(%s): nr_turn_stun_ctx_handle_redirect trying %s",
+      tctx->label, alternate_addr->as_string);
+
+  /* This also handles the call to nr_transport_addr_fmt_addr_string */
+  if ((r = nr_transport_addr_copy_addrport(&tctx->turn_server_addr,
+                                           alternate_addr))) {
+    r_log(NR_LOG_TURN, LOG_ERR,
+          "TURN(%s): nr_turn_stun_ctx_handle_redirect copying ALTERNATE-SERVER "
+          "failed(%d)!",
+          tctx->label, r);
+    assert(0);
+    ABORT(r);
+  }
+
+  /* TURN server address is now updated. Restart the STUN Allocate ctx. Note
+   * that we do not attempt to update the local address; if the TURN server
+   * redirects to something that is not best reached from the already-selected
+   * local address, oh well. */
+
+  if (tctx->turn_server_addr.protocol == IPPROTO_TCP) {
+    /* TCP support in subsequent patch */
+    ABORT(R_FAILED);
+  }
+
+  nr_transport_addr_copy(&ctx->stun->peer_addr, &tctx->turn_server_addr);
+
+  if ((r = nr_turn_stun_ctx_start(ctx))) {
+    r_log(NR_LOG_TURN, LOG_ERR,
+          "TURN(%s): nr_turn_stun_ctx_handle_redirect nr_turn_stun_ctx_start "
+          "failed(%d)!",
+          tctx->label, r);
+    assert(0);
+    ABORT(r);
+  }
+
+  _status = 0;
+abort:
+  return _status;
+}
+
 static void nr_turn_stun_ctx_cb(NR_SOCKET s, int how, void *arg)
 {
   int r, _status;
@@ -287,8 +382,16 @@ static void nr_turn_stun_ctx_cb(NR_SOCKET s, int how, void *arg)
         }
 
         ctx->retry_ct++;
-      }
-      else {
+      } else if (ctx->stun->error_code == 300) {
+        r_log(NR_LOG_TURN, LOG_INFO,
+              "TURN(%s): Redirect received, restarting TURN", ctx->tctx->label);
+        /* We don't limit this with a retry counter, we limit redirects by
+         * checking whether we've tried the ALTERNATE-SERVER yet. */
+        ctx->retry_ct = 0;
+        if ((r = nr_turn_stun_ctx_handle_redirect(ctx))) {
+          ABORT(r);
+        }
+      } else {
         ABORT(R_FAILED);
       }
       break;
