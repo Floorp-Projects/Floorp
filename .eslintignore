@@ -218,3 +218,6 @@ tools/update-packaging/**/*refs.js
 
 # Ignore backgroundtasks preferences files.
 toolkit/components/backgroundtasks/defaults
+
+# Ignore pre-generated webpack and typescript transpiled files for translations
+browser/extensions/translations/extension/
