@@ -2214,6 +2214,15 @@ class AssemblerX86Shared : public AssemblerShared {
     masm.vpblendw_irr(mask, src1.encoding(), src0.encoding(), dest.encoding());
   }
 
+  void vpblendvb(FloatRegister mask, FloatRegister src1, FloatRegister src0,
+                 FloatRegister dest) {
+    MOZ_ASSERT(HasSSE41());
+    MOZ_ASSERT(mask.encoding() == X86Encoding::xmm0 &&
+                   src0.encoding() == dest.encoding(),
+               "only legacy encoding is supported");
+    masm.pblendvb_rr(src1.encoding(), dest.encoding());
+  }
+
   void vpinsrb(unsigned lane, const Operand& src1, FloatRegister src0,
                FloatRegister dest) {
     MOZ_ASSERT(HasSSE41());
