@@ -480,6 +480,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   uint32_t ObserverCount() const;
   bool HasImageRequests() const;
   bool ShouldKeepTimerRunningWhileWaitingForFirstContentfulPaint();
+  bool ShouldKeepTimerRunningAfterPageLoad();
   ObserverArray& ArrayFor(mozilla::FlushType aFlushType);
   // Trigger a refresh immediately, if haven't been disconnected or frozen.
   void DoRefresh();
@@ -589,6 +590,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // True if we attempted an extra tick (see CanDoExtraTick) since the last
   // vsync and thus shouldn't allow another.
   bool mAttemptedExtraTickSinceLastVsync : 1;
+
+  bool mHasExceededAfterLoadTickPeriod : 1;
 
   // Number of seconds that the refresh driver is blocked waiting for a
   // compositor transaction to be completed before we append a note to the gfx

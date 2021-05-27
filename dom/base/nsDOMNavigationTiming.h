@@ -202,6 +202,8 @@ class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
     return mDocShellHasBeenActiveSinceNavigationStart;
   }
 
+  mozilla::TimeStamp LoadEventEnd() { return mLoadEventEnd; }
+
  private:
   friend class nsDocShell;
   nsDOMNavigationTiming(nsDocShell* aDocShell, nsDOMNavigationTiming* aOther);
