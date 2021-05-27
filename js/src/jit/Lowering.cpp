@@ -370,7 +370,7 @@ void LIRGenerator::visitLoadArgumentsObjectArg(MLoadArgumentsObjectArg* ins) {
 }
 
 void LIRGenerator::visitArgumentsObjectLength(MArgumentsObjectLength* ins) {
-  MDefinition* argsObj = ins->getArgsObject();
+  MDefinition* argsObj = ins->argsObject();
   MOZ_ASSERT(argsObj->type() == MIRType::Object);
 
   auto* lir = new (alloc()) LArgumentsObjectLength(useRegister(argsObj));
