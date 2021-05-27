@@ -77,6 +77,14 @@
 #   - attribute not specified (default): no code generated
 #   - true: adds setMovable call in opcode constructor
 #
+# congruent_to
+# ============
+# Used by ValueNumbering to determine if two values are congruent.
+#   - attribute not specified (default): no code generated, congruentTo(foo) returns
+#     false
+#   - if_operands_equal: congruentTo(foo) will return congruentIfOperandsEqual(foo)
+#   - custom: custom C++ implementation
+#
 # alias_set
 # =========
 # Defines the getAliasSet function for a MIR op. The alias set is used for alias 
@@ -124,7 +132,10 @@
   gen_boilerplate: false
 
 - name: IsConstructing
-  gen_boilerplate: false
+  result_type: Boolean
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: TableSwitch
   gen_boilerplate: false
@@ -226,10 +237,24 @@
   gen_boilerplate: false
 
 - name: SameValueDouble
-  gen_boilerplate: false
+  operands:
+    left: Double
+    right: Double
+  result_type: Boolean
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  clone: true
 
 - name: SameValue
-  gen_boilerplate: false
+  operands:
+    left: Value
+    right: Value
+  result_type: Boolean
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  clone: true
 
 - name: Box
   gen_boilerplate: false
@@ -306,11 +331,23 @@
 - name: WasmTruncateToInt32
   gen_boilerplate: false
 
+# Store a JS Value that can't be represented as an AnyRef pointer into an
+# object that holds the value (opaquely) as such a pointer.
 - name: WasmBoxValue
-  gen_boilerplate: false
+  operands:
+    def: Value
+  type_policy: none
+  result_type: RefOrNull
+  congruent_to: if_operands_equal
+  alias_set: none
 
-- name: WasmAnyRefFromJSObject
-  gen_boilerplate: false
+- name: WasmAnyRefFromJSObject 
+  operands:
+    def: Object
+  type_policy: none
+  result_type: RefOrNull
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: Int32ToIntPtr
   gen_boilerplate: false
@@ -536,8 +573,15 @@
 - name: ImplicitThis
   gen_boilerplate: false
 
+# Load an arrow function's |new.target| value.
 - name: ArrowNewTarget
-  gen_boilerplate: false
+  operands:
+    callee: Object
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  # An arrow function's lexical |this| value is immutable.
+  alias_set: none
 
 - name: Phi
   gen_boilerplate: false
@@ -643,8 +687,15 @@
 - name: SetFunName
   gen_boilerplate: false
 
+# Returns obj->slots.
 - name: Slots
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Slots
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  clone: true
 
 - name: Elements
   gen_boilerplate: false
@@ -670,8 +721,14 @@
 - name: GetNextEntryForIterator
   gen_boilerplate: false
 
+# Read the byte length of an array buffer as IntPtr.
 - name: ArrayBufferByteLength
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: IntPtr
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
 
 - name: ArrayBufferViewLength
   gen_boilerplate: false
@@ -679,8 +736,15 @@
 - name: ArrayBufferViewByteOffset
   gen_boilerplate: false
 
+# Read the length of an array buffer view.
 - name: ArrayBufferViewElements
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Elements
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  clone: true
 
 - name: TypedArrayElementSize
   gen_boilerplate: false
@@ -1046,8 +1110,16 @@
 - name: ArgumentsLength
   gen_boilerplate: false
 
+# This MIR instruction is used to get an argument from the actual arguments.
 - name: GetFrameArgument
-  gen_boilerplate: false
+  operands:
+    index: Int32
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  # This instruction is never aliased, because ops like JSOp::SetArg don't
+  # write to the argument frames. We create an arguments object in that case.
+  alias_set: none
 
 - name: NewTarget
   gen_boilerplate: false
@@ -1194,7 +1266,13 @@
   alias_set: custom
 
 - name: GuardArrayIsPacked
-  gen_boilerplate: false
+  operands: 
+    array: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
 
 - name: GetPrototypeOf
   operands: 
@@ -1385,8 +1463,21 @@
 - name: Rotate
   gen_boilerplate: false
 
+# Wasm SIMD.
+#
+# See comment in WasmIonCompile.cpp for a justification for these nodes.
+# (v128, v128, v128) -> v128 effect-free operation.
 - name: WasmBitselectSimd128
-  gen_boilerplate: false
+  operands:
+    lhs: Simd128
+    rhs: Simd128
+    control: Simd128
+  type_policy: none
+  result_type: Simd128
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  clone: true
 
 - name: WasmBinarySimd128
   gen_boilerplate: false

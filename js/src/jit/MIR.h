@@ -1553,23 +1553,6 @@ class MCallee : public MNullaryInstruction {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-class MIsConstructing : public MNullaryInstruction {
- public:
-  MIsConstructing() : MNullaryInstruction(classOpcode) {
-    setResultType(MIRType::Boolean);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(IsConstructing)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 class MControlInstruction : public MInstruction {
  protected:
   explicit MControlInstruction(Opcode op) : MInstruction(op) {}
@@ -2869,45 +2852,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   }
 };
 
-class MSameValueDouble : public MBinaryInstruction,
-                         public AllDoublePolicy::Data {
-  MSameValueDouble(MDefinition* left, MDefinition* right)
-      : MBinaryInstruction(classOpcode, left, right) {
-    setResultType(MIRType::Boolean);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(SameValueDouble)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  ALLOW_CLONE(MSameValueDouble)
-};
-
-class MSameValue : public MBinaryInstruction, public BoxInputsPolicy::Data {
-  MSameValue(MDefinition* left, MDefinition* right)
-      : MBinaryInstruction(classOpcode, left, right) {
-    setResultType(MIRType::Boolean);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(SameValue)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  ALLOW_CLONE(MSameValue)
-};
-
 // Takes a typed value and returns an untyped value.
 class MBox : public MUnaryInstruction, public NoTypePolicy::Data {
   explicit MBox(MDefinition* ins) : MUnaryInstruction(classOpcode, ins) {
@@ -3699,43 +3643,6 @@ class MWasmTruncateToInt32 : public MUnaryInstruction,
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins) &&
            ins->toWasmTruncateToInt32()->flags() == flags_;
-  }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
-// Store a JS Value that can't be represented as an AnyRef pointer into an
-// object that holds the value (opaquely) as such a pointer.
-class MWasmBoxValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  explicit MWasmBoxValue(MDefinition* def)
-      : MUnaryInstruction(classOpcode, def) {
-    setResultType(MIRType::RefOrNull);
-  }
-
- public:
-  INSTRUCTION_HEADER(WasmBoxValue)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
-class MWasmAnyRefFromJSObject : public MUnaryInstruction,
-                                public NoTypePolicy::Data {
-  explicit MWasmAnyRefFromJSObject(MDefinition* def)
-      : MUnaryInstruction(classOpcode, def) {
-    setResultType(MIRType::RefOrNull);
-  }
-
- public:
-  INSTRUCTION_HEADER(WasmAnyRefFromJSObject)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
   }
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
@@ -6311,29 +6218,6 @@ class MImplicitThis : public MUnaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
-// Load an arrow function's |new.target| value.
-class MArrowNewTarget : public MUnaryInstruction,
-                        public SingleObjectPolicy::Data {
-  explicit MArrowNewTarget(MDefinition* callee)
-      : MUnaryInstruction(classOpcode, callee) {
-    setResultType(MIRType::Value);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(ArrowNewTarget)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, callee))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override {
-    // An arrow function's lexical |this| value is immutable.
-    return AliasSet::None();
-  }
-};
-
 // This is a 3 state flag used by FlagPhiInputsAsImplicitlyUsed to record and
 // propagate the information about the consumers of a Phi instruction. This is
 // then used to set ImplicitlyUsed flags on the inputs of such Phi instructions.
@@ -7120,29 +7004,6 @@ class MSetFunName : public MBinaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
-// Returns obj->slots.
-class MSlots : public MUnaryInstruction, public SingleObjectPolicy::Data {
-  explicit MSlots(MDefinition* object)
-      : MUnaryInstruction(classOpcode, object) {
-    setResultType(MIRType::Slots);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(Slots)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
-  }
-
-  ALLOW_CLONE(MSlots)
-};
-
 // Returns obj->elements.
 class MElements : public MUnaryInstruction, public SingleObjectPolicy::Data {
   explicit MElements(MDefinition* object)
@@ -7335,28 +7196,6 @@ class MGetNextEntryForIterator
   Mode mode() const { return mode_; }
 };
 
-// Read the byte length of an array buffer as IntPtr.
-class MArrayBufferByteLength : public MUnaryInstruction,
-                               public SingleObjectPolicy::Data {
-  explicit MArrayBufferByteLength(MDefinition* obj)
-      : MUnaryInstruction(classOpcode, obj) {
-    setResultType(MIRType::IntPtr);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(ArrayBufferByteLength)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::FixedSlot);
-  }
-};
-
 // Read the length of an array buffer view.
 class MArrayBufferViewLength : public MUnaryInstruction,
                                public SingleObjectPolicy::Data {
@@ -7403,30 +7242,6 @@ class MArrayBufferViewByteOffset : public MUnaryInstruction,
   }
 
   void computeRange(TempAllocator& alloc) override;
-};
-
-// Load an array buffer view's elements vector.
-class MArrayBufferViewElements : public MUnaryInstruction,
-                                 public SingleObjectPolicy::Data {
-  explicit MArrayBufferViewElements(MDefinition* object)
-      : MUnaryInstruction(classOpcode, object) {
-    setResultType(MIRType::Elements);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(ArrayBufferViewElements)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
-  }
-
-  ALLOW_CLONE(MArrayBufferViewElements)
 };
 
 // Return the element size of a typed array.
@@ -10589,30 +10404,6 @@ class MArgumentsLength : public MNullaryInstruction {
   bool canRecoverOnBailout() const override { return true; }
 };
 
-// This MIR instruction is used to get an argument from the actual arguments.
-class MGetFrameArgument : public MUnaryInstruction,
-                          public UnboxedInt32Policy<0>::Data {
-  explicit MGetFrameArgument(MDefinition* idx)
-      : MUnaryInstruction(classOpcode, idx) {
-    setResultType(MIRType::Value);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(GetFrameArgument)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, index))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override {
-    // This instruction is never aliased, because ops like JSOp::SetArg don't
-    // write to the argument frames. We create an arguments object in that case.
-    return AliasSet::None();
-  }
-};
-
 class MNewTarget : public MNullaryInstruction {
   MNewTarget() : MNullaryInstruction(classOpcode) {
     setResultType(MIRType::Value);
@@ -11455,28 +11246,6 @@ class MCheckObjCoercible : public MUnaryInstruction,
   }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
-};
-
-class MGuardArrayIsPacked : public MUnaryInstruction,
-                            public SingleObjectPolicy::Data {
-  explicit MGuardArrayIsPacked(MDefinition* array)
-      : MUnaryInstruction(classOpcode, array) {
-    setGuard();
-    setMovable();
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(GuardArrayIsPacked)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, array))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
-  }
 };
 
 class MObjectWithProto : public MUnaryInstruction,
@@ -12936,33 +12705,6 @@ class MRotate : public MBinaryInstruction, public NoTypePolicy::Data {
   bool isLeftRotate() const { return isLeftRotate_; }
 
   ALLOW_CLONE(MRotate)
-};
-
-// Wasm SIMD.
-//
-// See comment in WasmIonCompile.cpp for a justification for these nodes.
-
-// (v128, v128, v128) -> v128 effect-free operation.
-class MWasmBitselectSimd128 : public MTernaryInstruction,
-                              public NoTypePolicy::Data {
-  MWasmBitselectSimd128(MDefinition* lhs, MDefinition* rhs,
-                        MDefinition* control)
-      : MTernaryInstruction(classOpcode, lhs, rhs, control) {
-    setMovable();
-    setResultType(MIRType::Simd128);
-  }
-
- public:
-  INSTRUCTION_HEADER(WasmBitselectSimd128)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, lhs), (1, rhs), (2, control))
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  ALLOW_CLONE(MWasmBitselectSimd128)
 };
 
 // (v128, v128) -> v128 effect-free operations.
