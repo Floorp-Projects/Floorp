@@ -81,7 +81,7 @@
 # ========
 # The foldsTo method is used for determining if an instruction can be folded into
 # simpler instruction or for constant folding, depending on its operands.
-#   - no attribute present (default): no code generated, no constants to fold
+#   - attribute not specified (default): no code generated, no constants to fold
 #   - custom: custom C++ implementation
 #
 # congruent_to
@@ -99,6 +99,13 @@
 #   - attribute not specified (default): no code generated, alias set is Any
 #   - none: this is the most common case, this is will set the alias set to None.
 #   - custom: custom C++ implementation in MIR.cpp
+#
+# possibly_calls [optional]
+# ==============
+# Defines if a opcode can possibly call.
+#   - attribute not specified (default): no code generated, opcode does not call
+#   - true: possiblyCalls returns true
+#   - custom: custom C++ implementation
 #
 # clone
 # =====
@@ -157,7 +164,10 @@
   gen_boilerplate: false
 
 - name: Throw
-  gen_boilerplate: false
+  operands:
+    ins: Value
+  alias_set: custom
+  possibly_calls: true
 
 - name: NewArray
   gen_boilerplate: false
@@ -195,8 +205,13 @@
 - name: ArrayState
   gen_boilerplate: false
 
+# Setting __proto__ in an object literal.
 - name: MutateProto
-  gen_boilerplate: false
+  operands:
+    object: Object
+    value: Value
+  result_type: None
+  possibly_calls: true
 
 - name: InitPropGetterSetter
   gen_boilerplate: false
@@ -281,8 +296,17 @@
 - name: CreateThisWithTemplate
   gen_boilerplate: false
 
+# Caller-side allocation of |this| for |new|:
+# Constructs |this| when possible, else MagicValue(JS_IS_CONSTRUCTING).
 - name: CreateThis
-  gen_boilerplate: false
+  operands:
+    callee: Object
+    newTarget: Object
+  result_type: Value
+  # Performs a property read from |newTarget| iff |newTarget| is a JSFunction
+  # with an own |.prototype| property.
+  alias_set: custom
+  possibly_calls: true
 
 - name: CreateArgumentsObject
   gen_boilerplate: false
@@ -817,8 +841,19 @@
 - name: ArraySlice
   gen_boilerplate: false
 
+# MArrayJoin doesn't override |getAliasSet()|, because Array.prototype.join
+# might coerce the elements of the Array to strings. This coercion might
+# cause the evaluation of JavaScript code.
 - name: ArrayJoin
-  gen_boilerplate: false
+  operands:
+    array: Object
+    sep: String
+  result_type: String
+  possibly_calls: true
+  folds_to: custom 
+  # MArrayJoin doesn't override |getAliasSet()|, because Array.prototype.join
+  # might coerce the elements of the Array to strings. This coercion might
+  # cause the evaluation of JavaScript code.
 
 - name: LoadUnboxedScalar
   gen_boilerplate: false
@@ -1341,7 +1376,12 @@
   guard: true
 
 - name: ObjectWithProto
-  gen_boilerplate: false
+  operands: 
+    prototype: Value
+  result_type: Object
+  # May throw if prototype is neither an object nor null.
+  guard: true
+  possibly_calls: true
 
 - name: ObjectStaticProto
   gen_boilerplate: false
