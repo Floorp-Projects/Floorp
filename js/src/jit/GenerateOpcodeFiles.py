@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This script generates jit/LOpcodesGenerated.h (list of LIR instructions) and
-# jit/MOpcodesGenerated.h (list of MIR instructions) from MIR.h and LIR files.
+# This script generates jit/LOpcodesGenerated.h (list of LIR instructions)
+# from LIR files.
 
 import re
 
@@ -52,13 +52,6 @@ def generate_header(c_out, inputs, pat, includeguard, listname):
             "listname": listname,
         }
     )
-
-
-def generate_mir_header(c_out, *inputs):
-    pat = re.compile(
-        r"^\s*INSTRUCTION_HEADER(_WITHOUT_TYPEPOLICY)?\((?P<name>\w+)\);?$"
-    )
-    generate_header(c_out, inputs, pat, "jit_MOpcodesGenerated_h", "MIR_OPCODE_LIST")
 
 
 def generate_lir_header(c_out, *inputs):

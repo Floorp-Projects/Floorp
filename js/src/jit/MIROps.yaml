@@ -1,0 +1,830 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# [SMDOC] MIR Opcodes
+# =======================
+# This file defines all MIR opcodes.
+#
+# name
+# ====
+# Opcode name.
+#
+
+- name: Start
+
+- name: OsrEntry
+
+- name: Nop
+
+- name: LimitedTruncate
+
+- name: Constant
+
+- name: WasmNullConstant
+
+- name: WasmFloatConstant
+
+- name: Parameter
+
+- name: Callee
+
+- name: IsConstructing
+
+- name: TableSwitch
+
+- name: Goto
+
+- name: Test
+
+- name: Return
+
+- name: Throw
+
+- name: NewArray
+
+- name: NewArrayDynamicLength
+
+- name: NewTypedArray
+
+- name: NewTypedArrayDynamicLength
+
+- name: NewTypedArrayFromArray
+
+- name: NewTypedArrayFromArrayBuffer
+
+- name: NewObject
+
+- name: NewPlainObject
+
+- name: NewArrayObject
+
+- name: NewIterator
+
+- name: ObjectState
+
+- name: ArrayState
+
+- name: MutateProto
+
+- name: InitPropGetterSetter
+
+- name: InitElemGetterSetter
+
+- name: Call
+
+- name: ApplyArgs
+
+- name: ApplyArgsObj
+
+- name: ApplyArray
+
+- name: ConstructArray
+
+- name: Bail
+
+- name: Unreachable
+
+- name: EncodeSnapshot
+
+- name: AssertRecoveredOnBailout
+
+- name: AssertFloat32
+
+- name: Compare
+
+- name: SameValueDouble
+
+- name: SameValue
+
+- name: Box
+
+- name: Unbox
+
+- name: AssertRange
+
+- name: AssertClass
+
+- name: AssertShape
+
+- name: CreateThisWithTemplate
+
+- name: CreateThis
+
+- name: CreateArgumentsObject
+
+- name: CreateInlinedArgumentsObject
+
+- name: GetInlinedArgument
+
+- name: GetArgumentsObjectArg
+
+- name: SetArgumentsObjectArg
+
+- name: LoadArgumentsObjectArg
+
+- name: ArgumentsObjectLength
+
+- name: GuardArgumentsObjectFlags
+
+- name: ReturnFromCtor
+
+- name: ToDouble
+
+- name: ToFloat32
+
+- name: WasmUnsignedToDouble
+
+- name: WasmUnsignedToFloat32
+
+- name: WrapInt64ToInt32
+
+- name: ExtendInt32ToInt64
+
+- name: WasmBuiltinTruncateToInt64
+
+- name: WasmTruncateToInt64
+
+- name: WasmTruncateToInt32
+
+- name: WasmBoxValue
+
+- name: WasmAnyRefFromJSObject
+
+- name: Int32ToIntPtr
+
+- name: NonNegativeIntPtrToInt32
+
+- name: IntPtrToDouble
+
+- name: AdjustDataViewLength
+
+- name: Int64ToFloatingPoint
+
+- name: BuiltinInt64ToFloatingPoint
+
+- name: ToNumberInt32
+
+- name: ToIntegerInt32
+
+- name: TruncateToInt32
+
+- name: WasmBuiltinTruncateToInt32
+
+- name: ToBigInt
+
+- name: ToInt64
+
+- name: TruncateBigIntToInt64
+
+- name: Int64ToBigInt
+
+- name: ToString
+
+- name: BitNot
+
+- name: TypeOf
+
+- name: ToAsyncIter
+
+- name: ToPropertyKeyCache
+
+- name: BitAnd
+
+- name: BitOr
+
+- name: BitXor
+
+- name: Lsh
+
+- name: Rsh
+
+- name: Ursh
+
+- name: SignExtendInt32
+
+- name: SignExtendInt64
+
+- name: MinMax
+
+- name: MinMaxArray
+
+- name: Abs
+
+- name: Clz
+
+- name: Ctz
+
+- name: Popcnt
+
+- name: Sqrt
+
+- name: CopySign
+
+- name: Atan2
+
+- name: Hypot
+
+- name: Pow
+
+- name: PowHalf
+
+- name: Random
+
+- name: Sign
+
+- name: MathFunction
+
+- name: Add
+
+- name: Sub
+
+- name: Mul
+
+- name: Div
+
+- name: WasmBuiltinDivI64
+
+- name: Mod
+
+- name: WasmBuiltinModD
+
+- name: WasmBuiltinModI64
+
+- name: BigIntAdd
+
+- name: BigIntSub
+
+- name: BigIntMul
+
+- name: BigIntDiv
+
+- name: BigIntMod
+
+- name: BigIntPow
+
+- name: BigIntBitAnd
+
+- name: BigIntBitOr
+
+- name: BigIntBitXor
+
+- name: BigIntLsh
+
+- name: BigIntRsh
+
+- name: BigIntIncrement
+
+- name: BigIntDecrement
+
+- name: BigIntNegate
+
+- name: BigIntBitNot
+
+- name: Concat
+
+- name: CharCodeAt
+
+- name: FromCharCode
+
+- name: FromCodePoint
+
+- name: StringConvertCase
+
+- name: StringSplit
+
+- name: BoxNonStrictThis
+
+- name: ImplicitThis
+
+- name: ArrowNewTarget
+
+- name: Phi
+
+- name: Beta
+
+- name: NaNToZero
+
+- name: OsrValue
+
+- name: OsrEnvironmentChain
+
+- name: OsrArgumentsObject
+
+- name: OsrReturnValue
+
+- name: BinaryCache
+
+- name: UnaryCache
+
+- name: CheckOverRecursed
+
+- name: InterruptCheck
+
+- name: WasmInterruptCheck
+
+- name: WasmTrap
+
+- name: LexicalCheck
+
+- name: ThrowRuntimeLexicalError
+
+- name: ThrowMsg
+
+- name: GlobalDeclInstantiation
+
+- name: RegExp
+
+- name: RegExpMatcher
+
+- name: RegExpSearcher
+
+- name: RegExpTester
+
+- name: RegExpPrototypeOptimizable
+
+- name: RegExpInstanceOptimizable
+
+- name: GetFirstDollarIndex
+
+- name: StringReplace
+
+- name: Substr
+
+- name: ModuleMetadata
+
+- name: DynamicImport
+
+- name: Lambda
+
+- name: LambdaArrow
+
+- name: FunctionWithProto
+
+- name: SetFunName
+
+- name: Slots
+
+- name: Elements
+
+- name: InitializedLength
+
+- name: SetInitializedLength
+
+- name: ArrayLength
+
+- name: SetArrayLength
+
+- name: FunctionLength
+
+- name: FunctionName
+
+- name: GetNextEntryForIterator
+
+- name: ArrayBufferByteLength
+
+- name: ArrayBufferViewLength
+
+- name: ArrayBufferViewByteOffset
+
+- name: ArrayBufferViewElements
+
+- name: TypedArrayElementSize
+
+- name: GuardHasAttachedArrayBuffer
+
+- name: GuardNumberToIntPtrIndex
+
+- name: KeepAliveObject
+
+- name: Not
+
+- name: BoundsCheck
+
+- name: BoundsCheckLower
+
+- name: SpectreMaskIndex
+
+- name: LoadElement
+
+- name: LoadElementAndUnbox
+
+- name: LoadElementHole
+
+- name: StoreElement
+
+- name: StoreHoleValueElement
+
+- name: StoreElementHole
+
+- name: ArrayPopShift
+
+- name: ArrayPush
+
+- name: ArraySlice
+
+- name: ArrayJoin
+
+- name: LoadUnboxedScalar
+
+- name: LoadDataViewElement
+
+- name: LoadTypedArrayElementHole
+
+- name: StoreUnboxedScalar
+
+- name: StoreDataViewElement
+
+- name: StoreTypedArrayElementHole
+
+- name: EffectiveAddress
+
+- name: ClampToUint8
+
+- name: LoadFixedSlot
+
+- name: LoadFixedSlotAndUnbox
+
+- name: LoadDynamicSlotAndUnbox
+
+- name: StoreFixedSlot
+
+- name: GetPropertyCache
+
+- name: HomeObjectSuperBase
+
+- name: GetPropSuperCache
+
+- name: BindNameCache
+
+- name: CallBindVar
+
+- name: GuardShape
+
+- name: GuardProto
+
+- name: GuardNullProto
+
+- name: GuardIsNativeObject
+
+- name: GuardIsProxy
+
+- name: GuardIsNotProxy
+
+- name: GuardIsNotDOMProxy
+
+- name: ProxyGet
+
+- name: ProxyGetByValue
+
+- name: ProxyHasProp
+
+- name: ProxySet
+
+- name: ProxySetByValue
+
+- name: CallSetArrayLength
+
+- name: MegamorphicLoadSlot
+
+- name: MegamorphicLoadSlotByValue
+
+- name: MegamorphicStoreSlot
+
+- name: MegamorphicHasProp
+
+- name: GuardIsNotArrayBufferMaybeShared
+
+- name: GuardIsTypedArray
+
+- name: NurseryObject
+
+- name: GuardValue
+
+- name: GuardNullOrUndefined
+
+- name: GuardFunctionFlags
+
+- name: GuardFunctionIsNonBuiltinCtor
+
+- name: GuardFunctionKind
+
+- name: GuardFunctionScript
+
+- name: GuardObjectIdentity
+
+- name: GuardSpecificFunction
+
+- name: GuardSpecificAtom
+
+- name: GuardSpecificSymbol
+
+- name: GuardStringToIndex
+
+- name: GuardStringToInt32
+
+- name: GuardStringToDouble
+
+- name: GuardNoDenseElements
+
+- name: GuardTagNotEqual
+
+- name: LoadDynamicSlot
+
+- name: FunctionEnvironment
+
+- name: NewLexicalEnvironmentObject
+
+- name: NewClassBodyEnvironmentObject
+
+- name: CopyLexicalEnvironmentObject
+
+- name: HomeObject
+
+- name: AddAndStoreSlot
+
+- name: AllocateAndStoreSlot
+
+- name: StoreDynamicSlot
+
+- name: GetNameCache
+
+- name: CallGetIntrinsicValue
+
+- name: DeleteProperty
+
+- name: DeleteElement
+
+- name: SetPropertyCache
+
+- name: CallSetElement
+
+- name: SetDOMProperty
+
+- name: GetDOMProperty
+
+- name: GetDOMMember
+
+- name: LoadDOMExpandoValue
+
+- name: LoadDOMExpandoValueGuardGeneration
+
+- name: LoadDOMExpandoValueIgnoreGeneration
+
+- name: GuardDOMExpandoMissingOrGuardShape
+
+- name: StringLength
+
+- name: Floor
+
+- name: Ceil
+
+- name: Round
+
+- name: Trunc
+
+- name: NearbyInt
+
+- name: GetIteratorCache
+
+- name: OptimizeSpreadCallCache
+
+- name: IteratorMore
+
+- name: IsNoIter
+
+- name: IteratorEnd
+
+- name: InCache
+
+- name: InArray
+
+- name: GuardElementNotHole
+
+- name: CheckPrivateFieldCache
+
+- name: HasOwnCache
+
+- name: InstanceOf
+
+- name: InstanceOfCache
+
+- name: ArgumentsLength
+
+- name: GetFrameArgument
+
+- name: NewTarget
+
+- name: Rest
+
+- name: PostWriteBarrier
+
+- name: PostWriteElementBarrier
+
+- name: NewNamedLambdaObject
+
+- name: NewCallObject
+
+- name: NewStringObject
+
+- name: IsCallable
+
+- name: IsConstructor
+
+- name: IsCrossRealmArrayConstructor
+
+- name: IsObject
+
+- name: IsNullOrUndefined
+
+- name: HasClass
+
+- name: GuardToClass
+
+- name: IsArray
+
+- name: IsTypedArray
+
+- name: ObjectClassToString
+
+- name: CheckReturn
+
+- name: CheckThis
+
+- name: AsyncResolve
+
+- name: GeneratorReturn
+
+- name: AsyncAwait
+
+- name: CheckThisReinit
+
+- name: Generator
+
+- name: CanSkipAwait
+
+- name: MaybeExtractAwaitValue
+
+- name: IncrementWarmUpCounter
+
+- name: AtomicIsLockFree
+
+- name: CompareExchangeTypedArrayElement
+
+- name: AtomicExchangeTypedArrayElement
+
+- name: AtomicTypedArrayElementBinop
+
+- name: Debugger
+
+- name: CheckIsObj
+
+- name: CheckObjCoercible
+
+- name: CheckClassHeritage
+
+- name: DebugCheckSelfHosted
+
+- name: FinishBoundFunctionInit
+
+- name: IsPackedArray
+
+- name: GuardArrayIsPacked
+
+- name: GetPrototypeOf
+
+- name: ObjectWithProto
+
+- name: ObjectStaticProto
+
+- name: BuiltinObject
+
+- name: SuperFunction
+
+- name: InitHomeObject
+
+- name: IsTypedArrayConstructor
+
+- name: LoadValueTag
+
+- name: LoadWrapperTarget
+
+- name: GuardHasGetterSetter
+
+- name: GuardIsExtensible
+
+- name: GuardInt32IsNonNegative
+
+- name: GuardIndexGreaterThanDenseInitLength
+
+- name: GuardIndexIsValidUpdateOrAdd
+
+- name: CallAddOrUpdateSparseElement
+
+- name: CallGetSparseElement
+
+- name: CallNativeGetElement
+
+- name: CallObjectHasSparseElement
+
+- name: BigIntAsIntN
+
+- name: BigIntAsUintN
+
+- name: WasmNeg
+
+- name: WasmLoadTls
+
+- name: WasmHeapBase
+
+- name: WasmBoundsCheck
+
+- name: WasmExtendU32Index
+
+- name: WasmWrapU32Index
+
+- name: WasmAddOffset
+
+- name: WasmAlignmentCheck
+
+- name: WasmLoad
+
+- name: WasmStore
+
+- name: AsmJSLoadHeap
+
+- name: AsmJSStoreHeap
+
+- name: WasmFence
+
+- name: WasmCompareExchangeHeap
+
+- name: WasmAtomicExchangeHeap
+
+- name: WasmAtomicBinopHeap
+
+- name: WasmLoadGlobalVar
+
+- name: WasmLoadGlobalCell
+
+- name: WasmStoreGlobalVar
+
+- name: WasmStoreGlobalCell
+
+- name: WasmStoreStackResult
+
+- name: WasmDerivedPointer
+
+- name: WasmStoreRef
+
+- name: WasmParameter
+
+- name: WasmReturn
+
+- name: WasmReturnVoid
+
+- name: WasmStackArg
+
+- name: WasmRegisterResult
+
+- name: WasmFloatRegisterResult
+
+- name: WasmRegister64Result
+
+- name: WasmStackResultArea
+
+- name: WasmStackResult
+
+- name: WasmCall
+
+- name: WasmSelect
+
+- name: WasmReinterpret
+
+- name: Rotate
+
+- name: WasmBitselectSimd128
+
+- name: WasmBinarySimd128
+
+- name: WasmBinarySimd128WithConstant
+
+- name: WasmShiftSimd128
+
+- name: WasmShuffleSimd128
+
+- name: WasmReplaceLaneSimd128
+
+- name: WasmUnarySimd128
+
+- name: WasmScalarToSimd128
+
+- name: WasmReduceSimd128
+
+- name: WasmLoadLaneSimd128
+
+- name: WasmStoreLaneSimd128
+
+- name: UnreachableResult
+
+- name: IonToWasmCall
