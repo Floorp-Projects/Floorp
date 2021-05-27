@@ -123,6 +123,9 @@ android {
         // developer-only functionality when this flag is set.
         // This makes no sense for GeckoView and should be removed as soon as possible.
         buildConfigField 'boolean', 'MOZILLA_OFFICIAL', mozconfig.substs.MOZILLA_OFFICIAL ? 'true' : 'false';
+
+        // This env variable signifies whether we are running an isolated process build.
+        buildConfigField 'boolean', 'MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS', mozconfig.substs.MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS ? 'true' : 'false';
     }
 
     project.configureProductFlavors.delegate = it

@@ -69,6 +69,10 @@ public class Environment {
         return getEnvVar("MOZ_WEBRENDER").equals("1");
     }
 
+    public boolean isIsolatedProcess() {
+        return BuildConfig.MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS;
+    }
+
     public long getScaledTimeoutMillis() {
         if (isX86()) {
             return isEmulator() ? DEFAULT_X86_EMULATOR_TIMEOUT_MILLIS

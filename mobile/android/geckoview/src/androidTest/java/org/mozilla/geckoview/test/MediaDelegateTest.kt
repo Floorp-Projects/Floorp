@@ -5,9 +5,8 @@
 package org.mozilla.geckoview.test
 
 
-import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import android.util.Log
+import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers
 import org.json.JSONObject
 import org.junit.Test
@@ -129,6 +128,9 @@ class MediaDelegateTest : BaseSessionTest() {
     }
 
     @Test fun testDeviceRecordingEventVideo() {
+        // TODO: needs bug 1700243
+        assumeThat(sessionRule.env.isIsolatedProcess, Matchers.equalTo(false))
+
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
