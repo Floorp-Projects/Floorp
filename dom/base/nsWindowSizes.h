@@ -132,19 +132,41 @@ struct nsArenaSizes {
   int dummy;
 };
 
+struct nsDOMSizes {
+#define FOR_EACH_SIZE(MACRO)                 \
+  MACRO(DOM, mDOMElementNodesSize)           \
+  MACRO(DOM, mDOMTextNodesSize)              \
+  MACRO(DOM, mDOMCDATANodesSize)             \
+  MACRO(DOM, mDOMCommentNodesSize)           \
+  MACRO(DOM, mDOMEventTargetsSize)           \
+  MACRO(DOM, mDOMMediaQueryLists)            \
+  MACRO(DOM, mDOMPerformanceEventEntries)    \
+  MACRO(DOM, mDOMPerformanceUserEntries)     \
+  MACRO(DOM, mDOMPerformanceResourceEntries) \
+  MACRO(DOM, mDOMResizeObserverControllerSize)
+
+  nsDOMSizes() : FOR_EACH_SIZE(ZERO_SIZE) mDOMOtherSize(0) {}
+
+  void addToTabSizes(nsTabSizes* aSizes) const {
+    FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
+    aSizes->add(nsTabSizes::DOM, mDOMOtherSize);
+  }
+
+  size_t getTotalSize() const {
+    size_t total = 0;
+    FOR_EACH_SIZE(ADD_TO_TOTAL_SIZE)
+    total += mDOMOtherSize;
+    return total;
+  }
+
+  FOR_EACH_SIZE(DECL_SIZE)
+
+  size_t mDOMOtherSize;
+#undef FOR_EACH_SIZE
+};
+
 class nsWindowSizes {
 #define FOR_EACH_SIZE(MACRO)                                 \
-  MACRO(DOM, mDOMElementNodesSize)                           \
-  MACRO(DOM, mDOMTextNodesSize)                              \
-  MACRO(DOM, mDOMCDATANodesSize)                             \
-  MACRO(DOM, mDOMCommentNodesSize)                           \
-  MACRO(DOM, mDOMEventTargetsSize)                           \
-  MACRO(DOM, mDOMMediaQueryLists)                            \
-  MACRO(DOM, mDOMPerformanceEventEntries)                    \
-  MACRO(DOM, mDOMPerformanceUserEntries)                     \
-  MACRO(DOM, mDOMPerformanceResourceEntries)                 \
-  MACRO(DOM, mDOMResizeObserverControllerSize)               \
-  MACRO(DOM, mDOMOtherSize)                                  \
   MACRO(Style, mLayoutStyleSheetsSize)                       \
   MACRO(Style, mLayoutShadowDomStyleSheetsSize)              \
   MACRO(Style, mLayoutShadowDomAuthorStyles)                 \
@@ -177,6 +199,7 @@ class nsWindowSizes {
 
   void addToTabSizes(nsTabSizes* aSizes) const {
     FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
+    mDOMSizes.addToTabSizes(aSizes);
     mArenaSizes.addToTabSizes(aSizes);
     mStyleSizes.addToTabSizes(aSizes);
   }
@@ -185,6 +208,7 @@ class nsWindowSizes {
     size_t total = 0;
 
     FOR_EACH_SIZE(ADD_TO_TOTAL_SIZE)
+    total += mDOMSizes.getTotalSize();
     total += mArenaSizes.getTotalSize();
     total += mStyleSizes.getTotalSize();
 
@@ -195,6 +219,8 @@ class nsWindowSizes {
 
   uint32_t mDOMEventTargetsCount;
   uint32_t mDOMEventListenersCount;
+
+  nsDOMSizes mDOMSizes;
 
   nsArenaSizes mArenaSizes;
 

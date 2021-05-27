@@ -410,7 +410,7 @@ bool nsNodeInfoManager::InternalMathMLEnabled() {
 }
 
 void nsNodeInfoManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const {
-  aSizes.mDOMOtherSize += aSizes.mState.mMallocSizeOf(this);
+  aSizes.mDOMSizes.mDOMOtherSize += aSizes.mState.mMallocSizeOf(this);
 
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
