@@ -115,7 +115,7 @@ nsresult NS_NewHTMLDocument(Document** aInstancePtrResult, bool aLoadedAsData) {
     return rv;
   }
 
-  doc->SetLoadedAsData(aLoadedAsData);
+  doc->SetLoadedAsData(aLoadedAsData, /* aConsiderForMemoryReporting */ true);
   doc.forget(aInstancePtrResult);
 
   return NS_OK;

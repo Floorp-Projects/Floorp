@@ -474,6 +474,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const;
 
+  void CollectDOMSizesForDataDocuments(nsWindowSizes&) const;
+  void RegisterDataDocumentForMemoryReporting(Document*);
+  void UnregisterDataDocumentForMemoryReporting(Document*);
+
   enum SlowScriptResponse {
     ContinueSlowScript = 0,
     ContinueSlowScriptAndKeepNotifying,
@@ -1499,6 +1503,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
       mDocumentFlushedResolvers;
 
   nsTArray<uint32_t> mScrollMarks;
+
+  nsTArray<nsWeakPtr> mDataDocumentsForMemoryReporting;
 
   static InnerWindowByIdTable* sInnerWindowsById;
 
