@@ -271,9 +271,12 @@ class Clobber(MachCommandBase):
             from mozbuild.controller.clobber import Clobberer
 
             try:
-                Clobberer(self.topsrcdir, self.topobjdir, self.substs()).remove_objdir(
-                    full
-                )
+                substs = self.substs
+            except BuildEnvironmentNotFoundException:
+                substs = {}
+
+            try:
+                Clobberer(self.topsrcdir, self.topobjdir, substs).remove_objdir(full)
             except OSError as e:
                 if sys.platform.startswith("win"):
                     if isinstance(e, WindowsError) and e.winerror in (5, 32):
@@ -332,12 +335,6 @@ class Clobber(MachCommandBase):
             shutil.rmtree(mozpath.join(self.topobjdir, "gradle"), ignore_errors=True)
 
         return ret
-
-    def substs(self):
-        try:
-            return super(Clobber, self).substs
-        except BuildEnvironmentNotFoundException:
-            return {}
 
 
 @CommandProvider
