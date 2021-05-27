@@ -114,7 +114,18 @@
 #   - attribute not specified (default): no code generated, range is not set for node
 #   - custom: custom C++ implementation in RangeAnalysis.cpp
 #
-# clone 
+# can_recover
+# ===========
+# Indicates whether this instruction can be recovered on bailout.
+# Possible values:
+#   - attribute not specified (default): no code generated, canRecoverOnBailout 
+#     returns false
+#   - true: canRecoverOnBailout returns true
+#   - custom: canRecoverOnBailout has a custom C++ implementation
+# If the value is either 'true' or 'custom', writeRecoverData has a custom C++ 
+# implementation.
+#
+# clone
 # =====
 # Allows cloning for that MIR op. 
 #   - attribute not specified (default): no code generated
@@ -516,8 +527,18 @@
 - name: CopySign
   gen_boilerplate: false
 
+# Inline implementation of atan2 (arctangent of y/x).
 - name: Atan2
-  gen_boilerplate: false
+  operands: 
+    y: Double
+    x: Double
+  result_type: Double
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  possibly_calls: true
+  can_recover: true
+  clone: true
 
 - name: Hypot
   gen_boilerplate: false
@@ -610,10 +631,28 @@
   gen_boilerplate: false
 
 - name: CharCodeAt
-  gen_boilerplate: false
+  operands:
+    string: String
+    index: Int32
+  result_type: Int32
+  movable: true
+  folds_to: custom
+  congruent_to: if_operands_equal
+  # Strings are immutable, so there is no implicit dependency.
+  alias_set: none
+  compute_range: custom
+  can_recover: true
+  clone: true
 
 - name: FromCharCode
-  gen_boilerplate: false
+  operands:
+    code: Int32
+  result_type: String
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  can_recover: true
+  clone: true
 
 - name: FromCodePoint
   operands:
@@ -708,13 +747,31 @@
   gen_boilerplate: false
 
 - name: RegExpMatcher
-  gen_boilerplate: false
+  operands:
+    regexp: Object
+    string: String
+    lastIndex: Int32
+  result_type: Value
+  possibly_calls: true
+  can_recover: true
 
 - name: RegExpSearcher
-  gen_boilerplate: false
+  operands:
+    regexp: Object
+    string: String
+    lastIndex: Int32
+  result_type: Int32
+  possibly_calls: true
+  can_recover: true
 
 - name: RegExpTester
-  gen_boilerplate: false
+  operands:
+    regexp: Object
+    string: String
+    lastIndex: Int32
+  result_type: Int32
+  possibly_calls: true
+  can_recover: true
 
 - name: RegExpPrototypeOptimizable
   operands:
@@ -1363,7 +1420,13 @@
   result_type: Boolean
 
 - name: ArgumentsLength
-  gen_boilerplate: false
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  # Arguments |length| cannot be mutated by Ion Code.
+  alias_set: none
+  compute_range: custom
+  can_recover: true
 
 # This MIR instruction is used to get an argument from the actual arguments.
 - name: GetFrameArgument
@@ -1720,10 +1783,28 @@
   alias_set: custom
 
 - name: BigIntAsIntN
-  gen_boilerplate: false
+  operands:
+    bits: Int32
+    input: BigInt
+  result_type: BigInt
+  movable: true
+  congruent_to: if_operands_equal
+  possibly_calls: true
+  alias_set: none
+  can_recover: true
+  clone: true
 
 - name: BigIntAsUintN
-  gen_boilerplate: false
+  operands:
+    bits: Int32
+    input: BigInt
+  result_type: BigInt
+  movable: true
+  congruent_to: if_operands_equal
+  possibly_calls: true
+  alias_set: none
+  can_recover: true
+  clone: true
 
 - name: WasmNeg
   gen_boilerplate: false
