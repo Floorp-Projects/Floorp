@@ -318,20 +318,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1655049",
-    platform: "android",
-    domain: "dev.to",
-    bug: "1655049",
-    contentScripts: {
-      matches: ["*://dev.to/*"],
-      css: [
-        {
-          file: "injections/css/bug1655049-dev.to-unclickable-button-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1654907",
     platform: "android",
     domain: "reactine.ca",
@@ -373,35 +359,6 @@ const AVAILABLE_INJECTIONS = [
         },
       ],
       allFrames: true,
-    },
-  },
-  {
-    id: "bug1677442",
-    platform: "desktop",
-    domain: "store.hp.com",
-    bug: "1677442",
-    contentScripts: {
-      matches: ["*://d3nkfb7815bs43.cloudfront.net/*forstore.hp.com*"],
-      js: [
-        {
-          file: "injections/js/bug1677442-store.hp.com-disable-indexeddb.js",
-        },
-      ],
-      allFrames: true,
-    },
-  },
-  {
-    id: "bug1690158",
-    platform: "desktop",
-    domain: "slack.com",
-    bug: "1690158",
-    contentScripts: {
-      matches: ["*://app.slack.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1690158-slack.com-webkit-scrollbar.css",
-        },
-      ],
     },
   },
   {
@@ -450,6 +407,50 @@ const AVAILABLE_INJECTIONS = [
         },
       ],
       allFrames: true,
+    },
+  },
+  {
+    id: "bug1711082",
+    platform: "all",
+    domain: "m.aliexpress.com",
+    bug: "1711082",
+    contentScripts: {
+      matches: ["*://m.aliexpress.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1711082-m.aliexpress.com-undisable-search.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1712833",
+    platform: "all",
+    domain: "buskocchi.desuca.co.jp",
+    bug: "1712833",
+    contentScripts: {
+      matches: ["*://buskocchi.desuca.co.jp/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1712833-buskocchi.desuca.co.jp-fix-map-height.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1712843",
+    platform: "all",
+    domain: "snaptik.app",
+    bug: "1712843",
+    contentScripts: {
+      matches: ["*://snaptik.app/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1712843-snaptik.app-fix-text-input-alignment.css",
+        },
+      ],
     },
   },
 ];

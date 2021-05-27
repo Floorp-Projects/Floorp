@@ -676,6 +676,25 @@ const AVAILABLE_UA_OVERRIDES = [
       },
     },
   },
+  {
+    /*
+     * Bug 1712807 - Add UA override for www.dealnews.com
+     * Webcompat issue #39341 - https://webcompat.com/issues/39341
+     *
+     * The sites shows Firefox a different layout compared to Chrome.
+     * Spoofing as Chrome fixes this.
+     */
+    id: "bug1712807",
+    platform: "android",
+    domain: "www.dealnews.com",
+    bug: "1712807",
+    config: {
+      matches: ["*://www.dealnews.com/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
 ];
 
 const UAHelpers = {
