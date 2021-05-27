@@ -295,15 +295,15 @@ const ImageCacheCleaner = {
       aOriginAttributes
     );
 
-    imageCache.removeEntriesFromPrincipal(httpPrincipal);
-    imageCache.removeEntriesFromPrincipal(httpsPrincipal);
+    imageCache.removeEntriesFromPrincipalInAllProcesses(httpPrincipal);
+    imageCache.removeEntriesFromPrincipalInAllProcesses(httpsPrincipal);
   },
 
   async deleteByPrincipal(aPrincipal) {
     let imageCache = Cc["@mozilla.org/image/tools;1"]
       .getService(Ci.imgITools)
       .getImgCacheForDocument(null);
-    imageCache.removeEntriesFromPrincipal(aPrincipal);
+    imageCache.removeEntriesFromPrincipalInAllProcesses(aPrincipal);
   },
 
   deleteByBaseDomain(aBaseDomain) {
