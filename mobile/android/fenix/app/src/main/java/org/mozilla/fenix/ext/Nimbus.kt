@@ -63,7 +63,8 @@ fun NimbusApi.withVariables(featureId: FeatureId, sendExposureEvent: Boolean = t
     getVariables(featureId, sendExposureEvent)
 
 /**
- * Get a `Variables` object for this feature and use that to configure the feature itself or a more type safe configuration object.
+ * Get a `Variables` object for this feature and use that to configure the feature itself or a
+ * more type safe configuration object.
  *
  * @param featureId the id of the feature as it appears in `Experimenter`
  * @param sendExposureEvent by default `true`. This logs an event that the user was exposed to an experiment

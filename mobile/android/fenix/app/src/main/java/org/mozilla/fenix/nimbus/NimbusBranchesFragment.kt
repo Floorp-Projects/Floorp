@@ -20,7 +20,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.ext.withExperiment
 import org.mozilla.fenix.nimbus.controller.NimbusBranchesController
 import org.mozilla.fenix.nimbus.view.NimbusBranchesView
 
