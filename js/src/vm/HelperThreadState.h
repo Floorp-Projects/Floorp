@@ -193,8 +193,9 @@ class GlobalHelperThreadState {
     return threads_;
   }
 
-  bool ensureInitialized();
-  bool ensureThreadCount(size_t count, const AutoLockHelperThreadState& lock);
+  [[nodiscard]] bool ensureInitialized();
+  [[nodiscard]] bool ensureThreadCount(size_t count,
+                                       const AutoLockHelperThreadState& lock);
   void finish();
   void finishThreads();
 
