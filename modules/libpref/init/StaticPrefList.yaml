@@ -1088,6 +1088,12 @@
   value: @IS_NOT_MOZILLA_OFFICIAL@
   mirror: always
 
+# See bug 1710926
+- name: browser.download.improvements_to_download_panel
+  type: bool
+  value: false
+  mirror: always
+
 - name: browser.download.sanitize_non_media_extensions
   type: bool
   value: true
