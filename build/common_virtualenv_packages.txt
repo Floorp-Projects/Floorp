@@ -1,4 +1,4 @@
-optional:packages.txt:comm/build/virtualenv_packages.txt
+thunderbird:packages.txt:comm/build/virtualenv_packages.txt
 mozilla.pth:build
 mozilla.pth:config
 mozilla.pth:config/mozunit
