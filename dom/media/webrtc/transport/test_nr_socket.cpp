@@ -87,6 +87,7 @@ extern "C" {
 #include "async_timer.h"
 #include "nr_socket.h"
 #include "nr_socket_local.h"
+#include "stun.h"
 #include "stun_hint.h"
 #include "transport_addr.h"
 }
@@ -307,6 +308,11 @@ int TestNrSocket::sendto(const void* msg, size_t len, int flags,
     return nat_->error_code_for_drop_;
   }
 
+  if (nr_is_stun_request_message(buf, len) &&
+      maybe_send_fake_response(buf, len, to)) {
+    return 0;
+  }
+
   /* TODO: improve the functionality of this in bug 1253657 */
   if (!nat_->enabled_ || nat_->is_an_internal_tuple(*to)) {
     if (nat_->delay_stun_resp_ms_ && nr_is_stun_response_message(buf, len)) {
@@ -364,6 +370,15 @@ int TestNrSocket::sendto(const void* msg, size_t len, int flags,
 int TestNrSocket::recvfrom(void* buf, size_t maxlen, size_t* len, int flags,
                            nr_transport_addr* from) {
   MOZ_ASSERT(internal_socket_->my_addr().protocol != IPPROTO_TCP);
+
+  if (!read_buffer_.empty()) {
+    UdpPacket& packet = read_buffer_.front();
+    *len = std::min(maxlen, packet.buffer_->len());
+    memcpy(buf, packet.buffer_->data(), *len);
+    nr_transport_addr_copy(from, &packet.remote_address_);
+    read_buffer_.pop_front();
+    return 0;
+  }
 
   int r;
   bool ingress_allowed = false;
@@ -462,6 +477,25 @@ int TestNrSocket::connect(nr_transport_addr* addr) {
     return R_INTERNAL;
   }
 
+  if (maybe_get_redirect_targets(addr).isSome()) {
+    // If we are simulating STUN redirects for |addr|, we need to pretend that
+    // the TCP connection worked, since |addr| probably does not actually point
+    // at something that exists.
+    connect_fake_stun_address_.reset(new nr_transport_addr);
+    nr_transport_addr_copy(connect_fake_stun_address_.get(), addr);
+
+    // We dispatch this, otherwise nICEr can trip over its shoelaces
+    GetCurrentSerialEventTarget()->Dispatch(
+        NS_NewRunnableFunction("Async writeable callback for TestNrSocket",
+                               [this, self = RefPtr<TestNrSocket>(this)] {
+                                 if (poll_flags() & PR_POLL_WRITE) {
+                                   fire_callback(NR_ASYNC_WAIT_WRITE);
+                                 }
+                               }));
+
+    return R_WOULDBLOCK;
+  }
+
   if (!nat_->enabled_ ||
       addr->protocol == IPPROTO_UDP  // Horrible hack to allow default address
                                      // discovery to work. Only works because
@@ -514,6 +548,11 @@ int TestNrSocket::write(const void* msg, size_t len, size_t* written) {
     return R_INTERNAL;
   }
 
+  if (nr_is_stun_request_message(buf, len) && connect_fake_stun_address_ &&
+      maybe_send_fake_response(buf, len, connect_fake_stun_address_.get())) {
+    return 0;
+  }
+
   if (nat_->block_tcp_ && !tls_) {
     // Should cause this socket to be abandoned
     r_log(LOG_GENERIC, LOG_DEBUG,
@@ -550,6 +589,27 @@ int TestNrSocket::write(const void* msg, size_t len, size_t* written) {
 int TestNrSocket::read(void* buf, size_t maxlen, size_t* len) {
   r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p %s reading", this,
         internal_socket_->my_addr().as_string);
+
+  if (!read_buffer_.empty()) {
+    r_log(LOG_GENERIC, LOG_DEBUG,
+          "TestNrSocket %p %s has stuff in read_buffer_", this,
+          internal_socket_->my_addr().as_string);
+    UdpPacket packet(std::move(read_buffer_.front()));
+    read_buffer_.pop_front();
+    *len = std::min(maxlen, packet.buffer_->len());
+    memcpy(buf, packet.buffer_->data(), *len);
+    if (*len != packet.buffer_->len()) {
+      // Put remaining bytes in new packet, at the front.
+      read_buffer_.emplace_front(packet.buffer_->data() + *len,
+                                 packet.buffer_->len() - *len,
+                                 packet.remote_address_);
+    }
+    return 0;
+  }
+
+  if (connect_fake_stun_address_) {
+    return R_WOULDBLOCK;
+  }
 
   int r;
 
@@ -596,11 +656,21 @@ int TestNrSocket::async_wait(int how, NR_async_cb cb, void* cb_arg,
 
   if (how == NR_ASYNC_WAIT_READ) {
     NrSocketBase::async_wait(how, cb, cb_arg, function, line);
+    if (!read_buffer_.empty()) {
+      fire_readable_callback();
+      return 0;
+    }
 
     // Make sure we're waiting on the socket for the internal address
     r = internal_socket_->async_wait(how, socket_readable_callback, this,
                                      function, line);
   } else {
+    if (connect_fake_stun_address_) {
+      // Fake TCP connection case; register the callback on this socket, not
+      // a real one.
+      return NrSocketBase::async_wait(how, cb, cb_arg, function, line);
+    }
+
     // For write, just use the readiness of the internal socket, since we queue
     // everything for the port mappings.
     r = internal_socket_->async_wait(how, cb, cb_arg, function, line);
@@ -656,6 +726,10 @@ int TestNrSocket::cancel(int how) {
   r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s stop waiting for %s",
         internal_socket_->my_addr().as_string,
         how == NR_ASYNC_WAIT_READ ? "read" : "write");
+
+  if (connect_fake_stun_address_) {
+    return NrSocketBase::cancel(how);
+  }
 
   // Writable callbacks are decoupled except for the TCP case
   if (how == NR_ASYNC_WAIT_READ ||
@@ -727,7 +801,7 @@ void TestNrSocket::on_socket_readable(NrSocketBase* real_socket) {
 
 void TestNrSocket::fire_readable_callback() {
   MOZ_ASSERT(poll_flags() & PR_POLL_READ);
-  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s ready for read",
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p %s ready for read", this,
         internal_socket_->my_addr().as_string);
   fire_callback(NR_ASYNC_WAIT_READ);
 }
@@ -826,7 +900,7 @@ int TestNrSocket::PortMapping::send_from_queue() {
   int r = 0;
 
   while (!send_queue_.empty()) {
-    UdpPacket& packet = *send_queue_.front();
+    UdpPacket& packet = send_queue_.front();
     r_log(LOG_GENERIC, LOG_DEBUG,
           "PortMapping %s -> %s sending from queue to %s",
           external_socket_->my_addr().as_string, remote_address_.as_string,
@@ -867,7 +941,7 @@ int TestNrSocket::PortMapping::sendto(const void* msg, size_t len,
 
   if (r == R_WOULDBLOCK) {
     r_log(LOG_GENERIC, LOG_DEBUG, "Enqueueing UDP packet to %s", to.as_string);
-    send_queue_.push_back(RefPtr<UdpPacket>(new UdpPacket(msg, len, to)));
+    send_queue_.emplace_back(msg, len, to);
     return 0;
   }
   if (r) {
@@ -892,6 +966,136 @@ int TestNrSocket::PortMapping::cancel(int how) {
         how == NR_ASYNC_WAIT_READ ? "read" : "write");
 
   return external_socket_->cancel(how);
+}
+
+class nr_stun_message_deleter {
+ public:
+  nr_stun_message_deleter() = default;
+  void operator()(nr_stun_message* msg) const { nr_stun_message_destroy(&msg); }
+};
+
+bool TestNrSocket::maybe_send_fake_response(const void* msg, size_t len,
+                                            nr_transport_addr* to) {
+  Maybe<nsTArray<nsCString>> redirect_targets = maybe_get_redirect_targets(to);
+  if (!redirect_targets.isSome()) {
+    return false;
+  }
+
+  std::unique_ptr<nr_stun_message, nr_stun_message_deleter> request;
+  {
+    nr_stun_message* temp = nullptr;
+    if (NS_WARN_IF(nr_stun_message_create2(&temp, (unsigned char*)msg, len))) {
+      return false;
+    }
+    request.reset(temp);
+  }
+
+  if (NS_WARN_IF(nr_stun_decode_message(request.get(), nullptr, nullptr))) {
+    return false;
+  }
+
+  std::unique_ptr<nr_stun_message, nr_stun_message_deleter> response;
+  {
+    nr_stun_message* temp = nullptr;
+    if (nr_stun_message_create(&temp)) {
+      MOZ_CRASH("nr_stun_message_create failed!");
+    }
+    response.reset(temp);
+  }
+
+  nr_stun_form_error_response(request.get(), response.get(), 300,
+                              (char*)"Try alternate");
+
+  int port = 0;
+  if (nr_transport_addr_get_port(to, &port)) {
+    MOZ_CRASH();
+  }
+
+  for (const nsCString& address : *redirect_targets) {
+    r_log(LOG_GENERIC, LOG_DEBUG,
+          "TestNrSocket attempting to add alternate server %s", address.Data());
+    nr_transport_addr addr;
+    if (NS_WARN_IF(nr_str_port_to_transport_addr(address.Data(), port,
+                                                 IPPROTO_UDP, &addr))) {
+      continue;
+    }
+    if (nr_stun_message_add_alternate_server_attribute(response.get(), &addr)) {
+      MOZ_CRASH("nr_stun_message_add_alternate_server_attribute failed!");
+    }
+  }
+
+  if (nr_stun_encode_message(response.get())) {
+    MOZ_CRASH("nr_stun_encode_message failed!");
+  }
+
+  nr_transport_addr response_from;
+  if (nr_transport_addr_is_wildcard(to)) {
+    // |to| points to an FQDN, and nICEr is delegating DNS lookup to us; we
+    // aren't _actually_ going to do that though, so we select a bogus address
+    // for the response to come from. TEST-NET is a fairly reasonable thing to
+    // use for this.
+    int port = 0;
+    if (nr_transport_addr_get_port(to, &port)) {
+      MOZ_CRASH();
+    }
+    switch (to->ip_version) {
+      case NR_IPV4:
+        if (nr_str_port_to_transport_addr("198.51.100.1", port, to->protocol,
+                                          &response_from)) {
+          MOZ_CRASH();
+        }
+        break;
+      case NR_IPV6:
+        if (nr_str_port_to_transport_addr("::ffff:198.51.100.1", port,
+                                          to->protocol, &response_from)) {
+          MOZ_CRASH();
+        }
+        break;
+      default:
+        MOZ_CRASH();
+    }
+  } else {
+    nr_transport_addr_copy(&response_from, to);
+  }
+
+  read_buffer_.emplace_back(response->buffer, response->length, response_from);
+
+  // We dispatch this, otherwise nICEr can trip over its shoelaces
+  r_log(LOG_GENERIC, LOG_DEBUG,
+        "TestNrSocket %p scheduling callback for redirect response", this);
+  GetCurrentSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+      "Async readable callback for TestNrSocket",
+      [this, self = RefPtr<TestNrSocket>(this)] {
+        if (poll_flags() & PR_POLL_READ) {
+          fire_readable_callback();
+        } else {
+          r_log(LOG_GENERIC, LOG_DEBUG,
+                "TestNrSocket %p deferring callback for redirect response",
+                this);
+        }
+      }));
+
+  return true;
+}
+
+Maybe<nsTArray<nsCString>> TestNrSocket::maybe_get_redirect_targets(
+    nr_transport_addr* to) const {
+  Maybe<nsTArray<nsCString>> result;
+
+  // 256 is overkill, but it hardly matters
+  char addrstring[256];
+  if (nr_transport_addr_get_addrstring(to, addrstring, 256)) {
+    MOZ_CRASH("nr_transport_addr_get_addrstring failed!");
+  }
+
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket checking redirect rules for %s",
+        addrstring);
+  auto it = nat_->stun_redirect_map_.find(nsCString(addrstring));
+  if (it != nat_->stun_redirect_map_.end()) {
+    result = Some(it->second);
+  }
+
+  return result;
 }
 
 }  // namespace mozilla

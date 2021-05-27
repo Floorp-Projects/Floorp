@@ -625,6 +625,11 @@ bool NrIceCtx::Initialize() {
     test_nat->block_tcp_ = config_.mNatSimulatorConfig->mBlockTcp;
     test_nat->error_code_for_drop_ =
         config_.mNatSimulatorConfig->mErrorCodeForDrop;
+    if (config_.mNatSimulatorConfig->mRedirectAddress.Length()) {
+      test_nat
+          ->stun_redirect_map_[config_.mNatSimulatorConfig->mRedirectAddress] =
+          config_.mNatSimulatorConfig->mRedirectTargets;
+    }
     test_nat->enabled_ = true;
     SetNat(test_nat);
   }
