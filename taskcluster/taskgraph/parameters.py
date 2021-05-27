@@ -18,7 +18,6 @@ from taskgraph.util.schema import validate_schema
 from voluptuous import (
     ALLOW_EXTRA,
     Any,
-    Inclusive,
     Required,
     Schema,
 )
@@ -64,10 +63,6 @@ base_schema = Schema(
         Required("base_repository"): text_type,
         Required("build_date"): int,
         Required("build_number"): int,
-        Inclusive("comm_base_repository", "comm"): text_type,
-        Inclusive("comm_head_ref", "comm"): text_type,
-        Inclusive("comm_head_repository", "comm"): text_type,
-        Inclusive("comm_head_rev", "comm"): text_type,
         Required("do_not_optimize"): [text_type],
         Required("existing_tasks"): {text_type: text_type},
         Required("filters"): [text_type],
@@ -109,14 +104,6 @@ base_schema = Schema(
         Required("version"): text_type,
     }
 )
-
-
-COMM_PARAMETERS = [
-    "comm_base_repository",
-    "comm_head_ref",
-    "comm_head_repository",
-    "comm_head_rev",
-]
 
 
 def extend_parameters_schema(schema):
@@ -192,14 +179,6 @@ class Parameters(ReadOnlyDict):
             "try_task_config": {},
             "version": get_version(),
         }
-
-        if set(COMM_PARAMETERS) & set(kwargs):
-            defaults.update(
-                {
-                    "comm_base_repository": "https://hg.mozilla.org/comm-central",
-                    "comm_head_repository": "https://hg.mozilla.org/comm-central",
-                }
-            )
 
         for name, default in defaults.items():
             if name not in kwargs:
