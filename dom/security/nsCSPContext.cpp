@@ -67,6 +67,16 @@ static LogModule* GetCspContextLog() {
 #define CSPCONTEXTLOGENABLED() \
   MOZ_LOG_TEST(GetCspContextLog(), mozilla::LogLevel::Debug)
 
+static LogModule* GetCspOriginLogLog() {
+  static LazyLogModule gCspOriginPRLog("CSPOrigin");
+  return gCspOriginPRLog;
+}
+
+#define CSPORIGINLOG(args) \
+  MOZ_LOG(GetCspOriginLogLog(), mozilla::LogLevel::Debug, args)
+#define CSPORIGINLOGENABLED() \
+  MOZ_LOG_TEST(GetCspOriginLogLog(), mozilla::LogLevel::Debug)
+
 static const uint32_t CSP_CACHE_URI_CUTOFF_SIZE = 512;
 
 #ifdef DEBUG
@@ -401,6 +411,18 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString, bool aReportOnly,
       "did you forget to call setRequestContextWith{Document,Principal}?");
   NS_ENSURE_TRUE(mLoadingPrincipal, NS_ERROR_UNEXPECTED);
   NS_ENSURE_TRUE(mSelfURI, NS_ERROR_UNEXPECTED);
+
+  if (CSPORIGINLOGENABLED()) {
+    nsAutoCString selfURISpec;
+    mSelfURI->GetSpec(selfURISpec);
+    CSPORIGINLOG(("CSP - AppendPolicy"));
+    CSPORIGINLOG((" * selfURI: %s", selfURISpec.get()));
+    CSPORIGINLOG((" * reportOnly: %s", aReportOnly ? "yes" : "no"));
+    CSPORIGINLOG(
+        (" * deliveredViaMetaTag: %s", aDeliveredViaMetaTag ? "yes" : "no"));
+    CSPORIGINLOG(
+        (" * policy: %s\n", NS_ConvertUTF16toUTF8(aPolicyString).get()));
+  }
 
   nsCSPPolicy* policy = nsCSPParser::parseContentSecurityPolicy(
       aPolicyString, mSelfURI, aReportOnly, this, aDeliveredViaMetaTag);
