@@ -3105,6 +3105,10 @@ MDefinition* MBoxNonStrictThis::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+AliasSet MLoadArgumentsObjectArg::getAliasSet() const {
+  return AliasSet::Load(AliasSet::Any);
+}
+
 MDefinition* MReturnFromCtor::foldsTo(TempAllocator& alloc) {
   MDefinition* rval = value();
   if (rval->isBox()) {
@@ -5082,6 +5086,20 @@ AliasSet MSlots::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
+AliasSet MElements::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MFunctionLength::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                        AliasSet::DynamicSlot);
+}
+
+AliasSet MFunctionName::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                        AliasSet::DynamicSlot);
+}
+
 AliasSet MArrayBufferByteLength::getAliasSet() const {
   return AliasSet::Load(AliasSet::FixedSlot);
 }
@@ -5092,6 +5110,10 @@ AliasSet MArrayBufferViewLength::getAliasSet() const {
 
 AliasSet MArrayBufferViewElements::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MGuardHasAttachedArrayBuffer::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot);
 }
 
 AliasSet MArrayPush::getAliasSet() const {
@@ -5354,6 +5376,15 @@ MDefinition* MGuardIsNotProxy::foldsTo(TempAllocator& alloc) {
   return object();
 }
 
+AliasSet MMegamorphicLoadSlotByValue::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                        AliasSet::DynamicSlot);
+}
+
+AliasSet MGuardFunctionIsNonBuiltinCtor::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
 MDefinition* MGuardStringToIndex::foldsTo(TempAllocator& alloc) {
   if (!string()->isConstant()) {
     return this;
@@ -5402,6 +5433,18 @@ MDefinition* MGuardStringToDouble::foldsTo(TempAllocator& alloc) {
   return MConstant::New(alloc, DoubleValue(number));
 }
 
+AliasSet MGuardNoDenseElements::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MLoadDOMExpandoValue::getAliasSet() const {
+  return AliasSet::Load(AliasSet::DOMProxyExpando);
+}
+
+AliasSet MLoadDOMExpandoValueIgnoreGeneration::getAliasSet() const {
+  return AliasSet::Load(AliasSet::DOMProxyExpando);
+}
+
 MDefinition* MGuardToClass::foldsTo(TempAllocator& alloc) {
   const JSClass* clasp = GetObjectKnownJSClass(object());
   if (!clasp || getClass() != clasp) {
@@ -5448,6 +5491,11 @@ MDefinition* MIsArray::foldsTo(TempAllocator& alloc) {
 
   AssertKnownClass(alloc, this, input());
   return MConstant::New(alloc, BooleanValue(known == KnownClass::Array));
+}
+
+AliasSet MObjectClassToString::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                        AliasSet::DynamicSlot);
 }
 
 MDefinition* MGuardIsNotArrayBufferMaybeShared::foldsTo(TempAllocator& alloc) {
@@ -5543,6 +5591,27 @@ AliasSet MSuperFunction::getAliasSet() const {
 
 AliasSet MInitHomeObject::getAliasSet() const {
   return AliasSet::Store(AliasSet::ObjectFields);
+}
+
+AliasSet MLoadWrapperTarget::getAliasSet() const {
+  return AliasSet::Load(AliasSet::Any);
+}
+
+AliasSet MGuardIsExtensible::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MGuardIndexGreaterThanDenseInitLength::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MGuardIndexIsValidUpdateOrAdd::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MCallObjectHasSparseElement::getAliasSet() const {
+  return AliasSet::Load(AliasSet::Element | AliasSet::ObjectFields |
+                        AliasSet::FixedSlot | AliasSet::DynamicSlot);
 }
 
 MDefinition* MGuardInt32IsNonNegative::foldsTo(TempAllocator& alloc) {

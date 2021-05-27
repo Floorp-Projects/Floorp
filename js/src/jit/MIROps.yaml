@@ -330,8 +330,17 @@
 - name: SetArgumentsObjectArg
   gen_boilerplate: false
 
+# Load |arguments[index]| from a mapped or unmapped arguments object. Bails out
+# if any elements were overridden or deleted. Also bails out if the index is
+# out of bounds.
 - name: LoadArgumentsObjectArg
-  gen_boilerplate: false
+  operands:
+    argsObject: Object
+    index: Int32
+  result_type: Value
+  guard: true
+  congruent_to: if_operands_equal
+  alias_set: custom
 
 - name: ArgumentsObjectLength
   gen_boilerplate: false
@@ -607,7 +616,14 @@
   gen_boilerplate: false
 
 - name: FromCodePoint
-  gen_boilerplate: false
+  operands:
+    codePoint: Int32
+  result_type: String
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  clone: true
 
 - name: StringConvertCase
   gen_boilerplate: false
@@ -701,10 +717,17 @@
   gen_boilerplate: false
 
 - name: RegExpPrototypeOptimizable
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Boolean
+  alias_set: none
 
 - name: RegExpInstanceOptimizable
-  gen_boilerplate: false
+  operands:
+    object: Object
+    proto: Object
+  result_type: Boolean
+  alias_set: none
 
 - name: GetFirstDollarIndex
   gen_boilerplate: false
@@ -713,7 +736,13 @@
   gen_boilerplate: false
 
 - name: Substr
-  gen_boilerplate: false
+  operands:
+    string: String
+    begin: Int32
+    length: Int32
+  result_type: String
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: ModuleMetadata
   gen_boilerplate: false
@@ -745,8 +774,15 @@
   alias_set: custom
   clone: true
 
+# Returns obj->elements.
 - name: Elements
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Elements
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  clone: true
 
 - name: InitializedLength
   gen_boilerplate: false
@@ -760,11 +796,31 @@
 - name: SetArrayLength
   gen_boilerplate: false
 
+# Load the function length. Bails for functions with lazy scripts or a
+# resolved "length" property.
 - name: FunctionLength
-  gen_boilerplate: false
+  operands:
+    function: Object
+  result_type: Int32
+  guard: true
+  congruent_to: if_operands_equal
+  # Even though the "length" property is lazily resolved, it acts similar to
+  # a normal property load, so we can treat this operation like any other
+  # property read.
+  alias_set: custom
 
+# Load the function name. Bails for bound functions when the bound function
+# name prefix isn't present or functions with a resolved "name" property.
 - name: FunctionName
-  gen_boilerplate: false
+  operands:
+    function: Object
+  result_type: String
+  guard: true
+  congruent_to: if_operands_equal
+  # Even though the "name" property is lazily resolved, it acts similar to
+  # a normal property load, so we can treat this operation like any other
+  # property read.
+  alias_set: custom
 
 - name: GetNextEntryForIterator
   gen_boilerplate: false
@@ -804,8 +860,15 @@
 - name: TypedArrayElementSize
   gen_boilerplate: false
 
+# Guard an ArrayBufferView has an attached ArrayBuffer.
 - name: GuardHasAttachedArrayBuffer
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
 
 - name: GuardNumberToIntPtrIndex
   gen_boilerplate: false
@@ -943,23 +1006,53 @@
 - name: GuardNullProto
   gen_boilerplate: false
 
+# Guard the object is a native object.
 - name: GuardIsNativeObject
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: GuardIsProxy
-  gen_boilerplate: false
-
-- name: GuardIsNotProxy
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: GuardIsNotDOMProxy
-  gen_boilerplate: false
+  operands:
+    proxy: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+
+- name: GuardIsNotProxy
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
+  alias_set: none
 
 - name: ProxyGet
   gen_boilerplate: false
 
 - name: ProxyGetByValue
-  gen_boilerplate: false
+  operands:
+    proxy: Object
+    idVal: Value
+  result_type: Value
+  possibly_calls: true
 
 - name: ProxyHasProp
   gen_boilerplate: false
@@ -977,7 +1070,16 @@
   gen_boilerplate: false
 
 - name: MegamorphicLoadSlotByValue
-  gen_boilerplate: false
+  operands:
+    object: Object
+    idVal: Value
+  result_type: Value
+  # Bails when non-native or accessor properties are encountered, so we can't
+  # DCE this instruction.
+  guard: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  possibly_calls: true
 
 - name: MegamorphicStoreSlot
   gen_boilerplate: false
@@ -986,10 +1088,23 @@
   gen_boilerplate: false
 
 - name: GuardIsNotArrayBufferMaybeShared
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
+  alias_set: none
 
 - name: GuardIsTypedArray
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: NurseryObject
   gen_boilerplate: false
@@ -1011,7 +1126,13 @@
   gen_boilerplate: false
 
 - name: GuardFunctionIsNonBuiltinCtor
-  gen_boilerplate: false
+  operands:
+    function: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
 
 - name: GuardFunctionKind
   gen_boilerplate: false
@@ -1032,16 +1153,49 @@
   gen_boilerplate: false
 
 - name: GuardStringToIndex
-  gen_boilerplate: false
+  operands:
+    string: String
+  result_type: Int32
+  # Mark as guard because this instruction must not be eliminated. For
+  # example, if the string is not an index the operation could change from a
+  # typed array load to a getter call.
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
+  alias_set: none
 
 - name: GuardStringToInt32
-  gen_boilerplate: false
+  operands:
+    string: String
+  result_type: Int32
+  # Mark as guard to prevent the issue described in MGuardStringToIndex's
+  # constructor.
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
+  alias_set: none
 
 - name: GuardStringToDouble
-  gen_boilerplate: false
+  operands:
+    string: String
+  result_type: Double
+  # Mark as guard to prevent the issue described in MGuardStringToIndex's
+  # constructor.
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
+  alias_set: none
 
 - name: GuardNoDenseElements
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  alias_set: custom
 
 - name: GuardTagNotEqual
   gen_boilerplate: false
@@ -1114,14 +1268,28 @@
 - name: GetDOMMember
   gen_boilerplate: false
 
+# Load the private value expando from a DOM proxy. The target is stored in the
+# proxy object's private slot.
+# This is either an UndefinedValue (no expando), ObjectValue (the expando
+# object), or PrivateValue(ExpandoAndGeneration*).
 - name: LoadDOMExpandoValue
-  gen_boilerplate: false
+  operands:
+    proxy: Object
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
 
 - name: LoadDOMExpandoValueGuardGeneration
   gen_boilerplate: false
 
 - name: LoadDOMExpandoValueIgnoreGeneration
-  gen_boilerplate: false
+  operands:
+    proxy: Object
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
 
 - name: GuardDOMExpandoMissingOrGuardShape
   gen_boilerplate: false
@@ -1233,10 +1401,20 @@
   gen_boilerplate: false
 
 - name: IsConstructor
-  gen_boilerplate: false
+  operands: 
+    object: Object
+  result_type: Boolean
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: IsCrossRealmArrayConstructor
-  gen_boilerplate: false
+  operands: 
+    object: Object
+  result_type: Boolean
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: IsObject
   operands: 
@@ -1269,7 +1447,16 @@
   gen_boilerplate: false
 
 - name: ObjectClassToString
-  gen_boilerplate: false
+  operands: 
+    object: Object
+  result_type: String
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  possibly_calls: true
+  # Tests @@toStringTag is neither present on this object nor on any object
+  # of the prototype chain.
+  alias_set: custom
 
 - name: CheckReturn
   operands: 
@@ -1423,41 +1610,114 @@
   result_type: Object
   alias_set: custom
 
+# Return true if the object is definitely a TypedArray constructor, but not
+# necessarily from the currently active realm. Return false if the object is
+# not a TypedArray constructor or if it's a wrapper.
 - name: IsTypedArrayConstructor
-  gen_boilerplate: false
+  operands: 
+    object: Object
+  result_type: Boolean
+  alias_set: none
 
+# Load the JSValueTag on all platforms except ARM64. See the comments in
+# MacroAssembler-arm64.h for the |cmpTag(Register, ImmTag)| method for why
+# ARM64 doesn't use the raw JSValueTag, but instead a modified tag value. That
+# modified tag value can't be directly compared against JSValueTag constants.
 - name: LoadValueTag
-  gen_boilerplate: false
+  operands: 
+    value: Value
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
 
+# Load the target object from a proxy wrapper. The target is stored in the
+# proxy object's private slot.
 - name: LoadWrapperTarget
-  gen_boilerplate: false
+  operands: 
+    object: Object
+  result_type: Object
+  movable: true
+  congruent_to: if_operands_equal
+  # Can't use |AliasSet::None| because the target changes on navigation.
+  # TODO: Investigate using a narrower or a custom alias set.
+  alias_set: custom
 
 - name: GuardHasGetterSetter
   gen_boilerplate: false
 
 - name: GuardIsExtensible
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
 
 - name: GuardInt32IsNonNegative
-  gen_boilerplate: false
+  operands:
+    index: Int32
+  result_type: Int32
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
+  alias_set: none
 
+# Guard the input index is greater than the dense initialized length of an
+# object.
 - name: GuardIndexGreaterThanDenseInitLength
-  gen_boilerplate: false
+  operands:
+    object: Object
+    index: Int32
+  result_type: Int32
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
 
+# Guard an array object's length can be updated successfully when adding an
+# element at the input index.
 - name: GuardIndexIsValidUpdateOrAdd
-  gen_boilerplate: false
+  operands:
+    object: Object
+    index: Int32
+  result_type: Int32
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
 
 - name: CallAddOrUpdateSparseElement
   gen_boilerplate: false
 
+# Get a sparse element from an array object, possibly by calling an accessor
+# property.
 - name: CallGetSparseElement
-  gen_boilerplate: false
+  operands:
+    object: Object
+    index: Int32
+  result_type: Value
+  possibly_calls: true
 
 - name: CallNativeGetElement
-  gen_boilerplate: false
+  operands:
+    object: Object
+    index: Int32
+  result_type: Value
+  possibly_calls: true
 
+# Test if a native object has an own element (sparse or dense) at an index.
 - name: CallObjectHasSparseElement
-  gen_boilerplate: false
+  operands:
+    object: Object
+    index: Int32
+  result_type: Boolean
+  guard: true
+  congruent_to: if_operands_equal
+  possibly_calls: true
+  alias_set: custom
 
 - name: BigIntAsIntN
   gen_boilerplate: false
