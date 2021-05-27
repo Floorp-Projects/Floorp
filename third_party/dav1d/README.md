@@ -34,17 +34,18 @@ The plan is the following:
 5. Make it fast on mobile, by writing asm for ARMv8 chips,
 6. Make it fast on older desktop, by writing asm for SSSE3+ chips,
 7. Make high bit-depth fast on mobile, by writing asm for ARMv8 chips.
-
-### On-going
 8. Make it fast on older mobile, by writing asm for ARMv7 chips,
 9. Make high bit-depth fast on older mobile, by writing asm for ARMv7 chips,
+
+### On-going
 10. Improve C code base with [various tweaks](https://code.videolan.org/videolan/dav1d/wikis/task-list),
 11. Accelerate for less common architectures, like PPC, SSE2 or AVX-512.
+12. Make high bit-depth fast on desktop, by writing asm for AVX2 chips,
 
 ### After
-12. Make high bit-depth fast on desktop, by writing asm for AVX2 chips,
 13. Make high bit-depth fast on older desktop, by writing asm for SSSE3+ chips,
-14. Use more GPU, when possible.
+14. Use more GPU decoding, when possible.
+15. Improve threading.
 
 # Contribute
 

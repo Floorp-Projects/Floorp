@@ -86,12 +86,17 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
             '../../../third_party/dav1d/src/x86/cdef16_avx2.asm', # moved from autovendored
             '../../../third_party/dav1d/src/x86/cdef_avx2.asm',
             '../../../third_party/dav1d/src/x86/cdef_avx512.asm',
-            '../../../third_party/dav1d/src/x86/film_grain.asm',
-            '../../../third_party/dav1d/src/x86/ipred.asm',
-            '../../../third_party/dav1d/src/x86/itx.asm',
-            '../../../third_party/dav1d/src/x86/loopfilter.asm',
-            '../../../third_party/dav1d/src/x86/looprestoration.asm',
+            '../../../third_party/dav1d/src/x86/film_grain16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/film_grain_avx2.asm',
+            '../../../third_party/dav1d/src/x86/ipred16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/ipred_avx2.asm',
+            '../../../third_party/dav1d/src/x86/itx16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/itx_avx2.asm',
+            '../../../third_party/dav1d/src/x86/loopfilter16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/loopfilter_avx2.asm',
             '../../../third_party/dav1d/src/x86/looprestoration16_avx2.asm', # moved from autovendored
+            '../../../third_party/dav1d/src/x86/looprestoration_avx2.asm',
+            '../../../third_party/dav1d/src/x86/mc16_avx2.asm',
             '../../../third_party/dav1d/src/x86/mc_avx2.asm',
             '../../../third_party/dav1d/src/x86/mc_avx512.asm',
         ]
@@ -100,10 +105,11 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         '../../../third_party/dav1d/src/x86/cdef16_sse.asm',
         '../../../third_party/dav1d/src/x86/cdef_sse.asm',
         '../../../third_party/dav1d/src/x86/cpuid.asm',
-        '../../../third_party/dav1d/src/x86/film_grain_ssse3.asm',
-        '../../../third_party/dav1d/src/x86/ipred_ssse3.asm',
-        '../../../third_party/dav1d/src/x86/itx_ssse3.asm',
-        '../../../third_party/dav1d/src/x86/loopfilter_ssse3.asm',
+        '../../../third_party/dav1d/src/x86/film_grain_sse.asm',
+        '../../../third_party/dav1d/src/x86/ipred_sse.asm',
+        '../../../third_party/dav1d/src/x86/itx16_sse.asm',
+        '../../../third_party/dav1d/src/x86/itx_sse.asm',
+        '../../../third_party/dav1d/src/x86/loopfilter_sse.asm',
         '../../../third_party/dav1d/src/x86/looprestoration_sse.asm',
         '../../../third_party/dav1d/src/x86/mc_sse.asm',
         '../../../third_party/dav1d/src/x86/msac.asm',
@@ -141,6 +147,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
         '../../../third_party/dav1d/src/arm/cpu.c',
     ]
     EXPORTS += [
+        '../../../third_party/dav1d/src/arm/asm-offsets.h',
         '../../../third_party/dav1d/src/arm/cpu.h',
         '../../../third_party/dav1d/src/arm/msac.h',
     ]
@@ -178,6 +185,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/64/cdef16.S',
             '../../../third_party/dav1d/src/arm/64/cdef_tmpl.S',
             '../../../third_party/dav1d/src/arm/64/film_grain.S',
+            '../../../third_party/dav1d/src/arm/64/film_grain16.S',
             '../../../third_party/dav1d/src/arm/64/ipred.S',
             '../../../third_party/dav1d/src/arm/64/ipred16.S',
             # itx.S is used for both 8 and 16 bpc.

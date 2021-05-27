@@ -125,6 +125,7 @@ if is_asm_enabled
             if dav1d_bitdepths.contains('16')
                 libdav1d_sources_asm += files(
                     'arm/64/cdef16.S',
+                    'arm/64/film_grain16.S',
                     'arm/64/ipred16.S',
                     'arm/64/itx16.S',
                     'arm/64/loopfilter16.S',
@@ -189,6 +190,8 @@ if is_asm_enabled
             'x86/cpuid.asm',
             'x86/msac.asm',
             'x86/cdef_avx2.asm',
+            'x86/itx_avx2.asm',
+            'x86/looprestoration_avx2.asm',
             'x86/cdef_sse.asm',
         )
 
@@ -197,15 +200,13 @@ if is_asm_enabled
                 'x86/cdef_avx512.asm',
                 'x86/mc_avx512.asm',
                 'x86/mc_avx2.asm',
-                'x86/film_grain.asm',
-                'x86/ipred.asm',
-                'x86/itx.asm',
-                'x86/loopfilter.asm',
-                'x86/looprestoration.asm',
-                'x86/film_grain_ssse3.asm',
-                'x86/ipred_ssse3.asm',
-                'x86/itx_ssse3.asm',
-                'x86/loopfilter_ssse3.asm',
+                'x86/film_grain_avx2.asm',
+                'x86/ipred_avx2.asm',
+                'x86/loopfilter_avx2.asm',
+                'x86/film_grain_sse.asm',
+                'x86/ipred_sse.asm',
+                'x86/itx_sse.asm',
+                'x86/loopfilter_sse.asm',
                 'x86/looprestoration_sse.asm',
                 'x86/mc_sse.asm',
             )
@@ -214,8 +215,14 @@ if is_asm_enabled
         if dav1d_bitdepths.contains('16')
             libdav1d_sources_asm += files(
                 'x86/cdef16_avx2.asm',
-                'x86/cdef16_sse.asm',
+                'x86/film_grain16_avx2.asm',
+                'x86/ipred16_avx2.asm',
+                'x86/itx16_avx2.asm',
+                'x86/itx16_sse.asm',
+                'x86/loopfilter16_avx2.asm',
                 'x86/looprestoration16_avx2.asm',
+                'x86/mc16_avx2.asm',
+                'x86/cdef16_sse.asm',
             )
         endif
 
