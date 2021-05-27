@@ -82,13 +82,13 @@ class nsHttpResponseHead {
 
   [[nodiscard]] nsresult SetHeader(const nsACString& h, const nsACString& v,
                                    bool m = false);
-  [[nodiscard]] nsresult SetHeader(const nsHttpAtom& h, const nsACString& v,
+  [[nodiscard]] nsresult SetHeader(nsHttpAtom h, const nsACString& v,
                                    bool m = false);
-  [[nodiscard]] nsresult GetHeader(const nsHttpAtom& h, nsACString& v);
-  void ClearHeader(const nsHttpAtom& h);
+  [[nodiscard]] nsresult GetHeader(nsHttpAtom h, nsACString& v);
+  void ClearHeader(nsHttpAtom h);
   void ClearHeaders();
-  bool HasHeaderValue(const nsHttpAtom& h, const char* v);
-  bool HasHeader(const nsHttpAtom& h) const;
+  bool HasHeaderValue(nsHttpAtom h, const char* v);
+  bool HasHeader(nsHttpAtom h) const;
 
   void SetContentType(const nsACString& s);
   void SetContentCharset(const nsACString& s);
@@ -137,7 +137,7 @@ class nsHttpResponseHead {
   bool ExpiresInPast();
 
   // update headers...
-  void UpdateHeaders(nsHttpResponseHead* aOther);
+  void UpdateHeaders(nsHttpResponseHead* headers);
 
   // reset the response head to it's initial state
   void Reset();
@@ -155,7 +155,7 @@ class nsHttpResponseHead {
   // automatically under one lock.
   [[nodiscard]] nsresult VisitHeaders(nsIHttpHeaderVisitor* visitor,
                                       nsHttpHeaderArray::VisitorFilter filter);
-  [[nodiscard]] nsresult GetOriginalHeader(const nsHttpAtom& aHeader,
+  [[nodiscard]] nsresult GetOriginalHeader(nsHttpAtom aHeader,
                                            nsIHttpHeaderVisitor* aVisitor);
 
   bool HasContentType() const;
@@ -163,8 +163,7 @@ class nsHttpResponseHead {
   bool GetContentTypeOptionsHeader(nsACString& aOutput);
 
  private:
-  [[nodiscard]] nsresult SetHeader_locked(const nsHttpAtom& atom,
-                                          const nsACString& h,
+  [[nodiscard]] nsresult SetHeader_locked(nsHttpAtom atom, const nsACString& h,
                                           const nsACString& v, bool m = false);
   void AssignDefaultStatusText();
   void ParseVersion(const char*);
@@ -176,7 +175,7 @@ class nsHttpResponseHead {
                                                 bool originalFromNetHeaders);
 
   // these return failure if the header does not exist.
-  [[nodiscard]] nsresult ParseDateHeader(const nsHttpAtom& header,
+  [[nodiscard]] nsresult ParseDateHeader(nsHttpAtom header,
                                          uint32_t* result) const;
 
   bool ExpiresInPast_locked() const;

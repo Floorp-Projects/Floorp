@@ -353,7 +353,7 @@ mozilla::TimeStamp HttpTransactionParent::GetResponseEnd() {
   return mTimings.responseEnd;
 }
 
-TimingStruct HttpTransactionParent::Timings() { return mTimings; }
+const TimingStruct HttpTransactionParent::Timings() { return mTimings; }
 
 bool HttpTransactionParent::ResponseIsComplete() { return mResponseIsComplete; }
 

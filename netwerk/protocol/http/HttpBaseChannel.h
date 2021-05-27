@@ -442,8 +442,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // |EnsureUploadStreamIsCloneableComplete| to main thread.
   virtual void OnCopyComplete(nsresult aStatus);
 
-  void AddClassificationFlags(uint32_t aClassificationFlags,
-                              bool aIsThirdParty);
+  void AddClassificationFlags(uint32_t aFlags, bool aIsThirdParty);
 
   void SetFlashPluginState(nsIHttpChannel::FlashPluginState aState);
 
