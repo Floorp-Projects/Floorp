@@ -646,7 +646,7 @@ if args.variant == "msan":
 
 # Generate stacks from minidumps.
 if use_minidump:
-    venv_python = os.path.join(OBJDIR, "_virtualenvs", "init_py3", "bin", "python3")
+    venv_python = os.path.join(OBJDIR, "_virtualenvs", "common", "bin", "python3")
     run_command(
         [
             venv_python,
