@@ -470,7 +470,7 @@ featuregates:
 talos:
     description: testing/talos unit tests
     platform: windows10-64/opt
-    python-version: [2]
+    python-version: [3]
     treeherder:
         symbol: tal
     run:
