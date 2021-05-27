@@ -16,18 +16,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.mozilla.experiments.nimbus.Branch
-import org.mozilla.experiments.nimbus.FeatureConfig
 
 @RunWith(AndroidJUnit4::class)
 class NimbusBranchItemViewHolderTest {
 
     private val branch = Branch(
         slug = "control",
-        ratio = 1,
-        feature = FeatureConfig(
-            featureId = "first_switch",
-            enabled = false
-        )
+        ratio = 1
     )
     private lateinit var nimbusBranchesDelegate: NimbusBranchesAdapterDelegate
     private lateinit var selectedIconView: ImageView
