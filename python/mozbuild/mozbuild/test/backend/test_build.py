@@ -12,6 +12,7 @@ import sys
 import unittest
 import mozpack.path as mozpath
 from contextlib import contextmanager
+from mozfile import which
 from mozunit import main
 from mozbuild.backend import get_backend_class
 from mozbuild.backend.configenvironment import ConfigEnvironment
@@ -25,10 +26,22 @@ from mozpack.files import FileFinder
 from tempfile import mkdtemp
 
 
+def make_path():
+    try:
+        return buildconfig.substs["GMAKE"]
+    except KeyError:
+        # Fallback for when running the test without an objdir.
+        for name in ("gmake", "make", "mozmake", "gnumake", "mingw32-make"):
+            path = which(name)
+            if path:
+                return path
+
+
 BASE_SUBSTS = [
     ("PYTHON", mozpath.normsep(sys.executable)),
     ("PYTHON3", mozpath.normsep(sys.executable)),
     ("MOZ_UI_LOCALE", "en-US"),
+    ("GMAKE", make_path()),
 ]
 
 
@@ -84,6 +97,7 @@ class TestBuild(unittest.TestCase):
         substs = list(BASE_SUBSTS)
         with self.do_test_backend(RecursiveMakeBackend, substs=substs) as config:
             build = MozbuildObject(config.topsrcdir, None, None, config.topobjdir)
+            build._config_environment = config
             overrides = [
                 "install_manifest_depends=",
                 "MOZ_JAR_MAKER_FILE_FORMAT=flat",
@@ -112,6 +126,7 @@ class TestBuild(unittest.TestCase):
                 fh.write("20100101012345\n")
 
             build = MozbuildObject(config.topsrcdir, None, None, config.topobjdir)
+            build._config_environment = config
             overrides = [
                 "install_manifest_depends=",
                 "MOZ_JAR_MAKER_FILE_FORMAT=flat",
@@ -141,6 +156,7 @@ class TestBuild(unittest.TestCase):
                 fh.write("20100101012345\n")
 
             build = MozbuildObject(config.topsrcdir, None, None, config.topobjdir)
+            build._config_environment = config
             overrides = [
                 "TEST_MOZBUILD=1",
             ]

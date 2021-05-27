@@ -748,7 +748,7 @@ class MozbuildObject(ProcessExecutionMixin):
         """
         self._ensure_objdir_exists()
 
-        args = [self._make_path()]
+        args = [self.substs["GMAKE"]]
 
         if directory:
             args.extend(["-C", directory.replace(os.sep, "/")])
@@ -837,58 +837,6 @@ class MozbuildObject(ProcessExecutionMixin):
             params["log_name"] = "make"
 
         return fn(**params)
-
-    def _make_path(self):
-        baseconfig = os.path.join(self.topsrcdir, "config", "baseconfig.mk")
-
-        def is_xcode_lisense_error(output):
-            return self._is_osx() and b"Agreeing to the Xcode" in output
-
-        def validate_make(make):
-            if os.path.exists(baseconfig) and os.path.exists(make):
-                cmd = [make, "-f", baseconfig]
-                if self._is_windows():
-                    cmd.append("HOST_OS_ARCH=WINNT")
-                try:
-                    subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-                except subprocess.CalledProcessError as e:
-                    return False, is_xcode_lisense_error(e.output)
-                return True, False
-            return False, False
-
-        xcode_lisense_error = False
-        possible_makes = ["gmake", "make", "mozmake", "gnumake", "mingw32-make"]
-
-        if "MAKE" in os.environ:
-            make = os.environ["MAKE"]
-            possible_makes.insert(0, make)
-
-        for test in possible_makes:
-            if os.path.isabs(test):
-                make = test
-            else:
-                make = which(test)
-                if not make:
-                    continue
-            result, xcode_lisense_error_tmp = validate_make(make)
-            if result:
-                return make
-            if xcode_lisense_error_tmp:
-                xcode_lisense_error = True
-
-        if xcode_lisense_error:
-            raise Exception(
-                "Xcode requires accepting to the license agreement.\n"
-                "Please run Xcode and accept the license agreement."
-            )
-
-        if self._is_windows():
-            raise Exception(
-                "Could not find a suitable make implementation.\n"
-                "Please use MozillaBuild 1.9 or newer"
-            )
-        else:
-            raise Exception("Could not find a suitable make implementation.")
 
     def _run_command_in_srcdir(self, **args):
         return self.run_process(cwd=self.topsrcdir, **args)
