@@ -218,15 +218,8 @@ shell = help_shell | shell
 
 option(env="PYTHON3", nargs=1, help="Python 3 interpreter (3.6 or later)")
 
-option(
-    env="VIRTUALENV_NAME",
-    nargs=1,
-    default="common",
-    help="Name of the in-objdir virtualenv",
-)
 
-
-@depends("PYTHON3", "VIRTUALENV_NAME", check_build_environment, mozconfig, "--help")
+@depends("PYTHON3", check_build_environment, mozconfig, "--help")
 @imports(_from="__builtin__", _import="Exception")
 @imports("os")
 @imports("sys")
@@ -238,7 +231,7 @@ option(
 @imports(_from="mozbuild.pythonutil", _import="find_python3_executable")
 @imports(_from="mozbuild.pythonutil", _import="python_executable_version")
 @imports(_from="six", _import="ensure_text")
-def virtualenv_python3(env_python, virtualenv_name, build_env, mozconfig, help):
+def virtualenv_python3(env_python, build_env, mozconfig, help):
     # Avoid re-executing python when running configure --help.
     if help:
         return
@@ -256,7 +249,6 @@ def virtualenv_python3(env_python, virtualenv_name, build_env, mozconfig, help):
     log.debug("python3: sys.executable: %r" % sys.executable)
 
     python = env_python[0] if env_python else None
-    virtualenv_name = virtualenv_name[0]
 
     # Did our python come from mozconfig? Overrides environment setting.
     # Ideally we'd rely on the mozconfig injection from mozconfig_options,
@@ -292,7 +284,7 @@ def virtualenv_python3(env_python, virtualenv_name, build_env, mozconfig, help):
     with LineIO(lambda l: log.info(l), "replace") as out:
         manager = VirtualenvManager(
             topsrcdir,
-            os.path.join(virtualenvs_root, virtualenv_name),
+            os.path.join(virtualenvs_root, "common"),
             out,
             os.path.join(topsrcdir, "build", "build_virtualenv_packages.txt"),
         )
