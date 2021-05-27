@@ -41,7 +41,7 @@ static int nr_stun_server_send_response(nr_stun_server_ctx *ctx, nr_socket *sock
 static int nr_stun_server_process_request_auth_checks(nr_stun_server_ctx *ctx, nr_stun_message *req, int auth_rule, nr_stun_message *res);
 
 
-int nr_stun_server_ctx_create(char *label, nr_socket *sock, nr_stun_server_ctx **ctxp)
+int nr_stun_server_ctx_create(char *label, nr_stun_server_ctx **ctxp)
   {
     int r,_status;
     nr_stun_server_ctx *ctx=0;
@@ -54,8 +54,6 @@ int nr_stun_server_ctx_create(char *label, nr_socket *sock, nr_stun_server_ctx *
 
     if(!(ctx->label=r_strdup(label)))
       ABORT(R_NO_MEMORY);
-    ctx->sock=sock;
-    nr_socket_getaddr(sock,&ctx->my_addr);
 
     STAILQ_INIT(&ctx->clients);
 
@@ -232,8 +230,13 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
     nr_stun_server_request info;
     int error;
     int dont_free = 0;
+    nr_transport_addr my_addr;
 
-    r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-SERVER(%s): Received(my_addr=%s,peer_addr=%s)",ctx->label,ctx->my_addr.as_string,peer_addr->as_string);
+    if ((r=nr_socket_getaddr(sock, &my_addr))) {
+      ABORT(r);
+    }
+
+    r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-SERVER(%s): Received(my_addr=%s,peer_addr=%s)",ctx->label,my_addr.as_string,peer_addr->as_string);
 
     snprintf(string, sizeof(string)-1, "STUN-SERVER(%s): Received ", ctx->label);
     r_dump(NR_LOG_STUN, LOG_DEBUG, string, (char*)msg, len);
@@ -347,7 +350,7 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
          nr_stun_form_error_response(req, res, 500, "Failed to specify error");
 
     if ((r=nr_stun_server_send_response(ctx, sock, peer_addr, res, clnt))) {
-        r_log(NR_LOG_STUN,LOG_ERR,"STUN-SERVER(label=%s): Failed sending response (my_addr=%s,peer_addr=%s)",ctx->label,ctx->my_addr.as_string,peer_addr->as_string);
+        r_log(NR_LOG_STUN,LOG_ERR,"STUN-SERVER(label=%s): Failed sending response (my_addr=%s,peer_addr=%s)",ctx->label,my_addr.as_string,peer_addr->as_string);
         _status = R_FAILED;
     }
 
@@ -383,8 +386,13 @@ static int nr_stun_server_send_response(nr_stun_server_ctx *ctx, nr_socket *sock
   {
     int r,_status;
     char string[256];
+    nr_transport_addr my_addr;
 
-    r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-SERVER(label=%s): Sending(my_addr=%s,peer_addr=%s)",ctx->label,ctx->my_addr.as_string,peer_addr->as_string);
+    if ((r=nr_socket_getaddr(sock, &my_addr))) {
+      ABORT(r);
+    }
+
+    r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-SERVER(label=%s): Sending(my_addr=%s,peer_addr=%s)",ctx->label,my_addr.as_string,peer_addr->as_string);
 
     if ((r=nr_stun_encode_message(res))) {
         /* should never happen */
@@ -394,7 +402,7 @@ static int nr_stun_server_send_response(nr_stun_server_ctx *ctx, nr_socket *sock
         snprintf(string, sizeof(string)-1, "STUN(%s): Sending to %s ", ctx->label, peer_addr->as_string);
         r_dump(NR_LOG_STUN, LOG_DEBUG, string, (char*)res->buffer, res->length);
 
-        if(r=nr_socket_sendto(sock?sock:ctx->sock,res->buffer,res->length,0,peer_addr))
+        if(r=nr_socket_sendto(sock,res->buffer,res->length,0,peer_addr))
           ABORT(r);
     }
 

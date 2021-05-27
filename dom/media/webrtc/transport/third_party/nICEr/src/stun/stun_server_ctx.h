@@ -63,14 +63,12 @@ typedef STAILQ_HEAD(nr_stun_server_client_head_, nr_stun_server_client_) nr_stun
 
 struct nr_stun_server_ctx_ {
   char *label;
-  nr_socket *sock;
-  nr_transport_addr my_addr;
   nr_stun_server_client_head clients;
   nr_stun_server_client *default_client;
 };
 
 
-int nr_stun_server_ctx_create(char *label, nr_socket *sock, nr_stun_server_ctx **ctxp);
+int nr_stun_server_ctx_create(char *label, nr_stun_server_ctx **ctxp);
 int nr_stun_server_ctx_destroy(nr_stun_server_ctx **ctxp);
 int nr_stun_server_add_client(nr_stun_server_ctx *ctx, char *client_label, char *user, Data *pass, nr_stun_server_cb cb, void *cb_arg);
 int nr_stun_server_remove_client(nr_stun_server_ctx *ctx, void *cb_arg);

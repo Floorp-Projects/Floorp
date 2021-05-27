@@ -306,7 +306,7 @@ int TestStunServer::Initialize(int address_family) {
   }
 
   r = nr_stun_server_ctx_create(const_cast<char*>("Test STUN server"),
-                                send_sock_, &stun_server_);
+                                &stun_server_);
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Couldn't create STUN server");
     return R_INTERNAL;

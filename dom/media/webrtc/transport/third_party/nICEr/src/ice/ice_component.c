@@ -178,14 +178,14 @@ int nr_ice_component_destroy(nr_ice_component **componentp)
     return(0);
   }
 
-static int nr_ice_component_create_stun_server_ctx(nr_ice_component *component, nr_ice_socket *isock, nr_socket *sock, nr_transport_addr *addr, char *lufrag, Data *pwd)
+static int nr_ice_component_create_stun_server_ctx(nr_ice_component *component, nr_ice_socket *isock, nr_transport_addr *addr, char *lufrag, Data *pwd)
   {
     char label[256];
     int r,_status;
 
     /* Create a STUN server context for this socket */
     snprintf(label, sizeof(label), "server(%s)", addr->as_string);
-    if(r=nr_stun_server_ctx_create(label,sock,&isock->stun_server))
+    if(r=nr_stun_server_ctx_create(label,&isock->stun_server))
       ABORT(r);
     if(r=nr_ice_socket_register_stun_server(isock,isock->stun_server,&isock->stun_server_handle))
       ABORT(r);
@@ -316,7 +316,7 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           cand=0;
         }
         /* relayed*/
-        if(r=nr_socket_turn_create(sock, &turn_sock))
+        if(r=nr_socket_turn_create(&turn_sock))
           ABORT(r);
         if(r=nr_ice_candidate_create(ctx,component,
           isock,turn_sock,RELAYED,0,
@@ -335,7 +335,7 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
 #endif /* USE_TURN */
 
       /* Create a STUN server context for this socket */
-      if ((r=nr_ice_component_create_stun_server_ctx(component,isock,sock,&addrs[i].addr,lufrag,pwd)))
+      if ((r=nr_ice_component_create_stun_server_ctx(component,isock,&addrs[i].addr,lufrag,pwd)))
         ABORT(r);
     }
 
@@ -401,7 +401,7 @@ static int nr_ice_component_create_tcp_host_candidate(struct nr_ice_ctx_ *ctx,
     nrsock=NULL;
 
     /* Create a STUN server context for this socket */
-    if ((r=nr_ice_component_create_stun_server_ctx(component,isock_tmp,isock_tmp->sock,&addr,lufrag,pwd)))
+    if ((r=nr_ice_component_create_stun_server_ctx(component,isock_tmp,&addr,lufrag,pwd)))
       ABORT(r);
 
     if((r=nr_ice_candidate_create(ctx,component,isock_tmp,isock_tmp->sock,HOST,tcp_type,0,
@@ -590,7 +590,7 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           ABORT(r);
 
         /* The TURN socket */
-        if(r=nr_socket_turn_create(buffered_sock, &turn_sock))
+        if(r=nr_socket_turn_create(&turn_sock))
           ABORT(r);
 
         /* Create an ICE socket */
@@ -614,7 +614,7 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         cand=0;
 
         /* Create a STUN server context for this socket */
-        if ((r=nr_ice_component_create_stun_server_ctx(component,turn_isock,local_sock,&addr,lufrag,pwd)))
+        if ((r=nr_ice_component_create_stun_server_ctx(component,turn_isock,&addr,lufrag,pwd)))
           ABORT(r);
 
       }
