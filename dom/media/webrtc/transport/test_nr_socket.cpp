@@ -236,6 +236,8 @@ RefPtr<NrSocketBase> TestNrSocket::create_external_socket(
 int TestNrSocket::create(nr_transport_addr* addr) {
   tls_ = addr->tls;
 
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p create %s", this,
+        addr->as_string);
   return NrSocketBase::CreateSocket(addr, &internal_socket_, nullptr);
 }
 
@@ -293,6 +295,8 @@ void TestNrSocket::process_delayed_cb(NR_SOCKET s, int how, void* cb_arg) {
 int TestNrSocket::sendto(const void* msg, size_t len, int flags,
                          const nr_transport_addr* to) {
   MOZ_ASSERT(internal_socket_->my_addr().protocol != IPPROTO_TCP);
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p %s %s", this, __FUNCTION__,
+        to->as_string);
 
   if (nat_->nat_delegate_ &&
       nat_->nat_delegate_->on_sendto(nat_, msg, len, flags, to)) {
@@ -465,8 +469,8 @@ bool TestNrSocket::allow_ingress(const nr_transport_addr& from,
 }
 
 int TestNrSocket::connect(const nr_transport_addr* addr) {
-  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p %s connecting", this,
-        internal_socket_->my_addr().as_string);
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p %s connecting to %s", this,
+        internal_socket_->my_addr().as_string, addr->as_string);
 
   if (connect_invoked_ || !port_mappings_.empty()) {
     MOZ_CRASH("TestNrSocket::connect() called more than once!");

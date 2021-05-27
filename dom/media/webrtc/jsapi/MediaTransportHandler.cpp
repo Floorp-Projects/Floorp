@@ -360,6 +360,8 @@ static nsresult addNrIceServer(const nsString& aIceUrl,
     if (hostPos > 1) /* The username was removed */
       return NS_ERROR_FAILURE;
     path.Mid(host, hostPos, hostLen);
+    // Strip off brackets around IPv6 literals
+    host.Trim("[]");
   }
   if (port == -1) port = (isStuns || isTurns) ? 5349 : 3478;
 
