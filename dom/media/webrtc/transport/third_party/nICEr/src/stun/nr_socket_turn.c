@@ -53,7 +53,7 @@ typedef struct nr_socket_turn_ {
 
 static int nr_socket_turn_destroy(void **objp);
 static int nr_socket_turn_sendto(void *obj,const void *msg, size_t len,
-  int flags, nr_transport_addr *to);
+  int flags, const nr_transport_addr *to);
 static int nr_socket_turn_recvfrom(void *obj,void * restrict buf,
   size_t maxlen, size_t *len, int flags, nr_transport_addr *from);
 static int nr_socket_turn_getfd(void *obj, NR_SOCKET *fd);
@@ -118,7 +118,7 @@ static int nr_socket_turn_destroy(void **objp)
   }
 
 static int nr_socket_turn_sendto(void *obj,const void *msg, size_t len,
-  int flags, nr_transport_addr *addr)
+  int flags, const nr_transport_addr *addr)
   {
     int r,_status;
     nr_socket_turn *sturn=obj;

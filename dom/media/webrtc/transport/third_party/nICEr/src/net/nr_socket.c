@@ -81,7 +81,7 @@ int nr_socket_destroy(nr_socket **sockp)
   }
 
 int nr_socket_sendto(nr_socket *sock,const void *msg, size_t len, int flags,
-  nr_transport_addr *addr)
+  const nr_transport_addr *addr)
   {
     CHECK_DEFINED(ssendto);
     return sock->vtbl->ssendto(sock->obj,msg,len,flags,addr);
@@ -112,7 +112,7 @@ int nr_socket_close(nr_socket *sock)
     return sock->vtbl->close(sock->obj);
   }
 
-int nr_socket_connect(nr_socket *sock, nr_transport_addr *addr)
+int nr_socket_connect(nr_socket *sock, const nr_transport_addr *addr)
   {
     CHECK_DEFINED(connect);
     return sock->vtbl->connect(sock->obj, addr);

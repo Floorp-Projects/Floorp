@@ -87,26 +87,26 @@ int nr_str_port_to_transport_addr(const char *str, UINT2 port, int protocol, nr_
 int nr_ip6_port_to_transport_addr(struct in6_addr* addr6, UINT2 port, int protocol, nr_transport_addr *addr);
 
 int nr_transport_addr_get_addrstring(const nr_transport_addr *addr, char *str, int maxlen);
-int nr_transport_addr_get_port(nr_transport_addr *addr, int *port);
-int nr_transport_addr_cmp(nr_transport_addr *addr1,nr_transport_addr *addr2,int mode);
+int nr_transport_addr_get_port(const nr_transport_addr *addr, int *port);
+int nr_transport_addr_cmp(const nr_transport_addr *addr1,const nr_transport_addr *addr2,int mode);
 #define NR_TRANSPORT_ADDR_CMP_MODE_VERSION   1
 #define NR_TRANSPORT_ADDR_CMP_MODE_PROTOCOL  2
 #define NR_TRANSPORT_ADDR_CMP_MODE_ADDR      3
 #define NR_TRANSPORT_ADDR_CMP_MODE_ALL       4
 
-int nr_transport_addr_is_wildcard(nr_transport_addr *addr);
-int nr_transport_addr_is_loopback(nr_transport_addr *addr);
-int nr_transport_addr_get_private_addr_range(nr_transport_addr *addr);
-int nr_transport_addr_is_link_local(nr_transport_addr *addr);
-int nr_transport_addr_is_mac_based(nr_transport_addr *addr);
-int nr_transport_addr_is_teredo(nr_transport_addr *addr);
-int nr_transport_addr_check_compatibility(nr_transport_addr *addr1, nr_transport_addr *addr2);
-int nr_transport_addr_copy(nr_transport_addr *to, nr_transport_addr *from);
-int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, nr_transport_addr *from);
+int nr_transport_addr_is_wildcard(const nr_transport_addr *addr);
+int nr_transport_addr_is_loopback(const nr_transport_addr *addr);
+int nr_transport_addr_get_private_addr_range(const nr_transport_addr *addr);
+int nr_transport_addr_is_link_local(const nr_transport_addr *addr);
+int nr_transport_addr_is_mac_based(const nr_transport_addr *addr);
+int nr_transport_addr_is_teredo(const nr_transport_addr *addr);
+int nr_transport_addr_check_compatibility(const nr_transport_addr *addr1, const nr_transport_addr *addr2);
+int nr_transport_addr_copy(nr_transport_addr *to, const nr_transport_addr *from);
+int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, const nr_transport_addr *from);
 int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr);
 int nr_transport_addr_fmt_ifname_addr_string(const nr_transport_addr *addr, char *buf, int len);
 int nr_transport_addr_set_port(nr_transport_addr *addr, int port);
-int nr_transport_addr_is_reliable_transport(nr_transport_addr *addr);
+int nr_transport_addr_is_reliable_transport(const nr_transport_addr *addr);
 
 #endif
 

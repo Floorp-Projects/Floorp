@@ -79,13 +79,13 @@ typedef struct nr_socket_buffered_stun_ {
 
 static int nr_socket_buffered_stun_destroy(void **objp);
 static int nr_socket_buffered_stun_sendto(void *obj,const void *msg, size_t len,
-  int flags, nr_transport_addr *to);
+  int flags, const nr_transport_addr *to);
 static int nr_socket_buffered_stun_recvfrom(void *obj,void * restrict buf,
   size_t maxlen, size_t *len, int flags, nr_transport_addr *from);
 static int nr_socket_buffered_stun_getfd(void *obj, NR_SOCKET *fd);
 static int nr_socket_buffered_stun_getaddr(void *obj, nr_transport_addr *addrp);
 static int nr_socket_buffered_stun_close(void *obj);
-static int nr_socket_buffered_stun_connect(void *sock, nr_transport_addr *addr);
+static int nr_socket_buffered_stun_connect(void *sock, const nr_transport_addr *addr);
 static int nr_socket_buffered_stun_write(void *obj,const void *msg, size_t len, size_t *written);
 static void nr_socket_buffered_stun_writable_cb(NR_SOCKET s, int how, void *arg);
 static int nr_socket_buffered_stun_listen(void *obj, int backlog);
@@ -216,7 +216,7 @@ int nr_socket_buffered_stun_destroy(void **objp)
 }
 
 static int nr_socket_buffered_stun_sendto(void *obj,const void *msg, size_t len,
-  int flags, nr_transport_addr *to)
+  int flags, const nr_transport_addr *to)
 {
   nr_socket_buffered_stun *sock = (nr_socket_buffered_stun *)obj;
   int r, _status;
@@ -440,7 +440,7 @@ abort:
   }
 }
 
-static int nr_socket_buffered_stun_connect(void *obj, nr_transport_addr *addr)
+static int nr_socket_buffered_stun_connect(void *obj, const nr_transport_addr *addr)
 {
   nr_socket_buffered_stun *sock = (nr_socket_buffered_stun *)obj;
   int r, _status;

@@ -129,7 +129,7 @@ int nr_turn_client_failed(nr_turn_client_ctx *ctx);
 int nr_turn_client_deallocate(nr_turn_client_ctx *ctx);
 int nr_turn_client_send_indication(nr_turn_client_ctx *ctx,
                                    const UCHAR *msg, size_t len,
-                                   int flags, nr_transport_addr *remote_addr);
+                                   int flags, const nr_transport_addr *remote_addr);
 int nr_turn_client_parse_data_indication(nr_turn_client_ctx *ctx,
                                          nr_transport_addr *source_addr,
                                          UCHAR *msg, size_t len,
@@ -137,6 +137,6 @@ int nr_turn_client_parse_data_indication(nr_turn_client_ctx *ctx,
                                          size_t newsize,
                                          nr_transport_addr *remote_addr);
 int nr_turn_client_ensure_perm(nr_turn_client_ctx *ctx,
-                               nr_transport_addr *addr);
+                               const nr_transport_addr *addr);
 #endif
 

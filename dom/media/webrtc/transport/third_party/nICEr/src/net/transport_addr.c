@@ -162,7 +162,7 @@ int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int protocol, int keep
   }
 
 
-int nr_transport_addr_copy(nr_transport_addr *to, nr_transport_addr *from)
+int nr_transport_addr_copy(nr_transport_addr *to, const nr_transport_addr *from)
   {
     int _status;
 
@@ -186,7 +186,7 @@ int nr_transport_addr_copy(nr_transport_addr *to, nr_transport_addr *from)
     return(_status);
   }
 
-int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, nr_transport_addr *from)
+int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, const nr_transport_addr *from)
   {
     int r,_status;
     char save_ifname[MAXIFNAME];
@@ -308,7 +308,7 @@ int nr_transport_addr_get_addrstring(const nr_transport_addr *addr, char *str, i
     return(_status);
   }
 
-int nr_transport_addr_get_port(nr_transport_addr *addr, int *port)
+int nr_transport_addr_get_port(const nr_transport_addr *addr, int *port)
   {
     int _status;
 
@@ -350,7 +350,7 @@ int nr_transport_addr_set_port(nr_transport_addr *addr, int port)
 
 /* memcmp() may not work if, for instance, the string or interface
    haven't been made. Hmmm.. */
-int nr_transport_addr_cmp(nr_transport_addr *addr1,nr_transport_addr *addr2,int mode)
+int nr_transport_addr_cmp(const nr_transport_addr *addr1,const nr_transport_addr *addr2,int mode)
   {
     assert(mode);
 
@@ -391,7 +391,7 @@ int nr_transport_addr_cmp(nr_transport_addr *addr1,nr_transport_addr *addr2,int 
     return(0);
   }
 
-int nr_transport_addr_is_loopback(nr_transport_addr *addr)
+int nr_transport_addr_is_loopback(const nr_transport_addr *addr)
   {
     switch(addr->ip_version){
       case NR_IPV4:
@@ -417,7 +417,7 @@ int nr_transport_addr_is_loopback(nr_transport_addr *addr)
     return(0);
   }
 
-int nr_transport_addr_is_link_local(nr_transport_addr *addr)
+int nr_transport_addr_is_link_local(const nr_transport_addr *addr)
   {
     switch(addr->ip_version){
       case NR_IPV4:
@@ -439,7 +439,7 @@ int nr_transport_addr_is_link_local(nr_transport_addr *addr)
     return(0);
   }
 
-int nr_transport_addr_is_mac_based(nr_transport_addr *addr)
+int nr_transport_addr_is_mac_based(const nr_transport_addr *addr)
   {
     switch(addr->ip_version){
       case NR_IPV4:
@@ -463,7 +463,7 @@ int nr_transport_addr_is_mac_based(nr_transport_addr *addr)
     return(0);
   }
 
-int nr_transport_addr_is_teredo(nr_transport_addr *addr)
+int nr_transport_addr_is_teredo(const nr_transport_addr *addr)
   {
     switch(addr->ip_version){
       case NR_IPV4:
@@ -482,7 +482,7 @@ int nr_transport_addr_is_teredo(nr_transport_addr *addr)
     return(0);
   }
 
-int nr_transport_addr_check_compatibility(nr_transport_addr *addr1, nr_transport_addr *addr2)
+int nr_transport_addr_check_compatibility(const nr_transport_addr *addr1, const nr_transport_addr *addr2)
   {
     // first make sure we're comparing the same ip versions and protocols
     if ((addr1->ip_version != addr2->ip_version) ||
@@ -500,7 +500,7 @@ int nr_transport_addr_check_compatibility(nr_transport_addr *addr1, nr_transport
     return(0);
   }
 
-int nr_transport_addr_is_wildcard(nr_transport_addr *addr)
+int nr_transport_addr_is_wildcard(const nr_transport_addr *addr)
   {
     switch(addr->ip_version){
       case NR_IPV4:
@@ -533,7 +533,7 @@ nr_transport_addr_mask nr_private_ipv4_addrs[] = {
   {0x64400000, 0xFFC00000}
 };
 
-int nr_transport_addr_get_private_addr_range(nr_transport_addr *addr)
+int nr_transport_addr_get_private_addr_range(const nr_transport_addr *addr)
   {
     switch(addr->ip_version){
       case NR_IPV4:
@@ -554,7 +554,7 @@ int nr_transport_addr_get_private_addr_range(nr_transport_addr *addr)
     return(0);
   }
 
-int nr_transport_addr_is_reliable_transport(nr_transport_addr *addr)
+int nr_transport_addr_is_reliable_transport(const nr_transport_addr *addr)
   {
     return addr->protocol == IPPROTO_TCP;
   }

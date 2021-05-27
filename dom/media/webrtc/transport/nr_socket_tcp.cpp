@@ -95,7 +95,7 @@ int NrTcpSocket::create(nr_transport_addr* aAddr) {
   return 0;
 }
 
-int NrTcpSocket::connect(nr_transport_addr* aAddr) {
+int NrTcpSocket::connect(const nr_transport_addr* aAddr) {
   r_log(LOG_GENERIC, LOG_DEBUG, "NrTcpSocket::connect %p\n", this);
 
   nsCString remote_host;
@@ -216,7 +216,7 @@ int NrTcpSocket::getaddr(nr_transport_addr* aAddr) {
 }
 
 int NrTcpSocket::sendto(const void* aBuffer, size_t aCount, int aFlags,
-                        nr_transport_addr* aAddr) {
+                        const nr_transport_addr* aAddr) {
   // never call this
   MOZ_ASSERT(0);
   return R_FAILED;

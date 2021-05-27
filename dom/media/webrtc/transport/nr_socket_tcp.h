@@ -74,13 +74,13 @@ class NrTcpSocket : public NrSocketBase, public WebrtcTCPSocketCallback {
 
   // NrSocketBase
   int create(nr_transport_addr* aAddr) override;
-  int connect(nr_transport_addr* aAddr) override;
+  int connect(const nr_transport_addr* aAddr) override;
   void close() override;
   int write(const void* aBuffer, size_t aCount, size_t* aWrote) override;
   int read(void* aBuffer, size_t aCount, size_t* aRead) override;
   int getaddr(nr_transport_addr* aAddr) override;
   int sendto(const void* aBuffer, size_t aCount, int aFlags,
-             nr_transport_addr* aAddr) override;
+             const nr_transport_addr* aAddr) override;
   int recvfrom(void* aBuffer, size_t aCount, size_t* aRead, int aFlags,
                nr_transport_addr* aAddr) override;
   int listen(int aBacklog) override;
