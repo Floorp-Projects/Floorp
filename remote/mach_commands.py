@@ -54,8 +54,9 @@ def setup():
 
 @CommandProvider
 class RemoteCommands(MachCommandBase):
-    def remotedir(self):
-        return os.path.join(self.topsrcdir, "remote")
+    def __init__(self, *args, **kwargs):
+        super(RemoteCommands, self).__init__(*args, **kwargs)
+        self.remotedir = os.path.join(self.topsrcdir, "remote")
 
     @Command(
         "remote", category="misc", description="Remote protocol related operations."
@@ -88,11 +89,11 @@ class RemoteCommands(MachCommandBase):
         help="Do not install the just-pulled Puppeteer package,",
     )
     def vendor_puppeteer(self, command_context, repository, commitish, install):
-        puppeteer_dir = os.path.join(self.remotedir(), "test", "puppeteer")
+        puppeteer_dir = os.path.join(self.remotedir, "test", "puppeteer")
 
         # Preserve our custom mocha reporter
         shutil.move(
-            os.path.join(puppeteer_dir, "json-mocha-reporter.js"), self.remotedir()
+            os.path.join(puppeteer_dir, "json-mocha-reporter.js"), self.remotedir
         )
         shutil.rmtree(puppeteer_dir, ignore_errors=True)
         os.makedirs(puppeteer_dir)
@@ -123,7 +124,7 @@ class RemoteCommands(MachCommandBase):
                 shutil.rmtree(dir_path)
 
         shutil.move(
-            os.path.join(self.remotedir(), "json-mocha-reporter.js"), puppeteer_dir
+            os.path.join(self.remotedir, "json-mocha-reporter.js"), puppeteer_dir
         )
 
         import yaml
