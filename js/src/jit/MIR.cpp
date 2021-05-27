@@ -5070,6 +5070,18 @@ MDefinition* MGetFirstDollarIndex::foldsTo(TempAllocator& alloc) {
   return MConstant::New(alloc, Int32Value(index));
 }
 
+AliasSet MSlots::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MArrayBufferByteLength::getAliasSet() const {
+  return AliasSet::Load(AliasSet::FixedSlot);
+}
+
+AliasSet MArrayBufferViewElements::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
 MDefinition* MGuardNumberToIntPtrIndex::foldsTo(TempAllocator& alloc) {
   MDefinition* input = this->input();
 
@@ -5498,6 +5510,10 @@ MDefinition* MCheckObjCoercible::foldsTo(TempAllocator& alloc) {
 }
 
 AliasSet MIsPackedArray::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MGuardArrayIsPacked::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
