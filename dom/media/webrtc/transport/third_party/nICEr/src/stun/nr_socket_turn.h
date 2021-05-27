@@ -41,7 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    around TURN. It implements only the nr_socket features
    actually used by the ICE stack. You can't, for instance,
    read off the socket */
-int nr_socket_turn_create(nr_socket *sock, nr_socket **sockp);
+int nr_socket_turn_create(nr_socket **sockp);
 int nr_socket_turn_set_ctx(nr_socket *sock, nr_turn_client_ctx *ctx);
 
 #endif
