@@ -252,10 +252,7 @@ class TestNrSocketTest : public MtransportTest {
   int SendData_s(TestNrSocket* from, const nr_transport_addr& to) {
     // It is up to caller to ensure that |from| is writeable.
     const char buf[] = "foobajooba";
-    return from->sendto(
-        buf, sizeof(buf), 0,
-        // TODO(bug 1170299): Remove const_cast when no longer necessary
-        const_cast<nr_transport_addr*>(&to));
+    return from->sendto(buf, sizeof(buf), 0, &to);
   }
 
   int SendDataTcp_s(NrSocketBase* from) {

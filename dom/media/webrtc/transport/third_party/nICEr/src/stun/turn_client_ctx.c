@@ -79,10 +79,10 @@ static int nr_turn_client_start_refresh_timer(nr_turn_client_ctx *ctx,
                                               nr_turn_stun_ctx *sctx,
                                               UINT4 lifetime);
 static int nr_turn_permission_create(nr_turn_client_ctx *ctx,
-                                     nr_transport_addr *addr,
+                                     const nr_transport_addr *addr,
                                      nr_turn_permission **permp);
 static int nr_turn_permission_find(nr_turn_client_ctx *ctx,
-                                   nr_transport_addr *addr,
+                                   const nr_transport_addr *addr,
                                    nr_turn_permission **permp);
 static int nr_turn_permission_destroy(nr_turn_permission **permp);
 static void nr_turn_client_refresh_cb(NR_SOCKET s, int how, void *arg);
@@ -809,7 +809,7 @@ abort:
    We might in the future. Mozilla bug 857736 */
 int nr_turn_client_send_indication(nr_turn_client_ctx *ctx,
                                    const UCHAR *msg, size_t len,
-                                   int flags, nr_transport_addr *remote_addr)
+                                   int flags, const nr_transport_addr *remote_addr)
 {
   int r,_status;
   nr_stun_client_send_indication_params params = { { 0 } };
@@ -923,7 +923,7 @@ abort:
    unused.
 
 */
-int nr_turn_client_ensure_perm(nr_turn_client_ctx *ctx, nr_transport_addr *addr)
+int nr_turn_client_ensure_perm(nr_turn_client_ctx *ctx, const nr_transport_addr *addr)
 {
   int r, _status;
   nr_turn_permission *perm = 0;
@@ -962,7 +962,7 @@ abort:
   return(_status);
 }
 
-static int nr_turn_permission_create(nr_turn_client_ctx *ctx, nr_transport_addr *addr,
+static int nr_turn_permission_create(nr_turn_client_ctx *ctx, const nr_transport_addr *addr,
                                      nr_turn_permission **permp)
 {
   int r, _status;
@@ -1007,7 +1007,7 @@ abort:
 }
 
 
-static int nr_turn_permission_find(nr_turn_client_ctx *ctx, nr_transport_addr *addr,
+static int nr_turn_permission_find(nr_turn_client_ctx *ctx, const nr_transport_addr *addr,
                                    nr_turn_permission **permp)
 {
   nr_turn_permission *perm;

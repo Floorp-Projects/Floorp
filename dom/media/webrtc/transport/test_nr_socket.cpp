@@ -175,9 +175,7 @@ bool TestNat::is_an_internal_tuple(const nr_transport_addr& addr) const {
       MOZ_CRASH("TestNrSocket::getaddr failed!");
     }
 
-    // TODO(bug 1170299): Remove const_cast when no longer necessary
-    if (!nr_transport_addr_cmp(const_cast<nr_transport_addr*>(&addr),
-                               &addr_behind_nat,
+    if (!nr_transport_addr_cmp(&addr, &addr_behind_nat,
                                NR_TRANSPORT_ADDR_CMP_MODE_ALL)) {
       return true;
     }
@@ -210,10 +208,8 @@ RefPtr<NrSocketBase> TestNrSocket::create_external_socket(
   nr_transport_addr nat_external_addr;
 
   // Open the socket on an arbitrary port, on the same address.
-  // TODO(bug 1170299): Remove const_cast when no longer necessary
-  if ((r = nr_transport_addr_copy(
-           &nat_external_addr,
-           const_cast<nr_transport_addr*>(&internal_socket_->my_addr())))) {
+  if ((r = nr_transport_addr_copy(&nat_external_addr,
+                                  &internal_socket_->my_addr()))) {
     r_log(LOG_GENERIC, LOG_CRIT, "%s: Failure in nr_transport_addr_copy: %d",
           __FUNCTION__, r);
     return nullptr;
@@ -295,7 +291,7 @@ void TestNrSocket::process_delayed_cb(NR_SOCKET s, int how, void* cb_arg) {
 }
 
 int TestNrSocket::sendto(const void* msg, size_t len, int flags,
-                         nr_transport_addr* to) {
+                         const nr_transport_addr* to) {
   MOZ_ASSERT(internal_socket_->my_addr().protocol != IPPROTO_TCP);
 
   if (nat_->nat_delegate_ &&
@@ -468,7 +464,7 @@ bool TestNrSocket::allow_ingress(const nr_transport_addr& from,
   return true;
 }
 
-int TestNrSocket::connect(nr_transport_addr* addr) {
+int TestNrSocket::connect(const nr_transport_addr* addr) {
   r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p %s connecting", this,
         internal_socket_->my_addr().as_string);
 
@@ -749,9 +745,7 @@ bool TestNrSocket::is_my_external_tuple(const nr_transport_addr& addr) const {
       MOZ_CRASH("NrSocket::getaddr failed!");
     }
 
-    // TODO(bug 1170299): Remove const_cast when no longer necessary
-    if (!nr_transport_addr_cmp(const_cast<nr_transport_addr*>(&addr),
-                               &port_mapping_addr,
+    if (!nr_transport_addr_cmp(&addr, &port_mapping_addr,
                                NR_TRANSPORT_ADDR_CMP_MODE_ALL)) {
       return true;
     }
@@ -868,10 +862,10 @@ TestNrSocket::PortMapping* TestNrSocket::get_port_mapping(
   }
 
   for (PortMapping* port_mapping : port_mappings_) {
-    // TODO(bug 1170299): Remove const_cast when no longer necessary
-    if (!nr_transport_addr_cmp(const_cast<nr_transport_addr*>(&remote_address),
-                               &port_mapping->remote_address_, compare_flags))
+    if (!nr_transport_addr_cmp(&remote_address, &port_mapping->remote_address_,
+                               compare_flags)) {
       return port_mapping;
+    }
   }
   return nullptr;
 }
@@ -890,9 +884,7 @@ TestNrSocket::PortMapping::PortMapping(
     const nr_transport_addr& remote_address,
     const RefPtr<NrSocketBase>& external_socket)
     : external_socket_(external_socket) {
-  // TODO(bug 1170299): Remove const_cast when no longer necessary
-  nr_transport_addr_copy(&remote_address_,
-                         const_cast<nr_transport_addr*>(&remote_address));
+  nr_transport_addr_copy(&remote_address_, &remote_address);
 }
 
 int TestNrSocket::PortMapping::send_from_queue() {
@@ -934,10 +926,7 @@ int TestNrSocket::PortMapping::sendto(const void* msg, size_t len,
         to.as_string);
 
   last_used_ = PR_IntervalNow();
-  int r = external_socket_->sendto(
-      msg, len, 0,
-      // TODO(bug 1170299): Remove const_cast when no longer necessary
-      const_cast<nr_transport_addr*>(&to));
+  int r = external_socket_->sendto(msg, len, 0, &to);
 
   if (r == R_WOULDBLOCK) {
     r_log(LOG_GENERIC, LOG_DEBUG, "Enqueueing UDP packet to %s", to.as_string);
@@ -975,7 +964,7 @@ class nr_stun_message_deleter {
 };
 
 bool TestNrSocket::maybe_send_fake_response(const void* msg, size_t len,
-                                            nr_transport_addr* to) {
+                                            const nr_transport_addr* to) {
   Maybe<nsTArray<nsCString>> redirect_targets = maybe_get_redirect_targets(to);
   if (!redirect_targets.isSome()) {
     return false;
@@ -1079,7 +1068,7 @@ bool TestNrSocket::maybe_send_fake_response(const void* msg, size_t len,
 }
 
 Maybe<nsTArray<nsCString>> TestNrSocket::maybe_get_redirect_targets(
-    nr_transport_addr* to) const {
+    const nr_transport_addr* to) const {
   Maybe<nsTArray<nsCString>> result;
 
   // 256 is overkill, but it hardly matters

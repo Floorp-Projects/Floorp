@@ -372,7 +372,7 @@ TEST_F(TestNrSocketIceUnitTest, TestIcePeersPacketLoss) {
     }
 
     int on_sendto(TestNat* nat, const void* msg, size_t len, int flags,
-                  nr_transport_addr* to) override {
+                  const nr_transport_addr* to) override {
       ++messages;
       // 25% packet loss
       if (messages % 4 == 0) {

@@ -62,7 +62,7 @@ class DummySocket : public NrSocketBase {
   virtual int create(nr_transport_addr* addr) override { return 0; }
 
   virtual int sendto(const void* msg, size_t len, int flags,
-                     nr_transport_addr* to) override {
+                     const nr_transport_addr* to) override {
     MOZ_CRASH();
     return 0;
   }
@@ -80,7 +80,7 @@ class DummySocket : public NrSocketBase {
 
   virtual void close() override {}
 
-  virtual int connect(nr_transport_addr* addr) override {
+  virtual int connect(const nr_transport_addr* addr) override {
     nr_transport_addr_copy(&connect_addr_, addr);
     return 0;
   }

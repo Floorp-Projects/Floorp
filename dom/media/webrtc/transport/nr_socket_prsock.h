@@ -110,12 +110,12 @@ class NrSocketBase {
   // the nr_socket APIs
   virtual int create(nr_transport_addr* addr) = 0;
   virtual int sendto(const void* msg, size_t len, int flags,
-                     nr_transport_addr* to) = 0;
+                     const nr_transport_addr* to) = 0;
   virtual int recvfrom(void* buf, size_t maxlen, size_t* len, int flags,
                        nr_transport_addr* from) = 0;
   virtual int getaddr(nr_transport_addr* addrp) = 0;
   virtual void close() = 0;
-  virtual int connect(nr_transport_addr* addr) = 0;
+  virtual int connect(const nr_transport_addr* addr) = 0;
   virtual int write(const void* msg, size_t len, size_t* written) = 0;
   virtual int read(void* buf, size_t maxlen, size_t* len) = 0;
   virtual int listen(int backlog) = 0;
@@ -172,12 +172,12 @@ class NrSocket : public NrSocketBase, public nsASocketHandler {
   virtual int create(nr_transport_addr* addr)
       override;  // (really init, but it's called create)
   virtual int sendto(const void* msg, size_t len, int flags,
-                     nr_transport_addr* to) override;
+                     const nr_transport_addr* to) override;
   virtual int recvfrom(void* buf, size_t maxlen, size_t* len, int flags,
                        nr_transport_addr* from) override;
   virtual int getaddr(nr_transport_addr* addrp) override;
   virtual void close() override;
-  virtual int connect(nr_transport_addr* addr) override;
+  virtual int connect(const nr_transport_addr* addr) override;
   virtual int write(const void* msg, size_t len, size_t* written) override;
   virtual int read(void* buf, size_t maxlen, size_t* len) override;
   virtual int listen(int backlog) override;
@@ -250,12 +250,12 @@ class NrUdpSocketIpc : public NrSocketIpc {
   // Implementations of the NrSocketBase APIs
   virtual int create(nr_transport_addr* addr) override;
   virtual int sendto(const void* msg, size_t len, int flags,
-                     nr_transport_addr* to) override;
+                     const nr_transport_addr* to) override;
   virtual int recvfrom(void* buf, size_t maxlen, size_t* len, int flags,
                        nr_transport_addr* from) override;
   virtual int getaddr(nr_transport_addr* addrp) override;
   virtual void close() override;
-  virtual int connect(nr_transport_addr* addr) override;
+  virtual int connect(const nr_transport_addr* addr) override;
   virtual int write(const void* msg, size_t len, size_t* written) override;
   virtual int read(void* buf, size_t maxlen, size_t* len) override;
   virtual int listen(int backlog) override;
@@ -311,7 +311,7 @@ int nr_netaddr_to_transport_addr(const net::NetAddr* netaddr,
 int nr_praddr_to_transport_addr(const PRNetAddr* praddr,
                                 nr_transport_addr* addr, int protocol,
                                 int keep);
-int nr_transport_addr_get_addrstring_and_port(nr_transport_addr* addr,
+int nr_transport_addr_get_addrstring_and_port(const nr_transport_addr* addr,
                                               nsACString* host, int32_t* port);
 }  // namespace mozilla
 #endif
