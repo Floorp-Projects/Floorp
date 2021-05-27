@@ -25,6 +25,7 @@ sm-plain-win64/debug:
         toolchain:
             - win64-clang
             - win64-rust
+            - win64-mozmake
 
 sm-plain-win32/debug:
     description: "Spidermonkey Plain win32 debug"
@@ -42,6 +43,7 @@ sm-plain-win32/debug:
         toolchain:
             - win64-clang
             - win64-rust
+            - win64-mozmake
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -60,6 +62,7 @@ sm-plain-win64/opt:
         toolchain:
             - win64-clang
             - win64-rust
+            - win64-mozmake
 
 sm-plain-win32/opt:
     description: "Spidermonkey Plain win32 opt"
@@ -77,6 +80,7 @@ sm-plain-win32/opt:
         toolchain:
             - win64-clang
             - win64-rust
+            - win64-mozmake
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -95,6 +99,7 @@ sm-compacting-win64/debug:
         toolchain:
             - win64-clang
             - win64-rust
+            - win64-mozmake
 
 sm-compacting-win32/debug:
     description: "Spidermonkey Compacting win32 debug"
@@ -112,6 +117,7 @@ sm-compacting-win32/debug:
         toolchain:
             - win64-clang
             - win64-rust
+            - win64-mozmake
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
