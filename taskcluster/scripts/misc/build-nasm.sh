@@ -8,6 +8,29 @@ if [ -n "$TOOLTOOL_MANIFEST" ]; then
 fi
 
 cd $MOZ_FETCHES_DIR/nasm-*
+
+case $(cat version) in
+2.14.02)
+        # Fix for .debug_loc section containing garbage on elf32
+        # https://bugzilla.nasm.us/show_bug.cgi?id=3392631
+        patch -p1 <<'EOF'
+diff --git a/output/outelf.c b/output/outelf.c
+index de99d076..47031e12 100644
+--- a/output/outelf.c
++++ b/output/outelf.c
+@@ -3275,7 +3275,7 @@ static void dwarf_generate(void)
+     WRITELONG(pbuf,framelen-4); /* initial length */
+ 
+     /* build loc section */
+-    loclen = 16;
++    loclen = is_elf64() ? 16 : 8;
+     locbuf = pbuf = nasm_malloc(loclen);
+     if (is_elf32()) {
+         WRITELONG(pbuf,0);  /* null  beginning offset */
+EOF
+	;;
+esac
+
 case "$1" in
     win64)
         export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
@@ -27,23 +50,6 @@ case "$1" in
         EXE=
 	;;
     *)
-        # Fix for .debug_loc section containing garbage on elf32
-        # https://bugzilla.nasm.us/show_bug.cgi?id=3392631
-        patch -p1 <<'EOF'
-diff --git a/output/outelf.c b/output/outelf.c
-index de99d076..47031e12 100644
---- a/output/outelf.c
-+++ b/output/outelf.c
-@@ -3275,7 +3275,7 @@ static void dwarf_generate(void)
-     WRITELONG(pbuf,framelen-4); /* initial length */
- 
-     /* build loc section */
--    loclen = 16;
-+    loclen = is_elf64() ? 16 : 8;
-     locbuf = pbuf = nasm_malloc(loclen);
-     if (is_elf32()) {
-         WRITELONG(pbuf,0);  /* null  beginning offset */
-EOF
         ./configure CC="$MOZ_FETCHES_DIR/clang/bin/clang --sysroot=$MOZ_FETCHES_DIR/sysroot"
         EXE=
         ;;

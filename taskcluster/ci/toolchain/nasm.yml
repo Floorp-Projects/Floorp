@@ -23,7 +23,7 @@ win64-nasm:
         arguments: ['win64']
     fetches:
         fetch:
-            - nasm-2.14.02
+            - nasm-2.15.05
         toolchain:
             - linux64-clang-mingw-x64
 
@@ -38,7 +38,7 @@ macosx64-nasm:
         arguments: ['macosx64']
     fetches:
         fetch:
-            - nasm-2.14.02
+            - nasm-2.15.05
         toolchain:
             - linux64-cctools-port-clang-11
             - linux64-clang-11-macosx-cross
@@ -72,7 +72,7 @@ linux64-nasm:
         arguments: ['linux64']
     fetches:
         fetch:
-            - nasm-2.14.02
+            - nasm-2.15.05
         toolchain:
             - linux64-clang-11
             - linux64-sysroot
