@@ -594,3 +594,14 @@ nodejs-10-win64:
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
+
+gnumake:
+    description: GNU make source
+    fetch:
+        type: static-url
+        url: http://ftp.gnu.org/gnu/make/make-4.3.tar.gz
+        sha256: e05fdde47c5f7ca45cb697e973894ff4f5d79e13b750ed57d7b66d8defc78e19
+        size: 2317073
+        artifact-name: make.tar.zst
+        strip-components: 1
+        add-prefix: make/
