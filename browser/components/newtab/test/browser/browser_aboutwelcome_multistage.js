@@ -417,12 +417,26 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
 
     await onButtonClick(browser, "button.primary");
 
-    Assert.ok(
-      aboutWelcomeActor.onContentMessage.args.find(
-        args =>
-          args[1].event === "CLICK_BUTTON" &&
-          args[1].message_id === "MY-MOCHITEST-EXPERIMENT_AW_STEP1"
-      ),
+    const { callCount } = aboutWelcomeActor.onContentMessage;
+    ok(callCount >= 1, `${callCount} Stub was called`);
+    let clickCall;
+    for (let i = 0; i < callCount; i++) {
+      const call = aboutWelcomeActor.onContentMessage.getCall(i);
+      info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
+      if (call.calledWithMatch("", { event: "CLICK_BUTTON" })) {
+        clickCall = call;
+      }
+    }
+
+    Assert.equal(
+      clickCall.args[0],
+      "AWPage:TELEMETRY_EVENT",
+      "send telemetry event"
+    );
+
+    Assert.equal(
+      clickCall.args[1].message_id,
+      "MY-MOCHITEST-EXPERIMENT_AW_STEP1",
       "Telemetry should join id defined in feature value with screen"
     );
   }
