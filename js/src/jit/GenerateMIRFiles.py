@@ -105,6 +105,7 @@ def gen_mir_class(
     result,
     guard,
     movable,
+    folds_to,
     congruent_to,
     alias_set,
     clone,
@@ -144,7 +145,6 @@ def gen_mir_class(
     named_operands = []
     if operands:
         current_oper_num = 0
-        print("{}", name)
         for oper_name in operands:
             oper = "MDefinition* " + oper_name
             mir_operands.append(oper)
@@ -192,6 +192,8 @@ def gen_mir_class(
                 "  AliasSet getAliasSet() const override { "
                 "return AliasSet::None(); }\\\n"
             )
+    if folds_to:
+        code += "  MDefinition* foldsTo(TempAllocator& alloc) override;\\\n"
     if congruent_to:
         if congruent_to == "custom":
             code += "  bool congruentTo(const MDefinition* ins) const override;\\\n"
@@ -244,6 +246,9 @@ def generate_mir_header(c_out, yaml_path):
             movable = op.get("movable", None)
             assert movable is None or True
 
+            folds_to = op.get("folds_to", None)
+            assert folds_to is None or folds_to == "custom"
+
             congruent_to = op.get("congruent_to", None)
             assert (
                 congruent_to is None
@@ -264,6 +269,7 @@ def generate_mir_header(c_out, yaml_path):
                 result,
                 guard,
                 movable,
+                folds_to,
                 congruent_to,
                 alias_set,
                 clone,
