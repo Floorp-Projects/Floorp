@@ -51,6 +51,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/PendingFullscreenEvent.h"
+#include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_gfx.h"
@@ -84,6 +85,7 @@
 #include "mozilla/TimelineConsumers.h"
 #include "nsAnimationManager.h"
 #include "nsDisplayList.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsTransitionManager.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
@@ -1131,6 +1133,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
       mNeedToUpdateIntersectionObservations(false),
       mInNormalTick(false),
       mAttemptedExtraTickSinceLastVsync(false),
+      mHasExceededAfterLoadTickPeriod(false),
       mWarningThreshold(REFRESH_WAIT_WARNING) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext,
@@ -1735,6 +1738,43 @@ bool nsRefreshDriver::
   return TimeStamp::Now() <= mBeforeFirstContentfulPaintTimerRunningLimit;
 }
 
+bool nsRefreshDriver::ShouldKeepTimerRunningAfterPageLoad() {
+  if (mHasExceededAfterLoadTickPeriod ||
+      !StaticPrefs::layout_keep_ticking_after_load_ms() || mThrottled ||
+      mTestControllingRefreshes || !XRE_IsContentProcess() ||
+      !mPresContext->Document()->IsTopLevelContentDocument() ||
+      gfxPlatform::IsInLayoutAsapMode()) {
+    // Make the next check faster.
+    mHasExceededAfterLoadTickPeriod = true;
+    return false;
+  }
+
+  nsPIDOMWindowInner* innerWindow = mPresContext->Document()->GetInnerWindow();
+  if (innerWindow) {
+    if (PerformanceMainThread* perf = static_cast<PerformanceMainThread*>(
+            innerWindow->GetPerformance())) {
+      nsDOMNavigationTiming* timing = perf->GetDOMTiming();
+      if (timing) {
+        TimeStamp loadend = timing->LoadEventEnd();
+        if (loadend) {
+          // Keep ticking after the page load for some time.
+          bool retval =
+              (loadend +
+               TimeDuration::FromMilliseconds(
+                   StaticPrefs::layout_keep_ticking_after_load_ms())) >
+              TimeStamp::Now();
+          if (!retval) {
+            mHasExceededAfterLoadTickPeriod = true;
+          }
+          return retval;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
 nsRefreshDriver::ObserverArray& nsRefreshDriver::ArrayFor(
     FlushType aFlushType) {
   switch (aFlushType) {
@@ -2105,6 +2145,11 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     if (ShouldKeepTimerRunningWhileWaitingForFirstContentfulPaint()) {
       PROFILER_MARKER(
           "RefreshDriverTick waiting for first contentful paint", GRAPHICS,
+          MarkerInnerWindowIdFromDocShell(GetDocShell(mPresContext)), Tracing,
+          "Paint");
+    } else if (ShouldKeepTimerRunningAfterPageLoad()) {
+      PROFILER_MARKER(
+          "RefreshDriverTick after page load", GRAPHICS,
           MarkerInnerWindowIdFromDocShell(GetDocShell(mPresContext)), Tracing,
           "Paint");
     } else {
