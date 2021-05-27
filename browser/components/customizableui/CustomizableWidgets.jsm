@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RecentlyClosedTabsAndWindowsMenuUtils:
     "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
+  CharsetMenu: "resource://gre/modules/CharsetMenu.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
@@ -437,9 +438,174 @@ const CustomizableWidgets = [
   },
   {
     id: "characterencoding-button",
-    l10nId: "repair-text-encoding-button",
+    label: "characterencoding-button2.label",
+    type: "view",
+    viewId: "PanelUI-characterEncodingView",
+    tooltiptext: "characterencoding-button2.tooltiptext",
+    maybeDisableMenu(aDocument) {
+      let window = aDocument.defaultView;
+      return !(
+        window.gBrowser &&
+        window.gBrowser.selectedBrowser.mayEnableCharacterEncodingMenu
+      );
+    },
+    populateList(aDocument, aContainerId, aSection) {
+      let containerElem = aDocument.getElementById(aContainerId);
+
+      containerElem.addEventListener("command", this.onCommand);
+
+      let list = this.charsetInfo[aSection];
+
+      for (let item of list) {
+        let elem = aDocument.createXULElement("toolbarbutton");
+        elem.setAttribute("label", item.label);
+        elem.setAttribute("type", "checkbox");
+        elem.section = aSection;
+        elem.value = item.value;
+        elem.setAttribute("class", "subviewbutton");
+        containerElem.appendChild(elem);
+      }
+    },
+    updateCurrentCharset(aDocument) {
+      let currentCharset =
+        aDocument.defaultView.gBrowser.selectedBrowser.characterSet;
+      let {
+        charsetAutodetected,
+      } = aDocument.defaultView.gBrowser.selectedBrowser;
+      currentCharset = CharsetMenu.foldCharset(
+        currentCharset,
+        charsetAutodetected
+      );
+
+      let pinnedContainer = aDocument.getElementById(
+        "PanelUI-characterEncodingView-pinned"
+      );
+      let charsetContainer = aDocument.getElementById(
+        "PanelUI-characterEncodingView-charsets"
+      );
+      let elements = [
+        ...pinnedContainer.children,
+        ...charsetContainer.children,
+      ];
+
+      this._updateElements(elements, currentCharset);
+    },
+    _updateElements(aElements, aCurrentItem) {
+      if (!aElements.length) {
+        return;
+      }
+      let disabled = this.maybeDisableMenu(aElements[0].ownerDocument);
+      for (let elem of aElements) {
+        if (disabled) {
+          elem.setAttribute("disabled", "true");
+        } else {
+          elem.removeAttribute("disabled");
+        }
+        if (elem.value.toLowerCase() == aCurrentItem.toLowerCase()) {
+          elem.setAttribute("checked", "true");
+        } else {
+          elem.removeAttribute("checked");
+        }
+      }
+    },
+    onViewShowing(aEvent) {
+      if (!this._inited) {
+        this.onInit();
+      }
+      let document = aEvent.target.ownerDocument;
+
+      if (
+        !document.getElementById("PanelUI-characterEncodingView-pinned")
+          .firstChild
+      ) {
+        this.populateList(
+          document,
+          "PanelUI-characterEncodingView-pinned",
+          "pinnedCharsets"
+        );
+        this.populateList(
+          document,
+          "PanelUI-characterEncodingView-charsets",
+          "otherCharsets"
+        );
+      }
+
+      this.updateCurrentCharset(document);
+    },
     onCommand(aEvent) {
-      aEvent.view.BrowserSetForcedCharacterSet("_autodetect_all");
+      let node = aEvent.target;
+      if (!node.hasAttribute || !node.section) {
+        return;
+      }
+
+      let window = node.ownerGlobal;
+      let value = node.value;
+
+      window.BrowserSetForcedCharacterSet(value);
+    },
+    onCreated(aNode) {
+      let document = aNode.ownerDocument;
+
+      let updateButton = () => {
+        if (this.maybeDisableMenu(document)) {
+          aNode.setAttribute("disabled", "true");
+        } else {
+          aNode.removeAttribute("disabled");
+        }
+      };
+
+      let getPanel = () => {
+        let { PanelUI } = document.ownerGlobal;
+        return PanelUI.overflowPanel;
+      };
+
+      if (
+        CustomizableUI.getAreaType(this.currentArea) ==
+        CustomizableUI.TYPE_MENU_PANEL
+      ) {
+        getPanel().addEventListener("popupshowing", updateButton);
+      }
+
+      let listener = {
+        onWidgetAdded: (aWidgetId, aArea) => {
+          if (aWidgetId != this.id) {
+            return;
+          }
+          if (
+            CustomizableUI.getAreaType(aArea) == CustomizableUI.TYPE_MENU_PANEL
+          ) {
+            getPanel().addEventListener("popupshowing", updateButton);
+          }
+        },
+        onWidgetRemoved: (aWidgetId, aPrevArea) => {
+          if (aWidgetId != this.id) {
+            return;
+          }
+          aNode.removeAttribute("disabled");
+          if (
+            CustomizableUI.getAreaType(aPrevArea) ==
+            CustomizableUI.TYPE_MENU_PANEL
+          ) {
+            getPanel().removeEventListener("popupshowing", updateButton);
+          }
+        },
+        onWidgetInstanceRemoved: (aWidgetId, aDoc) => {
+          if (aWidgetId != this.id || aDoc != document) {
+            return;
+          }
+
+          CustomizableUI.removeListener(listener);
+          getPanel().removeEventListener("popupshowing", updateButton);
+        },
+      };
+      CustomizableUI.addListener(listener);
+      this.onInit();
+    },
+    onInit() {
+      this._inited = true;
+      if (!this.charsetInfo) {
+        this.charsetInfo = CharsetMenu.getData();
+      }
     },
   },
   {
