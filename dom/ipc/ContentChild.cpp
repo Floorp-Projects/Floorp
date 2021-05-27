@@ -2009,11 +2009,13 @@ mozilla::ipc::IPCResult ContentChild::RecvRegisterChromeItem(
 
   return IPC_OK();
 }
-
 mozilla::ipc::IPCResult ContentChild::RecvClearStyleSheetCache(
-    const Maybe<RefPtr<nsIPrincipal>>& aForPrincipal) {
-  nsIPrincipal* prin = aForPrincipal ? aForPrincipal.value().get() : nullptr;
-  SharedStyleSheetCache::Clear(prin);
+    const Maybe<RefPtr<nsIPrincipal>>& aForPrincipal,
+    const Maybe<nsCString>& aBaseDomain) {
+  nsIPrincipal* principal =
+      aForPrincipal ? aForPrincipal.value().get() : nullptr;
+  const nsCString* baseDomain = aBaseDomain ? aBaseDomain.ptr() : nullptr;
+  SharedStyleSheetCache::Clear(principal, baseDomain);
   return IPC_OK();
 }
 
