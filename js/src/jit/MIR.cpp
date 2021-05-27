@@ -3109,6 +3109,11 @@ AliasSet MLoadArgumentsObjectArg::getAliasSet() const {
   return AliasSet::Load(AliasSet::Any);
 }
 
+AliasSet MArgumentsObjectLength::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                        AliasSet::DynamicSlot);
+}
+
 MDefinition* MReturnFromCtor::foldsTo(TempAllocator& alloc) {
   MDefinition* rval = value();
   if (rval->isBox()) {
@@ -5090,6 +5095,22 @@ AliasSet MElements::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
+AliasSet MInitializedLength::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MSetInitializedLength::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ObjectFields);
+}
+
+AliasSet MArrayLength::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MSetArrayLength::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ObjectFields);
+}
+
 AliasSet MFunctionLength::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
                         AliasSet::DynamicSlot);
@@ -5105,6 +5126,10 @@ AliasSet MArrayBufferByteLength::getAliasSet() const {
 }
 
 AliasSet MArrayBufferViewLength::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ArrayBufferViewLengthOrOffset);
+}
+
+AliasSet MArrayBufferViewByteOffset::getAliasSet() const {
   return AliasSet::Load(AliasSet::ArrayBufferViewLengthOrOffset);
 }
 
@@ -5363,6 +5388,13 @@ MDefinition* MGuardSpecificSymbol::foldsTo(TempAllocator& alloc) {
   }
 
   return this;
+}
+
+bool MCallBindVar::congruentTo(const MDefinition* ins) const {
+  if (!ins->isCallBindVar()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
 }
 
 MDefinition* MGuardIsNotProxy::foldsTo(TempAllocator& alloc) {
