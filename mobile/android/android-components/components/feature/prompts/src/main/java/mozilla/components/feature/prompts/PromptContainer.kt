@@ -47,6 +47,8 @@ internal sealed class PromptContainer {
 
         override val context get() = fragment.requireContext()
 
+        @Suppress("DEPRECATION")
+        // https://github.com/mozilla-mobile/android-components/issues/10357
         override fun startActivityForResult(intent: Intent, code: Int) =
             fragment.startActivityForResult(intent, code)
 

@@ -204,6 +204,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         txtView.text = getString(R.string.signed_in, "${profile.displayName ?: ""} ${profile.email}")
     }
 
+    @Suppress("MissingSuperCall")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             REQUEST_CODE_CAMERA_PERMISSIONS -> qrFeature.onPermissionsResult(permissions, grantResults)
