@@ -1740,9 +1740,8 @@ bool Console::PopulateConsoleNotificationInTheTargetScope(
       js::SetFunctionNativeReserved(funObj, SLOT_RAW_STACK,
                                     JS::PrivateValue(aData->mStack.get()));
 
-      if (NS_WARN_IF(!JS_DefineProperty(
-              aCx, eventObj, "stacktrace", funObj, nullptr,
-              JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SETTER))) {
+      if (NS_WARN_IF(!JS_DefineProperty(aCx, eventObj, "stacktrace", funObj,
+                                        nullptr, JSPROP_ENUMERATE))) {
         return false;
       }
     }

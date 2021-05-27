@@ -658,9 +658,8 @@ static bool DefineGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
 
   js::SetFunctionNativeReserved(getter, SLOT_URI, uri);
 
-  return JS_DefinePropertyById(
-      aCx, aTarget, id, getter, setter,
-      JSPROP_GETTER | JSPROP_SETTER | JSPROP_ENUMERATE);
+  return JS_DefinePropertyById(aCx, aTarget, id, getter, setter,
+                               JSPROP_ENUMERATE);
 }
 }  // namespace module_getter
 

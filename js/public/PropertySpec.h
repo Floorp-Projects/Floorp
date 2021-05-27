@@ -236,8 +236,7 @@ struct JSPropertySpec {
       const char* name, uint8_t attributes, const char* getterName,
       const char* setterName = nullptr) {
     return JSPropertySpec(
-        name, attributes | JSPROP_GETTER | (setterName ? JSPROP_SETTER : 0),
-        Kind::SelfHostedAccessor,
+        name, attributes, Kind::SelfHostedAccessor,
         AccessorsOrValue::fromAccessors(
             JSPropertySpec::Accessor::selfHostedAccessor(getterName),
             setterName
@@ -249,8 +248,7 @@ struct JSPropertySpec {
       JS::SymbolCode name, uint8_t attributes, const char* getterName,
       const char* setterName = nullptr) {
     return JSPropertySpec(
-        name, attributes | JSPROP_GETTER | (setterName ? JSPROP_SETTER : 0),
-        Kind::SelfHostedAccessor,
+        name, attributes, Kind::SelfHostedAccessor,
         AccessorsOrValue::fromAccessors(
             JSPropertySpec::Accessor::selfHostedAccessor(getterName),
             setterName
