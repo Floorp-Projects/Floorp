@@ -392,10 +392,10 @@ windows-talos:
 
 # macOS
 
-macosx1100-64-qr-failures-tests:
-    - xpcshell-apple-silicon
-    - mochitest-media-apple-silicon
-    - mochitest-browser-chrome-apple-silicon
+macosx1100-64-qr-failure-tests:
+    - xpcshell-failures
+    - mochitest-media-failures
+    - mochitest-browser-chrome-failures
 
 macosx1100-64-jittests:
     - jittest
@@ -414,6 +414,10 @@ macosx1100-64-qr-tests:
     - reftest
     - xpcshell
 
+macosx1015-64-qr-failure-tests:
+    - mochitest-media-failures
+    - mochitest-browser-chrome-failures
+
 macosx1015-64-qr-tests:
     - cppunit
     - crashtest
@@ -424,8 +428,10 @@ macosx1015-64-qr-tests:
     - jsreftest
     - marionette
     - mochitest-a11y
+    - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-chrome-gpu
+    - mochitest-media
     - mochitest-plain
     - mochitest-plain-gpu
     - mochitest-remote
@@ -444,9 +450,7 @@ macosx1015-64-tests:
     - web-platform-tests-reftest
 
 macosx1014-64-qr-tests:
-    - mochitest-browser-chrome
     - mochitest-devtools-chrome
-    - mochitest-media
     - test-verify
     - test-verify-gpu
     - test-verify-wpt

@@ -103,9 +103,9 @@ xpcshell:
                     - linux64-node
                     - linux64-minidump-stackwalk
 
-xpcshell-apple-silicon:
-    description: "xpcshell apple silicon specific failures test run"
-    treeherder-symbol: X-f(AS)
+xpcshell-failures:
+    description: "xpcshell specific failures test run"
+    treeherder-symbol: X-f(X)
     run-on-projects:
         by-variant:
             fission: []
@@ -120,9 +120,11 @@ xpcshell-apple-silicon:
         config:
             - unittests/mac_unittest.py
         extra-options:
-            - --run-failures=apple_silicon
-            - --timeout-as-pass
-            - --crash-as-pass
+            by-test-platform:
+                macosx1100.*:
+                    - --run-failures=apple_silicon
+                    - --timeout-as-pass
+                    - --crash-as-pass
     fetches:
         toolchain:
             - macosx64-node

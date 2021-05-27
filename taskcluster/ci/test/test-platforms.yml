@@ -358,7 +358,7 @@ windows10-32-mingwclang/opt:
 #    test-sets:
 #        - macosx1100-64-qr-tests
 #        - macosx1100-64-jittests
-#        - macosx1100-64-qr-failures-tests
+#        - macosx1100-64-qr-failure-tests
 #        - macosx64-talos
 #        - browsertime-high-priority
 #        - raptor-firefox
@@ -368,7 +368,7 @@ windows10-32-mingwclang/opt:
 #    test-sets:
 #        - macosx1100-64-qr-tests
 #        - macosx1100-64-jittests
-#        - macosx1100-64-qr-failures-tests
+#        - macosx1100-64-qr-failure-tests
 
 macosx1015-64-shippable/opt:
     build-platform: macosx64-shippable/opt
@@ -410,6 +410,7 @@ macosx1015-64-devedition-qr/opt:
 macosx1015-64-qr/opt:
     build-platform: macosx64/opt
     test-sets:
+        - macosx1015-64-qr-failure-tests
         - macosx1015-64-qr-tests
         - web-platform-tests
         - web-platform-tests-backlog
