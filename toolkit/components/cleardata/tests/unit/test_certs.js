@@ -105,3 +105,84 @@ add_task(async function() {
     );
   }
 });
+
+add_task(async function test_deleteByBaseDomain() {
+  let toClear = [
+    Services.io.newURI("https://example.com"),
+    Services.io.newURI("http://example.com:8080"),
+    Services.io.newURI("http://test1.example.com"),
+    Services.io.newURI("http://foo.bar.example.com"),
+  ];
+
+  let toKeep = [
+    Services.io.newURI("https://example.org"),
+    Services.io.newURI("http://test1.example.org"),
+    Services.io.newURI("http://foo.bar.example.org"),
+    Services.io.newURI("http://example.test"),
+  ];
+
+  let all = toClear.concat(toKeep);
+
+  let cert = certDB.constructX509FromBase64(CERT_TEST);
+  ok(cert, "Cert was created");
+  Assert.equal(
+    overrideService.isCertUsedForOverrides(cert, true, true),
+    0,
+    "Cert should not be used for override yet"
+  );
+
+  let overrideBits =
+    Ci.nsICertOverrideService.ERROR_UNTRUSTED |
+    Ci.nsICertOverrideService.ERROR_MISMATCH;
+
+  all.forEach(({ asciiHost, port }) =>
+    overrideService.rememberValidityOverride(
+      asciiHost,
+      port,
+      cert,
+      overrideBits,
+      false
+    )
+  );
+
+  Assert.equal(
+    overrideService.isCertUsedForOverrides(cert, true, true),
+    all.length,
+    "Cert should be used for override now"
+  );
+
+  await new Promise(aResolve => {
+    Services.clearData.deleteDataFromBaseDomain(
+      "example.com",
+      true /* user request */,
+      Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS,
+      value => {
+        Assert.equal(value, 0);
+        aResolve();
+      }
+    );
+  });
+
+  Assert.equal(
+    overrideService.isCertUsedForOverrides(cert, true, true),
+    toKeep.length,
+    "Cert should still be used for override"
+  );
+
+  toClear.forEach(({ asciiHost, port }) =>
+    Assert.ok(
+      !overrideService.hasMatchingOverride(asciiHost, port, cert, {}, {}),
+      `Should have cleared override for ${asciiHost}:${port}`
+    )
+  );
+
+  toKeep.forEach(({ asciiHost, port }) =>
+    Assert.ok(
+      overrideService.hasMatchingOverride(asciiHost, port, cert, {}, {}),
+      `Should have kept override for ${asciiHost}:${port}`
+    )
+  );
+
+  // Cleanup
+  overrideService.clearAllOverrides();
+});
