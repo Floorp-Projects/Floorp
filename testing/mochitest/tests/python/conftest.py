@@ -72,6 +72,7 @@ def runtests(setup_test_harness, binary, parser, request):
     if runFailures == "selftest":
         options["crashAsPass"] = True
         options["timeoutAsPass"] = True
+        runtests.mozinfo.update({"selftest": True})
 
     if not os.path.isdir(runtests.build_obj.bindir):
         package_root = os.path.dirname(mochitest_root)
