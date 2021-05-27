@@ -25,6 +25,10 @@ enum class FunctionSyntaxKind : uint8_t {
   Method,
   FieldInitializer,
 
+  // Mostly static class blocks act similar to field initializers, however,
+  // there is some difference in static semantics.
+  StaticClassBlock,
+
   ClassConstructor,
   DerivedClassConstructor,
   Getter,

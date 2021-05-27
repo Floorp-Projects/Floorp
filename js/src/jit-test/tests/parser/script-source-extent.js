@@ -1,3 +1,5 @@
+// |jit-test| --enable-class-static-blocks
+
 // Test that the sourceStart/sourceEnd values of scripts match the current
 // expectations. These values are internal details and slightly arbitrary so
 // these tests expectations can be updated as needed.
@@ -328,3 +330,8 @@ testSourceExtent(` class C { static get #prop() { } }`,
 testSourceExtent(` class C { static set #prop(v) { } }`,
                  `                           ^------^ `,
                  ` ^----------------------------------`);
+
+// Static Class Blocks
+testSourceExtent(` class C { static { 10; } }`,
+                 `           ^-------------^ `,
+                 ` ^-------------------------`);

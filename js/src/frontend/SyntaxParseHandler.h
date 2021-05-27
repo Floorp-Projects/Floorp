@@ -381,6 +381,11 @@ class SyntaxParseHandler {
                                              bool isStatic) {
     return NodeGeneric;
   }
+
+  [[nodiscard]] Node newStaticClassBlock(FunctionNodeType block) {
+    return NodeGeneric;
+  }
+
   [[nodiscard]] bool addClassMemberDefinition(ListNodeType memberList,
                                               Node member) {
     return true;

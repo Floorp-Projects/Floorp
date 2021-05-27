@@ -374,6 +374,7 @@ MSG_DEF(JSMSG_UNNAMED_FUNCTION_STMT,   0, JSEXN_SYNTAXERR, "function statement r
 MSG_DEF(JSMSG_UNPAIRED_SURROGATE_EXPORT, 0, JSEXN_SYNTAXERR, "module export name contains unpaired surrogate")
 MSG_DEF(JSMSG_UNTERMINATED_COMMENT,    0, JSEXN_SYNTAXERR, "unterminated comment")
 MSG_DEF(JSMSG_UNTERMINATED_REGEXP,     0, JSEXN_SYNTAXERR, "unterminated regular expression literal")
+MSG_DEF(JSMSG_UNTERMINATED_STATIC_CLASS_BLOCK, 0, JSEXN_SYNTAXERR, "unterminated static class block")
 MSG_DEF(JSMSG_EOF_BEFORE_END_OF_LITERAL,1,JSEXN_SYNTAXERR, "{0} literal not terminated before end of script")
 MSG_DEF(JSMSG_EOL_BEFORE_END_OF_STRING,1, JSEXN_SYNTAXERR, "{0} string literal contains an unescaped line break")
 MSG_DEF(JSMSG_EOF_IN_ESCAPE_IN_LITERAL,1, JSEXN_SYNTAXERR, "reached end of script in the middle of an escape sequence in a {0} literal")

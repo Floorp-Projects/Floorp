@@ -107,9 +107,12 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
          kind == ParseNodeKind::Function;
 }
 
-static bool NeedsFieldInitializer(ParseNode* member, bool isStatic) {
-  return member->is<ClassField>() &&
-         member->as<ClassField>().isStatic() == isStatic;
+static bool NeedsFieldInitializer(ParseNode* member, bool inStaticContext) {
+  // For the purposes of bytecode emission, StaticClassBlocks are treated as if
+  // they were static initializers.
+  return (member->is<StaticClassBlock>() && inStaticContext) ||
+         (member->is<ClassField>() &&
+          member->as<ClassField>().isStatic() == inStaticContext);
 }
 
 static bool NeedsAccessorInitializer(ParseNode* member, bool isStatic) {
@@ -1546,6 +1549,7 @@ restart:
     case ParseNodeKind::ClassMethod:          // by ParseNodeKind::ClassDecl
     case ParseNodeKind::ClassField:           // by ParseNodeKind::ClassDecl
     case ParseNodeKind::ClassNames:           // by ParseNodeKind::ClassDecl
+    case ParseNodeKind::StaticClassBlock:     // by ParseNodeKind::ClassDecl
     case ParseNodeKind::ClassMemberList:      // by ParseNodeKind::ClassDecl
     case ParseNodeKind::ImportSpecList:       // by ParseNodeKind::Import
     case ParseNodeKind::ImportSpec:           // by ParseNodeKind::Import
@@ -9038,6 +9042,12 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       continue;
     }
 
+    if (propdef->isKind(ParseNodeKind::StaticClassBlock)) {
+      // Static class blocks are emitted as part of
+      // emitCreateMemberInitializers.
+      continue;
+    }
+
     if (propdef->is<LexicalScopeNode>()) {
       // Constructors are sometimes wrapped in LexicalScopeNodes. As we
       // already handled emitting the constructor, skip it.
@@ -9635,6 +9645,19 @@ bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj,
   return true;
 }
 
+static bool HasInitializer(ParseNode* node, bool isStaticContext) {
+  return (node->is<ClassField>() &&
+          node->as<ClassField>().isStatic() == isStaticContext) ||
+         (isStaticContext && node->is<StaticClassBlock>());
+}
+
+static FunctionNode* GetInitializer(ParseNode* node, bool isStaticContext) {
+  MOZ_ASSERT(HasInitializer(node, isStaticContext));
+  MOZ_ASSERT_IF(!node->is<ClassField>(), isStaticContext);
+  return node->is<ClassField>() ? node->as<ClassField>().initializer()
+                                : node->as<StaticClassBlock>().function();
+}
+
 bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
                                                    ListNode* obj,
                                                    FieldPlacement placement) {
@@ -9675,14 +9698,11 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
   }
 
   for (ParseNode* propdef : obj->contents()) {
-    if (!propdef->is<ClassField>()) {
-      continue;
-    }
-    if (propdef->as<ClassField>().isStatic() != isStatic) {
+    if (!HasInitializer(propdef, isStatic)) {
       continue;
     }
 
-    FunctionNode* initializer = propdef->as<ClassField>().initializer();
+    FunctionNode* initializer = GetInitializer(propdef, isStatic);
 
     if (!ce.prepareForMemberInitializer()) {
       return false;
@@ -10028,7 +10048,7 @@ bool BytecodeEmitter::emitInitializeInstanceMembers() {
 
 bool BytecodeEmitter::emitInitializeStaticFields(ListNode* classMembers) {
   auto isStaticField = [](ParseNode* propdef) {
-    return propdef->is<ClassField>() && propdef->as<ClassField>().isStatic();
+    return HasInitializer(propdef, true);
   };
   size_t numFields =
       std::count_if(classMembers->contents().begin(),
