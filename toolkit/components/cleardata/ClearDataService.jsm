@@ -306,9 +306,11 @@ const ImageCacheCleaner = {
     imageCache.removeEntriesFromPrincipalInAllProcesses(aPrincipal);
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    // TODO: Bug 1705033
-    return this.deleteByHost(aBaseDomain, {});
+  async deleteByBaseDomain(aBaseDomain) {
+    let imageCache = Cc["@mozilla.org/image/tools;1"]
+      .getService(Ci.imgITools)
+      .getImgCacheForDocument(null);
+    imageCache.removeEntriesFromBaseDomainInAllProcesses(aBaseDomain);
   },
 
   deleteAll() {
