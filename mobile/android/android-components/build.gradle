@@ -28,7 +28,6 @@ buildscript {
     dependencies {
         classpath Dependencies.tools_androidgradle
         classpath Dependencies.tools_kotlingradle
-        classpath Dependencies.tools_dokka
         classpath Dependencies.tools_androidmavenpublish
     }
 }
@@ -66,7 +65,6 @@ allprojects {
 
 subprojects {
     apply plugin: 'jacoco'
-    apply plugin: 'org.jetbrains.dokka-android'
 
     // Enable Kotlin warnings as errors for all modules
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
@@ -273,43 +271,6 @@ subprojects {
             }
         }
     }
-}
-
-evaluationDependsOnChildren()
-
-tasks.register("docs", org.jetbrains.dokka.gradle.DokkaAndroidTask) {
-    moduleName = "$rootProject.name"
-    outputDirectory = "$buildDir/javadoc"
-    outputFormat = "gfm"
-    jdkVersion = 7
-
-    subprojects.findAll {
-        it.hasProperty("android") && !it.name.startsWith("samples")
-    }.each {
-        classpath += files(it.android.getBootClasspath().join(File.pathSeparator))
-        it.android.libraryVariants.all { variant ->
-            classpath += files(variant.javaCompileProvider.get().classpath.files)
-        }
-    }
-
-    externalDocumentationLink {
-        url = new URL("https://mozilla.github.io/geckoview/javadoc/mozilla-central/package-list")
-    }
-
-    sourceDirs = files(subprojects.findAll {
-        !it.name.startsWith("samples")
-    }.collect { p ->
-        def path = new File(p.projectDir, "/src/main/java")
-
-        def relativePath = rootDir.toPath().relativize(path.toPath()).toString()
-        linkMapping {
-            dir = path
-            url = "https://github.com/mozilla-mobile/android-components/blob/master/$relativePath"
-            suffix = "#L"
-        }
-
-        return path
-    })
 }
 
 tasks.register("clean", Delete) {
