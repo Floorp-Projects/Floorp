@@ -22,6 +22,8 @@ third-party-detail-occurrences = Occurrences
     .title = How many times this module was loaded.
 third-party-detail-duration = Avg. Blocking time (ms)
     .title = How long this module blocked the application.
+third-party-detail-app = Application
+third-party-detail-publisher = Publisher
 
 third-party-th-process = Process
 third-party-th-duration = Loading Duration (ms)
