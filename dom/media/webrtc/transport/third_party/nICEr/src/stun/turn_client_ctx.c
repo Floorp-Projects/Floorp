@@ -44,6 +44,7 @@
 #include "nr_socket_buffered_stun.h"
 #include "stun.h"
 #include "turn_client_ctx.h"
+#include "ice_ctx.h"
 
 int NR_LOG_TURN = 0;
 
@@ -225,6 +226,17 @@ static int nr_turn_stun_ctx_handle_redirect(nr_turn_stun_ctx *ctx)
   nr_transport_addr *alternate_addr = 0;
   int index = 0;
 
+  if (!tctx->ctx) {
+    /* If we were to require TCP nr_sockets to allow multiple connect calls by
+     * disconnecting and re-connecting, we could avoid this requirement. */
+    r_log(NR_LOG_TURN, LOG_ERR,
+          "TURN(%s): nr_turn_stun_ctx_handle_redirect is not supported when "
+          "there is no ICE ctx, and by extension no socket factory, since we "
+          "need that to create new sockets in the TCP case",
+          tctx->label);
+    ABORT(R_BAD_ARGS);
+  }
+
   if (ctx->stun->response->header.type != NR_STUN_MSG_ALLOCATE_ERROR_RESPONSE) {
     r_log(NR_LOG_TURN, LOG_ERR,
           "TURN(%s): nr_turn_stun_ctx_handle_redirect called for something "
@@ -291,8 +303,52 @@ static int nr_turn_stun_ctx_handle_redirect(nr_turn_stun_ctx *ctx)
    * local address, oh well. */
 
   if (tctx->turn_server_addr.protocol == IPPROTO_TCP) {
-    /* TCP support in subsequent patch */
-    ABORT(R_FAILED);
+    /* For TCP, we need to replace the underlying nr_socket, since we cannot
+     * un-connect it from the old server. */
+    /* If we were to require TCP nr_sockets to allow multiple connect calls by
+     * disconnecting and re-connecting, we could avoid this stuff, and just
+     * call nr_socket_connect. */
+    nr_transport_addr old_local_addr;
+    nr_socket* new_socket;
+    if ((r = nr_socket_getaddr(tctx->sock, &old_local_addr))) {
+      r_log(NR_LOG_TURN, LOG_ERR,
+            "TURN(%s): nr_turn_stun_ctx_handle_redirect "
+            "failed to get old local address (%d)!",
+            tctx->label, r);
+      assert(0);
+      ABORT(r);
+    }
+
+    if ((r = nr_socket_factory_create_socket(tctx->ctx->socket_factory,
+            &old_local_addr, &new_socket))) {
+      r_log(NR_LOG_TURN, LOG_ERR,
+            "TURN(%s): nr_turn_stun_ctx_handle_redirect "
+            "failed to create new raw TCP socket for redirect (%d)!",
+            tctx->label, r);
+      assert(0);
+      ABORT(r);
+    }
+
+    if ((r = nr_socket_buffered_stun_reset(tctx->sock, new_socket))) {
+      /* nr_socket_buffered_stun_reset always takes ownership of |new_socket| */
+      r_log(NR_LOG_TURN, LOG_ERR,
+            "TURN(%s): nr_turn_stun_ctx_handle_redirect "
+            "failed to update raw TCP socket (%d)!",
+            tctx->label, r);
+      assert(0);
+      ABORT(r);
+    }
+
+    if ((r = nr_socket_connect(tctx->sock, &tctx->turn_server_addr))) {
+      if (r != R_WOULDBLOCK) {
+        r_log(NR_LOG_TURN, LOG_ERR,
+              "TURN(%s): nr_turn_stun_ctx_handle_redirect nr_socket_connect "
+              "failed(%d)!",
+              tctx->label, r);
+        assert(0);
+        ABORT(r);
+      }
+    }
   }
 
   nr_transport_addr_copy(&ctx->stun->peer_addr, &tctx->turn_server_addr);
@@ -418,11 +474,10 @@ abort:
 }
 
 /* nr_turn_client_ctx functions */
-int nr_turn_client_ctx_create(const char *label, nr_socket *sock,
-                              const char *username, Data *password,
-                              nr_transport_addr *addr,
-                              nr_turn_client_ctx **ctxp)
-{
+int nr_turn_client_ctx_create(const char* label, nr_socket* sock,
+                              const char* username, Data* password,
+                              nr_transport_addr* addr, nr_ice_ctx* ice_ctx,
+                              nr_turn_client_ctx** ctxp) {
   nr_turn_client_ctx *ctx=0;
   int r,_status;
 
@@ -455,6 +510,8 @@ int nr_turn_client_ctx_create(const char *label, nr_socket *sock,
         ABORT(r);
     }
   }
+
+  ctx->ctx = ice_ctx;
 
   *ctxp=ctx;
 

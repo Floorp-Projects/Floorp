@@ -843,6 +843,7 @@ static int nr_ice_start_relay_turn(nr_ice_candidate *cand)
                                    cand->u.relayed.server->username,
                                    cand->u.relayed.server->password,
                                    &cand->stun_server_addr,
+                                   cand->component->ctx,
                                    &cand->u.relayed.turn))
       ABORT(r);
 

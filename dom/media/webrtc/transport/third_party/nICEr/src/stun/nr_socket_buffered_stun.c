@@ -205,6 +205,7 @@ int nr_socket_buffered_stun_destroy(void **objp)
   /* Cancel waiting on the socket */
   if (sock->inner && !nr_socket_getfd(sock->inner, &fd)) {
     NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_WRITE);
+    NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_READ);
   }
 
   nr_p_buf_free_chain(sock->p_bufs, &sock->pending_writes);
@@ -609,4 +610,47 @@ abort:
   } else if (sock->pending) {
     nr_socket_buffered_stun_arm_writable_cb(sock);
   }
+}
+
+int nr_socket_buffered_stun_reset(nr_socket* sock_arg, nr_socket* new_inner) {
+  int r, _status;
+  NR_SOCKET fd;
+
+  nr_socket_buffered_stun* sock = (nr_socket_buffered_stun*)sock_arg->obj;
+
+  if (sock->inner && !nr_socket_getfd(sock->inner, &fd)) {
+    r_log(LOG_GENERIC, LOG_DEBUG, "In %s, canceling wait on old socket", __FUNCTION__);
+    NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_WRITE);
+    NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_READ);
+  }
+
+  nr_socket_destroy(&sock->inner);
+  sock->inner = new_inner;
+
+  sock->read_state = NR_ICE_SOCKET_READ_NONE;
+  sock->connected = 0;
+
+  sock->bytes_read = 0;
+  sock->bytes_needed = (sock->framing_type == ICE_TCP_FRAMING)
+                           ? sizeof(nr_frame_header)
+                           : sizeof(nr_stun_message_header);
+  sock->pending = 0;
+
+  nr_p_buf_free_chain(sock->p_bufs, &sock->pending_writes);
+  nr_p_buf_ctx_destroy(&sock->p_bufs);
+
+  STAILQ_INIT(&sock->pending_writes);
+
+  if ((r = nr_p_buf_ctx_create(sock->buffer_size, &sock->p_bufs))) {
+    ABORT(r);
+  }
+
+  if ((r = nr_ip4_port_to_transport_addr(INADDR_ANY, 0, IPPROTO_UDP,
+                                         &sock->remote_addr))) {
+    ABORT(r);
+  }
+
+  _status = 0;
+abort:
+  return (_status);
 }
