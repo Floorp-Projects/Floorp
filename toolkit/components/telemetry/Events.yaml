@@ -427,10 +427,10 @@ blocklist:
 downloads:
   added:
     description: >
-      Sent when downloading a new file. Possible values are in contained in DownloadsCommon::kFileExtensions.
+      Sent when downloading a new file. Possible values are in contained in DownloadList::kFileExtensions.
       All other downloads not in the listare marked as other.
     objects: ["fileExtension"]
-    bug_numbers: [1627676]
+    bug_numbers: [1627676, 1706355]
     notification_emails: ["rtestard@mozilla.com", "emalysz@mozilla.com"]
     products:
       - "firefox"
