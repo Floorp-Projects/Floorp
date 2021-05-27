@@ -203,7 +203,7 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   void AsyncOpenFinal(TimeStamp aTimeStamp);
 
-  [[nodiscard]] nsresult OpenCacheEntry(bool usingSSL);
+  [[nodiscard]] nsresult OpenCacheEntry(bool isHttps);
   [[nodiscard]] nsresult OpenCacheEntryInternal(bool isHttps);
   [[nodiscard]] nsresult ContinueConnect();
 
@@ -337,7 +337,7 @@ class nsHttpChannel final : public HttpBaseChannel,
           aContinueProcessResponseFunc);
   [[nodiscard]] nsresult ContinueProcessResponseAfterNotModified(nsresult aRv);
 
-  [[nodiscard]] nsresult AsyncProcessRedirection(uint32_t httpStatus);
+  [[nodiscard]] nsresult AsyncProcessRedirection(uint32_t redirectType);
   [[nodiscard]] nsresult ContinueProcessRedirection(nsresult);
   [[nodiscard]] nsresult ContinueProcessRedirectionAfterFallback(nsresult);
   [[nodiscard]] nsresult ProcessFailedProxyConnect(uint32_t httpStatus);
@@ -372,7 +372,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   // cache specific methods
   [[nodiscard]] nsresult OnNormalCacheEntryAvailable(nsICacheEntry* aEntry,
                                                      bool aNew,
-                                                     nsresult aResult);
+                                                     nsresult aEntryStatus);
   [[nodiscard]] nsresult OnCacheEntryAvailableInternal(nsICacheEntry* entry,
                                                        bool aNew,
                                                        nsresult status);

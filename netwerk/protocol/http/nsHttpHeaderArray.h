@@ -25,7 +25,7 @@ namespace net {
 
 class nsHttpHeaderArray {
  public:
-  const char* PeekHeader(nsHttpAtom header) const;
+  const char* PeekHeader(const nsHttpAtom& header) const;
 
   // For nsHttpResponseHead nsHttpHeaderArray will keep track of the original
   // headers as they come from the network and the parse headers used in
@@ -52,9 +52,10 @@ class nsHttpHeaderArray {
   [[nodiscard]] nsresult SetHeader(const nsACString& headerName,
                                    const nsACString& value, bool merge,
                                    HeaderVariety variety);
-  [[nodiscard]] nsresult SetHeader(nsHttpAtom header, const nsACString& value,
-                                   bool merge, HeaderVariety variety);
-  [[nodiscard]] nsresult SetHeader(nsHttpAtom header,
+  [[nodiscard]] nsresult SetHeader(const nsHttpAtom& header,
+                                   const nsACString& value, bool merge,
+                                   HeaderVariety variety);
+  [[nodiscard]] nsresult SetHeader(const nsHttpAtom& header,
                                    const nsACString& headerName,
                                    const nsACString& value, bool merge,
                                    HeaderVariety variety);
@@ -66,19 +67,20 @@ class nsHttpHeaderArray {
   // Merges supported headers. For other duplicate values, determines if error
   // needs to be thrown or 1st value kept.
   // For the response header we keep the original headers as well.
-  [[nodiscard]] nsresult SetHeaderFromNet(nsHttpAtom header,
+  [[nodiscard]] nsresult SetHeaderFromNet(const nsHttpAtom& header,
                                           const nsACString& headerNameOriginal,
                                           const nsACString& value,
                                           bool response);
 
   [[nodiscard]] nsresult SetResponseHeaderFromCache(
-      nsHttpAtom header, const nsACString& headerNameOriginal,
+      const nsHttpAtom& header, const nsACString& headerNameOriginal,
       const nsACString& value, HeaderVariety variety);
 
-  [[nodiscard]] nsresult GetHeader(nsHttpAtom header, nsACString& value) const;
-  [[nodiscard]] nsresult GetOriginalHeader(nsHttpAtom aHeader,
+  [[nodiscard]] nsresult GetHeader(const nsHttpAtom& header,
+                                   nsACString& result) const;
+  [[nodiscard]] nsresult GetOriginalHeader(const nsHttpAtom& aHeader,
                                            nsIHttpHeaderVisitor* aVisitor);
-  void ClearHeader(nsHttpAtom h);
+  void ClearHeader(const nsHttpAtom& h);
 
   // Find the location of the given header value, or null if none exists.
   const char* FindHeaderValue(nsHttpAtom header, const char* value) const {
@@ -90,7 +92,7 @@ class nsHttpHeaderArray {
     return FindHeaderValue(header, value) != nullptr;
   }
 
-  bool HasHeader(nsHttpAtom header) const;
+  bool HasHeader(const nsHttpAtom& header) const;
 
   enum VisitorFilter {
     eFilterAll,
@@ -105,7 +107,7 @@ class nsHttpHeaderArray {
   // parse a header line, return the header atom and a pointer to the
   // header value (the substring of the header line -- do not free).
   [[nodiscard]] static nsresult ParseHeaderLine(
-      const nsACString& line, nsHttpAtom* header = nullptr,
+      const nsACString& line, nsHttpAtom* hdr = nullptr,
       nsACString* headerNameOriginal = nullptr, nsACString* value = nullptr);
 
   void Flatten(nsACString&, bool pruneProxyHeaders, bool pruneTransients);
@@ -148,8 +150,8 @@ class nsHttpHeaderArray {
   [[nodiscard]] nsresult MergeHeader(nsHttpAtom header, nsEntry* entry,
                                      const nsACString& value,
                                      HeaderVariety variety);
-  [[nodiscard]] nsresult SetHeader_internal(nsHttpAtom header,
-                                            const nsACString& headeName,
+  [[nodiscard]] nsresult SetHeader_internal(const nsHttpAtom& header,
+                                            const nsACString& headerName,
                                             const nsACString& value,
                                             HeaderVariety variety);
 
