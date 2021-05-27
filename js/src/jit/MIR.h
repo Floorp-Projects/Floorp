@@ -13430,14 +13430,6 @@ class MWasmBitselectSimd128 : public MTernaryInstruction,
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
-#ifdef ENABLE_WASM_SIMD
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-
-  // If the control mask allows the operation to be specialized as a shuffle
-  // and it is profitable to specialize it on this platform, return true and
-  // the appropriate shuffle mask.
-  bool specializeConstantMaskAsShuffle(int8_t shuffle[16]);
-#endif
 
   ALLOW_CLONE(MWasmBitselectSimd128)
 };
