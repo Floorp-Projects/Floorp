@@ -92,13 +92,13 @@ function getEngineModules() {
   };
   if (Svc.Prefs.get("engine.addresses.available", false)) {
     result.Addresses = {
-      module: "resource://formautofill/FormAutofillSync.jsm",
+      module: "resource://autofill/FormAutofillSync.jsm",
       symbol: "AddressesEngine",
     };
   }
   if (Svc.Prefs.get("engine.creditcards.available", false)) {
     result.CreditCards = {
-      module: "resource://formautofill/FormAutofillSync.jsm",
+      module: "resource://autofill/FormAutofillSync.jsm",
       symbol: "CreditCardsEngine",
     };
   }
