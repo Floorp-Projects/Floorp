@@ -234,12 +234,12 @@ elif CONFIG["JS_CODEGEN_MIPS32"] or CONFIG["JS_CODEGEN_MIPS64"]:
             UNIFIED_SOURCES += ["mips64/Simulator-mips64.cpp"]
 
 
-# Generate jit/MOpcodesGenerated.h from jit/MIR.h
+# Generate jit/MIROpsGenerated.h from jit/MIROps.yaml
 GeneratedFile(
-    "MOpcodesGenerated.h",
-    script="GenerateOpcodeFiles.py",
+    "MIROpsGenerated.h",
+    script="GenerateMIRFiles.py",
     entry_point="generate_mir_header",
-    inputs=["MIR.h"],
+    inputs=["MIROps.yaml"],
 )
 
 # Generate jit/LOpcodesGenerated.h from jit/LIR.h, jit/shared/LIR-shared.h, and
