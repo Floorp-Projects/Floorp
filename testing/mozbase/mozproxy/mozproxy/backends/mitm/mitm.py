@@ -245,7 +245,7 @@ class Mitmproxy(Playback):
         self.download()
 
         # mitmproxy must be started before setup, so that the CA cert is available
-        self.start_mitmproxy_playback(self.mitmdump_path, self.browser_path)
+        self.start_mitmproxy(self.mitmdump_path, self.browser_path)
 
         # In case the setup fails, we want to stop the process before raising.
         try:
@@ -258,7 +258,7 @@ class Mitmproxy(Playback):
             LOG.error("Setup of MitmProxy failed.", exc_info=True)
             raise
 
-    def start_mitmproxy_playback(self, mitmdump_path, browser_path):
+    def start_mitmproxy(self, mitmdump_path, browser_path):
         """Startup mitmproxy and replay the specified flow file"""
         if self.mitmproxy_proc is not None:
             raise Exception("Proxy already started.")
@@ -272,6 +272,9 @@ class Mitmproxy(Playback):
         env["PATH"] = os.path.dirname(browser_path) + os.pathsep + env["PATH"]
         command = [mitmdump_path]
 
+        if self.config.get("verbose", False):
+            # Generate mitmproxy verbose logs
+            command.extend(["-v"])
         # add proxy host and port options
         command.extend(["--listen-host", self.host, "--listen-port", str(self.port)])
 
@@ -301,6 +304,9 @@ class Mitmproxy(Playback):
                 http_protocol_extractor,
             ]
             command.extend(args)
+            self.recording.set_metadata(
+                "proxy_version", self.config["playback_version"]
+            )
         else:
             # playback mode
             if len(self.playback_files) > 0:
@@ -312,7 +318,6 @@ class Mitmproxy(Playback):
 
                 if self.config["playback_version"] in ["4.0.4", "5.1.1", "6.0.2"]:
                     args = [
-                        "-v",  # Verbose mode
                         "--set",
                         "upstream_cert=false",
                         "--set",
