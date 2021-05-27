@@ -27,32 +27,14 @@ add_task(async function() {
 
   await document.getElementById("nav-bar").overflowable.show();
   let charEncodingButton = document.getElementById("characterencoding-button");
-  charEncodingButton.click();
-  let characterEncodingView = document.getElementById(
-    "PanelUI-characterEncodingView"
-  );
-  let subviewShownPromise = subviewShown(characterEncodingView);
-  await subviewShownPromise;
 
-  let checkedButtons = characterEncodingView.querySelectorAll(
-    "toolbarbutton[checked='true']"
-  );
-  let initialEncoding = checkedButtons[0];
-  is(
-    initialEncoding.getAttribute("label"),
-    "Western",
-    "The western encoding is initially selected"
+  ok(
+    !charEncodingButton.hasAttribute("disabled"),
+    "The encoding button should be enabled"
   );
 
-  // change the encoding
-  let encodings = characterEncodingView.querySelectorAll(
-    "toolbarbutton:not(.subviewbutton-back)"
-  );
-  let newEncoding = encodings[1].hasAttribute("checked")
-    ? encodings[2]
-    : encodings[1];
   let browserStopPromise = BrowserTestUtils.browserStopped(gBrowser, TEST_PAGE);
-  newEncoding.click();
+  charEncodingButton.click();
   await browserStopPromise;
   is(
     gBrowser.selectedBrowser.characterSet,
@@ -64,16 +46,10 @@ add_task(async function() {
     "The encoding menu should be disabled"
   );
 
-  // check that the new encodng is applied
-  await document.getElementById("nav-bar").overflowable.show();
-  charEncodingButton.click();
-  checkedButtons = characterEncodingView.querySelectorAll(
-    "toolbarbutton[checked='true']"
-  );
-  let selectedEncodingName = checkedButtons[0].getAttribute("label");
-  ok(
-    selectedEncodingName == "Unicode",
-    "The encoding was changed to " + selectedEncodingName
+  is(
+    charEncodingButton.getAttribute("disabled"),
+    "true",
+    "We should disable the encoding button in toolbar"
   );
 
   CustomizableUI.removeWidgetFromArea("characterencoding-button");
@@ -89,7 +65,7 @@ add_task(async function() {
   is(
     charEncodingButton.getAttribute("disabled"),
     "true",
-    "We should disable the encoding menu"
+    "We should disable the encoding button in overflow menu"
   );
 
   BrowserTestUtils.removeTab(newTab);

@@ -37,7 +37,7 @@ function nonBrowserWindowStartup() {
     "Browser:Reload",
     "viewFullZoomMenu",
     "pageStyleMenu",
-    "charsetMenu",
+    "repair-text-encoding",
     "View:PageSource",
     "View:FullScreen",
     "enterFullScreenItem",
