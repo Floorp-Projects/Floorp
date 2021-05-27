@@ -2694,6 +2694,11 @@ BrowserGlue.prototype = {
     );
   },
 
+  _quitSource: "unknown",
+  _registerQuitSource(source) {
+    this._quitSource = source;
+  },
+
   _onQuitRequest: function BG__onQuitRequest(aCancelQuit, aQuitType) {
     // If user has already dismissed quit request, then do nothing
     if (aCancelQuit instanceof Ci.nsISupportsPRBool && aCancelQuit.data) {
@@ -2722,6 +2727,7 @@ BrowserGlue.prototype = {
 
     var windowcount = 0;
     var pagecount = 0;
+    let pinnedcount = 0;
     for (let win of BrowserWindowTracker.orderedWindows) {
       if (win.closed) {
         continue;
@@ -2729,6 +2735,7 @@ BrowserGlue.prototype = {
       windowcount++;
       let tabbrowser = win.gBrowser;
       if (tabbrowser) {
+        pinnedcount += tabbrowser._numPinnedTabs;
         pagecount +=
           tabbrowser.browsers.length -
           tabbrowser._numPinnedTabs -
@@ -2826,6 +2833,28 @@ BrowserGlue.prototype = {
       checkboxLabel,
       warnOnClose
     );
+    Services.telemetry.setEventRecordingEnabled("close_tab_warning", true);
+    let warnCheckbox = warnOnClose.value ? "checked" : "unchecked";
+    if (!checkboxLabel) {
+      warnCheckbox = "not-present";
+    }
+    Services.telemetry.recordEvent(
+      "close_tab_warning",
+      "shown",
+      "application",
+      null,
+      {
+        source: this._quitSource,
+        button: buttonPressed == 0 ? "close" : "cancel",
+        warn_checkbox: warnCheckbox,
+        closing_wins: "" + windowcount,
+        closing_tabs: "" + (pagecount + pinnedcount),
+        will_restore: sessionWillBeRestored ? "yes" : "no",
+      }
+    );
+
+    this._quitSource = "unknown";
+
     // If the user has unticked the box, and has confirmed closing, stop showing
     // the warning.
     if (!sessionWillBeRestored && buttonPressed == 0 && !warnOnClose.value) {

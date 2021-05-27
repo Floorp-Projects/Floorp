@@ -2896,3 +2896,25 @@ contextservices.quicksuggest:
     notification_emails:
       - fx-search@mozilla.com
     expiry_version: never
+
+close_tab_warning:
+  shown:
+    description: >
+      Recorded whenever we show the 'Close Tabs' dialog, with details about
+      the reason it is shown and what choices the user makes (close or not).
+    objects: ["window", "application", "tabs"]
+    release_channel_collection: opt-out
+    expiry_version: "94"
+    record_in_processes: ["main"]
+    products: ["firefox"]
+    bug_numbers: [1712306]
+    notification_emails:
+      - gkruitbosch@mozilla.com
+      - rtestard@mozilla.com
+    extra_keys:
+      source: The way in which the tabs were closed (shortcut, close button, menuitem, appmenu, etc.)
+      button: Which button the user clicked (Close tabs or Cancel)
+      warn_checkbox: Whether the checkbox to display the warning again was checked or not.
+      closing_wins: The number of windows being closed.
+      closing_tabs: The number of tabs being closed.
+      will_restore: Whether the session will be restored if closed now.
