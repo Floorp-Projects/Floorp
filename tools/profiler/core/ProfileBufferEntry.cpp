@@ -980,11 +980,10 @@ int ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
           }
         }
 
-        if (numFrames == 0) {
+        if (numFrames == 0 && aRunningTimes.IsEmpty()) {
           // It is possible to have empty stacks if native stackwalking is
-          // disabled. Skip samples with empty stacks. (See Bug 1497985).
-          // Thus, don't use ERROR_AND_CONTINUE, but just continue by returning
-          // from this lambda.
+          // disabled. Skip samples with empty stacks, unless we have useful
+          // running times.
           return;
         }
 
@@ -1054,11 +1053,9 @@ int ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
               MOZ_ASSERT(aReader,
                          "Local ProfileChunkedBuffer cannot be out-of-session");
               EntryGetter stackEntryGetter(*aReader);
-              if (stackEntryGetter.Has()) {
-                ReadStack(stackEntryGetter,
-                          it.CurrentBlockIndex().ConvertToProfileBufferIndex(),
-                          unresponsiveDuration, runningTimes);
-              }
+              ReadStack(stackEntryGetter,
+                        it.CurrentBlockIndex().ConvertToProfileBufferIndex(),
+                        unresponsiveDuration, runningTimes);
             });
             mWorkerChunkManager.Reset(tempBuffer.GetAllChunks());
             break;
