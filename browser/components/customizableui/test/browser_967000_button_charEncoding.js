@@ -32,14 +32,16 @@ add_task(async function() {
     charEncodingButton,
     "The Character Encoding button was added to the Panel Menu"
   );
-  // Wait again for TSAN
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(resolve => setTimeout(resolve, 100));
   is(
     charEncodingButton.getAttribute("disabled"),
     "true",
     "The Character encoding button is initially disabled"
   );
+
+  let panelHidePromise = promiseOverflowHidden(window);
+  document.getElementById("nav-bar").overflowable._panel.hidePopup();
+  await panelHidePromise;
+  info("Panel hidden");
 
   let newTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -53,6 +55,42 @@ add_task(async function() {
     !charEncodingButton.hasAttribute("disabled"),
     "The Character encoding button gets enabled"
   );
+  charEncodingButton.click();
+  let characterEncodingView = document.getElementById(
+    "PanelUI-characterEncodingView"
+  );
+  let subviewShownPromise = subviewShown(characterEncodingView);
+  await subviewShownPromise;
+
+  ok(
+    characterEncodingView.hasAttribute("visible"),
+    "The Character encoding panel is displayed"
+  );
+
+  let pinnedEncodings = document.getElementById(
+    "PanelUI-characterEncodingView-pinned"
+  );
+  let charsetsList = document.getElementById(
+    "PanelUI-characterEncodingView-charsets"
+  );
+  ok(pinnedEncodings, "Pinned charsets are available");
+  ok(charsetsList, "Charsets list is available");
+
+  let checkedButtons = characterEncodingView.querySelectorAll(
+    "toolbarbutton[checked='true']"
+  );
+  is(checkedButtons.length, 1, "There should be 1 checked item.");
+  is(
+    checkedButtons[0].getAttribute("label"),
+    "Western",
+    "The western encoding is correctly selected"
+  );
+
+  panelHidePromise = promiseOverflowHidden(window);
+  document.getElementById("nav-bar").overflowable._panel.hidePopup();
+  await panelHidePromise;
+  info("Panel hidden");
+
   BrowserTestUtils.removeTab(newTab);
 });
 
