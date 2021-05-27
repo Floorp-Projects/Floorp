@@ -84,9 +84,12 @@ endif
 
 rustflags_neon =
 ifeq (neon,$(MOZ_FPU))
-# Enable neon and disable restriction to 16 FPU registers
+ifneq (,$(filter thumbv7neon-,$(RUST_TARGET)))
+# Enable neon and disable restriction to 16 FPU registers when neon is enabled
+# but we're not using a thumbv7neon target, where it's already the default.
 # (CPUs with neon have 32 FPU registers available)
 rustflags_neon += -C target_feature=+neon,-d16
+endif
 endif
 
 rustflags_sancov =
