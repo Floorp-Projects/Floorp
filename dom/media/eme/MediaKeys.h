@@ -165,6 +165,10 @@ class MediaKeys final : public nsIObserver,
     promise->MaybeResolve(aResult);
   }
 
+  // The topic used for requests related to mediakeys -- observe this to be
+  // notified of such requests.
+  constexpr static const char* kMediaKeysRequestTopic = "mediakeys-request";
+
  private:
   // Instantiate CDMProxy instance.
   // It could be MediaDrmCDMProxy (Widevine on Fennec) or ChromiumCDMProxy (the
