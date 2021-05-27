@@ -342,17 +342,6 @@ class VirtualenvManager(VirtualenvHelper):
         )
 
         def handle_package(package):
-            if package[0].startswith("set-variable "):
-                assert len(package) == 1
-                assignment = package[0][len("set-variable ") :].strip()
-                var, val = assignment.split("=", 1)
-                var = var if PY3 else ensure_binary(var)
-                val = val if PY3 else ensure_binary(val)
-                sitecustomize.write(
-                    "import os\n" "os.environ[%s] = %s\n" % (repr(var), repr(val))
-                )
-                return True
-
             if package[0] == "packages.txt":
                 assert len(package) == 2
 
