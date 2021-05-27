@@ -15,12 +15,12 @@
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">다운로드</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
-    <string name="mozac_feature_downloads_dialog_cancel">취소</string>
+
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">%1$s는 이 파일 형식은 다운로드 할 수 없습니다</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
-    <string name="mozac_feature_downloads_could_not_open_file">파일을 열 수 없습니다</string>
+
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
     <string name="mozac_feature_downloads_open_not_supported1">%1$s 파일을 열 앱이 없습니다</string>
@@ -32,7 +32,7 @@
     <!-- Button that cancels the download when pressed -->
     <string name="mozac_feature_downloads_button_cancel">취소</string>
     <!-- Button that opens the downloaded file when pressed -->
-    <string name="mozac_feature_downloads_button_open">열기</string>
+
     <!-- Button that restarts the download after a failed attempt -->
     <string name="mozac_feature_downloads_button_try_again">다시 시도</string>
 

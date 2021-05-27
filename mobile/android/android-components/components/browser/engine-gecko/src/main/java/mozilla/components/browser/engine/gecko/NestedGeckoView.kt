@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.MotionEvent
 import androidx.annotation.VisibleForTesting
@@ -116,6 +117,7 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
         return super.onTouchEvent(event)
     }
 
+    @SuppressLint("WrongThread") // Lint complains startNestedScroll() needs to be called on the main thread
     @VisibleForTesting
     internal fun updateInputResult(event: MotionEvent) {
         super.onTouchEventForDetailResult(event)

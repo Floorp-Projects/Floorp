@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package mozilla.components.feature.addons.update
 
 import android.app.Notification
@@ -331,7 +332,6 @@ class DefaultAddonUpdater(
             applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             } ?: throw IllegalStateException("Package has no launcher intent")
-
         return PendingIntent.getActivity(
             applicationContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT
         )

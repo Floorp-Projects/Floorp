@@ -15,10 +15,10 @@
     <string name="mozac_feature_downloads_file_not_supported2">ur izmir %1$s ad d-yagem anaw n ufaylu-a</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
-    <string name="mozac_feature_downloads_could_not_open_file">Ur izmir ad irẓem afaylu</string>
+
 
     <!-- Button that opens the downloaded file when pressed -->
-    <string name="mozac_feature_downloads_button_open">Rẓem</string>
+
 
     <!-- Button that restarts the download after a failed attempt -->
     <string name="mozac_feature_downloads_button_try_again">Arm daɣ</string>

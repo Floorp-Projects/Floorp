@@ -12,6 +12,8 @@ android {
     defaultConfig {
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -19,6 +21,14 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_version
     }
 
     packagingOptions {
@@ -45,6 +55,7 @@ dependencies {
     api project(':concept-fetch')
 
     implementation Dependencies.androidx_browser
+    implementation Dependencies.androidx_compose_ui
     implementation Dependencies.kotlin_coroutines
     implementation Dependencies.kotlin_stdlib
 
@@ -55,6 +66,10 @@ dependencies {
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_coroutines
+
+    androidTestImplementation Dependencies.androidx_test_junit
+    androidTestImplementation Dependencies.androidx_compose_ui_test_manifest
+    androidTestImplementation Dependencies.androidx_compose_ui_test
 }
 
 apply from: '../../../publish.gradle'

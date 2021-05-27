@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.autofill.ui.search
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -13,6 +14,7 @@ import mozilla.components.feature.autofill.R
 /**
  * Adapter for showing a list of logins.
  */
+@SuppressLint("NotifyDataSetChanged")
 internal class LoginsAdapter(
     private val onLoginSelected: (Login) -> Unit
 ) : RecyclerView.Adapter<LoginViewHolder>() {

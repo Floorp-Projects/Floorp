@@ -45,7 +45,7 @@ internal data class AuthFillResponseBuilder(
             context,
             configuration.activityRequestCode,
             authIntent,
-            PendingIntent.FLAG_CANCEL_CURRENT
+            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
         ).intentSender
 
         builder.setAuthentication(autofillIds.toTypedArray(), intentSender, authPresentation)

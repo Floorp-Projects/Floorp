@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.errorpages
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.annotation.StringRes
 import mozilla.components.support.ktx.android.content.appName
@@ -16,6 +17,7 @@ object ErrorPages {
     /**
      * Provides an encoded URL for an error page. Supports displaying images
      */
+    @SuppressLint("StringFormatInvalid")
     fun createUrlEncodedErrorPage(
         context: Context,
         errorType: ErrorType,

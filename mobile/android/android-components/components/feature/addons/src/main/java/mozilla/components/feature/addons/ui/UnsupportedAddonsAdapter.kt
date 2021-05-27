@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.addons.ui
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +25,7 @@ import mozilla.components.feature.addons.R
  * any interactions with the unsupported add-ons to the app to handle.
  * @property unsupportedAddons The list of unsupported add-ons based on the AMO store.
  */
+@SuppressLint("NotifyDataSetChanged")
 class UnsupportedAddonsAdapter(
     private val addonManager: AddonManager,
     private val unsupportedAddonsAdapterDelegate: UnsupportedAddonsAdapterDelegate,

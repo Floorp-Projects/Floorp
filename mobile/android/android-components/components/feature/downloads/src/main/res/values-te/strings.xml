@@ -15,13 +15,13 @@
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">దించుకో</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
-    <string name="mozac_feature_downloads_dialog_cancel">రద్దుచేయి</string>
+
 
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">ఈ రకపు ఫైలును %1$s దించుకోలేదు</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
-    <string name="mozac_feature_downloads_could_not_open_file">ఫైలును తెరవలేకపోయాం</string>
+
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
     <string name="mozac_feature_downloads_open_not_supported1">%1$s ఫైళ్ళను తెరవడానికి తగ్గ అనువర్తనం కనబడలేదు</string>
@@ -33,7 +33,7 @@
     <!-- Button that cancels the download when pressed -->
     <string name="mozac_feature_downloads_button_cancel">రద్దుచేయి</string>
     <!-- Button that opens the downloaded file when pressed -->
-    <string name="mozac_feature_downloads_button_open">తెరువు</string>
+
     <!-- Button that restarts the download after a failed attempt -->
     <string name="mozac_feature_downloads_button_try_again">మళ్ళీ ప్రయత్నించు</string>
 

@@ -13,6 +13,6 @@
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">ଡାଉନଲୋଡ଼</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
-    <string name="mozac_feature_downloads_dialog_cancel">ବାତିଲ କରନ୍ତୁ</string>
+
 
     </resources>

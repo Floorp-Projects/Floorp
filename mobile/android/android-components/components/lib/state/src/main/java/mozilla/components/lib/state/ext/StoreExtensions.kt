@@ -40,10 +40,10 @@ import mozilla.components.lib.state.Store
 fun <S : State, A : Action> Store<S, A>.observe(
     owner: LifecycleOwner,
     observer: Observer<S>
-) {
+): Store.Subscription<S, A>? {
     if (owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
         // This owner is already destroyed. No need to register.
-        return
+        return null
     }
 
     val subscription = observeManually(observer)
@@ -51,6 +51,8 @@ fun <S : State, A : Action> Store<S, A>.observe(
     subscription.binding = SubscriptionLifecycleBinding(owner, subscription).apply {
         owner.lifecycle.addObserver(this)
     }
+
+    return subscription
 }
 
 /**

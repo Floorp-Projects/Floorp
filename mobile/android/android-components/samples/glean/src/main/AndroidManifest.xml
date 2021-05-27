@@ -26,7 +26,8 @@
         android:name=".GleanApplication">
         <activity android:name="org.mozilla.samples.glean.MainActivity"
             android:windowSoftInputMode="adjustResize"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

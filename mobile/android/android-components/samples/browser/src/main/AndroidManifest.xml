@@ -31,6 +31,7 @@
         tools:ignore="UnusedAttribute">
         <activity android:name=".BrowserActivity"
             android:launchMode="singleTask"
+            android:exported="true"
             android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -135,6 +136,7 @@
         <service
             android:name=".autofill.AutofillService"
             android:label="@string/app_name"
+            android:exported="true"
             android:permission="android.permission.BIND_AUTOFILL_SERVICE">
             <intent-filter>
                 <action android:name="android.service.autofill.AutofillService"/>

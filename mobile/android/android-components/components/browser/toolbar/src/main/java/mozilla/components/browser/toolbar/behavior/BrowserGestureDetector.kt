@@ -48,6 +48,7 @@ internal class BrowserGestureDetector(
     )
 
     @VisibleForTesting
+    @Suppress("SoonBlockedPrivateApi") // https://github.com/mozilla-mobile/android-components/issues/10638
     internal var scaleGestureDetector = ScaleGestureDetector(
         applicationContext,
         CustomScaleDetectorListener(

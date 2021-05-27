@@ -3,6 +3,18 @@
 componentsVersion: 92.0.0
 # Please add a treeherder group in taskcluster/ci/config.yml if you add a new project here.
 projects:
+  compose-awesomebar:
+    path: components/compose/awesomebar
+    description: 'An awesomebar component showing search results matching text entered into the toolbar.'
+    publish: true
+  compose-browser-toolbar:
+    path: components/compose/browser-toolbar
+    description: 'A customizable toolbar for browsers using Jetpack Compose.'
+    publish: true
+  compose-engine:
+    path: components/compose/engine
+    description: 'A component for integrating a concept-engine implementation into Jetpack Compose UI.'
+    publish: true
   concept-awesomebar:
     path: components/concept/awesomebar
     description: 'An abstract definition of an awesomebar component.'
@@ -402,6 +414,10 @@ projects:
   samples-browser:
     path: samples/browser
     description: 'A simple browser composed from browser components.'
+    publish: false
+  samples-compose-browser:
+    path: samples/compose-browser
+    description: 'A simple browser composed from browser components using Jetpack Compose.'
     publish: false
   samples-crash:
     path: samples/crash

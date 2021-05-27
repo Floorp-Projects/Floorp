@@ -4,6 +4,7 @@
 
 package mozilla.components.lib.crash.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.text.SpannableStringBuilder
@@ -77,6 +78,7 @@ internal class CrashListAdapter(
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateList(list: List<CrashWithReports>) {
         crashes = list
         notifyDataSetChanged()

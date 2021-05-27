@@ -15,12 +15,12 @@
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">Download</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
-    <string name="mozac_feature_downloads_dialog_cancel">Cancel</string>
+
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">%1$s can’t download this file type</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
-    <string name="mozac_feature_downloads_could_not_open_file">Could not open file</string>
+
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
     <string name="mozac_feature_downloads_open_not_supported1">No app found to open %1$s files</string>
@@ -32,7 +32,7 @@
     <!-- Button that cancels the download when pressed -->
     <string name="mozac_feature_downloads_button_cancel">Cancel</string>
     <!-- Button that opens the downloaded file when pressed -->
-    <string name="mozac_feature_downloads_button_open">Open</string>
+
     <!-- Button that restarts the download after a failed attempt -->
     <string name="mozac_feature_downloads_button_try_again">Try Again</string>
 

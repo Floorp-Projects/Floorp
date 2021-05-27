@@ -6,8 +6,6 @@
     <dimen name="mozac_feature_findinpage_query_text_size">16sp</dimen>
     <dimen name="mozac_feature_findinpage_query_marginStart">16dp</dimen>
 
-    <dimen name="mozac_feature_findinpage_buttons_margin_end">16dp</dimen>
-
     <dimen name="mozac_feature_findinpage_result_count_text_size">12sp</dimen>
     <dimen name="mozac_feature_findinpage_result_count_margin_end">16dp</dimen>
     <dimen name="mozac_feature_findinpage_result_count_margin_start">16dp</dimen>

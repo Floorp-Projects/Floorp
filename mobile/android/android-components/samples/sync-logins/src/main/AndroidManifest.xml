@@ -20,7 +20,8 @@
         android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
         <activity android:name="org.mozilla.samples.sync.logins.MainActivity"
             android:windowSoftInputMode="adjustResize"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
