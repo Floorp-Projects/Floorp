@@ -329,7 +329,7 @@ class Clobber(MachCommandBase):
             )
 
         if "gradle" in what:
-            shutil.rmtree(mozpath.join(self.topobjdir, "gradle"))
+            shutil.rmtree(mozpath.join(self.topobjdir, "gradle"), ignore_errors=True)
 
         return ret
 
