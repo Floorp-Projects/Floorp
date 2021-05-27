@@ -8,6 +8,8 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/Vector.h"
 
+#include <cstdlib>
+
 using mozilla::ArrayLength;
 using mozilla::BinarySearch;
 using mozilla::BinarySearchIf;
@@ -98,8 +100,59 @@ static void TestBinarySearchIf() {
   A(!BinarySearchIf(v1, 0, len, RangeFinder(10, 12), &m) && m == 10);
 }
 
+static void TestEqualRange() {
+  struct CompareN {
+    int mVal;
+    explicit CompareN(int n) : mVal(n) {}
+    int operator()(int aVal) const { return mVal - aVal; }
+  };
+
+  constexpr int kMaxNumber = 100;
+  constexpr int kMaxRepeat = 2;
+
+  Vector<int> sortedArray;
+  MOZ_RELEASE_ASSERT(sortedArray.reserve(kMaxNumber * kMaxRepeat));
+
+  // Make a sorted array by appending the loop counter [0, kMaxRepeat] times
+  // in each iteration.  The array will be something like:
+  //   [0, 0, 1, 1, 2, 2, 8, 9, ..., kMaxNumber]
+  for (int i = 0; i <= kMaxNumber; ++i) {
+    int repeat = rand() % (kMaxRepeat + 1);
+    for (int j = 0; j < repeat; ++j) {
+      MOZ_RELEASE_ASSERT(sortedArray.emplaceBack(i));
+    }
+  }
+
+  for (int i = -1; i < kMaxNumber + 1; ++i) {
+    auto bounds = EqualRange(sortedArray, 0, sortedArray.length(), CompareN(i));
+
+    MOZ_RELEASE_ASSERT(bounds.first() <= sortedArray.length());
+    MOZ_RELEASE_ASSERT(bounds.second() <= sortedArray.length());
+    MOZ_RELEASE_ASSERT(bounds.first() <= bounds.second());
+
+    if (bounds.first() == 0) {
+      MOZ_RELEASE_ASSERT(sortedArray[0] >= i);
+    } else if (bounds.first() == sortedArray.length()) {
+      MOZ_RELEASE_ASSERT(sortedArray[sortedArray.length() - 1] < i);
+    } else {
+      MOZ_RELEASE_ASSERT(sortedArray[bounds.first() - 1] < i);
+      MOZ_RELEASE_ASSERT(sortedArray[bounds.first()] >= i);
+    }
+
+    if (bounds.second() == 0) {
+      MOZ_RELEASE_ASSERT(sortedArray[0] > i);
+    } else if (bounds.second() == sortedArray.length()) {
+      MOZ_RELEASE_ASSERT(sortedArray[sortedArray.length() - 1] <= i);
+    } else {
+      MOZ_RELEASE_ASSERT(sortedArray[bounds.second() - 1] <= i);
+      MOZ_RELEASE_ASSERT(sortedArray[bounds.second()] > i);
+    }
+  }
+}
+
 int main() {
   TestBinarySearch();
   TestBinarySearchIf();
+  TestEqualRange();
   return 0;
 }
