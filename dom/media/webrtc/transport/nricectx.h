@@ -216,6 +216,8 @@ class NrIceCtx {
     int mErrorCodeForDrop = 0;
     nsCString mMappingType = "ENDPOINT_INDEPENDENT"_ns;
     nsCString mFilteringType = "ENDPOINT_INDEPENDENT"_ns;
+    nsCString mRedirectAddress;
+    CopyableTArray<nsCString> mRedirectTargets;
   };
 
   struct Config {
