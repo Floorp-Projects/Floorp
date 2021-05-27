@@ -299,12 +299,6 @@ class VirtualenvManager(VirtualenvHelper):
         specifies the action. The remaining fields are arguments to that
         action. The following actions are supported:
 
-        setup.py -- Invoke setup.py for a package. Expects the arguments:
-            1. relative path directory containing setup.py.
-            2. argument(s) to setup.py. e.g. "develop". Each program argument
-               is delimited by a colon. Arguments with colons are not yet
-               supported.
-
         filename.pth -- Adds the path given as argument to filename.pth under
             the virtualenv site packages directory.
 
@@ -312,7 +306,7 @@ class VirtualenvManager(VirtualenvHelper):
             is attempted. If it fails, we issue a warning and go on. The
             initial "optional" field is stripped then the remaining line is
             processed like normal. e.g.
-            "optional:setup.py:python/foo:built_ext:-i"
+            "optional:mozilla.pth:python/foo
 
         packages.txt -- Denotes that the specified path is a child manifest. It
             will be read and processed as if its contents were concatenated
@@ -357,13 +351,6 @@ class VirtualenvManager(VirtualenvHelper):
                 sitecustomize.write(
                     "import os\n" "os.environ[%s] = %s\n" % (repr(var), repr(val))
                 )
-                return True
-
-            if package[0] == "setup.py":
-                assert len(package) >= 2
-
-                self.call_setup(os.path.join(self.topsrcdir, package[1]), package[2:])
-
                 return True
 
             if package[0] == "packages.txt":
