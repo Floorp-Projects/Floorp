@@ -42,12 +42,13 @@ div_table_ssse3: dw 840, 840, 420, 420, 280, 280, 210, 210
                  dw 168, 168, 140, 140, 120, 120, 105, 105
                  dw 420, 420, 210, 210, 140, 140, 105, 105
                  dw 105, 105, 105, 105, 105, 105, 105, 105
-shufw_6543210x:  db 12, 13, 10, 11,  8,  9,  6,  7,  4,  5,  2,  3,  0,  1, 14, 15
-shufb_lohi:      db  0,  8,  1,  9,  2, 10,  3, 11,  4, 12,  5, 13,  6, 14,  7, 15
-pw_8: times 8 dw 8
-pw_128: times 8 dw 128
-pw_256: times 8 dw 256
-pw_2048: times 8 dw 2048
+const shufw_6543210x, \
+            db 12, 13, 10, 11,  8,  9,  6,  7,  4,  5,  2,  3,  0,  1, 14, 15
+shufb_lohi: db  0,  8,  1,  9,  2, 10,  3, 11,  4, 12,  5, 13,  6, 14,  7, 15
+pw_8:      times 8 dw 8
+pw_128:    times 8 dw 128
+pw_256:    times 8 dw 256
+pw_2048:   times 8 dw 2048
 pw_0x7FFF: times 8 dw 0x7FFF
 pw_0x8000: times 8 dw 0x8000
 tap_table: ; masks for 8-bit shift emulation
@@ -758,27 +759,26 @@ cglobal cdef_filter_%1x%2_8bpc, 2, 7, 8, - 7 * 16 - (%2+4)*32, \
 
 %macro CDEF_DIR 0
  %if ARCH_X86_64
-cglobal cdef_dir_8bpc, 3, 5, 16, 32, src, stride, var, stride3
-    lea       stride3q, [strideq*3]
+cglobal cdef_dir_8bpc, 3, 7, 16, src, stride, var
+    lea             r6, [strideq*3]
     movq            m1, [srcq+strideq*0]
     movhps          m1, [srcq+strideq*1]
     movq            m3, [srcq+strideq*2]
-    movhps          m3, [srcq+stride3q]
+    movhps          m3, [srcq+r6       ]
     lea           srcq, [srcq+strideq*4]
     movq            m5, [srcq+strideq*0]
     movhps          m5, [srcq+strideq*1]
     movq            m7, [srcq+strideq*2]
-    movhps          m7, [srcq+stride3q]
+    movhps          m7, [srcq+r6       ]
 
     pxor            m8, m8
-    psadbw          m0, m1, m8
+    psadbw          m9, m1, m8
     psadbw          m2, m3, m8
     psadbw          m4, m5, m8
     psadbw          m6, m7, m8
-    packssdw        m0, m2
+    packssdw        m9, m2
     packssdw        m4, m6
-    packssdw        m0, m4
-    SWAP            m0, m9
+    packssdw        m9, m4
 
     punpcklbw       m0, m1, m8
     punpckhbw       m1, m8
@@ -788,7 +788,7 @@ cglobal cdef_dir_8bpc, 3, 5, 16, 32, src, stride, var, stride3
     punpckhbw       m5, m8
     punpcklbw       m6, m7, m8
     punpckhbw       m7, m8
-
+cglobal_label .main
     mova            m8, [pw_128]
     psubw           m0, m8
     psubw           m1, m8
@@ -1018,14 +1018,20 @@ cglobal cdef_dir_8bpc, 3, 5, 16, 32, src, stride, var, stride3
     punpckldq       m4, m6
     psubd           m2, m0, m1
     psubd           m3, m0, m4
-    mova    [rsp+0x00], m2                  ; emulate ymm in stack
-    mova    [rsp+0x10], m3
+%if WIN64
+    WIN64_RESTORE_XMM
+    %define tmp rsp+stack_offset+8
+%else
+    %define tmp rsp-40
+%endif
+    mova    [tmp+0x00], m2                  ; emulate ymm in stack
+    mova    [tmp+0x10], m3
     pcmpeqd         m1, m0                  ; compute best cost mask
     pcmpeqd         m4, m0
     packssdw        m4, m1
     pmovmskb       eax, m4                  ; get byte-idx from mask
     tzcnt          eax, eax
-    mov            r1d, [rsp+rax*2]         ; get idx^4 complement from emulated ymm
+    mov            r1d, [tmp+rax*2]         ; get idx^4 complement from emulated ymm
     shr            eax, 1                   ; get direction by converting byte-idx to word-idx
     shr            r1d, 10
     mov         [varq], r1d
@@ -1063,19 +1069,19 @@ cglobal cdef_dir_8bpc, 2, 4, 8, 96, src, stride, var, stride3
     movq            m7, [srcq+strideq*2]
     movhps          m7, [srcq+stride3q]
     psadbw          m3, m5, m0
-    psadbw          m0, m7, m0
+    psadbw          m0, m7
     packssdw        m3, m0
     pxor            m0, m0
-    packssdw        m2, m3
     punpcklbw       m4, m5, m0
     punpckhbw       m5, m0
     punpcklbw       m6, m7, m0
     punpckhbw       m7, m0
+cglobal_label .main
     psubw           m4, m1
     psubw           m5, m1
     psubw           m6, m1
     psubw           m7, m1
-
+    packssdw        m2, m3
     psllw           m1, 3
     psubw           m2, m1                  ; partial_sum_hv[0]
     pmaddwd         m2, m2

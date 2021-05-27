@@ -407,8 +407,10 @@ static int drain_picture(Dav1dContext *const c, Dav1dPicture *const out) {
             const unsigned progress =
                 atomic_load_explicit(&out_delayed->progress[1],
                                      memory_order_relaxed);
-            if (out_delayed->visible && progress != FRAME_ERROR)
+            if (out_delayed->visible && progress != FRAME_ERROR) {
                 dav1d_picture_ref(&c->out, &out_delayed->p);
+                c->event_flags |= dav1d_picture_get_event_flags(out_delayed);
+            }
             dav1d_thread_picture_unref(out_delayed);
             if (output_picture_ready(c))
                 return output_image(c, out, &c->out);
@@ -687,6 +689,15 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
     dav1d_mem_pool_end(c->picture_pool);
 
     dav1d_freep_aligned(c_out);
+}
+
+int dav1d_get_event_flags(Dav1dContext *const c, enum Dav1dEventFlags *const flags) {
+    validate_input_or_ret(c != NULL, DAV1D_ERR(EINVAL));
+    validate_input_or_ret(flags != NULL, DAV1D_ERR(EINVAL));
+
+    *flags = c->event_flags;
+    c->event_flags = 0;
+    return 0;
 }
 
 void dav1d_picture_unref(Dav1dPicture *const p) {

@@ -66,8 +66,8 @@ static const uint8_t z_angles[27] = {
 };
 
 static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
-    ALIGN_STK_64(pixel, c_dst, 64 * 64,);
-    ALIGN_STK_64(pixel, a_dst, 64 * 64,);
+    PIXEL_RECT(c_dst, 64, 64);
+    PIXEL_RECT(a_dst, 64, 64);
     ALIGN_STK_64(pixel, topleft_buf, 257,);
     pixel *const topleft = topleft_buf + 128;
 
@@ -89,7 +89,7 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
                     for (int h = imax(w / 4, 4); h <= imin(w * 4,
                         (mode == FILTER_PRED ? 32 : 64)); h <<= 1)
                     {
-                        const ptrdiff_t stride = w * sizeof(pixel);
+                        const ptrdiff_t stride = c_dst_stride;
 
                         int a = 0, maxw = 0, maxh = 0;
                         if (mode >= Z1_PRED && mode <= Z3_PRED) { /* angle */
@@ -112,12 +112,15 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
                         for (int i = -h * 2; i <= w * 2; i++)
                             topleft[i] = rnd() & bitdepth_max;
 
+                        CLEAR_PIXEL_RECT(c_dst);
+                        CLEAR_PIXEL_RECT(a_dst);
                         call_ref(c_dst, stride, topleft, w, h, a, maxw, maxh
                                  HIGHBD_TAIL_SUFFIX);
                         call_new(a_dst, stride, topleft, w, h, a, maxw, maxh
                                  HIGHBD_TAIL_SUFFIX);
-                        if (checkasm_check_pixel(c_dst, stride, a_dst, stride,
-                                                 w, h, "dst"))
+                        if (checkasm_check_pixel_padded(c_dst, stride,
+                                                        a_dst, stride,
+                                                        w, h, "dst"))
                         {
                             if (mode == Z1_PRED || mode == Z3_PRED)
                                 fprintf(stderr, "angle = %d (0x%03x)\n",

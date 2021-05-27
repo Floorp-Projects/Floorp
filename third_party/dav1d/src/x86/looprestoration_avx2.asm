@@ -41,7 +41,8 @@ sgr_r_ext:     times 16 db 1
 
 ; dword version of dav1d_sgr_x_by_x[] for use with gathers, wastes a bit of
 ; cache but eliminates some shifts in the inner sgr loop which is overall a win
-sgr_x_by_x:   dd 255,128, 85, 64, 51, 43, 37, 32, 28, 26, 23, 21, 20, 18, 17, 16
+const sgr_x_by_x_avx2
+              dd 255,128, 85, 64, 51, 43, 37, 32, 28, 26, 23, 21, 20, 18, 17, 16
               dd  15, 14, 13, 13, 12, 12, 11, 11, 10, 10,  9,  9,  9,  9,  8,  8
               dd   8,  8,  7,  7,  7,  7,  7,  6,  6,  6,  6,  6,  6,  6,  5,  5
               dd   5,  5,  5,  5,  5,  5,  5,  5,  4,  4,  4,  4,  4,  4,  4,  4
@@ -58,17 +59,18 @@ sgr_x_by_x:   dd 255,128, 85, 64, 51, 43, 37, 32, 28, 26, 23, 21, 20, 18, 17, 16
               dd   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1
               dd   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0
 
+               times 4 db -1 ; needed for 16-bit sgr
+pb_m5:         times 4 db -5
+pb_3:          times 4 db 3
+pw_5_6:        dw 5, 6
+
 sgr_l_shuf:    db  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11
 sgr_shuf:      db  1, -1,  2, -1,  3, -1,  4, -1,  5, -1,  6, -1,  7, -1,  8, -1
                db  9, -1, 10, -1, 11, -1, 12, -1
 
-pb_3:          times 4 db 3
-pb_m5:         times 4 db -5
-pw_16:         times 2 dw 16
 pw_256:        times 2 dw 256
 pw_2056:       times 2 dw 2056
 pw_m16380:     times 2 dw -16380
-pw_5_6:        dw 5, 6
 pd_25:         dd 25
 pd_34816:      dd 34816
 pd_m4096:      dd -4096
@@ -729,8 +731,8 @@ ALIGN function_align
 
 cglobal sgr_filter_5x5_8bpc, 5, 13, 16, 400*24+16, dst, dst_stride, left, lpf, \
                                                    lpf_stride, w, edge, params, h
-%define base r12-sgr_x_by_x-256*4
-    lea            r12, [sgr_x_by_x+256*4]
+%define base r12-sgr_x_by_x_avx2-256*4
+    lea            r12, [sgr_x_by_x_avx2+256*4]
     mov        paramsq, paramsmp
     mov             wd, wm
     mov          edged, r8m
@@ -1189,12 +1191,12 @@ ALIGN function_align
 
 cglobal sgr_filter_3x3_8bpc, 5, 15, 15, -400*28-16, dst, dst_stride, left, lpf, \
                                                     lpf_stride, w, edge, params, h
-%define base r14-sgr_x_by_x-256*4
+%define base r14-sgr_x_by_x_avx2-256*4
     mov        paramsq, paramsmp
     mov          edged, r8m
     mov             wd, wm
     mov             hd, r6m
-    lea            r14, [sgr_x_by_x+256*4]
+    lea            r14, [sgr_x_by_x_avx2+256*4]
     vbroadcasti128  m8, [base+sgr_shuf+2]
     add           lpfq, wq
     vbroadcasti128  m9, [base+sgr_shuf+4]
@@ -1548,8 +1550,8 @@ ALIGN function_align
 
 cglobal sgr_filter_mix_8bpc, 5, 13, 16, 400*56+8, dst, dst_stride, left, lpf, \
                                                   lpf_stride, w, edge, params, h
-%define base r12-sgr_x_by_x-256*4
-    lea            r12, [sgr_x_by_x+256*4]
+%define base r12-sgr_x_by_x_avx2-256*4
+    lea            r12, [sgr_x_by_x_avx2+256*4]
     mov        paramsq, paramsmp
     mov             wd, wm
     mov          edged, r8m

@@ -32,7 +32,7 @@ SECTION_RODATA 16
 
 ; Note: The order of (at least some of) those constants matter!
 
-deint_shuf: db  0,  1,  4,  5,  8,  9, 12, 13,  2,  3,  6,  7, 10, 11, 14, 15
+const deint_shuf, db  0,  1,  4,  5,  8,  9, 12, 13,  2,  3,  6,  7, 10, 11, 14, 15
 
 %macro COEF_PAIR 2
 pw_%1_%2:  dw  %1, %2
@@ -48,19 +48,20 @@ pw_m3803_3344:  dw -3803,  3344
 pw_m3803_m6688: dw -3803, -6688
 pw_2896_m2896:  dw  2896, -2896
 
-pw_5:       times 2 dw 5
-pw_2048:    times 2 dw 2048
-pw_4096:    times 2 dw 4096
-pw_8192:    times 2 dw 8192
-pw_16384:   times 2 dw 16384
-pw_1697x16: times 2 dw 1697*16
-pw_1697x8:  times 2 dw 1697*8
-pw_2896x8:  times 2 dw 2896*8
+const pw_5,       times 2 dw 5
+const pw_2048,    times 2 dw 2048
+const pw_4096,    times 2 dw 4096
+const pw_8192,    times 2 dw 8192
+const pw_16384,   times 2 dw 16384
+const pw_1697x16, times 2 dw 1697*16
+const pw_1697x8,  times 2 dw 1697*8
+const pw_2896x8,  times 2 dw 2896*8
+const pd_2048,    dd 2048
 
-pd_2048: dd 2048
-
-COEF_PAIR 2896, 2896
-COEF_PAIR 1567, 3784
+const pw_2896_2896,  dw  2896, 2896
+const pw_m2896_2896, dw -2896, 2896
+const pw_1567_3784,  dw  1567, 3784
+const pw_m3784_1567, dw -3784, 1567
 COEF_PAIR 3784, 1567
 COEF_PAIR  201, 4091
 COEF_PAIR  995, 3973
@@ -77,7 +78,7 @@ COEF_PAIR 3920, 1189
 COEF_PAIR  799, 4017
 COEF_PAIR 3406, 2276
 pw_m799_m4017:  dw  -799, -4017
-pw_m1567_m3784: dw -1567, -3784
+const pw_m1567_m3784, dw -1567, -3784
 pw_m3406_m2276: dw -3406, -2276
 pw_m401_m4076:  dw  -401, -4076
 pw_m3166_m2598: dw -3166, -2598
@@ -106,10 +107,11 @@ pw_2440x8:  COEF_X8  2440
 pw_m601x8:  COEF_X8  -601
 pw_4052x8:  COEF_X8  4052
 
-idct64_mul: COEF_X8  4095,   101,  4065,   501,  2967, -2824,  3229, -2520
-            COEF_X8  3745,  1660,  3564,  2019,  3822, -1474,  3948, -1092
-            COEF_X8  3996,   897,  3889,  1285,  3461, -2191,  3659, -1842
-            COEF_X8  3349,  2359,  3102,  2675,  4036,  -700,  4085,  -301
+const idct64_mul
+COEF_X8  4095,   101,  4065,   501,  2967, -2824,  3229, -2520
+COEF_X8  3745,  1660,  3564,  2019,  3822, -1474,  3948, -1092
+COEF_X8  3996,   897,  3889,  1285,  3461, -2191,  3659, -1842
+COEF_X8  3349,  2359,  3102,  2675,  4036,  -700,  4085,  -301
 
 pw_201_4091x8:   dw   201*8, 4091*8
 pw_m601_4052x8:  dw  -601*8, 4052*8
@@ -476,7 +478,7 @@ cglobal iadst_4x4_internal, 0, 5, 6, dst, stride, c, eob, tx2
 .end2:
     ITX4_END              0, 1, 2, 3
 ALIGN function_align
-.main:
+cglobal_label .main
     IADST4_1D_PACKED
     ret
 
@@ -708,7 +710,7 @@ cglobal idct_4x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     pshufd               m1, m1, q1032
     jmp m(iadst_4x8_internal).end2
 ALIGN function_align
-.main:
+cglobal_label .main
     WRAP_XMM IDCT8_1D_PACKED
     ret
 
@@ -759,7 +761,7 @@ ALIGN function_align
     WRAP_XMM IADST8_1D_PACKED 1
     ret
 ALIGN function_align
-.main_pass2:
+cglobal_label .main_pass2
     WRAP_XMM IADST8_1D_PACKED 2
     ret
 
@@ -945,7 +947,7 @@ cglobal idct_4x16_internal, 0, 5, 11, dst, stride, c, eob, tx2
     pshufd               m3, m3, q1032
     jmp m(iadst_4x16_internal).end2
 ALIGN function_align
-.main:
+cglobal_label .main
     WRAP_XMM IDCT16_1D_PACKED
     ret
 
@@ -1019,7 +1021,7 @@ ALIGN function_align
     vinserti128          m1, m5, xm2, 1 ; in4  in7  in6  in5
     pshufd               m3, m3, q1032  ; in12 in15 in13 in14
     pshufd               m2, m4, q1032  ; in11 in8  in9  in10
-.main2:
+cglobal_label .main2
     vpbroadcastd         m8, [o(pd_2048)]
     pxor                 m7, m7
     punpckhwd            m4, m3, m0 ; in12 in3  in14 in1
@@ -1278,7 +1280,7 @@ cglobal iadst_8x4_internal, 0, 5, 7, dst, stride, c, eob, tx2
     WRITE_8X4             0, 1, 4, 5
     RET
 ALIGN function_align
-.main:
+cglobal_label .main
     IADST4_1D_PACKED
     ret
 
@@ -1398,7 +1400,7 @@ cglobal idct_8x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     vpermq               m3, m3, q2031
     jmp m(iadst_8x8_internal).end2
 ALIGN function_align
-.main:
+cglobal_label .main
     IDCT8_1D_PACKED
     ret
 
@@ -1465,7 +1467,7 @@ ALIGN function_align
     IADST8_1D_PACKED 1
     ret
 ALIGN function_align
-.main_pass2:
+cglobal_label .main_pass2
     IADST8_1D_PACKED 2
     ret
 
@@ -1631,7 +1633,7 @@ cglobal idct_8x16_internal, 0, 5, 13, dst, stride, c, eob, tx2
     WRITE_8X4             6, 7, 0, 1
     RET
 ALIGN function_align
-.main:
+cglobal_label .main
     IDCT16_1D_PACKED
     ret
 
@@ -1659,7 +1661,7 @@ ALIGN function_align
     REPX {vpermq x, x, q3120}, m4, m5, m6, m7
     jmp m(idct_8x16_internal).end2
 ALIGN function_align
-.main:
+cglobal_label .main
     REPX {pshufd x, x, q1032}, m7, m1, m5, m3
 .main2:
     vpbroadcastd        m10, [o(pd_2048)]
@@ -1759,7 +1761,7 @@ ALIGN function_align
     pxor                 m9, m9
     ret
 ALIGN function_align
-.main_pass2_end:
+cglobal_label .main_pass2_end
     vpbroadcastd         m8, [o(pw_2896x8)]
     pshufb               m2, m11, m12
     pshufb               m5, m12
@@ -1964,7 +1966,7 @@ cglobal idct_16x4_internal, 0, 5, 11, dst, stride, c, eob, tx2
     call .main
     jmp m(iadst_16x4_internal).end
 ALIGN function_align
-.main:
+cglobal_label .main
     vpbroadcastd         m6, [o(pd_2048)]
     IDCT4_1D              0, 1, 2, 3, 4, 5, 6
     ret
@@ -2023,7 +2025,7 @@ cglobal iadst_16x4_internal, 0, 5, 11, dst, stride, c, eob, tx2
     WRITE_16X2            2, 3, 4, 5, strideq*0, strideq*1
     RET
 ALIGN function_align
-.main:
+cglobal_label .main
     vpbroadcastd         m6, [o(pw_m3344_3344)]
     vpbroadcastd         m7, [o(pw_3803_1321)]
     vpbroadcastd         m8, [o(pw_m1321_2482)]
@@ -2252,7 +2254,7 @@ cglobal idct_16x8_internal, 0, 5, 13, dst, stride, c, eob, tx2
     WRITE_16X2            6, 7, 0, 1, strideq*2, r3
     RET
 ALIGN function_align
-.main:
+cglobal_label .main
     vpbroadcastd        m10, [o(pd_2048)]
 .main2:
     IDCT8_1D              0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
@@ -2287,7 +2289,7 @@ ALIGN function_align
     REPX   {pmulhrsw x, m9}, m0, m2, m4, m6
     jmp m(idct_16x8_internal).end2
 ALIGN function_align
-.main:
+cglobal_label .main
     vpbroadcastd        m10, [o(pd_2048)]
     ITX_MULSUB_2W         7, 0, 8, 9, 10,  401, 4076 ; t1a, t0a
     ITX_MULSUB_2W         3, 4, 8, 9, 10, 3166, 2598 ; t5a, t4a
@@ -2338,7 +2340,7 @@ ALIGN function_align
     packssdw             m5, m11    ; -out5
     ret
 ALIGN function_align
-.main_pass2_end:
+cglobal_label .main_pass2_end
     vpbroadcastd         m8, [o(pw_2896x8)]
     psubsw               m4, m5, m3
     paddsw               m3, m5
@@ -2618,7 +2620,7 @@ cglobal idct_16x16_internal, 0, 5, 16, 32*3, dst, stride, c, eob, tx2
     WRITE_16X2           14, 15,  0,  1, strideq*2, r3
     RET
 ALIGN function_align
-.main:
+cglobal_label .main
     vpbroadcastd        m15, [o(pd_2048)]
     mova [rsp+gprsize+32*1], m1
     mova [rsp+gprsize+32*2], m9
@@ -2680,7 +2682,7 @@ ALIGN function_align
     psubw                m1, m6, m1
     jmp m(idct_16x16_internal).end2
 ALIGN function_align
-.main:
+cglobal_label .main
     vpbroadcastd        m15, [o(pd_2048)]
     mova [rsp+gprsize+32*1], m0
     mova [rsp+gprsize+32*2], m4
@@ -2811,7 +2813,7 @@ ALIGN function_align
     vpbroadcastd         m1, [o(pw_8192)]
     ret
 ALIGN function_align
-.main_pass2_end:
+cglobal_label .main_pass2_end
     ; In pass 2 we're going to clip to pixels afterwards anyway, so clipping to
     ; 16-bit here will produce the same result as using 32-bit intermediates.
     paddsw               m5, m10, m11 ; -out5
@@ -3172,7 +3174,7 @@ cglobal inv_txfm_add_dct_dct_8x32, 4, 4, 0, dst, stride, c, eob
     WRITE_8X4            14, 15,  4,  6
     RET
 ALIGN function_align
-.main_fast: ; bottom half is zero
+cglobal_label .main_fast ; bottom half is zero
     call m(idct_8x16_internal).main
     mova                 m8, [rsp+gprsize+0*32]
     mova [rsp+gprsize+0*32], m0
@@ -3187,7 +3189,7 @@ ALIGN function_align
     ITX_UNPACK_MULHRSW   13, 11,  6, 2440, 3290, m2751, 3035 ; t22a, t25a, t17a, t30a
     jmp .main2
 ALIGN function_align
-.main:
+cglobal_label .main
     call m(idct_8x16_internal).main
     mova                 m8, [rsp+gprsize+0*32]
     mova [rsp+gprsize+0*32], m0
@@ -3751,7 +3753,7 @@ cglobal inv_txfm_add_dct_dct_16x32, 4, 4, 0, dst, stride, c, eob
     call .pass2_end
     RET
 ALIGN function_align
-.main_oddhalf_fast: ; lower half is zero
+cglobal_label .main_oddhalf_fast ; lower half is zero
     mova [rsp+gprsize+32*1], m7
     pxor                 m7, m7
     mova [rsp+gprsize+32*0], m7
@@ -3783,7 +3785,7 @@ ALIGN function_align
     vpbroadcastd        m15, [o(pd_2048)]
     jmp .main2
 ALIGN function_align
-.main_oddhalf:
+cglobal_label .main_oddhalf
     mova [rsp+gprsize+32*0], m15
     mova [rsp+gprsize+32*1], m7
     mova [rsp+gprsize+32*2], m8
@@ -4657,7 +4659,7 @@ cglobal inv_txfm_add_dct_dct_16x64, 4, 4, 0, dst, stride, c, eob
     RET
 ALIGN function_align
 %define o_base idct64_mul - 8
-.main_part1:
+cglobal_label .main_part1
     ; idct64 steps 1-5:
     ; in1/31/17/15/ 9/23/25/ 7 ->
     ;     t32a/33/34a/35/36/37a/38/39a/56a/57/58a/59/60/61a/62/63a
@@ -4774,7 +4776,7 @@ ALIGN function_align
     cmp               tmp1q, tmp2q
     jne .main_part2_pass1_loop
     ret
-.main_part2_internal:
+cglobal_label .main_part2_internal
     mova                 m0, [tmp1q-32*12] ; t32a
     mova                 m6, [tmp2q-32*13] ; t39a
     mova                 m1, [tmp1q-32* 4] ; t40a

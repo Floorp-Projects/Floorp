@@ -184,11 +184,7 @@ static void fgy_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
         max_value = 235 << bitdepth_min_8;
     } else {
         min_value = 0;
-#if BITDEPTH == 8
-        max_value = 0xff;
-#else
-        max_value = bitdepth_max;
-#endif
+        max_value = BITDEPTH_MAX;
     }
 
     // seed[0] contains the current row, seed[1] contains the previous
@@ -299,11 +295,7 @@ fguv_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
         max_value = (is_id ? 235 : 240) << bitdepth_min_8;
     } else {
         min_value = 0;
-#if BITDEPTH == 8
-        max_value = 0xff;
-#else
-        max_value = bitdepth_max;
-#endif
+        max_value = BITDEPTH_MAX;
     }
 
     // seed[0] contains the current row, seed[1] contains the previous
@@ -370,7 +362,7 @@ fguv_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
             for (int x = 0; x < xstart; x++) {
                 int grain = sample_lut(grain_lut, offsets, sx, sy, 0, 0, x, y);
                 int old   = sample_lut(grain_lut, offsets, sx, sy, 1, 0, x, y);
-                grain = (old * w[sx][x][0] + grain * w[sx][x][1] + 16) >> 5;
+                grain = round2(old * w[sx][x][0] + grain * w[sx][x][1], 5);
                 grain = iclip(grain, grain_min, grain_max);
                 add_noise_uv(x, y, grain);
             }
@@ -381,7 +373,7 @@ fguv_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
             for (int x = xstart; x < bw; x++) {
                 int grain = sample_lut(grain_lut, offsets, sx, sy, 0, 0, x, y);
                 int old   = sample_lut(grain_lut, offsets, sx, sy, 0, 1, x, y);
-                grain = (old * w[sy][y][0] + grain * w[sy][y][1] + 16) >> 5;
+                grain = round2(old * w[sy][y][0] + grain * w[sy][y][1], 5);
                 grain = iclip(grain, grain_min, grain_max);
                 add_noise_uv(x, y, grain);
             }
@@ -391,17 +383,17 @@ fguv_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
                 // Blend the top pixel with the top left block
                 int top = sample_lut(grain_lut, offsets, sx, sy, 0, 1, x, y);
                 int old = sample_lut(grain_lut, offsets, sx, sy, 1, 1, x, y);
-                top = (old * w[sx][x][0] + top * w[sx][x][1] + 16) >> 5;
+                top = round2(old * w[sx][x][0] + top * w[sx][x][1], 5);
                 top = iclip(top, grain_min, grain_max);
 
                 // Blend the current pixel with the left block
                 int grain = sample_lut(grain_lut, offsets, sx, sy, 0, 0, x, y);
                 old = sample_lut(grain_lut, offsets, sx, sy, 1, 0, x, y);
-                grain = (old * w[sx][x][0] + grain * w[sx][x][1] + 16) >> 5;
+                grain = round2(old * w[sx][x][0] + grain * w[sx][x][1], 5);
                 grain = iclip(grain, grain_min, grain_max);
 
                 // Mix the row rows together and apply to image
-                grain = (top * w[sy][y][0] + grain * w[sy][y][1] + 16) >> 5;
+                grain = round2(top * w[sy][y][0] + grain * w[sy][y][1], 5);
                 grain = iclip(grain, grain_min, grain_max);
                 add_noise_uv(x, y, grain);
             }

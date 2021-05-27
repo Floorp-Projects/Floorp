@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
+ * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
@@ -43,9 +43,15 @@ enum PlaneType {
     PLANE_TYPE_ALL,
 };
 
+enum PictureFlags {
+    PICTURE_FLAG_NEW_SEQUENCE =       1 << 0,
+    PICTURE_FLAG_NEW_OP_PARAMS_INFO = 1 << 1,
+};
+
 typedef struct Dav1dThreadPicture {
     Dav1dPicture p;
     int visible;
+    enum PictureFlags flags;
     struct thread_data *t;
     // [0] block data (including segmentation map and motion vectors)
     // [1] pixel data
@@ -113,5 +119,10 @@ void dav1d_thread_picture_signal(const Dav1dThreadPicture *p, int y,
 int dav1d_default_picture_alloc(Dav1dPicture *p, void *cookie);
 void dav1d_default_picture_release(Dav1dPicture *p, void *cookie);
 void dav1d_picture_unref_internal(Dav1dPicture *p);
+
+/**
+ * Get event flags from picture flags.
+ */
+enum Dav1dEventFlags dav1d_picture_get_event_flags(const Dav1dThreadPicture *p);
 
 #endif /* DAV1D_SRC_PICTURE_H */

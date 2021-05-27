@@ -34,6 +34,12 @@
 #define UNIT_TEST 1
 #include "src/fg_apply_tmpl.c"
 
+#if BITDEPTH == 8
+#define checkasm_check_entry(...) checkasm_check(int8_t, __VA_ARGS__)
+#else
+#define checkasm_check_entry(...) checkasm_check(int16_t, __VA_ARGS__)
+#endif
+
 static const char ss_name[][4] = {
     [DAV1D_PIXEL_LAYOUT_I420 - 1] = "420",
     [DAV1D_PIXEL_LAYOUT_I422 - 1] = "422",
@@ -65,11 +71,9 @@ static void check_gen_grny(const Dav1dFilmGrainDSPContext *const dsp) {
 
             call_ref(grain_lut_c, fg_data HIGHBD_TAIL_SUFFIX);
             call_new(grain_lut_a, fg_data HIGHBD_TAIL_SUFFIX);
-            if (memcmp(grain_lut_c, grain_lut_a,
-                       GRAIN_WIDTH * GRAIN_HEIGHT * sizeof(entry)))
-            {
-                fail();
-            }
+            checkasm_check_entry(grain_lut_c[0], sizeof(entry) * GRAIN_WIDTH,
+                                 grain_lut_a[0], sizeof(entry) * GRAIN_WIDTH,
+                                 GRAIN_WIDTH, GRAIN_HEIGHT, "grain_lut");
 
             bench_new(grain_lut_a, fg_data HIGHBD_TAIL_SUFFIX);
         }
@@ -123,10 +127,11 @@ static void check_gen_grnuv(const Dav1dFilmGrainDSPContext *const dsp) {
                 memset(grain_lut_a, 0xff, sizeof(grain_lut_a));
                 call_ref(grain_lut_c, grain_lut_y, fg_data, uv HIGHBD_TAIL_SUFFIX);
                 call_new(grain_lut_a, grain_lut_y, fg_data, uv HIGHBD_TAIL_SUFFIX);
-                int diff = 0, w = ss_x ? 44 : GRAIN_WIDTH;
-                for (int y = 0; y < (ss_y ? 38 : GRAIN_HEIGHT); y++)
-                    diff |= memcmp(grain_lut_a[y], grain_lut_c[y], w * sizeof(entry));
-                if (diff) fail();
+                int w = ss_x ? 44 : GRAIN_WIDTH;
+                int h = ss_y ? 38 : GRAIN_HEIGHT;
+                checkasm_check_entry(grain_lut_c[0], sizeof(entry) * GRAIN_WIDTH,
+                                     grain_lut_a[0], sizeof(entry) * GRAIN_WIDTH,
+                                     w, h, "grain_lut");
 
                 bench_new(grain_lut_a, grain_lut_y, fg_data, uv HIGHBD_TAIL_SUFFIX);
             }
@@ -137,10 +142,10 @@ static void check_gen_grnuv(const Dav1dFilmGrainDSPContext *const dsp) {
 }
 
 static void check_fgy_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
-    ALIGN_STK_64(pixel, c_dst, 128 * 32,);
-    ALIGN_STK_64(pixel, a_dst, 128 * 32,);
-    ALIGN_STK_64(pixel, src, 128 * 32,);
-    const ptrdiff_t stride = 128 * sizeof(pixel);
+    PIXEL_RECT(c_dst, 128, 32);
+    PIXEL_RECT(a_dst, 128, 32);
+    PIXEL_RECT(src,   128, 32);
+    const ptrdiff_t stride = c_dst_stride;
 
     declare_func(void, pixel *dst_row, const pixel *src_row, ptrdiff_t stride,
                  const Dav1dFilmGrainData *data, size_t pw,
@@ -178,40 +183,56 @@ static void check_fgy_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
         generate_scaling(bitdepth_from_max(bitdepth_max), fg_data[0].y_points,
                          fg_data[0].num_y_points, scaling);
 
-        const int w = 1 + (rnd() & 127);
-        const int h = 1 + (rnd() & 31);
-
-        for (int y = 0; y < 32; y++)
-            for (int x = 0; x < 128; x++)
-                src[y * PXSTRIDE(stride) + x] = rnd() & bitdepth_max;
-        const int row_num = rnd() & 1 ? rnd() & 0x7ff : 0;
-
         fg_data[0].clip_to_restricted_range = rnd() & 1;
         fg_data[0].scaling_shift = (rnd() & 3) + 8;
         for (fg_data[0].overlap_flag = 0; fg_data[0].overlap_flag <= 1;
              fg_data[0].overlap_flag++)
         {
-            call_ref(c_dst, src, stride, fg_data, w, scaling, grain_lut, h,
-                     row_num HIGHBD_TAIL_SUFFIX);
-            call_new(a_dst, src, stride, fg_data, w, scaling, grain_lut, h,
-                     row_num HIGHBD_TAIL_SUFFIX);
+            for (int i = 0; i <= fg_data[0].overlap_flag; i++) {
+                int w, h, row_num;
+                if (fg_data[0].overlap_flag) {
+                    w = 35 + (rnd() % 93);
+                    h = 3 + (rnd() % 29);
+                    row_num = i ? 1 + (rnd() & 0x7ff) : 0;
+                } else {
+                    w = 1 + (rnd() & 127);
+                    h = 1 + (rnd() & 31);
+                    row_num = rnd() & 0x7ff;
+                }
 
-            checkasm_check_pixel(c_dst, stride, a_dst, stride, w, h, "dst");
+                for (int y = 0; y < 32; y++) {
+                    // Src pixels past the right edge can be uninitialized
+                    for (int x = 0; x < 128; x++)
+                        src[y * PXSTRIDE(stride) + x] = rnd();
+                    for (int x = 0; x < w; x++)
+                        src[y * PXSTRIDE(stride) + x] &= bitdepth_max;
+                }
+
+                CLEAR_PIXEL_RECT(c_dst);
+                CLEAR_PIXEL_RECT(a_dst);
+                call_ref(c_dst, src, stride, fg_data, w, scaling, grain_lut, h,
+                         row_num HIGHBD_TAIL_SUFFIX);
+                call_new(a_dst, src, stride, fg_data, w, scaling, grain_lut, h,
+                         row_num HIGHBD_TAIL_SUFFIX);
+
+                checkasm_check_pixel_padded_align(c_dst, stride, a_dst, stride,
+                                                  w, h, "dst", 32, 2);
+            }
         }
         fg_data[0].overlap_flag = 1;
         bench_new(a_dst, src, stride, fg_data, 64, scaling, grain_lut, 32,
-                  row_num HIGHBD_TAIL_SUFFIX);
+                  1 HIGHBD_TAIL_SUFFIX);
     }
 
     report("fgy_32x32xn");
 }
 
 static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
-    ALIGN_STK_64(pixel, c_dst, 128 * 32,);
-    ALIGN_STK_64(pixel, a_dst, 128 * 32,);
-    ALIGN_STK_64(pixel, src, 128 * 32,);
-    ALIGN_STK_64(pixel, luma_src, 128 * 32,);
-    const ptrdiff_t lstride = 128 * sizeof(pixel);
+    PIXEL_RECT(c_dst,    128, 32);
+    PIXEL_RECT(a_dst,    128, 32);
+    PIXEL_RECT(src,      128, 32);
+    PIXEL_RECT(luma_src, 128, 32);
+    const ptrdiff_t lstride = luma_src_stride;
 
     declare_func(void, pixel *dst_row, const pixel *src_row, ptrdiff_t stride,
                  const Dav1dFilmGrainData *data, size_t pw,
@@ -224,7 +245,7 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
         const enum Dav1dPixelLayout layout = layout_idx + 1;
         const int ss_x = layout != DAV1D_PIXEL_LAYOUT_I444;
         const int ss_y = layout == DAV1D_PIXEL_LAYOUT_I420;
-        const ptrdiff_t stride = (ss_x ? 96 : 128) * sizeof(pixel);
+        const ptrdiff_t stride = c_dst_stride;
 
         for (int csfl = 0; csfl <= 1; csfl++) {
             if (check_func(dsp->fguv_32x32xn[layout_idx],
@@ -258,17 +279,6 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
                 dsp->generate_grain_uv[layout_idx](grain_lut[1], grain_lut[0],
                                                    fg_data, uv_pl HIGHBD_TAIL_SUFFIX);
 
-                const int w = 1 + (rnd() & (127 >> ss_x));
-                const int h = 1 + (rnd() & (31 >> ss_y));
-
-                for (int y = 0; y < 32; y++)
-                    for (int x = 0; x < 128; x++)
-                        src[y * PXSTRIDE(stride) + x] = rnd() & bitdepth_max;
-                for (int y = 0; y < 32; y++)
-                    for (int x = 0; x < 128; x++)
-                        luma_src[y * PXSTRIDE(lstride) + x] = rnd() & bitdepth_max;
-                const int row_num = rnd() & 1 ? rnd() & 0x7ff : 0;
-
                 if (csfl) {
                     fg_data[0].num_y_points = 2 + (rnd() % 13);
                     const int pad = 0xff / fg_data[0].num_y_points;
@@ -301,17 +311,47 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
                 for (fg_data[0].overlap_flag = 0; fg_data[0].overlap_flag <= 1;
                      fg_data[0].overlap_flag++)
                 {
-                    call_ref(c_dst, src, stride, fg_data, w, scaling, grain_lut[1], h,
-                             row_num, luma_src, lstride, uv_pl, is_identity HIGHBD_TAIL_SUFFIX);
-                    call_new(a_dst, src, stride, fg_data, w, scaling, grain_lut[1], h,
-                             row_num, luma_src, lstride, uv_pl, is_identity HIGHBD_TAIL_SUFFIX);
+                    for (int i = 0; i <= fg_data[0].overlap_flag; i++) {
+                        int w, h, row_num;
+                        if (fg_data[0].overlap_flag) {
+                            w = (36 >> ss_x) + (rnd() % (92 >> ss_x));
+                            h = (4 >> ss_y) + (rnd() % (28 >> ss_y));
+                            row_num = i ? 1 + (rnd() & 0x7ff) : 0;
+                        } else {
+                            w = 1 + (rnd() & (127 >> ss_x));
+                            h = 1 + (rnd() & (31 >> ss_y));
+                            row_num = rnd() & 0x7ff;
+                        }
 
-                    checkasm_check_pixel(c_dst, stride, a_dst, stride, w, h, "dst");
+                        for (int y = 0; y < 32; y++) {
+                            // Src pixels past the right edge can be uninitialized
+                            for (int x = 0; x < 128; x++) {
+                                src[y * PXSTRIDE(stride) + x] = rnd();
+                                luma_src[y * PXSTRIDE(lstride) + x] = rnd();
+                            }
+                            for (int x = 0; x < w; x++)
+                                src[y * PXSTRIDE(stride) + x] &= bitdepth_max;
+                            for (int x = 0; x < (w << ss_x); x++)
+                                luma_src[y * PXSTRIDE(lstride) + x] &= bitdepth_max;
+                        }
+
+                        CLEAR_PIXEL_RECT(c_dst);
+                        CLEAR_PIXEL_RECT(a_dst);
+                        call_ref(c_dst, src, stride, fg_data, w, scaling, grain_lut[1], h,
+                                 row_num, luma_src, lstride, uv_pl, is_identity HIGHBD_TAIL_SUFFIX);
+                        call_new(a_dst, src, stride, fg_data, w, scaling, grain_lut[1], h,
+                                 row_num, luma_src, lstride, uv_pl, is_identity HIGHBD_TAIL_SUFFIX);
+
+                        checkasm_check_pixel_padded_align(c_dst, stride,
+                                                          a_dst, stride,
+                                                          w, h, "dst",
+                                                          32 >> ss_x, 2);
+                    }
                 }
 
                 fg_data[0].overlap_flag = 1;
                 bench_new(a_dst, src, stride, fg_data, 32, scaling, grain_lut[1], 16,
-                          row_num, luma_src, lstride, uv_pl, is_identity HIGHBD_TAIL_SUFFIX);
+                          1, luma_src, lstride, uv_pl, is_identity HIGHBD_TAIL_SUFFIX);
             }
         }
     }

@@ -56,26 +56,29 @@ decl_itx_fn(dav1d_inv_txfm_add_identity_flipadst_##w##x##h##_##opt)
 decl_itx16_fns(w, h, opt); \
 decl_itx_fn(dav1d_inv_txfm_add_wht_wht_##w##x##h##_##opt)
 
-decl_itx17_fns( 4,  4, avx2);
-decl_itx16_fns( 4,  8, avx2);
-decl_itx16_fns( 4, 16, avx2);
-decl_itx16_fns( 8,  4, avx2);
-decl_itx16_fns( 8,  8, avx2);
-decl_itx16_fns( 8, 16, avx2);
-decl_itx2_fns ( 8, 32, avx2);
-decl_itx16_fns(16,  4, avx2);
-decl_itx16_fns(16,  8, avx2);
-decl_itx12_fns(16, 16, avx2);
-decl_itx2_fns (16, 32, avx2);
-decl_itx2_fns (32,  8, avx2);
-decl_itx2_fns (32, 16, avx2);
-decl_itx2_fns (32, 32, avx2);
+#define avx2_fns(avx2) \
+decl_itx17_fns( 4,  4, avx2); \
+decl_itx16_fns( 4,  8, avx2); \
+decl_itx16_fns( 4, 16, avx2); \
+decl_itx16_fns( 8,  4, avx2); \
+decl_itx16_fns( 8,  8, avx2); \
+decl_itx16_fns( 8, 16, avx2); \
+decl_itx2_fns ( 8, 32, avx2); \
+decl_itx16_fns(16,  4, avx2); \
+decl_itx16_fns(16,  8, avx2); \
+decl_itx12_fns(16, 16, avx2); \
+decl_itx2_fns (16, 32, avx2); \
+decl_itx2_fns (32,  8, avx2); \
+decl_itx2_fns (32, 16, avx2); \
+decl_itx2_fns (32, 32, avx2); \
+decl_itx_fn(dav1d_inv_txfm_add_dct_dct_16x64_##avx2); \
+decl_itx_fn(dav1d_inv_txfm_add_dct_dct_32x64_##avx2); \
+decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x16_##avx2); \
+decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x32_##avx2); \
+decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x64_##avx2)
 
-decl_itx_fn(dav1d_inv_txfm_add_dct_dct_16x64_avx2);
-decl_itx_fn(dav1d_inv_txfm_add_dct_dct_32x64_avx2);
-decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x16_avx2);
-decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x32_avx2);
-decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x64_avx2);
+avx2_fns(avx2);
+avx2_fns(16bpc_avx2);
 
 decl_itx17_fns( 4,  4, ssse3);
 decl_itx16_fns( 4,  8, ssse3);
@@ -98,7 +101,11 @@ decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x16_ssse3);
 decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x32_ssse3);
 decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x64_ssse3);
 
-COLD void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c) {
+decl_itx_fn(dav1d_inv_txfm_add_wht_wht_4x4_16bpc_sse2);
+
+COLD void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c,
+                                        const int bpc)
+{
 #define assign_itx_fn(pfx, w, h, type, type_enum, ext) \
     c->itxfm_add[pfx##TX_##w##X##h][type_enum] = \
         dav1d_inv_txfm_add_##type##_##w##x##h##_##ext
@@ -134,8 +141,13 @@ COLD void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c) {
     assign_itx16_fn(pfx, w, h, ext); \
     assign_itx_fn(pfx, w, h, wht_wht,           WHT_WHT,           ext)
 
-
     const unsigned flags = dav1d_get_cpu_flags();
+
+    if (!(flags & DAV1D_X86_CPU_FLAG_SSE2)) return;
+
+#if BITDEPTH == 16
+    assign_itx_fn(, 4, 4, wht_wht, WHT_WHT, 16bpc_sse2);
+#endif
 
     if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;
 
@@ -163,25 +175,36 @@ COLD void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c) {
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
 
-#if BITDEPTH == 8 && ARCH_X86_64
-    assign_itx17_fn( ,  4,  4, avx2);
-    assign_itx16_fn(R,  4,  8, avx2);
-    assign_itx16_fn(R,  4, 16, avx2);
-    assign_itx16_fn(R,  8,  4, avx2);
-    assign_itx16_fn( ,  8,  8, avx2);
-    assign_itx16_fn(R,  8, 16, avx2);
-    assign_itx2_fn (R,  8, 32, avx2);
-    assign_itx16_fn(R, 16,  4, avx2);
-    assign_itx16_fn(R, 16,  8, avx2);
-    assign_itx12_fn( , 16, 16, avx2);
-    assign_itx2_fn (R, 16, 32, avx2);
-    assign_itx1_fn (R, 16, 64, avx2);
-    assign_itx2_fn (R, 32,  8, avx2);
-    assign_itx2_fn (R, 32, 16, avx2);
-    assign_itx2_fn ( , 32, 32, avx2);
-    assign_itx1_fn (R, 32, 64, avx2);
-    assign_itx1_fn (R, 64, 16, avx2);
-    assign_itx1_fn (R, 64, 32, avx2);
-    assign_itx1_fn ( , 64, 64, avx2);
+#if ARCH_X86_64 && BITDEPTH == 16
+    assign_itx_fn(, 4, 4, wht_wht, WHT_WHT, 16bpc_avx2);
+#endif
+
+    if (bpc > 10) return;
+
+#if ARCH_X86_64
+#if BITDEPTH == 8
+#define SUFFIX avx2
+#else
+#define SUFFIX 16bpc_avx2
+#endif
+    assign_itx17_fn( ,  4,  4, SUFFIX);
+    assign_itx16_fn(R,  4,  8, SUFFIX);
+    assign_itx16_fn(R,  4, 16, SUFFIX);
+    assign_itx16_fn(R,  8,  4, SUFFIX);
+    assign_itx16_fn( ,  8,  8, SUFFIX);
+    assign_itx16_fn(R,  8, 16, SUFFIX);
+    assign_itx2_fn (R,  8, 32, SUFFIX);
+    assign_itx16_fn(R, 16,  4, SUFFIX);
+    assign_itx16_fn(R, 16,  8, SUFFIX);
+    assign_itx12_fn( , 16, 16, SUFFIX);
+    assign_itx2_fn (R, 16, 32, SUFFIX);
+    assign_itx1_fn (R, 16, 64, SUFFIX);
+    assign_itx2_fn (R, 32,  8, SUFFIX);
+    assign_itx2_fn (R, 32, 16, SUFFIX);
+    assign_itx2_fn ( , 32, 32, SUFFIX);
+    assign_itx1_fn (R, 32, 64, SUFFIX);
+    assign_itx1_fn (R, 64, 16, SUFFIX);
+    assign_itx1_fn (R, 64, 32, SUFFIX);
+    assign_itx1_fn ( , 64, 64, SUFFIX);
 #endif
 }

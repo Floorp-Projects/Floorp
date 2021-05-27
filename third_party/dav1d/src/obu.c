@@ -1249,11 +1249,13 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
         // If we have read a sequence header which is different from
         // the old one, this is a new video sequence and can't use any
         // previous state. Free that state.
-        if (!c->seq_hdr)
+
+        if (!c->seq_hdr) {
             c->frame_hdr = NULL;
+            c->frame_flags |= PICTURE_FLAG_NEW_SEQUENCE;
         // see 7.5, operating_parameter_info is allowed to change in
         // sequence headers of a single sequence
-        else if (memcmp(seq_hdr, c->seq_hdr, offsetof(Dav1dSequenceHeader, operating_parameter_info))) {
+        } else if (memcmp(seq_hdr, c->seq_hdr, offsetof(Dav1dSequenceHeader, operating_parameter_info))) {
             c->frame_hdr = NULL;
             c->mastering_display = NULL;
             c->content_light = NULL;
@@ -1266,6 +1268,12 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
                 dav1d_ref_dec(&c->refs[i].refmvs);
                 dav1d_cdf_thread_unref(&c->cdf[i]);
             }
+            c->frame_flags |= PICTURE_FLAG_NEW_SEQUENCE;
+        // If operating_parameter_info changed, signal it
+        } else if (memcmp(seq_hdr->operating_parameter_info, c->seq_hdr->operating_parameter_info,
+                          sizeof(seq_hdr->operating_parameter_info)))
+        {
+            c->frame_flags |= PICTURE_FLAG_NEW_OP_PARAMS_INFO;
         }
         dav1d_ref_dec(&c->seq_hdr_ref);
         c->seq_hdr_ref = ref;
@@ -1537,6 +1545,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
                 dav1d_picture_ref(&c->out,
                                   &c->refs[c->frame_hdr->existing_frame_idx].p.p);
                 dav1d_data_props_copy(&c->out.m, &in->m);
+                c->event_flags |= dav1d_picture_get_event_flags(&c->refs[c->frame_hdr->existing_frame_idx].p);
             } else {
                 // need to append this to the frame output queue
                 const unsigned next = c->frame_thread.next++;
@@ -1553,8 +1562,10 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
                 if (out_delayed->p.data[0]) {
                     const unsigned progress = atomic_load_explicit(&out_delayed->progress[1],
                                                                    memory_order_relaxed);
-                    if (out_delayed->visible && progress != FRAME_ERROR)
+                    if (out_delayed->visible && progress != FRAME_ERROR) {
                         dav1d_picture_ref(&c->out, &out_delayed->p);
+                        c->event_flags |= dav1d_picture_get_event_flags(out_delayed);
+                    }
                     dav1d_thread_picture_unref(out_delayed);
                 }
                 dav1d_thread_picture_ref(out_delayed,

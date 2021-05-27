@@ -1,3 +1,15 @@
+Changes for 0.9.0 'Golden Eagle':
+---------------------------------
+
+0.9.0 is a major version of dav1d, adding notably 10b acceleration on x64.
+
+Details:
+ - x86 (64bit) AVX2 implementation of most 10b/12b functions, which should provide
+   a large boost for high-bitdepth decoding on modern x86 computers and servers.
+ - ARM64 neon implementation of FilmGrain (4:2:0/4:2:2/4:4:4 8bit)
+ - New API to signal events happening during the decoding process
+
+
 Changes for 0.8.2 'Eurasian hobby':
 -----------------------------------
 

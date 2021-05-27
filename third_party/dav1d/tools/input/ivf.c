@@ -66,13 +66,12 @@ static int64_t rl64(const uint8_t *const p) {
 static int ivf_open(IvfInputContext *const c, const char *const file,
                     unsigned fps[2], unsigned *const num_frames, unsigned timebase[2])
 {
-    size_t res;
     uint8_t hdr[32];
 
     if (!(c->f = fopen(file, "rb"))) {
         fprintf(stderr, "Failed to open %s: %s\n", file, strerror(errno));
         return -1;
-    } else if ((res = fread(hdr, 32, 1, c->f)) != 1) {
+    } else if (fread(hdr, 32, 1, c->f) != 1) {
         fprintf(stderr, "Failed to read stream header: %s\n", strerror(errno));
         fclose(c->f);
         return -1;
@@ -95,9 +94,9 @@ static int ivf_open(IvfInputContext *const c, const char *const file,
     uint8_t data[8];
     c->broken = 0;
     for (*num_frames = 0;; (*num_frames)++) {
-        if ((res = fread(data, 4, 1, c->f)) != 1) break; // EOF
+        if (fread(data, 4, 1, c->f) != 1) break; // EOF
         size_t sz = rl32(data);
-        if ((res = fread(data, 8, 1, c->f)) != 1) break; // EOF
+        if (fread(data, 8, 1, c->f) != 1) break; // EOF
         const uint64_t ts = rl64(data);
         if (*num_frames && ts <= c->last_ts)
             c->broken = 1;
