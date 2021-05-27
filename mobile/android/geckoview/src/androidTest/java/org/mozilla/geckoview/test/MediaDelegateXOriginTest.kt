@@ -7,7 +7,6 @@ package org.mozilla.geckoview.test
 
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import android.util.Log
 import org.hamcrest.Matchers
 import org.json.JSONObject
 import org.junit.Test
@@ -151,6 +150,9 @@ class MediaDelegateXOriginTest : BaseSessionTest() {
     @Test fun testDeviceRecordingEventAudioAndVideoInXOriginIframe() {
         // TODO: Bug 1648153
         assumeThat(sessionRule.env.isFission, Matchers.equalTo(false))
+
+        // TODO: needs bug 1700243
+        assumeThat(sessionRule.env.isIsolatedProcess, Matchers.equalTo(false))
 
         mainSession.loadTestPath(GETUSERMEDIA_XORIGIN_CONTAINER_HTML_PATH)
         mainSession.waitForPageStop()

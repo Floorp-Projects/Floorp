@@ -6,19 +6,14 @@ package org.mozilla.geckoview.test
 
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import android.util.Log
-
 import org.hamcrest.Matchers.*
-import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.Assume.assumeThat
-import org.junit.Assume.assumeTrue
 
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.util.Callbacks
 
 import org.mozilla.geckoview.GeckoResult
@@ -79,6 +74,9 @@ class MediaSessionTest : BaseSessionTest() {
 
     @Test
     fun domMetadataPlayback() {
+        // TODO: needs bug 1700243
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
         val onActivatedCalled = arrayOf(GeckoResult<Void>())
         val onMetadataCalled = arrayOf(
                 GeckoResult<Void>(),
@@ -309,6 +307,9 @@ class MediaSessionTest : BaseSessionTest() {
 
     @Test
     fun defaultMetadataPlayback() {
+        // TODO: needs bug 1700243
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
         val onActivatedCalled = arrayOf(GeckoResult<Void>())
         val onPlayCalled = arrayOf(GeckoResult<Void>(),
                 GeckoResult<Void>(),
@@ -392,6 +393,9 @@ class MediaSessionTest : BaseSessionTest() {
 
     @Test
     fun domMultiSessions() {
+        // TODO: needs bug 1700243
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
         val onActivatedCalled = arrayOf(
                 arrayOf(GeckoResult<Void>()),
                 arrayOf(GeckoResult<Void>()))
@@ -677,6 +681,9 @@ class MediaSessionTest : BaseSessionTest() {
 
     @Test
     fun fullscreenVideoElementMetadata() {
+        // TODO: bug 1706656
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "media.autoplay.default" to 0,
                 "full-screen-api.allow-trusted-requests-only" to false))
