@@ -1794,19 +1794,6 @@ class MReturn : public MAryControlInstruction<1, 0>,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-class MThrow : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  explicit MThrow(MDefinition* ins) : MUnaryInstruction(classOpcode, ins) {}
-
- public:
-  INSTRUCTION_HEADER(Throw)
-  TRIVIAL_NEW_WRAPPERS
-
-  virtual AliasSet getAliasSet() const override {
-    return AliasSet::Store(AliasSet::ExceptionState);
-  }
-  bool possiblyCalls() const override { return true; }
-};
-
 class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
  private:
   // Number of elements to allocate for the array.
@@ -2272,22 +2259,6 @@ class MArrayState : public MVariadicInstruction,
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
-};
-
-// Setting __proto__ in an object literal.
-class MMutateProto : public MBinaryInstruction,
-                     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
-  MMutateProto(MDefinition* obj, MDefinition* value)
-      : MBinaryInstruction(classOpcode, obj, value) {
-    setResultType(MIRType::None);
-  }
-
- public:
-  INSTRUCTION_HEADER(MutateProto)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, getObject), (1, getValue))
-
-  bool possiblyCalls() const override { return true; }
 };
 
 class MInitPropGetterSetter
@@ -3035,28 +3006,6 @@ class MCreateThisWithTemplate : public MUnaryInstruction,
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override;
-};
-
-// Caller-side allocation of |this| for |new|:
-// Constructs |this| when possible, else MagicValue(JS_IS_CONSTRUCTING).
-class MCreateThis : public MBinaryInstruction,
-                    public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>>::Data {
-  explicit MCreateThis(MDefinition* callee, MDefinition* newTarget)
-      : MBinaryInstruction(classOpcode, callee, newTarget) {
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(CreateThis)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, getCallee), (1, getNewTarget))
-
-  // Performs a property read from |newTarget| iff |newTarget| is a JSFunction
-  // with an own |.prototype| property.
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::Any);
-  }
-  bool possiblyCalls() const override { return true; }
 };
 
 // Eager initialization of arguments object.
@@ -7775,26 +7724,6 @@ class MArraySlice : public MTernaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
-class MArrayJoin : public MBinaryInstruction,
-                   public MixPolicy<ObjectPolicy<0>, StringPolicy<1>>::Data {
-  MArrayJoin(MDefinition* array, MDefinition* sep)
-      : MBinaryInstruction(classOpcode, array, sep) {
-    setResultType(MIRType::String);
-  }
-
- public:
-  INSTRUCTION_HEADER(ArrayJoin)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, array), (1, sep))
-
-  // MArrayJoin doesn't override |getAliasSet()|, because Array.prototype.join
-  // might coerce the elements of the Array to strings. This coercion might
-  // cause the evaluation of JavaScript code.
-
-  bool possiblyCalls() const override { return true; }
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-};
-
 // All barriered operations - MCompareExchangeTypedArrayElement,
 // MExchangeTypedArrayElement, and MAtomicTypedArrayElementBinop, as
 // well as MLoadUnboxedScalar and MStoreUnboxedScalar when they are
@@ -11085,22 +11014,6 @@ class MCheckIsObj : public MUnaryInstruction, public BoxInputsPolicy::Data {
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
   AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
-class MObjectWithProto : public MUnaryInstruction,
-                         public BoxInputsPolicy::Data {
-  explicit MObjectWithProto(MDefinition* prototype)
-      : MUnaryInstruction(classOpcode, prototype) {
-    setResultType(MIRType::Object);
-    setGuard();  // May throw if prototype is neither an object nor null.
-  }
-
- public:
-  INSTRUCTION_HEADER(ObjectWithProto)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, prototype))
-
-  bool possiblyCalls() const override { return true; }
 };
 
 // Used to load the prototype of an object known to have

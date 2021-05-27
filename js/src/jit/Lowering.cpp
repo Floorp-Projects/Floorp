@@ -243,7 +243,7 @@ void LIRGenerator::visitInitElemGetterSetter(MInitElemGetterSetter* ins) {
 
 void LIRGenerator::visitMutateProto(MMutateProto* ins) {
   LMutateProto* lir = new (alloc()) LMutateProto(
-      useRegisterAtStart(ins->getObject()), useBoxAtStart(ins->getValue()));
+      useRegisterAtStart(ins->object()), useBoxAtStart(ins->value()));
   add(lir, ins);
   assignSafepoint(lir, ins);
 }
@@ -262,9 +262,9 @@ void LIRGenerator::visitCreateThisWithTemplate(MCreateThisWithTemplate* ins) {
 }
 
 void LIRGenerator::visitCreateThis(MCreateThis* ins) {
-  LCreateThis* lir = new (alloc())
-      LCreateThis(useRegisterOrConstantAtStart(ins->getCallee()),
-                  useRegisterOrConstantAtStart(ins->getNewTarget()));
+  LCreateThis* lir =
+      new (alloc()) LCreateThis(useRegisterOrConstantAtStart(ins->callee()),
+                                useRegisterOrConstantAtStart(ins->newTarget()));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

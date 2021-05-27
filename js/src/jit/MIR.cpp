@@ -630,6 +630,10 @@ MDefinition* MTest::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+AliasSet MThrow::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ExceptionState);
+}
+
 #ifdef JS_JITSPEW
 void MDefinition::printOpcode(GenericPrinter& out) const {
   PrintOpcodeName(out, op());
@@ -4089,6 +4093,10 @@ void MBeta::printOpcode(GenericPrinter& out) const {
 bool MCreateThisWithTemplate::canRecoverOnBailout() const {
   MOZ_ASSERT(templateObject()->is<PlainObject>());
   return true;
+}
+
+AliasSet MCreateThis::getAliasSet() const {
+  return AliasSet::Load(AliasSet::Any);
 }
 
 MObjectState::MObjectState(MObjectState* state)
