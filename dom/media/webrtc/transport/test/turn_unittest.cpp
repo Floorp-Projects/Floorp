@@ -128,7 +128,7 @@ class TurnClient : public MtransportTest {
     Data password;
     INIT_DATA(password, &password_vec[0], password_vec.size());
     r = nr_turn_client_ctx_create("test", net_socket_, turn_user_.c_str(),
-                                  &password, &addr, &turn_ctx_);
+                                  &password, &addr, nullptr, &turn_ctx_);
     ASSERT_EQ(0, r);
 
     r = nr_socket_getfd(net_socket_, &net_fd_);
