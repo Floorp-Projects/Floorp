@@ -6646,6 +6646,29 @@ void nsGlobalWindowInner::AddSizeOfIncludingThis(
   }
 }
 
+void nsGlobalWindowInner::RegisterDataDocumentForMemoryReporting(
+    Document* aDocument) {
+  aDocument->SetAddedToMemoryReportAsDataDocument();
+  mDataDocumentsForMemoryReporting.AppendElement(
+      do_GetWeakReference(aDocument));
+}
+
+void nsGlobalWindowInner::UnregisterDataDocumentForMemoryReporting(
+    Document* aDocument) {
+  nsWeakPtr doc = do_GetWeakReference(aDocument);
+  MOZ_ASSERT(mDataDocumentsForMemoryReporting.Contains(doc));
+  mDataDocumentsForMemoryReporting.RemoveElement(doc);
+}
+
+void nsGlobalWindowInner::CollectDOMSizesForDataDocuments(
+    nsWindowSizes& aSize) const {
+  for (const nsWeakPtr& ptr : mDataDocumentsForMemoryReporting) {
+    if (nsCOMPtr<Document> doc = do_QueryReferent(ptr)) {
+      doc->DocAddSizeOfIncludingThis(aSize);
+    }
+  }
+}
+
 void nsGlobalWindowInner::AddGamepad(GamepadHandle aHandle, Gamepad* aGamepad) {
   // Create the index we will present to content based on which indices are
   // already taken, as required by the spec.
