@@ -755,19 +755,23 @@ nsresult NrIceCtx::SetStunServers(
     const std::vector<NrIceStunServer>& stun_servers) {
   if (stun_servers.empty()) return NS_OK;
 
-  auto servers = MakeUnique<nr_ice_stun_server[]>(stun_servers.size());
+  // We assume nr_ice_stun_server is memmoveable. That's true right now.
+  std::vector<nr_ice_stun_server> servers;
 
   for (size_t i = 0; i < stun_servers.size(); ++i) {
-    nsresult rv = stun_servers[i].ToNicerStunStruct(&servers[i]);
-    if (NS_FAILED(rv)) {
-      MOZ_MTLOG(ML_ERROR, "Couldn't set STUN server for '" << name_ << "'");
-      return NS_ERROR_FAILURE;
+    nr_ice_stun_server server;
+    nsresult rv = stun_servers[i].ToNicerStunStruct(&server);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_MTLOG(ML_ERROR, "Couldn't convert STUN server for '" << name_ << "'");
+    } else {
+      servers.push_back(server);
     }
   }
 
-  int r = nr_ice_ctx_set_stun_servers(ctx_, servers.get(), stun_servers.size());
+  int r = nr_ice_ctx_set_stun_servers(ctx_, &servers[0],
+                                      static_cast<int>(servers.size()));
   if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't set STUN server for '" << name_ << "'");
+    MOZ_MTLOG(ML_ERROR, "Couldn't set STUN servers for '" << name_ << "'");
     return NS_ERROR_FAILURE;
   }
 
@@ -780,23 +784,26 @@ nsresult NrIceCtx::SetTurnServers(
     const std::vector<NrIceTurnServer>& turn_servers) {
   if (turn_servers.empty()) return NS_OK;
 
-  auto servers = MakeUnique<nr_ice_turn_server[]>(turn_servers.size());
+  // We assume nr_ice_turn_server is memmoveable. That's true right now.
+  std::vector<nr_ice_turn_server> servers;
 
   for (size_t i = 0; i < turn_servers.size(); ++i) {
-    nsresult rv = turn_servers[i].ToNicerTurnStruct(&servers[i]);
-    if (NS_FAILED(rv)) {
-      MOZ_MTLOG(ML_ERROR, "Couldn't set TURN server for '" << name_ << "'");
-      return NS_ERROR_FAILURE;
+    nr_ice_turn_server server;
+    nsresult rv = turn_servers[i].ToNicerTurnStruct(&server);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_MTLOG(ML_ERROR, "Couldn't convert TURN server for '" << name_ << "'");
+    } else {
+      servers.push_back(server);
     }
   }
 
-  int r = nr_ice_ctx_set_turn_servers(ctx_, servers.get(), turn_servers.size());
+  int r = nr_ice_ctx_set_turn_servers(ctx_, &servers[0],
+                                      static_cast<int>(servers.size()));
   if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't set TURN server for '" << name_ << "'");
+    MOZ_MTLOG(ML_ERROR, "Couldn't set TURN servers for '" << name_ << "'");
+    // TODO(ekr@rtfm.com): This leaks the username/password. Need to free that.
     return NS_ERROR_FAILURE;
   }
-
-  // TODO(ekr@rtfm.com): This leaks the username/password. Need to free that.
 
   return NS_OK;
 }
