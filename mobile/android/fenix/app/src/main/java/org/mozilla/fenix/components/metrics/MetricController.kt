@@ -20,7 +20,7 @@ import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.downloads.facts.DownloadsFacts
 import mozilla.components.feature.findinpage.facts.FindInPageFacts
 import mozilla.components.feature.media.facts.MediaFacts
-import mozilla.components.feature.prompts.dialog.LoginDialogFacts
+import mozilla.components.feature.prompts.facts.LoginDialogFacts
 import mozilla.components.feature.pwa.ProgressiveWebAppFacts
 import mozilla.components.feature.syncedtabs.facts.SyncedTabsFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
