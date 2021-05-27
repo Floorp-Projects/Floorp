@@ -153,7 +153,7 @@ class RecordingFile:
     def generate_zip_file(self):
         self.update_metadata()
         with open(self._get_temp_path(self._metadata_path), "w") as metadata_file:
-            json.dump(self._metadata, metadata_file)
+            json.dump(self._metadata, metadata_file, sort_keys=True, indent=4)
 
         with ZipFile(self._recording_zip_path, "w") as zf:
             zf.write(self._metadata_path, "metadata.json")

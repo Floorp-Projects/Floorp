@@ -28,13 +28,25 @@ except ImportError:
 
 from mozlog import get_proxy_logger
 from mozprocess import ProcessHandler
-from mozproxy import mozharness_dir
+from mozproxy import mozharness_dir, mozbase_dir
 
 
 LOG = get_proxy_logger(component="mozproxy")
 
 # running locally via mach
-TOOLTOOL_PATHS = [os.path.join(mozharness_dir, "external_tools", "tooltool.py")]
+TOOLTOOL_PATHS = [
+    os.path.join(mozharness_dir, "external_tools", "tooltool.py"),
+    os.path.join(
+        mozbase_dir,
+        "..",
+        "..",
+        "python",
+        "mozbuild",
+        "mozbuild",
+        "action",
+        "tooltool.py",
+    ),
+]
 
 if "MOZ_UPLOAD_DIR" in os.environ:
     TOOLTOOL_PATHS.append(
@@ -90,7 +102,6 @@ def tooltool_download(manifest, run_local, raptor_dir):
         if os.path.exists(os.path.dirname(path)):
             tooltool_path = path
             break
-
     if tooltool_path is None:
         raise Exception("Could not find tooltool path!")
 
