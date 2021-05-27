@@ -41,8 +41,10 @@ void RenderPipeline::Cleanup() {
 
 already_AddRefed<BindGroupLayout> RenderPipeline::GetBindGroupLayout(
     uint32_t index) const {
-  RefPtr<BindGroupLayout> object =
-      new BindGroupLayout(mParent, mImplicitBindGroupLayoutIds[index], false);
+  const RawId id = index < mImplicitBindGroupLayoutIds.Length()
+                       ? mImplicitBindGroupLayoutIds[index]
+                       : 0;
+  RefPtr<BindGroupLayout> object = new BindGroupLayout(mParent, id, false);
   return object.forget();
 }
 
