@@ -789,9 +789,9 @@ function createUserContextMenu(
       bundle.GetStringFromName("userContextNone.accesskey")
     );
 
-    // We don't set an oncommand/command attribute because if we have
-    // to exclude a userContextId we are generating the contextMenu and
-    // isContextMenu will be true.
+    if (!isContextMenu) {
+      menuitem.setAttribute("command", "Browser:NewUserContextTab");
+    }
 
     docfrag.appendChild(menuitem);
 
