@@ -292,3 +292,34 @@ addAccessibleTask(
   },
   { iframe: true, remoteIframe: true }
 );
+
+// Test owning an ancestor which isn't created yet with an iframe in the
+// subtree.
+addAccessibleTask(
+  `
+  <span id="a">
+    <div id="b" aria-owns="c"></div>
+  </span>
+  <div id="c">
+    <iframe></iframe>
+  </div>
+  <script>
+    document.getElementById("c").setAttribute("aria-owns", "a");
+  </script>
+  `,
+  async function(browser, accDoc) {
+    testAccessibleTree(accDoc, {
+      DOCUMENT: [
+        {
+          // b
+          SECTION: [
+            {
+              // c
+              SECTION: [{ INTERNAL_FRAME: [{ DOCUMENT: [] }] }],
+            },
+          ],
+        },
+      ],
+    });
+  }
+);
