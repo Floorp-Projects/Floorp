@@ -287,7 +287,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBRequest,
                                                 DOMEventTargetHelper)
-  tmp->mResultVal.setUndefined();
   mozilla::DropJSObjects(tmp);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourceAsObjectStore)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourceAsIndex)

@@ -106,7 +106,7 @@ class SharedMutex {
 
 nsString ComputeWorkerPrivateId();
 
-class WorkerPrivate : public RelativeTimeline {
+class WorkerPrivate final : public RelativeTimeline {
  public:
   struct LocationInfo {
     nsCString mHref;

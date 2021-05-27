@@ -28,7 +28,6 @@ PushSubscriptionOptions::PushSubscriptionOptions(
 }
 
 PushSubscriptionOptions::~PushSubscriptionOptions() {
-  mAppServerKey = nullptr;
   mozilla::DropJSObjects(this);
 }
 

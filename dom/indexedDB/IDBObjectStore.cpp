@@ -479,7 +479,6 @@ IDBObjectStore::~IDBObjectStore() {
   AssertIsOnOwningThread();
 
   if (mRooted) {
-    mCachedKeyPath.setUndefined();
     mozilla::DropJSObjects(this);
   }
 }

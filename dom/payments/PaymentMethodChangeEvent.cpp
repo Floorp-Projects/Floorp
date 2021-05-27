@@ -15,7 +15,6 @@ namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(PaymentMethodChangeEvent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PaymentMethodChangeEvent,
                                                 PaymentRequestUpdateEvent)
-  tmp->mMethodDetails = nullptr;
   mozilla::DropJSObjects(tmp);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
