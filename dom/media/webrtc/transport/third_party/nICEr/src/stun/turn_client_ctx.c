@@ -92,6 +92,33 @@ static int nr_turn_client_send_stun_request(nr_turn_client_ctx *ctx,
                                             nr_stun_message *req,
                                             int flags);
 
+int nr_transport_addr_listnode_create(const nr_transport_addr *addr, nr_transport_addr_listnode **listnodep)
+{
+  nr_transport_addr_listnode *listnode = 0;
+  int r,_status;
+
+  if (!(listnode=RCALLOC(sizeof(nr_transport_addr_listnode)))) {
+    ABORT(R_NO_MEMORY);
+  }
+
+  if ((r = nr_transport_addr_copy(&listnode->value, addr))) {
+    ABORT(r);
+  }
+
+  *listnodep = listnode;
+  listnode = 0;
+  _status = 0;
+
+abort:
+  nr_transport_addr_listnode_destroy(&listnode);
+  return(_status);
+}
+
+void nr_transport_addr_listnode_destroy(nr_transport_addr_listnode **listnode)
+{
+  RFREE(*listnode);
+  *listnode = 0;
+}
 
 /* nr_turn_stun_ctx functions */
 static int nr_turn_stun_ctx_create(nr_turn_client_ctx *tctx, int mode,
@@ -126,6 +153,7 @@ static int nr_turn_stun_ctx_create(nr_turn_client_ctx *tctx, int mode,
   sctx->error_cb=error_cb;
   sctx->mode=mode;
   sctx->last_error_code=0;
+  STAILQ_INIT(&sctx->addresses_tried);
 
   /* Add ourselves to the tctx's list */
   STAILQ_INSERT_TAIL(&tctx->stun_ctxs, sctx, entry);
@@ -153,6 +181,12 @@ static int nr_turn_stun_ctx_destroy(nr_turn_stun_ctx **ctxp)
   nr_stun_client_ctx_destroy(&ctx->stun);
   RFREE(ctx->realm);
   RFREE(ctx->nonce);
+
+  while (!STAILQ_EMPTY(&ctx->addresses_tried)) {
+    nr_transport_addr_listnode *listnode = STAILQ_FIRST(&ctx->addresses_tried);
+    STAILQ_REMOVE_HEAD(&ctx->addresses_tried, entry);
+    nr_transport_addr_listnode_destroy(&listnode);
+  }
 
   RFREE(ctx);
 
@@ -199,6 +233,7 @@ static int nr_turn_stun_ctx_start(nr_turn_stun_ctx *ctx)
 {
   int r, _status;
   nr_turn_client_ctx *tctx = ctx->tctx;
+  nr_transport_addr_listnode *address_tried = 0;
 
   if ((r=nr_stun_client_reset(ctx->stun))) {
     r_log(NR_LOG_TURN, LOG_ERR, "TURN(%s): Couldn't reset STUN",
@@ -211,6 +246,12 @@ static int nr_turn_stun_ctx_start(nr_turn_stun_ctx *ctx)
           tctx->label);
     ABORT(r);
   }
+
+  if ((r=nr_transport_addr_listnode_create(&ctx->stun->peer_addr, &address_tried))) {
+    ABORT(r);
+  }
+
+  STAILQ_INSERT_TAIL(&ctx->addresses_tried, address_tried, entry);
 
   _status=0;
 abort:
@@ -268,6 +309,20 @@ static int nr_turn_stun_ctx_handle_redirect(nr_turn_stun_ctx *ctx)
             tctx->label, alternate_addr->as_string);
       alternate_addr = 0;
       continue;
+    }
+
+    /* Check if we've already tried this, and ignore if we have */
+    nr_transport_addr_listnode *address_tried = 0;
+    STAILQ_FOREACH(address_tried, &ctx->addresses_tried, entry) {
+      /* Ignore protocol */
+      alternate_addr->protocol = address_tried->value.protocol;
+      if (!nr_transport_addr_cmp(alternate_addr, &address_tried->value, NR_TRANSPORT_ADDR_CMP_MODE_ALL)) {
+        r_log(NR_LOG_TURN, LOG_INFO,
+              "TURN(%s): nr_turn_stun_ctx_handle_redirect already tried %s, ignoring",
+              tctx->label, alternate_addr->as_string);
+        alternate_addr = 0;
+        break;
+      }
     }
   }
 

@@ -40,6 +40,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct nr_ice_ctx_;
 
+typedef struct nr_transport_addr_listnode_ {
+  nr_transport_addr value;
+  STAILQ_ENTRY(nr_transport_addr_listnode_) entry;
+} nr_transport_addr_listnode;
+typedef STAILQ_HEAD(nr_transport_addr_listnode_head_, nr_transport_addr_listnode_) nr_transport_addr_listnode_head;
+
 /*
    Represents a single set of STUN transactions, i.e.,
    Allocate, Refresh, Permission. It automatically handles
@@ -55,6 +61,8 @@ typedef struct nr_turn_stun_ctx_ {
   NR_async_cb success_cb;
   NR_async_cb error_cb;
   int last_error_code;
+
+  nr_transport_addr_listnode_head addresses_tried;
 
   STAILQ_ENTRY(nr_turn_stun_ctx_) entry;
 } nr_turn_stun_ctx;
@@ -118,6 +126,8 @@ typedef struct nr_turn_client_ctx_ {
 
 extern int NR_LOG_TURN;
 
+int nr_transport_addr_listnode_create(const nr_transport_addr *addr, nr_transport_addr_listnode **listnodep);
+void nr_transport_addr_listnode_destroy(nr_transport_addr_listnode **listnode);
 int nr_turn_client_ctx_create(const char* label, nr_socket* sock,
                               const char* username, Data* password,
                               nr_transport_addr* addr,
