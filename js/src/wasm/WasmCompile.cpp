@@ -28,7 +28,7 @@
 #endif
 
 #include "util/Text.h"
-#include "vm/HelperThreads.h"
+#include "vm/HelperThreadState.h"
 #include "vm/Realm.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCraneliftCompile.h"
@@ -481,7 +481,7 @@ static const double spaceCutoffPct = 0.9;
 
 // Figure out whether we should use tiered compilation or not.
 static bool TieringBeneficial(uint32_t codeSize) {
-  uint32_t cpuCount = GetHelperThreadCPUCount();
+  uint32_t cpuCount = HelperThreadState().cpuCount;
   MOZ_ASSERT(cpuCount > 0);
 
   // It's mostly sensible not to background compile when there's only one
@@ -495,12 +495,12 @@ static bool TieringBeneficial(uint32_t codeSize) {
     return false;
   }
 
-  MOZ_ASSERT(GetHelperThreadCount() >= cpuCount);
+  MOZ_ASSERT(HelperThreadState().threadCount >= cpuCount);
 
   // Compute the max number of threads available to do actual background
   // compilation work.
 
-  uint32_t workers = GetMaxWasmCompilationThreads();
+  uint32_t workers = HelperThreadState().maxWasmCompilationThreads();
 
   // The number of cores we will use is bounded both by the CPU count and the
   // worker count.

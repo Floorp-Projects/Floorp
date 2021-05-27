@@ -75,8 +75,18 @@ GlobalHelperThreadState* gHelperThreadState = nullptr;
 
 bool js::CreateHelperThreadsState() {
   MOZ_ASSERT(!gHelperThreadState);
-  gHelperThreadState = js_new<GlobalHelperThreadState>();
-  return gHelperThreadState;
+  UniquePtr<GlobalHelperThreadState> helperThreadState =
+      MakeUnique<GlobalHelperThreadState>();
+  if (!helperThreadState) {
+    return false;
+  }
+  gHelperThreadState = helperThreadState.release();
+  if (!gHelperThreadState->ensureContextList(gHelperThreadState->threadCount)) {
+    js_delete(gHelperThreadState);
+    gHelperThreadState = nullptr;
+    return false;
+  }
+  return true;
 }
 
 void js::DestroyHelperThreadsState() {
@@ -118,14 +128,6 @@ bool js::SetFakeCPUCount(size_t count) {
   HelperThreadState().cpuCount = count;
   HelperThreadState().threadCount = ThreadCountForCPUCount(count);
   return true;
-}
-
-size_t js::GetHelperThreadCount() { return HelperThreadState().threadCount; }
-
-size_t js::GetHelperThreadCPUCount() { return HelperThreadState().cpuCount; }
-
-size_t js::GetMaxWasmCompilationThreads() {
-  return HelperThreadState().maxWasmCompilationThreads();
 }
 
 void JS::SetProfilingThreadCallbacks(
@@ -1297,34 +1299,31 @@ bool GlobalHelperThreadState::ensureInitialized() {
   MOZ_ASSERT(CanUseExtraThreads());
   MOZ_ASSERT(this == &HelperThreadState());
 
-  AutoLockHelperThreadState lock;
-
-  if (isInitialized(lock)) {
-    return true;
+  {
+    AutoLockHelperThreadState lock;
+    useInternalThreadPool_ = HelperThreadTaskCallback == nullptr;
   }
 
-  useInternalThreadPool_ = HelperThreadTaskCallback == nullptr;
-
-  for (size_t& i : runningTaskCount) {
-    i = 0;
-  }
-
-  if (!ensureThreadCount(threadCount, lock)) {
-    return false;
-  }
-
-  isInitialized_ = true;
-  return true;
+  return ensureThreadCount(threadCount);
 }
 
-bool GlobalHelperThreadState::ensureThreadCount(
-    size_t count, const AutoLockHelperThreadState& lock) {
-  if (!ensureContextList(count, lock)) {
+bool GlobalHelperThreadState::ensureThreadCount(size_t count) {
+  if (!ensureContextList(count)) {
     return false;
+  }
+
+  AutoLockHelperThreadState lock;
+
+  if (helperTasks_.capacity() >= count) {
+    return true;
   }
 
   if (!helperTasks_.reserve(count)) {
     return false;
+  }
+
+  for (size_t& i : runningTaskCount) {
+    i = 0;
   }
 
   if (!useInternalThreadPool(lock)) {
@@ -1412,7 +1411,9 @@ void GlobalHelperThreadState::finishThreads() {
       return;
     }
 
-    terminating_ = true;
+    for (auto& thread : threads(lock)) {
+      thread->setTerminate(lock);
+    }
 
     notifyAll(GlobalHelperThreadState::PRODUCER, lock);
 
@@ -1424,8 +1425,13 @@ void GlobalHelperThreadState::finishThreads() {
   }
 }
 
-bool GlobalHelperThreadState::ensureContextList(
-    size_t count, const AutoLockHelperThreadState& lock) {
+bool GlobalHelperThreadState::ensureContextList(size_t count) {
+  AutoLockHelperThreadState lock;
+
+  if (helperContexts_.length() >= count) {
+    return true;
+  }
+
   while (helperContexts_.length() < count) {
     auto cx = js::MakeUnique<JSContext>(nullptr, JS::ContextOptions());
     if (!cx || !cx->init(ContextKind::HelperThread) ||
@@ -2377,6 +2383,10 @@ bool HelperThread::init() {
   return thread.init(HelperThread::ThreadMain, this);
 }
 
+void HelperThread::setTerminate(const AutoLockHelperThreadState& lock) {
+  terminate = true;
+}
+
 void HelperThread::join() { thread.join(); }
 
 void HelperThread::ensureRegisteredWithProfiler() {
@@ -2670,7 +2680,7 @@ void GlobalHelperThreadState::trace(JSTracer* trc) {
 // Definition of helper thread tasks.
 //
 // Priority is determined by the order they're listed here.
-const GlobalHelperThreadState::Selector GlobalHelperThreadState::selectors[] = {
+const HelperThread::Selector HelperThread::selectors[] = {
     &GlobalHelperThreadState::maybeGetGCParallelTask,
     &GlobalHelperThreadState::maybeGetIonCompileTask,
     &GlobalHelperThreadState::maybeGetWasmTier1CompileTask,
@@ -2711,14 +2721,14 @@ void HelperThread::threadLoop() {
 
   AutoLockHelperThreadState lock;
 
-  while (!HelperThreadState().isTerminating(lock)) {
+  while (!terminate) {
     // The selectors may depend on the HelperThreadState not changing
     // between task selection and task execution, in particular, on new
     // tasks not being added (because of the lifo structure of the work
     // lists). Unlocking the HelperThreadState between task selection and
     // execution is not well-defined.
 
-    HelperThreadTask* task = HelperThreadState().findHighestPriorityTask(lock);
+    HelperThreadTask* task = findHighestPriorityTask(lock);
     if (!task) {
       AUTO_PROFILER_LABEL("HelperThread::threadLoop::wait", IDLE);
       HelperThreadState().wait(lock, GlobalHelperThreadState::PRODUCER);
@@ -2729,7 +2739,7 @@ void HelperThread::threadLoop() {
   }
 }
 
-HelperThreadTask* GlobalHelperThreadState::findHighestPriorityTask(
+HelperThreadTask* HelperThread::findHighestPriorityTask(
     const AutoLockHelperThreadState& locked) {
   // Return the highest priority task that is ready to start, or nullptr.
 
