@@ -2029,7 +2029,16 @@ mozilla::ipc::IPCResult ContentChild::RecvClearImageCacheFromPrincipal(
     loader = imgLoader::PrivateBrowsingLoader();
   }
 
-  loader->RemoveEntriesFromPrincipal(aPrincipal);
+  loader->RemoveEntriesInternal(aPrincipal, nullptr);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvClearImageCacheFromBaseDomain(
+    const nsCString& aBaseDomain) {
+  imgLoader::NormalLoader()->RemoveEntriesInternal(nullptr, &aBaseDomain);
+  imgLoader::PrivateBrowsingLoader()->RemoveEntriesInternal(nullptr,
+                                                            &aBaseDomain);
+
   return IPC_OK();
 }
 

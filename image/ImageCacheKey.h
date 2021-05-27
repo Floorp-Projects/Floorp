@@ -51,6 +51,8 @@ class ImageCacheKey final {
     return mOriginAttributes;
   }
 
+  const nsCString& IsolationKeyRef() const { return mIsolationKey; }
+
   /// Is this cache entry for a chrome image?
   bool IsChrome() const { return mIsChrome; }
 
