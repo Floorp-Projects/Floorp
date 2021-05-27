@@ -26,7 +26,6 @@ ContentProcessMessageManager::ContentProcessMessageManager(
 }
 
 ContentProcessMessageManager::~ContentProcessMessageManager() {
-  mAnonymousGlobalScopes.Clear();
   mozilla::DropJSObjects(this);
 }
 

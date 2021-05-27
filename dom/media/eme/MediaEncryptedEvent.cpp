@@ -28,7 +28,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MediaEncryptedEvent, Event)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaEncryptedEvent, Event)
-  tmp->mInitData = nullptr;
   mozilla::DropJSObjects(tmp);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -40,10 +39,7 @@ MediaEncryptedEvent::MediaEncryptedEvent(EventTarget* aOwner)
   mozilla::HoldJSObjects(this);
 }
 
-MediaEncryptedEvent::~MediaEncryptedEvent() {
-  mInitData = nullptr;
-  mozilla::DropJSObjects(this);
-}
+MediaEncryptedEvent::~MediaEncryptedEvent() { mozilla::DropJSObjects(this); }
 
 JSObject* MediaEncryptedEvent::WrapObjectInternal(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {

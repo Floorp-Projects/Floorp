@@ -142,8 +142,6 @@ void IDBKeyRange::DropJSObjects() {
   if (!mRooted) {
     return;
   }
-  mCachedLowerVal.setUndefined();
-  mCachedUpperVal.setUndefined();
   mHaveCachedLowerVal = false;
   mHaveCachedUpperVal = false;
   mRooted = false;

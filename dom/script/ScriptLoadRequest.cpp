@@ -184,7 +184,6 @@ void ScriptLoadRequest::MaybeCancelOffThreadScript() {
 
 void ScriptLoadRequest::DropBytecodeCacheReferences() {
   mCacheInfo = nullptr;
-  mScript = nullptr;
   DropJSObjects(this);
 }
 

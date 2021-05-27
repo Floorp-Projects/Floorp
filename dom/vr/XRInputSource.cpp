@@ -11,7 +11,6 @@
 #include "XRInputSpace.h"
 #include "VRDisplayClient.h"
 
-#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Gamepad.h"
 #include "mozilla/dom/GamepadManager.h"
 
@@ -122,7 +121,6 @@ XRInputSource::~XRInputSource() {
   mTargetRaySpace = nullptr;
   mGripSpace = nullptr;
   mGamepad = nullptr;
-  mozilla::DropJSObjects(this);
 }
 
 JSObject* XRInputSource::WrapObject(JSContext* aCx,

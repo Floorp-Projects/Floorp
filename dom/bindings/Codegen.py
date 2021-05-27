@@ -22812,18 +22812,19 @@ class CGEventClass(CGBindingImplClass):
         return retVal
 
     def define(self):
-        dropJS = ""
-        for m in self.membersNeedingTrace:
-            member = CGDictionary.makeMemberName(m.identifier.name)
-            if m.type.isAny():
-                dropJS += member + " = JS::UndefinedValue();\n"
-            elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
-                dropJS += member + " = nullptr;\n"
-            else:
-                raise TypeError("Unknown traceable member type %s" % m.type)
+        hasJS = False
+        if any(
+            not (
+                m.type.isAny() or m.type.isObject() or m.type.isSpiderMonkeyInterface()
+            )
+            for m in self.membersNeedingTrace
+        ):
+            raise TypeError("Unknown traceable member type %s" % m.type)
 
-        if dropJS != "":
-            dropJS += "mozilla::DropJSObjects(this);\n"
+        if len(self.membersNeedingTrace) > 0:
+            dropJS = "mozilla::DropJSObjects(this);\n"
+        else:
+            dropJS = ""
         # Just override CGClass and do our own thing
         ctorParams = (
             "aOwner, nullptr, nullptr" if self.parentType == "Event" else "aOwner"
