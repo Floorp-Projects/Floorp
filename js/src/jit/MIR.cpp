@@ -5086,8 +5086,16 @@ AliasSet MArrayBufferByteLength::getAliasSet() const {
   return AliasSet::Load(AliasSet::FixedSlot);
 }
 
+AliasSet MArrayBufferViewLength::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ArrayBufferViewLengthOrOffset);
+}
+
 AliasSet MArrayBufferViewElements::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MArrayPush::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ObjectFields | AliasSet::Element);
 }
 
 MDefinition* MGuardNumberToIntPtrIndex::foldsTo(TempAllocator& alloc) {

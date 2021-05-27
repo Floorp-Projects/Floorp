@@ -7120,30 +7120,6 @@ class MGetNextEntryForIterator
   Mode mode() const { return mode_; }
 };
 
-// Read the length of an array buffer view.
-class MArrayBufferViewLength : public MUnaryInstruction,
-                               public SingleObjectPolicy::Data {
-  explicit MArrayBufferViewLength(MDefinition* obj)
-      : MUnaryInstruction(classOpcode, obj) {
-    setResultType(MIRType::IntPtr);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(ArrayBufferViewLength)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ArrayBufferViewLengthOrOffset);
-  }
-
-  void computeRange(TempAllocator& alloc) override;
-};
-
 // Read the byteOffset of an array buffer view.
 class MArrayBufferViewByteOffset : public MUnaryInstruction,
                                    public SingleObjectPolicy::Data {
@@ -7674,27 +7650,6 @@ class MArrayPopShift : public MUnaryInstruction,
   }
 
   ALLOW_CLONE(MArrayPopShift)
-};
-
-// Array.prototype.push on a dense array. Returns the new array length.
-class MArrayPush : public MBinaryInstruction,
-                   public MixPolicy<SingleObjectPolicy, BoxPolicy<1>>::Data {
-  MArrayPush(MDefinition* object, MDefinition* value)
-      : MBinaryInstruction(classOpcode, object, value) {
-    setResultType(MIRType::Int32);
-  }
-
- public:
-  INSTRUCTION_HEADER(ArrayPush)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object), (1, value))
-
-  AliasSet getAliasSet() const override {
-    return AliasSet::Store(AliasSet::ObjectFields | AliasSet::Element);
-  }
-  void computeRange(TempAllocator& alloc) override;
-
-  ALLOW_CLONE(MArrayPush)
 };
 
 // Array.prototype.slice on a dense array.

@@ -109,6 +109,7 @@ def gen_mir_class(
     congruent_to,
     alias_set,
     possibly_calls,
+    compute_range,
     clone,
 ):
     """Generates class definition for a single MIR opcode."""
@@ -209,6 +210,8 @@ def gen_mir_class(
             code += "  bool possiblyCalls() const override;\\\n"
         else:
             code += "  bool possiblyCalls() const override { return true; }\\\n"
+    if compute_range:
+        code += "  void computeRange(TempAllocator& alloc) override;\\\n"
     if clone:
         code += "  ALLOW_CLONE(" + class_name + ")\\\n"
     code += "};\\\n"
@@ -265,8 +268,11 @@ def generate_mir_header(c_out, yaml_path):
             alias_set = op.get("alias_set", None)
             assert alias_set is None or True or isinstance(alias_set, str)
 
-            possibly_calls = op.get("possibly_calls", False)
+            possibly_calls = op.get("possibly_calls", None)
             assert possibly_calls is None or True or possibly_calls == "custom"
+
+            compute_range = op.get("compute_range", None)
+            assert compute_range is None or compute_range == "custom"
 
             clone = op.get("clone", None)
             assert clone is None or True
@@ -282,6 +288,7 @@ def generate_mir_header(c_out, yaml_path):
                 congruent_to,
                 alias_set,
                 possibly_calls,
+                compute_range,
                 clone,
             )
             mir_op_classes.append(code)
