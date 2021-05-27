@@ -11,7 +11,6 @@ import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.experiments.nimbus.Branch
-import org.mozilla.experiments.nimbus.FeatureConfig
 import org.mozilla.fenix.nimbus.controller.NimbusBranchesController
 
 class NimbusBranchesControllerTest {
@@ -32,11 +31,7 @@ class NimbusBranchesControllerTest {
     fun `WHEN branch item is clicked THEN branch is opted into and selectedBranch state is updated`() {
         val branch = Branch(
             slug = "slug",
-            ratio = 1,
-            feature = FeatureConfig(
-                featureId = "1",
-                enabled = true
-            )
+            ratio = 1
         )
 
         controller.onBranchItemClicked(branch)
