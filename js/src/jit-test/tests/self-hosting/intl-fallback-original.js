@@ -1,3 +1,5 @@
+// |jit-test| skip-if: typeof Intl === 'undefined'
+
 // Clobbering `Symbol` should not impact creation of %Intl%.[[FallbackSymbol]]
 globalThis.Symbol = null;
 
