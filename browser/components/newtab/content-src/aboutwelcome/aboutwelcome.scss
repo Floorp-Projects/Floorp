@@ -750,6 +750,8 @@ body {
 
     .purple-C {
       background-image: url('chrome://activity-stream/content/data/content/assets/noodle-C.svg');
+      -moz-context-properties: fill;
+      fill: #F6429A;
     }
 
     .orange-L {
@@ -918,7 +920,7 @@ body {
         height: 165px;
         border-radius: 50%;
         transform: translate(230%, -5%);
-        background: #FF7139;
+        background: #952BB9;
         transition-delay: -0.2s;
 
         @media (max-width: $break-point-large) {
@@ -1015,6 +1017,7 @@ body {
         height: 394px;
         transform: rotate(260deg) translate(-34%, -35%);
         transition-delay: -0.2s;
+        fill: #952BB9;
       }
 
       .yellow-circle {
@@ -1022,7 +1025,7 @@ body {
         height: 165px;
         border-radius: 50%;
         transform: translate(160%, 130%);
-        background: #FF7139;
+        background: #FF4AA2;
       }
     }
 

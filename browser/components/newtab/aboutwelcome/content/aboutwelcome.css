@@ -504,7 +504,9 @@ body {
       -moz-context-properties: fill;
       fill: var(--in-content-page-background); }
     .onboardingContainer.proton .purple-C {
-      background-image: url("chrome://activity-stream/content/data/content/assets/noodle-C.svg"); }
+      background-image: url("chrome://activity-stream/content/data/content/assets/noodle-C.svg");
+      -moz-context-properties: fill;
+      fill: #F6429A; }
     .onboardingContainer.proton .orange-L {
       background-image: url("chrome://activity-stream/content/data/content/assets/noodle-solid-L.svg");
       -moz-context-properties: fill;
@@ -622,7 +624,7 @@ body {
         height: 165px;
         border-radius: 50%;
         transform: translate(230%, -5%);
-        background: #FF7139;
+        background: #952BB9;
         transition-delay: -0.2s; }
         @media (max-width: 866px) {
           .onboardingContainer.proton .screen-1 .yellow-circle {
@@ -682,13 +684,14 @@ body {
         width: 392px;
         height: 394px;
         transform: rotate(260deg) translate(-34%, -35%);
-        transition-delay: -0.2s; }
+        transition-delay: -0.2s;
+        fill: #952BB9; }
       .onboardingContainer.proton .screen-2 .yellow-circle {
         width: 165px;
         height: 165px;
         border-radius: 50%;
         transform: translate(160%, 130%);
-        background: #FF7139; }
+        background: #FF4AA2; }
     .onboardingContainer.proton.transition-in .noodle {
       opacity: 0;
       rotate: var(--rotate);
