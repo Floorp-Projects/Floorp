@@ -302,11 +302,10 @@ class VirtualenvManager(VirtualenvHelper):
         filename.pth -- Adds the path given as argument to filename.pth under
             the virtualenv site packages directory.
 
-        optional -- This denotes the action as optional. The requested action
-            is attempted. If it fails, we issue a warning and go on. The
-            initial "optional" field is stripped then the remaining line is
-            processed like normal. e.g.
-            "optional:mozilla.pth:python/foo
+        thunderbird -- This denotes the action as to only occur for Thunderbird
+            checkouts. The initial "thunderbird" field is stripped, then the
+            remaining line is processed like normal. e.g.
+            "thunderbird:comms.pth:python/foo"
 
         packages.txt -- Denotes that the specified path is a child manifest. It
             will be read and processed as if its contents were concatenated
@@ -334,6 +333,7 @@ class VirtualenvManager(VirtualenvHelper):
         """
         import distutils.sysconfig
 
+        is_thunderbird = os.path.exists(os.path.join(self.topsrcdir, "comm"))
         packages = self.packages()
         python_lib = distutils.sysconfig.get_python_lib()
         do_close = not bool(sitecustomize)
@@ -374,17 +374,11 @@ class VirtualenvManager(VirtualenvHelper):
                     f.write("%s\n" % os.path.relpath(path, python_lib))
                 return True
 
-            if package[0] == "optional":
-                try:
-                    handle_package(package[1:])
+            if package[0] == "thunderbird":
+                if is_thunderbird:
+                    return handle_package(package[1:])
+                else:
                     return True
-                except Exception:
-                    print(
-                        "Error processing command. Ignoring",
-                        "because optional. (%s)" % ":".join(package),
-                        file=self.log_handle,
-                    )
-                    return False
 
             if package[0] in ("windows", "!windows"):
                 for_win = not package[0].startswith("!")
