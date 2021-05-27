@@ -12,7 +12,7 @@ async function doTest(isPrivate) {
   let defaultURL = AboutNewTab.newTabURL;
   let newTabURL;
   let mode;
-  let testURL = "http://example.com/";
+  let testURL = "https://example.com/";
   if (isPrivate) {
     mode = "per window private browsing";
     newTabURL = "about:privatebrowsing";

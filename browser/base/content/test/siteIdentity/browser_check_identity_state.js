@@ -9,6 +9,7 @@ const INSECURE_ICON_PREF = "security.insecure_connection_icon.enabled";
 const INSECURE_TEXT_PREF = "security.insecure_connection_text.enabled";
 const INSECURE_PBMODE_ICON_PREF =
   "security.insecure_connection_icon.pbmode.enabled";
+const HTTPS_FIRST_PBM_PREF = "dom.security.https_first_pbm";
 
 function loadNewTab(url) {
   return BrowserTestUtils.openNewForegroundTab(gBrowser, url, true);
@@ -736,16 +737,19 @@ add_task(async function test_pb_mode() {
   let prefs = [
     [INSECURE_ICON_PREF, true],
     [INSECURE_PBMODE_ICON_PREF, true],
+    [HTTPS_FIRST_PBM_PREF, false],
   ];
   await pbModeTest(prefs, true);
   prefs = [
     [INSECURE_ICON_PREF, false],
     [INSECURE_PBMODE_ICON_PREF, true],
+    [HTTPS_FIRST_PBM_PREF, false],
   ];
   await pbModeTest(prefs, true);
   prefs = [
     [INSECURE_ICON_PREF, false],
     [INSECURE_PBMODE_ICON_PREF, false],
+    [HTTPS_FIRST_PBM_PREF, false],
   ];
   await pbModeTest(prefs, false);
 });
