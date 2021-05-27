@@ -100,6 +100,10 @@ add_task(async () => {
     Assert.equal(cards.length, 1, "Only one card matching the module exists.");
     const card = cards[0];
 
+    Assert.ok(
+      card.querySelector(".image-warning").hidden,
+      "No warning sign for the module."
+    );
     Assert.equal(
       card.querySelector(".image-unsigned").hidden,
       false,

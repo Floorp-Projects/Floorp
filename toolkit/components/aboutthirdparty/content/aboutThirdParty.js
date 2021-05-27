@@ -4,9 +4,13 @@
 
 "use strict";
 
+const { getCrashManager } = ChromeUtils.import(
+  "resource://gre/modules/CrashManager.jsm"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let AboutThirdParty = null;
+let CrashModuleSet = null;
 
 // The expected format of |processKey| is "browser.0x1234"
 function formatProcess(processKey) {
@@ -55,9 +59,11 @@ async function fetchData() {
   for (const module of data.modules) {
     module.events = [];
     module.loadingOnMain = { count: 0, sum: 0 };
-    module.typeFlags = AboutThirdParty.lookupModuleType(
-      module.dllFile?.leafName
-    );
+
+    const moduleName = module.dllFile?.leafName;
+    module.typeFlags = AboutThirdParty.lookupModuleType(moduleName);
+    module.isCrasher = CrashModuleSet?.has(moduleName);
+
     module.application = AboutThirdParty.lookupApplication(
       module.dllFile?.path
     );
@@ -88,11 +94,21 @@ async function fetchData() {
   }
 
   data.modules.sort((a, b) => {
-    // First sort by |typeFlags| in ascending order to move up
-    // unknown-type modules first, then sort by |loadingOnMain|
-    // in descending order to move up slower modules.
-    const diff = a.typeFlags - b.typeFlags;
-    return diff == 0 ? b.loadingOnMain - a.loadingOnMain : diff;
+    // Firstly, show crasher modules
+    let diff = b.isCrasher - a.isCrasher;
+    if (diff) {
+      return diff;
+    }
+
+    // Then unknown-type modules
+    diff = a.typeFlags - b.typeFlags;
+    if (diff) {
+      return diff;
+    }
+
+    // Lastly sort the remaining modules in descending order
+    // of duration to move up slower modules.
+    return b.loadingOnMain - a.loadingOnMain;
   });
 
   return data.modules;
@@ -166,6 +182,9 @@ function copyDataToClipboard(aData) {
     if (module.signedBy) {
       copied.signedBy = module.signedBy;
     }
+    if (module.isCrasher) {
+      copied.isCrasher = module.isCrasher;
+    }
     if (module.companyName) {
       copied.companyName = module.companyName;
     }
@@ -225,6 +244,10 @@ function visualizeData(aData) {
     const btnOpenDir = newCard.querySelector(".button-open-dir");
     btnOpenDir.fileObj = module.dllFile;
     btnOpenDir.addEventListener("click", onClickOpenDir);
+
+    if (module.isCrasher) {
+      newCard.querySelector(".image-warning").hidden = false;
+    }
 
     if (!module.signedBy) {
       newCard.querySelector(".image-unsigned").hidden = false;
@@ -296,6 +319,45 @@ function visualizeData(aData) {
   document.getElementById("main").appendChild(mainContentFragment);
 }
 
+async function collectCrashInfo() {
+  const parseBigInt = maybeBigInt => {
+    try {
+      return BigInt(maybeBigInt);
+    } catch (e) {
+      Cu.reportError(e);
+    }
+    return NaN;
+  };
+
+  if (CrashModuleSet) {
+    return;
+  }
+
+  const crashes = await getCrashManager().getCrashes();
+  CrashModuleSet = new Set(
+    crashes.map(crash => {
+      const stackInfo = crash.metadata?.StackTraces;
+      if (!stackInfo) {
+        return null;
+      }
+
+      const crashAddr = parseBigInt(stackInfo.crash_info?.address);
+      if (typeof crashAddr !== "bigint") {
+        return null;
+      }
+
+      // Find modules whose address range includes the crashing address.
+      // No need to check the type of the return value from parseBigInt
+      // because comparing BigInt with NaN returns false.
+      return stackInfo.modules?.find(
+        module =>
+          crashAddr >= parseBigInt(module.base_addr) &&
+          crashAddr < parseBigInt(module.end_addr)
+      )?.filename;
+    })
+  );
+}
+
 async function onLoad() {
   document
     .getElementById("button-copy-to-clipboard")
@@ -308,11 +370,16 @@ async function onLoad() {
       e.target.disabled = false;
     });
 
+  const backgroundTasks = [
+    AboutThirdParty.collectSystemInfo(),
+    collectCrashInfo(),
+  ];
+
   let hasData = false;
-  AboutThirdParty.collectSystemInfo()
+  Promise.all(backgroundTasks)
     .then(() => {
       if (!hasData) {
-        // If collectSystemInfo was completed before fetchData,
+        // If all async tasks were completed before fetchData,
         // or there was no data available, visualizeData shows
         // full info and the reload button is not needed.
         return;
