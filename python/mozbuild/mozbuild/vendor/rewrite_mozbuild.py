@@ -862,7 +862,8 @@ def remove_file_from_moz_build_file(
             normalized_mozbuild_filename
         )
 
-        for key, normalized_source_filename_list in source_assignments:
+        for key in source_assignments:
+            normalized_source_filename_list = source_assignments[key]
             if normalized_filename_to_remove in normalized_source_filename_list:
                 unnormalized_filename_to_remove = unnormalize_filename(
                     normalized_mozbuild_filename, normalized_filename_to_remove
@@ -873,6 +874,7 @@ def remove_file_from_moz_build_file(
                 return
 
         normalized_filename_to_remove = original_normalized_filename_to_remove
+    raise Exception("Could not remove file")
 
 
 def add_file_to_moz_build_file(
