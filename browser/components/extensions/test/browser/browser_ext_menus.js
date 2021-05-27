@@ -167,9 +167,9 @@ add_task(async function test_bookmarkContextMenu() {
     },
   });
 
-  await toggleBookmarksToolbar(true);
   await ext.startup();
   await ext.awaitMessage("ready");
+  await toggleBookmarksToolbar(true);
 
   let menu = await openChromeContextMenu(
     "placesContext",
