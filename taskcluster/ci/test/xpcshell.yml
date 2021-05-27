@@ -75,6 +75,7 @@ xpcshell:
                 by-test-platform:
                     windows10-64-asan.*: 3
                     macosx1100.*: 2
+                    android-em-7.0-x86_64/debug-isolated-process: 3
                     default: default
     fetches:
         toolchain:

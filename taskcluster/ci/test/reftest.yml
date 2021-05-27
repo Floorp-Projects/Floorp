@@ -81,6 +81,7 @@ crashtest:
                     windows10-aarch64.*: 2
                     macosx1100.*: 2
                     android-hw-.*-qr/.*: 2
+                    android-em-7.0-x86_64/debug-isolated-process: 3
                     default: default
 
 crashtest-qr:
@@ -206,6 +207,7 @@ reftest:
                     windows10-aarch64.*: 2
                     android-hw-.*-qr/.*: 2
                     macosx1100.*: 2
+                    android-em-7.0-x86_64/debug-isolated-process: 3
                     default: default
 
 reftest-qr:
