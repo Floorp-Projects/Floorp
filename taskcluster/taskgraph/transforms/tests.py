@@ -180,7 +180,7 @@ def gv_e10s_filter(task):
 
 
 def fission_filter(task):
-    return task.get("e10s") in (True, "both") and get_mobile_project(task) != "fennec"
+    return task.get("e10s") in (True, "both")
 
 
 TEST_VARIANTS = {
@@ -825,7 +825,7 @@ def setup_browsertime_flag(config, tasks):
             continue
 
         if task["treeherder-symbol"].startswith("Rap"):
-            # The Rap group is subdivided as Rap{-fenix,-refbrow,-fennec}(...),
+            # The Rap group is subdivided as Rap{-fenix,-refbrow(...),
             # so `taskgraph.util.treeherder.replace_group` isn't appropriate.
             task["treeherder-symbol"] = task["treeherder-symbol"].replace(
                 "Rap", "Btime", 1
@@ -1174,7 +1174,7 @@ def get_mobile_project(task):
     if not task["build-platform"].startswith("android"):
         return
 
-    mobile_projects = ("fenix", "fennec", "geckoview", "refbrow", "chrome-m")
+    mobile_projects = ("fenix", "geckoview", "refbrow", "chrome-m")
 
     for name in mobile_projects:
         if name in task["test-name"]:
@@ -1189,7 +1189,7 @@ def get_mobile_project(task):
             if name in target:
                 return name
 
-    return "fennec"
+    return None
 
 
 @transforms.add
@@ -1199,9 +1199,6 @@ def adjust_mobile_e10s(config, tasks):
         if project == "geckoview":
             # Geckoview is always-e10s
             task["e10s"] = True
-        elif project == "fennec":
-            # Fennec is non-e10s
-            task["e10s"] = False
         yield task
 
 
