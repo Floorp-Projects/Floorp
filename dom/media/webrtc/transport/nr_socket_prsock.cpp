@@ -379,7 +379,7 @@ int NrSocket::cancel(int how) {
 }
 
 // Helper functions for addresses
-static int nr_transport_addr_to_praddr(nr_transport_addr* addr,
+static int nr_transport_addr_to_praddr(const nr_transport_addr* addr,
                                        PRNetAddr* naddr) {
   int _status;
 
@@ -444,7 +444,7 @@ abort:
   return (_status);
 }
 
-static int nr_transport_addr_to_netaddr(nr_transport_addr* addr,
+static int nr_transport_addr_to_netaddr(const nr_transport_addr* addr,
                                         net::NetAddr* naddr) {
   int r, _status;
   PRNetAddr praddr;
@@ -530,7 +530,7 @@ abort:
  * nr_transport_addr_get_addrstring_and_port
  * convert nr_transport_addr to IP address string and port number
  */
-int nr_transport_addr_get_addrstring_and_port(nr_transport_addr* addr,
+int nr_transport_addr_get_addrstring_and_port(const nr_transport_addr* addr,
                                               nsACString* host, int32_t* port) {
   int r, _status;
   char addr_string[64];
@@ -781,7 +781,7 @@ static int ShouldDrop(size_t len) {
 
 // This should be called on the STS thread.
 int NrSocket::sendto(const void* msg, size_t len, int flags,
-                     nr_transport_addr* to) {
+                     const nr_transport_addr* to) {
   ASSERT_ON_THREAD(ststhread_);
   int r, _status;
   PRNetAddr naddr;
@@ -848,7 +848,7 @@ void NrSocket::close() {
   cancel(NR_ASYNC_WAIT_WRITE);
 }
 
-int NrSocket::connect(nr_transport_addr* addr) {
+int NrSocket::connect(const nr_transport_addr* addr) {
   ASSERT_ON_THREAD(ststhread_);
   int r, _status;
   PRNetAddr naddr;
@@ -1301,7 +1301,7 @@ abort:
 }
 
 int NrUdpSocketIpc::sendto(const void* msg, size_t len, int flags,
-                           nr_transport_addr* to) {
+                           const nr_transport_addr* to) {
   ASSERT_ON_THREAD(sts_thread_);
 
   ReentrantMonitorAutoEnter mon(monitor_);
@@ -1411,7 +1411,7 @@ int NrUdpSocketIpc::getaddr(nr_transport_addr* addrp) {
   return nr_transport_addr_copy(addrp, &my_addr_);
 }
 
-int NrUdpSocketIpc::connect(nr_transport_addr* addr) {
+int NrUdpSocketIpc::connect(const nr_transport_addr* addr) {
   int r, _status;
   int32_t port;
   nsCString host;
@@ -1604,14 +1604,14 @@ using namespace mozilla;
 // Bridge to the nr_socket interface
 static int nr_socket_local_destroy(void** objp);
 static int nr_socket_local_sendto(void* obj, const void* msg, size_t len,
-                                  int flags, nr_transport_addr* to);
+                                  int flags, const nr_transport_addr* to);
 static int nr_socket_local_recvfrom(void* obj, void* restrict buf,
                                     size_t maxlen, size_t* len, int flags,
                                     nr_transport_addr* from);
 static int nr_socket_local_getfd(void* obj, NR_SOCKET* fd);
 static int nr_socket_local_getaddr(void* obj, nr_transport_addr* addrp);
 static int nr_socket_local_close(void* obj);
-static int nr_socket_local_connect(void* sock, nr_transport_addr* addr);
+static int nr_socket_local_connect(void* obj, const nr_transport_addr* addr);
 static int nr_socket_local_write(void* obj, const void* msg, size_t len,
                                  size_t* written);
 static int nr_socket_local_read(void* obj, void* restrict buf, size_t maxlen,
@@ -1710,7 +1710,7 @@ static int nr_socket_local_destroy(void** objp) {
 }
 
 static int nr_socket_local_sendto(void* obj, const void* msg, size_t len,
-                                  int flags, nr_transport_addr* addr) {
+                                  int flags, const nr_transport_addr* addr) {
   NrSocketBase* sock = static_cast<NrSocketBase*>(obj);
 
   return sock->sendto(msg, len, flags, addr);
@@ -1760,7 +1760,7 @@ static int nr_socket_local_read(void* obj, void* restrict buf, size_t maxlen,
   return sock->read(buf, maxlen, len);
 }
 
-static int nr_socket_local_connect(void* obj, nr_transport_addr* addr) {
+static int nr_socket_local_connect(void* obj, const nr_transport_addr* addr) {
   NrSocketBase* sock = static_cast<NrSocketBase*>(obj);
 
   return sock->connect(addr);

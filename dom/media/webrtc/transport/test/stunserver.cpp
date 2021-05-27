@@ -128,7 +128,7 @@ static int nr_socket_wrapped_destroy(void** objp) {
 }
 
 static int nr_socket_wrapped_sendto(void* obj, const void* msg, size_t len,
-                                    int flags, nr_transport_addr* addr) {
+                                    int flags, const nr_transport_addr* addr) {
   nr_socket_wrapped* wrapped = static_cast<nr_socket_wrapped*>(obj);
 
   return nr_socket_sendto(wrapped->sock_, msg, len, flags, &wrapped->addr_);

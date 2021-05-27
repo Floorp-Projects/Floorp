@@ -47,6 +47,6 @@ int nr_socket_multi_tcp_set_readable_cb(nr_socket *sock,
   NR_async_cb readable_cb,void *readable_cb_arg);
 
 int nr_socket_multi_tcp_stun_server_connect(nr_socket *sock,
-  nr_transport_addr *addr);
+  const nr_transport_addr *addr);
 
 #endif

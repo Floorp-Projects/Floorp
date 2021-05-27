@@ -107,7 +107,7 @@ abort:
   }
 
 static int nr_tcp_socket_ctx_initialize(nr_tcp_socket_ctx *tcpsock,
-  nr_transport_addr *addr, void* cb_arg)
+  const nr_transport_addr *addr, void* cb_arg)
   {
     int r, _status;
     NR_SOCKET fd;
@@ -138,12 +138,12 @@ typedef struct nr_socket_multi_tcp_ {
 
 static int nr_socket_multi_tcp_destroy(void **objp);
 static int nr_socket_multi_tcp_sendto(void *obj,const void *msg, size_t len,
-  int flags, nr_transport_addr *to);
+  int flags, const nr_transport_addr *to);
 static int nr_socket_multi_tcp_recvfrom(void *obj,void * restrict buf,
   size_t maxlen, size_t *len, int flags, nr_transport_addr *from);
 static int nr_socket_multi_tcp_getaddr(void *obj, nr_transport_addr *addrp);
 static int nr_socket_multi_tcp_close(void *obj);
-static int nr_socket_multi_tcp_connect(void *sock, nr_transport_addr *addr);
+static int nr_socket_multi_tcp_connect(void *sock, const nr_transport_addr *addr);
 static int nr_socket_multi_tcp_listen(void *obj, int backlog);
 
 static nr_socket_vtbl nr_socket_multi_tcp_vtbl={
@@ -309,13 +309,11 @@ int nr_socket_multi_tcp_set_readable_cb(nr_socket *sock,
 #define PREALLOC_DONT_CONNECT_UNLESS_SO  2
 
 static int nr_socket_multi_tcp_get_sock_connected_to(nr_socket_multi_tcp *sock,
-  nr_transport_addr *to, int preallocated_connect_mode, nr_socket **ret_sock)
+  const nr_transport_addr *to, int preallocated_connect_mode, nr_socket **ret_sock)
   {
     int r, _status;
     nr_tcp_socket_ctx *tcp_sock_ctx;
     nr_socket * nrsock;
-
-    to->protocol=IPPROTO_TCP;
 
     TAILQ_FOREACH(tcp_sock_ctx, &sock->sockets, entry) {
       if (!nr_transport_addr_is_wildcard(&tcp_sock_ctx->remote_addr)) {
@@ -397,7 +395,7 @@ static int nr_socket_multi_tcp_get_sock_connected_to(nr_socket_multi_tcp *sock,
   }
 
 int nr_socket_multi_tcp_stun_server_connect(nr_socket *sock,
-  nr_transport_addr *addr)
+  const nr_transport_addr *addr)
   {
     int r, _status;
     nr_socket_multi_tcp *mtcp_sock = (nr_socket_multi_tcp *)sock->obj;
@@ -454,7 +452,7 @@ static int nr_socket_multi_tcp_destroy(void **objp)
   }
 
 static int nr_socket_multi_tcp_sendto(void *obj, const void *msg, size_t len,
-  int flags, nr_transport_addr *to)
+  int flags, const nr_transport_addr *to)
   {
     int r, _status;
     nr_socket_multi_tcp *sock=(nr_socket_multi_tcp *)obj;
@@ -548,7 +546,7 @@ static void nr_tcp_socket_readable_cb(NR_SOCKET s, int how, void *arg)
       sock->readable_cb(s, how, sock->readable_cb_arg);
   }
 
-static int nr_socket_multi_tcp_connect(void *obj, nr_transport_addr *addr)
+static int nr_socket_multi_tcp_connect(void *obj, const nr_transport_addr *addr)
   {
     int r, _status;
     nr_socket_multi_tcp *sock=(nr_socket_multi_tcp *)obj;
