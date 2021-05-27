@@ -157,6 +157,7 @@ flatpak build-finish build                                      \
         --talk-name="org.gtk.vfs.*"                             \
         --talk-name=org.freedesktop.Notifications               \
         --own-name="org.mpris.MediaPlayer2.firefox.*"           \
+        --own-name="org.mozilla.firefox.*"                      \
         --command=firefox
 
 flatpak build-export --disable-sandbox --no-update-summary --exclude='/share/runtime/langpack/*/*' repo build "$FLATPAK_BRANCH"
