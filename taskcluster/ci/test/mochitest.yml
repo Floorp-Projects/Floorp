@@ -187,9 +187,9 @@ mochitest-browser-chrome:
             default: default
     allow-software-gl-layers: false
 
-mochitest-browser-chrome-apple-silicon:
-    description: "Mochitest failures on apple silicon browser chrome run"
-    treeherder-symbol: M-f(ASbc)
+mochitest-browser-chrome-failures:
+    description: "Mochitest failures for browser chrome run"
+    treeherder-symbol: M-f(bc)
     schedules-component: mochitest-browser-chrome
     suite:
         name: mochitest-browser-chrome
@@ -204,9 +204,15 @@ mochitest-browser-chrome-apple-silicon:
         mochitest-flavor: browser
         chunked: true
         extra-options:
-            - --run-failures=apple_silicon
-            - --timeout-as-pass
-            - --crash-as-pass
+            by-test-platform:
+                macosx1100.*:
+                    - --run-failures=apple_silicon
+                    - --timeout-as-pass
+                    - --crash-as-pass
+                macosx1015.*:
+                    - --run-failures=apple_catalina
+                    - --timeout-as-pass
+                    - --crash-as-pass
 
 browser-screenshots:
     description: "Browser Screenshots"
@@ -473,9 +479,9 @@ mochitest-media:
                     macosx1100.*: 2
                     default: default
 
-mochitest-media-apple-silicon:
-    description: "Mochitest failures on apple silicon media run"
-    treeherder-symbol: M-f(ASmda)
+mochitest-media-failures:
+    description: "Mochitest failures for mochitest media run"
+    treeherder-symbol: M-f(mda)
     schedules-component: mochitest-plain
     suite:
         name: mochitest-media
@@ -483,17 +489,28 @@ mochitest-media-apple-silicon:
     allow-software-gl-layers: false
     run-on-projects: ['mozilla-central']
     tier: 3
-    chunks: 2
+    chunks:
+        by-test-platform:
+            macosx1100.*: 2
+            macosx1015.*: 1
     max-run-time: 2700
     e10s: true
     mozharness:
         mochitest-flavor: plain
         chunked: true
         extra-options:
-            - --setpref=webgl.out-of-process=false
-            - --run-failures=apple_silicon
-            - --timeout-as-pass
-            - --crash-as-pass
+            by-test-platform:
+                macosx1100.*:
+                    - --setpref=webgl.out-of-process=false
+                    - --run-failures=apple_silicon
+                    - --timeout-as-pass
+                    - --crash-as-pass
+                macosx1015.*:
+                    - --setpref=webgl.out-of-process=false
+                    - --run-failures=apple_catalina
+                    - --timeout-as-pass
+                    - --crash-as-pass
+
 
 mochitest-plain-headless:
     description: "Mochitest plain headless run"
