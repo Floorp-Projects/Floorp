@@ -251,27 +251,10 @@ nr_stun_process_error_response(nr_stun_message *res, UINT2 *error_code)
 
     switch (attr->u.error_code.number / 100) {
     case 3:
-        /* If the error code is 300 through 399, the client SHOULD consider
-         * the transaction as failed unless the ALTERNATE-SERVER extension is
-         * being used.  See Section 11. */
-
-        if (attr->u.error_code.number == 300) {
-            if (!nr_stun_message_has_attribute(res, NR_STUN_ATTR_ALTERNATE_SERVER, 0)) {
-                r_log(NR_LOG_STUN, LOG_WARNING, "Missing ALTERNATE-SERVER");
-                ABORT(R_REJECTED);
-            }
-
-            /* draft-ietf-behave-rfc3489bis-10.txt S 11 */
-            if (!nr_stun_message_has_attribute(res, NR_STUN_ATTR_MESSAGE_INTEGRITY, 0)) {
-                r_log(NR_LOG_STUN, LOG_WARNING, "Missing MESSAGE-INTEGRITY");
-                ABORT(R_REJECTED);
-            }
-
-            ABORT(R_RETRY);
-        }
-
-        ABORT(R_REJECTED);
-        break;
+      /* We do not treat STUN/300 as retryable. The TURN Allocate handling
+       * code will reset the ctx if appropriate. */
+      ABORT(R_REJECTED);
+      break;
 
     case 4:
         /* If the error code is 400 through 499, the client declares the

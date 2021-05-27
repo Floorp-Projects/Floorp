@@ -157,9 +157,6 @@ int nr_stun_client_restart(nr_stun_client_ctx *ctx)
     int mode;
     NR_async_cb finished_cb;
     void *cb_arg;
-    nr_stun_message_attribute *ec;
-    nr_stun_message_attribute *as;
-
     if (ctx->state != NR_STUN_CLIENT_STATE_RUNNING)
         ABORT(R_NOT_PERMITTED);
 
@@ -172,13 +169,6 @@ int nr_stun_client_restart(nr_stun_client_ctx *ctx)
     mode = ctx->mode;
     finished_cb = ctx->finished_cb;
     cb_arg = ctx->cb_arg;
-
-    if (nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_ERROR_CODE, &ec)
-     && ec->u.error_code.number == 300) {
-        if (nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_ALTERNATE_SERVER, &as)) {
-            nr_transport_addr_copy(&ctx->peer_addr, &as->u.alternate_server);
-        }
-    }
 
     nr_stun_client_reset(ctx);
 
