@@ -161,7 +161,10 @@
   gen_boilerplate: false
 
 - name: Callee
-  gen_boilerplate: false
+  result_type: Object
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: IsConstructing
   result_type: Boolean
@@ -353,8 +356,18 @@
   congruent_to: if_operands_equal
   alias_set: custom
 
+# Load |arguments.length|. Bails out if the length has been overriden.
 - name: ArgumentsObjectLength
-  gen_boilerplate: false
+  operands:
+    argsObject: Object
+  result_type: Int32
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  # Even though the "length" property is lazily resolved, it acts similar to
+  # a normal property load, so we can treat this operation like any other
+  # property read.
+  alias_set: custom
 
 - name: GuardArgumentsObjectFlags
   gen_boilerplate: false
@@ -378,8 +391,16 @@
 - name: ToFloat32
   gen_boilerplate: false
 
+# Converts a uint32 to a double (coming from wasm).
 - name: WasmUnsignedToDouble
-  gen_boilerplate: false
+  operands:
+    def: Int32
+  type_policy: none
+  result_type: Double
+  movable: true
+  folds_to: custom
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: WasmUnsignedToFloat32
   gen_boilerplate: false
@@ -550,7 +571,12 @@
   gen_boilerplate: false
 
 - name: Random
-  gen_boilerplate: false
+  result_type: Double
+  alias_set: none
+  possibly_calls: true
+  compute_range: custom
+  can_recover: custom
+  clone: true
 
 - name: Sign
   gen_boilerplate: false
@@ -668,7 +694,16 @@
   gen_boilerplate: false
 
 - name: StringSplit
-  gen_boilerplate: false
+  operands:
+    string: String
+    separator: String
+  result_type: Object
+  possibly_calls: true
+  congruent_to: if_operands_equal
+  # Although this instruction returns a new array, we don't have to mark
+  # it as store instruction, see also MNewArray.
+  alias_set: none
+  can_recover: true
 
 - name: BoxNonStrictThis
   gen_boilerplate: false
@@ -720,8 +755,11 @@
   guard: true
   alias_set: none
 
+
+# Check whether we need to fire the interrupt handler.
 - name: InterruptCheck
-  gen_boilerplate: false
+  guard: true
+  alias_set: none
 
 - name: WasmInterruptCheck
   gen_boilerplate: false
@@ -841,17 +879,50 @@
   alias_set: custom
   clone: true
 
+# Load the initialized length from an elements header.
 - name: InitializedLength
-  gen_boilerplate: false
+  operands:
+    elements: Elements
+  type_policy: none
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  compute_range: custom
+  clone: true
 
 - name: SetInitializedLength
-  gen_boilerplate: false
+  operands:
+    elements: Elements
+    index: Int32
+  type_policy: none
+  alias_set: custom
+  clone: true
 
+
+# Load the array length from an elements header.
 - name: ArrayLength
-  gen_boilerplate: false
+  operands:
+    elements: Elements
+  type_policy: none
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  compute_range: custom
+  clone: true
 
+
+# Store to the length in an elements header. Note the input is an *index*, one
+# less than the desired length.
 - name: SetArrayLength
-  gen_boilerplate: false
+  operands:
+    elements: Elements
+    index: Int32
+  type_policy: none
+  alias_set: custom
+  # By default no, unless built as a recovered instruction.
+  can_recover: custom
 
 # Load the function length. Bails for functions with lazy scripts or a
 # resolved "length" property.
@@ -902,7 +973,13 @@
   compute_range: custom
 
 - name: ArrayBufferViewByteOffset
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: IntPtr
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  compute_range: custom
 
 # Read the length of an array buffer view.
 - name: ArrayBufferViewElements
@@ -914,8 +991,16 @@
   alias_set: custom
   clone: true
 
+# Return the element size of a typed array.
 - name: TypedArrayElementSize
-  gen_boilerplate: false
+  operands:
+    object: Object
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  # Class is immutable. See also MHasClass.
+  alias_set: none
+  compute_range: custom
 
 # Guard an ArrayBufferView has an attached ArrayBuffer.
 - name: GuardHasAttachedArrayBuffer
@@ -1052,7 +1137,12 @@
   result_type: Object
 
 - name: CallBindVar
-  gen_boilerplate: false
+  operands:
+    environmentChain: Object
+  result_type: Object
+  movable: true
+  congruent_to: custom
+  alias_set: none
 
 - name: GuardShape
   gen_boilerplate: false
@@ -1352,7 +1442,18 @@
   gen_boilerplate: false
 
 - name: StringLength
-  gen_boilerplate: false
+  operands:
+    string: String
+  result_type: Int32
+  movable: true
+  folds_to: custom
+  congruent_to: if_operands_equal
+  # The string |length| property is immutable, so there is no
+  # implicit dependency.
+  alias_set: none
+  compute_range: custom
+  can_recover: true
+  clone: true
 
 - name: Floor
   gen_boilerplate: false
@@ -1440,7 +1541,10 @@
   alias_set: none
 
 - name: NewTarget
-  gen_boilerplate: false
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: Rest
   gen_boilerplate: false
