@@ -60,6 +60,9 @@ UNIFIED_SOURCES += [
     "nsOSHelperAppServiceChild.cpp",
 ]
 
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DEFINES["MOZ_BUILD_APP_IS_BROWSER"] = True
+
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     UNIFIED_SOURCES += [
         "mac/nsLocalHandlerAppMac.mm",
