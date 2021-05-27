@@ -176,7 +176,6 @@ struct nr_stun_client_ctx_ {
   UINT4 mapped_addr_check_mask;  /* What checks to run on mapped addresses */
   int timeout_ms;
   struct timeval timer_set;
-  int retry_ct;
   NR_async_cb finished_cb;
   void *cb_arg;
   nr_stun_message *request;
