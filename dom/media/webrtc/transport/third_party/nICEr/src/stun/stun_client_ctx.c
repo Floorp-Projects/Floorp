@@ -475,27 +475,38 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
     /* determine password */
     switch (ctx->mode) {
     case NR_STUN_CLIENT_MODE_BINDING_REQUEST_LONG_TERM_AUTH:
+      /* If the STUN server responds with an error, give up, since we don't
+       * want to delay the completion of gathering. */
+      fail_on_error = 1;
       compute_lt_key = 1;
       /* Fall through */
     case NR_STUN_CLIENT_MODE_BINDING_REQUEST_SHORT_TERM_AUTH:
-        password = ctx->params.stun_binding_request.password;
-        break;
+      password = ctx->params.stun_binding_request.password;
+      break;
 
     case NR_STUN_CLIENT_MODE_BINDING_REQUEST_NO_AUTH:
-        /* do nothing */
-        break;
+      /* If the STUN server responds with an error, give up, since we don't
+       * want to delay the completion of gathering. */
+      fail_on_error = 1;
+      break;
 
     case NR_STUN_CLIENT_MODE_BINDING_REQUEST_STUND_0_96:
-        /* do nothing */
-        break;
+      /* If the STUN server responds with an error, give up, since we don't
+       * want to delay the completion of gathering. */
+      fail_on_error = 1;
+      break;
 
 #ifdef USE_ICE
     case NR_ICE_CLIENT_MODE_BINDING_REQUEST:
-        password = &ctx->params.ice_binding_request.password;
-        break;
+      /* We do not set fail_on_error here. The error might be transient, and
+       * retrying isn't going to cause a slowdown. */
+      password = &ctx->params.ice_binding_request.password;
+      break;
     case NR_ICE_CLIENT_MODE_USE_CANDIDATE:
-        password = &ctx->params.ice_binding_request.password;
-        break;
+      /* We do not set fail_on_error here. The error might be transient, and
+       * retrying isn't going to cause a slowdown. */
+      password = &ctx->params.ice_binding_request.password;
+      break;
 #endif /* USE_ICE */
 
 #ifdef USE_TURN
@@ -511,26 +522,26 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
     case NR_TURN_CLIENT_MODE_REFRESH_REQUEST:
       fail_on_error = 1;
       compute_lt_key = 1;
-        username = ctx->auth_params.username;
-        password = &ctx->auth_params.password;
-        /* do nothing */
-        break;
+      username = ctx->auth_params.username;
+      password = &ctx->auth_params.password;
+      /* do nothing */
+      break;
     case NR_TURN_CLIENT_MODE_PERMISSION_REQUEST:
       fail_on_error = 1;
       compute_lt_key = 1;
-        username = ctx->auth_params.username;
-        password = &ctx->auth_params.password;
-        /* do nothing */
-        break;
+      username = ctx->auth_params.username;
+      password = &ctx->auth_params.password;
+      /* do nothing */
+      break;
     case NR_TURN_CLIENT_MODE_SEND_INDICATION:
-        /* do nothing -- we just got our DATA-INDICATION */
-        break;
+      /* do nothing -- we just got our DATA-INDICATION */
+      break;
 #endif /* USE_TURN */
 
     default:
-        assert(0);
-        ABORT(R_FAILED);
-        break;
+      assert(0);
+      ABORT(R_FAILED);
+      break;
     }
 
     if (compute_lt_key) {
