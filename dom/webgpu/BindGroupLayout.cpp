@@ -16,7 +16,11 @@ GPU_IMPL_CYCLE_COLLECTION(BindGroupLayout, mParent)
 GPU_IMPL_JS_WRAP(BindGroupLayout)
 
 BindGroupLayout::BindGroupLayout(Device* const aParent, RawId aId, bool aOwning)
-    : ChildOf(aParent), mId(aId), mOwning(aOwning) {}
+    : ChildOf(aParent), mId(aId), mOwning(aOwning) {
+  if (!aId) {
+    mValid = false;
+  }
+}
 
 BindGroupLayout::~BindGroupLayout() { Cleanup(); }
 
