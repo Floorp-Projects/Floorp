@@ -122,8 +122,8 @@ MOZ_ALWAYS_INLINE size_t JSSLOT_FREE(const JSClass* clasp) {
 namespace js {
 
 /* Limit on the number of slotful properties in an object. */
-static const uint32_t SHAPE_INVALID_SLOT = Bit(24) - 1;
-static const uint32_t SHAPE_MAXIMUM_SLOT = Bit(24) - 2;
+static constexpr uint32_t SHAPE_INVALID_SLOT = Bit(24) - 1;
+static constexpr uint32_t SHAPE_MAXIMUM_SLOT = Bit(24) - 2;
 
 class Shape;
 struct StackShape;
@@ -157,6 +157,10 @@ class ShapePropertyFlags : public EnumFlags<ShapePropertyFlag> {
  public:
   static const ShapePropertyFlags defaultDataPropFlags;
 
+  static ShapePropertyFlags fromRaw(uint8_t flags) {
+    return ShapePropertyFlags(flags);
+  }
+
   bool configurable() const { return hasFlag(ShapePropertyFlag::Configurable); }
   bool enumerable() const { return hasFlag(ShapePropertyFlag::Enumerable); }
   bool writable() const {
@@ -185,34 +189,50 @@ constexpr ShapePropertyFlags ShapePropertyFlags::defaultDataPropFlags = {
     ShapePropertyFlag::Configurable, ShapePropertyFlag::Enumerable,
     ShapePropertyFlag::Writable};
 
-// ShapeProperty contains information (attributes, slot number) for a property
-// stored in the Shape tree. Property lookups on NativeObjects return a
+// ShapeProperty contains information (ShapePropertyFlags, slot number) for a
+// property stored in the Shape tree. Property lookups on NativeObjects return a
 // ShapeProperty.
 class ShapeProperty {
-  uint32_t slot_;
-  ShapePropertyFlags flags_;
+  static constexpr uint32_t FlagsMask = 0xff;
+  static constexpr uint32_t SlotShift = 8;
+
+  uint32_t slotAndFlags_ = 0;
+
+  static_assert(SHAPE_INVALID_SLOT <= (UINT32_MAX >> SlotShift),
+                "SHAPE_INVALID_SLOT must fit in slotAndFlags_");
+  static_assert(SHAPE_MAXIMUM_SLOT <= (UINT32_MAX >> SlotShift),
+                "SHAPE_MAXIMUM_SLOT must fit in slotAndFlags_");
 
  public:
   ShapeProperty(ShapePropertyFlags flags, uint32_t slot)
-      : slot_(slot), flags_(flags) {}
+      : slotAndFlags_((slot << SlotShift) | flags.toRaw()) {
+    MOZ_ASSERT(maybeSlot() == slot);
+    MOZ_ASSERT(this->flags() == flags);
+  }
 
-  bool isDataProperty() const { return flags_.isDataProperty(); }
-  bool isCustomDataProperty() const { return flags_.isCustomDataProperty(); }
-  bool isAccessorProperty() const { return flags_.isAccessorProperty(); }
-  bool isDataDescriptor() const { return flags_.isDataDescriptor(); }
+  ShapeProperty(const ShapeProperty& other) = default;
+
+  bool isDataProperty() const { return flags().isDataProperty(); }
+  bool isCustomDataProperty() const { return flags().isCustomDataProperty(); }
+  bool isAccessorProperty() const { return flags().isAccessorProperty(); }
+  bool isDataDescriptor() const { return flags().isDataDescriptor(); }
 
   bool hasSlot() const { return !isCustomDataProperty(); }
 
   uint32_t slot() const {
     MOZ_ASSERT(hasSlot());
-    MOZ_ASSERT(slot_ < SHAPE_INVALID_SLOT);
-    return slot_;
+    MOZ_ASSERT(maybeSlot() < SHAPE_INVALID_SLOT);
+    return maybeSlot();
   }
 
-  ShapePropertyFlags flags() const { return flags_; }
-  bool writable() const { return flags_.writable(); }
-  bool configurable() const { return flags_.configurable(); }
-  bool enumerable() const { return flags_.enumerable(); }
+  uint32_t maybeSlot() const { return slotAndFlags_ >> SlotShift; }
+
+  ShapePropertyFlags flags() const {
+    return ShapePropertyFlags::fromRaw(slotAndFlags_ & FlagsMask);
+  }
+  bool writable() const { return flags().writable(); }
+  bool configurable() const { return flags().configurable(); }
+  bool enumerable() const { return flags().enumerable(); }
 
   JS::PropertyAttributes propAttributes() const {
     JS::PropertyAttributes attrs{};
@@ -229,7 +249,7 @@ class ShapeProperty {
   }
 
   bool operator==(const ShapeProperty& other) const {
-    return slot_ == other.slot_ && flags_ == other.flags_;
+    return slotAndFlags_ == other.slotAndFlags_;
   }
   bool operator!=(const ShapeProperty& other) const {
     return !operator==(other);
