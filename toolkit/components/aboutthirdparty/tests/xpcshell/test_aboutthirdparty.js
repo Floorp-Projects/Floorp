@@ -50,4 +50,16 @@ add_task(async () => {
     Ci.nsIAboutThirdParty.ModuleType_Unknown,
     "Looking up an invalid name succeeds and returns ModuleType_Unknown."
   );
+
+  Assert.equal(
+    kATP.lookupApplication(""),
+    null,
+    "Looking up an empty string returns null."
+  );
+
+  Assert.equal(
+    kATP.lookupApplication("invalid path"),
+    null,
+    "Looking up an invalid path returns null."
+  );
 });
