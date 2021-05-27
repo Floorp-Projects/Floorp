@@ -87,10 +87,10 @@ function PeerConnectionTest(options) {
   }
 
   if (iceServersArray.length) {
-    if (!options.turn_disabled_local) {
+    if (!options.turn_disabled_local && !options.config_local.iceServers) {
       options.config_local.iceServers = iceServersArray;
     }
-    if (!options.turn_disabled_remote) {
+    if (!options.turn_disabled_remote && !options.config_remote.iceServers) {
       options.config_remote.iceServers = iceServersArray;
     }
   } else if (typeof turnServers !== "undefined") {

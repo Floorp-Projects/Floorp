@@ -928,6 +928,48 @@ const collectMemoryUsage = async path => {
   return { usage, reportCount };
 };
 
+// Some DNS helper functions
+const dnsLookup = async hostname => {
+  // Convenience API for various networking related stuff. _Almost_ convenient
+  // enough.
+  const neckoDashboard = SpecialPowers.Cc[
+    "@mozilla.org/network/dashboard;1"
+  ].getService(Ci.nsIDashboard);
+
+  const results = await new Promise(r => {
+    neckoDashboard.requestDNSLookup(hostname, results => {
+      r(SpecialPowers.wrap(results));
+    });
+  });
+
+  // |address| is an array-like dictionary (ie; keys are all integers).
+  // We convert to an array to make it less unwieldy.
+  const addresses = [...results.address];
+  info(`DNS results for ${hostname}: ${JSON.stringify(addresses)}`);
+  return addresses;
+};
+
+const dnsLookupV4 = async hostname => {
+  const addresses = await dnsLookup(hostname);
+  return addresses.filter(address => !address.includes(":"));
+};
+
+const dnsLookupV6 = async hostname => {
+  const addresses = await dnsLookup(hostname);
+  return addresses.filter(address => address.includes(":"));
+};
+
+const getTurnHostname = turnUrl => {
+  const urlNoParams = turnUrl.split("?")[0];
+  // Strip off scheme
+  const hostAndMaybePort = urlNoParams.split(":", 2)[1];
+  if (hostAndMaybePort[0] == "[") {
+    // IPV6 literal, strip out '[', and split at closing ']'
+    return hostAndMaybePort.substring(1).split("]")[0];
+  }
+  return hostAndMaybePort.split(":")[0];
+};
+
 /**
  * This class executes a series of functions in a continuous sequence.
  * Promise-bearing functions are executed after the previous promise completes.
