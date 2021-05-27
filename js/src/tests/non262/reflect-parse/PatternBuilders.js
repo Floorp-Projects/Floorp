@@ -170,6 +170,9 @@ function classField(id, init) {
                      name: id,
                      init: init });
 }
+function staticClassBlock(body) {
+    return Pattern({ type: "StaticClassBlock", body: body });
+}
 
 function funExpr(id, args, body, gen) {
     return Pattern({ type: "FunctionExpression",
