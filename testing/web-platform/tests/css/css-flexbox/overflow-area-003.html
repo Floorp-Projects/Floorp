@@ -39,6 +39,26 @@
     justify-content: center;
     align-items: center
   }
+
+  .relative {
+    position: relative;
+  }
+
+  .relative > .item {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+  }
+
+  .top-left {
+    left: -10px;
+    top: -10px;
+  }
+
+  .bottom-right {
+    bottom: -10px;
+    right: -10px;
+  }
   </style>
 
   <p>Test passes if all the teal boxes have no scrollbars.</p>
@@ -80,6 +100,22 @@
     </div>
     <div class="test center" style="flex-direction: column-reverse;">
       <div class="item"></div>
+    </div>
+  </div>
+
+  <!-- This set tests flex containers having a relative positioned flex item. -->
+  <div class="set">
+    <div class="test relative" style="flex-direction: row;">
+      <div class="item relative bottom-right"></div>
+    </div>
+    <div class="test relative" style="flex-direction: column;">
+      <div class="item relative bottom-right"></div>
+    </div>
+    <div class="test relative" style="flex-direction: row-reverse;">
+      <div class="item relative top-left"></div>
+    </div>
+    <div class="test relative" style="flex-direction: column-reverse;">
+      <div class="item relative top-left"></div>
     </div>
   </div>
 
