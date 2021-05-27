@@ -38,6 +38,11 @@ void AssertRoundTrips(const nsHttpResponseHead& aHead) {
 
 TEST(TestHttpResponseHead, Bug1636930)
 {
+  // Only create atom table when it's not already created.
+  if (!nsHttp::ResolveAtom("content-type")) {
+    Unused << nsHttp::CreateAtomTable();
+  }
+
   nsHttpResponseHead head;
 
   head.ParseStatusLine("HTTP/1.1 200 OK"_ns);
@@ -55,6 +60,11 @@ TEST(TestHttpResponseHead, Bug1636930)
 
 TEST(TestHttpResponseHead, bug1649807)
 {
+  // Only create atom table when it's not already created.
+  if (!nsHttp::ResolveAtom("content-type")) {
+    Unused << nsHttp::CreateAtomTable();
+  }
+
   nsHttpResponseHead head;
 
   head.ParseStatusLine("HTTP/1.1 200 OK"_ns);
@@ -75,6 +85,11 @@ TEST(TestHttpResponseHead, bug1649807)
 
 TEST(TestHttpResponseHead, bug1660200)
 {
+  // Only create atom table when it's not already created.
+  if (!nsHttp::ResolveAtom("content-type")) {
+    Unused << nsHttp::CreateAtomTable();
+  }
+
   nsHttpResponseHead head;
 
   head.ParseStatusLine("HTTP/1.1 200 OK"_ns);
@@ -88,22 +103,6 @@ TEST(TestHttpResponseHead, bug1660200)
   Unused << head.ParseHeaderLine("date: Tue, 12 May 2020 09:24:23 GMT"_ns);
 
   AssertRoundTrips(head);
-}
-
-TEST(TestHttpResponseHead, atoms)
-{
-  // Test that the resolving the content-type atom returns the initial static
-  ASSERT_EQ(nsHttp::Content_Type, nsHttp::ResolveAtom("content-type"_ns));
-  // Check that they're case insensitive
-  ASSERT_EQ(nsHttp::ResolveAtom("Content-Type"_ns),
-            nsHttp::ResolveAtom("content-type"_ns));
-  // This string literal should be the backing of the atom.
-  auto customHeader = "CustomHeader"_ns;
-  ASSERT_EQ(nsHttp::ResolveAtom(customHeader),
-            nsHttp::ResolveAtom("customheader"_ns));
-  // Check that we get the expected pointer back.
-  ASSERT_EQ(nsHttp::ResolveAtom("customheader"_ns).get(),
-            customHeader.BeginReading());
 }
 
 }  // namespace net

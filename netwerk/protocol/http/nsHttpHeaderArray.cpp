@@ -22,7 +22,7 @@ namespace net {
 nsresult nsHttpHeaderArray::SetHeader(
     const nsACString& headerName, const nsACString& value, bool merge,
     nsHttpHeaderArray::HeaderVariety variety) {
-  nsHttpAtom header = nsHttp::ResolveAtom(headerName);
+  nsHttpAtom header = nsHttp::ResolveAtom(PromiseFlatCString(headerName).get());
   if (!header) {
     NS_WARNING("failed to resolve atom");
     return NS_ERROR_NOT_AVAILABLE;
@@ -31,15 +31,14 @@ nsresult nsHttpHeaderArray::SetHeader(
 }
 
 nsresult nsHttpHeaderArray::SetHeader(
-    const nsHttpAtom& header, const nsACString& value, bool merge,
+    nsHttpAtom header, const nsACString& value, bool merge,
     nsHttpHeaderArray::HeaderVariety variety) {
   return SetHeader(header, ""_ns, value, merge, variety);
 }
 
 nsresult nsHttpHeaderArray::SetHeader(
-    const nsHttpAtom& header, const nsACString& headerName,
-    const nsACString& value, bool merge,
-    nsHttpHeaderArray::HeaderVariety variety) {
+    nsHttpAtom header, const nsACString& headerName, const nsACString& value,
+    bool merge, nsHttpHeaderArray::HeaderVariety variety) {
   MOZ_ASSERT(
       (variety == eVarietyResponse) || (variety == eVarietyRequestDefault) ||
           (variety == eVarietyRequestOverride),
@@ -68,8 +67,7 @@ nsresult nsHttpHeaderArray::SetHeader(
              "Cannot set default entry which overrides existing entry!");
   if (!entry) {
     return SetHeader_internal(header, headerName, value, variety);
-  }
-  if (merge && !IsSingletonHeader(header)) {
+  } else if (merge && !IsSingletonHeader(header)) {
     return MergeHeader(header, entry, value, variety);
   } else if (!IsIgnoreMultipleHeader(header)) {
     // Replace the existing string with the new value
@@ -86,8 +84,8 @@ nsresult nsHttpHeaderArray::SetHeader(
 }
 
 nsresult nsHttpHeaderArray::SetHeader_internal(
-    const nsHttpAtom& header, const nsACString& headerName,
-    const nsACString& value, nsHttpHeaderArray::HeaderVariety variety) {
+    nsHttpAtom header, const nsACString& headerName, const nsACString& value,
+    nsHttpHeaderArray::HeaderVariety variety) {
   nsEntry* entry = mHeaders.AppendElement();
   if (!entry) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -105,7 +103,7 @@ nsresult nsHttpHeaderArray::SetHeader_internal(
 
 nsresult nsHttpHeaderArray::SetEmptyHeader(const nsACString& headerName,
                                            HeaderVariety variety) {
-  nsHttpAtom header = nsHttp::ResolveAtom(headerName);
+  nsHttpAtom header = nsHttp::ResolveAtom(PromiseFlatCString(headerName).get());
   if (!header) {
     NS_WARNING("failed to resolve atom");
     return NS_ERROR_NOT_AVAILABLE;
@@ -122,8 +120,7 @@ nsresult nsHttpHeaderArray::SetEmptyHeader(const nsACString& headerName,
   if (entry && entry->variety != eVarietyResponseNetOriginalAndResponse) {
     entry->value.Truncate();
     return NS_OK;
-  }
-  if (entry) {
+  } else if (entry) {
     MOZ_ASSERT(variety == eVarietyResponse);
     entry->variety = eVarietyResponseNetOriginal;
   }
@@ -132,7 +129,7 @@ nsresult nsHttpHeaderArray::SetEmptyHeader(const nsACString& headerName,
 }
 
 nsresult nsHttpHeaderArray::SetHeaderFromNet(
-    const nsHttpAtom& header, const nsACString& headerNameOriginal,
+    nsHttpAtom header, const nsACString& headerNameOriginal,
     const nsACString& value, bool response) {
   // mHeader holds the consolidated (merged or updated) headers.
   // mHeader for response header will keep the original heades as well.
@@ -146,8 +143,8 @@ nsresult nsHttpHeaderArray::SetHeaderFromNet(
       variety = eVarietyResponseNetOriginalAndResponse;
     }
     return SetHeader_internal(header, headerNameOriginal, value, variety);
-  }
-  if (!IsSingletonHeader(header)) {
+
+  } else if (!IsSingletonHeader(header)) {
     HeaderVariety variety = eVarietyRequestOverride;
     if (response) {
       variety = eVarietyResponse;
@@ -182,7 +179,7 @@ nsresult nsHttpHeaderArray::SetHeaderFromNet(
 }
 
 nsresult nsHttpHeaderArray::SetResponseHeaderFromCache(
-    const nsHttpAtom& header, const nsACString& headerNameOriginal,
+    nsHttpAtom header, const nsACString& headerNameOriginal,
     const nsACString& value, nsHttpHeaderArray::HeaderVariety variety) {
   MOZ_ASSERT(
       (variety == eVarietyResponse) || (variety == eVarietyResponseNetOriginal),
@@ -196,8 +193,7 @@ nsresult nsHttpHeaderArray::SetResponseHeaderFromCache(
   nsTArray<nsEntry>::index_type index = 0;
   do {
     index = mHeaders.IndexOf(header, index, nsEntry::MatchHeader());
-    if (index !=
-        CopyableTArray<mozilla::net::nsHttpHeaderArray::nsEntry>::NoIndex) {
+    if (index != mHeaders.NoIndex) {
       nsEntry& entry = mHeaders[index];
       if (value.Equals(entry.value)) {
         MOZ_ASSERT(
@@ -210,14 +206,13 @@ nsresult nsHttpHeaderArray::SetResponseHeaderFromCache(
       }
       index++;
     }
-  } while (index !=
-           CopyableTArray<mozilla::net::nsHttpHeaderArray::nsEntry>::NoIndex);
+  } while (index != mHeaders.NoIndex);
   // If we are here, we have not found an entry so add a new one.
   return SetHeader_internal(header, headerNameOriginal, value,
                             eVarietyResponse);
 }
 
-void nsHttpHeaderArray::ClearHeader(const nsHttpAtom& header) {
+void nsHttpHeaderArray::ClearHeader(nsHttpAtom header) {
   nsEntry* entry = nullptr;
   int32_t index = LookupEntry(header, &entry);
   if (entry) {
@@ -229,13 +224,13 @@ void nsHttpHeaderArray::ClearHeader(const nsHttpAtom& header) {
   }
 }
 
-const char* nsHttpHeaderArray::PeekHeader(const nsHttpAtom& header) const {
+const char* nsHttpHeaderArray::PeekHeader(nsHttpAtom header) const {
   const nsEntry* entry = nullptr;
   LookupEntry(header, &entry);
   return entry ? entry->value.get() : nullptr;
 }
 
-nsresult nsHttpHeaderArray::GetHeader(const nsHttpAtom& header,
+nsresult nsHttpHeaderArray::GetHeader(nsHttpAtom header,
                                       nsACString& result) const {
   const nsEntry* entry = nullptr;
   LookupEntry(header, &entry);
@@ -244,7 +239,7 @@ nsresult nsHttpHeaderArray::GetHeader(const nsHttpAtom& header,
   return NS_OK;
 }
 
-nsresult nsHttpHeaderArray::GetOriginalHeader(const nsHttpAtom& aHeader,
+nsresult nsHttpHeaderArray::GetOriginalHeader(nsHttpAtom aHeader,
                                               nsIHttpHeaderVisitor* aVisitor) {
   NS_ENSURE_ARG_POINTER(aVisitor);
   uint32_t index = 0;
@@ -283,7 +278,7 @@ nsresult nsHttpHeaderArray::GetOriginalHeader(const nsHttpAtom& aHeader,
   return NS_OK;
 }
 
-bool nsHttpHeaderArray::HasHeader(const nsHttpAtom& header) const {
+bool nsHttpHeaderArray::HasHeader(nsHttpAtom header) const {
   const nsEntry* entry = nullptr;
   LookupEntry(header, &entry);
   return entry;

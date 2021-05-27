@@ -146,7 +146,7 @@ nsresult nsHttpResponseHead::SetHeader(const nsACString& hdr,
     return NS_ERROR_FAILURE;
   }
 
-  nsHttpAtom atom = nsHttp::ResolveAtom(hdr);
+  nsHttpAtom atom = nsHttp::ResolveAtom(PromiseFlatCString(hdr).get());
   if (!atom) {
     NS_WARNING("failed to resolve atom");
     return NS_ERROR_NOT_AVAILABLE;
@@ -155,8 +155,8 @@ nsresult nsHttpResponseHead::SetHeader(const nsACString& hdr,
   return SetHeader_locked(atom, hdr, val, merge);
 }
 
-nsresult nsHttpResponseHead::SetHeader(const nsHttpAtom& hdr,
-                                       const nsACString& val, bool merge) {
+nsresult nsHttpResponseHead::SetHeader(nsHttpAtom hdr, const nsACString& val,
+                                       bool merge) {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
 
   if (mInVisitHeaders) {
@@ -166,7 +166,7 @@ nsresult nsHttpResponseHead::SetHeader(const nsHttpAtom& hdr,
   return SetHeader_locked(hdr, ""_ns, val, merge);
 }
 
-nsresult nsHttpResponseHead::SetHeader_locked(const nsHttpAtom& atom,
+nsresult nsHttpResponseHead::SetHeader_locked(nsHttpAtom atom,
                                               const nsACString& hdr,
                                               const nsACString& val,
                                               bool merge) {
@@ -176,22 +176,21 @@ nsresult nsHttpResponseHead::SetHeader_locked(const nsHttpAtom& atom,
 
   // respond to changes in these headers.  we need to reparse the entire
   // header since the change may have merged in additional values.
-  if (atom == nsHttp::Cache_Control) {
+  if (atom == nsHttp::Cache_Control)
     ParseCacheControl(mHeaders.PeekHeader(atom));
-  } else if (atom == nsHttp::Pragma) {
+  else if (atom == nsHttp::Pragma)
     ParsePragma(mHeaders.PeekHeader(atom));
-  }
 
   return NS_OK;
 }
 
-nsresult nsHttpResponseHead::GetHeader(const nsHttpAtom& h, nsACString& v) {
+nsresult nsHttpResponseHead::GetHeader(nsHttpAtom h, nsACString& v) {
   v.Truncate();
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   return mHeaders.GetHeader(h, v);
 }
 
-void nsHttpResponseHead::ClearHeader(const nsHttpAtom& h) {
+void nsHttpResponseHead::ClearHeader(nsHttpAtom h) {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   mHeaders.ClearHeader(h);
 }
@@ -201,12 +200,12 @@ void nsHttpResponseHead::ClearHeaders() {
   mHeaders.Clear();
 }
 
-bool nsHttpResponseHead::HasHeaderValue(const nsHttpAtom& h, const char* v) {
+bool nsHttpResponseHead::HasHeaderValue(nsHttpAtom h, const char* v) {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   return mHeaders.HasHeaderValue(h, v);
 }
 
-bool nsHttpResponseHead::HasHeader(const nsHttpAtom& h) const {
+bool nsHttpResponseHead::HasHeader(nsHttpAtom h) const {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   return mHeaders.HasHeader(h);
 }
@@ -225,9 +224,9 @@ void nsHttpResponseHead::SetContentLength(int64_t len) {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
 
   mContentLength = len;
-  if (len < 0) {
+  if (len < 0)
     mHeaders.ClearHeader(nsHttp::Content_Length);
-  } else {
+  else {
     DebugOnly<nsresult> rv = mHeaders.SetHeader(
         nsHttp::Content_Length, nsPrintfCString("%" PRId64, len), false,
         nsHttpHeaderArray::eVarietyResponse);
@@ -624,11 +623,10 @@ nsresult nsHttpResponseHead::ParseHeaderLine_locked(
     LOG(("ParseContentType [type=%s]\n", val.get()));
     bool dummy;
     net_ParseContentType(val, mContentType, mContentCharset, &dummy);
-  } else if (hdr == nsHttp::Cache_Control) {
+  } else if (hdr == nsHttp::Cache_Control)
     ParseCacheControl(val.get());
-  } else if (hdr == nsHttp::Pragma) {
+  else if (hdr == nsHttp::Pragma)
     ParsePragma(val.get());
-  }
   return NS_OK;
 }
 
@@ -671,9 +669,8 @@ nsresult nsHttpResponseHead::ComputeCurrentAge(uint32_t now,
   if (now > dateValue) *result = now - dateValue;
 
   // Compute corrected received age
-  if (NS_SUCCEEDED(GetAgeValue_locked(&ageValue))) {
+  if (NS_SUCCEEDED(GetAgeValue_locked(&ageValue)))
     *result = std::max(*result, ageValue);
-  }
 
   // Compute current age
   *result += (now - requestTime);
@@ -702,9 +699,8 @@ nsresult nsHttpResponseHead::ComputeFreshnessLifetime(uint32_t* result) {
   *result = 0;
 
   uint32_t date = 0, date2 = 0;
-  if (NS_FAILED(GetDateValue_locked(&date))) {
+  if (NS_FAILED(GetDateValue_locked(&date)))
     date = NowInSeconds();  // synthesize a date header if none exists
-  }
 
   // Try HTTP/1.0 style expires header...
   if (NS_SUCCEEDED(GetExpiresValue_locked(&date2))) {
@@ -861,7 +857,11 @@ bool nsHttpResponseHead::StaleWhileRevalidate(uint32_t now,
     return true;
   }
 
-  return now <= stallValidUntil.value();
+  if (now > stallValidUntil.value()) {
+    return false;
+  }
+
+  return true;
 }
 
 bool nsHttpResponseHead::IsResumable() {
@@ -966,7 +966,7 @@ void nsHttpResponseHead::Reset() {
   mContentCharset.Truncate();
 }
 
-nsresult nsHttpResponseHead::ParseDateHeader(const nsHttpAtom& header,
+nsresult nsHttpResponseHead::ParseDateHeader(nsHttpAtom header,
                                              uint32_t* result) const {
   const char* val = mHeaders.PeekHeader(header);
   if (!val) return NS_ERROR_NOT_AVAILABLE;
@@ -1031,11 +1031,10 @@ nsresult nsHttpResponseHead::GetExpiresValue_locked(uint32_t* result) const {
     return NS_OK;
   }
 
-  if (time < 0) {
+  if (time < 0)
     *result = 0;
-  } else {
+  else
     *result = PRTimeToSeconds(time);
-  }
   return NS_OK;
 }
 
@@ -1080,9 +1079,8 @@ int64_t nsHttpResponseHead::TotalEntitySize() {
   if (!slash) return -1;  // No idea what the length is
 
   slash++;
-  if (*slash == '*') {  // Server doesn't know the length
+  if (*slash == '*')  // Server doesn't know the length
     return -1;
-  }
 
   int64_t size;
   if (!nsHttp::ParseInt64(slash, &size)) size = UINT64_MAX;
@@ -1220,7 +1218,7 @@ nsresult nsHttpResponseHead::VisitHeaders(
   return rv;
 }
 
-nsresult nsHttpResponseHead::GetOriginalHeader(const nsHttpAtom& aHeader,
+nsresult nsHttpResponseHead::GetOriginalHeader(nsHttpAtom aHeader,
                                                nsIHttpHeaderVisitor* aVisitor) {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   mInVisitHeaders = true;
