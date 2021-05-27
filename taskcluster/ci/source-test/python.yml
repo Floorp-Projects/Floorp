@@ -167,20 +167,6 @@ mozbase:
 mozharness:
     description: mozharness integration tests
     treeherder:
-        symbol: py2(mh)
-    run:
-        using: run-task
-        cache-dotcache: true
-        cwd: '{checkout}/testing/mozharness'
-        command: >
-            /usr/local/bin/tox -e py27-hg5.2
-    when:
-        files-changed:
-            - 'testing/mozharness/**'
-
-mozharness-py3:
-    description: mozharness integration tests
-    treeherder:
         symbol: py3(mh)
     run:
         using: run-task
