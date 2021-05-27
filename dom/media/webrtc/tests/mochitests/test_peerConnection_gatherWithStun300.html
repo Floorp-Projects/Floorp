@@ -1,0 +1,269 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="iceTestUtils.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "857668",
+    title: "RTCPeerConnection check STUN gathering with STUN/300 responses"
+  });
+
+  /* This is pretty hairy, so some background:
+   * Spec is here: https://datatracker.ietf.org/doc/html/rfc8489#section-10
+   * STUN/300 responses allow a server to redirect STUN requests to one or
+     more other servers, as ALTERNATE-SERVER attributes.
+   * The server specifies the IP address, IP version, and port for each
+     ALTERNATE-SERVER.
+   * The spec allows multiple rounds of redirects, and requires the client to
+     remember the servers it has already tried to avoid redirect loops.
+   * For TURNS, the TURN server can also supply an ALTERNATE-DOMAIN attribute,
+     which the client MUST use for the TLS handshake on the new target. The
+     client does _not_ use this as an FQDN; it always uses the address in the
+     ALTERNATE-SERVER. ALTERNATE-DOMAIN is meaningless in the non-TLS case.
+   * STUN/300 with ALTERNATE-SERVER is only defined for the TURN Allocate
+     message type (at least in the context of ICE). Clients are supposed to
+     treat STUN/300 as an unrecoverable error in all other cases. The TURN spec
+     does _not_ spell out how a client should handle multiple ALTERNATE-SERVERs.
+     We just take the first one that we have not already tried, and that is the
+     same IP version that we started with. This is because switching the IP
+     version is problematic for ICE.
+   * The test TURN server opens extra ports that will respond with redirects to
+     the _real_ ports, but the address remains the same. This is because we
+     cannot know ahead of time whether the machine we're running on has more
+     than one IP address of each version. This means the test TURN server is not
+     useful for testing cases where the address changes. Also, the test TURN
+     server does not currently know how to respond with multiple
+     ALTERNATE-SERVERs.
+   * To test cases where the _address_ changes, we instead use a feature in the
+     NAT simulator to respond with fake redirects when the destination address
+     matches an address that we configure with a pref. This feature can add
+     multiple ALTERNATE-SERVERs.
+   * The test TURN server's STUN/300 responses have a proper MESSAGE-INTEGRITY,
+     but the NAT simulator's do _not_. For now, we want both cases to work,
+     because some servers respond with STUN/300 without including
+     MESSAGE-INTEGRITY. This is a spec violation, even though the spec
+     contradicts itself in non-normative language elsewhere.
+   * Right now, neither the NAT simulator nor the test TURN server support
+     ALTERNATE-DOMAIN.
+  */
+
+  // These are the ports the test TURN server will respond with redirects on.
+  // The test TURN server tells us what these are in the JSON it spits out when
+  // we start it.
+  let turnRedirectPort;
+  let turnsRedirectPort;
+
+  // These are the addresses that we will configure the NAT simulator to
+  // redirect to. We do DNS lookups of the host in iceServersArray (provided
+  // by the test TURN server), and put the results here. On some platforms this
+  // will be 127.0.0.1 and ::1, but on others we may use a real address.
+  let redirectTargetV4;
+
+  // Test TURN server tells us these in the JSON it spits out when we start it
+  let username;
+  let credential;
+
+  // This is the address we will configure the NAT simulator to respond with
+  // redirects for. We use an address from TEST-NET since it is really unlikely
+  // we'll see that on a real machine, and also because we do not have
+  // special-case code in nICEr for TEST-NET (like we do for link-local, for
+  // example).
+  const redirectAddressV4 = '198.51.100.1';
+
+  const tests = [
+    async function baselineV4Cases() {
+      await checkSrflx([{urls:[`stun:${redirectTargetV4}`]}]);
+      await checkRelayUdp([{urls:[`turn:${redirectTargetV4}`], username, credential}]);
+      await checkRelayTcp([{urls:[`turn:${redirectTargetV4}?transport=tcp`], username, credential}]);
+      await checkRelayUdpTcp([{urls:[`turn:${redirectTargetV4}`, `turn:${redirectTargetV4}?transport=tcp`], username, credential}]);
+    },
+
+    async function stunV4Redirect() {
+      // This test uses the test TURN server, because nICEr drops responses
+      // without MESSAGE-INTEGRITY on the floor _unless_ they are a STUN/300 to
+      // an Allocate request. If we tried to use the NAT simulator for this, we
+      // would have to wait for nICEr to time out, since the NAT simulator does
+      // not know how to do MESSAGE-INTEGRITY.
+      await checkNoSrflx(
+          [{urls:[`stun:${redirectTargetV4}:${turnRedirectPort}`]}]);
+    },
+
+    async function turnV4UdpPortRedirect() {
+      await checkRelayUdp([{urls:[`turn:${redirectTargetV4}:${turnRedirectPort}`], username, credential}]);
+    },
+
+    async function turnV4TcpPortRedirect() {
+      await checkRelayTcp([{urls:[`turn:${redirectTargetV4}:${turnRedirectPort}?transport=tcp`], username, credential}]);
+    },
+
+    async function turnV4UdpTcpPortRedirect() {
+      await checkRelayUdpTcp([{urls:[`turn:${redirectTargetV4}:${turnRedirectPort}`, `turn:${redirectTargetV4}:${turnRedirectPort}?transport=tcp`], username, credential}]);
+    },
+
+    async function turnV4UdpAddressRedirect() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectTargetV4}`]);
+      await checkRelayUdp([{urls:[`turn:${redirectAddressV4}`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4TcpAddressRedirect() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectTargetV4}`]);
+      await checkRelayTcp([{urls:[`turn:${redirectAddressV4}?transport=tcp`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4UdpTcpAddressRedirect() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectTargetV4}`]);
+      await checkRelayUdpTcp([{urls:[`turn:${redirectAddressV4}`, `turn:${redirectAddressV4}?transport=tcp`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4UdpEmptyRedirect() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', '']);
+      await checkNoRelay([{urls:[`turn:${redirectAddressV4}`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4TcpEmptyRedirect() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', '']);
+      await checkNoRelay([{urls:[`turn:${redirectAddressV4}?transport=tcp`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4UdpTcpEmptyRedirect() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', '']);
+      await checkNoRelay([{urls:[`turn:${redirectAddressV4}`, `turn:${redirectAddressV4}?transport=tcp`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4UdpAddressAndPortRedirect() {
+      // This should result in two rounds of redirection; the first is by
+      // address, the second is by port.
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectTargetV4}`]);
+      await checkRelayUdp([{urls:[`turn:${redirectAddressV4}:${turnRedirectPort}`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4TcpAddressAndPortRedirect() {
+      // This should result in two rounds of redirection; the first is by
+      // address, the second is by port.
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectTargetV4}`]);
+      await checkRelayTcp([{urls:[`turn:${redirectAddressV4}:${turnRedirectPort}?transport=tcp`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4UdpTcpAddressAndPortRedirect() {
+      // This should result in two rounds of redirection; the first is by
+      // address, the second is by port.
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectTargetV4}`]);
+      await checkRelayUdpTcp([{urls:[`turn:${redirectAddressV4}:${turnRedirectPort}`, `turn:${redirectAddressV4}:${turnRedirectPort}?transport=tcp`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4UdpRedirectLoop() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectAddressV4}`]);
+      // If we don't detect the loop, gathering will not finish
+      await checkNoRelay([{urls:[`turn:${redirectAddressV4}`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4TcpRedirectLoop() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectAddressV4}`]);
+      // If we don't detect the loop, gathering will not finish
+      await checkNoRelay([{urls:[`turn:${redirectAddressV4}?transport=tcp`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4UdpTcpRedirectLoop() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectAddressV4}`]);
+      // If we don't detect the loop, gathering will not finish
+      await checkNoRelay([{urls:[`turn:${redirectAddressV4}`, `turn:${redirectAddressV4}?transport=tcp`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4UdpMultipleAddressRedirect() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectAddressV4},${redirectTargetV4}`]);
+      await checkRelayUdp([{urls:[`turn:${redirectAddressV4}`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4TcpMultipleAddressRedirect() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectAddressV4},${redirectTargetV4}`]);
+      await checkRelayTcp([{urls:[`turn:${redirectAddressV4}?transport=tcp`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function turnV4UdpTcpMultipleAddressRedirect() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.redirect_address', `${redirectAddressV4}`],
+          ['media.peerconnection.nat_simulator.redirect_targets', `${redirectAddressV4},${redirectTargetV4}`]);
+      await checkRelayUdpTcp([{urls:[`turn:${redirectAddressV4}`, `turn:${redirectAddressV4}?transport=tcp`], username, credential}]);
+      await SpecialPowers.popPrefEnv();
+    },
+  ];
+
+  runNetworkTest(async () => {
+    const turnServer = iceServersArray.find(server => "username" in server);
+    username = turnServer.username;
+    credential = turnServer.credential;
+    // Special props, non-standard
+    turnRedirectPort = turnServer.turn_redirect_port;
+    turnsRedirectPort = turnServer.turns_redirect_port;
+    // Just use the first url. It might make sense to look for TURNS first,
+    // since that will always use a hostname, but on CI we don't have TURNS
+    // support anyway (see bug 1323439).
+    const turnHostname = getTurnHostname(turnServer.urls[0]);
+    redirectTargetV4 = await dnsLookupV4(turnHostname);
+
+    await pushPrefs(
+        ['media.peerconnection.ice.obfuscate_host_addresses', false],
+        ['media.peerconnection.nat_simulator.filtering_type', 'ENDPOINT_INDEPENDENT'],
+        ['media.peerconnection.nat_simulator.mapping_type', 'ENDPOINT_INDEPENDENT'],
+        ['media.peerconnection.ice.loopback', true],
+        ['media.getusermedia.insecure.enabled', true]);
+
+    for (const test of tests) {
+      info(`Running test: ${test.name}`);
+      await test();
+      info(`Done running test: ${test.name}`);
+    }
+
+    await SpecialPowers.popPrefEnv();
+  }, { useIceServer: true });
+
+</script>
+</pre>
+</body>
+</html>
