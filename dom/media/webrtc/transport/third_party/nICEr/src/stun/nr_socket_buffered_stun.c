@@ -143,7 +143,7 @@ int nr_socket_buffered_stun_create(nr_socket *inner, int max_pending,
   sock->inner = inner;
   sock->framing_type = framing_type;
 
-  if ((r=nr_ip4_port_to_transport_addr(INADDR_ANY, 0, IPPROTO_UDP, &sock->remote_addr)))
+  if ((r=nr_ip4_port_to_transport_addr(INADDR_ANY, 0, IPPROTO_TCP, &sock->remote_addr)))
     ABORT(r);
 
   switch (framing_type) {
@@ -645,7 +645,7 @@ int nr_socket_buffered_stun_reset(nr_socket* sock_arg, nr_socket* new_inner) {
     ABORT(r);
   }
 
-  if ((r = nr_ip4_port_to_transport_addr(INADDR_ANY, 0, IPPROTO_UDP,
+  if ((r = nr_ip4_port_to_transport_addr(INADDR_ANY, 0, IPPROTO_TCP,
                                          &sock->remote_addr))) {
     ABORT(r);
   }
