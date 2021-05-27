@@ -406,9 +406,16 @@ nsDependentCSubstring MakeSourceFileRelativePath(
 }  // namespace detail
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+#  ifdef QM_ERROR_STACKS_ENABLED
 void LogError(const nsACString& aExpr, const ResultType& aResult,
               const nsACString& aSourceFilePath, const int32_t aSourceFileLine,
-              const Severity aSeverity) {
+              const Severity aSeverity)
+#  else
+void LogError(const nsACString& aExpr, const Maybe<nsresult> aResult,
+              const nsACString& aSourceFilePath, const int32_t aSourceFileLine,
+              const Severity aSeverity)
+#  endif
+{
   // TODO: Add MOZ_LOG support, bug 1711661.
 
   // We have to ignore failures with the Log severity. until we have support
