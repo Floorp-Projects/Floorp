@@ -59,8 +59,6 @@ typedef struct nr_transport_addr_ {
 #define NR_IPV4 4
 #define NR_IPV6 6
   UCHAR protocol;    /* IPPROTO_TCP, IPPROTO_UDP */
-  struct sockaddr *addr;
-  int addr_len;
   union {
     struct sockaddr_in addr4;
     struct sockaddr_in6 addr6;

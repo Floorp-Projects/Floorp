@@ -140,15 +140,11 @@ int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int protocol, int keep
       addr->ip_version=NR_IPV4;
 
       memcpy(&addr->u.addr4,saddr,sizeof(struct sockaddr_in));
-      addr->addr=(struct sockaddr *)&addr->u.addr4;
-      addr->addr_len=sizeof(struct sockaddr_in);
     }
     else if(saddr->sa_family==AF_INET6){
       addr->ip_version=NR_IPV6;
 
       memcpy(&addr->u.addr6, saddr, sizeof(struct sockaddr_in6));
-      addr->addr=(struct sockaddr *)&addr->u.addr6;
-      addr->addr_len=sizeof(struct sockaddr_in6);
     }
     else
       ABORT(R_BAD_ARGS);
@@ -164,26 +160,8 @@ int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int protocol, int keep
 
 int nr_transport_addr_copy(nr_transport_addr *to, const nr_transport_addr *from)
   {
-    int _status;
-
     memcpy(to,from,sizeof(nr_transport_addr));
-
-    // with IPC serialization, we should not assume that the pointer
-    // in from->addr is correct
-    switch (to->ip_version) {
-      case NR_IPV4:
-        to->addr=(struct sockaddr *)&to->u.addr4;
-        break;
-      case NR_IPV6:
-        to->addr=(struct sockaddr *)&to->u.addr6;
-        break;
-      default:
-        ABORT(R_BAD_ARGS);
-    }
-
-    _status=0;
-  abort:
-    return(_status);
+    return 0;
   }
 
 int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, const nr_transport_addr *from)
@@ -222,8 +200,6 @@ int nr_ip4_port_to_transport_addr(UINT4 ip4, UINT2 port, int protocol, nr_transp
     addr->u.addr4.sin_family=PF_INET;
     addr->u.addr4.sin_port=htons(port);
     addr->u.addr4.sin_addr.s_addr=htonl(ip4);
-    addr->addr=(struct sockaddr *)&addr->u.addr4;
-    addr->addr_len=sizeof(struct sockaddr_in);
 
     if(r=nr_transport_addr_fmt_addr_string(addr))
       ABORT(r);
@@ -265,8 +241,6 @@ int nr_ip6_port_to_transport_addr(struct in6_addr* addr6, UINT2 port, int protoc
     addr->u.addr6.sin6_family=PF_INET6;
     addr->u.addr6.sin6_port=htons(port);
     memcpy(addr->u.addr6.sin6_addr.s6_addr, addr6->s6_addr, sizeof(addr6->s6_addr));
-    addr->addr=(struct sockaddr *)&addr->u.addr6;
-    addr->addr_len=sizeof(struct sockaddr_in6);
 
     if(r=nr_transport_addr_fmt_addr_string(addr))
       ABORT(r);
@@ -366,7 +340,6 @@ int nr_transport_addr_cmp(const nr_transport_addr *addr1,const nr_transport_addr
     if(mode < NR_TRANSPORT_ADDR_CMP_MODE_ADDR)
       return(0);
 
-    assert(addr1->addr_len == addr2->addr_len);
     switch(addr1->ip_version){
       case NR_IPV4:
         if(addr1->u.addr4.sin_addr.s_addr != addr2->u.addr4.sin_addr.s_addr)
