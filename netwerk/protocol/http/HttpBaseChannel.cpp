@@ -366,8 +366,9 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
 
   nsAutoCString type;
   if (aProxyInfo && NS_SUCCEEDED(aProxyInfo->GetType(type)) &&
-      !type.EqualsLiteral("unknown"))
+      !type.EqualsLiteral("unknown")) {
     mProxyInfo = aProxyInfo;
+  }
 
   mCurrentThread = GetCurrentEventTarget();
   return rv;
@@ -728,8 +729,9 @@ HttpBaseChannel::GetContentDispositionHeader(
 
   nsresult rv = mResponseHead->GetHeader(nsHttp::Content_Disposition,
                                          aContentDispositionHeader);
-  if (NS_FAILED(rv) || aContentDispositionHeader.IsEmpty())
+  if (NS_FAILED(rv) || aContentDispositionHeader.IsEmpty()) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   return NS_OK;
 }
@@ -861,7 +863,7 @@ void CopyComplete(void* aClosure, nsresult aStatus) {
   MOZ_ASSERT(result, "Should only be called on the STS thread.");
 #endif
 
-  auto channel = static_cast<HttpBaseChannel*>(aClosure);
+  auto* channel = static_cast<HttpBaseChannel*>(aClosure);
   channel->OnCopyComplete(aStatus);
 }
 
@@ -1406,8 +1408,9 @@ nsresult HttpBaseChannel::nsContentEncodings::PrepareForNext(void) {
     --mCurEnd;
     if (*mCurEnd != ',' && !nsCRT::IsAsciiSpace(*mCurEnd)) break;
   }
-  if (mCurEnd == mEncodingHeader)
+  if (mCurEnd == mEncodingHeader) {
     return NS_ERROR_NOT_AVAILABLE;  // no more encodings
+  }
   ++mCurEnd;
 
   // At this point mCurEnd points to the first char _after_ the
@@ -1415,10 +1418,12 @@ nsresult HttpBaseChannel::nsContentEncodings::PrepareForNext(void) {
 
   mCurStart = mCurEnd - 1;
   while (mCurStart != mEncodingHeader && *mCurStart != ',' &&
-         !nsCRT::IsAsciiSpace(*mCurStart))
+         !nsCRT::IsAsciiSpace(*mCurStart)) {
     --mCurStart;
-  if (*mCurStart == ',' || nsCRT::IsAsciiSpace(*mCurStart))
+  }
+  if (*mCurStart == ',' || nsCRT::IsAsciiSpace(*mCurStart)) {
     ++mCurStart;  // we stopped because of a weird char, so move up one
+  }
 
   // At this point mCurStart and mCurEnd bracket the encoding string
   // we want.  Check that it's not "identity"
@@ -1780,8 +1785,9 @@ HttpBaseChannel::SetResponseHeader(const nsACString& header,
   // these response headers must not be changed
   if (atom == nsHttp::Content_Type || atom == nsHttp::Content_Length ||
       atom == nsHttp::Content_Encoding || atom == nsHttp::Trailer ||
-      atom == nsHttp::Transfer_Encoding)
+      atom == nsHttp::Transfer_Encoding) {
     return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   StoreResponseHeadersModified(true);
 
@@ -2175,11 +2181,7 @@ void HttpBaseChannel::NotifySetCookie(const nsACString& aCookie) {
 }
 
 bool HttpBaseChannel::IsBrowsingContextDiscarded() const {
-  if (mLoadGroup && mLoadGroup->GetIsBrowsingContextDiscarded()) {
-    return true;
-  }
-
-  return false;
+  return mLoadGroup && mLoadGroup->GetIsBrowsingContextDiscarded();
 }
 
 // https://mikewest.github.io/corpp/#process-navigation-response
@@ -3024,12 +3026,13 @@ NS_IMETHODIMP
 HttpBaseChannel::SetForceAllowThirdPartyCookie(bool aForce) {
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
-  if (aForce)
+  if (aForce) {
     StoreThirdPartyFlags(LoadThirdPartyFlags() |
                          nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
-  else
+  } else {
     StoreThirdPartyFlags(LoadThirdPartyFlags() &
                          ~nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
+  }
 
   return NS_OK;
 }
@@ -3075,7 +3078,7 @@ HttpBaseChannel::TakeAllSecurityMessages(
   MOZ_ASSERT(NS_IsMainThread());
 
   aMessages.Clear();
-  for (auto pair : mSecurityConsoleMessages) {
+  for (const auto& pair : mSecurityConsoleMessages) {
     nsresult rv;
     nsCOMPtr<nsISecurityConsoleMessage> message =
         do_CreateInstance(NS_SECURITY_CONSOLE_MESSAGE_CONTRACTID, &rv);
@@ -3147,8 +3150,9 @@ HttpBaseChannel::GetLocalPort(int32_t* port) {
     *port = (int32_t)ntohs(mSelfAddr.inet.port);
   } else if (mSelfAddr.raw.family == PR_AF_INET6) {
     *port = (int32_t)ntohs(mSelfAddr.inet6.port);
-  } else
+  } else {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   return NS_OK;
 }
@@ -3172,8 +3176,9 @@ HttpBaseChannel::GetRemotePort(int32_t* port) {
     *port = (int32_t)ntohs(mPeerAddr.inet.port);
   } else if (mPeerAddr.raw.family == PR_AF_INET6) {
     *port = (int32_t)ntohs(mPeerAddr.inet6.port);
-  } else
+  } else {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   return NS_OK;
 }
@@ -3979,8 +3984,9 @@ void HttpBaseChannel::PropagateReferenceIfNeeded(
 bool HttpBaseChannel::ShouldRewriteRedirectToGET(
     uint32_t httpStatus, nsHttpRequestHead::ParsedMethodType method) {
   // for 301 and 302, only rewrite POST
-  if (httpStatus == 301 || httpStatus == 302)
+  if (httpStatus == 301 || httpStatus == 302) {
     return method == nsHttpRequestHead::kMethod_Post;
+  }
 
   // rewrite for 303 unless it was HEAD
   if (httpStatus == 303) return method != nsHttpRequestHead::kMethod_Head;
@@ -4282,7 +4288,7 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
   }
 
   if (config.referrerInfo) {
-    DebugOnly<nsresult> success;
+    DebugOnly<nsresult> success{};
     success = httpChannel->SetReferrerInfo(config.referrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(success));
   }
@@ -4502,10 +4508,11 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     // if this was a top-level document channel, then the new channel
     // should have its mDocumentURI point to newURI; otherwise, we
     // just need to pass along our mDocumentURI to the new channel.
-    if (newURI && (mURI == mDocumentURI))
+    if (newURI && (mURI == mDocumentURI)) {
       rv = httpInternal->SetDocumentURI(newURI);
-    else
+    } else {
       rv = httpInternal->SetDocumentURI(mDocumentURI);
+    }
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // if there is a chain of keys for redirect-responses we transfer it to
@@ -5171,11 +5178,7 @@ bool HttpBaseChannel::EnsureRequestContext() {
   }
 
   rcsvc->GetRequestContext(mRequestContextID, getter_AddRefs(mRequestContext));
-  if (!mRequestContext) {
-    return false;
-  }
-
-  return true;
+  return static_cast<bool>(mRequestContext);
 }
 
 void HttpBaseChannel::EnsureTopBrowsingContextId() {
