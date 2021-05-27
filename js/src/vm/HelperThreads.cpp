@@ -75,18 +75,8 @@ GlobalHelperThreadState* gHelperThreadState = nullptr;
 
 bool js::CreateHelperThreadsState() {
   MOZ_ASSERT(!gHelperThreadState);
-  UniquePtr<GlobalHelperThreadState> helperThreadState =
-      MakeUnique<GlobalHelperThreadState>();
-  if (!helperThreadState) {
-    return false;
-  }
-  gHelperThreadState = helperThreadState.release();
-  if (!gHelperThreadState->ensureContextList(gHelperThreadState->threadCount)) {
-    js_delete(gHelperThreadState);
-    gHelperThreadState = nullptr;
-    return false;
-  }
-  return true;
+  gHelperThreadState = js_new<GlobalHelperThreadState>();
+  return gHelperThreadState;
 }
 
 void js::DestroyHelperThreadsState() {
@@ -1299,31 +1289,34 @@ bool GlobalHelperThreadState::ensureInitialized() {
   MOZ_ASSERT(CanUseExtraThreads());
   MOZ_ASSERT(this == &HelperThreadState());
 
-  {
-    AutoLockHelperThreadState lock;
-    useInternalThreadPool_ = HelperThreadTaskCallback == nullptr;
+  AutoLockHelperThreadState lock;
+
+  if (isInitialized(lock)) {
+    return true;
   }
 
-  return ensureThreadCount(threadCount);
-}
+  useInternalThreadPool_ = HelperThreadTaskCallback == nullptr;
 
-bool GlobalHelperThreadState::ensureThreadCount(size_t count) {
-  if (!ensureContextList(count)) {
+  for (size_t& i : runningTaskCount) {
+    i = 0;
+  }
+
+  if (!ensureThreadCount(threadCount, lock)) {
     return false;
   }
 
-  AutoLockHelperThreadState lock;
+  isInitialized_ = true;
+  return true;
+}
 
-  if (helperTasks_.capacity() >= count) {
-    return true;
+bool GlobalHelperThreadState::ensureThreadCount(
+    size_t count, const AutoLockHelperThreadState& lock) {
+  if (!ensureContextList(count, lock)) {
+    return false;
   }
 
   if (!helperTasks_.reserve(count)) {
     return false;
-  }
-
-  for (size_t& i : runningTaskCount) {
-    i = 0;
   }
 
   if (!useInternalThreadPool(lock)) {
@@ -1423,13 +1416,8 @@ void GlobalHelperThreadState::finishThreads() {
   }
 }
 
-bool GlobalHelperThreadState::ensureContextList(size_t count) {
-  AutoLockHelperThreadState lock;
-
-  if (helperContexts_.length() >= count) {
-    return true;
-  }
-
+bool GlobalHelperThreadState::ensureContextList(
+    size_t count, const AutoLockHelperThreadState& lock) {
   while (helperContexts_.length() < count) {
     auto cx = js::MakeUnique<JSContext>(nullptr, JS::ContextOptions());
     if (!cx || !cx->init(ContextKind::HelperThread) ||
