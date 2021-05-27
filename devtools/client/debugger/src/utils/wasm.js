@@ -32,16 +32,25 @@ function maybeWasmSectionNameResolver(data) {
 export function getWasmText(sourceId, data) {
   const nameResolver = maybeWasmSectionNameResolver(data);
   const parser = new BinaryReader();
+  let result;
   parser.setData(data.buffer, 0, data.length);
   const dis = new WasmDisassembler();
   if (nameResolver) {
     dis.nameResolver = nameResolver;
   }
   dis.addOffsets = true;
-  const done = dis.disassembleChunk(parser);
-  let result = dis.getResult();
-  if (result.lines.length === 0) {
-    result = { lines: ["No luck with wast conversion"], offsets: [0], done };
+  try {
+    const done = dis.disassembleChunk(parser);
+    result = dis.getResult();
+    if (result.lines.length === 0) {
+      result = { lines: ["No luck with wast conversion"], offsets: [0], done };
+    }
+  } catch (e) {
+    result = {
+      lines: [`Error occured during wast conversion : ${e.message}`],
+      offsets: [0],
+      done: null,
+    };
   }
 
   const { offsets } = result;
