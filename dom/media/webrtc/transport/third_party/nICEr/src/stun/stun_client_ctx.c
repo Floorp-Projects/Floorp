@@ -160,12 +160,6 @@ int nr_stun_client_start(nr_stun_client_ctx *ctx, int mode, NR_async_cb finished
     if (ctx->state != NR_STUN_CLIENT_STATE_RUNNING)
         ABORT(R_NOT_PERMITTED);
 
-    assert(ctx->retry_ct <= 2);
-    if (ctx->retry_ct > 2)
-        ABORT(R_NOT_PERMITTED);
-
-    ++ctx->retry_ct;
-
     mode = ctx->mode;
     finished_cb = ctx->finished_cb;
     cb_arg = ctx->cb_arg;
