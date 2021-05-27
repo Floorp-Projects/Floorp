@@ -15,5 +15,10 @@ interface nsIGNOMEShellService : nsIShellService
    * environments.
    */
   readonly attribute boolean canSetDesktopBackground;
+
+  /**
+   * Returns true if Firefox is set as the default handler for the scheme.
+   */
+  boolean isDefaultForScheme(in AUTF8String aScheme);
 };
 

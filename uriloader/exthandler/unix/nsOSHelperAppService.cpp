@@ -11,6 +11,10 @@
 #include "nsMIMEInfoUnix.h"
 #ifdef MOZ_WIDGET_GTK
 #  include "nsGNOMERegistry.h"
+#  ifdef MOZ_BUILD_APP_IS_BROWSER
+#    include "nsIToolkitShellService.h"
+#    include "nsIGNOMEShellService.h"
+#  endif
 #endif
 #include "nsISupports.h"
 #include "nsString.h"
@@ -1055,6 +1059,12 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(
 NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(
     const nsACString& aScheme, bool* _retval) {
   *_retval = false;
+#if defined(MOZ_BUILD_APP_IS_BROWSER) && defined(MOZ_WIDGET_GTK)
+  if (nsCOMPtr<nsIGNOMEShellService> shell =
+          do_GetService(NS_TOOLKITSHELLSERVICE_CONTRACTID)) {
+    return shell->IsDefaultForScheme(aScheme, _retval);
+  }
+#endif
   return NS_OK;
 }
 
