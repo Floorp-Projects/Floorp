@@ -1278,6 +1278,29 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
   MOZ_CRASH("Bad SymbolicAddress");
 }
 
+bool wasm::IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode) {
+  switch (callee) {
+    case SymbolicAddress::FloorD:
+    case SymbolicAddress::FloorF:
+      *mode = jit::RoundingMode::Down;
+      return true;
+    case SymbolicAddress::CeilD:
+    case SymbolicAddress::CeilF:
+      *mode = jit::RoundingMode::Up;
+      return true;
+    case SymbolicAddress::TruncD:
+    case SymbolicAddress::TruncF:
+      *mode = jit::RoundingMode::TowardsZero;
+      return true;
+    case SymbolicAddress::NearbyIntD:
+    case SymbolicAddress::NearbyIntF:
+      *mode = jit::RoundingMode::NearestTiesToEven;
+      return true;
+    default:
+      return false;
+  }
+}
+
 bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
   // Some functions don't want to a thunk, because they already have one or
   // they don't have frame info.
