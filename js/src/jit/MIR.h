@@ -2324,18 +2324,6 @@ class MInitPropGetterSetter
   PropertyName* name() const { return name_; }
 };
 
-class MInitElemGetterSetter
-    : public MTernaryInstruction,
-      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2>>::Data {
-  MInitElemGetterSetter(MDefinition* obj, MDefinition* id, MDefinition* value)
-      : MTernaryInstruction(classOpcode, obj, id, value) {}
-
- public:
-  INSTRUCTION_HEADER(InitElemGetterSetter)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object), (1, idValue), (2, value))
-};
-
 // WrappedFunction stores information about a function that can safely be used
 // off-thread. In particular, a function's flags can be modified on the main
 // thread as functions are relazified and delazified, so we must be careful not
@@ -4348,31 +4336,6 @@ class MTypeOf : public MUnaryInstruction,
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
-};
-
-class MToAsyncIter : public MBinaryInstruction,
-                     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
-  explicit MToAsyncIter(MDefinition* iterator, MDefinition* nextMethod)
-      : MBinaryInstruction(classOpcode, iterator, nextMethod) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(ToAsyncIter)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, getIterator), (1, getNextMethod))
-};
-
-class MToPropertyKeyCache : public MUnaryInstruction,
-                            public BoxPolicy<0>::Data {
-  explicit MToPropertyKeyCache(MDefinition* input)
-      : MUnaryInstruction(classOpcode, input) {
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(ToPropertyKeyCache)
-  TRIVIAL_NEW_WRAPPERS
 };
 
 class MBinaryBitwiseInstruction : public MBinaryInstruction,
@@ -6685,17 +6648,6 @@ class MBinaryCache : public MBinaryInstruction,
   TRIVIAL_NEW_WRAPPERS
 };
 
-class MUnaryCache : public MUnaryInstruction, public BoxPolicy<0>::Data {
-  explicit MUnaryCache(MDefinition* input)
-      : MUnaryInstruction(classOpcode, input) {
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(UnaryCache)
-  TRIVIAL_NEW_WRAPPERS
-};
-
 // Check whether we need to fire the interrupt handler.
 class MInterruptCheck : public MNullaryInstruction {
   MInterruptCheck() : MNullaryInstruction(classOpcode) { setGuard(); }
@@ -7044,18 +6996,6 @@ class MModuleMetadata : public MNullaryInstruction {
   TRIVIAL_NEW_WRAPPERS
 
   JSObject* module() const { return module_; }
-};
-
-class MDynamicImport : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  explicit MDynamicImport(MDefinition* specifier)
-      : MUnaryInstruction(classOpcode, specifier) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(DynamicImport)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, specifier))
 };
 
 struct LambdaFunctionInfo {
@@ -7580,20 +7520,6 @@ class MGuardNumberToIntPtrIndex : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   ALLOW_CLONE(MGuardNumberToIntPtrIndex)
-};
-
-class MKeepAliveObject : public MUnaryInstruction,
-                         public SingleObjectPolicy::Data {
-  explicit MKeepAliveObject(MDefinition* object)
-      : MUnaryInstruction(classOpcode, object) {
-    setResultType(MIRType::None);
-    setGuard();
-  }
-
- public:
-  INSTRUCTION_HEADER(KeepAliveObject)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
 };
 
 // Perform !-operation
@@ -8645,24 +8571,6 @@ class MGetPropertyCache : public MBinaryInstruction,
   NAMED_OPERANDS((0, value), (1, idval))
 };
 
-class MHomeObjectSuperBase : public MUnaryInstruction,
-                             public SingleObjectPolicy::Data {
-  explicit MHomeObjectSuperBase(MDefinition* homeObject)
-      : MUnaryInstruction(classOpcode, homeObject) {
-    setResultType(MIRType::Object);
-    setGuard();  // May throw if [[Prototype]] is null
-  }
-
- public:
-  INSTRUCTION_HEADER(HomeObjectSuperBase)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, homeObject))
-
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
-  }
-};
-
 class MGetPropSuperCache
     : public MTernaryInstruction,
       public MixPolicy<ObjectPolicy<0>, BoxExceptPolicy<1, MIRType::Object>,
@@ -8677,19 +8585,6 @@ class MGetPropSuperCache
   INSTRUCTION_HEADER(GetPropSuperCache)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object), (1, receiver), (2, idval))
-};
-
-class MBindNameCache : public MUnaryInstruction,
-                       public SingleObjectPolicy::Data {
-  explicit MBindNameCache(MDefinition* envChain)
-      : MUnaryInstruction(classOpcode, envChain) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(BindNameCache)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, environmentChain))
 };
 
 class MCallBindVar : public MUnaryInstruction, public SingleObjectPolicy::Data {
@@ -9799,22 +9694,6 @@ class MCopyLexicalEnvironmentObject : public MUnaryInstruction,
   }
 };
 
-class MHomeObject : public MUnaryInstruction, public SingleObjectPolicy::Data {
-  explicit MHomeObject(MDefinition* function)
-      : MUnaryInstruction(classOpcode, function) {
-    setResultType(MIRType::Object);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(HomeObject)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, function))
-
-  // A function's [[HomeObject]] is fixed.
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 class MAddAndStoreSlot
     : public MBinaryInstruction,
       public MixPolicy<SingleObjectPolicy, BoxPolicy<1>>::Data {
@@ -9930,20 +9809,6 @@ class MStoreDynamicSlot : public MBinaryInstruction,
 #endif
 
   ALLOW_CLONE(MStoreDynamicSlot)
-};
-
-class MGetNameCache : public MUnaryInstruction,
-                      public SingleObjectPolicy::Data {
- private:
-  explicit MGetNameCache(MDefinition* obj)
-      : MUnaryInstruction(classOpcode, obj) {
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(GetNameCache)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, envObj))
 };
 
 class MCallGetIntrinsicValue : public MNullaryInstruction {
@@ -10573,55 +10438,6 @@ class MGetIteratorCache : public MUnaryInstruction,
   NAMED_OPERANDS((0, value))
 };
 
-class MOptimizeSpreadCallCache : public MUnaryInstruction,
-                                 public BoxInputsPolicy::Data {
-  explicit MOptimizeSpreadCallCache(MDefinition* val)
-      : MUnaryInstruction(classOpcode, val) {
-    setResultType(MIRType::Boolean);
-  }
-
- public:
-  INSTRUCTION_HEADER(OptimizeSpreadCallCache)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, value))
-};
-
-class MIteratorMore : public MUnaryInstruction,
-                      public SingleObjectPolicy::Data {
-  explicit MIteratorMore(MDefinition* iter)
-      : MUnaryInstruction(classOpcode, iter) {
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(IteratorMore)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, iterator))
-};
-
-class MIsNoIter : public MUnaryInstruction, public NoTypePolicy::Data {
-  explicit MIsNoIter(MDefinition* def) : MUnaryInstruction(classOpcode, def) {
-    setResultType(MIRType::Boolean);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(IsNoIter)
-  TRIVIAL_NEW_WRAPPERS
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
-class MIteratorEnd : public MUnaryInstruction, public SingleObjectPolicy::Data {
-  explicit MIteratorEnd(MDefinition* iter)
-      : MUnaryInstruction(classOpcode, iter) {}
-
- public:
-  INSTRUCTION_HEADER(IteratorEnd)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, iterator))
-};
-
 // Implementation for 'in' operator using instruction cache
 class MInCache : public MBinaryInstruction,
                  public MixPolicy<CacheIdPolicy<0>, ObjectPolicy<1>>::Data {
@@ -10744,19 +10560,6 @@ class MInstanceOf : public MBinaryInstruction,
 
  public:
   INSTRUCTION_HEADER(InstanceOf)
-  TRIVIAL_NEW_WRAPPERS
-};
-
-// Implementation for instanceof operator with unknown rhs.
-class MInstanceOfCache : public MBinaryInstruction,
-                         public MixPolicy<BoxPolicy<0>, ObjectPolicy<1>>::Data {
-  MInstanceOfCache(MDefinition* obj, MDefinition* proto)
-      : MBinaryInstruction(classOpcode, obj, proto) {
-    setResultType(MIRType::Boolean);
-  }
-
- public:
-  INSTRUCTION_HEADER(InstanceOfCache)
   TRIVIAL_NEW_WRAPPERS
 };
 
@@ -11382,21 +11185,6 @@ class MObjectClassToString : public MUnaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
-class MCheckReturn : public MBinaryInstruction, public BoxInputsPolicy::Data {
-  explicit MCheckReturn(MDefinition* retVal, MDefinition* thisVal)
-      : MBinaryInstruction(classOpcode, retVal, thisVal) {
-    setGuard();
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(CheckReturn)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, returnValue), (1, thisValue))
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 class MCheckThis : public MUnaryInstruction, public BoxInputsPolicy::Data {
   explicit MCheckThis(MDefinition* thisVal)
       : MUnaryInstruction(classOpcode, thisVal) {
@@ -11432,38 +11220,6 @@ class MAsyncResolve : public MBinaryInstruction,
   AsyncFunctionResolveKind resolveKind() { return resolveKind_; }
 };
 
-// Returns from this function to the previous caller; this looks like a regular
-// Unary instruction and is used to lie to the MIR generator about suspending
-// ops like Yield/Await, which are emitted like returns, but MIR-Build like
-// regular instructions.
-class MGeneratorReturn : public MUnaryInstruction,
-                         public BoxInputsPolicy::Data {
-  explicit MGeneratorReturn(MDefinition* ins)
-      : MUnaryInstruction(classOpcode, ins) {
-    setGuard();
-  }
-
- public:
-  INSTRUCTION_HEADER(GeneratorReturn)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, input))
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
-class MAsyncAwait : public MBinaryInstruction,
-                    public MixPolicy<BoxPolicy<0>, ObjectPolicy<1>>::Data {
-  explicit MAsyncAwait(MDefinition* value, MDefinition* gen)
-      : MBinaryInstruction(classOpcode, value, gen) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(AsyncAwait)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, value), (1, generator))
-};
-
 class MCheckThisReinit : public MUnaryInstruction,
                          public BoxInputsPolicy::Data {
   explicit MCheckThisReinit(MDefinition* thisVal)
@@ -11494,18 +11250,6 @@ class MGenerator : public MTernaryInstruction,
   INSTRUCTION_HEADER(Generator)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, callee), (1, environmentChain), (2, argsObject))
-};
-
-class MCanSkipAwait : public MUnaryInstruction, public BoxPolicy<0>::Data {
-  explicit MCanSkipAwait(MDefinition* generator)
-      : MUnaryInstruction(classOpcode, generator) {
-    setResultType(MIRType::Boolean);
-  }
-
- public:
-  INSTRUCTION_HEADER(CanSkipAwait)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, value))
 };
 
 class MMaybeExtractAwaitValue : public MBinaryInstruction,
@@ -11713,66 +11457,6 @@ class MCheckObjCoercible : public MUnaryInstruction,
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
-class MCheckClassHeritage : public MUnaryInstruction,
-                            public BoxInputsPolicy::Data {
-  explicit MCheckClassHeritage(MDefinition* heritage)
-      : MUnaryInstruction(classOpcode, heritage) {
-    setGuard();
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(CheckClassHeritage)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, heritage))
-};
-
-class MDebugCheckSelfHosted : public MUnaryInstruction,
-                              public BoxInputsPolicy::Data {
-  explicit MDebugCheckSelfHosted(MDefinition* toCheck)
-      : MUnaryInstruction(classOpcode, toCheck) {
-    setGuard();
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(DebugCheckSelfHosted)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, checkValue))
-};
-
-class MFinishBoundFunctionInit
-    : public MTernaryInstruction,
-      public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>,
-                       UnboxedInt32Policy<2>>::Data {
-  MFinishBoundFunctionInit(MDefinition* bound, MDefinition* target,
-                           MDefinition* argCount)
-      : MTernaryInstruction(classOpcode, bound, target, argCount) {}
-
- public:
-  INSTRUCTION_HEADER(FinishBoundFunctionInit)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, bound), (1, target), (2, argCount))
-};
-
-class MIsPackedArray : public MUnaryInstruction,
-                       public SingleObjectPolicy::Data {
-  explicit MIsPackedArray(MDefinition* object)
-      : MUnaryInstruction(classOpcode, object) {
-    setResultType(MIRType::Boolean);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(IsPackedArray)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
-
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
-  }
-};
-
 class MGuardArrayIsPacked : public MUnaryInstruction,
                             public SingleObjectPolicy::Data {
   explicit MGuardArrayIsPacked(MDefinition* array)
@@ -11793,20 +11477,6 @@ class MGuardArrayIsPacked : public MUnaryInstruction,
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields);
   }
-};
-
-class MGetPrototypeOf : public MUnaryInstruction,
-                        public SingleObjectPolicy::Data {
-  explicit MGetPrototypeOf(MDefinition* target)
-      : MUnaryInstruction(classOpcode, target) {
-    setResultType(MIRType::Value);
-    setGuard();  // May throw if target is a proxy.
-  }
-
- public:
-  INSTRUCTION_HEADER(GetPrototypeOf)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, target))
 };
 
 class MObjectWithProto : public MUnaryInstruction,
@@ -11871,40 +11541,6 @@ class MBuiltinObject : public MNullaryInstruction {
   BuiltinObjectKind builtinObjectKind() const { return builtinObjectKind_; }
 
   bool possiblyCalls() const override { return true; }
-};
-
-class MSuperFunction : public MUnaryInstruction,
-                       public SingleObjectPolicy::Data {
-  explicit MSuperFunction(MDefinition* callee)
-      : MUnaryInstruction(classOpcode, callee) {
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(SuperFunction)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, callee))
-
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
-  }
-};
-
-class MInitHomeObject : public MBinaryInstruction,
-                        public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
-  explicit MInitHomeObject(MDefinition* function, MDefinition* homeObject)
-      : MBinaryInstruction(classOpcode, function, homeObject) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(InitHomeObject)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, function), (1, homeObject))
-
-  AliasSet getAliasSet() const override {
-    return AliasSet::Store(AliasSet::ObjectFields);
-  }
 };
 
 // Return true if the object is definitely a TypedArray constructor, but not
@@ -12427,33 +12063,6 @@ class MWasmAlignmentCheck : public MUnaryInstruction,
   uint32_t byteSize() const { return byteSize_; }
 
   wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
-};
-
-class MWasmExtendU32Index : public MUnaryInstruction,
-                            public NoTypePolicy::Data {
-  explicit MWasmExtendU32Index(MDefinition* input)
-      : MUnaryInstruction(classOpcode, input) {
-    setResultType(MIRType::Int64);
-  }
-
- public:
-  INSTRUCTION_HEADER(WasmExtendU32Index)
-  TRIVIAL_NEW_WRAPPERS
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
-class MWasmWrapU32Index : public MUnaryInstruction, public NoTypePolicy::Data {
-  explicit MWasmWrapU32Index(MDefinition* input)
-      : MUnaryInstruction(classOpcode, input) {
-    setResultType(MIRType::Int32);
-  }
-
- public:
-  INSTRUCTION_HEADER(WasmWrapU32Index)
-  TRIVIAL_NEW_WRAPPERS
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 class MWasmLoad
