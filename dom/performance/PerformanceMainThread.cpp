@@ -63,7 +63,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PerformanceMainThread,
                                   mPendingPointerDown,
                                   mPendingEventTimingEntries, mEventCounts)
   tmp->mMozMemory = nullptr;
-  mozilla::DropJSObjects(this);
+  mozilla::DropJSObjects(tmp);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PerformanceMainThread,
