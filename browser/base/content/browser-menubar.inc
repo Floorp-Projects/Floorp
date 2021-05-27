@@ -201,12 +201,10 @@
                     <menuseparator/>
                   </menupopup>
                 </menu>
-                <menu id="charsetMenu"
-                    oncommand="BrowserSetForcedCharacterSet(event.target.getAttribute('charset'));"
-                    onpopupshowing="CharsetMenu.build(event.target); UpdateCurrentCharset(this);" data-l10n-id="menu-view-charset">
-                  <menupopup>
-                  </menupopup>
-                </menu>
+                <menuitem id="repair-text-encoding"
+                          disabled="true"
+                          oncommand="BrowserSetForcedCharacterSet('_autodetect_all')"
+                          data-l10n-id="menu-view-repair-text-encoding"/>
                 <menuseparator/>
 #ifdef XP_MACOSX
                 <menuitem id="enterFullScreenItem"
