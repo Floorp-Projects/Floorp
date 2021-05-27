@@ -55,6 +55,9 @@ async function fetchData() {
   for (const module of data.modules) {
     module.events = [];
     module.loadingOnMain = { count: 0, sum: 0 };
+    module.typeFlags = AboutThirdParty.lookupModuleType(
+      module.dllFile?.leafName
+    );
   }
 
   for (const [proc, perProc] of Object.entries(data.processes)) {
@@ -80,6 +83,14 @@ async function fetchData() {
     module.loadingOnMain = avg;
     module.events.sort((a, b) => a.process.localeCompare(b.process));
   }
+
+  data.modules.sort((a, b) => {
+    // First sort by |typeFlags| in ascending order to move up
+    // unknown-type modules first, then sort by |loadingOnMain|
+    // in descending order to move up slower modules.
+    const diff = a.typeFlags - b.typeFlags;
+    return diff == 0 ? b.loadingOnMain - a.loadingOnMain : diff;
+  });
 
   return data.modules;
 }
@@ -144,6 +155,11 @@ function copyDataToClipboard(aData) {
       fileVersion: module.fileVersion,
     };
 
+    // We include the typeFlags field only when it's not 0 because
+    // typeFlags == 0 means system info is not yet collected.
+    if (module.typeFlags) {
+      copied.typeFlags = module.typeFlags;
+    }
     if (module.signedBy) {
       copied.signedBy = module.signedBy;
     }
@@ -190,6 +206,14 @@ function visualizeData(aData) {
     newCard
       .querySelector(".button-expand")
       .addEventListener("click", onClickExpand);
+
+    const modTagsContainer = newCard.querySelector(".module-tags");
+    if (module.typeFlags & Ci.nsIAboutThirdParty.ModuleType_IME) {
+      modTagsContainer.querySelector(".tag-ime").hidden = false;
+    }
+    if (module.typeFlags & Ci.nsIAboutThirdParty.ModuleType_ShellExtension) {
+      modTagsContainer.querySelector(".tag-shellex").hidden = false;
+    }
 
     const btnOpenDir = newCard.querySelector(".button-open-dir");
     btnOpenDir.fileObj = module.dllFile;
@@ -265,8 +289,27 @@ async function onLoad() {
       e.target.disabled = false;
     });
 
+  let hasData = false;
+  AboutThirdParty.collectSystemInfo()
+    .then(() => {
+      if (!hasData) {
+        // If collectSystemInfo was completed before fetchData,
+        // or there was no data available, visualizeData shows
+        // full info and the reload button is not needed.
+        return;
+      }
+
+      const button = document.getElementById("button-reload");
+      button.addEventListener("click", () => {
+        location.reload();
+      });
+      button.hidden = false;
+    })
+    .catch(Cu.reportError);
+
   const data = await fetchData();
-  if (!data?.length) {
+  hasData = data?.length;
+  if (!hasData) {
     document.getElementById("no-data").hidden = false;
     return;
   }
