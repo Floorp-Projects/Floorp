@@ -1,4 +1,3 @@
-import logging
 from os.path import join, dirname
 
 import pytest
@@ -9,8 +8,6 @@ from wptrunner import environment, products
 
 test_paths = {"/": {"tests_path": join(dirname(__file__), "..", "..", "..", "..", "..")}}  # repo root
 environment.do_delayed_imports(None, test_paths)
-
-logger = logging.getLogger()
 
 
 @active_products("product")
@@ -42,8 +39,7 @@ def test_webkitgtk_certificate_domain_list(product):
     kwargs["pause_after_test"] = False
     kwargs["pause_on_unexpected"] = False
     kwargs["debug_test"] = False
-    with ConfigBuilder(logger,
-                       browser_host="example.net",
+    with ConfigBuilder(browser_host="example.net",
                        alternate_hosts={"alt": "example.org"},
                        subdomains={"a", "b"},
                        not_subdomains={"x", "y"}) as env_config:

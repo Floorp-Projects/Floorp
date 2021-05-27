@@ -8,13 +8,12 @@ import urllib
 
 class WPTServer(object):
     def __init__(self, wpt_root):
-        self.logger = logging.getLogger()
         self.wpt_root = wpt_root
 
         # This is a terrible hack to get the default config of wptserve.
         sys.path.insert(0, os.path.join(wpt_root, "tools"))
         from serve.serve import build_config
-        with build_config(self.logger) as config:
+        with build_config() as config:
             self.host = config["browser_host"]
             self.http_port = config["ports"]["http"][0]
             self.https_port = config["ports"]["https"][0]
@@ -27,7 +26,7 @@ class WPTServer(object):
         wptserve_cmd = [os.path.join(self.wpt_root, 'wpt'), 'serve']
         if sys.executable:
             wptserve_cmd[0:0] = [sys.executable]
-        self.logger.info('Executing %s' % ' '.join(wptserve_cmd))
+        logging.info('Executing %s' % ' '.join(wptserve_cmd))
         self.proc = subprocess.Popen(
             wptserve_cmd,
             stderr=self.devnull,
