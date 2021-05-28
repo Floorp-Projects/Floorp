@@ -69,8 +69,7 @@ void AtomMarkingRuntime::unregisterArena(Arena* arena, const AutoLockGC& lock) {
   MOZ_ASSERT(arena->zone->isAtomsZone());
 
   // Leak these atom bits if we run out of memory.
-  mozilla::Unused << freeArenaIndexes.ref().emplaceBack(
-      arena->atomBitmapStart());
+  (void)freeArenaIndexes.ref().emplaceBack(arena->atomBitmapStart());
 }
 
 bool AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime,

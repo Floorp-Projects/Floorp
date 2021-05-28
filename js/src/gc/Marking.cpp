@@ -11,7 +11,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Unused.h"
 
 #include <algorithm>
 #include <initializer_list>
@@ -1985,7 +1984,7 @@ inline Cell* MarkStack::TaggedPtr::ptr() const {
 }
 
 inline void MarkStack::TaggedPtr::assertValid() const {
-  mozilla::Unused << tag();
+  (void)tag();
   MOZ_ASSERT(IsCellPointerValid(ptr()));
 }
 
@@ -2080,7 +2079,7 @@ void MarkStack::setMaxCapacity(size_t maxCapacity) {
   if (capacity() > maxCapacity_) {
     // If the realloc fails, just keep using the existing stack; it's
     // not ideal but better than failing.
-    mozilla::Unused << resize(maxCapacity_);
+    (void)resize(maxCapacity_);
   }
 }
 
@@ -2432,7 +2431,7 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
   if (!marker->incrementalWeakMapMarkingEnabled) {
     for (WeakMapBase* m : gcWeakMapList()) {
       if (m->mapColor) {
-        mozilla::Unused << m->markEntries(marker);
+        (void)m->markEntries(marker);
       }
     }
     return IncrementalProgress::Finished;
