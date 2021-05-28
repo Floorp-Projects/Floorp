@@ -614,3 +614,14 @@ void MacroAssemblerX86Shared::maxNumFloat32x4(FloatRegister lhs, Operand rhs,
     vorps(Operand(mask), output, output);
   }
 }
+
+void MacroAssemblerX86Shared::selectX4(FloatRegister mask, FloatRegister onTrue,
+                                       FloatRegister onFalse,
+                                       FloatRegister temp,
+                                       FloatRegister output) {
+  if (AssemblerX86Shared::HasAVX()) {
+    vblendvps(mask, onTrue, onFalse, output);
+  } else {
+    selectSimd128(mask, onTrue, onFalse, temp, output);
+  }
+}

@@ -822,6 +822,16 @@ for ( let [ty128,size] of [['i8x16',1], ['i16x8',2], ['i32x4',4]] ) {
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 32x4");
 }
 
+// Bitselect with constant mask folded into shuffle operation
+
+if (!isArm64) {
+  wasmCompile(`
+  (module (func (param v128) (param v128) (result v128)
+    (v128.bitselect (local.get 0) (local.get 1) (v128.const i8x16 0 -1 -1 0 0 0 0 0 -1 -1 -1 -1 -1 -1 0 0))))
+  `);
+      assertEq(wasmSimdAnalysis(), "shuffle -> blend 8x16");  
+}
+
 // Library
 
 function wasmCompile(text) {
