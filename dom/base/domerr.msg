@@ -140,7 +140,6 @@ DOM4_MSG_DEF(SyntaxError, "Invalid header name.", NS_ERROR_DOM_INVALID_HEADER_NA
 DOM4_MSG_DEF(InvalidStateError, "XMLHttpRequest has an invalid context.", NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT)
 DOM4_MSG_DEF(InvalidStateError, "XMLHttpRequest state must be OPENED.", NS_ERROR_DOM_INVALID_STATE_XHR_MUST_BE_OPENED)
 DOM4_MSG_DEF(InvalidStateError, "XMLHttpRequest must not be sending.", NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_SENDING)
-DOM4_MSG_DEF(InvalidStateError, "Cannot set 'responseType' property on XMLHttpRequest after 'send()' (when its state is LOADING or DONE).", NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE_RESPONSE_TYPE)
 
 /* Image decode errors. */
 DOM4_MSG_DEF(EncodingError, "Node bound to inactive document.", NS_ERROR_DOM_IMAGE_INACTIVE_DOCUMENT)
