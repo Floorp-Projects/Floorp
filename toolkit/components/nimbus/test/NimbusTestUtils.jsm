@@ -175,7 +175,8 @@ const ExperimentFakes = {
         slug: "treatment",
         feature: {
           featureId: "test-feature",
-          value: { title: "hello", enabled: true },
+          enabled: true,
+          value: { title: "hello" },
         },
         ...props,
       },
@@ -200,14 +201,15 @@ const ExperimentFakes = {
         {
           slug: "control",
           ratio: 1,
-          feature: { featureId: "test-feature", value: { enabled: true } },
+          feature: { featureId: "test-feature", enabled: true, value: null },
         },
         {
           slug: "treatment",
           ratio: 1,
           feature: {
             featureId: "test-feature",
-            value: { title: "hello", enabled: true },
+            enabled: true,
+            value: { title: "hello" },
           },
         },
       ],

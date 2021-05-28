@@ -27,11 +27,8 @@ function setDefaultBranch(pref, value) {
 
 const TEST_FALLBACK_PREF = "testprefbranch.config";
 const FAKE_FEATURE_MANIFEST = {
+  enabledFallbackPref: "testprefbranch.enabled",
   variables: {
-    enabled: {
-      type: "boolean",
-      fallbackPref: "testprefbranch.enabled",
-    },
     config: {
       type: "json",
       fallbackPref: TEST_FALLBACK_PREF,
@@ -39,9 +36,8 @@ const FAKE_FEATURE_MANIFEST = {
   },
 };
 const FAKE_FEATURE_REMOTE_VALUE = {
-  variables: {
-    enabled: true,
-  },
+  variables: {},
+  enabled: true,
   targeting: "true",
 };
 
@@ -178,7 +174,7 @@ add_task(async function test_ExperimentFeature_isEnabled_default() {
   sandbox.restore();
 });
 
-add_task(async function test_ExperimentFeature_isEnabled_default_over_remote() {
+add_task(async function test_ExperimentFeature_isEnabled_remote_over_default() {
   const { manager, sandbox } = await setupForExperimentFeature();
   await manager.store.ready();
 
@@ -194,25 +190,18 @@ add_task(async function test_ExperimentFeature_isEnabled_default_over_remote() {
 
   manager.store.updateRemoteConfigs("foo", {
     ...FAKE_FEATURE_REMOTE_VALUE,
-    variables: { enabled: true },
+    enabled: true,
   });
 
   await featureInstance.ready();
 
   Assert.equal(
     featureInstance.isEnabled(),
-    false,
-    "Should still use userpref over remote"
+    true,
+    "should use the remote value over the default"
   );
 
   Services.prefs.clearUserPref("testprefbranch.enabled");
-
-  Assert.equal(
-    featureInstance.isEnabled(),
-    true,
-    "Should use remote value over default pref"
-  );
-
   sandbox.restore();
 });
 
@@ -244,7 +233,8 @@ add_task(
         slug: "treatment",
         feature: {
           featureId: "foo",
-          value: { enabled: true },
+          enabled: true,
+          value: null,
         },
       },
     });
@@ -255,9 +245,10 @@ add_task(
     manager.store.addExperiment(expected);
 
     const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
+    Services.prefs.setBoolPref("testprefbranch.enabled", false);
     manager.store.updateRemoteConfigs("foo", {
       ...FAKE_FEATURE_REMOTE_VALUE,
-      variables: { enabled: false },
+      enabled: false,
     });
 
     await featureInstance.ready();
@@ -265,26 +256,16 @@ add_task(
     Assert.equal(
       featureInstance.isEnabled(),
       true,
-      "should return the enabled value defined in the experiment not the remote value"
+      "should return the enabled value defined in the experiment, not the default pref or the remote value"
     );
 
-    Services.prefs.setBoolPref("testprefbranch.enabled", false);
-
-    Assert.equal(
-      featureInstance.isEnabled(),
-      false,
-      "should return the user pref not the experiment value"
-    );
-
-    // Exposure is not triggered if user pref is set
-    Services.prefs.clearUserPref("testprefbranch.enabled");
-
-    Assert.ok(exposureSpy.notCalled, "should not emit exposure by default");
+    Assert.ok(exposureSpy.notCalled, "should emit exposure by default event");
 
     featureInstance.isEnabled({ sendExposureEvent: true });
 
     Assert.ok(exposureSpy.calledOnce, "should emit exposure event");
 
+    Services.prefs.clearUserPref("testprefbranch.enabled");
     sandbox.restore();
   }
 );
@@ -296,7 +277,8 @@ add_task(async function test_ExperimentFeature_isEnabled_no_exposure() {
       slug: "treatment",
       feature: {
         featureId: "foo",
-        value: { enabled: false },
+        enabled: false,
+        value: null,
       },
     },
   });
@@ -340,7 +322,8 @@ add_task(async function test_record_exposure_event() {
         slug: "treatment",
         feature: {
           featureId: "foo",
-          value: { enabled: false },
+          enabled: false,
+          value: null,
         },
       },
     })
@@ -370,7 +353,8 @@ add_task(async function test_record_exposure_event_once() {
         slug: "treatment",
         feature: {
           featureId: "foo",
-          value: { enabled: false },
+          enabled: false,
+          value: null,
         },
       },
     })
@@ -399,7 +383,8 @@ add_task(async function test_prevent_double_exposure_getValue() {
         slug: "treatment",
         feature: {
           featureId: "foo",
-          value: { enabled: false },
+          enabled: false,
+          value: null,
         },
       },
     })
@@ -431,7 +416,8 @@ add_task(async function test_prevent_double_exposure_isEnabled() {
         slug: "treatment",
         feature: {
           featureId: "foo",
-          value: { enabled: false },
+          enabled: false,
+          value: null,
         },
       },
     })
@@ -475,51 +461,4 @@ add_task(async function test_set_remote_before_ready() {
   });
 
   Assert.ok(feature.getValue().test, "Successfully set");
-});
-
-add_task(async function test_isEnabled_backwards_compatible() {
-  const PREVIOUS_FEATURE_MANIFEST = {
-    variables: {
-      config: {
-        type: "json",
-        fallbackPref: TEST_FALLBACK_PREF,
-      },
-    },
-  };
-  let sandbox = sinon.createSandbox();
-  const manager = ExperimentFakes.manager();
-  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
-  const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
-  const feature = new ExperimentFeature("foo", PREVIOUS_FEATURE_MANIFEST);
-
-  await manager.onStartup();
-
-  await ExperimentFakes.remoteDefaultsHelper({
-    feature,
-    store: manager.store,
-    configuration: { variables: {}, enabled: false },
-  });
-
-  Assert.ok(!feature.isEnabled(), "Disabled based on remote configs");
-
-  manager.store.addExperiment(
-    ExperimentFakes.experiment("blah", {
-      featureIds: ["foo"],
-      branch: {
-        slug: "treatment",
-        feature: {
-          featureId: "foo",
-          enabled: true,
-          value: {},
-        },
-      },
-    })
-  );
-
-  Assert.ok(exposureSpy.notCalled, "Not called until now");
-  Assert.ok(
-    feature.isEnabled({ sendExposureEvent: true }),
-    "Enabled based on experiment recipe"
-  );
-  Assert.ok(exposureSpy.calledOnce, "Exposure event sent");
 });

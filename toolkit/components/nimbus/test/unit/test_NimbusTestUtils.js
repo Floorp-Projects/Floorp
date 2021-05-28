@@ -55,7 +55,8 @@ add_task(async function test_enrollWithFeatureConfig() {
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
     {
       featureId: "enrollWithFeatureConfig",
-      value: { enabled: true },
+      enabled: true,
+      value: null,
     },
     { manager }
   );
