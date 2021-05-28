@@ -1242,7 +1242,7 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
               const nsACString& aSourceFilePath, int32_t aSourceFileLine,
               Severity aSeverity)
 #  else
-void LogError(const nsACString& aExpr, Maybe<nsresult> aResult,
+void LogError(const nsACString& aExpr, Maybe<nsresult> aMaybeRv,
               const nsACString& aSourceFilePath, int32_t aSourceFileLine,
               Severity aSeverity)
 #  endif
