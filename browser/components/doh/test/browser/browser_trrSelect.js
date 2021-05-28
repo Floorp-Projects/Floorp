@@ -7,6 +7,20 @@
 add_task(setup);
 
 add_task(async function testTRRSelect() {
+  // Set up the resolver lists in the default and user pref branches.
+  // dummyTRR3 which only exists in the user-branch value should be ignored.
+  let oldResolverList = Services.prefs.getCharPref("network.trr.resolvers");
+  Services.prefs
+    .getDefaultBranch("")
+    .setCharPref(
+      "network.trr.resolvers",
+      `[{"url": "https://dummytrr.com/query"}, {"url": "https://dummytrr2.com/query"}]`
+    );
+  Services.prefs.setCharPref(
+    "network.trr.resolvers",
+    `[{"url": "https://dummytrr.com/query"}, {"url": "https://dummytrr2.com/query"}, {"url": "https://dummytrr3.com/query"}]`
+  );
+
   // Clean start: doh-rollout.uri should be set after init.
   setPassingHeuristics();
   let prefPromise = TestUtils.waitForPrefChange(prefs.BREADCRUMB_PREF);
@@ -15,7 +29,7 @@ add_task(async function testTRRSelect() {
   is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb saved.");
   is(
     Preferences.get(prefs.TRR_SELECT_URI_PREF),
-    "https://example.com/dns-query",
+    "https://dummytrr.com/query",
     "TRR selection complete."
   );
 
@@ -32,7 +46,7 @@ add_task(async function testTRRSelect() {
   await prefPromise;
   is(
     Preferences.get(prefs.TRR_SELECT_URI_PREF),
-    "https://example.com/dns-query",
+    "https://dummytrr.com/query",
     "TRR selection complete."
   );
 
@@ -40,17 +54,13 @@ add_task(async function testTRRSelect() {
   await ensureTRRMode(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
-  // Disable committing and reset. The committed URI should be reset to the
-  // default provider and the dry-run-result should persist.
+  // Disable committing and reset. The committed URI should be cleared but the
+  // dry-run-result should persist.
   Preferences.set(prefs.TRR_SELECT_COMMIT_PREF, false);
   prefPromise = TestUtils.waitForPrefChange(prefs.TRR_SELECT_URI_PREF);
   await restartDoHController();
   await prefPromise;
-  is(
-    Preferences.get(prefs.TRR_SELECT_URI_PREF),
-    "https://example.com/1",
-    "Default TRR selected."
-  );
+  ok(!Preferences.isSet(prefs.TRR_SELECT_URI_PREF), "TRR selection cleared.");
   try {
     await BrowserTestUtils.waitForCondition(() => {
       return !Preferences.isSet(prefs.TRR_SELECT_DRY_RUN_RESULT_PREF);
@@ -61,7 +71,7 @@ add_task(async function testTRRSelect() {
   }
   is(
     Preferences.get(prefs.TRR_SELECT_DRY_RUN_RESULT_PREF),
-    "https://example.com/dns-query",
+    "https://dummytrr.com/query",
     "dry-run result has the correct value."
   );
 
@@ -76,23 +86,15 @@ add_task(async function testTRRSelect() {
   await restartDoHController();
   try {
     await BrowserTestUtils.waitForCondition(() => {
-      return (
-        Preferences.get(prefs.TRR_SELECT_URI_PREF) ==
-        "https://example.com/dns-query"
-      );
+      return Preferences.get(prefs.TRR_SELECT_URI_PREF);
     });
     ok(false, "Dry run result got committed, fail!");
   } catch (e) {
     ok(true, "Dry run result did not get committed");
   }
   is(
-    Preferences.get(prefs.TRR_SELECT_URI_PREF),
-    "https://example.com/1",
-    "Default TRR selected."
-  );
-  is(
     Preferences.get(prefs.TRR_SELECT_DRY_RUN_RESULT_PREF),
-    "https://example.com/dns-query",
+    "https://dummytrr.com/query",
     "TRR selection complete, dry-run result recorded."
   );
   Preferences.set(prefs.TRR_SELECT_COMMIT_PREF, true);
@@ -106,17 +108,14 @@ add_task(async function testTRRSelect() {
   Preferences.reset(prefs.TRR_SELECT_URI_PREF);
   Preferences.set(
     prefs.TRR_SELECT_DRY_RUN_RESULT_PREF,
-    "https://example.com/2"
+    "https://dummytrr2.com/query"
   );
-  prefPromise = TestUtils.waitForPrefChange(
-    prefs.TRR_SELECT_URI_PREF,
-    newVal => newVal == "https://example.com/2"
-  );
+  prefPromise = TestUtils.waitForPrefChange(prefs.TRR_SELECT_URI_PREF);
   await restartDoHController();
   await prefPromise;
   is(
     Preferences.get(prefs.TRR_SELECT_URI_PREF),
-    "https://example.com/2",
+    "https://dummytrr2.com/query",
     "TRR selection complete, existing dry-run-result committed."
   );
 
@@ -129,18 +128,23 @@ add_task(async function testTRRSelect() {
   Preferences.reset(prefs.TRR_SELECT_URI_PREF);
   Preferences.set(
     prefs.TRR_SELECT_DRY_RUN_RESULT_PREF,
-    "https://example.com/4"
+    "https://dummytrr3.com/query"
   );
   prefPromise = TestUtils.waitForPrefChange(prefs.TRR_SELECT_URI_PREF);
   await restartDoHController();
   await prefPromise;
   is(
     Preferences.get(prefs.TRR_SELECT_URI_PREF),
-    "https://example.com/dns-query",
+    "https://dummytrr.com/query",
     "TRR selection complete, existing dry-run-result discarded and refreshed."
   );
 
   // Wait for heuristics to complete.
   await ensureTRRMode(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
+
+  Services.prefs
+    .getDefaultBranch("")
+    .setCharPref("network.trr.resolvers", oldResolverList);
+  Services.prefs.clearUserPref("network.trr.resolvers");
 });
