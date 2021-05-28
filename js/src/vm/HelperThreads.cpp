@@ -2674,7 +2674,7 @@ void GlobalHelperThreadState::trace(JSTracer* trc) {
 // Definition of helper thread tasks.
 //
 // Priority is determined by the order they're listed here.
-const HelperThread::Selector HelperThread::selectors[] = {
+const GlobalHelperThreadState::Selector GlobalHelperThreadState::selectors[] = {
     &GlobalHelperThreadState::maybeGetGCParallelTask,
     &GlobalHelperThreadState::maybeGetIonCompileTask,
     &GlobalHelperThreadState::maybeGetWasmTier1CompileTask,
@@ -2722,7 +2722,7 @@ void HelperThread::threadLoop() {
     // lists). Unlocking the HelperThreadState between task selection and
     // execution is not well-defined.
 
-    HelperThreadTask* task = findHighestPriorityTask(lock);
+    HelperThreadTask* task = HelperThreadState().findHighestPriorityTask(lock);
     if (!task) {
       AUTO_PROFILER_LABEL("HelperThread::threadLoop::wait", IDLE);
       HelperThreadState().wait(lock, GlobalHelperThreadState::PRODUCER);
@@ -2733,7 +2733,7 @@ void HelperThread::threadLoop() {
   }
 }
 
-HelperThreadTask* HelperThread::findHighestPriorityTask(
+HelperThreadTask* GlobalHelperThreadState::findHighestPriorityTask(
     const AutoLockHelperThreadState& locked) {
   // Return the highest priority task that is ready to start, or nullptr.
 
