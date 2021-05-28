@@ -303,10 +303,24 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
  protected:
   virtual ~mozInlineSpellChecker();
 
-  // Adds the ranges corresponding to the misspelled words as long as
-  // aSpellCheckerSelection isn't full.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void AddRangesForMisspelledWords(
-      const nsTArray<NodeOffsetRange>& aRanges,
+  struct CompareRangeAndNodeOffsetRange;
+
+  // Ensures that all misspelled words have corresponding ranges in
+  // aSpellCheckerSelection. Reuses those of the old ranges, which still
+  // correspond to misspelled words and adds new ranges for those misspelled
+  // words for which no corresponding old range exists.
+  // Removes the old ranges which aren't reused from aSpellCheckerSelection.
+  //
+  // @param aNodeOffsetRangesForWords corresponds to aIsMisspelled.
+  //                                  `aNodeOffsetRangesForWords.Length() ==
+  //                                  aIsMisspelled.Length()`.
+  // @param aOldRangesForSomeWords ranges belonging to aSpellCheckerSelection.
+  //                               Its length may differ from
+  //                               `aNodeOffsetRangesForWords.Length()`.
+  // @param aIsMisspelled indicates which words are misspelled.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void UpdateRangesForMisspelledWords(
+      const nsTArray<NodeOffsetRange>& aNodeOffsetRangesForWords,
+      const nsTArray<RefPtr<nsRange>>& aOldRangesForSomeWords,
       const nsTArray<bool>& aIsMisspelled,
       mozilla::dom::Selection& aSpellCheckerSelection);
 
