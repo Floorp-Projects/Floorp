@@ -327,6 +327,8 @@ async function onLoad() {
     .catch(Cu.reportError);
 
   const data = await fetchData();
+  window.fetchDataDone = true;
+
   hasData = data?.length;
   if (!hasData) {
     document.getElementById("no-data").hidden = false;
