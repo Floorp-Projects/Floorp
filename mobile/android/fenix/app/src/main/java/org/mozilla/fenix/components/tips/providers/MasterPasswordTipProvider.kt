@@ -20,11 +20,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mozilla.appservices.logins.IdCollisionException
-import mozilla.appservices.logins.InvalidRecordException
-import mozilla.appservices.logins.LoginsStorageException
-import mozilla.appservices.logins.ServerPassword
-import mozilla.components.concept.storage.Login
+import mozilla.components.service.sync.logins.IdCollisionException
+import mozilla.components.service.sync.logins.InvalidRecordException
+import mozilla.components.service.sync.logins.LoginsStorageException
+import mozilla.components.service.sync.logins.ServerPassword
+import mozilla.components.service.sync.logins.toLogin
 import mozilla.components.support.migration.FennecLoginsMPImporter
 import mozilla.components.support.migration.FennecProfile
 import org.mozilla.fenix.R
@@ -198,7 +198,7 @@ class MasterPasswordTipProvider(
                     context.components.core.passwordsStorage.add(it)
                 } catch (e: InvalidRecordException) {
                     // This record was invalid and we couldn't save this login
-                    Sentry.capture("Master Password migration add login error $e for reason ${e.reason}")
+                    Sentry.capture("Master Password migration add login error $e for reason ${e.message}")
                 } catch (e: IdCollisionException) {
                     // Nonempty ID was provided
                     Sentry.capture("Master Password migration add login error $e")
@@ -257,23 +257,6 @@ class MasterPasswordTipProvider(
             }
         }
     }
-
-    /**
-     * Converts an Application Services [ServerPassword] to an Android Components [Login]
-     */
-    fun ServerPassword.toLogin() = Login(
-        origin = hostname,
-        formActionOrigin = formSubmitURL,
-        httpRealm = httpRealm,
-        username = username,
-        password = password,
-        timesUsed = timesUsed,
-        timeCreated = timeCreated,
-        timeLastUsed = timeLastUsed,
-        timePasswordChanged = timePasswordChanged,
-        usernameField = usernameField,
-        passwordField = passwordField
-    )
 
     companion object {
         private const val HALF_OPACITY = .5F
