@@ -32,7 +32,6 @@ using mozilla::LossyConvertUtf16toLatin1;
 using mozilla::Span;
 using mozilla::Tie;
 using mozilla::Tuple;
-using mozilla::Unused;
 using mozilla::Utf8Unit;
 
 using JS::Latin1CharsZ;
@@ -108,14 +107,14 @@ JS_PUBLIC_API size_t JS::DeflateStringToUTF8Buffer(JSLinearString* src,
     size_t read;
     size_t written;
     Tie(read, written) = ConvertLatin1toUtf8Partial(source, dst);
-    Unused << read;
+    (void)read;
     return written;
   }
   auto source = Span(src->twoByteChars(nogc), src->length());
   size_t read;
   size_t written;
   Tie(read, written) = ConvertUtf16toUtf8Partial(source, dst);
-  Unused << read;
+  (void)read;
   return written;
 }
 
@@ -125,13 +124,13 @@ void ConvertToUTF8(mozilla::Span<CharT> src, mozilla::Span<char> dst);
 template <>
 void ConvertToUTF8<const char16_t>(mozilla::Span<const char16_t> src,
                                    mozilla::Span<char> dst) {
-  Unused << ConvertUtf16toUtf8Partial(src, dst);
+  (void)ConvertUtf16toUtf8Partial(src, dst);
 }
 
 template <>
 void ConvertToUTF8<const Latin1Char>(mozilla::Span<const Latin1Char> src,
                                      mozilla::Span<char> dst) {
-  Unused << ConvertLatin1toUtf8Partial(AsChars(src), dst);
+  (void)ConvertLatin1toUtf8Partial(AsChars(src), dst);
 }
 
 template <typename CharT>

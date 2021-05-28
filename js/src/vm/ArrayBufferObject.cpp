@@ -72,7 +72,6 @@ using mozilla::CheckedInt;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
-using mozilla::Unused;
 
 using namespace js;
 
@@ -793,7 +792,7 @@ static bool CreateSpecificWasmBuffer32(
   } else if (liveBufferCount > StartTriggeringAtLiveBufferCount) {
     allocatedSinceLastTrigger++;
     if (allocatedSinceLastTrigger > AllocatedBuffersPerTrigger) {
-      Unused << cx->runtime()->gc.triggerGC(JS::GCReason::TOO_MUCH_WASM_MEMORY);
+      (void)cx->runtime()->gc.triggerGC(JS::GCReason::TOO_MUCH_WASM_MEMORY);
       allocatedSinceLastTrigger = 0;
     }
   } else {
@@ -1281,7 +1280,7 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
   AutoSetNewObjectMetadata metadata(cx);
   auto [buffer, toFill] =
       createBufferAndData<FillContents::Zero>(cx, nbytes, metadata, proto);
-  Unused << toFill;
+  (void)toFill;
   return buffer;
 }
 
