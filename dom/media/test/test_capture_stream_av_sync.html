@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>A/V sync test for stream capturing</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<p>Following canvas will capture and show the video frame when the video becomes audible</p><br>
+<canvas id="canvas" width="640" height="480"></canvas>
+<script type="application/javascript">
+
+/**
+ * This test will capture stream before the video starts playing, and check if
+ * A/V sync will keep sync during playing.
+ */
+add_task(async function testAVSyncForStreamCapturing() {
+  createVideo();
+  await captureStreamFromVideo({ callback : playMedia });
+  destroyVideo();
+});
+
+/**
+ * This test will check if A/V is still on sync after we switch the media sink
+ * from playback-based sink to mediatrack-based sink.
+ */
+add_task(async function testAVSyncWhenSwitchingMediaSink() {
+  createVideo();
+  await playMedia({resolveAfterReceivingTimeupdate : 5});
+  // Because the audio isn't cut cleanly at every second, it would last a little
+  // bit audible until it fully becomes silence (from 0.02s to 0.08s). When we
+  // switch the sink, we might start detecting the audible frame at those "tail"
+  // part which isn't the thing we want. Therefore, skip the first audible
+  // frame and wait until next audible sound comes up that will be a real start
+  // for audible sound.
+  await captureStreamFromVideo({ skipFirstFrame : true });
+  destroyVideo();
+});
+
+/**
+ * Following are helper functions
+ */
+const DEBUG = false;
+function info_debug(msg) {
+  if (DEBUG) {
+    info(msg);
+  }
+}
+
+function createVideo() {
+  const video = document.createElement("video");
+  // This video is special for testing A/V sync, it only produce audible sound
+  // once per second, and when the sound comes out, you can check the position
+  // of the square to know if the A/V keeps sync.
+  video.src = "sync.webm";
+  video.loop = true;
+  video.controls = true;
+  video.width = 640;
+  video.height = 480;
+  video.id = "video";
+  document.body.appendChild(video);
+}
+
+function destroyVideo() {
+  const video = document.getElementById("video");
+  video.src = null;
+  video.remove();
+}
+
+async function playMedia({ resolveAfterReceivingTimeupdate } = {}) {
+  const video = document.getElementById("video");
+  ok(await video.play().then(_=>true,_=>false), "video started playing");
+  if (resolveAfterReceivingTimeupdate > 0) {
+    // Play it for a while to ensure the clock growing on the normal audio sink.
+    for (let idx = 0; idx < resolveAfterReceivingTimeupdate; idx++) {
+      await new Promise(r => video.ontimeupdate = r);
+    }
+  }
+}
+
+// This method will capture the stream from the video element, and check if A/V
+// keeps sync during capturing. `callback` parameter will be executed after
+// finishing capturing.
+async function captureStreamFromVideo({callback, skipFirstFrame} = {}) {
+  return new Promise(r => {
+    const video = document.getElementById("video");
+    let ac = new AudioContext();
+    let analyser = ac.createAnalyser();
+    analyser.frequencyBuf = new Float32Array(analyser.frequencyBinCount);
+    analyser.smoothingTimeConstant = 0;
+    analyser.fftSize = 2048; // 1024 bins
+    let sourceNode = ac.createMediaElementSource(video);
+    sourceNode.connect(analyser);
+    analyser.connect(ac.destination);
+
+    if (callback instanceof Function) {
+      callback();
+    }
+
+    // The amount of time that we check the audible frames to see if the A/V
+    // is still in sync.
+    analyser._testTotalFramesAmount = 5;
+    analyser._testIdx = 0;
+    analyser._hasDetectedAudibleFrame = false;
+    analyser.notifyAnalysis = () => {
+      let {frequencyBuf} = analyser;
+      analyser.getFloatFrequencyData(frequencyBuf);
+      if (checkIfBufferIsSilent(frequencyBuf)) {
+        info_debug("no need to paint the silent frame");
+        analyser._hasDetectedAudibleFrame = false;
+        requestAnimationFrame(analyser.notifyAnalysis);
+        return;
+      }
+      if (analyser._hasDetectedAudibleFrame) {
+        info_debug("detected audible frame already");
+        requestAnimationFrame(analyser.notifyAnalysis);
+        return;
+      }
+      analyser._hasDetectedAudibleFrame = true;
+      if (skipFirstFrame) {
+        info("skip the first audible frame");
+        skipFirstFrame = false;
+        requestAnimationFrame(analyser.notifyAnalysis);
+        return;
+      }
+      info("paint audible frame");
+      const cvs = document.getElementById("canvas");
+      let context = cvs.getContext('2d');
+      context.drawImage(video, 0, 0, 640, 480);
+      if (checkIfAVIsOnSyncFuzzy(context)) {
+        ok(true, `test ${analyser._testIdx++} times, a/v is in sync!`);
+      } else {
+        ok(false, `test ${analyser._testIdx++} times, a/v is out of sync!`);
+      }
+      if (analyser._testIdx == analyser._testTotalFramesAmount) {
+        r();
+        return;
+      }
+      requestAnimationFrame(analyser.notifyAnalysis);
+    }
+    analyser.notifyAnalysis();
+  });
+}
+
+function checkIfBufferIsSilent(buffer) {
+  for (let data of buffer) {
+    // when sound is audible, its values are around -200 and the silence values
+    // are around -800.
+    if (data > -250) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// This function will check the pixel data from the `context` to see if the
+// square appears in the right place. As we can't control the exact timing
+// of rendering video frames in the compositor, so the result would be fuzzy.
+function checkIfAVIsOnSyncFuzzy(context) {
+  // This will fuzz the result from +0 (perfect sync) to -X to +X frames.
+  const FUZZY_FRAMES = 5;
+  const squareLength = 48;
+  // Canvas is 640*480, so perfect sync is the left-top corner when the square
+  // shows up in the middle.
+  const perfectSync =
+      { x: 320 - squareLength/2.0 ,
+        y: 240 - squareLength/2.0 };
+  let isAVSyncFuzzy = false;
+  // Get the whole partial section of image and detect where the square is.
+  let imageData = context.getImageData(0, perfectSync.y, 640, squareLength);
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    // If the pixel's color is red, then this position will be the left-top
+    // corner of the square.
+    if (isPixelColorRed(imageData.data[i], imageData.data[i+1],
+                        imageData.data[i+2])) {
+      const pos = ImageIdxToRelativeCoordinate(imageData, i);
+      const diff = calculateFrameDiffenceInXAxis(pos.x, perfectSync.x);
+      info(`find the square in [${pos.x}, ${pos.y + perfectSync.y}], diff=${diff}`);
+      if (diff <= FUZZY_FRAMES) {
+        isAVSyncFuzzy = true;
+      }
+      context.putImageData(imageData, 0, 0);
+      break;
+    }
+  }
+  if (!isAVSyncFuzzy) {
+    const ctx = document.getElementById('canvas');
+    info(ctx.toDataURL());
+  }
+  return isAVSyncFuzzy;
+}
+
+// Input an imageData and its idx, then return a relative coordinate on the
+// range of given imageData.
+function ImageIdxToRelativeCoordinate(imageData, idx) {
+  const offset = idx / 4; // RGBA
+  return { x: offset % imageData.width, y: offset / imageData.width };
+}
+
+function calculateFrameDiffenceInXAxis(squareX, targetX) {
+  const offsetX = Math.abs(targetX - squareX);
+  const xSpeedPerFrame = 640 / 60; // video is 60fps
+  return offsetX / xSpeedPerFrame;
+}
+
+function isPixelColorRed(r, g, b) {
+  // As the rendering color would vary in the screen on different platforms, so
+  // we won't strict the R should be 255, just check if it's larger than a
+  // certain threshold.
+  return r > 200 && g < 10 && b < 10;
+}
+
+</script>
+</head>
+<body>
+</body>
+</html>
