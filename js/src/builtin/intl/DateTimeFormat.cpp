@@ -280,14 +280,6 @@ static bool DefaultCalendar(JSContext* cx, const UniqueChars& locale,
   return true;
 }
 
-struct CalendarAlias {
-  const char* const calendar;
-  const char* const alias;
-};
-
-const CalendarAlias calendarAliases[] = {{"islamic-civil", "islamicc"},
-                                         {"ethioaa", "ethiopic-amete-alem"}};
-
 bool js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
@@ -350,19 +342,6 @@ bool js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp) {
     }
     if (!NewbornArrayPush(cx, calendars, StringValue(jscalendar))) {
       return false;
-    }
-
-    // ICU doesn't return calendar aliases, append them here.
-    for (const auto& calendarAlias : calendarAliases) {
-      if (StringsAreEqual(calendar, calendarAlias.calendar)) {
-        JSString* jscalendar = NewStringCopyZ<CanGC>(cx, calendarAlias.alias);
-        if (!jscalendar) {
-          return false;
-        }
-        if (!NewbornArrayPush(cx, calendars, StringValue(jscalendar))) {
-          return false;
-        }
-      }
     }
   }
 
