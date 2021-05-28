@@ -45,13 +45,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIOSPermissionRequest"
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProtonDoorhangersEnabled",
-  "browser.proton.doorhangers.enabled",
-  false
-);
-
 // Keep in sync with defines at base_capturer_pipewire.cc
 // With PipeWire we can't select which system resource is shared so
 // we don't create a window/screen list. Instead we place these constants
@@ -1114,7 +1107,7 @@ function prompt(aActor, aBrowser, aRequest) {
         "webRTC-selectMicrophone-menupopup"
       );
       let describedByIDs = ["webRTC-shareDevices-notification-description"];
-      let describedBySuffix = gProtonDoorhangersEnabled ? "icon" : "label";
+      let describedBySuffix = "icon";
 
       if (sharingScreen) {
         listScreenShareDevices(windowMenupopup, videoDevices);
@@ -1326,14 +1319,6 @@ function prompt(aActor, aBrowser, aRequest) {
   }
   let anchorId = "webRTC-share" + iconType + "-notification-icon";
 
-  if (!gProtonDoorhangersEnabled) {
-    let iconClass = iconType.toLowerCase();
-    if (iconClass == "devices") {
-      iconClass = "camera";
-    }
-    options.popupIconClass = iconClass + "-icon";
-  }
-
   if (aRequest.secondOrigin) {
     options.secondName = webrtcUI.getHostOrExtensionName(
       null,
@@ -1341,9 +1326,7 @@ function prompt(aActor, aBrowser, aRequest) {
     );
   }
 
-  if (gProtonDoorhangersEnabled) {
-    mainAction.disableHighlight = true;
-  }
+  mainAction.disableHighlight = true;
 
   notification = chromeDoc.defaultView.PopupNotifications.show(
     aBrowser,
