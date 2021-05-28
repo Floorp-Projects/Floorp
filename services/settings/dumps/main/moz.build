@@ -4,6 +4,8 @@
 
 FINAL_TARGET_FILES.defaults.settings.main += [
     "anti-tracking-url-decoration.json",
+    "doh-config.json",
+    "doh-providers.json",
     "example.json",
     "hijack-blocklists.json",
     "language-dictionaries.json",
