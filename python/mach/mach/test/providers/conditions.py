@@ -42,11 +42,6 @@ class ConditionsProvider(MachCommandBase):
 
 @CommandProvider
 class ConditionsContextProvider(MachCommandBase):
-    def __init__(self, *args, **kwargs):
-        super(ConditionsContextProvider, self).__init__(*args, **kwargs)
-        self.foo = self._mach_context.foo
-        self.bar = self._mach_context.bar
-
     @Command("cmd_foo_ctx", category="testing", conditions=[is_foo])
     def run_foo(self, command_context):
         pass
