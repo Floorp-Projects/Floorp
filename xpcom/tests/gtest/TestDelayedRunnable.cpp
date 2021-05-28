@@ -7,6 +7,7 @@
 #include "mozilla/DelayedRunnable.h"
 
 #include "gtest/gtest.h"
+#include "MediaTimer.h"
 #include "mozilla/media/MediaUtils.h"
 #include "VideoUtils.h"
 
@@ -101,4 +102,39 @@ TEST(DelayedRunnable, nsThreadShutdownTask)
   // Leak the thread, so it gets cleaned up by xpcom-shutdown.
   nsIThread* t = thread.forget().take();
   Unused << t;
+}
+
+TEST(DelayedRunnable, TimerFiresBeforeRunnableRuns)
+{
+  RefPtr<SharedThreadPool> pool = SharedThreadPool::Get("Test Pool"_ns);
+  auto tailTaskQueue1 = MakeRefPtr<TaskQueue>(
+      do_AddRef(pool), /* aSupportsTailDispatch = */ true);
+  auto tailTaskQueue2 = MakeRefPtr<TaskQueue>(
+      do_AddRef(pool), /* aSupportsTailDispatch = */ true);
+  auto noTailTaskQueue = MakeRefPtr<TaskQueue>(
+      do_AddRef(pool), /* aSupportsTailDispatch = */ false);
+  Monitor monitor(__func__);
+  MonitorAutoLock lock(monitor);
+  MOZ_ALWAYS_SUCCEEDS(
+      tailTaskQueue1->Dispatch(NS_NewRunnableFunction(__func__, [&] {
+        // This will tail dispatch the delayed runnable, making it prone to
+        // lose a race against the directly-initiated timer firing (and
+        // dispatching another non-tail-dispatched runnable).
+        EXPECT_TRUE(tailTaskQueue1->RequiresTailDispatch(tailTaskQueue2));
+        tailTaskQueue2->DelayedDispatch(
+            NS_NewRunnableFunction(__func__, [&] {}), 1);
+        MonitorAutoLock lock(monitor);
+        auto timer = MakeRefPtr<MediaTimer>();
+        timer->WaitFor(TimeDuration::FromMilliseconds(1), __func__)
+            ->Then(noTailTaskQueue, __func__, [&] {
+              MonitorAutoLock lock(monitor);
+              monitor.NotifyAll();
+            });
+        // Wait until the timer has run. It should have dispatched the
+        // TimerEvent to tailTaskQueue2 by then. The tail dispatch happens when
+        // we leave scope.
+        monitor.Wait();
+      })));
+  // Wait for async steps before wrapping up the test case.
+  monitor.Wait();
 }
