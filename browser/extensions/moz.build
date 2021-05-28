@@ -12,8 +12,3 @@ DIRS += [
     "report-site-issue",
     "pictureinpicture",
 ]
-
-if CONFIG["NIGHTLY_BUILD"]:
-    DIRS += [
-        "translations",
-    ]

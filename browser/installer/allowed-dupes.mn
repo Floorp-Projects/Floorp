@@ -175,8 +175,3 @@ browser/chrome/browser/skin/classic/browser/zoom-in.svg
 # Bug 1709445 - De-duplicate history icons
 browser/chrome/browser/skin/classic/browser/history.svg
 browser/chrome/browser/skin/classic/browser/places/history.svg
-
-# Bug 1710546 - Bundle Firefox extension as a builtin addon Nighly only
-# We plan to remove this duplicity after Firefox Translations become pref'd on
-browser/chrome/browser/builtin-addons/translations/wasm/cld-worker.js.mem
-browser/modules/translation/cld-worker.js.mem
