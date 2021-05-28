@@ -1833,9 +1833,8 @@ void GCRuntime::updateHelperThreadCount() {
   size_t target = size_t(cpuCount * helperThreadRatio.ref());
   helperThreadCount = mozilla::Clamp(target, size_t(1), maxHelperThreads.ref());
 
-  HelperThreadState().ensureThreadCount(helperThreadCount);
-
   AutoLockHelperThreadState lock;
+  HelperThreadState().ensureThreadCount(helperThreadCount, lock);
   HelperThreadState().setGCParallelThreadCount(helperThreadCount, lock);
 }
 
