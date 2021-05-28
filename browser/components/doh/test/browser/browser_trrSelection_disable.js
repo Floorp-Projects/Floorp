@@ -23,8 +23,8 @@ add_task(async function testTrrSelectionDisable() {
   );
   is(
     Preferences.get(prefs.TRR_SELECT_URI_PREF),
-    undefined,
-    "doh-rollout.uri remained unset."
+    "https://example.com/1",
+    "doh-rollout.uri set to first provider in the list."
   );
   ensureNoTRRSelectionTelemetry();
 
@@ -62,8 +62,8 @@ add_task(async function testTrrSelectionDisable() {
   );
   is(
     Preferences.get(prefs.TRR_SELECT_URI_PREF),
-    undefined,
-    "doh-rollout.uri remained unset."
+    "https://example.com/1",
+    "doh-rollout.uri set to first provider in the list."
   );
   await ensureTRRMode(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
