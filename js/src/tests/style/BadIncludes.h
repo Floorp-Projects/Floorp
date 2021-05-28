@@ -8,4 +8,6 @@
 #  include <tests/style/BadIncludes2.h>  // bad: <> form used for local file
 #elif D
 #  include "stdio.h"  // bad: "" form used for system file
+#elif E
+#  include "mozilla/Unused.h"  // bad: header is deprecated
 #endif
