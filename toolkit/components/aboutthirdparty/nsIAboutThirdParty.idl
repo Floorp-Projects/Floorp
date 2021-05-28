@@ -5,6 +5,13 @@
 
 #include "nsISupports.idl"
 
+[scriptable, uuid(063813a0-85d8-4e77-80ea-b61292c0493d)]
+interface nsIInstalledApplication : nsISupports
+{
+  readonly attribute AString name;
+  readonly attribute AString publisher;
+};
+
 [scriptable, uuid(d33ff086-b328-4ae6-aaf5-52d41aa5df38)]
 interface nsIAboutThirdParty : nsISupports
 {
@@ -20,6 +27,12 @@ interface nsIAboutThirdParty : nsISupports
    * for the given leaf name of a module.
    */
   unsigned long lookupModuleType(in AString aLeafName);
+
+  /**
+   * Returns an object representing an application which includes
+   * the given path of a module in its installation.
+   */
+  nsIInstalledApplication lookupApplication(in AString aModulePath);
 
   /**
    * Posts a background task to collect system information and resolves

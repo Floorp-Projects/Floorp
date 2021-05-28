@@ -9,9 +9,16 @@
 
 #include "mozilla/MozPromise.h"
 #include "nsIAboutThirdParty.h"
+#include "nsInterfaceHashtable.h"
+#include "nsTArray.h"
 #include "nsTHashMap.h"
 
 namespace mozilla {
+
+using InstallLocationT =
+    CompactPair<nsString, nsCOMPtr<nsIInstalledApplication>>;
+using ComponentPathMapT = nsInterfaceHashtable<nsStringCaseInsensitiveHashKey,
+                                               nsIInstalledApplication>;
 
 enum class KnownModuleType : uint32_t {
   Ime = 0,
@@ -29,6 +36,32 @@ enum class KnownModuleType : uint32_t {
   Last,
 };
 
+struct InstallLocationComparator {
+  const nsAString& mFilePath;
+
+  explicit InstallLocationComparator(const nsAString& aFilePath);
+  int operator()(const InstallLocationT& aLocation) const;
+};
+
+class InstalledApplication final : public nsIInstalledApplication {
+  nsString mName;
+  nsString mPublisher;
+
+  ~InstalledApplication() = default;
+
+ public:
+  InstalledApplication() = default;
+  InstalledApplication(nsString&& aAppName, nsString&& aPublisher);
+
+  InstalledApplication(InstalledApplication&&) = delete;
+  InstalledApplication& operator=(InstalledApplication&&) = delete;
+  InstalledApplication(const InstalledApplication&) = delete;
+  InstalledApplication& operator=(const InstalledApplication&) = delete;
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIINSTALLEDAPPLICATION
+};
+
 using BackgroundThreadPromise =
     MozPromise<bool /* aIgnored */, nsresult, /* IsExclusive */ false>;
 
@@ -42,6 +75,8 @@ class AboutThirdParty final : public nsIAboutThirdParty {
   Atomic<WorkerState, SequentiallyConsistent> mWorkerState;
   RefPtr<BackgroundThreadPromise::Private> mPromise;
   nsTHashMap<nsStringCaseInsensitiveHashKey, uint32_t> mKnownModules;
+  ComponentPathMapT mComponentPaths;
+  nsTArray<InstallLocationT> mLocations;
 
   ~AboutThirdParty() = default;
   void BackgroundThread();
