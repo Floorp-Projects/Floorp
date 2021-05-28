@@ -1829,7 +1829,7 @@ void GCRuntime::updateHelperThreadCount() {
     return;
   }
 
-  double cpuCount = HelperThreadState().cpuCount;
+  double cpuCount = GetHelperThreadCPUCount();
   size_t target = size_t(cpuCount * helperThreadRatio.ref());
   target = std::clamp(target, size_t(1), maxHelperThreads.ref());
 
@@ -1839,7 +1839,7 @@ void GCRuntime::updateHelperThreadCount() {
   // using an external thread pool.
   (void)HelperThreadState().ensureThreadCount(target, lock);
 
-  helperThreadCount = std::min(target, HelperThreadState().threadCount);
+  helperThreadCount = std::min(target, GetHelperThreadCount());
   HelperThreadState().setGCParallelThreadCount(helperThreadCount, lock);
 }
 

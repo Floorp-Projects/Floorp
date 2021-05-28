@@ -120,6 +120,14 @@ bool js::SetFakeCPUCount(size_t count) {
   return true;
 }
 
+size_t js::GetHelperThreadCount() { return HelperThreadState().threadCount; }
+
+size_t js::GetHelperThreadCPUCount() { return HelperThreadState().cpuCount; }
+
+size_t js::GetMaxWasmCompilationThreads() {
+  return HelperThreadState().maxWasmCompilationThreads();
+}
+
 void JS::SetProfilingThreadCallbacks(
     JS::RegisterThreadCallback registerThread,
     JS::UnregisterThreadCallback unregisterThread) {
