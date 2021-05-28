@@ -791,12 +791,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   }
 }
 
-@media (-moz-proton) {
-  /* The page actions menu is hidden by default, it is only shown in small
-     windows as the overflow target of multiple page action buttons */
-  #pageActionButton {
-    visibility: collapse;
-  }
+/* The page actions menu is hidden by default, it is only shown in small
+   windows as the overflow target of multiple page action buttons */
+#pageActionButton {
+  visibility: collapse;
 }
 
 /* 680px is just below half of popular 1366px wide screens, so when putting two
@@ -1391,12 +1389,6 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
   appearance: none;
   opacity: 0.65;
   -moz-window-shadow: none;
-}
-
-/* Page action panel */
-#pageAction-panel-sendToDevice-subview-body:not([state="notready"]) > .pageAction-sendToDevice-notReady,
-#pageAction-urlbar-sendToDevice-subview-body:not([state="notready"]) > .pageAction-sendToDevice-notReady {
-  display: none;
 }
 
 /* Page action buttons */

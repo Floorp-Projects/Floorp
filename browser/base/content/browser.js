@@ -4166,13 +4166,9 @@ const BrowserSearch = {
    * has search engines.
    */
   updateOpenSearchBadge() {
-    if (gProton) {
-      gURLBar.addSearchEngineHelper.setEnginesFromBrowser(
-        gBrowser.selectedBrowser
-      );
-    } else {
-      BrowserPageActions.addSearchEngine.updateEngines();
-    }
+    gURLBar.addSearchEngineHelper.setEnginesFromBrowser(
+      gBrowser.selectedBrowser
+    );
 
     var searchBar = this.searchBar;
     if (!searchBar) {
