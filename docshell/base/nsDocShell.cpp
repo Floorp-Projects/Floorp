@@ -1218,12 +1218,12 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
       nsCOMPtr<nsIChannel> channel = doc->GetChannel();
       if (channel) {
         SetLoadType(LOAD_HISTORY);
-        SetCurrentURI(doc->GetDocumentURI(), channel,
-                      /* aFireOnLocationChange */ true,
-                      /* aIsInitialAboutBlank */ false, /* aLocationFlags */ 0);
         mEODForCurrentDocument = false;
         mIsRestoringDocument = true;
         mLoadGroup->AddRequest(channel, nullptr);
+        SetCurrentURI(doc->GetDocumentURI(), channel,
+                      /* aFireOnLocationChange */ true,
+                      /* aIsInitialAboutBlank */ false, /* aLocationFlags */ 0);
         mLoadGroup->RemoveRequest(channel, nullptr, NS_OK);
         mIsRestoringDocument = false;
       }
