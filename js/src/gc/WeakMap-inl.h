@@ -10,7 +10,6 @@
 #include "gc/WeakMap.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Unused.h"
 
 #include <algorithm>
 #include <type_traits>
@@ -201,7 +200,7 @@ void WeakMap<K, V>::trace(JSTracer* trc) {
     // already present on the gray mark stack, which is marked later.
     if (mapColor < marker->markColor()) {
       mapColor = marker->markColor();
-      mozilla::Unused << markEntries(marker);
+      (void)markEntries(marker);
     }
     return;
   }
