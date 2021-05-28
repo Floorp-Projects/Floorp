@@ -2707,18 +2707,6 @@ js::jit::JitCode* TenuringTracer::onJitCodeEdge(jit::JitCode* code) {
 }
 js::Scope* TenuringTracer::onScopeEdge(Scope* scope) { return scope; }
 
-template <typename T>
-inline void TenuringTracer::traverse(T** thingp) {
-  // This is only used by VisitTraceList.
-  MOZ_ASSERT(!nursery().isInside(thingp));
-  CheckTracedThing(this, *thingp);
-  T* thing = *thingp;
-  T* post = DispatchToOnEdge(this, thing);
-  if (post != thing) {
-    *thingp = post;
-  }
-}
-
 void TenuringTracer::traverse(JS::Value* thingp) {
   MOZ_ASSERT(!nursery().isInside(thingp));
 
