@@ -607,7 +607,6 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& moduleEnv,
 
       for (size_t i = 0; i < inputs.length(); i++) {
         int funcIndex = inputs[i].index;
-        mozilla::Unused << funcIndex;
 
         JitSpew(JitSpew_Codegen, "# ========================================");
         JitSpew(JitSpew_Codegen, "# Start of wasm cranelift code for index %d",

@@ -1382,8 +1382,8 @@ bool WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    mozilla::Unused << JS::DeflateStringToUTF8Buffer(
-        linear, Span(name.begin(), name.length()));
+    (void)JS::DeflateStringToUTF8Buffer(linear,
+                                        Span(name.begin(), name.length()));
   }
 
   RootedValueVector elems(cx);
@@ -4537,7 +4537,7 @@ static bool ResolveResponse_OnFulfilled(JSContext* cx, unsigned argc,
     return RejectWithPendingException(cx, promise);
   }
 
-  Unused << task.release();
+  (void)task.release();
 
   callArgs.rval().setUndefined();
   return true;
