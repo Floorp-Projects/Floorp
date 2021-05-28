@@ -392,7 +392,7 @@ TaggedParserAtomIndex ParserAtomsTable::internUtf8(
   uint32_t length = 0;
   InflatedChar16Sequence<mozilla::Utf8Unit> seqCopy = seq;
   while (seqCopy.hasMore()) {
-    mozilla::Unused << seqCopy.next();
+    (void)seqCopy.next();
     length += 1;
   }
 

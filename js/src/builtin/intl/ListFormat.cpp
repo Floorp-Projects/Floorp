@@ -9,7 +9,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/Unused.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -284,8 +283,8 @@ static UListFormatter* NewUListFormatter(JSContext* cx,
   MOZ_ASSERT(type == ListFormatType::Conjunction);
   MOZ_ASSERT(style == ListFormatStyle::Long);
 
-  mozilla::Unused << type;
-  mozilla::Unused << style;
+  (void)type;
+  (void)style;
 
   lf = ulistfmt_open(IcuLocale(locale.get()), &status);
 #endif

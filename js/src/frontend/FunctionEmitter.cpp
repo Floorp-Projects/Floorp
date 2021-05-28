@@ -7,7 +7,6 @@
 #include "frontend/FunctionEmitter.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Unused.h"
 
 #include "builtin/ModuleObject.h"          // ModuleObject
 #include "frontend/AsyncEmitter.h"         // AsyncEmitter
@@ -312,7 +311,7 @@ bool FunctionEmitter::emitTopLevelFunction(GCThingIndex index) {
   // NOTE: The `index` is not directly stored as an opcode, but we collect the
   // range of indices in `BytecodeEmitter::emitDeclarationInstantiation` instead
   // of discrete indices.
-  mozilla::Unused << index;
+  (void)index;
 
   return true;
 }
