@@ -8,10 +8,40 @@ This means you might have to go searching through the dependency tree to get a f
 
 # Pings
 
+- [addresses-sync](#addresses-sync)
 - [bookmarks-sync](#bookmarks-sync)
+- [creditcards-sync](#creditcards-sync)
 - [history-sync](#history-sync)
 - [logins-sync](#logins-sync)
 - [sync](#sync)
+- [tabs-sync](#tabs-sync)
+
+## addresses-sync
+
+A ping sent for every Addresses engine sync. It doesn't include the `client_id` because it reports a hashed version of the user's Firefox Account ID.
+
+
+**Data reviews for this ping:**
+
+- <https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481>
+
+**Bugs related to this ping:**
+
+- <https://github.com/mozilla-mobile/android-components/issues/10371>
+
+All Glean pings contain built-in metrics in the [`ping_info`](https://mozilla.github.io/glean/book/user/pings/index.html#the-ping_info-section) and [`client_info`](https://mozilla.github.io/glean/book/user/pings/index.html#the-client_info-section) sections.
+
+In addition to those built-in metrics, the following metrics are added to the ping:
+
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
+| --- | --- | --- | --- | --- | --- | --- |
+| addresses_sync.failure_reason |[labeled_string](https://mozilla.github.io/glean/book/user/metrics/labeled_strings.html) |Records why the addresses sync failed: either due to an authentication error, unexpected exception, or other error. The error strings are truncated and sanitized to omit PII, like URLs and file system paths.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)|<ul><li>other</li><li>unexpected</li><li>auth</li></ul>|never |2 |
+| addresses_sync.finished_at |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |Records when the addresses sync finished. This includes the time to download, apply, and upload all records.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
+| addresses_sync.incoming |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |Records incoming addresses record counts. `applied` is the number of incoming records that were successfully stored or updated in the local database. `failed_to_apply` is the number of records that were ignored due to errors. `reconciled` is the number of merged records.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)|<ul><li>applied</li><li>failed_to_apply</li><li>reconciled</li></ul>|never |2 |
+| addresses_sync.outgoing |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |Records outgoing addresses record counts. `uploaded` is the number of records that were successfully sent to the server. `failed_to_upload` is the number of records that weren't uploaded, and will be retried on the next sync.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)|<ul><li>uploaded</li><li>failed_to_upload</li></ul>|never |2 |
+| addresses_sync.outgoing_batches |[counter](https://mozilla.github.io/glean/book/user/metrics/counter.html) |Records the number of batches needed to upload all outgoing records. The Sync server has a hard limit on the number of records (and request body bytes) on the number of records that can fit into a single batch, and large syncs may require multiple batches.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
+| addresses_sync.started_at |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |Records when the addresses sync started.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
+| addresses_sync.uid |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The user's hashed Firefox Account ID.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
 
 ## bookmarks-sync
 
@@ -41,6 +71,33 @@ In addition to those built-in metrics, the following metrics are added to the pi
 | bookmarks_sync.started_at |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |Records when the bookmark sync started.  |[mozilla-mobile/android-components#3092](https://github.com/mozilla-mobile/android-components/pull/3092)||never |2 |
 | bookmarks_sync.uid |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The user's hashed Firefox Account ID.  |[mozilla-mobile/android-components#3092](https://github.com/mozilla-mobile/android-components/pull/3092)||never |2 |
 | sync.sync_uuid |[uuid](https://mozilla.github.io/glean/book/user/metrics/uuid.html) |Unique identifier for this sync, used to correlate together individual pings for data types that were synchronized together (history, bookmarks, logins). If a data type is synchronized by itself via the legacy 'sync' API (as opposed to the Sync Manager), then this field will not be set on the corresponding ping.  |[mozilla-mobile/android-components#5386](https://github.com/mozilla-mobile/android-components/pull/5386#pullrequestreview-392363687)||never |1 |
+
+## creditcards-sync
+
+A ping sent for every Credit Cards engine sync. It doesn't include the `client_id` because it reports a hashed version of the user's Firefox Account ID.
+
+
+**Data reviews for this ping:**
+
+- <https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481>
+
+**Bugs related to this ping:**
+
+- <https://github.com/mozilla-mobile/android-components/issues/10371>
+
+All Glean pings contain built-in metrics in the [`ping_info`](https://mozilla.github.io/glean/book/user/pings/index.html#the-ping_info-section) and [`client_info`](https://mozilla.github.io/glean/book/user/pings/index.html#the-client_info-section) sections.
+
+In addition to those built-in metrics, the following metrics are added to the ping:
+
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
+| --- | --- | --- | --- | --- | --- | --- |
+| creditcards_sync.failure_reason |[labeled_string](https://mozilla.github.io/glean/book/user/metrics/labeled_strings.html) |Records why the credit cards sync failed: either due to an authentication error, unexpected exception, or other error. The error strings are truncated and sanitized to omit PII, like URLs and file system paths.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)|<ul><li>other</li><li>unexpected</li><li>auth</li></ul>|never |2 |
+| creditcards_sync.finished_at |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |Records when the credit cards sync finished. This includes the time to download, apply, and upload all records.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
+| creditcards_sync.incoming |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |Records incoming credit cards record counts. `applied` is the number of incoming records that were successfully stored or updated in the local database. `failed_to_apply` is the number of records that were ignored due to errors. `reconciled` is the number of merged records.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)|<ul><li>applied</li><li>failed_to_apply</li><li>reconciled</li></ul>|never |2 |
+| creditcards_sync.outgoing |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |Records outgoing credit cards record counts. `uploaded` is the number of records that were successfully sent to the server. `failed_to_upload` is the number of records that weren't uploaded, and will be retried on the next sync.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)|<ul><li>uploaded</li><li>failed_to_upload</li></ul>|never |2 |
+| creditcards_sync.outgoing_batches |[counter](https://mozilla.github.io/glean/book/user/metrics/counter.html) |Records the number of batches needed to upload all outgoing records. The Sync server has a hard limit on the number of records (and request body bytes) on the number of records that can fit into a single batch, and large syncs may require multiple batches.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
+| creditcards_sync.started_at |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |Records when the credit cards sync started.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
+| creditcards_sync.uid |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The user's hashed Firefox Account ID.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
 
 ## history-sync
 
@@ -121,6 +178,33 @@ In addition to those built-in metrics, the following metrics are added to the pi
 | fxa_tab.sent |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |Recorded when a tab is sent. Also sent by desktop - see also the docs at https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/sync-ping.html  |[Bug 1652902](https://bugzilla.mozilla.org/show_bug.cgi?id=1652902)|<ul><li>flow_id: A guid, unique for the URL being sent but common for all target devices. The value is randomly generated so can not identify details about the user or tab. </li><li>stream_id: A guid, unique for both the URL being sent and the target device. The value is randomly generated so can not identify details about the user or tab. </li></ul>|never | |
 | sync.failure_reason |[labeled_string](https://mozilla.github.io/glean/book/user/metrics/labeled_strings.html) |Records a global sync failure: either due to an authentication error, unexpected exception, or other error that caused the sync to fail. Error strings are truncated and sanitized to omit PII, like URLs and file system paths.  |[mozilla-mobile/android-components#3092](https://github.com/mozilla-mobile/android-components/pull/3092)|<ul><li>other</li><li>unexpected</li><li>auth</li></ul>|never |2 |
 | sync.sync_uuid |[uuid](https://mozilla.github.io/glean/book/user/metrics/uuid.html) |Unique identifier for this sync, used to correlate together individual pings for data types that were synchronized together (history, bookmarks, logins). If a data type is synchronized by itself via the legacy 'sync' API (as opposed to the Sync Manager), then this field will not be set on the corresponding ping.  |[mozilla-mobile/android-components#5386](https://github.com/mozilla-mobile/android-components/pull/5386#pullrequestreview-392363687)||never |1 |
+
+## tabs-sync
+
+A ping sent for every Tabs engine sync. It doesn't include the `client_id` because it reports a hashed version of the user's Firefox Account ID.
+
+
+**Data reviews for this ping:**
+
+- <https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481>
+
+**Bugs related to this ping:**
+
+- <https://github.com/mozilla-mobile/android-components/issues/10371>
+
+All Glean pings contain built-in metrics in the [`ping_info`](https://mozilla.github.io/glean/book/user/pings/index.html#the-ping_info-section) and [`client_info`](https://mozilla.github.io/glean/book/user/pings/index.html#the-client_info-section) sections.
+
+In addition to those built-in metrics, the following metrics are added to the ping:
+
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
+| --- | --- | --- | --- | --- | --- | --- |
+| tabs_sync.failure_reason |[labeled_string](https://mozilla.github.io/glean/book/user/metrics/labeled_strings.html) |Records why the tabs sync failed: either due to an authentication error, unexpected exception, or other error. The error strings are truncated and sanitized to omit PII, like URLs and file system paths.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)|<ul><li>other</li><li>unexpected</li><li>auth</li></ul>|never |2 |
+| tabs_sync.finished_at |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |Records when the tabs sync finished. This includes the time to download, apply, and upload all records.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
+| tabs_sync.incoming |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |Records incoming tabs record counts. `applied` is the number of incoming records that were successfully stored or updated in the local database. `failed_to_apply` is the number of records that were ignored due to errors. `reconciled` is the number of merged records.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)|<ul><li>applied</li><li>failed_to_apply</li><li>reconciled</li></ul>|never |2 |
+| tabs_sync.outgoing |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |Records outgoing tabs record counts. `uploaded` is the number of records that were successfully sent to the server. `failed_to_upload` is the number of records that weren't uploaded, and will be retried on the next sync.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)|<ul><li>uploaded</li><li>failed_to_upload</li></ul>|never |2 |
+| tabs_sync.outgoing_batches |[counter](https://mozilla.github.io/glean/book/user/metrics/counter.html) |Records the number of batches needed to upload all outgoing records. The Sync server has a hard limit on the number of records (and request body bytes) on the number of records that can fit into a single batch, and large syncs may require multiple batches.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
+| tabs_sync.started_at |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |Records when the tabs sync started.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
+| tabs_sync.uid |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The user's hashed Firefox Account ID.  |[mozilla-mobile/android-components#10372](https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481)||never |2 |
 
 Data categories are [defined here](https://wiki.mozilla.org/Firefox/Data_Collection).
 

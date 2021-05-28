@@ -12,10 +12,13 @@ import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.service.glean.private.LabeledMetricType
 import mozilla.components.service.glean.private.StringMetricType
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.sync.telemetry.GleanMetrics.AddressesSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
+import mozilla.components.support.sync.telemetry.GleanMetrics.CreditcardsSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.FxaTab
 import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
 import mozilla.components.support.sync.telemetry.GleanMetrics.LoginsSync
+import mozilla.components.support.sync.telemetry.GleanMetrics.TabsSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
 import mozilla.components.support.sync.telemetry.GleanMetrics.Sync
 import org.json.JSONException
@@ -41,6 +44,7 @@ object SyncTelemetry {
     /**
      * Process [SyncTelemetryPing] as returned from [mozilla.appservices.syncmanager.SyncManager].
      */
+    @Suppress("LongParameterList")
     fun processSyncTelemetry(
         syncTelemetry: SyncTelemetryPing,
 
@@ -49,7 +53,10 @@ object SyncTelemetry {
         submitGlobalPing: () -> Unit = { Pings.sync.submit() },
         submitHistoryPing: () -> Unit = { Pings.historySync.submit() },
         submitBookmarksPing: () -> Unit = { Pings.bookmarksSync.submit() },
-        submitLoginsPing: () -> Unit = { Pings.loginsSync.submit() }
+        submitLoginsPing: () -> Unit = { Pings.loginsSync.submit() },
+        submitCreditCardsPing: () -> Unit = { Pings.creditcardsSync.submit() },
+        submitAddressesPing: () -> Unit = { Pings.addressesSync.submit() },
+        submitTabsPing: () -> Unit = { Pings.tabsSync.submit() }
     ) {
         syncTelemetry.syncs.forEach { syncInfo ->
             // Note that `syncUuid` is configured to be submitted in all of the sync pings (it's set
@@ -83,6 +90,18 @@ object SyncTelemetry {
                     "passwords" -> {
                         individualLoginsSync(syncTelemetry.uid, engineInfo)
                         submitLoginsPing()
+                    }
+                    "creditcards" -> {
+                        individualCreditCardsSync(syncTelemetry.uid, engineInfo)
+                        submitCreditCardsPing()
+                    }
+                    "addresses" -> {
+                        individualAddressesSync(syncTelemetry.uid, engineInfo)
+                        submitAddressesPing()
+                    }
+                    "tabs" -> {
+                        individualTabsSync(syncTelemetry.uid, engineInfo)
+                        submitTabsPing()
                     }
                     else -> logger.warn("Ignoring telemetry for engine ${engineInfo.name}")
                 }
@@ -255,6 +274,114 @@ object SyncTelemetry {
         require(engineInfo.name == "history") { "Expected 'history', got ${engineInfo.name}" }
 
         HistorySync.apply {
+            val base = BaseGleanSyncPing.fromEngineInfo(hashedFxaUid, engineInfo)
+            uid.set(base.uid)
+            startedAt.set(base.startedAt)
+            finishedAt.set(base.finishedAt)
+            if (base.applied > 0) {
+                // Since all Sync ping counters have `lifetime: ping`, and
+                // we send the ping immediately after, we don't need to
+                // reset the counters before calling `add`.
+                incoming["applied"].add(base.applied)
+            }
+            if (base.failedToApply > 0) {
+                incoming["failed_to_apply"].add(base.failedToApply)
+            }
+            if (base.reconciled > 0) {
+                incoming["reconciled"].add(base.reconciled)
+            }
+            if (base.uploaded > 0) {
+                outgoing["uploaded"].add(base.uploaded)
+            }
+            if (base.failedToUpload > 0) {
+                outgoing["failed_to_upload"].add(base.failedToUpload)
+            }
+            if (base.outgoingBatches > 0) {
+                outgoingBatches.add(base.outgoingBatches)
+            }
+            base.failureReason?.let {
+                recordFailureReason(it, failureReason)
+            }
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    private fun individualCreditCardsSync(hashedFxaUid: String, engineInfo: EngineInfo) {
+        require(engineInfo.name == "creditcards") { "Expected 'creditcards', got ${engineInfo.name}" }
+
+        CreditcardsSync.apply {
+            val base = BaseGleanSyncPing.fromEngineInfo(hashedFxaUid, engineInfo)
+            uid.set(base.uid)
+            startedAt.set(base.startedAt)
+            finishedAt.set(base.finishedAt)
+            if (base.applied > 0) {
+                // Since all Sync ping counters have `lifetime: ping`, and
+                // we send the ping immediately after, we don't need to
+                // reset the counters before calling `add`.
+                incoming["applied"].add(base.applied)
+            }
+            if (base.failedToApply > 0) {
+                incoming["failed_to_apply"].add(base.failedToApply)
+            }
+            if (base.reconciled > 0) {
+                incoming["reconciled"].add(base.reconciled)
+            }
+            if (base.uploaded > 0) {
+                outgoing["uploaded"].add(base.uploaded)
+            }
+            if (base.failedToUpload > 0) {
+                outgoing["failed_to_upload"].add(base.failedToUpload)
+            }
+            if (base.outgoingBatches > 0) {
+                outgoingBatches.add(base.outgoingBatches)
+            }
+            base.failureReason?.let {
+                recordFailureReason(it, failureReason)
+            }
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    private fun individualAddressesSync(hashedFxaUid: String, engineInfo: EngineInfo) {
+        require(engineInfo.name == "addresses") { "Expected 'addresses', got ${engineInfo.name}" }
+
+        AddressesSync.apply {
+            val base = BaseGleanSyncPing.fromEngineInfo(hashedFxaUid, engineInfo)
+            uid.set(base.uid)
+            startedAt.set(base.startedAt)
+            finishedAt.set(base.finishedAt)
+            if (base.applied > 0) {
+                // Since all Sync ping counters have `lifetime: ping`, and
+                // we send the ping immediately after, we don't need to
+                // reset the counters before calling `add`.
+                incoming["applied"].add(base.applied)
+            }
+            if (base.failedToApply > 0) {
+                incoming["failed_to_apply"].add(base.failedToApply)
+            }
+            if (base.reconciled > 0) {
+                incoming["reconciled"].add(base.reconciled)
+            }
+            if (base.uploaded > 0) {
+                outgoing["uploaded"].add(base.uploaded)
+            }
+            if (base.failedToUpload > 0) {
+                outgoing["failed_to_upload"].add(base.failedToUpload)
+            }
+            if (base.outgoingBatches > 0) {
+                outgoingBatches.add(base.outgoingBatches)
+            }
+            base.failureReason?.let {
+                recordFailureReason(it, failureReason)
+            }
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    private fun individualTabsSync(hashedFxaUid: String, engineInfo: EngineInfo) {
+        require(engineInfo.name == "tabs") { "Expected 'tabs', got ${engineInfo.name}" }
+
+        TabsSync.apply {
             val base = BaseGleanSyncPing.fromEngineInfo(hashedFxaUid, engineInfo)
             uid.set(base.uid)
             startedAt.set(base.startedAt)

@@ -54,8 +54,9 @@ sync:
     expires: never
     lifetime: ping
 
-# `history-sync`, `logins-sync` and `bookmarks-sync` metrics
-# all use the same structure,
+# `history-sync`, `logins-sync`, `bookmarks-sync`, `creditcards-sync`,
+# `addresses-sync` and `tabs-sync` metrics
+# mostly use the same structure, with some minor variability,
 # but must be specified individually. We can't define them once and use
 # `send_in_pings` because the stores might be synced in parallel, and we can't
 # guarantee that a ping for one store would be sent before the others.
@@ -491,6 +492,424 @@ bookmarks_sync:
       - sync-core@mozilla.com
     expires: never
     lifetime: ping
+
+creditcards_sync:
+  uid:
+    type: string
+    description: >
+      The user's hashed Firefox Account ID.
+    send_in_pings:
+      - creditcards-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  started_at:
+    type: datetime
+    time_unit: millisecond
+    description: >
+      Records when the credit cards sync started.
+    send_in_pings:
+      - creditcards-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  finished_at:
+    type: datetime
+    time_unit: millisecond
+    description: >
+      Records when the credit cards sync finished. This includes the time to
+      download, apply, and upload all records.
+    send_in_pings:
+      - creditcards-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  incoming:
+    type: labeled_counter
+    labels:
+      - applied
+      - failed_to_apply
+      - reconciled
+    description: >
+      Records incoming credit cards record counts. `applied` is the number of
+      incoming records that were successfully stored or updated in the
+      local database. `failed_to_apply` is the number of records that were
+      ignored due to errors. `reconciled` is the number of merged records.
+    send_in_pings:
+      - creditcards-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  outgoing:
+    type: labeled_counter
+    labels:
+      - uploaded
+      - failed_to_upload
+    description: >
+      Records outgoing credit cards record counts. `uploaded` is the number of
+      records that were successfully sent to the server. `failed_to_upload`
+      is the number of records that weren't uploaded, and will be retried
+      on the next sync.
+    send_in_pings:
+      - creditcards-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  outgoing_batches:
+    type: counter
+    description: >
+      Records the number of batches needed to upload all outgoing records. The
+      Sync server has a hard limit on the number of records (and request body
+      bytes) on the number of records that can fit into a single batch, and
+      large syncs may require multiple batches.
+    send_in_pings:
+      - creditcards-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  failure_reason:
+    type: labeled_string
+    labels:
+      - other
+      - unexpected
+      - auth
+    description: >
+      Records why the credit cards sync failed: either due to an authentication
+      error, unexpected exception, or other error. The error strings are
+      truncated and sanitized to omit PII, like URLs and file system paths.
+    send_in_pings:
+      - creditcards-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+
+addresses_sync:
+  uid:
+    type: string
+    description: >
+      The user's hashed Firefox Account ID.
+    send_in_pings:
+      - addresses-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  started_at:
+    type: datetime
+    time_unit: millisecond
+    description: >
+      Records when the addresses sync started.
+    send_in_pings:
+      - addresses-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  finished_at:
+    type: datetime
+    time_unit: millisecond
+    description: >
+      Records when the addresses sync finished. This includes the time to
+      download, apply, and upload all records.
+    send_in_pings:
+      - addresses-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  incoming:
+    type: labeled_counter
+    labels:
+      - applied
+      - failed_to_apply
+      - reconciled
+    description: >
+      Records incoming addresses record counts. `applied` is the number of
+      incoming records that were successfully stored or updated in the
+      local database. `failed_to_apply` is the number of records that were
+      ignored due to errors. `reconciled` is the number of merged records.
+    send_in_pings:
+      - addresses-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  outgoing:
+    type: labeled_counter
+    labels:
+      - uploaded
+      - failed_to_upload
+    description: >
+      Records outgoing addresses record counts. `uploaded` is the number of
+      records that were successfully sent to the server. `failed_to_upload`
+      is the number of records that weren't uploaded, and will be retried
+      on the next sync.
+    send_in_pings:
+      - addresses-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  outgoing_batches:
+    type: counter
+    description: >
+      Records the number of batches needed to upload all outgoing records. The
+      Sync server has a hard limit on the number of records (and request body
+      bytes) on the number of records that can fit into a single batch, and
+      large syncs may require multiple batches.
+    send_in_pings:
+      - addresses-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  failure_reason:
+    type: labeled_string
+    labels:
+      - other
+      - unexpected
+      - auth
+    description: >
+      Records why the addresses sync failed: either due to an authentication
+      error, unexpected exception, or other error. The error strings are
+      truncated and sanitized to omit PII, like URLs and file system paths.
+    send_in_pings:
+      - addresses-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+
+tabs_sync:
+  uid:
+    type: string
+    description: >
+      The user's hashed Firefox Account ID.
+    send_in_pings:
+      - tabs-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  started_at:
+    type: datetime
+    time_unit: millisecond
+    description: >
+      Records when the tabs sync started.
+    send_in_pings:
+      - tabs-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  finished_at:
+    type: datetime
+    time_unit: millisecond
+    description: >
+      Records when the tabs sync finished. This includes the time to
+      download, apply, and upload all records.
+    send_in_pings:
+      - tabs-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  incoming:
+    type: labeled_counter
+    labels:
+      - applied
+      - failed_to_apply
+      - reconciled
+    description: >
+      Records incoming tabs record counts. `applied` is the number of
+      incoming records that were successfully stored or updated in the
+      local database. `failed_to_apply` is the number of records that were
+      ignored due to errors. `reconciled` is the number of merged records.
+    send_in_pings:
+      - tabs-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  outgoing:
+    type: labeled_counter
+    labels:
+      - uploaded
+      - failed_to_upload
+    description: >
+      Records outgoing tabs record counts. `uploaded` is the number of
+      records that were successfully sent to the server. `failed_to_upload`
+      is the number of records that weren't uploaded, and will be retried
+      on the next sync.
+    send_in_pings:
+      - tabs-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  outgoing_batches:
+    type: counter
+    description: >
+      Records the number of batches needed to upload all outgoing records. The
+      Sync server has a hard limit on the number of records (and request body
+      bytes) on the number of records that can fit into a single batch, and
+      large syncs may require multiple batches.
+    send_in_pings:
+      - tabs-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  failure_reason:
+    type: labeled_string
+    labels:
+      - other
+      - unexpected
+      - auth
+    description: >
+      Records why the tabs sync failed: either due to an authentication
+      error, unexpected exception, or other error. The error strings are
+      truncated and sanitized to omit PII, like URLs and file system paths.
+    send_in_pings:
+      - tabs-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/10371
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/10372#issuecomment-850378481
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+
 fxa_tab:
   sent:
     type: event
