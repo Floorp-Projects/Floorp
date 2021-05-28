@@ -60,3 +60,25 @@ directory of our firefox tree.
    variable to a non-empty value. This will print everything that the script executes.
 
 7. Checkin all the generated/modified files and try your build!
+
+# Adding new configurations to the build
+
+- Each new platform/architecture will require 2 new mozconfig files,
+  one for the debug build and one for the non-debug build.  The
+  filenames follow the same pattern as the generated json files,
+  `a-b-c-d.mozconfig` where:
+  - a = generating cpu (example: x64)
+  - b = debug (True / False)
+  - c = target cpu (example: x64 / arm64)
+  - d = target platform (mac/linux)
+- Each mozconfig file defines, in addition to debug/non-debug, the output
+  directory (MOZ_OBJDIR) and any architecture definition.
+- The new configs must be added to the appropriate platform section in
+  `generate-gn-build-files.sh`.
+
+**Note:** when adding new mozconfig files, especially for linux/android
+configs, it is important to include the `ac_add_options
+--enable-bootstrap`.  This ensures switching archtectures for
+"cross-compiled" generation works properly.  For example, when generating
+`x86` or `arm64` linux json files, it would be necessary to install additional
+libraries in order for the configure step to complete.
