@@ -71,6 +71,7 @@ Http3Listener.prototype = {
 };
 
 add_task(async function test_version1_enabled_1() {
+  Services.prefs.setBoolPref("network.http.http3.support_version1", true);
   let listener = new Http3Listener();
   listener.version1enabled = true;
   let chan = makeChan("https://foo.example.com/");
