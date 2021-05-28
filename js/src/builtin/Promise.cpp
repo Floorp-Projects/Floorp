@@ -4439,7 +4439,7 @@ static bool OriginalPromiseThenBuiltin(JSContext* cx, HandleValue promiseVal,
 
   if (!cx->isExceptionPending()) {
     // Reject the promise, but also propagate this uncatchable error.
-    mozilla::Unused << PromiseObject::reject(cx, promise, UndefinedHandleValue);
+    (void)PromiseObject::reject(cx, promise, UndefinedHandleValue);
     return false;
   }
 

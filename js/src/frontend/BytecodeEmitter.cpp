@@ -17,7 +17,6 @@
 #include "mozilla/Maybe.h"          // mozilla::{Maybe,Nothing,Some}
 #include "mozilla/PodOperations.h"  // mozilla::PodCopy
 #include "mozilla/Sprintf.h"        // SprintfLiteral
-#include "mozilla/Unused.h"         // mozilla::Unused
 #include "mozilla/Variant.h"        // mozilla::AsVariant
 
 #include <algorithm>
@@ -93,7 +92,6 @@ using mozilla::NumberEqualsInt32;
 using mozilla::NumberIsInt32;
 using mozilla::PodCopy;
 using mozilla::Some;
-using mozilla::Unused;
 
 static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
   // The few node types listed below are exceptions to the usual

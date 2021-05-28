@@ -12,7 +12,6 @@
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
 #include "mozilla/Range.h"            // mozilla::Range
 #include "mozilla/Span.h"             // mozilla::Span
-#include "mozilla/Unused.h"           // mozilla::Unused
 #include "mozilla/Variant.h"          // mozilla::Variant
 
 #include <stddef.h>  // size_t
@@ -284,7 +283,7 @@ class ScopeStencil {
                (isArrow ? IsArrow : 0)) {
     MOZ_ASSERT((kind == ScopeKind::Function) == functionIndex.isSome());
     // Silence -Wunused-private-field warnings.
-    mozilla::Unused << padding_;
+    (void)padding_;
   }
 
  private:
