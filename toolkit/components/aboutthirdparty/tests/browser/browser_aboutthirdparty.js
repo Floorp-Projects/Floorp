@@ -151,9 +151,14 @@ add_task(async () => {
       3,
       "The table has three cells as there is only one event."
     );
-    Assert.ok(
-      /browser \(process \d+\)/.test(tableCells[0].textContent),
+    Assert.equal(
+      tableCells[0].querySelector(".process-type").getAttribute("data-l10n-id"),
+      "process-type-browser",
       "The module was loaded into the main process."
+    );
+    Assert.ok(
+      Number(tableCells[0].querySelector(".process-id").textContent),
+      "A valid process ID is displayed."
     );
     Assert.equal(
       tableCells[1].querySelector(".event-duration").textContent,
