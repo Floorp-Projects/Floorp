@@ -35,13 +35,14 @@ class BlobImageKeyData final {
         mBlobKey(aOther.mBlobKey),
         mScaledFonts(std::move(aOther.mScaledFonts)),
         mExternalSurfaces(std::move(aOther.mExternalSurfaces)),
-        mDirty(false) {}
+        mDirty(aOther.mDirty) {}
 
   BlobImageKeyData& operator=(BlobImageKeyData&& aOther) noexcept {
     mManager = std::move(aOther.mManager);
     mBlobKey = aOther.mBlobKey;
     mScaledFonts = std::move(aOther.mScaledFonts);
     mExternalSurfaces = std::move(aOther.mExternalSurfaces);
+    mDirty = aOther.mDirty;
     return *this;
   }
 
