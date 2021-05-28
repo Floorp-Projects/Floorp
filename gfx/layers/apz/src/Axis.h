@@ -304,7 +304,6 @@ class Axis {
 
   bool OverscrollBehaviorAllowsHandoff() const;
   bool OverscrollBehaviorAllowsOverscrollEffect() const;
-  bool AllowOverscroll() const;
 
   virtual CSSToParentLayerScale GetAxisScale(
       const CSSToParentLayerScale2D& aScale) const = 0;

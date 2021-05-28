@@ -3561,27 +3561,14 @@ ScrollDirections AsyncPanZoomController::GetOverscrollableDirections() const {
     return result;
   }
 
-  if (mX.AllowOverscroll()) {
+  if (mX.CanScroll() && mX.OverscrollBehaviorAllowsOverscrollEffect()) {
     result += ScrollDirection::eHorizontal;
   }
 
-  if (mY.AllowOverscroll()) {
+  if (mY.CanScroll() && mY.OverscrollBehaviorAllowsOverscrollEffect()) {
     result += ScrollDirection::eVertical;
   }
 
-  return result;
-}
-
-ScrollDirections AsyncPanZoomController::GetScrollableDirections() const {
-  ScrollDirections result;
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
-
-  if (mX.CanScroll()) {
-    result += ScrollDirection::eHorizontal;
-  }
-  if (mY.CanScroll()) {
-    result += ScrollDirection::eVertical;
-  }
   return result;
 }
 
