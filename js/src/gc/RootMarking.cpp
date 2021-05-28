@@ -238,8 +238,6 @@ void StackShape::trace(JSTracer* trc) {
   TraceRoot(trc, (jsid*)&propid, "StackShape id");
 }
 
-void StackBaseShape::trace(JSTracer* trc) { proto.trace(trc); }
-
 void PropertyDescriptor::trace(JSTracer* trc) {
   TraceRoot(trc, &value_, "Descriptor::value");
   if (getter_) {
