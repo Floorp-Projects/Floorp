@@ -471,20 +471,11 @@ inline void GetLeafName(PUNICODE_STRING aDestString,
 
 #if defined(MOZILLA_INTERNAL_API)
 
-inline const nsDependentSubstring GetLeafName(const nsAString& aString) {
-  auto it = aString.EndReading();
-  size_t pos = aString.Length();
-  while (it > aString.BeginReading()) {
-    if (*(it - 1) == u'\\') {
-      return Substring(aString, pos);
-    }
-
-    MOZ_ASSERT(pos > 0);
-    --pos;
-    --it;
-  }
-
-  return Substring(aString, 0);  // No backslash in the string
+inline const nsDependentSubstring GetLeafName(const nsString& aString) {
+  int32_t lastBackslashPos = aString.RFindChar(L'\\');
+  int32_t leafStartPos =
+      (lastBackslashPos == kNotFound) ? 0 : (lastBackslashPos + 1);
+  return Substring(aString, leafStartPos);
 }
 
 #endif  // defined(MOZILLA_INTERNAL_API)

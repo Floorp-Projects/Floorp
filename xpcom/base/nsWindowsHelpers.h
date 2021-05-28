@@ -11,7 +11,6 @@
 #define nsWindowsHelpers_h
 
 #include <windows.h>
-#include <msi.h>
 #include "nsAutoRef.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
@@ -173,19 +172,6 @@ class nsAutoRefTraits<DEVMODEW*> {
   }
 };
 
-template <>
-class nsAutoRefTraits<MSIHANDLE> {
- public:
-  typedef MSIHANDLE RawRef;
-  static RawRef Void() { return 0; }
-
-  static void Release(RawRef aHandle) {
-    if (aHandle != Void()) {
-      ::MsiCloseHandle(aHandle);
-    }
-  }
-};
-
 // HGLOBAL is just a typedef of HANDLE which nsSimpleRef has a specialization
 // of, that means having a nsAutoRefTraits specialization for HGLOBAL is
 // useless. Therefore we create a wrapper class for HGLOBAL to make
@@ -251,7 +237,6 @@ typedef nsAutoRef<HMODULE> nsModuleHandle;
 typedef nsAutoRef<DEVMODEW*> nsAutoDevMode;
 typedef nsAutoRef<nsHGLOBAL> nsAutoGlobalMem;
 typedef nsAutoRef<nsHPRINTER> nsAutoPrinter;
-typedef nsAutoRef<MSIHANDLE> nsAutoMsiHandle;
 
 namespace {
 

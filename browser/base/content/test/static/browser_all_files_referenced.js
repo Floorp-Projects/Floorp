@@ -240,11 +240,6 @@ var whitelist = [
     file:
       "resource://gre/localization/en-US/toolkit/updates/backgroundupdate.ftl",
   },
-  // Bug 1713242 - referenced by aboutThirdParty.html which is only for Windows
-  {
-    file: "resource://gre/localization/en-US/toolkit/about/aboutThirdParty.ftl",
-    platforms: ["linux", "macosx"],
-  },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
