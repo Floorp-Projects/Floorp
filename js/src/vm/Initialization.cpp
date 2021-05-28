@@ -10,7 +10,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/Unused.h"
 
 #include "jstypes.h"
 
@@ -93,7 +92,7 @@ static void SetupCanonicalNaN() {
 #    error "No JIT support for non-canonical hardware NaN"
 #  endif
 
-  mozilla::Unused << hardwareNaNBits;
+  (void)hardwareNaNBits;
 #elif defined(JS_RUNTIME_CANONICAL_NAN)
   // Determine canonical NaN at startup. It must still match the ValueIsDouble
   // requirements.

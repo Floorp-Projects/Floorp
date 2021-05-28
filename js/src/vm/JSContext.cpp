@@ -15,7 +15,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"  // mozilla::ConvertUtf16ToUtf8
 
 #include <stdarg.h>
@@ -457,7 +456,7 @@ static void PrintSingleError(JSContext* cx, FILE* file,
     if (prefix) {
       fputs(prefix.get(), file);
     }
-    mozilla::Unused << fwrite(message, 1, ctmp - message, file);
+    (void)fwrite(message, 1, ctmp - message, file);
     message = ctmp;
   }
 

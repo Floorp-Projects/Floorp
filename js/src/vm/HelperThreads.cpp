@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include <algorithm>
@@ -50,7 +49,6 @@ using namespace js;
 using mozilla::Maybe;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
-using mozilla::Unused;
 using mozilla::Utf8Unit;
 
 using JS::CompileOptions;
@@ -162,7 +160,7 @@ size_t js::RemovePendingWasmCompileTasks(
 }
 
 void js::StartOffThreadWasmTier2Generator(wasm::UniqueTier2GeneratorTask task) {
-  Unused << HelperThreadState().submitTask(std::move(task));
+  (void)HelperThreadState().submitTask(std::move(task));
 }
 
 bool GlobalHelperThreadState::submitTask(wasm::UniqueTier2GeneratorTask task) {
@@ -172,7 +170,7 @@ bool GlobalHelperThreadState::submitTask(wasm::UniqueTier2GeneratorTask task) {
   if (!wasmTier2GeneratorWorklist(lock).append(task.get())) {
     return false;
   }
-  Unused << task.release();
+  (void)task.release();
 
   dispatch(lock);
   return true;
@@ -705,7 +703,7 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   }
 
   if (options.useOffThreadParseGlobal) {
-    Unused << instantiateStencils(cx);
+    (void)instantiateStencils(cx);
   }
 }
 
@@ -781,7 +779,7 @@ void ModuleParseTask<Unit>::parse(JSContext* cx) {
   }
 
   if (options.useOffThreadParseGlobal) {
-    Unused << instantiateStencils(cx);
+    (void)instantiateStencils(cx);
   }
 }
 
@@ -830,7 +828,7 @@ void ScriptDecodeTask::parse(JSContext* cx) {
     }
 
     if (options.useOffThreadParseGlobal) {
-      Unused << instantiateStencils(cx);
+      (void)instantiateStencils(cx);
     }
 
     return;
@@ -1908,7 +1906,7 @@ void GlobalHelperThreadState::startHandlingCompressionTasks(
         (task->runtimeMatches(maybeRuntime) && task->shouldStart())) {
       // OOMing during appending results in the task not being scheduled
       // and deleted.
-      Unused << submitTask(std::move(task), lock);
+      (void)submitTask(std::move(task), lock);
       remove(pending, &i);
     }
   }
@@ -2592,7 +2590,7 @@ bool js::StartOffThreadPromiseHelperTask(JSContext* cx,
     return false;
   }
 
-  Unused << task.release();
+  (void)task.release();
   return true;
 }
 

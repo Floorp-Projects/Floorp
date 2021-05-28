@@ -17,7 +17,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/Vector.h"
 
@@ -61,7 +60,6 @@ using mozilla::PodCopy;
 using mozilla::RangedPtr;
 using mozilla::RoundUpPow2;
 using mozilla::Span;
-using mozilla::Unused;
 
 using JS::AutoCheckCannotGC;
 using JS::AutoStableStringChars;
@@ -2024,7 +2022,7 @@ static bool FillWithRepresentatives(JSContext* cx, HandleArrayObject array,
   auto AppendString = [&check](JSContext* cx, HandleArrayObject array,
                                uint32_t* index, HandleString s) {
     MOZ_ASSERT(check(s));
-    Unused << check;  // silence clang -Wunused-lambda-capture in opt builds
+    (void)check;  // silence clang -Wunused-lambda-capture in opt builds
     RootedValue val(cx, StringValue(s));
     return JS_DefineElement(cx, array, (*index)++, val, 0);
   };

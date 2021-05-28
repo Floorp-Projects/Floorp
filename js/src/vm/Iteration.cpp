@@ -14,7 +14,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/Unused.h"
 
 #include <algorithm>
 #include <new>

@@ -14,7 +14,6 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/HashFunctions.h"  // mozilla::HashStringKnownLength
 #include "mozilla/RangedPtr.h"
-#include "mozilla/Unused.h"
 
 #include <iterator>
 #include <string.h>
