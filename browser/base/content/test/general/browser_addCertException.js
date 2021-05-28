@@ -27,7 +27,7 @@ add_task(async function() {
     gIdentityHandler._identityPopup,
     "ViewShown"
   );
-  document.getElementById("identity-popup-security-expander").click();
+  document.getElementById("identity-popup-security-button").click();
   await promiseViewShown;
 
   is_element_visible(

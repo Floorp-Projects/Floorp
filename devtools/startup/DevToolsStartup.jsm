@@ -561,15 +561,8 @@ DevToolsStartup.prototype = {
       return;
     }
 
-    const protonEnabled =
-      Services.prefs.getBoolPref("browser.proton.doorhangers.enabled", false) &&
-      Services.prefs.getBoolPref("browser.proton.enabled", false);
-    const panelviewId = protonEnabled
-      ? "appmenu-moreTools"
-      : "PanelUI-developer";
-    const subviewId = protonEnabled
-      ? "appmenu-developer-tools-view"
-      : "PanelUI-developerItems";
+    const panelviewId = "appmenu-moreTools";
+    const subviewId = "appmenu-developer-tools-view";
 
     const item = {
       id: id,

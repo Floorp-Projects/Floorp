@@ -726,7 +726,7 @@ var gSync = {
         let item = document.createXULElement("toolbarbutton");
         item.setAttribute("wrap", true);
         item.setAttribute("align", "start");
-        item.classList.add("pageAction-sendToDevice-device", "subviewbutton");
+        item.classList.add("sendToDevice-device", "subviewbutton");
         if (clientId) {
           item.classList.add("subviewbutton-iconic");
           if (lastModified) {

@@ -25,25 +25,30 @@
       </vbox>
       <toolbarseparator></toolbarseparator>
 
+      <toolbarbutton id="identity-popup-security-button"
+                     class="subviewbutton-nav subviewbutton"
+                     align="center"
+                     oncommand="gIdentityHandler.showSecuritySubView();">
+        <vbox class="identity-popup-security-connection identity-button">
+          <hbox flex="1">
+            <description class="identity-popup-connection-not-secure"
+                        when-connection="not-secure secure-cert-user-overridden secure-custom-root cert-error-page https-only-error-page" data-l10n-id="identity-connection-not-secure"></description>
+            <description class="identity-popup-connection-secure"
+                        when-connection="secure secure-ev" data-l10n-id="identity-connection-secure"></description>
+            <description class="identity-popup-connection-failure"
+                        when-connection="net-error-page" data-l10n-id="identity-connection-failure"></description>
+            <description when-connection="chrome" data-l10n-id="identity-connection-internal"></description>
+            <description when-connection="file" data-l10n-id="identity-connection-file"></description>
+            <description when-connection="extension" data-l10n-id="identity-extension-page"></description>
+            <description class="identity-popup-connection-secure upgraded" when-httpsonlystatus="upgraded failed-sub"
+              data-l10n-id="identity-https-only-connection-upgraded"></description>
+          </hbox>
+        </vbox>
+      </toolbarbutton>
+
       <!-- Security Section -->
       <hbox id="identity-popup-security" class="identity-popup-section" flex="1">
         <vbox class="identity-popup-security-content" flex="1">
-
-          <vbox class="identity-popup-security-connection identity-button">
-            <hbox flex="1">
-              <description class="identity-popup-connection-not-secure"
-                          when-connection="not-secure secure-cert-user-overridden secure-custom-root cert-error-page https-only-error-page" data-l10n-id="identity-connection-not-secure"></description>
-              <description class="identity-popup-connection-secure"
-                          when-connection="secure secure-ev" data-l10n-id="identity-connection-secure"></description>
-              <description class="identity-popup-connection-failure"
-                          when-connection="net-error-page" data-l10n-id="identity-connection-failure"></description>
-              <description when-connection="chrome" data-l10n-id="identity-connection-internal"></description>
-              <description when-connection="file" data-l10n-id="identity-connection-file"></description>
-              <description when-connection="extension" data-l10n-id="identity-extension-page"></description>
-              <description class="identity-popup-connection-secure upgraded" when-httpsonlystatus="upgraded failed-sub"
-                data-l10n-id="identity-https-only-connection-upgraded"></description>
-            </hbox>
-          </vbox>
 
           <vbox id="identity-popup-security-description">
             <description id="identity-popup-security-ev-content-owner"
@@ -85,10 +90,6 @@
           </vbox>
 
         </vbox>
-        <button id="identity-popup-security-expander"
-                class="identity-popup-expander"
-                when-connection="not-secure secure secure-ev secure-cert-user-overridden cert-error-page net-error-page https-only-error-page"
-                oncommand="gIdentityHandler.showSecuritySubView();"/>
       </hbox>
 
       <!-- Clear Site Data Button -->
