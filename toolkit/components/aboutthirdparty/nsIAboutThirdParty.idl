@@ -39,4 +39,11 @@ interface nsIAboutThirdParty : nsISupports
    * the returned promise when the task is finished.
    */
   [implicit_jscontext] Promise collectSystemInfo();
+
+  /**
+   * Open an OpenFile dialog with given parameters and immediately close it.
+   * This method should only be used for testing.
+   */
+  void openAndCloseFileDialogForTesting(
+      in AString aModuleName, in AString aInitialDir, in AString aFilter);
 };
