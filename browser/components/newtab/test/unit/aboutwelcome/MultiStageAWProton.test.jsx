@@ -49,11 +49,10 @@ describe("MultiStageAboutWelcomeProton module", () => {
       );
     });
     it("should have 'primary' button if we need to pin", async () => {
-      sandbox.stub(global.ShellService, "doesAppNeedPin").resolves(true);
-
       const data = await AboutWelcomeDefaults.prepareContentForReact({
         ...(await getData()),
         isProton: true,
+        needPin: true,
       });
 
       assert.propertyVal(

@@ -39,6 +39,7 @@ function mockShell(overrides = {}) {
     didMockShell = true;
   }
 
+  const sharedPinStub = sinon.stub();
   let mock = {
     canPin: false,
     isDefault: false,
@@ -49,11 +50,17 @@ function mockShell(overrides = {}) {
         throw Error;
       }
     },
+    get isAppInDock() {
+      return this.isPinned;
+    },
     isCurrentAppPinnedToTaskbarAsync() {
       return Promise.resolve(this.isPinned);
     },
     isDefaultBrowser() {
       return this.isDefault;
+    },
+    get macDockSupport() {
+      return this;
     },
     // eslint-disable-next-line mozilla/use-chromeutils-generateqi
     QueryInterface() {
@@ -63,7 +70,8 @@ function mockShell(overrides = {}) {
       return this;
     },
 
-    pinCurrentAppToTaskbar: sinon.stub(),
+    ensureAppIsPinnedToDock: sharedPinStub,
+    pinCurrentAppToTaskbar: sharedPinStub,
     setAsDefault: sinon.stub(),
     ...overrides,
   };
