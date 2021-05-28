@@ -213,6 +213,10 @@ reftest:
 reftest-qr:
     description: "Reftest webrender run"
     treeherder-symbol: R(R)
+    variants:
+        by-test-platform:
+            android-hw-p2-8-0-android-aarch64-qr/debug: ['webrender-sw']
+            default: []
     chunks: 2
     e10s: true
     run-on-projects:
