@@ -39,6 +39,10 @@ h1 {
   margin: 0;
 }
 
+.module-tags {
+  margin-inline: .5em;
+}
+
 .module-tag {
   font-size: 12px;
   white-space: nowrap;
