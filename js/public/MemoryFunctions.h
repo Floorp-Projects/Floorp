@@ -64,7 +64,6 @@ namespace JS {
   _(CDataBuffer)                         \
   _(CClosureInfo)                        \
   _(CTypesInt64)                         \
-  _(PerfMeasurement)                     \
   _(Embedding1)                          \
   _(Embedding2)                          \
   _(Embedding3)                          \
