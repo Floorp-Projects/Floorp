@@ -12,6 +12,7 @@ import mozilla.components.feature.autofill.response.fill.FillResponseBuilder
 import mozilla.components.feature.autofill.response.fill.LoginFillResponseBuilder
 import mozilla.components.feature.autofill.test.createMockStructure
 import mozilla.components.feature.autofill.ui.AbstractAutofillConfirmActivity
+import mozilla.components.feature.autofill.ui.AbstractAutofillSearchActivity
 import mozilla.components.feature.autofill.ui.AbstractAutofillUnlockActivity
 import mozilla.components.feature.autofill.verify.CredentialAccessVerifier
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
@@ -172,6 +173,7 @@ private fun <B : FillResponseBuilder> FillRequestHandlerTest.createTestCase(
         publicSuffixList = PublicSuffixList(testContext),
         unlockActivity = AbstractAutofillUnlockActivity::class.java,
         confirmActivity = AbstractAutofillConfirmActivity::class.java,
+        searchActivity = AbstractAutofillSearchActivity::class.java,
         applicationName = "Test",
         httpClient = mock(),
         verifier = verifier

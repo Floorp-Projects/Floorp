@@ -33,12 +33,15 @@ dependencies {
     implementation project(':lib-publicsuffixlist')
     implementation project(':service-digitalassetlinks')
     implementation project(':support-base')
+    implementation project(':support-ktx')
     implementation project(":support-utils")
 
     implementation Dependencies.androidx_annotation
     implementation Dependencies.androidx_biometric
     implementation Dependencies.androidx_fragment
     implementation Dependencies.androidx_lifecycle_runtime
+    implementation Dependencies.androidx_recyclerview
+    implementation Dependencies.androidx_core_ktx
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

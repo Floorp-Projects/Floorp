@@ -8,6 +8,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.feature.autofill.lock.AutofillLock
 import mozilla.components.feature.autofill.ui.AbstractAutofillConfirmActivity
+import mozilla.components.feature.autofill.ui.AbstractAutofillSearchActivity
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.feature.autofill.ui.AbstractAutofillUnlockActivity
 import mozilla.components.feature.autofill.verify.CredentialAccessVerifier
@@ -21,6 +22,7 @@ import mozilla.components.service.digitalassetlinks.local.StatementRelationCheck
  * @property publicSuffixList Global instance of the public suffix list used for matching domains.
  * @property unlockActivity Activity class that implements [AbstractAutofillUnlockActivity].
  * @property confirmActivity Activity class that implements [AbstractAutofillConfirmActivity].
+ * @property searchActivity Activity class that implements [AbstractAutofillSearchActivity].
  * @property applicationName The name of the application that integrates this feature. Used in UI.
  * @property lock Global [AutofillLock] instance used for unlocking the autofill service.
  * @property verifier Helper for verifying the connection between a domain and an application.
@@ -32,6 +34,7 @@ data class AutofillConfiguration(
     val publicSuffixList: PublicSuffixList,
     val unlockActivity: Class<*>,
     val confirmActivity: Class<*>,
+    val searchActivity: Class<*>,
     val applicationName: String,
     val httpClient: Client,
     val lock: AutofillLock = AutofillLock(),

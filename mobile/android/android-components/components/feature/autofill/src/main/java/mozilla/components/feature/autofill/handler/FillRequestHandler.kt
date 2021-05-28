@@ -22,6 +22,8 @@ import mozilla.components.feature.autofill.structure.getLookupDomain
 import mozilla.components.feature.autofill.structure.parseStructure
 
 internal const val EXTRA_LOGIN_ID = "loginId"
+// Maximum number of logins we are going to display in the autofill overlay.
+internal const val MAX_LOGINS = 10
 
 /**
  * Class responsible for handling [FillRequest]s and returning [FillResponse]s.
@@ -53,7 +55,10 @@ internal class FillRequestHandler(
             parsedStructure.packageName
         )
 
-        val logins = configuration.storage.getByBaseDomain(lookupDomain)
+        val logins = configuration.storage
+            .getByBaseDomain(lookupDomain)
+            .take(MAX_LOGINS)
+
         if (logins.isEmpty()) {
             return null
         }

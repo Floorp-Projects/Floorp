@@ -11,6 +11,7 @@ import androidx.annotation.RequiresApi
 import mozilla.components.concept.storage.Login
 import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.response.dataset.LoginDatasetBuilder
+import mozilla.components.feature.autofill.response.dataset.SearchDatasetBuilder
 import mozilla.components.feature.autofill.structure.ParsedStructure
 
 /**
@@ -23,6 +24,8 @@ internal data class LoginFillResponseBuilder(
     val logins: List<Login>,
     val needsConfirmation: Boolean
 ) : FillResponseBuilder {
+    private val searchDatasetBuilder = SearchDatasetBuilder(parsedStructure)
+
     override fun build(
         context: Context,
         configuration: AutofillConfiguration
@@ -44,6 +47,10 @@ internal data class LoginFillResponseBuilder(
 
             builder.addDataset(dataset)
         }
+
+        builder.addDataset(
+            searchDatasetBuilder.build(context, configuration)
+        )
 
         return builder.build()
     }

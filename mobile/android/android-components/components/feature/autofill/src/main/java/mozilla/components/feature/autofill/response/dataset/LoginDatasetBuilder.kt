@@ -70,7 +70,7 @@ internal data class LoginDatasetBuilder(
     }
 }
 
-private fun Login.usernamePresentationOrFallback(context: Context): String {
+internal fun Login.usernamePresentationOrFallback(context: Context): String {
     return if (username.isNotEmpty()) {
         username
     } else {

@@ -78,6 +78,7 @@ import mozilla.components.service.digitalassetlinks.local.StatementRelationCheck
 import mozilla.components.service.location.LocationService
 import org.mozilla.samples.browser.addons.AddonsActivity
 import org.mozilla.samples.browser.autofill.AutofillConfirmActivity
+import org.mozilla.samples.browser.autofill.AutofillSearchActivity
 import org.mozilla.samples.browser.autofill.AutofillUnlockActivity
 import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
@@ -101,6 +102,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             publicSuffixList = publicSuffixList,
             unlockActivity = AutofillUnlockActivity::class.java,
             confirmActivity = AutofillConfirmActivity::class.java,
+            searchActivity = AutofillSearchActivity::class.java,
             applicationName = "Sample Browser",
             httpClient = client
         )
