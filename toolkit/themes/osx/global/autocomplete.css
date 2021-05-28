@@ -12,11 +12,11 @@ html|input[nomatch="true"][highlightnonmatches="true"] {
 /* ::::: autocomplete popups ::::: */
 
 panel[type="autocomplete-richlistbox"] {
-  padding: 0px !important;
-  color: FieldText;
-  background-color: Field;
-  font: icon;
   appearance: none;
+  font: icon;
+  --panel-padding: 0px;
+  --panel-color: FieldText;
+  --panel-background: Field;
 }
 
 /* ::::: richlistbox autocomplete ::::: */

@@ -6,7 +6,7 @@ xul|popupnotificationcontent {
   margin-top: .5em;
 }
 
-.popup-notification-panel::part(arrowcontent) {
+.popup-notification-panel::part(content) {
   /* To keep the rounded borders of the panel, we use overflow: hidden; from the
    * panel-no-padding class to ensure the contents are clipped to the border box.
    * That causes us to override the "display" property so that the height of the
@@ -17,7 +17,7 @@ xul|popupnotificationcontent {
 }
 
 .popup-notification-panel > popupnotification:not([hidden]) {
-  /* Since the anonymous parent (::part(arrowcontent)) has display: flex, sizing
+  /* Since the anonymous parent (::part(content)) has display: flex, sizing
    * computations work better with display: block; than with the XUL default
    * display: -moz-box; */
   display: block;

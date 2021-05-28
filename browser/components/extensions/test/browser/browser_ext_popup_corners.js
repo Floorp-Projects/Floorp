@@ -35,7 +35,7 @@ add_task(async function testPopupBorderRadius() {
 
   async function testPanel(browser, standAlone = true) {
     let panel = getPanelForNode(browser);
-    let arrowContent = panel.shadowRoot.querySelector(".panel-arrowcontent");
+    let arrowContent = panel.panelContent;
 
     let panelStyle = getComputedStyle(arrowContent);
     is(
