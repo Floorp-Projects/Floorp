@@ -799,14 +799,7 @@ class MacroAssemblerX86Shared : public Assembler {
     vshufps(mask, src, dest, dest);
   }
   void selectX4(FloatRegister mask, FloatRegister onTrue, FloatRegister onFalse,
-                FloatRegister temp, FloatRegister output) {
-    if (AssemblerX86Shared::HasAVX()) {
-      vblendvps(mask, onTrue, onFalse, output);
-    } else {
-      selectSimd128(mask, onTrue, onFalse, temp, output);
-    }
-  }
-
+                FloatRegister temp, FloatRegister output);
   // End unused SIMD.
 
   void moveFloatAsDouble(Register src, FloatRegister dest) {
