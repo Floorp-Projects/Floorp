@@ -18,11 +18,18 @@ ChromeUtils.defineModuleGetter(
  */
 class InteractionsParent extends JSWindowActorParent {
   receiveMessage(msg) {
-    if (msg.name == "Interactions:PageLoaded") {
-      Interactions.registerNewInteraction(
-        this.browsingContext.embedderElement,
-        msg.data
-      );
+    switch (msg.name) {
+      case "Interactions:PageLoaded":
+        Interactions.registerNewInteraction(
+          this.browsingContext.embedderElement,
+          msg.data
+        );
+        break;
+      case "Interactions:PageHide":
+        Interactions.registerEndOfInteraction(
+          this.browsingContext.embedderElement
+        );
+        break;
     }
   }
 }
