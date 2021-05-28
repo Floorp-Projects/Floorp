@@ -3,3 +3,45 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 third-party-page-title = Third-party Module Information
+third-party-section-title = List of third-party modules in { -brand-short-name }
+
+third-party-intro =
+    This page shows the third-party modules which were injected into your
+    { -brand-short-name }. Any module that is not signed by Microsoft or
+    { -vendor-short-name } is considered to be a third-party module.
+
+third-party-header-module-list = Module list
+third-party-header-loading-events = Loading events
+
+third-party-message-empty = No third-party modules were detected.
+third-party-message-no-duration = Not recorded
+
+third-party-detail-version = File version
+third-party-detail-vendor = Vendor info
+third-party-detail-occurrences = Occurrences
+    .title = How many times this module was loaded.
+third-party-detail-duration = Avg. Blocking time (ms)
+    .title = How long this module blocked the application.
+
+third-party-th-process = Process
+third-party-th-duration = Loading Duration (ms)
+third-party-th-status = Status
+
+third-party-tag-background = Background
+    .title =
+        This module did not block the application because it was loaded
+        in the background.
+third-party-unsigned-icon =
+    .title = This module is not signed
+
+third-party-status-loaded = Loaded
+third-party-status-blocked = Blocked
+third-party-status-redirected = Redirected
+
+third-party-button-copy-to-clipboard = Copy raw data to clipboard
+third-party-button-open =
+    .title = Open file location…
+third-party-button-expand =
+    .title = Show detailed information
+third-party-button-collapse =
+    .title = Collapse detailed information
