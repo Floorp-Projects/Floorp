@@ -1550,12 +1550,8 @@ const DisplayItemClipChain* nsDisplayListBuilder::FuseClipChainUpTo(
 const nsIFrame* nsDisplayListBuilder::FindReferenceFrameFor(
     const nsIFrame* aFrame, nsPoint* aOffset) const {
   auto MaybeApplyAdditionalOffset = [&]() {
-    if (AdditionalOffset()) {
-      // The additional reference frame offset should only affect descendants
-      // of |mAdditionalOffsetFrame|.
-      MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(mAdditionalOffsetFrame,
-                                                        aFrame));
-      *aOffset += *AdditionalOffset();
+    if (auto offset = AdditionalOffset()) {
+      *aOffset += *offset;
     }
   };
 

@@ -1127,7 +1127,6 @@ class nsDisplayListBuilder {
       mBuilder->mAdditionalOffset = mozilla::Some(aOffset);
 
       mBuilder->mCurrentOffsetToReferenceFrame += aOffset;
-      mBuilder->mAdditionalOffsetFrame = mBuilder->mCurrentReferenceFrame;
     }
 
     bool IsAnimatedGeometryRoot() const { return mCurrentAGRState == AGR_YES; }
@@ -1941,7 +1940,6 @@ class nsDisplayListBuilder {
   // The offset from mCurrentFrame to mCurrentReferenceFrame.
   nsPoint mCurrentOffsetToReferenceFrame;
 
-  const nsIFrame* mAdditionalOffsetFrame;
   mozilla::Maybe<nsPoint> mAdditionalOffset;
 
   RefPtr<AnimatedGeometryRoot> mRootAGR;
