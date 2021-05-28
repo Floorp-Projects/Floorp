@@ -125,13 +125,6 @@ class OverscrollHandoffChain {
   typedef bool (AsyncPanZoomController::*APZCPredicate)() const;
   void ForEachApzc(APZCMethod aMethod) const;
   bool AnyApzc(APZCPredicate aPredicate) const;
-
-  // Return whether we allow handoff from |aChild| to |aRoot| with the given
-  // |aInput| event.
-  // |aChild| should be a child of |aRoot| in the handoff chain.
-  static bool AllowHandoffToRoot(const AsyncPanZoomController* aChild,
-                                 const AsyncPanZoomController* aRoot,
-                                 const InputData& aInput);
 };
 
 /**

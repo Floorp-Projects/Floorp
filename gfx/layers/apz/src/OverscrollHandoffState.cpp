@@ -152,68 +152,6 @@ bool OverscrollHandoffChain::HasAutoscrollApzc() const {
   return AnyApzc(&AsyncPanZoomController::IsAutoscroll);
 }
 
-static ScrollDirections ScrollDirectionsForDelta(
-    const ParentLayerPoint& aDelta) {
-  ScrollDirections result = EitherScrollDirection;
-
-  if (FuzzyEqualsAdditive(aDelta.x, 0.0f, COORDINATE_EPSILON)) {
-    result -= ScrollDirection::eHorizontal;
-  }
-  if (FuzzyEqualsAdditive(aDelta.y, 0.0f, COORDINATE_EPSILON)) {
-    result -= ScrollDirection::eVertical;
-  }
-
-  return result;
-}
-
-// Return the directions in which |aTarget| is scrollable.
-// Note that this function returns the direction even if there is no room to
-// scroll with |aDelta| in the direction. E.g. if |aTarget| is only vertically
-// scrollable and if the current scroll position is at the top, then even if
-// |aDelta| is negative, say (0, -10), this function returns
-// VerticalScrollDirection.
-static ScrollDirections ScrollableDirectionsForDelta(
-    const AsyncPanZoomController* aTarget, const ParentLayerPoint& aDelta) {
-  return ScrollDirectionsForDelta(aDelta) & aTarget->GetScrollableDirections();
-}
-
-// static
-bool OverscrollHandoffChain::AllowHandoffToRoot(
-    const AsyncPanZoomController* aChild, const AsyncPanZoomController* aRoot,
-    const InputData& aInput) {
-  MOZ_ASSERT(aChild && !aChild->IsRootContent() && !aChild->CanScroll(aInput),
-             "This function is supposed to be called with a child subframe "
-             "which should NOT be scrollable to the given input direction");
-  MOZ_ASSERT(
-      aRoot && aRoot->IsRootContent() && !aRoot->CanScroll(aInput),
-      "This function is supposed to be called with the root content "
-      "frame which should NOT be scrollable to the given input direction");
-
-  // Check whether the child subframe is scrollable in the opposite direction to
-  // the given input.
-  ScrollDirections scrollableDirectionsOnSubframe =
-      ScrollableDirectionsForDelta(aChild, aChild->GetDeltaForEvent(aInput));
-  if (scrollableDirectionsOnSubframe.isEmpty()) {
-    // If the child subframe is NOT scrollable in the opposite direction, i.e.
-    // the child subframe is not scrollable in either direction, normally it
-    // means the child subframe is not vertically scrollable or not horizontally
-    // scrollable, in such cases we do handoff to the root.
-    //
-    // NOTE: We don't check whether the root frame is scrollable or
-    // overscrollable in the given input direction either since we allow
-    // overscrolling on the root frame even if it's not scrollable and we allow
-    // handoff even if the root frame overscroll-behavior is none.
-    return true;
-  }
-
-  // If the child subframe is scrollable in the opposite direction, we do
-  // handoff to the root frame depending on whether the root frame is also
-  // scrollable in the same direction.
-  ScrollDirections scrollDirectionsOnRoot =
-      ScrollableDirectionsForDelta(aRoot, aRoot->GetDeltaForEvent(aInput));
-  return !(scrollableDirectionsOnSubframe & scrollDirectionsOnRoot).isEmpty();
-}
-
 RefPtr<AsyncPanZoomController> OverscrollHandoffChain::FindFirstScrollable(
     const InputData& aInput,
     ScrollDirections* aOutAllowedScrollDirections) const {
@@ -227,15 +165,33 @@ RefPtr<AsyncPanZoomController> OverscrollHandoffChain::FindFirstScrollable(
       return mChain[i];
     }
 
+    // If there is any directions we allow overscroll effects on the root
+    // content APZC (i.e. the overscroll-behavior of the root one is not
+    // `none`), we consider the APZC can be scrollable in terms of pan gestures
+    // because it causes overscrolling even if it's not able to scroll to the
+    // direction.
     if (StaticPrefs::apz_overscroll_enabled() &&
         // FIXME: Bug 1707491: Drop this pan gesture input check.
         aInput.mInputType == PANGESTURE_INPUT && mChain[i]->IsRootContent()) {
-      // Handoff to the root content APZC even if it's not scrollable.
-      // See comments in AllowHandoffToRoot when we handoff and when we don't.
-      if (i > 0 && AllowHandoffToRoot(mChain[i - 1], mChain[i], aInput)) {
-        *aOutAllowedScrollDirections &=
-            mChain[i]->GetOverscrollableDirections() &
-            ScrollDirectionsForDelta(mChain[i]->GetDeltaForEvent(aInput));
+      // Check whether the root content APZC is also overscrollable governed by
+      // overscroll-behavior in the same directions where we allow scrolling
+      // handoff and where we are going to scroll, if it matches we do handoff
+      // to the root content APZC.
+      // In other words, if the root content is not scrollable, we don't
+      // handoff.
+      ScrollDirections allowedOverscrollDirections =
+          mChain[i]->GetOverscrollableDirections();
+      ParentLayerPoint delta = mChain[i]->GetDeltaForEvent(aInput);
+      if (FuzzyEqualsAdditive(delta.x, 0.0f, COORDINATE_EPSILON)) {
+        allowedOverscrollDirections -= ScrollDirection::eHorizontal;
+      }
+      if (FuzzyEqualsAdditive(delta.y, 0.0f, COORDINATE_EPSILON)) {
+        allowedOverscrollDirections -= ScrollDirection::eVertical;
+      }
+
+      allowedOverscrollDirections &= *aOutAllowedScrollDirections;
+      if (!allowedOverscrollDirections.isEmpty()) {
+        *aOutAllowedScrollDirections = allowedOverscrollDirections;
         return mChain[i];
       }
     }
