@@ -1023,6 +1023,11 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
             refreshDriver->EnterUserInputProcessing();
           }
         }
+        auto cleanup = MakeScopeExit([&] {
+          if (refreshDriver) {
+            refreshDriver->ExitUserInputProcessing();
+          }
+        });
 
         clearTargets = ShouldClearTargets(aEvent);
 
@@ -1137,10 +1142,6 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
               default:
                 break;
             }
-          }
-
-          if (refreshDriver) {
-            driver->ExitUserInputProcessing();
           }
         }
 
