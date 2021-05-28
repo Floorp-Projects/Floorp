@@ -1289,12 +1289,14 @@ class MOZ_STACK_CLASS mozInlineSpellChecker::SpellCheckerSlice {
   [[nodiscard]] nsresult Execute();
 
  private:
-  // Creates an async request to check the words and add the ranges for the
+  // Creates an async request to check the words and update the ranges for the
   // misspellings.
   //
   // @param aWords normalized words corresponding to aRanges.
-  void CheckWordsAndAddRangesForMisspellings(
-      const nsTArray<nsString>& aWords, nsTArray<NodeOffsetRange>&& aRanges);
+  void CheckWordsAndUpdateRangesForMisspellings(
+      const nsTArray<nsString>& aWords,
+      const nsTArray<RefPtr<nsRange>>& aOldRangesToRemove,
+      nsTArray<NodeOffsetRange>&& aRanges);
 
   void RemoveRanges(const nsTArray<RefPtr<nsRange>>& aRanges);
 
@@ -1417,6 +1419,7 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
   PRTime beginTime = PR_Now();
 
   nsTArray<nsString> normalizedWords;
+  nsTArray<RefPtr<nsRange>> oldRangesToRemove;
   nsTArray<NodeOffsetRange> checkRanges;
   mozInlineSpellWordUtil::Word word;
   static const size_t requestChunkSize =
@@ -1437,8 +1440,8 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
           sInlineSpellCheckerLog, LogLevel::Verbose,
           ("%s: we have run out of time, schedule next round.", __FUNCTION__));
 
-      CheckWordsAndAddRangesForMisspellings(normalizedWords,
-                                            std::move(checkRanges));
+      CheckWordsAndUpdateRangesForMisspellings(
+          normalizedWords, oldRangesToRemove, std::move(checkRanges));
 
       // move the range to encompass the stuff that needs checking.
       nsresult rv = mStatus->mRange->SetStart(beginNode, beginOffset);
@@ -1473,7 +1476,7 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
         mSpellCheckSelection.GetRangesForInterval(
             *beginNode, beginOffset, *endNode, endOffset, true, ranges, erv);
         ENSURE_SUCCESS(erv, erv.StealNSResult());
-        RemoveRanges(ranges);
+        oldRangesToRemove.AppendElements(std::move(ranges));
       }
     }
 
@@ -1504,17 +1507,18 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
     checkRanges.AppendElement(word.mNodeOffsetRange);
     wordsChecked++;
     if (normalizedWords.Length() >= requestChunkSize) {
-      CheckWordsAndAddRangesForMisspellings(normalizedWords,
-                                            std::move(checkRanges));
+      CheckWordsAndUpdateRangesForMisspellings(
+          normalizedWords, oldRangesToRemove, std::move(checkRanges));
+      normalizedWords.Clear();
+      oldRangesToRemove.Clear();
       // Set new empty data for spellcheck range in DOM to avoid
       // clang-tidy detection.
-      normalizedWords.Clear();
       checkRanges = nsTArray<NodeOffsetRange>();
     }
   }
 
-  CheckWordsAndAddRangesForMisspellings(normalizedWords,
-                                        std::move(checkRanges));
+  CheckWordsAndUpdateRangesForMisspellings(normalizedWords, oldRangesToRemove,
+                                           std::move(checkRanges));
 
   return NS_OK;
 }
@@ -1547,9 +1551,13 @@ class MOZ_RAII AutoChangeNumPendingSpellChecks final {
 };
 
 void mozInlineSpellChecker::SpellCheckerSlice::
-    CheckWordsAndAddRangesForMisspellings(const nsTArray<nsString>& aWords,
-                                          nsTArray<NodeOffsetRange>&& aRanges) {
+    CheckWordsAndUpdateRangesForMisspellings(
+        const nsTArray<nsString>& aWords,
+        const nsTArray<RefPtr<nsRange>>& aOldRangesToRemove,
+        nsTArray<NodeOffsetRange>&& aRanges) {
   MOZ_ASSERT(aWords.Length() == aRanges.Length());
+
+  RemoveRanges(aOldRangesToRemove);
 
   if (aWords.IsEmpty()) {
     return;
