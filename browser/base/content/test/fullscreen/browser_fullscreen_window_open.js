@@ -22,7 +22,7 @@ async function testWindowOpen(iframeID) {
   let popup;
   await testExpectFullScreenExit(tab.linkedBrowser, true, async () => {
     info("Calling window.open()");
-    popup = await jsWindowOpen(tab.linkedBrowser, iframeID);
+    popup = await jsWindowOpen(tab.linkedBrowser, true, iframeID);
   });
 
   // Cleanup
