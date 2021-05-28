@@ -532,7 +532,6 @@ class SetBackgroundRequestRunnable final
   ~SetBackgroundRequestRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
-    // XXXedgar, do we intend to ignore the errors?
     mProxy->mXHR->SetMozBackgroundRequest(mValue, aRv);
   }
 };
@@ -696,12 +695,12 @@ class OpenRunnable final : public WorkerThreadProxySyncRunnable {
     WorkerPrivate* oldWorker = mProxy->mWorkerPrivate;
     mProxy->mWorkerPrivate = mWorkerPrivate;
 
-    MainThreadRunInternal(aRv);
+    aRv = MainThreadRunInternal();
 
     mProxy->mWorkerPrivate = oldWorker;
   }
 
-  void MainThreadRunInternal(ErrorResult& aRv);
+  nsresult MainThreadRunInternal();
 };
 
 class SetRequestHeaderRunnable final : public WorkerThreadProxySyncRunnable {
@@ -1207,41 +1206,40 @@ void AbortRunnable::RunOnMainThread(ErrorResult& aRv) {
   mProxy->Reset();
 }
 
-void OpenRunnable::MainThreadRunInternal(ErrorResult& aRv) {
+nsresult OpenRunnable::MainThreadRunInternal() {
   if (!mProxy->Init()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   if (mBackgroundRequest) {
-    mProxy->mXHR->SetMozBackgroundRequestExternal(mBackgroundRequest, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+    nsresult rv = mProxy->mXHR->SetMozBackgroundRequest(mBackgroundRequest);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (mOriginStack) {
     mProxy->mXHR->SetOriginStack(std::move(mOriginStack));
   }
 
+  ErrorResult rv;
+
   if (mWithCredentials) {
-    mProxy->mXHR->SetWithCredentials(mWithCredentials, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
+    mProxy->mXHR->SetWithCredentials(mWithCredentials, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
   }
 
   if (mTimeout) {
-    mProxy->mXHR->SetTimeout(mTimeout, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
+    mProxy->mXHR->SetTimeout(mTimeout, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
   }
 
   if (!mMimeTypeOverride.IsVoid()) {
-    mProxy->mXHR->OverrideMimeType(mMimeTypeOverride, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
+    mProxy->mXHR->OverrideMimeType(mMimeTypeOverride, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
   }
 
@@ -1250,20 +1248,25 @@ void OpenRunnable::MainThreadRunInternal(ErrorResult& aRv) {
 
   mProxy->mXHR->Open(
       mMethod, mURL, true, mUser.WasPassed() ? mUser.Value() : VoidString(),
-      mPassword.WasPassed() ? mPassword.Value() : VoidString(), aRv);
+      mPassword.WasPassed() ? mPassword.Value() : VoidString(), rv);
 
   MOZ_ASSERT(mProxy->mInOpen);
   mProxy->mInOpen = false;
 
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
   if (mSource) {
     mProxy->mXHR->SetSource(std::move(mSource));
   }
 
-  mProxy->mXHR->SetResponseType(mResponseType, aRv);
+  mProxy->mXHR->SetResponseType(mResponseType, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  return NS_OK;
 }
 
 void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
@@ -2077,9 +2080,8 @@ void XMLHttpRequestWorker::SetResponseType(
 
   if (mStateData->mReadyState == XMLHttpRequest_Binding::LOADING ||
       mStateData->mReadyState == XMLHttpRequest_Binding::DONE) {
-    aRv.ThrowInvalidStateError(
-        "Cannot set 'responseType' property on XMLHttpRequest after 'send()' "
-        "(when its state is LOADING or DONE).");
+    aRv.Throw(
+        NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE_RESPONSE_TYPE);
     return;
   }
 
@@ -2198,8 +2200,8 @@ void XMLHttpRequestWorker::GetResponseText(DOMString& aResponseText,
 
   if (mResponseType != XMLHttpRequestResponseType::_empty &&
       mResponseType != XMLHttpRequestResponseType::Text) {
-    aRv.ThrowInvalidStateError(
-        "responseText is only available if responseType is '' or 'text'.");
+    aRv.Throw(
+        NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSETEXT);
     return;
   }
 
