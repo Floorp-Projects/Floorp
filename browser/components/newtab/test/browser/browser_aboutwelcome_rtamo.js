@@ -209,11 +209,10 @@ add_task(async function test_rtamo_aboutwelcome() {
   );
 });
 
-add_task(async function test_rtamo_over_experimnts() {
+add_task(async function test_rtamo_over_experiments() {
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "aboutwelcome",
-    enabled: true,
-    value: { screens: [] },
+    value: { screens: [], enabled: true },
   });
 
   let browser = await openRTAMOWelcomePage();
