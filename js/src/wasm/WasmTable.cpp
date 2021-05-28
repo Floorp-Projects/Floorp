@@ -333,7 +333,7 @@ uint32_t Table::grow(uint32_t delta) {
       if (!newFunctions) {
         return -1;
       }
-      Unused << functions_.release();
+      (void)functions_.release();
       functions_.reset(newFunctions);
 
       // Realloc does not zero the delta for us.

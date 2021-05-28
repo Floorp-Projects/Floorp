@@ -18,15 +18,11 @@
 
 #include "wasm/WasmBinary.h"
 
-#include "mozilla/Unused.h"
-
 #include "js/Printf.h"
 #include "wasm/WasmValidate.h"
 
 using namespace js;
 using namespace js::wasm;
-
-using mozilla::Unused;
 
 // Decoder implementation.
 
@@ -55,7 +51,7 @@ void Decoder::warnf(const char* msg, ...) {
     return;
   }
 
-  Unused << warnings_->append(std::move(str));
+  (void)warnings_->append(std::move(str));
 }
 
 bool Decoder::fail(size_t errorOffset, const char* msg) {

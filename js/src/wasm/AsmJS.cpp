@@ -24,7 +24,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"  // SprintfLiteral
-#include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
 
@@ -90,7 +89,6 @@ using mozilla::IsPositiveZero;
 using mozilla::IsPowerOfTwo;
 using mozilla::PodZero;
 using mozilla::PositiveInfinity;
-using mozilla::Unused;
 using mozilla::Utf8Unit;
 using mozilla::Compression::LZ4;
 
@@ -1917,8 +1915,8 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
         // If warning succeeds, no exception is set.  If warning fails,
         // an exception is set and execution will halt.  Thus it's safe
         // and correct to ignore the return value here.
-        Unused << ts.compileWarning(std::move(metadata), nullptr,
-                                    JSMSG_USE_ASM_TYPE_FAIL, &args);
+        (void)ts.compileWarning(std::move(metadata), nullptr,
+                                JSMSG_USE_ASM_TYPE_FAIL, &args);
       }
     }
 
@@ -7028,7 +7026,7 @@ static bool TypeFailureWarning(frontend::ParserBase& parser, const char* str) {
   // Per the asm.js standard convention, whether failure sets a pending
   // exception determines whether to attempt non-asm.js reparsing, so ignore
   // the return value below.
-  Unused << parser.warningNoOffset(JSMSG_USE_ASM_TYPE_FAIL, str ? str : "");
+  (void)parser.warningNoOffset(JSMSG_USE_ASM_TYPE_FAIL, str ? str : "");
   return false;
 }
 
