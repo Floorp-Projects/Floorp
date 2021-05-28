@@ -4467,17 +4467,6 @@ bool MWasmLoadGlobalCell::congruentTo(const MDefinition* ins) const {
 }
 
 #ifdef ENABLE_WASM_SIMD
-MDefinition* MWasmBitselectSimd128::foldsTo(TempAllocator& alloc) {
-  if (control()->op() == MDefinition::Opcode::WasmFloatConstant) {
-    int8_t shuffle[16];
-    if (specializeConstantMaskAsShuffle(shuffle)) {
-      return MWasmShuffleSimd128::New(alloc, lhs(), rhs(),
-                                      SimdConstant::CreateX16(shuffle));
-    }
-  }
-  return this;
-}
-
 MDefinition* MWasmBinarySimd128::foldsTo(TempAllocator& alloc) {
   if (simdOp() == wasm::SimdOp::V8x16Swizzle && rhs()->isWasmFloatConstant()) {
     // Specialize swizzle(v, constant) as shuffle(mask, v, zero) to trigger all
