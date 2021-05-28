@@ -18,7 +18,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Unused.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -952,7 +951,7 @@ FutexThread::WaitResult js::FutexThread::wait(
     }
 
     if (isTimed) {
-      mozilla::Unused << cond_->wait_until(locked, *sliceEnd);
+      (void)cond_->wait_until(locked, *sliceEnd);
     } else {
       cond_->wait(locked);
     }

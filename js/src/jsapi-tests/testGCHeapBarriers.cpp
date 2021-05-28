@@ -7,7 +7,6 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 
 #include "gc/GCRuntime.h"
 #include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
@@ -356,7 +355,7 @@ bool TestWrapperType() {
     Rooted<ObjectT> obj0(cx, CreateTenuredGCThing<JSObject>(cx));
     WrapperT wrapper0(obj0);
     MakeGray(obj0);
-    mozilla::Unused << *wrapper0;
+    (void)*wrapper0;
     CHECK(obj0->isMarkedBlack());
   }
 
@@ -382,8 +381,8 @@ bool TestWrapperType() {
 template <typename WrapperT, typename ObjectT>
 bool TestUnbarrieredOperations(ObjectT obj, ObjectT obj2, WrapperT& wrapper,
                                WrapperT& wrapper2) {
-  mozilla::Unused << bool(wrapper);
-  mozilla::Unused << bool(wrapper2);
+  (void)bool(wrapper);
+  (void)bool(wrapper2);
   CHECK(obj->isMarkedGray());
   CHECK(obj2->isMarkedGray());
 

@@ -14,7 +14,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RandomNum.h"
-#include "mozilla/Unused.h"
 #include "mozilla/WrappingOperations.h"
 
 #include <cmath>
