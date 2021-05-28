@@ -4946,8 +4946,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
     mCurrentMaintenance = nullptr;
 
-    QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::IDB,
-                                                   "Maintenance finished"_ns);
+    QuotaManager::MaybeRecordQuotaClientShutdownStep(quota::Client::IDB,
+                                                     "Maintenance finished"_ns);
 
     ProcessMaintenanceQueue();
   }
@@ -9808,7 +9808,7 @@ void Database::CleanupMetadata() {
   MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(Id(), &info));
   MOZ_ALWAYS_TRUE(info->mLiveDatabases.RemoveElement(this));
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(
+  QuotaManager::MaybeRecordQuotaClientShutdownStep(
       quota::Client::IDB, "Live database entry removed"_ns);
 
   if (info->mLiveDatabases.IsEmpty()) {
@@ -9816,7 +9816,7 @@ void Database::CleanupMetadata() {
                !info->mWaitingFactoryOp->HasBlockedDatabases());
     gLiveDatabaseHashtable->Remove(Id());
 
-    QuotaManager::GetRef().MaybeRecordShutdownStep(
+    QuotaManager::MaybeRecordQuotaClientShutdownStep(
         quota::Client::IDB, "gLiveDatabaseHashtable entry removed"_ns);
   }
 
@@ -15506,12 +15506,9 @@ void FactoryOp::CleanupMetadata() {
   gFactoryOps->RemoveElement(this);
 
   // We might get here even after QuotaManagerOpen failed, so we need to check
-  // if we have a quota manager. If we don't, we obviously are not in quota
-  // manager shutdown.
-  if (auto* const quotaManager = QuotaManager::Get()) {
-    quotaManager->MaybeRecordShutdownStep(
-        quota::Client::IDB, "An element was removed from gFactoryOps"_ns);
-  }
+  // if we have a quota manager.
+  quota::QuotaManager::SafeMaybeRecordQuotaClientShutdownStep(
+      quota::Client::IDB, "An element was removed from gFactoryOps"_ns);
 
   // Match the IncreaseBusyCount in AllocPBackgroundIDBFactoryRequestParent().
   DecreaseBusyCount();

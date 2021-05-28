@@ -4351,7 +4351,7 @@ void Datastore::NoteFinishedPrepareDatastoreOp(
 
   mPrepareDatastoreOps.Remove(aPrepareDatastoreOp);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(
+  QuotaManager::MaybeRecordQuotaClientShutdownStep(
       quota::Client::LS, "PrepareDatastoreOp finished"_ns);
 
   MaybeClose();
@@ -4374,7 +4374,7 @@ void Datastore::NoteFinishedPrivateDatastore() {
 
   mHasLivePrivateDatastore = false;
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(
+  QuotaManager::MaybeRecordQuotaClientShutdownStep(
       quota::Client::LS, "PrivateDatastore finished"_ns);
 
   MaybeClose();
@@ -4401,7 +4401,7 @@ void Datastore::NoteFinishedPreparedDatastore(
 
   mPreparedDatastores.Remove(aPreparedDatastore);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(
+  QuotaManager::MaybeRecordQuotaClientShutdownStep(
       quota::Client::LS, "PreparedDatastore finished"_ns);
 
   MaybeClose();
@@ -4427,8 +4427,8 @@ void Datastore::NoteFinishedDatabase(Database* aDatabase) {
 
   mDatabases.Remove(aDatabase);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::LS,
-                                                 "Database finished"_ns);
+  QuotaManager::MaybeRecordQuotaClientShutdownStep(quota::Client::LS,
+                                                   "Database finished"_ns);
 
   MaybeClose();
 }
@@ -5087,8 +5087,8 @@ void Datastore::CleanupMetadata() {
   const DebugOnly<bool> removed = gDatastores->Remove(mOriginMetadata.mOrigin);
   MOZ_ASSERT(removed);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::LS,
-                                                 "Datastore removed"_ns);
+  QuotaManager::MaybeRecordQuotaClientShutdownStep(quota::Client::LS,
+                                                   "Datastore removed"_ns);
 
   if (!gDatastores->Count()) {
     gDatastores = nullptr;
@@ -5285,8 +5285,8 @@ void Database::AllowToClose() {
   MOZ_ASSERT(gLiveDatabases);
   gLiveDatabases->RemoveElement(this);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::LS,
-                                                 "Live database removed"_ns);
+  QuotaManager::MaybeRecordQuotaClientShutdownStep(quota::Client::LS,
+                                                   "Live database removed"_ns);
 
   if (gLiveDatabases->IsEmpty()) {
     gLiveDatabases = nullptr;
@@ -7400,7 +7400,7 @@ void PrepareDatastoreOp::CleanupMetadata() {
   MOZ_ASSERT(gPrepareDatastoreOps);
   gPrepareDatastoreOps->RemoveElement(this);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(
+  QuotaManager::MaybeRecordQuotaClientShutdownStep(
       quota::Client::LS, "PrepareDatastoreOp completed"_ns);
 
   if (gPrepareDatastoreOps->IsEmpty()) {

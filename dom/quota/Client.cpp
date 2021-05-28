@@ -233,7 +233,7 @@ bool Client::TypeFromPrefix(char aPrefix, Type& aType, const fallible_t&) {
 bool Client::InitiateShutdownWorkThreads() {
   AssertIsOnBackgroundThread();
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(GetType(), "starting"_ns);
+  QuotaManager::MaybeRecordQuotaClientShutdownStep(GetType(), "starting"_ns);
 
   InitiateShutdown();
 
@@ -241,7 +241,7 @@ bool Client::InitiateShutdownWorkThreads() {
 }
 
 void Client::FinalizeShutdownWorkThreads() {
-  QuotaManager::GetRef().MaybeRecordShutdownStep(GetType(), "completed"_ns);
+  QuotaManager::MaybeRecordQuotaClientShutdownStep(GetType(), "completed"_ns);
 
   FinalizeShutdown();
 }
