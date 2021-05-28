@@ -160,6 +160,8 @@ class GlobalHelperThreadState {
   // This is used to get the HelperThreadTask that are currently running.
   HelperThreadTaskVector helperTasks_;
 
+  bool isInitialized_ = false;
+
   bool useInternalThreadPool_;
 
   ParseTask* removeFinishedParseTask(JSContext* cx, ParseTaskKind kind,
@@ -179,6 +181,10 @@ class GlobalHelperThreadState {
 
   GlobalHelperThreadState();
 
+  bool isInitialized(const AutoLockHelperThreadState& lock) const {
+    return isInitialized_;
+  }
+
   HelperThreadVector& threads(const AutoLockHelperThreadState& lock) {
     return threads_;
   }
@@ -188,11 +194,12 @@ class GlobalHelperThreadState {
   }
 
   bool ensureInitialized();
-  bool ensureThreadCount(size_t count);
+  bool ensureThreadCount(size_t count, const AutoLockHelperThreadState& lock);
   void finish();
   void finishThreads();
 
-  [[nodiscard]] bool ensureContextList(size_t count);
+  [[nodiscard]] bool ensureContextList(size_t count,
+                                       const AutoLockHelperThreadState& lock);
   JSContext* getFirstUnusedContext(AutoLockHelperThreadState& locked);
   void destroyHelperContexts(AutoLockHelperThreadState& lock);
 
