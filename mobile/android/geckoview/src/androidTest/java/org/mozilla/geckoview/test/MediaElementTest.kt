@@ -304,6 +304,9 @@ class MediaElementTest : BaseSessionTest() {
 
     @Test
     fun webmMetadataMedia() {
+        // TODO: bug 1706656 (this one is intermittent)
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
         val meta = waitForMetadata(VIDEO_WEBM_PATH)
         assertThat("Current source is set", meta?.currentSource,
                 equalTo("$TEST_ENDPOINT/assets/www/videos/gizmo.webm"))
