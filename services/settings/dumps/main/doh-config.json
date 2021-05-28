@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "providers": "cloudflare-global, nextdns-global",
+      "rolloutEnabled": false,
+      "steeringEnabled": false,
+      "steeringProviders": "",
+      "autoDefaultEnabled": false,
+      "autoDefaultProviders": "",
+      "id": "global",
+      "last_modified": 1621943462970
+    }
+  ]
+}
