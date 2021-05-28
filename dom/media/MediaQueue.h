@@ -34,6 +34,11 @@ class MediaQueue : private nsRefPtrDeque<T> {
     return nsRefPtrDeque<T>::GetSize();
   }
 
+  inline void PushFront(T* aItem) {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    nsRefPtrDeque<T>::PushFront(aItem);
+  }
+
   inline void Push(T* aItem) {
     MOZ_DIAGNOSTIC_ASSERT(aItem);
     Push(do_AddRef(aItem));
