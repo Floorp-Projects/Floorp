@@ -113,9 +113,15 @@ void nsXULTooltipListener::MouseOut(Event* aEvent) {
     if (pm) {
       nsCOMPtr<nsINode> tooltipNode =
           pm->GetLastTriggerTooltipNode(currentTooltip->GetComposedDoc());
-      if (tooltipNode == targetNode) {
-        // if the target node is the current tooltip target node, the mouse
-        // left the node the tooltip appeared on, so close the tooltip.
+
+      // If the target node is the current tooltip target node, the mouse
+      // left the node the tooltip appeared on, so close the tooltip. However,
+      // don't do this if the mouse moved onto the tooltip in case the
+      // tooltip appears positioned near the mouse.
+      nsCOMPtr<EventTarget> relatedTarget =
+          aEvent->AsMouseEvent()->GetRelatedTarget();
+      nsCOMPtr<nsIContent> relatedContent = do_QueryInterface(relatedTarget);
+      if (tooltipNode == targetNode && relatedContent != currentTooltip) {
         HideTooltip();
         // reset special tree tracking
         if (mIsSourceTree) {
