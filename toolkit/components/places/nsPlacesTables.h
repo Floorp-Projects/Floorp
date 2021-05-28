@@ -273,34 +273,4 @@
 #define MOZ_META_KEY_ORIGIN_FRECENCY_SUM_OF_SQUARES \
   "origin_frecency_sum_of_squares"
 
-// This table holds history interactions that will be used to achieve improved
-// history recalls.
-#define CREATE_MOZ_PLACES_METADATA                                           \
-  nsLiteralCString(                                                          \
-      "CREATE TABLE moz_places_metadata ("                                   \
-      "id INTEGER PRIMARY KEY, "                                             \
-      "place_id INTEGER NOT NULL, "                                          \
-      "referrer_place_id INTEGER, "                                          \
-      "created_at INTEGER NOT NULL DEFAULT 0, "                              \
-      "updated_at INTEGER NOT NULL DEFAULT 0, "                              \
-      "total_view_time INTEGER NOT NULL DEFAULT 0, "                         \
-      "typing_time INTEGER NOT NULL DEFAULT 0, "                             \
-      "key_presses INTEGER NOT NULL DEFAULT 0, "                             \
-      "document_type INTEGER NOT NULL DEFAULT 0, "                           \
-      "search_query_id INTEGER, "                                            \
-      "FOREIGN KEY (place_id) REFERENCES moz_places(id) ON DELETE CASCADE, " \
-      "FOREIGN KEY (referrer_place_id) REFERENCES moz_places(id) ON DELETE " \
-      "CASCADE, "                                                            \
-      "FOREIGN KEY(search_query_id) REFERENCES "                             \
-      "moz_places_metadata_search_queries(id) ON DELETE CASCADE "            \
-      "CHECK(place_id != referrer_place_id) "                                \
-      ")")
-
-#define CREATE_MOZ_PLACES_METADATA_SEARCH_QUERIES                        \
-  nsLiteralCString(                                                      \
-      "CREATE TABLE IF NOT EXISTS moz_places_metadata_search_queries ( " \
-      "id INTEGER PRIMARY KEY, "                                         \
-      "terms TEXT NOT NULL UNIQUE "                                      \
-      ")")
-
 #endif  // __nsPlacesTables_h__
