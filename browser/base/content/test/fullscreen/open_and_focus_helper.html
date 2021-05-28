@@ -4,6 +4,7 @@
   <meta charset='utf-8'>
 </head>
 <body>
+  <input></input>
   <script>
     const MY_ORIGIN = window.location.origin;
     const CROSS_ORIGIN = "https://example.org";
@@ -31,11 +32,17 @@
     window.onMessage = function(event) {
       let canReply = event.ports && !!event.ports.length;
       if(event.data === "open") {
-        window.popup = window.open('https://example.com', '', 'top=0,height=1, width=300');
+        window.openedWindow = window.open('https://example.com' + window.location.pathname);
         if (canReply) event.ports[0].postMessage('opened');
+      } else if(event.data === "openpopup") {
+        window.openedWindow = window.open('https://example.com' + window.location.pathname, '', 'top=0,height=1, width=300');
+        if (canReply) event.ports[0].postMessage('popupopened');
       } else if(event.data === "focus") {
-        window.popup.focus();
+        window.openedWindow.focus();
         if (canReply) event.ports[0].postMessage('focused');
+      } else if(event.data === "elementfocus") {
+        document.querySelector("input").focus();
+        if (canReply) event.ports[0].postMessage('elementfocused');
       }
     }
     window.addEventListener('message', window.onMessage);
