@@ -183,24 +183,22 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         ).forEach {
             requirePreference<CheckBoxPreference>(it.prefId()).apply {
                 setOnPreferenceChangeListener { _, newValue ->
-                    updateSyncEngineState(context, it, newValue as Boolean)
+                    updateSyncEngineState(it, newValue as Boolean)
                     true
                 }
             }
         }
 
         // 'Passwords' and 'Credit card' listeners are special, since we also display a pin protection warning.
-        requirePreference<CheckBoxPreference>(SyncEngine.Passwords.prefId()).apply {
-            setOnPreferenceChangeListener { _, newValue ->
-                updateSyncEngineStateWithPinWarning(SyncEngine.Passwords, newValue as Boolean)
-                true
-            }
-        }
-
-        requirePreference<CheckBoxPreference>(SyncEngine.CreditCards.prefId()).apply {
-            setOnPreferenceChangeListener { _, newValue ->
-                updateSyncEngineStateWithPinWarning(SyncEngine.CreditCards, newValue as Boolean)
-                true
+        listOf(
+            SyncEngine.Passwords,
+            SyncEngine.CreditCards
+        ).forEach {
+            requirePreference<CheckBoxPreference>(it.prefId()).apply {
+                setOnPreferenceChangeListener { _, newValue ->
+                    updateSyncEngineStateWithPinWarning(it, newValue as Boolean)
+                    true
+                }
             }
         }
 
@@ -223,10 +221,10 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
      *
      * Currently used for logins and credit cards.
      *
-     * @param engine the sync engine whose preference has changed.
+     * @param syncEngine the sync engine whose preference has changed.
      * @param newValue the value denoting whether or not to sync the specified preference.
      */
-    private fun CheckBoxPreference.updateSyncEngineStateWithPinWarning(
+    private fun updateSyncEngineStateWithPinWarning(
         syncEngine: SyncEngine,
         newValue: Boolean
     ) {
@@ -236,7 +234,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             !newValue ||
             !requireContext().settings().shouldShowSecurityPinWarningSync
         ) {
-            updateSyncEngineState(context, syncEngine, newValue)
+            updateSyncEngineState(syncEngine, newValue)
         } else {
             showPinDialogWarning(syncEngine, newValue)
         }
@@ -250,10 +248,10 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
      * @param newValue the new value of the sync preference, where true indicates sync for that
      * preference and false indicates not synced.
      */
-    private fun updateSyncEngineState(context: Context, engine: SyncEngine, newValue: Boolean) {
-        SyncEnginesStorage(context).setStatus(engine, newValue)
+    private fun updateSyncEngineState(engine: SyncEngine, newValue: Boolean) {
+        SyncEnginesStorage(requireContext()).setStatus(engine, newValue)
         viewLifecycleOwner.lifecycleScope.launch {
-            context.components.backgroundServices.accountManager.syncNow(SyncReason.EngineChange)
+            requireContext().components.backgroundServices.accountManager.syncNow(SyncReason.EngineChange)
         }
     }
 
@@ -276,7 +274,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 )
 
                 setNegativeButton(getString(R.string.logins_warning_dialog_later)) { _: DialogInterface, _ ->
-                    updateSyncEngineState(context, syncEngine, newValue)
+                    updateSyncEngineState(syncEngine, newValue)
                 }
 
                 setPositiveButton(getString(R.string.logins_warning_dialog_set_up_now)) { it: DialogInterface, _ ->
