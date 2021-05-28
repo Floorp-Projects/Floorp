@@ -27,6 +27,12 @@ third-party-th-process = Process
 third-party-th-duration = Loading Duration (ms)
 third-party-th-status = Status
 
+third-party-tag-ime = IME
+    .title =
+        This type of module is loaded when you use a third-party IME.
+third-party-tag-shellex = Shell Extension
+    .title =
+        This type of module is loaded when you open the system file dialog.
 third-party-tag-background = Background
     .title =
         This module did not block the application because it was loaded
@@ -39,6 +45,8 @@ third-party-status-blocked = Blocked
 third-party-status-redirected = Redirected
 
 third-party-button-copy-to-clipboard = Copy raw data to clipboard
+third-party-button-reload = Reload with system info
+    .title = Reload with system information
 third-party-button-open =
     .title = Open file location…
 third-party-button-expand =
