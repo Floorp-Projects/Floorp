@@ -383,7 +383,7 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
       gIdentityHandler._identityPopup,
       "ViewShown"
     );
-    doc.getElementById("identity-popup-security-expander").click();
+    doc.getElementById("identity-popup-security-button").click();
     await promiseViewShown;
     is(
       Array.prototype.filter.call(

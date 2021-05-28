@@ -504,88 +504,7 @@
   fill: var(--toolbarbutton-icon-fill-attention);
 }
 
-#pageAction-panel-pinTab,
-#pageAction-urlbar-pinTab {
-  list-style-image: url("chrome://browser/skin/pin-tab.svg");
-}
-
-#pageAction-panel-pinTab[pinned],
-#pageAction-urlbar-pinTab[pinned] {
-  list-style-image: url("chrome://browser/skin/unpin-tab.svg");
-}
-
-#pageAction-panel-copyURL,
-#pageAction-urlbar-copyURL {
-  list-style-image: url("chrome://browser/skin/link.svg");
-}
-
-#pageAction-panel-emailLink,
-#pageAction-urlbar-emailLink {
-  list-style-image: url("chrome://browser/skin/mail.svg");
-}
-
-#pageAction-panel-sendToDevice,
-#pageAction-urlbar-sendToDevice {
-  list-style-image: url("chrome://browser/skin/send-to-device.svg");
-}
-
-#pageAction-panel-pinTab:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-#pageAction-urlbar-pinTab:-moz-locale-dir(rtl),
-#pageAction-panel-sendToDevice:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-#pageAction-urlbar-sendToDevice:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
-.pageAction-sendToDevice-device[clientType=phone] {
-  list-style-image: url("chrome://browser/skin/device-phone.svg");
-}
-
-.pageAction-sendToDevice-device[clientType=tablet] {
-  list-style-image: url("chrome://browser/skin/device-tablet.svg");
-}
-
-.pageAction-sendToDevice-device[clientType=desktop] {
-  list-style-image: url("chrome://browser/skin/device-desktop.svg");
-}
-
-.pageAction-sendToDevice-device[clientType=tv] {
-  list-style-image: url("chrome://browser/skin/device-tv.svg");
-}
-
-.pageAction-sendToDevice-device[clientType=vr] {
-  list-style-image: url("chrome://browser/skin/device-vr.svg");
-}
-
-.pageAction-sendToDevice-device.signintosync,
-#pageAction-panel-sendToDevice-fxa,
-#pageAction-urlbar-sendToDevice-fxa {
-  list-style-image: url("chrome://browser/skin/sync.svg");
-}
-
-#pageAction-panel-addSearchEngine > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  width: 16px;
-  height: 16px;
-}
-#pageAction-panel-addSearchEngine > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  display: -moz-box;
-  background: url(chrome://browser/skin/search-indicator-badge-add.svg) no-repeat center;
-  box-shadow: none;
-  /* "!important" is necessary to override the rule in toolbarbutton.css */
-  margin: -4px 0 0 !important;
-  margin-inline-end: -4px !important;
-  width: 11px;
-  height: 11px;
-  min-width: 11px;
-  min-height: 11px;
-}
-
 /* URL bar and page action buttons */
-
-@media (-moz-proton) {
-#pageActionSeparator {
-  /* Just remove this element once Proton is released */
-  display: none;
-}
 
 /* The background can be very dark and if the add-on uses a black-ish svg it
    will be barely visible. In the future we should have a standardized SVG
@@ -602,28 +521,6 @@
     filter: grayscale(100%) brightness(20%) invert();
   }
 }
-} /*** END proton ***/
-
-@media not (-moz-proton) {
-#pageActionSeparator {
-  /* This draws the separator the same way that #urlbar-label-box draws its
-     left and right borders, which end up looking like separators.  It might not
-     be the best way in this case, but it makes sure that all these vertical
-     lines in the urlbar look the same: same height, vertical position, etc. */
-  border-inline-start: 1px solid var(--autocomplete-popup-separator-color);
-  border-image: linear-gradient(transparent 15%, var(--autocomplete-popup-separator-color) 15%, var(--autocomplete-popup-separator-color) 85%, transparent 85%);
-  border-image-slice: 1;
-  width: 1px;
-  visibility: hidden;
-}
-
-#page-action-buttons > :not([hidden], toolbartabstop) ~ #pageActionSeparator {
-  /* Show the separator between the page actions and other elements when at
-     least one of the latter is shown. */
-  visibility: visible;
-  margin-inline: 6px;
-}
-} /*** END !proton ***/
 
 #userContext-icons,
 #urlbar-zoom-button {
@@ -648,18 +545,6 @@
 :root[uidensity=compact] .urlbar-icon {
   margin-inline: 1px;
 }
-
-@media not (-moz-proton) {
-.urlbar-icon {
-  width: calc(var(--urlbar-min-height) - 2px);
-  height: calc(var(--urlbar-min-height) - 2px);
-  margin-inline: 0;
-}
-
-.urlbar-page-action[disabled] {
-  fill-opacity: 0.3;
-}
-} /*** END !proton ***/
 
 :not(.urlbar-icon-wrapper) > .urlbar-icon:not([disabled]):hover,
 .urlbar-icon-wrapper:not([disabled]):hover {

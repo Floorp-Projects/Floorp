@@ -28,7 +28,7 @@ add_task(async function testIdentityPopupFocusClick() {
     await shown;
     isnot(
       Services.focus.focusedElement,
-      document.getElementById("identity-popup-security-expander")
+      document.getElementById("identity-popup-security-button")
     );
   });
 });

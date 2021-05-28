@@ -8,8 +8,6 @@ var EXPORTED_SYMBOLS = [
   "PageActions",
   // PageActions.Action
   // PageActions.ACTION_ID_BOOKMARK
-  // PageActions.ACTION_ID_PIN_TAB
-  // PageActions.ACTION_ID_BOOKMARK_SEPARATOR
   // PageActions.ACTION_ID_BUILT_IN_SEPARATOR
   // PageActions.ACTION_ID_TRANSIENT_SEPARATOR
 ];
@@ -19,7 +17,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   BinarySearch: "resource://gre/modules/BinarySearch.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -27,20 +24,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const ACTION_ID_BOOKMARK = "bookmark";
-const ACTION_ID_PIN_TAB = "pinTab";
-const ACTION_ID_BOOKMARK_SEPARATOR = "bookmarkSeparator";
 const ACTION_ID_BUILT_IN_SEPARATOR = "builtInSeparator";
 const ACTION_ID_TRANSIENT_SEPARATOR = "transientSeparator";
 
 const PREF_PERSISTED_ACTIONS = "browser.pageActions.persistedActions";
 const PERSISTED_ACTIONS_CURRENT_VERSION = 1;
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "protonEnabled",
-  "browser.proton.enabled",
-  false
-);
 
 // Escapes the given raw URL string, and returns an equivalent CSS url()
 // value for it.
@@ -270,19 +258,8 @@ var PageActions = {
       this._persistedActions.ids.push(action.id);
     }
 
-    if (protonEnabled) {
-      // Actions are always pinned to the urlbar in Proton except for panel
-      // separators.
-      action._pinnedToUrlbar = !action.__isSeparator;
-    } else if (!isNew) {
-      // The action has been seen before.  Override its pinnedToUrlbar value
-      // with the persisted value.  Set the private version of that property
-      // so that onActionToggledPinnedToUrlbar isn't called, which happens when
-      // the public version is set.
-      action._pinnedToUrlbar = this._persistedActions.idsInUrlbar.includes(
-        action.id
-      );
-    }
+    // Actions are always pinned to the urlbar, except for panel separators.
+    action._pinnedToUrlbar = !action.__isSeparator;
     this._updateIDsPinnedToUrlbarForAction(action);
   },
 
@@ -446,48 +423,17 @@ var PageActions = {
   },
 
   _migratePersistedActionsProton(actions) {
-    if (protonEnabled) {
-      if (actions?.idsInUrlbarPreProton) {
-        // continue with Proton
-      } else if (actions) {
-        // upgrade to Proton
-        actions.idsInUrlbarPreProton = [...(actions.idsInUrlbar || [])];
-      } else {
-        // new profile with Proton
-        actions = {
-          ids: [],
-          idsInUrlbar: [],
-          idsInUrlbarPreProton: [],
-          version: PERSISTED_ACTIONS_CURRENT_VERSION,
-        };
-      }
-    } else if (actions?.idsInUrlbarPreProton) {
-      // downgrade from Proton
-      // actions.ids will not include any pre-Proton built-in (or non-built-in)
-      // actions in idsInUrlbarPreProton, so add them back.
-      for (let id of actions.idsInUrlbarPreProton) {
-        if (!actions.ids.includes(id)) {
-          actions.ids.push(id);
-        }
-      }
-      actions.idsInUrlbar = actions.idsInUrlbarPreProton;
-      delete actions.idsInUrlbarPreProton;
-      // If idsInUrlbarPreProton was empty, we don't know whether it's because
-      // the user is coming from a profile where Proton was always enabled or
-      // one where they upgraded to Proton.  In the first case, we don't want
-      // them to end up without the default pinned actions, so pin them.  That
-      // means we'll get the second case wrong if the user unpinned all actions,
-      // but no big deal.
-      if (!actions.idsInUrlbar.length) {
-        actions.idsInUrlbar = [ACTION_ID_BOOKMARK];
-      }
+    if (actions?.idsInUrlbarPreProton) {
+      // continue with Proton
     } else if (actions) {
-      // continue without Proton
+      // upgrade to Proton
+      actions.idsInUrlbarPreProton = [...(actions.idsInUrlbar || [])];
     } else {
-      // new profile without Proton
+      // new profile with Proton
       actions = {
         ids: [],
         idsInUrlbar: [],
+        idsInUrlbarPreProton: [],
         version: PERSISTED_ACTIONS_CURRENT_VERSION,
       };
     }
@@ -599,8 +545,6 @@ var PageActions = {
  *        Called when the action's subview is showing in a browser window:
  *        onSubviewShowing(panelViewNode)
  *        * panelViewNode: The subview's panelview node.
- * @param panelFluentID (string, optional)
- *        The action panel node's corresponding fluent attribute used for its label.
  * @param pinnedToUrlbar (bool, optional)
  *        Pass true to pin the action to the urlbar.  An action is shown in the
  *        urlbar if it's pinned and not disabled.  False by default.
@@ -610,9 +554,6 @@ var PageActions = {
  *        Usually the ID of the action's button in the urlbar will be generated
  *        automatically.  Pass a string for this property to override that with
  *        your own ID.
- * @param urlbarFluentID (string, optional)
- *        The action urlbar node's corresponding fluent attribute used for its
- *        tooltip.
  * @param wantsIframe (bool, optional)
  *        Pass true to make an action that shows an iframe in a panel when
  *        clicked.
@@ -644,11 +585,9 @@ function Action(options) {
     onSubviewPlaced: false,
     onSubviewShowing: false,
     onPinToUrlbarToggled: false,
-    panelFluentID: false,
     pinnedToUrlbar: false,
     tooltip: false,
     urlbarIDOverride: false,
-    urlbarFluentID: false,
     wantsIframe: false,
     wantsSubview: false,
     disablePrivateBrowsing: false,
@@ -718,28 +657,6 @@ Action.prototype = {
    */
   get id() {
     return this._id;
-  },
-
-  /**
-   * The action panel node's fluent ID (string)
-   */
-  get panelFluentID() {
-    return this._panelFluentID;
-  },
-
-  set panelFluentID(id) {
-    this._panelFluentID = id;
-  },
-
-  /**
-   * The action urlbar node's fluent ID (string)
-   */
-  get urlbarFluentID() {
-    return this._urlbarFluentID;
-  },
-
-  set urlbarFluentID(id) {
-    this._urlbarFluentID = id;
   },
 
   get disablePrivateBrowsing() {
@@ -1194,7 +1111,7 @@ Action.prototype = {
     // extensions pageActions `_transient: true`, at least once we sunset
     // the proton preference and we don't need the pre-Proton behavior anymore,
     // and remove this special case.
-    const isProtonExtensionAction = this.extensionID && protonEnabled;
+    const isProtonExtensionAction = this.extensionID;
 
     return (
       (!(this.__transient || isProtonExtensionAction) ||
@@ -1238,8 +1155,6 @@ PageActions.ACTION_ID_TRANSIENT_SEPARATOR = ACTION_ID_TRANSIENT_SEPARATOR;
 
 // These are only necessary so that the test can use them.
 PageActions.ACTION_ID_BOOKMARK = ACTION_ID_BOOKMARK;
-PageActions.ACTION_ID_PIN_TAB = ACTION_ID_PIN_TAB;
-PageActions.ACTION_ID_BOOKMARK_SEPARATOR = ACTION_ID_BOOKMARK_SEPARATOR;
 PageActions.PREF_PERSISTED_ACTIONS = PREF_PERSISTED_ACTIONS;
 
 // Sorted in the order in which they should appear in the page action panel.
@@ -1266,158 +1181,6 @@ PageActions._initBuiltInActions = function() {
       },
     },
   ];
-
-  if (protonEnabled) {
-    return;
-  }
-
-  gBuiltInActions.push(
-    ...[
-      // pin tab
-      {
-        id: ACTION_ID_PIN_TAB,
-        onBeforePlacedInWindow(browserWindow) {
-          function handlePinEvent() {
-            browserPageActions(browserWindow).pinTab.updateState();
-          }
-          function handleWindowUnload() {
-            for (let event of ["TabPinned", "TabUnpinned"]) {
-              browserWindow.removeEventListener(event, handlePinEvent);
-            }
-          }
-
-          for (let event of ["TabPinned", "TabUnpinned"]) {
-            browserWindow.addEventListener(event, handlePinEvent);
-          }
-          browserWindow.addEventListener("unload", handleWindowUnload, {
-            once: true,
-          });
-        },
-        onPlacedInPanel(buttonNode) {
-          browserPageActions(buttonNode).pinTab.updateState();
-        },
-        onPlacedInUrlbar(buttonNode) {
-          browserPageActions(buttonNode).pinTab.updateState();
-        },
-        onLocationChange(browserWindow) {
-          browserPageActions(browserWindow).pinTab.updateState();
-        },
-        onCommand(event, buttonNode) {
-          browserPageActions(buttonNode).pinTab.onCommand(event, buttonNode);
-        },
-      },
-
-      // separator
-      {
-        id: ACTION_ID_BOOKMARK_SEPARATOR,
-        _isSeparator: true,
-      },
-
-      // copy URL
-      {
-        id: "copyURL",
-        panelFluentID: "page-action-copy-url-panel",
-        urlbarFluentID: "page-action-copy-url-urlbar",
-        onCommand(event, buttonNode) {
-          browserPageActions(buttonNode).copyURL.onCommand(event, buttonNode);
-        },
-      },
-
-      // email link
-      {
-        id: "emailLink",
-        panelFluentID: "page-action-email-link-panel",
-        urlbarFluentID: "page-action-email-link-urlbar",
-        onCommand(event, buttonNode) {
-          browserPageActions(buttonNode).emailLink.onCommand(event, buttonNode);
-        },
-      },
-
-      // add search engine
-      {
-        id: "addSearchEngine",
-        // The title is set in browser-pageActions.js.
-        isBadged: true,
-        _transient: true,
-        onShowingInPanel(buttonNode) {
-          browserPageActions(buttonNode).addSearchEngine.onShowingInPanel();
-        },
-        onCommand(event, buttonNode) {
-          browserPageActions(buttonNode).addSearchEngine.onCommand(
-            event,
-            buttonNode
-          );
-        },
-        onSubviewShowing(panelViewNode) {
-          browserPageActions(panelViewNode).addSearchEngine.onSubviewShowing(
-            panelViewNode
-          );
-        },
-      },
-    ]
-  );
-
-  // send to device
-  if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
-    gBuiltInActions.push({
-      id: "sendToDevice",
-      panelFluentID: "page-action-send-tabs-panel",
-      // The actual title is set by each window, per window, and depends on the
-      // number of tabs that are selected.
-      urlbarFluentID: "page-action-send-tabs-urlbar",
-      onBeforePlacedInWindow(browserWindow) {
-        browserPageActions(browserWindow).sendToDevice.onBeforePlacedInWindow(
-          browserWindow
-        );
-      },
-      onLocationChange(browserWindow) {
-        browserPageActions(browserWindow).sendToDevice.onLocationChange();
-      },
-      wantsSubview: true,
-      onSubviewPlaced(panelViewNode) {
-        browserPageActions(panelViewNode).sendToDevice.onSubviewPlaced(
-          panelViewNode
-        );
-      },
-      onSubviewShowing(panelViewNode) {
-        browserPageActions(panelViewNode).sendToDevice.onShowingSubview(
-          panelViewNode
-        );
-      },
-    });
-  }
-
-  // share URL
-  if (AppConstants.platform == "macosx") {
-    gBuiltInActions.push({
-      id: "shareURL",
-      panelFluentID: "page-action-share-url-panel",
-      urlbarFluentID: "page-action-share-url-urlbar",
-      onShowingInPanel(buttonNode) {
-        browserPageActions(buttonNode).shareURL.onShowingInPanel(buttonNode);
-      },
-      wantsSubview: true,
-      onSubviewShowing(panelViewNode) {
-        browserPageActions(panelViewNode).shareURL.onShowingSubview(
-          panelViewNode
-        );
-      },
-    });
-  }
-
-  if (AppConstants.isPlatformAndVersionAtLeast("win", "6.4")) {
-    gBuiltInActions.push(
-      // Share URL
-      {
-        id: "shareURL",
-        panelFluentID: "page-action-share-url-panel",
-        urlbarFluentID: "page-action-share-url-urlbar",
-        onCommand(event, buttonNode) {
-          browserPageActions(buttonNode).shareURL.onCommand(event, buttonNode);
-        },
-      }
-    );
-  }
 };
 
 /**

@@ -281,11 +281,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 %include ../shared/notification-icons.inc.css
 %include ../shared/addon-notification.inc.css
 
-#pageAction-urlbar-shareURL,
-#pageAction-panel-shareURL {
-  list-style-image: url("chrome://browser/skin/share.svg");
-}
-
 /* Address bar results view */
 
 %include ../shared/urlbarView.inc.css

@@ -308,15 +308,9 @@ async function openIdentityPopup(expand) {
   if (expand) {
     // give some time for opening to avoid weird style issues
     await new Promise(c => setTimeout(c, 500));
-    if (Services.prefs.getBoolPref("browser.proton.enabled", true)) {
-      gIdentityHandler._identityPopup
-        .querySelector("#identity-popup-security-button")
-        .click();
-    } else {
-      gIdentityHandler._identityPopup
-        .querySelector("#identity-popup-security-expander")
-        .click();
-    }
+    gIdentityHandler._identityPopup
+      .querySelector("#identity-popup-security-button")
+      .click();
   }
 }
 

@@ -33,7 +33,7 @@ add_task(async function test_https() {
 
     let securityView = document.getElementById("identity-popup-securityView");
     let shown = BrowserTestUtils.waitForEvent(securityView, "ViewShown");
-    document.getElementById("identity-popup-security-expander").click();
+    document.getElementById("identity-popup-security-button").click();
     await shown;
 
     let subPanelInfo = document.getElementById(
@@ -67,7 +67,7 @@ add_task(async function test_http() {
 
     let securityView = document.getElementById("identity-popup-securityView");
     let shown = BrowserTestUtils.waitForEvent(securityView, "ViewShown");
-    document.getElementById("identity-popup-security-expander").click();
+    document.getElementById("identity-popup-security-button").click();
     await shown;
 
     let subPanelInfo = document.getElementById(
