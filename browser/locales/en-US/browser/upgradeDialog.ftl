@@ -52,7 +52,7 @@ upgrade-dialog-pin-secondary-button = Not now
 upgrade-dialog-default-title-2 =
     Make { -brand-short-name } your default
 upgrade-dialog-default-subtitle-2 = Put speed, safety, and privacy on autopilot.
-upgrade-dialog-default-primary-button-2 = Make default
+upgrade-dialog-default-primary-button-2 = Make default browser
 upgrade-dialog-default-secondary-button = Not now
 
 ## Theme selection screen
