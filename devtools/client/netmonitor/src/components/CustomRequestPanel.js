@@ -49,7 +49,7 @@ class CustomRequestPanel extends Component {
     return {
       connector: PropTypes.object.isRequired,
       removeSelectedCustomRequest: PropTypes.func.isRequired,
-      request: PropTypes.object,
+      request: PropTypes.object.isRequired,
       sendCustomRequest: PropTypes.func.isRequired,
       updateRequest: PropTypes.func.isRequired,
     };
