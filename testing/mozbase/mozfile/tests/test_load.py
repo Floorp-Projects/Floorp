@@ -31,7 +31,7 @@ def fixture_httpd_url():
 
     httpd = WebTestHttpd(host="127.0.0.1", routes=[("GET", "*", example)])
 
-    httpd.start(block=False)
+    httpd.start()
     yield httpd.get_url()
     httpd.stop()
 
