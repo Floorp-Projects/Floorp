@@ -273,9 +273,9 @@ Shape* Shape::replaceLastProperty(JSContext* cx, ObjectFlags objectFlags,
   child.setObjectFlags(objectFlags);
 
   if (proto != shape->proto()) {
-    Rooted<StackBaseShape> base(
-        cx, StackBaseShape(shape->getObjectClass(), shape->realm(), proto));
-    BaseShape* nbase = BaseShape::get(cx, base);
+    Rooted<TaggedProto> protoRoot(cx, proto);
+    BaseShape* nbase =
+        BaseShape::get(cx, shape->getObjectClass(), shape->realm(), protoRoot);
     if (!nbase) {
       return nullptr;
     }
@@ -1221,19 +1221,18 @@ bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
   }
 
   if (obj->is<NativeObject>() && obj->as<NativeObject>().inDictionaryMode()) {
-    Rooted<StackBaseShape> base(
-        cx, StackBaseShape(obj->getClass(), obj->nonCCWRealm(), proto));
-    Rooted<BaseShape*> nbase(cx, BaseShape::get(cx, base));
+    HandleNativeObject nobj = obj.as<NativeObject>();
+    Rooted<BaseShape*> nbase(
+        cx, BaseShape::get(cx, nobj->getClass(), nobj->realm(), proto));
     if (!nbase) {
       return false;
     }
 
-    if (!NativeObject::generateOwnShape(cx, obj.as<NativeObject>())) {
+    if (!NativeObject::generateOwnShape(cx, nobj)) {
       return false;
     }
 
-    Shape* last = obj->as<NativeObject>().lastProperty();
-    last->setBase(nbase);
+    nobj->shape()->setBase(nbase);
     return true;
   }
 
@@ -1285,31 +1284,32 @@ Shape* Shape::setProto(JSContext* cx, TaggedProto proto, Shape* last) {
   return replaceLastProperty(cx, last->objectFlags(), proto, lastRoot);
 }
 
-inline BaseShape::BaseShape(const StackBaseShape& base)
-    : TenuredCellWithNonGCPointer(base.clasp),
-      realm_(base.realm),
-      proto_(base.proto) {
-  MOZ_ASSERT(JS::StringIsASCII(clasp()->name));
+BaseShape::BaseShape(const JSClass* clasp, JS::Realm* realm, TaggedProto proto)
+    : TenuredCellWithNonGCPointer(clasp), realm_(realm), proto_(proto) {
+  MOZ_ASSERT(JS::StringIsASCII(clasp->name));
 
-  MOZ_ASSERT_IF(proto().isObject(),
-                compartment() == proto().toObject()->compartment());
-  MOZ_ASSERT_IF(proto().isObject(), proto().toObject()->isUsedAsPrototype());
+  MOZ_ASSERT_IF(proto.isObject(),
+                compartment() == proto.toObject()->compartment());
+  MOZ_ASSERT_IF(proto.isObject(), proto.toObject()->isUsedAsPrototype());
 
   // Windows may not appear on prototype chains.
-  MOZ_ASSERT_IF(proto().isObject(), !IsWindow(proto().toObject()));
+  MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
 
 #ifdef DEBUG
-  if (GlobalObject* global = realm()->unsafeUnbarrieredMaybeGlobal()) {
+  if (GlobalObject* global = realm->unsafeUnbarrieredMaybeGlobal()) {
     AssertTargetIsNotGray(global);
   }
 #endif
 }
 
 /* static */
-BaseShape* BaseShape::get(JSContext* cx, Handle<StackBaseShape> base) {
+BaseShape* BaseShape::get(JSContext* cx, const JSClass* clasp, JS::Realm* realm,
+                          Handle<TaggedProto> proto) {
   auto& table = cx->zone()->baseShapes();
 
-  auto p = MakeDependentAddPtr(cx, table, base.get());
+  using Lookup = BaseShapeHasher::Lookup;
+
+  auto p = MakeDependentAddPtr(cx, table, Lookup(clasp, realm, proto));
   if (p) {
     return *p;
   }
@@ -1318,10 +1318,9 @@ BaseShape* BaseShape::get(JSContext* cx, Handle<StackBaseShape> base) {
   if (!nbase) {
     return nullptr;
   }
+  new (nbase) BaseShape(clasp, realm, proto);
 
-  new (nbase) BaseShape(base);
-
-  if (!p.add(cx, table, nbase, nbase)) {
+  if (!p.add(cx, table, Lookup(clasp, realm, proto), nbase)) {
     return nullptr;
   }
 
@@ -1357,7 +1356,8 @@ void Zone::checkBaseShapeTableAfterMovingGC() {
     BaseShape* base = r.front().unbarrieredGet();
     CheckGCThingAfterMovingGC(base);
 
-    BaseShapeSet::Ptr ptr = baseShapes().lookup(base);
+    BaseShapeHasher::Lookup lookup(base->clasp(), base->realm(), base->proto());
+    BaseShapeSet::Ptr ptr = baseShapes().lookup(lookup);
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
   }
 }
@@ -1765,8 +1765,7 @@ Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
   }
 
   Rooted<TaggedProto> protoRoot(cx, proto);
-  Rooted<StackBaseShape> base(cx, StackBaseShape(clasp, realm, proto));
-  Rooted<BaseShape*> nbase(cx, BaseShape::get(cx, base));
+  Rooted<BaseShape*> nbase(cx, BaseShape::get(cx, clasp, realm, protoRoot));
   if (!nbase) {
     return nullptr;
   }
