@@ -49,8 +49,14 @@ export async function onConnect(commands, _resourceCommand, _actions, store) {
   await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: onBreakpointAvailable,
   });
+
   await resourceCommand.watchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
     onAvailable: actions.addExceptionFromResources,
+  });
+  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
+    onAvailable: onDocumentEventAvailable,
+    // we only care about future events for DOCUMENT_EVENT
+    ignoreExistingResources: true,
   });
 }
 
@@ -68,6 +74,9 @@ export function onDisconnect() {
   });
   resourceCommand.unwatchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
     onAvailable: actions.addExceptionFromResources,
+  });
+  resourceCommand.unwatchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
+    onAvailable: onDocumentEventAvailable,
   });
   sourceQueue.clear();
 }
@@ -107,7 +116,6 @@ async function onTargetAvailable({ targetFront, isTargetSwitching }) {
   }
 
   targetFront.on("will-navigate", actions.willNavigate);
-  targetFront.on("navigate", actions.navigated);
 
   await threadFront.reconfigure({
     observeAsmJS: true,
@@ -135,7 +143,6 @@ async function onTargetAvailable({ targetFront, isTargetSwitching }) {
 function onTargetDestroyed({ targetFront }) {
   if (targetFront.isTopLevel) {
     targetFront.off("will-navigate", actions.willNavigate);
-    targetFront.off("navigate", actions.navigated);
   }
   actions.removeTarget(targetFront);
 }
@@ -164,6 +171,14 @@ async function onBreakpointAvailable(breakpoints) {
       recordEvent("pause", { reason: resource.why.type });
     } else if (resource.state == "resumed") {
       actions.resumed(threadFront.actorID);
+    }
+  }
+}
+
+function onDocumentEventAvailable(events) {
+  for (const event of events) {
+    if (event.name == "dom-complete") {
+      actions.navigated();
     }
   }
 }
