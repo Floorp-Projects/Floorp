@@ -158,25 +158,11 @@ void MacroAssemblerX86Shared::blendInt8x16(FloatRegister lhs, FloatRegister rhs,
                                            FloatRegister temp,
                                            const uint8_t lanes[16]) {
   MOZ_ASSERT(lhs == output);
-  MOZ_ASSERT(lhs == rhs || !temp.isInvalid());
+  MOZ_ASSERT(temp.encoding() == X86Encoding::xmm0, "pblendvb needs xmm0");
 
-  // TODO: Consider whether PBLENDVB would not be better, even if it is variable
-  // and requires xmm0 to be free and the loading of a mask.
-
-  // Set scratch = lanes to select from lhs.
-  int8_t mask[16];
-  for (unsigned i = 0; i < 16; i++) {
-    mask[i] = ~lanes[i];
-  }
-  ScratchSimd128Scope scratch(asMasm());
-  asMasm().loadConstantSimd128Int(SimdConstant::CreateX16(mask), scratch);
-  if (lhs == rhs) {
-    asMasm().moveSimd128Int(rhs, temp);
-    rhs = temp;
-  }
-  vpand(Operand(scratch), lhs, lhs);
-  vpandn(Operand(rhs), scratch, scratch);
-  vpor(scratch, lhs, lhs);
+  asMasm().loadConstantSimd128Int(
+      SimdConstant::CreateX16(reinterpret_cast<const int8_t*>(lanes)), temp);
+  vpblendvb(temp, rhs, lhs, output);
 }
 
 void MacroAssemblerX86Shared::blendInt16x8(FloatRegister lhs, FloatRegister rhs,
@@ -1094,9 +1080,6 @@ void MacroAssemblerX86Shared::selectSimd128(FloatRegister mask,
 
   asMasm().moveSimd128Int(onTrue, output);
   asMasm().moveSimd128Int(mask, temp);
-
-  // SSE4.1 has plain blendvps which can do this, but it is awkward
-  // to use because it requires the mask to be in xmm0.
 
   vpand(Operand(temp), output, output);
   vpandn(Operand(onFalse), temp, temp);
