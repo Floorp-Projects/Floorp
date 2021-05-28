@@ -1611,6 +1611,20 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">有効なクレジットカード番号を入力してください</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">保存されたカード情報を表示するにはロック解除してください</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">クレジットカード情報の保護</string>
+
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">端末のロックパターンや PIN、パスワードを設定して、保存されたクレジットカード情報とパスワードを他人の不正なアクセスから保護しましょう。</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">今すぐ設定</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">後で</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">端末のロック解除</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">検索エンジンの追加</string>
     <!-- Title of the Edit search engine screen -->

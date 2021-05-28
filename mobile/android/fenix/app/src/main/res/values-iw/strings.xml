@@ -1530,7 +1530,7 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">שמירה מאובטחת של הכניסות והססמאות שלך</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על פרטי הגישה והססמאות שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
+    <string name="logins_warning_dialog_message">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על פרטי הגישה והססמאות השמורות שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">מאוחר יותר</string>
 
@@ -1594,6 +1594,19 @@
 
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">נא להכניס מספר כרטיס אשראי תקין</string>
+
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">יש לבטל את הנעילה כדי להציג את הכרטיסים השמורים שלך</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">אבטחת כרטיסי האשראי שלך</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על כרטיסי האשראי השמורים שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">להגדיר כעת</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">מאוחר יותר</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">שחרור נעילת המכשיר שלך</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">הוספת מנוע חיפוש</string>

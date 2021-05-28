@@ -1608,6 +1608,19 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Ange ett giltigt kreditkortsnummer</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Lås upp för att se dina sparade kreditkort</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Säkra dina kreditkort</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Konfigurera enhetens låsmönster, PIN eller lösenord för att skydda dina sparade kreditkort från åtkomst om någon annan har din enhet.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Konfigurera nu</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Senare</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Lås upp din enhet</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Lägg till sökmotor</string>
     <!-- Title of the Edit search engine screen -->

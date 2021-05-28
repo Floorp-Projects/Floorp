@@ -1594,6 +1594,19 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Prošu zapodajće płaćiwe čisło kreditneje karty</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Za zwobraznjenje wašich składowanych kartow wotewrěć</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Waše kreditne karty zawěsćić</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Nastajće gratowy zawrjenski muster, PIN abo hesło, zo byšće přistupej k swojim składowanym kreditnym kartam zadźěwał, jeli něchtó druhi waš grat ma.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Nětko konfigurować</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Pozdźišo</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Wotewriće swój grat</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pytawu přidać</string>
     <!-- Title of the Edit search engine screen -->

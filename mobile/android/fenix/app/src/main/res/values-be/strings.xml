@@ -1614,6 +1614,11 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Калі ласка, увядзіце сапраўдны нумар крэдытнай карты</string>
 
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Наладзіць зараз</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Пазней</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Дадаць пашукавік</string>
     <!-- Title of the Edit search engine screen -->

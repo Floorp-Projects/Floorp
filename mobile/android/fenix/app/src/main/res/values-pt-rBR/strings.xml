@@ -1530,7 +1530,7 @@
     <string name="logins_warning_dialog_title">Proteja suas contas e senhas</string>
 
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Configure um desenho de bloqueio, código PIN ou senha para proteger o acesso a suas contas e senhas salvas, caso outras pessoas usem seu dispositivo.</string>
+    <string name="logins_warning_dialog_message">Configure um método de bloqueio do dispositivo (desenho, código PIN ou senha) para proteger o acesso a suas contas e senhas salvas, caso outras pessoas usem seu dispositivo.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Mais tarde</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1593,6 +1593,19 @@
 
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Digite um número de cartão de crédito válido</string>
+
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Desbloqueie para ver seus cartões salvos</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Proteja seus cartões de crédito</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Configure um método de bloqueio do dispositivo (desenho, código PIN ou senha) para proteger o acesso a seus cartões de crédito salvos, caso outras pessoas usem seu dispositivo.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Configurar agora</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Mais tarde</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Desbloqueie seu dispositivo</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Adicionar mecanismo de pesquisa</string>

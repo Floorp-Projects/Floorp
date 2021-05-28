@@ -928,7 +928,7 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Հավաքածուի ցանկ</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description2">Հավաքեք ձեզ համար կարևոր բաները:\nԽմբավորեք համանման որոնումները, կայքերը և ներդիրները՝ ավելի ուշ արագ մատչելու համար:</string>
+    <string name="no_collections_description2">Հավաքեք ձեզ համար կարևոր բաները:\nԽմբավորեք համանման որոնումները, կայքերը և ներդիրները՝ հետո ավելի արագ մատչելու համար:</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Ընտրեք ներդիրները</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1529,7 +1529,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Ստեղծեք սարքի կողպեքի նմուշ, PIN կամ գաղտնաբառ՝ ձեր պահպանված մուտքանունները և գաղտնաբառերը մուտք գործելուց պաշտպանելու համար, եթե ձեր սարքը ուրիշի ձեռքն ընկնի:</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_later">Ավելի ուշ</string>
+    <string name="logins_warning_dialog_later">Հետո</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_set_up_now">Տեղակայել հիմա</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->

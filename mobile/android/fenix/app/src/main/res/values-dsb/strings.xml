@@ -1592,6 +1592,19 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Pšosym zapódajśo płaśiwy numer kreditoweje kórty</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Za zwobraznjowanje wašych skłaźonych kreditowych kórtow wótwóriś</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Kreditowe kórty zawěsćiś</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Nastajśo rědowy zastajeński muster, PIN abo gronidło, aby pśistupoju k swójim skłaźonym kreditowym kórtam zajźował, jolic něchten drugi ma waš rěd.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Něnto konfigurěrowaś</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Pózdźej</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Wótwóŕśo swój rěd</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pytnicu pśidaś</string>
     <!-- Title of the Edit search engine screen -->
