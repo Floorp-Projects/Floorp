@@ -1179,13 +1179,6 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 81 uses schema version 54
 
-      if (currentSchemaVersion < 55) {
-        rv = MigrateV55Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 90 uses schema version 55
-
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -1273,13 +1266,6 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
     // moz_meta.
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_META);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // moz_places_metadata
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // moz_places_metadata_search_queries
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SEARCH_QUERIES);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // The bookmarks roots get initialized in CheckRoots().
@@ -1584,10 +1570,6 @@ nsresult Database::InitTempEntities() {
   NS_ENSURE_SUCCESS(rv, rv);
   rv =
       mMainConn->ExecuteSimpleSQL(CREATE_BOOKMARKS_DELETED_AFTERDELETE_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mMainConn->ExecuteSimpleSQL(
-      CREATE_PLACES_METADATA_DELETED_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2168,23 +2150,6 @@ nsresult Database::MigrateV54Up() {
       "of day','utc') * 1000 "
       "WHERE expire_ms = 0 "_ns);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV55Up() {
-  // Add places metadata tables.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      "SELECT id FROM moz_places_metadata"_ns, getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    // Create the tables.
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // moz_places_metadata_search_queries.
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SEARCH_QUERIES);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   return NS_OK;
 }
