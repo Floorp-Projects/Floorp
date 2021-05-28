@@ -2089,5 +2089,14 @@ describe("Top Sites Feed", () => {
       assert.ok(!fetched);
       assert.ok(!feed._contile.sites.length);
     });
+
+    it("should handle no content properly from Contile", async () => {
+      fetchStub.resolves({ ok: true, status: 204 });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(!fetched);
+      assert.ok(!feed._contile.sites.length);
+    });
   });
 });

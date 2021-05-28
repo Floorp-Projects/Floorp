@@ -162,6 +162,13 @@ class ContileIntegration {
         );
       }
 
+      // Contile returns 204 indicating there is no content at the moment.
+      // If this happens, just return without signifying the change so that the
+      // existing tiles (`this._sites`) could retain. We might want to introduce
+      // other handling for this in the future.
+      if (response.status === 204) {
+        return false;
+      }
       const body = await response.json();
       if (body?.tiles && Array.isArray(body.tiles)) {
         let { tiles } = body;
