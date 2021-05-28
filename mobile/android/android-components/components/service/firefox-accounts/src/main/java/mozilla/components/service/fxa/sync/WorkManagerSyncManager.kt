@@ -283,34 +283,34 @@ internal class WorkManagerSyncWorker(
         // If this is a "debouncing" sync task, and we've very recently synced successfully, skip it.
         if (isDebounced() && lastSyncedWithinStaggerBuffer()) {
             Result.success()
-        }
+        } else {
+            // Otherwise, proceed as normal and start preparing to sync.
 
-        // Otherwise, proceed as normal and start preparing to sync.
-
-        // We will need a list of SyncableStores.
-        val syncableStores = params.inputData.getStringArray(KEY_DATA_STORES)!!.associate {
-            // Convert from a string back to our SyncEngine type.
-            val engine = when (it) {
-                SyncEngine.History.nativeName -> SyncEngine.History
-                SyncEngine.Bookmarks.nativeName -> SyncEngine.Bookmarks
-                SyncEngine.Passwords.nativeName -> SyncEngine.Passwords
-                SyncEngine.Tabs.nativeName -> SyncEngine.Tabs
-                SyncEngine.CreditCards.nativeName -> SyncEngine.CreditCards
-                SyncEngine.Addresses.nativeName -> SyncEngine.Addresses
-                else -> throw IllegalStateException("Invalid syncable store: $it")
+            // We will need a list of SyncableStores.
+            val syncableStores = params.inputData.getStringArray(KEY_DATA_STORES)!!.associate {
+                // Convert from a string back to our SyncEngine type.
+                val engine = when (it) {
+                    SyncEngine.History.nativeName -> SyncEngine.History
+                    SyncEngine.Bookmarks.nativeName -> SyncEngine.Bookmarks
+                    SyncEngine.Passwords.nativeName -> SyncEngine.Passwords
+                    SyncEngine.Tabs.nativeName -> SyncEngine.Tabs
+                    SyncEngine.CreditCards.nativeName -> SyncEngine.CreditCards
+                    SyncEngine.Addresses.nativeName -> SyncEngine.Addresses
+                    else -> throw IllegalStateException("Invalid syncable store: $it")
+                }
+                engine to checkNotNull(GlobalSyncableStoreProvider.getLazyStoreWithKey(engine)) {
+                    "SyncableStore missing from GlobalSyncableStoreProvider: ${engine.nativeName}"
+                }
             }
-            engine to checkNotNull(GlobalSyncableStoreProvider.getLazyStoreWithKey(engine)) {
-                "SyncableStore missing from GlobalSyncableStoreProvider: ${engine.nativeName}"
+
+            if (syncableStores.isEmpty()) {
+                // Short-circuit if there are no configured stores.
+                // Don't update the "last-synced" timestamp because we haven't actually synced anything.
+                Result.success()
+            } else {
+                doSync(syncableStores)
             }
         }
-
-        if (syncableStores.isEmpty()) {
-            // Short-circuit if there are no configured stores.
-            // Don't update the "last-synced" timestamp because we haven't actually synced anything.
-            return@withContext Result.success()
-        }
-
-        doSync(syncableStores)
     }
 
     @Suppress("LongMethod", "ComplexMethod")
