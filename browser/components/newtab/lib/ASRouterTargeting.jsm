@@ -209,8 +209,12 @@ function CheckBrowserNeedsUpdate(
           const checkerInstance = UpdateChecker.createInstance(
             Ci.nsIUpdateChecker
           );
-          checkerInstance.checkForUpdates(updateServiceListener, true);
-          this._lastUpdated = now;
+          if (checkerInstance.canCheckForUpdates) {
+            checkerInstance.checkForUpdates(updateServiceListener, true);
+            this._lastUpdated = now;
+          } else {
+            resolve(false);
+          }
         } else {
           resolve(this._value);
         }
