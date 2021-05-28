@@ -113,7 +113,7 @@ class AudioSink : private AudioStream::DataSource {
   // The AudioData at which AudioStream::DataSource is reading.
   RefPtr<AudioData> mCurrentData;
 
-  // Monitor protecting access to mCursor and mWritten.
+  // Monitor protecting access to mCursor, mWritten and mCurrentData.
   // mCursor is created/destroyed on the cubeb thread, while we must also
   // ensure that mWritten and mCursor::Available() get modified simultaneously.
   // (written on cubeb thread, and read on MDSM task queue).
