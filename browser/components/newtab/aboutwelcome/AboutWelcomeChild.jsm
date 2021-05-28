@@ -233,7 +233,8 @@ class AboutWelcomeChild extends JSWindowActorChild {
     );
 
     let featureConfig = NimbusFeatures.aboutwelcome.getValue();
-    let defaults = await AboutWelcomeDefaults.getDefaults(featureConfig);
+    featureConfig.needPin = await this.sendQuery("AWPage:DOES_APP_NEED_PIN");
+    let defaults = AboutWelcomeDefaults.getDefaults(featureConfig);
     // FeatureConfig (from prefs or experiments) has higher precendence
     // to defaults. But the `screens` property isn't defined we shouldn't
     // override the default with `null`

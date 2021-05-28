@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Region: "resource://gre/modules/Region.jsm",
+  ShellService: "resource:///modules/ShellService.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -258,8 +259,10 @@ class AboutWelcomeParent extends JSWindowActorParent {
           this.RegionHomeObserver = new RegionHomeObserver(this);
         }
         return this.RegionHomeObserver.promiseRegionHome();
+      case "AWPage:DOES_APP_NEED_PIN":
+        return ShellService.doesAppNeedPin();
       case "AWPage:IS_DEFAULT_BROWSER":
-        return window.getShellService().isDefaultBrowser();
+        return ShellService.isDefaultBrowser();
       case "AWPage:WAIT_FOR_MIGRATION_CLOSE":
         return new Promise(resolve =>
           Services.ww.registerNotification(function observer(subject, topic) {

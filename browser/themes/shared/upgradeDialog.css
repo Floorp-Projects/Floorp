@@ -13,19 +13,18 @@ body {
 }
 
 body {
-  --logo-pos: 45px;
   --margin: 3px;
 
-  background: url(chrome://branding/content/about-logo.svg) center
-    var(--logo-pos) / calc(9px + var(--logo-pos)) no-repeat;
   display: flex;
   flex-direction: column;
-  padding: calc(20px + 2 * var(--logo-pos)) 30px 10px;
+  /* Specify a height based on the theme screen with 2-line title and 2-line
+   * theme text. This gets overridden if the first screen is taller. */
+  min-height: calc(336px + 12 * var(--margin));
+  padding: 24px 30px;
   width: 544px;
 }
 
 body.compact {
-  --logo-pos: 25px;
   --margin: 0px;
 }
 
@@ -33,8 +32,9 @@ body > .hidden {
   display: none;
 }
 
-spacer {
-  flex: auto;
+.logo {
+  margin: auto auto calc(4px + 2 * var(--margin));
+  width: calc(33px + 7 * var(--margin));
 }
 
 #title {
@@ -51,26 +51,13 @@ spacer {
   font-size: 16px;
   font-weight: bold;
   line-height: 24px;
-  margin: 0 auto;
+  margin: 0 auto calc(15px + 2 * var(--margin));
   text-align: center;
 }
 
 body.compact #subtitle {
   font-size: 14px;
   line-height: 20px;
-}
-
-.image {
-  background: center / contain no-repeat;
-  height: calc(110px + 30 * var(--margin));
-  margin: auto;
-  width: calc(280px + 40 * var(--margin));
-}
-
-/* Force margins on the first screen as it determines the height of subsequent
- * screens. This avoids scrollbars on the second screen if text is longer. */
-.image[screen="0"] {
-  margin-block: 30px;
 }
 
 .items {
@@ -80,7 +67,7 @@ body.compact #subtitle {
 
 .items > li {
   list-style: none;
-  margin: calc(18px + 2 * var(--margin)) 0;
+  margin-bottom: calc(18px + 2 * var(--margin));
   position: relative;
 }
 
@@ -135,7 +122,8 @@ body.compact .items p {
 
 .themes {
   display: flex;
-  padding: 18px 0;
+  margin-top: auto;
+  padding: 10px 0;
 }
 
 /* Make these theme radio buttons appear like regular buttons. */
@@ -174,13 +162,14 @@ body.compact .items p {
 
 /* Display a custom theme swatch at the top of each button. */
 .themes > ::before {
+  background-size: 100%;
   border-radius: 100%;
   content: "";
-  height: 62px;
+  height: 52px;
   margin: 0 auto 10px;
   outline: 1px solid var(--in-content-border-color);
   outline-offset: -0.5px;
-  width: 62px;
+  width: 52px;
 }
 
 .themes > :checked::before {
@@ -221,7 +210,11 @@ body.compact .items p {
 
 #primary,
 #secondary {
-  margin: calc(2px + var(--margin)) auto;
+  margin: calc(2px + var(--margin) / 3) auto;
+}
+
+#primary {
+  margin-top: auto;
 }
 
 #secondary {
@@ -235,7 +228,7 @@ body.compact .items p {
   display: flex;
   gap: 4px;
   line-height: 14px;
-  margin: calc(3 * var(--margin)) auto;
+  margin: calc(2 * var(--margin)) auto 0;
   user-select: none;
 }
 
