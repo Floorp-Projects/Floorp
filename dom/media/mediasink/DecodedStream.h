@@ -89,6 +89,13 @@ class DecodedStream : public MediaSink {
   void ConnectListener();
   void DisconnectListener();
 
+  // Give the audio that is going to be appended next as an input, if there is
+  // a gap between audio's time and the frames that we've written, then return
+  // a silence data that has same amount of frames and can be used to fill the
+  // gap. If no gap exists, return nullptr.
+  already_AddRefed<AudioData> CreateSilenceDataIfGapExists(
+      RefPtr<AudioData>& aNextAudio);
+
   const RefPtr<AbstractThread> mOwnerThread;
 
   // Used to access the graph.
