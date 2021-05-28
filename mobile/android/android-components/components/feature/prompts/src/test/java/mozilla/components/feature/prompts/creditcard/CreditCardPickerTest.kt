@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -46,7 +47,9 @@ class CreditCardPickerTest {
     )
 
     var manageCreditCardsCalled = false
+    var selectCreditCardCalled = false
     private val manageCreditCardsCallback: () -> Unit = { manageCreditCardsCalled = true }
+    private val selectCreditCardCallback: () -> Unit = { selectCreditCardCalled = true }
 
     @Before
     fun setup() {
@@ -56,21 +59,25 @@ class CreditCardPickerTest {
         creditCardPicker = CreditCardPicker(
             store = store,
             creditCardSelectBar = creditCardSelectBar,
-            manageCreditCardsCallback = manageCreditCardsCallback
+            manageCreditCardsCallback = manageCreditCardsCallback,
+            selectCreditCardCallback = selectCreditCardCallback
         )
 
         whenever(store.state).thenReturn(state)
     }
 
     @Test
-    fun `WHEN onOptionSelect is called with a credit card THEN the confirmed credit card is received and prompt is hidden`() {
+    fun `WHEN onOptionSelect is called with a credit card THEN selectCreditCardCallback is invoked and prompt is hidden`() {
+        assertNull(creditCardPicker.selectedCreditCard)
+
         setupSessionState(promptRequest)
 
         creditCardPicker.onOptionSelect(creditCard)
 
         verify(creditCardSelectBar).hidePrompt()
 
-        assertEquals(creditCard, confirmedCreditCard)
+        assertTrue(selectCreditCardCalled)
+        assertEquals(creditCard, creditCardPicker.selectedCreditCard)
     }
 
     @Test
@@ -103,6 +110,32 @@ class CreditCardPickerTest {
         creditCardPicker.handleSelectCreditCardRequest(promptRequest)
 
         verify(creditCardSelectBar).showPrompt(promptRequest.creditCards)
+    }
+
+    @Test
+    fun `GIVEN a selected credit card WHEN onAuthSuccess is called THEN the confirmed credit card is received`() {
+        assertNull(creditCardPicker.selectedCreditCard)
+
+        setupSessionState(promptRequest)
+
+        creditCardPicker.onOptionSelect(creditCard)
+        creditCardPicker.onAuthSuccess()
+
+        assertEquals(creditCard, confirmedCreditCard)
+        assertNull(creditCardPicker.selectedCreditCard)
+    }
+
+    @Test
+    fun `GIVEN a selected credit card WHEN onAuthFailure is called THEN the prompt request is dismissed`() {
+        assertNull(creditCardPicker.selectedCreditCard)
+
+        setupSessionState(promptRequest)
+
+        creditCardPicker.onOptionSelect(creditCard)
+        creditCardPicker.onAuthFailure()
+
+        assertNull(creditCardPicker.selectedCreditCard)
+        assertTrue(onDismissCalled)
     }
 
     private fun setupSessionState(request: PromptRequest? = null): TabSessionState {

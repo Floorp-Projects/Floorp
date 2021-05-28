@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.prompts.creditcard
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest
@@ -20,12 +21,15 @@ import mozilla.components.support.base.log.logger.Logger
  * prompt will be inflated.
  * @property manageCreditCardsCallback A callback invoked when a user selects "Manage credit cards"
  * from the select credit card prompt.
+ * @property selectCreditCardCallback A callback invoked when a user selects a credit card option
+ * from the select credit card prompt
  * @property sessionId The session ID which requested the prompt.
  */
 class CreditCardPicker(
     private val store: BrowserStore,
     private val creditCardSelectBar: SelectablePromptView<CreditCard>,
     private val manageCreditCardsCallback: () -> Unit = {},
+    private val selectCreditCardCallback: () -> Unit = {},
     private var sessionId: String? = null
 ) : SelectablePromptView.Listener<CreditCard> {
 
@@ -33,17 +37,47 @@ class CreditCardPicker(
         creditCardSelectBar.listener = this
     }
 
+    // The selected credit card option to confirm.
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var selectedCreditCard: CreditCard? = null
+
     override fun onManageOptions() {
         manageCreditCardsCallback.invoke()
         dismissSelectCreditCardRequest()
     }
 
     override fun onOptionSelect(option: CreditCard) {
-        store.consumePromptFrom(sessionId) {
-            if (it is PromptRequest.SelectCreditCard) it.onConfirm(option)
-        }
-
+        selectedCreditCard = option
         creditCardSelectBar.hidePrompt()
+        selectCreditCardCallback.invoke()
+    }
+
+    /**
+     * Called on a successful authentication to confirm the selected credit card option.
+     */
+    fun onAuthSuccess() {
+        store.consumePromptFrom(sessionId) {
+            if (it is PromptRequest.SelectCreditCard) {
+                selectedCreditCard?.let { creditCard ->
+                    it.onConfirm(creditCard)
+                }
+
+                selectedCreditCard = null
+            }
+        }
+    }
+
+    /**
+     * Called on a failed authentication to dismiss the current select credit card prompt request.
+     */
+    fun onAuthFailure() {
+        selectedCreditCard = null
+
+        store.consumePromptFrom(sessionId) {
+            if (it is PromptRequest.SelectCreditCard) {
+                it.onDismiss()
+            }
+        }
     }
 
     /**

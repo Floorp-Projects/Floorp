@@ -757,7 +757,7 @@ class PromptFeatureTest {
     }
 
     @Test
-    fun `onActivityResult with RESULT_CANCELED will consume PromptRequest call onDismiss `() {
+    fun `onActivityResult with RESULT_CANCELED will consume PromptRequest call onDismiss`() {
         var onDismissWasCalled = false
 
         val filePickerRequest =
@@ -776,6 +776,80 @@ class PromptFeatureTest {
         store.waitUntilIdle()
         assertTrue(onDismissWasCalled)
         assertNull(tab()?.content?.promptRequest)
+    }
+
+    @Test
+    fun `WHEN onActivityResult is called with PIN_REQUEST and RESULT_OK THEN onAuthSuccess) is called`() {
+        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val feature =
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                creditCardPickerView = creditCardPickerView,
+                isCreditCardAutofillEnabled = { true }
+            ) { }
+        feature.creditCardPicker = creditCardPicker
+        val intent = Intent()
+
+        feature.onActivityResult(PromptFeature.PIN_REQUEST, intent, RESULT_OK)
+
+        verify(creditCardPicker).onAuthSuccess()
+    }
+
+    @Test
+    fun `WHEN onActivityResult is called with PIN_REQUEST and RESULT_CANCELED THEN onAuthFailure is called`() {
+        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val feature =
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                creditCardPickerView = creditCardPickerView,
+                isCreditCardAutofillEnabled = { true }
+            ) { }
+        feature.creditCardPicker = creditCardPicker
+        val intent = Intent()
+
+        feature.onActivityResult(PromptFeature.PIN_REQUEST, intent, RESULT_CANCELED)
+
+        verify(creditCardPicker).onAuthFailure()
+    }
+
+    @Test
+    fun `GIVEN user successfully authenticates by biometric prompt WHEN onBiometricResult is called THEN onAuthSuccess is called`() {
+        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val feature =
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                creditCardPickerView = creditCardPickerView,
+                isCreditCardAutofillEnabled = { true }
+            ) { }
+        feature.creditCardPicker = creditCardPicker
+
+        feature.onBiometricResult(isAuthenticated = true)
+
+        verify(creditCardPicker).onAuthSuccess()
+    }
+
+    @Test
+    fun `GIVEN user fails to authenticate by biometric prompt WHEN onBiometricResult is called THEN onAuthFailure) is called`() {
+        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val feature =
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                creditCardPickerView = creditCardPickerView,
+                isCreditCardAutofillEnabled = { true }
+            ) { }
+        feature.creditCardPicker = creditCardPicker
+
+        feature.onBiometricResult(isAuthenticated = false)
+
+        verify(creditCardPicker).onAuthFailure()
     }
 
     @Test
