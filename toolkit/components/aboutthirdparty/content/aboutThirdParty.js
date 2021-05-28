@@ -4,9 +4,275 @@
 
 "use strict";
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 let AboutThirdParty = null;
 
-function onLoad() {}
+// The expected format of |processKey| is "browser.0x1234"
+function formatProcess(processKey) {
+  const [ptype, pidHex] = processKey.split(".");
+  if (ptype && pidHex) {
+    const pid = parseInt(pidHex, 16);
+    if (!isNaN(pid)) {
+      return `${ptype} (process ${pid})`;
+    }
+  }
+
+  Cu.reportError("Unexpted format: " + processKey);
+  return processKey;
+}
+
+async function fetchData() {
+  let data = null;
+  try {
+    data = await Services.telemetry.getUntrustedModuleLoadEvents(
+      Services.telemetry.INCLUDE_OLD_LOADEVENTS |
+        Services.telemetry.KEEP_LOADEVENTS_NEW |
+        Services.telemetry.INCLUDE_PRIVATE_FIELDS_IN_LOADEVENTS |
+        Services.telemetry.EXCLUDE_STACKINFO_FROM_LOADEVENTS
+    );
+  } catch (e) {
+    // No error report in case of NS_ERROR_NOT_AVAILABLE
+    // because the method throws it when data is empty.
+    if (
+      !(e instanceof Components.Exception) ||
+      e.result != Cr.NS_ERROR_NOT_AVAILABLE
+    ) {
+      Cu.reportError(e);
+    }
+  }
+
+  if (!data || !data.modules || !data.processes) {
+    return null;
+  }
+
+  // The original telemetry data structure has an array of modules
+  // and an array of loading events referring to the module array's
+  // item via its index.
+  // To easily display data per module, we put loading events into
+  // a corresponding module object and return the module array.
+
+  for (const module of data.modules) {
+    module.events = [];
+    module.loadingOnMain = { count: 0, sum: 0 };
+  }
+
+  for (const [proc, perProc] of Object.entries(data.processes)) {
+    for (const event of perProc.events) {
+      event.process = formatProcess(proc);
+      event.mainThread =
+        event.threadName == "MainThread" || event.threadName == "Main Thread";
+
+      const module = data.modules[event.moduleIndex];
+      if (event.mainThread) {
+        ++module.loadingOnMain.count;
+        module.loadingOnMain.sum += event.loadDurationMS;
+      }
+
+      module.events.push(event);
+    }
+  }
+
+  for (const module of data.modules) {
+    const avg = module.loadingOnMain.count
+      ? module.loadingOnMain.sum / module.loadingOnMain.count
+      : 0;
+    module.loadingOnMain = avg;
+    module.events.sort((a, b) => a.process.localeCompare(b.process));
+  }
+
+  return data.modules;
+}
+
+function setContent(element, text, l10n) {
+  if (text) {
+    element.textContent = text;
+  } else if (l10n) {
+    element.setAttribute("data-l10n-id", l10n);
+  }
+}
+
+function onClickOpenDir(event) {
+  const button = event.target.closest("button");
+  if (!button?.fileObj) {
+    return;
+  }
+  button.fileObj.reveal();
+}
+
+function onClickExpand(event) {
+  const iconUp = "chrome://global/skin/icons/arrow-up-12.svg";
+  const iconDown = "chrome://global/skin/icons/arrow-dropdown-12.svg";
+
+  const card = event.target.closest(".card");
+  const button = event.target.closest("button");
+  const image = button.querySelector("img");
+
+  const table = card.querySelector(".event-table");
+  if (!table) {
+    return;
+  }
+
+  if (table.hidden) {
+    table.hidden = false;
+    image.src = iconUp;
+    setContent(button, null, "third-party-button-collapse");
+  } else {
+    table.hidden = true;
+    image.src = iconDown;
+    setContent(button, null, "third-party-button-expand");
+  }
+}
+
+function createDetailRow(label, value) {
+  if (!document.templateDetailRow) {
+    document.templateDetailRow = document.querySelector(
+      "template[name=module-detail-row]"
+    );
+  }
+
+  const fragment = document.templateDetailRow.content.cloneNode(true);
+  setContent(fragment.querySelector("div > label"), null, label);
+  setContent(fragment.querySelector("div > span"), value);
+  return fragment;
+}
+
+function copyDataToClipboard(aData) {
+  const clipboardData = aData.map(module => {
+    const copied = {
+      name: module.dllFile?.leafName,
+      fileVersion: module.fileVersion,
+    };
+
+    if (module.signedBy) {
+      copied.signedBy = module.signedBy;
+    }
+    if (module.companyName) {
+      copied.companyName = module.companyName;
+    }
+
+    if (Array.isArray(module.events)) {
+      copied.events = module.events.map(event => {
+        return {
+          process: event.process,
+          threadID: event.threadID,
+          loadStatus: event.loadStatus,
+          loadDurationMS: event.loadDurationMS,
+        };
+      });
+    }
+
+    return copied;
+  });
+
+  return navigator.clipboard.writeText(JSON.stringify(clipboardData, null, 2));
+}
+
+function visualizeData(aData) {
+  const templateCard = document.querySelector("template[name=card]");
+  const templateTableRow = document.querySelector(
+    "template[name=event-table-row]"
+  );
+
+  const labelLoadStatus = [
+    "third-party-status-loaded",
+    "third-party-status-blocked",
+    "third-party-status-redirected",
+  ];
+
+  const mainContentFragment = new DocumentFragment();
+
+  for (const module of aData) {
+    const newCard = templateCard.content.cloneNode(true);
+    const leafName = module.dllFile?.leafName;
+
+    setContent(newCard.querySelector(".module-name"), leafName);
+    newCard
+      .querySelector(".button-expand")
+      .addEventListener("click", onClickExpand);
+
+    const btnOpenDir = newCard.querySelector(".button-open-dir");
+    btnOpenDir.fileObj = module.dllFile;
+    btnOpenDir.addEventListener("click", onClickOpenDir);
+
+    if (!module.signedBy) {
+      newCard.querySelector(".image-unsigned").hidden = false;
+    }
+
+    const modDetailContainer = newCard.querySelector(".module-details");
+
+    if (module.fileVersion) {
+      modDetailContainer.appendChild(
+        createDetailRow("third-party-detail-version", module.fileVersion)
+      );
+    }
+
+    const vendorInfo = module.signedBy || module.companyName;
+    if (vendorInfo) {
+      modDetailContainer.appendChild(
+        createDetailRow("third-party-detail-vendor", vendorInfo)
+      );
+    }
+
+    modDetailContainer.appendChild(
+      createDetailRow("third-party-detail-occurrences", module.events.length)
+    );
+    modDetailContainer.appendChild(
+      createDetailRow(
+        "third-party-detail-duration",
+        module.loadingOnMain || "-"
+      )
+    );
+
+    const eventTable = newCard.querySelector(".event-table > tbody");
+    for (const event of module.events) {
+      const fragment = templateTableRow.content.cloneNode(true);
+
+      const row = fragment.querySelector("tr");
+
+      setContent(row.children[0], event.process);
+
+      // Use setContent() instead of simple assignment because
+      // loadDurationMS can be empty (not zero) when a module is
+      // loaded very early in the process and we need to show
+      // a text in that case.
+      setContent(
+        row.children[1].querySelector(".event-duration"),
+        event.loadDurationMS,
+        "third-party-message-no-duration"
+      );
+      row.querySelector(".tag-background").hidden = event.mainThread;
+
+      setContent(row.children[2], null, labelLoadStatus[event.loadStatus]);
+      eventTable.appendChild(fragment);
+    }
+
+    mainContentFragment.appendChild(newCard);
+  }
+
+  document.getElementById("main").appendChild(mainContentFragment);
+}
+
+async function onLoad() {
+  document
+    .getElementById("button-copy-to-clipboard")
+    .addEventListener("click", async e => {
+      e.target.disabled = true;
+
+      const data = await fetchData();
+      await copyDataToClipboard(data || []).catch(Cu.reportError);
+
+      e.target.disabled = false;
+    });
+
+  const data = await fetchData();
+  if (!data?.length) {
+    document.getElementById("no-data").hidden = false;
+    return;
+  }
+
+  visualizeData(data);
+}
 
 try {
   AboutThirdParty = Cc["@mozilla.org/about-thirdparty;1"].getService(
