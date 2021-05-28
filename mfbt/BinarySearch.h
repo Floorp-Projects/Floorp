@@ -8,6 +8,7 @@
 #define mozilla_BinarySearch_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/CompactPair.h"
 
 #include <stddef.h>
 
@@ -126,6 +127,121 @@ bool BinarySearch(const Container& aContainer, size_t aBegin, size_t aEnd,
   return BinarySearchIf(aContainer, aBegin, aEnd,
                         detail::BinarySearchDefaultComparator<T>(aTarget),
                         aMatchOrInsertionPoint);
+}
+
+/*
+ * LowerBound(), UpperBound(), and EqualRange() are equivalent to
+ * std::lower_bound(), std::upper_bound(), and std::equal_range() respectively.
+ *
+ * LowerBound() returns an index pointing to the first element in the range
+ * in which each element is considered *not less than* the given value passed
+ * via |aCompare|, or the length of |aContainer| if no such element is found.
+ *
+ * UpperBound() returns an index pointing to the first element in the range
+ * in which each element is considered *greater than* the given value passed
+ * via |aCompare|, or the length of |aContainer| if no such element is found.
+ *
+ * EqualRange() returns a range [first, second) containing all elements are
+ * considered equivalent to the given value via |aCompare|.  If you need
+ * either the first or last index of the range, LowerBound() or UpperBound(),
+ * which is slightly faster than EqualRange(), should suffice.
+ *
+ * Example (another example is given in TestBinarySearch.cpp):
+ *
+ *   Vector<const char*> sortedStrings = ...
+ *
+ *   struct Comparator {
+ *     const nsACString& mStr;
+ *     explicit Comparator(const nsACString& aStr) : mStr(aStr) {}
+ *     int32_t operator()(const char* aVal) const {
+ *       return mStr.Compare(aVal);
+ *     }
+ *   };
+ *
+ *   auto bounds = EqualRange(sortedStrings, 0, sortedStrings.length(),
+ *                            Comparator("needle I'm looking for"_ns));
+ *   printf("Found the range [%zd %zd)\n", bounds.first(), bounds.second());
+ *
+ */
+template <typename Container, typename Comparator>
+size_t LowerBound(const Container& aContainer, size_t aBegin, size_t aEnd,
+                  const Comparator& aCompare) {
+  MOZ_ASSERT(aBegin <= aEnd);
+
+  size_t low = aBegin;
+  size_t high = aEnd;
+  while (high != low) {
+    size_t middle = low + (high - low) / 2;
+
+    // Allow any intermediate type so long as it provides a suitable ordering
+    // relation.
+    const int result = aCompare(aContainer[middle]);
+
+    // The range returning from LowerBound does include elements
+    // equivalent to the given value i.e. aCompare(element) == 0
+    if (result <= 0) {
+      high = middle;
+    } else {
+      low = middle + 1;
+    }
+  }
+
+  return low;
+}
+
+template <typename Container, typename Comparator>
+size_t UpperBound(const Container& aContainer, size_t aBegin, size_t aEnd,
+                  const Comparator& aCompare) {
+  MOZ_ASSERT(aBegin <= aEnd);
+
+  size_t low = aBegin;
+  size_t high = aEnd;
+  while (high != low) {
+    size_t middle = low + (high - low) / 2;
+
+    // Allow any intermediate type so long as it provides a suitable ordering
+    // relation.
+    const int result = aCompare(aContainer[middle]);
+
+    // The range returning from UpperBound does NOT include elements
+    // equivalent to the given value i.e. aCompare(element) == 0
+    if (result < 0) {
+      high = middle;
+    } else {
+      low = middle + 1;
+    }
+  }
+
+  return high;
+}
+
+template <typename Container, typename Comparator>
+CompactPair<size_t, size_t> EqualRange(const Container& aContainer,
+                                       size_t aBegin, size_t aEnd,
+                                       const Comparator& aCompare) {
+  MOZ_ASSERT(aBegin <= aEnd);
+
+  size_t low = aBegin;
+  size_t high = aEnd;
+  while (high != low) {
+    size_t middle = low + (high - low) / 2;
+
+    // Allow any intermediate type so long as it provides a suitable ordering
+    // relation.
+    const int result = aCompare(aContainer[middle]);
+
+    if (result < 0) {
+      high = middle;
+    } else if (result > 0) {
+      low = middle + 1;
+    } else {
+      return MakeCompactPair(
+          LowerBound(aContainer, low, middle, aCompare),
+          UpperBound(aContainer, middle + 1, high, aCompare));
+    }
+  }
+
+  return MakeCompactPair(low, high);
 }
 
 }  // namespace mozilla
