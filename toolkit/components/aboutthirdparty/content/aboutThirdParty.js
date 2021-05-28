@@ -12,20 +12,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 let AboutThirdParty = null;
 let CrashModuleSet = null;
 
-// The expected format of |processKey| is "browser.0x1234"
-function formatProcess(processKey) {
-  const [ptype, pidHex] = processKey.split(".");
-  if (ptype && pidHex) {
-    const pid = parseInt(pidHex, 16);
-    if (!isNaN(pid)) {
-      return `${ptype} (process ${pid})`;
-    }
-  }
-
-  Cu.reportError("Unexpted format: " + processKey);
-  return processKey;
-}
-
 async function fetchData() {
   let data = null;
   try {
@@ -71,7 +57,11 @@ async function fetchData() {
 
   for (const [proc, perProc] of Object.entries(data.processes)) {
     for (const event of perProc.events) {
-      event.process = formatProcess(proc);
+      // The expected format of |proc| is <type>.<pid> like "browser.0x1234"
+      const [ptype, pidHex] = proc.split(".");
+      event.processType = ptype;
+      event.processID = parseInt(pidHex, 16);
+
       event.mainThread =
         event.threadName == "MainThread" || event.threadName == "Main Thread";
 
@@ -90,7 +80,10 @@ async function fetchData() {
       ? module.loadingOnMain.sum / module.loadingOnMain.count
       : 0;
     module.loadingOnMain = avg;
-    module.events.sort((a, b) => a.process.localeCompare(b.process));
+    module.events.sort((a, b) => {
+      const diff = a.processType.localeCompare(b.processType);
+      return diff ? diff : a.processID - b.processID;
+    });
   }
 
   data.modules.sort((a, b) => {
@@ -196,7 +189,8 @@ function copyDataToClipboard(aData) {
     if (Array.isArray(module.events)) {
       copied.events = module.events.map(event => {
         return {
-          process: event.process,
+          processType: event.processType,
+          processID: event.processID,
           threadID: event.threadID,
           loadStatus: event.loadStatus,
           loadDurationMS: event.loadDurationMS,
@@ -208,6 +202,13 @@ function copyDataToClipboard(aData) {
   });
 
   return navigator.clipboard.writeText(JSON.stringify(clipboardData, null, 2));
+}
+
+function correctProcessTypeForFluent(type) {
+  // Convert a process type returned from XRE_GeckoProcessTypeToString()
+  // into a keyword defined in processTypes.ftl
+  const fluentType = type == "tab" ? "web" : type;
+  return "process-type-" + fluentType;
 }
 
 function visualizeData(aData) {
@@ -296,7 +297,12 @@ function visualizeData(aData) {
 
       const row = fragment.querySelector("tr");
 
-      setContent(row.children[0], event.process);
+      setContent(
+        row.children[0].querySelector(".process-type"),
+        null,
+        correctProcessTypeForFluent(event.processType)
+      );
+      setContent(row.children[0].querySelector(".process-id"), event.processID);
 
       // Use setContent() instead of simple assignment because
       // loadDurationMS can be empty (not zero) when a module is
