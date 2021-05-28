@@ -298,8 +298,8 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   virtual ~XMLHttpRequestMainThread();
 
   nsresult MaybeSilentSendFailure(nsresult aRv);
-  nsresult SendInternal(const BodyExtractorBase* aBody,
-                        bool aBodyIsDocumentOrString = false);
+  void SendInternal(const BodyExtractorBase* aBody,
+                    bool aBodyIsDocumentOrString, ErrorResult& aRv);
 
   bool IsCrossSiteCORSRequest() const;
   bool IsDeniedCrossSiteCORSRequest();
@@ -318,7 +318,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   virtual void SendInputStream(nsIInputStream* aInputStream,
                                ErrorResult& aRv) override {
     BodyExtractor<nsIInputStream> body(aInputStream);
-    aRv = SendInternal(&body);
+    SendInternal(&body, false, aRv);
   }
 
   void RequestErrorSteps(const ProgressEventType aEventType,
@@ -393,7 +393,8 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
   virtual bool MozBackgroundRequest() const override;
 
-  nsresult SetMozBackgroundRequest(bool aMozBackgroundRequest);
+  void SetMozBackgroundRequestExternal(bool aMozBackgroundRequest,
+                                       ErrorResult& aRv);
 
   virtual void SetMozBackgroundRequest(bool aMozBackgroundRequest,
                                        ErrorResult& aRv) override;
