@@ -112,8 +112,6 @@ class QuotaManager final : public BackgroundThreadObject {
   // Returns a non-owning reference.
   static QuotaManager* Get();
 
-  static QuotaManager& GetRef();
-
   // Returns true if we've begun the shutdown process.
   static bool IsShuttingDown();
 
@@ -371,8 +369,20 @@ class QuotaManager final : public BackgroundThreadObject {
   void NotifyStoragePressure(uint64_t aUsage);
 
   // Record a quota client shutdown step, if shutting down.
-  void MaybeRecordShutdownStep(Client::Type aClientType,
-                               const nsACString& aStepDescription);
+  // Assumes that the QuotaManager singleton is alive.
+  static void MaybeRecordQuotaClientShutdownStep(
+      const Client::Type aClientType, const nsACString& aStepDescription) {
+    // Callable on any thread.
+
+    MOZ_DIAGNOSTIC_ASSERT(QuotaManager::Get());
+    QuotaManager::Get()->MaybeRecordShutdownStep(Some(aClientType),
+                                                 aStepDescription);
+  }
+
+  // Record a quota client shutdown step, if shutting down.
+  // Checks if the QuotaManager singleton is alive.
+  static void SafeMaybeRecordQuotaClientShutdownStep(
+      Client::Type aClientType, const nsACString& aStepDescription);
 
   // Record a quota manager shutdown step, if shutting down.
   void MaybeRecordQuotaManagerShutdownStep(const nsACString& aStepDescription);
