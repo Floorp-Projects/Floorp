@@ -103,7 +103,7 @@
 #include "vm/AsyncIteration.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
-#include "vm/HelperThreadState.h"
+#include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
@@ -4572,7 +4572,7 @@ static bool HelperThreadCount(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (CanUseExtraThreads()) {
-    args.rval().setInt32(HelperThreadState().threadCount);
+    args.rval().setInt32(GetHelperThreadCount());
   } else {
     args.rval().setInt32(0);
   }
