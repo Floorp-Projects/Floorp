@@ -19,6 +19,7 @@ class TypesTest {
         assertEquals(SyncEngine.Bookmarks, "bookmarks".toSyncEngine())
         assertEquals(SyncEngine.Passwords, "passwords".toSyncEngine())
         assertEquals(SyncEngine.CreditCards, "creditcards".toSyncEngine())
+        assertEquals(SyncEngine.Addresses, "addresses".toSyncEngine())
         assertEquals(SyncEngine.Other("other"), "other".toSyncEngine())
     }
 
