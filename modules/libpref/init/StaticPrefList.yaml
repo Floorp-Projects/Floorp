@@ -9696,7 +9696,7 @@
 # Support http3 version1
 - name: network.http.http3.support_version1
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 #---------------------------------------------------------------------------
