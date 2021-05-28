@@ -7,6 +7,11 @@
 #ifndef mozilla_dom_quota_quotacommon_h__
 #define mozilla_dom_quota_quotacommon_h__
 
+// This must be included at the very beginning since it also contains
+// QM_ERROR_STACKS_ENABLED definition which is used below.
+// XXX Create a special file for this, like QuotaConfig.h
+#include "mozilla/dom/QMResult.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -23,7 +28,10 @@
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ThreadLocal.h"
-#include "mozilla/dom/QMResult.h"
+#if (defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)) && \
+    defined(QM_ERROR_STACKS_ENABLED)
+#  include "mozilla/Variant.h"
+#endif
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
