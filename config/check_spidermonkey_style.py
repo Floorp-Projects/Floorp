@@ -127,6 +127,10 @@ included_inclnames_to_ignore = set(
     ]
 )
 
+deprecated_inclnames = {
+    "mozilla/Unused.h": "Use [[nodiscard]] and (void)expr casts instead.",
+}
+
 # These files have additional constraints on where they are #included, so we
 # ignore #includes of them when checking #include ordering.
 oddly_ordered_inclnames = set(
@@ -166,6 +170,9 @@ js/src/tests/style/BadIncludes.h:8: error:
 js/src/tests/style/BadIncludes.h:10: error:
     "stdio.h" is included using the wrong path;
     did you forget a prefix, or is the file not yet committed?
+
+js/src/tests/style/BadIncludes.h:12: error:
+    "mozilla/Unused.h" is deprecated: Use [[nodiscard]] and (void)expr casts instead.
 
 js/src/tests/style/BadIncludes2.h:1: error:
     vanilla header includes an inline-header file "tests/style/BadIncludes2-inl.h"
@@ -696,6 +703,14 @@ def check_file(
                 )
 
         else:
+            msg = deprecated_inclnames.get(include.inclname)
+            if msg:
+                error(
+                    filename,
+                    include.linenum,
+                    include.quote() + " is deprecated: " + msg,
+                )
+
             if include.inclname not in included_inclnames_to_ignore:
                 included_kind = FileKind.get(include.inclname)
 
