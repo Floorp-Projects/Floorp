@@ -56,8 +56,11 @@ const FeatureManifest = {
   aboutwelcome: {
     description: "The about:welcome page",
     isEarlyStartup: true,
-    enabledFallbackPref: "browser.aboutwelcome.enabled",
     variables: {
+      enabled: {
+        type: "boolean",
+        fallbackPref: "browser.aboutwelcome.enabled",
+      },
       screens: {
         type: "json",
         fallbackPref: "browser.aboutwelcome.screens",
@@ -105,7 +108,12 @@ const FeatureManifest = {
   upgradeDialog: {
     description: "The dialog shown for major upgrades",
     isEarlyStartup: true,
-    enabledFallbackPref: "browser.startup.upgradeDialog.enabled",
+    variables: {
+      enabled: {
+        type: "boolean",
+        fallbackPref: "browser.startup.upgradeDialog.enabled",
+      },
+    },
   },
   privatebrowsing: {
     description: "about:privatebrowsing",

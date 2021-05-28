@@ -33,15 +33,13 @@ const REMOTE_CONFIGURATION = Object.freeze({
     {
       slug: "non-matching-configuration",
       description: "This configuration does not match because of targeting.",
-      variables: { skipFocus: false, remoteValue: false },
-      enabled: false,
+      variables: { skipFocus: false, remoteValue: false, enabled: false },
       targeting: "false",
     },
     {
       slug: "matching-configuration",
       description: "This configuration will match targeting.",
-      variables: { skipFocus: true, remoteValue: true },
-      enabled: true,
+      variables: { skipFocus: true, remoteValue: true, enabled: true },
       targeting: "true",
     },
   ],
@@ -177,7 +175,7 @@ add_task(async function update_remote_defaults_enabled() {
   Assert.equal(
     feature.isEnabled(),
     true,
-    "Feature is enabled by enabledFallbackPref"
+    "Feature is enabled by manifest.variables.enabled"
   );
 
   manager.store.updateRemoteConfigs(
