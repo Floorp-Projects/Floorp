@@ -9,16 +9,12 @@
 
 menupopup,
 panel {
-  border: 1px solid ThreeDShadow;
   min-width: 1px;
-  background-color: Menu;
-  color: MenuText;
 }
 
 /* ::::: arrow panel ::::: */
 
 panel[type="arrow"] {
-  appearance: none;
   border: none;
   background-color: transparent;
 }
@@ -33,34 +29,37 @@ panel[type="arrow"][side="right"] {
   margin-block: -20px;
 }
 
-.panel-arrowcontent {
-  padding: var(--arrowpanel-padding);
-  color: var(--arrowpanel-color);
-  background: var(--arrowpanel-background);
-  border-radius: var(--arrowpanel-border-radius);
-  border: 1px solid var(--arrowpanel-border-color);
+:is(panel, menupopup)::part(content) {
+  display: -moz-box;
+  -moz-box-flex: 1;
+  padding: var(--panel-padding, 0);
+  color: var(--panel-color, MenuText);
+  background: var(--panel-background, Menu);
+  border-radius: var(--panel-border-radius, 0);
+  border: 1px solid var(--panel-border-color, ThreeDShadow);
+  width: var(--panel-width, initial);
+}
+
+:is(panel, menupopup)[orient=vertical]::part(content) {
+  -moz-box-orient: vertical;
+}
+
+panel[type="arrow"]::part(content) {
+  /* TODO: Make this shadow apply to other popups (needs tests fixes to account
+   * for negative margins) */
   box-shadow: 0 0 4px hsla(0,0%,0%,.2);
   margin: 4px;
 }
 
-.panel-arrowcontent > html|slot {
-  /* propagate border-radius from arrowcontent to slotted children */
-  border-radius: inherit;
-}
-
-:host([orient=vertical]) .panel-arrowcontent {
-  -moz-box-orient: vertical;
-}
-
-panel[type="arrow"].panel-no-padding::part(arrowcontent) {
+panel[type="arrow"].panel-no-padding::part(content) {
   padding: 0;
   overflow: hidden; /* Don't let panel content overflow the border */
 }
 
 :is(panel, menupopup)::part(arrow) {
   -moz-context-properties: fill, stroke;
-  fill: var(--arrowpanel-background);
-  stroke: var(--arrowpanel-border-color);
+  fill: var(--panel-background);
+  stroke: var(--panel-border-color);
 }
 
 :is(panel, menupopup)[side="top"]::part(arrow),

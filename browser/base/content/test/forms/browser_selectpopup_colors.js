@@ -360,18 +360,15 @@ async function testSelectColors(selectID, itemCount, options) {
   );
   if (options.waitForComputedStyle) {
     let property = options.waitForComputedStyle.property;
-    let value = options.waitForComputedStyle.value;
+    let expectedValue = options.waitForComputedStyle.value;
     await TestUtils.waitForCondition(() => {
       let node = ["background-image", "background-color"].includes(property)
         ? arrowSB
         : selectPopup;
-      info(
-        `<${node.localName}> has ${property}: ${
-          getComputedStyle(node)[property]
-        }`
-      );
-      return getComputedStyle(node)[property] == value;
-    }, `${selectID} - Waiting for <select> to have ${property}: ${value}`);
+      let value = getComputedStyle(node).getPropertyValue(property);
+      info(`<${node.localName}> has ${property}: ${value}`);
+      return value == expectedValue;
+    }, `${selectID} - Waiting for <select> to have ${property}: ${expectedValue}`);
   }
 
   is(selectPopup.parentNode.itemCount, itemCount, "Correct number of items");
@@ -387,7 +384,11 @@ async function testSelectColors(selectID, itemCount, options) {
   }
   if (!options.skipSelectColorTest.color) {
     is(
-      getComputedStyle(selectPopup).color,
+      rgbaToString(
+        InspectorUtils.colorToRGBA(
+          getComputedStyle(selectPopup).getPropertyValue("--panel-color")
+        )
+      ),
       options.selectColor,
       selectID + " popup has expected foreground color"
     );
@@ -608,7 +609,7 @@ add_task(
     let options = {
       skipSelectColorTest: true,
       waitForComputedStyle: {
-        property: "color",
+        property: "--panel-color",
         value: "rgb(255, 0, 0)",
       },
     };
@@ -675,7 +676,7 @@ add_task(
       selectColor: "rgb(128, 0, 128)",
       selectBgColor: kDefaultSelectStyles.backgroundColor,
       waitForComputedStyle: {
-        property: "color",
+        property: "--panel-color",
         value: "rgb(128, 0, 128)",
       },
       leaveOpen: true,

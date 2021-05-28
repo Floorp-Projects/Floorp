@@ -56,9 +56,7 @@ add_task(async function test_popup_styling(browser, accDoc) {
       // Open the information arrow panel
       await openIdentityPopup();
 
-      let arrowContent = gIdentityHandler._identityPopup.shadowRoot.querySelector(
-        ".panel-arrowcontent"
-      );
+      let arrowContent = gIdentityHandler._identityPopup.panelContent;
       let arrowContentComputedStyle = window.getComputedStyle(arrowContent);
       // Ensure popup background color was set properly
       Assert.equal(
