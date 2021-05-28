@@ -22,8 +22,12 @@ h1 {
   min-width: auto;
 }
 
-.image-unsigned {
+.card-head > img {
   margin-inline-start: .5em;
+}
+
+.image-warning {
+  fill: #fcd100;
 }
 
 .card {
