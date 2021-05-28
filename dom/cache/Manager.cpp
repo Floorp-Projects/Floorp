@@ -267,7 +267,10 @@ class Manager::Factory {
 
     MOZ_ALWAYS_TRUE(sFactory->mManagerList.RemoveElement(&aManager));
 
-    quota::QuotaManager::GetRef().MaybeRecordShutdownStep(
+    // This might both happen in late shutdown such that this event
+    // is executed even after the QuotaManager singleton passed away
+    // or if the QuotaManager has not yet been created.
+    quota::QuotaManager::SafeMaybeRecordQuotaClientShutdownStep(
         quota::Client::DOMCACHE, "Manager removed"_ns);
 
     // clean up the factory singleton if there are no more managers
