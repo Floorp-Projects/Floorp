@@ -431,6 +431,13 @@ class GlobalHelperThreadState {
   bool submitTask(GCParallelTask* task,
                   const AutoLockHelperThreadState& locked);
   void runTaskLocked(HelperThreadTask* task, AutoLockHelperThreadState& lock);
+
+  using Selector = HelperThreadTask* (
+      GlobalHelperThreadState::*)(const AutoLockHelperThreadState&);
+  static const Selector selectors[];
+
+  HelperThreadTask* findHighestPriorityTask(
+      const AutoLockHelperThreadState& locked);
 };
 
 static inline GlobalHelperThreadState& HelperThreadState() {
@@ -475,13 +482,6 @@ class HelperThread {
    private:
     ProfilingStack* profilingStack;
   };
-
-  using Selector = HelperThreadTask* (
-      GlobalHelperThreadState::*)(const AutoLockHelperThreadState&);
-  static const Selector selectors[];
-
-  HelperThreadTask* findHighestPriorityTask(
-      const AutoLockHelperThreadState& locked);
 };
 
 class MOZ_RAII AutoSetHelperThreadContext {
