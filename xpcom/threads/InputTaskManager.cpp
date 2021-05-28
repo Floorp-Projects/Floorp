@@ -181,7 +181,8 @@ void InputTaskManager::InputPriorityController::DidRunTask() {
       }
       return;
     default:
-      MOZ_CRASH("Shouldn't run this input task when we suppose to run vsync");
+      MOZ_DIAGNOSTIC_ASSERT(
+          false, "Shouldn't run this input task when we suppose to run vsync");
       return;
   }
 }
