@@ -113,8 +113,8 @@ TEST(DelayedRunnable, TimerFiresBeforeRunnableRuns)
       do_AddRef(pool), /* aSupportsTailDispatch = */ true);
   auto noTailTaskQueue = MakeRefPtr<TaskQueue>(
       do_AddRef(pool), /* aSupportsTailDispatch = */ false);
-  Monitor monitor(__func__);
-  MonitorAutoLock lock(monitor);
+  Monitor outerMonitor(__func__);
+  MonitorAutoLock lock(outerMonitor);
   MOZ_ALWAYS_SUCCEEDS(
       tailTaskQueue1->Dispatch(NS_NewRunnableFunction(__func__, [&] {
         // This will tail dispatch the delayed runnable, making it prone to
@@ -123,18 +123,21 @@ TEST(DelayedRunnable, TimerFiresBeforeRunnableRuns)
         EXPECT_TRUE(tailTaskQueue1->RequiresTailDispatch(tailTaskQueue2));
         tailTaskQueue2->DelayedDispatch(
             NS_NewRunnableFunction(__func__, [&] {}), 1);
-        MonitorAutoLock lock(monitor);
+        Monitor innerMonitor(__func__);
+        MonitorAutoLock lock(innerMonitor);
         auto timer = MakeRefPtr<MediaTimer>();
         timer->WaitFor(TimeDuration::FromMilliseconds(1), __func__)
             ->Then(noTailTaskQueue, __func__, [&] {
-              MonitorAutoLock lock(monitor);
-              monitor.NotifyAll();
+              MonitorAutoLock lock(innerMonitor);
+              innerMonitor.NotifyAll();
             });
         // Wait until the timer has run. It should have dispatched the
         // TimerEvent to tailTaskQueue2 by then. The tail dispatch happens when
         // we leave scope.
-        monitor.Wait();
+        innerMonitor.Wait();
+        // Notify the outer monitor that we've finished the async steps.
+        outerMonitor.NotifyAll();
       })));
   // Wait for async steps before wrapping up the test case.
-  monitor.Wait();
+  outerMonitor.Wait();
 }
