@@ -197,6 +197,37 @@ class RaptorRunner(MozbuildObject):
                 }
             )
 
+            def _get_browsertime_package():
+                with open(
+                    os.path.join(
+                        self.topsrcdir,
+                        "tools",
+                        "browsertime",
+                        "node_modules",
+                        "browsertime",
+                        "package.json",
+                    )
+                ) as package:
+                    return json.load(package)
+
+            def _get_browsertime_resolved():
+                try:
+                    with open(
+                        os.path.join(
+                            self.topsrcdir,
+                            "tools",
+                            "browsertime",
+                            "node_modules",
+                            ".package-lock.json",
+                        )
+                    ) as package_lock:
+                        return json.load(package_lock)["packages"][
+                            "node_modules/browsertime"
+                        ]["resolved"]
+                except FileNotFoundError:
+                    # Older versions of node/npm add this metadata to package.json
+                    return _get_browsertime_package()["_from"]
+
             def _should_install():
                 # If browsertime doesn't exist, install it
                 if not os.path.exists(
@@ -207,37 +238,19 @@ class RaptorRunner(MozbuildObject):
                 # Browsertime exists, check if it's outdated
                 with open(
                     os.path.join(self.topsrcdir, "tools", "browsertime", "package.json")
-                ) as new, open(
-                    os.path.join(
-                        self.topsrcdir,
-                        "tools",
-                        "browsertime",
-                        "node_modules",
-                        "browsertime",
-                        "package.json",
-                    )
-                ) as old:
-                    old_pkg = json.load(old)
+                ) as new:
                     new_pkg = json.load(new)
 
-                return not old_pkg["_from"].endswith(
+                return not _get_browsertime_resolved().endswith(
                     new_pkg["devDependencies"]["browsertime"]
                 )
 
             def _get_browsertime_version():
-                # Returns the (current commit, version number) used
-                with open(
-                    os.path.join(
-                        self.topsrcdir,
-                        "tools",
-                        "browsertime",
-                        "node_modules",
-                        "browsertime",
-                        "package.json",
-                    )
-                ) as existing:
-                    package = json.load(existing)
-                return package["version"], package["_from"]
+                # Returns the (version number, current commit) used
+                return (
+                    _get_browsertime_package()["version"],
+                    _get_browsertime_resolved(),
+                )
 
             # Check if browsertime scripts exist and try to install them if
             # they aren't
