@@ -368,8 +368,8 @@ class Connector {
       return;
     }
 
-    if (resource.name === "dom-loading") {
-      // Netmonitor does not support dom-loading event yet.
+    // Netmonitor does not support dom-loading, nor will-navigate events yet.
+    if (resource.name != "dom-interactive" && resource.name != "dom-complete") {
       return;
     }
 
