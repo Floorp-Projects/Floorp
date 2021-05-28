@@ -88,19 +88,21 @@ async function fetchHeaders(headers, getLongString) {
  */
 function fetchNetworkUpdatePacket(requestData, request, updateTypes) {
   const promises = [];
-  updateTypes.forEach(updateType => {
-    // Only stackTrace will be handled differently
-    if (updateType === "stackTrace") {
-      if (request.cause.stacktraceAvailable && !request.stacktrace) {
+  if (request) {
+    updateTypes.forEach(updateType => {
+      // Only stackTrace will be handled differently
+      if (updateType === "stackTrace") {
+        if (request.cause.stacktraceAvailable && !request.stacktrace) {
+          promises.push(requestData(request.id, updateType));
+        }
+        return;
+      }
+
+      if (request[`${updateType}Available`] && !request[updateType]) {
         promises.push(requestData(request.id, updateType));
       }
-      return;
-    }
-
-    if (request[`${updateType}Available`] && !request[updateType]) {
-      promises.push(requestData(request.id, updateType));
-    }
-  });
+    });
+  }
 
   return Promise.all(promises);
 }
