@@ -443,6 +443,7 @@ macosx1015-64-qr-tests:
     - mochitest-webgpu
     - reftest
     - telemetry-tests-client
+    - xpcshell
 
 # debug only
 macosx1015-64-tests:
@@ -454,7 +455,6 @@ macosx1014-64-qr-tests:
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
-    - xpcshell
 
 macosx64-talos:
     - talos-bcv
