@@ -4,6 +4,7 @@
 
 "use strict";
 
+const kExtensionModuleName = "TestShellEx.dll";
 const kATP = Cc["@mozilla.org/about-thirdparty;1"].getService(
   Ci.nsIAboutThirdParty
 );
