@@ -24,6 +24,7 @@ import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -53,7 +54,7 @@ class SettingsSubMenuSearchRobot {
     fun saveNewSearchEngine() {
         addSearchEngineSaveButton().click()
         mDevice.findObject(
-            UiSelector().resourceId("org.mozilla.fenix.debug:id/recycler_view")
+            UiSelector().resourceId("$packageName:id/recycler_view")
         ).waitForExists(waitingTime)
     }
 

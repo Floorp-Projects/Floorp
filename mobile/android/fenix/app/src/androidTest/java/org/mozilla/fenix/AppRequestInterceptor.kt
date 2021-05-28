@@ -9,7 +9,7 @@ import androidx.navigation.NavController
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ui.robots.appContext
+import org.mozilla.fenix.helpers.TestHelper.appContext
 import java.lang.ref.WeakReference
 
 /**

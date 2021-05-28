@@ -21,9 +21,10 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.assertIsChecked
 import org.mozilla.fenix.helpers.click
-import org.mozilla.fenix.helpers.TestAssetHelper
 
 /**
  * Implementation of Robot Pattern for the settings Delete Browsing Data sub menu.
@@ -104,7 +105,7 @@ private fun cancelButton() =
     mDevice.findObject(UiSelector().textStartsWith("CANCEL"))
 
 private fun assertMessageInDialogBox() =
-    onView(withText("Firefox Preview will delete the selected browsing data."))
+    onView(withText("$appName will delete the selected browsing data."))
         .inRoot(isDialog())
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 

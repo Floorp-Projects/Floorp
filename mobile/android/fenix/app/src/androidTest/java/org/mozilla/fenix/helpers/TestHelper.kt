@@ -30,6 +30,7 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import kotlinx.coroutines.runBlocking
+import mozilla.components.support.ktx.android.content.appName
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
@@ -41,7 +42,9 @@ import java.io.File
 
 object TestHelper {
 
-    val packageName = InstrumentationRegistry.getInstrumentation().targetContext.packageName
+    val appContext: Context = InstrumentationRegistry.getInstrumentation().targetContext
+    val packageName: String = appContext.packageName
+    val appName = appContext.appName
 
     fun scrollToElementByText(text: String): UiScrollable {
         val appView = UiScrollable(UiSelector().scrollable(true))

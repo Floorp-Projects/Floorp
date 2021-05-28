@@ -33,6 +33,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.share.ShareFragment
@@ -179,7 +180,7 @@ class ThreeDotMenuMainRobot {
             mDevice.waitNotNull(Until.findObject(By.text("Bookmarks")), waitingTime)
 
             bookmarksButton().click()
-            assertTrue(mDevice.findObject(UiSelector().resourceId("org.mozilla.fenix.debug:id/bookmark_list")).waitForExists(waitingTime))
+            assertTrue(mDevice.findObject(UiSelector().resourceId("$packageName:id/bookmark_list")).waitForExists(waitingTime))
 
             BookmarksRobot().interact()
             return BookmarksRobot.Transition()
@@ -301,7 +302,7 @@ class ThreeDotMenuMainRobot {
             interact: BrowserRobot.() -> Unit
         ): BrowserRobot.Transition {
             mDevice.wait(
-                Until.findObject(By.res("org.mozilla.fenix.debug:id/name_collection_edittext")),
+                Until.findObject(By.res("$packageName:id/name_collection_edittext")),
                 waitingTime
             )
 
@@ -310,7 +311,7 @@ class ThreeDotMenuMainRobot {
                 ViewActions.pressImeActionButton()
             )
             // wait for the collection creation wrapper to be dismissed
-            mDevice.waitNotNull(Until.gone(By.res("org.mozilla.fenix.debug:id/createCollectionWrapper")))
+            mDevice.waitNotNull(Until.gone(By.res("$packageName:id/createCollectionWrapper")))
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()

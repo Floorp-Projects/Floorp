@@ -194,16 +194,4 @@ class SettingsBasicsTest {
             verifyMenuItemsAreDisabled()
         }
     }
-
-    @Test
-    fun changeDefaultBrowserSetting() {
-        // Opens settings and toggles the default browser setting to on. The device settings open and allows the user to set a default browser.
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyDefaultBrowserIsDisaled()
-            clickDefaultBrowserSwitch()
-            verifyAndroidDefaultAppsMenuAppears()
-        }
-    }
 }

@@ -38,7 +38,6 @@ import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
 import junit.framework.TestCase.assertTrue
 import mozilla.components.browser.state.state.searchEngines
-import mozilla.components.support.ktx.android.content.appName
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.instanceOf
@@ -48,6 +47,8 @@ import org.junit.Assert
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
@@ -63,7 +64,7 @@ import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
  */
 class HomeScreenRobot {
     val privateSessionMessage =
-        "${appContext.appName} clears your search and browsing history from private tabs when you close them" +
+        "$appName clears your search and browsing history from private tabs when you close them" +
                 " or quit the app. While this doesn’t make you anonymous to websites or your internet" +
                 " service provider, it makes it easier to keep what you do online private from anyone" +
                 " else who uses this device."
@@ -424,7 +425,6 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
 }
 
 val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-val appContext = InstrumentationRegistry.getInstrumentation().targetContext
 
 private fun homeScreenList() =
     UiScrollable(
@@ -510,7 +510,7 @@ private fun verifySearchEngineIcon(searchEngineName: String) {
 
 // First Run elements
 private fun assertWelcomeHeader() =
-    onView(allOf(withText("Welcome to ${appContext.appName}!")))
+    onView(allOf(withText("Welcome to $appName!")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertStartSyncHeader() {
@@ -597,7 +597,7 @@ private fun assertYourPrivacyText() {
     onView(
         allOf(
             withText(
-                "We’ve designed ${appContext.appName} to give you control over what you share online and what you share with us."
+                "We’ve designed $appName to give you control over what you share online and what you share with us."
             )
         )
     )

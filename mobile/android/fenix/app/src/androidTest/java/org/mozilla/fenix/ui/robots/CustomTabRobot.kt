@@ -11,9 +11,9 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiSelector
 import junit.framework.TestCase.assertTrue
-import mozilla.components.support.ktx.android.content.appName
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.appName
 
 /**
  *  Implementation of the robot pattern for Custom tabs
@@ -29,7 +29,7 @@ class CustomTabRobot {
     }
 
     fun verifyPoweredByTextIsDisplayed() {
-        mDevice.findObject(UiSelector().textContains("POWERED BY ${appContext.appName}"))
+        mDevice.findObject(UiSelector().textContains("POWERED BY $appName"))
     }
 
     fun verifyOpenInBrowserButtonExists() {
@@ -75,7 +75,7 @@ private fun desktopSiteButton() = onView(withId(R.id.switch_widget))
 
 private fun findInPageButton() = onView(withText("Find in page"))
 
-private fun openInBrowserButton() = onView(withText("Open in ${appContext.appName}"))
+private fun openInBrowserButton() = onView(withText("Open in $appName"))
 
 private fun refreshButton() = mDevice.findObject(UiSelector().description("Refresh"))
 

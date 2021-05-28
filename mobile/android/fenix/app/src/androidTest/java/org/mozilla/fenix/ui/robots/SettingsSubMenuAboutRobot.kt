@@ -28,6 +28,7 @@ import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.isVisibleForUser
 import org.mozilla.fenix.settings.SupportUtils
 import java.text.SimpleDateFormat
@@ -108,7 +109,7 @@ private fun assertVersionNumber() {
 
 private fun assertProductCompany() {
     onView(withId(R.id.about_content))
-        .check(matches(withText(containsString("Firefox Preview is produced by Mozilla."))))
+        .check(matches(withText(containsString("$appName is produced by Mozilla."))))
 }
 
 private fun assertCurrentTimestamp() {
@@ -122,11 +123,11 @@ private fun assertCurrentTimestamp() {
 
 private fun assertWhatIsNewInFirefoxPreview() {
 
-    if (!onView(withText("What’s new in Firefox Preview")).isVisibleForUser()) {
+    if (!onView(withText("What’s new in $appName")).isVisibleForUser()) {
         onView(withId(R.id.about_layout)).perform(ViewActions.swipeUp())
     }
 
-    onView(withText("What’s new in Firefox Preview"))
+    onView(withText("What’s new in $appName"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .perform(click())
 
@@ -222,7 +223,7 @@ private fun assertLibrariesUsed() {
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .perform(click())
 
-    onView(withId(R.id.navigationToolbar)).check(matches(hasDescendant(withText(containsString("Firefox Preview | OSS Libraries")))))
+    onView(withId(R.id.navigationToolbar)).check(matches(hasDescendant(withText(containsString("$appName | OSS Libraries")))))
     Espresso.pressBack()
 }
 

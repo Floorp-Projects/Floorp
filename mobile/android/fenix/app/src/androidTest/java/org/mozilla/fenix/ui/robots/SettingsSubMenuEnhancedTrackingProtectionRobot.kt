@@ -10,9 +10,9 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
-import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
@@ -26,6 +26,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.not
+import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.assertIsChecked
 import org.mozilla.fenix.helpers.click
@@ -122,7 +123,7 @@ private fun assertEnhancedTrackingProtectionHeader() {
 
 private fun assertEnhancedTrackingProtectionHeaderDescription() {
     onView(allOf(withParent(withParentIndex(0)),
-        withText("Keep your data to yourself. Firefox Preview protects you from many of the most common trackers that follow what you do online.")))
+        withText("Keep your data to yourself. $appName protects you from many of the most common trackers that follow what you do online.")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 

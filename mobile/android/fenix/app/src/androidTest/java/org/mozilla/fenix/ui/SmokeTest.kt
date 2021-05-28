@@ -30,6 +30,7 @@ import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.TestHelper.deleteDownloadFromStorage
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
@@ -1132,8 +1133,7 @@ class SmokeTest {
             verifyAddPrivateBrowsingShortcutButton()
             clickAddPrivateBrowsingShortcutButton()
             clickAddAutomaticallyButton()
-        }.openHomeScreenShortcut("Private Firefox Preview") {
-        }
+        }.openHomeScreenShortcut("Private $appName") {}
     }
 
     @Test

@@ -11,8 +11,8 @@ import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.onboarding.FenixOnboarding
-import org.mozilla.fenix.ui.robots.appContext
 
 /**
  * A [org.junit.Rule] to handle shared test set up for tests on [HomeActivity].

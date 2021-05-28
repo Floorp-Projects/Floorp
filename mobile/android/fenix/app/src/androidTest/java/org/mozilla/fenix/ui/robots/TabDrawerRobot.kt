@@ -60,7 +60,7 @@ class TabDrawerRobot {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         mDevice.waitNotNull(
-            Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_tabstray_url")),
+            Until.findObject(By.res("$packageName:id/mozac_browser_tabstray_url")),
             waitingTime
         )
         onView(withId(R.id.mozac_browser_tabstray_url))
@@ -88,7 +88,7 @@ class TabDrawerRobot {
 
     fun closeTab() {
         mDevice.findObject(
-            UiSelector().resourceId("org.mozilla.fenix.debug:id/mozac_browser_tabstray_close")
+            UiSelector().resourceId("$packageName:id/mozac_browser_tabstray_close")
         ).waitForExists(waitingTime)
 
         var retries = 0 // number of retries before failing, will stop at 2
@@ -96,7 +96,7 @@ class TabDrawerRobot {
             closeTabButton().click()
             retries++
         } while (mDevice.findObject(
-                UiSelector().resourceId("org.mozilla.fenix.debug:id/mozac_browser_tabstray_close")
+                UiSelector().resourceId("$packageName:id/mozac_browser_tabstray_close")
             ).exists() && retries < 3
         )
     }
@@ -150,7 +150,7 @@ class TabDrawerRobot {
         mDevice.waitNotNull(
             findObject(
                 By
-                    .res("org.mozilla.fenix.debug:id/play_pause_button")
+                    .res("$packageName:id/play_pause_button")
                     .desc(action)
             ),
             waitingTime

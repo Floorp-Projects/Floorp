@@ -18,6 +18,7 @@ import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -27,7 +28,7 @@ import org.mozilla.fenix.helpers.click
 class RecentlyClosedTabsRobot {
 
     fun waitForListToExist() =
-        mDevice.findObject(UiSelector().resourceId("org.mozilla.fenix.debug:id/recently_closed_list"))
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/recently_closed_list"))
             .waitForExists(
                 TestAssetHelper.waitingTime
             )

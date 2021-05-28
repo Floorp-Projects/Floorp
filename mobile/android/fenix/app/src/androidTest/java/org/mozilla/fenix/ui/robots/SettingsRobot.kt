@@ -33,6 +33,7 @@ import org.hamcrest.CoreMatchers
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.assertIsEnabled
 import org.mozilla.fenix.helpers.click
@@ -475,8 +476,8 @@ private fun assertRateOnGooglePlay(): ViewInteraction {
 
 private fun assertAboutFirefoxPreview(): ViewInteraction {
     onView(withId(R.id.recycler_view))
-        .perform(RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText("About Firefox Preview"))))
-    return onView(withText("About Firefox Preview"))
+        .perform(RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText("About $appName"))))
+    return onView(withText("About $appName"))
         .check(matches(isDisplayed()))
 }
 
