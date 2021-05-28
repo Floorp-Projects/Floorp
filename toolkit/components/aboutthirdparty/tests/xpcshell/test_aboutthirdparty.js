@@ -3,6 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async () => {
+  Assert.equal(
+    kATP.lookupModuleType(kExtensionModuleName),
+    0,
+    "lookupModuleType() returns 0 before system info is collected."
+  );
+
   // Make sure successive calls of collectSystemInfo() do not
   // cause anything bad.
   const kLoopCount = 100;
@@ -20,4 +26,28 @@ add_task(async () => {
       "All results from collectSystemInfo() are resolved."
     );
   }
+
+  Assert.equal(
+    kATP.lookupModuleType("SHELL32.dll"),
+    Ci.nsIAboutThirdParty.ModuleType_ShellExtension,
+    "Shell32.dll is always registered as a shell extension."
+  );
+
+  Assert.equal(
+    kATP.lookupModuleType(""),
+    Ci.nsIAboutThirdParty.ModuleType_Unknown,
+    "Looking up an empty string succeeds and returns ModuleType_Unknown."
+  );
+
+  Assert.equal(
+    kATP.lookupModuleType(null),
+    Ci.nsIAboutThirdParty.ModuleType_Unknown,
+    "Looking up null succeeds and returns ModuleType_Unknown."
+  );
+
+  Assert.equal(
+    kATP.lookupModuleType("invalid name"),
+    Ci.nsIAboutThirdParty.ModuleType_Unknown,
+    "Looking up an invalid name succeeds and returns ModuleType_Unknown."
+  );
 });
