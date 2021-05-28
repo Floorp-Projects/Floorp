@@ -143,7 +143,6 @@ DOM4_MSG_DEF(InvalidStateError, "XMLHttpRequest must not be sending.", NS_ERROR_
 DOM4_MSG_DEF(InvalidStateError, "Cannot set 'responseType' property on XMLHttpRequest after 'send()' (when its state is LOADING or DONE).", NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE_RESPONSE_TYPE)
 DOM4_MSG_DEF(InvalidStateError, "Cannot call 'overrideMimeType()' on XMLHttpRequest after 'send()' (when its state is LOADING or DONE).", NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE_OVERRIDE_MIME_TYPE)
 DOM4_MSG_DEF(InvalidStateError, "responseXML is only available if responseType is '' or 'document'.", NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSEXML)
-DOM4_MSG_DEF(InvalidStateError, "responseText is only available if responseType is '' or 'text'.", NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSETEXT)
 
 /* Image decode errors. */
 DOM4_MSG_DEF(EncodingError, "Node bound to inactive document.", NS_ERROR_DOM_IMAGE_INACTIVE_DOCUMENT)
