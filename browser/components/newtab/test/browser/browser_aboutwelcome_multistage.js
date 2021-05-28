@@ -322,8 +322,9 @@ add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
   await setAboutWelcomePref(true);
   await ExperimentAPI.ready();
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    enabled: false,
     featureId: "aboutwelcome",
-    value: { enabled: false },
+    value: null,
   });
 
   ExperimentAPI._store._syncToChildren({ flush: true });
@@ -362,10 +363,10 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
   await ExperimentAPI.ready();
 
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    enabled: true,
     featureId: "aboutwelcome",
     value: {
       id: "my-mochitest-experiment",
-      enabled: true,
       screens: TEST_MULTISTAGE_CONTENT,
     },
   });
@@ -507,10 +508,10 @@ add_task(async function test_multistage_aboutwelcome_transitions() {
   await ExperimentAPI.ready();
 
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    enabled: true,
     featureId: "aboutwelcome",
     value: {
       id: "my-mochitest-experiment",
-      enabled: true,
       screens: TEST_PROTON_CONTENT,
       isProton: true,
       transitions: true,
@@ -567,10 +568,10 @@ add_task(async function test_multistage_aboutwelcome_transitions_off() {
   await ExperimentAPI.ready();
 
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    enabled: true,
     featureId: "aboutwelcome",
     value: {
       id: "my-mochitest-experiment",
-      enabled: true,
       screens: TEST_PROTON_CONTENT,
       isProton: true,
       transitions: false,
