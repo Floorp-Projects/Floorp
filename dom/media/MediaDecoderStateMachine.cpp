@@ -1205,8 +1205,10 @@ class MediaDecoderStateMachine::AccurateSeekingState
     mDoneAudioSeeking = !Info().HasAudio();
     mDoneVideoSeeking = !Info().HasVideo();
 
-    mMaster->ResetDecode();
+    // Resetting decode should be called after stopping media sink, which can
+    // ensure that we have an empty media queue before seeking the demuxer.
     mMaster->StopMediaSink();
+    mMaster->ResetDecode();
 
     DemuxerSeek();
   }
@@ -2655,8 +2657,10 @@ RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
   master->mAudioWaitRequest.DisconnectIfExists();
   master->mVideoWaitRequest.DisconnectIfExists();
 
-  master->ResetDecode();
+  // Resetting decode should be called after stopping media sink, which can
+  // ensure that we have an empty media queue before seeking the demuxer.
   master->StopMediaSink();
+  master->ResetDecode();
   master->mMediaSink->Shutdown();
 
   // Prevent dangling pointers by disconnecting the listeners.
