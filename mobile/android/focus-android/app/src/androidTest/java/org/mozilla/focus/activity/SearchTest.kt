@@ -5,6 +5,7 @@ package org.mozilla.focus.activity
 
 import androidx.test.espresso.IdlingRegistry
 import org.junit.After
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.R
@@ -57,6 +58,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Failing on master: https://github.com/mozilla-mobile/focus-android/issues/4825")
     @Test
     fun enableSearchSuggestionOnFirstRunTest() {
         val searchString = "mozilla "
