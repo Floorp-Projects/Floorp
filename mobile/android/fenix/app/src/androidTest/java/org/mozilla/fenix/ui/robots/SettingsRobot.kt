@@ -311,14 +311,8 @@ private fun assertDefaultBrowserIsDisabled() {
 }
 
 private fun toggleDefaultBrowserSwitch() {
-    scrollToElementByText("Set as default browser")
-    onView(
-        CoreMatchers.allOf(
-            ViewMatchers.withParent(CoreMatchers.not(withId(R.id.navigationToolbar))),
-            withText("Set as default browser")
-        )
-    )
-        .perform(ViewActions.click())
+    scrollToElementByText("Privacy and security")
+    onView(withText("Set as default browser")).perform(ViewActions.click())
 }
 
 private fun assertAndroidDefaultAppsMenuAppears() {

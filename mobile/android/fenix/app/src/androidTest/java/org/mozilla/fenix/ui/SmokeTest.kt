@@ -26,7 +26,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
@@ -45,6 +45,7 @@ import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.notificationShade
+import org.mozilla.fenix.ui.robots.searchScreen
 import org.mozilla.fenix.ui.robots.tabDrawer
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
 
@@ -76,7 +77,7 @@ class SmokeTest {
     }
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
+    val activityTestRule = HomeActivityIntentTestRule()
     private lateinit var browserStore: BrowserStore
 
     @get: Rule
@@ -1134,6 +1135,11 @@ class SmokeTest {
             clickAddPrivateBrowsingShortcutButton()
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut("Private $appName") {}
+        searchScreen {
+            verifySearchView()
+        }.dismissSearchBar {
+            verifyPrivateSessionMessage()
+        }
     }
 
     @Test
@@ -1318,6 +1324,19 @@ class SmokeTest {
             verifyTabMediaControlButtonState("Play")
         }.openTab(audioTestPage.title) {
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
+        }
+    }
+
+    @Test
+    // For API>23
+    // Verifies the default browser switch opens the system default apps menu.
+    fun changeDefaultBrowserSetting() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+            verifyDefaultBrowserIsDisaled()
+            clickDefaultBrowserSwitch()
+            verifyAndroidDefaultAppsMenuAppears()
         }
     }
 }
