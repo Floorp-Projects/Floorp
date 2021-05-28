@@ -21,6 +21,7 @@ import mozilla.components.feature.downloads.facts.DownloadsFacts
 import mozilla.components.feature.findinpage.facts.FindInPageFacts
 import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.feature.prompts.facts.LoginDialogFacts
+import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
 import mozilla.components.feature.pwa.ProgressiveWebAppFacts
 import mozilla.components.feature.syncedtabs.facts.SyncedTabsFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
@@ -161,6 +162,8 @@ internal class ReleaseMetricController(
         Component.FEATURE_PROMPTS to LoginDialogFacts.Items.CANCEL -> Event.LoginDialogPromptCancelled
         Component.FEATURE_PROMPTS to LoginDialogFacts.Items.NEVER_SAVE -> Event.LoginDialogPromptNeverSave
         Component.FEATURE_PROMPTS to LoginDialogFacts.Items.SAVE -> Event.LoginDialogPromptSave
+        Component.FEATURE_PROMPTS to CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SUCCESS ->
+            Event.CreditCardAutofill
 
         Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.CLOSE -> Event.FindInPageClosed
         Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.INPUT -> Event.FindInPageSearchCommitted

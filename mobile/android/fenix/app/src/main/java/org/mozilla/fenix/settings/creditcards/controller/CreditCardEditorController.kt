@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.creditcards.controller
 
+import android.content.Context
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -12,8 +13,10 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardEditorInteractor
+import org.mozilla.fenix.ext.components
 
 /**
  * [CreditCardEditorFragment] controller. An interface that handles the view manipulation of the
@@ -52,11 +55,14 @@ interface CreditCardEditorController {
  * @param ioDispatcher [CoroutineDispatcher] used for executing async tasks. Defaults to [Dispatchers.IO].
  */
 class DefaultCreditCardEditorController(
+    context: Context,
     private val storage: AutofillCreditCardsAddressesStorage,
     private val lifecycleScope: CoroutineScope,
     private val navController: NavController,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : CreditCardEditorController {
+
+    private val metrics = context.components.analytics.metrics
 
     override fun handleCancelButtonClicked() {
         navController.popBackStack()
@@ -65,6 +71,7 @@ class DefaultCreditCardEditorController(
     override fun handleDeleteCreditCard(guid: String) {
         lifecycleScope.launch(ioDispatcher) {
             storage.deleteCreditCard(guid)
+            metrics.track(Event.CreditCardDelete)
 
             lifecycleScope.launch(Dispatchers.Main) {
                 navController.popBackStack()
@@ -75,6 +82,7 @@ class DefaultCreditCardEditorController(
     override fun handleSaveCreditCard(creditCardFields: NewCreditCardFields) {
         lifecycleScope.launch(ioDispatcher) {
             storage.addCreditCard(creditCardFields)
+            metrics.track(Event.CreditCardManualSave)
 
             lifecycleScope.launch(Dispatchers.Main) {
                 navController.popBackStack()

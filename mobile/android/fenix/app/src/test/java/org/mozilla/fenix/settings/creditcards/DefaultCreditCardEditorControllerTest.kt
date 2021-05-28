@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.settings.creditcards
 
+import android.content.Context
 import androidx.navigation.NavController
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -23,9 +25,15 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.creditcards.controller.DefaultCreditCardEditorController
 
 @ExperimentalCoroutinesApi
+@RunWith(FenixRobolectricTestRunner::class)
 class DefaultCreditCardEditorControllerTest {
 
     private val storage: AutofillCreditCardsAddressesStorage = mockk(relaxed = true)
@@ -35,14 +43,22 @@ class DefaultCreditCardEditorControllerTest {
     private val testDispatcher = TestCoroutineDispatcher()
 
     private lateinit var controller: DefaultCreditCardEditorController
+    private lateinit var context: Context
+    private lateinit var metrics: MetricController
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Before
     fun setup() {
+        metrics = mockk()
+        context = mockk()
+        every { metrics.track(any()) } returns Unit
+        every { context.components.analytics.metrics } returns metrics
+
         controller = spyk(
             DefaultCreditCardEditorController(
+                context = context,
                 storage = storage,
                 lifecycleScope = testCoroutineScope,
                 navController = navController,
@@ -75,6 +91,7 @@ class DefaultCreditCardEditorControllerTest {
         coVerify {
             storage.deleteCreditCard(creditCardId)
             navController.popBackStack()
+            metrics.track(Event.CreditCardDelete)
         }
     }
 
@@ -94,6 +111,7 @@ class DefaultCreditCardEditorControllerTest {
         coVerify {
             storage.addCreditCard(creditCardFields)
             navController.popBackStack()
+            metrics.track(Event.CreditCardManualSave)
         }
     }
 

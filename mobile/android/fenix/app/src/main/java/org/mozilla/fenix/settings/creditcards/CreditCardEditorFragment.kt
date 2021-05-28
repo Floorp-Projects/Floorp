@@ -55,6 +55,7 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
         val storage = requireContext().components.core.autofillStorage
         interactor = DefaultCreditCardEditorInteractor(
             controller = DefaultCreditCardEditorController(
+                context = requireContext(),
                 storage = storage,
                 lifecycleScope = lifecycleScope,
                 navController = findNavController()
