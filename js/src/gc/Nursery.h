@@ -142,8 +142,6 @@ class TenuringTracer final : public GenericTracer {
  public:
   Nursery& nursery() { return nursery_; }
 
-  template <typename T>
-  void traverse(T** thingp);
   void traverse(JS::Value* thingp);
 
   // The store buffers need to be able to call these directly.
