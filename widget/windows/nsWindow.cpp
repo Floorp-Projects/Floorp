@@ -8581,7 +8581,7 @@ bool nsWindow::DispatchTouchEventFromWMPointer(
   touchPoint.y = GET_Y_LPARAM(aLParam);
   touchPoint.ScreenToClient(mWnd);
 
-  SingleTouchData touchData(aPointerInfo.pointerId,
+  SingleTouchData touchData(static_cast<int32_t>(aPointerInfo.pointerId),
                             ScreenIntPoint::FromUnknownPoint(touchPoint),
                             ScreenSize(1, 1),  // pixel size radius for pen
                             0.0f,              // no radius rotation
@@ -8593,8 +8593,13 @@ bool nsWindow::DispatchTouchEventFromWMPointer(
   MultiTouchInput touchInput;
   touchInput.mType = touchType;
   touchInput.mTime = ::GetMessageTime();
-  touchInput.mTimeStamp = GetMessageTimeStamp(touchInput.mTime);
+  touchInput.mTimeStamp =
+      GetMessageTimeStamp(static_cast<long>(touchInput.mTime));
   touchInput.mTouches.AppendElement(touchData);
+
+  // POINTER_INFO.dwKeyStates can't be used as it only supports Shift and Ctrl
+  ModifierKeyState modifierKeyState;
+  touchInput.modifiers = modifierKeyState.GetModifiers();
 
   DispatchTouchInput(touchInput, MouseEvent_Binding::MOZ_SOURCE_PEN);
   return true;
