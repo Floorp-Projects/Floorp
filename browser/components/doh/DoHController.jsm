@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
   ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
-  DoHConfigController: "resource:///modules/DoHConfig.jsm",
+  Config: "resource:///modules/DoHConfig.jsm",
   Heuristics: "resource:///modules/DoHHeuristics.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -114,6 +114,8 @@ const BREADCRUMB_PREF = "doh-rollout.self-enabled";
 const NETWORK_TRR_MODE_PREF = "network.trr.mode";
 const NETWORK_TRR_URI_PREF = "network.trr.uri";
 
+const TRR_LIST_PREF = "network.trr.resolvers";
+
 const ROLLOUT_MODE_PREF = "doh-rollout.mode";
 const ROLLOUT_URI_PREF = "doh-rollout.uri";
 
@@ -166,13 +168,11 @@ const DoHController = {
       true
     );
 
-    await DoHConfigController.initComplete;
-
-    Services.obs.addObserver(this, DoHConfigController.kConfigUpdateTopic);
+    Services.obs.addObserver(this, Config.kConfigUpdateTopic);
     Preferences.observe(NETWORK_TRR_MODE_PREF, this);
     Preferences.observe(NETWORK_TRR_URI_PREF, this);
 
-    if (DoHConfigController.currentConfig.enabled) {
+    if (Config.enabled) {
       await this.maybeEnableHeuristics();
     } else if (Preferences.get(FIRST_RUN_PREF, false)) {
       await this.rollback();
@@ -193,7 +193,7 @@ const DoHController = {
   // Also used by tests to reset DoHController state (prefs are not cleared
   // here - tests do that when needed between _uninit and init).
   async _uninit() {
-    Services.obs.removeObserver(this, DoHConfigController.kConfigUpdateTopic);
+    Services.obs.removeObserver(this, Config.kConfigUpdateTopic);
     Preferences.ignore(NETWORK_TRR_MODE_PREF, this);
     Preferences.ignore(NETWORK_TRR_URI_PREF, this);
     AsyncShutdown.profileBeforeChange.removeBlocker(this._asyncShutdownBlocker);
@@ -201,15 +201,9 @@ const DoHController = {
   },
 
   // Called to reset state when a new config is available.
-  resetPromise: Promise.resolve(),
   async reset() {
-    this.resetPromise = this.resetPromise.then(async () => {
-      await this._uninit();
-      await this.init();
-      Services.obs.notifyObservers(null, "doh:controller-reloaded");
-    });
-
-    return this.resetPromise;
+    await this._uninit();
+    await this.init();
   },
 
   async migrateLocalStoragePrefs() {
@@ -334,14 +328,6 @@ const DoHController = {
     }
 
     await this.runTRRSelection();
-    // If we enter this branch it means that no automatic selection was possible.
-    // In this case, we try to set a fallback (as defined by DoHConfigController).
-    if (!Preferences.isSet(ROLLOUT_URI_PREF)) {
-      Preferences.set(
-        ROLLOUT_URI_PREF,
-        DoHConfigController.currentConfig.fallbackProviderURI
-      );
-    }
     this.runHeuristicsThrottled("startup");
     Services.obs.addObserver(this, kLinkStatusChangedTopic);
     Services.obs.addObserver(this, kConnectivityTopic);
@@ -574,26 +560,22 @@ const DoHController = {
   async runTRRSelection() {
     // If persisting the selection is disabled, clear the existing
     // selection.
-    if (!DoHConfigController.currentConfig.trrSelection.commitResult) {
+    if (!Config.trrSelection.commitResult) {
       Preferences.reset(ROLLOUT_URI_PREF);
     }
 
-    if (!DoHConfigController.currentConfig.trrSelection.enabled) {
+    if (!Config.trrSelection.enabled) {
       return;
     }
 
-    if (
-      Preferences.isSet(ROLLOUT_URI_PREF) &&
-      Preferences.get(ROLLOUT_URI_PREF) ==
-        Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF)
-    ) {
+    if (Preferences.isSet(ROLLOUT_URI_PREF)) {
       return;
     }
 
     await this.runTRRSelectionDryRun();
 
     // If persisting the selection is disabled, don't commit the value.
-    if (!DoHConfigController.currentConfig.trrSelection.commitResult) {
+    if (!Config.trrSelection.commitResult) {
       return;
     }
 
@@ -608,28 +590,31 @@ const DoHController = {
       // Check whether the existing dry-run-result is in the default
       // list of TRRs. If it is, all good. Else, run the dry run again.
       let dryRunResult = Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF);
-      let dryRunResultIsValid = DoHConfigController.currentConfig.providerList.some(
-        trr => trr.uri == dryRunResult
+      let defaultTRRs = JSON.parse(
+        Services.prefs.getDefaultBranch("").getCharPref(TRR_LIST_PREF)
+      );
+      let dryRunResultIsValid = defaultTRRs.some(
+        trr => trr.url == dryRunResult
       );
       if (dryRunResultIsValid) {
         return;
       }
     }
 
-    let setDryRunResultAndRecordTelemetry = trrUri => {
-      Preferences.set(TRR_SELECT_DRY_RUN_RESULT_PREF, trrUri);
+    let setDryRunResultAndRecordTelemetry = trr => {
+      Preferences.set(TRR_SELECT_DRY_RUN_RESULT_PREF, trr);
       Services.telemetry.recordEvent(
         TRRSELECT_TELEMETRY_CATEGORY,
         "trrselect",
         "dryrunresult",
-        trrUri.substring(0, 40) // Telemetry payload max length
+        trr.substring(0, 40) // Telemetry payload max length
       );
     };
 
     if (kIsInAutomation) {
       // For mochitests, just record telemetry with a dummy result.
       // TRRPerformance.jsm is tested in xpcshell.
-      setDryRunResultAndRecordTelemetry("https://example.com/dns-query");
+      setDryRunResultAndRecordTelemetry("https://dummytrr.com/query");
       return;
     }
 
@@ -639,13 +624,10 @@ const DoHController = {
       "resource:///modules/TRRPerformance.jsm"
     );
     await new Promise(resolve => {
-      let trrList = DoHConfigController.currentConfig.trrSelection.providerList.map(
-        trr => trr.uri
-      );
       let racer = new TRRRacer(() => {
         setDryRunResultAndRecordTelemetry(racer.getFastestTRR(true));
         resolve();
-      }, trrList);
+      });
       racer.run();
     });
   },
@@ -661,7 +643,7 @@ const DoHController = {
       case kPrefChangedTopic:
         this.onPrefChanged(data);
         break;
-      case DoHConfigController.kConfigUpdateTopic:
+      case Config.kConfigUpdateTopic:
         this.reset();
         break;
     }
