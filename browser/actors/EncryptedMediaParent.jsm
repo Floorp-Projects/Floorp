@@ -28,13 +28,6 @@ XPCOMUtils.defineLazyGetter(this, "gFluentStrings", function() {
   return new Localization(["branding/brand.ftl", "browser/browser.ftl"], true);
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProtonDoorhangersEnabled",
-  "browser.proton.doorhangers.enabled",
-  false
-);
-
 class EncryptedMediaParent extends JSWindowActorParent {
   isUiEnabled() {
     return Services.prefs.getBoolPref("browser.eme.ui.enabled");
@@ -246,7 +239,7 @@ class EncryptedMediaParent extends JSWindowActorParent {
         aBrowser.ownerGlobal.openPreferences("general-drm");
       },
       dismiss: true,
-      disableHighlight: gProtonDoorhangersEnabled,
+      disableHighlight: true,
     };
 
     let secondaryActions = [

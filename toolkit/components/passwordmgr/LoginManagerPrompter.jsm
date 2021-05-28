@@ -31,13 +31,6 @@ XPCOMUtils.defineLazyGetter(this, "strBundle", () => {
   );
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProtonDoorhangersEnabled",
-  "browser.proton.doorhangers.enabled",
-  false
-);
-
 const LoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
   "nsILoginInfo",
@@ -778,9 +771,7 @@ class LoginManagerPrompter {
       showOptions
     );
 
-    if (gProtonDoorhangersEnabled) {
-      mainAction.disableHighlight = true;
-    }
+    mainAction.disableHighlight = true;
 
     let notification = PopupNotifications.show(
       browser,

@@ -117,13 +117,6 @@ XPCOMUtils.defineLazyGetter(this, "gBundle", function() {
   );
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProtonAppMenuEnabled",
-  "browser.proton.enabled",
-  false
-);
-
 /**
  * Safety timeout after which asynchronous events will be canceled if any of the
  * registered blockers does not return.
@@ -1384,10 +1377,7 @@ var PanelView = class extends AssociatedToNode {
         // the label that's a direct child of the header.
         header.querySelector(".panel-header > h1 > span").textContent = value;
       } else {
-        if (
-          gProtonAppMenuEnabled &&
-          header.nextSibling.tagName == "toolbarseparator"
-        ) {
+        if (header.nextSibling.tagName == "toolbarseparator") {
           header.nextSibling.remove();
         }
         header.remove();
@@ -1426,10 +1416,7 @@ var PanelView = class extends AssociatedToNode {
     header.append(backButton, h1);
     this.node.prepend(header);
 
-    if (
-      gProtonAppMenuEnabled &&
-      header.nextSibling.tagName != "toolbarseparator"
-    ) {
+    if (header.nextSibling.tagName != "toolbarseparator") {
       let separator = this.document.createXULElement("toolbarseparator");
       this.node.insertBefore(separator, header.nextSibling);
     }
