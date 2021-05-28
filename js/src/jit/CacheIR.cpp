@@ -8,7 +8,6 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/Unused.h"
 
 #include "jsmath.h"
 
@@ -4708,7 +4707,7 @@ void InstanceOfIRGenerator::trackAttached(const char* name) {
   }
 #else
   // Silence Clang -Wunused-private-field warning.
-  mozilla::Unused << lhsVal_;
+  (void)lhsVal_;
 #endif
 }
 
