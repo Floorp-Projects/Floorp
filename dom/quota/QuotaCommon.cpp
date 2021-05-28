@@ -411,64 +411,87 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
               const nsACString& aSourceFilePath, const int32_t aSourceFileLine,
               const Severity aSeverity)
 #  else
-void LogError(const nsACString& aExpr, const Maybe<nsresult> aResult,
+void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
               const nsACString& aSourceFilePath, const int32_t aSourceFileLine,
               const Severity aSeverity)
 #  endif
 {
   // TODO: Add MOZ_LOG support, bug 1711661.
 
-  // We have to ignore failures with the Log severity. until we have support
-  // for MOZ_LOG.
+  // We have to ignore failures with the Log severity until we have support for
+  // MOZ_LOG.
   if (aSeverity == Severity::Log) {
     return;
   }
 
-  nsAutoCString extraInfosString;
+  Maybe<nsresult> maybeRv;
 
-  nsAutoCString rvName;
 #  ifdef QM_ERROR_STACKS_ENABLED
-  nsAutoCString frameIdStr;
-  nsAutoCString stackIdStr;
-  nsAutoCString processIdStr;
-
-  if (aResult.is<QMResult>() || aResult.is<nsresult>()) {
-    nsresult rv;
-
-    if (aResult.is<QMResult>()) {
-      const QMResult& result = aResult.as<QMResult>();
-      rv = result.NSResult();
-      frameIdStr.AppendInt(result.FrameId());
-      stackIdStr.AppendInt(result.StackId());
-      processIdStr.AppendInt(static_cast<uint32_t>(base::GetCurrentProcId()));
-    } else {
-      rv = aResult.as<nsresult>();
-    }
+  if (aResult.is<QMResult>()) {
+    maybeRv = Some(aResult.as<QMResult>().NSResult());
+  } else if (aResult.is<nsresult>()) {
+    maybeRv = Some(aResult.as<nsresult>());
+  }
 #  else
-  if (aResult) {
-    nsresult rv = *aResult;
+  maybeRv = aMaybeRv;
 #  endif
 
+  nsAutoCString rvCode;
+  nsAutoCString rvName;
+
+  if (maybeRv) {
+    nsresult rv = *maybeRv;
+
+    rvCode = nsPrintfCString("0x%" PRIX32, static_cast<uint32_t>(rv));
+
+    // XXX NS_ERROR_MODULE_WIN32 should be handled in GetErrorName directly.
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_WIN32) {
       // XXX We could also try to get the Win32 error name here.
-      rvName = nsPrintfCString("WIN32(0x%" PRIX16 ")", NS_ERROR_GET_CODE(rv));
+      rvName = nsPrintfCString(
+          "NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_WIN32, 0x%" PRIX16 ")",
+          NS_ERROR_GET_CODE(rv));
     } else {
-      rvName = mozilla::GetStaticErrorName(rv);
+      mozilla::GetErrorName(rv, rvName);
     }
-
-    extraInfosString.AppendPrintf(
-        " failed with "
-        "result 0x%" PRIX32 "%s%s%s",
-        static_cast<uint32_t>(rv), !rvName.IsEmpty() ? " (" : "",
-        !rvName.IsEmpty() ? rvName.get() : "", !rvName.IsEmpty() ? ")" : "");
+  }
 
 #  ifdef QM_ERROR_STACKS_ENABLED
-    if (aResult.is<QMResult>()) {
-      extraInfosString.Append(", frameId="_ns + frameIdStr + ", stackId="_ns +
-                              stackIdStr + ", processId="_ns + processIdStr);
-    }
-#  endif
+  nsAutoCString frameIdString;
+  nsAutoCString stackIdString;
+  nsAutoCString processIdString;
+
+  if (aResult.is<QMResult>()) {
+    const QMResult& result = aResult.as<QMResult>();
+    frameIdString = IntToCString(result.FrameId());
+    stackIdString = IntToCString(result.StackId());
+    processIdString =
+        IntToCString(static_cast<uint32_t>(base::GetCurrentProcId()));
   }
+#  endif
+
+  nsAutoCString extraInfosString;
+
+  if (!rvCode.IsEmpty()) {
+    extraInfosString.Append(" failed with resultCode "_ns + rvCode);
+  }
+
+  if (!rvName.IsEmpty()) {
+    extraInfosString.Append(", resultName "_ns + rvName);
+  }
+
+#  ifdef QM_ERROR_STACKS_ENABLED
+  if (!frameIdString.IsEmpty()) {
+    extraInfosString.Append(", frameId "_ns + frameIdString);
+  }
+
+  if (!stackIdString.IsEmpty()) {
+    extraInfosString.Append(", stackId "_ns + stackIdString);
+  }
+
+  if (!processIdString.IsEmpty()) {
+    extraInfosString.Append(", processId "_ns + processIdString);
+  }
+#  endif
 
   const auto sourceFileRelativePath =
       detail::MakeSourceFileRelativePath(aSourceFilePath);
@@ -490,7 +513,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aResult,
 #  ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
   const auto& extraInfos = ScopedLogExtraInfo::GetExtraInfoMap();
   for (const auto& item : extraInfos) {
-    extraInfosString.Append(", "_ns + nsDependentCString(item.first) + "="_ns +
+    extraInfosString.Append(", "_ns + nsDependentCString(item.first) + " "_ns +
                             *item.second);
   }
 #  endif
@@ -509,14 +532,16 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aResult,
   nsCOMPtr<nsIConsoleService> console =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   if (console) {
-    NS_ConvertUTF8toUTF16 message(
-        "QM_TRY failure ("_ns + severityString + ")"_ns + ": '"_ns + aExpr +
-        "' at "_ns + sourceFileRelativePath + ":"_ns +
-        IntToCString(aSourceFileLine) + extraInfosString);
+    NS_ConvertUTF8toUTF16 message("QM_TRY failure ("_ns + severityString +
+                                  ")"_ns + ": '"_ns + aExpr + extraInfosString +
+                                  "', file "_ns + sourceFileRelativePath +
+                                  ":"_ns + IntToCString(aSourceFileLine));
 
     // The concatenation above results in a message like:
-    // QM_TRY failure: 'EXPR' failed with result NS_ERROR_FAILURE at
-    // dom/quota/Foo.cpp:12345
+    // QM_TRY failure (ERROR): 'MaybeRemoveLocalStorageArchiveTmpFile() failed
+    // with resultCode 0x80004005, resultName NS_ERROR_FAILURE, frameId 1,
+    // stackId 1, processId 53978, context Initialization::Storage', file
+    // dom/quota/ActorsParent.cpp:6029
 
     console->LogStringMessage(message.get());
   }
@@ -534,14 +559,14 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aResult,
           "context"_ns, nsPromiseFlatCString{*contextIt->second}});
 
 #    ifdef QM_ERROR_STACKS_ENABLED
-      if (!frameIdStr.IsEmpty()) {
+      if (!frameIdString.IsEmpty()) {
         res.AppendElement(
-            EventExtraEntry{"frame_id"_ns, nsCString{frameIdStr}});
+            EventExtraEntry{"frame_id"_ns, nsCString{frameIdString}});
       }
 
-      if (!processIdStr.IsEmpty()) {
+      if (!processIdString.IsEmpty()) {
         res.AppendElement(
-            EventExtraEntry{"process_id"_ns, nsCString{processIdStr}});
+            EventExtraEntry{"process_id"_ns, nsCString{processIdString}});
       }
 #    endif
 
@@ -569,9 +594,9 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aResult,
           EventExtraEntry{"source_line"_ns, IntToCString(aSourceFileLine)});
 
 #    ifdef QM_ERROR_STACKS_ENABLED
-      if (!stackIdStr.IsEmpty()) {
+      if (!stackIdString.IsEmpty()) {
         res.AppendElement(
-            EventExtraEntry{"stack_id"_ns, nsCString{stackIdStr}});
+            EventExtraEntry{"stack_id"_ns, nsCString{stackIdString}});
       }
 #    endif
 
