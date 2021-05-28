@@ -41,6 +41,8 @@ third-party-tag-background = Background
         in the background.
 third-party-unsigned-icon =
     .title = This module is not signed
+third-party-warning-icon =
+    .title = { -brand-short-name } crashed in code from this module
 
 third-party-status-loaded = Loaded
 third-party-status-blocked = Blocked
