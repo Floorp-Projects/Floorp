@@ -409,7 +409,7 @@ def test_read_prefs_ttw():
 
     try:
         # start server
-        httpd.start(block=False)
+        httpd.start()
 
         # read preferences through the web
         read = prefs.read_prefs("http://%s:%d/prefs_with_comments.js" % (host, port))
