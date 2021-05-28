@@ -17,15 +17,13 @@ const { TestUtils } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-// Experiment store caches in prefs Enrollments for fast sync access
-function cleanupStorePrefCache() {
-  const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
-  try {
-    Services.prefs.deleteBranch(SYNC_DATA_PREF_BRANCH);
-  } catch (e) {
-    // Expected if nothing is cached
-  }
-}
+const { cleanupStorePrefCache } = ExperimentFakes;
+
+const { ExperimentStore } = ChromeUtils.import(
+  "resource://nimbus/lib/ExperimentStore.jsm"
+);
+
+const { SYNC_DATA_PREF_BRANCH } = ExperimentStore;
 
 /**
  * The normal case: Enrollment of a new experiment
@@ -218,7 +216,6 @@ add_task(async function test_sampling_check() {
 add_task(async function enroll_in_reference_aw_experiment() {
   cleanupStorePrefCache();
 
-  const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
   let dir = await OS.File.getCurrentDirectory();
   let src = OS.Path.join(dir, "reference_aboutwelcome_experiment_content.json");
   let bytes = await OS.File.read(src);
