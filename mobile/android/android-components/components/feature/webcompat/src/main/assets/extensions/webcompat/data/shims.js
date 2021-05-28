@@ -146,16 +146,34 @@ const AVAILABLE_SHIMS = [
     name: "Facebook SDK",
     bug: "1226498",
     file: "facebook-sdk.js",
+    logos: ["facebook.svg", "play.svg"],
     matches: [
       "*://connect.facebook.net/*/sdk.js*",
       "*://connect.facebook.net/*/all.js*",
+      {
+        patterns: ["*://www.facebook.com/platform/impression.php*"],
+        target: "tracking-pixel.png",
+        types: ["image", "imageset", "xmlhttprequest"],
+      },
     ],
-    needsShimHelpers: ["optIn"],
+    needsShimHelpers: ["optIn", "getOptions"],
     onlyIfBlockedByETP: true,
     unblocksOnOptIn: [
       "*://*.xx.fbcdn.net/*", // covers:
       // "*://scontent-.*-\d.xx.fbcdn.net/*",
       // "*://static.xx.fbcdn.net/rsrc.php/*",
+      "*://graph.facebook.com/v2*access_token*",
+      "*://graph.facebook.com/v*/me*",
+      "*://graph.facebook.com/*/picture*",
+      "*://www.facebook.com/*/plugins/login_button.php*",
+      "*://www.facebook.com/x/oauth/status*",
+      {
+        patterns: [
+          "*://www.facebook.com/*/plugins/video.php*",
+          "*://www.facebook.com/rsrc.php/*",
+        ],
+        branches: ["nightly"],
+      },
     ],
   },
   {

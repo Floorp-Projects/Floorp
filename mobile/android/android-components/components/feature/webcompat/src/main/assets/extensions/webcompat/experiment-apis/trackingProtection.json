@@ -4,12 +4,13 @@
     "description": "experimental API allow requests through ETP",
     "functions": [
       {
-        "name": "allow",
+        "name": "shim",
         "type": "function",
-        "description": "Add specific requests to a given allow-list",
+        "description": "Set specified URL patterns as intended to be shimmed",
         "parameters": [
           {
             "name": "allowlistId",
+            "description": "Identfier for the allow-list, so it may be added-to or revoked",
             "type": "string"
           },
           {
@@ -21,35 +22,40 @@
             }
           },
           {
-            "name": "options",
-            "type": "object",
+            "name": "notHosts",
+            "description": "Hosts on which to not shim these patterns",
+            "type": "array",
             "optional": true,
-            "properties": {
-              "hosts": {
-                "description": "Hosts to limit this bypass to (optional)",
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "optional": true
-              },
-              "notHosts": {
-                "description": "Hosts to not allow this bypass for (optional)",
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "optional": true
-              },
-              "hostOptIns": {
-                "description": "Hosts where a shim should not be used, but the requests should be allowed after user opt-in.",
-                "type": "boolean",
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "optional": true
-              }
+            "items": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      {
+        "name": "allow",
+        "type": "function",
+        "description": "Set specified URL patterns as intended to be allowed through the content blocker for the specified top hosts",
+        "parameters": [
+          {
+            "name": "allowlistId",
+            "description": "Identfier for the allow-list, so it may be added-to or revoked",
+            "type": "string"
+          },
+          {
+            "name": "patterns",
+            "description": "Array of match patterns",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hosts",
+            "description": "Hosts to allow the patterns on",
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         ],
@@ -58,7 +64,7 @@
       {
         "name": "revoke",
         "type": "function",
-        "description": "Revokes the given allow-list",
+        "description": "Revokes the given allow-list entirely (both shims and allows)",
         "parameters": [
           {
             "name": "allowListId",
