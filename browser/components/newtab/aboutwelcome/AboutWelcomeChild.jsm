@@ -233,6 +233,7 @@ class AboutWelcomeChild extends JSWindowActorChild {
     );
 
     let featureConfig = NimbusFeatures.aboutwelcome.getValue();
+    featureConfig.needDefault = await this.sendQuery("AWPage:NEED_DEFAULT");
     featureConfig.needPin = await this.sendQuery("AWPage:DOES_APP_NEED_PIN");
     let defaults = AboutWelcomeDefaults.getDefaults(featureConfig);
     // FeatureConfig (from prefs or experiments) has higher precendence

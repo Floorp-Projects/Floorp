@@ -39,69 +39,88 @@ describe("MultiStageAboutWelcomeProton module", () => {
 
   describe("AboutWelcomeDefaults for proton", () => {
     const getData = () => AboutWelcomeDefaults.getDefaults({ isProton: true });
-    it("should have 'default' button by default", async () => {
+    async function prepConfig(config) {
+      return AboutWelcomeDefaults.prepareContentForReact({
+        ...(await getData()),
+        isProton: true,
+        ...config,
+      });
+    }
+    beforeEach(() => {
+      sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
+    });
+    it("should have 'pin' button by default", async () => {
       const data = await getData();
 
       assert.propertyVal(
         data.screens[0].content.primary_button.label,
         "string_id",
-        "mr1-onboarding-set-default-only-primary-button-label"
+        "mr1-onboarding-pin-primary-button-label"
       );
     });
-    it("should have 'primary' button if we need to pin", async () => {
-      const data = await AboutWelcomeDefaults.prepareContentForReact({
-        ...(await getData()),
-        isProton: true,
-        needPin: true,
-      });
+    it("should have 'pin' button if we need default and pin", async () => {
+      const data = await prepConfig({ needDefault: true, needPin: true });
 
       assert.propertyVal(
         data.screens[0].content.primary_button.label,
         "string_id",
-        "mr1-onboarding-set-default-pin-primary-button-label"
+        "mr1-onboarding-pin-primary-button-label"
       );
+      assert.propertyVal(data.screens[0], "id", "AW_PIN_FIREFOX");
+      assert.propertyVal(data.screens[1], "id", "AW_SET_DEFAULT");
+      assert.lengthOf(data.screens, 4);
+    });
+    it("should keep 'pin' and remove 'default' if already default", async () => {
+      const data = await prepConfig({ needPin: true });
+
+      assert.propertyVal(data.screens[0], "id", "AW_PIN_FIREFOX");
+      assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
+      assert.lengthOf(data.screens, 3);
+    });
+    it("should switch to 'default' if already pinned", async () => {
+      const data = await prepConfig({ needDefault: true });
+
+      assert.propertyVal(data.screens[0], "id", "AW_ONLY_DEFAULT");
+      assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
+      assert.lengthOf(data.screens, 3);
+    });
+    it("should switch to 'start' if already pinned and default", async () => {
+      const data = await prepConfig();
+
+      assert.propertyVal(data.screens[0], "id", "AW_GET_STARTED");
+      assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
+      assert.lengthOf(data.screens, 3);
     });
     it("should have a FxA button", async () => {
-      sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
-
-      const data = await AboutWelcomeDefaults.prepareContentForReact({
-        ...(await getData()),
-        isProton: true,
-      });
+      const data = await prepConfig();
 
       assert.notProperty(data, "skipFxA");
       assert.property(data.screens[0].content, "secondary_button_top");
     });
     it("should remove the FxA button if pref disabled", async () => {
-      sandbox.stub(global.Services.prefs, "getBoolPref").returns(false);
+      global.Services.prefs.getBoolPref.returns(false);
 
-      const data = await AboutWelcomeDefaults.prepareContentForReact({
-        ...(await getData()),
-        isProton: true,
-      });
+      const data = await prepConfig();
 
       assert.property(data, "skipFxA", true);
       assert.notProperty(data.screens[0].content, "secondary_button_top");
     });
     it("should have an image caption", async () => {
-      const data = await AboutWelcomeDefaults.prepareContentForReact({
-        ...(await getData()),
-        isProton: true,
-      });
+      const data = await prepConfig();
 
       assert.property(data.screens[0].content, "help_text");
     });
     it("should remove the caption if deleteIfNotEn is true", async () => {
       sandbox.stub(global.Services.locale, "appLocaleAsBCP47").value("de");
 
-      let defaults = {
+      const data = await prepConfig({
         id: "DEFAULT_ABOUTWELCOME_PROTON",
         template: "multistage",
         transitions: true,
         background_url: `chrome://activity-stream/content/data/content/assets/proton-bkg.jpg`,
         screens: [
           {
-            id: "AW_SET_DEFAULT",
+            id: "AW_PIN_FIREFOX",
             order: 0,
             content: {
               help_text: {
@@ -113,11 +132,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
             },
           },
         ],
-      };
-
-      const data = await AboutWelcomeDefaults.prepareContentForReact({
-        ...defaults,
-        isProton: true,
       });
 
       assert.notProperty(data.screens[0].content.help_text, "text");

@@ -263,6 +263,12 @@ class AboutWelcomeParent extends JSWindowActorParent {
         return ShellService.doesAppNeedPin();
       case "AWPage:IS_DEFAULT_BROWSER":
         return ShellService.isDefaultBrowser();
+      case "AWPage:NEED_DEFAULT":
+        // Only need to set default if we're supposed to check and not default.
+        return (
+          Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser") &&
+          !ShellService.isDefaultBrowser()
+        );
       case "AWPage:WAIT_FOR_MIGRATION_CLOSE":
         return new Promise(resolve =>
           Services.ww.registerNotification(function observer(subject, topic) {
