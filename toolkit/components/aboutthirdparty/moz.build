@@ -9,6 +9,7 @@ with Files("**"):
 
 FINAL_LIBRARY = "xul"
 
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 JAR_MANIFESTS += ["jar.mn"]
 XPCOM_MANIFESTS += ["components.conf"]
@@ -21,6 +22,7 @@ EXPORTS.mozilla += [
 
 SOURCES += [
     "AboutThirdParty.cpp",
+    "AboutThirdParty_TestMethods.cpp",
     "AboutThirdPartyUtils.cpp",
     "MsiDatabase.cpp",
 ]
@@ -30,3 +32,5 @@ DELAYLOAD_DLLS += ["msi.dll"]
 
 if CONFIG["ENABLE_TESTS"]:
     DIRS += ["tests/gtest"]
+
+TEST_DIRS += ["tests/TestShellEx"]
