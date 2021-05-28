@@ -106,11 +106,7 @@
 .pkt_ext_containersignup .pkt_ext_learnmore {
     font-size: 0.9em;
 }
-.pkt_ext_containersignup .pkt_ext_learnmoreinactive {
-    visibility: hidden;
-}
-.pkt_ext_signupdetail,
-.los_variant_bottom {
+.pkt_ext_signupdetail {
     overflow: hidden;
 }
 .pkt_ext_signupdetail h4 {
@@ -142,17 +138,6 @@
     font-size: 0.9em;
     max-width: 320px;
     margin-top: 15px;
-}
-.pkt_ext_containersignup .tryitnowspace {
-    margin-top: 22px;
-}
-.pkt_ext_signupdetail p.pkt_ext_tos {
-    color: #777;
-    font-size: 0.7em;
-    line-height: 1.5;
-    margin-top: 17px;
-    padding-top: 0;
-    max-width: 190px;
 }
 
 /*=Core detail - storyboard
@@ -277,7 +262,6 @@
     opacity: 0.9;
 }
 .pkt_ext_containersignup .signup-btn-firefox,
-.pkt_ext_containersignup .signup-btn-tryitnow,
 .pkt_ext_containersignup .signup-btn-email,
 .pkt_ext_containersignup .signupinterim-btn-login,
 .pkt_ext_containersignup .signupinterim-btn-signup,
@@ -291,14 +275,10 @@
     position: relative;
     z-index: 10;
 }
-.pkt_ext_containersignup .signup-btn-tryitnow,
 .pkt_ext_containersignup .signup-btn-firefox {
     min-width: 14.5em;
     position: relative;
     padding: 0;
-}
-.pkt_ext_containersignup .signup-btn-tryitnow{
-    margin-top: 25px;
 }
 .pkt_ext_containersignup .signup-btn-firefox .logo {
     background: url(../img/signup_firefoxlogo@1x.png) center center no-repeat;
@@ -318,7 +298,6 @@
 .pkt_ext_containersignup .forgotreset-btn-change {
     margin-bottom: 2em;
 }
-.pkt_ext_containersignup .signup-btn-tryitnow .text,
 .pkt_ext_containersignup .signup-btn-firefox .text {
     display: inline-block;
     padding: 0.8em 1.625em;
@@ -326,7 +305,6 @@
     text-shadow: none;
     white-space: nowrap;
 }
-.pkt_ext_containersignup .signup-btn-tryitnow .text,
 .pkt_ext_containersignup .signup-btn-firefox .text {
     color: #fff;
 }
@@ -348,27 +326,22 @@
     margin-bottom: 0.5em;
 }
 .pkt_ext_signup_ja .signup-btn-firefox .text,
-.pkt_ext_signup_ja .signup-btn-tryitnow .text,
-.pkt_ext_signup_ru .signup-btn-firefox .text,
-.pkt_ext_signup_ru .signup-btn-tryitnow .text {
+.pkt_ext_signup_ru .signup-btn-firefox .text {
     inset-inline-start: 15px;
 }
 .pkt_ext_signup_de .signup-btn-firefox .logo,
-.pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-firefox .logo,
 .pkt_ext_signup_ja .signup-btn-firefox .logo,
 .pkt_ext_signup_ru .signup-btn-firefox .logo {
     height: 2.4em;
 }
 @media (min-resolution: 1.1dppx) {
     .pkt_ext_signup_de .signup-btn-firefox .logo,
-    .pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-firefox .logo,
     .pkt_ext_signup_ja .signup-btn-firefox .logo,
     .pkt_ext_signup_ru .signup-btn-firefox .logo {
         height: 2.5em;
     }
 }
 .pkt_ext_signup_de .signup-btn-email,
-.pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-email,
 .pkt_ext_signup_ja .signup-btn-email,
 .pkt_ext_signup_ru .signup-btn-email {
     min-width: 13em;
@@ -384,119 +357,4 @@
 .pkt_ext_signup_overflow.pkt_ext_signup_ja .signup-btn-firefox .logo,
 .pkt_ext_signup_overflow.pkt_ext_signup_ru .signup-btn-firefox .logo {
     display: none;
-}
-
-/* Signup variants */
-/* TODO: Delete post-experiment */
-
-.los_variant {
-    background-color: #fff;
-    padding: 0;
-    text-align: start;
-}
-
-.los_variant_top {
-    padding: 24px;
-}
-
-.los_variant_bottom {
-    text-align: start;
-    padding: 26px 22px 0;
-}
-
-.los_variant_a .los_variant_bottom {
-    text-align: center;
-}
-
-.los_variant_bottom .los_variant_button {
-    font-style: normal;
-    font-weight: 500;
-    font-size: 1.1em;
-    line-height: 24px;
-    text-align: center;
-    color: #FFFFFF;
-    border-radius: 4px;
-    background: #0060DF;
-    display: inline-block;
-    padding: 8px 16px;
-    margin-bottom: 16px
-}
-
-.los_variant_a .los_variant_bottom .los_variant_button {
-    display: block;
-}
-
-.los_variant_bottom .los_variant_button:hover {
-    color: #fff;
-}
-
-.los_variant_c .los_variant_bottom {
-    border-top: 1px solid #D7D7DB;
-    margin-top: 20px;
-}
-
-.los_variant_bottom .los_variant_sub {
-    font-style: normal;
-    font-weight: normal;
-    font-size: 0.9em;
-    line-height: 16px;
-    color: #737373;
-}
-
-.los_variant_bottom .los_variant_sub a {
-    color: #0060DF;
-}
-
-.los_variant_top a {
-    font-size: 1em;
-}
-
-.los_variant_a .los_variant_top {
-    background: #e8f7f6 url(../img/variant_a.png) bottom right no-repeat;
-    background-size: contain;
-    padding-block: 6px 24px;
-    padding-inline: 24px 102px;
-    height: 260px;
-}
-
-.los_variant_a .los_variant_top p {
-    margin-bottom: 0;
-}
-
-.los_variant_b .los_variant_top {
-    background: #DCEAFF url(../img/variant_b.png) bottom right no-repeat;
-    background-size: 80%;
-    padding: 24px 24px 160px;
-}
-
-.los_variant_top:dir(rtl) {
-     background-position-x: left;
-}
-
-.los_variant_b .los_variant_top a {
-    font-size: 1em;
-    line-height: 18px;
-    text-decoration-line: underline;
-    color: #0C0C0D;
-}
-
-.los_variant_c .los_variant_top {
-    background: #fff url(../img/variant_c.png) bottom right no-repeat;
-    background-size: contain;
-    padding: 24px 24px 160px;
-}
-
-.los_variant h1 {
-    font-weight: 600;
-    font-size: 1.1em;
-    line-height: 20px;
-    color: #0C0C0D;
-}
-
-.los_variant p {
-    font-style: normal;
-    font-weight: normal;
-    font-size: 1em;
-    line-height: 18px;
-    color: #0C0C0D;
 }
