@@ -21,4 +21,12 @@ EXPORTS.mozilla += [
 
 SOURCES += [
     "AboutThirdParty.cpp",
+    "AboutThirdPartyUtils.cpp",
+    "MsiDatabase.cpp",
 ]
+
+OS_LIBS += ["msi"]
+DELAYLOAD_DLLS += ["msi.dll"]
+
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["tests/gtest"]
