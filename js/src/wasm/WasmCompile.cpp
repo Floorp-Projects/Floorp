@@ -19,7 +19,6 @@
 #include "wasm/WasmCompile.h"
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Unused.h"
 
 #include <algorithm>
 

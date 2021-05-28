@@ -26,7 +26,6 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Unused.h"
 
 #include <type_traits>
 
@@ -69,7 +68,6 @@ using mozilla::Nothing;
 using mozilla::PodCopy;
 using mozilla::PodZero;
 using mozilla::Some;
-using mozilla::Unused;
 
 class Code;
 class DebugState;

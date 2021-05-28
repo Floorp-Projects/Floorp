@@ -19,7 +19,6 @@
 #include "wasm/WasmValidate.h"
 
 #include "mozilla/CheckedInt.h"
-#include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"
 
 #include "jit/JitOptions.h"
@@ -38,7 +37,6 @@ using mozilla::CheckedInt;
 using mozilla::CheckedInt32;
 using mozilla::IsUtf8;
 using mozilla::Span;
-using mozilla::Unused;
 
 // Misc helpers.
 
