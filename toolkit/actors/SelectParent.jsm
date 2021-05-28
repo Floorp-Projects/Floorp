@@ -158,6 +158,9 @@ var SelectParentHelper = {
           // scrollbar-width doesn't inherit.
           property = "--content-select-scrollbar-width";
         }
+        if (property == "color") {
+          property = "--panel-color";
+        }
         sheet.cssRules[0].style.setProperty(property, value);
       }
       // Some webpages set the <select> backgroundColor to transparent,
@@ -177,7 +180,7 @@ var SelectParentHelper = {
         sheet.cssRules[0].style["background-color"] = "";
         // If the background is set, we also make sure we set the color, to
         // prevent contrast issues.
-        sheet.cssRules[0].style.color = selectStyle.color;
+        sheet.cssRules[0].style.setProperty("--panel-color", selectStyle.color);
       }
       if (addedRule) {
         sheet.insertRule(

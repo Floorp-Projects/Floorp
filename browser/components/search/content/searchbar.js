@@ -749,7 +749,7 @@
               // least 3 buttons, so take that into account here.
               width = Math.max(width, popup.oneOffButtons.buttonWidth * 3);
             }
-            popup.style.width = width + "px";
+            popup.style.setProperty("--panel-width", width + "px");
           });
 
           popup._invalidate();

@@ -19,9 +19,9 @@ html|input[nomatch="true"][highlightnonmatches="true"] {
 
 panel[type="autocomplete-richlistbox"] {
   appearance: none;
-  padding: 0;
-  color: FieldText;
-  background-color: Field;
+  --panel-color: FieldText;
+  --panel-background: Field;
+  --panel-padding: 0;
 }
 
 /* ::::: richlistbox autocomplete ::::: */

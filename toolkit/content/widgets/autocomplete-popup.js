@@ -12,6 +12,14 @@
     constructor() {
       super();
 
+      this.attachShadow({ mode: "open" });
+
+      {
+        let slot = document.createElement("slot");
+        slot.part = "content";
+        this.shadowRoot.appendChild(slot);
+      }
+
       this.mInput = null;
       this.mPopupOpen = false;
       this._currentIndex = 0;
@@ -193,7 +201,7 @@
     closePopup() {
       if (this.mPopupOpen) {
         this.hidePopup();
-        this.removeAttribute("width");
+        this.style.removeProperty("--panel-width");
       }
     }
 
@@ -258,7 +266,7 @@
         this.selectedIndex = -1;
 
         var width = aElement.getBoundingClientRect().width;
-        this.setAttribute("width", width > 100 ? width : 100);
+        this.style.setProperty("--panel-width", Math.max(width, 100) + "px");
         // invalidate() depends on the width attribute
         this._invalidate();
 

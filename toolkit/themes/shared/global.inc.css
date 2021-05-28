@@ -30,6 +30,14 @@
   --toolbarbutton-icon-fill: currentColor;
 }
 
+panel[type=arrow] {
+  --panel-background: var(--arrowpanel-background);
+  --panel-color: var(--arrowpanel-color);
+  --panel-border-color: var(--arrowpanel-border-color);
+  --panel-border-radius: var(--arrowpanel-border-radius);
+  --panel-padding: var(--arrowpanel-padding);
+}
+
 @media not (-moz-proton-doorhangers) {
 :root {
   --popup-notification-body-width: 25em;

@@ -106,12 +106,20 @@ add_task(async function() {
   let popupRect = selectPopup.getBoundingClientRect();
   is(
     popupRect.x,
-    iframeX + iframeBorderLeft + selectRect.x - newWin.mozInnerScreenX,
+    iframeX +
+      iframeBorderLeft +
+      selectRect.x -
+      newWin.mozInnerScreenX +
+      parseFloat(getComputedStyle(selectPopup).marginLeft),
     "x position of the popup"
   );
 
   let expectedYPosition =
-    iframeY + selectRect.y + iframeBorderTop - newWin.mozInnerScreenY;
+    iframeY +
+    selectRect.y +
+    iframeBorderTop -
+    newWin.mozInnerScreenY +
+    parseFloat(getComputedStyle(selectPopup).marginTop);
   // On platforms other than MaxOSX the popup menu is positioned below the
   // option element.
   if (!navigator.platform.includes("Mac")) {
