@@ -97,6 +97,7 @@ Maybe<wr::BlobImageKey> SourceSurfaceBlobImage::UpdateKey(
 
       key.emplace(newEntry.ref().mBlobKey);
       entry = std::move(newEntry.ref());
+      MOZ_ASSERT(!entry.mDirty);
     }
   }
 
