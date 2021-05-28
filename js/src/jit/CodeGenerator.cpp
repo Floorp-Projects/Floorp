@@ -16,7 +16,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Tuple.h"
-#include "mozilla/Unused.h"
 
 #include <limits>
 #include <type_traits>

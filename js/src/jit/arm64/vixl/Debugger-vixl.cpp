@@ -30,7 +30,6 @@
 
 #include "jit/arm64/vixl/Debugger-vixl.h"
 
-#include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 
 #include "js/AllocPolicy.h"
@@ -1110,7 +1109,6 @@ bool DebugCommand::Match(const char* name, const char** aliases) {
 
 
 DebugCommand* DebugCommand::Parse(char* line) {
-  using mozilla::Unused;
   TokenVector args;
 
   for (char* chunk = strtok(line, " \t");
@@ -1122,15 +1120,15 @@ DebugCommand* DebugCommand::Parse(char* line) {
       Token* format = FormatToken::Tokenize(dot + 1);
       if (format != NULL) {
         *dot = '\0';
-        Unused << args.append(Token::Tokenize(chunk));
-        Unused << args.append(format);
+        (void)args.append(Token::Tokenize(chunk));
+        (void)args.append(format);
       } else {
         // Error while parsing the format, push the UnknownToken so an error
         // can be accurately reported.
-        Unused << args.append(Token::Tokenize(chunk));
+        (void)args.append(Token::Tokenize(chunk));
       }
     } else {
-      Unused << args.append(Token::Tokenize(chunk));
+      (void)args.append(Token::Tokenize(chunk));
     }
   }
 

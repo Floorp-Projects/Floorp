@@ -198,7 +198,7 @@ Maybe<InlinableCallData> FindInlinableCallData(ICCacheIRStub* stub) {
         MOZ_ASSERT(data.isNothing());
         calleeGuardOperand = reader.objOperandId();
         uint32_t targetOffset = reader.stubOffset();
-        mozilla::Unused << reader.stubOffset();  // nargsAndFlags
+        (void)reader.stubOffset();  // nargsAndFlags
         uintptr_t rawTarget = stubInfo->getStubRawWord(stubData, targetOffset);
         target = reinterpret_cast<JSFunction*>(rawTarget);
         break;
@@ -209,7 +209,7 @@ Maybe<InlinableCallData> FindInlinableCallData(ICCacheIRStub* stub) {
         uint32_t targetOffset = reader.stubOffset();
         uintptr_t rawTarget = stubInfo->getStubRawWord(stubData, targetOffset);
         target = reinterpret_cast<BaseScript*>(rawTarget)->function();
-        mozilla::Unused << reader.stubOffset();  // nargsAndFlags
+        (void)reader.stubOffset();  // nargsAndFlags
         break;
       }
       case CacheOp::CallScriptedFunction: {
@@ -290,7 +290,7 @@ Maybe<InlinableGetterData> FindInlinableGetterData(ICCacheIRStub* stub) {
         data->target = reinterpret_cast<JSFunction*>(rawTarget);
 
         data->sameRealm = reader.readBool();
-        mozilla::Unused << reader.stubOffset();  // nargsAndFlags
+        (void)reader.stubOffset();  // nargsAndFlags
 
         data->endOfSharedPrefix = opStart;
         break;
@@ -309,7 +309,7 @@ Maybe<InlinableGetterData> FindInlinableGetterData(ICCacheIRStub* stub) {
         data->icScript = reinterpret_cast<ICScript*>(rawICScript);
 
         data->sameRealm = reader.readBool();
-        mozilla::Unused << reader.stubOffset();  // nargsAndFlags
+        (void)reader.stubOffset();  // nargsAndFlags
 
         data->endOfSharedPrefix = opStart;
         break;
@@ -356,7 +356,7 @@ Maybe<InlinableSetterData> FindInlinableSetterData(ICCacheIRStub* stub) {
 
         data->rhsOperand = reader.valOperandId();
         data->sameRealm = reader.readBool();
-        mozilla::Unused << reader.stubOffset();  // nargsAndFlags
+        (void)reader.stubOffset();  // nargsAndFlags
 
         data->endOfSharedPrefix = opStart;
         break;
@@ -377,7 +377,7 @@ Maybe<InlinableSetterData> FindInlinableSetterData(ICCacheIRStub* stub) {
         data->icScript = reinterpret_cast<ICScript*>(rawICScript);
 
         data->sameRealm = reader.readBool();
-        mozilla::Unused << reader.stubOffset();  // nargsAndFlags
+        (void)reader.stubOffset();  // nargsAndFlags
 
         data->endOfSharedPrefix = opStart;
         break;

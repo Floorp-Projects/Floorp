@@ -11,7 +11,6 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TemplateLib.h"
-#include "mozilla/Unused.h"
 
 #include "jsfriendapi.h"
 #include "jslibmath.h"
