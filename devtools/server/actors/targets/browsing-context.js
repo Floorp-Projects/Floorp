@@ -1367,7 +1367,13 @@ const browsingContextTargetPrototype = {
   _changeTopLevelDocument(window) {
     // Fake a will-navigate on the previous document
     // to let a chance to unregister it
-    this._willNavigate(this.window, window.location.href, null, true);
+    this._willNavigate({
+      window: this.window,
+      newURI: window.location.href,
+      request: null,
+      isFrameSwitching: true,
+      navigationStart: Date.now(),
+    });
 
     this._windowDestroyed(this.window, null, true);
 
@@ -1437,7 +1443,13 @@ const browsingContextTargetPrototype = {
    * Start notifying server and client about a new document being loaded in the
    * currently targeted browsing context.
    */
-  _willNavigate(window, newURI, request, isFrameSwitching = false) {
+  _willNavigate({
+    window,
+    newURI,
+    request,
+    isFrameSwitching = false,
+    navigationStart,
+  }) {
     let isTopLevel = window == this.window;
     let reset = false;
 
@@ -1462,10 +1474,11 @@ const browsingContextTargetPrototype = {
     // starts, (all pending user prompts are dealt with), but before the first
     // request starts.
     this.emit("will-navigate", {
-      window: window,
-      isTopLevel: isTopLevel,
-      newURI: newURI,
-      request: request,
+      window,
+      isTopLevel,
+      newURI,
+      request,
+      navigationStart,
     });
 
     // We don't do anything for inner frames here.
@@ -1838,6 +1851,12 @@ DebuggerProgressListener.prototype = {
     const isDocument = flag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
     const isWindow = flag & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
 
+    // Ideally, we would fetch navigationStart from window.performance.timing.navigationStart
+    // but as WindowGlobal isn't instantiated yet we don't have access to it.
+    // This is ultimately handed over to DocumentEventListener, which uses this.
+    // See its comment about WILL_NAVIGATE_TIME_SHIFT for more details about the related workaround.
+    const navigationStart = Date.now();
+
     // Catch any iframe location change
     if (isDocument && isStop) {
       // Watch document stop to ensure having the new iframe url.
@@ -1849,7 +1868,13 @@ DebuggerProgressListener.prototype = {
       // One of the earliest events that tells us a new URI
       // is being loaded in this window.
       const newURI = request instanceof Ci.nsIChannel ? request.URI.spec : null;
-      this._targetActor._willNavigate(window, newURI, request);
+      this._targetActor._willNavigate({
+        window,
+        newURI,
+        request,
+        isFrameSwitching: false,
+        navigationStart,
+      });
     }
     if (isWindow && isStop) {
       // Don't dispatch "navigate" event just yet when there is a redirect to

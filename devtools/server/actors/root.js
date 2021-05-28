@@ -132,6 +132,9 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       noPauseOnThreadActorAttach: true,
       // @backward-compat { version 87 } ThreadActor supports isAttached request
       supportsThreadActorIsAttached: true,
+      // @backward-compat { version 90 } DOCUMENT_EVENT's will-navigate start being notified,
+      //                                 to replace target actor's will-navigate event
+      supportsDocumentEventWillNavigate: true,
     };
   },
 
