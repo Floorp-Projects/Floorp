@@ -60,6 +60,8 @@ class NodeOffsetRange {
   NodeOffsetRange(NodeOffset b, NodeOffset e)
       : mBegin(std::move(b)), mEnd(std::move(e)) {}
 
+  bool operator==(const nsRange& aRange) const;
+
   const NodeOffset& Begin() const { return mBegin; }
 
   const NodeOffset& End() const { return mEnd; }

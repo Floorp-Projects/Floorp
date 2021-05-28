@@ -113,6 +113,10 @@ bool NodeOffset::operator==(
          (*rangeBoundaryOffset == static_cast<uint32_t>(mOffset));
 }
 
+bool NodeOffsetRange::operator==(const nsRange& aRange) const {
+  return mBegin == aRange.StartRef() && mEnd == aRange.EndRef();
+}
+
 // static
 Maybe<mozInlineSpellWordUtil> mozInlineSpellWordUtil::Create(
     const TextEditor& aTextEditor) {
