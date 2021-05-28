@@ -31,6 +31,24 @@ class InteractionsChild extends JSWindowActorChild {
         }
         break;
       }
+      case "pagehide": {
+        if (
+          !this.docShell.currentDocumentChannel ||
+          !(this.docShell.currentDocumentChannel instanceof Ci.nsIHttpChannel)
+        ) {
+          return;
+        }
+
+        if (!this.docShell.currentDocumentChannel.requestSucceeded) {
+          return;
+        }
+
+        let docInfo = await this.#getDocumentInfo();
+        if (docInfo) {
+          this.sendAsyncMessage("Interactions:PageHide");
+        }
+        break;
+      }
     }
   }
 
@@ -50,6 +68,7 @@ class InteractionsChild extends JSWindowActorChild {
       return null;
     }
     return {
+      isActive: this.manager.browsingContext.isActive,
       url: doc.documentURIObject.specIgnoringRef,
     };
   }
