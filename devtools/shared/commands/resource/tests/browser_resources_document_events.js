@@ -24,9 +24,7 @@ async function testDocumentEventResources() {
   const tab = await addTab(url);
 
   const listener = new ResourceListener();
-  const { client, resourceCommand, targetCommand } = await initResourceCommand(
-    tab
-  );
+  const { commands } = await initResourceCommand(tab);
 
   info(
     "Check whether the document events are fired correctly even when the document was already loaded"
@@ -34,10 +32,23 @@ async function testDocumentEventResources() {
   const onLoadingAtInit = listener.once("dom-loading");
   const onInteractiveAtInit = listener.once("dom-interactive");
   const onCompleteAtInit = listener.once("dom-complete");
-  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
-    onAvailable: parameters => listener.dispatch(parameters),
-  });
-  await assertPromises(onLoadingAtInit, onInteractiveAtInit, onCompleteAtInit);
+  await commands.resourceCommand.watchResources(
+    [commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+    {
+      onAvailable: parameters => listener.dispatch(parameters),
+    }
+  );
+  await assertPromises(
+    commands,
+    // targetBeforeNavigation is only used when there is a will-navigate and a navigate, but there is none here
+    null,
+    // As we started watching on an already loaded document, and no navigation happened since we called watchResources,
+    // we don't have any will-navigate event
+    null,
+    onLoadingAtInit,
+    onInteractiveAtInit,
+    onCompleteAtInit
+  );
   ok(
     true,
     "Document events are fired even when the document was already loaded"
@@ -84,11 +95,16 @@ async function testDocumentEventResources() {
   );
 
   info("Check whether the document events are fired correctly when reloading");
+  const onWillNavigate = listener.once("will-navigate");
   const onLoadingAtReloaded = listener.once("dom-loading");
   const onInteractiveAtReloaded = listener.once("dom-interactive");
   const onCompleteAtReloaded = listener.once("dom-complete");
+  const targetBeforeNavigation = commands.targetCommand.targetFront;
   gBrowser.reloadTab(tab);
   await assertPromises(
+    commands,
+    targetBeforeNavigation,
+    onWillNavigate,
     onLoadingAtReloaded,
     onInteractiveAtReloaded,
     onCompleteAtReloaded
@@ -136,8 +152,7 @@ async function testDocumentEventResources() {
     `resource ${domCompleteResource.name} does not have a title property after reloading`
   );
 
-  targetCommand.destroy();
-  await client.close();
+  await commands.destroy();
 }
 
 async function testDocumentEventResourcesWithIgnoreExistingResources() {
@@ -145,26 +160,29 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
 
   const tab = await addTab("data:text/html,Document Events");
 
-  const { client, resourceCommand, targetCommand } = await initResourceCommand(
-    tab
-  );
+  const { commands } = await initResourceCommand(tab);
 
   info("Check whether the existing document events will not be fired");
   const documentEvents = [];
-  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
-    onAvailable: resources => documentEvents.push(...resources),
-    ignoreExistingResources: true,
-  });
+  await commands.resourceCommand.watchResources(
+    [commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+    {
+      onAvailable: resources => documentEvents.push(...resources),
+      ignoreExistingResources: true,
+    }
+  );
   is(documentEvents.length, 0, "Existing document events are not fired");
 
   info("Check whether the future document events are fired");
+  const targetBeforeNavigation = commands.targetCommand.targetFront;
   gBrowser.reloadTab(tab);
-  info("Wait for dom-loading, dom-interactive and dom-complete events");
-  await waitUntil(() => documentEvents.length === 3);
-  assertEvents(...documentEvents);
+  info(
+    "Wait for will-navigate, dom-loading, dom-interactive and dom-complete events"
+  );
+  await waitUntil(() => documentEvents.length === 4);
+  assertEvents(commands, targetBeforeNavigation, ...documentEvents);
 
-  targetCommand.destroy();
-  await client.close();
+  await commands.destroy();
 }
 
 async function testCrossOriginNavigation() {
@@ -172,24 +190,26 @@ async function testCrossOriginNavigation() {
 
   const tab = await addTab("http://example.com/document-builder.sjs?html=com");
 
-  const { client, resourceCommand, targetCommand } = await initResourceCommand(
-    tab
-  );
+  const { commands } = await initResourceCommand(tab);
 
   const documentEvents = [];
-  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
-    onAvailable: resources => documentEvents.push(...resources),
-    ignoreExistingResources: true,
-  });
+  await commands.resourceCommand.watchResources(
+    [commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+    {
+      onAvailable: resources => documentEvents.push(...resources),
+      ignoreExistingResources: true,
+    }
+  );
   // Wait for some time for extra safety
   await wait(1000);
   is(documentEvents.length, 0, "Existing document events are not fired");
 
   info("Navigate to another process");
-  const onSwitched = targetCommand.once("switched-target");
+  const onSwitched = commands.targetCommand.once("switched-target");
   const netUrl =
     "http://example.net/document-builder.sjs?html=<head><title>titleNet</title></head>net";
   const onLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  const targetBeforeNavigation = commands.targetCommand.targetFront;
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, netUrl);
   await onLoaded;
 
@@ -198,25 +218,53 @@ async function testCrossOriginNavigation() {
     await onSwitched;
   }
 
-  info("Wait for dom-loading, dom-interactive and dom-complete events");
-  await waitUntil(() => documentEvents.length >= 3);
-  assertEvents(...documentEvents);
+  info(
+    "Wait for will-navigate, dom-loading, dom-interactive and dom-complete events"
+  );
+  await waitUntil(() => documentEvents.length >= 4);
+  assertEvents(commands, targetBeforeNavigation, ...documentEvents);
 
   // Wait for some time in order to let a chance to have duplicated dom-loading events
   await wait(1000);
 
   is(
     documentEvents.length,
-    3,
-    "There is no duplicated event and only the 3 expected DOCUMENT_EVENT states"
+    4,
+    "There is no duplicated event and only the 4 expected DOCUMENT_EVENT states"
   );
-  const [loadingEvent, interactiveEvent, completeEvent] = documentEvents;
+  const [
+    willNavigateEvent,
+    loadingEvent,
+    interactiveEvent,
+    completeEvent,
+  ] = documentEvents;
+
+  is(
+    willNavigateEvent.name,
+    "will-navigate",
+    "The first DOCUMENT_EVENT is will-navigate"
+  );
+  is(
+    loadingEvent.name,
+    "dom-loading",
+    "The second DOCUMENT_EVENT is dom-loading"
+  );
+  is(
+    interactiveEvent.name,
+    "dom-interactive",
+    "The third DOCUMENT_EVENT is dom-interactive"
+  );
+  is(
+    completeEvent.name,
+    "dom-complete",
+    "The fourth DOCUMENT_EVENT is dom-complete"
+  );
 
   // followWindowGlobalLifeCycle will be true when enabling server side target switching,
   // even when fission is off.
   if (
     isFissionEnabled() ||
-    targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle
+    commands.targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle
   ) {
     is(
       loadingEvent.shouldBeIgnoredAsRedundantWithTargetAvailable,
@@ -264,25 +312,66 @@ async function testCrossOriginNavigation() {
     `resource ${completeEvent.name} does not have a title property after reloading`
   );
 
-  targetCommand.destroy();
-  await client.close();
+  await commands.destroy();
 }
 
-async function assertPromises(onLoading, onInteractive, onComplete) {
+async function assertPromises(
+  commands,
+  targetBeforeNavigation,
+  onWillNavigate,
+  onLoading,
+  onInteractive,
+  onComplete
+) {
+  const willNavigateEvent = await onWillNavigate;
   const loadingEvent = await onLoading;
   const interactiveEvent = await onInteractive;
   const completeEvent = await onComplete;
-  assertEvents(loadingEvent, interactiveEvent, completeEvent);
+  assertEvents(
+    commands,
+    targetBeforeNavigation,
+    willNavigateEvent,
+    loadingEvent,
+    interactiveEvent,
+    completeEvent
+  );
 }
 
-function assertEvents(loadingEvent, interactiveEvent, completeEvent) {
-  is(loadingEvent.name, "dom-loading", "First event is dom-loading");
+function assertEvents(
+  commands,
+  targetBeforeNavigation,
+  willNavigateEvent,
+  loadingEvent,
+  interactiveEvent,
+  completeEvent
+) {
+  if (willNavigateEvent) {
+    is(willNavigateEvent.name, "will-navigate", "Received the will-navigate");
+    is(
+      willNavigateEvent.newURI,
+      gBrowser.selectedBrowser.currentURI.spec,
+      "will-navigate newURI is set to the current tab new location"
+    );
+  }
+  is(
+    loadingEvent.name,
+    "dom-loading",
+    "loading received in the exepected order"
+  );
   is(
     interactiveEvent.name,
     "dom-interactive",
-    "First event is dom-interactive"
+    "interactive received in the expected order"
   );
-  is(completeEvent.name, "dom-complete", "First event is dom-complete");
+  is(completeEvent.name, "dom-complete", "complete received last");
+
+  if (willNavigateEvent) {
+    is(
+      typeof willNavigateEvent.time,
+      "number",
+      "Type of time attribute for will-navigate event is correct"
+    );
+  }
   is(
     typeof loadingEvent.time,
     "number",
@@ -299,6 +388,12 @@ function assertEvents(loadingEvent, interactiveEvent, completeEvent) {
     "Type of time attribute for complete event is correct"
   );
 
+  if (willNavigateEvent) {
+    ok(
+      willNavigateEvent.time < loadingEvent.time,
+      "Timestamp for dom-loading event is greater than will-navigate event"
+    );
+  }
   ok(
     loadingEvent.time < interactiveEvent.time,
     "Timestamp for interactive event is greater than loading event"
@@ -306,6 +401,32 @@ function assertEvents(loadingEvent, interactiveEvent, completeEvent) {
   ok(
     interactiveEvent.time < completeEvent.time,
     "Timestamp for complete event is greater than interactive event"
+  );
+
+  const currentTargetFront = commands.targetCommand.targetFront;
+  if (willNavigateEvent) {
+    // If we switched to a new target, this target will be different from currentTargetFront.
+    // This only happen if we navigate to another process or if server target switching is enabled.
+    is(
+      willNavigateEvent.targetFront,
+      targetBeforeNavigation,
+      "will-navigate target was the one before the navigation"
+    );
+  }
+  is(
+    loadingEvent.targetFront,
+    currentTargetFront,
+    "loading target is the current target"
+  );
+  is(
+    interactiveEvent.targetFront,
+    currentTargetFront,
+    "interactive target is the current target"
+  );
+  is(
+    completeEvent.targetFront,
+    currentTargetFront,
+    "complete target is the current target"
   );
 }
 
