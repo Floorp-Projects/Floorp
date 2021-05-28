@@ -9,6 +9,9 @@
         "description": {
           "type": "string"
         },
+        "enabledFallbackPref": {
+          "type": "string"
+        },
         "isEarlyStartup": {
           "type": "boolean",
           "description": "If the feature values should be cached in prefs for fast early startup."
