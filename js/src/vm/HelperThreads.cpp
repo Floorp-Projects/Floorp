@@ -1411,9 +1411,7 @@ void GlobalHelperThreadState::finishThreads() {
       return;
     }
 
-    for (auto& thread : threads(lock)) {
-      thread->setTerminate(lock);
-    }
+    terminating_ = true;
 
     notifyAll(GlobalHelperThreadState::PRODUCER, lock);
 
@@ -2383,10 +2381,6 @@ bool HelperThread::init() {
   return thread.init(HelperThread::ThreadMain, this);
 }
 
-void HelperThread::setTerminate(const AutoLockHelperThreadState& lock) {
-  terminate = true;
-}
-
 void HelperThread::join() { thread.join(); }
 
 void HelperThread::ensureRegisteredWithProfiler() {
@@ -2721,7 +2715,7 @@ void HelperThread::threadLoop() {
 
   AutoLockHelperThreadState lock;
 
-  while (!terminate) {
+  while (!HelperThreadState().isTerminating(lock)) {
     // The selectors may depend on the HelperThreadState not changing
     // between task selection and task execution, in particular, on new
     // tasks not being added (because of the lifo structure of the work

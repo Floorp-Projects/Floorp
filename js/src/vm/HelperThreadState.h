@@ -84,6 +84,8 @@ class GlobalHelperThreadState {
   // Number of threads to create. May be accessed without locking.
   size_t threadCount;
 
+  bool terminating_ = false;
+
   typedef Vector<jit::IonCompileTask*, 0, SystemAllocPolicy>
       IonCompileTaskVector;
   using IonFreeTaskVector =
@@ -215,6 +217,10 @@ class GlobalHelperThreadState {
   void notifyAll(CondVar which, const AutoLockHelperThreadState&);
 
   bool useInternalThreadPool(const AutoLockHelperThreadState& locked);
+
+  bool isTerminating(const AutoLockHelperThreadState& locked) const {
+    return terminating_;
+  }
 
  private:
   void notifyOne(CondVar which, const AutoLockHelperThreadState&);
@@ -446,19 +452,12 @@ class HelperThread {
    */
   ProfilingStack* profilingStack = nullptr;
 
-  /*
-   * Indicate to a thread that it should terminate itself. This is only read
-   * or written with the helper thread state lock held.
-   */
-  bool terminate = false;
-
  public:
   HelperThread();
   [[nodiscard]] bool init();
 
   ThreadId threadId() { return thread.get_id(); }
 
-  void setTerminate(const AutoLockHelperThreadState& lock);
   void join();
 
   static void ThreadMain(void* arg);
