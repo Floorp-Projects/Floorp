@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AttributionCode: "resource:///modules/AttributionCode.jsm",
   Services: "resource://gre/modules/Services.jsm",
-  ShellService: "resource:///modules/ShellService.jsm",
 });
 
 const DEFAULT_WELCOME_CONTENT = {
@@ -441,8 +440,8 @@ const RULES = [
   },
   {
     description: "Windows pin to task bar screen",
-    async getDefaults() {
-      if (await ShellService.doesAppNeedPin()) {
+    getDefaults(featureConfig) {
+      if (featureConfig.needPin) {
         return {
           template: "multistage",
           screens: [
@@ -508,9 +507,9 @@ const RULES = [
   },
 ];
 
-async function getDefaults(featureConfig) {
+function getDefaults(featureConfig) {
   for (const rule of RULES) {
-    const result = await rule.getDefaults(featureConfig);
+    const result = rule.getDefaults(featureConfig);
     if (result) {
       // Make a deep copy of the object to avoid editing the original default.
       return Cu.cloneInto(result, {});
@@ -585,7 +584,7 @@ async function prepareContentForReact(content) {
   }
 
   // Switch to "primary" if we also need to pin.
-  if (await ShellService.doesAppNeedPin()) {
+  if (content.needPin) {
     const defaultScreenIndex = content.screens?.findIndex(screen =>
       screen.id.startsWith("AW_SET_DEFAULT")
     );

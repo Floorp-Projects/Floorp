@@ -84,7 +84,7 @@ add_task(async function stop_asking() {
 });
 
 add_task(async function primary_default() {
-  const mock = mockShell();
+  const mock = mockShell({ isPinned: true });
   const histogram = getHistogram();
 
   await showAndWaitForModal(win => {
@@ -102,7 +102,7 @@ add_task(async function primary_default() {
   Assert.equal(
     mock.pinCurrentAppToTaskbar.callCount,
     0,
-    "Primary button doesn't pin if can't pin"
+    "Primary button doesn't pin if already pinned"
   );
   AssertHistogram(histogram, "accept");
 });

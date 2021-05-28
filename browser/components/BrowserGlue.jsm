@@ -4597,6 +4597,10 @@ var DefaultBrowserCheck = {
     );
     // Resolve the translations for the prompt elements and return only the
     // string values
+    const pinMessage =
+      AppConstants.platform == "macosx"
+        ? "default-browser-prompt-message-pin-mac"
+        : "default-browser-prompt-message-pin";
     let [promptTitle, promptMessage, askLabel, yesButton, notNowButton] = (
       await win.document.l10n.formatMessages([
         {
@@ -4605,9 +4609,7 @@ var DefaultBrowserCheck = {
             : "default-browser-prompt-title-alt",
         },
         {
-          id: needPin
-            ? "default-browser-prompt-message-pin"
-            : "default-browser-prompt-message-alt",
+          id: needPin ? pinMessage : "default-browser-prompt-message-alt",
         },
         { id: "default-browser-prompt-checkbox-not-again-label" },
         {

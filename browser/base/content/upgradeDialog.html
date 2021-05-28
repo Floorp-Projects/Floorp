@@ -15,10 +15,9 @@
   <script src="chrome://browser/content/upgradeDialog.js"></script>
 </head>
 <body role="dialog" aria-labelledby="title" aria-describedby="subtitle">
+  <img class="logo" role="presentation" src="chrome://branding/content/about-logo.svg"/>
   <h1 id="title" aria-live="polite"></h1>
   <h2 id="subtitle"></h2>
-  <spacer role="presentation"></spacer>
-  <div class="image"></div>
   <ul id="items" class="items">
     <li>
       <h2 data-l10n-id="upgrade-dialog-new-item-menu-title"></h2>
@@ -40,7 +39,6 @@
     <input type="radio" name="theme" data-l10n-id="upgrade-dialog-theme-alpenglow"></input>
     <input type="radio" name="theme" data-l10n-id="upgrade-dialog-theme-keep"></input>
   </div>
-  <spacer role="presentation"></spacer>
   <button id="primary" class="primary" aria-describedby="items"></button>
   <button id="secondary" class="text-link"></button>
   <h3 class="steps" aria-hidden="true"><span>•</span></h3>

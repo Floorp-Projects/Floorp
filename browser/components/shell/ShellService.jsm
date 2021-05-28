@@ -143,7 +143,21 @@ let ShellServiceInternal = {
       .add(setAsDefaultError);
   },
 
+  /**
+   * Checks if Firefox app can and isn't pinned to OS "taskbar."
+   *
+   * @throws if not called from main process.
+   */
   async doesAppNeedPin() {
+    if (
+      Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT
+    ) {
+      throw new Components.Exception(
+        "Can't determine pinned from child process",
+        Cr.NS_ERROR_NOT_AVAILABLE
+      );
+    }
+
     // Currently this only works on certain Windows versions.
     try {
       // First check if we can even pin the app where an exception means no.
@@ -153,15 +167,26 @@ let ShellServiceInternal = {
 
       // Then check if we're already pinned.
       return !(await this.shellService.isCurrentAppPinnedToTaskbarAsync());
-    } catch (ex) {
-      return false;
-    }
+    } catch (ex) {}
+
+    // Next check mac pinning to dock.
+    try {
+      return !this.macDockSupport.isAppInDock;
+    } catch (ex) {}
+    return false;
   },
 
+  /**
+   * Pin Firefox app to the OS "taskbar."
+   */
   async pinToTaskbar() {
     if (await this.doesAppNeedPin()) {
       try {
-        this.shellService.pinCurrentAppToTaskbar();
+        if (AppConstants.platform == "win") {
+          this.shellService.pinCurrentAppToTaskbar();
+        } else {
+          this.macDockSupport.ensureAppIsPinnedToDock();
+        }
       } catch (ex) {
         Cu.reportError(ex);
       }
@@ -169,12 +194,10 @@ let ShellServiceInternal = {
   },
 };
 
-XPCOMUtils.defineLazyServiceGetter(
-  ShellServiceInternal,
-  "shellService",
-  "@mozilla.org/browser/shell-service;1",
-  Ci.nsIShellService
-);
+XPCOMUtils.defineLazyServiceGetters(ShellServiceInternal, {
+  shellService: ["@mozilla.org/browser/shell-service;1", "nsIShellService"],
+  macDockSupport: ["@mozilla.org/widget/macdocksupport;1", "nsIMacDockSupport"],
+});
 
 /**
  * The external API exported by this module.
