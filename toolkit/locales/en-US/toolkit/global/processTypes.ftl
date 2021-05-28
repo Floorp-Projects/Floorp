@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 process-type-web = Web Content
-process-type-browser = Main
 
 # process used to run privileged about pages,
 # such as about:home
@@ -35,6 +34,3 @@ process-type-socket = Socket
 
 # process preallocated; may change to other types
 process-type-prealloc = Preallocated
-
-# process used to decode media
-process-type-rdd = RDD
