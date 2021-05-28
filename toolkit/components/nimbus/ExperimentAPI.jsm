@@ -454,9 +454,7 @@ class ExperimentFeature {
   }
 
   /**
-   * Lookup feature in active experiments and return value.
-   * By default, this will send an exposure event.
-   * @param {{sendExposureEvent: boolean, defaultValue?: any}} options
+   * @deprecated Please use .getAllVariables() instead.
    * @returns {obj} The feature value
    */
   getValue({ sendExposureEvent } = {}) {
@@ -479,6 +477,33 @@ class ExperimentFeature {
     return {
       ...this.prefGetters,
       ...this.getRemoteConfig()?.variables,
+      ...userPrefs,
+    };
+  }
+
+  /**
+   * Lookup feature variables in experiments, prefs, and remote defaults.
+   * @param {{sendExposureEvent: boolean, defaultValues?: {[variableName: string]: any}}} options
+   * @returns {{[variableName: string]: any}} The feature value
+   */
+  getAllVariables({ sendExposureEvent, defaultValues = null } = {}) {
+    // Any user pref will override any other configuration
+    let userPrefs = this._getUserPrefsValues();
+    const branch = ExperimentAPI.activateBranch({
+      featureId: this.featureId,
+      sendExposureEvent: sendExposureEvent && this._sendExposureEventOnce,
+    });
+
+    // Prevent future exposure events if user is enrolled in an experiment
+    if (branch && sendExposureEvent) {
+      this._sendExposureEventOnce = false;
+    }
+
+    return {
+      ...this.prefGetters,
+      ...defaultValues,
+      ...this.getRemoteConfig()?.variables,
+      ...(branch?.feature?.value || null),
       ...userPrefs,
     };
   }

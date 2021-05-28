@@ -14,6 +14,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { cleanupStorePrefCache } = ExperimentFakes;
+
 async function setupForExperimentFeature() {
   const sandbox = sinon.createSandbox();
   const manager = ExperimentFakes.manager();
@@ -119,8 +121,6 @@ add_task(
       FEATURE_ID,
       FAKE_FEATURE_MANIFEST
     );
-    // We're using the store in this test we need to wait for it to load
-    await manager.store.ready();
 
     Services.prefs.clearUserPref(TEST_FALLBACK_PREF);
 
@@ -153,5 +153,6 @@ add_task(
     );
 
     Services.prefs.clearUserPref(TEST_FALLBACK_PREF);
+    cleanupStorePrefCache();
   }
 );

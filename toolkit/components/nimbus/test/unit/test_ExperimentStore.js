@@ -1,8 +1,5 @@
 "use strict";
 
-const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
-const SYNC_DEFAULTS_PREF_BRANCH = "nimbus.syncdefaultsstore.";
-
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
@@ -10,15 +7,8 @@ const { ExperimentStore } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentStore.jsm"
 );
 
-// Experiment store caches in prefs Enrollments for fast sync access
-function cleanupStorePrefCache() {
-  try {
-    Services.prefs.deleteBranch(SYNC_DATA_PREF_BRANCH);
-    Services.prefs.deleteBranch(SYNC_DEFAULTS_PREF_BRANCH);
-  } catch (e) {
-    // Expected if nothing is cached
-  }
-}
+const { SYNC_DATA_PREF_BRANCH, SYNC_DEFAULTS_PREF_BRANCH } = ExperimentStore;
+const { cleanupStorePrefCache } = ExperimentFakes;
 
 add_task(async function test_sharedDataMap_key() {
   const store = new ExperimentStore();

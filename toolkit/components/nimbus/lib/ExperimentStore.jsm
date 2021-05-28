@@ -91,6 +91,9 @@ XPCOMUtils.defineLazyGetter(this, "syncDataStore", () => {
 const DEFAULT_STORE_ID = "ExperimentStoreData";
 
 class ExperimentStore extends SharedDataMap {
+  static SYNC_DATA_PREF_BRANCH = SYNC_DATA_PREF_BRANCH;
+  static SYNC_DEFAULTS_PREF_BRANCH = SYNC_DEFAULTS_PREF_BRANCH;
+
   constructor(sharedDataKey, options = { isParent: IS_MAIN_PROCESS }) {
     super(sharedDataKey || DEFAULT_STORE_ID, options);
   }
