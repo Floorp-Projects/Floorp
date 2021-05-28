@@ -137,6 +137,10 @@ static const RedirEntry kRedirMap[] = {
          nsIAboutModule::MAKE_LINKABLE | nsIAboutModule::URI_CAN_LOAD_IN_CHILD},
     {"support", "chrome://global/content/aboutSupport.xhtml",
      nsIAboutModule::ALLOW_SCRIPT},
+#ifdef XP_WIN
+    {"third-party", "chrome://global/content/aboutThirdParty.html",
+     nsIAboutModule::ALLOW_SCRIPT},
+#endif
 #ifndef MOZ_GLEAN_ANDROID
     {"glean", "chrome://global/content/aboutGlean.html",
      nsIAboutModule::HIDE_FROM_ABOUTABOUT | nsIAboutModule::ALLOW_SCRIPT},
