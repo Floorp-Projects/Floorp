@@ -320,6 +320,10 @@ class EnvironmentObject : public NativeObject {
   }
 
   static uint32_t enclosingEnvironmentSlot() { return ENCLOSING_ENV_SLOT; }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump();
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 };
 
 class CallObject : public EnvironmentObject {
@@ -1041,6 +1045,10 @@ class DebugEnvironmentProxy : public ProxyObject {
   // live (and thus does not have a synthesized EnvironmentObject or a
   // snapshot)?
   bool isOptimizedOut() const;
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump();
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 };
 
 /* Maintains per-realm debug environment bookkeeping information. */
