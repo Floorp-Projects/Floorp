@@ -13,11 +13,28 @@ several different sources, including:
   * WebExtensions
   * Open tabs
 
+Where to Start
+--------------
+
+If you want a high level, nontechnical summary of how the address bar works,
+read :ref:`Nontechnical Overview`.
+
+If you are interested in the technical details, you might want to skip ahead to
+:ref:`Architecture Overview`.
+
+Codebase
+--------
+
 Most of the address bar code lives in `browser/components/urlbar <https://searchfox.org/mozilla-central/source/browser/components/urlbar/>`_.
-A separate and important back-end piece currently is `toolkit/components/places/UnifiedComplete.jsm <https://searchfox.org/mozilla-central/source/toolkit/components/places/UnifiedComplete.jsm>`_, which was carried over from awesomebar and has not yet been rewritten for quantumbar.
+A separate and important back-end piece currently is `toolkit/components/places/UnifiedComplete.jsm <https://searchfox.org/mozilla-central/source/toolkit/components/places/UnifiedComplete.jsm>`_, which was carried over from awesomebar and is
+undergoing refactoring for quantumbar.
+
+Table of Contents
+-----------------
 
 .. toctree::
 
+   nontechnical-overview
    overview
    utilities
    telemetry
