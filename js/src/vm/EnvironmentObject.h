@@ -445,7 +445,7 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   bool hasImportBinding(HandlePropertyName name);
 
   bool lookupImport(jsid name, ModuleEnvironmentObject** envOut,
-                    mozilla::Maybe<ShapeProperty>* propOut);
+                    mozilla::Maybe<PropertyInfo>* propOut);
 
   void fixEnclosingEnvironmentAfterRealmMerge(GlobalObject& global);
 

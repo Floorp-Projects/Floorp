@@ -169,7 +169,7 @@ static inline JS::PropertyAttributes GetPropertyAttributes(
             JS::PropertyAttribute::Enumerable, JS::PropertyAttribute::Writable};
   }
 
-  return prop.shapeProperty().propAttributes();
+  return prop.propertyInfo().propAttributes();
 }
 
 /*

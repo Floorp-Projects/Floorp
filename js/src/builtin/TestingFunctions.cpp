@@ -4622,12 +4622,12 @@ class ShapeSnapshot {
   struct PropertySnapshot {
     HeapPtr<Shape*> propShape;
     HeapPtr<PropertyKey> key;
-    ShapeProperty prop;
+    PropertyInfo prop;
 
     explicit PropertySnapshot(Shape* shape)
         : propShape(shape),
-          key(shape->propertyWithKey().key()),
-          prop(propShape->property()) {}
+          key(propShape->propertyInfoWithKey().key()),
+          prop(propShape->propertyInfo()) {}
     void trace(JSTracer* trc) {
       TraceEdge(trc, &propShape, "propShape");
       TraceEdge(trc, &key, "key");
@@ -4756,7 +4756,7 @@ void ShapeSnapshot::checkSelf(JSContext* cx) const {
 
   for (const PropertySnapshot& propSnapshot : properties_) {
     Shape* propShape = propSnapshot.propShape;
-    ShapeProperty prop = propSnapshot.prop;
+    PropertyInfo prop = propSnapshot.prop;
 
     // Skip if the Shape no longer matches the snapshotted data. This can
     // only happen for non-configurable dictionary properties.
@@ -4817,7 +4817,7 @@ void ShapeSnapshot::check(JSContext* cx, const ShapeSnapshot& later) const {
       MOZ_RELEASE_ASSERT(properties_[i] == later.properties_[i]);
       // Non-configurable accessor properties and non-configurable, non-writable
       // data properties shouldn't have had their slot mutated.
-      ShapeProperty prop = properties_[i].prop;
+      PropertyInfo prop = properties_[i].prop;
       if (!prop.configurable()) {
         if (prop.isAccessorProperty() ||
             (prop.isDataProperty() && !prop.writable())) {

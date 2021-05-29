@@ -930,7 +930,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     nextKey = fromProp.key();
     propValue = fromPlain->getSlot(fromProp.slot());
 
-    Maybe<ShapeProperty> toProp;
+    Maybe<PropertyInfo> toProp;
     if (toWasEmpty) {
       MOZ_ASSERT(!toPlain->containsPure(nextKey));
       MOZ_ASSERT(toProp.isNothing());
@@ -1724,7 +1724,7 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
       if (JSID_IS_INT(id) && nobj->containsDenseElement(JSID_TO_INT(id))) {
         value.set(nobj->getDenseElement(JSID_TO_INT(id)));
       } else {
-        Maybe<ShapeProperty> prop = nobj->lookup(cx, id);
+        Maybe<PropertyInfo> prop = nobj->lookup(cx, id);
         if (prop.isNothing() || !prop->enumerable()) {
           continue;
         }

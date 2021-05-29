@@ -572,7 +572,7 @@ class NativeObject : public JSObject {
   }
 
   PropertyInfoWithKey getLastProperty() const {
-    return shape()->propertyWithKey();
+    return shape()->propertyInfoWithKey();
   }
 
   uint32_t propertyCount() const { return lastProperty()->entryCount(); }
@@ -904,8 +904,8 @@ class NativeObject : public JSObject {
 
   bool empty() const { return lastProperty()->isEmptyShape(); }
 
-  mozilla::Maybe<ShapeProperty> lookup(JSContext* cx, jsid id);
-  mozilla::Maybe<ShapeProperty> lookup(JSContext* cx, PropertyName* name) {
+  mozilla::Maybe<PropertyInfo> lookup(JSContext* cx, jsid id);
+  mozilla::Maybe<PropertyInfo> lookup(JSContext* cx, PropertyName* name) {
     return lookup(cx, NameToId(name));
   }
 
@@ -913,21 +913,21 @@ class NativeObject : public JSObject {
   bool contains(JSContext* cx, PropertyName* name) {
     return lookup(cx, name).isSome();
   }
-  bool contains(JSContext* cx, jsid id, ShapeProperty prop) {
-    mozilla::Maybe<ShapeProperty> found = lookup(cx, id);
+  bool contains(JSContext* cx, jsid id, PropertyInfo prop) {
+    mozilla::Maybe<PropertyInfo> found = lookup(cx, id);
     return found.isSome() && *found == prop;
   }
 
   /* Contextless; can be called from other pure code. */
-  mozilla::Maybe<ShapeProperty> lookupPure(jsid id);
-  mozilla::Maybe<ShapeProperty> lookupPure(PropertyName* name) {
+  mozilla::Maybe<PropertyInfo> lookupPure(jsid id);
+  mozilla::Maybe<PropertyInfo> lookupPure(PropertyName* name) {
     return lookupPure(NameToId(name));
   }
 
   bool containsPure(jsid id) { return lookupPure(id).isSome(); }
   bool containsPure(PropertyName* name) { return containsPure(NameToId(name)); }
-  bool containsPure(jsid id, ShapeProperty prop) {
-    mozilla::Maybe<ShapeProperty> found = lookupPure(id);
+  bool containsPure(jsid id, PropertyInfo prop) {
+    mozilla::Maybe<PropertyInfo> found = lookupPure(id);
     return found.isSome() && *found == prop;
   }
 
@@ -1093,7 +1093,7 @@ class NativeObject : public JSObject {
   GetterSetter* getGetterSetter(uint32_t slot) const {
     return getSlot(slot).toGCThing()->as<GetterSetter>();
   }
-  GetterSetter* getGetterSetter(ShapeProperty prop) const {
+  GetterSetter* getGetterSetter(PropertyInfo prop) const {
     MOZ_ASSERT(prop.isAccessorProperty());
     return getGetterSetter(prop.slot());
   }
@@ -1103,32 +1103,32 @@ class NativeObject : public JSObject {
   JSObject* getGetter(uint32_t slot) const {
     return getGetterSetter(slot)->getter();
   }
-  JSObject* getGetter(ShapeProperty prop) const {
+  JSObject* getGetter(PropertyInfo prop) const {
     return getGetterSetter(prop)->getter();
   }
-  JSObject* getSetter(ShapeProperty prop) const {
+  JSObject* getSetter(PropertyInfo prop) const {
     return getGetterSetter(prop)->setter();
   }
 
   // Returns true if the property has a non-nullptr getter or setter object.
   // |prop| can be any property.
-  bool hasGetter(ShapeProperty prop) const {
+  bool hasGetter(PropertyInfo prop) const {
     return prop.isAccessorProperty() && getGetter(prop);
   }
-  bool hasSetter(ShapeProperty prop) const {
+  bool hasSetter(PropertyInfo prop) const {
     return prop.isAccessorProperty() && getSetter(prop);
   }
 
   // If the property has a non-nullptr getter/setter, return it as ObjectValue.
   // Else return |undefined|. |prop| must be an accessor property.
-  Value getGetterValue(ShapeProperty prop) const {
+  Value getGetterValue(PropertyInfo prop) const {
     MOZ_ASSERT(prop.isAccessorProperty());
     if (JSObject* getterObj = getGetter(prop)) {
       return ObjectValue(*getterObj);
     }
     return UndefinedValue();
   }
-  Value getSetterValue(ShapeProperty prop) const {
+  Value getSetterValue(PropertyInfo prop) const {
     MOZ_ASSERT(prop.isAccessorProperty());
     if (JSObject* setterObj = getSetter(prop)) {
       return ObjectValue(*setterObj);
@@ -1708,8 +1708,7 @@ extern bool NativeLookupOwnProperty(
  */
 extern bool NativeGetExistingProperty(JSContext* cx, HandleObject receiver,
                                       HandleNativeObject obj, HandleId id,
-                                      ShapeProperty prop,
-                                      MutableHandleValue vp);
+                                      PropertyInfo prop, MutableHandleValue vp);
 
 /* * */
 

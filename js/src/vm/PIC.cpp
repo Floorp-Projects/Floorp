@@ -66,7 +66,7 @@ bool js::ForOfPIC::Chain::initialize(JSContext* cx) {
   disabled_ = true;
 
   // Look up Array.prototype[@@iterator], ensure it's a slotful shape.
-  mozilla::Maybe<ShapeProperty> iterProp =
+  mozilla::Maybe<PropertyInfo> iterProp =
       arrayProto->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
   if (iterProp.isNothing() || !iterProp->isDataProperty()) {
     return true;
@@ -84,7 +84,7 @@ bool js::ForOfPIC::Chain::initialize(JSContext* cx) {
   }
 
   // Look up the 'next' value on ArrayIterator.prototype
-  mozilla::Maybe<ShapeProperty> nextProp =
+  mozilla::Maybe<PropertyInfo> nextProp =
       arrayIteratorProto->lookup(cx, cx->names().next);
   if (nextProp.isNothing() || !nextProp->isDataProperty()) {
     return true;
