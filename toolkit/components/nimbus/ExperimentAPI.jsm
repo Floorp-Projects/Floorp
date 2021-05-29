@@ -314,22 +314,6 @@ class ExperimentFeature {
     this._listenForRemoteDefaults = this._listenForRemoteDefaults.bind(this);
     const variables = this.manifest?.variables || {};
 
-    // Add special enabled flag
-    if (this.manifest?.enabledFallbackPref) {
-      XPCOMUtils.defineLazyPreferenceGetter(
-        this,
-        "enabled",
-        this.manifest?.enabledFallbackPref,
-        null,
-        () => {
-          ExperimentAPI._store._emitFeatureUpdate(
-            this.featureId,
-            "pref-updated"
-          );
-        }
-      );
-    }
-
     Object.keys(variables).forEach(key => {
       const { type, fallbackPref } = variables[key];
       if (fallbackPref) {
@@ -444,12 +428,16 @@ class ExperimentFeature {
       return this.getRemoteConfig().enabled;
     }
 
-    // Then check the fallback pref, if it is defined
-    if (isBooleanValueDefined(this.enabled)) {
-      return this.enabled;
+    let enabled;
+    try {
+      enabled = this.getVariable("enabled", { sendExposureEvent });
+    } catch (e) {
+      /* This is expected not all features have an enabled flag defined */
+    }
+    if (isBooleanValueDefined(enabled)) {
+      return enabled;
     }
 
-    // Finally, return options.defaulValue if neither was found
     return defaultValue;
   }
 
@@ -533,7 +521,7 @@ class ExperimentFeature {
     })?.feature?.value?.[variable];
 
     // Prevent future exposure events if user is enrolled in an experiment
-    if (experimentValue && sendExposureEvent) {
+    if (typeof experimentValue !== "undefined" && sendExposureEvent) {
       this._sendExposureEventOnce = false;
     }
 

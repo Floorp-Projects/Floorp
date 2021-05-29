@@ -92,10 +92,6 @@
                     "type": "string",
                     "description": "The identifier for the feature flag"
                   },
-                  "enabled": {
-                    "type": "boolean",
-                    "description": "This can be used to turn the whole feature on/off"
-                  },
                   "value": {
                     "anyOf": [
                       {
@@ -109,18 +105,11 @@
                     "description": "Optional extra params for the feature (this should be validated against a schema)"
                   }
                 },
-                "required": [
-                  "featureId",
-                  "enabled",
-                  "value"
-                ],
+                "required": ["featureId", "value"],
                 "additionalProperties": false
               }
             },
-            "required": [
-              "slug",
-              "ratio"
-            ],
+            "required": ["slug", "ratio"],
             "additionalProperties": false
           },
           "description": "Branch configuration for the experiment"
@@ -130,18 +119,12 @@
           "description": "JEXL expression used to filter experiments based on locale, geo, etc."
         },
         "startDate": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "description": "Actual publish date of the experiment\nNote that this value is expected to be null in Remote Settings.",
           "format": "date-time"
         },
         "endDate": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "description": "Actual end date of the experiment.\nNote that this value is expected to be null in Remote Settings.",
           "format": "date-time"
         },
@@ -154,10 +137,7 @@
           "description": "Duration of enrollment from the start date in days"
         },
         "referenceBranch": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "description": "The slug of the reference branch"
         },
         "filter_expression": {
