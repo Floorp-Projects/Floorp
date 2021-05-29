@@ -868,10 +868,11 @@ class NotNull;
 /*
  * QM_OR_ELSE_WARN(expr, fallback) evaluates expr, which must produce a Result
  * value. On Success, it just moves the success over. On error, it calls
- * HandleError and a fallback function (passed as the second argument).
- * Failures are always reported as warnings. The macro essentially wraps the
- * fallback function with a warning. The macro is a sub macro and is intended
- * to be used along with one of the main macros such as QM_TRY.
+ * HandleError (with the Warning severity) and a fallback function (passed as
+ * the second argument) which produces a new result. Failed expr is always
+ * reported as a warning (the macro essentially wraps the fallback function
+ * with a warning). QM_OR_ELSE_WARN is a sub macro and is intended to be used
+ * along with one of the main macros such as QM_TRY.
  */
 #define QM_OR_ELSE_WARN(...) QM_OR_ELSE_REPORT(Warning, __VA_ARGS__)
 
