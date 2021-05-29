@@ -259,7 +259,8 @@ LayoutDeviceIntSize RenderCompositorSWGL::GetBufferSize() {
 
 void RenderCompositorSWGL::GetCompositorCapabilities(
     CompositorCapabilities* aCaps) {
-  RenderCompositor::GetCompositorCapabilities(aCaps);
+  // Always support a single update rect for SwCompositor
+  aCaps->max_update_rects = 1;
 
   // When the window contents may be damaged, we need to force a full redraw.
   aCaps->redraw_on_invalidation = true;
