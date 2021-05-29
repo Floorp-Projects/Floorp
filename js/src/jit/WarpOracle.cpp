@@ -219,7 +219,7 @@ template <typename T, typename... Args>
   ModuleEnvironmentObject* env = GetModuleEnvironmentForScript(script);
   MOZ_ASSERT(env);
 
-  mozilla::Maybe<ShapeProperty> prop;
+  mozilla::Maybe<PropertyInfo> prop;
   ModuleEnvironmentObject* targetEnv;
   MOZ_ALWAYS_TRUE(env->lookupImport(NameToId(name), &targetEnv, &prop));
 

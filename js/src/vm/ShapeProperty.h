@@ -84,10 +84,10 @@ constexpr PropertyFlags PropertyFlags::defaultDataPropFlags = {
     PropertyFlag::Configurable, PropertyFlag::Enumerable,
     PropertyFlag::Writable};
 
-// ShapeProperty contains information (PropertyFlags, slot number) for a
+// PropertyInfo contains information (PropertyFlags, slot number) for a
 // property stored in the Shape tree. Property lookups on NativeObjects return a
-// ShapeProperty.
-class ShapeProperty {
+// PropertyInfo.
+class PropertyInfo {
   static constexpr uint32_t FlagsMask = 0xff;
   static constexpr uint32_t SlotShift = 8;
 
@@ -99,13 +99,13 @@ class ShapeProperty {
                 "SHAPE_MAXIMUM_SLOT must fit in slotAndFlags_");
 
  public:
-  ShapeProperty(PropertyFlags flags, uint32_t slot)
+  PropertyInfo(PropertyFlags flags, uint32_t slot)
       : slotAndFlags_((slot << SlotShift) | flags.toRaw()) {
     MOZ_ASSERT(maybeSlot() == slot);
     MOZ_ASSERT(this->flags() == flags);
   }
 
-  ShapeProperty(const ShapeProperty& other) = default;
+  PropertyInfo(const PropertyInfo& other) = default;
 
   bool isDataProperty() const { return flags().isDataProperty(); }
   bool isCustomDataProperty() const { return flags().isCustomDataProperty(); }
@@ -143,20 +143,20 @@ class ShapeProperty {
     return attrs;
   }
 
-  bool operator==(const ShapeProperty& other) const {
+  bool operator==(const PropertyInfo& other) const {
     return slotAndFlags_ == other.slotAndFlags_;
   }
-  bool operator!=(const ShapeProperty& other) const {
+  bool operator!=(const PropertyInfo& other) const {
     return !operator==(other);
   }
 };
 
-class PropertyInfoWithKey : public ShapeProperty {
+class PropertyInfoWithKey : public PropertyInfo {
   PropertyKey key_;
 
  public:
   PropertyInfoWithKey(PropertyFlags flags, uint32_t slot, PropertyKey key)
-      : ShapeProperty(flags, slot), key_(key) {}
+      : PropertyInfo(flags, slot), key_(key) {}
 
   PropertyKey key() const { return key_; }
 

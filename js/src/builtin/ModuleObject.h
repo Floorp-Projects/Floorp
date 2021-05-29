@@ -177,7 +177,7 @@ class IndirectBindingMap {
   bool has(jsid name) const { return map_ ? map_->has(name) : false; }
 
   bool lookup(jsid name, ModuleEnvironmentObject** envOut,
-              mozilla::Maybe<ShapeProperty>* propOut) const;
+              mozilla::Maybe<PropertyInfo>* propOut) const;
 
   template <typename Func>
   void forEachExportedName(Func func) const {
@@ -193,12 +193,12 @@ class IndirectBindingMap {
  private:
   struct Binding {
     Binding(ModuleEnvironmentObject* environment, jsid targetName,
-            ShapeProperty prop);
+            PropertyInfo prop);
     HeapPtr<ModuleEnvironmentObject*> environment;
 #ifdef DEBUG
     HeapPtr<jsid> targetName;
 #endif
-    ShapeProperty prop;
+    PropertyInfo prop;
   };
 
   using Map =

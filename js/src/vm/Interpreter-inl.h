@@ -53,13 +53,13 @@ static inline bool IsUninitializedLexicalSlot(HandleObject obj,
     return false;
   }
 
-  ShapeProperty shapeProp = prop.shapeProperty();
-  if (!shapeProp.isDataProperty()) {
+  PropertyInfo propInfo = prop.propertyInfo();
+  if (!propInfo.isDataProperty()) {
     return false;
   }
 
   return IsUninitializedLexical(
-      obj->as<NativeObject>().getSlot(shapeProp.slot()));
+      obj->as<NativeObject>().getSlot(propInfo.slot()));
 }
 
 static inline bool CheckUninitializedLexical(JSContext* cx, PropertyName* name_,
@@ -123,17 +123,17 @@ inline bool FetchName(JSContext* cx, HandleObject receiver, HandleObject holder,
       return false;
     }
   } else {
-    ShapeProperty shapeProp = prop.shapeProperty();
-    if (shapeProp.isDataProperty()) {
+    PropertyInfo propInfo = prop.propertyInfo();
+    if (propInfo.isDataProperty()) {
       /* Fast path for Object instance properties. */
-      vp.set(holder->as<NativeObject>().getSlot(shapeProp.slot()));
+      vp.set(holder->as<NativeObject>().getSlot(propInfo.slot()));
     } else {
       // Unwrap 'with' environments for reasons given in
       // GetNameBoundInEnvironment.
       RootedObject normalized(cx, MaybeUnwrapWithEnvironment(receiver));
       RootedId id(cx, NameToId(name));
       if (!NativeGetExistingProperty(cx, normalized, holder.as<NativeObject>(),
-                                     id, shapeProp, vp)) {
+                                     id, propInfo, vp)) {
         return false;
       }
     }
@@ -154,12 +154,12 @@ inline bool FetchNameNoGC(NativeObject* pobj, PropertyResult prop, Value* vp) {
     return false;
   }
 
-  ShapeProperty shapeProp = prop.shapeProperty();
-  if (!shapeProp.isDataProperty()) {
+  PropertyInfo propInfo = prop.propertyInfo();
+  if (!propInfo.isDataProperty()) {
     return false;
   }
 
-  *vp = pobj->getSlot(shapeProp.slot());
+  *vp = pobj->getSlot(propInfo.slot());
   return !IsUninitializedLexical(*vp);
 }
 
@@ -283,7 +283,7 @@ inline void InitGlobalLexicalOperation(
                 lexicalEnv == &cx->global()->lexicalEnvironment());
   MOZ_ASSERT(JSOp(*pc) == JSOp::InitGLexical);
 
-  mozilla::Maybe<ShapeProperty> prop =
+  mozilla::Maybe<PropertyInfo> prop =
       lexicalEnv->lookup(cx, script->getName(pc));
   MOZ_ASSERT(prop.isSome());
   MOZ_ASSERT(IsUninitializedLexical(lexicalEnv->getSlot(prop->slot())));

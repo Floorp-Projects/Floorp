@@ -2472,11 +2472,11 @@ bool DebuggerObject::forceLexicalInitializationByName(
   result = false;
   if (prop.isFound()) {
     MOZ_ASSERT(prop.isNativeProperty());
-    ShapeProperty shapeProp = prop.shapeProperty();
-    Value v = globalLexical->as<NativeObject>().getSlot(shapeProp.slot());
-    if (shapeProp.isDataProperty() && v.isMagic() &&
+    PropertyInfo propInfo = prop.propertyInfo();
+    Value v = globalLexical->as<NativeObject>().getSlot(propInfo.slot());
+    if (propInfo.isDataProperty() && v.isMagic() &&
         v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
-      globalLexical->as<NativeObject>().setSlot(shapeProp.slot(),
+      globalLexical->as<NativeObject>().setSlot(propInfo.slot(),
                                                 UndefinedValue());
       result = true;
     }

@@ -1059,12 +1059,12 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   }
 
  public:
-  ShapeProperty property() const {
+  PropertyInfo propertyInfo() const {
     MOZ_ASSERT(!isEmptyShape());
-    return ShapeProperty(propFlags, maybeSlot());
+    return PropertyInfo(propFlags, maybeSlot());
   }
 
-  PropertyInfoWithKey propertyWithKey() const {
+  PropertyInfoWithKey propertyInfoWithKey() const {
     return PropertyInfoWithKey(propFlags, maybeSlot(), propid());
   }
 
@@ -1482,7 +1482,7 @@ class MOZ_RAII ShapePropertyIter {
 
   PropertyInfoWithKey get() const {
     MOZ_ASSERT(!done());
-    return cursor_->propertyWithKey();
+    return cursor_->propertyInfoWithKey();
   }
 
   PropertyInfoWithKey operator*() const { return get(); }
