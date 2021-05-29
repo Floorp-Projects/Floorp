@@ -84,11 +84,6 @@ var pktUI = (function() {
   const initialPanelSize = {
     signup: {
       control: { height: 450, width: 300 },
-      button_control: { height: 442, width: 300 },
-      variant_a: { height: 408, width: 300 },
-      variant_b: { height: 383, width: 300 },
-      variant_c: { height: 424, width: 300 },
-      button_variant: { height: 388, width: 300 },
     },
     saved: {
       control: { height: 132, width: 350 },
@@ -154,44 +149,12 @@ var pktUI = (function() {
    * Show the sign-up panel
    */
   function showSignUp() {
-    // AB test: Direct logged-out users to tab vs panel
-    if (pktApi.getSignupPanelTabTestVariant() == "v2") {
-      let site = Services.prefs.getCharPref("extensions.pocket.site");
-      openTabWithUrl(
-        "https://" +
-          site +
-          "/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext",
-        Services.scriptSecurityManager.createNullPrincipal({}),
-        null
-      );
-
-      // force the panel closed before it opens
-      getPanel().hidePopup();
-
-      return;
-    }
-
-    // Control: Show panel as normal
     getFirefoxAccountSignedInUser(function(userdata) {
-      var controlvariant = pktApi.getSignupPanelTabTestVariant() == "control";
-      var variant = "storyboard_lm";
-      const loggedOutVariant =
-        Services.prefs.getCharPref("extensions.pocket.loggedOutVariant") ||
-        "control";
       let sizes = initialPanelSize.signup.control;
-      if (loggedOutVariant && initialPanelSize.signup[loggedOutVariant]) {
-        sizes = initialPanelSize.signup[loggedOutVariant];
-      }
 
       showPanel(
         "about:pocket-signup?pockethost=" +
           Services.prefs.getCharPref("extensions.pocket.site") +
-          "&loggedOutVariant=" +
-          loggedOutVariant +
-          "&variant=" +
-          variant +
-          "&controlvariant=" +
-          controlvariant +
           "&locale=" +
           getUILocale(),
         sizes
