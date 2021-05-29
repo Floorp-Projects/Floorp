@@ -174,11 +174,11 @@ this.test = class extends ExtensionAPI {
           return Services.telemetry.getHistogramById(id).add(value);
         },
 
-        removeAllCertOverrides() {
+        removeCertOverride(host, port) {
           const overrideService = Cc[
             "@mozilla.org/security/certoverride;1"
           ].getService(Ci.nsICertOverrideService);
-          overrideService.clearAllOverrides();
+          overrideService.clearValidityOverride(host, port);
         },
 
         async setScalar(id, value) {

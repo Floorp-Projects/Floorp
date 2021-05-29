@@ -618,7 +618,6 @@ function addCertOverride(host, bits) {
           cos.rememberValidityOverride(
             host,
             -1,
-            {},
             securityInfo.serverCert,
             bits,
             false

@@ -171,7 +171,7 @@ const CertCleaner = {
       Ci.nsICertOverrideService
     );
 
-    overrideService.clearValidityOverride(aHost, -1, aOriginAttributes);
+    overrideService.clearValidityOverride(aHost, -1);
   },
 
   deleteByPrincipal(aPrincipal) {
