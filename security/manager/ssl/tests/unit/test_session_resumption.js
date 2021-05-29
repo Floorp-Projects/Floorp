@@ -75,7 +75,11 @@ function add_resume_non_ev_with_override_test() {
       let certOverrideService = Cc[
         "@mozilla.org/security/certoverride;1"
       ].getService(Ci.nsICertOverrideService);
-      certOverrideService.clearValidityOverride("expired.example.com", 8443);
+      certOverrideService.clearValidityOverride(
+        "expired.example.com",
+        8443,
+        {}
+      );
     }
   );
 }

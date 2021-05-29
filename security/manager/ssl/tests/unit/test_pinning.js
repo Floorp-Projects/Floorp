@@ -34,7 +34,7 @@ function add_clear_override(host) {
     let certOverrideService = Cc[
       "@mozilla.org/security/certoverride;1"
     ].getService(Ci.nsICertOverrideService);
-    certOverrideService.clearValidityOverride(host, 8443);
+    certOverrideService.clearValidityOverride(host, 8443, {});
     run_next_test();
   });
 }

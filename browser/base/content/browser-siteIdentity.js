@@ -494,7 +494,11 @@ var gIdentityHandler = {
     }
     let host = this._uri.host;
     let port = this._uri.port > 0 ? this._uri.port : 443;
-    this._overrideService.clearValidityOverride(host, port);
+    this._overrideService.clearValidityOverride(
+      host,
+      port,
+      gBrowser.contentPrincipal.originAttributes
+    );
     BrowserReloadSkipCache();
     if (this._popupInitialized) {
       PanelMultiView.hidePopup(this._identityPopup);

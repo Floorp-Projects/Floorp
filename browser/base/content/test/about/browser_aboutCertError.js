@@ -593,7 +593,7 @@ add_task(async function checkViewSource() {
   let certOverrideService = Cc[
     "@mozilla.org/security/certoverride;1"
   ].getService(Ci.nsICertOverrideService);
-  certOverrideService.clearValidityOverride("expired.example.com", -1);
+  certOverrideService.clearValidityOverride("expired.example.com", -1, {});
 
   loaded = BrowserTestUtils.waitForErrorPage(browser);
   BrowserReloadSkipCache();

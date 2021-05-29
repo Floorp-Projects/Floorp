@@ -31,10 +31,10 @@ function test() {
     var cos = Cc["@mozilla.org/security/certoverride;1"].getService(
       Ci.nsICertOverrideService
     );
-    cos.clearValidityOverride("nocert.example.com", -1);
-    cos.clearValidityOverride("self-signed.example.com", -1);
-    cos.clearValidityOverride("untrusted.example.com", -1);
-    cos.clearValidityOverride("expired.example.com", -1);
+    cos.clearValidityOverride("nocert.example.com", -1, {});
+    cos.clearValidityOverride("self-signed.example.com", -1, {});
+    cos.clearValidityOverride("untrusted.example.com", -1, {});
+    cos.clearValidityOverride("expired.example.com", -1, {});
 
     if (gPendingInstall) {
       gTests = [];
