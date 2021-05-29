@@ -15,6 +15,7 @@
 #include "NamespaceImports.h"
 
 #include "gc/Tracer.h"
+#include "js/GCVector.h"
 #include "js/PropertyDescriptor.h"
 #include "util/EnumFlags.h"
 
@@ -150,23 +151,23 @@ class ShapeProperty {
   }
 };
 
-class ShapePropertyWithKey : public ShapeProperty {
+class PropertyInfoWithKey : public ShapeProperty {
   PropertyKey key_;
 
  public:
-  ShapePropertyWithKey(PropertyFlags flags, uint32_t slot, PropertyKey key)
+  PropertyInfoWithKey(PropertyFlags flags, uint32_t slot, PropertyKey key)
       : ShapeProperty(flags, slot), key_(key) {}
 
   PropertyKey key() const { return key_; }
 
   void trace(JSTracer* trc) {
-    TraceRoot(trc, &key_, "ShapePropertyWithKey-key");
+    TraceRoot(trc, &key_, "PropertyInfoWithKey-key");
   }
 };
 
 template <class Wrapper>
-class WrappedPtrOperations<ShapePropertyWithKey, Wrapper> {
-  const ShapePropertyWithKey& value() const {
+class WrappedPtrOperations<PropertyInfoWithKey, Wrapper> {
+  const PropertyInfoWithKey& value() const {
     return static_cast<const Wrapper*>(this)->get();
   }
 
@@ -176,6 +177,8 @@ class WrappedPtrOperations<ShapePropertyWithKey, Wrapper> {
   PropertyKey key() const { return value().key(); }
   PropertyFlags flags() const { return value().flags(); }
 };
+
+using PropertyInfoWithKeyVector = GCVector<PropertyInfoWithKey, 8>;
 
 }  // namespace js
 

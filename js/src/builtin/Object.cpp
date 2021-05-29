@@ -865,7 +865,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
 
   // Get a list of all enumerable |from| properties.
 
-  Rooted<ShapePropertyVector> props(cx, ShapePropertyVector(cx));
+  Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
 #ifdef DEBUG
   RootedShape fromShape(cx, fromPlain->lastProperty());
@@ -923,7 +923,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     // Assert |from| still has the same properties.
     MOZ_ASSERT(fromPlain->lastProperty() == fromShape);
 
-    ShapePropertyWithKey fromProp = props[i - 1];
+    PropertyInfoWithKey fromProp = props[i - 1];
     MOZ_ASSERT(fromProp.isDataProperty());
     MOZ_ASSERT(fromProp.enumerable());
 
@@ -973,7 +973,7 @@ static bool TryAssignNative(JSContext* cx, HandleObject to, HandleObject from,
   // Get a list of |from| properties. As long as from->shape() == fromShape
   // we can use this to speed up both the enumerability check and the GetProp.
 
-  Rooted<ShapePropertyVector> props(cx, ShapePropertyVector(cx));
+  Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
   RootedShape fromShape(cx, fromNative->shape());
   for (ShapePropertyIter<NoGC> iter(fromShape); !iter.done(); iter++) {
@@ -994,7 +994,7 @@ static bool TryAssignNative(JSContext* cx, HandleObject to, HandleObject from,
   RootedValue toReceiver(cx, ObjectValue(*to));
 
   for (size_t i = props.length(); i > 0; i--) {
-    ShapePropertyWithKey prop = props[i - 1];
+    PropertyInfoWithKey prop = props[i - 1];
     nextKey = prop.key();
 
     // If |from| still has the same shape, it must still be a NativeObject with
@@ -1594,7 +1594,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     // Get a list of all |obj| properties. As long as obj->shape()
     // is equal to |objShape|, we can use this to speed up both the
     // enumerability check and GetProperty.
-    Rooted<ShapePropertyVector> props(cx, ShapePropertyVector(cx));
+    Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
     // Collect all non-symbol properties.
     RootedShape objShape(cx, nobj->shape());
@@ -1611,7 +1611,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
 
     RootedId id(cx);
     for (size_t i = props.length(); i > 0; i--) {
-      ShapePropertyWithKey prop = props[i - 1];
+      PropertyInfoWithKey prop = props[i - 1];
       id = prop.key();
 
       // If |obj| still has the same shape, it must still be a NativeObject with

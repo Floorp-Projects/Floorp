@@ -2818,7 +2818,7 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
   }
 
   // Collect all enumerable data properties.
-  Rooted<ShapePropertyVector> props(cx, ShapePropertyVector(cx));
+  Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
   RootedShape fromShape(cx, from->shape());
   for (ShapePropertyIter<NoGC> iter(fromShape); !iter.done(); iter++) {
@@ -2855,7 +2855,7 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
   RootedId key(cx);
   RootedValue value(cx);
   for (size_t i = props.length(); i > 0; i--) {
-    ShapePropertyWithKey prop = props[i - 1];
+    PropertyInfoWithKey prop = props[i - 1];
     MOZ_ASSERT(prop.isDataProperty());
     MOZ_ASSERT(prop.enumerable());
 
