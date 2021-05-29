@@ -858,20 +858,20 @@ class NotNull;
 // QM_OR_ELSE_WARN/QM_OR_ELSE_NOTE/QM_OR_ELSE_LOG and shouldn't be used
 // directly.
 
-#define QM_OR_ELSE_REPORT(severity, expr, orElseFunc)              \
+#define QM_OR_ELSE_REPORT(severity, expr, fallback)                \
   (expr).orElse([&](const auto& firstRes) {                        \
     mozilla::dom::quota::QM_HANDLE_ERROR(                          \
         #expr, firstRes, mozilla::dom::quota::Severity::severity); \
-    return orElseFunc(firstRes);                                   \
+    return fallback(firstRes);                                     \
   })
 
 /*
- * QM_OR_ELSE_WARN(expr, orElse) evaluates expr, which must produce a Result
+ * QM_OR_ELSE_WARN(expr, fallback) evaluates expr, which must produce a Result
  * value. On Success, it just moves the success over. On error, it calls
- * HandleError and a custom orElse function (passed as the second argument).
+ * HandleError and a fallback function (passed as the second argument).
  * Failures are always reported as warnings. The macro essentially wraps the
- * orElse function with a warning. The macro is a sub macro and is intended to
- * be used along with one of the main macros such as QM_TRY.
+ * fallback function with a warning. The macro is a sub macro and is intended
+ * to be used along with one of the main macros such as QM_TRY.
  */
 #define QM_OR_ELSE_WARN(...) QM_OR_ELSE_REPORT(Warning, __VA_ARGS__)
 
