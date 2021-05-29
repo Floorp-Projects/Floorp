@@ -18,28 +18,26 @@
                 "type": "string",
                 "description": "Configuration identifier that will be included in Telemetry."
               },
-              "description": {
-                "type": "string",
-                "description": "Configuration description."
-              },
               "variables": {
                 "type": "object",
-                "description": "Key value pairs that should match the feature manifest definition."
+                "description": "Key value pairs that should match the feature manifest definition.",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["enabled"]
               },
               "targeting": {
                 "type": "string",
                 "description": "Target the configuration only to specific clients."
-              },
-              "enabled": {
-                "type": "boolean",
-                "description": "Is the feature off or on."
               },
               "description": {
                 "type": "string",
                 "description": "Explanation for configuration and targeting"
               }
             },
-            "required": ["variables", "enabled", "targeting", "slug"],
+            "required": ["variables", "targeting", "slug"],
             "additionalProperties": false
           }
         }
