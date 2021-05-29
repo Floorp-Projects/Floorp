@@ -1585,6 +1585,19 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Несиелік картаның жарамды нөмірін енгізіңіз</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Сақталған карталарыңызды көру үшін бұғаттауын ашыңыз</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Несиелік карталарыңызды қорғаңыз</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Бөтен адам сіздің құрылғыңызда болса, одан сақталған несиелік карталарды қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Қазір баптау</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Кейінірек</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Құрылғының бұғаттауын ашыңыз</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Іздеу жүйесін қосу</string>
     <!-- Title of the Edit search engine screen -->

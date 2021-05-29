@@ -1614,6 +1614,20 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Picatz un numèro de carta de crèdit valid</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Desblocatz per veire las cartas enregistradas</string>
+
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Securizatz vòstras cartas de crèdit</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Configuratz un esquèma de verrolhatge, un còdi PIN o un senhal per protegir vòstres identificants de cartas de crèdit enregistrats se per cas qualqu’un accedisca a vòstre periferic.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Configurar ara</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Mai tard</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Desverrolhatz lo periferic</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Apondre un motor de recèrca</string>
     <!-- Title of the Edit search engine screen -->
@@ -1782,6 +1796,9 @@
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Clicatz per aver de detalhs</string>
+
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Remontar</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Tampar</string>

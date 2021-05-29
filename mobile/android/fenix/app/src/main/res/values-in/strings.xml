@@ -21,10 +21,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Tab privat Anda akan muncul di sini.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 tab terbuka. Ketuk untuk beralih tab.</string>
 
@@ -185,6 +181,13 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Tampilan</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Ubahsuai tampilan pembaca</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Tambahkan</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Ubah</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Tidak dapat terhubung. Skema URL yang tidak dapat dikenali.</string>
@@ -222,6 +225,11 @@
     <string name="search_suggestions_onboarding_text">%s akan membagikan segala yang Anda ketik pada bilah alamat dengan mesin pencari baku Anda.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Pelajari lebih lanjut</string>
+
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Cari %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Cari langsung dari bilah alamat</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -414,6 +422,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s dalam %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Kartu kredit</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Alamat</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Tab yang diterima</string>
@@ -445,9 +458,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Pelajari lebih lanjut</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Dimatikan secara global, buka Pengaturan untuk menyalakannya.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetri</string>
 
@@ -459,6 +469,8 @@
     <string name="preferences_marketing_data">Data pemasaran</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Bagikan data mengenai fitur yang Anda gunakan pada %1$s dengan Leanplum, vendor pemasaran seluler kami.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Bagikan data penggunaan dasar dengan Adjust, vendor pemasaran seluler kami</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Kajian</string>
     <!-- Summary for studies preferences -->
@@ -608,12 +620,16 @@
     <string name="tabs_header_private_title">Sesi pribadi</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Tab privat</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Tab tersinkron</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Tambah tab</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Tambah tab pribadi</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Pribadi</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sinkron</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Tab Terbuka</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -624,6 +640,8 @@
     <string name="tab_tray_menu_item_share">Bagikan semua tab</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Tab yang baru saja ditutup</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Setelan akun</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Setelan tab</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -795,12 +813,12 @@
     <string name="bookmark_delete_folder_snackbar">%1$s terhapus</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Tambah folder</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Markah dibuat.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Markah berhasil disimpan!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">EDIT</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Ubah</string>
     <!-- Bookmark overflow menu select button -->
     <string name="bookmark_menu_select_button">Pilih</string>
     <!-- Bookmark overflow menu copy button -->
@@ -981,6 +999,8 @@
     <string name="share_link_all_apps_subheader">Semua tindakan</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Baru saja digunakan</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Masuk untuk menyinkronkan</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Masuk ke Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1177,9 +1197,6 @@
 
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Sudah memiliki akun?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Ketahui tentang %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Lihat apa yang baru</string>
     <!-- text for the "what's new" onboarding card description
@@ -1187,10 +1204,10 @@
     <string name="onboarding_whats_new_description">Punya pertanyaan mengenai desain ulang %s? Ingin tahu apa saja yang berubah?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Dapatkan jawabannya di sini</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Mulai sinkronkan markah, kata sandi, dan lainnya dengan akun Firefox Anda.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Sinkronkan Firefox antar perangkat</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Pelajari lebih lanjut</string>
+    <string name="onboarding_manual_sign_in_description">Bawa markah, riwayat, dan kata sandi ke Firefox di perangkat ini.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1199,8 +1216,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Ya, masukkan saya</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Masuk…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Masuk ke Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Daftar</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Tetap keluar</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1208,26 +1225,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Gagal masuk</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Privasi otomatis</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Pengaturan privasi dan keamanan memblokir pelacak, malware, dan perusahaan yang mengikuti Anda.</string>
+    <string name="onboarding_tracking_protection_header_3">Privasi selalu aktif</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox secara otomatis menghentikan perusahaan yang mengikuti Anda di web secara rahasia.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standar (baku)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Memblokir lebih sedikit pelacak. Laman akan dimuat secara normal.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Seimbang untuk privasi dan kinerja. Halaman dimuat secara normal.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Ketat (disarankan)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Ketat</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Memblokir lebih banyak pelacak, iklan, dan sembulan. Halaman dimuat lebih cepat, namun beberapa fungsi mungkin tidak berfungsi.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Pilih posisi</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Blokir lebih banyak pelacak sehingga laman dimuat lebih cepat, tetapi beberapa fungsionalitas pada laman mungkin rusak.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Pilih penempatan bilah alat Anda</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Coba menjelajah dengan satu tangan dengan bilah alat di bawah atau pindahkan ke atas.</string>
+    <string name="onboarding_toolbar_placement_description_1">Letakkan bilah alat agar mudah dijangkau. Tetap di bawah, atau pindahkan ke atas.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Menjelajah dengan privat</string>
     <!-- text for the private browsing onboarding card description
@@ -1240,7 +1254,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Privasi Anda</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Kami merancang %s agar Anda dapat mengendalikan apa saja yang Anda bagikan secara daring dan apa yang Anda bagikan kepada kami.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Pelajari pemberitahuan privasi kami</string>
@@ -1255,7 +1269,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Pilih tema Anda</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Hemat baterai dan penglihatan Anda dengan mengaktifkan mode gelap.</string>
+    <string name="onboarding_theme_picker_description_2">Hemat baterai dan penglihatan Anda dengan mode gelap.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Otomatis</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1311,13 +1325,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standar (baku)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Memblokir lebih sedikit pelacak. Laman akan dimuat secara normal.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Seimbang untuk privasi dan kinerja. Halaman dimuat secara normal.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Apa yang diblokir oleh perlindungan pelacakan standar</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Ketat</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Memblokir lebih banyak pelacak, iklan, dan sembulan. Halaman dimuat lebih cepat, namun beberapa fungsi mungkin tidak berfungsi.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Blokir lebih banyak pelacak sehingga laman dimuat lebih cepat, tetapi beberapa fungsionalitas pada laman mungkin rusak.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Apa yang diblokir oleh perlindungan pelacakan ketat</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1458,10 +1472,8 @@
     <string name="preferences_passwords_autofill">Isi Otomatis</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sinkronkan info masuk</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Aktif</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Nonaktif</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sinkronkan log masuk antar perangkat</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Hubungkan kembali</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1551,6 +1563,60 @@
     <string name="saved_logins_sort_strategy_last_used">Terakhir digunakan</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Sortir menu info masuk</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Kartu kredit</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Simpan dan isi otomatis kartu</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Data terenkripsi</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Sinkronisasi kartu antar perangkat</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sinkronkan kartu</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Tambahkan kartu kredit</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Kelola kartu tersimpan</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Tambah kartu</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Ubah kartu</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Nomor Kartu</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Tanggal Kedaluwarsa</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Nama pada Kartu</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Nama Alias Kartu</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Hapus kartu</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Hapus kartu</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Simpan</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Simpan</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Batal</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Kartu tersimpan</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Masukkan nomor kartu kredit yang sah</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Buka kunci untuk melihat kartu yang Anda simpan</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Amankan kartu kredit Anda</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Atur pola, PIN, atau kata sandi kunci perangkat untuk melindungi kartu kredit Anda yang tersimpan agar tidak diakses jika orang lain memiliki perangkat Anda.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Atur sekarang</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Nanti</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Buka perangkat Anda</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tambah mesin pencari</string>
@@ -1711,23 +1777,19 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Batal</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Setel tautan dari situs web, surel, dan pesan untuk secara otomatis dibuka di Firefox.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Hapus</string>
-
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Dapatkan hasil maksimal dari %s.</string>
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Klik untuk lebih jelasnya</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Kumpulkan hal-hal yang penting bagi Anda</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Kelompokkan pencarian, situs, dan tab yang serupa agar dapat diakses cepat nanti.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Anda masuk sebagai %s di peramban Firefox lainnya pada ponsel ini. Apakah Anda ingin masuk dengan akun tersebut?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Anda dapat dengan mudah menambahkan situs web ini ke layar Beranda ponsel Anda untuk mendapatkan akses instan dan penjelajahan lebih cepat seperti menggunakan aplikasi.</string>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Arahkan ke atas</string>
 
-    </resources>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Tutup</string>
+
+</resources>

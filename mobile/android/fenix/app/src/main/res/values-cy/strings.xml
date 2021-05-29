@@ -1590,6 +1590,19 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Rhowch rif cerdyn credyd dilys</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Datgloi i weld y cardiau rydych wedi’u cadw</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Diogelwch eich cerdyn credyd</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Gosodwch batrwm cloi dyfais, PIN, neu gyfrinair i ddiogelu eich mewngofnodion a’ch cyfrineiriau sydd wedi’u cadw rhag i rhywun arall sydd â mynediad i’ch dyfais.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Gosod nawr</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Yn hwyrach</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Datgloi’ch dyfais</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Ychwanegu peiriant chwilio</string>
     <!-- Title of the Edit search engine screen -->
