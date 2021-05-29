@@ -854,6 +854,17 @@ class NotNull;
 
 // QM_NOTEONLY_TRY_INSPECT doesn't make sense.
 
+// QM_OR_ELSE_REPORT macro is an implementation detail of
+// QM_OR_ELSE_WARN/QM_OR_ELSE_NOTE/QM_OR_ELSE_LOG and shouldn't be used
+// directly.
+
+#define QM_OR_ELSE_REPORT(severity, expr, orElseFunc)              \
+  (expr).orElse([&](const auto& firstRes) {                        \
+    mozilla::dom::quota::QM_HANDLE_ERROR(                          \
+        #expr, firstRes, mozilla::dom::quota::Severity::severity); \
+    return orElseFunc(firstRes);                                   \
+  })
+
 /*
  * QM_OR_ELSE_WARN(expr, orElse) evaluates expr, which must produce a Result
  * value. On Success, it just moves the success over. On error, it calls
@@ -862,24 +873,14 @@ class NotNull;
  * orElse function with a warning. The macro is a sub macro and is intended to
  * be used along with one of the main macros such as QM_TRY.
  */
-#define QM_OR_ELSE_WARN(expr, orElseFunc)                         \
-  (expr).orElse([&](const auto& firstRes) {                       \
-    mozilla::dom::quota::QM_HANDLE_ERROR(                         \
-        #expr, firstRes, mozilla::dom::quota::Severity::Warning); \
-    return orElseFunc(firstRes);                                  \
-  })
+#define QM_OR_ELSE_WARN(...) QM_OR_ELSE_REPORT(Warning, __VA_ARGS__)
 
 /**
  * QM_OR_ELSE_NOTE is like QM_OR_ELSE_WARN. The only difference is that
  * failures are reported using a lower level of severity relative to failures
  * reported by QM_OR_ELSE_WARN.
  */
-#define QM_OR_ELSE_NOTE(expr, orElseFunc)                                      \
-  (expr).orElse([&](const auto& firstRes) {                                    \
-    mozilla::dom::quota::QM_HANDLE_ERROR(#expr, firstRes,                      \
-                                         mozilla::dom::quota::Severity::Note); \
-    return orElseFunc(firstRes);                                               \
-  })
+#define QM_OR_ELSE_NOTE(...) QM_OR_ELSE_REPORT(Note, __VA_ARGS__)
 
 /**
  * QM_OR_ELSE_LOG is like QM_OR_ELSE_WARN. The only difference is that
@@ -890,12 +891,7 @@ class NotNull;
  * telemetry. For that reason, the expression shouldn't contain nested QM_TRY
  * macro uses.
  */
-#define QM_OR_ELSE_LOG(expr, orElseFunc)                                      \
-  (expr).orElse([&](const auto& firstRes) {                                   \
-    mozilla::dom::quota::QM_HANDLE_ERROR(#expr, firstRes,                     \
-                                         mozilla::dom::quota::Severity::Log); \
-    return orElseFunc(firstRes);                                              \
-  })
+#define QM_OR_ELSE_LOG(...) QM_OR_ELSE_REPORT(Log, __VA_ARGS__)
 
 // Telemetry probes to collect number of failure during the initialization.
 #ifdef NIGHTLY_BUILD
