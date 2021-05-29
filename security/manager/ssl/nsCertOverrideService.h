@@ -39,7 +39,6 @@ class nsCertOverride final : public nsICertOverride {
 
   nsCString mAsciiHost;
   int32_t mPort;
-  OriginAttributes mOriginAttributes;
   bool mIsTemporary;  // true: session only, false: stored on disk
   nsCString mFingerprint;
   OverrideBits mOverrideBits;
@@ -68,16 +67,16 @@ class nsCertOverrideEntry final : public PLDHashEntryHdr {
   nsCertOverrideEntry(nsCertOverrideEntry&& toMove)
       : PLDHashEntryHdr(std::move(toMove)),
         mSettings(std::move(toMove.mSettings)),
-        mKeyString(std::move(toMove.mKeyString)) {}
+        mHostWithPort(std::move(toMove.mHostWithPort)) {}
 
   ~nsCertOverrideEntry() = default;
 
-  KeyType GetKey() const { return KeyStringPtr(); }
+  KeyType GetKey() const { return HostWithPortPtr(); }
 
-  KeyTypePointer GetKeyPointer() const { return KeyStringPtr(); }
+  KeyTypePointer GetKeyPointer() const { return HostWithPortPtr(); }
 
   bool KeyEquals(KeyTypePointer aKey) const {
-    return !strcmp(KeyStringPtr(), aKey);
+    return !strcmp(HostWithPortPtr(), aKey);
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
@@ -89,12 +88,12 @@ class nsCertOverrideEntry final : public PLDHashEntryHdr {
   enum { ALLOW_MEMMOVE = false };
 
   // get methods
-  inline const nsCString& KeyString() const { return mKeyString; }
+  inline const nsCString& HostWithPort() const { return mHostWithPort; }
 
-  inline KeyTypePointer KeyStringPtr() const { return mKeyString.get(); }
+  inline KeyTypePointer HostWithPortPtr() const { return mHostWithPort.get(); }
 
   RefPtr<nsCertOverride> mSettings;
-  nsCString mKeyString;
+  nsCString mHostWithPort;
 };
 
 class nsCertOverrideService final : public nsICertOverrideService,
@@ -112,16 +111,11 @@ class nsCertOverrideService final : public nsICertOverrideService,
   nsresult Init();
   void RemoveAllTemporaryOverrides();
 
-  // Concatenates host name and the port number. If the port number is -1 then
+  // Concates host name and the port number. If the port number is -1 then
   // port 443 is automatically used. This method ensures there is always a port
   // number separated with colon.
   static void GetHostWithPort(const nsACString& aHostName, int32_t aPort,
-                              nsACString& aRetval);
-
-  // Concatenates host name, port number, and origin attributes.
-  static void GetKeyString(const nsACString& aHostName, int32_t aPort,
-                           const OriginAttributes& aOriginAttributes,
-                           nsACString& aRetval);
+                              nsACString& _retval);
 
   void AssertOnTaskQueue() const {
     MOZ_ASSERT(mWriterTaskQueue->IsOnCurrentThread());
@@ -144,7 +138,6 @@ class nsCertOverrideService final : public nsICertOverrideService,
   nsresult Read(const mozilla::MutexAutoLock& aProofOfLock);
   nsresult Write(const mozilla::MutexAutoLock& aProofOfLock);
   nsresult AddEntryToList(const nsACString& host, int32_t port,
-                          const OriginAttributes& aOriginAttributes,
                           nsIX509Cert* aCert, const bool aIsTemporary,
                           const nsACString& fingerprint,
                           nsCertOverride::OverrideBits ob,

@@ -41,8 +41,8 @@ const APIS = {
   GetActive({ tab }) {
     return browser.test.getActive(tab.id);
   },
-  RemoveAllCertOverrides() {
-    browser.test.removeAllCertOverrides();
+  RemoveCertOverride({ host, port }) {
+    browser.test.removeCertOverride(host, port);
   },
   RestorePrefs({ oldPrefs }) {
     return browser.test.restorePrefs(oldPrefs);
