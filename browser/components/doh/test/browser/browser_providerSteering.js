@@ -5,7 +5,7 @@
 "use strict";
 
 const TEST_DOMAIN = "doh.test.";
-const AUTO_TRR_URI = "https://dummytrr.com/query";
+const AUTO_TRR_URI = "https://example.com/dns-query";
 
 add_task(setup);
 
