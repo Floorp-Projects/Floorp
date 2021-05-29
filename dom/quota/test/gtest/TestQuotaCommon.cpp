@@ -1181,12 +1181,12 @@ TEST(QuotaCommon_WarnOnlyTryUnwrap, Failure_WithCleanup)
 
 TEST(QuotaCommon_OrElseWarn, Success)
 {
-  bool orElseWarnRun = false;
+  bool fallbackRun = false;
   bool tryContinued = false;
 
   const auto res = [&]() -> mozilla::Result<mozilla::Ok, NotOk> {
-    QM_TRY(QM_OR_ELSE_WARN(OkIf(true), ([&orElseWarnRun](const NotOk) {
-                             orElseWarnRun = true;
+    QM_TRY(QM_OR_ELSE_WARN(OkIf(true), ([&fallbackRun](const NotOk) {
+                             fallbackRun = true;
                              return mozilla::Result<mozilla::Ok, NotOk>{
                                  mozilla::Ok{}};
                            })));
@@ -1196,20 +1196,20 @@ TEST(QuotaCommon_OrElseWarn, Success)
   }();
 
   EXPECT_TRUE(res.isOk());
-  EXPECT_FALSE(orElseWarnRun);
+  EXPECT_FALSE(fallbackRun);
   EXPECT_TRUE(tryContinued);
 }
 
 TEST(QuotaCommon_OrElseWarn, Failure_MappedToSuccess)
 {
-  bool orElseWarnRun = false;
+  bool fallbackRun = false;
   bool tryContinued = false;
 
   // XXX Consider allowing to set a custom error handler, so that we can
   // actually assert that a warning was emitted.
   const auto res = [&]() -> mozilla::Result<mozilla::Ok, NotOk> {
-    QM_TRY(QM_OR_ELSE_WARN(OkIf(false), ([&orElseWarnRun](const NotOk) {
-                             orElseWarnRun = true;
+    QM_TRY(QM_OR_ELSE_WARN(OkIf(false), ([&fallbackRun](const NotOk) {
+                             fallbackRun = true;
                              return mozilla::Result<mozilla::Ok, NotOk>{
                                  mozilla::Ok{}};
                            })));
@@ -1218,20 +1218,20 @@ TEST(QuotaCommon_OrElseWarn, Failure_MappedToSuccess)
   }();
 
   EXPECT_TRUE(res.isOk());
-  EXPECT_TRUE(orElseWarnRun);
+  EXPECT_TRUE(fallbackRun);
   EXPECT_TRUE(tryContinued);
 }
 
 TEST(QuotaCommon_OrElseWarn, Failure_MappedToError)
 {
-  bool orElseWarnRun = false;
+  bool fallbackRun = false;
   bool tryContinued = false;
 
   // XXX Consider allowing to set a custom error handler, so that we can
   // actually assert that a warning was emitted.
   const auto res = [&]() -> mozilla::Result<mozilla::Ok, NotOk> {
-    QM_TRY(QM_OR_ELSE_WARN(OkIf(false), ([&orElseWarnRun](const NotOk) {
-                             orElseWarnRun = true;
+    QM_TRY(QM_OR_ELSE_WARN(OkIf(false), ([&fallbackRun](const NotOk) {
+                             fallbackRun = true;
                              return mozilla::Result<mozilla::Ok, NotOk>{
                                  NotOk{}};
                            })));
@@ -1240,7 +1240,7 @@ TEST(QuotaCommon_OrElseWarn, Failure_MappedToError)
   }();
 
   EXPECT_TRUE(res.isErr());
-  EXPECT_TRUE(orElseWarnRun);
+  EXPECT_TRUE(fallbackRun);
   EXPECT_FALSE(tryContinued);
 }
 
