@@ -1100,6 +1100,8 @@ static bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
   MOZ_ASSERT(!lazy->hasBytecode(), "Script is already compiled!");
   MOZ_ASSERT(lazy->function() == fun);
 
+  MOZ_DIAGNOSTIC_ASSERT(!fun->isGhost());
+
   AutoIncrementalTimer timer(cx->realm()->timers.delazificationTime);
 
   size_t sourceStart = lazy->sourceStart();

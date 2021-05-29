@@ -5163,6 +5163,12 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
 
       fun = script->function();
 
+      // Ignore any delazification placeholder functions. These should not be
+      // exposed to debugger in any way.
+      if (fun->isGhost()) {
+        continue;
+      }
+
       // Delazify script.
       JSScript* compiledScript = GetOrCreateFunctionScript(cx, fun);
       if (!compiledScript) {
