@@ -4217,3 +4217,110 @@ JSObject* js::MaybeOptimizeBindGlobalName(JSContext* cx,
 
   return nullptr;
 }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+static void DumpEnvironmentObject(JSObject* unrootedEnvObj) {
+  JSContext* cx = TlsContext.get();
+  if (!cx) {
+    fprintf(stderr, "*** can't get JSContext for current thread\n");
+    return;
+  }
+
+  Rooted<JSObject*> envObj(cx, unrootedEnvObj);
+  while (envObj) {
+    Rooted<EnvironmentObject*> env(cx);
+    if (envObj->is<EnvironmentObject>()) {
+      env = &envObj->as<EnvironmentObject>();
+    } else if (envObj->is<DebugEnvironmentProxy>()) {
+      fprintf(stderr, "[DebugProxy] ");
+      env = &envObj->as<DebugEnvironmentProxy>().environment();
+    } else {
+      MOZ_ASSERT(envObj->is<GlobalObject>());
+      fprintf(stderr, "global\n");
+      break;
+    }
+
+    Rooted<Scope*> scope(cx);
+    if (env->is<CallObject>()) {
+      fprintf(stderr, "CallObject");
+    } else if (env->is<VarEnvironmentObject>()) {
+      fprintf(stderr, "VarEnvironmentObject");
+      scope = &env->as<VarEnvironmentObject>().scope();
+    } else if (env->is<ModuleEnvironmentObject>()) {
+      fprintf(stderr, "ModuleEnvironmentObject");
+    } else if (env->is<WasmInstanceEnvironmentObject>()) {
+      fprintf(stderr, "WasmInstanceEnvironmentObject");
+      scope = &env->as<WasmInstanceEnvironmentObject>().scope();
+    } else if (env->is<WasmFunctionCallObject>()) {
+      fprintf(stderr, "WasmFunctionCallObject");
+      scope = &env->as<WasmFunctionCallObject>().scope();
+    } else if (env->is<LexicalEnvironmentObject>()) {
+      if (env->is<ScopedLexicalEnvironmentObject>()) {
+        if (env->is<BlockLexicalEnvironmentObject>()) {
+          if (env->is<NamedLambdaObject>()) {
+            fprintf(stderr, "NamedLambdaObject");
+          } else {
+            fprintf(stderr, "BlockLexicalEnvironmentObject");
+          }
+        } else if (env->is<ClassBodyLexicalEnvironmentObject>()) {
+          fprintf(stderr, "ClassBodyLexicalEnvironmentObject");
+        } else {
+          fprintf(stderr, "ScopedLexicalEnvironmentObject");
+        }
+        scope = &env->as<ScopedLexicalEnvironmentObject>().scope();
+      } else if (env->is<ExtensibleLexicalEnvironmentObject>()) {
+        if (env->is<GlobalLexicalEnvironmentObject>()) {
+          fprintf(stderr, "GlobalLexicalEnvironmentObject");
+        } else if (env->is<NonSyntacticLexicalEnvironmentObject>()) {
+          fprintf(stderr, "NonSyntacticLexicalEnvironmentObject");
+        } else {
+          fprintf(stderr, "ExtensibleLexicalEnvironmentObject");
+        }
+      } else {
+        fprintf(stderr, "LexicalEnvironmentObject");
+      }
+    } else if (env->is<NonSyntacticVariablesObject>()) {
+      fprintf(stderr, "NonSyntacticVariablesObject");
+    } else if (env->is<WithEnvironmentObject>()) {
+      fprintf(stderr, "WithEnvironmentObject");
+    } else if (env->is<RuntimeLexicalErrorObject>()) {
+      fprintf(stderr, "RuntimeLexicalErrorObject");
+    } else {
+      fprintf(stderr, "EnvironmentObject");
+    }
+
+    if (scope) {
+      fprintf(stderr, " {\n");
+      for (Rooted<BindingIter> bi(cx, BindingIter(scope)); bi; bi++) {
+        if (bi.location().kind() == BindingLocation::Kind::Environment) {
+          UniqueChars bytes = AtomToPrintableString(cx, bi.name());
+          if (!bytes) {
+            fprintf(stderr, "  *** out of memory\n");
+            return;
+          }
+
+          fprintf(stderr, "  %u: %s %s\n", bi.location().slot(),
+                  BindingKindString(bi.kind()), bytes.get());
+        }
+      }
+      fprintf(stderr, "}");
+    }
+
+    fprintf(stderr, "\n");
+
+    if (envObj->is<DebugEnvironmentProxy>()) {
+      envObj = &envObj->as<DebugEnvironmentProxy>().enclosingEnvironment();
+    } else {
+      envObj = &env->enclosingEnvironment();
+    }
+
+    if (envObj) {
+      fprintf(stderr, "-> ");
+    }
+  }
+}
+
+void EnvironmentObject::dump() { DumpEnvironmentObject(this); }
+
+void DebugEnvironmentProxy::dump() { DumpEnvironmentObject(this); }
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
