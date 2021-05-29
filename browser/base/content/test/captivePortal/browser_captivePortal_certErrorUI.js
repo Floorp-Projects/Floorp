@@ -141,6 +141,6 @@ add_task(async function testCaptivePortalAdvancedPanel() {
   let certOverrideService = Cc[
     "@mozilla.org/security/certoverride;1"
   ].getService(Ci.nsICertOverrideService);
-  certOverrideService.clearValidityOverride("expired.example.com", -1);
+  certOverrideService.clearValidityOverride("expired.example.com", -1, {});
   await BrowserTestUtils.removeTab(tab);
 });

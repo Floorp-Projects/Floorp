@@ -36,6 +36,7 @@ add_task(async function() {
   overrideService.rememberValidityOverride(
     TEST_URI.asciiHost,
     TEST_URI.port,
+    {},
     cert,
     flags,
     false
@@ -69,6 +70,7 @@ add_task(async function() {
     overrideService.rememberValidityOverride(
       uri.asciiHost,
       uri.port,
+      {},
       cert,
       flags,
       false
@@ -77,11 +79,53 @@ add_task(async function() {
       overrideService.hasMatchingOverride(
         uri.asciiHost,
         uri.port,
+        {},
         cert,
         {},
         {}
       ),
       `Should have added override for ${uri.asciiHost}:${uri.port}`
+    );
+    Assert.ok(
+      !overrideService.hasMatchingOverride(
+        uri.asciiHost,
+        uri.port,
+        { privateBrowsingId: 1 },
+        cert,
+        {},
+        {}
+      ),
+      `Should not have added override for ${uri.asciiHost}:${uri.port} with private browsing ID`
+    );
+    overrideService.rememberValidityOverride(
+      uri.asciiHost,
+      uri.port,
+      { privateBrowsingId: 1 },
+      cert,
+      flags,
+      false
+    );
+    Assert.ok(
+      overrideService.hasMatchingOverride(
+        uri.asciiHost,
+        uri.port,
+        { privateBrowsingId: 1 },
+        cert,
+        {},
+        {}
+      ),
+      `Should have added override for ${uri.asciiHost}:${uri.port} with private browsing ID`
+    );
+    Assert.ok(
+      !overrideService.hasMatchingOverride(
+        uri.asciiHost,
+        uri.port,
+        { privateBrowsingId: 2 },
+        cert,
+        {},
+        {}
+      ),
+      `Should not have added override for ${uri.asciiHost}:${uri.port} with private browsing ID 2`
     );
   }
 
@@ -97,11 +141,23 @@ add_task(async function() {
       !overrideService.hasMatchingOverride(
         uri.asciiHost,
         uri.port,
+        {},
         cert,
         {},
         {}
       ),
       `Should have removed override for ${uri.asciiHost}:${uri.port}`
+    );
+    Assert.ok(
+      !overrideService.hasMatchingOverride(
+        uri.asciiHost,
+        uri.port,
+        { privateBrowsingId: 1 },
+        cert,
+        {},
+        {}
+      ),
+      `Should have removed override for ${uri.asciiHost}:${uri.port} with private browsing attribute`
     );
   }
 });
