@@ -214,10 +214,10 @@ void CanonicalBrowsingContext::ReplacedBy(
 
   if (mSessionHistory) {
     mSessionHistory->SetBrowsingContext(aNewContext);
-    if (mozilla::BFCacheInParent()) {
-      // XXXBFCache Should we clear the epoch always?
-      mSessionHistory->SetEpoch(0, Nothing());
-    }
+    // At this point we will be creating a new ChildSHistory in the child.
+    // That means that the child's epoch will be reset, so it makes sense to
+    // reset the epoch in the parent too.
+    mSessionHistory->SetEpoch(0, Nothing());
     mSessionHistory.swap(aNewContext->mSessionHistory);
     RefPtr<ChildSHistory> childSHistory = ForgetChildSHistory();
     aNewContext->SetChildSHistory(childSHistory);
