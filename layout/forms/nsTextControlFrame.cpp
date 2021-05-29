@@ -1028,16 +1028,8 @@ nsresult nsTextControlFrame::OffsetToDOMPoint(uint32_t aOffset,
     *aPosition = 0;
   } else if (textNode) {
     uint32_t textLength = textNode->Length();
-    if (length == 2 && aOffset == textLength) {
-      // If we're at the end of the text node and we have a trailing BR node,
-      // set the selection on the BR node.
-      rootNode.forget(aResult);
-      *aPosition = 1;
-    } else {
-      // Otherwise, set the selection on the textnode itself.
-      firstNode.forget(aResult);
-      *aPosition = std::min(aOffset, textLength);
-    }
+    firstNode.forget(aResult);
+    *aPosition = std::min(aOffset, textLength);
   } else {
     rootNode.forget(aResult);
     *aPosition = 0;

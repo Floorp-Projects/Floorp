@@ -81,9 +81,37 @@ static nsLineBox* FindContainingLine(nsIFrame* aFrame) {
   return nullptr;
 }
 
+static bool AdjustCaretFrameForLineStart(nsIFrame*& aFrame,
+                                         int32_t& aFrameOffset,
+                                         nsFrameSelection& aFrameSelection) {
+  if (!aFrame->HasSignificantTerminalNewline()) {
+    return false;
+  }
+
+  int32_t start;
+  int32_t end;
+  aFrame->GetOffsets(start, end);
+  if (aFrameOffset != end) {
+    return false;
+  }
+
+  nsIFrame* nextSibling = aFrame->GetNextSibling();
+  if (!nextSibling) {
+    return false;
+  }
+
+  aFrame = nextSibling;
+  aFrame->GetOffsets(start, end);
+  aFrameOffset = start;
+  aFrameSelection.SetHint(CARET_ASSOCIATE_AFTER);
+  return true;
+}
+
 static void AdjustCaretFrameForLineEnd(nsIFrame** aFrame, int32_t* aOffset) {
   nsLineBox* line = FindContainingLine(*aFrame);
-  if (!line) return;
+  if (!line) {
+    return;
+  }
   int32_t count = line->GetChildCount();
   for (nsIFrame* f = line->mFirstChild; count > 0;
        --count, f = f->GetNextSibling()) {
@@ -636,11 +664,16 @@ nsIFrame* nsCaret::GetCaretFrameForNodeOffset(
     *aReturnUnadjustedFrame = theFrame;
   }
 
-  // if theFrame is after a text frame that's logically at the end of the line
-  // (e.g. if theFrame is a <br> frame), then put the caret at the end of
-  // that text frame instead. This way, the caret will be positioned as if
-  // trailing whitespace was not trimmed.
-  AdjustCaretFrameForLineEnd(&theFrame, &theFrameOffset);
+  // if theFrame is a text frame with a significant terminal character, use the
+  // next frame instead
+  if (!AdjustCaretFrameForLineStart(theFrame, theFrameOffset,
+                                    *aFrameSelection)) {
+    // if theFrame is after a text frame that's logically at the end of the line
+    // (e.g. if theFrame is a <br> frame), then put the caret at the end of
+    // that text frame instead. This way, the caret will be positioned as if
+    // trailing whitespace was not trimmed.
+    AdjustCaretFrameForLineEnd(&theFrame, &theFrameOffset);
+  };
 
   // Mamdouh : modification of the caret to work at rtl and ltr with Bidi
   //
