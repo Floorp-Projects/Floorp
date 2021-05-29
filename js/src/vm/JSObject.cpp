@@ -3148,7 +3148,7 @@ JS_FRIEND_API void js::DumpId(jsid id, js::GenericPrinter& out) {
 
 static void DumpProperty(const NativeObject* obj, Shape& shape,
                          js::GenericPrinter& out) {
-  ShapePropertyWithKey prop = shape.propertyWithKey();
+  PropertyInfoWithKey prop = shape.propertyWithKey();
   jsid id = prop.key();
   if (JSID_IS_ATOM(id)) {
     id.toAtom()->dumpCharsNoNewline(out);

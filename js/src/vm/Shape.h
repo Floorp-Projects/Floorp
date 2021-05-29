@@ -1064,8 +1064,8 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return ShapeProperty(propFlags, maybeSlot());
   }
 
-  ShapePropertyWithKey propertyWithKey() const {
-    return ShapePropertyWithKey(propFlags, maybeSlot(), propid());
+  PropertyInfoWithKey propertyWithKey() const {
+    return PropertyInfoWithKey(propFlags, maybeSlot(), propid());
   }
 
   uint32_t entryCount() {
@@ -1446,8 +1446,6 @@ MOZ_ALWAYS_INLINE bool ShapeIC::search(jsid id, Shape** foundShape) {
   return false;
 }
 
-using ShapePropertyVector = GCVector<ShapePropertyWithKey, 8>;
-
 // Iterator for iterating over a shape's properties. It can be used like this:
 //
 //   for (ShapePropertyIter<NoGC> iter(nobj->shape()); !iter.done(); iter++) {
@@ -1482,18 +1480,18 @@ class MOZ_RAII ShapePropertyIter {
     cursor_ = cursor_->previous();
   }
 
-  ShapePropertyWithKey get() const {
+  PropertyInfoWithKey get() const {
     MOZ_ASSERT(!done());
     return cursor_->propertyWithKey();
   }
 
-  ShapePropertyWithKey operator*() const { return get(); }
+  PropertyInfoWithKey operator*() const { return get(); }
 
   // Fake pointer struct to make operator-> work.
   // See https://stackoverflow.com/a/52856349.
   struct FakePtr {
-    ShapePropertyWithKey val_;
-    const ShapePropertyWithKey* operator->() const { return &val_; }
+    PropertyInfoWithKey val_;
+    const PropertyInfoWithKey* operator->() const { return &val_; }
   };
   FakePtr operator->() const { return {get()}; }
 };
