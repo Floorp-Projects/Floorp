@@ -828,8 +828,8 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     Maybe<ShapeProperty> lengthProp = arr->lookup(cx, id);
     MOZ_ASSERT(lengthProp.isSome());
     MOZ_ASSERT(lengthProp->isCustomDataProperty());
-    ShapePropertyFlags flags = lengthProp->flags();
-    flags.clearFlag(ShapePropertyFlag::Writable);
+    PropertyFlags flags = lengthProp->flags();
+    flags.clearFlag(PropertyFlag::Writable);
     if (!NativeObject::changeCustomDataPropAttributes(cx, arr, id, flags)) {
       return false;
     }
@@ -931,8 +931,8 @@ static bool AddLengthProperty(JSContext* cx, HandleArrayObject obj) {
   MOZ_ASSERT(obj->empty());
 
   RootedId lengthId(cx, NameToId(cx->names().length));
-  constexpr ShapePropertyFlags flags = {ShapePropertyFlag::CustomDataProperty,
-                                        ShapePropertyFlag::Writable};
+  constexpr PropertyFlags flags = {PropertyFlag::CustomDataProperty,
+                                   PropertyFlag::Writable};
   return NativeObject::addCustomDataProperty(cx, obj, lengthId, flags);
 }
 

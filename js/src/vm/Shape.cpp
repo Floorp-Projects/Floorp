@@ -519,8 +519,7 @@ NativeObject::maybeConvertToDictionaryForAdd(JSContext* cx,
   return toDictionaryMode(cx, obj);
 }
 
-static void AssertValidCustomDataProp(NativeObject* obj,
-                                      ShapePropertyFlags flags) {
+static void AssertValidCustomDataProp(NativeObject* obj, PropertyFlags flags) {
   // We only support custom data properties on ArrayObject and ArgumentsObject.
   // The mechanism is deprecated so we don't want to add new uses.
   MOZ_ASSERT(flags.isCustomDataProperty());
@@ -530,8 +529,7 @@ static void AssertValidCustomDataProp(NativeObject* obj,
 
 /* static */
 bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
-                                         HandleId id,
-                                         ShapePropertyFlags flags) {
+                                         HandleId id, PropertyFlags flags) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
   MOZ_ASSERT(!id.isPrivateName());
   MOZ_ASSERT(!obj->containsPure(id));
@@ -564,8 +562,8 @@ bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
 
 /* static */
 bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
-                               HandleId id, uint32_t slot,
-                               ShapePropertyFlags flags, uint32_t* slotOut) {
+                               HandleId id, uint32_t slot, PropertyFlags flags,
+                               uint32_t* slotOut) {
   AutoCheckShapeConsistency check(obj);
   MOZ_ASSERT(!flags.isCustomDataProperty(),
              "Use addCustomDataProperty for custom data properties");
@@ -640,7 +638,7 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
 
   AutoCheckShapeConsistency check(obj);
 
-  constexpr ShapePropertyFlags flags = ShapePropertyFlags::defaultDataPropFlags;
+  constexpr PropertyFlags flags = PropertyFlags::defaultDataPropFlags;
   ObjectFlags objectFlags =
       GetObjectFlagsForNewProperty(obj->lastProperty(), id, flags, cx);
 
@@ -746,7 +744,7 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
  * Assert some invariants that should hold when changing properties. It's the
  * responsibility of the callers to ensure these hold.
  */
-static void AssertCanChangeFlags(Shape* shape, ShapePropertyFlags flags) {
+static void AssertCanChangeFlags(Shape* shape, PropertyFlags flags) {
 #ifdef DEBUG
   ShapeProperty prop = shape->property();
   if (prop.configurable()) {
@@ -803,7 +801,7 @@ bool NativeObject::maybeToDictionaryModeForChange(JSContext* cx,
 
 /* static */
 bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
-                                  HandleId id, ShapePropertyFlags flags,
+                                  HandleId id, PropertyFlags flags,
                                   uint32_t* slotOut) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
 
@@ -897,7 +895,7 @@ bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
 bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
                                                   HandleNativeObject obj,
                                                   HandleId id,
-                                                  ShapePropertyFlags flags) {
+                                                  PropertyFlags flags) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
 
   AutoCheckShapeConsistency check(obj);
@@ -1666,7 +1664,7 @@ void Shape::dump(js::GenericPrinter& out) const {
 
   if (!propFlags.isEmpty()) {
     bool first = true;
-    auto dumpFlag = [&](ShapePropertyFlag flag, const char* name) {
+    auto dumpFlag = [&](PropertyFlag flag, const char* name) {
       if (!propFlags.hasFlag(flag)) {
         return;
       }
@@ -1677,11 +1675,11 @@ void Shape::dump(js::GenericPrinter& out) const {
       first = false;
     };
     out.putChar('(');
-    dumpFlag(ShapePropertyFlag::Enumerable, "enumerable");
-    dumpFlag(ShapePropertyFlag::Configurable, "configurable");
-    dumpFlag(ShapePropertyFlag::Writable, "writable");
-    dumpFlag(ShapePropertyFlag::AccessorProperty, "accessor");
-    dumpFlag(ShapePropertyFlag::CustomDataProperty, "custom-data");
+    dumpFlag(PropertyFlag::Enumerable, "enumerable");
+    dumpFlag(PropertyFlag::Configurable, "configurable");
+    dumpFlag(PropertyFlag::Writable, "writable");
+    dumpFlag(PropertyFlag::AccessorProperty, "accessor");
+    dumpFlag(PropertyFlag::CustomDataProperty, "custom-data");
     out.putChar(')');
   }
 

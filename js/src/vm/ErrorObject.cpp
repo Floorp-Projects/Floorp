@@ -429,8 +429,8 @@ Shape* js::ErrorObject::assignInitialShape(JSContext* cx,
                                            Handle<ErrorObject*> obj) {
   MOZ_ASSERT(obj->empty());
 
-  constexpr ShapePropertyFlags propFlags = {ShapePropertyFlag::Configurable,
-                                            ShapePropertyFlag::Writable};
+  constexpr PropertyFlags propFlags = {PropertyFlag::Configurable,
+                                       PropertyFlag::Writable};
 
   uint32_t slot;
   if (!NativeObject::addProperty(cx, obj, cx->names().fileName, FILENAME_SLOT,
@@ -475,8 +475,8 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
   // |new Error("")| -- but not in others -- |new Error(undefined)|,
   // |new Error()|.
   if (message) {
-    constexpr ShapePropertyFlags propFlags = {ShapePropertyFlag::Configurable,
-                                              ShapePropertyFlag::Writable};
+    constexpr PropertyFlags propFlags = {PropertyFlag::Configurable,
+                                         PropertyFlag::Writable};
     uint32_t slot;
     if (!NativeObject::addProperty(cx, obj, cx->names().message, MESSAGE_SLOT,
                                    propFlags, &slot)) {

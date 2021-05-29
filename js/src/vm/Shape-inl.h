@@ -192,7 +192,7 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
 }
 
 MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(
-    Shape* last, jsid id, ShapePropertyFlags propFlags, JSContext* cx) {
+    Shape* last, jsid id, PropertyFlags propFlags, JSContext* cx) {
   ObjectFlags flags = last->objectFlags();
 
   uint32_t index;

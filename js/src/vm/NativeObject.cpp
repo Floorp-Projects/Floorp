@@ -567,7 +567,7 @@ DenseElementResult NativeObject::maybeDensifySparseElements(
     if (!IdIsIndex(iter->key(), &index)) {
       continue;
     }
-    if (iter->flags() != ShapePropertyFlags::defaultDataPropFlags) {
+    if (iter->flags() != PropertyFlags::defaultDataPropFlags) {
       // For simplicity, only densify the object if all indexed properties can
       // be converted to dense elements.
       return DenseElementResult::Incomplete;
@@ -1232,7 +1232,7 @@ bool NativeObject::reshapeForShadowedProp(JSContext* cx,
 
 static bool ChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                            HandleObject getter, HandleObject setter,
-                           ShapePropertyFlags flags, PropertyResult* existing) {
+                           PropertyFlags flags, PropertyResult* existing) {
   MOZ_ASSERT(existing);
 
   Rooted<GetterSetter*> gs(cx);
@@ -1272,19 +1272,18 @@ static bool ChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
   return true;
 }
 
-static ShapePropertyFlags ComputeShapePropertyFlags(
-    const PropertyDescriptor& desc) {
+static PropertyFlags ComputePropertyFlags(const PropertyDescriptor& desc) {
   desc.assertComplete();
 
-  ShapePropertyFlags flags;
-  flags.setFlag(ShapePropertyFlag::Configurable, desc.configurable());
-  flags.setFlag(ShapePropertyFlag::Enumerable, desc.enumerable());
+  PropertyFlags flags;
+  flags.setFlag(PropertyFlag::Configurable, desc.configurable());
+  flags.setFlag(PropertyFlag::Enumerable, desc.enumerable());
 
   if (desc.isDataDescriptor()) {
-    flags.setFlag(ShapePropertyFlag::Writable, desc.writable());
+    flags.setFlag(PropertyFlag::Writable, desc.writable());
   } else {
     MOZ_ASSERT(desc.isAccessorDescriptor());
-    flags.setFlag(ShapePropertyFlag::AccessorProperty);
+    flags.setFlag(PropertyFlag::AccessorProperty);
   }
 
   return flags;
@@ -1318,8 +1317,8 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
   // Use dense storage for indexed properties where possible: when we have an
   // integer key with default property attributes and are either adding a new
   // property or changing a dense element.
-  ShapePropertyFlags flags = ComputeShapePropertyFlags(desc);
-  if (id.isInt() && flags == ShapePropertyFlags::defaultDataPropFlags &&
+  PropertyFlags flags = ComputePropertyFlags(desc);
+  if (id.isInt() && flags == PropertyFlags::defaultDataPropFlags &&
       (AddOrChange == IsAddOrChange::Add || existing->isDenseElement())) {
     MOZ_ASSERT(!desc.isAccessorDescriptor());
     MOZ_ASSERT(!obj->is<TypedArrayObject>());
