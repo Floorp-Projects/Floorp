@@ -571,7 +571,7 @@ class NativeObject : public JSObject {
     return shape();
   }
 
-  ShapePropertyWithKey getLastProperty() const {
+  PropertyInfoWithKey getLastProperty() const {
     return shape()->propertyWithKey();
   }
 

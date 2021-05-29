@@ -2903,7 +2903,7 @@ static bool CloneProperties(JSContext* cx, HandleNativeObject selfHostedObject,
     }
   }
 
-  Rooted<ShapePropertyVector> props(cx, ShapePropertyVector(cx));
+  Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
   for (ShapePropertyIter<NoGC> iter(selfHostedObject->shape()); !iter.done();
        iter++) {
     if (iter->enumerable() && !props.append(*iter)) {
