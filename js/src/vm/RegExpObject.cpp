@@ -267,7 +267,7 @@ Shape* RegExpObject::assignInitialShape(JSContext* cx,
   /* The lastIndex property alone is writable but non-configurable. */
   uint32_t slot;
   if (!NativeObject::addProperty(cx, self, cx->names().lastIndex,
-                                 LAST_INDEX_SLOT, {ShapePropertyFlag::Writable},
+                                 LAST_INDEX_SLOT, {PropertyFlag::Writable},
                                  &slot)) {
     return nullptr;
   }

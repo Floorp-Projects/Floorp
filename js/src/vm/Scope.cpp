@@ -107,14 +107,14 @@ Shape* js::EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
 static Shape* NextEnvironmentShape(JSContext* cx, HandleAtom name,
                                    BindingKind bindKind, uint32_t slot,
                                    HandleShape shape) {
-  ShapePropertyFlags propFlags = {ShapePropertyFlag::Enumerable};
+  PropertyFlags propFlags = {PropertyFlag::Enumerable};
   switch (bindKind) {
     case BindingKind::Const:
     case BindingKind::NamedLambdaCallee:
       // Non-writable.
       break;
     default:
-      propFlags.setFlag(ShapePropertyFlag::Writable);
+      propFlags.setFlag(PropertyFlag::Writable);
       break;
   }
 
