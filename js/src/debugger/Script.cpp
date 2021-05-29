@@ -529,6 +529,12 @@ static bool PushInnerFunctions(JSContext* cx, Debugger* dbg, HandleObject array,
     if (obj->is<JSFunction>()) {
       fun = &obj->as<JSFunction>();
 
+      // Ignore any delazification placeholder functions. These should not be
+      // exposed to debugger in any way.
+      if (fun->isGhost()) {
+        continue;
+      }
+
       if (!PushFunctionScript(cx, dbg, fun, array)) {
         return false;
       }
