@@ -5733,7 +5733,7 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
   // here since we just want to log NS_ERROR_FILE_NOT_FOUND and
   // NS_ERROR_FILE_TARGET_DOES_NOT_EXIST results and not spam the reports.
   // Theoretically, there should be no QM_OR_ELSE_(WARN|LOG) when a caller
-  // passes Idempotency::No, but it's simpler when the orElse function just
+  // passes Idempotency::No, but it's simpler when the fallback function just
   // always propagates the passed error.
 
   QM_TRY_INSPECT(
