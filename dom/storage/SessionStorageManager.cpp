@@ -14,6 +14,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/PrincipalHashKey.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
