@@ -441,7 +441,7 @@ bool JSFunction::hasNonConfigurablePrototypeDataProperty() {
 #ifdef DEBUG
     PropertyName* prototypeName =
         runtimeFromMainThread()->commonNames->prototype;
-    Maybe<ShapeProperty> prop = lookupPure(prototypeName);
+    Maybe<PropertyInfo> prop = lookupPure(prototypeName);
     MOZ_ASSERT(prop.isSome());
     MOZ_ASSERT(prop->isDataProperty());
     MOZ_ASSERT(!prop->configurable());
@@ -455,7 +455,7 @@ bool JSFunction::hasNonConfigurablePrototypeDataProperty() {
   }
 
   PropertyName* prototypeName = runtimeFromMainThread()->commonNames->prototype;
-  Maybe<ShapeProperty> prop = lookupPure(prototypeName);
+  Maybe<PropertyInfo> prop = lookupPure(prototypeName);
   return prop.isSome() && prop->isDataProperty() && !prop->configurable();
 }
 

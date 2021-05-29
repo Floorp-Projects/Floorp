@@ -26,7 +26,7 @@ class PropertyResult {
   };
   union {
     // Set if kind is NativeProperty.
-    ShapeProperty shapeProp_;
+    PropertyInfo propInfo_;
     // Set if kind is DenseElement.
     uint32_t denseIndex_;
     // Set if kind is TypedArrayElement.
@@ -36,7 +36,7 @@ class PropertyResult {
   bool ignoreProtoChain_ = false;
 
  public:
-  // Note: because ShapeProperty does not have a default constructor, we can't
+  // Note: because PropertyInfo does not have a default constructor, we can't
   // use |= default| here.
   PropertyResult() {}
 
@@ -56,9 +56,9 @@ class PropertyResult {
   bool isTypedArrayElement() const { return kind_ == Kind::TypedArrayElement; }
   bool isNativeProperty() const { return kind_ == Kind::NativeProperty; }
 
-  ShapeProperty shapeProperty() const {
+  PropertyInfo propertyInfo() const {
     MOZ_ASSERT(isNativeProperty());
-    return shapeProp_;
+    return propInfo_;
   }
 
   uint32_t denseElementIndex() const {
@@ -73,9 +73,9 @@ class PropertyResult {
 
   void setNotFound() { kind_ = Kind::NotFound; }
 
-  void setNativeProperty(ShapeProperty prop) {
+  void setNativeProperty(PropertyInfo prop) {
     kind_ = Kind::NativeProperty;
-    shapeProp_ = prop;
+    propInfo_ = prop;
   }
 
   void setTypedObjectProperty() { kind_ = Kind::NonNativeProperty; }

@@ -750,7 +750,7 @@ class GlobalObject : public NativeObject {
     }
 
     NativeObject* holder = &slot.toObject().as<NativeObject>();
-    mozilla::Maybe<ShapeProperty> prop = holder->lookupPure(name);
+    mozilla::Maybe<PropertyInfo> prop = holder->lookupPure(name);
     if (prop.isNothing()) {
       *vp = UndefinedValue();
       return false;
@@ -769,7 +769,7 @@ class GlobalObject : public NativeObject {
       return false;
     }
 
-    if (mozilla::Maybe<ShapeProperty> prop = holder->lookup(cx, name)) {
+    if (mozilla::Maybe<PropertyInfo> prop = holder->lookup(cx, name)) {
       vp.set(holder->getSlot(prop->slot()));
       *exists = true;
     } else {

@@ -636,7 +636,7 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
   bool lengthIsWritable = arr->lengthIsWritable();
 #ifdef DEBUG
   {
-    mozilla::Maybe<ShapeProperty> lengthProp = arr->lookupPure(id);
+    mozilla::Maybe<PropertyInfo> lengthProp = arr->lookupPure(id);
     MOZ_ASSERT(lengthProp.isSome());
     MOZ_ASSERT(lengthProp->writable() == lengthIsWritable);
   }
@@ -825,7 +825,7 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
 
   // Step 20.
   if (desc.hasWritable() && !desc.writable()) {
-    Maybe<ShapeProperty> lengthProp = arr->lookup(cx, id);
+    Maybe<PropertyInfo> lengthProp = arr->lookup(cx, id);
     MOZ_ASSERT(lengthProp.isSome());
     MOZ_ASSERT(lengthProp->isCustomDataProperty());
     PropertyFlags flags = lengthProp->flags();
@@ -4051,7 +4051,7 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
   state_ = State::Disabled;
 
   // Look up Array.prototype[@@iterator] and ensure it's a data property.
-  Maybe<ShapeProperty> ctorProp =
+  Maybe<PropertyInfo> ctorProp =
       arrayProto->lookup(cx, NameToId(cx->names().constructor));
   if (ctorProp.isNothing() || !ctorProp->isDataProperty()) {
     return;
@@ -4068,7 +4068,7 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
   }
 
   // Look up the '@@species' value on Array
-  Maybe<ShapeProperty> speciesProp =
+  Maybe<PropertyInfo> speciesProp =
       arrayCtor->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
   if (speciesProp.isNothing() || !arrayCtor->hasGetter(*speciesProp)) {
     return;

@@ -2024,7 +2024,7 @@ bool js::LookupNameUnqualified(JSContext* cx, HandlePropertyName name,
         return false;
       }
     } else if (env->is<LexicalEnvironmentObject>() &&
-               !prop.shapeProperty().writable()) {
+               !prop.propertyInfo().writable()) {
       // Assigning to a named lambda callee name is a no-op in sloppy mode.
       if (!(env->is<BlockLexicalEnvironmentObject>() &&
             env->as<BlockLexicalEnvironmentObject>().scope().kind() ==
@@ -2098,12 +2098,12 @@ static inline bool NativeGetPureInline(NativeObject* pobj, jsid id,
   }
 
   // Fail if we have a custom getter.
-  ShapeProperty shapeProp = prop.shapeProperty();
-  if (!shapeProp.isDataProperty()) {
+  PropertyInfo propInfo = prop.propertyInfo();
+  if (!propInfo.isDataProperty()) {
     return false;
   }
 
-  *vp = pobj->getSlot(shapeProp.slot());
+  *vp = pobj->getSlot(propInfo.slot());
   MOZ_ASSERT(!vp->isMagic());
   return true;
 }
@@ -2146,9 +2146,9 @@ static inline bool NativeGetGetterPureInline(NativeObject* holder,
                                              JSFunction** fp) {
   MOZ_ASSERT(prop.isNativeProperty());
 
-  ShapeProperty shapeProp = prop.shapeProperty();
-  if (holder->hasGetter(shapeProp)) {
-    JSObject* getter = holder->getGetter(shapeProp);
+  PropertyInfo propInfo = prop.propertyInfo();
+  if (holder->hasGetter(propInfo)) {
+    JSObject* getter = holder->getGetter(propInfo);
     if (getter->is<JSFunction>()) {
       *fp = &getter->as<JSFunction>();
       return true;
@@ -2206,14 +2206,14 @@ bool js::GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id,
     return true;
   }
 
-  ShapeProperty shapeProp = prop.shapeProperty();
+  PropertyInfo propInfo = prop.propertyInfo();
 
   NativeObject* nobj = &obj->as<NativeObject>();
-  if (!nobj->hasGetter(shapeProp)) {
+  if (!nobj->hasGetter(propInfo)) {
     return true;
   }
 
-  JSObject* getterObj = nobj->getGetter(shapeProp);
+  JSObject* getterObj = nobj->getGetter(propInfo);
   if (!getterObj->is<JSFunction>()) {
     return true;
   }
@@ -2234,7 +2234,7 @@ bool js::HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id,
     return false;
   }
 
-  *result = prop.isNativeProperty() && prop.shapeProperty().isDataProperty();
+  *result = prop.isNativeProperty() && prop.propertyInfo().isDataProperty();
   return true;
 }
 
@@ -3148,7 +3148,7 @@ JS_FRIEND_API void js::DumpId(jsid id, js::GenericPrinter& out) {
 
 static void DumpProperty(const NativeObject* obj, Shape& shape,
                          js::GenericPrinter& out) {
-  PropertyInfoWithKey prop = shape.propertyWithKey();
+  PropertyInfoWithKey prop = shape.propertyInfoWithKey();
   jsid id = prop.key();
   if (JSID_IS_ATOM(id)) {
     id.toAtom()->dumpCharsNoNewline(out);

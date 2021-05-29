@@ -1837,7 +1837,7 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
 
   while (true) {
     if (Shape* shape = obj->lastProperty()->search(cx, id)) {
-      ShapeProperty prop = shape->property();
+      PropertyInfo prop = shape->propertyInfo();
       if (!prop.isDataProperty()) {
         return false;
       }
@@ -1945,7 +1945,7 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
     return false;
   }
 
-  ShapeProperty prop = shape->property();
+  PropertyInfo prop = shape->propertyInfo();
   if (!prop.isDataProperty() || !prop.writable()) {
     return false;
   }
@@ -1968,7 +1968,7 @@ bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
 
   while (true) {
     if (Shape* shape = nobj->lastProperty()->search(cx, id)) {
-      ShapeProperty prop = shape->property();
+      PropertyInfo prop = shape->propertyInfo();
       if (!prop.isAccessorProperty()) {
         return false;
       }

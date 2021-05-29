@@ -456,7 +456,7 @@ bool ModuleEnvironmentObject::hasImportBinding(HandlePropertyName name) {
 
 bool ModuleEnvironmentObject::lookupImport(
     jsid name, ModuleEnvironmentObject** envOut,
-    mozilla::Maybe<ShapeProperty>* propOut) {
+    mozilla::Maybe<PropertyInfo>* propOut) {
   return importBindings().lookup(name, envOut, propOut);
 }
 
@@ -472,11 +472,11 @@ bool ModuleEnvironmentObject::lookupProperty(JSContext* cx, HandleObject obj,
                                              PropertyResult* propp) {
   const IndirectBindingMap& bindings =
       obj->as<ModuleEnvironmentObject>().importBindings();
-  mozilla::Maybe<ShapeProperty> shapeProp;
+  mozilla::Maybe<PropertyInfo> propInfo;
   ModuleEnvironmentObject* env;
-  if (bindings.lookup(id, &env, &shapeProp)) {
+  if (bindings.lookup(id, &env, &propInfo)) {
     objp.set(env);
-    propp->setNativeProperty(*shapeProp);
+    propp->setNativeProperty(*propInfo);
     return true;
   }
 
@@ -507,7 +507,7 @@ bool ModuleEnvironmentObject::getProperty(JSContext* cx, HandleObject obj,
                                           MutableHandleValue vp) {
   const IndirectBindingMap& bindings =
       obj->as<ModuleEnvironmentObject>().importBindings();
-  mozilla::Maybe<ShapeProperty> prop;
+  mozilla::Maybe<PropertyInfo> prop;
   ModuleEnvironmentObject* env;
   if (bindings.lookup(id, &env, &prop)) {
     vp.set(env->getSlot(prop->slot()));
@@ -537,7 +537,7 @@ bool ModuleEnvironmentObject::getOwnPropertyDescriptor(
     MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
   const IndirectBindingMap& bindings =
       obj->as<ModuleEnvironmentObject>().importBindings();
-  mozilla::Maybe<ShapeProperty> prop;
+  mozilla::Maybe<PropertyInfo> prop;
   ModuleEnvironmentObject* env;
   if (bindings.lookup(id, &env, &prop)) {
     desc.set(mozilla::Some(PropertyDescriptor::Data(
@@ -3442,7 +3442,7 @@ bool js::CheckLexicalNameConflict(
     HandleObject varObj, HandlePropertyName name) {
   const char* redeclKind = nullptr;
   RootedId id(cx, NameToId(name));
-  mozilla::Maybe<ShapeProperty> prop;
+  mozilla::Maybe<PropertyInfo> prop;
   if (varObj->is<GlobalObject>() &&
       varObj->as<GlobalObject>().realm()->isInVarNames(name)) {
     // ES 15.1.11 step 5.a
@@ -3479,7 +3479,7 @@ bool js::CheckLexicalNameConflict(
 [[nodiscard]] static bool CheckVarNameConflict(
     JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
     HandlePropertyName name) {
-  mozilla::Maybe<ShapeProperty> prop = lexicalEnv->lookup(cx, name);
+  mozilla::Maybe<PropertyInfo> prop = lexicalEnv->lookup(cx, name);
   if (prop.isSome()) {
     ReportRuntimeRedeclaration(cx, name, prop->writable() ? "let" : "const");
     return false;
@@ -3674,15 +3674,15 @@ static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
     MOZ_ASSERT(varObj->is<NativeObject>() ||
                varObj->is<DebugEnvironmentProxy>());
     if (varObj->is<GlobalObject>()) {
-      ShapeProperty shapeProp = prop.shapeProperty();
-      if (shapeProp.configurable()) {
+      PropertyInfo propInfo = prop.propertyInfo();
+      if (propInfo.configurable()) {
         if (!DefineDataProperty(cx, varObj, name, rval, attrs)) {
           return false;
         }
       } else {
-        MOZ_ASSERT(shapeProp.isDataProperty());
-        MOZ_ASSERT(shapeProp.writable());
-        MOZ_ASSERT(shapeProp.enumerable());
+        MOZ_ASSERT(propInfo.isDataProperty());
+        MOZ_ASSERT(propInfo.writable());
+        MOZ_ASSERT(propInfo.enumerable());
       }
 
       // Careful: the presence of a shape, even one appearing to derive from
@@ -4195,7 +4195,7 @@ JSObject* js::MaybeOptimizeBindGlobalName(JSContext* cx,
   // 'let') at compile time.
   Rooted<GlobalLexicalEnvironmentObject*> env(cx,
                                               &global->lexicalEnvironment());
-  mozilla::Maybe<ShapeProperty> prop = env->lookup(cx, name);
+  mozilla::Maybe<PropertyInfo> prop = env->lookup(cx, name);
   if (prop.isSome()) {
     if (prop->writable() &&
         !env->getSlot(prop->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {
