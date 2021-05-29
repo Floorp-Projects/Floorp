@@ -206,7 +206,8 @@ struct Grouper {
   // Paint the list of aChildren display items.
   void PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
                           BlobItemData* aData, const IntRect& aItemBounds,
-                          nsDisplayList* aChildren, gfxContext* aContext,
+                          bool aDirty, nsDisplayList* aChildren,
+                          gfxContext* aContext,
                           WebRenderDrawEventRecorder* aRecorder,
                           RenderRootStateManager* aRootManager,
                           wr::IpcResourceUpdateQueue& aResources);
@@ -795,8 +796,12 @@ struct DIGroup {
 
       nsDisplayList* children = item->GetChildren();
       if (children) {
+        // If we aren't dirty, we still need to iterate over the children to
+        // ensure the blob index data is recorded the same as before to allow
+        // the merging of the parts inside in the invalid rect. Any items that
+        // are painted as a single item need to avoid repainting in that case.
         GP("doing children in EndGroup\n");
-        aGrouper->PaintContainerItem(this, item, data, bounds, children,
+        aGrouper->PaintContainerItem(this, item, data, bounds, dirty, children,
                                      aContext, aRecorder, aRootManager,
                                      aResources);
         continue;
@@ -871,7 +876,7 @@ static BlobItemData* GetBlobItemDataForGroup(nsDisplayItem* aItem,
 
 void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
                                  BlobItemData* aData,
-                                 const IntRect& aItemBounds,
+                                 const IntRect& aItemBounds, bool aDirty,
                                  nsDisplayList* aChildren, gfxContext* aContext,
                                  WebRenderDrawEventRecorder* aRecorder,
                                  RenderRootStateManager* aRootManager,
@@ -893,13 +898,20 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       Matrix4x4Flagged trans = transformItem->GetTransform();
       Matrix trans2d;
       if (!trans.Is2D(&trans2d)) {
-        // We don't currently support doing invalidation inside 3d transforms.
-        // For now just paint it as a single item.
-        aItem->SetPaintRect(aItem->GetClippedBounds(mDisplayListBuilder));
+        // Painting will cause us to include the item's recording in the blob.
+        // We only want to do that if it is dirty, because otherwise the
+        // recording might change (e.g. due to factor of 2 scaling of images
+        // giving different results) and the merging will discard it because it
+        // is outside the invalid rect.
+        if (aDirty) {
+          // We don't currently support doing invalidation inside 3d transforms.
+          // For now just paint it as a single item.
+          aItem->SetPaintRect(aItem->GetClippedBounds(mDisplayListBuilder));
 
-        aItem->AsPaintedDisplayItem()->Paint(mDisplayListBuilder, aContext);
-        TakeExternalSurfaces(aRecorder, aData->mExternalSurfaces, aRootManager,
-                             aResources);
+          aItem->AsPaintedDisplayItem()->Paint(mDisplayListBuilder, aContext);
+          TakeExternalSurfaces(aRecorder, aData->mExternalSurfaces,
+                               aRootManager, aResources);
+        }
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
       } else {
         aContext->Multiply(ThebesMatrix(trans2d));
@@ -989,13 +1001,20 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
     }
     case DisplayItemType::TYPE_FILTER: {
       GP("Paint Filter\n");
-      auto filterItem = static_cast<nsDisplayFilters*>(aItem);
-      filterItem->SetPaintRect(
-          filterItem->GetClippedBounds(mDisplayListBuilder));
+      // Painting will cause us to include the item's recording in the blob. We
+      // only want to do that if it is dirty, because otherwise the recording
+      // might change (e.g. due to factor of 2 scaling of images giving
+      // different results) and the merging will discard it because it is
+      // outside the invalid rect.
+      if (aDirty) {
+        auto filterItem = static_cast<nsDisplayFilters*>(aItem);
+        filterItem->SetPaintRect(
+            filterItem->GetClippedBounds(mDisplayListBuilder));
 
-      filterItem->Paint(mDisplayListBuilder, aContext);
-      TakeExternalSurfaces(aRecorder, aData->mExternalSurfaces, aRootManager,
-                           aResources);
+        filterItem->Paint(mDisplayListBuilder, aContext);
+        TakeExternalSurfaces(aRecorder, aData->mExternalSurfaces, aRootManager,
+                             aResources);
+      }
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
       break;
     }
