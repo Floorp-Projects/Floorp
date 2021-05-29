@@ -1547,7 +1547,7 @@ parent:
      * Adds a certificate exception for the given hostname and port.
      */
     async AddCertException(nsCString aSerializedCert, uint32_t aFlags,
-                           nsCString aHostName, int32_t aPort, OriginAttributes aOriginAttributes,
+                           nsCString aHostName, int32_t aPort,
                            bool aIsTemporary)
           returns (nsresult success);
 

@@ -2136,10 +2136,16 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     /**
-     * Revokes all SSL overrides
+     * Revokes SSL overrides set for a given host and port
+     *
+     * @param host the host.
+     * @param port the port (-1 == 443).
      */
-    public void removeAllCertOverrides() {
-        webExtensionApiCall("RemoveAllCertOverrides", null);
+    public void removeCertOverride(final String host, final long port) {
+        webExtensionApiCall("RemoveCertOverride", args -> {
+            args.put("host", host);
+            args.put("port", port);
+        });
     }
 
     private interface SetArgs {
