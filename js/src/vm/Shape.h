@@ -35,7 +35,7 @@
 #include "util/EnumFlags.h"
 #include "vm/JSAtom.h"
 #include "vm/Printer.h"
-#include "vm/ShapeProperty.h"
+#include "vm/PropertyInfo.h"
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
 

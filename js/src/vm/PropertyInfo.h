@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_ShapeProperty_h
-#define vm_ShapeProperty_h
+#ifndef vm_PropertyInfo_h
+#define vm_PropertyInfo_h
 
 #include "mozilla/Assertions.h"
 
@@ -182,4 +182,4 @@ using PropertyInfoWithKeyVector = GCVector<PropertyInfoWithKey, 8>;
 
 }  // namespace js
 
-#endif /* vm_ShapeProperty_h */
+#endif /* vm_PropertyInfo_h */
