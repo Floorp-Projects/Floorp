@@ -25,7 +25,7 @@ static constexpr uint32_t SHAPE_INVALID_SLOT = Bit(24) - 1;
 static constexpr uint32_t SHAPE_MAXIMUM_SLOT = Bit(24) - 2;
 
 // Flags associated with each property stored in the shape tree.
-enum class ShapePropertyFlag : uint8_t {
+enum class PropertyFlag : uint8_t {
   // Property attributes. See also JS::PropertyAttribute.
   Configurable = 1 << 0,
   Enumerable = 1 << 1,
@@ -46,22 +46,20 @@ enum class ShapePropertyFlag : uint8_t {
   CustomDataProperty = 1 << 4,
 };
 
-class ShapePropertyFlags : public EnumFlags<ShapePropertyFlag> {
-  using Base = EnumFlags<ShapePropertyFlag>;
+class PropertyFlags : public EnumFlags<PropertyFlag> {
+  using Base = EnumFlags<PropertyFlag>;
   using Base::Base;
 
  public:
-  static const ShapePropertyFlags defaultDataPropFlags;
+  static const PropertyFlags defaultDataPropFlags;
 
-  static ShapePropertyFlags fromRaw(uint8_t flags) {
-    return ShapePropertyFlags(flags);
-  }
+  static PropertyFlags fromRaw(uint8_t flags) { return PropertyFlags(flags); }
 
-  bool configurable() const { return hasFlag(ShapePropertyFlag::Configurable); }
-  bool enumerable() const { return hasFlag(ShapePropertyFlag::Enumerable); }
+  bool configurable() const { return hasFlag(PropertyFlag::Configurable); }
+  bool enumerable() const { return hasFlag(PropertyFlag::Enumerable); }
   bool writable() const {
     MOZ_ASSERT(isDataDescriptor());
-    return hasFlag(ShapePropertyFlag::Writable);
+    return hasFlag(PropertyFlag::Writable);
   }
 
   // Note: this returns true only for plain data properties with a slot. Returns
@@ -70,10 +68,10 @@ class ShapePropertyFlags : public EnumFlags<ShapePropertyFlag> {
     return !isAccessorProperty() && !isCustomDataProperty();
   }
   bool isAccessorProperty() const {
-    return hasFlag(ShapePropertyFlag::AccessorProperty);
+    return hasFlag(PropertyFlag::AccessorProperty);
   }
   bool isCustomDataProperty() const {
-    return hasFlag(ShapePropertyFlag::CustomDataProperty);
+    return hasFlag(PropertyFlag::CustomDataProperty);
   }
 
   // Note: unlike isDataProperty, this returns true also for custom data
@@ -81,11 +79,11 @@ class ShapePropertyFlags : public EnumFlags<ShapePropertyFlag> {
   bool isDataDescriptor() const { return !isAccessorProperty(); }
 };
 
-constexpr ShapePropertyFlags ShapePropertyFlags::defaultDataPropFlags = {
-    ShapePropertyFlag::Configurable, ShapePropertyFlag::Enumerable,
-    ShapePropertyFlag::Writable};
+constexpr PropertyFlags PropertyFlags::defaultDataPropFlags = {
+    PropertyFlag::Configurable, PropertyFlag::Enumerable,
+    PropertyFlag::Writable};
 
-// ShapeProperty contains information (ShapePropertyFlags, slot number) for a
+// ShapeProperty contains information (PropertyFlags, slot number) for a
 // property stored in the Shape tree. Property lookups on NativeObjects return a
 // ShapeProperty.
 class ShapeProperty {
@@ -100,7 +98,7 @@ class ShapeProperty {
                 "SHAPE_MAXIMUM_SLOT must fit in slotAndFlags_");
 
  public:
-  ShapeProperty(ShapePropertyFlags flags, uint32_t slot)
+  ShapeProperty(PropertyFlags flags, uint32_t slot)
       : slotAndFlags_((slot << SlotShift) | flags.toRaw()) {
     MOZ_ASSERT(maybeSlot() == slot);
     MOZ_ASSERT(this->flags() == flags);
@@ -123,8 +121,8 @@ class ShapeProperty {
 
   uint32_t maybeSlot() const { return slotAndFlags_ >> SlotShift; }
 
-  ShapePropertyFlags flags() const {
-    return ShapePropertyFlags::fromRaw(slotAndFlags_ & FlagsMask);
+  PropertyFlags flags() const {
+    return PropertyFlags::fromRaw(slotAndFlags_ & FlagsMask);
   }
   bool writable() const { return flags().writable(); }
   bool configurable() const { return flags().configurable(); }
@@ -156,7 +154,7 @@ class ShapePropertyWithKey : public ShapeProperty {
   PropertyKey key_;
 
  public:
-  ShapePropertyWithKey(ShapePropertyFlags flags, uint32_t slot, PropertyKey key)
+  ShapePropertyWithKey(PropertyFlags flags, uint32_t slot, PropertyKey key)
       : ShapeProperty(flags, slot), key_(key) {}
 
   PropertyKey key() const { return key_; }
@@ -176,7 +174,7 @@ class WrappedPtrOperations<ShapePropertyWithKey, Wrapper> {
   bool isDataProperty() const { return value().isDataProperty(); }
   uint32_t slot() const { return value().slot(); }
   PropertyKey key() const { return value().key(); }
-  ShapePropertyFlags flags() const { return value().flags(); }
+  PropertyFlags flags() const { return value().flags(); }
 };
 
 }  // namespace js

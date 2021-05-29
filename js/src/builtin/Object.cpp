@@ -886,7 +886,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     if (MOZ_UNLIKELY(!iter->isDataProperty())) {
       return true;
     }
-    if (iter->flags() != ShapePropertyFlags::defaultDataPropFlags) {
+    if (iter->flags() != PropertyFlags::defaultDataPropFlags) {
       hasPropsWithNonDefaultAttrs = true;
     }
     if (!iter->enumerable()) {

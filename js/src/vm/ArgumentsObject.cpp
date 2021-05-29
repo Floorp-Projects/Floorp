@@ -635,8 +635,7 @@ bool ArgumentsObject::reifyIterator(JSContext* cx,
 
 static bool ResolveArgumentsProperty(JSContext* cx,
                                      Handle<ArgumentsObject*> obj, HandleId id,
-                                     ShapePropertyFlags flags,
-                                     bool* resolvedp) {
+                                     PropertyFlags flags, bool* resolvedp) {
   // Note: we don't need to call ReshapeForShadowedProp here because we're just
   // resolving an existing property instead of defining a new property.
 
@@ -670,16 +669,15 @@ bool MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  ShapePropertyFlags flags = {ShapePropertyFlag::CustomDataProperty,
-                              ShapePropertyFlag::Configurable,
-                              ShapePropertyFlag::Writable};
+  PropertyFlags flags = {PropertyFlag::CustomDataProperty,
+                         PropertyFlag::Configurable, PropertyFlag::Writable};
   if (JSID_IS_INT(id)) {
     uint32_t arg = uint32_t(JSID_TO_INT(id));
     if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg)) {
       return true;
     }
 
-    flags.setFlag(ShapePropertyFlag::Enumerable);
+    flags.setFlag(PropertyFlag::Enumerable);
   } else if (id.isAtom(cx->names().length)) {
     if (argsobj->hasOverriddenLength()) {
       return true;
@@ -787,9 +785,9 @@ static bool DefineMappedIndex(JSContext* cx, Handle<MappedArgumentsObject*> obj,
     }
   }
 
-  ShapePropertyFlags flags = shapeProp.flags();
-  flags.setFlag(ShapePropertyFlag::Configurable, configurable);
-  flags.setFlag(ShapePropertyFlag::Enumerable, enumerable);
+  PropertyFlags flags = shapeProp.flags();
+  flags.setFlag(PropertyFlag::Configurable, configurable);
+  flags.setFlag(PropertyFlag::Enumerable, enumerable);
   if (!NativeObject::changeCustomDataPropAttributes(cx, obj, id, flags)) {
     return false;
   }
@@ -964,16 +962,15 @@ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  ShapePropertyFlags flags = {ShapePropertyFlag::CustomDataProperty,
-                              ShapePropertyFlag::Configurable,
-                              ShapePropertyFlag::Writable};
+  PropertyFlags flags = {PropertyFlag::CustomDataProperty,
+                         PropertyFlag::Configurable, PropertyFlag::Writable};
   if (JSID_IS_INT(id)) {
     uint32_t arg = uint32_t(JSID_TO_INT(id));
     if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg)) {
       return true;
     }
 
-    flags.setFlag(ShapePropertyFlag::Enumerable);
+    flags.setFlag(PropertyFlag::Enumerable);
   } else if (id.isAtom(cx->names().length)) {
     if (argsobj->hasOverriddenLength()) {
       return true;

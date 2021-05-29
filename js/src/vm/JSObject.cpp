@@ -512,13 +512,13 @@ bool js::ReadPropertyDescriptors(
 
 /*** Seal and freeze ********************************************************/
 
-static ShapePropertyFlags ComputeFlagsForSealOrFreeze(ShapePropertyFlags flags,
-                                                      IntegrityLevel level) {
+static PropertyFlags ComputeFlagsForSealOrFreeze(PropertyFlags flags,
+                                                 IntegrityLevel level) {
   // Make all properties non-configurable; if freezing, make data properties
   // read-only.
-  flags.clearFlag(ShapePropertyFlag::Configurable);
+  flags.clearFlag(PropertyFlag::Configurable);
   if (level == IntegrityLevel::Frozen && flags.isDataDescriptor()) {
-    flags.clearFlag(ShapePropertyFlag::Writable);
+    flags.clearFlag(PropertyFlag::Writable);
   }
   return flags;
 }

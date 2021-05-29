@@ -755,7 +755,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
  private:
   uint32_t immutableFlags;  /* immutable flags, see above */
   ObjectFlags objectFlags_; /* immutable object flags, see ObjectFlags */
-  ShapePropertyFlags propFlags;
+  PropertyFlags propFlags;
   uint8_t mutableFlags; /* mutable flags, see below for defines */
 
   GCPtrShape parent; /* parent node, reverse for..in order */
@@ -978,12 +978,12 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   inline bool matches(const StackShape& other) const;
 
   bool matchesParamsAfterId(BaseShape* base, ObjectFlags aobjectFlags,
-                            uint32_t aslot, ShapePropertyFlags aflags) const {
+                            uint32_t aslot, PropertyFlags aflags) const {
     return base == this->base() && objectFlags() == aobjectFlags &&
            matchesPropertyParamsAfterId(aslot, aflags);
   }
   bool matchesPropertyParamsAfterId(uint32_t aslot,
-                                    ShapePropertyFlags aflags) const {
+                                    PropertyFlags aflags) const {
     return maybeSlot() == aslot && propFlags == aflags;
   }
 
@@ -1291,11 +1291,11 @@ struct StackShape {
   jsid propid;
   uint32_t immutableFlags;
   ObjectFlags objectFlags;
-  ShapePropertyFlags propFlags;
+  PropertyFlags propFlags;
   uint8_t mutableFlags;
 
   explicit StackShape(BaseShape* base, ObjectFlags objectFlags, jsid propid,
-                      uint32_t slot, ShapePropertyFlags propFlags)
+                      uint32_t slot, PropertyFlags propFlags)
       : base(base),
         propid(propid),
         immutableFlags(slot),
@@ -1353,7 +1353,7 @@ class WrappedPtrOperations<StackShape, Wrapper> {
   uint32_t slot() const { return ss().slot(); }
   uint32_t maybeSlot() const { return ss().maybeSlot(); }
   uint32_t slotSpan() const { return ss().slotSpan(); }
-  ShapePropertyFlags propFlags() const { return ss().propFlags; }
+  PropertyFlags propFlags() const { return ss().propFlags; }
   ObjectFlags objectFlags() const { return ss().objectFlags; }
   jsid propid() const { return ss().propid; }
 };
@@ -1366,7 +1366,7 @@ class MutableWrappedPtrOperations<StackShape, Wrapper>
  public:
   void setSlot(uint32_t slot) { ss().setSlot(slot); }
   void setBase(BaseShape* base) { ss().base = base; }
-  void setPropFlags(ShapePropertyFlags flags) { ss().propFlags = flags; }
+  void setPropFlags(PropertyFlags flags) { ss().propFlags = flags; }
   void setObjectFlags(ObjectFlags objectFlags) {
     ss().objectFlags = objectFlags;
   }
