@@ -17,7 +17,7 @@ add_task(async function testCleanFlow() {
   is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb saved.");
   is(
     Preferences.get(prefs.TRR_SELECT_URI_PREF),
-    "https://dummytrr.com/query",
+    "https://example.com/dns-query",
     "TRR selection complete."
   );
   await checkTRRSelectionTelemetry();

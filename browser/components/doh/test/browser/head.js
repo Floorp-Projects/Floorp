@@ -1,22 +1,15 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ASRouter",
-  "resource://activity-stream/lib/ASRouter.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "DoHController",
-  "resource:///modules/DoHController.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
+  DoHController: "resource:///modules/DoHController.jsm",
+  DoHConfigController: "resource:///modules/DoHConfig.jsm",
+  DoHTestUtils: "resource://testing-common/DoHTestUtils.jsm",
+  Preferences: "resource://gre/modules/Preferences.jsm",
+  Region: "resource://gre/modules/Region.jsm",
+  RegionTestUtils: "resource://testing-common/RegionTestUtils.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -52,6 +45,7 @@ const prefs = {
   FIRST_RUN_PREF: "doh-rollout.doneFirstRun",
   BALROG_MIGRATION_PREF: "doh-rollout.balrog-migration-done",
   PREVIOUS_TRR_MODE_PREF: "doh-rollout.previous.trr.mode",
+  PROVIDER_LIST_PREF: "doh-rollout.provider-list",
   TRR_SELECT_ENABLED_PREF: "doh-rollout.trr-selection.enabled",
   TRR_SELECT_URI_PREF: "doh-rollout.uri",
   TRR_SELECT_COMMIT_PREF: "doh-rollout.trr-selection.commit-result",
@@ -74,6 +68,8 @@ const CFR_JSON = {
 };
 
 async function setup() {
+  await DoHController._uninit();
+  await DoHConfigController._uninit();
   SpecialPowers.pushPrefEnv({
     set: [["security.notification_enable_delay", 0]],
   });
@@ -128,6 +124,13 @@ async function setup() {
   // Global canary
   gDNSOverride.addIPOverride("use-application-dns.net.", "4.1.1.1");
 
+  await DoHTestUtils.resetRemoteSettingsConfig(false);
+
+  await DoHConfigController.init();
+  await DoHController.init();
+
+  await waitForStateTelemetry(["rollback"]);
+
   registerCleanupFunction(async () => {
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.telemetry.clearEvents();
@@ -141,8 +144,21 @@ async function setup() {
     await DoHController._uninit();
     Services.telemetry.clearEvents();
     Preferences.reset(Object.values(prefs));
+    await DoHTestUtils.resetRemoteSettingsConfig(false);
     await DoHController.init();
   });
+}
+
+const kTestRegion = "DE";
+const kRegionalPrefNamespace = `doh-rollout.${kTestRegion.toLowerCase()}`;
+
+async function setupRegion() {
+  Region._home = null;
+  RegionTestUtils.setNetworkRegion(kTestRegion);
+  await Region._fetchRegion();
+  is(Region.home, kTestRegion, "Should have correct region");
+  Preferences.reset("doh-rollout.home-region");
+  await DoHConfigController.loadRegion();
 }
 
 async function checkTRRSelectionTelemetry() {
@@ -162,7 +178,7 @@ async function checkTRRSelectionTelemetry() {
   is(events.length, 1, "Found the expected trrselect event.");
   is(
     events[0][4],
-    "https://dummytrr.com/query",
+    "https://example.com/dns-query",
     "The event records the expected decision"
   );
 }
