@@ -417,8 +417,12 @@ bool Compartment::wrap(JSContext* cx,
       return false;
     }
   }
-
-  return wrap(cx, desc.value());
+  if (desc.hasValue()) {
+    if (!wrap(cx, desc.value())) {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool Compartment::wrap(JSContext* cx,

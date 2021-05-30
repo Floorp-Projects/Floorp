@@ -260,7 +260,7 @@ class JS_PUBLIC_API PropertyDescriptor {
 
   bool hasValue() const { return hasValue_; }
   Value value() const {
-    // TODO: Assert hasValue()
+    MOZ_ASSERT(hasValue());
     return value_;
   }
   void setValue(const Value& v) {
@@ -373,6 +373,7 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
 
   bool hasValue() const { return desc().hasValue(); }
   JS::Handle<JS::Value> value() const {
+    MOZ_ASSERT(hasValue());
     return JS::Handle<JS::Value>::fromMarkedLocation(desc().valueDoNotUse());
   }
 
@@ -403,6 +404,7 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
 
  public:
   JS::MutableHandle<JS::Value> value() {
+    MOZ_ASSERT(desc().hasValue());
     return JS::MutableHandle<JS::Value>::fromMarkedLocation(
         desc().valueDoNotUse());
   }

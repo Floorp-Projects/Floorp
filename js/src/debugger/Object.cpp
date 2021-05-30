@@ -2163,11 +2163,12 @@ bool DebuggerObject::getOwnPropertyDescriptor(
   if (desc_.isSome()) {
     Rooted<PropertyDescriptor> desc(cx, *desc_);
 
-    // Rewrap the debuggee values in desc for the debugger.
-    if (!dbg->wrapDebuggeeValue(cx, desc.value())) {
-      return false;
+    if (desc.hasValue()) {
+      // Rewrap the debuggee values in desc for the debugger.
+      if (!dbg->wrapDebuggeeValue(cx, desc.value())) {
+        return false;
+      }
     }
-
     if (desc.hasGetterObject()) {
       RootedValue get(cx, ObjectOrNullValue(desc.getterObject()));
       if (!dbg->wrapDebuggeeValue(cx, &get)) {
