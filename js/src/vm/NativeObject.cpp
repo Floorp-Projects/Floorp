@@ -1338,8 +1338,8 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
 
   if constexpr (AddOrChange == IsAddOrChange::Add) {
     if (desc.isAccessorDescriptor()) {
-      Rooted<GetterSetter*> gs(cx, GetterSetter::create(cx, desc.getterObject(),
-                                                        desc.setterObject()));
+      Rooted<GetterSetter*> gs(
+          cx, GetterSetter::create(cx, desc.getter(), desc.setter()));
       if (!gs) {
         return false;
       }
@@ -1359,8 +1359,8 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
     }
   } else {
     if (desc.isAccessorDescriptor()) {
-      if (!ChangeProperty(cx, obj, id, desc.getterObject(), desc.setterObject(),
-                          flags, existing)) {
+      if (!ChangeProperty(cx, obj, id, desc.getter(), desc.setter(), flags,
+                          existing)) {
         return false;
       }
     } else {
@@ -1516,14 +1516,12 @@ static bool DefinePropertyIsRedundant(JSContext* cx, HandleNativeObject obj,
       return true;
     }
     PropertyInfo propInfo = prop.propertyInfo();
-    if (desc.hasGetter() &&
-        (!propInfo.isAccessorProperty() ||
-         desc.getterObject() != obj->getGetter(propInfo))) {
+    if (desc.hasGetter() && (!propInfo.isAccessorProperty() ||
+                             desc.getter() != obj->getGetter(propInfo))) {
       return true;
     }
-    if (desc.hasSetter() &&
-        (!propInfo.isAccessorProperty() ||
-         desc.setterObject() != obj->getSetter(propInfo))) {
+    if (desc.hasSetter() && (!propInfo.isAccessorProperty() ||
+                             desc.setter() != obj->getSetter(propInfo))) {
       return true;
     }
   }
@@ -1755,8 +1753,7 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     // question are objects, we can just compare pointers.
     if (desc.hasSetter()) {
       // Step 8.a.i.
-      if (!attrs.configurable() &&
-          desc.setterObject() != obj->getSetter(propInfo)) {
+      if (!attrs.configurable() && desc.setter() != obj->getSetter(propInfo)) {
         return result.fail(JSMSG_CANT_REDEFINE_PROP);
       }
     } else {
@@ -1765,8 +1762,7 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     }
     if (desc.hasGetter()) {
       // Step 8.a.ii.
-      if (!attrs.configurable() &&
-          desc.getterObject() != obj->getGetter(propInfo)) {
+      if (!attrs.configurable() && desc.getter() != obj->getGetter(propInfo)) {
         return result.fail(JSMSG_CANT_REDEFINE_PROP);
       }
     } else {

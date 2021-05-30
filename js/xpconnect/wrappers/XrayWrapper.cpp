@@ -1881,10 +1881,10 @@ static bool RecreateLostWaivers(JSContext* cx, const PropertyDescriptor* orig,
   bool valueWasWaived =
       orig->hasValue() && orig->value().isObject() &&
       WrapperFactory::HasWaiveXrayFlag(&orig->value().toObject());
-  bool getterWasWaived = orig->hasGetter() && orig->getterObject() &&
-                         WrapperFactory::HasWaiveXrayFlag(orig->getterObject());
-  bool setterWasWaived = orig->hasSetter() && orig->setterObject() &&
-                         WrapperFactory::HasWaiveXrayFlag(orig->setterObject());
+  bool getterWasWaived = orig->hasGetter() && orig->getter() &&
+                         WrapperFactory::HasWaiveXrayFlag(orig->getter());
+  bool setterWasWaived = orig->hasSetter() && orig->setter() &&
+                         WrapperFactory::HasWaiveXrayFlag(orig->setter());
 
   // Recreate waivers. Note that for value, we need an extra UncheckedUnwrap
   // to handle same-compartment security wrappers (see above). This should
@@ -1898,17 +1898,17 @@ static bool RecreateLostWaivers(JSContext* cx, const PropertyDescriptor* orig,
     NS_ENSURE_TRUE(rewaived, false);
     wrapped.value().set(ObjectValue(*rewaived));
   }
-  if (getterWasWaived && !IsCrossCompartmentWrapper(wrapped.getterObject())) {
+  if (getterWasWaived && !IsCrossCompartmentWrapper(wrapped.getter())) {
     // We can't end up with WindowProxy or Location as getters.
-    MOZ_ASSERT(CheckedUnwrapStatic(wrapped.getterObject()));
-    rewaived = WrapperFactory::WaiveXray(cx, wrapped.getterObject());
+    MOZ_ASSERT(CheckedUnwrapStatic(wrapped.getter()));
+    rewaived = WrapperFactory::WaiveXray(cx, wrapped.getter());
     NS_ENSURE_TRUE(rewaived, false);
     wrapped.setGetter(rewaived);
   }
-  if (setterWasWaived && !IsCrossCompartmentWrapper(wrapped.setterObject())) {
+  if (setterWasWaived && !IsCrossCompartmentWrapper(wrapped.setter())) {
     // We can't end up with WindowProxy or Location as setters.
-    MOZ_ASSERT(CheckedUnwrapStatic(wrapped.setterObject()));
-    rewaived = WrapperFactory::WaiveXray(cx, wrapped.setterObject());
+    MOZ_ASSERT(CheckedUnwrapStatic(wrapped.setter()));
+    rewaived = WrapperFactory::WaiveXray(cx, wrapped.setter());
     NS_ENSURE_TRUE(rewaived, false);
     wrapped.setSetter(rewaived);
   }
@@ -2052,7 +2052,7 @@ bool XrayWrapper<Base, Traits>::get(JSContext* cx, HandleObject wrapper,
   }
 
   MOZ_ASSERT(desc->isAccessorDescriptor());
-  RootedObject getter(cx, desc->getterObject());
+  RootedObject getter(cx, desc->getter());
 
   if (!getter) {
     vp.setUndefined();

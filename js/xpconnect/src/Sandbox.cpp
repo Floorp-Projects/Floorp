@@ -722,12 +722,10 @@ bool SandboxProxyHandler::getPropertyDescriptorImpl(
   Rooted<PropertyDescriptor> desc(cx, *desc_);
 
   // Now fix up the getter/setter/value as needed.
-  if (desc.hasGetter() &&
-      !WrapAccessorFunction(cx, desc.getterObject(), proxy)) {
+  if (desc.hasGetter() && !WrapAccessorFunction(cx, desc.getter(), proxy)) {
     return false;
   }
-  if (desc.hasSetter() &&
-      !WrapAccessorFunction(cx, desc.setterObject(), proxy)) {
+  if (desc.hasSetter() && !WrapAccessorFunction(cx, desc.setter(), proxy)) {
     return false;
   }
   if (desc.hasValue() && desc.value().isObject()) {
@@ -800,7 +798,7 @@ bool SandboxProxyHandler::get(JSContext* cx, JS::Handle<JSObject*> proxy,
   }
 
   MOZ_ASSERT(desc->isAccessorDescriptor());
-  RootedObject getter(cx, desc->getterObject());
+  RootedObject getter(cx, desc->getter());
 
   if (!getter) {
     vp.setUndefined();

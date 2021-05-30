@@ -813,7 +813,7 @@ bool ToPropertyDescriptor(JSContext* cx, HandleValue descval,
                           MutableHandle<JS::PropertyDescriptor> desc);
 
 /*
- * Throw a TypeError if desc.getterObject() or setterObject() is not
+ * Throw a TypeError if desc.getter() or setter() is not
  * callable. This performs exactly the checks omitted by ToPropertyDescriptor
  * when checkAccessors is false.
  */
