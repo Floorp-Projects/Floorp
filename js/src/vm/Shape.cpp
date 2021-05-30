@@ -1364,10 +1364,6 @@ void Zone::checkBaseShapeTableAfterMovingGC() {
 
 #endif  // JSGC_HASH_TABLE_CHECKS
 
-inline InitialShapeEntry::InitialShapeEntry() : shape(nullptr) {}
-
-inline InitialShapeEntry::InitialShapeEntry(Shape* shape) : shape(shape) {}
-
 #ifdef JSGC_HASH_TABLE_CHECKS
 
 void Zone::checkInitialShapesTableAfterMovingGC() {
@@ -1377,12 +1373,11 @@ void Zone::checkInitialShapesTableAfterMovingGC() {
    * entries are discoverable.
    */
   for (auto r = initialShapes().all(); !r.empty(); r.popFront()) {
-    InitialShapeEntry entry = r.front();
-    Shape* shape = entry.shape.unbarrieredGet();
+    Shape* shape = r.front().unbarrieredGet();
 
     CheckGCThingAfterMovingGC(shape);
 
-    using Lookup = InitialShapeEntry::Lookup;
+    using Lookup = InitialShapeHasher::Lookup;
     Lookup lookup(shape->getObjectClass(), shape->realm(), shape->proto(),
                   shape->numFixedSlots(), shape->objectFlags());
     InitialShapeSet::Ptr ptr = initialShapes().lookup(lookup);
@@ -1757,11 +1752,11 @@ Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
 
   auto& table = realm->zone()->initialShapes();
 
-  using Lookup = InitialShapeEntry::Lookup;
-  auto protoPointer = MakeDependentAddPtr(
+  using Lookup = InitialShapeHasher::Lookup;
+  auto ptr = MakeDependentAddPtr(
       cx, table, Lookup(clasp, realm, proto, nfixed, objectFlags));
-  if (protoPointer) {
-    return protoPointer->shape;
+  if (ptr) {
+    return *ptr;
   }
 
   Rooted<TaggedProto> protoRoot(cx, proto);
@@ -1776,7 +1771,7 @@ Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
   }
 
   Lookup lookup(clasp, realm, protoRoot, nfixed, objectFlags);
-  if (!protoPointer.add(cx, table, lookup, InitialShapeEntry(shape))) {
+  if (!ptr.add(cx, table, lookup, shape)) {
     return nullptr;
   }
 
@@ -1817,18 +1812,16 @@ void NewObjectCache::invalidateEntriesForShape(Shape* shape) {
 
 /* static */
 void EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape) {
-  using Lookup = InitialShapeEntry::Lookup;
+  using Lookup = InitialShapeHasher::Lookup;
   Lookup lookup(shape->getObjectClass(), shape->realm(), shape->proto(),
                 shape->numFixedSlots(), shape->objectFlags());
 
   InitialShapeSet::Ptr p = cx->zone()->initialShapes().lookup(lookup);
   MOZ_ASSERT(p);
 
-  InitialShapeEntry& entry = const_cast<InitialShapeEntry&>(*p);
-
   // The metadata callback can end up causing redundant changes of the initial
   // shape.
-  if (entry.shape == shape) {
+  if (*p == shape) {
     return;
   }
 
@@ -1838,10 +1831,10 @@ void EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape) {
   while (!nshape->isEmptyShape()) {
     nshape = nshape->previous();
   }
-  MOZ_ASSERT(nshape == entry.shape);
+  MOZ_ASSERT(nshape == *p);
 #endif
 
-  entry.shape = WeakHeapPtrShape(shape);
+  cx->zone()->initialShapes().replaceKey(p, lookup, shape.get());
 
   /*
    * This affects the shape that will be produced by the various NewObject
@@ -1855,18 +1848,6 @@ void EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape) {
    */
   if (!cx->isHelperThreadContext()) {
     cx->caches().newObjectCache.invalidateEntriesForShape(shape);
-  }
-}
-
-void Zone::fixupInitialShapeTable() {
-  for (InitialShapeSet::Enum e(initialShapes()); !e.empty(); e.popFront()) {
-    // The shape may have been moved, but we can update that in place.
-    Shape* shape = e.front().shape.unbarrieredGet();
-    if (IsForwarded(shape)) {
-      shape = Forwarded(shape);
-      e.mutableFront().shape.set(shape);
-    }
-    shape->updateBaseShapeAfterMovingGC();
   }
 }
 
