@@ -9,18 +9,17 @@ menupopup,
 panel {
   appearance: auto;
   -moz-default-appearance: menupopup;
-  /* We set the default background here, rather than on ::part(content),
-   * because otherwise it'd interfere with the native look. Non-native-looking
-   * popups should get their background via --panel-background */
+  -moz-font-smoothing-background-color: -moz-mac-menupopup;
   background-color: Menu;
+  color: MenuText;
 }
 
 menupopup > menu > menupopup {
   margin-top: -4px;
 }
 
-menupopup {
-  --panel-padding: 4px 0;
+.menupopup-arrowscrollbox {
+  padding: 4px 0;
 }
 
 panel[titlebar] {
@@ -42,36 +41,36 @@ panel[type="arrow"][side="right"] {
   margin-block: -25px;
 }
 
-:is(panel, menupopup)::part(content) {
-  display: -moz-box;
-  -moz-box-flex: 1;
-  -moz-font-smoothing-background-color: var(--panel-background, -moz-mac-menupopup);
-  background: var(--panel-background, transparent);
-  color: var(--panel-color, MenuText);
-  border-radius: var(--panel-border-radius, 0);
-  box-shadow: 0 0 0 1px var(--panel-border-color, transparent);
-  padding: var(--panel-padding);
-  width: var(--panel-width, initial);
+.panel-arrowcontent {
+  appearance: none;
+  -moz-font-smoothing-background-color: var(--arrowpanel-background);
+  background: var(--arrowpanel-background);
+  border-radius: var(--arrowpanel-border-radius);
+  box-shadow: 0 0 0 1px var(--arrowpanel-border-color);
+  color: var(--arrowpanel-color);
   border: none;
-}
-
-:is(panel, menupopup)[orient=vertical]::part(content) {
-  -moz-box-orient: vertical;
-}
-
-panel[type="arrow"]::part(content) {
+  padding: var(--arrowpanel-padding);
   margin: 1px;
 }
 
-panel[type="arrow"].panel-no-padding::part(content) {
+.panel-arrowcontent > html|slot {
+  /* propagate border-radius from arrowcontent to slotted children */
+  border-radius: inherit;
+}
+
+:host([orient=vertical]) .panel-arrowcontent {
+  -moz-box-orient: vertical;
+}
+
+panel[type="arrow"].panel-no-padding::part(arrowcontent) {
   padding: 0;
   overflow: hidden; /* Don't let panel content overflow the border-radius */
 }
 
 :is(panel, menupopup)::part(arrow) {
   -moz-context-properties: fill, stroke;
-  fill: var(--panel-background);
-  stroke: var(--panel-border-color);
+  fill: var(--arrowpanel-background);
+  stroke: var(--arrowpanel-border-color);
 }
 
 :is(panel, menupopup)[side="top"]::part(arrow) {
