@@ -91,27 +91,22 @@ class CacheQuotaClient final : public quota::Client {
     // next action recalculate the padding size.
     QM_TRY(aCommitHook());
 
-    // XXX Replace QM_TRY(QM_OR_ELSE_WARN(...)) with QM_WARNONLY_TRY(..)
-    QM_TRY(QM_OR_ELSE_WARN(
-        ToResult(DirectoryPaddingFinalizeWrite(aBaseDir)),
-        ([&aBaseDir](const nsresult) -> Result<Ok, nsresult> {
-          // Force restore file next time.
-          // XXX QM_TRY failures from DirectoryPaddingDeleteFile are not
-          // propagated here, but there's no warning which would close the
-          // error stack.
-          Unused << DirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
+    QM_WARNONLY_TRY(ToResult(DirectoryPaddingFinalizeWrite(aBaseDir)),
+                    ([&aBaseDir](const nsresult) {
+                      // Force restore file next time.
+                      QM_WARNONLY_TRY(DirectoryPaddingDeleteFile(
+                          aBaseDir, DirPaddingFile::FILE));
 
-          // Ensure that we are able to force the padding file
-          // to be restored.
-          MOZ_ASSERT(
-              DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE));
+                      // Ensure that we are able to force the padding file to
+                      // be restored.
+                      MOZ_ASSERT(DirectoryPaddingFileExists(
+                          aBaseDir, DirPaddingFile::TMP_FILE));
 
-          // Since both the body file and header have been
-          // stored in the file-system, just make the action be
-          // resolve and let the padding file be restored in the
-          // next action.
-          return Ok{};
-        })));
+                      // Since both the body file and header have been stored
+                      // in the file-system, just make the action be resolve
+                      // and let the padding file be restored in the next
+                      // action.
+                    }));
 
     return NS_OK;
   }
