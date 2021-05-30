@@ -111,13 +111,6 @@ inline Shape* Shape::new_(JSContext* cx, Handle<StackShape> other,
   return new (shape) Shape(other, nfixed);
 }
 
-inline void Shape::updateBaseShapeAfterMovingGC() {
-  BaseShape* base = this->base();
-  if (IsForwarded(base)) {
-    unbarrieredSetHeaderPtr(Forwarded(base));
-  }
-}
-
 inline void Shape::setNextDictionaryShape(Shape* shape) {
   setDictionaryNextPtr(DictionaryShapeLink(shape));
 }

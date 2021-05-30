@@ -592,10 +592,7 @@ void Zone::clearTables() {
   initialShapes().clear();
 }
 
-void Zone::fixupAfterMovingGC() {
-  ZoneAllocator::fixupAfterMovingGC();
-  fixupInitialShapeTable();
-}
+void Zone::fixupAfterMovingGC() { ZoneAllocator::fixupAfterMovingGC(); }
 
 bool Zone::addRttValueObject(JSContext* cx, HandleObject obj) {
   // Type descriptor objects are always tenured so we don't need post barriers

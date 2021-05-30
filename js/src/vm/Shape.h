@@ -1077,7 +1077,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   MOZ_ALWAYS_INLINE Shape* searchLinear(jsid id);
 
   void fixupAfterMovingGC();
-  void updateBaseShapeAfterMovingGC();
 
   // For JIT usage.
   static constexpr size_t offsetOfBaseShape() { return offsetOfHeaderPtr(); }
@@ -1152,19 +1151,12 @@ struct EmptyShape : public js::Shape {
                                               Handle<ObjectSubclass*> obj);
 };
 
-/*
- * Entries for the per-zone initialShapes set indexing initial shapes for
- * objects in the zone and the associated types.
- */
-struct InitialShapeEntry {
-  /*
-   * Initial shape to give to the object. This is an empty shape, except for
-   * certain classes (e.g. String, RegExp) which may add certain baked-in
-   * properties.
-   */
-  WeakHeapPtr<Shape*> shape;
-
-  /* State used to determine a match on an initial shape. */
+// Hash policy for the per-zone initialShapes set storing initial shapes for
+// objects in the zone.
+//
+// These are empty shapes, except for certain classes (e.g. String, RegExp)
+// which may add certain baked-in properties. See insertInitialShape.
+struct InitialShapeHasher {
   struct Lookup {
     const JSClass* clasp;
     JS::Realm* realm;
@@ -1181,39 +1173,22 @@ struct InitialShapeEntry {
           objectFlags(objectFlags) {}
   };
 
-  inline InitialShapeEntry();
-  inline explicit InitialShapeEntry(Shape* shape);
-
   static HashNumber hash(const Lookup& lookup) {
     HashNumber hash = MovableCellHasher<TaggedProto>::hash(lookup.proto);
-    return mozilla::AddToHash(
-        hash, mozilla::HashGeneric(lookup.clasp, lookup.realm, lookup.nfixed,
-                                   lookup.objectFlags.toRaw()));
+    return mozilla::AddToHash(hash, lookup.clasp, lookup.realm, lookup.nfixed,
+                              lookup.objectFlags.toRaw());
   }
-  static inline bool match(const InitialShapeEntry& key, const Lookup& lookup) {
-    const Shape* shape = key.shape.unbarrieredGet();
+  static bool match(const WeakHeapPtr<Shape*>& key, const Lookup& lookup) {
+    const Shape* shape = key.unbarrieredGet();
     return lookup.clasp == shape->getObjectClass() &&
            lookup.realm == shape->realm() &&
            lookup.nfixed == shape->numFixedSlots() &&
            lookup.objectFlags == shape->objectFlags() &&
            lookup.proto == shape->proto();
   }
-  static void rekey(InitialShapeEntry& k, const InitialShapeEntry& newKey) {
-    k = newKey;
-  }
-
-  bool needsSweep() {
-    Shape* ushape = shape.unbarrieredGet();
-    return gc::IsAboutToBeFinalizedUnbarriered(&ushape);
-  }
-
-  bool operator==(const InitialShapeEntry& other) const {
-    return shape == other.shape;
-  }
 };
-
 using InitialShapeSet = JS::WeakCache<
-    JS::GCHashSet<InitialShapeEntry, InitialShapeEntry, SystemAllocPolicy>>;
+    JS::GCHashSet<WeakHeapPtr<Shape*>, InitialShapeHasher, SystemAllocPolicy>>;
 
 struct StackShape {
   /* For performance, StackShape only roots when absolutely necessary. */
