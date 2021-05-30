@@ -679,9 +679,9 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
   if (kSQLiteGrowthIncrement) {
     // This is just an optimization so ignore the failure if the disk is
     // currently too full.
-    QM_TRY(QM_OR_ELSE_WARN(
+    QM_TRY(QM_OR_ELSE_WARN_IF(
         ToResult(aConnection.SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns)),
-        (ErrToDefaultOkOrErr<NS_ERROR_FILE_TOO_BIG, Ok>)));
+        IsSpecificError<NS_ERROR_FILE_TOO_BIG>, ErrToDefaultOk<>));
   }
 #endif  // IDB_MOBILE
 
@@ -747,12 +747,12 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
 
   QM_TRY_UNWRAP(
       auto connection,
-      QM_OR_ELSE_WARN(
-          OpenDatabase(aStorageService, aFileURL, aTelemetryId)
-              .map([](auto connection) -> ConnectionType {
-                return Some(std::move(connection));
-              }),
-          (ErrToDefaultOkOrErr<NS_ERROR_STORAGE_BUSY, ConnectionType>)));
+      QM_OR_ELSE_WARN_IF(OpenDatabase(aStorageService, aFileURL, aTelemetryId)
+                             .map([](auto connection) -> ConnectionType {
+                               return Some(std::move(connection));
+                             }),
+                         IsSpecificError<NS_ERROR_STORAGE_BUSY>,
+                         ErrToDefaultOk<ConnectionType>));
 
   if (connection.isNothing()) {
 #ifdef DEBUG
@@ -775,22 +775,18 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
     do {
       PR_Sleep(PR_MillisecondsToInterval(100));
 
-      QM_TRY_UNWRAP(
-          connection,
-          QM_OR_ELSE_WARN(
-              OpenDatabase(aStorageService, aFileURL, aTelemetryId)
-                  .map([](auto connection) -> ConnectionType {
-                    return Some(std::move(connection));
-                  }),
-              ([&start](nsresult aValue) -> Result<ConnectionType, nsresult> {
-                if (aValue != NS_ERROR_STORAGE_BUSY ||
-                    TimeStamp::NowLoRes() - start >
-                        TimeDuration::FromSeconds(10)) {
-                  return Err(aValue);
-                }
-
-                return ConnectionType();
-              })));
+      QM_TRY_UNWRAP(connection,
+                    QM_OR_ELSE_WARN_IF(
+                        OpenDatabase(aStorageService, aFileURL, aTelemetryId)
+                            .map([](auto connection) -> ConnectionType {
+                              return Some(std::move(connection));
+                            }),
+                        ([&start](nsresult aValue) {
+                          return aValue == NS_ERROR_STORAGE_BUSY &&
+                                 TimeStamp::NowLoRes() - start <=
+                                     TimeDuration::FromSeconds(10);
+                        }),
+                        ErrToDefaultOk<ConnectionType>));
     } while (connection.isNothing());
   }
 
@@ -844,22 +840,18 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 
   QM_TRY_UNWRAP(
       auto connection,
-      QM_OR_ELSE_WARN(
+      QM_OR_ELSE_WARN_IF(
           OpenDatabaseAndHandleBusy(*storageService, *dbFileUrl, aTelemetryId)
               .map([](auto connection) -> nsCOMPtr<mozIStorageConnection> {
                 return std::move(connection).unwrapBasePtr();
               }),
-          ([&aName](nsresult aValue)
-               -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
+          ([&aName](nsresult aValue) {
             // If we're just opening the database during origin initialization,
             // then we don't want to erase any files. The failure here will fail
             // origin initialization too.
-            if (!IsDatabaseCorruptionError(aValue) || aName.IsVoid()) {
-              return Err(aValue);
-            }
-
-            return nsCOMPtr<mozIStorageConnection>();
-          })));
+            return IsDatabaseCorruptionError(aValue) && !aName.IsVoid();
+          }),
+          ErrToDefaultOk<nsCOMPtr<mozIStorageConnection>>));
 
   if (!connection) {
     // XXX Shouldn't we also update quota usage?
@@ -5693,60 +5685,53 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
   return std::move(serializedStructuredCloneFiles);
 }
 
+bool IsFileNotFoundError(const nsresult aRv) {
+  return aRv == NS_ERROR_FILE_NOT_FOUND ||
+         aRv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+}
+
 enum struct Idempotency { Yes, No };
 
-template <typename R>
-Result<Maybe<R>, nsresult> IdempotentFilter(const nsresult aRv) {
-  if (aRv == NS_ERROR_FILE_NOT_FOUND ||
-      aRv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-    return Maybe<R>{};
-  }
-
-  return Err(aRv);
-}
-
-template <typename R>
-auto MakeMaybeIdempotentFilter(const Idempotency aIdempotent)
-    -> Result<Maybe<R>, nsresult> (*)(nsresult) {
-  if (aIdempotent == Idempotency::Yes) {
-    return IdempotentFilter<R>;
-  }
-
-  return [](const nsresult rv) { return Result<Maybe<R>, nsresult>{Err(rv)}; };
-}
-
 // Delete a file, decreasing the quota usage as appropriate. If the file no
-// longer exists but aIdempotent is true, success is returned, although quota
-// usage can't be decreased. (With the assumption being that the file was
-// already deleted prior to this logic running, and the non-existent file was no
-// longer tracked by quota because it didn't exist at initialization time or a
-// previous deletion call updated the usage.)
+// longer exists but aIdempotency is Idempotency::Yes, success is returned,
+// although quota usage can't be decreased. (With the assumption being that the
+// file was already deleted prior to this logic running, and the non-existent
+// file was no longer tracked by quota because it didn't exist at
+// initialization time or a previous deletion call updated the usage.)
 nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
                     const PersistenceType aPersistenceType,
                     const OriginMetadata& aOriginMetadata,
-                    const Idempotency aIdempotent) {
+                    const Idempotency aIdempotency) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
 
   // Callers which pass Idempotency::Yes call this function without checking if
-  // the file already exists (idempotent usage). QM_OR_ELSE_WARN is not used
+  // the file already exists (idempotent usage). QM_OR_ELSE_WARN_IF is not used
   // here since we just want to log NS_ERROR_FILE_NOT_FOUND and
   // NS_ERROR_FILE_TARGET_DOES_NOT_EXIST results and not spam the reports.
-  // Theoretically, there should be no QM_OR_ELSE_(WARN|LOG) when a caller
-  // passes Idempotency::No, but it's simpler when the fallback function just
-  // always propagates the passed error.
+  // Theoretically, there should be no QM_OR_ELSE_(WARN|LOG)_IF when a caller
+  // passes Idempotency::No, but it's simpler when the predicate just always
+  // returns false in that case.
+
+  const auto isIgnorableError = [&aIdempotency]() -> bool (*)(nsresult) {
+    if (aIdempotency == Idempotency::Yes) {
+      return IsFileNotFoundError;
+    }
+
+    return [](const nsresult rv) { return false; };
+  }();
 
   QM_TRY_INSPECT(
       const auto& fileSize,
       ([aQuotaManager, &aFile,
-        aIdempotent]() -> Result<Maybe<int64_t>, nsresult> {
+        isIgnorableError]() -> Result<Maybe<int64_t>, nsresult> {
         if (aQuotaManager) {
           QM_TRY_INSPECT(
               const Maybe<int64_t>& fileSize,
-              QM_OR_ELSE_LOG(
+              QM_OR_ELSE_LOG_IF(
                   MOZ_TO_RESULT_INVOKE(aFile, GetFileSize)
                       .map([](const int64_t val) { return Some(val); }),
-                  MakeMaybeIdempotentFilter<int64_t>(aIdempotent)));
+                  isIgnorableError, ErrToDefaultOk<Maybe<int64_t>>));
 
           // XXX Can we really assert that the file size is not 0 if
           // it existed? This might be violated by external
@@ -5763,9 +5748,10 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
     return NS_OK;
   }
 
-  QM_TRY_INSPECT(const auto& didExist,
-                 QM_OR_ELSE_LOG(ToResult(aFile.Remove(false)).map(Some<Ok>),
-                                MakeMaybeIdempotentFilter<Ok>(aIdempotent)));
+  QM_TRY_INSPECT(
+      const auto& didExist,
+      QM_OR_ELSE_LOG_IF(ToResult(aFile.Remove(false)).map(Some<Ok>),
+                        isIgnorableError, ErrToDefaultOk<Maybe<Ok>>));
 
   if (!didExist) {
     // XXX If we get here, this means that the file still existed when we
@@ -5815,9 +5801,10 @@ nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
 
   QM_TRY_INSPECT(const auto& file, CloneFileAndAppend(*aDirectory, aFilename));
 
-  QM_TRY_INSPECT(const auto& didExist,
-                 QM_OR_ELSE_WARN(ToResult(file->Remove(true)).map(Some<Ok>),
-                                 IdempotentFilter<Ok>));
+  QM_TRY_INSPECT(
+      const auto& didExist,
+      QM_OR_ELSE_WARN_IF(ToResult(file->Remove(true)).map(Some<Ok>),
+                         IsFileNotFoundError, ErrToDefaultOk<Maybe<Ok>>));
 
   Unused << didExist;
 
@@ -5838,7 +5825,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
                          kIdbDeletionMarkerFilePrefix + aDatabaseNameBase));
 
   // Callers call this function without checking if the file already exists
-  // (idempotent usage). QM_OR_ELSE_WARN is not used here since we just want
+  // (idempotent usage). QM_OR_ELSE_WARN_IF is not used here since we just want
   // to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
   //
   // TODO: In theory if this file exists, then RemoveDatabaseFilesAndDirectory
@@ -5852,11 +5839,11 @@ Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
   // marker here. We currently treat this as idempotent usage, but we could
   // add an additional argument to RemoveDatabaseFilesAndDirectory which would
   // indicate that we are resuming an unfinished removal, so the marker already
-  // exists and doesn't have to be created, and change QM_OR_ELSE_LOG to
-  // QM_OR_ELSE_WARN in the end.
-  QM_TRY(QM_OR_ELSE_LOG(
+  // exists and doesn't have to be created, and change QM_OR_ELSE_LOG_IF to
+  // QM_OR_ELSE_WARN_IF in the end.
+  QM_TRY(QM_OR_ELSE_LOG_IF(
       ToResult(markerFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
-      ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>));
+      IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>, ErrToDefaultOk<>));
 
   return markerFile;
 }
@@ -5884,10 +5871,16 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
     return Ok{};
   }
 
+  // XXX We actually scan the directory multiple times here. Once in
+  // FileManager::GetUsage and once in nsIFile::Remove (and there's one more
+  // scan in the cleanup function).
+
   QM_TRY_UNWRAP(auto fileUsage, FileManager::GetUsage(&aFileManagerDirectory));
 
   uint64_t usageValue = fileUsage.GetValue().valueOr(0);
 
+  // XXX QM_OR_ELSE_WARN is not needed here, the lambda function below looks
+  // more like a cleanup after a failure.
   auto res = QM_OR_ELSE_WARN(
       MOZ_TO_RESULT_INVOKE(aFileManagerDirectory, Remove, true),
       ([&usageValue, &aFileManagerDirectory](nsresult rv) {
@@ -5895,6 +5888,11 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
         // information before returning the error.
 
         // failures of GetUsage are intentionally ignored
+        // XXX QM_TRY failures from FileManager::GetUsage are not propagated
+        // here, but there's no warning which would close the error stack.
+        // XXX If FileManager::GetUsage fails here, usageValue stays unchanged,
+        // so we will decrease usage below even for files which were not
+        // deleted.
         Unused << FileManager::GetUsage(&aFileManagerDirectory)
                       .andThen([&usageValue](const auto& newFileUsage) {
                         const auto newFileUsageValue =
@@ -6915,29 +6913,28 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
   QM_TRY_INSPECT(const auto& beginStmt,
                  BorrowCachedStatement("BEGIN IMMEDIATE;"_ns));
 
-  QM_TRY(QM_OR_ELSE_WARN(
-      ToResult(beginStmt->Execute()), ([&beginStmt](nsresult rv) {
-        if (rv == NS_ERROR_STORAGE_BUSY) {
-          NS_WARNING(
-              "Received NS_ERROR_STORAGE_BUSY when attempting to start write "
-              "transaction, retrying for up to 10 seconds");
+  QM_TRY(QM_OR_ELSE_WARN_IF(
+      ToResult(beginStmt->Execute()), IsSpecificError<NS_ERROR_STORAGE_BUSY>,
+      ([&beginStmt](nsresult rv) {
+        NS_WARNING(
+            "Received NS_ERROR_STORAGE_BUSY when attempting to start write "
+            "transaction, retrying for up to 10 seconds");
 
-          // Another thread must be using the database. Wait up to 10 seconds
-          // for that to complete.
-          const TimeStamp start = TimeStamp::NowLoRes();
+        // Another thread must be using the database. Wait up to 10 seconds
+        // for that to complete.
+        const TimeStamp start = TimeStamp::NowLoRes();
 
-          while (true) {
-            PR_Sleep(PR_MillisecondsToInterval(100));
+        while (true) {
+          PR_Sleep(PR_MillisecondsToInterval(100));
 
-            rv = beginStmt->Execute();
-            if (rv != NS_ERROR_STORAGE_BUSY ||
-                TimeStamp::NowLoRes() - start > TimeDuration::FromSeconds(10)) {
-              break;
-            }
+          rv = beginStmt->Execute();
+          if (rv != NS_ERROR_STORAGE_BUSY ||
+              TimeStamp::NowLoRes() - start > TimeDuration::FromSeconds(10)) {
+            break;
           }
         }
 
-        return Result<Ok, nsresult>{rv};
+        return ToResult(rv);
       })));
 
   mInWriteTransaction = true;
@@ -12461,24 +12458,21 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
           // and NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
           // check, but the file was found by a directory traversal and
           // ToInteger on the name succeeded, so it should be our file and if
-          // the file disappears, the use of QM_OR_ELSE_WARN is ok here.
+          // the file disappears, the use of QM_OR_ELSE_WARN_IF is ok here.
           QM_TRY_INSPECT(
               const auto& thisUsage,
-              QM_OR_ELSE_WARN(
+              QM_OR_ELSE_WARN_IF(
                   MOZ_TO_RESULT_INVOKE(file, GetFileSize)
                       .map([](const int64_t fileSize) {
                         return FileUsageType(Some(uint64_t(fileSize)));
                       }),
-                  ([](const nsresult rv) -> Result<FileUsageType, nsresult> {
-                    if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
-                        rv == NS_ERROR_FILE_NOT_FOUND) {
-                      // If the file does no longer exist, treat it as
-                      // 0-sized.
-                      return FileUsageType{};
-                    }
-
-                    return Err(rv);
-                  })));
+                  ([](const nsresult rv) {
+                    return rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
+                           rv == NS_ERROR_FILE_NOT_FOUND;
+                  }),
+                  // If the file does no longer exist, treat it as
+                  // 0-sized.
+                  ErrToDefaultOk<FileUsageType>));
 
           usage += thisUsage;
 
@@ -12897,19 +12891,18 @@ nsresult QuotaClient::GetUsageForOriginInternal(
                        CloneFileAndAppend(*directory,
                                           databaseFilename + kSQLiteWALSuffix));
 
-        // QM_OR_ELSE_WARN is not used here since we just want to log
+        // QM_OR_ELSE_WARN_IF is not used here since we just want to log
         // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
         // result and not spam the reports (the -wal file doesn't have to
         // exist).
-        QM_TRY_INSPECT(
-            const int64_t& walFileSize,
-            QM_OR_ELSE_LOG(MOZ_TO_RESULT_INVOKE(walFile, GetFileSize),
+        QM_TRY_INSPECT(const int64_t& walFileSize,
+                       QM_OR_ELSE_LOG_IF(
+                           MOZ_TO_RESULT_INVOKE(walFile, GetFileSize),
                            ([](const nsresult rv) {
-                             return (rv == NS_ERROR_FILE_NOT_FOUND ||
-                                     rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
-                                        ? Result<int64_t, nsresult>{0}
-                                        : Err(rv);
-                           })));
+                             return rv == NS_ERROR_FILE_NOT_FOUND ||
+                                    rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+                           }),
+                           (ErrToOk<0, int64_t>)));
         MOZ_ASSERT(walFileSize >= 0);
         *aUsageInfo += DatabaseUsageType(Some(uint64_t(walFileSize)));
       }
@@ -14642,11 +14635,11 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
     QM_TRY(aObjectStoreKey.BindToStatement(&*borrowedStmt,
                                            kStmtParamNameObjectDataKey));
 
-    // QM_OR_ELSE_WARN is not used here since we just want to log the
+    // QM_OR_ELSE_WARN_IF is not used here since we just want to log the
     // collision and not spam the reports.
-    QM_TRY(QM_OR_ELSE_LOG(
+    QM_TRY(QM_OR_ELSE_LOG_IF(
         ToResult(borrowedStmt->Execute()),
-        ([&info, index, &aIndexValues](nsresult rv) -> Result<Ok, nsresult> {
+        ([&info, index, &aIndexValues](nsresult rv) {
           if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {
             // If we're inserting multiple entries for the same unique
             // index, then we might have failed to insert due to
@@ -14659,13 +14652,14 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
                 // We found a key with the same value for the same
                 // index. So we must have had a collision with a value
                 // we just inserted.
-                return Ok{};
+                return true;
               }
             }
           }
 
-          return Err(rv);
-        })));
+          return false;
+        }),
+        ErrToDefaultOk<>));
   }
 
   return NS_OK;
