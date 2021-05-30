@@ -2174,14 +2174,14 @@ bool DebuggerObject::getOwnPropertyDescriptor(
       if (!dbg->wrapDebuggeeValue(cx, &get)) {
         return false;
       }
-      desc.setGetterObject(get.toObjectOrNull());
+      desc.setGetter(get.toObjectOrNull());
     }
     if (desc.hasSetter()) {
       RootedValue set(cx, ObjectOrNullValue(desc.setterObject()));
       if (!dbg->wrapDebuggeeValue(cx, &set)) {
         return false;
       }
-      desc.setSetterObject(set.toObjectOrNull());
+      desc.setSetter(set.toObjectOrNull());
     }
 
     desc_.set(mozilla::Some(desc.get()));

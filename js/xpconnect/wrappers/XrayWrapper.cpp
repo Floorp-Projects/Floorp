@@ -1903,14 +1903,14 @@ static bool RecreateLostWaivers(JSContext* cx, const PropertyDescriptor* orig,
     MOZ_ASSERT(CheckedUnwrapStatic(wrapped.getterObject()));
     rewaived = WrapperFactory::WaiveXray(cx, wrapped.getterObject());
     NS_ENSURE_TRUE(rewaived, false);
-    wrapped.setGetterObject(rewaived);
+    wrapped.setGetter(rewaived);
   }
   if (setterWasWaived && !IsCrossCompartmentWrapper(wrapped.setterObject())) {
     // We can't end up with WindowProxy or Location as setters.
     MOZ_ASSERT(CheckedUnwrapStatic(wrapped.setterObject()));
     rewaived = WrapperFactory::WaiveXray(cx, wrapped.setterObject());
     NS_ENSURE_TRUE(rewaived, false);
-    wrapped.setSetterObject(rewaived);
+    wrapped.setSetter(rewaived);
   }
 
   return true;
