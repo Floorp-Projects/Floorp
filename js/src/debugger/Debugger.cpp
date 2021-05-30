@@ -1557,7 +1557,7 @@ bool Debugger::unwrapPropertyDescriptor(
     desc.setValue(value);
   }
 
-  if (desc.hasGetterObject()) {
+  if (desc.hasGetter()) {
     RootedObject get(cx, desc.getterObject());
     if (get) {
       if (!unwrapDebuggeeObject(cx, &get)) {
@@ -1570,7 +1570,7 @@ bool Debugger::unwrapPropertyDescriptor(
     desc.setGetterObject(get);
   }
 
-  if (desc.hasSetterObject()) {
+  if (desc.hasSetter()) {
     RootedObject set(cx, desc.setterObject());
     if (set) {
       if (!unwrapDebuggeeObject(cx, &set)) {
