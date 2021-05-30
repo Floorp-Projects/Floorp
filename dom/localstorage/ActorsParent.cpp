@@ -438,9 +438,10 @@ nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
   if (kSQLiteGrowthIncrement) {
     // This is just an optimization so ignore the failure if the disk is
     // currently too full.
-    QM_TRY(QM_OR_ELSE_WARN(ToResult(aConnection->SetGrowthIncrement(
-                               kSQLiteGrowthIncrement, ""_ns)),
-                           ErrToDefaultOkOrErr<NS_ERROR_FILE_TOO_BIG>));
+    QM_TRY(QM_OR_ELSE_WARN_IF(ToResult(aConnection->SetGrowthIncrement(
+                                  kSQLiteGrowthIncrement, ""_ns)),
+                              IsSpecificError<NS_ERROR_FILE_TOO_BIG>,
+                              ErrToDefaultOk<>));
   }
 #endif  // LS_MOBILE
 
@@ -461,48 +462,42 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
       ToResultGet<nsCOMPtr<mozIStorageService>>(
           MOZ_SELECT_OVERLOAD(do_GetService), MOZ_STORAGE_SERVICE_CONTRACTID));
 
-  // XXX We can't use QM_OR_ELSE_WARN because base-toolchains builds fail with:
-  // error: use of 'tryResult28' before deduction of 'auto'
+  // XXX We can't use QM_OR_ELSE_WARN_IF because base-toolchains builds fail
+  // with: error: use of 'tryResult28' before deduction of 'auto'
   QM_TRY_UNWRAP(
       auto connection,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>,
-                                 storageService, OpenDatabase, &aDBFile)
-          .orElse([&aUsageFile, &aDBFile, &aCorruptedFileHandler,
-                   &storageService](const nsresult rv)
-                      -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-            if (IsDatabaseCorruptionError(rv)) {
-              // Remove the usage file first (it might not exist at all due
-              // to corrupted state, which is ignored here).
+      OrElseIf(
+          MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>,
+                                     storageService, OpenDatabase, &aDBFile),
+          IsDatabaseCorruptionError,
+          ([&aUsageFile, &aDBFile, &aCorruptedFileHandler,
+            &storageService](const nsresult rv)
+               -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
+            // Remove the usage file first (it might not exist at all due
+            // to corrupted state, which is ignored here).
 
-              // Usually we only use QM_OR_ELSE_LOG/QM_OR_ELSE_LOG_IF with
-              // Remove and
-              // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
-              // check, but we're already in the rare case of corruption here,
-              // so the use of QM_OR_ELSE_WARN is ok here.
-              QM_TRY(QM_OR_ELSE_WARN(
-                  ToResult(aUsageFile.Remove(false)),
-                  ([](const nsresult rv) -> Result<Ok, nsresult> {
-                    if (rv == NS_ERROR_FILE_NOT_FOUND ||
-                        rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-                      return Ok{};
-                    }
+            // Usually we only use QM_OR_ELSE_LOG/QM_OR_ELSE_LOG_IF with Remove
+            // and NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
+            // check, but we're already in the rare case of corruption here,
+            // so the use of QM_OR_ELSE_WARN_IF is ok here.
+            QM_TRY(QM_OR_ELSE_WARN_IF(
+                ToResult(aUsageFile.Remove(false)), ([](const nsresult rv) {
+                  return rv == NS_ERROR_FILE_NOT_FOUND ||
+                         rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+                }),
+                ErrToDefaultOk<>));
 
-                    return Err(rv);
-                  })));
+            // Call the corrupted file handler before trying to remove the
+            // database file, which might fail.
+            std::forward<CorruptedFileHandler>(aCorruptedFileHandler)();
 
-              // Call the corrupted file handler before trying to remove the
-              // database file, which might fail.
-              std::forward<CorruptedFileHandler>(aCorruptedFileHandler)();
+            // Nuke the database file.
+            QM_TRY(aDBFile.Remove(false));
 
-              // Nuke the database file.
-              QM_TRY(aDBFile.Remove(false));
-
-              QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
-                  nsCOMPtr<mozIStorageConnection>, storageService, OpenDatabase,
-                  &aDBFile));
-            }
-            return Err(rv);
-          }));
+            QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
+                nsCOMPtr<mozIStorageConnection>, storageService, OpenDatabase,
+                &aDBFile));
+          })));
 
   QM_TRY(SetDefaultPragmas(connection));
 
@@ -687,19 +682,13 @@ CreateArchiveStorageConnection(const nsAString& aStoragePath) {
 
   QM_TRY_UNWRAP(
       auto connection,
-      QM_OR_ELSE_WARN(
+      QM_OR_ELSE_WARN_IF(
           MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
                                      OpenUnsharedDatabase, archiveFile),
-          ([](const nsresult rv)
-               -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-            if (IsDatabaseCorruptionError(rv)) {
-              // Don't throw an error, leave a corrupted ls-archive database as
-              // it is.
-              return nsCOMPtr<mozIStorageConnection>{};
-            }
-
-            return Err(rv);
-          })));
+          IsDatabaseCorruptionError,
+          // Don't throw an error, leave a corrupted ls-archive database as
+          // it is.
+          ErrToDefaultOk<nsCOMPtr<mozIStorageConnection>>));
 
   if (connection) {
     const nsresult rv = StorageDBUpdater::Update(connection);
@@ -824,20 +813,17 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
 
   QM_TRY_UNWRAP(
       auto connection,
-      QM_OR_ELSE_WARN(
+      QM_OR_ELSE_WARN_IF(
           MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
                                      OpenUnsharedDatabase, shadowFile),
+          IsDatabaseCorruptionError,
           ([&shadowFile, &ss](const nsresult rv)
                -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-            if (IsDatabaseCorruptionError(rv)) {
-              QM_TRY(shadowFile->Remove(false));
+            QM_TRY(shadowFile->Remove(false));
 
-              QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
-                  nsCOMPtr<mozIStorageConnection>, ss, OpenUnsharedDatabase,
-                  shadowFile));
-            }
-
-            return Err(rv);
+            QM_TRY_RETURN(
+                MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
+                                           OpenUnsharedDatabase, shadowFile));
           })));
 
   QM_TRY(SetShadowJournalMode(connection));
@@ -967,24 +953,21 @@ Result<bool, nsresult> ExistsAsFile(nsIFile& aFile) {
 
   // This is an optimization to check both properties in one OS case, rather
   // than calling Exists first, and then IsDirectory. IsDirectory also checks
-  // if the path exists. QM_OR_ELSE_WARN is not used here since we just want to
-  // log NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST result and
-  // not spam the reports.
-  QM_TRY_INSPECT(
-      const auto& res,
-      QM_OR_ELSE_LOG(
-          MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
-              .map([](const bool isDirectory) {
-                return isDirectory ? ExistsAsFileResult::IsDirectory
-                                   : ExistsAsFileResult::IsFile;
-              }),
-          ([](const nsresult rv) -> Result<ExistsAsFileResult, nsresult> {
-            if (rv != NS_ERROR_FILE_NOT_FOUND &&
-                rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-              return Err(rv);
-            }
-            return ExistsAsFileResult::DoesNotExist;
-          })));
+  // if the path exists. QM_OR_ELSE_WARN_IF is not used here since we just want
+  // to log NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST result
+  // and not spam the reports.
+  QM_TRY_INSPECT(const auto& res,
+                 QM_OR_ELSE_LOG_IF(
+                     MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
+                         .map([](const bool isDirectory) {
+                           return isDirectory ? ExistsAsFileResult::IsDirectory
+                                              : ExistsAsFileResult::IsFile;
+                         }),
+                     ([](const nsresult rv) {
+                       return rv == NS_ERROR_FILE_NOT_FOUND ||
+                              rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+                     }),
+                     ErrToOk<ExistsAsFileResult::DoesNotExist>));
 
   QM_TRY(OkIf(res != ExistsAsFileResult::IsDirectory), Err(NS_ERROR_FAILURE));
 
