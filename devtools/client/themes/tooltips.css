@@ -245,7 +245,7 @@ strong {
 /* The arrow image is hidden because the panel is opened using openPopupAtScreen(). */
 
 /* The arrow content is styled on the HTML, so we don't need the styling on the XUL element */
-.tooltip-xul-wrapper[type="arrow"]::part(arrowcontent) {
+.tooltip-xul-wrapper[type="arrow"]::part(content) {
   margin: 0;
   padding: 0;
   background: transparent;

@@ -440,7 +440,7 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
   font-size: 1.1rem;
 }
 
-#confirmation-hint::part(arrowcontent) {
+#confirmation-hint::part(content) {
   -moz-box-align: center;
 }
 
@@ -575,7 +575,7 @@ panelview:not([mainview]) .toolbarbutton-text,
   min-width: calc(@menuPanelWidth@ + 32px);
 }
 
-.cui-widget-panel.cui-widget-panelWithFooter::part(arrowcontent) {
+.cui-widget-panel.cui-widget-panelWithFooter::part(content) {
   padding-bottom: 0;
 }
 

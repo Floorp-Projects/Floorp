@@ -30,6 +30,14 @@
   --toolbarbutton-icon-fill: currentColor;
 }
 
+:is(menupopup, panel)[type=arrow] {
+  --panel-background: var(--arrowpanel-background);
+  --panel-color: var(--arrowpanel-color);
+  --panel-border-color: var(--arrowpanel-border-color);
+  --panel-border-radius: var(--arrowpanel-border-radius);
+  --panel-padding: var(--arrowpanel-padding);
+}
+
 @media not (-moz-proton-doorhangers) {
 :root {
   --popup-notification-body-width: 25em;
@@ -136,14 +144,11 @@ xul|label[disabled="true"] {
 /* Autoscroll popup */
 
 .autoscroller {
-  border: none;
-  padding: 0;
-  background-image: url("chrome://global/skin/icons/autoscroll.svg");
-  background-size: contain;
-  background-color: transparent;
-  background-repeat: no-repeat;
   appearance: none;
   -moz-window-shadow: none;
+  --panel-border-color: transparent;
+  --panel-padding: 0;
+  --panel-background: url("chrome://global/skin/icons/autoscroll.svg") contain transparent no-repeat;
   /* Set pointer-events: none; so that mousemove events can be handled by AutoScrollChild.jsm. */
   pointer-events: none;
 }

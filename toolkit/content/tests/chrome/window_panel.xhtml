@@ -5,9 +5,19 @@
   XUL Widget Test for panels
   -->
 <window title="Titlebar" width="200" height="200"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<html:style>
+<![CDATA[
+  panel, panel::part(content) {
+    border: 0;
+    margin: 0;
+  }
+]]>
+</html:style>
 
 <tree id="tree" seltype="single" width="100" height="100">
   <treecols>
@@ -101,8 +111,8 @@ function createPanel(attrs)
   button.label = "OK";
   button.width = 120;
   button.height = 40;
-  button.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
-  panel.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
+  button.setAttribute("style", "appearance: none; border: 0; margin: 0;");
+  panel.setAttribute("style", "appearance: none; border: 0; margin: 0;");
   return document.documentElement.appendChild(panel);
 }
 
@@ -192,7 +202,7 @@ var tests = [
       var panelrect = panel.getBoundingClientRect();
       ok(panelrect.left >= 200 - window.mozInnerScreenX, testname + "left");
       if (!navigator.platform.includes("Linux")) {
-        ok(panelrect.top >= 210 - window.mozInnerScreenY + 10, testname + "top greater");
+        ok(panelrect.top >= 210 - window.mozInnerScreenY, testname + "top greater " + panelrect.top + " " + window.mozInnerScreenY);
       }
       ok(panelrect.top <= 210 - window.mozInnerScreenY + 36, testname + "top less");
       is(panelrect.width, 120, testname + "width");
