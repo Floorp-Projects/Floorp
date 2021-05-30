@@ -133,6 +133,9 @@ pub type RasterToLayoutTransform = Transform3D<f32, RasterPixel, LayoutPixel>;
 pub type PictureToRasterTransform = Transform3D<f32, PicturePixel, RasterPixel>;
 pub type RasterToPictureTransform = Transform3D<f32, RasterPixel, PicturePixel>;
 
+/// Scaling ratio from picture pixels to raster pixels (e.g. if scaling a picture surface up/down).
+pub type RasterPixelScale = Scale<f32, PicturePixel, RasterPixel>;
+
 // Fixed position coordinates, to avoid float precision errors.
 pub type LayoutPointAu = Point2D<Au, LayoutPixel>;
 pub type LayoutRectAu = Rect<Au, LayoutPixel>;

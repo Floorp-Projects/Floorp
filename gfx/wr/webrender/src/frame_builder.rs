@@ -549,10 +549,7 @@ impl FrameBuilder {
 
         self.globals.update(gpu_cache);
 
-        scene.spatial_tree.update_tree(
-            global_device_pixel_scale,
-            scene_properties,
-        );
+        scene.spatial_tree.update_tree(scene_properties);
         let mut transform_palette = scene.spatial_tree.build_transform_palette();
         scene.clip_store.begin_frame(&mut scratch.clip_store);
 
