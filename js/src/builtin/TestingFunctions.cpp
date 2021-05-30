@@ -131,6 +131,7 @@
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/ObjectFlags-inl.h"
 #include "vm/StringType-inl.h"
 
 using namespace js;
