@@ -528,7 +528,6 @@ impl FrameBuilder {
         gpu_cache: &mut GpuCache,
         rg_builder: &mut RenderTaskGraphBuilder,
         stamp: FrameStamp,
-        global_device_pixel_scale: DevicePixelScale,
         device_origin: DeviceIntPoint,
         scene_properties: &SceneProperties,
         data_stores: &mut DataStores,
@@ -555,12 +554,14 @@ impl FrameBuilder {
 
         rg_builder.begin_frame(stamp.frame_id());
 
-        let output_size = scene.output_rect.size.to_i32();
+        // TODO(dp): Remove me completely!!
+        let global_device_pixel_scale = DevicePixelScale::new(1.0);
+
+        let output_size = scene.output_rect.size;
         let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out();
 
         let mut composite_state = CompositeState::new(
             scene.config.compositor_kind,
-            global_device_pixel_scale,
             scene.config.max_depth_ids,
             dirty_rects_are_valid,
         );

@@ -100,6 +100,7 @@ pub type LayoutIntSize = Size2D<i32, LayoutPixel>;
 pub struct WorldPixel;
 
 pub type WorldRect = Rect<f32, WorldPixel>;
+pub type WorldIntRect = Rect<i32, WorldPixel>;
 pub type WorldPoint = Point2D<f32, WorldPixel>;
 pub type WorldSize = Size2D<f32, WorldPixel>;
 pub type WorldPoint3D = Point3D<f32, WorldPixel>;
