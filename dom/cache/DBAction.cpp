@@ -171,26 +171,23 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
 
   QM_TRY_UNWRAP(
       auto conn,
-      QM_OR_ELSE_WARN(
+      QM_OR_ELSE_WARN_IF(
           MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>,
                                      storageService, OpenDatabaseWithFileURL,
                                      dbFileUrl, ""_ns),
+          IsDatabaseCorruptionError,
           ([&aQuotaInfo, &aDBFile, &storageService,
             &dbFileUrl](const nsresult rv)
                -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-            if (IsDatabaseCorruptionError(rv)) {
-              NS_WARNING(
-                  "Cache database corrupted. Recreating empty database.");
+            NS_WARNING("Cache database corrupted. Recreating empty database.");
 
-              // There is nothing else we can do to recover.  Also, this data
-              // can be deleted by QuotaManager at any time anyways.
-              QM_TRY(WipeDatabase(aQuotaInfo, aDBFile));
+            // There is nothing else we can do to recover.  Also, this data
+            // can be deleted by QuotaManager at any time anyways.
+            QM_TRY(WipeDatabase(aQuotaInfo, aDBFile));
 
-              QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
-                  nsCOMPtr<mozIStorageConnection>, storageService,
-                  OpenDatabaseWithFileURL, dbFileUrl, ""_ns));
-            }
-            return Err(rv);
+            QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
+                nsCOMPtr<mozIStorageConnection>, storageService,
+                OpenDatabaseWithFileURL, dbFileUrl, ""_ns));
           })));
 
   // Check the schema to make sure it is not too old.
