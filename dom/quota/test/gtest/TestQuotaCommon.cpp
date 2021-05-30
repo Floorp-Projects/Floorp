@@ -1478,6 +1478,53 @@ TEST(QuotaCommon_ErrToDefaultOkOrErr, NsCOMPtr_Err)
   EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
 }
 
+TEST(QuotaCommon_IsSpecificError, Match)
+{ EXPECT_TRUE(IsSpecificError<NS_ERROR_FAILURE>(NS_ERROR_FAILURE)); }
+
+TEST(QuotaCommon_IsSpecificError, Mismatch)
+{ EXPECT_FALSE(IsSpecificError<NS_ERROR_FAILURE>(NS_ERROR_UNEXPECTED)); }
+
+TEST(QuotaCommon_ErrToOk, Bool_True)
+{
+  auto res = ErrToOk<true>(NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), true);
+}
+
+TEST(QuotaCommon_ErrToOk, Bool_False)
+{
+  auto res = ErrToOk<false>(NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), false);
+}
+
+TEST(QuotaCommon_ErrToOk, Int_42)
+{
+  auto res = ErrToOk<42>(NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), 42);
+}
+
+TEST(QuotaCommon_ErrToOk, NsCOMPtr_nullptr)
+{
+  auto res = ErrToOk<nullptr, nsCOMPtr<nsISupports>>(NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), nullptr);
+}
+
+TEST(QuotaCommon_ErrToDefaultOk, Ok)
+{
+  auto res = ErrToDefaultOk<Ok>(NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+}
+
+TEST(QuotaCommon_ErrToDefaultOk, NsCOMPtr)
+{
+  auto res = ErrToDefaultOk<nsCOMPtr<nsISupports>>(NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), nullptr);
+}
+
 class StringPairParameterized
     : public ::testing::TestWithParam<std::pair<const char*, const char*>> {};
 

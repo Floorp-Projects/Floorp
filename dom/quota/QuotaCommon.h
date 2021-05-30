@@ -1022,6 +1022,34 @@ auto ErrToDefaultOkOrErr(nsresult aValue) -> Result<V, nsresult> {
   return Err(aValue);
 }
 
+// Helper template function so that QM_TRY predicates checking for a specific
+// error can be concisely written as IsSpecificError<NS_SOME_ERROR> instead of
+// as a more verbose lambda.
+template <nsresult ErrorValue>
+bool IsSpecificError(const nsresult aValue) {
+  return aValue == ErrorValue;
+}
+
+// Helper template function so that QM_TRY fallback functions that are
+// converting errors into specific in-band success values can be concisely
+// written as ErrToOk<SuccessValueToReturn> (with the return type inferred).
+// For example, many file-related APIs that access information about a file may
+// return an nsresult error code if the file does not exist. From an
+// application perspective, the file not existing is not actually exceptional
+// and can instead be handled by the success case.
+template <auto SuccessValue, typename V = decltype(SuccessValue)>
+auto ErrToOk(const nsresult aValue) -> Result<V, nsresult> {
+  return V{SuccessValue};
+}
+
+// Helper template function so that QM_TRY fallback functions that are
+// suppressing errors by converting them into (generic) success can be
+// concisely written as ErrToDefaultOk<>.
+template <typename V = mozilla::Ok>
+auto ErrToDefaultOk(const nsresult aValue) -> Result<V, nsresult> {
+  return V{};
+}
+
 // TODO: Maybe move this to mfbt/ResultExtensions.h
 template <typename R, typename Func, typename... Args>
 Result<R, nsresult> ToResultGet(const Func& aFunc, Args&&... aArgs) {
