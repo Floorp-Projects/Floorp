@@ -164,7 +164,7 @@ bool MaybeCrossOriginObjectMixins::CrossOriginGet(
 
   // Step 5.
   JS::Rooted<JSObject*> getter(cx);
-  if (!desc->hasGetter() || !(getter = desc->getterObject())) {
+  if (!desc->hasGetter() || !(getter = desc->getter())) {
     // Step 6.
     return ReportCrossOriginDenial(cx, id, "get"_ns);
   }
@@ -210,7 +210,7 @@ bool MaybeCrossOriginObjectMixins::CrossOriginSet(
 
   // Step 3.
   JS::Rooted<JSObject*> setter(cx);
-  if (desc->hasSetter() && (setter = desc->setterObject())) {
+  if (desc->hasSetter() && (setter = desc->setter())) {
     JS::Rooted<JS::Value> ignored(cx);
     // Step 3.1.
     if (!JS::Call(cx, receiver, setter, JS::HandleValueArray(v), &ignored)) {

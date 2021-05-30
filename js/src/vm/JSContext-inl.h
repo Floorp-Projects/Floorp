@@ -182,10 +182,10 @@ class ContextChecks {
 
   void check(const PropertyDescriptor& desc, int argIndex) {
     if (desc.hasGetter()) {
-      check(desc.getterObject(), argIndex);
+      check(desc.getter(), argIndex);
     }
     if (desc.hasSetter()) {
-      check(desc.setterObject(), argIndex);
+      check(desc.setter(), argIndex);
     }
     if (desc.hasValue()) {
       check(desc.value(), argIndex);

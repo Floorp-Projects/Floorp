@@ -464,14 +464,14 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
     }
 
     if (desc->isAccessorDescriptor()) {
-      if (desc->hasGetter() && desc->getterObject()) {
-        val.setObject(*desc->getterObject());
+      if (desc->hasGetter() && desc->getter()) {
+        val.setObject(*desc->getter());
         if (!AddProperty(id, val, PropertyKind::Getter)) {
           return nullptr;
         }
       }
-      if (desc->hasSetter() && desc->setterObject()) {
-        val.setObject(*desc->setterObject());
+      if (desc->hasSetter() && desc->setter()) {
+        val.setObject(*desc->setter());
         if (!AddProperty(id, val, PropertyKind::Setter)) {
           return nullptr;
         }
@@ -1334,13 +1334,13 @@ static bool FromPropertyDescriptorToArray(
     result->initDenseElement(PROP_DESC_ATTRS_AND_KIND_INDEX,
                              Int32Value(attrsAndKind));
 
-    if (JSObject* get = desc->getterObject()) {
+    if (JSObject* get = desc->getter()) {
       result->initDenseElement(PROP_DESC_GETTER_INDEX, ObjectValue(*get));
     } else {
       result->initDenseElement(PROP_DESC_GETTER_INDEX, UndefinedValue());
     }
 
-    if (JSObject* set = desc->setterObject()) {
+    if (JSObject* set = desc->setter()) {
       result->initDenseElement(PROP_DESC_SETTER_INDEX, ObjectValue(*set));
     } else {
       result->initDenseElement(PROP_DESC_SETTER_INDEX, UndefinedValue());
