@@ -418,13 +418,13 @@ bool js::ToPropertyDescriptor(JSContext* cx, HandleValue descval,
       return false;
     }
 
-    // We delay setGetterObject/setSetterObject after the previous check,
+    // We delay setGetter/setSetter after the previous check,
     // because otherwise we would assert.
     if (hasGet) {
-      desc.setGetterObject(getter);
+      desc.setGetter(getter);
     }
     if (hasSet) {
-      desc.setSetterObject(setter);
+      desc.setSetter(setter);
     }
   }
 
@@ -469,11 +469,11 @@ void js::CompletePropertyDescriptor(MutableHandle<PropertyDescriptor> desc) {
   } else {
     // Step 4.a.
     if (!desc.hasGetter()) {
-      desc.setGetterObject(nullptr);
+      desc.setGetter(nullptr);
     }
     // Step 4.b.
     if (!desc.hasSetter()) {
-      desc.setSetterObject(nullptr);
+      desc.setSetter(nullptr);
     }
   }
 

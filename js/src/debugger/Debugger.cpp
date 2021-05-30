@@ -1567,7 +1567,7 @@ bool Debugger::unwrapPropertyDescriptor(
         return false;
       }
     }
-    desc.setGetterObject(get);
+    desc.setGetter(get);
   }
 
   if (desc.hasSetter()) {
@@ -1580,7 +1580,7 @@ bool Debugger::unwrapPropertyDescriptor(
         return false;
       }
     }
-    desc.setSetterObject(set);
+    desc.setSetter(set);
   }
 
   return true;

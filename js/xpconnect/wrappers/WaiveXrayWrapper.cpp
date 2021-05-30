@@ -35,14 +35,14 @@ bool WaiveXrayWrapper::getOwnPropertyDescriptor(
     if (!WrapperFactory::WaiveXrayAndWrap(cx, &v)) {
       return false;
     }
-    desc_.setGetterObject(&v.toObject());
+    desc_.setGetter(&v.toObject());
   }
   if (desc_.hasSetter() && desc_.setterObject()) {
     RootedValue v(cx, JS::ObjectValue(*desc_.setterObject()));
     if (!WrapperFactory::WaiveXrayAndWrap(cx, &v)) {
       return false;
     }
-    desc_.setSetterObject(&v.toObject());
+    desc_.setSetter(&v.toObject());
   }
 
   desc.set(mozilla::Some(desc_.get()));
