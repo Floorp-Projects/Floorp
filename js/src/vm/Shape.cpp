@@ -22,6 +22,7 @@
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/ShapeZone.h"
 
 #include "vm/Caches-inl.h"
 #include "vm/JSContext-inl.h"
@@ -1305,7 +1306,7 @@ BaseShape::BaseShape(const JSClass* clasp, JS::Realm* realm, TaggedProto proto)
 /* static */
 BaseShape* BaseShape::get(JSContext* cx, const JSClass* clasp, JS::Realm* realm,
                           Handle<TaggedProto> proto) {
-  auto& table = cx->zone()->baseShapes();
+  auto& table = cx->zone()->shapeZone().baseShapes;
 
   using Lookup = BaseShapeHasher::Lookup;
 
@@ -1348,44 +1349,6 @@ bool Shape::canSkipMarkingShapeCache() {
   return count == cache.getTablePointer()->entryCount();
 }
 #endif
-
-#ifdef JSGC_HASH_TABLE_CHECKS
-
-void Zone::checkBaseShapeTableAfterMovingGC() {
-  for (auto r = baseShapes().all(); !r.empty(); r.popFront()) {
-    BaseShape* base = r.front().unbarrieredGet();
-    CheckGCThingAfterMovingGC(base);
-
-    BaseShapeHasher::Lookup lookup(base->clasp(), base->realm(), base->proto());
-    BaseShapeSet::Ptr ptr = baseShapes().lookup(lookup);
-    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
-  }
-}
-
-#endif  // JSGC_HASH_TABLE_CHECKS
-
-#ifdef JSGC_HASH_TABLE_CHECKS
-
-void Zone::checkInitialShapesTableAfterMovingGC() {
-  /*
-   * Assert that the postbarriers have worked and that nothing is left in
-   * initialShapes that points into the nursery, and that the hash table
-   * entries are discoverable.
-   */
-  for (auto r = initialShapes().all(); !r.empty(); r.popFront()) {
-    Shape* shape = r.front().unbarrieredGet();
-
-    CheckGCThingAfterMovingGC(shape);
-
-    using Lookup = InitialShapeHasher::Lookup;
-    Lookup lookup(shape->getObjectClass(), shape->realm(), shape->proto(),
-                  shape->numFixedSlots(), shape->objectFlags());
-    InitialShapeSet::Ptr ptr = initialShapes().lookup(lookup);
-    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
-  }
-}
-
-#endif  // JSGC_HASH_TABLE_CHECKS
 
 Shape* EmptyShape::new_(JSContext* cx, Handle<BaseShape*> base,
                         ObjectFlags objectFlags, uint32_t nfixed) {
@@ -1750,7 +1713,7 @@ Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
     proto = TaggedProto(protoObj);
   }
 
-  auto& table = realm->zone()->initialShapes();
+  auto& table = realm->zone()->shapeZone().initialShapes;
 
   using Lookup = InitialShapeHasher::Lookup;
   auto ptr = MakeDependentAddPtr(
@@ -1816,7 +1779,8 @@ void EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape) {
   Lookup lookup(shape->getObjectClass(), shape->realm(), shape->proto(),
                 shape->numFixedSlots(), shape->objectFlags());
 
-  InitialShapeSet::Ptr p = cx->zone()->initialShapes().lookup(lookup);
+  auto& table = cx->zone()->shapeZone().initialShapes;
+  InitialShapeSet::Ptr p = table.lookup(lookup);
   MOZ_ASSERT(p);
 
   // The metadata callback can end up causing redundant changes of the initial
@@ -1834,7 +1798,7 @@ void EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape) {
   MOZ_ASSERT(nshape == *p);
 #endif
 
-  cx->zone()->initialShapes().replaceKey(p, lookup, shape.get());
+  table.replaceKey(p, lookup, shape.get());
 
   /*
    * This affects the shape that will be produced by the various NewObject
