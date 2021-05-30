@@ -366,6 +366,11 @@ class MutableWrappedPtrOperations<JS::GCHashSet<Args...>, Wrapper>
   AddPtr lookupForAdd(const Lookup& l) { return set().lookupForAdd(l); }
 
   template <typename TInput>
+  void replaceKey(Ptr p, const Lookup& l, TInput&& newValue) {
+    set().replaceKey(p, l, std::forward<TInput>(newValue));
+  }
+
+  template <typename TInput>
   bool add(AddPtr& p, TInput&& t) {
     return set().add(p, std::forward<TInput>(t));
   }
@@ -765,6 +770,11 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
     if (p) {
       remove(p);
     }
+  }
+
+  template <typename TInput>
+  void replaceKey(Ptr p, const Lookup& l, TInput&& newValue) {
+    set.replaceKey(p, l, std::forward<TInput>(newValue));
   }
 
   template <typename TInput>
