@@ -5,7 +5,7 @@
 
 async function testPanel(browser, standAlone, initial_background) {
   let panel = getPanelForNode(browser);
-  let arrowContent = panel.shadowRoot.querySelector(".panel-arrowcontent");
+  let arrowContent = panel.panelContent;
   let arrow = panel.shadowRoot.querySelector(".panel-arrow");
 
   let checkArrow = (background = null) => {

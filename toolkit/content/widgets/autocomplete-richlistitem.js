@@ -692,9 +692,12 @@
       const minWidth = getComputedStyle(popup).minWidth.replace("px", "");
       // Make item fit in popup as XUL box could not constrain
       // item's width
-      // popup.width is equal to the input field's width from the content process
+      // --panel-width is equal to the input field's width from the content process
       this.firstElementChild.style.width =
-        Math.max(minWidth, popup.width) + "px";
+        Math.max(
+          minWidth,
+          parseFloat(popup.style.getPropertyValue("--panel-width") || "0")
+        ) + "px";
     }
 
     _onOverflow() {}
