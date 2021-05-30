@@ -534,8 +534,6 @@ class MOZ_RAII AutoKeepShapeCaches {
  * earlier property, however.
  */
 
-class Shape;
-
 // Flags set on the Shape which describe the referring object. Once set these
 // cannot be unset (except during object densification of sparse indexes), and
 // are transferred from shape to shape as the object's last property changes.
@@ -578,9 +576,6 @@ using ObjectFlags = EnumFlags<ObjectFlag>;
 
 class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
  public:
-  friend class Shape;
-  friend struct StackShape;
-
   /* Class of referring object, stored in the cell header */
   const JSClass* clasp() const { return headerPtr(); }
 
