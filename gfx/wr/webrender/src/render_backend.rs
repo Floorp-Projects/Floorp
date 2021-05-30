@@ -563,9 +563,6 @@ impl Document {
     ) -> RenderedDocument {
         let frame_build_start_time = precise_time_ns();
 
-        // TODO(dp): Remove global_device_pixel_scale completely, replacing with per-surface raster-scale
-        let accumulated_scale_factor = DevicePixelScale::new(1.0);
-
         // Advance to the next frame.
         self.stamp.advance();
 
@@ -579,7 +576,6 @@ impl Document {
                 gpu_cache,
                 &mut self.rg_builder,
                 self.stamp,
-                accumulated_scale_factor,
                 self.view.scene.device_rect.origin,
                 &self.dynamic_properties,
                 &mut self.data_stores,

@@ -850,6 +850,8 @@ pub struct Tile {
     /// TODO(gw): We have multiple dirty rects available due to the quadtree above. In future,
     ///           expose these as multiple dirty rects, which will help in some cases.
     pub device_dirty_rect: DeviceRect,
+    /// World space rect that contains valid pixels region of this tile.
+    pub world_valid_rect: WorldRect,
     /// Device space rect that contains valid pixels region of this tile.
     pub device_valid_rect: DeviceRect,
     /// Uniquely describes the content of this tile, in a way that can be
@@ -901,6 +903,7 @@ impl Tile {
             local_tile_rect: PictureRect::zero(),
             local_tile_box: PictureBox2D::zero(),
             world_tile_rect: WorldRect::zero(),
+            world_valid_rect: WorldRect::zero(),
             device_valid_rect: DeviceRect::zero(),
             local_dirty_rect: PictureRect::zero(),
             device_dirty_rect: DeviceRect::zero(),
@@ -1226,7 +1229,7 @@ impl Tile {
 
         // The device_valid_rect is referenced during `update_content_validity` so it
         // must be updated here first.
-        let world_valid_rect = ctx.pic_to_world_mapper
+        self.world_valid_rect = ctx.pic_to_world_mapper
             .map(&self.current_descriptor.local_valid_rect)
             .expect("bug: map local valid rect");
 
@@ -1235,7 +1238,7 @@ impl Tile {
         // always aligned to a device pixel. To handle this, round out to get all
         // required pixels, and intersect with the tile device rect.
         let device_rect = (self.world_tile_rect * ctx.global_device_pixel_scale).round();
-        self.device_valid_rect = (world_valid_rect * ctx.global_device_pixel_scale)
+        self.device_valid_rect = (self.world_valid_rect * ctx.global_device_pixel_scale)
             .round_out()
             .intersection(&device_rect)
             .unwrap_or_else(DeviceRect::zero);
@@ -4852,26 +4855,26 @@ impl PicturePrimitive {
                 // the tile rects below for occlusion testing to the relevant area.
                 let world_clip_rect = map_pic_to_world
                     .map(&tile_cache.local_clip_rect)
-                    .expect("bug: unable to map clip rect");
-                let device_clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
+                    .expect("bug: unable to map clip rect")
+                    .round();
 
                 for (sub_slice_index, sub_slice) in tile_cache.sub_slices.iter_mut().enumerate() {
                     for tile in sub_slice.tiles.values_mut() {
                         surface_device_rect = surface_device_rect.union(&tile.device_valid_rect);
 
                         if tile.is_visible {
-                            // Get the world space rect that this tile will actually occupy on screem
-                            let device_draw_rect = device_clip_rect.intersection(&tile.device_valid_rect);
+                            // Get the world space rect that this tile will actually occupy on screen
+                            let world_draw_rect = world_clip_rect.intersection(&tile.world_valid_rect);
 
                             // If that draw rect is occluded by some set of tiles in front of it,
                             // then mark it as not visible and skip drawing. When it's not occluded
                             // it will fail this test, and get rasterized by the render task setup
                             // code below.
-                            match device_draw_rect {
-                                Some(device_draw_rect) => {
+                            match world_draw_rect {
+                                Some(world_draw_rect) => {
                                     // Only check for occlusion on visible tiles that are fixed position.
                                     if tile_cache.spatial_node_index == ROOT_SPATIAL_NODE_INDEX &&
-                                       frame_state.composite_state.occluders.is_tile_occluded(tile.z_id, device_draw_rect) {
+                                       frame_state.composite_state.occluders.is_tile_occluded(tile.z_id, world_draw_rect) {
                                         // If this tile has an allocated native surface, free it, since it's completely
                                         // occluded. We will need to re-allocate this surface if it becomes visible,
                                         // but that's likely to be rare (e.g. when there is no content display list
