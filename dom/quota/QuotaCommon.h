@@ -894,6 +894,69 @@ class NotNull;
  */
 #define QM_OR_ELSE_LOG(...) QM_OR_ELSE_REPORT(Log, __VA_ARGS__)
 
+namespace mozilla::dom::quota {
+
+// XXX Support orElseIf directly in mozilla::Result
+template <typename V, typename E, typename P, typename F>
+auto OrElseIf(Result<V, E>&& aResult, P&& aPred, F&& aFunc) -> Result<V, E> {
+  return MOZ_UNLIKELY(aResult.isErr())
+             ? (std::forward<P>(aPred)(aResult.inspectErr()))
+                   ? std::forward<F>(aFunc)(aResult.unwrapErr())
+                   : aResult.propagateErr()
+             : aResult.unwrap();
+}
+
+}  // namespace mozilla::dom::quota
+
+// QM_OR_ELSE_REPORT_IF macro is an implementation detail of
+// QM_OR_ELSE_WARN_IF/QM_OR_ELSE_NOTE_IF/QM_OR_ELSE_LOG_IF and shouldn't be
+// used directly.
+
+#define QM_OR_ELSE_REPORT_IF(severity, expr, predicate, fallback) \
+  mozilla::dom::quota::OrElseIf(                                  \
+      (expr),                                                     \
+      [&](const auto& firstRes) {                                 \
+        bool res = predicate(firstRes);                           \
+        mozilla::dom::quota::QM_HANDLE_ERROR(                     \
+            #expr, firstRes,                                      \
+            res ? mozilla::dom::quota::Severity::severity         \
+                : mozilla::dom::quota::Severity::Error);          \
+        return res;                                               \
+      },                                                          \
+      fallback)
+
+/*
+ * QM_OR_ELSE_WARN_IF(expr, predicate, fallback) evaluates expr first, which
+ * must produce a Result value. On Success, it just moves the success over.
+ * On error, it calls a predicate function (passed as the second argument) and
+ * then it either calls HandleError (with the Warning severity) and a fallback
+ * function (passed as the third argument) which produces a new result if the
+ * predicate returned true. Or it calls HandleError (with the Error severity)
+ * and propagates the error result if the predicate returned false. So failed
+ * expr can be reported as a warning or as an error depending on the predicate.
+ * QM_OR_ELSE_WARN_IF is a sub macro and is intended to be used along with one
+ * of the main macros such as QM_TRY.
+ */
+#define QM_OR_ELSE_WARN_IF(...) QM_OR_ELSE_REPORT_IF(Warning, __VA_ARGS__)
+
+/**
+ * QM_OR_ELSE_NOTE_IF is like QM_OR_ELSE_WARN_IF. The only difference is that
+ * failures are reported using a lower level of severity relative to failures
+ * reported by QM_OR_ELSE_WARN_IF.
+ */
+#define QM_OR_ELSE_NOTE_IF(...) QM_OR_ELSE_REPORT_IF(Note, __VA_ARGS__)
+
+/**
+ * QM_OR_ELSE_LOG_IF is like QM_OR_ELSE_WARN_IF. The only difference is that
+ * failures are reported using the lowest severity which is currently ignored
+ * in LogError, so nothing goes to the console, browser console and telemetry.
+ * Since nothing goes to the telemetry, the macro can't signal the end of the
+ * underlying error stack or change the type of the error stack in the
+ * telemetry. For that reason, the expression shouldn't contain nested QM_TRY
+ * macro uses.
+ */
+#define QM_OR_ELSE_LOG_IF(...) QM_OR_ELSE_REPORT_IF(Log, __VA_ARGS__)
+
 // Telemetry probes to collect number of failure during the initialization.
 #ifdef NIGHTLY_BUILD
 #  define RECORD_IN_NIGHTLY(_recorder, _status) \

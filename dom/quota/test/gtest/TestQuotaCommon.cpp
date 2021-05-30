@@ -1244,6 +1244,118 @@ TEST(QuotaCommon_OrElseWarn, Failure_MappedToError)
   EXPECT_FALSE(tryContinued);
 }
 
+TEST(QuotaCommon_OrElseWarnIf, Success)
+{
+  bool predicateRun = false;
+  bool fallbackRun = false;
+  bool tryContinued = false;
+
+  const auto res = [&]() -> mozilla::Result<mozilla::Ok, NotOk> {
+    QM_TRY(QM_OR_ELSE_WARN_IF(
+        OkIf(true),
+        [&predicateRun](const NotOk) {
+          predicateRun = true;
+          return false;
+        },
+        ([&fallbackRun](const NotOk) {
+          fallbackRun = true;
+          return mozilla::Result<mozilla::Ok, NotOk>{mozilla::Ok{}};
+        })));
+
+    tryContinued = true;
+    return mozilla::Ok{};
+  }();
+
+  EXPECT_TRUE(res.isOk());
+  EXPECT_FALSE(predicateRun);
+  EXPECT_FALSE(fallbackRun);
+  EXPECT_TRUE(tryContinued);
+}
+
+TEST(QuotaCommon_OrElseWarnIf, Failure_PredicateReturnsFalse)
+{
+  bool predicateRun = false;
+  bool fallbackRun = false;
+  bool tryContinued = false;
+
+  const auto res = [&]() -> mozilla::Result<mozilla::Ok, NotOk> {
+    QM_TRY(QM_OR_ELSE_WARN_IF(
+        OkIf(false),
+        [&predicateRun](const NotOk) {
+          predicateRun = true;
+          return false;
+        },
+        ([&fallbackRun](const NotOk) {
+          fallbackRun = true;
+          return mozilla::Result<mozilla::Ok, NotOk>{mozilla::Ok{}};
+        })));
+
+    tryContinued = true;
+    return mozilla::Ok{};
+  }();
+
+  EXPECT_TRUE(res.isErr());
+  EXPECT_TRUE(predicateRun);
+  EXPECT_FALSE(fallbackRun);
+  EXPECT_FALSE(tryContinued);
+}
+
+TEST(QuotaCommon_OrElseWarnIf, Failure_PredicateReturnsTrue_MappedToSuccess)
+{
+  bool predicateRun = false;
+  bool fallbackRun = false;
+  bool tryContinued = false;
+
+  const auto res = [&]() -> mozilla::Result<mozilla::Ok, NotOk> {
+    QM_TRY(QM_OR_ELSE_WARN_IF(
+        OkIf(false),
+        [&predicateRun](const NotOk) {
+          predicateRun = true;
+          return true;
+        },
+        ([&fallbackRun](const NotOk) {
+          fallbackRun = true;
+          return mozilla::Result<mozilla::Ok, NotOk>{mozilla::Ok{}};
+        })));
+
+    tryContinued = true;
+    return mozilla::Ok{};
+  }();
+
+  EXPECT_TRUE(res.isOk());
+  EXPECT_TRUE(predicateRun);
+  EXPECT_TRUE(fallbackRun);
+  EXPECT_TRUE(tryContinued);
+}
+
+TEST(QuotaCommon_OrElseWarnIf, Failure_PredicateReturnsTrue_MappedToError)
+{
+  bool predicateRun = false;
+  bool fallbackRun = false;
+  bool tryContinued = false;
+
+  const auto res = [&]() -> mozilla::Result<mozilla::Ok, NotOk> {
+    QM_TRY(QM_OR_ELSE_WARN_IF(
+        OkIf(false),
+        [&predicateRun](const NotOk) {
+          predicateRun = true;
+          return true;
+        },
+        ([&fallbackRun](const NotOk) {
+          fallbackRun = true;
+          return mozilla::Result<mozilla::Ok, NotOk>{mozilla::NotOk{}};
+        })));
+
+    tryContinued = true;
+    return mozilla::Ok{};
+  }();
+
+  EXPECT_TRUE(res.isErr());
+  EXPECT_TRUE(predicateRun);
+  EXPECT_TRUE(fallbackRun);
+  EXPECT_FALSE(tryContinued);
+}
+
 TEST(QuotaCommon_OkIf, True)
 {
   auto res = OkIf(true);
