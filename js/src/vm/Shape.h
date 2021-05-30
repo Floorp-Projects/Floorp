@@ -1305,7 +1305,7 @@ struct StackShape {
   }
 
   HashNumber hash() const {
-    HashNumber hash = HashId(propid);
+    HashNumber hash = HashPropertyKey(propid);
     return mozilla::AddToHash(
         hash, mozilla::HashGeneric(base, objectFlags.toRaw(), propFlags.toRaw(),
                                    maybeSlot()));
@@ -1471,7 +1471,7 @@ class MOZ_RAII ShapePropertyIter {
 };
 
 MOZ_ALWAYS_INLINE HashNumber ShapeTable::Hasher::hash(PropertyKey key) {
-  return HashId(key);
+  return HashPropertyKey(key);
 }
 MOZ_ALWAYS_INLINE bool ShapeTable::Hasher::match(Shape* shape,
                                                  PropertyKey key) {

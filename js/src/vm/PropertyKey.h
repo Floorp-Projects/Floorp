@@ -9,6 +9,8 @@
 
 #include "mozilla/HashFunctions.h"  // mozilla::HashGeneric
 
+#include "NamespaceImports.h"  // js::PropertyKey
+
 #include "js/HashTable.h"   // js::DefaultHasher
 #include "js/Id.h"          // JS::PropertyKey
 #include "vm/StringType.h"  // JSAtom::hash
@@ -16,16 +18,16 @@
 
 namespace js {
 
-static MOZ_ALWAYS_INLINE js::HashNumber HashId(jsid id) {
+static MOZ_ALWAYS_INLINE js::HashNumber HashPropertyKey(PropertyKey key) {
   // HashGeneric alone would work, but bits of atom and symbol addresses
   // could then be recovered from the hash code. See bug 1330769.
-  if (MOZ_LIKELY(JSID_IS_ATOM(id))) {
-    return id.toAtom()->hash();
+  if (MOZ_LIKELY(key.isAtom())) {
+    return key.toAtom()->hash();
   }
-  if (JSID_IS_SYMBOL(id)) {
-    return JSID_TO_SYMBOL(id)->hash();
+  if (key.isSymbol()) {
+    return key.toSymbol()->hash();
   }
-  return mozilla::HashGeneric(JSID_BITS(id));
+  return mozilla::HashGeneric(key.asBits);
 }
 
 }  // namespace js
@@ -33,10 +35,14 @@ static MOZ_ALWAYS_INLINE js::HashNumber HashId(jsid id) {
 namespace mozilla {
 
 template <>
-struct DefaultHasher<jsid> {
-  using Lookup = jsid;
-  static HashNumber hash(jsid id) { return js::HashId(id); }
-  static bool match(jsid id1, jsid id2) { return id1 == id2; }
+struct DefaultHasher<JS::PropertyKey> {
+  using Lookup = JS::PropertyKey;
+  static HashNumber hash(JS::PropertyKey key) {
+    return js::HashPropertyKey(key);
+  }
+  static bool match(JS::PropertyKey key1, JS::PropertyKey key2) {
+    return key1 == key2;
+  }
 };
 
 }  // namespace mozilla
