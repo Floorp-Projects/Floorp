@@ -213,37 +213,6 @@ class DictionaryShapeLink {
   }
 } JS_HAZ_GC_POINTER;
 
-class PropertyTree {
-  friend class ::JSFunction;
-
-#ifdef DEBUG
-  JS::Zone* zone_;
-#endif
-
-  bool insertChild(JSContext* cx, Shape* parent, Shape* child);
-
-  PropertyTree();
-
- public:
-  /*
-   * Use a lower limit for objects that are accessed using SETELEM (o[x] = y).
-   * These objects are likely used as hashmaps and dictionary mode is more
-   * efficient in this case.
-   */
-  enum { MAX_HEIGHT = 512, MAX_HEIGHT_WITH_ELEMENTS_ACCESS = 128 };
-
-  explicit PropertyTree(JS::Zone* zone)
-#ifdef DEBUG
-      : zone_(zone)
-#endif
-  {
-  }
-
-  MOZ_ALWAYS_INLINE Shape* inlinedGetChild(JSContext* cx, Shape* parent,
-                                           JS::Handle<StackShape> childSpec);
-  Shape* getChild(JSContext* cx, Shape* parent, JS::Handle<StackShape> child);
-};
-
 class TenuringTracer;
 
 class AutoKeepShapeCaches;
@@ -602,30 +571,6 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 #endif
   }
 };
-
-// Hash policy for the per-zone baseShapes set.
-struct BaseShapeHasher {
-  struct Lookup {
-    const JSClass* clasp;
-    JS::Realm* realm;
-    TaggedProto proto;
-
-    Lookup(const JSClass* clasp, JS::Realm* realm, TaggedProto proto)
-        : clasp(clasp), realm(realm), proto(proto) {}
-  };
-
-  static HashNumber hash(const Lookup& lookup) {
-    HashNumber hash = MovableCellHasher<TaggedProto>::hash(lookup.proto);
-    return mozilla::AddToHash(hash, lookup.clasp, lookup.realm);
-  }
-  static bool match(const WeakHeapPtr<BaseShape*>& key, const Lookup& lookup) {
-    return key.unbarrieredGet()->clasp() == lookup.clasp &&
-           key.unbarrieredGet()->realm() == lookup.realm &&
-           key.unbarrieredGet()->proto() == lookup.proto;
-  }
-};
-using BaseShapeSet = JS::WeakCache<
-    JS::GCHashSet<WeakHeapPtr<BaseShape*>, BaseShapeHasher, SystemAllocPolicy>>;
 
 class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   friend class ::JSObject;
@@ -1150,45 +1095,6 @@ struct EmptyShape : public js::Shape {
   static inline bool ensureInitialCustomShape(JSContext* cx,
                                               Handle<ObjectSubclass*> obj);
 };
-
-// Hash policy for the per-zone initialShapes set storing initial shapes for
-// objects in the zone.
-//
-// These are empty shapes, except for certain classes (e.g. String, RegExp)
-// which may add certain baked-in properties. See insertInitialShape.
-struct InitialShapeHasher {
-  struct Lookup {
-    const JSClass* clasp;
-    JS::Realm* realm;
-    TaggedProto proto;
-    uint32_t nfixed;
-    ObjectFlags objectFlags;
-
-    Lookup(const JSClass* clasp, JS::Realm* realm, const TaggedProto& proto,
-           uint32_t nfixed, ObjectFlags objectFlags)
-        : clasp(clasp),
-          realm(realm),
-          proto(proto),
-          nfixed(nfixed),
-          objectFlags(objectFlags) {}
-  };
-
-  static HashNumber hash(const Lookup& lookup) {
-    HashNumber hash = MovableCellHasher<TaggedProto>::hash(lookup.proto);
-    return mozilla::AddToHash(hash, lookup.clasp, lookup.realm, lookup.nfixed,
-                              lookup.objectFlags.toRaw());
-  }
-  static bool match(const WeakHeapPtr<Shape*>& key, const Lookup& lookup) {
-    const Shape* shape = key.unbarrieredGet();
-    return lookup.clasp == shape->getObjectClass() &&
-           lookup.realm == shape->realm() &&
-           lookup.nfixed == shape->numFixedSlots() &&
-           lookup.objectFlags == shape->objectFlags() &&
-           lookup.proto == shape->proto();
-  }
-};
-using InitialShapeSet = JS::WeakCache<
-    JS::GCHashSet<WeakHeapPtr<Shape*>, InitialShapeHasher, SystemAllocPolicy>>;
 
 struct StackShape {
   /* For performance, StackShape only roots when absolutely necessary. */

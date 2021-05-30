@@ -22,6 +22,7 @@
 #include "js/GCHashTable.h"
 #include "vm/AtomsTable.h"
 #include "vm/JSFunction.h"
+#include "vm/ShapeZone.h"
 
 namespace js {
 
@@ -296,17 +297,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // Cache for Function.prototype.toString. Purged on GC.
   js::ZoneOrGCTaskData<js::FunctionToStringCache> functionToStringCache_;
 
-  // Shared Shape property tree.
-  js::ZoneData<js::PropertyTree> propertyTree_;
-
-  // Set of all unowned base shapes in the Zone.
-  js::ZoneData<js::BaseShapeSet> baseShapes_;
-
-  // Set of initial shapes in the Zone. For certain prototypes -- namely,
-  // those of various builtin classes -- there are two entries: one for a
-  // lookup via TaggedProto, and one for a lookup via JSProtoKey. See
-  // InitialShapeProto.
-  js::ZoneData<js::InitialShapeSet> initialShapes_;
+  // Information about Shapes and BaseShapes.
+  js::ZoneData<js::ShapeZone> shapeZone_;
 
   // The set of all finalization registries in this zone.
   using FinalizationRegistrySet =
@@ -591,11 +583,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     return functionToStringCache_.ref();
   }
 
-  js::PropertyTree& propertyTree() { return propertyTree_.ref(); }
-
-  js::BaseShapeSet& baseShapes() { return baseShapes_.ref(); }
-
-  js::InitialShapeSet& initialShapes() { return initialShapes_.ref(); }
+  js::ShapeZone& shapeZone() { return shapeZone_.ref(); }
+  js::PropertyTree& propertyTree() { return shapeZone().propertyTree; }
 
   void fixupAfterMovingGC();
   void fixupScriptMapsAfterMovingGC(JSTracer* trc);
@@ -656,9 +645,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 #ifdef JSGC_HASH_TABLE_CHECKS
   void checkAllCrossCompartmentWrappersAfterMovingGC();
   void checkStringWrappersAfterMovingGC();
-
-  void checkInitialShapesTableAfterMovingGC();
-  void checkBaseShapeTableAfterMovingGC();
 
   // Assert that the UniqueId table has been redirected successfully.
   void checkUniqueIdTableAfterMovingGC();
