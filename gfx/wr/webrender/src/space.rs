@@ -170,36 +170,36 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
 
 #[derive(Clone, Debug)]
 pub struct SpaceSnapper {
-    pub ref_spatial_node_index: SpatialNodeIndex,
+    ref_spatial_node_index: SpatialNodeIndex,
     current_target_spatial_node_index: SpatialNodeIndex,
     snapping_transform: Option<ScaleOffset>,
-    pub device_pixel_scale: DevicePixelScale,
+    raster_pixel_scale: RasterPixelScale,
 }
 
 impl SpaceSnapper {
     pub fn new(
         ref_spatial_node_index: SpatialNodeIndex,
-        device_pixel_scale: DevicePixelScale,
+        raster_pixel_scale: RasterPixelScale,
     ) -> Self {
         SpaceSnapper {
             ref_spatial_node_index,
             current_target_spatial_node_index: SpatialNodeIndex::INVALID,
             snapping_transform: None,
-            device_pixel_scale,
+            raster_pixel_scale,
         }
     }
 
     pub fn new_with_target(
         ref_spatial_node_index: SpatialNodeIndex,
         target_node_index: SpatialNodeIndex,
-        device_pixel_scale: DevicePixelScale,
+        raster_pixel_scale: RasterPixelScale,
         spatial_tree: &SpatialTree,
     ) -> Self {
         let mut snapper = SpaceSnapper {
             ref_spatial_node_index,
             current_target_spatial_node_index: SpatialNodeIndex::INVALID,
             snapping_transform: None,
-            device_pixel_scale,
+            raster_pixel_scale,
         };
 
         snapper.set_target_spatial_node(target_node_index, spatial_tree);
@@ -224,7 +224,7 @@ impl SpaceSnapper {
                 Some(ref_scale_offset
                     .inverse()
                     .accumulate(target_scale_offset)
-                    .scale(self.device_pixel_scale.0))
+                    .scale(self.raster_pixel_scale.0))
             }
             _ => None,
         };

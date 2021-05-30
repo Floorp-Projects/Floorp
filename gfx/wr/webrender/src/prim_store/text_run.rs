@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, FontInstanceFlags, GlyphInstance, RasterSpace, Shadow};
-use api::units::{LayoutToWorldTransform, LayoutVector2D};
+use api::units::{LayoutToWorldTransform, LayoutVector2D, RasterPixelScale};
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
@@ -319,12 +319,17 @@ impl TextRunPrimitive {
             // shader do the snapping in device pixels.
             self.reference_frame_relative_offset
         } else {
+            // TODO(dp): The SurfaceInfo struct needs to be updated to use RasterPixelScale
+            //           rather than DevicePixelScale, however this is a large chunk of
+            //           work that will be done as a follow up patch.
+            let raster_pixel_scale = RasterPixelScale::new(surface.device_pixel_scale.0);
+
             // There may be an animation, so snap the reference frame relative
             // offset such that it excludes the impact, if any.
             let snap_to_device = SpaceSnapper::new_with_target(
                 surface.raster_spatial_node_index,
                 spatial_node_index,
-                surface.device_pixel_scale,
+                raster_pixel_scale,
                 spatial_tree,
             );
             snap_to_device.snap_point(&self.reference_frame_relative_offset.to_point()).to_vector()

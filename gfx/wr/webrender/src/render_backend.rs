@@ -81,18 +81,6 @@ pub struct SceneView {
     pub quality_settings: QualitySettings,
 }
 
-impl SceneView {
-    pub fn accumulated_scale_factor_for_snapping(&self) -> DevicePixelScale {
-        DevicePixelScale::new(1.0)
-    }
-}
-
-impl DocumentView {
-    pub fn accumulated_scale_factor(&self) -> DevicePixelScale {
-        DevicePixelScale::new(1.0)
-    }
-}
-
 #[derive(Copy, Clone, Hash, MallocSizeOf, PartialEq, PartialOrd, Debug, Eq, Ord)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -575,7 +563,8 @@ impl Document {
     ) -> RenderedDocument {
         let frame_build_start_time = precise_time_ns();
 
-        let accumulated_scale_factor = self.view.accumulated_scale_factor();
+        // TODO(dp): Remove global_device_pixel_scale completely, replacing with per-surface raster-scale
+        let accumulated_scale_factor = DevicePixelScale::new(1.0);
 
         // Advance to the next frame.
         self.stamp.advance();
@@ -629,12 +618,7 @@ impl Document {
     }
 
     fn rebuild_hit_tester(&mut self) {
-        let accumulated_scale_factor = self.view.accumulated_scale_factor();
-
-        self.scene.spatial_tree.update_tree(
-            accumulated_scale_factor,
-            &self.dynamic_properties,
-        );
+        self.scene.spatial_tree.update_tree(&self.dynamic_properties);
 
         let hit_tester = Arc::new(self.scene.create_hit_tester());
         self.hit_tester = Some(Arc::clone(&hit_tester));

@@ -531,12 +531,12 @@ impl<'a> SceneBuilder<'a> {
             .background_color
             .and_then(|color| if color.a > 0.0 { Some(color) } else { None });
 
-        let device_pixel_scale = view.accumulated_scale_factor_for_snapping();
         let spatial_tree = SpatialTree::new();
 
+        // During scene building, we assume a 1:1 picture -> raster pixel scale
         let snap_to_device = SpaceSnapper::new(
             ROOT_SPATIAL_NODE_INDEX,
-            device_pixel_scale,
+            RasterPixelScale::new(1.0),
         );
 
         let mut builder = SceneBuilder {
