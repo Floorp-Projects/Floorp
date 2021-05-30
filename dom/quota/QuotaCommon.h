@@ -1571,15 +1571,6 @@ constexpr bool IsDatabaseCorruptionError(const nsresult aRv) {
   return aRv == NS_ERROR_FILE_CORRUPTED || aRv == NS_ERROR_STORAGE_IOERR;
 }
 
-template <auto SuccessValue, typename V = decltype(SuccessValue)>
-auto FilterDatabaseCorruptionError(const nsresult aValue)
-    -> Result<V, nsresult> {
-  if (IsDatabaseCorruptionError(aValue)) {
-    return V{SuccessValue};
-  }
-  return Err(aValue);
-}
-
 template <typename Func>
 auto CallWithDelayedRetriesIfAccessDenied(Func&& aFunc, uint32_t aMaxRetries,
                                           uint32_t aDelayMs)

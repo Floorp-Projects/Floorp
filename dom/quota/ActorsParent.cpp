@@ -570,21 +570,15 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateWebAppsStoreConnection(
     return nsCOMPtr<mozIStorageConnection>{};
   }
 
-  QM_TRY_INSPECT(const auto& connection,
-                 QM_OR_ELSE_WARN(
-                     MOZ_TO_RESULT_INVOKE_TYPED(
-                         nsCOMPtr<mozIStorageConnection>, aStorageService,
-                         OpenUnsharedDatabase, &aWebAppsStoreFile),
-                     ([](const nsresult rv)
-                          -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-                       if (IsDatabaseCorruptionError(rv)) {
+  QM_TRY_INSPECT(
+      const auto& connection,
+      QM_OR_ELSE_WARN_IF(MOZ_TO_RESULT_INVOKE_TYPED(
+                             nsCOMPtr<mozIStorageConnection>, aStorageService,
+                             OpenUnsharedDatabase, &aWebAppsStoreFile),
+                         IsDatabaseCorruptionError,
                          // Don't throw an error, leave a corrupted webappsstore
                          // database as it is.
-                         return nsCOMPtr<mozIStorageConnection>{};
-                       }
-
-                       return Err(rv);
-                     })));
+                         ErrToDefaultOk<nsCOMPtr<mozIStorageConnection>>));
 
   if (connection) {
     // Don't propagate an error, leave a non-updateable webappsstore database as
@@ -2393,14 +2387,16 @@ Result<bool, nsresult> EnsureDirectory(nsIFile& aDirectory) {
   AssertIsOnIOThread();
 
   // Callers call this function without checking if the directory already
-  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we just
-  // want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
+  // exists (idempotent usage). QM_OR_ELSE_WARN_IF is not used here since we
+  // just want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the
+  // reports.
   QM_TRY_INSPECT(
       const auto& exists,
-      QM_OR_ELSE_LOG(MOZ_TO_RESULT_INVOKE(aDirectory, Create,
-                                          nsIFile::DIRECTORY_TYPE, 0755)
-                         .map([](Ok) { return false; }),
-                     (ErrToOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, true>)));
+      QM_OR_ELSE_LOG_IF(MOZ_TO_RESULT_INVOKE(aDirectory, Create,
+                                             nsIFile::DIRECTORY_TYPE, 0755)
+                            .map([](Ok) { return false; }),
+                        IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>,
+                        ErrToOk<true>));
 
   if (exists) {
     QM_TRY_INSPECT(const bool& isDirectory,
@@ -4719,25 +4715,22 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
                           // they won't be accessed after initialization.
                         }
 
-                        QM_TRY(QM_OR_ELSE_WARN(
+                        QM_TRY(QM_OR_ELSE_WARN_IF(
                             ToResult(InitializeOrigin(
                                 aPersistenceType, metadata,
                                 metadata.mLastAccessTime, metadata.mPersisted,
                                 childDirectory)),
+                            IsDatabaseCorruptionError,
                             ([&childDirectory](
                                  const nsresult rv) -> Result<Ok, nsresult> {
-                              if (IsDatabaseCorruptionError(rv)) {
-                                // If the origin can't be initialized due to
-                                // corruption, this is a permanent
-                                // condition, and we need to remove all data
-                                // for the origin on disk.
+                              // If the origin can't be initialized due to
+                              // corruption, this is a permanent
+                              // condition, and we need to remove all data
+                              // for the origin on disk.
 
-                                QM_TRY(childDirectory->Remove(true));
+                              QM_TRY(childDirectory->Remove(true));
 
-                                return Ok{};
-                              }
-
-                              return Err(rv);
+                              return Ok{};
                             })));
 
                         break;
@@ -5999,11 +5992,11 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
 
   QM_TRY_UNWRAP(
       auto connection,
-      QM_OR_ELSE_WARN(
+      QM_OR_ELSE_WARN_IF(
           MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
                                      OpenUnsharedDatabase, storageFile),
-          (FilterDatabaseCorruptionError<nullptr,
-                                         nsCOMPtr<mozIStorageConnection>>)));
+          IsDatabaseCorruptionError,
+          ErrToDefaultOk<nsCOMPtr<mozIStorageConnection>>));
 
   if (!connection) {
     // Nuke the database file.
@@ -6026,13 +6019,11 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
                  GetLocalStorageArchiveFile(*mStoragePath));
 
   if (CachedNextGenLocalStorageEnabled()) {
-    QM_TRY(QM_OR_ELSE_WARN(
+    QM_TRY(QM_OR_ELSE_WARN_IF(
         MaybeCreateOrUpgradeLocalStorageArchive(*lsArchiveFile),
+        IsDatabaseCorruptionError,
         ([&](const nsresult rv) -> Result<Ok, nsresult> {
-          if (IsDatabaseCorruptionError(rv)) {
-            QM_TRY_RETURN(CreateEmptyLocalStorageArchive(*lsArchiveFile));
-          }
-          return Err(rv);
+          QM_TRY_RETURN(CreateEmptyLocalStorageArchive(*lsArchiveFile));
         })));
   } else {
     QM_TRY(MaybeRemoveLocalStorageDataAndArchive(*lsArchiveFile));
@@ -10559,20 +10550,17 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::MaybeUpgradeOriginDirectory(
     // Usually we only use QM_OR_ELSE_LOG/QM_OR_ELSE_LOG_IF with Create and
     // NS_ERROR_FILE_ALREADY_EXISTS check, but typically the idb directory
     // shouldn't exist during the upgrade and the upgrade runs only once in
-    // most of the cases, so the use of QM_OR_ELSE_WARN is ok here.
-    QM_TRY(QM_OR_ELSE_WARN(
+    // most of the cases, so the use of QM_OR_ELSE_WARN_IF is ok here.
+    QM_TRY(QM_OR_ELSE_WARN_IF(
         ToResult(idbDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755)),
+        IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>,
         ([&idbDirectory](const nsresult rv) -> Result<Ok, nsresult> {
-          if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
-            QM_TRY_INSPECT(const bool& isDirectory,
-                           MOZ_TO_RESULT_INVOKE(idbDirectory, IsDirectory));
+          QM_TRY_INSPECT(const bool& isDirectory,
+                         MOZ_TO_RESULT_INVOKE(idbDirectory, IsDirectory));
 
-            QM_TRY(OkIf(isDirectory), Err(NS_ERROR_UNEXPECTED));
+          QM_TRY(OkIf(isDirectory), Err(NS_ERROR_UNEXPECTED));
 
-            return Ok{};
-          }
-
-          return Err(rv);
+          return Ok{};
         })));
 
     QM_TRY(CollectEachFile(
