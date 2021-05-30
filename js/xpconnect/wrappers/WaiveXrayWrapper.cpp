@@ -12,47 +12,40 @@ using namespace JS;
 
 namespace xpc {
 
-static bool WaiveAccessors(JSContext* cx,
-                           MutableHandle<PropertyDescriptor> desc) {
-  if (desc.hasGetterObject() && desc.getterObject()) {
-    RootedValue v(cx, JS::ObjectValue(*desc.getterObject()));
-    if (!WrapperFactory::WaiveXrayAndWrap(cx, &v)) {
-      return false;
-    }
-    desc.setGetterObject(&v.toObject());
-  }
-
-  if (desc.hasSetterObject() && desc.setterObject()) {
-    RootedValue v(cx, JS::ObjectValue(*desc.setterObject()));
-    if (!WrapperFactory::WaiveXrayAndWrap(cx, &v)) {
-      return false;
-    }
-    desc.setSetterObject(&v.toObject());
-  }
-  return true;
-}
-
 bool WaiveXrayWrapper::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
     MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) const {
-  Rooted<mozilla::Maybe<PropertyDescriptor>> desc_(cx);
   if (!CrossCompartmentWrapper::getOwnPropertyDescriptor(cx, wrapper, id,
-                                                         &desc_)) {
+                                                         desc)) {
     return false;
   }
 
-  if (desc_.isNothing()) {
-    desc.reset();
+  if (desc.isNothing()) {
     return true;
   }
 
-  Rooted<PropertyDescriptor> pd(cx, *desc_);
-  if (!WrapperFactory::WaiveXrayAndWrap(cx, pd.value()) ||
-      !WaiveAccessors(cx, &pd)) {
-    return false;
+  Rooted<PropertyDescriptor> desc_(cx, *desc);
+  if (desc_.hasValue()) {
+    if (!WrapperFactory::WaiveXrayAndWrap(cx, desc_.value())) {
+      return false;
+    }
+  }
+  if (desc_.hasGetterObject() && desc_.getterObject()) {
+    RootedValue v(cx, JS::ObjectValue(*desc_.getterObject()));
+    if (!WrapperFactory::WaiveXrayAndWrap(cx, &v)) {
+      return false;
+    }
+    desc_.setGetterObject(&v.toObject());
+  }
+  if (desc_.hasSetterObject() && desc_.setterObject()) {
+    RootedValue v(cx, JS::ObjectValue(*desc_.setterObject()));
+    if (!WrapperFactory::WaiveXrayAndWrap(cx, &v)) {
+      return false;
+    }
+    desc_.setSetterObject(&v.toObject());
   }
 
-  desc.set(mozilla::Some(pd.get()));
+  desc.set(mozilla::Some(desc_.get()));
   return true;
 }
 

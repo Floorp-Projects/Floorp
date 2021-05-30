@@ -1399,7 +1399,11 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
     }
   }
 
-  return CallAddPropertyHook(cx, obj, id, desc.value());
+  if (desc.isDataDescriptor()) {
+    return CallAddPropertyHook(cx, obj, id, desc.value());
+  }
+
+  return CallAddPropertyHook(cx, obj, id, UndefinedHandleValue);
 }
 
 // Versions of AddOrChangeProperty optimized for adding a plain data property.

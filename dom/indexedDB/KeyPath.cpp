@@ -104,8 +104,7 @@ nsresult GetJSValFromKeyPathString(
       JS::Rooted<JS::Value> intermediate(aCx);
       bool hasProp = false;
 
-      // Bug 1710041: This should check for isDataDescriptor!
-      if (desc.isSome()) {
+      if (desc.isSome() && desc->isDataDescriptor()) {
         intermediate = desc->value();
         hasProp = true;
       } else {
