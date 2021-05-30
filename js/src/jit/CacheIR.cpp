@@ -1349,7 +1349,7 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
     return AttachDecision::NoAction;
   }
 
-  RootedObject getter(cx_, desc->getterObject());
+  RootedObject getter(cx_, desc->getter());
   if (!getter || !getter->is<JSFunction>() ||
       !getter->as<JSFunction>().isNativeWithoutJitEntry()) {
     return AttachDecision::NoAction;

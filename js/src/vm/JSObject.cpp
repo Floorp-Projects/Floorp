@@ -191,7 +191,7 @@ bool js::FromPropertyDescriptorToObject(JSContext* cx,
 
   // Step 6.
   if (desc.hasGetter()) {
-    if (JSObject* get = desc.getterObject()) {
+    if (JSObject* get = desc.getter()) {
       v.setObject(*get);
     } else {
       v.setUndefined();
@@ -203,7 +203,7 @@ bool js::FromPropertyDescriptorToObject(JSContext* cx,
 
   // Step 7.
   if (desc.hasSetter()) {
-    if (JSObject* set = desc.setterObject()) {
+    if (JSObject* set = desc.setter()) {
       v.setObject(*set);
     } else {
       v.setUndefined();
@@ -436,11 +436,11 @@ bool js::ToPropertyDescriptor(JSContext* cx, HandleValue descval,
 Result<> js::CheckPropertyDescriptorAccessors(JSContext* cx,
                                               Handle<PropertyDescriptor> desc) {
   if (desc.hasGetter()) {
-    MOZ_TRY(CheckCallable(cx, desc.getterObject(), js_getter_str));
+    MOZ_TRY(CheckCallable(cx, desc.getter(), js_getter_str));
   }
 
   if (desc.hasSetter()) {
-    MOZ_TRY(CheckCallable(cx, desc.setterObject(), js_setter_str));
+    MOZ_TRY(CheckCallable(cx, desc.setter(), js_setter_str));
   }
 
   return Ok();
