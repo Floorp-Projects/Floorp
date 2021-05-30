@@ -730,7 +730,7 @@ bool SandboxProxyHandler::getPropertyDescriptorImpl(
       !WrapAccessorFunction(cx, desc.setterObject(), proxy)) {
     return false;
   }
-  if (desc.value().isObject()) {
+  if (desc.hasValue() && desc.value().isObject()) {
     RootedObject val(cx, &desc.value().toObject());
     if (JS::IsCallable(val) &&
         // Don't wrap DOM constructors: they don't care about the "this"

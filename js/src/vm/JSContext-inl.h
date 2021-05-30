@@ -187,7 +187,9 @@ class ContextChecks {
     if (desc.hasSetterObject()) {
       check(desc.setterObject(), argIndex);
     }
-    check(desc.value(), argIndex);
+    if (desc.hasValue()) {
+      check(desc.value(), argIndex);
+    }
   }
 
   void check(Handle<mozilla::Maybe<Value>> maybe, int argIndex) {
