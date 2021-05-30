@@ -174,11 +174,10 @@ function showSecuritySection() {
 }
 
 /* In the case of SSL error pages about domain mismatch, see if
-         we can hyperlink the user to the correct site.  We don't want
-         to do this generically since it allows MitM attacks to redirect
-         users to a site under attacker control, but in certain cases
-         it is safe (and helpful!) to do so.  Bug 402210
-      */
+ * we can hyperlink the user to the correct site.  We don't want
+ * to do this generically since it allows MitM attacks to redirect
+ * users to a site under attacker control, but in certain cases
+ * it is safe (and helpful!) to do so.  Bug 402210 */
 function addDomainErrorLink() {
   // Rather than textContent, we need to treat description as HTML
   var sd = document.getElementById("errorShortDescText");
@@ -260,18 +259,18 @@ function endsWith(haystack, needle) {
 }
 
 /* Only do autofocus if we're the toplevel frame; otherwise we
-         don't want to call attention to ourselves!  The key part is
-         that autofocus happens on insertion into the tree, so we
-         can remove the button, add @autofocus, and reinsert the
-         button.
-       */
-function addAutofocus(buttonId, position = "afterbegin") {
+ * don't want to call attention to ourselves!  The key part is
+ * that autofocus happens on insertion into the tree, so we
+ * can remove the button, add @autofocus, and reinsert the
+ * button. */
+function addAutofocus(buttonId) {
   if (window.top == window) {
-    var button = document.getElementById(buttonId);
-    var parent = button.parentNode;
+    let button = document.getElementById(buttonId);
+    let nextSibling = button.nextSibling;
+    let parent = button.parentNode;
     button.remove();
     button.setAttribute("autofocus", "true");
-    parent.insertAdjacentElement(position, button);
+    parent.insertBefore(button, nextSibling);
   }
 }
 
