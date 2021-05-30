@@ -424,6 +424,7 @@ UNIFIED_SOURCES += [
     "vm/Scope.cpp",
     "vm/SelfHosting.cpp",
     "vm/Shape.cpp",
+    "vm/ShapeZone.cpp",
     "vm/SharedArrayObject.cpp",
     "vm/SharedImmutableStringsCache.cpp",
     "vm/SourceHook.cpp",
