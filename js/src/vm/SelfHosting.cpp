@@ -619,18 +619,18 @@ static bool intrinsic_DefineProperty(JSContext* cx, unsigned argc, Value* vp) {
   if (attributes & ACCESSOR_DESCRIPTOR_KIND) {
     Value getter = args[3];
     if (getter.isObject()) {
-      desc.setGetterObject(&getter.toObject());
+      desc.setGetter(&getter.toObject());
     } else if (getter.isUndefined()) {
-      desc.setGetterObject(nullptr);
+      desc.setGetter(nullptr);
     } else {
       MOZ_ASSERT(getter.isNull());
     }
 
     Value setter = args[4];
     if (setter.isObject()) {
-      desc.setSetterObject(&setter.toObject());
+      desc.setSetter(&setter.toObject());
     } else if (setter.isUndefined()) {
-      desc.setSetterObject(nullptr);
+      desc.setSetter(nullptr);
     } else {
       MOZ_ASSERT(setter.isNull());
     }

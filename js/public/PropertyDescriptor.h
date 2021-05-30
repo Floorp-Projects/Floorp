@@ -171,8 +171,8 @@ class JS_PUBLIC_API PropertyDescriptor {
     PropertyDescriptor desc;
     desc.setConfigurable(attributes.configurable());
     desc.setEnumerable(attributes.enumerable());
-    desc.setGetterObject(getter);
-    desc.setSetterObject(setter);
+    desc.setGetter(getter);
+    desc.setSetter(setter);
     desc.assertComplete();
     return desc;
   }
@@ -186,8 +186,8 @@ class JS_PUBLIC_API PropertyDescriptor {
     PropertyDescriptor desc;
     desc.setConfigurable(!(attrs & JSPROP_PERMANENT));
     desc.setEnumerable(attrs & JSPROP_ENUMERATE);
-    desc.setGetterObject(getter);
-    desc.setSetterObject(setter);
+    desc.setGetter(getter);
+    desc.setSetter(setter);
     desc.setResolving(attrs & JSPROP_RESOLVING);
     desc.assertComplete();
     return desc;
@@ -203,10 +203,10 @@ class JS_PUBLIC_API PropertyDescriptor {
     desc.setConfigurable(!(attrs & JSPROP_PERMANENT));
     desc.setEnumerable(attrs & JSPROP_ENUMERATE);
     if (getter) {
-      desc.setGetterObject(*getter);
+      desc.setGetter(*getter);
     }
     if (setter) {
-      desc.setSetterObject(*setter);
+      desc.setSetter(*setter);
     }
     desc.setResolving(attrs & JSPROP_RESOLVING);
     desc.assertValid();
@@ -285,7 +285,7 @@ class JS_PUBLIC_API PropertyDescriptor {
     MOZ_ASSERT(hasGetter());
     return getter_;
   }
-  void setGetterObject(JSObject* obj) {
+  void setGetter(JSObject* obj) {
     MOZ_ASSERT(!isDataDescriptor());
     hasGetter_ = true;
     getter_ = obj;
@@ -296,7 +296,7 @@ class JS_PUBLIC_API PropertyDescriptor {
     MOZ_ASSERT(hasSetter());
     return setter_;
   }
-  void setSetterObject(JSObject* obj) {
+  void setSetter(JSObject* obj) {
     MOZ_ASSERT(!isDataDescriptor());
     hasSetter_ = true;
     setter_ = obj;
@@ -415,8 +415,8 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
   void setEnumerable(bool enumerable) { desc().setEnumerable(enumerable); }
   void setWritable(bool writable) { desc().setWritable(writable); }
 
-  void setGetterObject(JSObject* obj) { desc().setGetterObject(obj); }
-  void setSetterObject(JSObject* obj) { desc().setSetterObject(obj); }
+  void setGetter(JSObject* obj) { desc().setGetter(obj); }
+  void setSetter(JSObject* obj) { desc().setSetter(obj); }
 
   JS::MutableHandle<JSObject*> getterObject() {
     MOZ_ASSERT(desc().hasGetter());
