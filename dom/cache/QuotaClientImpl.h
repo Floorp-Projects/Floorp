@@ -91,10 +91,14 @@ class CacheQuotaClient final : public quota::Client {
     // next action recalculate the padding size.
     QM_TRY(aCommitHook());
 
+    // XXX Replace QM_TRY(QM_OR_ELSE_WARN(...)) with QM_WARNONLY_TRY(..)
     QM_TRY(QM_OR_ELSE_WARN(
         ToResult(DirectoryPaddingFinalizeWrite(aBaseDir)),
         ([&aBaseDir](const nsresult) -> Result<Ok, nsresult> {
           // Force restore file next time.
+          // XXX QM_TRY failures from DirectoryPaddingDeleteFile are not
+          // propagated here, but there's no warning which would close the
+          // error stack.
           Unused << DirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
 
           // Ensure that we are able to force the padding file

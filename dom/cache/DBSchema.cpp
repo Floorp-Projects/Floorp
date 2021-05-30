@@ -520,6 +520,9 @@ nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
     // if a new migration is incorrect by fast failing on the corruption.
     // Unfortunately, this must be performed outside of the transaction.
 
+    // XXX Currently if both VACUUM and IntegrityCheck fail, we will propagate
+    // an error result from IntegrityCheck which is wrong. This should rather
+    // use a cleanup function instead of QM_OR_ELSE_WARN.
     QM_TRY(
         QM_OR_ELSE_WARN(ToResult(aConn.ExecuteSimpleSQL("VACUUM"_ns)),
                         ([&aConn](const nsresult rv) -> Result<Ok, nsresult> {
@@ -554,8 +557,9 @@ nsresult InitializeConnection(mozIStorageConnection& aConn) {
       kPageSize)));
 
   // Limit fragmentation by growing the database by many pages at once.
-  QM_TRY(QM_OR_ELSE_WARN(ToResult(aConn.SetGrowthIncrement(kGrowthSize, ""_ns)),
-                         ErrToDefaultOkOrErr<NS_ERROR_FILE_TOO_BIG>));
+  QM_TRY(QM_OR_ELSE_WARN_IF(
+      ToResult(aConn.SetGrowthIncrement(kGrowthSize, ""_ns)),
+      IsSpecificError<NS_ERROR_FILE_TOO_BIG>, ErrToDefaultOk<>));
 
   // Enable WAL journaling.  This must be performed in a separate transaction
   // after changing the page_size and enabling auto_vacuum.

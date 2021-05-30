@@ -64,18 +64,9 @@ nsresult DirectoryPaddingWrite(nsIFile& aBaseDir,
 
 const auto kMorgueDirectory = u"morgue"_ns;
 
-template <typename SuccessType = Ok>
-Result<SuccessType, nsresult> MapNotFoundToDefault(const nsresult aRv) {
-  return (aRv == NS_ERROR_FILE_NOT_FOUND ||
-          aRv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
-             ? Result<SuccessType, nsresult>{std::in_place}
-             : Err(aRv);
-}
-
-Result<Ok, nsresult> MapAlreadyExistsToDefault(const nsresult aRv) {
-  return (aRv == NS_ERROR_FILE_ALREADY_EXISTS)
-             ? Result<Ok, nsresult>{std::in_place}
-             : Err(aRv);
+bool IsFileNotFoundError(const nsresult aRv) {
+  return aRv == NS_ERROR_FILE_NOT_FOUND ||
+         aRv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
 }
 
 Result<NotNull<nsCOMPtr<nsIFile>>, nsresult> BodyGetCacheDir(nsIFile& aBaseDir,
@@ -89,11 +80,12 @@ Result<NotNull<nsCOMPtr<nsIFile>>, nsresult> BodyGetCacheDir(nsIFile& aBaseDir,
   QM_TRY(cacheDir->Append(IntToString(aId.m3[7])));
 
   // Callers call this function without checking if the directory already
-  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we just
-  // want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
-  QM_TRY(
-      QM_OR_ELSE_LOG(ToResult(cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
-                     (ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>)));
+  // exists (idempotent usage). QM_OR_ELSE_WARN_IF is not used here since we
+  // just want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the
+  // reports.
+  QM_TRY(QM_OR_ELSE_LOG_IF(
+      ToResult(cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
+      IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>, ErrToDefaultOk<>));
 
   return WrapNotNullUnchecked(std::move(cacheDir));
 }
@@ -105,11 +97,12 @@ nsresult BodyCreateDir(nsIFile& aBaseDir) {
                  CloneFileAndAppend(aBaseDir, kMorgueDirectory));
 
   // Callers call this function without checking if the directory already
-  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we just
-  // want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
-  QM_TRY(
-      QM_OR_ELSE_LOG(ToResult(bodyDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
-                     (ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>)));
+  // exists (idempotent usage). QM_OR_ELSE_WARN_IF is not used here since we
+  // just want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the
+  // reports.
+  QM_TRY(QM_OR_ELSE_LOG_IF(
+      ToResult(bodyDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
+      IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>, ErrToDefaultOk<>));
 
   return NS_OK;
 }
@@ -382,23 +375,18 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
               return false;
             };
 
-            // QM_OR_ELSE_WARN is not used here since we just want to log
+            // QM_OR_ELSE_WARN_IF is not used here since we just want to log
             // NS_ERROR_FILE_FS_CORRUPTED result and not spam the reports (even
             // a warning in the reports is not desired).
-            QM_TRY(QM_OR_ELSE_LOG(
+            QM_TRY(QM_OR_ELSE_LOG_IF(
                 ToResult(BodyTraverseFiles(aQuotaInfo, *subdir,
                                            removeOrphanedFiles,
                                            /* aCanRemoveFiles */ true,
                                            /* aTrackQuota */ true)),
-                ([](const nsresult rv) -> Result<Ok, nsresult> {
-                  // We treat NS_ERROR_FILE_FS_CORRUPTED as if the
-                  // directory did not exist at all.
-                  if (rv == NS_ERROR_FILE_FS_CORRUPTED) {
-                    return Ok{};
-                  }
-
-                  return Err(rv);
-                })));
+                IsSpecificError<NS_ERROR_FILE_FS_CORRUPTED>,
+                // We treat NS_ERROR_FILE_FS_CORRUPTED as if the
+                // directory did not exist at all.
+                ErrToDefaultOk<>));
             break;
           }
 
@@ -438,7 +426,7 @@ nsresult CreateMarkerFile(const QuotaInfo& aQuotaInfo) {
   QM_TRY_INSPECT(const auto& marker, GetMarkerFileHandle(aQuotaInfo));
 
   // Callers call this function without checking if the file already exists
-  // (idempotent usage). QM_OR_ELSE_WARN is not used here since we just want
+  // (idempotent usage). QM_OR_ELSE_WARN_IF is not used here since we just want
   // to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
   //
   // TODO: In theory if this file exists, then Context::~Context should have
@@ -449,11 +437,11 @@ nsresult CreateMarkerFile(const QuotaInfo& aQuotaInfo) {
   // of our standard operating procedure to redundantly try and create the
   // marker here. We currently treat this as idempotent usage, but we could
   // make sure to delete the marker file when handling the existing marker
-  // file in SetupAction::RunSyncWithDBOnTarget and change QM_OR_ELSE_LOG to
-  // QM_OR_ELSE_WARN in the end.
-  QM_TRY(
-      QM_OR_ELSE_LOG(ToResult(marker->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
-                     MapAlreadyExistsToDefault));
+  // file in SetupAction::RunSyncWithDBOnTarget and change QM_OR_ELSE_LOG_IF to
+  // QM_OR_ELSE_WARN_IF in the end.
+  QM_TRY(QM_OR_ELSE_LOG_IF(
+      ToResult(marker->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
+      IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>, ErrToDefaultOk<>));
 
   // Note, we don't need to fsync here.  We only care about actually
   // writing the marker if later modifications to the Cache are
@@ -525,9 +513,9 @@ nsresult RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile& aFile,
   if (aTrackQuota) {
     QM_TRY_INSPECT(
         const auto& maybeFileSize,
-        QM_OR_ELSE_WARN(
+        QM_OR_ELSE_WARN_IF(
             MOZ_TO_RESULT_INVOKE(aFile, GetFileSize).map(Some<int64_t>),
-            MapNotFoundToDefault<Maybe<int64_t>>));
+            IsFileNotFoundError, ErrToDefaultOk<Maybe<int64_t>>));
 
     if (!maybeFileSize) {
       return NS_OK;
@@ -536,8 +524,8 @@ nsresult RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile& aFile,
     fileSize = *maybeFileSize;
   }
 
-  QM_TRY(QM_OR_ELSE_WARN(ToResult(aFile.Remove(/* recursive */ false)),
-                         MapNotFoundToDefault<>));
+  QM_TRY(QM_OR_ELSE_WARN_IF(ToResult(aFile.Remove(/* recursive */ false)),
+                            IsFileNotFoundError, ErrToDefaultOk<>));
 
   if (fileSize > 0) {
     MOZ_ASSERT(aTrackQuota);
@@ -608,10 +596,10 @@ nsresult UpdateDirectoryPaddingFile(nsIFile& aBaseDir,
 
   const auto directoryPaddingGetResult =
       aTemporaryFileExist ? Maybe<int64_t>{} : [&aBaseDir] {
-        QM_TRY_RETURN(
-            QM_OR_ELSE_WARN(DirectoryPaddingGet(aBaseDir).map(Some<int64_t>),
-                            MapNotFoundToDefault<Maybe<int64_t>>),
-            Maybe<int64_t>{});
+        QM_TRY_RETURN(QM_OR_ELSE_WARN_IF(
+                          DirectoryPaddingGet(aBaseDir).map(Some<int64_t>),
+                          IsFileNotFoundError, ErrToDefaultOk<Maybe<int64_t>>),
+                      Maybe<int64_t>{});
       }();
 
   QM_TRY_INSPECT(
@@ -724,8 +712,8 @@ nsresult DirectoryPaddingDeleteFile(nsIFile& aBaseDir,
                                        ? nsLiteralString(PADDING_TMP_FILE_NAME)
                                        : nsLiteralString(PADDING_FILE_NAME)));
 
-  QM_TRY(QM_OR_ELSE_WARN(ToResult(file->Remove(/* recursive */ false)),
-                         MapNotFoundToDefault<>));
+  QM_TRY(QM_OR_ELSE_WARN_IF(ToResult(file->Remove(/* recursive */ false)),
+                            IsFileNotFoundError, ErrToDefaultOk<>));
 
   return NS_OK;
 }
