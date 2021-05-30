@@ -1516,12 +1516,12 @@ static bool DefinePropertyIsRedundant(JSContext* cx, HandleNativeObject obj,
       return true;
     }
     PropertyInfo propInfo = prop.propertyInfo();
-    if (desc.hasGetterObject() &&
+    if (desc.hasGetter() &&
         (!propInfo.isAccessorProperty() ||
          desc.getterObject() != obj->getGetter(propInfo))) {
       return true;
     }
-    if (desc.hasSetterObject() &&
+    if (desc.hasSetter() &&
         (!propInfo.isAccessorProperty() ||
          desc.setterObject() != obj->getSetter(propInfo))) {
       return true;
@@ -1683,8 +1683,8 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     // everything from shape.
     MOZ_ASSERT(!desc.hasValue());
     MOZ_ASSERT(!desc.hasWritable());
-    MOZ_ASSERT(!desc.hasGetterObject());
-    MOZ_ASSERT(!desc.hasSetterObject());
+    MOZ_ASSERT(!desc.hasGetter());
+    MOZ_ASSERT(!desc.hasSetter());
     if (IsDataDescriptor(prop)) {
       RootedValue currentValue(cx);
       if (!GetExistingDataProperty(cx, obj, id, prop, &currentValue)) {
@@ -1753,7 +1753,7 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
 
     // The spec says to use SameValue, but since the values in
     // question are objects, we can just compare pointers.
-    if (desc.hasSetterObject()) {
+    if (desc.hasSetter()) {
       // Step 8.a.i.
       if (!attrs.configurable() &&
           desc.setterObject() != obj->getSetter(propInfo)) {
@@ -1763,7 +1763,7 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
       // Fill in desc.[[Set]] from shape.
       desc.setSetterObject(obj->getSetter(propInfo));
     }
-    if (desc.hasGetterObject()) {
+    if (desc.hasGetter()) {
       // Step 8.a.ii.
       if (!attrs.configurable() &&
           desc.getterObject() != obj->getGetter(propInfo)) {

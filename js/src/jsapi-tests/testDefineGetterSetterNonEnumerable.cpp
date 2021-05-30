@@ -39,8 +39,8 @@ BEGIN_TEST(testDefineGetterSetterNonEnumerable) {
   JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> desc(cx);
   CHECK(JS_GetOwnPropertyDescriptor(cx, vObject, PROPERTY_NAME, &desc));
   CHECK(desc.isSome());
-  CHECK(desc->hasGetterObject());
-  CHECK(desc->hasSetterObject());
+  CHECK(desc->hasGetter());
+  CHECK(desc->hasSetter());
   CHECK(!desc->configurable());
   CHECK(!desc->enumerable());
 

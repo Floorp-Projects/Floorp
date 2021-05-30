@@ -1881,9 +1881,9 @@ static bool RecreateLostWaivers(JSContext* cx, const PropertyDescriptor* orig,
   bool valueWasWaived =
       orig->hasValue() && orig->value().isObject() &&
       WrapperFactory::HasWaiveXrayFlag(&orig->value().toObject());
-  bool getterWasWaived = orig->hasGetterObject() && orig->getterObject() &&
+  bool getterWasWaived = orig->hasGetter() && orig->getterObject() &&
                          WrapperFactory::HasWaiveXrayFlag(orig->getterObject());
-  bool setterWasWaived = orig->hasSetterObject() && orig->setterObject() &&
+  bool setterWasWaived = orig->hasSetter() && orig->setterObject() &&
                          WrapperFactory::HasWaiveXrayFlag(orig->setterObject());
 
   // Recreate waivers. Note that for value, we need an extra UncheckedUnwrap

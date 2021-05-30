@@ -30,14 +30,14 @@ bool WaiveXrayWrapper::getOwnPropertyDescriptor(
       return false;
     }
   }
-  if (desc_.hasGetterObject() && desc_.getterObject()) {
+  if (desc_.hasGetter() && desc_.getterObject()) {
     RootedValue v(cx, JS::ObjectValue(*desc_.getterObject()));
     if (!WrapperFactory::WaiveXrayAndWrap(cx, &v)) {
       return false;
     }
     desc_.setGetterObject(&v.toObject());
   }
-  if (desc_.hasSetterObject() && desc_.setterObject()) {
+  if (desc_.hasSetter() && desc_.setterObject()) {
     RootedValue v(cx, JS::ObjectValue(*desc_.setterObject()));
     if (!WrapperFactory::WaiveXrayAndWrap(cx, &v)) {
       return false;

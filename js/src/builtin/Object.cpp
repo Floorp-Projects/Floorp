@@ -464,13 +464,13 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
     }
 
     if (desc->isAccessorDescriptor()) {
-      if (desc->hasGetterObject() && desc->getterObject()) {
+      if (desc->hasGetter() && desc->getterObject()) {
         val.setObject(*desc->getterObject());
         if (!AddProperty(id, val, PropertyKind::Getter)) {
           return nullptr;
         }
       }
-      if (desc->hasSetterObject() && desc->setterObject()) {
+      if (desc->hasSetter() && desc->setterObject()) {
         val.setObject(*desc->setterObject());
         if (!AddProperty(id, val, PropertyKind::Setter)) {
           return nullptr;

@@ -2169,14 +2169,14 @@ bool DebuggerObject::getOwnPropertyDescriptor(
         return false;
       }
     }
-    if (desc.hasGetterObject()) {
+    if (desc.hasGetter()) {
       RootedValue get(cx, ObjectOrNullValue(desc.getterObject()));
       if (!dbg->wrapDebuggeeValue(cx, &get)) {
         return false;
       }
       desc.setGetterObject(get.toObjectOrNull());
     }
-    if (desc.hasSetterObject()) {
+    if (desc.hasSetter()) {
       RootedValue set(cx, ObjectOrNullValue(desc.setterObject()));
       if (!dbg->wrapDebuggeeValue(cx, &set)) {
         return false;
