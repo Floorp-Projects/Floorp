@@ -18,8 +18,11 @@ html|input[nomatch="true"][highlightnonmatches="true"] {
 /* ::::: autocomplete popups ::::: */
 
 panel[type="autocomplete-richlistbox"] {
-  --panel-color: FieldText;
-  --panel-background: Field;
+  border: 1px solid ThreeDShadow;
+  padding: 0;
+  color: FieldText;
+  background-color: Field;
+  appearance: none;
 }
 
 /* ::::: richlistbox autocomplete ::::: */

@@ -10,11 +10,12 @@
   class MozPanel extends MozElements.MozElementMixin(XULPopupElement) {
     static get markup() {
       return `
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
       <vbox class="panel-arrowcontainer" flex="1">
         <box class="panel-arrowbox" part="arrowbox">
           <image class="panel-arrow" part="arrow"/>
         </box>
-        <html:slot part="content" />
+        <box class="panel-arrowcontent" flex="1" part="arrowcontent"><html:slot/></box>
       </vbox>
       `;
     }
@@ -58,7 +59,7 @@
 
     initialize() {
       // As an optimization, we don't slot contents if the panel is [hidden] in
-      // connectedCallack this means we can avoid running this code at startup
+      // connecetedCallack this means we can avoid running this code at startup
       // and only need to do it when a panel is about to be shown.
       // We then override the `hidden` setter and `removeAttribute` and call this
       // function if the node is about to be shown.
@@ -67,22 +68,15 @@
       }
 
       if (!this.isArrowPanel) {
-        let slot = document.createElement("slot");
-        slot.part = "content";
-        this.shadowRoot.appendChild(slot);
+        this.shadowRoot.appendChild(document.createElement("slot"));
       } else {
         this.shadowRoot.appendChild(this.constructor.fragment);
       }
     }
 
-    get panelContent() {
-      return this.shadowRoot.querySelector("[part=content]");
-    }
-
     get hidden() {
       return super.hidden;
     }
-
     set hidden(v) {
       if (!v) {
         this.initialize();

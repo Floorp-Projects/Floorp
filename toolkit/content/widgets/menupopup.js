@@ -107,7 +107,7 @@
         <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
         <html:style>${this.styles}</html:style>
         <arrowscrollbox class="menupopup-arrowscrollbox"
-                        part="arrowscrollbox content"
+                        part="arrowscrollbox"
                         exportparts="scrollbox: arrowscrollbox-scrollbox"
                         flex="1"
                         orient="vertical"
@@ -136,7 +136,7 @@
         case "macosx":
           s += `
             :host(.in-menulist) arrowscrollbox {
-              --panel-padding: 0;
+              padding: 0;
             }
           `;
           break;

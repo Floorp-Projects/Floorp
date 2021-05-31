@@ -848,21 +848,23 @@
 /* search bar popup */
 
 #PopupSearchAutoComplete {
-  --panel-background: var(--autocomplete-popup-background);
-  --panel-color: var(--autocomplete-popup-color);
-  --panel-border-color: var(--arrowpanel-border-color);
+  background-color: var(--autocomplete-popup-background);
+  color: var(--autocomplete-popup-color);
+  border-color: var(--arrowpanel-border-color);
 }
 
 @media (-moz-proton) {
-#PopupSearchAutoComplete::part(content)  {
+#PopupSearchAutoComplete {
+  border: 1px solid var(--arrowpanel-border-color);
   /* Remove the top border since the panel is flush with the input. */
   border-top-width: 0;
-  --panel-padding: var(--panel-subview-body-padding);
+  /* override autocomplete.css padding */
+  padding: var(--panel-subview-body-padding) !important;
 }
 
 #PopupSearchAutoComplete:-moz-lwtheme {
-  --panel-color: var(--lwt-toolbar-field-focus-color);
-  --panel-background: var(--lwt-toolbar-field-focus);
+  color: var(--lwt-toolbar-field-focus-color);
+  background-color: var(--lwt-toolbar-field-focus);
 }
 } /*** END proton ***/
 

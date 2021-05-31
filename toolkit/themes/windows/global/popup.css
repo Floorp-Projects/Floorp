@@ -9,7 +9,11 @@
 
 menupopup,
 panel {
+  border: 1px solid ThreeDShadow;
+  padding: 0;
   min-width: 1px;
+  background-color: Menu;
+  color: MenuText;
 }
 
 menupopup {
@@ -31,11 +35,10 @@ menupopup {
     border: none;
     border-radius: 4px;
 
-    --panel-color: var(--menu-color);
-    --panel-border-radius: 4px;
-    --panel-padding: 4px 0;
-    --panel-border-color: var(--menu-border-color);
-    --panel-background: var(--menu-background-color);
+    /* Set this here rather than on the scrollbox so it is more easily
+     * overridden by e.g. ContentSelectDropdown */
+    color: var(--menu-color);
+
     --nested-margin: -6px;
   }
 
@@ -45,7 +48,16 @@ menupopup {
     padding-inline-start: 1em;
   }
 
-  menupopup::part(content) {
+  /* This is the container inside of the <menupopup> element; the border is
+     defined here to keep it inside of the shadow. */
+  .menupopup-arrowscrollbox {
+    background-color: var(--menu-background-color);
+
+    border: 1px solid var(--menu-border-color);
+    border-radius: 4px;
+
+    padding-block: 4px;
+
     /* Prevent contained items from drawing over the border-radius. */
     overflow: clip;
   }
@@ -74,35 +86,35 @@ panel[type="arrow"][side="right"] {
   margin-block: -20px;
 }
 
-:is(panel, menupopup)::part(content) {
-  display: -moz-box;
-  -moz-box-flex: 1;
-  padding: var(--panel-padding, 0);
-  color: var(--panel-color, MenuText);
-  background: var(--panel-background, Menu);
-  border-radius: var(--panel-border-radius, 0);
-  border: 1px solid var(--panel-border-color, ThreeDShadow);
-  width: var(--panel-width, initial);
-}
-
-:is(panel, menupopup)[orient=vertical]::part(content) {
-  -moz-box-orient: vertical;
-}
-
-:is(panel, menupopup)[type="arrow"]::part(content) {
-  margin: 4px;
+.panel-arrowcontent {
+  padding: var(--arrowpanel-padding);
+  color: var(--arrowpanel-color);
+  background: var(--arrowpanel-background);
+  border-radius: var(--arrowpanel-border-radius);
+  background-clip: padding-box;
+  border: 1px solid var(--arrowpanel-border-color);
   box-shadow: 0 0 4px hsla(0,0%,0%,.2);
+  margin: 4px;
+}
+
+.panel-arrowcontent > html|slot {
+  /* propagate border-radius from arrowcontent to slotted children */
+  border-radius: inherit;
+}
+
+:host([orient=vertical]) .panel-arrowcontent {
+  -moz-box-orient: vertical;
 }
 
 @media not (-moz-proton) {
 @media (-moz-os-version: windows-win7) {
-:is(panel, menupopup)[type="arrow"]::part(content) {
-  --arrowpanel-border-radius: 4px;
+.panel-arrowcontent {
+  border-radius: 4px;
 }
 }
 }
 
-panel[type="arrow"].panel-no-padding::part(content) {
+panel[type="arrow"].panel-no-padding::part(arrowcontent) {
   padding: 0;
   overflow: hidden; /* Don't let panel content overflow the border-radius */
 }
@@ -146,7 +158,7 @@ panel[type="arrow"].panel-no-padding::part(content) {
 }
 
 @media (-moz-windows-default-theme) {
-  :is(panel, menupopup)[type="arrow"]::part(content) {
+  .panel-arrowcontent {
     box-shadow: 0 0 4px hsla(210,4%,10%,.2);
   }
 }
