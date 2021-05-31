@@ -326,8 +326,6 @@ add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
     value: { enabled: false },
   });
 
-  ExperimentAPI._store._syncToChildren({ flush: true });
-
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:welcome",
@@ -369,8 +367,6 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       screens: TEST_MULTISTAGE_CONTENT,
     },
   });
-
-  ExperimentAPI._store._syncToChildren({ flush: true });
 
   sandbox.spy(ExperimentAPI, "recordExposureEvent");
 
@@ -517,8 +513,6 @@ add_task(async function test_multistage_aboutwelcome_transitions() {
     },
   });
 
-  ExperimentAPI._store._syncToChildren({ flush: true });
-
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:welcome",
@@ -576,8 +570,6 @@ add_task(async function test_multistage_aboutwelcome_transitions_off() {
       transitions: false,
     },
   });
-
-  ExperimentAPI._store._syncToChildren({ flush: true });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
