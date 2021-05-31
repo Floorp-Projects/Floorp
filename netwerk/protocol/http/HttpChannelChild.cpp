@@ -362,9 +362,20 @@ void HttpChannelChild::ProcessOnStartRequest(
   LOG(("HttpChannelChild::ProcessOnStartRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
+  TimeStamp start = TimeStamp::Now();
+
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aResponseHead,
-             aUseResponseHead, aRequestHeaders, aArgs]() {
+             aUseResponseHead, aRequestHeaders, aArgs, start]() {
+#ifdef NIGHTLY_BUILD
+        if (self->mLoadFlags & nsIRequest::LOAD_RECORD_START_REQUEST_DELAY) {
+          TimeDuration delay = TimeStamp::Now() - start;
+          Telemetry::Accumulate(
+              Telemetry::HTTP_PRELOAD_IMAGE_STARTREQUEST_DELAY,
+              static_cast<uint32_t>(delay.ToMilliseconds()));
+        }
+#endif
+
         self->OnStartRequest(aResponseHead, aUseResponseHead, aRequestHeaders,
                              aArgs);
       }));
