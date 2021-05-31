@@ -8,13 +8,18 @@
 
 class AboutCompatBroker {
   constructor(bindings) {
-    this.portsToAboutCompatTabs = this.buildPorts();
-
     this._injections = bindings.injections;
-    this._injections.bindAboutCompatBroker(this);
-
     this._uaOverrides = bindings.uaOverrides;
-    this._uaOverrides.bindAboutCompatBroker(this);
+
+    if (!this._injections && !this._uaOverrides) {
+      throw new Error(
+        "No injections or UA overrides; about:compat broker is not needed"
+      );
+    }
+
+    this.portsToAboutCompatTabs = this.buildPorts();
+    this._injections?.bindAboutCompatBroker(this);
+    this._uaOverrides?.bindAboutCompatBroker(this);
   }
 
   buildPorts() {
@@ -47,8 +52,8 @@ class AboutCompatBroker {
 
   getOverrideOrInterventionById(id) {
     for (const [type, things] of Object.entries({
-      overrides: this._uaOverrides.getAvailableOverrides(),
-      interventions: this._injections.getAvailableInjections(),
+      overrides: this._uaOverrides?.getAvailableOverrides() || [],
+      interventions: this._injections?.getAvailableInjections() || [],
     })) {
       for (const what of things) {
         if (what.id === id) {
@@ -76,17 +81,17 @@ class AboutCompatBroker {
               switch (type) {
                 case "interventions": {
                   if (what.active) {
-                    await this._injections.disableInjection(what);
+                    await this._injections?.disableInjection(what);
                   } else {
-                    await this._injections.enableInjection(what);
+                    await this._injections?.enableInjection(what);
                   }
                   break;
                 }
                 case "overrides": {
                   if (what.active) {
-                    await this._uaOverrides.disableOverride(what);
+                    await this._uaOverrides?.disableOverride(what);
                   } else {
-                    await this._uaOverrides.enableOverride(what);
+                    await this._uaOverrides?.enableOverride(what);
                   }
                   break;
                 }
@@ -101,15 +106,15 @@ class AboutCompatBroker {
         case "getOverridesAndInterventions": {
           return Promise.resolve({
             overrides:
-              (this._uaOverrides.isEnabled() &&
+              (this._uaOverrides?.isEnabled() &&
                 this.filterOverrides(
-                  this._uaOverrides.getAvailableOverrides()
+                  this._uaOverrides?.getAvailableOverrides()
                 )) ||
               false,
             interventions:
-              (this._injections.isEnabled() &&
+              (this._injections?.isEnabled() &&
                 this.filterOverrides(
-                  this._injections.getAvailableInjections()
+                  this._injections?.getAvailableInjections()
                 )) ||
               false,
           });
