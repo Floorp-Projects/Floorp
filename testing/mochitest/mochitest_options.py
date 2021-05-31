@@ -1174,6 +1174,7 @@ class MochitestArguments(ArgumentContainer):
             "forkserver": options.defaultLeakThreshold,
             # GMP rarely gets a log, but when it does, it leaks a little.
             "gmplugin": 20000,
+            "rdd": 400,
         }
 
         # See the dependencies of bug 1401764.
