@@ -9,9 +9,6 @@ const { AddonRepository } = ChromeUtils.import(
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
-const { ExperimentAPI } = ChromeUtils.import(
-  "resource://nimbus/ExperimentAPI.jsm"
-);
 
 add_task(function setup() {
   let sandbox = sinon.createSandbox();
@@ -229,7 +226,6 @@ add_task(async function test_rtamo_over_experiments() {
   );
 
   await doExperimentCleanup();
-  ExperimentAPI._store._syncToChildren({ flush: true });
 
   browser = await openRTAMOWelcomePage();
 

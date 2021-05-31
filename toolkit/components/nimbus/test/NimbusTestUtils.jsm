@@ -82,7 +82,7 @@ const ExperimentFakes = {
     }
     store.updateRemoteConfigs(feature.featureId, configuration);
 
-    return feature.ready();
+    return feature.ready().then(() => store._syncToChildren({ flush: true }));
   },
   async enrollWithFeatureConfig(
     featureConfig,
@@ -121,6 +121,7 @@ const ExperimentFakes = {
     let enrollmentPromise = new Promise(resolve =>
       manager.store.on(`update:${recipe.slug}`, (event, experiment) => {
         if (experiment.active) {
+          manager.store._syncToChildren({ flush: true });
           resolve(experiment);
         }
       })
