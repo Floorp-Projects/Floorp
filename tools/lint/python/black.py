@@ -11,8 +11,10 @@ import signal
 import subprocess
 import sys
 
+from mozfile import which
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
+import mozpack.path as mozpath
 from mozprocess import ProcessHandler
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -49,7 +51,8 @@ def get_black_version(binary):
     except subprocess.CalledProcessError as e:
         output = e.output
 
-    return re.match(r"black, version (.*)$", output)[1]
+    # Accept `black.EXE, version ...` on Windows.
+    return re.match(r"black.*, version (.*)$", output)[1]
 
 
 def parse_issues(config, output, paths, *, log):
@@ -108,6 +111,28 @@ def run_process(config, cmd):
 
 
 def setup(root, **lintargs):
+    log = lintargs["log"]
+    virtualenv_bin_path = lintargs.get("virtualenv_bin_path")
+    # Using `which` searches multiple directories and handles `.exe` on Windows.
+    binary = mozpath.normsep(
+        which("black", path=(virtualenv_bin_path, default_bindir()))
+    )
+
+    if binary and os.path.exists(binary):
+        log.debug("Looking for black at {}".format(binary))
+        version = get_black_version(binary)
+        versions = [
+            line.split()[0].strip()
+            for line in open(BLACK_REQUIREMENTS_PATH).readlines()
+            if line.startswith("black==")
+        ]
+        if ["black=={}".format(version)] == versions:
+            log.debug("Black is present with expected version {}".format(version))
+            return 0
+        else:
+            log.debug("Black is present but unexpected version {}".format(version))
+
+    log.debug("Black needs to be installed or updated")
     virtualenv_manager = lintargs["virtualenv_manager"]
     try:
         virtualenv_manager.install_pip_requirements(BLACK_REQUIREMENTS_PATH, quiet=True)
