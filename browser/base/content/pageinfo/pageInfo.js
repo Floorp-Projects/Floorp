@@ -1130,6 +1130,6 @@ function checkProtocol(img) {
   var url = img[COL_IMAGE_ADDRESS];
   return (
     /^data:image\//i.test(url) ||
-    /^(https?|ftp|file|about|chrome|resource):/.test(url)
+    /^(https?|file|about|chrome|resource):/.test(url)
   );
 }

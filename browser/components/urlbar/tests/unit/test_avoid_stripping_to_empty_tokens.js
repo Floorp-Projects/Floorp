@@ -5,7 +5,7 @@
 testEngine_setup();
 
 add_task(async function test_protocol_trimming() {
-  for (let prot of ["http", "https", "ftp"]) {
+  for (let prot of ["http", "https"]) {
     let visit = {
       // Include the protocol in the query string to ensure we get matches (see bug 1059395)
       uri: Services.io.newURI(
