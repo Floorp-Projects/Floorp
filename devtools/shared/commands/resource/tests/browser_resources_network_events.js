@@ -30,10 +30,12 @@ async function testNetworkEventResourcesWithExistingResources() {
       [`${EXAMPLE_DOMAIN}cached_post.html`]: {
         resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
         method: "POST",
+        isNavigationRequest: false,
       },
       [`${EXAMPLE_DOMAIN}live_get.html`]: {
         resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
         method: "GET",
+        isNavigationRequest: false,
       },
     },
     expectedResourcesOnUpdated: {
@@ -57,6 +59,7 @@ async function testNetworkEventResourcesWithoutExistingResources() {
       [`${EXAMPLE_DOMAIN}live_get.html`]: {
         resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
         method: "GET",
+        isNavigationRequest: false,
       },
     },
     expectedResourcesOnUpdated: {
@@ -145,11 +148,7 @@ async function testNetworkEventResources(options) {
         resourceCommand.TYPES.NETWORK_EVENT,
         "Received a network event resource"
       );
-      actualResourcesOnAvailable[resource.url] = {
-        resourceId: resource.resourceId,
-        resourceType: resource.resourceType,
-        method: resource.method,
-      };
+      actualResourcesOnAvailable[resource.url] = resource;
       totalExpectedOnAvailableCounts--;
     }
   };
@@ -161,11 +160,7 @@ async function testNetworkEventResources(options) {
         resourceCommand.TYPES.NETWORK_EVENT,
         "Received a network update event resource"
       );
-      actualResourcesOnUpdated[resource.url] = {
-        resourceId: resource.resourceId,
-        resourceType: resource.resourceType,
-        method: resource.method,
-      };
+      actualResourcesOnUpdated[resource.url] = resource;
       totalExpectedOnUpdatedCounts--;
     }
   };
@@ -305,6 +300,21 @@ async function testNetworkEventResourcesFromTheContentProcess() {
     "Got three network events fired on update"
   );
 
+  // Find the page's request
+  const availablePageResource = allResourcesOnAvailable.find(
+    resource => resource.url === CSP_URL
+  );
+  is(
+    availablePageResource.resourceType,
+    resourceCommand.TYPES.NETWORK_EVENT,
+    "This is a network event resource"
+  );
+  is(
+    availablePageResource.isNavigationRequest,
+    true,
+    "The page request is correctly flaged as a navigation request"
+  );
+
   // Find the Blocked CSP JS resource
   const availableJSResource = allResourcesOnAvailable.find(
     resource => resource.url === JS_CSP_URL
@@ -388,6 +398,13 @@ function assertResources(actual, expected) {
     "The resource type is correct"
   );
   is(actual.method, expected.method, "The method is correct");
+  if ("isNavigationRequest" in expected) {
+    is(
+      actual.isNavigationRequest,
+      expected.isNavigationRequest,
+      "The isNavigationRequest attribute is correct"
+    );
+  }
 }
 
 const cachedRequest = `await fetch("/cached_post.html", { method: "POST" });`;
