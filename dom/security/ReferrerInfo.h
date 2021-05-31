@@ -154,7 +154,7 @@ class ReferrerInfo : public nsIReferrerInfo {
 
   /**
    * Check whether the given referrer's scheme is allowed to be computed and
-   * sent. The allowlist schemes are: http, https, ftp.
+   * sent. The allowlist schemes are: http, https.
    */
   static bool IsReferrerSchemeAllowed(nsIURI* aReferrer);
 
@@ -368,7 +368,7 @@ class ReferrerInfo : public nsIReferrerInfo {
   bool IsPolicyOverrided() { return mOverridePolicyByDefault; }
 
   /*
-   *  Get origin string from a given valid referrer URI (http, https, ftp)
+   *  Get origin string from a given valid referrer URI (http, https)
    *
    *  @aReferrer - the full referrer URI
    *  @aResult - the resulting aReferrer in string format.
