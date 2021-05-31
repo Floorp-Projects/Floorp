@@ -9,9 +9,11 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
-
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
 );
 
 async function setupForExperimentFeature() {
@@ -65,13 +67,17 @@ add_task(async function test_ExperimentFeature_getPreferenceName() {
 add_task(async function test_ExperimentFeature_getVariable_notRegistered() {
   const instance = createInstanceWithVariables(TEST_VARIABLES);
 
-  Assert.throws(
-    () => {
-      instance.getVariable("non_existant_variable");
-    },
-    /Nimbus: Warning - variable "non_existant_variable" is not defined in FeatureManifest\.js/,
-    "should throw in automation for variables not defined in the manifest"
-  );
+  if (Cu.isInAutomation || AppConstants.NIGHTLY_BUILD) {
+    Assert.throws(
+      () => {
+        instance.getVariable("non_existant_variable");
+      },
+      /Nimbus: Warning - variable "non_existant_variable" is not defined in FeatureManifest\.js/,
+      "should throw in automation for variables not defined in the manifest"
+    );
+  } else {
+    info("Won't throw when running in Beta and release candidates");
+  }
 });
 
 add_task(async function test_ExperimentFeature_getVariable_noFallbackPref() {
