@@ -56,7 +56,13 @@ const SHIFT_JIS_SCORE_PER_LEVEL_1_KANJI: i64 = CJK_BASE_SCORE;
 
 const SHIFT_JIS_SCORE_PER_LEVEL_2_KANJI: i64 = CJK_SECONDARY_BASE_SCORE;
 
-const HALF_WIDTH_KATAKANA_PENALTY: i64 = -(CJK_BASE_SCORE * 3);
+// Manually calibrated relative to windows-1256 Persian and Urdu
+const SHIFT_JIS_INITIAL_HALF_WIDTH_KATAKANA_PENALTY: i64 = -75;
+
+const HALF_WIDTH_KATAKANA_SCORE: i64 = 1;
+
+// Unclear if this is a good idea; seems not harmful, but can't be sure.
+const HALF_WIDTH_KATAKANA_VOICING_SCORE: i64 = 10;
 
 const SHIFT_JIS_PUA_PENALTY: i64 = -(CJK_BASE_SCORE * 10); // Should this be larger?
 
@@ -947,6 +953,13 @@ enum LatinCj {
     Other,
 }
 
+#[derive(PartialEq, Copy, Clone)]
+enum HalfWidthKatakana {
+    DakutenForbidden,
+    DakutenAllowed,
+    DakutenOrHandakutenAllowed,
+}
+
 #[derive(PartialEq)]
 enum LatinKorean {
     AsciiLetter,
@@ -1195,7 +1208,8 @@ fn more_problematic_lead(b: u8) -> bool {
 
 struct ShiftJisCandidate {
     decoder: Decoder,
-    non_ascii_seen: bool,
+    half_width_katakana_seen: bool,
+    half_width_katakana_state: HalfWidthKatakana,
     prev: LatinCj,
     prev_byte: u8,
     pending_score: Option<i64>,
@@ -1222,13 +1236,9 @@ impl ShiftJisCandidate {
                 .decoder
                 .decode_to_utf16_without_replacement(&src, &mut dst, false);
             if written > 0 {
+                let half_width_katakana_state = self.half_width_katakana_state;
+                self.half_width_katakana_state = HalfWidthKatakana::DakutenForbidden;
                 let u = dst[0];
-                if !self.non_ascii_seen && u >= 0x80 {
-                    self.non_ascii_seen = true;
-                    if u >= 0xFF61 && u <= 0xFF9F {
-                        return None;
-                    }
-                }
                 if (u >= u16::from(b'a') && u <= u16::from(b'z'))
                     || (u >= u16::from(b'A') && u <= u16::from(b'Z'))
                 {
@@ -1238,8 +1248,38 @@ impl ShiftJisCandidate {
                     }
                     self.prev = LatinCj::AsciiLetter;
                 } else if u >= 0xFF61 && u <= 0xFF9F {
+                    if !self.half_width_katakana_seen {
+                        self.half_width_katakana_seen = true;
+                        // To avoid misdetecting title-length inputs
+                        score += SHIFT_JIS_INITIAL_HALF_WIDTH_KATAKANA_PENALTY;
+                    }
                     self.pending_score = None; // Discard pending score
-                    score += HALF_WIDTH_KATAKANA_PENALTY;
+                    score += HALF_WIDTH_KATAKANA_SCORE;
+
+                    if (u >= 0xFF76 && u <= 0xFF84) || u == 0xFF73 {
+                        self.half_width_katakana_state = HalfWidthKatakana::DakutenAllowed;
+                    } else if u >= 0xFF8A && u <= 0xFF8E {
+                        self.half_width_katakana_state =
+                            HalfWidthKatakana::DakutenOrHandakutenAllowed;
+                    } else if u == 0xFF9E {
+                        if half_width_katakana_state == HalfWidthKatakana::DakutenForbidden {
+                            score += IMPLAUSIBILITY_PENALTY;
+                        } else {
+                            score += HALF_WIDTH_KATAKANA_VOICING_SCORE;
+                        }
+                    } else if u == 0xFF9F {
+                        if half_width_katakana_state
+                            != HalfWidthKatakana::DakutenOrHandakutenAllowed
+                        {
+                            score += IMPLAUSIBILITY_PENALTY;
+                        } else {
+                            score += HALF_WIDTH_KATAKANA_VOICING_SCORE;
+                        }
+                    }
+
+                    if self.prev == LatinCj::AsciiLetter {
+                        score += CJK_LATIN_ADJACENCY_PENALTY;
+                    }
                     self.prev = LatinCj::Cj;
                 } else if u >= 0x3040 && u < 0x3100 {
                     if let Some(pending) = self.pending_score {
@@ -1377,6 +1417,7 @@ impl ShiftJisCandidate {
 struct EucJpCandidate {
     decoder: Decoder,
     non_ascii_seen: bool,
+    half_width_katakana_state: HalfWidthKatakana,
     prev: LatinCj,
     prev_byte: u8,
     prev_prev_byte: u8,
@@ -1393,12 +1434,11 @@ impl EucJpCandidate {
                 .decoder
                 .decode_to_utf16_without_replacement(&src, &mut dst, false);
             if written > 0 {
+                let half_width_katakana_state = self.half_width_katakana_state;
+                self.half_width_katakana_state = HalfWidthKatakana::DakutenForbidden;
                 let u = dst[0];
                 if !self.non_ascii_seen && u >= 0x80 {
                     self.non_ascii_seen = true;
-                    if u >= 0xFF61 && u <= 0xFF9F {
-                        return None;
-                    }
                     if u >= 0x3040 && u < 0x3100 {
                         // Remove the kana advantage over initial Big5
                         // hanzi.
@@ -1413,7 +1453,32 @@ impl EucJpCandidate {
                     }
                     self.prev = LatinCj::AsciiLetter;
                 } else if u >= 0xFF61 && u <= 0xFF9F {
-                    score += HALF_WIDTH_KATAKANA_PENALTY;
+                    score += HALF_WIDTH_KATAKANA_SCORE;
+
+                    if (u >= 0xFF76 && u <= 0xFF84) || u == 0xFF73 {
+                        self.half_width_katakana_state = HalfWidthKatakana::DakutenAllowed;
+                    } else if u >= 0xFF8A && u <= 0xFF8E {
+                        self.half_width_katakana_state =
+                            HalfWidthKatakana::DakutenOrHandakutenAllowed;
+                    } else if u == 0xFF9E {
+                        if half_width_katakana_state == HalfWidthKatakana::DakutenForbidden {
+                            score += IMPLAUSIBILITY_PENALTY;
+                        } else {
+                            score += HALF_WIDTH_KATAKANA_VOICING_SCORE;
+                        }
+                    } else if u == 0xFF9F {
+                        if half_width_katakana_state
+                            != HalfWidthKatakana::DakutenOrHandakutenAllowed
+                        {
+                            score += IMPLAUSIBILITY_PENALTY;
+                        } else {
+                            score += HALF_WIDTH_KATAKANA_VOICING_SCORE;
+                        }
+                    }
+
+                    if self.prev == LatinCj::AsciiLetter {
+                        score += CJK_LATIN_ADJACENCY_PENALTY;
+                    }
                     self.prev = LatinCj::Other;
                 } else if (u >= 0x3041 && u <= 0x3093) || (u >= 0x30A1 && u <= 0x30F6) {
                     match u {
@@ -2459,7 +2524,8 @@ impl Candidate {
         Candidate {
             inner: InnerCandidate::Shift(ShiftJisCandidate {
                 decoder: SHIFT_JIS.new_decoder_without_bom_handling(),
-                non_ascii_seen: false,
+                half_width_katakana_seen: false,
+                half_width_katakana_state: HalfWidthKatakana::DakutenForbidden,
                 prev: LatinCj::Other,
                 prev_byte: 0,
                 pending_score: None,
@@ -2473,6 +2539,7 @@ impl Candidate {
             inner: InnerCandidate::EucJp(EucJpCandidate {
                 decoder: EUC_JP.new_decoder_without_bom_handling(),
                 non_ascii_seen: false,
+                half_width_katakana_state: HalfWidthKatakana::DakutenForbidden,
                 prev: LatinCj::Other,
                 prev_byte: 0,
                 prev_prev_byte: 0,
@@ -3453,6 +3520,11 @@ mod tests {
     #[test]
     fn test_euro() {
         check(" €9", WINDOWS_1252);
+    }
+
+    #[test]
+    fn test_shift_jis_half_width_katakana() {
+        check("ﾊｰﾄﾞｳｪｱﾊｰﾄﾞｳｪｱﾊｰﾄﾞｳｪｱﾊｰﾄﾞｳｪｱﾊｰﾄﾞｳｪｱ", SHIFT_JIS);
     }
 
     #[test]
