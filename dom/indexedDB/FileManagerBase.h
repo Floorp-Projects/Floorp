@@ -13,7 +13,7 @@
 #include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsISupportsImpl.h"
-#include "FileInfoT.h"
+#include "FileInfo.h"
 #include "FlippedOnce.h"
 
 namespace mozilla {
@@ -23,7 +23,7 @@ namespace indexedDB {
 template <typename FileManager>
 class FileManagerBase {
  public:
-  using FileInfo = FileInfoT<FileManager>;
+  using FileInfo = FileInfo<FileManager>;
   using MutexType = StaticMutex;
   using AutoLock = mozilla::detail::BaseAutoLock<MutexType&>;
 
