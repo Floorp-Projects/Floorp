@@ -454,6 +454,7 @@ class ResourceCommand {
    *        which describes the resource.
    */
   async _onResourceAvailable({ targetFront, watcherFront }, resources) {
+    let includesDocumentEventWillNavigate = false;
     for (let resource of resources) {
       const { resourceType } = resource;
 
@@ -482,11 +483,25 @@ class ResourceCommand {
         });
       }
 
+      if (
+        resourceType == ResourceCommand.TYPES.DOCUMENT_EVENT &&
+        resource.name == "will-navigate"
+      ) {
+        includesDocumentEventWillNavigate = true;
+      }
+
       this._queueResourceEvent("available", resourceType, resource);
 
       this._cache.push(resource);
     }
-    this._throttledNotifyWatchers();
+    // If we receive the DOCUMENT_EVENT for will-navigate,
+    // flush immediately the resources in order to notify about the navigation sooner than later.
+    // (this is especially useful for tests, even if they should probably avoid depending on this...)
+    if (includesDocumentEventWillNavigate) {
+      this._notifyWatchers();
+    } else {
+      this._throttledNotifyWatchers();
+    }
   }
 
   /**
