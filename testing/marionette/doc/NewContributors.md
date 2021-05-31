@@ -64,8 +64,7 @@ your patches are laid out in [Patches.md](Patches.html).
 Resources
 ---------
 
-  * Search Mozilla's code repository with searchfox to find the [code for
-    Marionette] and the [Marionette client/harness].
+  * Search Mozilla's code repositories with [searchfox].
 
   * Another [guide for new contributors].  It has not been updated in a long
     time but it's a good general resource if you ever get stuck on something.
@@ -82,8 +81,7 @@ Resources
   * If you'd rather use git instead of hg, see [git workflow for
     Gecko development] and/or [this blog post by :ato].
 
-[code for Marionette]: https://searchfox.org/mozilla-central/source/remote/marionette/
-[Marionette client/harness]: https://searchfox.org/mozilla-central/source/testing/marionette/
+[searchfox]: https://searchfox.org/mozilla-central/source/testing/marionette/
 [guide for new contributors]: https://ateam-bootcamp.readthedocs.org/en/latest/guide/index.html#new-contributor-guide
 [Mercurial for Mozillians]: https://mozilla-version-control-tools.readthedocs.org/en/latest/hgmozilla/index.html
 [guide]: https://gist.github.com/mjzffr/d2adef328a416081f543
