@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_INDEXEDDB_FILEINFOMANAGER_H_
-#define DOM_INDEXEDDB_FILEINFOMANAGER_H_
+#ifndef mozilla_dom_indexeddb_filemanagerbase_h__
+#define mozilla_dom_indexeddb_filemanagerbase_h__
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
@@ -13,37 +13,17 @@
 #include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsISupportsImpl.h"
-#include "FileInfo.h"
+#include "FileInfoT.h"
 #include "FlippedOnce.h"
 
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-class FileInfoManagerBase {
- public:
-  bool Invalidated() const { return mInvalidated; }
-
- protected:
-  bool AssertValid() const {
-    if (NS_WARN_IF(Invalidated())) {
-      MOZ_ASSERT(false);
-      return false;
-    }
-
-    return true;
-  }
-
-  void Invalidate() { mInvalidated.Flip(); }
-
- private:
-  FlippedOnce<false> mInvalidated;
-};
-
 template <typename FileManager>
-class FileInfoManager : public FileInfoManagerBase {
+class FileManagerBase {
  public:
-  using FileInfo = FileInfo<FileManager>;
+  using FileInfo = FileInfoT<FileManager>;
   using MutexType = StaticMutex;
   using AutoLock = mozilla::detail::BaseAutoLock<MutexType&>;
 
@@ -56,7 +36,7 @@ class FileInfoManager : public FileInfoManagerBase {
       const int64_t id = ++mLastFileId;
 
       auto fileInfo =
-          MakeNotNull<FileInfo*>(FileInfoManagerGuard{},
+          MakeNotNull<FileInfo*>(FileManagerGuard{},
                                  SafeRefPtr{static_cast<FileManager*>(this),
                                             AcquireStrongRefFromRawPtr{}},
                                  id);
@@ -76,25 +56,27 @@ class FileInfoManager : public FileInfoManagerBase {
   nsresult Invalidate() {
     AutoLock lock(FileManager::Mutex());
 
-    FileInfoManagerBase::Invalidate();
+    mInvalidated.Flip();
 
     mFileInfos.RemoveIf([](const auto& iter) {
       FileInfo* info = iter.Data();
       MOZ_ASSERT(info);
 
-      return !info->LockedClearDBRefs(FileInfoManagerGuard{});
+      return !info->LockedClearDBRefs(FileManagerGuard{});
     });
 
     return NS_OK;
   }
 
-  class FileInfoManagerGuard {
-    FileInfoManagerGuard() = default;
+  bool Invalidated() const { return mInvalidated; }
+
+  class FileManagerGuard {
+    FileManagerGuard() = default;
   };
 
  private:
   // Runs the given aFileInfoTableOp operation, which must return a FileInfo*,
-  // under the FileManager lock, acquires a strong reference to the returned
+  // under the file manager lock, acquires a strong reference to the returned
   // object under the lock, and returns the strong reference.
   template <typename FileInfoTableOp>
   [[nodiscard]] SafeRefPtr<FileInfo> AcquireFileInfo(
@@ -123,20 +105,31 @@ class FileInfoManager : public FileInfoManagerBase {
   }
 
  protected:
+  bool AssertValid() const {
+    if (NS_WARN_IF(static_cast<const FileManager*>(this)->Invalidated())) {
+      MOZ_ASSERT(false);
+      return false;
+    }
+
+    return true;
+  }
+
 #ifdef DEBUG
-  ~FileInfoManager() { MOZ_ASSERT(mFileInfos.IsEmpty()); }
+  ~FileManagerBase() { MOZ_ASSERT(mFileInfos.IsEmpty()); }
 #else
-  ~FileInfoManager() = default;
+  ~FileManagerBase() = default;
 #endif
 
   // Access to the following fields must be protected by
   // FileManager::Mutex()
   int64_t mLastFileId = 0;
   nsTHashMap<nsUint64HashKey, NotNull<FileInfo*>> mFileInfos;
+
+  FlippedOnce<false> mInvalidated;
 };
 
 }  // namespace indexedDB
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // DOM_INDEXEDDB_FILEINFOMANAGER_H_
+#endif  // mozilla_dom_indexeddb_filemanagerbase_h__
