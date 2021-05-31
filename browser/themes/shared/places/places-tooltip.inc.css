@@ -46,6 +46,9 @@
        anchor, and should match the padding-inline-start of
        the tooltip. */
     padding: var(--places-tooltip-shadow-size);
+  }
+
+  .places-tooltip[position] {
     margin-inline-start: calc(-1 * var(--places-tooltip-shadow-size));
     margin-block-start: calc(-1 * var(--places-tooltip-shadow-size));
   }

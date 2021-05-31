@@ -5,7 +5,8 @@
 <!-- Bookmarks and history tooltip -->
 <tooltip id="bhTooltip" noautohide="true"
          class="places-tooltip"
-         onpopupshowing="return window.top.BookmarksEventHandler.fillInBHTooltip(document, event)">
+         onpopupshowing="return window.top.BookmarksEventHandler.fillInBHTooltip(document, event)"
+         onpopuphiding="this.removeAttribute('position')">
   <vbox class="places-tooltip-box" flex="1">
     <description class="tooltip-label places-tooltip-title"/>
     <description crop="center" class="tooltip-label places-tooltip-uri uri-element"/>
