@@ -61,15 +61,6 @@ const ScreenMargin CalculatePendingDisplayPort(
 gfx::IntSize GetDisplayportAlignmentMultiplier(const ScreenSize& aBaseSize);
 
 /**
- * This computes the min/max values to use for the mousewheel animation
- * duration. Normally this just comes from prefs but we are doing a gradual
- * migration of users from old values to new values so this encapsulates some
- * of that behaviour. Values are in milliseconds, same as the
- * general.smoothScroll.mouseWheel.duration* prefs.
- */
-std::pair<int32_t, int32_t> GetMouseWheelAnimationDurations();
-
-/**
  * Calculate the physics parameters for smooth scroll animations for the
  * given origin, based on pref values.
  */
