@@ -311,31 +311,49 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **use live sites**: false
    * **Test Task**:
       * test-linux1804-64-qr/opt-browsertime-tp6-firefox-cnn-e10s
+      * test-linux1804-64-qr/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
       * test-linux1804-64-shippable-qr/opt-browsertime-tp6-firefox-cnn-e10s
       * test-linux1804-64-shippable-qr/opt-browsertime-tp6-firefox-cnn-fis-e10s
+      * test-linux1804-64-shippable-qr/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
+      * test-linux1804-64-shippable-qr/opt-browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s
       * test-linux1804-64-shippable/opt-browsertime-tp6-chrome-cnn-e10s
       * test-linux1804-64-shippable/opt-browsertime-tp6-chromium-cnn-e10s
       * test-linux1804-64-shippable/opt-browsertime-tp6-firefox-cnn-e10s
+      * test-linux1804-64-shippable/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
       * test-linux1804-64/opt-browsertime-tp6-firefox-cnn-e10s
+      * test-linux1804-64/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
       * test-macosx1014-64-shippable-qr/opt-browsertime-tp6-firefox-cnn-e10s
       * test-macosx1014-64-shippable-qr/opt-browsertime-tp6-firefox-cnn-fis-e10s
+      * test-macosx1014-64-shippable-qr/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
+      * test-macosx1014-64-shippable-qr/opt-browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s
       * test-macosx1015-64-shippable-qr/opt-browsertime-tp6-firefox-cnn-e10s
       * test-macosx1015-64-shippable-qr/opt-browsertime-tp6-firefox-cnn-fis-e10s
+      * test-macosx1015-64-shippable-qr/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
+      * test-macosx1015-64-shippable-qr/opt-browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s
       * test-macosx1015-64-shippable/opt-browsertime-tp6-chrome-cnn-e10s
       * test-macosx1015-64-shippable/opt-browsertime-tp6-chromium-cnn-e10s
       * test-macosx1015-64-shippable/opt-browsertime-tp6-firefox-cnn-e10s
+      * test-macosx1015-64-shippable/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
       * test-windows10-32-shippable/opt-browsertime-tp6-chrome-cnn-e10s
       * test-windows10-32-shippable/opt-browsertime-tp6-chromium-cnn-e10s
       * test-windows10-32-shippable/opt-browsertime-tp6-firefox-cnn-e10s
+      * test-windows10-32-shippable/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
       * test-windows10-32/opt-browsertime-tp6-firefox-cnn-e10s
+      * test-windows10-32/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
       * test-windows10-64-qr/opt-browsertime-tp6-firefox-cnn-e10s
+      * test-windows10-64-qr/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
       * test-windows10-64-ref-hw-2017/opt-browsertime-tp6-firefox-cnn-e10s
+      * test-windows10-64-ref-hw-2017/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
       * test-windows10-64-shippable-qr/opt-browsertime-tp6-firefox-cnn-e10s
       * test-windows10-64-shippable-qr/opt-browsertime-tp6-firefox-cnn-fis-e10s
+      * test-windows10-64-shippable-qr/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
+      * test-windows10-64-shippable-qr/opt-browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s
       * test-windows10-64-shippable/opt-browsertime-tp6-chrome-cnn-e10s
       * test-windows10-64-shippable/opt-browsertime-tp6-chromium-cnn-e10s
       * test-windows10-64-shippable/opt-browsertime-tp6-firefox-cnn-e10s
+      * test-windows10-64-shippable/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
       * test-windows10-64/opt-browsertime-tp6-firefox-cnn-e10s
+      * test-windows10-64/opt-browsertime-tp6-live-sheriffed-firefox-cnn-e10s
 
 
 .. dropdown:: ebay (BT, FF, CH, CU)
