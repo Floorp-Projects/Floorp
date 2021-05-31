@@ -88,9 +88,7 @@ test_runner(async function test_AboutPocketParent_receiveMessage_PKT_initL10N({
   await aboutPocketParent.receiveMessage({
     name: "PKT_initL10N",
     data: {
-      payload: {
-        tos: ["https://foo.com", "https://bar.com"],
-      },
+      payload: {},
       panelId: 1,
     },
   });
@@ -119,11 +117,6 @@ test_runner(async function test_AboutPocketParent_receiveMessage_PKT_initL10N({
   Assert.ok(
     args[2].strings,
     "Should fire sendResponseMessageToPanel with PKT_initL10N payload strings"
-  );
-  Assert.equal(
-    args[2].strings.tos,
-    'By continuing, you agree to Pocket’s <a href="https://foo.com" target="_blank">Terms of Service</a> and <a href="https://bar.com" target="_blank">Privacy Policy</a>',
-    "Should fire sendResponseMessageToPanel with PKT_initL10N payload strings tos"
   );
 });
 
