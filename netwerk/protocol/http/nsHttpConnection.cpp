@@ -2618,17 +2618,15 @@ nsAHttpTransaction* nsHttpConnection::Transaction() { return mTransaction; }
 nsresult nsHttpConnection::GetSelfAddr(NetAddr* addr) {
   if (!mSocketTransport) {
     return NS_ERROR_FAILURE;
-  } else {
-    return mSocketTransport->GetSelfAddr(addr);
   }
+  return mSocketTransport->GetSelfAddr(addr);
 }
 
 nsresult nsHttpConnection::GetPeerAddr(NetAddr* addr) {
   if (!mSocketTransport) {
     return NS_ERROR_FAILURE;
-  } else {
-    return mSocketTransport->GetPeerAddr(addr);
   }
+  return mSocketTransport->GetPeerAddr(addr);
 }
 
 bool nsHttpConnection::ResolvedByTRR() {
