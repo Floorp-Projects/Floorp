@@ -7,7 +7,7 @@
 #include "ActorsParentCommon.h"
 
 // local includes
-#include "FileInfoFwd.h"  // for FileInfo
+#include "DatabaseFileInfoFwd.h"  // for DatabaseFileInfo
 #include "FileManager.h"
 #include "IndexedDatabase.h"  // for StructuredCloneFile...
 #include "IndexedDatabaseManager.h"
@@ -105,11 +105,11 @@ Result<StructuredCloneFileParent, nsresult> DeserializeStructuredCloneFile(
                          ? aText
                          : static_cast<const nsAString&>(Substring(aText, 1))));
 
-  SafeRefPtr<FileInfo> fileInfo = aFileManager.GetFileInfo(id);
+  SafeRefPtr<DatabaseFileInfo> fileInfo = aFileManager.GetFileInfo(id);
   MOZ_ASSERT(fileInfo);
-  // XXX In bug 1432133, for some reasons FileInfo object cannot be got. This
-  // is just a short-term fix, and we are working on finding the real cause
-  // in bug 1519859.
+  // XXX In bug 1432133, for some reasons DatabaseFileInfo object cannot be
+  // got. This is just a short-term fix, and we are working on finding the real
+  // cause in bug 1519859.
   if (!fileInfo) {
     IDB_WARNING(
         "Corrupt structured clone data detected in IndexedDB. Failing the "

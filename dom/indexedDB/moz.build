@@ -24,7 +24,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 TEST_DIRS += ["test/gtest"]
 
 EXPORTS.mozilla.dom += [
-    "FileInfoFwd.h",
+    "DatabaseFileInfoFwd.h",
     "FlippedOnce.h",
     "IDBCursor.h",
     "IDBCursorType.h",
@@ -58,8 +58,8 @@ EXPORTS.mozilla.dom.indexedDB += [
 UNIFIED_SOURCES += [
     "ActorsChild.cpp",
     "ActorsParentCommon.cpp",
+    "DatabaseFileInfo.cpp",
     "DBSchema.cpp",
-    "FileInfo.cpp",
     "IDBCursor.cpp",
     "IDBCursorType.cpp",
     "IDBDatabase.cpp",
