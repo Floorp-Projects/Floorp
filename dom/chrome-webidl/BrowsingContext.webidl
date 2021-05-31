@@ -188,12 +188,6 @@ interface BrowsingContext {
   [SetterThrows] attribute DisplayMode displayMode;
 
   /**
-   * This allows chrome to override the default choice of whether touch events
-   * are available in a specific BrowsingContext and its descendents.
-   */
-  [SetterThrows] attribute TouchEventsOverride touchEventsOverride;
-
-  /**
    * The nsID of the browsing context in the session history.
    */
   [NewObject, Throws]
@@ -289,6 +283,12 @@ interface CanonicalBrowsingContext : BrowsingContext {
   readonly attribute URI? currentURI;
 
   void clearRestoreState();
+
+  /**
+   * This allows chrome to override the default choice of whether touch events
+   * are available in a specific BrowsingContext and its descendents.
+   */
+  [SetterThrows] attribute TouchEventsOverride touchEventsOverride;
 };
 
 [Exposed=Window, ChromeOnly]
