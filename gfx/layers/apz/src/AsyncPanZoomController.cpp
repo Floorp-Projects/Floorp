@@ -71,7 +71,6 @@
 #include "mozilla/layers/DirectionUtils.h"  // for GetAxis{Start,End,Length,Scale}
 #include "mozilla/layers/LayerTransactionParent.h"  // for LayerTransactionParent
 #include "mozilla/layers/MetricsSharingController.h"  // for MetricsSharingController
-#include "mozilla/layers/ScrollInputMethods.h"        // for ScrollInputMethod
 #include "mozilla/mozalloc.h"                         // for operator new, etc
 #include "mozilla/Unused.h"                           // for unused
 #include "mozilla/FloatingPoint.h"                    // for FuzzyEquals*
@@ -949,10 +948,6 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
   if (aEvent.mType == MouseInput::MouseType::MOUSE_DOWN) {
     APZC_LOG("%p starting scrollbar drag\n", this);
     SetState(SCROLLBAR_DRAG);
-
-    mozilla::Telemetry::Accumulate(
-        mozilla::Telemetry::SCROLL_INPUT_METHODS,
-        (uint32_t)ScrollInputMethod::ApzScrollbarDrag);
   }
 
   if (aEvent.mType != MouseInput::MouseType::MOUSE_MOVE) {
@@ -1228,9 +1223,6 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(
 void AsyncPanZoomController::StartAutoscroll(const ScreenPoint& aPoint) {
   // Cancel any existing animation.
   CancelAnimation();
-
-  Telemetry::Accumulate(Telemetry::SCROLL_INPUT_METHODS,
-                        (uint32_t)ScrollInputMethod::ApzAutoscrolling);
 
   SetState(AUTOSCROLL);
   StartAnimation(new AutoscrollAnimation(*this, aPoint));
@@ -1965,36 +1957,7 @@ ParentLayerPoint AsyncPanZoomController::GetScrollWheelDelta(
   return delta;
 }
 
-static void ReportKeyboardScrollAction(const KeyboardScrollAction& aAction) {
-  ScrollInputMethod scrollMethod;
-
-  switch (aAction.mType) {
-    case KeyboardScrollAction::eScrollLine: {
-      scrollMethod = ScrollInputMethod::ApzScrollLine;
-      break;
-    }
-    case KeyboardScrollAction::eScrollCharacter: {
-      scrollMethod = ScrollInputMethod::ApzScrollCharacter;
-      break;
-    }
-    case KeyboardScrollAction::eScrollPage: {
-      scrollMethod = ScrollInputMethod::ApzScrollPage;
-      break;
-    }
-    case KeyboardScrollAction::eScrollComplete: {
-      scrollMethod = ScrollInputMethod::ApzCompleteScroll;
-      break;
-    }
-  }
-
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-                                 (uint32_t)scrollMethod);
-}
-
 nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
-  // Report the type of scroll action to telemetry
-  ReportKeyboardScrollAction(aEvent.mAction);
-
   // Mark that this APZC has async key scrolled
   mTestHasAsyncKeyScrolled = true;
 
@@ -2311,23 +2274,6 @@ void AsyncPanZoomController::DoDelayedRequestContentRepaint() {
   mPinchPaintTimerSet = false;
 }
 
-static ScrollInputMethod ScrollInputMethodForWheelDeltaType(
-    ScrollWheelInput::ScrollDeltaType aDeltaType) {
-  switch (aDeltaType) {
-    case ScrollWheelInput::SCROLLDELTA_LINE: {
-      return ScrollInputMethod::ApzWheelLine;
-    }
-    case ScrollWheelInput::SCROLLDELTA_PAGE: {
-      return ScrollInputMethod::ApzWheelPage;
-    }
-    case ScrollWheelInput::SCROLLDELTA_PIXEL: {
-      return ScrollInputMethod::ApzWheelPixel;
-    }
-  }
-  MOZ_ASSERT_UNREACHABLE("Invalid value");
-  return ScrollInputMethod::ApzWheelLine;
-}
-
 static void AdjustDeltaForAllowedScrollDirections(
     ParentLayerPoint& aDelta,
     const ScrollDirections& aAllowedScrollDirections) {
@@ -2411,10 +2357,6 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
     // Avoid spurious state changes and unnecessary work
     return nsEventStatus_eIgnore;
   }
-
-  mozilla::Telemetry::Accumulate(
-      mozilla::Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t)ScrollInputMethodForWheelDeltaType(aEvent.mDeltaType));
 
   switch (aEvent.mScrollMode) {
     case ScrollWheelInput::SCROLLMODE_INSTANT: {
@@ -2550,9 +2492,6 @@ nsEventStatus AsyncPanZoomController::OnPanBegin(
   }
 
   StartTouch(aEvent.mLocalPanStartPoint, aEvent.mTimeStamp);
-
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-                                 (uint32_t)ScrollInputMethod::ApzPanGesture);
 
   if (GetAxisLockMode() == FREE) {
     SetState(PANNING);
@@ -3351,8 +3290,6 @@ nsEventStatus AsyncPanZoomController::StartPanning(
   }
 
   if (IsInPanningState()) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-                                   (uint32_t)ScrollInputMethod::ApzTouch);
     mTouchStartRestingTimeBeforePan = aEventTime - mTouchStartTime;
     mMinimumVelocityDuringPan = Nothing();
 

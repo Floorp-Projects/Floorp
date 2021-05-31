@@ -13923,16 +13923,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Graphics Crash Reason (...)"
   },
-  "SCROLL_INPUT_METHODS": {
-    "record_in_processes": ["main", "content", "gpu"],
-    "products": ["firefox"],
-    "alert_emails": ["botond@mozilla.com"],
-    "bug_numbers": [1670003, 1672576],
-    "expires_in_version": "89",
-    "kind": "enumerated",
-    "n_values": 64,
-    "description": "Count of scroll actions triggered by different input methods. See gfx/layers/apz/util/ScrollInputMethods.h for a list of possible values and their meanings."
-  },
   "WEBFONT_DOWNLOAD_TIME": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
