@@ -1,3 +1,5 @@
+// |jit-test| skip-if: getBuildConfiguration()['wasi']
+
 var iters = 250;
 
 // Generate a deeply nested version of:

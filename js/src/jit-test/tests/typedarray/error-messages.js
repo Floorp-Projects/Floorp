@@ -1,3 +1,5 @@
+// |jit-test| skip-if: getBuildConfiguration()['wasi']
+
 function assertThrowsMessage(f, regexp) {
     var threw = true;
     var error = null;
