@@ -46,14 +46,14 @@ const GeckoViewPushController = {
 
         const [url, principal] = createScopeAndPrincipal(scope);
 
-        // Grant this since there is no way for the worker
-        // to prompt for permission.
-        Services.perms.addFromPrincipal(
-          principal,
-          "desktop-notification",
-          Services.perms.ALLOW_ACTION,
-          Services.perms.EXPIRE_SESSION
-        );
+        if (
+          Services.perms.testPermissionFromPrincipal(
+            principal,
+            "desktop-notification"
+          ) != Services.perms.ALLOW_ACTION
+        ) {
+          return;
+        }
 
         if (!data) {
           PushNotifier.notifyPush(url, principal, "");
