@@ -781,6 +781,12 @@ exports.createNetworkEvent = function(
     }
   }
 
+  // isNavigationRequest is true for the one request used to load a new top level document
+  // of a given tab, or top level window. It will typically be false for navigation requests
+  // of iframes, i.e. the request loading another document in an iframe.
+  event.isNavigationRequest =
+    channel.isMainDocumentChannel && channel.loadInfo.isTopLevelLoad;
+
   return event;
 };
 
