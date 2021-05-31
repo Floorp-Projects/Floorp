@@ -34,9 +34,9 @@ async function getWebConsoleWrapper() {
 describe("WebConsoleWrapper", () => {
   it("clears queues when dispatchMessagesClear is called", async () => {
     const ncow = await getWebConsoleWrapper();
-    ncow.queuedMessageAdds.push({ fakePacket: "message" });
-    ncow.queuedMessageUpdates.push({ fakePacket: "message-update" });
-    ncow.queuedRequestUpdates.push({ fakePacket: "request-update" });
+    ncow.queuedMessageAdds.push({ fakePacket: "message", data: {} });
+    ncow.queuedMessageUpdates.push({ fakePacket: "message-update", data: {} });
+    ncow.queuedRequestUpdates.push({ fakePacket: "request-update", data: {} });
 
     ncow.dispatchMessagesClear();
 

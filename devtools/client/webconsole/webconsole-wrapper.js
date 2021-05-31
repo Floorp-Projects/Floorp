@@ -142,10 +142,17 @@ class WebConsoleWrapper {
   dispatchMessagesClear() {
     // We might still have pending message additions and updates when the clear action is
     // triggered, so we need to flush them to make sure we don't have unexpected behavior
-    // in the ConsoleOutput.
-    this.queuedMessageAdds = [];
-    this.queuedMessageUpdates = [];
-    this.queuedRequestUpdates = [];
+    // in the ConsoleOutput. *But* we want to keep any pending navigation request,
+    // as we want to keep displaying them even if we received a clear request.
+    function filter(l) {
+      return l.filter(update => update.isNavigationRequest);
+    }
+    this.queuedMessageAdds = filter(this.queuedMessageAdds);
+    this.queuedMessageUpdates = filter(this.queuedMessageUpdates);
+    this.queuedRequestUpdates = this.queuedRequestUpdates.filter(
+      update => update.data.isNavigationRequest
+    );
+
     store?.dispatch(actions.messagesClear());
     this.webConsoleUI.emitForTests("messages-cleared");
   }
