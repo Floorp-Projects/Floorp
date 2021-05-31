@@ -42,6 +42,7 @@ dependencies {
     implementation Dependencies.androidx_lifecycle_runtime
     implementation Dependencies.androidx_recyclerview
     implementation Dependencies.androidx_core_ktx
+    implementation Dependencies.androidx_preferences
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
