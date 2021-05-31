@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_indexeddb_filemanager_h__
-#define mozilla_dom_indexeddb_filemanager_h__
+#ifndef DOM_INDEXEDDB_DATABASEFILEMANAGER_H_
+#define DOM_INDEXEDDB_DATABASEFILEMANAGER_H_
 
 #include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/PersistenceType.h"
@@ -16,15 +16,14 @@
 class nsIFile;
 class mozIStorageConnection;
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+namespace mozilla::dom::indexedDB {
 
 // Implemented in ActorsParent.cpp.
-class FileManager final : public FileManagerBase<FileManager>,
-                          public AtomicSafeRefCounted<FileManager> {
+class DatabaseFileManager final
+    : public FileManagerBase<DatabaseFileManager>,
+      public AtomicSafeRefCounted<DatabaseFileManager> {
   using PersistenceType = mozilla::dom::quota::PersistenceType;
-  using FileManagerBase<FileManager>::MutexType;
+  using FileManagerBase<DatabaseFileManager>::MutexType;
 
   const PersistenceType mPersistenceType;
   const quota::OriginMetadata mOriginMetadata;
@@ -35,7 +34,7 @@ class FileManager final : public FileManagerBase<FileManager>,
 
   const bool mEnforcingQuota;
 
-  // Lock protecting FileManager.mFileInfos.
+  // Lock protecting DatabaseFileManager.mFileInfos.
   // It's s also used to atomically update DatabaseFileInfo.mRefCnt and
   // DatabaseFileInfo.mDBRefCnt
   static MutexType sMutex;
@@ -53,9 +52,9 @@ class FileManager final : public FileManagerBase<FileManager>,
 
   static Result<quota::FileUsageType, nsresult> GetUsage(nsIFile* aDirectory);
 
-  FileManager(PersistenceType aPersistenceType,
-              const quota::OriginMetadata& aOriginMetadata,
-              const nsAString& aDatabaseName, bool aEnforcingQuota);
+  DatabaseFileManager(PersistenceType aPersistenceType,
+                      const quota::OriginMetadata& aOriginMetadata,
+                      const nsAString& aDatabaseName, bool aEnforcingQuota);
 
   PersistenceType Type() const { return mPersistenceType; }
 
@@ -87,15 +86,13 @@ class FileManager final : public FileManagerBase<FileManager>,
 
   [[nodiscard]] nsresult AsyncDeleteFile(int64_t aFileId);
 
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(FileManager)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(DatabaseFileManager)
 
   static StaticMutex& Mutex() { return sMutex; }
 
-  ~FileManager() = default;
+  ~DatabaseFileManager() = default;
 };
 
-}  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::indexedDB
 
-#endif  // mozilla_dom_indexeddb_filemanager_h__
+#endif  // DOM_INDEXEDDB_DATABASEFILEMANAGER_H_

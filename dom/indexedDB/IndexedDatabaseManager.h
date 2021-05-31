@@ -27,15 +27,15 @@ class IDBFactory;
 namespace indexedDB {
 
 class BackgroundUtilsChild;
-class FileManager;
+class DatabaseFileManager;
 class FileManagerInfo;
 
 }  // namespace indexedDB
 
 class IndexedDatabaseManager final {
-  typedef mozilla::dom::quota::PersistenceType PersistenceType;
-  typedef mozilla::dom::indexedDB::FileManager FileManager;
-  typedef mozilla::dom::indexedDB::FileManagerInfo FileManagerInfo;
+  using PersistenceType = mozilla::dom::quota::PersistenceType;
+  using DatabaseFileManager = mozilla::dom::indexedDB::DatabaseFileManager;
+  using FileManagerInfo = mozilla::dom::indexedDB::FileManagerInfo;
 
  public:
   enum LoggingMode {
@@ -105,11 +105,11 @@ class IndexedDatabaseManager final {
 
   void ClearBackgroundActor();
 
-  [[nodiscard]] SafeRefPtr<FileManager> GetFileManager(
+  [[nodiscard]] SafeRefPtr<DatabaseFileManager> GetFileManager(
       PersistenceType aPersistenceType, const nsACString& aOrigin,
       const nsAString& aDatabaseName);
 
-  void AddFileManager(SafeRefPtr<FileManager> aFileManager);
+  void AddFileManager(SafeRefPtr<DatabaseFileManager> aFileManager);
 
   void InvalidateAllFileManagers();
 
@@ -151,11 +151,11 @@ class IndexedDatabaseManager final {
   static void LoggingModePrefChangedCallback(const char* aPrefName,
                                              void* aClosure);
 
-  // Maintains a list of all file managers per origin. This list isn't
-  // protected by any mutex but it is only ever touched on the IO thread.
+  // Maintains a list of all DatabaseFileManager objects per origin. This list
+  // isn't protected by any mutex but it is only ever touched on the IO thread.
   nsClassHashtable<nsCStringHashKey, FileManagerInfo> mFileManagerInfos;
 
-  nsClassHashtable<nsRefPtrHashKey<FileManager>, nsTArray<int64_t>>
+  nsClassHashtable<nsRefPtrHashKey<DatabaseFileManager>, nsTArray<int64_t>>
       mPendingDeleteInfos;
 
   nsCString mLocale;
