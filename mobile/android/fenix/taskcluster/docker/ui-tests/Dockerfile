@@ -11,7 +11,7 @@ USER worker:worker
 
 ENV GOOGLE_SDK_DOWNLOAD ./gcloud.tar.gz
 ENV GOOGLE_SDK_VERSION 233
-ENV FLANK_VERSION v21.01.0
+ENV FLANK_VERSION v21.05.0
 
 ENV TEST_TOOLS /builds/worker/test-tools
 ENV PATH ${PATH}:${TEST_TOOLS}:${TEST_TOOLS}/google-cloud-sdk/bin
