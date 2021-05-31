@@ -429,17 +429,6 @@ add_task(async function test_windows_zoneInformation() {
         "\r\n",
     },
     {
-      options: {
-        referrerInfo: createReferrerInfo("ftp://user:pass@example.com/"),
-      },
-      expectedZoneId:
-        "[ZoneTransfer]\r\nZoneId=3\r\n" +
-        "ReferrerUrl=ftp://example.com/\r\n" +
-        "HostUrl=" +
-        httpSourceUrl +
-        "\r\n",
-    },
-    {
       options: { isPrivate: true },
       expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n",
     },
