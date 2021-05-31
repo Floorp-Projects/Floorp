@@ -2301,6 +2301,9 @@ nsresult imgLoader::LoadImage(
     // Propagate background loading...
     requestFlags |= nsIRequest::LOAD_BACKGROUND;
   }
+  if (aLoadFlags & nsIRequest::LOAD_RECORD_START_REQUEST_DELAY) {
+    requestFlags |= nsIRequest::LOAD_RECORD_START_REQUEST_DELAY;
+  }
 
   if (aLinkPreload) {
     // Set background loading if it is <link rel=preload>

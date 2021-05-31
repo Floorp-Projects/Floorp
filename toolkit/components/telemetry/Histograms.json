@@ -16656,6 +16656,28 @@
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
     "description": "HTTP subitem channel: ODoH lookup time (ms)"
   },
+  "HTTP_PRELOAD_IMAGE_STARTREQUEST_DELAY": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "expires_in_version": "96",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 50,
+    "bug_numbers": [1713489],
+    "alert_emails": ["necko@mozilla.com", "mwoodrow@mozilla.com"],
+    "description": "Time spent waiting on the main-thread to be available to process OnStartRequest, for image preload requests"
+  },
+  "DOCUMENT_PRELOAD_IMAGE_ASYNCOPEN_DELAY": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "expires_in_version": "96",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 50,
+    "bug_numbers": [1713489],
+    "alert_emails": ["necko@mozilla.com", "mwoodrow@mozilla.com"],
+    "description": "Time spent waiting on the main-thread to be available to run AsyncOpen, for image preload requests"
+  },
   "OPAQUE_RESPONSE_BLOCKING_TIME_MS" : {
     "record_in_processes": ["main"],
     "products": ["firefox"],
