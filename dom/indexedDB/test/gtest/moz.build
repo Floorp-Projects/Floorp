@@ -9,9 +9,9 @@ UNIFIED_SOURCES = [
 # not UNIFIED_SOURCES because TestKey.cpp has classes in an anonymous namespace
 # which result in a GCC error when used in tests, cf. gfx/tests/gtest/moz.build
 SOURCES = [
-    "TestFileInfo.cpp",
     "TestKey.cpp",
     "TestSafeRefPtr.cpp",
+    "TestSimpleFileInfo.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

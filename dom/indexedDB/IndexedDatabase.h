@@ -7,12 +7,12 @@
 #ifndef mozilla_dom_indexeddatabase_h__
 #define mozilla_dom_indexeddatabase_h__
 
+#include "DatabaseFileInfoFwd.h"
 #include "js/StructuredClone.h"
 #include "mozilla/InitializedOnce.h"
 #include "mozilla/Variant.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "FileInfoFwd.h"
 #include "SafeRefPtr.h"
 
 namespace mozilla {
@@ -109,7 +109,8 @@ struct StructuredCloneFileParent : StructuredCloneFileBase {
   StructuredCloneFileParent& operator=(StructuredCloneFileParent&&) = delete;
 
   // In IndexedDatabaseInlines.h
-  StructuredCloneFileParent(FileType aType, SafeRefPtr<FileInfo> aFileInfo);
+  StructuredCloneFileParent(FileType aType,
+                            SafeRefPtr<DatabaseFileInfo> aFileInfo);
 
   // In IndexedDatabaseInlines.h
   ~StructuredCloneFileParent();
@@ -119,13 +120,13 @@ struct StructuredCloneFileParent : StructuredCloneFileBase {
   // can be declared const in the base class.
   void MutateType(FileType aNewType) { mType = aNewType; }
 
-  const indexedDB::FileInfo& FileInfo() const { return ***mContents; }
+  const DatabaseFileInfo& FileInfo() const { return ***mContents; }
 
   // In IndexedDatabaseInlines.h
-  SafeRefPtr<indexedDB::FileInfo> FileInfoPtr() const;
+  SafeRefPtr<DatabaseFileInfo> FileInfoPtr() const;
 
  private:
-  InitializedOnce<const Maybe<SafeRefPtr<indexedDB::FileInfo>>> mContents;
+  InitializedOnce<const Maybe<SafeRefPtr<DatabaseFileInfo>>> mContents;
 };
 
 struct StructuredCloneReadInfoBase {

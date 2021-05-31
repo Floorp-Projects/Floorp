@@ -8,8 +8,8 @@
 
 // local includes
 #include "ActorsParentCommon.h"
+#include "DatabaseFileInfoFwd.h"
 #include "DBSchema.h"
-#include "FileInfoFwd.h"
 #include "FileManager.h"
 #include "IndexedDatabase.h"
 #include "IndexedDBCommon.h"

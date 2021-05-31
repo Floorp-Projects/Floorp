@@ -122,7 +122,7 @@ bool FileInfoT<FileManager>::LockedClearDBRefs(
     return true;
   }
 
-  // In this case, we are not responsible for removing the file info from the
+  // In this case, we are not responsible for removing the FileInfo from the
   // hashtable. It's up to FileManager which is the only caller of this method.
 
   MOZ_ASSERT(mFileManager->Invalidated());

@@ -304,7 +304,7 @@ class ValueDeserializationHelper<StructuredCloneFileParent>
 
     MOZ_ASSERT(global);
 
-    // We do not have an mBlob but do have an FileInfo.
+    // We do not have an mBlob but do have a DatabaseFileInfo.
     //
     // If we are creating an index, we do need a real-looking Blob/File instance
     // because the index's key path can reference their properties.  Rather than
