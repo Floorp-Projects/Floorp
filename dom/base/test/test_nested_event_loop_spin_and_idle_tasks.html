@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Nested event loop spinning and idle task handling</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    if (!location.search.includes("newpage")) {
+      SimpleTest.waitForExplicitFinish();
+      var win = window.open(this.location + "?newpage");
+      win.onload = function() {
+        var xhr = new XMLHttpRequest();
+        // Spin the event loop using a synchronous XMLHttpRequest.
+        xhr.open("GET", "slow.sjs", false);
+        xhr.send();
+        ok(win.didRunIdleCallback, "Should have run an idle callback.");
+        win.close();
+        SimpleTest.finish();
+      }
+    } else {
+      var didRunIdleCallback = false;
+      requestIdleCallback(function() {
+        didRunIdleCallback = true;
+      });
+    }
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
