@@ -18,10 +18,11 @@ class AgainParser(BaseTryParser):
             ["--index"],
             {
                 "default": 0,
-                "type": int,
+                "const": "list",
+                "nargs": "?",
                 "help": "Index of entry in the history to re-push, "
                 "where '0' is the most recent (default 0). "
-                "Use --list to display indices.",
+                "Use --index without a value to display indices.",
             },
         ],
         [
@@ -59,6 +60,15 @@ class AgainParser(BaseTryParser):
 def run(
     index=0, purge=False, list_configs=False, list_tasks=0, message="{msg}", **pushargs
 ):
+    if index == "list":
+        list_configs = True
+    else:
+        try:
+            index = int(index)
+        except ValueError:
+            print("error: '--index' must be an integer")
+            return 1
+
     if purge:
         os.remove(history_path)
         return
