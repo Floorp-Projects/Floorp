@@ -9,16 +9,6 @@
       "autoDefaultProviders": "",
       "id": "global",
       "last_modified": 1621943462970
-    },
-    {
-      "providers": "cloudflare-global, nextdns-global",
-      "rolloutEnabled": true,
-      "steeringEnabled": true,
-      "steeringProviders": "comcast-US",
-      "autoDefaultEnabled": false,
-      "autoDefaultProviders": "",
-      "id": "US",
-      "last_modified": 1621943462967
     }
   ]
 }
