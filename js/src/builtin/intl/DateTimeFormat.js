@@ -387,7 +387,8 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     formatOpt.second = GetOption(options, "second", "string", ["2-digit", "numeric"], undefined);
     formatOpt.fractionalSecondDigits = GetNumberOption(options, "fractionalSecondDigits", 1, 3,
                                                        undefined);
-    formatOpt.timeZoneName = GetOption(options, "timeZoneName", "string", ["short", "long"],
+    formatOpt.timeZoneName = GetOption(options, "timeZoneName", "string", ["short", "long",
+                                       "shortOffset", "longOffset", "shortGeneric", "longGeneric"],
                                        undefined);
 
     // Steps 23-24 provided by ICU - see comment after this function.
@@ -659,6 +660,18 @@ function toICUSkeleton(options) {
         break;
     case "long":
         skeleton += "zzzz";
+        break;
+    case "shortOffset":
+        skeleton += "O";
+        break;
+    case "longOffset":
+        skeleton += "OOOO";
+        break;
+    case "shortGeneric":
+        skeleton += "v";
+        break;
+    case "longGeneric":
+        skeleton += "vvvv";
         break;
     }
     return skeleton;
@@ -1049,6 +1062,7 @@ function resolveICUPattern(pattern, result, includeDateTimeFields) {
             case "c":
             case "B":
             case "z":
+            case "O":
             case "v":
             case "V":
                 if (count <= 3)
@@ -1143,9 +1157,14 @@ function resolveICUPattern(pattern, result, includeDateTimeFields) {
                 fractionalSecondDigits = value;
                 break;
             case "z":
+                timeZoneName = value;
+                break;
+            case "O":
+                timeZoneName = value + "Offset";
+                break;
             case "v":
             case "V":
-                timeZoneName = value;
+                timeZoneName = value + "Generic";
                 break;
             }
         }
