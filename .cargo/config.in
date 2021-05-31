@@ -90,7 +90,7 @@ rev = "ed8a4c6f900a90d4dbc1d64b856e61490a1c3570"
 [source."https://github.com/hsivonen/chardetng"]
 git = "https://github.com/hsivonen/chardetng"
 replace-with = "vendored-sources"
-rev = "39f95e2f7cd6e632a379cdeee62c68e8cedd7810"
+rev = "302c995f91f44cf26e77dc4758ad56c3ff0153ad"
 
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
