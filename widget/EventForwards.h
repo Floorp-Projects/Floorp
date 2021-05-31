@@ -445,6 +445,7 @@ enum MouseButton : int16_t {
   eSecondary = 2,
   eX1 = 3,  // Typically, "back" button
   eX2 = 4,  // Typically, "forward" button
+  eEraser = 5
 };
 
 enum MouseButtonsFlag {
@@ -457,7 +458,8 @@ enum MouseButtonsFlag {
   e4thFlag = 0x08,
   // typicall, "forward" button being right side of 5-button
   // mice, see "buttons" attribute document of DOM3 Events.
-  e5thFlag = 0x10
+  e5thFlag = 0x10,
+  eEraserFlag = 0x20
 };
 
 enum class TextRangeType : RawTextRangeType;
