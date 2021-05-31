@@ -620,6 +620,25 @@ bool TaskController::ExecuteNextTaskOnlyMainThreadInternal(
   do {
     taskRan = DoExecuteNextTaskOnlyMainThreadInternal(aProofOfLock);
     if (taskRan) {
+      if (mIdleTaskManager && mIdleTaskManager->mTaskCount &&
+          mIdleTaskManager->IsSuspended(aProofOfLock)) {
+        uint32_t activeTasks = mMainThreadTasks.size();
+        for (TaskManager* manager : mTaskManagers) {
+          if (manager->IsSuspended(aProofOfLock)) {
+            activeTasks -= manager->mTaskCount;
+          } else {
+            break;
+          }
+        }
+
+        if (!activeTasks) {
+          // We have only idle (and maybe other suspended) tasks left, so need
+          // to update the idle state. We need to temporarily release the lock
+          // while we do that.
+          MutexAutoUnlock unlock(mGraphMutex);
+          mIdleTaskManager->State().RequestIdleDeadlineIfNeeded(unlock);
+        }
+      }
       break;
     }
 
