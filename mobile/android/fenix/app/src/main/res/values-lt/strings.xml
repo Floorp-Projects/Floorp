@@ -412,6 +412,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">„%1$s“, esanti „%2$s%3$s“</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Mokėjimo kortelės</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Adresai</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Gautos kortelės</string>
@@ -1457,10 +1462,8 @@
     <string name="preferences_passwords_autofill">Užpildyti automatiškai</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sinchronizuoti prisijungimus</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Taip</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Ne</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sinchronizuoti prisijungimus tarp įrenginių</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Prisijungti iš naujo</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1565,6 +1568,8 @@
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sinchronizuoti korteles tarp įrenginių</string>
 
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sinchronizuoti korteles</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Pridėti mokėjimo kortelę</string>
 
@@ -1595,6 +1600,23 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Įrašytos kortelės</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Įveskite teisingą mokėjimo kortelės numerį</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Atrakinkite, norėdami peržiūrėti įrašytas korteles</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Apsaugokite savo mokėjimo korteles</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Naudokite įrenginio užraktą, PIN, arba slaptažodį, kad apsaugotumėte savo mokėjimo korteles tada, kai jūsų įrenginį turi kažkas kitas.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Apsaugoti dabar</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Vėliau</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Atrakinkite savo įrenginį</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Atrakinkite, norėdami naudoti įrašytą mokėjimo kortelės informaciją</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pridėti ieškyklę</string>
@@ -1767,4 +1789,10 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Spustelėkite čia, jeigu norite daugiau informacijos</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Pereiti aukštyn</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Užverti</string>
+
+</resources>

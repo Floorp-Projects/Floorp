@@ -1605,6 +1605,22 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Ci vole à scrive un numeru accettevule di carta bancaria</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Spalancate per affissà e vostre carte arregistrate</string>
+
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Prutege e vostre carte bancarie</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Definite un dissegnu di chjusura, un codice PIN o una parolla d’entrata per prutege e vostre carte arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Cunfigurà subitu</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Dopu</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Spalancate u vostru apparechju</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Spalancate per impiegà l’infurmazione di e carte bancarie arregistrate</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Aghjunghje un mutore di ricerca</string>
     <!-- Title of the Edit search engine screen -->

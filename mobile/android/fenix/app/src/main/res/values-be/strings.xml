@@ -1614,10 +1614,21 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Калі ласка, увядзіце сапраўдны нумар крэдытнай карты</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Разблакуйце, каб пабачыць захаваныя карты</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Абараніце свае крэдытныя карты</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Наладзьце графічны ключ, пін або пароль для блакавання прылады, каб абараніць захаваныя крэдытныя карты, калі хтось іншы атрымае доступ да вашай прылады.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Наладзіць зараз</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">Пазней</string>
+
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Разблакуйце сваю прыладу</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Разблакуйце, каб выкарыстаць захаваную інфармацыю крэдытнай карты</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Дадаць пашукавік</string>

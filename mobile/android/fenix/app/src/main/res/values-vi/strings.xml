@@ -1582,6 +1582,21 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Vui lòng nhập số thẻ tín dụng hợp lệ</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Mở khóa để xem các thẻ tín dụng đã lưu của bạn</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Bảo mật thẻ tín dụng của bạn</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Thiết lập màn hình khóa thiết bị với mẫu hình, mã PIN hoặc mật khẩu để bảo vệ thẻ tín dụng đã lưu của bạn không bị truy cập nếu người khác có thiết bị của bạn.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Thiết lập ngay</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Để sau</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Mở khóa thiết bị của bạn</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Mở khóa để sử dụng thông tin thẻ tín dụng được lưu trữ</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Thêm công cụ tìm kiếm</string>
     <!-- Title of the Edit search engine screen -->

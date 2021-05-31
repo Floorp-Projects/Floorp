@@ -1623,6 +1623,21 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Пожалуйста, введите корректный номер карты</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Разблокируйте, чтобы просмотреть сохранённые карты</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Защитите свои банковские карты</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Настройте графический ключ, PIN-код или пароль для блокировки устройства, чтобы защитить сохранённые банковские карты, если кто-либо ещё получит доступ к вашему устройству.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Настроить сейчас</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Позже</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Разблокируйте своё устройство</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Разблокируйте, чтобы использовать сохранённые данные банковской карты</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Добавление поисковой системы</string>
     <!-- Title of the Edit search engine screen -->

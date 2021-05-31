@@ -1627,6 +1627,21 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Por favor, escriba un número válido de tarjeta de crédito</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Desbloquear para ver tus tarjetas guardadas</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Asegurar tus tarjetas de crédito</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Configura un patrón de bloqueo, PIN o contraseña para proteger el acceso a tus tarjetas guardadas si alguien más accede a tu dispositivo.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Configurar ahora</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Más tarde</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Desbloquear tu dispositivo</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Desbloquear para usar la información de la tarjeta de crédito almacenada</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Añadir buscador</string>
     <!-- Title of the Edit search engine screen -->

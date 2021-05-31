@@ -1633,6 +1633,9 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">裝置解鎖</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">解鎖後，即可使用儲存的信用卡資訊</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">新增搜尋引擎</string>
     <!-- Title of the Edit search engine screen -->

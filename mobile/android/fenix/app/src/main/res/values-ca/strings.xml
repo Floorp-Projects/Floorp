@@ -21,10 +21,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Les pestanyes privades es mostraran aquí.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 pestanya oberta. Toqueu per canviar de pestanya.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -182,6 +178,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Personalitza la vista de lectura</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Afegeix</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Edita</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">No s’ha pogut connectar. No es reconeix l’esquema d’URL.</string>
@@ -414,6 +415,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s en %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Targetes de crèdit</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Adreces</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Pestanyes rebudes</string>
@@ -444,9 +450,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Més informació</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Desactivada globalment, aneu als Paràmetres per activar-la.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemesura</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -457,6 +460,8 @@
     <string name="preferences_marketing_data">Dades de màrqueting</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Comparteix dades de funcions que utilitzeu al %1$s amb Leanplum, el nostre proveïdor de màrqueting mòbil.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Comparteix dades bàsiques d’ús amb Adjust, el nostre proveïdor de màrqueting mòbil</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Estudis</string>
     <!-- Summary for studies preferences -->
@@ -605,12 +610,16 @@
     <string name="tabs_header_private_title">Sessió privada</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Pestanyes privades</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Pestanyes sincronitzades</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Afegeix una pestanya</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Afegeix una pestanya privada</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Privada</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sincronitza</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Pestanyes obertes</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -621,6 +630,8 @@
     <string name="tab_tray_menu_item_share">Comparteix totes les pestanyes</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Pestanyes tancades recentment</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Paràmetres del compte</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Paràmetres de les pestanyes</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -791,8 +802,6 @@
     <string name="bookmark_delete_folder_snackbar">S’ha suprimit %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Afegeix una carpeta</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">S’ha creat l’adreça d’interès.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">S’ha desat l’adreça d’interès</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -978,6 +987,8 @@
     <string name="share_link_all_apps_subheader">Totes les accions</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Usades recentment</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Inicia la sessió per sincronitzar</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Inicia la sessió al Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1171,9 +1182,6 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Ja teniu un compte?</string>
 
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Coneixeu el %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Descobriu les novetats</string>
     <!-- text for the "what's new" onboarding card description
@@ -1181,10 +1189,10 @@
     <string name="onboarding_whats_new_description">Teniu preguntes sobre el redisseny del %s? Voleu saber què ha canviat?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Vegeu les respostes aquí</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Comenceu a sincronitzar les adreces d’interès, les contrasenyes i molt més amb el vostre compte del Firefox.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Sincronitzeu el Firefox entre dispositius</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Més informació</string>
+    <string name="onboarding_manual_sign_in_description">Importeu les adreces d’interès, l’historial i les contrasenyes al Firefox d’aquest dispositiu.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1193,8 +1201,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Sí, inicia la sessió</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">S’està iniciant la sessió…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Inicia la sessió al Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Registre</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">No iniciïs la sessió</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1202,26 +1210,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">No s’ha pogut iniciar la sessió</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Privadesa automàtica</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Els paràmetres de privadesa i de seguretat bloquen els elements de seguiment, el programari maliciós i les empreses que us fan el seguiment.</string>
+    <string name="onboarding_tracking_protection_header_3">Privadesa sempre activa</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">El Firefox bloca automàticament les empreses que, en secret, us fan el seguiment mentre navegueu.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Estàndard (per defecte)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Es bloquen menys elements de seguiment. Les pàgines es carregaran amb normalitat.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Equilibri entre privadesa i rendiment. Les pàgines es carreguen amb normalitat.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricta (recomanat)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Estricta</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Bloca més elements de seguiment, anuncis i finestres emergents. Les pàgines es carreguen més ràpidament, però és possible que algunes característiques no funcionin.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Posicioneu-vos</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Bloca més elements de seguiment i fa que les pàgines es carreguin més ràpidament, però podria causar problemes amb algunes funcions de la pàgina.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Trieu la ubicació de la barra d’eines</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Proveu la navegació amb una sola mà amb la barra d’eines part inferior o moveu-la al capdamunt.</string>
+    <string name="onboarding_toolbar_placement_description_1">Tingueu la barra d’eines a mà. La podeu mantenir a la part inferior o moure-la a dalt.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navegueu amb privadesa</string>
     <!-- text for the private browsing onboarding card description
@@ -1234,7 +1239,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">La vostra privadesa</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Hem dissenyat el %s per donar-vos el control sobre tot allò que compartiu en línia i que compartiu amb nosaltres.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Mostra l’avís de privadesa</string>
@@ -1249,7 +1254,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Trieu el tema</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Estalvieu bateria i descanseu la vista activant el mode fosc.</string>
+    <string name="onboarding_theme_picker_description_2">Estalvieu bateria i descanseu la vista amb el mode fosc.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automàtic</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1305,13 +1310,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Estàndard (per defecte)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Es bloquen menys elements de seguiment. Les pàgines es carregaran amb normalitat.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Equilibri entre privadesa i rendiment. Les pàgines es carreguen amb normalitat.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Què es bloca en la protecció contra el seguiment estàndard</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricta</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloca més elements de seguiment, anuncis i finestres emergents. Les pàgines es carreguen més ràpidament, però és possible que algunes característiques no funcionin.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Bloca més elements de seguiment i fa que les pàgines es carreguin més ràpidament, però podria causar problemes amb algunes funcions de la pàgina.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Què es bloca en la protecció contra el seguiment estricta</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1453,10 +1458,8 @@
     <string name="preferences_passwords_autofill">Emplenament automàtic</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronitza els inicis de sessió</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Activat</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Desactivat</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sincronitza els inicis de sessió entre dispositius</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Torna a connectar</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1547,6 +1550,63 @@
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordena el menú d’inicis de sessió</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Targetes de crèdit</string>
+
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Desa i emplena automàticament les targetes</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Les dades estan xifrades</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Sincronitza les targetes entre dispositius</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sincronitza les targetes</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Afegeix una targeta de crèdit</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Gestiona les targetes desades</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Afegeix una targeta</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Edita la targeta</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Número de targeta</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Data de caducitat</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Nom del titular</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Sobrenom de la targeta</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Suprimeix la targeta</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Suprimeix la targeta</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Desa</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Desa</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Cancel·la</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Targetes desades</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Introduïu un número de targeta de crèdit vàlid</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Desbloqueu per veure les targetes desades</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Protegiu les vostres targetes de crèdit</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Configureu un patró de bloqueig del dispositiu, un PIN o una contrasenya perquè cap persona que accedeixi al vostre dispositiu pugui veure les targetes de crèdit que deseu.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Configura-ho ara</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Més tard</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Desbloqueu el dispositiu</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Desbloqueu per utilitzar la informació emmagatzemada d’una targeta de crèdit</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Afegeix un motor de cerca</string>
@@ -1708,23 +1768,19 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Cancel·la</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Feu que els enllaços dels llocs web, del correu electrònic i dels missatges s’obrin automàticament en el Firefox.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Elimina</string>
-
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Traieu tot el profit al %s.</string>
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Feu clic aquí per a veure més informació</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Recolliu tot allò que us insteressa</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Agrupeu les cerques, els llocs i les pestanyes similars per accedir-hi ràpidament en el futur.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Ja heu iniciat la sessió com a %s en un altre navegador Firefox d’aquest telèfon. Voleu iniciar la sessió amb aquest compte?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Podeu afegir fàcilment aquest lloc web a la pantalla d’inici del telèfon per accedir-hi directament i navegar-hi com si fos una aplicació.</string>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Navega cap amunt</string>
 
-    </resources>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Tanca</string>
+
+</resources>

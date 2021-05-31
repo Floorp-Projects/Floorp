@@ -1591,6 +1591,21 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Մուտքագրեք բանկային վավեր քարտի համար</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Ապակողպեք՝ դիտելու համար պահպանված քարտերը</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Անվտանգ դարձրեք ձեր բանկային քարտերը</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Տեղակայեք սարքի կողպման նախշ, PIN կամ գաղտնաբառ՝ պաշտպանելու պահված բանկային քարտերը այն դեպքում, եթե որևէ մեկը ևս մուտք ունի Ձեր սարքին:</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Տեղակայել հիմա</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Ավելի ուշ</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Ապակողպեք ձեր սարքը</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Ապակողպեք՝ օգտագործելու համար բանկային քարտերի պահված տեղեկությունները</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Ավելացնել որոնիչ</string>
     <!-- Title of the Edit search engine screen -->

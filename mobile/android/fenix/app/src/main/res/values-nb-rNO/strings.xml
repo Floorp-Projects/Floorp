@@ -1617,12 +1617,17 @@
     <string name="credit_cards_biometric_prompt_message">Lås opp for å se dine lagrede betalingskort</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Sikre dine betalingskort</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Konfigurer en PIN-kode, et passord eller et låsemønster for å beskytte de lagrede betalingskortene dine om noen andre skulle få tak i enheten din.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Konfigurer nå</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">Senere</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Lås opp enheten din</string>
+
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Lås opp for å bruke lagret betalingskortinformasjon</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Legg til søkemotor</string>

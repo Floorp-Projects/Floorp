@@ -1606,6 +1606,21 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Ma ulac aɣilif sekcem uṭṭun ameɣtu n tkarḍa n usmad</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Kkes asekkeṛ i wakken ad twaliḍ tikerḍiwin-ik·im yettwaskelsen</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Seɣles tikerḍiwin-ik·im n usmad</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Sbadu taneɣruft n usekkeṛ n yibenk, tangalt PIN neq awal uffir i ummesten n tkerḍiwin-ik·im n usmad yettwaskelsen ticki yella win ikecmen ɣer yibenk-inek·inem.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Sbadu tura</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Ticki</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Serreḥ i ibenk-inek·inem</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Kkes asekkeṛ i wakken ad tesqedceḍ talɣut n tkarḍa n usmad</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Rnu amsedday n unadi</string>
     <!-- Title of the Edit search engine screen -->
