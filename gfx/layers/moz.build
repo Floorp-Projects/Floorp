@@ -373,7 +373,6 @@ UNIFIED_SOURCES += [
     "apz/src/KeyboardMap.cpp",
     "apz/src/KeyboardScrollAction.cpp",
     "apz/src/OverscrollHandoffState.cpp",
-    "apz/src/OvershootDetector.cpp",
     "apz/src/PotentialCheckerboardDurationTracker.cpp",
     "apz/src/QueuedInput.cpp",
     "apz/src/SampledAPZCState.cpp",
