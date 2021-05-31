@@ -254,6 +254,10 @@ class MultiTouchInput : public InputData {
   // the touch interaction, so we sstore it in the event.
   ExternalPoint mScreenOffset;
   bool mHandledByAPZ;
+  // These button fields match to the corresponding fields in
+  // WidgetMouseEventBase.
+  int16_t mButton = 0;
+  int16_t mButtons = 0;
 };
 
 class MouseInput : public InputData {
