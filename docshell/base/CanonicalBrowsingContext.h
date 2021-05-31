@@ -322,8 +322,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     mPriorityActive = aIsActive;
   }
 
-  void SetTouchEventsOverride(dom::TouchEventsOverride, ErrorResult& aRv);
-
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();

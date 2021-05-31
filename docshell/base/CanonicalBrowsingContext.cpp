@@ -2351,11 +2351,6 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
   return bfcacheCombo == 0;
 }
 
-void CanonicalBrowsingContext::SetTouchEventsOverride(
-    dom::TouchEventsOverride aOverride, ErrorResult& aRv) {
-  SetTouchEventsOverrideInternal(aOverride, aRv);
-}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CanonicalBrowsingContext, BrowsingContext,
                                    mSessionHistory, mContainerFeaturePolicy,
                                    mCurrentBrowserParent,
