@@ -51,7 +51,7 @@
       let refs = {};
       let dbRefs = {};
       let hasFileInfo = utils.getFileReferences(name, id, null, refs, dbRefs);
-      ok(hasFileInfo, "Has file info");
+      ok(hasFileInfo, `Expect existing DatabaseFileInfo for ${name}/${id}`);
       is(refs.value, 1, "Correct ref count");
       is(dbRefs.value, id / 100 >> 0, "Correct db ref count");
     }

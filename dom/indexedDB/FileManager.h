@@ -36,8 +36,8 @@ class FileManager final : public FileManagerBase<FileManager>,
   const bool mEnforcingQuota;
 
   // Lock protecting FileManager.mFileInfos.
-  // It's s also used to atomically update FileInfo.mRefCnt and
-  // FileInfo.mDBRefCnt
+  // It's s also used to atomically update DatabaseFileInfo.mRefCnt and
+  // DatabaseFileInfo.mDBRefCnt
   static MutexType sMutex;
 
  public:

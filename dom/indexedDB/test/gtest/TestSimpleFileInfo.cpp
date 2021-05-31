@@ -16,6 +16,10 @@
 using namespace mozilla;
 using namespace mozilla::dom::indexedDB;
 
+class TestFileManager;
+
+using SimpleFileInfo = FileInfoT<TestFileManager>;
+
 struct TestFileManagerStats final {
   // XXX We don't keep track of the specific aFileId parameters here, should we?
 
@@ -30,7 +34,7 @@ class TestFileManager final : public FileManagerBase<TestFileManager>,
 
   MOZ_DECLARE_REFCOUNTED_TYPENAME(TestFileManager)
 
-  // FileManager functions that are used by FileInfo
+  // FileManager functions that are used by SimpleFileInfo
 
   [[nodiscard]] nsresult AsyncDeleteFile(const int64_t aFileId) {
     MOZ_RELEASE_ASSERT(!mFileInfos.Contains(aFileId));
@@ -60,8 +64,9 @@ class TestFileManager final : public FileManagerBase<TestFileManager>,
       // Copied from within FileManager::Init.
 
       mFileInfos.InsertOrUpdate(
-          id, MakeNotNull<FileInfo*>(FileManagerGuard{}, SafeRefPtrFromThis(),
-                                     id, static_cast<nsrefcnt>(1)));
+          id,
+          MakeNotNull<SimpleFileInfo*>(FileManagerGuard{}, SafeRefPtrFromThis(),
+                                       id, static_cast<nsrefcnt>(1)));
 
       mLastFileId = std::max(id, mLastFileId);
     }
@@ -78,10 +83,8 @@ class TestFileManager final : public FileManagerBase<TestFileManager>,
   TestFileManagerStats* const mStats;
 };
 
-using TestFileInfo = FileInfoT<TestFileManager>;
-
-// These tests test the TestFileManager itself, to ensure the FileInfo tests
-// below are valid.
+// These tests test the TestFileManager itself, to ensure the SimpleFileInfo
+// tests below are valid.
 
 TEST(DOM_IndexedDB_TestFileManager, Invalidate)
 {
@@ -92,11 +95,12 @@ TEST(DOM_IndexedDB_TestFileManager, Invalidate)
   ASSERT_TRUE(fileManager->Invalidated());
 }
 
-// These tests mainly test FileInfo, but it is not completely independent from
-// the FileManager concept, including the functionality of FileManagerBase.
-// The actual FileManager is not tested here.
+// These tests mainly test SimpleFileInfo, which is a simplified version of
+// DatabaseFileInfo (SimpleFileInfo doesn't work with real files stored on
+// disk). The actual objects, DatabaseFileInfo and FileManager are not tested
+// here.
 
-TEST(DOM_IndexedDB_FileInfo, Create)
+TEST(DOM_IndexedDB_SimpleFileInfo, Create)
 {
   auto stats = TestFileManagerStats{};
 
@@ -117,7 +121,7 @@ TEST(DOM_IndexedDB_FileInfo, Create)
   ASSERT_EQ(1u, stats.mAsyncDeleteFileCalls);
 }
 
-TEST(DOM_IndexedDB_FileInfo, CreateWithInitialDBRefCnt)
+TEST(DOM_IndexedDB_SimpleFileInfo, CreateWithInitialDBRefCnt)
 {
   auto stats = TestFileManagerStats{};
 
@@ -144,7 +148,7 @@ TEST(DOM_IndexedDB_FileInfo, CreateWithInitialDBRefCnt)
   ASSERT_EQ(0u, stats.mAsyncDeleteFileCalls);
 }
 
-TEST(DOM_IndexedDB_FileInfo, CreateWithInitialDBRefCnt_Invalidate)
+TEST(DOM_IndexedDB_SimpleFileInfo, CreateWithInitialDBRefCnt_Invalidate)
 {
   auto stats = TestFileManagerStats{};
 
@@ -172,7 +176,7 @@ TEST(DOM_IndexedDB_FileInfo, CreateWithInitialDBRefCnt_Invalidate)
   ASSERT_EQ(0u, stats.mAsyncDeleteFileCalls);
 }
 
-TEST(DOM_IndexedDB_FileInfo, CreateWithInitialDBRefCnt_UpdateDBRefsToZero)
+TEST(DOM_IndexedDB_SimpleFileInfo, CreateWithInitialDBRefCnt_UpdateDBRefsToZero)
 {
   auto stats = TestFileManagerStats{};
 
@@ -195,7 +199,7 @@ TEST(DOM_IndexedDB_FileInfo, CreateWithInitialDBRefCnt_UpdateDBRefsToZero)
   ASSERT_EQ(1u, stats.mAsyncDeleteFileCalls);
 }
 
-TEST(DOM_IndexedDB_FileInfo, ReleaseWithFileManagerCleanup)
+TEST(DOM_IndexedDB_SimpleFileInfo, ReleaseWithFileManagerCleanup)
 {
   auto stats = TestFileManagerStats{};
   {
@@ -215,7 +219,7 @@ TEST(DOM_IndexedDB_FileInfo, ReleaseWithFileManagerCleanup)
 #ifndef DEBUG
 // These tests cause assertion failures in DEBUG builds.
 
-TEST(DOM_IndexedDB_FileInfo, Invalidate_CreateFileInfo)
+TEST(DOM_IndexedDB_SimpleFileInfo, Invalidate_CreateFileInfo)
 {
   auto stats = TestFileManagerStats{};
   {
@@ -234,7 +238,7 @@ TEST(DOM_IndexedDB_FileInfo, Invalidate_CreateFileInfo)
 }
 #endif
 
-TEST(DOM_IndexedDB_FileInfo, Invalidate_Release)
+TEST(DOM_IndexedDB_SimpleFileInfo, Invalidate_Release)
 {
   auto stats = TestFileManagerStats{};
   {
@@ -252,7 +256,7 @@ TEST(DOM_IndexedDB_FileInfo, Invalidate_Release)
   ASSERT_EQ(0u, stats.mAsyncDeleteFileCalls);
 }
 
-TEST(DOM_IndexedDB_FileInfo, Invalidate_ReleaseWithFileManagerCleanup)
+TEST(DOM_IndexedDB_SimpleFileInfo, Invalidate_ReleaseWithFileManagerCleanup)
 {
   auto stats = TestFileManagerStats{};
   {

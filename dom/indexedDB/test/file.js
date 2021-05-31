@@ -214,14 +214,14 @@ function getFilePath(file) {
 function* assertEventuallyHasFileInfo(name, id) {
   yield* assertEventuallyWithGC(
     () => utils.getFileReferences(name, id),
-    `Expect existing FileInfo for ${name}/${id}`
+    `Expect existing DatabaseFileInfo for ${name}/${id}`
   );
 }
 
 function* assertEventuallyHasNoFileInfo(name, id) {
   yield* assertEventuallyWithGC(
     () => !utils.getFileReferences(name, id),
-    `Expect no existing FileInfo for ${name}/${id}`
+    `Expect no existing DatabaseFileInfo for ${name}/${id}`
   );
 }
 
