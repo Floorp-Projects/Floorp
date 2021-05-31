@@ -516,7 +516,8 @@ class nsWindow final : public nsWindowBase {
   bool WithinDraggableRegion(int32_t clientX, int32_t clientY);
 
   bool DispatchTouchEventFromWMPointer(UINT msg, LPARAM aLParam,
-                                       const WinPointerInfo& aPointerInfo);
+                                       const WinPointerInfo& aPointerInfo,
+                                       mozilla::MouseButton aButton);
 
  protected:
 #endif  // MOZ_XUL
