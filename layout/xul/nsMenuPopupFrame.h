@@ -244,6 +244,10 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   bool IsVisible() {
     return mPopupState == ePopupVisible || mPopupState == ePopupShown;
   }
+  bool IsVisibleOrShowing() {
+    return IsOpen() || mPopupState == ePopupPositioning ||
+           mPopupState == ePopupShowing;
+  }
   bool IsNativeMenu() { return mIsNativeMenu; }
 
   // Return true if the popup is for a menulist.

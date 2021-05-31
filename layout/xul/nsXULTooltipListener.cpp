@@ -439,15 +439,6 @@ static void SetTitletipLabel(XULTreeElement* aTree, Element* aTooltip,
 }
 #endif
 
-static bool IsInTree(const Element& aTarget) {
-  for (nsIContent* p = aTarget.GetParent(); p; p = p->GetParent()) {
-    if (p->IsAnyOfXULElements(nsGkAtoms::tree, nsGkAtoms::treechildren)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 void nsXULTooltipListener::LaunchTooltip() {
   RefPtr<Element> currentTooltip = do_QueryReferent(mCurrentTooltip);
   if (!currentTooltip) {
@@ -491,25 +482,7 @@ void nsXULTooltipListener::LaunchTooltip() {
     return;
   }
 
-  nsAutoString position;
-  if (!IsInTree(*target)) {
-    nsAutoString closest;
-    currentTooltip->GetAttr(nsGkAtoms::anchortoclosest, closest);
-    if (!closest.IsEmpty()) {
-      if (auto* closestTarget =
-              target->Closest(NS_ConvertUTF16toUTF8(closest), IgnoreErrors())) {
-        target = closestTarget;
-      }
-    }
-    currentTooltip->GetAttr(nsGkAtoms::position, position);
-  }
-
-  if (position.IsEmpty()) {
-    pm->ShowTooltipAtScreen(currentTooltip, target, mMouseScreenX,
-                            mMouseScreenY);
-  } else {
-    pm->ShowTooltipAtPosition(currentTooltip, target, position);
-  }
+  pm->ShowTooltipAtScreen(currentTooltip, target, mMouseScreenX, mMouseScreenY);
 #endif
 }
 

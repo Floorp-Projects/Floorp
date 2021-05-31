@@ -71,12 +71,6 @@
         ],
       });
 
-      let tabTooltip = document.getElementById("tabbrowser-tab-tooltip");
-      if (gProtonPlacesTooltip) {
-        tabTooltip.setAttribute("position", "after_start");
-        tabTooltip.setAttribute("anchortoclosest", "tab");
-      }
-
       // We take over setting the document title, so remove the l10n id to
       // avoid it being re-translated and overwriting document content if
       // we ever switch languages at runtime. After a language change, the
@@ -5379,6 +5373,7 @@
           .replace("#1", pluralCount);
       };
 
+      let alignToTab = true;
       let label;
       const selectedTabs = this.selectedTabs;
       const contextTabInSelection = selectedTabs.includes(tab);
@@ -5386,6 +5381,7 @@
         ? selectedTabs.length
         : 1;
       if (tab.mOverCloseButton) {
+        alignToTab = false;
         label = tab.selected
           ? stringWithShortcut(
               "tabs.closeTabs.tooltip",
@@ -5425,6 +5421,7 @@
             gTabBrowserBundle.GetStringFromName(stringID)
           ).replace("#1", affectedTabsLength);
         }
+        alignToTab = false;
       } else {
         label = this.getTabTooltip(tab);
       }
@@ -5432,6 +5429,11 @@
       if (!gProtonPlacesTooltip) {
         event.target.setAttribute("label", label);
         return;
+      }
+
+      if (alignToTab) {
+        event.target.setAttribute("position", "after_start");
+        event.target.moveToAnchor(tab, "after_start");
       }
 
       let title = event.target.querySelector(".places-tooltip-title");

@@ -615,7 +615,8 @@
 
     <tooltip id="tabbrowser-tab-tooltip"
              class="places-tooltip"
-             onpopupshowing="gBrowser.createTooltip(event);">
+             onpopupshowing="gBrowser.createTooltip(event);"
+             onpopuphiding="this.removeAttribute('position')">
       <vbox class="places-tooltip-box" flex="1">
         <description class="tooltip-label places-tooltip-title"/>
         <hbox>
