@@ -10,6 +10,8 @@
     <string name="mozac_browser_menu_new_private_tab">Pestanya privada nova</string>
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">Tanca la pestanya</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">Duplica la pestanya</string>
     <!-- Content description of the tab counter toolbar button -->
     <string name="mozac_tab_counter_content_description">El botó del comptador de pestanyes de la barra d’eines.</string>
 </resources>
