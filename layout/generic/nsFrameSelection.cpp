@@ -80,14 +80,12 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/layers/ScrollInputMethods.h"
 
 #include "nsFocusManager.h"
 #include "nsPIDOMWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::layers::ScrollInputMethod;
 
 static LazyLogModule sFrameSelectionLog("FrameSelection");
 
@@ -1915,10 +1913,6 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
 
   // Then, scroll the given frame one page.
   if (scrollableFrame) {
-    mozilla::Telemetry::Accumulate(
-        mozilla::Telemetry::SCROLL_INPUT_METHODS,
-        (uint32_t)ScrollInputMethod::MainThreadScrollPage);
-
     // If we'll call ScrollSelectionIntoView later and selection wasn't
     // changed and we scroll outside of selection limiter, we shouldn't use
     // smooth scroll here because nsIScrollableFrame uses normal runnable,

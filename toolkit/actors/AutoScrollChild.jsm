@@ -235,11 +235,6 @@ class AutoScrollChild extends JSWindowActorChild {
     let content = this.document.defaultView;
     this._lastFrame = content.performance.now();
     content.requestAnimationFrame(this.autoscrollLoop);
-
-    const kAutoscroll = 15; // defined in mozilla/layers/ScrollInputMethods.h
-    Services.telemetry
-      .getHistogramById("SCROLL_INPUT_METHODS")
-      .add(kAutoscroll);
   }
 
   stopScroll() {
