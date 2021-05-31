@@ -344,8 +344,10 @@ class Shims {
         }
       };
       browser.tabs.onRemoved.addListener(unmarkShimsActive);
-      browser.tabs.onUpdated.addListener(unmarkShimsActive, {
-        properties: ["discarded", "url"],
+      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+        if (changeInfo.discarded || changeInfo.url) {
+          unmarkShimsActive(tabId);
+        }
       });
       browser.webRequest.onBeforeRequest.addListener(
         this._redirectLogos.bind(this),
