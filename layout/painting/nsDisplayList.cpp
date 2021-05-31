@@ -6222,6 +6222,10 @@ void nsDisplayBlendMode::Paint(nsDisplayListBuilder* aBuilder,
 
   RefPtr<DrawTarget> dt = aCtx->GetDrawTarget()->CreateSimilarDrawTarget(
       rect.Size(), SurfaceFormat::B8G8R8A8);
+  if (!dt) {
+    return;
+  }
+
   dt->SetTransform(Matrix::Translation(-rect.x, -rect.y));
   RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(dt);
 
