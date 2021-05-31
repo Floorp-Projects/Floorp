@@ -90,6 +90,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
 
     this._truncated = false;
     this._private = networkEvent.private;
+    this._isNavigationRequest = networkEvent.isNavigationRequest;
   },
 
   /**
@@ -131,6 +132,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       // For websocket requests the serial is used instead of the channel id.
       stacktraceResourceId:
         this._cause.type == "websocket" ? this._serial : this._channelId,
+      isNavigationRequest: this._isNavigationRequest,
     };
   },
 
