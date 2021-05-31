@@ -617,6 +617,8 @@ macosx64-ccov/opt:
     description: "MacOS X x64 Cross-compile Code Coverage"
     index:
         job-name: macosx64-ccov-opt
+    attributes:
+        skip-verify-test-packaging: true
     treeherder:
         platform: osx-cross-ccov/opt
         symbol: B
