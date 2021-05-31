@@ -35,11 +35,11 @@ codespell:
         - python/mach/docs/
         - python/mozlint/
         - remote/doc/
+        - remote/marionette/doc/
         - security/manager/locales/en-US/
         - services/sync/locales/en-US/
         - taskcluster/docs/
         - testing/geckodriver/doc/
-        - testing/marionette/doc/
         - testing/mozbase/docs/
         - toolkit/components/extensions/docs/
         - toolkit/components/normandy/docs/

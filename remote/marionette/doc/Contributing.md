@@ -56,7 +56,7 @@ code in our [code style document], which we highly recommend you read.
 
 [ask questions]: ./index.html#communication
 [reach out to us]: ./index.html#communication
-[mozilla-central]: https://searchfox.org/mozilla-central/source/testing/marionette/
+[mozilla-central]: https://searchfox.org/mozilla-central/source/remote/marionette/
 [good first bugs]: https://codetribute.mozilla.org/projects/automation
 [code style document]: CodeStyle.html
 
