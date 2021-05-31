@@ -1181,8 +1181,6 @@ WebSocketChannel::~WebSocketChannel() {
 
   NS_ReleaseOnMainThread("WebSocketChannel::mLoadGroup", mLoadGroup.forget());
   NS_ReleaseOnMainThread("WebSocketChannel::mLoadInfo", mLoadInfo.forget());
-  NS_ReleaseOnMainThread("WebSocketChannel::mTargetThread",
-                         mTargetThread.forget());
   NS_ReleaseOnMainThread("WebSocketChannel::mService", mService.forget());
 }
 
