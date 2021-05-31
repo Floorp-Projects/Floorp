@@ -747,22 +747,6 @@ nsresult TextEditor::InsertWithQuotationsAsSubAction(
   return rv;
 }
 
-nsresult TextEditor::SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
-                                        nsAString& aResult) const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  *aIsCollapsed = SelectionRef().IsCollapsed();
-
-  if (!*aIsCollapsed) {
-    aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
-  }
-  // If the selection isn't collapsed, we'll use the whole document.
-  nsresult rv = ComputeValueInternal(u"text/plain"_ns, aFlags, aResult);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "TextEditor::ComputeValueInternal(text/plain) failed");
-  return rv;
-}
-
 nsresult TextEditor::SelectEntireDocument() {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!AsHTMLEditor());
