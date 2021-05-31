@@ -4274,11 +4274,6 @@
   value: 50
   mirror: always
 
-- name: general.smoothScroll.mouseWheel.migrationPercent
-  type: RelaxedAtomicInt32
-  value: 100
-  mirror: always
-
 - name: general.smoothScroll.other
   type: RelaxedAtomicBool
   value: true
