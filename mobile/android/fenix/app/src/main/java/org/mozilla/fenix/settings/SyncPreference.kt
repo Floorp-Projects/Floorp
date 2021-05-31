@@ -32,6 +32,13 @@ class SyncPreference @JvmOverloads constructor(
         widgetLayoutResource = R.layout.preference_sync
     }
 
+    /**
+     * Updates the switch state.
+     * */
+    internal fun setSwitchCheckedState(isChecked: Boolean) {
+        switchView?.isChecked = isChecked
+    }
+
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
 

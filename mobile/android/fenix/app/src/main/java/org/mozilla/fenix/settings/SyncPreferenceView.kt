@@ -83,6 +83,7 @@ class SyncPreferenceView(
 
             setOnPreferenceChangeListener { _, newValue ->
                 SyncEnginesStorage(context).setStatus(syncEngine, newValue as Boolean)
+                setSwitchCheckedState(newValue)
                 true
             }
         }

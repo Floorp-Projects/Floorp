@@ -137,6 +137,7 @@ class SyncPreferenceViewTest {
             SyncEngine.Passwords to true
         )
         every { anyConstructed<SyncEnginesStorage>().setStatus(any(), any()) } just Runs
+        every { syncPreference.setSwitchCheckedState(any()) } just Runs
 
         createView()
 
@@ -155,6 +156,7 @@ class SyncPreferenceViewTest {
             SyncEngine.Passwords to false
         )
         every { anyConstructed<SyncEnginesStorage>().setStatus(any(), any()) } just Runs
+        every { syncPreference.setSwitchCheckedState(any()) } just Runs
 
         createView()
 
