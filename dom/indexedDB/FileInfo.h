@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_indexeddb_fileinfot_h__
-#define mozilla_dom_indexeddb_fileinfot_h__
+#ifndef DOM_INDEXEDDB_FILEINFO_H_
+#define DOM_INDEXEDDB_FILEINFO_H_
 
 #include "nsISupportsImpl.h"
 #include "nsCOMPtr.h"
@@ -16,14 +16,14 @@ namespace dom {
 namespace indexedDB {
 
 template <typename FileManager>
-class FileInfoT final {
+class FileInfo final {
  public:
   using AutoLock = typename FileManager::AutoLock;
   using IdType = int64_t;
 
-  FileInfoT(const typename FileManager::FileManagerGuard& aGuard,
-            SafeRefPtr<FileManager> aFileManager, const int64_t aFileId,
-            const nsrefcnt aInitialDBRefCnt = 0);
+  FileInfo(const typename FileManager::FileManagerGuard& aGuard,
+           SafeRefPtr<FileManager> aFileManager, const int64_t aFileId,
+           const nsrefcnt aInitialDBRefCnt = 0);
 
   void AddRef();
   void Release(const bool aSyncDeleteFile = false);
@@ -59,4 +59,4 @@ class FileInfoT final {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_indexeddb_fileinfot_h__
+#endif  // DOM_INDEXEDDB_FILEINFO_H_
