@@ -7,7 +7,7 @@
 #include "ActorsParentCommon.h"
 
 // local includes
-#include "DatabaseFileInfoFwd.h"  // for DatabaseFileInfo
+#include "DatabaseFileInfo.h"
 #include "DatabaseFileManager.h"
 #include "IndexedDatabase.h"  // for StructuredCloneFile...
 #include "IndexedDatabaseManager.h"

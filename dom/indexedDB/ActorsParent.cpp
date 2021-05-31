@@ -21,12 +21,10 @@
 #include <utility>
 #include "ActorsParentCommon.h"
 #include "CrashAnnotations.h"
-#include "DatabaseFileInfoFwd.h"
+#include "DatabaseFileInfo.h"
 #include "DatabaseFileManager.h"
 #include "DBSchema.h"
 #include "ErrorList.h"
-#include "FileInfo.h"
-#include "FileInfoManager.h"
 #include "IDBCursorType.h"
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"

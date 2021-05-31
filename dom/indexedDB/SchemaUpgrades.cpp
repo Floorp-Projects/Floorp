@@ -8,7 +8,7 @@
 
 // local includes
 #include "ActorsParentCommon.h"
-#include "DatabaseFileInfoFwd.h"
+#include "DatabaseFileInfo.h"
 #include "DatabaseFileManager.h"
 #include "DBSchema.h"
 #include "IndexedDatabase.h"

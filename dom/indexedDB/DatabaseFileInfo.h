@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DatabaseFileInfo.h"
+#ifndef DOM_INDEXEDDB_DATABASEFILEINFO_H_
+#define DOM_INDEXEDDB_DATABASEFILEINFO_H_
 
-#include "FileInfoImpl.h"
+#include "DatabaseFileInfoFwd.h"
 
-namespace mozilla::dom::indexedDB {
+#include "DatabaseFileManager.h"
+#include "FileInfo.h"
 
-template class FileInfo<DatabaseFileManager>;
-
-}  // namespace mozilla::dom::indexedDB
+#endif  // DOM_INDEXEDDB_DATABASEFILEINFO_H_
