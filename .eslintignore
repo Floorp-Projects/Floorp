@@ -155,7 +155,6 @@ python/
 # These are (mainly) imported code that we don't want to lint to make imports easier.
 remote/cdp/Protocol.jsm
 remote/cdp/test/browser/chrome-remote-interface.js
-remote/marionette/atom.js
 
 # services/ exclusions
 
@@ -171,6 +170,7 @@ servo/
 
 # Test files that we don't want to lint (preprocessed, minified etc)
 testing/condprofile/condprof/tests/profile
+testing/marionette/atom.js
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 testing/talos/talos/scripts/jszip.min.js
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js

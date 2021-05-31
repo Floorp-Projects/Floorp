@@ -14,7 +14,7 @@ For the overall Marionette project, a few rough rules are:
 
   * Code is mutable and not written in stone.  Nothing that
     is checked in is sacred and we encourage change to make
-    remote/marionette a pleasant ecosystem to work in.
+    testing/marionette a pleasant ecosystem to work in.
 
 
 JavaScript
@@ -166,14 +166,14 @@ to make this happen!
 
 The practical details of working on the Marionette code is outlined
 in [CONTRIBUTING.md], but generally you do not have to re-build
-Firefox when changing code.  Any change to remote/marionette/*.js
+Firefox when changing code.  Any change to testing/marionette/*.js
 will be picked up on restarting Firefox.  The only notable exception
-is remote/components/marionette.js, which does require
+is testing/marionette/components/marionette.js, which does require
 a re-build.
 
 [XPCOM]: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM
 [strict mode]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode
-[our own specialisations]: https://searchfox.org/mozilla-central/source/remote/marionette/.eslintrc.js
+[our own specialisations]: https://searchfox.org/mozilla-central/source/testing/marionette/.eslintrc.js
 [linter]: #linting
 [copying header]: https://www.mozilla.org/en-US/MPL/headers/
 [public domain]: https://creativecommons.org/publicdomain/zero/1.0/
@@ -190,7 +190,7 @@ TODO
 Documentation
 -------------
 
-We keep our documentation in-tree under [remote/marionette/doc]
+We keep our documentation in-tree under [testing/marionette/doc]
 and [testing/geckodriver/doc].  Updates and minor changes to
 documentation should ideally not be scrutinised to the same degree
 as code changes to encourage frequent updates so that the documentation
@@ -207,17 +207,16 @@ These include public functions—or command implementations—on
 the `GeckoDriver` class, as well as all exported symbols from
 other modules.  Documentation for non-exported symbols is not required.
 
-The API documentation can be regenerated to [remote/marionette/doc/internals]
+The API documentation can be regenerated to [testing/marionette/doc/api]
 so:
 
-The API documentation uses [jsdoc] and is generated to <https://firefox-source-docs.mozilla.org/testing/marionette/internals> on Taskcluster.  You may also build the documentation locally:
+The API documentation uses [jsdoc] and is generated to <https://firefox-source-docs.mozilla.org/testing/marionette/marionette/internals> on Taskcluster.  You may also build the documentation locally:
 
 	% ./mach doc
 
 [Mozilla eslint rules]: https://searchfox.org/mozilla-central/source/.eslintrc.js
-[remote/marionette/doc]: https://searchfox.org/mozilla-central/source/remote/marionette/doc
-[remote/marionette/doc/internals]: https://searchfox.org/mozilla-central/source/remote/marionette/doc/internals
 [testing/geckodriver/doc]: https://searchfox.org/mozilla-central/source/testing/geckodriver/doc
+[testing/marionette/doc]: https://searchfox.org/mozilla-central/source/testing/marionette/doc
 [jsdoc]: http://usejsdoc.org/
 
 
@@ -230,13 +229,13 @@ which harmonises the output from [eslint] and [flake8].
 
 To run the linter with a sensible output:
 
-	% ./mach lint -funix remote/marionette
+	% ./mach lint -funix testing/marionette
 
 For certain classes of style violations the eslint linter has
 an automatic mode for fixing and formatting your code.  This is
 particularly useful to keep to whitespace and indentation rules:
 
-	% ./mach eslint --fix remote/marionette
+	% ./mach eslint --fix testing/marionette
 
 The linter is also run as a try job (shorthand `ES`) which means
 any style violations will automatically block a patch from landing

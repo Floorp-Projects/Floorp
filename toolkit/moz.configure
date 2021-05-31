@@ -1075,7 +1075,7 @@ add_old_configure_assignment("FT2_CFLAGS", ft2_info.cflags)
 # It also backs ../testing/geckodriver, which is Mozilla's WebDriver
 # implementation.
 #
-# The source of Marionette lives in ../remote/marionette.
+# The source of Marionette lives in ../testing/marionette.
 #
 # For more information, see:
 # https://firefox-source-docs.mozilla.org/testing/marionette/index.html
