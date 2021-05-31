@@ -27,7 +27,7 @@ object FeatureFlags {
     /**
      * Enables the Credit Cards autofill feature.
      */
-    val creditCardsFeature = Config.channel.isNightlyOrDebug
+    const val creditCardsFeature = true
 
     /**
      * Enables WebAuthn support.
