@@ -2428,6 +2428,19 @@ bool ServiceWorkerManager::IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI,
     if (clientInfo.isSome()) {
       StartControllingClient(clientInfo.ref(), registration);
     }
+
+    uint32_t redirectMode = nsIHttpChannelInternal::REDIRECT_MODE_MANUAL;
+    nsCOMPtr<nsIHttpChannelInternal> http = do_QueryInterface(aChannel);
+    MOZ_ALWAYS_SUCCEEDS(http->GetRedirectMode(&redirectMode));
+
+    // Synthetic redirects for non-subresource requests with a "follow"
+    // redirect mode may switch controllers.  This is basically worker
+    // scripts right now.  In this case we need to explicitly clear the
+    // controller to avoid assertions on the SetController() below.
+    if (redirectMode == nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW) {
+      loadInfo->ClearController();
+    }
+
     loadInfo->SetController(registration->GetActive()->Descriptor());
 
     // https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm 17.1
