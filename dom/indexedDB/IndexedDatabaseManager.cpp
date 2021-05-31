@@ -29,7 +29,7 @@
 #include "mozilla/Logging.h"
 
 #include "ActorsChild.h"
-#include "DatabaseFileManager.h"
+#include "FileManager.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
 #include "IDBKeyRange.h"
@@ -63,10 +63,10 @@ using namespace mozilla::ipc;
 
 class FileManagerInfo {
  public:
-  [[nodiscard]] SafeRefPtr<DatabaseFileManager> GetFileManager(
+  [[nodiscard]] SafeRefPtr<FileManager> GetFileManager(
       PersistenceType aPersistenceType, const nsAString& aName) const;
 
-  void AddFileManager(SafeRefPtr<DatabaseFileManager> aFileManager);
+  void AddFileManager(SafeRefPtr<FileManager> aFileManager);
 
   bool HasFileManagers() const {
     AssertIsOnIOThread();
@@ -84,17 +84,17 @@ class FileManagerInfo {
                                       const nsAString& aName);
 
  private:
-  nsTArray<SafeRefPtr<DatabaseFileManager> >& GetArray(
+  nsTArray<SafeRefPtr<FileManager> >& GetArray(
       PersistenceType aPersistenceType);
 
-  const nsTArray<SafeRefPtr<DatabaseFileManager> >& GetImmutableArray(
+  const nsTArray<SafeRefPtr<FileManager> >& GetImmutableArray(
       PersistenceType aPersistenceType) const {
     return const_cast<FileManagerInfo*>(this)->GetArray(aPersistenceType);
   }
 
-  nsTArray<SafeRefPtr<DatabaseFileManager> > mPersistentStorageFileManagers;
-  nsTArray<SafeRefPtr<DatabaseFileManager> > mTemporaryStorageFileManagers;
-  nsTArray<SafeRefPtr<DatabaseFileManager> > mDefaultStorageFileManagers;
+  nsTArray<SafeRefPtr<FileManager> > mPersistentStorageFileManagers;
+  nsTArray<SafeRefPtr<FileManager> > mTemporaryStorageFileManagers;
+  nsTArray<SafeRefPtr<FileManager> > mDefaultStorageFileManagers;
 };
 
 }  // namespace indexedDB
@@ -675,7 +675,7 @@ void IndexedDatabaseManager::ClearBackgroundActor() {
   mBackgroundActor = nullptr;
 }
 
-SafeRefPtr<DatabaseFileManager> IndexedDatabaseManager::GetFileManager(
+SafeRefPtr<FileManager> IndexedDatabaseManager::GetFileManager(
     PersistenceType aPersistenceType, const nsACString& aOrigin,
     const nsAString& aDatabaseName) {
   AssertIsOnIOThread();
@@ -689,9 +689,9 @@ SafeRefPtr<DatabaseFileManager> IndexedDatabaseManager::GetFileManager(
 }
 
 void IndexedDatabaseManager::AddFileManager(
-    SafeRefPtr<DatabaseFileManager> aFileManager) {
+    SafeRefPtr<FileManager> aFileManager) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aFileManager);
+  NS_ASSERTION(aFileManager, "Null file manager!");
 
   const auto& origin = aFileManager->Origin();
   mFileManagerInfos.GetOrInsertNew(origin)->AddFileManager(
@@ -840,7 +840,7 @@ const nsCString& IndexedDatabaseManager::GetLocale() {
   return idbManager->mLocale;
 }
 
-SafeRefPtr<DatabaseFileManager> FileManagerInfo::GetFileManager(
+SafeRefPtr<FileManager> FileManagerInfo::GetFileManager(
     PersistenceType aPersistenceType, const nsAString& aName) const {
   AssertIsOnIOThread();
 
@@ -853,12 +853,10 @@ SafeRefPtr<DatabaseFileManager> FileManagerInfo::GetFileManager(
   return foundIt != end ? foundIt->clonePtr() : nullptr;
 }
 
-void FileManagerInfo::AddFileManager(
-    SafeRefPtr<DatabaseFileManager> aFileManager) {
+void FileManagerInfo::AddFileManager(SafeRefPtr<FileManager> aFileManager) {
   AssertIsOnIOThread();
 
-  nsTArray<SafeRefPtr<DatabaseFileManager> >& managers =
-      GetArray(aFileManager->Type());
+  nsTArray<SafeRefPtr<FileManager> >& managers = GetArray(aFileManager->Type());
 
   NS_ASSERTION(!managers.Contains(aFileManager), "Adding more than once?!");
 
@@ -887,8 +885,7 @@ void FileManagerInfo::InvalidateAndRemoveFileManagers(
     PersistenceType aPersistenceType) {
   AssertIsOnIOThread();
 
-  nsTArray<SafeRefPtr<DatabaseFileManager> >& managers =
-      GetArray(aPersistenceType);
+  nsTArray<SafeRefPtr<FileManager> >& managers = GetArray(aPersistenceType);
 
   for (uint32_t i = 0; i < managers.Length(); i++) {
     managers[i]->Invalidate();
@@ -912,7 +909,7 @@ void FileManagerInfo::InvalidateAndRemoveFileManager(
   }
 }
 
-nsTArray<SafeRefPtr<DatabaseFileManager> >& FileManagerInfo::GetArray(
+nsTArray<SafeRefPtr<FileManager> >& FileManagerInfo::GetArray(
     PersistenceType aPersistenceType) {
   switch (aPersistenceType) {
     case PERSISTENCE_TYPE_PERSISTENT:
