@@ -505,7 +505,7 @@ function promiseNativeWheelAndWaitForWheelEvent(
     try {
       synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY);
     } catch (e) {
-      reject();
+      reject(e);
     }
   });
 }
@@ -534,7 +534,7 @@ function promiseNativeWheelAndWaitForScrollEvent(
     try {
       synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY);
     } catch (e) {
-      reject();
+      reject(e);
     }
   });
 }
