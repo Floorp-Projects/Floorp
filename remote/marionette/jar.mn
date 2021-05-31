@@ -39,7 +39,7 @@ marionette.jar:
   content/prefs.js (prefs.js)
   content/print.js (print.js)
   content/reftest.js (reftest.js)
-  content/reftest.xhtml (reftest.xhtml)
+  content/reftest.xhtml (chrome/reftest.xhtml)
   content/reftest-content.js (reftest-content.js)
   content/server.js (server.js)
   content/session.js (session.js)

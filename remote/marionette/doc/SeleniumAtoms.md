@@ -17,7 +17,7 @@ To use one of those atoms Javascript modules will have to import
 
 [Selenium atoms]: https://github.com/SeleniumHQ/selenium/tree/master/javascript/webdriver/atoms
 [WebDriver specification]: https://w3c.github.io/webdriver/webdriver-spec.html
-[atom.js]: https://searchfox.org/mozilla-central/source/testing/marionette/atom.js
+[atom.js]: https://searchfox.org/mozilla-central/source/remote/marionette/atom.js
 
 
 Update required Selenium atoms

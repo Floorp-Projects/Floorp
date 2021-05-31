@@ -5,6 +5,7 @@
 DIRS += [
     "cdp",
     "components",
+    "marionette",
     "shared",
 ]
 

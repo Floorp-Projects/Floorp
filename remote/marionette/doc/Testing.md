@@ -23,14 +23,14 @@ xpcshell unit tests
 -------------------
 
 Marionette has a set of [xpcshell] unit tests located in
-_testing/marionette/test/unit.  These can be run this way:
+_remote/marionette/test/xpcshell.  These can be run this way:
 
-	% ./mach test testing/marionette/test/unit
+	% ./mach test remote/marionette/test/unit
 
 Because tests are run in parallel and xpcshell itself is quite
 chatty, it can sometimes be useful to run the tests sequentially:
 
-	% ./mach test --sequential testing/marionette/test/unit/test_error.js
+	% ./mach test --sequential remote/marionette/test/xpcshell/test_error.js
 
 These unit tests run as part of the `X` jobs on Treeherder.
 
