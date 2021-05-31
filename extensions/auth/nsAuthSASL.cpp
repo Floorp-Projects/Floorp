@@ -20,14 +20,13 @@ void nsAuthSASL::Reset() { mSASLReady = false; }
 NS_IMPL_ISUPPORTS(nsAuthSASL, nsIAuthModule)
 
 NS_IMETHODIMP
-nsAuthSASL::Init(const nsACString& serviceName, uint32_t serviceFlags,
-                 const nsAString& domain, const nsAString& username,
-                 const nsAString& password) {
+nsAuthSASL::Init(const char* serviceName, uint32_t serviceFlags,
+                 const char16_t* domain, const char16_t* username,
+                 const char16_t* password) {
   nsresult rv;
 
-  NS_ASSERTION(!username.IsEmpty(), "SASL requires a username");
-  NS_ASSERTION(domain.IsEmpty() && password.IsEmpty(),
-               "unexpected credentials");
+  NS_ASSERTION(username, "SASL requires a username");
+  NS_ASSERTION(!domain && !password, "unexpected credentials");
 
   mUsername = username;
 
@@ -46,7 +45,7 @@ nsAuthSASL::Init(const nsACString& serviceName, uint32_t serviceFlags,
 
   MOZ_ALWAYS_TRUE(mInnerModule = nsIAuthModule::CreateInstance(authType));
 
-  mInnerModule->Init(serviceName, serviceFlags, u""_ns, u""_ns, u""_ns);
+  mInnerModule->Init(serviceName, serviceFlags, nullptr, nullptr, nullptr);
 
   return NS_OK;
 }
