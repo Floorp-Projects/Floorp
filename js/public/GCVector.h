@@ -7,7 +7,13 @@
 #ifndef js_GCVector_h
 #define js_GCVector_h
 
+#include "mozilla/Assertions.h"       // MOZ_ASSERT
+#include "mozilla/Attributes.h"       // MOZ_STACK_CLASS
+#include "mozilla/MemoryReporting.h"  // MallocSizeOf
 #include "mozilla/Vector.h"
+
+#include <stddef.h>  // size_t
+#include <utility>   // forward, move
 
 #include "js/AllocPolicy.h"
 #include "js/GCPolicyAPI.h"
