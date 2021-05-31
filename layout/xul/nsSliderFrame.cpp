@@ -47,7 +47,6 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/InputAPZContext.h"
-#include "mozilla/layers/ScrollInputMethods.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include <algorithm>
 
@@ -59,7 +58,6 @@ using mozilla::layers::AsyncDragMetrics;
 using mozilla::layers::InputAPZContext;
 using mozilla::layers::ScrollbarData;
 using mozilla::layers::ScrollDirection;
-using mozilla::layers::ScrollInputMethod;
 
 bool nsSliderFrame::gMiddlePref = false;
 int32_t nsSliderFrame::gSnapMultiplier;
@@ -743,10 +741,6 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     nsSize thumbSize = thumbFrame->GetSize();
     nscoord thumbLength = isHorizontal ? thumbSize.width : thumbSize.height;
 
-    mozilla::Telemetry::Accumulate(
-        mozilla::Telemetry::SCROLL_INPUT_METHODS,
-        (uint32_t)ScrollInputMethod::MainThreadScrollbarTrackClick);
-
     // set it
     AutoWeakFrame weakFrame(this);
     // should aMaySnap be true here?
@@ -1245,19 +1239,6 @@ nsresult nsSliderFrame::StopDrag() {
   AddListener();
   DragThumb(false);
 
-  if (!mScrollingWithAPZ) {
-    // We record this one at the end of the drag rather than at the beginning
-    // because at the point that the main thread starts the drag (in StartDrag)
-    // it may not know for sure whether APZ or the main thread will end up
-    // handling the drag. Even if mScrollingWithAPZ is true initially, it
-    // may get set to false if APZ rejects the drag. But by the end of the drag
-    // the mScrollingWithAPZ flag should be correct and so we can use it here
-    // to determine if APZ or the main thread handled the drag.
-    mozilla::Telemetry::Accumulate(
-        mozilla::Telemetry::SCROLL_INPUT_METHODS,
-        (uint32_t)ScrollInputMethod::MainThreadScrollbarDrag);
-  }
-
   mScrollingWithAPZ = false;
 
   UnsuppressDisplayport();
@@ -1436,10 +1417,6 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
   if (!GetEventPoint(aEvent, eventPoint)) {
     return NS_OK;
   }
-
-  mozilla::Telemetry::Accumulate(
-      mozilla::Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t)ScrollInputMethod::MainThreadScrollbarTrackClick);
 
   if (IsXULHorizontal() ? eventPoint.x < thumbRect.x
                         : eventPoint.y < thumbRect.y)

@@ -40,7 +40,6 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/Text.h"
-#include "mozilla/layers/ScrollInputMethods.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsFrameSelection.h"
 #include "mozilla/ErrorResult.h"
@@ -53,7 +52,6 @@
 namespace mozilla {
 
 using namespace dom;
-using layers::ScrollInputMethod;
 using ValueSetterOption = TextControlState::ValueSetterOption;
 using ValueSetterOptions = TextControlState::ValueSetterOptions;
 
@@ -660,10 +658,6 @@ TextInputSelectionController::CompleteScroll(bool aForward) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mozilla::Telemetry::Accumulate(
-      mozilla::Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t)ScrollInputMethod::MainThreadCompleteScroll);
-
   mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::WHOLE,
                          ScrollMode::Instant);
   return NS_OK;
@@ -717,10 +711,6 @@ TextInputSelectionController::ScrollPage(bool aForward) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mozilla::Telemetry::Accumulate(
-      mozilla::Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t)ScrollInputMethod::MainThreadScrollPage);
-
   mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::PAGES,
                          ScrollMode::Smooth);
   return NS_OK;
@@ -732,10 +722,6 @@ TextInputSelectionController::ScrollLine(bool aForward) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mozilla::Telemetry::Accumulate(
-      mozilla::Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t)ScrollInputMethod::MainThreadScrollLine);
-
   mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::LINES,
                          ScrollMode::Smooth);
   return NS_OK;
@@ -746,10 +732,6 @@ TextInputSelectionController::ScrollCharacter(bool aRight) {
   if (!mScrollFrame) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-
-  mozilla::Telemetry::Accumulate(
-      mozilla::Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t)ScrollInputMethod::MainThreadScrollCharacter);
 
   mScrollFrame->ScrollBy(nsIntPoint(aRight ? 1 : -1, 0), ScrollUnit::LINES,
                          ScrollMode::Smooth);
