@@ -24,6 +24,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "mozilla/SVGObserverUtils.h"  // for SVGRenderingObserver
 #include "mozilla/Tuple.h"
 #include "nsIStreamListener.h"
@@ -788,8 +789,13 @@ Tuple<ImgDrawResult, IntSize> VectorImage::GetImageContainerSize(
     return MakeTuple(ImgDrawResult::NOT_READY, IntSize(0, 0));
   }
 
-  if (mHaveAnimations ||
-      aManager->GetBackendType() != LayersBackend::LAYERS_WR) {
+  if (mHaveAnimations && !StaticPrefs::image_svg_blob_image()) {
+    // We don't support rasterizing animation SVGs. We can put them in a blob
+    // recording however instead of using fallback.
+    return MakeTuple(ImgDrawResult::NOT_SUPPORTED, IntSize(0, 0));
+  }
+
+  if (aManager->GetBackendType() != LayersBackend::LAYERS_WR) {
     return MakeTuple(ImgDrawResult::NOT_SUPPORTED, IntSize(0, 0));
   }
 
@@ -805,8 +811,14 @@ Tuple<ImgDrawResult, IntSize> VectorImage::GetImageContainerSize(
 NS_IMETHODIMP_(bool)
 VectorImage::IsImageContainerAvailable(LayerManager* aManager,
                                        uint32_t aFlags) {
-  if (mError || !mIsFullyLoaded || mHaveAnimations ||
+  if (mError || !mIsFullyLoaded ||
       aManager->GetBackendType() != LayersBackend::LAYERS_WR) {
+    return false;
+  }
+
+  if (mHaveAnimations && !StaticPrefs::image_svg_blob_image()) {
+    // We don't support rasterizing animation SVGs. We can put them in a blob
+    // recording however instead of using fallback.
     return false;
   }
 
@@ -845,9 +857,18 @@ VectorImage::GetImageContainerAtSize(layers::LayerManager* aManager,
   // The aspect ratio flag was already handled as part of the SVG context
   // restriction above.
   uint32_t flags = aFlags & ~(FLAG_FORCE_PRESERVEASPECTRATIO_NONE);
-  return GetImageContainerImpl(aManager, aSize,
-                               newSVGContext ? newSVGContext : aSVGContext,
-                               aRegion, flags, aOutContainer);
+  auto rv = GetImageContainerImpl(aManager, aSize,
+                                  newSVGContext ? newSVGContext : aSVGContext,
+                                  aRegion, flags, aOutContainer);
+
+  // Invalidations may still be suspended if we had a refresh tick and there
+  // were no image containers remaining. If we created a new container, we
+  // should resume invalidations to allow animations to progress.
+  if (*aOutContainer && mRenderingObserver) {
+    mRenderingObserver->ResumeHonoringInvalidations();
+  }
+
+  return rv;
 }
 
 bool VectorImage::MaybeRestrictSVGContext(
