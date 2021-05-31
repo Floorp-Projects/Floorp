@@ -111,11 +111,6 @@ let gExceptionsList = [
     key: "securityOverride.warningContent",
     type: "single-quote",
   },
-  {
-    file: "pocket.properties",
-    key: "tos",
-    type: "double-quote",
-  },
 ];
 
 /**
