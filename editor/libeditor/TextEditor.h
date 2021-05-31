@@ -556,13 +556,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertTextFromTransferable(nsITransferable* transferable);
 
-  /**
-   * Shared outputstring; returns whether selection is collapsed and resulting
-   * string.
-   */
-  nsresult SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
-                              nsAString& aResult) const;
-
   bool IsCopyToClipboardAllowedInternal() const final;
 
   virtual already_AddRefed<Element> GetInputEventTargetElement() const override;

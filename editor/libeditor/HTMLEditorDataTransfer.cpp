@@ -2916,12 +2916,15 @@ NS_IMETHODIMP HTMLEditor::Rewrap(bool aRespectNewlines) {
   }
 
   nsAutoString current;
-  bool isCollapsed;
-  rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted |
-                              nsIDocumentEncoder::OutputLFLineBreak,
-                          &isCollapsed, current);
+  const bool isCollapsed = SelectionRef().IsCollapsed();
+  uint32_t flags = nsIDocumentEncoder::OutputFormatted |
+                   nsIDocumentEncoder::OutputLFLineBreak;
+  if (!isCollapsed) {
+    flags |= nsIDocumentEncoder::OutputSelectionOnly;
+  }
+  rv = ComputeValueInternal(u"text/plain"_ns, flags, current);
   if (NS_FAILED(rv)) {
-    NS_WARNING("TextEditor::SharedOutputString() failed");
+    NS_WARNING("TextEditor::ComputeValueInternal(text/plain) failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
