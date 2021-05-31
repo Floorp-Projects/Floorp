@@ -204,14 +204,6 @@
 		</dict>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>ftp URL</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>ftp</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleURLName</key>
 			<string>file URL</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
