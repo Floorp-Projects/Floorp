@@ -365,8 +365,9 @@ class TabsTrayFragment : AppCompatDialogFragment() {
 
     @VisibleForTesting
     internal fun dismissTabsTray() {
+        // This should always be the last thing we do because nothing (e.g. telemetry)
+        // is guaranteed after that.
         dismissAllowingStateLoss()
-        requireComponents.analytics.metrics.track(Event.TabsTrayClosed)
     }
 
     companion object {

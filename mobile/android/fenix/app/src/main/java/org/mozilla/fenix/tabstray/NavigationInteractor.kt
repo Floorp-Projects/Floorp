@@ -105,6 +105,7 @@ class DefaultNavigationInteractor(
 ) : NavigationInteractor {
 
     override fun onTabTrayDismissed() {
+        metrics.track(Event.TabsTrayClosed)
         dismissTabTray()
     }
 

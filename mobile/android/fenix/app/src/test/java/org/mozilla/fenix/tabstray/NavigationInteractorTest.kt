@@ -167,7 +167,12 @@ class NavigationInteractorTest {
     @Test
     fun `onTabTrayDismissed calls dismissTabTray on DefaultNavigationInteractor`() {
         navigationInteractor.onTabTrayDismissed()
-        verify(exactly = 1) { dismissTabTray() }
+
+        // We care about the order here; anything after `dismissTabTray` is not guaranteed.
+        verifyOrder {
+            metrics.track(Event.TabsTrayClosed)
+            dismissTabTray()
+        }
     }
 
     @Test

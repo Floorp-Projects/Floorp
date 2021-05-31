@@ -335,7 +335,7 @@ class TabsTrayFragmentTest {
     }
 
     @Test
-    fun `WHEN dismissTabsTray is called THEN it dismisses the tray and record this event`() {
+    fun `WHEN dismissTabsTray is called THEN it dismisses the tray`() {
         every { fragment.dismissAllowingStateLoss() } just Runs
         val metrics: MetricController = mockk(relaxed = true)
         every { context.components.analytics.metrics } returns metrics
@@ -343,6 +343,5 @@ class TabsTrayFragmentTest {
         fragment.dismissTabsTray()
 
         verify { fragment.dismissAllowingStateLoss() }
-        verify { metrics.track(Event.TabsTrayClosed) }
     }
 }
