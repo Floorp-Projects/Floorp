@@ -72,6 +72,13 @@ class IdlePeriodState {
     mCachedIdleDeadline = GetIdleDeadlineInternal(false, aProofOfUnlock);
   }
 
+  // If we have local idle deadline, but don't have an idle token, this will
+  // request such from the parent process when this is called in a child
+  // process.
+  void RequestIdleDeadlineIfNeeded(const MutexAutoUnlock& aProofOfUnlock) {
+    GetIdleDeadlineInternal(false, aProofOfUnlock);
+  }
+
   // Reset our cached idle deadline, so we stop allowing idle runnables to run.
   void ClearCachedIdleDeadline() { mCachedIdleDeadline = TimeStamp(); }
 
