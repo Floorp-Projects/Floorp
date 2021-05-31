@@ -329,7 +329,7 @@ browsertime-tp6-live-sheriffed:
             - --chimera
             - --live-sites
     raptor-subtests:
-        - [cnn-ampstories, cnn-amp]
+        - cnn
     run-on-projects:
         by-variant:
             fission: []
