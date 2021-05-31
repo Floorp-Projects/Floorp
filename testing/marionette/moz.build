@@ -2,7 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+DIRS += ["components"]
+
+JAR_MANIFESTS += ["jar.mn"]
+
 MARIONETTE_UNIT_MANIFESTS += ["harness/marionette_harness/tests/unit/unit-tests.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Marionette")
@@ -10,4 +15,8 @@ with Files("**"):
 with Files("harness/**"):
     SCHEDULES.exclusive = ["marionette", "firefox-ui"]
 
+SPHINX_TREES["/testing/marionette"] = "doc"
 SPHINX_PYTHON_PACKAGE_DIRS += ["client/marionette_driver"]
+
+with Files("doc/**"):
+    SCHEDULES.exclusive = ["docs"]

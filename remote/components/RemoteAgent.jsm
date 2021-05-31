@@ -23,31 +23,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
-const PREF_ACTIVE_PROTOCOLS = ["remote.active-protocols"];
-const PREF_FORCE_LOCAL = "remote.force-local";
-
-const BIDI_ACTIVE = 0x1;
-const CDP_ACTIVE = 0x2;
+const FORCE_LOCAL = "remote.force-local";
 
 const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
 
 class RemoteAgentClass {
   constructor() {
     this.alteredPrefs = new Set();
-
-    const protocols = Services.prefs.getIntPref(PREF_ACTIVE_PROTOCOLS);
-    if (protocols < 1 || protocols > 3) {
-      throw Error(`Invalid remote protocol identifier: ${protocols}`);
-    }
-    this._activeProtocols = protocols;
-  }
-
-  get isBiDiEnabled() {
-    return (this._activeProtocols & BIDI_ACTIVE) == BIDI_ACTIVE;
-  }
-
-  get isCDPEnabled() {
-    return (this._activeProtocols & CDP_ACTIVE) == CDP_ACTIVE;
   }
 
   get listening() {
@@ -79,7 +61,7 @@ class RemoteAgentClass {
     }
 
     let { host, port } = url;
-    if (Preferences.get(PREF_FORCE_LOCAL) && !LOOPBACKS.includes(host)) {
+    if (Preferences.get(FORCE_LOCAL) && !LOOPBACKS.includes(host)) {
       throw Components.Exception(
         "Restricted to loopback devices",
         Cr.NS_ERROR_ILLEGAL_VALUE
@@ -100,39 +82,33 @@ class RemoteAgentClass {
     }
 
     this.server = new HttpServer();
+    this.server.registerPrefixHandler("/json/", new JSONHandler(this));
 
-    if (this.isCDPEnabled) {
-      this.server.registerPrefixHandler("/json/", new JSONHandler(this));
-
-      this.targetList = new TargetList();
-      this.targetList.on("target-created", (eventName, target) => {
-        this.server.registerPathHandler(target.path, target);
-      });
-      this.targetList.on("target-destroyed", (eventName, target) => {
-        this.server.registerPathHandler(target.path, null);
-      });
-    }
+    this.targetList = new TargetList();
+    this.targetList.on("target-created", (eventName, target) => {
+      this.server.registerPathHandler(target.path, target);
+    });
+    this.targetList.on("target-destroyed", (eventName, target) => {
+      this.server.registerPathHandler(target.path, null);
+    });
 
     return this.asyncListen(host, port);
   }
 
   async asyncListen(host, port) {
     try {
+      await this.targetList.watchForTargets();
+
+      // Immediatly instantiate the main process target in order
+      // to be accessible via HTTP endpoint on startup
+      const mainTarget = this.targetList.getMainProcessTarget();
+
       this.server._start(port, host);
-
-      if (this.isCDPEnabled) {
-        await this.targetList.watchForTargets();
-
-        // Immediatly instantiate the main process target in order
-        // to be accessible via HTTP endpoint on startup
-        const mainTarget = this.targetList.getMainProcessTarget();
-
-        Services.obs.notifyObservers(
-          null,
-          "remote-listening",
-          `DevTools listening on ${mainTarget.wsDebuggerURL}`
-        );
-      }
+      Services.obs.notifyObservers(
+        null,
+        "remote-listening",
+        `DevTools listening on ${mainTarget.wsDebuggerURL}`
+      );
     } catch (e) {
       await this.close();
       logger.error(`Unable to start remote agent: ${e.message}`, e);
@@ -147,12 +123,10 @@ class RemoteAgentClass {
       }
       this.alteredPrefs.clear();
 
-      if (this.isCDPEnabled) {
-        // destroy targetList before stopping server,
-        // otherwise the HTTP will fail to stop
-        if (this.targetList) {
-          this.targetList.destructor();
-        }
+      // destroy targetList before stopping server,
+      // otherwise the HTTP will fail to stop
+      if (this.targetList) {
+        this.targetList.destructor();
       }
 
       if (this.listening) {
