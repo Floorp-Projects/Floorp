@@ -67,6 +67,7 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
 
     override fun stop() {
         Adjust.setEnabled(false)
+        Adjust.gdprForgetMe(application.applicationContext)
     }
 
     // We're not currently sending events directly to Adjust
