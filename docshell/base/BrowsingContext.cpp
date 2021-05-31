@@ -2613,8 +2613,9 @@ bool BrowsingContext::InactiveForSuspend() const {
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_TouchEventsOverrideInternal>,
-                             dom::TouchEventsOverride, ContentParent* aSource) {
-  return XRE_IsParentProcess() && !aSource;
+                             dom::TouchEventsOverride, ContentParent*) {
+  // TODO: Bug 1688948 - Should only be set in the parent process.
+  return true;
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_PrefersColorSchemeOverride>,
@@ -2870,6 +2871,11 @@ mozilla::dom::TouchEventsOverride BrowsingContext::TouchEventsOverride() const {
   }
 
   return mozilla::dom::TouchEventsOverride::None;
+}
+
+void BrowsingContext::SetTouchEventsOverride(dom::TouchEventsOverride aOverride,
+                                             ErrorResult& aRv) {
+  SetTouchEventsOverrideInternal(aOverride, aRv);
 }
 
 // We map `watchedByDevTools` WebIDL attribute to `watchedByDevToolsInternal`
