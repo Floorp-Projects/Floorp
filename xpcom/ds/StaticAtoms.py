@@ -100,7 +100,6 @@ STATIC_ATOMS = [
     Atom("ancestor", "ancestor"),
     Atom("ancestorOrSelf", "ancestor-or-self"),
     Atom("anchor", "anchor"),
-    Atom("anchortoclosest", "anchortoclosest"),
     Atom("_and", "and"),
     Atom("animations", "animations"),
     Atom("anonid", "anonid"),

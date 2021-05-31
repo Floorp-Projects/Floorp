@@ -158,7 +158,7 @@ void XULPopupElement::MoveToAnchor(Element* aAnchorElement,
                                    const nsAString& aPosition, int32_t aXPos,
                                    int32_t aYPos, bool aAttributesOverride) {
   nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
-  if (menuPopupFrame && menuPopupFrame->IsVisible()) {
+  if (menuPopupFrame && menuPopupFrame->IsVisibleOrShowing()) {
     menuPopupFrame->MoveToAnchor(aAnchorElement, aPosition, aXPos, aYPos,
                                  aAttributesOverride);
   }

@@ -954,22 +954,6 @@ void nsXULPopupManager::ShowPopupAtScreenRect(
   BeginShowingPopup(aPopup, aIsContextMenu, false, aTriggerEvent);
 }
 
-void nsXULPopupManager::ShowTooltipAtPosition(nsIContent* aPopup,
-                                              nsIContent* aTriggerContent,
-                                              const nsAString& aPosition) {
-  nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
-  if (!popupFrame || !MayShowPopup(popupFrame)) {
-    return;
-  }
-
-  InitTriggerEvent(nullptr, nullptr, nullptr);
-
-  popupFrame->InitializePopup(aTriggerContent, aTriggerContent, aPosition, 0, 0,
-                              MenuPopupAnchorType_Node, false);
-
-  BeginShowingPopup(aPopup, false, false, nullptr);
-}
-
 void nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
                                             nsIContent* aTriggerContent,
                                             int32_t aXPos, int32_t aYPos) {
