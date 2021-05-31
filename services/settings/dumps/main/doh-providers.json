@@ -17,6 +17,15 @@
       "canonicalName": "",
       "id": "cloudflare-global",
       "last_modified": 1621943542615
+    },
+    {
+      "uri": "https://doh.xfinity.com/dns-query",
+      "UIName": "",
+      "schema": 1621819253029,
+      "autoDefault": false,
+      "canonicalName": "doh-discovery.xfinity.com",
+      "id": "comcast-US",
+      "last_modified": 1621943542597
     }
   ]
 }
