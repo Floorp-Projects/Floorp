@@ -226,7 +226,6 @@ class WebConsoleWrapper {
       // Add a type in order for this event packet to be identified by
       // utils/messages.js's `transformPacket`
       packet.type = "will-navigate";
-      packet.timeStamp = Date.now();
       this.dispatchMessageAdd(packet);
     } else {
       this.dispatchMessagesClear();

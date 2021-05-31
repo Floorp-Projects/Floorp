@@ -230,6 +230,7 @@ class WebConsoleUI {
         resourceCommand.TYPES.NETWORK_EVENT,
         resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
         resourceCommand.TYPES.CLONED_CONTENT_PROCESS_MESSAGE,
+        resourceCommand.TYPES.DOCUMENT_EVENT,
       ],
       {
         onAvailable: this._onResourceAvailable,
@@ -373,6 +374,7 @@ class WebConsoleUI {
         resourceCommand.TYPES.NETWORK_EVENT,
         resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
         resourceCommand.TYPES.CLONED_CONTENT_PROCESS_MESSAGE,
+        resourceCommand.TYPES.DOCUMENT_EVENT,
       ],
       {
         onAvailable: this._onResourceAvailable,
@@ -395,6 +397,16 @@ class WebConsoleUI {
     const messages = [];
     for (const resource of resources) {
       const { TYPES } = this.hud.resourceCommand;
+      if (resource.resourceType === TYPES.DOCUMENT_EVENT) {
+        if (resource.name == "will-navigate") {
+          this.handleWillNavigate({
+            timeStamp: resource.time,
+            url: resource.newURI,
+          });
+        }
+        // For now, ignore all other DOCUMENT_EVENT's.
+        continue;
+      }
       // Ignore messages forwarded from content processes if we're in fission browser toolbox.
       if (
         !this.wrapper ||
@@ -688,8 +700,8 @@ class WebConsoleUI {
     this.emit("reloaded");
   }
 
-  handleTabWillNavigate(packet) {
-    this.wrapper.dispatchTabWillNavigate(packet);
+  handleWillNavigate({ timeStamp, url }) {
+    this.wrapper.dispatchTabWillNavigate({ timeStamp, url });
   }
 
   getInputCursor() {
