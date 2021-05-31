@@ -22,10 +22,9 @@ FileInfo<FileManager>::FileInfo(
     const typename FileManager::FileInfoManagerGuard& aGuard,
     SafeRefPtr<FileManager> aFileManager, const int64_t aFileId,
     const nsrefcnt aInitialDBRefCnt)
-    : mFileId(aFileId),
+    : FileInfoBase{aFileId},
       mDBRefCnt(aInitialDBRefCnt),
       mFileManager(std::move(aFileManager)) {
-  MOZ_ASSERT(mFileId > 0);
   MOZ_ASSERT(mFileManager);
 }
 
@@ -63,11 +62,6 @@ void FileInfo<FileManager>::GetReferences(int32_t* const aRefCnt,
 template <typename FileManager>
 FileManager& FileInfo<FileManager>::Manager() const {
   return *mFileManager;
-}
-
-template <typename FileManager>
-int64_t FileInfo<FileManager>::Id() const {
-  return mFileId;
 }
 
 template <typename FileManager>
