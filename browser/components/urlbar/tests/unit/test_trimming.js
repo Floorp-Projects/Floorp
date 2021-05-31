@@ -147,6 +147,52 @@ add_task(async function test_untrimmed_www_path() {
   await cleanupPlaces();
 });
 
+add_task(async function test_untrimmed_ftp() {
+  info("Searching for untrimmed ftp:// entry");
+  await PlacesTestUtils.addVisits({
+    uri: Services.io.newURI("ftp://mozilla.org/test/"),
+  });
+  let context = createContext("mo", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "mozilla.org/",
+    completed: "ftp://mozilla.org/",
+    matches: [
+      makeVisitResult(context, {
+        uri: "ftp://mozilla.org/",
+        title: "ftp://mozilla.org",
+        heuristic: true,
+      }),
+      makeVisitResult(context, {
+        uri: "ftp://mozilla.org/test/",
+        title: "test visit for ftp://mozilla.org/test/",
+      }),
+    ],
+  });
+  await cleanupPlaces();
+});
+
+add_task(async function test_untrimmed_ftp_path() {
+  info("Searching for untrimmed ftp:// entry with path");
+  await PlacesTestUtils.addVisits({
+    uri: Services.io.newURI("ftp://mozilla.org/test/"),
+  });
+  let context = createContext("mozilla.org/t", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "mozilla.org/test/",
+    completed: "ftp://mozilla.org/test/",
+    matches: [
+      makeVisitResult(context, {
+        uri: "ftp://mozilla.org/test/",
+        title: "ftp://mozilla.org/test/",
+        heuristic: true,
+      }),
+    ],
+  });
+  await cleanupPlaces();
+});
+
 add_task(async function test_escaped_chars() {
   info("Searching for URL with characters that are normally escaped");
   await PlacesTestUtils.addVisits({

@@ -89,7 +89,7 @@ const {
   FIXUP_FLAG_FIX_SCHEME_TYPOS,
 } = Ci.nsIURIFixup;
 
-const COMMON_PROTOCOLS = ["http", "https", "file"];
+const COMMON_PROTOCOLS = ["http", "https", "ftp", "file"];
 
 // Regex used to identify user:password tokens in url strings.
 // This is not a strict valid characters check, because we try to fixup this
