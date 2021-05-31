@@ -13,7 +13,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.android.synthetic.main.sync_tabs_list_item.view.*
 import kotlinx.android.synthetic.main.view_synced_tabs_group.view.*
-import kotlinx.android.synthetic.main.view_synced_tabs_title.view.*
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.sync.Device
@@ -45,8 +44,8 @@ class SyncedTabsViewHolderTest {
             mockk(),
             TabEntry(
                 title = "Firefox",
-                url = "https://firefox.com",
-                iconUrl = "https://firefox.com/favicon.ico"
+                url = "https://mozilla.org/mobile",
+                iconUrl = "https://mozilla.org/favicon.ico"
             ),
             mockk()
         ),
@@ -79,7 +78,7 @@ class SyncedTabsViewHolderTest {
         tabViewHolder.bind(SyncedTabsAdapter.AdapterItem.Tab(tab), mockk())
 
         assertEquals("Firefox", tabView.synced_tab_item_title.text)
-        assertEquals("https://firefox.com", tabView.synced_tab_item_url.text)
+        assertEquals("mozilla.org", tabView.synced_tab_item_url.text)
     }
 
     @Test
@@ -100,11 +99,6 @@ class SyncedTabsViewHolderTest {
         deviceViewHolder.bind(SyncedTabsAdapter.AdapterItem.Device(device), mockk())
 
         verify { deviceViewGroupName.text = "Charcoal" }
-        verify {
-            deviceViewGroupName.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                R.drawable.mozac_ic_device_desktop, 0, 0, 0
-            )
-        }
     }
 
     @Test
@@ -116,11 +110,6 @@ class SyncedTabsViewHolderTest {
         deviceViewHolder.bind(SyncedTabsAdapter.AdapterItem.Device(device), mockk())
 
         verify { deviceViewGroupName.text = "Emerald" }
-        verify {
-            deviceViewGroupName.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                R.drawable.mozac_ic_device_mobile, 0, 0, 0
-            )
-        }
     }
 
     @Test

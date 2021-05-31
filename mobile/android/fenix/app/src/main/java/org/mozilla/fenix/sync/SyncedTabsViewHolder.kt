@@ -9,17 +9,18 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
-import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.sync_tabs_error_row.view.*
 import kotlinx.android.synthetic.main.sync_tabs_list_item.view.*
 import kotlinx.android.synthetic.main.view_synced_tabs_group.view.*
 import kotlinx.android.synthetic.main.view_synced_tabs_title.view.*
-import mozilla.components.concept.sync.DeviceType
+import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
+import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.sync.SyncedTabsAdapter.AdapterItem
 
 /**
@@ -44,6 +45,8 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
             val active = tab.tab.active()
             itemView.synced_tab_item_title.text = active.title
             itemView.synced_tab_item_url.text = active.url
+                .toShortUrl(itemView.context.components.publicSuffixList)
+                .take(MAX_URI_LENGTH)
         }
 
         companion object {
@@ -55,7 +58,6 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
 
         override fun <T : AdapterItem> bind(item: T, interactor: SyncedTabsView.Listener) {
             val errorItem = item as AdapterItem.Error
-            setErrorMargins()
 
             itemView.sync_tabs_error_description.text =
                 itemView.context.getString(errorItem.descriptionResId)
@@ -81,18 +83,7 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         }
 
         private fun bindHeader(device: AdapterItem.Device) {
-            val deviceLogoDrawable = when (device.device.deviceType) {
-                DeviceType.DESKTOP -> R.drawable.mozac_ic_device_desktop
-                else -> R.drawable.mozac_ic_device_mobile
-            }
-
             itemView.synced_tabs_group_name.text = device.device.displayName
-            itemView.synced_tabs_group_name.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                deviceLogoDrawable,
-                0,
-                0,
-                0
-            )
         }
 
         companion object {
@@ -128,15 +119,5 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         companion object {
             const val LAYOUT_ID = R.layout.view_synced_tabs_title
         }
-    }
-
-    internal fun setErrorMargins() {
-        val lp = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        val margin = itemView.resources.getDimensionPixelSize(R.dimen.synced_tabs_error_margin)
-        lp.setMargins(margin, margin, margin, 0)
-        itemView.layoutParams = lp
     }
 }

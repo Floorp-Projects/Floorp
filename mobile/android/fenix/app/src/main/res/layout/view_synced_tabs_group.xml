@@ -8,36 +8,24 @@
     android:id="@+id/synced_tabs_group"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="8dp">
+    android:paddingStart="16dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="7dp">
 
     <TextView
         android:id="@+id/synced_tabs_group_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:drawablePadding="32dp"
         android:gravity="center_vertical|start"
         android:textAppearance="@style/Header14TextStyle"
         android:textColor="@color/primary_text_normal_theme"
         android:textSize="12sp"
+        android:letterSpacing="0.04"
         android:textDirection="locale"
-        app:drawableStartCompat="@drawable/mozac_ic_device_desktop"
-        app:drawableTint="@color/primary_text_normal_theme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Header" />
-
-    <View
-        android:id="@+id/synced_tabs_group_separator"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="6dp"
-        android:background="?syncedTabsSeparator"
-        android:importantForAccessibility="no"
-        android:visibility="visible"
-        app:layout_constraintTop_toBottomOf="@+id/synced_tabs_group_name" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
