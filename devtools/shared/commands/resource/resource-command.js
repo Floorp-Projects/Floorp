@@ -383,6 +383,33 @@ class ResourceCommand {
         )
       );
     }
+
+    // @backward-compat { version 91 } DOCUMENT_EVENT's will-navigate start being notified,
+    //                                 to replace target actor's will-navigate event
+    // In the meantime fake a DOCUMENT_EVENT's will-navigate out of target actor's will-navigate.
+    // We should keep this code until we support the watcher actor for all descriptors (bug 1675763).
+    if (
+      !this.targetCommand.hasTargetWatcherSupport(
+        "supportsDocumentEventWillNavigate"
+      )
+    ) {
+      const offWillNavigate2 = targetFront.on(
+        "will-navigate",
+        ({ url, isFrameSwitching }) => {
+          targetFront.emit("resource-available-form", [
+            {
+              resourceType: this.TYPES.DOCUMENT_EVENT,
+              name: "will-navigate",
+              time: Date.now(), // will-navigate was not passing any timestamp
+              shouldBeIgnoredAsRedundantWithTargetAvailable: false,
+              isFrameSwitching,
+              newURI: url,
+            },
+          ]);
+        }
+      );
+      this._offTargetFrontListeners.push(offWillNavigate2);
+    }
   }
 
   _shouldRestartListenerOnTargetSwitching(resourceType) {

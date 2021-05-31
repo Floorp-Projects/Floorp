@@ -1809,7 +1809,13 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @param {Number} time
    *        The time that the event is fired.
    */
-  onDocumentEvent: function(name, time) {
+  onDocumentEvent: function(name, { time }) {
+    // will-navigate event has been added in Fx91 and is only expected to be used
+    // by DOCUMENT_EVENT watcher. For toolbox still not using watcher actor and DOCUMENT_EVENT watcher
+    // will-navigate will be emitted based on target actor's will-navigate events.
+    if (name == "will-navigate") {
+      return;
+    }
     this.emit("documentEvent", {
       name,
       time,
