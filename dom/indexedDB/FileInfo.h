@@ -21,7 +21,7 @@ class FileInfo final {
   using AutoLock = typename FileManager::AutoLock;
   using IdType = int64_t;
 
-  FileInfo(const typename FileManager::FileManagerGuard& aGuard,
+  FileInfo(const typename FileManager::FileInfoManagerGuard& aGuard,
            SafeRefPtr<FileManager> aFileManager, const int64_t aFileId,
            const nsrefcnt aInitialDBRefCnt = 0);
 
@@ -39,7 +39,8 @@ class FileInfo final {
   nsCOMPtr<nsIFile> GetFileForFileInfo() const;
 
   void LockedAddRef();
-  bool LockedClearDBRefs(const typename FileManager::FileManagerGuard& aGuard);
+  bool LockedClearDBRefs(
+      const typename FileManager::FileInfoManagerGuard& aGuard);
 
  private:
   void UpdateReferences(ThreadSafeAutoRefCnt& aRefCount, int32_t aDelta,

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_indexeddb_filemanagerbase_h__
-#define mozilla_dom_indexeddb_filemanagerbase_h__
+#ifndef DOM_INDEXEDDB_FILEINFOMANAGER_H_
+#define DOM_INDEXEDDB_FILEINFOMANAGER_H_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
@@ -21,7 +21,7 @@ namespace dom {
 namespace indexedDB {
 
 template <typename FileManager>
-class FileManagerBase {
+class FileInfoManager {
  public:
   using FileInfo = FileInfo<FileManager>;
   using MutexType = StaticMutex;
@@ -36,7 +36,7 @@ class FileManagerBase {
       const int64_t id = ++mLastFileId;
 
       auto fileInfo =
-          MakeNotNull<FileInfo*>(FileManagerGuard{},
+          MakeNotNull<FileInfo*>(FileInfoManagerGuard{},
                                  SafeRefPtr{static_cast<FileManager*>(this),
                                             AcquireStrongRefFromRawPtr{}},
                                  id);
@@ -62,7 +62,7 @@ class FileManagerBase {
       FileInfo* info = iter.Data();
       MOZ_ASSERT(info);
 
-      return !info->LockedClearDBRefs(FileManagerGuard{});
+      return !info->LockedClearDBRefs(FileInfoManagerGuard{});
     });
 
     return NS_OK;
@@ -70,8 +70,8 @@ class FileManagerBase {
 
   bool Invalidated() const { return mInvalidated; }
 
-  class FileManagerGuard {
-    FileManagerGuard() = default;
+  class FileInfoManagerGuard {
+    FileInfoManagerGuard() = default;
   };
 
  private:
@@ -115,9 +115,9 @@ class FileManagerBase {
   }
 
 #ifdef DEBUG
-  ~FileManagerBase() { MOZ_ASSERT(mFileInfos.IsEmpty()); }
+  ~FileInfoManager() { MOZ_ASSERT(mFileInfos.IsEmpty()); }
 #else
-  ~FileManagerBase() = default;
+  ~FileInfoManager() = default;
 #endif
 
   // Access to the following fields must be protected by
@@ -132,4 +132,4 @@ class FileManagerBase {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_indexeddb_filemanagerbase_h__
+#endif  // DOM_INDEXEDDB_FILEINFOMANAGER_H_

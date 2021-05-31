@@ -26,7 +26,7 @@
 #include "DBSchema.h"
 #include "ErrorList.h"
 #include "FileInfo.h"
-#include "FileManagerBase.h"
+#include "FileInfoManager.h"
 #include "IDBCursorType.h"
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
@@ -12234,7 +12234,7 @@ nsresult DatabaseFileManager::Init(nsIFile* aDirectory,
         MOZ_ASSERT(dbRefCnt > 0);
         mFileInfos.InsertOrUpdate(
             id, MakeNotNull<DatabaseFileInfo*>(
-                    FileManagerGuard{}, SafeRefPtrFromThis(), id,
+                    FileInfoManagerGuard{}, SafeRefPtrFromThis(), id,
                     static_cast<nsrefcnt>(dbRefCnt)));
 
         mLastFileId = std::max(id, mLastFileId);
