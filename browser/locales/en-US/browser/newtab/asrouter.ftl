@@ -122,3 +122,10 @@ cfr-doorhanger-fission-primary-button = OK, Got it
   .accesskey = O
 cfr-doorhanger-fission-secondary-button = Learn more
   .accesskey = L
+
+## Full Video Support CFR message
+
+cfr-doorhanger-video-support-body = Videos on this site may not play correctly on this version of { -brand-short-name }. For full video support, update { -brand-short-name } now.
+cfr-doorhanger-video-support-header = Update { -brand-short-name } to play video
+cfr-doorhanger-video-support-primary-button = Update Now
+  .accesskey = U
