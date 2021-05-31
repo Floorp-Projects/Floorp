@@ -14,39 +14,6 @@ const { ExperimentAPI } = ChromeUtils.import(
  * for the "privatebrowsing" feature are working as expected.
  */
 
-async function enrollWithFeatureConfig(featureValues) {
-  const experiment = ExperimentFakes.recipe("mochitest-privatebrowsing-info", {
-    featureIds: ["privatebrowsing"],
-    branches: [
-      {
-        slug: "treatment-branch",
-        ratio: 1,
-        feature: {
-          featureId: "privatebrowsing",
-          enabled: true,
-          value: featureValues,
-        },
-      },
-    ],
-    bucketConfig: {
-      start: 0,
-      // Ensure 100% enrollment
-      count: 10000,
-      total: 10000,
-      namespace: "my-mochitest",
-      randomizationUnit: "normandy_id",
-    },
-  });
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(experiment);
-
-  await enrollmentPromise;
-  ExperimentAPI._store._syncToChildren({ flush: true });
-  return { experiment, doExperimentCleanup };
-}
-
 async function openTabAndWaitForRender() {
   let { win, tab } = await openAboutPrivateBrowsing();
   await SpecialPowers.spawn(tab, [], async function() {
@@ -79,13 +46,17 @@ function waitForTelemetryEvent(category) {
 }
 
 add_task(async function test_experiment_plain_text() {
-  let { doExperimentCleanup } = await enrollWithFeatureConfig({
-    infoTitle: "Hello world",
-    infoBody: "This is some text",
-    infoLinkText: "This is a link",
-    infoIcon: "chrome://branding/content/about-logo.png",
-    promoTitle: "Promo title",
-    promoLinkText: "Promo link",
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "privatebrowsing",
+    enabled: true,
+    value: {
+      infoTitle: "Hello world",
+      infoBody: "This is some text",
+      infoLinkText: "This is a link",
+      infoIcon: "chrome://branding/content/about-logo.png",
+      promoTitle: "Promo title",
+      promoLinkText: "Promo link",
+    },
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -122,9 +93,13 @@ add_task(async function test_experiment_plain_text() {
 });
 
 add_task(async function test_experiment_fluent() {
-  let { doExperimentCleanup } = await enrollWithFeatureConfig({
-    infoBody: "fluent:about-private-browsing-info-title",
-    promoLinkText: "fluent:about-private-browsing-need-more-privacy",
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "privatebrowsing",
+    enabled: true,
+    value: {
+      infoBody: "fluent:about-private-browsing-info-title",
+      promoLinkText: "fluent:about-private-browsing-need-more-privacy",
+    },
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -153,8 +128,12 @@ add_task(async function test_experiment_fluent() {
 });
 
 add_task(async function test_experiment_info_disabled() {
-  let { doExperimentCleanup } = await enrollWithFeatureConfig({
-    infoEnabled: false,
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "privatebrowsing",
+    enabled: true,
+    value: {
+      infoEnabled: false,
+    },
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -172,8 +151,12 @@ add_task(async function test_experiment_info_disabled() {
 });
 
 add_task(async function test_experiment_promo_disabled() {
-  let { doExperimentCleanup } = await enrollWithFeatureConfig({
-    promoEnabled: false,
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "privatebrowsing",
+    enabled: true,
+    value: {
+      promoEnabled: false,
+    },
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -192,9 +175,13 @@ add_task(async function test_experiment_promo_disabled() {
 
 add_task(async function test_experiment_format_urls() {
   const LOCALE = Services.locale.appLocaleAsBCP47;
-  let { doExperimentCleanup } = await enrollWithFeatureConfig({
-    infoLinkUrl: "http://foo.mozilla.com/%LOCALE%",
-    promoLinkUrl: "http://bar.mozilla.com/%LOCALE%",
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "privatebrowsing",
+    enabled: true,
+    value: {
+      infoLinkUrl: "http://foo.mozilla.com/%LOCALE%",
+      promoLinkUrl: "http://bar.mozilla.com/%LOCALE%",
+    },
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -217,8 +204,12 @@ add_task(async function test_experiment_format_urls() {
 });
 
 add_task(async function test_experiment_click_info_telemetry() {
-  let { doExperimentCleanup } = await enrollWithFeatureConfig({
-    infoLinkUrl: "http://example.com",
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "privatebrowsing",
+    enabled: true,
+    value: {
+      infoLinkUrl: "http://example.com",
+    },
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -242,8 +233,12 @@ add_task(async function test_experiment_click_info_telemetry() {
 });
 
 add_task(async function test_experiment_click_promo_telemetry() {
-  let { doExperimentCleanup } = await enrollWithFeatureConfig({
-    promoLinkUrl: "http://example.com",
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "privatebrowsing",
+    enabled: true,
+    value: {
+      promoLinkUrl: "http://example.com",
+    },
   });
 
   let { win, tab } = await openTabAndWaitForRender();
