@@ -971,7 +971,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Storing number of installed add-ons for telemetry purposes
+     * Stores the number of installed add-ons for telemetry purposes
      */
     var installedAddonsCount by intPreference(
         appContext.getPreferenceKey(R.string.pref_key_installed_addons_count),
@@ -979,7 +979,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Storing the list of installed add-ons for telemetry purposes
+     * Stores the list of installed add-ons for telemetry purposes
      */
     var installedAddonsList by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_installed_addons_list),
@@ -987,7 +987,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Storing number of enabled add-ons for telemetry purposes
+     * Stores the number of enabled add-ons for telemetry purposes
      */
     var enabledAddonsCount by intPreference(
         appContext.getPreferenceKey(R.string.pref_key_enabled_addons_count),
@@ -995,11 +995,35 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Storing the list of enabled add-ons for telemetry purposes
+     * Stores the list of enabled add-ons for telemetry purposes
      */
     var enabledAddonsList by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_enabled_addons_list),
         default = ""
+    )
+
+    /**
+     * Stores the number of credit cards that have been saved manually by the user.
+     */
+    var creditCardsSavedCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_credit_cards_saved_count),
+        0
+    )
+
+    /**
+     * Stores the number of credit cards that have been deleted by the user.
+     */
+    var creditCardsDeletedCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_credit_cards_deleted_count),
+        0
+    )
+
+    /**
+     * Stores the number of times that user has autofilled a credit card.
+     */
+    var creditCardsAutofilledCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_credit_cards_autofilled_count),
+        0
     )
 
     private var savedLoginsSortingStrategyString by stringPreference(

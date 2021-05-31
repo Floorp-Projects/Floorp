@@ -10,6 +10,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyAll
+import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
@@ -364,10 +365,39 @@ class MetricControllerTest {
         assertEquals(settings.installedAddonsList, "")
         assertEquals(settings.enabledAddonsCount, 0)
         assertEquals(settings.enabledAddonsList, "")
+
         controller.factToEvent(fact)
+
         assertEquals(settings.installedAddonsCount, 4)
         assertEquals(settings.installedAddonsList, "test1,test2,test3,test4")
         assertEquals(settings.enabledAddonsCount, 2)
         assertEquals(settings.enabledAddonsList, "test2,test4")
+    }
+
+    @Test
+    fun `credit card autofill fact shold set value in SharedPreference`() {
+        val enabled = true
+        val settings = Settings(testContext)
+        val controller = ReleaseMetricController(
+            services = listOf(dataService1),
+            isDataTelemetryEnabled = { enabled },
+            isMarketingDataTelemetryEnabled = { enabled },
+            settings
+        )
+        val fact = Fact(
+            component = Component.FEATURE_PROMPTS,
+            action = Action.INTERACTION,
+            item = CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SUCCESS
+        )
+
+        assertEquals(0, settings.creditCardsAutofilledCount)
+
+        controller.factToEvent(fact)
+
+        assertEquals(1, settings.creditCardsAutofilledCount)
+
+        controller.factToEvent(fact)
+
+        assertEquals(2, settings.creditCardsAutofilledCount)
     }
 }

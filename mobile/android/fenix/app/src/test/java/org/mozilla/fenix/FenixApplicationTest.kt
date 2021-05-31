@@ -128,6 +128,9 @@ class FenixApplicationTest {
         every { settings.touchExplorationIsEnabled } returns true
         every { settings.shouldUseLightTheme } returns true
         every { settings.signedInFxaAccount } returns true
+        every { settings.creditCardsSavedCount } returns 1
+        every { settings.creditCardsDeletedCount } returns 2
+        every { settings.creditCardsAutofilledCount } returns 3
 
         application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
 
@@ -146,6 +149,9 @@ class FenixApplicationTest {
         assertEquals(true, Metrics.hasTopSites.testGetValue())
         assertEquals(2, Metrics.topSitesCount.testGetValue())
         assertEquals(true, Addons.hasInstalledAddons.testGetValue())
+        assertEquals(1, Metrics.creditCardsSavedCount.testGetValue())
+        assertEquals(2, Metrics.creditCardsDeletedCount.testGetValue())
+        assertEquals(3, Metrics.creditCardsAutofillCount.testGetValue())
         assertEquals(listOf("test1", "test2", "test3"), Addons.installedAddons.testGetValue())
         assertEquals(true, Addons.hasEnabledAddons.testGetValue())
         assertEquals(listOf("test1", "test2"), Addons.enabledAddons.testGetValue())

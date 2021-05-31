@@ -565,6 +565,18 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 topSitesCount.add(topSitesSize)
             }
 
+            if (settings.creditCardsSavedCount > 0) {
+                creditCardsSavedCount.add(settings.creditCardsSavedCount)
+            }
+
+            if (settings.creditCardsDeletedCount > 0) {
+                creditCardsDeletedCount.add(settings.creditCardsDeletedCount)
+            }
+
+            if (settings.creditCardsAutofilledCount > 0) {
+                creditCardsAutofillCount.add(settings.creditCardsAutofilledCount)
+            }
+
             val installedAddonSize = settings.installedAddonsCount
             Addons.hasInstalledAddons.set(installedAddonSize > 0)
             if (installedAddonSize > 0) {

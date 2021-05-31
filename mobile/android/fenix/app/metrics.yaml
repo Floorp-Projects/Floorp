@@ -1007,6 +1007,57 @@ metrics:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
+  credit_cards_saved_count:
+    type: counter
+    lifetime: application
+    description: |
+      A counter that indicates the number of credit cards that have been
+      saved manually by the user.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18711
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/19548#issuecomment-848811030
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-10-01"
+  credit_cards_deleted_count:
+    type: counter
+    lifetime: application
+    description: |
+      A counter that indicates the number of credit cards that have been
+      deleted by the user.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18711
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/19548#issuecomment-848811030
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-10-01"
+  credit_cards_autofill_count:
+    type: counter
+    lifetime: application
+    description: |
+      A counter that indicates the number of times the user has autofilled
+      a credit card.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18711
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/19548#issuecomment-848811030
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-10-01"
   mozilla_products:
     type: string_list
     lifetime: application
@@ -5389,56 +5440,6 @@ set_default_setting_experiment:
       - https://github.com/mozilla-mobile/fenix/issues/18852
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/19047
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-10-01"
-
-credit_cards:
-  manual_save:
-    type: counter
-    description: |
-      A counter of the number of credit cards that have been saved
-      manually by the user.
-    send_in_pings:
-      - metrics
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/18711
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/19548#issuecomment-848811030
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-10-01"
-  delete_card:
-    type: counter
-    description: |
-      A counter of the number of credit cards that have been deleted by
-      the user.
-    send_in_pings:
-      - metrics
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/18711
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/19548#issuecomment-848811030
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-10-01"
-  autofill_card:
-    type: counter
-    description: |
-      A counter of the number of times the user has autofilled
-      a credit card.
-    send_in_pings:
-      - metrics
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/18711
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/19548#issuecomment-848811030
     data_sensitivity:
       - interaction
     notification_emails:

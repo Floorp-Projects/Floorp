@@ -182,6 +182,12 @@
     <string name="pref_key_credit_cards_sync_cards_across_devices" translatable="false">pref_key_credit_cards_sync_cards_across_devices</string>
     <!-- Key for the "Manage saved cards" preference in the "Credit cards" fragment -->
     <string name="pref_key_credit_cards_manage_cards" translatable="false">pref_key_credit_cards_manage_cards</string>
+    <!-- Key for the number of credit cards that have been saved manually by the user metric value -->
+    <string name="pref_key_credit_cards_saved_count" translatable="false">pref_key_credit_cards_saved_count</string>
+    <!-- Key for the number of credit cards that have been deleted by the user metric value -->
+    <string name="pref_key_credit_cards_deleted_count" translatable="false">pref_key_credit_cards_deleted_count</string>
+    <!-- Key for the number of times the user has autofilled a credit card metric value -->
+    <string name="pref_key_credit_cards_autofilled_count" translatable="false">pref_key_credit_cards_autofilled_count</string>
 
     <!-- Privacy Settings -->
     <string name="pref_key_open_links_in_a_private_tab" translatable="false">pref_key_open_links_in_a_private_tab</string>

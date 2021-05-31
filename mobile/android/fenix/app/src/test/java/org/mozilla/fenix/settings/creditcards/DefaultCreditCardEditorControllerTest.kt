@@ -4,10 +4,8 @@
 
 package org.mozilla.fenix.settings.creditcards
 
-import android.content.Context
 import androidx.navigation.NavController
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -19,18 +17,18 @@ import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.utils.CreditCardNetworkType
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.creditcards.controller.DefaultCreditCardEditorController
+import org.mozilla.fenix.utils.Settings
 
 @ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
@@ -43,25 +41,20 @@ class DefaultCreditCardEditorControllerTest {
     private val testDispatcher = TestCoroutineDispatcher()
 
     private lateinit var controller: DefaultCreditCardEditorController
-    private lateinit var context: Context
-    private lateinit var metrics: MetricController
+    private lateinit var settings: Settings
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Before
     fun setup() {
-        metrics = mockk()
-        context = mockk()
-        every { metrics.track(any()) } returns Unit
-        every { context.components.analytics.metrics } returns metrics
-
+        settings = Settings(testContext)
         controller = spyk(
             DefaultCreditCardEditorController(
-                context = context,
                 storage = storage,
                 lifecycleScope = testCoroutineScope,
                 navController = navController,
+                settings = settings,
                 ioDispatcher = testDispatcher
             )
         )
@@ -84,19 +77,24 @@ class DefaultCreditCardEditorControllerTest {
 
     @Test
     fun handleDeleteCreditCard() = testCoroutineScope.runBlockingTest {
+        assertEquals(0, settings.creditCardsDeletedCount)
+
         val creditCardId = "id"
 
         controller.handleDeleteCreditCard(creditCardId)
 
+        assertEquals(1, settings.creditCardsDeletedCount)
+
         coVerify {
             storage.deleteCreditCard(creditCardId)
             navController.popBackStack()
-            metrics.track(Event.CreditCardDelete)
         }
     }
 
     @Test
     fun handleSaveCreditCard() = testCoroutineScope.runBlockingTest {
+        assertEquals(0, settings.creditCardsSavedCount)
+
         val creditCardFields = NewCreditCardFields(
             billingName = "Banana Apple",
             plaintextCardNumber = CreditCardNumber.Plaintext("4111111111111112"),
@@ -108,10 +106,11 @@ class DefaultCreditCardEditorControllerTest {
 
         controller.handleSaveCreditCard(creditCardFields)
 
+        assertEquals(1, settings.creditCardsSavedCount)
+
         coVerify {
             storage.addCreditCard(creditCardFields)
             navController.popBackStack()
-            metrics.track(Event.CreditCardManualSave)
         }
     }
 
