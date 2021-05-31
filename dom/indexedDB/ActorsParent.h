@@ -28,7 +28,7 @@ class Client;
 
 namespace indexedDB {
 
-class FileManager;
+class DatabaseFileManager;
 class LoggingInfo;
 class PBackgroundIDBFactoryParent;
 class PBackgroundIndexedDBUtilsParent;

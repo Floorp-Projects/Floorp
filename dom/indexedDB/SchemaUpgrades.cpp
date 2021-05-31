@@ -9,8 +9,8 @@
 // local includes
 #include "ActorsParentCommon.h"
 #include "DatabaseFileInfoFwd.h"
+#include "DatabaseFileManager.h"
 #include "DBSchema.h"
-#include "FileManager.h"
 #include "IndexedDatabase.h"
 #include "IndexedDBCommon.h"
 #include "ReportInternalError.h"
@@ -2263,7 +2263,7 @@ nsresult UpgradeSchemaFrom18_0To19_0(mozIStorageConnection& aConnection) {
 }
 
 class UpgradeFileIdsFunction final : public mozIStorageFunction {
-  SafeRefPtr<FileManager> mFileManager;
+  SafeRefPtr<DatabaseFileManager> mFileManager;
 
  public:
   UpgradeFileIdsFunction() { AssertIsOnIOThread(); }
@@ -2856,9 +2856,10 @@ nsresult DeserializeUpgradeValueToFileIds(
 
 nsresult UpgradeFileIdsFunction::Init(nsIFile* aFMDirectory,
                                       mozIStorageConnection& aConnection) {
-  // This file manager doesn't need real origin info, etc. The only purpose is
-  // to store file ids without adding more complexity or code duplication.
-  auto fileManager = MakeSafeRefPtr<FileManager>(
+  // This DatabaseFileManager doesn't need real origin info, etc. The only
+  // purpose is to store file ids without adding more complexity or code
+  // duplication.
+  auto fileManager = MakeSafeRefPtr<DatabaseFileManager>(
       PERSISTENCE_TYPE_INVALID, quota::OriginMetadata{}, u""_ns, false);
 
   nsresult rv = fileManager->Init(aFMDirectory, aConnection);
