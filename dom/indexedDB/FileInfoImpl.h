@@ -19,7 +19,7 @@ namespace indexedDB {
 
 template <typename FileManager>
 FileInfo<FileManager>::FileInfo(
-    const typename FileManager::FileManagerGuard& aGuard,
+    const typename FileManager::FileInfoManagerGuard& aGuard,
     SafeRefPtr<FileManager> aFileManager, const int64_t aFileId,
     const nsrefcnt aInitialDBRefCnt)
     : mFileId(aFileId),
@@ -113,7 +113,7 @@ void FileInfo<FileManager>::LockedAddRef() {
 
 template <typename FileManager>
 bool FileInfo<FileManager>::LockedClearDBRefs(
-    const typename FileManager::FileManagerGuard&) {
+    const typename FileManager::FileInfoManagerGuard&) {
   FileManager::Mutex().AssertCurrentThreadOwns();
 
   mDBRefCnt = 0;
