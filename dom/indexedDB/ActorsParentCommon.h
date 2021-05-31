@@ -35,7 +35,7 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-class FileManager;
+class DatabaseFileManager;
 struct StructuredCloneFileParent;
 struct StructuredCloneReadInfoParent;
 
@@ -102,21 +102,19 @@ Result<std::pair<uint64_t, mozilla::Span<const uint8_t>>, nsresult>
 ReadCompressedNumber(Span<const uint8_t> aSpan);
 
 Result<StructuredCloneReadInfoParent, nsresult>
-GetStructuredCloneReadInfoFromValueArray(mozIStorageValueArray* aValues,
-                                         uint32_t aDataIndex,
-                                         uint32_t aFileIdsIndex,
-                                         const FileManager& aFileManager,
-                                         const Maybe<CipherKey>& aMaybeKey);
+GetStructuredCloneReadInfoFromValueArray(
+    mozIStorageValueArray* aValues, uint32_t aDataIndex, uint32_t aFileIdsIndex,
+    const DatabaseFileManager& aFileManager, const Maybe<CipherKey>& aMaybeKey);
 
 Result<StructuredCloneReadInfoParent, nsresult>
 GetStructuredCloneReadInfoFromStatement(mozIStorageStatement* aStatement,
                                         uint32_t aDataIndex,
                                         uint32_t aFileIdsIndex,
-                                        const FileManager& aFileManager,
+                                        const DatabaseFileManager& aFileManager,
                                         const Maybe<CipherKey>& aMaybeKey);
 
 Result<nsTArray<StructuredCloneFileParent>, nsresult>
-DeserializeStructuredCloneFiles(const FileManager& aFileManager,
+DeserializeStructuredCloneFiles(const DatabaseFileManager& aFileManager,
                                 const nsAString& aText);
 
 nsresult ExecuteSimpleSQLSequence(mozIStorageConnection& aConnection,
