@@ -22,7 +22,7 @@
 namespace mozilla {
 namespace net {
 
-static inline void GetAuthKey(const nsACString& scheme, const nsACString& host,
+static inline void GetAuthKey(const char* scheme, const char* host,
                               int32_t port, nsACString const& originSuffix,
                               nsCString& key) {
   key.Truncate();
@@ -33,6 +33,17 @@ static inline void GetAuthKey(const nsACString& scheme, const nsACString& host,
   key.Append(host);
   key.Append(':');
   key.AppendInt(port);
+}
+
+// return true if the two strings are equal or both empty.  an empty string
+// is either null or zero length.
+static bool StrEquivalent(const char16_t* a, const char16_t* b) {
+  static const char16_t emptyStr[] = {0};
+
+  if (!a) a = emptyStr;
+  if (!b) b = emptyStr;
+
+  return nsCRT::strcmp(a, b) == 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -60,14 +71,12 @@ nsHttpAuthCache::~nsHttpAuthCache() {
   }
 }
 
-nsresult nsHttpAuthCache::GetAuthEntryForPath(const nsACString& scheme,
-                                              const nsACString& host,
-                                              int32_t port,
-                                              const nsACString& path,
+nsresult nsHttpAuthCache::GetAuthEntryForPath(const char* scheme,
+                                              const char* host, int32_t port,
+                                              const char* path,
                                               nsACString const& originSuffix,
                                               nsHttpAuthEntry** entry) {
-  LOG(("nsHttpAuthCache::GetAuthEntryForPath %p [path=%s]\n", this,
-       path.BeginReading()));
+  LOG(("nsHttpAuthCache::GetAuthEntryForPath %p [path=%s]\n", this, path));
 
   nsAutoCString key;
   nsHttpAuthNode* node = LookupAuthNode(scheme, host, port, originSuffix, key);
@@ -78,16 +87,14 @@ nsresult nsHttpAuthCache::GetAuthEntryForPath(const nsACString& scheme,
   return *entry ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
-nsresult nsHttpAuthCache::GetAuthEntryForDomain(const nsACString& scheme,
-                                                const nsACString& host,
-                                                int32_t port,
-                                                const nsACString& realm,
+nsresult nsHttpAuthCache::GetAuthEntryForDomain(const char* scheme,
+                                                const char* host, int32_t port,
+                                                const char* realm,
                                                 nsACString const& originSuffix,
                                                 nsHttpAuthEntry** entry)
 
 {
-  LOG(("nsHttpAuthCache::GetAuthEntryForDomain %p [realm=%s]\n", this,
-       realm.BeginReading()));
+  LOG(("nsHttpAuthCache::GetAuthEntryForDomain %p [realm=%s]\n", this, realm));
 
   nsAutoCString key;
   nsHttpAuthNode* node = LookupAuthNode(scheme, host, port, originSuffix, key);
@@ -98,15 +105,17 @@ nsresult nsHttpAuthCache::GetAuthEntryForDomain(const nsACString& scheme,
   return *entry ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
-nsresult nsHttpAuthCache::SetAuthEntry(
-    const nsACString& scheme, const nsACString& host, int32_t port,
-    const nsACString& path, const nsACString& realm, const nsACString& creds,
-    const nsACString& challenge, nsACString const& originSuffix,
-    const nsHttpAuthIdentity* ident, nsISupports* metadata) {
+nsresult nsHttpAuthCache::SetAuthEntry(const char* scheme, const char* host,
+                                       int32_t port, const char* path,
+                                       const char* realm, const char* creds,
+                                       const char* challenge,
+                                       nsACString const& originSuffix,
+                                       const nsHttpAuthIdentity* ident,
+                                       nsISupports* metadata) {
   nsresult rv;
 
   LOG(("nsHttpAuthCache::SetAuthEntry %p [realm=%s path=%s metadata=%p]\n",
-       this, realm.BeginReading(), path.BeginReading(), metadata));
+       this, realm, path, metadata));
 
   nsAutoCString key;
   nsHttpAuthNode* node = LookupAuthNode(scheme, host, port, originSuffix, key);
@@ -127,9 +136,8 @@ nsresult nsHttpAuthCache::SetAuthEntry(
   return node->SetAuthEntry(path, realm, creds, challenge, ident, metadata);
 }
 
-void nsHttpAuthCache::ClearAuthEntry(const nsACString& scheme,
-                                     const nsACString& host, int32_t port,
-                                     const nsACString& realm,
+void nsHttpAuthCache::ClearAuthEntry(const char* scheme, const char* host,
+                                     int32_t port, const char* realm,
                                      nsACString const& originSuffix) {
   nsAutoCString key;
   GetAuthKey(scheme, host, port, originSuffix, key);
@@ -146,9 +154,8 @@ void nsHttpAuthCache::ClearAll() {
 // nsHttpAuthCache <private>
 //-----------------------------------------------------------------------------
 
-nsHttpAuthNode* nsHttpAuthCache::LookupAuthNode(const nsACString& scheme,
-                                                const nsACString& host,
-                                                int32_t port,
+nsHttpAuthNode* nsHttpAuthCache::LookupAuthNode(const char* scheme,
+                                                const char* host, int32_t port,
                                                 nsACString const& originSuffix,
                                                 nsCString& key) {
   GetAuthKey(scheme, host, port, originSuffix, key);
@@ -208,55 +215,153 @@ void nsHttpAuthCache::CollectKeys(nsTArray<nsCString>& aValue) {
 // nsHttpAuthIdentity
 //-----------------------------------------------------------------------------
 
+nsresult nsHttpAuthIdentity::Set(const char16_t* domain, const char16_t* user,
+                                 const char16_t* pass) {
+  char16_t *newUser, *newPass, *newDomain;
+
+  int domainLen = domain ? NS_strlen(domain) : 0;
+  int userLen = user ? NS_strlen(user) : 0;
+  int passLen = pass ? NS_strlen(pass) : 0;
+
+  int len = userLen + 1 + passLen + 1 + domainLen + 1;
+  newUser = (char16_t*)malloc(len * sizeof(char16_t));
+  if (!newUser) return NS_ERROR_OUT_OF_MEMORY;
+
+  if (user) memcpy(newUser, user, userLen * sizeof(char16_t));
+  newUser[userLen] = 0;
+
+  newPass = &newUser[userLen + 1];
+  if (pass) memcpy(newPass, pass, passLen * sizeof(char16_t));
+  newPass[passLen] = 0;
+
+  newDomain = &newPass[passLen + 1];
+  if (domain) memcpy(newDomain, domain, domainLen * sizeof(char16_t));
+  newDomain[domainLen] = 0;
+
+  // wait until the end to clear member vars in case input params
+  // reference our members!
+  if (mUser) free(mUser);
+  mUser = newUser;
+  mPass = newPass;
+  mDomain = newDomain;
+  return NS_OK;
+}
+
 void nsHttpAuthIdentity::Clear() {
-  mUser.Truncate();
-  mPass.Truncate();
-  mDomain.Truncate();
+  if (mUser) {
+    free(mUser);
+    mUser = nullptr;
+    mPass = nullptr;
+    mDomain = nullptr;
+  }
 }
 
 bool nsHttpAuthIdentity::Equals(const nsHttpAuthIdentity& ident) const {
   // we could probably optimize this with a single loop, but why bother?
-  return mUser == ident.mUser && mPass == ident.mPass &&
-         mDomain == ident.mDomain;
+  return StrEquivalent(mUser, ident.mUser) &&
+         StrEquivalent(mPass, ident.mPass) &&
+         StrEquivalent(mDomain, ident.mDomain);
 }
 
 //-----------------------------------------------------------------------------
 // nsHttpAuthEntry
 //-----------------------------------------------------------------------------
 
-nsresult nsHttpAuthEntry::AddPath(const nsACString& aPath) {
-  for (const auto& p : mPaths) {
-    if (StringBeginsWith(aPath, p)) {
+nsHttpAuthEntry::~nsHttpAuthEntry() {
+  if (mRealm) free(mRealm);
+
+  while (mRoot) {
+    nsHttpAuthPath* ap = mRoot;
+    mRoot = mRoot->mNext;
+    free(ap);
+  }
+}
+
+nsresult nsHttpAuthEntry::AddPath(const char* aPath) {
+  // null path matches empty path
+  if (!aPath) aPath = "";
+
+  nsHttpAuthPath* tempPtr = mRoot;
+  while (tempPtr) {
+    const char* curpath = tempPtr->mPath;
+    if (strncmp(aPath, curpath, strlen(curpath)) == 0)
       return NS_OK;  // subpath already exists in the list
-    }
+
+    tempPtr = tempPtr->mNext;
   }
 
-  mPaths.AppendElement(aPath);
+  // Append the aPath
+  nsHttpAuthPath* newAuthPath;
+  int newpathLen = strlen(aPath);
+  newAuthPath = (nsHttpAuthPath*)malloc(sizeof(nsHttpAuthPath) + newpathLen);
+  if (!newAuthPath) return NS_ERROR_OUT_OF_MEMORY;
+
+  memcpy(newAuthPath->mPath, aPath, newpathLen + 1);
+  newAuthPath->mNext = nullptr;
+
+  if (!mRoot)
+    mRoot = newAuthPath;  // first entry
+  else
+    mTail->mNext = newAuthPath;  // Append newAuthPath
+
+  // update the tail pointer.
+  mTail = newAuthPath;
   return NS_OK;
 }
 
-nsresult nsHttpAuthEntry::Set(const nsACString& path, const nsACString& realm,
-                              const nsACString& creds, const nsACString& chall,
+nsresult nsHttpAuthEntry::Set(const char* path, const char* realm,
+                              const char* creds, const char* chall,
                               const nsHttpAuthIdentity* ident,
                               nsISupports* metadata) {
+  char *newRealm, *newCreds, *newChall;
+
+  int realmLen = realm ? strlen(realm) : 0;
+  int credsLen = creds ? strlen(creds) : 0;
+  int challLen = chall ? strlen(chall) : 0;
+
+  int len = realmLen + 1 + credsLen + 1 + challLen + 1;
+  newRealm = (char*)malloc(len);
+  if (!newRealm) return NS_ERROR_OUT_OF_MEMORY;
+
+  if (realm) memcpy(newRealm, realm, realmLen);
+  newRealm[realmLen] = 0;
+
+  newCreds = &newRealm[realmLen + 1];
+  if (creds) memcpy(newCreds, creds, credsLen);
+  newCreds[credsLen] = 0;
+
+  newChall = &newCreds[credsLen + 1];
+  if (chall) memcpy(newChall, chall, challLen);
+  newChall[challLen] = 0;
+
+  nsresult rv = NS_OK;
   if (ident) {
-    mIdent = *ident;
+    rv = mIdent.Set(*ident);
   } else if (mIdent.IsEmpty()) {
     // If we are not given an identity and our cached identity has not been
     // initialized yet (so is currently empty), initialize it now by
     // filling it with nulls.  We need to do that because consumers expect
     // that mIdent is initialized after this function returns.
-    mIdent.Clear();
+    rv = mIdent.Set(nullptr, nullptr, nullptr);
   }
-
-  nsresult rv = AddPath(path);
   if (NS_FAILED(rv)) {
+    free(newRealm);
     return rv;
   }
 
-  mRealm = realm;
-  mCreds = creds;
-  mChallenge = chall;
+  rv = AddPath(path);
+  if (NS_FAILED(rv)) {
+    free(newRealm);
+    return rv;
+  }
+
+  // wait until the end to clear member vars in case input params
+  // reference our members!
+  if (mRealm) free(mRealm);
+
+  mRealm = newRealm;
+  mCreds = newCreds;
+  mChallenge = newChall;
   mMetaData = metadata;
 
   return NS_OK;
@@ -276,36 +381,45 @@ nsHttpAuthNode::~nsHttpAuthNode() {
   mList.Clear();
 }
 
-nsHttpAuthEntry* nsHttpAuthNode::LookupEntryByPath(const nsACString& aPath) {
+nsHttpAuthEntry* nsHttpAuthNode::LookupEntryByPath(const char* path) {
+  // null path matches empty path
+  if (!path) path = "";
+
   // look for an entry that either matches or contains this directory.
   // ie. we'll give out credentials if the given directory is a sub-
   // directory of an existing entry.
   for (uint32_t i = 0; i < mList.Length(); ++i) {
     const auto& entry = mList[i];
-
-    for (const auto& entryPath : entry->mPaths) {
+    nsHttpAuthPath* authPath = entry->RootPath();
+    while (authPath) {
+      const char* entryPath = authPath->mPath;
       // proxy auth entries have no path, so require exact match on
       // empty path string.
-      if (entryPath.IsEmpty()) {
-        if (aPath.IsEmpty()) {
+      if (entryPath[0] == '\0') {
+        if (path[0] == '\0') {
           return entry.get();
         }
-      } else if (StringBeginsWith(aPath, entryPath)) {
+      } else if (strncmp(path, entryPath, strlen(entryPath)) == 0) {
         return entry.get();
       }
+
+      authPath = authPath->mNext;
     }
   }
   return nullptr;
 }
 
 nsHttpAuthNode::EntryList::const_iterator nsHttpAuthNode::LookupEntryItrByRealm(
-    const nsACString& realm) const {
+    const char* realm) const {
+  // null realm matches empty realm
+  if (!realm) realm = "";
+
   return std::find_if(mList.cbegin(), mList.cend(), [&realm](const auto& val) {
-    return realm.Equals(val->Realm());
+    return strcmp(realm, val->Realm()) == 0;
   });
 }
 
-nsHttpAuthEntry* nsHttpAuthNode::LookupEntryByRealm(const nsACString& realm) {
+nsHttpAuthEntry* nsHttpAuthNode::LookupEntryByRealm(const char* realm) {
   auto itr = LookupEntryItrByRealm(realm);
   if (itr != mList.cend()) {
     return itr->get();
@@ -314,10 +428,8 @@ nsHttpAuthEntry* nsHttpAuthNode::LookupEntryByRealm(const nsACString& realm) {
   return nullptr;
 }
 
-nsresult nsHttpAuthNode::SetAuthEntry(const nsACString& path,
-                                      const nsACString& realm,
-                                      const nsACString& creds,
-                                      const nsACString& challenge,
+nsresult nsHttpAuthNode::SetAuthEntry(const char* path, const char* realm,
+                                      const char* creds, const char* challenge,
                                       const nsHttpAuthIdentity* ident,
                                       nsISupports* metadata) {
   // look for an entry with a matching realm
@@ -338,7 +450,7 @@ nsresult nsHttpAuthNode::SetAuthEntry(const nsACString& path,
   return NS_OK;
 }
 
-void nsHttpAuthNode::ClearAuthEntry(const nsACString& realm) {
+void nsHttpAuthNode::ClearAuthEntry(const char* realm) {
   auto idx = LookupEntryItrByRealm(realm);
   if (idx != mList.cend()) {
     mList.RemoveElementAt(idx);
