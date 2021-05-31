@@ -90,7 +90,7 @@ static nsresult InitSSPI() {
 
 //-----------------------------------------------------------------------------
 
-nsresult nsAuthSSPI::MakeSN(const nsACString& principal, nsCString& result) {
+nsresult nsAuthSSPI::MakeSN(const char* principal, nsCString& result) {
   nsresult rv;
 
   nsAutoCString buf(principal);
@@ -174,9 +174,9 @@ void nsAuthSSPI::Reset() {
 NS_IMPL_ISUPPORTS(nsAuthSSPI, nsIAuthModule)
 
 NS_IMETHODIMP
-nsAuthSSPI::Init(const nsACString& aServiceName, uint32_t aServiceFlags,
-                 const nsAString& aDomain, const nsAString& aUsername,
-                 const nsAString& aPassword) {
+nsAuthSSPI::Init(const char* serviceName, uint32_t serviceFlags,
+                 const char16_t* domain, const char16_t* username,
+                 const char16_t* password) {
   LOG(("  nsAuthSSPI::Init\n"));
 
   mIsFirst = true;
@@ -185,7 +185,7 @@ nsAuthSSPI::Init(const nsACString& aServiceName, uint32_t aServiceFlags,
 
   // The caller must supply a service name to be used. (For why we now require
   // a service name for NTLM, see bug 487872.)
-  NS_ENSURE_TRUE(!aServiceName.IsEmpty(), NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(serviceName && *serviceName, NS_ERROR_INVALID_ARG);
 
   nsresult rv;
 
@@ -203,18 +203,18 @@ nsAuthSSPI::Init(const nsACString& aServiceName, uint32_t aServiceFlags,
     // lookups. The incoming serviceName is in the format: "protocol@hostname",
     // SSPI expects
     // "<service class>/<hostname>", so swap the '@' for a '/'.
-    mServiceName = aServiceName;
+    mServiceName.Assign(serviceName);
     int32_t index = mServiceName.FindChar('@');
     if (index == kNotFound) return NS_ERROR_UNEXPECTED;
     mServiceName.Replace(index, 1, '/');
   } else {
     // Kerberos requires the canonical host, MakeSN takes care of this through a
     // DNS lookup.
-    rv = MakeSN(aServiceName, mServiceName);
+    rv = MakeSN(serviceName, mServiceName);
     if (NS_FAILED(rv)) return rv;
   }
 
-  mServiceFlags = aServiceFlags;
+  mServiceFlags = serviceFlags;
 
   SECURITY_STATUS rc;
 
@@ -235,11 +235,11 @@ nsAuthSSPI::Init(const nsACString& aServiceName, uint32_t aServiceFlags,
   // domain, username, and password will be null if nsHttpNTLMAuth's
   // ChallengeReceived returns false for identityInvalid. Use default
   // credentials in this case by passing null for pai.
-  if (!aUsername.IsEmpty() && !aPassword.IsEmpty()) {
+  if (username && password) {
     // Keep a copy of these strings for the duration
-    mUsername = aUsername;
-    mPassword = aPassword;
-    mDomain = aDomain;
+    mUsername.Assign(username);
+    mPassword.Assign(password);
+    mDomain.Assign(domain);
     ai.Domain = reinterpret_cast<unsigned short*>(mDomain.BeginWriting());
     ai.DomainLength = mDomain.Length();
     ai.User = reinterpret_cast<unsigned short*>(mUsername.BeginWriting());
@@ -258,7 +258,7 @@ nsAuthSSPI::Init(const nsACString& aServiceName, uint32_t aServiceFlags,
   static bool sTelemetrySent = false;
   if (!sTelemetrySent) {
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::NTLM_MODULE_USED_2,
-                                   aServiceFlags & nsIAuthModule::REQ_PROXY_AUTH
+                                   serviceFlags & nsIAuthModule::REQ_PROXY_AUTH
                                        ? NTLM_MODULE_WIN_API_PROXY
                                        : NTLM_MODULE_WIN_API_DIRECT);
     sTelemetrySent = true;

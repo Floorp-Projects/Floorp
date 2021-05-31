@@ -113,9 +113,8 @@ static bool CanUseDefaultCredentials(nsIHttpAuthenticableChannel* channel,
   Unused << channel->GetURI(getter_AddRefs(uri));
 
   bool allowNonFqdn;
-  if (NS_FAILED(prefs->GetBoolPref(kAllowNonFqdn, &allowNonFqdn))) {
+  if (NS_FAILED(prefs->GetBoolPref(kAllowNonFqdn, &allowNonFqdn)))
     allowNonFqdn = false;
-  }
   if (allowNonFqdn && uri && IsNonFqdn(uri)) {
     LOG(("Host is non-fqdn, default credentials are allowed\n"));
     return true;
@@ -155,7 +154,7 @@ NS_IMPL_ISUPPORTS(nsHttpNTLMAuth, nsIHttpAuthenticator)
 
 NS_IMETHODIMP
 nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel* channel,
-                                  const nsACString& challenge, bool isProxyAuth,
+                                  const char* challenge, bool isProxyAuth,
                                   nsISupports** sessionState,
                                   nsISupports** continuationState,
                                   bool* identityInvalid) {
@@ -172,8 +171,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel* channel,
   // Start a new auth sequence if the challenge is exactly "NTLM".
   // If native NTLM auth apis are available and enabled through prefs,
   // try to use them.
-  if (StringBeginsWith(challenge, "NTLM"_ns,
-                       nsCaseInsensitiveCStringComparator)) {
+  if (nsCRT::strcasecmp(challenge, "NTLM") == 0) {
     nsCOMPtr<nsIAuthModule> module;
 
     // Check to see if we should default to our generic NTLM auth module
@@ -250,31 +248,33 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel* channel,
 NS_IMETHODIMP
 nsHttpNTLMAuth::GenerateCredentialsAsync(
     nsIHttpAuthenticableChannel* authChannel,
-    nsIHttpAuthenticatorCallback* aCallback, const nsACString& challenge,
-    bool isProxyAuth, const nsAString& domain, const nsAString& username,
-    const nsAString& password, nsISupports* sessionState,
+    nsIHttpAuthenticatorCallback* aCallback, const char* challenge,
+    bool isProxyAuth, const char16_t* domain, const char16_t* username,
+    const char16_t* password, nsISupports* sessionState,
     nsISupports* continuationState, nsICancelable** aCancellable) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsHttpNTLMAuth::GenerateCredentials(
-    nsIHttpAuthenticableChannel* authChannel, const nsACString& aChallenge,
-    bool isProxyAuth, const nsAString& domain, const nsAString& user,
-    const nsAString& pass, nsISupports** sessionState,
-    nsISupports** continuationState, uint32_t* aFlags, nsACString& creds)
+nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel* authChannel,
+                                    const char* challenge, bool isProxyAuth,
+                                    const char16_t* domain,
+                                    const char16_t* user, const char16_t* pass,
+                                    nsISupports** sessionState,
+                                    nsISupports** continuationState,
+                                    uint32_t* aFlags, char** creds)
 
 {
   LOG(("nsHttpNTLMAuth::GenerateCredentials\n"));
 
-  creds.Truncate();
+  *creds = nullptr;
   *aFlags = 0;
 
   // if user or password is empty, ChallengeReceived returned
   // identityInvalid = false, that means we are using default user
   // credentials; see  nsAuthSSPI::Init method for explanation of this
   // condition
-  if (user.IsEmpty() || pass.IsEmpty()) *aFlags = USING_INTERNAL_IDENTITY;
+  if (!user || !pass) *aFlags = USING_INTERNAL_IDENTITY;
 
   nsresult rv;
   nsCOMPtr<nsIAuthModule> module = do_QueryInterface(*continuationState, &rv);
@@ -285,8 +285,7 @@ nsHttpNTLMAuth::GenerateCredentials(
   Maybe<nsTArray<uint8_t>> certArray;
 
   // initial challenge
-  if (StringBeginsWith(aChallenge, "NTLM"_ns,
-                       nsCaseInsensitiveCStringComparator)) {
+  if (nsCRT::strcasecmp(challenge, "NTLM") == 0) {
     // NTLM service name format is 'HTTP@host' for both http and https
     nsCOMPtr<nsIURI> uri;
     rv = authChannel->GetURI(getter_AddRefs(uri));
@@ -300,7 +299,7 @@ nsHttpNTLMAuth::GenerateCredentials(
     uint32_t reqFlags = nsIAuthModule::REQ_DEFAULT;
     if (isProxyAuth) reqFlags |= nsIAuthModule::REQ_PROXY_AUTH;
 
-    rv = module->Init(serviceName, reqFlags, domain, user, pass);
+    rv = module->Init(serviceName.get(), reqFlags, domain, user, pass);
     if (NS_FAILED(rv)) return rv;
 
 // This update enables updated Windows machines (Win7 or patched previous
@@ -352,19 +351,16 @@ nsHttpNTLMAuth::GenerateCredentials(
   } else {
     // decode challenge; skip past "NTLM " to the start of the base64
     // encoded data.
-    if (aChallenge.Length() < 6) {
-      return NS_ERROR_UNEXPECTED;  // bogus challenge
-    }
+    int len = strlen(challenge);
+    if (len < 6) return NS_ERROR_UNEXPECTED;  // bogus challenge
+    challenge += 5;
+    len -= 5;
 
     // strip off any padding (see bug 230351)
-    nsDependentCSubstring challenge(aChallenge, 5);
-    uint32_t len = challenge.Length();
-    while (len > 0 && challenge[len - 1] == '=') {
-      len--;
-    }
+    while (len && challenge[len - 1] == '=') len--;
 
     // decode into the input secbuffer
-    rv = Base64Decode(challenge.BeginReading(), len, (char**)&inBuf, &inBufLen);
+    rv = Base64Decode(challenge, len, (char**)&inBuf, &inBufLen);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -380,10 +376,10 @@ nsHttpNTLMAuth::GenerateCredentials(
     if (!credsLen.isValid()) {
       rv = NS_ERROR_FAILURE;
     } else {
-      nsAutoCString encoded;
-      (void)Base64Decode(nsDependentCSubstring((char*)outBuf, outBufLen),
-                         encoded);
-      creds = nsPrintfCString("NTLM %s", encoded.get());
+      *creds = (char*)moz_xmalloc(credsLen.value());
+      memcpy(*creds, "NTLM ", 5);
+      PL_Base64Encode((char*)outBuf, outBufLen, *creds + 5);
+      (*creds)[credsLen.value() - 1] = '\0';  // null terminate
     }
 
     // OK, we are done with |outBuf|
