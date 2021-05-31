@@ -11,6 +11,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/TimeStamp.h"
@@ -19,6 +20,9 @@
 #include "nsThread.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
+
+#include <android/api-level.h>
+#include <pthread.h>
 
 using namespace mozilla;
 
@@ -165,11 +169,46 @@ class CreateOnUiThread : public Runnable {
     sThread = new AndroidUiThread();
     sThread->InitCurrentThread();
     sThread->SetObserver(new ThreadObserver());
-    PROFILER_REGISTER_THREAD("AndroidUI");
+    RegisterThreadWithProfiler();
     sMessageLoop =
         new MessageLoop(MessageLoop::TYPE_MOZILLA_ANDROID_UI, sThread.get());
     lock.NotifyAll();
     return NS_OK;
+  }
+
+ private:
+  static void RegisterThreadWithProfiler() {
+#if defined(MOZ_GECKO_PROFILER)
+    // We don't use the PROFILER_REGISTER_THREAD macro here because by this
+    // point the Android UI thread is already quite a ways into its stack;
+    // the profiler's sampler thread will ignore a lot of frames if we do not
+    // provide a better value for the stack top. We'll manually obtain that
+    // info via pthreads.
+
+    // Fallback address if any pthread calls fail
+    char fallback;
+    char* stackTop = &fallback;
+
+    auto regOnExit = MakeScopeExit(
+        [&stackTop]() { profiler_register_thread("AndroidUI", stackTop); });
+
+    // Bionic does not properly support pthread_attr_getstack for the UI thread
+    // until Lollipop (API 21).
+#  if __ANDROID_API__ >= __ANDROID_API_L__
+    pthread_attr_t attrs;
+    if (pthread_getattr_np(pthread_self(), &attrs)) {
+      return;
+    }
+
+    void* stackBase;
+    size_t stackSize;
+    if (pthread_attr_getstack(&attrs, &stackBase, &stackSize)) {
+      return;
+    }
+
+    stackTop = static_cast<char*>(stackBase) + stackSize - 1;
+#  endif  // __ANDROID_API__ >= __ANDROID_API_L__
+#endif    // defined(MOZ_GECKO_PROFILER)
   }
 };
 
