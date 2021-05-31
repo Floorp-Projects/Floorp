@@ -44,6 +44,7 @@ class mozInlineSpellChecker;
 class nsAtom;
 class nsCaret;
 class nsIContent;
+class nsIDocumentEncoder;
 class nsIDocumentStateListener;
 class nsIEditActionListener;
 class nsIEditorObserver;
@@ -2241,6 +2242,19 @@ class EditorBase : public nsIEditor,
   nsresult GetDocumentCharsetInternal(nsACString& aCharset) const;
 
   /**
+   * GetAndInitDocEncoder() returns a document encoder instance for aFormatType
+   * after initializing it.  The result may be cached for saving recreation
+   * cost.
+   *
+   * @param aFormatType             MIME type like "text/plain".
+   * @param aDocumentEncoderFlags   Flags of nsIDocumentEncoder.
+   * @param aCharset                Encoding of the document.
+   */
+  already_AddRefed<nsIDocumentEncoder> GetAndInitDocEncoder(
+      const nsAString& aFormatType, uint32_t aDocumentEncoderFlags,
+      const nsACString& aCharset) const;
+
+  /**
    * SelectAllInternal() should be used instead of SelectAll() in editor
    * because SelectAll() creates AutoEditActionSetter but we should avoid
    * to create it as far as possible.
@@ -2725,6 +2739,12 @@ class EditorBase : public nsIEditor,
   RefPtr<TextInputListener> mTextInputListener;
 
   RefPtr<IMEContentObserver> mIMEContentObserver;
+
+  // These members cache last encoder and its type for the performance in
+  // TextEditor::ComputeTextValue() which is the implementation of
+  // `<input>.value` and `<textarea>.value`.  See `GetAndInitDocEncoder()`.
+  mutable nsCOMPtr<nsIDocumentEncoder> mCachedDocumentEncoder;
+  mutable nsString mCachedDocumentEncoderType;
 
   // Listens to all low level actions on the doc.
   // Edit action listener is currently used by highlighter of the findbar and
