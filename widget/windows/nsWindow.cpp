@@ -8558,7 +8558,8 @@ bool nsWindow::WidgetTypeSupportsAcceleration() {
 }
 
 bool nsWindow::DispatchTouchEventFromWMPointer(
-    UINT msg, LPARAM aLParam, const WinPointerInfo& aPointerInfo) {
+    UINT msg, LPARAM aLParam, const WinPointerInfo& aPointerInfo,
+    mozilla::MouseButton aButton) {
   MultiTouchInput::MultiTouchType touchType;
   switch (msg) {
     case WM_POINTERDOWN:
@@ -8597,6 +8598,8 @@ bool nsWindow::DispatchTouchEventFromWMPointer(
   touchInput.mTimeStamp =
       GetMessageTimeStamp(static_cast<long>(touchInput.mTime));
   touchInput.mTouches.AppendElement(touchData);
+  touchInput.mButton = aButton;
+  touchInput.mButtons = aPointerInfo.mButtons;
 
   // POINTER_INFO.dwKeyStates can't be used as it only supports Shift and Ctrl
   ModifierKeyState modifierKeyState;

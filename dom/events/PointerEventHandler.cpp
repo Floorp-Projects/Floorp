@@ -533,12 +533,16 @@ void PointerEventHandler::InitPointerEventFromTouch(
   MOZ_ASSERT(aPointerEvent);
   MOZ_ASSERT(aTouchEvent);
 
+  // Use mButton/mButtons only when mButton got a value (from pen input)
   int16_t button = aTouchEvent->mMessage == eTouchMove
                        ? MouseButton::eNotPressed
+                   : aTouchEvent->mButton != MouseButton::eNotPressed
+                       ? aTouchEvent->mButton
                        : MouseButton::ePrimary;
-
   int16_t buttons = aTouchEvent->mMessage == eTouchEnd
                         ? MouseButtonsFlag::eNoButtons
+                    : aTouchEvent->mButton != MouseButton::eNotPressed
+                        ? aTouchEvent->mButtons
                         : MouseButtonsFlag::ePrimaryFlag;
 
   aPointerEvent->mIsPrimary = aIsPrimary;

@@ -91,14 +91,18 @@ MultiTouchInput::MultiTouchInput(const MultiTouchInput& aOther)
                 aOther.modifiers),
       mType(aOther.mType),
       mScreenOffset(aOther.mScreenOffset),
-      mHandledByAPZ(aOther.mHandledByAPZ) {
+      mHandledByAPZ(aOther.mHandledByAPZ),
+      mButton(aOther.mButton),
+      mButtons(aOther.mButtons) {
   mTouches.AppendElements(aOther.mTouches);
 }
 
 MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
     : InputData(MULTITOUCH_INPUT, aTouchEvent.mTime, aTouchEvent.mTimeStamp,
                 aTouchEvent.mModifiers),
-      mHandledByAPZ(aTouchEvent.mFlags.mHandledByAPZ) {
+      mHandledByAPZ(aTouchEvent.mFlags.mHandledByAPZ),
+      mButton(aTouchEvent.mButton),
+      mButtons(aTouchEvent.mButtons) {
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only copy from WidgetTouchEvent on main thread");
 
@@ -139,7 +143,7 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
         ViewAs<ScreenPixel>(
             domTouch->mRefPoint,
             PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent),
-        ScreenSize(radiusX, radiusY), rotationAngle, force);
+        ScreenSize((float)radiusX, (float)radiusY), rotationAngle, force);
 
     mTouches.AppendElement(data);
   }
@@ -197,6 +201,8 @@ WidgetTouchEvent MultiTouchInput::ToWidgetEvent(nsIWidget* aWidget,
   event.mFocusSequenceNumber = mFocusSequenceNumber;
   event.mLayersId = mLayersId;
   event.mInputSource = aInputSource;
+  event.mButton = mButton;
+  event.mButtons = mButtons;
 
   for (size_t i = 0; i < mTouches.Length(); i++) {
     *event.mTouches.AppendElement() = mTouches[i].ToNewDOMTouch();
