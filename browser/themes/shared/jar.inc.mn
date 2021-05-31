@@ -85,9 +85,6 @@
   skin/classic/browser/notification-icons/update.svg                        (../shared/notification-icons/update.svg)
   skin/classic/browser/notification-icons/midi.svg                          (../shared/notification-icons/midi.svg)
   skin/classic/browser/notification-icons/webauthn.svg                      (../shared/notification-icons/webauthn.svg)
-  skin/classic/browser/notification-icons/block-cryptominer.svg             (../shared/notification-icons/block-cryptominer.svg)
-  skin/classic/browser/notification-icons/block-fingerprinter.svg           (../shared/notification-icons/block-fingerprinter.svg)
-  skin/classic/browser/notification-icons/block-social.svg                  (../shared/notification-icons/block-social.svg)
 
   skin/classic/browser/tracking-protection.svg                        (../shared/identity-block/tracking-protection.svg)
   skin/classic/browser/tracking-protection-disabled.svg               (../shared/identity-block/tracking-protection-disabled.svg)
