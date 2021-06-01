@@ -36,7 +36,8 @@ function longPressLink() {
 var eventsFired = 0;
 function recordEvent(e) {
   let target = document.getElementById("b");
-  if (getPlatform() == "windows") {
+  const platform = getPlatform();
+  if (platform == "windows") {
     // On Windows we get a mouselongtap event once the long-tap has been detected
     // by APZ, and that's what we use as the trigger to lift the finger. That then
     // triggers the contextmenu. This matches the platform convention.
@@ -63,10 +64,10 @@ function recordEvent(e) {
         subtestDone();
       });
     }
-  } else {
-    // On non-Windows platforms we get a contextmenu event once the long-tap has
-    // been detected. Since we prevent-default that, we don't get a mouselongtap
-    // event at all, and instead get a touchcancel.
+  } else if (platform != "android") {
+    // On non-Windows desktop platforms we get a contextmenu event once the
+    // long-tap has been detected. Since we prevent-default that, we don't get
+    // a mouselongtap event at all, and instead get a touchcancel.
     switch (eventsFired) {
       case 0: is(e.type, "touchstart", "Got a touchstart"); break;
       case 1: is(e.type, "mouseover", "Got a mouseover"); break;
@@ -79,6 +80,53 @@ function recordEvent(e) {
     eventsFired++;
 
     if (eventsFired == 6) {
+      removeMouseEventListeners(target);
+      synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
+        dump("Finished synthesizing touch-end, doing an APZ flush to see if any more unexpected events come through...\n");
+        promiseOnlyApzControllerFlushed().then(function() {
+          dump("Done APZ flush, ending test...\n");
+          subtestDone();
+        });
+      });
+    }
+  } else {
+    // On Android we get a contextmenu event once the long-tap has been
+    // detected. If contextmenu opens we get a touchcancel event, and if
+    // contextmenu didn't open because of preventDefault() in the content,
+    // we will not get the touchcancel event.
+    switch (eventsFired) {
+      case 0: is(e.type, "touchstart", "Got a touchstart"); break;
+      case 1: is(e.type, "mouseover", "Got a mouseover"); break;
+      case 2: is(e.type, "mouseenter", "Got a mouseenter"); break;
+      case 3: is(e.type, "mousemove", "Got a mousemove"); break;
+      case 4: is(e.type, "contextmenu", "Got a contextmenu");
+        // Do preventDefault() in this content, thus we will not get any
+        // touchcancel event.
+        e.preventDefault();
+        synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
+          dump("Finished synthesizing touch-end, waiting for a touchend event...\n");
+        });
+        break;
+      case 5: is(e.type, "touchend", "Got a touchend");
+        // Send another long press.
+        synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
+          dump("Finished synthesizing touch-start, waiting for events...\n");
+        });
+        break;
+      case 6: is(e.type, "touchstart", "Got another touchstart"); break;
+      // NOTE: In this another event case, we don't get mouseover or moveenter
+      // event either since the target element hasn't been changed.
+      case 7: is(e.type, "mousemove", "Got another mousemove"); break;
+      case 8: is(e.type, "contextmenu", "Got another contextmenu");
+        // DON'T DO preventDefault() this time, thus we should get a touchcancel
+        // event.
+        break;
+      case 9: is(e.type, "touchcancel", "Got a touchcancel"); break;
+      default: ok(false, "Got an unexpected event of type " + e.type); break;
+    }
+    eventsFired++;
+
+    if (eventsFired == 10) {
       removeMouseEventListeners(target);
       synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
         dump("Finished synthesizing touch-end, doing an APZ flush to see if any more unexpected events come through...\n");
