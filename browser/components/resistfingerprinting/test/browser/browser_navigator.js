@@ -44,7 +44,7 @@ const SPOOFED_APPVERSION = {
   linux: "5.0 (X11)",
   win: "5.0 (Windows)",
   macosx: "5.0 (Macintosh)",
-  android: "5.0 (Android 9)",
+  android: "5.0 (Android 10)",
   other: "5.0 (X11)",
 };
 
@@ -107,14 +107,14 @@ const SPOOFED_UA_NAVIGATOR_OS = {
   linux: "X11; Linux x86_64",
   win: "Windows NT 10.0; Win64; x64",
   macosx: "Macintosh; Intel Mac OS X 10.15",
-  android: "Android 9; Mobile",
+  android: "Android 10; Mobile",
   other: "X11; Linux x86_64",
 };
 const SPOOFED_UA_HTTPHEADER_OS = {
   linux: "Windows NT 10.0",
   win: "Windows NT 10.0",
   macosx: "Windows NT 10.0",
-  android: "Android 9; Mobile",
+  android: "Android 10; Mobile",
   other: "Windows NT 10.0",
 };
 const SPOOFED_HW_CONCURRENCY = 2;
