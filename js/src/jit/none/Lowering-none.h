@@ -96,6 +96,8 @@ class LIRGeneratorNone : public LIRGeneratorShared {
   void lowerMulI(MMul*, MDefinition*, MDefinition*) { MOZ_CRASH(); }
   void lowerUDiv(MDiv*) { MOZ_CRASH(); }
   void lowerUMod(MMod*) { MOZ_CRASH(); }
+  void lowerWasmSelectI(MWasmSelect* select) { MOZ_CRASH(); }
+  void lowerWasmSelectI64(MWasmSelect* select) { MOZ_CRASH(); }
 
   void lowerBigIntLsh(MBigIntLsh*) { MOZ_CRASH(); }
   void lowerBigIntRsh(MBigIntRsh*) { MOZ_CRASH(); }

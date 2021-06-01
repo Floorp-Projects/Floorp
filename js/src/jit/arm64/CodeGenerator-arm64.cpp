@@ -2415,10 +2415,6 @@ void CodeGenerator::visitWasmSelect(LWasmSelect* lir) {
       Register trueReg = ToRegister(lir->trueExpr());
       Register falseReg = ToRegister(lir->falseExpr());
 
-      // TODO: Not desirable on ARM64 to have this restriction, since CSEL can
-      // have three independent registers as operands.
-      MOZ_ASSERT(trueReg == outReg, "true reg is reused for input");
-
       if (mirType == MIRType::Int32) {
         masm.Csel(ARMRegister(outReg, 32), ARMRegister(trueReg, 32),
                   ARMRegister(falseReg, 32), Assembler::NonZero);
@@ -2430,31 +2426,34 @@ void CodeGenerator::visitWasmSelect(LWasmSelect* lir) {
     }
 
     case MIRType::Float32:
-#ifdef ENABLE_WASM_SIMD
-    case MIRType::Simd128:
-#endif
-    case MIRType::Double: {
+    case MIRType::Double:
+    case MIRType::Simd128: {
       FloatRegister outReg = ToFloatRegister(lir->output());
-      mozilla::DebugOnly<FloatRegister> trueReg =
-          ToFloatRegister(lir->trueExpr());
+      FloatRegister trueReg = ToFloatRegister(lir->trueExpr());
       FloatRegister falseReg = ToFloatRegister(lir->falseExpr());
 
-      // TODO: Again, not desirable, we can use FCSEL to do better.
-      MOZ_ASSERT(trueReg.inspect() == outReg, "true reg is reused for input");
-
-      Label done;
-      masm.j(Assembler::NonZero, &done);
-
-      if (mirType == MIRType::Float32) {
-        masm.moveFloat32(falseReg, outReg);
+      switch (mirType) {
+        case MIRType::Float32:
+          masm.Fcsel(ARMFPRegister(outReg, 32), ARMFPRegister(trueReg, 32),
+                     ARMFPRegister(falseReg, 32), Assembler::NonZero);
+          break;
+        case MIRType::Double:
+          masm.Fcsel(ARMFPRegister(outReg, 64), ARMFPRegister(trueReg, 64),
+                     ARMFPRegister(falseReg, 64), Assembler::NonZero);
+          break;
 #ifdef ENABLE_WASM_SIMD
-      } else if (mirType == MIRType::Simd128) {
-        masm.moveSimd128(falseReg, outReg);
+        case MIRType::Simd128: {
+          MOZ_ASSERT(outReg == trueReg);
+          Label done;
+          masm.j(Assembler::NonZero, &done);
+          masm.moveSimd128(falseReg, outReg);
+          masm.bind(&done);
+          break;
+        }
 #endif
-      } else /* mirType == MIRType::Double */ {
-        masm.moveDouble(falseReg, outReg);
+        default:
+          MOZ_CRASH();
       }
-      masm.bind(&done);
       break;
     }
 
@@ -2512,17 +2511,13 @@ void CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir) {
 void CodeGenerator::visitWasmSelectI64(LWasmSelectI64* lir) {
   MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
   Register condReg = ToRegister(lir->condExpr());
-  Register falseReg = ToRegister64(lir->falseExpr()).reg;
+  Register64 trueReg = ToRegister64(lir->trueExpr());
+  Register64 falseReg = ToRegister64(lir->falseExpr());
   Register64 outReg = ToOutRegister64(lir);
 
-  // TODO: Not desirable on ARM64 to have this restriction, since CSEL can
-  // have three independent registers as operands.
-  MOZ_ASSERT(ToRegister64(lir->trueExpr()) == outReg,
-             "true expr is reused for input");
-
   masm.test32(condReg, condReg);
-  masm.Csel(ARMRegister(outReg.reg, 64), ARMRegister(outReg.reg, 64),
-            ARMRegister(falseReg, 64), Assembler::NonZero);
+  masm.Csel(ARMRegister(outReg.reg, 64), ARMRegister(trueReg.reg, 64),
+            ARMRegister(falseReg.reg, 64), Assembler::NonZero);
 }
 
 void CodeGenerator::visitSignExtendInt64(LSignExtendInt64* ins) {
