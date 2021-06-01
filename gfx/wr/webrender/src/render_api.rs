@@ -318,7 +318,7 @@ impl Transaction {
         &mut self,
         device_rect: DeviceIntRect,
     ) {
-        window_size_sanity_check(device_rect.size);
+        window_size_sanity_check(device_rect.size());
         self.scene_ops.push(
             SceneMsg::SetDocumentView {
                 device_rect,

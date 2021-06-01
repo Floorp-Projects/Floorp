@@ -995,10 +995,10 @@ fn add_segment(
             match style0 {
                 BorderStyle::Dashed => {
                     let (x, y) = if is_vertical {
-                        let half_dash_size = task_rect.size.height * 0.25;
+                        let half_dash_size = task_rect.height() * 0.25;
                         (0., half_dash_size)
                     } else {
-                        let half_dash_size = task_rect.size.width * 0.25;
+                        let half_dash_size = task_rect.width() * 0.25;
                         (half_dash_size, 0.)
                     };
 
@@ -1282,7 +1282,7 @@ pub fn build_border_instances(
     let v_corner_radius = (LayoutSize::from_au(cache_key.v_adjacent_corner_radius) * scale).ceil();
 
     add_segment(
-        DeviceRect::new(DevicePoint::zero(), cache_size.to_f32()),
+        DeviceRect::from_size(cache_size.to_f32()),
         style0,
         style1,
         color0,
