@@ -30,7 +30,7 @@ add_task(async function() {
   await toolbox.selectTool("inspector");
 
   info("Press Escape and wait for the split console to be opened");
-  let onSplitConsole = toolbox.once("split-console");
+  const onSplitConsole = toolbox.once("split-console");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, devtoolsWindow);
   await onSplitConsole;
   await waitUntil(() => toolbox.isSplitConsoleFocused());
