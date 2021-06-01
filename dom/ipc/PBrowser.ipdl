@@ -563,8 +563,7 @@ parent:
     async NavigationFinished();
 
     async SessionStoreUpdate(nsCString? aDocShellCaps, bool? aPrivatedMode,
-                             bool aNeedCollectSHistory,
-                             bool aIsFinal, uint32_t aEpoch);
+                             bool aNeedCollectSHistory, uint32_t aEpoch);
 
     async IntrinsicSizeOrRatioChanged(IntrinsicSize? aIntrinsicSize,
                                       AspectRatio? aIntrinsicRatio);
