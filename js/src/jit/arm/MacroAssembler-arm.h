@@ -185,6 +185,8 @@ class MacroAssemblerARM : public Assembler {
   void ma_neg(Register src, Register dest, SBit s = LeaveCC,
               Condition c = Always);
 
+  void ma_neg(Register64 src, Register64 dest);
+
   // And
   void ma_and(Register src, Register dest, SBit s = LeaveCC,
               Condition c = Always);

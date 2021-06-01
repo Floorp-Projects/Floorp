@@ -1894,6 +1894,12 @@ void CodeGenerator::visitNegI(LNegI* ins) {
   masm.Neg(output, input);
 }
 
+void CodeGenerator::visitNegI64(LNegI64* ins) {
+  const ARMRegister input = toXRegister(ins->input());
+  const ARMRegister output = toXRegister(ins->output());
+  masm.Neg(output, input);
+}
+
 void CodeGenerator::visitNegD(LNegD* ins) {
   const ARMFPRegister input(ToFloatRegister(ins->input()), 64);
   const ARMFPRegister output(ToFloatRegister(ins->output()), 64);

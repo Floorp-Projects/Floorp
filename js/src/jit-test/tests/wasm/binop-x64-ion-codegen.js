@@ -144,3 +144,28 @@ codegenTestX64_adhoc(
      49 0f af c3               imul %r11, %rax`, {no_prefix:true});
 assertEq(wasmEvalText(quint64).exports.f(-37000000000n), -37000000000n*5n)
 assertEq(wasmEvalText(quint64).exports.f(42000000000n), 42000000000n*5n)
+
+// Test that 0-n yields negation.
+
+let subneg32 =
+    `(module
+       (func (export "f") (param i32) (result i32)
+         (i32.sub (i32.const 0) (local.get 0))))`
+codegenTestX64_adhoc(
+    subneg32,
+    'f',
+    'f7 d8  neg %eax', {no_prefix:true});
+assertEq(wasmEvalText(subneg32).exports.f(-37), 37)
+assertEq(wasmEvalText(subneg32).exports.f(42), -42)
+
+let subneg64 =
+    `(module
+       (func (export "f") (param i64) (result i64)
+         (i64.sub (i64.const 0) (local.get 0))))`
+codegenTestX64_adhoc(
+    subneg64,
+    'f',
+    '48 f7 d8  neg %rax', {no_prefix:true});
+assertEq(wasmEvalText(subneg64).exports.f(-37000000000n), 37000000000n)
+assertEq(wasmEvalText(subneg64).exports.f(42000000000n), -42000000000n)
+
