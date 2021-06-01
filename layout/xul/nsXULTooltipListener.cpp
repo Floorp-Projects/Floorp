@@ -234,7 +234,7 @@ NS_IMETHODIMP
 nsXULTooltipListener::HandleEvent(Event* aEvent) {
   nsAutoString type;
   aEvent->GetType(type);
-  if (type.EqualsLiteral("DOMMouseScroll") || type.EqualsLiteral("mousedown") ||
+  if (type.EqualsLiteral("wheel") || type.EqualsLiteral("mousedown") ||
       type.EqualsLiteral("mouseup") || type.EqualsLiteral("dragstart")) {
     HideTooltip();
     return NS_OK;
@@ -399,7 +399,7 @@ nsresult nsXULTooltipListener::ShowTooltip() {
       currentTooltip->AddSystemEventListener(u"popuphiding"_ns, this, false,
                                              false);
 
-      // listen for mousedown, mouseup, keydown, and DOMMouseScroll events at
+      // listen for mousedown, mouseup, keydown, and mouse events at
       // document level
       Document* doc = sourceNode->GetComposedDoc();
       if (doc) {
@@ -408,7 +408,7 @@ nsresult nsXULTooltipListener::ShowTooltip() {
         // applications.  If we don't specify the aWantsUntrusted of
         // AddSystemEventListener(), the event target sets it to TRUE if the
         // target is in content.
-        doc->AddSystemEventListener(u"DOMMouseScroll"_ns, this, true);
+        doc->AddSystemEventListener(u"wheel"_ns, this, true);
         doc->AddSystemEventListener(u"mousedown"_ns, this, true);
         doc->AddSystemEventListener(u"mouseup"_ns, this, true);
 #ifndef XP_WIN
@@ -639,7 +639,7 @@ nsresult nsXULTooltipListener::DestroyTooltip() {
     nsCOMPtr<Document> doc = currentTooltip->GetComposedDoc();
     if (doc) {
       // remove the mousedown and keydown listener from document
-      doc->RemoveSystemEventListener(u"DOMMouseScroll"_ns, this, true);
+      doc->RemoveSystemEventListener(u"wheel"_ns, this, true);
       doc->RemoveSystemEventListener(u"mousedown"_ns, this, true);
       doc->RemoveSystemEventListener(u"mouseup"_ns, this, true);
 #ifndef XP_WIN

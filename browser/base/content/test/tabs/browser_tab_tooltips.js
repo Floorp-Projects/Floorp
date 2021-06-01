@@ -110,3 +110,22 @@ add_task(async function() {
     BrowserTestUtils.removeTab(tab);
   }
 });
+
+// This test verifies that a mouse wheel closes the tooltip.
+add_task(async function() {
+  const tabUrl =
+    "data:text/html,<html><head><title>A Tab</title></head><body>Hello</body></html>";
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
+
+  let tooltip = document.getElementById("tabbrowser-tab-tooltip");
+  await openTooltip(tab, tooltip);
+
+  EventUtils.synthesizeWheel(tab, 4, 4, {
+    deltaMode: WheelEvent.DOM_DELTA_LINE,
+    deltaY: 1.0,
+  });
+
+  is(tooltip.state, "closed", "wheel event closed the tooltip");
+
+  BrowserTestUtils.removeTab(tab);
+});
