@@ -104,10 +104,10 @@ bool RemoteWorkerManager::MatchRemoteType(const nsACString& processRemoteType,
 
 // static
 Result<nsCString, nsresult> RemoteWorkerManager::GetRemoteType(
-    const nsCOMPtr<nsIPrincipal>& aPrincipal, WorkerType aWorkerType) {
+    const nsCOMPtr<nsIPrincipal>& aPrincipal, WorkerKind aWorkerKind) {
   AssertIsOnMainThread();
 
-  MOZ_ASSERT_IF(aWorkerType == WorkerType::WorkerTypeService,
+  MOZ_ASSERT_IF(aWorkerKind == WorkerKind::WorkerKindService,
                 aPrincipal->GetIsContentPrincipal());
 
   nsCOMPtr<nsIE10SUtils> e10sUtils =
@@ -118,7 +118,7 @@ Result<nsCString, nsresult> RemoteWorkerManager::GetRemoteType(
   }
 
   nsCString preferredRemoteType = DEFAULT_REMOTE_TYPE;
-  if (aWorkerType == WorkerType::WorkerTypeShared) {
+  if (aWorkerKind == WorkerKind::WorkerKindShared) {
     if (auto* contentChild = ContentChild::GetSingleton()) {
       // For a shared worker set the preferred remote type to the content
       // child process remote type.
@@ -130,11 +130,11 @@ Result<nsCString, nsresult> RemoteWorkerManager::GetRemoteType(
 
   nsIE10SUtils::RemoteWorkerType workerType;
 
-  switch (aWorkerType) {
-    case WorkerType::WorkerTypeService:
+  switch (aWorkerKind) {
+    case WorkerKind::WorkerKindService:
       workerType = nsIE10SUtils::REMOTE_WORKER_TYPE_SERVICE;
       break;
-    case WorkerType::WorkerTypeShared:
+    case WorkerKind::WorkerKindShared:
       workerType = nsIE10SUtils::REMOTE_WORKER_TYPE_SHARED;
       break;
     default:
@@ -227,7 +227,7 @@ Result<nsCString, nsresult> RemoteWorkerManager::GetRemoteType(
         buf,
         "workerType=%s, principal=%s, preferredRemoteType=%s, "
         "processRemoteType=%s, errorName=%s, errorLocation=%s:%d",
-        aWorkerType == WorkerType::WorkerTypeService ? "service" : "shared",
+        aWorkerKind == WorkerKind::WorkerKindService ? "service" : "shared",
         principalTypeOrScheme.get(),
         PromiseFlatCString(RemoteTypePrefix(preferredRemoteType)).get(),
         processRemoteType.get(), errorName.get(), errorFilename.get(),
@@ -245,7 +245,7 @@ Result<nsCString, nsresult> RemoteWorkerManager::GetRemoteType(
     LOG(
         ("GetRemoteType workerType=%s, principal=%s, "
          "preferredRemoteType=%s, selectedRemoteType=%s",
-         aWorkerType == WorkerType::WorkerTypeService ? "service" : "shared",
+         aWorkerKind == WorkerKind::WorkerKindService ? "service" : "shared",
          principalOrigin.get(), preferredRemoteType.get(), remoteType.get()));
   }
 
@@ -300,7 +300,7 @@ bool RemoteWorkerManager::IsRemoteTypeAllowed(const RemoteWorkerData& aData) {
   bool isServiceWorker = aData.serviceWorkerData().type() ==
                          OptionalServiceWorkerData::TServiceWorkerData;
   auto remoteType = GetRemoteType(
-      principal, isServiceWorker ? WorkerTypeService : WorkerTypeShared);
+      principal, isServiceWorker ? WorkerKindService : WorkerKindShared);
   if (NS_WARN_IF(remoteType.isErr())) {
     LOG(("IsRemoteTypeAllowed: Error to retrieve remote type"));
     return false;

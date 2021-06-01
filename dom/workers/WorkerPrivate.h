@@ -50,8 +50,8 @@ namespace dom {
 
 // If you change this, the corresponding list in nsIWorkerDebugger.idl needs
 // to be updated too. And histograms enum for worker use counters uses the same
-// order of worker type. Please also update dom/base/usecounters.py.
-enum WorkerType { WorkerTypeDedicated, WorkerTypeShared, WorkerTypeService };
+// order of worker kind. Please also update dom/base/usecounters.py.
+enum WorkerKind { WorkerKindDedicated, WorkerKindShared, WorkerKindService };
 
 class ClientInfo;
 class ClientSource;
@@ -124,7 +124,7 @@ class WorkerPrivate final : public RelativeTimeline {
 
   static already_AddRefed<WorkerPrivate> Constructor(
       JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
-      WorkerType aWorkerType, const nsAString& aWorkerName,
+      WorkerKind aWorkerKind, const nsAString& aWorkerName,
       const nsACString& aServiceWorkerScope, WorkerLoadInfo* aLoadInfo,
       ErrorResult& aRv, nsString aId = u""_ns);
 
@@ -134,7 +134,7 @@ class WorkerPrivate final : public RelativeTimeline {
                               WorkerPrivate* aParent,
                               const nsAString& aScriptURL, bool aIsChromeWorker,
                               LoadGroupBehavior aLoadGroupBehavior,
-                              WorkerType aWorkerType,
+                              WorkerKind aWorkerKind,
                               WorkerLoadInfo* aLoadInfo);
 
   void Traverse(nsCycleCollectionTraversalCallback& aCb);
@@ -597,25 +597,25 @@ class WorkerPrivate final : public RelativeTimeline {
 
   const nsString& WorkerName() const { return mWorkerName; }
 
-  WorkerType Type() const { return mWorkerType; }
+  WorkerKind Kind() const { return mWorkerKind; }
 
-  bool IsDedicatedWorker() const { return mWorkerType == WorkerTypeDedicated; }
+  bool IsDedicatedWorker() const { return mWorkerKind == WorkerKindDedicated; }
 
-  bool IsSharedWorker() const { return mWorkerType == WorkerTypeShared; }
+  bool IsSharedWorker() const { return mWorkerKind == WorkerKindShared; }
 
-  bool IsServiceWorker() const { return mWorkerType == WorkerTypeService; }
+  bool IsServiceWorker() const { return mWorkerKind == WorkerKindService; }
 
   nsContentPolicyType ContentPolicyType() const {
-    return ContentPolicyType(mWorkerType);
+    return ContentPolicyType(mWorkerKind);
   }
 
-  static nsContentPolicyType ContentPolicyType(WorkerType aWorkerType) {
-    switch (aWorkerType) {
-      case WorkerTypeDedicated:
+  static nsContentPolicyType ContentPolicyType(WorkerKind aWorkerKind) {
+    switch (aWorkerKind) {
+      case WorkerKindDedicated:
         return nsIContentPolicy::TYPE_INTERNAL_WORKER;
-      case WorkerTypeShared:
+      case WorkerKindShared:
         return nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
-      case WorkerTypeService:
+      case WorkerKindService:
         return nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER;
       default:
         MOZ_ASSERT_UNREACHABLE("Invalid worker type");
@@ -979,7 +979,7 @@ class WorkerPrivate final : public RelativeTimeline {
  private:
   WorkerPrivate(
       WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
-      WorkerType aWorkerType, const nsAString& aWorkerName,
+      WorkerKind aWorkerKind, const nsAString& aWorkerName,
       const nsACString& aServiceWorkerScope, WorkerLoadInfo& aLoadInfo,
       nsString&& aId, const nsID& aAgentClusterId,
       const nsILoadInfo::CrossOriginOpenerPolicy aAgentClusterOpenerPolicy);
@@ -1110,7 +1110,7 @@ class WorkerPrivate final : public RelativeTimeline {
   // This is the worker name for shared workers and dedicated workers.
   const nsString mWorkerName;
 
-  const WorkerType mWorkerType;
+  const WorkerKind mWorkerKind;
 
   // The worker is owned by its thread, which is represented here.  This is set
   // in Constructor() and emptied by WorkerFinishedRunnable, and conditionally

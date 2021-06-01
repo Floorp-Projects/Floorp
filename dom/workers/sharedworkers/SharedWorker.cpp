@@ -106,7 +106,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   WorkerLoadInfo loadInfo;
   aRv = WorkerPrivate::GetLoadInfo(cx, window, nullptr, aScriptURL, false,
                                    WorkerPrivate::OverrideLoadGroup,
-                                   WorkerTypeShared, &loadInfo);
+                                   WorkerKindShared, &loadInfo);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -201,7 +201,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   net::CookieJarSettings::Cast(loadInfo.mCookieJarSettings)->Serialize(cjsData);
 
   auto remoteType = RemoteWorkerManager::GetRemoteType(
-      loadInfo.mPrincipal, WorkerType::WorkerTypeShared);
+      loadInfo.mPrincipal, WorkerKind::WorkerKindShared);
   if (NS_WARN_IF(remoteType.isErr())) {
     aRv.Throw(remoteType.unwrapErr());
     return nullptr;

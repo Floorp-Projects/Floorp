@@ -245,7 +245,7 @@ WorkerDebugger::GetType(uint32_t* aResult) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  *aResult = mWorkerPrivate->Type();
+  *aResult = mWorkerPrivate->Kind();
   return NS_OK;
 }
 
