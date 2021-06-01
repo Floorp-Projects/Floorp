@@ -48,6 +48,7 @@ xpcshell:
             default:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
+                    android-em-7.0-x86_64/debug-isolated-process: []
                     windows10-64-asan/opt: []  # No XPCShell on ASAN yet
                     default: built-projects
     chunks:
