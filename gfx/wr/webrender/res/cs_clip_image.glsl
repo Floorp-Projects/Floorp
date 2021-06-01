@@ -46,7 +46,7 @@ ClipImageVertexInfo write_clip_image_vertex(RectWithSize tile_rect,
                                             RectWithSize local_clip_rect,
                                             Transform prim_transform,
                                             Transform clip_transform,
-                                            RectWithEndpoint sub_rect,
+                                            RectWithSize sub_rect,
                                             vec2 task_origin,
                                             vec2 screen_origin,
                                             float device_pixel_scale) {

@@ -20,10 +20,9 @@ use mint;
 use core::cmp::{Eq, PartialEq};
 use core::fmt;
 use core::hash::Hash;
-use core::iter::Sum;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-use num_traits::{NumCast, Signed, Float};
+use num_traits::{NumCast, Signed};
 #[cfg(feature = "serde")]
 use serde;
 
@@ -80,22 +79,6 @@ where
         S: serde::Serializer,
     {
         (&self.width, &self.height).serialize(serializer)
-    }
-}
-
-#[cfg(feature = "arbitrary")]
-impl<'a, T, U> arbitrary::Arbitrary<'a> for Size2D<T, U>
-where
-    T: arbitrary::Arbitrary<'a>,
-{
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self>
-    {
-        let (width, height) = arbitrary::Arbitrary::arbitrary(u)?;
-        Ok(Size2D {
-            width,
-            height,
-            _unit: PhantomData,
-        })
     }
 }
 
@@ -159,19 +142,6 @@ impl<T, U> Size2D<T, U> {
     #[inline]
     pub fn from_lengths(width: Length<T, U>, height: Length<T, U>) -> Self {
         Size2D::new(width.0, height.0)
-    }
-
-    /// Constructor setting all components to the same value.
-    #[inline]
-    pub fn splat(v: T) -> Self
-    where
-        T: Clone,
-    {
-        Size2D {
-            width: v.clone(),
-            height: v,
-            _unit: PhantomData,
-        }
     }
 
     /// Tag a unitless value with units.
@@ -392,14 +362,6 @@ impl<T: NumCast + Copy, U> Size2D<T, U> {
     }
 }
 
-impl<T: Float, U> Size2D<T, U> {
-    /// Returns true if all members are finite.
-    #[inline]
-    pub fn is_finite(self) -> bool {
-        self.width.is_finite() && self.height.is_finite()
-    }
-}
-
 impl<T: Signed, U> Size2D<T, U> {
     /// Computes the absolute value of each component.
     ///
@@ -439,12 +401,6 @@ impl<T: PartialOrd, U> Size2D<T, U> {
         T: Copy,
     {
         self.max(start).min(end)
-    }
-
-    // Returns true if this size is larger or equal to the other size in all dimensions.
-    #[inline]
-    pub fn contains(self, other: Self) -> bool {
-        self.width >= other.width && self.height >= other.height
     }
 
     /// Returns vector with results of "greater then" operation on each component.
@@ -539,25 +495,6 @@ impl<T: Add, U> Add for Size2D<T, U> {
     #[inline]
     fn add(self, other: Self) -> Self::Output {
         Size2D::new(self.width + other.width, self.height + other.height)
-    }
-}
-
-impl<T: Copy + Add<T, Output = T>, U> Add<&Self> for Size2D<T, U> {
-    type Output = Self;
-    fn add(self, other: &Self) -> Self {
-        Size2D::new(self.width + other.width, self.height + other.height)
-    }
-}
-
-impl<T: Add<Output = T> + Zero, U> Sum for Size2D<T, U> {
-    fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
-        iter.fold(Self::zero(), Add::add)
-    }
-}
-
-impl<'a, T: 'a + Add<Output = T> + Copy + Zero, U: 'a> Sum<&'a Self> for Size2D<T, U> {
-    fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
-        iter.fold(Self::zero(), Add::add)
     }
 }
 
@@ -759,22 +696,18 @@ mod size2d {
             let s1 = Size2D::new(1.0, 2.0);
             let s2 = Size2D::new(3.0, 4.0);
             assert_eq!(s1 + s2, Size2D::new(4.0, 6.0));
-            assert_eq!(s1 + &s2, Size2D::new(4.0, 6.0));
 
             let s1 = Size2D::new(1.0, 2.0);
             let s2 = Size2D::new(0.0, 0.0);
             assert_eq!(s1 + s2, Size2D::new(1.0, 2.0));
-            assert_eq!(s1 + &s2, Size2D::new(1.0, 2.0));
 
             let s1 = Size2D::new(1.0, 2.0);
             let s2 = Size2D::new(-3.0, -4.0);
             assert_eq!(s1 + s2, Size2D::new(-2.0, -2.0));
-            assert_eq!(s1 + &s2, Size2D::new(-2.0, -2.0));
 
             let s1 = Size2D::new(0.0, 0.0);
             let s2 = Size2D::new(0.0, 0.0);
             assert_eq!(s1 + s2, Size2D::new(0.0, 0.0));
-            assert_eq!(s1 + &s2, Size2D::new(0.0, 0.0));
         }
 
         #[test]
@@ -794,17 +727,6 @@ mod size2d {
             let mut s = Size2D::new(0.0, 0.0);
             s += Size2D::new(0.0, 0.0);
             assert_eq!(s, Size2D::new(0.0, 0.0));
-        }
-
-        #[test]
-        pub fn test_sum() {
-            let sizes = [
-                Size2D::new(0.0, 1.0),
-                Size2D::new(1.0, 2.0),
-                Size2D::new(2.0, 3.0)
-            ];
-            let sum = Size2D::new(3.0, 6.0);
-            assert_eq!(sizes.iter().sum::<Size2D<_>>(), sum);
         }
 
         #[test]
@@ -1048,24 +970,11 @@ impl<T, U> Size3D<T, U> {
             _unit: PhantomData,
         }
     }
+
     /// Constructor taking scalar strongly typed lengths.
     #[inline]
     pub fn from_lengths(width: Length<T, U>, height: Length<T, U>, depth: Length<T, U>) -> Self {
         Size3D::new(width.0, height.0, depth.0)
-    }
-
-    /// Constructor setting all components to the same value.
-    #[inline]
-    pub fn splat(v: T) -> Self
-    where
-        T: Clone,
-    {
-        Size3D {
-            width: v.clone(),
-            height: v.clone(),
-            depth: v,
-            _unit: PhantomData,
-        }
     }
 
     /// Tag a unitless value with units.
@@ -1280,14 +1189,6 @@ impl<T: NumCast + Copy, U> Size3D<T, U> {
     }
 }
 
-impl<T: Float, U> Size3D<T, U> {
-    /// Returns true if all members are finite.
-    #[inline]
-    pub fn is_finite(self) -> bool {
-        self.width.is_finite() && self.height.is_finite() && self.depth.is_finite()
-    }
-}
-
 impl<T: Signed, U> Size3D<T, U> {
     /// Computes the absolute value of each component.
     ///
@@ -1336,13 +1237,6 @@ impl<T: PartialOrd, U> Size3D<T, U> {
     {
         self.max(start).min(end)
     }
-
-    // Returns true if this size is larger or equal to the other size in all dimensions.
-    #[inline]
-    pub fn contains(self, other: Self) -> bool {
-        self.width >= other.width && self.height >= other.height && self.depth >= other.depth
-    }
-
 
     /// Returns vector with results of "greater than" operation on each component.
     pub fn greater_than(self, other: Self) -> BoolVector3D {
@@ -1442,29 +1336,6 @@ impl<T: Add, U> Add for Size3D<T, U> {
             self.height + other.height,
             self.depth + other.depth,
         )
-    }
-}
-
-impl<T: Copy + Add<T, Output = T>, U> Add<&Self> for Size3D<T, U> {
-    type Output = Self;
-    fn add(self, other: &Self) -> Self {
-        Size3D::new(
-            self.width + other.width,
-            self.height + other.height,
-            self.depth + other.depth,
-        )
-    }
-}
-
-impl<T: Add<Output = T> + Zero, U> Sum for Size3D<T, U> {
-    fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
-        iter.fold(Self::zero(), Add::add)
-    }
-}
-
-impl<'a, T: 'a + Add<Output = T> + Copy + Zero, U: 'a> Sum<&'a Self> for Size3D<T, U> {
-    fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
-        iter.fold(Self::zero(), Add::add)
     }
 }
 
@@ -1667,33 +1538,18 @@ mod size3d {
             let s1 = Size3D::new(1.0, 2.0, 3.0);
             let s2 = Size3D::new(4.0, 5.0, 6.0);
             assert_eq!(s1 + s2, Size3D::new(5.0, 7.0, 9.0));
-            assert_eq!(s1 + &s2, Size3D::new(5.0, 7.0, 9.0));
 
             let s1 = Size3D::new(1.0, 2.0, 3.0);
             let s2 = Size3D::new(0.0, 0.0, 0.0);
             assert_eq!(s1 + s2, Size3D::new(1.0, 2.0, 3.0));
-            assert_eq!(s1 + &s2, Size3D::new(1.0, 2.0, 3.0));
 
             let s1 = Size3D::new(1.0, 2.0, 3.0);
             let s2 = Size3D::new(-4.0, -5.0, -6.0);
             assert_eq!(s1 + s2, Size3D::new(-3.0, -3.0, -3.0));
-            assert_eq!(s1 + &s2, Size3D::new(-3.0, -3.0, -3.0));
 
             let s1 = Size3D::new(0.0, 0.0, 0.0);
             let s2 = Size3D::new(0.0, 0.0, 0.0);
             assert_eq!(s1 + s2, Size3D::new(0.0, 0.0, 0.0));
-            assert_eq!(s1 + &s2, Size3D::new(0.0, 0.0, 0.0));
-        }
-
-        #[test]
-        pub fn test_sum() {
-            let sizes = [
-                Size3D::new(0.0, 1.0, 2.0),
-                Size3D::new(1.0, 2.0, 3.0),
-                Size3D::new(2.0, 3.0, 4.0)
-            ];
-            let sum = Size3D::new(3.0, 6.0, 9.0);
-            assert_eq!(sizes.iter().sum::<Size3D<_>>(), sum);
         }
 
         #[test]

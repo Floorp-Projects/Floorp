@@ -345,10 +345,10 @@ static inline wr::LayoutRect ToLayoutRect(const gfx::Rect& rect) {
 static inline wr::DeviceIntRect ToDeviceIntRect(
     const mozilla::ImageIntRect& rect) {
   wr::DeviceIntRect r;
-  r.min.x = rect.X();
-  r.min.y = rect.Y();
-  r.max.x = rect.X() + rect.Width();
-  r.max.y = rect.Y() + rect.Height();
+  r.origin.x = rect.X();
+  r.origin.y = rect.Y();
+  r.size.width = rect.Width();
+  r.size.height = rect.Height();
   return r;
 }
 
