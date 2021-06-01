@@ -130,12 +130,6 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("json"),
       },
     },
-    synthesizeKey: {
-      request: {
-        args: Arg(0, "json"),
-      },
-      response: {},
-    },
     scrollIntoView: {
       request: {
         args: Arg(0, "string"),
@@ -484,15 +478,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
     }
 
     return regions;
-  },
-
-  /**
-   * Synthesize a key event for an element. This handler doesn't send a message
-   * back. Consumers should listen to specific events on the inspector/highlighter
-   * to know when the event got synthesized.
-   */
-  synthesizeKey: function({ key, options, content }) {
-    EventUtils.synthesizeKey(key, options, this.content);
   },
 
   /**

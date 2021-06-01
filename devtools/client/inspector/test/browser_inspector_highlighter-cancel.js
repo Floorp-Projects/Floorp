@@ -36,7 +36,7 @@ add_task(async function() {
 
   function cancelPickerByShortcut() {
     info("Key pressed. Waiting for picker to be canceled.");
-    testActor.synthesizeKey({ key: "VK_ESCAPE", options: {} });
+    BrowserTestUtils.synthesizeKey("VK_ESCAPE", {}, gBrowser.selectedBrowser);
     return toolbox.nodePicker.once("picker-node-canceled");
   }
 

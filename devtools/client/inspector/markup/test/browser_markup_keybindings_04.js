@@ -12,7 +12,7 @@ requestLongerTimeout(2);
 const TEST_URL = "data:text/html;charset=utf8,<div>test element</div>";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Select the test node with the browser ctx menu");
   await clickOnInspectMenuItem("div");
@@ -26,7 +26,7 @@ add_task(async function() {
   assertNodeSelected(inspector, "body");
 
   info("Select the test node with the element picker");
-  await selectWithElementPicker(inspector, testActor);
+  await selectWithElementPicker(inspector);
   assertNodeSelected(inspector, "div");
 
   info(
@@ -55,7 +55,7 @@ function selectPreviousNodeWithArrowUp(inspector) {
   return Promise.all([onUpdated, onNodeHighlighted]);
 }
 
-async function selectWithElementPicker(inspector, testActor) {
+async function selectWithElementPicker(inspector) {
   await startPicker(inspector.toolbox);
 
   await safeSynthesizeMouseEventAtCenterInContentPage(
@@ -66,6 +66,6 @@ async function selectWithElementPicker(inspector, testActor) {
     gBrowser.selectedBrowser
   );
 
-  await testActor.synthesizeKey({ key: "KEY_Enter", options: {} });
+  BrowserTestUtils.synthesizeKey("KEY_Enter", {}, gBrowser.selectedBrowser);
   await inspector.once("inspector-updated");
 }

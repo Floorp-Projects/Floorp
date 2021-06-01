@@ -10,13 +10,13 @@ const IS_OSX = Services.appinfo.OS === "Darwin";
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);
   await hoverElement(inspector, "#another");
 
   info("Testing enter/return key as pick-node command");
-  await doKeyPick({ key: "VK_RETURN", options: {} });
+  await doKeyPick("VK_RETURN");
   is(
     inspector.selection.nodeFront.id,
     "another",
@@ -26,7 +26,7 @@ add_task(async function() {
   info("Testing escape key as cancel-picker command");
   await startPicker(toolbox);
   await hoverElement(inspector, "#ahoy");
-  await doKeyStop({ key: "VK_ESCAPE", options: {} });
+  await doKeyStop("VK_ESCAPE");
   is(
     inspector.selection.nodeFront.id,
     "another",
@@ -36,24 +36,24 @@ add_task(async function() {
   info("Testing Ctrl+Shift+C shortcut as cancel-picker command");
   await startPicker(toolbox);
   await hoverElement(inspector, "#ahoy");
-  const shortcutOpts = { key: "VK_C", options: {} };
+  const eventOptions = { key: "VK_C" };
   if (IS_OSX) {
-    shortcutOpts.options.metaKey = true;
-    shortcutOpts.options.altKey = true;
+    eventOptions.metaKey = true;
+    eventOptions.altKey = true;
   } else {
-    shortcutOpts.options.ctrlKey = true;
-    shortcutOpts.options.shiftKey = true;
+    eventOptions.ctrlKey = true;
+    eventOptions.shiftKey = true;
   }
-  await doKeyStop(shortcutOpts);
+  await doKeyStop("VK_C", eventOptions);
   is(
     inspector.selection.nodeFront.id,
     "another",
     "The #another DIV is still selected. Passed."
   );
 
-  function doKeyPick(args) {
+  function doKeyPick(key, options = {}) {
     info("Key pressed. Waiting for element to be picked");
-    testActor.synthesizeKey(args);
+    BrowserTestUtils.synthesizeKey(key, options, gBrowser.selectedBrowser);
     return Promise.all([
       inspector.selection.once("new-node-front"),
       inspector.once("inspector-updated"),
@@ -61,9 +61,9 @@ add_task(async function() {
     ]);
   }
 
-  function doKeyStop(args) {
+  function doKeyStop(key, options = {}) {
     info("Key pressed. Waiting for picker to be canceled");
-    testActor.synthesizeKey(args);
+    BrowserTestUtils.synthesizeKey(key, options, gBrowser.selectedBrowser);
     return toolbox.nodePicker.once("picker-stopped");
   }
 });
