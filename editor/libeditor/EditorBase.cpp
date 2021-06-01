@@ -1411,6 +1411,54 @@ NS_IMETHODIMP EditorBase::SetDocumentCharacterSet(
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+nsresult EditorBase::ComputeValueInternal(const nsAString& aFormatType,
+                                          uint32_t aDocumentEncoderFlags,
+                                          nsAString& aOutputString) const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  // First, let's try to get the value simply only from text node if the
+  // caller wants plaintext value.
+  // NOTE: If it's neither <input type="text"> nor <textarea>, e.g., an HTML
+  // editor which is in plaintext mode (e.g., plaintext email composer on
+  // Thunderbird), it should be handled by the expensive path.
+  if (IsTextEditor() && aFormatType.LowerCaseEqualsLiteral("text/plain")) {
+    // If it's necessary to check selection range or the editor wraps hard,
+    // we need some complicated handling.  In such case, we need to use the
+    // expensive path.
+    // XXX Anything else what we cannot return the text node data simply?
+    if (!(aDocumentEncoderFlags & (nsIDocumentEncoder::OutputSelectionOnly |
+                                   nsIDocumentEncoder::OutputWrap))) {
+      EditActionResult result =
+          AsTextEditor()->ComputeValueFromTextNodeAndPaddingBRElement(
+              aOutputString);
+      if (result.Failed() || result.Canceled() || result.Handled()) {
+        NS_WARNING_ASSERTION(
+            result.Succeeded(),
+            "TextEditor::ComputeValueFromTextNodeAndPaddingBRElement() failed");
+        return result.Rv();
+      }
+    }
+  }
+
+  nsAutoCString charset;
+  nsresult rv = GetDocumentCharsetInternal(charset);
+  if (NS_FAILED(rv) || charset.IsEmpty()) {
+    charset.AssignLiteral("windows-1252");  // XXX Why don't we use "UTF-8"?
+  }
+
+  nsCOMPtr<nsIDocumentEncoder> encoder =
+      GetAndInitDocEncoder(aFormatType, aDocumentEncoderFlags, charset);
+  if (!encoder) {
+    NS_WARNING("EditorBase::GetAndInitDocEncoder() failed");
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = encoder->EncodeToString(aOutputString);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "nsIDocumentEncoder::EncodeToString() failed");
+  return rv;
+}
+
 already_AddRefed<nsIDocumentEncoder> EditorBase::GetAndInitDocEncoder(
     const nsAString& aFormatType, uint32_t aDocumentEncoderFlags,
     const nsACString& aCharset) const {

@@ -43,7 +43,6 @@
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIDocumentEncoder.h"
 #include "nsINode.h"
 #include "nsIPrincipal.h"
 #include "nsISelectionController.h"
@@ -489,53 +488,9 @@ NS_IMETHODIMP TextEditor::OutputToString(const nsAString& aFormatType,
   nsresult rv =
       ComputeValueInternal(aFormatType, aDocumentEncoderFlags, aOutputString);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "TextEditor::ComputeValueInternal() failed");
+                       "EditorBase::ComputeValueInternal() failed");
   // This is low level API for XUL application.  So, we should return raw
   // error code here.
-  return rv;
-}
-
-nsresult TextEditor::ComputeValueInternal(const nsAString& aFormatType,
-                                          uint32_t aDocumentEncoderFlags,
-                                          nsAString& aOutputString) const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  // First, let's try to get the value simply only from text node if the
-  // caller wants plaintext value.
-  if (aFormatType.LowerCaseEqualsLiteral("text/plain")) {
-    // If it's necessary to check selection range or the editor wraps hard,
-    // we need some complicated handling.  In such case, we need to use the
-    // expensive path.
-    // XXX Anything else what we cannot return the text node data simply?
-    if (!(aDocumentEncoderFlags & (nsIDocumentEncoder::OutputSelectionOnly |
-                                   nsIDocumentEncoder::OutputWrap))) {
-      EditActionResult result =
-          ComputeValueFromTextNodeAndPaddingBRElement(aOutputString);
-      if (result.Failed() || result.Canceled() || result.Handled()) {
-        NS_WARNING_ASSERTION(
-            result.Succeeded(),
-            "TextEditor::ComputeValueFromTextNodeAndPaddingBRElement() failed");
-        return result.Rv();
-      }
-    }
-  }
-
-  nsAutoCString charset;
-  nsresult rv = GetDocumentCharsetInternal(charset);
-  if (NS_FAILED(rv) || charset.IsEmpty()) {
-    charset.AssignLiteral("windows-1252");
-  }
-
-  nsCOMPtr<nsIDocumentEncoder> encoder =
-      GetAndInitDocEncoder(aFormatType, aDocumentEncoderFlags, charset);
-  if (!encoder) {
-    NS_WARNING("EditorBase::GetAndInitDocEncoder() failed");
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = encoder->EncodeToString(aOutputString);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "nsIDocumentEncoder::EncodeToString() failed");
   return rv;
 }
 

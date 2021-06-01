@@ -2242,6 +2242,18 @@ class EditorBase : public nsIEditor,
   nsresult GetDocumentCharsetInternal(nsACString& aCharset) const;
 
   /**
+   * ComputeValueInternal() computes string value of this editor for given
+   * format.  This may be too expensive if it's in hot path.
+   *
+   * @param aFormatType             MIME type like "text/plain".
+   * @param aDocumentEncoderFlags   Flags of nsIDocumentEncoder.
+   * @param aCharset                Encoding of the document.
+   */
+  nsresult ComputeValueInternal(const nsAString& aFormatType,
+                                uint32_t aDocumentEncoderFlags,
+                                nsAString& aOutputString) const;
+
+  /**
    * GetAndInitDocEncoder() returns a document encoder instance for aFormatType
    * after initializing it.  The result may be cached for saving recreation
    * cost.
