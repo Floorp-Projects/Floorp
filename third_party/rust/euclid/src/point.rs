@@ -78,6 +78,21 @@ where
     }
 }
 
+#[cfg(feature = "arbitrary")]
+impl<'a, T, U> arbitrary::Arbitrary<'a> for Point2D<T, U>
+where
+    T: arbitrary::Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self>
+    {
+        let (x, y) = arbitrary::Arbitrary::arbitrary(u)?;
+        Ok(Point2D {
+            x,
+            y,
+            _unit: PhantomData,
+        })
+    }
+}
 impl<T, U> Eq for Point2D<T, U> where T: Eq {}
 
 impl<T, U> PartialEq for Point2D<T, U>
@@ -146,6 +161,19 @@ impl<T, U> Point2D<T, U> {
     #[inline]
     pub fn from_lengths(x: Length<T, U>, y: Length<T, U>) -> Self {
         point2(x.0, y.0)
+    }
+
+    /// Constructor setting all components to the same value.
+    #[inline]
+    pub fn splat(v: T) -> Self
+    where
+        T: Clone,
+    {
+        Point2D {
+            x: v.clone(),
+            y: v,
+            _unit: PhantomData,
+        }
     }
 
     /// Tag a unitless value with units.
@@ -454,6 +482,14 @@ impl<T: NumCast + Copy, U> Point2D<T, U> {
     #[inline]
     pub fn to_i64(self) -> Point2D<i64, U> {
         self.cast()
+    }
+}
+
+impl<T: Float, U> Point2D<T, U> {
+    /// Returns true if all members are finite.
+    #[inline]
+    pub fn is_finite(self) -> bool {
+        self.x.is_finite() && self.y.is_finite()
     }
 }
 
@@ -819,6 +855,20 @@ impl<T, U> Point3D<T, U> {
         point3(x.0, y.0, z.0)
     }
 
+    /// Constructor setting all components to the same value.
+    #[inline]
+    pub fn splat(v: T) -> Self
+    where
+        T: Clone,
+    {
+        Point3D {
+            x: v.clone(),
+            y: v.clone(),
+            z: v,
+            _unit: PhantomData,
+        }
+    }
+
     /// Tag a unitless value with units.
     #[inline]
     pub fn from_untyped(p: Point3D<T, UnknownUnit>) -> Self {
@@ -1152,6 +1202,14 @@ impl<T: NumCast + Copy, U> Point3D<T, U> {
     #[inline]
     pub fn to_i64(self) -> Point3D<i64, U> {
         self.cast()
+    }
+}
+
+impl<T: Float, U> Point3D<T, U> {
+    /// Returns true if all members are finite.
+    #[inline]
+    pub fn is_finite(self) -> bool {
+        self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
     }
 }
 
