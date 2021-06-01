@@ -117,7 +117,7 @@ async function testBody(inspector, testActor) {
   const newBodyHTML = await testActor.getProperty("body", "outerHTML");
   is(newBodyHTML, bodyHTML, "<body> HTML has been updated");
 
-  const headsNum = await testActor.getNumberOfElementMatches("head");
+  const headsNum = await getNumberOfMatchingElementsInContentPage("head");
   is(headsNum, 1, "no extra <head>s have been added");
 }
 
@@ -148,7 +148,7 @@ async function testHead(inspector, testActor) {
     "<head> HTML has been updated"
   );
   is(
-    await testActor.getNumberOfElementMatches("body"),
+    await getNumberOfMatchingElementsInContentPage("body"),
     1,
     "no extra <body>s have been added"
   );
@@ -198,12 +198,12 @@ async function testDocumentElement(inspector, testActor) {
     "<html> HTML has been updated"
   );
   is(
-    await testActor.getNumberOfElementMatches("head"),
+    await getNumberOfMatchingElementsInContentPage("head"),
     1,
     "no extra <head>s have been added"
   );
   is(
-    await testActor.getNumberOfElementMatches("body"),
+    await getNumberOfMatchingElementsInContentPage("body"),
     1,
     "no extra <body>s have been added"
   );
@@ -258,12 +258,12 @@ async function testDocumentElement2(inspector, testActor) {
     "<html> HTML has been updated"
   );
   is(
-    await testActor.getNumberOfElementMatches("head"),
+    await getNumberOfMatchingElementsInContentPage("head"),
     1,
     "no extra <head>s have been added"
   );
   is(
-    await testActor.getNumberOfElementMatches("body"),
+    await getNumberOfMatchingElementsInContentPage("body"),
     1,
     "no extra <body>s have been added"
   );

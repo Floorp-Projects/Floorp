@@ -784,3 +784,17 @@ async function waitUntilVisitedState(tab, selectors) {
     return hasVisitedState;
   });
 }
+
+/**
+ * Return the number of elements matching the passed selector.
+ *
+ * @param {string} selector
+ * @returns Promise<Number> the number of matching elements
+ */
+function getNumberOfMatchingElementsInContentPage(selector) {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function(
+    innerSelector
+  ) {
+    return content.document.querySelectorAll(innerSelector).length;
+  });
+}

@@ -66,14 +66,6 @@ var testSpec = protocol.generateActorSpec({
   typeName: "test",
 
   methods: {
-    getNumberOfElementMatches: {
-      request: {
-        selector: Arg(0, "string"),
-      },
-      response: {
-        value: RetVal("number"),
-      },
-    },
     getHighlighterAttribute: {
       request: {
         nodeID: Arg(0, "string"),
@@ -361,13 +353,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
       );
     }
     return node;
-  },
-  /**
-   * Helper to get the number of elements matching a selector
-   * @param {string} CSS selector.
-   */
-  getNumberOfElementMatches: function(selector, root = this.content.document) {
-    return root.querySelectorAll(selector).length;
   },
 
   /**
