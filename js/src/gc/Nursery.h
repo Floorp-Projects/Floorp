@@ -243,17 +243,17 @@ class Nursery {
 
   // Allocate and return a pointer to a new GC object with its |slots|
   // pointer pre-filled. Returns nullptr if the Nursery is full.
-  JSObject* allocateObject(JSContext* cx, size_t size, size_t numDynamic,
-                           const JSClass* clasp);
+  JSObject* allocateObject(gc::AllocSite* site, size_t size,
+                           size_t numDynamicSlots, const JSClass* clasp);
 
   // Allocate and return a pointer to a new GC thing. Returns nullptr if the
   // Nursery is full.
-  gc::Cell* allocateCell(JS::Zone* zone, size_t size, JS::TraceKind kind);
+  gc::Cell* allocateCell(gc::AllocSite* site, size_t size, JS::TraceKind kind);
 
-  gc::Cell* allocateBigInt(JS::Zone* zone, size_t size) {
-    return allocateCell(zone, size, JS::TraceKind::BigInt);
+  gc::Cell* allocateBigInt(gc::AllocSite* site, size_t size) {
+    return allocateCell(site, size, JS::TraceKind::BigInt);
   }
-  gc::Cell* allocateString(JS::Zone* zone, size_t size);
+  gc::Cell* allocateString(gc::AllocSite* site, size_t size);
 
   static size_t nurseryCellHeaderSize() {
     return sizeof(gc::NurseryCellHeader);

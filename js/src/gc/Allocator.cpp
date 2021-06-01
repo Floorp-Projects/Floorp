@@ -36,8 +36,9 @@ using namespace gc;
 
 template <AllowGC allowGC /* = CanGC */>
 JSObject* js::AllocateObject(JSContext* cx, AllocKind kind,
-                             size_t nDynamicSlots, InitialHeap heap,
-                             const JSClass* clasp) {
+                             size_t nDynamicSlots, gc::InitialHeap heap,
+                             const JSClass* clasp,
+                             AllocSite* site /* = nullptr */) {
   MOZ_ASSERT(IsObjectAllocKind(kind));
   size_t thingSize = Arena::thingSize(kind);
 
@@ -48,6 +49,9 @@ JSObject* js::AllocateObject(JSContext* cx, AllocKind kind,
       "All allocations must be at least the allocator-imposed minimum size.");
 
   MOZ_ASSERT_IF(nDynamicSlots != 0, clasp->isNativeObject());
+
+  MOZ_ASSERT_IF(site && site->initialHeap() == TenuredHeap,
+                heap == TenuredHeap);
 
   // We cannot trigger GC or make runtime assertions when nursery allocation
   // is suppressed, either explicitly or because we are off-thread.
@@ -66,8 +70,12 @@ JSObject* js::AllocateObject(JSContext* cx, AllocKind kind,
   }
 
   if (cx->nursery().isEnabled() && heap != TenuredHeap) {
-    JSObject* obj = rt->gc.tryNewNurseryObject<allowGC>(cx, thingSize,
-                                                        nDynamicSlots, clasp);
+    if (!site) {
+      site = cx->zone()->unknownAllocSite();
+    }
+
+    JSObject* obj = rt->gc.tryNewNurseryObject<allowGC>(
+        cx, thingSize, nDynamicSlots, clasp, site);
     if (obj) {
       return obj;
     }
@@ -88,11 +96,13 @@ JSObject* js::AllocateObject(JSContext* cx, AllocKind kind,
 template JSObject* js::AllocateObject<NoGC>(JSContext* cx, gc::AllocKind kind,
                                             size_t nDynamicSlots,
                                             gc::InitialHeap heap,
-                                            const JSClass* clasp);
+                                            const JSClass* clasp,
+                                            gc::AllocSite* site);
 template JSObject* js::AllocateObject<CanGC>(JSContext* cx, gc::AllocKind kind,
                                              size_t nDynamicSlots,
                                              gc::InitialHeap heap,
-                                             const JSClass* clasp);
+                                             const JSClass* clasp,
+                                             gc::AllocSite* site);
 
 // Attempt to allocate a new JSObject out of the nursery. If there is not
 // enough room in the nursery or there is an OOM, this method will return
@@ -100,7 +110,8 @@ template JSObject* js::AllocateObject<CanGC>(JSContext* cx, gc::AllocKind kind,
 template <AllowGC allowGC>
 JSObject* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
                                          size_t nDynamicSlots,
-                                         const JSClass* clasp) {
+                                         const JSClass* clasp,
+                                         AllocSite* site) {
   MOZ_RELEASE_ASSERT(!cx->isHelperThreadContext());
 
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
@@ -108,7 +119,7 @@ JSObject* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
   JSObject* obj =
-      cx->nursery().allocateObject(cx, thingSize, nDynamicSlots, clasp);
+      cx->nursery().allocateObject(site, thingSize, nDynamicSlots, clasp);
   if (obj) {
     return obj;
   }
@@ -118,7 +129,8 @@ JSObject* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
 
     // Exceeding gcMaxBytes while tenuring can disable the Nursery.
     if (cx->nursery().isEnabled()) {
-      return cx->nursery().allocateObject(cx, thingSize, nDynamicSlots, clasp);
+      return cx->nursery().allocateObject(site, thingSize, nDynamicSlots,
+                                          clasp);
     }
   }
   return nullptr;
@@ -169,7 +181,8 @@ JSString* GCRuntime::tryNewNurseryString(JSContext* cx, size_t thingSize,
   MOZ_ASSERT(!cx->isNurseryAllocSuppressed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
-  Cell* cell = cx->nursery().allocateString(cx->zone(), thingSize);
+  AllocSite* site = cx->zone()->unknownAllocSite();
+  Cell* cell = cx->nursery().allocateString(site, thingSize);
   if (cell) {
     return static_cast<JSString*>(cell);
   }
@@ -181,7 +194,7 @@ JSString* GCRuntime::tryNewNurseryString(JSContext* cx, size_t thingSize,
     // other heuristics can disable nursery strings for this zone.
     if (cx->nursery().isEnabled() && cx->zone()->allocNurseryStrings) {
       return static_cast<JSString*>(
-          cx->nursery().allocateString(cx->zone(), thingSize));
+          cx->nursery().allocateString(site, thingSize));
     }
   }
   return nullptr;
@@ -244,7 +257,8 @@ JS::BigInt* GCRuntime::tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
   MOZ_ASSERT(!cx->isNurseryAllocSuppressed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
-  Cell* cell = cx->nursery().allocateBigInt(cx->zone(), thingSize);
+  AllocSite* site = cx->zone()->unknownAllocSite();
+  Cell* cell = cx->nursery().allocateBigInt(site, thingSize);
   if (cell) {
     return static_cast<JS::BigInt*>(cell);
   }
@@ -256,7 +270,7 @@ JS::BigInt* GCRuntime::tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
     // other heuristics can disable nursery BigInts for this zone.
     if (cx->nursery().isEnabled() && cx->zone()->allocNurseryBigInts) {
       return static_cast<JS::BigInt*>(
-          cx->nursery().allocateBigInt(cx->zone(), thingSize));
+          cx->nursery().allocateBigInt(site, thingSize));
     }
   }
   return nullptr;
