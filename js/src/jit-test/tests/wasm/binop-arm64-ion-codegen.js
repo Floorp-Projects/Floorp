@@ -262,3 +262,21 @@ codegenTestARM64_adhoc(
 assertEq(wasmEvalText(subneg64).exports.f(-37000000000n), 37000000000n)
 assertEq(wasmEvalText(subneg64).exports.f(42000000000n), -42000000000n)
 
+// Test that select does something reasonable and does not tie its output to one
+// of its inputs.
+
+codegenTestARM64_adhoc(
+    `(module
+       (func (export "f") (param i64) (param i64) (param i64) (param i32) (result i64)
+         (select (local.get 1) (local.get 2) (local.get 3))))`,
+    'f',
+    `6a03007f  tst     w3, w3
+     9a821020  csel    x0, x1, x2, ne`)
+
+codegenTestARM64_adhoc(
+    `(module
+       (func (export "f") (param f64) (param f64) (param f64) (param i32) (result f64)
+         (select (local.get 1) (local.get 2) (local.get 3))))`,
+    'f',
+    `6a00001f  tst     w0, w0
+     1e621c20  fcsel   d0, d1, d2, ne`)

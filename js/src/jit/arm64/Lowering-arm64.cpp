@@ -374,6 +374,28 @@ void LIRGenerator::visitPowHalf(MPowHalf* ins) {
   define(lir, ins);
 }
 
+void LIRGeneratorARM64::lowerWasmSelectI(MWasmSelect* select) {
+  if (select->type() == MIRType::Simd128) {
+    LAllocation t = useRegisterAtStart(select->trueExpr());
+    LAllocation f = useRegister(select->falseExpr());
+    LAllocation c = useRegister(select->condExpr());
+    auto* lir = new (alloc()) LWasmSelect(t, f, c);
+    defineReuseInput(lir, select, LWasmSelect::TrueExprIndex);
+  } else {
+    LAllocation t = useRegisterAtStart(select->trueExpr());
+    LAllocation f = useRegisterAtStart(select->falseExpr());
+    LAllocation c = useRegisterAtStart(select->condExpr());
+    define(new (alloc()) LWasmSelect(t, f, c), select);
+  }
+}
+
+void LIRGeneratorARM64::lowerWasmSelectI64(MWasmSelect* select) {
+  LInt64Allocation t = useInt64RegisterAtStart(select->trueExpr());
+  LInt64Allocation f = useInt64RegisterAtStart(select->falseExpr());
+  LAllocation c = useRegisterAtStart(select->condExpr());
+  defineInt64(new (alloc()) LWasmSelectI64(t, f, c), select);
+}
+
 LTableSwitch* LIRGeneratorARM64::newLTableSwitch(const LAllocation& in,
                                                  const LDefinition& inputCopy,
                                                  MTableSwitch* tableswitch) {

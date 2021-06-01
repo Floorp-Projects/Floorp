@@ -316,6 +316,20 @@ void LIRGenerator::visitPowHalf(MPowHalf* ins) {
   defineReuseInput(lir, ins, 0);
 }
 
+void LIRGeneratorMIPSShared::lowerWasmSelectI(MWasmSelect* select) {
+  auto* lir = new (alloc())
+      LWasmSelect(useRegisterAtStart(select->trueExpr()),
+                  useAny(select->falseExpr()), useRegister(select->condExpr()));
+  defineReuseInput(lir, select, LWasmSelect::TrueExprIndex);
+}
+
+void LIRGeneratorMIPSShared::lowerWasmSelectI64(MWasmSelect* select) {
+  auto* lir = new (alloc()) LWasmSelectI64(
+      useInt64RegisterAtStart(select->trueExpr()),
+      useInt64(select->falseExpr()), useRegister(select->condExpr()));
+  defineInt64ReuseInput(lir, select, LWasmSelectI64::TrueExprIndex);
+}
+
 LTableSwitch* LIRGeneratorMIPSShared::newLTableSwitch(
     const LAllocation& in, const LDefinition& inputCopy,
     MTableSwitch* tableswitch) {
