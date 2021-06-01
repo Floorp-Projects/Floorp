@@ -70,6 +70,41 @@ pub struct Transform3D<T, Src, Dst> {
     pub _unit: PhantomData<(Src, Dst)>,
 }
 
+
+#[cfg(feature = "arbitrary")]
+impl<'a, T, Src, Dst> arbitrary::Arbitrary<'a> for Transform3D<T, Src, Dst>
+where
+    T: arbitrary::Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self>
+    {
+        let (m11, m12, m13, m14) = arbitrary::Arbitrary::arbitrary(u)?;
+        let (m21, m22, m23, m24) = arbitrary::Arbitrary::arbitrary(u)?;
+        let (m31, m32, m33, m34) = arbitrary::Arbitrary::arbitrary(u)?;
+        let (m41, m42, m43, m44) = arbitrary::Arbitrary::arbitrary(u)?;
+
+        Ok(Transform3D {
+            m11,
+            m12,
+            m13,
+            m14,
+            m21,
+            m22,
+            m23,
+            m24,
+            m31,
+            m32,
+            m33,
+            m34,
+            m41,
+            m42,
+            m43,
+            m44,
+            _unit: PhantomData,
+        })
+    }
+}
+
 impl<T: Copy, Src, Dst> Copy for Transform3D<T, Src, Dst> {}
 
 impl<T: Clone, Src, Dst> Clone for Transform3D<T, Src, Dst> {
@@ -425,7 +460,7 @@ where
         )
     }
 
-    /// Create a simple perspective projection transform:
+    /// Create a simple perspective transform, projecting to the plane `z = -d`.
     ///
     /// ```text
     /// 1   0   0   0
@@ -433,6 +468,8 @@ where
     /// 0   0   1 -1/d
     /// 0   0   0   1
     /// ```
+    ///
+    /// See <https://drafts.csswg.org/css-transforms-2/#PerspectiveDefined>.
     pub fn perspective(d: T) -> Self
     where
         T: Neg<Output = T> + Div<Output = T>,
