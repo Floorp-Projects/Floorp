@@ -471,6 +471,11 @@ void Zone::discardJitCode(JSFreeOp* fop, const DiscardOptions& options) {
       jitScript->purgeOptimizedStubs(script);
     }
 
+    if (options.resetNurseryAllocSites || options.resetPretenuredAllocSites) {
+      jitScript->resetAllocSites(options.resetNurseryAllocSites,
+                                 options.resetPretenuredAllocSites);
+    }
+
     // Finally, reset the active flag.
     jitScript->resetActive();
   }
@@ -486,6 +491,38 @@ void Zone::discardJitCode(JSFreeOp* fop, const DiscardOptions& options) {
   if (options.discardBaselineCode) {
     jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(this);
     jitZone()->purgeIonCacheIRStubInfo();
+  }
+}
+
+void JS::Zone::resetAllocSitesAndInvalidate(bool resetNurserySites,
+                                            bool resetPretenuredSites) {
+  MOZ_ASSERT(resetNurserySites || resetPretenuredSites);
+
+  if (!jitZone()) {
+    return;
+  }
+
+  JSContext* cx = runtime_->mainContextFromOwnThread();
+  for (auto base = cellIterUnsafe<BaseScript>(); !base.done(); base.next()) {
+    jit::JitScript* jitScript = base->maybeJitScript();
+    if (!jitScript) {
+      continue;
+    }
+
+    if (!jitScript->resetAllocSites(resetNurserySites, resetPretenuredSites)) {
+      continue;
+    }
+
+    JSScript* script = base->asJSScript();
+    CancelOffThreadIonCompile(script);
+
+    if (!script->hasIonScript()) {
+      continue;
+    }
+
+    jit::Invalidate(cx, script,
+                    /* resetUses = */ true,
+                    /* cancelOffThread = */ true);
   }
 }
 

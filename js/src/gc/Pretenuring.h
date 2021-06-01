@@ -110,6 +110,10 @@ class AllocSite {
 
   void updateStateOnMinorGC(double promotionRate);
 
+  // Reset the state to 'Unknown' unless we have reached the invalidation limit
+  // for this site. Return whether the state was reset.
+  bool maybeResetState();
+
   bool invalidationLimitReached() const;
   bool invalidateScript(GCRuntime* gc);
 
@@ -150,6 +154,41 @@ class PretenuringZone {
   // things that are handled by the pretenuring system.  Allocation counts are
   // not recorded by optimized JIT code.
   AllocSite optimizedAllocSite;
+
+  // Count of tenured cell allocations made between each major collection and
+  // how many survived.
+  uint32_t allocCountInNewlyCreatedArenas = 0;
+  uint32_t survivorCountInNewlyCreatedArenas = 0;
+
+  // Count of successive collections that had a low young tenured survival
+  // rate. Used to discard optimized code if we get the pretenuring decision
+  // wrong.
+  uint32_t lowYoungTenuredSurvivalCount = 0;
+
+  // Count of successive nursery collections that had a high survival rate for
+  // objects allocated by optimized code. Used to discard optimized code if we
+  // get the pretenuring decision wrong.
+  uint32_t highNurserySurvivalCount = 0;
+
+  void clearCellCountsInNewlyCreatedArenas() {
+    allocCountInNewlyCreatedArenas = 0;
+    survivorCountInNewlyCreatedArenas = 0;
+  }
+  void updateCellCountsInNewlyCreatedArenas(uint32_t allocCount,
+                                            uint32_t survivorCount) {
+    allocCountInNewlyCreatedArenas += allocCount;
+    survivorCountInNewlyCreatedArenas += survivorCount;
+  }
+
+  bool calculateYoungTenuredSurvivalRate(double* rateOut);
+
+  void noteLowYoungTenuredSurvivalRate(bool lowYoungSurvivalRate);
+  void noteHighNurserySurvivalRate(bool highNurserySurvivalRate);
+
+  // Recovery: if code behaviour change we may need to reset allocation site
+  // state and invalidate JIT code.
+  bool shouldResetNurseryAllocSites();
+  bool shouldResetPretenuredAllocSites();
 };
 
 // Pretenuring information stored as part of the the GC nursery.
@@ -174,7 +213,10 @@ class PretenuringNursery {
     allocatedSites = site;
   }
 
-  void doPretenuring(GCRuntime* gc, bool reportInfo);
+  void doPretenuring(GCRuntime* gc, bool validPromotionRate,
+                     double promotionRate, bool reportInfo);
+
+  void maybeStopPretenuring(GCRuntime* gc);
 
   void* addressOfAllocatedSites() { return &allocatedSites; }
 };
