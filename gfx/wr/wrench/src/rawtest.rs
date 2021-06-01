@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use euclid::{point2, size2, rect, Box2D};
+use euclid::{point2, size2, rect};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::sync::mpsc::Receiver;
@@ -238,7 +238,7 @@ impl<'a> RawtestHarness<'a> {
             blob_img,
             ImageDescriptor::new(151, 56, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
             blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
-            DeviceIntRect::from_size(DeviceIntSize::new(151, 56)),
+            rect(0, 0, 151, 56),
             Some(128),
         );
 
@@ -279,7 +279,7 @@ impl<'a> RawtestHarness<'a> {
 
         let test_size = FramebufferIntSize::new(800, 800);
 
-        let window_rect = FramebufferIntRect::from_origin_and_size(
+        let window_rect = FramebufferIntRect::new(
             FramebufferIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
@@ -293,7 +293,7 @@ impl<'a> RawtestHarness<'a> {
             blob_img,
             ImageDescriptor::new(15000, 15000, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
             blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
-            DeviceIntRect::from_size(DeviceIntSize::new(15000, 15000)),
+            rect(0, 0, 15000, 15000),
             Some(100),
         );
 
@@ -344,8 +344,8 @@ impl<'a> RawtestHarness<'a> {
         //png::save_flipped("out.png", pixels.clone(), size2(window_rect.size.width, window_rect.size.height));
 
         // make sure things are in the right spot
-        let w = window_rect.width() as usize;
-        let h = window_rect.height() as usize;
+        let w = window_rect.size.width as usize;
+        let h = window_rect.size.height as usize;
         let p1 = (40 + (h - 100) * w) * 4;
         assert_eq!(pixels[p1 + 0], 50);
         assert_eq!(pixels[p1 + 1], 50);
@@ -366,7 +366,7 @@ impl<'a> RawtestHarness<'a> {
 
         let window_size = self.window.get_inner_size();
         let test_size = FramebufferIntSize::new(800, 800);
-        let window_rect = FramebufferIntRect::from_origin_and_size(
+        let window_rect = FramebufferIntRect::new(
             FramebufferIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
@@ -379,8 +379,8 @@ impl<'a> RawtestHarness<'a> {
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
             blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
             DeviceIntRect {
-                min: point2(50, 20),
-                max: point2(450, 420),
+                origin: point2(50, 20),
+                size: size2(400, 400),
             },
             Some(100),
         );
@@ -423,8 +423,8 @@ impl<'a> RawtestHarness<'a> {
 
 
         // make sure things are in the right spot
-        let w = window_rect.width() as usize;
-        let h = window_rect.height() as usize;
+        let w = window_rect.size.width as usize;
+        let h = window_rect.size.height as usize;
         let p1 = (65 + (h - 15) * w) * 4;
         assert_eq!(pixels[p1 + 0], 255);
         assert_eq!(pixels[p1 + 1], 255);
@@ -460,7 +460,7 @@ impl<'a> RawtestHarness<'a> {
 
         let window_size = self.window.get_inner_size();
         let test_size = FramebufferIntSize::new(800, 800);
-        let window_rect = FramebufferIntRect::from_origin_and_size(
+        let window_rect = FramebufferIntRect::new(
             FramebufferIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
@@ -473,8 +473,8 @@ impl<'a> RawtestHarness<'a> {
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
             blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
             DeviceIntRect {
-                min: point2(0, 0),
-                max: point2(500, 500),
+                origin: point2(0, 0),
+                size: size2(500, 500),
             },
             Some(128),
         );
@@ -519,8 +519,8 @@ impl<'a> RawtestHarness<'a> {
         let mut txn = Transaction::new();
 
         txn.set_blob_image_visible_area(blob_img, DeviceIntRect {
-            min: point2(50, 50),
-            max: point2(450, 450),
+            origin: point2(50, 50),
+            size: size2(400, 400),
         });
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
@@ -563,8 +563,8 @@ impl<'a> RawtestHarness<'a> {
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
             blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
             DeviceIntRect {
-                min: point2(50, 50),
-                max: point2(450, 450),
+                origin: point2(50, 50),
+                size: size2(400, 400),
             },
             Some(128),
         );
@@ -614,7 +614,7 @@ impl<'a> RawtestHarness<'a> {
         let window_size = self.window.get_inner_size();
 
         let test_size = FramebufferIntSize::new(800, 800);
-        let window_rect = FramebufferIntRect::from_origin_and_size(
+        let window_rect = FramebufferIntRect::new(
             point2(0, window_size.height - test_size.height),
             test_size,
         );
@@ -628,7 +628,7 @@ impl<'a> RawtestHarness<'a> {
             blob_img,
             ImageDescriptor::new(1510, 1510, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
             blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
-            DeviceIntRect::from_size(size2(1510, 1510)),
+            rect(0, 0, 1510, 1510),
             None,
         );
 
@@ -686,8 +686,8 @@ impl<'a> RawtestHarness<'a> {
             blob_img,
             ImageDescriptor::new(1510, 1510, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
             blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
-            DeviceIntRect::from_size(size2(1510, 1510)),
-            &Box2D { min: point2(10, 10), max: point2(110, 110) }.into(),
+            rect(0, 0, 1510, 1510),
+            &rect(10, 10, 100, 100).into(),
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
@@ -714,7 +714,7 @@ impl<'a> RawtestHarness<'a> {
 
         let pixels = self.render_and_get_pixels(window_rect);
 
-        self.compare_pixels(original_pixels, pixels, window_rect.size());
+        self.compare_pixels(original_pixels, pixels, window_rect.size);
 
         // Leaving a tiled blob image in the resource cache
         // confuses the `test_capture`. TODO: remove this
@@ -729,7 +729,7 @@ impl<'a> RawtestHarness<'a> {
         let window_size = self.window.get_inner_size();
 
         let test_size = FramebufferIntSize::new(400, 400);
-        let window_rect = FramebufferIntRect::from_origin_and_size(
+        let window_rect = FramebufferIntRect::new(
             FramebufferIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
@@ -744,7 +744,7 @@ impl<'a> RawtestHarness<'a> {
                 blob_img,
                 ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
                 blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
-                DeviceIntRect::from_size(size2(500, 500)),
+                rect(0, 0, 500, 500),
                 None,
             );
         }
@@ -816,7 +816,7 @@ impl<'a> RawtestHarness<'a> {
         let window_size = self.window.get_inner_size();
 
         let test_size = FramebufferIntSize::new(400, 400);
-        let window_rect = FramebufferIntRect::from_origin_and_size(
+        let window_rect = FramebufferIntRect::new(
             point2(0, window_size.height - test_size.height),
             test_size,
         );
@@ -831,7 +831,7 @@ impl<'a> RawtestHarness<'a> {
                 blob_img,
                 ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
                 blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
-                DeviceIntRect::from_size(size2(500, 500)),
+                rect(0, 0, 500, 500),
                 None,
             );
             blob_img2 = api.generate_blob_image_key();
@@ -839,7 +839,7 @@ impl<'a> RawtestHarness<'a> {
                 blob_img2,
                 ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
                 blob::serialize_blob(ColorU::new(80, 50, 150, 255)),
-                DeviceIntRect::from_size(size2(500, 500)),
+                rect(0, 0, 500, 500),
                 None,
             );
             (blob_img, blob_img2)
@@ -899,15 +899,15 @@ impl<'a> RawtestHarness<'a> {
             blob_img,
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
             blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
-            DeviceIntRect::from_size(size2(500, 500)),
-            &Box2D { min: point2(100, 100), max: point2(200, 200) }.into(),
+            rect(0, 0, 500, 500),
+            &rect(100, 100, 100, 100).into(),
         );
         txn.update_blob_image(
             blob_img2,
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
             blob::serialize_blob(ColorU::new(59, 50, 150, 255)),
-            DeviceIntRect::from_size(size2(500, 500)),
-            &Box2D { min: point2(100, 100), max: point2(200, 200) }.into(),
+            rect(0, 0, 500, 500),
+            &rect(100, 100, 100, 100).into(),
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
@@ -921,8 +921,8 @@ impl<'a> RawtestHarness<'a> {
             blob_img,
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
             blob::serialize_blob(ColorU::new(50, 150, 150, 255)),
-            DeviceIntRect::from_size(size2(500, 500)),
-            &Box2D { min: point2(200, 200), max: point2(300, 300) }.into(),
+            rect(0, 0, 500, 500),
+            &rect(200, 200, 100, 100).into(),
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
@@ -944,7 +944,7 @@ impl<'a> RawtestHarness<'a> {
         let window_size = self.window.get_inner_size();
 
         let test_size = FramebufferIntSize::new(400, 400);
-        let window_rect = FramebufferIntRect::from_origin_and_size(
+        let window_rect = FramebufferIntRect::new(
             point2(0, window_size.height - test_size.height),
             test_size,
         );
@@ -957,7 +957,7 @@ impl<'a> RawtestHarness<'a> {
                 img,
                 ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
                 blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
-                DeviceIntRect::from_size(size2(500, 500)),
+                rect(0, 0, 500, 500),
                 None,
             );
             img
@@ -987,8 +987,8 @@ impl<'a> RawtestHarness<'a> {
             blob_img,
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
             blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
-            DeviceIntRect::from_size(size2(500, 500)),
-            &Box2D { min: point2(100, 100), max: point2(200, 200) }.into(),
+            rect(0, 0, 500, 500),
+            &rect(100, 100, 100, 100).into(),
         );
 
         // make a new display list that refers to the first image
@@ -1012,8 +1012,8 @@ impl<'a> RawtestHarness<'a> {
             blob_img,
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, ImageDescriptorFlags::empty()),
             blob::serialize_blob(ColorU::new(50, 150, 150, 255)),
-            DeviceIntRect::from_size(size2(500, 500)),
-            &Box2D { min: point2(200, 200), max: point2(300, 300) }.into(),
+            rect(0, 0, 500, 500),
+            &rect(200, 200, 100, 100).into(),
         );
 
         // make a new display list that refers to the first image
@@ -1032,7 +1032,7 @@ impl<'a> RawtestHarness<'a> {
         let pixels_third = self.render_and_get_pixels(window_rect);
 
         assert!(pixels_first != pixels_third);
-        self.compare_pixels(pixels_first, pixels_second, window_rect.size());
+        self.compare_pixels(pixels_first, pixels_second, window_rect.size);
     }
 
     // Ensures that content doing a save-restore produces the same results as not
@@ -1041,7 +1041,7 @@ impl<'a> RawtestHarness<'a> {
         let window_size = self.window.get_inner_size();
 
         let test_size = FramebufferIntSize::new(400, 400);
-        let window_rect = FramebufferIntRect::from_origin_and_size(
+        let window_rect = FramebufferIntRect::new(
             point2(0, window_size.height - test_size.height),
             test_size,
         );
@@ -1134,7 +1134,7 @@ impl<'a> RawtestHarness<'a> {
         let first = do_test(false);
         let second = do_test(true);
 
-        self.compare_pixels(first, second, window_rect.size());
+        self.compare_pixels(first, second, window_rect.size);
     }
 
     // regression test for #2769
@@ -1144,7 +1144,7 @@ impl<'a> RawtestHarness<'a> {
         let window_size = self.window.get_inner_size();
 
         let test_size = FramebufferIntSize::new(400, 400);
-        let window_rect = FramebufferIntRect::from_origin_and_size(
+        let window_rect = FramebufferIntRect::new(
             point2(0, window_size.height - test_size.height),
             test_size,
         );
@@ -1194,7 +1194,7 @@ impl<'a> RawtestHarness<'a> {
         let path = "../captures/test";
         let layout_size = LayoutSize::new(400., 400.);
         let dim = self.window.get_inner_size();
-        let window_rect = FramebufferIntRect::from_origin_and_size(
+        let window_rect = FramebufferIntRect::new(
             point2(0, dim.height - layout_size.height as i32),
             size2(layout_size.width as i32, layout_size.height as i32),
         );
@@ -1261,7 +1261,7 @@ impl<'a> RawtestHarness<'a> {
 
         // 5. render the built frame and compare
         let pixels1 = self.render_and_get_pixels(window_rect);
-        self.compare_pixels(pixels0.clone(), pixels1, window_rect.size());
+        self.compare_pixels(pixels0.clone(), pixels1, window_rect.size);
 
         // 6. rebuild the scene and compare again
         let mut txn = Transaction::new();
@@ -1269,7 +1269,7 @@ impl<'a> RawtestHarness<'a> {
         txn.generate_frame(0);
         self.wrench.api.send_transaction(captured.document_id, txn);
         let pixels2 = self.render_and_get_pixels(window_rect);
-        self.compare_pixels(pixels0, pixels2, window_rect.size());
+        self.compare_pixels(pixels0, pixels2, window_rect.size);
     }
 
     fn test_zero_height_window(&mut self) {

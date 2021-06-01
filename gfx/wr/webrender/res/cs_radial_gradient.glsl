@@ -28,7 +28,7 @@ void main(void) {
     float rd = aEndRadius - aStartRadius;
     float radius_scale = rd != 0.0 ? 1.0 / rd : 0.0;
 
-    vec2 pos = mix(aTaskRect.xy, aTaskRect.zw, aPosition.xy);
+    vec2 pos = aTaskRect.xy + aTaskRect.zw * aPosition.xy;
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
 
     v_start_radius = aStartRadius * radius_scale;
@@ -38,7 +38,7 @@ void main(void) {
 
     // v_pos is in a coordinate space relative to the task rect
     // (so it is independent of the task origin).
-    v_pos = ((aTaskRect.zw - aTaskRect.xy) * aPosition.xy * aScale - aCenter) * radius_scale;
+    v_pos = (aTaskRect.zw * aPosition.xy * aScale - aCenter) * radius_scale;
     v_pos.y *= aXYRatio;
 
     v_gradient_repeat = float(aExtendMode == EXTEND_MODE_REPEAT);

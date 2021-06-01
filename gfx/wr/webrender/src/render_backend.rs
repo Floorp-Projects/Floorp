@@ -486,7 +486,7 @@ impl Document {
     }
 
     fn has_pixels(&self) -> bool {
-        !self.view.scene.device_rect.is_empty()
+        !self.view.scene.device_rect.size.is_empty()
     }
 
     fn process_frame_msg(
@@ -576,7 +576,7 @@ impl Document {
                 gpu_cache,
                 &mut self.rg_builder,
                 self.stamp,
-                self.view.scene.device_rect.min,
+                self.view.scene.device_rect.origin,
                 &self.dynamic_properties,
                 &mut self.data_stores,
                 &mut self.scratch,
