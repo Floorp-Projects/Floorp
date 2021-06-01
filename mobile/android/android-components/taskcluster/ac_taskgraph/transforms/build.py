@@ -45,13 +45,6 @@ def handle_coverage(config, tasks):
     for task in tasks:
         if task.pop('include-coverage', False):
             task['run']['gradlew'].insert(0, '-Pcoverage')
-            task['run']['post-gradlew'] = [['automation/taskcluster/action/upload_coverage_report.sh']]
-            task['run']['secrets'] = [{
-                'name': 'project/mobile/android-components/public-tokens',
-                'key': 'codecov',
-                'path': '.cc_token',
-            }]
-
         yield task
 
 

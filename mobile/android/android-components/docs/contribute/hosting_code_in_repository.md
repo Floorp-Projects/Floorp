@@ -68,7 +68,6 @@ In addition to that the *Android components* team started to write [custom lint 
 The *Android components* team evaluates, integrates and maintains third-party services for code quality, testing and automation purposes.
 
 Currently we are using:
-* *Codecov* for visualizing and analyzing code coverage reports of merges and pull requests.
 * *Firebase Device Lab* for running tests on real devices.
 
 The *Android components* team is currently evaluating [Gradle Enterprise](https://gradle.com/) to speed up builds and improve build reliability.

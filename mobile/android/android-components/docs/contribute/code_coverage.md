@@ -10,11 +10,7 @@ permalink: /contributing/code-coverage
 
 # Automated reports
 
-[![codecov](https://codecov.io/gh/mozilla-mobile/android-components/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla-mobile/android-components)
-
-For pull requests and master pushes we generate code coverage reports on taskcluster and upload them to codecov:
-
-* [https://codecov.io/gh/mozilla-mobile/android-components](https://codecov.io/gh/mozilla-mobile/android-components)
+For pull requests and master pushes we generate code coverage reports on taskcluster and they can be accessed via the GitHub checks.
 
 # Generating reports locally
 
