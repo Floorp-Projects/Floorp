@@ -2551,11 +2551,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
           JS_ReportErrorASCII(cx, "discardSource option mismatch");
           return false;
         }
-        if (globalOptions.instrumentationKinds !=
-            options.instrumentationKinds) {
-          JS_ReportErrorASCII(cx, "instrumentationKinds mismatch");
-          return false;
-        }
       }
     }
   }

@@ -192,7 +192,7 @@ bool PrivateOpEmitter::emitGet() {
       }
     }
 
-    if (!bce_->emitElemOpBase(JSOp::GetElem, ShouldInstrument::Yes)) {
+    if (!bce_->emitElemOpBase(JSOp::GetElem)) {
       //            [stack] OBJ NAME VALUE  # if isCompoundAssignment
       //            [stack] OBJ METHOD      # if Call
       //            [stack] VALUE           # otherwise
@@ -261,7 +261,7 @@ bool PrivateOpEmitter::emitAssignment() {
     }
 
     JSOp setOp = isFieldInit() ? JSOp::InitElem : JSOp::StrictSetElem;
-    if (!bce_->emitElemOpBase(setOp, ShouldInstrument::Yes)) {
+    if (!bce_->emitElemOpBase(setOp)) {
       //            [stack] RHS
       return false;
     }
@@ -312,7 +312,7 @@ bool PrivateOpEmitter::emitIncDec() {
     return false;
   }
 
-  if (!bce_->emitElemOpBase(JSOp::StrictSetElem, ShouldInstrument::Yes)) {
+  if (!bce_->emitElemOpBase(JSOp::StrictSetElem)) {
     //              [stack] N? N+1
     return false;
   }
