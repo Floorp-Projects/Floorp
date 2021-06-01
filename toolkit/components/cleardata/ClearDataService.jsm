@@ -171,7 +171,7 @@ const CertCleaner = {
       Ci.nsICertOverrideService
     );
 
-    overrideService.clearValidityOverride(aHost, -1);
+    overrideService.clearValidityOverride(aHost, -1, aOriginAttributes);
   },
 
   deleteByPrincipal(aPrincipal) {
@@ -188,7 +188,7 @@ const CertCleaner = {
         hasBaseDomain({ host: asciiHost }, aBaseDomain)
       )
       .forEach(({ asciiHost, port }) =>
-        overrideService.clearValidityOverride(asciiHost, port)
+        overrideService.clearValidityOverride(asciiHost, port, {})
       );
   },
 

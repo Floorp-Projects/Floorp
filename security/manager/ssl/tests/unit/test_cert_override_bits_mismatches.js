@@ -28,10 +28,11 @@ function add_override_bits_mismatch_test(
   ].getService(Ci.nsICertOverrideService);
   for (let overrideBits = 0; overrideBits <= MAX_BITS; overrideBits++) {
     add_test(function() {
-      certOverrideService.clearValidityOverride(host, 8443);
+      certOverrideService.clearValidityOverride(host, 8443, {});
       certOverrideService.rememberValidityOverride(
         host,
         8443,
+        {},
         cert,
         overrideBits,
         true

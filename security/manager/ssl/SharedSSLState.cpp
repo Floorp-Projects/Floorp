@@ -44,7 +44,8 @@ class MainThreadClearer : public SyncRunnableBase {
       nsCOMPtr<nsICertOverrideService> icos =
           do_GetService(NS_CERTOVERRIDE_CONTRACTID);
       if (icos) {
-        icos->ClearValidityOverride("all:temporary-certificates"_ns, 0);
+        icos->ClearValidityOverride("all:temporary-certificates"_ns, 0,
+                                    OriginAttributes());
       }
     }
 
