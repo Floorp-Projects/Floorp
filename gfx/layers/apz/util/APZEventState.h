@@ -29,6 +29,7 @@ class nsIWidget;
 namespace mozilla {
 
 class PresShell;
+enum class PreventDefaultResult : uint8_t;
 
 namespace layers {
 
@@ -79,10 +80,10 @@ class APZEventState final {
   ~APZEventState();
   bool SendPendingTouchPreventedResponse(bool aPreventDefault);
   MOZ_CAN_RUN_SCRIPT
-  bool FireContextmenuEvents(PresShell* aPresShell, const CSSPoint& aPoint,
-                             const CSSToLayoutDeviceScale& aScale,
-                             Modifiers aModifiers,
-                             const nsCOMPtr<nsIWidget>& aWidget);
+  PreventDefaultResult FireContextmenuEvents(
+      PresShell* aPresShell, const CSSPoint& aPoint,
+      const CSSToLayoutDeviceScale& aScale, Modifiers aModifiers,
+      const nsCOMPtr<nsIWidget>& aWidget);
   already_AddRefed<nsIWidget> GetWidget() const;
   already_AddRefed<nsIContent> GetTouchRollup() const;
   bool MainThreadAgreesEventsAreConsumableByAPZ() const;
