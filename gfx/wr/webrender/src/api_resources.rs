@@ -93,7 +93,7 @@ impl ApiResources {
                     blobs_to_rasterize.push(img.key);
                 }
                 ResourceUpdate::UpdateBlobImage(ref img) => {
-                    debug_assert_eq!(img.visible_rect.size, img.descriptor.size);
+                    debug_assert_eq!(img.visible_rect.size(), img.descriptor.size);
                     self.update_blob_image(
                         img.key,
                         Some(&img.descriptor),
@@ -212,7 +212,7 @@ impl ApiResources {
             _ => {}
         }
 
-        let blob_size = visible_rect.size;
+        let blob_size = visible_rect.size();
 
         if let Some(descriptor) = descriptor {
             image.descriptor = *descriptor;
@@ -274,7 +274,7 @@ impl ApiResources {
                         &template.visible_rect,
                         template.tile_size,
                         tile,
-                    ).cast_unit(),
+                    ).to_rect().cast_unit(),
                     format: template.descriptor.format,
                 };
 

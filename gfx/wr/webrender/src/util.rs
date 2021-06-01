@@ -927,7 +927,7 @@ pub trait MaxRect {
 
 impl MaxRect for DeviceIntRect {
     fn max_rect() -> Self {
-        DeviceIntRect::new(
+        DeviceIntRect::from_origin_and_size(
             DeviceIntPoint::new(i32::MIN / 2, i32::MIN / 2),
             DeviceIntSize::new(i32::MAX, i32::MAX),
         )
@@ -1207,7 +1207,7 @@ pub fn raster_rect_to_device_pixels(
     device_pixel_scale: DevicePixelScale,
 ) -> DeviceRect {
     let world_rect = rect * Scale::new(1.0);
-    let device_rect = world_rect * device_pixel_scale;
+    let device_rect = (world_rect * device_pixel_scale).to_box2d();
     device_rect.round_out()
 }
 

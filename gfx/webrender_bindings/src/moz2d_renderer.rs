@@ -17,7 +17,7 @@ use rayon::ThreadPool;
 use webrender::api::units::{BlobDirtyRect, BlobToDeviceTranslation, DeviceIntRect};
 use webrender::api::*;
 
-use euclid::Rect;
+use euclid::{Rect, Box2D};
 use std;
 use std::collections::btree_map::BTreeMap;
 use std::collections::hash_map;
@@ -273,6 +273,7 @@ impl BlobWriter {
     }
 }
 
+// TODO: replace with euclid::Box2D
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
 #[repr(C)]
 /// A two-points representation of a rectangle.
@@ -325,6 +326,23 @@ impl<T> From<&Rect<i32, T>> for Box2d {
             y1: rect.min_y(),
             x2: rect.max_x(),
             y2: rect.max_y(),
+        }
+    }
+}
+
+impl<T> From<Box2D<i32, T>> for Box2d {
+    fn from(rect: Box2D<i32, T>) -> Box2d {
+        (&rect).into()
+    }
+}
+
+impl<T> From<&Box2D<i32, T>> for Box2d {
+    fn from(rect: &Box2D<i32, T>) -> Box2d {
+        Box2d {
+            x1: rect.min.x,
+            y1: rect.min.y,
+            x2: rect.max.x,
+            y2: rect.max.y,
         }
     }
 }
@@ -634,7 +652,7 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
     let mut output = vec![0u8; buf_size];
 
     let dirty_rect = match job.dirty_rect {
-        DirtyRect::Partial(rect) => Some(rect),
+        DirtyRect::Partial(rect) => Some(rect.to_rect()),
         DirtyRect::All => None,
     };
     assert!(descriptor.rect.size.width > 0 && descriptor.rect.size.height > 0);
@@ -653,9 +671,9 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
             ) {
                 // We want the dirty rect local to the tile rather than the whole image.
                 // TODO(nical): move that up and avoid recomupting the tile bounds in the callback
-                let dirty_rect = job.dirty_rect.to_subrect_of(&descriptor.rect);
+                let dirty_rect = job.dirty_rect.to_subrect_of(&descriptor.rect.to_box2d());
                 let tx: BlobToDeviceTranslation = (-descriptor.rect.origin.to_vector()).into();
-                let rasterized_rect = tx.transform_rect(&dirty_rect);
+                let rasterized_rect = tx.transform_box(&dirty_rect);
 
                 Ok(RasterizedBlobImage {
                     rasterized_rect,
@@ -705,10 +723,10 @@ impl BlobImageHandler for Moz2dBlobImageHandler {
                 let command = e.get_mut();
                 let dirty_rect = if let DirtyRect::Partial(rect) = *dirty_rect {
                     Box2d {
-                        x1: rect.min_x(),
-                        y1: rect.min_y(),
-                        x2: rect.max_x(),
-                        y2: rect.max_y(),
+                        x1: rect.min.x,
+                        y1: rect.min.y,
+                        x2: rect.max.x,
+                        y2: rect.max.y,
                     }
                 } else {
                     Box2d {

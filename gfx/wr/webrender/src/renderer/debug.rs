@@ -201,11 +201,11 @@ impl DebugRenderer {
 
                 // If either corner of the glyph will end up out of bounds, drop it.
                 if let Some(b) = bounds {
-                    let rect = DeviceRect::new(
-                        DevicePoint::new(x0, y0),
-                        DeviceSize::new(x1 - x0, y1 - y0),
-                    );
-                    if !b.contains_rect(&rect) {
+                    let rect = DeviceRect {
+                        min: DevicePoint::new(x0, y0),
+                        max: DevicePoint::new(x1, y1),
+                    };
+                    if !b.contains_box(&rect) {
                         continue;
                     }
                 }
@@ -286,8 +286,8 @@ impl DebugRenderer {
 
 
     pub fn add_rect(&mut self, rect: &DeviceIntRect, color: ColorU) {
-        let p0 = rect.origin;
-        let p1 = p0 + rect.size;
+        let p0 = rect.min;
+        let p1 = rect.max;
         self.add_line(p0.x, p0.y, color, p1.x, p0.y, color);
         self.add_line(p1.x, p0.y, color, p1.x, p1.y, color);
         self.add_line(p1.x, p1.y, color, p0.x, p1.y, color);

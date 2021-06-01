@@ -51,15 +51,15 @@ fn render_blob(
     // make sense for the rendered content to depend on its tile.
     let tile_checker = (tile.x % 2 == 0) != (tile.y % 2 == 0);
 
-    let dirty_rect = dirty_rect.to_subrect_of(&descriptor.rect);
+    let dirty_rect = dirty_rect.to_subrect_of(&descriptor.rect.to_box2d());
 
     // We want the dirty rect local to the tile rather than the whole image.
     let tx: BlobToDeviceTranslation = (-descriptor.rect.origin.to_vector()).into();
 
-    let rasterized_rect = tx.transform_rect(&dirty_rect);
+    let rasterized_rect = tx.transform_box(&dirty_rect);
 
-    for y in rasterized_rect.min_y() .. rasterized_rect.max_y() {
-        for x in rasterized_rect.min_x() .. rasterized_rect.max_x() {
+    for y in rasterized_rect.min.y .. rasterized_rect.max.y {
+        for x in rasterized_rect.min.x .. rasterized_rect.max.x {
             // Apply the tile's offset. This is important: all drawing commands should be
             // translated by this offset to give correct results with tiled blob images.
             let x2 = x + descriptor.rect.origin.x;

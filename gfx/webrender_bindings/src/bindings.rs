@@ -716,7 +716,7 @@ pub extern "C" fn wr_renderer_get_screenshot_async(
     assert!(!screenshot_height.is_null());
 
     let (handle, size) = renderer.get_screenshot_async(
-        DeviceIntRect::new(
+        DeviceIntRect::from_origin_and_size(
             DeviceIntPoint::new(window_x, window_y),
             DeviceIntSize::new(window_width, window_height),
         ),
@@ -2103,7 +2103,7 @@ pub extern "C" fn wr_resource_updates_update_blob_image(
         descriptor.into(),
         Arc::new(bytes.flush_into_vec()),
         visible_rect,
-        &DirtyRect::Partial(dirty_rect),
+        &DirtyRect::Partial(dirty_rect.to_box2d()),
     );
 }
 
