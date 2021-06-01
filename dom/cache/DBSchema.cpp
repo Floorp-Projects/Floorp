@@ -552,8 +552,12 @@ nsresult InitializeConnection(mozIStorageConnection& aConn) {
 
   // Limit fragmentation by growing the database by many pages at once.
   QM_TRY(QM_OR_ELSE_WARN_IF(
+      // Expression.
       ToResult(aConn.SetGrowthIncrement(kGrowthSize, ""_ns)),
-      IsSpecificError<NS_ERROR_FILE_TOO_BIG>, ErrToDefaultOk<>));
+      // Predicate.
+      IsSpecificError<NS_ERROR_FILE_TOO_BIG>,
+      // Fallback.
+      ErrToDefaultOk<>));
 
   // Enable WAL journaling.  This must be performed in a separate transaction
   // after changing the page_size and enabling auto_vacuum.
