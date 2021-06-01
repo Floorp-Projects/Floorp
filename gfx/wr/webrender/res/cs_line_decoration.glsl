@@ -84,7 +84,7 @@ void main(void) {
 
     vLocalPos = mix(aPosition.xy, aPosition.yx, aAxisSelect) * size;
 
-    gl_Position = uTransform * vec4(aTaskRect.xy + aTaskRect.zw * aPosition.xy, 0.0, 1.0);
+    gl_Position = uTransform * vec4(mix(aTaskRect.xy, aTaskRect.zw, aPosition.xy), 0.0, 1.0);
 }
 #endif
 
