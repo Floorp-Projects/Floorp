@@ -20,8 +20,28 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
+class FileInfoManagerBase {
+ public:
+  bool Invalidated() const { return mInvalidated; }
+
+ protected:
+  bool AssertValid() const {
+    if (NS_WARN_IF(Invalidated())) {
+      MOZ_ASSERT(false);
+      return false;
+    }
+
+    return true;
+  }
+
+  void Invalidate() { mInvalidated.Flip(); }
+
+ private:
+  FlippedOnce<false> mInvalidated;
+};
+
 template <typename FileManager>
-class FileInfoManager {
+class FileInfoManager : public FileInfoManagerBase {
  public:
   using FileInfoType = FileInfo<FileManager>;
   using MutexType = StaticMutex;
@@ -56,7 +76,7 @@ class FileInfoManager {
   nsresult Invalidate() {
     AutoLockType lock(FileManager::Mutex());
 
-    mInvalidated.Flip();
+    FileInfoManagerBase::Invalidate();
 
     mFileInfos.RemoveIf([](const auto& iter) {
       FileInfoType* info = iter.Data();
@@ -67,8 +87,6 @@ class FileInfoManager {
 
     return NS_OK;
   }
-
-  bool Invalidated() const { return mInvalidated; }
 
   class FileInfoManagerGuard {
     FileInfoManagerGuard() = default;
@@ -105,15 +123,6 @@ class FileInfoManager {
   }
 
  protected:
-  bool AssertValid() const {
-    if (NS_WARN_IF(static_cast<const FileManager*>(this)->Invalidated())) {
-      MOZ_ASSERT(false);
-      return false;
-    }
-
-    return true;
-  }
-
 #ifdef DEBUG
   ~FileInfoManager() { MOZ_ASSERT(mFileInfos.IsEmpty()); }
 #else
@@ -124,8 +133,6 @@ class FileInfoManager {
   // FileManager::Mutex()
   int64_t mLastFileId = 0;
   nsTHashMap<nsUint64HashKey, NotNull<FileInfoType*>> mFileInfos;
-
-  FlippedOnce<false> mInvalidated;
 };
 
 }  // namespace indexedDB
