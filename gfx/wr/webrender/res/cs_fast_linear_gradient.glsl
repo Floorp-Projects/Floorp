@@ -21,7 +21,7 @@ void main(void) {
     vColor0 = aColor0;
     vColor1 = aColor1;
 
-    gl_Position = uTransform * vec4(aTaskRect.xy + aTaskRect.zw * aPosition.xy, 0.0, 1.0);
+    gl_Position = uTransform * vec4(mix(aTaskRect.xy, aTaskRect.zw, aPosition.xy), 0.0, 1.0);
 }
 #endif
 

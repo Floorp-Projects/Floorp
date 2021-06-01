@@ -543,8 +543,8 @@ impl RenderTarget for AlphaRenderTarget {
                     &ctx.screen_world_rect,
                     task_info.device_pixel_scale,
                     ctx.global_device_pixel_scale,
-                    target_rect.origin.to_f32(),
-                    task_info.actual_rect.origin,
+                    target_rect.min.to_f32(),
+                    task_info.actual_rect.min,
                 );
                 if task_info.clear_to_one || clear_to_one {
                     self.one_clears.push(task_id);
@@ -554,15 +554,14 @@ impl RenderTarget for AlphaRenderTarget {
                 if region_task.clear_to_one {
                     self.one_clears.push(task_id);
                 }
-                let device_rect = DeviceRect::new(
-                    DevicePoint::zero(),
-                    target_rect.size.to_f32(),
+                let device_rect = DeviceRect::from_size(
+                    target_rect.size().to_f32(),
                 );
                 self.clip_batcher.add_clip_region(
                     region_task.local_pos,
                     device_rect,
                     region_task.clip_data.clone(),
-                    target_rect.origin.to_f32(),
+                    target_rect.min.to_f32(),
                     DevicePoint::zero(),
                     region_task.device_pixel_scale.0,
                 );
@@ -675,7 +674,7 @@ impl TextureCacheRenderTarget {
             RenderTaskKind::Border(ref task_info) => {
                 self.clears.push(target_rect);
 
-                let task_origin = target_rect.origin.to_f32();
+                let task_origin = target_rect.min.to_f32();
                 // TODO(gw): Clone here instead of a move of this vec, since the frame
                 //           graph is immutable by this point. It's rare that borders
                 //           are drawn since they are persisted in the texture cache,
@@ -750,7 +749,7 @@ fn add_scaling_instances(
 ) {
     let target_rect = target_task
         .get_target_rect()
-        .inner_rect(task.padding)
+        .inner_box(task.padding)
         .to_f32();
 
     let source = source_task.unwrap().get_texture_source();

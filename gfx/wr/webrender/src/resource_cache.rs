@@ -831,7 +831,7 @@ impl ResourceCache {
                                     tile.x as i32,
                                     tile.y as i32,
                                 ) * tile_size as i32;
-                                rect.origin -= tile_offset.to_vector();
+                                rect = rect.translate(-tile_offset.to_vector());
 
                                 let tile_rect = compute_tile_size(
                                     &descriptor.size.into(),
@@ -1063,7 +1063,7 @@ impl ResourceCache {
     fn set_image_visible_rect(&mut self, key: ImageKey, rect: &DeviceIntRect) {
         if let Some(image) = self.resources.image_templates.get_mut(key) {
             image.visible_rect = *rect;
-            image.descriptor.size = rect.size;
+            image.descriptor.size = rect.size();
         }
     }
 
@@ -1131,7 +1131,7 @@ impl ResourceCache {
                 index_in_text_run: loop_index as i32,
                 uv_rect_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
                 offset: DevicePoint::new(cache_item.user_data[0], cache_item.user_data[1]),
-                size: cache_item.uv_rect.size,
+                size: cache_item.uv_rect.size(),
                 scale: cache_item.user_data[2],
             });
         }
@@ -1296,7 +1296,7 @@ impl ResourceCache {
                     if !tiled_on_cpu {
                         // we don't expect to have partial tiles at the top and left of non-blob
                         // images.
-                        debug_assert_eq!(image_template.visible_rect.origin, point2(0, 0));
+                        debug_assert_eq!(image_template.visible_rect.min, point2(0, 0));
                         let bpp = descriptor.format.bytes_per_pixel();
                         let stride = descriptor.compute_stride();
                         descriptor.stride = Some(stride);
@@ -1796,12 +1796,7 @@ const NATIVE_FONT: &'static [u8] = include_bytes!("../res/Proggy.ttf");
 // This currently only casts the unit but will soon apply an offset
 fn to_image_dirty_rect(blob_dirty_rect: &BlobDirtyRect) -> ImageDirtyRect {
     match *blob_dirty_rect {
-        DirtyRect::Partial(rect) => DirtyRect::Partial(
-            DeviceIntRect {
-                origin: DeviceIntPoint::new(rect.origin.x, rect.origin.y),
-                size: DeviceIntSize::new(rect.size.width, rect.size.height),
-            }
-        ),
+        DirtyRect::Partial(rect) => DirtyRect::Partial(rect.cast_unit()),
         DirtyRect::All => DirtyRect::All,
     }
 }
@@ -1892,7 +1887,7 @@ impl ResourceCache {
                         data: Arc::new(vec![0; desc.compute_total_size() as usize])
                     };
 
-                    assert_eq!(result.rasterized_rect.size, desc.size);
+                    assert_eq!(result.rasterized_rect.size(), desc.size);
                     assert_eq!(result.data.len(), desc.compute_total_size() as usize);
 
                     num_blobs += 1;
