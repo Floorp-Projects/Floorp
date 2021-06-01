@@ -855,7 +855,7 @@ class NotNull;
 // QM_NOTEONLY_TRY_INSPECT doesn't make sense.
 
 // QM_OR_ELSE_REPORT macro is an implementation detail of
-// QM_OR_ELSE_WARN/QM_OR_ELSE_NOTE/QM_OR_ELSE_LOG and shouldn't be used
+// QM_OR_ELSE_WARN/QM_OR_ELSE_NOTE/QM_OR_ELSE_LOG_VERBOSE and shouldn't be used
 // directly.
 
 #define QM_OR_ELSE_REPORT(severity, expr, fallback)                \
@@ -884,7 +884,7 @@ class NotNull;
 #define QM_OR_ELSE_NOTE(...) QM_OR_ELSE_REPORT(Note, __VA_ARGS__)
 
 /**
- * QM_OR_ELSE_LOG is like QM_OR_ELSE_WARN. The only difference is that
+ * QM_OR_ELSE_LOG_VERBOSE is like QM_OR_ELSE_WARN. The only difference is that
  * failures are reported using the lowest severity which is currently ignored
  * in LogError, so nothing goes to the console, browser console and telemetry.
  * Since nothing goes to the telemetry, the macro can't signal the end of the
@@ -892,7 +892,7 @@ class NotNull;
  * telemetry. For that reason, the expression shouldn't contain nested QM_TRY
  * macro uses.
  */
-#define QM_OR_ELSE_LOG(...) QM_OR_ELSE_REPORT(Log, __VA_ARGS__)
+#define QM_OR_ELSE_LOG_VERBOSE(...) QM_OR_ELSE_REPORT(Log, __VA_ARGS__)
 
 namespace mozilla::dom::quota {
 
@@ -909,8 +909,8 @@ auto OrElseIf(Result<V, E>&& aResult, P&& aPred, F&& aFunc) -> Result<V, E> {
 }  // namespace mozilla::dom::quota
 
 // QM_OR_ELSE_REPORT_IF macro is an implementation detail of
-// QM_OR_ELSE_WARN_IF/QM_OR_ELSE_NOTE_IF/QM_OR_ELSE_LOG_IF and shouldn't be
-// used directly.
+// QM_OR_ELSE_WARN_IF/QM_OR_ELSE_NOTE_IF/QM_OR_ELSE_LOG_VERBOSE_IF and
+// shouldn't be used directly.
 
 #define QM_OR_ELSE_REPORT_IF(severity, expr, predicate, fallback) \
   mozilla::dom::quota::OrElseIf(                                  \
@@ -947,15 +947,16 @@ auto OrElseIf(Result<V, E>&& aResult, P&& aPred, F&& aFunc) -> Result<V, E> {
 #define QM_OR_ELSE_NOTE_IF(...) QM_OR_ELSE_REPORT_IF(Note, __VA_ARGS__)
 
 /**
- * QM_OR_ELSE_LOG_IF is like QM_OR_ELSE_WARN_IF. The only difference is that
- * failures are reported using the lowest severity which is currently ignored
- * in LogError, so nothing goes to the console, browser console and telemetry.
- * Since nothing goes to the telemetry, the macro can't signal the end of the
- * underlying error stack or change the type of the error stack in the
- * telemetry. For that reason, the expression shouldn't contain nested QM_TRY
- * macro uses.
+ * QM_OR_ELSE_LOG_VERBOSE_IF is like QM_OR_ELSE_WARN_IF. The only difference is
+ * that failures are reported using the lowest severity which is currently
+ * ignored in LogError, so nothing goes to the console, browser console and
+ * telemetry. Since nothing goes to the telemetry, the macro can't signal the
+ * end of the underlying error stack or change the type of the error stack in
+ * the telemetry. For that reason, the expression shouldn't contain nested
+ * QM_TRY macro uses.
  */
-#define QM_OR_ELSE_LOG_IF(...) QM_OR_ELSE_REPORT_IF(Log, __VA_ARGS__)
+#define QM_OR_ELSE_LOG_VERBOSE_IF(...) \
+  QM_OR_ELSE_REPORT_IF(Verbose, __VA_ARGS__)
 
 // Telemetry probes to collect number of failure during the initialization.
 #ifdef NIGHTLY_BUILD
@@ -1319,7 +1320,7 @@ enum class Severity {
   Error,
   Warning,
   Note,
-  Log,
+  Verbose,
 };
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)

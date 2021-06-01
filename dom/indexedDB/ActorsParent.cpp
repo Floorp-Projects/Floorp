@@ -5717,9 +5717,9 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
   // the file already exists (idempotent usage). QM_OR_ELSE_WARN_IF is not used
   // here since we just want to log NS_ERROR_FILE_NOT_FOUND and
   // NS_ERROR_FILE_TARGET_DOES_NOT_EXIST results and not spam the reports.
-  // Theoretically, there should be no QM_OR_ELSE_(WARN|LOG)_IF when a caller
-  // passes Idempotency::No, but it's simpler when the predicate just always
-  // returns false in that case.
+  // Theoretically, there should be no QM_OR_ELSE_(WARN|LOG_VERBOSE)_IF when a
+  // caller passes Idempotency::No, but it's simpler when the predicate just
+  // always returns false in that case.
 
   const auto isIgnorableError = [&aIdempotency]() -> bool (*)(nsresult) {
     if (aIdempotency == Idempotency::Yes) {
@@ -5736,7 +5736,7 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
         if (aQuotaManager) {
           QM_TRY_INSPECT(
               const Maybe<int64_t>& fileSize,
-              QM_OR_ELSE_LOG_IF(
+              QM_OR_ELSE_LOG_VERBOSE_IF(
                   MOZ_TO_RESULT_INVOKE(aFile, GetFileSize)
                       .map([](const int64_t val) { return Some(val); }),
                   isIgnorableError, ErrToDefaultOk<Maybe<int64_t>>));
@@ -5758,8 +5758,8 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
 
   QM_TRY_INSPECT(
       const auto& didExist,
-      QM_OR_ELSE_LOG_IF(ToResult(aFile.Remove(false)).map(Some<Ok>),
-                        isIgnorableError, ErrToDefaultOk<Maybe<Ok>>));
+      QM_OR_ELSE_LOG_VERBOSE_IF(ToResult(aFile.Remove(false)).map(Some<Ok>),
+                                isIgnorableError, ErrToDefaultOk<Maybe<Ok>>));
 
   if (!didExist) {
     // XXX If we get here, this means that the file still existed when we
@@ -5847,9 +5847,9 @@ Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
   // marker here. We currently treat this as idempotent usage, but we could
   // add an additional argument to RemoveDatabaseFilesAndDirectory which would
   // indicate that we are resuming an unfinished removal, so the marker already
-  // exists and doesn't have to be created, and change QM_OR_ELSE_LOG_IF to
-  // QM_OR_ELSE_WARN_IF in the end.
-  QM_TRY(QM_OR_ELSE_LOG_IF(
+  // exists and doesn't have to be created, and change
+  // QM_OR_ELSE_LOG_VERBOSE_IF to QM_OR_ELSE_WARN_IF in the end.
+  QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
       ToResult(markerFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
       IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>, ErrToDefaultOk<>));
 
@@ -12473,8 +12473,8 @@ Result<FileUsageType, nsresult> DatabaseFileManager::GetUsage(
         nsresult rv;
         leafName.ToInteger64(&rv);
         if (NS_SUCCEEDED(rv)) {
-          // Usually we only use QM_OR_ELSE_LOG/QM_OR_ELSE_LOG_IF with Remove
-          // and NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
+          // Usually we only use QM_OR_ELSE_LOG_VERBOSE(_IF) with Remove and
+          // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
           // check, but the file was found by a directory traversal and
           // ToInteger on the name succeeded, so it should be our file and if
           // the file disappears, the use of QM_OR_ELSE_WARN_IF is ok here.
@@ -12916,7 +12916,7 @@ nsresult QuotaClient::GetUsageForOriginInternal(
         // result and not spam the reports (the -wal file doesn't have to
         // exist).
         QM_TRY_INSPECT(const int64_t& walFileSize,
-                       QM_OR_ELSE_LOG_IF(
+                       QM_OR_ELSE_LOG_VERBOSE_IF(
                            MOZ_TO_RESULT_INVOKE(walFile, GetFileSize),
                            ([](const nsresult rv) {
                              return rv == NS_ERROR_FILE_NOT_FOUND ||
@@ -14657,7 +14657,7 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
 
     // QM_OR_ELSE_WARN_IF is not used here since we just want to log the
     // collision and not spam the reports.
-    QM_TRY(QM_OR_ELSE_LOG_IF(
+    QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
         ToResult(borrowedStmt->Execute()),
         ([&info, index, &aIndexValues](nsresult rv) {
           if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {

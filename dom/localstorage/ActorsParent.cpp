@@ -476,8 +476,8 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
             // Remove the usage file first (it might not exist at all due
             // to corrupted state, which is ignored here).
 
-            // Usually we only use QM_OR_ELSE_LOG/QM_OR_ELSE_LOG_IF with Remove
-            // and NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
+            // Usually we only use QM_OR_ELSE_LOG_VERBOSE(_IF) with Remove and
+            // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
             // check, but we're already in the rare case of corruption here,
             // so the use of QM_OR_ELSE_WARN_IF is ok here.
             QM_TRY(QM_OR_ELSE_WARN_IF(
@@ -957,7 +957,7 @@ Result<bool, nsresult> ExistsAsFile(nsIFile& aFile) {
   // to log NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST result
   // and not spam the reports.
   QM_TRY_INSPECT(const auto& res,
-                 QM_OR_ELSE_LOG_IF(
+                 QM_OR_ELSE_LOG_VERBOSE_IF(
                      MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
                          .map([](const bool isDirectory) {
                            return isDirectory ? ExistsAsFileResult::IsDirectory

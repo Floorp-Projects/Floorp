@@ -83,7 +83,7 @@ Result<NotNull<nsCOMPtr<nsIFile>>, nsresult> BodyGetCacheDir(nsIFile& aBaseDir,
   // exists (idempotent usage). QM_OR_ELSE_WARN_IF is not used here since we
   // just want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the
   // reports.
-  QM_TRY(QM_OR_ELSE_LOG_IF(
+  QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
       ToResult(cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
       IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>, ErrToDefaultOk<>));
 
@@ -100,7 +100,7 @@ nsresult BodyCreateDir(nsIFile& aBaseDir) {
   // exists (idempotent usage). QM_OR_ELSE_WARN_IF is not used here since we
   // just want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the
   // reports.
-  QM_TRY(QM_OR_ELSE_LOG_IF(
+  QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
       ToResult(bodyDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
       IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>, ErrToDefaultOk<>));
 
@@ -378,7 +378,7 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
             // QM_OR_ELSE_WARN_IF is not used here since we just want to log
             // NS_ERROR_FILE_FS_CORRUPTED result and not spam the reports (even
             // a warning in the reports is not desired).
-            QM_TRY(QM_OR_ELSE_LOG_IF(
+            QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
                 ToResult(BodyTraverseFiles(aQuotaInfo, *subdir,
                                            removeOrphanedFiles,
                                            /* aCanRemoveFiles */ true,
@@ -437,9 +437,9 @@ nsresult CreateMarkerFile(const QuotaInfo& aQuotaInfo) {
   // of our standard operating procedure to redundantly try and create the
   // marker here. We currently treat this as idempotent usage, but we could
   // make sure to delete the marker file when handling the existing marker
-  // file in SetupAction::RunSyncWithDBOnTarget and change QM_OR_ELSE_LOG_IF to
-  // QM_OR_ELSE_WARN_IF in the end.
-  QM_TRY(QM_OR_ELSE_LOG_IF(
+  // file in SetupAction::RunSyncWithDBOnTarget and change
+  // QM_OR_ELSE_LOG_VERBOSE_IF to QM_OR_ELSE_WARN_IF in the end.
+  QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
       ToResult(marker->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
       IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>, ErrToDefaultOk<>));
 
