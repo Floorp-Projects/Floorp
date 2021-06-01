@@ -201,6 +201,7 @@ EXTRA_JS_MODULES += [
     "PopupNotifications.jsm",
     "Preferences.jsm",
     "PrivateBrowsingUtils.jsm",
+    "ProcessType.jsm",
     "ProfileAge.jsm",
     "Promise-backend.js",
     "Promise.jsm",
