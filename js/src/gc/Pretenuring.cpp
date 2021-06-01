@@ -9,7 +9,11 @@
 
 #include "mozilla/Sprintf.h"
 
+#include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
+#include "jit/Invalidation.h"
+
+#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -19,6 +23,10 @@ using namespace js::gc;
 // prevents unbounded time traversing the list during minor GC.
 static constexpr size_t MaxAllocSitesPerMinorGC = 500;
 
+// The maximum number of times to invalidate JIT code for a site. After this we
+// leave the site's state as Unknown and don't pretenure allocations.
+static constexpr size_t MaxInvalidationCount = 5;
+
 AllocSite* const AllocSite::EndSentinel = reinterpret_cast<AllocSite*>(1);
 
 bool PretenuringNursery::canCreateAllocSite() {
@@ -27,7 +35,11 @@ bool PretenuringNursery::canCreateAllocSite() {
 }
 
 void PretenuringNursery::doPretenuring(GCRuntime* gc, bool reportInfo) {
+  mozilla::Maybe<AutoGCSession> session;
+
   size_t sitesActive = 0;
+  size_t sitesPretenured = 0;
+  size_t sitesInvalidated = 0;
 
   if (reportInfo) {
     AllocSite::printInfoHeader();
@@ -44,6 +56,7 @@ void PretenuringNursery::doPretenuring(GCRuntime* gc, bool reportInfo) {
 
     bool hasPromotionRate = false;
     double promotionRate = 0.0;
+    bool wasInvalidated = false;
     if (site->hasScript()) {
       sitesActive++;
 
@@ -51,12 +64,32 @@ void PretenuringNursery::doPretenuring(GCRuntime* gc, bool reportInfo) {
         promotionRate =
             double(site->nurseryTenuredCount) / double(site->nurseryAllocCount);
         hasPromotionRate = true;
+
+        AllocSite::State prevState = site->state();
         site->updateStateOnMinorGC(promotionRate);
+        AllocSite::State newState = site->state();
+
+        // We can optimize JIT code before we collect the nursery and realise a
+        // site should be pretenured. Make sure we invalidate any existing
+        // optimized code in this case.
+        if (prevState == AllocSite::State::Unknown &&
+            newState == AllocSite::State::LongLived) {
+          sitesPretenured++;
+
+          if (!session.isSome()) {
+            session.emplace(gc, JS::HeapState::MinorCollecting);
+          }
+
+          wasInvalidated = site->invalidateScript(gc);
+          if (wasInvalidated) {
+            sitesInvalidated++;
+          }
+        }
       }
     }
 
     if (reportInfo) {
-      site->printInfo(hasPromotionRate, promotionRate);
+      site->printInfo(hasPromotionRate, promotionRate, wasInvalidated);
     }
 
     site->resetNurseryAllocations();
@@ -70,17 +103,44 @@ void PretenuringNursery::doPretenuring(GCRuntime* gc, bool reportInfo) {
     AllocSite* site = zone->optimizedAllocSite();
     if (site->hasNurseryAllocations()) {
       if (reportInfo) {
-        site->printInfo(false, 0.0);
+        site->printInfo(false, 0.0, false);
       }
       site->resetNurseryAllocations();
     }
   }
 
   if (reportInfo) {
-    AllocSite::printInfoFooter(allocSitesCreated, sitesActive);
+    AllocSite::printInfoFooter(allocSitesCreated, sitesActive, sitesPretenured,
+                               sitesInvalidated);
   }
 
   allocSitesCreated = 0;
+}
+
+bool AllocSite::invalidateScript(GCRuntime* gc) {
+  CancelOffThreadIonCompile(script_);
+
+  if (!script_->hasIonScript()) {
+    return false;
+  }
+
+  if (invalidationLimitReached()) {
+    state_ = State::Unknown;
+    return false;
+  }
+
+  invalidationCount++;
+
+  JSContext* cx = gc->rt->mainContextFromOwnThread();
+  jit::Invalidate(cx, script_,
+                  /* resetUses = */ false,
+                  /* cancelOffThread = */ true);
+  return true;
+}
+
+bool AllocSite::invalidationLimitReached() const {
+  MOZ_ASSERT(invalidationCount <= MaxInvalidationCount);
+  return invalidationCount == MaxInvalidationCount;
 }
 
 AllocSite::Kind AllocSite::kind() const {
@@ -109,6 +169,11 @@ void AllocSite::updateStateOnMinorGC(double promotionRate) {
   // The nursery is used to allocate if the site's state is Unknown or
   // ShortLived. There are no direct transition between ShortLived and LongLived
   // to avoid pretenuring sites that we've recently observed being short-lived.
+
+  if (invalidationLimitReached()) {
+    MOZ_ASSERT(state_ == State::Unknown);
+    return;
+  }
 
   bool highPromotionRate = promotionRate >= 0.9;
 
@@ -149,12 +214,17 @@ void AllocSite::printInfoHeader() {
 }
 
 /* static */
-void AllocSite::printInfoFooter(size_t sitesCreated, size_t sitesActive) {
-  fprintf(stderr, "  %zu alloc sites created, %zu active\n", sitesCreated,
-          sitesActive);
+void AllocSite::printInfoFooter(size_t sitesCreated, size_t sitesActive,
+                                size_t sitesPretenured,
+                                size_t sitesInvalidated) {
+  fprintf(stderr,
+          "  %zu alloc sites created, %zu active, %zu pretenured, %zu "
+          "invalidated\n",
+          sitesCreated, sitesActive, sitesPretenured, sitesInvalidated);
 }
 
-void AllocSite::printInfo(bool hasPromotionRate, double promotionRate) const {
+void AllocSite::printInfo(bool hasPromotionRate, double promotionRate,
+                          bool wasInvalidated) const {
   // Zone.
   fprintf(stderr, "  %p %p", this, zone());
 
@@ -184,8 +254,12 @@ void AllocSite::printInfo(bool hasPromotionRate, double promotionRate) const {
   fprintf(stderr, " %6s", buffer);
 
   // Current state for sites associated with a script.
-  if (hasScript()) {
-    fprintf(stderr, " %10s", stateName());
+  const char* state = hasScript() ? stateName() : "";
+  fprintf(stderr, " %10s", state);
+
+  // Whether the associated script was invalidated.
+  if (wasInvalidated) {
+    fprintf(stderr, " invalidated");
   }
 
   fprintf(stderr, "\n");

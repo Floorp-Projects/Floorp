@@ -20,6 +20,7 @@
 #define gc_Pretenuring_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/Maybe.h"
 
 #include "gc/AllocKind.h"
 #include "js/TypeDecls.h"
@@ -64,6 +65,9 @@ class AllocSite {
   // The state is atomic as it can be read off-thread by warp transpilation.
   mozilla::Atomic<State, mozilla::ReleaseAcquire> state_{State::Unknown};
 
+  // Number of times the script has been invalidated.
+  uint32_t invalidationCount = 0;
+
   static AllocSite* const EndSentinel;
 
   friend class PretenuringZone;
@@ -85,6 +89,8 @@ class AllocSite {
 
   bool isInAllocatedList() const { return nextNurseryAllocated; }
 
+  State state() const { return state_; }
+
   // Whether allocations at this site should be allocated in the nursery or the
   // tenured heap.
   InitialHeap initialHeap() const {
@@ -104,11 +110,16 @@ class AllocSite {
 
   void updateStateOnMinorGC(double promotionRate);
 
+  bool invalidationLimitReached() const;
+  bool invalidateScript(GCRuntime* gc);
+
   void trace(JSTracer* trc);
 
   static void printInfoHeader();
-  static void printInfoFooter(size_t sitesCreated, size_t sitesActive);
-  void printInfo(bool hasPromotionRate, double promotionRate) const;
+  static void printInfoFooter(size_t sitesCreated, size_t sitesActive,
+                              size_t sitesPretenured, size_t sitesInvalidated);
+  void printInfo(bool hasPromotionRate, double promotionRate,
+                 bool wasInvalidated) const;
 
   static constexpr size_t offsetOfState() {
     return offsetof(AllocSite, state_);
