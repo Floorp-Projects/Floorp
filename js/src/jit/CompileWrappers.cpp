@@ -152,6 +152,11 @@ uint32_t* CompileZone::addressOfNurseryAllocCount() {
   return zone()->runtimeFromAnyThread()->gc.addressOfNurseryAllocCount();
 }
 
+void* CompileZone::addressOfNurseryAllocatedSites() {
+  JSRuntime* rt = zone()->runtimeFromAnyThread();
+  return rt->gc.nursery().addressOfNurseryAllocatedSites();
+}
+
 bool CompileZone::canNurseryAllocateStrings() {
   return zone()->runtimeFromAnyThread()->gc.nursery().canAllocateStrings() &&
          zone()->allocNurseryStrings;
@@ -162,11 +167,12 @@ bool CompileZone::canNurseryAllocateBigInts() {
          zone()->allocNurseryBigInts;
 }
 
-uintptr_t CompileZone::nurseryCellHeader(JS::TraceKind kind) {
-  gc::AllocSite* site = kind == JS::TraceKind::Object
+uintptr_t CompileZone::nurseryCellHeader(JS::TraceKind traceKind,
+                                         gc::CatchAllAllocSite siteKind) {
+  gc::AllocSite* site = siteKind == gc::CatchAllAllocSite::Optimized
                             ? zone()->optimizedAllocSite()
                             : zone()->unknownAllocSite();
-  return gc::NurseryCellHeader::MakeValue(site, kind);
+  return gc::NurseryCellHeader::MakeValue(site, traceKind);
 }
 
 JS::Realm* CompileRealm::realm() { return reinterpret_cast<JS::Realm*>(this); }
