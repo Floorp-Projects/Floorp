@@ -380,10 +380,15 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     DiscardOptions() {}
     bool discardBaselineCode = true;
     bool discardJitScripts = false;
+    bool resetNurseryAllocSites = false;
+    bool resetPretenuredAllocSites = false;
   };
 
   void discardJitCode(JSFreeOp* fop,
                       const DiscardOptions& options = DiscardOptions());
+
+  void resetAllocSitesAndInvalidate(bool resetNurserySites,
+                                    bool resetPretenuredSites);
 
   void addSizeOfIncludingThis(
       mozilla::MallocSizeOf mallocSizeOf, JS::CodeSizes* code,

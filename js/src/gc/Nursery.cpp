@@ -782,26 +782,23 @@ js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
       stringTail(&stringHead) {}
 
 inline double js::Nursery::calcPromotionRate(bool* validForTenuring) const {
+  MOZ_ASSERT(validForTenuring);
+
+  if (previousGC.nurseryUsedBytes == 0) {
+    *validForTenuring = false;
+    return 0.0;
+  }
+
   double used = double(previousGC.nurseryUsedBytes);
   double capacity = double(previousGC.nurseryCapacity);
   double tenured = double(previousGC.tenuredBytes);
-  double rate;
 
-  if (previousGC.nurseryUsedBytes > 0) {
-    if (validForTenuring) {
-      // We can only use promotion rates if they're likely to be valid,
-      // they're only valid if the nursery was at least 90% full.
-      *validForTenuring = used > capacity * 0.9;
-    }
-    rate = tenured / used;
-  } else {
-    if (validForTenuring) {
-      *validForTenuring = false;
-    }
-    rate = 0.0;
-  }
+  // We should only use the promotion rate to make tenuring decisions if it's
+  // likely to be valid. The criterion we use is that the nursery was at least
+  // 90% full.
+  *validForTenuring = used > capacity * 0.9;
 
-  return rate;
+  return tenured / used;
 }
 
 void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
@@ -1104,11 +1101,11 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
 
   bool validPromotionRate;
   const double promotionRate = calcPromotionRate(&validPromotionRate);
-  bool highPromotionRate =
-      validPromotionRate && promotionRate > tunables().pretenureThreshold();
 
   startProfile(ProfileKey::Pretenure);
-  doPretenuring(rt, reason, highPromotionRate);
+  if (!wasEmpty) {
+    doPretenuring(rt, reason, validPromotionRate, promotionRate);
+  }
   endProfile(ProfileKey::Pretenure);
 
   // We ignore gcMaxBytes when allocating for minor collection. However, if we
@@ -1292,8 +1289,12 @@ js::Nursery::CollectionResult js::Nursery::doCollection(JS::GCReason reason) {
 }
 
 void js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
-                                bool highPromotionRate) {
-  pretenuringNursery.doPretenuring(gc, reportPretenuring_);
+                                bool validPromotionRate, double promotionRate) {
+  pretenuringNursery.doPretenuring(gc, validPromotionRate, promotionRate,
+                                   reportPretenuring_);
+
+  bool highPromotionRate =
+      validPromotionRate && promotionRate > tunables().pretenureThreshold();
 
   bool pretenureStr = false;
   bool pretenureBigInt = false;

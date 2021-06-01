@@ -634,6 +634,24 @@ gc::AllocSite* JitScript::createAllocSite(JSScript* script) {
   return site;
 }
 
+bool JitScript::resetAllocSites(bool resetNurserySites,
+                                bool resetPretenuredSites) {
+  MOZ_ASSERT(resetNurserySites || resetPretenuredSites);
+
+  bool anyReset = false;
+
+  for (gc::AllocSite* site : allocSites_) {
+    if ((resetNurserySites && site->initialHeap() == gc::DefaultHeap) ||
+        (resetPretenuredSites && site->initialHeap() == gc::TenuredHeap)) {
+      if (site->maybeResetState()) {
+        anyReset = true;
+      }
+    }
+  }
+
+  return anyReset;
+}
+
 JitScriptICStubSpace* ICScript::jitScriptStubSpace() {
   if (isInlined()) {
     return inliningRoot_->jitScriptStubSpace();

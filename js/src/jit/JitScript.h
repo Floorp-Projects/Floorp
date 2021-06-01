@@ -451,6 +451,8 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   gc::AllocSite* createAllocSite(JSScript* script);
 
+  bool resetAllocSites(bool resetNurserySites, bool resetPretenuredSites);
+
  private:
   // Methods to set baselineScript_ to a BaselineScript*, nullptr, or
   // BaselineDisabledScriptPtr.
