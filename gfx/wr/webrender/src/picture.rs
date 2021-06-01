@@ -1237,9 +1237,8 @@ impl Tile {
         // is just to deal with float accuracy. However, the valid rect is not
         // always aligned to a device pixel. To handle this, round out to get all
         // required pixels, and intersect with the tile device rect.
-        let device_rect = (self.world_tile_rect * ctx.global_device_pixel_scale).round().to_box2d();
+        let device_rect = (self.world_tile_rect * ctx.global_device_pixel_scale).round();
         self.device_valid_rect = (self.world_valid_rect * ctx.global_device_pixel_scale)
-            .to_box2d()
             .round_out()
             .intersection(&device_rect)
             .unwrap_or_else(DeviceRect::zero);
@@ -3133,7 +3132,7 @@ impl TileCacheInstance {
         let world_rect = pic_to_world_mapper
             .map(&prim_rect)
             .expect("bug: unable to map the primitive to world space");
-        let device_rect = (world_rect * frame_context.global_device_pixel_scale).round().to_box2d();
+        let device_rect = (world_rect * frame_context.global_device_pixel_scale).round();
 
         // TODO(gw): Is there any case where if the primitive ends up on a fractional
         //           boundary we want to _skip_ promoting to a compositor surface and
@@ -3156,14 +3155,14 @@ impl TileCacheInstance {
                 let world_to_device_scale = Transform3D::from_scale(frame_context.global_device_pixel_scale);
                 let transform = surface_to_world_mapper.get_transform().pre_translate(prim_origin).then(&world_to_device_scale);
 
-                (local_prim_rect.to_box2d().cast_unit(), transform)
+                (local_prim_rect.cast_unit(), transform)
             }
         };
 
-        let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round().to_box2d();
+        let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
 
-        if surface_rect.width() >= MAX_COMPOSITOR_SURFACES_SIZE ||
-           surface_rect.height() >= MAX_COMPOSITOR_SURFACES_SIZE {
+        if surface_rect.size.width >= MAX_COMPOSITOR_SURFACES_SIZE ||
+           surface_rect.size.height >= MAX_COMPOSITOR_SURFACES_SIZE {
                return false;
         }
 
@@ -3187,7 +3186,7 @@ impl TileCacheInstance {
                 (None, None)
             }
             CompositorKind::Native { .. } => {
-                let native_surface_size = surface_rect.size().round().to_i32();
+                let native_surface_size = surface_rect.size.round().to_i32();
 
                 let key = ExternalNativeSurfaceKey {
                     image_keys: *api_keys,
@@ -4870,7 +4869,7 @@ impl PicturePrimitive {
                     .map(&tile_cache.local_clip_rect)
                     .expect("bug: unable to map clip rect")
                     .round();
-                let device_clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round().to_box2d();
+                let device_clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
 
                 for (sub_slice_index, sub_slice) in tile_cache.sub_slices.iter_mut().enumerate() {
                     for tile in sub_slice.tiles.values_mut() {
@@ -4958,7 +4957,7 @@ impl PicturePrimitive {
                                 30.0 + sub_slice_index as f32 * 20.0,
                             );
                             let tile_device_rect = tile.world_tile_rect * frame_context.global_device_pixel_scale;
-                            if tile_device_rect.height() >= label_offset.y {
+                            if tile_device_rect.size.height >= label_offset.y {
                                 let surface = tile.surface.as_ref().expect("no tile surface set!");
 
                                 scratch.push_debug_string(
@@ -5012,9 +5011,8 @@ impl PicturePrimitive {
                         // Update the world/device dirty rect
                         let world_dirty_rect = map_pic_to_world.map(&tile.local_dirty_rect).expect("bug");
 
-                        let device_rect = (tile.world_tile_rect * frame_context.global_device_pixel_scale).round().to_box2d();
+                        let device_rect = (tile.world_tile_rect * frame_context.global_device_pixel_scale).round();
                         tile.device_dirty_rect = (world_dirty_rect * frame_context.global_device_pixel_scale)
-                            .to_box2d()
                             .round_out()
                             .intersection(&device_rect)
                             .unwrap_or_else(DeviceRect::zero);
@@ -5107,12 +5105,12 @@ impl PicturePrimitive {
                                 );
 
                                 let scissor_rect = tile.device_dirty_rect
-                                    .translate(-device_rect.min.to_vector())
+                                    .translate(-device_rect.origin.to_vector())
                                     .round()
                                     .to_i32();
 
                                 let valid_rect = tile.device_valid_rect
-                                    .translate(-device_rect.min.to_vector())
+                                    .translate(-device_rect.origin.to_vector())
                                     .round()
                                     .to_i32();
 
@@ -5160,7 +5158,7 @@ impl PicturePrimitive {
 
                             // If the entire tile valid region is dirty, we can update the fract offset
                             // at which the tile was rendered.
-                            if tile.device_dirty_rect.contains_box(&tile.device_valid_rect) {
+                            if tile.device_dirty_rect.contains_rect(&tile.device_valid_rect) {
                                 tile.device_fract_offset = tile_cache.device_fract_offset;
                             }
                         }
@@ -5199,8 +5197,8 @@ impl PicturePrimitive {
                             kind: tile_kind(&surface, is_opaque),
                             surface,
                             rect: device_rect,
-                            valid_rect: tile.device_valid_rect.translate(-device_rect.min.to_vector()),
-                            dirty_rect: tile.device_dirty_rect.translate(-device_rect.min.to_vector()),
+                            valid_rect: tile.device_valid_rect.translate(-device_rect.origin.to_vector()),
+                            dirty_rect: tile.device_dirty_rect.translate(-device_rect.origin.to_vector()),
                             clip_rect: device_clip_rect,
                             transform: None,
                             z_id: tile.z_id,
@@ -5327,11 +5325,11 @@ impl PicturePrimitive {
                     } else {
                         max_target_size as f32
                     };
-                    if device_rect.width() > limit || device_rect.height() > limit {
+                    if device_rect.size.width > limit || device_rect.size.height > limit {
                         // round_out will grow by 1 integer pixel if origin is on a
                         // fractional position, so keep that margin for error with -1:
                         let scale = (limit as f32 - 1.0) /
-                                    (f32::max(device_rect.width(), device_rect.height()));
+                                    (f32::max(device_rect.size.width, device_rect.size.height));
                         *device_pixel_scale = *device_pixel_scale * Scale::new(scale);
                         let new_device_rect = device_rect.to_f32() * Scale::new(scale);
                         *device_rect = new_device_rect.round_out();
@@ -5388,16 +5386,15 @@ impl PicturePrimitive {
                             clipped
                         };
 
-                        let mut original_size = device_rect.size();
+                        let mut original_size = device_rect.size;
 
                         // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
                         // what would be even better is to rasterize the picture at the down-scaled size
                         // directly.
-                        let adjusted_size = BlurTask::adjusted_blur_source_size(
-                            device_rect.size(),
+                        device_rect.size = BlurTask::adjusted_blur_source_size(
+                            device_rect.size,
                             blur_std_deviation,
                         );
-                        device_rect.set_size(adjusted_size);
 
                         if let Some(scale) = adjust_scale_for_max_surface_size(
                             raster_config, frame_context.fb_config.max_target_size,
@@ -5417,16 +5414,16 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
-                        let task_size = device_rect.size().to_i32();
+                        let task_size = device_rect.size.to_i32();
 
                         let picture_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new_dynamic(
                                 task_size,
                                 RenderTaskKind::new_picture(
                                     task_size,
-                                    unclipped.size(),
+                                    unclipped.size,
                                     pic_index,
-                                    device_rect.min,
+                                    device_rect.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
                                     None,
@@ -5470,14 +5467,13 @@ impl PicturePrimitive {
                                 .intersection(&unclipped)
                                 .unwrap();
 
-                        let adjusted_size = BlurTask::adjusted_blur_source_size(
-                            device_rect.size(),
+                        device_rect.size = BlurTask::adjusted_blur_source_size(
+                            device_rect.size,
                             DeviceSize::new(
                                 max_std_deviation * scale_factors.0,
                                 max_std_deviation * scale_factors.1
                             ),
                         );
-                        device_rect.set_size(adjusted_size);
 
                         if let Some(scale) = adjust_scale_for_max_surface_size(
                             raster_config, frame_context.fb_config.max_target_size,
@@ -5496,16 +5492,16 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
-                        let task_size = device_rect.size().to_i32();
+                        let task_size = device_rect.size.to_i32();
 
                         let picture_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new_dynamic(
                                 task_size,
                                 RenderTaskKind::new_picture(
                                     task_size,
-                                    unclipped.size(),
+                                    unclipped.size,
                                     pic_index,
-                                    device_rect.min,
+                                    device_rect.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
                                     None,
@@ -5538,7 +5534,7 @@ impl PicturePrimitive {
                                 frame_state.rg_builder,
                                 RenderTargetKind::Color,
                                 Some(&mut blur_tasks),
-                                device_rect.size().to_i32(),
+                                device_rect.size.to_i32(),
                             );
                         }
 
@@ -5625,8 +5621,8 @@ impl PicturePrimitive {
 
                                 frame_state.rg_builder.add().init(
                                     RenderTask::new_dynamic(
-                                        available_rect.size().to_i32(),
-                                        RenderTaskKind::new_readback(Some(available_rect.min)),
+                                        available_rect.size.to_i32(),
+                                        RenderTaskKind::new_readback(Some(available_rect.origin)),
                                     ).with_uv_rect_kind(backdrop_uv)
                                 )
                             }
@@ -5647,16 +5643,16 @@ impl PicturePrimitive {
 
                         self.secondary_render_task_id = Some(readback_task_id);
 
-                        let task_size = clipped.size().to_i32();
+                        let task_size = clipped.size.to_i32();
 
                         let render_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new_dynamic(
                                 task_size,
                                 RenderTaskKind::new_picture(
                                     task_size,
-                                    unclipped.size(),
+                                    unclipped.size,
                                     pic_index,
-                                    clipped.min,
+                                    clipped.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
                                     None,
@@ -5693,16 +5689,16 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
-                        let task_size = clipped.size().to_i32();
+                        let task_size = clipped.size.to_i32();
 
                         let render_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new_dynamic(
                                 task_size,
                                 RenderTaskKind::new_picture(
                                     task_size,
-                                    unclipped.size(),
+                                    unclipped.size,
                                     pic_index,
-                                    clipped.min,
+                                    clipped.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
                                     None,
@@ -5738,16 +5734,16 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
-                        let task_size = clipped.size().to_i32();
+                        let task_size = clipped.size.to_i32();
 
                         let render_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new_dynamic(
                                 task_size,
                                 RenderTaskKind::new_picture(
                                     task_size,
-                                    unclipped.size(),
+                                    unclipped.size,
                                     pic_index,
-                                    clipped.min,
+                                    clipped.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
                                     None,
@@ -5784,16 +5780,16 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
-                        let task_size = clipped.size().to_i32();
+                        let task_size = clipped.size.to_i32();
 
                         let render_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new_dynamic(
                                 task_size,
                                 RenderTaskKind::new_picture(
                                     task_size,
-                                    unclipped.size(),
+                                    unclipped.size,
                                     pic_index,
-                                    clipped.min,
+                                    clipped.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
                                     None,
@@ -5830,16 +5826,16 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
-                        let task_size = clipped.size().to_i32();
+                        let task_size = clipped.size.to_i32();
 
                         let picture_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new_dynamic(
                                 task_size,
                                 RenderTaskKind::new_picture(
                                     task_size,
-                                    unclipped.size(),
+                                    unclipped.size,
                                     pic_index,
-                                    clipped.min,
+                                    clipped.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
                                     None,
@@ -5853,7 +5849,7 @@ impl PicturePrimitive {
                             primitives,
                             filter_datas,
                             frame_state.rg_builder,
-                            clipped.size().to_i32(),
+                            clipped.size.to_i32(),
                             uv_rect_kind,
                             picture_task_id,
                             device_pixel_scale,
@@ -6573,8 +6569,8 @@ fn calculate_screen_uv(
     let raster_pos = transform.transform_point2d_homogeneous(*local_pos);
 
     DeviceHomogeneousVector::new(
-        (raster_pos.x * device_pixel_scale.0 - rendered_rect.min.x * raster_pos.w) / rendered_rect.width(),
-        (raster_pos.y * device_pixel_scale.0 - rendered_rect.min.y * raster_pos.w) / rendered_rect.height(),
+        (raster_pos.x * device_pixel_scale.0 - rendered_rect.origin.x * raster_pos.w) / rendered_rect.size.width,
+        (raster_pos.y * device_pixel_scale.0 - rendered_rect.origin.y * raster_pos.w) / rendered_rect.size.height,
         0.0,
         raster_pos.w,
     )
@@ -6589,7 +6585,7 @@ fn calculate_uv_rect_kind(
     device_pixel_scale: DevicePixelScale,
 ) -> UvRectKind {
     let top_left = calculate_screen_uv(
-        &pic_rect.top_left(),
+        &pic_rect.origin,
         transform,
         &rendered_rect,
         device_pixel_scale,
@@ -6987,7 +6983,7 @@ impl TileNode {
                     let world_rect = pic_to_world_mapper
                         .map(&local_rect)
                         .unwrap();
-                    let device_rect = (world_rect * global_device_pixel_scale).to_box2d();
+                    let device_rect = world_rect * global_device_pixel_scale;
 
                     let outer_color = color.scale_alpha(0.3);
                     let inner_color = outer_color.scale_alpha(0.5);
