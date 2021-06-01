@@ -510,7 +510,7 @@ pub fn update_primitive_visibility(
                             &map_surface_to_world,
                         ) {
                             let debug_rect = rect * frame_context.global_device_pixel_scale;
-                            frame_state.scratch.primitive.push_debug_rect(debug_rect.to_box2d(), debug_color, debug_color.scale_alpha(0.5));
+                            frame_state.scratch.primitive.push_debug_rect(debug_rect, debug_color, debug_color.scale_alpha(0.5));
                         }
                     }
                 } else if frame_context.debug_flags.contains(::api::DebugFlags::OBSCURE_IMAGES) {
@@ -527,7 +527,7 @@ pub fn update_primitive_visibility(
                         ) {
                             let rect = rect * frame_context.global_device_pixel_scale;
                             if rect.size.width > 70.0 && rect.size.height > 70.0 {
-                                frame_state.scratch.primitive.push_debug_rect(rect.to_box2d(), debug_colors::PURPLE, debug_colors::PURPLE);
+                                frame_state.scratch.primitive.push_debug_rect(rect, debug_colors::PURPLE, debug_colors::PURPLE);
                             }
                         }
                     }

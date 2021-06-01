@@ -12,7 +12,7 @@ PER_INSTANCE in float aDevicePixelScale;
 PER_INSTANCE in ivec2 aTransformIds;
 
 struct ClipMaskInstanceCommon {
-    RectWithEndpoint sub_rect;
+    RectWithSize sub_rect;
     vec2 task_origin;
     vec2 screen_origin;
     float device_pixel_scale;
@@ -23,7 +23,7 @@ struct ClipMaskInstanceCommon {
 ClipMaskInstanceCommon fetch_clip_item_common() {
     ClipMaskInstanceCommon cmi;
 
-    cmi.sub_rect = RectWithEndpoint(aClipDeviceArea.xy, aClipDeviceArea.zw);
+    cmi.sub_rect = RectWithSize(aClipDeviceArea.xy, aClipDeviceArea.zw);
     cmi.task_origin = aClipOrigins.xy;
     cmi.screen_origin = aClipOrigins.zw;
     cmi.device_pixel_scale = aDevicePixelScale;
@@ -49,11 +49,11 @@ RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
 ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
                                       Transform prim_transform,
                                       Transform clip_transform,
-                                      RectWithEndpoint sub_rect,
+                                      RectWithSize sub_rect,
                                       vec2 task_origin,
                                       vec2 screen_origin,
                                       float device_pixel_scale) {
-    vec2 device_pos = screen_origin + mix(sub_rect.p0, sub_rect.p1, aPosition.xy);
+    vec2 device_pos = screen_origin + sub_rect.p0 + aPosition.xy * sub_rect.size;
     vec2 world_pos = device_pos / device_pixel_scale;
 
     vec4 pos = prim_transform.m * vec4(world_pos, 0.0, 1.0);
@@ -70,7 +70,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
     // We can therefore simplify this when the clip construction is rewritten
     // to only affect the areas touched by a clip.
     vec4 vertex_pos = vec4(
-        task_origin + mix(sub_rect.p0, sub_rect.p1, aPosition.xy),
+        task_origin + sub_rect.p0 + aPosition.xy * sub_rect.size,
         0.0,
         1.0
     );
