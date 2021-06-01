@@ -15,7 +15,7 @@ add_task(async function() {
   const { inspector, testActor } = await openInspectorForURL(TEST_URL);
 
   info("Select the test node with the browser ctx menu");
-  await clickOnInspectMenuItem(testActor, "div");
+  await clickOnInspectMenuItem("div");
   assertNodeSelected(inspector, "div");
 
   info(
@@ -58,7 +58,7 @@ function selectPreviousNodeWithArrowUp(inspector) {
 async function selectWithElementPicker(inspector, testActor) {
   await startPicker(inspector.toolbox);
 
-  await BrowserTestUtils.synthesizeMouseAtCenter(
+  await safeSynthesizeMouseEventAtCenterInContentPage(
     "div",
     {
       type: "mousemove",

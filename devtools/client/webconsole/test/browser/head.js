@@ -1287,11 +1287,7 @@ async function selectNodeWithPicker(toolbox, testActor, selector) {
   const onPickerStopped = toolbox.nodePicker.once("picker-stopped");
   const onInspectorUpdated = inspector.once("inspector-updated");
 
-  testActor.synthesizeMouse({
-    selector,
-    center: true,
-    options: {},
-  });
+  await safeSynthesizeMouseEventAtCenterInContentPage(selector);
 
   await onPickerStopped;
   await onInspectorUpdated;

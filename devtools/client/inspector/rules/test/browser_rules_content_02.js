@@ -1,6 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
-/* globals getTestActorWithoutToolbox */
+
 "use strict";
 
 // Test the rule-view content when the inspector gets opened via the page
@@ -17,10 +17,13 @@ const CONTENT = `
 `;
 
 add_task(async function() {
-  const tab = await addTab("data:text/html;charset=utf-8," + CONTENT);
+  await addTab("data:text/html;charset=utf-8," + CONTENT);
 
-  const testActor = await getTestActorWithoutToolbox(tab);
-  const inspector = await clickOnInspectMenuItem(testActor, "span");
+  // const commands = await CommandsFactory.forTab(tab);
+  // // Initialize the TargetCommands which require some async stuff to be done
+  // // before being fully ready. This will define the `targetCommand.targetFront` attribute.
+  // await commands.targetCommand.startListening();
+  const inspector = await clickOnInspectMenuItem("span");
 
   checkRuleViewContent(inspector.getPanel("ruleview").view);
 });

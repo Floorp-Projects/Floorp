@@ -8,7 +8,7 @@
 // view, its root and other containers, and other parts of inspector.
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(
+  const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"
   );
   const markup = inspector.markup;
@@ -68,7 +68,7 @@ add_task(async function() {
     "Keyboard focus should again be on tag element of focused container"
   );
 
-  await clickOnInspectMenuItem(testActor, "h1");
+  await clickOnInspectMenuItem("h1");
   is(
     doc.activeElement,
     rootContainer.elt,
