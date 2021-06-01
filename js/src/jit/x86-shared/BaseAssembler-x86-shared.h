@@ -3775,6 +3775,13 @@ class BaseAssembler : public GenericAssembler {
                        mask, src1, src0, dst);
   }
 
+  void pblendvb_rr(XMMRegisterID other, XMMRegisterID dst) {
+    spew("%-11s%s, %s", "pblendvb", XMMRegName(other), XMMRegName(dst));
+    m_formatter.legacySSEPrefix(VEX_PD);
+    m_formatter.threeByteOp(OP3_PBLENDVB_VdqWdq, ESCAPE_38, (RegisterID)other,
+                            dst);
+  }
+
   void vpinsrb_irr(unsigned lane, RegisterID src1, XMMRegisterID src0,
                    XMMRegisterID dst) {
     MOZ_ASSERT(lane < 16);
