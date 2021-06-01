@@ -438,10 +438,11 @@ bool ValidationRequired(bool isForcedValid,
     // or not this is the first access this session.  This behavior
     // is consistent with existing browsers and is generally expected
     // by web authors.
-    if (freshness == 0)
+    if (freshness == 0) {
       doValidation = true;
-    else
+    } else {
       doValidation = fromPreviousSession;
+    }
   } else {
     doValidation = true;
   }
@@ -567,7 +568,7 @@ void NotifyActiveTabLoadOptimization() {
   }
 }
 
-TimeStamp const GetLastActiveTabLoadOptimizationHit() {
+TimeStamp GetLastActiveTabLoadOptimizationHit() {
   return gHttpHandler ? gHttpHandler->GetLastActiveTabLoadOptimizationHit()
                       : TimeStamp();
 }
@@ -610,13 +611,10 @@ void EnsureBuffer(UniquePtr<uint8_t[]>& buf, uint32_t newSize,
 }
 
 static bool IsTokenSymbol(signed char chr) {
-  if (chr < 33 || chr == 127 || chr == '(' || chr == ')' || chr == '<' ||
-      chr == '>' || chr == '@' || chr == ',' || chr == ';' || chr == ':' ||
-      chr == '"' || chr == '/' || chr == '[' || chr == ']' || chr == '?' ||
-      chr == '=' || chr == '{' || chr == '}' || chr == '\\') {
-    return false;
-  }
-  return true;
+  return !(chr < 33 || chr == 127 || chr == '(' || chr == ')' || chr == '<' ||
+           chr == '>' || chr == '@' || chr == ',' || chr == ';' || chr == ':' ||
+           chr == '"' || chr == '/' || chr == '[' || chr == ']' || chr == '?' ||
+           chr == '=' || chr == '{' || chr == '}' || chr == '\\');
 }
 
 ParsedHeaderPair::ParsedHeaderPair(const char* name, int32_t nameLen,
@@ -728,8 +726,9 @@ void ParsedHeaderValueList::ParseNameAndValue(const char* input,
 
   for (; *input && *input != ';' && *input != ',' &&
          !nsCRT::IsAsciiSpace(*input) && *input != '=';
-       input++)
+       input++) {
     ;
+  }
 
   nameEnd = input;
 
@@ -768,8 +767,9 @@ void ParsedHeaderValueList::ParseNameAndValue(const char* input,
     valueStart = input;
     for (valueEnd = input; *valueEnd && !nsCRT::IsAsciiSpace(*valueEnd) &&
                            *valueEnd != ';' && *valueEnd != ',';
-         valueEnd++)
+         valueEnd++) {
       ;
+    }
     if (!allowInvalidValue) {
       for (const char* c = valueStart; c < valueEnd; c++) {
         if (!IsTokenSymbol(*c)) {

@@ -128,7 +128,7 @@ class HttpTransactionShell : public nsISupports {
   virtual void SetDomainLookupEnd(mozilla::TimeStamp timeStamp,
                                   bool onlyIfNull = false) = 0;
 
-  virtual const TimingStruct Timings() = 0;
+  virtual TimingStruct Timings() = 0;
 
   // Called to set/find out if the transaction generated a complete response.
   virtual bool ResponseIsComplete() = 0;
@@ -201,7 +201,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
                                     bool onlyIfNull = false) override;         \
   virtual void SetDomainLookupEnd(mozilla::TimeStamp timeStamp,                \
                                   bool onlyIfNull = false) override;           \
-  virtual const TimingStruct Timings() override;                               \
+  virtual TimingStruct Timings() override;                                     \
   virtual bool ResponseIsComplete() override;                                  \
   virtual int64_t GetTransferSize() override;                                  \
   virtual int64_t GetRequestSize() override;                                   \
