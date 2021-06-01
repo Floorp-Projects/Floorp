@@ -197,7 +197,7 @@ always equal to `obj.script.isAsyncFunction`, assuming `obj.script` is a
 
 ### `isClassConstructor`
 If the referent is a debuggee function, returns `true` if the referent is a class,
-or false if it is some other sort of function. If the referent is not a debuggee 
+or false if it is some other sort of function. If the referent is not a debuggee
 function, or not a function at all, this is `undefined`. (This is always equal to
 `obj.script.isClassConstructor`, assuming `obj.script` is a `Debugger.Script`.)
 
@@ -604,48 +604,6 @@ that has not yet been updated.
 ### `forceLexicalInitializationByName(binding)`
 If <i>binding</i> is in an uninitialized state initialize it to undefined
 and return true, otherwise do nothing and return false.
-
-### `setInstrumentation(callback, kinds)`
-If the referent is a global object, this specifies how instrumentation
-should be installed on scripts created in the future in this global's realm.
-If the referent is not a global object, throw a `TypeError`.  If the global
-already has instrumentation specified, throw an `Error`. `callback` is a
-`Debugger.Object` wrapping the callback to invoke, and `kinds` is an array
-of strings specifying the kinds of operations at which the callback should
-be invoked. Instrumentation is initially inactive, and can be activated via
-`DebuggerObject.setInstrumentationActive`. When instrumentation is active
-and an operation described by one of the instrumentation kinds executes,
-the callback is invoked with at least three arguments: the string kind of
-operation executing, the ID for the script specified by
-`Debugger.Script.setInstrumentationId`, and the bytecode offset
-of the script location following the instrumentation.  More call arguments
-are possible for some instrumentation kinds.  If an instrumented script is
-invoked without having `setInstrumentationId` called on it, it will throw an
-`Error`.  The possible instrumentation kinds and any extra arguments are as
-follows:
-
-* `main`: The main entry point of a script.
-* `entry`: Points other than the main entry point where a frame for the
-  script might begin executing when it was not previously on the stack.
-  Only applies to generator/async scripts.
-* `exit`: Points at which a script's frame will be popped or suspended.
-* `breakpoint`: Breakpoint sites in a script.
-* `getProperty`: Property read operations, including `x.f` and
-  destructuring operations. The callback will be additionally invoked with
-  the object and property name.
-* `setProperty`: Property write operations. The callback will be
-  additionally invoked with the object, property name, and rhs.
-* `getElement`: Element read operations. The callback will be additionally
-  invoked with the object and element value.
-* `setElement`: Element write operations. The callback will be
-  additionally invoked with the object, element value, and rhs.
-
-### `setInstrumentationActive(active)`
-If the referent is a global object, set whether instrumentation is active
-in the global's realm.  The instrumentation callback is only invoked when
-instrumentation is active, and code will run faster when instrumentation is
-inactive. If the referent is not a global object, throw a `TypeError`.
-If the referent has not had instrumentation installed, throw an `Error`.
 
 ### `getPromiseReactions`
 

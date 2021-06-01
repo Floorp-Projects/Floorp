@@ -6367,18 +6367,6 @@ DebuggerSource* Debugger::wrapWasmSource(
   return wrapVariantReferent(cx, referent);
 }
 
-bool DebugAPI::getScriptInstrumentationId(JSContext* cx, HandleObject dbgObject,
-                                          HandleScript script,
-                                          MutableHandleValue rval) {
-  Debugger* dbg = Debugger::fromJSObject(dbgObject);
-  DebuggerScript* dbgScript = dbg->wrapScript(cx, script);
-  if (!dbgScript) {
-    return false;
-  }
-  rval.set(dbgScript->getInstrumentationId());
-  return true;
-}
-
 bool Debugger::observesFrame(AbstractFramePtr frame) const {
   if (frame.isWasmDebugFrame()) {
     return observesWasm(frame.wasmInstance());

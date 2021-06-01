@@ -27,7 +27,6 @@
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/GetterSetter.h"
-#include "vm/Instrumentation.h"
 #include "vm/Opcodes.h"
 
 #include "jit/InlineScriptTree-inl.h"

@@ -47,7 +47,6 @@
 #include "vm/EqualityOperations.h"  // js::StrictlyEqual
 #include "vm/FunctionFlags.h"       // js::FunctionFlags
 #include "vm/GeneratorObject.h"
-#include "vm/Instrumentation.h"
 #include "vm/Iteration.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"

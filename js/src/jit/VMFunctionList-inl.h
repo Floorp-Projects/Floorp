@@ -20,7 +20,6 @@
 #include "vm/AsyncIteration.h"
 #include "vm/BigIntType.h"
 #include "vm/EqualityOperations.h"
-#include "vm/Instrumentation.h"
 #include "vm/Interpreter.h"
 #include "vm/TypedArrayObject.h"
 
