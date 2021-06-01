@@ -21,8 +21,6 @@ class nsICacheEntry;
 
 namespace mozilla {
 
-class Mutex;
-
 namespace net {
 class nsHttpResponseHead;
 class nsHttpRequestHead;
@@ -151,35 +149,14 @@ extern const nsCString kHttp3Versions[];
 // http atoms...
 //-----------------------------------------------------------------------------
 
-struct nsHttpAtom {
-  nsHttpAtom() : _val(nullptr){};
-  explicit nsHttpAtom(const char* val) : _val(val) {}
-  nsHttpAtom(const nsHttpAtom& other) = default;
-
-  operator const char*() const { return _val; }
-  const char* get() const { return _val; }
-
-  void operator=(const char* v) { _val = v; }
-  void operator=(const nsHttpAtom& a) { _val = a._val; }
-
-  // private
-  const char* _val;
-};
+struct nsHttpAtom;
 
 namespace nsHttp {
 [[nodiscard]] nsresult CreateAtomTable();
 void DestroyAtomTable();
 
-// The mutex is valid any time the Atom Table is valid
-// This mutex is used in the unusual case that the network thread and
-// main thread might access the same data
-Mutex* GetLock();
-
 // will dynamically add atoms to the table if they don't already exist
-nsHttpAtom ResolveAtom(const char*);
-inline nsHttpAtom ResolveAtom(const nsACString& s) {
-  return ResolveAtom(PromiseFlatCString(s).get());
-}
+nsHttpAtom ResolveAtom(const nsACString& s);
 
 // returns true if the specified token [start,end) is valid per RFC 2616
 // section 2.2
@@ -300,6 +277,31 @@ bool SendDataInChunks(const nsCString& aData, uint64_t aOffset, uint32_t aCount,
 }
 
 }  // namespace nsHttp
+
+struct nsHttpAtom {
+  nsHttpAtom() = default;
+  nsHttpAtom(const nsHttpAtom& other) = default;
+
+  operator const char*() const { return get(); }
+  const char* get() const {
+    if (_val.IsEmpty()) {
+      return nullptr;
+    }
+    return _val.BeginReading();
+  }
+
+  const nsCString& val() const { return _val; }
+
+  void operator=(const nsHttpAtom& a) { _val = a._val; }
+
+  // This constructor is mainly used to build the static atom list
+  // Avoid using it for anything else.
+  explicit nsHttpAtom(const nsACString& val) : _val(val) {}
+
+ private:
+  nsCString _val;
+  friend nsHttpAtom nsHttp::ResolveAtom(const nsACString& s);
+};
 
 //-----------------------------------------------------------------------------
 // utilities...
