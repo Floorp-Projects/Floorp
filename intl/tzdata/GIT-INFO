@@ -1,7 +1,5 @@
-commit 95120170afa0cf622a18da37d3af58abf8ecd40e
-Author: Yoshito Umaoka <yumaoka@users.noreply.github.com>
-Date:   Wed Jan 27 09:48:37 2021 -0500
+commit 9b32a927730a1725b8398e5c4e14a6e08354af13
+Author: Hugo van der Merwe <17109322+hugovdm@users.noreply.github.com>
+Date:   Wed Mar 24 18:52:51 2021 +0100
 
-    ICU-21467 tzdata 2021a updates. Also updated build script. With this … (#17)
-    
-    change, we no longer release ICU time zone data updates for ICU 4.2 or older releases.
+    ICU-21508 Rename 'master' to 'main' in dev/tool/tzu/SourceModel.java (#20)
