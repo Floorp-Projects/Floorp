@@ -532,6 +532,7 @@ class SetBackgroundRequestRunnable final
   ~SetBackgroundRequestRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
+    // XXXedgar, do we intend to ignore the errors?
     mProxy->mXHR->SetMozBackgroundRequest(mValue, aRv);
   }
 };
@@ -695,12 +696,12 @@ class OpenRunnable final : public WorkerThreadProxySyncRunnable {
     WorkerPrivate* oldWorker = mProxy->mWorkerPrivate;
     mProxy->mWorkerPrivate = mWorkerPrivate;
 
-    aRv = MainThreadRunInternal();
+    MainThreadRunInternal(aRv);
 
     mProxy->mWorkerPrivate = oldWorker;
   }
 
-  nsresult MainThreadRunInternal();
+  void MainThreadRunInternal(ErrorResult& aRv);
 };
 
 class SetRequestHeaderRunnable final : public WorkerThreadProxySyncRunnable {
@@ -1206,40 +1207,41 @@ void AbortRunnable::RunOnMainThread(ErrorResult& aRv) {
   mProxy->Reset();
 }
 
-nsresult OpenRunnable::MainThreadRunInternal() {
+void OpenRunnable::MainThreadRunInternal(ErrorResult& aRv) {
   if (!mProxy->Init()) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   if (mBackgroundRequest) {
-    nsresult rv = mProxy->mXHR->SetMozBackgroundRequest(mBackgroundRequest);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mProxy->mXHR->SetMozBackgroundRequestExternal(mBackgroundRequest, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
 
   if (mOriginStack) {
     mProxy->mXHR->SetOriginStack(std::move(mOriginStack));
   }
 
-  ErrorResult rv;
-
   if (mWithCredentials) {
-    mProxy->mXHR->SetWithCredentials(mWithCredentials, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
+    mProxy->mXHR->SetWithCredentials(mWithCredentials, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
     }
   }
 
   if (mTimeout) {
-    mProxy->mXHR->SetTimeout(mTimeout, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
+    mProxy->mXHR->SetTimeout(mTimeout, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
     }
   }
 
   if (!mMimeTypeOverride.IsVoid()) {
-    mProxy->mXHR->OverrideMimeType(mMimeTypeOverride, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
+    mProxy->mXHR->OverrideMimeType(mMimeTypeOverride, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
     }
   }
 
@@ -1248,25 +1250,20 @@ nsresult OpenRunnable::MainThreadRunInternal() {
 
   mProxy->mXHR->Open(
       mMethod, mURL, true, mUser.WasPassed() ? mUser.Value() : VoidString(),
-      mPassword.WasPassed() ? mPassword.Value() : VoidString(), rv);
+      mPassword.WasPassed() ? mPassword.Value() : VoidString(), aRv);
 
   MOZ_ASSERT(mProxy->mInOpen);
   mProxy->mInOpen = false;
 
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
   }
 
   if (mSource) {
     mProxy->mXHR->SetSource(std::move(mSource));
   }
 
-  mProxy->mXHR->SetResponseType(mResponseType, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  return NS_OK;
+  mProxy->mXHR->SetResponseType(mResponseType, aRv);
 }
 
 void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
