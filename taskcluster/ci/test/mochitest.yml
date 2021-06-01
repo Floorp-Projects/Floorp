@@ -79,6 +79,7 @@ mochitest-plain:
             default:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
+                    android-em-7.0-x86_64/debug-isolated-process: []
                     default: built-projects
     chunks:
         by-test-platform:
@@ -337,6 +338,7 @@ mochitest-plain-gpu:
             default:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
+                    android-em-7.0-x86_64/debug-isolated-process: []
                     default: built-projects
     virtualization:
         by-test-platform:
@@ -434,6 +436,7 @@ mochitest-media:
                     .*-tsan/opt: ['trunk']
                     android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
                     android-hw-.*-api-16(-qr)?/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
+                    android-em-7.0-x86_64/debug-isolated-process: []
                     android-hw-.*-api-16-shippable(-qr)?/opt: ['trunk', 'mozilla-beta', 'mozilla-release']
                     windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     default: built-projects
