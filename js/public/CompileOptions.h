@@ -173,9 +173,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   uint32_t introductionOffset = 0;
   bool hasIntroductionInfo = false;
 
-  // Mask of operation kinds which should be instrumented.
-  uint32_t instrumentationKinds = 0;
-
  protected:
   TransitiveCompileOptions() = default;
 

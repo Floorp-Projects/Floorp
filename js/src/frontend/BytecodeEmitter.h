@@ -173,10 +173,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // The end location of a function body that is being emitted.
   mozilla::Maybe<uint32_t> functionBodyEndPos = {};
 
-  // Mask of operation kinds which need instrumentation. This is obtained from
-  // the compile options and copied here for efficiency.
-  uint32_t instrumentationKinds = 0;
-
   /*
    * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
    * space above their tempMark points. This means that you cannot alloc from
@@ -302,11 +298,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   bool inPrologue() const { return mainOffset_.isNothing(); }
 
-  [[nodiscard]] bool switchToMain() {
+  void switchToMain() {
     MOZ_ASSERT(inPrologue());
     mainOffset_.emplace(bytecodeSection().code().length());
-
-    return emitInstrumentation(InstrumentationKind::Main);
   }
 
   void setFunctionBodyEndPos(uint32_t pos) {
@@ -479,12 +473,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] bool emitGCIndexOp(JSOp op, GCThingIndex index);
 
-  [[nodiscard]] bool emitAtomOp(
-      JSOp op, TaggedParserAtomIndex atom,
-      ShouldInstrument shouldInstrument = ShouldInstrument::No);
-  [[nodiscard]] bool emitAtomOp(
-      JSOp op, GCThingIndex atomIndex,
-      ShouldInstrument shouldInstrument = ShouldInstrument::No);
+  [[nodiscard]] bool emitAtomOp(JSOp op, TaggedParserAtomIndex atom);
+  [[nodiscard]] bool emitAtomOp(JSOp op, GCThingIndex atomIndex);
 
   [[nodiscard]] bool emitArrayLiteral(ListNode* array);
   [[nodiscard]] bool emitArray(ParseNode* arrayHead, uint32_t count);
@@ -624,8 +614,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] bool emitElemObjAndKey(PropertyByValue* elem, bool isSuper,
                                        ElemOpEmitter& eoe);
-  [[nodiscard]] bool emitElemOpBase(
-      JSOp op, ShouldInstrument shouldInstrument = ShouldInstrument::No);
+  [[nodiscard]] bool emitElemOpBase(JSOp op);
 
   [[nodiscard]] bool emitElemIncDec(UnaryNode* incDec);
   [[nodiscard]] bool emitObjAndPrivateName(PrivateMemberAccess* elem,
@@ -883,10 +872,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] bool emitExportDefault(BinaryNode* exportNode);
 
-  [[nodiscard]] bool emitReturnRval() {
-    return emitInstrumentation(InstrumentationKind::Exit) &&
-           emit1(JSOp::RetRval);
-  }
+  [[nodiscard]] bool emitReturnRval() { return emit1(JSOp::RetRval); }
 
   [[nodiscard]] bool emitCheckPrivateField(ThrowCondition throwCondition,
                                            ThrowMsgKind msgKind) {
@@ -903,28 +889,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitNewPrivateNames(TaggedParserAtomIndex privateBrandName,
                                          ListNode* classMembers);
 
-  [[nodiscard]] bool emitInstrumentation(InstrumentationKind kind,
-                                         uint32_t npopped = 0) {
-    return MOZ_LIKELY(!instrumentationKinds) ||
-           emitInstrumentationSlow(kind, std::function<bool(uint32_t)>());
-  }
-
-  [[nodiscard]] bool emitInstrumentationForOpcode(JSOp op,
-                                                  GCThingIndex atomIndex) {
-    return MOZ_LIKELY(!instrumentationKinds) ||
-           emitInstrumentationForOpcodeSlow(op, atomIndex);
-  }
-
   [[nodiscard]] js::UniquePtr<ImmutableScriptData> createImmutableScriptData(
       JSContext* cx);
 
  private:
-  [[nodiscard]] bool emitInstrumentationSlow(
-      InstrumentationKind kind,
-      const std::function<bool(uint32_t)>& pushOperandsCallback);
-  [[nodiscard]] bool emitInstrumentationForOpcodeSlow(JSOp op,
-                                                      GCThingIndex atomIndex);
-
   [[nodiscard]] bool allowSelfHostedIter(ParseNode* parseNode);
 
   [[nodiscard]] bool emitSelfHostedGetBuiltinConstructorOrPrototype(

@@ -209,7 +209,6 @@ class MOZ_STACK_CLASS TryEmitter {
   [[nodiscard]] bool emitTryEnd();
   [[nodiscard]] bool emitCatchEnd();
   [[nodiscard]] bool emitFinallyEnd();
-  [[nodiscard]] bool instrumentEntryPoint();
 };
 
 } /* namespace frontend */
