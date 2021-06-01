@@ -1411,6 +1411,23 @@ NS_IMETHODIMP EditorBase::SetDocumentCharacterSet(
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+NS_IMETHODIMP EditorBase::OutputToString(const nsAString& aFormatType,
+                                         uint32_t aDocumentEncoderFlags,
+                                         nsAString& aOutputString) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsresult rv =
+      ComputeValueInternal(aFormatType, aDocumentEncoderFlags, aOutputString);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::ComputeValueInternal() failed");
+  // This is low level API for XUL application.  So, we should return raw
+  // error code here.
+  return rv;
+}
+
 nsresult EditorBase::ComputeValueInternal(const nsAString& aFormatType,
                                           uint32_t aDocumentEncoderFlags,
                                           nsAString& aOutputString) const {
@@ -2367,13 +2384,6 @@ NS_IMETHODIMP EditorBase::RemoveDocumentStateListener(
   mDocStateListeners.RemoveElement(aListener);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP EditorBase::OutputToString(const nsAString& aFormatType,
-                                         uint32_t aFlags,
-                                         nsAString& aOutputString) {
-  // these should be implemented by derived classes.
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 bool EditorBase::ArePreservingSelection() {
