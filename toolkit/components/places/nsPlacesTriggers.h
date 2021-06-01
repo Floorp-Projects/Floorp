@@ -330,4 +330,19 @@
         "SELECT note_sync_change(); "                                       \
         "END")
 
+// This trigger removes orphan search terms when interactions are removed from
+// the metadata table.
+#  define CREATE_PLACES_METADATA_DELETED_AFTERDELETE_TRIGGER           \
+    nsLiteralCString(                                                  \
+        "CREATE TEMP TRIGGER moz_places_metadata_afterdelete_trigger " \
+        "AFTER DELETE ON moz_places_metadata "                         \
+        "FOR EACH ROW "                                                \
+        "BEGIN "                                                       \
+        "DELETE FROM moz_places_metadata_search_queries WHERE id = "   \
+        "OLD.search_query_id AND NOT EXISTS ("                         \
+        "SELECT id FROM moz_places_metadata "                          \
+        "WHERE search_query_id = OLD.search_query_id"                  \
+        ");"                                                           \
+        "END")
+
 #endif  // __nsPlacesTriggers_h__
