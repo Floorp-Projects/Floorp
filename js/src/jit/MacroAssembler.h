@@ -11,6 +11,7 @@
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Variant.h"
 
 #if defined(JS_CODEGEN_X86)
 #  include "jit/x86/MacroAssembler-x86.h"
@@ -266,6 +267,17 @@ constexpr uint32_t WasmCallerTLSOffsetBeforeCall =
     wasm::FrameWithTls::callerTLSOffset() + ShadowStackSpace;
 constexpr uint32_t WasmCalleeTLSOffsetBeforeCall =
     wasm::FrameWithTls::calleeTLSOffset() + ShadowStackSpace;
+
+// Allocation sites may be passed to GC thing allocation methods either via a
+// register (for baseline compilation) or an enum indicating one of the
+// catch-all allocation sites (for optimized compilation).
+struct AllocSiteInput
+    : public mozilla::Variant<Register, gc::CatchAllAllocSite> {
+  using Base = mozilla::Variant<Register, gc::CatchAllAllocSite>;
+  AllocSiteInput() : Base(gc::CatchAllAllocSite::Unknown) {}
+  explicit AllocSiteInput(gc::CatchAllAllocSite catchAll) : Base(catchAll) {}
+  explicit AllocSiteInput(Register reg) : Base(reg) {}
+};
 
 // [SMDOC] Code generation invariants (incomplete)
 //
@@ -4667,19 +4679,24 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void checkAllocatorState(Label* fail);
   bool shouldNurseryAllocate(gc::AllocKind allocKind,
                              gc::InitialHeap initialHeap);
-  void nurseryAllocateObject(Register result, Register temp,
-                             gc::AllocKind allocKind, size_t nDynamicSlots,
-                             Label* fail);
+  void nurseryAllocateObject(
+      Register result, Register temp, gc::AllocKind allocKind,
+      size_t nDynamicSlots, Label* fail,
+      const AllocSiteInput& allocSite = AllocSiteInput());
   void bumpPointerAllocate(Register result, Register temp, Label* fail,
                            CompileZone* zone, void* posAddr,
                            const void* curEddAddr, JS::TraceKind traceKind,
-                           uint32_t size);
+                           uint32_t size,
+                           const AllocSiteInput& allocSite = AllocSiteInput());
+  void updateAllocSite(Register temp, Register result, CompileZone* zone,
+                       Register site);
 
   void freeListAllocate(Register result, Register temp, gc::AllocKind allocKind,
                         Label* fail);
   void allocateObject(Register result, Register temp, gc::AllocKind allocKind,
                       uint32_t nDynamicSlots, gc::InitialHeap initialHeap,
-                      Label* fail);
+                      Label* fail,
+                      const AllocSiteInput& allocSite = AllocSiteInput());
   void nurseryAllocateString(Register result, Register temp,
                              gc::AllocKind allocKind, Label* fail);
   void allocateString(Register result, Register temp, gc::AllocKind allocKind,
@@ -4708,13 +4725,14 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void createPlainGCObject(Register result, Register shape, Register temp,
                            Register temp2, uint32_t numFixedSlots,
                            uint32_t numDynamicSlots, gc::AllocKind allocKind,
-                           gc::InitialHeap initialHeap, Label* fail);
+                           gc::InitialHeap initialHeap, Label* fail,
+                           const AllocSiteInput& allocSite = AllocSiteInput());
 
-  void createArrayWithFixedElements(Register result, Register shape,
-                                    Register temp, uint32_t arrayLength,
-                                    uint32_t arrayCapacity,
-                                    gc::AllocKind allocKind,
-                                    gc::InitialHeap initialHeap, Label* fail);
+  void createArrayWithFixedElements(
+      Register result, Register shape, Register temp, uint32_t arrayLength,
+      uint32_t arrayCapacity, gc::AllocKind allocKind,
+      gc::InitialHeap initialHeap, Label* fail,
+      const AllocSiteInput& allocSite = AllocSiteInput());
 
   void initGCThing(Register obj, Register temp,
                    const TemplateObject& templateObj, bool initContents = true);

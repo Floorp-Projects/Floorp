@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include "gc/Pretenuring.h"
 #include "js/TypeDecls.h"
 
 struct JSAtomState;
@@ -35,6 +36,8 @@ using DOMCallbacks = struct JSDOMCallbacks;
 namespace gc {
 
 enum class AllocKind : uint8_t;
+
+class AllocSite;
 class FreeSpan;
 
 }  // namespace gc
@@ -110,10 +113,13 @@ class CompileZone {
 
   uint32_t* addressOfNurseryAllocCount();
 
+  void* addressOfNurseryAllocatedSites();
+
   bool canNurseryAllocateStrings();
   bool canNurseryAllocateBigInts();
 
-  uintptr_t nurseryCellHeader(JS::TraceKind kind);
+  uintptr_t nurseryCellHeader(JS::TraceKind traceKind,
+                              gc::CatchAllAllocSite siteKind);
 };
 
 class JitRealm;

@@ -30,6 +30,8 @@ namespace gc {
 class GCRuntime;
 class PretenuringNursery;
 
+enum class CatchAllAllocSite { Unknown, Optimized };
+
 // Information about an allocation site.
 //
 // Nursery cells contain a pointer to one of these in their cell header (stored
@@ -104,6 +106,16 @@ class AllocSite {
   static void printInfoFooter(size_t sitesActive);
   void printInfo(bool hasPromotionRate, double promotionRate) const;
 
+  static constexpr size_t offsetOfState() {
+    return offsetof(AllocSite, state_);
+  }
+  static constexpr size_t offsetOfNurseryAllocCount() {
+    return offsetof(AllocSite, nurseryAllocCount);
+  }
+  static constexpr size_t offsetOfNextNurseryAllocated() {
+    return offsetof(AllocSite, nextNurseryAllocated);
+  }
+
  private:
   const char* stateName() const;
 };
@@ -143,6 +155,8 @@ class PretenuringNursery {
   }
 
   void doPretenuring(GCRuntime* gc, bool reportInfo);
+
+  void* addressOfAllocatedSites() { return &allocatedSites; }
 };
 
 }  // namespace gc

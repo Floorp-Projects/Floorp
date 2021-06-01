@@ -399,6 +399,9 @@ class Nursery {
   const void* addressOfCurrentBigIntEnd() const {
     return (void*)&currentBigIntEnd_;
   }
+  void* addressOfNurseryAllocatedSites() {
+    return pretenuringNursery.addressOfAllocatedSites();
+  }
 
   void requestMinorGC(JS::GCReason reason) const;
 
