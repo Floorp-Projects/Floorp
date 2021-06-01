@@ -13,6 +13,7 @@
 #include "gc/AllocKind.h"
 #include "gc/GCEnum.h"
 #include "gc/Memory.h"
+#include "gc/Pretenuring.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "util/Poison.h"
@@ -21,6 +22,7 @@ namespace js {
 
 class AutoLockGC;
 class AutoLockGCBgAlloc;
+class Nursery;
 class NurseryDecommitTask;
 
 namespace gc {
@@ -722,27 +724,28 @@ static const int32_t ChunkStoreBufferOffsetFromLastByte =
 // Cell header stored before all nursery cells.
 struct alignas(gc::CellAlignBytes) NurseryCellHeader {
   // Store zone pointer with the trace kind in the lowest three bits.
-  const uintptr_t zoneAndTraceKind;
+  const uintptr_t allocSiteAndTraceKind;
 
   // We only need to store a subset of trace kinds so this doesn't cover the
   // full range.
   static const uintptr_t TraceKindMask = 3;
 
-  static uintptr_t MakeValue(JS::Zone* const zone, JS::TraceKind kind) {
+  static uintptr_t MakeValue(AllocSite* const site, JS::TraceKind kind) {
     MOZ_ASSERT(uintptr_t(kind) < TraceKindMask);
-    MOZ_ASSERT((uintptr_t(zone) & TraceKindMask) == 0);
-    return uintptr_t(zone) | uintptr_t(kind);
+    MOZ_ASSERT((uintptr_t(site) & TraceKindMask) == 0);
+    return uintptr_t(site) | uintptr_t(kind);
   }
 
-  NurseryCellHeader(JS::Zone* const zone, JS::TraceKind kind)
-      : zoneAndTraceKind(MakeValue(zone, kind)) {}
+  inline NurseryCellHeader(AllocSite* site, JS::TraceKind kind);
 
-  JS::Zone* zone() const {
-    return reinterpret_cast<JS::Zone*>(zoneAndTraceKind & ~TraceKindMask);
+  AllocSite* allocSite() const {
+    return reinterpret_cast<AllocSite*>(allocSiteAndTraceKind & ~TraceKindMask);
   }
+
+  JS::Zone* zone() const { return allocSite()->zone(); }
 
   JS::TraceKind traceKind() const {
-    return JS::TraceKind(zoneAndTraceKind & TraceKindMask);
+    return JS::TraceKind(allocSiteAndTraceKind & TraceKindMask);
   }
 
   static const NurseryCellHeader* from(const Cell* cell) {
