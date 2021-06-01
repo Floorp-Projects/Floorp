@@ -14,10 +14,10 @@ const TEST_DATA = [
     selector: "#one",
     oldHTML: '<div id="one">First <em>Div</em></div>',
     newHTML: '<div id="one">First Div</div>',
-    validate: async function({ pageNodeFront, selectedNodeFront, testActor }) {
+    validate: async function({ testActor }) {
       const text = await testActor.getProperty("#one", "textContent");
       is(text, "First Div", "New div has expected text content");
-      const num = await testActor.getNumberOfElementMatches("#one em");
+      const num = await getNumberOfMatchingElementsInContentPage("#one em");
       is(num, 0, "No em remaining");
     },
   },
