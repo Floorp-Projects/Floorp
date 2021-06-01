@@ -193,9 +193,9 @@ def bootstrap(topsrcdir):
     # Ensure we are running Python 2.7 or 3.5+. We put this check here so we
     # generate a user-friendly error message rather than a cryptic stack trace
     # on module import.
-    major = sys.version_info[:2][0]
-    if sys.version_info < (3, 6):
-        print("Python 3.6+ is required to run mach.")
+    major, minor = sys.version_info[:2]
+    if (major == 2 and minor < 7) or (major == 3 and minor < 5):
+        print("Python 2.7 or Python 3.5+ is required to run mach.")
         print("You are running Python", platform.python_version())
         sys.exit(1)
 
