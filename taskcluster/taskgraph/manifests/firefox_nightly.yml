@@ -113,6 +113,18 @@ mapping:
                 default:
                     - ${year}/${month}/${upload_date}-${branch}-l10n
                     - latest-${branch}-l10n
+    KEY:
+        <<: *default
+        from:
+            - signing
+        description: "Public GPG Key"
+        pretty_name: KEY
+        checksums_path: KEY
+        only_for_platforms:
+            - linux64-shippable
+        destinations:
+            - ${year}/${month}/${upload_date}-${branch}
+            - latest-${branch}
     target.common.tests.tar.gz:
         <<: *default
         description: "Mixture of reftests, mochitests, UI and others, commonly bundled together in a test suite"
