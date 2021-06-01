@@ -4389,31 +4389,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(BigInt) { PUSH_BIGINT(script->getBigInt(REGS.pc)); }
     END_CASE(BigInt)
 
-    CASE(InstrumentationActive) {
-      ReservedRooted<Value> rval(&rootValue0);
-      if (!InstrumentationActiveOperation(cx, &rval)) {
-        goto error;
-      }
-      PUSH_COPY(rval);
-    }
-    END_CASE(InstrumentationActive)
-
-    CASE(InstrumentationCallback) {
-      JSObject* obj = InstrumentationCallbackOperation(cx);
-      MOZ_ASSERT(obj);
-      PUSH_OBJECT(*obj);
-    }
-    END_CASE(InstrumentationCallback)
-
-    CASE(InstrumentationScriptId) {
-      ReservedRooted<Value> rval(&rootValue0);
-      if (!InstrumentationScriptIdOperation(cx, script, &rval)) {
-        goto error;
-      }
-      PUSH_COPY(rval);
-    }
-    END_CASE(InstrumentationScriptId)
-
     DEFAULT() {
       char numBuf[12];
       SprintfLiteral(numBuf, "%d", *REGS.pc);

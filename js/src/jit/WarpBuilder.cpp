@@ -2845,24 +2845,6 @@ bool WarpBuilder::build_Debugger(BytecodeLocation loc) {
   return resumeAfter(debugger, loc);
 }
 
-bool WarpBuilder::build_InstrumentationActive(BytecodeLocation) {
-  bool active = scriptSnapshot()->instrumentationActive();
-  pushConstant(BooleanValue(active));
-  return true;
-}
-
-bool WarpBuilder::build_InstrumentationCallback(BytecodeLocation) {
-  JSObject* callback = scriptSnapshot()->instrumentationCallback();
-  pushConstant(ObjectValue(*callback));
-  return true;
-}
-
-bool WarpBuilder::build_InstrumentationScriptId(BytecodeLocation) {
-  int32_t scriptId = scriptSnapshot()->instrumentationScriptId();
-  pushConstant(Int32Value(scriptId));
-  return true;
-}
-
 bool WarpBuilder::build_TableSwitch(BytecodeLocation loc) {
   int32_t low = loc.getTableSwitchLow();
   int32_t high = loc.getTableSwitchHigh();
