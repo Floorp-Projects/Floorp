@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
-/* globals getTestActorWithoutToolbox */
 
 "use strict";
 
@@ -47,7 +46,7 @@ const TEST_URL =
   </script>`);
 
 add_task(async function() {
-  const { inspector, toolbox, tab } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   info("Waiting for element picker to become active");
   await startPicker(toolbox);
@@ -59,13 +58,11 @@ add_task(async function() {
   info("Close DevTools before testing Inspect Element");
   await toolbox.destroy();
 
-  info("Waiting for element picker to become active.");
-  const newTestActor = await getTestActorWithoutToolbox(tab);
   info("Click on Inspect Element for our test-image <div>");
   // Note: we click on test-outer, because we can't find the <div> using a simple
   // querySelector. However the click is simulated in the middle of the <test-outer>
   // component, and will always hit the test <div> which takes all the space.
-  const newInspector = await clickOnInspectMenuItem(newTestActor, "test-outer");
+  const newInspector = await clickOnInspectMenuItem("test-outer");
   info("Check again that the markup view is displayed as expected");
   await assertMarkupView(newInspector);
 });

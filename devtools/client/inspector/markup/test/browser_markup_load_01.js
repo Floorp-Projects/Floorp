@@ -36,7 +36,7 @@ const TEST_URL =
   "</html>";
 
 add_task(async function() {
-  const { inspector, testActor, tab } = await openInspectorForURL(TEST_URL);
+  const { inspector, tab } = await openInspectorForURL(TEST_URL);
 
   const domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
   const pageLoaded = waitForLinkedBrowserEvent(tab, "load");
@@ -52,7 +52,7 @@ add_task(async function() {
 
   info("Inspect element via context menu");
   const markupLoaded = inspector.once("markuploaded");
-  await clickOnInspectMenuItem(testActor, "img");
+  await clickOnInspectMenuItem("img");
 
   info("Wait for load");
   await pageLoaded;

@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
-/* globals getTestActorWithoutToolbox */
 
 "use strict";
 
@@ -39,16 +38,14 @@ const TEST_URL =
 `);
 
 add_task(async function() {
-  const tab = await addTab(TEST_URL);
-  const testActor = await getTestActorWithoutToolbox(tab);
-
-  await testNodeWithChangingPath(testActor);
-  await testNodeWithChangingId(testActor);
+  await addTab(TEST_URL);
+  await testNodeWithChangingPath();
+  await testNodeWithChangingId();
 });
 
-async function testNodeWithChangingPath(testActor) {
+async function testNodeWithChangingPath() {
   info("Test that inspect element works if the CSS path changes");
-  const inspector = await clickOnInspectMenuItem(testActor, "span");
+  const inspector = await clickOnInspectMenuItem("span");
 
   const selectedNode = inspector.selection.nodeFront;
   ok(selectedNode, "A node is selected in the inspector");
@@ -65,9 +62,9 @@ async function testNodeWithChangingPath(testActor) {
   );
 }
 
-async function testNodeWithChangingId(testActor) {
+async function testNodeWithChangingId() {
   info("Test that inspect element works if the id changes");
-  const inspector = await clickOnInspectMenuItem(testActor, "#changing-id");
+  const inspector = await clickOnInspectMenuItem("#changing-id");
 
   const selectedNode = inspector.selection.nodeFront;
   ok(selectedNode, "A node is selected in the inspector");

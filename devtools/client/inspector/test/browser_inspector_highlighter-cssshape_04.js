@@ -125,17 +125,17 @@ async function testPolygonAddPoint(config) {
 
   let newPointX = x2;
   let newPointY = (y1 + y2) / 2;
-  const options = {
-    selector: ":root",
-    x: newPointX,
-    y: newPointY,
-    center: false,
-    options: { clickCount: 2 },
-  };
 
   const onRuleViewChanged = view.once("ruleview-changed");
   info("Adding new polygon point");
-  await testActor.synthesizeMouse(options);
+  BrowserTestUtils.synthesizeMouse(
+    ":root",
+    newPointX,
+    newPointY,
+    { clickCount: 2 },
+    gBrowser.selectedTab.linkedBrowser
+  );
+
   await testActor.reflow();
   info("Waiting for rule view changed from shape change");
   await onRuleViewChanged;
@@ -174,18 +174,13 @@ async function testPolygonRemovePoint(config) {
   const quads = await testActor.getAllAdjustedQuads(selector);
   const { top, left, width, height } = quads.border[0].bounds;
 
-  const options = {
-    selector: ":root",
-    x: left + (width * x) / 100,
-    y: top + (height * y) / 100,
-    center: false,
-    options: { clickCount: 2 },
-  };
+  const adjustedX = left + (width * x) / 100;
+  const adjustedY = top + (height * y) / 100;
 
   info("Move mouse over first point in highlighter");
   const onEventHandled = highlighters.once("highlighter-event-handled");
   const { mouse } = helper;
-  await mouse.move(options.x, options.y);
+  await mouse.move(adjustedX, adjustedY);
   await onEventHandled;
   const markerHidden = await testActor.getHighlighterNodeAttribute(
     "shapes-marker-hover",
@@ -198,7 +193,14 @@ async function testPolygonRemovePoint(config) {
   const onShapeChangeApplied = highlighters.once(
     "shapes-highlighter-changes-applied"
   );
-  await testActor.synthesizeMouse(options);
+  BrowserTestUtils.synthesizeMouse(
+    ":root",
+    adjustedX,
+    adjustedY,
+    { clickCount: 2 },
+    gBrowser.selectedTab.linkedBrowser
+  );
+
   info("Waiting for shape changes to apply");
   await onShapeChangeApplied;
   const definition = await getComputedPropertyValue(
