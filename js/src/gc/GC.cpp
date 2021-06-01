@@ -4214,8 +4214,10 @@ void GCRuntime::discardJITCodeForGC() {
   js::CancelOffThreadIonCompile(rt, JS::Zone::Prepare);
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_DISCARD_CODE);
-    zone->discardJitCode(rt->defaultFreeOp(), Zone::DiscardBaselineCode,
-                         Zone::DiscardJitScripts);
+    Zone::DiscardOptions options;
+    options.discardBaselineCode = true;
+    options.discardJitScripts = true;
+    zone->discardJitCode(rt->defaultFreeOp(), options);
   }
 }
 

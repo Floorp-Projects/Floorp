@@ -397,9 +397,7 @@ void Zone::sweepWeakMaps() {
   WeakMapBase::sweepZone(this);
 }
 
-void Zone::discardJitCode(JSFreeOp* fop,
-                          ShouldDiscardBaselineCode discardBaselineCode,
-                          ShouldDiscardJitScripts discardJitScripts) {
+void Zone::discardJitCode(JSFreeOp* fop, const DiscardOptions& options) {
   if (!jitZone()) {
     return;
   }
@@ -408,7 +406,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
     return;
   }
 
-  if (discardBaselineCode || discardJitScripts) {
+  if (options.discardBaselineCode || options.discardJitScripts) {
 #ifdef DEBUG
     // Assert no JitScripts are marked as active.
     for (auto iter = cellIter<BaseScript>(); !iter.done(); iter.next()) {
@@ -436,7 +434,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
     jit::FinishInvalidation(fop, script);
 
     // Discard baseline script if it's not marked as active.
-    if (discardBaselineCode) {
+    if (options.discardBaselineCode) {
       if (jitScript->hasBaselineScript() && !jitScript->active()) {
         jit::FinishDiscardBaselineScript(fop, script);
       }
@@ -454,7 +452,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
     // Try to release the script's JitScript. This should happen after
     // releasing JIT code because we can't do this when the script still has
     // JIT code.
-    if (discardJitScripts) {
+    if (options.discardJitScripts) {
       script->maybeReleaseJitScript(fop);
       jitScript = script->maybeJitScript();
       if (!jitScript) {
@@ -469,7 +467,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
 
     // If we did not release the JitScript, we need to purge optimized IC
     // stubs because the optimizedStubSpace will be purged below.
-    if (discardBaselineCode) {
+    if (options.discardBaselineCode) {
       jitScript->purgeOptimizedStubs(script);
     }
 
@@ -485,7 +483,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
    *
    * Defer freeing any allocated blocks until after the next minor GC.
    */
-  if (discardBaselineCode) {
+  if (options.discardBaselineCode) {
     jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(this);
     jitZone()->purgeIonCacheIRStubInfo();
   }
