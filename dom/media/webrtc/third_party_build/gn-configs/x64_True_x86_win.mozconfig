@@ -1,0 +1,4 @@
+ac_add_options --target=i686
+ac_add_options --enable-debug
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-x64_True_x86_win
+
