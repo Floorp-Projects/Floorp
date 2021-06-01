@@ -472,10 +472,11 @@ Cell* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
   auto cell =
       reinterpret_cast<Cell*>(uintptr_t(ptr) + sizeof(NurseryCellHeader));
 
+  // Update the allocation site. This code is also inlined in
+  // MacroAssembler::updateAllocSite.
   if (!site->isInAllocatedList()) {
     pretenuringNursery.insertIntoAllocatedList(site);
   }
-
   site->incAllocCount();
 
   gcprobes::NurseryAlloc(cell, kind);

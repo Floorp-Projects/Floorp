@@ -7074,7 +7074,8 @@ void CodeGenerator::visitNewPlainObject(LNewPlainObject* lir) {
   masm.movePtr(ImmGCPtr(shape), shapeReg);
   masm.createPlainGCObject(objReg, shapeReg, temp0Reg, temp1Reg,
                            mir->numFixedSlots(), mir->numDynamicSlots(),
-                           allocKind, initialHeap, ool->entry());
+                           allocKind, initialHeap, ool->entry(),
+                           AllocSiteInput(gc::CatchAllAllocSite::Optimized));
 
   masm.bind(ool->rejoin());
 }
@@ -7103,9 +7104,10 @@ void CodeGenerator::visitNewArrayObject(LNewArrayObject* lir) {
       StoreRegisterTo(objReg));
 
   masm.movePtr(ImmPtr(shape), shapeReg);
-  masm.createArrayWithFixedElements(objReg, shapeReg, temp0Reg, arrayLength,
-                                    arrayCapacity, allocKind,
-                                    mir->initialHeap(), ool->entry());
+  masm.createArrayWithFixedElements(
+      objReg, shapeReg, temp0Reg, arrayLength, arrayCapacity, allocKind,
+      mir->initialHeap(), ool->entry(),
+      AllocSiteInput(gc::CatchAllAllocSite::Optimized));
   masm.bind(ool->rejoin());
 }
 
