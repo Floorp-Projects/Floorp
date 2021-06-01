@@ -602,6 +602,11 @@ class MachCommands(MachCommandBase):
         if fh:
             fh = open(fh, "w")
         print(out, file=fh)
+        if options["format"] != "json":
+            logger.info(
+                "If you were expecting differences in task bodies "
+                'you should pass "-J"\n'
+            )
 
     def format_taskgraph(self, graph_attr, options):
         import taskgraph
