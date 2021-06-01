@@ -181,52 +181,12 @@ nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
       aKeyboardEvent->PreventDefault();
       return NS_OK;
 
-    case NS_VK_BACK: {
-      if (aKeyboardEvent->IsControl() || aKeyboardEvent->IsAlt() ||
-          aKeyboardEvent->IsMeta() || aKeyboardEvent->IsOS()) {
-        return NS_OK;
-      }
-      DebugOnly<nsresult> rvIgnored =
-          DeleteSelectionAsAction(nsIEditor::ePrevious, nsIEditor::eStrip);
-      aKeyboardEvent->PreventDefault();
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "EditorBase::DeleteSelectionAsAction() failed, but ignored");
-      return NS_OK;
-    }
-    case NS_VK_DELETE: {
-      // on certain platforms (such as windows) the shift key
-      // modifies what delete does (cmd_cut in this case).
-      // bailing here to allow the keybindings to do the cut.
-      if (aKeyboardEvent->IsShift() || aKeyboardEvent->IsControl() ||
-          aKeyboardEvent->IsAlt() || aKeyboardEvent->IsMeta() ||
-          aKeyboardEvent->IsOS()) {
-        return NS_OK;
-      }
-      DebugOnly<nsresult> rvIgnored =
-          DeleteSelectionAsAction(nsIEditor::eNext, nsIEditor::eStrip);
-      aKeyboardEvent->PreventDefault();
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "EditorBase::DeleteSelectionAsAction() failed, but ignored");
-      return NS_OK;
-    }
+    case NS_VK_BACK:
+    case NS_VK_DELETE:
     case NS_VK_TAB: {
-      if (IsTabbable()) {
-        return NS_OK;  // let it be used for focus switching
-      }
-
-      if (aKeyboardEvent->IsShift() || aKeyboardEvent->IsControl() ||
-          aKeyboardEvent->IsAlt() || aKeyboardEvent->IsMeta() ||
-          aKeyboardEvent->IsOS()) {
-        return NS_OK;
-      }
-
-      // else we insert the tab straight through
-      aKeyboardEvent->PreventDefault();
-      nsresult rv = OnInputText(u"\t"_ns);
+      nsresult rv = EditorBase::HandleKeyPressEvent(aKeyboardEvent);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "EditorBase::OnInputText(\\t) failed");
+                           "EditorBase::HandleKeyPressEvent() failed");
       return rv;
     }
     case NS_VK_RETURN: {
