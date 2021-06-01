@@ -32,6 +32,7 @@ inline void js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind,
 
   zone = zoneArg;
   allocKind = kind;
+  isNewlyCreated = 1;
   onDelayedMarkingList_ = 0;
   hasDelayedBlackMarking_ = 0;
   hasDelayedGrayMarking_ = 0;

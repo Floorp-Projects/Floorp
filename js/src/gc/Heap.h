@@ -192,22 +192,27 @@ class alignas(ArenaSize) Arena {
   Arena* next;
 
  private:
-  /*
-   * When recursive marking uses too much stack we delay marking of
-   * arenas and link them into a list for later processing. This
-   * uses the following fields.
-   */
-  static const size_t DELAYED_MARKING_FLAG_BITS = 3;
+  static const size_t ARENA_FLAG_BITS = 4;
   static const size_t DELAYED_MARKING_ARENA_BITS =
-      JS_BITS_PER_WORD - DELAYED_MARKING_FLAG_BITS;
+      JS_BITS_PER_WORD - ArenaShift;
+  static_assert(
+      ARENA_FLAG_BITS + DELAYED_MARKING_ARENA_BITS <= JS_BITS_PER_WORD,
+      "Not enough space to pack flags and nextDelayedMarkingArena_ pointer "
+      "into a single word.");
+
+  /*
+   * True until the arena is swept for the first time.
+   */
+  size_t isNewlyCreated : 1;
+
+  /*
+   * When recursive marking uses too much stack we delay marking of arenas and
+   * link them into a list for later processing. This uses the following fields.
+   */
   size_t onDelayedMarkingList_ : 1;
   size_t hasDelayedBlackMarking_ : 1;
   size_t hasDelayedGrayMarking_ : 1;
   size_t nextDelayedMarkingArena_ : DELAYED_MARKING_ARENA_BITS;
-  static_assert(
-      DELAYED_MARKING_ARENA_BITS >= JS_BITS_PER_WORD - ArenaShift,
-      "Arena::nextDelayedMarkingArena_ packing assumes that ArenaShift has "
-      "enough bits to cover allocKind and delayed marking state.");
 
   union {
     /*
