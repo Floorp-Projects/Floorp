@@ -2,6 +2,17 @@
 
 // This test checks whether the new tab page color properties work.
 
+function waitForAboutNewTabReady(browser, url) {
+  // Stop-gap fix for https://bugzilla.mozilla.org/show_bug.cgi?id=1697196#c24
+  return SpecialPowers.spawn(browser, [url], async url => {
+    let doc = content.document;
+    await ContentTaskUtils.waitForCondition(
+      () => doc.querySelector(".outer-wrapper"),
+      `Waiting for page wrapper to be initialized at ${url}`
+    );
+  });
+}
+
 /**
  * Test whether the selected browser has the new tab page theme applied
  * @param {Object} theme that is applied
@@ -127,6 +138,7 @@ add_task(async function test_support_ntp_colors() {
   for (let url of ["about:newtab", "about:home", "about:welcome"]) {
     info("Opening url: " + url);
     await BrowserTestUtils.withNewTab({ gBrowser, url }, async browser => {
+      await waitForAboutNewTabReady(browser, url);
       await test_ntp_theme(
         {
           colors: {
