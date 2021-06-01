@@ -79,7 +79,7 @@ struct ParamTraits<mozilla::net::nsHttpAtom> {
     nsAutoCString value;
     if (!ReadParam(aMsg, aIter, &value)) return false;
 
-    *aResult = mozilla::net::nsHttp::ResolveAtom(value.get());
+    *aResult = mozilla::net::nsHttp::ResolveAtom(value);
     MOZ_ASSERT(aResult->get(), "atom table not initialized");
     return true;
   }
