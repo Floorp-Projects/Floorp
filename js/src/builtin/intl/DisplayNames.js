@@ -58,13 +58,19 @@ function resolveDisplayNamesInternals(lazyDisplayNamesData) {
     internalProps.style = lazyDisplayNamesData.style;
 
     // Step 14.
-    internalProps.type = lazyDisplayNamesData.type;
+    var type = lazyDisplayNamesData.type;
+    internalProps.type = type;
 
     // Step 16.
     internalProps.fallback = lazyDisplayNamesData.fallback;
 
     // Step 17.
     internalProps.locale = r.locale;
+
+    // Step 25.
+    if (type === "language") {
+        internalProps.languageDisplay = lazyDisplayNamesData.languageDisplay;
+    }
 
     if (mozExtensions) {
         internalProps.calendar = r.ca;
@@ -132,6 +138,9 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
     //
     //     fallback: "code" / "none",
     //
+    //     // field present only if type === "language":
+    //     languageDisplay: "dialect" / "standard",
+    //
     //     mozExtensions: true / false,
     //   }
     //
@@ -198,6 +207,15 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
     // Step 16.
     lazyDisplayNamesData.fallback = fallback;
 
+    // Step 24.
+    var languageDisplay = GetOption(options, "languageDisplay", "string", ["dialect", "standard"],
+                                    "dialect");
+
+    // Step 25.
+    if (type === "language") {
+        lazyDisplayNamesData.languageDisplay = languageDisplay;
+    }
+
     // We've done everything that must be done now: mark the lazy data as fully
     // computed and install it.
     initializeIntlObject(displayNames, "DisplayNames", lazyDisplayNamesData);
@@ -239,10 +257,11 @@ function Intl_DisplayNames_of(code) {
 
   // Unpack the internals object to avoid a slow runtime to selfhosted JS call
   // in |intl_ComputeDisplayName()|.
-  var {locale, calendar = "", style, type, fallback} = internals;
+  var {locale, calendar = "", style, type, languageDisplay = "", fallback} = internals;
 
   // Steps 5-10.
-  return intl_ComputeDisplayName(displayNames, locale, calendar, style, fallback, type, code);
+  return intl_ComputeDisplayName(displayNames, locale, calendar, style, languageDisplay, fallback,
+                                 type, code);
 }
 
 /**
@@ -268,8 +287,16 @@ function Intl_DisplayNames_resolvedOptions() {
         fallback: internals.fallback,
     };
 
+    // languageDisplay is only present for language display names.
+    assert(hasOwn("languageDisplay", internals) === (internals.type === "language"),
+           "languageDisplay is present iff type is 'language'");
+
+    if (hasOwn("languageDisplay", internals)) {
+        _DefineDataProperty(options, "languageDisplay", internals.languageDisplay);
+    }
+
     if (hasOwn("calendar", internals)) {
-        options.calendar = internals.calendar;
+        _DefineDataProperty(options, "calendar", internals.calendar);
     }
 
     // Step 6.
