@@ -428,16 +428,13 @@ nsWindow::nsWindow()
       mWindowScaleFactorChanged(true),
       mWindowScaleFactor(1),
       mCompositedScreen(gdk_screen_is_composited(gdk_screen_get_default())),
-#ifdef MOZ_WAYLAND
-      mNeedsCompositorResume(false),
-      mCompositorInitiallyPaused(false),
-      mNativePointerLockCenter(LayoutDeviceIntPoint()),
-#endif
       mShell(nullptr),
       mContainer(nullptr),
       mGdkWindow(nullptr),
       mWindowShouldStartDragging(false),
       mCompositorWidgetDelegate(nullptr),
+      mNeedsCompositorResume(false),
+      mCompositorInitiallyPaused(false),
       mHasMappedToplevel(false),
       mRetryPointerGrab(false),
       mSizeState(nsSizeMode_Normal),
@@ -485,6 +482,7 @@ nsWindow::nsWindow()
 #endif
 #ifdef MOZ_WAYLAND
       ,
+      mNativePointerLockCenter(LayoutDeviceIntPoint()),
       mLockedPointer(nullptr),
       mRelativePointer(nullptr)
 #endif
@@ -1305,7 +1303,7 @@ void nsWindow::RemovePopupFromHierarchyList() {
 
 void nsWindow::HideWaylandWindow() {
   LOG(("nsWindow::HideWaylandWindow: [%p]\n", this));
-  PauseRemoteRenderer();
+  PauseCompositor();
   gtk_widget_hide(mShell);
 }
 
@@ -2217,7 +2215,7 @@ void nsWindow::WaylandPopupMove(bool aUseMoveToRect) {
     }
   }
   if (applyGtkWorkaround) {
-    PauseRemoteRenderer();
+    PauseCompositor();
     gtk_widget_hide(mShell);
   }
 
@@ -3243,24 +3241,6 @@ static bool ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, cairo_t* cr) {
 }
 
 #ifdef MOZ_WAYLAND
-void nsWindow::MaybeResumeCompositor() {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  if (mIsDestroyed || !mNeedsCompositorResume) {
-    return;
-  }
-
-  if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
-    MOZ_ASSERT(mCompositorWidgetDelegate);
-    if (mCompositorWidgetDelegate) {
-      mCompositorInitiallyPaused = false;
-      mNeedsCompositorResume = false;
-      remoteRenderer->SendResumeAsync();
-    }
-    remoteRenderer->SendForcePresent();
-  }
-}
-
 void nsWindow::CreateCompositorVsyncDispatcher() {
   if (!mWaylandVsyncSource) {
     nsBaseWidget::CreateCompositorVsyncDispatcher();
@@ -5362,13 +5342,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // the drawing window
       mGdkWindow = gtk_widget_get_window(eventWidget);
 
-#ifdef MOZ_WAYLAND
       if (GdkIsX11Display() && gfx::gfxVars::UseEGL() && isAccelerated) {
         mCompositorInitiallyPaused = true;
         mNeedsCompositorResume = true;
         MaybeResumeCompositor();
       }
-#endif
 
       if (mIsWaylandPanelWindow) {
         gtk_window_set_decorated(GTK_WINDOW(mShell), false);
@@ -5795,8 +5773,25 @@ void nsWindow::NativeMoveResize() {
   }
 }
 
-void nsWindow::PauseRemoteRenderer() {
-#ifdef MOZ_WAYLAND
+void nsWindow::MaybeResumeCompositor() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (mIsDestroyed || !mNeedsCompositorResume) {
+    return;
+  }
+
+  if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
+    MOZ_ASSERT(mCompositorWidgetDelegate);
+    if (mCompositorWidgetDelegate) {
+      mCompositorInitiallyPaused = false;
+      mNeedsCompositorResume = false;
+      remoteRenderer->SendResumeAsync();
+    }
+    remoteRenderer->SendForcePresent();
+  }
+}
+
+void nsWindow::PauseCompositor() {
   if (!mIsDestroyed) {
     if (mContainer) {
       // Because wl_egl_window is destroyed on moz_container_unmap(),
@@ -5813,19 +5808,22 @@ void nsWindow::PauseRemoteRenderer() {
       if (needsCompositorPause) {
         // XXX slow sync IPC
         remoteRenderer->SendPause();
-        // Re-request initial draw callback
-        RefPtr<nsWindow> self(this);
-        moz_container_wayland_add_initial_draw_callback(
-            mContainer, [self]() -> void {
-              self->mNeedsCompositorResume = true;
-              self->MaybeResumeCompositor();
-            });
+#ifdef MOZ_WAYLAND
+        if (GdkIsWaylandDisplay()) {
+          // Re-request initial draw callback
+          RefPtr<nsWindow> self(this);
+          moz_container_wayland_add_initial_draw_callback(
+              mContainer, [self]() -> void {
+                self->mNeedsCompositorResume = true;
+                self->MaybeResumeCompositor();
+              });
+        }
+#endif
       } else {
         DestroyLayerManager();
       }
     }
   }
-#endif
 }
 
 void nsWindow::WaylandStartVsync() {
@@ -8161,9 +8159,7 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
     MOZ_ASSERT(mCompositorWidgetDelegate,
                "nsWindow::SetCompositorWidgetDelegate called with a "
                "non-PlatformCompositorWidgetDelegate");
-#ifdef MOZ_WAYLAND
     MaybeResumeCompositor();
-#endif
   } else {
     mCompositorWidgetDelegate = nullptr;
   }
