@@ -2317,6 +2317,16 @@ class LNegI : public LInstructionHelper<1, 1, 0> {
   }
 };
 
+// Negative of an int64
+class LNegI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES, 0> {
+ public:
+  LIR_HEADER(NegI64);
+  explicit LNegI64(const LInt64Allocation& num)
+      : LInstructionHelper(classOpcode) {
+    setInt64Operand(0, num);
+  }
+};
+
 // Negative of a double.
 class LNegD : public LInstructionHelper<1, 1, 0> {
  public:

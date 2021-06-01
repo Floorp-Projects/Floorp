@@ -1955,6 +1955,12 @@ void CodeGenerator::visitNegI(LNegI* ins) {
   masm.neg32(input);
 }
 
+void CodeGenerator::visitNegI64(LNegI64* ins) {
+  Register64 input = ToRegister64(ins->getInt64Operand(0));
+  MOZ_ASSERT(input == ToOutRegister64(ins));
+  masm.neg64(input);
+}
+
 void CodeGenerator::visitNegD(LNegD* ins) {
   FloatRegister input = ToFloatRegister(ins->input());
   MOZ_ASSERT(input == ToFloatRegister(ins->output()));

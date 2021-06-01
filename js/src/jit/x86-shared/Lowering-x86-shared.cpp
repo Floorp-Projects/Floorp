@@ -161,10 +161,13 @@ void LIRGeneratorX86Shared::lowerForBitAndAndBranch(LBitAndAndBranch* baab,
   add(baab, mir);
 }
 
-void LIRGeneratorX86Shared::lowerNegI(MInstruction* ins, MDefinition* input,
-                                      int32_t inputNo) {
-  defineReuseInput(new (alloc()) LNegI(useRegisterAtStart(input)), ins,
-                   inputNo);
+void LIRGeneratorX86Shared::lowerNegI(MInstruction* ins, MDefinition* input) {
+  defineReuseInput(new (alloc()) LNegI(useRegisterAtStart(input)), ins, 0);
+}
+
+void LIRGeneratorX86Shared::lowerNegI64(MInstruction* ins, MDefinition* input) {
+  defineInt64ReuseInput(new (alloc()) LNegI64(useInt64RegisterAtStart(input)),
+                        ins, 0);
 }
 
 void LIRGeneratorX86Shared::lowerMulI(MMul* mul, MDefinition* lhs,
