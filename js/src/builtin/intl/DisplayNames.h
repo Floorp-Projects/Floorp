@@ -81,7 +81,8 @@ class DisplayNamesObject : public NativeObject {
  * display name was found.
  *
  * Usage: result = intl_ComputeDisplayName(displayNames, locale, calendar,
- *                                         style, fallback, type, code)
+ *                                         style, languageDisplay, fallback,
+ *                                         type, code)
  */
 [[nodiscard]] extern bool intl_ComputeDisplayName(JSContext* cx, unsigned argc,
                                                   Value* vp);

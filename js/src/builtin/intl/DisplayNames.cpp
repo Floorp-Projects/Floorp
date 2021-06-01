@@ -263,14 +263,19 @@ enum class DisplayNamesStyle { Long, Short, Narrow };
 
 enum class DisplayNamesFallback { None, Code };
 
+enum class DisplayNamesLanguageDisplay { Standard, Dialect };
+
 static ULocaleDisplayNames* NewULocaleDisplayNames(
-    JSContext* cx, const char* locale, DisplayNamesStyle displayStyle) {
+    JSContext* cx, const char* locale, DisplayNamesStyle displayStyle,
+    DisplayNamesLanguageDisplay languageDisplay) {
   UErrorCode status = U_ZERO_ERROR;
 
   UDisplayContext contexts[] = {
-      // Use the standard names, not the dialect names.
-      // For example "English (GB)" instead of "British English".
-      UDISPCTX_STANDARD_NAMES,
+      // Use either standard or dialect names.
+      // For example either "English (GB)" or "British English".
+      languageDisplay == DisplayNamesLanguageDisplay::Standard
+          ? UDISPCTX_STANDARD_NAMES
+          : UDISPCTX_DIALECT_NAMES,
 
       // Assume the display names are used in a stand-alone context.
       UDISPCTX_CAPITALIZATION_FOR_STANDALONE,
@@ -295,11 +300,13 @@ static ULocaleDisplayNames* NewULocaleDisplayNames(
 
 static ULocaleDisplayNames* GetOrCreateLocaleDisplayNames(
     JSContext* cx, Handle<DisplayNamesObject*> displayNames, const char* locale,
-    DisplayNamesStyle displayStyle) {
+    DisplayNamesStyle displayStyle,
+    DisplayNamesLanguageDisplay languageDisplay =
+        DisplayNamesLanguageDisplay::Standard) {
   // Obtain a cached ULocaleDisplayNames object.
   ULocaleDisplayNames* ldn = displayNames->getLocaleDisplayNames();
   if (!ldn) {
-    ldn = NewULocaleDisplayNames(cx, locale, displayStyle);
+    ldn = NewULocaleDisplayNames(cx, locale, displayStyle, languageDisplay);
     if (!ldn) {
       return nullptr;
     }
@@ -330,8 +337,8 @@ static void ReportInvalidOptionError(JSContext* cx, const char* type,
 
 static JSString* GetLanguageDisplayName(
     JSContext* cx, Handle<DisplayNamesObject*> displayNames, const char* locale,
-    DisplayNamesStyle displayStyle, DisplayNamesFallback fallback,
-    HandleLinearString languageStr) {
+    DisplayNamesStyle displayStyle, DisplayNamesLanguageDisplay languageDisplay,
+    DisplayNamesFallback fallback, HandleLinearString languageStr) {
   bool ok;
   intl::LanguageTag tag(cx);
   JS_TRY_VAR_OR_RETURN_NULL(
@@ -353,8 +360,8 @@ static JSString* GetLanguageDisplayName(
     return nullptr;
   }
 
-  ULocaleDisplayNames* ldn =
-      GetOrCreateLocaleDisplayNames(cx, displayNames, locale, displayStyle);
+  ULocaleDisplayNames* ldn = GetOrCreateLocaleDisplayNames(
+      cx, displayNames, locale, displayStyle, languageDisplay);
   if (!ldn) {
     return nullptr;
   }
@@ -971,12 +978,12 @@ static JSString* GetDateTimeFieldDisplayName(JSContext* cx, const char* locale,
 }
 
 /**
- * intl_ComputeDisplayName(displayNames, locale, calendar, style, fallback,
- *                         type, code)
+ * intl_ComputeDisplayName(displayNames, locale, calendar, style,
+ *                         languageDisplay, fallback, type, code)
  */
 bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 7);
+  MOZ_ASSERT(args.length() == 8);
 
   Rooted<DisplayNamesObject*> displayNames(
       cx, &args[0].toObject().as<DisplayNamesObject>());
@@ -991,7 +998,7 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedLinearString code(cx, args[6].toString()->ensureLinear(cx));
+  RootedLinearString code(cx, args[7].toString()->ensureLinear(cx));
   if (!code) {
     return false;
   }
@@ -1013,9 +1020,25 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
+  DisplayNamesLanguageDisplay languageDisplay;
+  {
+    JSLinearString* language = args[4].toString()->ensureLinear(cx);
+    if (!language) {
+      return false;
+    }
+
+    if (StringEqualsLiteral(language, "dialect")) {
+      languageDisplay = DisplayNamesLanguageDisplay::Dialect;
+    } else {
+      MOZ_ASSERT(language->empty() ||
+                 StringEqualsLiteral(language, "standard"));
+      languageDisplay = DisplayNamesLanguageDisplay::Standard;
+    }
+  }
+
   DisplayNamesFallback displayFallback;
   {
-    JSLinearString* fallback = args[4].toString()->ensureLinear(cx);
+    JSLinearString* fallback = args[5].toString()->ensureLinear(cx);
     if (!fallback) {
       return false;
     }
@@ -1028,15 +1051,16 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  JSLinearString* type = args[5].toString()->ensureLinear(cx);
+  JSLinearString* type = args[6].toString()->ensureLinear(cx);
   if (!type) {
     return false;
   }
 
   JSString* result;
   if (StringEqualsLiteral(type, "language")) {
-    result = GetLanguageDisplayName(cx, displayNames, locale.get(),
-                                    displayStyle, displayFallback, code);
+    result =
+        GetLanguageDisplayName(cx, displayNames, locale.get(), displayStyle,
+                               languageDisplay, displayFallback, code);
   } else if (StringEqualsLiteral(type, "script")) {
     result = GetScriptDisplayName(cx, displayNames, locale.get(), displayStyle,
                                   displayFallback, code);
