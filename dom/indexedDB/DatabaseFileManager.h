@@ -7,11 +7,11 @@
 #ifndef DOM_INDEXEDDB_DATABASEFILEMANAGER_H_
 #define DOM_INDEXEDDB_DATABASEFILEMANAGER_H_
 
+#include "FileInfoManager.h"
 #include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/InitializedOnce.h"
-#include "FileManagerBase.h"
 
 class nsIFile;
 class mozIStorageConnection;
@@ -20,10 +20,10 @@ namespace mozilla::dom::indexedDB {
 
 // Implemented in ActorsParent.cpp.
 class DatabaseFileManager final
-    : public FileManagerBase<DatabaseFileManager>,
+    : public FileInfoManager<DatabaseFileManager>,
       public AtomicSafeRefCounted<DatabaseFileManager> {
   using PersistenceType = mozilla::dom::quota::PersistenceType;
-  using FileManagerBase<DatabaseFileManager>::MutexType;
+  using FileInfoManager<DatabaseFileManager>::MutexType;
 
   const PersistenceType mPersistenceType;
   const quota::OriginMetadata mOriginMetadata;
