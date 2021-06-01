@@ -436,7 +436,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   ErrorResult error;
   RefPtr<WorkerPrivate> workerPrivate = WorkerPrivate::Constructor(
       jsapi.cx(), aData.originalScriptURL(), false,
-      mIsServiceWorker ? WorkerTypeService : WorkerTypeShared, aData.name(),
+      mIsServiceWorker ? WorkerKindService : WorkerKindShared, aData.name(),
       VoidCString(), &info, error, std::move(workerPrivateId));
 
   if (NS_WARN_IF(error.Failed())) {

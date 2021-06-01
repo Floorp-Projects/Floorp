@@ -11,7 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/RemoteWorkerTypes.h"
-#include "mozilla/dom/WorkerPrivate.h"  // WorkerType enum
+#include "mozilla/dom/WorkerPrivate.h"  // WorkerKind enum
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
@@ -50,7 +50,7 @@ class RemoteWorkerManager final {
    * launched.
    */
   static Result<nsCString, nsresult> GetRemoteType(
-      const nsCOMPtr<nsIPrincipal>& aPrincipal, WorkerType aWorkerType);
+      const nsCOMPtr<nsIPrincipal>& aPrincipal, WorkerKind aWorkerKind);
 
   /**
    * Verify if a remote worker should be allowed to run in the current

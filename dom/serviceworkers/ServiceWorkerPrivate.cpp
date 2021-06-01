@@ -1752,7 +1752,7 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   NS_ConvertUTF8toUTF16 scriptSpec(mInfo->ScriptSpec());
 
   mWorkerPrivate = WorkerPrivate::Constructor(jsapi.cx(), scriptSpec, false,
-                                              WorkerTypeService, VoidString(),
+                                              WorkerKindService, VoidString(),
                                               ""_ns, &info, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
