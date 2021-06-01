@@ -179,8 +179,7 @@ bool IsReasonableHeaderValue(const nsACString& s);
 // |separators| and may appear at the beginning or end of the |input|
 // string.  null is returned if the |token| is not found.  |input| may be
 // null, in which case null is returned.
-const char* FindToken(const char* input, const char* token,
-                      const char* separators);
+const char* FindToken(const char* input, const char* token, const char* seps);
 
 // This function parses a string containing a decimal-valued, non-negative
 // 64-bit integer.  If the value would exceed INT64_MAX, then false is
@@ -231,7 +230,7 @@ void DetermineFramingAndImmutability(nsICacheEntry* entry,
 // took place.  Called only on the parent process and only updates
 // mLastActiveTabLoadOptimizationHit timestamp to now.
 void NotifyActiveTabLoadOptimization();
-TimeStamp const GetLastActiveTabLoadOptimizationHit();
+TimeStamp GetLastActiveTabLoadOptimizationHit();
 void SetLastActiveTabLoadOptimizationHit(TimeStamp const& when);
 bool IsBeforeLastActiveTabLoadOptimization(TimeStamp const& when);
 
@@ -369,7 +368,7 @@ class ParsedHeaderValueListList {
   // Note that ParsedHeaderValueListList is currently used to parse
   // Alt-Svc and Server-Timing header. |allowInvalidValue| is set to true
   // when parsing Alt-Svc for historical reasons.
-  explicit ParsedHeaderValueListList(const nsCString& txt,
+  explicit ParsedHeaderValueListList(const nsCString& fullHeader,
                                      bool allowInvalidValue = true);
   nsTArray<ParsedHeaderValueList> mValues;
 
