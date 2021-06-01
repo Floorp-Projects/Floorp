@@ -734,11 +734,6 @@ with modules["DOM"]:
     ] = FAILURE(
         1023
     )  # NOQA: E501
-    errors[
-        "NS_ERROR_DOM_INVALID_STATE_XHR_CHUNKED_RESPONSETYPES_UNSUPPORTED_FOR_SYNC"
-    ] = FAILURE(
-        1024
-    )  # NOQA: E501
 
     # When manipulating the bytecode cache with the JS API, some transcoding
     # errors, such as a different bytecode format can cause failures of the
