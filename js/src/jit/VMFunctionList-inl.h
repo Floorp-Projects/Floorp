@@ -152,9 +152,6 @@ namespace jit {
   _(InitFunctionEnvironmentObjects, js::jit::InitFunctionEnvironmentObjects)   \
   _(InitPropGetterSetterOperation, js::InitPropGetterSetterOperation)          \
   _(InitRestParameter, js::jit::InitRestParameter)                             \
-  _(InstrumentationActiveOperation, js::InstrumentationActiveOperation)        \
-  _(InstrumentationCallbackOperation, js::InstrumentationCallbackOperation)    \
-  _(InstrumentationScriptIdOperation, js::InstrumentationScriptIdOperation)    \
   _(Int32ToString, js::Int32ToString<CanGC>)                                   \
   _(InterpretResume, js::jit::InterpretResume)                                 \
   _(InterruptCheck, js::jit::InterruptCheck)                                   \
