@@ -28,8 +28,8 @@ add_task(async function() {
   const testActor = await getTestActorWithoutToolbox(tab);
 
   await testToolboxInitialization(testActor, tab);
-  await testContextMenuInitialization(testActor);
-  await testContextMenuInspectorAlreadyOpen(testActor);
+  await testContextMenuInitialization();
+  await testContextMenuInspectorAlreadyOpen();
 });
 
 async function testToolboxInitialization(testActor, tab) {
@@ -61,22 +61,22 @@ async function testToolboxInitialization(testActor, tab) {
   ok(!toolboxForTab, "Toolbox destroyed.");
 }
 
-async function testContextMenuInitialization(testActor) {
+async function testContextMenuInitialization() {
   info("Opening inspector by clicking on 'Inspect Element' context menu item");
-  await clickOnInspectMenuItem(testActor, "#salutation");
+  await clickOnInspectMenuItem("#salutation");
 
   info("Checking inspector state.");
   await testMarkupView("#salutation");
   await testBreadcrumbs("#salutation");
 }
 
-async function testContextMenuInspectorAlreadyOpen(testActor) {
+async function testContextMenuInspectorAlreadyOpen() {
   info("Changing node by clicking on 'Inspect Element' context menu item");
 
   const inspector = await getActiveInspector();
   ok(inspector, "Inspector is active");
 
-  await clickOnInspectMenuItem(testActor, "#closing");
+  await clickOnInspectMenuItem("#closing");
 
   ok(true, "Inspector was updated when 'Inspect Element' was clicked.");
   await testMarkupView("#closing", inspector);

@@ -11,7 +11,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
                   <p id="one">one</p><p id="two">two</p><p id="three">three</p>`;
 
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URI);
 
   const body = await getNodeFront("body", inspector);
   is(
@@ -24,27 +24,25 @@ add_task(async function() {
   await startPicker(toolbox);
 
   info("Shift-clicking element #one should select it but keep the picker ON");
-  await clickElement("#one", testActor, inspector, true);
+  await clickElement("#one", inspector, true);
   await checkElementSelected("#one", inspector);
   checkPickerMode(toolbox, true);
 
   info("Shift-clicking element #two should select it but keep the picker ON");
-  await clickElement("#two", testActor, inspector, true);
+  await clickElement("#two", inspector, true);
   await checkElementSelected("#two", inspector);
   checkPickerMode(toolbox, true);
 
   info("Clicking element #three should select it and turn the picker OFF");
-  await clickElement("#three", testActor, inspector, false);
+  await clickElement("#three", inspector, false);
   await checkElementSelected("#three", inspector);
   checkPickerMode(toolbox, false);
 });
 
-async function clickElement(selector, testActor, inspector, isShift) {
+async function clickElement(selector, inspector, isShift) {
   const onSelectionChanged = inspector.once("inspector-updated");
-  await testActor.synthesizeMouse({
-    selector: selector,
-    center: true,
-    options: { shiftKey: isShift },
+  await safeSynthesizeMouseEventAtCenterInContentPage(selector, {
+    shiftKey: isShift,
   });
   await onSelectionChanged;
 }

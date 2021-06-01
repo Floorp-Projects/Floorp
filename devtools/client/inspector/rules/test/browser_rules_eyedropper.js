@@ -99,7 +99,7 @@ async function runTest(testActor, inspector, view, isWindowHost) {
   await openEyedropper(view, swatch);
 
   info("Test that a color can be selected with the eyedropper");
-  await testSelect(view, swatch, inspector, testActor);
+  await testSelect(view, swatch, inspector);
 
   const onHidden = tooltip.once("hidden");
   tooltip.hide();
@@ -121,7 +121,7 @@ async function testESC(swatch, inspector, testActor) {
   is(color, ORIGINAL_COLOR, "swatch didn't change after pressing ESC");
 }
 
-async function testSelect(view, swatch, inspector, testActor) {
+async function testSelect(view, swatch, inspector) {
   info("Click at x:10px y:10px");
   const onPicked = new Promise(resolve => {
     inspector.inspectorFront.once("color-picked", resolve);
@@ -129,23 +129,14 @@ async function testSelect(view, swatch, inspector, testActor) {
   // The change to the content is done async after rule view change
   const onRuleViewChanged = view.once("ruleview-changed");
 
-  await testActor.synthesizeMouse({
-    selector: "html",
-    x: 10,
-    y: 10,
-    options: { type: "mousemove" },
+  await safeSynthesizeMouseEventAtCenterInContentPage("#div1", {
+    type: "mousemove",
   });
-  await testActor.synthesizeMouse({
-    selector: "html",
-    x: 10,
-    y: 10,
-    options: { type: "mousedown" },
+  await safeSynthesizeMouseEventAtCenterInContentPage("#div1", {
+    type: "mousedown",
   });
-  await testActor.synthesizeMouse({
-    selector: "html",
-    x: 10,
-    y: 10,
-    options: { type: "mouseup" },
+  await safeSynthesizeMouseEventAtCenterInContentPage("#div1", {
+    type: "mouseup",
   });
 
   await onPicked;

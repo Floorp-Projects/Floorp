@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals getTestActorWithoutToolbox */
-
 "use strict";
 
 // Tests for inspect node in browser context menu
@@ -21,27 +19,26 @@ const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 add_task(async function() {
   await pushPref("devtools.command-button-frames.enabled", true);
 
-  const tab = await addTab(TEST_URI);
-  const testActor = await getTestActorWithoutToolbox(tab);
+  await addTab(TEST_URI);
 
   // Use context menu with root frame selected in toolbox
-  await testContextMenuWithinIframe(testActor, async inspector => {
+  await testContextMenuWithinIframe(async inspector => {
     return getNodeFrontInFrames(["iframe", "#in-frame"], inspector);
   });
 
   // Use context menu with inner frame selected in toolbox
   await changeToolboxToInnerFrame();
-  await testContextMenuWithinIframe(testActor, async inspector => {
+  await testContextMenuWithinIframe(async inspector => {
     return getNodeFront("#in-frame", inspector);
   });
 });
 
-async function testContextMenuWithinIframe(testActor, nodeFrontGetter) {
+async function testContextMenuWithinIframe(nodeFrontGetter) {
   info(
     "Opening inspector via 'Inspect Element' context menu item within an iframe"
   );
   const selector = ["iframe", "#in-frame"];
-  await clickOnInspectMenuItem(testActor, selector);
+  await clickOnInspectMenuItem(selector);
 
   info("Checking inspector state.");
   const inspector = await getActiveInspector();

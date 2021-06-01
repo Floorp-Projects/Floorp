@@ -130,12 +130,6 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("json"),
       },
     },
-    synthesizeMouse: {
-      request: {
-        object: Arg(0, "json"),
-      },
-      response: {},
-    },
     synthesizeKey: {
       request: {
         args: Arg(0, "json"),
@@ -490,45 +484,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
     }
 
     return regions;
-  },
-
-  /**
-   * Get the window which mouse events on node should be delivered to.
-   */
-  windowForMouseEvent: function(node) {
-    return node.ownerDocument.defaultView;
-  },
-
-  /**
-   * Synthesize a mouse event on an element, after ensuring that it is visible
-   * in the viewport. This handler doesn't send a message back. Consumers
-   * should listen to specific events on the inspector/highlighter to know when
-   * the event got synthesized.
-   * @param {String} selector The node selector to get the node target for the event
-   * @param {Number} x
-   * @param {Number} y
-   * @param {Boolean} center If set to true, x/y will be ignored and
-   *                  synthesizeMouseAtCenter will be used instead
-   * @param {Object} options Other event options
-   */
-  synthesizeMouse: function({ selector, x, y, center, options }) {
-    const node = this._querySelector(selector);
-    node.scrollIntoView();
-    if (center) {
-      EventUtils.synthesizeMouseAtCenter(
-        node,
-        options,
-        this.windowForMouseEvent(node)
-      );
-    } else {
-      EventUtils.synthesizeMouse(
-        node,
-        x,
-        y,
-        options,
-        this.windowForMouseEvent(node)
-      );
-    }
   },
 
   /**
