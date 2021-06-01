@@ -15,7 +15,7 @@ use crate::scale::Scale;
 use crate::size::Size3D;
 use crate::vector::Vector3D;
 
-use num_traits::NumCast;
+use num_traits::{NumCast, Float};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -23,7 +23,7 @@ use core::borrow::Borrow;
 use core::cmp::PartialOrd;
 use core::fmt;
 use core::hash::{Hash, Hasher};
-use core::ops::{Add, Div, DivAssign, Mul, MulAssign, Sub};
+use core::ops::{Add, Div, DivAssign, Mul, MulAssign, Sub, Range};
 
 /// An axis aligned 3D box represented by its minimum and maximum coordinates.
 #[repr(C)]
@@ -74,6 +74,15 @@ impl<T, U> Box3D<T, U> {
     #[inline]
     pub const fn new(min: Point3D<T, U>, max: Point3D<T, U>) -> Self {
         Box3D { min, max }
+    }
+
+    /// Creates a Box3D of the given size, at offset zero.
+    #[inline]
+    pub fn from_size(size: Size3D<T, U>) -> Self where T: Zero {
+        Box3D {
+            min: Point3D::zero(),
+            max: point3(size.width, size.height, size.depth),
+        }
     }
 }
 
@@ -174,9 +183,18 @@ where
         Box3D::new(intersection_min, intersection_max)
     }
 
-    /// Returns the smallest box containing both of the provided boxes.
+    /// Computes the union of two boxes.
+    ///
+    /// If either of the boxes is empty, the other one is returned.
     #[inline]
     pub fn union(&self, other: &Self) -> Self {
+        if other.is_empty() {
+            return *self;
+        }
+        if self.is_empty() {
+            return *other;
+        }
+
         Box3D::new(
             Point3D::new(
                 min(self.min.x, other.min.x),
@@ -255,14 +273,6 @@ impl<T, U> Box3D<T, U>
 where
     T: Copy + Zero + PartialOrd,
 {
-    /// Creates a Box3D of the given size, at offset zero.
-    #[inline]
-    pub fn from_size(size: Size3D<T, U>) -> Self {
-        let zero = Point3D::zero();
-        let point = size.to_vector().to_point();
-        Box3D::from_points(&[zero, point])
-    }
-
     /// Returns the smallest box containing all of the provided points.
     pub fn from_points<I>(points: I) -> Self
     where
@@ -438,6 +448,21 @@ impl<T, U> Box3D<T, U>
 where
     T: Copy,
 {
+    #[inline]
+    pub fn x_range(&self) -> Range<T> {
+        self.min.x..self.max.x
+    }
+
+    #[inline]
+    pub fn y_range(&self) -> Range<T> {
+        self.min.y..self.max.y
+    }
+
+    #[inline]
+    pub fn z_range(&self) -> Range<T> {
+        self.min.z..self.max.z
+    }
+
     /// Drop the units, preserving only the numeric value.
     #[inline]
     pub fn to_untyped(&self) -> Box3D<T, UnknownUnit> {
@@ -552,6 +577,14 @@ impl<T: NumCast + Copy, U> Box3D<T, U> {
     }
 }
 
+impl<T: Float, U> Box3D<T, U> {
+    /// Returns true if all members are finite.
+    #[inline]
+    pub fn is_finite(self) -> bool {
+        self.min.is_finite() && self.max.is_finite()
+    }
+}
+
 impl<T, U> Box3D<T, U>
 where
     T: Round,
@@ -602,6 +635,15 @@ where
 {
     fn from(b: Size3D<T, U>) -> Self {
         Self::from_size(b)
+    }
+}
+
+impl<T: Default, U> Default for Box3D<T, U> {
+    fn default() -> Self {
+        Box3D {
+            min: Default::default(),
+            max: Default::default(),
+        }
     }
 }
 

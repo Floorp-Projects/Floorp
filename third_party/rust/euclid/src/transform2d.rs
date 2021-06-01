@@ -69,6 +69,21 @@ pub struct Transform2D<T, Src, Dst> {
     pub _unit: PhantomData<(Src, Dst)>,
 }
 
+#[cfg(feature = "arbitrary")]
+impl<'a, T, Src, Dst> arbitrary::Arbitrary<'a> for Transform2D<T, Src, Dst>
+where
+    T: arbitrary::Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self>
+    {
+        let (m11, m12, m21, m22, m31, m32) = arbitrary::Arbitrary::arbitrary(u)?;
+        Ok(Transform2D {
+            m11, m12, m21, m22, m31, m32,
+            _unit: PhantomData,
+        })
+    }
+}
+
 impl<T: Copy, Src, Dst> Copy for Transform2D<T, Src, Dst> {}
 
 impl<T: Clone, Src, Dst> Clone for Transform2D<T, Src, Dst> {
