@@ -89,6 +89,8 @@ class LIRGeneratorARM : public LIRGeneratorShared {
   void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
   void lowerUDiv(MDiv* div);
   void lowerUMod(MMod* mod);
+  void lowerWasmSelectI(MWasmSelect* select);
+  void lowerWasmSelectI64(MWasmSelect* select);
 
   void lowerBigIntLsh(MBigIntLsh* ins);
   void lowerBigIntRsh(MBigIntRsh* ins);
