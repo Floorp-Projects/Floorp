@@ -95,6 +95,7 @@ web-platform-tests:
                     linux.*-qr/.*: ['release']  # skip on integration branches due to high load
                     windows.*-qr/.*: ['release']  # skip on integration branches due to high load
                     .*-tsan/opt: ['trunk']
+                    android-em-7.0-x86_64/debug-isolated-process: []
                     default: built-projects
     mozharness:
         chunked: true
@@ -174,6 +175,7 @@ web-platform-tests-reftest:
             default:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
+                    android-em-7.0-x86_64/debug-isolated-process: []
                     default: built-projects
     tier:
         by-variant:
