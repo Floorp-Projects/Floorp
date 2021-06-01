@@ -218,6 +218,8 @@ class WindowGlobalParent final : public WindowContext,
       const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
       uint32_t aEpoch);
 
+  void NotifySessionStoreUpdatesComplete(Element* aEmbedder);
+
   Maybe<uint64_t> GetSingleChannelId() { return mSingleChannelId; }
 
   uint16_t GetBFCacheStatus() { return mBFCacheStatus; }

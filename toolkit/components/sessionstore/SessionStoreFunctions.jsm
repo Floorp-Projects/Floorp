@@ -14,15 +14,15 @@ function UpdateSessionStore(
   aBrowser,
   aBrowsingContext,
   aEpoch,
-  aData,
-  aCollectSHistory
+  aCollectSHistory,
+  aData
 ) {
   return SessionStoreFuncInternal.updateSessionStore(
     aBrowser,
     aBrowsingContext,
     aEpoch,
-    aData,
-    aCollectSHistory
+    aCollectSHistory,
+    aData
   );
 }
 
@@ -65,8 +65,8 @@ var SessionStoreFuncInternal = {
     aBrowser,
     aBrowsingContext,
     aEpoch,
-    aData,
-    aCollectSHistory
+    aCollectSHistory,
+    aData
   ) {
     let currentData = {};
     if (aData.docShellCaps != undefined) {

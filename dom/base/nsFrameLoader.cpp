@@ -1857,7 +1857,7 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
   mDestroyCalled = true;
 
   // request a tabStateFlush before tab is closed
-  RequestTabStateFlush();
+  RequestFinalTabStateFlush();
 
   // After this point, we return an error when trying to send a message using
   // the message manager on the frame.
@@ -3195,7 +3195,7 @@ already_AddRefed<Promise> nsFrameLoader::RequestTabStateFlush(
 
   if (mSessionStoreListener) {
     context->FlushSessionStore();
-    mSessionStoreListener->ForceFlushFromParent(false);
+    mSessionStoreListener->ForceFlushFromParent();
     context->Canonical()->UpdateSessionStoreSessionStorage(
         [promise]() { promise->MaybeResolveWithUndefined(); });
 
@@ -3222,24 +3222,36 @@ already_AddRefed<Promise> nsFrameLoader::RequestTabStateFlush(
   return promise.forget();
 }
 
-void nsFrameLoader::RequestTabStateFlush() {
+void nsFrameLoader::RequestFinalTabStateFlush() {
   BrowsingContext* context = GetExtantBrowsingContext();
   if (!context || !context->IsTop()) {
     return;
   }
 
+  RefPtr<WindowGlobalParent> wgp =
+      context->Canonical()->GetCurrentWindowGlobal();
+  RefPtr<Element> embedder = context->GetEmbedderElement();
+
   if (mSessionStoreListener) {
     context->FlushSessionStore();
-    mSessionStoreListener->ForceFlushFromParent(true);
+    mSessionStoreListener->ForceFlushFromParent();
+    wgp->NotifySessionStoreUpdatesComplete(embedder);
     // No async ipc call is involved in parent only case
     return;
   }
+
+  using FlushPromise = ContentParent::FlushTabStatePromise;
+  nsTArray<RefPtr<FlushPromise>> flushPromises;
   context->Group()->EachParent([&](ContentParent* aParent) {
     if (aParent->CanSend()) {
-      aParent->SendFlushTabState(
-          context, [](auto) {}, [](auto) {});
+      flushPromises.AppendElement(aParent->SendFlushTabState(context));
     }
   });
+
+  FlushPromise::All(GetCurrentSerialEventTarget(), flushPromises)
+      ->Then(GetCurrentSerialEventTarget(), __func__, [wgp, embedder]() {
+        wgp->NotifySessionStoreUpdatesComplete(embedder);
+      });
 }
 
 void nsFrameLoader::RequestEpochUpdate(uint32_t aEpoch) {

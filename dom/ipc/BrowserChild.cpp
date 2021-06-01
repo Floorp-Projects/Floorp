@@ -3775,7 +3775,7 @@ nsresult BrowserChild::PrepareProgressListenerData(
   return PrepareRequestData(aRequest, aRequestData);
 }
 
-bool BrowserChild::UpdateSessionStore(bool aIsFinal) {
+bool BrowserChild::UpdateSessionStore() {
   if (!mSessionStoreListener) {
     return false;
   }
@@ -3793,7 +3793,7 @@ bool BrowserChild::UpdateSessionStore(bool aIsFinal) {
 
   Unused << SendSessionStoreUpdate(docShellCaps, privatedMode,
                                    store->GetAndClearSHistoryChanged(),
-                                   aIsFinal, mSessionStoreListener->GetEpoch());
+                                   mSessionStoreListener->GetEpoch());
   return true;
 }
 

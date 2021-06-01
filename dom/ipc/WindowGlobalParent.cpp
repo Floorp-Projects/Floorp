@@ -1341,6 +1341,18 @@ nsresult WindowGlobalParent::ResetSessionStore(uint32_t aEpoch) {
                                             aEpoch, update);
 }
 
+void WindowGlobalParent::NotifySessionStoreUpdatesComplete(Element* aEmbedder) {
+  if (!aEmbedder) {
+    aEmbedder = GetRootOwnerElement();
+  }
+  if (aEmbedder) {
+    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+      obs->NotifyWhenScriptSafe(ToSupports(aEmbedder),
+                                "browser-shutdown-tabstate-updated", nullptr);
+    }
+  }
+}
+
 mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateSessionStore(
     const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
     uint32_t aEpoch) {
