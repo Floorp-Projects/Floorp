@@ -628,10 +628,10 @@ xul|menulist::part(dropmarker-icon) {
 
 xul|menulist > xul|menupopup {
   appearance: none;
-  border: 1px solid var(--in-content-box-border-color);
-  border-radius: 2px;
-  background-color: var(--in-content-box-background);
-  color: var(--in-content-text-color);
+  --panel-border-color: var(--in-content-box-border-color);
+  --panel-border-radius: 2px;
+  --panel-background: var(--in-content-box-background);
+  --panel-color: var(--in-content-text-color);
 }
 
 xul|menulist > xul|menupopup xul|menu,
