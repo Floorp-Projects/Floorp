@@ -2028,21 +2028,8 @@
 - name: Rotate
   gen_boilerplate: false
 
-# Wasm SIMD.
-#
-# See comment in WasmIonCompile.cpp for a justification for these nodes.
-# (v128, v128, v128) -> v128 effect-free operation.
 - name: WasmBitselectSimd128
-  operands:
-    lhs: Simd128
-    rhs: Simd128
-    control: Simd128
-  type_policy: none
-  result_type: Simd128
-  movable: true
-  congruent_to: if_operands_equal
-  alias_set: none
-  clone: true
+  gen_boilerplate: false
 
 - name: WasmBinarySimd128
   gen_boilerplate: false
