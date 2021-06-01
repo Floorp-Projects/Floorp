@@ -1124,7 +1124,7 @@ static already_AddRefed<gl::GLContext> CreateGLContextANGLE(
 }
 #endif
 
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WAYLAND)
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WAYLAND) || defined(MOZ_X11)
 static already_AddRefed<gl::GLContext> CreateGLContextEGL() {
   // Create GLContext with dummy EGLSurface.
   bool forHardwareWebRender = true;
@@ -1163,7 +1163,7 @@ static already_AddRefed<gl::GLContext> CreateGLContext(nsACString& aError) {
   }
 #elif defined(MOZ_WIDGET_ANDROID)
   gl = CreateGLContextEGL();
-#elif defined(MOZ_WAYLAND)
+#elif defined(MOZ_WAYLAND) || defined(MOZ_X11)
   if (gfx::gfxVars::UseEGL()) {
     gl = CreateGLContextEGL();
   }

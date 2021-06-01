@@ -35,11 +35,9 @@ namespace mozilla::wr {
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
     const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
-#ifdef MOZ_WAYLAND
-  if (!gfx::gfxVars::UseEGL()) {
+  if ((kIsWayland || kIsX11) && !gfx::gfxVars::UseEGL()) {
     return nullptr;
   }
-#endif
   if (!RenderThread::Get()->SingletonGL()) {
     gfxCriticalNote << "Failed to get shared GL context";
     return nullptr;
@@ -69,12 +67,12 @@ RenderCompositorEGL::~RenderCompositorEGL() {
 }
 
 bool RenderCompositorEGL::BeginFrame() {
-#ifdef MOZ_WAYLAND
-  if (mEGLSurface == EGL_NO_SURFACE) {
+  if ((kIsWayland || kIsX11) && mEGLSurface == EGL_NO_SURFACE) {
     gfxCriticalNote
         << "We don't have EGLSurface to draw into. Called too early?";
     return false;
   }
+#ifdef MOZ_WAYLAND
   if (mWidget->AsGTK()) {
     mWidget->AsGTK()->SetEGLNativeWindowSize(GetBufferSize());
   }
@@ -174,7 +172,7 @@ bool RenderCompositorEGL::Resume() {
     mEGLSurfaceSize = LayoutDeviceIntSize(width, height);
     ANativeWindow_release(nativeWindow);
 #endif  // MOZ_WIDGET_ANDROID
-  } else if (kIsWayland) {
+  } else if (kIsWayland || kIsX11) {
     // Destroy EGLSurface if it exists and create a new one. We will set the
     // swap interval after MakeCurrent() has been called.
     DestroyEGLSurface();

@@ -447,12 +447,6 @@ class nsWindow final : public nsBaseWidget {
   int mWindowScaleFactor;
   bool mCompositedScreen;
 
-#ifdef MOZ_WAYLAND
-  bool mNeedsCompositorResume;
-  bool mCompositorInitiallyPaused;
-  LayoutDeviceIntPoint mNativePointerLockCenter;
-#endif
-
  private:
   void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
                    nsIntRect aBoundsRect);
@@ -474,6 +468,9 @@ class nsWindow final : public nsBaseWidget {
 
   void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
                                               GdkEventButton* aEvent);
+
+  void MaybeResumeCompositor();
+  void PauseCompositor();
 
   void WaylandStartVsync();
   void WaylandStopVsync();
@@ -518,6 +515,9 @@ class nsWindow final : public nsBaseWidget {
   GdkWindow* mGdkWindow;
   bool mWindowShouldStartDragging;
   PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
+
+  bool mNeedsCompositorResume;
+  bool mCompositorInitiallyPaused;
 
   uint32_t mHasMappedToplevel : 1, mRetryPointerGrab : 1;
   nsSizeMode mSizeState;
@@ -621,7 +621,6 @@ class nsWindow final : public nsBaseWidget {
   bool WaylandPopupIsMenu();
   bool WaylandPopupIsPermanent();
   bool IsWidgetOverflowWindow();
-  void PauseRemoteRenderer();
   void RemovePopupFromHierarchyList();
   void HideWaylandWindow();
   void HideWaylandPopupWindow(bool aTemporaryHidden, bool aRemoveFromPopupList);
@@ -821,9 +820,8 @@ class nsWindow final : public nsBaseWidget {
   bool ConfigureX11GLVisual(bool aUseAlpha);
 #endif
 #ifdef MOZ_WAYLAND
-  void MaybeResumeCompositor();
-
   RefPtr<mozilla::gfx::VsyncSource> mWaylandVsyncSource;
+  LayoutDeviceIntPoint mNativePointerLockCenter;
   zwp_locked_pointer_v1* mLockedPointer;
   zwp_relative_pointer_v1* mRelativePointer;
 #endif
