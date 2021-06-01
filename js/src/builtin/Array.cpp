@@ -3826,7 +3826,8 @@ static inline bool EnsureNewArrayElements(JSContext* cx, ArrayObject* obj,
 template <uint32_t maxLength>
 static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
                                                HandleObject protoArg,
-                                               NewObjectKind newKind) {
+                                               NewObjectKind newKind,
+                                               gc::AllocSite* site = nullptr) {
   gc::AllocKind allocKind = GuessArrayGCKind(length);
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
@@ -3846,9 +3847,10 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
     NewObjectCache& cache = cx->caches().newObjectCache;
     NewObjectCache::EntryIndex entry = -1;
     if (cache.lookupProto(&ArrayObject::class_, proto, allocKind, &entry)) {
-      gc::InitialHeap heap = GetInitialHeap(newKind, &ArrayObject::class_);
+      gc::InitialHeap heap =
+          GetInitialHeap(newKind, &ArrayObject::class_, site);
       AutoSetNewObjectMetadata metadata(cx);
-      JSObject* obj = cache.newObjectFromHit(cx, entry, heap);
+      JSObject* obj = cache.newObjectFromHit(cx, entry, heap, site);
       if (obj) {
         /* Fixup the elements pointer and length, which may be incorrect. */
         ArrayObject* arr = &obj->as<ArrayObject>();
@@ -3876,9 +3878,10 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
 
   AutoSetNewObjectMetadata metadata(cx);
   RootedArrayObject arr(
-      cx, ArrayObject::createArray(
-              cx, allocKind, GetInitialHeap(newKind, &ArrayObject::class_),
-              shape, length, metadata));
+      cx,
+      ArrayObject::createArray(
+          cx, allocKind, GetInitialHeap(newKind, &ArrayObject::class_, site),
+          shape, length, metadata));
   if (!arr) {
     return nullptr;
   }
@@ -3922,8 +3925,9 @@ ArrayObject* JS_FASTCALL js::NewTenuredDenseEmptyArray(
 
 ArrayObject* JS_FASTCALL js::NewDenseFullyAllocatedArray(
     JSContext* cx, uint32_t length, HandleObject proto /* = nullptr */,
-    NewObjectKind newKind /* = GenericObject */) {
-  return NewArray<UINT32_MAX>(cx, length, proto, newKind);
+    NewObjectKind newKind /* = GenericObject */,
+    gc::AllocSite* site /* = nullptr */) {
+  return NewArray<UINT32_MAX>(cx, length, proto, newKind, site);
 }
 
 ArrayObject* js::NewDensePartlyAllocatedArray(
