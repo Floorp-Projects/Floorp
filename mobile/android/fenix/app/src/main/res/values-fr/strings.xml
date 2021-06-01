@@ -1624,6 +1624,19 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Veuillez saisir un numéro de carte bancaire valide</string>
 
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Protégez vos cartes bancaires</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Configurez un schéma de verrouillage, un code PIN ou un mot de passe pour protéger vos cartes bancaires enregistrées si jamais quelqu’un accède à votre appareil.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Configurer maintenant</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Plus tard</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Déverrouillez votre appareil</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Déverrouillez pour utiliser les informations de cartes bancaires enregistrées</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Ajouter un moteur de recherche</string>
     <!-- Title of the Edit search engine screen -->
