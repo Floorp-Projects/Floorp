@@ -153,7 +153,7 @@ add_task(async () => {
     );
     Assert.equal(
       tableCells[0].querySelector(".process-type").getAttribute("data-l10n-id"),
-      "process-type-browser",
+      "process-type-default",
       "The module was loaded into the main process."
     );
     Assert.ok(
