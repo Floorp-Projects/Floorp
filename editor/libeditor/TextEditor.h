@@ -523,18 +523,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   bool IsSafeToInsertData(const Document* aSourceDoc) const;
 
   /**
-   * ComputeValueInternal() computes string value of this editor for given
-   * format.  This may be too expensive if it's in hot path.
-   *
-   * @param aFormatType             MIME type like "text/plain".
-   * @param aDocumentEncoderFlags   Flags of nsIDocumentEncoder.
-   * @param aCharset                Encoding of the document.
-   */
-  nsresult ComputeValueInternal(const nsAString& aFormatType,
-                                uint32_t aDocumentEncoderFlags,
-                                nsAString& aOutputString) const;
-
-  /**
    * Factored methods for handling insertion of data from transferables
    * (drag&drop or clipboard).
    */

@@ -2924,7 +2924,7 @@ NS_IMETHODIMP HTMLEditor::Rewrap(bool aRespectNewlines) {
   }
   rv = ComputeValueInternal(u"text/plain"_ns, flags, current);
   if (NS_FAILED(rv)) {
-    NS_WARNING("TextEditor::ComputeValueInternal(text/plain) failed");
+    NS_WARNING("EditorBase::ComputeValueInternal(text/plain) failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
