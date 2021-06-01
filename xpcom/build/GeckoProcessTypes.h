@@ -63,6 +63,8 @@ GECKO_PROCESS_TYPE(10, ForkServer, "forkserver", ForkServer, Self)
 // * toolkit/components/crashes/nsICrashService.idl and
 //   CrashService.jsm (PROCESS_TYPE constants)
 // * ipc/glue/CrashReporterHost.cpp (assertions)
+// * toolkit/locales/en-US/toolkit/global/processTypes.ftl and
+//   toolkit/modules/ProcessType.jsm
 //
 // Also, please ensure that any new sandbox environment variables are added
 // in build/pgo/profileserver.py to ensure your new process participates in
