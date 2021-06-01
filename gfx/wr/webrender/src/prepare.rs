@@ -1546,7 +1546,7 @@ fn get_unclipped_device_rect(
 ) -> Option<DeviceRect> {
     let raster_rect = map_to_raster.map(&prim_rect)?;
     let world_rect = raster_rect * Scale::new(1.0);
-    Some((world_rect * device_pixel_scale).to_box2d())
+    Some(world_rect * device_pixel_scale)
 }
 
 /// Given an unclipped device rect, try to find a minimal device space
@@ -1561,7 +1561,7 @@ fn get_clipped_device_rect(
     device_pixel_scale: DevicePixelScale,
 ) -> Option<DeviceRect> {
     let unclipped_raster_rect = {
-        let world_rect = unclipped.to_rect() * Scale::new(1.0);
+        let world_rect = *unclipped * Scale::new(1.0);
         let raster_rect = world_rect * device_pixel_scale.inverse();
 
         raster_rect.cast_unit()

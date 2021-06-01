@@ -880,7 +880,8 @@ impl<T> VertexDataTexture<T> {
             MAX_VERTEX_TEXTURE_WIDTH - (MAX_VERTEX_TEXTURE_WIDTH % texels_per_item)
         };
 
-        let rect = DeviceIntRect::from_size(
+        let rect = DeviceIntRect::new(
+            DeviceIntPoint::zero(),
             DeviceIntSize::new(logical_width as i32, needed_height),
         );
 

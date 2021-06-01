@@ -47,9 +47,3 @@ bitflags = true
 
 [export.rename]
 "ThinVec" = "nsTArray"
-
-[export.body]
-"Box2D" = """
-  inline T width() const { return max.x - min.x; }
-  inline T height() const { return max.y - min.y; }
-"""

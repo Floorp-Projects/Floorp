@@ -1244,12 +1244,8 @@ impl DrawTarget {
             DrawTarget::Default { ref rect, surface_origin_is_top_left, .. } => {
                 // perform a Y-flip here
                 if !surface_origin_is_top_left {
-                    let w = fb_rect.width();
-                    let h = fb_rect.height();
-                    fb_rect.min.x = fb_rect.min.x + rect.min.x;
-                    fb_rect.min.y = rect.max.y - fb_rect.max.y;
-                    fb_rect.max.x = fb_rect.min.x + w;
-                    fb_rect.max.y = fb_rect.min.y + h;
+                    fb_rect.origin.y = rect.origin.y + rect.size.height - fb_rect.origin.y - fb_rect.size.height;
+                    fb_rect.origin.x += rect.origin.x;
                 }
             }
             DrawTarget::Texture { .. } | DrawTarget::External { .. } | DrawTarget::NativeSurface { .. } => (),
@@ -1288,7 +1284,8 @@ impl DrawTarget {
                 }
             }
             None => {
-                FramebufferIntRect::from_size(
+                FramebufferIntRect::new(
+                    FramebufferIntPoint::zero(),
                     device_size_as_framebuffer_size(dimensions),
                 )
             }
@@ -2125,7 +2122,8 @@ impl Device {
                 (self.default_draw_fbo, rect, false)
             }
             DrawTarget::Texture { dimensions, fbo_id, with_depth, .. } => {
-                let rect = FramebufferIntRect::from_size(
+                let rect = FramebufferIntRect::new(
+                    FramebufferIntPoint::zero(),
                     device_size_as_framebuffer_size(dimensions),
                 );
                 (fbo_id, rect, with_depth)
@@ -2136,7 +2134,7 @@ impl Device {
             DrawTarget::NativeSurface { external_fbo_id, offset, dimensions, .. } => {
                 (
                     FBOId(external_fbo_id),
-                    device_rect_as_framebuffer_rect(&DeviceIntRect::from_origin_and_size(offset, dimensions)),
+                    device_rect_as_framebuffer_rect(&DeviceIntRect::new(offset, dimensions)),
                     true
                 )
             }
@@ -2145,10 +2143,10 @@ impl Device {
         self.depth_available = depth_available;
         self.bind_draw_target_impl(fbo_id);
         self.gl.viewport(
-            rect.min.x,
-            rect.min.y,
-            rect.width(),
-            rect.height(),
+            rect.origin.x,
+            rect.origin.y,
+            rect.size.width,
+            rect.size.height,
         );
     }
 
@@ -2566,9 +2564,9 @@ impl Device {
 
             self.blit_render_target(
                 ReadTarget::from_texture(src_texture),
-                FramebufferIntRect::from_origin_and_size(src_offset, size),
+                FramebufferIntRect::new(src_offset, size),
                 DrawTarget::from_texture(dest_texture, false),
-                FramebufferIntRect::from_origin_and_size(dest_offset, size),
+                FramebufferIntRect::new(dest_offset, size),
                 // In most cases the filter shouldn't matter, as there is no scaling involved
                 // in the blit. We were previously using Linear, but this caused issues when
                 // blitting RGBAF32 textures on Mali, so use Nearest to be safe.
@@ -2722,18 +2720,18 @@ impl Device {
             TextureFilter::Linear | TextureFilter::Trilinear => gl::LINEAR,
         };
 
-        let src_x0 = src_rect.min.x + self.bound_read_fbo.1.x;
-        let src_y0 = src_rect.min.y + self.bound_read_fbo.1.y;
+        let src_x0 = src_rect.origin.x + self.bound_read_fbo.1.x;
+        let src_y0 = src_rect.origin.y + self.bound_read_fbo.1.y;
 
         self.gl.blit_framebuffer(
             src_x0,
             src_y0,
-            src_x0 + src_rect.width(),
-            src_y0 + src_rect.height(),
-            dest_rect.min.x,
-            dest_rect.min.y,
-            dest_rect.max.x,
-            dest_rect.max.y,
+            src_x0 + src_rect.size.width,
+            src_y0 + src_rect.size.height,
+            dest_rect.origin.x,
+            dest_rect.origin.y,
+            dest_rect.origin.x + dest_rect.size.width,
+            dest_rect.origin.y + dest_rect.size.height,
             gl::COLOR_BUFFER_BIT,
             filter,
         );
@@ -2771,8 +2769,8 @@ impl Device {
         debug_assert!(self.inside_frame);
 
         let mut inverted_dest_rect = dest_rect;
-        inverted_dest_rect.min.y = dest_rect.max.y;
-        inverted_dest_rect.max.y = dest_rect.min.y;
+        inverted_dest_rect.origin.y = dest_rect.max_y();
+        inverted_dest_rect.size.height *= -1;
 
         self.blit_render_target(
             src_target,
@@ -2978,7 +2976,7 @@ impl Device {
         format: ImageFormat,
         pbo: &PBO,
     ) {
-        let byte_size = rect.area() as usize * format.bytes_per_pixel() as usize;
+        let byte_size = rect.size.area() as usize * format.bytes_per_pixel() as usize;
 
         assert!(byte_size <= pbo.reserved_size);
 
@@ -2991,10 +2989,10 @@ impl Device {
 
         unsafe {
             self.gl.read_pixels_into_pbo(
-                rect.min.x as _,
-                rect.min.y as _,
-                rect.width() as _,
-                rect.height() as _,
+                rect.origin.x as _,
+                rect.origin.y as _,
+                rect.size.width as _,
+                rect.size.height as _,
                 gl_format.read,
                 gl_format.pixel_type,
             );
@@ -3116,15 +3114,15 @@ impl Device {
     ) {
         let bytes_per_pixel = format.bytes_per_pixel();
         let desc = self.gl_describe_format(format);
-        let size_in_bytes = (bytes_per_pixel * rect.area()) as usize;
+        let size_in_bytes = (bytes_per_pixel * rect.size.width * rect.size.height) as usize;
         assert_eq!(output.len(), size_in_bytes);
 
         self.gl.flush();
         self.gl.read_pixels_into_buffer(
-            rect.min.x as _,
-            rect.min.y as _,
-            rect.width() as _,
-            rect.height() as _,
+            rect.origin.x as _,
+            rect.origin.y as _,
+            rect.size.width as _,
+            rect.size.height as _,
             desc.read,
             desc.pixel_type,
             output,
@@ -3588,10 +3586,10 @@ impl Device {
                 Some(rect) => {
                     self.gl.enable(gl::SCISSOR_TEST);
                     self.gl.scissor(
-                        rect.min.x,
-                        rect.min.y,
-                        rect.width(),
-                        rect.height(),
+                        rect.origin.x,
+                        rect.origin.y,
+                        rect.size.width,
+                        rect.size.height,
                     );
                     self.gl.clear(clear_bits);
                     self.gl.disable(gl::SCISSOR_TEST);
@@ -3628,10 +3626,10 @@ impl Device {
 
     pub fn set_scissor_rect(&self, rect: FramebufferIntRect) {
         self.gl.scissor(
-            rect.min.x,
-            rect.min.y,
-            rect.width(),
-            rect.height(),
+            rect.origin.x,
+            rect.origin.y,
+            rect.size.width,
+            rect.size.height,
         );
     }
 
@@ -4431,7 +4429,7 @@ impl<'a> TextureUploader<'a> {
         // Textures dimensions may have been clamped by the hardware. Crop the
         // upload region to match.
         let cropped = rect.intersection(
-            &DeviceIntRect::from_size(texture.get_dimensions())
+            &DeviceIntRect::new(DeviceIntPoint::zero(), texture.get_dimensions())
         );
         if cfg!(debug_assertions) && cropped.map_or(true, |r| r != rect) {
             warn!("Cropping texture upload {:?} to {:?}", rect, cropped);
@@ -4442,13 +4440,13 @@ impl<'a> TextureUploader<'a> {
         };
 
         let bytes_pp = texture.format.bytes_per_pixel() as usize;
-        let width_bytes = rect.width() as usize * bytes_pp;
+        let width_bytes = rect.size.width as usize * bytes_pp;
 
         let src_stride = stride.map_or(width_bytes, |stride| {
             assert!(stride >= 0);
             stride as usize
         });
-        let src_size = (rect.height() as usize - 1) * src_stride + width_bytes;
+        let src_size = (rect.size.height as usize - 1) * src_stride + width_bytes;
         assert!(src_size <= len * mem::size_of::<T>());
 
         match device.upload_method {
@@ -4469,10 +4467,10 @@ impl<'a> TextureUploader<'a> {
                     texture,
                 });
 
-                width_bytes * rect.height() as usize
+                width_bytes * rect.size.height as usize
             }
             UploadMethod::PixelBuffer(_) => {
-                let mut staging_buffer = match self.stage(device, texture.format, rect.size()) {
+                let mut staging_buffer = match self.stage(device, texture.format, rect.size) {
                     Ok(staging_buffer) => staging_buffer,
                     Err(_) => return 0,
                 };
@@ -4488,7 +4486,7 @@ impl<'a> TextureUploader<'a> {
                     } else {
                         // copy the data line-by-line in to the buffer so
                         // that it has an optimal stride
-                        for y in 0..rect.height() as usize {
+                        for y in 0..rect.size.height as usize {
                             let src_start = y * src_stride;
                             let src_end = src_start + width_bytes;
                             let dst_start = y * staging_buffer.get_stride();
@@ -4558,8 +4556,8 @@ impl<'a> TextureUploader<'a> {
             );
         }
 
-        let pos = chunk.rect.min;
-        let size = chunk.rect.size();
+        let pos = chunk.rect.origin;
+        let size = chunk.rect.size;
 
         match chunk.texture.target {
             gl::TEXTURE_2D | gl::TEXTURE_RECTANGLE | gl::TEXTURE_EXTERNAL_OES => {
