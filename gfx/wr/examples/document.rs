@@ -62,7 +62,7 @@ impl App {
 
         for (pipeline_id, color, offset) in init_data {
             let size = DeviceIntSize::new(250, 250);
-            let bounds = DeviceIntRect::from_origin_and_size(offset, size);
+            let bounds = DeviceIntRect::new(offset, size);
 
             let document_id = api.add_document(size);
             let mut txn = Transaction::new();
@@ -74,7 +74,7 @@ impl App {
                 pipeline_id,
                 content_rect: LayoutRect::new(
                     LayoutPoint::origin(),
-                    bounds.size().to_f32() / Scale::new(device_pixel_ratio),
+                    bounds.size.to_f32() / Scale::new(device_pixel_ratio),
                 ),
                 color,
             });

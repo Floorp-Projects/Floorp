@@ -575,7 +575,7 @@ impl<'a> SceneBuilder<'a> {
         BuiltScene {
             has_root_pipeline: scene.has_root_pipeline(),
             pipeline_epochs: scene.pipeline_epochs.clone(),
-            output_rect: view.device_rect.size().into(),
+            output_rect: view.device_rect.size.into(),
             background_color,
             hit_testing_scene: Arc::new(builder.hit_testing_scene),
             spatial_tree: builder.spatial_tree,

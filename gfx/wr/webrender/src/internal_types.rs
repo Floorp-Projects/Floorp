@@ -405,7 +405,7 @@ impl TextureUpdateList {
         height: i32,
     ) {
         let size = DeviceIntSize::new(width, height);
-        let rect = DeviceIntRect::from_origin_and_size(origin, size);
+        let rect = DeviceIntRect::new(origin, size);
         self.push_update(id, TextureCacheUpdate {
             rect,
             stride: None,

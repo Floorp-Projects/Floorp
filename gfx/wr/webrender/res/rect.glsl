@@ -53,3 +53,4 @@ float signed_distance_rect(vec2 pos, vec2 p0, vec2 p1) {
 vec2 clamp_rect(vec2 pt, RectWithSize rect) {
     return clamp(pt, rect.p0, rect.p0 + rect.size);
 }
+
