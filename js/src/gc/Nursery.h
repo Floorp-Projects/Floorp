@@ -442,6 +442,10 @@ class Nursery {
 
   bool canCreateAllocSite() { return pretenuringNursery.canCreateAllocSite(); }
   void noteAllocSiteCreated() { pretenuringNursery.noteAllocSiteCreated(); }
+  bool reportPretenuring() const { return reportPretenuring_; }
+  void maybeStopPretenuring(gc::GCRuntime* gc) {
+    pretenuringNursery.maybeStopPretenuring(gc);
+  }
 
   // Round a size in bytes to the nearest valid nursery size.
   static size_t roundSize(size_t size);
@@ -698,7 +702,7 @@ class Nursery {
   CollectionResult doCollection(JS::GCReason reason);
 
   void doPretenuring(JSRuntime* rt, JS::GCReason reason,
-                     bool highPromotionRate);
+                     bool validPromotionRate, double promotionRate);
 
   // Move all objects and everything they can reach to the tenured heap.
   void collectToObjectFixedPoint(TenuringTracer& mover);

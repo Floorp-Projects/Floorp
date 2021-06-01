@@ -506,6 +506,12 @@ inline size_t Arena::finalize(JSFreeOp* fop, AllocKind thingKind,
     }
   }
 
+  if constexpr (std::is_same_v<T, JSObject>) {
+    if (isNewlyCreated) {
+      zone->pretenuring.updateCellCountsInNewlyCreatedArenas(
+          nmarked + nfinalized, nmarked);
+    }
+  }
   isNewlyCreated = 0;
 
   if (thingKind == AllocKind::STRING ||
@@ -4213,13 +4219,53 @@ bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
 }
 
 void GCRuntime::discardJITCodeForGC() {
+  size_t nurserySiteResetCount = 0;
+  size_t pretenuredSiteResetCount = 0;
+
   js::CancelOffThreadIonCompile(rt, JS::Zone::Prepare);
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_DISCARD_CODE);
-    Zone::DiscardOptions options;
-    options.discardBaselineCode = true;
-    options.discardJitScripts = true;
-    zone->discardJitCode(rt->defaultFreeOp(), options);
+
+    // We may need to reset allocation sites and discard JIT code to recover if
+    // we find object lifetimes have changed.
+    PretenuringZone& pz = zone->pretenuring;
+    bool resetNurserySites = pz.shouldResetNurseryAllocSites();
+    bool resetPretenuredSites = pz.shouldResetPretenuredAllocSites();
+
+    if (!zone->isPreservingCode()) {
+      Zone::DiscardOptions options;
+      options.discardBaselineCode = true;
+      options.discardJitScripts = true;
+      options.resetNurseryAllocSites = resetNurserySites;
+      options.resetPretenuredAllocSites = resetPretenuredSites;
+      zone->discardJitCode(rt->defaultFreeOp(), options);
+
+    } else if (resetNurserySites || resetPretenuredSites) {
+      zone->resetAllocSitesAndInvalidate(resetNurserySites,
+                                         resetPretenuredSites);
+    }
+
+    if (resetNurserySites) {
+      nurserySiteResetCount++;
+    }
+    if (resetPretenuredSites) {
+      pretenuredSiteResetCount++;
+    }
+  }
+
+  if (nursery().reportPretenuring()) {
+    if (nurserySiteResetCount) {
+      fprintf(
+          stderr,
+          "GC reset nursery alloc sites and invalidated code in %zu zones\n",
+          nurserySiteResetCount);
+    }
+    if (pretenuredSiteResetCount) {
+      fprintf(
+          stderr,
+          "GC reset pretenured alloc sites and invalidated code in %zu zones\n",
+          pretenuredSiteResetCount);
+    }
   }
 }
 
@@ -5752,6 +5798,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JSFreeOp* fop,
     zone->changeGCState(Zone::Sweep, Zone::Finished);
     zone->arenas.unmarkPreMarkedFreeCells();
     zone->arenas.checkNoArenasToUpdate();
+    zone->pretenuring.clearCellCountsInNewlyCreatedArenas();
   }
 
   /*
@@ -6607,7 +6654,7 @@ void GCRuntime::finishCollection() {
 
   clearBufferedGrayRoots();
 
-  maybeStopStringPretenuring();
+  maybeStopPretenuring();
 
   {
     AutoLockGC lock(this);
@@ -6652,7 +6699,9 @@ void GCRuntime::checkGCStateNotInUse() {
 #endif
 }
 
-void GCRuntime::maybeStopStringPretenuring() {
+void GCRuntime::maybeStopPretenuring() {
+  nursery().maybeStopPretenuring(this);
+
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     if (zone->allocNurseryStrings) {
       continue;

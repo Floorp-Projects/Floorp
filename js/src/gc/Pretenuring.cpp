@@ -13,6 +13,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/Invalidation.h"
 
+#include "gc/PrivateIterators-inl.h"
 #include "vm/JSScript-inl.h"
 
 using namespace js;
@@ -27,6 +28,31 @@ static constexpr size_t MaxAllocSitesPerMinorGC = 500;
 // leave the site's state as Unknown and don't pretenure allocations.
 static constexpr size_t MaxInvalidationCount = 5;
 
+// The minimum number of allocated cells needed to determine the survival rate
+// of cells in newly created arenas.
+static constexpr size_t MinCellsRequiredForSurvivalRate = 100;
+
+// The young survival rate below which a major collection is determined to have
+// a low young survival rate.
+static constexpr double LowYoungSurvivalThreshold = 0.05;
+
+// The number of consecutive major collections with a low young survival rate
+// that must occur before recovery is attempted.
+static constexpr size_t LowYoungSurvivalCountBeforeRecovery = 2;
+
+// The proportion of the nursery that must be tenured above which a minor
+// collection may be determined to have a high nursery survival rate.
+static constexpr double HighNurserySurvivalPromotionThreshold = 0.6;
+
+// The number of nursery allocations made by optimized JIT code that must be
+// tenured above which a minor collection may be determined to have a high
+// nursery survival rate.
+static constexpr size_t HighNurserySurvivalOptimizedAllocThreshold = 10000;
+
+// The number of consecutive minor collections with a high nursery survival rate
+// that must occur before recovery is attempted.
+static constexpr size_t HighNurserySurvivalCountBeforeRecovery = 2;
+
 AllocSite* const AllocSite::EndSentinel = reinterpret_cast<AllocSite*>(1);
 
 bool PretenuringNursery::canCreateAllocSite() {
@@ -34,12 +60,29 @@ bool PretenuringNursery::canCreateAllocSite() {
   return allocSitesCreated < MaxAllocSitesPerMinorGC;
 }
 
-void PretenuringNursery::doPretenuring(GCRuntime* gc, bool reportInfo) {
+void PretenuringNursery::doPretenuring(GCRuntime* gc, bool validPromotionRate,
+                                       double promotionRate, bool reportInfo) {
   mozilla::Maybe<AutoGCSession> session;
 
   size_t sitesActive = 0;
   size_t sitesPretenured = 0;
   size_t sitesInvalidated = 0;
+  size_t zonesWithHighNurserySurvival = 0;
+
+  // Check whether previously optimized code has changed its behaviour and
+  // needs to be recompiled so that it can pretenure its allocations.
+  if (validPromotionRate) {
+    for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
+      bool highNurserySurvivalRate =
+          promotionRate > HighNurserySurvivalPromotionThreshold &&
+          zone->optimizedAllocSite()->nurseryTenuredCount >=
+              HighNurserySurvivalOptimizedAllocThreshold;
+      zone->pretenuring.noteHighNurserySurvivalRate(highNurserySurvivalRate);
+      if (highNurserySurvivalRate) {
+        zonesWithHighNurserySurvival++;
+      }
+    }
+  }
 
   if (reportInfo) {
     AllocSite::printInfoHeader();
@@ -69,12 +112,12 @@ void PretenuringNursery::doPretenuring(GCRuntime* gc, bool reportInfo) {
         site->updateStateOnMinorGC(promotionRate);
         AllocSite::State newState = site->state();
 
-        // We can optimize JIT code before we collect the nursery and realise a
-        // site should be pretenured. Make sure we invalidate any existing
-        // optimized code in this case.
         if (prevState == AllocSite::State::Unknown &&
             newState == AllocSite::State::LongLived) {
           sitesPretenured++;
+
+          // We can optimize JIT code before we realise that a site should be
+          // pretenured. Make sure we invalidate any existing optimized code.
 
           if (!session.isSome()) {
             session.emplace(gc, JS::HeapState::MinorCollecting);
@@ -112,6 +155,10 @@ void PretenuringNursery::doPretenuring(GCRuntime* gc, bool reportInfo) {
   if (reportInfo) {
     AllocSite::printInfoFooter(allocSitesCreated, sitesActive, sitesPretenured,
                                sitesInvalidated);
+    if (zonesWithHighNurserySurvival) {
+      fprintf(stderr, "  %zu zones with high nursery survival rate\n",
+              zonesWithHighNurserySurvival);
+    }
   }
 
   allocSitesCreated = 0;
@@ -141,6 +188,16 @@ bool AllocSite::invalidateScript(GCRuntime* gc) {
 bool AllocSite::invalidationLimitReached() const {
   MOZ_ASSERT(invalidationCount <= MaxInvalidationCount);
   return invalidationCount == MaxInvalidationCount;
+}
+
+void PretenuringNursery::maybeStopPretenuring(GCRuntime* gc) {
+  for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
+    double rate;
+    if (zone->pretenuring.calculateYoungTenuredSurvivalRate(&rate)) {
+      bool lowYoungSurvivalRate = rate < LowYoungSurvivalThreshold;
+      zone->pretenuring.noteLowYoungTenuredSurvivalRate(lowYoungSurvivalRate);
+    }
+  }
 }
 
 AllocSite::Kind AllocSite::kind() const {
@@ -202,10 +259,69 @@ void AllocSite::updateStateOnMinorGC(double promotionRate) {
   }
 }
 
+bool AllocSite::maybeResetState() {
+  if (invalidationLimitReached()) {
+    MOZ_ASSERT(state_ == State::Unknown);
+    return false;
+  }
+
+  invalidationCount++;
+  state_ = State::Unknown;
+  return true;
+}
+
 void AllocSite::trace(JSTracer* trc) {
   if (script_) {
     TraceManuallyBarrieredEdge(trc, &script_, "AllocSite script");
   }
+}
+
+bool PretenuringZone::calculateYoungTenuredSurvivalRate(double* rateOut) {
+  MOZ_ASSERT(allocCountInNewlyCreatedArenas >=
+             survivorCountInNewlyCreatedArenas);
+  if (allocCountInNewlyCreatedArenas < MinCellsRequiredForSurvivalRate) {
+    return false;
+  }
+
+  *rateOut = double(survivorCountInNewlyCreatedArenas) /
+             double(allocCountInNewlyCreatedArenas);
+  return true;
+}
+
+void PretenuringZone::noteLowYoungTenuredSurvivalRate(
+    bool lowYoungSurvivalRate) {
+  if (lowYoungSurvivalRate) {
+    lowYoungTenuredSurvivalCount++;
+  } else {
+    lowYoungTenuredSurvivalCount = 0;
+  }
+}
+
+void PretenuringZone::noteHighNurserySurvivalRate(
+    bool highNurserySurvivalRate) {
+  if (highNurserySurvivalRate) {
+    highNurserySurvivalCount++;
+  } else {
+    highNurserySurvivalCount = 0;
+  }
+}
+
+bool PretenuringZone::shouldResetNurseryAllocSites() {
+  bool shouldReset =
+      highNurserySurvivalCount >= HighNurserySurvivalCountBeforeRecovery;
+  if (shouldReset) {
+    highNurserySurvivalCount = 0;
+  }
+  return shouldReset;
+}
+
+bool PretenuringZone::shouldResetPretenuredAllocSites() {
+  bool shouldReset =
+      lowYoungTenuredSurvivalCount >= LowYoungSurvivalCountBeforeRecovery;
+  if (shouldReset) {
+    lowYoungTenuredSurvivalCount = 0;
+  }
+  return shouldReset;
 }
 
 /* static */
