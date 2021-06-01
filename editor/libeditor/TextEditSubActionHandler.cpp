@@ -832,19 +832,13 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
 EditActionResult TextEditor::ComputeValueFromTextNodeAndPaddingBRElement(
     nsAString& aValue) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!IsHTMLEditor());
 
   // If there is a padding <br> element, there's no content.  So output empty
   // string.
   if (mPaddingBRElementForEmptyEditor) {
     aValue.Truncate();
     return EditActionHandled();
-  }
-
-  // If it's neither <input type="text"> nor <textarea>, e.g., an HTML editor
-  // which is in plaintext mode (e.g., plaintext email composer on Thunderbird),
-  // it should be handled by the expensive path.
-  if (AsHTMLEditor()) {
-    return EditActionIgnored();
   }
 
   Element* anonymousDivElement = GetRoot();
