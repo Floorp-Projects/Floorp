@@ -551,13 +551,14 @@ bool APZCCallbackHelper::DispatchMouseEvent(
     unsigned short aInputSourceArg, uint32_t aPointerId) {
   NS_ENSURE_TRUE(aPresShell, true);
 
-  bool defaultPrevented = false;
+  PreventDefaultResult preventDefaultResult;
   nsContentUtils::SendMouseEvent(
       aPresShell, aType, aPoint.x, aPoint.y, aButton,
       nsIDOMWindowUtils::MOUSE_BUTTONS_NOT_SPECIFIED, aClickCount, aModifiers,
       /* aIgnoreRootScrollFrame = */ false, 0, aInputSourceArg, aPointerId,
-      false, &defaultPrevented, false, /* aIsWidgetEventSynthesized = */ false);
-  return defaultPrevented;
+      false, &preventDefaultResult, false,
+      /* aIsWidgetEventSynthesized = */ false);
+  return preventDefaultResult != PreventDefaultResult::No;
 }
 
 void APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
