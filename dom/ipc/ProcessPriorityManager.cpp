@@ -395,6 +395,12 @@ ProcessPriorityManagerImpl::Observe(nsISupports* aSubject, const char* aTopic,
 already_AddRefed<ParticularProcessPriorityManager>
 ProcessPriorityManagerImpl::GetParticularProcessPriorityManager(
     ContentParent* aContentParent) {
+  // If this content parent is already being shut down, there's no
+  // need to adjust its priority.
+  if (aContentParent->IsDead()) {
+    return nullptr;
+  }
+
   const uint64_t cpId = aContentParent->ChildID();
   return mParticularManagers.WithEntryHandle(cpId, [&](auto&& entry) {
     if (!entry) {
@@ -498,6 +504,7 @@ ParticularProcessPriorityManager::ParticularProcessPriorityManager(
       mHoldsPlayingAudioWakeLock(false),
       mHoldsPlayingVideoWakeLock(false) {
   MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_RELEASE_ASSERT(!aContentParent->IsDead());
   LOGP("Creating ParticularProcessPriorityManager.");
 }
 
