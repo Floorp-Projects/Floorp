@@ -245,6 +245,10 @@ struct EventNameMapping {
   bool mMaybeSpecialSVGorSMILEvent;
 };
 
+namespace mozilla {
+enum class PreventDefaultResult : uint8_t { No, ByContent, ByChrome };
+}
+
 class nsContentUtils {
   friend class nsAutoScriptBlockerSuppressNodeRemoved;
   typedef mozilla::dom::Element Element;
@@ -2916,8 +2920,8 @@ class nsContentUtils {
       float aY, int32_t aButton, int32_t aButtons, int32_t aClickCount,
       int32_t aModifiers, bool aIgnoreRootScrollFrame, float aPressure,
       unsigned short aInputSourceArg, uint32_t aIdentifier, bool aToWindow,
-      bool* aPreventDefault, bool aIsDOMEventSynthesized,
-      bool aIsWidgetEventSynthesized);
+      mozilla::PreventDefaultResult* aPreventDefault,
+      bool aIsDOMEventSynthesized, bool aIsWidgetEventSynthesized);
 
   static void FirePageShowEventForFrameLoaderSwap(
       nsIDocShellTreeItem* aItem,
@@ -3491,6 +3495,12 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType) {
       return static_cast<ExtContentPolicyType>(aType);
   }
 }
+
+namespace mozilla {
+std::ostream& operator<<(
+    std::ostream& aOut,
+    const mozilla::PreventDefaultResult aPreventDefaultResult);
+}  // namespace mozilla
 
 class MOZ_RAII nsAutoScriptBlocker {
  public:
