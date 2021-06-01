@@ -474,6 +474,8 @@ class Nursery {
   // changed by maybeResizeNursery() each collection. It includes chunk headers.
   size_t capacity_;
 
+  gc::PretenuringNursery pretenuringNursery;
+
   mozilla::TimeDuration timeInChunkAlloc_;
 
   // Report minor collections taking at least this long, if enabled.
@@ -488,6 +490,9 @@ class Nursery {
 
   // Report how many strings were deduplicated.
   bool reportDeduplications_;
+
+  // Report information on allocation sites and pretenuring.
+  bool reportPretenuring_;
 
   // Whether and why a collection of this nursery has been requested. This is
   // mutable as it is set by the store buffer, which otherwise cannot modify

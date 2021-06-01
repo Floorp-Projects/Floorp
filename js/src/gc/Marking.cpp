@@ -2644,6 +2644,11 @@ size_t GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
 
 /*** Tenuring Tracer ********************************************************/
 
+static inline void UpdateAllocSiteOnTenure(Cell* cell) {
+  AllocSite* site = NurseryCellHeader::from(cell)->allocSite();
+  site->incTenuredCount();
+}
+
 JSObject* TenuringTracer::onObjectEdge(JSObject* obj) {
   if (!IsInsideNursery(obj)) {
     return obj;
@@ -2653,6 +2658,8 @@ JSObject* TenuringTracer::onObjectEdge(JSObject* obj) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(obj);
     return static_cast<JSObject*>(overlay->forwardingAddress());
   }
+
+  UpdateAllocSiteOnTenure(obj);
 
   // Take a fast path for tenuring a plain object which is by far the most
   // common case.
@@ -2673,6 +2680,8 @@ JSString* TenuringTracer::onStringEdge(JSString* str) {
     return static_cast<JSString*>(overlay->forwardingAddress());
   }
 
+  UpdateAllocSiteOnTenure(str);
+
   return moveToTenured(str);
 }
 
@@ -2685,6 +2694,8 @@ JS::BigInt* TenuringTracer::onBigIntEdge(JS::BigInt* bi) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(bi);
     return static_cast<JS::BigInt*>(overlay->forwardingAddress());
   }
+
+  UpdateAllocSiteOnTenure(bi);
 
   return moveToTenured(bi);
 }
