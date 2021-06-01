@@ -76,7 +76,7 @@ class FileManagerBase {
 
  private:
   // Runs the given aFileInfoTableOp operation, which must return a FileInfo*,
-  // under the file manager lock, acquires a strong reference to the returned
+  // under the FileManager lock, acquires a strong reference to the returned
   // object under the lock, and returns the strong reference.
   template <typename FileInfoTableOp>
   [[nodiscard]] SafeRefPtr<FileInfo> AcquireFileInfo(

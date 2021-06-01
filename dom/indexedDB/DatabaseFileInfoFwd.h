@@ -9,12 +9,12 @@
 
 namespace mozilla::dom::indexedDB {
 
-class FileManager;
+class DatabaseFileManager;
 
 template <typename FileManager>
 class FileInfoT;
 
-using DatabaseFileInfo = FileInfoT<indexedDB::FileManager>;
+using DatabaseFileInfo = FileInfoT<indexedDB::DatabaseFileManager>;
 
 }  // namespace mozilla::dom::indexedDB
 
