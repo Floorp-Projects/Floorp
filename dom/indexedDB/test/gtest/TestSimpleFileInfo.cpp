@@ -16,25 +16,25 @@
 using namespace mozilla;
 using namespace mozilla::dom::indexedDB;
 
-class TestFileManager;
+class SimpleFileManager;
 
-using SimpleFileInfo = FileInfoT<TestFileManager>;
+using SimpleFileInfo = FileInfoT<SimpleFileManager>;
 
-struct TestFileManagerStats final {
+struct SimpleFileManagerStats final {
   // XXX We don't keep track of the specific aFileId parameters here, should we?
 
   size_t mAsyncDeleteFileCalls = 0;
   size_t mSyncDeleteFileCalls = 0;
 };
 
-class TestFileManager final : public FileManagerBase<TestFileManager>,
-                              public AtomicSafeRefCounted<TestFileManager> {
+class SimpleFileManager final : public FileManagerBase<SimpleFileManager>,
+                                public AtomicSafeRefCounted<SimpleFileManager> {
  public:
-  using FileManagerBase<TestFileManager>::MutexType;
+  using FileManagerBase<SimpleFileManager>::MutexType;
 
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(TestFileManager)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(SimpleFileManager)
 
-  // FileManager functions that are used by SimpleFileInfo
+  // SimpleFileManager functions that are used by SimpleFileInfo
 
   [[nodiscard]] nsresult AsyncDeleteFile(const int64_t aFileId) {
     MOZ_RELEASE_ASSERT(!mFileInfos.Contains(aFileId));
@@ -56,12 +56,12 @@ class TestFileManager final : public FileManagerBase<TestFileManager>,
   }
 
   // Test-specific functions
-  explicit TestFileManager(TestFileManagerStats* aStats = nullptr)
+  explicit SimpleFileManager(SimpleFileManagerStats* aStats = nullptr)
       : mStats{aStats} {}
 
   void CreateDBOnlyFileInfos() {
     for (const auto id : kDBOnlyFileInfoIds) {
-      // Copied from within FileManager::Init.
+      // Copied from within DatabaseFileManager::Init.
 
       mFileInfos.InsertOrUpdate(
           id,
@@ -80,15 +80,15 @@ class TestFileManager final : public FileManagerBase<TestFileManager>,
  private:
   inline static MutexType sMutex;
 
-  TestFileManagerStats* const mStats;
+  SimpleFileManagerStats* const mStats;
 };
 
-// These tests test the TestFileManager itself, to ensure the SimpleFileInfo
+// These tests test the SimpleFileManager itself, to ensure the SimpleFileInfo
 // tests below are valid.
 
-TEST(DOM_IndexedDB_TestFileManager, Invalidate)
+TEST(DOM_IndexedDB_SimpleFileManager, Invalidate)
 {
-  const auto fileManager = MakeSafeRefPtr<TestFileManager>();
+  const auto fileManager = MakeSafeRefPtr<SimpleFileManager>();
 
   fileManager->Invalidate();
 
@@ -97,15 +97,15 @@ TEST(DOM_IndexedDB_TestFileManager, Invalidate)
 
 // These tests mainly test SimpleFileInfo, which is a simplified version of
 // DatabaseFileInfo (SimpleFileInfo doesn't work with real files stored on
-// disk). The actual objects, DatabaseFileInfo and FileManager are not tested
-// here.
+// disk). The actual objects, DatabaseFileInfo and DatabaseFileManager are not
+// tested here.
 
 TEST(DOM_IndexedDB_SimpleFileInfo, Create)
 {
-  auto stats = TestFileManagerStats{};
+  auto stats = SimpleFileManagerStats{};
 
   {
-    const auto fileManager = MakeSafeRefPtr<TestFileManager>(&stats);
+    const auto fileManager = MakeSafeRefPtr<SimpleFileManager>(&stats);
     auto fileInfo = fileManager->CreateFileInfo();
 
     int32_t memRefCnt, dbRefCnt;
@@ -123,13 +123,13 @@ TEST(DOM_IndexedDB_SimpleFileInfo, Create)
 
 TEST(DOM_IndexedDB_SimpleFileInfo, CreateWithInitialDBRefCnt)
 {
-  auto stats = TestFileManagerStats{};
+  auto stats = SimpleFileManagerStats{};
 
   {
-    const auto fileManager = MakeSafeRefPtr<TestFileManager>(&stats);
+    const auto fileManager = MakeSafeRefPtr<SimpleFileManager>(&stats);
     fileManager->CreateDBOnlyFileInfos();
 
-    for (const auto id : TestFileManager::kDBOnlyFileInfoIds) {
+    for (const auto id : SimpleFileManager::kDBOnlyFileInfoIds) {
       const auto fileInfo = fileManager->GetFileInfo(id);
       ASSERT_NE(nullptr, fileInfo);
 
@@ -150,14 +150,14 @@ TEST(DOM_IndexedDB_SimpleFileInfo, CreateWithInitialDBRefCnt)
 
 TEST(DOM_IndexedDB_SimpleFileInfo, CreateWithInitialDBRefCnt_Invalidate)
 {
-  auto stats = TestFileManagerStats{};
+  auto stats = SimpleFileManagerStats{};
 
   {
-    const auto fileManager = MakeSafeRefPtr<TestFileManager>(&stats);
+    const auto fileManager = MakeSafeRefPtr<SimpleFileManager>(&stats);
     fileManager->CreateDBOnlyFileInfos();
 
     const auto fileInfos = TransformIntoNewArray(
-        TestFileManager::kDBOnlyFileInfoIds,
+        SimpleFileManager::kDBOnlyFileInfoIds,
         [&fileManager](const auto id) { return fileManager->GetFileInfo(id); });
 
     fileManager->Invalidate();
@@ -178,14 +178,14 @@ TEST(DOM_IndexedDB_SimpleFileInfo, CreateWithInitialDBRefCnt_Invalidate)
 
 TEST(DOM_IndexedDB_SimpleFileInfo, CreateWithInitialDBRefCnt_UpdateDBRefsToZero)
 {
-  auto stats = TestFileManagerStats{};
+  auto stats = SimpleFileManagerStats{};
 
   {
-    const auto fileManager = MakeSafeRefPtr<TestFileManager>(&stats);
+    const auto fileManager = MakeSafeRefPtr<SimpleFileManager>(&stats);
     fileManager->CreateDBOnlyFileInfos();
 
     const auto fileInfo =
-        fileManager->GetFileInfo(TestFileManager::kDBOnlyFileInfoIds[0]);
+        fileManager->GetFileInfo(SimpleFileManager::kDBOnlyFileInfoIds[0]);
     fileInfo->UpdateDBRefs(-1);
 
     int32_t memRefCnt, dbRefCnt;
@@ -201,16 +201,16 @@ TEST(DOM_IndexedDB_SimpleFileInfo, CreateWithInitialDBRefCnt_UpdateDBRefsToZero)
 
 TEST(DOM_IndexedDB_SimpleFileInfo, ReleaseWithFileManagerCleanup)
 {
-  auto stats = TestFileManagerStats{};
+  auto stats = SimpleFileManagerStats{};
   {
-    const auto fileManager = MakeSafeRefPtr<TestFileManager>(&stats);
+    const auto fileManager = MakeSafeRefPtr<SimpleFileManager>(&stats);
     fileManager->CreateDBOnlyFileInfos();
 
     auto* fileInfo = fileManager->CreateFileInfo().forget().take();
     fileInfo->Release(/* aSyncDeleteFile */ true);
 
-    // This was the only reference and FileManager was not invalidated, to
-    // FileManager::Cleanup should have been called.
+    // This was the only reference and SimpleFileManager was not invalidated,
+    // so SimpleFileManager::Cleanup should have been called.
     ASSERT_EQ(1u, stats.mSyncDeleteFileCalls);
   }
   ASSERT_EQ(0u, stats.mAsyncDeleteFileCalls);
@@ -221,9 +221,9 @@ TEST(DOM_IndexedDB_SimpleFileInfo, ReleaseWithFileManagerCleanup)
 
 TEST(DOM_IndexedDB_SimpleFileInfo, Invalidate_CreateFileInfo)
 {
-  auto stats = TestFileManagerStats{};
+  auto stats = SimpleFileManagerStats{};
   {
-    const auto fileManager = MakeSafeRefPtr<TestFileManager>(&stats);
+    const auto fileManager = MakeSafeRefPtr<SimpleFileManager>(&stats);
 
     fileManager->Invalidate();
 
@@ -240,16 +240,16 @@ TEST(DOM_IndexedDB_SimpleFileInfo, Invalidate_CreateFileInfo)
 
 TEST(DOM_IndexedDB_SimpleFileInfo, Invalidate_Release)
 {
-  auto stats = TestFileManagerStats{};
+  auto stats = SimpleFileManagerStats{};
   {
-    const auto fileManager = MakeSafeRefPtr<TestFileManager>(&stats);
+    const auto fileManager = MakeSafeRefPtr<SimpleFileManager>(&stats);
 
     const auto fileInfo = fileManager->CreateFileInfo();
     Unused << fileInfo;
 
     fileManager->Invalidate();
 
-    // FileManager was invalidated, so Release does not do any cleanup.
+    // SimpleFileManager was invalidated, so Release does not do any cleanup.
   }
 
   ASSERT_EQ(0u, stats.mSyncDeleteFileCalls);
@@ -258,15 +258,15 @@ TEST(DOM_IndexedDB_SimpleFileInfo, Invalidate_Release)
 
 TEST(DOM_IndexedDB_SimpleFileInfo, Invalidate_ReleaseWithFileManagerCleanup)
 {
-  auto stats = TestFileManagerStats{};
+  auto stats = SimpleFileManagerStats{};
   {
-    const auto fileManager = MakeSafeRefPtr<TestFileManager>(&stats);
+    const auto fileManager = MakeSafeRefPtr<SimpleFileManager>(&stats);
 
     auto* fileInfo = fileManager->CreateFileInfo().forget().take();
 
     fileManager->Invalidate();
 
-    // FileManager was invalidated, so Release does not do any cleanup.
+    // SimpleFileManager was invalidated, so Release does not do any cleanup.
     fileInfo->Release(/* aSyncDeleteFile */ true);
   }
 
