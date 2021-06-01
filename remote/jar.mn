@@ -7,6 +7,7 @@ remote.jar:
   content/components/RemoteAgent.jsm (components/RemoteAgent.jsm)
 
   ## CDP ##
+  content/cdp/CDP.jsm (cdp/CDP.jsm)
   content/cdp/Connection.jsm (cdp/Connection.jsm)
   content/cdp/Error.jsm (cdp/Error.jsm)
   content/cdp/JSONHandler.jsm (cdp/JSONHandler.jsm)

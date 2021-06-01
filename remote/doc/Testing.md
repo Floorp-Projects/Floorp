@@ -76,7 +76,7 @@ This is what it looks like all put together:
 	  info("Current URL: " + tab.linkedBrowser.currentURI.spec);
 
 	  // manually connect to a specific target
-	  const { mainProcessTarget } = RemoteAgent.targetList;
+	  const { mainProcessTarget } = RemoteAgent.cdp.targetList;
 	  const target = mainProcessTarget.wsDebuggerURL;
 	  const client = await CDP({ target });
 
