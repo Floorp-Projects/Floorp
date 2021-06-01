@@ -201,6 +201,8 @@
                 "+/Scripts%short",
                 "+/Scripts%stand-alone",
                 "+/Variants",
+                "+/Types/calendar",
+                "+/Types%short/calendar",
                 "+/localeDisplayPattern"
             ]
         },
