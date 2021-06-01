@@ -726,9 +726,6 @@ with modules["DOM"]:
     ] = FAILURE(
         1037
     )  # NOQA: E501
-    errors[
-        "NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSEXML"
-    ] = FAILURE(1022)
 
     # When manipulating the bytecode cache with the JS API, some transcoding
     # errors, such as a different bytecode format can cause failures of the
