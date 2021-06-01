@@ -453,6 +453,11 @@ void MacroAssemblerARM::ma_neg(Register src1, Register dest, SBit s,
   as_rsb(dest, src1, Imm8(0), s, c);
 }
 
+void MacroAssemblerARM::ma_neg(Register64 src, Register64 dest) {
+  as_rsb(dest.low, src.low, Imm8(0), SetCC);
+  as_rsc(dest.high, src.high, Imm8(0));
+}
+
 // And.
 void MacroAssemblerARM::ma_and(Register src, Register dest, SBit s,
                                Assembler::Condition c) {

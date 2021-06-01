@@ -251,9 +251,14 @@ void LIRGeneratorMIPSShared::lowerDivI(MDiv* div) {
   define(lir, div);
 }
 
-void LIRGeneratorMIPSShared::lowerNegI(MInstruction* ins, MDefinition* input,
-                                       int32_t inputNo) {
+void LIRGeneratorMIPSShared::lowerNegI(MInstruction* ins, MDefinition* input) {
   define(new (alloc()) LNegI(useRegisterAtStart(input)), ins);
+}
+
+void LIRGeneratorMIPSShared::lowerNegI64(MInstruction* ins,
+                                         MDefinition* input) {
+  defineInt64ReuseInput(new (alloc()) LNegI64(useInt64RegisterAtStart(input)),
+                        ins, 0);
 }
 
 void LIRGeneratorMIPSShared::lowerMulI(MMul* mul, MDefinition* lhs,
