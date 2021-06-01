@@ -2165,9 +2165,6 @@ class nsLayoutUtils {
     /* If image type is vector, the return surface size will same as
        element size, not image's intrinsic size. */
     SFE_USE_ELEMENT_SIZE_IF_VECTOR = 1 << 4,
-    /* Instead of converting the colorspace to the display's colorspace,
-       use sRGB. */
-    SFE_TO_SRGB_COLORSPACE = 1 << 5,
     /* Ensure that the returned surface has a size that matches the
      * SurfaceFromElementResult::mSize. This is mostly a convenience thing so
      * that callers who want this don't have to deal with it themselves.
