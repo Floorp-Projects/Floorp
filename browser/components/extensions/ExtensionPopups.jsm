@@ -248,10 +248,21 @@ class BasePopup {
               if (this.destroyed) {
                 return;
               }
-              this.browser.messageManager.sendAsyncMessage(
-                "Extension:GrabFocus",
-                {}
-              );
+              // Wait the reflow before asking the popup panel to grab the focus, otherwise
+              // `nsFocusManager::SetFocus` may ignore out request because the panel view
+              // visibility is still set to `nsViewVisibility_kHide` (waiting the document
+              // to be fully flushed makes us sure that when the popup panel grabs the focus
+              // nsMenuPopupFrame::LayoutPopup has already been colled and set the frame
+              // visibility to `nsViewVisibility_kShow`).
+              this.browser.ownerGlobal.promiseDocumentFlushed(() => {
+                if (this.destroyed) {
+                  return;
+                }
+                this.browser.messageManager.sendAsyncMessage(
+                  "Extension:GrabFocus",
+                  {}
+                );
+              });
             })
             .catch(() => {
               // If the panel closes too fast an exception is raised here and tests will fail.
