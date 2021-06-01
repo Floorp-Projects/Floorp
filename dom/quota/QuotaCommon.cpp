@@ -172,7 +172,7 @@ Result<nsIFileKind, nsresult> GetDirEntryKind(nsIFile& aFile) {
   // just want to log NS_ERROR_FILE_NOT_FOUND,
   // NS_ERROR_FILE_TARGET_DOES_NOT_EXIST and NS_ERROR_FILE_FS_CORRUPTED results
   // and not spam the reports.
-  QM_TRY_RETURN(QM_OR_ELSE_LOG_IF(
+  QM_TRY_RETURN(QM_OR_ELSE_LOG_VERBOSE_IF(
       MOZ_TO_RESULT_INVOKE(aFile, IsDirectory).map([](const bool isDirectory) {
         return isDirectory ? nsIFileKind::ExistsAsDirectory
                            : nsIFileKind::ExistsAsFile;
@@ -416,9 +416,9 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
 {
   // TODO: Add MOZ_LOG support, bug 1711661.
 
-  // We have to ignore failures with the Log severity until we have support for
-  // MOZ_LOG.
-  if (aSeverity == Severity::Log) {
+  // We have to ignore failures with the Verbose severity until we have support
+  // for MOZ_LOG.
+  if (aSeverity == Severity::Verbose) {
     return;
   }
 
@@ -502,8 +502,8 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
         return "WARNING"_ns;
       case Severity::Note:
         return "NOTE"_ns;
-      case Severity::Log:
-        return "LOG"_ns;
+      case Severity::Verbose:
+        return "VERBOSE"_ns;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad severity value!");
   }();
