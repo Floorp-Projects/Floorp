@@ -2329,6 +2329,12 @@ class EditorBase : public nsIEditor,
   virtual void RemoveEventListeners();
 
   /**
+   * Called if and only if this editor is in readonly mode.
+   */
+  void HandleKeyPressEventInReadOnlyMode(
+      WidgetKeyboardEvent& aKeyboardEvent) const;
+
+  /**
    * Get the input event target. This might return null.
    */
   virtual already_AddRefed<Element> GetInputEventTargetElement() const = 0;
