@@ -256,7 +256,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                     @AssertCalled(count = 1, order = [2])
                     override fun onPageStop(session: GeckoSession, success: Boolean) {
                         assertThat("Load should succeed", success, equalTo(true))
-                        sessionRule.removeCertOverride(host, -1)
+                        sessionRule.removeAllCertOverrides()
                     }
                 })
         mainSession.evaluateJS("location.reload()")

@@ -167,6 +167,7 @@ add_task(async function setup() {
   certOverrideService.rememberValidityOverride(
     "localhost",
     server.port,
+    {},
     cert,
     overrideBits,
     true
@@ -175,7 +176,7 @@ add_task(async function setup() {
   registerCleanupFunction(async function() {
     await PlacesUtils.history.clear();
     MockRegistrar.unregister(clientAuthDialogsCID);
-    certOverrideService.clearValidityOverride("localhost", server.port);
+    certOverrideService.clearValidityOverride("localhost", server.port, {});
   });
 });
 

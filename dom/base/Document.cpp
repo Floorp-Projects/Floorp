@@ -1610,7 +1610,9 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
 
     ContentChild* cc = ContentChild::GetSingleton();
     MOZ_ASSERT(cc);
-    cc->SendAddCertException(certSerialized, flags, host, port, aIsTemporary)
+    OriginAttributes const& attrs = NodePrincipal()->OriginAttributesRef();
+    cc->SendAddCertException(certSerialized, flags, host, port, attrs,
+                             aIsTemporary)
         ->Then(GetCurrentSerialEventTarget(), __func__,
                [promise](const mozilla::MozPromise<
                          nsresult, mozilla::ipc::ResponseRejectReason,
@@ -1632,8 +1634,9 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
       return promise.forget();
     }
 
-    rv = overrideService->RememberValidityOverride(host, port, cert, flags,
-                                                   aIsTemporary);
+    OriginAttributes const& attrs = NodePrincipal()->OriginAttributesRef();
+    rv = overrideService->RememberValidityOverride(host, port, attrs, cert,
+                                                   flags, aIsTemporary);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       promise->MaybeReject(rv);
       return promise.forget();
