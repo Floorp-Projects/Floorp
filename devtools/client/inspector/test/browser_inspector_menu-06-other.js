@@ -18,7 +18,7 @@ add_task(async function() {
 
     await selectNode(".duplicate", inspector);
     is(
-      await testActor.getNumberOfElementMatches(".duplicate"),
+      await getNumberOfMatchingElementsInContentPage(".duplicate"),
       1,
       "There should initially be 1 .duplicate node"
     );
@@ -35,7 +35,7 @@ add_task(async function() {
     await updated;
 
     is(
-      await testActor.getNumberOfElementMatches(".duplicate"),
+      await getNumberOfMatchingElementsInContentPage(".duplicate"),
       2,
       "The duplicated node should be in the markup."
     );

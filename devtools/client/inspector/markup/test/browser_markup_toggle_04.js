@@ -8,7 +8,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_toggle.html";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Getting the container for the UL parent element");
   const container = await getContainerForSelector("ul", inspector);
@@ -28,7 +28,7 @@ add_task(async function() {
   await onUpdated;
 
   info("Checking that child LI elements have been created");
-  const numLi = await testActor.getNumberOfElementMatches("li");
+  const numLi = await getNumberOfMatchingElementsInContentPage("li");
   for (let i = 0; i < numLi; i++) {
     const liContainer = await getContainerForSelector(
       `li:nth-child(${i + 1})`,

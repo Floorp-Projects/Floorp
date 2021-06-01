@@ -98,7 +98,9 @@ const TEST_DATA = [
     validate: async function({ pageNodeFront, selectedNodeFront, testActor }) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      const num = await testActor.getNumberOfElementMatches("#badMarkup5 div");
+      const num = await getNumberOfMatchingElementsInContentPage(
+        "#badMarkup5 div"
+      );
 
       const pText = await testActor.getProperty("#badMarkup5", "textContent");
       const pTag = await testActor.getProperty("#badMarkup5", "tagName");
