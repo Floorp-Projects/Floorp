@@ -2200,8 +2200,8 @@ void XMLHttpRequestWorker::GetResponseText(DOMString& aResponseText,
 
   if (mResponseType != XMLHttpRequestResponseType::_empty &&
       mResponseType != XMLHttpRequestResponseType::Text) {
-    aRv.Throw(
-        NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSETEXT);
+    aRv.ThrowInvalidStateError(
+        "responseText is only available if responseType is '' or 'text'.");
     return;
   }
 
