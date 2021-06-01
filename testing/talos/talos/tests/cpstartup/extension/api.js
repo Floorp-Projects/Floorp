@@ -23,6 +23,7 @@ ChromeUtils.defineModuleGetter(
 
 const PREALLOCATED_PREF = "dom.ipc.processPrelaunch.enabled";
 const MESSAGES = ["CPStartup:Go", "CPStartup:BrowserChildReady"];
+const BROWSER_FLUSH_TOPIC = "sessionstore-browser-shutdown-flush";
 let domainID = 1;
 
 /* global ExtensionAPI */
@@ -117,18 +118,14 @@ this.cpstartup = class extends ExtensionAPI {
 
   removeTab(tab) {
     return new Promise(resolve => {
-      let { messageManager: mm, frameLoader } = tab.linkedBrowser;
-      mm.addMessageListener(
-        "SessionStore:update",
-        function onMessage(msg) {
-          if (msg.targetFrameLoader == frameLoader && msg.data.isFinal) {
-            mm.removeMessageListener("SessionStore:update", onMessage);
-            resolve();
-          }
-        },
-        true
-      );
-
+      let browser = tab.linkedBrowser;
+      let observer = (subject, topic, data) => {
+        if (subject === browser) {
+          Services.obs.removeObserver(observer, BROWSER_FLUSH_TOPIC);
+          resolve();
+        }
+      };
+      Services.obs.addObserver(observer, BROWSER_FLUSH_TOPIC);
       tab.ownerGlobal.gBrowser.removeTab(tab);
     });
   }

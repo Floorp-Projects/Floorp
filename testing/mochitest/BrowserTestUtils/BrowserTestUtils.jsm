@@ -1119,6 +1119,7 @@ var BrowserTestUtils = {
     let domWinClosedPromise = BrowserTestUtils.domWindowClosed(win);
     let promises = [domWinClosedPromise];
     let winType = win.document.documentElement.getAttribute("windowtype");
+    let flushTopic = "sessionstore-browser-shutdown-flush";
 
     if (winType == "navigator:browser") {
       let finalMsgsPromise = new Promise(resolve => {
@@ -1128,24 +1129,21 @@ var BrowserTestUtils = {
         browserSet.forEach(browser => {
           win.gBrowser._insertBrowser(win.gBrowser.getTabForBrowser(browser));
         });
-        let mm = win.getGroupMessageManager("browsers");
 
-        mm.addMessageListener(
-          "SessionStore:update",
-          function onMessage(msg) {
-            if (browserSet.has(msg.target) && msg.data.isFinal) {
-              browserSet.delete(msg.target);
-              if (!browserSet.size) {
-                mm.removeMessageListener("SessionStore:update", onMessage);
-                // Give the TabStateFlusher a chance to react to this final
-                // update and for the TabStateFlusher.flushWindow promise
-                // to resolve before we resolve.
-                TestUtils.executeSoon(resolve);
-              }
-            }
-          },
-          true
-        );
+        let observer = (subject, topic, data) => {
+          if (browserSet.has(subject)) {
+            browserSet.delete(subject);
+          }
+          if (!browserSet.size) {
+            Services.obs.removeObserver(observer, flushTopic);
+            // Give the TabStateFlusher a chance to react to this final
+            // update and for the TabStateFlusher.flushWindow promise
+            // to resolve before we resolve.
+            TestUtils.executeSoon(resolve);
+          }
+        };
+
+        Services.obs.addObserver(observer, flushTopic);
       });
 
       promises.push(finalMsgsPromise);
@@ -1165,19 +1163,17 @@ var BrowserTestUtils = {
    */
   waitForSessionStoreUpdate(tab) {
     return new Promise(resolve => {
-      let { messageManager: mm, frameLoader } = tab.linkedBrowser;
-      mm.addMessageListener(
-        "SessionStore:update",
-        function onMessage(msg) {
-          if (msg.targetFrameLoader == frameLoader && msg.data.isFinal) {
-            mm.removeMessageListener("SessionStore:update", onMessage);
-            // Wait for the next event tick to make sure other listeners are
-            // called.
-            TestUtils.executeSoon(() => resolve());
-          }
-        },
-        true
-      );
+      let browser = tab.linkedBrowser;
+      let flushTopic = "sessionstore-browser-shutdown-flush";
+      let observer = (subject, topic, data) => {
+        if (subject === browser) {
+          Services.obs.removeObserver(observer, flushTopic);
+          // Wait for the next event tick to make sure other listeners are
+          // called.
+          TestUtils.executeSoon(() => resolve());
+        }
+      };
+      Services.obs.addObserver(observer, flushTopic);
     });
   },
 
