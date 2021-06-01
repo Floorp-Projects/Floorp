@@ -13,6 +13,7 @@
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
+#include <cstring>
 #include <iterator>
 
 #include "jsapi.h"
@@ -615,6 +616,81 @@ static JSString* GetCurrencyDisplayName(JSContext* cx, const char* locale,
   return NewStringCopyN<CanGC>(cx, name, size_t(length));
 }
 
+static JSString* GetCalendarDisplayName(
+    JSContext* cx, Handle<DisplayNamesObject*> displayNames, const char* locale,
+    DisplayNamesStyle displayStyle, DisplayNamesFallback fallback,
+    HandleLinearString calendarStr) {
+  // Report an error if the input can't be parsed as a Unicode type nonterminal.
+  if (calendarStr->empty() ||
+      !intl::LanguageTagParser::canParseUnicodeExtensionType(calendarStr)) {
+    ReportInvalidOptionError(cx, "calendar", calendarStr);
+    return nullptr;
+  }
+
+  MOZ_ASSERT(StringIsAscii(calendarStr), "Unicode extension types are ASCII");
+
+  UniqueChars calendar = EncodeAscii(cx, calendarStr);
+  if (!calendar) {
+    return nullptr;
+  }
+
+  // Convert into canonical case before searching for replacements.
+  intl::AsciiToLowerCase(calendar.get(), calendarStr->length(), calendar.get());
+
+  auto key = mozilla::MakeStringSpan("ca");
+  auto type = mozilla::Span(calendar.get(), calendarStr->length());
+
+  // Search if there's a replacement for the Unicode calendar keyword.
+  const char* canonicalCalendar = calendar.get();
+  if (const char* replacement =
+          intl::LanguageTag::replaceUnicodeExtensionType(key, type)) {
+    canonicalCalendar = replacement;
+  }
+
+  // The input calendar name is user-controlled, so be extra cautious before
+  // passing arbitrarily large strings to ICU.
+  static constexpr size_t maximumCalendarLength = 100;
+
+  if (std::strlen(canonicalCalendar) <= maximumCalendarLength) {
+    // |uldn_keyValueDisplayName| expects old-style keyword values.
+    if (const char* cal = uloc_toLegacyType("calendar", canonicalCalendar)) {
+      ULocaleDisplayNames* ldn =
+          GetOrCreateLocaleDisplayNames(cx, displayNames, locale, displayStyle);
+      if (!ldn) {
+        return nullptr;
+      }
+
+      JSString* str = CallICU(
+          cx, [ldn, &cal](UChar* chars, uint32_t size, UErrorCode* status) {
+            // |uldn_keyValueDisplayName| expects old-style keyword values.
+            int32_t res = uldn_keyValueDisplayName(ldn, "calendar", cal, chars,
+                                                   size, status);
+
+            // |uldn_keyValueDisplayName| reports U_ILLEGAL_ARGUMENT_ERROR when
+            // no display name was found.
+            if (*status == U_ILLEGAL_ARGUMENT_ERROR) {
+              *status = U_ZERO_ERROR;
+              res = 0;
+            }
+            return res;
+          });
+      if (!str) {
+        return nullptr;
+      }
+      if (!str->empty()) {
+        return str;
+      }
+    }
+  }
+
+  // Return the canonicalized input when no localized calendar name was found.
+  if (fallback == DisplayNamesFallback::Code) {
+    // Canonical case for calendar is lower case.
+    return js::StringToLowerCase(cx, calendarStr);
+  }
+  return cx->emptyString();
+}
+
 #ifdef DEBUG
 static bool IsStandaloneMonth(UDateFormatSymbolType symbolType) {
   switch (symbolType) {
@@ -1070,6 +1146,9 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
   } else if (StringEqualsLiteral(type, "currency")) {
     result = GetCurrencyDisplayName(cx, locale.get(), displayStyle,
                                     displayFallback, code);
+  } else if (StringEqualsLiteral(type, "calendar")) {
+    result = GetCalendarDisplayName(cx, displayNames, locale.get(),
+                                    displayStyle, displayFallback, code);
   } else if (StringEqualsLiteral(type, "weekday")) {
     result = GetWeekdayDisplayName(cx, displayNames, locale.get(), calendar,
                                    displayStyle, code);
