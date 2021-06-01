@@ -45,7 +45,8 @@ class ArrayObject : public NativeObject {
   static inline ArrayObject* createArray(JSContext* cx, gc::AllocKind kind,
                                          gc::InitialHeap heap,
                                          HandleShape shape, uint32_t length,
-                                         AutoSetNewObjectMetadata& metadata);
+                                         AutoSetNewObjectMetadata& metadata,
+                                         gc::AllocSite* site = nullptr);
 
  private:
   // Helper for the above methods.
@@ -53,7 +54,8 @@ class ArrayObject : public NativeObject {
                                                  gc::AllocKind kind,
                                                  gc::InitialHeap heap,
                                                  HandleShape shape,
-                                                 AutoSetNewObjectMetadata&);
+                                                 AutoSetNewObjectMetadata&,
+                                                 gc::AllocSite* site = nullptr);
 
   static inline ArrayObject* finishCreateArray(
       ArrayObject* obj, HandleShape shape, AutoSetNewObjectMetadata& metadata);

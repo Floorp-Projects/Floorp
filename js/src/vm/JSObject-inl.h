@@ -319,12 +319,16 @@ inline bool IsInternalFunctionObject(JSObject& funobj) {
 }
 
 inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
-                                      const JSClass* clasp) {
+                                      const JSClass* clasp,
+                                      gc::AllocSite* site = nullptr) {
   if (newKind != GenericObject) {
     return gc::TenuredHeap;
   }
   if (clasp->hasFinalize() && !CanNurseryAllocateFinalizedClass(clasp)) {
     return gc::TenuredHeap;
+  }
+  if (site) {
+    return site->initialHeap();
   }
   return gc::DefaultHeap;
 }

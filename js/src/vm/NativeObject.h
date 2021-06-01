@@ -634,8 +634,8 @@ class NativeObject : public JSObject {
   inline bool isInWholeCellBuffer() const;
 
   static inline JS::Result<NativeObject*, JS::OOM> create(
-      JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-      js::HandleShape shape);
+      JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
+      HandleShape shape, gc::AllocSite* site = nullptr);
 
 #ifdef DEBUG
   static void enableShapeConsistencyChecks();

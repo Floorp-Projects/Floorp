@@ -147,7 +147,8 @@ class NewObjectCache {
    * indicate failure).
    */
   inline NativeObject* newObjectFromHit(JSContext* cx, EntryIndex entry,
-                                        js::gc::InitialHeap heap);
+                                        js::gc::InitialHeap heap,
+                                        gc::AllocSite* site = nullptr);
 
   /* Fill an entry after a cache miss. */
   void fillProto(EntryIndex entry, const JSClass* clasp, js::TaggedProto proto,
