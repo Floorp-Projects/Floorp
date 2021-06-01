@@ -54,7 +54,7 @@ const DESCRIPTION = {
 };
 
 this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
-  const front = panel.panelWin.gStore.getState().front;
+  let front = panel.panelWin.gStore.getState().front;
 
   const startWindows = await getWindowsInSnapshot(front);
   dumpn(
@@ -64,6 +64,9 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   is(startWindows.length, 1);
 
   await refreshTab();
+
+  // Update the front as we may have switched to a new target and a new memory front
+  front = panel.panelWin.gStore.getState().front;
 
   const endWindows = await getWindowsInSnapshot(front);
   is(endWindows.length, 1);
