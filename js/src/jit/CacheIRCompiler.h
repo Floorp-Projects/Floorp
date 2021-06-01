@@ -1254,6 +1254,9 @@ class CacheIRStubInfo {
   template <class Stub, class T>
   js::GCPtr<T>& getStubField(Stub* stub, uint32_t offset) const;
 
+  template <class Stub, class T>
+  T* getPtrStubField(Stub* stub, uint32_t offset) const;
+
   template <class T>
   js::GCPtr<T>& getStubField(ICCacheIRStub* stub, uint32_t offset) const {
     return getStubField<ICCacheIRStub, T>(stub, offset);

@@ -604,6 +604,36 @@ InliningRoot* JitScript::getOrCreateInliningRoot(JSContext* cx,
   return inliningRoot_.get();
 }
 
+gc::AllocSite* JitScript::createAllocSite(JSScript* script) {
+  MOZ_ASSERT(script->jitScript() == this);
+
+  Nursery& nursery = script->runtimeFromMainThread()->gc.nursery();
+  if (!nursery.canCreateAllocSite()) {
+    // Don't block attaching an optimized stub, but don't process allocations
+    // for this site.
+    return script->zone()->unknownAllocSite();
+  }
+
+  if (!allocSites_.reserve(allocSites_.length() + 1)) {
+    return nullptr;
+  }
+
+  ICStubSpace* stubSpace = jitScriptStubSpace();
+  auto* site =
+      static_cast<gc::AllocSite*>(stubSpace->alloc(sizeof(gc::AllocSite)));
+  if (!site) {
+    return nullptr;
+  }
+
+  new (site) gc::AllocSite(script->zone(), script);
+
+  allocSites_.infallibleAppend(site);
+
+  nursery.noteAllocSiteCreated();
+
+  return site;
+}
+
 JitScriptICStubSpace* ICScript::jitScriptStubSpace() {
   if (isInlined()) {
     return inliningRoot_->jitScriptStubSpace();
@@ -660,5 +690,4 @@ HashNumber ICScript::hash() {
   }
   return h;
 }
-
 #endif

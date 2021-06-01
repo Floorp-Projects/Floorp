@@ -213,6 +213,9 @@ const void* CacheIRCloner::getRawPointerField(uint32_t stubOffset) {
 uint64_t CacheIRCloner::getRawInt64Field(uint32_t stubOffset) {
   return static_cast<uint64_t>(readStubInt64(stubOffset));
 }
+gc::AllocSite* CacheIRCloner::getAllocSiteField(uint32_t stubOffset) {
+  return reinterpret_cast<gc::AllocSite*>(readStubWord(stubOffset));
+}
 
 jsid CacheIRCloner::getIdField(uint32_t stubOffset) {
   return jsid::fromRawBits(readStubWord(stubOffset));
@@ -10988,12 +10991,14 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringInt32Arith() {
 
 NewArrayIRGenerator::NewArrayIRGenerator(JSContext* cx, HandleScript script,
                                          jsbytecode* pc, ICState state, JSOp op,
-                                         HandleObject templateObj)
+                                         HandleObject templateObj,
+                                         JSScript* outerScript)
     : IRGenerator(cx, script, pc, CacheKind::NewArray, state),
 #ifdef JS_CACHEIR_SPEW
       op_(op),
 #endif
-      templateObject_(templateObj) {
+      templateObject_(templateObj),
+      outerScript_(outerScript) {
   MOZ_ASSERT(templateObject_);
 }
 
@@ -11026,10 +11031,15 @@ AttachDecision NewArrayIRGenerator::tryAttachArrayObject() {
   writer.guardNoAllocationMetadataBuilder(
       cx_->realm()->addressOfMetadataBuilder());
 
+  gc::AllocSite* site = outerScript_->createAllocSite();
+  if (!site) {
+    return AttachDecision::NoAction;
+  }
+
   Shape* shape = arrayObj->lastProperty();
   uint32_t length = arrayObj->length();
 
-  writer.newArrayObjectResult(length, shape);
+  writer.newArrayObjectResult(length, shape, site);
 
   writer.returnFromIC();
 
@@ -11048,12 +11058,14 @@ AttachDecision NewArrayIRGenerator::tryAttachStub() {
 
 NewObjectIRGenerator::NewObjectIRGenerator(JSContext* cx, HandleScript script,
                                            jsbytecode* pc, ICState state,
-                                           JSOp op, HandleObject templateObj)
+                                           JSOp op, HandleObject templateObj,
+                                           JSScript* outerScript)
     : IRGenerator(cx, script, pc, CacheKind::NewObject, state),
 #ifdef JS_CACHEIR_SPEW
       op_(op),
 #endif
-      templateObject_(templateObj) {
+      templateObject_(templateObj),
+      outerScript_(outerScript) {
   MOZ_ASSERT(templateObject_);
 }
 
@@ -11086,6 +11098,11 @@ AttachDecision NewObjectIRGenerator::tryAttachPlainObject() {
   MOZ_ASSERT(!nativeObj->hasDynamicElements());
   MOZ_ASSERT(!nativeObj->isSharedMemory());
 
+  gc::AllocSite* site = outerScript_->createAllocSite();
+  if (!site) {
+    return AttachDecision::NoAction;
+  }
+
   uint32_t numFixedSlots = nativeObj->numUsedFixedSlots();
   uint32_t numDynamicSlots = nativeObj->numDynamicSlots();
   gc::AllocKind allocKind = nativeObj->allocKindForTenure();
@@ -11093,7 +11110,8 @@ AttachDecision NewObjectIRGenerator::tryAttachPlainObject() {
 
   writer.guardNoAllocationMetadataBuilder(
       cx_->realm()->addressOfMetadataBuilder());
-  writer.newPlainObjectResult(numFixedSlots, numDynamicSlots, allocKind, shape);
+  writer.newPlainObjectResult(numFixedSlots, numDynamicSlots, allocKind, shape,
+                              site);
 
   writer.returnFromIC();
 

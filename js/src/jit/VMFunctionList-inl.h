@@ -185,12 +185,15 @@ namespace jit {
   _(NativeGetElement, js::NativeGetElement)                                    \
   _(NewArgumentsObject, js::jit::NewArgumentsObject)                           \
   _(NewArrayIterator, js::NewArrayIterator)                                    \
+  _(NewArrayObjectBaselineFallback, js::NewArrayObjectBaselineFallback)        \
+  _(NewArrayObjectOptimzedFallback, js::NewArrayObjectOptimizedFallback)       \
   _(NewArrayOperation, js::NewArrayOperation)                                  \
   _(NewArrayWithShape, js::NewArrayWithShape)                                  \
   _(NewCallObject, js::jit::NewCallObject)                                     \
   _(NewObjectOperation, js::NewObjectOperation)                                \
   _(NewObjectOperationWithTemplate, js::NewObjectOperationWithTemplate)        \
-  _(NewPlainObject, js::NewPlainObject)                                        \
+  _(NewPlainObjectBaselineFallback, js::NewPlainObjectBaselineFallback)        \
+  _(NewPlainObjectOptimizedFallback, js::NewPlainObjectOptimizedFallback)      \
   _(NewRegExpStringIterator, js::NewRegExpStringIterator)                      \
   _(NewStringIterator, js::NewStringIterator)                                  \
   _(NewStringObject, js::jit::NewStringObject)                                 \

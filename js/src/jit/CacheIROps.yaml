@@ -2436,6 +2436,7 @@
     numDynamicSlots: UInt32Imm
     allocKind: AllocKindImm
     shape: ShapeField
+    site: AllocSiteField
 
 - name: NewArrayObjectResult
   shared: false
@@ -2444,6 +2445,7 @@
   args:
     arrayLength: UInt32Imm
     shape: ShapeField
+    site: AllocSiteField
 
 - name: CallStringConcatResult
   shared: true

@@ -366,6 +366,12 @@ void WarpCacheIR::traceData(JSTracer* trc) {
           TraceWarpGCPtr(trc, WarpGCPtr<Value>(val), "warp-cacheir-value");
           break;
         }
+        case StubField::Type::AllocSite: {
+          uintptr_t word = stubInfo_->getStubRawWord(stubData_, offset);
+          auto* site = reinterpret_cast<gc::AllocSite*>(word);
+          site->trace(trc);
+          break;
+        }
         case StubField::Type::Limit:
           return;  // Done.
       }

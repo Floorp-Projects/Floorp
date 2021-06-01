@@ -156,6 +156,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   const wasm::FuncExport* wasmFuncExportField(uint32_t offset) {
     return reinterpret_cast<const wasm::FuncExport*>(readStubWord(offset));
   }
+  gc::AllocSite* allocSiteStubField(uint32_t offset) {
+    return reinterpret_cast<gc::AllocSite*>(readStubWord(offset));
+  }
   const void* rawPointerField(uint32_t offset) {
     return reinterpret_cast<const void*>(readStubWord(offset));
   }
@@ -4686,11 +4689,12 @@ bool WarpCacheIRTranspiler::emitGuardNoAllocationMetadataBuilder(
 bool WarpCacheIRTranspiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
                                                      uint32_t numDynamicSlots,
                                                      gc::AllocKind allocKind,
-                                                     uint32_t shapeOffset) {
+                                                     uint32_t shapeOffset,
+                                                     uint32_t siteOffset) {
   Shape* shape = shapeStubField(shapeOffset);
+  gc::AllocSite* site = allocSiteStubField(siteOffset);
 
-  // TODO: support pre-tenuring.
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::InitialHeap heap = site->initialHeap();
 
   auto* shapeConstant = MConstant::NewShape(alloc(), shape);
   add(shapeConstant);
@@ -4704,11 +4708,12 @@ bool WarpCacheIRTranspiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
 }
 
 bool WarpCacheIRTranspiler::emitNewArrayObjectResult(uint32_t length,
-                                                     uint32_t shapeOffset) {
+                                                     uint32_t shapeOffset,
+                                                     uint32_t siteOffset) {
   Shape* shape = shapeStubField(shapeOffset);
+  gc::AllocSite* site = allocSiteStubField(siteOffset);
 
-  // TODO: support pre-tenuring.
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::InitialHeap heap = site->initialHeap();
 
   auto* shapeConstant = MConstant::NewShape(alloc(), shape);
   add(shapeConstant);
