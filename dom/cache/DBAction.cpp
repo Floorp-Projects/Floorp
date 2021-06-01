@@ -172,10 +172,13 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
   QM_TRY_UNWRAP(
       auto conn,
       QM_OR_ELSE_WARN_IF(
+          // Expression.
           MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>,
                                      storageService, OpenDatabaseWithFileURL,
                                      dbFileUrl, ""_ns),
+          // Predicate.
           IsDatabaseCorruptionError,
+          // Fallback.
           ([&aQuotaInfo, &aDBFile, &storageService,
             &dbFileUrl](const nsresult rv)
                -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {

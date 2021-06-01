@@ -679,8 +679,12 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
     // This is just an optimization so ignore the failure if the disk is
     // currently too full.
     QM_TRY(QM_OR_ELSE_WARN_IF(
+        // Expression.
         ToResult(aConnection.SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns)),
-        IsSpecificError<NS_ERROR_FILE_TOO_BIG>, ErrToDefaultOk<>));
+        // Predicate.
+        IsSpecificError<NS_ERROR_FILE_TOO_BIG>,
+        // Fallback.
+        ErrToDefaultOk<>));
   }
 #endif  // IDB_MOBILE
 
@@ -744,14 +748,17 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
 
   using ConnectionType = Maybe<MovingNotNull<nsCOMPtr<mozIStorageConnection>>>;
 
-  QM_TRY_UNWRAP(
-      auto connection,
-      QM_OR_ELSE_WARN_IF(OpenDatabase(aStorageService, aFileURL, aTelemetryId)
-                             .map([](auto connection) -> ConnectionType {
-                               return Some(std::move(connection));
-                             }),
-                         IsSpecificError<NS_ERROR_STORAGE_BUSY>,
-                         ErrToDefaultOk<ConnectionType>));
+  QM_TRY_UNWRAP(auto connection,
+                QM_OR_ELSE_WARN_IF(
+                    // Expression
+                    OpenDatabase(aStorageService, aFileURL, aTelemetryId)
+                        .map([](auto connection) -> ConnectionType {
+                          return Some(std::move(connection));
+                        }),
+                    // Predicate.
+                    IsSpecificError<NS_ERROR_STORAGE_BUSY>,
+                    // Fallback.
+                    ErrToDefaultOk<ConnectionType>));
 
   if (connection.isNothing()) {
 #ifdef DEBUG
@@ -776,15 +783,18 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
 
       QM_TRY_UNWRAP(connection,
                     QM_OR_ELSE_WARN_IF(
+                        // Expression.
                         OpenDatabase(aStorageService, aFileURL, aTelemetryId)
                             .map([](auto connection) -> ConnectionType {
                               return Some(std::move(connection));
                             }),
+                        // Predicate.
                         ([&start](nsresult aValue) {
                           return aValue == NS_ERROR_STORAGE_BUSY &&
                                  TimeStamp::NowLoRes() - start <=
                                      TimeDuration::FromSeconds(10);
                         }),
+                        // Fallback.
                         ErrToDefaultOk<ConnectionType>));
     } while (connection.isNothing());
   }
@@ -840,16 +850,19 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
   QM_TRY_UNWRAP(
       auto connection,
       QM_OR_ELSE_WARN_IF(
+          // Expression.
           OpenDatabaseAndHandleBusy(*storageService, *dbFileUrl, aTelemetryId)
               .map([](auto connection) -> nsCOMPtr<mozIStorageConnection> {
                 return std::move(connection).unwrapBasePtr();
               }),
+          // Predicate.
           ([&aName](nsresult aValue) {
             // If we're just opening the database during origin initialization,
             // then we don't want to erase any files. The failure here will fail
             // origin initialization too.
             return IsDatabaseCorruptionError(aValue) && !aName.IsVoid();
           }),
+          // Fallback.
           ErrToDefaultOk<nsCOMPtr<mozIStorageConnection>>));
 
   if (!connection) {
@@ -5737,9 +5750,13 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
           QM_TRY_INSPECT(
               const Maybe<int64_t>& fileSize,
               QM_OR_ELSE_LOG_VERBOSE_IF(
+                  // Expression.
                   MOZ_TO_RESULT_INVOKE(aFile, GetFileSize)
                       .map([](const int64_t val) { return Some(val); }),
-                  isIgnorableError, ErrToDefaultOk<Maybe<int64_t>>));
+                  // Predicate.
+                  isIgnorableError,
+                  // Fallback.
+                  ErrToDefaultOk<Maybe<int64_t>>));
 
           // XXX Can we really assert that the file size is not 0 if
           // it existed? This might be violated by external
@@ -5756,10 +5773,14 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
     return NS_OK;
   }
 
-  QM_TRY_INSPECT(
-      const auto& didExist,
-      QM_OR_ELSE_LOG_VERBOSE_IF(ToResult(aFile.Remove(false)).map(Some<Ok>),
-                                isIgnorableError, ErrToDefaultOk<Maybe<Ok>>));
+  QM_TRY_INSPECT(const auto& didExist,
+                 QM_OR_ELSE_LOG_VERBOSE_IF(
+                     // Expression.
+                     ToResult(aFile.Remove(false)).map(Some<Ok>),
+                     // Predicate.
+                     isIgnorableError,
+                     // Fallback.
+                     ErrToDefaultOk<Maybe<Ok>>));
 
   if (!didExist) {
     // XXX If we get here, this means that the file still existed when we
@@ -5809,10 +5830,14 @@ nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
 
   QM_TRY_INSPECT(const auto& file, CloneFileAndAppend(*aDirectory, aFilename));
 
-  QM_TRY_INSPECT(
-      const auto& didExist,
-      QM_OR_ELSE_WARN_IF(ToResult(file->Remove(true)).map(Some<Ok>),
-                         IsFileNotFoundError, ErrToDefaultOk<Maybe<Ok>>));
+  QM_TRY_INSPECT(const auto& didExist,
+                 QM_OR_ELSE_WARN_IF(
+                     // Expression.
+                     ToResult(file->Remove(true)).map(Some<Ok>),
+                     // Predicate.
+                     IsFileNotFoundError,
+                     // Fallback.
+                     ErrToDefaultOk<Maybe<Ok>>));
 
   Unused << didExist;
 
@@ -5850,8 +5875,12 @@ Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
   // exists and doesn't have to be created, and change
   // QM_OR_ELSE_LOG_VERBOSE_IF to QM_OR_ELSE_WARN_IF in the end.
   QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
+      // Expression.
       ToResult(markerFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
-      IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>, ErrToDefaultOk<>));
+      // Predicate.
+      IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>,
+      // Fallback.
+      ErrToDefaultOk<>));
 
   return markerFile;
 }
@@ -5891,7 +5920,9 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
   // XXX QM_OR_ELSE_WARN is not needed here, the lambda function below looks
   // more like a cleanup after a failure.
   auto res = QM_OR_ELSE_WARN(
+      // Expression.
       MOZ_TO_RESULT_INVOKE(aFileManagerDirectory, Remove, true),
+      // Fallback.
       ([&usageValue, &aFileManagerDirectory](nsresult rv) {
         // We may have deleted some files, try to update quota
         // information before returning the error.
@@ -6925,7 +6956,11 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
                  BorrowCachedStatement("BEGIN IMMEDIATE;"_ns));
 
   QM_TRY(QM_OR_ELSE_WARN_IF(
-      ToResult(beginStmt->Execute()), IsSpecificError<NS_ERROR_STORAGE_BUSY>,
+      // Expression.
+      ToResult(beginStmt->Execute()),
+      // Predicate.
+      IsSpecificError<NS_ERROR_STORAGE_BUSY>,
+      // Fallback.
       ([&beginStmt](nsresult rv) {
         NS_WARNING(
             "Received NS_ERROR_STORAGE_BUSY when attempting to start write "
@@ -12481,15 +12516,17 @@ Result<FileUsageType, nsresult> DatabaseFileManager::GetUsage(
           QM_TRY_INSPECT(
               const auto& thisUsage,
               QM_OR_ELSE_WARN_IF(
+                  // Expression.
                   MOZ_TO_RESULT_INVOKE(file, GetFileSize)
                       .map([](const int64_t fileSize) {
                         return FileUsageType(Some(uint64_t(fileSize)));
                       }),
+                  // Predicate.
                   ([](const nsresult rv) {
                     return rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
                            rv == NS_ERROR_FILE_NOT_FOUND;
                   }),
-                  // If the file does no longer exist, treat it as
+                  // Fallback. If the file does no longer exist, treat it as
                   // 0-sized.
                   ErrToDefaultOk<FileUsageType>));
 
@@ -12822,11 +12859,13 @@ nsresult QuotaClient::GetUsageForOriginInternal(
           // The directory must have the correct suffix.
           nsDependentSubstring subdirNameBase;
           QM_TRY(QM_OR_ELSE_WARN(
+                     // Expression.
                      ([&subdirName, &subdirNameBase] {
                        QM_TRY_RETURN(OkIf(GetFilenameBase(
                            subdirName, kFileManagerDirectoryNameSuffix,
                            subdirNameBase)));
                      }()),
+                     // Fallback.
                      ([&directory,
                        &subdirName](const NotOk) -> Result<Ok, nsresult> {
                        // If there is an unexpected directory in the idb
@@ -12859,8 +12898,10 @@ nsresult QuotaClient::GetUsageForOriginInternal(
           // clear that the warning handler is infallible, which would also
           // remove the need for the error type conversion.
           QM_WARNONLY_TRY(QM_OR_ELSE_WARN(
+              // Expression.
               OkIf(databaseFilenames.Contains(subdirNameBase))
                   .mapErr([](const NotOk) { return NS_ERROR_FAILURE; }),
+              // Fallback.
               ([&directory,
                 &subdirName](const nsresult) -> Result<Ok, nsresult> {
                 // XXX It seems if we really got here, we can fail the
@@ -12917,11 +12958,14 @@ nsresult QuotaClient::GetUsageForOriginInternal(
         // exist).
         QM_TRY_INSPECT(const int64_t& walFileSize,
                        QM_OR_ELSE_LOG_VERBOSE_IF(
+                           // Expression.
                            MOZ_TO_RESULT_INVOKE(walFile, GetFileSize),
+                           // Predicate.
                            ([](const nsresult rv) {
                              return rv == NS_ERROR_FILE_NOT_FOUND ||
                                     rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
                            }),
+                           // Fallback.
                            (ErrToOk<0, int64_t>)));
         MOZ_ASSERT(walFileSize >= 0);
         *aUsageInfo += DatabaseUsageType(Some(uint64_t(walFileSize)));
@@ -14658,7 +14702,9 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
     // QM_OR_ELSE_WARN_IF is not used here since we just want to log the
     // collision and not spam the reports.
     QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
+        // Expression.
         ToResult(borrowedStmt->Execute()),
+        // Predicate.
         ([&info, index, &aIndexValues](nsresult rv) {
           if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {
             // If we're inserting multiple entries for the same unique
@@ -14679,6 +14725,7 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
 
           return false;
         }),
+        // Fallback.
         ErrToDefaultOk<>));
   }
 

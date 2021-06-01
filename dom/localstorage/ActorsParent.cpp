@@ -438,10 +438,14 @@ nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
   if (kSQLiteGrowthIncrement) {
     // This is just an optimization so ignore the failure if the disk is
     // currently too full.
-    QM_TRY(QM_OR_ELSE_WARN_IF(ToResult(aConnection->SetGrowthIncrement(
-                                  kSQLiteGrowthIncrement, ""_ns)),
-                              IsSpecificError<NS_ERROR_FILE_TOO_BIG>,
-                              ErrToDefaultOk<>));
+    QM_TRY(QM_OR_ELSE_WARN_IF(
+        // Expression.
+        ToResult(
+            aConnection->SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns)),
+        // Predicate.
+        IsSpecificError<NS_ERROR_FILE_TOO_BIG>,
+        // Fallback.
+        ErrToDefaultOk<>));
   }
 #endif  // LS_MOBILE
 
@@ -467,9 +471,12 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
   QM_TRY_UNWRAP(
       auto connection,
       OrElseIf(
+          // Expression.
           MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>,
                                      storageService, OpenDatabase, &aDBFile),
+          // Predicate.
           IsDatabaseCorruptionError,
+          // Fallback.
           ([&aUsageFile, &aDBFile, &aCorruptedFileHandler,
             &storageService](const nsresult rv)
                -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
@@ -481,10 +488,14 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
             // check, but we're already in the rare case of corruption here,
             // so the use of QM_OR_ELSE_WARN_IF is ok here.
             QM_TRY(QM_OR_ELSE_WARN_IF(
-                ToResult(aUsageFile.Remove(false)), ([](const nsresult rv) {
+                // Expression.
+                ToResult(aUsageFile.Remove(false)),
+                // Predicate.
+                ([](const nsresult rv) {
                   return rv == NS_ERROR_FILE_NOT_FOUND ||
                          rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
                 }),
+                // Fallback.
                 ErrToDefaultOk<>));
 
             // Call the corrupted file handler before trying to remove the
@@ -683,11 +694,13 @@ CreateArchiveStorageConnection(const nsAString& aStoragePath) {
   QM_TRY_UNWRAP(
       auto connection,
       QM_OR_ELSE_WARN_IF(
+          // Expression.
           MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
                                      OpenUnsharedDatabase, archiveFile),
+          // Predicate.
           IsDatabaseCorruptionError,
-          // Don't throw an error, leave a corrupted ls-archive database as
-          // it is.
+          // Fallback. Don't throw an error, leave a corrupted ls-archive
+          // database as it is.
           ErrToDefaultOk<nsCOMPtr<mozIStorageConnection>>));
 
   if (connection) {
@@ -814,9 +827,12 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
   QM_TRY_UNWRAP(
       auto connection,
       QM_OR_ELSE_WARN_IF(
+          // Expression.
           MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
                                      OpenUnsharedDatabase, shadowFile),
+          // Predicate.
           IsDatabaseCorruptionError,
+          // Fallback.
           ([&shadowFile, &ss](const nsresult rv)
                -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
             QM_TRY(shadowFile->Remove(false));
@@ -843,7 +859,9 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
   // would mean that a parameter must be added that indicates whether it's
   // handling the shadow file or not).
   QM_TRY(QM_OR_ELSE_WARN(
+      // Expression.
       ToResult(StorageDBUpdater::Update(connection)),
+      // Fallback.
       ([&connection, &shadowFile, &ss](const nsresult) -> Result<Ok, nsresult> {
         QM_TRY(connection->Close());
         QM_TRY(shadowFile->Remove(false));
@@ -958,15 +976,18 @@ Result<bool, nsresult> ExistsAsFile(nsIFile& aFile) {
   // and not spam the reports.
   QM_TRY_INSPECT(const auto& res,
                  QM_OR_ELSE_LOG_VERBOSE_IF(
+                     // Expression.
                      MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
                          .map([](const bool isDirectory) {
                            return isDirectory ? ExistsAsFileResult::IsDirectory
                                               : ExistsAsFileResult::IsFile;
                          }),
+                     // Predicate.
                      ([](const nsresult rv) {
                        return rv == NS_ERROR_FILE_NOT_FOUND ||
                               rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
                      }),
+                     // Fallback.
                      ErrToOk<ExistsAsFileResult::DoesNotExist>));
 
   QM_TRY(OkIf(res != ExistsAsFileResult::IsDirectory), Err(NS_ERROR_FAILURE));
@@ -8099,10 +8120,11 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
         &aOriginMetadata]() -> Result<UsageInfo, nsresult> {
         if (fileExists) {
           QM_TRY_RETURN(QM_OR_ELSE_WARN(
-              // To simplify control flow, we call LoadUsageFile unconditionally
-              // here, even though it will necessarily fail if usageFileExists
-              // is false.
+              // Expression. To simplify control flow, we call LoadUsageFile
+              // unconditionally here, even though it will necessarily fail if
+              // usageFileExists is false.
               LoadUsageFile(*usageFile),
+              // Fallback.
               ([&file, &usageFile, &usageJournalFile, &aOriginMetadata](
                    const nsresult) -> Result<UsageInfo, nsresult> {
                 QM_TRY_INSPECT(
