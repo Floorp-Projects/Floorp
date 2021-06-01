@@ -390,13 +390,6 @@ falls within the scope of a try block, and `false` otherwise.
 
 **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
-### `setInstrumentationId(id)`:
-**If the instance refers to a `JSScript`**, set the value which will be
-supplied as the script's ID to instrumentation callbacks in the script's
-realm. See `Debugger.Object.setInstrumentation()`.
-
-**If the instance refers to WebAssembly code**, throw a `TypeError`.
-
 ### Deprecated Debugger.Script Prototype Functions
 
 The following functions have all been deprecated in favor of `getOffsetMetadata`,

@@ -49,7 +49,6 @@
 #include "vm/ErrorObject.h"              // for JSObject::is, ErrorObject
 #include "vm/GeneratorObject.h"          // for AbstractGeneratorObject
 #include "vm/GlobalObject.h"             // for JSObject::is, GlobalObject
-#include "vm/Instrumentation.h"          // for RealmInstrumentation
 #include "vm/Interpreter.h"              // for Call
 #include "vm/JSAtom.h"                   // for Atomize
 #include "vm/JSContext.h"                // for JSContext, ReportValueError
@@ -220,8 +219,6 @@ struct MOZ_STACK_CLASS DebuggerObject::CallData {
   bool isSameNativeMethod();
   bool unsafeDereferenceMethod();
   bool unwrapMethod();
-  bool setInstrumentationMethod();
-  bool setInstrumentationActiveMethod();
   bool getPromiseReactionsMethod();
 
   using Method = bool (CallData::*)();
@@ -1357,97 +1354,6 @@ bool DebuggerObject::CallData::unwrapMethod() {
   return true;
 }
 
-bool DebuggerObject::CallData::setInstrumentationMethod() {
-  if (!args.requireAtLeast(cx, "Debugger.Object.prototype.setInstrumentation",
-                           2)) {
-    return false;
-  }
-
-  if (!DebuggerObject::requireGlobal(cx, object)) {
-    return false;
-  }
-  RootedGlobalObject global(cx, &object->referent()->as<GlobalObject>());
-
-  RootedValue v(cx, args[0]);
-  if (!object->owner()->unwrapDebuggeeValue(cx, &v)) {
-    return false;
-  }
-  if (!v.isObject()) {
-    JS_ReportErrorASCII(cx, "Instrumentation callback must be an object");
-    return false;
-  }
-  RootedObject callback(cx, &v.toObject());
-
-  if (!args[1].isObject()) {
-    JS_ReportErrorASCII(cx, "Instrumentation kinds must be an object");
-    return false;
-  }
-  RootedObject kindsObj(cx, &args[1].toObject());
-
-  uint64_t length = 0;
-  if (!GetLengthProperty(cx, kindsObj, &length)) {
-    return false;
-  }
-
-  if (length > UINT32_MAX) {
-    JS_ReportErrorASCII(cx, "Invalid length for instrumentation kinds array");
-    return false;
-  }
-
-  Rooted<ValueVector> values(cx, ValueVector(cx));
-  if (!values.growBy(length) ||
-      !GetElements(cx, kindsObj, length, values.begin())) {
-    return false;
-  }
-
-  Rooted<StringVector> kinds(cx, StringVector(cx));
-  for (size_t i = 0; i < values.length(); i++) {
-    if (!values[i].isString()) {
-      JS_ReportErrorASCII(cx, "Instrumentation kind must be a string");
-      return false;
-    }
-    if (!kinds.append(values[i].toString())) {
-      return false;
-    }
-  }
-
-  {
-    AutoRealm ar(cx, global);
-    RootedObject dbgObject(cx, object->owner()->toJSObject());
-    if (!RealmInstrumentation::install(cx, global, callback, dbgObject,
-                                       kinds)) {
-      return false;
-    }
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
-
-bool DebuggerObject::CallData::setInstrumentationActiveMethod() {
-  if (!DebuggerObject::requireGlobal(cx, object)) {
-    return false;
-  }
-
-  if (!args.requireAtLeast(
-          cx, "Debugger.Object.prototype.setInstrumentationActive", 1)) {
-    return false;
-  }
-
-  RootedGlobalObject global(cx, &object->referent()->as<GlobalObject>());
-  bool active = ToBoolean(args[0]);
-
-  {
-    AutoRealm ar(cx, global);
-    if (!RealmInstrumentation::setActive(cx, global, object->owner(), active)) {
-      return false;
-    }
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
-
 struct DebuggerObject::PromiseReactionRecordBuilder
     : js::PromiseReactionRecordBuilder {
   Debugger* dbg;
@@ -1615,8 +1521,6 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_DEBUG_FN("isSameNative", isSameNativeMethod, 1),
     JS_DEBUG_FN("unsafeDereference", unsafeDereferenceMethod, 0),
     JS_DEBUG_FN("unwrap", unwrapMethod, 0),
-    JS_DEBUG_FN("setInstrumentation", setInstrumentationMethod, 2),
-    JS_DEBUG_FN("setInstrumentationActive", setInstrumentationActiveMethod, 1),
     JS_DEBUG_FN("getPromiseReactions", getPromiseReactionsMethod, 0),
     JS_FS_END};
 
