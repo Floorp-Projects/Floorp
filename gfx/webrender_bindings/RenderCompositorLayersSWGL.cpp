@@ -88,8 +88,8 @@ void RenderCompositorLayersSWGL::StartCompositing(
   MOZ_RELEASE_ASSERT(aNumDirtyRects > 0);
   for (size_t i = 0; i < aNumDirtyRects; i++) {
     const auto& rect = aDirtyRects[i];
-    dirty.OrWith(gfx::IntRect(rect.origin.x, rect.origin.y, rect.size.width,
-                              rect.size.height));
+    dirty.OrWith(
+        gfx::IntRect(rect.min.x, rect.min.y, rect.width(), rect.height()));
   }
   dirty.AndWith(bounds);
 
@@ -97,8 +97,8 @@ void RenderCompositorLayersSWGL::StartCompositing(
   opaque.SubOut(mWidget->GetTransparentRegion().ToUnknownRegion());
   for (size_t i = 0; i < aNumOpaqueRects; i++) {
     const auto& rect = aOpaqueRects[i];
-    opaque.OrWith(gfx::IntRect(rect.origin.x, rect.origin.y, rect.size.width,
-                               rect.size.height));
+    opaque.OrWith(
+        gfx::IntRect(rect.min.x, rect.min.y, rect.width(), rect.height()));
   }
   if (!mCompositor->BeginFrameForWindow(dirty, Nothing(), bounds, opaque)) {
     return;
@@ -188,21 +188,19 @@ bool RenderCompositorLayersSWGL::MapTile(wr::NativeTileId aId,
 
   mCurrentTile = layerCursor->second.get();
   mCurrentTileId = aId;
-  mCurrentTileDirty =
-      gfx::IntRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
-                   aDirtyRect.size.width, aDirtyRect.size.height);
+  mCurrentTileDirty = gfx::IntRect(aDirtyRect.min.x, aDirtyRect.min.y,
+                                   aDirtyRect.width(), aDirtyRect.height());
 
   if (!mCurrentTile->Map(aDirtyRect, aValidRect, aData, aStride)) {
     gfxCriticalNote << "MapTile failed aValidRect: "
-                    << gfx::Rect(aValidRect.origin.x, aValidRect.origin.y,
-                                 aValidRect.size.width, aValidRect.size.height);
+                    << gfx::Rect(aValidRect.min.x, aValidRect.min.y,
+                                 aValidRect.width(), aValidRect.height());
     return false;
   }
 
   // Store the new valid rect, so that we can composite only those pixels
-  mCurrentTile->mValidRect =
-      gfx::Rect(aValidRect.origin.x, aValidRect.origin.y, aValidRect.size.width,
-                aValidRect.size.height);
+  mCurrentTile->mValidRect = gfx::Rect(aValidRect.min.x, aValidRect.min.y,
+                                       aValidRect.width(), aValidRect.height());
   return true;
 }
 
@@ -307,8 +305,8 @@ void RenderCompositorLayersSWGL::AddSurface(
       aTransform.m31, aTransform.m32, aTransform.m33, aTransform.m34,
       aTransform.m41, aTransform.m42, aTransform.m43, aTransform.m44);
 
-  gfx::IntRect clipRect(aClipRect.origin.x, aClipRect.origin.y,
-                        aClipRect.size.width, aClipRect.size.height);
+  gfx::IntRect clipRect(aClipRect.min.x, aClipRect.min.y, aClipRect.width(),
+                        aClipRect.height());
 
   mFrameSurfaces.AppendElement(FrameSurface{aId, transform, clipRect,
                                             ToSamplingFilter(aImageRendering)});

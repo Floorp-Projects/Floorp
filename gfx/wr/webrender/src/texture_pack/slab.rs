@@ -247,10 +247,10 @@ impl SlabAllocator {
                 if let Some((origin, location)) = region.alloc() {
                     return Some((
                         pack_alloc_id(region.index, location),
-                        DeviceIntRect {
+                        DeviceIntRect::from_origin_and_size(
                             origin,
-                            size: allocated_size,
-                        }
+                            allocated_size,
+                        )
                     ));
                 }
             }
@@ -263,10 +263,10 @@ impl SlabAllocator {
 
             return Some((
                 pack_alloc_id(region.index, location),
-                DeviceIntRect {
+                DeviceIntRect::from_origin_and_size(
                     origin,
-                    size: allocated_size,
-                },
+                    allocated_size,
+                ),
             ))
         }
 
@@ -288,7 +288,7 @@ impl SlabAllocator {
         let region_spacing = 5.0;
         let text_spacing = 15.0;
         let regions_per_row = (self.size / self.region_size) as usize;
-        let wh = rect.size().width.min(rect.size().height);
+        let wh = rect.width().min(rect.height());
         let region_wh = (wh - region_spacing) / regions_per_row as f32 - region_spacing;
 
         let x0 = rect.min.x;

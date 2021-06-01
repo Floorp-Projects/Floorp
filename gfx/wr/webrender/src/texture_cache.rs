@@ -1199,7 +1199,7 @@ impl TextureCache {
         let origin = entry.details.describe();
         (
             entry.texture_id,
-            DeviceIntRect::new(origin, entry.size),
+            DeviceIntRect::from_origin_and_size(origin, entry.size),
             entry.swizzle,
             entry.uv_rect_handle,
             entry.user_data,
@@ -1504,7 +1504,7 @@ impl TextureCache {
         };
 
         let bpp = formats.internal.bytes_per_pixel();
-        let allocated_size_in_bytes = (allocated_rect.size.area() * bpp) as usize;
+        let allocated_size_in_bytes = (allocated_rect.area() * bpp) as usize;
         self.bytes_allocated[budget_type as usize] += allocated_size_in_bytes;
 
         (CacheEntry {
@@ -1512,7 +1512,7 @@ impl TextureCache {
             user_data: params.user_data,
             last_access: self.now,
             details: EntryDetails::Cache {
-                origin: allocated_rect.origin,
+                origin: allocated_rect.min,
                 alloc_id,
                 allocated_size_in_bytes,
             },
@@ -1827,14 +1827,14 @@ impl TextureCacheUpdate {
             DirtyRect::Partial(dirty) => {
                 // the dirty rectangle doesn't have to be within the area but has to intersect it, at least
                 let stride = descriptor.compute_stride();
-                let offset = descriptor.offset + dirty.origin.y * stride + dirty.origin.x * descriptor.format.bytes_per_pixel();
+                let offset = descriptor.offset + dirty.min.y * stride + dirty.min.x * descriptor.format.bytes_per_pixel();
 
                 TextureCacheUpdate {
-                    rect: DeviceIntRect::new(
-                        DeviceIntPoint::new(origin.x + dirty.origin.x, origin.y + dirty.origin.y),
+                    rect: DeviceIntRect::from_origin_and_size(
+                        DeviceIntPoint::new(origin.x + dirty.min.x, origin.y + dirty.min.y),
                         DeviceIntSize::new(
-                            dirty.size.width.min(size.width - dirty.origin.x),
-                            dirty.size.height.min(size.height - dirty.origin.y),
+                            dirty.width().min(size.width - dirty.min.x),
+                            dirty.height().min(size.height - dirty.min.y),
                         ),
                     ),
                     source,
@@ -1845,7 +1845,7 @@ impl TextureCacheUpdate {
             }
             DirtyRect::All => {
                 TextureCacheUpdate {
-                    rect: DeviceIntRect::new(origin, size),
+                    rect: DeviceIntRect::from_origin_and_size(origin, size),
                     source,
                     stride: descriptor.stride,
                     offset: descriptor.offset,
