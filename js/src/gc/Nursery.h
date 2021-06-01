@@ -701,8 +701,8 @@ class Nursery {
   };
   CollectionResult doCollection(JS::GCReason reason);
 
-  void doPretenuring(JSRuntime* rt, JS::GCReason reason,
-                     bool validPromotionRate, double promotionRate);
+  size_t doPretenuring(JSRuntime* rt, JS::GCReason reason,
+                       bool validPromotionRate, double promotionRate);
 
   // Move all objects and everything they can reach to the tenured heap.
   void collectToObjectFixedPoint(TenuringTracer& mover);
@@ -760,7 +760,8 @@ class Nursery {
   void freeChunksFrom(unsigned firstFreeChunk);
 
   void sendTelemetry(JS::GCReason reason, mozilla::TimeDuration totalTime,
-                     bool wasEmpty, double promotionRate);
+                     bool wasEmpty, double promotionRate,
+                     size_t sitesPretenured);
 
   void printCollectionProfile(JS::GCReason reason, double promotionRate);
   void printDeduplicationData(js::StringStats& prev, js::StringStats& curr);
