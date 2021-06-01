@@ -445,8 +445,8 @@ static void LogMessage(
 Document* XMLHttpRequestMainThread::GetResponseXML(ErrorResult& aRv) {
   if (mResponseType != XMLHttpRequestResponseType::_empty &&
       mResponseType != XMLHttpRequestResponseType::Document) {
-    aRv.Throw(
-        NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSEXML);
+    aRv.ThrowInvalidStateError(
+        "responseXML is only available if responseType is '' or 'document'.");
     return nullptr;
   }
   if (mWarnAboutSyncHtml) {
