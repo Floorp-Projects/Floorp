@@ -12,7 +12,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -54,21 +53,21 @@ class _Interactions {
   #interactions = new WeakMap();
 
   /**
-   * Tracks the currently active window so that we can avoid recording
-   * interactions in non-active windows.
+   * This is a reference to the interaction for the foreground browser. If the
+   * application is not focussed, or a non-interaction page is visible, then
+   * this will be undefined.
    *
-   * @type {DOMWindow}
+   * @type {InteractionInfo}
    */
-  #activeWindow = undefined;
+  #currentInteraction = undefined;
 
   /**
-   * This stores the page view start time of the current page view.
-   * For any single page view, this may be moved multiple times as the
-   * associated interaction is updated for the current total page view time.
+   * This stores the time that the current interaction was activated or last
+   * updated. It is used to calculate the total page view time.
    *
    * @type {number}
    */
-  _pageViewStartTime = Cu.now();
+  _lastUpdateTime = Cu.now();
 
   /**
    * Initializes, sets up actors and observers.
@@ -105,8 +104,6 @@ class _Interactions {
       },
     });
 
-    this.#activeWindow = Services.wm.getMostRecentBrowserWindow();
-
     for (let win of BrowserWindowTracker.orderedWindows) {
       if (!win.closed) {
         this.#registerWindow(win);
@@ -136,10 +133,9 @@ class _Interactions {
     };
     this.#interactions.set(browser, interaction);
 
-    // Only reset the time if this is being loaded in the active tab of the
-    // active window.
-    if (docInfo.isActive && browser.ownerGlobal == this.#activeWindow) {
-      this._pageViewStartTime = Cu.now();
+    if (docInfo.isActive) {
+      this.#currentInteraction = interaction;
+      this._lastUpdateTime = Cu.now();
     }
   }
 
@@ -152,70 +148,30 @@ class _Interactions {
    *   The browser object associated with the interaction.
    */
   registerEndOfInteraction(browser) {
-    this.logConsole.debug("End of interaction");
-
-    this.#updateInteraction(browser);
-    this.#interactions.delete(browser);
-  }
-
-  /**
-   * Updates the current interaction.
-   *
-   * @param {Browser} [browser]
-   *   The browser object that has triggered the update, if known. This is
-   *   used to check if the browser is in the active window, and as an
-   *   optimization to avoid obtaining the browser object.
-   */
-  #updateInteraction(browser = undefined) {
-    if (
-      !this.#activeWindow ||
-      (browser && browser.ownerGlobal != this.#activeWindow)
-    ) {
-      this.logConsole.debug("No active window");
-      return;
-    }
-
-    if (!browser) {
-      browser = this.#activeWindow.gBrowser.selectedTab.linkedBrowser;
-    }
-
     let interaction = this.#interactions.get(browser);
     if (!interaction) {
-      this.logConsole.debug("No interaction to update");
       return;
     }
 
-    interaction.totalViewTime += Cu.now() - this._pageViewStartTime;
-    this._pageViewStartTime = Cu.now();
+    this.#updateInteractionViewTime();
+    this.logConsole.debug("End of interaction for", interaction);
+
     this._updateDatabase(interaction);
+
+    this.#interactions.delete(browser);
+    this.#currentInteraction = undefined;
   }
 
   /**
-   * Handles a window becoming active.
-   *
-   * @param {DOMWindow} win
+   * Updates the interaction view time of the current interaction.
    */
-  #onActivateWindow(win) {
-    this.logConsole.debug("Activate window");
-
-    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+  #updateInteractionViewTime() {
+    if (!this.#currentInteraction) {
       return;
     }
-
-    this.#activeWindow = win;
-    this._pageViewStartTime = Cu.now();
-  }
-
-  /**
-   * Handles a window going inactive.
-   *
-   * @param {DOMWindow} win
-   */
-  #onDeactivateWindow(win) {
-    this.logConsole.debug("Deactivate window");
-
-    this.#updateInteraction();
-    this.#activeWindow = undefined;
+    let now = Cu.now();
+    this.#currentInteraction.totalViewTime += now - this._lastUpdateTime;
+    this._lastUpdateTime = now;
   }
 
   /**
@@ -225,12 +181,25 @@ class _Interactions {
    *
    * @param {Browser} previousBrowser
    *   The instance of the browser that the user switched away from.
+   * @param {Browser} browser
+   *   The instance of the browser that the user switched to.
    */
-  #onTabSelect(previousBrowser) {
+  #onTabSelect(previousBrowser, browser) {
     this.logConsole.debug("Tab switch notified");
 
-    this.#updateInteraction(previousBrowser);
-    this._pageViewStartTime = Cu.now();
+    let interaction = this.#interactions.get(previousBrowser);
+    if (interaction) {
+      this.#updateInteractionViewTime();
+      // The interaction might continue later, but for now we update the
+      // database to ensure that the interaction does not go away (e.g. on
+      // tab close).
+      this._updateDatabase(interaction);
+    }
+
+    // Note: this could be undefined in the case of switching to a browser with
+    // something that we don't track, e.g. about:blank.
+    this.#currentInteraction = this.#interactions.get(browser);
+    this._lastUpdateTime = Cu.now();
   }
 
   /**
@@ -241,13 +210,10 @@ class _Interactions {
   handleEvent(event) {
     switch (event.type) {
       case "TabSelect":
-        this.#onTabSelect(event.detail.previousTab.linkedBrowser);
-        break;
-      case "activate":
-        this.#onActivateWindow(event.target);
-        break;
-      case "deactivate":
-        this.#onDeactivateWindow(event.target);
+        this.#onTabSelect(
+          event.detail.previousTab.linkedBrowser,
+          event.target.linkedBrowser
+        );
         break;
       case "unload":
         this.#unregisterWindow(event.target);
@@ -277,13 +243,7 @@ class _Interactions {
    *   The window to register in.
    */
   #registerWindow(win) {
-    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
-      return;
-    }
-
     win.addEventListener("TabSelect", this, true);
-    win.addEventListener("deactivate", this, true);
-    win.addEventListener("activate", this, true);
   }
 
   /**
@@ -294,8 +254,6 @@ class _Interactions {
    */
   #unregisterWindow(win) {
     win.removeEventListener("TabSelect", this, true);
-    win.removeEventListener("deactivate", this, true);
-    win.removeEventListener("activate", this, true);
   }
 
   /**
