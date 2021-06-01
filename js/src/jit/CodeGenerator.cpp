@@ -995,7 +995,6 @@ void CodeGenerator::visitValueToInt32(LValueToInt32* lir) {
   } else if (lir->mode() == LValueToInt32::TRUNCATE_NOWRAP) {
     auto* ool = new (alloc()) OutOfLineZeroIfNaN(lir, temp, output);
     addOutOfLineCode(ool, lir->mir());
-
     masm.truncateNoWrapValueToInt32(operand, temp, output, ool->entry(),
                                     &fails);
     masm.bind(ool->rejoin());
@@ -7066,7 +7065,7 @@ void CodeGenerator::visitNewPlainObject(LNewPlainObject* lir) {
 
   using Fn =
       JSObject* (*)(JSContext*, HandleShape, gc::AllocKind, gc::InitialHeap);
-  OutOfLineCode* ool = oolCallVM<Fn, NewPlainObject>(
+  OutOfLineCode* ool = oolCallVM<Fn, NewPlainObjectOptimizedFallback>(
       lir,
       ArgList(ImmGCPtr(shape), Imm32(int32_t(allocKind)), Imm32(initialHeap)),
       StoreRegisterTo(objReg));
@@ -7098,9 +7097,14 @@ void CodeGenerator::visitNewArrayObject(LNewArrayObject* lir) {
 
   const Shape* shape = mir->shape();
 
-  using Fn = ArrayObject* (*)(JSContext*, uint32_t, NewObjectKind);
-  OutOfLineCode* ool = oolCallVM<Fn, NewArrayOperation>(
-      lir, ArgList(Imm32(arrayLength), Imm32(GenericObject)),
+  NewObjectKind objectKind =
+      mir->initialHeap() == gc::TenuredHeap ? TenuredObject : GenericObject;
+
+  using Fn =
+      ArrayObject* (*)(JSContext*, uint32_t, gc::AllocKind, NewObjectKind);
+  OutOfLineCode* ool = oolCallVM<Fn, NewArrayObjectOptimizedFallback>(
+      lir,
+      ArgList(Imm32(arrayLength), Imm32(int32_t(allocKind)), Imm32(objectKind)),
       StoreRegisterTo(objReg));
 
   masm.movePtr(ImmPtr(shape), shapeReg);

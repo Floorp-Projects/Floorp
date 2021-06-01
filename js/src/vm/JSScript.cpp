@@ -4831,6 +4831,10 @@ void JSScript::resetWarmUpCounterToDelayIonCompilation() {
   }
 }
 
+gc::AllocSite* JSScript::createAllocSite() {
+  return jitScript()->createAllocSite(this);
+}
+
 void JSScript::AutoDelazify::holdScript(JS::HandleFunction fun) {
   if (fun) {
     if (fun->realm()->isSelfHostingRealm()) {

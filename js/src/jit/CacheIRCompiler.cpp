@@ -1109,6 +1109,14 @@ template GCPtr<JSClass*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
 template GCPtr<ArrayObject*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
     ICCacheIRStub* stub, uint32_t offset) const;
 
+template <class Stub, class T>
+T* CacheIRStubInfo::getPtrStubField(Stub* stub, uint32_t offset) const {
+  uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
+  MOZ_ASSERT(uintptr_t(stubData + offset) % sizeof(uintptr_t) == 0);
+
+  return *reinterpret_cast<T**>(stubData + offset);
+}
+
 template <typename T, typename V>
 static void InitGCPtr(uintptr_t* ptr, V val) {
   AsGCPtr<T>(ptr)->init(mozilla::BitwiseCast<T>(val));
@@ -1126,6 +1134,7 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
     switch (field.type()) {
       case StubField::Type::RawInt32:
       case StubField::Type::RawPointer:
+      case StubField::Type::AllocSite:
         *destWords = field.asWord();
         break;
       case StubField::Type::Shape:
@@ -1213,6 +1222,12 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
         TraceEdge(trc, &stubInfo->getStubField<T, JS::Value>(stub, offset),
                   "cacheir-value");
         break;
+      case StubField::Type::AllocSite: {
+        gc::AllocSite* site =
+            stubInfo->getPtrStubField<T, gc::AllocSite>(stub, offset);
+        site->trace(trc);
+        break;
+      }
       case StubField::Type::Limit:
         return;  // Done.
     }

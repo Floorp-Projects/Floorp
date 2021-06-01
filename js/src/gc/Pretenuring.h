@@ -24,6 +24,8 @@
 #include "gc/AllocKind.h"
 #include "js/TypeDecls.h"
 
+class JS_PUBLIC_API JSTracer;
+
 namespace js {
 namespace gc {
 
@@ -102,8 +104,10 @@ class AllocSite {
 
   void updateStateOnMinorGC(double promotionRate);
 
+  void trace(JSTracer* trc);
+
   static void printInfoHeader();
-  static void printInfoFooter(size_t sitesActive);
+  static void printInfoFooter(size_t sitesCreated, size_t sitesActive);
   void printInfo(bool hasPromotionRate, double promotionRate) const;
 
   static constexpr size_t offsetOfState() {
@@ -141,12 +145,17 @@ class PretenuringZone {
 class PretenuringNursery {
   gc::AllocSite* allocatedSites;
 
+  size_t allocSitesCreated = 0;
+
  public:
   PretenuringNursery() : allocatedSites(AllocSite::EndSentinel) {}
 
   bool hasAllocatedSites() const {
     return allocatedSites != AllocSite::EndSentinel;
   }
+
+  bool canCreateAllocSite();
+  void noteAllocSiteCreated() { allocSitesCreated++; }
 
   void insertIntoAllocatedList(AllocSite* site) {
     MOZ_ASSERT(!site->isInAllocatedList());

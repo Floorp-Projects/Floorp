@@ -621,13 +621,26 @@ JSObject* NewObjectOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
 JSObject* NewObjectOperationWithTemplate(JSContext* cx,
                                          HandleObject templateObject);
 
-JSObject* NewPlainObject(JSContext* cx, HandleShape shape,
-                         gc::AllocKind allocKind, gc::InitialHeap initialHeap);
+JSObject* NewPlainObjectBaselineFallback(JSContext* cx, HandleShape shape,
+                                         gc::AllocKind allocKind,
+                                         gc::AllocSite* site);
+
+JSObject* NewPlainObjectOptimizedFallback(JSContext* cx, HandleShape shape,
+                                          gc::AllocKind allocKind,
+                                          gc::InitialHeap initialHeap);
 
 JSObject* CreateThisWithTemplate(JSContext* cx, HandleObject templateObject);
 
 ArrayObject* NewArrayOperation(JSContext* cx, uint32_t length,
                                NewObjectKind newKind = GenericObject);
+
+// Called from JIT code when inline array allocation fails.
+ArrayObject* NewArrayObjectBaselineFallback(JSContext* cx, uint32_t length,
+                                            gc::AllocKind allocKind,
+                                            gc::AllocSite* site);
+ArrayObject* NewArrayObjectOptimizedFallback(JSContext* cx, uint32_t length,
+                                             gc::AllocKind allocKind,
+                                             NewObjectKind newKind);
 
 [[nodiscard]] bool GetImportOperation(JSContext* cx, HandleObject envChain,
                                       HandleScript script, jsbytecode* pc,

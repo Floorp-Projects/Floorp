@@ -2882,7 +2882,8 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
 }
 
 bool BaselineCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
-                                                       uint32_t shapeOffset) {
+                                                       uint32_t shapeOffset,
+                                                       uint32_t siteOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   gc::AllocKind allocKind = GuessArrayGCKind(arrayLength);
@@ -2896,10 +2897,14 @@ bool BaselineCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
   AutoOutputRegister output(*this);
   AutoScratchRegister result(allocator, masm);
   AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegister site(allocator, masm);
   AutoScratchRegisterMaybeOutput shape(allocator, masm, output);
 
   Address shapeAddr(stubAddress(shapeOffset));
   masm.loadPtr(shapeAddr, shape);
+
+  Address siteAddr(stubAddress(siteOffset));
+  masm.loadPtr(siteAddr, site);
 
   allocator.discardStack(masm);
 
@@ -2908,7 +2913,7 @@ bool BaselineCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
 
   masm.createArrayWithFixedElements(result, shape, scratch, arrayLength,
                                     arrayCapacity, allocKind, gc::DefaultHeap,
-                                    &fail);
+                                    &fail, AllocSiteInput(site));
   masm.jump(&done);
 
   {
@@ -2921,11 +2926,13 @@ bool BaselineCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
     AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
 
-    masm.Push(Imm32(GenericObject));
+    masm.Push(site);
+    masm.Push(Imm32(int32_t(allocKind)));
     masm.Push(Imm32(arrayLength));
 
-    using Fn = ArrayObject* (*)(JSContext*, uint32_t, NewObjectKind);
-    callVM<Fn, NewArrayOperation>(masm);
+    using Fn =
+        ArrayObject* (*)(JSContext*, uint32_t, gc::AllocKind, gc::AllocSite*);
+    callVM<Fn, NewArrayObjectBaselineFallback>(masm);
 
     stubFrame.leave(masm);
     masm.mov(ReturnReg, result);
@@ -2939,16 +2946,21 @@ bool BaselineCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
 bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
                                                        uint32_t numDynamicSlots,
                                                        gc::AllocKind allocKind,
-                                                       uint32_t shapeOffset) {
+                                                       uint32_t shapeOffset,
+                                                       uint32_t siteOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
   AutoScratchRegister obj(allocator, masm);
   AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegister site(allocator, masm);
   AutoScratchRegisterMaybeOutput shape(allocator, masm, output);
 
   Address shapeAddr(stubAddress(shapeOffset));
   masm.loadPtr(shapeAddr, shape);
+
+  Address siteAddr(stubAddress(siteOffset));
+  masm.loadPtr(siteAddr, site);
 
   allocator.discardStack(masm);
 
@@ -2956,7 +2968,8 @@ bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
   Label fail;
 
   masm.createPlainGCObject(obj, shape, scratch, shape, numFixedSlots,
-                           numDynamicSlots, allocKind, gc::DefaultHeap, &fail);
+                           numDynamicSlots, allocKind, gc::DefaultHeap, &fail,
+                           AllocSiteInput(site));
   masm.jump(&done);
 
   {
@@ -2969,14 +2982,14 @@ bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
     AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
 
-    masm.Push(Imm32(gc::DefaultHeap));
+    masm.Push(site);
     masm.Push(Imm32(int32_t(allocKind)));
     masm.loadPtr(shapeAddr, shape);  // This might have been overwritten.
     masm.Push(shape);
 
     using Fn =
-        JSObject* (*)(JSContext*, HandleShape, gc::AllocKind, gc::InitialHeap);
-    callVM<Fn, NewPlainObject>(masm);
+        JSObject* (*)(JSContext*, HandleShape, gc::AllocKind, gc::AllocSite*);
+    callVM<Fn, NewPlainObjectBaselineFallback>(masm);
 
     stubFrame.leave(masm);
     masm.mov(ReturnReg, obj);
