@@ -10,6 +10,7 @@
 #include "DatabaseFileInfo.h"
 #include "DatabaseFileManager.h"
 #include "IndexedDatabase.h"  // for StructuredCloneFile...
+#include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
 #include "IndexedDBCommon.h"
 #include "ReportInternalError.h"

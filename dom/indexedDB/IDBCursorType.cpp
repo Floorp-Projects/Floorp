@@ -6,6 +6,8 @@
 
 #include "IDBCursorType.h"
 
+#include "IndexedDatabaseInlines.h"
+
 namespace mozilla::dom {
 CommonCursorDataBase::CommonCursorDataBase(Key aKey) : mKey{std::move(aKey)} {}
 

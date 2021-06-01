@@ -12,6 +12,7 @@
 #include "DatabaseFileManager.h"
 #include "DBSchema.h"
 #include "IndexedDatabase.h"
+#include "IndexedDatabaseInlines.h"
 #include "IndexedDBCommon.h"
 #include "ReportInternalError.h"
 
