@@ -589,5 +589,5 @@ void js::MaybePrintAndClearPendingException(JSContext* cx) {
   }
 
   MOZ_ASSERT(!report.report()->isWarning());
-  JS::PrintError(cx, stderr, report, true);
+  JS::PrintError(stderr, report, true);
 }
