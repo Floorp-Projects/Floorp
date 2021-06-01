@@ -1628,9 +1628,6 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   aRequest->mCacheInfo = nullptr;
   nsCOMPtr<nsICacheInfoChannel> cic(do_QueryInterface(channel));
   if (cic && StaticPrefs::dom_script_loader_bytecode_cache_enabled() &&
-      // Globals with instrumentation have modified script bytecode and can't
-      // use cached bytecode.
-      !js::GlobalHasInstrumentation(globalObject->GetGlobalJSObject()) &&
       // Bug 1436400: no bytecode cache support for modules yet.
       !aRequest->IsModuleRequest()) {
     MOZ_ASSERT(!aRequest->GetWebExtGlobal(),
