@@ -4677,7 +4677,26 @@ NS_IMETHODIMP EditorBase::RemoveAttributeOrEquivalent(
   return EditorBase::ToGenericNSResult(rv);
 }
 
+void EditorBase::HandleKeyPressEventInReadOnlyMode(
+    WidgetKeyboardEvent& aKeyboardEvent) const {
+  MOZ_ASSERT(IsReadonly());
+  MOZ_ASSERT(aKeyboardEvent.mMessage == eKeyPress);
+
+  switch (aKeyboardEvent.mKeyCode) {
+    case NS_VK_BACK:
+      // If it's a `Backspace` key, let's consume it because it may be mapped
+      // to "Back" of the history navigation.  So, it's possible that user
+      // tries to delete a character with `Backspace` even in the read-only
+      // editor.
+      aKeyboardEvent.PreventDefault();
+      break;
+  }
+  // XXX How about space key (page up and page down in browser navigation)?
+}
+
 nsresult EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
+  MOZ_ASSERT(!IsReadonly());
+
   // NOTE: When you change this method, you should also change:
   //   * editor/libeditor/tests/test_texteditor_keyevent_handling.html
   //   * editor/libeditor/tests/test_htmleditor_keyevent_handling.html
@@ -4690,16 +4709,6 @@ nsresult EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   }
   MOZ_ASSERT(aKeyboardEvent->mMessage == eKeyPress,
              "HandleKeyPressEvent gets non-keypress event");
-
-  // if we are readonly or disabled, then do nothing.
-  if (IsReadonly()) {
-    // consume backspace for disabled and readonly textfields, to prevent
-    // back in history, which could be confusing to users
-    if (aKeyboardEvent->mKeyCode == NS_VK_BACK) {
-      aKeyboardEvent->PreventDefault();
-    }
-    return NS_OK;
-  }
 
   switch (aKeyboardEvent->mKeyCode) {
     case NS_VK_META:

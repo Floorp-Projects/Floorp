@@ -866,19 +866,15 @@ void HTMLEditor::PostHandleSelectionChangeCommand(Command aCommand) {
 nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   // NOTE: When you change this method, you should also change:
   //   * editor/libeditor/tests/test_htmleditor_keyevent_handling.html
-
-  if (IsReadonly()) {
-    // When we're not editable, the events are handled on EditorBase, so, we can
-    // bypass TextEditor.
-    nsresult rv = EditorBase::HandleKeyPressEvent(aKeyboardEvent);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::HandleKeyPressEvent() failed");
-    return rv;
-  }
-
   if (NS_WARN_IF(!aKeyboardEvent)) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  if (IsReadonly()) {
+    HandleKeyPressEventInReadOnlyMode(*aKeyboardEvent);
+    return NS_OK;
+  }
+
   MOZ_ASSERT(aKeyboardEvent->mMessage == eKeyPress,
              "HandleKeyPressEvent gets non-keypress event");
 
