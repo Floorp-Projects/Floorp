@@ -146,19 +146,20 @@ xul|label[disabled="true"] {
 .autoscroller {
   appearance: none;
   -moz-window-shadow: none;
+  --autoscroll-background-image: url("chrome://global/skin/icons/autoscroll.svg");
   --panel-border-color: transparent;
   --panel-padding: 0;
-  --panel-background: url("chrome://global/skin/icons/autoscroll.svg") contain transparent no-repeat;
+  --panel-background: transparent no-repeat center / contain var(--autoscroll-background-image);
   /* Set pointer-events: none; so that mousemove events can be handled by AutoScrollChild.jsm. */
   pointer-events: none;
 }
 
 .autoscroller[scrolldir="NS"] {
-  background-image: url("chrome://global/skin/icons/autoscroll-vertical.svg");
+  --autoscroll-background-image: url("chrome://global/skin/icons/autoscroll-vertical.svg");
 }
 
 .autoscroller[scrolldir="EW"] {
-  background-image: url("chrome://global/skin/icons/autoscroll-horizontal.svg");
+  --autoscroll-background-image: url("chrome://global/skin/icons/autoscroll-horizontal.svg");
 }
 
 /* Panel footers */
