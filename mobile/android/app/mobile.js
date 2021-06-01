@@ -395,9 +395,6 @@ pref("apz.second_tap_tolerance", "0.3");
 pref("apz.touch_move_tolerance", "0.03");
 pref("apz.touch_start_tolerance", "0.06");
 
-// Enable the Visual Viewport API
-pref("dom.visualviewport.enabled", true);
-
 pref("layers.progressive-paint", true);
 pref("layers.low-precision-buffer", true);
 // We want to limit layers for two reasons:

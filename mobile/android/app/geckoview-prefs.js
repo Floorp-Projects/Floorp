@@ -51,9 +51,6 @@ pref("dom.storageManager.enabled", true);
 // shared by GeckoView.)
 pref("dom.storage.next_gen", true);
 
-// enable Visual Viewport API
-pref("dom.visualviewport.enabled", true);
-
 // Inherit locale from the OS, used for multi-locale builds
 pref("intl.locale.requested", "");
 
