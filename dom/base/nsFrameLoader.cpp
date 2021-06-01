@@ -3235,7 +3235,9 @@ void nsFrameLoader::RequestFinalTabStateFlush() {
   if (mSessionStoreListener) {
     context->FlushSessionStore();
     mSessionStoreListener->ForceFlushFromParent();
-    wgp->NotifySessionStoreUpdatesComplete(embedder);
+    if (wgp) {
+      wgp->NotifySessionStoreUpdatesComplete(embedder);
+    }
     // No async ipc call is involved in parent only case
     return;
   }
@@ -3250,7 +3252,9 @@ void nsFrameLoader::RequestFinalTabStateFlush() {
 
   FlushPromise::All(GetCurrentSerialEventTarget(), flushPromises)
       ->Then(GetCurrentSerialEventTarget(), __func__, [wgp, embedder]() {
-        wgp->NotifySessionStoreUpdatesComplete(embedder);
+        if (wgp) {
+          wgp->NotifySessionStoreUpdatesComplete(embedder);
+        }
       });
 }
 
