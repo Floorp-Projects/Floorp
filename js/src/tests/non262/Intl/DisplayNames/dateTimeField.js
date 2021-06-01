@@ -1,6 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Intl')||!this.hasOwnProperty('addIntlExtras'))
-
-addMozIntlDisplayNames(this);
+// |reftest| skip-if(!this.hasOwnProperty('Intl'))
 
 const tests = {
   "en": {
@@ -126,14 +124,11 @@ const tests = {
 };
 
 for (let [locale, localeTests] of Object.entries(tests)) {
-  let defaultCalendar = new Intl.DateTimeFormat(locale).resolvedOptions().calendar;
-
   for (let [style, styleTests] of Object.entries(localeTests)) {
     let dn = new Intl.DisplayNames(locale, {type: "dateTimeField", style});
 
     let resolved = dn.resolvedOptions();
     assertEq(resolved.locale, locale);
-    assertEq(resolved.calendar, defaultCalendar);
     assertEq(resolved.style, style);
     assertEq(resolved.type, "dateTimeField");
     assertEq(resolved.fallback, "code");
@@ -149,7 +144,7 @@ for (let [locale, localeTests] of Object.entries(tests)) {
 }
 
 {
-  let dn = new Intl.DisplayNames("en", {type: "dayPeriod"});
+  let dn = new Intl.DisplayNames("en", {type: "dateTimeField"});
 
   // Performs ToString on the input and then validates the stringified result.
   assertThrowsInstanceOf(() => dn.of(), RangeError);

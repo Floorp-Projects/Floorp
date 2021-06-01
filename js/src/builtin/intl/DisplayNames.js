@@ -186,11 +186,13 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
     var type;
     if (mozExtensions) {
         type = GetOption(options, "type", "string",
-                         ["language", "region", "script", "currency", "weekday", "month",
-                          "quarter", "dayPeriod", "dateTimeField"], undefined);
+                         ["language", "region", "script", "currency", "dateTimeField",
+                          "weekday", "month", "quarter", "dayPeriod"],
+                          undefined);
     } else {
         type = GetOption(options, "type", "string",
-                         ["language", "region", "script", "currency"], undefined);
+                         ["language", "region", "script", "currency", "dateTimeField"],
+                         undefined);
     }
 
     // Step 13.
