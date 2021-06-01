@@ -20,7 +20,7 @@ namespace js {
 
 /* static */ inline ArrayObject* ArrayObject::createArrayInternal(
     JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap, HandleShape shape,
-    AutoSetNewObjectMetadata&) {
+    AutoSetNewObjectMetadata&, gc::AllocSite* site) {
   const JSClass* clasp = shape->getObjectClass();
   MOZ_ASSERT(shape);
   MOZ_ASSERT(clasp == &ArrayObject::class_);
@@ -32,7 +32,8 @@ namespace js {
   MOZ_ASSERT(shape->numFixedSlots() == 0);
 
   size_t nDynamicSlots = calculateDynamicSlots(0, shape->slotSpan(), clasp);
-  JSObject* obj = js::AllocateObject(cx, kind, nDynamicSlots, heap, clasp);
+  JSObject* obj =
+      js::AllocateObject(cx, kind, nDynamicSlots, heap, clasp, site);
   if (!obj) {
     return nullptr;
   }
@@ -64,8 +65,8 @@ namespace js {
 
 /* static */ inline ArrayObject* ArrayObject::createArray(
     JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap, HandleShape shape,
-    uint32_t length, AutoSetNewObjectMetadata& metadata) {
-  ArrayObject* obj = createArrayInternal(cx, kind, heap, shape, metadata);
+    uint32_t length, AutoSetNewObjectMetadata& metadata, gc::AllocSite* site) {
+  ArrayObject* obj = createArrayInternal(cx, kind, heap, shape, metadata, site);
   if (!obj) {
     return nullptr;
   }

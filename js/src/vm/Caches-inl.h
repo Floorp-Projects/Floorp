@@ -43,7 +43,8 @@ inline void NewObjectCache::fillGlobal(EntryIndex entry, const JSClass* clasp,
 
 inline NativeObject* NewObjectCache::newObjectFromHit(JSContext* cx,
                                                       EntryIndex entryIndex,
-                                                      gc::InitialHeap heap) {
+                                                      gc::InitialHeap heap,
+                                                      gc::AllocSite* site) {
   MOZ_ASSERT(unsigned(entryIndex) < std::size(entries));
   Entry* entry = &entries[entryIndex];
 
@@ -62,7 +63,7 @@ inline NativeObject* NewObjectCache::newObjectFromHit(JSContext* cx,
 
   const JSClass* clasp = templateObj->getClass();
   NativeObject* obj = static_cast<NativeObject*>(AllocateObject<NoGC>(
-      cx, entry->kind, /* nDynamicSlots = */ 0, heap, clasp));
+      cx, entry->kind, /* nDynamicSlots = */ 0, heap, clasp, site));
   if (!obj) {
     return nullptr;
   }
