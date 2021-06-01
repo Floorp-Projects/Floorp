@@ -14,7 +14,7 @@ class DatabaseFileManager;
 template <typename FileManager>
 class FileInfo;
 
-using DatabaseFileInfo = FileInfo<indexedDB::DatabaseFileManager>;
+using DatabaseFileInfo = FileInfo<DatabaseFileManager>;
 
 }  // namespace mozilla::dom::indexedDB
 
