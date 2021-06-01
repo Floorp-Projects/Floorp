@@ -25,7 +25,7 @@
 #include "DatabaseFileManager.h"
 #include "DBSchema.h"
 #include "ErrorList.h"
-#include "FileInfoT.h"
+#include "FileInfo.h"
 #include "FileManagerBase.h"
 #include "IDBCursorType.h"
 #include "IDBObjectStore.h"

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FileInfoTImpl.h"
+#include "FileInfoImpl.h"
 #include "FileManagerBase.h"
 
 #include "gtest/gtest.h"
@@ -18,7 +18,7 @@ using namespace mozilla::dom::indexedDB;
 
 class SimpleFileManager;
 
-using SimpleFileInfo = FileInfoT<SimpleFileManager>;
+using SimpleFileInfo = FileInfo<SimpleFileManager>;
 
 struct SimpleFileManagerStats final {
   // XXX We don't keep track of the specific aFileId parameters here, should we?
