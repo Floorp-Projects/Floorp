@@ -326,15 +326,6 @@ static XDRResult XDRStencilHeader(
 template class js::XDRState<XDR_ENCODE>;
 template class js::XDRState<XDR_DECODE>;
 
-static bool IsOptionCompatibleWithEncoding(
-    const JS::ReadOnlyCompileOptions& options) {
-  // Instrumented scripts cannot be encoded, as they have extra instructions
-  // which are not normally present. Globals with instrumentation enabled must
-  // compile scripts via the bytecode emitter, which will insert these
-  // instructions.
-  return !options.instrumentationKinds;
-}
-
 XDRResult XDRStencilEncoder::codeStencil(
     const JS::ReadOnlyCompileOptions* options,
     const RefPtr<ScriptSource>& source,
@@ -343,12 +334,6 @@ XDRResult XDRStencilEncoder::codeStencil(
   auto sanityCheck = mozilla::MakeScopeExit(
       [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
 #endif
-
-  if (options) {
-    if (!IsOptionCompatibleWithEncoding(*options)) {
-      return fail(JS::TranscodeResult::Failure);
-    }
-  }
 
   MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(this, stencil));
 
@@ -381,10 +366,6 @@ XDRIncrementalStencilEncoder::~XDRIncrementalStencilEncoder() {
 XDRResult XDRIncrementalStencilEncoder::setInitial(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     UniquePtr<frontend::ExtensibleCompilationStencil>&& initial) {
-  if (!IsOptionCompatibleWithEncoding(options)) {
-    return mozilla::Err(JS::TranscodeResult::Failure);
-  }
-
   MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(*initial));
 
   merger_ = cx->new_<frontend::CompilationStencilMerger>();
