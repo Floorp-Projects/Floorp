@@ -27,6 +27,9 @@
 namespace js {
 namespace gc {
 
+class GCRuntime;
+class PretenuringNursery;
+
 // Information about an allocation site.
 //
 // Nursery cells contain a pointer to one of these in their cell header (stored
@@ -44,8 +47,23 @@ class AllocSite {
   // sites. This is used when we need to invalidate the script.
   JSScript* script_ = nullptr;
 
+  // Next pointer forming a linked list of sites at which nursery allocation
+  // happened since the last nursery collection.
+  AllocSite* nextNurseryAllocated = nullptr;
+
+  // Number of nursery allocations at this site since last nursery collection.
+  uint32_t nurseryAllocCount = 0;
+
+  // Number of nursery allocations that survived. Used during collection.
+  uint32_t nurseryTenuredCount = 0;
+
   // The state is atomic as it can be read off-thread by warp transpilation.
   mozilla::Atomic<State, mozilla::ReleaseAcquire> state_{State::Unknown};
+
+  static AllocSite* const EndSentinel;
+
+  friend class PretenuringZone;
+  friend class PretenuringNursery;
 
  public:
   // Create a dummy site to use for unknown allocations.
@@ -58,15 +76,41 @@ class AllocSite {
   bool hasScript() const { return script_; }
   JSScript* script() const { return script_; }
 
+  enum class Kind : uint32_t { Normal, Unknown, Optimized };
+  Kind kind() const;
+
+  bool isInAllocatedList() const { return nextNurseryAllocated; }
+
   // Whether allocations at this site should be allocated in the nursery or the
   // tenured heap.
   InitialHeap initialHeap() const {
     return state_ == State::LongLived ? TenuredHeap : DefaultHeap;
   }
+
+  bool hasNurseryAllocations() const {
+    return nurseryAllocCount != 0 || nurseryTenuredCount != 0;
+  }
+  void resetNurseryAllocations() {
+    nurseryAllocCount = 0;
+    nurseryTenuredCount = 0;
+  }
+
+  void incAllocCount() { nurseryAllocCount++; }
+  void incTenuredCount() { nurseryTenuredCount++; }
+
+  void updateStateOnMinorGC(double promotionRate);
+
+  static void printInfoHeader();
+  static void printInfoFooter(size_t sitesActive);
+  void printInfo(bool hasPromotionRate, double promotionRate) const;
+
+ private:
+  const char* stateName() const;
 };
 
 // Pretenuring information stored per zone.
-struct PretenuringZone {
+class PretenuringZone {
+ public:
   explicit PretenuringZone(JS::Zone* zone)
       : unknownAllocSite(zone), optimizedAllocSite(zone) {}
 
@@ -79,6 +123,26 @@ struct PretenuringZone {
   // things that are handled by the pretenuring system.  Allocation counts are
   // not recorded by optimized JIT code.
   AllocSite optimizedAllocSite;
+};
+
+// Pretenuring information stored as part of the the GC nursery.
+class PretenuringNursery {
+  gc::AllocSite* allocatedSites;
+
+ public:
+  PretenuringNursery() : allocatedSites(AllocSite::EndSentinel) {}
+
+  bool hasAllocatedSites() const {
+    return allocatedSites != AllocSite::EndSentinel;
+  }
+
+  void insertIntoAllocatedList(AllocSite* site) {
+    MOZ_ASSERT(!site->isInAllocatedList());
+    site->nextNurseryAllocated = allocatedSites;
+    allocatedSites = site;
+  }
+
+  void doPretenuring(GCRuntime* gc, bool reportInfo);
 };
 
 }  // namespace gc

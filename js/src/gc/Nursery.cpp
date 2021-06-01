@@ -193,6 +193,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       canAllocateStrings_(true),
       canAllocateBigInts_(true),
       reportDeduplications_(false),
+      reportPretenuring_(false),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
       hasRecentGrowthData(false),
       smoothedGrowthFactor(1.0),
@@ -212,28 +213,44 @@ js::Nursery::Nursery(GCRuntime* gc)
   }
 }
 
-bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
-  if (char* env = getenv("JS_GC_PROFILE_NURSERY")) {
-    if (0 == strcmp(env, "help")) {
-      fprintf(stderr,
-              "JS_GC_PROFILE_NURSERY=N\n"
-              "\tReport minor GC's taking at least N microseconds.\n");
-      exit(0);
-    }
-    enableProfiling_ = true;
-    profileThreshold_ = TimeDuration::FromMicroseconds(atoi(env));
+static const char* GetEnvVar(const char* name, const char* helpMessage) {
+  const char* value = getenv(name);
+  if (!value) {
+    return nullptr;
   }
 
-  if (char* env = getenv("JS_GC_REPORT_STATS")) {
-    if (0 == strcmp(env, "help")) {
-      fprintf(stderr,
-              "JS_GC_REPORT_STATS=1\n"
-              "\tAfter a minor GC, report how many strings were "
-              "deduplicated.\n");
-      exit(0);
-    }
-    reportDeduplications_ = !!atoi(env);
+  if (strcmp(value, "help") == 0) {
+    fprintf(stderr, "%s", helpMessage);
+    exit(0);
   }
+
+  return value;
+}
+
+static bool GetBoolEnvVar(const char* name, const char* helpMessage) {
+  const char* env = GetEnvVar(name, helpMessage);
+  return env && bool(atoi(env));
+}
+
+bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
+  const char* profileEnv =
+      GetEnvVar("JS_GC_PROFILE_NURSERY",
+                "JS_GC_PROFILE_NURSERY=N\n"
+                "\tReport minor GC's taking at least N microseconds.\n");
+  if (profileEnv) {
+    enableProfiling_ = true;
+    profileThreshold_ = TimeDuration::FromMicroseconds(atoi(profileEnv));
+  }
+
+  reportDeduplications_ = GetBoolEnvVar(
+      "JS_GC_REPORT_STATS",
+      "JS_GC_REPORT_STATS=1\n"
+      "\tAfter a minor GC, report how many strings were deduplicated.\n");
+
+  reportPretenuring_ = GetBoolEnvVar(
+      "JS_GC_REPORT_PRETENURE",
+      "JS_GC_REPORT_PRETENURE=1\n"
+      "\tAfter a minor GC, report information about pretenuring.\n");
 
   if (!gc->storeBuffer().enable()) {
     return false;
@@ -454,6 +471,13 @@ Cell* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
 
   auto cell =
       reinterpret_cast<Cell*>(uintptr_t(ptr) + sizeof(NurseryCellHeader));
+
+  if (!site->isInAllocatedList()) {
+    pretenuringNursery.insertIntoAllocatedList(site);
+  }
+
+  site->incAllocCount();
+
   gcprobes::NurseryAlloc(cell, kind);
   return cell;
 }
@@ -1015,6 +1039,8 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
     // to keep these entries as they may refer to tenured cells which may be
     // freed after this point.
     gc->storeBuffer().clear();
+
+    MOZ_ASSERT(!pretenuringNursery.hasAllocatedSites());
   }
 
   if (!isEnabled()) {
@@ -1266,10 +1292,7 @@ js::Nursery::CollectionResult js::Nursery::doCollection(JS::GCReason reason) {
 
 void js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
                                 bool highPromotionRate) {
-  // If we are promoting the nursery, or exhausted the store buffer with
-  // pointers to nursery things, which will force a collection well before
-  // the nursery is full, look for object groups that are getting promoted
-  // excessively and try to pretenure them.
+  pretenuringNursery.doPretenuring(gc, reportPretenuring_);
 
   bool pretenureStr = false;
   bool pretenureBigInt = false;
