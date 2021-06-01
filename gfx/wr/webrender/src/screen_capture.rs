@@ -115,17 +115,17 @@ impl AsyncScreenshotGrabber {
     ) -> (AsyncScreenshotHandle, DeviceIntSize) {
         let screenshot_size = match self.mode {
             AsyncScreenshotGrabberMode::ProfilerScreenshots => {
-                assert_ne!(window_rect.size.width, 0);
-                assert_ne!(window_rect.size.height, 0);
+                assert_ne!(window_rect.width(), 0);
+                assert_ne!(window_rect.height(), 0);
 
-                let scale = (buffer_size.width as f32 / window_rect.size.width as f32)
-                    .min(buffer_size.height as f32 / window_rect.size.height as f32);
+                let scale = (buffer_size.width as f32 / window_rect.width() as f32)
+                    .min(buffer_size.height as f32 / window_rect.height() as f32);
 
-                (window_rect.size.to_f32() * scale).round().to_i32()
+                (window_rect.size().to_f32() * scale).round().to_i32()
             }
 
             AsyncScreenshotGrabberMode::CompositionRecorder => {
-                assert_eq!(buffer_size, window_rect.size);
+                assert_eq!(buffer_size, window_rect.size());
                 buffer_size
             }
         };
@@ -193,7 +193,7 @@ impl AsyncScreenshotGrabber {
 
         device.read_pixels_into_pbo(
             read_target,
-            DeviceIntRect::new(DeviceIntPoint::new(0, 0), read_size),
+            DeviceIntRect::from_size(read_size),
             image_format,
             &pbo,
         );
@@ -267,7 +267,7 @@ impl AsyncScreenshotGrabber {
         }
         assert_eq!(self.scaling_textures[level].get_dimensions(), texture_size);
 
-        let (read_target, read_target_rect) = if read_target_rect.size.width > 2 * dest_size.width {
+        let (read_target, read_target_rect) = if read_target_rect.width() > 2 * dest_size.width {
             self.scale_screenshot(
                 device,
                 read_target,
@@ -281,7 +281,7 @@ impl AsyncScreenshotGrabber {
 
             (
                 ReadTarget::from_texture(&self.scaling_textures[level + 1]),
-                DeviceIntRect::new(DeviceIntPoint::new(0, 0), dest_size * 2),
+                DeviceIntRect::from_size(dest_size * 2),
             )
         } else {
             (read_target, read_target_rect)
@@ -290,7 +290,7 @@ impl AsyncScreenshotGrabber {
         let draw_target = DrawTarget::from_texture(&self.scaling_textures[level], false);
 
         let draw_target_rect = draw_target
-            .to_framebuffer_rect(DeviceIntRect::new(DeviceIntPoint::new(0, 0), dest_size));
+            .to_framebuffer_rect(DeviceIntRect::from_size(dest_size));
 
         let read_target_rect = device_rect_as_framebuffer_rect(&read_target_rect);
 
@@ -402,7 +402,7 @@ impl Renderer {
             .get_or_insert_with(AsyncScreenshotGrabber::new_composition_recorder)
             .get_screenshot(
                 &mut self.device,
-                DeviceIntRect::new(DeviceIntPoint::new(0, 0), device_size),
+                DeviceIntRect::from_size(device_size),
                 device_size,
                 image_format,
             );
