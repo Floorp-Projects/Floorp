@@ -677,7 +677,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
     mCancelContentJSEpoch = aEpoch;
   }
 
-  bool UpdateSessionStore(bool aIsFinal = false);
+  bool UpdateSessionStore();
 
 #ifdef XP_WIN
   // Check if the window this BrowserChild is associated with supports

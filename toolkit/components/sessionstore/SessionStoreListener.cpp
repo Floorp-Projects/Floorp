@@ -437,14 +437,14 @@ int CollectPositions(BrowsingContext* aBrowsingContext,
   return aPositionDescendants[currentIdx] + 1;
 }
 
-bool TabListener::ForceFlushFromParent(bool aIsFinal) {
+bool TabListener::ForceFlushFromParent() {
   if (!XRE_IsParentProcess()) {
     return false;
   }
   if (!mSessionStore) {
     return false;
   }
-  return UpdateSessionStore(true, aIsFinal);
+  return UpdateSessionStore(true);
 }
 
 void TabListener::UpdateSHistoryChanges(bool aImmediately) {
@@ -455,7 +455,7 @@ void TabListener::UpdateSHistoryChanges(bool aImmediately) {
   }
 }
 
-bool TabListener::UpdateSessionStore(bool aIsFlush, bool aIsFinal) {
+bool TabListener::UpdateSessionStore(bool aIsFlush) {
   if (!aIsFlush) {
     if (!mSessionStore || !mSessionStore->UpdateNeeded()) {
       return false;
@@ -466,7 +466,7 @@ bool TabListener::UpdateSessionStore(bool aIsFlush, bool aIsFinal) {
     BrowserChild* browserChild = BrowserChild::GetFrom(mDocShell);
     if (browserChild) {
       StopTimerForUpdate();
-      return browserChild->UpdateSessionStore(aIsFinal);
+      return browserChild->UpdateSessionStore();
     }
     return false;
   }
@@ -508,8 +508,8 @@ bool TabListener::UpdateSessionStore(bool aIsFlush, bool aIsFinal) {
   NS_ENSURE_TRUE(ok, false);
 
   nsresult rv = funcs->UpdateSessionStore(
-      mOwnerContent, mDocShell->GetBrowsingContext(), mEpoch, dataVal,
-      mSessionStore->GetAndClearSHistoryChanged());
+      mOwnerContent, mDocShell->GetBrowsingContext(), mEpoch,
+      mSessionStore->GetAndClearSHistoryChanged(), dataVal);
   NS_ENSURE_SUCCESS(rv, false);
   StopTimerForUpdate();
   return true;

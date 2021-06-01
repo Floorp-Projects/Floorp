@@ -2960,8 +2960,7 @@ bool BrowserParent::ReconstructWebProgressAndRequest(
 
 mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
     const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
-    const bool aNeedCollectSHistory, const bool& aIsFinal,
-    const uint32_t& aEpoch) {
+    const bool aNeedCollectSHistory, const uint32_t& aEpoch) {
   UpdateSessionStoreData data;
   if (aDocShellCaps.isSome()) {
     data.mDocShellCaps.Construct() = aDocShellCaps.value();
@@ -2981,7 +2980,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
   NS_ENSURE_TRUE(ok, IPC_OK());
 
   nsresult rv = funcs->UpdateSessionStore(
-      mFrameElement, mBrowsingContext, aEpoch, dataVal, aNeedCollectSHistory);
+      mFrameElement, mBrowsingContext, aEpoch, aNeedCollectSHistory, dataVal);
 
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 

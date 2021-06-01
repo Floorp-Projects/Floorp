@@ -489,7 +489,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // browsing context for a newly opened tab/window is ready.
   void InvokeBrowsingContextReadyCallback();
 
-  void RequestTabStateFlush();
+  void RequestFinalTabStateFlush();
 
   RefPtr<mozilla::dom::BrowsingContext> mPendingBrowsingContext;
   nsCOMPtr<nsIURI> mURIToLoad;
