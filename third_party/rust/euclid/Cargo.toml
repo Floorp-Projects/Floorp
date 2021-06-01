@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "euclid"
-version = "0.22.0"
+version = "0.22.6"
 authors = ["The Servo Project Developers"]
 description = "Geometry primitives"
 documentation = "https://docs.rs/euclid/"
@@ -21,6 +21,11 @@ keywords = ["matrix", "vector", "linear-algebra", "geometry"]
 categories = ["science"]
 license = "MIT / Apache-2.0"
 repository = "https://github.com/servo/euclid"
+[dependencies.arbitrary]
+version = "1"
+features = ["derive"]
+optional = true
+
 [dependencies.mint]
 version = "0.5.1"
 optional = true
