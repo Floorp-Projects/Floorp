@@ -7,8 +7,15 @@ const { XPIInstall } = ChromeUtils.import(
   "resource://gre/modules/addons/XPIInstall.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionPermissions",
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
+
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
+AddonTestUtils.usePrivilegedSignatures = false;
 
 const testStartTime = Date.now();
 const not_before = new Date(testStartTime - 3600000).toISOString();
@@ -332,5 +339,61 @@ add_task(async function test_recommendation_persist_restart() {
 
   checkRecommended(addon);
 
+  await addon.uninstall();
+});
+
+add_task(async function test_isLineExtension_internal_svg_permission() {
+  async function assertLineExtensionStateAndPermission(
+    addonId,
+    expectLineExtension,
+    isRestart
+  ) {
+    const { extension } = WebExtensionPolicy.getByID(addonId);
+
+    const msgShould = expectLineExtension ? "should" : "should not";
+
+    equal(
+      extension.hasPermission("internal:svgContextPropertiesAllowed"),
+      expectLineExtension,
+      `"${addonId}" ${msgShould} have permission internal:svgContextPropertiesAllowed`
+    );
+    if (isRestart) {
+      const { permissions } = await ExtensionPermissions.get(addonId);
+      Assert.deepEqual(
+        permissions,
+        expectLineExtension ? ["internal:svgContextPropertiesAllowed"] : [],
+        `ExtensionPermission.get("${addonId}") result ${msgShould} include internal:svgContextPropertiesAllowed permission`
+      );
+    }
+  }
+
+  const idLineExt = "line-extension@test.web.extension";
+  await installAddonWithRecommendations(idLineExt, {
+    addon_id: idLineExt,
+    states: ["line"],
+    validity: { not_before, not_after },
+  });
+
+  info(`Test line extension ${idLineExt}`);
+  await assertLineExtensionStateAndPermission(idLineExt, true, false);
+  await AddonTestUtils.promiseRestartManager();
+  info(`Test ${idLineExt} again after AOM restart`);
+  await assertLineExtensionStateAndPermission(idLineExt, true, true);
+  let addon = await AddonManager.getAddonByID(idLineExt);
+  await addon.uninstall();
+
+  const idNonLineExt = "non-line-extension@test.web.extension";
+  await installAddonWithRecommendations(idNonLineExt, {
+    addon_id: idNonLineExt,
+    states: ["recommended"],
+    validity: { not_before, not_after },
+  });
+
+  info(`Test non line extension: ${idNonLineExt}`);
+  await assertLineExtensionStateAndPermission(idNonLineExt, false, false);
+  await AddonTestUtils.promiseRestartManager();
+  info(`Test ${idNonLineExt} again after AOM restart`);
+  await assertLineExtensionStateAndPermission(idNonLineExt, false, true);
+  addon = await AddonManager.getAddonByID(idNonLineExt);
   await addon.uninstall();
 });

@@ -474,14 +474,17 @@ ExtensionTestCommon = class ExtensionTestCommon {
       signedState = AddonManager.SIGNEDSTATE_SYSTEM;
     }
 
-    return new Extension({
-      id,
-      resourceURI: jarURI,
-      cleanupFile: file,
-      signedState,
-      incognitoOverride: data.incognitoOverride,
-      temporarilyInstalled: !!data.temporarilyInstalled,
-      TEST_NO_ADDON_MANAGER: true,
-    });
+    return new Extension(
+      {
+        id,
+        resourceURI: jarURI,
+        cleanupFile: file,
+        signedState,
+        incognitoOverride: data.incognitoOverride,
+        temporarilyInstalled: !!data.temporarilyInstalled,
+        TEST_NO_ADDON_MANAGER: true,
+      },
+      data.startupReason
+    );
   }
 };

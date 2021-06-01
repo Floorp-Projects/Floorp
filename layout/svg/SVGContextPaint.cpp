@@ -54,7 +54,8 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
   // specifically ones that are "ours". WebExtensions are moz-extension://
   // regardless if the extension is in-tree or not. Since we don't want
   // extension developers coming to rely on image context paint either, we only
-  // enable context-paint for extensions that are signed by Mozilla.
+  // enable context-paint for extensions that are owned by Mozilla
+  // (based on the extension permission "internal:svgContextPropertiesAllowed").
   //
   // We also allow this for browser UI icons that are served up from
   // Mozilla-controlled domains listed in the
@@ -71,23 +72,12 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
 
   RefPtr<extensions::WebExtensionPolicy> addonPolicy = principal->AddonPolicy();
   if (addonPolicy) {
-    if (addonPolicy->IsPrivileged()) {
-      return true;
-    }
-
-    // Bug 1710917: look for a different approach to achieve the same goal
-    // (restrict this to the subset of addons that are owned by Mozilla and/or
-    // part of the browser itself) without having to maintain the list of the
-    // allowed addon id suffixes in two places (here in Firefox and also on
-    // the AMO side to prevent arbitrary third party extensions to use that
-    // same suffix in their manifest.json files).
-    nsString addonId;
-    if (NS_SUCCEEDED(principal->GetAddonId(addonId))) {
-      if (StringEndsWith(addonId, u"@mozilla.org"_ns) ||
-          StringEndsWith(addonId, u"@mozilla.com"_ns)) {
-        return true;
-      }
-    }
+    // Only allowed for extensions that have the
+    // internal:svgContextPropertiesAllowed permission (added internally from
+    // to Mozilla-owned extensions, see `isMozillaExtension` function
+    // defined in Extension.jsm for the exact criteria).
+    return addonPolicy->HasPermission(
+        nsGkAtoms::svgContextPropertiesAllowedPermission);
   }
 
   bool isInAllowList = false;
