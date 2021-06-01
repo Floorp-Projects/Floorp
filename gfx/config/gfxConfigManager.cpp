@@ -261,8 +261,6 @@ void gfxConfigManager::ConfigureWebRender() {
                             "FEATURE_FAILURE_USER_FORCE_ENABLED_SW_WR"_ns);
   } else if (mWrEnvForceEnabled) {
     mFeatureWr->UserForceEnable("Force enabled by envvar");
-  } else if (mWrForceEnabled) {
-    mFeatureWr->UserForceEnable("Force enabled by pref");
   } else if (mWrForceDisabled || mWrEnvForceDisabled) {
     // If the user set the pref to force-disable, let's do that. This
     // will override all the other enabling prefs
@@ -270,6 +268,8 @@ void gfxConfigManager::ConfigureWebRender() {
     // gfx.webrender.all.qualified).
     mFeatureWr->UserDisable("User force-disabled WR",
                             "FEATURE_FAILURE_USER_FORCE_DISABLED"_ns);
+  } else if (mWrForceEnabled) {
+    mFeatureWr->UserForceEnable("Force enabled by pref");
   }
 
   if (!mFeatureWrQualified->IsEnabled()) {
