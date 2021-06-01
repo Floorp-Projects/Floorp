@@ -1,17 +1,22 @@
 /* Test that the charset menu is properly enabled when swapping browsers. */
 add_task(async function test() {
-  // NB: This test cheats and calls updateCharacterEncodingMenuState directly
-  // instead of opening the "View" menu.
   function charsetMenuEnabled() {
-    updateCharacterEncodingMenuState();
-    return !document.getElementById("charsetMenu").hasAttribute("disabled");
+    return !document
+      .getElementById("repair-text-encoding")
+      .hasAttribute("disabled");
   }
 
-  const PAGE = "data:text/html,<!DOCTYPE html><body>hello";
+  const PAGE =
+    "data:text/html;charset=windows-1252,<!DOCTYPE html><body>hello %e4";
   let tab1 = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: PAGE,
   });
+  await BrowserTestUtils.waitForMutationCondition(
+    document.getElementById("repair-text-encoding"),
+    { attributes: true },
+    charsetMenuEnabled
+  );
   ok(charsetMenuEnabled(), "should have a charset menu here");
 
   let tab2 = await BrowserTestUtils.openNewForegroundTab({ gBrowser });
