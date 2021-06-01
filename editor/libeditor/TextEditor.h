@@ -64,9 +64,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   using EditorBase::CanCut;
   using EditorBase::CanPaste;
 
-  NS_IMETHOD OutputToString(const nsAString& aFormatType, uint32_t aFlags,
-                            nsAString& aOutputString) override;
-
   // Overrides of EditorBase
   MOZ_CAN_RUN_SCRIPT virtual nsresult Init(Document& aDoc, Element* aRoot,
                                            nsISelectionController* aSelCon,
