@@ -477,23 +477,6 @@ bool TextEditor::IsCopyToClipboardAllowedInternal() const {
   return mUnmaskedStart <= selectionStart && UnmaskedEnd() >= selectionEnd;
 }
 
-NS_IMETHODIMP TextEditor::OutputToString(const nsAString& aFormatType,
-                                         uint32_t aDocumentEncoderFlags,
-                                         nsAString& aOutputString) {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  nsresult rv =
-      ComputeValueInternal(aFormatType, aDocumentEncoderFlags, aOutputString);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::ComputeValueInternal() failed");
-  // This is low level API for XUL application.  So, we should return raw
-  // error code here.
-  return rv;
-}
-
 nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
                                               bool aDispatchPasteEvent,
                                               nsIPrincipal* aPrincipal) {
