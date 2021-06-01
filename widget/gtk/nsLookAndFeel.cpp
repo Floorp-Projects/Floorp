@@ -1085,11 +1085,14 @@ void nsLookAndFeel::WithAltThemeConfigured(
   // find the light variant.
   if (mSystemTheme.mIsDark && mSystemTheme.mIsDark == GetThemeIsDark()) {
     nsCString potentialLightThemeName = mSystemTheme.mName;
+    // clang-format off
     constexpr nsLiteralCString kSubstringsToRemove[] = {
-        "-dark"_ns,    "-darker"_ns,  "-darkest"_ns, "-Dark"_ns,
-        "-Darker"_ns,  "-Darkest"_ns, "_dark"_ns,    "_darker"_ns,
-        "_darkest"_ns, "_Dark"_ns,    "_Darker"_ns,  "_Darkest"_ns,
+        "-darkest"_ns, "-darker"_ns, "-dark"_ns,
+        "-Darkest"_ns, "-Darker"_ns, "-Dark"_ns,
+        "_darkest"_ns, "_darker"_ns, "_dark"_ns,
+        "_Darkest"_ns, "_Darker"_ns, "_Dark"_ns,
     };
+    // clang-format on
     bool found = false;
     for (auto& s : kSubstringsToRemove) {
       potentialLightThemeName = mSystemTheme.mName;
