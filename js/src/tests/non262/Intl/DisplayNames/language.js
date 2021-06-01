@@ -81,12 +81,13 @@ const tests = {
 
 for (let [locale, localeTests] of Object.entries(tests)) {
   for (let [style, styleTests] of Object.entries(localeTests)) {
-    let dn = new Intl.DisplayNames(locale, {type: "language", style});
+    let dn = new Intl.DisplayNames(locale, {type: "language", languageDisplay: "standard", style});
 
     let resolved = dn.resolvedOptions();
     assertEq(resolved.locale, locale);
     assertEq(resolved.style, style);
     assertEq(resolved.type, "language");
+    assertEq(resolved.languageDisplay, "standard");
     assertEq(resolved.fallback, "code");
 
     let inheritedTests = {...localeTests.long, ...localeTests.short, ...localeTests.narrow};
@@ -189,6 +190,15 @@ for (let [locale, localeTests] of Object.entries(tests)) {
 
   assertEq(dn.of("IT-LATN-IT"), "Italian (Latin, Italy)");
   assertEq(dn.of("it-latn-it"), "Italian (Latin, Italy)");
+}
+
+// resolvedOptions() only outputs "languageDisplay" when the type is "language".
+{
+  let dn1 = new Intl.DisplayNames("en", {type: "language"});
+  let dn2 = new Intl.DisplayNames("en", {type: "script"});
+
+  assertEq(dn1.resolvedOptions().languageDisplay, "dialect");
+  assertEq(dn2.resolvedOptions().hasOwnProperty("languageDisplay"), false);
 }
 
 if (typeof reportCompare === "function")

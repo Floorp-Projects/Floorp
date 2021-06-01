@@ -653,6 +653,9 @@ skip script test262/intl402/DisplayNames/locales-length-poison-throws.js
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/tonumber-value-detached-buffer.js
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/tonumber-value-detached-buffer.js
 
+# Tests not yet updated for https://github.com/tc39/intl-displaynames-v2
+skip script test262/intl402/DisplayNames/prototype/resolvedOptions/return-object.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
