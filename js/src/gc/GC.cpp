@@ -506,6 +506,8 @@ inline size_t Arena::finalize(JSFreeOp* fop, AllocKind thingKind,
     }
   }
 
+  isNewlyCreated = 0;
+
   if (thingKind == AllocKind::STRING ||
       thingKind == AllocKind::FAT_INLINE_STRING) {
     zone->markedStrings += nmarked;
