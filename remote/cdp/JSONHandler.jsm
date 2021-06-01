@@ -21,8 +21,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 class JSONHandler {
-  constructor(agent) {
-    this.agent = agent;
+  constructor(cdp) {
+    this.cdp = cdp;
     this.routes = {
       "/json/version": this.getVersion.bind(this),
       "/json/protocol": this.getProtocol.bind(this),
@@ -31,7 +31,7 @@ class JSONHandler {
   }
 
   getVersion() {
-    const mainProcessTarget = this.agent.targetList.getMainProcessTarget();
+    const mainProcessTarget = this.cdp.targetList.getMainProcessTarget();
 
     const { userAgent } = Cc[
       "@mozilla.org/network/protocol;1?name=http"
@@ -52,7 +52,7 @@ class JSONHandler {
   }
 
   getTargetList() {
-    return [...this.agent.targetList];
+    return [...this.cdp.targetList];
   }
 
   // nsIHttpRequestHandler
