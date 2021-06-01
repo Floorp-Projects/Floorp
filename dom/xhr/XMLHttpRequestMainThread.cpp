@@ -2897,7 +2897,7 @@ void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
 
   // Step 1
   if (mState != XMLHttpRequest_Binding::OPENED) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_BE_OPENED);
+    aRv.ThrowInvalidStateError("XMLHttpRequest state must be OPENED.");
     return;
   }
 
@@ -3106,7 +3106,7 @@ void XMLHttpRequestMainThread::SetRequestHeader(const nsACString& aName,
 
   // Step 1
   if (mState != XMLHttpRequest_Binding::OPENED) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_BE_OPENED);
+    aRv.ThrowInvalidStateError("XMLHttpRequest state must be OPENED.");
     return;
   }
 

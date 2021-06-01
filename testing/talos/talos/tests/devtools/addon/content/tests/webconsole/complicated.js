@@ -34,7 +34,7 @@ const EXPECTED_MESSAGES = [
     nightlyOnly: true,
   },
   {
-    text: `Uncaught DOMException: XMLHttpRequest state must be OPENED.`,
+    text: `Uncaught DOMException: XMLHttpRequest.send: XMLHttpRequest state must be OPENED.`,
     visibleWhenFissionEnabled: true,
   },
   {
