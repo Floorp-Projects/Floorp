@@ -1280,7 +1280,7 @@ void CompositorBridgeParent::NotifyJankedAnimations(
     const LayersId& layersId = entry.first;
     const nsTArray<uint64_t>& animations = entry.second;
     if (layersId == mRootLayerTreeID) {
-      if (mLayerManager) {
+      if (mLayerManager || mWrBridge) {
         Unused << SendNotifyJankedAnimations(LayersId{0}, animations);
       }
       // It unlikely happens multiple processes have janked animations at same
