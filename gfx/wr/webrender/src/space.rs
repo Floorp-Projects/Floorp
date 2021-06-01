@@ -234,8 +234,8 @@ impl SpaceSnapper {
         debug_assert!(self.current_target_spatial_node_index != SpatialNodeIndex::INVALID);
         match self.snapping_transform {
             Some(ref scale_offset) => {
-                let snapped_device_rect : DeviceRect = scale_offset.map_rect(rect).snap();
-                scale_offset.unmap_rect(&snapped_device_rect)
+                let snapped_device_rect: DeviceRect = scale_offset.map_rect(rect).snap().to_box2d();
+                scale_offset.unmap_rect(&snapped_device_rect.to_rect())
             }
             None => *rect,
         }

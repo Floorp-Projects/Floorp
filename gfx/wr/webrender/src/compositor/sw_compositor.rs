@@ -72,7 +72,7 @@ impl SwTile {
         clip_rect: &DeviceIntRect,
     ) -> Option<DeviceIntRect> {
         let bounds = self.local_bounds(surface);
-        let device_rect = transform.outer_transformed_rect(&bounds.to_f32())?.round_out().to_i32();
+        let device_rect = transform.outer_transformed_box2d(&bounds.to_f32())?.round_out().to_i32();
         device_rect.intersection(clip_rect)
     }
 
@@ -101,7 +101,7 @@ impl SwTile {
         // Offset the valid rect to the appropriate surface origin.
         let valid = self.local_bounds(surface);
         // The destination rect is the valid rect transformed and then clipped.
-        let dest_rect = transform.outer_transformed_rect(&valid.to_f32())?.round_out().to_i32();
+        let dest_rect = transform.outer_transformed_box2d(&valid.to_f32())?.round_out().to_i32();
         if !dest_rect.intersects(clip_rect) {
             return None;
         }
@@ -110,10 +110,10 @@ impl SwTile {
         // a source rect that is now relative to the surface origin rather than absolute.
         let inv_transform = transform.inverse()?;
         let src_rect = inv_transform
-            .outer_transformed_rect(&dest_rect.to_f32())?
+            .outer_transformed_box2d(&dest_rect.to_f32())?
             .round()
             .to_i32()
-            .translate(-valid.origin.to_vector());
+            .translate(-valid.min.to_vector());
         Some((src_rect, dest_rect, transform.m22 < 0.0))
     }
 }
@@ -157,7 +157,7 @@ impl SwSurface {
         clip_rect: &DeviceIntRect,
     ) -> Option<DeviceIntRect> {
         let bounds = self.local_bounds();
-        let device_rect = transform.outer_transformed_rect(&bounds.to_f32())?.round_out().to_i32();
+        let device_rect = transform.outer_transformed_box2d(&bounds.to_f32())?.round_out().to_i32();
         device_rect.intersection(clip_rect)
     }
 }
@@ -212,32 +212,32 @@ impl SwCompositeJob {
         let band_index = num_bands - 1 - band_index;
         // Calculate the Y extents for the job's band, starting at the current index and spanning to
         // the following index.
-        let band_offset = (self.clipped_dst.size.height * band_index) / num_bands;
-        let band_height = (self.clipped_dst.size.height * (band_index + 1)) / num_bands - band_offset;
+        let band_offset = (self.clipped_dst.height() * band_index) / num_bands;
+        let band_height = (self.clipped_dst.height() * (band_index + 1)) / num_bands - band_offset;
         // Create a rect that is the intersection of the band with the clipped dest
-        let band_clip = DeviceIntRect::new(
-            DeviceIntPoint::new(self.clipped_dst.origin.x, self.clipped_dst.origin.y + band_offset),
-            DeviceIntSize::new(self.clipped_dst.size.width, band_height),
+        let band_clip = DeviceIntRect::from_origin_and_size(
+            DeviceIntPoint::new(self.clipped_dst.min.x, self.clipped_dst.min.y + band_offset),
+            DeviceIntSize::new(self.clipped_dst.width(), band_height),
         );
         match self.locked_src {
             SwCompositeSource::BGRA(ref resource) => {
                 self.locked_dst.composite(
                     resource,
-                    self.src_rect.origin.x,
-                    self.src_rect.origin.y,
-                    self.src_rect.size.width,
-                    self.src_rect.size.height,
-                    self.dst_rect.origin.x,
-                    self.dst_rect.origin.y,
-                    self.dst_rect.size.width,
-                    self.dst_rect.size.height,
+                    self.src_rect.min.x,
+                    self.src_rect.min.y,
+                    self.src_rect.width(),
+                    self.src_rect.height(),
+                    self.dst_rect.min.x,
+                    self.dst_rect.min.y,
+                    self.dst_rect.width(),
+                    self.dst_rect.height(),
                     self.opaque,
                     self.flip_y,
                     image_rendering_to_gl_filter(self.filter),
-                    band_clip.origin.x,
-                    band_clip.origin.y,
-                    band_clip.size.width,
-                    band_clip.size.height,
+                    band_clip.min.x,
+                    band_clip.min.y,
+                    band_clip.width(),
+                    band_clip.height(),
                 );
             }
             SwCompositeSource::YUV(ref y, ref u, ref v, color_space, color_depth) => {
@@ -253,19 +253,19 @@ impl SwCompositeJob {
                     v,
                     swgl_color_space,
                     color_depth.bit_depth(),
-                    self.src_rect.origin.x,
-                    self.src_rect.origin.y,
-                    self.src_rect.size.width,
-                    self.src_rect.size.height,
-                    self.dst_rect.origin.x,
-                    self.dst_rect.origin.y,
-                    self.dst_rect.size.width,
-                    self.dst_rect.size.height,
+                    self.src_rect.min.x,
+                    self.src_rect.min.y,
+                    self.src_rect.width(),
+                    self.src_rect.height(),
+                    self.dst_rect.min.x,
+                    self.dst_rect.min.y,
+                    self.dst_rect.width(),
+                    self.dst_rect.height(),
                     self.flip_y,
-                    band_clip.origin.x,
-                    band_clip.origin.y,
-                    band_clip.size.width,
-                    band_clip.size.height,
+                    band_clip.min.x,
+                    band_clip.min.y,
+                    band_clip.width(),
+                    band_clip.height(),
                 );
             }
         }
@@ -526,8 +526,8 @@ impl SwCompositeThread {
             None => return,
         };
 
-        let num_bands = if clipped_dst.size.width >= 64 && clipped_dst.size.height >= 64 {
-            (clipped_dst.size.height / 64).min(4) as u8
+        let num_bands = if clipped_dst.width() >= 64 && clipped_dst.height() >= 64 {
+            (clipped_dst.height() / 64).min(4) as u8
         } else {
             1
         };
@@ -791,13 +791,13 @@ impl SwCompositor {
         }
 
         fn set_x_range(rect: &mut DeviceIntRect, range: &Range<i32>) {
-            rect.origin.x = range.start;
-            rect.size.width = range.end - range.start;
+            rect.min.x = range.start;
+            rect.max.x = range.end;
         }
 
         fn set_y_range(rect: &mut DeviceIntRect, range: &Range<i32>) {
-            rect.origin.y = range.start;
-            rect.size.height = range.end - range.start;
+            rect.min.y = range.start;
+            rect.max.y = range.end;
         }
 
         fn union(base: Range<i32>, extra: Range<i32>) -> Range<i32> {
@@ -1266,8 +1266,8 @@ impl Compositor for SwCompositor {
                 self.gl.set_texture_buffer(
                     tile.color_id,
                     gl::RGBA8,
-                    valid_rect.size.width,
-                    valid_rect.size.height,
+                    valid_rect.width(),
+                    valid_rect.height(),
                     stride,
                     buf,
                     surface.tile_size.width,
@@ -1285,15 +1285,15 @@ impl Compositor for SwCompositor {
                 self.gl.set_texture_buffer(
                     self.depth_id,
                     gl::DEPTH_COMPONENT,
-                    valid_rect.size.width,
-                    valid_rect.size.height,
+                    valid_rect.width(),
+                    valid_rect.height(),
                     0,
                     ptr::null_mut(),
                     self.max_tile_size.width,
                     self.max_tile_size.height,
                 );
                 surface_info.fbo_id = tile.fbo_id;
-                surface_info.origin -= valid_rect.origin.to_vector();
+                surface_info.origin -= valid_rect.min.to_vector();
             }
         }
 
