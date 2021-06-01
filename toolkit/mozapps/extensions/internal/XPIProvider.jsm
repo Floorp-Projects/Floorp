@@ -1809,6 +1809,7 @@ class BootstrapScope {
         temporarilyInstalled: addon.location.isTemporary,
         builtIn: addon.location.isBuiltin,
         isSystem: addon.location.isSystem,
+        recommendationState: addon.recommendationState,
       };
 
       if (aMethod == "startup" && addon.startupData) {

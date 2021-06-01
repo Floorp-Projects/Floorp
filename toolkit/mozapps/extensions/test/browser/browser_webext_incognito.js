@@ -59,10 +59,11 @@ async function setPrivateBrowsingValue(value, id) {
         // Let's make sure we received the right message
         let { permissions } = value == "0" ? removed : added;
         ok(permissions.includes("internal:privateBrowsingAllowed"));
+        Management.off("change-permissions", listener);
         resolve();
       }
     };
-    Management.once("change-permissions", listener);
+    Management.on("change-permissions", listener);
   });
   let radio = getHtmlElem(
     `input[type="radio"][name="private-browsing"][value="${value}"]`
@@ -134,10 +135,7 @@ function checkHelpRow(selector, expected) {
 
 async function hasPrivateAllowed(id) {
   let perms = await ExtensionPermissions.get(id);
-  return (
-    perms.permissions.length == 1 &&
-    perms.permissions[0] == "internal:privateBrowsingAllowed"
-  );
+  return perms.permissions.includes("internal:privateBrowsingAllowed");
 }
 
 add_task(function clearInitialTelemetry() {
