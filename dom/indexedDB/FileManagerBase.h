@@ -13,7 +13,7 @@
 #include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsISupportsImpl.h"
-#include "FileInfoT.h"
+#include "FileInfo.h"
 #include "FlippedOnce.h"
 
 namespace mozilla {
@@ -23,30 +23,30 @@ namespace indexedDB {
 template <typename FileManager>
 class FileManagerBase {
  public:
-  using FileInfo = FileInfoT<FileManager>;
+  using FileInfoType = FileInfo<FileManager>;
   using MutexType = StaticMutex;
-  using AutoLock = mozilla::detail::BaseAutoLock<MutexType&>;
+  using AutoLockType = mozilla::detail::BaseAutoLock<MutexType&>;
 
-  [[nodiscard]] SafeRefPtr<FileInfo> GetFileInfo(int64_t aId) const {
+  [[nodiscard]] SafeRefPtr<FileInfoType> GetFileInfo(int64_t aId) const {
     return AcquireFileInfo([this, aId] { return mFileInfos.MaybeGet(aId); });
   }
 
-  [[nodiscard]] SafeRefPtr<FileInfo> CreateFileInfo() {
+  [[nodiscard]] SafeRefPtr<FileInfoType> CreateFileInfo() {
     return AcquireFileInfo([this] {
       const int64_t id = ++mLastFileId;
 
       auto fileInfo =
-          MakeNotNull<FileInfo*>(FileManagerGuard{},
-                                 SafeRefPtr{static_cast<FileManager*>(this),
-                                            AcquireStrongRefFromRawPtr{}},
-                                 id);
+          MakeNotNull<FileInfoType*>(FileManagerGuard{},
+                                     SafeRefPtr{static_cast<FileManager*>(this),
+                                                AcquireStrongRefFromRawPtr{}},
+                                     id);
 
       mFileInfos.InsertOrUpdate(id, fileInfo);
       return Some(fileInfo);
     });
   }
 
-  void RemoveFileInfo(const int64_t aId, const AutoLock& aFileMutexLock) {
+  void RemoveFileInfo(const int64_t aId, const AutoLockType& aFileMutexLock) {
 #ifdef DEBUG
     aFileMutexLock.AssertOwns(FileManager::Mutex());
 #endif
@@ -54,12 +54,12 @@ class FileManagerBase {
   }
 
   nsresult Invalidate() {
-    AutoLock lock(FileManager::Mutex());
+    AutoLockType lock(FileManager::Mutex());
 
     mInvalidated.Flip();
 
     mFileInfos.RemoveIf([](const auto& iter) {
-      FileInfo* info = iter.Data();
+      FileInfoType* info = iter.Data();
       MOZ_ASSERT(info);
 
       return !info->LockedClearDBRefs(FileManagerGuard{});
@@ -79,7 +79,7 @@ class FileManagerBase {
   // under the FileManager lock, acquires a strong reference to the returned
   // object under the lock, and returns the strong reference.
   template <typename FileInfoTableOp>
-  [[nodiscard]] SafeRefPtr<FileInfo> AcquireFileInfo(
+  [[nodiscard]] SafeRefPtr<FileInfoType> AcquireFileInfo(
       const FileInfoTableOp& aFileInfoTableOp) const {
     if (!AssertValid()) {
       // In release, the assertions are disabled.
@@ -88,8 +88,8 @@ class FileManagerBase {
 
     // We cannot simply change this to SafeRefPtr<FileInfo>, because
     // FileInfo::AddRef also acquires the FileManager::Mutex.
-    auto fileInfo = [&aFileInfoTableOp]() -> RefPtr<FileInfo> {
-      AutoLock lock(FileManager::Mutex());
+    auto fileInfo = [&aFileInfoTableOp]() -> RefPtr<FileInfoType> {
+      AutoLockType lock(FileManager::Mutex());
 
       const auto maybeFileInfo = aFileInfoTableOp();
       if (maybeFileInfo) {
@@ -123,7 +123,7 @@ class FileManagerBase {
   // Access to the following fields must be protected by
   // FileManager::Mutex()
   int64_t mLastFileId = 0;
-  nsTHashMap<nsUint64HashKey, NotNull<FileInfo*>> mFileInfos;
+  nsTHashMap<nsUint64HashKey, NotNull<FileInfoType*>> mFileInfos;
 
   FlippedOnce<false> mInvalidated;
 };
