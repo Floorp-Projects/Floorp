@@ -2287,6 +2287,12 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
   }
 
   uint16_t bfcacheCombo = 0;
+  if (mRestoreState) {
+    bfcacheCombo |= BFCacheStatus::RESTORING;
+    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
+            (" * during session restore"));
+  }
+
   if (Group()->Toplevels().Length() > 1) {
     bfcacheCombo |= BFCacheStatus::NOT_ONLY_TOPLEVEL_IN_BCG;
     MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
