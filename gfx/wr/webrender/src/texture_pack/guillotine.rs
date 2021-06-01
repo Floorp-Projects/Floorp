@@ -84,7 +84,7 @@ impl GuillotineAllocator {
     }
 
     fn push(&mut self, slice: FreeRectSlice, rect: DeviceIntRect) {
-        let id = FreeListBin::for_size(&rect.size).0 as usize;
+        let id = FreeListBin::for_size(&rect.size()).0 as usize;
         self.bins[id].push(FreeRect {
             slice,
             rect,
@@ -102,13 +102,13 @@ impl GuillotineAllocator {
             .find_map(|id| if FIND_SMALLEST_AREA {
                 let mut smallest_index_and_area = None;
                 for (candidate_index, candidate) in self.bins[id as usize].iter().enumerate() {
-                    if requested_dimensions.width > candidate.rect.size.width ||
-                        requested_dimensions.height > candidate.rect.size.height
+                    if requested_dimensions.width > candidate.rect.width() ||
+                        requested_dimensions.height > candidate.rect.height()
                     {
                         continue;
                     }
 
-                    let candidate_area = candidate.rect.size.area();
+                    let candidate_area = candidate.rect.area();
                     match smallest_index_and_area {
                         Some((_, area)) if candidate_area >= area => continue,
                         _ => smallest_index_and_area = Some((candidate_index, candidate_area)),
@@ -121,8 +121,8 @@ impl GuillotineAllocator {
                 self.bins[id as usize]
                     .iter()
                     .position(|candidate| {
-                        requested_dimensions.width <= candidate.rect.size.width &&
-                        requested_dimensions.height <= candidate.rect.size.height
+                        requested_dimensions.width <= candidate.rect.width() &&
+                        requested_dimensions.height <= candidate.rect.height()
                     })
                     .map(|index| (FreeListBin(id), FreeListIndex(index)))
             })
@@ -130,46 +130,46 @@ impl GuillotineAllocator {
 
     // Split that results in the single largest area (Min Area Split Rule, MINAS).
     fn split_guillotine(&mut self, chosen: &FreeRect, requested_dimensions: &DeviceIntSize) {
-        let candidate_free_rect_to_right = DeviceIntRect::new(
+        let candidate_free_rect_to_right = DeviceIntRect::from_origin_and_size(
             DeviceIntPoint::new(
-                chosen.rect.origin.x + requested_dimensions.width,
-                chosen.rect.origin.y,
+                chosen.rect.min.x + requested_dimensions.width,
+                chosen.rect.min.y,
             ),
             DeviceIntSize::new(
-                chosen.rect.size.width - requested_dimensions.width,
+                chosen.rect.width() - requested_dimensions.width,
                 requested_dimensions.height,
             ),
         );
-        let candidate_free_rect_to_bottom = DeviceIntRect::new(
+        let candidate_free_rect_to_bottom = DeviceIntRect::from_origin_and_size(
             DeviceIntPoint::new(
-                chosen.rect.origin.x,
-                chosen.rect.origin.y + requested_dimensions.height,
+                chosen.rect.min.x,
+                chosen.rect.min.y + requested_dimensions.height,
             ),
             DeviceIntSize::new(
                 requested_dimensions.width,
-                chosen.rect.size.height - requested_dimensions.height,
+                chosen.rect.height() - requested_dimensions.height,
             ),
         );
 
         // Guillotine the rectangle.
         let new_free_rect_to_right;
         let new_free_rect_to_bottom;
-        if candidate_free_rect_to_right.size.area() > candidate_free_rect_to_bottom.size.area() {
-            new_free_rect_to_right = DeviceIntRect::new(
-                candidate_free_rect_to_right.origin,
+        if candidate_free_rect_to_right.area() > candidate_free_rect_to_bottom.area() {
+            new_free_rect_to_right = DeviceIntRect::from_origin_and_size(
+                candidate_free_rect_to_right.min,
                 DeviceIntSize::new(
-                    candidate_free_rect_to_right.size.width,
-                    chosen.rect.size.height,
+                    candidate_free_rect_to_right.width(),
+                    chosen.rect.height(),
                 ),
             );
             new_free_rect_to_bottom = candidate_free_rect_to_bottom
         } else {
             new_free_rect_to_right = candidate_free_rect_to_right;
-            new_free_rect_to_bottom = DeviceIntRect::new(
-                candidate_free_rect_to_bottom.origin,
+            new_free_rect_to_bottom = DeviceIntRect::from_origin_and_size(
+                candidate_free_rect_to_bottom.min,
                 DeviceIntSize::new(
-                    chosen.rect.size.width,
-                    candidate_free_rect_to_bottom.size.height,
+                    chosen.rect.width(),
+                    candidate_free_rect_to_bottom.height(),
                 ),
             )
         }
@@ -196,7 +196,7 @@ impl GuillotineAllocator {
         self.split_guillotine(&chosen, requested_dimensions);
 
         // Return the result.
-        Some((chosen.slice, chosen.rect.origin))
+        Some((chosen.slice, chosen.rect.min))
     }
 
     /// Add a new slice to the allocator, and immediately allocate a rect from it.
@@ -217,8 +217,7 @@ impl GuillotineAllocator {
 fn random_fill(count: usize, texture_size: i32) -> f32 {
     use rand::{thread_rng, Rng};
 
-    let total_rect = DeviceIntRect::new(
-        DeviceIntPoint::zero(),
+    let total_rect = DeviceIntRect::from_size(
         DeviceIntSize::new(texture_size, texture_size),
     );
     let mut rng = thread_rng();
@@ -242,14 +241,14 @@ fn random_fill(count: usize, texture_size: i32) -> f32 {
 
         match allocator.allocate(&size) {
             Some((slice, origin)) => {
-                let rect = DeviceIntRect::new(origin, size);
+                let rect = DeviceIntRect::from_origin_and_size(origin, size);
                 assert_eq!(None, slices[slice.0 as usize].iter().find(|r| r.intersects(&rect)));
-                assert!(total_rect.contains_rect(&rect));
+                assert!(total_rect.contains_box(&rect));
                 slices[slice.0 as usize].push(rect);
             }
             None => {
-                allocator.extend(FreeRectSlice(slices.len() as u32), total_rect.size, size);
-                let rect = DeviceIntRect::new(DeviceIntPoint::zero(), size);
+                allocator.extend(FreeRectSlice(slices.len() as u32), total_rect.size(), size);
+                let rect = DeviceIntRect::from_size(size);
                 slices.push(vec![rect]);
             }
         }
@@ -257,9 +256,9 @@ fn random_fill(count: usize, texture_size: i32) -> f32 {
     // validate the free rects
     for (i, free_vecs) in allocator.bins.iter().enumerate() {
         for fr in free_vecs {
-            assert_eq!(FreeListBin(i as u8), FreeListBin::for_size(&fr.rect.size));
+            assert_eq!(FreeListBin(i as u8), FreeListBin::for_size(&fr.rect.size()));
             assert_eq!(None, slices[fr.slice.0 as usize].iter().find(|r| r.intersects(&fr.rect)));
-            assert!(total_rect.contains_rect(&fr.rect));
+            assert!(total_rect.contains_box(&fr.rect));
             slices[fr.slice.0 as usize].push(fr.rect);
         }
     }

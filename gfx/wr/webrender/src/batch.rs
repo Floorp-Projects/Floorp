@@ -1360,7 +1360,7 @@ impl BatchBuilder {
                                         DeviceVector2D::new(0.5, 0.5)
                                     ).floor() - glyph_translation;
 
-                                    let device_glyph_rect = DeviceRect::new(
+                                    let device_glyph_rect = DeviceRect::from_origin_and_size(
                                         glyph.offset + raster_glyph_offset.to_vector() + raster_text_offset,
                                         glyph.size.to_f32(),
                                     );
@@ -1371,11 +1371,11 @@ impl BatchBuilder {
                                 let map_device_to_surface: SpaceMapper<PicturePixel, DevicePixel> = SpaceMapper::new_with_target(
                                     root_spatial_node_index,
                                     surface_spatial_node_index,
-                                    device_bounding_rect,
+                                    device_bounding_rect.to_rect(),
                                     ctx.spatial_tree,
                                 );
 
-                                match map_device_to_surface.unmap(&device_bounding_rect) {
+                                match map_device_to_surface.unmap(&device_bounding_rect.to_rect()) {
                                     Some(r) => r.intersection(&bounding_rect),
                                     None => Some(*bounding_rect),
                                 }
@@ -3414,7 +3414,7 @@ impl ClipBatcher {
             return false;
         }
 
-        let mask_screen_rect_size = mask_screen_rect.size.to_i32();
+        let mask_screen_rect_size = mask_screen_rect.size().to_i32();
         let clip_spatial_node = &spatial_tree
             .spatial_nodes[clip_spatial_node_index.0 as usize];
 
@@ -3448,7 +3448,7 @@ impl ClipBatcher {
         // Because we only run this code path for axis-aligned rects (the root coord system check above),
         // and only for rectangles (not rounded etc), the world_device_rect is not conservative - we know
         // that there is no inner_rect, and the world_device_rect should be the real, axis-aligned clip rect.
-        let mask_origin = mask_screen_rect.origin.to_vector();
+        let mask_origin = mask_screen_rect.min.to_vector();
         let clip_list = self.get_batch_list(is_first_clip);
 
         for y in 0 .. y_tiles {
@@ -3461,19 +3461,16 @@ impl ClipBatcher {
                     (p0.x + CLIP_RECTANGLE_TILE_SIZE).min(mask_screen_rect_size.width),
                     (p0.y + CLIP_RECTANGLE_TILE_SIZE).min(mask_screen_rect_size.height),
                 );
-                let normalized_sub_rect = DeviceIntRect::new(
-                    p0,
-                    DeviceIntSize::new(
-                        p1.x - p0.x,
-                        p1.y - p0.y,
-                    ),
-                ).to_f32();
+                let normalized_sub_rect = DeviceIntRect {
+                    min: p0,
+                    max: p1,
+                }.to_f32();
                 let world_sub_rect = normalized_sub_rect.translate(mask_origin);
 
                 // If the clip rect completely contains this tile rect, then drawing
                 // these pixels would be redundant - since this clip can't possibly
                 // affect the pixels in this tile, skip them!
-                if !world_device_rect.contains_rect(&world_sub_rect) {
+                if !world_device_rect.to_box2d().contains_box(&world_sub_rect) {
                     clip_list.slow_rectangles.push(ClipMaskInstanceRect {
                         common: ClipMaskInstanceCommon {
                             sub_rect: normalized_sub_rect,
@@ -3555,10 +3552,7 @@ impl ClipBatcher {
             };
 
             let common = ClipMaskInstanceCommon {
-                sub_rect: DeviceRect::new(
-                    DevicePoint::zero(),
-                    actual_rect.size,
-                ),
+                sub_rect: DeviceRect::from_size(actual_rect.size()),
                 task_origin,
                 screen_origin,
                 device_pixel_scale: surface_device_pixel_scale.0,
@@ -3598,8 +3592,8 @@ impl ClipBatcher {
                         // ensure nothing is drawn outside the target. If for some reason we can't map the
                         // rect back to local space, we also fall back to just using a scissor rectangle.
                         let world_rect =
-                            sub_rect.translate(actual_rect.origin.to_vector()) / surface_device_pixel_scale;
-                        let (clip_transform_id, local_rect, scissor) = match map_local_to_world.unmap(&world_rect) {
+                            sub_rect.translate(actual_rect.min.to_vector()) / surface_device_pixel_scale;
+                        let (clip_transform_id, local_rect, scissor) = match map_local_to_world.unmap(&world_rect.to_rect()) {
                             Some(local_rect)
                                 if clip_transform_id.transform_kind() == TransformedRectKind::AxisAligned &&
                                    !map_local_to_world.get_transform().has_perspective_component() => {
@@ -3640,16 +3634,17 @@ impl ClipBatcher {
                     let clip_is_axis_aligned = clip_spatial_node.coordinate_system_id == CoordinateSystemId::root();
 
                     if clip_instance.has_visible_tiles() {
-                        let sub_rect_bounds = actual_rect.size.into();
+                        let sub_rect_bounds = actual_rect.size().into();
 
                         for tile in clip_store.visible_mask_tiles(&clip_instance) {
                             let tile_sub_rect = if clip_is_axis_aligned {
                                 let tile_world_rect = map_local_to_world
                                     .map(&tile.tile_rect)
-                                    .expect("bug: should always map as axis-aligned");
+                                    .expect("bug: should always map as axis-aligned")
+                                    .to_box2d();
                                 let tile_device_rect = tile_world_rect * surface_device_pixel_scale;
                                 tile_device_rect
-                                    .translate(-actual_rect.origin.to_vector())
+                                    .translate(-actual_rect.min.to_vector())
                                     .round_out()
                                     .intersection(&sub_rect_bounds)
                             } else {
@@ -3657,7 +3652,7 @@ impl ClipBatcher {
                             };
 
                             if let Some(tile_sub_rect) = tile_sub_rect {
-                                assert!(sub_rect_bounds.contains_rect(&tile_sub_rect));
+                                assert!(sub_rect_bounds.contains_box(&tile_sub_rect));
                                 add_image(
                                     request.with_tile(tile.tile_offset),
                                     tile.tile_rect,
@@ -3675,7 +3670,7 @@ impl ClipBatcher {
                     if is_first_clip &&
                         (!clip_is_axis_aligned ||
                          !(map_local_to_world.map(&rect).expect("bug: should always map as axis-aligned")
-                            * surface_device_pixel_scale).contains_rect(&actual_rect)) {
+                            * surface_device_pixel_scale).contains_rect(&actual_rect.to_rect())) {
                         clear_to_one = true;
                     }
                     true
