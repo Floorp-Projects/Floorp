@@ -557,8 +557,8 @@ impl FrameBuilder {
         // TODO(dp): Remove me completely!!
         let global_device_pixel_scale = DevicePixelScale::new(1.0);
 
-        let output_size = scene.output_rect.size;
-        let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out();
+        let output_size = scene.output_rect.size();
+        let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out().to_rect();
 
         let mut composite_state = CompositeState::new(
             scene.config.compositor_kind,
@@ -689,9 +689,9 @@ impl FrameBuilder {
         scene.clip_store.end_frame(&mut scratch.clip_store);
 
         Frame {
-            device_rect: DeviceIntRect::new(
+            device_rect: DeviceIntRect::from_origin_and_size(
                 device_origin,
-                scene.output_rect.size,
+                scene.output_rect.size(),
             ),
             passes,
             transform_palette: transform_palette.finish(),
@@ -732,7 +732,7 @@ impl FrameBuilder {
                     let world_clip_rect = map_local_to_world
                         .map(&tile_cache.local_clip_rect)
                         .expect("bug: unable to map clip rect");
-                    let device_clip_rect = (world_clip_rect * ctx.global_device_pixel_scale).round();
+                    let device_clip_rect = (world_clip_rect * ctx.global_device_pixel_scale).round().to_box2d();
 
                     composite_state.push_surface(
                         tile_cache,
