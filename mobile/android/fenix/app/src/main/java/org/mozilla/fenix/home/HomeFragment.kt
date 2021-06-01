@@ -262,7 +262,7 @@ class HomeFragment : Fragment() {
                 hideOnboarding = ::hideOnboardingAndOpenSearch,
                 registerCollectionStorageObserver = ::registerCollectionStorageObserver,
                 showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
-                showTabTray = ::openTabTray,
+                showTabTray = ::openTabsTray,
                 handleSwipedItemDeletionCancel = ::handleSwipedItemDeletionCancel
             )
         )
@@ -396,7 +396,7 @@ class HomeFragment : Fragment() {
             }
 
             view.tab_button.setOnClickListener {
-                openTabTray()
+                openTabsTray()
             }
 
             PrivateBrowsingButtonView(
@@ -1038,15 +1038,10 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun openTabTray() {
-        val direction = if (requireContext().settings().tabsTrayRewrite) {
-            HomeFragmentDirections.actionGlobalTabsTrayFragment()
-        } else {
-            HomeFragmentDirections.actionGlobalTabTrayDialogFragment()
-        }
+    private fun openTabsTray() {
         findNavController().nav(
             R.id.homeFragment,
-            direction
+            HomeFragmentDirections.actionGlobalTabsTrayFragment()
         )
     }
 

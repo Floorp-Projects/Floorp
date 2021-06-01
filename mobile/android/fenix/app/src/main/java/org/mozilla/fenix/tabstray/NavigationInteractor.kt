@@ -209,7 +209,7 @@ class DefaultNavigationInteractor(
         activity.openToBrowserAndLoad(
             searchTermOrURL = tab.active().url,
             newTab = true,
-            from = BrowserDirection.FromTabTray
+            from = BrowserDirection.FromTabsTray
         )
     }
 }

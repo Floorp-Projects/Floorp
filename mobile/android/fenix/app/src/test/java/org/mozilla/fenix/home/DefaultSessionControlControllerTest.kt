@@ -666,7 +666,7 @@ class DefaultSessionControlControllerTest {
 
         verify {
             navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_tabTrayDialogFragment },
+                match<NavDirections> { it.actionId == R.id.action_global_tabsTrayFragment },
                 null
             )
         }

@@ -34,7 +34,6 @@ import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
-import org.mozilla.fenix.FeatureFlags.tabsTrayRewrite
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixAccountManager
 import org.mozilla.fenix.experiments.ExperimentBranch
@@ -371,7 +370,7 @@ open class DefaultToolbarMenu(
                 historyItem,
                 downloadsItem,
                 extensionsItem,
-                if (tabsTrayRewrite) syncMenuItem else syncedTabsItem,
+                syncMenuItem,
                 BrowserMenuDivider(),
                 getSetDefaultBrowserItem(),
                 getSetDefaultBrowserItem()?.let { BrowserMenuDivider() },

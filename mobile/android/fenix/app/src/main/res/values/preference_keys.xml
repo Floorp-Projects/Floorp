@@ -264,7 +264,6 @@
     <string name="pref_key_close_tabs_after_one_day" translatable="false">pref_key_close_tabs_after_one_day</string>
     <string name="pref_key_close_tabs_after_one_week" translatable="false">pref_key_close_tabs_after_one_week</string>
     <string name="pref_key_close_tabs_after_one_month" translatable="false">pref_key_close_tabs_after_one_month</string>
-    <string name="pref_key_new_tabs_tray" translatable="false">pref_key_new_tabs_tray</string>
     <string name="pref_key_allow_third_party_root_certs" translatable="false">pref_key_allow_third_party_cert_roots</string>
 
     <string name="pref_key_camera_permissions_needed" translatable="false">pref_key_camera_permissions_needed</string>

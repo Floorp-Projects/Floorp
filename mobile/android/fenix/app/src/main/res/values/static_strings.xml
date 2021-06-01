@@ -37,10 +37,6 @@
     <string name="preferences_debug_info" translatable="false">Secret Debug Info</string>
     <!-- Label for enabling Address Autofill -->
     <string name="preferences_debug_settings_enable_address_feature" translatable="false">Enable Address Autofill</string>
-    <!-- Label for the new tabs tray preference -->
-    <string name="preferences_debug_settings_tabs_tray_rewrite">Use new Tabs Tray</string>
-    <!-- Label for a longer description of the new tabs tray preference -->
-    <string name="preferences_debug_settings_tabs_tray_rewrite_summary">A refactored tabs tray that will include Synced Tabs.</string>
     <!-- Label for allowing third party root certificates from the Android OS CA store preference -->
     <string name="preferences_debug_settings_allow_third_party_root_certs">Use third party CA certificates</string>
     <!-- Label for a longer description of allowing third party root certificates from the Android OS CA store preference -->

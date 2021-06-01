@@ -114,11 +114,6 @@
         android:id="@+id/action_global_quickSettingsSheetDialogFragment"
         app:destination="@id/quickSettingsSheetDialogFragment" />
     <action
-        android:id="@+id/action_global_tabTrayDialogFragment"
-        app:destination="@id/tabTrayDialogFragment"
-        app:popUpTo="@id/tabTrayDialogFragment"
-        app:popUpToInclusive="true" />
-    <action
         android:id="@+id/action_global_tabsTrayFragment"
         app:destination="@id/tabsTrayFragment"
         app:popUpTo="@id/tabsTrayFragment"
@@ -139,16 +134,6 @@
     <dialog
         android:id="@+id/tabsTrayFragment"
         android:name="org.mozilla.fenix.tabstray.TabsTrayFragment">
-        <argument
-            android:name="enterMultiselect"
-            android:defaultValue="false"
-            app:argType="boolean" />
-    </dialog>
-
-    <dialog
-        android:id="@+id/tabTrayDialogFragment"
-        android:name="org.mozilla.fenix.tabtray.TabTrayDialogFragment"
-        tools:layout="@layout/fragment_tab_tray_dialog">
         <argument
             android:name="enterMultiselect"
             android:defaultValue="false"

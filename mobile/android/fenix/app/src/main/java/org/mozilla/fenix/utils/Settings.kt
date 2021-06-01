@@ -351,12 +351,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
-    var tabsTrayRewrite by featureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_new_tabs_tray),
-        default = true,
-        featureFlag = FeatureFlags.tabsTrayRewrite
-    )
-
     var allowThirdPartyRootCerts by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_allow_third_party_root_certs),
         default = false

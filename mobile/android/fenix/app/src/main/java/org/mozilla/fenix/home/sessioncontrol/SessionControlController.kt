@@ -484,7 +484,7 @@ class DefaultSessionControlController(
     }
 
     private fun showTabTrayCollectionCreation() {
-        val directions = HomeFragmentDirections.actionGlobalTabTrayDialogFragment(
+        val directions = HomeFragmentDirections.actionGlobalTabsTrayFragment(
             enterMultiselect = true
         )
         navController.nav(R.id.homeFragment, directions)

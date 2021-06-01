@@ -51,7 +51,6 @@ class ThreeDotMenuMainRobot {
     fun verifyAddOnsButton() = assertAddOnsButton()
     fun verifyHistoryButton() = assertHistoryButton()
     fun verifyBookmarksButton() = assertBookmarksButton()
-    fun verifySyncedTabsButton() = assertSyncedTabsButton()
     fun verifySyncSignInButton() = assertSignInToSyncButton()
     fun verifyHelpButton() = assertHelpButton()
     fun verifyThreeDotMenuExists() = threeDotMenuRecyclerViewExists()
@@ -155,15 +154,6 @@ class ThreeDotMenuMainRobot {
 
             DownloadRobot().interact()
             return DownloadRobot.Transition()
-        }
-
-        fun openSyncedTabs(interact: SyncedTabsRobot.() -> Unit): SyncedTabsRobot.Transition {
-            onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(swipeDown())
-            mDevice.waitNotNull(Until.findObject(By.text("Synced tabs")), waitingTime)
-            syncedTabsButton().click()
-
-            SyncedTabsRobot().interact()
-            return SyncedTabsRobot.Transition()
         }
 
         fun openSyncSignIn(interact: SyncSignInRobot.() -> Unit): SyncSignInRobot.Transition {
@@ -416,10 +406,6 @@ private fun assertHistoryButton() = historyButton()
 
 private fun bookmarksButton() = onView(allOf(withText(R.string.library_bookmarks)))
 private fun assertBookmarksButton() = bookmarksButton()
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun syncedTabsButton() = onView(allOf(withText(R.string.library_synced_tabs)))
-private fun assertSyncedTabsButton() = syncedTabsButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun signInToSyncButton() = onView(withText("Sign in to sync"))

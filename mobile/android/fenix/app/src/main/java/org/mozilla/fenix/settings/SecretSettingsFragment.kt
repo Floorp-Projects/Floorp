@@ -30,12 +30,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_new_tabs_tray).apply {
-            isVisible = FeatureFlags.tabsTrayRewrite
-            isChecked = context.settings().tabsTrayRewrite
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
         requirePreference<SwitchPreference>(R.string.pref_key_allow_third_party_root_certs).apply {
             isVisible = true
             isChecked = context.settings().allowThirdPartyRootCerts

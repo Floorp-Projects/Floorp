@@ -49,11 +49,7 @@ class ThreeDotMenuMainTest {
             verifyHistoryButton()
             verifyDownloadsButton()
             verifyAddOnsButton()
-            if (FeatureFlags.tabsTrayRewrite) {
-                verifySyncSignInButton()
-            } else {
-                verifySyncedTabsButton()
-            }
+            verifySyncSignInButton()
             verifyDesktopSite()
             verifyWhatsNewButton()
             verifyHelpButton()

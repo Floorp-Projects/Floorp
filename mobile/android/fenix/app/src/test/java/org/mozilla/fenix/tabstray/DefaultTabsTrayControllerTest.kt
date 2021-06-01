@@ -35,7 +35,6 @@ import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.helpers.DisableNavGraphProviderAssertionRule
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragment
-import org.mozilla.fenix.tabtray.TabTrayDialogFragmentDirections
 
 @RunWith(FenixRobolectricTestRunner::class)
 class DefaultTabsTrayControllerTest {
@@ -124,7 +123,7 @@ class DefaultTabsTrayControllerTest {
         verifyOrder {
             profiler.getProfilerTime()
             navController.navigateBlockingForAsyncNavGraph(
-                TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
+                TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
             )
             navigationInteractor.onTabTrayDismissed()
             profiler.addMarker(
@@ -159,7 +158,7 @@ class DefaultTabsTrayControllerTest {
         verifyOrder {
             profiler.getProfilerTime()
             navController.navigateBlockingForAsyncNavGraph(
-                TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
+                TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
             )
             navigationInteractor.onTabTrayDismissed()
             profiler.addMarker(

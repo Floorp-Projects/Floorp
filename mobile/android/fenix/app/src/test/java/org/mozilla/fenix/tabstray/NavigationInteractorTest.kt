@@ -271,7 +271,7 @@ class NavigationInteractorTest {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = "https://mozilla.org",
                 newTab = true,
-                from = BrowserDirection.FromTabTray
+                from = BrowserDirection.FromTabsTray
             )
         }
     }

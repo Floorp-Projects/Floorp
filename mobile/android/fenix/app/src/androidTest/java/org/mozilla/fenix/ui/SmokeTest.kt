@@ -251,18 +251,10 @@ class SmokeTest {
     // Verifies the Synced tabs menu or Sync Sign In menu opens from a tab's 3 dot menu.
     // The test is assuming we are NOT signed in.
     fun openMainMenuSyncItemTest() {
-        if (FeatureFlags.tabsTrayRewrite) {
-            homeScreen {
-            }.openThreeDotMenu {
-            }.openSyncSignIn {
-                verifySyncSignInMenuHeader()
-            }
-        } else {
-            homeScreen {
-            }.openThreeDotMenu {
-            }.openSyncedTabs {
-                verifySyncedTabsMenuHeader()
-            }
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSyncSignIn {
+            verifySyncSignInMenuHeader()
         }
     }
 
@@ -888,6 +880,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Enable after #19738 and #19090 land.")
     @Test
     fun createFirstCollectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

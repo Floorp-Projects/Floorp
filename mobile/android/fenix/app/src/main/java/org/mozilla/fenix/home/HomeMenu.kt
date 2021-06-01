@@ -23,7 +23,6 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import org.mozilla.fenix.FeatureFlags.tabsTrayRewrite
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixAccountManager
 import org.mozilla.fenix.experiments.FeatureId
@@ -209,7 +208,7 @@ class HomeMenu(
             historyItem,
             downloadsItem,
             extensionsItem,
-            if (tabsTrayRewrite) syncSignInMenuItem else syncedTabsItem,
+            syncSignInMenuItem,
             accountAuthItem,
             BrowserMenuDivider(),
             desktopItem,
