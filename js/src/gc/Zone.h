@@ -236,6 +236,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadData<unsigned> gcSweepGroupIndex;
 #endif
 
+  js::gc::PretenuringZone pretenuring;
+
  private:
   // Side map for storing unique ids for cells, independent of address.
   js::ZoneOrGCTaskData<js::gc::UniqueIdMap> uniqueIds_;
@@ -641,6 +643,13 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // Clear the kept-alive set.
   // See: https://tc39.es/proposal-weakrefs/#sec-clear-kept-objects
   void clearKeptObjects();
+
+  js::gc::AllocSite* unknownAllocSite() {
+    return &pretenuring.unknownAllocSite;
+  }
+  js::gc::AllocSite* optimizedAllocSite() {
+    return &pretenuring.optimizedAllocSite;
+  }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
   void checkAllCrossCompartmentWrappersAfterMovingGC();

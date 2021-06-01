@@ -116,6 +116,13 @@ static_assert(int(AllocKind::OBJECT_FIRST) == 0,
 
 constexpr size_t AllocKindCount = size_t(AllocKind::LIMIT);
 
+/*
+ * This flag allows an allocation site to request a specific heap based upon the
+ * estimated lifetime or lifetime requirements of objects allocated from that
+ * site.
+ */
+enum InitialHeap : uint8_t { DefaultHeap, TenuredHeap };
+
 inline bool IsAllocKind(AllocKind kind) {
   return kind >= AllocKind::FIRST && kind <= AllocKind::LIMIT;
 }

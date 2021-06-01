@@ -396,7 +396,7 @@ void js::Nursery::leaveZealMode() {
 }
 #endif  // JS_GC_ZEAL
 
-JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
+JSObject* js::Nursery::allocateObject(gc::AllocSite* site, size_t size,
                                       size_t nDynamicSlots,
                                       const JSClass* clasp) {
   // Ensure there's enough space to replace the contents with a
@@ -408,7 +408,7 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
                                           clasp->isProxyObject());
 
   auto* obj = reinterpret_cast<JSObject*>(
-      allocateCell(cx->zone(), size, JS::TraceKind::Object));
+      allocateCell(site, size, JS::TraceKind::Object));
   if (!obj) {
     return nullptr;
   }
@@ -418,7 +418,7 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
   if (nDynamicSlots) {
     MOZ_ASSERT(clasp->isNativeObject());
     void* allocation =
-        allocateBuffer(cx->zone(), ObjectSlots::allocSize(nDynamicSlots));
+        allocateBuffer(site->zone(), ObjectSlots::allocSize(nDynamicSlots));
     if (!allocation) {
       // It is safe to leave the allocated object uninitialized, since we
       // do not visit unallocated things in the nursery.
@@ -438,7 +438,8 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
   return obj;
 }
 
-Cell* js::Nursery::allocateCell(Zone* zone, size_t size, JS::TraceKind kind) {
+Cell* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
+                                JS::TraceKind kind) {
   // Ensure there's enough space to replace the contents with a
   // RelocationOverlay.
   MOZ_ASSERT(size >= sizeof(RelocationOverlay));
@@ -449,7 +450,7 @@ Cell* js::Nursery::allocateCell(Zone* zone, size_t size, JS::TraceKind kind) {
     return nullptr;
   }
 
-  new (ptr) NurseryCellHeader(zone, kind);
+  new (ptr) NurseryCellHeader(site, kind);
 
   auto cell =
       reinterpret_cast<Cell*>(uintptr_t(ptr) + sizeof(NurseryCellHeader));
@@ -457,10 +458,10 @@ Cell* js::Nursery::allocateCell(Zone* zone, size_t size, JS::TraceKind kind) {
   return cell;
 }
 
-Cell* js::Nursery::allocateString(JS::Zone* zone, size_t size) {
-  Cell* cell = allocateCell(zone, size, JS::TraceKind::String);
+Cell* js::Nursery::allocateString(gc::AllocSite* site, size_t size) {
+  Cell* cell = allocateCell(site, size, JS::TraceKind::String);
   if (cell) {
-    zone->nurseryAllocatedStrings++;
+    site->zone()->nurseryAllocatedStrings++;
   }
   return cell;
 }

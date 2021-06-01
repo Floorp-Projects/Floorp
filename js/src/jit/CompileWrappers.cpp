@@ -163,7 +163,10 @@ bool CompileZone::canNurseryAllocateBigInts() {
 }
 
 uintptr_t CompileZone::nurseryCellHeader(JS::TraceKind kind) {
-  return gc::NurseryCellHeader::MakeValue(zone(), kind);
+  gc::AllocSite* site = kind == JS::TraceKind::Object
+                            ? zone()->optimizedAllocSite()
+                            : zone()->unknownAllocSite();
+  return gc::NurseryCellHeader::MakeValue(site, kind);
 }
 
 JS::Realm* CompileRealm::realm() { return reinterpret_cast<JS::Realm*>(this); }
