@@ -58,9 +58,6 @@
         android:id="@+id/action_global_settingsFragment"
         app:destination="@id/settingsFragment" />
     <action
-        android:id="@+id/action_global_syncedTabsFragment"
-        app:destination="@id/syncedTabsFragment" />
-    <action
         android:id="@+id/action_global_privateBrowsingFragment"
         app:destination="@id/privateBrowsingFragment" />
     <action
@@ -196,9 +193,6 @@
             android:name="activeSessionId"
             app:argType="string"
             app:nullable="true" />
-        <action
-            android:id="@+id/action_browserFragment_to_syncedTabsFragment"
-            app:destination="@id/syncedTabsFragment" />
         <action
             android:id="@+id/action_browserFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />
@@ -356,12 +350,6 @@
             app:popUpTo="@id/settingsFragment"
             app:popUpToInclusive="true" />
     </fragment>
-
-    <fragment
-        android:id="@+id/syncedTabsFragment"
-        android:name="org.mozilla.fenix.sync.SyncedTabsFragment"
-        android:label="@string/synced_tabs"
-        tools:layout="@layout/fragment_synced_tabs" />
 
     <fragment
         android:id="@+id/loginExceptionsFragment"

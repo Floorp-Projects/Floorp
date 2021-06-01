@@ -332,14 +332,6 @@ open class DefaultToolbarMenu(
         onItemTapped.invoke(ToolbarMenu.Item.Quit)
     }
 
-    val syncedTabsItem = BrowserMenuImageText(
-        context.getString(R.string.synced_tabs),
-        R.drawable.ic_synced_tabs,
-        primaryTextColor()
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.SyncedTabs)
-    }
-
     private fun getSyncItemTitle(): String {
         val authenticatedAccount = accountManager.authenticatedAccount
         val email = accountManager.accountProfileEmail

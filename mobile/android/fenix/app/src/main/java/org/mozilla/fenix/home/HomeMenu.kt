@@ -45,7 +45,6 @@ class HomeMenu(
         object History : Item()
         object Downloads : Item()
         object Extensions : Item()
-        object SyncTabs : Item()
         data class SyncAccount(val signedIn: Boolean) : Item()
         object WhatsNew : Item()
         object Help : Item()
@@ -91,14 +90,6 @@ class HomeMenu(
         }
     }
 
-    val syncedTabsItem = BrowserMenuImageText(
-        context.getString(R.string.synced_tabs),
-        R.drawable.ic_synced_tabs,
-        primaryTextColor
-    ) {
-        onItemTapped.invoke(Item.SyncTabs)
-    }
-
     private fun getSyncItemTitle(): String {
         val authenticatedAccount = accountManager.authenticatedAccount
         val email = accountManager.accountProfileEmail
@@ -110,7 +101,7 @@ class HomeMenu(
         }
     }
 
-    val syncSignInMenuItem = BrowserMenuImageText(
+    private val syncSignInMenuItem = BrowserMenuImageText(
         getSyncItemTitle(),
         R.drawable.ic_synced_tabs,
         primaryTextColor

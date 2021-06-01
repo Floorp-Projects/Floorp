@@ -786,13 +786,6 @@ class HomeFragment : Fragment() {
                         )
                         requireComponents.analytics.metrics.track(Event.HomeMenuSettingsItemClicked)
                     }
-                    HomeMenu.Item.SyncTabs -> {
-                        hideOnboardingIfNeeded()
-                        nav(
-                            R.id.homeFragment,
-                            HomeFragmentDirections.actionGlobalSyncedTabsFragment()
-                        )
-                    }
                     is HomeMenu.Item.SyncAccount -> {
                         hideOnboardingIfNeeded()
                         val directions = if (it.signedIn) {

@@ -111,7 +111,6 @@ import org.mozilla.fenix.settings.logins.fragment.SavedLoginsAuthFragmentDirecti
 import org.mozilla.fenix.settings.search.AddSearchEngineFragmentDirections
 import org.mozilla.fenix.settings.search.EditCustomSearchEngineFragmentDirections
 import org.mozilla.fenix.share.AddNewDeviceFragmentDirections
-import org.mozilla.fenix.sync.SyncedTabsFragmentDirections
 import org.mozilla.fenix.tabstray.TabsTrayFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
@@ -786,8 +785,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             SearchDialogFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSettings ->
             SettingsFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromSyncedTabs ->
-            SyncedTabsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromBookmarks ->
             BookmarkFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromHistory ->
