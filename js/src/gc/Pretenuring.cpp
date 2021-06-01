@@ -60,8 +60,9 @@ bool PretenuringNursery::canCreateAllocSite() {
   return allocSitesCreated < MaxAllocSitesPerMinorGC;
 }
 
-void PretenuringNursery::doPretenuring(GCRuntime* gc, bool validPromotionRate,
-                                       double promotionRate, bool reportInfo) {
+size_t PretenuringNursery::doPretenuring(GCRuntime* gc, bool validPromotionRate,
+                                         double promotionRate,
+                                         bool reportInfo) {
   mozilla::Maybe<AutoGCSession> session;
 
   size_t sitesActive = 0;
@@ -162,6 +163,8 @@ void PretenuringNursery::doPretenuring(GCRuntime* gc, bool validPromotionRate,
   }
 
   allocSitesCreated = 0;
+
+  return sitesPretenured;
 }
 
 bool AllocSite::invalidateScript(GCRuntime* gc) {

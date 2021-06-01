@@ -213,8 +213,8 @@ class PretenuringNursery {
     allocatedSites = site;
   }
 
-  void doPretenuring(GCRuntime* gc, bool validPromotionRate,
-                     double promotionRate, bool reportInfo);
+  size_t doPretenuring(GCRuntime* gc, bool validPromotionRate,
+                       double promotionRate, bool reportInfo);
 
   void maybeStopPretenuring(GCRuntime* gc);
 

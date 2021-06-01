@@ -1103,8 +1103,10 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   const double promotionRate = calcPromotionRate(&validPromotionRate);
 
   startProfile(ProfileKey::Pretenure);
+  size_t sitesPretenured = 0;
   if (!wasEmpty) {
-    doPretenuring(rt, reason, validPromotionRate, promotionRate);
+    sitesPretenured =
+        doPretenuring(rt, reason, validPromotionRate, promotionRate);
   }
   endProfile(ProfileKey::Pretenure);
 
@@ -1120,7 +1122,7 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   gc->incMinorGcNumber();
 
   TimeDuration totalTime = profileDurations_[ProfileKey::Total];
-  sendTelemetry(reason, totalTime, wasEmpty, promotionRate);
+  sendTelemetry(reason, totalTime, wasEmpty, promotionRate, sitesPretenured);
 
   stats().endNurseryCollection(reason);
   gcprobes::MinorGCEnd();
@@ -1147,7 +1149,8 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
 }
 
 void js::Nursery::sendTelemetry(JS::GCReason reason, TimeDuration totalTime,
-                                bool wasEmpty, double promotionRate) {
+                                bool wasEmpty, double promotionRate,
+                                size_t sitesPretenured) {
   JSRuntime* rt = runtime();
   rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON, uint32_t(reason));
   if (totalTime.ToMilliseconds() > 1.0) {
@@ -1157,7 +1160,7 @@ void js::Nursery::sendTelemetry(JS::GCReason reason, TimeDuration totalTime,
   rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, committed());
 
   if (!wasEmpty) {
-    rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT_2, 0);
+    rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT_2, sitesPretenured);
     rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE,
                      promotionRate * 100);
   }
@@ -1288,10 +1291,11 @@ js::Nursery::CollectionResult js::Nursery::doCollection(JS::GCReason reason) {
   return {mover.tenuredSize, mover.tenuredCells};
 }
 
-void js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
-                                bool validPromotionRate, double promotionRate) {
-  pretenuringNursery.doPretenuring(gc, validPromotionRate, promotionRate,
-                                   reportPretenuring_);
+size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
+                                  bool validPromotionRate,
+                                  double promotionRate) {
+  size_t sitesPretenured = pretenuringNursery.doPretenuring(
+      gc, validPromotionRate, promotionRate, reportPretenuring_);
 
   bool highPromotionRate =
       validPromotionRate && promotionRate > tunables().pretenureThreshold();
@@ -1374,6 +1378,8 @@ void js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
   stats().setStat(gcstats::STAT_NURSERY_BIGINT_REALMS_DISABLED,
                   numNurseryBigIntRealmsDisabled);
   stats().setStat(gcstats::STAT_BIGINTS_TENURED, numBigIntsTenured);
+
+  return sitesPretenured;
 }
 
 bool js::Nursery::registerMallocedBuffer(void* buffer, size_t nbytes) {
