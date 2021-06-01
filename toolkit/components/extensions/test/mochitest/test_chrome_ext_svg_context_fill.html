@@ -76,14 +76,13 @@ async function test_moz_extension_svg_context_fill({
     expectAllowed,
   });
 
-  const extension = ExtensionTestUtils.loadExtension({
+  let extDefinition = {
     manifest: {
       applications: { gecko: { id: addonId } },
     },
     background() {
       browser.test.sendMessage("svg-url", browser.runtime.getURL("context-fill-fallback-red.svg"));
     },
-    isPrivileged,
     files: {
       "context-fill-fallback-red.svg": `
         <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
@@ -92,7 +91,28 @@ async function test_moz_extension_svg_context_fill({
         </svg>
       `,
     },
-  });
+  }
+
+  if (isPrivileged) {
+    // isPrivileged is unused when useAddonManager is set (see ExtensionTestCommon.generate),
+    // the internal permission being tested is only added when the extension has a startupReason
+    // related to new installations and upgrades/downgrades and so the `startupReason` is set here
+    // to be able to mock the startupReason expected when useAddonManager can't be used.
+    extDefinition = {
+      ...extDefinition,
+      isPrivileged,
+      startupReason: "ADDON_INSTALL",
+    };
+  } else {
+    // useAddonManager temporary is instead used to explicitly test the other cases when the extension
+    // is not expected to be privileged.
+    extDefinition = {
+      ...extDefinition,
+      useAddonManager: "temporary",
+    };
+  }
+
+  const extension = ExtensionTestUtils.loadExtension(extDefinition);
 
   await extension.startup();
 
@@ -130,6 +150,11 @@ async function test_moz_extension_svg_context_fill({
   await extension.unload();
 }
 
+// This test file verify that the non-standard svg context-fill feature is allowed
+// on extensions svg files coming from Mozilla-owned extensions.
+//
+// NOTE: line extension permission to use context fill is tested in test_recommendations.js
+
 add_task(async function test_allowed_on_privileged_ext() {
   await test_moz_extension_svg_context_fill({
     addonId: "privileged-addon@mochi.test",
@@ -160,9 +185,6 @@ add_task(async function test_allowed_on_privileged_ext_with_mozilla_id() {
   });
 });
 
-// Bug 1710917 TODO: we may have to re-evalute this test (along with removing the
-// special case based on the addon id suffixes and replace it with some better
-// approach to be determined as part of that bug).
 add_task(async function test_allowed_on_non_privileged_ext_with_mozilla_id() {
   await test_moz_extension_svg_context_fill({
     addonId: "non-privileged-addon@mozilla.org",
