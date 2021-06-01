@@ -14,7 +14,17 @@
 using namespace js;
 using namespace js::gc;
 
+// The maximum number of alloc sites to create between each minor
+// collection. Stop tracking allocation after this limit is reached. This
+// prevents unbounded time traversing the list during minor GC.
+static constexpr size_t MaxAllocSitesPerMinorGC = 500;
+
 AllocSite* const AllocSite::EndSentinel = reinterpret_cast<AllocSite*>(1);
+
+bool PretenuringNursery::canCreateAllocSite() {
+  MOZ_ASSERT(allocSitesCreated <= MaxAllocSitesPerMinorGC);
+  return allocSitesCreated < MaxAllocSitesPerMinorGC;
+}
 
 void PretenuringNursery::doPretenuring(GCRuntime* gc, bool reportInfo) {
   size_t sitesActive = 0;
@@ -67,8 +77,10 @@ void PretenuringNursery::doPretenuring(GCRuntime* gc, bool reportInfo) {
   }
 
   if (reportInfo) {
-    AllocSite::printInfoFooter(sitesActive);
+    AllocSite::printInfoFooter(allocSitesCreated, sitesActive);
   }
+
+  allocSitesCreated = 0;
 }
 
 AllocSite::Kind AllocSite::kind() const {
@@ -125,14 +137,21 @@ void AllocSite::updateStateOnMinorGC(double promotionRate) {
   }
 }
 
+void AllocSite::trace(JSTracer* trc) {
+  if (script_) {
+    TraceManuallyBarrieredEdge(trc, &script_, "AllocSite script");
+  }
+}
+
 /* static */
 void AllocSite::printInfoHeader() {
   fprintf(stderr, "Pretenuring info after minor GC:\n");
 }
 
 /* static */
-void AllocSite::printInfoFooter(size_t sitesActive) {
-  fprintf(stderr, "  %zu sites active\n", sitesActive);
+void AllocSite::printInfoFooter(size_t sitesCreated, size_t sitesActive) {
+  fprintf(stderr, "  %zu alloc sites created, %zu active\n", sitesCreated,
+          sitesActive);
 }
 
 void AllocSite::printInfo(bool hasPromotionRate, double promotionRate) const {

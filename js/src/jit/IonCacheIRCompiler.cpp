@@ -2020,13 +2020,15 @@ bool IonCacheIRCompiler::emitSameValueResult(ValOperandId lhs,
 }
 
 bool IonCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
-                                                  uint32_t shapeOffset) {
+                                                  uint32_t shapeOffset,
+                                                  uint32_t siteOffset) {
   MOZ_CRASH("NewArray ICs not used in ion");
 }
 
 bool IonCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
                                                   uint32_t numDynamicSlots,
                                                   gc::AllocKind allocKind,
-                                                  uint32_t shapeOffset) {
+                                                  uint32_t shapeOffset,
+                                                  uint32_t siteOffset) {
   MOZ_CRASH("NewObject ICs not used in ion");
 }

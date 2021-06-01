@@ -1552,7 +1552,8 @@ bool RNewPlainObject::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedShape shape(cx, &iter.read().toGCCellPtr().as<Shape>());
 
   // See CodeGenerator::visitNewPlainObject.
-  JSObject* resultObject = NewPlainObject(cx, shape, allocKind_, initialHeap_);
+  JSObject* resultObject =
+      NewPlainObjectOptimizedFallback(cx, shape, allocKind_, initialHeap_);
   if (!resultObject) {
     return false;
   }
