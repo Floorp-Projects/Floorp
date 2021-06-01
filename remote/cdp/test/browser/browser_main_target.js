@@ -6,7 +6,7 @@
 // Test very basic CDP features.
 
 add_task(async function({ CDP }) {
-  const { mainProcessTarget } = RemoteAgent.targetList;
+  const { mainProcessTarget } = RemoteAgent.cdp.targetList;
   ok(
     mainProcessTarget,
     "The main process target is instantiated after the call to `listen`"

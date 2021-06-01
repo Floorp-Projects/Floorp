@@ -7,6 +7,13 @@ There are a couple of preferences associated with the Remote Agent:
 Configurable preferences
 ------------------------
 
+### `remote.active-protocols`
+
+Defines the remote protocols that are active. Available protocols are,
+WebDriver BiDi (`1`), and CDP (`2`). Multiple protocols can be activated
+at the same time by using bitwise or with the values. Defaults to `3`
+in Nightly builds, and `2` otherwise.
+
 ### `remote.force-local`
 
 Limits the Remote Agent to be allowed to listen on loopback devices,

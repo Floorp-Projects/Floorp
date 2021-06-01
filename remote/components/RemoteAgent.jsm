@@ -6,30 +6,43 @@
 
 var EXPORTED_SYMBOLS = ["RemoteAgent", "RemoteAgentFactory"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
+  CDP: "chrome://remote/content/cdp/CDP.jsm",
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
-  JSONHandler: "chrome://remote/content/cdp/JSONHandler.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
   RecommendedPreferences:
     "chrome://remote/content/cdp/RecommendedPreferences.jsm",
-  TargetList: "chrome://remote/content/cdp/targets/TargetList.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
-const FORCE_LOCAL = "remote.force-local";
+const PREF_ACTIVE_PROTOCOLS = "remote.active-protocols";
+const PREF_FORCE_LOCAL = "remote.force-local";
+
+// const BIDI_ACTIVE = 0x1;
+const CDP_ACTIVE = 0x2;
 
 const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
 
 class RemoteAgentClass {
   constructor() {
+    this.cdp = null;
+    this.server = null;
+
     this.alteredPrefs = new Set();
+
+    const protocols = Services.prefs.getIntPref(PREF_ACTIVE_PROTOCOLS);
+    if (protocols < 1 || protocols > 3) {
+      throw Error(`Invalid remote protocol identifier: ${protocols}`);
+    }
+    this.activeProtocols = protocols;
   }
 
   get listening() {
@@ -61,7 +74,7 @@ class RemoteAgentClass {
     }
 
     let { host, port } = url;
-    if (Preferences.get(FORCE_LOCAL) && !LOOPBACKS.includes(host)) {
+    if (Preferences.get(PREF_FORCE_LOCAL) && !LOOPBACKS.includes(host)) {
       throw Components.Exception(
         "Restricted to loopback devices",
         Cr.NS_ERROR_ILLEGAL_VALUE
@@ -82,33 +95,19 @@ class RemoteAgentClass {
     }
 
     this.server = new HttpServer();
-    this.server.registerPrefixHandler("/json/", new JSONHandler(this));
 
-    this.targetList = new TargetList();
-    this.targetList.on("target-created", (eventName, target) => {
-      this.server.registerPathHandler(target.path, target);
-    });
-    this.targetList.on("target-destroyed", (eventName, target) => {
-      this.server.registerPathHandler(target.path, null);
-    });
+    if ((this.activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
+      this.cdp = new CDP(this.server);
+    }
 
     return this.asyncListen(host, port);
   }
 
   async asyncListen(host, port) {
     try {
-      await this.targetList.watchForTargets();
-
-      // Immediatly instantiate the main process target in order
-      // to be accessible via HTTP endpoint on startup
-      const mainTarget = this.targetList.getMainProcessTarget();
-
       this.server._start(port, host);
-      Services.obs.notifyObservers(
-        null,
-        "remote-listening",
-        `DevTools listening on ${mainTarget.wsDebuggerURL}`
-      );
+
+      await this.cdp?.start();
     } catch (e) {
       await this.close();
       logger.error(`Unable to start remote agent: ${e.message}`, e);
@@ -123,11 +122,9 @@ class RemoteAgentClass {
       }
       this.alteredPrefs.clear();
 
-      // destroy targetList before stopping server,
-      // otherwise the HTTP will fail to stop
-      if (this.targetList) {
-        this.targetList.destructor();
-      }
+      // Stop the CDP support before stopping the server.
+      // Otherwise the HTTP server will fail to stop.
+      this.cdp?.stop();
 
       if (this.listening) {
         return this.server.stop();
@@ -136,8 +133,8 @@ class RemoteAgentClass {
       // this function must never fail
       logger.error("unable to stop listener", e);
     } finally {
+      this.cdp = null;
       this.server = null;
-      this.targetList = null;
     }
 
     return Promise.resolve();
