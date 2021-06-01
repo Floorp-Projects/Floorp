@@ -39,6 +39,24 @@ pub struct SideOffsets2D<T, U> {
     pub _unit: PhantomData<U>,
 }
 
+#[cfg(feature = "arbitrary")]
+impl<'a, T, U> arbitrary::Arbitrary<'a> for SideOffsets2D<T, U>
+where
+    T: arbitrary::Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self>
+    {
+        let (top, right, bottom, left) = arbitrary::Arbitrary::arbitrary(u)?;
+        Ok(SideOffsets2D {
+            top,
+            right,
+            bottom,
+            left,
+            _unit: PhantomData,
+        })
+    }
+}
+
 impl<T: Copy, U> Copy for SideOffsets2D<T, U> {}
 
 impl<T: Clone, U> Clone for SideOffsets2D<T, U> {
