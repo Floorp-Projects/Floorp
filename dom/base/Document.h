@@ -302,6 +302,7 @@ enum BFCacheStatus {
   CONTAINS_REMOTE_SUBFRAMES = 1 << 11,   // Status 11
   NOT_ONLY_TOPLEVEL_IN_BCG = 1 << 12,    // Status 12
   ABOUT_PAGE = 1 << 13,                  // Status 13
+  RESTORING = 1 << 14,                   // Status 14
 };
 
 }  // namespace dom
