@@ -8,7 +8,7 @@
 
 // local includes
 #include "DatabaseFileInfoFwd.h"  // for DatabaseFileInfo
-#include "FileManager.h"
+#include "DatabaseFileManager.h"
 #include "IndexedDatabase.h"  // for StructuredCloneFile...
 #include "IndexedDatabaseManager.h"
 #include "IndexedDBCommon.h"
@@ -92,7 +92,8 @@ int32_t ToInteger(const nsAString& aStr, nsresult* const aRv) {
 }
 
 Result<StructuredCloneFileParent, nsresult> DeserializeStructuredCloneFile(
-    const FileManager& aFileManager, const nsDependentSubstring& aText) {
+    const DatabaseFileManager& aFileManager,
+    const nsDependentSubstring& aText) {
   MOZ_ASSERT(!aText.IsEmpty());
 
   const StructuredCloneFileBase::FileType type =
@@ -337,7 +338,7 @@ nsresult ReadCompressedIndexDataValuesFromSource(
 Result<StructuredCloneReadInfoParent, nsresult>
 GetStructuredCloneReadInfoFromBlob(const uint8_t* aBlobData,
                                    uint32_t aBlobDataLength,
-                                   const FileManager& aFileManager,
+                                   const DatabaseFileManager& aFileManager,
                                    const nsAString& aFileIds,
                                    const Maybe<CipherKey>& aMaybeKey) {
   MOZ_ASSERT(!IsOnBackgroundThread());
@@ -378,10 +379,9 @@ GetStructuredCloneReadInfoFromBlob(const uint8_t* aBlobData,
 }
 
 Result<StructuredCloneReadInfoParent, nsresult>
-GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
-                                           const FileManager& aFileManager,
-                                           const nsAString& aFileIds,
-                                           const Maybe<CipherKey>& aMaybeKey) {
+GetStructuredCloneReadInfoFromExternalBlob(
+    uint64_t aIntData, const DatabaseFileManager& aFileManager,
+    const nsAString& aFileIds, const Maybe<CipherKey>& aMaybeKey) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
   AUTO_PROFILER_LABEL("GetStructuredCloneReadInfoFromExternalBlob", DOM);
@@ -441,7 +441,7 @@ template <typename T>
 Result<StructuredCloneReadInfoParent, nsresult>
 GetStructuredCloneReadInfoFromSource(T* aSource, uint32_t aDataIndex,
                                      uint32_t aFileIdsIndex,
-                                     const FileManager& aFileManager,
+                                     const DatabaseFileManager& aFileManager,
                                      const Maybe<CipherKey>& aMaybeKey) {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aSource);
@@ -671,11 +671,10 @@ ReadCompressedNumber(const Span<const uint8_t> aSpan) {
 }
 
 Result<StructuredCloneReadInfoParent, nsresult>
-GetStructuredCloneReadInfoFromValueArray(mozIStorageValueArray* aValues,
-                                         uint32_t aDataIndex,
-                                         uint32_t aFileIdsIndex,
-                                         const FileManager& aFileManager,
-                                         const Maybe<CipherKey>& aMaybeKey) {
+GetStructuredCloneReadInfoFromValueArray(
+    mozIStorageValueArray* aValues, uint32_t aDataIndex, uint32_t aFileIdsIndex,
+    const DatabaseFileManager& aFileManager,
+    const Maybe<CipherKey>& aMaybeKey) {
   return GetStructuredCloneReadInfoFromSource(
       aValues, aDataIndex, aFileIdsIndex, aFileManager, aMaybeKey);
 }
@@ -684,14 +683,14 @@ Result<StructuredCloneReadInfoParent, nsresult>
 GetStructuredCloneReadInfoFromStatement(mozIStorageStatement* aStatement,
                                         uint32_t aDataIndex,
                                         uint32_t aFileIdsIndex,
-                                        const FileManager& aFileManager,
+                                        const DatabaseFileManager& aFileManager,
                                         const Maybe<CipherKey>& aMaybeKey) {
   return GetStructuredCloneReadInfoFromSource(
       aStatement, aDataIndex, aFileIdsIndex, aFileManager, aMaybeKey);
 }
 
 Result<nsTArray<StructuredCloneFileParent>, nsresult>
-DeserializeStructuredCloneFiles(const FileManager& aFileManager,
+DeserializeStructuredCloneFiles(const DatabaseFileManager& aFileManager,
                                 const nsAString& aText) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
