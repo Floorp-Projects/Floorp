@@ -1164,7 +1164,7 @@ const menuTracker = {
     const cell = tree.getCellAt(event.x, event.y);
     const node = tree.view.nodeForTreeIndex(cell.row);
 
-    if (!node.bookmarkGuid || Bookmarks.isVirtualRootItem(node.bookmarkGuid)) {
+    if (!node?.bookmarkGuid || Bookmarks.isVirtualRootItem(node.bookmarkGuid)) {
       return;
     }
 
