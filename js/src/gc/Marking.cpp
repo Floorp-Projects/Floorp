@@ -830,15 +830,33 @@ void GCMarker::severWeakDelegate(JSObject* key, JSObject* delegate) {
     return;
   }
 
-  // We are losing the edges from the delegate to the value. Maintain
-  // snapshot-at-beginning by marking through those edges, conservatively (even
-  // if the containing weakmap has not yet been marked).
+  // We are losing 3 edges here: key -> delegate, delegate -> key, and
+  // <delegate, map> -> value. Maintain snapshot-at-beginning (hereafter,
+  // S-A-B) by conservatively assuming the delegate will end up black and
+  // marking through the latter 2 edges.
   //
-  // If this ends up overmarking, we can change this to iterate through every
-  // live weakmap in the Zone instead.
+  // Note that this does not fully give S-A-B:
+  //
+  //  1. If the map is gray, then the value will only be marked gray here even
+  //  though the map could later be discovered to be black.
+  //
+  //  2. If the map has not yet been marked, we won't have any entries to mark
+  //  here in the first place.
+  //
+  //  3. We're not marking the delegate, since that would cause eg nukeAllCCWs
+  //  to keep everything alive for another collection.
+  //
+  // We can't even assume that the delegate passed in here is live, because we
+  // could have gotten here from nukeAllCCWs, which iterates over all CCWs
+  // including dead ones.
+  //
+  // This is ok because S-A-B is only needed to prevent the case where an
+  // unmarked object is removed from the graph and then re-inserted where it is
+  // reachable only by things that have already been marked. None of the 3
+  // target objects will be re-inserted anywhere as a result of this action.
+
   EphemeronEdgeVector& edges = p->value;
-  gc::AutoSetMarkColor autoColor(
-      *this, gc::detail::GetEffectiveColor(runtime(), delegate));
+  gc::AutoSetMarkColor autoColor(*this, MarkColor::Black);
   markEphemeronEdges(edges);
 }
 
@@ -856,10 +874,9 @@ void GCMarker::restoreWeakDelegate(JSObject* key, JSObject* delegate) {
     return;
   }
 
-  // Similar to severWeakDelegate above, mark through every key -> value edge.
+  // Similar to severWeakDelegate above, mark through the key -> value edge.
   EphemeronEdgeVector& edges = p->value;
-  gc::AutoSetMarkColor autoColor(*this,
-                                 gc::detail::GetEffectiveColor(runtime(), key));
+  gc::AutoSetMarkColor autoColor(*this, MarkColor::Black);
   markEphemeronEdges(edges);
 }
 
