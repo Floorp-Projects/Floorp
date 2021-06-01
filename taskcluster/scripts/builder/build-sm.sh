@@ -28,7 +28,10 @@ if [ -n "$MOZ_JS_UPLOAD_BINARIES" ]; then
     upload=1
 fi
 if [ "$upload" = "1" ]; then
-    cp -rL "$OBJDIR/dist/bin/"{js,jsapi-tests,js-gdb.py} "$UPLOAD_DIR"
+    (
+        cd "$OBJDIR/dist/bin"
+        zip "$UPLOAD_DIR/target.jsshell.zip" {js,jsapi-tests,js-gdb.py,libnspr4.so,libplds4.so,libplc4.so}
+    )
     cp -L "$OBJDIR/mozinfo.json" "$UPLOAD_DIR/target.mozinfo.json"
 
     # Fuzzing users want the correct version of llvm-symbolizer available in the
