@@ -1,0 +1,19 @@
+{
+  "name": "another",
+  "manifest_version": 2,
+  "version": "1.0",
+  "description": "another",
+  "applications": {
+    "gecko": {
+      "id": "another@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "another",
+      "search_url": "https://mochi.test:8888/browser/browser/components/search/test/browser/?search={searchTerms}&bar=1",
+      "suggest_url": "https://mochi.test:8888/browser/browser/modules/test/browser/usageTelemetrySearchSuggestions.sjs?{searchTerms}"
+    }
+  }
+}
