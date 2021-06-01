@@ -11005,6 +11005,40 @@ class MRotate : public MBinaryInstruction, public NoTypePolicy::Data {
   ALLOW_CLONE(MRotate)
 };
 
+// Wasm SIMD.
+//
+// See comment in WasmIonCompile.cpp for a justification for these nodes.
+// (v128, v128, v128) -> v128 effect-free operation.
+class MWasmBitselectSimd128 : public MTernaryInstruction,
+                              public NoTypePolicy::Data {
+  MWasmBitselectSimd128(MDefinition* lhs, MDefinition* rhs,
+                        MDefinition* control)
+      : MTernaryInstruction(classOpcode, lhs, rhs, control) {
+    setMovable();
+    setResultType(MIRType::Simd128);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmBitselectSimd128)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, lhs), (1, rhs), (2, control))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+#ifdef ENABLE_WASM_SIMD
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  // If the control mask allows the operation to be specialized as a shuffle
+  // and it is profitable to specialize it on this platform, return true and
+  // the appropriate shuffle mask.
+  bool specializeConstantMaskAsShuffle(int8_t shuffle[16]);
+#endif
+
+  ALLOW_CLONE(MWasmBitselectSimd128)
+};
+
 // (v128, v128) -> v128 effect-free operations.
 class MWasmBinarySimd128 : public MBinaryInstruction,
                            public NoTypePolicy::Data {
