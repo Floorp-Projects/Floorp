@@ -118,7 +118,7 @@ using mozilla::Maybe;
 static void selfHosting_WarningReporter(JSContext* cx, JSErrorReport* report) {
   MOZ_ASSERT(report->isWarning());
 
-  JS::PrintError(cx, stderr, report, true);
+  JS::PrintError(stderr, report, true);
 }
 
 static bool intrinsic_ToObject(JSContext* cx, unsigned argc, Value* vp) {

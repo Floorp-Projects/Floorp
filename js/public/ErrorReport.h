@@ -355,11 +355,10 @@ struct MOZ_STACK_CLASS JS_PUBLIC_API ErrorReportBuilder {
 
 // Writes a full report to a file descriptor. Does nothing for JSErrorReports
 // which are warnings, unless reportWarnings is set.
-extern JS_PUBLIC_API void PrintError(JSContext* cx, FILE* file,
-                                     JSErrorReport* report,
+extern JS_PUBLIC_API void PrintError(FILE* file, JSErrorReport* report,
                                      bool reportWarnings);
 
-extern JS_PUBLIC_API void PrintError(JSContext* cx, FILE* file,
+extern JS_PUBLIC_API void PrintError(FILE* file,
                                      const JS::ErrorReportBuilder& builder,
                                      bool reportWarnings);
 
