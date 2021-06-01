@@ -8,6 +8,11 @@ var EXPORTED_SYMBOLS = ["TabStateFlusher"];
 
 ChromeUtils.defineModuleGetter(
   this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm"
 );
@@ -110,21 +115,24 @@ var TabStateFlusherInternal = {
       */
       nativePromise = browser.frameLoader.requestTabStateFlush();
     }
-    /*
-      In the event that we have to trigger a process switch and thus change
-      browser remoteness, session store needs to register and track the new
-      browser window loaded and to have message manager listener registered
-      ** before ** TabStateFlusher send "SessionStore:flush" message. This fixes
-      the race where we send the message before the message listener is
-      registered for it.
-      */
-    SessionStore.ensureInitialized(browser.ownerGlobal);
 
-    let mm = browser.messageManager;
-    mm.sendAsyncMessage("SessionStore:flush", {
-      id,
-      epoch: SessionStore.getCurrentEpoch(browser),
-    });
+    if (!Services.appinfo.sessionHistoryInParent) {
+      /*
+        In the event that we have to trigger a process switch and thus change
+        browser remoteness, session store needs to register and track the new
+        browser window loaded and to have message manager listener registered
+        ** before ** TabStateFlusher send "SessionStore:flush" message. This fixes
+        the race where we send the message before the message listener is
+        registered for it.
+        */
+      SessionStore.ensureInitialized(browser.ownerGlobal);
+
+      let mm = browser.messageManager;
+      mm.sendAsyncMessage("SessionStore:flush", {
+        id,
+        epoch: SessionStore.getCurrentEpoch(browser),
+      });
+    }
 
     // Retrieve active requests for given browser.
     let permanentKey = browser.permanentKey;
@@ -136,13 +144,20 @@ var TabStateFlusherInternal = {
       this._requests.set(permanentKey, request);
     }
 
-    let promise = new Promise(resolve => {
-      // Store resolve() so that we can resolve the promise later.
-      request.perBrowserRequests.set(id, resolve);
-    });
+    // Non-SHIP flushes resolve this after the "SessionStore:update" message. We
+    // don't use that message for SHIP, so it's fine to resolve the request
+    // immediately after the native promise resolves, since SessionStore will
+    // have processed all updates from this browser by that point.
+    let requestPromise = Promise.resolve();
+    if (!Services.appinfo.sessionHistoryInParent) {
+      requestPromise = new Promise(resolve => {
+        // Store resolve() so that we can resolve the promise later.
+        request.perBrowserRequests.set(id, resolve);
+      });
+    }
 
     return Promise.race([
-      nativePromise.then(_ => promise),
+      nativePromise.then(_ => requestPromise),
       request.cancelPromise,
     ]);
   },
