@@ -377,18 +377,6 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
     chunk->mBufferFormat = AUDIO_FORMAT_S16;
     chunk->mPrincipalHandle = aPrincipalHandle;
   }
-  void AppendSegment(const AudioSegment* aSegment,
-                     const PrincipalHandle& aPrincipalHandle) {
-    MOZ_ASSERT(aSegment);
-
-    for (const AudioChunk& c : aSegment->mChunks) {
-      AudioChunk* chunk = AppendChunk(c.GetDuration());
-      chunk->mBuffer = c.mBuffer;
-      chunk->mChannelData = c.mChannelData;
-      chunk->mBufferFormat = c.mBufferFormat;
-      chunk->mPrincipalHandle = aPrincipalHandle;
-    }
-  }
   // Consumes aChunk, and returns a pointer to the persistent copy of aChunk
   // in the segment.
   AudioChunk* AppendAndConsumeChunk(AudioChunk* aChunk) {
