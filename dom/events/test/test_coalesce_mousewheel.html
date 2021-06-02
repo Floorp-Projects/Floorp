@@ -1,0 +1,116 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>mousewheel coalescing</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+  var mousewheelCount = 0;
+  function mousewheel() {
+    // Make mousewheel handling slow
+    var start = performance.now();
+    while (performance.now() < (start + 10));
+    ++mousewheelCount;
+  }
+
+  function resolveIfProcessed(resolve, minamount) {
+    if (mousewheelCount >= minamount) {
+      SimpleTest.requestFlakyTimeout("Make sure we got all events.");
+      setTimeout(function() { resolve(mousewheelCount); }, 20);
+    } else {
+      setTimeout(function() { resolveIfProcessed(resolve, minamount); });
+    }
+  }
+
+  async function fireOneSingleWheelEvent() {
+    var ret = new Promise(function(resolve) {
+      mousewheelCount = 0;
+      var element = document.getElementById("wheelEventReceiver");
+      element.addEventListener("wheel", mousewheel, true);
+
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+
+      setTimeout(function() { resolveIfProcessed(resolve, 1); });
+    });
+
+    return ret
+  }
+
+  async function fireTwoSingleWheelEvents() {
+    var ret = new Promise(function(resolve) {
+      mousewheelCount = 0;
+      var element = document.getElementById("wheelEventReceiver");
+      element.addEventListener("wheel", mousewheel, true);
+
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+
+      setTimeout(function() { resolveIfProcessed(resolve, 1); });
+    });
+
+    return ret
+  }
+  async function fireManySingleWheelEvents() {
+    var ret = new Promise(function(resolve) {
+      mousewheelCount = 0;
+      var element = document.getElementById("wheelEventReceiver");
+      element.addEventListener("wheel", mousewheel, true);
+
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+
+      setTimeout(function() { resolveIfProcessed(resolve, 1); });
+    });
+
+    return ret
+  }
+  async function fireMixedWheelEvents() {
+    var ret = new Promise(function(resolve) {
+      mousewheelCount = 0;
+      var element = document.getElementById("wheelEventReceiver");
+      element.addEventListener("wheel", mousewheel, true);
+
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_PAGE });
+      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+
+      setTimeout(function() { resolveIfProcessed(resolve, 3); });
+    });
+
+    return ret
+  }
+
+  async function runTests() {
+    var enabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
+
+    var oneMouseWheels = await fireOneSingleWheelEvent();
+    is(oneMouseWheels, 1,
+       "Should have gotten 1 wheel event");
+    var twoMouseWheelsWithCoalescing = await fireTwoSingleWheelEvents();
+    is(twoMouseWheelsWithCoalescing, 1,
+       "Should have gotten 1 wheel event");
+    var manyMouseWheelsWithCoalescing = await fireManySingleWheelEvents();
+    is(manyMouseWheelsWithCoalescing, 1,
+       "Should have gotten 1 wheel event");
+    var mixedMouseWheelsWithCoalescing = await fireMixedWheelEvents();
+    is(mixedMouseWheelsWithCoalescing, 3,
+       "Should have got 3 wheel event");
+
+    setTimeout("SimpleTest.finish()");
+    window.close();
+  }
+
+  </script>
+</head>
+<body onload="SimpleTest.waitForFocus(runTests);">
+  <div id="wheelEventReceiver" style="width:100px;height:100px;"></div>
+</body>
+</html>
