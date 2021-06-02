@@ -165,11 +165,6 @@ add_task(async function test_escaped_chars() {
         iconUri: "page-icon:https://www.mozilla.org/",
         heuristic: true,
       }),
-      // UnifiedComplete escapes this character.
-      makeVisitResult(context, {
-        uri: "https://www.mozilla.org/%E5%95%8A-test",
-        title: "test visit for https://www.mozilla.org/%E5%95%8A-test",
-      }),
     ],
   });
   await cleanupPlaces();
