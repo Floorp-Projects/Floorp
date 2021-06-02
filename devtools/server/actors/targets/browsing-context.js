@@ -73,13 +73,6 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyRequireGetter(
-  this,
-  "TouchSimulator",
-  "devtools/server/actors/emulation/touch-simulator",
-  true
-);
-
 function getWindowID(window) {
   return window.windowGlobalChild.innerWindowId;
 }
@@ -605,11 +598,6 @@ const browsingContextTargetPrototype = {
     if (this._attached) {
       // TODO: Bug 997119: Remove this coupling with thread actor
       this.threadActor._parentClosed = true;
-    }
-
-    if (this._touchSimulator) {
-      this._touchSimulator.stop();
-      this._touchSimulator = null;
     }
 
     this._detach();
@@ -1248,33 +1236,15 @@ const browsingContextTargetPrototype = {
       return;
     }
 
-    let reload = false;
-    if (typeof options.touchEventsOverride !== "undefined") {
-      const enableTouchSimulator = options.touchEventsOverride === "enabled";
-
-      // We want to reload the document if it's a top level target on which the touch
-      // simulator will be toggled and the user has turned the "reload on touch simulation"
-      // settings on.
-      if (
-        enableTouchSimulator !== this.touchSimulator.enabled &&
-        options.reloadOnTouchSimulationToggle === true &&
-        this.isTopLevelTarget
-      ) {
-        reload = true;
-      }
-
-      if (enableTouchSimulator) {
-        this.touchSimulator.start();
-      } else {
-        this.touchSimulator.stop();
-      }
-    }
-
     if (!this.isTopLevelTarget) {
-      // Following DevTools target options should only apply to the top target and be
+      // DevTools target options should only apply to the top target and be
       // propagated through the browsing context tree via the platform.
       return;
     }
+
+    // Wait a tick so that the response packet can be dispatched before the
+    // subsequent navigation event packet.
+    let reload = false;
 
     if (
       typeof options.javascriptEnabled !== "undefined" &&
@@ -1302,14 +1272,6 @@ const browsingContextTargetPrototype = {
     if (reload) {
       this.reload();
     }
-  },
-
-  get touchSimulator() {
-    if (!this._touchSimulator) {
-      this._touchSimulator = new TouchSimulator(this.chromeEventHandler);
-    }
-
-    return this._touchSimulator;
   },
 
   /**
