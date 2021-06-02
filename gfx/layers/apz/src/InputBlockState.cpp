@@ -285,15 +285,18 @@ WheelBlockState::WheelBlockState(
         mOverscrollHandoffChain->FindFirstScrollable(aInitialEvent,
                                                      &mAllowedScrollDirections);
 
-    // If nothing is scrollable, we don't consider this block as starting a
-    // transaction.
-    if (!apzc) {
+    if (apzc) {
+      if (apzc != GetTargetApzc()) {
+        UpdateTargetApzc(apzc);
+      }
+    } else if (!mOverscrollHandoffChain->CanBePanned(
+                   mOverscrollHandoffChain->GetApzcAtIndex(0))) {
+      // If there's absolutely nothing scrollable start a transaction and mark
+      // this as such to we know to store our EventTime.
+      mIsScrollable = false;
+    } else {
+      // Scrollable, but not in this direction.
       EndTransaction();
-      return;
-    }
-
-    if (apzc != GetTargetApzc()) {
-      UpdateTargetApzc(apzc);
     }
   }
 }
@@ -349,7 +352,7 @@ void WheelBlockState::Update(ScrollWheelInput& aEvent) {
   // We skip this check if the target is not yet confirmed, so that when it is
   // confirmed, we don't timeout the transaction.
   RefPtr<AsyncPanZoomController> apzc = GetTargetApzc();
-  if (IsTargetConfirmed() && !apzc->CanScroll(aEvent)) {
+  if (mIsScrollable && IsTargetConfirmed() && !apzc->CanScroll(aEvent)) {
     return;
   }
 
