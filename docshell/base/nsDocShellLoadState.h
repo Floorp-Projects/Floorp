@@ -247,6 +247,8 @@ class nsDocShellLoadState final {
 
   void SetFileName(const nsAString& aFileName);
 
+  nsIURI* GetUnstrippedURI() const;
+
   // Give the type of DocShell we're loading into (chrome/content/etc) and
   // origin attributes for the URI we're loading, figure out if we should
   // inherit our principal from the document the load was requested from, or
@@ -517,6 +519,10 @@ class nsDocShellLoadState final {
 
   // True if the load was triggered by a meta refresh.
   bool mIsMetaRefresh;
+
+  // The original URI before query stripping happened. If it's present, it shows
+  // the query stripping happened. Otherwise, it will be a nullptr.
+  nsCOMPtr<nsIURI> mUnstrippedURI;
 };
 
 #endif /* nsDocShellLoadState_h__ */
