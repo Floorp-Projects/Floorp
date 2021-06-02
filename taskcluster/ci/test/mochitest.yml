@@ -141,6 +141,7 @@ mochitest-browser-chrome:
         by-variant:
             fission:
                 by-test-platform:
+                    linux.*64-asan/opt: ['trunk']
                     linux.*64(-shippable)?/(opt|debug): ['trunk']
                     (windows10-64|macosx.*64)(-shippable)?-qr/(opt|debug): ['trunk']
                     default: []
