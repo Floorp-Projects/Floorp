@@ -8735,9 +8735,14 @@ void Document::SetBody(nsGenericHTMLElement* newBody, ErrorResult& rv) {
   // The body element must be either a body tag or a frameset tag. And we must
   // have a root element to be able to add kids to it.
   if (!newBody ||
-      !newBody->IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset) ||
-      !root) {
-    rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      !newBody->IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset)) {
+    rv.ThrowHierarchyRequestError(
+        "The new body must be either a body tag or frameset tag.");
+    return;
+  }
+
+  if (!root) {
+    rv.ThrowHierarchyRequestError("No root element.");
     return;
   }
 
@@ -9831,7 +9836,7 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
     }
     case DOCUMENT_FRAGMENT_NODE: {
       if (adoptedNode->IsShadowRoot()) {
-        rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        rv.ThrowHierarchyRequestError("The adopted node is a shadow root.");
         return nullptr;
       }
       [[fallthrough]];
@@ -9856,7 +9861,9 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
       while (bc) {
         nsCOMPtr<nsINode> node = bc->GetEmbedderElement();
         if (node && node->IsInclusiveDescendantOf(adoptedNode)) {
-          rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+          rv.ThrowHierarchyRequestError(
+              "Trying to adopt a node into its own contentDocument or a "
+              "descendant contentDocument.");
           return nullptr;
         }
 
