@@ -83,23 +83,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
     }
 
     function checkHasAsyncKeyScrolled() {
-      // Get the compositor-side test data from nsIDOMWindowUtils.
-      var utils = SpecialPowers.getDOMWindowUtils(window);
-      var compositorTestData = utils.getCompositorAPZTestData();
-
-      ok(compositorTestData.paints.length > 0, "expected at least one paint in compositor test data");
-
-      // Get the sequence number of the last paint on the compositor side.
-      // We do this before converting the APZ test data because the conversion
-      // loses the order of the paints.
-      var lastPaint = compositorTestData.paints[compositorTestData.paints.length - 1];
-      var lastPaintSeqNo = lastPaint.sequenceNumber;
-
-      // Convert the test data into a representation that's easier to navigate.
-      compositorTestData = convertTestData(compositorTestData);
-
       // Reconstruct the APZC tree structure in the last paint.
-      var apzcTree = buildApzcTree(compositorTestData.paints[lastPaintSeqNo]);
+      var apzcTree = getLastApzcTree();
       var rcd = findRcdNode(apzcTree);
 
       if (rcd) {
