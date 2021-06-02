@@ -90,7 +90,18 @@ add_task(function makeResultBuckets_true() {
             // general
             {
               flex: 1,
-              group: UrlbarUtils.RESULT_GROUP.GENERAL,
+              children: [
+                {
+                  maxResultCount: 3,
+                  group: UrlbarUtils.RESULT_GROUP.INPUT_HISTORY,
+                },
+                {
+                  group: UrlbarUtils.RESULT_GROUP.GENERAL,
+                },
+                {
+                  group: UrlbarUtils.RESULT_GROUP.INPUT_HISTORY,
+                },
+              ],
             },
           ],
         },
@@ -132,7 +143,18 @@ add_task(function makeResultBuckets_false() {
             // general
             {
               flex: 2,
-              group: UrlbarUtils.RESULT_GROUP.GENERAL,
+              children: [
+                {
+                  maxResultCount: 3,
+                  group: UrlbarUtils.RESULT_GROUP.INPUT_HISTORY,
+                },
+                {
+                  group: UrlbarUtils.RESULT_GROUP.GENERAL,
+                },
+                {
+                  group: UrlbarUtils.RESULT_GROUP.INPUT_HISTORY,
+                },
+              ],
             },
             // suggestions
             {

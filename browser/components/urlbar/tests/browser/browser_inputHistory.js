@@ -208,9 +208,7 @@ add_task(async function test_adaptive_limited() {
 });
 
 add_task(async function test_adaptive_limited() {
-  info(
-    "Adaptive results should be added at the top up to maxRichResults / 4, then enqueued"
-  );
+  info("Up to 3 adaptive results should be added at the top, then enqueued");
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 
@@ -232,7 +230,8 @@ add_task(async function test_adaptive_limited() {
     url,
   });
 
-  let expectedBookmarkIndex = Math.floor(n / 4) + 2;
+  // After 1 heuristic and 3 input history results.
+  let expectedBookmarkIndex = 4;
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "site",
@@ -252,6 +251,7 @@ add_task(async function test_adaptive_limited() {
     result.url.startsWith("http://site.tld"),
     "Check last adaptive result"
   );
+
   await PlacesUtils.bookmarks.remove(bm);
 });
 

@@ -420,7 +420,7 @@ const tests = [
         numWords: "1",
         selIndex: val => parseInt(val) > 0,
         selType: "bookmark",
-        provider: "UnifiedComplete",
+        provider: "InputHistory",
       },
     };
   },
