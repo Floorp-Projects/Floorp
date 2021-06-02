@@ -43,6 +43,7 @@ DevToolsModules(
     "toolbox-hosts.js",
     "toolbox-options.js",
     "toolbox-tabs-order-manager.js",
+    "toolbox-window.js",
     "toolbox.js",
 )
 
