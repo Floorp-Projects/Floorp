@@ -169,7 +169,8 @@ LazyInstantiator::GetClientPid(const DWORD aClientTid) {
  */
 static const char* gBlockedRemoteClients[] = {
     "tbnotifier.exe",  // Ask.com Toolbar, bug 1453876
-    "flow.exe"         // Conexant Flow causes performance issues, bug 1569712
+    "flow.exe",        // Conexant Flow causes performance issues, bug 1569712
+    "rtop_bg.exe",     // ByteFence Anti-Malware, bug 1713383
 };
 
 /**
