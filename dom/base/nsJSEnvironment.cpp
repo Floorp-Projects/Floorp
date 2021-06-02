@@ -1798,34 +1798,21 @@ void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
     return;
   }
 
-  RefPtr<IdleTaskRunner> runnable;
-  if (sGCRunner) {
-    // To maintain pre-bug 1692308 GCReason handling: RunNextCollectorTimer
-    // should override the PokeGC reason, but only if the first slice has not
-    // happened yet. If there was no PokeGC reason (ie, this is an
-    // internally-generated GC), then do not override the reason (which will be
-    // INTER_SLICE_GC).
-    if (!sScheduler.InIncrementalGC() &&
-        sScheduler.mMajorGCReason != JS::GCReason::INTER_SLICE_GC) {
-      sScheduler.SetWantMajorGC(aReason);
-    }
-    sGCRunner->SetIdleDeadline(aDeadline);
-    runnable = sGCRunner;
-  } else {
-    // Check the CC timers after the GC timers, because the CC timers won't do
-    // anything if a GC is in progress.
-    MOZ_ASSERT(
-        !sScheduler.InIncrementalGC(),
-        "Don't check the CC timers if the CC is locked out during an iGC.");
+  // When we're in an incremental GC, we should always have an sGCRunner, so do
+  // not check CC timers. The CC timers won't do anything during a GC.
+  MOZ_ASSERT_IF(sScheduler.InIncrementalGC(), sGCRunner);
 
-    if (sCCRunner) {
-      sCCRunner->SetIdleDeadline(aDeadline);
-      runnable = sCCRunner;
-    }
+  RefPtr<IdleTaskRunner> runner;
+  if (sGCRunner) {
+    sScheduler.SetWantMajorGC(aReason);
+    runner = sGCRunner;
+  } else if (sCCRunner) {
+    runner = sCCRunner;
   }
 
-  if (runnable) {
-    runnable->Run();
+  if (runner) {
+    runner->SetIdleDeadline(aDeadline);
+    runner->Run();
   }
 }
 

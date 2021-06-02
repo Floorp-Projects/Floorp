@@ -197,23 +197,15 @@ class CCGCScheduler {
 
   void NoteGCSliceEnd() {
     if (mMajorGCReason == JS::GCReason::NO_REASON) {
-      // If the GC was internally triggered, then we won't have a reason set
-      // and want to use INTER_SLICE_GC for every subsequent slice. If the GC
-      // was triggered by PokeGC, then we will have a reason and want every
-      // subsequent slice to inherit that reason (*unless*
-      // RunNextCollectorTimer provides a new reason before the initial timer
-      // fires, in which case the PokeGC reason will be replaced.)
-      //
-      // This behavior doesn't make all that much sense, but reverts to the
-      // behavior before bug 1692308. A following patch will change the
-      // behavior.
-      mMajorGCReason = JS::GCReason::INTER_SLICE_GC;
-
-      // Also, internally-triggered GCs do not wait for the parent's permission
-      // to proceed. This flag won't be checked during an incremental GC, but
-      // it better reflects reality.
+      // Internally-triggered GCs do not wait for the parent's permission to
+      // proceed. This flag won't be checked during an incremental GC anyway,
+      // but it better reflects reality.
       mReadyForMajorGC = true;
     }
+
+    // Subsequent slices should be INTER_SLICE_GC unless they are triggered by
+    // something else that provides its own reason.
+    mMajorGCReason = JS::GCReason::INTER_SLICE_GC;
   }
 
   // When we decide to do a cycle collection but we're in the middle of an
@@ -393,9 +385,9 @@ class CCGCScheduler {
 
   uint32_t mCleanupsSinceLastGC = UINT32_MAX;
 
- public:
   JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
 
+ public:
   uint32_t mCCollectedWaitingForGC = 0;
   uint32_t mCCollectedZonesWaitingForGC = 0;
   uint32_t mLikelyShortLivingObjectsNeedingGC = 0;
