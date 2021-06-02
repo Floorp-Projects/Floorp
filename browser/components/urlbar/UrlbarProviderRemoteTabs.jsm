@@ -128,17 +128,8 @@ class ProviderRemoteTabs extends UrlbarProvider {
     }
 
     let resultsAdded = 0;
+    let staleTabs = [];
     for (let { tab, client } of tabsData) {
-      // Once we've added half our allotted results, only continue to add remote
-      // tabs if they are recent. We do this avoid polluting results with
-      // irrelevant remote tabs.
-      if (
-        resultsAdded >= queryContext.maxResults / 2 ||
-        tab.lastUsed <= (Date.now() - RECENT_REMOTE_TAB_THRESHOLD_MS) / 1000
-      ) {
-        continue;
-      }
-
       if (
         !searchString ||
         searchString == UrlbarTokenizer.RESTRICT.OPENPAGE ||
@@ -156,26 +147,49 @@ class ProviderRemoteTabs extends UrlbarProvider {
             ).spec;
           }
         }
-        addCallback(
-          this,
-          new UrlbarResult(
-            UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
-            UrlbarUtils.RESULT_SOURCE.TABS,
-            ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-              url: [tab.url, UrlbarUtils.HIGHLIGHT.TYPED],
-              title: [tab.title, UrlbarUtils.HIGHLIGHT.TYPED],
-              device: client.name,
-              icon: showRemoteIconsPref ? tab.icon : "",
-              lastUsed: (tab.lastUsed || 0) * 1000,
-            })
-          )
-        );
-        resultsAdded++;
 
-        if (resultsAdded >= queryContext.maxResults) {
-          break;
+        let result = new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
+          UrlbarUtils.RESULT_SOURCE.TABS,
+          ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+            url: [tab.url, UrlbarUtils.HIGHLIGHT.TYPED],
+            title: [tab.title, UrlbarUtils.HIGHLIGHT.TYPED],
+            device: client.name,
+            icon: showRemoteIconsPref ? tab.icon : "",
+            lastUsed: (tab.lastUsed || 0) * 1000,
+          })
+        );
+
+        // We want to return the most relevant remote tabs and thus the most
+        // recent ones. While SyncedTabs.jsm returns tabs that are sorted by
+        // most recent client, then most recent tab, we can do better. For
+        // example, the most recent client might have one recent tab and then
+        // many very stale tabs. Those very stale tabs will push out more recent
+        // tabs from staler clients. This provider first returns tabs from the
+        // last 72 hours, sorted by client recency. Then, it adds remaining
+        // tabs. We are not concerned about filling the remote tabs bucket with
+        // stale tabs, because the muxer ensures remote tabs flex with other
+        // results. It will only show the stale tabs if it has nothing else
+        // to show.
+        if (
+          tab.lastUsed <=
+          (Date.now() - RECENT_REMOTE_TAB_THRESHOLD_MS) / 1000
+        ) {
+          staleTabs.push(result);
+        } else {
+          addCallback(this, result);
+          resultsAdded++;
         }
       }
+
+      if (resultsAdded == queryContext.maxResults) {
+        break;
+      }
+    }
+
+    while (staleTabs.length && resultsAdded < queryContext.maxResults) {
+      addCallback(this, staleTabs.shift());
+      resultsAdded++;
     }
   }
 

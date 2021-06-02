@@ -319,7 +319,7 @@ add_task(async function test_remotetab_matches_override() {
 add_task(async function test_mixed_result_types() {
   // In case we have many results, non-remote results should flex to the bottom.
   let url = "http://foo.remote.com/";
-  let tabs = Array(5)
+  let tabs = Array(6)
     .fill(0)
     .map((e, i) => ({
       urlHistory: [`${url}${i}`],
@@ -371,8 +371,24 @@ add_task(async function test_mixed_result_types() {
         title: "A title",
         lastUsed: tabs[2].lastUsed,
       }),
-      // We expect to not see /3 and /4 because they are older than the 72 hour
-      // cutoff.
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/3",
+        device: "My Phone",
+        title: "A title",
+        lastUsed: tabs[3].lastUsed,
+      }),
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/4",
+        device: "My Phone",
+        title: "A title",
+        lastUsed: tabs[4].lastUsed,
+      }),
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/5",
+        device: "My Phone",
+        title: "A title",
+        lastUsed: tabs[5].lastUsed,
+      }),
       makeVisitResult(context, {
         uri: historyUrl,
         title: "test visit for " + historyUrl,
@@ -389,20 +405,13 @@ add_task(async function test_mixed_result_types() {
 
 add_task(async function test_many_remotetab_results() {
   let url = "http://foo.remote.com/";
-  let tabs = Array(6)
+  let tabs = Array(8)
     .fill(0)
     .map((e, i) => ({
       urlHistory: [`${url}${i}`],
       title: "A title",
-      // All the results in this array are fresh (< 72 hours old.)
-      lastUsed: Math.floor(Date.now() / 1000),
+      lastUsed: Math.floor(Date.now() / 1000) - i * 86400, // i days old.
     }));
-  tabs.push({
-    urlHistory: [`${url}5`],
-    title: "A title",
-    // This result is older than the 72 hour cutoff.
-    lastUsed: Math.floor(Date.now() / 1000) - 4 * 86400,
-  });
 
   // First set up Sync to have the page as a remote tab.
   configureEngine({
@@ -451,10 +460,104 @@ add_task(async function test_many_remotetab_results() {
         title: "A title",
         lastUsed: tabs[4].lastUsed,
       }),
-      // We don't expect http://foo.remote.com/5, because it is over the limit
-      // of maxResults / 2.
-      // We don't expect http://foo.remote.com/6, because it is both over the
-      // limit of maxResults / 2 and it is stale.
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/5",
+        device: "My Phone",
+        title: "A title",
+        lastUsed: tabs[5].lastUsed,
+      }),
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/6",
+        device: "My Phone",
+        title: "A title",
+        lastUsed: tabs[6].lastUsed,
+      }),
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/7",
+        device: "My Phone",
+        title: "A title",
+        lastUsed: tabs[7].lastUsed,
+      }),
+    ],
+  });
+});
+
+add_task(async function multiple_clients() {
+  let url = "http://foo.remote.com/";
+  let mobileTabs = Array(2)
+    .fill(0)
+    .map((e, i) => ({
+      urlHistory: [`${url}mobile/${i}`],
+      lastUsed: Date.now() / 1000 - 4 * 86400, // 4 days old (past threshold)
+    }));
+
+  let desktopTabs = Array(3)
+    .fill(0)
+    .map((e, i) => ({
+      urlHistory: [`${url}desktop/${i}`],
+      lastUsed: Date.now() / 1000 - 1, // Fresh tabs
+    }));
+
+  // mobileTabs has the most recent tab, making it the most recent client. The
+  // rest of its tabs are stale. The tabs in desktopTabs are fresh, but not
+  // as fresh as the most recent tab in mobileTab.
+  mobileTabs.push({
+    urlHistory: [`${url}mobile/fresh`],
+    lastUsed: Date.now() / 1000,
+  });
+
+  configureEngine({
+    guid_mobile: {
+      id: "mobile",
+      tabs: mobileTabs,
+    },
+    guid_desktop: {
+      id: "desktop",
+      tabs: desktopTabs,
+    },
+  });
+
+  // We expect that we will show the recent tab from mobileTabs, then all the
+  // tabs from desktopTabs, then the remaining tabs from mobileTabs.
+  let query = "rem";
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/mobile/fresh",
+        device: "My Phone",
+        lastUsed: mobileTabs[2].lastUsed,
+      }),
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/desktop/0",
+        device: "My Desktop",
+        lastUsed: desktopTabs[0].lastUsed,
+      }),
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/desktop/1",
+        device: "My Desktop",
+        lastUsed: desktopTabs[1].lastUsed,
+      }),
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/desktop/2",
+        device: "My Desktop",
+        lastUsed: desktopTabs[2].lastUsed,
+      }),
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/mobile/0",
+        device: "My Phone",
+        lastUsed: mobileTabs[0].lastUsed,
+      }),
+      makeRemoteTabResult(context, {
+        uri: "http://foo.remote.com/mobile/1",
+        device: "My Phone",
+        lastUsed: mobileTabs[1].lastUsed,
+      }),
     ],
   });
 });
