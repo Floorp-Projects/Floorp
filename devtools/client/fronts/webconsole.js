@@ -33,11 +33,8 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "consoleActor";
 
-    this.pendingEvaluationResults = new Map();
-    this.onEvaluationResult = this.onEvaluationResult.bind(this);
     this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
 
-    this.on("evaluationResult", this.onEvaluationResult);
     this.before("consoleAPICall", this.beforeConsoleAPICall);
     this.before("pageError", this.beforePageError);
     this.before("serverNetworkEvent", this.beforeServerNetworkEvent);
@@ -65,117 +62,6 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     // The stacktrace info needs to be sent before
     // the network event.
     this.emit("serverNetworkStackTrace", packet);
-  }
-
-  /**
-   * Evaluate a JavaScript expression asynchronously.
-   *
-   * @param {String} string: The code you want to evaluate.
-   * @param {Object} opts: Options for evaluation:
-   *
-   *        - {String} frameActor: a FrameActor ID. The FA holds a reference to
-   *        a Debugger.Frame. This option allows you to evaluate the string in
-   *        the frame of the given FA.
-   *
-   *        - {String} url: the url to evaluate the script as. Defaults to
-   *        "debugger eval code".
-   *
-   *        - {String} selectedNodeActor: the NodeActor ID of the current
-   *        selection in the Inspector, if such a selection
-   *        exists. This is used by helper functions that can
-   *        reference the currently selected node in the Inspector, like $0.
-   *
-   *        - {String} selectedObjectActor: the actorID of a given objectActor.
-   *        This is used by context menu entries to get a reference to an object, in order
-   *        to perform some operation on it (copy it, store it as a global variable, …).
-   *
-   *        - {Integer} innerWindowID: An optional window id to be used for the evaluation,
-   *        instead of the regular webConsoleActor.evalWindow.
-   *        This is used by functions that may want to evaluate in a different window (for
-   *        example a non-remote iframe), like getting the elements of a given document.
-   *
-   * @return {Promise}: A promise that resolves with the response.
-   */
-  async evaluateJSAsync(string, opts = {}) {
-    const options = {
-      text: string,
-      frameActor: opts.frameActor,
-      url: opts.url,
-      selectedNodeActor: opts.selectedNodeActor,
-      selectedObjectActor: opts.selectedObjectActor,
-      innerWindowID: opts.innerWindowID,
-      mapped: opts.mapped,
-      eager: opts.eager,
-    };
-
-    this._pendingAsyncEvaluation = super.evaluateJSAsync(options);
-    const { resultID } = await this._pendingAsyncEvaluation;
-    this._pendingAsyncEvaluation = null;
-
-    return new Promise((resolve, reject) => {
-      // Null check this in case the client has been detached while sending
-      // the one way request
-      if (this.pendingEvaluationResults) {
-        this.pendingEvaluationResults.set(resultID, resp => {
-          if (resp.error) {
-            reject(resp);
-          } else {
-            if (resp.result) {
-              resp.result = getAdHocFrontOrPrimitiveGrip(resp.result, this);
-            }
-
-            if (resp.helperResult?.object) {
-              resp.helperResult.object = getAdHocFrontOrPrimitiveGrip(
-                resp.helperResult.object,
-                this
-              );
-            }
-
-            if (resp.exception) {
-              resp.exception = getAdHocFrontOrPrimitiveGrip(
-                resp.exception,
-                this
-              );
-            }
-
-            if (resp.exceptionMessage) {
-              resp.exceptionMessage = getAdHocFrontOrPrimitiveGrip(
-                resp.exceptionMessage,
-                this
-              );
-            }
-
-            resolve(resp);
-          }
-        });
-      }
-    });
-  }
-
-  /**
-   * Handler for the actors's unsolicited evaluationResult packet.
-   */
-  async onEvaluationResult(packet) {
-    // In some cases, the evaluationResult event can be received before the initial call
-    // to evaluationJSAsync completes. So make sure to wait for the corresponding promise
-    // before handling the event.
-    await this._pendingAsyncEvaluation;
-
-    // Find the associated callback based on this ID, and fire it.
-    // In a sync evaluation, this would have already been called in
-    // direct response to the client.request function.
-    const onResponse = this.pendingEvaluationResults.get(packet.resultID);
-    if (onResponse) {
-      onResponse(packet);
-      this.pendingEvaluationResults.delete(packet.resultID);
-    } else {
-      DevToolsUtils.reportException(
-        "onEvaluationResult",
-        "No response handler for an evaluateJSAsync result (resultID: " +
-          packet.resultID +
-          ")"
-      );
-    }
   }
 
   beforeConsoleAPICall(packet) {
@@ -495,10 +381,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     // at the top of the function.
     this._client = null;
 
-    this.off("evaluationResult", this.onEvaluationResult);
     this._longStrings = null;
-    this.pendingEvaluationResults.clear();
-    this.pendingEvaluationResults = null;
     return super.destroy();
   }
 }

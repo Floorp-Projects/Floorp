@@ -14,12 +14,8 @@ add_task(
   })
 );
 
-async function testBreakpointsAndDebuggerStatements({
-  threadFront,
-  targetFront,
-}) {
-  const consoleFront = await targetFront.getFront("console");
-  consoleFront.evaluateJSAsync(
+async function testBreakpointsAndDebuggerStatements({ commands, threadFront }) {
+  commands.scriptCommand.execute(
     `function foo(stop) {
       debugger;
       debugger;

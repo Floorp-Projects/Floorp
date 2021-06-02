@@ -13,6 +13,8 @@ self.onmessage = function(event) {
   if (event.data == "ping") {
     f();
     postMessage("pong");
+  } else if (event.data?.type == "log") {
+    console.log(event.data.message);
   }
 };
 

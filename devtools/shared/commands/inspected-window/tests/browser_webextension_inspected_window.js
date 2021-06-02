@@ -306,12 +306,9 @@ add_task(async function test_exception_inspectedWindowEval_result() {
 });
 
 add_task(async function test_exception_inspectedWindowReload() {
-  const {
-    webConsoleFront,
-    commands,
-    extension,
-    fakeExtCallerInfo,
-  } = await setup(`${TEST_RELOAD_URL}?test=cache`);
+  const { commands, extension, fakeExtCallerInfo } = await setup(
+    `${TEST_RELOAD_URL}?test=cache`
+  );
 
   // Test reload with bypassCache=false.
 
@@ -330,7 +327,7 @@ add_task(async function test_exception_inspectedWindowReload() {
 
   await waitForNoBypassCacheReload;
 
-  const noBypassCacheEval = await webConsoleFront.evaluateJSAsync(
+  const noBypassCacheEval = await commands.scriptCommand.execute(
     "document.body.textContent"
   );
 
@@ -349,7 +346,7 @@ add_task(async function test_exception_inspectedWindowReload() {
 
   await waitForForceBypassCacheReload;
 
-  const forceBypassCacheEval = await webConsoleFront.evaluateJSAsync(
+  const forceBypassCacheEval = await commands.scriptCommand.execute(
     "document.body.textContent"
   );
 
@@ -363,12 +360,9 @@ add_task(async function test_exception_inspectedWindowReload() {
 });
 
 add_task(async function test_exception_inspectedWindowReload_customUserAgent() {
-  const {
-    webConsoleFront,
-    commands,
-    extension,
-    fakeExtCallerInfo,
-  } = await setup(`${TEST_RELOAD_URL}?test=user-agent`);
+  const { commands, extension, fakeExtCallerInfo } = await setup(
+    `${TEST_RELOAD_URL}?test=user-agent`
+  );
 
   // Test reload with custom userAgent.
 
@@ -379,7 +373,7 @@ add_task(async function test_exception_inspectedWindowReload_customUserAgent() {
 
   await waitForCustomUserAgentReload;
 
-  const customUserAgentEval = await webConsoleFront.evaluateJSAsync(
+  const customUserAgentEval = await commands.scriptCommand.execute(
     "document.body.textContent"
   );
 
@@ -396,7 +390,7 @@ add_task(async function test_exception_inspectedWindowReload_customUserAgent() {
 
   await waitForNoCustomUserAgentReload;
 
-  const noCustomUserAgentEval = await webConsoleFront.evaluateJSAsync(
+  const noCustomUserAgentEval = await commands.scriptCommand.execute(
     "document.body.textContent"
   );
 
@@ -410,12 +404,9 @@ add_task(async function test_exception_inspectedWindowReload_customUserAgent() {
 });
 
 add_task(async function test_exception_inspectedWindowReload_injectedScript() {
-  const {
-    webConsoleFront,
-    commands,
-    extension,
-    fakeExtCallerInfo,
-  } = await setup(`${TEST_RELOAD_URL}?test=injected-script&frames=3`);
+  const { commands, extension, fakeExtCallerInfo } = await setup(
+    `${TEST_RELOAD_URL}?test=injected-script&frames=3`
+  );
 
   // Test reload with an injectedScript.
 
@@ -425,7 +416,7 @@ add_task(async function test_exception_inspectedWindowReload_injectedScript() {
   });
   await waitForInjectedScriptReload;
 
-  const injectedScriptEval = await webConsoleFront.evaluateJSAsync(
+  const injectedScriptEval = await commands.scriptCommand.execute(
     `(${collectEvalResults})()`
   );
 
@@ -443,7 +434,7 @@ add_task(async function test_exception_inspectedWindowReload_injectedScript() {
   await commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {});
   await waitForNoInjectedScriptReload;
 
-  const noInjectedScriptEval = await webConsoleFront.evaluateJSAsync(
+  const noInjectedScriptEval = await commands.scriptCommand.execute(
     `(${collectEvalResults})()`
   );
 
@@ -459,12 +450,9 @@ add_task(async function test_exception_inspectedWindowReload_injectedScript() {
 });
 
 add_task(async function test_exception_inspectedWindowReload_multiple_calls() {
-  const {
-    webConsoleFront,
-    commands,
-    extension,
-    fakeExtCallerInfo,
-  } = await setup(`${TEST_RELOAD_URL}?test=user-agent`);
+  const { commands, extension, fakeExtCallerInfo } = await setup(
+    `${TEST_RELOAD_URL}?test=user-agent`
+  );
 
   // Test reload with custom userAgent three times (and then
   // check that only the first one has affected the page reload.
@@ -480,7 +468,7 @@ add_task(async function test_exception_inspectedWindowReload_multiple_calls() {
 
   await waitForCustomUserAgentReload;
 
-  const customUserAgentEval = await webConsoleFront.evaluateJSAsync(
+  const customUserAgentEval = await commands.scriptCommand.execute(
     "document.body.textContent"
   );
 
@@ -497,7 +485,7 @@ add_task(async function test_exception_inspectedWindowReload_multiple_calls() {
 
   await waitForNoCustomUserAgentReload;
 
-  const noCustomUserAgentEval = await webConsoleFront.evaluateJSAsync(
+  const noCustomUserAgentEval = await commands.scriptCommand.execute(
     "document.body.textContent"
   );
 
@@ -511,12 +499,9 @@ add_task(async function test_exception_inspectedWindowReload_multiple_calls() {
 });
 
 add_task(async function test_exception_inspectedWindowReload_stopped() {
-  const {
-    webConsoleFront,
-    commands,
-    extension,
-    fakeExtCallerInfo,
-  } = await setup(`${TEST_RELOAD_URL}?test=injected-script&frames=3`);
+  const { commands, extension, fakeExtCallerInfo } = await setup(
+    `${TEST_RELOAD_URL}?test=injected-script&frames=3`
+  );
 
   // Test reload on a page that calls window.stop() immediately during the page loading
 
@@ -536,7 +521,7 @@ add_task(async function test_exception_inspectedWindowReload_stopped() {
   });
   await waitForInjectedScriptReload;
 
-  const injectedScriptEval = await webConsoleFront.evaluateJSAsync(
+  const injectedScriptEval = await commands.scriptCommand.execute(
     `(${collectEvalResults})()`
   );
 
@@ -557,7 +542,7 @@ add_task(async function test_exception_inspectedWindowReload_stopped() {
   await commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {});
   await waitForNoInjectedScriptReload;
 
-  const noInjectedScriptEval = await webConsoleFront.evaluateJSAsync(
+  const noInjectedScriptEval = await commands.scriptCommand.execute(
     `(${collectEvalResults})()`
   );
 

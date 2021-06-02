@@ -39,8 +39,18 @@ exports.CommandsFactory = {
     return commands;
   },
 
-  async forMainProcess() {
-    const client = await createLocalClient();
+  /**
+   * Create commands for the main process.
+   *
+   * @param {Object} options
+   * @param {DevToolsClient} options.client: An optional DevToolsClient. If none is passed,
+   *        a new one will be created.
+   * @returns {Object} Commands
+   */
+  async forMainProcess({ client } = {}) {
+    if (!client) {
+      client = await createLocalClient();
+    }
 
     const descriptor = await client.mainRoot.getMainProcess();
     const commands = await createCommandsDictionary(descriptor);

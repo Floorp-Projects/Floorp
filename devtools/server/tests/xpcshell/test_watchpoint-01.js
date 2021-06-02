@@ -19,10 +19,9 @@ add_task(
   })
 );
 
-async function testSetWatchpoint({ threadFront, debuggee, targetFront }) {
+async function testSetWatchpoint({ commands, threadFront, debuggee }) {
   async function evaluateJS(input) {
-    const consoleFront = await targetFront.getFront("console");
-    const { result } = await consoleFront.evaluateJSAsync(input, {
+    const { result } = await commands.scriptCommand.execute(input, {
       thread: threadFront.actor,
       frameActor: packet.frame.actorID,
     });

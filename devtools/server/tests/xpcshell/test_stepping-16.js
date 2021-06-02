@@ -16,9 +16,8 @@ async function invokeAndPause({ global, threadFront }, expression, url) {
 }
 
 add_task(
-  threadFrontTest(async ({ threadFront, targetFront, debuggee }) => {
-    const consoleFront = await targetFront.getFront("console");
-    const dbg = { global: debuggee, threadFront, consoleFront };
+  threadFrontTest(async ({ commands, threadFront, debuggee }) => {
+    const dbg = { global: debuggee, threadFront };
     invokeAndPause(
       dbg,
       `function outermost() {
@@ -60,7 +59,7 @@ add_task(
     blackBox(blackboxedSourceFront);
 
     async function testStepping(action, expectedLine) {
-      consoleFront.evaluateJSAsync("outermost()");
+      commands.scriptCommand.execute("outermost()");
       await waitForPause(threadFront);
       await stepOver(threadFront);
       const packet = await action(threadFront);

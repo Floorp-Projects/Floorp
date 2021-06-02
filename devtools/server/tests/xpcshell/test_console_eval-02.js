@@ -8,14 +8,13 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, targetFront, debuggee }) => {
-    const consoleFront = await targetFront.getFront("console");
-    await consoleFront.evaluateJSAsync(`
+  threadFrontTest(async ({ commands }) => {
+    await commands.scriptCommand.execute(`
       var obj = [1, 2, 3];
       var fn = obj.includes.bind(obj, 2);
     `);
 
-    const normalResult = await consoleFront.evaluateJSAsync("fn()", {
+    const normalResult = await commands.scriptCommand.execute("fn()", {
       eager: true,
     });
     Assert.equal(normalResult.result, true, "normal eval");

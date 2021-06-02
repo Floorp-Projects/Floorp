@@ -57,4 +57,12 @@ add_task(async function() {
     ".result"
   );
   ok(message, "`$$('div')` returns an empty array");
+
+  message = await executeAndWaitForMessage(
+    hud,
+    "$$(':foo')",
+    "':foo' is not a valid selector",
+    ".error"
+  );
+  ok(message, "`$$(':foo')` returns an error message");
 });

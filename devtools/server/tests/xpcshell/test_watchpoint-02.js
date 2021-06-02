@@ -20,14 +20,12 @@ add_task(
 // Test that we advance to the next line when a location
 // has both a breakpoint and set watchpoint.
 async function testBreakpointAndSetWatchpoint({
+  commands,
   threadFront,
   debuggee,
-  targetFront,
 }) {
   async function evaluateJS(input) {
-    const consoleFront = await targetFront.getFront("console");
-    const { result } = await consoleFront.evaluateJSAsync(input, {
-      thread: threadFront.actor,
+    const { result } = await commands.scriptCommand.execute(input, {
       frameActor: packet.frame.actorID,
     });
     return result;
@@ -107,7 +105,7 @@ async function testBreakpointAndGetWatchpoint({ threadFront, debuggee }) {
         debugger;                         // 3
         obj.a + 4;                        // 4
         debugger;                         // 5
-      }                                   // 
+      }                                   //
       stopMe({a: 1})`,
       debuggee,
       "1.8",
@@ -159,11 +157,9 @@ async function testBreakpointAndGetWatchpoint({ threadFront, debuggee }) {
 
 // Test that we can pause multiple times
 // on the same line for a watchpoint.
-async function testLoops({ threadFront, debuggee, targetFront }) {
+async function testLoops({ commands, threadFront, debuggee }) {
   async function evaluateJS(input) {
-    const consoleFront = await targetFront.getFront("console");
-    const { result } = await consoleFront.evaluateJSAsync(input, {
-      thread: threadFront.actor,
+    const { result } = await commands.scriptCommand.execute(input, {
       frameActor: packet.frame.actorID,
     });
     return result;
@@ -174,13 +170,13 @@ async function testLoops({ threadFront, debuggee, targetFront }) {
     Cu.evalInSandbox(
       `                                   // 1
       function stopMe(obj) {              // 2
-        let i = 0;                        // 3  
+        let i = 0;                        // 3
         debugger;                         // 4
         while (i++ < 2) {                 // 5
           obj.a = 2;                      // 6
         }                                 // 7
         debugger;                         // 8
-      }                                   // 
+      }                                   //
       stopMe({a: 1})`,
       debuggee,
       "1.8",

@@ -55,11 +55,13 @@ async function testGetPauseWithGetOrSetWatchpoint({ threadFront, debuggee }) {
   await resume(threadFront);
 }
 
-async function testSetPauseWithGetOrSetWatchpoint({ threadFront, debuggee, targetFront }) {
+async function testSetPauseWithGetOrSetWatchpoint({
+  commands,
+  threadFront,
+  debuggee,
+}) {
   async function evaluateJS(input) {
-    const consoleFront = await targetFront.getFront("console");
-    const { result } = await consoleFront.evaluateJSAsync(input, {
-      thread: threadFront.actor,
+    const { result } = await commands.scriptCommand.execute(input, {
       frameActor: packet.frame.actorID,
     });
     return result;

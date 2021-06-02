@@ -9,11 +9,10 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, targetFront, debuggee }) => {
+  threadFrontTest(async ({ commands, threadFront }) => {
     dumpn("Evaluating test code and waiting for first debugger statement");
 
-    const consoleFront = await targetFront.getFront("console");
-    consoleFront.evaluateJSAsync(
+    commands.scriptCommand.execute(
       `(function () {
         const a = () => { return 2 };
         debugger;
