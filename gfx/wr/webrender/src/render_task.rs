@@ -128,8 +128,8 @@ impl RenderTaskLocation {
     pub fn size(&self) -> DeviceIntSize {
         match self {
             RenderTaskLocation::Unallocated { size } => *size,
-            RenderTaskLocation::Dynamic { rect, .. } => rect.size(),
-            RenderTaskLocation::Static { rect, .. } => rect.size(),
+            RenderTaskLocation::Dynamic { rect, .. } => rect.size,
+            RenderTaskLocation::Static { rect, .. } => rect.size,
             RenderTaskLocation::CacheRequest { size } => *size,
         }
     }
@@ -473,7 +473,7 @@ impl RenderTaskKind {
         // TODO(gw): If this ever shows up in a profile, we could pre-calculate
         //           whether a ClipSources contains any box-shadows and skip
         //           this iteration for the majority of cases.
-        let task_size = outer_rect.size().to_i32();
+        let task_size = outer_rect.size.to_i32();
 
         // If we have a potentially tiled clip mask, clear the mask area first. Otherwise,
         // the first (primary) clip mask will overwrite all the clip mask pixels with
@@ -584,8 +584,8 @@ impl RenderTaskKind {
             RenderTaskKind::CacheMask(ref task) => {
                 [
                     task.device_pixel_scale.0,
-                    task.actual_rect.min.x,
-                    task.actual_rect.min.y,
+                    task.actual_rect.origin.x,
+                    task.actual_rect.origin.y,
                     0.0,
                 ]
             }
@@ -637,10 +637,10 @@ impl RenderTaskKind {
 
         RenderTaskData {
             data: [
-                target_rect.min.x as f32,
-                target_rect.min.y as f32,
-                target_rect.width() as f32,
-                target_rect.height() as f32,
+                target_rect.origin.x as f32,
+                target_rect.origin.y as f32,
+                target_rect.size.width as f32,
+                target_rect.size.height as f32,
                 data[0],
                 data[1],
                 data[2],
@@ -1409,8 +1409,8 @@ impl RenderTask {
         }
 
         if let Some(mut request) = gpu_cache.request(&mut self.uv_rect_handle) {
-            let p0 = target_rect.min.to_f32();
-            let p1 = target_rect.max.to_f32();
+            let p0 = target_rect.min().to_f32();
+            let p1 = target_rect.max().to_f32();
             let image_source = ImageSource {
                 p0,
                 p1,

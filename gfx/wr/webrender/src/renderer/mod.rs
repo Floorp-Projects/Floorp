@@ -1744,13 +1744,22 @@ impl Renderer {
                 // Ensure old surface is invalidated before binding
                 compositor.invalidate_tile(
                     NativeTileId::DEBUG_OVERLAY,
-                    DeviceIntRect::from_size(surface_size),
+                    DeviceIntRect::new(
+                        DeviceIntPoint::zero(),
+                        surface_size,
+                    ),
                 );
                 // Bind the native surface
                 let surface_info = compositor.bind(
                     NativeTileId::DEBUG_OVERLAY,
-                    DeviceIntRect::from_size(surface_size),
-                    DeviceIntRect::from_size(surface_size),
+                    DeviceIntRect::new(
+                        DeviceIntPoint::zero(),
+                        surface_size,
+                    ),
+                    DeviceIntRect::new(
+                        DeviceIntPoint::zero(),
+                        surface_size,
+                    ),
                 );
 
                 // Bind the native surface to current FBO target
@@ -1792,7 +1801,8 @@ impl Renderer {
                 compositor.add_surface(
                     NativeSurfaceId::DEBUG_OVERLAY,
                     CompositorSurfaceTransform::identity(),
-                    DeviceIntRect::from_size(
+                    DeviceIntRect::new(
+                        DeviceIntPoint::zero(),
                         self.debug_overlay_state.current_size.unwrap(),
                     ),
                     ImageRendering::Auto,
@@ -2379,38 +2389,38 @@ impl Renderer {
         );
 
         // Get the rect that we ideally want, in space of the parent surface
-        let wanted_rect = DeviceRect::from_origin_and_size(
+        let wanted_rect = DeviceRect::new(
             readback_origin,
-            readback_rect.size().to_f32(),
+            readback_rect.size.to_f32(),
         );
 
         // Get the rect that is available on the parent surface. It may be smaller
         // than desired because this is a picture cache tile covering only part of
         // the wanted rect and/or because the parent surface was clipped.
-        let avail_rect = DeviceRect::from_origin_and_size(
+        let avail_rect = DeviceRect::new(
             backdrop_screen_origin,
-            backdrop_rect.size().to_f32(),
+            backdrop_rect.size.to_f32(),
         );
 
         if let Some(int_rect) = wanted_rect.intersection(&avail_rect) {
             // If there is a valid intersection, work out the correct origins and
             // sizes of the copy rects, and do the blit.
-            let copy_size = int_rect.size().to_i32();
+            let copy_size = int_rect.size.to_i32();
 
-            let src_origin = backdrop_rect.min.to_f32() +
-                int_rect.min.to_vector() -
+            let src_origin = backdrop_rect.origin.to_f32() +
+                int_rect.origin.to_vector() -
                 backdrop_screen_origin.to_vector();
 
-            let src = DeviceIntRect::from_origin_and_size(
+            let src = DeviceIntRect::new(
                 src_origin.to_i32(),
                 copy_size,
             );
 
-            let dest_origin = readback_rect.min.to_f32() +
-                int_rect.min.to_vector() -
+            let dest_origin = readback_rect.origin.to_f32() +
+                int_rect.origin.to_vector() -
                 readback_origin.to_vector();
 
-            let dest = DeviceIntRect::from_origin_and_size(
+            let dest = DeviceIntRect::new(
                 dest_origin.to_i32(),
                 copy_size,
             );
@@ -2464,7 +2474,7 @@ impl Renderer {
                 (source_texture, source_rect)
             };
 
-            debug_assert_eq!(source_rect.size(), blit.target_rect.size());
+            debug_assert_eq!(source_rect.size, blit.target_rect.size);
             let (texture, swizzle) = self.texture_resolver
                 .resolve(&source)
                 .expect("BUG: invalid source texture");
@@ -2588,8 +2598,8 @@ impl Renderer {
                     }
                     let instance = ClearInstance {
                         rect: [
-                            r.min.x as f32, r.min.y as f32,
-                            r.width() as f32, r.height() as f32,
+                            r.origin.x as f32, r.origin.y as f32,
+                            r.size.width as f32, r.size.height as f32,
                         ],
                         color: clear_color.unwrap_or([0.0; 4]),
                     };
@@ -3041,8 +3051,7 @@ impl Renderer {
         for item in tiles_iter {
             let tile = &composite_state.tiles[item.key];
 
-            let clip_rect = item.rectangle;
-            let tile_rect = composite_state.get_device_rect(&tile.local_rect, tile.transform_index);
+            let clip_rect = item.rectangle.to_rect();
 
             // Work out the draw params based on the tile surface
             let (instance, textures, shader_params) = match tile.surface {
@@ -3050,7 +3059,7 @@ impl Renderer {
                     let dummy = TextureSource::Dummy;
                     let image_buffer_kind = dummy.image_buffer_kind();
                     let instance = CompositeInstance::new(
-                        tile_rect,
+                        tile.rect,
                         clip_rect,
                         color.premultiplied(),
                         tile.z_id,
@@ -3064,7 +3073,7 @@ impl Renderer {
                 }
                 CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture } } => {
                     let instance = CompositeInstance::new(
-                        tile_rect,
+                        tile.rect,
                         clip_rect,
                         PremultipliedColorF::WHITE,
                         tile.z_id,
@@ -3105,7 +3114,7 @@ impl Renderer {
 
                             (
                                 CompositeInstance::new_yuv(
-                                    tile_rect,
+                                    tile.rect,
                                     clip_rect,
                                     tile.z_id,
                                     color_space,
@@ -3131,7 +3140,7 @@ impl Renderer {
                                 uv_rect.uv1.y = y;
                             }
                             let instance = CompositeInstance::new_rgb(
-                                tile_rect,
+                                tile.rect,
                                 clip_rect,
                                 PremultipliedColorF::WHITE,
                                 tile.z_id,
@@ -3155,7 +3164,7 @@ impl Renderer {
                     let dummy = TextureSource::Dummy;
                     let image_buffer_kind = dummy.image_buffer_kind();
                     let instance = CompositeInstance::new(
-                        tile_rect,
+                        tile.rect,
                         clip_rect,
                         PremultipliedColorF::BLACK,
                         tile.z_id,
@@ -3258,26 +3267,22 @@ impl Renderer {
             // Clear tiles overwrite whatever is under them, so they are treated as opaque.
             let is_opaque = tile.kind != TileKind::Alpha;
 
-            let device_tile_box = composite_state.get_device_rect(
-                &tile.local_rect,
-                tile.transform_index
-            );
-
             // Determine a clip rect to apply to this tile, depending on what
             // the partial present mode is.
             let partial_clip_rect = match partial_present_mode {
-                Some(PartialPresentMode::Single { dirty_rect }) => dirty_rect,
-                None => device_tile_box,
+                Some(PartialPresentMode::Single { dirty_rect }) => dirty_rect.to_box2d(),
+                None => tile.rect.to_box2d(),
             };
 
             // Simple compositor needs the valid rect in device space to match clip rect
-            let device_valid_rect = composite_state
-                .get_device_rect(&tile.local_valid_rect, tile.transform_index);
+            let valid_device_rect = tile.valid_rect.translate(
+                tile.rect.origin.to_vector()
+            ).to_box2d();
 
-            let rect = device_tile_box
-                .intersection_unchecked(&tile.device_clip_rect)
+            let rect = tile.rect.to_box2d()
+                .intersection_unchecked(&tile.clip_rect.to_box2d())
                 .intersection_unchecked(&partial_clip_rect)
-                .intersection_unchecked(&device_valid_rect);
+                .intersection_unchecked(&valid_device_rect);
 
             if rect.is_empty() {
                 continue;
@@ -3304,7 +3309,7 @@ impl Renderer {
                 // on Mali-G77 we have observed artefacts when calling glClear (even with
                 // the empty scissor rect set) after calling eglSetDamageRegion with an
                 // empty damage region. So avoid clearing in that case. See bug 1709548.
-                if !dirty_rect.is_empty() && occlusion.test(&dirty_rect) {
+                if !dirty_rect.is_empty() && occlusion.test(&dirty_rect.to_box2d()) {
                     // We have a single dirty rect, so clear only that
                     self.device.clear_target(clear_color,
                                              None,
@@ -3409,7 +3414,7 @@ impl Renderer {
                 DrawTarget::NativeSurface { .. } => {
                     unreachable!("bug: native compositor surface in child target");
                 }
-                DrawTarget::Default { rect, total_size, .. } if rect.min == FramebufferIntPoint::zero() && rect.size() == total_size => {
+                DrawTarget::Default { rect, total_size, .. } if rect.origin == FramebufferIntPoint::zero() && rect.size == total_size => {
                     // whole screen is covered, no need for scissor
                     None
                 }
@@ -3661,8 +3666,8 @@ impl Renderer {
                         let rect = render_tasks[*task_id].get_target_rect().to_f32();
                         ClearInstance {
                             rect: [
-                                rect.min.x, rect.min.y,
-                                rect.width(), rect.height(),
+                                rect.origin.x, rect.origin.y,
+                                rect.size.width, rect.size.height,
                             ],
                             color: zero_color,
                         }
@@ -3674,8 +3679,8 @@ impl Renderer {
                         let rect = render_tasks[*task_id].get_target_rect().to_f32();
                         ClearInstance {
                             rect: [
-                                rect.min.x, rect.min.y,
-                                rect.width(), rect.height(),
+                                rect.origin.x, rect.origin.y,
+                                rect.size.width, rect.size.height,
                             ],
                             color: one_color,
                         }
@@ -3831,8 +3836,8 @@ impl Renderer {
                     .iter()
                     .map(|r| ClearInstance {
                         rect: [
-                            r.min.x as f32, r.min.y as f32,
-                            r.width() as f32, r.height() as f32,
+                            r.origin.x as f32, r.origin.y as f32,
+                            r.size.width as f32, r.size.height as f32,
                         ],
                         color,
                     })
@@ -4204,11 +4209,16 @@ impl Renderer {
                     if tile.kind == TileKind::Clear {
                         continue;
                     }
-                    let dirty_rect = composite_state.get_device_rect(
-                        &tile.local_dirty_rect,
-                        tile.transform_index,
-                    );
-                    combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+                    let tile_dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
+                    let transformed_dirty_rect = if let Some(transform) = tile.transform {
+                        transform.outer_transformed_rect(&tile_dirty_rect)
+                    } else {
+                        Some(tile_dirty_rect)
+                    };
+
+                    if let Some(dirty_rect) = transformed_dirty_rect {
+                        combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+                    }
                 }
 
                 let combined_dirty_rect = combined_dirty_rect.round();
@@ -4241,7 +4251,8 @@ impl Renderer {
             } else {
                 // If we don't have a valid partial present scenario, return a single
                 // dirty rect to the client that covers the entire framebuffer.
-                let fb_rect = DeviceIntRect::from_size(
+                let fb_rect = DeviceIntRect::new(
+                    DeviceIntPoint::zero(),
                     draw_target_dimensions,
                 );
                 results.dirty_rects.push(fb_rect);
@@ -4375,14 +4386,12 @@ impl Renderer {
                     if tile.kind == TileKind::Clear {
                         continue;
                     }
-                    if !tile.local_dirty_rect.is_empty() {
-                        if let CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::Native { id, .. } } = tile.surface {
-                            let valid_rect = frame.composite_state.get_surface_rect(
-                                &tile.local_valid_rect,
-                                &tile.local_rect.origin,
-                                tile.transform_index,
-                            ).to_i32();
-
+                    if !tile.dirty_rect.is_empty() {
+                        if let CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::Native { id, .. } } =
+                            tile.surface {
+                            let valid_rect = tile.valid_rect
+                                .round()
+                                .to_i32();
                             compositor.invalidate_tile(id, valid_rect);
                         }
                     }
@@ -4625,7 +4634,7 @@ impl Renderer {
                 PictureCacheDebugInfo::new(),
             );
 
-            let size = frame.device_rect.size().to_f32();
+            let size = frame.device_rect.size.to_f32();
             let surface_origin_is_top_left = self.device.surface_origin_is_top_left();
             let (bottom, top) = if surface_origin_is_top_left {
               (0.0, size.height)
@@ -4646,9 +4655,7 @@ impl Renderer {
             let mut fb_rect = frame.device_rect * fb_scale;
 
             if !surface_origin_is_top_left {
-                let h = fb_rect.height();
-                fb_rect.min.y = device_size.height - fb_rect.max.y;
-                fb_rect.max.y = fb_rect.min.y + h;
+                fb_rect.origin.y = device_size.height - fb_rect.origin.y - fb_rect.size.height;
             }
 
             let draw_target = DrawTarget::Default {
@@ -4734,10 +4741,10 @@ impl Renderer {
             match item {
                 DebugItem::Rect { rect, outer_color, inner_color } => {
                     debug_renderer.add_quad(
-                        rect.min.x,
-                        rect.min.y,
-                        rect.max.x,
-                        rect.max.y,
+                        rect.origin.x,
+                        rect.origin.y,
+                        rect.origin.x + rect.size.width,
+                        rect.origin.y + rect.size.height,
                         (*inner_color).into(),
                         (*inner_color).into(),
                     );
@@ -4811,12 +4818,12 @@ impl Renderer {
                 .max(0),
         );
 
-        let source_rect = DeviceIntRect::from_origin_and_size(
+        let source_rect = DeviceIntRect::new(
             source_origin,
             source_size,
         );
 
-        let target_rect = DeviceIntRect::from_origin_and_size(
+        let target_rect = DeviceIntRect::new(
             DeviceIntPoint::new(
                 device_size.width - target_size.width - 64,
                 device_size.height - target_size.height - 64,
@@ -4824,8 +4831,9 @@ impl Renderer {
             target_size,
         );
 
-        let texture_rect = FramebufferIntRect::from_size(
-            source_rect.size().cast_unit(),
+        let texture_rect = FramebufferIntRect::new(
+            FramebufferIntPoint::zero(),
+            source_rect.size.cast_unit(),
         );
 
         debug_renderer.add_rect(
@@ -4837,8 +4845,8 @@ impl Renderer {
             let texture = self.device.create_texture(
                 ImageBufferKind::Texture2D,
                 ImageFormat::BGRA8,
-                source_rect.width(),
-                source_rect.height(),
+                source_rect.size.width,
+                source_rect.size.height,
                 TextureFilter::Nearest,
                 Some(RenderTargetInfo { has_depth: false }),
             );
@@ -4945,7 +4953,8 @@ impl Renderer {
                 continue;
             }
             let dimensions = texture.get_dimensions();
-            let src_rect = FramebufferIntRect::from_size(
+            let src_rect = FramebufferIntRect::new(
+                FramebufferIntPoint::zero(),
                 FramebufferIntSize::new(dimensions.width as i32, dimensions.height as i32),
             );
 
@@ -4957,7 +4966,7 @@ impl Renderer {
             }
 
             // Draw the info tag.
-            let tag_rect = rect(x, tag_y, size, tag_height).to_box2d();
+            let tag_rect = rect(x, tag_y, size, tag_height);
             let tag_color = select_color(texture);
             device.clear_target(
                 Some(tag_color),
@@ -4969,15 +4978,15 @@ impl Renderer {
             let dim = texture.get_dimensions();
             let text_rect = tag_rect.inflate(-text_margin, -text_margin);
             debug_renderer.add_text(
-                text_rect.min.x as f32,
-                text_rect.max.y as f32, // Top-relative.
+                text_rect.min_x() as f32,
+                text_rect.max_y() as f32, // Top-relative.
                 &format!("{}x{}", dim.width, dim.height),
                 ColorU::new(0, 0, 0, 255),
                 Some(tag_rect.to_f32())
             );
 
             // Blit the contents of the texture.
-            let dest_rect = draw_target.to_framebuffer_rect(rect(x, image_y, size, size).to_box2d());
+            let dest_rect = draw_target.to_framebuffer_rect(rect(x, image_y, size, size));
             let read_target = ReadTarget::from_texture(texture);
 
             if surface_origin_is_top_left {
@@ -5080,7 +5089,7 @@ impl Renderer {
     }
 
     pub fn read_pixels_rgba8(&mut self, rect: FramebufferIntRect) -> Vec<u8> {
-        let mut pixels = vec![0; (rect.area() * 4) as usize];
+        let mut pixels = vec![0; (rect.size.width * rect.size.height * 4) as usize];
         self.device.read_pixels_into(rect, ImageFormat::RGBA8, &mut pixels);
         pixels
     }
@@ -5978,8 +5987,8 @@ mod tests {
         assert_eq!(tracker.get_damage_rect(3), Some(DeviceRect::zero()));
         assert_eq!(tracker.get_damage_rect(4), None);
 
-        let damage1 = DeviceRect::from_origin_and_size(DevicePoint::new(10.0, 10.0), DeviceSize::new(10.0, 10.0));
-        let damage2 = DeviceRect::from_origin_and_size(DevicePoint::new(20.0, 20.0), DeviceSize::new(10.0, 10.0));
+        let damage1 = DeviceRect::new(DevicePoint::new(10.0, 10.0), DeviceSize::new(10.0, 10.0));
+        let damage2 = DeviceRect::new(DevicePoint::new(20.0, 20.0), DeviceSize::new(10.0, 10.0));
         let combined = damage1.union(&damage2);
 
         tracker.push_dirty_rect(&damage1);

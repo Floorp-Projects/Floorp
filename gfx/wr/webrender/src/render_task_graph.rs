@@ -444,7 +444,7 @@ impl RenderTaskGraphBuilder {
                                     let surface = self.active_surfaces.get_mut(&texture_id).unwrap();
                                     if let Some(p) = surface.alloc_rect(size, kind, true) {
                                         location = Some((texture_id, p));
-                                        *used_rect = used_rect.union(&DeviceIntRect::from_origin_and_size(p, size));
+                                        *used_rect = used_rect.union(&DeviceIntRect::new(p, size));
                                         sub_pass.task_ids.push(*task_id);
                                         break;
                                     }
@@ -520,7 +520,7 @@ impl RenderTaskGraphBuilder {
                                 surface: SubPassSurface::Dynamic {
                                     texture_id,
                                     target_kind: kind,
-                                    used_rect: DeviceIntRect::from_origin_and_size(p, size),
+                                    used_rect: DeviceIntRect::new(p, size),
                                 },
                                 task_ids: vec![*task_id],
                             });
@@ -530,7 +530,7 @@ impl RenderTaskGraphBuilder {
                         assert!(location.is_some());
                         task.location = RenderTaskLocation::Dynamic {
                             texture_id: location.unwrap().0,
-                            rect: DeviceIntRect::from_origin_and_size(location.unwrap().1, size),
+                            rect: DeviceIntRect::new(location.unwrap().1, size),
                         };
                     }
                     RenderTaskLocation::Static { ref surface, .. } => {

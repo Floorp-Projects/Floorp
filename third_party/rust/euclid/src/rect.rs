@@ -16,7 +16,7 @@ use crate::side_offsets::SideOffsets2D;
 use crate::size::Size2D;
 use crate::vector::Vector2D;
 
-use num_traits::{NumCast, Float};
+use num_traits::NumCast;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -32,7 +32,7 @@ use core::ops::{Add, Div, DivAssign, Mul, MulAssign, Range, Sub};
 ///
 /// `Rect` is represented by an origin point and a size.
 ///
-/// See [`Box2D`] for a rectangle represented by two endpoints.
+/// See [`Rect`] for a rectangle represented by two endpoints.
 ///
 /// # Empty rectangle
 ///
@@ -52,21 +52,6 @@ use core::ops::{Add, Div, DivAssign, Mul, MulAssign, Range, Sub};
 pub struct Rect<T, U> {
     pub origin: Point2D<T, U>,
     pub size: Size2D<T, U>,
-}
-
-#[cfg(feature = "arbitrary")]
-impl<'a, T, U> arbitrary::Arbitrary<'a> for Rect<T, U>
-where
-    T: arbitrary::Arbitrary<'a>,
-{
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self>
-    {
-        let (origin, size) = arbitrary::Arbitrary::arbitrary(u)?;
-        Ok(Rect {
-            origin,
-            size,
-        })
-    }
 }
 
 impl<T: Hash, U> Hash for Rect<T, U> {
@@ -368,6 +353,13 @@ where
 {
     #[inline]
     pub fn union(&self, other: &Self) -> Self {
+        if self.size == Zero::zero() {
+            return *other;
+        }
+        if other.size == Zero::zero() {
+            return *self;
+        }
+
         self.to_box2d().union(&other.to_box2d()).to_rect()
     }
 }
@@ -584,14 +576,6 @@ impl<T: NumCast + Copy, U> Rect<T, U> {
     #[inline]
     pub fn to_i64(&self) -> Rect<i64, U> {
         self.cast()
-    }
-}
-
-impl<T: Float, U> Rect<T, U> {
-    /// Returns true if all members are finite.
-    #[inline]
-    pub fn is_finite(self) -> bool {
-        self.origin.is_finite() && self.size.is_finite()
     }
 }
 

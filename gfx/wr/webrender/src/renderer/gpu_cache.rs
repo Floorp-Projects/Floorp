@@ -342,7 +342,7 @@ impl GpuCacheTexture {
                     }
 
                     let blocks = row.dirty_blocks();
-                    let rect = DeviceIntRect::from_origin_and_size(
+                    let rect = DeviceIntRect::new(
                         DeviceIntPoint::new(row.min_dirty as i32, row_index as i32),
                         DeviceIntSize::new(blocks.len() as i32, 1),
                     );

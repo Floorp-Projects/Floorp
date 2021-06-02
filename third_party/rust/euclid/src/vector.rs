@@ -22,7 +22,6 @@ use crate::Angle;
 use core::cmp::{Eq, PartialEq};
 use core::fmt;
 use core::hash::Hash;
-use core::iter::Sum;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 #[cfg(feature = "mint")]
@@ -87,22 +86,6 @@ where
     }
 }
 
-#[cfg(feature = "arbitrary")]
-impl<'a, T, U> arbitrary::Arbitrary<'a> for Vector2D<T, U>
-where
-    T: arbitrary::Arbitrary<'a>,
-{
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self>
-    {
-        let (x, y) = arbitrary::Arbitrary::arbitrary(u)?;
-        Ok(Vector2D {
-            x,
-            y,
-            _unit: PhantomData,
-        })
-    }
-}
-
 impl<T: Eq, U> Eq for Vector2D<T, U> {}
 
 impl<T: PartialEq, U> PartialEq for Vector2D<T, U> {
@@ -148,34 +131,12 @@ impl<T, U> Vector2D<T, U> {
         Vector2D::new(Zero::zero(), Zero::zero())
     }
 
-    /// Constructor, setting all components to one.
-    #[inline]
-    pub fn one() -> Self
-    where
-        T: One,
-    {
-        Vector2D::new(One::one(), One::one())
-    }
-
     /// Constructor taking scalar values directly.
     #[inline]
     pub const fn new(x: T, y: T) -> Self {
         Vector2D {
             x,
             y,
-            _unit: PhantomData,
-        }
-    }
-
-    /// Constructor setting all components to the same value.
-    #[inline]
-    pub fn splat(v: T) -> Self
-    where
-        T: Clone,
-    {
-        Vector2D {
-            x: v.clone(),
-            y: v,
             _unit: PhantomData,
         }
     }
@@ -243,24 +204,6 @@ impl<T, U> Vector2D<T, U> {
         T: Sub<Output = T> + Mul<Output = T>,
     {
         self.x * other.y - self.y * other.x
-    }
-
-    /// Returns the component-wise multiplication of the two vectors.
-    #[inline]
-    pub fn component_mul(self, other: Self) -> Self
-    where
-        T: Mul<Output = T>,
-    {
-        vec2(self.x * other.x, self.y * other.y)
-    }
-
-    /// Returns the component-wise division of the two vectors.
-    #[inline]
-    pub fn component_div(self, other: Self) -> Self
-    where
-        T: Div<Output = T>,
-    {
-        vec2(self.x / other.x, self.y / other.y)
     }
 }
 
@@ -509,12 +452,6 @@ impl<T: Float, U> Vector2D<T, U> {
         debug_assert!(min <= max);
         self.with_min_length(min).with_max_length(max)
     }
-
-    /// Returns true if all members are finite.
-    #[inline]
-    pub fn is_finite(self) -> bool {
-        self.x.is_finite() && self.y.is_finite()
-    }
 }
 
 impl<T, U> Vector2D<T, U>
@@ -709,27 +646,6 @@ impl<T: Add, U> Add for Vector2D<T, U> {
     #[inline]
     fn add(self, other: Self) -> Self::Output {
         Vector2D::new(self.x + other.x, self.y + other.y)
-    }
-}
-
-impl<T: Add + Copy, U> Add<&Self> for Vector2D<T, U> {
-    type Output = Vector2D<T::Output, U>;
-
-    #[inline]
-    fn add(self, other: &Self) -> Self::Output {
-        Vector2D::new(self.x + other.x, self.y + other.y)
-    }
-}
-
-impl<T: Add<Output = T> + Zero, U> Sum for Vector2D<T, U> {
-    fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
-        iter.fold(Self::zero(), Add::add)
-    }
-}
-
-impl<'a, T: 'a + Add<Output = T> + Copy + Zero, U: 'a> Sum<&'a Self> for Vector2D<T, U> {
-    fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
-        iter.fold(Self::zero(), Add::add)
     }
 }
 
@@ -998,15 +914,6 @@ impl<T, U> Vector3D<T, U> {
         vec3(Zero::zero(), Zero::zero(), Zero::zero())
     }
 
-    /// Constructor, setting all components to one.
-    #[inline]
-    pub fn one() -> Self
-    where
-        T: One,
-    {
-        vec3(One::one(), One::one(), One::one())
-    }
-
     /// Constructor taking scalar values directly.
     #[inline]
     pub const fn new(x: T, y: T, z: T) -> Self {
@@ -1014,19 +921,6 @@ impl<T, U> Vector3D<T, U> {
             x,
             y,
             z,
-            _unit: PhantomData,
-        }
-    }
-    /// Constructor setting all components to the same value.
-    #[inline]
-    pub fn splat(v: T) -> Self
-    where
-        T: Clone,
-    {
-        Vector3D {
-            x: v.clone(),
-            y: v.clone(),
-            z: v,
             _unit: PhantomData,
         }
     }
@@ -1093,24 +987,6 @@ impl<T: Copy, U> Vector3D<T, U> {
             self.z * other.x - self.x * other.z,
             self.x * other.y - self.y * other.x,
         )
-    }
-
-    /// Returns the component-wise multiplication of the two vectors.
-    #[inline]
-    pub fn component_mul(self, other: Self) -> Self
-    where
-        T: Mul<Output = T>,
-    {
-        vec3(self.x * other.x, self.y * other.y, self.z * other.z)
-    }
-
-    /// Returns the component-wise division of the two vectors.
-    #[inline]
-    pub fn component_div(self, other: Self) -> Self
-    where
-        T: Div<Output = T>,
-    {
-        vec3(self.x / other.x, self.y / other.y, self.z / other.z)
     }
 
     /// Cast this vector into a point.
@@ -1359,12 +1235,6 @@ impl<T: Float, U> Vector3D<T, U> {
         debug_assert!(min <= max);
         self.with_min_length(min).with_max_length(max)
     }
-
-    /// Returns true if all members are finite.
-    #[inline]
-    pub fn is_finite(self) -> bool {
-        self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
-    }
 }
 
 impl<T, U> Vector3D<T, U>
@@ -1575,27 +1445,6 @@ impl<T: Add, U> Add for Vector3D<T, U> {
     #[inline]
     fn add(self, other: Self) -> Self::Output {
         vec3(self.x + other.x, self.y + other.y, self.z + other.z)
-    }
-}
-
-impl<'a, T: 'a + Add + Copy, U: 'a> Add<&Self> for Vector3D<T, U> {
-    type Output = Vector3D<T::Output, U>;
-
-    #[inline]
-    fn add(self, other: &Self) -> Self::Output {
-        vec3(self.x + other.x, self.y + other.y, self.z + other.z)
-    }
-}
-
-impl<T: Add<Output = T> + Zero, U> Sum for Vector3D<T, U> {
-    fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
-        iter.fold(Self::zero(), Add::add)
-    }
-}
-
-impl<'a, T: 'a + Add<Output = T> + Copy + Zero, U: 'a> Sum<&'a Self> for Vector3D<T, U> {
-    fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
-        iter.fold(Self::zero(), Add::add)
     }
 }
 
@@ -1977,7 +1826,7 @@ impl BoolVector3D {
 
 /// Convenience constructor.
 #[inline]
-pub const fn vec2<T, U>(x: T, y: T) -> Vector2D<T, U> {
+pub fn vec2<T, U>(x: T, y: T) -> Vector2D<T, U> {
     Vector2D {
         x,
         y,
@@ -1987,7 +1836,7 @@ pub const fn vec2<T, U>(x: T, y: T) -> Vector2D<T, U> {
 
 /// Convenience constructor.
 #[inline]
-pub const fn vec3<T, U>(x: T, y: T, z: T) -> Vector3D<T, U> {
+pub fn vec3<T, U>(x: T, y: T, z: T) -> Vector3D<T, U> {
     Vector3D {
         x,
         y,
@@ -1998,13 +1847,13 @@ pub const fn vec3<T, U>(x: T, y: T, z: T) -> Vector3D<T, U> {
 
 /// Shorthand for `BoolVector2D { x, y }`.
 #[inline]
-pub const fn bvec2(x: bool, y: bool) -> BoolVector2D {
+pub fn bvec2(x: bool, y: bool) -> BoolVector2D {
     BoolVector2D { x, y }
 }
 
 /// Shorthand for `BoolVector3D { x, y, z }`.
 #[inline]
-pub const fn bvec3(x: bool, y: bool, z: bool) -> BoolVector3D {
+pub fn bvec3(x: bool, y: bool, z: bool) -> BoolVector3D {
     BoolVector3D { x, y, z }
 }
 
@@ -2194,19 +2043,9 @@ mod vector2d {
         let p1 = Vector2DMm::new(1.0, 2.0);
         let p2 = Vector2DMm::new(3.0, 4.0);
 
-        assert_eq!(p1 + p2, vec2(4.0, 6.0));
-        assert_eq!(p1 + &p2, vec2(4.0, 6.0));
-    }
+        let result = p1 + p2;
 
-    #[test]
-    pub fn test_sum() {
-        let vecs = [
-            Vector2DMm::new(1.0, 2.0),
-            Vector2DMm::new(3.0, 4.0),
-            Vector2DMm::new(5.0, 6.0)
-        ];
-        let sum = Vector2DMm::new(9.0, 12.0);
-        assert_eq!(vecs.iter().sum::<Vector2DMm<_>>(), sum);
+        assert_eq!(result, vec2(4.0, 6.0));
     }
 
     #[test]
@@ -2253,26 +2092,6 @@ mod vector3d {
     use mint;
 
     type Vec3 = default::Vector3D<f32>;
-
-    #[test]
-    pub fn test_add() {
-        let p1 = Vec3::new(1.0, 2.0, 3.0);
-        let p2 = Vec3::new(4.0, 5.0, 6.0);
-
-        assert_eq!(p1 + p2, vec3(5.0, 7.0, 9.0));
-        assert_eq!(p1 + &p2, vec3(5.0, 7.0, 9.0));
-    }
-
-    #[test]
-    pub fn test_sum() {
-        let vecs = [
-            Vec3::new(1.0, 2.0, 3.0),
-            Vec3::new(4.0, 5.0, 6.0),
-            Vec3::new(7.0, 8.0, 9.0)
-        ];
-        let sum = Vec3::new(12.0, 15.0, 18.0);
-        assert_eq!(vecs.iter().sum::<Vec3>(), sum);
-    }
 
     #[test]
     pub fn test_dot() {
