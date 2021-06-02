@@ -5,6 +5,7 @@
 use serde::ser::{Serialize, Serializer};
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
+use std::fmt::{self, Display, Formatter};
 
 pub static ELEMENT_KEY: &str = "element-6066-11e4-a52e-4f735466cecf";
 pub static FRAME_KEY: &str = "frame-075b-4da1-b6ba-e579c2d3230a";
@@ -94,9 +95,9 @@ impl<'de> Deserialize<'de> for WebElement {
     }
 }
 
-impl WebElement {
-    pub fn to_string(&self) -> String {
-        self.0.clone()
+impl Display for WebElement {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

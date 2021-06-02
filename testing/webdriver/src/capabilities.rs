@@ -221,11 +221,11 @@ impl SpecNewSessionParameters {
 
                 "proxyAutoconfigUrl" => match value.as_str() {
                     Some(x) => {
-                        Url::parse(x).or_else(|_| {
-                            Err(WebDriverError::new(
+                        Url::parse(x).map_err(|_| {
+                            WebDriverError::new(
                                 ErrorStatus::InvalidArgument,
                                 format!("proxyAutoconfigUrl is not a valid URL: {}", x),
-                            ))
+                            )
                         })?;
                     }
                     None => {
@@ -301,11 +301,11 @@ impl SpecNewSessionParameters {
                 }
 
                 // Temporarily add a scheme so the host can be parsed as URL
-                let url = Url::parse(&format!("http://{}", host)).or_else(|_| {
-                    Err(WebDriverError::new(
+                let url = Url::parse(&format!("http://{}", host)).map_err(|_| {
+                    WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         format!("{} is not a valid URL: {}", entry, host),
-                    ))
+                    )
                 })?;
 
                 if url.username() != ""
@@ -448,7 +448,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                 .ok()
                                 .and_then(|x| x);
 
-                            if value.as_str() != browserValue.as_ref().map(|x| &**x) {
+                            if value.as_str() != browserValue.as_deref() {
                                 return false;
                             }
                         }
@@ -475,7 +475,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                 .platform_name(merged)
                                 .ok()
                                 .and_then(|x| x);
-                            if value.as_str() != browserValue.as_ref().map(|x| &**x) {
+                            if value.as_str() != browserValue.as_deref() {
                                 return false;
                             }
                         }
