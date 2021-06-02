@@ -1394,29 +1394,30 @@ void LIRGenerator::visitMinMaxArray(MMinMaxArray* ins) {
   define(lir, ins);
 }
 
-void LIRGenerator::visitAbs(MAbs* ins) {
+LInstructionHelper<1, 1, 0>* LIRGenerator::allocateAbs(MAbs* ins,
+                                                       LAllocation input) {
   MDefinition* num = ins->input();
   MOZ_ASSERT(IsNumberType(num->type()));
 
   LInstructionHelper<1, 1, 0>* lir;
   switch (num->type()) {
     case MIRType::Int32:
-      lir = new (alloc()) LAbsI(useRegisterAtStart(num));
+      lir = new (alloc()) LAbsI(input);
       // needed to handle abs(INT32_MIN)
       if (ins->fallible()) {
         assignSnapshot(lir, ins->bailoutKind());
       }
       break;
     case MIRType::Float32:
-      lir = new (alloc()) LAbsF(useRegisterAtStart(num));
+      lir = new (alloc()) LAbsF(input);
       break;
     case MIRType::Double:
-      lir = new (alloc()) LAbsD(useRegisterAtStart(num));
+      lir = new (alloc()) LAbsD(input);
       break;
     default:
       MOZ_CRASH();
   }
-  defineReuseInput(lir, ins, 0);
+  return lir;
 }
 
 void LIRGenerator::visitClz(MClz* ins) {
