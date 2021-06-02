@@ -1,10 +1,6 @@
 "use strict";
 
 add_task(async function test_theme_incognito_not_allowed() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   let windowExtension = ExtensionTestUtils.loadExtension({
     incognitoOverride: "spanning",
     async background() {

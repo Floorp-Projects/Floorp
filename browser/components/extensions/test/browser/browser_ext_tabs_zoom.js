@@ -8,9 +8,6 @@ const SITE_SPECIFIC_PREF = "browser.zoom.siteSpecific";
 // incognito data in event listeners it will fail.
 let monitor;
 add_task(async function startup() {
-  SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
   monitor = await startIncognitoMonitorExtension();
 });
 registerCleanupFunction(async function finish() {

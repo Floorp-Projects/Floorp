@@ -4,12 +4,6 @@
 
 loadTestSubscript("head_devtools.js");
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-});
-
 async function testIncognito(incognitoOverride) {
   let privateAllowed = incognitoOverride == "spanning";
 

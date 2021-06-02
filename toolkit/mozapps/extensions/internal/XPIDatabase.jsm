@@ -39,13 +39,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "allowPrivateBrowsingByDefault",
-  "extensions.allowPrivateBrowsingByDefault",
-  true
-);
-
 const { nsIBlocklistService } = Ci;
 
 // These are injected from XPIProvider.jsm
@@ -754,7 +747,6 @@ class AddonInternal {
     // when the extension has opted out or it gets the permission automatically
     // on every extension startup (as system, privileged and builtin addons).
     if (
-      !allowPrivateBrowsingByDefault &&
       this.type === "extension" &&
       this.incognito !== "not_allowed" &&
       this.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED &&

@@ -66,11 +66,6 @@ function protocolChromeScript() {
 }
 
 add_task(async function test_protocolHandler() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.allowPrivateBrowsingByDefault", false],
-    ],
-  });
   let extensionData = {
     manifest: {
       protocol_handlers: [

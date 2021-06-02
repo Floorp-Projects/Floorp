@@ -15,10 +15,6 @@
 "use strict";
 
 add_task(async function webnav_test_incognito() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   // Monitor will fail if it gets any event.
   let monitor = ExtensionTestUtils.loadExtension({
     manifest: {

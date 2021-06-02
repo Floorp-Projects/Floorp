@@ -93,10 +93,6 @@ add_task(async function test_sessions_forget_closed_window() {
 });
 
 add_task(async function test_sessions_forget_closed_window_private() {
-  SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   let pb_extension = getExtension("spanning");
   await pb_extension.startup();
   let extension = getExtension("not_allowed");

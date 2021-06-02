@@ -10,6 +10,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   ExtensionSettingsStore: "resource://gre/modules/ExtensionSettingsStore.jsm",
+  HomePage: "resource:///modules/HomePage.jsm",
 });
 
 ChromeUtils.defineModuleGetter(
@@ -543,12 +544,35 @@ add_task(async function test_doorhanger_new_window() {
   // Skipping for window leak in debug builds, follow up bug: 1678412
 }).skip(AppConstants.DEBUG);
 
+async function testHomePageWindow(options = {}) {
+  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
+  let win = OpenBrowserWindow(options.options);
+  let openHomepage = TestUtils.topicObserved("browser-open-homepage-start");
+  await windowOpenedPromise;
+  let doc = win.document;
+  let panel = ExtensionControlledPopup._getAndMaybeCreatePanel(doc);
+
+  let popupShown = options.expectPanel && promisePopupShown(panel);
+  win.BrowserHome();
+  await Promise.all([
+    BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser),
+    openHomepage,
+    popupShown,
+  ]);
+
+  await options.test(win);
+
+  if (options.expectPanel) {
+    let popupHidden = promisePopupHidden(panel);
+    panel.hidePopup();
+    await popupHidden;
+  }
+  await BrowserTestUtils.closeWindow(win);
+}
+
 add_task(async function test_overriding_home_page_incognito_not_allowed() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.allowPrivateBrowsingByDefault", false],
-      ["browser.startup.page", 1],
-    ],
+    set: [["browser.startup.page", 1]],
   });
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -556,60 +580,58 @@ add_task(async function test_overriding_home_page_incognito_not_allowed() {
       chrome_settings_overrides: { homepage: "home.html" },
       name: "extension",
     },
-    background() {
-      browser.test.sendMessage("url", browser.runtime.getURL("home.html"));
-    },
     files: { "home.html": "<h1>1</h1>" },
     useAddonManager: "temporary",
   });
 
   await extension.startup();
-  let url = await extension.awaitMessage("url");
+  let url = `moz-extension://${extension.uuid}/home.html`;
 
-  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow({ url });
-  let win = OpenBrowserWindow();
+  await testHomePageWindow({
+    expectPanel: true,
+    test(win) {
+      let doc = win.document;
+      let description = doc.getElementById(
+        "extension-homepage-notification-description"
+      );
+      let popupnotification = description.closest("popupnotification");
+      is(
+        description.textContent,
+        "An extension,  extension, changed what you see when you open your homepage and new windows.Learn more",
+        "The extension name is in the popup"
+      );
+      is(
+        popupnotification.hidden,
+        false,
+        "The expected popup notification is visible"
+      );
 
-  await windowOpenedPromise;
-  let doc = win.document;
-  let panel = ExtensionControlledPopup._getAndMaybeCreatePanel(doc);
-  await promisePopupShown(panel);
+      Assert.equal(HomePage.get(win), url, "The homepage is not set");
+      Assert.equal(
+        win.gURLBar.value,
+        url,
+        "home page not used in private window"
+      );
+    },
+  });
 
-  let description = doc.getElementById(
-    "extension-homepage-notification-description"
-  );
-  let popupnotification = description.closest("popupnotification");
-  is(
-    description.textContent,
-    "An extension,  extension, changed what you see when you open your homepage and new windows.Learn more",
-    "The extension name is in the popup"
-  );
-  is(
-    popupnotification.hidden,
-    false,
-    "The expected popup notification is visible"
-  );
-
-  ok(win.gURLBar.value.endsWith("home.html"), "extension is in control");
-  await BrowserTestUtils.closeWindow(win);
-
-  // Verify a private window does not open the extension page.
-  windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
-  win = OpenBrowserWindow({ private: true });
-  await windowOpenedPromise;
-  win.BrowserHome();
-  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-
-  is(win.gURLBar.value, "", "home page not used in private window");
+  await testHomePageWindow({
+    expectPanel: false,
+    options: { private: true },
+    test(win) {
+      Assert.notEqual(HomePage.get(win), url, "The homepage is not set");
+      Assert.notEqual(
+        win.gURLBar.value,
+        url,
+        "home page not used in private window"
+      );
+    },
+  });
 
   await extension.unload();
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_overriding_home_page_incognito_spanning() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       chrome_settings_overrides: { homepage: "home.html" },
@@ -625,62 +647,73 @@ add_task(async function test_overriding_home_page_incognito_spanning() {
 
   await extension.startup();
 
-  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
-  let win = OpenBrowserWindow({ private: true });
-  await windowOpenedPromise;
-  let doc = win.document;
-  let panel = ExtensionControlledPopup._getAndMaybeCreatePanel(doc);
-
-  let popupShown = promisePopupShown(panel);
-  win.BrowserHome();
-  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-  await popupShown;
-
-  ok(getHomePageURL().endsWith("home.html"), "The homepage is set");
-  ok(
-    win.gURLBar.value.endsWith("home.html"),
-    "extension is in control in private window"
-  );
-
-  let popupHidden = promisePopupHidden(panel);
-  panel.hidePopup();
-  await popupHidden;
+  // private window uses extension homepage
+  await testHomePageWindow({
+    expectPanel: true,
+    options: { private: true },
+    test(win) {
+      Assert.equal(
+        HomePage.get(win),
+        `moz-extension://${extension.uuid}/home.html`,
+        "The homepage is set"
+      );
+      Assert.equal(
+        win.gURLBar.value,
+        `moz-extension://${extension.uuid}/home.html`,
+        "extension is control in window"
+      );
+    },
+  });
 
   await extension.unload();
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_overriding_home_page_incognito_external() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      chrome_settings_overrides: { homepage: "https://example.com/home.html" },
+      chrome_settings_overrides: { homepage: "/home.html" },
       name: "extension",
     },
     useAddonManager: "temporary",
+    files: { "home.html": "<h1>non-private home</h1>" },
   });
 
   await extension.startup();
 
-  // Verify a private window does not open the extension page.
-  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
-  let win = OpenBrowserWindow({ private: true });
-  await windowOpenedPromise;
-  let openHomepage = TestUtils.topicObserved("browser-open-homepage-start");
-  win.BrowserHome();
-  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-  await openHomepage;
+  // non-private window uses extension homepage
+  await testHomePageWindow({
+    expectPanel: true,
+    test(win) {
+      Assert.equal(
+        HomePage.get(win),
+        `moz-extension://${extension.uuid}/home.html`,
+        "The homepage is set"
+      );
+      Assert.equal(
+        win.gURLBar.value,
+        `moz-extension://${extension.uuid}/home.html`,
+        "extension is control in window"
+      );
+    },
+  });
 
-  is(win.gURLBar.value, "", "home page not used in private window");
-  is(
-    win.gBrowser.selectedBrowser.currentURI.spec,
-    "about:home",
-    "home page not used in private window"
-  );
+  // private window does not use extension window
+  await testHomePageWindow({
+    expectPanel: false,
+    options: { private: true },
+    test(win) {
+      Assert.notEqual(
+        HomePage.get(win),
+        `moz-extension://${extension.uuid}/home.html`,
+        "The homepage is not set"
+      );
+      Assert.notEqual(
+        win.gURLBar.value,
+        `moz-extension://${extension.uuid}/home.html`,
+        "home page not used in private window"
+      );
+    },
+  });
 
   await extension.unload();
-  await BrowserTestUtils.closeWindow(win);
 });

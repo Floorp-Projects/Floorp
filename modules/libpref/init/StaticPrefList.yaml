@@ -3915,12 +3915,6 @@
 # Prefs starting with "extensions."
 #---------------------------------------------------------------------------
 
-# Private browsing opt-in is only supported on Firefox desktop.
-- name: extensions.allowPrivateBrowsingByDefault
-  type: bool
-  value: false
-  mirror: always
-
 # Whether the background.service_worker in the extension manifest.json file
 # is enabled.
 - name: extensions.backgroundServiceWorker.enabled

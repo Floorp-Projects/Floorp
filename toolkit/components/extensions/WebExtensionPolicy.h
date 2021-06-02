@@ -243,7 +243,6 @@ class WebExtensionPolicy final : public nsISupports,
   dom::BrowsingContextGroup::KeepAlivePtr mBrowsingContextGroup;
 
   bool mActive = false;
-  bool mAllowPrivateBrowsingByDefault = true;
 
   RefPtr<WebExtensionLocalizeCallback> mLocalizeCallback;
 
