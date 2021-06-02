@@ -9277,6 +9277,13 @@
   value: 2000
   mirror: always
 
+# When parsing "SOCKS" in PAC string, the default version of SOCKS that will be
+# used.
+- name: network.proxy.default_pac_script_socks_version
+  type: RelaxedAtomicUint32
+  value: 4
+  mirror: always
+
 # Some requests during a page load are marked as "tail", mainly trackers, but not only.
 # This pref controls whether such requests are put to the tail, behind other requests
 # emerging during page loading process.

@@ -1216,6 +1216,10 @@ const char* nsProtocolProxyService::ExtractProxyInfo(const char* start,
         type = kProxyType_HTTP;
       } else if (nsCRT::strncasecmp(start, kProxyType_SOCKS, 5) == 0) {
         type = kProxyType_SOCKS4;  // assume v4 for 4x compat
+        if (StaticPrefs::network_proxy_default_pac_script_socks_version() ==
+            5) {
+          type = kProxyType_SOCKS;
+        }
       } else if (nsCRT::strncasecmp(start, kProxyType_HTTPS, 5) == 0) {
         type = kProxyType_HTTPS;
       }
