@@ -166,6 +166,39 @@ add_task(async function test_fog_event_works() {
   Assert.equal("test_only.ipc", events[0].category);
   Assert.equal("an_event", events[0].name);
   Assert.deepEqual(extra, events[0].extra);
+
+  let extra2 = {
+    extra1: "can set extras",
+    extra2: 37,
+    extra3_longer_name: false,
+  };
+  Glean.testOnlyIpc.eventWithExtra.record(extra2);
+  events = Glean.testOnlyIpc.eventWithExtra.testGetValue();
+  Assert.equal(1, events.length);
+  Assert.equal("test_only.ipc", events[0].category);
+  Assert.equal("event_with_extra", events[0].name);
+  let expectedExtra = {
+    extra1: "can set extras",
+    extra2: "37",
+    extra3_longer_name: "false",
+  };
+  Assert.deepEqual(expectedExtra, events[0].extra);
+
+  // Invalid extra keys don't crash, the event is not recorded.
+  let extra3 = {
+    extra1_nonexistent_extra: "this does not crash",
+  };
+  Glean.testOnlyIpc.eventWithExtra.record(extra3);
+  events = Glean.testOnlyIpc.eventWithExtra.testGetValue();
+  Assert.equal(1, events.length, "Recorded one event too many.");
+
+  // Quantities need to be non-negative.
+  let extra4 = {
+    extra2: -1,
+  };
+  Glean.testOnlyIpc.eventWithExtra.record(extra4);
+  events = Glean.testOnlyIpc.eventWithExtra.testGetValue();
+  Assert.equal(1, events.length, "Recorded one event too many.");
 });
 
 add_task(async function test_fog_memory_distribution_works() {

@@ -12,23 +12,56 @@ Jinja2 template is not. Please file bugs! #}
 #define mozilla_Metrics_h
 
 #include "mozilla/glean/bindings/MetricTypes.h"
+#include "mozilla/Tuple.h"
+#include "mozilla/Maybe.h"
+#include "nsTArray.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla::glean {
 
-enum class NoExtraKeys {};
-
-{% macro generate_extra_keys(obj) %}
+{%- macro generate_extra_keys(obj) -%}
 {% for name, suffix in obj["_generate_enums"] %}
+{# we always use the `extra` suffix, because we only expose the new event API #}
+{% set suffix = "Extra" %}
 {% if obj|attr(name)|length %}
-    enum class {{ obj.name|Camelize }}{{ suffix }} : int32_t {
-        {% for key in obj|attr(name) %}
-        {{ key | Camelize }},
-        {% endfor %}
-    };
-
+    {% if obj.has_extra_types %}
+    {{ extra_keys_with_types(obj, name, suffix)|indent }}
+    {% else %}
+#error "Untyped event extras not supported. Please annotate event extras with a type. See documentation for details. (Metric: {{obj.category}}.{{obj.name}}, defined in: {{obj.defined_in['filepath']}}:{{obj.defined_in['line']}})"
+    {% endif %}
 {% endif %}
 {% endfor %}
-{% endmacro %}
+{%- endmacro -%}
+
+{%- macro extra_keys_with_types(obj, name, suffix) -%}
+struct {{ obj.name|Camelize }}{{ suffix }} {
+  {% for item, type in obj|attr(name) %}
+  mozilla::Maybe<{{type|extra_type_name}}> {{ item|camelize }};
+  {% endfor %}
+
+  Tuple<nsTArray<uint32_t>, nsTArray<nsCString>> ToFfiExtra() const {
+    nsTArray<uint32_t> extraKeys;
+    nsTArray<nsCString> extraValues;
+    {% for item, type in obj|attr(name) %}
+    if ({{item|camelize}}) {
+      extraKeys.AppendElement({{loop.index-1}});
+      {% if type == "string" %}
+      extraValues.EmplaceBack({{item|camelize}}.value());
+      {% elif type == "boolean" %}
+      extraValues.AppendElement()->AssignASCII({{item|camelize}}.value() ? "true" : "false");
+      {% elif type == "quantity" %}
+      extraValues.EmplaceBack(nsPrintfCString("%d", {{item|camelize}}.value()));
+      {% else %}
+#error "Glean: Invalid extra key type for metric {{obj.category}}.{{obj.name}}, defined in: {{obj.defined_in['filepath']}}:{{obj.defined_in['line']}})"
+      {% endif %}
+    }
+    {% endfor %}
+    return MakeTuple(std::move(extraKeys), std::move(extraValues));
+  }
+};
+{%- endmacro %}
+
+struct NoExtraKeys;
 
 {% for category_name, objs in all_objs.items() %}
 namespace {{ category_name|snake_case }} {

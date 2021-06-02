@@ -15,7 +15,7 @@ use crate::private::EventRecordingError;
 #[no_mangle]
 pub extern "C" fn fog_event_record(
     id: u32,
-    extra_keys: &ThinVec<i32>,
+    extra_keys: &ThinVec<u32>,
     extra_values: &ThinVec<nsCString>,
 ) {
     // If no extra keys are passed, we can shortcut here.
@@ -38,13 +38,13 @@ pub extern "C" fn fog_event_record(
     let extra = extra_keys
         .iter()
         .zip(extra_values.iter())
-        .map(|(&k, v)| (k, v.to_string()))
+        .map(|(&k, v)| (k as i32, v.to_string()))
         .collect();
     match metric_maps::record_event_by_id(id, extra) {
         Ok(()) => {}
         Err(EventRecordingError::InvalidId) => panic!("No event for id {}", id),
         Err(EventRecordingError::InvalidExtraKey) => {
-            panic!("Invalid extra keys in map for id {}", id)
+            // TODO: Record an error. bug 1704504.
         }
     }
 }
@@ -81,7 +81,7 @@ pub extern "C" fn fog_event_record_str(
         Ok(()) => {}
         Err(EventRecordingError::InvalidId) => panic!("No event for id {}", id),
         Err(EventRecordingError::InvalidExtraKey) => {
-            panic!("Invalid extra keys in map for id {}", id)
+            // TODO: Record an error. bug 1704504.
         }
     }
 }

@@ -8,55 +8,40 @@ Jinja2 template is not. Please file bugs! #}
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-{% macro generate_extra_keys(obj) %}
-{% for name, suffix in obj["_generate_enums"] %}
+{% macro generate_extra_keys(obj) -%}
+{% for name, _ in obj["_generate_enums"] %}
+{# we always use the `extra` suffix, because we only expose the new event API #}
+{% set suffix = "Extra" %}
 {% if obj|attr(name)|length %}
-    #[derive(Clone, Copy, Hash, Eq, PartialEq)]
-    pub enum {{ obj.name|Camelize }}{{ suffix }} {
-        {% for key in obj|attr(name) %}
-        {{ key | Camelize }},
-        {% endfor %}
-    }
-
-    impl ExtraKeys for {{ obj.name|Camelize }}{{ suffix }} {
-        const ALLOWED_KEYS: &'static [&'static str] = {{ obj.allowed_extra_keys|extra_keys }};
-
-        fn index(self) -> i32 {
-            self as i32
-        }
-    }
-
-    /// Convert from an extra key's index to its variant.
-    impl std::convert::TryFrom<i32> for {{ obj.name|Camelize }}{{ suffix }} {
-        type Error = EventRecordingError;
-
-        fn try_from(value: i32) -> Result<Self, Self::Error> {
-          match value {
-              {% for key in obj|attr(name) %}
-              {{loop.index-1}} => Ok(Self::{{key | Camelize}}),
-              {% endfor %}
-              _ => Err(EventRecordingError::InvalidExtraKey),
-          }
-        }
-    }
-
-    /// Convert from an extra key's string representation to its variant.
-    impl std::convert::TryFrom<&str> for {{ obj.name|Camelize }}{{ suffix }} {
-        type Error = EventRecordingError;
-
-        fn try_from(value: &str) -> Result<Self, Self::Error> {
-          match value {
-              {% for key in obj|attr(name) %}
-              "{{key}}" => Ok(Self::{{key | Camelize}}),
-              {% endfor %}
-              _ => Err(EventRecordingError::InvalidExtraKey),
-          }
-        }
-    }
-
+    {% if obj.has_extra_types %}
+    {{ extra_keys_with_types(obj, name, suffix)|indent }}
+    {% else %}
+    compile_error!("Untyped event extras not supported. Please annotate event extras with a type. See documentation for details. (Metric: {{obj.category}}.{{obj.name}}, defined in: {{obj.defined_in['filepath']}}:{{obj.defined_in['line']}})");
+    {% endif %}
 {% endif %}
 {% endfor %}
-{% endmacro %}
+{%- endmacro -%}
+
+{%- macro extra_keys_with_types(obj, name, suffix) -%}
+#[derive(Default, Debug, Clone, Hash, Eq, PartialEq)]
+pub struct {{ obj.name|Camelize }}{{ suffix }} {
+    {% for item, type in obj|attr(name) %}
+    pub {{ item|snake_case }}: Option<{{type|extra_type_name}}>,
+    {% endfor %}
+}
+
+impl ExtraKeys for {{ obj.name|Camelize }}{{ suffix }} {
+    const ALLOWED_KEYS: &'static [&'static str] = {{ obj.allowed_extra_keys|extra_keys }};
+
+    fn into_ffi_extra(self) -> ::std::collections::HashMap<i32, String> {
+      let mut map = ::std::collections::HashMap::new();
+      {% for key, _ in obj|attr(name) %}
+      self.{{key|snake_case}}.and_then(|val| map.insert({{loop.index-1}}, val.to_string()));
+      {% endfor %}
+      map
+    }
+}
+{%- endmacro -%}
 
 {% for category_name, objs in all_objs.items() %}
 pub mod {{ category_name|snake_case }} {
@@ -100,8 +85,8 @@ pub mod {{ category_name|snake_case }} {
 #[allow(dead_code)]
 pub(crate) mod __glean_metric_maps {
     use std::collections::HashMap;
-    use std::convert::TryInto;
 
+    use super::{id_for_extra_key, extra_keys_len};
     use crate::private::*;
     use once_cell::sync::Lazy;
 
@@ -115,11 +100,6 @@ pub(crate) mod __glean_metric_maps {
     });
 
 {% endfor %}
-
-    /// Helper to get the number of allowed extra keys for a given event metric.
-    fn extra_keys_len<K: ExtraKeys>(_event: &EventMetric<K>) -> usize {
-        K::ALLOWED_KEYS.len()
-    }
 
     /// Wrapper to record an event based on its metric ID.
     ///
@@ -142,13 +122,7 @@ pub(crate) mod __glean_metric_maps {
                   "No extra keys allowed, but some were passed"
               );
 
-              // In case of `NoExtraKeys` the whole iterator is impossible, so rustc complains.
-              #[allow(unused_variables)]
-              let extra: HashMap<_, _> = extra
-                  .into_iter()
-                  .map(|(k, v)| k.try_into().map(|k| (k, v)))
-                  .collect::<Result<HashMap<_, _>, _>>()?;
-              super::{{event}}.record(Some(extra));
+              super::{{event}}.record_raw(extra);
               Ok(())
           }
 {% endfor %}
@@ -207,13 +181,11 @@ pub(crate) mod __glean_metric_maps {
                   "No extra keys allowed, but some were passed"
               );
 
-              // In case of `NoExtraKeys` the whole iterator is impossible, so rustc complains.
-              #[allow(unused_variables)]
               let extra = extra
                   .into_iter()
-                  .map(|(k, v)| (&*k).try_into().map(|k| (k, v)))
+                  .map(|(k, v)| id_for_extra_key(&*k, &super::{{event}}).map(|k| (k, v)))
                   .collect::<Result<HashMap<_, _>, _>>()?;
-              super::{{event}}.record(Some(extra));
+              super::{{event}}.record_raw(extra);
               Ok(())
           }
 {% endfor %}

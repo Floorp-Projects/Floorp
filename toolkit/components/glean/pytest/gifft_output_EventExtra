@@ -10,19 +10,19 @@
 namespace mozilla::glean {
 
 template <>
-/*static*/ const nsCString impl::EventMetric<NoExtraKeys>::ExtraStringForKey(NoExtraKeys aKey) {
+/*static*/ const nsCString impl::EventMetric<NoExtraKeys>::ExtraStringForKey(uint32_t aKey) {
   MOZ_ASSERT_UNREACHABLE("What are you doing here? No extra keys!");
   return ""_ns;
 }
 
 template <>
-/*static*/ const nsCString impl::EventMetric<test_nested::EventMetricWithExtraKeys>::ExtraStringForKey(test_nested::EventMetricWithExtraKeys aKey) {
-  using test_nested::EventMetricWithExtraKeys;
+/*static*/ const nsCString impl::EventMetric<test_nested::EventMetricWithExtraExtra>::ExtraStringForKey(uint32_t aKey) {
+  using test_nested::EventMetricWithExtraExtra;
   switch (aKey) {
-    case EventMetricWithExtraKeys::AnExtraKey: {
+    case 0: {
       return "an_extra_key"_ns;
     }
-    case EventMetricWithExtraKeys::AnotherExtraKey: {
+    case 1: {
       return "another_extra_key"_ns;
     }
     default: {

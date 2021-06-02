@@ -279,8 +279,10 @@ test.nested:
       - https://example.com
     extra_keys:
       an_extra_key:
+        type: string
         description: An extra key description
       another_extra_key:
+        type: string
         description: Another extra key description
     telemetry_mirror: EventMetric_EnumName_WithExtra
 
