@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use serde_json;
 use std::marker::PhantomData;
 use std::net::{SocketAddr, TcpListener as StdTcpListener};
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -309,7 +308,7 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
                 if let Some(origin) = origin_header {
                     let mut valid_host = false;
                     let host_url = Url::parse(&origin).ok();
-                    let host = host_url.as_ref().and_then(|x| x.host().to_owned());
+                    let host = host_url.as_ref().and_then(|x| x.host());
                     if let Some(host) = host {
                         valid_host = match host {
                             Host::Domain("localhost") => true,
