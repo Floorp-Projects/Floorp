@@ -1138,7 +1138,8 @@ function test41() {
     ws.onclose = function(e) {
       ok(true, "test 41a close");
 
-      // establish a hsts policy for example.com
+      // Since third-party loads can't set HSTS state, this will not set
+      // HSTS for example.com.
       var wsb = CreateTestWS(
         "wss://example.com/tests/dom/websocket/tests/file_websocket",
         "test-41b",
@@ -1153,7 +1154,7 @@ function test41() {
       wsb.onclose = function(event) {
         ok(true, "test 41b close");
 
-        // try ws:// again, it should be done over wss:// now due to hsts
+        // try ws:// again, it should be done over ws:// again
         var wsc = CreateTestWS(
           "ws://example.com/tests/dom/websocket/tests/file_websocket",
           "test-41c"
@@ -1163,25 +1164,14 @@ function test41() {
           ok(true, "test 41c open");
           is(
             wsc.url,
-            "wss://example.com/tests/dom/websocket/tests/file_websocket",
-            "test 41c ws should be redirected by hsts to wss"
+            "ws://example.com/tests/dom/websocket/tests/file_websocket",
+            "test 41c ws should not be redirected by hsts to wss"
           );
           wsc.close();
         };
 
         wsc.onclose = function() {
           ok(true, "test 41c close");
-
-          // clean up the STS state
-          const Ci = SpecialPowers.Ci;
-          var loadContext = SpecialPowers.wrap(window).docShell.QueryInterface(
-            Ci.nsILoadContext
-          );
-          var flags = 0;
-          if (loadContext.usePrivateBrowsing) {
-            flags |= Ci.nsISocketProvider.NO_PERMANENT_STORAGE;
-          }
-          SpecialPowers.cleanUpSTSData("http://example.com", flags);
           resolve();
         };
       };
