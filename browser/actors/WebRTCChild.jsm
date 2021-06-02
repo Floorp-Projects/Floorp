@@ -290,8 +290,8 @@ function prompt(
   aSecure,
   aIsHandlingUserInput
 ) {
-  let audioDevices = [];
-  let videoDevices = [];
+  let audioInputDevices = [];
+  let videoInputDevices = [];
   let devices = [];
 
   // MediaStreamConstraints defines video as 'boolean or MediaTrackConstraints'.
@@ -309,7 +309,7 @@ function prompt(
         // capture, and if we have requested an audio capture, we are not
         // getting a microphone instead.
         if (audio && (device.mediaSource == "microphone") != sharingAudio) {
-          audioDevices.push({
+          audioInputDevices.push({
             name: device.rawName, // unfiltered device name to show to the user
             deviceIndex: devices.length,
             id: device.rawId,
@@ -331,7 +331,7 @@ function prompt(
           if (device.scary) {
             deviceObject.scary = true;
           }
-          videoDevices.push(deviceObject);
+          videoInputDevices.push(deviceObject);
           devices.push(device);
         }
         break;
@@ -339,10 +339,10 @@ function prompt(
   }
 
   let requestTypes = [];
-  if (videoDevices.length) {
+  if (videoInputDevices.length) {
     requestTypes.push(sharingScreen ? "Screen" : "Camera");
   }
-  if (audioDevices.length) {
+  if (audioInputDevices.length) {
     requestTypes.push(sharingAudio ? "AudioCapture" : "Microphone");
   }
 
@@ -399,8 +399,8 @@ function prompt(
     requestTypes,
     sharingScreen,
     sharingAudio,
-    audioDevices,
-    videoDevices,
+    audioInputDevices,
+    videoInputDevices,
   };
 
   let actor = getActorForWindow(aContentWindow);
