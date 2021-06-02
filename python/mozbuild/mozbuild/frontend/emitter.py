@@ -1267,7 +1267,7 @@ class TreeMetadataEmitter(LoggingMixin):
             if v in context and context[v]:
                 computed_flags.resolve_flags("MOZBUILD_%s" % v, context[v])
 
-        for v in ["WASM_CFLAGS", "WASM_CXXFLAGS", "WASM_LDFLAGS"]:
+        for v in ["WASM_CFLAGS", "WASM_CXXFLAGS"]:
             if v in context and context[v]:
                 computed_wasm_flags.resolve_flags("MOZBUILD_%s" % v, context[v])
 

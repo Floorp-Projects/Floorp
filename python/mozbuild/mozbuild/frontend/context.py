@@ -716,27 +716,27 @@ class WasmFlags(TargetCompileFlags):
             (
                 "DEBUG",
                 self._debug_flags(),
-                ("WASM_CFLAGS", "WASM_CXXFLAGS", "WASM_LDFLAGS"),
+                ("WASM_CFLAGS", "WASM_CXXFLAGS"),
             ),
             (
                 "CLANG_PLUGIN",
                 context.config.substs.get("CLANG_PLUGIN_FLAGS"),
-                ("WASM_CFLAGS", "WASM_CXXFLAGS", "WASM_LDFLAGS"),
+                ("WASM_CFLAGS", "WASM_CXXFLAGS"),
             ),
             (
                 "OPTIMIZE",
                 self._optimize_flags(),
-                ("WASM_CFLAGS", "WASM_CXXFLAGS", "WASM_LDFLAGS"),
+                ("WASM_CFLAGS", "WASM_CXXFLAGS"),
             ),
             (
                 "FRAMEPTR",
                 context.config.substs.get("MOZ_FRAMEPTR_FLAGS"),
-                ("WASM_CFLAGS", "WASM_CXXFLAGS", "WASM_LDFLAGS"),
+                ("WASM_CFLAGS", "WASM_CXXFLAGS"),
             ),
             (
                 "WARNINGS_AS_ERRORS",
                 self._warnings_as_errors(),
-                ("WASM_CXXFLAGS", "WASM_CFLAGS", "WASM_LDFLAGS"),
+                ("WASM_CXXFLAGS", "WASM_CFLAGS"),
             ),
             ("MOZBUILD_CFLAGS", None, ("WASM_CFLAGS",)),
             ("MOZBUILD_CXXFLAGS", None, ("WASM_CXXFLAGS",)),
@@ -745,11 +745,6 @@ class WasmFlags(TargetCompileFlags):
                 "WASM_CXXFLAGS",
                 context.config.substs.get("WASM_CXXFLAGS"),
                 ("WASM_CXXFLAGS",),
-            ),
-            (
-                "WASM_LDFLAGS",
-                context.config.substs.get("WASM_LDFLAGS"),
-                ("WASM_LDFLAGS",),
             ),
             ("WASM_DEFINES", None, ("WASM_CFLAGS", "WASM_CXXFLAGS")),
             ("MOZBUILD_WASM_CFLAGS", None, ("WASM_CFLAGS",)),
@@ -2486,17 +2481,6 @@ VARIABLES = {
         list,
         """Flags passed to the C++-to-wasm compiler for all of the
            C++ source files declared in this directory.
-
-           Note that the ordering of flags matters here; these flags will be
-           added to the compiler's command line in the same order as they
-           appear in the moz.build file.
-        """,
-    ),
-    "WASM_LDFLAGS": (
-        List,
-        list,
-        """Flags passed to the linker when linking wasm modules
-           declared in this directory.
 
            Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they

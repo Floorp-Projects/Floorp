@@ -2216,17 +2216,6 @@ with only_when(requires_wasm_sandboxing & compile_environment):
 
     set_config("WASM_CXXFLAGS", wasm_cxxflags)
 
-    option(
-        env="WASM_LDFLAGS", nargs=1, help="Options to pass when linking wasm modules"
-    )
-
-    @depends("WASM_LDFLAGS")
-    def wasm_ldflags(value):
-        if value:
-            return value
-
-    set_config("WASM_LDFLAGS", wasm_ldflags)
-
     # This function is returning "ldflags" that lucetc will use when invoking
     # the linker, but really lucetc is going to be invoking the compiler, since
     # the compiler handles lots of details for us (like finding the linker in
