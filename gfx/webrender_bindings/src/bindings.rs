@@ -784,8 +784,8 @@ pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut Renderer) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_renderer_accumulate_memory_report(renderer: &mut Renderer, report: &mut MemoryReport, swgl: *mut c_void) {
-    *report += renderer.report_memory(swgl);
+pub unsafe extern "C" fn wr_renderer_accumulate_memory_report(renderer: &mut Renderer, report: &mut MemoryReport) {
+    *report += renderer.report_memory();
 }
 
 // cbindgen doesn't support tuples, so we have a little struct instead, with
