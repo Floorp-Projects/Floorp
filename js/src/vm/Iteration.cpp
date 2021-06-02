@@ -420,7 +420,8 @@ struct SortComparatorIds {
         *lessOrEqualp = uint32_t(ca) <= uint32_t(cb);
         return true;
       }
-      MOZ_ASSERT(ca == JS::SymbolCode::InSymbolRegistry ||
+      MOZ_ASSERT(ca == JS::SymbolCode::PrivateNameSymbol ||
+                 ca == JS::SymbolCode::InSymbolRegistry ||
                  ca == JS::SymbolCode::UniqueSymbol);
       astr = JSID_TO_SYMBOL(a)->description();
       bstr = JSID_TO_SYMBOL(b)->description();
