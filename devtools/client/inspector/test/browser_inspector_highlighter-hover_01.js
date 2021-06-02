@@ -26,7 +26,7 @@ add_task(async function() {
       "was selected"
   );
 
-  await testActor.setProperty("p", "textContent", "dary!!!!");
+  await setContentPageElementProperty("p", "textContent", "dary!!!!");
   isVisible = await testActor.isHighlighting();
   ok(isVisible, "the highlighter is still visible");
 });
