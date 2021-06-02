@@ -48,7 +48,7 @@ class HTMLTableElement final : public nsGenericHTMLElement {
   }
   void SetTHead(HTMLTableSectionElement* aTHead, ErrorResult& aError) {
     if (aTHead && !aTHead->IsHTMLElement(nsGkAtoms::thead)) {
-      aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      aError.ThrowHierarchyRequestError("New value must be a thead element.");
       return;
     }
 
@@ -76,7 +76,7 @@ class HTMLTableElement final : public nsGenericHTMLElement {
   }
   void SetTFoot(HTMLTableSectionElement* aTFoot, ErrorResult& aError) {
     if (aTFoot && !aTFoot->IsHTMLElement(nsGkAtoms::tfoot)) {
-      aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      aError.ThrowHierarchyRequestError("New value must be a tfoot element.");
       return;
     }
 
