@@ -28,7 +28,6 @@ class WebConsoleConnectionProxy {
     this.target = target;
     this._connecter = null;
 
-    this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onLastPrivateContextExited = this._onLastPrivateContextExited.bind(
       this
     );
@@ -50,8 +49,6 @@ class WebConsoleConnectionProxy {
       return Promise.reject("target was destroyed");
     }
 
-    this.target.on("navigate", this._onTabNavigated);
-
     const connection = (async () => {
       this.webConsoleFront = await this.target.getFront("console");
 
@@ -65,10 +62,6 @@ class WebConsoleConnectionProxy {
       await this.webConsoleUI.setSaveRequestAndResponseBodies(saveBodies);
 
       this._addWebConsoleFrontEventListeners();
-
-      if (this.webConsoleFront && !this.webConsoleFront.hasNativeConsoleAPI) {
-        await this.webConsoleUI.logWarningAboutReplacedAPI();
-      }
     })();
 
     let timeoutId;
@@ -141,20 +134,6 @@ class WebConsoleConnectionProxy {
   }
 
   /**
-   * The "navigate" event handlers. We redirect any message to the UI for displaying.
-   *
-   * @private
-   * @param object packet
-   *        The message received from the server.
-   */
-  _onTabNavigated(packet) {
-    // Some message might try to update while we are closing the toolbox.
-    if (!this.webConsoleUI) {
-      return;
-    }
-    this.webConsoleUI.handleTabNavigated(packet);
-  }
-  /**
    * Disconnect the Web Console from the remote server.
    *
    * @return object
@@ -166,7 +145,6 @@ class WebConsoleConnectionProxy {
     }
 
     this._removeWebConsoleFrontEventListeners();
-    this.target.off("navigate", this._onTabNavigated);
 
     this.webConsoleFront = null;
   }
