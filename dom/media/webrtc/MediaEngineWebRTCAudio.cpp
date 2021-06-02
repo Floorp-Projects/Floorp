@@ -1272,6 +1272,10 @@ nsresult AudioInputTrack::OpenAudioInput(CubebUtils::AudioDeviceID aId,
   MOZ_ASSERT(!mInputListener);
   MOZ_ASSERT(mDeviceId.isNothing());
   mInputListener = aListener;
+  ProcessedMediaTrack* input = GraphImpl()->GetDeviceTrack(aId);
+  MOZ_ASSERT(input);
+  LOG("Open device %p (InputTrack=%p) for Mic source %p", aId, input, this);
+  mPort = AllocateInputPort(input);
   mDeviceId.emplace(aId);
   return GraphImpl()->OpenAudioInput(aId, aListener);
 }
@@ -1282,7 +1286,11 @@ void AudioInputTrack::CloseAudioInput() {
   if (!mInputListener) {
     return;
   }
+  MOZ_ASSERT(mPort);
   MOZ_ASSERT(mDeviceId.isSome());
+  LOG("Close device %p (InputTrack=%p) for Mic source %p ", mDeviceId.value(),
+      mPort->GetSource(), this);
+  mPort->Destroy();
   GraphImpl()->CloseAudioInput(mDeviceId.extract(), mInputListener);
   mInputListener = nullptr;
 }
