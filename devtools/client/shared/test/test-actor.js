@@ -167,14 +167,6 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("json"),
       },
     },
-    setProperty: {
-      request: {
-        selector: Arg(0, "string"),
-        property: Arg(1, "string"),
-        value: Arg(2, "string"),
-      },
-      response: {},
-    },
     reload: {
       request: {},
       response: {},
@@ -538,17 +530,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
       bottom: rect.bottom,
       left: rect.left,
     };
-  },
-
-  /**
-   * Set a JS property on a DOM Node.
-   * @param {String} selector The node selector
-   * @param {String} property The property name
-   * @param {String} value The attribute value
-   */
-  setProperty: function(selector, property, value) {
-    const node = this._querySelector(selector);
-    node[property] = value;
   },
 
   /**

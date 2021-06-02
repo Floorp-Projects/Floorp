@@ -52,7 +52,11 @@ add_task(async function() {
   await testActor.isNodeCorrectlyHighlighted("iframe", is);
 
   info("Scrolling the document");
-  await testActor.setProperty("iframe", "style", "margin-bottom: 2000px");
+  await setContentPageElementProperty(
+    "iframe",
+    "style",
+    "margin-bottom: 2000px"
+  );
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
     content.scrollBy(0, 40)
   );
