@@ -674,8 +674,8 @@ updatebot:
         - .cpp""".strip(),
                 ),
                 (
-                  "exception",
-                  b"""
+                    "exception",
+                    b"""
 ---
 schema: 1
 origin:
@@ -700,7 +700,7 @@ updatebot:
     - type: commit-alert
       frequency: 0 weeks
                   """.strip(),
-                )
+                ),
             ]
         )
 
