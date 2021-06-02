@@ -64,6 +64,7 @@ var UrlbarUtils = {
     INPUT_HISTORY: "inputHistory",
     OMNIBOX: "extension",
     REMOTE_SUGGESTION: "remoteSuggestion",
+    REMOTE_TAB: "remoteTab",
     SUGGESTED_INDEX: "suggestedIndex",
     TAIL_SUGGESTION: "tailSuggestion",
   },
@@ -543,6 +544,8 @@ var UrlbarUtils = {
         break;
       case UrlbarUtils.RESULT_TYPE.OMNIBOX:
         return UrlbarUtils.RESULT_GROUP.OMNIBOX;
+      case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+        return UrlbarUtils.RESULT_GROUP.REMOTE_TAB;
     }
     return UrlbarUtils.RESULT_GROUP.GENERAL;
   },
@@ -1347,7 +1350,7 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
   },
   [UrlbarUtils.RESULT_TYPE.REMOTE_TAB]: {
     type: "object",
-    required: ["device", "url"],
+    required: ["device", "url", "lastUsed"],
     properties: {
       device: {
         type: "string",
@@ -1357,6 +1360,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       },
       icon: {
         type: "string",
+      },
+      lastUsed: {
+        type: "number",
       },
       title: {
         type: "string",
