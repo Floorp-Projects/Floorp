@@ -757,13 +757,13 @@
 #urlbar .search-panel-one-offs-header-label {
   white-space: nowrap;
   margin: 0;
-  padding-inline: 8px 12px;
+  padding-inline: var(--urlbarView-item-inline-padding) 18px;
 }
 
 #urlbar .searchbar-engine-one-off-item {
   min-width: 28px;
   height: 28px;
-  margin-inline: 6px;
+  margin-inline: 0 12px;
 }
 
 @media (-moz-proton) {
