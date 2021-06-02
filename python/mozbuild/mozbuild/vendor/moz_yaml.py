@@ -385,7 +385,7 @@ def _schema_1():
                                 msg="Invalid filter value specified in tasks",
                             ),
                             "source-extensions": Unique([str]),
-                            "frequency": Match(r"^(every|release|[0-9]+ weeks?)$"),
+                            "frequency": Match(r"^(every|release|[1-9][0-9]* weeks?)$"),
                         }
                     ],
                 ),
