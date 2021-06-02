@@ -20,6 +20,31 @@ Core <https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox%20Build%20Syste
    General*. Bugs against testing commands should be filed somewhere in
    the *Testing* product.
 
+How do I debug a command failing with a Python exception?
+---------------------------------------------------------
+
+You can run a command and break into ``pdb``, the Python debugger,
+when the command is invoked with:
+
+.. code-block:: shell
+
+   ./mach --debug-command FAILING-COMMAND ARGS ...
+
+How do I profile a slow command?
+--------------------------------
+
+You can run a command and capture a profile as the ``mach`` process
+loads and invokes the command with:
+
+.. code-block:: shell
+
+   ./mach --profile-command SLOW-COMMAND ARGS ...
+
+Look for a ``mach_profile_SLOW-COMMAND.cProfile`` file.  You can
+visualize using `snakeviz <https://jiffyclub.github.io/snakeviz/>`__.
+Instructions on how to install and use ``snakeviz`` are printed to the
+console, since it can be tricky to target the correct Python virtual
+environment.
 
 Is ``mach`` a build system?
 ---------------------------
