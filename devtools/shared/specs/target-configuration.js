@@ -20,7 +20,6 @@ types.addDictType("target-configuration.configuration", {
   paintFlashing: "nullable:boolean",
   printSimulationEnabled: "nullable:boolean",
   rdmPaneOrientation: "nullable:json",
-  reloadOnTouchSimulationToggle: "nullable:boolean",
   restoreFocus: "nullable:boolean",
   serviceWorkersTestingEnabled: "nullable:boolean",
   touchEventsOverride: "nullable:string",

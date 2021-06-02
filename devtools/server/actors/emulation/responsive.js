@@ -9,6 +9,13 @@ const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const { responsiveSpec } = require("devtools/shared/specs/responsive");
 
+loader.lazyRequireGetter(
+  this,
+  "TouchSimulator",
+  "devtools/server/actors/emulation/touch-simulator",
+  true
+);
+
 const FLOATING_SCROLLBARS_SHEET = Services.io.newURI(
   "chrome://devtools/skin/floating-scrollbars-responsive-design.css"
 );
@@ -39,12 +46,14 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
 
   destroy() {
     this.clearNetworkThrottling();
+    this.toggleTouchSimulator({ enable: false });
     this.clearMetaViewportOverride();
 
     this.targetActor.off("window-ready", this.onWindowReady);
 
     this.targetActor = null;
     this.docShell = null;
+    this._touchSimulator = null;
 
     protocol.Actor.prototype.destroy.call(this);
   },
@@ -64,6 +73,16 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
     }
     const form = this.targetActor.form();
     return this.conn._getOrCreateActor(form.consoleActor);
+  },
+
+  get touchSimulator() {
+    if (!this._touchSimulator) {
+      this._touchSimulator = new TouchSimulator(
+        this.targetActor.chromeEventHandler
+      );
+    }
+
+    return this._touchSimulator;
   },
 
   get win() {
@@ -178,7 +197,33 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
    * @param {String} pickerType
    */
   setElementPickerState(state, pickerType) {
-    this.targetActor.touchSimulator.setElementPickerState(state, pickerType);
+    this.touchSimulator.setElementPickerState(state, pickerType);
+  },
+
+  /**
+   * Start or stop the touch simulator depending on the parameter
+   *
+   * @param {Object} options
+   * @param {Boolean} options.enable: Pass true to start the touch simulator. Any other
+   *                  value will stop it. Defaults to false.
+   * @returns {Boolean} Whether or not any action was done on the touch simulator.
+   */
+  toggleTouchSimulator({ enable = false } = {}) {
+    if (enable) {
+      if (this.touchSimulator.enabled) {
+        return false;
+      }
+
+      this.touchSimulator.start();
+      return true;
+    }
+
+    if (!this.touchSimulator.enabled) {
+      return false;
+    }
+
+    this.touchSimulator.stop();
+    return true;
   },
 
   /* Meta viewport override */
