@@ -167,6 +167,9 @@ class AudioInputProcessing : public AudioDataListener {
 
   void Disconnect(MediaTrackGraphImpl* aGraph) override;
 
+  void ProcessInput(MediaTrackGraphImpl* aGraph, const AudioDataValue* aBuffer,
+                    size_t aFrames, TrackRate aRate, uint32_t aChannels);
+
   template <typename T>
   void InsertInGraph(MediaTrackGraphImpl* aGraph, const T* aBuffer,
                      size_t aFrames, uint32_t aChannels);
@@ -247,6 +250,8 @@ class AudioInputProcessing : public AudioDataListener {
   bool mEnabled;
   // Whether or not we've ended and removed the AudioInputTrack.
   bool mEnded;
+  // Whether or not the new input data arrives.
+  bool mInputProcessed;
 };
 
 // MediaTrack subclass tailored for MediaEngineWebRTCMicrophoneSource.
