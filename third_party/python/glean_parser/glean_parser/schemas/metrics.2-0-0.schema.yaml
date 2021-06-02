@@ -348,6 +348,12 @@ definitions:
           properties:
             description:
               type: string
+            type:
+              type: string
+              enum:
+                - string
+                - boolean
+                - quantity
           required:
             - description
         maxProperties: 10

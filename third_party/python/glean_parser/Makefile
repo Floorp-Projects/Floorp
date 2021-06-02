@@ -64,9 +64,11 @@ dist: clean ## builds source and wheel package
 	ls -l dist
 
 install: clean ## install the package to the active Python's site-packages
-	python setup.py install
+	pip install .
 
 install-kotlin-linters: ## install ktlint and detekt for linting Kotlin output
-	curl -sSLO https://github.com/shyiko/ktlint/releases/download/0.29.0/ktlint
+	test -f ktlint || curl -sSLO https://github.com/shyiko/ktlint/releases/download/0.29.0/ktlint
+	echo "03c9f9f78f80bcdb44c292d95e4d9abf221daf5e377673c1b6675a8003eab94d *ktlint" | sha256sum -c -
 	chmod a+x ktlint
-	curl -sSL --output "detekt-cli-1.1.1-all.jar" https://bintray.com/arturbosch/code-analysis/download_file?file_path=io%2Fgitlab%2Farturbosch%2Fdetekt%2Fdetekt-cli%2F1.1.1%2Fdetekt-cli-1.1.1-all.jar
+	test -f detekt-cli.jar || curl -sSL --output "detekt-cli.jar" https://github.com/detekt/detekt/releases/download/v1.16.0/detekt-cli-1.16.0-all.jar
+	echo "dd63aae60cce4b0516ffc11d31b6280d4010ab481754c7e49b2c9e78db877ca4 *detekt-cli.jar" | sha256sum -c -
