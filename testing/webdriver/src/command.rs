@@ -590,7 +590,7 @@ where
     D: Deserializer<'de>,
 {
     let val = f64::deserialize(deserializer)?;
-    if val < 0.1 || val > 2.0 {
+    if !(0.1..=2.0).contains(&val) {
         return Err(de::Error::custom(format!("{} is outside range 0.1-2", val)));
     };
     Ok(val)
@@ -645,7 +645,7 @@ fn deserialize_to_nullable_u64<'de, D>(deserializer: D) -> Result<Option<Option<
 where
     D: Deserializer<'de>,
 {
-    let opt = Option::deserialize(deserializer)?.map(|value: f64| value);
+    let opt: Option<f64> = Option::deserialize(deserializer)?;
     let value = match opt {
         Some(n) => {
             if n < 0.0 || n.fract() != 0.0 {
@@ -672,7 +672,7 @@ fn deserialize_to_u64<'de, D>(deserializer: D) -> Result<Option<u64>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let opt = Option::deserialize(deserializer)?.map(|value: f64| value);
+    let opt: Option<f64> = Option::deserialize(deserializer)?;
     let value = match opt {
         Some(n) => {
             if n < 0.0 || n.fract() != 0.0 {

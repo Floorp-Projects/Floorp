@@ -88,8 +88,8 @@ pub struct NewSessionResponse {
 impl NewSessionResponse {
     pub fn new(session_id: String, capabilities: Value) -> NewSessionResponse {
         NewSessionResponse {
-            capabilities,
             session_id,
+            capabilities,
         }
     }
 }

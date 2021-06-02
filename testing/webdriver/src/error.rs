@@ -6,7 +6,6 @@ use base64::DecodeError;
 use http::StatusCode;
 use serde::de::{Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
-use serde_json;
 use std::borrow::Cow;
 use std::convert::From;
 use std::error::Error;
