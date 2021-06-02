@@ -5480,6 +5480,7 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
 
     ParentLayerRect compositionBounds = Metrics().GetCompositionBounds();
     CSSRect cssPageRect = Metrics().GetScrollableRect();
+    CSSSize sizeBeforeZoom = Metrics().CalculateCompositedSizeInCssPixels();
     CSSPoint scrollOffset = Metrics().GetVisualScrollOffset();
     // TODO: Need to handle different x-and y-scales.
     CSSToParentLayerScale currentZoom = Metrics().GetZoom().ToScaleFactor();
@@ -5523,24 +5524,8 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
                 (currentZoom == localMinZoom && targetZoom <= localMinZoom);
     }
 
-    FrameMetrics endZoomToMetrics = Metrics();
-    CSSSize sizeBeforeZoom = Metrics().CalculateCompositedSizeInCssPixels();
     if (zoomOut) {
-      // Set our zoom to the min zoom and then calculate what the after-zoom
-      // composited size is, and then calculate the new scroll offset so that we
-      // center what the old composited size displayed.
       targetZoom = localMinZoom;
-      endZoomToMetrics.SetZoom(CSSToParentLayerScale2D(targetZoom));
-
-      CSSSize sizeAfterZoom =
-          endZoomToMetrics.CalculateCompositedSizeInCssPixels();
-
-      rect = CSSRect(
-          scrollOffset.x + (sizeBeforeZoom.width - sizeAfterZoom.width) / 2,
-          scrollOffset.y + (sizeBeforeZoom.height - sizeAfterZoom.height) / 2,
-          sizeAfterZoom.Width(), sizeAfterZoom.Height());
-
-      rect = rect.Intersect(cssPageRect);
     }
 
     targetZoom.scale =
@@ -5560,12 +5545,25 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
         }
       }
     }
-    endZoomToMetrics.SetZoom(CSSToParentLayerScale2D(targetZoom));
 
-    // Adjust the zoomToRect to a sensible position to prevent overscrolling.
+    FrameMetrics endZoomToMetrics = Metrics();
+    endZoomToMetrics.SetZoom(CSSToParentLayerScale2D(targetZoom));
     CSSSize sizeAfterZoom =
         endZoomToMetrics.CalculateCompositedSizeInCssPixels();
 
+    if (zoomOut) {
+      // With our zoom at the min zoom, calculate what the after-zoom
+      // composited size is, and then calculate the new scroll offset so that we
+      // center what the old composited size displayed.
+      rect = CSSRect(
+          scrollOffset.x + (sizeBeforeZoom.width - sizeAfterZoom.width) / 2,
+          scrollOffset.y + (sizeBeforeZoom.height - sizeAfterZoom.height) / 2,
+          sizeAfterZoom.Width(), sizeAfterZoom.Height());
+
+      rect = rect.Intersect(cssPageRect);
+    }
+
+    // Check if we can fit the full elementBoundingRect.
     if (!zoomOut && aZoomTarget.elementBoundingRect.isSome()) {
       MOZ_ASSERT(aZoomTarget.elementBoundingRect->Contains(rect));
       CSSRect elementBoundingRect =
