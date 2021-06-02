@@ -312,8 +312,8 @@ void DCLayerTree::Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset,
   auto tile = surface->GetTile(aId.x, aId.y);
   wr::DeviceIntPoint targetOffset{0, 0};
 
-  gfx::IntRect validRect(aValidRect.min.x, aValidRect.min.y, aValidRect.width(),
-                         aValidRect.height());
+  gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
+                         aValidRect.size.width, aValidRect.size.height);
   if (!tile->mValidRect.IsEqualEdges(validRect)) {
     tile->mValidRect = validRect;
     surface->DirtyAllocatedRect();
@@ -447,8 +447,9 @@ void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
   // on that. I suspect that will perform worse though, so we should only do
   // that for complex transforms (which are never provided right now).
   MOZ_ASSERT(transform.IsRectilinear());
-  gfx::Rect clip = transform.Inverse().TransformBounds(gfx::Rect(
-      aClipRect.min.x, aClipRect.min.y, aClipRect.width(), aClipRect.height()));
+  gfx::Rect clip = transform.Inverse().TransformBounds(
+      gfx::Rect(aClipRect.origin.x, aClipRect.origin.y, aClipRect.size.width,
+                aClipRect.size.height));
   // Set the clip rect - converting from world space to the pre-offset space
   // that DC requires for rectangle clips.
   visual->SetClip(D2DRect(clip));
@@ -960,10 +961,10 @@ GLuint DCLayerTree::CreateEGLSurfaceForCompositionSurface(
   POINT offset;
 
   RECT update_rect;
-  update_rect.left = aSurfaceOffset.x + aDirtyRect.min.x;
-  update_rect.top = aSurfaceOffset.y + aDirtyRect.min.y;
-  update_rect.right = aSurfaceOffset.x + aDirtyRect.max.x;
-  update_rect.bottom = aSurfaceOffset.y + aDirtyRect.max.y;
+  update_rect.left = aSurfaceOffset.x + aDirtyRect.origin.x;
+  update_rect.top = aSurfaceOffset.y + aDirtyRect.origin.y;
+  update_rect.right = update_rect.left + aDirtyRect.size.width;
+  update_rect.bottom = update_rect.top + aDirtyRect.size.height;
 
   hr = aCompositionSurface->BeginDraw(&update_rect, __uuidof(ID3D11Texture2D),
                                       (void**)getter_AddRefs(backBuf), &offset);
@@ -976,8 +977,8 @@ GLuint DCLayerTree::CreateEGLSurfaceForCompositionSurface(
 
   // DC includes the origin of the dirty / update rect in the draw offset,
   // undo that here since WR expects it to be an absolute offset.
-  offset.x -= aDirtyRect.min.x;
-  offset.y -= aDirtyRect.min.y;
+  offset.x -= aDirtyRect.origin.x;
+  offset.y -= aDirtyRect.origin.y;
 
   D3D11_TEXTURE2D_DESC desc;
   backBuf->GetDesc(&desc);

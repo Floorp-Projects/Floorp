@@ -11,7 +11,6 @@ use crate::approxeq::ApproxEq;
 use crate::trig::Trig;
 use core::cmp::{Eq, PartialEq};
 use core::hash::Hash;
-use core::iter::Sum;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign};
 use num_traits::{Float, FloatConst, NumCast, One, Zero};
 #[cfg(feature = "serde")]
@@ -20,7 +19,6 @@ use serde::{Deserialize, Serialize};
 /// An angle in radians
 #[derive(Copy, Clone, Default, Debug, PartialEq, Eq, PartialOrd, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Angle<T> {
     pub radians: T,
 }
@@ -109,12 +107,6 @@ where
     pub fn sin_cos(self) -> (T, T) {
         self.radians.sin_cos()
     }
-
-    /// Returns true if the angle is a finite number.
-    #[inline]
-    pub fn is_finite(self) -> bool {
-        self.radians.is_finite()
-    }
 }
 
 impl<T> Angle<T>
@@ -182,28 +174,9 @@ where
 }
 
 impl<T: Add<T, Output = T>> Add for Angle<T> {
-    type Output = Self;
-    fn add(self, other: Self) -> Self {
-        Self::radians(self.radians + other.radians)
-    }
-}
-
-impl<T: Copy + Add<T, Output = T>> Add<&Self> for Angle<T> {
-    type Output = Self;
-    fn add(self, other: &Self) -> Self {
-        Self::radians(self.radians + other.radians)
-    }
-}
-
-impl<T: Add + Zero> Sum for Angle<T> {
-    fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
-        iter.fold(Self::zero(), Add::add)
-    }
-}
-
-impl<'a, T: 'a + Add + Copy + Zero> Sum<&'a Self> for Angle<T> {
-    fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
-        iter.fold(Self::zero(), Add::add)
+    type Output = Angle<T>;
+    fn add(self, other: Angle<T>) -> Angle<T> {
+        Angle::radians(self.radians + other.radians)
     }
 }
 
@@ -340,12 +313,4 @@ fn lerp() {
     assert!(a
         .lerp(b + A::two_pi() * 5.0, 0.75)
         .approx_eq(&Angle::radians(1.75)));
-}
-
-#[test]
-fn sum() {
-    type A = Angle<f32>;
-    let angles = [A::radians(1.0), A::radians(2.0), A::radians(3.0)];
-    let sum = A::radians(6.0);
-    assert_eq!(angles.iter().sum::<A>(), sum);
 }

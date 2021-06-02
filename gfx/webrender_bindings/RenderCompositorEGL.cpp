@@ -115,11 +115,13 @@ RenderedFrameId RenderCompositorEGL::EndFrame(
     gfx::IntRegion bufferInvalid;
     const auto bufferSize = GetBufferSize();
     for (const DeviceIntRect& rect : aDirtyRects) {
-      const auto left = std::max(0, std::min(bufferSize.width, rect.min.x));
-      const auto top = std::max(0, std::min(bufferSize.height, rect.min.y));
+      const auto left = std::max(0, std::min(bufferSize.width, rect.origin.x));
+      const auto top = std::max(0, std::min(bufferSize.height, rect.origin.y));
 
-      const auto right = std::min(bufferSize.width, std::max(0, rect.max.x));
-      const auto bottom = std::min(bufferSize.height, std::max(0, rect.max.y));
+      const auto right = std::min(bufferSize.width,
+                                  std::max(0, rect.origin.x + rect.size.width));
+      const auto bottom = std::min(
+          bufferSize.height, std::max(0, rect.origin.y + rect.size.height));
 
       const auto width = right - left;
       const auto height = bottom - top;
@@ -269,14 +271,16 @@ void RenderCompositorEGL::SetBufferDamageRegion(const wr::DeviceIntRect* aRects,
     const auto bufferSize = GetBufferSize();
     for (size_t i = 0; i < aNumRects; i++) {
       const auto left =
-          std::max(0, std::min(bufferSize.width, aRects[i].min.x));
+          std::max(0, std::min(bufferSize.width, aRects[i].origin.x));
       const auto top =
-          std::max(0, std::min(bufferSize.height, aRects[i].min.y));
+          std::max(0, std::min(bufferSize.height, aRects[i].origin.y));
 
       const auto right =
-          std::min(bufferSize.width, std::max(0, aRects[i].max.x));
+          std::min(bufferSize.width,
+                   std::max(0, aRects[i].origin.x + aRects[i].size.width));
       const auto bottom =
-          std::min(bufferSize.height, std::max(0, aRects[i].max.y));
+          std::min(bufferSize.height,
+                   std::max(0, aRects[i].origin.y + aRects[i].size.height));
 
       const auto width = right - left;
       const auto height = bottom - top;
