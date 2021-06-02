@@ -119,6 +119,10 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
     AssertOnGraphThread();
     return mVolume;
   }
+  float PlaybackRate() const {
+    AssertOnGraphThread();
+    return mPlaybackRate;
+  }
 
  protected:
   ~AudioDecoderInputTrack();
