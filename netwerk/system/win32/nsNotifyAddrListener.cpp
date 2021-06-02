@@ -486,7 +486,14 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
         continue;
       }
 
-      if (adapter->IfType == IF_TYPE_PPP) {
+      LOG(("Adapter %s type: %u",
+           NS_ConvertUTF16toUTF8(adapter->FriendlyName).get(),
+           adapter->IfType));
+
+      if (adapter->IfType == IF_TYPE_PPP ||
+          adapter->IfType == IF_TYPE_PROP_VIRTUAL ||
+          nsDependentString(adapter->FriendlyName).Find(u"VPN") != kNotFound ||
+          nsDependentString(adapter->Description).Find(u"VPN") != kNotFound) {
         LOG(("VPN connection found"));
         platformDNSIndications |= VPN_DETECTED;
       }
