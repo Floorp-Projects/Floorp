@@ -687,6 +687,11 @@ To see more help for a specific command, run:
             help="Start a Python debugger when command is dispatched.",
         )
         global_group.add_argument(
+            "--profile-command",
+            action="store_true",
+            help="Capture a Python profile of the mach process as command is dispatched.",
+        )
+        global_group.add_argument(
             "--settings",
             dest="settings_file",
             metavar="FILENAME",
