@@ -13,23 +13,22 @@ use crate::ErrorType;
 ///
 /// Extra keys need to be pre-defined and map to a string representation.
 ///
-/// For user-defined `EventMetric`s these will be defined as `enums`.
-/// Each variant will correspond to an entry in the `ALLOWED_KEYS` list.
+/// For user-defined `EventMetric`s these will be defined as `struct`s.
+/// Each extra key will be a field in that struct.
+/// Each field will correspond to an entry in the `ALLOWED_KEYS` list.
 /// The Glean SDK requires the keys as strings for submission in pings,
 /// whereas in code we want to provide users a type to work with
 /// (e.g. to avoid typos or misuse of the API).
-pub trait ExtraKeys: Hash + Eq + PartialEq + Copy {
+pub trait ExtraKeys {
     /// List of allowed extra keys as strings.
     const ALLOWED_KEYS: &'static [&'static str];
 
-    /// The index of the extra key.
+    /// Convert the event extras into 2 lists:
     ///
-    /// It corresponds to its position in the associated `ALLOWED_KEYS` list.
-    ///
-    /// *Note*: An index of `-1` indicates an invalid / non-existing extra key.
-    /// Invalid / non-existing extra keys will be recorded as an error.
-    /// This cannot happen for generated code.
-    fn index(self) -> i32;
+    /// 1. The list of extra key indices.
+    ///    Unset keys will be skipped.
+    /// 2. The list of extra values.
+    fn into_ffi_extra(self) -> HashMap<i32, String>;
 }
 
 /// Default of no extra keys for events.
@@ -45,9 +44,8 @@ pub enum NoExtraKeys {}
 impl ExtraKeys for NoExtraKeys {
     const ALLOWED_KEYS: &'static [&'static str] = &[];
 
-    fn index(self) -> i32 {
-        // This index will never be used.
-        -1
+    fn into_ffi_extra(self) -> HashMap<i32, String> {
+        unimplemented!("non-existing extra keys can't be turned into a list")
     }
 }
 
@@ -87,11 +85,8 @@ pub trait Event {
     ///
     /// # Arguments
     ///
-    /// * `extra` - A [`HashMap`] of (key, value) pairs. The key is one of the allowed extra keys as
-    ///             set in the metric defintion.
-    ///             If a wrong key is used or a value is larger than allowed, an error is reported
-    ///             and no event is recorded.
-    fn record<M: Into<Option<HashMap<Self::Extra, String>>>>(&self, extra: M);
+    /// * `extra` - (optional) An object for the extra keys.
+    fn record<M: Into<Option<Self::Extra>>>(&self, extra: M);
 
     /// **Exported for test purposes.**
     ///
