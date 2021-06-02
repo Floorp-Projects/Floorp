@@ -109,6 +109,10 @@ struct BaseRect {
   // (including edges) of *this and aRect. If there are no points in that
   // intersection, returns an empty rectangle with x/y set to the std::max of
   // the x/y of *this and aRect.
+  //
+  // Intersection with an empty Rect may not produce an empty Rect if overflow
+  // occurs. e.g. {INT_MIN, 0, 0, 20} Intersect { 5000, 0, 500, 20 } gives:
+  // the non-emtpy {5000, 0, 500, 20 } instead of {5000, 0, 0, 0}
   [[nodiscard]] Sub Intersect(const Sub& aRect) const {
     Sub result;
     result.x = std::max<T>(x, aRect.x);
@@ -124,6 +128,29 @@ struct BaseRect {
     }
     return result;
   }
+
+  // Gives the same results as Intersect() but handles integer overflow
+  // better. This comes at a tiny cost in performance.
+  // e.g. {INT_MIN, 0, 0, 20} Intersect { 5000, 0, 500, 20 } gives:
+  // {5000, 0, 0, 0}
+  [[nodiscard]] Sub SafeIntersect(const Sub& aRect) const {
+    Sub result;
+    result.x = std::max<T>(x, aRect.x);
+    result.y = std::max<T>(y, aRect.y);
+    T right = std::min<T>(x + width, aRect.x + aRect.width);
+    T bottom = std::min<T>(y + height, aRect.y + aRect.height);
+    // See bug 1457110, this function expects to -only- size to 0,0 if the
+    // width/height is explicitly negative.
+    if (right < result.x || bottom < result.y) {
+      result.width = 0;
+      result.height = 0;
+    } else {
+      result.width = right - result.x;
+      result.height = bottom - result.y;
+    }
+    return result;
+  }
+
   // Sets *this to be the rectangle containing the intersection of the points
   // (including edges) of *this and aRect. If there are no points in that
   // intersection, sets *this to be an empty rectangle with x/y set to the
