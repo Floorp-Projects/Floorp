@@ -976,10 +976,10 @@
 # 1 = always
 # 2 = never
 #
-# Default to 0 on windows, 1 elsewhere.
+# Default to 0 on windows and mac, 1 elsewhere.
 - name: browser.display.document_color_use
   type: RelaxedAtomicUint32
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
   value: 0
 #else
   value: 1
