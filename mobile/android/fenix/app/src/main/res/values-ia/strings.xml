@@ -36,7 +36,7 @@
     <!-- Content description for close button while in multiselect mode in tab tray -->
     <string name="tab_tray_close_multiselect_content_description">Exir del modo multiselection</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
-    <string name="tab_tray_collection_button_multiselect_content_description">Salvar schedas eligite al collection</string>
+    <string name="tab_tray_collection_button_multiselect_content_description">Salvar le schedas seligite in un collection</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">Selecte %1$s</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
@@ -671,11 +671,11 @@
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">Clauder</string>
     <!-- Content description for tabs tray multiselect share button -->
-    <string name="tab_tray_multiselect_share_content_description">Compartir schedas eligite</string>
+    <string name="tab_tray_multiselect_share_content_description">Compartir le schedas seligite</string>
 
 
     <!-- Content description for tabs tray multiselect menu -->
-    <string name="tab_tray_multiselect_menu_content_description">Menu del schedas eligite</string>
+    <string name="tab_tray_multiselect_menu_content_description">Menu de schedas seligite</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Remover le scheda ex le collection</string>
     <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -979,7 +979,7 @@
 
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
      %d is a placeholder for the number of tabs selected. -->
-    <string name="create_collection_save_to_collection_tabs_selected">%d schedas eligite</string>
+    <string name="create_collection_save_to_collection_tabs_selected">%d schedas seligite</string>
     <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
     %d is a placeholder for the number of tabs selected. -->
     <string name="create_collection_save_to_collection_tab_selected">%d scheda seligite</string>

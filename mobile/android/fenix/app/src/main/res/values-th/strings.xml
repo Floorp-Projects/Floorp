@@ -412,6 +412,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s บน %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">บัตรเครดิต</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">ที่อยู่</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">แท็บที่ได้รับ</string>
@@ -443,9 +448,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">เรียนรู้เพิ่มเติม</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">ปิดใช้งานสำหรับทุกไซต์แล้ว ให้ไปที่การตั้งค่าเพื่อเปิด</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">การวัดและส่งข้อมูลทางไกล</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -456,6 +458,8 @@
     <string name="preferences_marketing_data">ข้อมูลการตลาด</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">แบ่งปันข้อมูลเกี่ยวกับคุณลักษณะที่คุณใช้ใน %1$s กับ Leanplum ผู้ให้บริการการตลาดมือถือของเรา</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">แบ่งปันข้อมูลการใช้งานพื้นฐานกับ Adjust ผู้จำหน่ายการตลาดมือถือของเรา</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">การศึกษา</string>
     <!-- Summary for studies preferences -->
@@ -794,8 +798,6 @@
     <string name="bookmark_delete_folder_snackbar">ลบ %1$s แล้ว</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">เพิ่มโฟลเดอร์</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">สร้างที่คั่นหน้าแล้ว</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">บันทึกที่คั่นหน้าแล้ว!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1448,10 +1450,8 @@
     <string name="preferences_passwords_autofill">การเติมอัตโนมัติ</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ซิงค์การเข้าสู่ระบบ</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">เปิด</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">ปิด</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">ซิงค์การเข้าสู่ระบบระหว่างอุปกรณ์</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">เชื่อมต่อใหม่</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1552,6 +1552,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">ข้อมูลถูกเข้ารหัส</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">ซิงค์บัตรระหว่างอุปกรณ์</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">ซิงค์บัตร</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">เพิ่มบัตรเครดิต</string>
 
@@ -1582,6 +1584,23 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">บัตรที่บันทึกไว้</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">โปรดป้อนหมายเลขบัตรเครดิตที่ถูกต้อง</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">ปลดล็อกเพื่อดูบัตรเครดิตที่บันทึกไว้ของคุณ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">รักษาความปลอดภัยให้กับบัตรเครดิตของคุณ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงบัตรเครดิตที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">ตั้งค่าตอนนี้</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">ภายหลัง</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">ปลดล็อกอุปกรณ์ของคุณ</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">ปลดล็อกเพื่อใช้ข้อมูลบัตรเครดิตที่เก็บไว้</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">เพิ่มเครื่องมือค้นหา</string>
@@ -1748,20 +1767,13 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ลบ</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">รับประโยชน์สูงสุดจาก %s</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">คลิกเพื่อดูรายละเอียดเพิ่มเติม</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">รวบรวมสิ่งที่สำคัญสำหรับคุณ</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">จัดกลุ่มการค้นหา ไซต์ และแท็บที่คล้ายกันเพื่อการเข้าถึงอย่างรวดเร็วในภายหลัง</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">คุณลงชื่อเข้าในชื่อ %s บนเบราว์เซอร์ Firefox อื่นบนโทรศัพท์นี้ คุณต้องการลงชื่อเข้าด้วยบัญชีนี้หรือไม่?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">คุณสามารถเพิ่มเว็บไซต์นี้ลงในหน้าจอหลักของโทรศัพท์ของคุณเพื่อเข้าถึงและเรียกดูได้เร็วขึ้นด้วยประสบการณ์ที่เหมือนแอป</string>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">นำทางขึ้นไปด้านบน</string>
 
-    </resources>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">ปิด</string>
+
+</resources>

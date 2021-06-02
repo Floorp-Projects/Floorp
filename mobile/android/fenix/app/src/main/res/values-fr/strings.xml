@@ -1624,6 +1624,8 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Veuillez saisir un numéro de carte bancaire valide</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Déverrouillez pour afficher vos cartes enregistrées</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Protégez vos cartes bancaires</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
