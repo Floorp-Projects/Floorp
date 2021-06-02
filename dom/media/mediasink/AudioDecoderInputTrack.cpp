@@ -7,6 +7,10 @@
 #include "MediaData.h"
 #include "mozilla/ScopeExit.h"
 
+// Use abort() instead of exception in SoundTouch.
+#define ST_NO_EXCEPTION_HANDLING 1
+#include "soundtouch/SoundTouchFactory.h"
+
 namespace mozilla {
 
 extern LazyLogModule gMediaDecoderLog;
@@ -266,6 +270,7 @@ void AudioDecoderInputTrack::SetPlaybackRateImpl(float aPlaybackRate) {
     void Run() override {
       LOG_M("Apply playback rate=%f", mTrack.get(), mPlaybackRate);
       mTrack->mPlaybackRate = mPlaybackRate;
+      mTrack->SetTempoAndRateForTimeStretcher();
     }
 
    protected:
@@ -296,6 +301,7 @@ void AudioDecoderInputTrack::SetPreservesPitchImpl(bool aPreservesPitch) {
     void Run() override {
       LOG_M("Apply preserves pitch=%d", mTrack.get(), mPreservesPitch);
       mTrack->mPreservesPitch = mPreservesPitch;
+      mTrack->SetTempoAndRateForTimeStretcher();
     }
 
    protected:
@@ -317,6 +323,9 @@ void AudioDecoderInputTrack::DestroyImpl() {
   LOG("DestroyImpl");
   AssertOnGraphThreadOrNotRunning();
   mBufferedData.Clear();
+  if (mTimeStretcher) {
+    soundtouch::destroySoundTouchObj(mTimeStretcher);
+  }
   ProcessedMediaTrack::DestroyImpl();
 }
 
@@ -333,9 +342,9 @@ void AudioDecoderInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
     return;
   }
 
-  TrackTime filledDuration = 0;
-  auto notify = MakeScopeExit([this, &filledDuration] {
-    NotifyInTheEndOfProcessInput(filledDuration);
+  TrackTime consumedDuration = 0;
+  auto notify = MakeScopeExit([this, &consumedDuration] {
+    NotifyInTheEndOfProcessInput(consumedDuration);
   });
 
   if (mSentAllData && (aFlags & ALLOW_END)) {
@@ -357,12 +366,7 @@ void AudioDecoderInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
     HandleSPSCData(data);
   }
 
-  filledDuration += AppendBufferedDataToOutput(expectedDuration);
-  if (TrackTime gap = expectedDuration - filledDuration; gap > 0) {
-    LOG("Audio underrun, fill silence %" PRId64, gap);
-    MOZ_ASSERT(mBufferedData.IsEmpty());
-    mSegment->AppendNullData(gap);
-  }
+  consumedDuration += AppendBufferedDataToOutput(expectedDuration);
   if (HasSentAllData()) {
     LOG("Sent all data, should end track in next iteration");
     mSentAllData = true;
@@ -400,24 +404,186 @@ TrackTime AudioDecoderInputTrack::AppendBufferedDataToOutput(
     TrackTime aExpectedDuration) {
   AssertOnGraphThread();
 
-  const TrackTime available =
-      std::min(aExpectedDuration, mBufferedData.GetDuration());
-
   // Remove the necessary part from `mBufferedData` to create a new
   // segment in order to apply some operation without affecting all data.
   AudioSegment outputSegment;
-  outputSegment.AppendSlice(mBufferedData, 0, available);
-  MOZ_ASSERT(outputSegment.GetDuration() <= aExpectedDuration);
-  mBufferedData.RemoveLeading(available);
+  TrackTime consumedDuration = 0;
+  if (mPlaybackRate != 1.0) {
+    consumedDuration =
+        AppendTimeStretchedDataToSegment(aExpectedDuration, outputSegment);
+  } else {
+    consumedDuration =
+        AppendUnstretchedDataToSegment(aExpectedDuration, outputSegment);
+  }
 
   // Apply any necessary change on the segement which would be outputed to the
   // graph.
+  const TrackTime appendedDuration = outputSegment.GetDuration();
   outputSegment.ApplyVolume(mVolume);
   ApplyTrackDisabling(&outputSegment);
   mSegment->AppendFrom(&outputSegment);
 
-  LOG("Appended %" PRId64 ", and remaining %" PRId64, available,
-      mBufferedData.GetDuration());
+  LOG("Appended %" PRId64 ", consumed %" PRId64
+      ", remaining raw buffered %" PRId64 ", remaining time-stretched %u",
+      appendedDuration, consumedDuration, mBufferedData.GetDuration(),
+      mTimeStretcher ? mTimeStretcher->numSamples() : 0);
+  if (auto gap = aExpectedDuration - appendedDuration; gap > 0) {
+    LOG("Audio underrun, fill silence %" PRId64, gap);
+    MOZ_ASSERT(mBufferedData.IsEmpty());
+    mSegment->AppendNullData(gap);
+  }
+  return consumedDuration;
+}
+
+TrackTime AudioDecoderInputTrack::AppendTimeStretchedDataToSegment(
+    TrackTime aExpectedDuration, AudioSegment& aOutput) {
+  AssertOnGraphThread();
+  EnsureTimeStretcher();
+
+  MOZ_ASSERT(mPlaybackRate != 1.0f);
+  MOZ_ASSERT(aExpectedDuration >= 0);
+  MOZ_ASSERT(mTimeStretcher);
+  MOZ_ASSERT(aOutput.IsEmpty());
+
+  // If we don't have enough data that have been time-stretched, fill raw data
+  // into the time stretcher until the amount of samples that time stretcher
+  // finishes processed reaches or exceeds the expected duration.
+  TrackTime consumedDuration = 0;
+  if (mTimeStretcher->numSamples() < aExpectedDuration) {
+    consumedDuration = FillDataToTimeStretcher(aExpectedDuration);
+  }
+  MOZ_ASSERT(consumedDuration >= 0);
+  Unused << GetDataFromTimeStretcher(aExpectedDuration, aOutput);
+  return consumedDuration;
+}
+
+TrackTime AudioDecoderInputTrack::FillDataToTimeStretcher(
+    TrackTime aExpectedDuration) {
+  AssertOnGraphThread();
+  MOZ_ASSERT(mPlaybackRate != 1.0f);
+  MOZ_ASSERT(aExpectedDuration >= 0);
+  MOZ_ASSERT(mTimeStretcher);
+
+  TrackTime consumedDuration = 0;
+  const uint32_t channels = GetChannelCountForTimeStretcher();
+  mBufferedData.IterateOnChunks([&](AudioChunk* aChunk) {
+    MOZ_ASSERT(aChunk);
+    if (aChunk->IsNull() && aChunk->GetDuration() == 0) {
+      // Skip this chunk and wait for next one.
+      return false;
+    }
+    const uint32_t bufferLength = channels * aChunk->GetDuration();
+    if (bufferLength > mInterleavedBuffer.Capacity()) {
+      mInterleavedBuffer.SetCapacity(bufferLength);
+    }
+    mInterleavedBuffer.SetLengthAndRetainStorage(bufferLength);
+    if (aChunk->IsNull()) {
+      MOZ_ASSERT(aChunk->GetDuration(), "chunk with only silence");
+      memset(mInterleavedBuffer.Elements(), 0, mInterleavedBuffer.Length());
+    } else {
+      // Do the up-mix/down-mix first if necessary that forces to change the
+      // data's channel count to the time stretcher's channel count. Then
+      // perform a transformation from planar to interleaved.
+      switch (aChunk->mBufferFormat) {
+        case AUDIO_FORMAT_S16:
+          WriteChunk<int16_t>(*aChunk, channels, 1.0f,
+                              mInterleavedBuffer.Elements());
+          break;
+        case AUDIO_FORMAT_FLOAT32:
+          WriteChunk<float>(*aChunk, channels, 1.0f,
+                            mInterleavedBuffer.Elements());
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE("Not expected format");
+      }
+    }
+    mTimeStretcher->putSamples(mInterleavedBuffer.Elements(),
+                               aChunk->GetDuration());
+    consumedDuration += aChunk->GetDuration();
+    return mTimeStretcher->numSamples() >= aExpectedDuration;
+  });
+  mBufferedData.RemoveLeading(consumedDuration);
+  return consumedDuration;
+}
+
+TrackTime AudioDecoderInputTrack::AppendUnstretchedDataToSegment(
+    TrackTime aExpectedDuration, AudioSegment& aOutput) {
+  AssertOnGraphThread();
+  MOZ_ASSERT(mPlaybackRate == 1.0f);
+  MOZ_ASSERT(aExpectedDuration >= 0);
+  MOZ_ASSERT(aOutput.IsEmpty());
+
+  const TrackTime drained =
+      DrainStretchedDataIfNeeded(aExpectedDuration, aOutput);
+  const TrackTime available =
+      std::min(aExpectedDuration - drained, mBufferedData.GetDuration());
+  aOutput.AppendSlice(mBufferedData, 0, available);
+  MOZ_ASSERT(aOutput.GetDuration() <= aExpectedDuration);
+  mBufferedData.RemoveLeading(available);
+  return available;
+}
+
+TrackTime AudioDecoderInputTrack::DrainStretchedDataIfNeeded(
+    TrackTime aExpectedDuration, AudioSegment& aOutput) {
+  AssertOnGraphThread();
+  MOZ_ASSERT(mPlaybackRate == 1.0f);
+  MOZ_ASSERT(aExpectedDuration >= 0);
+
+  if (!mTimeStretcher) {
+    return 0;
+  }
+  if (mTimeStretcher->numSamples() == 0) {
+    return 0;
+  }
+  return GetDataFromTimeStretcher(aExpectedDuration, aOutput);
+}
+
+TrackTime AudioDecoderInputTrack::GetDataFromTimeStretcher(
+    TrackTime aExpectedDuration, AudioSegment& aOutput) {
+  AssertOnGraphThread();
+  MOZ_ASSERT(mTimeStretcher);
+  MOZ_ASSERT(aExpectedDuration >= 0);
+
+  if (HasSentAllData() && mTimeStretcher->numUnprocessedSamples()) {
+    mTimeStretcher->flush();
+    LOG("Flush %u frames from the time stretcher",
+        mTimeStretcher->numSamples());
+  }
+
+  const TrackTime available =
+      std::min((TrackTime)mTimeStretcher->numSamples(), aExpectedDuration);
+  if (available == 0) {
+    // Either running out of stretched data, or the raw data we filled into
+    // the time stretcher were not enough for producing stretched data.
+    return 0;
+  }
+
+  // Retrieve interleaved data from the time stretcher.
+  const uint32_t channelCount = GetChannelCountForTimeStretcher();
+  const uint32_t bufferLength = channelCount * available;
+  if (bufferLength > mInterleavedBuffer.Capacity()) {
+    mInterleavedBuffer.SetCapacity(bufferLength);
+  }
+  mInterleavedBuffer.SetLengthAndRetainStorage(bufferLength);
+  mTimeStretcher->receiveSamples(mInterleavedBuffer.Elements(), available);
+
+  // Perform a transformation from interleaved to planar.
+  CheckedInt<size_t> bufferSize(sizeof(AudioDataValue));
+  bufferSize *= bufferLength;
+  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
+  AudioDataValue* bufferData = static_cast<AudioDataValue*>(buffer->Data());
+  AutoTArray<AudioDataValue*, 2> planarBuffer;
+  planarBuffer.SetLength(channelCount);
+  for (size_t idx = 0; idx < channelCount; idx++) {
+    planarBuffer[idx] = bufferData + idx * available;
+  }
+  DeinterleaveAndConvertBuffer(mInterleavedBuffer.Elements(), available,
+                               channelCount, planarBuffer.Elements());
+  AutoTArray<const AudioDataValue*, 2> outputChannels;
+  outputChannels.AppendElements(planarBuffer);
+  aOutput.AppendFrames(buffer.forget(), outputChannels,
+                       static_cast<int32_t>(available),
+                       mBufferedData.GetOldestPrinciple());
   return available;
 }
 
@@ -445,6 +611,53 @@ uint32_t AudioDecoderInputTrack::NumberOfChannels() const {
   AssertOnGraphThread();
   const uint32_t maxChannelCount = GetData<AudioSegment>()->MaxChannelCount();
   return maxChannelCount ? maxChannelCount : mInitialInputChannels;
+}
+
+void AudioDecoderInputTrack::EnsureTimeStretcher() {
+  AssertOnGraphThread();
+  if (!mTimeStretcher) {
+    mTimeStretcher = soundtouch::createSoundTouchObj();
+    mTimeStretcher->setSampleRate(GraphImpl()->GraphRate());
+    mTimeStretcher->setChannels(GetChannelCountForTimeStretcher());
+    mTimeStretcher->setPitch(1.0);
+
+    // SoundTouch v2.1.2 uses automatic time-stretch settings with the following
+    // values:
+    // Tempo 0.5: 90ms sequence, 20ms seekwindow, 8ms overlap
+    // Tempo 2.0: 40ms sequence, 15ms seekwindow, 8ms overlap
+    // We are going to use a smaller 10ms sequence size to improve speech
+    // clarity, giving more resolution at high tempo and less reverb at low
+    // tempo. Maintain 15ms seekwindow and 8ms overlap for smoothness.
+    mTimeStretcher->setSetting(SETTING_SEQUENCE_MS, 10);
+    mTimeStretcher->setSetting(SETTING_SEEKWINDOW_MS, 15);
+    mTimeStretcher->setSetting(SETTING_OVERLAP_MS, 8);
+    SetTempoAndRateForTimeStretcher();
+    LOG("Create TimeStretcher (channel=%d, playbackRate=%f, preservePitch=%d)",
+        GetChannelCountForTimeStretcher(), mPlaybackRate, mPreservesPitch);
+  }
+}
+
+void AudioDecoderInputTrack::SetTempoAndRateForTimeStretcher() {
+  AssertOnGraphThread();
+  if (!mTimeStretcher) {
+    return;
+  }
+  if (mPreservesPitch) {
+    mTimeStretcher->setTempo(mPlaybackRate);
+    mTimeStretcher->setRate(1.0f);
+  } else {
+    mTimeStretcher->setTempo(1.0f);
+    mTimeStretcher->setRate(mPlaybackRate);
+  }
+}
+
+uint32_t AudioDecoderInputTrack::GetChannelCountForTimeStretcher() const {
+  // The time stretcher MUST be initialized with a fixed channel count, but the
+  // channel count in audio chunks might vary. Therefore, we always use the
+  // initial input channel count to initialize the time stretcher and perform a
+  // real-time down-mix/up-mix for audio chunks which have different channel
+  // count than the initial input channel count.
+  return mInitialInputChannels;
 }
 
 #undef LOG

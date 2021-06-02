@@ -15,6 +15,10 @@
 #include "mozilla/StateMirroring.h"
 #include "nsISerialEventTarget.h"
 
+namespace soundtouch {
+class MOZ_EXPORT SoundTouch;
+}
+
 namespace mozilla {
 
 class AudioData;
@@ -130,7 +134,21 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
                                  const PrincipalHandle& aPrincipalHandle);
 
   void HandleSPSCData(SPSCData& aData);
+
+  // These methods would return the total frames that we consumed from
+  // `mBufferedData`.
   TrackTime AppendBufferedDataToOutput(TrackTime aExpectedDuration);
+  TrackTime FillDataToTimeStretcher(TrackTime aExpectedDuration);
+  TrackTime AppendTimeStretchedDataToSegment(TrackTime aExpectedDuration,
+                                             AudioSegment& aOutput);
+  TrackTime AppendUnstretchedDataToSegment(TrackTime aExpectedDuration,
+                                           AudioSegment& aOutput);
+
+  // Return the total frames that we retrieve from the time stretcher.
+  TrackTime DrainStretchedDataIfNeeded(TrackTime aExpectedDuration,
+                                       AudioSegment& aOutput);
+  TrackTime GetDataFromTimeStretcher(TrackTime aExpectedDuration,
+                                     AudioSegment& aOutput);
   void NotifyInTheEndOfProcessInput(TrackTime aFillDuration);
 
   bool HasSentAllData() const;
@@ -144,6 +162,10 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   void SetVolumeImpl(float aVolume);
   void SetPlaybackRateImpl(float aPlaybackRate);
   void SetPreservesPitchImpl(bool aPreservesPitch);
+
+  void EnsureTimeStretcher();
+  void SetTempoAndRateForTimeStretcher();
+  uint32_t GetChannelCountForTimeStretcher() const;
 
   inline void AssertOnDecoderThread() const {
     MOZ_ASSERT(mDecoderThread->IsOnCurrentThread());
@@ -203,6 +225,12 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   // True if we've sent all data to the graph, then the track will be marked as
   // ended in the next iteration.
   bool mSentAllData = false;
+
+  // This is used to adjust the playback rate and pitch.
+  soundtouch::SoundTouch* mTimeStretcher = nullptr;
+
+  // Buffers that would be used for the time stretching.
+  AutoTArray<AudioDataValue, 2> mInterleavedBuffer;
 };
 
 }  // namespace mozilla
