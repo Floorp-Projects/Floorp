@@ -4,8 +4,9 @@
 
 package mozilla.components.concept.storage
 
+import android.annotation.SuppressLint
 import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 import kotlinx.coroutines.Deferred
 
 /**
@@ -155,6 +156,7 @@ sealed class CreditCardNumber(val number: String) {
     /**
      * An encrypted credit card number.
      */
+    @SuppressLint("ParcelCreator")
     @Parcelize
     data class Encrypted(private val data: String) : CreditCardNumber(data), Parcelable
 
@@ -179,6 +181,7 @@ sealed class CreditCardNumber(val number: String) {
  * @property timeLastModified Time of last modified in milliseconds from the unix epoch.
  * @property timesUsed Number of times the credit card was used.
  */
+@SuppressLint("ParcelCreator")
 @Parcelize
 data class CreditCard(
     val guid: String,

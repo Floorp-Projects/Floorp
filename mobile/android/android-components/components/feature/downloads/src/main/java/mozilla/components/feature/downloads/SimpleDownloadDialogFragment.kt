@@ -18,10 +18,8 @@ import androidx.annotation.StringRes
 import androidx.annotation.StyleRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
-import kotlinx.android.synthetic.main.mozac_downloads_prompt.*
-import kotlinx.android.synthetic.main.mozac_downloads_prompt.view.*
-import kotlinx.android.synthetic.main.mozac_downloads_prompt.view.download_button
 import android.graphics.drawable.GradientDrawable
+import mozilla.components.feature.downloads.databinding.MozacDownloadsPromptBinding
 
 /**
  * A confirmation dialog to be called before a download is triggered.
@@ -80,8 +78,10 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
             false
         )
 
+        val binding = MozacDownloadsPromptBinding.bind(rootView)
+
         with(requireBundle()) {
-            rootView.title.text = if (getLong(KEY_CONTENT_LENGTH) <= 0L) {
+            binding.title.text = if (getLong(KEY_CONTENT_LENGTH) <= 0L) {
                 getString(R.string.mozac_feature_downloads_dialog_download)
             } else {
                 val contentSize = getLong(KEY_CONTENT_LENGTH).toMegabyteOrKilobyteString()
@@ -93,12 +93,12 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
                         requireContext(),
                         positiveButtonBackgroundColor
                 )
-                rootView.download_button.backgroundTintList = backgroundTintList
+                binding.downloadButton.backgroundTintList = backgroundTintList
             }
 
             if (positiveButtonTextColor != DEFAULT_VALUE) {
                 val color = ContextCompat.getColor(requireContext(), positiveButtonTextColor)
-                rootView.download_button.setTextColor(color)
+                binding.downloadButton.setTextColor(color)
             }
 
             if (positiveButtonRadius != DEFAULT_VALUE.toFloat()) {
@@ -109,20 +109,20 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
                         positiveButtonBackgroundColor
                 ))
                 shape.cornerRadius = positiveButtonRadius
-                rootView.download_button.background = shape
+                binding.downloadButton.background = shape
             }
 
-            rootView.filename.text = getString(KEY_FILE_NAME, "")
-            rootView.download_button.text = getString(
+            binding.filename.text = getString(KEY_FILE_NAME, "")
+            binding.downloadButton.text = getString(
                     getInt(KEY_DOWNLOAD_TEXT, R.string.mozac_feature_downloads_dialog_download)
             )
 
-            rootView.close_button.setOnClickListener {
+            binding.closeButton.setOnClickListener {
                 onCancelDownload()
                 dismiss()
             }
 
-            rootView.download_button.setOnClickListener {
+            binding.downloadButton.setOnClickListener {
                 onStartDownload()
                 dismiss()
             }

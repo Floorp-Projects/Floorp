@@ -9,11 +9,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.fragment_device.view.device_name
-import kotlinx.android.synthetic.main.fragment_device.view.device_type
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import org.mozilla.samples.sync.DeviceFragment.OnDeviceListInteractionListener
+import org.mozilla.samples.sync.databinding.FragmentDeviceBinding
 
 /**
  * [RecyclerView.Adapter] that can display a [DummyItem] and makes a call to the
@@ -37,9 +36,9 @@ class DeviceRecyclerViewAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.fragment_device, parent, false)
-        return ViewHolder(view)
+        val binding = FragmentDeviceBinding
+            .inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -54,7 +53,7 @@ class DeviceRecyclerViewAdapter(
             DeviceType.UNKNOWN -> "Unknown"
         }
 
-        with(holder.mView) {
+        with(holder.itemView) {
             tag = item
             setOnClickListener(mOnClickListener)
         }
@@ -62,8 +61,8 @@ class DeviceRecyclerViewAdapter(
 
     override fun getItemCount(): Int = devices.size
 
-    inner class ViewHolder(val mView: View) : RecyclerView.ViewHolder(mView) {
-        val nameView: TextView = mView.device_name
-        val typeView: TextView = mView.device_type
+    inner class ViewHolder(binding: FragmentDeviceBinding) : RecyclerView.ViewHolder(binding.root) {
+        val nameView: TextView = binding.deviceName
+        val typeView: TextView = binding.deviceType
     }
 }

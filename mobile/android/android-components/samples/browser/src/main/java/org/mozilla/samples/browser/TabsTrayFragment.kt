@@ -11,14 +11,13 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_tabstray.tabsTray
-import kotlinx.android.synthetic.main.fragment_tabstray.toolbar
 import mozilla.components.browser.tabstray.TabsAdapter
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.samples.browser.databinding.FragmentTabstrayBinding
 import org.mozilla.samples.browser.ext.components
 
 /**
@@ -33,13 +32,14 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        toolbar.setNavigationIcon(R.drawable.mozac_ic_back)
-        toolbar.setNavigationOnClickListener {
+        val binding = FragmentTabstrayBinding.bind(view)
+        binding.toolbar.setNavigationIcon(R.drawable.mozac_ic_back)
+        binding.toolbar.setNavigationOnClickListener {
             closeTabsTray()
         }
 
-        toolbar.inflateMenu(R.menu.tabstray_menu)
-        toolbar.setOnMenuItemClickListener {
+        binding.toolbar.inflateMenu(R.menu.tabstray_menu)
+        binding.toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.newTab -> {
                     components.tabsUseCases.addTab.invoke("about:blank", selectTab = true)
@@ -50,8 +50,8 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
         }
 
         val tabsAdapter = createTabsAdapter()
-        tabsTray.adapter = tabsAdapter
-        tabsTray.layoutManager = GridLayoutManager(context, 2)
+        binding.tabsTray.adapter = tabsAdapter
+        binding.tabsTray.layoutManager = GridLayoutManager(context, 2)
 
         tabsFeature.set(
             feature = TabsFeature(

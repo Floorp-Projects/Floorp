@@ -15,7 +15,7 @@
             android:paddingStart="?android:attr/listPreferredItemPaddingStart"
             android:paddingEnd="?android:attr/listPreferredItemPaddingEnd">
 
-        <SwitchCompat
+        <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/enable_switch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -69,7 +69,7 @@
                 android:textSize="18sp"
                 app:drawableStartCompat="@drawable/mozac_ic_permissions" />
 
-        <SwitchCompat
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/allow_in_private_browsing_switch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

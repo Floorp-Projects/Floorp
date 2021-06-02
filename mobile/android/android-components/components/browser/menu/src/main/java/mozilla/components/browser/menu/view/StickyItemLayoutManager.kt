@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.menu.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PointF
 import android.os.Parcelable
@@ -12,7 +13,7 @@ import android.view.ViewTreeObserver
 import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 
 // Inspired from
 // https://github.com/qiujayen/sticky-layoutmanager/blob/b1ddb086db5b04ff3c5357dabe1bff47a935dd37/
@@ -469,6 +470,7 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
 /**
  * Save / restore existing [RecyclerView] state and scrolling position and offset.
  */
+@SuppressLint("ParcelCreator")
 @Parcelize
 @VisibleForTesting
 internal data class SavedState(
