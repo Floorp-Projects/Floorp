@@ -2131,11 +2131,12 @@ bool DocumentLoadListener::MaybeHandleLoadErrorWithURIFixup(nsresult aStatus) {
           nsDocShell::INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
       bc->UsePrivateBrowsing(), true, getter_AddRefs(newPostData));
 
-  // If the request failed, the above attempt to fix it failed but it
-  // was upgraded using HTTPS-First, then let's check if we can downgrade
-  // the scheme to HTTP again.
+  // Since aStatus will be NS_OK for 4xx and 5xx error codes we
+  // have to check each request which was upgraded by https-first.
+  // If an error (including 4xx and 5xx) occured, then let's check if
+  // we can downgrade the scheme to HTTP again.
   bool isHTTPSFirstFixup = false;
-  if (NS_FAILED(aStatus) && !newURI) {
+  if (!newURI) {
     newURI = nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(mChannel,
                                                                      aStatus);
     isHTTPSFirstFixup = true;
