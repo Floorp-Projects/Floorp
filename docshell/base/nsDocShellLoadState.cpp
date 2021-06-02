@@ -86,6 +86,7 @@ nsDocShellLoadState::nsDocShellLoadState(
     mLoadingSessionHistoryInfo = MakeUnique<LoadingSessionHistoryInfo>(
         aLoadState.loadingSessionHistoryInfo().ref());
   }
+  mUnstrippedURI = aLoadState.UnstrippedURI();
 }
 
 nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
@@ -130,7 +131,8 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mCancelContentJSEpoch(aOther.mCancelContentJSEpoch),
       mLoadIdentifier(aOther.mLoadIdentifier),
       mChannelInitialized(aOther.mChannelInitialized),
-      mIsMetaRefresh(aOther.mIsMetaRefresh) {
+      mIsMetaRefresh(aOther.mIsMetaRefresh),
+      mUnstrippedURI(aOther.mUnstrippedURI) {
   if (aOther.mLoadingSessionHistoryInfo) {
     mLoadingSessionHistoryInfo = MakeUnique<LoadingSessionHistoryInfo>(
         *aOther.mLoadingSessionHistoryInfo);
@@ -1018,5 +1020,8 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   if (mLoadingSessionHistoryInfo) {
     loadState.loadingSessionHistoryInfo().emplace(*mLoadingSessionHistoryInfo);
   }
+  loadState.UnstrippedURI() = mUnstrippedURI;
   return loadState;
 }
+
+nsIURI* nsDocShellLoadState::GetUnstrippedURI() const { return mUnstrippedURI; }
