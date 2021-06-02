@@ -34,10 +34,6 @@ body {
   'Helvetica Neue', sans-serif;
   font-size: 16px;
   position: relative;
-  /* these two rules fix test failures in
-  "browser_ext_themes_ntp_colors" & "browser_ext_themes_ntp_colors_perwindow".*/
-  color: var(--newtab-text-primary-color);
-  background-color: var(--newtab-background-color);
 
   &[lwt-newtab-brighttext] {
     --newtab-background-color: #2A2A2E;
