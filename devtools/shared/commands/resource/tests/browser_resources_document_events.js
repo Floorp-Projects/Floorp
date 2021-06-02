@@ -8,6 +8,7 @@
 add_task(async function() {
   await testDocumentEventResources();
   await testDocumentEventResourcesWithIgnoreExistingResources();
+  await testDomCompleteWithOverloadedConsole();
 
   // Enable server side target switching for next test
   // as the regression it tracks only occurs with server side target switching enabled
@@ -315,6 +316,36 @@ async function testCrossOriginNavigation() {
   await commands.destroy();
 }
 
+async function testDomCompleteWithOverloadedConsole() {
+  info("Test dom-complete with an overloaded console object");
+
+  const tab = await addTab(
+    "data:text/html,<script>window.console = {};</script>"
+  );
+
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
+    tab
+  );
+
+  info("Check that all DOCUMENT_EVENTS are fired for the already loaded page");
+  const documentEvents = [];
+  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
+    onAvailable: resources => documentEvents.push(...resources),
+  });
+  is(documentEvents.length, 3, "Existing document events are fired");
+
+  const domComplete = documentEvents[2];
+  is(domComplete.name, "dom-complete", "the last resource is the dom-complete");
+  is(
+    domComplete.hasNativeConsoleAPI,
+    false,
+    "the console object is reported to be overloaded"
+  );
+
+  targetCommand.destroy();
+  await client.close();
+}
+
 async function assertPromises(
   commands,
   targetBeforeNavigation,
@@ -427,6 +458,12 @@ function assertEvents(
     completeEvent.targetFront,
     currentTargetFront,
     "complete target is the current target"
+  );
+
+  is(
+    completeEvent.hasNativeConsoleAPI,
+    true,
+    "None of the tests (except the dedicated one) overload the console object"
   );
 }
 
