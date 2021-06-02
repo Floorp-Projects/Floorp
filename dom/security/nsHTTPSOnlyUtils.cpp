@@ -366,22 +366,63 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
 /* static */
 already_AddRefed<nsIURI>
 nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(nsIChannel* aChannel,
-                                                        nsresult aError) {
+                                                        nsresult aStatus) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
   // Only downgrade if we this request was upgraded using HTTPS-First Mode
   if (!(httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST)) {
     return nullptr;
   }
-
-  // No matter if we're downgrading or not, the request failed so we need to
-  // inform the background request.
+  // Once loading is in progress we set that flag so that timeout counter
+  // measures do not kick in.
   loadInfo->SetHttpsOnlyStatus(
       httpsOnlyStatus | nsILoadInfo::HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS);
 
+  nsresult status = aStatus;
+  // Since 4xx and 5xx errors return NS_OK instead of NS_ERROR_*, we need
+  // to check each NS_OK for those errors.
+  // Only downgrade an NS_OK status if it is an 4xx or 5xx error.
+  if (NS_SUCCEEDED(aStatus)) {
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+    // If no httpChannel exists we have nothing to do here.
+    if (!httpChannel) {
+      return nullptr;
+    }
+    uint32_t responseStatus = 0;
+    if (NS_FAILED(httpChannel->GetResponseStatus(&responseStatus))) {
+      return nullptr;
+    }
+
+    // In case we found one 4xx or 5xx error we need to log it later on,
+    // for that reason we flip the nsresult 'status' from 'NS_OK' to the
+    // corresponding NS_ERROR_*.
+    // To do so we convert the response status to  an nsresult error
+    // Every NS_OK that is NOT an 4xx or 5xx error code won't get downgraded.
+    if (responseStatus >= 400 && responseStatus < 512) {
+      // HttpProxyResponseToErrorCode() maps 400 and 404 on
+      // the same error as a 500 status which would lead to no downgrade
+      // later on. For that reason we explicit filter for 400 and 404 status
+      // codes to log them correctly and to downgrade them if possible.
+      switch (responseStatus) {
+        case 400:
+          status = NS_ERROR_PROXY_BAD_REQUEST;
+          break;
+        case 404:
+          status = NS_ERROR_PROXY_NOT_FOUND;
+          break;
+        default:
+          status = mozilla::net::HttpProxyResponseToErrorCode(responseStatus);
+          break;
+      }
+    }
+    if (NS_SUCCEEDED(status)) {
+      return nullptr;
+    }
+  }
+
   // We're only downgrading if it's possible that the error was
   // caused by the upgrade.
-  if (HttpsUpgradeUnrelatedErrorCode(aError)) {
+  if (HttpsUpgradeUnrelatedErrorCode(status)) {
     return nullptr;
   }
 
