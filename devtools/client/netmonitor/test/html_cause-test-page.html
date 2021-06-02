@@ -16,7 +16,9 @@
     <p>Request cause test</p>
     <img src="img_request" />
     <img srcset="img_srcset_request" />
-    <div style="height: 200vh;"></div>
+    <!-- ensure that the two next <img> are offscreen
+         so that the error listener is registered before we try loading them -->
+    <div style="height: 2000vh;"></div>
     <img loading="lazy" src="lazy_img_request" />
     <img loading="lazy" srcset="lazy_img_srcset_request" />
     <script type="text/javascript">
@@ -65,14 +67,14 @@
           const lazyImgs = document.querySelectorAll("img[loading='lazy']");
 
           const promises = [
-            lazyImgs[0].addEventListener("error", resolve),
-            lazyImgs[1].addEventListener("error", resolve),
+            new Promise(r => lazyImgs[0].addEventListener("error", r)),
+            new Promise(r => lazyImgs[1].addEventListener("error", r)),
           ];
 
           // Given that the default display style of <img> is `inline` so
           // it's sufficient to scroll to an <img>.
           lazyImgs[0].scrollIntoView({ behavior: "instant" });
-          return Promise.all(promises);
+          resolve(Promise.all(promises));
         });
       }
 
