@@ -19,17 +19,17 @@ const platformPromise = browser.runtime.getPlatformInfo().then(info => {
 });
 
 let debug = async function() {
-  if ((await releaseBranchPromise) !== "beta_or_release") {
+  if ((await releaseBranchPromise) !== "release_or_beta") {
     console.debug.apply(this, arguments);
   }
 };
 let error = async function() {
-  if ((await releaseBranchPromise) !== "beta_or_release") {
+  if ((await releaseBranchPromise) !== "release_or_beta") {
     console.error.apply(this, arguments);
   }
 };
 let warn = async function() {
-  if ((await releaseBranchPromise) !== "beta_or_release") {
+  if ((await releaseBranchPromise) !== "release_or_beta") {
     console.warn.apply(this, arguments);
   }
 };
@@ -61,6 +61,7 @@ class Shim {
     this._disabledByReleaseBranch = false;
 
     this._activeOnTabs = new Set();
+    this._showedOptInOnTabs = new Set();
 
     const pref = `disabled_shims.${this.id}`;
 
@@ -185,6 +186,7 @@ class Shim {
       this._activeOnTabs.add(tabId);
     } else {
       this._activeOnTabs.delete(tabId);
+      this._showedOptInOnTabs.delete(tabId);
     }
   }
 
@@ -281,6 +283,22 @@ class Shim {
 
   hasUserOptedInAlready(host) {
     return this._hostOptIns.has(host);
+  }
+
+  showOptInWarningOnce(tabId, origin) {
+    if (this._showedOptInOnTabs.has(tabId)) {
+      return Promise.resolve();
+    }
+    this._showedOptInOnTabs.add(tabId);
+
+    const { bug, name } = this;
+    const warning = `${name} is allowed on ${origin} for this browsing session due to user opt-in. See https://bugzilla.mozilla.org/show_bug.cgi?id=${bug} for details.`;
+    return browser.tabs
+      .executeScript(tabId, {
+        code: `console.warn(${JSON.stringify(warning)})`,
+        runAt: "document_start",
+      })
+      .catch(() => {});
   }
 }
 
@@ -439,11 +457,10 @@ class Shims {
     } else if (message === "optIn") {
       try {
         await shim.onUserOptIn(new URL(url).hostname);
-        const { name, bug } = shim;
         const origin = new URL(tab.url).origin;
         warn(
           "** User opted in for",
-          name,
+          shim.name,
           "shim on",
           origin,
           "on tab",
@@ -451,12 +468,7 @@ class Shims {
           "frame",
           frameId
         );
-        const warning = `${name} is now being allowed on ${origin} for this browsing session. See https://bugzilla.mozilla.org/show_bug.cgi?id=${bug} for details.`;
-        await browser.tabs.executeScript(id, {
-          code: `console.warn(${JSON.stringify(warning)})`,
-          frameId,
-          runAt: "document_start",
-        });
+        await shim.showOptInWarningOnce(id, origin);
       } catch (err) {
         console.error(err);
         throw new Error("error");
@@ -538,15 +550,18 @@ class Shims {
         continue;
       }
 
-      // If the user has already opted in for this shim, all requests it covers
-      // should be allowed; no need for a shim anymore.
-      if (shim.hasUserOptedInAlready(topHost)) {
-        return undefined;
-      }
-
       // If this URL and content type isn't meant for this shim, don't apply it.
       match = shim.isTriggeredByURLAndType(url, type);
       if (match) {
+        // If the user has already opted in for this shim, all requests it covers
+        // should be allowed; no need for a shim anymore.
+        if (shim.hasUserOptedInAlready(topHost)) {
+          warn(
+            `Allowing tracking ${type} ${url} on tab ${tabId} frame ${frameId} due to opt-in`
+          );
+          shim.showOptInWarningOnce(tabId, new URL(originUrl).origin);
+          return undefined;
+        }
         shimToApply = shim;
         break;
       }
