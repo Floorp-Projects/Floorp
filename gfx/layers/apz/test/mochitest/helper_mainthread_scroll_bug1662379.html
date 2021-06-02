@@ -99,10 +99,7 @@ function getAsyncScrollOffsetForUniqueRcdChild() {
     return {x: -1, y: -1};
   }
   let child = rcd.children[0];
-  let scroll = child.asyncScrollOffset;
-  let pieces = scroll.replace(/[()\s]+/g, "").split(",");
-  is(pieces.length, 2, "expected string of form (x,y)");
-  return {x: parseInt(pieces[0]), y: parseInt(pieces[1])};
+  return parsePoint(child.asyncScrollOffset);
 }
 
 async function test() {

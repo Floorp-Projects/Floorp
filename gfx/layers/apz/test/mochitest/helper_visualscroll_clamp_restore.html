@@ -40,10 +40,7 @@ function getAsyncScrollOffset() {
   if (rcd == null) {
     return {x: -1, y: -1};
   }
-  let scroll = rcd.asyncScrollOffset;
-  let pieces = scroll.replace(/[()\s]+/g, "").split(",");
-  is(pieces.length, 2, "expected string of form (x,y)");
-  return {x: parseInt(pieces[0]), y: parseInt(pieces[1])};
+  return parsePoint(rcd.asyncScrollOffset);
 }
 
 async function test() {
