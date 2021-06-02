@@ -181,10 +181,12 @@ void AudioSegment::WriteTo(AudioMixer& aMixer, uint32_t aOutputChannels,
 
     switch (c.mBufferFormat) {
       case AUDIO_FORMAT_S16:
-        WriteChunk<int16_t>(c, aOutputChannels, buf.Elements() + offset);
+        WriteChunk<int16_t>(c, aOutputChannels, c.mVolume,
+                            buf.Elements() + offset);
         break;
       case AUDIO_FORMAT_FLOAT32:
-        WriteChunk<float>(c, aOutputChannels, buf.Elements() + offset);
+        WriteChunk<float>(c, aOutputChannels, c.mVolume,
+                          buf.Elements() + offset);
         break;
       case AUDIO_FORMAT_SILENCE:
         // The mixer is expecting interleaved data, so this is ok.
