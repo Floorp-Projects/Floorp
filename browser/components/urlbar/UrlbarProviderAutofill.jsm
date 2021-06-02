@@ -213,25 +213,6 @@ const QUERY_URL_PREFIX_BOOKMARK = urlQuery(
        BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
 );
 
-const kProtocolsWithIcons = [
-  "chrome:",
-  "moz-extension:",
-  "about:",
-  "http:",
-  "https:",
-];
-function iconHelper(url) {
-  if (typeof url == "string") {
-    return kProtocolsWithIcons.some(p => url.startsWith(p))
-      ? "page-icon:" + url
-      : UrlbarUtils.ICON.DEFAULT;
-  }
-  if (url && url instanceof URL && kProtocolsWithIcons.includes(url.protocol)) {
-    return "page-icon:" + url.href;
-  }
-  return UrlbarUtils.ICON.DEFAULT;
-}
-
 /**
  * Class used to create the provider.
  */
@@ -636,7 +617,7 @@ class ProviderAutofill extends UrlbarProvider {
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
         url: [finalCompleteValue, UrlbarUtils.HIGHLIGHT.TYPED],
-        icon: iconHelper(finalCompleteValue),
+        icon: UrlbarUtils.getIconForUrl(finalCompleteValue),
       })
     );
     autofilledValue =
@@ -692,7 +673,7 @@ class ProviderAutofill extends UrlbarProvider {
           ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             title: [trimmedUrl, UrlbarUtils.HIGHLIGHT.TYPED],
             url: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
-            icon: iconHelper(aboutUrl),
+            icon: UrlbarUtils.getIconForUrl(aboutUrl),
           })
         );
         let autofilledValue =

@@ -433,6 +433,22 @@ class Preferences {
   }
 
   /**
+   * Sets the value of the resultBuckets pref to the current default buckets.
+   * This should be called from BrowserGlue._migrateUI when the default buckets
+   * are modified.
+   */
+  migrateResultBuckets() {
+    this.set(
+      "resultBuckets",
+      JSON.stringify(
+        makeResultBuckets({
+          showSearchSuggestionsFirst: this.get("showSearchSuggestionsFirst"),
+        })
+      )
+    );
+  }
+
+  /**
    * Adds a preference observer.  Observers are held weakly.
    *
    * @param {object} observer
