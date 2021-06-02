@@ -499,6 +499,9 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
     maybeCspToInheritInfo.emplace(cspToInheritInfo);
   }
 
+  nsCOMPtr<nsIURI> unstrippedURI;
+  Unused << aLoadInfo->GetUnstrippedURI(getter_AddRefs(unstrippedURI));
+
   *aOptionalLoadInfoArgs = Some(LoadInfoArgs(
       loadingPrincipalInfo, triggeringPrincipalInfo, principalToInheritInfo,
       sandboxedLoadingPrincipalInfo, topLevelPrincipalInfo,
@@ -540,7 +543,8 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetIsMediaRequest(), aLoadInfo->GetIsMediaInitialRequest(),
       cookieJarSettingsArgs, aLoadInfo->GetRequestBlockingReason(),
       maybeCspToInheritInfo, aLoadInfo->GetHasStoragePermission(),
-      aLoadInfo->GetIsMetaRefresh(), aLoadInfo->GetLoadingEmbedderPolicy()));
+      aLoadInfo->GetIsMetaRefresh(), aLoadInfo->GetLoadingEmbedderPolicy(),
+      unstrippedURI));
 
   return NS_OK;
 }
@@ -797,7 +801,7 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.isInDevToolsContext(), loadInfoArgs.parserCreatedScript(),
       loadInfoArgs.hasStoragePermission(), loadInfoArgs.isMetaRefresh(),
       loadInfoArgs.requestBlockingReason(), loadingContext,
-      loadInfoArgs.loadingEmbedderPolicy());
+      loadInfoArgs.loadingEmbedderPolicy(), loadInfoArgs.unstrippedURI());
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
@@ -839,6 +843,9 @@ void LoadInfoToParentLoadInfoForwarder(
     cookieJarSettingsArgs = Some(args);
   }
 
+  nsCOMPtr<nsIURI> unstrippedURI;
+  Unused << aLoadInfo->GetUnstrippedURI(getter_AddRefs(unstrippedURI));
+
   *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
       aLoadInfo->GetAllowInsecureRedirectToDataURI(), ipcController, tainting,
       aLoadInfo->GetSkipContentSniffing(), aLoadInfo->GetHttpsOnlyStatus(),
@@ -852,7 +859,7 @@ void LoadInfoToParentLoadInfoForwarder(
       cookieJarSettingsArgs, aLoadInfo->GetRequestBlockingReason(),
       aLoadInfo->GetHasStoragePermission(), aLoadInfo->GetIsMetaRefresh(),
       aLoadInfo->GetIsThirdPartyContextToTopWindow(),
-      aLoadInfo->GetIsInThirdPartyContext());
+      aLoadInfo->GetIsInThirdPartyContext(), unstrippedURI);
 }
 
 nsresult MergeParentLoadInfoForwarder(
@@ -934,6 +941,9 @@ nsresult MergeParentLoadInfoForwarder(
 
   rv = aLoadInfo->SetIsInThirdPartyContext(
       aForwarderArgs.isInThirdPartyContext());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aLoadInfo->SetUnstrippedURI(aForwarderArgs.unstrippedURI());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

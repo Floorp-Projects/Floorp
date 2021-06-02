@@ -40,7 +40,6 @@ namespace mozilla {
 namespace ipc {
 
 void SerializeURI(nsIURI* aURI, URIParams& aParams) {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aURI);
 
   aURI->Serialize(aParams);
@@ -50,8 +49,6 @@ void SerializeURI(nsIURI* aURI, URIParams& aParams) {
 }
 
 void SerializeURI(nsIURI* aURI, Maybe<URIParams>& aParams) {
-  MOZ_ASSERT(NS_IsMainThread());
-
   if (aURI) {
     URIParams params;
     SerializeURI(aURI, params);
@@ -62,8 +59,6 @@ void SerializeURI(nsIURI* aURI, Maybe<URIParams>& aParams) {
 }
 
 already_AddRefed<nsIURI> DeserializeURI(const URIParams& aParams) {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsCOMPtr<nsIURIMutator> mutator;
 
   switch (aParams.type()) {
@@ -132,8 +127,6 @@ already_AddRefed<nsIURI> DeserializeURI(const URIParams& aParams) {
 }
 
 already_AddRefed<nsIURI> DeserializeURI(const Maybe<URIParams>& aParams) {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsCOMPtr<nsIURI> uri;
 
   if (aParams.isSome()) {
