@@ -148,7 +148,7 @@ impl<'a> From<&'a OsString> for Arg {
 pub fn parse_args<'a>(
     args: impl Iterator<Item = &'a OsString>,
 ) -> Vec<(Option<Arg>, Option<String>)> {
-    args.map(|arg| parse_arg_name_value(arg))
+    args.map(parse_arg_name_value)
         .map(|(name, value)| {
             if let Some(arg_name) = name {
                 (Some(Arg::new(&arg_name)), value)
