@@ -6,7 +6,7 @@
             FTU_PREF, ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, AUTOFILL_CREDITCARDS_AVAILABLE_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF,
             SUPPORTED_COUNTRIES_PREF,
             SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
-            sleep, expectPopupOpen, openPopupOn, openPopupForSubframe, expectPopupClose, closePopup, closePopupForSubframe,
+            sleep, expectPopupOpen, openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
             getNotification, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog */
@@ -283,39 +283,68 @@ async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
 
 async function expectPopupOpen(browser) {
   info("expectPopupOpen");
-  const { autoCompletePopup } = browser;
-  await BrowserTestUtils.waitForCondition(
-    () => autoCompletePopup.popupOpen,
-    "popup should be open"
+  await BrowserTestUtils.waitForPopupEvent(browser.autoCompletePopup, "shown");
+  await BrowserTestUtils.waitForMutationCondition(
+    browser.autoCompletePopup.richlistbox,
+    { childList: true, subtree: true, attributes: true },
+    () => {
+      const listItemElems = getDisplayedPopupItems(browser);
+      return (
+        !![...listItemElems].length &&
+        [...listItemElems].every(item => {
+          return (
+            (item.getAttribute("originaltype") == "autofill-profile" ||
+              item.getAttribute("originaltype") == "autofill-insecureWarning" ||
+              item.getAttribute("originaltype") == "autofill-footer") &&
+            item.hasAttribute("formautofillattached")
+          );
+        })
+      );
+    }
   );
-  await BrowserTestUtils.waitForCondition(() => {
-    const listItemElems = getDisplayedPopupItems(browser);
-    return (
-      !![...listItemElems].length &&
-      [...listItemElems].every(item => {
-        return (
-          (item.getAttribute("originaltype") == "autofill-profile" ||
-            item.getAttribute("originaltype") == "autofill-insecureWarning" ||
-            item.getAttribute("originaltype") == "autofill-footer") &&
-          item.hasAttribute("formautofillattached")
-        );
-      })
-    );
-  }, "The popup should be a form autofill one");
 }
 
 async function waitForPopupEnabled(browser) {
   const {
     autoCompletePopup: { richlistbox: itemsBox },
   } = browser;
-  const listItemElems = itemsBox.querySelectorAll(".autocomplete-richlistitem");
-  await TestUtils.waitForCondition(
-    () => !listItemElems[0].disabled,
-    "Wait for list elements to become enabled"
+  info("Wait for list elements to become enabled");
+  await BrowserTestUtils.waitForMutationCondition(
+    itemsBox,
+    { subtree: true, attributes: true, attributeFilter: ["disabled"] },
+    () => !itemsBox.querySelectorAll(".autocomplete-richlistitem")[0].disabled
   );
 }
 
+// Wait for the popup state change notification to happen in a child process.
+function waitPopupStateInChild(bc, messageName) {
+  return SpecialPowers.spawn(bc, [messageName], expectedMessage => {
+    return new Promise(resolve => {
+      const { AutoCompleteChild } = ChromeUtils.import(
+        "resource://gre/actors/AutoCompleteChild.jsm"
+      );
+
+      let listener = {
+        popupStateChanged: name => {
+          if (name != expectedMessage) {
+            info("Expected " + expectedMessage + " but received " + name);
+            return;
+          }
+
+          AutoCompleteChild.removePopupStateListener(listener);
+          resolve();
+        },
+      };
+      AutoCompleteChild.addPopupStateListener(listener);
+    });
+  });
+}
+
 async function openPopupOn(browser, selector) {
+  let childNotifiedPromise = waitPopupStateInChild(
+    browser,
+    "FormAutoComplete:PopupOpened"
+  );
   await SimpleTest.promiseFocus(browser);
   await focusAndWaitForFieldsIdentified(browser, selector);
   if (!selector.includes("cc-")) {
@@ -323,9 +352,15 @@ async function openPopupOn(browser, selector) {
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
   }
   await expectPopupOpen(browser);
+  await childNotifiedPromise;
 }
 
 async function openPopupForSubframe(browser, frameBrowsingContext, selector) {
+  let childNotifiedPromise = waitPopupStateInChild(
+    frameBrowsingContext,
+    "FormAutoComplete:PopupOpened"
+  );
+
   await SimpleTest.promiseFocus(browser);
   await focusAndWaitForFieldsIdentified(frameBrowsingContext, selector);
   if (!selector.includes("cc-")) {
@@ -333,29 +368,49 @@ async function openPopupForSubframe(browser, frameBrowsingContext, selector) {
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, frameBrowsingContext);
   }
   await expectPopupOpen(browser);
-}
-
-async function expectPopupClose(browser) {
-  await BrowserTestUtils.waitForCondition(
-    () => !browser.autoCompletePopup.popupOpen,
-    "popup should have closed"
-  );
+  await childNotifiedPromise;
 }
 
 async function closePopup(browser) {
+  // Return if the popup isn't open.
+  if (!browser.autoCompletePopup.popupOpen) {
+    return;
+  }
+
+  let childNotifiedPromise = waitPopupStateInChild(
+    browser,
+    "FormAutoComplete:PopupClosed"
+  );
+  let popupClosePromise = BrowserTestUtils.waitForPopupEvent(
+    browser.autoCompletePopup,
+    "hidden"
+  );
+
   await SpecialPowers.spawn(browser, [], async function() {
     content.document.activeElement.blur();
   });
 
-  await expectPopupClose(browser);
+  await popupClosePromise;
+  await childNotifiedPromise;
 }
 
 async function closePopupForSubframe(browser, frameBrowsingContext) {
+  let childNotifiedPromise = waitPopupStateInChild(
+    browser,
+    "FormAutoComplete:PopupClosed"
+  );
+
+  let popupClosePromise = BrowserTestUtils.waitForPopupEvent(
+    browser.autoCompletePopup,
+    "hidden"
+  );
+
   await SpecialPowers.spawn(frameBrowsingContext, [], async function() {
     content.document.activeElement.blur();
   });
 
-  await expectPopupClose(browser);
+  await popupClosePromise;
+  await childNotifiedPromise;
 }
 
 function emulateMessageToBrowser(name, data) {
@@ -495,9 +550,11 @@ async function expectWarningText(browser, expectedText) {
   }
   warningBox = warningBox._warningTextBox;
 
-  await BrowserTestUtils.waitForCondition(() => {
-    return warningBox.textContent == expectedText;
-  }, `Waiting for expected warning text: ${expectedText}, Got ${warningBox.textContent}`);
+  await BrowserTestUtils.waitForMutationCondition(
+    warningBox,
+    { childList: true, characterData: true },
+    () => warningBox.textContent == expectedText
+  );
   ok(true, `Got expected warning text: ${expectedText}`);
 }
 
