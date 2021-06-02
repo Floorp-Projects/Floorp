@@ -35,7 +35,7 @@ var gTests = [
         "webRTC-shareDevices-notification-icon",
         "anchored to device icon"
       );
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
       is(
         PopupNotifications.panel.firstElementChild.getAttribute("popupid"),
         "webRTC-shareDevices",
@@ -89,7 +89,7 @@ var gTests = [
       await promiseRequestDevice(true, true, frame1ID, undefined, frame1BC);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -170,7 +170,7 @@ var gTests = [
       await promiseRequestDevice(true, true, frame1ID, undefined, frame1BC);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -266,7 +266,7 @@ var gTests = [
       await promiseRequestDevice(true, true, frame1ID, undefined, frame1BC);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       let observerPromise1 = expectObserverCalled(
         "getUserMedia:response:allow",
@@ -342,7 +342,7 @@ var gTests = [
       await promiseRequestDevice(true, true, frame1ID, undefined, frame1BC);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       info("reloading the frame");
       promise = expectObserverCalledOnClose(
@@ -386,7 +386,7 @@ var gTests = [
       await promiseRequestDevice(true, true, frame1ID, undefined, frame1BC);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -430,7 +430,7 @@ var gTests = [
       await promiseRequestDevice(false, true, frame2ID, undefined, frame2BC);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(false, true);
+      checkDeviceSelectors(["camera"]);
 
       observerPromise1 = expectObserverCalled(
         "getUserMedia:response:allow",
@@ -505,7 +505,7 @@ var gTests = [
       await promiseRequestDevice(false, true, frame1ID, undefined, frame1BC);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(false, true);
+      checkDeviceSelectors(["camera"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -547,7 +547,7 @@ var gTests = [
       await promiseRequestDevice(true, true, frame2ID, undefined, frame2BC);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       observerPromise1 = expectObserverCalled(
         "getUserMedia:response:allow",
@@ -615,7 +615,7 @@ var gTests = [
       await promiseRequestDevice(true, true, frame1ID, undefined, frame1BC);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -673,7 +673,7 @@ var gTests = [
         await promiseRequestDevice(true, true, frame1ID, undefined, frame1BC);
         await promise;
         await observerPromise;
-        checkDeviceSelectors(true, true);
+        checkDeviceSelectors(["microphone", "camera"]);
 
         // During the second pass, the indicator is already open.
         let indicator = t == 0 ? promiseIndicatorWindow() : Promise.resolve();

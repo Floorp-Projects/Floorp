@@ -62,7 +62,7 @@ async function testNotificationSilencing(aBrowser) {
   await promise;
   await observerPromise;
 
-  checkDeviceSelectors(false, false, true, window);
+  checkDeviceSelectors(["screen"], window);
 
   let document = window.document;
 

@@ -43,7 +43,7 @@ var gTests = [
         "webRTC-shareMicrophone-notification-icon",
         "anchored to mic icon"
       );
-      checkDeviceSelectors(true);
+      checkDeviceSelectors(["microphone"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -137,7 +137,7 @@ var gTests = [
         "webRTC-shareDevices-notification-icon",
         "anchored to device icon"
       );
-      checkDeviceSelectors(false, true);
+      checkDeviceSelectors(["camera"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(

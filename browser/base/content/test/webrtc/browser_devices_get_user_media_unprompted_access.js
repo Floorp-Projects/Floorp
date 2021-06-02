@@ -72,7 +72,7 @@ var gTests = [
         "webRTC-shareScreen-notification-icon",
         "anchored to device icon"
       );
-      checkDeviceSelectors(false, false, true);
+      checkDeviceSelectors(["screen"]);
 
       observerPromise = expectObserverCalled("getUserMedia:response:deny");
       await promiseMessage(permissionError, () => {
@@ -94,7 +94,7 @@ var gTests = [
       await promiseRequestDevice(true, true);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       observerPromise1 = expectObserverCalled("getUserMedia:response:deny");
       observerPromise2 = expectObserverCalled("recording-window-ended");
@@ -167,7 +167,7 @@ var gTests = [
         await promiseRequestDevice(false, true);
         await popupShown;
         await request;
-        checkDeviceSelectors(false, true);
+        checkDeviceSelectors(["camera"]);
 
         // Allow and stop the camera again.
         const response = expectObserverCalled("getUserMedia:response:allow");
@@ -198,7 +198,7 @@ var gTests = [
         await promiseRequestDevice(true, true);
         await popupShown;
         await request;
-        checkDeviceSelectors(true, true);
+        checkDeviceSelectors(["microphone", "camera"]);
 
         // Allow and stop the camera again.
         const response = expectObserverCalled("getUserMedia:response:allow");
@@ -229,7 +229,7 @@ var gTests = [
         await promiseRequestDevice(true, false);
         await popupShown;
         await request;
-        checkDeviceSelectors(true, false);
+        checkDeviceSelectors(["microphone"]);
 
         const response = expectObserverCalled("getUserMedia:response:deny");
         const windowEnded = expectObserverCalled("recording-window-ended");
@@ -298,7 +298,7 @@ var gTests = [
         await promiseRequestDevice(true, false);
         await popupShown;
         await request;
-        checkDeviceSelectors(true, false);
+        checkDeviceSelectors(["microphone"]);
 
         // Allow and stop the microphone again.
         const response = expectObserverCalled("getUserMedia:response:allow");
@@ -329,7 +329,7 @@ var gTests = [
         await promiseRequestDevice(true, true);
         await popupShown;
         await request;
-        checkDeviceSelectors(true, true);
+        checkDeviceSelectors(["microphone", "camera"]);
 
         // Allow and stop the microphone again.
         const response = expectObserverCalled("getUserMedia:response:allow");
@@ -360,7 +360,7 @@ var gTests = [
         await promiseRequestDevice(false, true);
         await popupShown;
         await request;
-        checkDeviceSelectors(false, true);
+        checkDeviceSelectors(["camera"]);
 
         const response = expectObserverCalled("getUserMedia:response:deny");
         const windowEnded = expectObserverCalled("recording-window-ended");
@@ -423,7 +423,7 @@ var gTests = [
       await promiseRequestDevice(true, false);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, false);
+      checkDeviceSelectors(["microphone"]);
 
       observerPromise = expectObserverCalled("getUserMedia:response:deny");
 
@@ -454,7 +454,7 @@ var gTests = [
       await promiseRequestDevice(true, true);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       observerPromise = expectObserverCalled("getUserMedia:response:deny");
 
@@ -491,7 +491,7 @@ var gTests = [
         "webRTC-shareScreen-notification-icon",
         "anchored to device icon"
       );
-      checkDeviceSelectors(false, false, true);
+      checkDeviceSelectors(["screen"]);
 
       observerPromise = expectObserverCalled("getUserMedia:response:deny");
 
@@ -579,7 +579,7 @@ var gTests = [
       await promiseRequestDevice(false, true);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(false, true);
+      checkDeviceSelectors(["camera"]);
 
       observerPromise = expectObserverCalled("getUserMedia:response:deny");
 
@@ -610,7 +610,7 @@ var gTests = [
       await promiseRequestDevice(true, true);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       observerPromise = expectObserverCalled("getUserMedia:response:deny");
 
