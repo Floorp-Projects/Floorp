@@ -3059,10 +3059,8 @@ runBox2d(cacheEntry);
 while (!wasmHasTier2CompilationCompleted(cacheEntry.module))
     sleep(1);
 
-// Cranelift code cannot yet be cached, but cranelift tier2 compilation will
-// still populate the cacheEntry.
-if (!wasmCompileMode().match("cranelift")) {
-    assertEq(cacheEntry.cached, wasmCachingEnabled());
+if (wasmCachingEnabled()) {
+    assertEq(cacheEntry.cached, true)
 }
 
 runBox2d(cacheEntry);
