@@ -122,6 +122,12 @@ If your default Python is Python 2, you may need to instead run:
 
 `python3 mach python-test toolkit/components/glean/pytest`
 
+These tests check the code generator output against known good file contents.
+If you change the code generator the files will need an update.
+Run the test suite with the `UPDATE_EXPECT` environment variable set to do that automatically:
+
+`UPDATE_EXPECT=1 mach test toolkit/components/glean/pytest`
+
 ## C++ (Treeherder symbol `GTest` (a build task))
 
 To test the C++ parts of FOG's implementation

@@ -8,6 +8,7 @@ from os import path
 from pathlib import Path
 import sys
 
+from expect_helper import expect
 
 # Shenanigans to import the FOG glean_parser runner
 FOG_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir))
@@ -25,11 +26,9 @@ def test_gifft_codegen():
     A regression test. Very fragile.
     It generates C++ for GIFFT for metrics_test.yaml and compares it
     byte-for-byte with expected output C++ files.
-    To generate new expected output files, edit t/c/g/metrics_index.py,
-    comment out the other metrics yamls, and add one for
-    t/c/g/pytest/metrics_test.yaml. Run `mach build` (it'll fail). Copy
-    objdir/t/c/g/XGIFFTMap.h to gifft_output_X.
-    Don't forget to undo your edits to metrics_index.py after you're done.
+    To generate new expected output files, set `UPDATE_EXPECT=1` when running the test suite:
+
+    UPDATE_EXPECT=1 mach test toolkit/components/glean/pytest
     """
 
     options = {"allow_reserved": False}
@@ -46,14 +45,10 @@ def test_gifft_codegen():
         cpp_fd = io.StringIO()
         run_glean_parser.output_gifft_map(output_fd, probe_type, all_objs, cpp_fd)
 
-        with open(here_path / f"gifft_output_{probe_type}", "r") as file:
-            EXPECTED = file.read()
-        assert output_fd.getvalue() == EXPECTED
+        expect(here_path / f"gifft_output_{probe_type}", output_fd.getvalue())
 
         if probe_type == "Event":
-            with open(here_path / "gifft_output_EventExtra", "r") as file:
-                EXPECTED = file.read()
-            assert cpp_fd.getvalue() == EXPECTED
+            expect(here_path / "gifft_output_EventExtra", cpp_fd.getvalue())
 
 
 if __name__ == "__main__":

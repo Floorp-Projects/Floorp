@@ -8,6 +8,7 @@ from os import path
 from pathlib import Path
 import sys
 
+from expect_helper import expect
 
 # Shenanigans to import the cpp outputter extension
 FOG_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir))
@@ -25,8 +26,9 @@ def test_all_metric_types():
     It generates C++ for a given test metrics.yaml and compares it byte-for-byte
     with an expected output C++ file.
     Expect it to be fragile.
-    To generate a new expected output file, copy the test yaml over the one in t/c/g,
-    run mach build, then copy the C++ output from objdir/t/c/g/.
+    To generate new expected output files, set `UPDATE_EXPECT=1` when running the test suite:
+
+    UPDATE_EXPECT=1 mach test toolkit/components/glean/pytest
     """
 
     options = {"allow_reserved": False}
@@ -39,11 +41,10 @@ def test_all_metric_types():
     output_fd = io.StringIO()
     cpp.output_cpp(all_objs.value, output_fd, options)
 
-    with open(
-        path.join(path.dirname(__file__), "metrics_test_output_cpp"), "r"
-    ) as file:
-        EXPECTED_CPP = file.read()
-    assert output_fd.getvalue() == EXPECTED_CPP
+    expect(
+        path.join(path.dirname(__file__), "metrics_test_output_cpp"),
+        output_fd.getvalue(),
+    )
 
 
 def test_fake_pings():
@@ -51,11 +52,9 @@ def test_fake_pings():
     It generates C++ for pings_test.yaml, comparing it byte-for-byte
     with an expected output C++ file `pings_test_output_cpp`.
     Expect it to be fragile.
-    To generate a new expected output file, edit t/c/g/metrics_index.py,
-    comment out all other ping yamls, and add one for
-    t/c/g/pytest/pings_test.yaml. Run `mach build` (it'll fail). Copy
-    objdir/t/c/g/GleanPings.h over pings_test_output_cpp.
-    (Don't forget to undo your edits to t/c/g/metrics_index.py)
+    To generate new expected output files, set `UPDATE_EXPECT=1` when running the test suite:
+
+    UPDATE_EXPECT=1 mach test toolkit/components/glean/pytest
     """
 
     options = {"allow_reserved": False}
@@ -68,9 +67,9 @@ def test_fake_pings():
     output_fd = io.StringIO()
     cpp.output_cpp(all_objs.value, output_fd, options)
 
-    with open(path.join(path.dirname(__file__), "pings_test_output_cpp"), "r") as file:
-        EXPECTED_CPP = file.read()
-    assert output_fd.getvalue() == EXPECTED_CPP
+    expect(
+        path.join(path.dirname(__file__), "pings_test_output_cpp"), output_fd.getvalue()
+    )
 
 
 if __name__ == "__main__":
