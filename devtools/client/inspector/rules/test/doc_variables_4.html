@@ -1,0 +1,23 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>variables test</title>
+  <style>
+    :root {
+      --10: 10px;
+      ---blue: blue;
+    }
+    #a {
+      font-size: var(--10);
+    }
+    #b {
+      color: var(---blue);
+    }
+  </style>
+</head>
+<body>
+  <div id="a">A</div><br>
+  <div id="b">B</div>
+</body>
+</html>
