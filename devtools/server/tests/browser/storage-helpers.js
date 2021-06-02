@@ -27,38 +27,15 @@ async function openTabAndSetupStorage(url) {
   const content = await addTab(url);
 
   // Setup the async storages in main window and for all its iframes
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-    /**
-     * Get all windows including frames recursively.
-     *
-     * @param {Window} [baseWindow]
-     *        The base window at which to start looking for child windows
-     *        (optional).
-     * @return {Set}
-     *         A set of windows.
-     */
-    function getAllWindows(baseWindow) {
-      const windows = new Set();
-
-      const _getAllWindows = function(win) {
-        windows.add(win.wrappedJSObject);
-
-        for (let i = 0; i < win.length; i++) {
-          _getAllWindows(win[i]);
-        }
-      };
-      _getAllWindows(baseWindow);
-
-      return windows;
-    }
-
-    const windows = getAllWindows(content);
-    for (const win of windows) {
-      if (win.setup) {
-        await win.setup();
+  const browsingContexts = gBrowser.selectedBrowser.browsingContext.getAllBrowsingContextsInSubtree();
+  for (const browsingContext of browsingContexts) {
+    await SpecialPowers.spawn(browsingContext, [], async function() {
+      if (content.wrappedJSObject.setup) {
+        await content.wrappedJSObject.setup();
       }
-    }
-  });
+    });
+  }
+
   // selected tab is set in addTab
   const target = await createAndAttachTargetForTab(gBrowser.selectedTab);
   const front = await target.getFront("storage");
@@ -66,36 +43,12 @@ async function openTabAndSetupStorage(url) {
 }
 
 async function clearStorage() {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-    /**
-     * Get all windows including frames recursively.
-     *
-     * @param {Window} [baseWindow]
-     *        The base window at which to start looking for child windows
-     *        (optional).
-     * @return {Set}
-     *         A set of windows.
-     */
-    function getAllWindows(baseWindow) {
-      const windows = new Set();
-
-      const _getAllWindows = function(win) {
-        windows.add(win.wrappedJSObject);
-
-        for (let i = 0; i < win.length; i++) {
-          _getAllWindows(win[i]);
-        }
-      };
-      _getAllWindows(baseWindow);
-
-      return windows;
-    }
-
-    const windows = getAllWindows(content);
-    for (const win of windows) {
-      if (win.clear) {
-        await win.clear();
+  const browsingContexts = gBrowser.selectedBrowser.browsingContext.getAllBrowsingContextsInSubtree();
+  for (const browsingContext of browsingContexts) {
+    await SpecialPowers.spawn(browsingContext, [], async function() {
+      if (content.wrappedJSObject.clear) {
+        await content.wrappedJSObject.clear();
       }
-    }
-  });
+    });
+  }
 }
