@@ -706,5 +706,13 @@ TRRLoadInfo::SetLoadingEmbedderPolicy(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+TRRLoadInfo::GetUnstrippedURI(nsIURI** aURI) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetUnstrippedURI(nsIURI* aURI) { return NS_ERROR_NOT_IMPLEMENTED; }
+
 }  // namespace net
 }  // namespace mozilla

@@ -1372,4 +1372,10 @@ interface nsILoadInfo : nsISupports
    * element and it's an initial request.
    */
   [infallible] attribute boolean isMediaInitialRequest;
+
+  /**
+   * If this is non-null, this property holds the URI as it was before query
+   * stripping was performed.
+   */
+  attribute nsIURI unstrippedURI;
 };

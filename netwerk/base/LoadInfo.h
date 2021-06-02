@@ -222,7 +222,8 @@ class LoadInfo final : public nsILoadInfo {
       bool aIsInDevToolsContext, bool aParserCreatedScript,
       bool aHasStoragePermission, bool aIsMetaRefresh,
       uint32_t aRequestBlockingReason, nsINode* aLoadingContext,
-      nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy);
+      nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
+      nsIURI* aUnstrippedURI);
   LoadInfo(const LoadInfo& rhs);
 
   NS_IMETHOD GetRedirects(JSContext* aCx,
@@ -340,6 +341,8 @@ class LoadInfo final : public nsILoadInfo {
   // See https://wicg.github.io/cross-origin-embedder-policy/#corp-check.
   nsILoadInfo::CrossOriginEmbedderPolicy mLoadingEmbedderPolicy =
       nsILoadInfo::EMBEDDER_POLICY_NULL;
+
+  nsCOMPtr<nsIURI> mUnstrippedURI;
 };
 
 }  // namespace net
