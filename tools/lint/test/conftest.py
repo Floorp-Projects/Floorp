@@ -93,8 +93,17 @@ def run_setup(config):
     if "setup" not in config:
         return
 
+    log = logging.LoggerAdapter(
+        logger, {"lintname": config.get("name"), "pid": os.getpid()}
+    )
+
     func = findobject(config["setup"])
-    func(build.topsrcdir, virtualenv_manager=build.virtualenv_manager)
+    func(
+        build.topsrcdir,
+        virtualenv_manager=build.virtualenv_manager,
+        virtualenv_bin_path=build.virtualenv_manager.bin_path,
+        log=log,
+    )
 
 
 @pytest.fixture

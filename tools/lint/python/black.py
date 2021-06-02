@@ -114,11 +114,10 @@ def setup(root, **lintargs):
     log = lintargs["log"]
     virtualenv_bin_path = lintargs.get("virtualenv_bin_path")
     # Using `which` searches multiple directories and handles `.exe` on Windows.
-    binary = mozpath.normsep(
-        which("black", path=(virtualenv_bin_path, default_bindir()))
-    )
+    binary = which("black", path=(virtualenv_bin_path, default_bindir()))
 
     if binary and os.path.exists(binary):
+        binary = mozpath.normsep(binary)
         log.debug("Looking for black at {}".format(binary))
         version = get_black_version(binary)
         versions = [
