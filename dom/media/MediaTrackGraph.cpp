@@ -131,6 +131,16 @@ void NativeInputTrack::InitDataHolderIfNeeded() {
   }
 }
 
+Maybe<NativeInputTrack::BufferInfo> NativeInputTrack::GetInputBufferData() {
+  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  if (!mDataHolder) {
+    return Nothing();
+  }
+  return Some(BufferInfo{mDataHolder->mInputData.mBuffer,
+                         mDataHolder->mInputData.mFrames,
+                         mDataHolder->mInputData.mChannels});
+}
+
 void NativeInputTrack::NotifyOutputData(MediaTrackGraphImpl* aGraph,
                                         AudioDataValue* aBuffer, size_t aFrames,
                                         TrackRate aRate, uint32_t aChannels) {
