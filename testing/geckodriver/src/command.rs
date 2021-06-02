@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::logging;
-use base64;
 use hyper::Method;
 use serde::de::{self, Deserialize, Deserializer};
 use serde_json::{self, Value};
