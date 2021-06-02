@@ -324,6 +324,7 @@ add_task(async function clickLabel() {
       let loadPromise = BrowserTestUtils.browserLoaded(
         gBrowser.selectedBrowser
       );
+
       info("Performing click relative to index 3");
       await UrlbarTestUtils.promisePopupClose(window, () =>
         click(result3.element.row, { y: -2 })
@@ -331,12 +332,12 @@ add_task(async function clickLabel() {
       info("Waiting for load after performing click relative to index 3");
       await loadPromise;
       Assert.equal(gBrowser.currentURI.spec, url2, "Loaded URL at index 2");
-
       // Now do the search again.
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
         value: "test",
       });
+
       await checkLabels(MAX_RESULTS, {
         1: FIREFOX_SUGGEST_LABEL,
       });
