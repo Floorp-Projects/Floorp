@@ -37,12 +37,8 @@ loader.lazyRequireGetter(
  */
 var NON_ASCII = "[^\\x00-\\x7F]";
 var ESCAPE = "\\\\[^\n\r]";
-var FIRST_CHAR = ["[_a-z]", NON_ASCII, ESCAPE].join("|");
-var TRAILING_CHAR = ["[_a-z0-9-]", NON_ASCII, ESCAPE].join("|");
-var IS_VARIABLE_TOKEN = new RegExp(
-  `^--(${FIRST_CHAR})(${TRAILING_CHAR})*$`,
-  "i"
-);
+var VALID_CHAR = ["[_a-z0-9-]", NON_ASCII, ESCAPE].join("|");
+var IS_VARIABLE_TOKEN = new RegExp(`^--(${VALID_CHAR})*$`, "i");
 
 /**
  * The CssProperties front provides a mechanism to have a one-time asynchronous
