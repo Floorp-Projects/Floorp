@@ -595,7 +595,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes),
       mIsMediaRequest(rhs.mIsMediaRequest),
       mIsMediaInitialRequest(rhs.mIsMediaInitialRequest),
-      mLoadingEmbedderPolicy(rhs.mLoadingEmbedderPolicy) {}
+      mLoadingEmbedderPolicy(rhs.mLoadingEmbedderPolicy),
+      mUnstrippedURI(rhs.mUnstrippedURI) {}
 
 LoadInfo::LoadInfo(
     nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
@@ -635,7 +636,8 @@ LoadInfo::LoadInfo(
     bool aIsInDevToolsContext, bool aParserCreatedScript,
     bool aHasStoragePermission, bool aIsMetaRefresh,
     uint32_t aRequestBlockingReason, nsINode* aLoadingContext,
-    nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy)
+    nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
+    nsIURI* aUnstrippedURI)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(aPrincipalToInherit),
@@ -703,7 +705,8 @@ LoadInfo::LoadInfo(
       mIsFromProcessingFrameAttributes(false),
       mIsMediaRequest(false),
       mIsMediaInitialRequest(false),
-      mLoadingEmbedderPolicy(aLoadingEmbedderPolicy) {
+      mLoadingEmbedderPolicy(aLoadingEmbedderPolicy),
+      mUnstrippedURI(aUnstrippedURI) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal ||
              aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -1714,6 +1717,18 @@ LoadInfo::SetRequestBlockingReason(uint32_t aReason) {
 NS_IMETHODIMP
 LoadInfo::GetRequestBlockingReason(uint32_t* aReason) {
   *aReason = mRequestBlockingReason;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetUnstrippedURI(nsIURI** aURI) {
+  *aURI = do_AddRef(mUnstrippedURI).take();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetUnstrippedURI(nsIURI* aURI) {
+  mUnstrippedURI = aURI;
   return NS_OK;
 }
 
