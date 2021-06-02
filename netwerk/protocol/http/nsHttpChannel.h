@@ -362,6 +362,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] virtual nsresult SetupReplacementChannel(
       nsIURI*, nsIChannel*, bool preserveMethod,
       uint32_t redirectFlags) override;
+  void HandleAsyncRedirectToUnstrippedURI();
 
   // proxy specific methods
   [[nodiscard]] nsresult ProxyFailover();
