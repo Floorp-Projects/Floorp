@@ -145,7 +145,8 @@ nsresult nsCanvasFrame::CreateAnonymousContent(
       parent->RemoveChildNode(&anonContent->ContentNode(), false);
     }
 
-    mCustomContentContainer->AppendChildTo(&anonContent->ContentNode(), false);
+    mCustomContentContainer->AppendChildTo(&anonContent->ContentNode(), false,
+                                           IgnoreErrors());
   }
 
   // Create a popupgroup element for system privileged non-XUL documents to

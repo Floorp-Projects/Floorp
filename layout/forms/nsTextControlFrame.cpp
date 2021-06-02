@@ -346,7 +346,7 @@ already_AddRefed<Element> nsTextControlFrame::MakeAnonElement(
   }
 
   if (aParent) {
-    aParent->AppendChildTo(element, false);
+    aParent->AppendChildTo(element, false, IgnoreErrors());
   }
 
   return element.forget();
@@ -370,7 +370,7 @@ already_AddRefed<Element> nsTextControlFrame::MakeAnonDivWithTextNode(
       textNode->MarkAsMaybeMasked();
     }
   }
-  div->AppendChildTo(textNode, false);
+  div->AppendChildTo(textNode, false, IgnoreErrors());
   return div.forget();
 }
 
@@ -1203,7 +1203,7 @@ nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
       textNode->MarkAsMaybeMasked();
     }
 
-    mRootNode->AppendChildTo(textNode, aNotify);
+    mRootNode->AppendChildTo(textNode, aNotify, IgnoreErrors());
     textContent = textNode;
   } else {
     textContent = childContent->GetAsText();

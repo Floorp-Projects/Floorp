@@ -311,7 +311,7 @@ void SVGUseElement::UpdateShadowTree() {
     }
 
     if (newElement) {
-      shadow->AppendChildTo(newElement, /* aNotify = */ true);
+      shadow->AppendChildTo(newElement, /* aNotify = */ true, IgnoreErrors());
     }
   });
 

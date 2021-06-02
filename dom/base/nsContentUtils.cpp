@@ -5404,9 +5404,10 @@ nsresult nsContentUtils::SetNodeTextContent(nsIContent* aContent,
 
   textContent->SetText(aValue, true);
 
-  nsresult rv = aContent->AppendChildTo(textContent, true);
+  ErrorResult rv;
+  aContent->AppendChildTo(textContent, true, rv);
   mb.NodesAdded();
-  return rv;
+  return rv.StealNSResult();
 }
 
 static bool AppendNodeTextContentsRecurse(nsINode* aNode, nsAString& aResult,

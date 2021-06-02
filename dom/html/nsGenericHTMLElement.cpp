@@ -2810,7 +2810,7 @@ void nsGenericHTMLElement::SetInnerText(const nsAString& aValue) {
         RefPtr<nsTextNode> textContent = new (NodeInfo()->NodeInfoManager())
             nsTextNode(NodeInfo()->NodeInfoManager());
         textContent->SetText(str, true);
-        AppendChildTo(textContent, true);
+        AppendChildTo(textContent, true, IgnoreErrors());
       }
       if (s == end) {
         break;
@@ -2821,7 +2821,7 @@ void nsGenericHTMLElement::SetInnerText(const nsAString& aValue) {
               nsGkAtoms::br, nullptr, kNameSpaceID_XHTML, ELEMENT_NODE);
       auto* nim = ni->NodeInfoManager();
       RefPtr<HTMLBRElement> br = new (nim) HTMLBRElement(ni.forget());
-      AppendChildTo(br, true);
+      AppendChildTo(br, true, IgnoreErrors());
     } else {
       str.Append(*s);
     }

@@ -65,9 +65,12 @@ nsresult txMozillaTextOutput::endDocument(nsresult aResult) {
   RefPtr<nsTextNode> text = new (mDocument->NodeInfoManager())
       nsTextNode(mDocument->NodeInfoManager());
 
+  ErrorResult rv;
   text->SetText(mText, false);
-  nsresult rv = mTextParent->AppendChildTo(text, true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mTextParent->AppendChildTo(text, true, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
 
   // This should really be handled by Document::EndLoad
   if (mCreatedDocument) {
@@ -169,8 +172,11 @@ nsresult txMozillaTextOutput::createResultDocument(Document* aSourceDocument,
         mDocument->CreateElem(nsDependentAtomString(nsGkAtoms::result),
                               nsGkAtoms::transformiix, namespaceID);
 
-    rv = mDocument->AppendChildTo(mTextParent, true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    mDocument->AppendChildTo(mTextParent, true, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
   } else {
     RefPtr<Element> html, head, body;
     rv = createXHTMLElement(nsGkAtoms::html, getter_AddRefs(html));
@@ -179,14 +185,19 @@ nsresult txMozillaTextOutput::createResultDocument(Document* aSourceDocument,
     rv = createXHTMLElement(nsGkAtoms::head, getter_AddRefs(head));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = html->AppendChildTo(head, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    html->AppendChildTo(head, false, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
 
     rv = createXHTMLElement(nsGkAtoms::body, getter_AddRefs(body));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = html->AppendChildTo(body, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    html->AppendChildTo(body, false, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
 
     {
       RefPtr<Element> textParent;
@@ -199,11 +210,15 @@ nsresult txMozillaTextOutput::createResultDocument(Document* aSourceDocument,
                                            u"transformiixResult"_ns, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = body->AppendChildTo(mTextParent, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    body->AppendChildTo(mTextParent, false, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
 
-    rv = mDocument->AppendChildTo(html, true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mDocument->AppendChildTo(html, true, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
   }
 
   return NS_OK;

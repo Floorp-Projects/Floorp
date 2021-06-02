@@ -11,6 +11,7 @@
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla {
+class ErrorResult;
 class EventChainPreVisitor;
 namespace dom {
 
@@ -26,8 +27,8 @@ class HTMLOptGroupElement final : public nsGenericHTMLElement {
                                        nsGenericHTMLElement)
 
   // nsINode
-  virtual nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                                     bool aNotify) override;
+  virtual void InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
+                                 bool aNotify, ErrorResult& aRv) override;
   virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
 
   // nsIContent

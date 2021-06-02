@@ -1505,11 +1505,12 @@ static nsresult UpdateGlobalsInSubtree(nsIContent* aRoot) {
   return NS_OK;
 }
 
-nsresult nsINode::InsertChildBefore(nsIContent* aKid,
-                                    nsIContent* aChildToInsertBefore,
-                                    bool aNotify) {
+void nsINode::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
+                                bool aNotify, ErrorResult& aRv) {
   if (!IsContainerNode()) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    aRv.ThrowHierarchyRequestError(
+        "Parent is not a Document, DocumentFragment, or Element node.");
+    return;
   }
 
   MOZ_ASSERT(!aKid->GetParentNode(), "Inserting node that already has parent");
@@ -1523,22 +1524,16 @@ nsresult nsINode::InsertChildBefore(nsIContent* aKid,
   mozAutoDocUpdate updateBatch(GetComposedDoc(), aNotify);
 
   if (OwnerDoc() != aKid->OwnerDoc()) {
-    ErrorResult error;
-    AdoptNodeIntoOwnerDoc(this, aKid, error);
-
-    // Need to WouldReportJSException() if our callee can throw a JS
-    // exception (which it can) and we're neither propagating the
-    // error out nor unconditionally suppressing it.
-    error.WouldReportJSException();
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
+    AdoptNodeIntoOwnerDoc(this, aKid, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
     }
   }
 
-  if (!aChildToInsertBefore) {
+  if (!aBeforeThis) {
     AppendChildToChildList(aKid);
   } else {
-    InsertChildToChildList(aKid, aChildToInsertBefore);
+    InsertChildToChildList(aKid, aBeforeThis);
   }
 
   nsIContent* parent = IsContent() ? AsContent() : nullptr;
@@ -1546,16 +1541,16 @@ nsresult nsINode::InsertChildBefore(nsIContent* aKid,
   // XXXbz Do we even need this code anymore?
   bool wasInNACScope = ShouldUseNACScope(aKid);
   BindContext context(*this);
-  nsresult rv = aKid->BindToTree(context, *this);
-  if (NS_SUCCEEDED(rv) && !wasInNACScope && ShouldUseNACScope(aKid)) {
+  aRv = aKid->BindToTree(context, *this);
+  if (!aRv.Failed() && !wasInNACScope && ShouldUseNACScope(aKid)) {
     MOZ_ASSERT(ShouldUseNACScope(this),
                "Why does the kid need to use an the anonymous content scope?");
-    rv = UpdateGlobalsInSubtree(aKid);
+    aRv = UpdateGlobalsInSubtree(aKid);
   }
-  if (NS_FAILED(rv)) {
+  if (aRv.Failed()) {
     DisconnectChild(aKid);
     aKid->UnbindFromTree();
-    return rv;
+    return;
   }
 
   // Invalidate cached array of child nodes
@@ -1567,7 +1562,7 @@ nsresult nsINode::InsertChildBefore(nsIContent* aKid,
   if (aNotify) {
     // Note that we always want to call ContentInserted when things are added
     // as kids to documents
-    if (parent && !aChildToInsertBefore) {
+    if (parent && !aBeforeThis) {
       MutationObservers::NotifyContentAppended(parent, aKid);
     } else {
       MutationObservers::NotifyContentInserted(this, aKid);
@@ -1582,8 +1577,6 @@ nsresult nsINode::InsertChildBefore(nsIContent* aKid,
       (new AsyncEventDispatcher(aKid, mutation))->RunDOMEventWhenSafe();
     }
   }
-
-  return NS_OK;
 }
 
 nsIContent* nsINode::GetPreviousSibling() const {
@@ -2673,8 +2666,8 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     for (uint32_t i = 0; i < count; ++i) {
       // XXXbz how come no reparenting here?  That seems odd...
       // Insert the child.
-      aError = InsertChildBefore(fragChildren->ElementAt(i), nodeToInsertBefore,
-                                 !appending);
+      InsertChildBefore(fragChildren->ElementAt(i), nodeToInsertBefore,
+                        !appending, aError);
       if (aError.Failed()) {
         // Make sure to notify on any children that we did succeed to insert
         if (appending && i != 0) {
@@ -2716,7 +2709,7 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
                             : GetLastChild());
       mb.SetNextSibling(nodeToInsertBefore);
     }
-    aError = InsertChildBefore(newContent, nodeToInsertBefore, true);
+    InsertChildBefore(newContent, nodeToInsertBefore, true, aError);
     if (aError.Failed()) {
       return nullptr;
     }
@@ -3124,9 +3117,9 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
     if (aParent) {
       // If we're cloning we need to insert the cloned children into the cloned
       // parent.
-      rv = aParent->AppendChildTo(static_cast<nsIContent*>(clone.get()), false);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        aError.Throw(rv);
+      aParent->AppendChildTo(static_cast<nsIContent*>(clone.get()), false,
+                             aError);
+      if (NS_WARN_IF(aError.Failed())) {
         return nullptr;
       }
     } else if (aDeep && clone->IsDocument()) {
