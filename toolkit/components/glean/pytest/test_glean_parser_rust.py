@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import sys
 
+from expect_helper import expect
 
 # Shenanigans to import the rust outputter extension
 FOG_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir))
@@ -27,8 +28,9 @@ def test_all_metric_types():
     It generates Rust for a given test metrics.yaml and compares it byte-for-byte
     with an expected output Rust file.
     Expect it to be fragile.
-    To generate a new expected output file, copy the test yaml over the one in t/c/g,
-    run mach build, then copy the rust output from objdir/t/c/g/api/src/.
+    To generate new expected output files, set `UPDATE_EXPECT=1` when running the test suite:
+
+    UPDATE_EXPECT=1 mach test toolkit/components/glean/pytest
     """
 
     options = {"allow_reserved": False}
@@ -41,9 +43,9 @@ def test_all_metric_types():
     output_fd = io.StringIO()
     rust.output_rust(all_objs.value, output_fd, options)
 
-    with open(path.join(path.dirname(__file__), "metrics_test_output"), "r") as file:
-        EXPECTED_RUST = file.read()
-    assert output_fd.getvalue() == EXPECTED_RUST
+    expect(
+        path.join(path.dirname(__file__), "metrics_test_output"), output_fd.getvalue()
+    )
 
 
 def test_fake_pings():
@@ -51,8 +53,9 @@ def test_fake_pings():
     It generates Rust for pings_test.yaml, comparing it byte-for-byte
     with an expected output Rust file.
     Expect it to be fragile.
-    To generate a new expected output file, copy the test yaml over the one in t/c/g,
-    run mach build, then copy the rust output from objdir/t/c/g/api/src/.
+    To generate new expected output files, set `UPDATE_EXPECT=1` when running the test suite:
+
+    UPDATE_EXPECT=1 mach test toolkit/components/glean/pytest
     """
 
     options = {"allow_reserved": False}
@@ -65,9 +68,7 @@ def test_fake_pings():
     output_fd = io.StringIO()
     rust.output_rust(all_objs.value, output_fd, options)
 
-    with open(path.join(path.dirname(__file__), "pings_test_output"), "r") as file:
-        EXPECTED_RUST = file.read()
-    assert output_fd.getvalue() == EXPECTED_RUST
+    expect(path.join(path.dirname(__file__), "pings_test_output"), output_fd.getvalue())
 
 
 def test_expires_version():
