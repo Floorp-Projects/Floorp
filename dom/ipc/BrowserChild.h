@@ -759,12 +759,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   void UpdateRepeatedKeyEventEndTime(const WidgetKeyboardEvent& aEvent);
 
-  bool MaybeCoalesceWheelEvent(const WidgetWheelEvent& aEvent,
-                               const ScrollableLayerGuid& aGuid,
-                               const uint64_t& aInputBlockId,
-                               bool* aIsNextWheelEvent);
-
-  void MaybeDispatchCoalescedWheelEvent();
+  void DispatchCoalescedWheelEvent();
 
   /**
    * Dispatch aEvent on aEvent.mWidget.
