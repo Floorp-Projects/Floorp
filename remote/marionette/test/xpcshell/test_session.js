@@ -614,6 +614,7 @@ add_test(function test_Capabilities_fromJSON() {
     () => fromJSON({ "moz:webdriverClick": 1 }),
     /InvalidArgumentError/
   );
+  Assert.throws(() => fromJSON({ webSocketUrl: true }), /InvalidArgumentError/);
 
   run_next_test();
 });
