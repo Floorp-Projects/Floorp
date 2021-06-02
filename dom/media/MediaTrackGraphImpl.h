@@ -67,27 +67,6 @@ class NativeInputTrack : public ProcessedMediaTrack {
   // Other Graph Thread APIs
   void InitDataHolderIfNeeded();
 
-  struct BufferInfo {
-    AudioDataValue* mBuffer = nullptr;
-    size_t mFrames = 0;
-    uint32_t mChannels = 0;
-
-    void Set(const AudioDataValue* aBuffer, size_t aFrames,
-             uint32_t aChannels) {
-      mBuffer = const_cast<AudioDataValue*>(aBuffer);
-      mFrames = aFrames;
-      mChannels = aChannels;
-    }
-
-    void Clear() {
-      mBuffer = nullptr;
-      mFrames = 0;
-      mChannels = 0;
-    }
-  };
-  // TODO: Return data from GetData<AudioSegment>() instead
-  Maybe<BufferInfo> GetInputBufferData();
-
   // Any thread
   NativeInputTrack* AsNativeInputTrack() override { return this; }
 
@@ -99,10 +78,10 @@ class NativeInputTrack : public ProcessedMediaTrack {
   class AudioDataBuffers {
    public:
     AudioDataBuffers() = default;
-    void SetOutputData(const AudioDataValue* aBuffer, size_t aFrames,
-                       uint32_t aChannels);
-    void SetInputData(const AudioDataValue* aBuffer, size_t aFrames,
-                      uint32_t aChannels);
+    void SetOutputData(AudioDataValue* aBuffer, size_t aFrames,
+                       uint32_t aChannels, TrackRate aRate);
+    void SetInputData(AudioDataValue* aBuffer, size_t aFrames,
+                      uint32_t aChannels, TrackRate aRate);
 
     enum Scope : unsigned char {
       Input = 0x01,
@@ -110,15 +89,19 @@ class NativeInputTrack : public ProcessedMediaTrack {
     };
     void Clear(Scope aScope);
 
+    typedef AudioDataListenerInterface::BufferInfo BufferInfo;
     // Storing the audio output data coming from NotifyOutputData
-    BufferInfo mOutputData;
+    Maybe<BufferInfo> mOutputData;
     // Storing the audio input data coming from NotifyInputData
-    BufferInfo mInputData;
+    Maybe<BufferInfo> mInputData;
   };
 
   // Only accessed on the graph thread.
   // Storing the audio data coming from GraphDriver directly.
   Maybe<AudioDataBuffers> mDataHolder;
+
+  // Only accessed on the graph thread.
+  uint32_t mInputChannels = 0;
 
   // Only accessed on the main thread.
   // When this becomes zero, this NativeInputTrack is no longer needed.
