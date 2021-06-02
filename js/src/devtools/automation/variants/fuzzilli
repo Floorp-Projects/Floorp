@@ -1,7 +1,8 @@
 {
-    "configure-args": "--enable-js-fuzzilli --enable-gczeal --disable-jemalloc --disable-stdcxx-compat --enable-ctypes --enable-nspr-build --enable-rust-simd",
+    "configure-args": "--enable-js-fuzzilli --enable-fuzzing --enable-gczeal --disable-shared-js",
     "optimize": true,
     "debug": true,
+    "nspr": false,
     "compiler": "clang",
     "env": {
         "JITTEST_EXTRA_ARGS": "--jitflags=ion"
