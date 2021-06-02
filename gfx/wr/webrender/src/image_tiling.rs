@@ -305,8 +305,8 @@ pub fn tiles(
 
     // Size of regular tiles in layout space.
     let layout_tile_size = LayoutSize::new(
-        device_tile_size as f32 / image_rect.width() as f32 * prim_rect.width(),
-        device_tile_size as f32 / image_rect.height() as f32 * prim_rect.height(),
+        device_tile_size as f32 / image_rect.size.width as f32 * prim_rect.size.width,
+        device_tile_size as f32 / image_rect.size.height as f32 * prim_rect.size.height,
     );
 
     // The decomposition logic is exactly the same on each axis so we reduce
@@ -503,16 +503,16 @@ pub fn compute_tile_rect(
     tile: TileOffset,
 ) -> DeviceIntRect {
     let regular_tile_size = regular_tile_size as i32;
-    DeviceIntRect::from_origin_and_size(
-        point2(
+    DeviceIntRect {
+        origin: point2(
             compute_tile_origin_1d(image_rect.x_range(), regular_tile_size, tile.x as i32),
             compute_tile_origin_1d(image_rect.y_range(), regular_tile_size, tile.y as i32),
         ),
-        size2(
+        size: size2(
             compute_tile_size_1d(image_rect.x_range(), regular_tile_size, tile.x as i32),
             compute_tile_size_1d(image_rect.y_range(), regular_tile_size, tile.y as i32),
         ),
-    )
+    }
 }
 
 fn compute_tile_origin_1d(
@@ -600,10 +600,10 @@ pub fn compute_valid_tiles_if_bounds_change(
         }
     };
 
-    let left = prev_rect.min.x != new_rect.min.x;
-    let right = prev_rect.max.x != new_rect.max.x;
-    let top = prev_rect.min.y != new_rect.min.y;
-    let bottom = prev_rect.max.y != new_rect.max.y;
+    let left = prev_rect.min_x() != new_rect.min_x();
+    let right = prev_rect.max_x() != new_rect.max_x();
+    let top = prev_rect.min_y() != new_rect.min_y();
+    let bottom = prev_rect.max_y() != new_rect.max_y();
 
     if !left && !right && !top && !bottom {
         // Bounds have not changed.
@@ -617,10 +617,10 @@ pub fn compute_valid_tiles_if_bounds_change(
         .cast::<f32>()
         .scale(tw, th);
 
-    let min_x = if left { f32::ceil(tiles.min.x) } else { f32::floor(tiles.min.x) };
-    let min_y = if top { f32::ceil(tiles.min.y) } else { f32::floor(tiles.min.y) };
-    let max_x = if right { f32::floor(tiles.max.x) } else { f32::ceil(tiles.max.x) };
-    let max_y = if bottom { f32::floor(tiles.max.y) } else { f32::ceil(tiles.max.y) };
+    let min_x = if left { f32::ceil(tiles.min_x()) } else { f32::floor(tiles.min_x()) };
+    let min_y = if top { f32::ceil(tiles.min_y()) } else { f32::floor(tiles.min_y()) };
+    let max_x = if right { f32::floor(tiles.max_x()) } else { f32::ceil(tiles.max_x()) };
+    let max_y = if bottom { f32::floor(tiles.max_y()) } else { f32::ceil(tiles.max_y()) };
 
     Some(TileRange {
         origin: point2(min_x as i32, min_y as i32),
@@ -666,7 +666,7 @@ mod tests {
         let mut count = 0;
         checked_for_each_tile(&rect(0., 0., 1000., 1000.),
             &rect(75., 75., 400., 400.),
-            &rect(0, 0, 400, 400).to_box2d(),
+            &rect(0, 0, 400, 400),
             36,
             &mut |_tile_rect, _tile_offset, _tile_flags| {
                 count += 1;
@@ -680,7 +680,7 @@ mod tests {
         let mut count = 0;
         checked_for_each_tile(&rect(0., 0., 74., 74.),
             &rect(75., 75., 400., 400.),
-            &rect(0, 0, 400, 400).to_box2d(),
+            &rect(0, 0, 400, 400),
             36,
             &mut |_tile_rect, _tile_offset, _tile_flags| {
               count += 1;
@@ -795,22 +795,22 @@ mod tests {
     #[test]
     fn smaller_than_tile_size_at_origin() {
         let r = compute_tile_rect(
-            &rect(0, 0, 80, 80).to_box2d(),
+            &rect(0, 0, 80, 80),
             256,
             point2(0, 0),
         );
 
-        assert_eq!(r, rect(0, 0, 80, 80).to_box2d());
+        assert_eq!(r, rect(0, 0, 80, 80));
     }
 
     #[test]
     fn smaller_than_tile_size_with_offset() {
         let r = compute_tile_rect(
-            &rect(20, 20, 80, 80).to_box2d(),
+            &rect(20, 20, 80, 80),
             256,
             point2(0, 0),
         );
 
-        assert_eq!(r, rect(20, 20, 80, 80).to_box2d());
+        assert_eq!(r, rect(20, 20, 80, 80));
     }
 }

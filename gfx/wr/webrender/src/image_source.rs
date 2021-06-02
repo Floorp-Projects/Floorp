@@ -52,7 +52,8 @@ pub fn resolve_image(
                     let cache_item = CacheItem {
                         texture_id: TextureSource::External(deferred_resolve_index, image_buffer_kind),
                         uv_rect_handle: cache_handle,
-                        uv_rect: DeviceIntRect::from_size(
+                        uv_rect: DeviceIntRect::new(
+                            DeviceIntPoint::zero(),
                             image_properties.descriptor.size,
                         ),
                         user_data: [0.0; 4],

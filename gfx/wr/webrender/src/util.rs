@@ -128,7 +128,6 @@ impl<T> VecHelper<T> for Vec<T> {
 //           way the current spatial tree works.
 #[derive(Debug, Clone, Copy, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScaleOffset {
     pub scale: default::Vector2D<f32>,
     pub offset: default::Vector2D<f32>,
@@ -928,7 +927,7 @@ pub trait MaxRect {
 
 impl MaxRect for DeviceIntRect {
     fn max_rect() -> Self {
-        DeviceIntRect::from_origin_and_size(
+        DeviceIntRect::new(
             DeviceIntPoint::new(i32::MIN / 2, i32::MIN / 2),
             DeviceIntSize::new(i32::MAX, i32::MAX),
         )
@@ -1208,7 +1207,7 @@ pub fn raster_rect_to_device_pixels(
     device_pixel_scale: DevicePixelScale,
 ) -> DeviceRect {
     let world_rect = rect * Scale::new(1.0);
-    let device_rect = (world_rect * device_pixel_scale).to_box2d();
+    let device_rect = world_rect * device_pixel_scale;
     device_rect.round_out()
 }
 

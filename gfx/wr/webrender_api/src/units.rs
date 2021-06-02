@@ -25,13 +25,13 @@ use crate::image::DirtyRect;
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 pub struct DevicePixel;
 
-pub type DeviceIntRect = Box2D<i32, DevicePixel>;
+pub type DeviceIntRect = Rect<i32, DevicePixel>;
 pub type DeviceIntPoint = Point2D<i32, DevicePixel>;
 pub type DeviceIntSize = Size2D<i32, DevicePixel>;
 pub type DeviceIntLength = Length<i32, DevicePixel>;
 pub type DeviceIntSideOffsets = SideOffsets2D<i32, DevicePixel>;
 
-pub type DeviceRect = Box2D<f32, DevicePixel>;
+pub type DeviceRect = Rect<f32, DevicePixel>;
 pub type DeviceBox2D = Box2D<f32, DevicePixel>;
 pub type DevicePoint = Point2D<f32, DevicePixel>;
 pub type DeviceVector2D = Vector2D<f32, DevicePixel>;
@@ -45,7 +45,7 @@ pub struct FramebufferPixel;
 
 pub type FramebufferIntPoint = Point2D<i32, FramebufferPixel>;
 pub type FramebufferIntSize = Size2D<i32, FramebufferPixel>;
-pub type FramebufferIntRect = Box2D<i32, FramebufferPixel>;
+pub type FramebufferIntRect = Rect<i32, FramebufferPixel>;
 
 /// Geometry in the coordinate system of a Picture (intermediate
 /// surface) in physical pixels.
@@ -179,8 +179,8 @@ impl TexelRect {
 impl Into<TexelRect> for DeviceIntRect {
     fn into(self) -> TexelRect {
         TexelRect {
-            uv0: self.min.to_f32(),
-            uv1: self.max.to_f32(),
+            uv0: self.min().to_f32(),
+            uv1: self.max().to_f32(),
         }
     }
 }

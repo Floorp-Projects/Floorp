@@ -380,9 +380,9 @@ bool RenderCompositorOGLSWGL::TileOGL::Map(wr::DeviceIntRect aDirtyRect,
     gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPBO);
     size_t stride = mSurface->Stride();
     size_t offset =
-        stride * aValidRect.min.y + aValidRect.min.x * sizeof(uint32_t);
-    size_t length = stride * (aValidRect.height() - 1) +
-                    (aValidRect.width()) * sizeof(uint32_t);
+        stride * aValidRect.origin.y + aValidRect.origin.x * sizeof(uint32_t);
+    size_t length = stride * (aValidRect.size.height - 1) +
+                    aValidRect.size.width * sizeof(uint32_t);
     void* data = gl->fMapBufferRange(
         LOCAL_GL_PIXEL_UNPACK_BUFFER, offset, length,
         LOCAL_GL_MAP_WRITE_BIT | LOCAL_GL_MAP_INVALIDATE_BUFFER_BIT);
@@ -400,8 +400,8 @@ bool RenderCompositorOGLSWGL::TileOGL::Map(wr::DeviceIntRect aDirtyRect,
     }
     // Verify that we're not somehow using a PBOUnpackSurface.
     MOZ_ASSERT(map.mData != nullptr);
-    *aData = map.mData + aValidRect.min.y * map.mStride +
-             aValidRect.min.x * sizeof(uint32_t);
+    *aData = map.mData + aValidRect.origin.y * map.mStride +
+             aValidRect.origin.x * sizeof(uint32_t);
     *aStride = map.mStride;
   }
   return true;
