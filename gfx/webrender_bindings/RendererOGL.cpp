@@ -413,7 +413,7 @@ RenderTextureHost* RendererOGL::GetRenderTexture(
 }
 
 void RendererOGL::AccumulateMemoryReport(MemoryReport* aReport) {
-  wr_renderer_accumulate_memory_report(GetRenderer(), aReport, swgl());
+  wr_renderer_accumulate_memory_report(GetRenderer(), aReport);
 
   LayoutDeviceIntSize size = mCompositor->GetBufferSize();
 
