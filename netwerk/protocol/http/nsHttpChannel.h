@@ -447,12 +447,12 @@ class nsHttpChannel final : public HttpBaseChannel,
       nsHttpResponseHead* aResponseHead);
 
   /**
-   * A function to process a single security header (STS or PKP), assumes
-   * some basic sanity checks have been applied to the channel. Called
+   * A function to process HTTP Strict Transport Security (HSTS) headers.
+   * Some basic consistency checks have been applied to the channel. Called
    * from ProcessSecurityHeaders.
    */
-  [[nodiscard]] nsresult ProcessSingleSecurityHeader(
-      uint32_t aType, nsITransportSecurityInfo* aSecInfo, uint32_t aFlags);
+  [[nodiscard]] nsresult ProcessHSTSHeader(nsITransportSecurityInfo* aSecInfo,
+                                           uint32_t aFlags);
 
   void InvalidateCacheEntryForLocation(const char* location);
   void AssembleCacheKey(const char* spec, uint32_t postID, nsACString& key);
