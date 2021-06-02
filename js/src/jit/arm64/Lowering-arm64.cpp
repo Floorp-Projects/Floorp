@@ -396,10 +396,6 @@ void LIRGeneratorARM64::lowerWasmSelectI64(MWasmSelect* select) {
   defineInt64(new (alloc()) LWasmSelectI64(t, f, c), select);
 }
 
-void LIRGenerator::visitAbs(MAbs* ins) {
-  define(allocateAbs(ins, useRegisterAtStart(ins->input())), ins);
-}
-
 LTableSwitch* LIRGeneratorARM64::newLTableSwitch(const LAllocation& in,
                                                  const LDefinition& inputCopy,
                                                  MTableSwitch* tableswitch) {
