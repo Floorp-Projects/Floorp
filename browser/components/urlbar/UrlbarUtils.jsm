@@ -205,6 +205,15 @@ var UrlbarUtils = {
     "typed",
   ]),
 
+  // The favicon service stores icons for URLs with the following protocols.
+  PROTOCOLS_WITH_ICONS: [
+    "chrome:",
+    "moz-extension:",
+    "about:",
+    "http:",
+    "https:",
+  ],
+
   // Search mode objects corresponding to the local shortcuts in the view, in
   // order they appear.  Pref names are relative to the `browser.urlbar` branch.
   get LOCAL_SEARCH_MODES() {
@@ -619,6 +628,26 @@ var UrlbarUtils = {
         return 3;
     }
     return 1;
+  },
+
+  /**
+   * Gets a default icon for a URL.
+   * @param {string} url
+   * @returns {string} A URI pointing to an icon for `url`.
+   */
+  getIconForUrl(url) {
+    if (typeof url == "string") {
+      return UrlbarUtils.PROTOCOLS_WITH_ICONS.some(p => url.startsWith(p))
+        ? "page-icon:" + url
+        : UrlbarUtils.ICON.DEFAULT;
+    }
+    if (
+      url instanceof URL &&
+      UrlbarUtils.PROTOCOLS_WITH_ICONS.includes(url.protocol)
+    ) {
+      return "page-icon:" + url.href;
+    }
+    return UrlbarUtils.ICON.DEFAULT;
   },
 
   /**
