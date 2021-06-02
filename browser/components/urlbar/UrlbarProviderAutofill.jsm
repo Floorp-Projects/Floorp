@@ -27,10 +27,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
 const QUERYTYPE = {
-  FILTERED: 0,
   AUTOFILL_ORIGIN: 1,
   AUTOFILL_URL: 2,
-  ADAPTIVE: 3,
 };
 
 // `WITH` clause for the autofill queries.  autofill_frecency_threshold.value is
