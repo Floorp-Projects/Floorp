@@ -14,7 +14,6 @@ const MS_PER_DAY = 86400000; // 24 * 60 * 60 * 1000
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
 const QUERYTYPE_FILTERED = 0;
-const QUERYTYPE_ADAPTIVE = 3;
 
 // The default frecency value used when inserting matches with unknown frecency.
 const FRECENCY_DEFAULT = 1000;
@@ -107,28 +106,6 @@ const SQL_SWITCHTAB_QUERY = `SELECT :query_type, t.url, t.url, NULL, NULL, NULL,
                             NULL, NULL, NULL, t.open_count,
                             :matchBehavior, :searchBehavior)
    ORDER BY t.ROWID DESC
-   LIMIT :maxResults`;
-
-const SQL_ADAPTIVE_QUERY = `/* do not warn (bug 487789) */
-   SELECT :query_type, h.url, h.title, ${SQL_BOOKMARK_TAGS_FRAGMENT},
-          h.visit_count, h.typed, h.id, t.open_count, h.frecency
-   FROM (
-     SELECT ROUND(MAX(use_count) * (1 + (input = :search_string)), 1) AS rank,
-            place_id
-     FROM moz_inputhistory
-     WHERE input BETWEEN :search_string AND :search_string || X'FFFF'
-     GROUP BY place_id
-   ) AS i
-   JOIN moz_places h ON h.id = i.place_id
-   LEFT JOIN moz_openpages_temp t
-          ON t.url = h.url
-         AND t.userContextId = :userContextId
-   WHERE AUTOCOMPLETE_MATCH(NULL, h.url,
-                            IFNULL(btitle, h.title), tags,
-                            h.visit_count, h.typed, bookmarked,
-                            t.open_count,
-                            :matchBehavior, :searchBehavior)
-   ORDER BY rank DESC, h.frecency DESC
    LIMIT :maxResults`;
 
 // Getters
@@ -592,10 +569,6 @@ function Search(
   result.setDefaultIndex(-1);
   this._result = result;
 
-  // Used to limit the number of adaptive results.
-  this._adaptiveCount = 0;
-  this._extraAdaptiveRows = [];
-
   // Used to limit the number of remote tab results.
   this._extraRemoteTabRows = [];
 
@@ -762,14 +735,13 @@ Search.prototype = {
     // 2) inline completion from search engine resultDomains
     // 3) submission for the current search engine
     // 4) Places keywords
-    // 5) adaptive learning (this._adaptiveQuery)
-    // 6) open pages not supported by history (this._switchToTabQuery)
-    // 7) query based on match behavior
+    // 5) open pages not supported by history (this._switchToTabQuery)
+    // 6) query based on match behavior
     //
     // (4) only gets run if we get any filtered tokens, since if there are no
     // tokens, there is nothing to match.
     //
-    // (1) and (5) only get run if actions are enabled. When actions are
+    // (1) only runs if actions are enabled. When actions are
     // enabled, the first result is always a special result (resulting from one
     // of the queries between (1) and (4) inclusive). As such, the UI is
     // expected to auto-select the first result when actions are enabled. If the
@@ -830,17 +802,7 @@ Search.prototype = {
       }
     }
 
-    // Run the adaptive query first.
-    await conn.executeCached(
-      this._adaptiveQuery[0],
-      this._adaptiveQuery[1],
-      this._onResultRow.bind(this)
-    );
-    if (!this.pending) {
-      return;
-    }
-
-    // Then fetch remote tabs.
+    // Fetch remote tabs.
     if (this._enableActions && this.hasBehavior("openpage")) {
       await this._matchRemoteTabs();
       if (!this.pending) {
@@ -863,14 +825,6 @@ Search.prototype = {
       }
     }
 
-    // If we have some unused adaptive matches, add them now.
-    while (
-      this._extraAdaptiveRows.length &&
-      this._result.matchCount < this._maxResults
-    ) {
-      this._addFilteredQueryMatch(this._extraAdaptiveRows.shift());
-    }
-
     // If we have some unused remote tab matches, add them now.
     while (
       this._extraRemoteTabRows.length &&
@@ -887,7 +841,7 @@ Search.prototype = {
       this._counts[MATCH_TYPE.GENERAL] + this._counts[MATCH_TYPE.HEURISTIC];
     if (count < this._maxResults) {
       this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
-      let queries = [this._adaptiveQuery, this._searchQuery];
+      let queries = [this._searchQuery];
       if (this.hasBehavior("openpage")) {
         queries.unshift(this._switchToTabQuery);
       }
@@ -1215,9 +1169,6 @@ Search.prototype = {
   _onResultRow(row, cancel) {
     let queryType = row.getResultByIndex(QUERYINDEX_QUERYTYPE);
     switch (queryType) {
-      case QUERYTYPE_ADAPTIVE:
-        this._addAdaptiveQueryMatch(row);
-        break;
       case QUERYTYPE_FILTERED:
         this._addFilteredQueryMatch(row);
         break;
@@ -1629,26 +1580,6 @@ Search.prototype = {
     });
   },
 
-  // This is the same as _addFilteredQueryMatch, but it only returns a few
-  // results, caching the others. If at the end we don't find other results, we
-  // can add these.
-  _addAdaptiveQueryMatch(row) {
-    // We should only show filtered results in search mode.
-    if (this._searchModeEngine) {
-      return;
-    }
-    // Allow one quarter of the results to be adaptive results.
-    // Note: ideally adaptive results should have their own provider and the
-    // results muxer should decide what to show.  But that's too complex to
-    // support in the current code, so that's left for a future refactoring.
-    if (this._adaptiveCount < Math.ceil(this._maxResults / 4)) {
-      this._addFilteredQueryMatch(row);
-    } else {
-      this._extraAdaptiveRows.push(row);
-    }
-    this._adaptiveCount++;
-  },
-
   _addFilteredQueryMatch(row) {
     let placeId = row.getResultByIndex(QUERYINDEX_PLACEID);
     let url = row.getResultByIndex(QUERYINDEX_URL);
@@ -1849,27 +1780,6 @@ Search.prototype = {
         // We only want to search the tokens that we are left with - not the
         // original search string.
         searchString: this._keywordFilteredSearchString,
-        userContextId: this._userContextId,
-        maxResults: this._maxResults,
-      },
-    ];
-  },
-
-  /**
-   * Obtains the query to search for adaptive results.
-   *
-   * @return an array consisting of the correctly optimized query to search the
-   *         database with and an object containing the params to bound.
-   */
-  get _adaptiveQuery() {
-    return [
-      SQL_ADAPTIVE_QUERY,
-      {
-        parent: PlacesUtils.tagsFolderId,
-        search_string: this._searchString,
-        query_type: QUERYTYPE_ADAPTIVE,
-        matchBehavior: this._matchBehavior,
-        searchBehavior: this._behavior,
         userContextId: this._userContextId,
         maxResults: this._maxResults,
       },
