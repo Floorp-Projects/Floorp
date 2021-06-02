@@ -230,6 +230,7 @@ add_task(async function test_onProviderResultsRequested() {
               title: "Test remote_tab-tabs result",
               url: "https://example.com/remote_tab-tabs",
               device: "device",
+              lastUsed: 1621366890,
             },
           },
           {
@@ -327,6 +328,7 @@ add_task(async function test_onProviderResultsRequested() {
         url: "https://example.com/remote_tab-tabs",
         displayUrl: "example.com/remote_tab-tabs",
         device: "device",
+        lastUsed: 1621366890,
       },
     },
     {
