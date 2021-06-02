@@ -12,6 +12,7 @@ const Commands = {
     "devtools/shared/commands/inspected-window/inspected-window-command",
   inspectorCommand: "devtools/shared/commands/inspector/inspector-command",
   resourceCommand: "devtools/shared/commands/resource/resource-command",
+  scriptCommand: "devtools/shared/commands/script/script-command",
   targetCommand: "devtools/shared/commands/target/target-command",
   targetConfigurationCommand:
     "devtools/shared/commands/target-configuration/target-configuration-command",

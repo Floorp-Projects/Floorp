@@ -16,7 +16,6 @@ DIRS += [
 DevToolsModules(
     "browser-console-manager.js",
     "browser-console.js",
-    "commands.js",
     "constants.js",
     "panel.js",
     "service-container.js",

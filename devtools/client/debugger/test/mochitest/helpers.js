@@ -1995,11 +1995,11 @@ async function getDebuggerSplitConsole(dbg) {
 // string in the topmost frame.
 async function evaluateInTopFrame(dbg, text) {
   const threadFront = dbg.toolbox.target.threadFront;
-  const consoleFront = await dbg.toolbox.target.getFront("console");
   const { frames } = await threadFront.getFrames(0, 1);
   ok(frames.length == 1, "Got one frame");
-  const options = { thread: threadFront.actor, frameActor: frames[0].actorID };
-  const response = await consoleFront.evaluateJSAsync(text, options);
+  const response = await dbg.commands.scriptCommand.execute(text, {
+    frameActor: frames[0].actorID,
+  });
   return response.result.type == "undefined" ? undefined : response.result;
 }
 

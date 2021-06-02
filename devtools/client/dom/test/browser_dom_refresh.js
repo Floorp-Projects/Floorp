@@ -14,10 +14,17 @@ add_task(async function() {
   const { panel } = await addTestTab(TEST_PAGE_URL);
 
   // Create a new variable in the page scope and refresh the panel.
-  await evaluateJSAsync(panel, "var _b = 10");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.wrappedJSObject._b = 10;
+  });
+
   await refreshPanel(panel);
 
   // Verify that the variable is displayed now.
   const row = getRowByLabel(panel, "_b");
   ok(row, "New variable must be displayed");
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    delete content.wrappedJSObject._b;
+  });
 });

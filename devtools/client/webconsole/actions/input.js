@@ -68,7 +68,7 @@ async function getMappedExpression(hud, expression) {
 }
 
 function evaluateExpression(expression, from = "input") {
-  return async ({ dispatch, toolbox, webConsoleUI, hud, client }) => {
+  return async ({ dispatch, toolbox, webConsoleUI, hud, commands }) => {
     if (!expression) {
       expression = hud.getInputSelection() || hud.getInputValue();
     }
@@ -102,8 +102,8 @@ function evaluateExpression(expression, from = "input") {
     // we still need to pass the error response to onExpressionEvaluated.
     const onSettled = res => res;
 
-    const response = await client
-      .evaluateJSAsync(expression, {
+    const response = await commands.scriptCommand
+      .execute(expression, {
         frameActor: webConsoleUI.getFrameActor(),
         selectedNodeActor: webConsoleUI.getSelectedNodeActorID(),
         selectedTargetFront: toolbox && toolbox.getSelectedTargetFront(),
@@ -334,7 +334,14 @@ function setInputValue(value) {
  *                         the previous evaluation.
  */
 function terminalInputChanged(expression, force = false) {
-  return async ({ dispatch, webConsoleUI, hud, toolbox, client, getState }) => {
+  return async ({
+    dispatch,
+    webConsoleUI,
+    hud,
+    toolbox,
+    commands,
+    getState,
+  }) => {
     const prefs = getAllPrefs(getState());
     if (!prefs.eagerEvaluation) {
       return null;
@@ -370,7 +377,7 @@ function terminalInputChanged(expression, force = false) {
     let mapped;
     ({ expression, mapped } = await getMappedExpression(hud, expression));
 
-    const response = await client.evaluateJSAsync(expression, {
+    const response = await commands.scriptCommand.execute(expression, {
       frameActor: await webConsoleUI.getFrameActor(),
       selectedNodeActor: webConsoleUI.getSelectedNodeActorID(),
       selectedTargetFront: toolbox && toolbox.getSelectedTargetFront(),

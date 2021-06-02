@@ -368,7 +368,7 @@ class MarkupContextMenu {
       "temp" + i;
     }`;
 
-    const res = await hud.evaluateJSAsync(evalString, {
+    const res = await this.toolbox.commands.scriptCommand.execute(evalString, {
       selectedNodeActor: this.selection.nodeFront.actorID,
     });
     hud.setInputValue(res.result);

@@ -40,8 +40,6 @@ loader.lazyRequireGetter(
   "devtools/client/shared/redux/middleware/ignore",
   true
 );
-const ConsoleCommands = require("devtools/client/webconsole/commands.js");
-
 const ZoomKeys = require("devtools/client/shared/zoom-keys");
 
 const PREF_SIDEBAR_ENABLED = "devtools.webconsole.sidebarToggle";
@@ -161,10 +159,6 @@ class WebConsoleUI {
         // - `ConsoleCommands`, in order to set TargetCommand.targetFront which is wrapped by hud.currentTarget
         await this.hud.commands.targetCommand.startListening();
       }
-
-      this._consoleCommands = new ConsoleCommands({
-        commands: this.hud.commands,
-      });
 
       await this.wrapper.init();
 

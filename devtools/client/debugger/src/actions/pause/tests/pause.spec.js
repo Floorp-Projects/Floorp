@@ -24,7 +24,6 @@ const mockCommandClient = {
     }),
   stepOver: () => new Promise(_resolve => _resolve),
   evaluate: async () => {},
-  evaluateInFrame: async () => {},
   evaluateExpressions: async () => [],
   resume: async () => {},
   getFrameScopes: async frame => frame.scope,

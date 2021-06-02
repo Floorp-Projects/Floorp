@@ -8,6 +8,8 @@ add_task(async function() {
   await addTab("about:blank");
 
   info(`Open browser console with ctrl-shift-j`);
+  // we're using the browser console so we can check for error messages that would be
+  // caused by console code.
   const opened = waitForBrowserConsole();
   EventUtils.synthesizeKey("j", { accelKey: true, shiftKey: true }, window);
   const hud = await opened;
@@ -20,8 +22,8 @@ add_task(async function() {
   await onMessagesCleared;
 
   info(`Create a null variable`);
-  // Using the console front directly as we don't want to impact the UI state.
-  await hud.evaluateJSAsync(`globalThis.nullVar = null;`);
+  // Using the commands directly as we don't want to impact the UI state.
+  await hud.commands.scriptCommand.execute("globalThis.nullVar = null");
 
   info(`Check completion suggestions for "null"`);
   await setInputValueForAutocompletion(hud, "null");
@@ -67,5 +69,5 @@ add_task(async function() {
   );
 
   info(`Cleanup`);
-  await hud.evaluateJSAsync(`delete globalThis.nullVar;`);
+  await hud.commands.scriptCommand.execute("delete globalThis.nullVar");
 });
