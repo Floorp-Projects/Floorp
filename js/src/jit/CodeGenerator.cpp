@@ -6502,6 +6502,7 @@ bool CodeGenerator::generateBody() {
       columnNumber = current->mir()->columnIndex();
 #  endif
     }
+    JitSpew(JitSpew_Codegen, "--------------------------------");
     JitSpew(JitSpew_Codegen, "# block%zu %s:%zu:%u%s:", i,
             filename ? filename : "?", lineNumber, columnNumber,
             current->mir()->isLoopHeader() ? " (loop header)" : "");
@@ -6534,7 +6535,8 @@ bool CodeGenerator::generateBody() {
       }
 
 #ifdef JS_JITSPEW
-      JitSpewStart(JitSpew_Codegen, "# instruction %s", iter->opName());
+      JitSpewStart(JitSpew_Codegen, "                                # LIR=%s",
+                   iter->opName());
       if (const char* extra = iter->getExtraName()) {
         JitSpewCont(JitSpew_Codegen, ":%s", extra);
       }
