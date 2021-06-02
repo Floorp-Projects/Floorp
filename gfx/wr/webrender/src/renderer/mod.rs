@@ -110,6 +110,7 @@ use std::{
     cell::RefCell,
     collections::VecDeque,
     f32,
+    ffi::c_void,
     mem,
     num::NonZeroUsize,
     path::PathBuf,
@@ -5142,7 +5143,7 @@ impl Renderer {
     }
 
     /// Collects a memory report.
-    pub fn report_memory(&self) -> MemoryReport {
+    pub fn report_memory(&self, swgl: *mut c_void) -> MemoryReport {
         let mut report = MemoryReport::default();
 
         // GPU cache CPU memory.
@@ -5168,7 +5169,7 @@ impl Renderer {
         report += self.texture_upload_pbo_pool.report_memory();
 
         // Textures held internally within the device layer.
-        report += self.device.report_memory(self.size_of_ops.as_ref().unwrap());
+        report += self.device.report_memory(self.size_of_ops.as_ref().unwrap(), swgl);
 
         report
     }
