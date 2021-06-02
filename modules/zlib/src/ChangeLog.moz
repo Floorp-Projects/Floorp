@@ -67,3 +67,7 @@ Mozilla.org changes:
   Sync'ed with 1.2.11 release
   (keeping '#include "mozzconf.h"' in zconf.h)
   See bug #1328099
+
+- 28 May 2021
+  Add <unistd.h> because of the error: implicit declaration of function {lseek, read, write} is invalid in C99.
+  See bug #1701197

@@ -2202,7 +2202,8 @@ def linker_ldflags(linker, target, macos_sdk, sysroot_path, multiarch_dir):
         else:
             flags.append("-Wl,--sysroot=%s" % macos_sdk)
 
-    if sysroot_path and multiarch_dir:
+    # rpath-link is irrelevant to wasm, see for more info https://github.com/emscripten-core/emscripten/issues/11076.
+    if sysroot_path and multiarch_dir and target.os != "WASI":
         for d in ("lib", "usr/lib"):
             multiarch_lib_dir = os.path.join(sysroot_path, d, multiarch_dir)
             if os.path.exists(multiarch_lib_dir):
