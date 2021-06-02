@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
 
     async function test() {
       // Sanity check
-      is(checkHasAsyncKeyScrolled(false), false, "expected no async key scrolling before test");
+      is(checkHasAsyncKeyScrolled(), false, "expected no async key scrolling before test");
 
       // Send a key to initiate a page scroll to take us to the bottom of the
       // page. This scroll is done synchronously because APZ doesn't have
@@ -59,7 +59,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
       // the next key input or the default action won't occur.
       await promiseApzFlushedRepaints();
 
-      is(checkHasAsyncKeyScrolled(false), false, "expected no async key scrolling before KEY_Home dispatch");
+      is(checkHasAsyncKeyScrolled(), false, "expected no async key scrolling before KEY_Home dispatch");
 
       // This scroll should be asynchronous now that the focus state is up to date.
       let scrollTopPromise = new Promise(resolve => {
@@ -79,18 +79,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
 
       // Wait for APZ to settle and then check that async scrolling happened.
       await promiseApzFlushedRepaints();
-      is(checkHasAsyncKeyScrolled(true), true, "expected async key scrolling after test");
+      is(checkHasAsyncKeyScrolled(), true, "expected async key scrolling after test");
     }
 
-    function checkHasAsyncKeyScrolled(requirePaints) {
+    function checkHasAsyncKeyScrolled() {
       // Get the compositor-side test data from nsIDOMWindowUtils.
       var utils = SpecialPowers.getDOMWindowUtils(window);
       var compositorTestData = utils.getCompositorAPZTestData();
 
-      if (requirePaints) {
-        ok(compositorTestData.paints.length > 0,
-                      "expected at least one paint in compositor test data");
-      }
+      ok(compositorTestData.paints.length > 0, "expected at least one paint in compositor test data");
 
       // Get the sequence number of the last paint on the compositor side.
       // We do this before converting the APZ test data because the conversion
