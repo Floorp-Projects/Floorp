@@ -39,7 +39,7 @@ job-defaults:
     worker:
         artifacts:
             - name: public
-              path: /build/android-components/results
+              path: /builds/worker/artifacts
               type: directory
         docker-image: {in-tree: ui-tests}
         env:

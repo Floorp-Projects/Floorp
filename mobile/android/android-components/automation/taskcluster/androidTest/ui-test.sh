@@ -54,6 +54,8 @@ PATH_TEST="./automation/taskcluster/androidTest"
 FLANK_BIN="/builds/worker/test-tools/flank.jar"
 FLANK_CONF_ARM="${PATH_TEST}/flank-arm.yml"
 FLANK_CONF_X86="${PATH_TEST}/flank-x86.yml"
+ARTIFACT_DIR="/builds/worker/artifacts"
+RESULTS_DIR="${ARTIFACT_DIR}/results"
 
 echo
 echo "ACTIVATE SERVICE ACCT"
@@ -116,14 +118,9 @@ function failure_check() {
     fi
 
     echo
-    echo "COPY ARTIFACTS"
-    echo
-    cp -r ./results /builds/worker/artifacts
-
-    echo
     echo "RESULTS"
     echo
-    ls -la ./results
+    ls -la "${RESULTS_DIR}"
     echo
     echo
 }
@@ -131,7 +128,7 @@ function failure_check() {
 echo
 echo "EXECUTE TEST(S)"
 echo
-$JAVA_BIN -jar $FLANK_BIN android run --config=$flank_template --max-test-shards=$num_shards --app=$APK_APP --test=$APK_TEST --project=$GOOGLE_PROJECT
+$JAVA_BIN -jar $FLANK_BIN android run --config=$flank_template --max-test-shards=$num_shards --app=$APK_APP --test=$APK_TEST --project=$GOOGLE_PROJECT --local-result-dir="${RESULTS_DIR}"
 exitcode=$?
 
 failure_check
