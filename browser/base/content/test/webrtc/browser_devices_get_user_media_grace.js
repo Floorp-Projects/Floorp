@@ -176,15 +176,7 @@ var gTests = [
       await allow(true, true);
       await closeStream();
 
-      info("Reload through the page");
-      await disableObserverVerification();
-      let reloaded = BrowserTestUtils.browserLoaded(browser);
-      await SpecialPowers.spawn(browser, [], () =>
-        content.document.location.reload()
-      );
-      await reloaded;
-      await enableObserverVerification();
-
+      await reloadFromContent();
       info(
         "After page reload, gUM(camera+mic) returns a stream " +
           "without prompting within grace period."
@@ -193,17 +185,7 @@ var gTests = [
       await noPrompt(true, true);
       await closeStream();
 
-      info("Reload as a user");
-      let reloadButton = document.getElementById("reload-button");
-      await disableObserverVerification();
-      await TestUtils.waitForCondition(() => {
-        return !reloadButton.disabled;
-      });
-      reloaded = BrowserTestUtils.browserLoaded(browser);
-      EventUtils.synthesizeMouseAtCenter(reloadButton, {});
-      await reloaded;
-      await enableObserverVerification();
-
+      await reloadAsUser();
       info(
         "After user page reload, gUM(camera+mic) returns a stream " +
           "without prompting within grace period."
