@@ -61,6 +61,7 @@ var UrlbarUtils = {
     HEURISTIC_TEST: "heuristicTest",
     HEURISTIC_TOKEN_ALIAS_ENGINE: "heuristicTokenAliasEngine",
     HEURISTIC_UNIFIED_COMPLETE: "heuristicUnifiedComplete",
+    INPUT_HISTORY: "inputHistory",
     OMNIBOX: "extension",
     REMOTE_SUGGESTION: "remoteSuggestion",
     SUGGESTED_INDEX: "suggestedIndex",
@@ -520,6 +521,14 @@ var UrlbarUtils = {
       );
       return UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK;
     }
+
+    switch (result.providerName) {
+      case "InputHistory":
+        return UrlbarUtils.RESULT_GROUP.INPUT_HISTORY;
+      default:
+        break;
+    }
+
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.SEARCH:
         if (result.source == UrlbarUtils.RESULT_SOURCE.HISTORY) {

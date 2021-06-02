@@ -336,7 +336,18 @@ function makeResultBuckets({ showSearchSuggestionsFirst }) {
       },
       // general
       {
-        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+        children: [
+          {
+            maxResultCount: 3,
+            group: UrlbarUtils.RESULT_GROUP.INPUT_HISTORY,
+          },
+          {
+            group: UrlbarUtils.RESULT_GROUP.GENERAL,
+          },
+          {
+            group: UrlbarUtils.RESULT_GROUP.INPUT_HISTORY,
+          },
+        ],
       },
     ],
   };

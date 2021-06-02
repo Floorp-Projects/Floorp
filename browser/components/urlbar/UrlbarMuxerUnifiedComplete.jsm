@@ -422,15 +422,20 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         }
       );
       let topPrefixData = state.strippedUrlToTopPrefixAndTitle.get(strippedUrl);
-      // We don't expect completely identical URLs in the results at this point,
-      // so if the prefixes are the same, then we're deduping a result against
+      // If the condition below is not met, we are deduping a result against
       // itself.
-      if (topPrefixData && prefix != topPrefixData.prefix) {
+      if (
+        topPrefixData &&
+        (prefix != topPrefixData.prefix ||
+          result.providerName != topPrefixData.providerName)
+      ) {
         let prefixRank = UrlbarUtils.getPrefixRank(prefix);
         if (
-          prefixRank < topPrefixData.rank &&
-          (prefix.endsWith("www.") == topPrefixData.prefix.endsWith("www.") ||
-            result.payload?.title == topPrefixData.title)
+          (prefixRank < topPrefixData.rank &&
+            (prefix.endsWith("www.") == topPrefixData.prefix.endsWith("www.") ||
+              result.payload?.title == topPrefixData.title)) ||
+          (prefix == topPrefixData.prefix &&
+            result.providerName != topPrefixData.providerName)
         ) {
           return false;
         }
@@ -634,11 +639,12 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       let topPrefixData = state.strippedUrlToTopPrefixAndTitle.get(strippedUrl);
       let topPrefixRank = topPrefixData ? topPrefixData.rank : -1;
       if (topPrefixRank < prefixRank) {
-        // strippedUrl => { prefix, title, rank }
+        // strippedUrl => { prefix, title, rank, providerName }
         state.strippedUrlToTopPrefixAndTitle.set(strippedUrl, {
           prefix,
           title: result.payload.title,
           rank: prefixRank,
+          providerName: result.providerName,
         });
       }
     }

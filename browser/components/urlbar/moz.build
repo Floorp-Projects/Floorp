@@ -21,6 +21,7 @@ EXTRA_JS_MODULES += [
     "UrlbarProviderCalculator.jsm",
     "UrlbarProviderExtension.jsm",
     "UrlbarProviderHeuristicFallback.jsm",
+    "UrlbarProviderInputHistory.jsm",
     "UrlbarProviderInterventions.jsm",
     "UrlbarProviderOmnibox.jsm",
     "UrlbarProviderOpenTabs.jsm",
