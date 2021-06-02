@@ -291,7 +291,7 @@ add_task(async function test_remote_tab_result() {
     .stub(SyncedTabs._internal, "getTabClients")
     .callsFake(() => Promise.resolve(Cu.cloneInto([REMOTE_TAB], {})));
 
-  // Reset internal cache in PlacesRemoteTabsAutocompleteProvider.
+  // Reset internal cache in UrlbarProviderRemoteTabs.
   Services.obs.notifyObservers(null, "weave:engine:sync:finish", "tabs");
 
   registerCleanupFunction(async function() {
