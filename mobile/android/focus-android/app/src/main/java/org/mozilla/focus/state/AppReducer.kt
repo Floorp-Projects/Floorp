@@ -179,7 +179,7 @@ private fun navigateUp(state: AppState, action: AppAction.NavigateUp): AppState 
         Screen.Settings.Page.SearchRemove -> Screen.Settings(page = Screen.Settings.Page.SearchList)
         Screen.Settings.Page.SearchAdd -> Screen.Settings(page = Screen.Settings.Page.SearchList)
         Screen.Settings.Page.SearchAutocomplete -> Screen.Settings(page = Screen.Settings.Page.Search)
-        Screen.Settings.Page.SearchAutocompleteList -> Screen.Settings(page = Screen.Settings.Page.Search)
+        Screen.Settings.Page.SearchAutocompleteList -> Screen.Settings(page = Screen.Settings.Page.SearchAutocomplete)
 
         Screen.Settings.Page.SearchAutocompleteAdd -> Screen.Settings(
             page = Screen.Settings.Page.SearchAutocompleteList
