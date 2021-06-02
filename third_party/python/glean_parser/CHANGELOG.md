@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+## 3.4.0 (2021-05-28)
+
+- Add missing import for Kotlin code ([#339](https://github.com/mozilla/glean_parser/pull/341))
+- Use a plain Kotlin type in the generated interface implementation ([#339](https://github.com/mozilla/glean_parser/pull/341))
+- Generate additional generics for event metrics ([#339](https://github.com/mozilla/glean_parser/pull/341))
+- For Kotlin skip generating `GleanBuildInfo.kt` when requested (with `with_buildinfo=false`) ([#341](https://github.com/mozilla/glean_parser/pull/341))
+
+## 3.3.2 (2021-05-18)
+
+- Fix another bug in the Swift code generation when generating extra keys ([#334](https://github.com/mozilla/glean_parser/pull/334))
+
+## 3.3.1 (2021-05-18)
+
+- Fix Swift code generation bug for pings ([#333](https://github.com/mozilla/glean_parser/pull/333))
+
+## 3.3.0 (2021-05-18)
+
+- Generate new event API construct ([#321](https://github.com/mozilla/glean_parser/pull/321))
+
 ## 3.2.0 (2021-04-28)
 
 - Add option to add extra introductory text to generated markdown ([#298](https://github.com/mozilla/glean_parser/pull/298))

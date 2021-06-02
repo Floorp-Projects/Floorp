@@ -54,7 +54,7 @@ commands:
                     # being available to pip on all of the platforms we need to
                     # support, so we need to make sure the dependencies are all
                     # pure Python or provide pre-built wheels.
-                    command: CC=broken_compiler python setup.py install --user
+                    command: CC=broken_compiler pip install . --user
             - run:
                     name: test
                     command: make test
