@@ -89,11 +89,12 @@ async function initBrowserToolboxTask({
   const client = new DevToolsClient(transport);
   await client.connect();
 
-  ok(true, "Connected");
-
   const descriptorFront = await client.mainRoot.getMainProcess();
   const target = await descriptorFront.getTarget();
   const consoleFront = await target.getFront("console");
+
+  ok(true, "Connected");
+
   const preferenceFront = await client.mainRoot.getFront("preference");
 
   if (enableContentMessages) {
@@ -136,8 +137,14 @@ async function initBrowserToolboxTask({
     },
   });
 
+  async function evaluateExpression(expression, options = {}) {
+    const onEvaluationResult = consoleFront.once("evaluationResult");
+    await consoleFront.evaluateJSAsync({ text: expression, ...options });
+    return onEvaluationResult;
+  }
+
   async function spawn(arg, fn) {
-    const rv = await consoleFront.evaluateJSAsync(`(${fn})(${arg})`, {
+    const rv = await evaluateExpression(`(${fn})(${arg})`, {
       mapped: { await: true },
     });
     if (rv.exception) {
@@ -150,12 +157,12 @@ async function initBrowserToolboxTask({
 
   async function importFunctions(functions) {
     for (const [key, fn] of Object.entries(functions)) {
-      await consoleFront.evaluateJSAsync(`this.${key} = ${fn}`);
+      await evaluateExpression(`this.${key} = ${fn}`);
     }
   }
 
   async function importScript(script) {
-    const response = await consoleFront.evaluateJSAsync(script);
+    const response = await evaluateExpression(script);
     if (response.hasException) {
       ok(
         false,
@@ -167,7 +174,7 @@ async function initBrowserToolboxTask({
 
   async function destroy() {
     const closePromise = process._dbgProcess.wait();
-    consoleFront.evaluateJSAsync("gToolbox.destroy()").catch(e => {
+    evaluateExpression("gToolbox.destroy()").catch(e => {
       // Ignore connection close as the toolbox destroy may destroy
       // everything quickly enough so that evaluate request is still pending
       if (!e.message.includes("Connection closed")) {

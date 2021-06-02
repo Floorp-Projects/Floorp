@@ -9,17 +9,14 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, targetFront, debuggee }) => {
+  threadFrontTest(async ({ commands, threadFront }) => {
     dumpn("Evaluating test code and waiting for first debugger statement");
 
-    const consoleFront = await targetFront.getFront("console");
-    consoleFront.evaluateJSAsync(
-      `(function(){
+    commands.scriptCommand.execute(`(function(){
         debugger;
         var a = 1;
         var b = 2;
-      })();`
-    );
+      })();`);
 
     await waitForEvent(threadFront, "paused");
     const packet = await stepOver(threadFront);

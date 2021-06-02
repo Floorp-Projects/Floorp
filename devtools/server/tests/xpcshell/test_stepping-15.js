@@ -15,13 +15,12 @@ async function invokeAndPause({ global, threadFront }, expression, url) {
   );
 }
 add_task(
-  threadFrontTest(async ({ threadFront, targetFront, debuggee }) => {
-    const consoleFront = await targetFront.getFront("console");
+  threadFrontTest(async ({ commands, threadFront, debuggee }) => {
     const dbg = { global: debuggee, threadFront };
 
     // Test stepping from a blackboxed location
     async function testStepping(action, expectedLine) {
-      consoleFront.evaluateJSAsync(`outermost()`);
+      commands.scriptCommand.execute(`outermost()`);
       await waitForPause(threadFront);
       await blackBox(blackboxedSourceFront);
       const packet = await action(threadFront);

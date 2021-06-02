@@ -9,11 +9,9 @@ Tests that removing a watchpoint does not change the value of the property that 
 */
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, targetFront }) => {
+  threadFrontTest(async ({ commands, threadFront, debuggee }) => {
     async function evaluateJS(input) {
-      const consoleFront = await targetFront.getFront("console");
-      const { result } = await consoleFront.evaluateJSAsync(input, {
-        thread: threadFront.actor,
+      const { result } = await commands.scriptCommand.execute(input, {
         frameActor: packet.frame.actorID,
       });
       return result;
@@ -28,7 +26,7 @@ add_task(
                     obj.a = 2;                        // 4
                     debugger;                         // 5
                   }                                   //
-            
+
                   stopMe({a: 1})`,
         debuggee,
         "1.8",

@@ -8,6 +8,9 @@ const { DevToolsClient } = require("devtools/client/devtools-client");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { Toolbox } = require("devtools/client/framework/toolbox");
+const {
+  CommandsFactory,
+} = require("devtools/shared/commands/commands-factory");
 
 async function setupToolboxTest(extensionId) {
   DevToolsServer.init();
@@ -15,8 +18,12 @@ async function setupToolboxTest(extensionId) {
   const transport = DevToolsServer.connectPipe();
   const client = new DevToolsClient(transport);
   await client.connect();
-  const addonFront = await client.mainRoot.getAddon({ id: extensionId });
-  const toolbox = await gDevTools.showToolbox(addonFront, {
+
+  const commands = await CommandsFactory.forAddon(extensionId);
+  await commands.targetCommand.startListening();
+  const addonDescriptor = commands.descriptorFront;
+
+  const toolbox = await gDevTools.showToolbox(addonDescriptor, {
     hostType: Toolbox.HostType.WINDOW,
   });
 
@@ -27,15 +34,15 @@ async function setupToolboxTest(extensionId) {
     }
   }
 
-  const consoleFront = await toolbox.target.getFront("console");
-
   const netmonitor = await toolbox.selectTool("netmonitor");
 
   const expectedURL = "http://mochi.test:8888/?test_netmonitor=1";
 
   // Call a function defined in the target extension to make it
   // fetch from an expected http url.
-  await consoleFront.evaluateJSAsync(`doFetchHTTPRequest("${expectedURL}");`);
+  await toolbox.commands.scriptCommand.execute(
+    `doFetchHTTPRequest("${expectedURL}");`
+  );
 
   await waitFor(() => {
     return !netmonitor.panelWin.document.querySelector(
@@ -65,7 +72,7 @@ async function setupToolboxTest(extensionId) {
 
   // Call a function defined in the target extension to make assertions
   // on the network requests collected by the netmonitor panel.
-  await consoleFront.evaluateJSAsync(
+  await toolbox.commands.scriptCommand.execute(
     `testNetworkRequestReceived(${JSON.stringify(requests)});`
   );
 

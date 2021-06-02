@@ -8,9 +8,8 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, targetFront, debuggee }) => {
-    const consoleFront = await targetFront.getFront("console");
-    await consoleFront.evaluateJSAsync(`
+  threadFrontTest(async ({ commands }) => {
+    await commands.scriptCommand.execute(`
       function fib(n) {
         if (n == 1 || n == 0) {
           return 1;
@@ -20,12 +19,12 @@ add_task(
       }
     `);
 
-    const normalResult = await consoleFront.evaluateJSAsync("fib(1)", {
+    const normalResult = await commands.scriptCommand.execute("fib(1)", {
       eager: true,
     });
     Assert.equal(normalResult.result, 1, "normal eval");
 
-    const timeoutResult = await consoleFront.evaluateJSAsync("fib(100)", {
+    const timeoutResult = await commands.scriptCommand.execute("fib(100)", {
       eager: true,
     });
     Assert.equal(typeof timeoutResult.result, "object", "timeout eval");
