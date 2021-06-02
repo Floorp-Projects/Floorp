@@ -26,6 +26,7 @@
             android:text="@string/credit_cards_card_number"
             android:textColor="?primaryText"
             android:textSize="12sp"
+            android:labelFor="@id/card_number_input"
             app:fontFamily="@font/metropolis_semibold" />
 
         <com.google.android.material.textfield.TextInputLayout
@@ -67,6 +68,7 @@
             android:text="@string/credit_cards_name_on_card"
             android:textColor="?primaryText"
             android:textSize="12sp"
+            android:labelFor="@id/name_on_card_input"
             app:fontFamily="@font/metropolis_semibold" />
 
         <com.google.android.material.textfield.TextInputLayout
