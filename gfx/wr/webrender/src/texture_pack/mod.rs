@@ -232,7 +232,7 @@ impl AtlasAllocator for BucketedShelfAllocator {
 
     fn allocate(&mut self, size: DeviceIntSize) -> Option<(AllocId, DeviceIntRect)> {
         self.allocate(size.to_untyped()).map(|alloc| {
-            (AllocId(alloc.id.serialize()), alloc.rectangle.to_rect().cast_unit())
+            (AllocId(alloc.id.serialize()), alloc.rectangle.cast_unit())
         })
     }
 
@@ -262,7 +262,7 @@ impl AtlasAllocator for ShelfAllocator {
 
     fn allocate(&mut self, size: DeviceIntSize) -> Option<(AllocId, DeviceIntRect)> {
         self.allocate(size.to_untyped()).map(|alloc| {
-            (AllocId(alloc.id.serialize()), alloc.rectangle.to_rect().cast_unit())
+            (AllocId(alloc.id.serialize()), alloc.rectangle.cast_unit())
         })
     }
 

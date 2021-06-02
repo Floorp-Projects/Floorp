@@ -966,7 +966,7 @@ impl<'a> ReftestHarness<'a> {
         );
 
         // taking the bottom left sub-rectangle
-        let rect = FramebufferIntRect::new(
+        let rect = FramebufferIntRect::from_origin_and_size(
             FramebufferIntPoint::new(0, window_size.height - size.height),
             FramebufferIntSize::new(size.width, size.height),
         );
