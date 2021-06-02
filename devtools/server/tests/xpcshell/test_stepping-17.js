@@ -8,9 +8,7 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, targetFront, debuggee }) => {
-    const consoleFront = await targetFront.getFront("console");
-
+  threadFrontTest(async ({ commands, threadFront, debuggee }) => {
     Cu.evalInSandbox(
       `function blackboxed(callback) { return () => callback(); }`,
       debuggee,
@@ -26,13 +24,11 @@ add_task(
     blackBox(blackboxedSourceFront);
 
     const testStepping = async function(wrapperName, stepHandler, message) {
-      consoleFront.evaluateJSAsync(
-        `(function () {
+      commands.scriptCommand.execute(`(function () {
           const p = Promise.resolve();
           p.then(${wrapperName}(() => { debugger; }))
           .then(${wrapperName}(() => { }));
-        })();`
-      );
+        })();`);
 
       await waitForEvent(threadFront, "paused");
       const step = await stepHandler(threadFront);
@@ -50,8 +46,7 @@ add_task(
     await testStepping("", stepOut, "Step out on the outermost frame");
     await testStepping("blackboxed", stepOut, "Step out with blackboxing");
 
-    consoleFront.evaluateJSAsync(
-      `(async function () {
+    commands.scriptCommand.execute(`(async function () {
         const p = Promise.resolve();
         const p2 = p.then(() => {
           debugger;
@@ -62,8 +57,7 @@ add_task(
         const result = await p2;
         return result;
       })();
-      `
-    );
+      `);
 
     await waitForEvent(threadFront, "paused");
     await stepOver(threadFront);

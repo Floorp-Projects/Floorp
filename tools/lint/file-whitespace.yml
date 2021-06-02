@@ -24,7 +24,6 @@ file-whitespace:
         # Excluded because tests were failing unexpectedly
         - devtools/client/styleeditor/test/sync_with_csp.css
         - devtools/client/webconsole/test/browser/test-message-categories-css-parser.css
-        - devtools/shared/webconsole/test/chrome/test_jsterm.html
         - devtools/shared/webconsole/test/chrome/test_object_actor_native_getters.html
         - docshell/base/crashtests
         - docshell/test

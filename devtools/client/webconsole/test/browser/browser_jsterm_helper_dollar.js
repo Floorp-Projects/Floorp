@@ -42,4 +42,12 @@ add_task(async function() {
 
   message = await executeAndWaitForMessage(hud, "$('div')", "null", ".result");
   ok(message, "`$('div')` does return null");
+
+  message = await executeAndWaitForMessage(
+    hud,
+    "$(':foo')",
+    "':foo' is not a valid selector",
+    ".error"
+  );
+  ok(message, "`$(':foo')` returns an error message");
 });

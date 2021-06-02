@@ -24,17 +24,14 @@ add_task(
 
 // Ensure that we advance to the next line when we
 // step to a debugger statement and resume.
-async function testDebuggerStatements({ threadFront, targetFront }) {
-  const consoleFront = await targetFront.getFront("console");
-  consoleFront.evaluateJSAsync(
-    `function foo(stop) {
+async function testDebuggerStatements({ commands, threadFront }) {
+  commands.scriptCommand.execute(`function foo(stop) {
       debugger;
       debugger;
       debugger;
     }
     foo();
-    //# sourceURL=http://example.com/code.js`
-  );
+    //# sourceURL=http://example.com/code.js`);
 
   await performActions(threadFront, [
     [
@@ -57,20 +54,14 @@ async function testDebuggerStatements({ threadFront, targetFront }) {
 
 // Ensure that we advance to the next line when we hit a breakpoint
 // on a line with a debugger statement and resume.
-async function testBreakpointsAndDebuggerStatements({
-  threadFront,
-  targetFront,
-}) {
-  const consoleFront = await targetFront.getFront("console");
-  consoleFront.evaluateJSAsync(
-    `function foo(stop) {
+async function testBreakpointsAndDebuggerStatements({ commands, threadFront }) {
+  commands.scriptCommand.execute(`function foo(stop) {
       debugger;
       debugger;
       debugger;
     }
     foo();
-    //# sourceURL=http://example.com/testBreakpointsAndDebuggerStatements.js`
-  );
+    //# sourceURL=http://example.com/testBreakpointsAndDebuggerStatements.js`);
 
   threadFront.setBreakpoint(
     {
@@ -101,18 +92,15 @@ async function testBreakpointsAndDebuggerStatements({
 
 // Ensure that we advance to the next line when we step to
 // a line with a breakpoint and resume.
-async function testBreakpoints({ threadFront, targetFront }) {
-  const consoleFront = await targetFront.getFront("console");
-  consoleFront.evaluateJSAsync(
-    `function foo(stop) {
+async function testBreakpoints({ commands, threadFront }) {
+  commands.scriptCommand.execute(`function foo(stop) {
       debugger;
       a();
       debugger;
     }
     function a() {}
     foo();
-    //# sourceURL=http://example.com/testBreakpoints.js`
-  );
+    //# sourceURL=http://example.com/testBreakpoints.js`);
 
   threadFront.setBreakpoint(
     { sourceUrl: "http://example.com/testBreakpoints.js", line: 3, column: 6 },
@@ -136,10 +124,8 @@ async function testBreakpoints({ threadFront, targetFront }) {
 
 // Ensure that we advance to the next line when we step to
 // a line with a breakpoint and resume.
-async function testLoops({ threadFront, targetFront }) {
-  const consoleFront = await targetFront.getFront("console");
-  consoleFront.evaluateJSAsync(
-    `function foo(stop) {
+async function testLoops({ commands, threadFront }) {
+  commands.scriptCommand.execute(`function foo(stop) {
       let i = 0;
       debugger;
       while (i++ < 2) {
@@ -148,8 +134,7 @@ async function testLoops({ threadFront, targetFront }) {
       debugger;
     }
     foo();
-    //# sourceURL=http://example.com/testLoops.js`
-  );
+    //# sourceURL=http://example.com/testLoops.js`);
 
   await performActions(threadFront, [
     [
@@ -179,16 +164,13 @@ async function testLoops({ threadFront, targetFront }) {
 // debugger statement, remove the breakpoint, and try to pause on the
 // debugger statement before pausing anywhere else, debugger pauses instead of
 // skipping debugger statement.
-async function testRemovingBreakpoint({ threadFront, targetFront }) {
-  const consoleFront = await targetFront.getFront("console");
-  consoleFront.evaluateJSAsync(
-    `function foo(stop) {
+async function testRemovingBreakpoint({ commands, threadFront }) {
+  commands.scriptCommand.execute(`function foo(stop) {
       debugger;
     }
     foo();
     foo();
-    //# sourceURL=http://example.com/testRemovingBreakpoint.js`
-  );
+    //# sourceURL=http://example.com/testRemovingBreakpoint.js`);
 
   const location = {
     sourceUrl: "http://example.com/testRemovingBreakpoint.js",
@@ -216,16 +198,13 @@ async function testRemovingBreakpoint({ threadFront, targetFront }) {
 // breakpoint on the same line, and try to pause on the breakpoint
 // before pausing anywhere else, debugger pauses on that line instead of
 // skipping breakpoint.
-async function testAddingBreakpoint({ threadFront, targetFront }) {
-  const consoleFront = await targetFront.getFront("console");
-  consoleFront.evaluateJSAsync(
-    `function foo(stop) {
+async function testAddingBreakpoint({ commands, threadFront }) {
+  commands.scriptCommand.execute(`function foo(stop) {
       debugger;
     }
     foo();
     foo();
-    //# sourceURL=http://example.com/testAddingBreakpoint.js`
-  );
+    //# sourceURL=http://example.com/testAddingBreakpoint.js`);
 
   const location = {
     sourceUrl: "http://example.com/testAddingBreakpoint.js",

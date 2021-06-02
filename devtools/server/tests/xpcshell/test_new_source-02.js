@@ -8,7 +8,7 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, targetFront }) => {
+  threadFrontTest(async ({ commands, threadFront, debuggee }) => {
     await executeOnNextTickAndWaitForPause(
       () => evalCode(debuggee),
       threadFront
@@ -19,8 +19,7 @@ add_task(
     Assert.ok(!!packet1.source);
     Assert.ok(packet1.source.introductionType, "eval");
 
-    const consoleFront = await targetFront.getFront("console");
-    consoleFront.evaluateJSAsync(
+    commands.scriptCommand.execute(
       "function f() { }\n//# sourceURL=http://example.com/code.js"
     );
 

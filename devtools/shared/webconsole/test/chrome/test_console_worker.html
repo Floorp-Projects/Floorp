@@ -57,21 +57,15 @@ const testCachedMessages = async function (state) {
 };
 
 const testConsoleAPI = async function (state) {
-  info("testConsoleAPI entered");
-  return new Promise(resolve => {
-    const onConsoleAPICall = (packet) => {
-      info("received message level: " + packet.message.level);
-      checkConsoleAPICalls([packet], expectedConsoleAPICalls);
-      state.webConsoleFront.off("consoleAPICall", onConsoleAPICall);
-      resolve();
-    }
-
-    info("testConsoleAPI: adding listener for consoleAPICall");
-    state.webConsoleFront.on("consoleAPICall", onConsoleAPICall);
-
-    state.webConsoleFront.evaluateJSAsync("console.log('Log was requested from worker')",
-      () => { });
+  info("testConsoleAPI: adding listener for consoleAPICall");
+  const onConsoleApiMessage = state.webConsoleFront.once("consoleAPICall");
+  state._worker_ref.postMessage({
+    type: "log",
+    message: "Log was requested from worker"
   });
+  const packet = await onConsoleApiMessage;
+  info("received message level: " + packet.message.level);
+  checkConsoleAPICalls([packet], expectedConsoleAPICalls);
 };
 
 </script>

@@ -4,6 +4,11 @@
 
 "use strict";
 
+const {
+  getAdHocFrontOrPrimitiveGrip,
+  // eslint-disable-next-line mozilla/reject-some-requires
+} = require("devtools/client/fronts/object");
+
 class ScriptCommand {
   constructor({ commands }) {
     this._commands = commands;
@@ -58,9 +63,78 @@ class ScriptCommand {
       }
     }
 
-    const front = await targetFront.getFront("console");
+    const consoleFront = await targetFront.getFront("console");
 
-    return front.evaluateJSAsync(expression, options);
+    // We call `evaluateJSAsync` RDP request, which immediately returns a simple `resultID`,
+    // for which we later receive a related `evaluationResult` RDP event, with the same resultID.
+    // The evaluation result will be contained in this RDP event.
+    let resultID;
+    const response = await new Promise(resolve => {
+      const offEvaluationResult = consoleFront.on(
+        "evaluationResult",
+        async packet => {
+          // In some cases, the evaluationResult event can be received before the call to
+          // evaluationJSAsync completes. So make sure to wait for the corresponding promise
+          // before handling the evaluationResult event.
+          await onEvaluateJSAsync;
+
+          if (packet.resultID === resultID) {
+            resolve(packet);
+            offEvaluationResult();
+          }
+        }
+      );
+
+      const onEvaluateJSAsync = consoleFront
+        .evaluateJSAsync({
+          text: expression,
+          eager: options.eager,
+          frameActor,
+          innerWindowID: options.innerWindowID,
+          mapped: options.mapped,
+          selectedNodeActor,
+          selectedObjectActor,
+          url: options.url,
+        })
+        .then(packet => {
+          resultID = packet.resultID;
+        });
+    });
+
+    // `response` is the packet sent via `evaluationResult` RDP event.
+    if (response.error) {
+      throw response;
+    }
+
+    if (response.result) {
+      response.result = getAdHocFrontOrPrimitiveGrip(
+        response.result,
+        consoleFront
+      );
+    }
+
+    if (response.helperResult?.object) {
+      response.helperResult.object = getAdHocFrontOrPrimitiveGrip(
+        response.helperResult.object,
+        consoleFront
+      );
+    }
+
+    if (response.exception) {
+      response.exception = getAdHocFrontOrPrimitiveGrip(
+        response.exception,
+        consoleFront
+      );
+    }
+
+    if (response.exceptionMessage) {
+      response.exceptionMessage = getAdHocFrontOrPrimitiveGrip(
+        response.exceptionMessage,
+        consoleFront
+      );
+    }
+
+    return response;
   }
 }
 
