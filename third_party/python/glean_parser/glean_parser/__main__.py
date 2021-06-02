@@ -36,7 +36,10 @@ from . import validate_ping
     required=True,
 )
 @click.option(
-    "--format", "-f", type=click.Choice(mod_translate.OUTPUTTERS.keys()), required=True
+    "--format",
+    "-f",
+    type=click.Choice(list(mod_translate.OUTPUTTERS.keys())),
+    required=True,
 )
 @click.option(
     "--option",
@@ -161,7 +164,10 @@ def glinter(input, allow_reserved, allow_missing_files):
     required=True,
 )
 @click.option(
-    "--format", "-f", type=click.Choice(mod_coverage.OUTPUTTERS.keys()), required=True
+    "--format",
+    "-f",
+    type=click.Choice(list(mod_coverage.OUTPUTTERS.keys())),
+    required=True,
 )
 @click.option(
     "--allow-reserved",

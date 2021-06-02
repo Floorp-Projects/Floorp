@@ -29,8 +29,8 @@ requirements = [
     "diskcache>=4",
     "iso8601>=0.1.10; python_version<='3.6'",
     "Jinja2>=2.10.1",
-    "jsonschema>=3.0.2",
-    "PyYAML>=3.13",
+    "jsonschema>=3.0.2,<4",
+    "PyYAML>=5.3.1",
     "yamllint>=1.18.0",
 ]
 

@@ -9,10 +9,44 @@ Jinja2 template is not. Please file bugs! #}
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 {% macro obj_declaration(obj, suffix='', access='') %}
 {{ access }}static let {{ obj.name|camelize|variable_name }}{{ suffix }} = {{ obj|type_name }}( // generated from {{ obj.identifier() }}
-            {% for arg_name in extra_args if obj[arg_name] is defined %}
-            {{ arg_name|camelize }}: {{ obj[arg_name]|swift }}{{ "," if not loop.last }}
+        {% for arg_name in extra_args if obj[arg_name] is defined %}
+        {{ arg_name|camelize }}: {{ obj[arg_name]|swift }}{{ "," if not loop.last }}
+        {% endfor %}
+    )
+{% endmacro %}
+
+{% macro enum_decl(obj, name, suffix) %}
+enum {{ obj.name|Camelize }}{{ suffix }}: Int32, ExtraKeys {
+        {% for key in obj|attr(name) %}
+        case {{ key|camelize|variable_name }} = {{ loop.index-1 }}
+        {% endfor %}
+
+        public func index() -> Int32 {
+            return self.rawValue
+        }
+    }
+{% endmacro %}
+
+{% macro struct_decl(obj, name, suffix) %}
+struct {{ obj.name|Camelize }}{{ suffix }}: EventExtras {
+        {% for item, typ in obj|attr(name) %}
+        var {{ item|camelize|variable_name }}: {{typ|extra_type_name}}?
+        {% endfor %}
+
+        func toFfiExtra() -> ([Int32], [String]) {
+            var keys = [Int32]()
+            var values = [String]()
+
+            {% for item in obj|attr(name) %}
+            if let {{ item[0]|camelize }} = self.{{item[0]|camelize}} {
+                keys.append({{ loop.index - 1 }})
+                values.append(String({{ item[0]|camelize }}))
+            }
             {% endfor %}
-        )
+
+            return (keys, values)
+        }
+    }
 {% endmacro %}
 
 {% if not allow_reserved %}
@@ -68,23 +102,18 @@ extension {{ namespace }} {
         {% if obj|attr("_generate_enums") %}
         {% for name, suffix in obj["_generate_enums"] %}
         {% if obj|attr(name)|length %}
-        enum {{ obj.name|Camelize }}{{ suffix }}: Int32, ExtraKeys {
-        {% for key in obj|attr(name) %}
-            case {{ key|camelize|variable_name }} = {{ loop.index-1 }}
-        {% endfor %}
-
-            public func index() -> Int32 {
-                return self.rawValue
-            }
-        }
-
+        {% if obj.has_extra_types %}
+        {{ struct_decl(obj, name, suffix)|indent }}
+        {% else %}
+        {{ enum_decl(obj, name, suffix)|indent }}
+        {% endif %}
         {% endif %}
         {% endfor %}
         {% endif %}
     {% endfor %}
     {% for obj in category.objs.values() %}
         {% if obj.labeled %}
-        {{ obj_declaration(obj, 'Label', 'private ') }}
+        {{ obj_declaration(obj, 'Label', 'private ') | indent }}
         /// {{ obj.description|wordwrap() | replace('\n', '\n        /// ') }}
         static let {{ obj.name|camelize|variable_name }} = try! LabeledMetricType<{{ obj|type_name }}>( // generated from {{ obj.identifier() }}
             category: {{ obj.category|swift }},
@@ -98,7 +127,7 @@ extension {{ namespace }} {
 
         {% else %}
         /// {{ obj.description|wordwrap() | replace('\n', '\n        /// ') }}
-        {{ obj_declaration(obj) }}
+        {{ obj_declaration(obj) | indent }}
         {% endif %}
     {% endfor %}
     }

@@ -299,12 +299,29 @@ class Event(Metric):
     def __init__(self, *args, **kwargs):
         self.extra_keys = kwargs.pop("extra_keys", {})
         self.validate_extra_keys(self.extra_keys, kwargs.get("_config", {}))
+        if self.has_extra_types:
+            self._generate_enums = [("allowed_extra_keys_with_types", "Extra")]
         super().__init__(*args, **kwargs)
 
     @property
     def allowed_extra_keys(self):
         # Sort keys so that output is deterministic
         return sorted(list(self.extra_keys.keys()))
+
+    @property
+    def allowed_extra_keys_with_types(self):
+        # Sort keys so that output is deterministic
+        return sorted(
+            [(k, v["type"]) for (k, v) in self.extra_keys.items()], key=lambda x: x[0]
+        )
+
+    @property
+    def has_extra_types(self):
+        """
+        If any extra key has a `type` specified,
+        we generate the new struct/object-based API.
+        """
+        return any("type" in x for x in self.extra_keys.values())
 
     @staticmethod
     def validate_extra_keys(extra_keys: Dict[str, str], config: Dict[str, Any]) -> None:

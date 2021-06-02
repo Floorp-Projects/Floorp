@@ -103,9 +103,9 @@ fluent.syntax==0.18.1 \
     #   -r requirements-mach-vendor-python.in
     #   compare-locales
     #   fluent.migrate
-glean_parser==3.2.0 \
-    --hash=sha256:2959462531ac088bd598530453aea45f6f2980d6a3794aa9dcd8a8bfaf1ba8da \
-    --hash=sha256:f6eb2259707155e18ee97c5b9c868011c4eebfcfe2c98c596f3e82a9d02af4dd
+glean_parser==3.4.0 \
+    --hash=sha256:b7f889f361f1f01bdf90865b22ed1215364a5e6a44017daf6098b7abf8799132 \
+    --hash=sha256:db25d00cade1931180ac0e604d0fa878b4f71919fdb22a4442e5879940915309
     # via -r requirements-mach-vendor-python.in
 idna==2.10 \
     --hash=sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6 \
