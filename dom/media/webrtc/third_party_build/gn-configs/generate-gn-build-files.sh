@@ -180,5 +180,15 @@ fi
 echo "Building moz.build files from gn json files"
 ./mach build-backend -b GnMozbuildWriter --verbose
 
+# Make sure all the moz.build files have unix line endings if generated
+# on Windows.
+if [ "$IS_WIN" == 1 ]; then
+  MODIFIED_BUILD_FILES=`hg status --modified --added --no-status --include '**/moz.build'`
+  for BUILD_FILE in $MODIFIED_BUILD_FILES
+  do
+    dos2unix $BUILD_FILE
+  done
+fi
+
 echo
 echo "Done generating gn build files. You should now be able to build with ./mach build"
