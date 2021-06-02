@@ -2,11 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::android::AndroidHandler;
+use crate::browser::{Browser, LocalBrowser, RemoteBrowser};
+use crate::build;
+use crate::capabilities::{FirefoxCapabilities, FirefoxOptions};
 use crate::command::{
     AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
     GeckoExtensionCommand, GeckoExtensionRoute, CHROME_ELEMENT_KEY,
 };
+use crate::logging;
 use marionette_rs::common::{
     Cookie as MarionetteCookie, Date as MarionetteDate, Frame as MarionetteFrame,
     Timeouts as MarionetteTimeouts, WebElement as MarionetteWebElement, Window,
@@ -22,18 +25,14 @@ use marionette_rs::webdriver::{
     Url as MarionetteUrl, WindowRect as MarionetteWindowRect,
 };
 use mozdevice::AndroidStorageInput;
-use mozprofile::profile::Profile;
-use mozprofile::{preferences::Pref, profile::PrefFile};
-use mozrunner::runner::{FirefoxProcess, FirefoxRunner, Runner, RunnerProcess};
 use serde::de::{self, Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
 use serde_json::{self, Map, Value};
-use std::fs;
 use std::io::prelude::*;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::io::Result as IoResult;
-use std::net::{TcpListener, TcpStream};
+use std::net::{Shutdown, TcpListener, TcpStream};
 use std::path::PathBuf;
 use std::sync::Mutex;
 use std::thread;
@@ -68,23 +67,8 @@ use webdriver::response::{
 };
 use webdriver::server::{Session, WebDriverHandler};
 
-use crate::build;
-use crate::capabilities::{FirefoxCapabilities, FirefoxOptions};
-use crate::logging;
-use crate::prefs;
-
-/// A running Gecko instance.
-#[derive(Debug)]
-pub enum Browser {
-    /// A local Firefox process, running on this (host) device.
-    Host(FirefoxProcess),
-
-    /// A remote instance, running on a (target) Android device.
-    Target(AndroidHandler),
-}
-
 #[derive(Debug, PartialEq, Deserialize)]
-pub struct MarionetteHandshake {
+struct MarionetteHandshake {
     #[serde(rename = "marionetteProtocol")]
     protocol: u16,
     #[serde(rename = "applicationType")]
@@ -92,42 +76,38 @@ pub struct MarionetteHandshake {
 }
 
 #[derive(Default)]
-pub struct MarionetteSettings {
-    pub host: String,
-    pub port: Option<u16>,
-    pub binary: Option<PathBuf>,
-    pub connect_existing: bool,
+pub(crate) struct MarionetteSettings {
+    pub(crate) host: String,
+    pub(crate) port: Option<u16>,
+    pub(crate) binary: Option<PathBuf>,
+    pub(crate) connect_existing: bool,
 
     /// Brings up the Browser Toolbox when starting Firefox,
     /// letting you debug internals.
-    pub jsdebugger: bool,
+    pub(crate) jsdebugger: bool,
 
-    pub android_storage: AndroidStorageInput,
+    pub(crate) android_storage: AndroidStorageInput,
 }
 
 #[derive(Default)]
-pub struct MarionetteHandler {
-    pub connection: Mutex<Option<MarionetteConnection>>,
-    pub settings: MarionetteSettings,
-    pub browser: Option<Browser>,
-    prefs_backup: Option<(PathBuf, PathBuf)>,
+pub(crate) struct MarionetteHandler {
+    connection: Mutex<Option<MarionetteConnection>>,
+    settings: MarionetteSettings,
 }
 
 impl MarionetteHandler {
-    pub fn new(settings: MarionetteSettings) -> MarionetteHandler {
+    pub(crate) fn new(settings: MarionetteSettings) -> MarionetteHandler {
         MarionetteHandler {
             connection: Mutex::new(None),
             settings,
-            browser: None,
-            prefs_backup: None,
         }
     }
 
-    pub fn create_connection(
-        &mut self,
-        session_id: &Option<String>,
+    fn create_connection(
+        &self,
+        session_id: Option<String>,
         new_session_parameters: &NewSessionParameters,
-    ) -> WebDriverResult<Map<String, Value>> {
+    ) -> WebDriverResult<MarionetteConnection> {
         let (options, capabilities) = {
             let mut fx_capabilities = FirefoxCapabilities::new(self.settings.binary.as_ref());
             let mut capabilities = new_session_parameters
@@ -154,206 +134,33 @@ impl MarionetteHandler {
         let host = self.settings.host.to_owned();
         let port = self.settings.port.unwrap_or(get_free_port(&host)?);
 
-        match options.android {
-            Some(_) => {
-                // TODO: support connecting to running Apps.  There's no real obstruction here,
-                // just some details about port forwarding to work through.  We can't follow
-                // `chromedriver` here since it uses an abstract socket rather than a TCP socket:
-                // see bug 1240830 for thoughts on doing that for Marionette.
-                if self.settings.connect_existing {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::SessionNotCreated,
-                        "Cannot connect to an existing Android App yet",
-                    ));
-                }
-
-                self.start_android(port, options)?;
-            }
-            None => {
-                if !self.settings.connect_existing {
-                    self.start_browser(port, options)?;
-                }
-            }
-        }
-
-        let mut connection = MarionetteConnection::new(host, port, session_id.clone());
-        connection.connect(&mut self.browser).or_else(|e| {
-            match self.browser {
-                Some(Browser::Host(ref mut runner)) => {
-                    runner.kill()?;
-                }
-                Some(Browser::Target(ref mut handler)) => {
-                    handler.force_stop().map_err(|e| {
-                        WebDriverError::new(ErrorStatus::UnknownError, e.to_string())
-                    })?;
-                }
-                _ => {}
-            }
-
-            Err(e)
-        })?;
-        self.connection = Mutex::new(Some(connection));
-        Ok(capabilities)
-    }
-
-    fn start_android(&mut self, port: u16, options: FirefoxOptions) -> WebDriverResult<()> {
-        let android_options = options.android.unwrap();
-
-        let handler = AndroidHandler::new(&android_options, port)?;
-
-        // Profile management.
-        let is_custom_profile = options.profile.is_some();
-
-        let mut profile = options.profile.unwrap_or(Profile::new()?);
-
-        self.set_prefs(
-            handler.target_port,
-            &mut profile,
-            is_custom_profile,
-            options.prefs,
-        )
-        .map_err(|e| {
-            WebDriverError::new(
-                ErrorStatus::SessionNotCreated,
-                format!("Failed to set preferences: {}", e),
-            )
-        })?;
-
-        handler
-            .prepare(&profile, options.env.unwrap_or_default())
-            .map_err(|e| WebDriverError::new(ErrorStatus::UnknownError, e.to_string()))?;
-
-        handler
-            .launch()
-            .map_err(|e| WebDriverError::new(ErrorStatus::UnknownError, e.to_string()))?;
-
-        self.browser = Some(Browser::Target(handler));
-
-        Ok(())
-    }
-
-    fn start_browser(&mut self, port: u16, options: FirefoxOptions) -> WebDriverResult<()> {
-        let binary = options.binary.ok_or_else(|| {
-            WebDriverError::new(
-                ErrorStatus::SessionNotCreated,
-                "Expected browser binary location, but unable to find \
-             binary in default location, no \
-             'moz:firefoxOptions.binary' capability provided, and \
-             no binary flag set on the command line",
-            )
-        })?;
-
-        let is_custom_profile = options.profile.is_some();
-
-        let mut profile = match options.profile {
-            Some(x) => x,
-            None => Profile::new()?,
-        };
-
-        self.set_prefs(port, &mut profile, is_custom_profile, options.prefs)
-            .map_err(|e| {
-                WebDriverError::new(
+        let browser = if options.android.is_some() {
+            // TODO: support connecting to running Apps.  There's no real obstruction here,
+            // just some details about port forwarding to work through.  We can't follow
+            // `chromedriver` here since it uses an abstract socket rather than a TCP socket:
+            // see bug 1240830 for thoughts on doing that for Marionette.
+            if self.settings.connect_existing {
+                return Err(WebDriverError::new(
                     ErrorStatus::SessionNotCreated,
-                    format!("Failed to set preferences: {}", e),
-                )
-            })?;
-
-        let mut runner = FirefoxRunner::new(&binary, profile);
-
-        runner.arg("--marionette");
-        if self.settings.jsdebugger {
-            runner.arg("--jsdebugger");
-        }
-        if let Some(args) = options.args.as_ref() {
-            runner.args(args);
-        }
-
-        // https://developer.mozilla.org/docs/Environment_variables_affecting_crash_reporting
-        runner
-            .env("MOZ_CRASHREPORTER", "1")
-            .env("MOZ_CRASHREPORTER_NO_REPORT", "1")
-            .env("MOZ_CRASHREPORTER_SHUTDOWN", "1");
-
-        let browser_proc = runner.start().map_err(|e| {
-            WebDriverError::new(
-                ErrorStatus::SessionNotCreated,
-                format!("Failed to start browser {}: {}", binary.display(), e),
-            )
-        })?;
-        self.browser = Some(Browser::Host(browser_proc));
-
-        Ok(())
-    }
-
-    pub fn set_prefs(
-        &mut self,
-        port: u16,
-        profile: &mut Profile,
-        custom_profile: bool,
-        extra_prefs: Vec<(String, Pref)>,
-    ) -> WebDriverResult<()> {
-        let prefs = profile.user_prefs().map_err(|_| {
-            WebDriverError::new(
-                ErrorStatus::UnknownError,
-                "Unable to read profile preferences file",
-            )
-        })?;
-
-        if custom_profile && prefs.path.exists() {
-            self.backup_prefs(prefs)?;
-        }
-
-        for &(ref name, ref value) in prefs::DEFAULT.iter() {
-            if !custom_profile || !prefs.contains_key(name) {
-                prefs.insert((*name).to_string(), (*value).clone());
+                    "Cannot connect to an existing Android App yet",
+                ));
             }
-        }
-
-        prefs.insert_slice(&extra_prefs[..]);
-
-        if self.settings.jsdebugger {
-            prefs.insert("devtools.browsertoolbox.panel", Pref::new("jsdebugger"));
-            prefs.insert("devtools.debugger.remote-enabled", Pref::new(true));
-            prefs.insert("devtools.chrome.enabled", Pref::new(true));
-            prefs.insert("devtools.debugger.prompt-connection", Pref::new(false));
-        }
-
-        prefs.insert("marionette.log.level", logging::max_level().into());
-        prefs.insert("marionette.port", Pref::new(port));
-
-        prefs.write().map_err(|e| {
-            WebDriverError::new(
-                ErrorStatus::UnknownError,
-                format!("Unable to write Firefox profile: {}", e),
-            )
-        })
+            Browser::Remote(RemoteBrowser::new(port, options)?)
+        } else if !self.settings.connect_existing {
+            Browser::Local(LocalBrowser::new(port, options, self.settings.jsdebugger)?)
+        } else {
+            Browser::Existing
+        };
+        let session = MarionetteSession::new(session_id, capabilities);
+        MarionetteConnection::new(host, port, browser, session)
     }
 
-    fn backup_prefs(&mut self, prefs: &PrefFile) -> WebDriverResult<()> {
-        let mut prefs_backup_path = prefs.path.clone();
-        let mut counter = 0;
-        while {
-            let ext = if counter > 0 {
-                format!("geckodriver_backup_{}", counter)
-            } else {
-                "geckodriver_backup".to_string()
-            };
-            prefs_backup_path.set_extension(ext);
-            prefs_backup_path.exists()
-        } {
-            counter += 1
-        }
-        debug!("Backing up prefs to {:?}", prefs_backup_path);
-        fs::copy(&prefs.path, &prefs_backup_path)?;
-        self.prefs_backup = Some((prefs.path.clone(), prefs_backup_path));
-        Ok(())
-    }
-
-    fn restore_prefs(&mut self) {
-        if let Some((orig_path, backup_path)) = self.prefs_backup.as_ref() {
-            if backup_path.exists() {
-                let _ = fs::rename(backup_path, orig_path);
-                self.prefs_backup = None;
+    fn close_connection(&mut self) {
+        if let Ok(connection) = self.connection.get_mut() {
+            if let Some(conn) = connection.take() {
+                if let Err(e) = conn.close(false) {
+                    error!("Failed to close browser connection: {}", e)
+                }
             }
         }
     }
@@ -365,75 +172,49 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
         _: &Option<Session>,
         msg: WebDriverMessage<GeckoExtensionRoute>,
     ) -> WebDriverResult<WebDriverResponse> {
-        let mut resolved_capabilities = None;
-        {
-            let mut capabilities_options = None;
-            // First handle the status message which doesn't actually require a marionette
-            // connection or message
-            if let Status = msg.command {
-                let (ready, message) = self
-                    .connection
-                    .lock()
-                    .map(|ref connection| {
-                        connection
-                            .as_ref()
-                            .map(|_| (false, "Session already started"))
-                            .unwrap_or((true, ""))
-                    })
-                    .unwrap_or((false, "geckodriver internal error"));
-                let mut value = Map::new();
-                value.insert("ready".to_string(), Value::Bool(ready));
-                value.insert("message".to_string(), Value::String(message.into()));
-                return Ok(WebDriverResponse::Generic(ValueResponse(Value::Object(
-                    value,
-                ))));
-            }
-
-            match self.connection.lock() {
-                Ok(ref connection) => {
-                    if connection.is_none() {
-                        match msg.command {
-                            NewSession(ref capabilities) => {
-                                capabilities_options = Some(capabilities);
-                            }
-                            _ => {
-                                return Err(WebDriverError::new(
-                                    ErrorStatus::InvalidSessionId,
-                                    "Tried to run command without establishing a connection",
-                                ));
-                            }
-                        }
-                    }
-                }
-                Err(_) => {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::UnknownError,
-                        "Failed to aquire Marionette connection",
-                    ))
-                }
-            }
-            if let Some(capabilities) = capabilities_options {
-                resolved_capabilities =
-                    Some(self.create_connection(&msg.session_id, &capabilities)?);
-            }
+        // First handle the status message which doesn't actually require a marionette
+        // connection or message
+        if let Status = msg.command {
+            let (ready, message) = self
+                .connection
+                .get_mut()
+                .map(|ref connection| {
+                    connection
+                        .as_ref()
+                        .map(|_| (false, "Session already started"))
+                        .unwrap_or((true, ""))
+                })
+                .unwrap_or((false, "geckodriver internal error"));
+            let mut value = Map::new();
+            value.insert("ready".to_string(), Value::Bool(ready));
+            value.insert("message".to_string(), Value::String(message.into()));
+            return Ok(WebDriverResponse::Generic(ValueResponse(Value::Object(
+                value,
+            ))));
         }
 
         match self.connection.lock() {
-            Ok(ref mut connection) => {
-                match connection.as_mut() {
-                    Some(conn) => {
-                        conn.send_command(resolved_capabilities, &msg)
-                            .map_err(|mut err| {
-                                // Shutdown the browser if no session can
-                                // be established due to errors.
-                                if let NewSession(_) = msg.command {
-                                    err.delete_session = true;
-                                }
-                                err
-                            })
+            Ok(mut connection) => {
+                if connection.is_none() {
+                    if let NewSession(ref capabilities) = msg.command {
+                        let conn = self.create_connection(msg.session_id.clone(), &capabilities)?;
+                        *connection = Some(conn);
+                    } else {
+                        return Err(WebDriverError::new(
+                            ErrorStatus::InvalidSessionId,
+                            "Tried to run command without establishing a connection",
+                        ));
                     }
-                    None => panic!("Connection missing"),
                 }
+                let conn = connection.as_mut().expect("Missing connection");
+                conn.send_command(&msg).map_err(|mut err| {
+                    // Shutdown the browser if no session can
+                    // be established due to errors.
+                    if let NewSession(_) = msg.command {
+                        err.delete_session = true;
+                    }
+                    err
+                })
             }
             Err(_) => Err(WebDriverError::new(
                 ErrorStatus::UnknownError,
@@ -450,59 +231,33 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
             };
             let _ = self.handle_command(session, delete_session);
         }
-
-        if let Ok(ref mut connection) = self.connection.lock() {
-            if let Some(conn) = connection.as_mut() {
-                conn.close();
-            }
-        }
-
-        match self.browser {
-            Some(Browser::Host(ref mut runner)) => {
-                // TODO(https://bugzil.la/1443922):
-                // Use toolkit.asyncshutdown.crash_timout pref
-                match runner.wait(time::Duration::from_secs(70)) {
-                    Ok(x) => debug!("Browser process stopped: {}", x),
-                    Err(e) => error!("Failed to stop browser process: {}", e),
-                }
-            }
-            Some(Browser::Target(ref mut handler)) => {
-                // Try to force-stop the process on the target device
-                match handler.force_stop() {
-                    Ok(_) => debug!("Android package force-stopped"),
-                    Err(e) => error!("Failed to force-stop Android package: {}", e),
-                }
-            }
-            None => {}
-        }
-
-        self.restore_prefs();
-        self.connection = Mutex::new(None);
-        self.browser = None;
+        self.close_connection();
     }
 }
 
 impl Drop for MarionetteHandler {
     fn drop(&mut self) {
-        self.restore_prefs()
+        self.close_connection();
     }
 }
 
-pub struct MarionetteSession {
-    pub session_id: String,
+struct MarionetteSession {
+    session_id: String,
+    capabilities: Map<String, Value>,
     command_id: MessageId,
 }
 
 impl MarionetteSession {
-    pub fn new(session_id: Option<String>) -> MarionetteSession {
+    fn new(session_id: Option<String>, capabilities: Map<String, Value>) -> MarionetteSession {
         let initital_id = session_id.unwrap_or_else(|| "".to_string());
         MarionetteSession {
             session_id: initital_id,
+            capabilities,
             command_id: 0,
         }
     }
 
-    pub fn update(
+    fn update(
         &mut self,
         msg: &WebDriverMessage<GeckoExtensionRoute>,
         resp: &MarionetteResponse,
@@ -553,12 +308,12 @@ impl MarionetteSession {
         Ok(WebElement(id))
     }
 
-    pub fn next_command_id(&mut self) -> MessageId {
+    fn next_command_id(&mut self) -> MessageId {
         self.command_id += 1;
         self.command_id
     }
 
-    pub fn response(
+    fn response(
         &mut self,
         msg: &WebDriverMessage<GeckoExtensionRoute>,
         resp: MarionetteResponse,
@@ -1125,10 +880,10 @@ fn try_convert_to_marionette_message(
 }
 
 #[derive(Debug, PartialEq)]
-pub struct MarionetteCommand {
-    pub id: MessageId,
-    pub name: String,
-    pub params: Map<String, Value>,
+struct MarionetteCommand {
+    id: MessageId,
+    name: String,
+    params: Map<String, Value>,
 }
 
 impl Serialize for MarionetteCommand {
@@ -1157,7 +912,7 @@ impl MarionetteCommand {
 
     fn from_webdriver_message(
         id: MessageId,
-        capabilities: Option<Map<String, Value>>,
+        capabilities: &Map<String, Value>,
         msg: &WebDriverMessage<GeckoExtensionRoute>,
     ) -> WebDriverResult<String> {
         use self::GeckoExtensionCommand::*;
@@ -1169,11 +924,8 @@ impl MarionetteCommand {
             let (opt_name, opt_parameters) = match msg.command {
                 Status => panic!("Got status command that should already have been handled"),
                 NewSession(_) => {
-                    let caps = capabilities
-                        .expect("Tried to create new session without processing capabilities");
-
                     let mut data = Map::new();
-                    for (k, v) in caps.iter() {
+                    for (k, v) in capabilities.iter() {
                         data.insert(k.to_string(), serde_json::to_value(v)?);
                     }
 
@@ -1206,10 +958,10 @@ impl MarionetteCommand {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct MarionetteResponse {
-    pub id: MessageId,
-    pub error: Option<MarionetteError>,
-    pub result: Value,
+struct MarionetteResponse {
+    id: MessageId,
+    error: Option<MarionetteError>,
+    result: Value,
 }
 
 impl<'de> Deserialize<'de> for MarionetteResponse {
@@ -1258,11 +1010,11 @@ impl MarionetteResponse {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct MarionetteError {
+struct MarionetteError {
     #[serde(rename = "error")]
-    pub code: String,
-    pub message: String,
-    pub stacktrace: Option<String>,
+    code: String,
+    message: String,
+    stacktrace: Option<String>,
 }
 
 impl Into<WebDriverError> for MarionetteError {
@@ -1284,25 +1036,36 @@ fn get_free_port(host: &str) -> IoResult<u16> {
         .map(|x| x.port())
 }
 
-pub struct MarionetteConnection {
-    host: String,
-    port: u16,
-    stream: Option<TcpStream>,
-    pub session: MarionetteSession,
+struct MarionetteConnection {
+    browser: Browser,
+    session: MarionetteSession,
+    stream: TcpStream,
 }
 
 impl MarionetteConnection {
-    pub fn new(host: String, port: u16, session_id: Option<String>) -> MarionetteConnection {
-        let session = MarionetteSession::new(session_id);
-        MarionetteConnection {
-            host,
-            port,
-            stream: None,
+    fn new(
+        host: String,
+        port: u16,
+        mut browser: Browser,
+        session: MarionetteSession,
+    ) -> WebDriverResult<MarionetteConnection> {
+        let stream = match MarionetteConnection::connect(&host, port, &mut browser) {
+            Ok(stream) => stream,
+            Err(e) => {
+                if let Err(e) = browser.close(true) {
+                    error!("Failed to stop browser: {:?}", e);
+                }
+                return Err(e);
+            }
+        };
+        Ok(MarionetteConnection {
+            browser,
             session,
-        }
+            stream,
+        })
     }
 
-    pub fn connect(&mut self, browser: &mut Option<Browser>) -> WebDriverResult<()> {
+    fn connect(host: &str, port: u16, browser: &mut Browser) -> WebDriverResult<TcpStream> {
         let timeout = time::Duration::from_secs(60);
         let poll_interval = time::Duration::from_millis(100);
         let now = time::Instant::now();
@@ -1310,47 +1073,25 @@ impl MarionetteConnection {
         debug!(
             "Waiting {}s to connect to browser on {}:{}",
             timeout.as_secs(),
-            self.host,
-            self.port
+            host,
+            port
         );
 
         loop {
             // immediately abort connection attempts if process disappears
-            if let Some(Browser::Host(ref mut runner)) = *browser {
-                let exit_status = match runner.try_wait() {
-                    Ok(Some(status)) => Some(
-                        status
-                            .code()
-                            .map(|c| c.to_string())
-                            .unwrap_or_else(|| "signal".into()),
-                    ),
-                    Ok(None) => None,
-                    Err(_) => Some("{unknown}".into()),
-                };
-                if let Some(s) = exit_status {
+            if let Browser::Local(browser) = browser {
+                if let Some(status) = browser.check_status() {
                     return Err(WebDriverError::new(
                         ErrorStatus::UnknownError,
-                        format!("Process unexpectedly closed with status {}", s),
+                        format!("Process unexpectedly closed with status {}", status),
                     ));
                 }
             }
 
-            let try_connect = || -> WebDriverResult<(TcpStream, MarionetteHandshake)> {
-                let mut stream = TcpStream::connect((&self.host[..], self.port))?;
-                let data = MarionetteConnection::handshake(&mut stream)?;
-
-                Ok((stream, data))
-            };
-
-            match try_connect() {
-                Ok((stream, _data)) => {
-                    debug!(
-                        "Connection to Marionette established on {}:{}.",
-                        self.host, self.port,
-                    );
-
-                    self.stream = Some(stream);
-                    break;
+            match MarionetteConnection::try_connect(host, port) {
+                Ok(stream) => {
+                    debug!("Connection to Marionette established on {}:{}.", host, port);
+                    return Ok(stream);
                 }
                 Err(e) => {
                     if now.elapsed() < timeout {
@@ -1361,8 +1102,12 @@ impl MarionetteConnection {
                 }
             }
         }
+    }
 
-        Ok(())
+    fn try_connect(host: &str, port: u16) -> WebDriverResult<TcpStream> {
+        let mut stream = TcpStream::connect((host, port))?;
+        MarionetteConnection::handshake(&mut stream)?;
+        Ok(stream)
     }
 
     fn handshake(stream: &mut TcpStream) -> WebDriverResult<MarionetteHandshake> {
@@ -1409,15 +1154,19 @@ impl MarionetteConnection {
         Ok(data)
     }
 
-    pub fn close(&self) {}
+    fn close(self, force: bool) -> WebDriverResult<()> {
+        self.stream.shutdown(Shutdown::Both)?;
+        self.browser.close(force)?;
+        Ok(())
+    }
 
-    pub fn send_command(
+    fn send_command(
         &mut self,
-        capabilities: Option<Map<String, Value>>,
         msg: &WebDriverMessage<GeckoExtensionRoute>,
     ) -> WebDriverResult<WebDriverResponse> {
         let id = self.session.next_command_id();
-        let enc_cmd = MarionetteCommand::from_webdriver_message(id, capabilities, msg)?;
+        let enc_cmd =
+            MarionetteCommand::from_webdriver_message(id, &self.session.capabilities, msg)?;
         let resp_data = self.send(enc_cmd)?;
         let data: MarionetteResponse = serde_json::from_str(&resp_data)?;
 
@@ -1425,30 +1174,16 @@ impl MarionetteConnection {
     }
 
     fn send(&mut self, data: String) -> WebDriverResult<String> {
-        let stream = match self.stream {
-            Some(ref mut stream) => {
-                if stream.write(&*data.as_bytes()).is_err() {
-                    let mut err = WebDriverError::new(
-                        ErrorStatus::UnknownError,
-                        "Failed to write request to stream",
-                    );
-                    err.delete_session = true;
-                    return Err(err);
-                }
+        if self.stream.write(&*data.as_bytes()).is_err() {
+            let mut err = WebDriverError::new(
+                ErrorStatus::UnknownError,
+                "Failed to write request to stream",
+            );
+            err.delete_session = true;
+            return Err(err);
+        }
 
-                stream
-            }
-            None => {
-                let mut err = WebDriverError::new(
-                    ErrorStatus::UnknownError,
-                    "Tried to write before opening stream",
-                );
-                err.delete_session = true;
-                return Err(err);
-            }
-        };
-
-        match MarionetteConnection::read_resp(stream) {
+        match MarionetteConnection::read_resp(&mut self.stream) {
             Ok(resp) => Ok(resp),
             Err(_) => {
                 let mut err = WebDriverError::new(
@@ -1750,100 +1485,5 @@ impl ToMarionette<MarionetteWindowRect> for WindowRectParameters {
             width: self.width,
             height: self.height,
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{MarionetteHandler, MarionetteSettings};
-    use crate::webdriver::server::WebDriverHandler;
-    use mozprofile::preferences::{Pref, PrefValue};
-    use mozprofile::profile::Profile;
-    use std::fs;
-    use std::io::{Read, Write};
-
-    // This is not a pretty test, mostly due to the nature of
-    // mozprofile's and MarionetteHandler's APIs, but we have had
-    // several regressions related to marionette.log.level.
-    #[test]
-    fn test_marionette_log_level() {
-        let mut profile = Profile::new().unwrap();
-        let mut handler = MarionetteHandler::new(MarionetteSettings::default());
-        handler.set_prefs(2828, &mut profile, false, vec![]).ok();
-        let user_prefs = profile.user_prefs().unwrap();
-
-        let pref = user_prefs.get("marionette.log.level").unwrap();
-        let value = match pref.value {
-            PrefValue::String(ref s) => s,
-            _ => panic!(),
-        };
-        for (i, ch) in value.chars().enumerate() {
-            if i == 0 {
-                assert!(ch.is_uppercase());
-            } else {
-                assert!(ch.is_lowercase());
-            }
-        }
-    }
-
-    #[test]
-    fn test_pref_backup() {
-        let mut profile = Profile::new().unwrap();
-        let mut handler = MarionetteHandler::new(MarionetteSettings::default());
-
-        // Create some prefs in the profile
-        let initial_prefs = profile.user_prefs().unwrap();
-        initial_prefs.insert("geckodriver.example", Pref::new("example"));
-        initial_prefs.write().unwrap();
-
-        let prefs_path = initial_prefs.path.clone();
-
-        let mut conflicting_backup_path = initial_prefs.path.clone();
-        conflicting_backup_path.set_extension("geckodriver_backup".to_string());
-        println!("{:?}", conflicting_backup_path);
-        let mut file = fs::File::create(&conflicting_backup_path).unwrap();
-        file.write_all(b"test").unwrap();
-        assert!(conflicting_backup_path.exists());
-
-        let mut initial_prefs_data = String::new();
-        fs::File::open(&prefs_path)
-            .expect("Initial prefs exist")
-            .read_to_string(&mut initial_prefs_data)
-            .unwrap();
-
-        handler.set_prefs(2828, &mut profile, true, vec![]).ok();
-        let user_prefs = profile.user_prefs().unwrap();
-
-        assert!(user_prefs.path.exists());
-        let mut backup_path = user_prefs.path.clone();
-        backup_path.set_extension("geckodriver_backup_1".to_string());
-
-        assert!(backup_path.exists());
-
-        // Ensure the actual prefs contain both the existing ones and the ones we added
-        let pref = user_prefs.get("marionette.port").unwrap();
-        assert_eq!(pref.value, PrefValue::Int(2828));
-
-        let pref = user_prefs.get("geckodriver.example").unwrap();
-        assert_eq!(pref.value, PrefValue::String("example".into()));
-
-        // Ensure the backup prefs don't contain the new settings
-        let mut backup_data = String::new();
-        fs::File::open(&backup_path)
-            .expect("Backup prefs exist")
-            .read_to_string(&mut backup_data)
-            .unwrap();
-        assert_eq!(backup_data, initial_prefs_data);
-
-        // Check that after we finish the session we corectly restore the original file
-        handler.delete_session(&None);
-
-        assert!(!backup_path.exists());
-        let mut final_prefs_data = String::new();
-        fs::File::open(&prefs_path)
-            .expect("Initial prefs exist")
-            .read_to_string(&mut final_prefs_data)
-            .unwrap();
-        assert_eq!(final_prefs_data, initial_prefs_data);
     }
 }

@@ -44,6 +44,7 @@ macro_rules! try_opt {
 }
 
 mod android;
+mod browser;
 mod build;
 mod capabilities;
 mod command;

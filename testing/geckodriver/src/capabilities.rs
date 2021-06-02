@@ -781,10 +781,8 @@ mod tests {
 
     use self::mozprofile::preferences::Pref;
     use super::*;
-    use crate::marionette::MarionetteHandler;
     use mozdevice::AndroidStorageInput;
-    use serde_json::json;
-    use std::default::Default;
+    use serde_json::{json, Map, Value};
     use std::fs::File;
     use std::io::Read;
 
@@ -1168,41 +1166,6 @@ mod tests {
             prefs.get("startup.homepage_welcome_url"),
             Some(&Pref::new("data:text/html,PASS"))
         );
-    }
-
-    #[test]
-    fn test_prefs() {
-        let encoded_profile = example_profile();
-        let mut prefs: Map<String, Value> = Map::new();
-        prefs.insert(
-            "browser.display.background_color".into(),
-            Value::String("#00ff00".into()),
-        );
-
-        let mut firefox_opts = Capabilities::new();
-        firefox_opts.insert("profile".into(), encoded_profile);
-        firefox_opts.insert("prefs".into(), Value::Object(prefs));
-
-        let opts = make_options(firefox_opts).expect("valid profile and prefs");
-        let mut profile = opts.profile.expect("valid firefox profile");
-
-        let mut handler = MarionetteHandler::new(Default::default());
-        handler
-            .set_prefs(2828, &mut profile, true, opts.prefs)
-            .expect("set preferences");
-
-        let prefs_set = profile.user_prefs().expect("valid user preferences");
-        println!("{:#?}", prefs_set.prefs);
-
-        assert_eq!(
-            prefs_set.get("startup.homepage_welcome_url"),
-            Some(&Pref::new("data:text/html,PASS"))
-        );
-        assert_eq!(
-            prefs_set.get("browser.display.background_color"),
-            Some(&Pref::new("#00ff00"))
-        );
-        assert_eq!(prefs_set.get("marionette.port"), Some(&Pref::new(2828)));
     }
 
     #[test]
