@@ -141,6 +141,17 @@ class DecodedStreamGraphListener {
 
     MOZ_ASSERT_IF(aType == MediaSegment::AUDIO, !mAudioEnded);
     MOZ_ASSERT_IF(aType == MediaSegment::VIDEO, !mVideoEnded);
+    // This situation would happen when playing audio in >1x playback rate,
+    // because the audio output clock isn't align the graph time and would go
+    // forward faster. Eg. playback rate=2, when the graph time passes 10s, the
+    // audio clock time actually already goes forward 20s. After audio track
+    // ended, video track would tirgger the clock, but the video time still
+    // follows the graph time, which is smaller than the preivous audio clock
+    // time and should be ignored.
+    if (aCurrentTrackTime <= mLastOutputTime) {
+      MOZ_ASSERT(aType == MediaSegment::VIDEO);
+      return;
+    }
     MOZ_ASSERT(aCurrentTrackTime > mLastOutputTime);
     mLastOutputTime = aCurrentTrackTime;
 
@@ -315,7 +326,8 @@ class DecodedStreamData final {
                            const TimeUnit& aEnd,
                            const gfx::IntSize& aIntrinsicSize,
                            const TimeStamp& aTimeStamp, VideoSegment* aOutput,
-                           const PrincipalHandle& aPrincipalHandle);
+                           const PrincipalHandle& aPrincipalHandle,
+                           double aPlaybackRate);
 
   /* The following group of fields are protected by the decoder's monitor
    * and can be read or written on any thread.
@@ -803,7 +815,8 @@ void DecodedStream::CheckIsDataAudible(const AudioData* aData) {
 void DecodedStreamData::WriteVideoToSegment(
     layers::Image* aImage, const TimeUnit& aStart, const TimeUnit& aEnd,
     const gfx::IntSize& aIntrinsicSize, const TimeStamp& aTimeStamp,
-    VideoSegment* aOutput, const PrincipalHandle& aPrincipalHandle) {
+    VideoSegment* aOutput, const PrincipalHandle& aPrincipalHandle,
+    double aPlaybackRate) {
   RefPtr<layers::Image> image = aImage;
   auto end =
       mVideoTrack->MicrosecondsToTrackTimeRoundDown(aEnd.ToMicroseconds());
@@ -814,7 +827,9 @@ void DecodedStreamData::WriteVideoToSegment(
   // Extend this so we get accurate durations for all frames.
   // Because this track is pushed, we need durations so the graph can track
   // when playout of the track has finished.
-  aOutput->ExtendLastFrameBy(end - start);
+  MOZ_ASSERT(aPlaybackRate > 0);
+  aOutput->ExtendLastFrameBy(
+      static_cast<TrackTime>((float)(end - start) / aPlaybackRate));
 
   mLastVideoStartTime = Some(aStart);
   mLastVideoEndTime = Some(aEnd);
@@ -947,7 +962,7 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
                    currentTime + (lastEnd - currentPosition).ToTimeDuration());
       mData->WriteVideoToSegment(mData->mLastVideoImage, lastEnd, v->mTime,
                                  mData->mLastVideoImageDisplaySize, t, &output,
-                                 aPrincipalHandle);
+                                 aPrincipalHandle, mPlaybackRate);
       lastEnd = v->mTime;
     }
 
@@ -966,7 +981,7 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
       mData->mLastVideoImage = v->mImage;
       mData->mLastVideoImageDisplaySize = v->mDisplay;
       mData->WriteVideoToSegment(v->mImage, lastEnd, end, v->mDisplay, t,
-                                 &output, aPrincipalHandle);
+                                 &output, aPrincipalHandle, mPlaybackRate);
     }
   }
 
@@ -1006,7 +1021,7 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
           mData->mLastVideoImage, start, start + deviation,
           mData->mLastVideoImageDisplaySize,
           currentTime + (start + deviation - currentPosition).ToTimeDuration(),
-          &endSegment, aPrincipalHandle);
+          &endSegment, aPrincipalHandle, mPlaybackRate);
       MOZ_ASSERT(endSegment.GetDuration() > 0);
       if (forceBlack) {
         endSegment.ReplaceWithDisabled();
