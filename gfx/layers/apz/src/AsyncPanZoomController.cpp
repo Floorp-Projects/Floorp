@@ -5528,8 +5528,6 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
       targetZoom = localMinZoom;
     }
 
-    targetZoom.scale =
-        clamped(targetZoom.scale, localMinZoom.scale, localMaxZoom.scale);
     if (aFlags & PAN_INTO_VIEW_ONLY) {
       targetZoom = currentZoom;
     } else if (aFlags & ONLY_ZOOM_TO_DEFAULT_SCALE) {
@@ -5545,6 +5543,9 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
         }
       }
     }
+
+    targetZoom.scale =
+        clamped(targetZoom.scale, localMinZoom.scale, localMaxZoom.scale);
 
     FrameMetrics endZoomToMetrics = Metrics();
     endZoomToMetrics.SetZoom(CSSToParentLayerScale2D(targetZoom));
