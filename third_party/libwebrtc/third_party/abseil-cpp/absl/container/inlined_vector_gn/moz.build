@@ -31,7 +31,6 @@ if not CONFIG["MOZ_DEBUG"]:
 if CONFIG["MOZ_DEBUG"] == "1":
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
-    DEFINES["_DEBUG"] = True
 
 if CONFIG["OS_TARGET"] == "Android":
 
@@ -62,12 +61,54 @@ if CONFIG["OS_TARGET"] == "Linux":
         "atomic"
     ]
 
+if CONFIG["OS_TARGET"] == "WINNT":
+
+    DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
+    DEFINES["NOMINMAX"] = True
+    DEFINES["NTDDI_VERSION"] = "0x0A000000"
+    DEFINES["PSAPI_VERSION"] = "2"
+    DEFINES["UNICODE"] = True
+    DEFINES["USE_AURA"] = "1"
+    DEFINES["WIN32"] = True
+    DEFINES["WIN32_LEAN_AND_MEAN"] = True
+    DEFINES["WINAPI_FAMILY"] = "WINAPI_FAMILY_DESKTOP_APP"
+    DEFINES["WINVER"] = "0x0A00"
+    DEFINES["_ATL_NO_OPENGL"] = True
+    DEFINES["_CRT_NONSTDC_NO_DEPRECATE"] = True
+    DEFINES["_CRT_NONSTDC_NO_WARNINGS"] = True
+    DEFINES["_CRT_RAND_S"] = True
+    DEFINES["_CRT_SECURE_NO_DEPRECATE"] = True
+    DEFINES["_ENABLE_EXTENDED_ALIGNED_STORAGE"] = True
+    DEFINES["_HAS_EXCEPTIONS"] = "0"
+    DEFINES["_SCL_SECURE_NO_DEPRECATE"] = True
+    DEFINES["_SECURE_ATL"] = True
+    DEFINES["_UNICODE"] = True
+    DEFINES["_WIN32_WINNT"] = "0x0A00"
+    DEFINES["_WINDOWS"] = True
+    DEFINES["__STD_C"] = True
+
 if CONFIG["CPU_ARCH"] == "arm":
 
     OS_LIBS += [
         "android_support",
         "unwind"
     ]
+
+if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["_DEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Darwin":
+
+    DEFINES["_DEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["_DEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
+
+    DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
