@@ -199,13 +199,12 @@ impl AndroidHandler {
         // Check if the specified package is installed
         let response =
             device.execute_host_shell_command(&format!("pm list packages {}", &options.package))?;
-        let packages = response
+        let mut packages = response
             .trim()
             .split_terminator('\n')
             .filter(|line| line.starts_with("package:"))
-            .map(|line| line.rsplit(':').next().expect("Package name found"))
-            .collect::<Vec<&str>>();
-        if !packages.contains(&options.package.as_str()) {
+            .map(|line| line.rsplit(':').next().expect("Package name found"));
+        if packages.find(|x| x == &options.package.as_str()).is_none() {
             return Err(AndroidError::PackageNotFound(options.package.clone()));
         }
 

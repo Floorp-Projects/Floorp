@@ -35,10 +35,8 @@ impl fmt::Display for BuildInfo {
     }
 }
 
-// TODO(Henrik): Change into From
-//std::convert::From<&str>` is not implemented for `rustc_serialize::json::Json
-impl Into<Value> for BuildInfo {
-    fn into(self) -> Value {
+impl From<BuildInfo> for Value {
+    fn from(_: BuildInfo) -> Value {
         Value::String(BuildInfo::version().to_string())
     }
 }

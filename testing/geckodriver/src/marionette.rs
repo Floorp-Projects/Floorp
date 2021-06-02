@@ -273,7 +273,7 @@ impl MarionetteSession {
                 ErrorStatus::SessionNotCreated,
                 "Unable to convert session id to string"
             );
-            self.session_id = session_id.to_string().clone();
+            self.session_id = session_id.to_string();
         };
         Ok(())
     }
@@ -653,7 +653,7 @@ impl MarionetteSession {
 
                 WebDriverResponse::NewSession(NewSessionResponse::new(
                     session_id.to_string(),
-                    Value::Object(capabilities.clone()),
+                    Value::Object(capabilities),
                 ))
             }
             DeleteSession => WebDriverResponse::DeleteSession,
@@ -704,7 +704,7 @@ fn try_convert_to_marionette_message(
                 MarionetteWebDriverCommand::ElementSendKeys {
                     id: e.clone().to_string(),
                     text: keys.text.clone(),
-                    value: keys.value.clone(),
+                    value: keys.value,
                 },
             ))
         }
@@ -726,7 +726,7 @@ fn try_convert_to_marionette_message(
                 MarionetteWebDriverCommand::FindElementElement {
                     element: e.clone().to_string(),
                     using: locator.using.clone(),
-                    value: locator.value.clone(),
+                    value: locator.value,
                 },
             ))
         }
@@ -736,7 +736,7 @@ fn try_convert_to_marionette_message(
                 MarionetteWebDriverCommand::FindElementElements {
                     element: e.clone().to_string(),
                     using: locator.using.clone(),
-                    value: locator.value.clone(),
+                    value: locator.value,
                 },
             ))
         }
@@ -862,19 +862,16 @@ fn try_convert_to_marionette_message(
                 MarionetteWebDriverCommand::TakeScreenshot(screenshot),
             ))
         }
-        Extension(ref extension) => match extension {
-            TakeFullScreenshot => {
-                let screenshot = ScreenshotOptions {
-                    id: None,
-                    highlights: vec![],
-                    full: true,
-                };
-                Some(Command::WebDriver(
-                    MarionetteWebDriverCommand::TakeFullScreenshot(screenshot),
-                ))
-            }
-            _ => None,
-        },
+        Extension(TakeFullScreenshot) => {
+            let screenshot = ScreenshotOptions {
+                id: None,
+                highlights: vec![],
+                full: true,
+            };
+            Some(Command::WebDriver(
+                MarionetteWebDriverCommand::TakeFullScreenshot(screenshot),
+            ))
+        }
         _ => None,
     })
 }
@@ -1017,12 +1014,12 @@ struct MarionetteError {
     stacktrace: Option<String>,
 }
 
-impl Into<WebDriverError> for MarionetteError {
-    fn into(self) -> WebDriverError {
-        let status = ErrorStatus::from(self.code);
-        let message = self.message;
+impl From<MarionetteError> for WebDriverError {
+    fn from(error: MarionetteError) -> WebDriverError {
+        let status = ErrorStatus::from(error.code);
+        let message = error.message;
 
-        if let Some(stack) = self.stacktrace {
+        if let Some(stack) = error.stacktrace {
             WebDriverError::new_with_stack(status, message, stack)
         } else {
             WebDriverError::new(status, message)
@@ -1200,7 +1197,7 @@ impl MarionetteConnection {
         let mut bytes = 0usize;
 
         loop {
-            let buf = &mut [0 as u8];
+            let buf = &mut [0u8];
             let num_read = stream.read(buf)?;
             let byte = match num_read {
                 0 => {
@@ -1209,9 +1206,9 @@ impl MarionetteConnection {
                         "EOF reading marionette message",
                     ))
                 }
-                1 => buf[0] as char,
+                1 => buf[0],
                 _ => panic!("Expected one byte got more"),
-            };
+            } as char;
             match byte {
                 '0'..='9' => {
                     bytes *= 10;
@@ -1222,7 +1219,7 @@ impl MarionetteConnection {
             }
         }
 
-        let buf = &mut [0 as u8; 8192];
+        let buf = &mut [0u8; 8192];
         let mut payload = Vec::with_capacity(bytes);
         let mut total_read = 0;
         while total_read < bytes {
@@ -1400,7 +1397,7 @@ impl ToMarionette<MarionetteSelector> for LocatorStrategy {
     fn to_marionette(&self) -> WebDriverResult<MarionetteSelector> {
         use self::LocatorStrategy::*;
         match self {
-            CSSSelector => Ok(MarionetteSelector::CSS),
+            CSSSelector => Ok(MarionetteSelector::Css),
             LinkText => Ok(MarionetteSelector::LinkText),
             PartialLinkText => Ok(MarionetteSelector::PartialLinkText),
             TagName => Ok(MarionetteSelector::TagName),
@@ -1434,7 +1431,7 @@ impl ToMarionette<MarionetteFrame> for SwitchToFrameParameters {
     fn to_marionette(&self) -> WebDriverResult<MarionetteFrame> {
         Ok(match &self.id {
             Some(x) => match x {
-                FrameId::Short(n) => MarionetteFrame::Index(n.clone()),
+                FrameId::Short(n) => MarionetteFrame::Index(*n),
                 FrameId::Element(el) => MarionetteFrame::Element(el.0.clone()),
             },
             None => MarionetteFrame::Parent,
