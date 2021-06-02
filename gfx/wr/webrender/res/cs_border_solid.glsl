@@ -85,7 +85,8 @@ void main(void) {
     bool do_aa = ((aFlags >> 24) & 0xf0) != 0;
 
     vec2 outer_scale = get_outer_corner_scale(segment);
-    vec2 outer = outer_scale * aRect.zw;
+    vec2 size = aRect.zw - aRect.xy;
+    vec2 outer = outer_scale * size;
     vec2 clip_sign = 1.0 - 2.0 * outer_scale;
 
     int mix_colors;
@@ -103,7 +104,7 @@ void main(void) {
     }
 
     vMixColors = mix_colors;
-    vPos = aRect.zw * aPosition.xy;
+    vPos = size * aPosition.xy;
 
     vColor0 = aColor0;
     vColor1 = aColor1;

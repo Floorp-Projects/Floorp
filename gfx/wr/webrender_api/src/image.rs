@@ -4,7 +4,7 @@
 
 #![deny(missing_docs)]
 
-use euclid::{size2, Rect, num::Zero};
+use euclid::{size2, Box2D, num::Zero};
 use peek_poke::PeekPoke;
 use std::ops::{Add, Sub};
 use std::sync::Arc;
@@ -296,7 +296,7 @@ impl ImageDescriptor {
 
     /// Computes the bounding rectangle for the image, rooted at (0, 0).
     pub fn full_rect(&self) -> DeviceIntRect {
-        DeviceIntRect::new(
+        DeviceIntRect::from_origin_and_size(
             DeviceIntPoint::zero(),
             self.size,
         )
@@ -439,13 +439,13 @@ pub struct BlobImageParams {
 
 /// The possible states of a Dirty rect.
 ///
-/// This exists because people kept getting confused with `Option<Rect>`.
+/// This exists because people kept getting confused with `Option<Box2D>`.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum DirtyRect<T: Copy, U> {
     /// Everything is Dirty, equivalent to Partial(image_bounds)
     All,
     /// Some specific amount is dirty
-    Partial(Rect<T, U>)
+    Partial(Box2D<T, U>)
 }
 
 impl<T, U> DirtyRect<T, U>
@@ -458,7 +458,7 @@ where
 {
     /// Creates an empty DirtyRect (indicating nothing is invalid)
     pub fn empty() -> Self {
-        DirtyRect::Partial(Rect::zero())
+        DirtyRect::Partial(Box2D::zero())
     }
 
     /// Returns whether the dirty rect is empty
@@ -476,7 +476,7 @@ where
 
     /// Maps over the contents of Partial.
     pub fn map<F>(self, func: F) -> Self
-        where F: FnOnce(Rect<T, U>) -> Rect<T, U>,
+        where F: FnOnce(Box2D<T, U>) -> Box2D<T, U>,
     {
         use crate::DirtyRect::*;
 
@@ -503,19 +503,19 @@ where
         match (*self, *other) {
             (All, rect) | (rect, All)  => rect,
             (Partial(rect1), Partial(rect2)) => {
-                Partial(rect1.intersection(&rect2).unwrap_or_else(Rect::zero))
+                Partial(rect1.intersection(&rect2).unwrap_or_else(Box2D::zero))
             }
         }
     }
 
     /// Converts the dirty rect into a subrect of the given one via intersection.
-    pub fn to_subrect_of(&self, rect: &Rect<T, U>) -> Rect<T, U> {
+    pub fn to_subrect_of(&self, rect: &Box2D<T, U>) -> Box2D<T, U> {
         use crate::DirtyRect::*;
 
         match *self {
             All => *rect,
             Partial(dirty_rect) => {
-                dirty_rect.intersection(rect).unwrap_or_else(Rect::zero)
+                dirty_rect.intersection(rect).unwrap_or_else(Box2D::zero)
             }
         }
     }
@@ -526,8 +526,8 @@ impl<T: Copy, U> Clone for DirtyRect<T, U> {
     fn clone(&self) -> Self { *self }
 }
 
-impl<T: Copy, U> From<Rect<T, U>> for DirtyRect<T, U> {
-    fn from(rect: Rect<T, U>) -> Self {
+impl<T: Copy, U> From<Box2D<T, U>> for DirtyRect<T, U> {
+    fn from(rect: Box2D<T, U>) -> Self {
         DirtyRect::Partial(rect)
     }
 }
