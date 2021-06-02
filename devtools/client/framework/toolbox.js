@@ -289,7 +289,6 @@ function Toolbox(
 
   this._toolRegistered = this._toolRegistered.bind(this);
   this._toolUnregistered = this._toolUnregistered.bind(this);
-  this._onWillNavigate = this._onWillNavigate.bind(this);
   this._refreshHostTitle = this._refreshHostTitle.bind(this);
   this.toggleNoAutohide = this.toggleNoAutohide.bind(this);
   this._updateFrames = this._updateFrames.bind(this);
@@ -698,7 +697,6 @@ Toolbox.prototype = {
 
       // Attach to a new top-level target.
       // For now, register these event listeners only on the top level target
-      targetFront.on("will-navigate", this._onWillNavigate);
       targetFront.on("frame-update", this._updateFrames);
       targetFront.on("inspect-object", this._onInspectObject);
     }
@@ -733,7 +731,6 @@ Toolbox.prototype = {
   _onTargetDestroyed({ targetFront }) {
     if (targetFront.isTopLevel) {
       this.target.off("inspect-object", this._onInspectObject);
-      this.target.off("will-navigate", this._onWillNavigate);
       this.target.off("frame-update", this._updateFrames);
     }
 
@@ -4334,6 +4331,17 @@ Toolbox.prototype = {
         if (level === "clear") {
           errors = 0;
         }
+      }
+
+      if (
+        resource.resourceType === this.resourceCommand.TYPES.DOCUMENT_EVENT &&
+        resource.name === "will-navigate"
+      ) {
+        this._onWillNavigate();
+        // While we will call `setErrorCount(0)` from onWillNavigate, we also need to reset
+        // `errors` local variable in order to clear previous errors processed in the same
+        // throttling bucket as this will-navigate resource.
+        errors = 0;
       }
 
       if (
