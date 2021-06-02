@@ -1064,11 +1064,15 @@ void MediaDevice::GetSettings(MediaTrackSettings& aOutSettings) const {
   mSource->GetSettings(aOutSettings);
 }
 
-// Threadsafe since mSource is const.
+// Threadsafe since mKind and mSource are const.
 NS_IMETHODIMP
 MediaDevice::GetMediaSource(nsAString& aMediaSource) {
-  aMediaSource.AssignASCII(
-      dom::MediaSourceEnumValues::GetString(GetMediaSource()));
+  if (mKind == MediaDeviceKind::Audiooutput) {
+    aMediaSource.Truncate();
+  } else {
+    aMediaSource.AssignASCII(
+        dom::MediaSourceEnumValues::GetString(GetMediaSource()));
+  }
   return NS_OK;
 }
 
