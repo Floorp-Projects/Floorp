@@ -107,9 +107,8 @@ use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX,
 };
 use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId, NativeTileId, CompositeTileSurface, tile_kind};
 use crate::composite::{ExternalSurfaceDescriptor, ExternalSurfaceDependency, CompositeTileDescriptor, CompositeTile};
-use crate::composite::{CompositorTransformIndex};
 use crate::debug_colors;
-use euclid::{vec2, vec3, Point2D, Scale, Size2D, Vector2D, Rect, Transform3D, SideOffsets2D};
+use euclid::{vec2, vec3, Point2D, Scale, Size2D, Vector2D, Vector3D, Rect, Transform3D, SideOffsets2D};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
 use crate::intern::ItemUid;
@@ -130,7 +129,6 @@ use crate::renderer::BlendMode;
 use crate::resource_cache::{ResourceCache, ImageGeneration, ImageRequest};
 use crate::space::SpaceMapper;
 use crate::scene::SceneProperties;
-use crate::spatial_tree::CoordinateSystemId;
 use smallvec::SmallVec;
 use std::{mem, u8, marker, u32};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -847,7 +845,7 @@ pub struct Tile {
     /// Same as local_tile_rect, but in min/max form as an optimization
     pub local_tile_box: PictureBox2D,
     /// The picture space dirty rect for this tile.
-    pub local_dirty_rect: PictureRect,
+    local_dirty_rect: PictureRect,
     /// The device space dirty rect for this tile.
     /// TODO(gw): We have multiple dirty rects available due to the quadtree above. In future,
     ///           expose these as multiple dirty rects, which will help in some cases.
@@ -887,7 +885,7 @@ pub struct Tile {
     /// The first reason the tile was invalidated this frame.
     invalidation_reason: Option<InvalidationReason>,
     /// The local space valid rect for all primitives that affect this tile.
-    pub local_valid_rect: PictureBox2D,
+    local_valid_rect: PictureBox2D,
     /// z-buffer id for this tile
     pub z_id: ZBufferId,
     /// The last frame this tile had its dependencies updated (dependency updating is
@@ -1048,13 +1046,7 @@ impl Tile {
             self.local_tile_rect.origin,
             self.local_tile_rect.bottom_right(),
         );
-        // TODO(gw): This is a hack / fix for Box2D::union in euclid not working with
-        //           zero sized rect accumulation. Once that lands, we'll revert this
-        //           to be zero.
-        self.local_valid_rect = PictureBox2D::new(
-            PicturePoint::new( 1.0e32,  1.0e32),
-            PicturePoint::new(-1.0e32, -1.0e32),
-        );
+        self.local_valid_rect = PictureBox2D::zero();
         self.invalidation_reason  = None;
 
         self.world_tile_rect = ctx.pic_to_world_mapper
@@ -1571,7 +1563,7 @@ pub struct TileDescriptor {
     transforms: Vec<SpatialNodeKey>,
 
     /// Picture space rect that contains valid pixels region of this tile.
-    pub local_valid_rect: PictureRect,
+    local_valid_rect: PictureRect,
 
     /// List of the effects of color that we care about
     /// tracking for this tile.
@@ -2344,8 +2336,6 @@ pub struct TileCacheInstance {
     pub external_native_surface_cache: FastHashMap<ExternalNativeSurfaceKey, ExternalNativeSurface>,
     /// Current frame ID of this tile cache instance. Used for book-keeping / garbage collecting
     frame_id: FrameId,
-    /// Registered transform in CompositeState for this picture cache
-    pub transform_index: CompositorTransformIndex,
 }
 
 enum SurfacePromotionResult {
@@ -2404,7 +2394,6 @@ impl TileCacheInstance {
             tile_size_override: None,
             external_native_surface_cache: FastHashMap::default(),
             frame_id: FrameId::INVALID,
-            transform_index: CompositorTransformIndex::INVALID,
         }
     }
 
@@ -3141,38 +3130,41 @@ impl TileCacheInstance {
             return true;
         }
 
-        let prim_offset = ScaleOffset::from_offset(local_prim_rect.origin.to_vector().cast_unit());
+        let world_rect = pic_to_world_mapper
+            .map(&prim_rect)
+            .expect("bug: unable to map the primitive to world space");
+        let device_rect = (world_rect * frame_context.global_device_pixel_scale).round().to_box2d();
 
-        let local_prim_to_device = get_relative_scale_offset(
-            prim_spatial_node_index,
-            ROOT_SPATIAL_NODE_INDEX,
-            frame_context.spatial_tree,
-        );
+        // TODO(gw): Is there any case where if the primitive ends up on a fractional
+        //           boundary we want to _skip_ promoting to a compositor surface and
+        //           draw it as part of the content?
+        let (surface_rect, transform) = match composite_state.compositor_kind {
+            CompositorKind::Draw { .. } => {
+                (device_rect, Transform3D::identity())
+            }
+            CompositorKind::Native { .. } => {
+                // If we have a Native Compositor, then we can support doing the transformation
+                // as part of compositing. Use the local prim rect for the external surface, and
+                // compute the full local to device transform to provide to the compositor.
+                let surface_to_world_mapper : SpaceMapper<PicturePixel, WorldPixel> = SpaceMapper::new_with_target(
+                    ROOT_SPATIAL_NODE_INDEX,
+                    prim_spatial_node_index,
+                    frame_context.global_screen_world_rect,
+                    frame_context.spatial_tree,
+                );
+                let prim_origin = Vector3D::new(local_prim_rect.origin.x, local_prim_rect.origin.y, 0.0);
+                let world_to_device_scale = Transform3D::from_scale(frame_context.global_device_pixel_scale);
+                let transform = surface_to_world_mapper.get_transform().pre_translate(prim_origin).then(&world_to_device_scale);
 
-        let normalized_prim_to_device = prim_offset.accumulate(&local_prim_to_device);
-
-        let (local_to_surface, surface_to_device) = if composite_state.compositor_kind.supports_transforms() {
-            (ScaleOffset::identity(), normalized_prim_to_device)
-        } else {
-            (normalized_prim_to_device, ScaleOffset::identity())
+                (local_prim_rect.to_box2d().cast_unit(), transform)
+            }
         };
-
-        let compositor_transform_index = composite_state.register_transform(
-            local_to_surface,
-            surface_to_device,
-        );
-
-        let surface_size = composite_state.get_surface_rect(
-            &local_prim_rect,
-            &local_prim_rect.origin,
-            compositor_transform_index,
-        ).size();
 
         let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round().to_box2d();
 
-        if surface_size.width >= MAX_COMPOSITOR_SURFACES_SIZE ||
-           surface_size.height >= MAX_COMPOSITOR_SURFACES_SIZE {
-           return false;
+        if surface_rect.width() >= MAX_COMPOSITOR_SURFACES_SIZE ||
+           surface_rect.height() >= MAX_COMPOSITOR_SURFACES_SIZE {
+               return false;
         }
 
         // If this primitive is an external image, and supports being used
@@ -3195,7 +3187,7 @@ impl TileCacheInstance {
                 (None, None)
             }
             CompositorKind::Native { .. } => {
-                let native_surface_size = surface_size.to_i32();
+                let native_surface_size = surface_rect.size().round().to_i32();
 
                 let key = ExternalNativeSurfaceKey {
                     image_keys: *api_keys,
@@ -3292,13 +3284,14 @@ impl TileCacheInstance {
             prohibited_rect: pic_clip_rect,
             is_opaque,
             descriptor: ExternalSurfaceDescriptor {
-                local_surface_size: local_prim_rect.size,
-                local_rect: prim_rect,
+                local_rect: prim_info.prim_clip_box.to_rect(),
                 local_clip_rect: prim_info.prim_clip_box.to_rect(),
                 dependency,
                 image_rendering,
+                device_rect,
+                surface_rect,
                 clip_rect,
-                transform_index: compositor_transform_index,
+                transform: transform.cast_unit(),
                 z_id: ZBufferId::invalid(),
                 native_surface_id,
                 update_params,
@@ -3853,22 +3846,6 @@ impl TileCacheInstance {
     ) {
         self.dirty_region.reset(self.spatial_node_index);
         self.subpixel_mode = self.calculate_subpixel_mode();
-
-        // Register this transform so it's available for conversions during compositing
-        let surface_to_device = ScaleOffset::from_offset(self.device_position.to_vector().cast_unit());
-
-        let local_to_surface = get_relative_scale_offset(
-            self.spatial_node_index,
-            ROOT_SPATIAL_NODE_INDEX,
-            frame_context.spatial_tree,
-        ).accumulate(&surface_to_device.inverse());
-
-        self.transform_index = frame_state.composite_state.register_transform(
-            local_to_surface,
-            // TODO(gw): Once we support scaling of picture cache tiles during compositing,
-            //           that transform gets plugged in here!
-            surface_to_device,
-        );
 
         let map_pic_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
@@ -5129,17 +5106,15 @@ impl PicturePrimitive {
                                     tile_cache.current_tile_size,
                                 );
 
-                                let scissor_rect = frame_state.composite_state.get_surface_rect(
-                                    &tile.local_dirty_rect,
-                                    &tile.local_tile_rect.origin,
-                                    tile_cache.transform_index,
-                                ).to_i32();
+                                let scissor_rect = tile.device_dirty_rect
+                                    .translate(-device_rect.min.to_vector())
+                                    .round()
+                                    .to_i32();
 
-                                let valid_rect = frame_state.composite_state.get_surface_rect(
-                                    &tile.current_descriptor.local_valid_rect,
-                                    &tile.local_tile_rect.origin,
-                                    tile_cache.transform_index,
-                                ).to_i32();
+                                let valid_rect = tile.device_valid_rect
+                                    .translate(-device_rect.min.to_vector())
+                                    .round()
+                                    .to_i32();
 
                                 let task_size = tile_cache.current_tile_size;
 
@@ -5223,12 +5198,12 @@ impl PicturePrimitive {
                         let composite_tile = CompositeTile {
                             kind: tile_kind(&surface, is_opaque),
                             surface,
-                            local_rect: tile.local_tile_rect,
-                            local_valid_rect: tile.current_descriptor.local_valid_rect,
-                            local_dirty_rect: tile.local_dirty_rect,
-                            device_clip_rect,
+                            rect: device_rect,
+                            valid_rect: tile.device_valid_rect.translate(-device_rect.min.to_vector()),
+                            dirty_rect: tile.device_dirty_rect.translate(-device_rect.min.to_vector()),
+                            clip_rect: device_clip_rect,
+                            transform: None,
                             z_id: tile.z_id,
-                            transform_index: tile_cache.transform_index,
                         };
 
                         sub_slice.composite_tiles.push(composite_tile);
@@ -7467,20 +7442,4 @@ pub fn get_raster_rects(
     }
 
     Some((clipped, unclipped))
-}
-
-fn get_relative_scale_offset(
-    child_spatial_node_index: SpatialNodeIndex,
-    parent_spatial_node_index: SpatialNodeIndex,
-    spatial_tree: &SpatialTree,
-) -> ScaleOffset {
-    let parent_spatial_node = &spatial_tree.spatial_nodes[parent_spatial_node_index.0 as usize];
-    assert_eq!(parent_spatial_node.coordinate_system_id, CoordinateSystemId::root());
-
-    let child_spatial_node = &spatial_tree.spatial_nodes[child_spatial_node_index.0 as usize];
-    assert_eq!(child_spatial_node.coordinate_system_id, CoordinateSystemId::root());
-
-    parent_spatial_node.content_transform
-        .inverse()
-        .accumulate(&child_spatial_node.content_transform)
 }
