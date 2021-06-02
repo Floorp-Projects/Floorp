@@ -305,10 +305,10 @@ bool TransactionBuilder::IsRenderedFrameInvalidated() const {
 void TransactionBuilder::SetDocumentView(
     const LayoutDeviceIntRect& aDocumentRect) {
   wr::DeviceIntRect wrDocRect;
-  wrDocRect.origin.x = aDocumentRect.x;
-  wrDocRect.origin.y = aDocumentRect.y;
-  wrDocRect.size.width = aDocumentRect.width;
-  wrDocRect.size.height = aDocumentRect.height;
+  wrDocRect.min.x = aDocumentRect.x;
+  wrDocRect.min.y = aDocumentRect.y;
+  wrDocRect.max.x = aDocumentRect.x + aDocumentRect.width;
+  wrDocRect.max.y = aDocumentRect.y + aDocumentRect.height;
   wr_transaction_set_document_view(mTxn, &wrDocRect);
 }
 

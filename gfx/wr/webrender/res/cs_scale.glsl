@@ -22,7 +22,7 @@ PER_INSTANCE attribute vec4 aScaleSourceRect;
 
 void main(void) {
     vec2 src_offset = aScaleSourceRect.xy;
-    vec2 src_size = aScaleSourceRect.zw;
+    vec2 src_size = aScaleSourceRect.zw - aScaleSourceRect.xy;
 
     // If this is in WR_FEATURE_TEXTURE_RECT mode, the rect and size use
     // non-normalized texture coordinates.
@@ -37,7 +37,7 @@ void main(void) {
     vUvRect = vec4(src_offset + vec2(0.5),
                    src_offset + src_size - vec2(0.5)) / texture_size.xyxy;
 
-    vec2 pos = aScaleTargetRect.xy + aScaleTargetRect.zw * aPosition.xy;
+    vec2 pos = mix(aScaleTargetRect.xy, aScaleTargetRect.zw, aPosition.xy);
     vUv = (src_offset + src_size * aPosition.xy) / texture_size;
 
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);

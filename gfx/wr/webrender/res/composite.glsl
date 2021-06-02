@@ -61,13 +61,13 @@ PER_INSTANCE attribute vec4 aUvRect0;
 
 void main(void) {
 	// Get world position
-    vec2 world_pos = aDeviceRect.xy + aPosition.xy * aDeviceRect.zw;
+    vec2 world_pos = mix(aDeviceRect.xy, aDeviceRect.zw, aPosition.xy);
 
     // Clip the position to the world space clip rect
-    vec2 clipped_world_pos = clamp(world_pos, aDeviceClipRect.xy, aDeviceClipRect.xy + aDeviceClipRect.zw);
+    vec2 clipped_world_pos = clamp(world_pos, aDeviceClipRect.xy, aDeviceClipRect.zw);
 
     // Derive the normalized UV from the clipped vertex position
-    vec2 uv = (clipped_world_pos - aDeviceRect.xy) / aDeviceRect.zw;
+    vec2 uv = (clipped_world_pos - aDeviceRect.xy) / (aDeviceRect.zw - aDeviceRect.xy);
 
 #ifdef WR_FEATURE_YUV
     int yuv_color_space = int(aParams.y);

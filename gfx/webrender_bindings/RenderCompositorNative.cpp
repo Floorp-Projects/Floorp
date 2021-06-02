@@ -391,8 +391,8 @@ void RenderCompositorNative::AddSurface(
     gfx::IntPoint layerPosition(surface.mTileSize.width * it->first.mX,
                                 surface.mTileSize.height * it->first.mY);
     layer->SetPosition(layerPosition);
-    gfx::IntRect clipRect(aClipRect.origin.x, aClipRect.origin.y,
-                          aClipRect.size.width, aClipRect.size.height);
+    gfx::IntRect clipRect(aClipRect.min.x, aClipRect.min.y, aClipRect.width(),
+                          aClipRect.height());
     layer->SetClipRect(Some(clipRect));
     layer->SetTransform(transform);
     layer->SetSamplingFilter(ToSamplingFilter(aImageRendering));
@@ -505,10 +505,10 @@ void RenderCompositorNativeOGL::Bind(wr::NativeTileId aId,
                                      uint32_t* aFboId,
                                      wr::DeviceIntRect aDirtyRect,
                                      wr::DeviceIntRect aValidRect) {
-  gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
-                         aValidRect.size.width, aValidRect.size.height);
-  gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
-                         aDirtyRect.size.width, aDirtyRect.size.height);
+  gfx::IntRect validRect(aValidRect.min.x, aValidRect.min.y, aValidRect.width(),
+                         aValidRect.height());
+  gfx::IntRect dirtyRect(aDirtyRect.min.x, aDirtyRect.min.y, aDirtyRect.width(),
+                         aDirtyRect.height());
 
   BindNativeLayer(aId, dirtyRect);
 
@@ -615,10 +615,10 @@ bool RenderCompositorNativeSWGL::MapTile(wr::NativeTileId aId,
   if (mNativeLayerForEntireWindow) {
     return false;
   }
-  gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
-                         aDirtyRect.size.width, aDirtyRect.size.height);
-  gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
-                         aValidRect.size.width, aValidRect.size.height);
+  gfx::IntRect dirtyRect(aDirtyRect.min.x, aDirtyRect.min.y, aDirtyRect.width(),
+                         aDirtyRect.height());
+  gfx::IntRect validRect(aValidRect.min.x, aValidRect.min.y, aValidRect.width(),
+                         aValidRect.height());
   BindNativeLayer(aId, dirtyRect);
   if (!MapNativeLayer(mCurrentlyBoundNativeLayer, dirtyRect, validRect)) {
     UnbindNativeLayer();
