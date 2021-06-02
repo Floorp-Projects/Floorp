@@ -48,33 +48,36 @@ class EventMetric {
    *                If the wrong keys are used or values are too large
    *                an error is report and no event is recorded.
    */
-  void Record(const Span<const Tuple<T, nsCString>>& aExtras = {}) const {
+  void Record(const Maybe<T>& aExtras = Nothing()) const {
     auto id = EventIdForMetric(mId);
     if (id) {
+      // NB. In case `aExtras` is filled we call `ToFfiExtra`, causing
+      // twice the required allocation. We could be smarter and reuse the data.
+      // But this is GIFFT-only allocation, so wait to be told it's a problem.
       Maybe<CopyableTArray<Telemetry::EventExtraEntry>> telExtras;
-      if (!aExtras.IsEmpty()) {
+      if (aExtras) {
         CopyableTArray<Telemetry::EventExtraEntry> extras;
-        for (auto& entry : aExtras) {
-          auto extraString = ExtraStringForKey(Get<0>(entry));
+        auto serializedExtras = aExtras->ToFfiExtra();
+        auto keys = std::move(Get<0>(serializedExtras));
+        auto values = std::move(Get<1>(serializedExtras));
+        for (size_t i = 0; i < keys.Length(); i++) {
+          auto extraString = ExtraStringForKey(keys[i]);
           extras.EmplaceBack(
-              Telemetry::EventExtraEntry{extraString, Get<1>(entry)});
+              Telemetry::EventExtraEntry{extraString, values[i]});
         }
         telExtras = Some(extras);
       }
       Telemetry::RecordEvent(id.extract(), Nothing(), telExtras);
     }
 #ifndef MOZ_GLEAN_ANDROID
-    static_assert(sizeof(T) <= sizeof(int32_t),
-                  "Extra keys need to fit into 32 bits");
-
-    nsTArray<int32_t> extraKeys;
-    nsTArray<nsCString> extraValues;
-    for (auto& entry : aExtras) {
-      extraKeys.AppendElement(static_cast<int32_t>(mozilla::Get<0>(entry)));
-      extraValues.AppendElement(mozilla::Get<1>(entry));
+    if (aExtras) {
+      auto extra = aExtras->ToFfiExtra();
+      fog_event_record(mId, &mozilla::Get<0>(extra), &mozilla::Get<1>(extra));
+    } else {
+      nsTArray<uint32_t> keys;
+      nsTArray<nsCString> vals;
+      fog_event_record(mId, &keys, &vals);
     }
-
-    fog_event_record(mId, &extraKeys, &extraValues);
 #endif
   }
 
@@ -133,14 +136,20 @@ class EventMetric {
   }
 
  private:
-  static const nsCString ExtraStringForKey(T aKey);
+  static const nsCString ExtraStringForKey(uint32_t aKey);
 
   const uint32_t mId;
 };
 
 }  // namespace impl
 
-enum class NoExtraKeys;
+struct NoExtraKeys {
+  Tuple<nsTArray<uint32_t>, nsTArray<nsCString>> ToFfiExtra() const {
+    nsTArray<uint32_t> extraKeys;
+    nsTArray<nsCString> extraValues;
+    return MakeTuple(std::move(extraKeys), std::move(extraValues));
+  }
+};
 
 class GleanEvent final : public nsIGleanEvent {
  public:

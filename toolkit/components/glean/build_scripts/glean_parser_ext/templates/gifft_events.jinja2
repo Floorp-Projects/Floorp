@@ -12,7 +12,7 @@ Jinja2 template is not. Pleas file bugs! #}
 namespace mozilla::glean {
 
 template <>
-/*static*/ const nsCString impl::EventMetric<NoExtraKeys>::ExtraStringForKey(NoExtraKeys aKey) {
+/*static*/ const nsCString impl::EventMetric<NoExtraKeys>::ExtraStringForKey(uint32_t aKey) {
   MOZ_ASSERT_UNREACHABLE("What are you doing here? No extra keys!");
   return ""_ns;
 }
@@ -20,17 +20,19 @@ template <>
 {% for category_name, objs in all_objs.items() %}
 {% for obj in objs.values() %}
 {% if obj|attr("_generate_enums") %}
-{% for name, suffix in obj["_generate_enums"] %}
+{# we always use the `extra` suffix, because we only expose the new event API #}
+{% set suffix = "Extra" %}
+{% for name, _ in obj["_generate_enums"] %}
 {% if obj|attr(name)|length %}
 {% set ns %}{{ category_name|snake_case }}{% endset %}
 {% set type %}{{ obj.name|Camelize }}{{ suffix }}{% endset %}
 template <>
-/*static*/ const nsCString impl::EventMetric<{{ ns }}::{{ type }}>::ExtraStringForKey({{ ns }}::{{ type }} aKey) {
+/*static*/ const nsCString impl::EventMetric<{{ ns }}::{{ type }}>::ExtraStringForKey(uint32_t aKey) {
   using {{ ns }}::{{ type }};
   switch (aKey) {
 {% if obj|attr("telemetry_mirror") %}{# Optimization: Do not generate switch if not mirrored #}
-{% for key in obj|attr(name) %}
-    case {{ type }}::{{ key|Camelize }}: {
+{% for key, _ in obj|attr(name) %}
+    case {{loop.index-1}}: {
       return "{{ key }}"_ns;
     }
 {% endfor %}

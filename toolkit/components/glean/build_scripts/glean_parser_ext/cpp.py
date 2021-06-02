@@ -57,10 +57,28 @@ def type_name(obj):
             if not len(getattr(obj, name)) and suffix == "Keys":
                 return util.Camelize(obj.type) + "Metric<NoExtraKeys>"
             else:
+                # we always use the `extra` suffix,
+                # because we only expose the new event API
+                suffix = "Extra"
                 return "{}Metric<{}>".format(
                     util.Camelize(obj.type), util.Camelize(obj.name) + suffix
                 )
     return util.Camelize(obj.type) + "Metric"
+
+
+def extra_type_name(typ: str) -> str:
+    """
+    Returns the corresponding Rust type for event's extra key types.
+    """
+
+    if typ == "boolean":
+        return "bool"
+    elif typ == "string":
+        return "nsCString"
+    elif typ == "quantity":
+        return "uint32_t"
+    else:
+        return "UNSUPPORTED"
 
 
 def output_cpp(objs, output_fd, options={}):
@@ -104,6 +122,7 @@ def output_cpp(objs, output_fd, options={}):
             ("cpp", cpp_datatypes_filter),
             ("snake_case", util.snake_case),
             ("type_name", type_name),
+            ("extra_type_name", extra_type_name),
             ("metric_id", get_metric_id),
             ("ping_id", get_ping_id),
             ("Camelize", util.Camelize),
