@@ -39,3 +39,4 @@ jobs:
           branch: automation/sync-strings-${{ steps.fenix-beta-version.outputs.major-beta-version }}
           title: "Sync Strings from master to releases_${{steps.fenix-beta-version.outputs.fenix-beta-version}}.0"
           body: "This (automated) PR syncs strings from `master` to `releases_${{steps.fenix-beta-version.outputs.fenix-beta-version}}.0.0`"
+          labels: needs:review
