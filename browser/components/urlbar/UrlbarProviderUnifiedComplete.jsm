@@ -256,17 +256,6 @@ function makeUrlbarResult(tokens, info) {
           })
         );
       }
-      case "remotetab":
-        return new UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
-          UrlbarUtils.RESULT_SOURCE.TABS,
-          ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-            url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
-            title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
-            device: [action.params.deviceName, UrlbarUtils.HIGHLIGHT.TYPED],
-            icon: info.icon,
-          })
-        );
       case "switchtab":
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.TAB_SWITCH,

@@ -65,7 +65,6 @@ if CONFIG["MOZ_PLACES"]:
         "PlacesBackups.jsm",
         "PlacesDBUtils.jsm",
         "PlacesExpiration.jsm",
-        "PlacesRemoteTabsAutocompleteProvider.jsm",
         "PlacesSyncUtils.jsm",
         "PlacesTransactions.jsm",
         "PlacesUtils.jsm",
