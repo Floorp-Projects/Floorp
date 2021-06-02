@@ -104,10 +104,7 @@ class Issue(object):
         assert root is not None, "Missing ResultSummary.root"
         if os.path.isabs(self.path):
             self.path = mozpath.normpath(self.path)
-            if self.path.startswith(root):
-                self.relpath = mozpath.relpath(self.path, root)
-            else:
-                self.relpath = self.path
+            self.relpath = mozpath.relpath(self.path, root)
         else:
             self.relpath = mozpath.normpath(self.path)
             self.path = mozpath.join(root, self.path)
