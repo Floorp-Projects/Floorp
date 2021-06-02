@@ -1117,8 +1117,12 @@ class Isolate {
   friend class HandleScope;
 
   JSContext* cx_;
-  RegExpStack* regexpStack_;
-  Counters counters_;
+  RegExpStack* regexpStack_{};
+  Counters counters_{};
+#ifdef DEBUG
+ public:
+  uint32_t shouldSimulateInterrupt_ = 0;
+#endif
 };
 
 // Origin:

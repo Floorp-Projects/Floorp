@@ -673,7 +673,13 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
   do {
     DebugOnly<bool> alreadyThrowing = cx->isExceptionPending();
     RegExpRunStatus result = irregexp::Execute(cx, re, input, start, matches);
-
+#ifdef DEBUG
+    // Check if we must simulate the interruption
+    if (js::irregexp::IsolateShouldSimulateInterrupt(cx->isolate)) {
+      js::irregexp::IsolateClearShouldSimulateInterrupt(cx->isolate);
+      cx->requestInterrupt(InterruptReason::CallbackUrgent);
+    }
+#endif
     if (result == RegExpRunStatus_Error) {
       /* Execute can return RegExpRunStatus_Error:
        *

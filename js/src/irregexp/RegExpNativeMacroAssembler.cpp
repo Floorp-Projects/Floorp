@@ -87,12 +87,23 @@ void SMRegExpMacroAssembler::AdvanceRegister(int reg, int by) {
 }
 
 void SMRegExpMacroAssembler::Backtrack() {
+#ifdef DEBUG
+  js::jit::Label bailOut;
+  // Check for simulating interrupt
+  masm_.branch32(Assembler::NotEqual,
+                 AbsoluteAddress(&cx_->isolate->shouldSimulateInterrupt_),
+                 Imm32(0), &bailOut);
+#endif
   // Check for an interrupt. We have to restart from the beginning if we
   // are interrupted, so we only check for urgent interrupts.
   js::jit::Label noInterrupt;
   masm_.branchTest32(
       Assembler::Zero, AbsoluteAddress(cx_->addressOfInterruptBits()),
       Imm32(uint32_t(js::InterruptReason::CallbackUrgent)), &noInterrupt);
+#ifdef DEBUG
+  // bailing out if we have simulating interrupt flag set
+  masm_.bind(&bailOut);
+#endif
   masm_.movePtr(ImmWord(js::RegExpRunStatus_Error), temp0_);
   masm_.jump(&exit_label_);
   masm_.bind(&noInterrupt);
