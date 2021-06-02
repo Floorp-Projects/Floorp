@@ -288,9 +288,11 @@ class nsRange final : public mozilla::dom::AbstractRange,
    *
    * @param aFragment DocumentFragment containing the nodes.
    *                  May be null to indicate the caller doesn't want a
-   * fragment.
+   *                  fragment.
+   * @param aRv The error if any.
    */
-  nsresult CutContents(mozilla::dom::DocumentFragment** frag);
+  void CutContents(mozilla::dom::DocumentFragment** aFragment,
+                   ErrorResult& aRv);
 
   static nsresult CloneParentsBetween(nsINode* aAncestor, nsINode* aNode,
                                       nsINode** aClosestAncestor,
