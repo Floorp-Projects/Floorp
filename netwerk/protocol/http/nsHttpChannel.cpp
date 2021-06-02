@@ -119,6 +119,7 @@
 #include "../../cache2/CacheFileUtils.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsINetworkLinkService.h"
+#include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/nsHTTPSOnlyStreamListener.h"
@@ -454,6 +455,18 @@ nsresult nsHttpChannel::OnBeforeConnect() {
   // nsIHttpChannel.redirectTo API request
   if (mAPIRedirectToURI) {
     return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
+  }
+
+  // Check to see if we should redirect this channel to the unstripped URI. To
+  // revert the query stripping if the loading channel is in the content
+  // blocking allow list.
+  if (ContentBlockingAllowList::Check(this)) {
+    nsCOMPtr<nsIURI> unstrippedURI;
+    mLoadInfo->GetUnstrippedURI(getter_AddRefs(unstrippedURI));
+
+    if (unstrippedURI) {
+      return AsyncCall(&nsHttpChannel::HandleAsyncRedirectToUnstrippedURI);
+    }
   }
 
   // Note that we are only setting the "Upgrade-Insecure-Requests" request
@@ -2724,6 +2737,40 @@ void nsHttpChannel::HandleAsyncAPIRedirect() {
 
   nsresult rv = StartRedirectChannelToURI(
       mAPIRedirectToURI, nsIChannelEventSink::REDIRECT_PERMANENT);
+  if (NS_FAILED(rv)) {
+    rv = ContinueAsyncRedirectChannelToURI(rv);
+    if (NS_FAILED(rv)) {
+      LOG(("ContinueAsyncRedirectChannelToURI failed (%08x) [this=%p]\n",
+           static_cast<uint32_t>(rv), this));
+    }
+  }
+}
+
+void nsHttpChannel::HandleAsyncRedirectToUnstrippedURI() {
+  MOZ_ASSERT(!mCallOnResume, "How did that happen?");
+
+  if (mSuspendCount) {
+    LOG(
+        ("Waiting until resume to do async redirect to unstripped URI "
+         "[this=%p]\n",
+         this));
+    mCallOnResume = [](nsHttpChannel* self) {
+      self->HandleAsyncRedirectToUnstrippedURI();
+      return NS_OK;
+    };
+    return;
+  }
+
+  nsCOMPtr<nsIURI> unstrippedURI;
+  mLoadInfo->GetUnstrippedURI(getter_AddRefs(unstrippedURI));
+
+  // Clear the unstripped URI from the loadInfo before starting redirect in case
+  // endless redirect.
+  mLoadInfo->SetUnstrippedURI(nullptr);
+
+  nsresult rv = StartRedirectChannelToURI(
+      unstrippedURI, nsIChannelEventSink::REDIRECT_PERMANENT);
+
   if (NS_FAILED(rv)) {
     rv = ContinueAsyncRedirectChannelToURI(rv);
     if (NS_FAILED(rv)) {
