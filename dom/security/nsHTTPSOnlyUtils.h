@@ -84,12 +84,12 @@ class nsHTTPSOnlyUtils {
   /**
    * Determines if the request was previously upgraded with HTTPS-First, creates
    * a downgraded URI and logs to console.
-   * @param  aError   Error code
+   * @param  aStatus   Status code
    * @param  aChannel Failed channel
    * @return          URI with http-scheme or nullptr
    */
   static already_AddRefed<nsIURI> PotentiallyDowngradeHttpsFirstRequest(
-      nsIChannel* aChannel, nsresult aError);
+      nsIChannel* aChannel, nsresult aStatus);
 
   /**
    * Checks if the error code is on a block-list of codes that are probably
