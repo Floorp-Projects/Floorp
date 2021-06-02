@@ -65,7 +65,7 @@ add_task(async function() {
     info("Waiting for inspector selection to update");
     await onNodeReselected;
 
-    const outerHTML = await testActor.getProperty("body", "outerHTML");
+    const outerHTML = await getContentPageElementProperty("body", "outerHTML");
     ok(
       outerHTML.includes(clipboard.getText()),
       "Clipboard content was pasted into the node's outer HTML."
@@ -87,7 +87,7 @@ add_task(async function() {
     );
     const innerHTMLSelector = "#paste-area .inner";
     const getInnerHTML = () =>
-      testActor.getProperty(innerHTMLSelector, "innerHTML");
+      getContentPageElementProperty(innerHTMLSelector, "innerHTML");
     const origInnerHTML = await getInnerHTML();
 
     const nodeFront = await getNodeFront(innerHTMLSelector, inspector);
@@ -141,7 +141,10 @@ add_task(async function() {
       await onMutation;
     }
 
-    let html = await testActor.getProperty(adjacentNodeSelector, "innerHTML");
+    let html = await getContentPageElementProperty(
+      adjacentNodeSelector,
+      "innerHTML"
+    );
     ok(
       html.trim() === '1<span class="ref">234</span><span>5</span>',
       "The Paste as Last Child / as First Child / Before / After worked as " +
@@ -149,7 +152,10 @@ add_task(async function() {
     );
     await undoChange(inspector);
 
-    html = await testActor.getProperty(adjacentNodeSelector, "innerHTML");
+    html = await getContentPageElementProperty(
+      adjacentNodeSelector,
+      "innerHTML"
+    );
     ok(
       html.trim() === '1<span class="ref">234</span>',
       "Undo works for paste adjacent HTML"

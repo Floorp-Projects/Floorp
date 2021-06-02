@@ -60,11 +60,11 @@ const TEST_DATA = [
     validate: async function({ pageNodeFront, selectedNodeFront, testActor }) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      const emText = await testActor.getProperty(
+      const emText = await getContentPageElementProperty(
         "#badMarkup3 em",
         "textContent"
       );
-      const strongText = await testActor.getProperty(
+      const strongText = await getContentPageElementProperty(
         "#badMarkup3 strong",
         "textContent"
       );
@@ -79,11 +79,23 @@ const TEST_DATA = [
     validate: async function({ pageNodeFront, selectedNodeFront, testActor }) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      const divText = await testActor.getProperty("#badMarkup4", "textContent");
-      const divTag = await testActor.getProperty("#badMarkup4", "tagName");
+      const divText = await getContentPageElementProperty(
+        "#badMarkup4",
+        "textContent"
+      );
+      const divTag = await getContentPageElementProperty(
+        "#badMarkup4",
+        "tagName"
+      );
 
-      const pText = await testActor.getProperty("#badMarkup4 p", "textContent");
-      const pTag = await testActor.getProperty("#badMarkup4 p", "tagName");
+      const pText = await getContentPageElementProperty(
+        "#badMarkup4 p",
+        "textContent"
+      );
+      const pTag = await getContentPageElementProperty(
+        "#badMarkup4 p",
+        "tagName"
+      );
 
       is(divText, "badMarkup4", "textContent is correct");
       is(divTag, "DIV", "did not change to <p> tag");
@@ -102,14 +114,20 @@ const TEST_DATA = [
         "#badMarkup5 div"
       );
 
-      const pText = await testActor.getProperty("#badMarkup5", "textContent");
-      const pTag = await testActor.getProperty("#badMarkup5", "tagName");
+      const pText = await getContentPageElementProperty(
+        "#badMarkup5",
+        "textContent"
+      );
+      const pTag = await getContentPageElementProperty(
+        "#badMarkup5",
+        "tagName"
+      );
 
-      const divText = await testActor.getProperty(
+      const divText = await getContentPageElementProperty(
         "#badMarkup5 ~ div",
         "textContent"
       );
-      const divTag = await testActor.getProperty(
+      const divTag = await getContentPageElementProperty(
         "#badMarkup5 ~ div",
         "tagName"
       );
