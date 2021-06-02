@@ -559,18 +559,20 @@ void MacroAssembler::negateDouble(FloatRegister reg) { ma_vneg(reg, reg); }
 
 void MacroAssembler::negateFloat(FloatRegister reg) { ma_vneg_f32(reg, reg); }
 
-void MacroAssembler::absFloat32(FloatRegister src, FloatRegister dest) {
-  if (src != dest) {
-    ma_vmov_f32(src, dest);
+void MacroAssembler::abs32(Register src, Register dest) {
+  as_cmp(src, Imm8(0));
+  as_rsb(dest, src, Imm8(0), LeaveCC, LessThan);
+  if (dest != src) {
+    as_mov(dest, O2Reg(src), LeaveCC, GreaterThanOrEqual);
   }
-  ma_vabs_f32(dest, dest);
+}
+
+void MacroAssembler::absFloat32(FloatRegister src, FloatRegister dest) {
+  ma_vabs_f32(src, dest);
 }
 
 void MacroAssembler::absDouble(FloatRegister src, FloatRegister dest) {
-  if (src != dest) {
-    ma_vmov(src, dest);
-  }
-  ma_vabs(dest, dest);
+  ma_vabs(src, dest);
 }
 
 void MacroAssembler::sqrtFloat32(FloatRegister src, FloatRegister dest) {

@@ -259,6 +259,16 @@ void MacroAssembler::negateDouble(FloatRegister reg) {
   vxorpd(scratch, reg, reg);  // s ^ 0x80000000000000
 }
 
+void MacroAssembler::abs32(Register src, Register dest) {
+  if (src != dest) {
+    move32(src, dest);
+  }
+  Label positive;
+  branchTest32(Assembler::NotSigned, dest, dest, &positive);
+  neg32(dest);
+  bind(&positive);
+}
+
 void MacroAssembler::absFloat32(FloatRegister src, FloatRegister dest) {
   ScratchFloat32Scope scratch(*this);
   loadConstantFloat32(mozilla::SpecificNaN<float>(

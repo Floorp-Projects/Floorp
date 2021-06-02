@@ -559,6 +559,11 @@ void MacroAssembler::negateDouble(FloatRegister reg) {
   fneg(ARMFPRegister(reg, 64), ARMFPRegister(reg, 64));
 }
 
+void MacroAssembler::abs32(Register src, Register dest) {
+  Cmp(ARMRegister(src, 32), wzr);
+  Cneg(ARMRegister(dest, 32), ARMRegister(src, 32), Assembler::LessThan);
+}
+
 void MacroAssembler::absFloat32(FloatRegister src, FloatRegister dest) {
   fabs(ARMFPRegister(dest, 32), ARMFPRegister(src, 32));
 }

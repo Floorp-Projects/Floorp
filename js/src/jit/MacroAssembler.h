@@ -1159,6 +1159,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void negateDouble(FloatRegister reg) PER_SHARED_ARCH;
 
+  inline void abs32(Register src, Register dest) PER_SHARED_ARCH;
   inline void absFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
   inline void absDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
