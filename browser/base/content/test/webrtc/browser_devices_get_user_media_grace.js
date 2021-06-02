@@ -32,7 +32,11 @@ async function prompt(audio, video) {
   await promiseRequestDevice(audio, video);
   await promise;
   await observerPromise;
-  checkDeviceSelectors(audio, video);
+  const expectedDeviceSelectorTypes = [
+    audio && "microphone",
+    video && "camera",
+  ].filter(x => x);
+  checkDeviceSelectors(expectedDeviceSelectorTypes);
 }
 
 async function allow(audio, video) {
@@ -138,7 +142,7 @@ var gTests = [
         "webRTC-shareScreen-notification-icon",
         "anchored to device icon"
       );
-      checkDeviceSelectors(false, false, true);
+      checkDeviceSelectors(["screen"]);
 
       observerPromise = expectObserverCalled("getUserMedia:response:deny");
       await promiseMessage(permissionError, () => {
@@ -219,7 +223,7 @@ var gTests = [
         "webRTC-shareScreen-notification-icon",
         "anchored to device icon"
       );
-      checkDeviceSelectors(false, false, true);
+      checkDeviceSelectors(["screen"]);
 
       observerPromise = expectObserverCalled("getUserMedia:response:deny");
       await promiseMessage(permissionError, () => {

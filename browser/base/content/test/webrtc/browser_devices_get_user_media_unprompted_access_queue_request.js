@@ -10,7 +10,7 @@ var gTests = [
       await promiseRequestDevice(false, true);
       await promiseRequestDevice(false, true);
       await promise;
-      checkDeviceSelectors(false, true);
+      checkDeviceSelectors(["camera"]);
       await observerPromise;
 
       let promises = [

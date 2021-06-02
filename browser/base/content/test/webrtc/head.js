@@ -821,10 +821,19 @@ async function reloadAndAssertClosedStreams() {
   await checkNotSharing();
 }
 
-function checkDeviceSelectors(aAudio, aVideo, aScreen, aWindow = window) {
+/**
+ * @param {("microphone"|"camera"|"screen")[]} aExpectedTypes
+ * @param {Window} [aWindow]
+ */
+function checkDeviceSelectors(aExpectedTypes, aWindow = window) {
+  for (const type of aExpectedTypes) {
+    if (!["microphone", "camera", "screen"].includes(type)) {
+      throw new Error(`Bad device type name ${type}`);
+    }
+  }
   let document = aWindow.document;
   let micSelector = document.getElementById("webRTC-selectMicrophone");
-  if (aAudio) {
+  if (aExpectedTypes.includes("microphone")) {
     ok(!micSelector.hidden, "microphone selector visible");
     let micSelectorList = document.getElementById(
       "webRTC-selectMicrophone-menulist"
@@ -851,7 +860,7 @@ function checkDeviceSelectors(aAudio, aVideo, aScreen, aWindow = window) {
   }
 
   let cameraSelector = document.getElementById("webRTC-selectCamera");
-  if (aVideo) {
+  if (aExpectedTypes.includes("camera")) {
     ok(!cameraSelector.hidden, "camera selector visible");
     let cameraSelectorList = document.getElementById(
       "webRTC-selectCamera-menulist"
@@ -873,7 +882,7 @@ function checkDeviceSelectors(aAudio, aVideo, aScreen, aWindow = window) {
   }
 
   let screenSelector = document.getElementById("webRTC-selectWindowOrScreen");
-  if (aScreen) {
+  if (aExpectedTypes.includes("screen")) {
     ok(!screenSelector.hidden, "screen selector visible");
   } else {
     ok(screenSelector.hidden, "screen selector hidden");
@@ -1243,7 +1252,11 @@ async function shareDevices(
     await promiseRequestDevice(mic, camera, null, null, browser);
     await promise;
 
-    checkDeviceSelectors(mic, camera);
+    const expectedDeviceSelectorTypes = [
+      camera && "camera",
+      mic && "microphone",
+    ].filter(x => x);
+    checkDeviceSelectors(expectedDeviceSelectorTypes);
     let observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
     let observerPromise2 = expectObserverCalled("recording-device-events");
 
@@ -1271,7 +1284,7 @@ async function shareDevices(
     await promiseRequestDevice(false, true, null, "screen", browser);
     await promise;
 
-    checkDeviceSelectors(false, false, true, window);
+    checkDeviceSelectors(["screen"], window);
 
     let document = window.document;
 
