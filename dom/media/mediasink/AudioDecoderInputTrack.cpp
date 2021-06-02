@@ -387,12 +387,15 @@ void AudioDecoderInputTrack::HandleSPSCData(SPSCData& aData) {
   }
   if (aData.IsEOS()) {
     MOZ_ASSERT(!Ended());
+    LOG("Received EOS");
     mReceivedEOS = true;
     return;
   }
   if (aData.IsClearFutureData()) {
+    LOG("Clear future data");
     mBufferedData.Clear();
     if (!Ended()) {
+      LOG("Clear EOS");
       mReceivedEOS = false;
     }
     return;
