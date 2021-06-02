@@ -832,55 +832,33 @@ function checkDeviceSelectors(aExpectedTypes, aWindow = window) {
     }
   }
   let document = aWindow.document;
-  let micSelector = document.getElementById("webRTC-selectMicrophone");
-  if (aExpectedTypes.includes("microphone")) {
-    ok(!micSelector.hidden, "microphone selector visible");
-    let micSelectorList = document.getElementById(
-      "webRTC-selectMicrophone-menulist"
+
+  for (let type of ["Microphone", "Camera"]) {
+    let selector = document.getElementById(`webRTC-select${type}`);
+    if (!aExpectedTypes.includes(type.toLowerCase())) {
+      ok(selector.hidden, `${type} selector hidden`);
+      continue;
+    }
+    ok(!selector.hidden, `${type} selector visible`);
+    let selectorList = document.getElementById(`webRTC-select${type}-menulist`);
+    let label = document.getElementById(
+      `webRTC-select${type}-single-device-label`
     );
-    let micLabel = document.getElementById(
-      "webRTC-selectMicrophone-single-device-label"
-    );
-    // If there's only 1 device listed, then we should show the label instead of
-    // the menulist.
-    if (micSelectorList.itemCount == 1) {
-      ok(micSelectorList.hidden, "Selector list should be hidden.");
-      ok(!micLabel.hidden, "Selector label should not be hidden.");
+    // If there's only 1 device listed, then we should show the label
+    // instead of the menulist.
+    if (selectorList.itemCount == 1) {
+      ok(selectorList.hidden, `${type} selector list should be hidden.`);
+      ok(!label.hidden, `${type} selector label should not be hidden.`);
       is(
-        micLabel.value,
-        micSelectorList.selectedItem.getAttribute("label"),
-        "Label should be showing the lone device label."
+        label.value,
+        selectorList.selectedItem.getAttribute("label"),
+        `${type} label should be showing the lone device label.`
       );
     } else {
-      ok(!micSelectorList.hidden, "Selector list should not be hidden.");
-      ok(micLabel.hidden, "Selector label should be hidden.");
+      ok(!selectorList.hidden, `${type} selector list should not be hidden.`);
+      ok(label.hidden, `${type} selector label should be hidden.`);
     }
-  } else {
-    ok(micSelector.hidden, "microphone selector hidden");
   }
-
-  let cameraSelector = document.getElementById("webRTC-selectCamera");
-  if (aExpectedTypes.includes("camera")) {
-    ok(!cameraSelector.hidden, "camera selector visible");
-    let cameraSelectorList = document.getElementById(
-      "webRTC-selectCamera-menulist"
-    );
-    let cameraLabel = document.getElementById(
-      "webRTC-selectCamera-single-device-label"
-    );
-    // If there's only 1 device listed, then we should show the label instead of
-    // the menulist.
-    if (cameraSelectorList.itemCount == 1) {
-      ok(cameraSelectorList.hidden, "Selector list should be hidden.");
-      ok(!cameraLabel.hidden, "Selector label should not be hidden.");
-    } else {
-      ok(!cameraSelectorList.hidden, "Selector list should not be hidden.");
-      ok(cameraLabel.hidden, "Selector label should be hidden.");
-    }
-  } else {
-    ok(cameraSelector.hidden, "camera selector hidden");
-  }
-
   let screenSelector = document.getElementById("webRTC-selectWindowOrScreen");
   if (aExpectedTypes.includes("screen")) {
     ok(!screenSelector.hidden, "screen selector visible");
