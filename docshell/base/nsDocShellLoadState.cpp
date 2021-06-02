@@ -603,6 +603,7 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
 
   nsCOMPtr<nsIURI> strippedURI;
   if (URLQueryStringStripper::Strip(URI(), strippedURI)) {
+    mUnstrippedURI = URI();
     SetURI(strippedURI);
   }
 }
