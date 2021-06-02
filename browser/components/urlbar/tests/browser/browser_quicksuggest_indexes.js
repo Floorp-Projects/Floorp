@@ -7,6 +7,8 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
@@ -118,6 +120,123 @@ add_task(async function suggestionsLast() {
   });
   await SpecialPowers.popPrefEnv();
 });
+
+// Tests with history only plus a suggestedIndex result with a resultSpan
+add_task(async function otherSuggestedIndex_noSuggestions() {
+  await doSuggestedIndexTest([
+    // heuristic
+    { heuristic: true },
+    // TestProvider result
+    { suggestedIndex: 1, resultSpan: 2 },
+    // history
+    { type: UrlbarUtils.RESULT_TYPE.URL },
+    { type: UrlbarUtils.RESULT_TYPE.URL },
+    { type: UrlbarUtils.RESULT_TYPE.URL },
+    { type: UrlbarUtils.RESULT_TYPE.URL },
+    { type: UrlbarUtils.RESULT_TYPE.URL },
+    { type: UrlbarUtils.RESULT_TYPE.URL },
+    // quick suggest
+    {
+      type: UrlbarUtils.RESULT_TYPE.URL,
+      providerName: UrlbarProviderQuickSuggest.name,
+    },
+  ]);
+});
+
+// Tests with suggestions followed by history plus a suggestedIndex result with
+// a resultSpan
+add_task(async function otherSuggestedIndex_suggestionsFirst() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[SUGGESTIONS_FIRST_PREF, true]],
+  });
+  await withSuggestions(async () => {
+    await doSuggestedIndexTest([
+      // heuristic
+      { heuristic: true },
+      // TestProvider result
+      { suggestedIndex: 1, resultSpan: 2 },
+      // search suggestions
+      {
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        payload: { suggestion: SPONSORED_SEARCH_STRING + "foo" },
+      },
+      {
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        payload: { suggestion: SPONSORED_SEARCH_STRING + "bar" },
+      },
+      // history
+      { type: UrlbarUtils.RESULT_TYPE.URL },
+      { type: UrlbarUtils.RESULT_TYPE.URL },
+      { type: UrlbarUtils.RESULT_TYPE.URL },
+      { type: UrlbarUtils.RESULT_TYPE.URL },
+      // quick suggest
+      {
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        providerName: UrlbarProviderQuickSuggest.name,
+      },
+    ]);
+  });
+  await SpecialPowers.popPrefEnv();
+});
+
+// Tests with history followed by suggestions plus a suggestedIndex result with
+// a resultSpan
+add_task(async function otherSuggestedIndex_suggestionsLast() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[SUGGESTIONS_FIRST_PREF, false]],
+  });
+  await withSuggestions(async () => {
+    await doSuggestedIndexTest([
+      // heuristic
+      { heuristic: true },
+      // TestProvider result
+      { suggestedIndex: 1, resultSpan: 2 },
+      // history
+      { type: UrlbarUtils.RESULT_TYPE.URL },
+      { type: UrlbarUtils.RESULT_TYPE.URL },
+      { type: UrlbarUtils.RESULT_TYPE.URL },
+      { type: UrlbarUtils.RESULT_TYPE.URL },
+      // quick suggest
+      {
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        providerName: UrlbarProviderQuickSuggest.name,
+      },
+      // search suggestions
+      {
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        payload: { suggestion: SPONSORED_SEARCH_STRING + "foo" },
+      },
+      {
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        payload: { suggestion: SPONSORED_SEARCH_STRING + "bar" },
+      },
+    ]);
+  });
+  await SpecialPowers.popPrefEnv();
+});
+
+/**
+ * A test provider that returns one result with a suggestedIndex and resultSpan.
+ */
+class TestProvider extends UrlbarTestUtils.TestProvider {
+  constructor() {
+    super({
+      results: [
+        Object.assign(
+          new UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.URL,
+            UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+            { url: "http://example.com/test" }
+          ),
+          {
+            suggestedIndex: 1,
+            resultSpan: 2,
+          }
+        ),
+      ],
+    });
+  }
+}
 
 /**
  * Does a round of test permutations.
@@ -297,4 +416,58 @@ async function withSuggestions(callback) {
     await Services.search.removeEngine(engine);
     await SpecialPowers.popPrefEnv();
   }
+}
+
+/**
+ * Registers a test provider that returns a result with a suggestedIndex and
+ * resultSpan and asserts the given expected results match the actual results.
+ *
+ * @param {array} expectedProps
+ *   See `checkResults()`.
+ */
+async function doSuggestedIndexTest(expectedProps) {
+  await addHistory();
+  let provider = new TestProvider();
+  UrlbarProvidersManager.registerProvider(provider);
+
+  let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: SPONSORED_SEARCH_STRING,
+  });
+  checkResults(context.results, expectedProps);
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  UrlbarProvidersManager.unregisterProvider(provider);
+  await PlacesUtils.history.clear();
+}
+
+/**
+ * Asserts the given actual and expected results match.
+ *
+ * @param {array} actualResults
+ *   Array of actual results.
+ * @param {array} expectedProps
+ *   Array of expected result-like objects. Only the properties defined in each
+ *   of these objects are compared against the corresponding actual result.
+ */
+function checkResults(actualResults, expectedProps) {
+  let actualProps = actualResults.map((actual, i) => {
+    if (expectedProps.length <= i) {
+      return actual;
+    }
+    let props = {};
+    let expected = expectedProps[i];
+    for (let [key, expectedValue] of Object.entries(expected)) {
+      if (key != "payload") {
+        props[key] = actual[key];
+      } else {
+        props.payload = {};
+        for (let pkey of Object.keys(expectedValue)) {
+          props.payload[pkey] = actual.payload[pkey];
+        }
+      }
+    }
+    return props;
+  });
+  Assert.deepEqual(actualProps, expectedProps);
 }
