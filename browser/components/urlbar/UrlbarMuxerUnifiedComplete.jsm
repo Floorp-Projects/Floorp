@@ -58,7 +58,12 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     let state = {
       context,
       resultsByGroup: new Map(),
-      totalResultCount: 0,
+      // This is analogous to `maxResults` except it's the total available
+      // result span instead of the total available result count. We'll add
+      // results until `usedResultSpan` would exceed `availableResultSpan`.
+      availableResultSpan: context.maxResults,
+      // The total span of results that have been added so far.
+      usedResultSpan: 0,
       strippedUrlToTopPrefixAndTitle: new Map(),
       canShowPrivateSearch: context.results.length > 1,
       canShowTailSuggestions: true,
@@ -96,6 +101,21 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       this._updateStatePreAdd(result, state);
     }
 
+    // Subtract from `availableResultSpan` the total span of suggestedIndex
+    // results so there will be room for them at the end of the sort.
+    let suggestedIndexResults = state.resultsByGroup.get(
+      UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX
+    );
+    if (suggestedIndexResults) {
+      let span = suggestedIndexResults.reduce((sum, result) => {
+        if (this._canAddResult(result, state)) {
+          sum += UrlbarUtils.getSpanForResult(result);
+        }
+        return sum;
+      }, 0);
+      state.availableResultSpan = Math.max(state.availableResultSpan - span, 0);
+    }
+
     // Determine the buckets to use for this sort.  In search mode with an
     // engine, show search suggestions first.
     let rootBucket = context.searchMode?.engineName
@@ -103,15 +123,14 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       : UrlbarPrefs.get("resultBuckets");
     logger.debug(`Buckets: ${rootBucket}`);
 
-    let sortedResults = this._fillBuckets(
+    let [sortedResults] = this._fillBuckets(
       rootBucket,
-      context.maxResults,
+      state.availableResultSpan,
       state
     );
 
     this._addSuggestedIndexResults(sortedResults, state);
 
-    this._truncateResults(sortedResults, context.maxResults);
     context.results = sortedResults;
   }
 
@@ -145,24 +164,25 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *
    * @param {object} bucket
    *   The result bucket to fill.
-   * @param {number} maxResultCount
-   *   The maximum number of results to include in the bucket.
+   * @param {number} availableSpan
+   *   The maximum total result span to include in the bucket.
    * @param {object} state
    *   The muxer state.
    * @returns {array}
-   *   A flat array of results in the bucket.
+   *   `[results, span]`, where `results` is a flat array of results in the
+   *   bucket and `span` is the total span of the results.
    */
-  _fillBuckets(bucket, maxResultCount, state) {
+  _fillBuckets(bucket, availableSpan, state) {
     // If there are no child buckets, then fill the bucket directly.
     if (!bucket.children) {
-      return this._addResults(bucket.group, maxResultCount, state);
+      return this._addResults(bucket.group, availableSpan, state);
     }
 
     // Set up some flex state for the bucket.
     let stateCopy;
     let flexSum = 0;
     let unfilledChildIndexes = [];
-    let unfilledChildResultCount = 0;
+    let unfilledChildSpan = 0;
     if (bucket.flexChildren) {
       stateCopy = this._copyState(state);
       for (let child of bucket.children) {
@@ -177,39 +197,44 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     // Fill each child bucket, collecting all results in `results`.
     let results = [];
+    let usedSpan = 0;
     for (
       let i = 0;
-      i < bucket.children.length && results.length < maxResultCount;
+      i < bucket.children.length && usedSpan < availableSpan;
       i++
     ) {
       let child = bucket.children[i];
 
-      // Compute the child's max result count.
-      let childMaxResultCount;
+      // Compute the child's total available result span.
+      let availableChildSpan;
       if (bucket.flexChildren) {
         let flex = typeof child.flex == "number" ? child.flex : 0;
-        childMaxResultCount = Math.round(maxResultCount * (flex / flexSum));
+        availableChildSpan = Math.round(availableSpan * (flex / flexSum));
       } else {
-        childMaxResultCount = Math.min(
+        availableChildSpan = Math.min(
           typeof child.maxResultCount == "number"
             ? child.maxResultCount
             : Infinity,
-          // parent max result count - current total of child results
-          maxResultCount - results.length
+          availableSpan - usedSpan
         );
       }
 
       // Recurse and fill the child bucket.
-      let childResults = this._fillBuckets(child, childMaxResultCount, state);
+      let [childResults, usedChildSpan] = this._fillBuckets(
+        child,
+        availableChildSpan,
+        state
+      );
       results = results.concat(childResults);
+      usedSpan += usedChildSpan;
 
-      if (bucket.flexChildren && childResults.length < childMaxResultCount) {
+      if (bucket.flexChildren && usedChildSpan < availableChildSpan) {
         // The flexed child bucket wasn't completely filled.  We'll try to make
         // up the difference below by overfilling children that did fill up.
         let flex = typeof child.flex == "number" ? child.flex : 0;
         flexSumFilled -= flex;
         unfilledChildIndexes.push(i);
-        unfilledChildResultCount += childResults.length;
+        unfilledChildSpan += usedChildSpan;
       }
     }
 
@@ -218,35 +243,37 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // buckets that did fill up while still respecting their flex ratios.
     if (unfilledChildIndexes.length) {
       results = [];
-      let remainingResultCount = maxResultCount - unfilledChildResultCount;
+      usedSpan = 0;
+      let remainingSpan = availableSpan - unfilledChildSpan;
       for (
         let i = 0;
-        i < bucket.children.length && results.length < maxResultCount;
+        i < bucket.children.length && usedSpan < availableSpan;
         i++
       ) {
         let child = bucket.children[i];
-        let childMaxResultCount;
+        let availableChildSpan;
         if (unfilledChildIndexes.length && i == unfilledChildIndexes[0]) {
-          // This is one of the children that didn't fill up.  Since it didn't
-          // fill up, the max result count to use in this pass isn't important
-          // as long as it's >= the number of results it was able to fill.  We
-          // can't re-use its results from the first pass (even though they're
-          // still correct) because we need to properly update `stateCopy` and
-          // therefore re-fill the child.
+          // This is one of the children that didn't fill up. Since it didn't
+          // fill up, the available span to use in this pass isn't important as
+          // long as it's >= the span that was filled. We can't re-use its
+          // results from the first pass (even though they're still correct)
+          // because we need to properly update `stateCopy` and therefore
+          // re-fill the child.
           unfilledChildIndexes.shift();
-          childMaxResultCount = maxResultCount;
+          availableChildSpan = availableSpan;
         } else {
           let flex = typeof child.flex == "number" ? child.flex : 0;
-          childMaxResultCount = flex
-            ? Math.round(remainingResultCount * (flex / flexSumFilled))
-            : remainingResultCount;
+          availableChildSpan = flex
+            ? Math.round(remainingSpan * (flex / flexSumFilled))
+            : remainingSpan;
         }
-        let childResults = this._fillBuckets(
+        let [childResults, usedChildSpan] = this._fillBuckets(
           child,
-          childMaxResultCount,
+          availableChildSpan,
           stateCopy
         );
         results = results.concat(childResults);
+        usedSpan += usedChildSpan;
       }
 
       // Update `state` in place so that it's also updated in the caller.
@@ -255,7 +282,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       }
     }
 
-    return results;
+    return [results, usedSpan];
   }
 
   /**
@@ -264,23 +291,25 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *
    * @param {string} group
    *   The bucket's group.
-   * @param {number} maxResultCount
-   *   The maximum number of results to add to the bucket.
+   * @param {number} availableSpan
+   *   The maximum total result span to add to the bucket.
    * @param {object} state
    *   Global state that we use to make decisions during this sort.
    * @returns {array}
-   *   The added results, empty if no results were added.
+   *   `[results, span]`, where `results` is the array of added results and
+   *   `span` is the total span of the results. If no results were added,
+   *   `results` will be empty and `span` will be zero.
    */
-  _addResults(group, maxResultCount, state) {
-    // For form history, maxHistoricalSearchSuggestions == 0 implies that the
-    // user has opted out of form history completely, so we override maxResult
-    // count here in that case.  Other values of maxHistoricalSearchSuggestions
+  _addResults(group, availableSpan, state) {
+    // For form history, maxHistoricalSearchSuggestions == 0 implies the user
+    // has opted out of form history completely, so we override the available
+    // span here in that case. Other values of maxHistoricalSearchSuggestions
     // are ignored and we use the flex defined on the form history bucket.
     if (
       group == UrlbarUtils.RESULT_GROUP.FORM_HISTORY &&
       !UrlbarPrefs.get("maxHistoricalSearchSuggestions")
     ) {
-      maxResultCount = 0;
+      availableSpan = 0;
     }
 
     let addQuickSuggest =
@@ -288,26 +317,39 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       group == UrlbarUtils.RESULT_GROUP.GENERAL &&
       this._canAddResult(state.quickSuggestResult, state);
     if (addQuickSuggest) {
-      maxResultCount--;
+      availableSpan -= UrlbarUtils.getSpanForResult(state.quickSuggestResult);
     }
 
     let addedResults = [];
+    let usedSpan = 0;
     let groupResults = state.resultsByGroup.get(group);
     while (
       groupResults?.length &&
-      addedResults.length < maxResultCount &&
-      state.totalResultCount < state.context.maxResults
+      usedSpan < availableSpan &&
+      state.usedResultSpan < state.availableResultSpan
     ) {
-      // We either add or discard results in the order they appear in the
-      // groupResults array, so shift() them off.  That way later buckets with
-      // the same group won't include results that earlier buckets have added or
-      // discarded.
-      let result = groupResults.shift();
+      let result = groupResults[0];
       if (this._canAddResult(result, state)) {
+        let span = UrlbarUtils.getSpanForResult(result);
+        let newUsedSpan = usedSpan + span;
+        if (availableSpan < newUsedSpan && !result.heuristic) {
+          // Adding the result would exceed the bucket's available span, so stop
+          // adding results to it. Skip the shift() below so the result can be
+          // added to later buckets. The heuristic result is an exception since
+          // we should always show it when it exists.
+          break;
+        }
         addedResults.push(result);
-        state.totalResultCount++;
+        usedSpan = newUsedSpan;
+        state.usedResultSpan += span;
         this._updateStatePostAdd(result, state);
       }
+
+      // We either add or discard results in the order they appear in
+      // `groupResults`, so shift() them off. That way later buckets with the
+      // same group won't include results that earlier buckets have added or
+      // discarded.
+      groupResults.shift();
     }
 
     if (addQuickSuggest) {
@@ -324,19 +366,21 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
           ? "quickSuggestNonSponsoredIndex"
           : "quickSuggestSponsoredIndex"
       );
-      // A negative index means insertion relative to the end of the bucket,
-      // similar to `suggestedIndex`.
+      // A positive index is relative to the start of the bucket and a negative
+      // index is relative to the end, similar to `suggestedIndex`.
       if (index < 0) {
         index = Math.max(index + addedResults.length + 1, 0);
       } else {
         index = Math.min(index, addedResults.length);
       }
       addedResults.splice(index, 0, quickSuggestResult);
-      state.totalResultCount++;
+      let span = UrlbarUtils.getSpanForResult(quickSuggestResult);
+      usedSpan += span;
+      state.usedResultSpan += span;
       this._updateStatePostAdd(quickSuggestResult, state);
     }
 
-    return addedResults;
+    return [addedResults, usedSpan];
   }
 
   /**
@@ -544,7 +588,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // that there's always at most one heuristic and it's always first, but
     // since result buckets are stored in a pref and can therefore be modified
     // by the user, we perform this check.
-    if (result.heuristic && state.totalResultCount) {
+    if (result.heuristic && state.usedResultSpan) {
       return false;
     }
 
@@ -699,76 +743,40 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       return;
     }
 
-    // First, sort the results by index in ascending order so that insertions of
-    // results with both positive and negative indexes are in ascending order.
-    suggestedIndexResults.sort((a, b) => a.suggestedIndex - b.suggestedIndex);
-
-    // Insert results with positive indexes.  Insertions should happen in
-    // ascending order so that higher-index results are inserted at their
-    // suggested indexes and aren't offset by later lower-index insertions.
-    let negativeIndexSpanCount = 0;
+    // Partition the results into positive- and negative-index arrays. Positive
+    // indexes are relative to the start of the list and negative indexes are
+    // relative to the end.
+    let positive = [];
+    let negative = [];
     for (let result of suggestedIndexResults) {
-      if (result.suggestedIndex < 0) {
-        negativeIndexSpanCount += UrlbarUtils.getSpanForResult(result);
-      } else {
+      let results = result.suggestedIndex < 0 ? negative : positive;
+      results.push(result);
+    }
+
+    // Sort the positive results ascending so that results at the end of the
+    // array don't end up offset by later insertions at the front.
+    positive.sort((a, b) => a.suggestedIndex - b.suggestedIndex);
+
+    // Conversely, sort the negative results descending so that results at the
+    // front of the array don't end up offset by later insertions at the end.
+    negative.sort((a, b) => b.suggestedIndex - a.suggestedIndex);
+
+    // Insert the results. We start with the positive results because we have
+    // tests that assume they're inserted first. In practice it shouldn't matter
+    // because there's no good reason we would ever have a negative result come
+    // before a positive result in the same query. Even if we did, we have to
+    // insert one before the other, and there's no right or wrong order.
+    for (let results of [positive, negative]) {
+      for (let result of results) {
         this._updateStatePreAdd(result, state);
         if (this._canAddResult(result, state)) {
           let index =
-            result.suggestedIndex <= sortedResults.length
-              ? result.suggestedIndex
-              : sortedResults.length;
+            result.suggestedIndex >= 0
+              ? Math.min(result.suggestedIndex, sortedResults.length)
+              : Math.max(result.suggestedIndex + sortedResults.length + 1, 0);
           sortedResults.splice(index, 0, result);
           this._updateStatePostAdd(result, state);
         }
-      }
-    }
-
-    // Before inserting results with negative indexes, truncate the sorted
-    // results so that their total span count is no larger than maxResults minus
-    // the span count of the negative-index results themselves.  If we didn't do
-    // that, the negative-index results could end up getting removed when the
-    // muxer truncates the final results array, which would effectively mean
-    // that we inserted them at the wrong indexes.
-    this._truncateResults(
-      sortedResults,
-      state.context.maxResults - negativeIndexSpanCount
-    );
-
-    // Insert results with negative indexes.
-    if (negativeIndexSpanCount) {
-      for (let result of suggestedIndexResults) {
-        if (result.suggestedIndex >= 0) {
-          break;
-        }
-        this._updateStatePreAdd(result, state);
-        if (this._canAddResult(result, state)) {
-          let index = Math.max(
-            result.suggestedIndex + sortedResults.length + 1,
-            0
-          );
-          sortedResults.splice(index, 0, result);
-          this._updateStatePostAdd(result, state);
-        }
-      }
-    }
-  }
-
-  /**
-   * Truncates the array of results so that their total span count is no larger
-   * than a given number.
-   *
-   * @param {array} sortedResults
-   *   The sorted results produced by the muxer so far.  Updated in place.
-   * @param {number} maxSpanCount
-   *   The max span count.
-   */
-  _truncateResults(sortedResults, maxSpanCount) {
-    let remainingSpanCount = maxSpanCount;
-    for (let i = 0; i < sortedResults.length; i++) {
-      remainingSpanCount -= UrlbarUtils.getSpanForResult(sortedResults[i]);
-      if (remainingSpanCount < 0) {
-        sortedResults.splice(i, sortedResults.length - i);
-        break;
       }
     }
   }

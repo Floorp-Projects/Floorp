@@ -1317,6 +1317,35 @@ add_resultBuckets_task({
   ],
 });
 
+add_resultBuckets_task({
+  testName: "resultSpan = 3 followed by others",
+  resultBuckets: {
+    children: [
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+      {
+        group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
+      },
+    ],
+  },
+  providerResults: [
+    // max results remote suggestions
+    ...makeRemoteSuggestionResults(MAX_RESULTS),
+    // 1 history with resultSpan = 3
+    Object.assign(
+      makeHistoryResults(1)[0],
+      { resultSpan: 3 },
+    )
+  ],
+  expectedResultIndexes: [
+    // general/history: 1
+    ...makeIndexRange(MAX_RESULTS, 1),
+    // remote suggestions: maxResults - resultSpan of 3 = 10 - 3 = 7
+    ...makeIndexRange(0, 7),
+  ],
+});
+
 /**
  * Adds a test task.
  *
