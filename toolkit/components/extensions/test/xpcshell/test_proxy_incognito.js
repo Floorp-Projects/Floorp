@@ -11,12 +11,6 @@ server.registerPathHandler("/dummy", (request, response) => {
 });
 
 add_task(async function test_incognito_proxy_onRequest_access() {
-  // No specific support exists in the proxy api for this test,
-  // rather it depends on functionality existing in ChannelWrapper
-  // that prevents notification of private channels if the
-  // extension does not have permission.
-  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
-
   // This extension will fail if it gets a private request.
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -98,6 +92,4 @@ add_task(async function test_incognito_proxy_onRequest_access() {
 
   await pextension.unload();
   await extension.unload();
-
-  Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });

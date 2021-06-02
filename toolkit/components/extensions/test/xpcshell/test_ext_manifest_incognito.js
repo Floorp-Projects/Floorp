@@ -3,8 +3,6 @@
 "use strict";
 
 add_task(async function test_manifest_incognito() {
-  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
-
   let normalized = await ExtensionTestUtils.normalizeManifest({
     incognito: "spanning",
   });
@@ -44,5 +42,4 @@ add_task(async function test_manifest_incognito() {
     undefined,
     "Invalid incognito string should be undefined"
   );
-  Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });

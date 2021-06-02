@@ -8,7 +8,6 @@ add_task(async function test_theme_install() {
     set: [
       ["extensions.webapi.testing", true],
       ["extensions.install.requireBuiltInCerts", false],
-      ["extensions.allowPrivateBrowsingByDefault", false],
     ],
   });
 

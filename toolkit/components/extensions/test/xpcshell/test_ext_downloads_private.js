@@ -17,7 +17,6 @@ add_task(function setup() {
   );
   info(`Using download directory ${downloadDir.path}`);
 
-  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue(
     "browser.download.dir",
@@ -26,7 +25,6 @@ add_task(function setup() {
   );
 
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
 

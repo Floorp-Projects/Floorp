@@ -174,10 +174,6 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
       mLocalizeCallback(aInit.mLocalizeCallback),
       mIsPrivileged(aInit.mIsPrivileged),
       mPermissions(new AtomSet(aInit.mPermissions)) {
-  // We set this here to prevent this policy changing after creation.
-  mAllowPrivateBrowsingByDefault =
-      StaticPrefs::extensions_allowPrivateBrowsingByDefault();
-
   MatchPatternOptions options;
   options.mRestrictSchemes = !HasPermission(nsGkAtoms::mozillaAddons);
 
@@ -546,8 +542,7 @@ void WebExtensionPolicy::GetContentScripts(
 }
 
 bool WebExtensionPolicy::PrivateBrowsingAllowed() const {
-  return mAllowPrivateBrowsingByDefault ||
-         HasPermission(nsGkAtoms::privateBrowsingAllowedPermission);
+  return HasPermission(nsGkAtoms::privateBrowsingAllowedPermission);
 }
 
 bool WebExtensionPolicy::CanAccessContext(nsILoadContext* aContext) const {

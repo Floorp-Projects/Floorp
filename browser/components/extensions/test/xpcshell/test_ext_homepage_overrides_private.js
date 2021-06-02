@@ -25,7 +25,6 @@ const HOMEPAGE_URL_PREF = "browser.startup.homepage";
 const HOMEPAGE_URI = "webext-homepage-1.html";
 
 Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
-Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
 
 AddonTestUtils.init(this);
 AddonTestUtils.usePrivilegedSignatures = false;

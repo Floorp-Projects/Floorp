@@ -144,10 +144,6 @@ add_task(function clearInitialTelemetry() {
 });
 
 add_task(async function test_badge_and_toggle_incognito() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   let addons = new Map([
     [
       "@test-default",
@@ -291,10 +287,6 @@ add_task(async function test_badge_and_toggle_incognito() {
 });
 
 add_task(async function test_addon_preferences_button() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   let addons = new Map([
     [
       "test-inline-options@mozilla.com",
@@ -460,10 +452,7 @@ add_task(async function test_addon_preferences_button() {
 
 add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.allowPrivateBrowsingByDefault", false],
-      ["extensions.langpacks.signatures.required", false],
-    ],
+    set: [["extensions.langpacks.signatures.required", false]],
   });
 
   const TEST_ADDONS = [

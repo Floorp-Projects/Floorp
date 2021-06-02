@@ -2,10 +2,6 @@
 
 // Make sure that we won't trigger events for a private window.
 add_task(async function test_no_show_hide_for_private_window() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   function background() {
     let events = [];
     browser.menus.onShown.addListener(data => events.push(data));
