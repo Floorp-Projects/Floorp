@@ -521,6 +521,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   // auth specific data
   nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
   nsCOMPtr<nsIURI> mRedirectURI;
+  nsCOMPtr<nsIURI> mUnstrippedRedirectURI;
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsCOMPtr<nsIChannel> mPreflightChannel;
 
