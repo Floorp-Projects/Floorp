@@ -19,6 +19,21 @@ function convertEntries(entries) {
   return result;
 }
 
+function parsePoint(str) {
+  var pieces = str.replace(/[()\s]+/g, "").split(",");
+  SimpleTest.is(pieces.length, 2, "expected string of form (x,y)");
+  for (var i = 0; i < 2; i++) {
+    var eq = pieces[i].indexOf("=");
+    if (eq >= 0) {
+      pieces[i] = pieces[i].substring(eq + 1);
+    }
+  }
+  return {
+    x: parseInt(pieces[0]),
+    y: parseInt(pieces[1]),
+  };
+}
+
 // TODO: Clean up these rect-handling functions so that e.g. a rect returned
 //       by Element.getBoundingClientRect() Just Works with them.
 function parseRect(str) {

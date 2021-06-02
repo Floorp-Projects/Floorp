@@ -585,11 +585,7 @@ function getAsyncScrollOffsets(aPaintsToIgnore) {
     }
 
     ok(rcd.children.length == 1, "Root content APZC has exactly one child");
-    var scroll = rcd.children[0].asyncScrollOffset;
-    var pieces = scroll.replace(/[()\s]+/g, "").split(",");
-    is(pieces.length, 2, "expected string of form (x,y)");
-    offsets.push({ x: parseInt(pieces[0]),
-                   y: parseInt(pieces[1]) });
+    offsets.push(parsePoint(rcd.children[0].asyncScrollOffset));
   }
   return offsets;
 }
