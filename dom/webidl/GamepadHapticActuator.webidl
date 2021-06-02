@@ -13,7 +13,8 @@ enum GamepadHapticActuatorType {
 
 [Pref="dom.gamepad.extensions.enabled",
  HeaderFile="mozilla/dom/GamepadHapticActuator.h",
- Exposed=Window]
+ Exposed=Window,
+ SecureContext]
 interface GamepadHapticActuator
 {
   readonly attribute GamepadHapticActuatorType type;
