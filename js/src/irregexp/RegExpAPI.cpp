@@ -766,5 +766,18 @@ uint32_t CaseInsensitiveCompareUnicode(const char16_t* substring1,
       substring1, substring2, byteLength);
 }
 
+#ifdef DEBUG
+bool IsolateShouldSimulateInterrupt(Isolate* isolate) {
+  return isolate->shouldSimulateInterrupt_ != 0;
+}
+
+void IsolateSetShouldSimulateInterrupt(Isolate* isolate) {
+  isolate->shouldSimulateInterrupt_ = 1;
+}
+void IsolateClearShouldSimulateInterrupt(Isolate* isolate) {
+  isolate->shouldSimulateInterrupt_ = 0;
+}
+#endif
+
 }  // namespace irregexp
 }  // namespace js

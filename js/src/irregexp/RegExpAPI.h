@@ -55,7 +55,11 @@ uint32_t CaseInsensitiveCompareNonUnicode(const char16_t* substring1,
 uint32_t CaseInsensitiveCompareUnicode(const char16_t* substring1,
                                        const char16_t* substring2,
                                        size_t byteLength);
-
+#ifdef DEBUG
+bool IsolateShouldSimulateInterrupt(Isolate* isolate);
+void IsolateSetShouldSimulateInterrupt(Isolate* isolate);
+void IsolateClearShouldSimulateInterrupt(Isolate* isolate);
+#endif
 }  // namespace irregexp
 }  // namespace js
 
