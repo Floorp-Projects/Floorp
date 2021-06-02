@@ -573,7 +573,7 @@ bool nsDocShellLoadState::LoadIsFromSessionHistory() const {
 }
 
 void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
-    BrowsingContext* aContext) {
+    BrowsingContext* aContext, nsIURI* aCurrentUnstrippedURI) {
   MOZ_ASSERT(aContext);
 
   // We don't need to strip for sub frames because the query string has been
@@ -605,7 +605,24 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
   if (URLQueryStringStripper::Strip(URI(), strippedURI)) {
     mUnstrippedURI = URI();
     SetURI(strippedURI);
+  } else if (LoadType() & nsIDocShell::LOAD_CMD_RELOAD) {
+    // Preserve the Unstripped URI if it's a reload. By doing this, we can
+    // restore the stripped query parameters once the ETP has been toggled to
+    // off.
+    mUnstrippedURI = aCurrentUnstrippedURI;
   }
+
+#ifdef DEBUG
+  // Make sure that unstripped URI is the same as URI() but only the query
+  // string could be different.
+  if (mUnstrippedURI) {
+    nsCOMPtr<nsIURI> uri;
+    URLQueryStringStripper::Strip(mUnstrippedURI, uri);
+    bool equals = false;
+    Unused << URI()->Equals(uri, &equals);
+    MOZ_ASSERT(equals);
+  }
+#endif
 }
 
 const nsString& nsDocShellLoadState::Target() const { return mTarget; }

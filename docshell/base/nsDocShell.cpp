@@ -10451,8 +10451,18 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   nsLoadFlags loadFlags = aLoadState->CalculateChannelLoadFlags(
       mBrowsingContext, Some(uriModified), Some(isXFOError));
 
+  // Get the unstripped URI from the current document channel. The unstripped
+  // URI will be preserved if it's a reload.
+  nsCOMPtr<nsIURI> currentUnstrippedURI;
+  nsCOMPtr<nsIChannel> docChannel = GetCurrentDocChannel();
+  if (docChannel) {
+    nsCOMPtr<nsILoadInfo> docLoadInfo = docChannel->LoadInfo();
+    docLoadInfo->GetUnstrippedURI(getter_AddRefs(currentUnstrippedURI));
+  }
+
   // Strip the target query parameters before creating the channel.
-  aLoadState->MaybeStripTrackerQueryStrings(mBrowsingContext);
+  aLoadState->MaybeStripTrackerQueryStrings(mBrowsingContext,
+                                            currentUnstrippedURI);
 
   nsCOMPtr<nsIChannel> channel;
   if (DocumentChannel::CanUseDocumentChannel(aLoadState->URI())) {
