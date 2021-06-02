@@ -5063,14 +5063,24 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
     bool isThirdPartyRedirectURI = true;
     thirdPartyUtil->IsThirdPartyURI(mURI, mRedirectURI,
                                     &isThirdPartyRedirectURI);
+    if (isThirdPartyRedirectURI && mLoadInfo->GetExternalContentPolicyType() ==
+                                       ExtContentPolicy::TYPE_DOCUMENT) {
+      nsCOMPtr<nsIPrincipal> prin;
+      ContentBlockingAllowList::RecomputePrincipal(
+          mRedirectURI, mLoadInfo->GetOriginAttributes(), getter_AddRefs(prin));
 
-    nsCOMPtr<nsIURI> strippedURI;
-    if (isThirdPartyRedirectURI &&
-        mLoadInfo->GetExternalContentPolicyType() ==
-            ExtContentPolicy::TYPE_DOCUMENT &&
-        URLQueryStringStripper::Strip(mRedirectURI, strippedURI)) {
-      mUnstrippedRedirectURI = mRedirectURI;
-      mRedirectURI = strippedURI;
+      bool isRedirectURIInAllowList = false;
+      if (prin) {
+        ContentBlockingAllowList::Check(prin, mPrivateBrowsing,
+                                        isRedirectURIInAllowList);
+      }
+
+      nsCOMPtr<nsIURI> strippedURI;
+      if (!isRedirectURIInAllowList &&
+          URLQueryStringStripper::Strip(mRedirectURI, strippedURI)) {
+        mUnstrippedRedirectURI = mRedirectURI;
+        mRedirectURI = strippedURI;
+      }
     }
   }
 
