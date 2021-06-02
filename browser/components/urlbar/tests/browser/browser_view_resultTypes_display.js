@@ -261,7 +261,7 @@ add_task(async function test_remote_tab_result() {
         url: "http://example.com",
         icon: UrlbarUtils.ICON.DEFAULT,
         client: "7cqCr77ptzX3",
-        lastUsed: parseInt(Date.now() / 1000),
+        lastUsed: Math.floor(Date.now() / 1000),
       },
     ],
   };

@@ -295,6 +295,18 @@ async function addTestTailSuggestionsEngine(suggestionsFn = null) {
   return engine;
 }
 
+async function addOpenPages(uri, count = 1, userContextId = 0) {
+  for (let i = 0; i < count; i++) {
+    await UrlbarProviderOpenTabs.registerOpenTab(uri.spec, userContextId);
+  }
+}
+
+async function removeOpenPages(aUri, aCount = 1, aUserContextId = 0) {
+  for (let i = 0; i < aCount; i++) {
+    await UrlbarProviderOpenTabs.unregisterOpenTab(aUri.spec, aUserContextId);
+  }
+}
+
 /**
  * Helper for tests that generate search results but aren't interested in
  * suggestions, such as autofill tests. Installs a test engine and disables
@@ -458,6 +470,31 @@ function makeOmniboxResult(
 }
 
 /**
+ * Creates a UrlbarResult for an switch-to-tab result.
+ * @param {UrlbarQueryContext} queryContext
+ *   The context that this result will be displayed in.
+ * @param {string} options.uri
+ *   The page URI.
+ * @param {string} [options.title]
+ *   The page title.
+ * @param {string} [options.iconUri]
+ *   A URI for the page icon.
+ * @returns {UrlbarResult}
+ */
+function makeTabSwitchResult(queryContext, { uri, title, iconUri }) {
+  return new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+    UrlbarUtils.RESULT_SOURCE.TABS,
+    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
+      title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
+      // Check against undefined so consumers can pass in the empty string.
+      icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
+    })
+  );
+}
+
+/**
  * Creates a UrlbarResult for a keyword search result.
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
@@ -527,6 +564,54 @@ function makePrioritySearchResult(
   if (heuristic) {
     result.heuristic = heuristic;
   }
+  return result;
+}
+
+/**
+ * Creates a UrlbarResult for a remote tab result.
+ * @param {UrlbarQueryContext} queryContext
+ *   The context that this result will be displayed in.
+ * @param {string} options.uri
+ *   The page URI.
+ * @param {string} options.device
+ *   The name of the device that the remote tab comes from.
+ * @param {string} [options.title]
+ *   The page title.
+ * @param {number} [options.lastUsed]
+ *   The last time the remote tab was visited, in epoch seconds. Defaults
+ *   to 0.
+ * @param {string} [options.iconUri]
+ *   A URI for the page's icon.
+ * @returns {UrlbarResult}
+ */
+function makeRemoteTabResult(
+  queryContext,
+  { uri, device, title, iconUri, lastUsed = 0 }
+) {
+  let payload = {
+    url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
+    device: [device, UrlbarUtils.HIGHLIGHT.TYPED],
+    // Check against undefined so consumers can pass in the empty string.
+    icon:
+      typeof iconUri != "undefined"
+        ? iconUri
+        : `moz-anno:favicon:page-icon:${uri}`,
+    lastUsed: lastUsed * 1000,
+  };
+
+  // Check against undefined so consumers can pass in the empty string.
+  if (typeof title != "undefined") {
+    payload.title = [title, UrlbarUtils.HIGHLIGHT.TYPED];
+  } else {
+    payload.title = [uri, UrlbarUtils.HIGHLIGHT.TYPED];
+  }
+
+  let result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
+    UrlbarUtils.RESULT_SOURCE.TABS,
+    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
+  );
+
   return result;
 }
 

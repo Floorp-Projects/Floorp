@@ -166,7 +166,7 @@ class ProviderRemoteTabs extends UrlbarProvider {
               title: [tab.title, UrlbarUtils.HIGHLIGHT.TYPED],
               device: client.name,
               icon: showRemoteIconsPref ? tab.icon : "",
-              lastUsed: tab.lastUsed * 1000,
+              lastUsed: (tab.lastUsed || 0) * 1000,
             })
           )
         );
