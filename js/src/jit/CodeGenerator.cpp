@@ -8156,34 +8156,32 @@ void CodeGenerator::visitMinMaxArrayD(LMinMaxArrayD* ins) {
   bailoutFrom(&bail, ins->snapshot());
 }
 
+// For Abs*, lowering will have tied input to output on platforms where that is
+// sensible, and otherwise left them untied.
+
 void CodeGenerator::visitAbsI(LAbsI* ins) {
   Register input = ToRegister(ins->input());
-  MOZ_ASSERT(input == ToRegister(ins->output()));
+  Register output = ToRegister(ins->output());
 
-  Label positive;
-  masm.branchTest32(Assembler::NotSigned, input, input, &positive);
   if (ins->mir()->fallible()) {
+    Label positive;
+    masm.branchTest32(Assembler::NotSigned, input, input, &positive);
     Label bail;
     masm.branchNeg32(Assembler::Overflow, input, &bail);
     bailoutFrom(&bail, ins->snapshot());
+    masm.bind(&positive);
   } else {
-    masm.neg32(input);
+    masm.abs32(input, output);
   }
-  masm.bind(&positive);
 }
 
 void CodeGenerator::visitAbsD(LAbsD* ins) {
-  FloatRegister input = ToFloatRegister(ins->input());
-  MOZ_ASSERT(input == ToFloatRegister(ins->output()));
-
-  masm.absDouble(input, input);
+  masm.absDouble(ToFloatRegister(ins->input()), ToFloatRegister(ins->output()));
 }
 
 void CodeGenerator::visitAbsF(LAbsF* ins) {
-  FloatRegister input = ToFloatRegister(ins->input());
-  MOZ_ASSERT(input == ToFloatRegister(ins->output()));
-
-  masm.absFloat32(input, input);
+  masm.absFloat32(ToFloatRegister(ins->input()),
+                  ToFloatRegister(ins->output()));
 }
 
 void CodeGenerator::visitPowII(LPowII* ins) {
