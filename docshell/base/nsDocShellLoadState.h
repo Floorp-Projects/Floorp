@@ -323,7 +323,8 @@ class nsDocShellLoadState final {
                                    bool aLoadingFromActiveEntry);
   void ClearLoadIsFromSessionHistory();
 
-  void MaybeStripTrackerQueryStrings(mozilla::dom::BrowsingContext* aContext);
+  void MaybeStripTrackerQueryStrings(mozilla::dom::BrowsingContext* aContext,
+                                     nsIURI* aCurrentUnstrippedURI = nullptr);
 
  protected:
   // Destructor can't be defaulted or inlined, as header doesn't have all type
