@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test garbage collection of captured stream, when playing a MediaSource</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="mediasource.js"></script>
+</head>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function forceGC() {
+  SpecialPowers.gc();
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = async function() {
+// Create an infinite source using a MediaSource
+let el = document.createElement("audio");
+const ms = new MediaSource();
+el.src = URL.createObjectURL(ms);
+await once(ms, "sourceopen");
+const sb = ms.addSourceBuffer("video/mp4");
+await fetchAndLoad(sb, "bipbop/bipbop_audio", ["init"], ".mp4");
+await fetchAndLoad(sb, "bipbop/bipbop_audio", range(1, 11), ".m4s");
+setInterval(async function() {
+  sb.timestampOffset =  sb.buffered.end(sb.buffered.length - 1);
+  await fetchAndLoad(sb, "bipbop/bipbop_audio", range(1, 11), ".m4s");
+}, 8000);
+el.play();
+
+// Analyze the media element output.
+const ac = new AudioContext;
+const analyzer = ac.createAnalyser();
+
+// bug 1703603
+const stream = el.mozCaptureStreamUntilEnded();
+const mss = ac.createMediaStreamSource(stream);
+const gain = ac.createGain();
+// compensate mochitest volume scaling, but don't connect to the AudioContext's
+// destination to avoid noise during the test
+gain.gain.value = 90;
+mss.connect(gain).connect(analyzer);
+
+
+// Drop the media element reference: it is supposed to be kept alive by the
+// AudioContext via the `MediaStream`.
+el = null;
+
+// check whether the media element is still playing using the analyzer, spam the
+// GC to ensure all refs are kept.
+const buf = new Float32Array(analyzer.frequencyBinCount);
+const startTime = Date.now();
+function checkNonSilent() {
+  analyzer.getFloatFrequencyData(buf);
+  forceGC();
+  // Wait a good 20 seconds.
+  if (Date.now() - startTime < 2000) {
+    requestAnimationFrame(checkNonSilent);
+  } else {
+    ok(true, "All objects were kept alive.");
+    SimpleTest.finish();
+  }
+}
+checkNonSilent();
+}
+</script>
+</pre>
+</body>
+</html>
