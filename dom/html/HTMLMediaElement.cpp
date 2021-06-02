@@ -1178,6 +1178,8 @@ void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                               "mFinishWhenEndedLoadingSrc", aFlags);
   ImplCycleCollectionTraverse(aCallback, aField.mFinishWhenEndedAttrStream,
                               "mFinishWhenEndedAttrStream", aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mFinishWhenEndedMediaSource,
+                              "mFinishWhenEndedMediaSource", aFlags);
 }
 
 void ImplCycleCollectionUnlink(HTMLMediaElement::OutputMediaStream& aField) {
@@ -1185,6 +1187,7 @@ void ImplCycleCollectionUnlink(HTMLMediaElement::OutputMediaStream& aField) {
   ImplCycleCollectionUnlink(aField.mLiveTracks);
   ImplCycleCollectionUnlink(aField.mFinishWhenEndedLoadingSrc);
   ImplCycleCollectionUnlink(aField.mFinishWhenEndedAttrStream);
+  ImplCycleCollectionUnlink(aField.mFinishWhenEndedMediaSource);
 }
 
 NS_IMPL_ADDREF_INHERITED(HTMLMediaElement::MediaElementTrackSource,
@@ -3640,7 +3643,8 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
     }
 
     if (!mOutputStreams[i].mFinishWhenEndedLoadingSrc &&
-        !mOutputStreams[i].mFinishWhenEndedAttrStream) {
+        !mOutputStreams[i].mFinishWhenEndedAttrStream &&
+        !mOutputStreams[i].mFinishWhenEndedMediaSource) {
       // This finish-when-ended stream has not seen any source loaded yet.
       // Update the loading src if it's time.
       if (!IsPlaybackEnded()) {
@@ -3648,6 +3652,8 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
           mOutputStreams[i].mFinishWhenEndedLoadingSrc = mLoadingSrc;
         } else if (mSrcAttrStream) {
           mOutputStreams[i].mFinishWhenEndedAttrStream = mSrcAttrStream;
+        } else if (mSrcMediaSource) {
+          mOutputStreams[i].mFinishWhenEndedMediaSource = mSrcMediaSource;
         }
       }
       continue;
@@ -3661,6 +3667,10 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
     }
     if (!IsPlaybackEnded() &&
         mSrcAttrStream == mOutputStreams[i].mFinishWhenEndedAttrStream) {
+      continue;
+    }
+    if (!IsPlaybackEnded() &&
+        mSrcMediaSource == mOutputStreams[i].mFinishWhenEndedMediaSource) {
       continue;
     }
     LOG(LogLevel::Debug,
@@ -3809,8 +3819,12 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
     if (mSrcAttrStream) {
       out->mFinishWhenEndedAttrStream = mSrcAttrStream;
     }
+    if (mSrcMediaSource) {
+      out->mFinishWhenEndedMediaSource = mSrcMediaSource;
+    }
     MOZ_ASSERT(out->mFinishWhenEndedLoadingSrc ||
-               out->mFinishWhenEndedAttrStream);
+               out->mFinishWhenEndedAttrStream ||
+               out->mFinishWhenEndedMediaSource);
   }
 
   if (aStreamCaptureType == StreamCaptureType::CAPTURE_AUDIO) {

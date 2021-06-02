@@ -135,11 +135,13 @@ class HTMLMediaElement : public nsGenericHTMLElement,
     const bool mCapturingAudioOnly;
     const bool mFinishWhenEnded;
     // If mFinishWhenEnded is true, this is the URI of the first resource
-    // mStream got tracks for, if not a MediaStream.
+    // mStream got tracks for.
     nsCOMPtr<nsIURI> mFinishWhenEndedLoadingSrc;
     // If mFinishWhenEnded is true, this is the first MediaStream mStream got
-    // tracks for, if not a resource.
+    // tracks for.
     RefPtr<DOMMediaStream> mFinishWhenEndedAttrStream;
+    // If mFinishWhenEnded is true, this is the MediaSource being played.
+    RefPtr<MediaSource> mFinishWhenEndedMediaSource;
   };
 
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
