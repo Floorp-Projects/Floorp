@@ -35,11 +35,6 @@ object FeatureFlags {
     val webAuthFeature = Config.channel.isNightlyOrDebug
 
     /**
-     * Shows new three-dot toolbar menu design.
-     */
-    const val toolbarMenuFeature = true
-
-    /**
      * Enables the tabs tray re-write with Synced Tabs.
      */
     const val tabsTrayRewrite = true

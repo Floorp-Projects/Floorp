@@ -26,7 +26,6 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.components.toolbar.DefaultToolbarMenu
 import org.mozilla.fenix.ext.settings
 
@@ -88,70 +87,62 @@ class DefaultToolbarMenuTest {
     @Test
     @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/18822")
     fun `WHEN the bottom toolbar is set THEN the first item in the list is not the navigation`() {
-        if (FeatureFlags.toolbarMenuFeature) {
-            every { context.settings().shouldUseBottomToolbar } returns true
-            createMenu()
+        every { context.settings().shouldUseBottomToolbar } returns true
+        createMenu()
 
-            val menuItems = toolbarMenu.newCoreMenuItems
-            assertNotNull(menuItems)
+        val menuItems = toolbarMenu.coreMenuItems
+        assertNotNull(menuItems)
 
-            val firstItem = menuItems[0]
-            val newTabItem = toolbarMenu.newTabItem
+        val firstItem = menuItems[0]
+        val newTabItem = toolbarMenu.newTabItem
 
-            assertEquals(newTabItem, firstItem)
-        }
+        assertEquals(newTabItem, firstItem)
     }
 
     @Test
     @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/18822")
     fun `WHEN the top toolbar is set THEN the first item in the list is the navigation`() {
-        if (FeatureFlags.toolbarMenuFeature) {
-            every { context.settings().shouldUseBottomToolbar } returns false
-            createMenu()
+        every { context.settings().shouldUseBottomToolbar } returns false
+        createMenu()
 
-            val menuItems = toolbarMenu.newCoreMenuItems
-            assertNotNull(menuItems)
+        val menuItems = toolbarMenu.coreMenuItems
+        assertNotNull(menuItems)
 
-            val firstItem = menuItems[0]
-            val navToolbar = toolbarMenu.menuToolbar
+        val firstItem = menuItems[0]
+        val navToolbar = toolbarMenu.menuToolbar
 
-            assertEquals(navToolbar, firstItem)
-        }
+        assertEquals(navToolbar, firstItem)
     }
 
     @Test
     @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/18822")
     fun `WHEN the bottom toolbar is set THEN the nav menu should be the last item`() {
-        if (FeatureFlags.toolbarMenuFeature) {
-            every { context.settings().shouldUseBottomToolbar } returns true
+        every { context.settings().shouldUseBottomToolbar } returns true
 
-            createMenu()
+        createMenu()
 
-            val menuItems = toolbarMenu.newCoreMenuItems
-            assertNotNull(menuItems)
+        val menuItems = toolbarMenu.coreMenuItems
+        assertNotNull(menuItems)
 
-            val lastItem = menuItems[menuItems.size - 1]
-            val navToolbar = toolbarMenu.menuToolbar
+        val lastItem = menuItems[menuItems.size - 1]
+        val navToolbar = toolbarMenu.menuToolbar
 
-            assertEquals(navToolbar, lastItem)
-        }
+        assertEquals(navToolbar, lastItem)
     }
 
     @Test
     @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/18822")
     fun `WHEN the top toolbar is set THEN settings should be the last item`() {
-        if (FeatureFlags.toolbarMenuFeature) {
-            every { context.settings().shouldUseBottomToolbar } returns false
+        every { context.settings().shouldUseBottomToolbar } returns false
 
-            createMenu()
+        createMenu()
 
-            val menuItems = toolbarMenu.newCoreMenuItems
-            assertNotNull(menuItems)
+        val menuItems = toolbarMenu.coreMenuItems
+        assertNotNull(menuItems)
 
-            val lastItem = menuItems[menuItems.size - 1]
-            val settingsItem = toolbarMenu.settingsItem
+        val lastItem = menuItems[menuItems.size - 1]
+        val settingsItem = toolbarMenu.settingsItem
 
-            assertEquals(settingsItem, lastItem)
-        }
+        assertEquals(settingsItem, lastItem)
     }
 }

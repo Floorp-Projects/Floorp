@@ -34,15 +34,11 @@ import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.FeatureFlags.tabsTrayRewrite
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.accounts.FenixAccountManager
 import org.mozilla.fenix.experiments.ExperimentBranch
 import org.mozilla.fenix.experiments.FeatureId
-import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.withExperiment
@@ -82,12 +78,7 @@ open class DefaultToolbarMenu(
 
     override val menuBuilder by lazy {
         WebExtensionBrowserMenuBuilder(
-            items =
-                if (FeatureFlags.toolbarMenuFeature) {
-                    newCoreMenuItems
-                } else {
-                    oldCoreMenuItems
-                },
+            items = coreMenuItems,
             endOfMenuAlwaysVisible = shouldUseBottomToolbar,
             store = store,
             style = WebExtensionBrowserMenuBuilder.Style(
@@ -161,27 +152,7 @@ open class DefaultToolbarMenu(
 
         registerForIsBookmarkedUpdates()
 
-        if (FeatureFlags.toolbarMenuFeature) {
-            BrowserMenuItemToolbar(listOf(back, forward, share, refresh), isSticky = true)
-        } else {
-            val bookmark = BrowserMenuItemToolbar.TwoStateButton(
-                primaryImageResource = R.drawable.ic_bookmark_filled,
-                primaryContentDescription = context.getString(R.string.browser_menu_edit_bookmark),
-                primaryImageTintResource = primaryTextColor(),
-                // TwoStateButton.isInPrimaryState must be synchronous, and checking bookmark state is
-                // relatively slow. The best we can do here is periodically compute and cache a new "is
-                // bookmarked" state, and use that whenever the menu has been opened.
-                isInPrimaryState = { isCurrentUrlBookmarked },
-                secondaryImageResource = R.drawable.ic_bookmark_outline,
-                secondaryContentDescription = context.getString(R.string.browser_menu_bookmark),
-                secondaryImageTintResource = primaryTextColor(),
-                disableInSecondaryState = false
-            ) {
-                handleBookmarkItemTapped()
-            }
-
-            BrowserMenuItemToolbar(listOf(back, forward, bookmark, share, refresh))
-        }
+        BrowserMenuItemToolbar(listOf(back, forward, share, refresh), isSticky = true)
     }
 
     // Predicates that need to be repeatedly called as the session changes
@@ -220,170 +191,6 @@ open class DefaultToolbarMenu(
         }
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.InstallPwaToHomeScreen)
-    }
-
-    private val oldCoreMenuItems by lazy {
-        val settings = BrowserMenuHighlightableItem(
-            label = context.getString(R.string.browser_menu_settings),
-            startImageResource = R.drawable.ic_settings,
-            iconTintColorResource = if (hasAccountProblem)
-                ThemeManager.resolveAttribute(R.attr.syncDisconnected, context) else
-                primaryTextColor(),
-            textColorResource = if (hasAccountProblem)
-                ThemeManager.resolveAttribute(R.attr.primaryText, context) else
-                primaryTextColor(),
-            highlight = BrowserMenuHighlight.HighPriority(
-                endImageResource = R.drawable.ic_sync_disconnected,
-                backgroundTint = context.getColorFromAttr(R.attr.syncDisconnectedBackground),
-                canPropagate = false
-            ),
-            isHighlighted = { hasAccountProblem }
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.Settings)
-        }
-
-        val desktopMode = BrowserMenuImageSwitch(
-            imageResource = R.drawable.ic_desktop,
-            label = context.getString(R.string.browser_menu_desktop_site),
-            initialState = {
-                selectedSession?.content?.desktopMode ?: false
-            }
-        ) { checked ->
-            onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
-        }
-
-        val addToTopSites = BrowserMenuImageText(
-            label = context.getString(R.string.browser_menu_add_to_top_sites),
-            imageResource = R.drawable.ic_top_sites,
-            iconTintColorResource = primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.AddToTopSites)
-        }
-
-        val addToHomescreen = BrowserMenuImageText(
-            label = context.getString(R.string.browser_menu_add_to_homescreen),
-            imageResource = R.drawable.ic_add_to_homescreen,
-            iconTintColorResource = primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
-        }
-
-        val syncedTabs = BrowserMenuImageText(
-            label = context.getString(R.string.synced_tabs),
-            imageResource = R.drawable.ic_synced_tabs,
-            iconTintColorResource = primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.SyncedTabs)
-        }
-
-        val findInPage = BrowserMenuImageText(
-            label = context.getString(R.string.browser_menu_find_in_page),
-            imageResource = R.drawable.mozac_ic_search,
-            iconTintColorResource = primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
-        }
-
-        val reportSiteIssuePlaceholder = WebExtensionPlaceholderMenuItem(
-            id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID
-        )
-
-        val saveToCollection = BrowserMenuImageText(
-            label = context.getString(R.string.browser_menu_save_to_collection_2),
-            imageResource = R.drawable.ic_tab_collection,
-            iconTintColorResource = primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.SaveToCollection)
-        }
-
-        val deleteDataOnQuit = BrowserMenuImageText(
-            label = context.getString(R.string.delete_browsing_data_on_quit_action),
-            imageResource = R.drawable.ic_exit,
-            iconTintColorResource = primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.Quit)
-        }
-
-        val readerAppearance = BrowserMenuImageText(
-            label = context.getString(R.string.browser_menu_read_appearance),
-            imageResource = R.drawable.ic_readermode_appearance,
-            iconTintColorResource = primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.CustomizeReaderView)
-        }
-
-        val openInApp = BrowserMenuHighlightableItem(
-            label = context.getString(R.string.browser_menu_open_app_link),
-            startImageResource = R.drawable.ic_open_in_app,
-            iconTintColorResource = primaryTextColor(),
-            highlight = BrowserMenuHighlight.LowPriority(
-                label = context.getString(R.string.browser_menu_open_app_link),
-                notificationTint = getColor(context, R.color.whats_new_notification_color)
-            ),
-            isHighlighted = { !context.settings().openInAppOpened }
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
-        }
-
-        val historyItem = BrowserMenuImageText(
-            context.getString(R.string.library_history),
-            R.drawable.ic_history,
-            primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.History)
-        }
-
-        val bookmarksItem = BrowserMenuImageText(
-            context.getString(R.string.library_bookmarks),
-            R.drawable.ic_bookmark_filled,
-            primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.Bookmarks)
-        }
-
-        val downloadsItem = BrowserMenuImageText(
-            context.getString(R.string.library_downloads),
-            R.drawable.ic_download,
-            primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.Downloads)
-        }
-
-        // Predicates that are called once, during screen init
-        val shouldShowSaveToCollection = (context.asActivity() as? HomeActivity)
-            ?.browsingModeManager?.mode == BrowsingMode.Normal
-        val shouldDeleteDataOnQuit = context.components.settings
-            .shouldDeleteBrowsingDataOnQuit
-
-        val menuItems = listOfNotNull(
-            downloadsItem,
-            historyItem,
-            bookmarksItem,
-            syncedTabs,
-            settings,
-            if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
-            BrowserMenuDivider(),
-            reportSiteIssuePlaceholder,
-            findInPage,
-            getSetDefaultBrowserItem()?.let { BrowserMenuDivider() },
-            getSetDefaultBrowserItem(),
-            getSetDefaultBrowserItem()?.let { BrowserMenuDivider() },
-            addToTopSites,
-            addToHomescreen.apply { visible = ::canAddToHomescreen },
-            installToHomescreen.apply { visible = ::canInstall },
-            if (shouldShowSaveToCollection) saveToCollection else null,
-            desktopMode,
-            openInApp.apply { visible = ::shouldShowOpenInApp },
-            readerAppearance.apply { visible = ::shouldShowReaderViewCustomization },
-            BrowserMenuDivider(),
-            menuToolbar
-        )
-
-        if (shouldUseBottomToolbar) {
-            menuItems
-        } else {
-            menuItems.reversed()
-        }
     }
 
     val newTabItem = BrowserMenuImageText(
@@ -554,7 +361,7 @@ open class DefaultToolbarMenu(
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    val newCoreMenuItems by lazy {
+    val coreMenuItems by lazy {
         val menuItems =
             listOfNotNull(
                 if (shouldUseBottomToolbar) null else menuToolbar,

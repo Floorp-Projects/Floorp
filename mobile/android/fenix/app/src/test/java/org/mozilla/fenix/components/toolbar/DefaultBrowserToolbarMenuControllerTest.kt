@@ -48,7 +48,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -68,7 +67,6 @@ import org.mozilla.fenix.utils.Settings
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(FenixRobolectricTestRunner::class)
-@Suppress("ForbiddenComment")
 class DefaultBrowserToolbarMenuControllerTest {
 
     @get:Rule
@@ -137,76 +135,67 @@ class DefaultBrowserToolbarMenuControllerTest {
         unmockkObject(FenixSnackbar.Companion)
     }
 
-    // TODO: These can be removed for https://github.com/mozilla-mobile/fenix/issues/17870
-    // todo === Start ===
     @Test
     fun handleToolbarBookmarkPressWithReaderModeInactive() = runBlockingTest {
-        if (!FeatureFlags.toolbarMenuFeature) {
-            val item = ToolbarMenu.Item.Bookmark
+        val item = ToolbarMenu.Item.Bookmark
 
-            val title = "Mozilla"
-            val url = "https://mozilla.org"
-            val regularTab = createTab(
-                url = url,
-                readerState = ReaderState(active = false, activeUrl = "https://1234.org"),
-                title = title
-            )
-            val store =
-                BrowserStore(BrowserState(tabs = listOf(regularTab), selectedTabId = regularTab.id))
+        val title = "Mozilla"
+        val url = "https://mozilla.org"
+        val regularTab = createTab(
+            url = url,
+            readerState = ReaderState(active = false, activeUrl = "https://1234.org"),
+            title = title
+        )
+        val store =
+            BrowserStore(BrowserState(tabs = listOf(regularTab), selectedTabId = regularTab.id))
 
-            val controller = createController(scope = this, store = store)
-            controller.handleToolbarItemInteraction(item)
+        val controller = createController(scope = this, store = store)
+        controller.handleToolbarItemInteraction(item)
 
-            verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BOOKMARK)) }
-            verify { bookmarkTapped(url, title) }
-        }
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BOOKMARK)) }
+        verify { bookmarkTapped(url, title) }
     }
 
     @Test
     fun `IF reader mode is active WHEN bookmark menu item is pressed THEN menu item is handled`() = runBlockingTest {
-        if (!FeatureFlags.toolbarMenuFeature) {
-            val item = ToolbarMenu.Item.Bookmark
-            val title = "Mozilla"
-            val readerUrl = "moz-extension://1234"
-            val readerTab = createTab(
-                url = readerUrl,
-                readerState = ReaderState(active = true, activeUrl = "https://mozilla.org"),
-                title = title
-            )
-            browserStore =
-                BrowserStore(BrowserState(tabs = listOf(readerTab), selectedTabId = readerTab.id))
+        val item = ToolbarMenu.Item.Bookmark
+        val title = "Mozilla"
+        val readerUrl = "moz-extension://1234"
+        val readerTab = createTab(
+            url = readerUrl,
+            readerState = ReaderState(active = true, activeUrl = "https://mozilla.org"),
+            title = title
+        )
+        browserStore =
+            BrowserStore(BrowserState(tabs = listOf(readerTab), selectedTabId = readerTab.id))
 
-            val controller = createController(scope = this, store = browserStore)
-            controller.handleToolbarItemInteraction(item)
+        val controller = createController(scope = this, store = browserStore)
+        controller.handleToolbarItemInteraction(item)
 
-            verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BOOKMARK)) }
-            verify { bookmarkTapped("https://mozilla.org", title) }
-        }
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BOOKMARK)) }
+        verify { bookmarkTapped("https://mozilla.org", title) }
     }
 
     @Test
     fun `WHEN open in Fenix menu item is pressed THEN menu item is handled correctly`() = runBlockingTest {
-        if (!FeatureFlags.toolbarMenuFeature) {
-            val customTab = createCustomTab("https://mozilla.org")
-            browserStore.dispatch(CustomTabListAction.AddCustomTabAction(customTab)).joinBlocking()
-            val controller = createController(
-                scope = this,
-                store = browserStore,
-                customTabSessionId = customTab.id
-            )
+        val customTab = createCustomTab("https://mozilla.org")
+        browserStore.dispatch(CustomTabListAction.AddCustomTabAction(customTab)).joinBlocking()
+        val controller = createController(
+            scope = this,
+            store = browserStore,
+            customTabSessionId = customTab.id
+        )
 
-            val item = ToolbarMenu.Item.OpenInFenix
+        val item = ToolbarMenu.Item.OpenInFenix
 
-            every { activity.startActivity(any()) } just Runs
-            controller.handleToolbarItemInteraction(item)
+        every { activity.startActivity(any()) } just Runs
+        controller.handleToolbarItemInteraction(item)
 
-            verify { sessionFeature.release() }
-            verify { customTabUseCases.migrate(customTab.id, true) }
-            verify { activity.startActivity(openInFenixIntent) }
-            verify { activity.finishAndRemoveTask() }
-        }
+        verify { sessionFeature.release() }
+        verify { customTabUseCases.migrate(customTab.id, true) }
+        verify { activity.startActivity(openInFenixIntent) }
+        verify { activity.finishAndRemoveTask() }
     }
-    // todo === End ===
 
     @Test
     fun `WHEN reader mode menu item is pressed THEN handle appearance change`() = runBlockingTest {
