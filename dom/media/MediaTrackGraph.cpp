@@ -62,23 +62,27 @@ LazyLogModule gMediaTrackGraphLog("MediaTrackGraph");
  */
 static nsTHashMap<nsUint32HashKey, MediaTrackGraphImpl*> gGraphs;
 
-void NativeInputTrack::AudioDataBuffers::SetOutputData(
-    const AudioDataValue* aBuffer, size_t aFrames, uint32_t aChannels) {
-  mOutputData.Set(aBuffer, aFrames, aChannels);
+void NativeInputTrack::AudioDataBuffers::SetOutputData(AudioDataValue* aBuffer,
+                                                       size_t aFrames,
+                                                       uint32_t aChannels,
+                                                       TrackRate aRate) {
+  mOutputData = Some(BufferInfo{aBuffer, aFrames, aChannels, aRate});
 }
 
-void NativeInputTrack::AudioDataBuffers::SetInputData(
-    const AudioDataValue* aBuffer, size_t aFrames, uint32_t aChannels) {
-  mInputData.Set(aBuffer, aFrames, aChannels);
+void NativeInputTrack::AudioDataBuffers::SetInputData(AudioDataValue* aBuffer,
+                                                      size_t aFrames,
+                                                      uint32_t aChannels,
+                                                      TrackRate aRate) {
+  mInputData = Some(BufferInfo{aBuffer, aFrames, aChannels, aRate});
 }
 
 void NativeInputTrack::AudioDataBuffers::Clear(Scope aScope) {
   if (aScope & Scope::Input) {
-    mInputData.Clear();
+    mInputData.take();
   }
 
   if (aScope & Scope::Output) {
-    mOutputData.Clear();
+    mOutputData.take();
   }
 }
 
@@ -116,12 +120,60 @@ void NativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                     uint32_t aFlags) {
   MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
   TRACE_COMMENT("NativeInputTrack %p", this);
-  // TODO: Put input data to mSegment
+
+  if (!mDataHolder || !mDataHolder->mInputData) {
+    return;
+  }
+
+  // One NotifyInputData might have multiple following ProcessInput calls, but
+  // we only process one input per NotifyInputData call.
+  NativeInputTrack::AudioDataBuffers::BufferInfo inputInfo =
+      mDataHolder->mInputData.extract();
+
+  MOZ_ASSERT(mInputChannels == inputInfo.mChannels);
+  MOZ_ASSERT(inputInfo.mChannels >= 1 && inputInfo.mChannels <= 8,
+             "Support up to 8 channels");
+
+  CheckedInt<size_t> bufferSize(sizeof(AudioDataValue));
+  bufferSize *= inputInfo.mFrames;
+  bufferSize *= inputInfo.mChannels;
+  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
+  AutoTArray<const AudioDataValue*, 8> channels;
+  if (inputInfo.mChannels == 1) {
+    PodCopy(static_cast<AudioDataValue*>(buffer->Data()), inputInfo.mBuffer,
+            inputInfo.mFrames);
+    channels.AppendElement(static_cast<AudioDataValue*>(buffer->Data()));
+  } else {
+    channels.SetLength(inputInfo.mChannels);
+    AutoTArray<AudioDataValue*, 8> writeChannels;
+    writeChannels.SetLength(inputInfo.mChannels);
+    AudioDataValue* samples = static_cast<AudioDataValue*>(buffer->Data());
+
+    size_t offset = 0;
+    for (uint32_t i = 0; i < inputInfo.mChannels; ++i) {
+      channels[i] = writeChannels[i] = samples + offset;
+      offset += inputInfo.mFrames;
+    }
+
+    DeinterleaveAndConvertBuffer(inputInfo.mBuffer, inputInfo.mFrames,
+                                 inputInfo.mChannels,
+                                 writeChannels.Elements());
+  }
+
+  LOG(LogLevel::Verbose,
+      ("NativeInputTrack %p Appending %zu frames of raw audio", this,
+       inputInfo.mFrames));
+
+  MOZ_ASSERT(inputInfo.mChannels == channels.Length());
+  GetData<AudioSegment>()->Clear();
+  GetData<AudioSegment>()->AppendFrames(buffer.forget(), channels,
+                                        static_cast<int32_t>(inputInfo.mFrames),
+                                        PRINCIPAL_HANDLE_NONE);
 }
 
 uint32_t NativeInputTrack::NumberOfChannels() const {
   MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
-  return mDataHolder ? mDataHolder->mInputData.mChannels : 0;
+  return mInputChannels;
 }
 
 void NativeInputTrack::InitDataHolderIfNeeded() {
@@ -131,27 +183,15 @@ void NativeInputTrack::InitDataHolderIfNeeded() {
   }
 }
 
-Maybe<NativeInputTrack::BufferInfo> NativeInputTrack::GetInputBufferData() {
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
-  if (!mDataHolder) {
-    return Nothing();
-  }
-  return Some(BufferInfo{mDataHolder->mInputData.mBuffer,
-                         mDataHolder->mInputData.mFrames,
-                         mDataHolder->mInputData.mChannels});
-}
-
 void NativeInputTrack::NotifyOutputData(MediaTrackGraphImpl* aGraph,
                                         AudioDataValue* aBuffer, size_t aFrames,
                                         TrackRate aRate, uint32_t aChannels) {
   MOZ_ASSERT(aGraph->OnGraphThreadOrNotRunning());
   MOZ_ASSERT(aGraph == mGraph, "Receive output data from another graph");
   MOZ_ASSERT(mDataHolder);
-  mDataHolder->SetOutputData(aBuffer, aFrames, aChannels);
+  mDataHolder->SetOutputData(aBuffer, aFrames, aChannels, aRate);
   for (auto& listener : mDataUsers) {
-    listener->NotifyOutputData(aGraph, mDataHolder->mOutputData.mBuffer,
-                               mDataHolder->mOutputData.mFrames, aRate,
-                               mDataHolder->mOutputData.mChannels);
+    listener->NotifyOutputData(aGraph, mDataHolder->mOutputData.value());
   }
 }
 
@@ -160,6 +200,7 @@ void NativeInputTrack::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(aGraph == mGraph,
              "Receive input stopped signal from another graph");
   MOZ_ASSERT(mDataHolder);
+  mInputChannels = 0;
   mDataHolder->Clear(AudioDataBuffers::Scope::Input);
   for (auto& listener : mDataUsers) {
     listener->NotifyInputStopped(aGraph);
@@ -175,11 +216,14 @@ void NativeInputTrack::NotifyInputData(MediaTrackGraphImpl* aGraph,
   MOZ_ASSERT(aGraph == mGraph, "Receive input data from another graph");
 
   MOZ_ASSERT(mDataHolder);
-  mDataHolder->SetInputData(aBuffer, aFrames, aChannels);
+  MOZ_ASSERT(aChannels);
+  if (!mInputChannels) {
+    mInputChannels = aChannels;
+  }
+  mDataHolder->SetInputData(const_cast<AudioDataValue*>(aBuffer), aFrames,
+                            aChannels, aRate);
   for (auto& listener : mDataUsers) {
-    listener->NotifyInputData(aGraph, mDataHolder->mInputData.mBuffer,
-                              mDataHolder->mInputData.mFrames, aRate,
-                              mDataHolder->mInputData.mChannels,
+    listener->NotifyInputData(aGraph, mDataHolder->mInputData.value(),
                               aAlreadyBuffered);
   }
 }
