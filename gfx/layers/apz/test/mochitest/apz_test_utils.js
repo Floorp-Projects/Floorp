@@ -250,6 +250,23 @@ function getLastContentDisplayportFor(elementId, expectPainted = true) {
   return null;
 }
 
+// Return the APZC tree (as produced by buildApzcTree) for the last
+// non-empty paint received by the compositor.
+function getLastApzcTree() {
+  let data = SpecialPowers.getDOMWindowUtils(window).getCompositorAPZTestData();
+  if (data == undefined) {
+    ok(false, "expected to have compositor apz test data");
+    return null;
+  }
+  if (data.paints.length == 0) {
+    ok(false, "expected to have at least one compositor paint bucket");
+    return null;
+  }
+  var seqno = data.paints[data.paints.length - 1].sequenceNumber;
+  data = convertTestData(data);
+  return buildApzcTree(data.paints[seqno]);
+}
+
 // Return a promise that is resolved on the next rAF callback
 function promiseFrame(aWindow = window) {
   return new Promise(resolve => {

@@ -33,9 +33,7 @@ function clampRestore() {
 }
 
 function getAsyncScrollOffset() {
-  let data = SpecialPowers.getDOMWindowUtils(window).getCompositorAPZTestData();
-  let bucket = data.paints[data.paints.length - 1];
-  let apzcTree = buildApzcTree(convertScrollFrameData(bucket.scrollFrames));
+  let apzcTree = getLastApzcTree();
   let rcd = findRcdNode(apzcTree);
   if (rcd == null) {
     return {x: -1, y: -1};
