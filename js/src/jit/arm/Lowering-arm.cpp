@@ -380,6 +380,10 @@ void LIRGeneratorARM::lowerNegI64(MInstruction* ins, MDefinition* input) {
                         ins, 0);
 }
 
+void LIRGenerator::visitAbs(MAbs* ins) {
+  define(allocateAbs(ins, useRegisterAtStart(ins->input())), ins);
+}
+
 void LIRGeneratorARM::lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs) {
   LMulI* lir = new (alloc()) LMulI;
   if (mul->fallible()) {
