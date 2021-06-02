@@ -802,8 +802,24 @@ async function closeStream(
   await assertWebRTCIndicatorStatus(null);
 }
 
-async function reloadAndAssertClosedStreams() {
-  info("reloading the web page");
+async function reloadAsUser() {
+  info("reloading as a user");
+
+  const reloadButton = document.getElementById("reload-button");
+  await TestUtils.waitForCondition(() => !reloadButton.disabled);
+  // Disable observers as the page is being reloaded which can destroy
+  // the actors listening to the notifications.
+  await disableObserverVerification();
+
+  let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  reloadButton.click();
+  await loadedPromise;
+
+  await enableObserverVerification();
+}
+
+async function reloadFromContent() {
+  info("reloading from content");
 
   // Disable observers as the page is being reloaded which can destroy
   // the actors listening to the notifications.
@@ -817,7 +833,10 @@ async function reloadAndAssertClosedStreams() {
   await loadedPromise;
 
   await enableObserverVerification();
+}
 
+async function reloadAndAssertClosedStreams() {
+  await reloadFromContent();
   await checkNotSharing();
 }
 
