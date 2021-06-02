@@ -21,30 +21,30 @@ const NEW_HTML = '<div id="keyboard">Edited</div>';
 requestLongerTimeout(2);
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   inspector.markup._frame.focus();
 
   info("Check that pressing escape cancels edits");
-  await testEscapeCancels(inspector, testActor);
+  await testEscapeCancels(inspector);
 
   info("Check that pressing F2 commits edits");
-  await testF2Commits(inspector, testActor);
+  await testF2Commits(inspector);
 
   info("Check that editing the <body> element works like other nodes");
-  await testBody(inspector, testActor);
+  await testBody(inspector);
 
   info("Check that editing the <head> element works like other nodes");
-  await testHead(inspector, testActor);
+  await testHead(inspector);
 
   info("Check that editing the <html> element works like other nodes");
-  await testDocumentElement(inspector, testActor);
+  await testDocumentElement(inspector);
 
   info("Check (again) that editing the <html> element works like other nodes");
-  await testDocumentElement2(inspector, testActor);
+  await testDocumentElement2(inspector);
 });
 
-async function testEscapeCancels(inspector, testActor) {
+async function testEscapeCancels(inspector) {
   await selectNode(SELECTOR, inspector);
 
   const onHtmlEditorCreated = once(inspector.markup, "begin-editing");
@@ -53,7 +53,7 @@ async function testEscapeCancels(inspector, testActor) {
   ok(inspector.markup.htmlEditor._visible, "HTML Editor is visible");
 
   is(
-    await testActor.getProperty(SELECTOR, "outerHTML"),
+    await getContentPageElementProperty(SELECTOR, "outerHTML"),
     OLD_HTML,
     "The node is starting with old HTML."
   );
@@ -66,13 +66,13 @@ async function testEscapeCancels(inspector, testActor) {
   ok(!inspector.markup.htmlEditor._visible, "HTML Editor is not visible");
 
   is(
-    await testActor.getProperty(SELECTOR, "outerHTML"),
+    await getContentPageElementProperty(SELECTOR, "outerHTML"),
     OLD_HTML,
     "Escape cancels edits"
   );
 }
 
-async function testF2Commits(inspector, testActor) {
+async function testF2Commits(inspector) {
   const onEditorShown = once(inspector.markup.htmlEditor, "popupshown");
   inspector.markup._frame.contentDocument.documentElement.focus();
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
@@ -80,7 +80,7 @@ async function testF2Commits(inspector, testActor) {
   ok(inspector.markup.htmlEditor._visible, "HTML Editor is visible");
 
   is(
-    await testActor.getProperty(SELECTOR, "outerHTML"),
+    await getContentPageElementProperty(SELECTOR, "outerHTML"),
     OLD_HTML,
     "The node is starting with old HTML."
   );
@@ -93,14 +93,17 @@ async function testF2Commits(inspector, testActor) {
   ok(!inspector.markup.htmlEditor._visible, "HTML Editor is not visible");
 
   is(
-    await testActor.getProperty(SELECTOR, "outerHTML"),
+    await getContentPageElementProperty(SELECTOR, "outerHTML"),
     NEW_HTML,
     "F2 commits edits - the node has new HTML."
   );
 }
 
-async function testBody(inspector, testActor) {
-  const currentBodyHTML = await testActor.getProperty("body", "outerHTML");
+async function testBody(inspector) {
+  const currentBodyHTML = await getContentPageElementProperty(
+    "body",
+    "outerHTML"
+  );
   const bodyHTML = '<body id="updated"><p></p></body>';
   const bodyFront = await getNodeFront("body", inspector);
 
@@ -114,17 +117,20 @@ async function testBody(inspector, testActor) {
   await onReselected;
   await onUpdated;
 
-  const newBodyHTML = await testActor.getProperty("body", "outerHTML");
+  const newBodyHTML = await getContentPageElementProperty("body", "outerHTML");
   is(newBodyHTML, bodyHTML, "<body> HTML has been updated");
 
   const headsNum = await getNumberOfMatchingElementsInContentPage("head");
   is(headsNum, 1, "no extra <head>s have been added");
 }
 
-async function testHead(inspector, testActor) {
+async function testHead(inspector) {
   await selectNode("head", inspector);
 
-  const currentHeadHTML = await testActor.getProperty("head", "outerHTML");
+  const currentHeadHTML = await getContentPageElementProperty(
+    "head",
+    "outerHTML"
+  );
   const headHTML =
     '<head id="updated"><title>New Title</title>' +
     '<script>window.foo="bar";</script></head>';
@@ -143,7 +149,7 @@ async function testHead(inspector, testActor) {
   is(await getDocumentTitle(), "New Title", "New title has been added");
   is(await getWindowFoo(), undefined, "Script has not been executed");
   is(
-    await testActor.getProperty("head", "outerHTML"),
+    await getContentPageElementProperty("head", "outerHTML"),
     headHTML,
     "<head> HTML has been updated"
   );
@@ -154,7 +160,7 @@ async function testHead(inspector, testActor) {
   );
 }
 
-async function testDocumentElement(inspector, testActor) {
+async function testDocumentElement(inspector) {
   const currentDocElementOuterHMTL = await getDocumentOuterHTML();
   const docElementHTML =
     '<html id="updated" foo="bar"><head>' +
@@ -193,7 +199,7 @@ async function testDocumentElement(inspector, testActor) {
     "<html> attribute has been updated"
   );
   is(
-    await testActor.getProperty("html", "outerHTML"),
+    await getContentPageElementProperty("html", "outerHTML"),
     docElementHTML,
     "<html> HTML has been updated"
   );
@@ -208,13 +214,13 @@ async function testDocumentElement(inspector, testActor) {
     "no extra <body>s have been added"
   );
   is(
-    await testActor.getProperty("body", "textContent"),
+    await getContentPageElementProperty("body", "textContent"),
     "Hello",
     "document.body.textContent has been updated"
   );
 }
 
-async function testDocumentElement2(inspector, testActor) {
+async function testDocumentElement2(inspector) {
   const currentDocElementOuterHMTL = await getDocumentOuterHTML();
   const docElementHTML =
     '<html id="somethingelse" class="updated"><head>' +
@@ -253,7 +259,7 @@ async function testDocumentElement2(inspector, testActor) {
     "<html> attribute has been removed"
   );
   is(
-    await testActor.getProperty("html", "outerHTML"),
+    await getContentPageElementProperty("html", "outerHTML"),
     docElementHTML,
     "<html> HTML has been updated"
   );
@@ -268,7 +274,7 @@ async function testDocumentElement2(inspector, testActor) {
     "no extra <body>s have been added"
   );
   is(
-    await testActor.getProperty("body", "textContent"),
+    await getContentPageElementProperty("body", "textContent"),
     "Hello again",
     "document.body.textContent has been updated"
   );

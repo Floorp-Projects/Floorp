@@ -13,17 +13,17 @@ const PASTE_AS_LAST_CHILD =
 add_task(async function() {
   const clipboard = require("devtools/shared/platform/clipboard");
 
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   const refSelector = "svg";
-  const oldHTML = await testActor.getProperty(refSelector, "innerHTML");
+  const oldHTML = await getContentPageElementProperty(refSelector, "innerHTML");
   await selectNode(refSelector, inspector);
   const markupTagLine = getContainerForSelector(refSelector, inspector).tagLine;
 
   await pasteContent("node-menu-pastefirstchild", PASTE_AS_FIRST_CHILD);
   await pasteContent("node-menu-pastelastchild", PASTE_AS_LAST_CHILD);
 
-  const html = await testActor.getProperty(refSelector, "innerHTML");
+  const html = await getContentPageElementProperty(refSelector, "innerHTML");
   const expectedHtml = PASTE_AS_FIRST_CHILD + oldHTML + PASTE_AS_LAST_CHILD;
   is(html, expectedHtml, "The innerHTML of the SVG node is correct");
 
