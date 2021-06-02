@@ -650,6 +650,11 @@ class Capabilities extends Map {
           }
           break;
 
+        case "webSocketUrl":
+          throw new error.InvalidArgumentError(
+            "webSocketURL is not supported yet"
+          );
+
         case "moz:accessibilityChecks":
           assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
           break;

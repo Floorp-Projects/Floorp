@@ -249,3 +249,9 @@ class TestCapabilityMatching(MarionetteTestCase):
                 SessionNotCreatedException, "InvalidArgumentError"
             ):
                 self.marionette.start_session({"unhandledPromptBehavior": behavior})
+
+    def test_web_socket_url(self):
+        with self.assertRaisesRegexp(
+            SessionNotCreatedException, "InvalidArgumentError"
+        ):
+            self.marionette.start_session({"webSocketUrl": True})
