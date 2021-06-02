@@ -130,12 +130,12 @@ async function test_ntp_theme(theme, isBrightText) {
 add_task(async function test_support_ntp_colors() {
   // BrowserTestUtils.withNewTab waits for about:newtab to load
   // so we disable preloading before running the test.
-  SpecialPowers.setBoolPref("browser.newtab.preload", false);
+  await SpecialPowers.setBoolPref("browser.newtab.preload", false);
   registerCleanupFunction(() => {
     SpecialPowers.clearUserPref("browser.newtab.preload");
   });
   NewTabPagePreloading.removePreloadedBrowser(window);
-  for (let url of ["about:newtab", "about:home", "about:welcome"]) {
+  for (let url of ["about:newtab", "about:home"]) {
     info("Opening url: " + url);
     await BrowserTestUtils.withNewTab({ gBrowser, url }, async browser => {
       await waitForAboutNewTabReady(browser, url);
