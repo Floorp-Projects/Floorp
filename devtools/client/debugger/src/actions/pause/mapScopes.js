@@ -51,7 +51,6 @@ export async function buildOriginalScopes(
 
   const results = await client.evaluateExpressions(inputs, {
     frameId,
-    thread: cx.thread,
   });
 
   const variables = {};

@@ -245,27 +245,16 @@ async function removeBreakpoint(location) {
   });
 }
 
-function evaluateInFrame(script, options) {
-  return evaluate(script, options);
-}
-
 async function evaluateExpressions(scripts, options) {
   return Promise.all(scripts.map(script => evaluate(script, options)));
 }
 
-async function evaluate(script, { thread, frameId } = {}) {
-  const params = { thread, frameActor: frameId };
+async function evaluate(script, { frameId } = {}) {
   if (!currentTarget() || !script) {
     return { result: null };
   }
 
-  const target = thread ? lookupTarget(thread) : currentTarget();
-  const consoleFront = await target.getFront("console");
-  if (!consoleFront) {
-    return { result: null };
-  }
-
-  return consoleFront.evaluateJSAsync(script, params);
+  return commands.scriptCommand.execute(script, { frameActor: frameId });
 }
 
 async function autocomplete(input, cursor, frameId) {
@@ -455,7 +444,6 @@ const clientCommands = {
   removeWatchpoint,
   removeBreakpoint,
   evaluate,
-  evaluateInFrame,
   evaluateExpressions,
   getProperties,
   getFrameScopes,

@@ -12,7 +12,7 @@ import {
 import { makeMockFrame } from "../../utils/test-mockup";
 
 const mockThreadFront = {
-  evaluateInFrame: (script, { frameId }) =>
+  evaluate: (script, { frameId }) =>
     new Promise((resolve, reject) => {
       if (!frameId) {
         resolve("bla");

@@ -22,7 +22,7 @@ function waitForPreview(store, expression) {
 
 function mockThreadFront(overrides) {
   return {
-    evaluateInFrame: async () => ({ result: {} }),
+    evaluate: async () => ({ result: {} }),
     getFrameScopes: async () => {},
     getFrames: async () => [],
     sourceContents: async () => ({
