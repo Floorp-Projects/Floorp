@@ -377,6 +377,29 @@ class WebConsoleUI {
     );
   }
 
+  /**
+   * Handler for when the page is done loading.
+   *
+   * @param Boolean hasNativeConsoleAPI
+   *        True if the `console` object is the native one and hasn't been overloaded by a custom
+   *        object by the page itself.
+   */
+  async handleNavigated({ hasNativeConsoleAPI }) {
+    // Wait for completion of any async dispatch before notifying that the console
+    // is fully updated after a page reload
+    await this.wrapper.waitAsyncDispatches();
+
+    if (!hasNativeConsoleAPI) {
+      this.logWarningAboutReplacedAPI();
+    }
+
+    this.emit("reloaded");
+  }
+
+  handleWillNavigate({ timeStamp, url }) {
+    this.wrapper.dispatchTabWillNavigate({ timeStamp, url });
+  }
+
   async watchCssMessages() {
     const { resourceCommand } = this.hud;
     await resourceCommand.watchResources([resourceCommand.TYPES.CSS_MESSAGE], {
@@ -396,6 +419,11 @@ class WebConsoleUI {
           this.handleWillNavigate({
             timeStamp: resource.time,
             url: resource.newURI,
+          });
+        }
+        if (resource.name == "dom-complete") {
+          this.handleNavigated({
+            hasNativeConsoleAPI: resource.hasNativeConsoleAPI,
           });
         }
         // For now, ignore all other DOCUMENT_EVENT's.
@@ -672,30 +700,6 @@ class WebConsoleUI {
 
   _onChangeSplitConsoleState() {
     this.wrapper.dispatchSplitConsoleCloseButtonToggle();
-  }
-
-  /**
-   * Handler for the tabNavigated notification.
-   *
-   * @param string event
-   *        Event name.
-   * @param object packet
-   *        Notification packet received from the server.
-   */
-  async handleTabNavigated(packet) {
-    // Wait for completion of any async dispatch before notifying that the console
-    // is fully updated after a page reload
-    await this.wrapper.waitAsyncDispatches();
-
-    if (!packet.nativeConsoleAPI) {
-      this.logWarningAboutReplacedAPI();
-    }
-
-    this.emit("reloaded");
-  }
-
-  handleWillNavigate({ timeStamp, url }) {
-    this.wrapper.dispatchTabWillNavigate({ timeStamp, url });
   }
 
   getInputCursor() {
