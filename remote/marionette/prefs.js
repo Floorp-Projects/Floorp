@@ -177,7 +177,6 @@ class MarionetteBranch extends Branch {
         return Log.Level.Trace;
       case "info":
       default:
-        dump(`*** log: ${Log}\n\n`);
         return Log.Level.Info;
     }
   }
