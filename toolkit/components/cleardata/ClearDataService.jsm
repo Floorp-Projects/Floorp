@@ -702,7 +702,12 @@ const PredictorNetworkCleaner = {
 };
 
 const PushNotificationsCleaner = {
-  deleteByHost(aHost, aOriginAttributes) {
+  /**
+   * Clear entries for aDomain including subdomains of aDomain.
+   * @param {string} aDomain - Domain to clear data for.
+   * @returns {Promise} a promise which resolves once data has been cleared.
+   */
+  _deleteByRootDomain(aDomain) {
     if (!Services.prefs.getBoolPref("dom.push.enabled", false)) {
       return Promise.resolve();
     }
@@ -711,7 +716,8 @@ const PushNotificationsCleaner = {
       let push = Cc["@mozilla.org/push/Service;1"].getService(
         Ci.nsIPushService
       );
-      push.clearForDomain(aHost, aStatus => {
+      // ClearForDomain also clears subdomains.
+      push.clearForDomain(aDomain, aStatus => {
         if (!Components.isSuccessCode(aStatus)) {
           aReject();
         } else {
@@ -721,13 +727,20 @@ const PushNotificationsCleaner = {
     });
   },
 
+  deleteByHost(aHost, aOriginAttributes) {
+    // Will also clear entries for subdomains of aHost. Data is cleared across
+    // all origin attributes.
+    return this._deleteByRootDomain(aHost);
+  },
+
   deleteByPrincipal(aPrincipal) {
-    return this.deleteByHost(aPrincipal.host, aPrincipal.originAttributes);
+    // Will also clear entries for subdomains of the principal host. Data is
+    // cleared across all origin attributes.
+    return this._deleteByRootDomain(aPrincipal.host);
   },
 
   deleteByBaseDomain(aBaseDomain) {
-    // TODO: Bug 1709623
-    return this.deleteByHost(aBaseDomain, {});
+    return this._deleteByRootDomain(aBaseDomain);
   },
 
   deleteAll() {
