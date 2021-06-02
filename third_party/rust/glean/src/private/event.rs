@@ -56,13 +56,11 @@ impl<K: traits::ExtraKeys> EventMetric<K> {
 impl<K: traits::ExtraKeys> traits::Event for EventMetric<K> {
     type Extra = K;
 
-    fn record<M: Into<Option<HashMap<<Self as traits::Event>::Extra, String>>>>(&self, extra: M) {
+    fn record<M: Into<Option<<Self as traits::Event>::Extra>>>(&self, extra: M) {
         let now = crate::get_timestamp_ms();
 
-        // Translate from [ExtraKey -> String] to a [Int -> String] map
-        let extra = extra
-            .into()
-            .map(|h| h.into_iter().map(|(k, v)| (k.index(), v)).collect());
+        // Translate from {ExtraKey -> String} to a [Int -> String] map
+        let extra = extra.into().map(|e| e.into_ffi_extra());
         let metric = Arc::clone(&self.inner);
         crate::launch_with_glean(move |glean| metric.record(glean, now, extra));
     }
@@ -130,17 +128,20 @@ mod test {
         let _lock = lock_test();
         let _t = new_glean(None, true);
 
-        #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
-        enum SomeExtra {
-            Key1,
-            Key2,
+        #[derive(Default, Debug, Clone, Hash, Eq, PartialEq)]
+        struct SomeExtra {
+            key1: Option<String>,
+            key2: Option<String>,
         }
 
         impl glean_core::traits::ExtraKeys for SomeExtra {
             const ALLOWED_KEYS: &'static [&'static str] = &["key1", "key2"];
 
-            fn index(self) -> i32 {
-                self as i32
+            fn into_ffi_extra(self) -> HashMap<i32, String> {
+                let mut map = HashMap::new();
+                self.key1.and_then(|key1| map.insert(0, key1));
+                self.key2.and_then(|key2| map.insert(1, key2));
+                map
             }
         }
 
@@ -151,13 +152,16 @@ mod test {
             ..Default::default()
         });
 
-        let mut map1 = HashMap::new();
-        map1.insert(SomeExtra::Key1, "1".into());
+        let map1 = SomeExtra {
+            key1: Some("1".into()),
+            ..Default::default()
+        };
         metric.record(map1);
 
-        let mut map2 = HashMap::new();
-        map2.insert(SomeExtra::Key1, "1".into());
-        map2.insert(SomeExtra::Key2, "2".into());
+        let map2 = SomeExtra {
+            key1: Some("1".into()),
+            key2: Some("2".into()),
+        };
         metric.record(map2);
 
         metric.record(None);
