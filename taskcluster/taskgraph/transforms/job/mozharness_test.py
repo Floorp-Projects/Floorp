@@ -157,6 +157,10 @@ def mozharness_test_on_docker(config, job, taskdesc):
         ):
             env.update({"NEED_COMPIZ": "true"})
 
+    # Set MOZ_ENABLE_WAYLAND env variables to enable Wayland backend.
+    if "wayland" in job["label"]:
+        env["MOZ_ENABLE_WAYLAND"] = "1"
+
     if mozharness.get("mochitest-flavor"):
         env["MOCHITEST_FLAVOR"] = mozharness["mochitest-flavor"]
 
