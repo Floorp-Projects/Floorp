@@ -36,8 +36,6 @@ const SUPPORTED_OPTIONS = {
   rdmPaneMaxTouchPoints: true,
   // Page orientation (used in RDM and doesn't apply if RDM isn't enabled)
   rdmPaneOrientation: true,
-  // Reload the page when the touch simulation state changes (only works alongside touchEventsOverride)
-  reloadOnTouchSimulationToggle: true,
   // Restore focus in the page after closing DevTools.
   restoreFocus: true,
   // Enable service worker testing over HTTP (instead of HTTPS only).
