@@ -27,7 +27,7 @@ const REMOTE_TAB = {
       url: TEST_URL,
       icon: UrlbarUtils.ICON.DEFAULT,
       client: "7cqCr77ptzX3",
-      lastUsed: 1452124677,
+      lastUsed: Math.floor(Date.now() / 1000),
     },
   ],
 };

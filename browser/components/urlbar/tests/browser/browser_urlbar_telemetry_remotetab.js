@@ -136,7 +136,7 @@ add_task(async function setup() {
         url: "http://example.com",
         icon: UrlbarUtils.ICON.DEFAULT,
         client: "7cqCr77ptzX3",
-        lastUsed: 1452124677,
+        lastUsed: Math.floor(Date.now() / 1000),
       },
     ],
   };
