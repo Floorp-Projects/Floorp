@@ -706,6 +706,7 @@ case "$target" in
     ;;
 
 *-wasi*)
+    CXXFLAGS="$CXXFLAGS -mthread-model single"
     MOZ_FIX_LINK_PATHS=
     ;;
 
