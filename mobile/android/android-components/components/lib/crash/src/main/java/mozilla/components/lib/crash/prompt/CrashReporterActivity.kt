@@ -11,14 +11,10 @@ import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.mozac_lib_crash_crashreporter.closeButton
-import kotlinx.android.synthetic.main.mozac_lib_crash_crashreporter.messageView
-import kotlinx.android.synthetic.main.mozac_lib_crash_crashreporter.restartButton
-import kotlinx.android.synthetic.main.mozac_lib_crash_crashreporter.sendCheckbox
-import kotlinx.android.synthetic.main.mozac_lib_crash_crashreporter.titleView
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
+import mozilla.components.lib.crash.databinding.MozacLibCrashCrashreporterBinding
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -39,6 +35,9 @@ class CrashReporterActivity : AppCompatActivity() {
     @VisibleForTesting(otherwise = PRIVATE)
     internal var reporterCoroutineContext: CoroutineContext = EmptyCoroutineContext
 
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal lateinit var binding: MozacLibCrashCrashreporterBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(crashReporter.promptConfiguration.theme)
 
@@ -53,21 +52,23 @@ class CrashReporterActivity : AppCompatActivity() {
         val appName = crashReporter.promptConfiguration.appName
         val organizationName = crashReporter.promptConfiguration.organizationName
 
-        titleView.text = getString(R.string.mozac_lib_crash_dialog_title, appName)
-        sendCheckbox.text = getString(R.string.mozac_lib_crash_dialog_checkbox, organizationName)
+        binding = MozacLibCrashCrashreporterBinding.inflate(layoutInflater)
 
-        sendCheckbox.isChecked = sharedPreferences.getBoolean(PREFERENCE_KEY_SEND_REPORT, true)
+        binding.titleView.text = getString(R.string.mozac_lib_crash_dialog_title, appName)
+        binding.sendCheckbox.text = getString(R.string.mozac_lib_crash_dialog_checkbox, organizationName)
 
-        restartButton.apply {
+        binding.sendCheckbox.isChecked = sharedPreferences.getBoolean(PREFERENCE_KEY_SEND_REPORT, true)
+
+        binding.restartButton.apply {
             text = getString(R.string.mozac_lib_crash_dialog_button_restart, appName)
             setOnClickListener { restart() }
         }
-        closeButton.setOnClickListener { close() }
+        binding.closeButton.setOnClickListener { close() }
 
         if (crashReporter.promptConfiguration.message == null) {
-            messageView.visibility = View.GONE
+            binding.messageView.visibility = View.GONE
         } else {
-            messageView.text = crashReporter.promptConfiguration.message
+            binding.messageView.text = crashReporter.promptConfiguration.message
         }
     }
 
@@ -90,9 +91,9 @@ class CrashReporterActivity : AppCompatActivity() {
     }
 
     private fun sendCrashReportIfNeeded(then: () -> Unit) {
-        sharedPreferences.edit().putBoolean(PREFERENCE_KEY_SEND_REPORT, sendCheckbox.isChecked).apply()
+        sharedPreferences.edit().putBoolean(PREFERENCE_KEY_SEND_REPORT, binding.sendCheckbox.isChecked).apply()
 
-        if (!sendCheckbox.isChecked) {
+        if (!binding.sendCheckbox.isChecked) {
             then()
             return
         }

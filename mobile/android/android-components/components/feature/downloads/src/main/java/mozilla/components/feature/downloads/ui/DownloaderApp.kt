@@ -4,9 +4,10 @@
 
 package mozilla.components.feature.downloads.ui
 
+import android.annotation.SuppressLint
 import android.content.pm.ResolveInfo
 import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 
 /**
  * Represents an app that can perform downloads.
@@ -18,6 +19,7 @@ import kotlinx.android.parcel.Parcelize
  * @property url The full url to the content that should be downloaded.
  * @property contentType Content type (MIME type) to indicate the media type of the download.
  */
+@SuppressLint("ParcelCreator")
 @Parcelize
 data class DownloaderApp(
     val name: String,

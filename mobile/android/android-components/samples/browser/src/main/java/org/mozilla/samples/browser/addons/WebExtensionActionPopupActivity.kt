@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.fragment_add_on_settings.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.concept.engine.EngineSession
@@ -20,6 +19,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.samples.browser.R
+import org.mozilla.samples.browser.databinding.FragmentAddOnSettingsBinding
 import org.mozilla.samples.browser.ext.components
 
 /**
@@ -67,9 +67,10 @@ class WebExtensionActionPopupActivity : AppCompatActivity() {
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
 
+            val binding = FragmentAddOnSettingsBinding.bind(view)
             val session = engineSession
             if (session != null) {
-                addonSettingsEngineView.render(session)
+                binding.addonSettingsEngineView.render(session)
                 session.register(this, view)
                 consumePopupSession()
             } else {
@@ -77,7 +78,7 @@ class WebExtensionActionPopupActivity : AppCompatActivity() {
                     state.extensions[webExtensionId]?.let { extState ->
                         extState.popupSession?.let {
                             if (engineSession == null) {
-                                addonSettingsEngineView.render(it)
+                                binding.addonSettingsEngineView.render(it)
                                 it.register(this, view)
                                 consumePopupSession()
                                 engineSession = it

@@ -4,8 +4,9 @@
 
 package mozilla.components.browser.state.state.content
 
+import android.annotation.SuppressLint
 import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 
 /**
  * Value type that represents any information about permissions that should
@@ -14,6 +15,7 @@ import kotlinx.android.parcel.Parcelize
  * @property isAutoPlayBlocking indicates if the autoplay setting
  * disabled some web content from playing.
  */
+@SuppressLint("ParcelCreator")
 @Parcelize
 data class PermissionHighlightsState(
     val isAutoPlayBlocking: Boolean = false

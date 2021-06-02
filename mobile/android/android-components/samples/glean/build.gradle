@@ -20,7 +20,6 @@ plugins {
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -43,6 +42,10 @@ android {
         debug {
             applicationIdSuffix ".debug"
         }
+    }
+
+    buildFeatures {
+        viewBinding true
     }
 }
 

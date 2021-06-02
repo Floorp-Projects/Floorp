@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
@@ -36,6 +35,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import org.mozilla.samples.browser.databinding.FragmentBrowserBinding
 import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.ContextMenuIntegration
@@ -65,33 +65,36 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         promptFeature
     )
 
+    private var _binding: FragmentBrowserBinding? = null
+    val binding get() = _binding!!
+
     @CallSuper
     @Suppress("LongMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        val layout = inflater.inflate(R.layout.fragment_browser, container, false)
+        _binding = FragmentBrowserBinding.inflate(inflater, container, false)
 
-        layout.toolbar.display.menuBuilder = components.menuBuilder
+        binding.toolbar.display.menuBuilder = components.menuBuilder
 
         sessionFeature.set(
             feature = SessionFeature(
                 components.store,
                 components.sessionUseCases.goBack,
-                layout.engineView,
+                binding.engineView,
                 sessionId),
             owner = this,
-            view = layout)
+            view = binding.root)
 
         toolbarFeature.set(
             feature = ToolbarFeature(
-                layout.toolbar,
+                binding.toolbar,
                 components.store,
                 components.sessionUseCases.loadUrl,
                 components.defaultSearchUseCase,
                 sessionId),
             owner = this,
-            view = layout)
+            view = binding.root)
 
-        layout.toolbar.display.indicators += listOf(
+        binding.toolbar.display.indicators += listOf(
             DisplayToolbar.Indicators.TRACKING_PROTECTION, DisplayToolbar.Indicators.HIGHLIGHT
         )
 
@@ -99,9 +102,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             feature = SwipeRefreshFeature(
                 components.store,
                 components.sessionUseCases.reload,
-                layout.swipeToRefresh),
+                binding.swipeToRefresh),
             owner = this,
-            view = layout)
+            view = binding.root)
 
         downloadsFeature.set(
             feature = DownloadsFeature(
@@ -122,10 +125,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                     requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
                 }),
             owner = this,
-            view = layout
+            view = binding.root
         )
 
-        val scrollFeature = CoordinateScrollingFeature(components.store, layout.engineView, layout.toolbar)
+        val scrollFeature = CoordinateScrollingFeature(components.store, binding.engineView, binding.toolbar)
 
         contextMenuIntegration.set(
             feature = ContextMenuIntegration(
@@ -134,11 +137,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 browserStore = components.store,
                 tabsUseCases = components.tabsUseCases,
                 contextMenuUseCases = components.contextMenuUseCases,
-                parentView = layout,
+                parentView = binding.root,
                 sessionId = sessionId
             ),
             owner = this,
-            view = layout)
+            view = binding.root)
 
         appLinksFeature.set(
             feature = AppLinksFeature(
@@ -150,7 +153,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 loadUrlUseCase = components.sessionUseCases.loadUrl
             ),
             owner = this,
-            view = layout
+            view = binding.root
         )
 
         promptFeature.set(
@@ -163,7 +166,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                     requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
                 }),
             owner = this,
-            view = layout)
+            view = binding.root)
 
         sitePermissionsFeature.set(
             feature = SitePermissionsFeature(
@@ -188,13 +191,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 store = components.store
             ),
             owner = this,
-            view = layout
+            view = binding.root
         )
 
         findInPageIntegration.set(
-            feature = FindInPageIntegration(components.store, layout.findInPage, layout.engineView),
+            feature = FindInPageIntegration(components.store, binding.findInPage, binding.engineView),
             owner = this,
-            view = layout)
+            view = binding.root)
 
         val secureWindowFeature = SecureWindowFeature(
             window = requireActivity().window,
@@ -208,7 +211,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             secureWindowFeature
         )
 
-        return layout
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -222,7 +225,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                     )
                 }
                 .collect {
-                    view.toolbar.invalidateActions()
+                    binding.toolbar.invalidateActions()
                 }
         }
     }
@@ -258,5 +261,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         protected fun Bundle.putSessionId(sessionId: String?) {
             putString(SESSION_ID_KEY, sessionId)
         }
+    }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

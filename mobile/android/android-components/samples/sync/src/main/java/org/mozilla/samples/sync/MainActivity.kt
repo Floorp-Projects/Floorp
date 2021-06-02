@@ -9,7 +9,6 @@ import android.text.method.ScrollingMovementMethod
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import kotlinx.android.synthetic.main.activity_main.syncStatus
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +54,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
+import org.mozilla.samples.sync.databinding.ActivityMainBinding
 import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
 
@@ -121,14 +121,18 @@ class MainActivity :
 
     private val logger = Logger("SampleSync")
 
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+
         RustLog.enable()
         RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
 
         Log.addSink(AndroidLogSink())
 
-        setContentView(R.layout.activity_main)
+        setContentView(binding.root)
 
         findViewById<View>(R.id.buttonSignIn).setOnClickListener {
             launch {
@@ -396,14 +400,14 @@ class MainActivity :
         override fun onStarted() {
             logger.info("onSyncStarted")
             CoroutineScope(Dispatchers.Main).launch {
-                syncStatus?.text = getString(R.string.syncing)
+                binding.syncStatus.text = getString(R.string.syncing)
             }
         }
 
         override fun onIdle() {
             logger.info("onSyncIdle")
             CoroutineScope(Dispatchers.Main).launch {
-                syncStatus?.text = getString(R.string.sync_idle)
+                binding.syncStatus.text = getString(R.string.sync_idle)
 
                 val historyResultTextView: TextView = findViewById(R.id.historySyncResult)
                 val visitedCount = withContext(Dispatchers.IO) { historyStorage.value.getVisited().size }
@@ -439,7 +443,7 @@ class MainActivity :
         override fun onError(error: Exception?) {
             logger.error("onSyncError", error)
             CoroutineScope(Dispatchers.Main).launch {
-                syncStatus?.text = getString(R.string.sync_error, error)
+                binding.syncStatus.text = getString(R.string.sync_error, error)
             }
         }
     }

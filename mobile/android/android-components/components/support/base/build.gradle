@@ -4,7 +4,6 @@
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 def generatedSrcDir = new File(buildDir, "generated/components/src/main/java")
 
@@ -48,6 +47,10 @@ android {
                 srcDirs += generatedSrcDir
             }
         }
+    }
+
+    buildFeatures {
+        viewBinding true
     }
 }
 
