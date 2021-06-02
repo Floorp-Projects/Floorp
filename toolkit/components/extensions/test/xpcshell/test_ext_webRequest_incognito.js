@@ -9,8 +9,6 @@ server.registerPathHandler("/dummy", (request, response) => {
 });
 
 add_task(async function test_incognito_webrequest_access() {
-  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
-
   let pb_extension = ExtensionTestUtils.loadExtension({
     incognitoOverride: "spanning",
     manifest: {
@@ -76,6 +74,4 @@ add_task(async function test_incognito_webrequest_access() {
 
   await pb_extension.unload();
   await extension.unload();
-
-  Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });

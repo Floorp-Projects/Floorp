@@ -7,11 +7,9 @@ add_task(async function test_background_incognito() {
     "Test background page incognito value with permanent private browsing enabled"
   );
 
-  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
   Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("browser.privatebrowsing.autostart");
-    Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
   });
 
   let extension = ExtensionTestUtils.loadExtension({

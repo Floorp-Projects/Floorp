@@ -113,13 +113,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // Temporary pref to be turned on when ready.
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "allowPrivateBrowsingByDefault",
-  "extensions.allowPrivateBrowsingByDefault",
-  true
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "userContextIsolation",
   "extensions.userContextIsolation.enabled",
   false
@@ -969,16 +962,6 @@ class ExtensionData {
 
     this.manifest = manifest;
     this.rawManifest = manifest;
-
-    if (
-      allowPrivateBrowsingByDefault &&
-      "incognito" in manifest &&
-      manifest.incognito == "not_allowed"
-    ) {
-      throw new Error(
-        `manifest.incognito set to "not_allowed" is currently unvailable for use.`
-      );
-    }
 
     if (manifest && manifest.default_locale) {
       await this.initLocale();
@@ -2622,32 +2605,30 @@ class Extension extends ExtensionData {
 
       // We automatically add permissions to system/built-in extensions.
       // Extensions expliticy stating not_allowed will never get permission.
-      if (!allowPrivateBrowsingByDefault) {
-        let isAllowed = this.permissions.has(PRIVATE_ALLOWED_PERMISSION);
-        if (this.manifest.incognito === "not_allowed") {
-          // If an extension previously had permission, but upgrades/downgrades to
-          // a version that specifies "not_allowed" in manifest, remove the
-          // permission.
-          if (isAllowed) {
-            ExtensionPermissions.remove(this.id, {
-              permissions: [PRIVATE_ALLOWED_PERMISSION],
-              origins: [],
-            });
-            this.permissions.delete(PRIVATE_ALLOWED_PERMISSION);
-          }
-        } else if (
-          !isAllowed &&
-          this.isPrivileged &&
-          !this.addonData.temporarilyInstalled
-        ) {
-          // Add to EP so it is preserved after ADDON_INSTALL.  We don't wait on the add here
-          // since we are pushing the value into this.permissions.  EP will eventually save.
-          ExtensionPermissions.add(this.id, {
+      let isAllowed = this.permissions.has(PRIVATE_ALLOWED_PERMISSION);
+      if (this.manifest.incognito === "not_allowed") {
+        // If an extension previously had permission, but upgrades/downgrades to
+        // a version that specifies "not_allowed" in manifest, remove the
+        // permission.
+        if (isAllowed) {
+          ExtensionPermissions.remove(this.id, {
             permissions: [PRIVATE_ALLOWED_PERMISSION],
             origins: [],
           });
-          this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
+          this.permissions.delete(PRIVATE_ALLOWED_PERMISSION);
         }
+      } else if (
+        !isAllowed &&
+        this.isPrivileged &&
+        !this.addonData.temporarilyInstalled
+      ) {
+        // Add to EP so it is preserved after ADDON_INSTALL.  We don't wait on the add here
+        // since we are pushing the value into this.permissions.  EP will eventually save.
+        ExtensionPermissions.add(this.id, {
+          permissions: [PRIVATE_ALLOWED_PERMISSION],
+          origins: [],
+        });
+        this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
       }
 
       // We only want to update the SVG_CONTEXT_PROPERTIES_PERMISSION during install and

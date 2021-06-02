@@ -138,10 +138,6 @@ add_task(async function testIncognitoPopup() {
 });
 
 add_task(async function test_pageAction_incognito_not_allowed() {
-  SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   const URL = "https://example.com/";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {

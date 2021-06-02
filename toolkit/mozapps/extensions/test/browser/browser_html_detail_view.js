@@ -131,10 +131,6 @@ async function assertBackButtonIsDisabled(win) {
 }
 
 add_task(async function enableHtmlViews() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   gProvider = new MockProvider();
   gProvider.createAddons([
     {

@@ -380,10 +380,6 @@ add_task(async function testAboutFind() {
 });
 
 add_task(async function testIncognitoFind() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   async function background() {
     await browser.test.assertRejects(
       browser.find.find("banana"),
@@ -427,10 +423,6 @@ add_task(async function testIncognitoFind() {
 });
 
 add_task(async function testIncognitoFindAllowed() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   // We're only testing we can make the calls in a private window,
   // testFind above tests full functionality.
   async function background() {

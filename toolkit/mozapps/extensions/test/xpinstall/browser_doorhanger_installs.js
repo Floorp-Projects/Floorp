@@ -161,16 +161,8 @@ function acceptAppMenuNotificationWhenShown(
 
       PanelUI.notificationPanel.removeEventListener("popupshown", popupshown);
 
-      let allowPrivate = Services.prefs.getBoolPref(
-        "extensions.allowPrivateBrowsingByDefault",
-        true
-      );
       let checkbox = document.getElementById("addon-incognito-checkbox");
-      is(
-        checkbox.hidden,
-        privileged || (allowPrivate && !checkIncognito),
-        "checkbox visibility is correct"
-      );
+      is(checkbox.hidden, privileged, "checkbox visibility is correct");
       is(checkbox.checked, incognitoChecked, "checkbox is marked as expected");
 
       // If we're unchecking or checking the incognito property, this will
@@ -646,10 +638,6 @@ var TESTS = [
   },
 
   async function test_whitelistedInstall() {
-    SpecialPowers.pushPrefEnv({
-      set: [["extensions.allowPrivateBrowsingByDefault", false]],
-    });
-
     let originalTab = gBrowser.selectedTab;
     let tab;
     gBrowser.selectedTab = originalTab;
@@ -711,7 +699,6 @@ var TESTS = [
 
     PermissionTestUtils.remove("http://example.com/", "install");
 
-    Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
     await removeTabAndWaitForNotificationClose();
   },
 
@@ -858,9 +845,6 @@ var TESTS = [
   },
 
   async function test_urlBar() {
-    SpecialPowers.pushPrefEnv({
-      set: [["extensions.allowPrivateBrowsingByDefault", false]],
-    });
     let progressPromise = waitForProgressNotification();
     let dialogPromise = waitForInstallDialog();
 
@@ -917,8 +901,6 @@ var TESTS = [
     );
 
     await addon.uninstall();
-
-    Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 
     await removeTabAndWaitForNotificationClose();
   },
@@ -1120,9 +1102,6 @@ var TESTS = [
   },
 
   async function test_incognito_checkbox() {
-    SpecialPowers.pushPrefEnv({
-      set: [["extensions.allowPrivateBrowsingByDefault", false]],
-    });
     // Grant permission up front.
     const permissionName = "internal:privateBrowsingAllowed";
     let incognitoPermission = {
@@ -1198,9 +1177,6 @@ var TESTS = [
   },
 
   async function test_incognito_checkbox_new_window() {
-    SpecialPowers.pushPrefEnv({
-      set: [["extensions.allowPrivateBrowsingByDefault", false]],
-    });
     let win = await BrowserTestUtils.openNewBrowserWindow();
     await SimpleTest.promiseFocus(win);
     // Grant permission up front.

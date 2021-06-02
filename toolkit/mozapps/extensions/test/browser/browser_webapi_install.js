@@ -43,7 +43,6 @@ add_task(async function setup() {
     set: [
       ["extensions.webapi.testing", true],
       ["extensions.install.requireBuiltInCerts", false],
-      ["extensions.allowPrivateBrowsingByDefault", false],
     ],
   });
   info("added preferences");

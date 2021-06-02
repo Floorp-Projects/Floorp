@@ -621,10 +621,6 @@ add_task(async function dontTemporarilyShowAboutExtensionPath() {
 });
 
 add_task(async function test_overriding_newtab_incognito_not_allowed() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   let panel = getNewTabDoorhanger().closest("panel");
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -670,10 +666,6 @@ add_task(async function test_overriding_newtab_incognito_not_allowed() {
 });
 
 add_task(async function test_overriding_newtab_incognito_spanning() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   let extension = ExtensionTestUtils.loadExtension({
     ...extensionData,
     useAddonManager: "permanent",

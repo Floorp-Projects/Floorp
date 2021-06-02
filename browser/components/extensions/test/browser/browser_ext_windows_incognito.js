@@ -3,10 +3,6 @@
 "use strict";
 
 add_task(async function test_window_incognito() {
-  SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   const url =
     "http://mochi.test:8888/browser/browser/components/extensions/test/browser/file_iframe_document.html";
 

@@ -3,10 +3,6 @@
 "use strict";
 
 add_task(async function test_sidebarAction_not_allowed() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       sidebar_action: {

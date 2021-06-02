@@ -3,8 +3,6 @@
 "use strict";
 
 add_task(async function test_is_allowed_incognito_access() {
-  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
-
   async function background() {
     let allowed = await browser.extension.isAllowedIncognitoAccess();
 
@@ -20,12 +18,9 @@ add_task(async function test_is_allowed_incognito_access() {
   await extension.startup();
   await extension.awaitFinish("isAllowedIncognitoAccess");
   await extension.unload();
-  Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });
 
 add_task(async function test_is_denied_incognito_access() {
-  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
-
   async function background() {
     let allowed = await browser.extension.isAllowedIncognitoAccess();
 
@@ -40,7 +35,6 @@ add_task(async function test_is_denied_incognito_access() {
   await extension.startup();
   await extension.awaitFinish("isNotAllowedIncognitoAccess");
   await extension.unload();
-  Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });
 
 add_task(async function test_in_incognito_context_false() {

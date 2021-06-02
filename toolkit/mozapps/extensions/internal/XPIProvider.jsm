@@ -2495,10 +2495,6 @@ var XPIProvider = {
       // enabled extension will be migrated.
       try {
         if (
-          !Services.prefs.getBoolPref(
-            "extensions.allowPrivateBrowsingByDefault",
-            true
-          ) &&
           !Services.prefs.getBoolPref("extensions.incognito.migrated", false)
         ) {
           XPIDatabase.syncLoadDB(false);

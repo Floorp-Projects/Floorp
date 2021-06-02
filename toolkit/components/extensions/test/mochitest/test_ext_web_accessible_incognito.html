@@ -53,10 +53,6 @@ function testScript() {
 }
 
 add_task(async function test_web_accessible_resources_incognito() {
-  await SpecialPowers.pushPrefEnv({set: [
-    ["extensions.allowPrivateBrowsingByDefault", false],
-  ]});
-
   // This extension will not have access to private browsing so its
   // accessible resources should not be able to load in them.
   let extension = ExtensionTestUtils.loadExtension({

@@ -3,10 +3,6 @@
 "use strict";
 
 add_task(async function test_user_defined_commands() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
-  });
-
   const testCommands = [
     // Ctrl Shortcuts
     {
