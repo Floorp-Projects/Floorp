@@ -5017,9 +5017,13 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
     thirdPartyUtil->IsThirdPartyURI(mURI, mRedirectURI,
                                     &isThirdPartyRedirectURI);
 
-    if (isThirdPartyRedirectURI && mLoadInfo->GetExternalContentPolicyType() ==
-                                       ExtContentPolicy::TYPE_DOCUMENT) {
-      Unused << URLQueryStringStripper::Strip(mRedirectURI, mRedirectURI);
+    nsCOMPtr<nsIURI> strippedURI;
+    if (isThirdPartyRedirectURI &&
+        mLoadInfo->GetExternalContentPolicyType() ==
+            ExtContentPolicy::TYPE_DOCUMENT &&
+        URLQueryStringStripper::Strip(mRedirectURI, strippedURI)) {
+      mUnstrippedRedirectURI = mRedirectURI;
+      mRedirectURI = strippedURI;
     }
   }
 
@@ -5098,6 +5102,10 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
   nsCOMPtr<nsIChannel> newChannel;
   nsCOMPtr<nsILoadInfo> redirectLoadInfo =
       CloneLoadInfoForRedirect(mRedirectURI, redirectFlags);
+
+  // Propagate the unstripped redirect URI.
+  redirectLoadInfo->SetUnstrippedURI(mUnstrippedRedirectURI);
+
   rv = NS_NewChannelInternal(getter_AddRefs(newChannel), mRedirectURI,
                              redirectLoadInfo,
                              nullptr,  // PerformanceStorage
