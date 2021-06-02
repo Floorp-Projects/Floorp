@@ -423,10 +423,25 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
+
+  PrincipalHandle GetOldestPrinciple() const {
+    const AudioChunk* chunk = mChunks.IsEmpty() ? nullptr : &mChunks[0];
+    return chunk ? chunk->GetPrincipalHandle() : PRINCIPAL_HANDLE_NONE;
+  }
+
+  // Iterate on each chunks until the input function returns true.
+  template <typename Function>
+  void IterateOnChunks(const Function&& aFunction) {
+    for (uint32_t idx = 0; idx < mChunks.Length(); idx++) {
+      if (aFunction(&mChunks[idx])) {
+        return;
+      }
+    }
+  }
 };
 
 template <typename SrcT>
-void WriteChunk(AudioChunk& aChunk, uint32_t aOutputChannels,
+void WriteChunk(AudioChunk& aChunk, uint32_t aOutputChannels, float aVolume,
                 AudioDataValue* aOutputBuffer) {
   AutoTArray<const SrcT*, GUESS_AUDIO_CHANNELS> channelData;
 
@@ -440,11 +455,11 @@ void WriteChunk(AudioChunk& aChunk, uint32_t aOutputChannels,
   }
   if (channelData.Length() > aOutputChannels) {
     // Down-mix.
-    DownmixAndInterleave(channelData, aChunk.mDuration, aChunk.mVolume,
+    DownmixAndInterleave(channelData, aChunk.mDuration, aVolume,
                          aOutputChannels, aOutputBuffer);
   } else {
     InterleaveAndConvertBuffer(channelData.Elements(), aChunk.mDuration,
-                               aChunk.mVolume, aOutputChannels, aOutputBuffer);
+                               aVolume, aOutputChannels, aOutputBuffer);
   }
 }
 
