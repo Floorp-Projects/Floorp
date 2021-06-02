@@ -411,3 +411,34 @@ TEST_F(TestAudioDecoderInputTrack, OutputAndEndEvent) {
   outputListener.Disconnect();
   endListener.Disconnect();
 }
+
+TEST_F(TestAudioDecoderInputTrack, PlaybackRateChange) {
+  // In order to run the playback change directly without using a real graph.
+  // one for setting the track's playback, another for the track destruction.
+  EXPECT_CALL(*mGraph, AppendMessage)
+      .Times(2)
+      .WillOnce([](UniquePtr<ControlMessage> aMessage) { aMessage->Run(); })
+      .WillOnce([](UniquePtr<ControlMessage> aMessage) {});
+
+  // Changing the playback rate.
+  float expectedPlaybackRate = 2.0;
+  mTrack->SetPlaybackRate(expectedPlaybackRate);
+  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+      [&] { return mTrack->PlaybackRate() == expectedPlaybackRate; });
+
+  // Time stretcher in the track would usually need certain amount of data
+  // before it outputs the time-stretched result. As we're in testing, we would
+  // only append data once, so signal an EOS after appending data, in order to
+  // ask the track to flush all samples from the time strecther.
+  RefPtr<AudioData> audio = CreateAudioData(100);
+  mTrack->AppendData(audio, nullptr);
+  mTrack->NotifyEndOfStream();
+
+  // Playback rate is 2x, so we should only get 1/2x sample frames, another 1/2
+  // should be silence.
+  TrackTime start = 0;
+  TrackTime end = audio->Frames();
+  mTrack->ProcessInput(start, end, kNoFlags);
+  EXPECT_PRED_FORMAT2(ExpectSegmentNonSilence, start, audio->Frames() / 2);
+  EXPECT_PRED_FORMAT2(ExpectSegmentSilence, start + audio->Frames() / 2, end);
+}
