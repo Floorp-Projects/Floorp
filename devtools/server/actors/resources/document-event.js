@@ -36,6 +36,8 @@ class DocumentEventWatcher {
         // This will be `true` when the user selected a document in the frame picker tool,
         // in the toolbox toolbar.
         isFrameSwitching,
+        // This is only passed for dom-complete event
+        hasNativeConsoleAPI,
         // This is only passed for will-navigate event
         newURI,
       } = {}
@@ -57,6 +59,10 @@ class DocumentEventWatcher {
           // only send `newURI` on will navigate so we don't make the payload bigger for
           // other events
           newURI: name === "will-navigate" ? newURI : null,
+          // only send `hasNativeConsoleAPI` on dom complete so we don't make the payload bigger for
+          // other events
+          hasNativeConsoleAPI:
+            name == "dom-complete" ? hasNativeConsoleAPI : null,
         },
       ]);
     };

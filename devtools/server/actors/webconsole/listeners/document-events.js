@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global XPCNativeWrapper */
+
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -153,7 +155,37 @@ DocumentEventsListener.prototype = {
     // 'complete' and the corresponding readystatechange event is thrown
     const window = event.target.defaultView;
     const time = window.performance.timing.domComplete;
-    this.emit("dom-complete", { time, isFrameSwitching });
+    this.emit("dom-complete", {
+      time,
+      isFrameSwitching,
+      hasNativeConsoleAPI: this.hasNativeConsoleAPI(window),
+    });
+  },
+
+  /**
+   * Tells if the window.console object is native or overwritten by script in
+   * the page.
+   *
+   * @param nsIDOMWindow window
+   *        The window object you want to check.
+   * @return boolean
+   *         True if the window.console object is native, or false otherwise.
+   */
+  hasNativeConsoleAPI(window) {
+    let isNative = false;
+    try {
+      // We are very explicitly examining the "console" property of
+      // the non-Xrayed object here.
+      const console = window.wrappedJSObject.console;
+      // In xpcshell tests, console ends up being undefined and XPCNativeWrapper
+      // crashes in debug builds.
+      if (console) {
+        isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE === true;
+      }
+    } catch (ex) {
+      // ignore
+    }
+    return isNative;
   },
 
   destroy() {
