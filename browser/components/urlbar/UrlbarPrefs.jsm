@@ -342,7 +342,17 @@ function makeResultBuckets({ showSearchSuggestionsFirst }) {
             group: UrlbarUtils.RESULT_GROUP.INPUT_HISTORY,
           },
           {
-            group: UrlbarUtils.RESULT_GROUP.GENERAL,
+            flexChildren: true,
+            children: [
+              {
+                flex: 1,
+                group: UrlbarUtils.RESULT_GROUP.REMOTE_TAB,
+              },
+              {
+                flex: 2,
+                group: UrlbarUtils.RESULT_GROUP.GENERAL,
+              },
+            ],
           },
           {
             group: UrlbarUtils.RESULT_GROUP.INPUT_HISTORY,

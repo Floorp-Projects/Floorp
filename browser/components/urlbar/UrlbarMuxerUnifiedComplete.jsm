@@ -65,6 +65,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       // The total span of results that have been added so far.
       usedResultSpan: 0,
       strippedUrlToTopPrefixAndTitle: new Map(),
+      urlToTabResultType: new Map(),
+      addedRemoteTabUrls: new Set(),
       canShowPrivateSearch: context.results.length > 1,
       canShowTailSuggestions: true,
       // Form history and remote suggestions added so far.  Used for deduping
@@ -151,6 +153,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       strippedUrlToTopPrefixAndTitle: new Map(
         state.strippedUrlToTopPrefixAndTitle
       ),
+      urlToTabResultType: new Map(state.urlToTabResultType),
+      addedRemoteTabUrls: new Set(state.addedRemoteTabUrls),
       suggestions: new Set(state.suggestions),
     });
     for (let [group, results] of state.resultsByGroup) {
@@ -540,6 +544,28 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       return false;
     }
 
+    // Discard remote tab results that dupes another remote tab or a
+    // switch-to-tab result.
+    if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
+      if (state.addedRemoteTabUrls.has(result.payload.url)) {
+        return false;
+      }
+      let maybeDupeType = state.urlToTabResultType.get(result.payload.url);
+      if (maybeDupeType == UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
+        return false;
+      }
+    }
+
+    // Discard history results that dupe either remote or switch-to-tab results.
+    if (
+      !result.heuristic &&
+      result.type == UrlbarUtils.RESULT_TYPE.URL &&
+      result.payload.url &&
+      state.urlToTabResultType.has(result.payload.url)
+    ) {
+      return false;
+    }
+
     // Discard SERPs from browser history that dupe either the heuristic or
     // previously added suggestions.
     if (
@@ -649,6 +675,17 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       }
     }
 
+    // Save some state we'll use later to dedupe results from open/remote tabs.
+    if (
+      result.payload.url &&
+      (result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH ||
+        (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB &&
+          !state.urlToTabResultType.has(result.payload.url)))
+    ) {
+      // url => result type
+      state.urlToTabResultType.set(result.payload.url, result.type);
+    }
+
     // If we find results other than the heuristic, "Search in Private
     // Window," or tail suggestions, then we should hide tail suggestions
     // since they're a last resort.
@@ -729,6 +766,13 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
           result.payload.engine
         );
       }
+    }
+
+    // Sync will send us duplicate remote tabs if multiple copies of a tab are
+    // open on a synced client. Keep track of which remote tabs we've added to
+    // dedupe these.
+    if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
+      state.addedRemoteTabUrls.add(result.payload.url);
     }
   }
 
