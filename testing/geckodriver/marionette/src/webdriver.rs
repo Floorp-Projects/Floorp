@@ -26,7 +26,7 @@ pub struct Locator {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Selector {
     #[serde(rename = "css selector")]
-    CSS,
+    Css,
     #[serde(rename = "link text")]
     LinkText,
     #[serde(rename = "partial link text")]
@@ -301,7 +301,7 @@ mod tests {
 
     #[test]
     fn test_json_selector_css() {
-        assert_ser_de(&Selector::CSS, json!("css selector"));
+        assert_ser_de(&Selector::Css, json!("css selector"));
     }
 
     #[test]
@@ -375,7 +375,7 @@ mod tests {
     #[test]
     fn test_command_with_params() {
         let locator = Locator {
-            using: Selector::CSS,
+            using: Selector::Css,
             value: "value".into(),
         };
         let json = json!({"WebDriver:FindElement": {"using": "css selector", "value": "value"}});

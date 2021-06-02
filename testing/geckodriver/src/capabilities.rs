@@ -4,7 +4,6 @@
 
 use crate::command::LogOptions;
 use crate::logging::Level;
-use base64;
 use mozdevice::AndroidStorageInput;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
@@ -25,7 +24,6 @@ use std::path::{Path, PathBuf};
 use std::str::{self, FromStr};
 use webdriver::capabilities::{BrowserCapabilities, Capabilities};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
-use zip;
 
 #[derive(Clone, Debug)]
 enum VersionError {
@@ -166,7 +164,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         comparison: &str,
     ) -> WebDriverResult<bool> {
         Version::from_str(version)
-            .map_err(|err| VersionError::from(err))?
+            .map_err(VersionError::from)?
             .matches(comparison)
             .map_err(|err| VersionError::from(err).into())
     }
@@ -414,7 +412,7 @@ impl FirefoxOptions {
         if let Some(args) = rv.args.as_ref() {
             let os_args = parse_args(
                 args.iter()
-                    .map(|x| OsString::from(x))
+                    .map(OsString::from)
                     .collect::<Vec<_>>()
                     .iter(),
             );
@@ -429,13 +427,11 @@ impl FirefoxOptions {
                 rv.profile = Some(Profile::new_from_path(&path_buf)?);
             }
 
-            if let Some(_) = get_arg_value(os_args.iter(), Arg::NamedProfile) {
-                if rv.profile.is_some() {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        "Can't provide both a -P argument and a profile",
-                    ));
-                }
+            if get_arg_value(os_args.iter(), Arg::NamedProfile).is_some() && rv.profile.is_some() {
+                return Err(WebDriverError::new(
+                    ErrorStatus::InvalidArgument,
+                    "Can't provide both a -P argument and a profile",
+                ));
             }
         }
 
@@ -448,9 +444,7 @@ impl FirefoxOptions {
             })?;
 
             if use_web_socket {
-                let mut remote_args = Vec::new();
-                remote_args.push("--remote-debugging-port".to_owned());
-                remote_args.push("0".to_owned());
+                let mut remote_args = vec!["--remote-debugging-port".to_owned(), "0".to_owned()];
 
                 if let Some(ref mut args) = rv.args {
                     args.append(&mut remote_args);
@@ -627,7 +621,7 @@ impl FirefoxOptions {
                         })?
                         .to_owned();
 
-                    if activity.contains("/") {
+                    if activity.contains('/') {
                         return Err(WebDriverError::new(
                             ErrorStatus::InvalidArgument,
                             "androidActivity should not contain '/",

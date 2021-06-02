@@ -37,8 +37,6 @@ use std::io::Write;
 use std::str;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use chrono;
-use log;
 use mozprofile::preferences::Pref;
 
 static MAX_LOG_LEVEL: AtomicUsize = AtomicUsize::new(0);
@@ -116,10 +114,10 @@ impl str::FromStr for Level {
     }
 }
 
-impl Into<log::Level> for Level {
-    fn into(self) -> log::Level {
+impl From<Level> for log::Level {
+    fn from(level: Level) -> log::Level {
         use self::Level::*;
-        match self {
+        match level {
             Fatal | Error => log::Level::Error,
             Warn => log::Level::Warn,
             Info => log::Level::Info,
@@ -129,10 +127,10 @@ impl Into<log::Level> for Level {
     }
 }
 
-impl Into<Pref> for Level {
-    fn into(self) -> Pref {
+impl From<Level> for Pref {
+    fn from(level: Level) -> Pref {
         use self::Level::*;
-        Pref::new(match self {
+        Pref::new(match level {
             Fatal => "Fatal",
             Error => "Error",
             Warn => "Warn",

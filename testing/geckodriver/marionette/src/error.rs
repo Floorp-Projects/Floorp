@@ -64,9 +64,9 @@ fn empty_string() -> String {
     "".to_owned()
 }
 
-impl Into<Error> for MarionetteError {
-    fn into(self) -> Error {
-        Error::Marionette(self)
+impl From<MarionetteError> for Error {
+    fn from(error: MarionetteError) -> Error {
+        Error::Marionette(error)
     }
 }
 
