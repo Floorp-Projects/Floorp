@@ -306,6 +306,20 @@ TEST_VARIANTS = {
             }
         },
     },
+    "wayland": {
+        "description": "{description} with Wayland backend enabled",
+        "suffix": "wayland",
+        "replace": {
+            "run-on-projects": [],
+        },
+        "merge": {
+            "mozharness": {
+                "extra-options": [
+                    "--setpref=widget.wayland.test-workarounds.enabled=true",
+                ],
+            }
+        },
+    },
     "webrender": {
         "description": "{description} with webrender enabled",
         "suffix": "wr",
