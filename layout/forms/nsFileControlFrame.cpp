@@ -228,8 +228,9 @@ static already_AddRefed<Element> MakeAnonButton(Document* aDoc,
 
   textContent->SetText(buttonTxt, false);
 
-  nsresult rv = button->AppendChildTo(textContent, false);
-  if (NS_FAILED(rv)) {
+  IgnoredErrorResult error;
+  button->AppendChildTo(textContent, false, error);
+  if (error.Failed()) {
     return nullptr;
   }
 
@@ -273,7 +274,7 @@ nsresult nsFileControlFrame::CreateAnonymousContent(
   mTextContent->SetIsNativeAnonymousRoot();
   RefPtr<nsTextNode> text =
       new (doc->NodeInfoManager()) nsTextNode(doc->NodeInfoManager());
-  mTextContent->AppendChildTo(text, false);
+  mTextContent->AppendChildTo(text, false, IgnoreErrors());
 
   // Update the displayed text to reflect the current element's value.
   nsAutoString value;

@@ -130,7 +130,9 @@ nsresult VideoDocument::CreateVideoElement() {
         true);
   }
 
-  return body->AppendChildTo(element, false);
+  ErrorResult rv;
+  body->AppendChildTo(element, false, rv);
+  return rv.StealNSResult();
 }
 
 void VideoDocument::UpdateTitle(nsIChannel* aChannel) {

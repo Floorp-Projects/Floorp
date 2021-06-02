@@ -246,14 +246,14 @@ nsresult nsHtml5TreeOperation::Append(nsIContent* aNode, nsIContent* aParent,
                                       nsHtml5DocumentBuilder* aBuilder) {
   MOZ_ASSERT(aBuilder);
   MOZ_ASSERT(aBuilder->IsInDocUpdate());
-  nsresult rv = NS_OK;
+  ErrorResult rv;
   nsHtml5OtherDocUpdate update(aParent->OwnerDoc(), aBuilder->GetDocument());
-  rv = aParent->AppendChildTo(aNode, false);
-  if (NS_SUCCEEDED(rv)) {
+  aParent->AppendChildTo(aNode, false, rv);
+  if (!rv.Failed()) {
     aNode->SetParserHasNotified();
     MutationObservers::NotifyContentAppended(aParent, aNode);
   }
-  return rv;
+  return rv.StealNSResult();
 }
 
 nsresult nsHtml5TreeOperation::Append(nsIContent* aNode, nsIContent* aParent,
@@ -281,15 +281,18 @@ nsresult nsHtml5TreeOperation::AppendToDocument(
   MOZ_ASSERT(aBuilder);
   MOZ_ASSERT(aBuilder->GetDocument() == aNode->OwnerDoc());
   MOZ_ASSERT(aBuilder->IsInDocUpdate());
-  nsresult rv = NS_OK;
 
+  ErrorResult rv;
   Document* doc = aBuilder->GetDocument();
-  rv = doc->AppendChildTo(aNode, false);
-  if (rv == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR) {
+  doc->AppendChildTo(aNode, false, rv);
+  if (rv.ErrorCodeIs(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR)) {
     aNode->SetParserHasNotified();
     return NS_OK;
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+
   aNode->SetParserHasNotified();
   MutationObservers::NotifyContentInserted(doc, aNode);
 
@@ -299,7 +302,7 @@ nsresult nsHtml5TreeOperation::AppendToDocument(
     nsContentUtils::AddScriptRunner(
         new nsDocElementCreatedNotificationRunner(doc));
   }
-  return rv;
+  return NS_OK;
 }
 
 static bool IsElementOrTemplateContent(nsINode* aNode) {
@@ -339,8 +342,12 @@ nsresult nsHtml5TreeOperation::AppendChildrenToNewParent(
   while (aNode->HasChildren()) {
     nsCOMPtr<nsIContent> child = aNode->GetFirstChild();
     aNode->RemoveChildNode(child, true);
-    nsresult rv = aParent->AppendChildTo(child, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+
+    ErrorResult rv;
+    aParent->AppendChildTo(child, false, rv);
+    if (rv.Failed()) {
+      return rv.StealNSResult();
+    }
     didAppend = true;
   }
   if (didAppend) {
@@ -360,10 +367,14 @@ nsresult nsHtml5TreeOperation::FosterParent(nsIContent* aNode,
   if (IsElementOrTemplateContent(foster)) {
     nsHtml5OtherDocUpdate update(foster->OwnerDoc(), aBuilder->GetDocument());
 
-    nsresult rv = foster->InsertChildBefore(aNode, aTable, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult rv;
+    foster->InsertChildBefore(aNode, aTable, false, rv);
+    if (rv.Failed()) {
+      return rv.StealNSResult();
+    }
+
     MutationObservers::NotifyContentInserted(foster, aNode);
-    return rv;
+    return NS_OK;
   }
 
   return Append(aNode, aParent, aBuilder);
@@ -672,8 +683,12 @@ nsresult nsHtml5TreeOperation::FosterParentText(
     rv = text->SetText(aBuffer, aLength, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = foster->InsertChildBefore(text, aTable, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    foster->InsertChildBefore(text, aTable, false, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
+
     MutationObservers::NotifyContentInserted(foster, text);
     return rv;
   }

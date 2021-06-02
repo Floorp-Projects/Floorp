@@ -49,14 +49,13 @@ void HTMLPictureElement::RemoveChildNode(nsIContent* aKid, bool aNotify) {
   nsGenericHTMLElement::RemoveChildNode(aKid, aNotify);
 }
 
-nsresult HTMLPictureElement::InsertChildBefore(nsIContent* aKid,
-                                               nsIContent* aBeforeThis,
-                                               bool aNotify) {
-  nsresult rv =
-      nsGenericHTMLElement::InsertChildBefore(aKid, aBeforeThis, aNotify);
-
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(aKid, rv);
+void HTMLPictureElement::InsertChildBefore(nsIContent* aKid,
+                                           nsIContent* aBeforeThis,
+                                           bool aNotify, ErrorResult& aRv) {
+  nsGenericHTMLElement::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv);
+  if (aRv.Failed() || !aKid) {
+    return;
+  }
 
   if (aKid->IsHTMLElement(nsGkAtoms::img)) {
     HTMLImageElement* img = HTMLImageElement::FromNode(aKid);
@@ -75,8 +74,6 @@ nsresult HTMLPictureElement::InsertChildBefore(nsIContent* aKid,
       } while ((nextSibling = nextSibling->GetNextSibling()));
     }
   }
-
-  return rv;
 }
 
 JSObject* HTMLPictureElement::WrapNode(JSContext* aCx,

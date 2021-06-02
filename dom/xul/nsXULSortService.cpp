@@ -276,7 +276,7 @@ static nsresult SortContainer(nsIContent* aContainer, nsSortState* aSortState) {
     nsIContent* child = items[i].content;
     nsIContent* parent = items[i].parent;
     if (parent) {
-      parent->AppendChildTo(child, true);
+      parent->AppendChildTo(child, true, mozilla::IgnoreErrors());
 
       // if it's a container in a tree or menu, find its children,
       // and sort those also

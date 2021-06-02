@@ -249,11 +249,24 @@ already_AddRefed<Document> nsContentDLF::CreateBlankDocument(
 
   // blat in the structure
   NS_ASSERTION(blankDoc->GetChildCount() == 0, "Shouldn't have children");
-  if (!htmlElement || !headElement || !bodyElement ||
-      NS_FAILED(blankDoc->AppendChildTo(htmlElement, false)) ||
-      NS_FAILED(htmlElement->AppendChildTo(headElement, false)) ||
-      // XXXbz Why not notifying here?
-      NS_FAILED(htmlElement->AppendChildTo(bodyElement, false))) {
+  if (!htmlElement || !headElement || !bodyElement) {
+    return nullptr;
+  }
+
+  mozilla::IgnoredErrorResult rv;
+  blankDoc->AppendChildTo(htmlElement, false, rv);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+
+  htmlElement->AppendChildTo(headElement, false, rv);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+
+  // XXXbz Why not notifying here?
+  htmlElement->AppendChildTo(bodyElement, false, rv);
+  if (rv.Failed()) {
     return nullptr;
   }
 

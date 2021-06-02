@@ -324,8 +324,11 @@ nsresult PrototypeDocumentContentSink::PrepareToWalk() {
   rv = CreateElementFromPrototype(proto, getter_AddRefs(root), nullptr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = mDocument->AppendChildTo(root, false);
-  if (NS_FAILED(rv)) return rv;
+  ErrorResult error;
+  mDocument->AppendChildTo(root, false, error);
+  if (error.Failed()) {
+    return error.StealNSResult();
+  }
 
   // TODO(emilio): Should this really notify? We don't notify of appends anyhow,
   // and we just appended the root so no styles can possibly depend on it.
@@ -365,9 +368,11 @@ nsresult PrototypeDocumentContentSink::CreateAndInsertPI(
     rv = InsertXMLStylesheetPI(aProtoPI, aParent, aBeforeThis, pi);
   } else {
     // No special processing, just add the PI to the document.
-    rv = aParent->InsertChildBefore(
-        node->AsContent(), aBeforeThis ? aBeforeThis->AsContent() : nullptr,
-        false);
+    ErrorResult error;
+    aParent->InsertChildBefore(node->AsContent(),
+                               aBeforeThis ? aBeforeThis->AsContent() : nullptr,
+                               false, error);
+    rv = error.StealNSResult();
   }
 
   return rv;
@@ -376,16 +381,17 @@ nsresult PrototypeDocumentContentSink::CreateAndInsertPI(
 nsresult PrototypeDocumentContentSink::InsertXMLStylesheetPI(
     const nsXULPrototypePI* aProtoPI, nsINode* aParent, nsINode* aBeforeThis,
     XMLStylesheetProcessingInstruction* aPINode) {
-  nsresult rv;
-
   // We want to be notified when the style sheet finishes loading, so
   // disable style sheet loading for now.
   aPINode->SetEnableUpdates(false);
   aPINode->OverrideBaseURI(mCurrentPrototype->GetURI());
 
-  rv = aParent->InsertChildBefore(
-      aPINode, aBeforeThis ? aBeforeThis->AsContent() : nullptr, false);
-  if (NS_FAILED(rv)) return rv;
+  ErrorResult rv;
+  aParent->InsertChildBefore(
+      aPINode, aBeforeThis ? aBeforeThis->AsContent() : nullptr, false, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
 
   aPINode->SetEnableUpdates(true);
 
@@ -523,8 +529,11 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
           if (NS_FAILED(rv)) return rv;
 
           // ...and append it to the content model.
-          rv = nodeToPushTo->AppendChildTo(child, false);
-          if (NS_FAILED(rv)) return rv;
+          ErrorResult error;
+          nodeToPushTo->AppendChildTo(child, false, error);
+          if (error.Failed()) {
+            return error.StealNSResult();
+          }
 
           if (nsIContent::RequiresDoneCreatingElement(
                   protoele->mNodeInfo->NamespaceID(),
@@ -572,8 +581,11 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
           auto* textproto = static_cast<nsXULPrototypeText*>(childproto);
           text->SetText(textproto->mValue, false);
 
-          rv = nodeToPushTo->AppendChildTo(text, false);
-          NS_ENSURE_SUCCESS(rv, rv);
+          ErrorResult error;
+          nodeToPushTo->AppendChildTo(text, false, error);
+          if (error.Failed()) {
+            return error.StealNSResult();
+          }
         } break;
 
         case nsXULPrototypeNode::eType_PI: {

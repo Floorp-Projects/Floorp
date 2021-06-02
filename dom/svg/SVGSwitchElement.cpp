@@ -71,15 +71,15 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGSwitchElement)
 //----------------------------------------------------------------------
 // nsINode methods
 
-nsresult SVGSwitchElement::InsertChildBefore(nsIContent* aKid,
-                                             nsIContent* aBeforeThis,
-                                             bool aNotify) {
-  nsresult rv =
-      SVGSwitchElementBase::InsertChildBefore(aKid, aBeforeThis, aNotify);
-  if (NS_SUCCEEDED(rv)) {
-    MaybeInvalidate();
+void SVGSwitchElement::InsertChildBefore(nsIContent* aKid,
+                                         nsIContent* aBeforeThis, bool aNotify,
+                                         ErrorResult& aRv) {
+  SVGSwitchElementBase::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv);
+  if (aRv.Failed()) {
+    return;
   }
-  return rv;
+
+  MaybeInvalidate();
 }
 
 void SVGSwitchElement::RemoveChildNode(nsIContent* aKid, bool aNotify) {

@@ -1716,7 +1716,7 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
     // think that we're going from not being anonymous to being anonymous and
     // do some extra work; setting the flag here avoids that.
     content->SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
-    container->AppendChildTo(content, false);
+    container->AppendChildTo(content, false, IgnoreErrors());
     if (auto* element = Element::FromNode(content)) {
       // If we created any children elements, Servo needs to traverse them, but
       // the root is already set up.

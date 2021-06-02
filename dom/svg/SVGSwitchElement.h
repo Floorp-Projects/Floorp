@@ -14,6 +14,7 @@ nsresult NS_NewSVGSwitchElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
+class ErrorResult;
 namespace dom {
 
 using SVGSwitchElementBase = SVGGraphicsElement;
@@ -39,8 +40,8 @@ class SVGSwitchElement final : public SVGSwitchElementBase {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGSwitchElement,
                                            SVGSwitchElementBase)
   // nsINode
-  virtual nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                                     bool aNotify) override;
+  virtual void InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
+                                 bool aNotify, ErrorResult& aRv) override;
   virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
 
   // nsIContent
