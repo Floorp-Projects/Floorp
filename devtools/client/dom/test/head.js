@@ -186,11 +186,6 @@ function expandRow(panel, labelText) {
   });
 }
 
-async function evaluateJSAsync(panel, expression) {
-  const consoleFront = await panel.currentTarget.getFront("console");
-  return consoleFront.evaluateJSAsync(expression);
-}
-
 function refreshPanel(panel) {
   const doc = panel.panelWin.document;
   const button = doc.querySelector("#dom-refresh-button");

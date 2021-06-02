@@ -94,14 +94,14 @@ function messageClose(id) {
  * @return {[type]} [description]
  */
 function messageGetMatchingElements(id, cssSelectors) {
-  return async ({ dispatch, client, getState }) => {
+  return async ({ dispatch, commands, getState }) => {
     try {
       // We need to do the querySelectorAll using the target the message is coming from,
       // as well as with the window the warning message was emitted from.
       const message = getState().messages.messagesById.get(id);
       const selectedTargetFront = message?.targetFront;
 
-      const response = await client.evaluateJSAsync(
+      const response = await commands.scriptCommand.execute(
         `document.querySelectorAll('${cssSelectors}')`,
         {
           selectedTargetFront,
