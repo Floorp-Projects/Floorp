@@ -825,17 +825,17 @@ class nsINode : public mozilla::dom::EventTarget {
    *        add aKid at the end.
    * @param aNotify whether to notify the document (current document for
    *        nsIContent, and |this| for Document) that the insert has occurred
-   *
-   * @throws NS_ERROR_DOM_HIERARCHY_REQUEST_ERR if one attempts to have more
-   * than one element node as a child of a document.  Doing this will also
-   * assert -- you shouldn't be doing it!  Check with Document::GetRootElement()
-   * first if you're not sure.  Apart from this one constraint, this doesn't do
-   * any checking on whether aKid is a valid child of |this|.
-   *
-   * @throws NS_ERROR_OUT_OF_MEMORY in some cases (from BindToTree).
+   * @param aRv The error, if any.
+   *        Throw NS_ERROR_DOM_HIERARCHY_REQUEST_ERR if one attempts to have
+   *        more than one element node as a child of a document.  Doing this
+   *        will also assert -- you shouldn't be doing it!  Check with
+   *        Document::GetRootElement() first if you're not sure.  Apart from
+   *        this one constraint, this doesn't do any checking on whether aKid is
+   *        a valid child of |this|.
+   *        Throw NS_ERROR_OUT_OF_MEMORY in some cases (from BindToTree).
    */
-  virtual nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                                     bool aNotify);
+  virtual void InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
+                                 bool aNotify, mozilla::ErrorResult& aRv);
 
   /**
    * Append a content node to the end of the child list.  This method handles
@@ -844,17 +844,18 @@ class nsINode : public mozilla::dom::EventTarget {
    * @param aKid the content to append
    * @param aNotify whether to notify the document (current document for
    *        nsIContent, and |this| for Document) that the append has occurred
-   *
-   * @throws NS_ERROR_DOM_HIERARCHY_REQUEST_ERR if one attempts to have more
-   * than one element node as a child of a document.  Doing this will also
-   * assert -- you shouldn't be doing it!  Check with Document::GetRootElement()
-   * first if you're not sure.  Apart from this one constraint, this doesn't do
-   * any checking on whether aKid is a valid child of |this|.
-   *
-   * @throws NS_ERROR_OUT_OF_MEMORY in some cases (from BindToTree).
+   * @param aRv The error, if any.
+   *        Throw NS_ERROR_DOM_HIERARCHY_REQUEST_ERR if one attempts to have
+   *        more than one element node as a child of a document.  Doing this
+   *        will also assert -- you shouldn't be doing it!  Check with
+   *        Document::GetRootElement() first if you're not sure.  Apart from
+   *        this one constraint, this doesn't do any checking on whether aKid is
+   *        a valid child of |this|.
+   *        Throw NS_ERROR_OUT_OF_MEMORY in some cases (from BindToTree).
    */
-  nsresult AppendChildTo(nsIContent* aKid, bool aNotify) {
-    return InsertChildBefore(aKid, nullptr, aNotify);
+  void AppendChildTo(nsIContent* aKid, bool aNotify,
+                     mozilla::ErrorResult& aRv) {
+    InsertChildBefore(aKid, nullptr, aNotify, aRv);
   }
 
   /**

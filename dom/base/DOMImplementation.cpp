@@ -156,34 +156,45 @@ nsresult DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
                         scriptHandlingObject, DocumentFlavorLegacyGuess);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  ErrorResult error;
   nsCOMPtr<Element> root =
       doc->CreateElem(u"html"_ns, nullptr, kNameSpaceID_XHTML);
-  rv = doc->AppendChildTo(root, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  doc->AppendChildTo(root, false, error);
+  if (error.Failed()) {
+    return error.StealNSResult();
+  }
 
   nsCOMPtr<Element> head =
       doc->CreateElem(u"head"_ns, nullptr, kNameSpaceID_XHTML);
-  rv = root->AppendChildTo(head, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  root->AppendChildTo(head, false, error);
+  if (error.Failed()) {
+    return error.StealNSResult();
+  }
 
   if (!DOMStringIsNull(aTitle)) {
     nsCOMPtr<Element> title =
         doc->CreateElem(u"title"_ns, nullptr, kNameSpaceID_XHTML);
-    rv = head->AppendChildTo(title, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    head->AppendChildTo(title, false, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
 
     RefPtr<nsTextNode> titleText =
         new (doc->NodeInfoManager()) nsTextNode(doc->NodeInfoManager());
     rv = titleText->SetText(aTitle, false);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = title->AppendChildTo(titleText, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    title->AppendChildTo(titleText, false, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
   }
 
   nsCOMPtr<Element> body =
       doc->CreateElem(u"body"_ns, nullptr, kNameSpaceID_XHTML);
-  rv = root->AppendChildTo(body, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  root->AppendChildTo(body, false, error);
+  if (error.Failed()) {
+    return error.StealNSResult();
+  }
 
   doc->SetReadyStateInternal(Document::READYSTATE_COMPLETE);
 

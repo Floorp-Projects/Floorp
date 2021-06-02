@@ -608,7 +608,7 @@ already_AddRefed<nsGenericHTMLElement> HTMLTableElement::CreateTFoot() {
     if (!foot) {
       return nullptr;
     }
-    AppendChildTo(foot, true);
+    AppendChildTo(foot, true, IgnoreErrors());
   }
 
   return foot.forget();
@@ -750,7 +750,7 @@ already_AddRefed<nsGenericHTMLElement> HTMLTableElement::InsertRow(
 
       rowGroup = NS_NewHTMLTableSectionElement(nodeInfo.forget());
       if (rowGroup) {
-        aError = AppendChildTo(rowGroup, true);
+        AppendChildTo(rowGroup, true, aError);
         if (aError.Failed()) {
           return nullptr;
         }

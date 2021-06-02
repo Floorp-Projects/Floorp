@@ -562,7 +562,7 @@ nsresult ImageDocument::CreateSyntheticDocument() {
   mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::src, srcString, false);
   mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::alt, srcString, false);
 
-  body->AppendChildTo(mImageContent, false);
+  body->AppendChildTo(mImageContent, false, IgnoreErrors());
   mImageContent->SetLoadingEnabled(true);
 
   return NS_OK;

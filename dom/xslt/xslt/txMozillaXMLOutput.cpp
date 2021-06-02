@@ -179,7 +179,9 @@ nsresult txMozillaXMLOutput::comment(const nsString& aData) {
   rv = comment->SetText(aData, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mCurrentNode->AppendChildTo(comment, true);
+  ErrorResult error;
+  mCurrentNode->AppendChildTo(comment, true, error);
+  return error.StealNSResult();
 }
 
 nsresult txMozillaXMLOutput::endDocument(nsresult aResult) {
@@ -317,7 +319,7 @@ nsresult txMozillaXMLOutput::endElement() {
     // Check to make sure that script hasn't inserted the node somewhere
     // else in the tree
     if (!mCurrentNode->GetParentNode()) {
-      parent->AppendChildTo(mNonAddedNode, true);
+      parent->AppendChildTo(mNonAddedNode, true, IgnoreErrors());
     }
     mNonAddedNode = nullptr;
   }
@@ -357,8 +359,11 @@ nsresult txMozillaXMLOutput::processingInstruction(const nsString& aTarget,
     }
   }
 
-  rv = mCurrentNode->AppendChildTo(pi, true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult error;
+  mCurrentNode->AppendChildTo(pi, true, error);
+  if (error.Failed()) {
+    return error.StealNSResult();
+  }
 
   if (linkStyle) {
     linkStyle->SetEnableUpdates(true);
@@ -517,8 +522,11 @@ nsresult txMozillaXMLOutput::closePrevious(bool aFlushText) {
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = mCurrentNode->AppendChildTo(mOpenedElement, true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    mCurrentNode->AppendChildTo(mOpenedElement, true, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
 
     if (currentIsDoc) {
       mRootContentCreated = true;
@@ -546,8 +554,11 @@ nsresult txMozillaXMLOutput::closePrevious(bool aFlushText) {
     rv = text->SetText(mText, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mCurrentNode->AppendChildTo(text, true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    mCurrentNode->AppendChildTo(text, true, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
 
     mText.Truncate();
   }
@@ -593,8 +604,11 @@ nsresult txMozillaXMLOutput::createTxWrapper() {
     } else {
       mDocument->RemoveChildNode(childContent, true);
 
-      rv = wrapper->AppendChildTo(childContent, true);
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult error;
+      wrapper->AppendChildTo(childContent, true, error);
+      if (error.Failed()) {
+        return error.StealNSResult();
+      }
       break;
     }
   }
@@ -606,7 +620,9 @@ nsresult txMozillaXMLOutput::createTxWrapper() {
   mRootContentCreated = true;
   NS_ASSERTION(rootLocation == mDocument->GetChildCount(),
                "Incorrect root location");
-  return mDocument->AppendChildTo(wrapper, true);
+  ErrorResult error;
+  mDocument->AppendChildTo(wrapper, true, error);
+  return error.StealNSResult();
 }
 
 nsresult txMozillaXMLOutput::startHTMLElement(nsIContent* aElement,
@@ -631,8 +647,11 @@ nsresult txMozillaXMLOutput::startHTMLElement(nsIContent* aElement,
     rv = createHTMLElement(nsGkAtoms::tbody, getter_AddRefs(tbody));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mCurrentNode->AppendChildTo(tbody, true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    mCurrentNode->AppendChildTo(tbody, true, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
 
     rv = mTableStateStack.push(NS_INT32_TO_PTR(ADDED_TBODY));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -664,8 +683,11 @@ nsresult txMozillaXMLOutput::startHTMLElement(nsIContent* aElement,
 
     // No need to notify since aElement hasn't been inserted yet
     NS_ASSERTION(!aElement->IsInUncomposedDoc(), "should not be in doc");
-    rv = aElement->AppendChildTo(meta, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    aElement->AppendChildTo(meta, false, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
+    }
   }
 
   return NS_OK;
@@ -828,8 +850,11 @@ nsresult txMozillaXMLOutput::createResultDocument(const nsAString& aName,
           mNodeInfoManager, doctypeName, mOutputFormat.mPublicId,
           mOutputFormat.mSystemId, VoidString());
 
-      rv = mDocument->AppendChildTo(documentType, true);
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult error;
+      mDocument->AppendChildTo(documentType, true, error);
+      if (error.Failed()) {
+        return error.StealNSResult();
+      }
     }
   }
 

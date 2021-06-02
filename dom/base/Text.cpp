@@ -52,7 +52,7 @@ already_AddRefed<Text> Text::SplitText(uint32_t aOffset, ErrorResult& aRv) {
   nsCOMPtr<nsINode> parent = GetParentNode();
   if (parent) {
     nsCOMPtr<nsIContent> beforeNode = GetNextSibling();
-    parent->InsertChildBefore(newContent, beforeNode, true);
+    parent->InsertChildBefore(newContent, beforeNode, true, IgnoreErrors());
   }
 
   return newContent.forget();

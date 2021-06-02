@@ -55,17 +55,15 @@ Element* HTMLOptGroupElement::GetSelect() {
   return parent;
 }
 
-nsresult HTMLOptGroupElement::InsertChildBefore(nsIContent* aKid,
-                                                nsIContent* aBeforeThis,
-                                                bool aNotify) {
+void HTMLOptGroupElement::InsertChildBefore(nsIContent* aKid,
+                                            nsIContent* aBeforeThis,
+                                            bool aNotify, ErrorResult& aRv) {
   int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
   SafeOptionListMutation safeMutation(GetSelect(), this, aKid, index, aNotify);
-  nsresult rv =
-      nsGenericHTMLElement::InsertChildBefore(aKid, aBeforeThis, aNotify);
-  if (NS_FAILED(rv)) {
+  nsGenericHTMLElement::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv);
+  if (aRv.Failed()) {
     safeMutation.MutationFailed();
   }
-  return rv;
 }
 
 void HTMLOptGroupElement::RemoveChildNode(nsIContent* aKid, bool aNotify) {
