@@ -15,7 +15,7 @@ var gTests = [
       await promiseRequestDevice(true, true, "frame1");
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -42,7 +42,7 @@ var gTests = [
       await promiseRequestDevice(true, true, "frame2");
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       observerPromise1 = expectObserverCalled("getUserMedia:response:deny");
       observerPromise2 = expectObserverCalled("recording-window-ended");
@@ -96,7 +96,7 @@ var gTests = [
       await promiseRequestDevice(true, true, "frame1");
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -124,7 +124,7 @@ var gTests = [
       await promiseRequestDevice(true, true);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       observerPromise1 = expectObserverCalled("getUserMedia:response:deny");
       observerPromise2 = expectObserverCalled("recording-window-ended");
@@ -164,7 +164,7 @@ var gTests = [
       await promiseRequestDevice(true, true, "frame1");
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -203,7 +203,7 @@ var gTests = [
       await promiseRequestDevice(true, true, "frame1");
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       observerPromise1 = expectObserverCalled("getUserMedia:response:deny");
       observerPromise2 = expectObserverCalled("recording-window-ended");
@@ -241,7 +241,7 @@ var gTests = [
       await promiseRequestDevice(true, true);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
       let indicator = promiseIndicatorWindow();
 
       let observerPromise1 = expectObserverCalled(
@@ -271,7 +271,7 @@ var gTests = [
       await promiseRequestDevice(true, true, "frame2");
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       observerPromise1 = expectObserverCalled("getUserMedia:response:deny");
       observerPromise2 = expectObserverCalled("recording-window-ended");

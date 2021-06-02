@@ -55,7 +55,7 @@ add_task(async function test_get_user_media_by_device_id() {
     await promiseRequestDevice({ deviceId: { exact: audioId } });
     await promise;
     await observerPromise;
-    checkDeviceSelectors(true /* aAudio */);
+    checkDeviceSelectors(["microphone"]);
 
     await allowStreamsThenClose();
 
@@ -64,7 +64,7 @@ add_task(async function test_get_user_media_by_device_id() {
     await promiseRequestDevice(false, { deviceId: { exact: videoId } });
     await promise;
     await observerPromise;
-    checkDeviceSelectors(false, true /* aVideo */);
+    checkDeviceSelectors(["camera"]);
 
     await allowStreamsThenClose();
 
@@ -76,7 +76,7 @@ add_task(async function test_get_user_media_by_device_id() {
     );
     await promise;
     await observerPromise;
-    checkDeviceSelectors(true /* aAudio */, true /* aVideo */);
+    checkDeviceSelectors(["microphone", "camera"]);
     await allowStreamsThenClose();
   });
 });

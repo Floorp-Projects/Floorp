@@ -14,7 +14,7 @@ var gTests = [
       await promiseRequestDevice(true, true);
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(

@@ -95,7 +95,7 @@ async function promptNoDelegateScreenSharing(aThirdPartyOrgin) {
   await promise;
   await observerPromise;
 
-  checkDeviceSelectors(false, false, true);
+  checkDeviceSelectors(["screen"]);
   const notification = PopupNotifications.panel.firstElementChild;
 
   // The 'Remember this decision' checkbox is hidden.
@@ -168,7 +168,7 @@ var gTests = [
       await promiseRequestDevice(true, true, "frame1");
       await promise;
       await observerPromise;
-      checkDeviceSelectors(true, true);
+      checkDeviceSelectors(["microphone", "camera"]);
 
       // The 'Remember this decision' checkbox is visible.
       const notification = PopupNotifications.panel.firstElementChild;
@@ -218,7 +218,7 @@ var gTests = [
       await promise;
       await observerPromise;
 
-      checkDeviceSelectors(false, false, true);
+      checkDeviceSelectors(["screen"]);
       const notification = PopupNotifications.panel.firstElementChild;
 
       // The 'Remember this decision' checkbox is visible.

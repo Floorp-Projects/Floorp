@@ -21,7 +21,7 @@ var gTests = [
       await promise;
       await observerPromise;
 
-      checkDeviceSelectors(true);
+      checkDeviceSelectors(["microphone"]);
 
       let observerPromise1 = expectObserverCalled(
         "getUserMedia:response:allow"
@@ -95,7 +95,7 @@ var gTests = [
       await promise;
       await observerPromise;
 
-      checkDeviceSelectors(false, true);
+      checkDeviceSelectors(["camera"]);
 
       observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
       observerPromise2 = expectObserverCalled("recording-device-events");
@@ -194,7 +194,7 @@ var gTests = [
       await promise;
       await observerPromise;
 
-      checkDeviceSelectors(false, true);
+      checkDeviceSelectors(["camera"]);
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -264,7 +264,7 @@ var gTests = [
       await promise;
       await observerPromise;
 
-      checkDeviceSelectors(false, true);
+      checkDeviceSelectors(["camera"]);
 
       observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
       observerPromise2 = expectObserverCalled("recording-device-events");
@@ -359,7 +359,7 @@ var gTests = [
         "webRTC-shareScreen-notification-icon",
         "anchored to device icon"
       );
-      checkDeviceSelectors(false, false, true);
+      checkDeviceSelectors(["screen"]);
 
       // Select the last screen so that we can have a stream.
       let menulist = document.getElementById("webRTC-selectWindow-menulist");
@@ -446,7 +446,7 @@ var gTests = [
         "webRTC-shareScreen-notification-icon",
         "anchored to device icon"
       );
-      checkDeviceSelectors(false, false, true);
+      checkDeviceSelectors(["screen"]);
 
       // Select the last screen so that we can have a stream.
       menulist.getItemAtIndex(menulist.itemCount - 1).doCommand();
