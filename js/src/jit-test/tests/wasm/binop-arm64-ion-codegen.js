@@ -280,20 +280,3 @@ codegenTestARM64_adhoc(
     'f',
     `6a00001f  tst     w0, w0
      1e621c20  fcsel   d0, d1, d2, ne`)
-
-// FP ABS should not tie its input to its output.
-
-codegenTestARM64_adhoc(
-    `(module
-       (func (export "f") (param f32) (param f32) (result f32)
-         (f32.abs (local.get 1))))`,
-    'f',
-    '1e20c020  fabs    s0, s1');
-
-codegenTestARM64_adhoc(
-    `(module
-       (func (export "f") (param f64) (param f64) (result f64)
-         (f64.abs (local.get 1))))`,
-    'f',
-    '1e60c020  fabs    d0, d1');
-

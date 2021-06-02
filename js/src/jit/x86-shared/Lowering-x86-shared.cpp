@@ -170,10 +170,6 @@ void LIRGeneratorX86Shared::lowerNegI64(MInstruction* ins, MDefinition* input) {
                         ins, 0);
 }
 
-void LIRGenerator::visitAbs(MAbs* ins) {
-  defineReuseInput(allocateAbs(ins, useRegisterAtStart(ins->input())), ins, 0);
-}
-
 void LIRGeneratorX86Shared::lowerMulI(MMul* mul, MDefinition* lhs,
                                       MDefinition* rhs) {
   // Note: If we need a negative zero check, lhs is used twice.
