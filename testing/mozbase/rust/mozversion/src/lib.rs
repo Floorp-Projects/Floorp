@@ -264,7 +264,7 @@ fn parse_binary_version(version_str: &str) -> VersionResult<Version> {
         .and_then(|captures| captures.name("version"))
         .ok_or_else(|| Error::VersionError("--version output didn't match expectations".into()))?;
 
-    Ok(Version::from_str(version_match.as_str())?)
+    Version::from_str(version_match.as_str())
 }
 
 #[derive(Clone, Debug)]
