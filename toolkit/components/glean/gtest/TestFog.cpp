@@ -127,20 +127,18 @@ TEST(FOG, TestCppDatetimeWorks)
 }
 
 using mozilla::MakeTuple;
+using mozilla::Some;
 using mozilla::Tuple;
-using mozilla::glean::test_only_ipc::AnEventKeys;
+using mozilla::glean::test_only_ipc::AnEventExtra;
+using mozilla::glean::test_only_ipc::EventWithExtraExtra;
 
 TEST(FOG, TestCppEventWorks)
 {
   test_only_ipc::no_extra_event.Record();
   ASSERT_TRUE(test_only_ipc::no_extra_event.TestGetValue("store1"_ns).isSome());
 
-  // Ugh, this API...
-  nsTArray<Tuple<test_only_ipc::AnEventKeys, nsCString>> extra;
-  nsCString val = "can set extras"_ns;
-  extra.AppendElement(MakeTuple(AnEventKeys::Extra1, val));
-
-  test_only_ipc::an_event.Record(std::move(extra));
+  AnEventExtra extra = {.extra1 = Some("can set extras"_ns)};
+  test_only_ipc::an_event.Record(Some(extra));
   auto optEvents = test_only_ipc::an_event.TestGetValue("store1"_ns);
   ASSERT_TRUE(optEvents.isSome());
 
@@ -151,6 +149,37 @@ TEST(FOG, TestCppEventWorks)
   ASSERT_EQ(1UL, events[0].mExtra.Length());
   ASSERT_STREQ("extra1", mozilla::Get<0>(events[0].mExtra[0]).get());
   ASSERT_STREQ("can set extras", mozilla::Get<1>(events[0].mExtra[0]).get());
+}
+
+TEST(FOG, TestCppEventsWithDifferentExtraTypes)
+{
+  EventWithExtraExtra extra = {.extra1 = Some("can set extras"_ns),
+                               .extra2 = Some(37),
+                               .extra3LongerName = Some(false)};
+  test_only_ipc::event_with_extra.Record(Some(extra));
+  auto optEvents = test_only_ipc::event_with_extra.TestGetValue("store1"_ns);
+  ASSERT_TRUE(optEvents.isSome());
+
+  auto events = optEvents.extract();
+  ASSERT_EQ(1UL, events.Length());
+
+  // The list of extra key/value pairs can be in any order.
+  ASSERT_EQ(3UL, events[0].mExtra.Length());
+  for (auto extra : events[0].mExtra) {
+    auto key = mozilla::Get<0>(extra);
+    auto value = mozilla::Get<1>(extra);
+
+    if (key == "extra1"_ns) {
+      ASSERT_STREQ("can set extras", value.get());
+    } else if (key == "extra2"_ns) {
+      ASSERT_STREQ("37", value.get());
+    } else if (key == "extra3_longer_name"_ns) {
+      ASSERT_STREQ("false", value.get());
+    } else {
+      ASSERT_TRUE(false)
+      << "Invalid extra item recorded.";
+    }
+  }
 }
 
 TEST(FOG, TestCppMemoryDistWorks)

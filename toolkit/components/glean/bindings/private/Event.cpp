@@ -64,9 +64,17 @@ GleanEvent::Record(JS::HandleValue aExtra, JSContext* aCx) {
     }
 
     nsAutoJSCString jsValue;
-    if (!value.isString() || !jsValue.init(aCx, value)) {
-      LogToBrowserConsole(nsIScriptError::warningFlag,
-                          u"Extra properties should have string values."_ns);
+    if (value.isString() || (value.isInt32() && value.toInt32() >= 0) ||
+        value.isBoolean()) {
+      if (!jsValue.init(aCx, value)) {
+        LogToBrowserConsole(nsIScriptError::warningFlag,
+                            u"Can't extract extra property"_ns);
+        return NS_OK;
+      }
+    } else {
+      LogToBrowserConsole(
+          nsIScriptError::warningFlag,
+          u"Extra properties should have string, bool or non-negative integer values."_ns);
       return NS_OK;
     }
 
