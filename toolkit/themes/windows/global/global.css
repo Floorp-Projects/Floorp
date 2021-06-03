@@ -21,7 +21,7 @@
 }
 } /** END not Proton **/
 
-@media (-moz-proton-non-native-menus) {
+@media (-moz-windows-non-native-menus) {
   :host,
   :root {
     /* Override some menu color variables for light browser themes. */
