@@ -106,10 +106,6 @@ add_task(function makeResultBuckets_true() {
                       flex: 2,
                       group: UrlbarUtils.RESULT_GROUP.GENERAL,
                     },
-                    {
-                      flex: 2,
-                      group: UrlbarUtils.RESULT_GROUP.ABOUT_PAGES,
-                    },
                   ],
                 },
                 {
@@ -172,10 +168,6 @@ add_task(function makeResultBuckets_false() {
                     {
                       flex: 2,
                       group: UrlbarUtils.RESULT_GROUP.GENERAL,
-                    },
-                    {
-                      flex: 2,
-                      group: UrlbarUtils.RESULT_GROUP.ABOUT_PAGES,
                     },
                   ],
                 },

@@ -17,7 +17,6 @@ EXTRA_JS_MODULES += [
     "UrlbarInput.jsm",
     "UrlbarMuxerUnifiedComplete.jsm",
     "UrlbarPrefs.jsm",
-    "UrlbarProviderAboutPages.jsm",
     "UrlbarProviderAutofill.jsm",
     "UrlbarProviderCalculator.jsm",
     "UrlbarProviderExtension.jsm",
