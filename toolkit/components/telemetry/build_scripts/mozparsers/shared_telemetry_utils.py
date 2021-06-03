@@ -179,6 +179,8 @@ def load_yaml_file(filename):
         with open(filename, "r") as f:
             return yaml.safe_load(f)
     except IOError as e:
-        raise ParserError("Error opening " + filename + ": " + str(e))
+        raise ParserError("Error opening " + filename + ": " + e.message)
     except ValueError as e:
-        raise ParserError("Error parsing processes in {}: {}".format(filename, e))
+        raise ParserError(
+            "Error parsing processes in {}: {}".format(filename, e.message)
+        )
