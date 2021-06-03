@@ -51,3 +51,17 @@
   margin-block-start: calc(6 * var(--base-unit));
   margin-block-end: calc(2 * var(--base-unit));
 }
+
+@media (-moz-toolbar-prefers-color-scheme: dark) {
+  .sidebar-item--selectable:hover {
+    background-color: rgb(92, 92, 106);
+  }
+
+  .sidebar-item--selected {
+    color: var(--link-color);
+  }
+
+  .sidebar-item:not(.sidebar-item--selectable), .sidebar__label {
+    color: var(--category-text);
+  }
+}
