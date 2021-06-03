@@ -321,6 +321,8 @@ class TaskController {
   // Let users know whether the last main thread task runnable did work.
   bool MTTaskRunnableProcessedTask() { return mMTTaskRunnableProcessedTask; }
 
+  static int32_t GetPoolThreadCount();
+
  private:
   friend void ThreadFuncPoolThread(void* aIndex);
 

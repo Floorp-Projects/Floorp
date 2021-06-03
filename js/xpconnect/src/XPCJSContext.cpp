@@ -1184,7 +1184,8 @@ static bool CreateSelfHostedSharedMemory(JSContext* aCx,
 }
 
 nsresult XPCJSContext::Initialize() {
-  SetHelperThreadTaskCallback(&DispatchOffThreadTask);
+  size_t threadCount = TaskController::GetPoolThreadCount();
+  SetHelperThreadTaskCallback(&DispatchOffThreadTask, threadCount);
 
   nsresult rv =
       CycleCollectedJSContext::Initialize(nullptr, JS::DefaultHeapMaxBytes);

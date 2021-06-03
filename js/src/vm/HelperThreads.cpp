@@ -110,13 +110,20 @@ static size_t ThreadCountForCPUCount(size_t cpuCount) {
 }
 
 bool js::SetFakeCPUCount(size_t count) {
+  HelperThreadState().setCpuCount(count);
+  return true;
+}
+
+void GlobalHelperThreadState::setCpuCount(size_t count) {
   // This must be called before the threads have been initialized.
   AutoLockHelperThreadState lock;
-  MOZ_ASSERT(HelperThreadState().threads(lock).empty());
+  MOZ_ASSERT(!isInitialized(lock));
 
-  HelperThreadState().cpuCount = count;
-  HelperThreadState().threadCount = ThreadCountForCPUCount(count);
-  return true;
+  // We can't do this if an external thread pool is in use.
+  MOZ_ASSERT(!dispatchTaskCallback);
+
+  cpuCount = count;
+  threadCount = ThreadCountForCPUCount(count);
 }
 
 size_t js::GetHelperThreadCount() { return HelperThreadState().threadCount; }
@@ -137,16 +144,19 @@ void JS::SetProfilingThreadCallbacks(
 // Bug 1630189: Without MOZ_NEVER_INLINE, Windows PGO builds have a linking
 // error for HelperThreadTaskCallback.
 JS_PUBLIC_API MOZ_NEVER_INLINE void JS::SetHelperThreadTaskCallback(
-    HelperThreadTaskCallback callback) {
-  HelperThreadState().setExternalTaskCallback(callback);
+    HelperThreadTaskCallback callback, size_t threadCount) {
+  HelperThreadState().setExternalTaskCallback(callback, threadCount);
 }
 
 void GlobalHelperThreadState::setExternalTaskCallback(
-    JS::HelperThreadTaskCallback callback) {
+    JS::HelperThreadTaskCallback callback, size_t threadCount) {
   AutoLockHelperThreadState lock;
   MOZ_ASSERT(!isInitialized(lock));
   MOZ_ASSERT(!dispatchTaskCallback);
+  MOZ_ASSERT(threadCount != 0);
+
   dispatchTaskCallback = callback;
+  this->threadCount = threadCount;
 }
 
 bool js::StartOffThreadWasmCompile(wasm::CompileTask* task,
