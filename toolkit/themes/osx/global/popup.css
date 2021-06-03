@@ -13,6 +13,12 @@ panel {
    * because otherwise it'd interfere with the native look. Non-native-looking
    * popups should get their background via --panel-background */
   background-color: Menu;
+  --panel-background: none;
+  --panel-color: MenuText;
+  --panel-padding: 0;
+  --panel-border-color: transparent;
+  --panel-border-radius: 0;
+  --panel-width: initial;
 }
 
 menupopup > menu > menupopup {
@@ -46,12 +52,12 @@ panel[type="arrow"][side="right"] {
   display: -moz-box;
   -moz-box-flex: 1;
   -moz-font-smoothing-background-color: var(--panel-background, -moz-mac-menupopup);
-  background: var(--panel-background, transparent);
-  color: var(--panel-color, MenuText);
-  border-radius: var(--panel-border-radius, 0);
-  box-shadow: 0 0 0 1px var(--panel-border-color, transparent);
+  background: var(--panel-background);
+  color: var(--panel-color);
+  border-radius: var(--panel-border-radius);
+  box-shadow: 0 0 0 1px var(--panel-border-color);
   padding: var(--panel-padding);
-  width: var(--panel-width, initial);
+  width: var(--panel-width);
   border: none;
 }
 
