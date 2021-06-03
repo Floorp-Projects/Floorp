@@ -159,13 +159,6 @@ class BrowserFragment :
         val blockIcon = view.findViewById<View>(R.id.block_image) as ImageView
         blockIcon.setImageResource(R.drawable.ic_tracking_protection_disabled)
 
-        val customTabConfig = tab.ifCustomTab()?.config
-        if (customTabConfig != null) {
-            initialiseCustomTabUi(view, customTabConfig)
-        } else {
-            initialiseNormalBrowserUi(view)
-        }
-
         return view
     }
 
@@ -342,6 +335,13 @@ class BrowserFragment :
             stopButton.setOnClickListener(this)
             forwardButton.setOnClickListener(this)
             backButton.setOnClickListener(this)
+        }
+
+        val customTabConfig = tab.ifCustomTab()?.config
+        if (customTabConfig != null) {
+            initialiseCustomTabUi(view, customTabConfig)
+        } else {
+            initialiseNormalBrowserUi(view)
         }
     }
 
