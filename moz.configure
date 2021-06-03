@@ -648,6 +648,8 @@ option(
 # on Android and Desktop platforms with the exception of:
 #  - Windows PGO, where linking xul-gtest.dll takes too long;
 #  - Android other than x86_64, where gtest is not required.
+
+
 @depends(
     "MOZ_PGO",
     build_project,
@@ -685,6 +687,8 @@ set_config("MOZ_UI_LOCALE", depends("--enable-ui-locale")(lambda x: x))
 
 # clang-plugin location
 # ==============================================================
+
+
 @depends(host_library_name_info, check_build_environment, when="--enable-clang-plugin")
 def clang_plugin_path(library_name_info, build_env):
     topobjdir = build_env.topobjdir
@@ -710,6 +714,8 @@ add_old_configure_assignment("CLANG_PLUGIN", clang_plugin_path)
 awk = check_prog("AWK", ("gawk", "mawk", "nawk", "awk"))
 
 # Until the AWK variable is not necessary in old-configure
+
+
 @depends(awk)
 def awk_for_old_configure(value):
     return value
@@ -723,6 +729,8 @@ add_old_configure_assignment("AWK", awk_for_old_configure)
 perl = check_prog("PERL", ("perl5", "perl"))
 
 # Until the PERL variable is not necessary in old-configure
+
+
 @depends(perl)
 def perl_for_old_configure(value):
     return value
@@ -902,6 +910,8 @@ def makensis_progs(target):
 nsis = check_prog("MAKENSISU", makensis_progs, allow_missing=True)
 
 # Make sure the version of makensis is up to date.
+
+
 @depends(nsis, wine)
 @checking("for NSIS version")
 @imports("re")
@@ -909,7 +919,10 @@ def nsis_version(nsis, wine):
     if not nsis:
         return None
     nsis_min_version = "3.0b1"
-    onerror = lambda: die("Failed to get nsis version.")
+
+    def onerror():
+        return die("Failed to get nsis version.")
+
     if wine and nsis.lower().endswith(".exe"):
         out = check_cmd_output(wine, nsis, "-version", onerror=onerror)
     else:
@@ -1018,6 +1031,8 @@ option(
 )
 
 # This should be handled as a `when` once bug 1617793 is fixed.
+
+
 @depends("--enable-strip", c_compiler, when=compile_environment)
 def enable_strip(strip, c_compiler):
     if strip and c_compiler.type != "clang-cl":
@@ -1033,6 +1048,8 @@ option(
 )
 
 # This should be handled as a `when` once bug 1617793 is fixed.
+
+
 @depends("--enable-install-strip", c_compiler, when=compile_environment)
 def enable_install_strip(strip, c_compiler):
     if strip and c_compiler.type != "clang-cl":
