@@ -1709,94 +1709,15 @@ struct AutoWalkJSStack {
   }
 };
 
-class StackWalkControl {
- public:
-  struct ResumePoint {
-    // If lost, the stack walker should resume at these values.
-    void* resumeSp;  // If null, stop the walker here, don't resume again.
-    void* resumeBp;
-    void* resumePc;
-  };
-
-#if (defined(_MSC_VER) && defined(_M_AMD64))
- public:
-  static constexpr bool scIsSupported = true;
-
-  void Clear() { mResumePointCount = 0; }
-
-  size_t ResumePointCount() const { return mResumePointCount; }
-
-  static constexpr size_t MaxResumePointCount() {
-    return scMaxResumePointCount;
-  }
-
-  // Add a resume point. Note that adding anything past MaxResumePointCount()
-  // would silently fail. In practice this means that stack walking may still
-  // lose native frames.
-  void AddResumePoint(ResumePoint&& aResumePoint) {
-    // If SP is null, we expect BP and PC to also be null.
-    MOZ_ASSERT_IF(!aResumePoint.resumeSp, !aResumePoint.resumeBp);
-    MOZ_ASSERT_IF(!aResumePoint.resumeSp, !aResumePoint.resumePc);
-
-    // If BP and/or PC are not null, SP must not be null. (But we allow BP/PC to
-    // be null even if SP is not null.)
-    MOZ_ASSERT_IF(aResumePoint.resumeBp, aResumePoint.resumeSp);
-    MOZ_ASSERT_IF(aResumePoint.resumePc, aResumePoint.resumeSp);
-
-    if (mResumePointCount < scMaxResumePointCount) {
-      mResumePoint[mResumePointCount] = std::move(aResumePoint);
-      ++mResumePointCount;
-    }
-  }
-
-  // Only allow non-modifying range-for loops.
-  const ResumePoint* begin() const { return &mResumePoint[0]; }
-  const ResumePoint* end() const { return &mResumePoint[mResumePointCount]; }
-
-  // Find the next resume point that would be a caller of the function with the
-  // given SP; i.e., the resume point with the closest resumeSp > aSp.
-  const ResumePoint* GetResumePointCallingSp(void* aSp) const {
-    const ResumePoint* callingResumePoint = nullptr;
-    for (const ResumePoint& resumePoint : *this) {
-      if (resumePoint.resumeSp &&        // This is a potential resume point.
-          resumePoint.resumeSp > aSp &&  // It is a caller of the given SP.
-          (!callingResumePoint ||        // This is the first candidate.
-           resumePoint.resumeSp < callingResumePoint->resumeSp)  // Or better.
-      ) {
-        callingResumePoint = &resumePoint;
-      }
-    }
-    return callingResumePoint;
-  }
-
- private:
-  size_t mResumePointCount = 0;
-  static constexpr size_t scMaxResumePointCount = 32;
-  ResumePoint mResumePoint[scMaxResumePointCount];
-
-#else   // #if (defined(_MSC_VER) && defined(_M_AMD64))
- public:
-  static constexpr bool scIsSupported = false;
-  // Discarded constexpr-if statements are still checked during compilation,
-  // these declarations are necessary for that, even if not actually used.
-  void Clear();
-  size_t ResumePointCount();
-  static constexpr size_t MaxResumePointCount();
-  void AddResumePoint(ResumePoint&& aResumePoint);
-  const ResumePoint* begin() const;
-  const ResumePoint* end() const;
-  const ResumePoint* GetResumePointCallingSp(void* aSp) const;
-#endif  // #if (defined(_MSC_VER) && defined(_M_AMD64)) #else
-};
-
 // Make a copy of the JS stack into a JSFrame array, and return the number of
 // copied frames.
 // This copy is necessary since, like the native stack, the JS stack is iterated
 // youngest-to-oldest and we need to iterate oldest-to-youngest in MergeStacks.
-static uint32_t ExtractJsFrames(
-    bool aIsSynchronous, const RegisteredThread& aRegisteredThread,
-    const Registers& aRegs, ProfilerStackCollector& aCollector,
-    JsFrameBuffer aJsFrames, StackWalkControl* aStackWalkControlIfSupported) {
+static uint32_t ExtractJsFrames(bool aIsSynchronous,
+                                const RegisteredThread& aRegisteredThread,
+                                const Registers& aRegs,
+                                ProfilerStackCollector& aCollector,
+                                JsFrameBuffer aJsFrames) {
   uint32_t jsFramesCount = 0;
 
   // Only walk jit stack if profiling frame iterator is turned on.
@@ -1840,26 +1761,6 @@ static uint32_t ExtractJsFrames(
               break;
             }
           }
-        }
-
-        if constexpr (StackWalkControl::scIsSupported) {
-          if (aStackWalkControlIfSupported) {
-            jsIter.getCppEntryRegisters().apply(
-                [&](const JS::ProfilingFrameIterator::RegisterState&
-                        aCppEntry) {
-                  StackWalkControl::ResumePoint resumePoint;
-                  resumePoint.resumeSp = aCppEntry.sp;
-                  resumePoint.resumeBp = aCppEntry.fp;
-                  resumePoint.resumePc = aCppEntry.pc;
-                  aStackWalkControlIfSupported->AddResumePoint(
-                      std::move(resumePoint));
-                });
-          }
-        } else {
-          MOZ_ASSERT(!aStackWalkControlIfSupported,
-                     "aStackWalkControlIfSupported should be null when "
-                     "!StackWalkControl::scIsSupported");
-          (void)aStackWalkControlIfSupported;
         }
       }
     }
@@ -2086,10 +1987,10 @@ static void StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP,
 #endif
 
 #if defined(USE_FRAME_POINTER_STACK_WALK)
-static void DoFramePointerBacktrace(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread,
-    const Registers& aRegs, NativeStack& aNativeStack,
-    StackWalkControl* aStackWalkControlIfSupported) {
+static void DoFramePointerBacktrace(PSLockRef aLock,
+                                    const RegisteredThread& aRegisteredThread,
+                                    const Registers& aRegs,
+                                    NativeStack& aNativeStack) {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
@@ -2112,10 +2013,10 @@ static void DoFramePointerBacktrace(
 #endif
 
 #if defined(USE_MOZ_STACK_WALK)
-static void DoMozStackWalkBacktrace(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread,
-    const Registers& aRegs, NativeStack& aNativeStack,
-    StackWalkControl* aStackWalkControlIfSupported) {
+static void DoMozStackWalkBacktrace(PSLockRef aLock,
+                                    const RegisteredThread& aRegisteredThread,
+                                    const Registers& aRegs,
+                                    NativeStack& aNativeStack) {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
@@ -2126,91 +2027,20 @@ static void DoMozStackWalkBacktrace(
   // argument.
   StackWalkCallback(/* frameNum */ 0, aRegs.mPC, aRegs.mSP, &aNativeStack);
 
+  uint32_t maxFrames = uint32_t(MAX_NATIVE_FRAMES - aNativeStack.mCount);
+
   HANDLE thread = GetThreadHandle(aRegisteredThread.GetPlatformData());
   MOZ_ASSERT(thread);
-
-  CONTEXT context_buf;
-  CONTEXT* context = nullptr;
-  if constexpr (StackWalkControl::scIsSupported) {
-    context = &context_buf;
-    memset(&context_buf, 0, sizeof(CONTEXT));
-    context_buf.ContextFlags = CONTEXT_FULL;
-#  if defined(_M_AMD64)
-    context_buf.Rsp = (DWORD64)aRegs.mSP;
-    context_buf.Rbp = (DWORD64)aRegs.mFP;
-    context_buf.Rip = (DWORD64)aRegs.mPC;
-#  else
-#    error "unknown platform"
-#  endif
-  } else {
-    context = nullptr;
-  }
-
-  // This is to check forward-progress after using a resume point.
-  void* previousResumeSp = nullptr;
-
-  for (;;) {
-    MozStackWalkThread(StackWalkCallback,
-                       uint32_t(MAX_NATIVE_FRAMES - aNativeStack.mCount),
-                       &aNativeStack, thread, context);
-
-    if constexpr (!StackWalkControl::scIsSupported) {
-      break;
-    } else {
-      if (aNativeStack.mCount >= MAX_NATIVE_FRAMES) {
-        // No room to add more frames.
-        break;
-      }
-      if (!aStackWalkControlIfSupported ||
-          aStackWalkControlIfSupported->ResumePointCount() == 0) {
-        // No resume information.
-        break;
-      }
-      void* lastSP = aNativeStack.mSPs[aNativeStack.mCount - 1];
-      if (previousResumeSp &&
-          ((uintptr_t)lastSP <= (uintptr_t)previousResumeSp)) {
-        // No progress after the previous resume point.
-        break;
-      }
-      const StackWalkControl::ResumePoint* resumePoint =
-          aStackWalkControlIfSupported->GetResumePointCallingSp(lastSP);
-      if (!resumePoint) {
-        break;
-      }
-      void* sp = resumePoint->resumeSp;
-      if (!sp) {
-        // Null SP in a resume point means we stop here.
-        break;
-      }
-      void* bp = resumePoint->resumeBp;
-      void* pc = resumePoint->resumePc;
-      StackWalkCallback(/* frameNum */ aNativeStack.mCount, pc, sp,
-                        &aNativeStack);
-      ++aNativeStack.mCount;
-      if (aNativeStack.mCount >= MAX_NATIVE_FRAMES) {
-        break;
-      }
-      // Prepare context to resume stack walking.
-      memset(&context_buf, 0, sizeof(CONTEXT));
-      context_buf.ContextFlags = CONTEXT_FULL;
-#  if defined(_M_AMD64)
-      context_buf.Rsp = (DWORD64)sp;
-      context_buf.Rbp = (DWORD64)bp;
-      context_buf.Rip = (DWORD64)pc;
-#  else
-#    error "unknown platform"
-#  endif
-      previousResumeSp = sp;
-    }
-  }
+  MozStackWalkThread(StackWalkCallback, maxFrames, &aNativeStack, thread,
+                     /* context */ nullptr);
 }
 #endif
 
 #ifdef USE_EHABI_STACKWALK
 static void DoEHABIBacktrace(PSLockRef aLock,
                              const RegisteredThread& aRegisteredThread,
-                             const Registers& aRegs, NativeStack& aNativeStack,
-                             StackWalkControl* aStackWalkControlIfSupported) {
+                             const Registers& aRegs,
+                             NativeStack& aNativeStack) {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
@@ -2219,7 +2049,6 @@ static void DoEHABIBacktrace(PSLockRef aLock,
       EHABIStackWalk(aRegs.mContext->uc_mcontext,
                      const_cast<void*>(aRegisteredThread.StackTop()),
                      aNativeStack.mSPs, aNativeStack.mPCs, MAX_NATIVE_FRAMES);
-  (void)aStackWalkControlIfSupported;  // TODO: Implement.
 }
 #endif
 
@@ -2244,13 +2073,10 @@ MOZ_ASAN_BLACKLIST static void ASAN_memcpy(void* aDst, const void* aSrc,
 
 static void DoLULBacktrace(PSLockRef aLock,
                            const RegisteredThread& aRegisteredThread,
-                           const Registers& aRegs, NativeStack& aNativeStack,
-                           StackWalkControl* aStackWalkControlIfSupported) {
+                           const Registers& aRegs, NativeStack& aNativeStack) {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
-
-  (void)aStackWalkControlIfSupported;  // TODO: Implement.
 
   const mcontext_t* mc = &aRegs.mContext->uc_mcontext;
 
@@ -2398,25 +2224,21 @@ static void DoLULBacktrace(PSLockRef aLock,
 #ifdef HAVE_NATIVE_UNWIND
 static void DoNativeBacktrace(PSLockRef aLock,
                               const RegisteredThread& aRegisteredThread,
-                              const Registers& aRegs, NativeStack& aNativeStack,
-                              StackWalkControl* aStackWalkControlIfSupported) {
+                              const Registers& aRegs,
+                              NativeStack& aNativeStack) {
   // This method determines which stackwalker is used for periodic and
   // synchronous samples. (Backtrace samples are treated differently, see
   // profiler_suspend_and_sample_thread() for details). The only part of the
   // ordering that matters is that LUL must precede FRAME_POINTER, because on
   // Linux they can both be present.
 #  if defined(USE_LUL_STACKWALK)
-  DoLULBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack,
-                 aStackWalkControlIfSupported);
+  DoLULBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack);
 #  elif defined(USE_EHABI_STACKWALK)
-  DoEHABIBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack,
-                   aStackWalkControlIfSupported);
+  DoEHABIBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack);
 #  elif defined(USE_FRAME_POINTER_STACK_WALK)
-  DoFramePointerBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack,
-                          aStackWalkControlIfSupported);
+  DoFramePointerBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack);
 #  elif defined(USE_MOZ_STACK_WALK)
-  DoMozStackWalkBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack,
-                          aStackWalkControlIfSupported);
+  DoMozStackWalkBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack);
 #  else
 #    error "Invalid configuration"
 #  endif
@@ -2443,25 +2265,13 @@ static inline void DoSharedSample(
 
   ProfileBufferCollector collector(aBuffer, aSamplePos, aBufferRangeStart);
   JsFrameBuffer& jsFrames = CorePS::JsFrames(aLock);
-  StackWalkControl* stackWalkControlIfSupported = nullptr;
-#if defined(HAVE_NATIVE_UNWIND)
-  const bool captureNative = ActivePS::FeatureStackWalk(aLock) &&
-                             aCaptureOptions == StackCaptureOptions::Full;
-  StackWalkControl stackWalkControl;
-  if constexpr (StackWalkControl::scIsSupported) {
-    if (captureNative) {
-      stackWalkControlIfSupported = &stackWalkControl;
-    }
-  }
-#endif  // defined(HAVE_NATIVE_UNWIND)
-  const uint32_t jsFramesCount =
-      ExtractJsFrames(aIsSynchronous, aRegisteredThread, aRegs, collector,
-                      jsFrames, stackWalkControlIfSupported);
+  const uint32_t jsFramesCount = ExtractJsFrames(
+      aIsSynchronous, aRegisteredThread, aRegs, collector, jsFrames);
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
-  if (captureNative) {
-    DoNativeBacktrace(aLock, aRegisteredThread, aRegs, nativeStack,
-                      stackWalkControlIfSupported);
+  if (ActivePS::FeatureStackWalk(aLock) &&
+      aCaptureOptions == StackCaptureOptions::Full) {
+    DoNativeBacktrace(aLock, aRegisteredThread, aRegs, nativeStack);
 
     MergeStacks(ActivePS::Features(aLock), aIsSynchronous, aRegisteredThread,
                 aRegs, nativeStack, collector, jsFrames, jsFramesCount);
@@ -6164,18 +5974,8 @@ void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
         // The target thread is now suspended. Collect a native backtrace,
         // and call the callback.
         JsFrameBuffer& jsFrames = CorePS::JsFrames(lock);
-        StackWalkControl* stackWalkControlIfSupported = nullptr;
-#if defined(HAVE_FASTINIT_NATIVE_UNWIND)
-        StackWalkControl stackWalkControl;
-        if constexpr (StackWalkControl::scIsSupported) {
-          if (aSampleNative) {
-            stackWalkControlIfSupported = &stackWalkControl;
-          }
-        }
-#endif
-        const uint32_t jsFramesCount =
-            ExtractJsFrames(isSynchronous, registeredThread, aRegs, aCollector,
-                            jsFrames, stackWalkControlIfSupported);
+        const uint32_t jsFramesCount = ExtractJsFrames(
+            isSynchronous, registeredThread, aRegs, aCollector, jsFrames);
 
 #if defined(HAVE_FASTINIT_NATIVE_UNWIND)
         if (aSampleNative) {
@@ -6183,11 +5983,9 @@ void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
           // suspend_and_sample_thread as other stackwalking methods may not be
           // initialized.
 #  if defined(USE_FRAME_POINTER_STACK_WALK)
-          DoFramePointerBacktrace(lock, registeredThread, aRegs, nativeStack,
-                                  stackWalkControlIfSupported);
+          DoFramePointerBacktrace(lock, registeredThread, aRegs, nativeStack);
 #  elif defined(USE_MOZ_STACK_WALK)
-          DoMozStackWalkBacktrace(lock, registeredThread, aRegs, nativeStack,
-                                  stackWalkControlIfSupported);
+          DoMozStackWalkBacktrace(lock, registeredThread, aRegs, nativeStack);
 #  else
 #    error "Invalid configuration"
 #  endif
