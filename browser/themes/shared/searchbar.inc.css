@@ -79,8 +79,6 @@
   /* Bug 1108841: prevent font-size from affecting the layout */
   line-height: 0;
   flex-wrap: wrap;
-  /* Show at least 3 buttons */
-  min-width: calc(48px * 3);
 }
 
 .searchbar-engine-one-off-item {
@@ -88,7 +86,8 @@
   display: inline-block;
   min-width: 32px;
   height: 32px;
-  margin: var(--arrowpanel-menuitem-margin);
+  margin-inline-end: 8px;
+  margin-block: 0;
   padding: 0;
   color: inherit;
   border-radius: var(--toolbarbutton-border-radius);
