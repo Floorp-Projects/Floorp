@@ -491,7 +491,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
     rv = MOZ_KnownLive(mHTMLEditor)
              .PrepareToInsertContent(aPointToInsert, aDoDeleteSelection);
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::PrepareToInsertContent() failed");
+      NS_WARNING("EditorBase::PrepareToInsertContent() failed");
       return rv;
     }
   }

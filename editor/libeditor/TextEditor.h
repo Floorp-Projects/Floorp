@@ -483,21 +483,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   MOZ_CAN_RUN_SCRIPT virtual nsresult SelectEntireDocument() override;
 
   /**
-   * PrepareInsertContent() is a helper method of InsertTextAt(),
-   * HTMLEditor::DoInsertHTMLWithContext().  They insert content coming from
-   * clipboard or drag and drop.  Before that, they may need to remove selected
-   * contents and adjust selection.  This does them instead.
-   *
-   * @param aPointToInsert      Point to insert.  Must be set.  Callers
-   *                            shouldn't use this instance after calling this
-   *                            method because this method may cause changing
-   *                            the DOM tree and Selection.
-   * @param aDoDeleteSelection  true if selected content should be removed.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult PrepareToInsertContent(
-      const EditorDOMPoint& aPointToInsert, bool aDoDeleteSelection);
-
-  /**
    * InsertTextAt() inserts aStringToInsert at aPointToInsert.
    *
    * @param aStringToInsert     The string which you want to insert.
