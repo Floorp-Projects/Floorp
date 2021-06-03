@@ -53,26 +53,12 @@ dialog[insecureauth] {
   min-height: 0;
 }
 
-@media not (-moz-proton-modals) {
-.sizeDetermined,
-.sizeDetermined .dialogRow,
-.sizeDetermined #infoContainer {
-  max-height: 100%;
-}
-
-dialog[subdialog] #infoContainer {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-}
-
 .sizeDetermined > div {
   display: contents;
 }
 
 #loginLabel, #password1Label {
-  text-align: end;
+  text-align: start;
 }
 
 #loginTextbox,
@@ -80,7 +66,6 @@ dialog[subdialog] #infoContainer {
   text-align: match-parent;
 }
 
-@media (-moz-proton-modals) {
 /* use flexbox instead of grid: */
 dialog[subdialog],
 dialog[subdialog] #dialogGrid,
@@ -159,11 +144,6 @@ dialog[subdialog] .dialogRow {
   margin-block: 0 var(--grid-padding);
 }
 
-/* Start-align labels: */
-#loginLabel, #password1Label {
-  text-align: start;
-}
-
 /* Fix spacing in the `prompt()` case: */
 dialog[subdialog] #loginLabel[value=""] {
   display: none;
@@ -171,5 +151,4 @@ dialog[subdialog] #loginLabel[value=""] {
 
 dialog[subdialog][windowtype="prompt:prompt"] #infoRow {
   margin-bottom: 4px;
-}
 }
