@@ -399,13 +399,13 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
                         nsIEditor::EStripWrappers aStripWrappers) override;
 
   /**
-   * ComputeValueFromTextNodeAndPaddingBRElement() tries to compute "value" of
-   * this editor content only with text node and padding `<br>` element.
+   * ComputeValueFromTextNodeAndBRElement() tries to compute "value" of
+   * this editor content only with text nodes and `<br>` elements.
    * If this succeeds to compute the value, it's returned with aValue and
    * the result is marked as "handled".  Otherwise, the caller needs to
    * compute it with another way.
    */
-  EditActionResult ComputeValueFromTextNodeAndPaddingBRElement(
+  EditActionResult ComputeValueFromTextNodeAndBRElement(
       nsAString& aValue) const;
 
   /**

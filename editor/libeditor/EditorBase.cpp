@@ -1435,23 +1435,28 @@ nsresult EditorBase::ComputeValueInternal(const nsAString& aFormatType,
 
   // First, let's try to get the value simply only from text node if the
   // caller wants plaintext value.
-  // NOTE: If it's neither <input type="text"> nor <textarea>, e.g., an HTML
-  // editor which is in plaintext mode (e.g., plaintext email composer on
-  // Thunderbird), it should be handled by the expensive path.
-  if (IsTextEditor() && aFormatType.LowerCaseEqualsLiteral("text/plain")) {
-    // If it's necessary to check selection range or the editor wraps hard,
-    // we need some complicated handling.  In such case, we need to use the
-    // expensive path.
-    // XXX Anything else what we cannot return the text node data simply?
-    if (!(aDocumentEncoderFlags & (nsIDocumentEncoder::OutputSelectionOnly |
-                                   nsIDocumentEncoder::OutputWrap))) {
+  if (aFormatType.LowerCaseEqualsLiteral("text/plain") &&
+      !(aDocumentEncoderFlags & (nsIDocumentEncoder::OutputSelectionOnly |
+                                 nsIDocumentEncoder::OutputWrap))) {
+    // Shortcut for empty editor case.
+    if (mPaddingBRElementForEmptyEditor) {
+      aOutputString.Truncate();
+      return NS_OK;
+    }
+    // NOTE: If it's neither <input type="text"> nor <textarea>, e.g., an HTML
+    // editor which is in plaintext mode (e.g., plaintext email composer on
+    // Thunderbird), it should be handled by the expensive path.
+    if (IsTextEditor()) {
+      // If it's necessary to check selection range or the editor wraps hard,
+      // we need some complicated handling.  In such case, we need to use the
+      // expensive path.
+      // XXX Anything else what we cannot return the text node data simply?
       EditActionResult result =
-          AsTextEditor()->ComputeValueFromTextNodeAndPaddingBRElement(
-              aOutputString);
+          AsTextEditor()->ComputeValueFromTextNodeAndBRElement(aOutputString);
       if (result.Failed() || result.Canceled() || result.Handled()) {
         NS_WARNING_ASSERTION(
             result.Succeeded(),
-            "TextEditor::ComputeValueFromTextNodeAndPaddingBRElement() failed");
+            "TextEditor::ComputeValueFromTextNodeAndBRElement() failed");
         return result.Rv();
       }
     }
