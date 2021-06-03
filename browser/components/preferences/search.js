@@ -248,7 +248,7 @@ var gSearchPane = {
     let container = document.getElementById("showQuickSuggestContainer");
     let desc = document.getElementById("searchSuggestionsDesc");
 
-    if (!NimbusFeatures.urlbar.getValue().quickSuggestEnabled) {
+    if (!UrlbarPrefs.get("quickSuggestEnabled")) {
       // The experiment is not enabled.  This is the default, so to avoid
       // accidentally messing anything up, only modify the doc if we're being
       // called due to a change in the experiment enabled status.
