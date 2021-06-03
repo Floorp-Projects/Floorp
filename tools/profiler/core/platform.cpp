@@ -2126,12 +2126,86 @@ static void DoMozStackWalkBacktrace(
   // argument.
   StackWalkCallback(/* frameNum */ 0, aRegs.mPC, aRegs.mSP, &aNativeStack);
 
-  uint32_t maxFrames = uint32_t(MAX_NATIVE_FRAMES - aNativeStack.mCount);
-
   HANDLE thread = GetThreadHandle(aRegisteredThread.GetPlatformData());
   MOZ_ASSERT(thread);
-  MozStackWalkThread(StackWalkCallback, maxFrames, &aNativeStack, thread,
-                     /* context */ nullptr);
+
+  CONTEXT context_buf;
+  CONTEXT* context = nullptr;
+  if constexpr (StackWalkControl::scIsSupported) {
+    context = &context_buf;
+    memset(&context_buf, 0, sizeof(CONTEXT));
+    context_buf.ContextFlags = CONTEXT_FULL;
+#  if defined(_M_AMD64)
+    context_buf.Rsp = (DWORD64)aRegs.mSP;
+    context_buf.Rbp = (DWORD64)aRegs.mFP;
+    context_buf.Rip = (DWORD64)aRegs.mPC;
+#  else
+    static_assert(!StackWalkControl::scIsSupported,
+                  "Mismatched support between StackWalkControl and "
+                  "DoMozStackWalkBacktrace");
+#  endif
+  } else {
+    context = nullptr;
+  }
+
+  // This is to check forward-progress after using a resume point.
+  void* previousResumeSp = nullptr;
+
+  for (;;) {
+    MozStackWalkThread(StackWalkCallback,
+                       uint32_t(MAX_NATIVE_FRAMES - aNativeStack.mCount),
+                       &aNativeStack, thread, context);
+
+    if constexpr (!StackWalkControl::scIsSupported) {
+      break;
+    } else {
+      if (aNativeStack.mCount >= MAX_NATIVE_FRAMES) {
+        // No room to add more frames.
+        break;
+      }
+      if (!aStackWalkControlIfSupported ||
+          aStackWalkControlIfSupported->ResumePointCount() == 0) {
+        // No resume information.
+        break;
+      }
+      void* lastSP = aNativeStack.mSPs[aNativeStack.mCount - 1];
+      if (previousResumeSp &&
+          ((uintptr_t)lastSP <= (uintptr_t)previousResumeSp)) {
+        // No progress after the previous resume point.
+        break;
+      }
+      const StackWalkControl::ResumePoint* resumePoint =
+          aStackWalkControlIfSupported->GetResumePointCallingSp(lastSP);
+      if (!resumePoint) {
+        break;
+      }
+      void* sp = resumePoint->resumeSp;
+      if (!sp) {
+        // Null SP in a resume point means we stop here.
+        break;
+      }
+      void* pc = resumePoint->resumePc;
+      StackWalkCallback(/* frameNum */ aNativeStack.mCount, pc, sp,
+                        &aNativeStack);
+      ++aNativeStack.mCount;
+      if (aNativeStack.mCount >= MAX_NATIVE_FRAMES) {
+        break;
+      }
+      // Prepare context to resume stack walking.
+      memset(&context_buf, 0, sizeof(CONTEXT));
+      context_buf.ContextFlags = CONTEXT_FULL;
+#  if defined(_M_AMD64)
+      context_buf.Rsp = (DWORD64)sp;
+      context_buf.Rbp = (DWORD64)resumePoint->resumeBp;
+      context_buf.Rip = (DWORD64)pc;
+#  else
+      static_assert(!StackWalkControl::scIsSupported,
+                    "Mismatched support between StackWalkControl and "
+                    "DoMozStackWalkBacktrace");
+#  endif
+      previousResumeSp = sp;
+    }
+  }
 }
 #endif
 
