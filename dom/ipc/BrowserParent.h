@@ -549,9 +549,6 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvUnlockNativePointer();
 
-  void SendMouseEvent(const nsAString& aType, float aX, float aY,
-                      int32_t aButton, int32_t aClickCount, int32_t aModifiers);
-
   /**
    * The following Send*Event() marks aEvent as posted to remote process if
    * it succeeded.  So, you can check the result with

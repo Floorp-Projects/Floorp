@@ -2809,21 +2809,6 @@ void nsFrameLoader::DeactivateRemoteFrame(ErrorResult& aRv) {
   browserParent->Deactivate(false, nsFocusManager::GenerateFocusActionId());
 }
 
-void nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType, float aX,
-                                               float aY, int32_t aButton,
-                                               int32_t aClickCount,
-                                               int32_t aModifiers,
-                                               ErrorResult& aRv) {
-  auto* browserParent = GetBrowserParent();
-  if (!browserParent) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  browserParent->SendMouseEvent(aType, aX, aY, aButton, aClickCount,
-                                aModifiers);
-}
-
 void nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture,
                                        ErrorResult& aRv) {
   auto* browserParent = GetBrowserParent();
