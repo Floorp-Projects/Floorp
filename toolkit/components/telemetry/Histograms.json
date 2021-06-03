@@ -14408,6 +14408,16 @@
     "kind": "count",
     "description": "Tracking the total number of opened Containers."
   },
+  "NUMBER_OF_PROFILES": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["dtownsend@mozilla.com"],
+    "expires_in_version": "85",
+    "bug_numbers": [1296606, 1488881, 1490342, 1621948, 1649958],
+    "kind": "count",
+    "description": "Number of named browser profiles for the current user, as reported by the profile service at startup.",
+    "releaseChannelCollection": "opt-out"
+  },
   "TIME_TO_FIRST_CLICK_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
