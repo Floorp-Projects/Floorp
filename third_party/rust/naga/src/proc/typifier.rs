@@ -93,6 +93,8 @@ pub enum ResolveError {
     },
     #[error("Invalid scalar {0:?}")]
     InvalidScalar(Handle<crate::Expression>),
+    #[error("Invalid vector {0:?}")]
+    InvalidVector(Handle<crate::Expression>),
     #[error("Invalid pointer {0:?}")]
     InvalidPointer(Handle<crate::Expression>),
     #[error("Invalid image {0:?}")]
@@ -151,6 +153,17 @@ impl<'a> ResolveContext<'a> {
                     } => Ti::ValuePointer {
                         size: None,
                         kind,
+                        width,
+                        class,
+                    },
+                    // Matrices are only dynamically indexed behind a pointer
+                    Ti::Matrix {
+                        columns: _,
+                        rows,
+                        width,
+                    } => Ti::ValuePointer {
+                        kind: crate::ScalarKind::Float,
+                        size: Some(rows),
                         width,
                         class,
                     },
@@ -286,6 +299,21 @@ impl<'a> ResolveContext<'a> {
                 ref other => {
                     log::error!("Scalar type {:?}", other);
                     return Err(ResolveError::InvalidScalar(value));
+                }
+            },
+            crate::Expression::Swizzle {
+                size,
+                vector,
+                pattern: _,
+            } => match *past(vector).inner_with(types) {
+                Ti::Vector {
+                    size: _,
+                    kind,
+                    width,
+                } => TypeResolution::Value(Ti::Vector { size, kind, width }),
+                ref other => {
+                    log::error!("Vector type {:?}", other);
+                    return Err(ResolveError::InvalidVector(vector));
                 }
             },
             crate::Expression::Compose { ty, .. } => TypeResolution::Handle(ty),
@@ -444,7 +472,7 @@ impl<'a> ResolveContext<'a> {
                 | crate::BinaryOperator::LogicalAnd
                 | crate::BinaryOperator::LogicalOr => {
                     let kind = crate::ScalarKind::Bool;
-                    let width = 1;
+                    let width = crate::BOOL_WIDTH;
                     let inner = match *past(left).inner_with(types) {
                         Ti::Scalar { .. } => Ti::Scalar { kind, width },
                         Ti::Vector { size, .. } => Ti::Vector { size, kind, width },
@@ -467,7 +495,7 @@ impl<'a> ResolveContext<'a> {
             crate::Expression::Derivative { axis: _, expr } => past(expr).clone(),
             crate::Expression::Relational { .. } => TypeResolution::Value(Ti::Scalar {
                 kind: crate::ScalarKind::Bool,
-                width: 4,
+                width: crate::BOOL_WIDTH,
             }),
             crate::Expression::Math {
                 fun,
@@ -544,7 +572,8 @@ impl<'a> ResolveContext<'a> {
                     },
                     Mf::Normalize |
                     Mf::FaceForward |
-                    Mf::Reflect => res_arg.clone(),
+                    Mf::Reflect |
+                    Mf::Refract => res_arg.clone(),
                     // computational
                     Mf::Sign |
                     Mf::Fma |
@@ -598,14 +627,21 @@ impl<'a> ResolveContext<'a> {
             crate::Expression::As {
                 expr,
                 kind,
-                convert: _,
+                convert,
             } => match *past(expr).inner_with(types) {
-                Ti::Scalar { kind: _, width } => TypeResolution::Value(Ti::Scalar { kind, width }),
+                Ti::Scalar { kind: _, width } => TypeResolution::Value(Ti::Scalar {
+                    kind,
+                    width: convert.unwrap_or(width),
+                }),
                 Ti::Vector {
                     kind: _,
                     size,
                     width,
-                } => TypeResolution::Value(Ti::Vector { kind, size, width }),
+                } => TypeResolution::Value(Ti::Vector {
+                    kind,
+                    size,
+                    width: convert.unwrap_or(width),
+                }),
                 ref other => {
                     return Err(ResolveError::IncompatibleOperands(format!(
                         "{:?} as {:?}",

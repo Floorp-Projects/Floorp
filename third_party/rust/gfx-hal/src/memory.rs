@@ -131,7 +131,7 @@ impl Segment {
 
 /// Defines a single memory bind region.
 ///
-/// This is used in the [`bind_sparse`][CommandQueue::bind_sparse] method to define a physical
+/// This is used in the [`bind_sparse`][queue::Queue::bind_sparse] method to define a physical
 /// store region for a buffer.
 #[derive(Debug)]
 pub struct SparseBind<M> {
@@ -148,7 +148,7 @@ pub struct SparseBind<M> {
 
 /// Defines a single image memory bind region.
 ///
-/// This is used in the [`bind_sparse`][CommandQueue::bind_sparse] method to define a physical
+/// This is used in the [`bind_sparse`][queue::Queue::bind_sparse] method to define a physical
 /// store region for a buffer.
 #[derive(Debug)]
 pub struct SparseImageBind<M> {

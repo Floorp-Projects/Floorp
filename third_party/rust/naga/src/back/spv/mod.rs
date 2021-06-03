@@ -57,8 +57,10 @@ pub struct Options {
     pub lang_version: (u8, u8),
     /// Configuration flags for the writer.
     pub flags: WriterFlags,
-    /// Set of SPIR-V capabilities.
-    pub capabilities: crate::FastHashSet<Capability>,
+    /// Set of SPIR-V allowed capabilities, if provided.
+    // Note: there is a major bug currently associated with deriving the capabilities.
+    // We are calling `required_capabilities`, but the semantics of this is broken.
+    pub capabilities: Option<crate::FastHashSet<Capability>>,
 }
 
 impl Default for Options {
@@ -67,12 +69,10 @@ impl Default for Options {
         if cfg!(debug_assertions) {
             flags |= WriterFlags::DEBUG;
         }
-        let mut capabilities = crate::FastHashSet::default();
-        capabilities.insert(Capability::Shader);
         Options {
             lang_version: (1, 0),
             flags,
-            capabilities,
+            capabilities: None,
         }
     }
 }

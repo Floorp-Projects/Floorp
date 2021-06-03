@@ -51,13 +51,12 @@ use crate::{
     ImageClass, Interpolation, LocalVariable, Module, RelationalFunction, Sampling, ScalarKind,
     ScalarValue, ShaderStage, Statement, StorageAccess, StorageClass, StorageFormat, StructMember,
     Type, TypeInner, UnaryOperator,
-
 };
 use features::FeaturesManager;
 use std::{
     cmp::Ordering,
     fmt,
-    io::{Error as IoError, Write},
+    fmt::{Error as FmtError, Write},
 };
 use thiserror::Error;
 
@@ -71,6 +70,8 @@ pub const SUPPORTED_CORE_VERSIONS: &[u16] = &[330, 400, 410, 420, 430, 440, 450]
 /// List of supported es glsl versions
 pub const SUPPORTED_ES_VERSIONS: &[u16] = &[300, 310, 320];
 const INDENT: &str = "    ";
+
+const COMPONENTS: &[char] = &['x', 'y', 'z', 'w'];
 
 /// glsl version
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -271,8 +272,8 @@ type BackendResult = Result<(), Error>;
 #[derive(Debug, Error)]
 pub enum Error {
     /// A error occurred while writing to the output
-    #[error("I/O error")]
-    IoError(#[from] IoError),
+    #[error("Format error")]
+    FmtError(#[from] FmtError),
     /// The specified [`Version`](Version) doesn't have all required [`Features`](super)
     ///
     /// Contains the missing [`Features`](Features)
@@ -362,7 +363,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
         // Generate a map with names required to write the module
         let mut names = FastHashMap::default();
-        Namer::default().reset(module, keywords::RESERVED_KEYWORDS, &mut names);
+        Namer::default().reset(module, keywords::RESERVED_KEYWORDS, &["gl_"], &mut names);
 
         // Build the instance
         let mut this = Self {
@@ -494,15 +495,8 @@ impl<'a, W: Write> Writer<'a, W> {
                         write!(self.out, "layout({}) ", glsl_storage_format(format))?;
                     }
 
-                    // Write the storage access modifier
-                    //
-                    // glsl allows adding both `readonly` and `writeonly` but this means that
-                    // they can only be used to query information about the image which isn't what
-                    // we want here so when storage access is both `LOAD` and `STORE` add no modifiers
-                    if global.storage_access == StorageAccess::LOAD {
-                        write!(self.out, "readonly ")?;
-                    } else if global.storage_access == StorageAccess::STORE {
-                        write!(self.out, "writeonly ")?;
+                    if let Some(storage_access) = glsl_storage_access(global.storage_access) {
+                        write!(self.out, "{} ", storage_access)?;
                     }
 
                     // All images in glsl are `uniform`
@@ -740,20 +734,21 @@ impl<'a, W: Write> Writer<'a, W> {
         handle: Handle<GlobalVariable>,
         global: &GlobalVariable,
     ) -> BackendResult {
-        // Write the storage access modifier
-        //
-        // glsl allows adding both `readonly` and `writeonly` but this means that
-        // they can only be used to query information about the resource which isn't what
-        // we want here so when storage access is both `LOAD` and `STORE` add no modifiers
-        if global.storage_access == StorageAccess::LOAD {
-            write!(self.out, "readonly ")?;
-        } else if global.storage_access == StorageAccess::STORE {
-            write!(self.out, "writeonly ")?;
+        if let Some(storage_access) = glsl_storage_access(global.storage_access) {
+            write!(self.out, "{} ", storage_access)?;
         }
 
         // Write the storage class
         // Trailing space is important
-        write!(self.out, "{} ", glsl_storage_class(global.class))?;
+        if let Some(storage_class) = glsl_storage_class(global.class) {
+            write!(self.out, "{} ", storage_class)?;
+        } else if let TypeInner::Struct {
+            level: crate::StructLevel::Root,
+            ..
+        } = self.module.types[global.ty].inner
+        {
+            write!(self.out, "struct ")?;
+        }
 
         // Write the type
         // `write_type` adds no leading or trailing spaces
@@ -761,7 +756,14 @@ impl<'a, W: Write> Writer<'a, W> {
 
         // Finally write the global name and end the global with a `;` and a newline
         // Leading space is important
-        writeln!(self.out, " {};", self.get_global_name(handle, global))?;
+        let global_name = self.get_global_name(handle, global);
+        let global_str =
+            if let Some(default_value) = zero_init_value_str(&self.module.types[global.ty].inner) {
+                format!("{} = {}", global_name, default_value)
+            } else {
+                global_name
+            };
+        writeln!(self.out, " {};", global_str)?;
         writeln!(self.out)?;
 
         Ok(())
@@ -797,7 +799,11 @@ impl<'a, W: Write> Writer<'a, W> {
             }
             _ => {
                 let (location, interpolation, sampling) = match binding {
-                    Some(&Binding::Location { location, interpolation, sampling }) => (location, interpolation, sampling),
+                    Some(&Binding::Location {
+                        location,
+                        interpolation,
+                        sampling,
+                    }) => (location, interpolation, sampling),
                     _ => return Ok(()),
                 };
 
@@ -818,10 +824,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
                 // Write the storage class
                 if self.options.version.supports_explicit_locations() {
-                    write!(
-                        self.out,
-                        "layout(location = {}) ",
-                        location)?;
+                    write!(self.out, "layout(location = {}) ", location)?;
                 }
 
                 // Write the sampling auxiliary qualifier.
@@ -847,7 +850,11 @@ impl<'a, W: Write> Writer<'a, W> {
                 // Finally write the global name and end the global with a `;` and a newline
                 // Leading space is important
                 let vname = VaryingName {
-                    binding: &Binding::Location { location, interpolation: None, sampling: None },
+                    binding: &Binding::Location {
+                        location,
+                        interpolation: None,
+                        sampling: None,
+                    },
                     stage: self.entry_point.stage,
                     output,
                 };
@@ -1113,8 +1120,14 @@ impl<'a, W: Write> Writer<'a, W> {
             match self.module.types[member.ty].inner {
                 TypeInner::Array { base, .. } => {
                     // GLSL arrays are written as `type name[size]`
+                    let ty_name = match self.module.types[base].inner {
+                        // Write scalar type by backend so as not to depend on the front-end implementation
+                        // Name returned from frontend can be generated (type1, float1, etc.)
+                        TypeInner::Scalar { kind, width } => glsl_scalar(kind, width)?.full,
+                        _ => &self.names[&NameKey::Type(base)],
+                    };
+
                     // Write `type` and `name`
-                    let ty_name = &self.names[&NameKey::Type(base)];
                     write!(self.out, "{}", ty_name)?;
                     write!(
                         self.out,
@@ -1284,7 +1297,7 @@ impl<'a, W: Write> Writer<'a, W> {
                     }
 
                     // Write `break;` if the block isn't fallthrough
-                    if case.fall_through {
+                    if !case.fall_through {
                         writeln!(self.out, "{}break;", INDENT.repeat(indent + 2))?;
                     }
                 }
@@ -1352,17 +1365,50 @@ impl<'a, W: Write> Writer<'a, W> {
                             let value = value.unwrap();
                             match self.module.types[result.ty].inner {
                                 crate::TypeInner::Struct { ref members, .. } => {
+                                    let (mut is_temp_struct_used, mut return_struct) = (false, "");
+                                    if let Expression::Compose { .. } = ctx.expressions[value] {
+                                        is_temp_struct_used = true;
+                                        return_struct = "_tmp_return";
+                                        write!(
+                                            self.out,
+                                            "{} {} = ",
+                                            &self.names[&NameKey::Type(result.ty)],
+                                            return_struct
+                                        )?;
+                                        self.write_expr(value, ctx)?;
+                                        writeln!(self.out, ";")?;
+                                        write!(self.out, "{}", INDENT.repeat(indent))?;
+                                    }
                                     for (index, member) in members.iter().enumerate() {
+                                        // TODO: handle builtin in better way
+                                        if let Some(Binding::BuiltIn(builtin)) = member.binding {
+                                            match builtin {
+                                                crate::BuiltIn::ClipDistance
+                                                | crate::BuiltIn::CullDistance
+                                                | crate::BuiltIn::PointSize => {
+                                                    if self.options.version.is_es() {
+                                                        continue;
+                                                    }
+                                                }
+                                                _ => {}
+                                            }
+                                        }
+
                                         let varying_name = VaryingName {
                                             binding: member.binding.as_ref().unwrap(),
                                             stage: ep.stage,
                                             output: true,
                                         };
+                                        let field_name = self.names
+                                            [&NameKey::StructMember(result.ty, index as u32)]
+                                            .clone();
                                         write!(self.out, "{} = ", varying_name)?;
-                                        self.write_expr(value, ctx)?;
-                                        let field_name = &self.names
-                                            [&NameKey::StructMember(result.ty, index as u32)];
-                                        writeln!(self.out, ".{};", field_name)?;
+
+                                        if !is_temp_struct_used {
+                                            self.write_expr(value, ctx)?;
+                                        }
+
+                                        writeln!(self.out, "{}.{};", return_struct, &field_name)?;
                                         write!(self.out, "{}", INDENT.repeat(indent))?;
                                     }
                                 }
@@ -1386,9 +1432,14 @@ impl<'a, W: Write> Writer<'a, W> {
             // This is one of the places were glsl adds to the syntax of C in this case the discard
             // keyword which ceases all further processing in a fragment shader, it's called OpKill
             // in spir-v that's why it's called `Statement::Kill`
-            Statement::Kill => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
-                writeln!(self.out, "discard;")?
+            Statement::Kill => writeln!(self.out, "{}discard;", INDENT.repeat(indent))?,
+            // Issue an execution or a memory barrier.
+            Statement::Barrier(flags) => {
+                if flags.is_empty() {
+                    writeln!(self.out, "{}barrier();", INDENT.repeat(indent))?;
+                } else {
+                    writeln!(self.out, "{}groupMemoryBarrier();", INDENT.repeat(indent))?;
+                }
             }
             // Stores in glsl are just variable assignments written as `pointer = value;`
             Statement::Store { pointer, value } => {
@@ -1506,6 +1557,18 @@ impl<'a, W: Write> Writer<'a, W> {
                 write!(self.out, "(")?;
                 self.write_expr(value, ctx)?;
                 write!(self.out, ")")?
+            }
+            // `Swizzle` adds a few letters behind the dot.
+            Expression::Swizzle {
+                size,
+                vector,
+                pattern,
+            } => {
+                self.write_expr(vector, ctx)?;
+                write!(self.out, ".")?;
+                for &sc in pattern[..size as usize].iter() {
+                    self.out.write_char(COMPONENTS[sc as usize])?;
+                }
             }
             // `Compose` is pretty simple we just write `type(components)` where `components` is a
             // comma separated list of expressions
@@ -1728,14 +1791,13 @@ impl<'a, W: Write> Writer<'a, W> {
                         write!(self.out, ")",)?;
                     }
                     crate::ImageQuery::NumLayers => {
-                        let selector = ['x', 'y', 'z', 'w'];
                         let fun_name = match class {
                             ImageClass::Sampled { .. } | ImageClass::Depth => "textureSize",
                             ImageClass::Storage(_) => "imageSize",
                         };
                         write!(self.out, "{}(", fun_name)?;
                         self.write_expr(image, ctx)?;
-                        write!(self.out, ",0).{}", selector[components])?;
+                        write!(self.out, ",0).{}", COMPONENTS[components])?;
                     }
                     crate::ImageQuery::NumSamples => {
                         // assumes ARB_shader_texture_image_samples
@@ -1819,30 +1881,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 if function.is_some() {
                     write!(self.out, ",")?
                 } else {
-                    write!(
-                        self.out,
-                        " {} ",
-                        match op {
-                            BinaryOperator::Add => "+",
-                            BinaryOperator::Subtract => "-",
-                            BinaryOperator::Multiply => "*",
-                            BinaryOperator::Divide => "/",
-                            BinaryOperator::Modulo => "%",
-                            BinaryOperator::Equal => "==",
-                            BinaryOperator::NotEqual => "!=",
-                            BinaryOperator::Less => "<",
-                            BinaryOperator::LessEqual => "<=",
-                            BinaryOperator::Greater => ">",
-                            BinaryOperator::GreaterEqual => ">=",
-                            BinaryOperator::And => "&",
-                            BinaryOperator::ExclusiveOr => "^",
-                            BinaryOperator::InclusiveOr => "|",
-                            BinaryOperator::LogicalAnd => "&&",
-                            BinaryOperator::LogicalOr => "||",
-                            BinaryOperator::ShiftLeft => "<<",
-                            BinaryOperator::ShiftRight => ">>",
-                        }
-                    )?;
+                    write!(self.out, " {} ", super::binary_operation_str(op))?;
                 }
 
                 self.write_expr(right, ctx)?;
@@ -1947,6 +1986,7 @@ impl<'a, W: Write> Writer<'a, W> {
                     Mf::Normalize => "normalize",
                     Mf::FaceForward => "faceforward",
                     Mf::Reflect => "reflect",
+                    Mf::Refract => "refract",
                     // computational
                     Mf::Sign => "sign",
                     Mf::Fma => "fma",
@@ -1984,45 +2024,39 @@ impl<'a, W: Write> Writer<'a, W> {
                 convert,
             } => {
                 let inner = ctx.info[expr].ty.inner_with(&self.module.types);
-                if convert {
-                    // this is similar to `write_type`, but with the target kind
-                    match *inner {
-                        TypeInner::Scalar { kind: _, width } => {
-                            write!(self.out, "{}", glsl_scalar(target_kind, width)?.full)?
-                        }
-                        TypeInner::Vector {
-                            size,
-                            kind: _,
-                            width,
-                        } => write!(
-                            self.out,
-                            "{}vec{}",
-                            glsl_scalar(target_kind, width)?.prefix,
-                            size as u8
-                        )?,
-                        ref other => unreachable!("unexpected cast of {:?}", other),
-                    }
-                } else {
-                    let source_kind = inner.scalar_kind().unwrap();
-                    write!(
-                        self.out,
-                        "{}",
-                        match (source_kind, target_kind) {
-                            (ScalarKind::Float, ScalarKind::Sint) => "floatBitsToInt",
-                            (ScalarKind::Float, ScalarKind::Uint) => "floatBitsToUInt",
-                            (ScalarKind::Sint, ScalarKind::Float) => "intBitsToFloat",
-                            (ScalarKind::Uint, ScalarKind::Float) => "uintBitsToFloat",
-                            // There is no way to bitcast between Uint/Sint in glsl. Use constructor conversion
-                            (ScalarKind::Uint, ScalarKind::Sint) => "int",
-                            (ScalarKind::Sint, ScalarKind::Uint) => "uint",
-                            _ => {
-                                return Err(Error::Custom(format!(
-                                    "Cannot bitcast {:?} to {:?}",
-                                    source_kind, target_kind
-                                )));
+                match convert {
+                    Some(width) => {
+                        // this is similar to `write_type`, but with the target kind
+                        let scalar = glsl_scalar(target_kind, width)?;
+                        match *inner {
+                            TypeInner::Vector { size, .. } => {
+                                write!(self.out, "{}vec{}", scalar.prefix, size as u8)?
                             }
+                            _ => write!(self.out, "{}", scalar.full)?,
                         }
-                    )?;
+                    }
+                    None => {
+                        let source_kind = inner.scalar_kind().unwrap();
+                        write!(
+                            self.out,
+                            "{}",
+                            match (source_kind, target_kind) {
+                                (ScalarKind::Float, ScalarKind::Sint) => "floatBitsToInt",
+                                (ScalarKind::Float, ScalarKind::Uint) => "floatBitsToUInt",
+                                (ScalarKind::Sint, ScalarKind::Float) => "intBitsToFloat",
+                                (ScalarKind::Uint, ScalarKind::Float) => "uintBitsToFloat",
+                                // There is no way to bitcast between Uint/Sint in glsl. Use constructor conversion
+                                (ScalarKind::Uint, ScalarKind::Sint) => "int",
+                                (ScalarKind::Sint, ScalarKind::Uint) => "uint",
+                                _ => {
+                                    return Err(Error::Custom(format!(
+                                        "Cannot bitcast {:?} to {:?}",
+                                        source_kind, target_kind
+                                    )));
+                                }
+                            }
+                        )?;
+                    }
                 }
 
                 write!(self.out, "(")?;
@@ -2181,6 +2215,7 @@ fn glsl_built_in(built_in: BuiltIn, output: bool) -> &'static str {
         BuiltIn::BaseInstance => "uint(gl_BaseInstance)",
         BuiltIn::BaseVertex => "uint(gl_BaseVertex)",
         BuiltIn::ClipDistance => "gl_ClipDistance",
+        BuiltIn::CullDistance => "gl_CullDistance",
         BuiltIn::InstanceIndex => "uint(gl_InstanceID)",
         BuiltIn::PointSize => "gl_PointSize",
         BuiltIn::VertexIndex => "uint(gl_VertexID)",
@@ -2205,15 +2240,15 @@ fn glsl_built_in(built_in: BuiltIn, output: bool) -> &'static str {
 }
 
 /// Helper function that returns the string corresponding to the storage class
-fn glsl_storage_class(class: StorageClass) -> &'static str {
+fn glsl_storage_class(class: StorageClass) -> Option<&'static str> {
     match class {
-        StorageClass::Function => "",
-        StorageClass::Private => "",
-        StorageClass::Storage => "buffer",
-        StorageClass::Uniform => "uniform",
-        StorageClass::Handle => "uniform",
-        StorageClass::WorkGroup => "shared",
-        StorageClass::PushConstant => "",
+        StorageClass::Function => None,
+        StorageClass::Private => None,
+        StorageClass::Storage => Some("buffer"),
+        StorageClass::Uniform => Some("uniform"),
+        StorageClass::Handle => Some("uniform"),
+        StorageClass::WorkGroup => Some("shared"),
+        StorageClass::PushConstant => None,
     }
 }
 
@@ -2280,5 +2315,43 @@ fn glsl_storage_format(format: StorageFormat) -> &'static str {
         StorageFormat::Rgba32Uint => "rgba32ui",
         StorageFormat::Rgba32Sint => "rgba32i",
         StorageFormat::Rgba32Float => "rgba32f",
+    }
+}
+
+/// Helper function that return the glsl storage access string of [`StorageAccess`](crate::StorageAccess)
+///
+/// glsl allows adding both `readonly` and `writeonly` but this means that
+/// they can only be used to query information about the resource which isn't what
+/// we want here so when storage access is both `LOAD` and `STORE` add no modifiers
+fn glsl_storage_access(storage_access: StorageAccess) -> Option<&'static str> {
+    if storage_access == StorageAccess::LOAD {
+        Some("readonly")
+    } else if storage_access == StorageAccess::STORE {
+        Some("writeonly")
+    } else {
+        None
+    }
+}
+
+/// Helper function that return string with default zero initialization for supported types
+fn zero_init_value_str(inner: &TypeInner) -> Option<String> {
+    match *inner {
+        TypeInner::Scalar { kind, .. } => match kind {
+            ScalarKind::Bool => Some(String::from("false")),
+            _ => Some(String::from("0")),
+        },
+        TypeInner::Vector { size, kind, width } => {
+            if let Ok(scalar_string) = glsl_scalar(kind, width) {
+                let vec_type = format!("{}vec{}", scalar_string.prefix, size as u8);
+                match size {
+                    crate::VectorSize::Bi => Some(format!("{}(0, 0)", vec_type)),
+                    crate::VectorSize::Tri => Some(format!("{}(0, 0, 0)", vec_type)),
+                    crate::VectorSize::Quad => Some(format!("{}(0, 0, 0, 0)", vec_type)),
+                }
+            } else {
+                None
+            }
+        }
+        _ => None,
     }
 }

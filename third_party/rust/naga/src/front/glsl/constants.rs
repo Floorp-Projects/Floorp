@@ -49,8 +49,8 @@ pub enum ConstantSolvingError {
     InvalidUnaryOpArg,
     #[error("Cannot apply the binary op to the arguments")]
     InvalidBinaryOpArgs,
-    #[error("Splat type is not registered")]
-    SplatType,
+    #[error("Splat/swizzle type is not registered")]
+    DestinationTypeNotFound,
 }
 
 impl<'a> ConstantSolver<'a> {
@@ -70,8 +70,8 @@ impl<'a> ConstantSolver<'a> {
                 size,
                 value: splat_value,
             } => {
-                let tgt = self.solve(splat_value)?;
-                let ty = match self.constants[tgt].inner {
+                let value_constant = self.solve(splat_value)?;
+                let ty = match self.constants[value_constant].inner {
                     ConstantInner::Scalar { ref value, width } => {
                         let kind = value.scalar_kind();
                         self.types
@@ -79,13 +79,54 @@ impl<'a> ConstantSolver<'a> {
                     }
                     ConstantInner::Composite { .. } => None,
                 };
+
+                //TODO: register the new type if needed
+                let ty = ty.ok_or(ConstantSolvingError::DestinationTypeNotFound)?;
                 Ok(self.constants.fetch_or_append(Constant {
                     name: None,
                     specialization: None,
                     inner: ConstantInner::Composite {
-                        ty: ty.ok_or(ConstantSolvingError::SplatType)?,
-                        components: vec![tgt; size as usize],
+                        ty,
+                        components: vec![value_constant; size as usize],
                     },
+                }))
+            }
+            Expression::Swizzle {
+                size,
+                vector: src_vector,
+                pattern,
+            } => {
+                let src_constant = self.solve(src_vector)?;
+                let (ty, src_components) = match self.constants[src_constant].inner {
+                    ConstantInner::Scalar { .. } => (None, &[][..]),
+                    ConstantInner::Composite {
+                        ty,
+                        components: ref src_components,
+                    } => match self.types[ty].inner {
+                        crate::TypeInner::Vector {
+                            size: _,
+                            kind,
+                            width,
+                        } => {
+                            let dst_ty = self.types.fetch_if(|t| {
+                                t.inner == crate::TypeInner::Vector { size, kind, width }
+                            });
+                            (dst_ty, &src_components[..])
+                        }
+                        _ => (None, &[][..]),
+                    },
+                };
+                //TODO: register the new type if needed
+                let ty = ty.ok_or(ConstantSolvingError::DestinationTypeNotFound)?;
+                let components = pattern
+                    .iter()
+                    .map(|&sc| src_components[sc as usize])
+                    .collect();
+
+                Ok(self.constants.fetch_or_append(Constant {
+                    name: None,
+                    specialization: None,
+                    inner: ConstantInner::Composite { ty, components },
                 }))
             }
             Expression::Compose { ty, ref components } => {
@@ -101,15 +142,15 @@ impl<'a> ConstantSolver<'a> {
                 }))
             }
             Expression::Unary { expr, op } => {
-                let tgt = self.solve(expr)?;
+                let expr_constant = self.solve(expr)?;
 
-                self.unary_op(op, tgt)
+                self.unary_op(op, expr_constant)
             }
             Expression::Binary { left, right, op } => {
-                let left = self.solve(left)?;
-                let right = self.solve(right)?;
+                let left_constant = self.solve(left)?;
+                let right_constant = self.solve(right)?;
 
-                self.binary_op(op, left, right)
+                self.binary_op(op, left_constant, right_constant)
             }
             Expression::Math { .. } => todo!(),
             Expression::As {
@@ -117,12 +158,11 @@ impl<'a> ConstantSolver<'a> {
                 expr,
                 kind,
             } => {
-                let tgt = self.solve(expr)?;
+                let expr_constant = self.solve(expr)?;
 
-                if convert {
-                    self.cast(tgt, kind)
-                } else {
-                    Err(ConstantSolvingError::Bitcast)
+                match convert {
+                    Some(width) => self.cast(expr_constant, kind, width),
+                    None => Err(ConstantSolvingError::Bitcast),
                 }
             }
             Expression::ArrayLength(expr) => {
@@ -198,6 +238,7 @@ impl<'a> ConstantSolver<'a> {
         &mut self,
         constant: Handle<Constant>,
         kind: ScalarKind,
+        target_width: crate::Bytes,
     ) -> Result<Handle<Constant>, ConstantSolvingError> {
         fn inner_cast<A: num_traits::FromPrimitive>(value: ScalarValue) -> A {
             match value {
@@ -212,7 +253,11 @@ impl<'a> ConstantSolver<'a> {
         let mut inner = self.constants[constant].inner.clone();
 
         match inner {
-            ConstantInner::Scalar { ref mut value, .. } => {
+            ConstantInner::Scalar {
+                ref mut value,
+                ref mut width,
+            } => {
+                *width = target_width;
                 *value = match kind {
                     ScalarKind::Sint => ScalarValue::Sint(inner_cast(*value)),
                     ScalarKind::Uint => ScalarValue::Uint(inner_cast(*value)),
@@ -230,7 +275,7 @@ impl<'a> ConstantSolver<'a> {
                 }
 
                 for component in components {
-                    *component = self.cast(*component, kind)?;
+                    *component = self.cast(*component, kind, target_width)?;
                 }
             }
         }
@@ -520,7 +565,7 @@ mod tests {
         let root = expressions.append(Expression::As {
             expr,
             kind: ScalarKind::Bool,
-            convert: true,
+            convert: Some(crate::BOOL_WIDTH),
         });
 
         let mut solver = ConstantSolver {
@@ -534,7 +579,7 @@ mod tests {
         assert_eq!(
             constants[res].inner,
             ConstantInner::Scalar {
-                width: 4,
+                width: crate::BOOL_WIDTH,
                 value: ScalarValue::Bool(true),
             },
         );

@@ -1,7 +1,7 @@
 use super::super::Typifier;
 use crate::{
     proc::ensure_block_returns, BinaryOperator, Block, EntryPoint, Expression, Function,
-    MathFunction, RelationalFunction, SampleLevel, TypeInner,
+    MathFunction, RelationalFunction, SampleLevel, ScalarKind, TypeInner,
 };
 
 use super::{ast::*, error::ErrorKind};
@@ -11,20 +11,62 @@ impl Program<'_> {
         match fc.kind {
             FunctionCallKind::TypeConstructor(ty) => {
                 let h = if fc.args.len() == 1 {
-                    let kind = self.module.types[ty].inner.scalar_kind().ok_or_else(|| {
-                        ErrorKind::SemanticError("Can only cast to scalar or vector".into())
-                    })?;
-                    self.context.expressions.append(Expression::As {
-                        kind,
-                        expr: fc.args[0].expression,
-                        convert: true,
-                    })
+                    let is_vec = match *self.resolve_type(fc.args[0].expression)? {
+                        TypeInner::Vector { .. } => true,
+                        _ => false,
+                    };
+
+                    match self.module.types[ty].inner {
+                        TypeInner::Vector { size, .. } if !is_vec => {
+                            self.context.expressions.append(Expression::Splat {
+                                size,
+                                value: fc.args[0].expression,
+                            })
+                        }
+                        TypeInner::Scalar { kind, width }
+                        | TypeInner::Vector { kind, width, .. } => {
+                            self.context.expressions.append(Expression::As {
+                                kind,
+                                expr: fc.args[0].expression,
+                                convert: Some(width),
+                            })
+                        }
+                        TypeInner::Matrix {
+                            columns,
+                            rows,
+                            width,
+                        } => {
+                            let value = self.context.expressions.append(Expression::As {
+                                kind: ScalarKind::Float,
+                                expr: fc.args[0].expression,
+                                convert: Some(width),
+                            });
+
+                            let column = if is_vec {
+                                value
+                            } else {
+                                self.context
+                                    .expressions
+                                    .append(Expression::Splat { size: rows, value })
+                            };
+
+                            let columns =
+                                std::iter::repeat(column).take(columns as usize).collect();
+
+                            self.context.expressions.append(Expression::Compose {
+                                ty,
+                                components: columns,
+                            })
+                        }
+                        _ => return Err(ErrorKind::SemanticError("Bad cast".into())),
+                    }
                 } else {
                     self.context.expressions.append(Expression::Compose {
                         ty,
                         components: fc.args.iter().map(|a| a.expression).collect(),
                     })
                 };
+
                 Ok(ExpressionRule {
                     expression: h,
                     statements: fc
@@ -80,6 +122,35 @@ impl Program<'_> {
                             })
                         } else {
                             Err(ErrorKind::SemanticError("Bad call to texture".into()))
+                        }
+                    }
+                    "textureLod" => {
+                        if fc.args.len() != 3 {
+                            return Err(ErrorKind::WrongNumberArgs(name, 3, fc.args.len()));
+                        }
+                        if let Some(sampler) = fc.args[0].sampler {
+                            Ok(ExpressionRule {
+                                expression: self.context.expressions.append(
+                                    Expression::ImageSample {
+                                        image: fc.args[0].expression,
+                                        sampler,
+                                        coordinate: fc.args[1].expression,
+                                        array_index: None, //TODO
+                                        offset: None,      //TODO
+                                        level: SampleLevel::Exact(fc.args[2].expression),
+                                        depth_ref: None,
+                                    },
+                                ),
+                                sampler: None,
+                                statements: fc
+                                    .args
+                                    .into_iter()
+                                    .map(|a| a.statements)
+                                    .flatten()
+                                    .collect(),
+                            })
+                        } else {
+                            Err(ErrorKind::SemanticError("Bad call to textureLod".into()))
                         }
                     }
                     "ceil" | "round" | "floor" | "fract" | "trunc" | "sin" | "abs" | "sqrt"
