@@ -31,8 +31,7 @@
   padding-inline-start: 3px;
 }
 
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-windows-non-native-menus) {
   /* Prevent the global arrowscrollbox rules from replacing our background. */
   #BMB_bookmarksPopup::part(arrowscrollbox),
   #BMB_bookmarksPopup menupopup[placespopup=true]::part(arrowscrollbox) {
@@ -47,7 +46,6 @@
   #BMB_bookmarksPopup menupopup[placespopup=true] {
     margin-top: -8px;
   }
-}
 }
 
 #BMB_bookmarksPopup menupopup[placespopup=true]::part(innerbox) {

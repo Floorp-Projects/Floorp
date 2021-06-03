@@ -33,7 +33,7 @@ xul|button > xul|*.button-box {
 }
 }
 
-@media (-moz-proton-contextmenus) and (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-proton-non-native-menus) {
   xul|menulist > xul|menupopup {
     background-color: transparent;
     border-color: transparent;
