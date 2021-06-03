@@ -746,8 +746,8 @@
             let { width } = window.windowUtils.getBoundsWithoutFlushing(this);
             if (popup.oneOffButtons) {
               // We have a min-width rule on search-panel-one-offs to show at
-              // least 3 buttons, so take that into account here.
-              width = Math.max(width, popup.oneOffButtons.buttonWidth * 3);
+              // least 4 buttons, so take that into account here.
+              width = Math.max(width, popup.oneOffButtons.buttonWidth * 4);
             }
             popup.style.setProperty("--panel-width", width + "px");
           });
