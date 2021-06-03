@@ -307,9 +307,11 @@ class ResponsiveUI {
       await this.updateDPPX(null);
       reloadNeeded |=
         (await this.updateUserAgent()) && this.reloadOnChange("userAgent");
-      reloadNeeded |=
-        (await this.updateTouchSimulation()) &&
-        this.reloadOnChange("touchSimulation");
+
+      // Don't reload on the server if we're already doing a reload on the client
+      const reloadOnTouchSimulationChange =
+        this.reloadOnChange("touchSimulation") && !reloadNeeded;
+      await this.updateTouchSimulation(null, reloadOnTouchSimulationChange);
       if (reloadNeeded) {
         await this.reloadBrowser();
       }
@@ -489,9 +491,12 @@ class ResponsiveUI {
     reloadNeeded |=
       (await this.updateUserAgent(userAgent)) &&
       this.reloadOnChange("userAgent");
-    reloadNeeded |=
-      (await this.updateTouchSimulation(touch)) &&
-      this.reloadOnChange("touchSimulation");
+
+    // Don't reload on the server if we're already doing a reload on the client
+    const reloadOnTouchSimulationChange =
+      this.reloadOnChange("touchSimulation") && !reloadNeeded;
+    await this.updateTouchSimulation(touch, reloadOnTouchSimulationChange);
+
     if (reloadNeeded) {
       this.reloadBrowser();
     }
@@ -516,12 +521,11 @@ class ResponsiveUI {
 
     await this.updateMaxTouchPointsEnabled(enabled);
 
-    const reloadNeeded =
-      (await this.updateTouchSimulation(enabled)) &&
-      this.reloadOnChange("touchSimulation");
-    if (reloadNeeded) {
-      this.reloadBrowser();
-    }
+    await this.updateTouchSimulation(
+      enabled,
+      this.reloadOnChange("touchSimulation")
+    );
+
     // Used by tests
     this.emit("touch-simulation-changed");
   }
@@ -547,9 +551,11 @@ class ResponsiveUI {
     await this.updateDPPX(null);
     reloadNeeded |=
       (await this.updateUserAgent()) && this.reloadOnChange("userAgent");
-    reloadNeeded |=
-      (await this.updateTouchSimulation()) &&
-      this.reloadOnChange("touchSimulation");
+
+    // Don't reload on the server if we're already doing a reload on the client
+    const reloadOnTouchSimulationChange =
+      this.reloadOnChange("touchSimulation") && !reloadNeeded;
+    await this.updateTouchSimulation(null, reloadOnTouchSimulationChange);
     if (reloadNeeded) {
       this.reloadBrowser();
     }
@@ -790,12 +796,11 @@ class ResponsiveUI {
     await this.updateScreenOrientation(type, angle);
     await this.updateMaxTouchPointsEnabled(touchSimulationEnabled);
 
-    let reloadNeeded = false;
     if (touchSimulationEnabled) {
-      reloadNeeded |=
-        (await this.updateTouchSimulation(touchSimulationEnabled)) &&
-        this.reloadOnChange("touchSimulation");
+      await this.updateTouchSimulation(touchSimulationEnabled);
     }
+
+    let reloadNeeded = false;
     if (userAgent) {
       reloadNeeded |=
         (await this.updateUserAgent(userAgent)) &&
@@ -867,32 +872,31 @@ class ResponsiveUI {
    * false, this method will clear all touch simulation and meta viewport
    * overrides, returning to default behavior for both settings.
    *
-   * @return boolean
-   *         Whether a reload is needed to apply the override change(s).
+   * @param {boolean} enabled
+   * @param {boolean} reloadOnTouchSimulationToggle: Set to true to trigger a page reload
+   *        if the touch simulation state changes.
    */
-  async updateTouchSimulation(enabled) {
-    let reloadNeeded;
+  async updateTouchSimulation(enabled, reloadOnTouchSimulationToggle) {
+    // Call setMetaViewportOverride so the server would be in the expected state when/if
+    // the document reloads (as part of the call to updateConfiguration).
     if (enabled) {
-      reloadNeeded = await this.commands.targetConfigurationCommand.setTouchEventsOverride(
-        "enabled"
-      );
-
       const metaViewportEnabled = Services.prefs.getBoolPref(
         "devtools.responsive.metaViewport.enabled",
         false
       );
       if (metaViewportEnabled) {
-        reloadNeeded |= await this.responsiveFront.setMetaViewportOverride(
+        await this.responsiveFront.setMetaViewportOverride(
           Ci.nsIDocShell.META_VIEWPORT_OVERRIDE_ENABLED
         );
       }
     } else {
-      reloadNeeded = await this.commands.targetConfigurationCommand.setTouchEventsOverride(
-        null
-      );
-      reloadNeeded |= await this.responsiveFront.clearMetaViewportOverride();
+      await this.responsiveFront.clearMetaViewportOverride();
     }
-    return reloadNeeded;
+
+    await this.commands.targetConfigurationCommand.updateConfiguration({
+      touchEventsOverride: enabled ? "enabled" : null,
+      reloadOnTouchSimulationToggle,
+    });
   }
 
   /**
