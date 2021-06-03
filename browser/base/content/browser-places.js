@@ -1687,10 +1687,6 @@ var BookmarkingUI = {
       entry: "subviewbutton",
     };
 
-    if (!gProtonDoorhangers) {
-      extraClasses.footer = "panel-subview-footer";
-    }
-
     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`, {
       extraClasses,
       insertionPoint: ".panel-subview-footer-button",

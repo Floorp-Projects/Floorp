@@ -573,14 +573,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-/* Temporary pref while the Proton doorhangers work stablizes. */
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProtonDoorhangers",
-  "browser.proton.doorhangers.enabled",
-  false
-);
-
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
     "chrome://browser/content/translation-notification.js",
@@ -7540,7 +7532,7 @@ var IndexedDBPromptHelper = {
           Ci.nsIPermissionManager.ALLOW_ACTION
         );
       },
-      disableHighlight: gProtonDoorhangers,
+      disableHighlight: true,
     };
 
     var secondaryActions = [
@@ -7639,7 +7631,7 @@ var CanvasPermissionPromptHelper = {
           state && state.checkboxChecked
         );
       },
-      disableHighlight: gProtonDoorhangers,
+      disableHighlight: true,
     };
 
     let secondaryActions = [
@@ -7813,9 +7805,7 @@ var WebAuthnPromptHelper = {
       }
     };
 
-    if (gProtonDoorhangers) {
-      mainAction.disableHighlight = true;
-    }
+    mainAction.disableHighlight = true;
 
     this._tid = tid;
     this._current = PopupNotifications.show(

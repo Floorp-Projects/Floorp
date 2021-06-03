@@ -1185,7 +1185,7 @@ add_task(async function transient() {
   Assert.equal(onPlacedInPanelCount, 0, "onPlacedInPanelCount should remain 0");
   Assert.equal(
     onBeforePlacedInWindowCount,
-    gProton ? 1 : 0,
+    1,
     "onBeforePlacedInWindowCount after adding transient action"
   );
 
