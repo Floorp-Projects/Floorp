@@ -7172,11 +7172,8 @@ var TabContextMenu = {
   updateShareURLMenuItem() {
     // We only support "share URL" on macOS and on Windows 10:
     if (
-      !gProton ||
-      !(
-        AppConstants.platform == "macosx" ||
-        AppConstants.isPlatformAndVersionAtLeast("win", "6.4")
-      )
+      AppConstants.platform != "macosx" &&
+      !AppConstants.isPlatformAndVersionAtLeast("win", "6.4")
     ) {
       return;
     }
