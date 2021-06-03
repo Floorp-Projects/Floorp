@@ -2427,6 +2427,13 @@
   args:
     val: ValueField
 
+- name: LoadOperandResult
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    input: ValId
+
 - name: NewPlainObjectResult
   shared: false
   transpile: true

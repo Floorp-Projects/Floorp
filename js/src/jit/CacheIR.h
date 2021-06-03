@@ -1823,6 +1823,7 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
 class MOZ_RAII ToBoolIRGenerator : public IRGenerator {
   HandleValue val_;
 
+  AttachDecision tryAttachBool();
   AttachDecision tryAttachInt32();
   AttachDecision tryAttachNumber();
   AttachDecision tryAttachString();
