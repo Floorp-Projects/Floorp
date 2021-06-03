@@ -8554,8 +8554,7 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
   // If there are too many arguments, don't optimize (we won't be able to store
   // the arguments in the LIR node).
   static_assert(wasm::MaxArgsForJitInlineCall <= ArgumentKindArgIndexLimit);
-  if (sig.args().length() > wasm::MaxArgsForJitInlineCall ||
-      argc_ > ArgumentKindArgIndexLimit) {
+  if (sig.args().length() > wasm::MaxArgsForJitInlineCall) {
     return AttachDecision::NoAction;
   }
 
