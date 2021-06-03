@@ -10,11 +10,22 @@
 menupopup,
 panel {
   min-width: 1px;
+  --panel-background: Menu;
+  --panel-color: MenuText;
+  --panel-padding: 0;
+  --panel-border-radius: 0;
+  --panel-border-color: ThreeDShadow;
+  --panel-width: initial;
 }
 
 menupopup {
   appearance: auto;
   -moz-default-appearance: menupopup;
+  /* We set the background-color / border here so that it doesn't interfere with native styling. */
+  background-color: Menu;
+  border: 1px solid ThreeDShadow;
+  --panel-background: transparent;
+  --panel-border-color: transparent;
   --nested-margin: -3px;
 }
 
@@ -77,12 +88,12 @@ panel[type="arrow"][side="right"] {
 :is(panel, menupopup)::part(content) {
   display: -moz-box;
   -moz-box-flex: 1;
-  padding: var(--panel-padding, 0);
-  color: var(--panel-color, MenuText);
-  background: var(--panel-background, Menu);
-  border-radius: var(--panel-border-radius, 0);
-  border: 1px solid var(--panel-border-color, ThreeDShadow);
-  width: var(--panel-width, initial);
+  padding: var(--panel-padding);
+  color: var(--panel-color);
+  background: var(--panel-background);
+  border-radius: var(--panel-border-radius);
+  border: 1px solid var(--panel-border-color);
+  width: var(--panel-width);
 }
 
 :is(panel, menupopup)[orient=vertical]::part(content) {
@@ -155,16 +166,16 @@ panel[type="arrow"].panel-no-padding::part(content) {
 
 menulist > menupopup {
   appearance: none;
+  background-color: transparent;
+  border: none;
   min-width: 0;
-  background-color: Field;
 }
 
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (not (-moz-proton-contextmenus)) or (not ((-moz-windows-default-theme) and (-moz-os-version: windows-win10))) {
   /* For Win10, the popup itself needs to have a transparent background because
      otherwise the background color would appear behind the drop shadow. */
   menulist > menupopup {
-    background-color: transparent;
+    --panel-background: Field;
+    --panel-border-color: ThreeDShadow;
   }
-}
 }
