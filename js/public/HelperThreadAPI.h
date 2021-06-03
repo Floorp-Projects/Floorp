@@ -21,7 +21,7 @@ namespace JS {
  */
 using HelperThreadTaskCallback = void (*)();
 extern JS_PUBLIC_API void SetHelperThreadTaskCallback(
-    HelperThreadTaskCallback callback);
+    HelperThreadTaskCallback callback, size_t threadCount);
 
 // Function to call from external thread pool to run a helper thread task.
 extern JS_PUBLIC_API void RunHelperThreadTask();
