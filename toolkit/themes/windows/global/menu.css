@@ -25,8 +25,7 @@ menucaption {
   -moz-image-region: auto;
 }
 
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-windows-non-native-menus) {
   /* For Windows 10, prevent using native OS drawing of certain menu elements,
      especially background colors and shadows. */
   menu, menuitem, menucaption {
@@ -42,7 +41,6 @@ menucaption {
     margin-inline-start: 0 !important; /* need !important to override the other !important below... */
   }
 }
-}
 
 menu[disabled="true"],
 menuitem[disabled="true"],
@@ -52,8 +50,7 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   text-shadow: none;
 }
 
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-windows-non-native-menus) {
   menu[disabled="true"],
   menuitem[disabled="true"],
   menu[_moz-menuactive="true"][disabled="true"],
@@ -67,7 +64,6 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   menuitem[_moz-menuactive="true"][disabled="true"] {
     background-color: var(--menuitem-disabled-hover-background-color);
   }
-}
 }
 
 @media (-moz-windows-classic) {
@@ -129,12 +125,10 @@ menucaption {
 }
 
 /* Don't leave space for icons on Win10. */
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-windows-non-native-menus) {
   .menu-text {
     padding-inline-start: 0 !important;
   }
-}
 }
 
 /* ..... menu arrow box ..... */
@@ -149,8 +143,7 @@ menucaption {
 }
 
 /* Override the native menu arrow with a custom one for Win10. */
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-windows-non-native-menus) {
   .menu-right {
     appearance: none;
     list-style-image: url("chrome://global/skin/icons/menu-arrow.svg");
@@ -170,7 +163,6 @@ menucaption {
   .menu-right:-moz-locale-dir(rtl) {
     transform: scaleX(-1);
   }
-}
 }
 
 /* ::::: menu/menuitems in menubar ::::: */
@@ -242,14 +234,12 @@ menuitem[_moz-menuactive="true"] {
   color: -moz-menuhovertext;
 }
 
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-windows-non-native-menus) {
   menu[_moz-menuactive="true"]:not([disabled="true"]),
   menuitem[_moz-menuactive="true"]:not([disabled="true"]) {
     background-color: var(--menuitem-hover-background-color);
     color: var(--menu-color);
   }
-}
 }
 
 /* ::::: menu/menuitems in menulist popups ::::: */
@@ -306,12 +296,10 @@ menulist > menupopup > :is(menuitem, menucaption):not(.menuitem-iconic) > .menu-
   margin: 0 !important;
 }
 
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-windows-non-native-menus) {
   menulist > menupopup {
     color: var(--menu-color);
   }
-}
 }
 
 /* ::::: checkbox and radio menuitems ::::: */
@@ -346,8 +334,7 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
   display: none;
 }
 
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-windows-non-native-menus) {
   menupopup[needsgutter] menu:not([icon], .menu-iconic),
   menupopup[needsgutter] menuitem:not([checked="true"], [icon], .menuitem-iconic) {
     padding-inline-start: 36px;
@@ -387,7 +374,6 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
     display: initial;
   }
 }
-}
 
 /* ::::: menuseparator ::::: */
 
@@ -406,8 +392,7 @@ menulist > menupopup > menuseparator {
 }
 
 /* On Windows 10, separators get entirely custom rendering. */
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-windows-non-native-menus) {
   menuseparator {
     appearance: none;
 
@@ -418,7 +403,6 @@ menulist > menupopup > menuseparator {
     /* The side margins should align with the start of the menu item text. */
     margin: 2px 1em;
   }
-}
 }
 
 %include ../../shared/menu-scrolling.inc.css

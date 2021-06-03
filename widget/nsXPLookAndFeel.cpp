@@ -418,8 +418,8 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
 }
 
 static constexpr nsLiteralCString kMediaQueryPrefs[] = {
+    "browser.display.windows.native_menus"_ns,
     "browser.proton.enabled"_ns,
-    "browser.proton.contextmenus.enabled"_ns,
     "browser.proton.modals.enabled"_ns,
     "browser.proton.doorhangers.enabled"_ns,
     "browser.proton.places-tooltip.enabled"_ns,

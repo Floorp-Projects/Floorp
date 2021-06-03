@@ -29,8 +29,7 @@ menupopup {
   --nested-margin: -3px;
 }
 
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-windows-non-native-menus) {
   menupopup {
     /* Disable the default appearance so we can override the native styling. */
     appearance: none;
@@ -60,7 +59,6 @@ menupopup {
     /* Prevent contained items from drawing over the border-radius. */
     overflow: clip;
   }
-}
 }
 
 menupopup > menu > menupopup {
@@ -171,7 +169,7 @@ menulist > menupopup {
   min-width: 0;
 }
 
-@media (not (-moz-proton-contextmenus)) or (not ((-moz-windows-default-theme) and (-moz-os-version: windows-win10))) {
+@media not (-moz-windows-non-native-menus) {
   /* For Win10, the popup itself needs to have a transparent background because
      otherwise the background color would appear behind the drop shadow. */
   menulist > menupopup {
