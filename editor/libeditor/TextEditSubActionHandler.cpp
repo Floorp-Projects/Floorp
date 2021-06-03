@@ -829,17 +829,10 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
   return EditActionHandled(rv);
 }
 
-EditActionResult TextEditor::ComputeValueFromTextNodeAndPaddingBRElement(
+EditActionResult TextEditor::ComputeValueFromTextNodeAndBRElement(
     nsAString& aValue) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsHTMLEditor());
-
-  // If there is a padding <br> element, there's no content.  So output empty
-  // string.
-  if (mPaddingBRElementForEmptyEditor) {
-    aValue.Truncate();
-    return EditActionHandled();
-  }
 
   Element* anonymousDivElement = GetRoot();
   if (!anonymousDivElement) {
@@ -849,7 +842,8 @@ EditActionResult TextEditor::ComputeValueFromTextNodeAndPaddingBRElement(
   }
 
   nsIContent* textNodeOrPaddingBRElement = anonymousDivElement->GetFirstChild();
-  if (!textNodeOrPaddingBRElement) {
+  if (!textNodeOrPaddingBRElement ||
+      textNodeOrPaddingBRElement == mPaddingBRElementForEmptyEditor) {
     aValue.Truncate();
     return EditActionHandled();
   }
