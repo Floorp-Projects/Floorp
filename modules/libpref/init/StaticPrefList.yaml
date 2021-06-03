@@ -267,6 +267,13 @@
 # The apz prefs are explained in AsyncPanZoomController.cpp
 #---------------------------------------------------------------------------
 
+# amount we zoom in for a double tap gesture if we couldn't find any content
+# based rect to zoom to
+- name: apz.doubletapzoom.defaultzoomin
+  type: AtomicFloat
+  value: 1.2f
+  mirror: always
+
 - name: apz.scrollbarbuttonrepeat.enabled
   type: RelaxedAtomicBool
   value: true

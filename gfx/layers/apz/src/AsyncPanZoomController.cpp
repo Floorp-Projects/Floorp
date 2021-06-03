@@ -5480,8 +5480,8 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
 
     ParentLayerRect compositionBounds = Metrics().GetCompositionBounds();
     CSSRect cssPageRect = Metrics().GetScrollableRect();
-    CSSSize sizeBeforeZoom = Metrics().CalculateCompositedSizeInCssPixels();
     CSSPoint scrollOffset = Metrics().GetVisualScrollOffset();
+    CSSSize sizeBeforeZoom = Metrics().CalculateCompositedSizeInCssPixels();
     // TODO: Need to handle different x-and y-scales.
     CSSToParentLayerScale currentZoom = Metrics().GetZoom().ToScaleFactor();
     CSSToParentLayerScale targetZoom;
@@ -5513,15 +5513,39 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
     //    requested that we zoom out.
     // 2. currentZoom is equal to mZoomConstraints.mMaxZoom and user still
     // double-tapping it
-    // 3. currentZoom is equal to localMinZoom and user still double-tapping it
-    // Treat these three cases as a request to zoom out as much as possible.
-    bool zoomOut;
+    // Treat these cases as a request to zoom out as much as possible
+    // unless we were passed the ZOOM_IN_IF_CANT_ZOOM_OUT flag and currentZoom
+    // is equal to localMinZoom and user still double-tapping it, then try to
+    // zoom in a small amount to provide feedback to the user.
+    bool zoomOut = false;
+    // True if we are already zoomed out and we are asked to either stay there
+    // or zoom out more and the ZOOM_IN_IF_CANT_ZOOM_OUT flag was passed.
+    bool zoomInDefaultAmount = false;
     if (aFlags & DISABLE_ZOOM_OUT) {
       zoomOut = false;
     } else {
-      zoomOut = rect.IsEmpty() ||
-                (currentZoom == localMaxZoom && targetZoom >= localMaxZoom) ||
-                (currentZoom == localMinZoom && targetZoom <= localMinZoom);
+      if (rect.IsEmpty()) {
+        if (currentZoom == localMinZoom &&
+            (aFlags & ZOOM_IN_IF_CANT_ZOOM_OUT)) {
+          zoomInDefaultAmount = true;
+        } else {
+          zoomOut = true;
+        }
+      } else if (currentZoom == localMaxZoom && targetZoom >= localMaxZoom) {
+        zoomOut = true;
+      }
+    }
+
+    // already at min zoom and asked to zoom out further
+    if (!zoomOut && currentZoom == localMinZoom && targetZoom <= localMinZoom &&
+        (aFlags & ZOOM_IN_IF_CANT_ZOOM_OUT)) {
+      zoomInDefaultAmount = true;
+    }
+    MOZ_ASSERT(!(zoomInDefaultAmount && zoomOut));
+
+    if (zoomInDefaultAmount) {
+      targetZoom = CSSToParentLayerScale(
+          currentZoom.scale * StaticPrefs::apz_doubletapzoom_defaultzoomin());
     }
 
     if (zoomOut) {
@@ -5552,20 +5576,31 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
     CSSSize sizeAfterZoom =
         endZoomToMetrics.CalculateCompositedSizeInCssPixels();
 
-    if (zoomOut) {
-      // With our zoom at the min zoom, calculate what the after-zoom
-      // composited size is, and then calculate the new scroll offset so that we
-      // center what the old composited size displayed.
-      rect = CSSRect(
-          scrollOffset.x + (sizeBeforeZoom.width - sizeAfterZoom.width) / 2,
-          scrollOffset.y + (sizeBeforeZoom.height - sizeAfterZoom.height) / 2,
-          sizeAfterZoom.Width(), sizeAfterZoom.Height());
+    if (zoomInDefaultAmount || zoomOut) {
+      // For the zoom out case we should always center what was visible
+      // otherwise it feels like we are scrolling as well as zooming out. For
+      // the non-zoomOut case, if we've been provided a pointer location, zoom
+      // around that, otherwise just zoom in to the center of what's currently
+      // visible.
+      if (!zoomOut && aZoomTarget.documentRelativePointerPosition.isSome()) {
+        rect = CSSRect(aZoomTarget.documentRelativePointerPosition->x -
+                           sizeAfterZoom.width / 2,
+                       aZoomTarget.documentRelativePointerPosition->y -
+                           sizeAfterZoom.height / 2,
+                       sizeAfterZoom.Width(), sizeAfterZoom.Height());
+      } else {
+        rect = CSSRect(
+            scrollOffset.x + (sizeBeforeZoom.width - sizeAfterZoom.width) / 2,
+            scrollOffset.y + (sizeBeforeZoom.height - sizeAfterZoom.height) / 2,
+            sizeAfterZoom.Width(), sizeAfterZoom.Height());
+      }
 
       rect = rect.Intersect(cssPageRect);
     }
 
     // Check if we can fit the full elementBoundingRect.
-    if (!zoomOut && aZoomTarget.elementBoundingRect.isSome()) {
+    if (!aZoomTarget.targetRect.IsEmpty() && !zoomOut &&
+        aZoomTarget.elementBoundingRect.isSome()) {
       MOZ_ASSERT(aZoomTarget.elementBoundingRect->Contains(rect));
       CSSRect elementBoundingRect =
           aZoomTarget.elementBoundingRect->Intersect(cssPageRect);
