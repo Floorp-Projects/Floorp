@@ -256,7 +256,7 @@ fi
 
 # Use |mach python| if a source checkout exists so in-tree packages are
 # available.
-[[ -x "${GECKO_PATH}/mach" ]] && python="${PYTHON:-python2.7} ${GECKO_PATH}/mach python" || python="${PYTHON:-python2.7}"
+[[ -x "${GECKO_PATH}/mach" ]] && python="${PYTHON:-python3} ${GECKO_PATH}/mach python" || python="${PYTHON:-python3}"
 
 # Save the computed mozharness command to a binary which is useful for
 # interactive mode.
