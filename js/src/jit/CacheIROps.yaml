@@ -2380,35 +2380,35 @@
 
 - name: LoadInt32TruthyResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     input: ValId
 
 - name: LoadDoubleTruthyResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     input: NumberId
 
 - name: LoadStringTruthyResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     str: StringId
 
 - name: LoadObjectTruthyResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     obj: ObjId
 
 - name: LoadBigIntTruthyResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     bigInt: BigIntId
