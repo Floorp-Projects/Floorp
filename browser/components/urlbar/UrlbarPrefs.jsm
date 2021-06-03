@@ -352,6 +352,13 @@ function makeResultBuckets({ showSearchSuggestionsFirst }) {
                 flex: 2,
                 group: UrlbarUtils.RESULT_GROUP.GENERAL,
               },
+              {
+                // We show a relatively large number of about page results because
+                // they only show up for very specific queries: those starting with
+                // `about:`.
+                flex: 2,
+                group: UrlbarUtils.RESULT_GROUP.ABOUT_PAGES,
+              },
             ],
           },
           {
