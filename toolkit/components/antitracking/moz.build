@@ -12,7 +12,6 @@ XPIDL_SOURCES += [
     "nsIPurgeTrackerService.idl",
     "nsITrackingDBService.idl",
     "nsIURLDecorationAnnotationsService.idl",
-    "nsIURLQueryStrippingListService.idl",
 ]
 
 XPIDL_MODULE = "toolkit_antitracking"
@@ -27,7 +26,6 @@ EXTRA_JS_MODULES += [
     "PurgeTrackerService.jsm",
     "TrackingDBService.jsm",
     "URLDecorationAnnotationsService.jsm",
-    "URLQueryStrippingListService.jsm",
 ]
 
 XPCOM_MANIFESTS += [
