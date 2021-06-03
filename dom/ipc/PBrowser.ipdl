@@ -724,16 +724,6 @@ child:
     async StopIMEStateManagement();
 
     /**
-     * @see nsIDOMWindowUtils sendMouseEvent.
-     */
-    async MouseEvent(nsString aType,
-                     float aX,
-                     float aY,
-                     int32_t aButton,
-                     int32_t aClickCount,
-                     int32_t aModifiers);
-
-    /**
      * When two consecutive mouse move events would be added to the message queue,
      * they are 'compressed' by dumping the oldest one.
      */
