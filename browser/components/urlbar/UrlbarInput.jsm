@@ -3543,7 +3543,7 @@ class AddSearchEngineHelper {
    * them in a submenu.
    */
   get maxInlineEngines() {
-    return 3;
+    return this.shortcutButtons._maxInlineAddEngines;
   }
 
   /**
@@ -3556,21 +3556,7 @@ class AddSearchEngineHelper {
     let engines = browser.engines?.slice() || [];
     if (!this._sameEngines(this.engines, engines)) {
       this.engines = engines;
-
-      // Update shortcut buttons. We only add `maxInlineEngines` engines, to
-      // cover the most common cases, others can be added from the context menu.
-      this.shortcutButtons.updateWebEngines(
-        engines.slice(0, this.maxInlineEngines).map(e => ({
-          name: e.title,
-          uri: e.uri,
-          get icon() {
-            // The icon is actually the browser favicon, that may not be in
-            // place yet, it will be fetched from the browser when the ui
-            // element is built.
-            return e.icon;
-          },
-        }))
-      );
+      this.shortcutButtons.updateWebEngines(engines);
     }
   }
 

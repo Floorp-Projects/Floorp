@@ -387,7 +387,9 @@ add_task(async function test_open_search() {
 
   let engines;
   await TestUtils.waitForCondition(() => {
-    engines = getOpenSearchItems();
+    engines = searchPopup.querySelectorAll(
+      ".searchbar-engine-one-off-add-engine"
+    );
     return engines.length == 3;
   }, "Should expose three engines");
 
@@ -412,16 +414,17 @@ add_task(async function test_open_search() {
       "the engine #" + i + " should be selected"
     );
     ok(
-      selectedButton.classList.contains("addengine-item"),
-      "the button is themed as an engine item"
+      selectedButton.classList.contains("searchbar-engine-one-off-add-engine"),
+      "the button is themed as an add engine"
     );
   }
 
   // Pressing up again should select the last one-off button.
   EventUtils.synthesizeKey("KEY_ArrowUp");
+  const allOneOffs = getOneOffs();
   is(
     textbox.selectedButton,
-    getOneOffs().pop(),
+    allOneOffs[allOneOffs.length - engines.length - 1],
     "the last one-off button should be selected"
   );
 
