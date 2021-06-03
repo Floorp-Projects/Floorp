@@ -47,12 +47,12 @@ async function testDocumentElement(inspector) {
   await onReselected;
 
   is(
-    await getAttributeInBrowser(gBrowser.selectedBrowser, "svg", "width"),
+    await getContentPageElementAttribute("svg", "width"),
     "200",
     "<svg> width has been updated"
   );
   is(
-    await getAttributeInBrowser(gBrowser.selectedBrowser, "svg", "height"),
+    await getContentPageElementAttribute("svg", "height"),
     "200",
     "<svg> height has been updated"
   );
@@ -84,12 +84,12 @@ async function testDocumentElement2(inspector) {
   await onReselected;
 
   is(
-    await getAttributeInBrowser(gBrowser.selectedBrowser, "svg", "width"),
+    await getContentPageElementAttribute("svg", "width"),
     "300",
     "<svg> width has been updated"
   );
   is(
-    await getAttributeInBrowser(gBrowser.selectedBrowser, "svg", "height"),
+    await getContentPageElementAttribute("svg", "height"),
     "300",
     "<svg> height has been updated"
   );

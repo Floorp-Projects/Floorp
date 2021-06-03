@@ -8,12 +8,11 @@
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 add_task(async function() {
-  const { inspector, tab } = await openInspectorForURL(TEST_URL);
-  const browser = tab.linkedBrowser;
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Adding a contextmenu attribute to the body node via the content");
   let onMutated = inspector.once("markupmutation");
-  await setAttributeInBrowser(browser, "body", "contextmenu", "menu1");
+  await setContentPageElementAttribute("body", "contextmenu", "menu1");
   await onMutated;
 
   info("Checking for links in the new attribute");
@@ -28,7 +27,7 @@ add_task(async function() {
   info("Editing the contextmenu attribute on the body node");
   onMutated = inspector.once("markupmutation");
 
-  await setAttributeInBrowser(browser, "body", "contextmenu", "menu2");
+  await setContentPageElementAttribute("body", "contextmenu", "menu2");
   await onMutated;
 
   info("Checking for links in the updated attribute");
