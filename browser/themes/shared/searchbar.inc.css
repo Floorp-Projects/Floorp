@@ -43,8 +43,7 @@
  * - The elements underneath the search results all have a top border.
  *
  * When the search results are collapsed:
- * - The elements underneath the search results all have a bottom border, except
- *   the lowest one: search-setting-button.
+ * - The elements underneath the search results all have a bottom border.
  */
 
 .search-panel-current-engine {
@@ -160,18 +159,6 @@
   fill-opacity: 1;
 }
 
-.search-setting-button {
-  appearance: none;
-  margin: var(--arrowpanel-menuitem-margin);
-  min-height: 32px;
-  color: inherit !important; /* Overriding toolbarbutton.css on Linux. */
-  border-radius: var(--toolbarbutton-border-radius);
-}
-
-.search-setting-button {
-  padding: var(--arrowpanel-menuitem-margin);
-}
-
 .searchbar-separator {
   appearance: none;
   margin: var(--panel-separator-margin);
@@ -186,55 +173,20 @@
 }
 
 @media not (-moz-proton) {
-.search-setting-button {
-  border-top: 1px solid var(--panel-separator-color);
-  border-radius: 0;
-}
-
 .searchbar-separator {
   display: none;
 }
-
-.search-setting-button:not([selected]):hover {
-  background-color: var(--arrowpanel-dimmed);
-  color: inherit;
-}
-
-.search-setting-button[selected] {
-  background-color: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color) !important;
-}
-.search-setting-button[selected]:hover {
-  color: var(--autocomplete-popup-highlight-color) !important;
-}
 } /*** END !proton ***/
 
-@media (-moz-proton) {
-/* We don't handle `:active` because it doesn't work on the search or settings
-   buttons due to event.preventDefault() in SearchOneOffs._on_mousedown(). */
-.search-setting-button:hover {
-  background-color: var(--panelview-toolbarbutton-hover-bgcolor);
-  color: var(--panelview-toolbarbutton-hover-color) !important; /* Overriding `color` from non-`:hover` above */
-}
-
-.search-setting-button[selected] {
-  box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
-}
-} /*** END proton ***/
-
-.search-setting-button-compact {
+.search-setting-button {
   max-height: 32px;
   align-self: end;
   margin-inline: var(--arrowpanel-menuitem-margin);
 }
 
-.search-setting-button-compact > .button-box > .button-icon {
+.search-setting-button > .button-box > .button-icon {
   list-style-image: url("chrome://global/skin/icons/settings.svg");
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
-}
-
-.search-one-offs[compact=true] .searchbar-separator {
-  display: none;
 }

@@ -230,7 +230,7 @@ add_task(async function editedView() {
     Assert.equal(
       BrowserTestUtils.is_visible(heuristicResult.element.action),
       !oneOffSearchButtons.selectedButton.classList.contains(
-        "search-setting-button-compact"
+        "search-setting-button"
       ),
       "The heuristic action should be visible when a one-off button is selected"
     );
@@ -252,7 +252,7 @@ add_task(async function editedView() {
     Assert.equal(
       BrowserTestUtils.is_visible(heuristicResult.element.action),
       !oneOffSearchButtons.selectedButton.classList.contains(
-        "search-setting-button-compact"
+        "search-setting-button"
       ),
       "The heuristic action should be visible when a one-off button is selected"
     );

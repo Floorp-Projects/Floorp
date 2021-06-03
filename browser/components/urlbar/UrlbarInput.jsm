@@ -85,7 +85,6 @@ class UrlbarInput {
             </html:div>
           </html:div>
           <hbox class="search-one-offs"
-                compact="true"
                 includecurrentengine="true"
                 disabletab="true"/>
         </vbox>
