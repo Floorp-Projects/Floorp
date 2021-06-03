@@ -42,7 +42,7 @@
         android:textSize="12sp"
         android:maxLines="1"
         android:ellipsize="end"
-        android:textColor="?secondaryText"
+        android:textColor="@color/photonLightGrey60"
         tools:text="https://www.mozilla.org/en-US/firefox/new/"
         app:layout_constraintStart_toStartOf="@id/share_tab_title"
         app:layout_constraintTop_toBottomOf="@id/share_tab_title"
