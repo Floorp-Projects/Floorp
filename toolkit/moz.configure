@@ -2370,7 +2370,9 @@ check_prog(
 @depends(target, build_project)
 def forkserver_default(target, build_project):
     return build_project == "browser" and (
-        (target.os == "GNU" and target.kernel == "Linux") or target.os == "FreeBSD"
+        (target.os == "GNU" and target.kernel == "Linux")
+        or target.os == "FreeBSD"
+        or target.os == "OpenBSD"
     )
 
 
@@ -2388,6 +2390,7 @@ def forkserver_flag(value, target):
         target.os == "Android"
         or (target.os == "GNU" and target.kernel == "Linux")
         or target.os == "FreeBSD"
+        or target.os == "OpenBSD"
     ):
         return bool(value)
     pass
