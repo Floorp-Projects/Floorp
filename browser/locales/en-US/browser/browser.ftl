@@ -180,10 +180,6 @@ full-screen-exit =
 # the Urlbar and searchbar.
 search-one-offs-with-title = This time, search with:
 
-# This string won't wrap, so if the translated string is longer,
-# consider translating it as if it said only "Search Settings".
-search-one-offs-change-settings-button =
-    .label = Change Search Settings
 search-one-offs-change-settings-compact-button =
     .tooltiptext = Change search settings
 

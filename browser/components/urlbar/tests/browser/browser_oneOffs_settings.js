@@ -73,7 +73,7 @@ add_task(async function test_open_settings_with_enter() {
     Assert.ok(
       UrlbarTestUtils.getOneOffSearchButtons(
         window
-      ).selectedButton.classList.contains("search-setting-button-compact"),
+      ).selectedButton.classList.contains("search-setting-button"),
       "Should have selected the settings button"
     );
 
@@ -83,6 +83,8 @@ add_task(async function test_open_settings_with_enter() {
 
 add_task(async function test_open_settings_with_click() {
   await selectSettings(() => {
-    UrlbarTestUtils.getOneOffSearchButtons(window).settingsButton.click();
+    UrlbarTestUtils.getOneOffSearchButtons(
+      window
+    ).settingsButtonCompact.click();
   });
 });

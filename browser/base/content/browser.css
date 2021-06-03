@@ -94,11 +94,6 @@ body {
   }
 }
 
-.search-one-offs[compact=true] .search-setting-button,
-.search-one-offs:not([compact=true]) .search-setting-button-compact {
-  display: none;
-}
-
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar[autohide="true"] {
   overflow: hidden;
