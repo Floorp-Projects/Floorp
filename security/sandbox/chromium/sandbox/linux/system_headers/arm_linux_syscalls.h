@@ -1385,6 +1385,13 @@
 #define __NR_memfd_create (__NR_SYSCALL_BASE+385)
 #endif
 
+#if !defined(__NR_statx)
+#define __NR_statx (__NR_SYSCALL_BASE+397)
+#endif
+
+#if !defined(__NR_rseq)
+#define __NR_rseq (__NR_SYSCALL_BASE+398)
+#endif
 // ARM private syscalls.
 #if !defined(__ARM_NR_BASE)
 #define __ARM_NR_BASE (__NR_SYSCALL_BASE + 0xF0000)
