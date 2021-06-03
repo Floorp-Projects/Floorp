@@ -3,18 +3,43 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BrowsingContextWebProgress.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/Logging.h"
+#include "nsCOMPtr.h"
+#include "nsIWebProgressListener.h"
+#include "nsString.h"
+#include "nsPrintfCString.h"
+#include "nsIChannel.h"
+#include "xptinfo.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF(BrowsingContextWebProgress)
-NS_IMPL_RELEASE(BrowsingContextWebProgress)
+static mozilla::LazyLogModule gBCWebProgressLog("BCWebProgress");
 
-NS_INTERFACE_MAP_BEGIN(BrowsingContextWebProgress)
+static nsCString DescribeBrowsingContext(CanonicalBrowsingContext* aContext);
+static nsCString DescribeWebProgress(nsIWebProgress* aWebProgress);
+static nsCString DescribeRequest(nsIRequest* aRequest);
+static nsCString DescribeWebProgressFlags(uint32_t aFlags,
+                                          const nsACString& aPrefix);
+static nsCString DescribeError(nsresult aError);
+
+NS_IMPL_CYCLE_COLLECTION(BrowsingContextWebProgress, mCurrentBrowsingContext)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(BrowsingContextWebProgress)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowsingContextWebProgress)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowsingContextWebProgress)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgress)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 NS_INTERFACE_MAP_END
+
+BrowsingContextWebProgress::BrowsingContextWebProgress(
+    CanonicalBrowsingContext* aBrowsingContext)
+    : mCurrentBrowsingContext(aBrowsingContext) {}
+
+BrowsingContextWebProgress::~BrowsingContextWebProgress() = default;
 
 NS_IMETHODIMP BrowsingContextWebProgress::AddProgressListener(
     nsIWebProgressListener* aListener, uint32_t aNotifyMask) {
@@ -48,18 +73,18 @@ NS_IMETHODIMP BrowsingContextWebProgress::GetDOMWindow(
 }
 
 NS_IMETHODIMP BrowsingContextWebProgress::GetIsTopLevel(bool* aIsTopLevel) {
-  *aIsTopLevel = true;
+  *aIsTopLevel = mCurrentBrowsingContext->IsTop();
   return NS_OK;
 }
 
 NS_IMETHODIMP BrowsingContextWebProgress::GetIsLoadingDocument(
     bool* aIsLoadingDocument) {
-  *aIsLoadingDocument = false;
+  *aIsLoadingDocument = mIsLoadingDocument;
   return NS_OK;
 }
 
 NS_IMETHODIMP BrowsingContextWebProgress::GetLoadType(uint32_t* aLoadType) {
-  *aLoadType = 0;
+  *aLoadType = mLoadType;
   return NS_OK;
 }
 
@@ -94,28 +119,38 @@ void BrowsingContextWebProgress::UpdateAndNotifyListeners(
   }
 
   mListenerInfoList.Compact();
+
+  // Notify the parent BrowsingContextWebProgress of the event to continue
+  // propagating.
+  auto* parent = mCurrentBrowsingContext->GetParent();
+  if (parent && parent->GetWebProgress()) {
+    aCallback(parent->GetWebProgress());
+  }
 }
 
 void BrowsingContextWebProgress::ContextDiscarded() {
-  if (!mAwaitingStop) {
+  if (!mIsLoadingDocument) {
     return;
   }
+
+  // If our BrowsingContext is being discarded while still loading a document,
+  // fire a synthetic `STATE_STOP` to end the ongoing load.
+  MOZ_LOG(gBCWebProgressLog, LogLevel::Info,
+          ("Discarded while loading %s",
+           DescribeBrowsingContext(mCurrentBrowsingContext).get()));
 
   // This matches what nsDocLoader::doStopDocumentLoad does, except we don't
   // bother notifying for `STATE_STOP | STATE_IS_DOCUMENT`,
   // nsBrowserStatusFilter would filter it out before it gets to the parent
   // process.
-  const int32_t flags = STATE_STOP | STATE_IS_WINDOW | STATE_IS_NETWORK;
-  UpdateAndNotifyListeners(((flags >> 16) & nsIWebProgress::NOTIFY_STATE_ALL),
-                           [&](nsIWebProgressListener* listener) {
-                             // TODO(emilio): We might want to stash the
-                             // request from OnStateChange on a member or
-                             // something if having no request causes trouble
-                             // here. Ditto for the webprogress instance.
-                             listener->OnStateChange(this,
-                                                     /* aRequest = */ nullptr,
-                                                     flags, NS_ERROR_ABORT);
-                           });
+  nsCOMPtr<nsIRequest> request = mLoadingDocumentRequest;
+  OnStateChange(this, request, STATE_STOP | STATE_IS_WINDOW | STATE_IS_NETWORK,
+                NS_ERROR_ABORT);
+}
+
+void BrowsingContextWebProgress::ContextReplaced(
+    CanonicalBrowsingContext* aNewContext) {
+  mCurrentBrowsingContext = aNewContext;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,42 +161,62 @@ BrowsingContextWebProgress::OnStateChange(nsIWebProgress* aWebProgress,
                                           nsIRequest* aRequest,
                                           uint32_t aStateFlags,
                                           nsresult aStatus) {
-  const uint32_t startDocumentFlags =
-      nsIWebProgressListener::STATE_START |
-      nsIWebProgressListener::STATE_IS_DOCUMENT |
-      nsIWebProgressListener::STATE_IS_REQUEST |
-      nsIWebProgressListener::STATE_IS_WINDOW |
-      nsIWebProgressListener::STATE_IS_NETWORK;
-  bool isTopLevel = false;
-  nsresult rv = aWebProgress->GetIsTopLevel(&isTopLevel);
-  NS_ENSURE_SUCCESS(rv, rv);
-  bool isTopLevelStartDocumentEvent =
-      (aStateFlags & startDocumentFlags) == startDocumentFlags && isTopLevel;
-  // If we receive a matching STATE_START for a top-level document event,
-  // and we are currently not suspending this event, start suspending all
-  // further matching STATE_START events after this one.
-  if (isTopLevelStartDocumentEvent && !mAwaitingStop) {
-    mAwaitingStop = true;
-  } else if (mAwaitingStop) {
-    // If we are currently suspending matching STATE_START events, check if this
-    // is a corresponding STATE_STOP event.
-    const uint32_t stopWindowFlags = nsIWebProgressListener::STATE_STOP |
-                                     nsIWebProgressListener::STATE_IS_WINDOW;
-    bool isTopLevelStopWindowEvent =
-        (aStateFlags & stopWindowFlags) == stopWindowFlags && isTopLevel;
-    if (isTopLevelStopWindowEvent) {
-      // If this is a STATE_STOP event corresponding to the initial STATE_START
-      // event, stop suspending matching STATE_START events.
-      mAwaitingStop = false;
-    } else if (isTopLevelStartDocumentEvent) {
-      // We have received a matching STATE_START event at least twice, but
-      // haven't received the corresponding STATE_STOP event for the first one.
-      // Don't let this event through. This is probably a duplicate event from
-      // the new BrowserParent due to a process switch.
-      return NS_OK;
+  MOZ_LOG(
+      gBCWebProgressLog, LogLevel::Info,
+      ("OnStateChange(%s, %s, %s, %s) on %s",
+       DescribeWebProgress(aWebProgress).get(), DescribeRequest(aRequest).get(),
+       DescribeWebProgressFlags(aStateFlags, "STATE_"_ns).get(),
+       DescribeError(aStatus).get(),
+       DescribeBrowsingContext(mCurrentBrowsingContext).get()));
+
+  bool targetIsThis = aWebProgress == this;
+
+  // We may receive a request from an in-process nsDocShell which doesn't have
+  // `aWebProgress == this` which we should still consider as targeting
+  // ourselves.
+  if (nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aWebProgress);
+      docShell && docShell->GetBrowsingContext() == mCurrentBrowsingContext) {
+    targetIsThis = true;
+    aWebProgress->GetLoadType(&mLoadType);
+  }
+
+  // Track `mIsLoadingDocument` based on the notifications we've received so far
+  // if the nsIWebProgress being targeted is this one.
+  if (targetIsThis) {
+    constexpr uint32_t startFlags = nsIWebProgressListener::STATE_START |
+                                    nsIWebProgressListener::STATE_IS_DOCUMENT |
+                                    nsIWebProgressListener::STATE_IS_REQUEST |
+                                    nsIWebProgressListener::STATE_IS_WINDOW |
+                                    nsIWebProgressListener::STATE_IS_NETWORK;
+    constexpr uint32_t stopFlags = nsIWebProgressListener::STATE_STOP |
+                                   nsIWebProgressListener::STATE_IS_WINDOW;
+    constexpr uint32_t redirectFlags =
+        nsIWebProgressListener::STATE_IS_REDIRECTED_DOCUMENT;
+    if ((aStateFlags & startFlags) == startFlags) {
+      if (mIsLoadingDocument) {
+        // We received a duplicate `STATE_START` notification, silence this
+        // notification until we receive the matching `STATE_STOP` to not fire
+        // duplicate `STATE_START` notifications into frontend on process
+        // switches.
+        return NS_OK;
+      }
+      mIsLoadingDocument = true;
+
+      // Record the request we started the load with, so we can emit a synthetic
+      // `STATE_STOP` notification if the BrowsingContext is discarded before
+      // the notification arrives.
+      mLoadingDocumentRequest = aRequest;
+    } else if ((aStateFlags & stopFlags) == stopFlags) {
+      // We've received a `STATE_STOP` notification targeting this web progress,
+      // clear our loading document flag.
+      mIsLoadingDocument = false;
+      mLoadingDocumentRequest = nullptr;
+    } else if (mIsLoadingDocument &&
+               (aStateFlags & redirectFlags) == redirectFlags) {
+      // If we see a redirected document load, update the loading request which
+      // we'll emit the synthetic STATE_STOP notification with.
+      mLoadingDocumentRequest = aRequest;
     }
-    // Allow all other progress events that don't match top-level start document
-    // flags.
   }
 
   UpdateAndNotifyListeners(
@@ -179,6 +234,12 @@ BrowsingContextWebProgress::OnProgressChange(nsIWebProgress* aWebProgress,
                                              int32_t aMaxSelfProgress,
                                              int32_t aCurTotalProgress,
                                              int32_t aMaxTotalProgress) {
+  MOZ_LOG(
+      gBCWebProgressLog, LogLevel::Info,
+      ("OnProgressChange(%s, %s, %d, %d, %d, %d) on %s",
+       DescribeWebProgress(aWebProgress).get(), DescribeRequest(aRequest).get(),
+       aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress,
+       DescribeBrowsingContext(mCurrentBrowsingContext).get()));
   UpdateAndNotifyListeners(
       nsIWebProgress::NOTIFY_PROGRESS, [&](nsIWebProgressListener* listener) {
         listener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress,
@@ -193,6 +254,13 @@ BrowsingContextWebProgress::OnLocationChange(nsIWebProgress* aWebProgress,
                                              nsIRequest* aRequest,
                                              nsIURI* aLocation,
                                              uint32_t aFlags) {
+  MOZ_LOG(
+      gBCWebProgressLog, LogLevel::Info,
+      ("OnProgressChange(%s, %s, %s, %s) on %s",
+       DescribeWebProgress(aWebProgress).get(), DescribeRequest(aRequest).get(),
+       aLocation ? aLocation->GetSpecOrDefault().get() : "<null>",
+       DescribeWebProgressFlags(aFlags, "LOCATION_CHANGE_"_ns).get(),
+       DescribeBrowsingContext(mCurrentBrowsingContext).get()));
   UpdateAndNotifyListeners(
       nsIWebProgress::NOTIFY_LOCATION, [&](nsIWebProgressListener* listener) {
         listener->OnLocationChange(aWebProgress, aRequest, aLocation, aFlags);
@@ -205,6 +273,12 @@ BrowsingContextWebProgress::OnStatusChange(nsIWebProgress* aWebProgress,
                                            nsIRequest* aRequest,
                                            nsresult aStatus,
                                            const char16_t* aMessage) {
+  MOZ_LOG(
+      gBCWebProgressLog, LogLevel::Info,
+      ("OnStatusChange(%s, %s, %s, \"%s\") on %s",
+       DescribeWebProgress(aWebProgress).get(), DescribeRequest(aRequest).get(),
+       DescribeError(aStatus).get(), NS_ConvertUTF16toUTF8(aMessage).get(),
+       DescribeBrowsingContext(mCurrentBrowsingContext).get()));
   UpdateAndNotifyListeners(
       nsIWebProgress::NOTIFY_STATUS, [&](nsIWebProgressListener* listener) {
         listener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
@@ -216,6 +290,11 @@ NS_IMETHODIMP
 BrowsingContextWebProgress::OnSecurityChange(nsIWebProgress* aWebProgress,
                                              nsIRequest* aRequest,
                                              uint32_t aState) {
+  MOZ_LOG(
+      gBCWebProgressLog, LogLevel::Info,
+      ("OnSecurityChange(%s, %s, %x) on %s",
+       DescribeWebProgress(aWebProgress).get(), DescribeRequest(aRequest).get(),
+       aState, DescribeBrowsingContext(mCurrentBrowsingContext).get()));
   UpdateAndNotifyListeners(
       nsIWebProgress::NOTIFY_SECURITY, [&](nsIWebProgressListener* listener) {
         listener->OnSecurityChange(aWebProgress, aRequest, aState);
@@ -227,12 +306,109 @@ NS_IMETHODIMP
 BrowsingContextWebProgress::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
                                                    nsIRequest* aRequest,
                                                    uint32_t aEvent) {
+  MOZ_LOG(
+      gBCWebProgressLog, LogLevel::Info,
+      ("OnContentBlockingEvent(%s, %s, %x) on %s",
+       DescribeWebProgress(aWebProgress).get(), DescribeRequest(aRequest).get(),
+       aEvent, DescribeBrowsingContext(mCurrentBrowsingContext).get()));
   UpdateAndNotifyListeners(nsIWebProgress::NOTIFY_CONTENT_BLOCKING,
                            [&](nsIWebProgressListener* listener) {
                              listener->OnContentBlockingEvent(aWebProgress,
                                                               aRequest, aEvent);
                            });
   return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Helper methods for notification logging
+
+static nsCString DescribeBrowsingContext(CanonicalBrowsingContext* aContext) {
+  if (!aContext) {
+    return "<null>"_ns;
+  }
+
+  nsCOMPtr<nsIURI> currentURI = aContext->GetCurrentURI();
+  return nsPrintfCString(
+      "{top:%d, id:%" PRIx64 ", url:%s}", aContext->IsTop(), aContext->Id(),
+      currentURI ? currentURI->GetSpecOrDefault().get() : "<null>");
+}
+
+static nsCString DescribeWebProgress(nsIWebProgress* aWebProgress) {
+  if (!aWebProgress) {
+    return "<null>"_ns;
+  }
+
+  bool isTopLevel = false;
+  aWebProgress->GetIsTopLevel(&isTopLevel);
+  bool isLoadingDocument = false;
+  aWebProgress->GetIsLoadingDocument(&isLoadingDocument);
+  return nsPrintfCString("{isTopLevel:%d, isLoadingDocument:%d}", isTopLevel,
+                         isLoadingDocument);
+}
+
+static nsCString DescribeRequest(nsIRequest* aRequest) {
+  if (!aRequest) {
+    return "<null>"_ns;
+  }
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  if (!channel) {
+    return "<non-channel>"_ns;
+  }
+
+  nsCOMPtr<nsIURI> originalURI;
+  channel->GetOriginalURI(getter_AddRefs(originalURI));
+  nsCOMPtr<nsIURI> uri;
+  channel->GetURI(getter_AddRefs(uri));
+
+  return nsPrintfCString(
+      "{URI:%s, originalURI:%s}",
+      uri ? uri->GetSpecOrDefault().get() : "<null>",
+      originalURI ? originalURI->GetSpecOrDefault().get() : "<null>");
+}
+
+static nsCString DescribeWebProgressFlags(uint32_t aFlags,
+                                          const nsACString& aPrefix) {
+  nsCString flags;
+  uint32_t remaining = aFlags;
+
+  // Hackily fetch the names of each constant from the XPT information used for
+  // reflecting it into JS. This doesn't need to be reliable and just exists as
+  // a logging aid.
+  //
+  // If a change to xpt in the future breaks this code, just delete it and
+  // replace it with a normal hex log.
+  if (const auto* ifaceInfo =
+          nsXPTInterfaceInfo::ByIID(NS_GET_IID(nsIWebProgressListener))) {
+    for (uint16_t i = 0; i < ifaceInfo->ConstantCount(); ++i) {
+      const auto& constInfo = ifaceInfo->Constant(i);
+      nsDependentCString name(constInfo.Name());
+      if (!StringBeginsWith(name, aPrefix)) {
+        continue;
+      }
+
+      if (remaining & constInfo.mValue) {
+        remaining &= ~constInfo.mValue;
+        if (!flags.IsEmpty()) {
+          flags.AppendLiteral("|");
+        }
+        flags.Append(name);
+      }
+    }
+  }
+  if (remaining != 0 || flags.IsEmpty()) {
+    if (!flags.IsEmpty()) {
+      flags.AppendLiteral("|");
+    }
+    flags.AppendInt(remaining, 16);
+  }
+  return flags;
+}
+
+static nsCString DescribeError(nsresult aError) {
+  nsCString name;
+  GetErrorName(aError, name);
+  return name;
 }
 
 }  // namespace dom
