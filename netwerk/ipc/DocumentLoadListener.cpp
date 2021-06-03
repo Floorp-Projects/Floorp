@@ -53,7 +53,6 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/nsHTTPSOnlyUtils.h"
-#include "mozilla/dom/RemoteWebProgress.h"
 #include "mozilla/dom/RemoteWebProgressRequest.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/ExtensionPolicyService.h"
@@ -177,13 +176,6 @@ static auto CreateObjectLoadInfo(nsDocShellLoadState* aLoadState,
   loadInfo->SetIsMetaRefresh(aLoadState->IsMetaRefresh());
 
   return loadInfo.forget();
-}
-
-static auto WebProgressForBrowsingContext(
-    CanonicalBrowsingContext* aBrowsingContext)
-    -> already_AddRefed<BrowsingContextWebProgress> {
-  return RefPtr<BrowsingContextWebProgress>(aBrowsingContext->GetWebProgress())
-      .forget();
 }
 
 /**
@@ -866,17 +858,15 @@ auto DocumentLoadListener::OpenInParent(nsDocShellLoadState* aLoadState,
 void DocumentLoadListener::FireStateChange(uint32_t aStateFlags,
                                            nsresult aStatus) {
   nsCOMPtr<nsIChannel> request = GetChannel();
-  nsCOMPtr<nsIWebProgress> webProgress =
-      new RemoteWebProgress(GetLoadType(), true, true);
 
-  RefPtr<BrowsingContextWebProgress> loadingWebProgress =
-      WebProgressForBrowsingContext(GetLoadingBrowsingContext());
+  RefPtr<BrowsingContextWebProgress> webProgress =
+      GetLoadingBrowsingContext()->GetWebProgress();
 
-  if (loadingWebProgress) {
+  if (webProgress) {
     NS_DispatchToMainThread(
         NS_NewRunnableFunction("DocumentLoadListener::FireStateChange", [=]() {
-          loadingWebProgress->OnStateChange(webProgress, request, aStateFlags,
-                                            aStatus);
+          webProgress->OnStateChange(webProgress, request, aStateFlags,
+                                     aStatus);
         }));
   }
 }
@@ -2626,18 +2616,16 @@ NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
                                              nsresult aStatus,
                                              const char16_t* aStatusArg) {
   nsCOMPtr<nsIChannel> channel = mChannel;
-  nsCOMPtr<nsIWebProgress> webProgress =
-      new RemoteWebProgress(mLoadStateLoadType, true, true);
 
-  RefPtr<BrowsingContextWebProgress> topWebProgress =
-      WebProgressForBrowsingContext(GetTopBrowsingContext());
+  RefPtr<BrowsingContextWebProgress> webProgress =
+      GetLoadingBrowsingContext()->GetWebProgress();
   const nsString message(aStatusArg);
 
-  if (topWebProgress) {
+  if (webProgress) {
     NS_DispatchToMainThread(
         NS_NewRunnableFunction("DocumentLoadListener::OnStatus", [=]() {
-          topWebProgress->OnStatusChange(webProgress, channel, aStatus,
-                                         message.get());
+          webProgress->OnStatusChange(webProgress, channel, aStatus,
+                                      message.get());
         }));
   }
   return NS_OK;

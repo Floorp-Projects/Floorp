@@ -9,18 +9,35 @@
 #include "nsIWebProgressListener.h"
 #include "nsTObserverArray.h"
 #include "nsWeakReference.h"
+#include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
 namespace dom {
 
+class CanonicalBrowsingContext;
+
+/// Object acting as the nsIWebProgress instance for a BrowsingContext over its
+/// lifetime.
+///
+/// An active toplevel CanonicalBrowsingContext will always have a
+/// BrowsingContextWebProgress, which will be moved between contexts as
+/// BrowsingContextGroup-changing loads are performed.
+///
+/// Subframes will only have a `BrowsingContextWebProgress` if they are loaded
+/// in a content process, and will use the nsDocShell instead if they are loaded
+/// in the parent process, as parent process documents cannot have or be
+/// out-of-process iframes.
 class BrowsingContextWebProgress final : public nsIWebProgress,
                                          public nsIWebProgressListener {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(BrowsingContextWebProgress,
+                                           nsIWebProgress)
   NS_DECL_NSIWEBPROGRESS
   NS_DECL_NSIWEBPROGRESSLISTENER
 
-  BrowsingContextWebProgress() = default;
+  explicit BrowsingContextWebProgress(
+      CanonicalBrowsingContext* aBrowsingContext);
 
   struct ListenerInfo {
     ListenerInfo(nsIWeakReference* aListener, unsigned long aNotifyMask)
@@ -41,9 +58,12 @@ class BrowsingContextWebProgress final : public nsIWebProgress,
   };
 
   void ContextDiscarded();
+  void ContextReplaced(CanonicalBrowsingContext* aNewContext);
+
+  void SetLoadType(uint32_t aLoadType) { mLoadType = aLoadType; }
 
  private:
-  virtual ~BrowsingContextWebProgress() = default;
+  virtual ~BrowsingContextWebProgress();
 
   void UpdateAndNotifyListeners(
       uint32_t aFlag,
@@ -52,16 +72,26 @@ class BrowsingContextWebProgress final : public nsIWebProgress,
   using ListenerArray = nsAutoTObserverArray<ListenerInfo, 4>;
   ListenerArray mListenerInfoList;
 
-  // This indicates whether we are currently suspending onStateChange top level
-  // STATE_START events for a document. We start suspending whenever we receive
-  // the first STATE_START event with the matching flags (see
-  // ::RecvOnStateChange for details), until we get a corresponding STATE_STOP
-  // event. In the meantime, if there other onStateChange events, this flag does
-  // not affect them. We do this to avoid duplicate onStateChange STATE_START
-  // events that happen during process switch. With this flag, we allow
-  // onStateChange STATE_START event from the old BrowserParent, but not the
-  // same event from the new BrowserParent during a process switch.
-  bool mAwaitingStop = false;
+  // The current BrowsingContext which owns this BrowsingContextWebProgress.
+  // This context may change during navigations and may not be fully attached at
+  // all times.
+  RefPtr<CanonicalBrowsingContext> mCurrentBrowsingContext;
+
+  // The current request being actively loaded by the BrowsingContext. Only set
+  // while mIsLoadingDocument is true, and is used to fire STATE_STOP
+  // notifications if the BrowsingContext is discarded while the load is
+  // ongoing.
+  nsCOMPtr<nsIRequest> mLoadingDocumentRequest;
+
+  // The most recent load type observed for this BrowsingContextWebProgress.
+  uint32_t mLoadType = 0;
+
+  // Are we currently in the process of loading a document? This is true between
+  // the `STATE_START` notification from content and the `STATE_STOP`
+  // notification being received. Duplicate `STATE_START` events may be
+  // discarded while loading a document to avoid noise caused by process
+  // switches.
+  bool mIsLoadingDocument = false;
 };
 
 }  // namespace dom
