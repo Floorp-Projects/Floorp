@@ -50,12 +50,12 @@ class TabCollectionStorage(
     /**
      * Adds the state of the given [TabSessionState]s to the [TabCollection].
      */
-    fun addTabsToCollection(collection: TabCollection, sessions: List<TabSessionState>) {
+    fun addTabsToCollection(collection: TabCollection, sessions: List<TabSessionState>): Long? {
         val collectionEntity = (collection as TabCollectionAdapter).entity.collection
-        addTabsToCollection(collectionEntity, sessions)
+        return addTabsToCollection(collectionEntity, sessions)
     }
 
-    private fun addTabsToCollection(collection: TabCollectionEntity, sessions: List<TabSessionState>) {
+    private fun addTabsToCollection(collection: TabCollectionEntity, sessions: List<TabSessionState>): Long? {
         sessions.forEach { session ->
             val fileName = UUID.randomUUID().toString()
 
@@ -75,6 +75,7 @@ class TabCollectionStorage(
 
         collection.updatedAt = System.currentTimeMillis()
         database.value.tabCollectionDao().updateTabCollection(collection)
+        return collection.id
     }
 
     /**

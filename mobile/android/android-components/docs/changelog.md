@@ -82,6 +82,9 @@ permalink: /changelog/
     }
     ```
 
+* **feature-tab-collections**:
+    * [addTabsToCollection] now returns the id of the collection which the tabs were added to.
+
 * **service-nimbus**
   * Added UI components for displaying a list of branches and the selected branch related to a Nimbus experiments.
 

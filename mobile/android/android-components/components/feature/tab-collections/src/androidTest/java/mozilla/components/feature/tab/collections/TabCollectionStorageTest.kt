@@ -92,18 +92,20 @@ class TabCollectionStorageTest {
     @Test
     fun testAddingTabsToExistingCollection() {
         storage.createCollection("Articles")
+        var id: Long?
 
         getAllCollections().let { collections ->
             assertEquals(1, collections.size)
             assertEquals(0, collections[0].tabs.size)
 
-            storage.addTabsToCollection(collections[0], listOf(
+            id = storage.addTabsToCollection(collections[0], listOf(
                 createTab("https://www.mozilla.org", title = "Mozilla"),
                 createTab("https://www.firefox.com", title = "Firefox")
             ))
         }
 
         getAllCollections().let { collections ->
+            assertEquals(1L, id)
             assertEquals(1, collections.size)
             assertEquals(2, collections[0].tabs.size)
 
