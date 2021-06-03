@@ -213,13 +213,11 @@
 
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
   skin/classic/browser/tabbrowser/hourglass.svg                (../shared/tabbrowser/hourglass.svg)
-  skin/classic/browser/tabbrowser/indicator-tab-attention.svg  (../shared/tabbrowser/indicator-tab-attention.svg)
   skin/classic/browser/tabbrowser/loading.svg                  (../shared/tabbrowser/loading.svg)
   skin/classic/browser/tabbrowser/loading-burst.svg            (../shared/tabbrowser/loading-burst.svg)
   skin/classic/browser/tabbrowser/pendingpaint.png             (../shared/tabbrowser/pendingpaint.png)
   skin/classic/browser/tabbrowser/tab-audio-playing-small.svg  (../shared/tabbrowser/tab-audio-playing-small.svg)
   skin/classic/browser/tabbrowser/tab-audio-muted-small.svg    (../shared/tabbrowser/tab-audio-muted-small.svg)
-  skin/classic/browser/tabbrowser/tab-audio-blocked.svg        (../shared/tabbrowser/tab-audio-blocked.svg)
   skin/classic/browser/tabbrowser/tab-audio-blocked-small.svg  (../shared/tabbrowser/tab-audio-blocked-small.svg)
   skin/classic/browser/tabbrowser/tab-connecting.png           (../shared/tabbrowser/tab-connecting.png)
   skin/classic/browser/tabbrowser/tab-connecting@2x.png        (../shared/tabbrowser/tab-connecting@2x.png)
@@ -228,7 +226,6 @@
   skin/classic/browser/tabbrowser/tab-loading@2x.png           (../shared/tabbrowser/tab-loading@2x.png)
   skin/classic/browser/tabbrowser/tab-loading-inverted.png     (../shared/tabbrowser/tab-loading-inverted.png)
   skin/classic/browser/tabbrowser/tab-loading-inverted@2x.png  (../shared/tabbrowser/tab-loading-inverted@2x.png)
-  skin/classic/browser/tabbrowser/tab-overflow-indicator.png   (../shared/tabbrowser/tab-overflow-indicator.png)
 
   skin/classic/browser/translating-16.png                      (../shared/translation/translating-16.png)
   skin/classic/browser/translating-16@2x.png                   (../shared/translation/translating-16@2x.png)
