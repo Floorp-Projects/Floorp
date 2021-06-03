@@ -623,15 +623,15 @@ var BrowserPageActions = {
     urlbarNode,
     disabled = action.getDisabled(window)
   ) {
-    // When Proton is enabled, the extension page actions should behave similarly
-    // to a transient action, and be hidden from the urlbar overflow menu if they
+    // Extension page actions should behave like a transient action,
+    // and be hidden from the urlbar overflow menu if they
     // are disabled (as in the urlbar when the overflow menu isn't available)
     //
     // TODO(Bug 1704139): as a follow up we may look into just set on all
     // extension pageActions `_transient: true`, at least once we sunset
     // the proton preference and we don't need the pre-Proton behavior anymore,
     // and remove this special case.
-    const isProtonExtensionAction = action.extensionID && gProton;
+    const isProtonExtensionAction = action.extensionID;
 
     if (action.__transient || isProtonExtensionAction) {
       this.placeActionInPanel(action);
@@ -942,11 +942,8 @@ var BrowserPageActions = {
     }
 
     let action = this.actionForNode(popup.triggerNode);
-    if (
-      !action ||
-      // In Proton, only extension actions provide a context menu.
-      (gProton && !action.extensionID)
-    ) {
+    // Only extension actions provide a context menu.
+    if (!action?.extensionID) {
       this._contextAction = null;
       event.preventDefault();
       return;
