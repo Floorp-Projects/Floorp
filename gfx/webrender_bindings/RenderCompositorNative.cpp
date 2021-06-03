@@ -36,7 +36,6 @@ RenderCompositorNative::RenderCompositorNative(
 }
 
 RenderCompositorNative::~RenderCompositorNative() {
-  Pause();
   mProfilerScreenshotGrabber.Destroy();
   mNativeLayerRoot->SetLayers({});
   mNativeLayerForEntireWindow = nullptr;
