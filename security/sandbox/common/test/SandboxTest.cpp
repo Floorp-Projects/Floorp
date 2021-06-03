@@ -7,12 +7,15 @@
 #include "SandboxTest.h"
 
 #include "mozilla/Components.h"
+#include "mozilla/Preferences.h"
 #include "SandboxTestingParent.h"
 #include "SandboxTestingChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GPUChild.h"
+#include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "nsIOService.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -84,6 +87,40 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
         break;
       }
 
+      case GeckoProcessType_Socket: {
+        // mochitest harness force this variable, but we actually do not want
+        // that
+        int rv_unset =
+#ifdef XP_UNIX
+            unsetenv("MOZ_DISABLE_SOCKET_PROCESS");
+#endif  // XP_UNIX
+#ifdef XP_WIN
+        _putenv("MOZ_DISABLE_SOCKET_PROCESS=");
+#endif  // XP_WIN
+        MOZ_ASSERT(rv_unset == 0, "Error unsetting env var");
+
+        nsresult rv_pref =
+            Preferences::SetBool("network.process.enabled", true);
+        MOZ_ASSERT(rv_pref == NS_OK, "Error enforcing pref");
+
+        MOZ_ASSERT(net::gIOService, "No gIOService?");
+        RefPtr<SandboxTest> self = this;
+        net::gIOService->CallOrWaitForSocketProcess([self, type]() {
+          // If socket process was previously disabled by env,
+          // nsIOService code will take some time before it creates the new
+          // process and it triggers this callback
+          //
+          // If that happens, then by the time we reach the end of StartTests()
+          // the mSandboxTestingParents[type] might not yet have been updated
+          // this is why below we allow for a delayed dispatch to give a chance
+          net::SocketProcessParent* parent =
+              net::SocketProcessParent::GetSingleton();
+          self->mSandboxTestingParents[type] =
+              InitializeSandboxTestingActors(parent);
+        });
+        break;
+      }
+
       default:
         MOZ_ASSERT_UNREACHABLE(
             "SandboxTest does not yet support this process type");
@@ -91,7 +128,24 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
     }
 
     if (!mSandboxTestingParents[type]) {
-      return NS_ERROR_FAILURE;
+      if (type == GeckoProcessType_Socket) {
+        // Give a chance to the socket process to be present and to the callback
+        // above to be ran. We delay by 5 seconds, but hopefully since it is all
+        // on the main thread, the value itself should not be important.
+        RefPtr<SandboxTest> self = this;
+        NS_DelayedDispatchToCurrentThread(
+            NS_NewRunnableFunction(
+                "SandboxTest::StartTests",
+                [self, type]() {
+                  if (!self->mSandboxTestingParents[type]) {
+                    MOZ_ASSERT_UNREACHABLE(
+                        "SandboxTest failed to get a Parent");
+                  }
+                }),
+            5e3 /* delay by five seconds */);
+      } else {
+        return NS_ERROR_FAILURE;
+      }
     }
   }
   return NS_OK;

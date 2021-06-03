@@ -40,11 +40,6 @@ class SandboxTestingChild : public PSandboxTestingChild {
 
   virtual bool RecvShutDown();
 
- private:
-  explicit SandboxTestingChild(SandboxTestingThread* aThread,
-                               Endpoint<PSandboxTestingChild>&& aEndpoint);
-  void Bind(Endpoint<PSandboxTestingChild>&& aEndpoint);
-
 #ifdef XP_UNIX
   // For test cases that return an error number or 0, like newer POSIX APIs.
   void PosixTest(const nsCString& aName, bool aExpectSuccess, int aStatus);
@@ -55,6 +50,11 @@ class SandboxTestingChild : public PSandboxTestingChild {
   template <typename F>
   void ErrnoTest(const nsCString& aName, bool aExpectSuccess, F&& aFunction);
 #endif
+
+ private:
+  explicit SandboxTestingChild(SandboxTestingThread* aThread,
+                               Endpoint<PSandboxTestingChild>&& aEndpoint);
+  void Bind(Endpoint<PSandboxTestingChild>&& aEndpoint);
 
   UniquePtr<SandboxTestingThread> mThread;
 
