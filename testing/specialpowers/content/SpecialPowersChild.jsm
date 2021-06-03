@@ -309,6 +309,52 @@ class SpecialPowersChild extends JSWindowActorChild {
         let { task, args, caller, taskId, imports } = message.data;
         return this._spawnTask(task, args, caller, taskId, imports);
 
+      case "EnsureFocus":
+        // Ensure that the focus is in this child document. Returns a browsing
+        // context of a child frame if a subframe should be focused or undefined
+        // otherwise.
+
+        // If a subframe node is focused, then the focus will actually
+        // be within that subframe's document. If blurSubframe is true,
+        // then blur the subframe so that this parent document is focused
+        // instead. If blurSubframe is false, then return the browsing
+        // context for that subframe. The parent process will then call back
+        // into this same code but in the process for that subframe.
+        let focusedNode = this.document.activeElement;
+        let subframeFocused =
+          ChromeUtils.getClassName(focusedNode) == "HTMLIFrameElement" ||
+          ChromeUtils.getClassName(focusedNode) == "HTMLFrameElement" ||
+          ChromeUtils.getClassName(focusedNode) == "XULFrameElement";
+        if (subframeFocused) {
+          if (message.data.blurSubframe) {
+            Services.focus.clearFocus(this.contentWindow);
+          } else {
+            if (!this.document.hasFocus()) {
+              this.contentWindow.focus();
+            }
+            return Promise.resolve(focusedNode.browsingContext);
+          }
+        }
+
+        // A subframe is not focused, so if this document is
+        // not focused, focus it and wait for the focus event.
+        if (!this.document.hasFocus()) {
+          return new Promise(resolve => {
+            this.document.addEventListener(
+              "focus",
+              () => {
+                resolve();
+              },
+              {
+                capture: true,
+                once: true,
+              }
+            );
+            this.contentWindow.focus();
+          });
+        }
+        break;
+
       case "Assert":
         {
           if ("info" in message.data) {
@@ -1653,6 +1699,10 @@ class SpecialPowersChild extends JSWindowActorChild {
     return Services.focus.focusedWindow;
   }
 
+  clearFocus(aWindow) {
+    Services.focus.clearFocus(aWindow);
+  }
+
   focus(aWindow) {
     // This is called inside TestRunner._makeIframe without aWindow, because of assertions in oop mochitests
     // With aWindow, it is called in SimpleTest.waitForFocus to allow popup window opener focus switching
@@ -1668,6 +1718,13 @@ class SpecialPowersChild extends JSWindowActorChild {
     } catch (e) {
       Cu.reportError(e);
     }
+  }
+
+  ensureFocus(aBrowsingContext, aBlurSubframe) {
+    return this.sendQuery("EnsureFocus", {
+      browsingContext: aBrowsingContext,
+      blurSubframe: aBlurSubframe,
+    });
   }
 
   getClipboardData(flavor, whichClipboard) {
