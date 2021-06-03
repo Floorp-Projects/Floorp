@@ -471,11 +471,11 @@ def load_scalars(filename, strict_type_checks=True):
         with io.open(filename, "r", encoding="utf-8") as f:
             scalars = yaml.safe_load(f)
     except IOError as e:
-        ParserError("Error opening " + filename + ": " + e.message).handle_now()
+        ParserError("Error opening " + filename + ": " + str(e)).handle_now()
     except ValueError as e:
         ParserError(
             "Error parsing scalars in {}: {}"
-            ".\nSee: {}".format(filename, e.message, BASE_DOC_URL)
+            ".\nSee: {}".format(filename, e, BASE_DOC_URL)
         ).handle_now()
 
     scalar_list = []

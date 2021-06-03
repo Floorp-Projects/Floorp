@@ -285,7 +285,7 @@ class BaseWebTestRequestHandler(http.server.BaseHTTPRequestHandler):
             try:
                 handler(request, response)
             except HTTPException as e:
-                response.set_error(e.code, e.message)
+                response.set_error(e.code, str(e))
             except Exception as e:
                 self.respond_with_error(response, e)
         self.logger.debug("%i %s %s (%s) %i" % (response.status[0],
@@ -620,7 +620,7 @@ class Http2WebTestRequestHandler(BaseWebTestRequestHandler):
         try:
             return handler.frame_handler(request)
         except HTTPException as e:
-            response.set_error(e.code, e.message)
+            response.set_error(e.code, str(e))
             response.write()
         except Exception as e:
             self.respond_with_error(response, e)

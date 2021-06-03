@@ -144,7 +144,7 @@ def main():
             )
 
         except Exception as e:
-            print('Ignored "%s": %s' % (line, e.message), file=sys.stderr)
+            print('Ignored "%s": %s' % (line, e), file=sys.stderr)
 
 
 if __name__ == "__main__":
