@@ -5478,6 +5478,9 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
     MOZ_ASSERT(Metrics().IsRootContent());
     MOZ_ASSERT(Metrics().GetZoom().AreScalesSame());
 
+    const float defaultZoomInAmount =
+        StaticPrefs::apz_doubletapzoom_defaultzoomin();
+
     ParentLayerRect compositionBounds = Metrics().GetCompositionBounds();
     CSSRect cssPageRect = Metrics().GetScrollableRect();
     CSSPoint scrollOffset = Metrics().GetVisualScrollOffset();
@@ -5526,7 +5529,8 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
     } else {
       if (rect.IsEmpty()) {
         if (currentZoom == localMinZoom &&
-            (aFlags & ZOOM_IN_IF_CANT_ZOOM_OUT)) {
+            (aFlags & ZOOM_IN_IF_CANT_ZOOM_OUT) &&
+            (defaultZoomInAmount != 1.f)) {
           zoomInDefaultAmount = true;
         } else {
           zoomOut = true;
@@ -5538,14 +5542,14 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
 
     // already at min zoom and asked to zoom out further
     if (!zoomOut && currentZoom == localMinZoom && targetZoom <= localMinZoom &&
-        (aFlags & ZOOM_IN_IF_CANT_ZOOM_OUT)) {
+        (aFlags & ZOOM_IN_IF_CANT_ZOOM_OUT) && (defaultZoomInAmount != 1.f)) {
       zoomInDefaultAmount = true;
     }
     MOZ_ASSERT(!(zoomInDefaultAmount && zoomOut));
 
     if (zoomInDefaultAmount) {
-      targetZoom = CSSToParentLayerScale(
-          currentZoom.scale * StaticPrefs::apz_doubletapzoom_defaultzoomin());
+      targetZoom =
+          CSSToParentLayerScale(currentZoom.scale * defaultZoomInAmount);
     }
 
     if (zoomOut) {
