@@ -28,16 +28,11 @@ async function testCollapsedLongAttribute(inspector, testActor) {
 
   info("Adding test attributes to the node");
   let onMutation = inspector.once("markupmutation");
-  await setAttributeInBrowser(gBrowser.selectedBrowser, "#node24", "class", "");
+  await setContentPageElementAttribute("#node24", "class", "");
   await onMutation;
 
   onMutation = inspector.once("markupmutation");
-  await setAttributeInBrowser(
-    gBrowser.selectedBrowser,
-    "#node24",
-    "data-long",
-    LONG_ATTRIBUTE
-  );
+  await setContentPageElementAttribute("#node24", "data-long", LONG_ATTRIBUTE);
   await onMutation;
 
   await assertAttributes(

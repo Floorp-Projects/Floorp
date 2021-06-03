@@ -20,8 +20,7 @@ add_task(async function() {
 
   info("Changing the node's style and waiting for the update");
   const onUpdated = inspector.once("rule-view-refreshed");
-  await setAttributeInBrowser(
-    gBrowser.selectedBrowser,
+  await setContentPageElementAttribute(
     "#testdiv",
     "style",
     "font-size: 3em; color: lightgoldenrodyellow; " +

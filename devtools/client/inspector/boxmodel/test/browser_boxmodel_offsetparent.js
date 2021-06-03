@@ -84,11 +84,10 @@ async function testInitialValues(inspector, boxmodel) {
 async function testChangingValues(inspector, boxmodel) {
   info("Test that changing the document updates the box model");
   const viewdoc = boxmodel.document;
-  const browser = gBrowser.selectedBrowser;
 
   for (const { selector, update } of updates) {
     const onUpdated = waitForUpdate(inspector);
-    await setAttributeInBrowser(browser, selector, "style", update);
+    await setContentPageElementAttribute(selector, "style", update);
     await onUpdated;
   }
 

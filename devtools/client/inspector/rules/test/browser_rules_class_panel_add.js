@@ -85,11 +85,7 @@ add_task(async function() {
     await onEmpty;
 
     info("Check the state of the DOM node");
-    const className = await getAttributeInBrowser(
-      gBrowser.selectedBrowser,
-      "body",
-      "class"
-    );
+    const className = await getContentPageElementAttribute("body", "class");
     const expectedClassName = expectedClasses.length
       ? expectedClasses.join(" ")
       : null;
