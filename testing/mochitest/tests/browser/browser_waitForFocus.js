@@ -99,3 +99,62 @@ add_task(async function() {
 
   gBrowser.removeCurrentTab();
 });
+
+// Tests focusing the sidebar, which is in a parent process subframe
+// and then switching the focus to another window.
+add_task(async function() {
+  await SidebarUI.show("viewBookmarksSidebar");
+
+  gURLBar.focus();
+
+  // Focus the sidebar.
+  await SimpleTest.promiseFocus(SidebarUI.browser);
+  is(
+    document.activeElement,
+    document.getElementById("sidebar"),
+    "sidebar focused"
+  );
+  ok(
+    document.activeElement.contentDocument.hasFocus(),
+    "sidebar document hasFocus"
+  );
+
+  // Focus the sidebar again, which should cause no change.
+  await SimpleTest.promiseFocus(SidebarUI.browser);
+  is(
+    document.activeElement,
+    document.getElementById("sidebar"),
+    "sidebar focused"
+  );
+  ok(
+    document.activeElement.contentDocument.hasFocus(),
+    "sidebar document hasFocus"
+  );
+
+  // Focus another window. The sidebar should no longer be focused.
+  let window2 = await BrowserTestUtils.openNewBrowserWindow();
+  is(
+    document.activeElement,
+    document.getElementById("sidebar"),
+    "sidebar focused after window 2 opened"
+  );
+  ok(
+    !document.activeElement.contentDocument.hasFocus(),
+    "sidebar document hasFocus after window 2 opened"
+  );
+
+  // Focus the first window again and the sidebar should be focused again.
+  await SimpleTest.promiseFocus(window);
+  is(
+    document.activeElement,
+    document.getElementById("sidebar"),
+    "sidebar focused after window1 refocused"
+  );
+  ok(
+    document.activeElement.contentDocument.hasFocus(),
+    "sidebar document hasFocus after window1 refocused"
+  );
+
+  await BrowserTestUtils.closeWindow(window2);
+  await SidebarUI.hide();
+});
