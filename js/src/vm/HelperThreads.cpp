@@ -2727,6 +2727,10 @@ void HelperThread::threadLoop() {
   }
 }
 
+void JS::RunHelperThreadTask() {
+  MOZ_CRASH("JS::RunHelperThreadTask is not yet implemented");
+}
+
 HelperThreadTask* GlobalHelperThreadState::findHighestPriorityTask(
     const AutoLockHelperThreadState& locked) {
   // Return the highest priority task that is ready to start, or nullptr.
