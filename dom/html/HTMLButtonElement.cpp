@@ -56,7 +56,7 @@ HTMLButtonElement::HTMLButtonElement(
                                         kButtonDefaultType->value),
       mDisabledChanged(false),
       mInInternalActivate(false),
-      mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT)) {
+      mInhibitStateRestoration(aFromParser & FROM_PARSER_FRAGMENT) {
   // Set up our default state: enabled
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }
