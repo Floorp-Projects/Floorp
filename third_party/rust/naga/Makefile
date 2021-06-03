@@ -1,4 +1,4 @@
-.PHONY: all clean validate-spv validate-msl validate-glsl validate-dot validate-wgsl
+.PHONY: all clean validate-spv validate-msl validate-glsl validate-dot validate-wgsl validate-hlsl
 .SECONDARY: boids.metal quad.metal
 SNAPSHOTS_IN=tests/in
 SNAPSHOTS_OUT=tests/out
@@ -20,7 +20,7 @@ clean:
 %.metallib: %.air
 	xcrun -sdk macosx metallib $< -o $@
 
-%.dot: $(SNAPSHOTS_IN)/%.wgsl $(wildcard src/*.rs src/front/wgsl/*.rs src/back/dot/*.rs bin/convert.rs)
+%.dot: $(SNAPSHOTS_IN)/%.wgsl $(wildcard src/*.rs src/front/wgsl/*.rs src/back/dot/*.rs bin/naga.rs)
 	cargo run --features wgsl-in,dot-out -- $< $@
 
 %.png: %.dot
@@ -61,5 +61,12 @@ validate-dot: $(SNAPSHOTS_OUT)/*.dot
 validate-wgsl: $(SNAPSHOTS_OUT)/*.wgsl
 	@set -e && for file in $^ ; do \
 		echo "Validating" $${file#"$(SNAPSHOTS_OUT)/"};	\
-		cargo run --bin convert --features wgsl-in $${file} >/dev/null; \
+		cargo run --features wgsl-in $${file}; \
 	done
+
+validate-hlsl: $(SNAPSHOTS_OUT)/*.hlsl
+	@set -e && for file in $(SNAPSHOTS_OUT)/*.Compute.hlsl ; do \
+		echo "Validating" $${file#"$(SNAPSHOTS_OUT)/"};\
+		dxc $${file} -T cs_6_0;\
+	done
+

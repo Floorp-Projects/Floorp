@@ -22,6 +22,37 @@
 
 extern crate alloc;
 
+#[cfg(feature = "tracing")]
+macro_rules! report_error_on_drop {
+    ($($tokens:tt)*) => {{
+        #[cfg(feature = "std")]
+        {
+            if std::thread::panicking() {
+                return;
+            }
+        }
+
+        tracing::error!($($tokens)*)
+    }};
+}
+
+#[cfg(all(not(feature = "tracing"), feature = "std"))]
+macro_rules! report_error_on_drop {
+    ($($tokens:tt)*) => {{
+        if std::thread::panicking() {
+            return;
+        }
+        eprintln!($($tokens)*)
+    }};
+}
+
+#[cfg(all(not(feature = "tracing"), not(feature = "std")))]
+macro_rules! report_error_on_drop {
+    ($($tokens:tt)*) => {{
+        panic!($($tokens)*)
+    }};
+}
+
 mod allocator;
 mod block;
 mod buddy;

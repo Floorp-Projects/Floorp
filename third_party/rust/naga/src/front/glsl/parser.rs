@@ -1,4 +1,9 @@
-#![allow(clippy::panic, clippy::needless_lifetimes, clippy::upper_case_acronyms)]
+#![allow(
+    unused_braces,
+    clippy::panic,
+    clippy::needless_lifetimes,
+    clippy::upper_case_acronyms
+)]
 use pomelo::pomelo;
 pomelo! {
     //%verbose;
@@ -6,7 +11,7 @@ pomelo! {
         use super::super::{error::ErrorKind, token::*, ast::*};
         use crate::{
             BOOL_WIDTH,
-            Arena, BinaryOperator, Binding, Block, Constant,
+            Arena, ArraySize, BinaryOperator, Binding, Block, Constant,
             ConstantInner, Expression,
             Function, FunctionArgument, FunctionResult,
             GlobalVariable, Handle, Interpolation,
@@ -592,6 +597,34 @@ pomelo! {
             ty,
         }
     }
+
+    single_declaration ::= fully_specified_type(t) Identifier(i) LeftBracket additive_expression(exp) RightBracket  {
+        let ty_item = t.1.ok_or_else(|| ErrorKind::SemanticError("Empty type for declaration".into()))?;
+
+        let array_size = if let Ok(constant) = extra.solve_constant(exp.expression) {
+            ArraySize::Constant(constant)
+        } else {
+            ArraySize::Dynamic
+        };
+
+        let item_size = extra.type_size(ty_item)?;
+
+        let ty = extra.module.types.fetch_or_append(Type {
+            inner: TypeInner::Array {
+                base: ty_item,
+                size: array_size,
+                stride: item_size as u32,
+            },
+            name: None,
+        });
+
+        VarDeclaration {
+            type_qualifiers: t.0,
+            ids_initializers: vec![(Some(i.1), None)],
+            ty,
+        }
+    }
+
     // single_declaration ::= fully_specified_type Identifier array_specifier;
     // single_declaration ::= fully_specified_type Identifier array_specifier Equal initializer;
     single_declaration ::= fully_specified_type(t) Identifier(i) Equal initializer(init) {
@@ -1024,7 +1057,7 @@ pomelo! {
         for (pos, arg) in args.into_iter().enumerate() {
             if let Some(name) = arg.name.clone() {
                 let exp = extra.context.expressions.append(Expression::FunctionArgument(pos as u32));
-                extra.context.add_local_var(name, exp);
+                extra.context.add_function_arg(name, exp);
             }
             extra.context.arguments.push(arg);
         }
@@ -1051,8 +1084,8 @@ pomelo! {
         FunctionArgument { name: Some(n.1), ty, binding: None }
     }
     // parameter_declarator ::= type_specifier(ty) Identifier(ident) array_specifier;
-    parameter_declaration ::= parameter_declarator;
-    parameter_declaration ::= parameter_type_specifier(ty) {
+    parameter_declaration ::= In? parameter_declarator(arg) { arg };
+    parameter_declaration ::= In? parameter_type_specifier(ty) {
         FunctionArgument { name: None, ty, binding: None }
     }
 

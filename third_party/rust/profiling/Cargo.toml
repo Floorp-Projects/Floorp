@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "profiling"
-version = "0.1.10"
+version = "1.0.1"
 authors = ["Philip Degarmo <aclysma@gmail.com>"]
 description = "This crate provides a very thin abstraction over other profiler crates."
 homepage = "https://github.com/aclysma/profiling"
@@ -37,7 +37,7 @@ version = "1.3"
 optional = true
 
 [dependencies.profiling-procmacros]
-version = "0.1.3"
+version = "1.0.1"
 optional = true
 
 [dependencies.puffin]
@@ -95,8 +95,9 @@ version = "0.24"
 [features]
 default = ["procmacros"]
 procmacros = ["profiling-procmacros"]
-profile-with-optick = ["optick"]
-profile-with-puffin = ["puffin"]
-profile-with-superluminal = ["superluminal-perf"]
-profile-with-tracing = ["tracing"]
-profile-with-tracy = ["tracy-client"]
+profile-with-optick = ["optick", "profiling-procmacros/profile-with-optick"]
+profile-with-puffin = ["puffin", "profiling-procmacros/profile-with-puffin"]
+profile-with-superluminal = ["superluminal-perf", "profiling-procmacros/profile-with-superluminal"]
+profile-with-tracing = ["tracing", "profiling-procmacros/profile-with-tracing"]
+profile-with-tracy = ["tracy-client", "profiling-procmacros/profile-with-tracy"]
+type-check = []

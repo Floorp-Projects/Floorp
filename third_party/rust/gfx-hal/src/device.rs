@@ -555,7 +555,7 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// [queue submission][crate::queue::Queue::submit] command.
     ///
     /// Fences **can** be unsignaled on the host with
-    /// [`reset_fences`][Device::reset_fences].
+    /// [`reset_fence`][Device::reset_fence].
     ///
     /// Fences **can** be waited on by the host with the
     /// [`wait_for_fences`][Device::wait_for_fences] command.

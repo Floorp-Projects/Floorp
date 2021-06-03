@@ -1,9 +1,9 @@
 use super::{super::Typifier, constants::ConstantSolver, error::ErrorKind};
 use crate::{
-    proc::ResolveContext, Arena, BinaryOperator, Binding, Constant, Expression, FastHashMap,
-    Function, FunctionArgument, GlobalVariable, Handle, Interpolation, LocalVariable, Module,
-    RelationalFunction, ResourceBinding, Sampling, ShaderStage, Statement, StorageClass, Type,
-    UnaryOperator,
+    proc::ResolveContext, Arena, ArraySize, BinaryOperator, Binding, Constant, Expression,
+    FastHashMap, Function, FunctionArgument, GlobalVariable, Handle, Interpolation, LocalVariable,
+    Module, RelationalFunction, ResourceBinding, Sampling, ShaderStage, Statement, StorageClass,
+    Type, UnaryOperator,
 };
 
 #[derive(Debug)]
@@ -144,6 +144,51 @@ impl<'a> Program<'a> {
             .solve(root)
             .map_err(|_| ErrorKind::SemanticError("Can't solve constant".into()))
     }
+
+    pub fn type_size(&self, ty: Handle<Type>) -> Result<u8, ErrorKind> {
+        Ok(match self.module.types[ty].inner {
+            crate::TypeInner::Scalar { width, .. } => width,
+            crate::TypeInner::Vector { size, width, .. } => size as u8 * width,
+            crate::TypeInner::Matrix {
+                columns,
+                rows,
+                width,
+            } => columns as u8 * rows as u8 * width,
+            crate::TypeInner::Pointer { .. } => {
+                return Err(ErrorKind::NotImplemented("type size of pointer"))
+            }
+            crate::TypeInner::ValuePointer { .. } => {
+                return Err(ErrorKind::NotImplemented("type size of value pointer"))
+            }
+            crate::TypeInner::Array { size, stride, .. } => {
+                stride as u8
+                    * match size {
+                        ArraySize::Dynamic => {
+                            return Err(ErrorKind::NotImplemented("type size of dynamic array"))
+                        }
+                        ArraySize::Constant(constant) => {
+                            match self.module.constants[constant].inner {
+                                crate::ConstantInner::Scalar { width, .. } => width,
+                                crate::ConstantInner::Composite { .. } => {
+                                    return Err(ErrorKind::NotImplemented(
+                                        "type size of array with composite item size",
+                                    ))
+                                }
+                            }
+                        }
+                    }
+            }
+            crate::TypeInner::Struct { .. } => {
+                return Err(ErrorKind::NotImplemented("type size of struct"))
+            }
+            crate::TypeInner::Image { .. } => {
+                return Err(ErrorKind::NotImplemented("type size of image"))
+            }
+            crate::TypeInner::Sampler { .. } => {
+                return Err(ErrorKind::NotImplemented("type size of sampler"))
+            }
+        })
+    }
 }
 
 #[derive(Debug)]
@@ -190,7 +235,17 @@ impl Context {
     /// Add variable to current scope
     pub fn add_local_var(&mut self, name: String, handle: Handle<Expression>) {
         if let Some(current) = self.scopes.last_mut() {
-            (*current).insert(name, handle);
+            let expr = self
+                .expressions
+                .append(Expression::Load { pointer: handle });
+            (*current).insert(name, expr);
+        }
+    }
+
+    /// Add function argument to current scope
+    pub fn add_function_arg(&mut self, name: String, expr: Handle<Expression>) {
+        if let Some(current) = self.scopes.last_mut() {
+            (*current).insert(name, expr);
         }
     }
 

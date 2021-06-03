@@ -1,6 +1,6 @@
 [package]
 name = "gfx-auxil"
-version = "0.8.0"
+version = "0.9.0"
 description = "Implementation details shared between gfx-rs backends"
 homepage = "https://github.com/gfx-rs/gfx"
 repository = "https://github.com/gfx-rs/gfx"
@@ -12,7 +12,7 @@ workspace = "../../../"
 edition = "2018"
 
 [dependencies]
-hal = { path = "../../hal", version = "0.7", package = "gfx-hal" }
+hal = { path = "../../hal", version = "0.8", package = "gfx-hal" }
 fxhash = "0.2.1"
 spirv_cross = { version = "0.23", optional = true }
 

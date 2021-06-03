@@ -22,6 +22,9 @@ pub struct Surface {
     swapchain_format: metal::MTLPixelFormat,
     swapchain_format_desc: format::FormatDesc,
     main_thread_id: thread::ThreadId,
+    // Useful for UI-intensive applications that are sensitive to
+    // window resizing.
+    pub present_with_transaction: bool,
 }
 
 unsafe impl Send for Surface {}
@@ -40,6 +43,7 @@ impl Surface {
                 aspects: format::Aspects::empty(),
             },
             main_thread_id: thread::current().id(),
+            present_with_transaction: false,
         }
     }
 
@@ -93,6 +97,7 @@ impl Surface {
             render_layer.set_device(&*device_raw);
             render_layer.set_pixel_format(mtl_format);
             render_layer.set_framebuffer_only(framebuffer_only as _);
+            render_layer.set_presents_with_transaction(self.present_with_transaction);
 
             // this gets ignored on iOS for certain OS/device combinations (iphone5s iOS 10.3)
             let () = msg_send![*render_layer, setMaximumDrawableCount: config.image_count as u64];
@@ -146,17 +151,12 @@ impl Surface {
 pub struct SwapchainImage {
     image: native::Image,
     view: native::ImageView,
-    drawable: metal::MetalDrawable,
+    pub(crate) drawable: metal::MetalDrawable,
+    pub(crate) present_with_transaction: bool,
 }
 
 unsafe impl Send for SwapchainImage {}
 unsafe impl Sync for SwapchainImage {}
-
-impl SwapchainImage {
-    pub(crate) fn into_drawable(self) -> metal::MetalDrawable {
-        self.drawable
-    }
-}
 
 impl Borrow<native::Image> for SwapchainImage {
     fn borrow(&self) -> &native::Image {
@@ -244,6 +244,12 @@ impl w::PresentationSurface<Backend> for Surface {
         if !image::Usage::COLOR_ATTACHMENT.contains(config.image_usage) {
             warn!("Swapchain usage {:?} is not expected", config.image_usage);
         }
+        #[cfg(target_os = "macos")]
+        {
+            if self.view.is_some() && self.main_thread_id != thread::current().id() {
+                return Err(w::SwapchainError::WrongThread);
+            }
+        }
         self.swapchain_format = self.configure(&device.shared, &config);
         Ok(())
     }
@@ -278,6 +284,7 @@ impl w::PresentationSurface<Backend> for Surface {
                 mtl_format: self.swapchain_format,
             },
             drawable,
+            present_with_transaction: self.present_with_transaction,
         };
         Ok((sc_image, None))
     }
