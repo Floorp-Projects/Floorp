@@ -74,8 +74,8 @@ add_task(async function aboutAboutAndAboutAddons() {
       makeVisitResult(context, {
         uri: "about:addons",
         title: "about:addons",
-        iconUri: "",
-        providerName: "UnifiedComplete",
+        tags: null,
+        providerName: "AboutPages",
       }),
     ],
   });
@@ -95,4 +95,38 @@ add_task(async function aboutColonHasNoMatch() {
       }),
     ],
   });
+});
+
+// Tests that about: pages are shown after general results.
+add_task(async function after_general() {
+  await PlacesTestUtils.addVisits([
+    {
+      uri: Services.io.newURI("http://example.com/guide/aboutaddons/"),
+      title: "Guide to about:addons in Firefox",
+    },
+  ]);
+
+  let context = createContext("about:a", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        uri: "about:about",
+        title: "about:about",
+        heuristic: true,
+        providerName: "Autofill",
+      }),
+      makeVisitResult(context, {
+        uri: "http://example.com/guide/aboutaddons/",
+        title: "Guide to about:addons in Firefox",
+      }),
+      makeVisitResult(context, {
+        uri: "about:addons",
+        title: "about:addons",
+        tags: null,
+        providerName: "AboutPages",
+      }),
+    ],
+  });
+  await cleanupPlaces();
 });

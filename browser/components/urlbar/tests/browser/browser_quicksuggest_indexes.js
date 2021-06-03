@@ -169,6 +169,7 @@ add_task(async function otherSuggestedIndex_suggestionsFirst() {
       { type: UrlbarUtils.RESULT_TYPE.URL },
       { type: UrlbarUtils.RESULT_TYPE.URL },
       { type: UrlbarUtils.RESULT_TYPE.URL },
+      { type: UrlbarUtils.RESULT_TYPE.URL },
       // quick suggest
       {
         type: UrlbarUtils.RESULT_TYPE.URL,
