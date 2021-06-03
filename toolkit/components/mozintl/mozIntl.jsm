@@ -591,6 +591,7 @@ const availableLocaleDisplayNames = {
     "rw",
     "sa",
     "sc",
+    "sco",
     "sd",
     "se",
     "sg",
