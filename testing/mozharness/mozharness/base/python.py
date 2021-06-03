@@ -311,9 +311,7 @@ class VirtualenvMixin(object):
             try:
                 socket.gethostbyname(parsed.hostname)
             except socket.gaierror as e:
-                self.info(
-                    "error resolving %s (ignoring): %s" % (parsed.hostname, e.message)
-                )
+                self.info("error resolving %s (ignoring): %s" % (parsed.hostname, e))
                 continue
 
             command.extend(["--find-links", link])
@@ -951,9 +949,7 @@ class Python3Virtualenv(object):
             try:
                 socket.gethostbyname(parsed.hostname)
             except socket.gaierror as e:
-                self.info(
-                    "error resolving %s (ignoring): %s" % (parsed.hostname, e.message)
-                )
+                self.info("error resolving %s (ignoring): %s" % (parsed.hostname, e))
                 continue
 
             pip_args += ["--find-links", link]
