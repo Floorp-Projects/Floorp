@@ -1506,7 +1506,7 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Κωδικός πρόσβασης</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Εισάγετε ξανά το PIN σας</string>
+    <string name="preferences_passwords_saved_logins_enter_pin">Εισαγάγετε ξανά το PIN σας</string>
     <!-- Message displayed in security prompt to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin_description">Ξεκλειδώστε για να δείτε τις αποθηκευμένες συνδέσεις σας</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->

@@ -89,6 +89,8 @@
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Ɣef %1$s</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Tigurawin n uzerray</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Amiḍan</string>
     <!-- Preference shown on banner to sign into account -->
