@@ -1063,4 +1063,11 @@
 #define __NR_memfd_create 279
 #endif
 
+#if !defined(__NR_statx)
+#define __NR_statx 291
+#endif
+
+#if !defined(__NR_rseq)
+#define __NR_rseq 293
+#endif
 #endif  // SANDBOX_LINUX_SYSTEM_HEADERS_ARM64_LINUX_SYSCALLS_H_
