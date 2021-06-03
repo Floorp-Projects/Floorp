@@ -217,6 +217,8 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
                                        OperandId rhsId,
                                        MCompare::CompareType compareType);
 
+  [[nodiscard]] bool emitTruthyResult(OperandId inputId);
+
   [[nodiscard]] bool emitNewIteratorResult(MNewIterator::Type type,
                                            uint32_t templateObjectOffset);
 
@@ -3866,13 +3868,40 @@ bool WarpCacheIRTranspiler::emitBigIntAsUintNResult(Int32OperandId bitsId,
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitLoadValueTruthyResult(ValOperandId inputId) {
+bool WarpCacheIRTranspiler::emitTruthyResult(OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
   auto* result = convertToBoolean(input);
 
   pushResult(result);
   return true;
+}
+
+bool WarpCacheIRTranspiler::emitLoadInt32TruthyResult(ValOperandId inputId) {
+  return emitTruthyResult(inputId);
+}
+
+bool WarpCacheIRTranspiler::emitLoadDoubleTruthyResult(
+    NumberOperandId inputId) {
+  return emitTruthyResult(inputId);
+}
+
+bool WarpCacheIRTranspiler::emitLoadStringTruthyResult(
+    StringOperandId inputId) {
+  return emitTruthyResult(inputId);
+}
+
+bool WarpCacheIRTranspiler::emitLoadObjectTruthyResult(ObjOperandId inputId) {
+  return emitTruthyResult(inputId);
+}
+
+bool WarpCacheIRTranspiler::emitLoadBigIntTruthyResult(
+    BigIntOperandId inputId) {
+  return emitTruthyResult(inputId);
+}
+
+bool WarpCacheIRTranspiler::emitLoadValueTruthyResult(ValOperandId inputId) {
+  return emitTruthyResult(inputId);
 }
 
 bool WarpCacheIRTranspiler::emitLoadOperandResult(ValOperandId inputId) {

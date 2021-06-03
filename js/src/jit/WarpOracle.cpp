@@ -538,6 +538,11 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::NewObject:
       case JSOp::NewInit:
       case JSOp::NewArray:
+      case JSOp::JumpIfFalse:
+      case JSOp::JumpIfTrue:
+      case JSOp::And:
+      case JSOp::Or:
+      case JSOp::Not:
         MOZ_TRY(maybeInlineIC(opSnapshots, loc));
         break;
 
@@ -580,17 +585,12 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::SetArg:
       case JSOp::JumpTarget:
       case JSOp::LoopHead:
-      case JSOp::JumpIfFalse:
-      case JSOp::JumpIfTrue:
-      case JSOp::And:
-      case JSOp::Or:
       case JSOp::Case:
       case JSOp::Default:
       case JSOp::Coalesce:
       case JSOp::Goto:
       case JSOp::DebugCheckSelfHosted:
       case JSOp::DynamicImport:
-      case JSOp::Not:
       case JSOp::ToString:
       case JSOp::GlobalOrEvalDeclInstantiation:
       case JSOp::BindVar:
