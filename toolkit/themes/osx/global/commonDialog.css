@@ -4,19 +4,6 @@
 
 %include ../../shared/commonDialog.inc.css
 
-@media not (-moz-proton-modals) {
-#commonDialog {
-  line-height: 13px;
-}
-
-#infoTitle,
-#infoBody {
-  font: menu;
-  line-height: 16px;
-  margin-bottom: 6px;
-}
-}
-
 #commonDialog:not([subdialog]) {
   line-height: 13px;
 }

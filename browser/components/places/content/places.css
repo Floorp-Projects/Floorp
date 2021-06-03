@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@media (-moz-proton-modals) {
 :root {
   /* we eventually want to share this value with the bookmark panel, which is
      currently using --arrowpanel-padding */
@@ -91,7 +90,6 @@
 #bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > image {
   margin-inline-end: 8px;
 }
-} /** END Proton **/
 
 tree[is="places-tree"] > treechildren::-moz-tree-cell {
   /* ensure we use the direction of the website title / url instead of the
