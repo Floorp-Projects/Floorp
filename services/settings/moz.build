@@ -7,6 +7,7 @@ with Files("**"):
 
 DIRS += [
     "dumps",
+    "static-dumps",
 ]
 
 EXTRA_COMPONENTS += [
