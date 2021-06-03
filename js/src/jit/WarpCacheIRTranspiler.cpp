@@ -3875,6 +3875,12 @@ bool WarpCacheIRTranspiler::emitLoadValueTruthyResult(ValOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadOperandResult(ValOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+  pushResult(input);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadWrapperTarget(ObjOperandId objId,
                                                   ObjOperandId resultId) {
   MDefinition* obj = getOperand(objId);
