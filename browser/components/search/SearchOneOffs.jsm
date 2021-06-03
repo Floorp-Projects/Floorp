@@ -148,6 +148,10 @@ class SearchOneOffs {
     return this.container.getAttribute(...args);
   }
 
+  hasAttribute(...args) {
+    return this.container.hasAttribute(...args);
+  }
+
   setAttribute(...args) {
     this.container.setAttribute(...args);
   }
@@ -194,16 +198,10 @@ class SearchOneOffs {
 
   /**
    * Width in pixels of the one-off buttons.
+   * NOTE: Used in browser/components/search/content/searchbar.js only.
    */
   get buttonWidth() {
     return 48;
-  }
-
-  /**
-   * Height in pixels of the one-off buttons.
-   */
-  get buttonHeight() {
-    return 32;
   }
 
   /**
@@ -275,7 +273,13 @@ class SearchOneOffs {
     if (this.isViewOpen) {
       let isOneOffSelected =
         this.selectedButton &&
-        this.selectedButton.classList.contains("searchbar-engine-one-off-item");
+        this.selectedButton.classList.contains(
+          "searchbar-engine-one-off-item"
+        ) &&
+        !(
+          this.selectedButton == this.settingsButtonCompact &&
+          this.hasAttribute("is_searchbar")
+        );
       // Typing de-selects the settings or opensearch buttons at the bottom
       // of the search panel, as typing shows the user intends to search.
       if (this.selectedButton && !isOneOffSelected) {
@@ -478,7 +482,10 @@ class SearchOneOffs {
       this.spacerCompact.setAttribute("flex", "1");
     }
 
-    let engines = (await this.getEngineInfo()).engines;
+    // Ensure we can refer to the settings buttons by ID:
+    let origin = this.telemetryOrigin;
+    this.settingsButton.id = origin + "-anon-search-settings";
+    this.settingsButtonCompact.id = origin + "-anon-search-settings-compact";
 
     if (this.popup) {
       let buttonsWidth = this.popup.clientWidth;
@@ -495,33 +502,17 @@ class SearchOneOffs {
         --buttonsWidth;
       }
 
+      // 8 is for the margin-inline of the setting button.
+      buttonsWidth -= this.settingsButtonCompact.clientWidth + 8;
+
       // If the header string is very long, then the searchbar buttons will
       // overflow their container unless max-width is set.
       this.buttons.style.setProperty("max-width", `${buttonsWidth}px`);
-
-      // In very narrow windows, we should always have at least one button
-      // per row.
-      buttonsWidth = Math.max(buttonsWidth, this.buttonWidth);
-
-      let enginesPerRow = Math.floor(buttonsWidth / this.buttonWidth);
-      // There will be an empty area of:
-      //   buttonsWidth - enginesPerRow * this.buttonWidth  px
-      // at the end of each row.
-
-      // If the <div> with the list of search engines doesn't have
-      // a fixed height, the panel will be sized incorrectly, causing the bottom
-      // of the suggestion <tree> to be hidden.
-      let engineCount = engines.length + addEngines.length;
-      let rowCount = Math.ceil(engineCount / enginesPerRow);
-      let height = rowCount * this.buttonHeight;
-      this.buttons.style.setProperty("height", `${height}px`);
     }
-    // Ensure we can refer to the settings buttons by ID:
-    let origin = this.telemetryOrigin;
-    this.settingsButton.id = origin + "-anon-search-settings";
-    this.settingsButtonCompact.id = origin + "-anon-search-settings-compact";
 
+    let engines = (await this.getEngineInfo()).engines;
     this._rebuildEngineList(engines, addEngines);
+
     this.dispatchEvent(new Event("rebuild"));
   }
 
