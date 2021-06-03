@@ -7,7 +7,7 @@
 #ifndef mozilla_URLQueryStringStripper_h
 #define mozilla_URLQueryStringStripper_h
 
-#include "nsIURLQueryStrippingListService.h"
+#include "nsIObserver.h"
 
 #include "nsStringFwd.h"
 #include "nsTHashSet.h"
@@ -27,10 +27,10 @@ namespace mozilla {
 //       similar things. We could somehow combine these two modules into one.
 //       We will improve this in the future.
 
-class URLQueryStringStripper final : public nsIURLQueryStrippingListObserver {
+class URLQueryStringStripper final : public nsIObserver {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIURLQUERYSTRIPPINGLISTOBSERVER
+  NS_DECL_NSIOBSERVER
 
   // Strip the query parameters that are in the strip list. Return true if there
   // is any query parameter has been stripped. Otherwise, false.
@@ -50,12 +50,11 @@ class URLQueryStringStripper final : public nsIURLQueryStrippingListObserver {
 
   bool CheckAllowList(nsIURI* aURI);
 
-  void PopulateStripList(const nsAString& aList);
-  void PopulateAllowList(const nsACString& aList);
+  void PopulateStripList();
+  void PopulateAllowList();
 
   nsTHashSet<nsString> mList;
   nsTHashSet<nsCString> mAllowList;
-  nsCOMPtr<nsIURLQueryStrippingListService> mService;
 };
 
 }  // namespace mozilla
