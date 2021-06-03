@@ -998,20 +998,6 @@ nsXREDirProvider::DoStartup() {
     }
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::SAFE_MODE_USAGE, mode);
 
-    // Telemetry about number of profiles.
-    nsCOMPtr<nsIToolkitProfileService> profileService =
-        do_GetService("@mozilla.org/toolkit/profile-service;1");
-    if (profileService) {
-      uint32_t count = 0;
-      rv = profileService->GetProfileCount(&count);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::NUMBER_OF_PROFILES,
-                                     count);
-    }
-
     obsSvc->NotifyObservers(nullptr, "profile-initial-state", nullptr);
 
 #if defined(MOZ_SANDBOX)
