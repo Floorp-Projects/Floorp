@@ -1842,7 +1842,25 @@ static uint32_t ExtractJsFrames(
           }
         }
 
-        // TODO: Store JIT data in aStackWalkControlIfSupported. See next patch.
+        if constexpr (StackWalkControl::scIsSupported) {
+          if (aStackWalkControlIfSupported) {
+            jsIter.getCppEntryRegisters().apply(
+                [&](const JS::ProfilingFrameIterator::RegisterState&
+                        aCppEntry) {
+                  StackWalkControl::ResumePoint resumePoint;
+                  resumePoint.resumeSp = aCppEntry.sp;
+                  resumePoint.resumeBp = aCppEntry.fp;
+                  resumePoint.resumePc = aCppEntry.pc;
+                  aStackWalkControlIfSupported->AddResumePoint(
+                      std::move(resumePoint));
+                });
+          }
+        } else {
+          MOZ_ASSERT(!aStackWalkControlIfSupported,
+                     "aStackWalkControlIfSupported should be null when "
+                     "!StackWalkControl::scIsSupported");
+          (void)aStackWalkControlIfSupported;
+        }
       }
     }
   }
