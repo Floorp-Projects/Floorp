@@ -110,7 +110,11 @@ const AVAILABLE_SHIMS = [
     ],
     needsShimHelpers: ["optIn"],
     onlyIfBlockedByETP: true,
-    unblocksOnOptIn: ["*://pubads.g.doubleclick.net/gampad/ads*"],
+    unblocksOnOptIn: [
+      "*://pubads.g.doubleclick.net/gampad/ads*",
+      "*://cdn.adsafeprotected.com/iasPET.1.js",
+      "*://static.adsafeprotected.com/vans-adapter-google-ima.js",
+    ],
   },
   {
     id: "AdsByGoogle",
@@ -159,6 +163,8 @@ const AVAILABLE_SHIMS = [
     needsShimHelpers: ["optIn", "getOptions"],
     onlyIfBlockedByETP: true,
     unblocksOnOptIn: [
+      "*://connect.facebook.net/*/sdk.js*",
+      "*://connect.facebook.net/*/all.js*",
       "*://*.xx.fbcdn.net/*", // covers:
       // "*://scontent-.*-\d.xx.fbcdn.net/*",
       // "*://static.xx.fbcdn.net/rsrc.php/*",
@@ -227,7 +233,6 @@ const AVAILABLE_SHIMS = [
       "*://securepubads.g.doubleclick.net/gpt/pubads_impl_*.js",
     ],
     onlyIfBlockedByETP: true,
-    unblocksOnOptIn: ["*://pubads.g.doubleclick.net/ssai/event/*/streams"],
   },
   {
     id: "IMA3",

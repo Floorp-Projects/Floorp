@@ -80,14 +80,19 @@ class Manager {
           } catch (_) {
             return;
           }
+          // if any allowlist unblocks the request entirely, we allow it
+          for (const allowList of this._allowLists.values()) {
+            if (allowList.allows(url, topHost)) {
+              this._unblockedChannelIds.add(channelId);
+              channel.allow();
+              return;
+            }
+          }
+          // otherwise, if any allowlist shims the request we say it's replaced
           for (const allowList of this._allowLists.values()) {
             if (allowList.shims(url, topHost)) {
               this._unblockedChannelIds.add(channelId);
-              channel.replace(); // we will be shimming this request
-              return;
-            } else if (allowList.allows(url, topHost)) {
-              this._unblockedChannelIds.add(channelId);
-              channel.allow(); // we just want to allow this request
+              channel.replace();
               return;
             }
           }
