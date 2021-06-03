@@ -14,12 +14,17 @@
 
 name: "Create Release"
 
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   push:
     branches:
       - 'releases/**'
     paths:
       - '.buildconfig.yml'
+
 jobs:
   main:
     name: "Create Release"

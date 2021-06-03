@@ -19,6 +19,10 @@
 
 name: "Update GeckoView"
 
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   schedule:
     - cron: '*/15 * * * *'
