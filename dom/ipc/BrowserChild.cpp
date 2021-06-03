@@ -1705,12 +1705,52 @@ BrowserChild::RecvNormalPriorityRealMouseEnterExitWidgetEvent(
   return RecvRealMouseButtonEvent(aEvent, aGuid, aInputBlockId);
 }
 
+// In case handling repeated mouse wheel takes much time, we skip firing current
+// wheel event if it may be coalesced to the next one.
+bool BrowserChild::MaybeCoalesceWheelEvent(const WidgetWheelEvent& aEvent,
+                                           const ScrollableLayerGuid& aGuid,
+                                           const uint64_t& aInputBlockId,
+                                           bool* aIsNextWheelEvent) {
+  MOZ_ASSERT(aIsNextWheelEvent);
+  if (aEvent.mMessage == eWheel) {
+    GetIPCChannel()->PeekMessages(
+        [aIsNextWheelEvent](const IPC::Message& aMsg) -> bool {
+          if (aMsg.type() == mozilla::dom::PBrowser::Msg_MouseWheelEvent__ID) {
+            *aIsNextWheelEvent = true;
+          }
+          return false;  // Stop peeking.
+        });
+    // We only coalesce the current event when
+    // 1. It's eWheel (we don't coalesce eOperationStart and eWheelOperationEnd)
+    // 2. It's not the first wheel event.
+    // 3. It's not the last wheel event.
+    // 4. It's dispatched before the last wheel event was processed +
+    //    the processing time of the last event.
+    //    This way pages spending lots of time in wheel listeners get wheel
+    //    events coalesced more aggressively.
+    // 5. It has same attributes as the coalesced wheel event which is not yet
+    //    fired.
+    if (!mLastWheelProcessedTimeFromParent.IsNull() && *aIsNextWheelEvent &&
+        aEvent.mTimeStamp < (mLastWheelProcessedTimeFromParent +
+                             mLastWheelProcessingDuration) &&
+        (mCoalescedWheelData.IsEmpty() ||
+         mCoalescedWheelData.CanCoalesce(aEvent, aGuid, aInputBlockId))) {
+      mCoalescedWheelData.Coalesce(aEvent, aGuid, aInputBlockId);
+      return true;
+    }
+  }
+  return false;
+}
+
 nsEventStatus BrowserChild::DispatchWidgetEventViaAPZ(WidgetGUIEvent& aEvent) {
   aEvent.ResetWaitingReplyFromRemoteProcessState();
   return APZCCallbackHelper::DispatchWidgetEvent(aEvent);
 }
 
-void BrowserChild::DispatchCoalescedWheelEvent() {
+void BrowserChild::MaybeDispatchCoalescedWheelEvent() {
+  if (mCoalescedWheelData.IsEmpty()) {
+    return;
+  }
   UniquePtr<WidgetWheelEvent> wheelEvent =
       mCoalescedWheelData.TakeCoalescedEvent();
   MOZ_ASSERT(wheelEvent);
@@ -1755,35 +1795,26 @@ mozilla::ipc::IPCResult BrowserChild::RecvMouseWheelEvent(
     const WidgetWheelEvent& aEvent, const ScrollableLayerGuid& aGuid,
     const uint64_t& aInputBlockId) {
   bool isNextWheelEvent = false;
-  // We only coalesce the current event when
-  // 1. It's eWheel (we don't coalesce eOperationStart and eWheelOperationEnd)
-  // 2. It has same attributes as the coalesced wheel event which is not yet
-  //    fired.
-  if (aEvent.mMessage == eWheel) {
-    GetIPCChannel()->PeekMessages(
-        [&isNextWheelEvent](const IPC::Message& aMsg) -> bool {
-          if (aMsg.type() == mozilla::dom::PBrowser::Msg_MouseWheelEvent__ID) {
-            isNextWheelEvent = true;
-          }
-          return false;  // Stop peeking.
-        });
-
-    if (!mCoalescedWheelData.IsEmpty() &&
-        !mCoalescedWheelData.CanCoalesce(aEvent, aGuid, aInputBlockId)) {
-      DispatchCoalescedWheelEvent();
-      MOZ_ASSERT(mCoalescedWheelData.IsEmpty());
-    }
-    mCoalescedWheelData.Coalesce(aEvent, aGuid, aInputBlockId);
-
-    MOZ_ASSERT(!mCoalescedWheelData.IsEmpty());
-    // If the next event isn't a wheel event, make sure we dispatch.
-    if (!isNextWheelEvent) {
-      DispatchCoalescedWheelEvent();
-    }
+  if (MaybeCoalesceWheelEvent(aEvent, aGuid, aInputBlockId,
+                              &isNextWheelEvent)) {
+    return IPC_OK();
+  }
+  if (isNextWheelEvent) {
+    // Update mLastWheelProcessedTimeFromParent so that we can compare the end
+    // time of the current event with the dispatched time of the next event.
+    mLastWheelProcessedTimeFromParent = aEvent.mTimeStamp;
+    mozilla::TimeStamp beforeDispatchingTime = TimeStamp::Now();
+    MaybeDispatchCoalescedWheelEvent();
+    DispatchWheelEvent(aEvent, aGuid, aInputBlockId);
+    mLastWheelProcessingDuration = (TimeStamp::Now() - beforeDispatchingTime);
+    mLastWheelProcessedTimeFromParent += mLastWheelProcessingDuration;
   } else {
+    // This is the last wheel event. Set mLastWheelProcessedTimeFromParent to
+    // null moment to avoid coalesce the next incoming wheel event.
+    mLastWheelProcessedTimeFromParent = TimeStamp();
+    MaybeDispatchCoalescedWheelEvent();
     DispatchWheelEvent(aEvent, aGuid, aInputBlockId);
   }
-
   return IPC_OK();
 }
 
