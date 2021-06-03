@@ -99,7 +99,7 @@ sealed class PromptRequest(
         val logins: List<Login>,
         override val onDismiss: () -> Unit,
         val onConfirm: (Login) -> Unit
-    ) : PromptRequest(), Dismissible
+    ) : PromptRequest(shouldDismissOnLoad = false), Dismissible
 
     /**
      * Value type that represents a request for a select login prompt.
