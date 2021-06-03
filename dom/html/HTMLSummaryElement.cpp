@@ -62,37 +62,7 @@ nsresult HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     }
   }  // event->HasMouseEventMessage()
 
-  if (event->HasKeyEventMessage()) {
-    WidgetKeyboardEvent* keyboardEvent = event->AsKeyboardEvent();
-    bool dispatchClick = false;
-
-    switch (event->mMessage) {
-      case eKeyPress:
-        if (keyboardEvent->mCharCode == ' ') {
-          // Consume 'space' key to prevent scrolling the page down.
-          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-        }
-
-        dispatchClick = keyboardEvent->mKeyCode == NS_VK_RETURN;
-        break;
-
-      case eKeyUp:
-        dispatchClick = keyboardEvent->mKeyCode == NS_VK_SPACE;
-        break;
-
-      default:
-        break;
-    }
-
-    if (dispatchClick) {
-      rv = DispatchSimulatedClick(this, event->mFlags.mIsTrusted,
-                                  aVisitor.mPresContext);
-      if (NS_SUCCEEDED(rv)) {
-        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-      }
-    }
-  }  // event->HasKeyEventMessage()
-
+  HandleKeyboardActivation(aVisitor);
   return rv;
 }
 

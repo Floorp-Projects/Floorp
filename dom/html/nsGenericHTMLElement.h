@@ -699,11 +699,13 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   virtual mozilla::EventListenerManager* GetEventListenerManagerForAttr(
       nsAtom* aAttrName, bool* aDefer) override;
 
-  /**
-   * Dispatch a simulated mouse click by keyboard to the given element.
-   */
-  nsresult DispatchSimulatedClick(nsGenericHTMLElement* aElement,
-                                  bool aIsTrusted, nsPresContext* aPresContext);
+  /** Handles dispatching a simulated click on `this` on space or enter. */
+  void HandleKeyboardActivation(mozilla::EventChainPostVisitor&);
+
+  /** Dispatch a simulated mouse click by keyboard to the given element. */
+  static nsresult DispatchSimulatedClick(nsGenericHTMLElement* aElement,
+                                         bool aIsTrusted,
+                                         nsPresContext* aPresContext);
 
   /**
    * Create a URI for the given aURISpec string.
