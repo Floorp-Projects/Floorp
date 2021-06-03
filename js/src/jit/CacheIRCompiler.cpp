@@ -2434,6 +2434,14 @@ bool CacheIRCompiler::emitLoadBooleanResult(bool val) {
   return true;
 }
 
+bool CacheIRCompiler::emitLoadOperandResult(ValOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  ValueOperand input = allocator.useValueRegister(masm, inputId);
+  masm.moveValue(input, output.valueReg());
+  return true;
+}
+
 static void EmitStoreResult(MacroAssembler& masm, Register reg,
                             JSValueType type,
                             const AutoOutputRegister& output) {

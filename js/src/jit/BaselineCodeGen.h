@@ -216,7 +216,6 @@ class BaselineCodeGen {
 
   [[nodiscard]] bool emitReturn();
 
-  [[nodiscard]] bool emitToBoolean();
   [[nodiscard]] bool emitTest(bool branchIfTrue);
   [[nodiscard]] bool emitAndOr(bool branchIfTrue);
   [[nodiscard]] bool emitCoalesce();
