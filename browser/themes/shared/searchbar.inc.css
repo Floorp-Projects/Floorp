@@ -103,8 +103,7 @@
 
 /* We don't handle `:active` because it doesn't work on the search or settings
    buttons due to event.preventDefault() in SearchOneOffs._on_mousedown(). */
-.searchbar-engine-one-off-item:not([selected]):hover,
-.addengine-item:hover {
+.searchbar-engine-one-off-item:not([selected]):hover {
   background-color: var(--autocomplete-popup-hover-background);
   color: inherit;
 }
@@ -127,75 +126,6 @@
   margin-inline-end: 0;
   width: 16px;
   height: 16px;
-}
-
-.addengine-item {
-  appearance: none;
-  color: inherit;
-  height: 32px;
-  margin: var(--arrowpanel-menuitem-margin);
-  border-radius: var(--toolbarbutton-border-radius);
-  padding: 0 10px;
-}
-
-@media not (-moz-proton) {
-.addengine-item {
-  border-radius: 0;
-}
-
-.addengine-item:first-of-type {
-  border-top: 1px solid var(--panel-separator-color);
-}
-} /*** END !proton ***/
-
-.addengine-item[selected] {
-  background-color: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color);
-}
-
-.addengine-item[type=menu][selected] {
-  color: inherit;
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
-.addengine-item > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.addengine-item > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  display: -moz-box;
-  background: url(chrome://browser/skin/search-indicator-badge-add.svg) no-repeat center;
-  box-shadow: none;
-  /* "!important" is necessary to override the rule in toolbarbutton.css */
-  margin: -4px 0 0 !important;
-  margin-inline-end: -4px !important;
-  width: 11px;
-  height: 11px;
-  min-width: 11px;
-  min-height: 11px;
-}
-
-.addengine-item > .toolbarbutton-text {
-  text-align: start;
-  padding-inline-start: 10px;
-}
-
-.addengine-item:not([image]) {
-  list-style-image: url("chrome://browser/skin/search-engine-placeholder.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .addengine-item:not([image]) {
-    list-style-image: url("chrome://browser/skin/search-engine-placeholder@2x.png");
-  }
-}
-
-.addengine-item[type=menu] > .toolbarbutton-menu-dropmarker {
-  display: -moz-box;
-  appearance: auto !important;
-  -moz-default-appearance: menuarrow !important;
-  list-style-image: none;
 }
 
 .search-panel-tree {

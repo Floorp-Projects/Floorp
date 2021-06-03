@@ -330,34 +330,24 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   /**
+   * Overrides _getAddEngines to return engines that can be added.
+   *
+   * @returns {array} engines
+   */
+  _getAddEngines() {
+    return this._webEngines;
+  }
+
+  /**
    * Overrides _rebuildEngineList to add the local one-offs.
    *
    * @param {array} engines
    *    The search engines to add.
+   * @param {array} addEngines
+   *        The engines that can be added.
    */
-  _rebuildEngineList(engines) {
-    super._rebuildEngineList(engines);
-
-    if (Services.prefs.getBoolPref("browser.proton.enabled", false)) {
-      for (let engine of this._webEngines) {
-        let button = this.document.createXULElement("button");
-        button.id = this._buttonIDForEngine(engine);
-        button.classList.add("searchbar-engine-one-off-item");
-        button.classList.add("searchbar-engine-one-off-add-engine");
-        button.setAttribute("tabindex", "-1");
-        if (engine.icon) {
-          button.setAttribute("image", engine.icon);
-        }
-        button.setAttribute("data-l10n-id", "search-one-offs-add-engine");
-        button.setAttribute(
-          "data-l10n-args",
-          JSON.stringify({ engineName: engine.name })
-        );
-        button.setAttribute("engine-name", engine.name);
-        button.setAttribute("uri", engine.uri);
-        this.buttons.appendChild(button);
-      }
-    }
+  _rebuildEngineList(engines, addEngines) {
+    super._rebuildEngineList(engines, addEngines);
 
     for (let { source, pref, restrict } of UrlbarUtils.LOCAL_SEARCH_MODES) {
       if (!UrlbarPrefs.get(pref)) {

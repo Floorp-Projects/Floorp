@@ -46,19 +46,18 @@ async function test_opensearch(shouldWork) {
   searchBarButton.click();
   await promiseSearchPopupShown;
   let oneOffsContainer = searchPopup.searchOneOffsContainer;
-  let engineListElement = oneOffsContainer.querySelector(".search-add-engines");
+  let engineElement = oneOffsContainer.querySelector(
+    ".searchbar-engine-one-off-add-engine"
+  );
   if (shouldWork) {
-    ok(
-      engineListElement.firstElementChild,
-      "There should be search engines available to add"
-    );
+    ok(engineElement, "There should be search engines available to add");
     ok(
       searchBar.getAttribute("addengines"),
       "Search bar should have addengines attribute"
     );
   } else {
     is(
-      engineListElement.firstElementChild,
+      engineElement,
       null,
       "There should be no search engines available to add"
     );

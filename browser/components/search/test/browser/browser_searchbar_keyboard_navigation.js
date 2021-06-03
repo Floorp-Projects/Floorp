@@ -1,7 +1,6 @@
 // Tests that keyboard navigation in the search panel works as designed.
 
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
-const oneOffsContainer = searchPopup.searchOneOffsContainer;
 
 const kValues = ["foo1", "foo2", "foo3"];
 const kUserValue = "foo";
@@ -9,7 +8,9 @@ const kUserValue = "foo";
 function getOpenSearchItems() {
   let os = [];
 
-  let addEngineList = oneOffsContainer.querySelector(".search-add-engines");
+  let addEngineList = searchPopup.searchOneOffsContainer.querySelector(
+    ".search-add-engines"
+  );
   for (
     let item = addEngineList.firstElementChild;
     item;
@@ -580,7 +581,9 @@ add_task(async function test_open_search() {
   searchbar.focus();
   await promise;
 
-  let engines = getOpenSearchItems();
+  let engines = searchPopup.querySelectorAll(
+    ".searchbar-engine-one-off-add-engine"
+  );
   is(engines.length, 3, "the opensearch.html page exposes 3 engines");
 
   // Check that there's initially no selection.
@@ -604,16 +607,17 @@ add_task(async function test_open_search() {
       "the engine #" + i + " should be selected"
     );
     ok(
-      selectedButton.classList.contains("addengine-item"),
-      "the button is themed as an engine item"
+      selectedButton.classList.contains("searchbar-engine-one-off-add-engine"),
+      "the button is themed as an add engine"
     );
   }
 
   // Pressing up again should select the last one-off button.
   EventUtils.synthesizeKey("KEY_ArrowUp");
+  const allOneOffs = getOneOffs();
   is(
     textbox.selectedButton,
-    getOneOffs().pop(),
+    allOneOffs[allOneOffs.length - engines.length - 1],
     "the last one-off button should be selected"
   );
 
