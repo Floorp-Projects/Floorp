@@ -1711,7 +1711,82 @@ struct AutoWalkJSStack {
 
 class StackWalkControl {
  public:
+  struct ResumePoint {
+    // If lost, the stack walker should resume at these values.
+    void* resumeSp;  // If null, stop the walker here, don't resume again.
+    void* resumeBp;
+    void* resumePc;
+  };
+
+#if (defined(_MSC_VER) && defined(_M_AMD64))
+ public:
+  static constexpr bool scIsSupported = true;
+
+  void Clear() { mResumePointCount = 0; }
+
+  size_t ResumePointCount() const { return mResumePointCount; }
+
+  static constexpr size_t MaxResumePointCount() {
+    return scMaxResumePointCount;
+  }
+
+  // Add a resume point. Note that adding anything past MaxResumePointCount()
+  // would silently fail. In practice this means that stack walking may still
+  // lose native frames.
+  void AddResumePoint(ResumePoint&& aResumePoint) {
+    // If SP is null, we expect BP and PC to also be null.
+    MOZ_ASSERT_IF(!aResumePoint.resumeSp, !aResumePoint.resumeBp);
+    MOZ_ASSERT_IF(!aResumePoint.resumeSp, !aResumePoint.resumePc);
+
+    // If BP and/or PC are not null, SP must not be null. (But we allow BP/PC to
+    // be null even if SP is not null.)
+    MOZ_ASSERT_IF(aResumePoint.resumeBp, aResumePoint.resumeSp);
+    MOZ_ASSERT_IF(aResumePoint.resumePc, aResumePoint.resumeSp);
+
+    if (mResumePointCount < scMaxResumePointCount) {
+      mResumePoint[mResumePointCount] = std::move(aResumePoint);
+      ++mResumePointCount;
+    }
+  }
+
+  // Only allow non-modifying range-for loops.
+  const ResumePoint* begin() const { return &mResumePoint[0]; }
+  const ResumePoint* end() const { return &mResumePoint[mResumePointCount]; }
+
+  // Find the next resume point that would be a caller of the function with the
+  // given SP; i.e., the resume point with the closest resumeSp > aSp.
+  const ResumePoint* GetResumePointCallingSp(void* aSp) const {
+    const ResumePoint* callingResumePoint = nullptr;
+    for (const ResumePoint& resumePoint : *this) {
+      if (resumePoint.resumeSp &&        // This is a potential resume point.
+          resumePoint.resumeSp > aSp &&  // It is a caller of the given SP.
+          (!callingResumePoint ||        // This is the first candidate.
+           resumePoint.resumeSp < callingResumePoint->resumeSp)  // Or better.
+      ) {
+        callingResumePoint = &resumePoint;
+      }
+    }
+    return callingResumePoint;
+  }
+
+ private:
+  size_t mResumePointCount = 0;
+  static constexpr size_t scMaxResumePointCount = 32;
+  ResumePoint mResumePoint[scMaxResumePointCount];
+
+#else   // #if (defined(_MSC_VER) && defined(_M_AMD64))
+ public:
   static constexpr bool scIsSupported = false;
+  // Discarded constexpr-if statements are still checked during compilation,
+  // these declarations are necessary for that, even if not actually used.
+  void Clear();
+  size_t ResumePointCount();
+  static constexpr size_t MaxResumePointCount();
+  void AddResumePoint(ResumePoint&& aResumePoint);
+  const ResumePoint* begin() const;
+  const ResumePoint* end() const;
+  const ResumePoint* GetResumePointCallingSp(void* aSp) const;
+#endif  // #if (defined(_MSC_VER) && defined(_M_AMD64)) #else
 };
 
 // Make a copy of the JS stack into a JSFrame array, and return the number of
