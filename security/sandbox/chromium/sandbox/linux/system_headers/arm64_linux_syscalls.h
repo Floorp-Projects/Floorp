@@ -2,6 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/* Constructed by running:
+ * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/include/uapi/asm-generic/unistd.h?h=v5.8
+ *   | grep '^#define' | sed -e 's/__NR3264_/__NR_/g' | grep '__NR_'
+ *   | awk '{ if ($2 != $3) { print "#if !defined(" $2 ")\n#define " $2 " " $3 "\n#endif\n"; } }'
+ * */
+
 #ifndef SANDBOX_LINUX_SYSTEM_HEADERS_ARM64_LINUX_SYSCALLS_H_
 #define SANDBOX_LINUX_SYSTEM_HEADERS_ARM64_LINUX_SYSCALLS_H_
 
@@ -323,8 +329,8 @@
 #define __NR_readlinkat 78
 #endif
 
-#if !defined(__NR_newfstatat)
-#define __NR_newfstatat 79
+#if !defined(__NR_fstatat)
+#define __NR_fstatat 79
 #endif
 
 #if !defined(__NR_fstat)
@@ -341,6 +347,10 @@
 
 #if !defined(__NR_fdatasync)
 #define __NR_fdatasync 83
+#endif
+
+#if !defined(__NR_sync_file_range2)
+#define __NR_sync_file_range2 84
 #endif
 
 #if !defined(__NR_sync_file_range)
@@ -983,6 +993,10 @@
 #define __NR_recvmmsg 243
 #endif
 
+#if !defined(__NR_arch_specific_syscall)
+#define __NR_arch_specific_syscall 244
+#endif
+
 #if !defined(__NR_wait4)
 #define __NR_wait4 260
 #endif
@@ -1063,11 +1077,264 @@
 #define __NR_memfd_create 279
 #endif
 
+#if !defined(__NR_bpf)
+#define __NR_bpf 280
+#endif
+
+#if !defined(__NR_execveat)
+#define __NR_execveat 281
+#endif
+
+#if !defined(__NR_userfaultfd)
+#define __NR_userfaultfd 282
+#endif
+
+#if !defined(__NR_membarrier)
+#define __NR_membarrier 283
+#endif
+
+#if !defined(__NR_mlock2)
+#define __NR_mlock2 284
+#endif
+
+#if !defined(__NR_copy_file_range)
+#define __NR_copy_file_range 285
+#endif
+
+#if !defined(__NR_preadv2)
+#define __NR_preadv2 286
+#endif
+
+#if !defined(__NR_pwritev2)
+#define __NR_pwritev2 287
+#endif
+
+#if !defined(__NR_pkey_mprotect)
+#define __NR_pkey_mprotect 288
+#endif
+
+#if !defined(__NR_pkey_alloc)
+#define __NR_pkey_alloc 289
+#endif
+
+#if !defined(__NR_pkey_free)
+#define __NR_pkey_free 290
+#endif
+
 #if !defined(__NR_statx)
 #define __NR_statx 291
+#endif
+
+#if !defined(__NR_io_pgetevents)
+#define __NR_io_pgetevents 292
 #endif
 
 #if !defined(__NR_rseq)
 #define __NR_rseq 293
 #endif
+
+#if !defined(__NR_kexec_file_load)
+#define __NR_kexec_file_load 294
+#endif
+
+#if !defined(__NR_clock_gettime64)
+#define __NR_clock_gettime64 403
+#endif
+
+#if !defined(__NR_clock_settime64)
+#define __NR_clock_settime64 404
+#endif
+
+#if !defined(__NR_clock_adjtime64)
+#define __NR_clock_adjtime64 405
+#endif
+
+#if !defined(__NR_clock_getres_time64)
+#define __NR_clock_getres_time64 406
+#endif
+
+#if !defined(__NR_clock_nanosleep_time64)
+#define __NR_clock_nanosleep_time64 407
+#endif
+
+#if !defined(__NR_timer_gettime64)
+#define __NR_timer_gettime64 408
+#endif
+
+#if !defined(__NR_timer_settime64)
+#define __NR_timer_settime64 409
+#endif
+
+#if !defined(__NR_timerfd_gettime64)
+#define __NR_timerfd_gettime64 410
+#endif
+
+#if !defined(__NR_timerfd_settime64)
+#define __NR_timerfd_settime64 411
+#endif
+
+#if !defined(__NR_utimensat_time64)
+#define __NR_utimensat_time64 412
+#endif
+
+#if !defined(__NR_pselect6_time64)
+#define __NR_pselect6_time64 413
+#endif
+
+#if !defined(__NR_ppoll_time64)
+#define __NR_ppoll_time64 414
+#endif
+
+#if !defined(__NR_io_pgetevents_time64)
+#define __NR_io_pgetevents_time64 416
+#endif
+
+#if !defined(__NR_recvmmsg_time64)
+#define __NR_recvmmsg_time64 417
+#endif
+
+#if !defined(__NR_mq_timedsend_time64)
+#define __NR_mq_timedsend_time64 418
+#endif
+
+#if !defined(__NR_mq_timedreceive_time64)
+#define __NR_mq_timedreceive_time64 419
+#endif
+
+#if !defined(__NR_semtimedop_time64)
+#define __NR_semtimedop_time64 420
+#endif
+
+#if !defined(__NR_rt_sigtimedwait_time64)
+#define __NR_rt_sigtimedwait_time64 421
+#endif
+
+#if !defined(__NR_futex_time64)
+#define __NR_futex_time64 422
+#endif
+
+#if !defined(__NR_sched_rr_get_interval_time64)
+#define __NR_sched_rr_get_interval_time64 423
+#endif
+
+#if !defined(__NR_pidfd_send_signal)
+#define __NR_pidfd_send_signal 424
+#endif
+
+#if !defined(__NR_io_uring_setup)
+#define __NR_io_uring_setup 425
+#endif
+
+#if !defined(__NR_io_uring_enter)
+#define __NR_io_uring_enter 426
+#endif
+
+#if !defined(__NR_io_uring_register)
+#define __NR_io_uring_register 427
+#endif
+
+#if !defined(__NR_open_tree)
+#define __NR_open_tree 428
+#endif
+
+#if !defined(__NR_move_mount)
+#define __NR_move_mount 429
+#endif
+
+#if !defined(__NR_fsopen)
+#define __NR_fsopen 430
+#endif
+
+#if !defined(__NR_fsconfig)
+#define __NR_fsconfig 431
+#endif
+
+#if !defined(__NR_fsmount)
+#define __NR_fsmount 432
+#endif
+
+#if !defined(__NR_fspick)
+#define __NR_fspick 433
+#endif
+
+#if !defined(__NR_pidfd_open)
+#define __NR_pidfd_open 434
+#endif
+
+#if !defined(__NR_clone3)
+#define __NR_clone3 435
+#endif
+
+#if !defined(__NR_openat2)
+#define __NR_openat2 437
+#endif
+
+#if !defined(__NR_pidfd_getfd)
+#define __NR_pidfd_getfd 438
+#endif
+
+#if !defined(__NR_faccessat2)
+#define __NR_faccessat2 439
+#endif
+
+#if !defined(__NR_syscalls)
+#define __NR_syscalls 440
+#endif
+
+#if !defined(__NR_newfstatat)
+#define __NR_newfstatat __NR_fstatat
+#endif
+
+#if !defined(__NR_fcntl64)
+#define __NR_fcntl64 __NR_fcntl
+#endif
+
+#if !defined(__NR_statfs64)
+#define __NR_statfs64 __NR_statfs
+#endif
+
+#if !defined(__NR_fstatfs64)
+#define __NR_fstatfs64 __NR_fstatfs
+#endif
+
+#if !defined(__NR_truncate64)
+#define __NR_truncate64 __NR_truncate
+#endif
+
+#if !defined(__NR_ftruncate64)
+#define __NR_ftruncate64 __NR_ftruncate
+#endif
+
+#if !defined(__NR_llseek)
+#define __NR_llseek __NR_lseek
+#endif
+
+#if !defined(__NR_sendfile64)
+#define __NR_sendfile64 __NR_sendfile
+#endif
+
+#if !defined(__NR_fstatat64)
+#define __NR_fstatat64 __NR_fstatat
+#endif
+
+#if !defined(__NR_fstat64)
+#define __NR_fstat64 __NR_fstat
+#endif
+
+#if !defined(__NR_mmap2)
+#define __NR_mmap2 __NR_mmap
+#endif
+
+#if !defined(__NR_fadvise64_64)
+#define __NR_fadvise64_64 __NR_fadvise64
+#endif
+
+#if !defined(__NR_stat64)
+#define __NR_stat64 __NR_stat
+#endif
+
+#if !defined(__NR_lstat64)
+#define __NR_lstat64 __NR_lstat
+#endif
+
 #endif  // SANDBOX_LINUX_SYSTEM_HEADERS_ARM64_LINUX_SYSCALLS_H_
