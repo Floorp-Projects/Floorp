@@ -42,8 +42,7 @@ std::atomic<uint64_t> Task::sCurrentTaskSeqNo = 0;
 
 const int32_t kMaximumPoolThreadCount = 8;
 
-/* static */
-int32_t TaskController::GetPoolThreadCount() {
+static int32_t GetPoolThreadCount() {
   if (PR_GetEnv("MOZ_TASKCONTROLLER_THREADCOUNT")) {
     return strtol(PR_GetEnv("MOZ_TASKCONTROLLER_THREADCOUNT"), nullptr, 0);
   }
