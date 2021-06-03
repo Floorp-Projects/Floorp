@@ -2439,17 +2439,26 @@ bool nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
 void nsGenericHTMLElement::HandleKeyboardActivation(
     EventChainPostVisitor& aVisitor) {
   const auto message = aVisitor.mEvent->mMessage;
-  if (message != eKeyUp && message != eKeyPress) {
-    return;
-  }
-
-  if (nsEventStatus_eIgnore != aVisitor.mEventStatus) {
+  if (message != eKeyDown && message != eKeyUp && message != eKeyPress) {
     return;
   }
 
   const WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
+  if (nsEventStatus_eIgnore != aVisitor.mEventStatus) {
+    if (message == eKeyUp && keyEvent->mKeyCode == NS_VK_SPACE) {
+      // Unset the flag even if the event is default-prevented or something.
+      UnsetFlags(HTML_ELEMENT_ACTIVE_FOR_KEYBOARD);
+    }
+    return;
+  }
+
   bool shouldActivate = false;
   switch (message) {
+    case eKeyDown:
+      if (keyEvent->mKeyCode == NS_VK_SPACE) {
+        SetFlags(HTML_ELEMENT_ACTIVE_FOR_KEYBOARD);
+      }
+      return;
     case eKeyPress:
       shouldActivate = keyEvent->mKeyCode == NS_VK_RETURN;
       if (keyEvent->mKeyCode == NS_VK_SPACE) {
@@ -2458,7 +2467,11 @@ void nsGenericHTMLElement::HandleKeyboardActivation(
       }
       break;
     case eKeyUp:
-      shouldActivate = keyEvent->mKeyCode == NS_VK_SPACE;
+      shouldActivate = keyEvent->mKeyCode == NS_VK_SPACE &&
+                       HasFlag(HTML_ELEMENT_ACTIVE_FOR_KEYBOARD);
+      if (shouldActivate) {
+        UnsetFlags(HTML_ELEMENT_ACTIVE_FOR_KEYBOARD);
+      }
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("why didn't we bail out earlier?");

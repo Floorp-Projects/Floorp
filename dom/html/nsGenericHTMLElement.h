@@ -905,8 +905,23 @@ class HTMLFieldSetElement;
 }  // namespace dom
 }  // namespace mozilla
 
-#define FORM_ELEMENT_FLAG_BIT(n_) \
+#define HTML_ELEMENT_FLAG_BIT(n_) \
   NODE_FLAG_BIT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
+
+// HTMLElement specific bits
+enum {
+  // Used to handle keyboard activation.
+  HTML_ELEMENT_ACTIVE_FOR_KEYBOARD = HTML_ELEMENT_FLAG_BIT(0),
+
+  // Remaining bits are type specific.
+  HTML_ELEMENT_TYPE_SPECIFIC_BITS_OFFSET =
+      ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1,
+};
+
+ASSERT_NODE_FLAGS_SPACE(HTML_ELEMENT_TYPE_SPECIFIC_BITS_OFFSET);
+
+#define FORM_ELEMENT_FLAG_BIT(n_) \
+  NODE_FLAG_BIT(HTML_ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
 
 // Form element specific bits
 enum {
@@ -931,7 +946,7 @@ enum {
 // MAYBE_ORPHAN_FORM_ELEMENT set at the same time, so if it becomes an issue we
 // can probably merge them into the same bit.  --bz
 
-ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 3);
+ASSERT_NODE_FLAGS_SPACE(HTML_ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 3);
 
 #undef FORM_ELEMENT_FLAG_BIT
 
