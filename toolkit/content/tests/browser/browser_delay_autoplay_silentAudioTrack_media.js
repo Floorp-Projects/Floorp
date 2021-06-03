@@ -2,7 +2,7 @@ const PAGE =
   "https://example.com/browser/toolkit/content/tests/browser/file_silentAudioTrack.html";
 
 async function click_unblock_icon(tab) {
-  let icon = tab.soundPlayingIcon;
+  let icon = tab.overlayIcon;
 
   await hover_icon(icon, document.getElementById("tabbrowser-tab-tooltip"));
   EventUtils.synthesizeMouseAtCenter(icon, { button: 0 });
