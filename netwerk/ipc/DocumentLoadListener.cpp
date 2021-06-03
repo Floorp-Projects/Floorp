@@ -1713,6 +1713,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
         browsingContext->AllowedInBFCache(mDocumentChannelId);
     if (options.mTryUseBFCache) {
       options.mReplaceBrowsingContext = true;
+      options.mActiveSessionHistoryEntry =
+          browsingContext->GetActiveSessionHistoryEntry();
     }
   }
 
