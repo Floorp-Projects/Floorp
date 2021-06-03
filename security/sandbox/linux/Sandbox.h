@@ -63,6 +63,10 @@ MOZ_EXPORT void SetRemoteDataDecoderSandbox(int aBroker);
 
 MOZ_EXPORT void SetSocketProcessSandbox(int aBroker);
 
+// We want to turn on/off crashing on error when running some tests
+// This will return current value and set the aValue we pass
+MOZ_EXPORT bool SetSandboxCrashOnError(bool aValue);
+
 }  // namespace mozilla
 
 #endif  // mozilla_Sandbox_h

@@ -83,7 +83,7 @@ mozilla::Atomic<int> gSeccompTsyncBroadcastSignum(0);
 
 namespace mozilla {
 
-static bool gSandboxCrashOnError = false;
+static mozilla::Atomic<bool> gSandboxCrashOnError(false);
 
 // This is initialized by SandboxSetCrashFunc().
 SandboxCrashFunc gSandboxCrashFunc;
@@ -707,6 +707,12 @@ void SetSocketProcessSandbox(int aBroker) {
   }
 
   SetCurrentProcessSandbox(GetSocketProcessSandboxPolicy(sBroker));
+}
+
+bool SetSandboxCrashOnError(bool aValue) {
+  bool oldValue = gSandboxCrashOnError;
+  gSandboxCrashOnError = aValue;
+  return oldValue;
 }
 
 }  // namespace mozilla
