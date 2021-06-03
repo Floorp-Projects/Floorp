@@ -201,21 +201,18 @@ add_task(async function open_empty_hiddenOneOffs() {
     set: [["browser.search.hiddenOneOffs", engines.map(e => e.name).join(",")]],
   });
 
-  let oneOffButtons = searchPopup.searchOneOffsContainer.querySelector(
-    ".search-panel-one-offs"
-  );
   textbox.value = "foo";
   let promise = promiseEvent(searchPopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(textbox, {});
   await promise;
 
   Assert.ok(
-    oneOffButtons.hasAttribute("hidden"),
-    "The one-offs buttons should have the hidden attribute."
+    searchPopup.searchOneOffsContainer.hasAttribute("hidden"),
+    "The one-offs buttons container should have the hidden attribute."
   );
   Assert.ok(
-    BrowserTestUtils.is_hidden(oneOffButtons),
-    "The one-off buttons should be hidden."
+    BrowserTestUtils.is_hidden(searchPopup.searchOneOffsContainer),
+    "The one-off buttons container should be hidden."
   );
 
   promise = promiseEvent(searchPopup, "popuphidden");

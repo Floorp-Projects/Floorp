@@ -225,6 +225,7 @@
 .search-setting-button-compact {
   max-height: 32px;
   align-self: end;
+  margin-inline: var(--arrowpanel-menuitem-margin);
 }
 
 .search-setting-button-compact > .button-box > .button-icon {
@@ -232,4 +233,8 @@
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
+}
+
+.search-one-offs[compact=true] .searchbar-separator {
+  display: none;
 }

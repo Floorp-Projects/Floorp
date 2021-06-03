@@ -108,7 +108,7 @@
       <menuseparator class="searchbar-separator"/>
       <richlistbox class="autocomplete-richlistbox search-panel-tree" flex="1"></richlistbox>
       <menuseparator class="searchbar-separator"/>
-      <hbox class="search-one-offs"></hbox>
+      <hbox class="search-one-offs" compact="true" is_searchbar="true"/>
     `;
     }
 
