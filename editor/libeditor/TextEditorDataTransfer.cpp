@@ -85,25 +85,6 @@ nsresult TextEditor::PrepareTransferable(nsITransferable** aOutTransferable) {
   return NS_OK;
 }
 
-nsresult TextEditor::InsertTextAt(const nsAString& aStringToInsert,
-                                  const EditorDOMPoint& aPointToInsert,
-                                  bool aDoDeleteSelection) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  MOZ_ASSERT(aPointToInsert.IsSet());
-
-  nsresult rv = PrepareToInsertContent(aPointToInsert, aDoDeleteSelection);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::PrepareToInsertContent() failed");
-    return rv;
-  }
-
-  rv = InsertTextAsSubAction(aStringToInsert);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::InsertTextAsSubAction() failed");
-  return rv;
-}
-
 nsresult TextEditor::InsertTextFromTransferable(
     nsITransferable* aTransferable) {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -460,7 +441,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
       return NS_OK;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "TextEditor::InsertTextAt() failed, but ignored");
+                         "EditorBase::InsertTextAt() failed, but ignored");
   } else {
     editActionData.InitializeDataTransfer(dataTransfer);
     RefPtr<StaticRange> targetRange = StaticRange::Create(

@@ -1764,6 +1764,24 @@ nsresult EditorBase::PrepareToInsertContent(
   return error.StealNSResult();
 }
 
+nsresult EditorBase::InsertTextAt(const nsAString& aStringToInsert,
+                                  const EditorDOMPoint& aPointToInsert,
+                                  bool aDoDeleteSelection) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aPointToInsert.IsSet());
+
+  nsresult rv = PrepareToInsertContent(aPointToInsert, aDoDeleteSelection);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::PrepareToInsertContent() failed");
+    return rv;
+  }
+
+  rv = InsertTextAsSubAction(aStringToInsert);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::InsertTextAsSubAction() failed");
+  return rv;
+}
+
 NS_IMETHODIMP EditorBase::PasteTransferable(nsITransferable* aTransferable) {
   nsresult rv = PasteTransferableAsAction(aTransferable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),

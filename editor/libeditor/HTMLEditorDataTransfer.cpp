@@ -1962,7 +1962,7 @@ nsresult HTMLEditor::InsertFromDataTransfer(const DataTransfer* aDataTransfer,
       GetStringFromDataTransfer(aDataTransfer, type, aIndex, text);
       nsresult rv = InsertTextAt(text, aDroppedAt, aDoDeleteSelection);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "TextEditor::InsertTextAt() failed");
+                           "EditorBase::InsertTextAt() failed");
       return rv;
     }
   }
