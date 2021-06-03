@@ -290,7 +290,9 @@ void nsPageFrame::DrawHeaderFooter(
   if (!aStrRight.IsEmpty()) numStrs++;
 
   if (numStrs == 0) return;
-  nscoord strSpace = aRect.width / numStrs;
+  const nscoord contentWidth =
+      aRect.width - (mPD->mEdgePaperMargin.left + mPD->mEdgePaperMargin.right);
+  const nscoord strSpace = contentWidth / numStrs;
 
   if (!aStrLeft.IsEmpty()) {
     DrawHeaderFooter(aRenderingContext, aFontMetrics, aHeaderFooter,
@@ -324,9 +326,6 @@ void nsPageFrame::DrawHeaderFooter(gfxContext& aRenderingContext,
                                    int32_t aJust, const nsString& aStr,
                                    const nsRect& aRect, nscoord aAscent,
                                    nscoord aHeight, nscoord aWidth) {
-  nscoord contentWidth =
-      aWidth - (mPD->mEdgePaperMargin.left + mPD->mEdgePaperMargin.right);
-
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
 
   if ((aHeaderFooter == eHeader && aHeight < mPageContentMargin.top) ||
@@ -343,9 +342,9 @@ void nsPageFrame::DrawHeaderFooter(gfxContext& aRenderingContext,
       return;  // bail is empty string
     }
     // find how much text fits, the "position" is the size of the available area
-    if (nsLayoutUtils::BinarySearchForPosition(
-            drawTarget, aFontMetrics, text, 0, 0, 0, len, int32_t(contentWidth),
-            indx, textWidth)) {
+    if (nsLayoutUtils::BinarySearchForPosition(drawTarget, aFontMetrics, text,
+                                               0, 0, 0, len, int32_t(aWidth),
+                                               indx, textWidth)) {
       if (indx < len - 1) {
         // we can't fit in all the text
         if (indx > 3) {
