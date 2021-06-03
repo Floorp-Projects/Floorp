@@ -27,6 +27,13 @@ explains how to use the Gecko profiler.
 * [LogAlloc](https://searchfox.org/mozilla-central/source/memory/replace/logalloc/README) is a tool that dumps a log of memory allocations in Gecko. That log can then be replayed against Firefox's default memory allocator independently or through another replace-malloc library, allowing the testing of other allocators under the exact same workload.
 * [See also the documentation on Leak-hunting strategies and tips.](leak_hunting_strategies_and_tips.md) 
 
+## Profiling and performance tools
+
+* [Profiling with Instruments](profiling_with_instruments.md) How to use Apple's Instruments tool to profile Mozilla code.
+* [Profiling with xperf](profiling_with_xperf.md) How to use Microsoft's Xperf tool to profile Mozilla code.
+* [Profiling with Concurrency Visualizer](profiling_with_concurrency_visualizer.md) How to use Visual Studio's Concurrency Visualizer tool to profile Mozilla code.
+* [Profiling with Zoom](profiling_with_zoom.md) Zoom is a profiler for Linux done by the people who made Shark.
+* [Adding a new telemetry probe](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/start/adding-a-new-probe.html) Information on how to add a new measurement to the Telemetry performance-reporting system
 
 ## Power Profiling
 
