@@ -85,35 +85,6 @@ nsresult TextEditor::PrepareTransferable(nsITransferable** aOutTransferable) {
   return NS_OK;
 }
 
-nsresult TextEditor::PrepareToInsertContent(
-    const EditorDOMPoint& aPointToInsert, bool aDoDeleteSelection) {
-  // TODO: Move this method to `EditorBase`.
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  MOZ_ASSERT(aPointToInsert.IsSet());
-
-  EditorDOMPoint pointToInsert(aPointToInsert);
-  if (aDoDeleteSelection) {
-    AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToInsert);
-    nsresult rv = DeleteSelectionAsSubAction(
-        nsIEditor::eNone,
-        IsTextEditor() ? nsIEditor::eNoStrip : nsIEditor::eStrip);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::DeleteSelectionAsSubAction(eNone) failed");
-      return rv;
-    }
-  }
-
-  IgnoredErrorResult error;
-  SelectionRef().CollapseInLimiter(pointToInsert, error);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(!error.Failed(),
-                       "Selection::CollapseInLimiter() failed");
-  return error.StealNSResult();
-}
-
 nsresult TextEditor::InsertTextAt(const nsAString& aStringToInsert,
                                   const EditorDOMPoint& aPointToInsert,
                                   bool aDoDeleteSelection) {
@@ -123,7 +94,7 @@ nsresult TextEditor::InsertTextAt(const nsAString& aStringToInsert,
 
   nsresult rv = PrepareToInsertContent(aPointToInsert, aDoDeleteSelection);
   if (NS_FAILED(rv)) {
-    NS_WARNING("TextEditor::PrepareToInsertContent() failed");
+    NS_WARNING("EditorBase::PrepareToInsertContent() failed");
     return rv;
   }
 
