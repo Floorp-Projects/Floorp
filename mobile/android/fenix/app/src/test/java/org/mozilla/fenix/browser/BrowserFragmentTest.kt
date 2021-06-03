@@ -44,6 +44,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.onboarding.FenixOnboarding
+import org.mozilla.fenix.utils.Settings
 import java.lang.Exception
 
 @ExperimentalCoroutinesApi
@@ -368,5 +369,17 @@ class BrowserFragmentTest {
         }
 
         override fun getLifecycle(): Lifecycle = lifecycleRegistry
+    }
+
+    @Test
+    fun `WHEN updating the last browse activity THEN update the associated preference`() {
+        val settings: Settings = mockk(relaxed = true)
+
+        every { browserFragment.context } returns context
+        every { context.settings() } returns settings
+
+        browserFragment.updateLastBrowseActivity()
+
+        verify(exactly = 1) { settings.lastBrowseActivity = any() }
     }
 }

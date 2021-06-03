@@ -8,6 +8,7 @@ import android.content.Context
 import android.os.StrictMode
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
@@ -183,7 +184,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     override fun onStop() {
         super.onStop()
-
+        updateLastBrowseActivity()
         pwaOnboardingObserver?.stop()
     }
 
@@ -291,5 +292,15 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             FenixSnackbarDelegate(view)
         ) + ContextMenuCandidate.createOpenInExternalAppCandidate(requireContext(),
             contextMenuCandidateAppLinksUseCases)
+    }
+
+    /**
+     * Updates the last time the user was active on the [BrowserFragment].
+     * This is useful to determine if the user has to start on the [HomeFragment]
+     * or it should go directly to the [BrowserFragment].
+     */
+    @VisibleForTesting
+    internal fun updateLastBrowseActivity() {
+        requireContext().settings().lastBrowseActivity = System.currentTimeMillis()
     }
 }

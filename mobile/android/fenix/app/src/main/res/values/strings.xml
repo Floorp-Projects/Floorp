@@ -570,6 +570,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">After one month</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Start on home</string>
+    <!-- Option for staring on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">After four hours</string>
+    <!-- Option for always staring on the home screen -->
+    <string name="start_on_home_always">Always</string>
+    <!-- Option for never staring on the home screen -->
+    <string name="start_on_home_never">Never</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Close manually</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->

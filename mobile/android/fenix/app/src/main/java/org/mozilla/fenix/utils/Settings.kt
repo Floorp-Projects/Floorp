@@ -66,6 +66,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         private const val CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED = 3
         private const val APP_LAUNCHES_TO_SHOW_DEFAULT_BROWSER_CARD = 3
 
+        const val FOUR_HOURS_MS = 60 * 60 * 4 * 1000L
         const val ONE_DAY_MS = 60 * 60 * 24 * 1000L
         const val THREE_DAYS_MS = 3 * ONE_DAY_MS
         const val ONE_WEEK_MS = 60 * 60 * 24 * 7 * 1000L
@@ -350,6 +351,56 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_allow_third_party_root_certs),
         default = false
     )
+
+    /**
+     * Indicates the last time when the user was interacting with the [BrowserFragment],
+     * This is useful to determine if the user has to start on the [HomeFragment]
+     * or it should go directly to the [BrowserFragment].
+     */
+    var lastBrowseActivity by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_last_browse_activity_time),
+        default = timeNowInMillis()
+    )
+
+    /**
+     * Indicates if the user has selected the option to start on the home screen after
+     * four hours of inactivity.
+     */
+    var startOnHomeAfterFourHours by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_start_on_home_after_four_hours),
+        default = true
+    )
+
+    /**
+     * Indicates if the user has selected the option to always start on the home screen.
+     */
+    var startOnHomeAlways by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_start_on_home_always),
+        default = false
+    )
+
+    /**
+     * Indicates if the user has selected the option to never start on the home screen.
+     */
+    var startOnHomeNever by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_start_on_home_never),
+        default = false
+    )
+
+    /**
+     * Indicates if the user should start on the home screen, based on the user's preferences.
+     */
+    fun shouldStartOnHome(): Boolean {
+        return when {
+            startOnHomeAfterFourHours -> timeNowInMillis() - lastBrowseActivity >= FOUR_HOURS_MS
+            startOnHomeAlways -> true
+            startOnHomeNever -> false
+            else -> false
+        }
+    }
+
+    @VisibleForTesting
+    internal fun timeNowInMillis(): Long = System.currentTimeMillis()
 
     fun getTabTimeout(): Long = when {
         closeTabsAfterOneDay -> ONE_DAY_MS

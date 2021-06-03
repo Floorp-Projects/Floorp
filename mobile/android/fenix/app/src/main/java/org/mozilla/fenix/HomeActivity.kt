@@ -6,6 +6,7 @@ package org.mozilla.fenix
 
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.ACTION_MAIN
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
@@ -116,6 +117,7 @@ import org.mozilla.fenix.tabstray.TabsTrayFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
+import org.mozilla.fenix.utils.Settings
 import java.lang.ref.WeakReference
 
 /**
@@ -217,8 +219,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             it.start()
         }
 
-        if (isActivityColdStarted(intent, savedInstanceState) &&
-                !externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }) {
+        if (!shouldStartOnHome() &&
+            shouldNavigateBrowserFragmentOnCouldStart(savedInstanceState)
+        ) {
             navigateToBrowserOnColdStart()
         }
 
@@ -978,6 +981,32 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 // Activity was restarted from Recents after it was destroyed by Android while in background
                 // in cases of memory pressure / "Don't keep activities".
                 startingIntent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
+    }
+
+    /**
+     *  Indicates if the user should be redirected to the [BrowserFragment] or to the [HomeFragment],
+     *  links from an external apps should always opened in the [BrowserFragment].
+     */
+    fun shouldStartOnHome(intent: Intent? = this.intent): Boolean {
+        return components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+            // We only want to open on home when users tap the app,
+            // we want to ignore other cases when the app gets open by users clicking on links.
+            getSettings().shouldStartOnHome() && intent?.action == ACTION_MAIN
+        }
+    }
+
+    @VisibleForTesting
+    internal fun getSettings(): Settings = settings()
+
+    private fun shouldNavigateBrowserFragmentOnCouldStart(savedInstanceState: Bundle?): Boolean {
+        return isActivityColdStarted(intent, savedInstanceState) &&
+            !externalSourceIntentProcessors.any {
+                it.process(
+                    intent,
+                    navHost.navController,
+                    this.intent
+                )
+            }
     }
 
     companion object {

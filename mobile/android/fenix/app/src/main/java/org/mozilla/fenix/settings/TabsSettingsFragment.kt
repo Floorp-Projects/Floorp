@@ -23,6 +23,9 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
     private lateinit var radioOneDay: RadioButtonPreference
     private lateinit var radioOneWeek: RadioButtonPreference
     private lateinit var radioOneMonth: RadioButtonPreference
+    private lateinit var startOnHomeRadioFourHours: RadioButtonPreference
+    private lateinit var startOnHomeRadioAlways: RadioButtonPreference
+    private lateinit var startOnHomeRadioNever: RadioButtonPreference
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.tabs_preferences, rootKey)
@@ -53,6 +56,10 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
         radioOneWeek = requirePreference(R.string.pref_key_close_tabs_after_one_week)
         radioOneMonth = requirePreference(R.string.pref_key_close_tabs_after_one_month)
 
+        startOnHomeRadioFourHours = requirePreference(R.string.pref_key_start_on_home_after_four_hours)
+        startOnHomeRadioAlways = requirePreference(R.string.pref_key_start_on_home_always)
+        startOnHomeRadioNever = requirePreference(R.string.pref_key_start_on_home_never)
+
         setupRadioGroups()
     }
 
@@ -67,6 +74,12 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
             radioOneDay,
             radioOneMonth,
             radioOneWeek
+        )
+
+        addToRadioGroup(
+            startOnHomeRadioFourHours,
+            startOnHomeRadioAlways,
+            startOnHomeRadioNever
         )
     }
 }

@@ -140,6 +140,33 @@ class HomeActivityTest {
     }
 
     @Test
+    fun `GIVEN the user has been away for a long time WHEN the user opens the app THEN do start on home`() {
+        val settings: Settings = mockk()
+        val startingIntent = Intent().apply {
+            action = Intent.ACTION_MAIN
+        }
+        every { activity.applicationContext } returns testContext
+
+        every { settings.shouldStartOnHome() } returns true
+        every { activity.getSettings() } returns settings
+
+        assertTrue(activity.shouldStartOnHome(startingIntent))
+    }
+
+    @Test
+    fun `GIVEN the user has been away for a long time WHEN opening a link THEN do not start on home`() {
+        val settings: Settings = mockk()
+        val startingIntent = Intent().apply {
+            action = Intent.ACTION_VIEW
+        }
+        every { settings.shouldStartOnHome() } returns true
+        every { activity.getSettings() } returns settings
+        every { activity.applicationContext } returns testContext
+
+        assertFalse(activity.shouldStartOnHome(startingIntent))
+    }
+
+    @Test
     fun `WHEN onCreate is called THEN the duration is measured`() {
         assertFalse(PerfStartup.homeActivityOnCreate.testHasValue()) // sanity check.
 

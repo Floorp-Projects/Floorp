@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.utils
 
+import io.mockk.every
+import io.mockk.spyk
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
@@ -19,6 +21,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
+import java.util.Calendar
 
 @RunWith(FenixRobolectricTestRunner::class)
 class SettingsTest {
@@ -689,5 +692,57 @@ class SettingsTest {
 
         // Then
         assertEquals(2, settings.creditCardsSavedCount)
+    }
+
+    @Test
+    fun `GIVEN startOnHomeAlways is selected WHEN calling shouldStartOnHome THEN return true`() {
+        settings.startOnHomeAlways = true
+        settings.startOnHomeNever = false
+        settings.startOnHomeAfterFourHours = false
+
+        assertTrue(settings.shouldStartOnHome())
+    }
+
+    @Test
+    fun `GIVEN startOnHomeNever is selected WHEN calling shouldStartOnHome THEN return be false`() {
+        settings.startOnHomeNever = true
+        settings.startOnHomeAlways = false
+        settings.startOnHomeAfterFourHours = false
+
+        assertFalse(settings.shouldStartOnHome())
+    }
+
+    @Test
+    fun `GIVEN startOnHomeAfterFourHours is selected after four hours of inactivity WHEN calling shouldStartOnHome THEN return true`() {
+        val localSetting = spyk(settings)
+        val now = Calendar.getInstance()
+
+        localSetting.startOnHomeAfterFourHours = true
+        localSetting.startOnHomeNever = false
+        localSetting.startOnHomeAlways = false
+
+        now.timeInMillis = System.currentTimeMillis()
+        localSetting.lastBrowseActivity = now.timeInMillis
+        now.add(Calendar.HOUR, 4)
+
+        every { localSetting.timeNowInMillis() } returns now.timeInMillis
+
+        assertTrue(localSetting.shouldStartOnHome())
+    }
+
+    @Test
+    fun `GIVEN startOnHomeAfterFourHours is selected and with recent activity WHEN calling shouldStartOnHome THEN return false`() {
+        val localSetting = spyk(settings)
+        val now = System.currentTimeMillis()
+
+        localSetting.startOnHomeAfterFourHours = true
+        localSetting.startOnHomeNever = false
+        localSetting.startOnHomeAlways = false
+
+        localSetting.lastBrowseActivity = now
+
+        every { localSetting.timeNowInMillis() } returns now
+
+        assertFalse(localSetting.shouldStartOnHome())
     }
 }
