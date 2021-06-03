@@ -2,7 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Generated from the Linux kernel's syscall_32.tbl.
+/* Constructed by running:
+ * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/arch/x86/entry/syscalls/syscall_32.tbl?h=v5.8
+ *   | grep -vE '^#|^$'
+ *   | awk '{ if ($2 == "i386") { print "#if !defined(__NR_" $3 ")\n#define __NR_" $3 " " $1 "\n#endif\n"; } }'
+ * */
+
 #ifndef SANDBOX_LINUX_SYSTEM_HEADERS_X86_32_LINUX_SYSCALLS_H_
 #define SANDBOX_LINUX_SYSTEM_HEADERS_X86_32_LINUX_SYSCALLS_H_
 
@@ -1710,5 +1715,17 @@
 #define __NR_clone3 435
 #endif
 
-#endif  // SANDBOX_LINUX_SYSTEM_HEADERS_X86_32_LINUX_SYSCALLS_H_
+#if !defined(__NR_openat2)
+#define __NR_openat2 437
+#endif
 
+#if !defined(__NR_pidfd_getfd)
+#define __NR_pidfd_getfd 438
+#endif
+
+#if !defined(__NR_faccessat2)
+#define __NR_faccessat2 439
+#endif
+
+
+#endif  // SANDBOX_LINUX_SYSTEM_HEADERS_X86_32_LINUX_SYSCALLS_H_
