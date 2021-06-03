@@ -205,7 +205,10 @@ class GlobalHelperThreadState {
   void finish();
   void finishThreads();
 
-  void setExternalTaskCallback(JS::HelperThreadTaskCallback callback);
+  void setCpuCount(size_t count);
+
+  void setExternalTaskCallback(JS::HelperThreadTaskCallback callback,
+                               size_t threadCount);
 
   [[nodiscard]] bool ensureContextList(size_t count,
                                        const AutoLockHelperThreadState& lock);
