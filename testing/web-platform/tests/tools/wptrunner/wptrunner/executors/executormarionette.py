@@ -129,7 +129,7 @@ class MarionetteBaseProtocolPart(BaseProtocolPart):
                 pass
             except errors.JavascriptException as e:
                 # This can happen if we navigate, but just keep going
-                self.logger.debug(e)
+                self.logger.debug(e.message)
                 pass
             except IOError:
                 self.logger.debug("Socket closed")
@@ -801,7 +801,7 @@ class ExecuteAsyncScriptRun(TimedRunner):
             self.logger.info("NoSuchWindowException on command, setting status to CRASH")
             self.result = False, ("CRASH", None)
         except Exception as e:
-            if isinstance(e, errors.JavascriptException) and str(e).startswith("Document was unloaded"):
+            if isinstance(e, errors.JavascriptException) and e.message.startswith("Document was unloaded"):
                 message = "Document unloaded; maybe test navigated the top-level-browsing context?"
             else:
                 message = getattr(e, "message", "")

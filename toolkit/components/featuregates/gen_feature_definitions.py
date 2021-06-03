@@ -165,7 +165,7 @@ def expand_feature(feature):
             feature[key] = process_configured_value(key, feature[key])
     except FeatureGateException as e:
         raise FeatureGateException(
-            "Error when processing feature {}: {}".format(feature["id"], e)
+            "Error when processing feature {}: {}".format(feature["id"], e.message)
         )
 
     return feature

@@ -867,7 +867,7 @@ def main():
 
         return run(venv, vars(args))
     except WptrunError as e:
-        exit(e)
+        exit(e.message)
 
 
 if __name__ == "__main__":

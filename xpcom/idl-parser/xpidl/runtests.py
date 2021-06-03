@@ -158,7 +158,7 @@ attribute long bar;
                 False, "Must check that interfaces inherit from nsISupports"
             )
         except xpidl.IDLError as e:
-            self.assertEqual(str(e), "Interface 'foo' must inherit from nsISupports")
+            self.assertEqual(e.message, "Interface 'foo' must inherit from nsISupports")
 
     def testBuiltinClassParent(self):
         i = self.p.parse(
@@ -177,7 +177,7 @@ attribute long bar;
             )
         except xpidl.IDLError as e:
             self.assertEqual(
-                str(e),
+                e.message,
                 "interface 'bar' is not builtinclass but derives from builtinclass 'foo'",
             )
 
@@ -201,7 +201,7 @@ attribute long bar;
             )
         except xpidl.IDLError as e:
             self.assertEqual(
-                str(e),
+                e.message,
                 (
                     "scriptable interface 'nsIScriptableWithNotXPCOM' "
                     "must be marked [builtinclass] because it contains a [notxpcom] "
@@ -229,7 +229,7 @@ attribute long bar;
             )
         except xpidl.IDLError as e:
             self.assertEqual(
-                str(e),
+                e.message,
                 (
                     "scriptable interface 'nsIScriptableWithNotXPCOM' must be marked "
                     "[builtinclass] because it contains a [notxpcom] attribute 'attrib'"
@@ -251,7 +251,7 @@ attribute long bar;
             i.resolve([], self.p, {})
             self.assertTrue(False, "Must detect undefined symbols")
         except xpidl.IDLError as e:
-            self.assertEqual(str(e), ("cannot find symbol 'Y'"))
+            self.assertEqual(e.message, ("cannot find symbol 'Y'"))
 
 
 if __name__ == "__main__":
