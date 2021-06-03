@@ -1,7 +1,61 @@
 {
   "data": [
     {
-      "schema": 1622213914550,
+      "schema": 1622581045640,
+      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
+      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
+      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
+        "size": 1727,
+        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
+        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
+      "crlite_enrolled": true,
+      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
+      "last_modified": 1622602645120
+    },
+    {
+      "schema": 1622555926542,
+      "derHash": "COfqyZimLEFVzEy8Xtoy9bQaEsAS8pqzQzvTZjSBSfA=",
+      "subject": "CN=Certum Trusted Network CA 2,OU=Certum Certification Authority,O=Unizeto Technologies S.A.,C=PL",
+      "subjectDN": "MIGAMQswCQYDVQQGEwJQTDEiMCAGA1UEChMZVW5pemV0byBUZWNobm9sb2dpZXMgUy5BLjEnMCUGA1UECxMeQ2VydHVtIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MSQwIgYDVQQDExtDZXJ0dW0gVHJ1c3RlZCBOZXR3b3JrIENBIDI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e0785e431e6c3051033a56f1edb8202c50396095a309bb8a6576ac654828f02a",
+        "size": 2064,
+        "filename": "aztX6eyI0bs9AWN_8zx2mLPJdYJV6fAeqRePPn87K1I=.pem",
+        "location": "security-state-staging/intermediates/2314351a-e3d4-490a-9af7-00dedbc5441d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "aztX6eyI0bs9AWN/8zx2mLPJdYJV6fAeqRePPn87K1I=",
+      "crlite_enrolled": false,
+      "id": "44261107-8d3f-48ac-8a0d-8b9ef00b4189",
+      "last_modified": 1622559454515
+    },
+    {
+      "schema": 1622515801648,
+      "derHash": "/M986IpkKHTRwQf00QxqfdM0eXY5upgTBFRWLDA68XA=",
+      "subject": "CN=Quantum Basic TLS DV RSA R1,O=Quantum CA Limited,C=GB",
+      "subjectDN": "MFAxCzAJBgNVBAYTAkdCMRswGQYDVQQKDBJRdWFudHVtIENBIExpbWl0ZWQxJDAiBgNVBAMMG1F1YW50dW0gQmFzaWMgVExTIERWIFJTQSBSMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9a5b9cf6da2c98fb4d3adb057a8cb4c74161b112407d57a29dd0fc9cb2d24904",
+        "size": 2381,
+        "filename": "OB3HSFDxykZYkZCziJA-6l6iHYbsqNrhFIrMg_L45mU=.pem",
+        "location": "security-state-staging/intermediates/0f12f590-b4c0-47a3-a66e-78070f6bfe7f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "OB3HSFDxykZYkZCziJA+6l6iHYbsqNrhFIrMg/L45mU=",
+      "crlite_enrolled": true,
+      "id": "10b10ba7-6c85-4583-9814-eda266ae2416",
+      "last_modified": 1622516241262
+    },
+    {
+      "schema": 1622512721194,
       "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
       "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
       "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
@@ -16,7 +70,7 @@
       "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
       "crlite_enrolled": true,
       "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
-      "last_modified": 1622257053044
+      "last_modified": 1622516241243
     },
     {
       "schema": 1622124043138,
@@ -53,24 +107,6 @@
       "crlite_enrolled": false,
       "id": "1a6503c7-0f5c-4cde-8e28-452c972f857e",
       "last_modified": 1622105887036
-    },
-    {
-      "schema": 1621933058505,
-      "derHash": "/M986IpkKHTRwQf00QxqfdM0eXY5upgTBFRWLDA68XA=",
-      "subject": "CN=Quantum Basic TLS DV RSA R1,O=Quantum CA Limited,C=GB",
-      "subjectDN": "MFAxCzAJBgNVBAYTAkdCMRswGQYDVQQKDBJRdWFudHVtIENBIExpbWl0ZWQxJDAiBgNVBAMMG1F1YW50dW0gQmFzaWMgVExTIERWIFJTQSBSMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "9a5b9cf6da2c98fb4d3adb057a8cb4c74161b112407d57a29dd0fc9cb2d24904",
-        "size": 2381,
-        "filename": "OB3HSFDxykZYkZCziJA-6l6iHYbsqNrhFIrMg_L45mU=.pem",
-        "location": "security-state-staging/intermediates/0f12f590-b4c0-47a3-a66e-78070f6bfe7f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "OB3HSFDxykZYkZCziJA+6l6iHYbsqNrhFIrMg/L45mU=",
-      "crlite_enrolled": false,
-      "id": "10b10ba7-6c85-4583-9814-eda266ae2416",
-      "last_modified": 1621954723530
     },
     {
       "schema": 1621609055804,
@@ -989,24 +1025,6 @@
       "crlite_enrolled": false,
       "id": "1d3bbd98-9e9e-414a-a695-553391fbd175",
       "last_modified": 1620399433307
-    },
-    {
-      "schema": 1619728730686,
-      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
-      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
-      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
-        "size": 1727,
-        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
-        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
-      "crlite_enrolled": true,
-      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
-      "last_modified": 1620399433269
     },
     {
       "schema": 1619405839700,
