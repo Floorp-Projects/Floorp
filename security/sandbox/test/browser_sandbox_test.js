@@ -11,7 +11,10 @@ function test() {
   );
 
   // Types of processes to test, taken from GeckoProcessTypes.h
-  var processTypes = ["tab", "gpu"];
+  // GPU process might not run depending on the platform, so we need it to be
+  // the last one of the list to allow the remainingTests logic below to work
+  // as expected.
+  var processTypes = ["tab", "socket", "gpu"];
 
   // A callback called after each test-result.
   Services.obs.addObserver(function result(subject, topic, data) {

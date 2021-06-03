@@ -5,17 +5,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "SandboxTestingChild.h"
+#include "SandboxTestingChildTests.h"
 #include "SandboxTestingThread.h"
 
-#include "nsXULAppAPI.h"
-
-#ifdef XP_UNIX
-#  include <fcntl.h>
-#  include <sys/stat.h>
-#  include <sys/types.h>
-#  include <time.h>
-#  include <unistd.h>
+#ifdef XP_LINUX
+#  include "mozilla/Sandbox.h"
 #endif
+
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 
@@ -61,36 +58,21 @@ void SandboxTestingChild::Bind(Endpoint<PSandboxTestingChild>&& aEndpoint) {
   DebugOnly<bool> ok = aEndpoint.Bind(this);
   MOZ_ASSERT(ok);
 
+#ifdef XP_LINUX
+  bool sandboxCrashOnError = SetSandboxCrashOnError(false);
+#endif
+
   if (XRE_IsContentProcess()) {
-#ifdef XP_UNIX
-    struct stat st;
-    static const char kAllowedPath[] = "/usr/lib";
-
-    ErrnoTest("fstatat_as_stat"_ns, true,
-              [&] { return fstatat(AT_FDCWD, kAllowedPath, &st, 0); });
-    ErrnoTest("fstatat_as_lstat"_ns, true, [&] {
-      return fstatat(AT_FDCWD, kAllowedPath, &st, AT_SYMLINK_NOFOLLOW);
-    });
-
-#  ifdef XP_LINUX
-    ErrnoTest("fstatat_as_fstat"_ns, true,
-              [&] { return fstatat(0, "", &st, AT_EMPTY_PATH); });
-#  endif  // XP_LINUX
-
-    const struct timespec usec = {0, 1000};
-    ErrnoTest("nanosleep"_ns, true, [&] { return nanosleep(&usec, nullptr); });
-
-    struct timespec res = {0, 0};
-    ErrnoTest("clock_getres"_ns, true,
-              [&] { return clock_getres(CLOCK_REALTIME, &res); });
-
-#else   // XP_UNIX
-    SendReportTestResults("dummy_test"_ns,
-                          /* shouldSucceed */ true,
-                          /* didSucceed */ true,
-                          "The test framework fails if there are no cases."_ns);
-#endif  // XP_UNIX
+    RunTestsContent(this);
   }
+
+  if (XRE_IsSocketProcess()) {
+    RunTestsSocket(this);
+  }
+
+#ifdef XP_LINUX
+  SetSandboxCrashOnError(sandboxCrashOnError);
+#endif
 
   // Tell SandboxTest that this process is done with all tests.
   SendTestCompleted();
