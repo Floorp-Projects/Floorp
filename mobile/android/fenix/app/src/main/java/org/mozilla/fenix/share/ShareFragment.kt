@@ -135,10 +135,10 @@ class ShareFragment : AppCompatDialogFragment() {
         args.sessionId
             ?.let { sessionId -> browserStore.state.findTabOrCustomTab(sessionId) }
             ?.let { tab ->
-                val promptRequest = tab.content.promptRequest
+                val promptRequest = tab.content.promptRequests.lastOrNull { it is PromptRequest.Share }
                 if (promptRequest is PromptRequest.Share) {
                     consume(promptRequest)
-                    browserStore.dispatch(ContentAction.ConsumePromptRequestAction(tab.id))
+                    browserStore.dispatch(ContentAction.ConsumePromptRequestAction(tab.id, promptRequest))
                 }
             }
     }
