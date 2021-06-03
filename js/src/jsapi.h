@@ -196,8 +196,12 @@ extern JS_PUBLIC_API bool JS_IsBuiltinFunctionConstructor(JSFunction* fun);
 /**
  * Set callback to send tasks to XPCOM thread pools
  */
-JS_PUBLIC_API void SetHelperThreadTaskCallback(
-    bool (*callback)(js::UniquePtr<js::RunnableTask>));
+JS_PUBLIC_API void SetHelperThreadTaskCallback(void (*callback)());
+
+namespace JS {
+// Function to call from external thread pool to run a helper thread task.
+extern JS_PUBLIC_API void RunHelperThreadTask();
+}  // namespace JS
 
 extern JS_PUBLIC_API const char* JS_GetImplementationVersion(void);
 
