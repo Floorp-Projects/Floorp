@@ -15,11 +15,6 @@ object FeatureFlags {
     val pullToRefreshEnabled = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables the Nimbus experiments library.
-     */
-    const val nimbusExperiments = true
-
-    /**
      * Enables the Addresses autofill feature.
      */
     val addressesFeature = Config.channel.isNightlyOrDebug

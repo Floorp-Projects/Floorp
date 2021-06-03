@@ -14,10 +14,8 @@ import mozilla.components.lib.crash.service.GleanCrashReporterService
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import mozilla.components.service.nimbus.NimbusApi
-import mozilla.components.service.nimbus.NimbusDisabled
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ReleaseChannel
@@ -25,7 +23,6 @@ import org.mozilla.fenix.components.metrics.AdjustMetricsService
 import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.experiments.createNimbus
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.utils.Mockable
@@ -59,9 +56,11 @@ class Analytics(
 
         // The name "Fenix" here matches the product name on Socorro and is unrelated to the actual app name:
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1523284
-        val socorroService = MozillaSocorroService(context, appName = "Fenix",
+        val socorroService = MozillaSocorroService(
+            context, appName = "Fenix",
             version = MOZ_APP_VERSION, buildId = MOZ_APP_BUILDID, vendor = MOZ_APP_VENDOR,
-            releaseChannel = MOZ_UPDATE_CHANNEL)
+            releaseChannel = MOZ_UPDATE_CHANNEL
+        )
         services.add(socorroService)
 
         val intent = Intent(context, HomeActivity::class.java).apply {
@@ -102,11 +101,7 @@ class Analytics(
     }
 
     val experiments: NimbusApi by lazyMonitored {
-        if (FeatureFlags.nimbusExperiments) {
-            createNimbus(context, BuildConfig.NIMBUS_ENDPOINT)
-        } else {
-            NimbusDisabled()
-        }
+        createNimbus(context, BuildConfig.NIMBUS_ENDPOINT)
     }
 }
 

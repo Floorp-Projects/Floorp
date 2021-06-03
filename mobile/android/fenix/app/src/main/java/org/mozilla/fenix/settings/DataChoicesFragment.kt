@@ -7,7 +7,6 @@ package org.mozilla.fenix.settings
 import android.os.Bundle
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.components
@@ -72,7 +71,6 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
 
         requirePreference<SwitchPreference>(R.string.pref_key_experimentation).apply {
             isChecked = context.settings().isExperimentationEnabled
-            isVisible = FeatureFlags.nimbusExperiments
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }
