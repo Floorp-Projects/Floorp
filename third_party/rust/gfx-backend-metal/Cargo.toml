@@ -1,6 +1,6 @@
 [package]
 name = "gfx-backend-metal"
-version = "0.7.0"
+version = "0.8.1"
 description = "Metal API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
 repository = "https://github.com/gfx-rs/gfx"
@@ -13,6 +13,7 @@ workspace = "../../.."
 edition = "2018"
 
 [features]
+#TODO: add a feature to enable `profiling`, so that we can CI test it
 default = []
 signpost = []
 cross = ["spirv_cross", "auxil", "naga/spv-out"]
@@ -22,15 +23,15 @@ pipeline-cache = ["tempfile", "serde", "bincode", "naga/serialize", "naga/deseri
 name = "gfx_backend_metal"
 
 [dependencies]
-hal = { package = "gfx-hal", path = "../../hal", version = "0.7" }
+hal = { package = "gfx-hal", path = "../../hal", version = "0.8" }
 range-alloc = { path = "../../auxil/range-alloc", version = "0.1" }
 arrayvec = "0.5"
 bitflags = "1.0"
 copyless = "0.1.4"
 fxhash = "0.2.1"
-log = { version = "0.4" }
+log = "0.4"
 dispatch = { version = "0.2", optional = true }
-metal = { git = "https://github.com/gfx-rs/metal-rs", rev="78f632d194c7c16d18b71d7373c4080847d110b0", features = ["private"] }
+metal = { version = "0.22", features = ["private"] }
 foreign-types = "0.3"
 objc = "0.2.5"
 block = "0.1"
@@ -38,7 +39,7 @@ cocoa-foundation = "0.1"
 parking_lot = "0.11"
 storage-map = "0.3"
 raw-window-handle = "0.3"
-profiling = { version = "0.1.10", default-features = false }
+profiling = { version = "1", default-features = false }
 tempfile = { version = "3.2", optional = true }
 serde = { version = "1", features = ["serde_derive"], optional = true }
 bincode = { version = "1", optional = true }
@@ -46,7 +47,7 @@ bincode = { version = "1", optional = true }
 [dependencies.auxil]
 package = "gfx-auxil"
 path = "../../auxil/auxil"
-version = "0.8"
+version = "0.9"
 features = ["spirv_cross"]
 optional = true
 
@@ -57,7 +58,7 @@ optional = true
 
 [dependencies.naga]
 git = "https://github.com/gfx-rs/naga"
-tag = "gfx-22"
+tag = "gfx-25"
 features = ["spv-in", "msl-out"]
 
 # This forces docs.rs to build the crate on mac, otherwise the build fails

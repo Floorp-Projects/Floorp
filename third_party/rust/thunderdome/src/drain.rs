@@ -2,7 +2,7 @@ use std::iter::{ExactSizeIterator, FusedIterator};
 
 use crate::arena::{Arena, Index};
 
-/// See [`Arena::drain`][Arena::drain].
+/// See [`Arena::drain`].
 pub struct Drain<'a, T> {
     pub(crate) arena: &'a mut Arena<T>,
     pub(crate) slot: u32,
@@ -32,7 +32,7 @@ impl<'a, T> Iterator for Drain<'a, T> {
             // If this entry is occupied, this method will mark it as an empty.
             // Otherwise, we'll continue looping until we've drained all
             // occupied entries from the arena.
-            if let Some((index, value)) = self.arena.remove_entry_by_slot(slot) {
+            if let Some((index, value)) = self.arena.remove_by_slot(slot) {
                 return Some((index, value));
             }
         }

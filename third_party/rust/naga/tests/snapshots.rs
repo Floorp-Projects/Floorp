@@ -21,18 +21,23 @@ bitflags::bitflags! {
 
 #[derive(Default, serde::Deserialize)]
 struct Parameters {
+    #[serde(default)]
+    god_mode: bool,
     #[cfg_attr(not(feature = "spv-out"), allow(dead_code))]
     spv_version: (u8, u8),
     #[cfg_attr(not(feature = "spv-out"), allow(dead_code))]
     spv_capabilities: naga::FastHashSet<spirv::Capability>,
     #[cfg_attr(not(feature = "spv-out"), allow(dead_code))]
+    #[serde(default)]
     spv_debug: bool,
     #[cfg_attr(not(feature = "spv-out"), allow(dead_code))]
+    #[serde(default)]
     spv_adjust_coordinate_space: bool,
     #[cfg(all(feature = "deserialize", feature = "msl-out"))]
     #[serde(default)]
     msl: naga::back::msl::Options,
     #[cfg(all(not(feature = "deserialize"), feature = "msl-out"))]
+    #[serde(default)]
     msl_custom: bool,
     #[cfg_attr(not(feature = "glsl-out"), allow(dead_code))]
     #[serde(default)]
@@ -46,7 +51,12 @@ fn check_targets(module: &naga::Module, name: &str, targets: Targets) {
         Ok(string) => ron::de::from_str(&string).expect("Couldn't find param file"),
         Err(_) => Parameters::default(),
     };
-    let info = naga::valid::Validator::new(naga::valid::ValidationFlags::all())
+    let capabilities = if params.god_mode {
+        naga::valid::Capabilities::all()
+    } else {
+        naga::valid::Capabilities::empty()
+    };
+    let info = naga::valid::Validator::new(naga::valid::ValidationFlags::all(), capabilities)
         .validate(module)
         .unwrap();
 
@@ -96,13 +106,15 @@ fn check_targets(module: &naga::Module, name: &str, targets: Targets) {
     #[cfg(feature = "hlsl-out")]
     {
         if targets.contains(Targets::HLSL) {
-            check_output_hlsl(module, &dest);
+            for ep in module.entry_points.iter() {
+                check_output_hlsl(module, &dest, ep.stage);
+            }
         }
     }
     #[cfg(feature = "wgsl-out")]
     {
         if targets.contains(Targets::WGSL) {
-            check_output_wgsl(module, &dest);
+            check_output_wgsl(module, &info, &dest);
         }
     }
 }
@@ -127,7 +139,7 @@ fn check_output_spv(
     let options = spv::Options {
         lang_version: params.spv_version,
         flags,
-        capabilities: params.spv_capabilities.clone(),
+        capabilities: Some(params.spv_capabilities.clone()),
     };
 
     let spv = spv::write_vec(module, info, &options).unwrap();
@@ -154,7 +166,7 @@ fn check_output_msl(
     let options = &params.msl;
     #[cfg(not(feature = "deserialize"))]
     let options = if params.msl_custom {
-        println!("Skipping {}", destination);
+        println!("Skipping {}", destination.display());
         return;
     } else {
         &default_options
@@ -164,7 +176,13 @@ fn check_output_msl(
         allow_point_size: true,
     };
 
-    let (string, _) = msl::write_string(module, info, options, &pipeline_options).unwrap();
+    let (string, tr_info) = msl::write_string(module, info, options, &pipeline_options).unwrap();
+
+    for (ep, result) in module.entry_points.iter().zip(tr_info.entry_point_names) {
+        if let Err(error) = result {
+            panic!("Failed to translate '{}': {}", ep.name, error);
+        }
+    }
 
     fs::write(destination.with_extension("msl"), string).unwrap();
 }
@@ -189,30 +207,29 @@ fn check_output_glsl(
         entry_point: ep_name.to_string(),
     };
 
-    let mut buffer = Vec::new();
+    let mut buffer = String::new();
     let mut writer = glsl::Writer::new(&mut buffer, module, info, &options).unwrap();
     writer.write().unwrap();
 
-    let string = String::from_utf8(buffer).unwrap();
-
     let ext = format!("{:?}.glsl", stage);
-    fs::write(destination.with_extension(&ext), string).unwrap();
+    fs::write(destination.with_extension(&ext), buffer).unwrap();
 }
 
 #[cfg(feature = "hlsl-out")]
-fn check_output_hlsl(module: &naga::Module, destination: &PathBuf) {
+fn check_output_hlsl(module: &naga::Module, destination: &PathBuf, stage: naga::ShaderStage) {
     use naga::back::hlsl;
 
     let string = hlsl::write_string(module).unwrap();
 
-    fs::write(destination.with_extension("hlsl"), string).unwrap();
+    let ext = format!("{:?}.hlsl", stage);
+    fs::write(destination.with_extension(&ext), string).unwrap();
 }
 
 #[cfg(feature = "wgsl-out")]
-fn check_output_wgsl(module: &naga::Module, destination: &PathBuf) {
+fn check_output_wgsl(module: &naga::Module, info: &naga::valid::ModuleInfo, destination: &PathBuf) {
     use naga::back::wgsl;
 
-    let string = wgsl::write_string(module).unwrap();
+    let string = wgsl::write_string(module, info).unwrap();
 
     fs::write(destination.with_extension("wgsl"), string).unwrap();
 }
@@ -228,24 +245,27 @@ fn convert_wgsl() {
         ),
         (
             "quad",
-            Targets::SPIRV | Targets::METAL | Targets::GLSL | Targets::DOT,
+            Targets::SPIRV | Targets::METAL | Targets::GLSL | Targets::DOT | Targets::WGSL,
         ),
-        ("boids", Targets::SPIRV | Targets::METAL),
+        ("boids", Targets::SPIRV | Targets::METAL | Targets::GLSL),
         ("skybox", Targets::SPIRV | Targets::METAL | Targets::GLSL),
         (
             "collatz",
             Targets::SPIRV | Targets::METAL | Targets::IR | Targets::ANALYSIS,
         ),
         ("shadow", Targets::SPIRV | Targets::METAL | Targets::GLSL),
-        //SPIR-V is blocked by https://github.com/gfx-rs/naga/issues/646
-        ("image-copy", Targets::METAL),
-        ("texture-array", Targets::SPIRV | Targets::METAL),
+        ("image", Targets::SPIRV | Targets::METAL),
+        ("extra", Targets::SPIRV | Targets::METAL),
         ("operators", Targets::SPIRV | Targets::METAL | Targets::GLSL),
         (
             "interpolate",
             Targets::SPIRV | Targets::METAL | Targets::GLSL,
         ),
         ("access", Targets::SPIRV | Targets::METAL),
+        (
+            "control-flow",
+            Targets::SPIRV | Targets::METAL | Targets::GLSL,
+        ),
     ];
 
     for &(name, targets) in inputs.iter() {
@@ -266,20 +286,28 @@ fn convert_spv(name: &str, adjust_coordinate_space: bool, targets: Targets) {
         &fs::read(format!("{}/{}/{}.spv", root, DIR_IN, name)).expect("Couldn't find spv file"),
         &naga::front::spv::Options {
             adjust_coordinate_space,
+            strict_capabilities: false,
             flow_graph_dump_prefix: None,
         },
     )
     .unwrap();
     check_targets(&module, name, targets);
-    naga::valid::Validator::new(naga::valid::ValidationFlags::all())
-        .validate(&module)
-        .unwrap();
+    naga::valid::Validator::new(
+        naga::valid::ValidationFlags::all(),
+        naga::valid::Capabilities::empty(),
+    )
+    .validate(&module)
+    .unwrap();
 }
 
 #[cfg(feature = "spv-in")]
 #[test]
 fn convert_spv_quad_vert() {
-    convert_spv("quad-vert", false, Targets::METAL);
+    convert_spv(
+        "quad-vert",
+        false,
+        Targets::METAL | Targets::GLSL | Targets::WGSL,
+    );
 }
 
 #[cfg(feature = "spv-in")]

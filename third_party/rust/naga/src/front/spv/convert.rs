@@ -14,8 +14,12 @@ pub(super) fn map_binary_operator(word: spirv::Op) -> Result<crate::BinaryOperat
         Op::UDiv | Op::SDiv | Op::FDiv => Ok(BinaryOperator::Divide),
         Op::UMod | Op::SMod | Op::FMod => Ok(BinaryOperator::Modulo),
         // Relational and Logical Instructions
-        Op::IEqual | Op::FOrdEqual | Op::FUnordEqual => Ok(BinaryOperator::Equal),
-        Op::INotEqual | Op::FOrdNotEqual | Op::FUnordNotEqual => Ok(BinaryOperator::NotEqual),
+        Op::IEqual | Op::FOrdEqual | Op::FUnordEqual | Op::LogicalEqual => {
+            Ok(BinaryOperator::Equal)
+        }
+        Op::INotEqual | Op::FOrdNotEqual | Op::FUnordNotEqual | Op::LogicalNotEqual => {
+            Ok(BinaryOperator::NotEqual)
+        }
         Op::ULessThan | Op::SLessThan | Op::FOrdLessThan | Op::FUnordLessThan => {
             Ok(BinaryOperator::Less)
         }
@@ -121,6 +125,7 @@ pub(super) fn map_builtin(word: spirv::Word) -> Result<crate::BuiltIn, Error> {
         Some(Bi::BaseInstance) => crate::BuiltIn::BaseInstance,
         Some(Bi::BaseVertex) => crate::BuiltIn::BaseVertex,
         Some(Bi::ClipDistance) => crate::BuiltIn::ClipDistance,
+        Some(Bi::CullDistance) => crate::BuiltIn::CullDistance,
         Some(Bi::InstanceIndex) => crate::BuiltIn::InstanceIndex,
         Some(Bi::PointSize) => crate::BuiltIn::PointSize,
         Some(Bi::VertexIndex) => crate::BuiltIn::VertexIndex,

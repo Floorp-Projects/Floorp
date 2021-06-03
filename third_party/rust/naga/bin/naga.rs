@@ -5,6 +5,7 @@ use std::{env, error::Error, path::Path};
 
 #[derive(Default)]
 struct Parameters {
+    validation_flags: naga::valid::ValidationFlags,
     #[cfg(feature = "spv-in")]
     spv_adjust_coordinate_space: bool,
     #[cfg(feature = "spv-in")]
@@ -23,10 +24,10 @@ trait PrettyResult {
 }
 
 fn print_err(error: impl Error) {
-    println!("{}:", error);
+    eprintln!("{}:", error);
     let mut e = error.source();
     while let Some(source) = e {
-        println!("\t{}", source);
+        eprintln!("\t{}", source);
         e = source.source();
     }
 }
@@ -48,7 +49,7 @@ fn main() {
     //env_logger::init(); // uncomment during development
 
     let mut input_path = None;
-    let mut output_path = None;
+    let mut output_paths = Vec::new();
     //TODO: read the parameters from RON?
     #[allow(unused_mut)]
     let mut params = Parameters::default();
@@ -60,6 +61,11 @@ fn main() {
         //TODO: use `strip_prefix` when MSRV reaches 1.45.0
         if arg.starts_with("--") {
             match &arg[2..] {
+                "validate" => {
+                    let value = args.next().unwrap().parse().unwrap();
+                    params.validation_flags =
+                        naga::valid::ValidationFlags::from_bits(value).unwrap();
+                }
                 #[cfg(feature = "spv-in")]
                 "flow-dir" => params.spv_flow_dump_prefix = args.next(),
                 #[cfg(feature = "glsl-out")]
@@ -81,10 +87,8 @@ fn main() {
             }
         } else if input_path.is_none() {
             input_path = Some(arg);
-        } else if output_path.is_none() {
-            output_path = Some(arg);
         } else {
-            log::warn!("Extra parameter: {}", arg);
+            output_paths.push(arg);
         }
     }
 
@@ -105,6 +109,7 @@ fn main() {
         "spv" => {
             let options = naga::front::spv::Options {
                 adjust_coordinate_space: params.spv_adjust_coordinate_space,
+                strict_capabilities: false,
                 flow_graph_dump_prefix: params.spv_flow_dump_prefix.map(std::path::PathBuf::from),
             };
             let input = fs::read(input_path).unwrap();
@@ -117,7 +122,7 @@ fn main() {
             match result {
                 Ok(v) => v,
                 Err(ref e) => {
-                    e.emit_to_stderr();
+                    e.emit_to_stderr(&input);
                     panic!("unable to parse WGSL");
                 }
             }
@@ -174,113 +179,120 @@ fn main() {
     };
 
     // validate the IR
-    #[allow(unused_variables)]
-    let info =
-        match naga::valid::Validator::new(naga::valid::ValidationFlags::all()).validate(&module) {
-            Ok(info) => Some(info),
-            Err(error) => {
-                print_err(error);
-                None
-            }
-        };
-
-    let output_path = match output_path {
-        Some(ref string) => string,
-        None => {
-            println!("{:#?}", module);
-            println!("{:#?}", info);
-            return;
+    let info = match naga::valid::Validator::new(
+        params.validation_flags,
+        naga::valid::Capabilities::all(),
+    )
+    .validate(&module)
+    {
+        Ok(info) => Some(info),
+        Err(error) => {
+            print_err(error);
+            None
         }
     };
 
-    match Path::new(output_path)
-        .extension()
-        .expect("Output has no extension?")
-        .to_str()
-        .unwrap()
-    {
-        #[cfg(feature = "msl-out")]
-        "metal" => {
-            use naga::back::msl;
-            let pipeline_options = msl::PipelineOptions::default();
-            let (msl, _) = msl::write_string(
-                &module,
-                info.as_ref().unwrap(),
-                &params.msl,
-                &pipeline_options,
-            )
-            .unwrap_pretty();
-            fs::write(output_path, msl).unwrap();
+    if output_paths.is_empty() {
+        if info.is_some() {
+            println!("Validation successful");
+            return;
+        } else {
+            std::process::exit(!0);
         }
-        #[cfg(feature = "spv-out")]
-        "spv" => {
-            use naga::back::spv;
+    }
 
-            let spv = spv::write_vec(&module, info.as_ref().unwrap(), &params.spv).unwrap_pretty();
-            let bytes = spv
-                .iter()
-                .fold(Vec::with_capacity(spv.len() * 4), |mut v, w| {
-                    v.extend_from_slice(&w.to_le_bytes());
-                    v
-                });
+    for output_path in output_paths {
+        match Path::new(&output_path)
+            .extension()
+            .expect("Output has no extension?")
+            .to_str()
+            .unwrap()
+        {
+            "txt" => {
+                use std::io::Write;
 
-            fs::write(output_path, bytes.as_slice()).unwrap();
-        }
-        #[cfg(feature = "glsl-out")]
-        stage @ "vert" | stage @ "frag" | stage @ "comp" => {
-            use naga::back::glsl;
+                let mut file = fs::File::create(output_path).unwrap();
+                writeln!(file, "{:#?}", module).unwrap();
+                if let Some(ref info) = info {
+                    writeln!(file).unwrap();
+                    writeln!(file, "{:#?}", info).unwrap();
+                }
+            }
+            #[cfg(feature = "msl-out")]
+            "metal" => {
+                use naga::back::msl;
 
-            params.glsl.shader_stage = match stage {
-                "vert" => naga::ShaderStage::Vertex,
-                "frag" => naga::ShaderStage::Fragment,
-                "comp" => naga::ShaderStage::Compute,
-                _ => unreachable!(),
-            };
-
-            let file = fs::OpenOptions::new()
-                .write(true)
-                .truncate(true)
-                .create(true)
-                .open(output_path)
-                .unwrap();
-
-            let mut writer = glsl::Writer::new(file, &module, info.as_ref().unwrap(), &params.glsl)
+                let pipeline_options = msl::PipelineOptions::default();
+                let (msl, _) = msl::write_string(
+                    &module,
+                    info.as_ref().unwrap(),
+                    &params.msl,
+                    &pipeline_options,
+                )
                 .unwrap_pretty();
+                fs::write(output_path, msl).unwrap();
+            }
+            #[cfg(feature = "spv-out")]
+            "spv" => {
+                use naga::back::spv;
 
-            writer
-                .write()
-                .map_err(|e| {
-                    fs::remove_file(output_path).unwrap();
-                    e
-                })
-                .unwrap();
-        }
-        #[cfg(feature = "dot-out")]
-        "dot" => {
-            use naga::back::dot;
-            let output = dot::write(&module, info.as_ref()).unwrap();
-            fs::write(output_path, output).unwrap();
-        }
-        #[cfg(feature = "hlsl-out")]
-        "hlsl" => {
-            use naga::back::hlsl;
+                let spv =
+                    spv::write_vec(&module, info.as_ref().unwrap(), &params.spv).unwrap_pretty();
+                let bytes = spv
+                    .iter()
+                    .fold(Vec::with_capacity(spv.len() * 4), |mut v, w| {
+                        v.extend_from_slice(&w.to_le_bytes());
+                        v
+                    });
 
-            let hlsl = hlsl::write_string(&module).unwrap_pretty();
-            fs::write(output_path, hlsl).unwrap();
-        }
-        #[cfg(feature = "wgsl-out")]
-        "wgsl" => {
-            use naga::back::wgsl;
+                fs::write(output_path, bytes.as_slice()).unwrap();
+            }
+            #[cfg(feature = "glsl-out")]
+            stage @ "vert" | stage @ "frag" | stage @ "comp" => {
+                use naga::back::glsl;
 
-            let wgsl = wgsl::write_string(&module).unwrap_pretty();
-            fs::write(output_path, wgsl).unwrap();
-        }
-        other => {
-            let _ = params;
-            panic!(
-                "Unknown output extension: {}, forgot to enable a feature?",
-                other
-            );
+                params.glsl.shader_stage = match stage {
+                    "vert" => naga::ShaderStage::Vertex,
+                    "frag" => naga::ShaderStage::Fragment,
+                    "comp" => naga::ShaderStage::Compute,
+                    _ => unreachable!(),
+                };
+
+                let mut buffer = String::new();
+                let mut writer =
+                    glsl::Writer::new(&mut buffer, &module, info.as_ref().unwrap(), &params.glsl)
+                        .unwrap_pretty();
+                writer.write().unwrap();
+                fs::write(output_path, buffer).unwrap();
+            }
+            #[cfg(feature = "dot-out")]
+            "dot" => {
+                use naga::back::dot;
+
+                let output = dot::write(&module, info.as_ref()).unwrap();
+                fs::write(output_path, output).unwrap();
+            }
+            #[cfg(feature = "hlsl-out")]
+            "hlsl" => {
+                use naga::back::hlsl;
+
+                let hlsl = hlsl::write_string(&module).unwrap_pretty();
+                fs::write(output_path, hlsl).unwrap();
+            }
+            #[cfg(feature = "wgsl-out")]
+            "wgsl" => {
+                use naga::back::wgsl;
+
+                let wgsl = wgsl::write_string(&module, info.as_ref().unwrap()).unwrap_pretty();
+                fs::write(output_path, wgsl).unwrap();
+            }
+            other => {
+                let _ = params;
+                println!(
+                    "Unknown output extension: {}, forgot to enable a feature?",
+                    other
+                );
+            }
         }
     }
 }

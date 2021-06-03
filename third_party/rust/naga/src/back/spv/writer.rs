@@ -1,5 +1,6 @@
 use super::{
-    helpers::map_storage_class, Instruction, LogicalLayout, Options, PhysicalLayout, WriterFlags,
+    helpers::{contains_builtin, map_storage_class},
+    Instruction, LogicalLayout, Options, PhysicalLayout, WriterFlags,
 };
 use crate::{
     arena::{Arena, Handle},
@@ -11,7 +12,6 @@ use std::{collections::hash_map::Entry, ops};
 use thiserror::Error;
 
 const BITS_PER_BYTE: crate::Bytes = 8;
-const CACHED_CONSTANT_INDICES: usize = 8;
 
 #[derive(Clone, Debug, Error)]
 pub enum Error {
@@ -21,6 +21,8 @@ pub enum Error {
     MissingCapabilities(Vec<spirv::Capability>),
     #[error("unimplemented {0}")]
     FeatureNotImplemented(&'static str),
+    #[error("module is not validated properly: {0}")]
+    Validation(&'static str),
 }
 
 #[derive(Default)]
@@ -121,9 +123,15 @@ enum LocalType {
         base: Handle<crate::Type>,
         class: spirv::StorageClass,
     },
-    SampledImage {
-        image_type: Handle<crate::Type>,
+    Image {
+        dim: crate::ImageDimension,
+        arrayed: bool,
+        class: crate::ImageClass,
     },
+    SampledImage {
+        image_type_id: Word,
+    },
+    Sampler,
 }
 
 impl PhysicalLayout {
@@ -165,6 +173,16 @@ impl PhysicalLayout {
                 width,
                 pointer_class: Some(map_storage_class(class)),
             },
+            crate::TypeInner::Image {
+                dim,
+                arrayed,
+                class,
+            } => LocalType::Image {
+                dim,
+                arrayed,
+                class,
+            },
+            crate::TypeInner::Sampler { comparison: _ } => LocalType::Sampler,
             _ => return None,
         })
     }
@@ -186,7 +204,7 @@ fn map_dim(dim: crate::ImageDimension) -> spirv::Dim {
     match dim {
         crate::ImageDimension::D1 => spirv::Dim::Dim1D,
         crate::ImageDimension::D2 => spirv::Dim::Dim2D,
-        crate::ImageDimension::D3 => spirv::Dim::Dim2D,
+        crate::ImageDimension::D3 => spirv::Dim::Dim3D,
         crate::ImageDimension::Cube => spirv::Dim::DimCube,
     }
 }
@@ -265,6 +283,7 @@ pub struct Writer {
     logical_layout: LogicalLayout,
     id_gen: IdGenerator,
     capabilities: crate::FastHashSet<spirv::Capability>,
+    strict_capabilities: bool,
     debugs: Vec<Instruction>,
     annotations: Vec<Instruction>,
     flags: WriterFlags,
@@ -275,7 +294,7 @@ pub struct Writer {
     lookup_function_type: crate::FastHashMap<LookupFunctionType, Word>,
     lookup_function_call: crate::FastHashMap<Handle<crate::Expression>, Word>,
     constant_ids: Vec<Word>,
-    index_constant_ids: Vec<Word>,
+    cached_constants: crate::FastHashMap<(crate::ScalarValue, crate::Bytes), Word>,
     global_variables: Vec<GlobalVariable>,
     cached: CachedExpressions,
     gl450_ext_inst_id: Word,
@@ -298,7 +317,15 @@ impl Writer {
             physical_layout: PhysicalLayout::new(raw_version),
             logical_layout: LogicalLayout::default(),
             id_gen,
-            capabilities: options.capabilities.clone(),
+            capabilities: match options.capabilities {
+                Some(ref caps) => caps.clone(),
+                None => {
+                    let mut caps = crate::FastHashSet::default();
+                    caps.insert(spirv::Capability::Shader);
+                    caps
+                }
+            },
+            strict_capabilities: options.capabilities.is_some(),
             debugs: vec![],
             annotations: vec![],
             flags: options.flags,
@@ -308,7 +335,7 @@ impl Writer {
             lookup_function_type: crate::FastHashMap::default(),
             lookup_function_call: crate::FastHashMap::default(),
             constant_ids: Vec::new(),
-            index_constant_ids: Vec::new(),
+            cached_constants: crate::FastHashMap::default(),
             global_variables: Vec::new(),
             cached: CachedExpressions::default(),
             gl450_ext_inst_id,
@@ -317,14 +344,19 @@ impl Writer {
     }
 
     fn check(&mut self, capabilities: &[spirv::Capability]) -> Result<(), Error> {
-        if capabilities.is_empty()
-            || capabilities
-                .iter()
-                .any(|cap| self.capabilities.contains(cap))
-        {
-            Ok(())
+        if self.strict_capabilities {
+            if capabilities.is_empty()
+                || capabilities
+                    .iter()
+                    .any(|cap| self.capabilities.contains(cap))
+            {
+                Ok(())
+            } else {
+                Err(Error::MissingCapabilities(capabilities.to_vec()))
+            }
         } else {
-            Err(Error::MissingCapabilities(capabilities.to_vec()))
+            self.capabilities.extend(capabilities);
+            Ok(())
         }
     }
 
@@ -382,43 +414,9 @@ impl Writer {
         })
     }
 
-    fn create_constant(&mut self, type_id: Word, value: &[Word]) -> Word {
-        let id = self.id_gen.next();
-        let instruction = Instruction::constant(type_id, id, value);
-        instruction.to_words(&mut self.logical_layout.declarations);
-        id
-    }
-
-    fn get_index_constant(
-        &mut self,
-        index: Word,
-        types: &Arena<crate::Type>,
-    ) -> Result<Word, Error> {
-        while self.index_constant_ids.len() <= index as usize {
-            self.index_constant_ids.push(0);
-        }
-        let cached = self.index_constant_ids[index as usize];
-        if cached != 0 {
-            return Ok(cached);
-        }
-
-        let type_id = self.get_type_id(
-            types,
-            LookupType::Local(LocalType::Value {
-                vector_size: None,
-                kind: crate::ScalarKind::Sint,
-                width: 4,
-                pointer_class: None,
-            }),
-        )?;
-
-        let id = self.create_constant(type_id, &[index]);
-        self.index_constant_ids[index as usize] = id;
-        Ok(id)
-    }
-
     fn decorate(&mut self, id: Word, decoration: spirv::Decoration, operands: &[Word]) {
-        self.annotations.push(Instruction::decorate(id, decoration, operands));
+        self.annotations
+            .push(Instruction::decorate(id, decoration, operands));
     }
 
     fn write_function(
@@ -559,8 +557,8 @@ impl Writer {
         };
 
         let lookup_function_type = LookupFunctionType {
-            return_type_id,
             parameter_type_ids,
+            return_type_id,
         };
 
         let function_id = self.id_gen.next();
@@ -633,6 +631,17 @@ impl Writer {
         Ok(function_id)
     }
 
+    fn write_execution_mode(
+        &mut self,
+        function_id: Word,
+        mode: spirv::ExecutionMode,
+    ) -> Result<(), Error> {
+        self.check(mode.required_capabilities())?;
+        Instruction::execution_mode(function_id, mode, &[])
+            .to_words(&mut self.logical_layout.execution_modes);
+        Ok(())
+    }
+
     // TODO Move to instructions module
     fn write_entry_point(
         &mut self,
@@ -651,10 +660,20 @@ impl Writer {
         let exec_model = match entry_point.stage {
             crate::ShaderStage::Vertex => spirv::ExecutionModel::Vertex,
             crate::ShaderStage::Fragment => {
-                let execution_mode = spirv::ExecutionMode::OriginUpperLeft;
-                self.check(execution_mode.required_capabilities())?;
-                Instruction::execution_mode(function_id, execution_mode, &[])
-                    .to_words(&mut self.logical_layout.execution_modes);
+                self.write_execution_mode(function_id, spirv::ExecutionMode::OriginUpperLeft)?;
+                if let Some(ref result) = entry_point.function.result {
+                    if contains_builtin(
+                        result.binding.as_ref(),
+                        result.ty,
+                        &ir_module.types,
+                        crate::BuiltIn::FragDepth,
+                    ) {
+                        self.write_execution_mode(
+                            function_id,
+                            spirv::ExecutionMode::DepthReplacing,
+                        )?;
+                    }
+                }
                 spirv::ExecutionModel::Fragment
             }
             crate::ShaderStage::Compute => {
@@ -679,17 +698,40 @@ impl Writer {
         ))
     }
 
-    fn write_scalar(&self, id: Word, kind: crate::ScalarKind, width: crate::Bytes) -> Instruction {
+    fn make_scalar(
+        &mut self,
+        id: Word,
+        kind: crate::ScalarKind,
+        width: crate::Bytes,
+    ) -> Instruction {
+        use crate::ScalarKind as Sk;
+
         let bits = (width * BITS_PER_BYTE) as u32;
         match kind {
-            crate::ScalarKind::Sint => {
-                Instruction::type_int(id, bits, super::instructions::Signedness::Signed)
+            Sk::Sint | Sk::Uint => {
+                let signedness = if kind == Sk::Sint {
+                    super::instructions::Signedness::Signed
+                } else {
+                    super::instructions::Signedness::Unsigned
+                };
+                let cap = match bits {
+                    8 => Some(spirv::Capability::Int8),
+                    16 => Some(spirv::Capability::Int16),
+                    64 => Some(spirv::Capability::Int64),
+                    _ => None,
+                };
+                if let Some(cap) = cap {
+                    self.capabilities.insert(cap);
+                }
+                Instruction::type_int(id, bits, signedness)
             }
-            crate::ScalarKind::Uint => {
-                Instruction::type_int(id, bits, super::instructions::Signedness::Unsigned)
+            crate::ScalarKind::Float => {
+                if bits == 64 {
+                    self.capabilities.insert(spirv::Capability::Float64);
+                }
+                Instruction::type_float(id, bits)
             }
-            crate::ScalarKind::Float => Instruction::type_float(id, bits),
-            crate::ScalarKind::Bool => Instruction::type_bool(id),
+            Sk::Bool => Instruction::type_bool(id),
         }
     }
 
@@ -705,7 +747,7 @@ impl Writer {
                 kind,
                 width,
                 pointer_class: None,
-            } => self.write_scalar(id, kind, width),
+            } => self.make_scalar(id, kind, width),
             LocalType::Value {
                 vector_size: Some(size),
                 kind,
@@ -760,8 +802,9 @@ impl Writer {
                 )?;
                 Instruction::type_pointer(id, class, type_id)
             }
-            LocalType::SampledImage { image_type } => {
-                let image_type_id = self.get_type_id(arena, LookupType::Handle(image_type))?;
+            // all the samplers and image types go through `write_type_declaration_arena`
+            LocalType::Image { .. } | LocalType::Sampler => unreachable!(),
+            LocalType::SampledImage { image_type_id } => {
                 Instruction::type_sampled_image(id, image_type_id)
             }
         };
@@ -807,7 +850,7 @@ impl Writer {
         use spirv::Decoration;
 
         let instruction = match ty.inner {
-            crate::TypeInner::Scalar { kind, width } => self.write_scalar(id, kind, width),
+            crate::TypeInner::Scalar { kind, width } => self.make_scalar(id, kind, width),
             crate::TypeInner::Vector { size, kind, width } => {
                 let scalar_id = self.get_type_id(
                     arena,
@@ -963,6 +1006,29 @@ impl Writer {
         Ok(id)
     }
 
+    fn get_index_constant(
+        &mut self,
+        index: Word,
+        types: &Arena<crate::Type>,
+    ) -> Result<Word, Error> {
+        self.get_constant_scalar(crate::ScalarValue::Uint(index as _), 4, types)
+    }
+
+    fn get_constant_scalar(
+        &mut self,
+        value: crate::ScalarValue,
+        width: crate::Bytes,
+        types: &Arena<crate::Type>,
+    ) -> Result<Word, Error> {
+        if let Some(&id) = self.cached_constants.get(&(value, width)) {
+            return Ok(id);
+        }
+        let id = self.id_gen.next();
+        self.write_constant_scalar(id, &value, width, None, types)?;
+        self.cached_constants.insert((value, width), id);
+        Ok(id)
+    }
+
     fn write_constant_scalar(
         &mut self,
         id: Word,
@@ -990,17 +1056,6 @@ impl Writer {
             crate::ScalarValue::Sint(val) => {
                 let words = match width {
                     4 => {
-                        if debug_name.is_none()
-                            && 0 <= val
-                            && val < CACHED_CONSTANT_INDICES as i64
-                            && self.index_constant_ids.get(val as usize).unwrap_or(&0) == &0
-                        {
-                            // cache this as an indexing constant
-                            while self.index_constant_ids.len() <= val as usize {
-                                self.index_constant_ids.push(0);
-                            }
-                            self.index_constant_ids[val as usize] = id;
-                        }
                         solo = [val as u32];
                         &solo[..]
                     }
@@ -1090,7 +1145,11 @@ impl Writer {
         use spirv::{BuiltIn, Decoration};
 
         match *binding {
-            crate::Binding::Location { location, interpolation, sampling } => {
+            crate::Binding::Location {
+                location,
+                interpolation,
+                sampling,
+            } => {
                 self.decorate(id, Decoration::Location, &[location]);
 
                 match interpolation {
@@ -1129,6 +1188,7 @@ impl Writer {
                     Bi::BaseInstance => BuiltIn::BaseInstance,
                     Bi::BaseVertex => BuiltIn::BaseVertex,
                     Bi::ClipDistance => BuiltIn::ClipDistance,
+                    Bi::CullDistance => BuiltIn::CullDistance,
                     Bi::InstanceIndex => BuiltIn::InstanceIndex,
                     Bi::PointSize => BuiltIn::PointSize,
                     Bi::VertexIndex => BuiltIn::VertexIndex,
@@ -1256,11 +1316,14 @@ impl Writer {
                         crate::VectorSize::Bi => crate::VectorSize::Tri,
                         crate::VectorSize::Tri => crate::VectorSize::Quad,
                         crate::VectorSize::Quad => {
-                            unimplemented!("Unable to extend the vec4 coordinate")
+                            return Err(Error::Validation("extending vec4 coordinate"));
                         }
                     }
                 }
-                ref other => unimplemented!("wrong coordinate type {:?}", other),
+                ref other => {
+                    log::error!("wrong coordinate type {:?}", other);
+                    return Err(Error::Validation("coordinate type"));
+                }
             };
 
             let array_index_f32_id = self.id_gen.next();
@@ -1353,6 +1416,27 @@ impl Writer {
         Ok((id, variable))
     }
 
+    fn is_intermediate(
+        &self,
+        expr_handle: Handle<crate::Expression>,
+        ir_function: &crate::Function,
+        ir_types: &Arena<crate::Type>,
+    ) -> bool {
+        match ir_function.expressions[expr_handle] {
+            crate::Expression::GlobalVariable(_) | crate::Expression::LocalVariable(_) => true,
+            crate::Expression::FunctionArgument(index) => {
+                let arg = &ir_function.arguments[index as usize];
+                match ir_types[arg.ty].inner {
+                    crate::TypeInner::Pointer { .. } | crate::TypeInner::ValuePointer { .. } => {
+                        true
+                    }
+                    _ => false,
+                }
+            }
+            _ => self.cached.ids[expr_handle.index()] == 0,
+        }
+    }
+
     /// Cache an expression for a value.
     fn cache_expression_value(
         &mut self,
@@ -1367,80 +1451,74 @@ impl Writer {
             self.get_expression_type_id(&ir_module.types, &fun_info[expr_handle].ty)?;
 
         let id = match ir_function.expressions[expr_handle] {
+            crate::Expression::Access { base, index: _ }
+                if self.is_intermediate(base, ir_function, &ir_module.types) =>
+            {
+                0
+            }
             crate::Expression::Access { base, index } => {
-                let base_is_var = match ir_function.expressions[base] {
-                    crate::Expression::GlobalVariable(_) | crate::Expression::LocalVariable(_) => {
-                        true
+                let index_id = self.cached[index];
+                let base_id = self.cached[base];
+                match *fun_info[base].ty.inner_with(&ir_module.types) {
+                    crate::TypeInner::Vector { .. } => {
+                        let id = self.id_gen.next();
+                        block.body.push(Instruction::vector_extract_dynamic(
+                            result_type_id,
+                            id,
+                            base_id,
+                            index_id,
+                        ));
+                        id
                     }
-                    _ => self.cached.ids[base.index()] == 0,
-                };
-                if base_is_var {
-                    0
-                } else {
-                    let index_id = self.cached[index];
-                    let base_id = self.cached[base];
-                    match *fun_info[base].ty.inner_with(&ir_module.types) {
-                        crate::TypeInner::Vector { .. } => {
-                            let id = self.id_gen.next();
-                            block.body.push(Instruction::vector_extract_dynamic(
-                                result_type_id,
-                                id,
-                                base_id,
-                                index_id,
-                            ));
-                            id
-                        }
-                        crate::TypeInner::Array {
-                            base: ty_element, ..
-                        } => {
-                            let (id, variable) = self.promote_access_expression_to_variable(
-                                &ir_module.types,
-                                result_type_id,
-                                base_id,
-                                &fun_info[base].ty,
-                                index_id,
-                                ty_element,
-                                block,
-                            )?;
-                            function.internal_variables.push(variable);
-                            id
-                        }
-                        ref other => {
-                            log::error!("Unable to access {:?}", other);
-                            return Err(Error::FeatureNotImplemented("access for type"));
-                        }
+                    crate::TypeInner::Array {
+                        base: ty_element, ..
+                    } => {
+                        let (id, variable) = self.promote_access_expression_to_variable(
+                            &ir_module.types,
+                            result_type_id,
+                            base_id,
+                            &fun_info[base].ty,
+                            index_id,
+                            ty_element,
+                            block,
+                        )?;
+                        function.internal_variables.push(variable);
+                        id
+                    }
+                    ref other => {
+                        log::error!(
+                            "Unable to access base {:?} of type {:?}",
+                            ir_function.expressions[base],
+                            other
+                        );
+                        return Err(Error::FeatureNotImplemented("access for type"));
                     }
                 }
             }
+            crate::Expression::AccessIndex { base, index: _ }
+                if self.is_intermediate(base, ir_function, &ir_module.types) =>
+            {
+                0
+            }
             crate::Expression::AccessIndex { base, index } => {
-                let base_is_var = match ir_function.expressions[base] {
-                    crate::Expression::GlobalVariable(_) | crate::Expression::LocalVariable(_) => {
-                        true
+                match *fun_info[base].ty.inner_with(&ir_module.types) {
+                    crate::TypeInner::Vector { .. }
+                    | crate::TypeInner::Matrix { .. }
+                    | crate::TypeInner::Array { .. }
+                    | crate::TypeInner::Struct { .. } => {
+                        let id = self.id_gen.next();
+                        let base_id = self.cached[base];
+                        block.body.push(Instruction::composite_extract(
+                            result_type_id,
+                            id,
+                            base_id,
+                            &[index],
+                        ));
+                        id
                     }
-                    _ => self.cached.ids[base.index()] == 0,
-                };
-                if base_is_var {
-                    0
-                } else {
-                    match *fun_info[base].ty.inner_with(&ir_module.types) {
-                        crate::TypeInner::Vector { .. }
-                        | crate::TypeInner::Matrix { .. }
-                        | crate::TypeInner::Array { .. }
-                        | crate::TypeInner::Struct { .. } => {
-                            let id = self.id_gen.next();
-                            let base_id = self.cached[base];
-                            block.body.push(Instruction::composite_extract(
-                                result_type_id,
-                                id,
-                                base_id,
-                                &[index],
-                            ));
-                            id
-                        }
-                        ref other => {
-                            log::error!("Unable to access index of {:?}", other);
-                            return Err(Error::FeatureNotImplemented("access index for type"));
-                        }
+                    ref other => {
+                        log::error!("Unable to access index of {:?}", other);
+                        return Err(Error::FeatureNotImplemented("access index for type"));
                     }
                 }
             }
@@ -1455,6 +1533,26 @@ impl Writer {
                 block.body.push(Instruction::composite_construct(
                     result_type_id,
                     id,
+                    &self.temp_list,
+                ));
+                id
+            }
+            crate::Expression::Swizzle {
+                size,
+                vector,
+                pattern,
+            } => {
+                let vector_id = self.cached[vector];
+                self.temp_list.clear();
+                for &sc in pattern[..size as usize].iter() {
+                    self.temp_list.push(sc as Word);
+                }
+                let id = self.id_gen.next();
+                block.body.push(Instruction::vector_shuffle(
+                    result_type_id,
+                    id,
+                    vector_id,
+                    vector_id,
                     &self.temp_list,
                 ));
                 id
@@ -1491,7 +1589,10 @@ impl Writer {
                             return Err(Error::FeatureNotImplemented("negation"));
                         }
                     },
-                    crate::UnaryOperator::Not => spirv::Op::Not,
+                    crate::UnaryOperator::Not => match expr_ty_inner.scalar_kind() {
+                        Some(crate::ScalarKind::Bool) => spirv::Op::LogicalNot,
+                        _ => spirv::Op::Not,
+                    },
                 };
 
                 block
@@ -1714,12 +1815,20 @@ impl Writer {
                         arg0_id,
                         arg1_id,
                     )),
+                    Mf::Outer => MathOp::Custom(Instruction::binary(
+                        spirv::Op::OuterProduct,
+                        result_type_id,
+                        id,
+                        arg0_id,
+                        arg1_id,
+                    )),
                     Mf::Cross => MathOp::Ext(spirv::GLOp::Cross),
                     Mf::Distance => MathOp::Ext(spirv::GLOp::Distance),
                     Mf::Length => MathOp::Ext(spirv::GLOp::Length),
                     Mf::Normalize => MathOp::Ext(spirv::GLOp::Normalize),
                     Mf::FaceForward => MathOp::Ext(spirv::GLOp::FaceForward),
                     Mf::Reflect => MathOp::Ext(spirv::GLOp::Reflect),
+                    Mf::Refract => MathOp::Ext(spirv::GLOp::Refract),
                     // exponent
                     Mf::Exp => MathOp::Ext(spirv::GLOp::Exp),
                     Mf::Exp2 => MathOp::Ext(spirv::GLOp::Exp2),
@@ -1746,7 +1855,7 @@ impl Writer {
                         arg0_id,
                     )),
                     Mf::Determinant => MathOp::Ext(spirv::GLOp::Determinant),
-                    Mf::Outer | Mf::ReverseBits | Mf::CountOneBits => {
+                    Mf::ReverseBits | Mf::CountOneBits => {
                         log::error!("unimplemented math function {:?}", fun);
                         return Err(Error::FeatureNotImplemented("math function"));
                     }
@@ -1799,11 +1908,14 @@ impl Writer {
                     .unwrap();
 
                 let op = match (expr_kind, kind) {
-                    _ if !convert => spirv::Op::Bitcast,
+                    _ if convert.is_none() => spirv::Op::Bitcast,
                     (crate::ScalarKind::Float, crate::ScalarKind::Uint) => spirv::Op::ConvertFToU,
                     (crate::ScalarKind::Float, crate::ScalarKind::Sint) => spirv::Op::ConvertFToS,
+                    (crate::ScalarKind::Float, crate::ScalarKind::Float) => spirv::Op::FConvert,
                     (crate::ScalarKind::Sint, crate::ScalarKind::Float) => spirv::Op::ConvertSToF,
+                    (crate::ScalarKind::Sint, crate::ScalarKind::Sint) => spirv::Op::SConvert,
                     (crate::ScalarKind::Uint, crate::ScalarKind::Float) => spirv::Op::ConvertUToF,
+                    (crate::ScalarKind::Uint, crate::ScalarKind::Uint) => spirv::Op::UConvert,
                     // We assume it's either an identity cast, or int-uint.
                     _ => spirv::Op::Bitcast,
                 };
@@ -1869,12 +1981,16 @@ impl Writer {
                     instruction.add_operand(index_id);
                 }
 
-                if instruction.type_id != Some(result_type_id) {
+                let inst_type_id = instruction.type_id;
+                block.body.push(instruction);
+                if inst_type_id != Some(result_type_id) {
                     let sub_id = self.id_gen.next();
-                    let index_id = self.get_index_constant(0, &ir_module.types)?;
-                    let sub_instruction =
-                        Instruction::vector_extract_dynamic(result_type_id, sub_id, id, index_id);
-                    block.body.push(sub_instruction);
+                    block.body.push(Instruction::composite_extract(
+                        result_type_id,
+                        sub_id,
+                        id,
+                        &[0],
+                    ));
                     sub_id
                 } else {
                     id
@@ -1917,9 +2033,11 @@ impl Writer {
                 };
 
                 // OpTypeSampledImage
+                let image_type_id =
+                    self.get_type_id(&ir_module.types, LookupType::Handle(image_type))?;
                 let sampled_image_type_id = self.get_type_id(
                     &ir_module.types,
-                    LookupType::Local(LocalType::SampledImage { image_type }),
+                    LookupType::Local(LocalType::SampledImage { image_type_id }),
                 )?;
 
                 let sampler_id = self.get_expression_global(ir_function, sampler);
@@ -1941,6 +2059,8 @@ impl Writer {
                 let id = self.id_gen.next();
 
                 let depth_id = depth_ref.map(|handle| self.cached[handle]);
+                let mut mask = spirv::ImageOperands::empty();
+                mask.set(spirv::ImageOperands::CONST_OFFSET, offset.is_some());
 
                 let mut main_instruction = match level {
                     crate::SampleLevel::Zero => {
@@ -1953,16 +2073,14 @@ impl Writer {
                             depth_id,
                         );
 
-                        //TODO: cache this!
-                        let zero_id = self.id_gen.next();
-                        self.write_constant_scalar(
-                            zero_id,
-                            &crate::ScalarValue::Float(0.0),
+                        let zero_id = self.get_constant_scalar(
+                            crate::ScalarValue::Float(0.0),
                             4,
-                            None,
                             &ir_module.types,
                         )?;
-                        inst.add_operand(spirv::ImageOperands::LOD.bits());
+
+                        mask |= spirv::ImageOperands::LOD;
+                        inst.add_operand(mask.bits());
                         inst.add_operand(zero_id);
 
                         inst
@@ -1986,7 +2104,8 @@ impl Writer {
                         );
 
                         let lod_id = self.cached[lod_handle];
-                        inst.add_operand(spirv::ImageOperands::LOD.bits());
+                        mask |= spirv::ImageOperands::LOD;
+                        inst.add_operand(mask.bits());
                         inst.add_operand(lod_id);
 
                         inst
@@ -2002,7 +2121,7 @@ impl Writer {
                         );
 
                         let bias_id = self.cached[bias_handle];
-                        inst.add_operand(spirv::ImageOperands::BIAS.bits());
+                        mask |= spirv::ImageOperands::BIAS;
                         inst.add_operand(bias_id);
 
                         inst
@@ -2019,7 +2138,7 @@ impl Writer {
 
                         let x_id = self.cached[x];
                         let y_id = self.cached[y];
-                        inst.add_operand(spirv::ImageOperands::GRAD.bits());
+                        mask |= spirv::ImageOperands::GRAD;
                         inst.add_operand(x_id);
                         inst.add_operand(y_id);
 
@@ -2029,7 +2148,6 @@ impl Writer {
 
                 if let Some(offset_const) = offset {
                     let offset_id = self.constant_ids[offset_const.index()];
-                    main_instruction.add_operand(spirv::ImageOperands::CONST_OFFSET.bits());
                     main_instruction.add_operand(offset_id);
                 }
 
@@ -2037,10 +2155,12 @@ impl Writer {
 
                 if needs_sub_access {
                     let sub_id = self.id_gen.next();
-                    let index_id = self.get_index_constant(0, &ir_module.types)?;
-                    let sub_instruction =
-                        Instruction::vector_extract_dynamic(result_type_id, sub_id, id, index_id);
-                    block.body.push(sub_instruction);
+                    block.body.push(Instruction::composite_extract(
+                        result_type_id,
+                        sub_id,
+                        id,
+                        &[0],
+                    ));
                     sub_id
                 } else {
                     id
@@ -2062,22 +2182,210 @@ impl Writer {
                 id
             }
             crate::Expression::Derivative { axis, expr } => {
-                use crate::DerivativeAxis;
+                use crate::DerivativeAxis as Da;
 
                 let id = self.id_gen.next();
                 let expr_id = self.cached[expr];
-                block.body.push(match axis {
-                    DerivativeAxis::X => Instruction::derive_x(result_type_id, id, expr_id),
-                    DerivativeAxis::Y => Instruction::derive_y(result_type_id, id, expr_id),
-                    DerivativeAxis::Width => Instruction::derive_width(result_type_id, id, expr_id),
-                });
+                let op = match axis {
+                    Da::X => spirv::Op::DPdx,
+                    Da::Y => spirv::Op::DPdy,
+                    Da::Width => spirv::Op::Fwidth,
+                };
+                block
+                    .body
+                    .push(Instruction::derivative(op, result_type_id, id, expr_id));
                 id
             }
-            crate::Expression::ImageQuery { .. }
-            | crate::Expression::Relational { .. }
-            | crate::Expression::ArrayLength(_) => {
-                log::error!("unimplemented {:?}", ir_function.expressions[expr_handle]);
-                return Err(Error::FeatureNotImplemented("expression"));
+            crate::Expression::ImageQuery { image, query } => {
+                use crate::{ImageClass as Ic, ImageDimension as Id, ImageQuery as Iq};
+
+                let image_id = self.get_expression_global(ir_function, image);
+                let image_type = fun_info[image].ty.handle().unwrap();
+                let (dim, arrayed, class) = match ir_module.types[image_type].inner {
+                    crate::TypeInner::Image {
+                        dim,
+                        arrayed,
+                        class,
+                    } => (dim, arrayed, class),
+                    _ => {
+                        return Err(Error::Validation("image type"));
+                    }
+                };
+
+                match query {
+                    Iq::Size { level } => {
+                        let dim_coords = match dim {
+                            Id::D1 => 1,
+                            Id::D2 | Id::Cube => 2,
+                            Id::D3 => 3,
+                        };
+                        let extended_size_type_id = {
+                            let array_coords = if arrayed { 1 } else { 0 };
+                            let vector_size = match dim_coords + array_coords {
+                                2 => Some(crate::VectorSize::Bi),
+                                3 => Some(crate::VectorSize::Tri),
+                                4 => Some(crate::VectorSize::Quad),
+                                _ => None,
+                            };
+                            self.get_type_id(
+                                &ir_module.types,
+                                LookupType::Local(LocalType::Value {
+                                    vector_size,
+                                    kind: crate::ScalarKind::Sint,
+                                    width: 4,
+                                    pointer_class: None,
+                                }),
+                            )?
+                        };
+
+                        let (query_op, level_id) = match class {
+                            Ic::Storage(_) => (spirv::Op::ImageQuerySize, None),
+                            _ => {
+                                let level_id = match level {
+                                    Some(expr) => self.cached[expr],
+                                    None => self.get_index_constant(0, &ir_module.types)?,
+                                };
+                                (spirv::Op::ImageQuerySizeLod, Some(level_id))
+                            }
+                        };
+                        // The ID of the vector returned by SPIR-V, which contains the dimensions
+                        // as well as the layer count.
+                        let id_extended = self.id_gen.next();
+                        let mut inst = Instruction::image_query(
+                            query_op,
+                            extended_size_type_id,
+                            id_extended,
+                            image_id,
+                        );
+                        if let Some(expr_id) = level_id {
+                            inst.add_operand(expr_id);
+                        }
+                        block.body.push(inst);
+
+                        if result_type_id != extended_size_type_id {
+                            let id = self.id_gen.next();
+                            let components = match dim {
+                                // always pick the first component, and duplicate it for all 3 dimensions
+                                Id::Cube => &[0u32, 0, 0][..],
+                                _ => &[0u32, 1, 2, 3][..dim_coords],
+                            };
+                            block.body.push(Instruction::vector_shuffle(
+                                result_type_id,
+                                id,
+                                id_extended,
+                                id_extended,
+                                components,
+                            ));
+                            id
+                        } else {
+                            id_extended
+                        }
+                    }
+                    Iq::NumLevels => {
+                        let id = self.id_gen.next();
+                        block.body.push(Instruction::image_query(
+                            spirv::Op::ImageQueryLevels,
+                            result_type_id,
+                            id,
+                            image_id,
+                        ));
+                        id
+                    }
+                    Iq::NumLayers => {
+                        let vec_size = match dim {
+                            Id::D1 => crate::VectorSize::Bi,
+                            Id::D2 | Id::Cube => crate::VectorSize::Tri,
+                            Id::D3 => crate::VectorSize::Quad,
+                        };
+                        let extended_size_type_id = self.get_type_id(
+                            &ir_module.types,
+                            LookupType::Local(LocalType::Value {
+                                vector_size: Some(vec_size),
+                                kind: crate::ScalarKind::Sint,
+                                width: 4,
+                                pointer_class: None,
+                            }),
+                        )?;
+                        let id_extended = self.id_gen.next();
+                        let mut inst = Instruction::image_query(
+                            spirv::Op::ImageQuerySizeLod,
+                            extended_size_type_id,
+                            id_extended,
+                            image_id,
+                        );
+                        inst.add_operand(self.get_index_constant(0, &ir_module.types)?);
+                        block.body.push(inst);
+                        let id = self.id_gen.next();
+                        block.body.push(Instruction::composite_extract(
+                            result_type_id,
+                            id,
+                            id_extended,
+                            &[vec_size as u32 - 1],
+                        ));
+                        id
+                    }
+                    Iq::NumSamples => {
+                        let id = self.id_gen.next();
+                        block.body.push(Instruction::image_query(
+                            spirv::Op::ImageQuerySamples,
+                            result_type_id,
+                            id,
+                            image_id,
+                        ));
+                        id
+                    }
+                }
+            }
+            crate::Expression::Relational { fun, argument } => {
+                use crate::RelationalFunction as Rf;
+                let arg_id = self.cached[argument];
+                let op = match fun {
+                    Rf::All => spirv::Op::All,
+                    Rf::Any => spirv::Op::Any,
+                    Rf::IsNan => spirv::Op::IsNan,
+                    Rf::IsInf => spirv::Op::IsInf,
+                    //TODO: these require Kernel capability
+                    Rf::IsFinite | Rf::IsNormal => {
+                        return Err(Error::FeatureNotImplemented("is finite/normal"))
+                    }
+                };
+                let id = self.id_gen.next();
+                block
+                    .body
+                    .push(Instruction::relational(op, result_type_id, id, arg_id));
+                id
+            }
+            crate::Expression::ArrayLength(expr) => {
+                let (structure_id, member_idx) = match ir_function.expressions[expr] {
+                    crate::Expression::AccessIndex { base, .. } => {
+                        match ir_function.expressions[base] {
+                            crate::Expression::GlobalVariable(handle) => {
+                                let global = &ir_module.global_variables[handle];
+                                let last_idx = match ir_module.types[global.ty].inner {
+                                    crate::TypeInner::Struct { ref members, .. } => {
+                                        members.len() as u32 - 1
+                                    }
+                                    _ => return Err(Error::Validation("array length expression")),
+                                };
+
+                                (self.global_variables[handle.index()].id, last_idx)
+                            }
+                            _ => return Err(Error::Validation("array length expression")),
+                        }
+                    }
+                    _ => return Err(Error::Validation("array length expression")),
+                };
+
+                // let structure_id = self.get_expression_global(ir_function, global);
+                let id = self.id_gen.next();
+
+                block.body.push(Instruction::array_length(
+                    result_type_id,
+                    id,
+                    structure_id,
+                    member_idx,
+                ));
+                id
             }
         };
 
@@ -2123,6 +2431,10 @@ impl Writer {
                 crate::Expression::LocalVariable(variable) => {
                     let local_var = &function.variables[&variable];
                     break (local_var.id, spirv::StorageClass::Function);
+                }
+                crate::Expression::FunctionArgument(index) => {
+                    let id = function.parameters[index as usize].result_id.unwrap();
+                    break (id, spirv::StorageClass::Function);
                 }
                 ref other => unimplemented!("Unexpected pointer expression {:?}", other),
             }
@@ -2488,6 +2800,33 @@ impl Writer {
                 crate::Statement::Kill => {
                     block.termination = Some(Instruction::kill());
                 }
+                crate::Statement::Barrier(flags) => {
+                    let memory_scope = if flags.contains(crate::Barrier::STORAGE) {
+                        spirv::Scope::Device
+                    } else {
+                        spirv::Scope::Workgroup
+                    };
+                    let mut semantics = spirv::MemorySemantics::ACQUIRE_RELEASE;
+                    semantics.set(
+                        spirv::MemorySemantics::UNIFORM_MEMORY,
+                        flags.contains(crate::Barrier::STORAGE),
+                    );
+                    semantics.set(
+                        spirv::MemorySemantics::WORKGROUP_MEMORY,
+                        flags.contains(crate::Barrier::WORK_GROUP),
+                    );
+                    let exec_scope_id =
+                        self.get_index_constant(spirv::Scope::Workgroup as u32, &ir_module.types)?;
+                    let mem_scope_id =
+                        self.get_index_constant(memory_scope as u32, &ir_module.types)?;
+                    let semantics_id =
+                        self.get_index_constant(semantics.bits(), &ir_module.types)?;
+                    block.body.push(Instruction::control_barrier(
+                        exec_scope_id,
+                        mem_scope_id,
+                        semantics_id,
+                    ));
+                }
                 crate::Statement::Store { pointer, value } => {
                     let (pointer_id, _) = self.write_expression_pointer(
                         ir_module,
@@ -2563,8 +2902,19 @@ impl Writer {
                 Some(id) => Instruction::branch(id),
                 // This can happen if the last branch had all the paths
                 // leading out of the graph (i.e. returning).
-                // So it doesn't matter what we do here, but it has to be valid.
-                None => Instruction::branch(label_id),
+                // Or it may be the end of the function.
+                None => match ir_function.result {
+                    Some(ref result) if function.entry_point_context.is_none() => {
+                        // create a Null and return it
+                        let null_id = self.id_gen.next();
+                        let type_id =
+                            self.get_type_id(&ir_module.types, LookupType::Handle(result.ty))?;
+                        Instruction::constant_null(type_id, null_id)
+                            .to_words(&mut self.logical_layout.declarations);
+                        Instruction::return_value(null_id)
+                    }
+                    _ => Instruction::return_void(),
+                },
             });
         }
 
@@ -2606,15 +2956,20 @@ impl Writer {
             match constant.inner {
                 crate::ConstantInner::Composite { .. } => continue,
                 crate::ConstantInner::Scalar { width, ref value } => {
-                    let id = self.id_gen.next();
-                    self.constant_ids[handle.index()] = id;
-                    self.write_constant_scalar(
-                        id,
-                        value,
-                        width,
-                        constant.name.as_ref(),
-                        &ir_module.types,
-                    )?;
+                    self.constant_ids[handle.index()] = match constant.name {
+                        Some(ref name) => {
+                            let id = self.id_gen.next();
+                            self.write_constant_scalar(
+                                id,
+                                value,
+                                width,
+                                Some(name),
+                                &ir_module.types,
+                            )?;
+                            id
+                        }
+                        None => self.get_constant_scalar(*value, width, &ir_module.types)?,
+                    };
                 }
             }
         }
@@ -2670,6 +3025,11 @@ impl Writer {
 
         for capability in self.capabilities.iter() {
             Instruction::capability(*capability).to_words(&mut self.logical_layout.capabilities);
+        }
+        if ir_module.entry_points.is_empty() {
+            // SPIR-V doesn't like modules without entry points
+            Instruction::capability(spirv::Capability::Linkage)
+                .to_words(&mut self.logical_layout.capabilities);
         }
 
         let addressing_model = spirv::AddressingModel::Logical;

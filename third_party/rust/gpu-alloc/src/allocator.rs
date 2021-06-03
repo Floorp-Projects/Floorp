@@ -548,9 +548,9 @@ where
                     FreeListBlock {
                         memory,
                         ptr,
+                        chunk,
                         offset,
                         size,
-                        chunk,
                     },
                     heap,
                     &mut self.allocations_remains,
