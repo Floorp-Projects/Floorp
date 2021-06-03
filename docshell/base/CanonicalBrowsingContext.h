@@ -11,6 +11,7 @@
 #include "mozilla/dom/MediaControlKeySource.h"
 #include "mozilla/dom/BrowsingContextWebProgress.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStoreRestoreData.h"
 #include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/ipc/IdType.h"
@@ -47,7 +48,6 @@ class FeaturePolicy;
 struct LoadURIOptions;
 class MediaController;
 struct LoadingSessionHistoryInfo;
-class SessionHistoryEntry;
 class SSCacheCopy;
 class WindowGlobalParent;
 
@@ -58,6 +58,7 @@ struct RemotenessChangeOptions {
   bool mReplaceBrowsingContext = false;
   uint64_t mSpecificGroupId = 0;
   bool mTryUseBFCache = false;
+  RefPtr<SessionHistoryEntry> mActiveSessionHistoryEntry;
 };
 
 // CanonicalBrowsingContext is a BrowsingContext living in the parent
