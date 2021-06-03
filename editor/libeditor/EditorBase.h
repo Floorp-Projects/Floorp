@@ -2135,6 +2135,18 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToInsertContent(
       const EditorDOMPoint& aPointToInsert, bool aDoDeleteSelection);
 
+  /**
+   * InsertTextAt() inserts aStringToInsert at aPointToInsert.
+   *
+   * @param aStringToInsert     The string which you want to insert.
+   * @param aPointToInsert      The insertion point.
+   * @param aDoDeleteSelection  true if you want this to delete selected
+   *                            content.  Otherwise, false.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTextAt(const nsAString& aStringToInsert,
+                                           const EditorDOMPoint& aPointToInsert,
+                                           bool aDoDeleteSelection);
+
  protected:  // Called by helper classes.
   /**
    * OnStartToHandleTopLevelEditSubAction() is called when
