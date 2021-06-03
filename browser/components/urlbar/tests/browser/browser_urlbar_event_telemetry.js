@@ -1330,7 +1330,9 @@ const noEventTests = [
           value: "x",
           fireInputEvent: true,
         });
-        UrlbarTestUtils.getOneOffSearchButtons(win).settingsButton.click();
+        UrlbarTestUtils.getOneOffSearchButtons(
+          win
+        ).settingsButtonCompact.click();
         await promise;
       }
     );
@@ -1353,7 +1355,7 @@ const noEventTests = [
         Assert.ok(
           UrlbarTestUtils.getOneOffSearchButtons(
             win
-          ).selectedButton.classList.contains("search-setting-button-compact"),
+          ).selectedButton.classList.contains("search-setting-button"),
           "Should have selected the settings button"
         );
         EventUtils.synthesizeKey("VK_RETURN", {}, win);

@@ -38,10 +38,8 @@ class SearchOneOffs {
       <box class="search-panel-one-offs-container">
         <hbox class="search-panel-one-offs" role="group"/>
         <hbox class="search-one-offs-spacer"/>
-        <button class="searchbar-engine-one-off-item search-setting-button-compact" tabindex="-1" data-l10n-id="search-one-offs-change-settings-compact-button"/>
+        <button class="searchbar-engine-one-off-item search-setting-button" tabindex="-1" data-l10n-id="search-one-offs-change-settings-compact-button"/>
       </box>
-      <menuseparator class="searchbar-separator"/>
-      <button class="search-setting-button" pack="start" data-l10n-id="search-one-offs-change-settings-button"/>
       <box>
         <menupopup class="search-one-offs-context-menu">
           <menuitem class="search-one-offs-context-open-in-new-tab" data-l10n-id="search-one-offs-context-open-new-tab"/>
@@ -72,11 +70,7 @@ class SearchOneOffs {
 
     this.header = this.querySelector(".search-panel-one-offs-header");
 
-    this.settingsButton = this.querySelector(".search-setting-button");
-
-    this.settingsButtonCompact = this.querySelector(
-      ".search-setting-button-compact"
-    );
+    this.settingsButtonCompact = this.querySelector(".search-setting-button");
 
     this.spacerCompact = this.querySelector(".search-one-offs-spacer");
 
@@ -352,10 +346,6 @@ class SearchOneOffs {
     return -1;
   }
 
-  get compact() {
-    return this.getAttribute("compact") == "true";
-  }
-
   async getEngineInfo() {
     if (this._engineInfo) {
       return this._engineInfo;
@@ -467,25 +457,17 @@ class SearchOneOffs {
     // We set this early, since we might either rebuild the DOM or hide it.
     this._engineInfo.domWasUpdated = true;
 
-    if (this.compact) {
-      this.container.hidden = hideOneOffs;
-    } else {
-      // Hide everything except the settings button.
-      this.header.hidden = this.buttons.hidden = hideOneOffs;
-    }
+    this.container.hidden = hideOneOffs;
 
     if (hideOneOffs) {
       return;
     }
 
-    if (this.compact) {
-      this.spacerCompact.setAttribute("flex", "1");
-    }
+    this.spacerCompact.setAttribute("flex", "1");
 
     // Ensure we can refer to the settings buttons by ID:
     let origin = this.telemetryOrigin;
-    this.settingsButton.id = origin + "-anon-search-settings";
-    this.settingsButtonCompact.id = origin + "-anon-search-settings-compact";
+    this.settingsButtonCompact.id = origin + "-anon-search-settings";
 
     if (this.popup) {
       let buttonsWidth = this.popup.clientWidth;
@@ -588,9 +570,7 @@ class SearchOneOffs {
     ];
 
     if (aIncludeNonEngineButtons) {
-      buttons.push(
-        this.compact ? this.settingsButtonCompact : this.settingsButton
-      );
+      buttons.push(this.settingsButtonCompact);
     }
 
     return buttons;
@@ -728,7 +708,7 @@ class SearchOneOffs {
   }
 
   _handleKeyDown(event, numListItems, allowEmptySelection, textboxUserValue) {
-    if (this.compact && this.container.hidden) {
+    if (this.container.hidden) {
       return false;
     }
     if (
@@ -887,11 +867,11 @@ class SearchOneOffs {
     if (event.keyCode == KeyboardEvent.DOM_VK_LEFT) {
       if (
         this.selectedButton &&
-        (this.compact || this.selectedButton.engine) &&
+        this.selectedButton.engine &&
         !this.disableOneOffsHorizontalKeyNavigation
       ) {
         // Moving left within the buttons.
-        this.advanceSelection(false, this.compact, true);
+        this.advanceSelection(false, true, true);
         return true;
       }
       return false;
@@ -900,11 +880,11 @@ class SearchOneOffs {
     if (event.keyCode == KeyboardEvent.DOM_VK_RIGHT) {
       if (
         this.selectedButton &&
-        (this.compact || this.selectedButton.engine) &&
+        this.selectedButton.engine &&
         !this.disableOneOffsHorizontalKeyNavigation
       ) {
         // Moving right within the buttons.
-        this.advanceSelection(true, this.compact, true);
+        this.advanceSelection(true, true, true);
         return true;
       }
       return false;
@@ -1044,7 +1024,7 @@ class SearchOneOffs {
   _on_command(event) {
     let target = event.target;
 
-    if (target == this.settingsButton || target == this.settingsButtonCompact) {
+    if (target == this.settingsButtonCompact) {
       this.window.openPreferences("paneSearch");
 
       // If the preference tab was already selected, the panel doesn't
@@ -1117,7 +1097,7 @@ class SearchOneOffs {
     // Prevent the context menu from appearing except on the one off buttons.
     if (
       !target.classList.contains("searchbar-engine-one-off-item") ||
-      target.classList.contains("search-setting-button-compact")
+      target.classList.contains("search-setting-button")
     ) {
       event.preventDefault();
       return;

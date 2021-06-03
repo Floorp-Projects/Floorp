@@ -108,7 +108,7 @@ add_task(async function test_arrows() {
   }
 
   ok(
-    textbox.selectedButton.classList.contains("search-setting-button-compact"),
+    textbox.selectedButton.classList.contains("search-setting-button"),
     "the settings item should be selected"
   );
   EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -120,7 +120,7 @@ add_task(async function test_arrows() {
   info("now test the up arrow key");
   EventUtils.synthesizeKey("KEY_ArrowUp");
   ok(
-    textbox.selectedButton.classList.contains("search-setting-button-compact"),
+    textbox.selectedButton.classList.contains("search-setting-button"),
     "the settings item should be selected"
   );
 
@@ -167,7 +167,7 @@ add_task(async function test_tab() {
   // One more <tab> selects the settings button.
   EventUtils.synthesizeKey("KEY_Tab");
   ok(
-    textbox.selectedButton.classList.contains("search-setting-button-compact"),
+    textbox.selectedButton.classList.contains("search-setting-button"),
     "the settings item should be selected"
   );
 
@@ -204,7 +204,7 @@ add_task(async function test_shift_tab() {
   // Press up once to select the last button.
   EventUtils.synthesizeKey("KEY_ArrowUp");
   ok(
-    textbox.selectedButton.classList.contains("search-setting-button-compact"),
+    textbox.selectedButton.classList.contains("search-setting-button"),
     "the settings item should be selected"
   );
 
@@ -321,7 +321,7 @@ add_task(async function test_alt_up() {
   // Cleanup for the next test.
   EventUtils.synthesizeKey("KEY_ArrowDown");
   ok(
-    textbox.selectedButton.classList.contains("search-setting-button-compact"),
+    textbox.selectedButton.classList.contains("search-setting-button"),
     "the settings item should be selected"
   );
   EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -400,7 +400,7 @@ add_task(async function test_open_search() {
   // Pressing up once selects the setting button...
   EventUtils.synthesizeKey("KEY_ArrowUp");
   ok(
-    textbox.selectedButton.classList.contains("search-setting-button-compact"),
+    textbox.selectedButton.classList.contains("search-setting-button"),
     "the settings item should be selected"
   );
 
@@ -441,7 +441,7 @@ add_task(async function test_open_search() {
   // Pressing down on the last engine item selects the settings button.
   EventUtils.synthesizeKey("KEY_ArrowDown");
   ok(
-    textbox.selectedButton.classList.contains("search-setting-button-compact"),
+    textbox.selectedButton.classList.contains("search-setting-button"),
     "the settings item should be selected"
   );
 
