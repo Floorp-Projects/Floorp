@@ -436,10 +436,8 @@ nsresult nsFocusManager::SetFocusedWindowWithCallerType(
     // in a child.
     nsIContent* content = windowToFocus->GetFocusedElement();
     if (content) {
-      if (nsCOMPtr<nsFrameLoaderOwner> frameLoaderOwner =
-              do_QueryInterface(content)) {
+      if (nsCOMPtr<nsPIDOMWindowOuter> childWindow = GetContentWindow(content))
         ClearFocus(windowToFocus);
-      }
     }
   }
 
@@ -884,7 +882,8 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
       // focus somewhere else, so just clear the focus in the toplevel window
       // so that no element is focused.
       //
-      // The Fission case is handled in FlushAndCheckIfFocusable().
+      // This check does not work correctly in Fission:
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1613054
       Document* subdoc = aDocument->GetSubDocumentFor(content);
       if (subdoc) {
         nsCOMPtr<nsIDocShell> docShell = subdoc->GetDocShell();
