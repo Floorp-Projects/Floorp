@@ -1157,24 +1157,19 @@ CycleCollectedJSRuntime* XPCJSContext::CreateRuntime(JSContext* aCx) {
 class HelperThreadTaskHandler : public Task {
  public:
   bool Run() override {
-    mOffThreadTask->runTask();
-    mOffThreadTask.reset();
+    JS::RunHelperThreadTask();
     return true;
   }
-  explicit HelperThreadTaskHandler(js::UniquePtr<RunnableTask> task)
-      // TODO: priority should be updated in Bug 1703185.
-      : Task(false, EventQueuePriority::Normal),
-        mOffThreadTask(std::move(task)) {}
+  explicit HelperThreadTaskHandler() : Task(false, EventQueuePriority::Normal) {
+    // Bug 1703185: Currently all tasks are run at the same priority.
+  }
 
  private:
   ~HelperThreadTaskHandler() = default;
-  js::UniquePtr<RunnableTask> mOffThreadTask;
 };
 
-bool DispatchOffThreadTask(js::UniquePtr<RunnableTask> task) {
-  TaskController::Get()->AddTask(
-      MakeAndAddRef<HelperThreadTaskHandler>(std::move(task)));
-  return true;
+static void DispatchOffThreadTask() {
+  TaskController::Get()->AddTask(MakeAndAddRef<HelperThreadTaskHandler>());
 }
 
 static bool CreateSelfHostedSharedMemory(JSContext* aCx,

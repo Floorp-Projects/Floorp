@@ -1910,7 +1910,7 @@ JS_PUBLIC_API void JS::AssertObjectBelongsToCurrentThread(JSObject* obj) {
 // HelperThreadTaskCallback, use MOZ_NEVER_INLINE to prevent this. See
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1630189#c4
 JS_PUBLIC_API MOZ_NEVER_INLINE void SetHelperThreadTaskCallback(
-    bool (*callback)(js::UniquePtr<js::RunnableTask>)) {
+    void (*callback)()) {
   HelperThreadTaskCallback = callback;
 }
 
