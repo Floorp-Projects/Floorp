@@ -1704,7 +1704,7 @@ size_t GlobalHelperThreadState::maxWasmCompilationThreads() const {
       IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER2)) {
     return 1;
   }
-  return cpuCount;
+  return std::min(cpuCount, threadCount);
 }
 
 size_t GlobalHelperThreadState::maxWasmTier2GeneratorThreads() const {
@@ -1716,14 +1716,14 @@ size_t GlobalHelperThreadState::maxPromiseHelperThreads() const {
       IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER2)) {
     return 1;
   }
-  return cpuCount;
+  return std::min(cpuCount, threadCount);
 }
 
 size_t GlobalHelperThreadState::maxParseThreads() const {
   if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_PARSE)) {
     return 1;
   }
-  return cpuCount;
+  return std::min(cpuCount, threadCount);
 }
 
 size_t GlobalHelperThreadState::maxCompressionThreads() const {
