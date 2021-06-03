@@ -41,7 +41,6 @@
 #include "jsapi.h"
 #include "js/ArrayBuffer.h"
 #include "js/ContextOptions.h"
-#include "js/HelperThreadAPI.h"
 #include "js/Initialization.h"
 #include "js/MemoryMetrics.h"
 #include "js/OffThreadScriptCompilation.h"
@@ -1158,19 +1157,24 @@ CycleCollectedJSRuntime* XPCJSContext::CreateRuntime(JSContext* aCx) {
 class HelperThreadTaskHandler : public Task {
  public:
   bool Run() override {
-    JS::RunHelperThreadTask();
+    mOffThreadTask->runTask();
+    mOffThreadTask.reset();
     return true;
   }
-  explicit HelperThreadTaskHandler() : Task(false, EventQueuePriority::Normal) {
-    // Bug 1703185: Currently all tasks are run at the same priority.
-  }
+  explicit HelperThreadTaskHandler(js::UniquePtr<RunnableTask> task)
+      // TODO: priority should be updated in Bug 1703185.
+      : Task(false, EventQueuePriority::Normal),
+        mOffThreadTask(std::move(task)) {}
 
  private:
   ~HelperThreadTaskHandler() = default;
+  js::UniquePtr<RunnableTask> mOffThreadTask;
 };
 
-static void DispatchOffThreadTask() {
-  TaskController::Get()->AddTask(MakeAndAddRef<HelperThreadTaskHandler>());
+bool DispatchOffThreadTask(js::UniquePtr<RunnableTask> task) {
+  TaskController::Get()->AddTask(
+      MakeAndAddRef<HelperThreadTaskHandler>(std::move(task)));
+  return true;
 }
 
 static bool CreateSelfHostedSharedMemory(JSContext* aCx,
@@ -1184,8 +1188,7 @@ static bool CreateSelfHostedSharedMemory(JSContext* aCx,
 }
 
 nsresult XPCJSContext::Initialize() {
-  size_t threadCount = TaskController::GetPoolThreadCount();
-  SetHelperThreadTaskCallback(&DispatchOffThreadTask, threadCount);
+  SetHelperThreadTaskCallback(&DispatchOffThreadTask);
 
   nsresult rv =
       CycleCollectedJSContext::Initialize(nullptr, JS::DefaultHeapMaxBytes);
