@@ -439,7 +439,7 @@ jobs:
                 export WRENCH_REFTESTS=$MOZ_FETCHES_DIR/reftests &&
                 export MOZHARNESS_PATH=$MOZ_FETCHES_DIR/mozharness &&
                 export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
-                python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
+                python3 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
             platform: android-hw-p2-8-0-arm7-api-16/debug
             symbol: WR(wrench)
@@ -483,7 +483,7 @@ jobs:
                 export WRENCH_REFTESTS=$MOZ_FETCHES_DIR/reftests &&
                 export MOZHARNESS_PATH=$MOZ_FETCHES_DIR/mozharness &&
                 export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
-                python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
+                python3 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
             platform: android-hw-p2-8-0-arm7-api-16/opt
             symbol: WR(wrench)
