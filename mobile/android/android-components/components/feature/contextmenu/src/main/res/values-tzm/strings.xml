@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Text for context menu item to open the link in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_new_tab">Ṛẓem asɣen g useksel amaynu</string>
+    <!-- Text for context menu item to open the link in a private tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Ṛẓem asɣen g useksel uslig</string>
+    <!-- Text for context menu item to open the image in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_image_in_new_tab">Ṛẓem tawlaft g useksel amaynu</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Bḍu asɣen</string>
     <!-- Text for context menu item to share the image with an other app. -->
     <string name="mozac_feature_contextmenu_share_image">Bḍu tawlaft</string>
+    <!-- Text for context menu item to share the email with another app. -->
+    <string name="mozac_feature_contextmenu_share_email_address">Bḍu tansa imayl</string>
     <!-- Text for context menu item to add to a contact. -->
     <string name="mozac_feature_contextmenu_add_to_contact">Rnu ɣer wassaɣ</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
