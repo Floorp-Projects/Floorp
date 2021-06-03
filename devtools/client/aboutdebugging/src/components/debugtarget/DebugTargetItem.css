@@ -56,7 +56,7 @@
 
 .debug-target-item__additional_actions {
   grid-area: additional_actions;
-  border-top: 1px solid var(--grey-20);
+  border-top: 1px solid var(--card-separator-color);
   margin-block-start: calc(var(--base-unit) * 2);
   padding-block-start: calc(var(--base-unit) * 2);
   padding-inline-end: calc(var(--base-unit) * 2);
@@ -91,4 +91,11 @@
 
 .debug-target-item:dir(rtl) > .debug-target-item__subname {
   margin-right: calc(var(--base-unit) * 3);
+}
+
+@media(-moz-toolbar-prefers-color-scheme: dark) {
+  .debug-target-item__icon {
+    -moz-context-properties: fill;
+    fill: var(--white-100);
+  }
 }

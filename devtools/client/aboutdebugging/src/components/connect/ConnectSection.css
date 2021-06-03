@@ -45,3 +45,10 @@
 .connect-section__extra {
   border-block-start: 1px solid var(--card-separator-color);
 }
+
+@media(-moz-toolbar-prefers-color-scheme: dark) {
+  .connect-section__header__icon {
+    fill: var(--white-100);
+    -moz-context-properties: fill;
+  }
+}
