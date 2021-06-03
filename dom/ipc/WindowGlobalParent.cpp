@@ -22,7 +22,6 @@
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/MediaController.h"
-#include "mozilla/dom/RemoteWebProgress.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ipc/IdType.h"
@@ -572,14 +571,9 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
 
   // Notify the OnContentBlockingEvent if necessary.
   if (event) {
-    if (!GetBrowsingContext()->GetWebProgress()) {
-      return;
+    if (auto* webProgress = GetBrowsingContext()->GetWebProgress()) {
+      webProgress->OnContentBlockingEvent(webProgress, aRequest, event.value());
     }
-
-    nsCOMPtr<nsIWebProgress> webProgress =
-        new RemoteWebProgress(0, false, BrowsingContext()->IsTopContent());
-    GetBrowsingContext()->Top()->GetWebProgress()->OnContentBlockingEvent(
-        webProgress, aRequest, event.value());
   }
 }
 
