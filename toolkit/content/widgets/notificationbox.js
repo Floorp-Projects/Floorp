@@ -7,9 +7,6 @@
 // This is loaded into chrome windows with the subscript loader. If you need to
 // define globals, wrap in a block to prevent leaking onto `window`.
 {
-  const { XPCOMUtils } = ChromeUtils.import(
-    "resource://gre/modules/XPCOMUtils.jsm"
-  );
   const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
   );
@@ -27,26 +24,13 @@
       this._insertElementFn = insertElementFn;
       this._animating = false;
       this.currentNotification = null;
-
-      XPCOMUtils.defineLazyPreferenceGetter(
-        this,
-        "gProton",
-        "browser.proton.enabled",
-        false
-      );
     }
 
     get stack() {
       if (!this._stack) {
-        let stack;
-        stack = document.createXULElement(
-          this.gProton ? "vbox" : "legacy-stack"
-        );
+        let stack = document.createXULElement("vbox");
         stack._notificationBox = this;
         stack.className = "notificationbox-stack";
-        if (!this.gProton) {
-          stack.appendChild(document.createXULElement("spacer"));
-        }
         stack.addEventListener("transitionend", event => {
           if (
             (event.target.localName == "notification" ||
@@ -169,7 +153,7 @@
 
       // Create the Custom Element and connect it to the document immediately.
       var newitem;
-      if (this.gProton && !aNotificationIs) {
+      if (!aNotificationIs) {
         if (!customElements.get("notification-message")) {
           // There's some weird timing stuff when this element is created at
           // script load time, we don't need it until now anyway so be lazy.
@@ -184,25 +168,11 @@
         );
       }
 
-      if (this.gProton) {
-        // Append or prepend notification, based on stack preference.
-        if (this.stack.hasAttribute("prepend-notifications")) {
-          this.stack.prepend(newitem);
-        } else {
-          this.stack.append(newitem);
-        }
+      // Append or prepend notification, based on stack preference.
+      if (this.stack.hasAttribute("prepend-notifications")) {
+        this.stack.prepend(newitem);
       } else {
-        // check for where the notification should be inserted according to
-        // priority. If two are equal, the existing one appears on top.
-        var notifications = this.allNotifications;
-        var insertPos = null;
-        for (var n = notifications.length - 1; n >= 0; n--) {
-          if (notifications[n].priority < aPriority) {
-            break;
-          }
-          insertPos = notifications[n];
-        }
-        this.stack.insertBefore(newitem, insertPos);
+        this.stack.append(newitem);
       }
 
       // Custom notification classes may not have the messageText property.
@@ -221,9 +191,6 @@
       }
       newitem.setAttribute("value", aValue);
 
-      if (aImage && !this.gProton) {
-        newitem.messageImage.setAttribute("src", aImage);
-      }
       newitem.eventCallback = aEventCallback;
 
       if (aButtons) {
@@ -241,17 +208,13 @@
         newitem.setAttribute("type", "warning");
       }
 
-      // Animate the notification for proton (all notifications visible)
-      // or if this isn't proton and this is the visible notification (it
-      // was inserted at the top of the stack).
-      if (this.gProton || !insertPos) {
-        newitem.style.display = "block";
-        newitem.style.position = "fixed";
-        newitem.style.top = "100%";
-        newitem.style.marginTop = "-15px";
-        newitem.style.opacity = "0";
-        this._showNotification(newitem, true);
-      }
+      // Animate the notification.
+      newitem.style.display = "block";
+      newitem.style.position = "fixed";
+      newitem.style.top = "100%";
+      newitem.style.marginTop = "-15px";
+      newitem.style.opacity = "0";
+      this._showNotification(newitem, true);
 
       // Fire event for accessibility APIs
       var event = document.createEvent("Events");
@@ -265,14 +228,8 @@
       if (!aItem.parentNode) {
         return;
       }
-      if (this.gProton) {
-        this.currentNotification = aItem;
-        this.removeCurrentNotification(aSkipAnimation);
-      } else if (aItem == this.currentNotification) {
-        this.removeCurrentNotification(aSkipAnimation);
-      } else if (aItem != this._closedNotification) {
-        this._removeNotificationElement(aItem);
-      }
+      this.currentNotification = aItem;
+      this.removeCurrentNotification(aSkipAnimation);
     }
 
     _removeNotificationElement(aChild) {
