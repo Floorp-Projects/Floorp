@@ -141,9 +141,9 @@ class HTMLButtonElement final : public nsGenericHTMLFormElementWithState,
  protected:
   virtual ~HTMLButtonElement();
 
-  bool mDisabledChanged;
-  bool mInInternalActivate;
-  bool mInhibitStateRestoration;
+  bool mDisabledChanged : 1;
+  bool mInInternalActivate : 1;
+  bool mInhibitStateRestoration : 1;
 };
 
 }  // namespace dom
