@@ -49,7 +49,7 @@ template const char16_t* js_strchr_limit(const char16_t* s, char16_t c,
 
 int32_t js_fputs(const char16_t* s, FILE* f) {
   while (*s != 0) {
-    if (fputwc(wchar_t(*s), f) == WEOF) {
+    if (fputwc(wchar_t(*s), f) == static_cast<wint_t>(WEOF)) {
       return WEOF;
     }
     s++;
