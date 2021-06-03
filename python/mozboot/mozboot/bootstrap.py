@@ -287,13 +287,6 @@ class Bootstrapper(object):
         subprocess.check_call((sys.executable, mach_binary, "install-moz-phab"))
 
     def bootstrap(self, settings):
-        if sys.version_info[0] < 3:
-            print(
-                "This script must be run with Python 3. \n"
-                'Try "python3 bootstrap.py".'
-            )
-            sys.exit(1)
-
         if self.choice is None:
             # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
             labels = [
