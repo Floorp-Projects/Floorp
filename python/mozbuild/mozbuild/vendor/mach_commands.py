@@ -84,7 +84,7 @@ class Vendor(MachCommandBase):
         if not ignore_modified and not check_for_update:
             self.check_modified_files()
         if not revision:
-            revision = "master"
+            revision = "HEAD"
 
         from mozbuild.vendor.vendor_manifest import VendorManifest
 
