@@ -553,7 +553,7 @@ class Preferences {
 
   get _nimbus() {
     if (!this.__nimbus) {
-      this.__nimbus = NimbusFeatures.urlbar.getValue();
+      this.__nimbus = NimbusFeatures.urlbar.getAllVariables();
     }
     return this.__nimbus;
   }
@@ -655,7 +655,7 @@ class Preferences {
    *
    * @param {string} name
    *   The name of the desired property in the object returned from
-   *   NimbusFeatures.urlbar.getValue().
+   *   NimbusFeatures.urlbar.getAllVariables().
    * @returns {object}
    *   An object describing the property's value with the following shape (same
    *   as _getPrefDescriptor()):
