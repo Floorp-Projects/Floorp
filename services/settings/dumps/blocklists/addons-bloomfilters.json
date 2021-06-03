@@ -3,6 +3,74 @@
     {
       "stash": {
         "blocked": [
+          "{9e642d9b-defb-4faa-a22d-af4b10579817}:1.0.9",
+          "{9e642d9b-defb-4faa-a22d-af4b10579817}:1.0.10",
+          "{9e642d9b-defb-4faa-a22d-af4b10579817}:1.0.8",
+          "{9e642d9b-defb-4faa-a22d-af4b10579817}:1.0.12",
+          "{9e642d9b-defb-4faa-a22d-af4b10579817}:1.0.11"
+        ],
+        "unblocked": []
+      },
+      "schema": 1622659087214,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1622680508463,
+      "id": "613577f8-7c53-41bb-be00-502a5f9c6c3f",
+      "last_modified": 1622680686149
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{b474874b-5083-457e-ac48-851083801c8f}:1.0.0",
+          "quickweb@com:1.2.10",
+          "{8f09050f-1777-4bfc-b898-a9c2ad51a552}:2.0.8"
+        ],
+        "unblocked": []
+      },
+      "schema": 1622637481073,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1622658908090,
+      "id": "0136974e-6af6-4352-9c52-e45f3cd4328e",
+      "last_modified": 1622659087075
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{1b8f04fb-db38-4645-b92c-49ad8c9c50ef}:2.0.8",
+          "{1b8f04fb-db38-4645-b92c-49ad8c9c50ef}:1.0.1",
+          "{1b8f04fb-db38-4645-b92c-49ad8c9c50ef}:2.0.7"
+        ],
+        "unblocked": []
+      },
+      "schema": 1622572691708,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1622637308373,
+      "id": "43c1f75d-4f23-4cb7-bffa-00f658c0fd9d",
+      "last_modified": 1622637480939
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{0bf5879c-5c30-431c-beb1-cecd639bc8d0}:1.0.3",
+          "{0bf5879c-5c30-431c-beb1-cecd639bc8d0}:1.0.1",
+          "{0bf5879c-5c30-431c-beb1-cecd639bc8d0}:1.0.6",
+          "{0bf5879c-5c30-431c-beb1-cecd639bc8d0}:1.0.7",
+          "{0bf5879c-5c30-431c-beb1-cecd639bc8d0}:1.0.4",
+          "{0bf5879c-5c30-431c-beb1-cecd639bc8d0}:1.0.5",
+          "{0bf5879c-5c30-431c-beb1-cecd639bc8d0}:1.0.2",
+          "{018804d6-9a5e-4217-bb2b-b6bddf3cd70f}:14.0.3",
+          "{41728512-1450-4c1f-88b2-afe9afa42d73}:13.0.3"
+        ],
+        "unblocked": []
+      },
+      "schema": 1622538399260,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1622572508659,
+      "id": "29149c6d-1a57-4d8b-b97d-9ff81d532c45",
+      "last_modified": 1622572691579
+    },
+    {
+      "stash": {
+        "blocked": [
           "{1f3efddb-def1-4ae2-99bd-02f505fa6240}:13.0.1",
           "{1f3efddb-def1-4ae2-99bd-02f505fa6240}:13.0.3",
           "{1f3efddb-def1-4ae2-99bd-02f505fa6240}:13.0.2",
