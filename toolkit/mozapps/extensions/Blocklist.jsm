@@ -1008,6 +1008,7 @@ this.ExtensionBlocklistMLBF = {
         this._stashes = null;
         return;
       }
+
       let records = await this._client.get();
       if (isUpdateReplaced()) {
         return;
@@ -1180,13 +1181,18 @@ this.ExtensionBlocklistMLBF = {
   },
 
   async getEntry(addon) {
-    if (!this._mlbfData) {
+    if (!this._stashes) {
       this.ensureInitialized();
       await this._updateMLBF(false);
+    } else if (this._updatePromise) {
+      // _stashes has been initialized, but the initialization of _mlbfData is
+      // still pending.
+      await this._updatePromise;
     }
 
     let blockKey = addon.id + ":" + addon.version;
 
+    // _stashes will be unset if !gBlocklistEnabled.
     if (this._stashes) {
       // Stashes are ordered by newest first.
       for (let stash of this._stashes) {
@@ -1215,7 +1221,7 @@ this.ExtensionBlocklistMLBF = {
       // - The RemoteSettings backend is unreachable, and this client was built
       //   without including a dump of the MLBF.
       //
-      // ... in other words, this shouldn't happen in practice.
+      // ... in other words, this is unlikely to happen in practice.
       return null;
     }
     let { cascadeFilter, generationTime } = this._mlbfData;
