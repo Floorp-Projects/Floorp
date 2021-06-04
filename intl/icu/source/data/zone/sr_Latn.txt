@@ -1,8 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr_Latn{
     %%Parent{"root"}
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžan"}
@@ -1020,7 +1020,7 @@ sr_Latn{
             ec{"Istanbul"}
         }
         "Europe:Jersey"{
-            ec{"Džersi"}
+            ec{"Džerzi"}
         }
         "Europe:Kaliningrad"{
             ec{"Kalinjingrad"}
@@ -1527,7 +1527,7 @@ sr_Latn{
             ss{"EET"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"Dalji istok Evrope"}
+            ls{"Vreme daljeg istoka Evrope"}
         }
         "meta:Europe_Western"{
             ld{"Zapadnoevropsko letnje vreme"}

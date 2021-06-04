@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 da{
-    Version{"37"}
     durationUnits{
         hm{"h.mm"}
         hms{"h.mm.ss"}
@@ -73,7 +73,7 @@ da{
                 dnam{"kvadrattommer"}
                 one{"{0} kvadrattomme"}
                 other{"{0} kvadrattommer"}
-                per{"{0}/in²"}
+                per{"{0} pr. kvadrattomme"}
             }
             square-kilometer{
                 dnam{"kvadratkilometer"}
@@ -131,7 +131,7 @@ da{
             }
             permillion{
                 dnam{"parts per million"}
-                one{"{0} parts per million"}
+                one{"{0} part per million"}
                 other{"{0} parts per million"}
             }
         }
@@ -345,7 +345,7 @@ da{
             }
             kilowatt-hour{
                 dnam{"kilowatt-timer"}
-                one{"kilowatt-time"}
+                one{"{0} kilowatt-time"}
                 other{"{0} kilowatt-timer"}
             }
         }
@@ -379,6 +379,11 @@ da{
             }
         }
         graphics{
+            dot{
+                dnam{"prik"}
+                one{"{0} prik"}
+                other{"{0} punkter"}
+            }
             dot-per-centimeter{
                 dnam{"punkter per centimeter"}
                 one{"{0} punkt per centimeter"}
@@ -398,6 +403,11 @@ da{
                 dnam{"megapixels"}
                 one{"{0} megapixel"}
                 other{"{0} megapixels"}
+            }
+            pixel{
+                dnam{"pixels"}
+                one{"{0} pixel"}
+                other{"{0} pixels"}
             }
             pixel-per-centimeter{
                 dnam{"pixels per centimeter"}
@@ -427,11 +437,26 @@ da{
                 one{"{0} decimeter"}
                 other{"{0} decimeter"}
             }
+            earth-radius{
+                dnam{"jordradius"}
+                one{"{0} jordradius"}
+                other{"{0} jordradier"}
+            }
+            fathom{
+                dnam{"favne"}
+                one{"{0} favn"}
+                other{"{0} favne"}
+            }
             foot{
                 dnam{"fod"}
                 one{"{0} fod"}
                 other{"{0} fod"}
                 per{"{0} pr. fod"}
+            }
+            furlong{
+                dnam{"furlongs"}
+                one{"{0} furlong"}
+                other{"{0} furlongs"}
             }
             inch{
                 dnam{"tommer"}
@@ -513,6 +538,16 @@ da{
             }
         }
         light{
+            candela{
+                dnam{"candela"}
+                one{"{0} candela"}
+                other{"{0} candela"}
+            }
+            lumen{
+                dnam{"lumen"}
+                one{"{0} lumen"}
+                other{"{0} lumen"}
+            }
             lux{
                 dnam{"lux"}
                 one{"{0} lux"}
@@ -524,6 +559,16 @@ da{
                 dnam{"karat"}
                 one{"{0} karat"}
                 other{"{0} karat"}
+            }
+            earth-mass{
+                dnam{"Jordmasser"}
+                one{"{0} jordmasse"}
+                other{"{0} jordmasser"}
+            }
+            grain{
+                dnam{"gran"}
+                one{"{0} gran"}
+                other{"{0} gran"}
             }
             gram{
                 dnam{"gram"}
@@ -573,6 +618,11 @@ da{
                 dnam{"solmasser"}
                 one{"{0} solmasse"}
                 other{"{0} solmasser"}
+            }
+            stone{
+                dnam{"stone"}
+                one{"{0} stone"}
+                other{"{0} stone"}
             }
             ton{
                 dnam{"short ton"}
@@ -656,7 +706,7 @@ da{
             pound-force-per-square-inch{
                 dnam{"pounds pr. kvadrattomme"}
                 one{"{0} pound pr. kvadrattomme"}
-                other{"{0} pounds pr. kvadrattommer"}
+                other{"{0} pounds pr. kvadrattomme"}
             }
         }
         speed{
@@ -721,6 +771,11 @@ da{
                 one{"{0} tønde"}
                 other{"{0} tønder"}
             }
+            bushel{
+                dnam{"skæpper"}
+                one{"{0} skæppe"}
+                other{"{0} skæpper"}
+            }
             centiliter{
                 dnam{"centiliter"}
                 one{"{0} centiliter"}
@@ -765,7 +820,7 @@ da{
             }
             cup{
                 dnam{"cups"}
-                one{"cup"}
+                one{"{0} cup"}
                 other{"{0} cups"}
             }
             cup-metric{
@@ -777,6 +832,26 @@ da{
                 dnam{"deciliter"}
                 one{"{0} deciliter"}
                 other{"{0} deciliter"}
+            }
+            dessert-spoon{
+                dnam{"dessertske"}
+                one{"{0} dessertske"}
+                other{"{0} dessertskeer"}
+            }
+            dessert-spoon-imperial{
+                dnam{"britisk dessertske"}
+                one{"{0} britisk dessertske"}
+                other{"{0} britiske dessertskeer"}
+            }
+            dram{
+                dnam{"britisk flydende dram"}
+                one{"{0} britisk flydende dram"}
+                other{"{0} britiske flydende dramme"}
+            }
+            drop{
+                dnam{"dråbe"}
+                one{"{0} dråbe"}
+                other{"{0} dråber"}
             }
             fluid-ounce{
                 dnam{"engelske fluid ounces"}
@@ -804,6 +879,10 @@ da{
                 one{"{0} hektoliter"}
                 other{"{0} hektoliter"}
             }
+            jigger{
+                one{"{0} jigger"}
+                other{"{0} jigger"}
+            }
             liter{
                 dnam{"liter"}
                 one{"{0} liter"}
@@ -820,6 +899,11 @@ da{
                 one{"{0} milliliter"}
                 other{"{0} milliliter"}
             }
+            pinch{
+                dnam{"knivspids"}
+                one{"{0} knivspids"}
+                other{"{0} knivspidser"}
+            }
             pint{
                 dnam{"pints"}
                 one{"{0} pint"}
@@ -834,6 +918,11 @@ da{
                 dnam{"engelske quarts"}
                 one{"{0} engelsk quart"}
                 other{"{0} engelske quarts"}
+            }
+            quart-imperial{
+                dnam{"britisk quart"}
+                one{"{0} britisk quart"}
+                other{"{0} britiske quarts"}
             }
             tablespoon{
                 dnam{"spiseskeer"}
@@ -1338,9 +1427,9 @@ da{
                 other{"{0} bit"}
             }
             byte{
-                dnam{"byte"}
-                one{"{0} byte"}
-                other{"{0} byte"}
+                dnam{"B"}
+                one{"{0} B"}
+                other{"{0} B"}
             }
             gigabit{
                 dnam{"Gbit"}
@@ -1408,7 +1497,7 @@ da{
             hour{
                 dnam{"timer"}
                 one{"{0} t."}
-                other{"{0} t"}
+                other{"{0} t."}
                 per{"{0} /t"}
             }
             microsecond{
@@ -1543,6 +1632,13 @@ da{
                 other{"{0} MHz"}
             }
         }
+        graphics{
+            dot{
+                dnam{"prik"}
+                one{"{0} p"}
+                other{"{0} p"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"ae"}
@@ -1559,6 +1655,11 @@ da{
                 dnam{"dm"}
                 one{"{0} dm"}
                 other{"{0} dm"}
+            }
+            fathom{
+                dnam{"favn"}
+                one{"{0} favn"}
+                other{"{0} favne"}
             }
             foot{
                 dnam{"fod"}
@@ -1656,6 +1757,11 @@ da{
                 one{"{0} kt."}
                 other{"{0} kt."}
             }
+            grain{
+                dnam{"gran"}
+                one{"{0} gran"}
+                other{"{0} gran"}
+            }
             gram{
                 dnam{"gram"}
                 one{"{0} g"}
@@ -1663,7 +1769,6 @@ da{
                 per{"{0}/g"}
             }
             kilogram{
-                dnam{"kilogram"}
                 one{"{0} kg"}
                 other{"{0} kg"}
                 per{"{0}/kg"}
@@ -1828,6 +1933,11 @@ da{
                 one{"{0} td."}
                 other{"{0} tdr."}
             }
+            bushel{
+                dnam{"skp."}
+                one{"{0} skp."}
+                other{"{0} skp."}
+            }
             centiliter{
                 dnam{"cl"}
                 one{"{0} cl"}
@@ -1885,6 +1995,26 @@ da{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"dsk."}
+                one{"{0} dsk."}
+                other{"{0} dsk."}
+            }
+            dessert-spoon-imperial{
+                dnam{"brit. dsk."}
+                one{"{0} brit. dsk."}
+                other{"{0} brit. dsk."}
+            }
+            dram{
+                dnam{"br. fl. dr."}
+                one{"{0} br. fl. dr."}
+                other{"{0} br. fl. dr."}
+            }
+            drop{
+                dnam{"dråbe"}
+                one{"{0} dråbe"}
+                other{"{0} dråber"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -1923,6 +2053,11 @@ da{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"knsp."}
+                one{"{0} knsp."}
+                other{"{0} knsp."}
+            }
             pint{
                 dnam{"pt"}
                 one{"{0} pt"}
@@ -1937,6 +2072,11 @@ da{
                 dnam{"qt"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"britisk qt"}
+                one{"{0} britisk qt"}
+                other{"{0} britiske qt"}
             }
             tablespoon{
                 dnam{"spsk."}

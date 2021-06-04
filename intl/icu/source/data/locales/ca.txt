@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ca{
     AuxExemplarCharacters{"[á ă â å ä ã ā æ ĕ ê ë ē ì ĭ î ī ŀ ñ º ŏ ô ö ø ō œ ù ŭ û ū ÿ]"}
     Ellipsis{
@@ -218,11 +219,10 @@ ca{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
-                "H:mm:ss zzzz",
+                "H:mm:ss (zzzz)",
                 "H:mm:ss z",
                 "H:mm:ss",
                 "H:mm",
@@ -257,7 +257,7 @@ ca{
         }
         chinese{
             DateTimePatterns{
-                "H:mm:ss zzzz",
+                "H:mm:ss (zzzz)",
                 "H:mm:ss z",
                 "H:mm:ss",
                 "H:mm",
@@ -336,7 +336,7 @@ ca{
         }
         generic{
             DateTimePatterns{
-                "H:mm:ss zzzz",
+                "H:mm:ss (zzzz)",
                 "H:mm:ss z",
                 "H:mm:ss",
                 "H:mm",
@@ -558,7 +558,7 @@ ca{
                 "p. m.",
             }
             DateTimePatterns{
-                "H:mm:ss zzzz",
+                "H:mm:ss (zzzz)",
                 "H:mm:ss z",
                 "H:mm:ss",
                 "H:mm",
@@ -567,8 +567,8 @@ ca{
                 "d MMM y",
                 "d/M/yy",
                 "{1}, {0}",
-                "{1} 'a' 'les' {0}",
-                "{1} 'a' 'les' {0}",
+                "{1}, 'a' 'les' {0}",
+                "{1}, 'a' 'les' {0}",
                 "{1}, {0}",
                 "{1} {0}",
             }
@@ -598,7 +598,9 @@ ca{
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
                 Hmsv{"H:mm:ss v"}
+                Hmsvvvv{"H:mm:ss (vvvv)"}
                 Hmv{"H:mm v"}
+                Hmvvvv{"H:mm (vvvv)"}
                 M{"L"}
                 MEd{"E d/M"}
                 MMM{"LLL"}
@@ -616,7 +618,9 @@ ca{
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
+                hmsvvvv{"h:mm:ss a (vvvv)"}
                 hmv{"h:mm a v"}
+                hmvvvv{"h:mm a (vvvv)"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -1083,7 +1087,7 @@ ca{
         }
         roc{
             DateTimePatterns{
-                "H:mm:ss zzzz",
+                "H:mm:ss (zzzz)",
                 "H:mm:ss z",
                 "H:mm:ss",
                 "H:mm",

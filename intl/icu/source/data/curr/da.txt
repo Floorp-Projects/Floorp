@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 da{
     Currencies{
         ADP{
@@ -892,7 +893,7 @@ da{
         }
         TTD{
             "TTD",
-            "dollar fra Trinidad og Tobago",
+            "trinidadisk dollar",
         }
         TWD{
             "NT$",
@@ -1217,7 +1218,7 @@ da{
             other{"armenske dram"}
         }
         ANG{
-            one{"Nederlandsk Antiller-gylden"}
+            one{"Nederlandske Antiller-gylden"}
             other{"Nederlandske Antiller-gylden"}
         }
         AOA{
@@ -1878,7 +1879,7 @@ da{
         }
         OMR{
             one{"omansk rial"}
-            other{"omanske rial"}
+            other{"omanske rialer"}
         }
         PAB{
             one{"panamansk balboa"}
@@ -2081,8 +2082,8 @@ da{
             other{"tyrkiske lira"}
         }
         TTD{
-            one{"dollar fra Trinidad og Tobago"}
-            other{"dollar fra Trinidad og Tobago"}
+            one{"trinidadisk dollar"}
+            other{"trinidadiske dollar"}
         }
         TWD{
             one{"ny taiwansk dollar"}
@@ -2249,5 +2250,4 @@ da{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 de_CH{
     Keys{
         colCaseFirst{"Sortierung nach Gross- bzw. Kleinbuchstaben"}
@@ -12,7 +13,6 @@ de_CH{
         ar_001{"Modernes Hocharabisch"}
         ars{"Nadschd-Arabisch"}
         bas{"Basaa-Sprache"}
-        be{"Weissrussisch"}
         bik{"Bikol-Sprache"}
         bin{"Bini-Sprache"}
         chb{"Chibcha-Sprache"}
@@ -27,6 +27,10 @@ de_CH{
         zh_Hans{"Chinesisch (vereinfacht)"}
         zh_Hant{"Chinesisch (traditionell)"}
     }
+    Languages%long{
+        zh_Hans{"Hochchinesisch (vereinfacht)"}
+        zh_Hant{"Hochchinesisch (traditionell)"}
+    }
     Types{
         colCaseFirst{
             upper{"Grossbuchstaben zuerst aufführen"}
@@ -40,5 +44,4 @@ de_CH{
             ussystem{"US Mass-System"}
         }
     }
-    Version{"37"}
 }

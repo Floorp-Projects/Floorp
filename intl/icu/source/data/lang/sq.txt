@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sq{
     Keys{
         calendar{"Kalendari"}
@@ -496,7 +497,7 @@ sq{
             iso8601{"kalendar ISO-8601"}
             japanese{"kalendar japonez"}
             persian{"kalendar persian"}
-            roc{"kalendar minguo (i Republikës së Kinës)"}
+            roc{"kalendar minguo"}
         }
         cf{
             account{"format valutor llogaritës"}
@@ -567,7 +568,6 @@ sq{
             tibt{"shifra tibetiane"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — Të gjitha"}
         category-list{"{0}: {1}"}
@@ -582,6 +582,8 @@ sq{
             one{"{0} vijëzim drejtshkrimor"}
             other{"{0} vijëzime drejtshkrimore"}
         }
+        subscript{"nënshënim {0}"}
+        superscript{"mbishënim {0}"}
     }
     codePatterns{
         language{"Gjuha: {0}"}

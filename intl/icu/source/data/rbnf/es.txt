@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es{
     RBNFRules{
         OrdinalRules{
@@ -288,5 +289,4 @@ es{
             "1000000000000000000: =#,##0=\u00AA;",
         }
     }
-    Version{"37"}
 }

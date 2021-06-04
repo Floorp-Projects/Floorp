@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 am{
     Keys{
         calendar{"የቀን አቆጣጠር"}
@@ -698,7 +699,6 @@ am{
             vaii{"የቫይ አሃዞች"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — ሁሉም"}
         category-list{"{0}: {1}"}
@@ -713,6 +713,8 @@ am{
             one{"{0} ምች"}
             other{"{0} ምች"}
         }
+        subscript{"ግርጌ ምልክት {0}"}
+        superscript{"ራስጌ ምልክት {0}"}
     }
     codePatterns{
         language{"{0}"}

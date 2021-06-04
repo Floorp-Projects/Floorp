@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 yo_BJ{
     Keys{
         calendar{"Kàlɛ́ńdà"}
@@ -10,16 +11,16 @@ yo_BJ{
         numbers{"Àwɔn nɔ́ńbà"}
     }
     Languages{
-        agq{"Ágɛ̀ɛ̀mù"}
-        bez{"Bɛ́nà"}
-        chr{"Shɛ́rókiì"}
-        cu{"Síláfííkì Ilé Ìjɔ́sìn"}
+        agq{"Èdè Ágɛ̀ɛ̀mù"}
+        bez{"Èdè Bɛ́nà"}
+        chr{"Èdè Shɛ́rókiì"}
+        cu{"Èdè Síláfííkì Ilé Ìjɔ́sìn"}
         da{"Èdè Ilɛ̀ Denmark"}
         de_AT{"Èdè Jámánì (Ɔ́síríà )"}
         de_CH{"Èdè Ilɛ̀ Jámánì (Orílɛ́ède swítsàlandì)"}
         dje{"Shárúmà"}
-        dsb{"Shobíànù Ìpìlɛ̀"}
-        ebu{"Ɛmbù"}
+        dsb{"Shóbíánù Apá Ìshàlɛ̀"}
+        ebu{"Èdè Ɛmbù"}
         en{"Èdè Gɛ̀ɛ́sì"}
         en_AU{"Èdè Gɛ̀ɛ́sì (órílɛ̀-èdè Ɔsirélíà)"}
         en_CA{"Èdè Gɛ̀ɛ́sì (Orílɛ̀-èdè Kánádà)"}
@@ -42,7 +43,7 @@ yo_BJ{
         ks{"Kashímirì"}
         ksb{"Sháńbálà"}
         ku{"Kɔdishì"}
-        kw{"Kɔ́nììshì"}
+        kw{"Èdè Kɔ́nììshì"}
         lb{"Lùshɛ́mbɔ́ɔ̀gì"}
         mul{"Ɔlɔ́pɔ̀ èdè"}
         nb{"Nɔ́ɔ́wè Bokímàl"}
@@ -74,12 +75,17 @@ yo_BJ{
         xog{"Shógà"}
         yav{"Yangbɛn"}
         zgh{"Àfɛnùkò Támásáìtì ti Mòrókò"}
-        zh{"Èdè Mandarin tí wɔ́n ń sɔ lórílɛ̀-èdè Sháínà"}
-        zh_Hant{"Èdè Ìbílɛ̀ Sháínà"}
+        zh{"Edè Sháínà"}
+        zh_Hans{"Ɛdè Sháínà Onírɔ̀rùn"}
+        zh_Hant{"Èdè Sháínà Ìbílɛ̀"}
         zu{"Èdè Shulu"}
     }
+    Languages%long{
+        zh_Hans{"Èdè Mandárínì Sháínà Onírɔ̀rùn"}
+        zh_Hant{"Èdè Mandárínì Sháínà Ìbílɛ̀"}
+    }
     Languages%menu{
-        zh{"Sháídà, Mandrínì"}
+        zh{"Edè Sháínà, Mandárínì"}
     }
     Languages%short{
         en_GB{"Èdè Gɛ̀ɛ́sì (GB)"}
@@ -109,17 +115,17 @@ yo_BJ{
     }
     Types{
         calendar{
-            buddhist{"Kàlɛ̀ńdà Buddhist"}
-            chinese{"Kàlɛ̀ńdà ti Sháìnà"}
-            dangi{"Kàlɛ̀ńdà dangi"}
-            ethiopic{"Kàlɛ̀ńdà Ɛtíópíìkì"}
+            buddhist{"Kàlɛ́ńdà Buddhist"}
+            chinese{"Kàlɛ́ńdà ti Sháìnà"}
+            dangi{"Kàlɛ́ńdà dangi"}
+            ethiopic{"Kàlɛ́ńdà Ɛtíópíìkì"}
             gregorian{"Kàlɛ́ńdà Gregory"}
-            hebrew{"Kàlɛ̀ńdà Hébérù"}
-            islamic{"Kàlɛ̀ńdà Lárúbáwá"}
+            hebrew{"Kàlɛ́ńdà Hébérù"}
+            islamic{"Kàlɛ́ńdà Lárúbáwá"}
             iso8601{"Kàlɛ́ńdà ISO-8601"}
-            japanese{"Kàlɛ̀ńdà ti Jàpánù"}
-            persian{"Kàlɛ̀ńdà Pásíànù"}
-            roc{"Kàlɛ̀ńdà Minguo"}
+            japanese{"Kàlɛ́ńdà ti Jàpánù"}
+            persian{"Kàlɛ́ńdà Pásíànù"}
+            roc{"Kàlɛ́ńdà Minguo"}
         }
         cf{
             account{"Ìgúnrégé Ìshirò Owó Kɔ́rɛ́ńsì"}
@@ -172,7 +178,6 @@ yo_BJ{
             tibt{"Àwɔn díjíìtì Tibetán"}
         }
     }
-    Version{"37"}
     codePatterns{
         script{"Ìshɔwɔ́kɔ̀wé: {0}"}
     }

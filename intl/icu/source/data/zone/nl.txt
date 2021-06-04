@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 nl{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -799,7 +799,7 @@ nl{
             ec{"Oral"}
         }
         "Asia:Phnom_Penh"{
-            ec{"Phnom-Penh"}
+            ec{"Phnom Penh"}
         }
         "Asia:Pontianak"{
             ec{"Pontianak"}
@@ -955,7 +955,7 @@ nl{
             ec{"Sydney"}
         }
         "Etc:UTC"{
-            ls{"Gecoördineerde wereldtijd"}
+            ls{"gecoördineerde wereldtijd"}
             ss{"UTC"}
         }
         "Etc:Unknown"{

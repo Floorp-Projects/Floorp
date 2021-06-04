@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ug{
     Keys{
         calendar{"يىلنامە"}
@@ -826,7 +827,6 @@ ug{
         VALENCIA{"ۋالېنسىيە"}
         WADEGILE{"ۋېي ئائىلىسى پىنيىن لاتىنلاشتۇرۇش"}
     }
-    Version{"37"}
     codePatterns{
         language{"تىل: {0}"}
         script{"يېزىق: {0}"}

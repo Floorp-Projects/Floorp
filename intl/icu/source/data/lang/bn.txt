@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bn{
     Keys{
         calendar{"ক্যালেন্ডার"}
@@ -352,7 +353,7 @@ bn{
         nl{"ওলন্দাজ"}
         nl_BE{"ফ্লেমিশ"}
         nmg{"কোয়াসিও"}
-        nn{"নরওয়েজীয়ান নিনর্স্ক"}
+        nn{"নরওয়েজিয়ান নিনর্স্ক"}
         nnh{"নিঙ্গেম্বুন"}
         no{"নরওয়েজীয়"}
         nog{"নোগাই"}
@@ -554,6 +555,7 @@ bn{
         en_US{"যুক্তরাষ্ট্রের ইংরেজি"}
     }
     Languages%variant{
+        ckb{"কুর্দিশ, সোরানি"}
         ps{"পুশতো"}
     }
     Scripts{
@@ -880,7 +882,6 @@ bn{
             wara{"ওয়ারেং সিটি সংখ্যা"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — সমস্ত"}
         category-list{"{0}: {1}"}
@@ -895,6 +896,8 @@ bn{
             one{"{0} স্ট্রোক"}
             other{"{0} স্ট্রোক"}
         }
+        subscript{"সাবস্ক্রিপ্ট {0}"}
+        superscript{"সুপারস্ক্রিপ্ট {0}"}
     }
     codePatterns{
         language{"ভাষা: {0}"}

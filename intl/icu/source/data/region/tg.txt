@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 tg{
     Countries{
         AC{"Асунсон"}
@@ -259,5 +260,4 @@ tg{
         CD{"Конго (ҶДК)"}
         CG{"Конго"}
     }
-    Version{"37"}
 }

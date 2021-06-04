@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_PY{
     %%Parent{"es_419"}
     NumberElements{
@@ -13,17 +14,8 @@ es_PY{
             }
         }
     }
-    Version{"37"}
     calendar{
         gregorian{
-            AmPmMarkers{
-                "a. m.",
-                "p. m.",
-            }
-            AmPmMarkersAbbr{
-                "a. m.",
-                "p. m.",
-            }
             dayNames{
                 format{
                     short{
@@ -50,16 +42,8 @@ es_PY{
             }
             dayPeriod{
                 stand-alone{
-                    abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
                     narrow{
                         noon{"m."}
-                    }
-                    wide{
-                        am{"a. m."}
-                        pm{"p. m."}
                     }
                 }
             }

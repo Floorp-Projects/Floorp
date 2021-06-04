@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bn{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -540,6 +540,16 @@ bn{
             }
         }
         light{
+            candela{
+                dnam{"ক্যান্ডেলা"}
+                one{"{0} ক্যান্ডেলা"}
+                other{"{0} ক্যান্ডেলা"}
+            }
+            lumen{
+                dnam{"লুমেন"}
+                one{"{0} লুমেন"}
+                other{"{0} লুমেন"}
+            }
             lux{
                 dnam{"লাক্স"}
                 one{"{0} লাক্স"}
@@ -746,6 +756,11 @@ bn{
                 one{"{0} নিউটন-একক"}
                 other{"{0} নিউটন-এককগুলি"}
             }
+            pound-force-foot{
+                dnam{"পাউন্ড-ফিট"}
+                one{"{0} lbf⋅ft"}
+                other{"{0} পাউন্ড-ফিট"}
+            }
         }
         volume{
             acre-foot{
@@ -857,6 +872,11 @@ bn{
                 one{"{0} মিলিলিটার"}
                 other{"{0} মিলিলিটার"}
             }
+            pinch{
+                dnam{"চিমটে"}
+                one{"{0} চিমটে"}
+                other{"{0} চিমটে"}
+            }
             pint{
                 dnam{"পিন্ট"}
                 one{"{0} পিন্ট"}
@@ -949,9 +969,9 @@ bn{
         }
         consumption{
             liter-per-100-kilometer{
-                dnam{"L/100km"}
-                one{"{0} L/100km"}
-                other{"{0} L/100km"}
+                dnam{"লি/100কিমি"}
+                one{"{0} লি/100কিমি"}
+                other{"{0} লি/100কিমি"}
             }
         }
         coordinate{
@@ -1427,9 +1447,9 @@ bn{
         }
         consumption{
             liter-per-100-kilometer{
-                dnam{"L/100km"}
-                one{"{0} L/100km"}
-                other{"{0} L/100km"}
+                dnam{"লি/100কিমি"}
+                one{"{0} লি/100কিমি"}
+                other{"{0} লি/100কিমি"}
             }
             liter-per-kilometer{
                 dnam{"লিটার/কিমি"}
@@ -2080,6 +2100,11 @@ bn{
                 dnam{"mL"}
                 one{"{0} mL"}
                 other{"{0} mL"}
+            }
+            pinch{
+                dnam{"চিমটে"}
+                one{"{0} চিমটে"}
+                other{"{0} চিমটে"}
             }
             pint{
                 dnam{"pt"}

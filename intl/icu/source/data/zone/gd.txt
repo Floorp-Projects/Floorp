@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 gd{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -682,7 +682,7 @@ gd{
             ec{"Beirut"}
         }
         "Asia:Bishkek"{
-            ec{"Bishkek"}
+            ec{"Biškek"}
         }
         "Asia:Brunei"{
             ec{"Brùnaigh"}
@@ -712,7 +712,7 @@ gd{
             ec{"Dubai"}
         }
         "Asia:Dushanbe"{
-            ec{"Dushanbe"}
+            ec{"Dušanbe"}
         }
         "Asia:Famagusta"{
             ec{"Famagusta"}
@@ -847,10 +847,10 @@ gd{
             ec{"Taipei"}
         }
         "Asia:Tashkent"{
-            ec{"Tashkent"}
+            ec{"Toškent"}
         }
         "Asia:Tbilisi"{
-            ec{"Tbilisi"}
+            ec{"T’bilisi"}
         }
         "Asia:Tehran"{
             ec{"Tehrān"}
@@ -1460,9 +1460,9 @@ gd{
             ls{"Àm Boilibhia"}
         }
         "meta:Brasilia"{
-            ld{"Tìde samhraidh Bhrasilia"}
-            lg{"Àm Bhrasilia"}
-            ls{"Bun-àm Bhrasilia"}
+            ld{"Tìde samhraidh Bhrasília"}
+            lg{"Àm Bhrasília"}
+            ls{"Bun-àm Bhrasília"}
         }
         "meta:Brunei"{
             ls{"Àm Bhrùnaigh Dàr as-Salàm"}

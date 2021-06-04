@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ps{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"ابيجان"}
@@ -964,7 +964,7 @@ ps{
             ec{"اندورا"}
         }
         "Europe:Astrakhan"{
-            ec{"آسترخان"}
+            ec{"استرا خان"}
         }
         "Europe:Athens"{
             ec{"ايتنز"}
@@ -1482,7 +1482,7 @@ ps{
             ls{"د اکوادور وخت"}
         }
         "meta:Europe_Central"{
-            ld{"وسطي اروپايي د اوړي وخت"}
+            ld{"مرکزي اروپايياوړي وخت"}
             lg{"مرکزي اروپايي وخت"}
             ls{"د مرکزي اروپا معیاري وخت"}
         }
@@ -1708,7 +1708,7 @@ ps{
         }
         "meta:Norfolk"{
             ld{"د نورفکاس ټاپو اوړي وخت"}
-            lg{"د نورفکاس ټاپو وخت"}
+            lg{"نورفوک ټاپو وخت"}
             ls{"د نورفکاس ټاپو معياري وخت"}
         }
         "meta:Noronha"{
@@ -1877,7 +1877,7 @@ ps{
         }
         "meta:Yekaterinburg"{
             ld{"د ياکټرنبرګ د اوړي وخت"}
-            lg{"د ياکيټرنبرګ وخت"}
+            lg{"یکاټیرینبرګ وخت"}
             ls{"د ياکيټرنبرګ معياري وخت"}
         }
         fallbackFormat{"{1} ({0})"}

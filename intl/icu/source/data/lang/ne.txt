@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ne{
     Keys{
         calendar{"पात्रो"}
@@ -419,7 +420,7 @@ ne{
         oj{"ओजिब्वा"}
         om{"ओरोमो"}
         or{"उडिया"}
-        os{"अोस्सेटिक"}
+        os{"ओस्सेटिक"}
         osa{"ओसागे"}
         ota{"अटोमन तुर्की"}
         pa{"पंजाबी"}
@@ -715,6 +716,9 @@ ne{
         Zyyy{"साझा"}
         Zzzz{"अज्ञात लिपि"}
     }
+    Scripts%stand-alone{
+        Hans{"सरलीकृत चिनियाँ"}
+    }
     Types{
         calendar{
             buddhist{"बुद्धिष्ट पात्रो"}
@@ -726,7 +730,7 @@ ne{
             indian{"भारतीय राष्ट्रिय पात्रो"}
             islamic{"इस्लामी पात्रो"}
             islamic-civil{"इस्लामी नागरिक पात्रो"}
-            iso8601{"ISO-8601 Calendar"}
+            iso8601{"ISO-8601 पात्रो"}
             japanese{"जापानी पात्रो"}
             persian{"फारसी पात्रो"}
             roc{"चिनियाँ गणतन्त्रको पात्रो"}
@@ -804,7 +808,6 @@ ne{
         AREVELA{"पूर्वी आर्मेनियाली"}
         POSIX{"कम्प्युटर"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0}-सबै"}
         category-list{"{0}: {1}"}
@@ -819,6 +822,8 @@ ne{
             one{"{0}स्ट्रोक"}
             other{"{0}स्ट्रोक"}
         }
+        subscript{"{0} को तल रेखा कोर्नुहोस्"}
+        superscript{"{0} को तल धर्का कोर्नुहोस्"}
     }
     codePatterns{
         language{"भाषा: {0}"}

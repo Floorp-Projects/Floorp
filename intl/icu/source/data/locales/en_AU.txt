@@ -1,8 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_AU{
     %%Parent{"en_001"}
-    ExemplarCharactersNumbers{"[↑]"}
     NumberElements{
         latn{
             miscPatterns{
@@ -13,7 +13,6 @@ en_AU{
             }
         }
     }
-    Version{"37"}
     calendar{
         chinese{
             monthNames{
@@ -271,6 +270,20 @@ en_AU{
             }
             monthNames{
                 format{
+                    abbreviated{
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "June",
+                        "July",
+                        "Aug",
+                        "Sept",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                    }
                     narrow{
                         "J",
                         "F",

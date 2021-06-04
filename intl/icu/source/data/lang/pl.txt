@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pl{
     Keys{
         calendar{"kalendarz"}
@@ -8,18 +9,18 @@ pl{
         colBackwards{"Odwrotne sortowanie ze znakami akcentowanymi"}
         colCaseFirst{"Kolejność wielkie/małe litery"}
         colCaseLevel{"Sortowanie uwzględniające wielkość liter"}
-        colNormalization{"Sortowanie znormalizowane"}
-        colNumeric{"Sortowanie numeryczne"}
-        colStrength{"Siła sortowania"}
+        colNormalization{"sortowanie znormalizowane"}
+        colNumeric{"sortowanie numeryczne"}
+        colStrength{"siła sortowania"}
         collation{"kolejność sortowania"}
         currency{"waluta"}
         hc{"cykl (12- lub 24-godzinny)"}
         lb{"styl podziału wiersza"}
         ms{"system miar"}
         numbers{"cyfry"}
-        timezone{"Strefa czasowa"}
-        va{"Wariant regionalny"}
-        x{"Do prywatnego użytku"}
+        timezone{"strefa czasowa"}
+        va{"wariant regionalny"}
+        x{"do użytku prywatnego"}
     }
     Languages{
         aa{"afar"}
@@ -111,7 +112,7 @@ pl{
         cch{"atsam"}
         ccp{"czakma"}
         ce{"czeczeński"}
-        ceb{"cebuano"}
+        ceb{"cebuański"}
         cgg{"chiga"}
         ch{"czamorro"}
         chb{"czibcza"}
@@ -140,8 +141,8 @@ pl{
         dar{"dargwijski"}
         dav{"taita"}
         de{"niemiecki"}
-        de_AT{"austriacki niemiecki"}
-        de_CH{"szwajcarski wysokoniemiecki"}
+        de_AT{"niemiecki austriacki"}
+        de_CH{"wysokoniemiecki szwajcarski"}
         del{"delaware"}
         den{"slave"}
         dgr{"dogrib"}
@@ -166,10 +167,10 @@ pl{
         el{"grecki"}
         elx{"elamicki"}
         en{"angielski"}
-        en_AU{"australijski angielski"}
-        en_CA{"kanadyjski angielski"}
-        en_GB{"brytyjski angielski"}
-        en_US{"amerykański angielski"}
+        en_AU{"angielski australijski"}
+        en_CA{"angielski kanadyjski"}
+        en_GB{"angielski brytyjski"}
+        en_US{"angielski amerykański"}
         enm{"średnioangielski"}
         eo{"esperanto"}
         es{"hiszpański"}
@@ -187,14 +188,14 @@ pl{
         fat{"fanti"}
         ff{"fulani"}
         fi{"fiński"}
-        fil{"filipino"}
+        fil{"filipiński"}
         fit{"meänkieli"}
         fj{"fidżijski"}
         fo{"farerski"}
         fon{"fon"}
         fr{"francuski"}
-        fr_CA{"kanadyjski francuski"}
-        fr_CH{"szwajcarski francuski"}
+        fr_CA{"francuski kanadyjski"}
+        fr_CH{"francuski szwajcarski"}
         frc{"cajuński"}
         frm{"średniofrancuski"}
         fro{"starofrancuski"}
@@ -647,7 +648,8 @@ pl{
     }
     Languages%menu{
         ckb{"kurdyjski sorani"}
-        zh{"chiński, mandaryński"}
+        yue{"chiński kantoński"}
+        zh{"chiński mandaryński"}
     }
     Languages%short{
         az{"azerski"}
@@ -976,7 +978,6 @@ pl{
         VALENCIA{"walencki"}
         WADEGILE{"latynizacja Wade’a i Gilesa"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — wszystko"}
         category-list{"{0}: {1}"}
@@ -993,6 +994,8 @@ pl{
             one{"{0} kreska"}
             other{"{0} kreski"}
         }
+        subscript{"indeks dolny {0}"}
+        superscript{"indeks górny {0}"}
     }
     codePatterns{
         language{"Język: {0}"}

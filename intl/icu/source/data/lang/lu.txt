@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lu{
     Languages{
         ak{"Liakan"}
@@ -46,5 +47,4 @@ lu{
         zh{"shinɛ"}
         zu{"Nzulu"}
     }
-    Version{"37"}
 }

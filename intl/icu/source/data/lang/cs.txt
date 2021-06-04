@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 cs{
     Keys{
         calendar{"Kalendář"}
@@ -637,7 +638,7 @@ cs{
         zh_Hant{"standardní čínština (tradiční)"}
     }
     Languages%menu{
-        yue{"jüe"}
+        yue{"čínština (kantonština)"}
         zh{"standardní čínština"}
     }
     Languages%short{
@@ -971,7 +972,6 @@ cs{
         SCOTLAND{"angličtina (Skotsko)"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – vše"}
         category-list{"{0}: {1}"}
@@ -988,6 +988,8 @@ cs{
             one{"{0} tah"}
             other{"{0} tahů"}
         }
+        subscript{"{0} v dolním indexu"}
+        superscript{"{0} v horním indexu"}
     }
     codePatterns{
         language{"Jazyk: {0}"}

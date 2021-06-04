@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 my{
     Currencies{
         AED{
@@ -52,7 +53,7 @@ my{
         }
         BBD{
             "BBD",
-            "ဘာဘေးဒီယန်း ဒေါ်လာ",
+            "ဘာဘေးဒိုးစ် ဒေါ်လာ",
         }
         BDT{
             "BDT",
@@ -877,7 +878,7 @@ my{
             other{"ဘော့စနီးယားနှင့် ဟာဇီဂိုဘီးနားမတ်က်"}
         }
         BBD{
-            other{"ဘာဘေးဒီယန်း ဒေါ်လာ"}
+            other{"ဘာဘေးဒိုးစ် ဒေါ်လာ"}
         }
         BDT{
             other{"ဘင်္ဂလားဒေ့ရှ် တာကာ"}
@@ -1330,5 +1331,4 @@ my{
             other{"ဇင်ဘာဘွေ ခွါးချာ"}
         }
     }
-    Version{"37"}
 }

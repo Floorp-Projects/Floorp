@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zh{
     Keys{
         calendar{"日历"}
@@ -132,7 +133,7 @@ zh{
         dje{"哲尔马语"}
         doi{"多格拉语"}
         dsb{"下索布语"}
-        dua{"都阿拉语"}
+        dua{"杜阿拉语"}
         dum{"中古荷兰语"}
         dv{"迪维希语"}
         dyo{"朱拉语"}
@@ -159,7 +160,7 @@ zh{
         es_MX{"墨西哥西班牙语"}
         et{"爱沙尼亚语"}
         eu{"巴斯克语"}
-        ewo{"旺杜语"}
+        ewo{"埃翁多语"}
         fa{"波斯语"}
         fa_AF{"达里语"}
         fan{"芳格语"}
@@ -565,7 +566,6 @@ zh{
     }
     Languages%menu{
         ars{"阿拉伯语（纳吉迪）"}
-        ckb{"库尔德语（索拉尼）"}
         yue{"广东话"}
         zh{"普通话"}
     }
@@ -1070,7 +1070,6 @@ zh{
         WADEGILE{"WG 威氏拼音法"}
         XSISTEMO{"西西斯特莫方言"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — 全部"}
         category-list{"{0}: {1}"}
@@ -1084,6 +1083,8 @@ zh{
         strokes{
             other{"{0}笔"}
         }
+        subscript{"下标{0}"}
+        superscript{"上标{0}"}
     }
     codePatterns{
         language{"语言：{0}"}

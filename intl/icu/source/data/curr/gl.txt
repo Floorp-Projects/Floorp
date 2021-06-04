@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 gl{
     Currencies{
         ADP{
@@ -477,7 +478,7 @@ gl{
         }
         MDL{
             "MDL",
-            "Leu moldavo",
+            "leu moldavo",
         }
         MGA{
             "MGA",
@@ -705,7 +706,7 @@ gl{
         }
         SZL{
             "SZL",
-            "lilangeni de Eswatini",
+            "lilangeni de Swazilandia",
         }
         THB{
             "฿",
@@ -1570,7 +1571,7 @@ gl{
             other{"libras sirias"}
         }
         SZL{
-            one{"lilangeni de Suacilandia"}
+            one{"lilangeni de Swazilandia"}
             other{"lilangenis de Eswatini"}
         }
         THB{
@@ -1690,5 +1691,4 @@ gl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

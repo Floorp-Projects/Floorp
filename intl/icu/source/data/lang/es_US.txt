@@ -1,12 +1,13 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_US{
     %%Parent{"es_419"}
     Languages{
         ace{"acehnés"}
         alt{"altái meridional"}
         arp{"arapaho"}
-        bas{"basa"}
+        ars{"árabe najdi"}
         bax{"bamun"}
         bho{"bhojpuri"}
         bla{"siksika"}
@@ -26,13 +27,13 @@ es_US{
         kbd{"kabardiano"}
         krc{"karachay-balkar"}
         lo{"lao"}
+        lou{"creole de Luisiana"}
         lus{"lushai"}
         mga{"irlandés medieval"}
         nl_BE{"flamenco"}
         nr{"ndebele meridional"}
         nso{"sotho septentrional"}
         rm{"romanche"}
-        rn{"kiroundi"}
         shu{"árabe chadiano"}
         sma{"sami meridional"}
         ss{"siswati"}
@@ -42,35 +43,23 @@ es_US{
         tet{"tetún"}
         tn{"setchwana"}
         tyv{"tuviniano"}
-        wo{"wolof"}
         xal{"kalmyk"}
         zh_Hans{"chino simplificado"}
         zh_Hant{"chino tradicional"}
     }
+    Languages%variant{
+        ug{"uigur variante"}
+    }
     Scripts{
-        Hanb{"hanb"}
-        Mlym{"malayálam"}
-        Telu{"telegu"}
+        Hrkt{"silabarios del japonés"}
+        Zzzz{"letra desconocida"}
     }
     Types{
-        calendar{
-            roc{"calendario minguo"}
-        }
-        collation{
-            ducet{"orden de clasificación de Unicode predeterminado"}
-        }
-        lb{
-            normal{"salto de línea normal"}
-        }
         numbers{
             gujr{"dígitos en gujarati"}
-            knda{"números en kannada"}
-            laoo{"números en lao"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
-        historic{"{0} — Históricos"}
         miscellaneous{"{0} — Varios"}
     }
 }

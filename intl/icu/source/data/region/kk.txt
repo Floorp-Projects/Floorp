@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kk{
     Countries{
         001{"Әлем"}
@@ -259,7 +260,7 @@ kk{
         TD{"Чад"}
         TF{"Францияның оңтүстік аймақтары"}
         TG{"Того"}
-        TH{"Тайланд"}
+        TH{"Таиланд"}
         TJ{"Тәжікстан"}
         TK{"Токелау"}
         TL{"Тимор-Лесте"}
@@ -311,5 +312,4 @@ kk{
         FK{"Фолкленд аралдары (Мальвин аралдары)"}
         TL{"Шығыс Тимор"}
     }
-    Version{"37"}
 }

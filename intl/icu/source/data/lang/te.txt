@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 te{
     Keys{
         calendar{"క్యాలెండర్"}
@@ -89,7 +90,7 @@ te{
         ccp{"చక్మా"}
         ce{"చెచెన్"}
         ceb{"సెబువానో"}
-        cgg{"ఛిగా"}
+        cgg{"చిగా"}
         ch{"చమర్రో"}
         chb{"చిబ్చా"}
         chg{"చాగటై"}
@@ -139,7 +140,7 @@ te{
         eka{"ఏకాజక్"}
         el{"గ్రీక్"}
         elx{"ఎలామైట్"}
-        en{"ఆంగ్లం"}
+        en{"ఇంగ్లీష్"}
         en_AU{"ఆస్ట్రేలియన్ ఇంగ్లీష్"}
         en_CA{"కెనడియన్ ఇంగ్లీష్"}
         en_GB{"బ్రిటిష్ ఇంగ్లీష్"}
@@ -854,7 +855,6 @@ te{
         REVISED{"సవరించబడిన వర్ణక్రమం"}
         WADEGILE{"వేడ్-గైల్స్ రోమనైజేషన్"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — అన్ని"}
         category-list{"{0}: {1}"}
@@ -869,6 +869,8 @@ te{
             one{"{0} స్ట్రోక్"}
             other{"{0} స్ట్రోకులు"}
         }
+        subscript{"సబ్‌స్క్రిప్ట్ {0}"}
+        superscript{"సూపర్‌స్క్రిప్ట్ {0}"}
     }
     codePatterns{
         language{"భాష: {0}"}

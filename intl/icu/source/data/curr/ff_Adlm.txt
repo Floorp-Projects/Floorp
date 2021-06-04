@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ff_Adlm{
     %%Parent{"root"}
     Currencies{
@@ -33,7 +34,7 @@ ff_Adlm{
         }
         AUD{
             "A$",
-            "𞤁𞤢𞤤𞤢 𞤌𞤧𞤼𞤪𞤢𞤤𞤭𞤴𞤢𞤲𞤳𞤮",
+            "𞤁𞤢𞤤𞤢 𞤌𞤧𞤼𞤢𞤪𞤤𞤭𞤴𞤢𞤲𞤳𞤮",
         }
         AWG{
             "AWG",
@@ -125,7 +126,7 @@ ff_Adlm{
         }
         CNY{
             "CN¥",
-            "𞤒𞤵𞤱𞤢𞤲 𞤕𞤢𞤴𞤲𞤭𞤲𞤳𞤮",
+            "𞤒𞤵𞤱𞤢𞥄𞤲 𞤕𞤢𞤴𞤲𞤭𞤲𞤳𞤮",
         }
         COP{
             "COP",
@@ -417,7 +418,7 @@ ff_Adlm{
         }
         NZD{
             "NZ$",
-            "𞤁𞤢𞤤𞤢 𞤐𞤫𞤱-𞤔𞤭𞤤𞤢𞤲𞤣𞤭𞤲𞤳𞤮",
+            "𞤁𞤢𞤤𞤢 𞤐𞤫𞤱 𞤟𞤫𞤤𞤢𞤲𞤣",
         }
         OMR{
             "OMR",
@@ -477,7 +478,7 @@ ff_Adlm{
         }
         SBD{
             "SBD",
-            "𞤁𞤢𞤤𞤢 𞤅𞤵𞤪𞤭𞥅𞤶𞤫 𞤅𞤵𞤤𞤫𞤴𞤥𞤢𞥄𞤲𞤭𞤲𞤳𞤮",
+            "𞤁𞤢𞤤𞤢 𞤕𞤵𞤪𞤭𞥅𞤶𞤫 𞤅𞤵𞤤𞤢𞤴𞤥𞤢𞥄𞤲",
         }
         SCR{
             "SCR",
@@ -680,8 +681,8 @@ ff_Adlm{
             other{"𞤆𞤫𞤧𞤮𞥅𞤶𞤭 𞤀𞤪𞤶𞤢𞤲𞤼𞤭𞤲𞤢"}
         }
         AUD{
-            one{"𞤣𞤢𞤤𞤢 𞤌𞤧𞤼𞤪𞤢𞤤𞤭𞤴𞤢𞤲𞤳𞤮"}
-            other{"𞤣𞤢𞤤𞤢𞥄𞤶𞤭 𞤌𞤧𞤼𞤪𞤢𞤤𞤭𞤴𞤢𞤲𞤳𞤮"}
+            one{"𞤁𞤢𞤤𞤢 𞤌𞤧𞤼𞤢𞤪𞤤𞤭𞤴𞤢𞤲𞤳𞤮"}
+            other{"𞤁𞤢𞤤𞤢𞥄𞤶𞤭 𞤌𞤧𞤼𞤢𞤪𞤤𞤭𞤴𞤢𞤲𞤳𞤮"}
         }
         AWG{
             one{"𞤊𞤵𞤤𞤮𞤪𞤭𞤲 𞤀𞤪𞤵𞤦𞤢𞤲𞤳𞤮"}
@@ -1066,8 +1067,8 @@ ff_Adlm{
             other{"𞤪𞤵𞥅𞤨𞤭𞥅𞤶𞤭 𞤐𞤫𞤨𞤢𞤤𞤭𞤴𞤢𞤲𞤳𞤮"}
         }
         NZD{
-            one{"𞤣𞤢𞤤𞤢 𞤐𞤫𞤱-𞤔𞤭𞤤𞤢𞤲𞤣𞤭𞤲𞤳𞤮"}
-            other{"𞤣𞤢𞤤𞤢𞥄𞤶𞤭 𞤐𞤫𞤱-𞤔𞤭𞤤𞤢𞤲𞤣𞤭𞤲𞤳𞤮"}
+            one{"𞤣𞤢𞤤𞤢 𞤐𞤫𞤱 𞤟𞤫𞤤𞤢𞤲𞤣"}
+            other{"𞤣𞤢𞤤𞤢𞥄𞤶𞤭 𞤐𞤫𞤱 𞤟𞤫𞤤𞤢𞤲𞤣"}
         }
         OMR{
             one{"𞤪𞤭𞤴𞤢𞥄𞤤 𞤌𞤥𞤢𞤲𞤭𞤴𞤢𞤲𞤳𞤮"}
@@ -1126,7 +1127,8 @@ ff_Adlm{
             other{"𞤪𞤭𞤴𞤢𞤤𞤶𞤭 𞤅𞤢𞤵𞥅𞤣𞤭𞤴𞤢𞤲𞤳𞤮"}
         }
         SBD{
-            other{"𞤣𞤢𞤤𞤢 𞤅𞤵𞤪𞤭𞥅𞤶𞤫 𞤅𞤵𞤤𞤫𞤴𞤥𞤢𞥄𞤲𞤭𞤲𞤳𞤮"}
+            one{"𞤣𞤢𞤤𞤢 𞤕𞤵𞤪𞤭𞥅𞤶𞤫 𞤅𞤵𞤤𞤢𞤴𞤥𞤢𞥄𞤲"}
+            other{"𞤣𞤢𞤤𞤢𞥄𞤶𞤭 𞤕𞤵𞤪𞤭𞥅𞤶𞤫 𞤅𞤵𞤤𞤢𞤴𞤥𞤢𞥄𞤲"}
         }
         SCR{
             one{"𞤪𞤵𞤨𞤭𞥅 𞤅𞤫𞤴𞤧𞤭𞤤𞤭𞤲𞤳𞤮"}
@@ -1285,5 +1287,4 @@ ff_Adlm{
             other{"𞤳𞤢𞤱𞤢𞤧𞤢𞥄𞤶𞤭 𞤟𞤢𞤥𞤦𞤭𞤲𞤳𞤮"}
         }
     }
-    Version{"37"}
 }

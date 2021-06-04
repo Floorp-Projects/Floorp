@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 smn{
     Languages{
         aa{"afar"}
@@ -397,7 +398,6 @@ smn{
         zxx{"ij kielâlâš siskáldâs"}
         zza{"zazakielâ"}
     }
-    Version{"37"}
     codePatterns{
         language{"kielâ: {0}"}
         script{"čäällimvuáhádâh: {0}"}

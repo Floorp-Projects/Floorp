@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_US{
     %%Parent{"es_419"}
     Countries{
@@ -18,7 +19,6 @@ es_US{
         AC{"Isla de la Ascensión"}
         BA{"Bosnia y Herzegovina"}
         CI{"Côte d’Ivoire"}
-        EZ{"zona euro"}
         GG{"Guernsey"}
         QO{"Territorios alejados de Oceanía"}
         TA{"Tristán de Acuña"}
@@ -27,5 +27,4 @@ es_US{
     Countries%short{
         GB{"RU"}
     }
-    Version{"37"}
 }

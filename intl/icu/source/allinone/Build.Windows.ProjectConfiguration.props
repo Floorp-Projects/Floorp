@@ -56,13 +56,7 @@
     <IcuBinOutputDir>binARM64</IcuBinOutputDir>
     <IcuLibOutputDir>libARM64</IcuLibOutputDir>
   </PropertyGroup>
-  <!-- This is the default SDK target. -->
-  <PropertyGroup>
-    <!-- Note that the Windows 8.1 SDK is backwards compatible down-level to Windows 7, so
-         setting this to 8.1 does not actually imply targeting Windows 8.1. -->
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
-  </PropertyGroup>
-  <!-- Desktop ARM/ARM64 support requires a newer version of the Windows SDK than 8.1 -->
+  <!-- Desktop ARM/ARM64 support requires a different version of the Windows SDK -->
   <!--
       Note: This version must match the version below in the ARM64 section for AdditionalLibraryDirectories
   -->

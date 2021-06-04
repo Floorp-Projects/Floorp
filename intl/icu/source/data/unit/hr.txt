@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hr{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -202,10 +202,10 @@ hr{
         }
         coordinate{
             dnam{"kardinalni smjer"}
-            east{"{0}I"}
-            north{"{0}S"}
-            south{"{0}J"}
-            west{"{0}Z"}
+            east{"{0} istočno"}
+            north{"{0} sjeverno"}
+            south{"{0} južno"}
+            west{"{0} zapadno"}
         }
         digital{
             bit{
@@ -479,6 +479,12 @@ hr{
             }
         }
         graphics{
+            dot{
+                dnam{"točka"}
+                few{"{0} točke"}
+                one{"{0} točka"}
+                other{"{0} točaka"}
+            }
             dot-per-centimeter{
                 dnam{"točke po centimetru"}
                 few{"{0} točke po centimetru"}
@@ -541,6 +547,12 @@ hr{
                 few{"{0} decimetra"}
                 one{"{0} decimetar"}
                 other{"{0} decimetara"}
+            }
+            earth-radius{
+                dnam{"srednji polumjer Zemlje"}
+                few{"{0} srednja polumjera Zemlje"}
+                one{"{0} srednji polumjer Zemlje"}
+                other{"{0} srednjih polumjera Zemlje"}
             }
             fathom{
                 dnam{"hvati"}
@@ -638,9 +650,9 @@ hr{
             }
             point{
                 dnam{"točke"}
-                few{"{0} točke"}
-                one{"{0} točka"}
-                other{"{0} točaka"}
+                few{"{0} tipografske točke"}
+                one{"{0} tipografska točka"}
+                other{"{0} tipografskih točaka"}
             }
             solar-radius{
                 dnam{"Sunčevi polumjeri"}
@@ -656,6 +668,18 @@ hr{
             }
         }
         light{
+            candela{
+                dnam{"kandela"}
+                few{"{0} kandele"}
+                one{"{0} kandela"}
+                other{"{0} kandela"}
+            }
+            lumen{
+                dnam{"lumen"}
+                few{"{0} lumena"}
+                one{"{0} lumen"}
+                other{"{0} lumena"}
+            }
             lux{
                 dnam{"luksi"}
                 few{"{0} luksa"}
@@ -687,6 +711,11 @@ hr{
                 few{"{0} Zemljine mase"}
                 one{"{0} Zemljina masa"}
                 other{"{0} Zemljinih masa"}
+            }
+            grain{
+                few{"{0} graina"}
+                one{"{0} gr"}
+                other{"{0} graina"}
             }
             gram{
                 dnam{"grami"}
@@ -1012,6 +1041,30 @@ hr{
                 one{"{0} decilitar"}
                 other{"{0} decilitara"}
             }
+            dessert-spoon{
+                dnam{"desertna žličica"}
+                few{"{0} desertne žličice"}
+                one{"{0} desertna žličica"}
+                other{"{0} desertnih žličica"}
+            }
+            dessert-spoon-imperial{
+                dnam{"imperijalna desertna žličica"}
+                few{"{0} imperijalne desertne žličice"}
+                one{"{0} imperijalna desertna žličica"}
+                other{"{0} imperijalnih desertnih žličica"}
+            }
+            dram{
+                dnam{"dram tekućine"}
+                few{"{0} drama tekućine"}
+                one{"{0} dram tekućine"}
+                other{"{0} drama tekućine"}
+            }
+            drop{
+                dnam{"kap"}
+                few{"{0} kapi"}
+                one{"{0} kap"}
+                other{"{0} kapi"}
+            }
             fluid-ounce{
                 dnam{"tekuće unce"}
                 few{"{0} tekuće unce"}
@@ -1044,6 +1097,11 @@ hr{
                 one{"{0} hektolitar"}
                 other{"{0} hektolitara"}
             }
+            jigger{
+                few{"{0} jiggera"}
+                one{"{0} jiggera"}
+                other{"{0} jiggera"}
+            }
             liter{
                 dnam{"litre"}
                 few{"{0} litre"}
@@ -1063,6 +1121,12 @@ hr{
                 one{"{0} mililitar"}
                 other{"{0} mililitara"}
             }
+            pinch{
+                dnam{"prstohvat"}
+                few{"{0} prstohvata"}
+                one{"{0} prstohvat"}
+                other{"{0} prstohvata"}
+            }
             pint{
                 dnam{"pinte"}
                 few{"{0} pinte"}
@@ -1080,6 +1144,12 @@ hr{
                 few{"{0} četvrtine"}
                 one{"{0} četvrtina"}
                 other{"{0} četvrtina"}
+            }
+            quart-imperial{
+                dnam{"imperijalna četvrtina"}
+                few{"{0} imperijalne četvrtine"}
+                one{"{0} imperijalna četvrtina"}
+                other{"{0} imperijalne četvrtine"}
             }
             tablespoon{
                 dnam{"žlice"}
@@ -1970,10 +2040,10 @@ hr{
         }
         coordinate{
             dnam{"smjer"}
-            east{"{0}I"}
-            north{"{0}S"}
-            south{"{0}J"}
-            west{"{0}Z"}
+            east{"{0} I"}
+            north{"{0} S"}
+            south{"{0} J"}
+            west{"{0} Z"}
         }
         digital{
             bit{
@@ -2227,6 +2297,12 @@ hr{
             }
         }
         graphics{
+            dot{
+                dnam{"točka"}
+                few{"{0} točke"}
+                one{"{0} točka"}
+                other{"{0} točaka"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 few{"{0} dpcm"}
@@ -2289,6 +2365,12 @@ hr{
                 few{"{0} dm"}
                 one{"{0} dm"}
                 other{"{0} dm"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
+                few{"{0} R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
             }
             fathom{
                 dnam{"hv"}
@@ -2414,6 +2496,12 @@ hr{
             }
             dalton{
                 dnam{"daltoni"}
+            }
+            grain{
+                dnam{"gr"}
+                few{"{0} gr"}
+                one{"{0} gr"}
+                other{"{0} gr"}
             }
             gram{
                 dnam{"g"}
@@ -2709,6 +2797,30 @@ hr{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"žličica"}
+                few{"{0} des. žličice"}
+                one{"{0} des. žličica"}
+                other{"{0} des. žličica"}
+            }
+            dessert-spoon-imperial{
+                dnam{"imp. žličica"}
+                few{"{0} imp. žličice"}
+                one{"{0} imp. žličica"}
+                other{"{0} imp. žličica"}
+            }
+            dram{
+                dnam{"fl dr"}
+                few{"{0} fl dr"}
+                one{"{0} fl dr"}
+                other{"{0} fl dr"}
+            }
+            drop{
+                dnam{"kap"}
+                few{"{0} kapi"}
+                one{"{0} kap"}
+                other{"{0} kapi"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 few{"{0} fl oz"}
@@ -2741,6 +2853,11 @@ hr{
                 one{"{0} hl"}
                 other{"{0} hl"}
             }
+            jigger{
+                few{"{0} jiggera"}
+                one{"{0} jiggera"}
+                other{"{0} jiggera"}
+            }
             liter{
                 dnam{"l"}
                 few{"{0} l"}
@@ -2759,6 +2876,12 @@ hr{
                 few{"{0} ml"}
                 one{"{0} ml"}
                 other{"{0} ml"}
+            }
+            pinch{
+                dnam{"prstohvat"}
+                few{"{0} prstohvata"}
+                one{"{0} prstohvat"}
+                other{"{0} prstohvata"}
             }
             pint{
                 dnam{"pt"}

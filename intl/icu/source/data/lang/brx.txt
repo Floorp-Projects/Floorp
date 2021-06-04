@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 brx{
     Keys{
         calendar{"पंचाग"}
@@ -609,7 +610,6 @@ brx{
         SOLBA{"श्टोलविज़्ज़ा या सोलबीका डायलेक्ट"}
         TARASK{"तारास्कीएवीचा वर्तनी"}
     }
-    Version{"37"}
     codePatterns{
         script{"देवनागरी: {0}"}
         territory{"क्षेत्र:भारत {0}"}

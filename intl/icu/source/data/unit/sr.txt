@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -171,7 +171,7 @@ sr{
         }
         consumption{
             liter-per-100-kilometer{
-                dnam{"L/100km"}
+                dnam{"литри на 100 километара"}
                 few{"{0} литра на 100 километара"}
                 one{"{0} литар на 100 километара"}
                 other{"{0} литара на 100 километара"}
@@ -219,49 +219,49 @@ sr{
                 dnam{"гигабитови"}
                 few{"{0} гигабита"}
                 one{"{0} гигабит"}
-                other{"{0} гигабита"}
+                other{"{0} гигабитова"}
             }
             gigabyte{
                 dnam{"гигабајти"}
                 few{"{0} гигабајта"}
                 one{"{0} гигабајт"}
-                other{"{0} гигабајта"}
+                other{"{0} гигабајтова"}
             }
             kilobit{
                 dnam{"килобитови"}
                 few{"{0} килобита"}
                 one{"{0} килобит"}
-                other{"{0} килобита"}
+                other{"{0} килобитова"}
             }
             kilobyte{
                 dnam{"килобајти"}
                 few{"{0} килобајта"}
                 one{"{0} килобајт"}
-                other{"{0} килобајта"}
+                other{"{0} килобајтова"}
             }
             megabit{
                 dnam{"мегабитови"}
                 few{"{0} мегабита"}
                 one{"{0} мегабит"}
-                other{"{0} мегабита"}
+                other{"{0} мегабитова"}
             }
             megabyte{
                 dnam{"мегабајти"}
                 few{"{0} мегабајта"}
                 one{"{0} мегабајт"}
-                other{"{0} мегабајта"}
+                other{"{0} мегабајтова"}
             }
             petabyte{
                 dnam{"петабајти"}
                 few{"{0} петабајта"}
                 one{"{0} петабајт"}
-                other{"{0} петабајта"}
+                other{"{0} петабајтова"}
             }
             terabit{
                 dnam{"терабитови"}
                 few{"{0} терабита"}
                 one{"{0} терабит"}
-                other{"{0} терабита"}
+                other{"{0} терабитова"}
             }
             terabyte{
                 dnam{"терабајти"}
@@ -470,6 +470,14 @@ sr{
                 other{"{0} мегахерца"}
             }
         }
+        graphics{
+            dot{
+                dnam{"тачка"}
+                few{"{0} тачке"}
+                one{"{0} тачка"}
+                other{"{0} тачака"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"астрономске јединице"}
@@ -490,12 +498,30 @@ sr{
                 one{"{0} дециметар"}
                 other{"{0} дециметара"}
             }
+            earth-radius{
+                dnam{"полупречник Земље"}
+                few{"{0} R⊕"}
+                one{"{0} полупречник Земље"}
+                other{"{0} полупречника Земље"}
+            }
+            fathom{
+                dnam{"хвати"}
+                few{"{0} хвата"}
+                one{"{0} хват"}
+                other{"{0} хвати"}
+            }
             foot{
                 dnam{"стопе"}
                 few{"{0} стопе"}
                 one{"{0} стопа"}
                 other{"{0} стопа"}
                 per{"{0}/ft"}
+            }
+            furlong{
+                dnam{"фурлонзи"}
+                few{"{0} фурлонга"}
+                one{"{0} фурлонг"}
+                other{"{0} фурлонга"}
             }
             inch{
                 dnam{"инчи"}
@@ -592,6 +618,18 @@ sr{
             }
         }
         light{
+            candela{
+                dnam{"кандела"}
+                few{"{0} канделе"}
+                one{"{0} кандела"}
+                other{"{0} кандела"}
+            }
+            lumen{
+                dnam{"лумен"}
+                few{"{0} лумена"}
+                one{"{0} лумен"}
+                other{"{0} лумена"}
+            }
             lux{
                 dnam{"лукс"}
                 few{"{0} лукса"}
@@ -617,6 +655,12 @@ sr{
                 few{"{0} масе земље"}
                 one{"{0} маса земље"}
                 other{"{0} маса земље"}
+            }
+            grain{
+                dnam{"грејн"}
+                few{"{0} грејна"}
+                one{"{0} грејн"}
+                other{"{0} грејна"}
             }
             gram{
                 dnam{"грами"}
@@ -675,6 +719,12 @@ sr{
                 few{"{0} масе сунца"}
                 one{"{0} маса сунца"}
                 other{"{0} маса сунца"}
+            }
+            stone{
+                dnam{"америчке тоне"}
+                few{"{0} америчке тоне"}
+                one{"{0} америчка тона"}
+                other{"{0} америчких тона"}
             }
             ton{
                 dnam{"тоне"}
@@ -843,10 +893,10 @@ sr{
                 other{"{0} њутн-метара"}
             }
             pound-force-foot{
-                dnam{"фунта-фити"}
-                few{"{0} фунта-фита"}
-                one{"{0} фунта-фит"}
-                other{"{0} фунта-фита"}
+                dnam{"фунта-стопе"}
+                few{"{0} фунте силе стопе"}
+                one{"{0} фунта силе стопе"}
+                other{"{0} фунти силе стопе"}
             }
         }
         volume{
@@ -861,6 +911,12 @@ sr{
                 few{"{0} барела"}
                 one{"{0} барел"}
                 other{"{0} барела"}
+            }
+            bushel{
+                dnam{"бушели"}
+                few{"{0} бушела"}
+                one{"{0} бушел"}
+                other{"{0} бушела"}
             }
             centiliter{
                 dnam{"центилитри"}
@@ -930,6 +986,30 @@ sr{
                 one{"{0} децилитар"}
                 other{"{0} децилитара"}
             }
+            dessert-spoon{
+                dnam{"десертна кашичица"}
+                few{"{0} десертне кашичице"}
+                one{"{0} десертна кашичица"}
+                other{"{0} десертних кашичица"}
+            }
+            dessert-spoon-imperial{
+                dnam{"империјска десертна кашичица"}
+                few{"{0} империјске десертне кашичице"}
+                one{"{0} империјска десертна кашичица"}
+                other{"{0} империјских десертних кашичица"}
+            }
+            dram{
+                dnam{"драм течности"}
+                few{"{0} драма течности"}
+                one{"{0} драм течности"}
+                other{"{0} драма течности"}
+            }
+            drop{
+                dnam{"кап"}
+                few{"{0} капи"}
+                one{"{0} кап"}
+                other{"{0} капи"}
+            }
             fluid-ounce{
                 dnam{"унце течности"}
                 few{"{0} унце течности"}
@@ -962,6 +1042,12 @@ sr{
                 one{"{0} хектолитар"}
                 other{"{0} хектолитара"}
             }
+            jigger{
+                dnam{"џигер"}
+                few{"{0} џигера"}
+                one{"{0} џигер"}
+                other{"{0} џигера"}
+            }
             liter{
                 dnam{"литри"}
                 few{"{0} литра"}
@@ -981,6 +1067,12 @@ sr{
                 one{"{0} милилитар"}
                 other{"{0} милилитара"}
             }
+            pinch{
+                dnam{"прстохват"}
+                few{"{0} прстохвата"}
+                one{"{0} прстохват"}
+                other{"{0} прстохвата"}
+            }
             pint{
                 dnam{"пинте"}
                 few{"{0} пинте"}
@@ -998,6 +1090,12 @@ sr{
                 few{"{0} кварта"}
                 one{"{0} кварат"}
                 other{"{0} кварата"}
+            }
+            quart-imperial{
+                dnam{"империјска четвртина"}
+                few{"{0} империјске четвртине"}
+                one{"{0} империјска четвртина"}
+                other{"{0} империјских четвртина"}
             }
             tablespoon{
                 dnam{"кашике"}
@@ -1758,6 +1856,12 @@ sr{
             }
         }
         graphics{
+            dot{
+                dnam{"тачка"}
+                few{"{0} тачке"}
+                one{"{0} тачка"}
+                other{"{0} тачака"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 few{"{0} dpcm"}
@@ -1821,12 +1925,30 @@ sr{
                 one{"{0} dm"}
                 other{"{0} dm"}
             }
+            earth-radius{
+                dnam{"R⊕"}
+                few{"{0} R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
+            fathom{
+                dnam{"хв"}
+                few{"{0} fth"}
+                one{"{0} fth"}
+                other{"{0} fth"}
+            }
             foot{
                 dnam{"ft"}
                 few{"{0} ft"}
                 one{"{0} ft"}
                 other{"{0} ft"}
                 per{"{0}/ft"}
+            }
+            furlong{
+                dnam{"фурлонзи"}
+                few{"{0} fur"}
+                one{"{0} fur"}
+                other{"{0} fur"}
             }
             inch{
                 dnam{"инчи"}
@@ -1930,6 +2052,9 @@ sr{
                 few{"{0} CD"}
                 one{"{0} CD"}
                 other{"{0} CD"}
+            }
+            grain{
+                dnam{"грејн"}
             }
             gram{
                 dnam{"грами"}
@@ -2205,6 +2330,15 @@ sr{
                 one{"{0} dL"}
                 other{"{0} dL"}
             }
+            dram{
+                dnam{"драм течности"}
+            }
+            drop{
+                dnam{"кап"}
+                few{"{0} капи"}
+                one{"{0} кап"}
+                other{"{0} капи"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 few{"{0} fl oz"}
@@ -2231,6 +2365,9 @@ sr{
                 one{"{0} hL"}
                 other{"{0} hL"}
             }
+            jigger{
+                dnam{"џигер"}
+            }
             liter{
                 dnam{"литри"}
                 few{"{0} l"}
@@ -2249,6 +2386,9 @@ sr{
                 few{"{0} mL"}
                 one{"{0} mL"}
                 other{"{0} mL"}
+            }
+            pinch{
+                dnam{"прстохват"}
             }
             pint{
                 dnam{"pt"}

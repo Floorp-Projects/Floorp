@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr{
     Keys{
         calendar{"календар"}
@@ -113,6 +114,7 @@ sr{
         dar{"даргински"}
         dav{"таита"}
         de{"немачки"}
+        de_AT{"аустријски немачки"}
         de_CH{"швајцарски високи немачки"}
         del{"делаверски"}
         den{"слејви"}
@@ -530,6 +532,10 @@ sr{
         zxx{"без лингвистичког садржаја"}
         zza{"заза"}
     }
+    Languages%long{
+        zh_Hans{"поједностављени мандарински кинески"}
+        zh_Hant{"традиционални мандарински кинески"}
+    }
     Languages%menu{
         yue{"кантонски кинески"}
         zh{"мандарински кинески"}
@@ -852,7 +858,6 @@ sr{
         TARASK{"Тараскијевичка ортографија"}
         VALENCIA{"Валенцијска"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — све"}
         category-list{"{0}: {1}"}
@@ -868,6 +873,8 @@ sr{
             one{"{0} потез"}
             other{"{0} потеза"}
         }
+        subscript{"написано испод {0}"}
+        superscript{"написано изнад {0}"}
     }
     codePatterns{
         language{"Језик: {0}"}

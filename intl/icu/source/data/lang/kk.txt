@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kk{
     Keys{
         calendar{"Күнтізбе"}
@@ -550,7 +551,6 @@ kk{
             tibt{"Тибет сандары"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — барлығы"}
         category-list{"{0}: {1}"}
@@ -565,6 +565,8 @@ kk{
             one{"{0} сызық"}
             other{"{0} сызық"}
         }
+        subscript{"жол асты таңба {0}"}
+        superscript{"жол үсті таңба {0}"}
     }
     codePatterns{
         language{"Тіл: {0}"}

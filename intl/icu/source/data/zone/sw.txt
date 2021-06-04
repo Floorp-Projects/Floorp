@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sw{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1452,15 +1452,15 @@ sw{
             ls{"Saa za Wastani za Choibalsan"}
         }
         "meta:Christmas"{
-            ls{"Saa za Kisiwa cha Christmas"}
+            ls{"Saa za Kisiwa cha Krismasi"}
         }
         "meta:Cocos"{
             ls{"Saa za Visiwa vya Cocos"}
         }
         "meta:Colombia"{
-            ld{"Saa za Majira ya joto za Colombia"}
-            lg{"Saa za Colombia"}
-            ls{"Saa za Wastani za Colombia"}
+            ld{"Saa za Majira ya joto za Kolombia"}
+            lg{"Saa za Kolombia"}
+            ls{"Saa za Wastani za Kolombia"}
         }
         "meta:Cook"{
             ld{"Saa za Majira nusu ya joto za Visiwa Cook"}
@@ -1468,9 +1468,9 @@ sw{
             ls{"Saa za Wastani za Visiwa vya Cook"}
         }
         "meta:Cuba"{
-            ld{"Saa za Mchana za Cuba"}
-            lg{"Saa za Cuba"}
-            ls{"Saa za Wastani ya Cuba"}
+            ld{"Saa za Mchana za Kuba"}
+            lg{"Saa za Kuba"}
+            ls{"Saa za Wastani ya Kuba"}
         }
         "meta:Davis"{
             ls{"Saa za Davis"}
@@ -1487,12 +1487,12 @@ sw{
             ls{"Saa za Wastani za Kisiwa cha Easter"}
         }
         "meta:Ecuador"{
-            ls{"Saa za Ecuador"}
+            ls{"Saa za Ekwado"}
         }
         "meta:Europe_Central"{
             ld{"Saa za Majira ya joto za Ulaya ya Kati"}
             lg{"Saa za Ulaya ya Kati"}
-            ls{"Saa za Wastani za Ulaya ya kati"}
+            ls{"Saa za Wastani za Ulaya ya Kati"}
         }
         "meta:Europe_Eastern"{
             ld{"Saa za Majira ya joto za Mashariki mwa Ulaya"}
@@ -1533,9 +1533,9 @@ sw{
             ls{"Saa za Gambier"}
         }
         "meta:Georgia"{
-            ld{"Saa za Majira ya joto za Georgia"}
-            lg{"Saa za Georgia"}
-            ls{"Saa za Wastani za Georgia"}
+            ld{"Saa za Majira ya joto za Jojia"}
+            lg{"Saa za Jojia"}
+            ls{"Saa za Wastani za Jojia"}
         }
         "meta:Gilbert_Islands"{
             ls{"Saa za Visiwa vya Gilbert"}
@@ -1572,7 +1572,7 @@ sw{
             ls{"Saa za Wastani za Hovd"}
         }
         "meta:India"{
-            ls{"Saa Wastani za India"}
+            ls{"Saa za Wastani za India"}
         }
         "meta:Indian_Ocean"{
             ls{"Saa za Bahari Hindi"}
@@ -1607,7 +1607,7 @@ sw{
         "meta:Japan"{
             ld{"Saa za Mchana za Japan"}
             lg{"Saa za Japan"}
-            ls{"Saa Wastani za Japan"}
+            ls{"Saa za Wastani za Japani"}
         }
         "meta:Kamchatka"{
             ld{"Saa za Kiangazi za Petropavlovsk-Kamchatski"}
@@ -1665,22 +1665,22 @@ sw{
             ls{"Saa za Visiwa vya Marshall"}
         }
         "meta:Mauritius"{
-            ld{"Saa za Majira ya joto za Mauritius"}
-            lg{"Saa za Mauritius"}
-            ls{"Saa za Wastani za Mauritius"}
+            ld{"Saa za Majira ya joto za Morisi"}
+            lg{"Saa za Morisi"}
+            ls{"Saa za Wastani za Morisi"}
         }
         "meta:Mawson"{
             ls{"Saa za Mawson"}
         }
         "meta:Mexico_Northwest"{
-            ld{"Saa za mchana za Mexico Kaskazini Magharibi"}
-            lg{"Saa za Mexico Kaskazini Magharibi"}
-            ls{"Saa za Wastani za Mexico Kaskazini Magharibi"}
+            ld{"Saa za mchana za Meksiko Kaskazini Magharibi"}
+            lg{"Saa za Meksiko Kaskazini Magharibi"}
+            ls{"Saa za Wastani za Meksiko Kaskazini Magharibi"}
         }
         "meta:Mexico_Pacific"{
-            ld{"Saa za mchana za pasifiki za Mexico"}
-            lg{"Saa za pasifiki za Mexico"}
-            ls{"Saa za wastani za pasifiki za Mexico"}
+            ld{"Saa za mchana za pasifiki za Meksiko"}
+            lg{"Saa za pasifiki za Meksiko"}
+            ls{"Saa za wastani za pasifiki za Meksiko"}
         }
         "meta:Mongolia"{
             ld{"Saa za Majira ya joto za Ulan Bator"}
@@ -1751,9 +1751,9 @@ sw{
             ls{"Saa za Papua New Guinea"}
         }
         "meta:Paraguay"{
-            ld{"Saa za Majira ya joto za Paraguay"}
-            lg{"Saa za Paraguay"}
-            ls{"Saa za Wastani za Paraguay"}
+            ld{"Saa za Majira ya joto za Paragwai"}
+            lg{"Saa za Paragwai"}
+            ls{"Saa za Wastani za Paragwai"}
         }
         "meta:Peru"{
             ld{"Saa za Majira ya joto za Peru"}
@@ -1852,9 +1852,9 @@ sw{
             ls{"Saa za Tuvalu"}
         }
         "meta:Uruguay"{
-            ld{"Saa za Majira ya joto za Uruguay"}
-            lg{"Saa za Uruguay"}
-            ls{"Saa za Wastani za Uruguay"}
+            ld{"Saa za Majira ya joto za Urugwai"}
+            lg{"Saa za Urugwai"}
+            ls{"Saa za Wastani za Urugwai"}
         }
         "meta:Uzbekistan"{
             ld{"Saa za Majira ya joto za Uzbekistan"}

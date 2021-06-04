@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 eu{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -767,6 +767,9 @@ eu{
         }
         "Asia:Kuwait"{
             ec{"Kuwait"}
+        }
+        "Asia:Macau"{
+            ec{"Macau"}
         }
         "Asia:Magadan"{
             ec{"Magadan"}
@@ -1729,7 +1732,7 @@ eu{
         "meta:Norfolk"{
             ld{"Norfolk uharteetako udako ordua"}
             lg{"Norfolk uharteetako ordua"}
-            ls{"Norfolk uharteetako ordua estandarra"}
+            ls{"Norfolk uharteetako ordu estandarra"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronhako udako ordua"}

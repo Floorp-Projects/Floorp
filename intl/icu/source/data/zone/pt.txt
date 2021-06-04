@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pt{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -816,6 +816,9 @@ pt{
         "Asia:Riyadh"{
             ec{"Riade"}
         }
+        "Asia:Saigon"{
+            ec{"Cidade de Ho Chi Minh"}
+        }
         "Asia:Sakhalin"{
             ec{"Sacalina"}
         }
@@ -892,7 +895,7 @@ pt{
             ec{"Cabo Verde"}
         }
         "Atlantic:Faeroe"{
-            ec{"Ilhas Faroe"}
+            ec{"Ilhas Faroé"}
         }
         "Atlantic:Madeira"{
             ec{"Madeira"}
@@ -1840,7 +1843,7 @@ pt{
             ls{"Horário de Seicheles"}
         }
         "meta:Singapore"{
-            ls{"Horário Padrão de Cingapura"}
+            ls{"Horário Padrão de Singapura"}
         }
         "meta:Solomon"{
             ls{"Horário das Ilhas Salomão"}

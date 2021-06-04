@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mai{
     Languages{
         de{"जर्मन"}
@@ -66,7 +67,6 @@ mai{
             latn{"पश्चिमी अंक"}
         }
     }
-    Version{"37"}
     codePatterns{
         language{"भाषा: {0}"}
         script{"लिपि: {0}"}

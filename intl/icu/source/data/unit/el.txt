@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 el{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -369,7 +369,7 @@ el{
             }
             therm-us{
                 dnam{"θερμικές μονάδες ΗΠΑ"}
-                one{"{0} θερμ. μονάδα ΗΠΑ"}
+                one{"{0} θερμική μονάδα ΗΠΑ"}
                 other{"{0} θερμικές μονάδες ΗΠΑ"}
             }
         }
@@ -408,6 +408,11 @@ el{
             }
         }
         graphics{
+            dot{
+                dnam{"κουκκίδα"}
+                one{"{0} κουκκίδα"}
+                other{"{0} κουκκίδες"}
+            }
             dot-per-centimeter{
                 dnam{"κουκκίδες ανά εκατοστό"}
                 one{"{0} κουκκίδα ανά εκατοστό"}
@@ -461,11 +466,26 @@ el{
                 one{"{0} δεκατόμετρο"}
                 other{"{0} δεκατόμετρα"}
             }
+            earth-radius{
+                dnam{"ακτίνα της Γης"}
+                one{"{0} ακτίνα της Γης"}
+                other{"{0} ακτίνες της Γης"}
+            }
+            fathom{
+                dnam{"οργιές"}
+                one{"{0} οργιά"}
+                other{"{0} οργιές"}
+            }
             foot{
                 dnam{"πόδια"}
                 one{"{0} πόδι"}
                 other{"{0} πόδια"}
                 per{"{0} ανά πόδι"}
+            }
+            furlong{
+                dnam{"φέρλονγκ"}
+                one{"{0} φέρλονγκ"}
+                other{"{0} φέρλονγκ"}
             }
             inch{
                 dnam{"ίντσες"}
@@ -545,6 +565,16 @@ el{
             }
         }
         light{
+            candela{
+                dnam{"καντέλα"}
+                one{"{0} καντέλα"}
+                other{"{0} καντέλα"}
+            }
+            lumen{
+                dnam{"λούμεν"}
+                one{"{0} λούμεν"}
+                other{"{0} λούμεν"}
+            }
             lux{
                 dnam{"λουξ"}
                 one{"{0} λουξ"}
@@ -571,6 +601,11 @@ el{
                 one{"{0} μάζα της Γης"}
                 other{"{0} μάζες της Γης"}
             }
+            grain{
+                dnam{"κόκκος"}
+                one{"{0} κόκκος"}
+                other{"{0} κόκκοι"}
+            }
             gram{
                 dnam{"γραμμάρια"}
                 one{"{0} γραμμάριο"}
@@ -584,9 +619,9 @@ el{
                 per{"{0} ανά χιλιόγραμμο"}
             }
             metric-ton{
-                dnam{"μετρικοί τόνοι"}
-                one{"{0} μετρικός τόνος"}
-                other{"{0} μετρικοί τόνοι"}
+                dnam{"τόνοι"}
+                one{"{0} τόνος"}
+                other{"{0} τόνοι"}
             }
             microgram{
                 dnam{"μικρογραμμάρια"}
@@ -620,10 +655,15 @@ el{
                 one{"{0} μάζα του Ήλιου"}
                 other{"{0} μάζες του Ήλιου"}
             }
+            stone{
+                dnam{"stone"}
+                one{"{0} stone"}
+                other{"{0} stone"}
+            }
             ton{
-                dnam{"τόνοι"}
-                one{"{0} τόνος"}
-                other{"{0} τόνοι"}
+                dnam{"τόνοι ΗΠΑ"}
+                one{"{0} τόνος ΗΠΑ"}
+                other{"{0} τόνοι ΗΠΑ"}
             }
         }
         power{
@@ -777,6 +817,11 @@ el{
                 one{"{0} βαρέλι"}
                 other{"{0} βαρέλια"}
             }
+            bushel{
+                dnam{"μπούσελ"}
+                one{"{0} μπούσελ"}
+                other{"{0} μπούσελ"}
+            }
             centiliter{
                 dnam{"εκατοστόλιτρα"}
                 one{"{0} εκατοστόλιτρο"}
@@ -834,6 +879,26 @@ el{
                 one{"{0} δεκατόλιτρο"}
                 other{"{0} δεκατόλιτρα"}
             }
+            dessert-spoon{
+                dnam{"κουταλιά φρούτου"}
+                one{"{0} κουταλιά φρούτου"}
+                other{"{0} κουταλιές φρούτου"}
+            }
+            dessert-spoon-imperial{
+                dnam{"αγγλοσαξονική κουταλιά φρούτου"}
+                one{"{0} αγγλοσαξονική κουταλιά φρούτου"}
+                other{"{0} αγγλοσαξονικές κουταλιές φρούτου"}
+            }
+            dram{
+                dnam{"δράμι"}
+                one{"{0} δράμι"}
+                other{"{0} δράμια"}
+            }
+            drop{
+                dnam{"σταγόνα"}
+                one{"{0} σταγόνα"}
+                other{"{0} σταγόνες"}
+            }
             fluid-ounce{
                 dnam{"ουγγιές όγκου"}
                 one{"{0} ουγγιά όγκου"}
@@ -861,6 +926,11 @@ el{
                 one{"{0} εκτόλιτρο"}
                 other{"{0} εκτόλιτρα"}
             }
+            jigger{
+                dnam{"μεζούρα"}
+                one{"{0} μεζούρα"}
+                other{"{0} μεζούρες"}
+            }
             liter{
                 dnam{"λίτρα"}
                 one{"{0} λίτρο"}
@@ -877,6 +947,11 @@ el{
                 one{"{0} χιλιοστόλιτρο"}
                 other{"{0} χιλιοστόλιτρα"}
             }
+            pinch{
+                dnam{"πρέζα"}
+                one{"{0} πρέζα"}
+                other{"{0} πρέζες"}
+            }
             pint{
                 dnam{"πίντες"}
                 one{"{0} πίντα"}
@@ -891,6 +966,11 @@ el{
                 dnam{"τέταρτα του γαλονιού"}
                 one{"{0} τέταρτο του γαλονιού"}
                 other{"{0} τέταρτα του γαλονιού"}
+            }
+            quart-imperial{
+                dnam{"αγγλοσαξονικά τέταρτα του γαλονιού"}
+                one{"{0} αγγλοσαξονικό τέταρτο του γαλονιού"}
+                other{"{0} αγγλοσαξονικά τέταρτα του γαλονιού"}
             }
             tablespoon{
                 dnam{"κουταλιές της σούπας"}
@@ -1287,7 +1367,7 @@ el{
                 other{"{0}‰"}
             }
             permillion{
-                dnam{"ppm"}
+                dnam{"μέρη/εκατ."}
                 one{"{0} ppm"}
                 other{"{0} ppm"}
             }
@@ -1551,6 +1631,11 @@ el{
             }
         }
         graphics{
+            dot{
+                dnam{"κουκ."}
+                one{"{0} κουκ."}
+                other{"{0} κουκ."}
+            }
             megapixel{
                 dnam{"megapixel"}
             }
@@ -1572,11 +1657,26 @@ el{
                 one{"{0} δεκ."}
                 other{"{0} δεκ."}
             }
+            earth-radius{
+                dnam{"R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
+            fathom{
+                dnam{"οργιές"}
+                one{"{0} οργ."}
+                other{"{0} οργ."}
+            }
             foot{
                 dnam{"πόδια"}
                 one{"{0} πδ"}
                 other{"{0} πδ"}
                 per{"{0}/πδ"}
+            }
+            furlong{
+                dnam{"φέρλ."}
+                one{"{0} φέρλ."}
+                other{"{0} φέρλ."}
             }
             inch{
                 dnam{"ίντσες"}
@@ -1656,6 +1756,16 @@ el{
             }
         }
         light{
+            candela{
+                dnam{"καντ."}
+                one{"{0} καντ."}
+                other{"{0} καντ."}
+            }
+            lumen{
+                dnam{"λμ"}
+                one{"{0} λμ."}
+                other{"{0} λμ."}
+            }
             lux{
                 dnam{"λουξ"}
                 one{"{0} λουξ"}
@@ -1683,6 +1793,11 @@ el{
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
             }
+            grain{
+                dnam{"κόκ."}
+                one{"{0} κόκ."}
+                other{"{0} κόκ."}
+            }
             gram{
                 dnam{"γραμμ."}
                 one{"{0} γρ."}
@@ -1696,9 +1811,9 @@ el{
                 per{"{0}/κιλό"}
             }
             metric-ton{
-                dnam{"μ.τ."}
-                one{"{0} μ.τ."}
-                other{"{0} μ.τ."}
+                dnam{"τ."}
+                one{"{0} τ."}
+                other{"{0} τ."}
             }
             microgram{
                 dnam{"µg"}
@@ -1732,10 +1847,14 @@ el{
                 one{"{0} M☉"}
                 other{"{0} M☉"}
             }
+            stone{
+                one{"{0} st"}
+                other{"{0} st"}
+            }
             ton{
-                dnam{"τόνοι"}
-                one{"{0} τ."}
-                other{"{0} τ."}
+                dnam{"τόνοι ΗΠΑ"}
+                one{"{0} τ. ΗΠΑ"}
+                other{"{0} τ. ΗΠΑ"}
             }
         }
         power{
@@ -1888,6 +2007,11 @@ el{
                 one{"{0} βρλ"}
                 other{"{0} βρλ"}
             }
+            bushel{
+                dnam{"μπ."}
+                one{"{0} μπ."}
+                other{"{0} μπ."}
+            }
             centiliter{
                 dnam{"cL"}
                 one{"{0} cL"}
@@ -1945,6 +2069,26 @@ el{
                 one{"{0} dL"}
                 other{"{0} dL"}
             }
+            dessert-spoon{
+                dnam{"κ.φρ."}
+                one{"{0} κ.φρ."}
+                other{"{0} κ.φρ."}
+            }
+            dessert-spoon-imperial{
+                dnam{"αγγλ. κουτ. φρ."}
+                one{"{0} αγγλ. κουτ. φρ."}
+                other{"{0} αγγλ. κουτ. φρ."}
+            }
+            dram{
+                dnam{"δράμι όγκου"}
+                one{"{0} δρ. όγκου"}
+                other{"{0} δρ. όγκου"}
+            }
+            drop{
+                dnam{"σταγ."}
+                one{"{0} σταγ."}
+                other{"{0} σταγ."}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -1972,6 +2116,11 @@ el{
                 one{"{0} hL"}
                 other{"{0} hL"}
             }
+            jigger{
+                dnam{"μεζ."}
+                one{"{0} μεζ."}
+                other{"{0} μεζ."}
+            }
             liter{
                 dnam{"λίτρα"}
                 one{"{0} λίτ."}
@@ -1988,6 +2137,11 @@ el{
                 one{"{0} mL"}
                 other{"{0} mL"}
             }
+            pinch{
+                dnam{"πρ."}
+                one{"{0} πρ."}
+                other{"{0} πρ."}
+            }
             pint{
                 dnam{"πίντες"}
                 one{"{0} πντ"}
@@ -2002,6 +2156,11 @@ el{
                 dnam{"τέταρτα γαλονιού"}
                 one{"{0} τέτ. γαλ."}
                 other{"{0} τέτ. γαλ."}
+            }
+            quart-imperial{
+                dnam{"αγγλ. τέτ. γαλ."}
+                one{"{0} αγγλ. τέτ. γαλ."}
+                other{"{0} αγγλ. τέτ. γαλ."}
             }
             tablespoon{
                 dnam{"κ.σ."}

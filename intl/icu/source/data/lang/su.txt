@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 su{
     Languages{
         de{"Jérman"}
@@ -8,7 +9,6 @@ su{
         en{"Inggris"}
         en_AU{"Inggris Australia"}
         en_CA{"Inggris Kanada"}
-        en_GB{"Inggris Inggris"}
         en_US{"Inggris Amerika"}
         es{"Spanyol"}
         es_419{"Spanyol Amérika Latin"}
@@ -24,7 +24,7 @@ su{
         pt_PT{"Portugis Éropa"}
         ru{"Rusia"}
         su{"Basa Sunda"}
-        und{"Teu Dipikaterang"}
+        und{"Basa teu dikenal"}
         zh{"Tiongkok"}
         zh_Hans{"Tiongkok Sederhana"}
         zh_Hant{"Tiongkok Tradisional"}
@@ -41,13 +41,12 @@ su{
         en_US{"Inggris AS"}
     }
     Scripts{
-        Arab{"Basa Arab"}
         Cyrl{"Sirilik"}
         Hans{"Sederhana"}
         Hant{"Tradisional"}
         Latn{"Latin"}
         Zxxx{"Non-tulisan"}
-        Zzzz{"Skrip Teu Dipikaterang"}
+        Zzzz{"Tulisan Teu Dikenal"}
     }
     Scripts%stand-alone{
         Hans{"Han Sederhana"}
@@ -55,7 +54,7 @@ su{
     }
     Types{
         calendar{
-            gregorian{"Kalender Grégorian"}
+            gregorian{"Kalénder Grégorian"}
         }
         collation{
             standard{"Aturan Runtuyan Standar"}
@@ -64,7 +63,6 @@ su{
             latn{"Digit Barat"}
         }
     }
-    Version{"37"}
     codePatterns{
         language{"Basa: {0}"}
         script{"Skrip: {0}"}

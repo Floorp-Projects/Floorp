@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sk{
     Keys{
         calendar{"kalendár"}
@@ -507,7 +508,7 @@ sk{
         twq{"tasawaq"}
         ty{"tahitčina"}
         tyv{"tuviančina"}
-        tzm{"tuaregčina (stredomarocká)"}
+        tzm{"tamazight (stredomarocký)"}
         udm{"udmurtčina"}
         ug{"ujgurčina"}
         uga{"ugaritčina"}
@@ -774,7 +775,6 @@ sk{
     Variants{
         SCOTLAND{"škótska štandardná angličtina"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – všetko"}
         category-list{"{0}: {1}"}
@@ -791,6 +791,8 @@ sk{
             one{"{0} ťah"}
             other{"{0} ťahov"}
         }
+        subscript{"{0} – dolný index"}
+        superscript{"{0} – horný index"}
     }
     codePatterns{
         language{"Jazyk: {0}"}

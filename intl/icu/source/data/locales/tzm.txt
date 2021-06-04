@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 tzm{
     AuxExemplarCharacters{"[o p v]"}
     ExemplarCharacters{"[a b c d ḍ e ɛ f g {gʷ} ɣ h ḥ i j k {kʷ} l m n q r ṛ s ṣ t ṭ u w x y z]"}
@@ -16,7 +17,6 @@ tzm{
             }
         }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{

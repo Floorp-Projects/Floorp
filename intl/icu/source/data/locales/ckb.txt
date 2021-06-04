@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ckb{
     AuxExemplarCharacters{
         "[\u200E\u200F \u064B \u064C \u064D \u064E \u064F \u0650 \u0651 \u0652 ء آ أ "
@@ -57,7 +58,6 @@ ckb{
         minimumGroupingDigits{"1"}
         native{"arab"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{

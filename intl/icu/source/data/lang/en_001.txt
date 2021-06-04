@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_001{
     Keys{
         colCaseLevel{"Case-Sensitive Sorting"}
@@ -8,6 +9,7 @@ en_001{
     Languages{
         mus{"Creek"}
         nds_NL{"West Low German"}
+        sah{"Yakut"}
     }
     Types{
         colNormalization{
@@ -21,7 +23,6 @@ en_001{
             h24{"24-Hour System (1–24)"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – all"}
         compatibility{"{0} – compatibility"}

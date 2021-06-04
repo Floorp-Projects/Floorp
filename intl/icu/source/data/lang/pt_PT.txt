@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pt_PT{
     Keys{
         cf{"Formato monetário"}
@@ -31,14 +32,12 @@ pt_PT{
         chn{"jargão chinook"}
         chr{"cherokee"}
         chy{"cheyenne"}
-        ckb{"sorani curdo"}
         co{"córsico"}
         crs{"francês crioulo seselwa"}
         cs{"checo"}
         cv{"chuvash"}
         de_AT{"alemão austríaco"}
         de_CH{"alto alemão suíço"}
-        ee{"ewe"}
         efi{"efik"}
         egy{"egípcio clássico"}
         en_AU{"inglês australiano"}
@@ -71,6 +70,7 @@ pt_PT{
         lou{"crioulo de Louisiana"}
         lrc{"luri do norte"}
         mak{"makassarês"}
+        mfe{"crioulo mauriciano"}
         mk{"macedónio"}
         moh{"mohawk"}
         mr{"marata"}
@@ -83,7 +83,6 @@ pt_PT{
         nn{"norueguês nynorsk"}
         non{"nórdico antigo"}
         oc{"occitano"}
-        or{"oriya"}
         os{"ossético"}
         pag{"língua pangasinesa"}
         pam{"pampango"}
@@ -102,13 +101,14 @@ pt_PT{
         sma{"sami do sul"}
         smn{"inari sami"}
         sn{"shona"}
+        st{"sesoto"}
         te{"telugu"}
         tem{"temne"}
         tg{"tajique"}
         tk{"turcomano"}
         to{"tonga"}
         tt{"tatar"}
-        tzm{"tamazight do Atlas Central"}
+        tzm{"tamazigue do Atlas Central"}
         uz{"usbeque"}
         wo{"uólofe"}
         xh{"xosa"}
@@ -131,6 +131,9 @@ pt_PT{
     Languages%short{
         az{"azeri"}
         en_GB{"inglês (RU)"}
+    }
+    Languages%variant{
+        ckb{"sorani (curdo)"}
     }
     Scripts{
         Aran{"nasta’liq"}
@@ -271,7 +274,6 @@ pt_PT{
         MONOTON{"monotónico"}
         POLYTON{"politónico"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – tudo"}
         compatibility{"{0} – compatibilidade"}

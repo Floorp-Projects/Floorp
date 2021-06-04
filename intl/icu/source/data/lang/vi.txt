@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 vi{
     Keys{
         calendar{"Lịch"}
@@ -228,7 +229,7 @@ vi{
         hif{"Tiếng Fiji Hindi"}
         hil{"Tiếng Hiligaynon"}
         hit{"Tiếng Hittite"}
-        hmn{"Tiếng Hmông"}
+        hmn{"Tiếng H’Mông"}
         ho{"Tiếng Hiri Motu"}
         hr{"Tiếng Croatia"}
         hsb{"Tiếng Thượng Sorbia"}
@@ -999,7 +1000,6 @@ vi{
         VALENCIA{"Tiếng Valencia"}
         WADEGILE{"La Mã hóa Wade-Giles"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — tất cả"}
         category-list{"{0}: {1}"}
@@ -1013,6 +1013,8 @@ vi{
         strokes{
             other{"{0} nét"}
         }
+        subscript{"chỉ số dưới {0}"}
+        superscript{"chỉ số trên {0}"}
     }
     codePatterns{
         language{"Ngôn ngữ: {0}"}

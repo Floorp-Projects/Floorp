@@ -1,8 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_DO{
     %%Parent{"es_419"}
-    Version{"37"}
     units{
         electric{
             ampere{
@@ -42,6 +42,16 @@ es_DO{
                 dnam{"seg."}
                 one{"{0} seg."}
                 other{"{0} seg."}
+            }
+        }
+        electric{
+            volt{
+                dnam{"voltios"}
+            }
+        }
+        power{
+            watt{
+                dnam{"vatios"}
             }
         }
     }

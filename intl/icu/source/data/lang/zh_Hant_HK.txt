@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zh_Hant_HK{
     Keys{
         ms{"度量衡系統"}
@@ -127,7 +128,6 @@ zh_Hant_HK{
         REVISED{"已修訂拼字法"}
         SCOTLAND{"蘇格蘭標準英語"}
     }
-    Version{"37"}
     characterLabelPattern{
         enclosed{"{0} — 包含"}
         historic{"{0} — 舊式"}

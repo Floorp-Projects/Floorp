@@ -207,7 +207,7 @@ static    double uprv_delta(UTimer* timer1, UTimer* timer2){
         return (t2-t1);
     }
 static    UBool uprv_compareFrequency(UTimer* /*timer1*/, UTimer* /*timer2*/){
-        return TRUE;
+        return true;
     }
 
 #endif

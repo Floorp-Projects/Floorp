@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ko{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,8 +14,8 @@ ko{
                 other{"{0} 중력가속도"}
             }
             meter-per-square-second{
-                dnam{"제곱 초당 미터"}
-                other{"{0}제곱 초당 미터"}
+                dnam{"미터 매 초 제곱"}
+                other{"제곱 초당 {0}미터"}
             }
         }
         angle{
@@ -295,6 +295,10 @@ ko{
                 dnam{"킬로와트시"}
                 other{"{0}킬로와트시"}
             }
+            therm-us{
+                dnam{"미국 섬"}
+                other{"{0}섬"}
+            }
         }
         force{
             newton{
@@ -324,6 +328,29 @@ ko{
                 other{"{0}메가헤르츠"}
             }
         }
+        graphics{
+            dot{
+                other{"{0}dot"}
+            }
+            dot-per-inch{
+                other{"{0}dpi"}
+            }
+            em{
+                other{"{0}em"}
+            }
+            megapixel{
+                other{"{0}MP"}
+            }
+            pixel{
+                other{"{0}px"}
+            }
+            pixel-per-centimeter{
+                other{"{0}ppcm"}
+            }
+            pixel-per-inch{
+                other{"{0}ppi"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"천문 단위"}
@@ -337,6 +364,10 @@ ko{
             decimeter{
                 dnam{"데시미터"}
                 other{"{0}데시미터"}
+            }
+            earth-radius{
+                dnam{"지구 반경"}
+                other{"{0}지구 반경"}
             }
             fathom{
                 dnam{"패덤"}
@@ -408,7 +439,7 @@ ko{
             }
             solar-radius{
                 dnam{"태양 반경"}
-                other{"{0} 태양 반경"}
+                other{"{0}태양 반경"}
             }
             yard{
                 dnam{"야드"}
@@ -416,6 +447,14 @@ ko{
             }
         }
         light{
+            candela{
+                dnam{"칸델라"}
+                other{"{0}칸델라"}
+            }
+            lumen{
+                dnam{"루멘"}
+                other{"{0}루멘"}
+            }
             lux{
                 dnam{"룩스"}
                 other{"{0}룩스"}
@@ -437,6 +476,10 @@ ko{
             earth-mass{
                 dnam{"지구 질량"}
                 other{"{0}지구 질량"}
+            }
+            grain{
+                dnam{"그레인"}
+                other{"{0}그레인"}
             }
             gram{
                 dnam{"그램"}
@@ -518,6 +561,10 @@ ko{
                 dnam{"atm"}
                 other{"{0}atm"}
             }
+            bar{
+                dnam{"바"}
+                other{"{0}바"}
+            }
             hectopascal{
                 dnam{"헥토파스칼"}
                 other{"{0}헥토파스칼"}
@@ -542,6 +589,10 @@ ko{
                 dnam{"수은주밀리미터"}
                 other{"{0}수은주밀리미터"}
             }
+            pascal{
+                dnam{"파스칼"}
+                other{"{0}파스칼"}
+            }
             pound-force-per-square-inch{
                 dnam{"제곱인치당 파운드"}
                 other{"{0}제곱인치당 파운드"}
@@ -557,11 +608,11 @@ ko{
                 other{"{0}노트"}
             }
             meter-per-second{
-                dnam{"m/s"}
+                dnam{"미터 매 초"}
                 other{"초속 {0}미터"}
             }
             mile-per-hour{
-                dnam{"mi/h"}
+                dnam{"시간당 마일"}
                 other{"시속 {0}마일"}
             }
         }
@@ -600,6 +651,10 @@ ko{
             barrel{
                 dnam{"배럴"}
                 other{"{0}배럴"}
+            }
+            bushel{
+                dnam{"부셸"}
+                other{"{0}부셸"}
             }
             centiliter{
                 dnam{"센티리터"}
@@ -647,6 +702,22 @@ ko{
                 dnam{"데시리터"}
                 other{"{0}데시리터"}
             }
+            dessert-spoon{
+                dnam{"디저트스푼"}
+                other{"{0}디저트스푼"}
+            }
+            dessert-spoon-imperial{
+                dnam{"영국 디저트스푼"}
+                other{"{0}영국 디저트스푼"}
+            }
+            dram{
+                dnam{"영국 액량 드램"}
+                other{"{0}영국 액량 드램"}
+            }
+            drop{
+                dnam{"방울"}
+                other{"{0}방울"}
+            }
             fluid-ounce{
                 dnam{"액량 온스"}
                 other{"{0}액량 온스"}
@@ -669,6 +740,10 @@ ko{
                 dnam{"헥토리터"}
                 other{"{0}헥토리터"}
             }
+            jigger{
+                dnam{"지거"}
+                other{"{0}지거"}
+            }
             liter{
                 dnam{"리터"}
                 other{"{0}리터"}
@@ -682,6 +757,10 @@ ko{
                 dnam{"밀리리터"}
                 other{"{0}밀리리터"}
             }
+            pinch{
+                dnam{"꼬집"}
+                other{"{0}꼬집"}
+            }
             pint{
                 dnam{"파인트"}
                 other{"{0}파인트"}
@@ -693,6 +772,10 @@ ko{
             quart{
                 dnam{"쿼트"}
                 other{"{0}쿼트"}
+            }
+            quart-imperial{
+                dnam{"영국 쿼트"}
+                other{"{0}영국 쿼트"}
             }
             tablespoon{
                 dnam{"테이블스푼"}
@@ -1236,7 +1319,7 @@ ko{
             }
             decade{
                 dnam{"dec"}
-                other{"{0} dec"}
+                other{"{0}dec"}
             }
             hour{
                 dnam{"시간"}
@@ -1333,8 +1416,8 @@ ko{
                 other{"{0}kWh"}
             }
             therm-us{
-                dnam{"US therm"}
-                other{"{0} US therm"}
+                dnam{"미국 섬"}
+                other{"{0}섬"}
             }
         }
         force{
@@ -1364,33 +1447,36 @@ ko{
             }
         }
         graphics{
+            dot{
+                other{"{0}dot"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
-                other{"{0} dpcm"}
+                other{"{0}dpcm"}
             }
             dot-per-inch{
                 dnam{"dpi"}
-                other{"{0} dpi"}
+                other{"{0}dpi"}
             }
             em{
                 dnam{"em"}
-                other{"{0} em"}
+                other{"{0}em"}
             }
             megapixel{
                 dnam{"MP"}
-                other{"{0} MP"}
+                other{"{0}MP"}
             }
             pixel{
                 dnam{"px"}
-                other{"{0} px"}
+                other{"{0}px"}
             }
             pixel-per-centimeter{
                 dnam{"ppcm"}
-                other{"{0} ppcm"}
+                other{"{0}ppcm"}
             }
             pixel-per-inch{
                 dnam{"ppi"}
-                other{"{0} ppi"}
+                other{"{0}ppi"}
             }
         }
         length{
@@ -1406,6 +1492,10 @@ ko{
             decimeter{
                 dnam{"dm"}
                 other{"{0}dm"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
+                other{"{0}R⊕"}
             }
             fathom{
                 dnam{"fm"}
@@ -1481,10 +1571,16 @@ ko{
             }
             yard{
                 dnam{"yd"}
-                other{"{0}야드"}
+                other{"{0}yd"}
             }
         }
         light{
+            candela{
+                other{"{0}cd"}
+            }
+            lumen{
+                other{"{0}lm"}
+            }
             lux{
                 dnam{"lx"}
                 other{"{0}lx"}
@@ -1505,6 +1601,9 @@ ko{
             earth-mass{
                 dnam{"M⊕"}
                 other{"{0}M⊕"}
+            }
+            grain{
+                other{"{0}grain"}
             }
             gram{
                 dnam{"그램"}
@@ -1588,7 +1687,7 @@ ko{
             }
             bar{
                 dnam{"bar"}
-                other{"{0} bar"}
+                other{"{0}bar"}
             }
             hectopascal{
                 dnam{"hPa"}
@@ -1616,7 +1715,7 @@ ko{
             }
             pascal{
                 dnam{"Pa"}
-                other{"{0} Pa"}
+                other{"{0}Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"psi"}
@@ -1676,6 +1775,10 @@ ko{
                 dnam{"bbl"}
                 other{"{0}bbl"}
             }
+            bushel{
+                dnam{"bu"}
+                other{"{0}bu"}
+            }
             centiliter{
                 dnam{"cL"}
                 other{"{0}cL"}
@@ -1722,6 +1825,18 @@ ko{
                 dnam{"dL"}
                 other{"{0}dL"}
             }
+            dessert-spoon{
+                other{"{0}dstspn"}
+            }
+            dessert-spoon-imperial{
+                other{"{0}dstspn Imp"}
+            }
+            dram{
+                other{"{0}dram fl"}
+            }
+            drop{
+                other{"{0}drop"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 other{"{0}fl oz"}
@@ -1744,6 +1859,9 @@ ko{
                 dnam{"hL"}
                 other{"{0}hL"}
             }
+            jigger{
+                other{"{0}jigger"}
+            }
             liter{
                 dnam{"리터"}
                 other{"{0}L"}
@@ -1757,6 +1875,9 @@ ko{
                 dnam{"mL"}
                 other{"{0}mL"}
             }
+            pinch{
+                other{"{0}pinch"}
+            }
             pint{
                 dnam{"pt"}
                 other{"{0}pt"}
@@ -1768,6 +1889,9 @@ ko{
             quart{
                 dnam{"qt"}
                 other{"{0}qt"}
+            }
+            quart-imperial{
+                other{"{0}qt Imp."}
             }
             tablespoon{
                 dnam{"tbsp"}

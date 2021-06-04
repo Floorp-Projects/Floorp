@@ -1,8 +1,71 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 yo_BJ{
-    Version{"37"}
     zoneStrings{
+        "America:Anchorage"{
+            ec{"ìlú Ankɔ́réèjì"}
+        }
+        "America:Bahia_Banderas"{
+            ec{"ìlú Báhì Bándɛ́rásì"}
+        }
+        "America:Barbados"{
+            ec{"ìlú Bábádɔ́ɔ̀sì"}
+        }
+        "America:Belize"{
+            ec{"ìlú Bɛ̀líìsì"}
+        }
+        "America:Blanc-Sablon"{
+            ec{"ìlú Blank Sabulɔ́ɔ̀nì"}
+        }
+        "America:Boise"{
+            ec{"ìlú Bɔ́isè"}
+        }
+        "America:Chihuahua"{
+            ec{"ìlú Shihuahua"}
+        }
+        "America:Coral_Harbour"{
+            ec{"ìlú àtikɔkàn"}
+        }
+        "America:Creston"{
+            ec{"ìlú Kírɛstɔ́ɔ̀nù"}
+        }
+        "America:Curacao"{
+            ec{"ìlú Kurashao"}
+        }
+        "America:Indiana:Knox"{
+            ec{"ìlú nɔ́sì"}
+        }
+        "America:Indiana:Marengo"{
+            ec{"ìlú Marɛ́ngo"}
+        }
+        "America:Kentucky:Monticello"{
+            ec{"ìlú Montisɛ́lò"}
+        }
+        "America:Kralendijk"{
+            ec{"ìlú Kíralɛ́ndáikì"}
+        }
+        "America:Marigot"{
+            ec{"ìlú Marigɔ́ɔ̀tì"}
+        }
+        "America:Mexico_City"{
+            ec{"ìlú Mɛ́síkò"}
+        }
+        "America:Miquelon"{
+            ec{"ìlú Mikulɔ́nì"}
+        }
+        "America:St_Johns"{
+            ec{"ìlú St Jɔ́ɔ̀nù"}
+        }
+        "America:St_Thomas"{
+            ec{"ìlú St Tɔ́màsì"}
+        }
+        "America:Swift_Current"{
+            ec{"ìlú Súfítù Kɔ̀rentì"}
+        }
+        "Atlantic:Bermuda"{
+            ec{"ìlú Bɛ̀múdà"}
+        }
         "Etc:UTC"{
             ls{"Àpapɔ̀ Àkókò Àgbáyé"}
         }
@@ -28,6 +91,11 @@ yo_BJ{
             ld{"Àkókò Ìyálɛta Pàsífíìkì"}
             lg{"Àkókò Pàsífíìkì"}
             ls{"Àkókò àsikò Pàsífíìkì"}
+        }
+        "meta:Argentina"{
+            ld{"Aago Soma Argentina"}
+            lg{"Aago Ajɛntìnà"}
+            ls{"Aago àsìkò Argentina"}
         }
         "meta:Atlantic"{
             ld{"Àkókò Ìyálɛta Àtìláńtíìkì"}

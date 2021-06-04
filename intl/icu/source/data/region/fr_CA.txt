@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fr_CA{
     Countries{
         030{"Asie orientale"}
@@ -10,23 +11,24 @@ fr_CA{
         155{"Europe occidentale"}
         AC{"île de l’Ascension"}
         AX{"îles d’Åland"}
-        BN{"Brunei"}
         BV{"île Bouvet"}
         BY{"Bélarus"}
         CC{"îles Cocos (Keeling)"}
         CK{"îles Cook"}
         CX{"île Christmas"}
         FK{"îles Malouines"}
-        FM{"Micronésie"}
         FO{"îles Féroé"}
         HM{"îles Heard et McDonald"}
         IC{"îles Canaries"}
         IM{"île de Man"}
         IO{"territoire britannique de l’océan Indien"}
+        KG{"Kirghizistan"}
+        LR{"Libéria"}
         MF{"Saint-Martin (France)"}
         MM{"Myanmar"}
         MP{"Mariannes du Nord"}
         NF{"île Norfolk"}
+        NG{"Nigéria"}
         PN{"îles Pitcairn"}
         QO{"Océanie lointaine"}
         RE{"la Réunion"}
@@ -34,14 +36,13 @@ fr_CA{
         TL{"Timor-Leste"}
         UM{"îles mineures éloignées des États-Unis"}
         VA{"Cité du Vatican"}
-        VC{"Saint-Vincent-et-les Grenadines"}
         VG{"îles Vierges britanniques"}
         VI{"îles Vierges américaines"}
+        VN{"Vietnam"}
     }
     Countries%variant{
         CI{"République de Côte d’Ivoire"}
         FK{"îles Falkland (Malouines)"}
         TL{"Timor oriental"}
     }
-    Version{"37"}
 }

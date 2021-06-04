@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 gd{
     Keys{
         calendar{"Mìosachan"}
@@ -621,12 +622,16 @@ gd{
         en_GB{"Beurla na RA"}
         en_US{"Beurla nan SA"}
     }
+    Languages%variant{
+        ckb{"Cùrdais Sorani"}
+    }
     Scripts{
         Adlm{"Adlam"}
         Afak{"Afaka"}
         Aghb{"Albàinis Chabhcasach"}
         Ahom{"Ahom"}
         Arab{"Arabais"}
+        Aran{"Nastaliq"}
         Armi{"Aramais impireil"}
         Armn{"Airmeinis"}
         Avst{"Avestanais"}
@@ -647,12 +652,14 @@ gd{
         Cari{"Carian"}
         Cham{"Cham"}
         Cher{"Cherokee"}
+        Chrs{"Khwarazm"}
         Cirt{"Cirth"}
         Copt{"Coptais"}
         Cprt{"Cìoprasais"}
         Cyrl{"Cirilis"}
         Cyrs{"Cirilis Seann-Slàbhais na h-Eaglaise"}
         Deva{"Devanagari"}
+        Diak{"Dives Akuru"}
         Dogr{"Dogra"}
         Dsrt{"Deseret"}
         Dupl{"Gearr-sgrìobhadh Duployé"}
@@ -693,6 +700,7 @@ gd{
         Khar{"Kharoshthi"}
         Khmr{"Cmèar"}
         Khoj{"Khojki"}
+        Kits{"Litrichean beaga na Khitan"}
         Knda{"Kannada"}
         Kore{"Coirèanais"}
         Kpel{"Kpelle"}
@@ -795,6 +803,7 @@ gd{
         Wole{"Woleai"}
         Xpeo{"Seann-Pheirsis"}
         Xsux{"Gèinn-sgrìobhadh Sumer is Akkad"}
+        Yezi{"Yezidis"}
         Yiii{"Yi"}
         Zanb{"Zanabazar ceàrnagach"}
         Zinh{"Dìleab"}
@@ -891,6 +900,7 @@ gd{
             cham{"Àireamhan Cham"}
             cyrl{"Àireamhan na Cirilise"}
             deva{"Àireamhan Devanagari"}
+            diak{"Àireamhan Dives Akuru"}
             ethi{"Àireamhan Itiopach"}
             fullwide{"Àireamhan làn-leud"}
             geor{"Àireamhan na Cairtbheilise"}
@@ -971,9 +981,11 @@ gd{
         ALALC97{"Ròmanachadh ALA-LC 1997"}
         ALUKU{"Dual-chainnt Aluku"}
         AO1990{"Aonta litreachadh na Portagailise 1990"}
+        ARANES{"Aranais"}
         AREVELA{"Airmeinis an Ear"}
         AREVMDA{"Airmeinis an Iar"}
         ASANTE{"Asante"}
+        AUVERN{"Auvernhat"}
         BAKU1926{"Abidil Laideann aonaichte na Turcaise"}
         BALANKA{"Dual-chainnt Balanka de Anii"}
         BARLA{"Dual-chainntean Barlavento de Kabuverdianu"}
@@ -983,15 +995,23 @@ gd{
         BISKE{"Dual-chainnt San Giorgio/Bila"}
         BOHORIC{"Aibidil Bohorič"}
         BOONT{"Boontling"}
+        BORNHOLM{"Bornholmsk"}
+        CISAUP{"Ogsatanais cios-Ailpeach"}
         COLB1945{"Aonta litreachaidh eadar a’ Phortagail is Braisil 1945"}
         CORNU{"Beurla na Còirne"}
+        CREISS{"Ogsatanais Chroissant"}
         DAJNKO{"Aibidil Dajnko"}
         EKAVSK{"Sèirbhis le fuaimneachadh iarach"}
         EMODENG{"Nua-Bheurla thràth"}
         FONIPA{"Comharran fuaim-eòlais an IPA"}
+        FONKIRSH{"Còdachadh Kirshenbaum na h-Aibidil Fuaim-eòlaiche"}
         FONNAPA{"Aibidil Fhuaim-eòlach Aimeireaga a Tuath"}
         FONUPA{"Comharran fuaim-eòlais an UPA"}
         FONXSAMP{"Tar-sgrìobhadh X-SAMPA"}
+        GASCON{"Ogsatanais Ghascogne"}
+        GRCLASS{"Nòs-sgrìobhaidh clasaigeach na h-Ogsatanaise"}
+        GRITAL{"Nòs-sgrìobhaidh Eadailteach na h-Ogsatanaise"}
+        GRMISTR{"Nòs-sgrìobhaidh Mhistral na h-Ogsatanaise"}
         HEPBURN{"Ròmanachadh Hepburn"}
         HOGNORSK{"Høgnorsk"}
         HSISTEMO{"Roghainn-èiginn stannardach litreachadh na h-Esperanto le h"}
@@ -1007,6 +1027,8 @@ gd{
         KOCIEWIE{"Kociewie"}
         KSCOR{"Litreachadh stannardach"}
         LAUKIKA{"Laukika"}
+        LEMOSIN{"Ogsatanais Lemosin"}
+        LENGADOC{"Ogsatanais Lengadoc"}
         LIPAW{"Dual-chainnt Lipovaz Resia"}
         LUNA1918{"Litreachadh na Ruisise às dèidh 1917"}
         METELKO{"Aibidil Metelko"}
@@ -1014,6 +1036,7 @@ gd{
         NDYUKA{"Dual-chainnt Ndyuka"}
         NEDIS{"Dual-chainnt Natisone"}
         NEWFOUND{"Beurla Talamh an Èisg"}
+        NICARD{"Ogsatanais Nice"}
         NJIVA{"Dual-chainnt Gniva/Njiva"}
         NULIK{"Nua-Volapük"}
         OSOJS{"Dual-chainnt Oseacco/Osojane"}
@@ -1026,6 +1049,7 @@ gd{
         PINYIN{"Ròmanachadh Pinyin"}
         POLYTON{"Greugais phoiliotonach"}
         POSIX{"Coimpiutair"}
+        PROVENC{"Ogsatanais Phrovence"}
         PUTER{"Puter"}
         REVISED{"Litreachadh lèirmheasaichte"}
         RIGIK{"Volapük chlasaigeach"}
@@ -1049,10 +1073,10 @@ gd{
         VAIDIKA{"Vaidika"}
         VALENCIA{"Valencià"}
         VALLADER{"Vallader"}
+        VIVARAUP{"Ogsatanais Vivaro-Ailpeach"}
         WADEGILE{"Ròmanachadh Wade-Giles"}
         XSISTEMO{"Roghainn-èiginn stannardach litreachadh na h-Esperanto le x"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – na h-uile"}
         category-list{"{0}: {1}"}
@@ -1069,6 +1093,8 @@ gd{
             other{"{0} stràc"}
             two{"{0} stràc"}
         }
+        subscript{"{0} (fo-sgrìobhte)"}
+        superscript{"{0} os-sgrìobhte"}
     }
     codePatterns{
         language{"Cànan: {0}"}

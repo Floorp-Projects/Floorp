@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 it{
     Countries{
         001{"Mondo"}
@@ -106,7 +107,7 @@ it{
         ER{"Eritrea"}
         ES{"Spagna"}
         ET{"Etiopia"}
-        EU{"Unione Europea"}
+        EU{"Unione europea"}
         EZ{"Eurozona"}
         FI{"Finlandia"}
         FJ{"Figi"}
@@ -312,6 +313,6 @@ it{
         CZ{"Repubblica Ceca"}
         FK{"Isole Falkland (Isole Malvine)"}
         SZ{"Regno di eSwatini"}
+        TL{"Timor Leste"}
     }
-    Version{"37"}
 }

@@ -26,8 +26,10 @@ CPPFLAGS += -I$(top_srcdir)/common -I$(srcdir)/../toolutil -I$(top_srcdir)/tools
 CPPFLAGS+= -I$(top_srcdir)/i18n
 LIBS = $(LIBICUTOOLUTIL) $(LIBICUI18N) $(LIBICUUC) $(DEFAULT_LIBS) $(LIB_M)
 
-OBJECTS = icuinfo.o
-@PLUGINS_TRUE@PLUGIN_OBJECTS = testplug.o
+SOURCES = $(shell cat $(srcdir)/sources.txt)
+OBJECTS = $(SOURCES:.cpp=.o)
+@PLUGINS_TRUE@PLUGIN_SOURCES = $(shell cat $(srcdir)/plugin_sources.txt)
+@PLUGINS_TRUE@PLUGIN_OBJECTS = $(@PLUGINS_TRUE@PLUGIN_SOURCES:.c=.o)
 
 DEPS = $(OBJECTS:.o=.d)
 

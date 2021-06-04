@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_AE{
-    Version{"37"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -98,7 +98,6 @@ en_AE{
                 "{1}, {0}",
             }
             availableFormats{
-                Bhms{"h:mm.ss B"}
                 EBhm{"E, h:mm B"}
                 EBhms{"E, h:mm:ss B"}
                 EHm{"E, HH:mm"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fr_CA{
     Currencies{
         ARS{
@@ -27,7 +28,7 @@ fr_CA{
             "dollar bélizéen",
         }
         CAD{
-            "$",
+            "$ CA",
             "dollar canadien",
         }
         CLP{
@@ -52,7 +53,7 @@ fr_CA{
         }
         FKP{
             "FKP",
-            "livre des Îles Malouines",
+            "livre des îles Malouines",
         }
         GBP{
             "£",
@@ -206,10 +207,6 @@ fr_CA{
             one{"escudo cap-verdien"}
             other{"escudos cap-verdiens"}
         }
-        FKP{
-            one{"livre des Îles Malouines"}
-            other{"livres des Îles Malouines"}
-        }
         GYD{
             one{"dollar guyanien"}
             other{"dollars guyaniens"}
@@ -267,5 +264,4 @@ fr_CA{
             other{"rials yéménites"}
         }
     }
-    Version{"37"}
 }

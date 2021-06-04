@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pt{
     Countries{
         001{"Mundo"}
@@ -56,7 +57,7 @@ pt{
         BE{"Bélgica"}
         BF{"Burquina Faso"}
         BG{"Bulgária"}
-        BH{"Bahrein"}
+        BH{"Barein"}
         BI{"Burundi"}
         BJ{"Benin"}
         BL{"São Bartolomeu"}
@@ -112,7 +113,7 @@ pt{
         FJ{"Fiji"}
         FK{"Ilhas Malvinas"}
         FM{"Micronésia"}
-        FO{"Ilhas Faroe"}
+        FO{"Ilhas Faroé"}
         FR{"França"}
         GA{"Gabão"}
         GB{"Reino Unido"}
@@ -178,7 +179,7 @@ pt{
         LY{"Líbia"}
         MA{"Marrocos"}
         MC{"Mônaco"}
-        MD{"Moldova"}
+        MD{"Moldávia"}
         ME{"Montenegro"}
         MF{"São Martinho"}
         MG{"Madagascar"}
@@ -313,5 +314,4 @@ pt{
         SZ{"Suazilândia"}
         TL{"República Democrática de Timor-Leste"}
     }
-    Version{"37"}
 }

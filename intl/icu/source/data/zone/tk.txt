@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 tk{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abijan"}
@@ -587,6 +587,9 @@ tk{
         }
         "America:Whitehorse"{
             ec{"Waýthors"}
+        }
+        "America:Winnipeg"{
+            ec{"Winnipeg"}
         }
         "America:Yakutat"{
             ec{"Ýakutat"}
@@ -1510,7 +1513,7 @@ tk{
             ls{"Fransuz Günorta we Antarktika ýerleri wagty"}
         }
         "meta:GMT"{
-            ls{"Grinwiç boýunça orta wagt"}
+            ls{"Grinwiç ortaça wagty"}
         }
         "meta:Galapagos"{
             ls{"Galapagos adalary wagty"}

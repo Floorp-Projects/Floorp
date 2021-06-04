@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 nnh{
     Keys{
         calendar{"fʉ̀ʼ njÿó"}
@@ -24,5 +25,4 @@ nnh{
         yav{"Shwóŋò pʉa shÿó Mbafìa"}
         ybb{"Shwóŋò Tsaŋ"}
     }
-    Version{"37"}
 }

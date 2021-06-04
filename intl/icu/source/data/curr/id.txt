@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 id{
     Currencies{
         ADP{
@@ -304,7 +305,7 @@ id{
         }
         CZK{
             "CZK",
-            "Koruna Cheska",
+            "Koruna Ceko",
         }
         DDM{
             "DDM",
@@ -328,7 +329,7 @@ id{
         }
         DZD{
             "DZD",
-            "Dinar Algeria",
+            "Dinar Aljazair",
         }
         ECS{
             "ECS",
@@ -532,7 +533,7 @@ id{
         }
         KGS{
             "KGS",
-            "Som Kirgistan",
+            "Som Kirgizstan",
         }
         KHR{
             "KHR",
@@ -568,7 +569,7 @@ id{
         }
         KZT{
             "KZT",
-            "Tenge Kazakstan",
+            "Tenge Kazakhstan",
         }
         LAK{
             "LAK",
@@ -800,7 +801,7 @@ id{
         }
         PLN{
             "PLN",
-            "Polandia Zloty",
+            "Zloty Polandia",
         }
         PLZ{
             "PLZ",
@@ -952,7 +953,7 @@ id{
         }
         TMT{
             "TMT",
-            "Manat Turkimenistan",
+            "Manat Turkmenistan",
         }
         TND{
             "TND",
@@ -1060,7 +1061,7 @@ id{
         }
         XAF{
             "FCFA",
-            "Franc CFA BEAC",
+            "Franc CFA Afrika Tengah",
         }
         XAG{
             "XAG",
@@ -1108,7 +1109,7 @@ id{
         }
         XOF{
             "CFA",
-            "Franc CFA BCEAO",
+            "Franc CFA Afrika Barat",
         }
         XPD{
             "XPD",
@@ -1466,7 +1467,7 @@ id{
             other{"Escudo Tanjung Verde"}
         }
         CZK{
-            other{"Koruna Cheska"}
+            other{"Koruna Ceko"}
         }
         DJF{
             other{"Franc Jibuti"}
@@ -1478,7 +1479,7 @@ id{
             other{"Peso Dominika"}
         }
         DZD{
-            other{"Dinar Algeria"}
+            other{"Dinar Aljazair"}
         }
         EGP{
             other{"Pound Mesir"}
@@ -1577,7 +1578,7 @@ id{
             other{"Shilling Kenya"}
         }
         KGS{
-            other{"Som Kirgistan"}
+            other{"Som Kirgizstan"}
         }
         KHR{
             other{"Riel Kamboja"}
@@ -1604,7 +1605,7 @@ id{
             other{"Dolar Kepulauan Cayman"}
         }
         KZT{
-            other{"Tenge Kazakstan"}
+            other{"Tenge Kazakhstan"}
         }
         LAK{
             other{"Kip Laos"}
@@ -1727,7 +1728,7 @@ id{
             other{"Rupee Pakistan"}
         }
         PLN{
-            other{"Polandia Zloty"}
+            other{"Zloty Polandia"}
         }
         PLZ{
             other{"Zloty Polandia (1950–1995)"}
@@ -1817,7 +1818,7 @@ id{
             other{"Manat Turkmenistan (1993–2009)"}
         }
         TMT{
-            other{"Manat Turkimenistan"}
+            other{"Manat Turkmenistan"}
         }
         TND{
             other{"Dinar Tunisia"}
@@ -1883,13 +1884,13 @@ id{
             other{"Tala Samoa"}
         }
         XAF{
-            other{"Franc CFA BEAC"}
+            other{"Franc CFA Afrika Tengah"}
         }
         XCD{
             other{"Dolar Karibia Timur"}
         }
         XOF{
-            other{"Franc CFA BCEAO"}
+            other{"Franc CFA Afrika Barat"}
         }
         XPF{
             other{"Franc CFP"}
@@ -1934,5 +1935,4 @@ id{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 se{
     AuxExemplarCharacters{"[à ç é è í ń ñ ó ò q ú w x y ü ø æ å ä ã ö]"}
     ExemplarCharacters{"[a á b c č d đ e f g h i j k l m n ŋ o p r s š t ŧ u v z ž]"}
@@ -166,7 +167,6 @@ se{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"37"}
     calendar{
         gregorian{
             AmPmMarkers{

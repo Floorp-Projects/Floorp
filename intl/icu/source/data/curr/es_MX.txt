@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_MX{
     %%Parent{"es_419"}
     Currencies{
@@ -75,7 +76,7 @@ es_MX{
         }
         BTN{
             one{"ngultrum butanés"}
-            other{"gultrums bultaneses"}
+            other{"ngultrums butaneses"}
         }
         KGS{
             one{"som kirguís"}
@@ -126,5 +127,4 @@ es_MX{
             other{"kwachas zambianos"}
         }
     }
-    Version{"37"}
 }

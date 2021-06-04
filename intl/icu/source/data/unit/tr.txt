@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 tr{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -403,6 +403,11 @@ tr{
             }
         }
         graphics{
+            dot{
+                dnam{"nokta"}
+                one{"{0} nokta"}
+                other{"{0} nokta"}
+            }
             dot-per-centimeter{
                 dnam{"nokta/santimetre"}
                 one{"{0} nokta/santimetre"}
@@ -453,6 +458,11 @@ tr{
                 dnam{"desimetre"}
                 one{"{0} desimetre"}
                 other{"{0} desimetre"}
+            }
+            earth-radius{
+                dnam{"Dünya yarıçapı"}
+                one{"{0} Dünya yarıçapı"}
+                other{"{0} Dünya yarıçapı"}
             }
             fathom{
                 dnam{"fathom"}
@@ -550,6 +560,16 @@ tr{
             }
         }
         light{
+            candela{
+                dnam{"kandela"}
+                one{"{0} kandela"}
+                other{"{0} kandela"}
+            }
+            lumen{
+                dnam{"lümen"}
+                one{"{0} lümen"}
+                other{"{0} lümen"}
+            }
             lux{
                 dnam{"lüks"}
                 one{"{0} lüks"}
@@ -576,6 +596,11 @@ tr{
                 dnam{"Dünya kütlesi"}
                 one{"{0} Dünya kütlesi"}
                 other{"{0} Dünya kütlesi"}
+            }
+            grain{
+                dnam{"tane"}
+                one{"{0} tane"}
+                other{"{0} tane"}
             }
             gram{
                 dnam{"gram"}
@@ -845,6 +870,26 @@ tr{
                 one{"{0} desilitre"}
                 other{"{0} desilitre"}
             }
+            dessert-spoon{
+                dnam{"tatlı kaşığı"}
+                one{"{0} tatlı kaşığı"}
+                other{"{0} tatlı kaşığı"}
+            }
+            dessert-spoon-imperial{
+                dnam{"İng. tatlı kaşığı"}
+                one{"{0} İng. tatlı kaşığı"}
+                other{"{0} İng. tatlı kaşığı"}
+            }
+            dram{
+                dnam{"dram"}
+                one{"{0} dram"}
+                other{"{0} dram"}
+            }
+            drop{
+                dnam{"damla"}
+                one{"{0} damla"}
+                other{"{0} damla"}
+            }
             fluid-ounce{
                 dnam{"sıvı ons"}
                 one{"{0} sıvı ons"}
@@ -888,6 +933,11 @@ tr{
                 one{"{0} mililitre"}
                 other{"{0} mililitre"}
             }
+            pinch{
+                dnam{"tutam"}
+                one{"{0} tutam"}
+                other{"{0} tutam"}
+            }
             pint{
                 dnam{"pint"}
                 one{"{0} pint"}
@@ -903,15 +953,20 @@ tr{
                 one{"{0} quart"}
                 other{"{0} quart"}
             }
+            quart-imperial{
+                dnam{"İng. quart"}
+                one{"{0} İng. quart"}
+                other{"{0} İng. quart"}
+            }
             tablespoon{
                 dnam{"yemek kaşığı"}
                 one{"{0} yemek kaşığı"}
                 other{"{0} yemek kaşığı"}
             }
             teaspoon{
-                dnam{"tatlı kaşığı"}
-                one{"{0} tatlı kaşığı"}
-                other{"{0} tatlı kaşığı"}
+                dnam{"çay kaşığı"}
+                one{"{0} çay kaşığı"}
+                other{"{0} çay kaşığı"}
             }
         }
     }
@@ -1294,7 +1349,7 @@ tr{
                 other{"{0} IY"}
             }
             meter{
-                dnam{"metre"}
+                dnam{"m"}
                 one{"{0} m"}
                 other{"{0} m"}
                 per{"{0}/m"}
@@ -1999,6 +2054,11 @@ tr{
             }
         }
         graphics{
+            dot{
+                dnam{"nokta"}
+                one{"{0} nokta"}
+                other{"{0} nokta"}
+            }
             megapixel{
                 dnam{"megapiksel"}
             }
@@ -2146,6 +2206,11 @@ tr{
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
             }
+            grain{
+                dnam{"tane"}
+                one{"{0} tane"}
+                other{"{0} tane"}
+            }
             gram{
                 dnam{"gram"}
                 one{"{0} g"}
@@ -2270,9 +2335,9 @@ tr{
                 other{"{0} mbar"}
             }
             millimeter-ofhg{
-                dnam{"mm Hg"}
-                one{"{0} mm Hg"}
-                other{"{0} mm Hg"}
+                dnam{"mmHg"}
+                one{"{0} mmHg"}
+                other{"{0} mmHg"}
             }
             pound-force-per-square-inch{
                 dnam{"lb/in²"}
@@ -2409,6 +2474,26 @@ tr{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"tat. kaşığı"}
+                one{"{0} tat. kaşığı"}
+                other{"{0} tat. kaşığı"}
+            }
+            dessert-spoon-imperial{
+                dnam{"İng. tat. kaşığı"}
+                one{"{0} İng. tat. kaşığı"}
+                other{"{0} İng. tat. kaşığı"}
+            }
+            dram{
+                dnam{"sıvı dram"}
+                one{"{0} sıvı dram"}
+                other{"{0} sıvı dram"}
+            }
+            drop{
+                dnam{"damla"}
+                one{"{0} damla"}
+                other{"{0} damla"}
+            }
             fluid-ounce{
                 dnam{"sıvı ons"}
                 one{"{0} sıvı ons"}
@@ -2452,6 +2537,11 @@ tr{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"tutam"}
+                one{"{0} tutam"}
+                other{"{0} tutam"}
+            }
             pint{
                 dnam{"pint"}
                 one{"{0} pint"}
@@ -2466,15 +2556,20 @@ tr{
                 one{"{0} qt"}
                 other{"{0} qt"}
             }
+            quart-imperial{
+                dnam{"İng quart"}
+                one{"{0} İng. quart"}
+                other{"{0} İng. quart"}
+            }
             tablespoon{
                 dnam{"yk"}
                 one{"{0} yk"}
                 other{"{0} yk"}
             }
             teaspoon{
-                dnam{"tk"}
-                one{"{0} tk"}
-                other{"{0} tk"}
+                dnam{"çk"}
+                one{"{0} çk"}
+                other{"{0} çk"}
             }
         }
     }

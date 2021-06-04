@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 th{
     Keys{
         calendar{"ปฏิทิน"}
@@ -169,7 +170,7 @@ th{
         en_AU{"อังกฤษ - ออสเตรเลีย"}
         en_CA{"อังกฤษ - แคนาดา"}
         en_GB{"อังกฤษ - สหราชอาณาจักร"}
-        en_US{"อังกฤษ - อเมริกัน"}
+        en_US{"อังกฤษ - สหรัฐอเมริกา"}
         enm{"อังกฤษกลาง"}
         eo{"เอสเปรันโต"}
         es{"สเปน"}
@@ -634,12 +635,16 @@ th{
         zen{"เซนากา"}
         zgh{"ทามาไซต์โมร็อกโกมาตรฐาน"}
         zh{"จีน"}
-        zh_Hans{"จีนประยุกต์"}
-        zh_Hant{"จีนดั้งเดิม"}
+        zh_Hans{"จีนตัวย่อ"}
+        zh_Hant{"จีนตัวเต็ม"}
         zu{"ซูลู"}
         zun{"ซูนิ"}
         zxx{"ไม่มีข้อมูลภาษา"}
         zza{"ซาซา"}
+    }
+    Languages%long{
+        zh_Hans{"จีนกลาง (ตัวย่อ)"}
+        zh_Hant{"จีนกลาง (ตัวเต็ม)"}
     }
     Languages%menu{
         yue{"จีน (กวางตุ้ง)"}
@@ -648,7 +653,7 @@ th{
     Languages%short{
         az{"อะเซอรี"}
         en_GB{"อังกฤษ - อังกฤษ"}
-        en_US{"อังกฤษ - อเมริกัน"}
+        en_US{"อังกฤษ - สหรัฐฯ"}
     }
     Languages%variant{
         ckb{"เคิร์ดโซรานี"}
@@ -1062,7 +1067,6 @@ th{
         VALLADER{"วัลลาเดอร์"}
         WADEGILE{"การถอดอักษรแบบเวด-ไจลส์"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — ทั้งหมด"}
         category-list{"{0}: {1}"}
@@ -1072,10 +1076,12 @@ th{
         historic{"{0} — โบราณ"}
         miscellaneous{"{0} — อื่นๆ"}
         other{"{0} — อื่นๆ"}
-        scripts{"สคริปต์ — {0}"}
+        scripts{"ตัวอักษร — {0}"}
         strokes{
             other{"{0} ขีด"}
         }
+        subscript{"ตัวห้อย {0}"}
+        superscript{"ตัวยก {0}"}
     }
     codePatterns{
         language{"ภาษา: {0}"}

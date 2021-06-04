@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zh_Hans_MO{
-    Version{"37"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -101,10 +101,10 @@ zh_Hans_MO{
                 "y年M月d日",
                 "y年M月d日",
                 "d/M/yy",
+                "{1}{0}",
+                "{1}{0}",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}{0}",
                 "{1} {0}",
             }
             availableFormats{

@@ -1152,7 +1152,7 @@ AC_ARG_WITH(data-packaging,
         library  shared library (.dll/.so/etc.)
         static   static library (.a/.lib/etc.)
         auto     build shared if possible (default)
-           See http://userguide.icu-project.org/icudata for more info.],
+           See https://unicode-org.github.io/icu/userguide/icudata for more info.],
 	[case "${withval}" in
                 files|archive|library) datapackaging=$withval ;;
 		auto) datapackaging=$withval ;;

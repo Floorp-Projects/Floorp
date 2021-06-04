@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zh_Hant{
     %%Parent{"root"}
     Keys{
@@ -631,6 +632,8 @@ zh_Hant{
     }
     Languages%menu{
         ars{"阿拉伯文（納吉迪）"}
+    }
+    Languages%variant{
         ckb{"庫德文（索拉尼）"}
     }
     Scripts{
@@ -748,7 +751,7 @@ zh_Hant{
         Ogam{"歐甘文"}
         Olck{"桑塔利文"}
         Orkh{"鄂爾渾文"}
-        Orya{"歐利亞文"}
+        Orya{"歐迪亞文"}
         Osge{"歐塞奇文"}
         Osma{"歐斯曼亞文"}
         Palm{"帕米瑞拉文字"}
@@ -841,7 +844,7 @@ zh_Hant{
             iso8601{"ISO 8601 國際曆法"}
             japanese{"日本曆"}
             persian{"波斯曆"}
-            roc{"民國曆"}
+            roc{"國曆"}
         }
         cf{
             account{"會計貨幣格式"}
@@ -981,7 +984,7 @@ zh_Hant{
             native{"原始數字"}
             nkoo{"曼德數字"}
             olck{"桑塔利文數字"}
-            orya{"歐利亞數字"}
+            orya{"歐迪亞數字"}
             osma{"奧斯曼亞數字"}
             roman{"羅馬數字"}
             romanlow{"小寫羅馬數字"}
@@ -1078,7 +1081,6 @@ zh_Hant{
         VALLADER{"瑞士瓦勒德方言"}
         WADEGILE{"威妥瑪式拼音"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — 全部"}
         category-list{"{0}: {1}"}
@@ -1092,6 +1094,8 @@ zh_Hant{
         strokes{
             other{"{0} 畫"}
         }
+        subscript{"下標 {0}"}
+        superscript{"上標 {0}"}
     }
     codePatterns{
         language{"語言：{0}"}

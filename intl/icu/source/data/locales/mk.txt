@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mk{
     AuxExemplarCharacters{"[ѐ ѝ]"}
     Ellipsis{
@@ -186,6 +187,7 @@ mk{
                 }
             }
             symbols{
+                approximatelySign{"≈"}
                 decimal{","}
                 exponential{"E"}
                 group{"."}
@@ -214,7 +216,6 @@ mk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -728,11 +729,11 @@ mk{
                 "d MMMM y",
                 "d.M.y",
                 "d.M.yy",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, 'во' {0}",
+                "{1}, 'во' {0}",
+                "{1}, 'во' {0}",
+                "{1}, 'во' {0}",
+                "{1}, 'во' {0}",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -789,8 +790,8 @@ mk{
                 yQQQ{"QQQ y 'г'."}
                 yQQQQ{"QQQQ y 'г'."}
                 yw{
-                    one{"w 'седмица' 'од' Y"}
-                    other{"w 'седмица' 'од' Y"}
+                    one{"w. 'седмица' 'од' Y"}
+                    other{"w. 'седмица' 'од' Y"}
                 }
             }
             dayNames{
@@ -874,11 +875,11 @@ mk{
             dayPeriod{
                 format{
                     abbreviated{
-                        afternoon1{"попл."}
+                        afternoon1{"попладне"}
                         evening1{"навечер"}
                         midnight{"полноќ"}
                         morning1{"наутро"}
-                        morning2{"претпл."}
+                        morning2{"претпладне"}
                         night1{"ноќе"}
                         noon{"напладне"}
                     }
@@ -939,15 +940,11 @@ mk{
             }
             eras{
                 abbreviated{
-                    "пр.н.е.",
-                    "н.е.",
-                }
-                abbreviated%variant{
                     "п.н.е.",
                     "н.е.",
                 }
                 narrow{
-                    "пр.н.е.",
+                    "п.н.е.",
                     "н.е.",
                 }
                 wide{

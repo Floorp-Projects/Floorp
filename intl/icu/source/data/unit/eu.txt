@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 eu{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -388,6 +388,11 @@ eu{
             }
         }
         graphics{
+            dot{
+                dnam{"puntua"}
+                one{"{0} puntu"}
+                other{"{0} puntu"}
+            }
             dot-per-centimeter{
                 dnam{"puntu zentimetroko"}
                 one{"{0} puntu zentimetroko"}
@@ -441,11 +446,26 @@ eu{
                 one{"{0} dezimetro"}
                 other{"{0} dezimetro"}
             }
+            earth-radius{
+                dnam{"Lurraren erradio"}
+                one{"{0} Lurraren erradio"}
+                other{"{0} Lurraren erradio"}
+            }
+            fathom{
+                dnam{"besoa"}
+                one{"{0} beso"}
+                other{"{0} beso"}
+            }
             foot{
                 dnam{"oin"}
                 one{"{0} oin"}
                 other{"{0} oin"}
                 per{"{0} oin bakoitzeko"}
+            }
+            furlong{
+                dnam{"fulong"}
+                one{"{0} furlong"}
+                other{"{0} furlong"}
             }
             inch{
                 dnam{"hazbete"}
@@ -512,8 +532,8 @@ eu{
             }
             point{
                 dnam{"puntu"}
-                one{"{0} puntu"}
-                other{"{0} puntu"}
+                one{"{0} puntu tipografiko"}
+                other{"{0} puntu tipografiko"}
             }
             solar-radius{
                 one{"{0} eguzki-erradio"}
@@ -526,6 +546,16 @@ eu{
             }
         }
         light{
+            candela{
+                dnam{"kandela"}
+                one{"{0} kandela"}
+                other{"{0} kandela"}
+            }
+            lumen{
+                dnam{"lumena"}
+                one{"{0} lumen"}
+                other{"{0} lumen"}
+            }
             lux{
                 dnam{"lux"}
                 one{"{0} lux"}
@@ -545,11 +575,16 @@ eu{
             }
             dalton{
                 one{"{0} dalton"}
-                other{"{0} daltons"}
+                other{"{0} dalton"}
             }
             earth-mass{
                 one{"{0} lur-masa"}
                 other{"{0} lur-masa"}
+            }
+            grain{
+                dnam{"alea"}
+                one{"{0} ale"}
+                other{"{0} ale"}
             }
             gram{
                 dnam{"gramoak"}
@@ -598,6 +633,11 @@ eu{
             solar-mass{
                 one{"{0} eguzki-masa"}
                 other{"{0} eguzki-masa"}
+            }
+            stone{
+                dnam{"stone-a"}
+                one{"{0} stone"}
+                other{"{0} stone"}
             }
             ton{
                 dnam{"AEBko tonak"}
@@ -695,7 +735,7 @@ eu{
                 other{"{0} kilometro orduko"}
             }
             knot{
-                dnam{"knot"}
+                dnam{"korapilo"}
                 one{"{0} korapilo"}
                 other{"{0} korapilo"}
             }
@@ -754,6 +794,11 @@ eu{
                 one{"{0} upel"}
                 other{"{0} upel"}
             }
+            bushel{
+                dnam{"bushelak"}
+                one{"{0} bushel"}
+                other{"{0} bushel"}
+            }
             centiliter{
                 dnam{"zentilitro"}
                 one{"{0} zentilitro"}
@@ -811,6 +856,26 @@ eu{
                 one{"{0} dezilitro"}
                 other{"{0} dezilitro"}
             }
+            dessert-spoon{
+                dnam{"postre-koilarakada"}
+                one{"{0} postre-koilarakada"}
+                other{"{0} postre-koilarakada"}
+            }
+            dessert-spoon-imperial{
+                dnam{"Postre-koilarakada inperiala"}
+                one{"{0} postre-koilarakada inperial"}
+                other{"{0} postre-koilarakada inperial"}
+            }
+            dram{
+                dnam{"dram fluidoa"}
+                one{"{0} dram fluido"}
+                other{"{0} dram fluido"}
+            }
+            drop{
+                dnam{"tanta"}
+                one{"{0} tanta"}
+                other{"{0} tanta"}
+            }
             fluid-ounce{
                 dnam{"ontza likido"}
                 one{"{0} likido-ontza"}
@@ -837,6 +902,11 @@ eu{
                 one{"{0} hektolitro"}
                 other{"{0} hektolitro"}
             }
+            jigger{
+                dnam{"txupitoa"}
+                one{"{0} txupito"}
+                other{"{0} txupito"}
+            }
             liter{
                 dnam{"litro"}
                 one{"{0} litro"}
@@ -853,6 +923,11 @@ eu{
                 one{"{0} mililitro"}
                 other{"{0} mililitro"}
             }
+            pinch{
+                dnam{"pinch-a"}
+                one{"{0} pinch"}
+                other{"{0} pinch"}
+            }
             pint{
                 dnam{"pinta"}
                 one{"{0} pinta"}
@@ -867,6 +942,11 @@ eu{
                 dnam{"galoi-laurden"}
                 one{"{0} galoi-laurden"}
                 other{"{0} galoi-laurden"}
+            }
+            quart-imperial{
+                dnam{"laurden inperiala"}
+                one{"{0} laurden inperial"}
+                other{"{0} laurden inperial"}
             }
             tablespoon{
                 dnam{"koilarakada"}
@@ -1507,6 +1587,9 @@ eu{
             }
         }
         graphics{
+            dot{
+                dnam{"puntua"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 one{"{0} dpcm"}
@@ -1546,8 +1629,8 @@ eu{
         length{
             astronomical-unit{
                 dnam{"ua"}
-                one{"{0} au"}
-                other{"{0} au"}
+                one{"{0} ua"}
+                other{"{0} ua"}
             }
             centimeter{
                 dnam{"cm"}
@@ -1560,11 +1643,21 @@ eu{
                 one{"{0} dm"}
                 other{"{0} dm"}
             }
+            fathom{
+                dnam{"fm"}
+                one{"{0} fm"}
+                other{"{0} fm"}
+            }
             foot{
                 dnam{"oin"}
                 one{"{0} ft"}
                 other{"{0} ft"}
                 per{"{0}/ft"}
+            }
+            furlong{
+                dnam{"furlong"}
+                one{"{0} fur"}
+                other{"{0} fur"}
             }
             inch{
                 dnam{"hazbete"}
@@ -1631,8 +1724,8 @@ eu{
             }
             point{
                 dnam{"puntu"}
-                one{"{0} puntu"}
-                other{"{0} puntu"}
+                one{"{0} pt"}
+                other{"{0} pt"}
             }
             solar-radius{
                 dnam{"eguzki-erradio"}
@@ -1644,6 +1737,16 @@ eu{
             }
         }
         light{
+            candela{
+                dnam{"cd"}
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                dnam{"lm"}
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"lux"}
                 one{"{0} lux"}
@@ -1666,6 +1769,11 @@ eu{
                 dnam{"lur-masa"}
                 one{"{0} lur-masa"}
                 other{"{0} lur-masa"}
+            }
+            grain{
+                dnam{"alea"}
+                one{"{0} ale"}
+                other{"{0} ale"}
             }
             gram{
                 dnam{"g"}
@@ -1715,6 +1823,10 @@ eu{
                 dnam{"eguzki-masa"}
                 one{"{0} eguzki-masa"}
                 other{"{0} eguzki-masa"}
+            }
+            stone{
+                one{"{0} st"}
+                other{"{0} st"}
             }
             ton{
                 dnam{"AEBko tona"}
@@ -1873,6 +1985,11 @@ eu{
                 one{"{0} upel"}
                 other{"{0} upel"}
             }
+            bushel{
+                dnam{"bushelak"}
+                one{"{0} bu"}
+                other{"{0} bu"}
+            }
             centiliter{
                 dnam{"cl"}
                 one{"{0} cl"}
@@ -1930,6 +2047,26 @@ eu{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"postre-koilar."}
+                one{"{0} postre-koilar."}
+                other{"{0} postre-koilar."}
+            }
+            dessert-spoon-imperial{
+                dnam{"postre-koilar. inp."}
+                one{"{0} postre-koilar. inp."}
+                other{"{0} postre-koilar. inp."}
+            }
+            dram{
+                dnam{"dram fluidoa"}
+                one{"{0} dram fl"}
+                other{"{0} dram fl"}
+            }
+            drop{
+                dnam{"tanta"}
+                one{"{0} tanta"}
+                other{"{0} tanta"}
+            }
             fluid-ounce{
                 dnam{"likido-ontza"}
                 one{"{0} likido-ontza"}
@@ -1957,6 +2094,11 @@ eu{
                 one{"{0} hl"}
                 other{"{0} hl"}
             }
+            jigger{
+                dnam{"txupitoa"}
+                one{"{0} txupito"}
+                other{"{0} txupito"}
+            }
             liter{
                 dnam{"l"}
                 one{"{0} l"}
@@ -1973,6 +2115,11 @@ eu{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"pinch-a"}
+                one{"{0} pinch"}
+                other{"{0} pinch"}
+            }
             pint{
                 dnam{"pinta"}
                 one{"{0} pinta"}
@@ -1987,6 +2134,11 @@ eu{
                 dnam{"galoi-laurden"}
                 one{"{0} galoi-laurden"}
                 other{"{0} galoi-laurden"}
+            }
+            quart-imperial{
+                dnam{"qt Imp"}
+                one{"{0} qt Imp."}
+                other{"{0} qt Imp."}
             }
             tablespoon{
                 dnam{"koilarakada"}

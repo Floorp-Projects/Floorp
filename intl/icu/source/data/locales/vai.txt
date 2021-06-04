@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 vai{
     AuxExemplarCharacters{"[ꘓ ꘔ ꘕ ꘖ ꘗ ꘘ ꘙ ꘚ ꘛ ꘜ ꘝ ꘞ ꘟ]"}
     ExemplarCharacters{
@@ -28,7 +29,6 @@ vai{
         }
         native{"vaii"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{

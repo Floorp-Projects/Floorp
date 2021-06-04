@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 el{
     Countries{
         001{"Κόσμος"}
@@ -253,7 +254,7 @@ el{
         SV{"Ελ Σαλβαδόρ"}
         SX{"Άγιος Μαρτίνος (Ολλανδικό τμήμα)"}
         SY{"Συρία"}
-        SZ{"Σουαζιλάνδη"}
+        SZ{"Εσουατίνι"}
         TA{"Τριστάν ντα Κούνια"}
         TC{"Νήσοι Τερκς και Κάικος"}
         TD{"Τσαντ"}
@@ -310,7 +311,7 @@ el{
         CG{"Κονγκό (Δημοκρατία)"}
         CZ{"Τσεχική Δημοκρατία"}
         FK{"Νήσοι Φόκλαντ (Νήσοι Μαλβίνας)"}
+        SZ{"Σουαζιλάνδη"}
         TL{"Ανατολικό Τιμόρ"}
     }
-    Version{"37"}
 }

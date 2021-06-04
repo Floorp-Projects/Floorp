@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hy{
     Keys{
         calendar{"օրացույց"}
@@ -491,10 +492,14 @@ hy{
         zh_Hant{"չինարեն (ավանդական չինարեն)"}
     }
     Languages%menu{
+        ckb{"քրդերեն (սորանի)"}
         yue{"չինարեն, կանտոներեն"}
     }
     Languages%short{
         en_GB{"անգլերեն (Բրիտանիա)"}
+    }
+    Languages%variant{
+        ckb{"սորանի"}
     }
     Scripts{
         Arab{"արաբական"}
@@ -623,7 +628,6 @@ hy{
         AREVELA{"արևելահայերեն"}
         AREVMDA{"արեւմտահայերէն"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — բոլորը"}
         category-list{"{0}․ {1}"}
@@ -638,6 +642,7 @@ hy{
             one{"{0} — Գծեր"}
             other{"{0} — Գծեր"}
         }
+        subscript{"ենթատողային {0}"}
     }
     codePatterns{
         language{"Լեզու՝ {0}"}

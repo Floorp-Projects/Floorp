@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 su{
     AuxExemplarCharacters{"[á à ă â å ä ã ā æ ç è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ö ø ō œ ú ù ŭ û ü ū ÿ]"}
     ExemplarCharacters{"[a b c d e é f g h i j k l m n o p q r s t u v w x y z]"}
@@ -12,6 +13,7 @@ su{
     NumberElements{
         latn{
             patterns{
+                currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
             }
             symbols{
@@ -22,7 +24,6 @@ su{
             }
         }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -35,8 +36,8 @@ su{
                 "d MMM y G",
                 "d/M/y GGGGG",
                 "{1}, {0}",
-                "{1} 'pukul' {0}",
-                "{1} 'pukul' {0}",
+                "{1} 'jam' {0}",
+                "{1} 'jam' {0}",
                 "{1}, {0}",
                 "{1}, {0}",
             }
@@ -55,8 +56,8 @@ su{
                 "d MMM y",
                 "d/M/yy",
                 "{1}, {0}",
-                "{1} 'pukul' {0}",
-                "{1} 'pukul' {0}",
+                "{1} 'jam' {0}",
+                "{1} 'jam' {0}",
                 "{1}, {0}",
                 "{1}, {0}",
             }
@@ -107,7 +108,7 @@ su{
                         "Sen",
                         "Sal",
                         "Reb",
-                        "Kam",
+                        "Kem",
                         "Jum",
                         "Sap",
                     }
@@ -125,7 +126,7 @@ su{
                         "Senén",
                         "Salasa",
                         "Rebo",
-                        "Kamis",
+                        "Kemis",
                         "Jumaah",
                         "Saptu",
                     }
@@ -136,7 +137,7 @@ su{
                         "Sen",
                         "Sal",
                         "Reb",
-                        "Kam",
+                        "Kem",
                         "Jum",
                         "Sap",
                     }
@@ -154,7 +155,7 @@ su{
                         "Senén",
                         "Salasa",
                         "Rebo",
-                        "Kamis",
+                        "Kemis",
                         "Jumaah",
                         "Saptu",
                     }
@@ -355,6 +356,13 @@ su{
         }
         second-short{
             dn{"dtk."}
+        }
+        sun{
+            relative{
+                "-1"{"Minggu kamari"}
+                "0"{"Minggu ieu"}
+                "1"{"Minggu payun"}
+            }
         }
         week{
             dn{"minggu"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bn{
     Countries{
         001{"পৃথিবী"}
@@ -187,7 +188,10 @@ bn{
         ML{"মালি"}
         MM{"মায়ানমার (বার্মা)"}
         MN{"মঙ্গোলিয়া"}
-        MO{"ম্যাকাও এসএআর চীনা"}
+        MO{
+            "ম্যাকাও এসএআর চীনা চীনা (ম্যাকাও এসএআর চীনা) চীনা (ঐতিহ্যবাহী, ম্যাকাও এ"
+            "সএআর চীনা) অঞ্চল: ম্যাকাও এসএআর চীন"
+        }
         MP{"উত্তরাঞ্চলীয় মারিয়ানা দ্বীপপুঞ্জ"}
         MQ{"মার্টিনিক"}
         MR{"মরিতানিয়া"}
@@ -314,5 +318,4 @@ bn{
         SZ{"সোয়াজিল্যান্ড"}
         TL{"পূর্ব তিমুর"}
     }
-    Version{"37"}
 }

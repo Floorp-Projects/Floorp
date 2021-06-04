@@ -1,8 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_PA{
     %%Parent{"es_419"}
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -56,14 +56,6 @@ es_PA{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "a. m.",
-                "p. m.",
-            }
-            AmPmMarkersAbbr{
-                "a. m.",
-                "p. m.",
-            }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
@@ -74,8 +66,8 @@ es_PA{
                 "MM/dd/y",
                 "MM/dd/yy",
                 "{1} {0}",
-                "{1} 'a' 'las' {0}",
-                "{1} 'a' 'las' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -103,16 +95,6 @@ es_PA{
                         morning2{"de la mañana"}
                         night1{"de la noche"}
                         noon{"mediodía"}
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    wide{
-                        am{"a. m."}
-                        pm{"p. m."}
                     }
                 }
             }

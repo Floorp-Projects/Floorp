@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_419{
     Countries{
         011{"África del Oeste"}
@@ -15,11 +16,11 @@ es_419{
         154{"Europa del Norte"}
         155{"Europa del Oeste"}
         AC{"Isla Ascensión"}
+        AX{"Islas Åland"}
         BA{"Bosnia-Herzegovina"}
         CG{"República del Congo"}
         CI{"Costa de Marfil"}
         EZ{"Eurozona"}
-        GG{"Guernesey"}
         IC{"Islas Canarias"}
         QO{"Islas Ultramarinas"}
         TA{"Tristán da Cunha"}
@@ -31,5 +32,4 @@ es_419{
     Countries%variant{
         CD{"Congo (República Democrática del Congo)"}
     }
-    Version{"37"}
 }

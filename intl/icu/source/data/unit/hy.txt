@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hy{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -408,6 +408,11 @@ hy{
             }
         }
         graphics{
+            dot{
+                dnam{"կետ"}
+                one{"{0} կետ"}
+                other{"{0} կետ"}
+            }
             dot-per-centimeter{
                 dnam{"կետեր սանտիմետրի վրա"}
                 one{"{0} կետ սանտիմետրի վրա"}
@@ -464,6 +469,10 @@ hy{
                 one{"{0} ֆուտ"}
                 other{"{0} ֆուտ"}
                 per{"{0} ֆուտի վրա"}
+            }
+            furlong{
+                one{"{0} ֆուրլոնգ"}
+                other{"{0} ֆուրլոնգ"}
             }
             inch{
                 dnam{"մատնաչափեր"}
@@ -529,9 +538,9 @@ hy{
                 other{"{0} պիկոմետր"}
             }
             point{
-                dnam{"կետեր"}
-                one{"{0} կետ"}
-                other{"{0} կետ"}
+                dnam{"pt"}
+                one{"{0} pt"}
+                other{"{0} pt"}
             }
             solar-radius{
                 dnam{"արեգակնային շառավիղներ"}
@@ -545,6 +554,11 @@ hy{
             }
         }
         light{
+            candela{
+                dnam{"կանդելա"}
+                one{"{0} կանդելա"}
+                other{"{0} կանդելա"}
+            }
             lux{
                 dnam{"լյուքսեր"}
                 one{"{0} լյուքս"}
@@ -571,6 +585,11 @@ hy{
                 dnam{"երկրային զանգվածներ"}
                 one{"{0} երկրային զանգված"}
                 other{"{0} արևային զանգված"}
+            }
+            grain{
+                dnam{"գրան"}
+                one{"{0} գրան"}
+                other{"{0} գրան"}
             }
             gram{
                 dnam{"գրամներ"}
@@ -620,6 +639,10 @@ hy{
                 dnam{"արեգակնային զանգվածներ"}
                 one{"{0} արեգակնային զանգված"}
                 other{"{0} արեգակնային զանգված"}
+            }
+            stone{
+                one{"{0} սթոուն"}
+                other{"{0} սթոուն"}
             }
             ton{
                 dnam{"ամերիկյան տոննաներ"}
@@ -778,6 +801,11 @@ hy{
                 one{"{0} տակառ"}
                 other{"{0} տակառ"}
             }
+            bushel{
+                dnam{"բուշել"}
+                one{"{0} բուշել"}
+                other{"{0} բուշել"}
+            }
             centiliter{
                 dnam{"սանտիլիտրեր"}
                 one{"{0} սանտիլիտր"}
@@ -835,6 +863,24 @@ hy{
                 one{"{0} դեցիլիտր"}
                 other{"{0} դեցիլիտր"}
             }
+            dessert-spoon{
+                one{"{0} աղանդերի գդալ"}
+                other{"{0} աղանդերի գդալ"}
+            }
+            dessert-spoon-imperial{
+                one{"{0} անգլիական աղանդերի գդալ"}
+                other{"{0} անգլիական աղանդերի գդալ"}
+            }
+            dram{
+                dnam{"դրամ"}
+                one{"{0} դրամ"}
+                other{"{0} դրամ"}
+            }
+            drop{
+                dnam{"կաթիլ"}
+                one{"{0} կաթիլ"}
+                other{"{0} կաթիլ"}
+            }
             fluid-ounce{
                 dnam{"հեղուկ ունկիներ"}
                 one{"{0} հեղուկ ունկի"}
@@ -862,6 +908,11 @@ hy{
                 one{"{0} հեկտոլիտր"}
                 other{"{0} հեկտոլիտր"}
             }
+            jigger{
+                dnam{"ջիգեր"}
+                one{"{0} ջիգեր"}
+                other{"{0} ջիգեր"}
+            }
             liter{
                 dnam{"լիտրեր"}
                 one{"{0} լիտր"}
@@ -878,6 +929,11 @@ hy{
                 one{"{0} միլիլիտր"}
                 other{"{0} միլիլիտր"}
             }
+            pinch{
+                dnam{"պտղունց"}
+                one{"{0} պտղունց"}
+                other{"{0} պտղունց"}
+            }
             pint{
                 dnam{"փինթեր"}
                 one{"{0} փինթ"}
@@ -892,6 +948,11 @@ hy{
                 dnam{"քվարտեր"}
                 one{"{0} քվարտ"}
                 other{"{0} քվարտ"}
+            }
+            quart-imperial{
+                dnam{"անգլիական քվարտ"}
+                one{"{0} անգլիական քվարտ"}
+                other{"{0} անգլիական քվարտ"}
             }
             tablespoon{
                 dnam{"ճաշի գդալ"}
@@ -964,9 +1025,9 @@ hy{
         }
         consumption{
             liter-per-100-kilometer{
-                dnam{"լ/100 կմ"}
-                one{"{0} լ/100 կմ"}
-                other{"{0} լ/100 կմ"}
+                dnam{"Լ/100 կմ"}
+                one{"{0} Լ/100 կմ"}
+                other{"{0} Լ/100 կմ"}
             }
         }
         coordinate{
@@ -1287,8 +1348,8 @@ hy{
             }
             permillion{
                 dnam{"մասնիկ/միլիոն"}
-                one{"{0} մասնիկ/միլիոն"}
-                other{"{0} մասնիկ/միլիոն"}
+                one{"{0} մմվ"}
+                other{"{0} մմվ"}
             }
             permyriad{
                 dnam{"‱"}
@@ -1298,9 +1359,9 @@ hy{
         }
         consumption{
             liter-per-100-kilometer{
-                dnam{"լ/100 կմ"}
-                one{"{0} լ/100 կմ"}
-                other{"{0} լ/100 կմ"}
+                dnam{"Լ/100 կմ"}
+                one{"{0} Լ/100 կմ"}
+                other{"{0} Լ/100 կմ"}
             }
             liter-per-kilometer{
                 dnam{"լ/կմ"}
@@ -1474,6 +1535,11 @@ hy{
             }
         }
         energy{
+            british-thermal-unit{
+                dnam{"ԲՋՄ"}
+                one{"{0} Բջմ"}
+                other{"{0} Բջմ"}
+            }
             calorie{
                 dnam{"կալ"}
                 one{"{0} կալ"}
@@ -1550,6 +1616,11 @@ hy{
             }
         }
         graphics{
+            dot{
+                dnam{"կետ"}
+                one{"{0} կետ"}
+                other{"{0} կետ"}
+            }
             dot-per-centimeter{
                 dnam{"կսմ"}
                 one{"{0} կսմ"}
@@ -1598,11 +1669,21 @@ hy{
                 one{"{0} դմ"}
                 other{"{0} դմ"}
             }
+            earth-radius{
+                dnam{"R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
             foot{
                 dnam{"ֆտ"}
                 one{"{0} ֆտ"}
                 other{"{0} ֆտ"}
                 per{"{0}/ֆտ"}
+            }
+            furlong{
+                dnam{"ֆուրլոնգ"}
+                one{"{0} ֆուրլ․"}
+                other{"{0} ֆուրլ․"}
             }
             inch{
                 dnam{"մատ"}
@@ -1668,9 +1749,8 @@ hy{
                 other{"{0} պմ"}
             }
             point{
-                dnam{"կտ"}
-                one{"{0} կտ"}
-                other{"{0} կտ"}
+                one{"{0} pt"}
+                other{"{0} pt"}
             }
             solar-radius{
                 dnam{"R☉"}
@@ -1684,6 +1764,16 @@ hy{
             }
         }
         light{
+            candela{
+                dnam{"կդ"}
+                one{"{0} կդ"}
+                other{"{0} կդ"}
+            }
+            lumen{
+                dnam{"լմ"}
+                one{"{0} լմ"}
+                other{"{0} լմ"}
+            }
             lux{
                 dnam{"լք"}
                 one{"{0} լք"}
@@ -1700,6 +1790,11 @@ hy{
                 dnam{"դա"}
                 one{"{0} դա"}
                 other{"{0} դա"}
+            }
+            grain{
+                dnam{"գրան"}
+                one{"{0} գրան"}
+                other{"{0} գրան"}
             }
             gram{
                 dnam{"գ"}
@@ -1744,6 +1839,11 @@ hy{
                 one{"{0} ֆունտ"}
                 other{"{0} ֆունտ"}
                 per{"{0}/ֆունտ"}
+            }
+            stone{
+                dnam{"սթոուն"}
+                one{"{0} սթոուն"}
+                other{"{0} սթոուն"}
             }
             ton{
                 dnam{"ամեր․ տ"}
@@ -1959,6 +2059,26 @@ hy{
                 one{"{0} դլ"}
                 other{"{0} դլ"}
             }
+            dessert-spoon{
+                dnam{"ագ․"}
+                one{"{0} ագ․"}
+                other{"{0} ագ․"}
+            }
+            dessert-spoon-imperial{
+                dnam{"անգլ․ ագ․"}
+                one{"{0} անգլ․ ագ․"}
+                other{"{0} անգլ․ ագ․"}
+            }
+            dram{
+                dnam{"հեղուկ դրամ"}
+                one{"{0} հեղուկ դրամ"}
+                other{"{0} հեղուկ դրամ"}
+            }
+            drop{
+                dnam{"կաթիլ"}
+                one{"{0} կաթիլ"}
+                other{"{0} կաթիլ"}
+            }
             fluid-ounce{
                 dnam{"հղ․ ունկ․"}
                 one{"{0} հղ. ունկ․"}
@@ -1986,6 +2106,11 @@ hy{
                 one{"{0} հլ"}
                 other{"{0} հլ"}
             }
+            jigger{
+                dnam{"ջիգեր"}
+                one{"{0} ջիգեր"}
+                other{"{0} ջիգեր"}
+            }
             liter{
                 dnam{"լ"}
                 one{"{0} լ"}
@@ -2002,6 +2127,11 @@ hy{
                 one{"{0} մլ"}
                 other{"{0} մլ"}
             }
+            pinch{
+                dnam{"պտղունց"}
+                one{"{0} պտղունց"}
+                other{"{0} պտղունց"}
+            }
             pint{
                 dnam{"փինթեր"}
                 one{"{0} փինթ"}
@@ -2016,6 +2146,11 @@ hy{
                 dnam{"քվարտ"}
                 one{"{0} քվարտ"}
                 other{"{0} քվարտ"}
+            }
+            quart-imperial{
+                dnam{"անգլիական քվարտ"}
+                one{"{0} անգլիական քվարտ"}
+                other{"{0} անգլիական քվարտ"}
             }
             tablespoon{
                 dnam{"ճգ."}

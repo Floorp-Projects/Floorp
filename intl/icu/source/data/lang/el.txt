@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 el{
     Keys{
         calendar{"Ημερολόγιο"}
@@ -329,7 +330,7 @@ el{
         mi{"Μαορί"}
         mic{"Μικμάκ"}
         min{"Μινανγκαμπάου"}
-        mk{"Μακεδονικά"}
+        mk{"Σλαβομακεδονικά"}
         ml{"Μαλαγιαλαμικά"}
         mn{"Μογγολικά"}
         mnc{"Μαντσού"}
@@ -509,7 +510,7 @@ el{
         tyv{"Τουβινικά"}
         tzm{"Ταμαζίτ Κεντρικού Μαρόκο"}
         udm{"Ουντμούρτ"}
-        ug{"Ουιγκουρικά"}
+        ug{"Ουιγουρικά"}
         uga{"Ουγκαριτικά"}
         uk{"Ουκρανικά"}
         umb{"Ουμπούντου"}
@@ -893,7 +894,6 @@ el{
         VALENCIA{"Βαλενθιανά"}
         WADEGILE{"Εκλατινισμένα Γουάντ-Γκιλς"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — όλα"}
         category-list{"{0}: {1}"}
@@ -908,6 +908,8 @@ el{
             one{"{0} γραμμή"}
             other{"{0} γραμμές"}
         }
+        subscript{"δείκτης {0}"}
+        superscript{"εκθέτης {0}"}
     }
     codePatterns{
         language{"Γλώσσα: {0}"}

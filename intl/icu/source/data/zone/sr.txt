@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиџан"}
@@ -1019,7 +1019,7 @@ sr{
             ec{"Истанбул"}
         }
         "Europe:Jersey"{
-            ec{"Џерси"}
+            ec{"Џерзи"}
         }
         "Europe:Kaliningrad"{
             ec{"Калињинград"}
@@ -1526,7 +1526,7 @@ sr{
             ss{"EET"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"Даљи исток Европе"}
+            ls{"Време даљег истока Европе"}
         }
         "meta:Europe_Western"{
             ld{"Западноевропско летње време"}

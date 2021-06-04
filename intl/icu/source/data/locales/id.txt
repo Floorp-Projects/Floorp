@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 id{
     AuxExemplarCharacters{"[å]"}
     Ellipsis{
@@ -13,7 +14,10 @@ id{
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
     ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{"[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ “ ” ( ) \\[ \\] /]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
+    }
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
@@ -150,6 +154,7 @@ id{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{","}
                 exponential{"E"}
                 group{"."}
@@ -175,7 +180,6 @@ id{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1712,9 +1716,9 @@ id{
         }
     }
     characterLabel{
-        activities{"Aktivitas"}
-        african_scripts{"Skrip Afrika"}
-        american_scripts{"Skrip Amerika"}
+        activities{"aktivitas"}
+        african_scripts{"skrip Afrika"}
+        american_scripts{"skrip Amerika"}
         animal{"hewan"}
         animals_nature{"satwa atau alam"}
         arrows{"panah"}
@@ -1731,9 +1735,9 @@ id{
         divination_symbols{"simbol ramalan"}
         downwards_arrows{"panah bawah"}
         downwards_upwards_arrows{"panah atas bawah"}
-        east_asian_scripts{"Skrip Asia Timur"}
+        east_asian_scripts{"skrip Asia Timur"}
         emoji{"emoji"}
-        european_scripts{"Skrip Eropa"}
+        european_scripts{"skrip Eropa"}
         female{"perempuan"}
         flag{"bendera"}
         flags{"bendera"}
@@ -1743,15 +1747,15 @@ id{
         full_width_form_variant{"varian lebar penuh"}
         geometric_shapes{"bentuk geometris"}
         half_width_form_variant{"varian setengah lebar"}
-        han_characters{"Aksara Han"}
-        han_radicals{"Han Radikal"}
+        han_characters{"aksara Han"}
+        han_radicals{"Han radikal"}
         hanja{"Hanja"}
-        hanzi_simplified{"Hanzi (Aksara Sederhana)"}
-        hanzi_traditional{"Hanzi (Aksara Tradisional)"}
+        hanzi_simplified{"Hanzi (sederhana)"}
+        hanzi_traditional{"Hanzi (tradisional)"}
         heart{"hati"}
         historic_scripts{"skrip historis"}
         ideographic_desc_characters{"karakter desk. ideografis"}
-        japanese_kana{"Huruf Kana Jepang"}
+        japanese_kana{"huruf Kana Jepang"}
         kanbun{"kanbun"}
         kanji{"kanji"}
         keycap{"keycap"}
@@ -1761,7 +1765,7 @@ id{
         limited_use{"penggunaan terbatas"}
         male{"pria"}
         math_symbols{"simbol matematika"}
-        middle_eastern_scripts{"Skrip Timur Tengah"}
+        middle_eastern_scripts{"skrip Timur Tengah"}
         miscellaneous{"lain-lain"}
         modern_scripts{"skrip modern"}
         modifier{"pengubah"}
@@ -1783,8 +1787,8 @@ id{
         small_form_variant{"varian kecil"}
         smiley{"wajah tersenyum"}
         smileys_people{"smiley atau orang"}
-        south_asian_scripts{"Skrip Asia Selatan"}
-        southeast_asian_scripts{"Skrip Asia Tenggara"}
+        south_asian_scripts{"skrip Asia Selatan"}
+        southeast_asian_scripts{"skrip Asia Tenggara"}
         spacing{"spasi"}
         sport{"olahraga"}
         symbols{"simbol"}
@@ -1796,7 +1800,7 @@ id{
         variant_forms{"varian"}
         vocalic_jamo{"jamo vokal"}
         weather{"cuaca"}
-        western_asian_scripts{"Skrip Asia Bagian Barat"}
+        western_asian_scripts{"skrip Asia Bagian Barat"}
         whitespace{"spasi kosong"}
     }
     contextTransforms{

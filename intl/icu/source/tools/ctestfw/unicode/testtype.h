@@ -39,3 +39,9 @@
     #define T_CTEST_EXPORT_API T_CTEST_IMPORT
 #endif
 
+#ifndef TRUE
+#   define TRUE  1
+#endif
+#ifndef FALSE
+#   define FALSE 0
+#endif

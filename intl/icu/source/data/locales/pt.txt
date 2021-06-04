@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pt{
     AuxExemplarCharacters{"[ª ă å ä ā æ è ĕ ë ē ì ĭ î ï ī ñ º ŏ ö ø ō œ ù ŭ û ü ū ÿ]"}
     Ellipsis{
@@ -211,7 +212,6 @@ pt{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -724,42 +724,42 @@ pt{
                     m{"h:mm – h:mm B"}
                 }
                 Gy{
-                    G{"G y – G y"}
-                    y{"G y – y"}
+                    G{"y G – y G"}
+                    y{"y – y G"}
                 }
                 GyM{
-                    G{"GGGGG MM/y – GGGGG MM/y"}
-                    M{"GGGGG MM/y – MM/y"}
-                    y{"GGGGG MM/y – MM/y"}
+                    G{"M/y GGGGG – M/y GGGGG"}
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
                 }
                 GyMEd{
-                    G{"GGGGG E dd/MM/y – GGGGG E dd/MM/y"}
-                    M{"GGGGG E dd/MM/y – E dd/MM/y"}
-                    d{"GGGGG E dd/MM/y – dd/MM/y"}
-                    y{"GGGGG E dd/MM/y – E dd/MM/y"}
+                    G{"E, M/d/y GGGGG – E, M/d/y GGGGG"}
+                    M{"E, M/d/y – E, M/d/y GGGGG"}
+                    d{"E, M/d/y – E, M/d/y GGGGG"}
+                    y{"E, M/d/y – E, M/d/y GGGGG"}
                 }
                 GyMMM{
-                    G{"G MMM y – G MMM y"}
-                    M{"G MMM y – MMM"}
-                    y{"G MMM y – MMM y"}
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
                 }
                 GyMMMEd{
-                    G{"G E, d 'de' MMM y – G E, d 'de' MMM y"}
-                    M{"G E, d 'de' MMM y – E, d 'de' MMM"}
-                    d{"G E, d 'de' MMM y – E, d 'de' MMM"}
-                    y{"G E, d 'de' MMM y – E, d 'de' MMM y"}
+                    G{"E, MMM d, y G – E, MMM d, y G"}
+                    M{"E, MMM d – E, MMM d, y G"}
+                    d{"E, MMM d – E, MMM d, y G"}
+                    y{"E, MMM d, y – E, MMM d, y G"}
                 }
                 GyMMMd{
-                    G{"G d 'de' MMM y – G d 'de' MMM y"}
-                    M{"G d 'de' MMM y – d 'de' MMM"}
-                    d{"G d – d 'de' MMM y"}
-                    y{"G d 'de' MMM y – d 'de' MMM y"}
+                    G{"MMM d, y G – MMM d, y G"}
+                    M{"MMM d – MMM d, y G"}
+                    d{"MMM d – d, y G"}
+                    y{"MMM d, y – MMM d, y G"}
                 }
                 GyMd{
-                    G{"GGGGG dd/MM/y – GGGGG dd/MM/y"}
-                    M{"GGGGG dd/MM/y – dd/MM/y"}
-                    d{"GGGGG dd/MM/y – dd/MM/y"}
-                    y{"GGGGG dd/MM/y – dd/MM/y"}
+                    G{"M/d/y GGGGG – M/d/y GGGGG"}
+                    M{"M/d/y – M/d/y GGGGG"}
+                    d{"M/d/y – M/d/y GGGGG"}
+                    y{"M/d/y – M/d/y GGGGG"}
                 }
                 H{
                     H{"HH'h' - HH'h'"}
@@ -2001,7 +2001,7 @@ pt{
         number{
             lenient{
                 "[\\-‒⁻₋−➖﹣－]",
-                "[,،٫、︐︑﹐﹑，､]",
+                "[,،٫⹁、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
             }
         }

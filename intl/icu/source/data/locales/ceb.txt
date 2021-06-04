@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ceb{
     AuxExemplarCharacters{"[c f j ñ q v x z]"}
     ExemplarCharacters{"[a b d e g h i k l m n o p r s t u w y]"}
@@ -14,7 +15,6 @@ ceb{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
-                percentFormat{"#,#0%"}
                 scientificFormat{"#E0"}
             }
             symbols{
@@ -35,7 +35,6 @@ ceb{
             }
         }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -214,7 +213,7 @@ ceb{
                 Ed{"d E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
-                Gy{"G y"}
+                Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
@@ -319,7 +318,7 @@ ceb{
             eras{
                 abbreviated{
                     "BC",
-                    "KP",
+                    "AD",
                 }
                 abbreviated%variant{
                     "BCE",
@@ -330,8 +329,8 @@ ceb{
                     "Anno Domini",
                 }
                 wide%variant{
-                    "Sa Wala Pa ang Common Era",
-                    "Common Era",
+                    "Wala Pa ang Komong Panahon",
+                    "Komong Panahon",
                 }
             }
             intervalFormats{
@@ -465,14 +464,14 @@ ceb{
             monthNames{
                 format{
                     abbreviated{
-                        "En",
+                        "Ene",
                         "Peb",
                         "Mar",
-                        "Apr",
+                        "Abr",
                         "May",
                         "Hun",
                         "Hul",
-                        "Ag",
+                        "Ago",
                         "Set",
                         "Okt",
                         "Nob",
@@ -619,7 +618,7 @@ ceb{
             dn{"AM/PM"}
         }
         era{
-            dn{"era"}
+            dn{"panahon"}
         }
         hour{
             dn{"oras"}

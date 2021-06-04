@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fil{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1322,7 +1322,7 @@ fil{
         "meta:America_Central"{
             ld{"Sentral na Daylight Time"}
             lg{"Sentral na Oras"}
-            ls{"Sentral na Karaniwang Oras"}
+            ls{"Sentral na Standard na Oras"}
         }
         "meta:America_Eastern"{
             ld{"Eastern Daylight Time"}
@@ -1722,7 +1722,7 @@ fil{
         "meta:Norfolk"{
             ld{"Daylight Time sa Norfolk Island"}
             lg{"Oras sa Norfolk Island"}
-            ls{"Standard na Norfolk Island"}
+            ls{"Standard na Oras sa Norfolk Island"}
         }
         "meta:Noronha"{
             ld{"Oras sa Tag-init ng Fernando de Noronha"}

@@ -1,11 +1,13 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 rm{
     AuxExemplarCharacters{"[á ă â å ä ā æ ç ĕ ê ë ē í ĭ î ï ī ñ ó ŏ ô ö ø ō œ ú ŭ û ü ū ÿ]"}
     ExemplarCharacters{"[a à b c d e é è f g h i ì j k l m n o ò p q r s t u ù v w x y z]"}
     ExemplarCharactersIndex{"[A À B C D E É È F G H I Ì J K L M N O Ò P Q R S T U Ù V W X Y Z]"}
     ExemplarCharactersNumbers{"[. ’ % ‰ + − 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
+        default{"latn"}
         latn{
             miscPatterns{
                 atLeast{"≥{0}"}
@@ -33,9 +35,15 @@ rm{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            plural{
+                one{"{0} di"}
+                other{"{0} dis"}
+            }
+        }
         minimumGroupingDigits{"1"}
+        native{"latn"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -47,11 +55,11 @@ rm{
                 "d MMMM y G",
                 "dd-MM-y G",
                 "dd-MM-y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1} 'a' 'las' {0}",
+                "{1} 'a' 'las' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             availableFormats{
                 E{"ccc"}
@@ -656,7 +664,7 @@ rm{
     }
     fields{
         day{
-            dn{"Tag"}
+            dn{"di"}
             relative{
                 "-1"{"ier"}
                 "-2"{"stersas"}
@@ -664,6 +672,12 @@ rm{
                 "1"{"damaun"}
                 "2"{"puschmaun"}
             }
+        }
+        day-narrow{
+            dn{"d"}
+        }
+        day-short{
+            dn{"di"}
         }
         dayperiod{
             dn{"mesadad dal di"}
@@ -680,8 +694,19 @@ rm{
         month{
             dn{"mais"}
         }
+        quarter{
+            dn{"quartal"}
+        }
         second{
             dn{"secunda"}
+        }
+        sun-short{
+            relativeTime{
+                future{
+                    one{"+{0} dumengia"}
+                    other{"en {0} du"}
+                }
+            }
         }
         week{
             dn{"emna"}
@@ -691,9 +716,40 @@ rm{
         }
         year{
             dn{"onn"}
+            relative{
+                "-1"{"l’onn passà"}
+                "0"{"quest onn"}
+                "1"{"l’onn proxim"}
+            }
         }
         zone{
             dn{"zona d’urari"}
+        }
+    }
+    listPattern{
+        or{
+            2{"{0} u {1}"}
+            end{"{0} u {1}"}
+        }
+        or-narrow{
+            2{"{0} u {1}"}
+            end{"{0} u {1}"}
+        }
+        or-short{
+            2{"{0} u {1}"}
+            end{"{0} u {1}"}
+        }
+        standard{
+            2{"{0} e {1}"}
+            end{"{0} e {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-narrow{
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
         }
     }
     measurementSystemNames{

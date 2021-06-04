@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ga{
     Currencies{
         ADP{
@@ -250,6 +251,10 @@ ga{
             "CLP",
             "Peso na Sile",
         }
+        CNH{
+            "CNH",
+            "Yuan na Síne (seachairgeadra)",
+        }
         CNY{
             "CN¥",
             "Yuan na Síne",
@@ -372,7 +377,7 @@ ga{
         }
         FRF{
             "FRF",
-            "FRF",
+            "Franc na Fraince",
         }
         GBP{
             "£",
@@ -580,7 +585,7 @@ ga{
         }
         LUC{
             "LUC",
-            "LUC",
+            "Franc Inmhalartach Lucsamburgach",
         }
         LUF{
             "LUF",
@@ -592,7 +597,7 @@ ga{
         }
         LVR{
             "LVR",
-            "LVR",
+            "Rúbal na Laitvia",
         }
         LYD{
             "LYD",
@@ -684,7 +689,7 @@ ga{
         }
         MXV{
             "MXV",
-            "MXV",
+            "Aonad Infheistíochta Meicsiceach",
         }
         MYR{
             "MYR",
@@ -1112,7 +1117,7 @@ ga{
         }
         YUN{
             "YUN",
-            "YUN",
+            "Dinar Inmhalartaithe Iúgslavach (1990–1992)",
         }
         YUR{
             "YUR",
@@ -1663,6 +1668,13 @@ ga{
             other{"peso na Sile"}
             two{"pheso na Sile"}
         }
+        CNH{
+            few{"Yuan na Síne (seachairgeadra)"}
+            many{"Yuan na Síne (seachairgeadra)"}
+            one{"Yuan na Síne (seachairgeadra)"}
+            other{"Yuan na Síne (seachairgeadra)"}
+            two{"Yuan na Síne (seachairgeadra)"}
+        }
         CNY{
             few{"yuan na Síne"}
             many{"yuan na Síne"}
@@ -2201,6 +2213,13 @@ ga{
             one{"Talonas Liotuánach"}
             other{"Talonas Liotuánach"}
             two{"Talonas Liotuánach"}
+        }
+        LUC{
+            few{"Franc Inmhalartach Lucsamburgach"}
+            many{"Franc Inmhalartach Lucsamburgach"}
+            one{"Franc Inmhalartach Lucsamburgach"}
+            other{"Franc Inmhalartach Lucsamburgach"}
+            two{"Franc Inmhalartach Lucsamburgach"}
         }
         LUF{
             few{"Franc Lucsamburg"}
@@ -3169,5 +3188,4 @@ ga{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"37"}
 }

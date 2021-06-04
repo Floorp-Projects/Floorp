@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ia{
     Keys{
         calendar{"calendario"}
@@ -532,7 +533,6 @@ ia{
             tibt{"cifras tibetan"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — toto"}
         category-list{"{0}: {1}"}

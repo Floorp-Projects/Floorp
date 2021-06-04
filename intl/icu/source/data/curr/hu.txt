@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hu{
     Currencies{
         ADP{
@@ -280,7 +281,7 @@ hu{
         }
         CVE{
             "CVE",
-            "Cape Verde-i escudo",
+            "Zöld-foki escudo",
         }
         CYP{
             "CYP",
@@ -1517,8 +1518,8 @@ hu{
             other{"kubai peso"}
         }
         CVE{
-            one{"Cape Verde-i escudo"}
-            other{"Cape Verde-i escudo"}
+            one{"Zöld-foki escudo"}
+            other{"Zöld-foki escudo"}
         }
         CZK{
             one{"cseh korona"}
@@ -2193,5 +2194,4 @@ hu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

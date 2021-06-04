@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kn{
     Countries{
         001{"ಪ್ರಪಂಚ"}
@@ -77,7 +78,7 @@ kn{
         CF{"ಮಧ್ಯ ಆಫ್ರಿಕಾ ಗಣರಾಜ್ಯ"}
         CG{"ಕಾಂಗೋ - ಬ್ರಾಜಾವಿಲ್ಲೇ"}
         CH{"ಸ್ವಿಟ್ಜರ್ಲ್ಯಾಂಡ್"}
-        CI{"ಕೋತ್‌ ದಿವಾರ್‍"}
+        CI{"ಕೋತ್ ದ್‘ಇವಾರ್"}
         CK{"ಕುಕ್ ದ್ವೀಪಗಳು"}
         CL{"ಚಿಲಿ"}
         CM{"ಕ್ಯಾಮರೂನ್"}
@@ -314,5 +315,4 @@ kn{
         SZ{"ಸ್ವಾಜಿಲ್ಯಾಂಡ್‌"}
         TL{"ಪೂರ್ವ ಟಿಮೋರ್"}
     }
-    Version{"37"}
 }

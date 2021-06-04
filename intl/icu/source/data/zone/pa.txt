@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pa{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"ਅਬੀਦਜਾਨ"}
@@ -1740,7 +1740,7 @@ pa{
             ls{"ਨੀਊ ਵੇਲਾ"}
         }
         "meta:Norfolk"{
-            ld{"ਨੋਰਫੌਕ ਆਈਲੈਂਡ ਗਰਮੀਆਂ ਦਾ ਵੇਲਾ"}
+            ld{"ਨੋਰਫੌਕ ਆਈਲੈਂਡ ਪ੍ਰਕਾਸ਼ ਵੇਲਾ"}
             lg{"ਨੋਰਫੌਕ ਆਈਲੈਂਡ ਵੇਲਾ"}
             ls{"ਨੋਰਫੌਕ ਆਈਲੈਂਡ ਮਿਆਰੀ ਵੇਲਾ"}
         }

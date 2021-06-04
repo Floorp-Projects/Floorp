@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 eu{
     AuxExemplarCharacters{"[á à ă â å ä ã ā æ é è ĕ ê ë ē í ì ĭ î ï ī ó ò ŏ ô ö ø ō œ ú ù ŭ û ü ū ÿ]"}
     Ellipsis{
@@ -19,6 +20,19 @@ eu{
     }
     MoreInformation{"?"}
     NumberElements{
+        arab{
+            symbols{
+                minusSign{"-"}
+                percentSign{"٪؜"}
+                plusSign{"+"}
+            }
+        }
+        arabext{
+            symbols{
+                minusSign{"‎-‎"}
+                plusSign{"‎+‎"}
+            }
+        }
         latn{
             miscPatterns{
                 approximately{"~{0}"}
@@ -36,16 +50,16 @@ eu{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"0000"}
-                        other{"0000"}
+                        one{"0"}
+                        other{"0"}
                     }
                     10000{
-                        one{"00000"}
-                        other{"00000"}
+                        one{"0"}
+                        other{"0"}
                     }
                     100000{
-                        one{"000000"}
-                        other{"000000"}
+                        one{"0"}
+                        other{"0"}
                     }
                     1000000{
                         one{"0 milioi"}
@@ -88,16 +102,16 @@ eu{
             patternsShort{
                 currencyFormat{
                     1000{
-                        one{"0000 ¤"}
-                        other{"0000 ¤"}
+                        one{"0"}
+                        other{"0"}
                     }
                     10000{
-                        one{"00000 ¤"}
-                        other{"00000 ¤"}
+                        one{"0"}
+                        other{"0"}
                     }
                     100000{
-                        one{"000000 ¤"}
-                        other{"000000 ¤"}
+                        one{"0"}
+                        other{"0"}
                     }
                     1000000{
                         one{"0 M ¤"}
@@ -138,16 +152,16 @@ eu{
                 }
                 decimalFormat{
                     1000{
-                        one{"0000"}
-                        other{"0000"}
+                        one{"0"}
+                        other{"0"}
                     }
                     10000{
-                        one{"00000"}
-                        other{"00000"}
+                        one{"0"}
+                        other{"0"}
                     }
                     100000{
-                        one{"000000"}
-                        other{"000000"}
+                        one{"0"}
+                        other{"0"}
                     }
                     1000000{
                         one{"0 M"}
@@ -205,12 +219,11 @@ eu{
                 other{"{0}. bira eskuinetara"}
             }
             plural{
-                one{"Nire {0} lagunarekin nago"}
-                other{"Nire {0} lagunekin nago"}
+                one{"{0} lagun etorri da"}
+                other{"{0} lagun etorri dira"}
             }
         }
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -924,15 +937,15 @@ eu{
     }
     characterLabel{
         activities{"Jarduerak"}
-        african_scripts{"Script afrikarrak"}
-        american_scripts{"Script amerikarrak"}
-        animal{"animalia"}
+        african_scripts{"Idazkera afrikarrak"}
+        american_scripts{"Idazkera amerikarrak"}
+        animal{"Animalia"}
         animals_nature{"Animaliak eta natura"}
         arrows{"Geziak"}
-        body{"gorputza"}
+        body{"Gorputza"}
         box_drawing{"Koadro-marrazketa"}
-        braille{"Braille"}
-        building{"eraikina"}
+        braille{"Braillea"}
+        building{"Eraikinak"}
         bullets_stars{"Buletak/Izarrak"}
         consonantal_jamo{"Jamo kontsonantea"}
         currency_symbols{"Moneten ikurrak"}
@@ -942,11 +955,11 @@ eu{
         divination_symbols{"Astrologia-ikurrak"}
         downwards_arrows{"Behera-geziak"}
         downwards_upwards_arrows{"Behera-/Gora-geziak"}
-        east_asian_scripts{"Asiako ekialdeko scriptak"}
+        east_asian_scripts{"Asiako ekialdeko idazkerak"}
         emoji{"Emotikonoa"}
-        european_scripts{"Script europearrak"}
-        female{"emakumea"}
-        flag{"bandera"}
+        european_scripts{"Idazkera europarrak"}
+        female{"Emakumea"}
+        flag{"Bandera"}
         flags{"Banderak"}
         food_drink{"Jan-edariak"}
         format{"Formatua"}
@@ -959,55 +972,55 @@ eu{
         hanja{"Hanja"}
         hanzi_simplified{"Hanzi (sinplifikatua)"}
         hanzi_traditional{"Hanzi (tradizionala)"}
-        heart{"bihotza"}
-        historic_scripts{"Script historikoak"}
+        heart{"Bihotza"}
+        historic_scripts{"Idazkera historikoak"}
         ideographic_desc_characters{"Karaktere ideografiko deskribatzaileak"}
         japanese_kana{"Japonierako kana"}
         kanbun{"Kanbuna"}
         kanji{"Kanjia"}
-        keycap{"tekla"}
+        keycap{"Tekla"}
         leftwards_arrows{"Ezker-geziak"}
         leftwards_rightwards_arrows{"Ezker-/Eskuin-geziak"}
         letterlike_symbols{"Hizkien antzeko ikurrak"}
         limited_use{"Erabilera mugatua"}
         male{"gizona"}
         math_symbols{"Matematikako ikurrak"}
-        middle_eastern_scripts{"Ekialde Ertaineko scriptak"}
+        middle_eastern_scripts{"Ekialde Ertaineko idazkerak"}
         miscellaneous{"Askotarikoak"}
-        modern_scripts{"Script modernoak"}
+        modern_scripts{"Idazkera modernoak"}
         modifier{"Aldatzailea"}
         musical_symbols{"Musika-ikurrak"}
-        nature{"natura"}
-        nonspacing{"Tarterik gabeko"}
+        nature{"Natura"}
+        nonspacing{"Tarterik gabekoak"}
         numbers{"Zenbakiak"}
         objects{"Objektuak"}
         other{"Bestelakoak"}
         paired{"Parekatuta"}
-        person{"pertsona"}
+        person{"Pertsona"}
         phonetic_alphabet{"Alfabeto fonetikoa"}
         pictographs{"Piktogramak"}
-        place{"tokia"}
-        plant{"landarea"}
+        place{"Tokia"}
+        plant{"Landarea"}
         punctuation{"Puntuazioa"}
         rightwards_arrows{"Eskuin-geziak"}
         sign_standard_symbols{"Zeinuak / Ikur estandarrak"}
         small_form_variant{"Forma-aldaera txikiak"}
         smiley{"emotikonoa"}
         smileys_people{"Emotikonoak eta jendea"}
-        south_asian_scripts{"Asiako hegoaldeko scriptak"}
+        south_asian_scripts{"Asiako hegoaldeko idazkerak"}
         southeast_asian_scripts{"Asiako hego-ekialdeko scriptak"}
         spacing{"Tartea"}
-        sport{"kirola"}
+        sport{"Kirola"}
         symbols{"Ikurrak"}
         technical_symbols{"Ikur teknikoak"}
         tone_marks{"Tonu-markak"}
-        travel{"bidaiak"}
+        travel{"Bidaiak"}
         travel_places{"Bidaiak eta tokiak"}
         upwards_arrows{"Gora-geziak"}
         variant_forms{"Aldaeren formak"}
         vocalic_jamo{"Jamo bokala"}
-        weather{"eguraldia"}
-        western_asian_scripts{"Asiako mendebaldeko scriptak"}
+        weather{"Eguraldia"}
+        western_asian_scripts{"Asiako mendebaldeko idazkerak"}
         whitespace{"Zuriunea"}
     }
     delimiters{

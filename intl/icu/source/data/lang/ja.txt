@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ja{
     Keys{
         calendar{"暦法"}
@@ -408,7 +409,7 @@ ja{
         niu{"ニウーエイ語"}
         njo{"アオ・ナガ語"}
         nl{"オランダ語"}
-        nl_BE{"フレミッシュ語"}
+        nl_BE{"フラマン語"}
         nmg{"クワシオ語"}
         nn{"ノルウェー語(ニーノシュク)"}
         nnh{"ンジエムブーン語"}
@@ -1058,7 +1059,6 @@ ja{
         VALLADER{"ヴァラダー"}
         WADEGILE{"ウェード式ローマ字表記法"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — すべて"}
         category-list{"{0}: {1}"}
@@ -1072,6 +1072,8 @@ ja{
         strokes{
             other{"{0} 画"}
         }
+        subscript{"下付き文字 {0}"}
+        superscript{"上付き文字 {0}"}
     }
     codePatterns{
         language{"言語: {0}"}

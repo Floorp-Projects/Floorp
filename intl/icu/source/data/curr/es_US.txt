@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_US{
     %%Parent{"es_419"}
     Currencies{
@@ -11,21 +12,17 @@ es_US{
             "BTN",
             "ngultrum butanés",
         }
+        ETB{
+            "ETB",
+            "birr",
+        }
         JPY{
             "¥",
             "yen",
         }
-        KGS{
-            "KGS",
-            "som kirguís",
-        }
         LAK{
             "LAK",
             "kip laosiano",
-        }
-        STN{
-            "STN",
-            "dobra santotomense",
         }
         THB{
             "THB",
@@ -53,7 +50,6 @@ es_US{
         }
     }
     Currencies%narrow{
-        BYN{"p."}
         FKP{"£"}
         RON{"lei"}
         SSP{"£"}
@@ -61,10 +57,6 @@ es_US{
         VEF{"Bs"}
     }
     CurrencyPlurals{
-        AMD{
-            one{"dram armenio"}
-            other{"drams armenios"}
-        }
         BDT{
             one{"taka bangladesí"}
             other{"takas bangladesíes"}
@@ -73,17 +65,13 @@ es_US{
             one{"ngultrum butanés"}
             other{"gultrums bultaneses"}
         }
-        KHR{
-            one{"riel camboyano"}
-            other{"rieles camboyanos"}
+        ETB{
+            one{"birr"}
+            other{"birres"}
         }
         LAK{
             one{"kip laosiano"}
             other{"kips laosianos"}
-        }
-        STN{
-            one{"dobra santotomense"}
-            other{"dobra santotomense"}
         }
         THB{
             one{"bat"}
@@ -92,10 +80,6 @@ es_US{
         UZS{
             one{"sum"}
             other{"sums"}
-        }
-        VES{
-            one{"bolívar venezolano"}
-            other{"bolivares venezolanos"}
         }
         VND{
             one{"dong vietnamita"}
@@ -110,5 +94,4 @@ es_US{
             other{"kwachas zambianos"}
         }
     }
-    Version{"37"}
 }

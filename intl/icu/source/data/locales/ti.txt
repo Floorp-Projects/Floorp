@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ti{
     AuxExemplarCharacters{
         "[᎐ ᎑ ᎒ ᎓ ᎔ ᎕ ᎖ ᎗ ᎘ ᎙ ሇ ⶀ ᎀ ᎁ ᎂ ᎃ ⶁ ⶂ ⶃ ⶄ ቇ ᎄ ᎅ ᎆ ᎇ ⶅ ⶆ ⶇ ኇ ⶈ ⶉ ⶊ ኯ ዏ ⶋ ዯ ⶌ ዸ"
@@ -20,7 +21,9 @@ ti{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"≥{0}"}
+                approximately{"~{0}"}
+                atLeast{"⩾{0}"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -185,6 +188,7 @@ ti{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
@@ -202,7 +206,6 @@ ti{
         native{"latn"}
         traditional{"ethi"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -230,12 +233,12 @@ ti{
         }
         gregorian{
             AmPmMarkers{
-                "ንጉሆ ሰዓተ",
-                "ድሕር ሰዓት",
+                "ቅድመ ፍርቂ-መዓልቲ",
+                "ደሕረ ፍርቀ-መዓልቲ",
             }
             AmPmMarkersAbbr{
-                "ንጉሆ ሰዓተ",
-                "ድሕር ሰዓት",
+                "ቅ ፍር-መዓ",
+                "ደሕ ፍር-መዓ",
             }
             AmPmMarkersNarrow{
                 "ንጉሆ ሰዓተ",
@@ -271,7 +274,7 @@ ti{
                 Ed{"d, E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
-                Gy{"G y"}
+                Gy{"y G"}
                 GyMMM{"G y MMM"}
                 GyMMMEd{"G y MMM d, E"}
                 GyMMMd{"G y MMM d"}
@@ -397,16 +400,16 @@ ti{
             dayPeriod{
                 stand-alone{
                     abbreviated{
-                        am{"ንጉሆ ሰዓተ"}
-                        pm{"ድሕር ሰዓት"}
+                        am{"ቅ ፍር-መዓ"}
+                        pm{"ደሕ ፍር-መዓ"}
                     }
                     narrow{
                         am{"ንጉሆ ሰዓተ"}
                         pm{"ድሕር ሰዓት"}
                     }
                     wide{
-                        am{"ንጉሆ ሰዓተ"}
-                        pm{"ድሕር ሰዓት"}
+                        am{"ቅድመ ፍርቂ-መዓልቲ"}
+                        pm{"ደሕረ ፍርቀ-መዓልቲ"}
                     }
                 }
             }
@@ -420,7 +423,7 @@ ti{
                     "ድ.ል.ክ",
                 }
                 wide{
-                    "ዓ/ዓ",
+                    "ቅድመ ክርስቶስ",
                     "ዓመተ ምህረት",
                 }
                 wide%variant{
@@ -429,6 +432,15 @@ ti{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -504,13 +516,13 @@ ti{
                     y{"y MMM – y MMM"}
                 }
                 yMMMEd{
-                    M{"y MMM d, E – MMM d, E"}
+                    M{"E, MMM d – E, MMM d, y"}
                     d{"y MMM d, E – MMM d, E"}
-                    y{"y MMM d, E – y MMM d, E"}
+                    y{"E, MMM d, y – E, MMM d, y"}
                 }
                 yMMMM{
-                    M{"y MMMM–MMMM"}
-                    y{"y MMMM – y MMMM"}
+                    M{"MMMM – MMMM y"}
+                    y{"MMMM y – MMMM y"}
                 }
                 yMMMd{
                     M{"y MMM d – MMM d"}
@@ -615,12 +627,6 @@ ti{
             }
             quarters{
                 format{
-                    abbreviated{
-                        "ር1",
-                        "ር2",
-                        "ር3",
-                        "ር4",
-                    }
                     narrow{
                         "1",
                         "2",
@@ -712,13 +718,13 @@ ti{
             dn{"መዓልቲ ናይ ዓ."}
         }
         dayperiod{
-            dn{"ክፍለ መዓልቲ"}
+            dn{"ቅድመ ፍርቂ-መዓልቲ/ድሕሪ ፍርቂ-መዓልቲ"}
         }
         dayperiod-narrow{
-            dn{"ክፍለ መዓልቲ"}
+            dn{"ቅድመ ፍርቂ-መዓልቲ/ድሕሪ ፍርቂ-መዓልቲ"}
         }
         dayperiod-short{
-            dn{"ክፍለ መዓልቲ"}
+            dn{"ቅድመ ፍርቂ-መዓልቲ/ድሕሪ ፍርቂ-መዓልቲ"}
         }
         era{
             dn{"ዘመን"}
@@ -935,6 +941,11 @@ ti{
         }
         month-narrow{
             dn{"ወርሒ"}
+            relative{
+                "-1"{"ዝሓለፈ ወርሒ"}
+                "0"{"ህሉው ወርሒ"}
+                "1"{"ዝመጽእ ወርሒ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ወርሒ"}
@@ -948,6 +959,11 @@ ti{
         }
         month-short{
             dn{"ወርሒ"}
+            relative{
+                "-1"{"ዝሓለፈ ወርሒ"}
+                "0"{"ህሉው ወርሒ"}
+                "1"{"ዝመጽእ ወርሒ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ወርሒ"}
@@ -1301,7 +1317,6 @@ ti{
             }
         }
         week{
-            dn{"ሰሙን"}
             relative{
                 "-1"{"ዝሓለፈ ሰሙን"}
                 "0"{"ህሉው ሰሙን"}
@@ -1348,10 +1363,7 @@ ti{
             }
         }
         weekOfMonth{
-            dn{"ሰን ናይ ወርሒ"}
-        }
-        weekOfMonth-narrow{
-            dn{"ሰሙ. ናይ ወር."}
+            dn{"ሰሙን ናይ ወርሒ"}
         }
         weekOfMonth-short{
             dn{"ሰሙ. ናይ ወር."}

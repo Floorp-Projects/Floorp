@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ps{
     Keys{
         calendar{"جنتري"}
@@ -81,7 +82,7 @@ ps{
         dav{"ټایټا"}
         de{"الماني"}
         de_AT{"اتريشي آلماني"}
-        de_CH{"سوئس لوی جرمن"}
+        de_CH{"سویس های جرمن"}
         dgr{"داگرب"}
         dje{"زرما"}
         dsb{"کښته سربيايي"}
@@ -141,7 +142,7 @@ ps{
         hr{"کروايشيايي"}
         hsb{"پورته سربيايي"}
         ht{"هيټي کريول"}
-        hu{"هنگري"}
+        hu{"هنګري"}
         hup{"ھوپا"}
         hy{"آرمينيايي"}
         hz{"هیرورو"}
@@ -254,7 +255,7 @@ ps{
         na{"نایرو"}
         nap{"نيپالين"}
         naq{"ناما"}
-        nb{"ناروې بوکمال"}
+        nb{"ناروېئي (بوکمال)"}
         nd{"شمالي نديبل"}
         nds{"کښته آلماني"}
         ne{"نېپالي"}
@@ -267,6 +268,7 @@ ps{
         nmg{"کواسیو"}
         nn{"ناروېئي (نائنورسک)"}
         nnh{"نایجیمون"}
+        no{"ناروېئي"}
         nog{"نوګی"}
         nqo{"نکو"}
         nr{"سويلي نديبيل"}
@@ -414,7 +416,7 @@ ps{
     }
     Languages%short{
         az{"اذري"}
-        en_GB{"انګليسي (GB)"}
+        en_GB{"یو کي انګلیسي"}
         en_US{"د متحده آيالاتو انګليسي"}
     }
     Scripts{
@@ -490,7 +492,7 @@ ps{
         collation{
             ducet{"ډيفالټ يونيکوډ ترتيب"}
             search{"د عمومي موخي لټون"}
-            standard{"معياري د لټې ترتيب"}
+            standard{"د معیاري لټي ترتیب"}
         }
         hc{
             h11{"د ۱۲ ساعتو نظام (۰ـ۱۱)"}
@@ -505,6 +507,7 @@ ps{
         }
         ms{
             metric{"ميټرک نظام"}
+            uksystem{"امپيريل د ناپ نظام"}
             ussystem{"د متحده آيالاتو د ناپ نظام"}
         }
         numbers{
@@ -545,7 +548,6 @@ ps{
             tibt{"تبتي اعداد"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} - ټول"}
         compatibility{"{0} - مطابقت"}
@@ -559,6 +561,8 @@ ps{
             one{"{0} استروک"}
             other{"{0} استروکس"}
         }
+        subscript{"فرعی سکرپټ {0}"}
+        superscript{"فرعی سکرپټ {0}"}
     }
     codePatterns{
         language{"ژبه: {0}"}

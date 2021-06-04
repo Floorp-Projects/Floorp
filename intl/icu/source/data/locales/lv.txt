@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lv{
     AuxExemplarCharacters{"[y ō q ŗ w x]"}
     Ellipsis{
@@ -251,7 +252,6 @@ lv{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -767,7 +767,7 @@ lv{
                 }
                 stand-alone{
                     abbreviated{
-                        afternoon1{"pēcpusdiena"}
+                        afternoon1{"pēcpusd."}
                         am{"priekšp."}
                         evening1{"vakars"}
                         midnight{"pusnakts"}
@@ -1351,7 +1351,7 @@ lv{
         currency_symbols{"valūtu simboli"}
         dash_connector{"svītras un savienotāji"}
         digits{"cipari"}
-        dingbats{"drukas ornamenti"}
+        dingbats{"dekorzīme"}
         divination_symbols{"okultie simboli"}
         downwards_arrows{"lejupvērstās bultiņas"}
         downwards_upwards_arrows{"lejupvērstās un augšupvērstās bultiņas"}
@@ -1647,7 +1647,7 @@ lv{
             }
         }
         minute-short{
-            dn{"min."}
+            dn{"min"}
             relativeTime{
                 future{
                     one{"pēc {0} min."}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sv{
     Keys{
         calendar{"kalender"}
@@ -447,7 +448,7 @@ sv{
         pap{"papiamento"}
         pau{"palau"}
         pcd{"pikardiska"}
-        pcm{"Nigeria-pidgin"}
+        pcm{"nigeriansk pidgin"}
         pdc{"Pennsylvaniatyska"}
         pdt{"mennonitisk lågtyska"}
         peo{"fornpersiska"}
@@ -507,7 +508,7 @@ sv{
         seh{"sena"}
         sei{"seri"}
         sel{"selkup"}
-        ses{"Gao-songhai"}
+        ses{"songhai"}
         sg{"sango"}
         sga{"forniriska"}
         sgs{"samogitiska"}
@@ -652,6 +653,8 @@ sv{
     }
     Languages%short{
         az{"azeriska"}
+        en_GB{"brittisk engelska"}
+        en_US{"amerikansk engelska"}
     }
     Languages%variant{
         ps{"pashto"}
@@ -684,12 +687,14 @@ sv{
         Cari{"kariska"}
         Cham{"cham"}
         Cher{"cherokee"}
+        Chrs{"khwarezmiska"}
         Cirt{"cirt"}
         Copt{"koptiska"}
         Cprt{"cypriotiska"}
         Cyrl{"kyrilliska"}
         Cyrs{"fornkyrkoslavisk kyrilliska"}
         Deva{"devanagari"}
+        Diak{"dives akuru"}
         Dogr{"dogriska"}
         Dsrt{"deseret"}
         Dupl{"Duployéstenografiska"}
@@ -713,8 +718,8 @@ sv{
         Hang{"hangul"}
         Hani{"han"}
         Hano{"hanunó’o"}
-        Hans{"förenklade"}
-        Hant{"traditionella"}
+        Hans{"förenklad"}
+        Hant{"traditionell"}
         Hatr{"hatran"}
         Hebr{"hebreiska"}
         Hira{"hiragana"}
@@ -734,6 +739,7 @@ sv{
         Khar{"kharoshti"}
         Khmr{"khmeriska"}
         Khoj{"khojkiska"}
+        Kits{"khitanska"}
         Knda{"kanaresiska"}
         Kore{"koreanska"}
         Kpel{"kpellé"}
@@ -840,6 +846,7 @@ sv{
         Wole{"woleai"}
         Xpeo{"fornpersiska"}
         Xsux{"sumero-akkadisk kilskrift"}
+        Yezi{"yazidiska"}
         Yiii{"yi"}
         Zanb{"zanabazar kvadratisk skrift"}
         Zinh{"ärvda"}
@@ -952,7 +959,7 @@ sv{
             ungegn{"enligt FN:s geografiska namnkommitté"}
         }
         ms{
-            metric{"SI-enheter"}
+            metric{"metersystem"}
             uksystem{"brittiskt måttsystem"}
             ussystem{"USA:s måttsystem"}
         }
@@ -969,6 +976,7 @@ sv{
             cham{"chamiska siffror"}
             cyrl{"kyrilliska taltecken"}
             deva{"devanagariska siffror"}
+            diak{"dives akuru-siffror"}
             ethi{"etiopiska taltecken"}
             finance{"finansiella siffror"}
             fullwide{"fullbreddssiffror"}
@@ -1066,6 +1074,7 @@ sv{
         BISKE{"Bila-dialekt"}
         BOHORIC{"Bohorič-alfabetet"}
         BOONT{"boontling"}
+        BORNHOLM{"Bornholm"}
         CISAUP{"cisalpinska (occitanska)"}
         COLB1945{"stavning enligt 1945 års konvention mellan Portugal och Brasilien"}
         CORNU{"kornisk engelska"}
@@ -1144,7 +1153,6 @@ sv{
         WADEGILE{"Wade-Giles"}
         XSISTEMO{"x-system"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – alla"}
         category-list{"{0}: {1}"}
@@ -1159,6 +1167,8 @@ sv{
             one{"{0} streck"}
             other{"{0} streck"}
         }
+        subscript{"nedsänkt {0}"}
+        superscript{"upphöjt {0}"}
     }
     codePatterns{
         language{"språk: {0}"}

@@ -40,6 +40,7 @@
 #include "unicode/ures.h"
 #include "unicode/ucnv.h"
 #include "unicode/ustring.h"
+#include "unicode/unistr.h"
 #include "cstring.h"
 #include "cmemory.h"
 
@@ -142,18 +143,42 @@ u_fopen(const char    *filename,
     return result; /* not a file leak */
 }
 
+// FILENAME_BUF_MAX represents the largest size that we are willing to use for a
+// stack-allocated buffer to contain a file name or path. If PATH_MAX (POSIX) or MAX_PATH
+// (Windows) are defined and are smaller than this we will use their defined value;
+// otherwise, we will use FILENAME_BUF_MAX for the stack-allocated buffer, and dynamically
+// allocate a buffer for any file name or path that is that length or longer.
+#define FILENAME_BUF_MAX 296
+#if defined PATH_MAX && PATH_MAX < FILENAME_BUF_MAX
+#define FILENAME_BUF_CAPACITY PATH_MAX
+#elif defined MAX_PATH && MAX_PATH < FILENAME_BUF_MAX
+#define FILENAME_BUF_CAPACITY MAX_PATH
+#else
+#define FILENAME_BUF_CAPACITY FILENAME_BUF_MAX
+#endif
+
 U_CAPI UFILE* U_EXPORT2
 u_fopen_u(const UChar   *filename,
         const char    *perm,
         const char    *locale,
         const char    *codepage)
 {
-    UFILE     *result;
-    char buffer[256];
+    UFILE *result;
+    char buffer[FILENAME_BUF_CAPACITY];
+    char *filenameBuffer = buffer;
 
-    u_austrcpy(buffer, filename);
+    icu::UnicodeString filenameString(true, filename, -1); // readonly aliasing, does not allocate memory
+    // extract with conversion to platform default codepage, return full length (not including 0 termination)
+    int32_t filenameLength = filenameString.extract(0, filenameString.length(), filenameBuffer, FILENAME_BUF_CAPACITY);
+    if (filenameLength >= FILENAME_BUF_CAPACITY) { // could not fit (with zero termination) in buffer
+        filenameBuffer = static_cast<char *>(uprv_malloc(++filenameLength)); // add one for zero termination
+        if (!filenameBuffer) {
+            return nullptr;
+        }
+        filenameString.extract(0, filenameString.length(), filenameBuffer, filenameLength);
+    }
 
-    result = u_fopen(buffer, perm, locale, codepage);
+    result = u_fopen(filenameBuffer, perm, locale, codepage);
 #if U_PLATFORM_USES_ONLY_WIN32_API
     /* Try Windows API _wfopen if the above fails. */
     if (!result) {
@@ -161,19 +186,24 @@ u_fopen_u(const UChar   *filename,
         wchar_t wperm[40] = {};
         size_t  retVal;
         mbstowcs_s(&retVal, wperm, UPRV_LENGTHOF(wperm), perm, _TRUNCATE);
-        FILE *systemFile = _wfopen((const wchar_t *)filename, wperm);
+        FILE *systemFile = _wfopen(reinterpret_cast<const wchar_t *>(filename), wperm); // may return NULL for long filename
         if (systemFile) {
             result = finit_owner(systemFile, locale, codepage, TRUE);
         }
-        if (!result) {
+        if (!result && systemFile) {
             /* Something bad happened.
-               Maybe the converter couldn't be opened. */
+               Maybe the converter couldn't be opened.
+               Bu do not fclose(systemFile) if systemFile is NULL. */
             fclose(systemFile);
         }
     }
 #endif
+    if (filenameBuffer != buffer) {
+        uprv_free(filenameBuffer);
+    }
     return result; /* not a file leak */
 }
+
 
 U_CAPI UFILE* U_EXPORT2
 u_fstropen(UChar *stringBuf,

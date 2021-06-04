@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ca{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -387,22 +387,22 @@ ca{
         }
         frequency{
             gigahertz{
-                dnam{"gigahertzs"}
+                dnam{"gigahertz"}
                 one{"{0} gigahertz"}
                 other{"{0} gigahertzs"}
             }
             hertz{
-                dnam{"hertzs"}
+                dnam{"hertz"}
                 one{"{0} hertz"}
                 other{"{0} hertzs"}
             }
             kilohertz{
-                dnam{"quilohertzs"}
+                dnam{"quilohertz"}
                 one{"{0} quilohertz"}
                 other{"{0} quilohertzs"}
             }
             megahertz{
-                dnam{"megahertzs"}
+                dnam{"megahertz"}
                 one{"{0} megahertz"}
                 other{"{0} megahertzs"}
             }
@@ -459,11 +459,26 @@ ca{
                 one{"{0} decímetre"}
                 other{"{0} decímetres"}
             }
+            earth-radius{
+                dnam{"radi terrestre"}
+                one{"{0} radi terrestre"}
+                other{"{0} radis terrestres"}
+            }
+            fathom{
+                dnam{"braces"}
+                one{"{0} braça"}
+                other{"{0} braces"}
+            }
             foot{
                 dnam{"peus"}
                 one{"{0} peu"}
                 other{"{0} peus"}
                 per{"{0} per peu"}
+            }
+            furlong{
+                dnam{"estadis"}
+                one{"{0} estadi"}
+                other{"{0} estadis"}
             }
             inch{
                 dnam{"polzades"}
@@ -530,8 +545,8 @@ ca{
             }
             point{
                 dnam{"punts"}
-                one{"{0} punt"}
-                other{"{0} punts"}
+                one{"{0} punt tipogràfic"}
+                other{"{0} punts tipogràfics"}
             }
             solar-radius{
                 dnam{"radis solars"}
@@ -545,6 +560,16 @@ ca{
             }
         }
         light{
+            candela{
+                dnam{"candela"}
+                one{"{0} candela"}
+                other{"{0} candeles"}
+            }
+            lumen{
+                dnam{"lumen"}
+                one{"{0} lumen"}
+                other{"{0} lumens"}
+            }
             lux{
                 dnam{"lux"}
                 one{"{0} lux"}
@@ -571,6 +596,10 @@ ca{
                 dnam{"masses de la Terra"}
                 one{"{0} massa de la Terra"}
                 other{"{0} masses de la Terra"}
+            }
+            grain{
+                one{"{0} gra"}
+                other{"{0} grans"}
             }
             gram{
                 dnam{"grams"}
@@ -620,6 +649,11 @@ ca{
                 dnam{"masses solars"}
                 one{"{0} massa solar"}
                 other{"{0} masses solars"}
+            }
+            stone{
+                dnam{"pedres"}
+                one{"{0} pedra"}
+                other{"{0} pedres"}
             }
             ton{
                 dnam{"tones"}
@@ -778,6 +812,11 @@ ca{
                 one{"{0} barril"}
                 other{"{0} barrils"}
             }
+            bushel{
+                dnam{"bushels"}
+                one{"{0} bushel"}
+                other{"{0} bushels"}
+            }
             centiliter{
                 dnam{"centilitres"}
                 one{"{0} centilitre"}
@@ -835,8 +874,26 @@ ca{
                 one{"{0} decilitre"}
                 other{"{0} decilitres"}
             }
+            dessert-spoon{
+                one{"{0} cullereta de postres"}
+                other{"{0} culleretes de postres"}
+            }
+            dessert-spoon-imperial{
+                dnam{"cullereta de postres imperial"}
+                one{"{0} cullereta de postres imperial"}
+                other{"{0} culleretes de postres imperials"}
+            }
+            dram{
+                dnam{"dracma"}
+                one{"{0} dracma"}
+                other{"{0} dracmes"}
+            }
+            drop{
+                one{"{0} gota"}
+                other{"{0} gotes"}
+            }
             fluid-ounce{
-                dnam{"unça líquida"}
+                dnam{"unces líquides"}
                 one{"{0} unça líquida"}
                 other{"{0} unces líquides"}
             }
@@ -862,6 +919,11 @@ ca{
                 one{"{0} hectolitre"}
                 other{"{0} hectolitres"}
             }
+            jigger{
+                dnam{"mesurador de cocteleria"}
+                one{"{0} mesurador de cocteleria"}
+                other{"{0} mesuradors de cocteleria"}
+            }
             liter{
                 dnam{"litres"}
                 one{"{0} litre"}
@@ -878,6 +940,10 @@ ca{
                 one{"{0} mil·lilitre"}
                 other{"{0} mil·lilitres"}
             }
+            pinch{
+                one{"{0} pessic"}
+                other{"{0} pessics"}
+            }
             pint{
                 dnam{"pintes"}
                 one{"{0} pinta"}
@@ -892,6 +958,10 @@ ca{
                 dnam{"quarts"}
                 one{"{0} quart"}
                 other{"{0} quarts"}
+            }
+            quart-imperial{
+                one{"{0} quart imperial"}
+                other{"{0} quarts imperials"}
             }
             tablespoon{
                 dnam{"cullerades"}
@@ -1200,12 +1270,12 @@ ca{
                 other{"{0} arcsec"}
             }
             degree{
-                dnam{"º"}
+                dnam{"graus"}
                 one{"{0}°"}
                 other{"{0}°"}
             }
             radian{
-                dnam{"rad"}
+                dnam{"radiants"}
                 one{"{0} rad"}
                 other{"{0} rad"}
             }
@@ -1278,7 +1348,7 @@ ca{
         }
         concentr{
             karat{
-                dnam{"ct"}
+                dnam{"quirats"}
                 one{"{0} ct"}
                 other{"{0} ct"}
             }
@@ -1288,7 +1358,7 @@ ca{
                 other{"{0} mg/dl"}
             }
             millimole-per-liter{
-                dnam{"mM/l"}
+                dnam{"mil·limols/litre"}
                 one{"{0} mM/l"}
                 other{"{0} mM/l"}
             }
@@ -1303,7 +1373,7 @@ ca{
                 other{"{0} ‰"}
             }
             permillion{
-                dnam{"ppm"}
+                dnam{"parts/milió"}
                 one{"{0} ppm"}
                 other{"{0} ppm"}
             }
@@ -1531,8 +1601,11 @@ ca{
             }
         }
         force{
+            newton{
+                dnam{"newton"}
+            }
             pound-force{
-                dnam{"lbf"}
+                dnam{"lliures-força"}
                 one{"{0} lbf"}
                 other{"{0} lbf"}
             }
@@ -1560,6 +1633,11 @@ ca{
             }
         }
         graphics{
+            dot{
+                dnam{"punt"}
+                one{"{0} punt"}
+                other{"{0} punts"}
+            }
             dot-per-centimeter{
                 dnam{"ppcm"}
                 one{"{0} ppcm"}
@@ -1587,7 +1665,7 @@ ca{
             }
             pixel-per-centimeter{
                 dnam{"píxels per cm"}
-                one{"{0} píxels per cm"}
+                one{"{0} píxel per cm"}
                 other{"{0} píxels per cm"}
             }
             pixel-per-inch{
@@ -1694,10 +1772,16 @@ ca{
             }
         }
         light{
+            lumen{
+                dnam{"lm"}
+            }
             lux{
-                dnam{"lx"}
+                dnam{"lux"}
                 one{"{0} lx"}
                 other{"{0} lx"}
+            }
+            solar-luminosity{
+                dnam{"lluminositats solars"}
             }
         }
         mass{
@@ -1714,6 +1798,11 @@ ca{
                 dnam{"M⊕"}
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
+            }
+            grain{
+                dnam{"gra"}
+                one{"{0} gra"}
+                other{"{0} grans"}
             }
             gram{
                 dnam{"grams"}
@@ -1758,6 +1847,11 @@ ca{
                 one{"{0} lb"}
                 other{"{0} lb"}
                 per{"{0}/lb"}
+            }
+            stone{
+                dnam{"st"}
+                one{"{0} st"}
+                other{"{0} st"}
             }
             ton{
                 dnam{"t"}
@@ -1908,6 +2002,11 @@ ca{
                 one{"{0} bbl"}
                 other{"{0} bbl"}
             }
+            bushel{
+                dnam{"bushels"}
+                one{"{0} bu"}
+                other{"{0} bu"}
+            }
             centiliter{
                 dnam{"cl"}
                 one{"{0} cl"}
@@ -1965,6 +2064,26 @@ ca{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"cullereta de postres"}
+                one{"{0} cullereta de postres"}
+                other{"{0} culleretes de postres"}
+            }
+            dessert-spoon-imperial{
+                dnam{"cull. postres imp."}
+                one{"{0} cull. postres imp."}
+                other{"{0} cull. postres imp."}
+            }
+            dram{
+                dnam{"dracma fluid"}
+                one{"{0} dracma fluid"}
+                other{"{0} dracmes fluids"}
+            }
+            drop{
+                dnam{"gota"}
+                one{"{0} gota"}
+                other{"{0} gotes"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -1992,6 +2111,11 @@ ca{
                 one{"{0} hl"}
                 other{"{0} hl"}
             }
+            jigger{
+                dnam{"mesurador"}
+                one{"{0} mesurador"}
+                other{"{0} mesuradors"}
+            }
             liter{
                 dnam{"l"}
                 one{"{0} l"}
@@ -2008,6 +2132,11 @@ ca{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"pessic"}
+                one{"{0} pessic"}
+                other{"{0} pessics"}
+            }
             pint{
                 dnam{"pt"}
                 one{"{0} pt"}
@@ -2022,6 +2151,11 @@ ca{
                 dnam{"qt"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"quart imperial"}
+                one{"{0} quart imperial"}
+                other{"{0} quarts imperials"}
             }
             tablespoon{
                 dnam{"cull."}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pa{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -406,6 +406,11 @@ pa{
             }
         }
         graphics{
+            dot{
+                dnam{"ਡਾਟ"}
+                one{"{0} ਡਾਟ"}
+                other{"{0} ਡਾਟ"}
+            }
             dot-per-centimeter{
                 dnam{"ਡਾਟ ਪ੍ਰਤੀ ਸੈਂਟੀਮੀਟਰ"}
                 one{"{0} ਡਾਟ ਪ੍ਰਤੀ ਸੈਂਟੀਮੀਟਰ"}
@@ -458,6 +463,11 @@ pa{
                 dnam{"ਡੈਸੀਮੀਟਰ"}
                 one{"{0} ਡੈਸੀਮੀਟਰ"}
                 other{"{0} ਡੈਸੀਮੀਟਰ"}
+            }
+            earth-radius{
+                dnam{"ਧਰਤੀ ਦਾ ਘੇਰਾ"}
+                one{"{0} ਧਰਤੀ ਦਾ ਘੇਰਾ"}
+                other{"{0} ਧਰਤੀ ਦਾ ਘੇਰਾ"}
             }
             fathom{
                 dnam{"ਫ਼ੈਦਮ"}
@@ -555,6 +565,16 @@ pa{
             }
         }
         light{
+            candela{
+                dnam{"ਕੈਂਡੇਲਾ"}
+                one{"{0} ਕੈਂਡੇਲਾ"}
+                other{"{0} ਕੈਂਡੇਲਾ"}
+            }
+            lumen{
+                dnam{"ਲੁਮੇਨ"}
+                one{"{0} ਲੁਮੇਨ"}
+                other{"{0} ਲੁਮੇਨ"}
+            }
             lux{
                 dnam{"ਲਕਸ"}
                 one{"{0} ਲਕਸ"}
@@ -581,6 +601,11 @@ pa{
                 dnam{"ਅਰਥ ਮਾਸ"}
                 one{"{0} ਅਰਥ ਮਾਸ"}
                 other{"{0} ਅਰਥ ਮਾਸ"}
+            }
+            grain{
+                dnam{"ਗ੍ਰੇਨ"}
+                one{"{0} ਗ੍ਰੇਨ"}
+                other{"{0} ਗ੍ਰੇਨ"}
             }
             gram{
                 dnam{"ਗ੍ਰਾਮ"}
@@ -637,9 +662,9 @@ pa{
                 other{"{0} ਸਟੋਨ"}
             }
             ton{
-                dnam{"ਟਨ"}
-                one{"{0} ਟਨ"}
-                other{"{0} ਟਨ"}
+                dnam{"ਅਮਰੀਕੀ ਟਨ"}
+                one{"{0} ਅਮਰੀਕੀ ਟਨ"}
+                other{"{0} ਅਮਰੀਕੀ ਟਨ"}
             }
         }
         power{
@@ -778,7 +803,7 @@ pa{
             }
             pound-force-foot{
                 dnam{"ਪੌਂਡ-ਫੁੱਟ"}
-                one{"{0} ਪੌਂਡ-ਫੁੱਟ"}
+                one{"{0} ਪੌਂਡ-ਬਲ-ਫੁੱਟ"}
                 other{"{0} ਪੌਂਡ-ਫੁੱਟ"}
             }
         }
@@ -855,6 +880,26 @@ pa{
                 one{"{0} ਡੈਸੀਲਿਟਰ"}
                 other{"{0} ਡੈਸੀਲਿਟਰ"}
             }
+            dessert-spoon{
+                dnam{"ਡੈਜ਼ਰਟ ਸਪੂਨ"}
+                one{"{0} ਡੈਜ਼ਰਟ ਸਪੂਨ"}
+                other{"{0} ਡੈਜ਼ਰਟ ਸਪੂਨ"}
+            }
+            dessert-spoon-imperial{
+                dnam{"ਇੰਪੀਰੀਅਲ ਡੈਜ਼ਰਟ ਸਪੂਨ"}
+                one{"{0} ਇੰਪੀਰੀਅਲ ਡੈਜ਼ਰਟ ਸਪੂਨ"}
+                other{"{0} ਇੰਪੀਰੀਅਲ ਡੈਜ਼ਰਟ ਸਪੂਨ"}
+            }
+            dram{
+                dnam{"ਚੁਸਕੀ"}
+                one{"{0} ਚੁਸਕੀ"}
+                other{"{0} ਚੁਸਕੀ"}
+            }
+            drop{
+                dnam{"ਬੂੰਦ"}
+                one{"{0} ਬੂੰਦ"}
+                other{"{0} ਬੂੰਦ"}
+            }
             fluid-ounce{
                 dnam{"ਤਰਲ ਔਂਸ"}
                 one{"{0} ਤਰਲ ਔਂਸ"}
@@ -882,6 +927,11 @@ pa{
                 one{"{0} ਹੈਕਟੋਲਿਟਰ"}
                 other{"{0} ਹੈਕਟੋਲਿਟਰ"}
             }
+            jigger{
+                dnam{"ਚੱਕਾ"}
+                one{"{0} ਚੱਕਾ"}
+                other{"{0} ਚੱਕਾ"}
+            }
             liter{
                 dnam{"ਲਿਟਰ"}
                 one{"{0} ਲਿਟਰ"}
@@ -898,6 +948,11 @@ pa{
                 one{"{0} ਮਿਲੀਲਿਟਰ"}
                 other{"{0} ਮਿਲੀਲਿਟਰ"}
             }
+            pinch{
+                dnam{"ਚੁਟਕੀ"}
+                one{"{0} ਚੁਟਕੀ"}
+                other{"{0} ਚੁਟਕੀ"}
+            }
             pint{
                 dnam{"ਪਿੰਟ"}
                 one{"{0} ਪਿੰਟ"}
@@ -912,6 +967,11 @@ pa{
                 dnam{"ਕੁਆਟ"}
                 one{"{0} ਕੁਆਟ"}
                 other{"{0} ਕੁਆਟ"}
+            }
+            quart-imperial{
+                dnam{"ਇੰਪੀਰੀਅਲ ਚੁਥਾਈ ਗੈਲਨ"}
+                one{"{0} ਇੰਪੀਰੀਅਲ ਚੁਥਾਈ ਗੈਲਨ"}
+                other{"{0} ਇੰਪੀਰੀਅਲ ਚੁਥਾਈ ਗੈਲਨ"}
             }
             tablespoon{
                 dnam{"ਟੇਬਲ ਸਪੂਨ"}
@@ -1087,6 +1147,8 @@ pa{
             }
             millisecond{
                 dnam{"ਮਿਲੀਸਕਿੰਟ"}
+                one{"{0} ਮਿ.ਸ."}
+                other{"{0} ਮਿ.ਸ."}
             }
             minute{
                 dnam{"ਮਿੰਟ"}
@@ -1853,8 +1915,8 @@ pa{
             }
             therm-us{
                 dnam{"US therm"}
-                one{"{0} US therm"}
-                other{"{0} US therm"}
+                one{"{0} ਯੂ.ਐਸ. ਥੈਰਮ"}
+                other{"{0} ਯੂ.ਐਸ. ਥੈਰਮ"}
             }
         }
         force{
@@ -1890,6 +1952,11 @@ pa{
             }
         }
         graphics{
+            dot{
+                dnam{"ਡਾਟ"}
+                one{"{0} ਡਾਟ"}
+                other{"{0} ਡਾਟ"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 one{"{0} dpcm"}
@@ -2037,6 +2104,11 @@ pa{
             }
         }
         light{
+            lumen{
+                dnam{"ਲੁਮੇਨ"}
+                one{"{0} ਲੁਮੇਨ"}
+                other{"{0} ਲੁਮੇਨ"}
+            }
             lux{
                 dnam{"ਲਕਸ"}
                 one{"{0} ਲਕਸ"}
@@ -2059,6 +2131,11 @@ pa{
             }
             earth-mass{
                 dnam{"ਅਰਥ ਮਾਸ"}
+            }
+            grain{
+                dnam{"ਗ੍ਰੇਨ"}
+                one{"{0} ਗ੍ਰੇਨ"}
+                other{"{0} ਗ੍ਰੇਨ"}
             }
             gram{
                 dnam{"ਗ੍ਰਾਮ"}
@@ -2113,9 +2190,9 @@ pa{
                 other{"{0} ਸਟੋਨ"}
             }
             ton{
-                dnam{"ਟਨ"}
-                one{"{0} ਟਨ"}
-                other{"{0} ਟਨ"}
+                dnam{"ਅਮਰੀਕੀ ਟਨ"}
+                one{"{0} ਅਮਰੀਕੀ ਟਨ"}
+                other{"{0} ਅਮਰੀਕੀ ਟਨ"}
             }
         }
         power{
@@ -2326,10 +2403,35 @@ pa{
                 one{"{0} ਡੈ.ਲਿ."}
                 other{"{0} ਡੈ.ਲਿ."}
             }
+            dessert-spoon{
+                dnam{"ਡੈਜ਼ਰਟ ਸਪੂਨ"}
+                one{"{0} ਡੈਜ਼ਰਟ ਸਪੂਨ"}
+                other{"{0} ਡੈਜ਼ਰਟ ਸਪੂਨ"}
+            }
+            dessert-spoon-imperial{
+                dnam{"ਇੰਪੀਰੀਅਲ ਡੈਜ਼ਰਟ ਸਪੂਨ"}
+                one{"{0} ਇੰਪ. ਡੈ. ਸ."}
+                other{"{0} ਇੰਪ. ਡੈ. ਸ."}
+            }
+            dram{
+                dnam{"ਚੁਸਕੀ ਭਰ"}
+                one{"{0} ਚੁਸਕੀ ਭਰ"}
+                other{"{0} ਚੁਸਕੀ ਭਰ"}
+            }
+            drop{
+                dnam{"ਬੂੰਦ"}
+                one{"{0} ਬੂੰਦ"}
+                other{"{0} ਬੂੰਦ"}
+            }
             fluid-ounce{
                 dnam{"ਤ. ਔਂਸ"}
                 one{"{0} ਤ. ਔਂਸ"}
                 other{"{0} ਤ. ਔਂਸ"}
+            }
+            fluid-ounce-imperial{
+                dnam{"ਇੰਪ. ਫਲੂ. ਔ."}
+                one{"{0} ਫਲੂ. ਔ. ਇੰਪ."}
+                other{"{0} ਫਲੂ. ਔ. ਇੰਪ."}
             }
             gallon{
                 dnam{"ਗੈਲਨ"}
@@ -2348,6 +2450,11 @@ pa{
                 one{"{0} ਹੈ.ਲਿ."}
                 other{"{0} ਹੈ.ਲਿ."}
             }
+            jigger{
+                dnam{"ਚੱਕਾ"}
+                one{"{0} ਚੱਕਾ"}
+                other{"{0} ਚੱਕਾ"}
+            }
             liter{
                 dnam{"ਲਿਟਰ"}
                 one{"{0} ਲਿ."}
@@ -2364,6 +2471,11 @@ pa{
                 one{"{0} ਮਿ.ਲਿ."}
                 other{"{0} ਮਿ.ਲਿ."}
             }
+            pinch{
+                dnam{"ਚੁਟਕੀ"}
+                one{"{0} ਚੁਟਕੀ"}
+                other{"{0} ਚੁਟਕੀ"}
+            }
             pint{
                 dnam{"ਪਿੰਟ"}
                 one{"{0} ਪਿੰਟ"}
@@ -2378,6 +2490,11 @@ pa{
                 dnam{"ਕੁਆਟ"}
                 one{"{0} ਕੁਆਟ"}
                 other{"{0} ਕੁਆਟ"}
+            }
+            quart-imperial{
+                dnam{"ਇੰਪੀਰੀਅਲ ਚੁਥਾਈ ਗੈਲਨ"}
+                one{"{0} ਇੰਪ. ਚੁ. ਗੈ."}
+                other{"{0} ਇੰਪ. ਚੁ. ਗੈ."}
             }
             tablespoon{
                 dnam{"ਟੇਬਲ ਸਪੂਨ"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bg{
     Keys{
         calendar{"календар"}
@@ -135,8 +136,10 @@ bg{
         el{"гръцки"}
         elx{"еламитски"}
         en{"английски"}
-        en_GB{"английски (Обединено кралство)"}
-        en_US{"английски (САЩ)"}
+        en_AU{"австралийски английски"}
+        en_CA{"канадски английски"}
+        en_GB{"британски английски"}
+        en_US{"американски английски"}
         enm{"средновековен английски"}
         eo{"есперанто"}
         es{"испански"}
@@ -396,7 +399,7 @@ bg{
         rwk{"рва"}
         sa{"санскрит"}
         sad{"сандаве"}
-        sah{"сакха"}
+        sah{"саха"}
         sam{"самаритански арамейски"}
         saq{"самбуру"}
         sas{"сасак"}
@@ -485,7 +488,7 @@ bg{
         uga{"угаритски"}
         uk{"украински"}
         umb{"умбунду"}
-        und{"неопределен"}
+        und{"непознат език"}
         ur{"урду"}
         uz{"узбекски"}
         vai{"ваи"}
@@ -502,7 +505,7 @@ bg{
         wbp{"валпири"}
         wo{"волоф"}
         xal{"калмик"}
-        xh{"ксоса"}
+        xh{"кхоса"}
         xog{"сога"}
         yao{"яо"}
         yap{"япезе"}
@@ -529,6 +532,7 @@ bg{
         zh_Hant{"китайски, мандарин (традиционен)"}
     }
     Languages%menu{
+        yue{"китайски, кантонски"}
         zh{"китайски, мандарин"}
     }
     Languages%short{
@@ -537,6 +541,7 @@ bg{
         en_US{"английски (US)"}
     }
     Languages%variant{
+        ckb{"кюрдски (Сорани)"}
         ps{"пущунски"}
     }
     Scripts{
@@ -839,7 +844,6 @@ bg{
         VALENCIA{"Валенсиански"}
         WADEGILE{"Уейд-Джайлс романизация"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – всички"}
         category-list{"{0}: {1}"}
@@ -854,6 +858,8 @@ bg{
             one{"{0} черта"}
             other{"{0} черти"}
         }
+        subscript{"долен индекс {0}"}
+        superscript{"горен индекс {0}"}
     }
     codePatterns{
         language{"Език: {0}"}

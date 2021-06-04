@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ml{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -534,6 +534,10 @@ ml{
                 one{"{0} ഭൂപിണ്ഡം"}
                 other{"{0} ഭൂപിണ്ഡം"}
             }
+            grain{
+                one{"{0} gr"}
+                other{"{0} gr"}
+            }
             gram{
                 dnam{"ഗ്രാം"}
                 one{"{0} ഗ്രാം"}
@@ -802,6 +806,11 @@ ml{
                 one{"{0} ഡെസിലിറ്റർ"}
                 other{"{0} ഡെസിലിറ്റർ"}
             }
+            dram{
+                dnam{"dram"}
+                one{"{0} dram"}
+                other{"{0} dram"}
+            }
             fluid-ounce{
                 dnam{"ഫ്ലൂയിഡ് ഔൺസ്"}
                 one{"{0} ഫ്ലൂയിഡ് ഔൺസ്"}
@@ -824,6 +833,11 @@ ml{
                 one{"{0} ഹെക്ടോലിറ്റർ"}
                 other{"{0} ഹെക്ടോലിറ്റർ"}
             }
+            jigger{
+                dnam{"ജിഗർ"}
+                one{"{0} ജിഗർ"}
+                other{"{0} ജിഗർ"}
+            }
             liter{
                 dnam{"ലിറ്റർ"}
                 one{"{0} ലിറ്റർ"}
@@ -839,6 +853,11 @@ ml{
                 dnam{"മില്ലിലിറ്റർ"}
                 one{"{0} മില്ലിലിറ്റർ"}
                 other{"{0} മില്ലിലിറ്റർ"}
+            }
+            pinch{
+                dnam{"നുള്ള്"}
+                one{"{0} നുള്ള്"}
+                other{"{0} നുള്ള്"}
             }
             pint{
                 dnam{"പൈന്റ്"}
@@ -1824,6 +1843,11 @@ ml{
             earth-mass{
                 dnam{"ഭൂപിണ്ഡം"}
             }
+            grain{
+                dnam{"grain"}
+                one{"{0} gr"}
+                other{"{0} gr"}
+            }
             gram{
                 dnam{"ഗ്രാം"}
                 one{"{0} ഗ്രാം"}
@@ -2088,6 +2112,11 @@ ml{
                 one{"{0} ഹെ.ലി."}
                 other{"{0} ഹെ.ലി."}
             }
+            jigger{
+                dnam{"ജിഗർ"}
+                one{"{0} ജിഗർ"}
+                other{"{0} ജിഗർ"}
+            }
             liter{
                 dnam{"ലിറ്റർ"}
                 one{"{0} ലി."}
@@ -2103,6 +2132,11 @@ ml{
                 dnam{"മി.ലി."}
                 one{"{0} മി.ലി."}
                 other{"{0} മി.ലി."}
+            }
+            pinch{
+                dnam{"നുള്ള്"}
+                one{"{0} നുള്ള്"}
+                other{"{0} നുള്ള്"}
             }
             pint{
                 dnam{"പൈ."}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 nb{
     Keys{
         calendar{"kalender"}
@@ -634,6 +635,7 @@ nb{
     }
     Languages%menu{
         ars{"arabisk (najd)"}
+        ckb{"kurdisk (sentral)"}
         zh{"kinesisk, mandarin"}
     }
     Languages%short{
@@ -688,7 +690,7 @@ nb{
         Grek{"gresk"}
         Gujr{"gujarati"}
         Guru{"gurmukhi"}
-        Hanb{"hanb"}
+        Hanb{"han-kinesisk med bopomofo"}
         Hang{"hangul"}
         Hani{"han"}
         Hano{"hanunoo"}
@@ -945,10 +947,10 @@ nb{
             gujr{"gujarati-sifre"}
             guru{"gurmukhi-sifre"}
             hanidec{"kinesiske desimaltall"}
-            hans{"forenklede kinesiske tall"}
-            hansfin{"forenklede kinesiske finanstall"}
-            hant{"tradisjonelle kinesiske tall"}
-            hantfin{"tradisjonelle kinesiske finanstall"}
+            hans{"forenklet kinesisk-tall"}
+            hansfin{"forenklet kinesisk-finanstall"}
+            hant{"tradisjonell kinesisk-tall"}
+            hantfin{"tradisjonell kinesisk-finanstall"}
             hebr{"hebraiske tall"}
             java{"java-tall"}
             jpan{"japanske tall"}
@@ -1057,7 +1059,6 @@ nb{
         VALLADER{"vallader"}
         WADEGILE{"Wade-Giles-romanisering"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – alt"}
         category-list{"{0}: {1}"}
@@ -1072,6 +1073,8 @@ nb{
             one{"{0} strek"}
             other{"{0} streker"}
         }
+        subscript{"senket {0}"}
+        superscript{"hevet {0}"}
     }
     codePatterns{
         language{"Språk: {0}"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es{
     AuxExemplarCharacters{"[ª à ă â å ä ã ā æ ç è ĕ ê ë ē ì ĭ î ï ī º ò ŏ ô ö ø ō œ ù ŭ û ū ý ÿ]"}
     Ellipsis{
@@ -215,7 +216,6 @@ es{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -798,13 +798,13 @@ es{
             dayNames{
                 format{
                     abbreviated{
-                        "dom.",
-                        "lun.",
-                        "mar.",
-                        "mié.",
-                        "jue.",
-                        "vie.",
-                        "sáb.",
+                        "dom",
+                        "lun",
+                        "mar",
+                        "mié",
+                        "jue",
+                        "vie",
+                        "sáb",
                     }
                     narrow{
                         "D",
@@ -836,13 +836,13 @@ es{
                 }
                 stand-alone{
                     abbreviated{
-                        "dom.",
-                        "lun.",
-                        "mar.",
-                        "mié.",
-                        "jue.",
-                        "vie.",
-                        "sáb.",
+                        "dom",
+                        "lun",
+                        "mar",
+                        "mié",
+                        "jue",
+                        "vie",
+                        "sáb",
                     }
                     narrow{
                         "D",
@@ -1099,18 +1099,18 @@ es{
             monthNames{
                 format{
                     abbreviated{
-                        "ene.",
-                        "feb.",
-                        "mar.",
-                        "abr.",
-                        "may.",
-                        "jun.",
-                        "jul.",
-                        "ago.",
-                        "sept.",
-                        "oct.",
-                        "nov.",
-                        "dic.",
+                        "ene",
+                        "feb",
+                        "mar",
+                        "abr",
+                        "may",
+                        "jun",
+                        "jul",
+                        "ago",
+                        "sept",
+                        "oct",
+                        "nov",
+                        "dic",
                     }
                     narrow{
                         "E",
@@ -1143,18 +1143,18 @@ es{
                 }
                 stand-alone{
                     abbreviated{
-                        "ene.",
-                        "feb.",
-                        "mar.",
-                        "abr.",
-                        "may.",
-                        "jun.",
-                        "jul.",
-                        "ago.",
-                        "sept.",
-                        "oct.",
-                        "nov.",
-                        "dic.",
+                        "ene",
+                        "feb",
+                        "mar",
+                        "abr",
+                        "may",
+                        "jun",
+                        "jul",
+                        "ago",
+                        "sept",
+                        "oct",
+                        "nov",
+                        "dic",
                     }
                     narrow{
                         "E",

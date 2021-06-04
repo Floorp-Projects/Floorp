@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zu{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -468,6 +468,14 @@ zu{
             }
         }
         light{
+            candela{
+                one{"{0} cd"}
+                other{"{0} candela"}
+            }
+            lumen{
+                one{"{0} i-lumen"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"lux"}
                 one{"{0} i-lux"}
@@ -700,6 +708,14 @@ zu{
                 dnam{"dL"}
                 one{"{0} dL"}
                 other{"{0} dL"}
+            }
+            dessert-spoon{
+                one{"{0} sipuni dessert"}
+                other{"{0} dstspn"}
+            }
+            dessert-spoon-imperial{
+                one{"{0} Imp. isipuni dessert"}
+                other{"{0} dstspn Imp"}
             }
             fluid-ounce{
                 dnam{"fl oz"}

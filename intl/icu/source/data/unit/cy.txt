@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 cy{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -236,7 +236,7 @@ cy{
                 many{"{0} rhan pob miliwn"}
                 one{"{0} rhan pob miliwn"}
                 other{"{0} rhan pob miliwn"}
-                two{"{0} rhan pob miliwn"}
+                two{"{0} ran pob miliwn"}
                 zero{"{0} rhan pob miliwn"}
             }
             permyriad{
@@ -683,6 +683,14 @@ cy{
             }
         }
         graphics{
+            dot{
+                few{"{0} dot"}
+                many{"{0} dot"}
+                one{"{0} dot"}
+                other{"{0} dot"}
+                two{"{0} ddot"}
+                zero{"{0} dot"}
+            }
             dot-per-centimeter{
                 dnam{"dotiau mewn centimedr"}
                 few{"{0} dpcm"}
@@ -696,10 +704,13 @@ cy{
                 dnam{"dotiau mewn modfedd"}
                 few{"{0} dpi"}
                 many{"{0} dpi"}
-                one{"{0} mewn modfedd"}
+                one{"{0} dot mewn modfedd"}
                 other{"{0} dot mewn modfedd"}
                 two{"{0} dpi"}
                 zero{"{0} dpi"}
+            }
+            em{
+                dnam{"em argraffyddol"}
             }
             megapixel{
                 dnam{"megapicseli"}
@@ -766,6 +777,15 @@ cy{
                 other{"{0} decimetr"}
                 two{"{0} dm"}
                 zero{"{0} dm"}
+            }
+            earth-radius{
+                dnam{"radiws y Ddaear"}
+                few{"{0} R⊕"}
+                many{"{0} R⊕"}
+                one{"{0} radiws y Ddaear"}
+                other{"{0} radiws y Ddaear"}
+                two{"{0} R⊕"}
+                zero{"{0} R⊕"}
             }
             fathom{
                 dnam{"gwrhydau"}
@@ -935,6 +955,12 @@ cy{
             }
         }
         light{
+            candela{
+                dnam{"candela"}
+            }
+            lumen{
+                dnam{"lwmen"}
+            }
             lux{
                 dnam{"lycsau"}
                 few{"{0} lx"}
@@ -981,6 +1007,15 @@ cy{
                 other{"{0} más ddaear"}
                 two{"{0} M⊕"}
                 zero{"{0} M⊕"}
+            }
+            grain{
+                dnam{"graen"}
+                few{"{0} graen"}
+                many{"{0} graen"}
+                one{"{0} graen"}
+                other{"{0} graen"}
+                two{"{0} raen"}
+                zero{"{0} graen"}
             }
             gram{
                 dnam{"gramau"}
@@ -1163,12 +1198,12 @@ cy{
             }
             inch-ofhg{
                 dnam{"modfeddi o fercwri"}
-                few{"{0} ″ Hg"}
-                many{"{0} ″ Hg"}
+                few{"{0} inHg"}
+                many{"{0} inHg"}
                 one{"{0} fodfedd o fercwri"}
                 other{"{0} modfedd o fercwri"}
-                two{"{0} ″ Hg"}
-                zero{"{0} ″ Hg"}
+                two{"{0} inHg"}
+                zero{"{0} inHg"}
             }
             kilopascal{
                 dnam{"cilopascalau"}
@@ -1199,15 +1234,21 @@ cy{
             }
             millimeter-ofhg{
                 dnam{"milimetrau o fercwri"}
-                few{"{0} mm Hg"}
-                many{"{0} mm Hg"}
+                few{"{0} mmHg"}
+                many{"{0} mmHg"}
                 one{"{0} milimetr o fercwri"}
                 other{"{0} milimetr o fercwri"}
-                two{"{0} mm Hg"}
-                zero{"{0} mm Hg"}
+                two{"{0} mmHg"}
+                zero{"{0} mmHg"}
             }
             pascal{
-                dnam{"pascals"}
+                dnam{"pascalau"}
+                few{"{0} Pa"}
+                many{"{0} Pa"}
+                one{"{0} pascal"}
+                other{"{0} pascal"}
+                two{"{0} Pa"}
+                zero{"{0} Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"pwysau y fodfedd sgwar"}
@@ -1309,7 +1350,7 @@ cy{
                 dnam{"pwys-troedfeddi"}
                 few{"{0} lbf⋅ft"}
                 many{"{0} lbf⋅ft"}
-                one{"{0} pwys-troedfedd"}
+                one{"{0} pwys o rym⋅droedfedd"}
                 other{"{0} pwys-troedfeddi"}
                 two{"{0} lbf⋅ft"}
                 zero{"{0} lbf⋅ft"}
@@ -1336,12 +1377,12 @@ cy{
             }
             bushel{
                 dnam{"bwsielau"}
-                few{"{0} bwsiel"}
-                many{"{0} bwsiel"}
+                few{"{0} bw"}
+                many{"{0} bw"}
                 one{"{0} bwsiel"}
                 other{"{0} bwsiel"}
-                two{"{0} bwsiel"}
-                zero{"{0} bwsiel"}
+                two{"{0} bw"}
+                zero{"{0} bw"}
             }
             centiliter{
                 dnam{"centilitrau"}
@@ -1444,6 +1485,42 @@ cy{
                 two{"{0} dL"}
                 zero{"{0} dL"}
             }
+            dessert-spoon{
+                dnam{"llond llwy bwdin"}
+                few{"{0} dstspn"}
+                many{"{0} dstspn"}
+                one{"{0} llond llwy bwdin"}
+                other{"{0} llond llwy bwdin"}
+                two{"{0} dstspn"}
+                zero{"{0} dstspn"}
+            }
+            dessert-spoon-imperial{
+                dnam{"llond llwy bwdin imp."}
+                few{"{0} dstspn Imp"}
+                many{"{0} dstspn Imp"}
+                one{"{0} llond llwy bwdin imp."}
+                other{"{0} llond llwy bwdin imp."}
+                two{"{0} dstspn Imp"}
+                zero{"{0} dstspn Imp"}
+            }
+            dram{
+                dnam{"dracmon hylifol"}
+                few{"{0} dracmon hy"}
+                many{"{0} dracmon hy"}
+                one{"{0} dracmon hy"}
+                other{"{0} dracmon hy"}
+                two{"{0} ddracmon hy"}
+                zero{"{0} dracmon hy"}
+            }
+            drop{
+                dnam{"diferyn"}
+                few{"{0} diferyn"}
+                many{"{0} diferyn"}
+                one{"{0} diferyn"}
+                other{"{0} diferyn"}
+                two{"{0} ddiferyn"}
+                zero{"{0} diferyn"}
+            }
             fluid-ounce{
                 dnam{"ownsiau hylifol"}
                 few{"{0} owns hylifol"}
@@ -1491,6 +1568,15 @@ cy{
                 two{"{0} hL"}
                 zero{"{0} hL"}
             }
+            jigger{
+                dnam{"joch"}
+                few{"{0} joch"}
+                many{"{0} joch"}
+                one{"{0} joch"}
+                other{"{0} joch"}
+                two{"{0} joch"}
+                zero{"{0} joch"}
+            }
             liter{
                 dnam{"litrau"}
                 few{"{0} L"}
@@ -1519,6 +1605,15 @@ cy{
                 two{"{0} mL"}
                 zero{"{0} mL"}
             }
+            pinch{
+                dnam{"pinsiad"}
+                few{"{0} phinsiad"}
+                many{"{0} pinsiad"}
+                one{"{0} pinsiad"}
+                other{"{0} pinsiad"}
+                two{"{0} binsiad"}
+                zero{"{0} pinsiad"}
+            }
             pint{
                 dnam{"peintiau"}
                 few{"{0} pheint"}
@@ -1545,6 +1640,15 @@ cy{
                 other{"{0} chwart"}
                 two{"{0} gwart"}
                 zero{"{0} chwart"}
+            }
+            quart-imperial{
+                dnam{"chwart Imp"}
+                few{"{0} cht Imp."}
+                many{"{0} cht Imp."}
+                one{"{0} cht Imp."}
+                other{"{0} cht Imp."}
+                two{"{0} cht Imp."}
+                zero{"{0} cht Imp."}
             }
             tablespoon{
                 dnam{"llond llwy fwrdd"}
@@ -1855,14 +1959,14 @@ cy{
                 zero{"{0} eil"}
             }
             week{
-                dnam{"w"}
-                few{"{0}w"}
-                many{"{0}w"}
+                dnam{"ws"}
+                few{"{0} ws"}
+                many{"{0} ws"}
                 one{"{0}w"}
                 other{"{0}w"}
                 per{"{0}/w"}
-                two{"{0}w"}
-                zero{"{0}w"}
+                two{"{0} ws"}
+                zero{"{0} ws"}
             }
             year{
                 dnam{"bl"}
@@ -2836,6 +2940,7 @@ cy{
                 zero{"{0} beit"}
             }
             gigabit{
+                dnam{"Gbit"}
                 few{"{0} Gb"}
                 many{"{0} Gb"}
                 one{"{0} Gb"}
@@ -2852,6 +2957,9 @@ cy{
                 two{"{0} GB"}
                 zero{"{0} GB"}
             }
+            kilobit{
+                dnam{"kbit"}
+            }
             kilobyte{
                 dnam{"kBeit"}
                 few{"{0} kB"}
@@ -2860,6 +2968,9 @@ cy{
                 other{"{0} kB"}
                 two{"{0} kB"}
                 zero{"{0} kB"}
+            }
+            megabit{
+                dnam{"Mbit"}
             }
             megabyte{
                 dnam{"MBeit"}
@@ -2914,12 +3025,12 @@ cy{
             }
             decade{
                 dnam{"deg"}
-                few{"{0} degawd"}
-                many{"{0} degawd"}
-                one{"{0} degawd"}
-                other{"{0} degawd"}
+                few{"{0} deg"}
+                many{"{0} deg"}
+                one{"{0} deg"}
+                other{"{0} deg"}
                 two{"{0} degawd"}
-                zero{"{0} degawd"}
+                zero{"{0} deg"}
             }
             hour{
                 dnam{"oriau"}
@@ -2990,13 +3101,13 @@ cy{
             }
             week{
                 dnam{"wythnosau"}
-                few{"{0} wythnos"}
-                many{"{0} wythnos"}
-                one{"{0} wythnos"}
-                other{"{0} wythnos"}
-                per{"{0}/wythnos"}
-                two{"{0} wythnos"}
-                zero{"{0} wythnos"}
+                few{"{0} ws"}
+                many{"{0} ws"}
+                one{"{0} ws"}
+                other{"{0} ws"}
+                per{"{0}/ws"}
+                two{"{0} ws"}
+                zero{"{0} ws"}
             }
             year{
                 dnam{"blynyddoedd"}
@@ -3132,6 +3243,14 @@ cy{
             }
         }
         graphics{
+            dot{
+                few{"{0} dot"}
+                many{"{0} dot"}
+                one{"{0} dot"}
+                other{"{0} dot"}
+                two{"{0} ddot"}
+                zero{"{0} dot"}
+            }
             megapixel{
                 dnam{"megapicseli"}
             }
@@ -3189,6 +3308,12 @@ cy{
             }
             furlong{
                 dnam{"ystadenni"}
+                few{"{0} yst"}
+                many{"{0} yst"}
+                one{"{0} yst"}
+                other{"{0} yst"}
+                two{"{0} yst"}
+                zero{"{0} yst"}
             }
             inch{
                 dnam{"modfeddi"}
@@ -3352,6 +3477,15 @@ cy{
             }
             earth-mass{
                 dnam{"masau ddaear"}
+            }
+            grain{
+                dnam{"graen"}
+                few{"{0} graen"}
+                many{"{0} graen"}
+                one{"{0} graen"}
+                other{"{0} graen"}
+                two{"{0} raen"}
+                zero{"{0} graen"}
             }
             gram{
                 dnam{"gramau"}
@@ -3518,13 +3652,13 @@ cy{
                 zero{"{0} hPa"}
             }
             inch-ofhg{
-                dnam{"\u0022 Hg"}
-                few{"{0} ″ Hg"}
-                many{"{0} ″ Hg"}
-                one{"{0} ″ Hg"}
-                other{"{0} ″ Hg"}
-                two{"{0} ″ Hg"}
-                zero{"{0} ″ Hg"}
+                dnam{"inHg"}
+                few{"{0} inHg"}
+                many{"{0} inHg"}
+                one{"{0} inHg"}
+                other{"{0} inHg"}
+                two{"{0} inHg"}
+                zero{"{0} inHg"}
             }
             millibar{
                 dnam{"mbar"}
@@ -3534,6 +3668,15 @@ cy{
                 other{"{0} mbar"}
                 two{"{0} mbar"}
                 zero{"{0} mbar"}
+            }
+            millimeter-ofhg{
+                dnam{"mmHg"}
+                few{"{0} mmHg"}
+                many{"{0} mmHg"}
+                one{"{0} mmHg"}
+                other{"{0} mmHg"}
+                two{"{0} mmHg"}
+                zero{"{0} mmHg"}
             }
             pound-force-per-square-inch{
                 few{"{0} psi"}
@@ -3614,12 +3757,12 @@ cy{
             }
             bushel{
                 dnam{"bwsielau"}
-                few{"{0} bwsiel"}
-                many{"{0} bwsiel"}
-                one{"{0} bwsiel"}
-                other{"{0} bwsiel"}
-                two{"{0} bwsiel"}
-                zero{"{0} bwsiel"}
+                few{"{0} bw"}
+                many{"{0} bw"}
+                one{"{0} bw"}
+                other{"{0} bw"}
+                two{"{0} bw"}
+                zero{"{0} bw"}
             }
             centiliter{
                 dnam{"cL"}
@@ -3721,6 +3864,24 @@ cy{
                 two{"{0} dL"}
                 zero{"{0} dL"}
             }
+            dram{
+                dnam{"dracmon hylifol"}
+                few{"{0} dracmon hy"}
+                many{"{0} dracmon hy"}
+                one{"{0} dracmon hy"}
+                other{"{0} dracmon hy"}
+                two{"{0} ddracmon hy"}
+                zero{"{0} dracmon hy"}
+            }
+            drop{
+                dnam{"diferyn"}
+                few{"{0} diferyn"}
+                many{"{0} diferyn"}
+                one{"{0} diferyn"}
+                other{"{0} diferyn"}
+                two{"{0} ddiferyn"}
+                zero{"{0} diferyn"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 few{"{0} fl oz"}
@@ -3759,6 +3920,15 @@ cy{
                 two{"{0} hL"}
                 zero{"{0} hL"}
             }
+            jigger{
+                dnam{"joch"}
+                few{"{0} joch"}
+                many{"{0} joch"}
+                one{"{0} joch"}
+                other{"{0} joch"}
+                two{"{0} joch"}
+                zero{"{0} joch"}
+            }
             liter{
                 dnam{"litrau"}
                 few{"{0} L"}
@@ -3787,6 +3957,15 @@ cy{
                 two{"{0} mL"}
                 zero{"{0} mL"}
             }
+            pinch{
+                dnam{"pinsiad"}
+                few{"{0} phinsiad"}
+                many{"{0} pinsiad"}
+                one{"{0} pinsiad"}
+                other{"{0} pinsiad"}
+                two{"{0} binsiad"}
+                zero{"{0} pinsiad"}
+            }
             pint{
                 dnam{"peintiau"}
                 few{"{0} pt"}
@@ -3813,6 +3992,15 @@ cy{
                 other{"{0} qt"}
                 two{"{0} qt"}
                 zero{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"cht Imp."}
+                few{"{0} cht Imp."}
+                many{"{0} cht Imp."}
+                one{"{0} cht Imp."}
+                other{"{0} cht Imp."}
+                two{"{0} cht Imp."}
+                zero{"{0} cht Imp."}
             }
             tablespoon{
                 dnam{"tbsp"}

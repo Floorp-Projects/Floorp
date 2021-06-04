@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 so{
     Keys{
         calendar{"Habeentiris"}
@@ -72,7 +73,7 @@ so{
         fa_AF{"Faarsi"}
         ff{"Fuulah"}
         fi{"Finishka"}
-        fil{"Tagalog"}
+        fil{"Filibiino"}
         fo{"Farowsi"}
         fr{"Faransiis"}
         fr_CA{"Faransiiska Kanada"}
@@ -154,6 +155,7 @@ so{
         mk{"Masadooniyaan"}
         ml{"Malayalam"}
         mn{"Mangooli"}
+        mni{"Maniburi"}
         mr{"Maarati"}
         ms{"Malaay"}
         mt{"Maltiis"}
@@ -178,6 +180,7 @@ so{
         or{"Oodhiya"}
         os{"Oseetic"}
         pa{"Bunjaabi"}
+        pcm{"Bidjinka Nayjeeriya"}
         pl{"Boolish"}
         prg{"Brashiyaanki Hore"}
         ps{"Bashtuu"}
@@ -196,6 +199,7 @@ so{
         sa{"Sanskrit"}
         sah{"Saaqa"}
         saq{"Sambuuru"}
+        sat{"Santali"}
         sbp{"Sangu"}
         sd{"Siindhi"}
         se{"Koonfurta Saami"}
@@ -443,7 +447,7 @@ so{
             ethiopic-amete-alem{"Taariikhda Itoobiya ee Amete Alem"}
             gregorian{"Habeetiriska Geregoriyaan"}
             hebrew{"Habeentiriska yuhuudda"}
-            indian{"Taariikhda Qaranka Hindiya"}
+            indian{"Habeentiris Qarameedka Hindiya"}
             islamic{"Habeentiriska islaamka"}
             islamic-civil{"Taariikhda Islaamiga (tabular, civil epoch)"}
             islamic-rgsa{"Habeentiriska Islaamka (Sacuudiga, aragtida)"}
@@ -624,7 +628,6 @@ so{
         UCRCOR{"orthographyga mideeysan ee hadana ladul maray"}
         VALENCIA{"Faleensiyaawi"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} dhamaan"}
         compatibility{"{0} — waafaqsanaanta"}
@@ -638,6 +641,8 @@ so{
             one{"{0} garaaca"}
             other{"{0} graacis"}
         }
+        subscript{"kordhig{0}"}
+        superscript{"kordhig {0}"}
     }
     codePatterns{
         language{"Luuqad : {0}"}

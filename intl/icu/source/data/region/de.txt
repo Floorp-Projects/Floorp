@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 de{
     Countries{
         001{"Welt"}
@@ -63,7 +64,7 @@ de{
         BM{"Bermuda"}
         BN{"Brunei Darussalam"}
         BO{"Bolivien"}
-        BQ{"Bonaire, Sint Eustatius und Saba"}
+        BQ{"Karibische Niederlande"}
         BR{"Brasilien"}
         BS{"Bahamas"}
         BT{"Bhutan"}
@@ -298,7 +299,7 @@ de{
         ZZ{"Unbekannte Region"}
     }
     Countries%short{
-        GB{"GB"}
+        GB{"UK"}
         HK{"Hongkong"}
         MO{"Macau"}
         PS{"Palästina"}
@@ -314,5 +315,4 @@ de{
         SZ{"Swasiland"}
         TL{"Osttimor"}
     }
-    Version{"37"}
 }

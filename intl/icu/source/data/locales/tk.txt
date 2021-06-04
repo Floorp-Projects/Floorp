@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 tk{
     AuxExemplarCharacters{"[c q v x]"}
     Ellipsis{
@@ -186,6 +187,7 @@ tk{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{","}
                 exponential{"E"}
                 group{" "}
@@ -211,7 +213,6 @@ tk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -1714,7 +1715,6 @@ tk{
             start{"{0}, {1}"}
         }
         standard-short{
-            2{"{0} we {1}"}
             end{"{0} we {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}

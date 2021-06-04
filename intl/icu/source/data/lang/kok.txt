@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kok{
     Keys{
         calendar{"दिनदर्शिका"}
@@ -257,7 +258,7 @@ kok{
         na{"नौरो"}
         nap{"नेपोलिटन"}
         naq{"नामा"}
-        nb{"नोर्वेजियन बोकमाल"}
+        nb{"नॉर्वेजियन बोकमाल"}
         nd{"उत्तर न्डेबेले"}
         nds{"निम्न जर्मन"}
         ne{"नेपाळी"}
@@ -268,7 +269,7 @@ kok{
         nl{"डच्"}
         nl_BE{"फ्लेमिश"}
         nmg{"ख्वासी"}
-        nn{"नोर्वोजियन नायनोर्स्क"}
+        nn{"नॉर्वेजियन नायनोर्स्क"}
         nnh{"न्गेबून"}
         no{"नोर्वेजियन"}
         nog{"नोगाय"}
@@ -417,6 +418,7 @@ kok{
         zh_Hant{"पारंपारीक मंडारीन चिनी"}
     }
     Languages%menu{
+        ckb{"खुर्दीश, मध्य"}
         yue{"चिनी, कॅण्टोनीस"}
         zh{"चिनी, मंडारीन"}
     }
@@ -424,6 +426,9 @@ kok{
         az{"अझेरी"}
         en_GB{"यूके इंग्लीश"}
         en_US{"यूएस इंग्लीश"}
+    }
+    Languages%variant{
+        ckb{"खुर्दीश, सोरानी"}
     }
     Scripts{
         Arab{"आरबी"}
@@ -457,7 +462,7 @@ kok{
         Mlym{"मलयाळम"}
         Mong{"मोंगोलियन"}
         Mymr{"म्यानमार"}
-        Orya{"ओरिया"}
+        Orya{"ओडिया"}
         Sinh{"सिन्हाला"}
         Taml{"तमीळ"}
         Telu{"तेलगू"}
@@ -465,7 +470,7 @@ kok{
         Thai{"थाई"}
         Tibt{"तिबेटन"}
         Zmth{"गणिताची चिन्नां"}
-        Zsye{"Emoji"}
+        Zsye{"ईमोजी"}
         Zsym{"चिन्नां"}
         Zxxx{"अलिखीत"}
         Zyyy{"सामान्य"}
@@ -481,7 +486,7 @@ kok{
             chinese{"चीनी दिनदर्शिका"}
             dangi{"डांगी दिनदर्शिका"}
             ethiopic{"इथियोपिक दिनदर्शिका"}
-            gregorian{"ग्रेगोरियन कॅलेन्डर"}
+            gregorian{"ग्रेगोरियन कॅलॅण्डर"}
             hebrew{"हिब्रू दिनदर्शिका"}
             islamic{"ईस्लामीक दिनदर्शिका"}
             iso8601{"आयएसओ-8601 दिनदर्शिका"}
@@ -555,9 +560,9 @@ kok{
             tibt{"तिबेतियन अंक"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — सगळें"}
+        category-list{"{0}: {1}"}
         compatibility{"{0} — अनुरुपताय"}
         enclosed{"{0} — जोडलां"}
         extended{"{0} — विस्तारायलां"}
@@ -568,6 +573,8 @@ kok{
         strokes{
             other{"{0} आघात"}
         }
+        subscript{"सबस्क्रिप्ट {0}"}
+        superscript{"सुपरस्क्रिप्ट {0}"}
     }
     codePatterns{
         language{"भासः{0}"}

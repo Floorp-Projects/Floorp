@@ -1,8 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_AR{
     %%Parent{"es_419"}
-    Version{"37"}
     units{
         duration{
             year{
@@ -72,6 +72,16 @@ es_AR{
                 one{"{0} año"}
                 other{"{0} años"}
                 per{"{0}/a"}
+            }
+        }
+        electric{
+            volt{
+                dnam{"voltios"}
+            }
+        }
+        power{
+            watt{
+                dnam{"vatios"}
             }
         }
     }
