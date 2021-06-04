@@ -316,6 +316,11 @@ void EmitterScope::dump(BytecodeEmitter* bce) {
                 l.environmentCoordinate().hops(),
                 l.environmentCoordinate().slot());
         break;
+      case NameLocation::Kind::DebugEnvironmentCoordinate:
+        fprintf(stdout, "debugEnvironment hops=%u slot=%u\n",
+                l.environmentCoordinate().hops(),
+                l.environmentCoordinate().slot());
+        break;
       case NameLocation::Kind::DynamicAnnexBVar:
         fprintf(stdout, "dynamic annex b var\n");
         break;
@@ -989,6 +994,18 @@ NameLocation EmitterScope::lookup(BytecodeEmitter* bce,
   return searchAndCache(bce, name);
 }
 
+/* static */
+uint32_t EmitterScope::CountEnclosingCompilationEnvironments(
+    BytecodeEmitter* bce, EmitterScope* emitterScope) {
+  uint32_t environments = emitterScope->hasEnvironment() ? 1 : 0;
+  while ((emitterScope = emitterScope->enclosing(&bce))) {
+    if (emitterScope->hasEnvironment()) {
+      environments++;
+    }
+  }
+  return environments;
+}
+
 bool EmitterScope::lookupPrivate(BytecodeEmitter* bce,
                                  TaggedParserAtomIndex name, NameLocation& loc,
                                  mozilla::Maybe<NameLocation>& brandLoc) {
@@ -998,11 +1015,12 @@ bool EmitterScope::lookupPrivate(BytecodeEmitter* bce,
   // environment coordinate for a name at a fixed offset, which will
   // correspond to the private brand for that class.
   //
-  // Despite easily being able to gather the information required to
-  // synthesize an environment coordinate (see cachePrivateFieldsForEval, and
-  // Bug 1638309), we don't have bytecode that is able to bypass the
-  // DebugEnvironmentProxy on the environment to load the right value. As a
-  // result, we cannot currently correctly brand check a private method.
+  // If our name lookup isn't a fixed location, we must construct a
+  // new environment coordinate, using information available from our private
+  // field cache. (See cachePrivateFieldsForEval, and Bug 1638309).
+  //
+  // This typically involves a DebugEnvironmentProxy, so we need to use a
+  // DebugEnvironmentCoordinate.
   //
   // See also Bug 793345 which argues that we should remove the
   // DebugEnvironmentProxy.
@@ -1016,17 +1034,36 @@ bool EmitterScope::lookupPrivate(BytecodeEmitter* bce,
     // method or private field, which we cannot disambiguate based on the
     // dynamic lookup.
     //
-    // Hoewver, this is precisely the case that the private field eval case can
+    // However, this is precisely the case that the private field eval case can
     // help us handle. It knows the truth about these private bindings.
     mozilla::Maybe<NameLocation> cacheEntry =
         bce->compilationState.scopeContext.getPrivateFieldLocation(name);
     MOZ_ASSERT(cacheEntry);
 
     if (cacheEntry->bindingKind() == BindingKind::PrivateMethod) {
-      bce->reportError(nullptr, JSMSG_DEBUG_NO_PRIVATE_METHOD);
-      return false;
+      MOZ_ASSERT(cacheEntry->kind() ==
+                 NameLocation::Kind::DebugEnvironmentCoordinate);
+      // To construct the brand check there are two hop values required:
+      //
+      // 1. Compilation Hops: The number of environment hops required to get to
+      //    the compilation enclosing environment.
+      // 2. "external hops", to get from compilation enclosing debug environment
+      //     to the environment that actually contains our brand. This is
+      //     determined by the cacheEntry. This traversal will bypass a Debug
+      //     environment proxy, which is why need to use
+      //     DebugEnvironmentCoordinate.
+
+      uint32_t compilation_hops =
+          CountEnclosingCompilationEnvironments(bce, this);
+
+      uint32_t external_hops = cacheEntry->environmentCoordinate().hops();
+
+      brandLoc = Some(NameLocation::DebugEnvironmentCoordinate(
+          BindingKind::Synthetic, compilation_hops + external_hops,
+          ClassBodyLexicalEnvironmentObject::privateBrandSlot()));
+    } else {
+      brandLoc = Nothing();
     }
-    brandLoc = Nothing();
     return true;
   }
 

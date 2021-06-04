@@ -998,7 +998,8 @@ bool BytecodeEmitter::emitArgOp(JSOp op, uint16_t slot) {
 }
 
 bool BytecodeEmitter::emitEnvCoordOp(JSOp op, EnvironmentCoordinate ec) {
-  MOZ_ASSERT(JOF_OPTYPE(op) == JOF_ENVCOORD);
+  MOZ_ASSERT(JOF_OPTYPE(op) == JOF_ENVCOORD ||
+             JOF_OPTYPE(op) == JOF_DEBUGCOORD);
 
   constexpr size_t N = ENVCOORD_HOPS_LEN + ENVCOORD_SLOT_LEN;
   MOZ_ASSERT(GetOpLength(op) == 1 + N);

@@ -35,6 +35,8 @@ enum {
   JOF_ICINDEX = 21,     /* uint32_t IC index */
   JOF_LOOPHEAD = 22,    /* JSOp::LoopHead, combines JOF_ICINDEX and JOF_UINT8 */
   JOF_TWO_UINT8 = 23,   /* A pair of unspecified uint8_t arguments */
+  JOF_DEBUGCOORD = 24,  /* An embedded ScopeCoordinate immediate that may
+                           traverse DebugEnvironmentProxies*/
   JOF_TYPEMASK = 0xFF,  /* mask for above immediate types */
 
   JOF_NAME = 1 << 8,        /* name operation */

@@ -41,7 +41,8 @@ class EnvironmentCoordinate {
   explicit inline EnvironmentCoordinate(jsbytecode* pc)
       : hops_(GET_ENVCOORD_HOPS(pc)),
         slot_(GET_ENVCOORD_SLOT(pc + ENVCOORD_HOPS_LEN)) {
-    MOZ_ASSERT(JOF_OPTYPE(JSOp(*pc)) == JOF_ENVCOORD);
+    MOZ_ASSERT(JOF_OPTYPE(JSOp(*pc)) == JOF_ENVCOORD ||
+               JOF_OPTYPE(JSOp(*pc)) == JOF_DEBUGCOORD);
   }
 
   EnvironmentCoordinate() = default;
@@ -240,6 +241,10 @@ class NameLocation {
     // The name is closed over and lives on an environment hops_ away in slot_.
     EnvironmentCoordinate,
 
+    // The name is closed over and lives on an environment hops_ away in slot_,
+    // where one or more of the environments may be a DebugEnvironmentProxy
+    DebugEnvironmentCoordinate,
+
     // An imported name in a module.
     Import,
 
@@ -314,6 +319,11 @@ class NameLocation {
     MOZ_ASSERT(slot < ENVCOORD_SLOT_LIMIT);
     return NameLocation(Kind::EnvironmentCoordinate, bindKind, hops, slot);
   }
+  static NameLocation DebugEnvironmentCoordinate(BindingKind bindKind,
+                                                 uint8_t hops, uint32_t slot) {
+    MOZ_ASSERT(slot < ENVCOORD_SLOT_LIMIT);
+    return NameLocation(Kind::DebugEnvironmentCoordinate, bindKind, hops, slot);
+  }
 
   static NameLocation Import() {
     return NameLocation(Kind::Import, BindingKind::Import);
@@ -349,7 +359,8 @@ class NameLocation {
   }
 
   class EnvironmentCoordinate environmentCoordinate() const {
-    MOZ_ASSERT(kind_ == Kind::EnvironmentCoordinate);
+    MOZ_ASSERT(kind_ == Kind::EnvironmentCoordinate ||
+               kind_ == Kind::DebugEnvironmentCoordinate);
     class EnvironmentCoordinate coord;
     coord.setHops(hops_);
     coord.setSlot(slot_);

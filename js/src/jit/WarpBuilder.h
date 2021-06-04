@@ -52,6 +52,7 @@ namespace jit {
   _(SetIntrinsic)                        \
   /* Private Fields */                   \
   _(InitLockedElem)                      \
+  _(GetAliasedDebugVar)                  \
   // === !! WARNING WARNING WARNING !! ===
   // Do you really want to sacrifice performance by not implementing this
   // operation in the optimizing compiler?
