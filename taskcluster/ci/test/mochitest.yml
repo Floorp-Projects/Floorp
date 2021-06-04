@@ -435,9 +435,9 @@ mochitest-media:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
                     android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
-                    android-hw-.*-api-16(-qr)?/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
+                    android-hw-.*-arm7(-qr)?/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64/debug-isolated-process: []
-                    android-hw-.*-api-16-shippable(-qr)?/opt: ['trunk', 'mozilla-beta', 'mozilla-release']
+                    android-hw-.*-arm7-shippable(-qr)?/opt: ['trunk', 'mozilla-beta', 'mozilla-release']
                     windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     default: built-projects
     variants:

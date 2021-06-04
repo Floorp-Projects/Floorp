@@ -137,7 +137,7 @@ jsreftest:
             default:
                 by-test-platform:
                     android-hw-.*-aarch64(?:-shippable)?/.*: ['mozilla-central', 'release']
-                    android-hw-.*-api-16(?:-shippable)?/.*: ['mozilla-central', 'release']
+                    android-hw-.*-arm7(?:-shippable)?/.*: ['mozilla-central', 'release']
                     default: built-projects
     virtualization:
         by-test-platform:

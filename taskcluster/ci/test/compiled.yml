@@ -76,7 +76,7 @@ jittest:
     run-on-projects:
         by-test-platform:
             android-hw-.*-aarch64/debug: ['mozilla-central', 'release']
-            android-hw-.*-api-16/debug: ['mozilla-central', 'release']
+            android-hw-.*-arm7/debug: ['mozilla-central', 'release']
             default: built-projects
     chunks:
         by-test-platform:
@@ -114,7 +114,7 @@ jittest-all:
     treeherder-symbol: Jit
     run-on-projects:
         by-test-platform:
-            android-hw-.*-api-16(?:-shippable)?/.*: ['mozilla-central', 'release']
+            android-hw-.*-arm7(?:-shippable)?/.*: ['mozilla-central', 'release']
             default: []
     chunks: 10
     max-run-time: 3600

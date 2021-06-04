@@ -157,7 +157,7 @@ jobs:
         index:
             job-name: android-armv7-searchfox-debug
         treeherder:
-            platform: android-4-0-armv7-api16/debug
+            platform: android-4-0-armv7/debug
         worker-type: b-linux
         worker:
             docker-image: {in-tree: android-build}
@@ -175,7 +175,7 @@ jobs:
                 - builds/releng_base_android_64_builds.py
             script: "mozharness/scripts/fx_desktop_build.py"
             secrets: true
-            custom-build-variant-cfg: api-16-debug-searchfox
+            custom-build-variant-cfg: arm-debug-searchfox
             tooltool-downloads: internal
         use-sccache: true
         fetches:

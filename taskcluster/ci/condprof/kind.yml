@@ -123,17 +123,17 @@ jobs:
                 - name: public/condprof
                   path: archive
                   type: directory
-    android-hw-g5-7-0-arm7-api-16-geckoview:
+    android-hw-g5-7-0-arm7-geckoview:
         worker-type: t-bitbar-gw-perf-g5
         description: Creates or update conditioned profiles on GeckoView+G5
         treeherder:
             symbol: condprof(geckoview)
-            platform: android-hw-g5-7-0-arm7-api-16/opt
+            platform: android-hw-g5-7-0-arm7/opt
         index:
             product: firefox
             job-name: condprof-g5-geckoview_example
         dependencies:
-            build: build-android-api-16-shippable/opt
+            build: build-android-arm-shippable/opt
         fetches:
             build:
                 - artifact: en-US/target.condprof.tests.tar.gz
@@ -158,12 +158,12 @@ jobs:
                 - name: public/condprof
                   path: archive
                   type: directory
-    android-hw-g5-7-0-arm7-api-16-fenix:
+    android-hw-g5-7-0-arm7-fenix:
         worker-type: t-bitbar-gw-perf-g5
         description: Creates or update conditioned profiles on Fenix+G5
         treeherder:
             symbol: condprof(fenix)
-            platform: android-hw-g5-7-0-arm7-api-16/opt
+            platform: android-hw-g5-7-0-arm7/opt
         index:
             product: firefox
             job-name: condprof-g5-fenix
@@ -203,7 +203,7 @@ jobs:
             product: firefox
             job-name: condprof-p2_aarch64-fenix
         dependencies:
-            build: build-android-api-16-shippable/opt
+            build: build-android-arm-shippable/opt
         fetches:
             build:
                 - artifact: en-US/target.condprof.tests.tar.gz
@@ -238,7 +238,7 @@ jobs:
             product: firefox
             job-name: condprof-p2_aarch64-geckoview_example
         dependencies:
-            build: build-android-api-16-shippable/opt
+            build: build-android-arm-shippable/opt
         fetches:
             build:
                 - artifact: en-US/target.condprof.tests.tar.gz

@@ -292,16 +292,16 @@ class BuildOptionParser(object):
         "code-coverage-opt": path_base + "%s_code_coverage_opt.py",
         "source": path_base + "%s_source.py",
         "noopt-debug": path_base + "%s_noopt_debug.py",
-        "api-16-gradle-dependencies": path_base
-        + "%s_api_16_gradle_dependencies.py",  # NOQA: E501
-        "api-16": path_base + "%s_api_16.py",
-        "api-16-beta": path_base + "%s_api_16_beta.py",
-        "api-16-beta-debug": path_base + "%s_api_16_beta_debug.py",
-        "api-16-debug": path_base + "%s_api_16_debug.py",
-        "api-16-debug-ccov": path_base + "%s_api_16_debug_ccov.py",
-        "api-16-debug-searchfox": path_base + "%s_api_16_debug_searchfox.py",
-        "api-16-gradle": path_base + "%s_api_16_gradle.py",
-        "api-16-profile-generate": path_base + "%s_api_16_profile_generate.py",
+        "arm-gradle-dependencies": path_base
+        + "%s_arm_gradle_dependencies.py",  # NOQA: E501
+        "arm": path_base + "%s_arm.py",
+        "arm-beta": path_base + "%s_arm_beta.py",
+        "arm-beta-debug": path_base + "%s_arm_beta_debug.py",
+        "arm-debug": path_base + "%s_arm_debug.py",
+        "arm-debug-ccov": path_base + "%s_arm_debug_ccov.py",
+        "arm-debug-searchfox": path_base + "%s_arm_debug_searchfox.py",
+        "arm-gradle": path_base + "%s_arm_gradle.py",
+        "arm-profile-generate": path_base + "%s_arm_profile_generate.py",
         "rusttests": path_base + "%s_rusttests.py",
         "rusttests-debug": path_base + "%s_rusttests_debug.py",
         "x86": path_base + "%s_x86.py",
@@ -316,7 +316,7 @@ class BuildOptionParser(object):
         "x86_64-debug-isolated-process": path_base
         + "%s_x86_64_debug_isolated_process.py",
         "x86_64-fuzzing-asan": path_base + "%s_x86_64_fuzzing_asan.py",
-        "api-16-partner-sample1": path_base + "%s_api_16_partner_sample1.py",
+        "arm-partner-sample1": path_base + "%s_arm_partner_sample1.py",
         "aarch64": path_base + "%s_aarch64.py",
         "aarch64-beta": path_base + "%s_aarch64_beta.py",
         "aarch64-beta-debug": path_base + "%s_aarch64_beta_debug.py",
