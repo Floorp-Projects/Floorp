@@ -422,6 +422,11 @@ macosx1015-64-qr/debug:
         - macosx1015-64-qr-tests
         - web-platform-tests
 
+macosx1015-64-ccov-qr/opt:
+    build-platform: macosx64-ccov/opt
+    test-sets:
+        - macosx1015-64-qr-tests
+
 macosx1014-64-qr/opt:
     build-platform: macosx64/opt
     test-sets:
@@ -443,11 +448,6 @@ macosx1014-64-devedition-qr/opt:
 
 macosx1014-64-qr/debug:
     build-platform: macosx64/debug
-    test-sets:
-        - macosx1014-64-qr-tests
-
-macosx1014-64-ccov-qr/opt:
-    build-platform: macosx64-ccov/opt
     test-sets:
         - macosx1014-64-qr-tests
 
