@@ -44,7 +44,7 @@ const tests = [
     {
         timeZone: "Africa/Casablanca",
         locale: "ar-MA-u-ca-islamicc", options: longFormatOptions,
-        result: "22 محرم 1434 هـ 12:00:00",
+        result: "22 محرم 1434 هـ في 12:00:00",
     },
     {
         timeZone: "Europe/Berlin",

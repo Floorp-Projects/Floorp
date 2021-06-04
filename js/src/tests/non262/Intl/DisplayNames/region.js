@@ -22,7 +22,7 @@ const tests = {
       "FR": "Frankreich",
     },
     short: {
-      "GB": "GB",
+      "GB": "UK",
       "US": "USA",
     },
     narrow: {},
