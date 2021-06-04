@@ -7,7 +7,7 @@
 // The same functionality is offered through filter_expression, which is tested
 // by services/settings/test/unit/test_remote_settings_jexl_filters.js and
 // test_blocklistchange.js.
-Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+enable_blocklist_v2_instead_of_useMLBF();
 
 var ADDONS = [
   {
