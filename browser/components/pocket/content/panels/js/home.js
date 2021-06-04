@@ -9,10 +9,7 @@ It does not contain any logic for saving or communication with the extension or 
 var PKT_PANEL_OVERLAY = function(options) {
   this.inited = false;
   this.active = false;
-  this.translations = {};
   this.pockethost = "getpocket.com";
-  this.dictJSON = {};
-
   this.parseHTML = function(htmlString) {
     const parser = new DOMParser();
     return parser.parseFromString(htmlString, `text/html`).documentElement;
@@ -52,9 +49,6 @@ var PKT_PANEL_OVERLAY = function(options) {
       });
     });
   };
-  this.getTranslations = function() {
-    this.dictJSON = window.pocketStrings;
-  };
 };
 
 PKT_PANEL_OVERLAY.prototype = {
@@ -77,11 +71,10 @@ PKT_PANEL_OVERLAY.prototype = {
     // For non English, we don't have a link yet for this.
     // When we do, we can consider flipping this on.
     const enableLocalizedExploreMore = false;
-
-    // set translations
-    this.getTranslations();
-    this.dictJSON.pockethost = this.pockethost;
-    this.dictJSON.utmsource = "firefox-button";
+    const templateData = {
+      pockethost: this.pockethost,
+      utmsource: "firefox-button",
+    };
 
     // extra modifier class for language
     if (this.locale) {
@@ -93,16 +86,14 @@ PKT_PANEL_OVERLAY.prototype = {
     // Create actual content
     document
       .querySelector(`body`)
-      .append(this.parseHTML(Handlebars.templates.home_shell(this.dictJSON)));
+      .append(this.parseHTML(Handlebars.templates.home_shell(templateData)));
 
     // We only have topic pages in English,
     // so ensure we only show a topics section for English browsers.
     if (this.locale.startsWith("en")) {
       const data = {
-        explorepopulartopics: this.dictJSON.explorepopulartopics,
-        discovermore: this.dictJSON.discovermore,
-        pockethost: this.dictJSON.pockethost,
-        utmsource: this.dictJSON.utmsource,
+        pockethost: templateData.pockethost,
+        utmsource: templateData.utmsource,
         topics: [
           { title: "Self Improvement", topic: "self-improvement" },
           { title: "Food", topic: "food" },
@@ -117,9 +108,7 @@ PKT_PANEL_OVERLAY.prototype = {
       // For non English, we have a slightly different component to the page.
       document
         .querySelector(`.pkt_ext_more`)
-        .append(
-          this.parseHTML(Handlebars.templates.explore_more(this.dictJSON))
-        );
+        .append(this.parseHTML(Handlebars.templates.explore_more()));
     }
 
     // close events
