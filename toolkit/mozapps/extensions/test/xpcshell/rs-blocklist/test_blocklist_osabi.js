@@ -4,7 +4,7 @@
  */
 
 // useMLBF=true only supports blocking by version+ID, not by OS/ABI.
-Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+enable_blocklist_v2_instead_of_useMLBF();
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
