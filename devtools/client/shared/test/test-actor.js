@@ -187,7 +187,6 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("json"),
       },
     },
-    reflow: {},
     getNodeRect: {
       request: {
         selector: Arg(0, "string"),
@@ -584,16 +583,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
       );
 
       this.content[relative ? "scrollBy" : "scrollTo"](x, y);
-    });
-  },
-
-  /**
-   * Forces the reflow and waits for the next repaint.
-   */
-  reflow: function() {
-    return new Promise(resolve => {
-      this.content.document.documentElement.offsetWidth;
-      this.content.requestAnimationFrame(resolve);
     });
   },
 
