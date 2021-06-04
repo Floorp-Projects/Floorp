@@ -226,7 +226,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             feature = AccessibleNewTabButtonBinding(
                 store = tabsTrayStore,
                 settings = requireComponents.settings,
-                newTabButton = tab_tray_new_tab,
+                actionButton = tab_tray_new_tab,
                 browserTrayInteractor = browserTrayInteractor
             ),
             owner = this,

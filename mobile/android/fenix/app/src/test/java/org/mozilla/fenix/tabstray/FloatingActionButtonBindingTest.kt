@@ -9,11 +9,13 @@ import com.google.android.material.floatingactionbutton.ExtendedFloatingActionBu
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -35,6 +37,11 @@ class FloatingActionButtonBindingTest {
     fun setup() {
         mockkStatic(AppCompatResources::class)
         every { AppCompatResources.getDrawable(any(), any()) } returns mockk(relaxed = true)
+    }
+
+    @After
+    fun teardown() {
+        unmockkStatic(AppCompatResources::class)
     }
 
     @Test
@@ -134,6 +141,7 @@ class FloatingActionButtonBindingTest {
         verify(exactly = 0) { actionButton.extend() }
         verify(exactly = 0) { actionButton.hide() }
         verify(exactly = 1) { actionButton.setIconResource(R.drawable.ic_new) }
+        verify(exactly = 1) { actionButton.contentDescription = any() }
 
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(Page.PrivateTabs.ordinal)))
         tabsTrayStore.waitUntilIdle()
@@ -144,6 +152,7 @@ class FloatingActionButtonBindingTest {
         verify(exactly = 0) { actionButton.hide() }
         verify(exactly = 1) { actionButton.setText(R.string.tab_drawer_fab_content) }
         verify(exactly = 2) { actionButton.setIconResource(R.drawable.ic_new) }
+        verify(exactly = 2) { actionButton.contentDescription = any() }
 
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(Page.SyncedTabs.ordinal)))
         tabsTrayStore.waitUntilIdle()
@@ -154,6 +163,7 @@ class FloatingActionButtonBindingTest {
         verify(exactly = 0) { actionButton.hide() }
         verify(exactly = 1) { actionButton.setText(R.string.tab_drawer_fab_sync) }
         verify(exactly = 1) { actionButton.setIconResource(R.drawable.ic_fab_sync) }
+        verify(exactly = 2) { actionButton.contentDescription = any() }
 
         tabsTrayStore.dispatch(TabsTrayAction.SyncNow)
         tabsTrayStore.waitUntilIdle()
@@ -164,5 +174,6 @@ class FloatingActionButtonBindingTest {
         verify(exactly = 0) { actionButton.hide() }
         verify(exactly = 1) { actionButton.setText(R.string.sync_syncing_in_progress) }
         verify(exactly = 2) { actionButton.setIconResource(R.drawable.ic_fab_sync) }
+        verify(exactly = 2) { actionButton.contentDescription = any() }
     }
 }

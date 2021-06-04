@@ -16,6 +16,8 @@ import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.utils.Settings
 
 /**
+ * A binding for an accessible [actionButton] that is updated on the selected page.
+ *
  * Do not show fab when accessibility service is enabled
  *
  * This binding is coupled with [AccessibleNewTabButtonBinding].
@@ -56,6 +58,7 @@ class FloatingActionButtonBinding(
                 actionButton.apply {
                     shrink()
                     show()
+                    contentDescription = context.getString(R.string.add_tab)
                     setIconResource(R.drawable.ic_new)
                     setOnClickListener {
                         browserTrayInteractor.onFabClicked(false)
@@ -67,6 +70,7 @@ class FloatingActionButtonBinding(
                     setText(R.string.tab_drawer_fab_content)
                     extend()
                     show()
+                    contentDescription = context.getString(R.string.add_private_tab)
                     setIconResource(R.drawable.ic_new)
                     setOnClickListener {
                         browserTrayInteractor.onFabClicked(true)

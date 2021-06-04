@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.tabstray
 
+import android.annotation.SuppressLint
 import android.view.View
 import android.widget.ImageButton
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,6 +18,8 @@ import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.utils.Settings
 
 /**
+ * A binding for an accessible [actionButton] that is updated on the selected page.
+ *
  * Do not show accessible new tab button when accessibility service is disabled
  *
  * This binding is coupled with [FloatingActionButtonBinding].
@@ -26,13 +29,15 @@ import org.mozilla.fenix.utils.Settings
 class AccessibleNewTabButtonBinding(
     private val store: TabsTrayStore,
     private val settings: Settings,
-    private val newTabButton: ImageButton,
+    private val actionButton: ImageButton,
     private val browserTrayInteractor: BrowserTrayInteractor
 ) : AbstractBinding<TabsTrayState>(store) {
 
+    // suppressing for the intentional behaviour of this feature.
+    @SuppressLint("MissingSuperCall")
     override fun start() {
         if (!settings.accessibilityServicesEnabled) {
-            newTabButton.visibility = View.GONE
+            actionButton.visibility = View.GONE
             return
         }
         super.start()
@@ -54,8 +59,9 @@ class AccessibleNewTabButtonBinding(
     private fun setAccessibleNewTabButton(selectedPage: Page, syncing: Boolean) {
         when (selectedPage) {
             Page.NormalTabs -> {
-                newTabButton.apply {
+                actionButton.apply {
                     visibility = View.VISIBLE
+                    contentDescription = context.getString(R.string.add_tab)
                     setImageResource(R.drawable.ic_new)
                     setOnClickListener {
                         browserTrayInteractor.onFabClicked(false)
@@ -63,8 +69,9 @@ class AccessibleNewTabButtonBinding(
                 }
             }
             Page.PrivateTabs -> {
-                newTabButton.apply {
+                actionButton.apply {
                     visibility = View.VISIBLE
+                    contentDescription = context.getString(R.string.add_private_tab)
                     setImageResource(R.drawable.ic_new)
                     setOnClickListener {
                         browserTrayInteractor.onFabClicked(true)
@@ -72,13 +79,12 @@ class AccessibleNewTabButtonBinding(
                 }
             }
             Page.SyncedTabs -> {
-                newTabButton.apply {
-                    visibility =
-                        when (syncing) {
-                            true -> View.GONE
-                            false -> View.VISIBLE
-                        }
-
+                actionButton.apply {
+                    visibility = when (syncing) {
+                        true -> View.GONE
+                        false -> View.VISIBLE
+                    }
+                    contentDescription = context.getString(R.string.tab_drawer_fab_sync)
                     setImageResource(R.drawable.ic_fab_sync)
                     setOnClickListener {
                         // Notify the store observers (one of which is the SyncedTabsFeature), that
