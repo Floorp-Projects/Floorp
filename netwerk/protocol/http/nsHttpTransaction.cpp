@@ -443,16 +443,14 @@ nsresult nsHttpTransaction::Init(
 
   if (gHttpHandler->UseHTTPSRRAsAltSvcEnabled() &&
       !(mCaps & NS_HTTP_DISALLOW_HTTPS_RR)) {
-    mHTTPSSVCReceivedStage = HTTPSSVC_NOT_PRESENT;
-
     nsCOMPtr<nsIEventTarget> target;
     Unused << gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
     if (target) {
       mResolver = new HTTPSRecordResolver(this);
       nsCOMPtr<nsICancelable> dnsRequest;
-      rv = mResolver->FetchHTTPSRRInternal(target, getter_AddRefs(dnsRequest));
-      if (NS_FAILED(rv) && (mCaps & NS_HTTP_WAIT_HTTPSSVC_RESULT)) {
-        return rv;
+      if (NS_SUCCEEDED(mResolver->FetchHTTPSRRInternal(
+              target, getter_AddRefs(dnsRequest)))) {
+        mHTTPSSVCReceivedStage = HTTPSSVC_NOT_PRESENT;
       }
 
       {

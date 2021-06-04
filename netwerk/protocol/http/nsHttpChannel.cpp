@@ -6807,11 +6807,9 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     }
 
     uint32_t stage = mTransaction->HTTPSSVCReceivedStage();
-    if (!LoadHTTPSSVCTelemetryReported()) {
-      if (stage != HTTPSSVC_NOT_USED) {
-        Telemetry::Accumulate(Telemetry::DNS_HTTPSSVC_RECORD_RECEIVING_STAGE,
-                              stage);
-      }
+    if (!LoadHTTPSSVCTelemetryReported() && stage != HTTPSSVC_NOT_USED) {
+      Telemetry::Accumulate(Telemetry::DNS_HTTPSSVC_RECORD_RECEIVING_STAGE,
+                            stage);
     }
 
     if (HTTPS_RR_IS_USED(stage)) {
