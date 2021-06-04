@@ -75,7 +75,7 @@ class WebSocketFrameRunnable final : public WebSocketBaseRunnable {
 
  private:
   virtual void DoWork(nsIWebSocketEventListener* aListener) override {
-    DebugOnly<nsresult> rv;
+    DebugOnly<nsresult> rv{};
     if (mFrameSent) {
       rv = aListener->FrameSent(mWebSocketSerialID, mFrame);
     } else {

@@ -37,9 +37,9 @@ NS_IMPL_ISUPPORTS(nsNoAuthURLParser, nsIURLParser)
   if (component##Len) *component##Len = int32_t(len);  \
   PR_END_MACRO
 
-#define OFFSET_RESULT(component, offset)         \
-  PR_BEGIN_MACRO                                 \
-  if (component##Pos) *component##Pos += offset; \
+#define OFFSET_RESULT(component, offset)           \
+  PR_BEGIN_MACRO                                   \
+  if (component##Pos) *component##Pos += (offset); \
   PR_END_MACRO
 
 NS_IMETHODIMP
@@ -98,8 +98,9 @@ nsBaseURLParser::ParseURL(const char* spec, int32_t specLen,
   }
 
   // ignore trailing whitespace and control characters
-  for (p = spec + specLen - 1; ((unsigned char)*p <= ' ') && (p != spec); --p)
+  for (p = spec + specLen - 1; ((unsigned char)*p <= ' ') && (p != spec); --p) {
     ;
+  }
 
   specLen = p - spec + 1;
 
@@ -209,9 +210,9 @@ nsBaseURLParser::ParsePath(const char* path, int32_t pathLen,
   const char* p = nullptr;
   for (p = path; p < path + pathLen; ++p) {
     // only match the query string if it precedes the reference fragment
-    if (!ref_beg && !query_beg && *p == '?')
+    if (!ref_beg && !query_beg && *p == '?') {
       query_beg = p + 1;
-    else if (*p == '#') {
+    } else if (*p == '#') {
       ref_beg = p + 1;
       if (query_beg) query_end = p;
       break;
@@ -219,31 +220,36 @@ nsBaseURLParser::ParsePath(const char* path, int32_t pathLen,
   }
 
   if (query_beg) {
-    if (query_end)
+    if (query_end) {
       SET_RESULT(query, query_beg - path, query_end - query_beg);
-    else
+    } else {
       SET_RESULT(query, query_beg - path, pathLen - (query_beg - path));
-  } else
+    }
+  } else {
     SET_RESULT(query, 0, -1);
+  }
 
-  if (ref_beg)
+  if (ref_beg) {
     SET_RESULT(ref, ref_beg - path, pathLen - (ref_beg - path));
-  else
+  } else {
     SET_RESULT(ref, 0, -1);
+  }
 
   const char* end;
-  if (query_beg)
+  if (query_beg) {
     end = query_beg - 1;
-  else if (ref_beg)
+  } else if (ref_beg) {
     end = ref_beg - 1;
-  else
+  } else {
     end = path + pathLen;
+  }
 
   // an empty file path is no file path
-  if (end != path)
+  if (end != path) {
     SET_RESULT(filepath, 0, end - path);
-  else
+  } else {
     SET_RESULT(filepath, 0, -1);
+  }
   return NS_OK;
 }
 
@@ -269,13 +275,15 @@ nsBaseURLParser::ParseFilePath(const char* filepath, int32_t filepathLen,
   const char* end = filepath + filepathLen;
 
   // search backwards for filename
-  for (p = end - 1; *p != '/' && p > filepath; --p)
+  for (p = end - 1; *p != '/' && p > filepath; --p) {
     ;
+  }
   if (*p == '/') {
     // catch /.. and /.
     if ((p + 1 < end && *(p + 1) == '.') &&
-        (p + 2 == end || (*(p + 2) == '.' && p + 3 == end)))
+        (p + 2 == end || (*(p + 2) == '.' && p + 3 == end))) {
       p = end - 1;
+    }
     // filepath = <directory><filename>.<extension>
     SET_RESULT(directory, 0, p - filepath + 1);
     ParseFileName(p + 1, end - (p + 1), basenamePos, basenameLen, extensionPos,
@@ -365,10 +373,11 @@ void nsNoAuthURLParser::ParseAfterScheme(const char* spec, int32_t specLen,
         }
       }
       SET_RESULT(auth, 0, -1);
-      if (p && p != spec + specLen)
+      if (p && p != spec + specLen) {
         SET_RESULT(path, p - spec, specLen - (p - spec));
-      else
+      } else {
         SET_RESULT(path, 0, -1);
+      }
       return;
     }
     default:
@@ -547,8 +556,9 @@ nsAuthURLParser::ParseServerInfo(const char* serverinfo, int32_t serverinfoLen,
         nsresult err;
         *port = buf.ToInteger(&err);
         if (NS_FAILED(err) || *port < 0 ||
-            *port > std::numeric_limits<uint16_t>::max())
+            *port > std::numeric_limits<uint16_t>::max()) {
           return NS_ERROR_MALFORMED_URI;
+        }
       }
     }
   } else {
@@ -561,8 +571,9 @@ nsAuthURLParser::ParseServerInfo(const char* serverinfo, int32_t serverinfoLen,
   if (*hostnameLen > 1 && *(serverinfo + *hostnamePos) == '[' &&
       *(serverinfo + *hostnamePos + *hostnameLen - 1) == ']' &&
       !net_IsValidIPv6Addr(
-          Substring(serverinfo + *hostnamePos + 1, *hostnameLen - 2)))
+          Substring(serverinfo + *hostnamePos + 1, *hostnameLen - 2))) {
     return NS_ERROR_MALFORMED_URI;
+  }
 
   return NS_OK;
 }

@@ -21,8 +21,6 @@ SpeculativeTransaction::SpeculativeTransaction(
       mTriedToWrite(false),
       mCloseCallback(std::move(aCallback)) {}
 
-SpeculativeTransaction::~SpeculativeTransaction() {}
-
 already_AddRefed<SpeculativeTransaction>
 SpeculativeTransaction::CreateWithNewConnInfo(nsHttpConnectionInfo* aConnInfo) {
   RefPtr<SpeculativeTransaction> trans =

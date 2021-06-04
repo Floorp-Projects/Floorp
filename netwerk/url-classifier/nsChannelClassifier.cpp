@@ -68,7 +68,7 @@ StaticAutoPtr<CachedPrefs> CachedPrefs::sInstance;
 
 // static
 void CachedPrefs::OnPrefsChange(const char* aPref, void* aPrefs) {
-  auto prefs = static_cast<CachedPrefs*>(aPrefs);
+  auto* prefs = static_cast<CachedPrefs*>(aPrefs);
 
   if (!strcmp(aPref, URLCLASSIFIER_EXCEPTION_HOSTNAMES)) {
     nsCString exceptionHostnames;

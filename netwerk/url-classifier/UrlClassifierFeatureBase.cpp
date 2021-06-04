@@ -17,7 +17,7 @@ namespace net {
 namespace {
 
 void OnPrefsChange(const char* aPrefName, void* aArray) {
-  auto array = static_cast<nsTArray<nsCString>*>(aArray);
+  auto* array = static_cast<nsTArray<nsCString>*>(aArray);
   MOZ_ASSERT(array);
 
   nsAutoCString value;

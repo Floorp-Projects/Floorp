@@ -339,7 +339,8 @@ void nsMediaFragmentURIParser::Parse(nsACString& aRef) {
     if (gotTemporal && gotSpatial) {
       // We've got one of each possible type. No need to look at the rest.
       break;
-    } else if (!gotTemporal && fragments[i].first.EqualsLiteral("t")) {
+    }
+    if (!gotTemporal && fragments[i].first.EqualsLiteral("t")) {
       nsAutoString value = NS_ConvertUTF8toUTF16(fragments[i].second);
       gotTemporal = ParseNPT(nsDependentSubstring(value, 0));
     } else if (!gotSpatial && fragments[i].first.EqualsLiteral("xywh")) {

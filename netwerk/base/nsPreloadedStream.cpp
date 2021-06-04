@@ -107,8 +107,9 @@ NS_IMETHODIMP
 nsPreloadedStream::AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
                              uint32_t aRequestedCount,
                              nsIEventTarget* aEventTarget) {
-  if (!mLen)
+  if (!mLen) {
     return mStream->AsyncWait(aCallback, aFlags, aRequestedCount, aEventTarget);
+  }
 
   if (!aCallback) return NS_OK;
 

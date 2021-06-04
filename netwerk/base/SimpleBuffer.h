@@ -26,7 +26,7 @@ class SimpleBufferPage : public LinkedListElement<SimpleBufferPage> {
 
  private:
   friend class SimpleBuffer;
-  char mBuffer[kSimpleBufferPageSize];
+  char mBuffer[kSimpleBufferPageSize]{0};
   size_t mReadOffset;
   size_t mWriteOffset;
 };
@@ -36,7 +36,7 @@ class SimpleBuffer {
   SimpleBuffer();
   ~SimpleBuffer() = default;
 
-  nsresult Write(char* stc, size_t len);   // return OK or OUT_OF_MEMORY
+  nsresult Write(char* src, size_t len);   // return OK or OUT_OF_MEMORY
   size_t Read(char* dest, size_t maxLen);  // return bytes read
   size_t Available();
   void Clear();

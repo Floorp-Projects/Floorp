@@ -66,11 +66,7 @@ bool DelayHttpChannelQueue::Initialize() {
   }
 
   rv = obs->AddObserver(this, "xpcom-shutdown", false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  return true;
+  return !NS_WARN_IF(NS_FAILED(rv));
 }
 
 NS_IMETHODIMP

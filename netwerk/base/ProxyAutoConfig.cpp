@@ -377,8 +377,9 @@ static void PACLogErrorOrWarning(const nsAString& aKind,
   nsString formattedMessage(u"PAC Execution "_ns);
   formattedMessage += aKind;
   formattedMessage += u": "_ns;
-  if (aReport->message())
+  if (aReport->message()) {
     formattedMessage.Append(NS_ConvertUTF8toUTF16(aReport->message().c_str()));
+  }
   formattedMessage += u" ["_ns;
   formattedMessage.Append(aReport->linebuf(), aReport->linebufLength());
   formattedMessage += u"]"_ns;
@@ -488,11 +489,7 @@ bool ProxyAutoConfig::ResolveAddress(const nsCString& aHostName,
   }
 
   nsCOMPtr<nsIDNSAddrRecord> rec = do_QueryInterface(helper->mResponse);
-  if (!rec || NS_FAILED(rec->GetNextAddr(0, aNetAddr))) {
-    return false;
-  }
-
-  return true;
+  return !(!rec || NS_FAILED(rec->GetNextAddr(0, aNetAddr)));
 }
 
 static bool PACResolveToString(const nsCString& aHostName,
@@ -502,8 +499,9 @@ static bool PACResolveToString(const nsCString& aHostName,
   if (!PACResolve(aHostName, &netAddr, aTimeout)) return false;
 
   char dottedDecimal[128];
-  if (!netAddr.ToStringBuffer(dottedDecimal, sizeof(dottedDecimal)))
+  if (!netAddr.ToStringBuffer(dottedDecimal, sizeof(dottedDecimal))) {
     return false;
+  }
 
   aDottedDecimal.Assign(dottedDecimal);
   return true;
@@ -932,8 +930,9 @@ bool ProxyAutoConfig::SrcAddress(const NetAddr* remoteAddress,
 
   char dottedDecimal[128];
   if (PR_NetAddrToString(&localName, dottedDecimal, sizeof(dottedDecimal)) !=
-      PR_SUCCESS)
+      PR_SUCCESS) {
     return false;
+  }
 
   localAddress.Assign(dottedDecimal);
 

@@ -8,8 +8,7 @@
 #include "nsString.h"
 #include "mozilla/DebugOnly.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 CacheIndexIterator::CacheIndexIterator(CacheIndex* aIndex, bool aAddNew)
     : mStatus(NS_OK), mIndex(aIndex), mAddNew(aAddNew) {
@@ -98,5 +97,4 @@ bool CacheIndexIterator::ReplaceRecord(CacheIndexRecordWrapper* aOldRecord,
   return false;
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

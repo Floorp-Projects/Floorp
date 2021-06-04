@@ -131,7 +131,7 @@ ConvertAppIdToOriginAttrsSQLFunction::OnFunctionCall(
 
   // Create an originAttributes object by inIsolatedMozBrowser.
   // Then create the originSuffix string from this object.
-  OriginAttributes attrs(inIsolatedMozBrowser ? true : false);
+  OriginAttributes attrs(inIsolatedMozBrowser != 0);
   nsAutoCString suffix;
   attrs.CreateSuffix(suffix);
 
@@ -382,7 +382,7 @@ void CookiePersistentStorage::NotifyChangedInternal(nsISupports* aSubject,
       u"added"_ns.Equals(aData)) {
     nsCOMPtr<nsICookie> xpcCookie = do_QueryInterface(aSubject);
     MOZ_ASSERT(xpcCookie);
-    auto cookie = static_cast<Cookie*>(xpcCookie.get());
+    auto* cookie = static_cast<Cookie*>(xpcCookie.get());
     if (!cookie->IsSession() && !aOldCookieIsSession) {
       return;
     }

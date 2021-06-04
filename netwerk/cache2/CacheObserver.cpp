@@ -18,8 +18,7 @@
 #include <time.h>
 #include <math.h>
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 StaticRefPtr<CacheObserver> CacheObserver::sSelf;
 
@@ -170,9 +169,7 @@ bool CacheObserver::EntryIsTooBig(int64_t aSize, bool aUsingDisk) {
       aUsingDisk ? DiskCacheCapacity() : MemoryCacheCapacity();
   derivedLimit <<= (10 - 3);
 
-  if (aSize > derivedLimit) return true;
-
-  return false;
+  return aSize > derivedLimit;
 }
 
 // static
@@ -243,8 +240,9 @@ CacheObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, "memory-pressure")) {
     RefPtr<CacheStorageService> service = CacheStorageService::Self();
-    if (service)
+    if (service) {
       service->PurgeFromMemory(nsICacheStorageService::PURGE_EVERYTHING);
+    }
 
     return NS_OK;
   }
@@ -253,5 +251,4 @@ CacheObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

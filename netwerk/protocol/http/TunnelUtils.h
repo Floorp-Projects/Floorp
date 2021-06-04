@@ -158,7 +158,7 @@ class TLSFilterTransaction final : public nsAHttpTransaction,
   int32_t FilterInput(char* aBuf, int32_t aAmount);
 
   static PRStatus GetPeerName(PRFileDesc* fd, PRNetAddr* addr);
-  static PRStatus GetSocketOption(PRFileDesc* fd, PRSocketOptionData* data);
+  static PRStatus GetSocketOption(PRFileDesc* fd, PRSocketOptionData* aOpt);
   static PRStatus SetSocketOption(PRFileDesc* fd,
                                   const PRSocketOptionData* data);
   static int32_t FilterWrite(PRFileDesc* fd, const void* buf, int32_t amount);
@@ -235,7 +235,7 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
                                        uint32_t count,
                                        uint32_t* countWritten) final;
   nsHttpRequestHead* RequestHead() final;
-  void Close(nsresult reason) final;
+  void Close(nsresult code) final;
 
   // ConnectedReadyForInput() tests whether the spdy connect transaction is
   // attached to an nsHttpConnection that can properly deal with flow control,

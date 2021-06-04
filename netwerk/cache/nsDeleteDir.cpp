@@ -97,8 +97,9 @@ nsresult nsDeleteDir::Shutdown(bool finishDeleting) {
 
   delete gInstance;
 
-  for (int32_t i = 0; i < dirsToRemove.Count(); i++)
+  for (int32_t i = 0; i < dirsToRemove.Count(); i++) {
     dirsToRemove[i]->Remove(true);
+  }
 
   return NS_OK;
 }
@@ -119,9 +120,10 @@ nsresult nsDeleteDir::InitThread() {
 void nsDeleteDir::DestroyThread() {
   if (!mBackgroundET) return;
 
-  if (mTimers.Count())
+  if (mTimers.Count()) {
     // more work to do, so don't delete thread.
     return;
+  }
 
   mBackgroundET = nullptr;
 }

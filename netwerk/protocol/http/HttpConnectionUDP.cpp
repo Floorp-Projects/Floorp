@@ -33,14 +33,7 @@ namespace net {
 // HttpConnectionUDP <public>
 //-----------------------------------------------------------------------------
 
-HttpConnectionUDP::HttpConnectionUDP()
-    : mHttpHandler(gHttpHandler),
-      mDontReuse(false),
-      mIsReused(false),
-      mLastTransactionExpectedNoContent(false),
-      mPriority(nsISupportsPriority::PRIORITY_NORMAL),
-      mForceSendPending(false),
-      mLastRequestBytesSentTime(0) {
+HttpConnectionUDP::HttpConnectionUDP() : mHttpHandler(gHttpHandler) {
   LOG(("Creating HttpConnectionUDP @%p\n", this));
 }
 
@@ -656,17 +649,15 @@ NS_IMETHODIMP HttpConnectionUDP::OnStopListening(nsIUDPSocket* aSocket,
 nsresult HttpConnectionUDP::GetSelfAddr(NetAddr* addr) {
   if (mSelfAddr) {
     return mSelfAddr->GetNetAddr(addr);
-  } else {
-    return NS_ERROR_FAILURE;
   }
+  return NS_ERROR_FAILURE;
 }
 
 nsresult HttpConnectionUDP::GetPeerAddr(NetAddr* addr) {
   if (mPeerAddr) {
     return mPeerAddr->GetNetAddr(addr);
-  } else {
-    return NS_ERROR_FAILURE;
   }
+  return NS_ERROR_FAILURE;
 }
 
 bool HttpConnectionUDP::ResolvedByTRR() { return mResolvedByTRR; }

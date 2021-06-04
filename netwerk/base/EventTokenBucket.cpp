@@ -90,8 +90,9 @@ EventTokenBucket::EventTokenBucket(uint32_t eventsPerSecond, uint32_t burstSize)
   nsresult rv;
   nsCOMPtr<nsIEventTarget> sts;
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     sts = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+  }
   if (NS_SUCCEEDED(rv)) mTimer = NS_NewTimer(sts);
   SetRate(eventsPerSecond, burstSize);
 }
@@ -261,8 +262,9 @@ void EventTokenBucket::DispatchEvents() {
 
 void EventTokenBucket::UpdateTimer() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  if (mTimerArmed || mPaused || mStopped || !mEvents.GetSize() || !mTimer)
+  if (mTimerArmed || mPaused || mStopped || !mEvents.GetSize() || !mTimer) {
     return;
+  }
 
   if (mCredit >= mUnitCost) return;
 
@@ -273,10 +275,11 @@ void EventTokenBucket::UpdateTimer() {
   uint64_t deficit = mUnitCost - mCredit;
   uint64_t msecWait = (deficit + (kUsecPerMsec - 1)) / kUsecPerMsec;
 
-  if (msecWait < 4)  // minimum wait
+  if (msecWait < 4) {  // minimum wait
     msecWait = 4;
-  else if (msecWait > 60000)  // maximum wait
+  } else if (msecWait > 60000) {  // maximum wait
     msecWait = 60000;
+  }
 
 #ifdef XP_WIN
   FineGrainTimers();

@@ -38,7 +38,7 @@ class nsHttpChunkedDecoder {
 
  private:
   [[nodiscard]] nsresult ParseChunkRemaining(char* buf, uint32_t count,
-                                             uint32_t* countRead);
+                                             uint32_t* bytesConsumed);
 
  private:
   UniquePtr<nsHttpHeaderArray> mTrailers;

@@ -156,7 +156,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   OnPushCallback mOnPushCallback;
   nsTArray<uint8_t> mDataForSniffer;
   std::function<void()> mCallOnResume;
-  uint32_t mHTTPSSVCReceivedStage;
+  uint32_t mHTTPSSVCReceivedStage{};
   RefPtr<nsHttpConnectionInfo> mConnInfo;
   bool mSupportsHTTP3 = false;
 };

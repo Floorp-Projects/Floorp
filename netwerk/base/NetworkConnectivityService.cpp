@@ -136,13 +136,9 @@ static inline bool NAT64PrefixFromPref(NetAddr* prefix) {
 
   nsresult rv = Preferences::GetCString(
       "network.connectivity-service.nat64-prefix", nat64PrefixPref);
-  if (NS_FAILED(rv) || nat64PrefixPref.IsEmpty() ||
-      NS_FAILED(prefix->InitFromString(nat64PrefixPref)) ||
-      prefix->raw.family != PR_AF_INET6) {
-    return false;
-  }
-
-  return true;
+  return !(NS_FAILED(rv) || nat64PrefixPref.IsEmpty() ||
+           NS_FAILED(prefix->InitFromString(nat64PrefixPref)) ||
+           prefix->raw.family != PR_AF_INET6);
 }
 
 static inline bool NAT64PrefixCompare(const NetAddr& prefix1,
