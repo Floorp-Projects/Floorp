@@ -2428,7 +2428,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
       LayerIntRect::FromUnknownRect(
           aMaskItem->GetBuildingRect().ScaleToOutsidePixels(
               scale.width, scale.height, appUnitsPerDevPixel))
-          .Intersect(itemRect);
+          .SafeIntersect(itemRect);
 
   if (visibleRect.IsEmpty()) {
     return Nothing();
