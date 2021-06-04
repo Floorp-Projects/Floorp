@@ -6,6 +6,8 @@
 // https://unicode-org.atlassian.net/browse/ICU-21154
 // https://unicode-org.atlassian.net/browse/ICU-21155
 // https://unicode-org.atlassian.net/browse/ICU-21156
+// https://unicode-org.atlassian.net/browse/ICU-21342
+// https://unicode-org.atlassian.net/browse/ICU-21343
 
 // Test locales which default to a 12-hour and a 24-hour clock.
 
@@ -17,7 +19,7 @@ let tests = {
       end: 10,
       data: [
         "12 – 10 AM",
-        "0 AM – 10 AM", // This result, along with others in this file, is caused by ICU-21156.
+        "0 – 10 AM",
         "12 – 10 AM",
         "00 – 10",
         "24 – 10",
@@ -66,7 +68,7 @@ let tests = {
       end: 10,
       data: [
         "1 – 10 AM",
-        "1 AM – 10 AM",
+        "1 – 10 AM",
         "1 – 10 AM",
         "01 – 10",
         "01 – 10",
@@ -139,7 +141,7 @@ let tests = {
       end: 22,
       data: [
         "12 – 10 PM",
-        "0 PM – 10 PM",
+        "0 – 10 PM",
         "12 – 10 PM",
         "12 – 22",
         "12 – 22",
@@ -188,7 +190,7 @@ let tests = {
       end: 23,
       data: [
         "10 – 11 PM",
-        "10 PM – 11 PM",
+        "10 – 11 PM",
         "10 – 11 PM",
         "22 – 23",
         "22 – 23",
@@ -215,10 +217,10 @@ let tests = {
       end: 10,
       data: [
         "00–10 Uhr",
-        "0 Uhr AM – 10 Uhr AM",
+        "0 – 10 Uhr AM",
         "12 – 10 Uhr AM",
         "00–10 Uhr",
-        "24 Uhr – 10 Uhr",
+        "24–10 Uhr",
       ],
     },
     // Midnight to noon.
@@ -230,7 +232,7 @@ let tests = {
         "0 Uhr AM – 0 Uhr PM",
         "12 Uhr AM – 12 Uhr PM",
         "00–12 Uhr",
-        "24 Uhr – 12 Uhr",
+        "24–12 Uhr",
       ],
     },
     // Midnight to evening.
@@ -242,7 +244,7 @@ let tests = {
         "0 Uhr AM – 10 Uhr PM",
         "12 Uhr AM – 10 Uhr PM",
         "00–22 Uhr",
-        "24 Uhr – 22 Uhr",
+        "24–22 Uhr",
       ],
     },
     // Midnight to midnight.
@@ -264,10 +266,10 @@ let tests = {
       end: 10,
       data: [
         "01–10 Uhr",
-        "1 Uhr AM – 10 Uhr AM",
+        "1 – 10 Uhr AM",
         "1 – 10 Uhr AM",
         "01–10 Uhr",
-        "01 Uhr – 10 Uhr",
+        "01–10 Uhr",
       ],
     },
     // Morning to noon.
@@ -279,7 +281,7 @@ let tests = {
         "1 Uhr AM – 0 Uhr PM",
         "1 Uhr AM – 12 Uhr PM",
         "01–12 Uhr",
-        "01 Uhr – 12 Uhr",
+        "01–12 Uhr",
       ],
     },
     // Morning to evening.
@@ -291,7 +293,7 @@ let tests = {
         "1 Uhr AM – 10 Uhr PM",
         "1 Uhr AM – 10 Uhr PM",
         "01–22 Uhr",
-        "01 Uhr – 22 Uhr",
+        "01–22 Uhr",
       ],
     },
     // Morning to midnight.
@@ -337,10 +339,10 @@ let tests = {
       end: 22,
       data: [
         "12–22 Uhr",
-        "0 Uhr PM – 10 Uhr PM",
+        "0 – 10 Uhr PM",
         "12 – 10 Uhr PM",
         "12–22 Uhr",
-        "12 Uhr – 22 Uhr",
+        "12–22 Uhr",
       ],
     },
     // Noon to midnight.
@@ -386,10 +388,10 @@ let tests = {
       end: 23,
       data: [
         "22–23 Uhr",
-        "10 Uhr PM – 11 Uhr PM",
+        "10 – 11 Uhr PM",
         "10 – 11 Uhr PM",
         "22–23 Uhr",
-        "22 Uhr – 23 Uhr",
+        "22–23 Uhr",
       ],
     },
     // Evening to midnight.

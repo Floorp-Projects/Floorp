@@ -32,7 +32,7 @@ const tests = {
       "nl-BE": "Niederländisch (Belgien)",
     },
     short: {
-      "en-Hant-GB": "Englisch (Traditionell, GB)",
+      "en-Hant-GB": "Englisch (Traditionell, UK)",
       "en-Hans-US": "Englisch (Vereinfacht, USA)",
     },
     narrow: {},
