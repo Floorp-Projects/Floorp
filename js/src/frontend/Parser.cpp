@@ -776,12 +776,15 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredPrivateName(
     case PropertyType::AsyncMethod:
     case PropertyType::AsyncGeneratorMethod:
       if (placement == FieldPlacement::Instance) {
-        // Optimized private method. Must be marked closed-over so that
-        // EmitterScope::lookupPrivate() works even if the method is used, but
-        // not within any method (from a computed property name).
+        // Optimized private method. Non-optimized paths still get
+        // DeclarationKind::Synthetic.
         declKind = DeclarationKind::PrivateMethod;
-        closedOver = ClosedOver::Yes;
       }
+
+      // Methods must be marked closed-over so that
+      // EmitterScope::lookupPrivate() works even if the method is used, but not
+      // within any method (from a computed property name, or debugger frame)
+      closedOver = ClosedOver::Yes;
       kind = PrivateNameKind::Method;
       break;
     case PropertyType::Getter:
