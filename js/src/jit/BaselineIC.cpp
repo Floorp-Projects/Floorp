@@ -393,6 +393,7 @@ bool ICSupportsPolymorphicTypeData(JSOp op) {
   BaselineICFallbackKind kind =
       BaselineICFallbackKind(FallbackKindTable.lookup(op));
   switch (kind) {
+    case BaselineICFallbackKind::ToBool:
     case BaselineICFallbackKind::TypeOf:
       return true;
     default:

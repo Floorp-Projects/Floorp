@@ -1735,10 +1735,17 @@ class MTest : public MAryControlInstruction<1, 2>, public TestPolicy::Data {
   MTest(MDefinition* ins, MBasicBlock* falseBranch)
       : MTest(ins, nullptr, falseBranch) {}
 
+  TypeDataList observedTypes_;
+
  public:
   INSTRUCTION_HEADER(Test)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, input))
+
+  const TypeDataList& observedTypes() const { return observedTypes_; }
+  void setObservedTypes(const TypeDataList& observed) {
+    observedTypes_ = observed;
+  }
 
   static const size_t TrueBranchIndex = 0;
 
