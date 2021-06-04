@@ -97,36 +97,6 @@ const ClassSpec ListFormatObject::classSpec_ = {
     nullptr,
     ClassSpec::DontDefineConstructor};
 
-enum class ListFormatOptions {
-  SupportsTypeAndStyle,
-  NoTypeAndStyle,
-};
-
-/**
- * Initialize a new Intl.ListFormat object using the named self-hosted function.
- */
-static bool InitializeListFormatObject(JSContext* cx, HandleObject obj,
-                                       HandlePropertyName initializer,
-                                       HandleValue locales, HandleValue options,
-                                       ListFormatOptions lfoptions) {
-  FixedInvokeArgs<4> args(cx);
-
-  args[0].setObject(*obj);
-  args[1].set(locales);
-  args[2].set(options);
-  args[3].setBoolean(lfoptions == ListFormatOptions::SupportsTypeAndStyle);
-
-  RootedValue ignored(cx);
-  if (!CallSelfHostedFunction(cx, initializer, JS::NullHandleValue, args,
-                              &ignored)) {
-    return false;
-  }
-
-  MOZ_ASSERT(ignored.isUndefined(),
-             "Unexpected return value from non-legacy Intl object initializer");
-  return true;
-}
-
 /**
  * Intl.ListFormat([ locales [, options]])
  */
@@ -154,18 +124,9 @@ static bool ListFormat(JSContext* cx, unsigned argc, Value* vp) {
   HandleValue locales = args.get(0);
   HandleValue options = args.get(1);
 
-  constexpr ListFormatOptions lfoptions =
-#ifndef U_HIDE_DRAFT_API
-      ListFormatOptions::SupportsTypeAndStyle
-#else
-      ListFormatOptions::NoTypeAndStyle
-#endif
-      ;
-
   // Step 3.
-  if (!InitializeListFormatObject(cx, listFormat,
-                                  cx->names().InitializeListFormat, locales,
-                                  options, lfoptions)) {
+  if (!intl::InitializeObject(cx, listFormat, cx->names().InitializeListFormat,
+                              locales, options)) {
     return false;
   }
 
@@ -248,10 +209,6 @@ static UListFormatter* NewUListFormatter(JSContext* cx,
     }
   }
 
-  UErrorCode status = U_ZERO_ERROR;
-  UListFormatter* lf;
-
-#ifndef U_HIDE_DRAFT_API
   UListFormatterType utype;
   switch (type) {
     case ListFormatType::Conjunction:
@@ -278,17 +235,9 @@ static UListFormatter* NewUListFormatter(JSContext* cx,
       break;
   }
 
-  lf = ulistfmt_openForType(IcuLocale(locale.get()), utype, uwidth, &status);
-#else
-  MOZ_ASSERT(type == ListFormatType::Conjunction);
-  MOZ_ASSERT(style == ListFormatStyle::Long);
-
-  (void)type;
-  (void)style;
-
-  lf = ulistfmt_open(IcuLocale(locale.get()), &status);
-#endif
-
+  UErrorCode status = U_ZERO_ERROR;
+  UListFormatter* lf =
+      ulistfmt_openForType(IcuLocale(locale.get()), utype, uwidth, &status);
   if (U_FAILURE(status)) {
     intl::ReportInternalError(cx);
     return nullptr;
