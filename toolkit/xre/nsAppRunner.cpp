@@ -11,7 +11,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/AvailableMemoryTracker.h"
 #include "mozilla/Components.h"
 #include "mozilla/FilePreferences.h"
 #include "mozilla/ChaosMode.h"
@@ -5235,10 +5234,6 @@ nsresult XREMain::XRE_mainRun() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 #endif
-
-  // AvailableMemoryTracker needs to be initialized
-  // after prefs have been loaded.
-  mozilla::AvailableMemoryTracker::Init();
 
   {
     rv = appStartup->Run();
