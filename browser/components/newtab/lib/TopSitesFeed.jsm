@@ -110,6 +110,7 @@ const DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH = "browser.topsites.experiment.";
 const CONTILE_ENABLED_PREF = "browser.topsites.contile.enabled";
 const CONTILE_ENDPOINT_PREF = "browser.topsites.contile.endpoint";
 const CONTILE_UPDATE_INTERVAL = 15 * 60 * 1000; // 15 minutes
+const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 
 function getShortURLForCurrentSearch() {
   const url = shortURL({ url: Services.search.defaultEngine.searchForm });
@@ -142,6 +143,19 @@ class ContileIntegration {
     }
   }
 
+  /**
+   * Filter the tiles whose sponsor is on the Top Sites sponsor blocklist.
+   *
+   * @param {array} tiles
+   *   An array of the tile objects
+   */
+  _filterBlockedSponsors(tiles) {
+    const blocklist = JSON.parse(
+      Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
+    );
+    return tiles.filter(tile => !blocklist.includes(shortURL(tile)));
+  }
+
   async _fetchSites() {
     if (
       !Services.prefs.getBoolPref(CONTILE_ENABLED_PREF) ||
@@ -172,6 +186,7 @@ class ContileIntegration {
       const body = await response.json();
       if (body?.tiles && Array.isArray(body.tiles)) {
         let { tiles } = body;
+        tiles = this._filterBlockedSponsors(tiles);
         if (tiles.length > MAX_NUM_SPONSORED) {
           Cu.reportError(
             `Contile provided more links than permitted. (${tiles.length} received, limit is ${MAX_NUM_SPONSORED})`
