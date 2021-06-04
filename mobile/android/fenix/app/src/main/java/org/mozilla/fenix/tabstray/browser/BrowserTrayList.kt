@@ -73,6 +73,8 @@ class BrowserTrayList @JvmOverloads constructor(
         tabsFeature.start()
         swipeToDelete.start()
 
+        adapter?.onAttachedToRecyclerView(this)
+
         touchHelper.attachToRecyclerView(this)
     }
 
