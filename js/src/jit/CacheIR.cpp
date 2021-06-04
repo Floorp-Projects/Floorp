@@ -9986,6 +9986,7 @@ void ToBoolIRGenerator::trackAttached(const char* name) {
 
 AttachDecision ToBoolIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
+  writer.setTypeData(TypeData(JSValueType(val_.type())));
 
   TRY_ATTACH(tryAttachBool());
   TRY_ATTACH(tryAttachInt32());
