@@ -134,13 +134,24 @@ static bool ShouldZoomToElement(
   return true;
 }
 
-static bool IsRectZoomedIn(const CSSRect& aRect,
-                           const CSSRect& aCompositedArea) {
+// Calculates if zooming to aRect would have almost the same zoom level as
+// aCompositedArea currently has. If so we would want to zoom out instead.
+static bool RectHasAlmostSameZoomLevel(const CSSRect& aRect,
+                                       const CSSRect& aCompositedArea) {
   // This functions checks to see if the area of the rect visible in the
   // composition bounds (i.e. the overlapArea variable below) is approximately
   // the max area of the rect we can show.
-  CSSRect overlap = aCompositedArea.Intersect(aRect);
-  float overlapArea = overlap.Width() * overlap.Height();
+
+  // AsyncPanZoomController::ZoomToRect will adjust the zoom and scroll offset
+  // so that the zoom to rect fills the composited area. If after adjusting the
+  // scroll offset _only_ the rect would fill the composited area we want to
+  // zoom out (we don't want to _just_ scroll, we want to do some amount of
+  // zooming, either in or out it doesn't matter which). So translate both rects
+  // to the same origin and then compute their overlap, which is what the
+  // following calculation does.
+
+  float overlapArea = std::min(aRect.width, aCompositedArea.width) *
+                      std::min(aRect.height, aCompositedArea.height);
   float availHeight = std::min(
       aRect.Width() * aCompositedArea.Height() / aCompositedArea.Width(),
       aRect.Height());
@@ -274,7 +285,7 @@ ZoomTarget CalculateRectToZoomTo(
 
   // If the rect is already taking up most of the visible area and is
   // stretching the width of the page, then we want to zoom out instead.
-  if (IsRectZoomedIn(rect, compositedArea)) {
+  if (RectHasAlmostSameZoomLevel(rect, compositedArea)) {
     return ZoomTarget{zoomOut, Nothing(), Some(documentRelativePoint)};
   }
 
