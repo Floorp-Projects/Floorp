@@ -4,8 +4,8 @@
 
 /* eslint no-unused-vars: ["error", {vars: "local", args: "none"}] */
 
-if (!_TEST_FILE[0].includes("toolkit/mozapps/extensions/test/xpcshell/")) {
-  ok(
+if (!_TEST_NAME.includes("toolkit/mozapps/extensions/test/xpcshell/")) {
+  Assert.ok(
     false,
     "head_addons.js may not be loaded by tests outside of " +
       "the add-on manager component."
