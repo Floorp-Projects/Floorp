@@ -122,29 +122,20 @@ UNUSED_SOURCES = set(
 )
 
 
-def find_source_file(dir, filename):
-    base = os.path.splitext(filename)[0]
-    for ext in (".cpp", ".c"):
-        f = mozpath.join(dir, base + ext)
-        if os.path.isfile(f):
-            return f
+def ensure_source_file_exists(dir, filename):
+    f = mozpath.join(dir, filename)
+    if os.path.isfile(f):
+        return f
     raise Exception("Couldn't find source file for: %s" % filename)
 
 
-def get_sources_from_makefile(makefile):
-    srcdir = os.path.dirname(makefile)
-    with open(makefile) as f:
-        contents = f.read().replace("\\\n", "").split("\n")
-    for line in contents:
-        if line.startswith("OBJECTS ="):
-            return sorted(
-                (
-                    find_source_file(srcdir, s)
-                    for s in line[len("OBJECTS =") :].strip().split()
-                ),
-                key=lambda x: x.lower(),
-            )
-    raise AssertionError("OBJECTS definition not found in file %s" % makefile)
+def get_sources(sources_file):
+    srcdir = os.path.dirname(sources_file)
+    with open(sources_file) as f:
+        return sorted(
+            (ensure_source_file_exists(srcdir, name.strip()) for name in f),
+            key=lambda x: x.lower(),
+        )
 
 
 def list_headers(path):
@@ -177,13 +168,11 @@ def update_sources(topsrcdir):
     print("Updating ICU sources lists...")
     for d in ["common", "i18n", "tools/toolutil", "tools/icupkg"]:
         base_path = mozpath.join(topsrcdir, "intl/icu/source/%s" % d)
-        makefile = mozpath.join(base_path, "Makefile.in")
+        sources_file = mozpath.join(base_path, "sources.txt")
         mozbuild = mozpath.join(
             topsrcdir, "config/external/icu/%s/sources.mozbuild" % mozpath.basename(d)
         )
-        sources = [
-            mozpath.relpath(s, topsrcdir) for s in get_sources_from_makefile(makefile)
-        ]
+        sources = [mozpath.relpath(s, topsrcdir) for s in get_sources(sources_file)]
         unicode_dir = mozpath.join(base_path, "unicode")
         if os.path.exists(unicode_dir):
             headers = [
