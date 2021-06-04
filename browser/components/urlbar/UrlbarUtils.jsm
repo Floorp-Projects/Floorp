@@ -55,6 +55,7 @@ var UrlbarUtils = {
     GENERAL: "general",
     FORM_HISTORY: "formHistory",
     HEURISTIC_AUTOFILL: "heuristicAutofill",
+    HEURISTIC_ENGINE_ALIAS: "heuristicEngineAlias",
     HEURISTIC_EXTENSION: "heuristicExtension",
     HEURISTIC_FALLBACK: "heuristicFallback",
     HEURISTIC_OMNIBOX: "heuristicOmnibox",
@@ -496,6 +497,8 @@ var UrlbarUtils = {
     }
     if (result.heuristic) {
       switch (result.providerName) {
+        case "AliasEngines":
+          return UrlbarUtils.RESULT_GROUP.HEURISTIC_ENGINE_ALIAS;
         case "Autofill":
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_AUTOFILL;
         case "HeuristicFallback":
