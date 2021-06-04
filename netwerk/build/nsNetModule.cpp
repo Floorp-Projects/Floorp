@@ -33,14 +33,14 @@
 
 using namespace mozilla;
 
-using ContentSnifferCache = nsCategoryCache<nsIContentSniffer>;
+typedef nsCategoryCache<nsIContentSniffer> ContentSnifferCache;
 ContentSnifferCache* gNetSniffers = nullptr;
 ContentSnifferCache* gDataSniffers = nullptr;
 ContentSnifferCache* gORBSniffers = nullptr;
 ContentSnifferCache* gNetAndORBSniffers = nullptr;
 
 #define static
-using nsLoadGroup = mozilla::net::nsLoadGroup;
+typedef mozilla::net::nsLoadGroup nsLoadGroup;
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLoadGroup, Init)
 #undef static
 

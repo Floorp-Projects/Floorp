@@ -37,7 +37,7 @@ static const uint32_t UDP_PACKET_CHUNK_SIZE = 1400;
 
 //-----------------------------------------------------------------------------
 
-using nsUDPSocketFunc = void (nsUDPSocket::*)();
+typedef void (nsUDPSocket::*nsUDPSocketFunc)(void);
 
 static nsresult PostEvent(nsUDPSocket* s, nsUDPSocketFunc func) {
   if (!gSocketTransportService) return NS_ERROR_FAILURE;
@@ -503,11 +503,10 @@ nsUDPSocket::Init(int32_t aPort, bool aLoopbackOnly, nsIPrincipal* aPrincipal,
   addr.raw.family = AF_INET;
   addr.inet.port = htons(aPort);
 
-  if (aLoopbackOnly) {
+  if (aLoopbackOnly)
     addr.inet.ip = htonl(INADDR_LOOPBACK);
-  } else {
+  else
     addr.inet.ip = htonl(INADDR_ANY);
-  }
 
   return InitWithAddress(&addr, aPrincipal, aAddressReuse, aOptionalArgc);
 }

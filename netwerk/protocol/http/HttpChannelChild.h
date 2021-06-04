@@ -204,7 +204,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   // Callbacks while receiving OnTransportAndData/OnStopRequest/OnProgress/
   // OnStatus/FlushedForDiversion/DivertMessages on background IPC channel.
   void ProcessOnTransportAndData(const nsresult& aChannelStatus,
-                                 const nsresult& aTransportStatus,
+                                 const nsresult& aStatus,
                                  const uint64_t& aOffset,
                                  const uint32_t& aCount,
                                  const nsCString& aData);
@@ -397,8 +397,7 @@ class HttpChannelChild final : public PHttpChannelChild,
                      const nsHttpHeaderArray& aResponseTrailers);
   void FailedAsyncOpen(const nsresult& status);
   void HandleAsyncAbort();
-  void Redirect1Begin(const uint32_t& registrarId,
-                      const URIParams& newOriginalURI,
+  void Redirect1Begin(const uint32_t& registrarId, const URIParams& newUri,
                       const uint32_t& newLoadFlags,
                       const uint32_t& redirectFlags,
                       const ParentLoadInfoForwarderArgs& loadInfoForwarder,

@@ -562,8 +562,7 @@ nsresult Http2Decompressor::OutputHeader(const nsACString& name,
     if (*cPtr == ':') {
       isColonHeader = true;
       break;
-    }
-    if (*cPtr != ' ' && *cPtr != '\t') {
+    } else if (*cPtr != ' ' && *cPtr != '\t') {
       isColonHeader = false;
       break;
     }
@@ -1116,8 +1115,7 @@ nsresult Http2Compressor::EncodeHeaderBlock(
       if (*cPtr == ':') {
         isColonHeader = true;
         break;
-      }
-      if (*cPtr != ' ' && *cPtr != '\t') {
+      } else if (*cPtr != ' ' && *cPtr != '\t') {
         isColonHeader = false;
         break;
       }
@@ -1128,9 +1126,8 @@ nsresult Http2Compressor::EncodeHeaderBlock(
 
     int32_t valueIndex = colonIndex + 1;
 
-    while (valueIndex < crlfIndex && beginBuffer[valueIndex] == ' ') {
+    while (valueIndex < crlfIndex && beginBuffer[valueIndex] == ' ')
       ++valueIndex;
-    }
 
     nsDependentCSubstring value =
         Substring(beginBuffer + valueIndex, beginBuffer + crlfIndex);

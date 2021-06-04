@@ -34,7 +34,8 @@
 #define TEMP_INDEX_NAME "index.tmp"
 #define JOURNAL_NAME "index.log"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 namespace {
 
@@ -1395,9 +1396,8 @@ nsresult CacheIndex::GetCacheStats(nsILoadContextInfo* aInfo, uint32_t* aSize,
 
   for (auto iter = index->mFrecencyArray.Iter(); !iter.Done(); iter.Next()) {
     if (aInfo &&
-        !CacheIndexEntry::RecordMatchesLoadContextInfo(iter.Get(), aInfo)) {
+        !CacheIndexEntry::RecordMatchesLoadContextInfo(iter.Get(), aInfo))
       continue;
-    }
 
     *aSize += CacheIndexEntry::GetFileSize(*(iter.Get()->Get()));
     ++*aCount;
@@ -2663,7 +2663,7 @@ nsresult CacheIndex::InitEntryFromDiskData(CacheIndexEntry* aEntry,
   aEntry->SetFrecency(aMetaData->GetFrecency());
 
   const char* altData = aMetaData->GetElement(CacheFileUtils::kAltDataKey);
-  bool hasAltData = altData != nullptr;
+  bool hasAltData = altData ? true : false;
   if (hasAltData && NS_FAILED(CacheFileUtils::ParseAlternativeDataInfo(
                         altData, nullptr, nullptr))) {
     return NS_ERROR_FAILURE;
@@ -2705,7 +2705,11 @@ nsresult CacheIndex::InitEntryFromDiskData(CacheIndexEntry* aEntry,
 bool CacheIndex::IsUpdatePending() {
   sLock.AssertCurrentThreadOwns();
 
-  return mUpdateTimer || mUpdateEventPending;
+  if (mUpdateTimer || mUpdateEventPending) {
+    return true;
+  }
+
+  return false;
 }
 
 void CacheIndex::BuildIndex() {
@@ -3870,4 +3874,5 @@ void CacheIndex::OnAsyncEviction(bool aEvicting) {
   }
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

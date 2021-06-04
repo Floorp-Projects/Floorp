@@ -30,7 +30,7 @@
 #include "nsNetCID.h"
 #include "nsXULAppAPI.h"
 
-using FileHandleType = mozilla::ipc::FileDescriptor::PlatformHandleType;
+typedef mozilla::ipc::FileDescriptor::PlatformHandleType FileHandleType;
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
@@ -854,9 +854,8 @@ nsAtomicFileOutputStream::Finish() {
       // in writing to the target file), there is nothing more to do.
 #ifdef DEBUG
       bool equal;
-      if (NS_FAILED(mTargetFile->Equals(mTempFile, &equal)) || !equal) {
+      if (NS_FAILED(mTargetFile->Equals(mTempFile, &equal)) || !equal)
         NS_WARNING("mTempFile not equal to mTargetFile");
-      }
 #endif
     } else {
       nsAutoString targetFilename;
@@ -882,15 +881,13 @@ nsAtomicFileOutputStream::Write(const char* buf, uint32_t count,
                                 uint32_t* result) {
   nsresult rv = nsFileOutputStream::Write(buf, count, result);
   if (NS_SUCCEEDED(mWriteResult)) {
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv))
       mWriteResult = rv;
-    } else if (count != *result) {
+    else if (count != *result)
       mWriteResult = NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
-    }
 
-    if (NS_FAILED(mWriteResult) && count > 0) {
+    if (NS_FAILED(mWriteResult) && count > 0)
       NS_WARNING("writing to output stream failed! data may be lost");
-    }
   }
   return rv;
 }

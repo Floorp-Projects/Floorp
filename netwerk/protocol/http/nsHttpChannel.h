@@ -269,7 +269,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   virtual ~nsHttpChannel();
 
  private:
-  using nsContinueRedirectionFunc = nsresult (nsHttpChannel::*)(nsresult);
+  typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 
   // Directly call |aFunc| if the channel is not canceled and not suspended.
   // Otherwise, set |aFunc| to |mCallOnResume| and wait until the channel

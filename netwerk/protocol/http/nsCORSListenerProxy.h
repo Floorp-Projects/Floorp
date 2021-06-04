@@ -84,7 +84,7 @@ class nsCORSListenerProxy final : public nsIStreamListener,
       const mozilla::OriginAttributes& aOriginAttributes);
   [[nodiscard]] static nsresult StartCORSPreflight(
       nsIChannel* aRequestChannel, nsICorsPreflightCallback* aCallback,
-      nsTArray<nsCString>& aUnsafeHeaders, nsIChannel** aPreflightChannel);
+      nsTArray<nsCString>& aACUnsafeHeaders, nsIChannel** aPreflightChannel);
 
   ~nsCORSListenerProxy() = default;
 

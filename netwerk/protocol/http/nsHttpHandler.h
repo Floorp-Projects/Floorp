@@ -119,7 +119,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   [[nodiscard]] nsresult AddStandardRequestHeaders(
       nsHttpRequestHead*, bool isSecure,
       ExtContentPolicyType aContentPolicyType);
-  [[nodiscard]] nsresult AddConnectionHeader(nsHttpRequestHead*, uint32_t caps);
+  [[nodiscard]] nsresult AddConnectionHeader(nsHttpRequestHead*,
+                                             uint32_t capabilities);
   bool IsAcceptableEncoding(const char* encoding, bool isSecure);
 
   const nsCString& UserAgent();
@@ -352,7 +353,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // provides the following helper routines for accessing those services:
   //
   [[nodiscard]] nsresult GetStreamConverterService(nsIStreamConverterService**);
-  [[nodiscard]] nsresult GetIOService(nsIIOService** result);
+  [[nodiscard]] nsresult GetIOService(nsIIOService** service);
   nsICookieService* GetCookieService();  // not addrefed
   nsISiteSecurityService* GetSSService();
 
@@ -469,7 +470,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // took place.  Called only on the parent process and only updates
   // mLastActiveTabLoadOptimizationHit timestamp to now.
   void NotifyActiveTabLoadOptimization();
-  TimeStamp GetLastActiveTabLoadOptimizationHit();
+  TimeStamp const GetLastActiveTabLoadOptimizationHit();
   void SetLastActiveTabLoadOptimizationHit(TimeStamp const& when);
   bool IsBeforeLastActiveTabLoadOptimization(TimeStamp const& when);
 

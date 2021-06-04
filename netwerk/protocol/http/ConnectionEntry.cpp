@@ -48,8 +48,9 @@ bool ConnectionEntry::AvailableForDispatchNow() {
     return true;
   }
 
-  return gHttpHandler->ConnMgr()->GetH2orH3ActiveConn(this, false, false) !=
-         nullptr;
+  return gHttpHandler->ConnMgr()->GetH2orH3ActiveConn(this, false, false)
+             ? true
+             : false;
 }
 
 uint32_t ConnectionEntry::UnconnectedDnsAndConnectSockets() const {
@@ -809,7 +810,7 @@ HttpRetParams ConnectionEntry::GetConnectionData() {
     data.idle.AppendElement(info);
   }
   for (uint32_t i = 0; i < mDnsAndConnectSockets.Length(); i++) {
-    DnsAndConnectSockets dnsAndSock{};
+    DnsAndConnectSockets dnsAndSock;
     dnsAndSock.speculative = mDnsAndConnectSockets[i]->IsSpeculative();
     data.dnsAndSocks.AppendElement(dnsAndSock);
   }

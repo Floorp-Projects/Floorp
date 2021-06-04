@@ -57,7 +57,7 @@ class AltSvcMapping {
 
  public:
   AltSvcMapping(DataStorage* storage, int32_t storageEpoch,
-                const nsCString& str);
+                const nsCString& serialized);
 
   static void ProcessHeader(
       const nsCString& buf, const nsCString& originScheme,
@@ -69,7 +69,7 @@ class AltSvcMapping {
 
   // AcceptableProxy() decides whether a particular proxy configuration (pi) is
   // suitable for use with Alt-Svc. No proxy (including a null pi) is suitable.
-  static bool AcceptableProxy(nsProxyInfo* proxyInfo);
+  static bool AcceptableProxy(nsProxyInfo* pi);
 
   const nsCString& AlternateHost() const { return mAlternateHost; }
   const nsCString& OriginHost() const { return mOriginHost; }
@@ -99,14 +99,14 @@ class AltSvcMapping {
                           const nsACString& originHost, int32_t originPort,
                           bool privateBrowsing,
                           const OriginAttributes& originAttributes,
-                          bool aHttp3);
+                          bool aIsHttp3);
 
   bool IsHttp3() { return mIsHttp3; }
   const nsCString& NPNToken() const { return mNPNToken; }
 
  private:
   virtual ~AltSvcMapping() = default;
-  void SyncString(const nsCString& str);
+  void SyncString(const nsCString& val);
   RefPtr<DataStorage> mStorage;
   int32_t mStorageEpoch;
   void Serialize(nsCString& out);
@@ -126,7 +126,7 @@ class AltSvcMapping {
   MOZ_INIT_OUTSIDE_CTOR uint32_t mExpiresAt;  // alt-svc mappping
 
   MOZ_INIT_OUTSIDE_CTOR bool mValidated;
-  MOZ_INIT_OUTSIDE_CTOR bool mHttps{};  // origin is https://
+  MOZ_INIT_OUTSIDE_CTOR bool mHttps;  // origin is https://
   MOZ_INIT_OUTSIDE_CTOR bool
       mMixedScheme;  // .wk allows http and https on same con
 
@@ -191,9 +191,9 @@ class AltSvcCache {
       uint32_t caps,
       const OriginAttributes& originAttributes);  // main thread
   already_AddRefed<AltSvcMapping> GetAltServiceMapping(
-      const nsACString& scheme, const nsACString& host, int32_t port,
-      bool privateBrowsing, const OriginAttributes& originAttributes,
-      bool aHttp2Allowed, bool aHttp3Allowed);
+      const nsACString& scheme, const nsACString& host, int32_t port, bool pb,
+      const OriginAttributes& originAttributes, bool aHttp2Allowed,
+      bool aHttp3Allowed);
   void ClearAltServiceMappings();
   void ClearHostMapping(const nsACString& host, int32_t port,
                         const OriginAttributes& originAttributes);

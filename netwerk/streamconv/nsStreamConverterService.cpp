@@ -161,7 +161,7 @@ nsresult nsStreamConverterService::ParseFromTo(const char* aContractID,
   return NS_OK;
 }
 
-using BFSHashTable = nsClassHashtable<nsCStringHashKey, BFSTableData>;
+typedef nsClassHashtable<nsCStringHashKey, BFSTableData> BFSHashTable;
 
 // nsObjectHashtable enumerator functions.
 
@@ -370,9 +370,8 @@ nsStreamConverterService::Convert(nsIInputStream* aFromStream,
                                   const char* aFromType, const char* aToType,
                                   nsISupports* aContext,
                                   nsIInputStream** _retval) {
-  if (!aFromStream || !aFromType || !aToType || !_retval) {
+  if (!aFromStream || !aFromType || !aToType || !_retval)
     return NS_ERROR_NULL_POINTER;
-  }
   nsresult rv;
 
   // first determine whether we can even handle this conversion
@@ -449,9 +448,8 @@ nsStreamConverterService::AsyncConvertData(const char* aFromType,
                                            nsIStreamListener* aListener,
                                            nsISupports* aContext,
                                            nsIStreamListener** _retval) {
-  if (!aFromType || !aToType || !aListener || !_retval) {
+  if (!aFromType || !aToType || !aListener || !_retval)
     return NS_ERROR_NULL_POINTER;
-  }
 
   nsresult rv;
 

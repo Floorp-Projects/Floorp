@@ -107,7 +107,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
       mPendingTime = now ? TimeStamp::Now() : TimeStamp();
     }
   }
-  TimeStamp GetPendingTime() { return mPendingTime; }
+  const TimeStamp GetPendingTime() { return mPendingTime; }
 
   // overload of nsAHttpTransaction::RequestContext()
   nsIRequestContext* RequestContext() override { return mRequestContext.get(); }
@@ -283,9 +283,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
           mCallbacks(aCallbacks) {}
 
     NS_IMETHOD Run() override {
-      if (mTrans->mConnection) {
+      if (mTrans->mConnection)
         mTrans->mConnection->SetSecurityCallbacks(mCallbacks);
-      }
       return NS_OK;
     }
 

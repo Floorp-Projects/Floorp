@@ -4,7 +4,8 @@
 
 #include "CacheLog.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 // Log module for cache2 (2013) cache implementation logging...
 //
@@ -17,4 +18,5 @@ namespace mozilla::net {
 // the file network.log.
 LazyLogModule gCache2Log("cache2");
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

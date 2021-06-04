@@ -316,17 +316,15 @@ nsViewSourceChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-  if (loadGroup) {
+  if (loadGroup)
     loadGroup->AddRequest(static_cast<nsIViewSourceChannel*>(this), nullptr);
-  }
 
   nsresult rv = NS_OK;
   rv = mChannel->AsyncOpen(this);
 
-  if (NS_FAILED(rv) && loadGroup) {
+  if (NS_FAILED(rv) && loadGroup)
     loadGroup->RemoveRequest(static_cast<nsIViewSourceChannel*>(this), nullptr,
                              rv);
-  }
 
   if (NS_SUCCEEDED(rv)) {
     // We do this here to make sure all notification callbacks changes have been
@@ -386,7 +384,7 @@ nsViewSourceChannel::SetLoadFlags(uint32_t aLoadFlags) {
   // the win32 compiler fails to deal due to amiguous inheritance.
   // nsIChannel::LOAD_DOCUMENT_URI/nsIRequest::LOAD_FROM_CACHE also fails; the
   // Win32 compiler thinks that's supposed to be a method.
-  mIsDocument = (aLoadFlags & ::nsIChannel::LOAD_DOCUMENT_URI) != 0;
+  mIsDocument = (aLoadFlags & ::nsIChannel::LOAD_DOCUMENT_URI) ? true : false;
 
   nsresult rv =
       mChannel->SetLoadFlags((aLoadFlags | ::nsIRequest::LOAD_FROM_CACHE) &

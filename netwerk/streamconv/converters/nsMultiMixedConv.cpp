@@ -879,9 +879,8 @@ nsresult nsMultiMixedConv::SendStop(nsresult aStatus) {
     // Remove the channel from its load group (if any)
     nsCOMPtr<nsILoadGroup> loadGroup;
     (void)mPartChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-    if (loadGroup) {
+    if (loadGroup)
       (void)loadGroup->RemoveRequest(mPartChannel, mContext, aStatus);
-    }
   }
 
   mPartChannel = nullptr;
@@ -923,9 +922,8 @@ nsresult nsMultiMixedConv::SendData() {
   if (mContentLength != UINT64_MAX) {
     // make sure that we don't send more than the mContentLength
     // XXX why? perhaps the Content-Length header was actually wrong!!
-    if ((uint64_t(mRawDataLength) + mTotalSent) > mContentLength) {
+    if ((uint64_t(mRawDataLength) + mTotalSent) > mContentLength)
       mRawDataLength = static_cast<uint32_t>(mContentLength - mTotalSent);
-    }
 
     if (mRawDataLength == 0) return NS_OK;
   }

@@ -41,7 +41,8 @@ LoadContextInfo* GetLoadContextInfo(nsIChannel* aChannel);
 LoadContextInfo* GetLoadContextInfo(nsILoadContext* aLoadContext,
                                     bool aIsAnonymous);
 
-LoadContextInfo* GetLoadContextInfo(nsIDOMWindow* aWindow, bool aIsAnonymous);
+LoadContextInfo* GetLoadContextInfo(nsIDOMWindow* aLoadContext,
+                                    bool aIsAnonymous);
 
 LoadContextInfo* GetLoadContextInfo(nsILoadContextInfo* aInfo);
 

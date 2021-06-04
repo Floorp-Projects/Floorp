@@ -76,10 +76,9 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_PARENT_IID)
 
   HttpChannelParent(dom::BrowserParent* iframeEmbedding,
-                    nsILoadContext* aLoadContext,
-                    PBOverrideStatus aOverrideStatus);
+                    nsILoadContext* aLoadContext, PBOverrideStatus aStatus);
 
-  [[nodiscard]] bool Init(const HttpChannelCreationArgs& aArgs);
+  [[nodiscard]] bool Init(const HttpChannelCreationArgs& aOpenArgs);
 
   // Forwarded to nsHttpChannel::SetApplyConversion.
   void SetApplyConversion(bool aApplyConversion) {
@@ -132,12 +131,12 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
  protected:
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during redirects.
-  [[nodiscard]] bool ConnectChannel(const uint32_t& registrarId);
+  [[nodiscard]] bool ConnectChannel(const uint32_t& channelId);
 
   [[nodiscard]] bool DoAsyncOpen(
       const URIParams& uri, const Maybe<URIParams>& originalUri,
       const Maybe<URIParams>& docUri, nsIReferrerInfo* aReferrerInfo,
-      const Maybe<URIParams>& aAPIRedirectToURI,
+      const Maybe<URIParams>& internalRedirectUri,
       const Maybe<URIParams>& topWindowUri, const uint32_t& loadFlags,
       const RequestHeaderTuples& requestHeaders, const nsCString& requestMethod,
       const Maybe<IPCStream>& uploadStream, const bool& uploadStreamHasHeaders,
@@ -158,7 +157,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const uint64_t& aContentWindowId,
       const nsTArray<PreferredAlternativeDataTypeParams>&
           aPreferredAlternativeTypes,
-      const uint64_t& aTopBrowsingContextId,
+      const uint64_t& aTopLevelOuterContentWindowId,
       const TimeStamp& aLaunchServiceWorkerStart,
       const TimeStamp& aLaunchServiceWorkerEnd,
       const TimeStamp& aDispatchFetchEventStart,

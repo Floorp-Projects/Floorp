@@ -66,12 +66,11 @@ nsStreamListenerTee::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
   nsresult rv;
 
   if (!mInputTee) {
-    if (mEventTarget) {
+    if (mEventTarget)
       rv = NS_NewInputStreamTeeAsync(getter_AddRefs(tee), input, mSink,
                                      mEventTarget);
-    } else {
+    else
       rv = NS_NewInputStreamTee(getter_AddRefs(tee), input, mSink);
-    }
     if (NS_FAILED(rv)) return rv;
 
     mInputTee = do_QueryInterface(tee, &rv);

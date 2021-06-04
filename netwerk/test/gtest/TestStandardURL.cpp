@@ -189,8 +189,8 @@ TEST(TestStandardURL, NormalizeBad)
       "2.2.2.256",     "2.2.-2.3",      "+2.2.2.3",        "13.0x2x2.2.3",
       "0x2x2.13.2.3"};
 
-  for (auto& i : manual) {
-    nsCString encHost(i);
+  for (uint32_t i = 0; i < sizeof(manual) / sizeof(manual[0]); i++) {
+    nsCString encHost(manual[i]);
     ASSERT_EQ(NS_ERROR_FAILURE, Test_NormalizeIPv4(encHost, result));
   }
 }
@@ -223,8 +223,8 @@ TEST(TestStandardURL, From_test_standardurldotjs)
       "0X7F000001",
       "0X007F.0X0000.0X0000.0X0001",
       "000177.0.00000.0X0001"};
-  for (auto& localIPv4 : localIPv4s) {
-    nsCString encHost(localIPv4);
+  for (uint32_t i = 0; i < sizeof(localIPv4s) / sizeof(localIPv4s[0]); i++) {
+    nsCString encHost(localIPv4s[i]);
     ASSERT_EQ(NS_OK, Test_NormalizeIPv4(encHost, result));
     ASSERT_TRUE(result.EqualsLiteral("127.0.0.1"));
   }
@@ -237,8 +237,8 @@ TEST(TestStandardURL, From_test_standardurldotjs)
                             "2+3",         "0.0.0.-1",
                             "1.2.3.4..",   "1..2",
                             ".1.2.3.4"};
-  for (auto& nonIPv4 : nonIPv4s) {
-    nsCString encHost(nonIPv4);
+  for (uint32_t i = 0; i < sizeof(nonIPv4s) / sizeof(nonIPv4s[0]); i++) {
+    nsCString encHost(nonIPv4s[i]);
     ASSERT_EQ(NS_ERROR_FAILURE, Test_NormalizeIPv4(encHost, result));
   }
 }

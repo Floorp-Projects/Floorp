@@ -103,7 +103,7 @@ class nsUnknownDecoder : public nsIStreamConverter,
    * false otherwise
    */
   struct nsSnifferEntry {
-    using TypeSniffFunc = bool (nsUnknownDecoder::*)(nsIRequest*);
+    typedef bool (nsUnknownDecoder::*TypeSniffFunc)(nsIRequest* aRequest);
 
     const char* mBytes;
     uint32_t mByteLen;

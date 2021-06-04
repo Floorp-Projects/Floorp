@@ -17,7 +17,7 @@ class UrlClassifierFeaturePhishingProtection final
  public:
   struct PhishingProtectionFeature;
 
-  static void GetFeatureNames(nsTArray<nsCString>& aArray);
+  static void GetFeatureNames(nsTArray<nsCString>& aNames);
 
   static void MaybeShutdown();
 

@@ -68,7 +68,11 @@ bool CookieCommons::PathMatches(Cookie* aCookie, const nsACString& aPath) {
   // of the request path that is not included in the cookie path is a %x2F ("/")
   // character, they match.
   uint32_t cookiePathLen = cookiePath.Length();
-  return isPrefix && aPath[cookiePathLen] == '/';
+  if (isPrefix && aPath[cookiePathLen] == '/') {
+    return true;
+  }
+
+  return false;
 }
 
 // Get the base domain for aHostURI; e.g. for "www.bbc.co.uk", this would be

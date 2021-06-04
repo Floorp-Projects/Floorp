@@ -18,10 +18,10 @@ class HttpBackgroundChannelParent;
 class HttpChannelParent;
 
 class BackgroundChannelRegistrar final : public nsIBackgroundChannelRegistrar {
-  using ChannelHashtable =
-      nsRefPtrHashtable<nsUint64HashKey, HttpChannelParent>;
-  using BackgroundChannelHashtable =
-      nsRefPtrHashtable<nsUint64HashKey, HttpBackgroundChannelParent>;
+  typedef nsRefPtrHashtable<nsUint64HashKey, HttpChannelParent>
+      ChannelHashtable;
+  typedef nsRefPtrHashtable<nsUint64HashKey, HttpBackgroundChannelParent>
+      BackgroundChannelHashtable;
 
  public:
   NS_DECL_ISUPPORTS

@@ -10,7 +10,8 @@
 
 #include "mozilla/IntegerPrintfMacros.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 #define kMinBufSize 512
 
@@ -835,4 +836,5 @@ mozilla::Atomic<uint32_t, ReleaseAcquire>& CacheFileChunk::ChunksMemoryUsage()
   return mIsPriority ? prioChunksMemoryUsage : chunksMemoryUsage;
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

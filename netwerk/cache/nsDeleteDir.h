@@ -47,7 +47,7 @@ class nsDeleteDir {
   /**
    * Returns the trash directory corresponding to the given directory.
    */
-  static nsresult GetTrashDir(nsIFile* target, nsCOMPtr<nsIFile>* result);
+  static nsresult GetTrashDir(nsIFile* dir, nsCOMPtr<nsIFile>* result);
 
   /**
    * Remove all trashes left from previous run. This function does nothing when

@@ -96,21 +96,21 @@ class HttpConnectionUDP final : public HttpConnectionBase,
 
   RefPtr<nsIAsyncInputStream> mInputOverflow;
 
-  bool mConnectedTransport = false;
-  bool mDontReuse = false;
-  bool mIsReused = false;
-  bool mLastTransactionExpectedNoContent = false;
+  bool mConnectedTransport;
+  bool mDontReuse;
+  bool mIsReused;
+  bool mLastTransactionExpectedNoContent;
 
-  int32_t mPriority = nsISupportsPriority::PRIORITY_NORMAL;
+  int32_t mPriority;
 
  private:
   // For ForceSend()
   static void ForceSendIO(nsITimer* aTimer, void* aClosure);
   [[nodiscard]] nsresult MaybeForceSendIO();
-  bool mForceSendPending = false;
+  bool mForceSendPending;
   nsCOMPtr<nsITimer> mForceSendTimer;
 
-  PRIntervalTime mLastRequestBytesSentTime = 0;
+  PRIntervalTime mLastRequestBytesSentTime;
   nsCOMPtr<nsIUDPSocket> mSocket;
 
   nsCOMPtr<nsINetAddr> mSelfAddr;

@@ -73,7 +73,7 @@ class SSLTokensCache : public nsIMemoryReporter {
     void Reset();
 
     nsCString mKey;
-    PRUint32 mExpirationTime = 0;
+    PRUint32 mExpirationTime;
     nsTArray<uint8_t> mToken;
     SessionCacheInfo mSessionCacheInfo;
   };

@@ -145,10 +145,9 @@ nsInputStreamTransport::SetEventSink(nsITransportEventSink* sink,
                                      nsIEventTarget* target) {
   NS_ENSURE_TRUE(!mInProgress, NS_ERROR_IN_PROGRESS);
 
-  if (target) {
+  if (target)
     return net_NewTransportEventSinkProxy(getter_AddRefs(mEventSink), sink,
                                           target);
-  }
 
   mEventSink = sink;
   return NS_OK;
@@ -176,9 +175,8 @@ nsInputStreamTransport::Read(char* buf, uint32_t count, uint32_t* result) {
 
   if (NS_SUCCEEDED(rv)) {
     mOffset += *result;
-    if (mEventSink) {
+    if (mEventSink)
       mEventSink->OnTransportStatus(this, NS_NET_STATUS_READING, mOffset, -1);
-    }
   }
   return rv;
 }

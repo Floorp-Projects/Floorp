@@ -646,9 +646,8 @@ nsBaseChannel::Open(nsIInputStream** aStream) {
     rv = Redirect(chan, nsIChannelEventSink::REDIRECT_INTERNAL, false);
     if (NS_FAILED(rv)) return rv;
     rv = chan->Open(aStream);
-  } else if (rv == NS_ERROR_NOT_IMPLEMENTED) {
+  } else if (rv == NS_ERROR_NOT_IMPLEMENTED)
     return NS_ImplementChannelOpen(this, aStream);
-  }
 
   if (NS_SUCCEEDED(rv)) {
     mWasOpened = true;
@@ -824,16 +823,14 @@ nsBaseChannel::OnStartRequest(nsIRequest* request) {
     }
 
     // Now, the general type sniffers. Skip this if we have none.
-    if (mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) {
+    if (mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS)
       mPump->PeekStream(CallTypeSniffers, static_cast<nsIChannel*>(this));
-    }
   }
 
   SUSPEND_PUMP_FOR_SCOPE();
 
-  if (mListener) {  // null in case of redirect
+  if (mListener)  // null in case of redirect
     return mListener->OnStartRequest(this);
-  }
   return NS_OK;
 }
 
@@ -848,9 +845,8 @@ nsBaseChannel::OnStopRequest(nsIRequest* request, nsresult status) {
   mRequest = nullptr;
   mPumpingData = false;
 
-  if (mListener) {  // null in case of redirect
+  if (mListener)  // null in case of redirect
     mListener->OnStopRequest(this, mStatus);
-  }
   ChannelDone();
 
   // No need to suspend pump in this scope since we will not be receiving

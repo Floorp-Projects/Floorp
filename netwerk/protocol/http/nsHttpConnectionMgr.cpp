@@ -67,7 +67,7 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
       mThrottleReadLimit(0),
       mThrottleReadInterval(0),
       mThrottleHoldTime(0),
-      mThrottleMaxTime(nullptr),
+      mThrottleMaxTime(0),
       mBeConservativeForProxy(true),
       mIsShuttingDown(false),
       mNumActiveConns(0),
@@ -248,9 +248,8 @@ void nsHttpConnectionMgr::PruneDeadConnectionsAfter(uint32_t timeInSeconds) {
 void nsHttpConnectionMgr::ConditionallyStopPruneDeadConnectionsTimer() {
   // Leave the timer in place if there are connections that potentially
   // need management
-  if (mNumIdleConns || (mNumActiveConns && gHttpHandler->IsSpdyEnabled())) {
+  if (mNumIdleConns || (mNumActiveConns && gHttpHandler->IsSpdyEnabled()))
     return;
-  }
 
   LOG(("nsHttpConnectionMgr::StopPruneDeadConnectionsTimer\n"));
 
@@ -1235,9 +1234,8 @@ nsresult nsHttpConnectionMgr::MakeNewConnection(
   outerLoopEnd:;
   }
 
-  if (AtActiveConnectionLimit(ent, trans->Caps())) {
+  if (AtActiveConnectionLimit(ent, trans->Caps()))
     return NS_ERROR_NOT_AVAILABLE;
-  }
 
   nsresult rv =
       CreateTransport(ent, trans, trans->Caps(), false, false,
@@ -1601,15 +1599,14 @@ nsresult nsHttpConnectionMgr::DispatchAbstractTransaction(
 void nsHttpConnectionMgr::ReportProxyTelemetry(ConnectionEntry* ent) {
   enum { PROXY_NONE = 1, PROXY_HTTP = 2, PROXY_SOCKS = 3, PROXY_HTTPS = 4 };
 
-  if (!ent->mConnInfo->UsingProxy()) {
+  if (!ent->mConnInfo->UsingProxy())
     Telemetry::Accumulate(Telemetry::HTTP_PROXY_TYPE, PROXY_NONE);
-  } else if (ent->mConnInfo->UsingHttpsProxy()) {
+  else if (ent->mConnInfo->UsingHttpsProxy())
     Telemetry::Accumulate(Telemetry::HTTP_PROXY_TYPE, PROXY_HTTPS);
-  } else if (ent->mConnInfo->UsingHttpProxy()) {
+  else if (ent->mConnInfo->UsingHttpProxy())
     Telemetry::Accumulate(Telemetry::HTTP_PROXY_TYPE, PROXY_HTTP);
-  } else {
+  else
     Telemetry::Accumulate(Telemetry::HTTP_PROXY_TYPE, PROXY_SOCKS);
-  }
 }
 
 nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
@@ -3567,9 +3564,8 @@ void nsHttpConnectionMgr::NewIdleConnectionAdded(uint32_t timeToLive) {
   // If the added connection was first idle connection or has shortest
   // time to live among the watched connections, pruning dead
   // connections needs to be done when it can't be reused anymore.
-  if (!mTimer || NowInSeconds() + timeToLive < mTimeOfNextWakeUp) {
+  if (!mTimer || NowInSeconds() + timeToLive < mTimeOfNextWakeUp)
     PruneDeadConnectionsAfter(timeToLive);
-  }
 }
 
 void nsHttpConnectionMgr::DecrementNumIdleConns() {

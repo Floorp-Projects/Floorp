@@ -62,14 +62,14 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   // Forwarded to from CacheEntryHandle : nsICacheEntry
   nsresult GetKey(nsACString& aKey);
   nsresult GetCacheEntryId(uint64_t* aCacheEntryId);
-  nsresult GetPersistent(bool* aPersistToDisk);
+  nsresult GetPersistent(bool* aPersistent);
   nsresult GetFetchCount(int32_t* aFetchCount);
   nsresult GetLastFetched(uint32_t* aLastFetched);
   nsresult GetLastModified(uint32_t* aLastModified);
   nsresult GetExpirationTime(uint32_t* aExpirationTime);
   nsresult SetExpirationTime(uint32_t expirationTime);
-  nsresult GetOnStartTime(uint64_t* aTime);
-  nsresult GetOnStopTime(uint64_t* aTime);
+  nsresult GetOnStartTime(uint64_t* aOnStartTime);
+  nsresult GetOnStopTime(uint64_t* aOnStopTime);
   nsresult SetNetworkTimes(uint64_t onStartTime, uint64_t onStopTime);
   nsresult SetContentType(uint8_t aContentType);
   nsresult ForceValidFor(uint32_t aSecondsToTheFuture);
@@ -80,8 +80,8 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   nsresult GetSecurityInfo(nsISupports** aSecurityInfo);
   nsresult SetSecurityInfo(nsISupports* aSecurityInfo);
   nsresult GetStorageDataSize(uint32_t* aStorageDataSize);
-  nsresult AsyncDoom(nsICacheEntryDoomCallback* aCallback);
-  nsresult GetMetaDataElement(const char* key, char** aRetval);
+  nsresult AsyncDoom(nsICacheEntryDoomCallback* listener);
+  nsresult GetMetaDataElement(const char* key, char** _retval);
   nsresult SetMetaDataElement(const char* key, const char* value);
   nsresult VisitMetaData(nsICacheEntryMetaDataVisitor* visitor);
   nsresult MetaDataReady(void);
@@ -89,18 +89,18 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   nsresult GetDiskStorageSizeInKB(uint32_t* aDiskStorageSizeInKB);
   nsresult Recreate(bool aMemoryOnly, nsICacheEntry** _retval);
   nsresult GetDataSize(int64_t* aDataSize);
-  nsresult GetAltDataSize(int64_t* aDataSize);
+  nsresult GetAltDataSize(int64_t* aAltDataSize);
   nsresult GetAltDataType(nsACString& aAltDataType);
   nsresult OpenAlternativeOutputStream(const nsACString& type,
                                        int64_t predictedSize,
                                        nsIAsyncOutputStream** _retval);
   nsresult OpenAlternativeInputStream(const nsACString& type,
                                       nsIInputStream** _retval);
-  nsresult GetLoadContextInfo(nsILoadContextInfo** aInfo);
+  nsresult GetLoadContextInfo(nsILoadContextInfo** aLoadContextInfo);
   nsresult Close(void);
   nsresult MarkValid(void);
   nsresult MaybeMarkValid(void);
-  nsresult HasWriteAccess(bool aWriteAllowed, bool* aWriteAccess);
+  nsresult HasWriteAccess(bool aWriteAllowed, bool* _retval);
 
  public:
   uint32_t GetMetadataMemoryConsumption();

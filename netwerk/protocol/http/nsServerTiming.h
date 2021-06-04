@@ -30,7 +30,7 @@ class nsServerTiming final : public nsIServerTiming {
   virtual ~nsServerTiming() = default;
 
   nsCString mName;
-  double mDuration = 0;
+  double mDuration;
   nsCString mDescription;
 };
 

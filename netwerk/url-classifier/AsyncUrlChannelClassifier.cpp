@@ -374,7 +374,7 @@ void FeatureData::DoLookup(nsUrlClassifierDBServiceWorker* aWorkerClassifier) {
        "%d [this=%p]",
        isBlocklisted, this));
 
-  if (!isBlocklisted) {
+  if (isBlocklisted == false) {
     // If one of the blocklist table matches the URI, we don't need to continue
     // with the others: the feature is blocklisted (but maybe also
     // entitylisted).
