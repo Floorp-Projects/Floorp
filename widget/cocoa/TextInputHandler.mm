@@ -2922,7 +2922,7 @@ bool TextInputHandler::DoCommandBySelector(const char* aSelector) {
   // this odd behavior, we need to handle the command before super class of
   // ChildView only when current key event is proper event to fire Escape
   // keypress event.
-  if (!strcmp(aSelector, "cancelOperatiorn:") && currentKeyEvent &&
+  if (!strcmp(aSelector, "cancelOperation:") && currentKeyEvent &&
       currentKeyEvent->IsProperKeyEvent(Command::CancelOperation)) {
     return HandleCommand(Command::CancelOperation);
   }
