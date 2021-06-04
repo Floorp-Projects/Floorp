@@ -33,6 +33,10 @@ pub enum ExpressionError {
     InvalidArrayType(Handle<crate::Expression>),
     #[error("Splatting {0:?} can't be done")]
     InvalidSplatType(Handle<crate::Expression>),
+    #[error("Swizzling {0:?} can't be done")]
+    InvalidVectorType(Handle<crate::Expression>),
+    #[error("Swizzle component {0:?} is outside of vector size {1:?}")]
+    InvalidSwizzleComponent(crate::SwizzleComponent, crate::VectorSize),
     #[error(transparent)]
     Compose(#[from] ComposeError),
     #[error("Operation {0:?} can't work with {1:?}")]
@@ -142,7 +146,8 @@ impl super::Validator {
                     Ti::Vector { .. }
                     | Ti::Matrix { .. }
                     | Ti::Array { .. }
-                    | Ti::Pointer { .. } => {}
+                    | Ti::Pointer { .. }
+                    | Ti::ValuePointer { size: Some(_), .. } => {}
                     ref other => {
                         log::error!("Indexing of {:?}", other);
                         return Err(ExpressionError::InvalidBaseType(base));
@@ -166,21 +171,36 @@ impl super::Validator {
                 ShaderStages::all()
             }
             E::AccessIndex { base, index } => {
-                let limit = match *resolver.resolve(base)? {
-                    Ti::Vector { size, .. } => size as u32,
-                    Ti::Matrix { columns, .. } => columns as u32,
-                    Ti::Array {
-                        size: crate::ArraySize::Constant(handle),
-                        ..
-                    } => module.constants[handle].to_array_length().unwrap(),
-                    Ti::Array { .. } => !0, // can't statically know, but need run-time checks
-                    Ti::Pointer { .. } => !0, //TODO
-                    Ti::Struct { ref members, .. } => members.len() as u32,
-                    ref other => {
-                        log::error!("Indexing of {:?}", other);
-                        return Err(ExpressionError::InvalidBaseType(base));
-                    }
-                };
+                fn resolve_index_limit(
+                    module: &crate::Module,
+                    top: Handle<crate::Expression>,
+                    ty: &crate::TypeInner,
+                    top_level: bool,
+                ) -> Result<u32, ExpressionError> {
+                    let limit = match *ty {
+                        Ti::Vector { size, .. }
+                        | Ti::ValuePointer {
+                            size: Some(size), ..
+                        } => size as u32,
+                        Ti::Matrix { columns, .. } => columns as u32,
+                        Ti::Array {
+                            size: crate::ArraySize::Constant(handle),
+                            ..
+                        } => module.constants[handle].to_array_length().unwrap(),
+                        Ti::Array { .. } => !0, // can't statically know, but need run-time checks
+                        Ti::Pointer { base, .. } if top_level => {
+                            resolve_index_limit(module, top, &module.types[base].inner, false)?
+                        }
+                        Ti::Struct { ref members, .. } => members.len() as u32,
+                        ref other => {
+                            log::error!("Indexing of {:?}", other);
+                            return Err(ExpressionError::InvalidBaseType(top));
+                        }
+                    };
+                    Ok(limit)
+                }
+
+                let limit = resolve_index_limit(module, base, resolver.resolve(base)?, true)?;
                 if index >= limit {
                     return Err(ExpressionError::IndexOutOfBounds(base, index));
                 }
@@ -200,6 +220,25 @@ impl super::Validator {
                     return Err(ExpressionError::InvalidSplatType(value));
                 }
             },
+            E::Swizzle {
+                size,
+                vector,
+                pattern,
+            } => {
+                let vec_size = match *resolver.resolve(vector)? {
+                    Ti::Vector { size: vec_size, .. } => vec_size,
+                    ref other => {
+                        log::error!("Swizzle vector type {:?}", other);
+                        return Err(ExpressionError::InvalidVectorType(vector));
+                    }
+                };
+                for &sc in pattern[..size as usize].iter() {
+                    if sc as u8 >= vec_size as u8 {
+                        return Err(ExpressionError::InvalidSwizzleComponent(sc, vec_size));
+                    }
+                }
+                ShaderStages::all()
+            }
             E::Compose { ref components, ty } => {
                 for &handle in components {
                     if handle >= root {
@@ -257,6 +296,7 @@ impl super::Validator {
                 level,
                 depth_ref,
             } => {
+                // check the validity of expressions
                 let image_var = match function.expressions[image] {
                     crate::Expression::GlobalVariable(var_handle) => {
                         &module.global_variables[var_handle]
@@ -276,26 +316,11 @@ impl super::Validator {
 
                 let (class, dim) = match module.types[image_var.ty].inner {
                     Ti::Image {
-                        //TODO: should we check that this is Float-only?
                         class,
                         arrayed,
                         dim,
                     } => {
-                        let image_depth = match class {
-                            crate::ImageClass::Sampled {
-                                kind: _,
-                                multi: false,
-                            } => false,
-                            crate::ImageClass::Depth => true,
-                            _ => return Err(ExpressionError::InvalidImageClass(class)),
-                        };
-                        if comparison != depth_ref.is_some() || (comparison && !image_depth) {
-                            return Err(ExpressionError::ComparisonSamplingMismatch {
-                                image: class,
-                                sampler: comparison,
-                                has_ref: depth_ref.is_some(),
-                            });
-                        }
+                        // check the array property
                         if arrayed != array_index.is_some() {
                             return Err(ExpressionError::InvalidImageArrayIndex);
                         }
@@ -313,6 +338,24 @@ impl super::Validator {
                     _ => return Err(ExpressionError::ExpectedImageType(image_var.ty)),
                 };
 
+                // check sampling and comparison properties
+                let image_depth = match class {
+                    crate::ImageClass::Sampled {
+                        kind: crate::ScalarKind::Float,
+                        multi: false,
+                    } => false,
+                    crate::ImageClass::Depth => true,
+                    _ => return Err(ExpressionError::InvalidImageClass(class)),
+                };
+                if comparison != depth_ref.is_some() || (comparison && !image_depth) {
+                    return Err(ExpressionError::ComparisonSamplingMismatch {
+                        image: class,
+                        sampler: comparison,
+                        has_ref: depth_ref.is_some(),
+                    });
+                }
+
+                // check texture coordinates type
                 let num_components = match dim {
                     crate::ImageDimension::D1 => 1,
                     crate::ImageDimension::D2 => 2,
@@ -329,6 +372,8 @@ impl super::Validator {
                     } if size as u32 == num_components => {}
                     _ => return Err(ExpressionError::InvalidImageCoordinateType(dim, coordinate)),
                 }
+
+                // check constant offset
                 if let Some(const_handle) = offset {
                     let good = match module.constants[const_handle].inner {
                         crate::ConstantInner::Scalar {
@@ -352,6 +397,7 @@ impl super::Validator {
                     }
                 }
 
+                // check depth reference type
                 if let Some(expr) = depth_ref {
                     match *resolver.resolve(expr)? {
                         Ti::Scalar {
@@ -360,12 +406,13 @@ impl super::Validator {
                         _ => return Err(ExpressionError::InvalidDepthReference(expr)),
                     }
                 }
+
+                // check level properties
                 let can_level = match class {
                     crate::ImageClass::Sampled { multi, .. } => !multi,
-                    crate::ImageClass::Storage { .. } => false,
+                    crate::ImageClass::Storage { .. } => unreachable!(),
                     crate::ImageClass::Depth { .. } => true,
                 };
-
                 match level {
                     // require `can_level` here?
                     crate::SampleLevel::Auto => ShaderStages::FRAGMENT,
@@ -514,6 +561,7 @@ impl super::Validator {
                 match (op, inner.scalar_kind()) {
                     (_, Some(Sk::Sint))
                     | (_, Some(Sk::Bool))
+                    //TODO: restrict Negate for bools?
                     | (Uo::Negate, Some(Sk::Float))
                     | (Uo::Not, Some(Sk::Uint)) => {}
                     other => {
@@ -666,6 +714,16 @@ impl super::Validator {
                     }
                 };
                 if !good {
+                    log::error!(
+                        "Left: {:?} of type {:?}",
+                        function.expressions[left],
+                        left_inner
+                    );
+                    log::error!(
+                        "Right: {:?} of type {:?}",
+                        function.expressions[right],
+                        right_inner
+                    );
                     return Err(ExpressionError::InvalidBinaryOperandTypes(op, left, right));
                 }
                 ShaderStages::all()
@@ -919,6 +977,47 @@ impl super::Validator {
                             ));
                         }
                     }
+                    Mf::Refract => {
+                        let (arg1_ty, arg2_ty) = match (arg1_ty, arg2_ty) {
+                            (Some(ty1), Some(ty2)) => (ty1, ty2),
+                            _ => return Err(ExpressionError::WrongArgumentCount(fun)),
+                        };
+
+                        match *arg_ty {
+                            Ti::Vector {
+                                kind: Sk::Float, ..
+                            } => {}
+                            _ => return Err(ExpressionError::InvalidArgumentType(fun, 0, arg)),
+                        }
+
+                        if arg1_ty != arg_ty {
+                            return Err(ExpressionError::InvalidArgumentType(
+                                fun,
+                                1,
+                                arg1.unwrap(),
+                            ));
+                        }
+
+                        match (arg_ty, arg2_ty) {
+                            (
+                                &Ti::Vector {
+                                    width: vector_width,
+                                    ..
+                                },
+                                &Ti::Scalar {
+                                    width: scalar_width,
+                                    kind: Sk::Float,
+                                },
+                            ) if vector_width == scalar_width => {}
+                            _ => {
+                                return Err(ExpressionError::InvalidArgumentType(
+                                    fun,
+                                    2,
+                                    arg2.unwrap(),
+                                ))
+                            }
+                        }
+                    }
                     Mf::Normalize => {
                         if arg1_ty.is_some() | arg2_ty.is_some() {
                             return Err(ExpressionError::WrongArgumentCount(fun));
@@ -1004,14 +1103,30 @@ impl super::Validator {
                     .resolve(expr)?
                     .scalar_kind()
                     .ok_or(ExpressionError::InvalidCastArgument)?;
-                if !convert && prev_kind == Sk::Bool || kind == Sk::Bool {
-                    return Err(ExpressionError::InvalidCastArgument);
+                match convert {
+                    Some(width) if !self.check_width(kind, width) => {
+                        return Err(ExpressionError::InvalidCastArgument)
+                    }
+                    None if prev_kind == Sk::Bool || kind == Sk::Bool => {
+                        return Err(ExpressionError::InvalidCastArgument)
+                    }
+                    _ => {}
                 }
                 ShaderStages::all()
             }
             E::Call(function) => other_infos[function.index()].available_stages,
             E::ArrayLength(expr) => match *resolver.resolve(expr)? {
-                Ti::Array { .. } => ShaderStages::all(),
+                Ti::Pointer { base, .. } => {
+                    if let Some(&Ti::Array {
+                        size: crate::ArraySize::Dynamic,
+                        ..
+                    }) = resolver.types.try_get(base).map(|ty| &ty.inner)
+                    {
+                        ShaderStages::all()
+                    } else {
+                        return Err(ExpressionError::InvalidArrayType(expr));
+                    }
+                }
                 ref other => {
                     log::error!("Array length of {:?}", other);
                     return Err(ExpressionError::InvalidArrayType(expr));

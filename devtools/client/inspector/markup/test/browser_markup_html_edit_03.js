@@ -184,17 +184,17 @@ async function testDocumentElement(inspector) {
   );
   is(await getWindowFoo(), undefined, "Script has not been executed");
   is(
-    await getAttributeInBrowser(gBrowser.selectedBrowser, "html", "id"),
+    await getContentPageElementAttribute("html", "id"),
     "updated",
     "<html> ID has been updated"
   );
   is(
-    await getAttributeInBrowser(gBrowser.selectedBrowser, "html", "class"),
+    await getContentPageElementAttribute("html", "class"),
     null,
     "<html> class has been updated"
   );
   is(
-    await getAttributeInBrowser(gBrowser.selectedBrowser, "html", "foo"),
+    await getContentPageElementAttribute("html", "foo"),
     "bar",
     "<html> attribute has been updated"
   );
@@ -244,17 +244,17 @@ async function testDocumentElement2(inspector) {
   );
   is(await getWindowFoo(), undefined, "Script has not been executed");
   is(
-    await getAttributeInBrowser(gBrowser.selectedBrowser, "html", "id"),
+    await getContentPageElementAttribute("html", "id"),
     "somethingelse",
     "<html> ID has been updated"
   );
   is(
-    await getAttributeInBrowser(gBrowser.selectedBrowser, "html", "class"),
+    await getContentPageElementAttribute("html", "class"),
     "updated",
     "<html> class has been updated"
   );
   is(
-    await getAttributeInBrowser(gBrowser.selectedBrowser, "html", "foo"),
+    await getContentPageElementAttribute("html", "foo"),
     null,
     "<html> attribute has been removed"
   );

@@ -69,17 +69,6 @@ enum ThreadType {
   THREAD_TYPE_MAX                    // Used to check shell function arguments
 };
 
-/*
- * Threads need a universal way to dispatch from xpcom thread pools,
- * so having objects inherit from this struct enables
- * mozilla::HelperThreadPool's runnable handler to call runTask() on each type.
- */
-struct RunnableTask {
-  virtual ThreadType threadType() = 0;
-  virtual void runTask() = 0;
-  virtual ~RunnableTask() = default;
-};
-
 namespace oom {
 
 /*

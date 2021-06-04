@@ -105,6 +105,28 @@ function callOpen(args) {
   return fd;
 }
 
+// Verify faccessat2
+function callFaccessat2(args) {
+  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  let { lib, dirfd, path, mode, flag } = args;
+  let libc = ctypes.open(lib);
+  let faccessat = libc.declare(
+    "faccessat",
+    ctypes.default_abi,
+    ctypes.int,
+    ctypes.int, // dirfd
+    ctypes.char.ptr, // path
+    ctypes.int, // mode
+    ctypes.int // flag
+  );
+  let rv = faccessat(dirfd, path, mode, flag);
+  if (rv == -1) {
+    rv = ctypes.errno;
+  }
+  libc.close();
+  return rv;
+}
+
 // open syscall flags
 function openWriteCreateFlags() {
   Assert.ok(isMac() || isLinux());
@@ -132,6 +154,43 @@ function getOSLib() {
       Assert.ok(false, "Unknown OS");
       return 0;
   }
+}
+
+// Reading a header might be weird, but the alternatives to read a stable
+// version number we can easily check against are not much more fun
+async function getKernelVersion() {
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  let header = await OS.File.read("/usr/include/linux/version.h", {
+    encoding: "utf-8",
+  });
+  let hr = header.split("\n");
+  for (let line in hr) {
+    let hrs = hr[line].split(" ");
+    if (hrs[0] === "#define" && hrs[1] === "LINUX_VERSION_CODE") {
+      return Number(hrs[2]);
+    }
+  }
+  throw Error("No LINUX_VERSION_CODE");
+}
+
+// This is how it is done in /usr/include/linux/version.h
+function computeKernelVersion(major, minor, dot) {
+  return (major << 16) + (minor << 8) + dot;
+}
+
+function getGlibcVersion() {
+  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  let libc = ctypes.open(getOSLib());
+  let gnu_get_libc_version = libc.declare(
+    "gnu_get_libc_version",
+    ctypes.default_abi,
+    ctypes.char.ptr
+  );
+  let rv = gnu_get_libc_version().readString();
+  libc.close();
+  let ar = rv.split(".");
+  // return a number made of MAJORMINOR
+  return Number(ar[0] + ar[1]);
 }
 
 // Returns a harmless command to execute with execv
@@ -290,11 +349,50 @@ add_task(async function() {
     ok(rv == 0, "calling sysctl('hw.ncpu') is permitted");
   }
 
-  // verify we block PR_CAPBSET_READ with EINVAL
   if (isLinux()) {
     const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+    // verify we block PR_CAPBSET_READ with EINVAL
     let option = OS.Constants.libc.PR_CAPBSET_READ;
     let rv = await SpecialPowers.spawn(browser, [{ lib, option }], callPrctl);
     ok(rv == OS.Constants.libc.EINVAL, "prctl(PR_CAPBSET_READ) is blocked");
+
+    const kernelVersion = await getKernelVersion();
+    const glibcVersion = getGlibcVersion();
+    // faccessat2 is only used with kernel 5.8+ by glibc 2.33+
+    if (glibcVersion >= 233 && kernelVersion >= computeKernelVersion(5, 8, 0)) {
+      info("Linux v5.8+, glibc 2.33+, checking faccessat2");
+      const dirfd = 0;
+      const path = "/";
+      const mode = 0;
+      // the value 0x01 is just one we know should get rejected
+      let rv = await SpecialPowers.spawn(
+        browser,
+        [{ lib, dirfd, path, mode, flag: 0x01 }],
+        callFaccessat2
+      );
+      ok(
+        rv == OS.Constants.libc.ENOSYS,
+        "faccessat2 (flag=0x01) was blocked with ENOSYS"
+      );
+
+      rv = await SpecialPowers.spawn(
+        browser,
+        [{ lib, dirfd, path, mode, flag: OS.Constants.libc.AT_EACCESS }],
+        callFaccessat2
+      );
+      ok(
+        rv == OS.Constants.libc.EACCES,
+        "faccessat2 (flag=0x200) was allowed, errno=EACCES"
+      );
+    } else {
+      info(
+        "Unsupported kernel (" +
+          kernelVersion +
+          " )/glibc (" +
+          glibcVersion +
+          "), skipping faccessat2"
+      );
+    }
   }
 });

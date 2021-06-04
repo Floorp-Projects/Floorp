@@ -835,3 +835,55 @@ function setContentPageElementProperty(selector, propertyName, propertyValue) {
     }
   );
 }
+
+/**
+ * Get an attribute on a DOM Node living in the content page.
+ *
+ * @param {String} selector The node selector
+ * @param {String} attribute The attribute name
+ * @return {String} value The attribute value
+ */
+async function getContentPageElementAttribute(selector, attribute) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector, attribute],
+    (_selector, _attribute) => {
+      return content.document.querySelector(_selector).getAttribute(_attribute);
+    }
+  );
+}
+
+/**
+ * Set an attribute on a DOM Node living in the content page.
+ *
+ * @param {String} selector The node selector
+ * @param {String} attribute The attribute name
+ * @param {String} value The attribute value
+ */
+async function setContentPageElementAttribute(selector, attribute, value) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector, attribute, value],
+    (_selector, _attribute, _value) => {
+      content.document
+        .querySelector(_selector)
+        .setAttribute(_attribute, _value);
+    }
+  );
+}
+
+/**
+ * Remove an attribute from a DOM Node living in the content page.
+ *
+ * @param {String} selector The node selector
+ * @param {String} attribute The attribute name
+ */
+async function removeContentPageElementAttribute(selector, attribute) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector, attribute],
+    (_selector, _attribute) => {
+      content.document.querySelector(_selector).removeAttribute(_attribute);
+    }
+  );
+}

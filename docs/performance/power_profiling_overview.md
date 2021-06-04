@@ -252,7 +252,7 @@ the code as being responsible.
     high-context measurements. This is useful because high CPU usage
     typically causes high power consumption.
 -   Some tools can provide high-context wakeup measurements:
-    [dtrace](/en-US/docs/Mozilla/Performance/dtrace) (on Mac) and
+    [dtrace](dtrace.md) (on Mac) and
     [perf](perf.md) (on Linux.)
 -   Source-level instrumentation, such as [TimerFirings
     logging](timerfirings_logging.md), can
@@ -295,7 +295,7 @@ power consumption.
         tools profiler, the Gecko Profiler, or generic performance
         profilers.
     -   For high wakeup counts, use
-        [dtrace](/en-US/docs/Mozilla/Performance/dtrace) or
+        [dtrace](dtrace.md) or
         [perf](perf.md) or [TimerFirings logging](timerfirings_logging.md).
 -   On Mac workloads that use graphics, Activity Monitor's "Energy"
     tab can tell you if the high-performance GPU is being used, which

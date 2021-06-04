@@ -90,7 +90,7 @@ async function executeTest(helper, desc, data) {
 }
 
 async function areElementAndHighlighterMovedCorrectly(helper, side, by) {
-  const { mouse, reflow, highlightedNode } = helper;
+  const { mouse, highlightedNode } = helper;
 
   const { x, y } = await getHandlerCoords(helper, side);
 
@@ -104,7 +104,7 @@ async function areElementAndHighlighterMovedCorrectly(helper, side, by) {
   await mouse.move(dx, dy);
   await mouse.up();
 
-  await reflow();
+  await reflowContentPage();
 
   info(`Checking ${side} handler is moved correctly`);
   await isHandlerPositionUpdated(helper, side, x, y, by);

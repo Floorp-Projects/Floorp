@@ -430,6 +430,28 @@ impl MetalLayerRef {
     pub fn set_opaque(&self, opaque: bool) {
         unsafe { msg_send![self, setOpaque: opaque] }
     }
+
+    pub fn wants_extended_dynamic_range_content(&self) -> bool {
+        unsafe {
+            match msg_send![self, wantsExtendedDynamicRangeContent] {
+                YES => true,
+                NO => false,
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    pub fn set_wants_extended_dynamic_range_content(
+        &self,
+        wants_extended_dynamic_range_content: bool,
+    ) {
+        unsafe {
+            msg_send![
+                self,
+                setWantsExtendedDynamicRangeContent: wants_extended_dynamic_range_content
+            ]
+        }
+    }
 }
 
 mod argument;

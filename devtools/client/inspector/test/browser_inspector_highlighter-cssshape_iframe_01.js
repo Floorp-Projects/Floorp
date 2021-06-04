@@ -12,16 +12,16 @@ const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 add_task(async function() {
   const env = await openInspectorForURL(TEST_URL);
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
-  const { testActor, inspector } = env;
+  const { inspector } = env;
   const view = selectRuleView(inspector);
   const highlighters = view.highlighters;
-  const config = { inspector, view, highlighters, testActor, helper };
+  const config = { inspector, view, highlighters, helper };
 
   await testPolygonIframeMovePoint(config);
 });
 
 async function testPolygonIframeMovePoint(config) {
-  const { inspector, view, testActor, helper } = config;
+  const { inspector, view, helper } = config;
   const selector = "#polygon";
   const property = "clip-path";
 
@@ -46,7 +46,7 @@ async function testPolygonIframeMovePoint(config) {
   await mouse.down(10, 10);
   await mouse.move(20, 20);
   await mouse.up();
-  await testActor.reflow();
+  await reflowContentPage();
   await onRuleViewChanged;
 
   let computedStyle = await highlightedNode.inspectorFront.pageStyle.getComputed(
@@ -61,7 +61,7 @@ async function testPolygonIframeMovePoint(config) {
   await mouse.down(110, 410);
   await mouse.move(120, 420);
   await mouse.up();
-  await testActor.reflow();
+  await reflowContentPage();
   await onRuleViewChanged;
 
   computedStyle = await highlightedNode.inspectorFront.pageStyle.getComputed(

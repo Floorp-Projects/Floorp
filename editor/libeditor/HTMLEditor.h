@@ -203,6 +203,17 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT nsresult GetBackgroundColorState(bool* aMixed,
                                                       nsAString& aOutColor);
 
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
+    const nsresult rv = HTMLEditor::PasteAsAction(aClipboardType, true);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "TextEditor::PasteAsAction() failed");
+    return rv;
+  }
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
+                nsIPrincipal* aPrincipal = nullptr) final;
+
   /**
    * PasteNoFormatting() pastes content in clipboard without any style
    * information.
@@ -3725,11 +3736,6 @@ class HTMLEditor final : public TextEditor,
                                            Document* aSourceDoc,
                                            const EditorDOMPoint& aPointToInsert,
                                            bool aDoDeleteSelection);
-
-  // factored methods for handling insertion of data from transferables
-  // (drag&drop or clipboard)
-  virtual nsresult PrepareTransferable(
-      nsITransferable** aTransferable) override;
 
   class HTMLTransferablePreparer;
   nsresult PrepareHTMLTransferable(nsITransferable** aTransferable) const;

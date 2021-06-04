@@ -149,7 +149,7 @@ void ChromeProcessController::HandleDoubleTap(
             "IAPZCTreeManager::ZoomToRect", mAPZCTreeManager,
             &IAPZCTreeManager::ZoomToRect,
             ScrollableLayerGuid(aGuid.mLayersId, presShellId, viewId),
-            zoomTarget, ZoomToRectBehavior::DEFAULT_BEHAVIOR));
+            zoomTarget, ZoomToRectBehavior::ZOOM_IN_IF_CANT_ZOOM_OUT));
   }
 }
 

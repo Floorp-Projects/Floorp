@@ -1,8 +1,9 @@
 use super::{
     analyzer::{UniformityDisruptor, UniformityRequirements},
-    ExpressionError, FunctionInfo, ModuleInfo, TypeFlags, ValidationFlags,
+    ExpressionError, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags, ValidationFlags,
 };
 use crate::arena::{Arena, Handle};
+use bit_set::BitSet;
 
 #[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(test, derive(PartialEq))]
@@ -120,11 +121,17 @@ struct BlockContext<'a> {
     types: &'a Arena<crate::Type>,
     global_vars: &'a Arena<crate::GlobalVariable>,
     functions: &'a Arena<crate::Function>,
+    prev_infos: &'a [FunctionInfo],
     return_type: Option<Handle<crate::Type>>,
 }
 
 impl<'a> BlockContext<'a> {
-    fn new(fun: &'a crate::Function, module: &'a crate::Module, info: &'a FunctionInfo) -> Self {
+    fn new(
+        fun: &'a crate::Function,
+        module: &'a crate::Module,
+        info: &'a FunctionInfo,
+        prev_infos: &'a [FunctionInfo],
+    ) -> Self {
         Self {
             flags: Flags::CAN_JUMP,
             info,
@@ -132,6 +139,7 @@ impl<'a> BlockContext<'a> {
             types: &module.types,
             global_vars: &module.global_variables,
             functions: &module.functions,
+            prev_infos,
             return_type: fun.result.as_ref().map(|fr| fr.ty),
         }
     }
@@ -144,6 +152,7 @@ impl<'a> BlockContext<'a> {
             types: self.types,
             global_vars: self.global_vars,
             functions: self.functions,
+            prev_infos: self.prev_infos,
             return_type: self.return_type,
         }
     }
@@ -160,20 +169,38 @@ impl<'a> BlockContext<'a> {
     fn resolve_type_impl(
         &self,
         handle: Handle<crate::Expression>,
+        valid_expressions: &BitSet,
     ) -> Result<&crate::TypeInner, ExpressionError> {
-        if handle.index() < self.expressions.len() {
-            Ok(self.info[handle].ty.inner_with(self.types))
-        } else {
+        if handle.index() >= self.expressions.len() {
             Err(ExpressionError::DoesntExist)
+        } else if !valid_expressions.contains(handle.index()) {
+            Err(ExpressionError::NotInScope)
+        } else {
+            Ok(self.info[handle].ty.inner_with(self.types))
         }
     }
 
     fn resolve_type(
         &self,
         handle: Handle<crate::Expression>,
+        valid_expressions: &BitSet,
     ) -> Result<&crate::TypeInner, FunctionError> {
-        self.resolve_type_impl(handle)
+        self.resolve_type_impl(handle, valid_expressions)
             .map_err(|error| FunctionError::Expression { handle, error })
+    }
+
+    fn resolve_pointer_type(
+        &self,
+        handle: Handle<crate::Expression>,
+    ) -> Result<&crate::TypeInner, FunctionError> {
+        if handle.index() >= self.expressions.len() {
+            Err(FunctionError::Expression {
+                handle,
+                error: ExpressionError::DoesntExist,
+            })
+        } else {
+            Ok(self.info[handle].ty.inner_with(self.types))
+        }
     }
 }
 
@@ -184,7 +211,7 @@ impl super::Validator {
         arguments: &[Handle<crate::Expression>],
         result: Option<Handle<crate::Expression>>,
         context: &BlockContext,
-    ) -> Result<(), CallError> {
+    ) -> Result<ShaderStages, CallError> {
         let fun = context
             .functions
             .try_get(function)
@@ -197,7 +224,7 @@ impl super::Validator {
         }
         for (index, (arg, &expr)) in fun.arguments.iter().zip(arguments).enumerate() {
             let ty = context
-                .resolve_type_impl(expr)
+                .resolve_type_impl(expr, &self.valid_expression_set)
                 .map_err(|error| CallError::Argument { index, error })?;
             if ty != &context.types[arg.ty].inner {
                 return Err(CallError::ArgumentType {
@@ -222,16 +249,18 @@ impl super::Validator {
             return Err(CallError::ExpressionMismatch(result));
         }
 
-        Ok(())
+        let callee_info = &context.prev_infos[function.index()];
+        Ok(callee_info.available_stages)
     }
 
     fn validate_block_impl(
         &mut self,
         statements: &[crate::Statement],
         context: &BlockContext,
-    ) -> Result<(), FunctionError> {
+    ) -> Result<ShaderStages, FunctionError> {
         use crate::{Statement as S, TypeInner as Ti};
         let mut finished = false;
+        let mut stages = ShaderStages::all();
         for statement in statements {
             if finished {
                 return Err(FunctionError::InstructionsAfterReturn);
@@ -246,28 +275,30 @@ impl super::Validator {
                         }
                     }
                 }
-                S::Block(ref block) => self.validate_block(block, context)?,
+                S::Block(ref block) => {
+                    stages &= self.validate_block(block, context)?;
+                }
                 S::If {
                     condition,
                     ref accept,
                     ref reject,
                 } => {
-                    match *context.resolve_type(condition)? {
+                    match *context.resolve_type(condition, &self.valid_expression_set)? {
                         Ti::Scalar {
                             kind: crate::ScalarKind::Bool,
                             width: _,
                         } => {}
                         _ => return Err(FunctionError::InvalidIfType(condition)),
                     }
-                    self.validate_block(accept, context)?;
-                    self.validate_block(reject, context)?;
+                    stages &= self.validate_block(accept, context)?;
+                    stages &= self.validate_block(reject, context)?;
                 }
                 S::Switch {
                     selector,
                     ref cases,
                     ref default,
                 } => {
-                    match *context.resolve_type(selector)? {
+                    match *context.resolve_type(selector, &self.valid_expression_set)? {
                         Ti::Scalar {
                             kind: crate::ScalarKind::Sint,
                             width: _,
@@ -281,9 +312,9 @@ impl super::Validator {
                         }
                     }
                     for case in cases {
-                        self.validate_block(&case.body, context)?;
+                        stages &= self.validate_block(&case.body, context)?;
                     }
-                    self.validate_block(default, context)?;
+                    stages &= self.validate_block(default, context)?;
                 }
                 S::Loop {
                     ref body,
@@ -292,11 +323,12 @@ impl super::Validator {
                     // special handling for block scoping is needed here,
                     // because the continuing{} block inherits the scope
                     let base_expression_count = self.valid_expression_list.len();
-                    self.validate_block_impl(
+                    stages &= self.validate_block_impl(
                         body,
                         &context.with_flags(Flags::CAN_JUMP | Flags::IN_LOOP),
                     )?;
-                    self.validate_block_impl(continuing, &context.with_flags(Flags::empty()))?;
+                    stages &=
+                        self.validate_block_impl(continuing, &context.with_flags(Flags::empty()))?;
                     for handle in self.valid_expression_list.drain(base_expression_count..) {
                         self.valid_expression_set.remove(handle.index());
                     }
@@ -311,7 +343,9 @@ impl super::Validator {
                     if !context.flags.contains(Flags::CAN_JUMP) {
                         return Err(FunctionError::InvalidReturnSpot);
                     }
-                    let value_ty = value.map(|expr| context.resolve_type(expr)).transpose()?;
+                    let value_ty = value
+                        .map(|expr| context.resolve_type(expr, &self.valid_expression_set))
+                        .transpose()?;
                     let expected_ty = context.return_type.map(|ty| &context.types[ty].inner);
                     if value_ty != expected_ty {
                         log::error!(
@@ -326,10 +360,13 @@ impl super::Validator {
                 S::Kill => {
                     finished = true;
                 }
+                S::Barrier(_) => {
+                    stages &= ShaderStages::COMPUTE;
+                }
                 S::Store { pointer, value } => {
                     let mut current = pointer;
                     loop {
-                        let _ = context.resolve_type(current)?;
+                        let _ = context.resolve_pointer_type(current)?;
                         match *context.get_expression(current)? {
                             crate::Expression::Access { base, .. }
                             | crate::Expression::AccessIndex { base, .. } => current = base,
@@ -340,14 +377,14 @@ impl super::Validator {
                         }
                     }
 
-                    let value_ty = context.resolve_type(value)?;
+                    let value_ty = context.resolve_type(value, &self.valid_expression_set)?;
                     match *value_ty {
                         Ti::Image { .. } | Ti::Sampler { .. } => {
                             return Err(FunctionError::InvalidStoreValue(value));
                         }
                         _ => {}
                     }
-                    let good = match *context.resolve_type(pointer)? {
+                    let good = match *context.resolve_pointer_type(pointer)? {
                         Ti::Pointer { base, class: _ } => *value_ty == context.types[base].inner,
                         Ti::ValuePointer {
                             size: Some(size),
@@ -393,7 +430,7 @@ impl super::Validator {
                             dim,
                         } => {
                             match context
-                                .resolve_type(coordinate)?
+                                .resolve_type(coordinate, &self.valid_expression_set)?
                                 .image_storage_coordinates()
                             {
                                 Some(coord_dim) if coord_dim == dim => {}
@@ -411,7 +448,7 @@ impl super::Validator {
                                 ));
                             }
                             if let Some(expr) = array_index {
-                                match *context.resolve_type(expr)? {
+                                match *context.resolve_type(expr, &self.valid_expression_set)? {
                                     Ti::Scalar {
                                         kind: crate::ScalarKind::Sint,
                                         width: _,
@@ -443,7 +480,7 @@ impl super::Validator {
                         }
                     };
 
-                    if *context.resolve_type(value)? != value_ty {
+                    if *context.resolve_type(value, &self.valid_expression_set)? != value_ty {
                         return Err(FunctionError::InvalidStoreValue(value));
                     }
                 }
@@ -451,27 +488,26 @@ impl super::Validator {
                     function,
                     ref arguments,
                     result,
-                } => {
-                    if let Err(error) = self.validate_call(function, arguments, result, context) {
-                        return Err(FunctionError::InvalidCall { function, error });
-                    }
-                }
+                } => match self.validate_call(function, arguments, result, context) {
+                    Ok(callee_stages) => stages &= callee_stages,
+                    Err(error) => return Err(FunctionError::InvalidCall { function, error }),
+                },
             }
         }
-        Ok(())
+        Ok(stages)
     }
 
     fn validate_block(
         &mut self,
         statements: &[crate::Statement],
         context: &BlockContext,
-    ) -> Result<(), FunctionError> {
+    ) -> Result<ShaderStages, FunctionError> {
         let base_expression_count = self.valid_expression_list.len();
-        self.validate_block_impl(statements, context)?;
+        let stages = self.validate_block_impl(statements, context)?;
         for handle in self.valid_expression_list.drain(base_expression_count..) {
             self.valid_expression_set.remove(handle.index());
         }
-        Ok(())
+        Ok(stages)
     }
 
     fn validate_local_var(
@@ -552,7 +588,11 @@ impl super::Validator {
         }
 
         if self.flags.contains(ValidationFlags::BLOCKS) {
-            self.validate_block(&fun.body, &BlockContext::new(fun, module, &info))?;
+            let stages = self.validate_block(
+                &fun.body,
+                &BlockContext::new(fun, module, &info, &mod_info.functions),
+            )?;
+            info.available_stages &= stages;
         }
         Ok(info)
     }

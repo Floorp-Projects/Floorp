@@ -31,6 +31,13 @@ struct ZoomTarget {
   // |targetRect| in view and keeping the zoom as close to the desired zoom as
   // possible).
   Maybe<CSSRect> elementBoundingRect;
+
+  // The document relative (ie if the content inside the root scroll frame
+  // existed without that scroll frame) pointer position at the time of the
+  // double tap or location of the double tap if we can compute it. Only used if
+  // the rest of this ZoomTarget is asking to zoom out but we are already at the
+  // minimum zoom. In which case we zoom in a small amount on this point.
+  Maybe<CSSPoint> documentRelativePointerPosition;
 };
 
 /**

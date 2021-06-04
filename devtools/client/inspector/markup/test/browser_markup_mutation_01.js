@@ -17,8 +17,7 @@ const TEST_DATA = [
   {
     desc: "Adding an attribute",
     test: async function() {
-      const browser = gBrowser.selectedBrowser;
-      await setAttributeInBrowser(browser, "#node1", "newattr", "newattrval");
+      await setContentPageElementAttribute("#node1", "newattr", "newattrval");
     },
     check: async function(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
@@ -37,8 +36,7 @@ const TEST_DATA = [
   {
     desc: "Removing an attribute",
     test: async function() {
-      const browser = gBrowser.selectedBrowser;
-      await removeAttributeInBrowser(browser, "#node1", "newattr");
+      await removeContentPageElementAttribute("#node1", "newattr");
     },
     check: async function(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
@@ -53,8 +51,7 @@ const TEST_DATA = [
   {
     desc: "Re-adding an attribute",
     test: async function() {
-      const browser = gBrowser.selectedBrowser;
-      await setAttributeInBrowser(browser, "#node1", "newattr", "newattrval");
+      await setContentPageElementAttribute("#node1", "newattr", "newattrval");
     },
     check: async function(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
@@ -73,9 +70,7 @@ const TEST_DATA = [
   {
     desc: "Changing an attribute",
     test: async function() {
-      const browser = gBrowser.selectedBrowser;
-      await setAttributeInBrowser(
-        browser,
+      await setContentPageElementAttribute(
         "#node1",
         "newattr",
         "newattrchanged"
@@ -114,8 +109,7 @@ const TEST_DATA = [
       info(
         "Add the attribute 'otherattr' on the content node to trigger the mutation"
       );
-      const browser = gBrowser.selectedBrowser;
-      await setAttributeInBrowser(browser, "#node1", "otherattr", "othervalue");
+      await setContentPageElementAttribute("#node1", "otherattr", "othervalue");
     },
     check: async function(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);

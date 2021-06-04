@@ -25,12 +25,7 @@ async function testOriginalAttributesOrder(inspector) {
 async function testOrderAfterAttributeChange(inspector) {
   info("Testing order of attributes after attribute is change by setAttribute");
 
-  await setAttributeInBrowser(
-    gBrowser.selectedBrowser,
-    "#order",
-    "a",
-    "changed"
-  );
+  await setContentPageElementAttribute("#order", "a", "changed");
 
   const attributes = await getAttributesFromEditor("#order", inspector);
   ok(

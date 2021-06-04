@@ -46,8 +46,8 @@ assert_eq!(arena.get(foo), None);
 | `size_of::<Index>()`         | 8           | 16                 | 8       | 8    |
 | `size_of::<Option<Index>>()` | 8           | 24                 | 8       | 16   |
 | Max Elements                 | 2³²         | 2⁶⁴                | 2³²     | 2⁶⁴  |
-| Non-`Copy` Values            | Yes         | Yes                | Sorta²  | Yes  |
-| `no_std` Support             | No          | Yes                | No      | No   |
+| Non-`Copy` Values            | Yes         | Yes                | Yes     | Yes  |
+| `no_std` Support             | No          | Yes                | Yes     | No   |
 | Serde Support                | No          | Yes                | Yes     | No   |
 
 * Sizes calculated on rustc `1.44.0-x86_64-pc-windows-msvc`
@@ -58,9 +58,6 @@ assert_eq!(arena.get(foo), None);
 1. Generational indices help solve the [ABA
    Problem](https://en.wikipedia.org/wiki/ABA_problem), which can cause dangling
    keys to mistakenly access newly-inserted data.
-2. slotmap's `SlotMap` and `HopSlotMap` require values to be `Copy` on stable
-  Rust versions. slotmap's `DenseSlotMap` type supports non-`Copy` types on
-  stable, but has different performance trade-offs.
 
 ## Minimum Supported Rust Version (MSRV)
 

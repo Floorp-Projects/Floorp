@@ -175,7 +175,7 @@ async function test_muting_using_menu(tab, expectMuted) {
 }
 
 async function test_playing_icon_on_tab(tab, browser, isPinned) {
-  let icon = isPinned ? tab.overlayIcon : tab.soundPlayingIcon;
+  let icon = isPinned ? tab.overlayIcon : tab.overlayIcon;
   let isActiveTab = tab === gBrowser.selectedTab;
 
   await play(tab);
@@ -364,7 +364,7 @@ async function test_swapped_browser_while_playing(oldTab, newBrowser) {
     "Expected the correct soundplaying attribute on the new tab"
   );
 
-  await test_tooltip(newTab.soundPlayingIcon, "Unmute tab", true, newTab);
+  await test_tooltip(newTab.overlayIcon, "Unmute tab", true, newTab);
 }
 
 async function test_swapped_browser_while_not_playing(oldTab, newBrowser) {
@@ -437,14 +437,14 @@ async function test_swapped_browser_while_not_playing(oldTab, newBrowser) {
     "Expected the correct soundplaying attribute on the new tab"
   );
 
-  await test_tooltip(newTab.soundPlayingIcon, "Unmute tab", true, newTab);
+  await test_tooltip(newTab.overlayIcon, "Unmute tab", true, newTab);
 }
 
 async function test_browser_swapping(tab, browser) {
   // First, test swapping with a playing but muted tab.
   await play(tab);
 
-  await test_mute_tab(tab, tab.soundPlayingIcon, true);
+  await test_mute_tab(tab, tab.overlayIcon, true);
 
   await BrowserTestUtils.withNewTab(
     {

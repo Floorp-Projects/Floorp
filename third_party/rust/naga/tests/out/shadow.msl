@@ -1,6 +1,10 @@
 #include <metal_stdlib>
 #include <simd/simd.h>
 
+struct _mslBufferSizes {
+    metal::uint size1;
+};
+
 constexpr constant unsigned c_max_lights = 10u;
 struct Globals {
     metal::uint4 num_lights;
@@ -25,8 +29,8 @@ float fetch_shadow(
     if (homogeneous_coords.w <= 0.0) {
         return 1.0;
     }
-    float _e28 = t_shadow.sample_compare(sampler_shadow, ((metal::float2(homogeneous_coords.x, homogeneous_coords.y) * metal::float2(0.5, -0.5)) / homogeneous_coords.w) + metal::float2(0.5, 0.5), static_cast<int>(light_id), homogeneous_coords.z / homogeneous_coords.w);
-    return _e28;
+    float _e26 = t_shadow.sample_compare(sampler_shadow, ((homogeneous_coords.xy * metal::float2(0.5, -0.5)) / metal::float2(homogeneous_coords.w)) + metal::float2(0.5, 0.5), static_cast<int>(light_id), homogeneous_coords.z / homogeneous_coords.w);
+    return _e26;
 }
 
 struct fs_mainInput {
@@ -38,10 +42,10 @@ struct fs_mainOutput {
 };
 fragment fs_mainOutput fs_main(
   fs_mainInput varyings [[stage_in]]
-, constant Globals& u_globals [[user(fake0), center_perspective]]
-, constant Lights& s_lights [[user(fake0), center_perspective]]
-, metal::depth2d_array<float, metal::access::sample> t_shadow [[user(fake0), center_perspective]]
-, metal::sampler sampler_shadow [[user(fake0), center_perspective]]
+, constant Globals& u_globals [[user(fake0)]]
+, constant Lights& s_lights [[user(fake0)]]
+, metal::depth2d_array<float, metal::access::sample> t_shadow [[user(fake0)]]
+, metal::sampler sampler_shadow [[user(fake0)]]
 ) {
     const auto raw_normal = varyings.raw_normal;
     const auto position = varyings.position;
@@ -58,7 +62,7 @@ fragment fs_mainOutput fs_main(
         }
         Light _e21 = s_lights.data[i];
         float _e25 = fetch_shadow(i, _e21.proj * position, t_shadow, sampler_shadow);
-        color1 = color1 + ((_e25 * metal::max(0.0, metal::dot(metal::normalize(raw_normal), metal::normalize(metal::float3(_e21.pos.x, _e21.pos.y, _e21.pos.z) - metal::float3(position.x, position.y, position.z))))) * metal::float3(_e21.color.x, _e21.color.y, _e21.color.z));
+        color1 = color1 + ((_e25 * metal::max(0.0, metal::dot(metal::normalize(raw_normal), metal::normalize(_e21.pos.xyz - position.xyz)))) * _e21.color.xyz);
     }
     return fs_mainOutput { metal::float4(color1, 1.0) };
 }

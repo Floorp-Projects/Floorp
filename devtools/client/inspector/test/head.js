@@ -1401,3 +1401,15 @@ async function deleteNodeWithContextMenu(node, inspector) {
     await inspector.once("breadcrumbs-updated");
   }
 }
+
+/**
+ * Forces the content page to reflow and waits for the next repaint.
+ */
+function reflowContentPage() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    return new Promise(resolve => {
+      content.document.documentElement.offsetWidth;
+      content.requestAnimationFrame(resolve);
+    });
+  });
+}

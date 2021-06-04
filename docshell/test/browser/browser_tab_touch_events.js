@@ -9,20 +9,24 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: URI }, async function(
     browser
   ) {
+    await SpecialPowers.spawn(browser, [], test_init);
+
+    browser.browsingContext.touchEventsOverride = "disabled";
+
     await SpecialPowers.spawn(browser, [], test_body);
   });
 });
 
-async function test_body() {
-  let bc = content.browsingContext;
-
+async function test_init() {
   is(
-    bc.touchEventsOverride,
+    content.browsingContext.touchEventsOverride,
     "none",
     "touchEventsOverride flag should be initially set to NONE"
   );
+}
 
-  bc.touchEventsOverride = "disabled";
+async function test_body() {
+  let bc = content.browsingContext;
   is(
     bc.touchEventsOverride,
     "disabled",

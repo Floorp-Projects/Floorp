@@ -8,35 +8,18 @@
 %define tabIndicatorReplacesIcon :not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked])
 
 :root {
-  --tab-min-height: 33px;
-  --inline-tab-padding: 9px;
+  --tab-min-height: 36px;
+  --inline-tab-padding: 8px;
   /* Value for --in-content-page-background in in-content/common.inc.css */
   --tabpanel-background-color: #f9f9fa;
-}
-
-@media (-moz-toolbar-prefers-color-scheme: dark) {
-  :root {
-    /* Value for --in-content-page-background for dark mode in in-content/common.inc.css */
-    --tabpanel-background-color: #2a2a2e;
-  }
-}
-
-:root[privatebrowsingmode=temporary] {
-  /* Value for --in-content-page-background in aboutPrivateBrowsing.css */
-  --tabpanel-background-color: #25003e;
-}
-
-@media (-moz-proton) {
-:root {
-  --tab-min-height: 36px;
   --tab-border-radius: 4px;
   --tab-shadow-max-size: 6px;
-  --proton-tab-block-margin: 4px;
-  --inline-tab-padding: 8px;
+  --tab-block-margin: 4px;
   /* --tabpanel-background-color matches $in-content-page-background in newtab
      (browser/components/newtab/content-src/styles/_variables.scss) */
   --tabpanel-background-color: #F9F9FB;
 }
+
 @media (-moz-toolbar-prefers-color-scheme: dark) {
   :root {
     /* --tabpanel-background-color matches $in-content-page-background in newtab
@@ -44,7 +27,11 @@
     --tabpanel-background-color: #2A2A2E;
   }
 }
-} /*** END proton ***/
+
+:root[privatebrowsingmode=temporary] {
+  /* Value for --in-content-page-background in aboutPrivateBrowsing.css */
+  --tabpanel-background-color: #25003e;
+}
 
 :root[uidensity=compact] {
   --tab-min-height: 29px;
@@ -55,16 +42,9 @@
 }
 
 #tabbrowser-tabs {
-  --tabs-top-border-width: 0px;
   --tab-min-width: 76px;
   --tab-loading-fill: #0A84FF;
 }
-
-@media not (-moz-proton) {
-#tabbrowser-tabs:-moz-lwtheme {
-  --tab-line-color: currentColor;
-}
-} /* end !proton */
 
 #tabbrowser-tabpanels {
   background-color: var(--tabpanel-background-color);
@@ -81,14 +61,12 @@
   min-height: inherit;
 }
 
-@media (-moz-proton) {
 #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox::part(scrollbox) {
   /* Add padding to match the shadow's blur radius so the
     shadow doesn't get clipped when either the first or
     last tab is selected */
   padding-inline: var(--tab-shadow-max-size);
 }
-} /*** END proton ***/
 
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
   .tab-stack {
@@ -114,7 +92,6 @@
   -moz-box-align: stretch;
 }
 
-@media (-moz-proton) {
 .tabbrowser-tab {
   min-height: var(--tab-min-height);
   padding-inline: 2px !important;
@@ -126,7 +103,6 @@
   outline: var(--focus-outline);
   outline-offset: -2px;
 }
-} /*** END proton ***/
 
 /* The selected tab should appear above the border between the tabs toolbar and
    the navigation toolbar. */
@@ -142,22 +118,6 @@
 :root:not([uidensity=compact]) .tab-content[pinned] {
   padding: 0 10px;
 }
-
-@media not (-moz-proton) {
-:root:not([uidensity=compact]) .tab-content[pinned] {
-  padding: 0 12px;
-}
-
-.tab-loading-burst.proton {
-  display: none;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
-.tab-loading-burst:not(.proton) {
-  display: none;
-}
-} /*** END proton ***/
 
 @media (prefers-reduced-motion: no-preference) {
   :root[sessionrestored] .tab-loading-burst {
@@ -223,14 +183,6 @@
   }
 }
 
-@media not (-moz-proton) {
-.tab-icon-stack,
-.tab-icon-sound,
-.tab-close-button {
-  margin-top: 1px;
-}
-} /*** END !proton ***/
-
 /* Width/height & margins apply on tab icon stack children */
 .tab-throbber-tabslist,
 .tab-throbber,
@@ -242,17 +194,6 @@
   width: 16px;
 }
 
-@media not (-moz-proton) {
-.tab-throbber:not([pinned]),
-.tab-icon-pending:not([pinned]),
-.tab-icon-image:not([pinned]),
-.tab-sharing-icon-overlay:not([pinned]),
-.tab-icon-overlay:not([pinned], [sharing]) {
-  margin-inline-end: 6px;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
 .tab-throbber:not([pinned]),
 .tab-icon-pending:not([pinned]),
 .tab-icon-image:not([pinned]),
@@ -260,7 +201,6 @@
 .tab-icon-overlay:not([pinned]) {
   margin-inline-end: 5.5px;
 }
-} /*** END proton ***/
 
 @media (prefers-reduced-motion: reduce) {
   .tab-throbber[busy] {
@@ -392,23 +332,12 @@
   padding: 2px;
 }
 
-@media not (-moz-proton) {
-.tab-icon-overlay[pictureinpicture] {
-  top: -5.5px;
-  inset-inline-end: -6px;
-  z-index: 1; /* Overlay tab title */
-  padding: 0;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
 :root[uidensity=compact] .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay),
 #tabbrowser-tabs[secondarytext-unsupported] .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay),
 :root:not([uidensity=compact]) #tabbrowser-tabs:not([secondarytext-unsupported]) .tabbrowser-tab:not(:hover) .tab-icon-overlay@tabIndicatorReplacesIcon@,
 :root:not([uidensity=compact]) #tabbrowser-tabs:not([secondarytext-unsupported]) .tabbrowser-tab:hover .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay) {
   opacity: 0;
 }
-} /*** END proton ***/
 
 .tab-icon-overlay[soundplaying]:not([crashed]),
 .tab-icon-overlay[muted]:not([crashed]),
@@ -441,15 +370,6 @@
   background-color: var(--tab-icon-overlay-stroke, black);
 }
 
-@media not (-moz-proton) {
-.tab-icon-overlay[pictureinpicture]:hover {
-  background-color: white;
-  stroke: white;
-  color: black;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
 .tab-icon-overlay@tabIndicatorReplacesIcon@ {
   border-radius: 2px;
   fill-opacity: 0.75;
@@ -462,7 +382,6 @@
 .tab-icon-overlay@tabIndicatorReplacesIcon@:hover:active {
   background-color: color-mix(in srgb, currentColor 30%, transparent);
 }
-} /*** END proton ***/
 
 .tab-icon-overlay[soundplaying] {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-playing-small.svg");
@@ -528,21 +447,6 @@
 .tab-close-button {
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
-}
-
-@media not (-moz-proton) {
-.tab-label {
-  /* Maintain consistent alignment in case of font fallback for non-Latin characters. */
-  line-height: 1.7em;
-}
-
-.tab-close-button {
-  margin-inline-end: -2px;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
-.tab-close-button {
   margin-inline-end: calc(var(--inline-tab-padding) / -2);
   width: 24px;
   height: 24px;
@@ -560,36 +464,9 @@
 #tabbrowser-tabs:not([closebuttons=activetab]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab:not([visuallyselected=true]):hover {
   --tab-label-mask-size: 1em;
 }
-} /*** END proton ***/
 
-@media not (-moz-proton) {
-:root[uidensity=touch] .tab-close-button {
-  margin-inline-end: calc(var(--inline-tab-padding) / -2);
-  width: 24px;
-  height: 24px;
-  padding: 4px;
-}
-} /*** END !proton ***/
 
-@media not (-moz-proton) {
-.tab-label-container.proton {
-  display: none;
-}
-
-.tab-icon-sound {
-  margin-inline-start: 1px;
-  width: 16px;
-  height: 16px;
-  padding: 0;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
-#tabbrowser-tabs[secondarytext-unsupported] .tab-secondary-label,
-.tab-label-container:not(.proton),
-.tab-label-container:not(.proton) + .tab-icon-sound {
+#tabbrowser-tabs[secondarytext-unsupported] .tab-secondary-label {
   display: none;
 }
 
@@ -604,66 +481,11 @@
   height: 1.3333em;
   margin: 0;
 }
-} /*** END proton ***/
 
-@media not (-moz-proton) {
-.tab-icon-sound[soundplaying],
-.tab-icon-sound[muted],
-.tab-icon-sound[activemedia-blocked] {
-  list-style-image: url(chrome://global/skin/media/audio.svg);
-}
-
-.tab-icon-sound[muted] {
-  list-style-image: url(chrome://global/skin/media/audio-muted.svg);
-}
-
-.tab-icon-sound[activemedia-blocked] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-blocked.svg);
-}
-
-.tab-icon-sound[pictureinpicture] {
-  list-style-image: url(chrome://global/skin/media/picture-in-picture-open.svg);
-  width: 14px;
-  height: 14px;
-  opacity: .8;
-}
-
-.tab-icon-sound[pictureinpicture]:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
-:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[pictureinpicture],
-:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[soundplaying],
-:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[muted],
-:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[activemedia-blocked] {
-  filter: drop-shadow(1px 1px 1px white);
-}
-
-:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[pictureinpicture],
-:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[soundplaying],
-:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[muted],
-:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[activemedia-blocked] {
-  filter: drop-shadow(1px 1px 1px black);
-}
-.tab-icon-sound[soundplaying]:not(:hover),
-.tab-icon-sound[muted]:not(:hover),
-.tab-icon-sound[activemedia-blocked]:not(:hover) {
-  opacity: .8;
-}
-
-.tab-icon-sound[soundplaying-scheduledremoval]:not([muted], :hover),
-.tab-icon-overlay[soundplaying-scheduledremoval]:not([muted], :hover) {
-  transition: opacity .3s linear var(--soundplaying-removal-delay);
-  opacity: 0;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
 .tab-secondary-label[soundplaying-scheduledremoval]:not([muted]):not(:hover) {
   transition: opacity .3s linear var(--soundplaying-removal-delay);
   opacity: 0;
 }
-} /*** END proton ***/
 
 /* Tab Overflow */
 #tabbrowser-arrowscrollbox:not([scrolledtostart])::part(overflow-start-indicator),
@@ -690,34 +512,10 @@
   margin-inline: -6.5px -.5px;
 }
 
-@media not (-moz-proton) {
-#tabbrowser-arrowscrollbox:not([scrolledtostart])::part(overflow-start-indicator),
-#tabbrowser-arrowscrollbox:not([scrolledtoend])::part(overflow-end-indicator) {
-  width: 18px;
-  background-image: url(chrome://browser/skin/tabbrowser/tab-overflow-indicator.png);
-  background-size: 17px 100%;
-  border-left: 1px solid;
-  border-image: linear-gradient(rgba(255,255,255,.2),
-                                rgba(255,255,255,.2) calc(100% - 1px - var(--tabs-navbar-shadow-size)),
-                                transparent calc(100% - 1px - var(--tabs-navbar-shadow-size)));
-  border-image-slice: 1;
-}
-} /*** END !proton ***/
-
 #tabbrowser-arrowscrollbox:-moz-locale-dir(rtl)::part(overflow-start-indicator),
 #tabbrowser-arrowscrollbox:-moz-locale-dir(ltr)::part(overflow-end-indicator) {
   transform: scaleX(-1);
 }
-
-@media not (-moz-proton) {
-#tabbrowser-arrowscrollbox:not([scrolledtostart])::part(overflow-start-indicator) {
-  margin-inline: -1px -17px;
-}
-
-#tabbrowser-arrowscrollbox:not([scrolledtoend])::part(overflow-end-indicator) {
-  margin-inline: -17px -1px;
-}
-} /*** END !proton ***/
 
 #tabbrowser-arrowscrollbox[scrolledtostart]::part(overflow-start-indicator),
 #tabbrowser-arrowscrollbox[scrolledtoend]::part(overflow-end-indicator) {
@@ -739,12 +537,6 @@
   color: var(--lwt-tab-text, var(--toolbar-color));
 }
 
-@media not (-moz-proton) {
-.tab-line {
-  height: 2px;
-}
-} /* end !proton */
-
 /* Selected tab */
 
 .tab-background {
@@ -752,10 +544,9 @@
   background-clip: padding-box;
 }
 
-@media (-moz-proton) {
 .tab-background {
   border-radius: var(--tab-border-radius);
-  margin-block: var(--proton-tab-block-margin);
+  margin-block: var(--tab-block-margin);
 }
 
 :root[sizemode=maximized] .tabbrowser-tab {
@@ -781,24 +572,6 @@
 :root:not([lwtheme-mozlightdark]) #TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
   box-shadow: 0 0 0 1px var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.9)));
 }
-} /*** END proton ***/
-
-@media not (-moz-proton) {
-
-%ifdef MENUBAR_CAN_AUTOHIDE
-#toolbar-menubar:not([autohide=true]) + #TabsToolbar,
-%endif
-:root:not([tabsintitlebar]) {
-  --tabs-top-border-width: 1px;
-}
-
-%ifdef MENUBAR_CAN_AUTOHIDE
-#toolbar-menubar:not([autohide=true]) + #TabsToolbar .tabbrowser-tab > .tab-stack > .tab-background,
-%endif
-:root:not([tabsintitlebar]) .tab-background {
-  border-top-style: solid;
-}
-} /*** END !proton ***/
 
 .tab-background[multiselected=true],
 .tab-background[selected=true] {
@@ -812,13 +585,6 @@
 .tab-background[multiselected=true]:not([selected=true]) {
   opacity: .9;
 }
-
-@media not (-moz-proton) {
-.tab-line[multiselected],
-.tab-line[selected=true] {
-  background-color: var(--tab-line-color);
-}
-} /* end !proton */
 
 /*
  * LightweightThemeConsumer will set the current lightweight theme's header
@@ -840,17 +606,6 @@
 
 /* Tab hover */
 
-@media not (-moz-proton) {
-.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true], [multiselected]) {
-  background-color: rgba(0,0,0,.1);
-}
-
-#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true], [multiselected]) {
-  background-color: rgba(255,255,255,.1);
-}
-} /* END !proton */
-
-@media (-moz-proton) {
 .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true], [multiselected]) {
   background-color: color-mix(in srgb, currentColor 11%, transparent);
 }
@@ -862,67 +617,9 @@
     outline-offset: -1px;
   }
 }
-} /* END proton */
-
-@media not (-moz-proton) {
-@media (prefers-reduced-motion: no-preference) {
-  .tab-line:not([selected=true], [multiselected]) {
-    transition: transform 250ms var(--animation-easing-function), opacity 250ms var(--animation-easing-function);
-  }
-}
-
-.tab-line:not([selected=true], [multiselected]) {
-  opacity: 0;
-  transform: scaleX(0);
-}
-
-.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true], [multiselected]) {
-  background-color: rgba(0,0,0,.2);
-  opacity: 1;
-  transform: none;
-}
-
-#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true], [multiselected]) {
-  background-color: rgba(255,255,255,.2);
-}
-
-.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line[multiselected]:not([selected=true]) {
-  opacity: 0.5;
-}
-} /* end !proton */
 
 /* Pinned tabs */
 
-@media not (-moz-proton) {
-/* Pinned tab separators need position: absolute when positioned (during overflow). */
-#tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned]::after {
-  display: block;
-  position: absolute;
-  inset-block: 0;
-  inset-inline-end: 0;
-}
-
-#tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] > .tab-stack {
-  border-inline-end: 1px solid transparent;
-}
-
-.tabbrowser-tab:is([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
-.tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]) {
-  background-image: url(chrome://browser/skin/tabbrowser/indicator-tab-attention.svg);
-  background-position: center bottom calc(-4px + var(--tabs-navbar-shadow-size));
-  background-repeat: no-repeat;
-}
-
-.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned], [selected="true"]) {
-  background-position-x: left 11px;
-}
-
-.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned], [selected="true"]):-moz-locale-dir(rtl) {
-  background-position-x: right 11px;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
 #TabsToolbar {
   --attention-icon-color: rgb(42,195,162);
 }
@@ -951,7 +648,6 @@
   /* Add a gap between the last pinned tab and the first visible tab */
   margin-inline-start: 12px !important; /* .tabbrowser-tab sets margin: 0 !important; */
 }
-} /*** END proton ***/
 
 .tab-label[attention]:not([selected="true"]) {
   font-weight: bold;
@@ -981,65 +677,6 @@
     display: none;
   }
 }
-
-/* Tab separators */
-
-@media not (-moz-proton) {
-.titlebar-spacer[type="pre-tabs"] {
-  border-inline-end: 1px solid var(--lwt-background-tab-separator-color, currentColor);
-  opacity: 0.2;
-}
-
-.tabbrowser-tab::after,
-.tabbrowser-tab::before {
-  border-left: 1px solid var(--lwt-background-tab-separator-color, currentColor);
-  margin-block: 5px 4px;
-  opacity: 0.3;
-}
-
-/* Move the ::before pseudo-element on tabs 1px to the left
- * to avoid resizing the tab when the pseudo-element is removed again
- * (this currently happens when a tab is dragged and dropped).
- *
- * Note that this doesn't perfectly solve the issue (dragged tabs
- * may still resize very slightly) on some DPI settings with uneven
- * scaling factors on Windows, because of bug 477157.
- */
-.tabbrowser-tab::before {
-  margin-inline-start: -1px;
-}
-
-%ifdef MENUBAR_CAN_AUTOHIDE
-:root[tabsintitlebar] #toolbar-menubar[autohide=true] + #TabsToolbar .tabbrowser-tab::after,
-%else
-:root[tabsintitlebar] .tabbrowser-tab::after,
-%endif
-/* Show full height tab separators on hover and multiselection. */
-.tabbrowser-tab:hover::after,
-#tabbrowser-tabs:not([movingtab]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab[beforehovered]::after,
-.tabbrowser-tab[multiselected]::after,
-#tabbrowser-tabs:not([movingtab]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab[before-multiselected]::after {
-  margin-top: var(--tabs-top-border-width);
-  margin-bottom: 0;
-}
-
-/* Show full height tab separators on selected tabs. */
-#tabbrowser-tabs:not([movingtab]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab[beforeselected-visible]::after,
-#tabbrowser-tabs[movingtab] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[visuallyselected]::before,
-.tabbrowser-tab[visuallyselected]::after {
-  border-color: var(--tabs-border-color);
-  margin-top: 0;
-  margin-bottom: var(--tabs-navbar-shadow-size);
-  opacity: 1;
-}
-
-.tabbrowser-tab::after,
-/* Also show separators beside the selected tab when dragging it. */
-#tabbrowser-tabs[movingtab] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[visuallyselected]::before {
-  content: "";
-  display: block;
-}
-} /*** END !proton ***/
 
 /* Tab bar scroll arrows */
 
@@ -1117,16 +754,6 @@
   font-weight: bold;
 }
 
-@media not (-moz-proton-doorhangers) {
-.all-tabs-item[selected] {
-  box-shadow: inset 4px 0 var(--blue-40);
-}
-
-.all-tabs-item[selected]:-moz-locale-dir(rtl) {
-  box-shadow: inset -4px 0 var(--blue-40);
-}
-}
-
 .all-tabs-button {
   list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
 }
@@ -1144,7 +771,6 @@
   list-style-image: url(chrome://global/skin/media/audio-muted.svg);
 }
 
-@media (-moz-proton) {
 #allTabsMenu-allTabsViewTabs {
   padding-bottom: 8px;
 }
@@ -1157,18 +783,3 @@
 .all-tabs-item > toolbarbutton {
   margin-inline-start: 0;
 }
-} /*** END proton ***/
-
-@media not (-moz-proton) {
-#allTabsMenu-searchTabs {
-  list-style-image: url(chrome://global/skin/icons/search-glass.svg);
-}
-
-#allTabsMenu-tabsSeparator {
-  margin-bottom: 0;
-}
-
-.all-tabs-item:hover {
-  background-color: var(--arrowpanel-dimmed);
-}
-} /*** END !proton ***/

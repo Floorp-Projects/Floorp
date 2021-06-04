@@ -750,10 +750,10 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
   int horizontalOffset =
       sNonClientHorizontalMargins - (sMaximized ? 0 : chromeHorMargin);
 
-  // found in tabs.inc.css, "--tab-min-height" + 2 * "--proton-tab-block-margin"
+  // found in tabs.inc.css, "--tab-min-height" + 2 * "--tab-block-margin"
   int tabBarHeight = CSSToDevPixels(44, sCSSToDevPixelScaling);
   int selectedTabBorderWidth = CSSToDevPixels(2, sCSSToDevPixelScaling);
-  // found in tabs.inc.css, "--proton-tab-block-margin"
+  // found in tabs.inc.css, "--tab-block-margin"
   int titlebarSpacerWidth = horizontalOffset +
                             CSSToDevPixels(2, sCSSToDevPixelScaling) -
                             selectedTabBorderWidth;
@@ -761,7 +761,7 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
     // found in tabs.inc.css, ".titlebar-spacer"
     titlebarSpacerWidth += CSSToDevPixels(40, sCSSToDevPixelScaling);
   }
-  // found in tabs.inc.css, "--proton-tab-block-margin"
+  // found in tabs.inc.css, "--tab-block-margin"
   int selectedTabMarginTop =
       CSSToDevPixels(4, sCSSToDevPixelScaling) - selectedTabBorderWidth;
   int selectedTabMarginBottom =

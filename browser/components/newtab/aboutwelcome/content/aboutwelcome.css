@@ -422,6 +422,11 @@ body {
       font-size: 14px;
       font-weight: normal;
       line-height: 20px; }
+      @media (forced-colors: active) {
+        .onboardingContainer.proton .secondary:hover {
+          background-color: var(--in-content-button-background-hover);
+          color: var(--in-content-button-text-color-hover) !important;
+          text-decoration: none; } }
     .onboardingContainer.proton .secondary-cta.top {
       position: absolute;
       top: 10px;

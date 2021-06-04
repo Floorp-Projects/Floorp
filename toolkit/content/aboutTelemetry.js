@@ -1350,6 +1350,37 @@ var Search = {
     return [isPassFunc, filter];
   },
 
+  filterTextRows(table, filterText) {
+    let [isPassFunc, filter] = this.chooseFilter(filterText);
+    let allElementHidden = true;
+
+    let needLowerCase = isPassFunc === this.isPassText;
+    let elements = table.rows;
+    for (let element of elements) {
+      if (element.firstChild.nodeName == "th") {
+        continue;
+      }
+      for (let cell of element.children) {
+        let subject = needLowerCase
+          ? cell.textContent.toLowerCase()
+          : cell.textContent;
+        element.hidden = !isPassFunc(subject, filter);
+        if (!element.hidden) {
+          if (allElementHidden) {
+            allElementHidden = false;
+          }
+          // Don't need to check the rest of this row.
+          break;
+        }
+      }
+    }
+    // Unhide the first row:
+    if (!allElementHidden) {
+      table.rows[0].hidden = false;
+    }
+    return allElementHidden;
+  },
+
   filterElements(elements, filterText) {
     let [isPassFunc, filter] = this.chooseFilter(filterText);
     let allElementHidden = true;
@@ -1423,9 +1454,12 @@ var Search = {
       return false;
     }
     let noSearchResults = true;
+    // In the home section, we search all other sections:
     if (section.id === "home-section") {
       return this.homeSearch(text);
-    } else if (section.id === "histograms-section") {
+    }
+
+    if (section.id === "histograms-section") {
       let histograms = section.getElementsByClassName("histogram");
       noSearchResults = this.filterElements(histograms, text);
     } else if (section.id === "keyed-histograms-section") {
@@ -1444,6 +1478,15 @@ var Search = {
         keyedElements.push({ key, datas });
       }
       noSearchResults = this.filterKeyedElements(keyedElements, text);
+    } else if (section.matches(".text-search")) {
+      let tables = section.querySelectorAll("table");
+      for (let table of tables) {
+        // If we unhide anything, flip noSearchResults to
+        // false so we don't show the "no results" bits.
+        if (!this.filterTextRows(table, text)) {
+          noSearchResults = false;
+        }
+      }
     } else if (section.querySelector(".sub-section")) {
       let keyedSubSections = [];
       let subsections = section.querySelectorAll(".sub-section");

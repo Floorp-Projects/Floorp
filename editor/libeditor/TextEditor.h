@@ -57,6 +57,12 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 
   // Overrides of nsIEditor
   NS_IMETHOD GetTextLength(int32_t* aCount) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) override {
+    const nsresult rv = TextEditor::PasteAsAction(aClipboardType, true);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HTMLEditor::PasteAsAction() failed");
+    return rv;
+  }
 
   // Shouldn't be used internally, but we need these using declarations for
   // avoiding warnings of clang.
@@ -85,22 +91,9 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 
   virtual dom::EventTarget* GetDOMEventTarget() const override;
 
-  /**
-   * PasteAsAction() pastes clipboard content to Selection.  This method
-   * may dispatch ePaste event first.  If its defaultPrevent() is called,
-   * this does nothing but returns NS_OK.
-   *
-   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
-   *                            nsIClipboard::kSelectionClipboard.
-   * @param aDispatchPasteEvent true if this should dispatch ePaste event
-   *                            before pasting.  Otherwise, false.
-   * @param aPrincipal          Set subject principal if it may be called by
-   *                            JS.  If set to nullptr, will be treated as
-   *                            called by system.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult PasteAsAction(int32_t aClipboardType,
-                                            bool aDispatchPasteEvent,
-                                            nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
+                nsIPrincipal* aPrincipal = nullptr) override;
 
   MOZ_CAN_RUN_SCRIPT nsresult
   PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
@@ -215,13 +208,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
       bool aSuppressTransaction) override;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
-
-  /**
-   * DeleteSelectionByDragAsAction() removes selection and dispatch "input"
-   * event whose inputType is "deleteByDrag".
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteSelectionByDragAsAction(bool aDispatchInputEvent);
 
   /**
    * Replace existed string with aString.  Caller must guarantee that there
@@ -399,13 +385,13 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
                         nsIEditor::EStripWrappers aStripWrappers) override;
 
   /**
-   * ComputeValueFromTextNodeAndPaddingBRElement() tries to compute "value" of
-   * this editor content only with text node and padding `<br>` element.
+   * ComputeValueFromTextNodeAndBRElement() tries to compute "value" of
+   * this editor content only with text nodes and `<br>` elements.
    * If this succeeds to compute the value, it's returned with aValue and
    * the result is marked as "handled".  Otherwise, the caller needs to
    * compute it with another way.
    */
-  EditActionResult ComputeValueFromTextNodeAndPaddingBRElement(
+  EditActionResult ComputeValueFromTextNodeAndBRElement(
       nsAString& aValue) const;
 
   /**
@@ -482,48 +468,8 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    */
   MOZ_CAN_RUN_SCRIPT virtual nsresult SelectEntireDocument() override;
 
-  /**
-   * PrepareInsertContent() is a helper method of InsertTextAt(),
-   * HTMLEditor::DoInsertHTMLWithContext().  They insert content coming from
-   * clipboard or drag and drop.  Before that, they may need to remove selected
-   * contents and adjust selection.  This does them instead.
-   *
-   * @param aPointToInsert      Point to insert.  Must be set.  Callers
-   *                            shouldn't use this instance after calling this
-   *                            method because this method may cause changing
-   *                            the DOM tree and Selection.
-   * @param aDoDeleteSelection  true if selected content should be removed.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult PrepareToInsertContent(
-      const EditorDOMPoint& aPointToInsert, bool aDoDeleteSelection);
-
-  /**
-   * InsertTextAt() inserts aStringToInsert at aPointToInsert.
-   *
-   * @param aStringToInsert     The string which you want to insert.
-   * @param aPointToInsert      The insertion point.
-   * @param aDoDeleteSelection  true if you want this to delete selected
-   *                            content.  Otherwise, false.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertTextAt(const nsAString& aStringToInsert,
-                                           const EditorDOMPoint& aPointToInsert,
-                                           bool aDoDeleteSelection);
-
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) override;
-
-  /**
-   * Return true if the data is safe to insert as the source and destination
-   * principals match, or we are in a editor context where this doesn't matter.
-   * Otherwise, the data must be sanitized first.
-   */
-  bool IsSafeToInsertData(const Document* aSourceDoc) const;
-
-  /**
-   * Factored methods for handling insertion of data from transferables
-   * (drag&drop or clipboard).
-   */
-  virtual nsresult PrepareTransferable(nsITransferable** transferable);
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertTextFromTransferable(nsITransferable* transferable);

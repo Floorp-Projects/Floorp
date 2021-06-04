@@ -256,12 +256,7 @@ where
 
             match Arc::try_unwrap(chunk.memory) {
                 Ok(memory) => device.deallocate_memory(memory),
-                #[cfg(feature = "tracing")]
-                Err(_) => {
-                    tracing::error!("Cleanup before all memory blocks are deallocated");
-                }
-                #[cfg(not(feature = "tracing"))]
-                _ => {}
+                Err(_) => {}
             }
         }
 
@@ -273,19 +268,9 @@ where
 
             match Arc::try_unwrap(chunk.memory) {
                 Ok(memory) => device.deallocate_memory(memory),
-                #[cfg(feature = "tracing")]
-                Err(_) => {
-                    tracing::error!("Cleanup before all memory blocks are deallocated");
-                }
-                #[cfg(not(feature = "tracing"))]
-                _ => {}
+                Err(_) => {}
             }
         }
-
-        assert!(
-            self.exhausted.is_empty(),
-            "All blocks must be deallocated before cleanup"
-        );
     }
 
     fn host_visible(&self) -> bool {

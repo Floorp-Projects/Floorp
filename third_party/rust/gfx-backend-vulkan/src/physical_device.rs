@@ -903,10 +903,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                 spv::Capability::ImageQuery,
                 spv::Capability::DerivativeControl,
                 //TODO: fill out the rest
-            ]
-            .iter()
-            .cloned()
-            .collect();
+            ];
             let mut flags = spv::WriterFlags::empty();
             flags.set(spv::WriterFlags::DEBUG, cfg!(debug_assertions));
             flags.set(
@@ -916,7 +913,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             spv::Options {
                 lang_version: (1, 0),
                 flags,
-                capabilities,
+                capabilities: Some(capabilities.iter().cloned().collect()),
             }
         };
 

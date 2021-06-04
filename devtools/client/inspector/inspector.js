@@ -160,7 +160,7 @@ function Inspector(toolbox, commands) {
   );
   this._onTargetAvailable = this._onTargetAvailable.bind(this);
   this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
-  this._onBeforeNavigate = this._onBeforeNavigate.bind(this);
+  this._onWillNavigate = this._onWillNavigate.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
   this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
 
@@ -213,6 +213,7 @@ Inspector.prototype = {
         this.toolbox.resourceCommand.TYPES.ROOT_NODE,
         // To observe CSS change before opening changes view.
         this.toolbox.resourceCommand.TYPES.CSS_CHANGE,
+        this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT,
       ],
       { onAvailable: this.onResourceAvailable }
     );
@@ -231,7 +232,6 @@ Inspector.prototype = {
       return;
     }
 
-    targetFront.on("will-navigate", this._onBeforeNavigate);
     await this.initInspectorFront(targetFront);
 
     await Promise.all([
@@ -245,7 +245,6 @@ Inspector.prototype = {
     if (!targetFront.isTopLevel) {
       return;
     }
-    targetFront.off("will-navigate", this._onBeforeNavigate);
 
     this._defaultNode = null;
     this.selection.setNodeFront(null);
@@ -407,9 +406,12 @@ Inspector.prototype = {
     return this;
   },
 
-  _onBeforeNavigate: function() {
+  _onWillNavigate: function() {
     this._defaultNode = null;
     this.selection.setNodeFront(null);
+    if (this._highlighters) {
+      this._highlighters.onWillNavigate();
+    }
     this._destroyMarkup();
     this._pendingSelectionUnique = null;
   },
@@ -1287,6 +1289,14 @@ Inspector.prototype = {
           this.onRootNodeAvailable(rootNodeFront);
         }
       }
+
+      if (
+        resource.resourceType ===
+          this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT &&
+        resource.name === "will-navigate"
+      ) {
+        this._onWillNavigate();
+      }
     }
   },
 
@@ -1638,7 +1648,6 @@ Inspector.prototype = {
     this.toolbox.nodePicker.off("picker-node-canceled", this.onPickerCanceled);
     this.toolbox.nodePicker.off("picker-node-hovered", this.onPickerHovered);
     this.toolbox.nodePicker.off("picker-node-picked", this.onPickerPicked);
-    this.currentTarget.off("will-navigate", this._onBeforeNavigate);
 
     for (const [, panel] of this._panels) {
       panel.destroy();
@@ -1681,7 +1690,11 @@ Inspector.prototype = {
     );
     const { resourceCommand } = this.toolbox;
     resourceCommand.unwatchResources(
-      [resourceCommand.TYPES.ROOT_NODE, resourceCommand.TYPES.CSS_CHANGE],
+      [
+        resourceCommand.TYPES.ROOT_NODE,
+        resourceCommand.TYPES.CSS_CHANGE,
+        resourceCommand.TYPES.DOCUMENT_EVENT,
+      ],
       { onAvailable: this.onResourceAvailable }
     );
 

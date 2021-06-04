@@ -1,6 +1,11 @@
 #include <metal_stdlib>
 #include <simd/simd.h>
 
+struct _mslBufferSizes {
+    metal::uint size1;
+    metal::uint size2;
+};
+
 constexpr constant unsigned NUM_PARTICLES = 1500u;
 struct Particle {
     metal::float2 pos;
@@ -27,6 +32,7 @@ kernel void main1(
 , constant SimParams& params [[buffer(0)]]
 , constant Particles& particlesSrc [[buffer(1)]]
 , device Particles& particlesDst [[buffer(2)]]
+, constant _mslBufferSizes& _buffer_sizes [[buffer(3)]]
 ) {
     metal::float2 vPos;
     metal::float2 vVel;
@@ -73,10 +79,10 @@ kernel void main1(
         }
     }
     if (cMassCount > 0) {
-        cMass = (cMass / static_cast<float>(cMassCount)) - vPos;
+        cMass = (cMass / metal::float2(static_cast<float>(cMassCount))) - vPos;
     }
     if (cVelCount > 0) {
-        cVel = cVel / static_cast<float>(cVelCount);
+        cVel = cVel / metal::float2(static_cast<float>(cVelCount));
     }
     vVel = ((vVel + (cMass * params.rule1Scale)) + (colVel * params.rule2Scale)) + (cVel * params.rule3Scale);
     vVel = metal::normalize(vVel) * metal::clamp(metal::length(vVel), 0.0, 0.1);

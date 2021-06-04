@@ -145,6 +145,10 @@ def collectTopmostFrames(rows):
             if seq == 1 or cid != prev_cid or sid != prev_sid or ctx != prev_ctx:
                 addTopmostFrame(row)
                 after_severity_downgrade = False
+            # We do not expect a non-error to be ever upgraded to an error
+            elif sev == "ERROR" and prev_sev != "ERROR":
+                addTopmostFrame(row)
+                after_severity_downgrade = False
             # If we just had a severity downgrade, we assume that we wanted
             # to break the error propagation after this point and split, too
             elif after_severity_downgrade:

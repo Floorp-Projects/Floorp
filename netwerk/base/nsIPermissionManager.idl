@@ -153,7 +153,9 @@ interface nsIPermissionManager : nsISupports
                                        in ACString type);
 
   /**
-   * See testExactPermission() above.
+   * Test whether the principal has the permission to perform a given action.
+   * This requires an exact hostname match. Subdomain principals do not match
+   * permissions of base domains.
    * System principals will always have permissions granted.
    * This function will perform a pref lookup to permissions.default.<type>
    * if the specific permission type is part of the whitelist for that functionality.
@@ -180,9 +182,9 @@ interface nsIPermissionManager : nsISupports
    * Get the permission object associated with the given principal and action.
    * @param principal The principal
    * @param type      A case-sensitive ASCII string identifying the consumer
-   * @param exactHost If true, only the specific host will be matched,
-   *                  @see testExactPermission. If false, subdomains will
-   *                  also be searched, @see testPermission.
+   * @param exactHost If true, only the specific host will be matched.
+   *                  If false, base domains of the principal will also
+   *                  be searched.
    * @returns The matching permission object, or null if no matching object
    *          was found. No matching object is equivalent to UNKNOWN_ACTION.
    * @note Clients in general should prefer the test* methods unless they

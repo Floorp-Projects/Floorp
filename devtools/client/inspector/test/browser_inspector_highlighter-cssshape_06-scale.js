@@ -34,7 +34,7 @@ async function teardown(config) {
 }
 
 async function testScale(config) {
-  const { testActor, helper, highlighters } = config;
+  const { helper, highlighters } = config;
   const options = { transformMode: true };
   const property = "clip-path";
 
@@ -55,7 +55,7 @@ async function testScale(config) {
       await mouse.down(x, y, selector);
       await mouse.move(x + dx, y + dy, selector);
       await mouse.up(x + dx, y + dy, selector);
-      await testActor.reflow();
+      await reflowContentPage();
       nw[0] += dx;
       nw[1] += dy;
     }
@@ -70,7 +70,7 @@ async function testScale(config) {
     await mouse.down(nw[0], nw[1], selector);
     await mouse.move(nw[0] + dx, nw[1] + dy, selector);
     await mouse.up(nw[0] + dx, nw[1] + dy, selector);
-    await testActor.reflow();
+    await reflowContentPage();
     await onShapeChangeApplied;
 
     const nwBB = await getBoundingBoxInPx({ selector, ...config });
@@ -86,7 +86,7 @@ async function testScale(config) {
     await mouse.down(nwBB.ne[0], nwBB.ne[1], selector);
     await mouse.move(nwBB.ne[0] - dx, nwBB.ne[1] + dy, selector);
     await mouse.up(nwBB.ne[0] - dx, nwBB.ne[1] + dy, selector);
-    await testActor.reflow();
+    await reflowContentPage();
     await onShapeChangeApplied;
 
     const neBB = await getBoundingBoxInPx({ selector, ...config });
@@ -106,7 +106,7 @@ async function testScale(config) {
     await mouse.down(neBB.sw[0], neBB.sw[1], selector);
     await mouse.move(neBB.sw[0] + dx, neBB.sw[1] - dy, selector);
     await mouse.up(neBB.sw[0] + dx, neBB.sw[1] - dy, selector);
-    await testActor.reflow();
+    await reflowContentPage();
     await onShapeChangeApplied;
 
     const swBB = await getBoundingBoxInPx({ selector, ...config });
@@ -126,7 +126,7 @@ async function testScale(config) {
     await mouse.down(swBB.se[0], swBB.se[1], selector);
     await mouse.move(swBB.se[0] - dx, swBB.se[1] - dy, selector);
     await mouse.up(swBB.se[0] - dx, swBB.se[1] - dy, selector);
-    await testActor.reflow();
+    await reflowContentPage();
     await onShapeChangeApplied;
 
     const seBB = await getBoundingBoxInPx({ selector, ...config });

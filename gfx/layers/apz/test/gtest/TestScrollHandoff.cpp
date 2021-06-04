@@ -655,3 +655,50 @@ TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_TouchAction) {
   SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", true);
   TestCrossApzcAxisLock();
 }
+
+TEST_F(APZScrollHandoffTesterLayersOnly, WheelHandoffAfterDirectionReversal) {
+  // Explicitly set the wheel transaction timeout pref because the test relies
+  // on its value.
+  SCOPED_GFX_PREF_INT("mousewheel.transaction.timeout", 1500);
+
+  // Set up a basic scroll handoff layer tree.
+  CreateScrollHandoffLayerTree1();
+
+  rootApzc = ApzcOf(root);
+  RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
+  FrameMetrics& rootMetrics = rootApzc->GetFrameMetrics();
+  FrameMetrics& childMetrics = childApzc->GetFrameMetrics();
+  CSSRect childScrollRange = childMetrics.CalculateScrollRange();
+
+  EXPECT_EQ(0, rootMetrics.GetVisualScrollOffset().y);
+  EXPECT_EQ(0, childMetrics.GetVisualScrollOffset().y);
+
+  ScreenIntPoint cursorLocation(10, 60);  // positioned to hit the subframe
+  ScreenPoint upwardDelta(0, -10);
+  ScreenPoint downwardDelta(0, 10);
+
+  // First wheel upwards. This will have no effect because we're already
+  // scrolled to the top.
+  Wheel(manager, cursorLocation, upwardDelta, mcc->Time());
+  EXPECT_EQ(0, rootMetrics.GetVisualScrollOffset().y);
+  EXPECT_EQ(0, childMetrics.GetVisualScrollOffset().y);
+
+  // Now wheel downwards 6 times. This should scroll the child, and get it
+  // to the bottom of its 50px scroll range.
+  for (size_t i = 0; i < 6; ++i) {
+    mcc->AdvanceByMillis(100);
+    Wheel(manager, cursorLocation, downwardDelta, mcc->Time());
+  }
+  EXPECT_EQ(0, rootMetrics.GetVisualScrollOffset().y);
+  EXPECT_EQ(childScrollRange.YMost(), childMetrics.GetVisualScrollOffset().y);
+
+  // Wheel downwards an additional 16 times, with 100ms increments.
+  // This should be enough to overcome the 1500ms wheel transaction timeout
+  // and start scrolling the root.
+  for (size_t i = 0; i < 16; ++i) {
+    mcc->AdvanceByMillis(100);
+    Wheel(manager, cursorLocation, downwardDelta, mcc->Time());
+  }
+  EXPECT_EQ(childScrollRange.YMost(), childMetrics.GetVisualScrollOffset().y);
+  EXPECT_GT(rootMetrics.GetVisualScrollOffset().y, 0);
+}

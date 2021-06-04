@@ -24,7 +24,9 @@
 #include "nsFrameSelection.h"
 #include "nsIContent.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsILoadContext.h"
 #include "nsINode.h"
+#include "nsITransferable.h"
 #include "nsRange.h"
 #include "nsStyleStruct.h"
 #include "nsTextFragment.h"
@@ -585,6 +587,39 @@ bool EditorUtils::IsPointInSelection(const Selection& aSelection,
   }
 
   return false;
+}
+
+// static
+Result<nsCOMPtr<nsITransferable>, nsresult>
+EditorUtils::CreateTransferableForPlainText(const Document& aDocument) {
+  // Create generic Transferable for getting the data
+  nsresult rv;
+  nsCOMPtr<nsITransferable> transferable =
+      do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("do_CreateInstance() failed to create nsITransferable instance");
+    return Err(rv);
+  }
+
+  if (!transferable) {
+    NS_WARNING("do_CreateInstance() returned nullptr, but ignored");
+    return nsCOMPtr<nsITransferable>();
+  }
+
+  DebugOnly<nsresult> rvIgnored =
+      transferable->Init(aDocument.GetLoadContext());
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "nsITransferable::Init() failed, but ignored");
+
+  rvIgnored = transferable->AddDataFlavor(kUnicodeMime);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "nsITransferable::AddDataFlavor(kUnicodeMime) failed, but ignored");
+  rvIgnored = transferable->AddDataFlavor(kMozTextInternal);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "nsITransferable::AddDataFlavor(kMozTextInternal) failed, but ignored");
+  return transferable;
 }
 
 }  // namespace mozilla
