@@ -38,12 +38,6 @@
   --panel-padding: var(--arrowpanel-padding);
 }
 
-@media not (-moz-proton-doorhangers) {
-:root {
-  --popup-notification-body-width: 25em;
-}
-} /** END not Proton **/
-
 /* Lightweight theme roots */
 
 :root[lwtheme-image]:-moz-lwtheme-darktext {
@@ -161,59 +155,6 @@ xul|label[disabled="true"] {
 .autoscroller[scrolldir="EW"] {
   --autoscroll-background-image: url("chrome://global/skin/icons/autoscroll-horizontal.svg");
 }
-
-/* Panel footers */
-
-@media not (-moz-proton-doorhangers) {
-.panel-footer {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-.panel-footer > xul|button {
-  appearance: none;
-  border-top: 1px solid var(--panel-separator-color);
-  color: inherit;
-  min-width: 0;
-  margin: 0;
-  padding: .9em 2px;
-}
-
-.panel-footer > xul|button[disabled] {
-  color: var(--panel-disabled-color) !important;
-}
-
-.panel-footer > xul|button:-moz-focusring {
-  outline: 1px dotted;
-  outline-offset: -3px;
-}
-
-.panel-footer > xul|button:not([disabled]):hover {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-.panel-footer > xul|button:not([disabled]):hover:active,
-.panel-footer > xul|button:not([disabled])[open] {
-  background-color: var(--arrowpanel-dimmed-further);
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
-}
-
-.panel-footer > xul|button:not([disabled])[default] {
-  color: white !important;
-  background-color: #0060df;
-}
-
-.panel-footer > xul|button:not([disabled])[default]:hover {
-  background-color: #003eaa;
-}
-
-.panel-footer > xul|button:not([disabled])[default]:hover:active {
-  background-color: #002275;
-}
-
-.panel-footer > xul|button > .button-box {
-  padding: 0;
-}
-} /** END not Proton **/
 
 /* Combobox dropdown renderer */
 #ContentSelectDropdown > menupopup {

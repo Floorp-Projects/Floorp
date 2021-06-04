@@ -389,7 +389,6 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
   max-width: @standaloneSubviewWidth@;
 }
 
-@media (-moz-proton-doorhangers) {
 #BMB_bookmarksPopup::part(arrowscrollbox) {
   border: 0;
 }
@@ -406,30 +405,6 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 #BMB_bookmarksPopup .subviewbutton {
   padding: var(--arrowpanel-menuitem-padding);
 }
-} /** END Proton **/
-
-@media not (-moz-proton-doorhangers) {
-#BMB_bookmarksPopup::part(arrowscrollbox) {
-  padding: 0;
-}
-
-/* Remove padding on xul:arrowscrollbox to avoid extra padding on footer */
-#BMB_bookmarksPopup menupopup::part(arrowscrollbox) {
-  padding-bottom: 0;
-}
-
-#BMB_bookmarksPopup menupopup[nofooterpopup=true]::part(arrowscrollbox) {
-  padding-bottom: 4px;
-}
-
-%ifndef XP_MACOSX
-/* Add some space at the top because there are no headers in menupopups of
-   the bookmarks menu. */
-#BMB_bookmarksPopup menupopup::part(arrowscrollbox-scrollbox) {
-  padding-top: 4px;
-}
-%endif
-} /** END not Proton **/
 
 #confirmation-hint {
   --arrowpanel-background: #0060df;
@@ -1842,13 +1817,6 @@ menuitem.panel-subview-footer@menuStateActive@,
   margin-inline-end: 3px;
 }
 
-@media not (-moz-proton-doorhangers) {
-#BMB_bookmarksPopup menupopup > .bookmarks-actions-menuseparator {
-  /* Hide bottom separator as the styled footer includes a top border serving the same purpose */
-  display: none;
-}
-} /** END not Proton **/
-
 /* Disabled (empty) item is always alone and never has an icon, so fix its left padding */
 #BMB_bookmarksPopup menupopup[emptyplacesresult] .bookmark-item.subviewbutton {
   padding-left: 6px;
@@ -2492,12 +2460,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   /* -10px to compensate for the margin on the container. We can't get rid of that
      because it helps position the background image. */
   margin: 0 calc(-10px + var(--horizontal-padding)) var(--vertical-section-padding);
-}
-
-@media (-moz-proton-doorhangers) {
-#protections-popup-message .whatsNew-message-body {
   margin-inline: 6px;
-}
 }
 
 #PanelUI-whatsNew .whatsNew-message-body.has-icon {

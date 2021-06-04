@@ -20,24 +20,7 @@
   --horizontal-padding: 1.78em;
   --vertical-section-padding: 0.9em;
   --height-offset: 0px;
-}
-
-@media (-moz-proton-doorhangers) {
-#identity-popup,
-#permission-popup,
-#protections-popup {
   font: menu;
-}
-}
-
-@media not (-moz-proton-doorhangers) {
-#identity-popup,
-#permission-popup,
-#protections-popup {
-%if defined(XP_MACOSX) || defined(XP_WIN)
-  font-size: 1.18em;
-%endif
-}
 }
 
 #protections-popup[toast] {
@@ -181,83 +164,6 @@
   background-position: calc(100% - 1em) 1em;
 }
 
-@media not (-moz-proton-doorhangers) {
-#identity-popup-securityView .identity-popup-security-content {
-  border-bottom: 1px solid var(--panel-separator-color);
-}
-
-.identity-popup-security-connection,
-#identity-popup-security-description,
-#identity-popup-security-httpsonlymode {
-  /* icon indent + 16px icon width + 6px description margin
-     (total of 12px margin with the native 6px description margin) */
-  padding-inline: calc(2em + 22px) 1em;
-}
-
-.identity-popup-security-connection > hbox {
-  margin-inline-start: 0;
-}
-
-#identity-popup-security-httpsonlymode-info {
-  margin-bottom: 0;
-}
-
-.identity-popup-connection-secure.upgraded {
-  margin-inline: 0;
-}
-
-#identity-popup-security-description > description {
-  margin-block: 0.5em 0.3em;
-  font-weight: normal;
-}
-
-/* EXPAND BUTTON */
-
-.identity-popup-expander {
-  margin: 0;
-  padding: 4px 0;
-  min-width: auto;
-  width: 38px;
-  border-style: none;
-  appearance: none;
-  background: url("chrome://global/skin/icons/arrow-left.svg") center no-repeat;
-  background-size: 16px, auto;
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: .6;
-  color: inherit;
-}
-
-.identity-popup-expander:-moz-locale-dir(ltr) {
-  transform: scaleX(-1);
-}
-
-.identity-popup-expander > .button-box {
-  border-right: 1px solid var(--panel-separator-color);
-  padding: 0;
-}
-
-.identity-popup-expander:hover {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-.identity-popup-expander:hover:active {
-  background-color: var(--arrowpanel-dimmed-further);
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
-}
-} /** END not PROTON **/
-
-@media not (-moz-proton-doorhangers) {
-.identity-popup-security-content,
-#permission-popup-permissions-content {
-  padding-block: 1em;
-}
-
-#permission-popup-permissions-content {
-  padding-inline: 2em 1em;
-}
-} /** END not PROTON **/
-
 /* CONTENT */
 
 .protections-popup-footer-button,
@@ -340,33 +246,6 @@
   margin-top: 4px;
 }
 
-@media not (-moz-proton-doorhangers) {
-#permission-popup-mainView-panel-header,
-#identity-popup-mainView-panel-header {
-  padding: var(--vertical-section-padding) 2px;
-}
-
-#identity-popup-mainView-panel-header-span,
-#permission-popup-mainView-panel-header-span {
-  margin-top: 0;
-}
-
-.identity-popup-warning-box {
-  padding: 0.5em;
-}
-
-.identity-popup-warning-gray {
-  background-color: var(--arrowpanel-dimmed);
-  border: 1px solid var(--panel-separator-color);
-}
-
-.identity-popup-warning-yellow {
-  color: black;
-  background-color: #FFEEBF;
-  border: 1px solid #FFE083;
-}
-} /** END not PROTON **/
-
 #protections-popup[toast] #protections-popup-info-button {
   display: none;
 }
@@ -390,29 +269,6 @@
 }
 
 /* SECURITY */
-
-@media not (-moz-proton-doorhangers) {
-.identity-popup-connection-secure {
-  color: #058B00;
-}
-
-:root[lwt-popup-brighttext] .identity-popup-connection-secure {
-  color: #30e60b;
-}
-
-#identity-popup[connection^=secure] .identity-popup-security-connection {
-  fill: #12BC00;
-}
-
-#identity-popup[connection=extension] .identity-popup-security-connection {
-  fill: #60bf4c;
-}
-
-#identity-popup[mixedcontent~=active-loaded] .identity-popup-connection-not-secure,
-#identity-popup:not([mixedcontent]) .identity-popup-connection-not-secure {
-  color: #d74345;
-}
-} /** END not PROTON **/
 
 #identity-popup[mixedcontent~=active-loaded] .identity-popup-connection-not-secure,
 #identity-popup:not([mixedcontent]) .identity-popup-connection-not-secure {
@@ -477,20 +333,6 @@
   padding-top: 4px;
 }
 
-@media not (-moz-proton-doorhangers) {
-#identity-popup-securityView-body {
-  /* icon indent + 16px icon width + 6px description margin
-    (total of 12px margin with the native 6px description margin) */
-  margin-inline: calc(2em + 22px) 1em;
-  padding-top: 0.5em;
-}
-
-#identity-popup-more-info-footer {
-  margin-top: 1em;
-}
-} /** END not PROTON **/
-
-@media (-moz-proton-doorhangers) {
 #identity-popup-multiView {
   height: -moz-fit-content;
 }
@@ -553,7 +395,6 @@
   padding-inline: 0;
   font-weight: 600;
 }
-}/** END Proton **/
 
 #identity-popup-securityView-body > label:not(.plain),
 #identity-popup-content-verifier ~ description {
@@ -897,30 +738,6 @@ description#identity-popup-content-verifier,
   margin-inline-start: 8px;
 }
 
-@media not (-moz-proton-doorhangers) {
-.permission-popup-permission-icon {
-  margin-inline-start: 3px;
-}
-
-.permission-popup-permission-icon.in-use {
-  -moz-context-properties: fill;
-  fill: rgb(224, 41, 29);
-}
-
-.permission-popup-permission-label,
-.permission-popup-permission-header-label {
-  margin-inline-start: 10px;
-}
-
-.permission-popup-permission-item {
-  padding-inline-end: 8px;
-}
-
-#identity-popup-security {
-  margin-top: -6px;
-}
-} /** END not PROTON **/
-
 .permission-popup-permission-label-subitem {
   /* Align label with other labels with icon. */
   /* icon width + icon inline margin + label inline margin */
@@ -1036,7 +853,7 @@ description#identity-popup-content-verifier,
 .protections-popup-tp-switch {
   appearance: none;
   box-sizing: border-box;
-  min-width: 26px;
+  min-width: 30px;
   border-radius: 10px;
   background-color: var(--button-bgcolor);
   border: 1px solid hsla(210,4%,10%,.14);
@@ -1045,12 +862,6 @@ description#identity-popup-content-verifier,
   padding: 2px;
   padding-inline-end: 0;
   transition: padding .2s ease;
-}
-
-@media (-moz-proton-doorhangers) {
-.protections-popup-tp-switch {
-  min-width: 30px;
-}
 }
 
 .protections-popup-tp-switch::before {
@@ -1068,13 +879,7 @@ description#identity-popup-content-verifier,
   background-color: var(--button-primary-bgcolor);
   border-color: var(--button-primary-hover-bgcolor);
   /* Push the toggle to the right. */
-  padding-inline-start: 12px;
-}
-
-@media (-moz-proton-doorhangers) {
-.protections-popup-tp-switch[enabled] {
   padding-inline-start: 16px;
-}
 }
 
 .protections-popup-tp-switch[enabled]:hover {
@@ -1208,81 +1013,6 @@ description#identity-popup-content-verifier,
   stroke: #ffbd4f;
 }
 
-@media not (-moz-proton-doorhangers) {
-#protections-popup-mainView-panel-header-section {
-  color: white;
-  background: radial-gradient(circle farthest-side at top right, #9059FF, #0250BB);
-
-  /* Set custom hover/focus/active states on the info button,
-     to make them more visible on the header background */
-  --arrowpanel-dimmed: rgba(12, 12, 13, 0.2);
-  --arrowpanel-dimmed-further: rgba(12, 12, 13, 0.3);
-  --arrowpanel-dimmed-even-further: rgba(12, 12, 13, 0.4);
-}
-
-#protections-popup[hasException] #protections-popup-tp-switch-section {
-  background: repeating-linear-gradient(
-    -56deg,
-    hsla(0,0%,80%,.25),
-    hsla(0,0%,80%,.25) 10px,
-    transparent 10px,
-    transparent 20px
-  );
-}
-
-:root[lwt-popup-brighttext] #protections-popup[hasException] #protections-popup-tp-switch-section {
-  background: repeating-linear-gradient(
-    -56deg,
-    rgba(249,249,250,.05),
-    rgba(249,249,250,.05) 10px,
-    transparent 10px,
-    transparent 20px
-  );
-}
-
-#protections-popup-mainView-panel-header-section:-moz-locale-dir(rtl) {
-  background: radial-gradient(circle farthest-side at top left, #9059FF, #0250BB);
-}
-
-#protections-popup-mainView-panel-header-section + toolbarseparator {
-  display: none;
-}
-
-#protections-popup-tp-switch-breakage-link,
-#protections-popup-tp-switch-breakage-fixed-link {
-  margin-top: calc(0.5 * var(--vertical-section-padding)) !important;
-}
-
-#protections-popup-milestones-content,
-#protections-popup-milestones {
-  border-radius: 0;
-}
-
-#protections-popup-milestones-text {
-  font-weight: normal;
-  font-size: 1.23em;
-}
-
-.protections-popup-footer-icon {
-  -moz-context-properties: fill;
-  width: 16px;
-  height: 16px;
-}
-
-.protections-popup-settings-icon {
-  list-style-image: url(chrome://global/skin/icons/settings.svg);
-}
-
-.protections-popup-show-report-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/dashboard.svg);
-}
-
-.protections-popup-footer-button-label {
-  margin-inline-start: 1em;
-}
-}/** END not PROTON **/
-
-@media (-moz-proton-doorhangers) {
 #protections-popup-mainView-panel-header {
   min-height: 43.5px;
 }
@@ -1377,8 +1107,6 @@ description#identity-popup-content-verifier,
 .protections-popup-list {
   padding: 5px 16px;
 }
-
-}/** END Proton **/
 
 /** Shim-allow warning and indicator icons **/
 
