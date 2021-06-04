@@ -70,7 +70,7 @@ linux64-android-gradle-dependencies:
             - 'taskcluster/scripts/misc/android-gradle-dependencies/**'
             - '*.gradle'
             - 'mobile/android/**/*.gradle'
-            - 'mobile/android/config/mozconfigs/android-api-16-gradle-dependencies/**'
+            - 'mobile/android/config/mozconfigs/android-arm-gradle-dependencies/**'
             - 'mobile/android/config/mozconfigs/common*'
             - 'mobile/android/gradle.configure'
         toolchain-artifact: public/build/android-gradle-dependencies.tar.zst

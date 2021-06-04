@@ -37,7 +37,7 @@ config = {
             "name": "Fennec l10n changesets",
             "platform_configs": [
                 {
-                    "platforms": ["android-api-16", "android"],
+                    "platforms": ["android-arm", "android"],
                     "path": "mobile/android/locales/all-locales",
                 },
                 {

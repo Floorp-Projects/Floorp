@@ -1057,7 +1057,7 @@ class Artifacts(object):
                 return "android-x86" + target_suffix
             if self._substs["ANDROID_CPU_ARCH"] == "arm64-v8a":
                 return "android-aarch64" + target_suffix
-            return "android-api-16" + target_suffix
+            return "android-arm" + target_suffix
 
         target_64bit = False
         if self._substs["target_cpu"] == "x86_64":
