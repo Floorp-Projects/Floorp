@@ -3,7 +3,6 @@
 "use strict";
 
 Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
-Services.prefs.setBoolPref("extensions.blocklist.useMLBF.stashes", true);
 
 // Set min version to 42 because the updater defaults to min version 42.
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42.0", "42.0");

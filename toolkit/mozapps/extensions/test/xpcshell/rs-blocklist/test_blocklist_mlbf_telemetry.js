@@ -4,7 +4,6 @@
 "use strict";
 
 Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
-Services.prefs.setBoolPref("extensions.blocklist.useMLBF.stashes", true);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
@@ -54,7 +53,6 @@ add_task(async function test_initialization() {
   ExtensionBlocklistMLBF.ensureInitialized();
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
-    "blocklist.mlbf_stashes": true,
     // In other parts of this test, this value is not checked any more.
     // test_blocklist_telemetry.js already checks lastModified_rs_addons_mlbf.
     "blocklist.lastModified_rs_addons_mlbf": undefined,
@@ -73,7 +71,6 @@ add_task(async function test_without_mlbf() {
   await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [{}] });
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
-    "blocklist.mlbf_stashes": true,
     "blocklist.mlbf_source": "unknown",
     "blocklist.mlbf_generation_time": "Missing Date",
     "blocklist.mlbf_stash_time_oldest": "Missing Date",
@@ -94,7 +91,6 @@ add_task(async function test_common_good_case_with_stashes() {
   });
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
-    "blocklist.mlbf_stashes": true,
     "blocklist.mlbf_source": "cache_match",
     "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
     "blocklist.mlbf_stash_time_oldest": toUTC(OLDEST_STASH.stash_time),
@@ -104,48 +100,11 @@ add_task(async function test_common_good_case_with_stashes() {
   // The records and cached attachment carries over to the next tests.
 });
 
-add_task(async function test_toggle_stash_pref() {
-  // The previous test had imported RECORDS_WITH_STASHES_AND_MLBF.
-  // Verify that toggling the pref causes those stashes to be ignored.
-  await toggleStashPref(false, () => {
-    // Telemetry should be updated immediately after setting the pref.
-    assertTelemetryScalars({
-      "blocklist.mlbf_enabled": true,
-      "blocklist.mlbf_stashes": false,
-    });
-  });
-  assertTelemetryScalars({
-    "blocklist.mlbf_enabled": true,
-    "blocklist.mlbf_stashes": false,
-    "blocklist.mlbf_source": "cache_match",
-    "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
-    "blocklist.mlbf_stash_time_oldest": "Missing Date",
-    "blocklist.mlbf_stash_time_newest": "Missing Date",
-  });
-
-  await toggleStashPref(true, () => {
-    // Telemetry should be updated immediately after setting the pref.
-    assertTelemetryScalars({
-      "blocklist.mlbf_enabled": true,
-      "blocklist.mlbf_stashes": true,
-    });
-  });
-  assertTelemetryScalars({
-    "blocklist.mlbf_enabled": true,
-    "blocklist.mlbf_stashes": true,
-    "blocklist.mlbf_source": "cache_match",
-    "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
-    "blocklist.mlbf_stash_time_oldest": toUTC(OLDEST_STASH.stash_time),
-    "blocklist.mlbf_stash_time_newest": toUTC(NEWEST_STASH.stash_time),
-  });
-});
-
 // Test what happens when there are no stashes in the collection itself.
 add_task(async function test_without_stashes() {
   await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [MLBF_RECORD] });
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
-    "blocklist.mlbf_stashes": true,
     "blocklist.mlbf_source": "cache_match",
     "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
     "blocklist.mlbf_stash_time_oldest": "Missing Date",
@@ -159,7 +118,6 @@ add_task(async function test_without_collection_but_cache() {
   await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [] });
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
-    "blocklist.mlbf_stashes": true,
     "blocklist.mlbf_source": "cache_fallback",
     "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
     "blocklist.mlbf_stash_time_oldest": "Missing Date",
@@ -167,8 +125,8 @@ add_task(async function test_without_collection_but_cache() {
   });
 });
 
-// Test that the mlbf_enabled and mlbf_stashes scalars are updated in response
-// to preference changes.
+// Test that the mlbf_enabled scalar is updated in response to preference
+// changes.
 add_task(async function test_toggle_preferences() {
   // Disable the blocklist, to prevent the v2 blocklist from initializing.
   // We only care about scalar updates in response to preference changes.
@@ -176,29 +134,12 @@ add_task(async function test_toggle_preferences() {
   // Sanity check: scalars haven't changed.
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
-    "blocklist.mlbf_stashes": true,
-    "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
-  });
-
-  Services.prefs.setBoolPref("extensions.blocklist.useMLBF.stashes", false);
-  assertTelemetryScalars({
-    "blocklist.mlbf_enabled": true,
-    "blocklist.mlbf_stashes": false,
     "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
   });
 
   Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": false,
-    "blocklist.mlbf_stashes": false,
-    "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
-  });
-
-  Services.prefs.setBoolPref("extensions.blocklist.useMLBF.stashes", true);
-  assertTelemetryScalars({
-    "blocklist.mlbf_enabled": false,
-    // The mlbf_stashes scalar is only updated when useMLBF is true.
-    "blocklist.mlbf_stashes": false,
     "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
   });
 });

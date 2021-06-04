@@ -9,7 +9,6 @@
  */
 
 Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
-Services.prefs.setBoolPref("extensions.blocklist.useMLBF.stashes", true);
 
 const ExtensionBlocklistMLBF = getExtensionBlocklistMLBF();
 
