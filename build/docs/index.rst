@@ -28,6 +28,7 @@ Important Concepts
    toolchains
    locales
    unified-builds
+   cross-compile
    rust
    sparse
    Support for projects building with GN <gn>
