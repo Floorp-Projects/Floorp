@@ -7,9 +7,7 @@ from __future__ import absolute_import
 
 update_platform_map = {
     "android": ["Android_arm-eabi-gcc3"],
-    "android-api-11": ["Android_arm-eabi-gcc3"],
-    "android-api-15": ["Android_arm-eabi-gcc3"],
-    "android-api-16": ["Android_arm-eabi-gcc3"],
+    "android-arm": ["Android_arm-eabi-gcc3"],
     "android-x86": ["Android_x86-gcc3"],
     "android-x86_64": ["Android_x86-64-gcc3"],
     "android-aarch64": ["Android_aarch64-gcc3"],

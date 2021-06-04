@@ -24,7 +24,7 @@ lints:
         docker-image: {in-tree: android-build}
         env:
             GRADLE_USER_HOME: /builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline
-            MOZCONFIG: mobile/android/config/mozconfigs/android-api-16/nightly-android-lints
+            MOZCONFIG: mobile/android/config/mozconfigs/android-arm/nightly-android-lints
             MOZ_OBJDIR: obj-firefox
             PERFHERDER_EXTRA_OPTIONS: android-lints
             TINDERBOX_OUTPUT: '1'

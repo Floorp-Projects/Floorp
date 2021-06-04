@@ -14,7 +14,7 @@ android-geckoview-docs/opt:
         product: mobile
         job-name: android-geckoview-docs
     treeherder:
-        platform: android-4-0-armv7-api16/opt
+        platform: android-4-0-armv7/opt
         kind: build
         tier: 2
         symbol: A(gv-docs)

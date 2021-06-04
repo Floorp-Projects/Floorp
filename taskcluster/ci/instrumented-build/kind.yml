@@ -135,14 +135,14 @@ jobs:
                 - macosx64-sdk-10.12
                 - wasi-sysroot
 
-    android-api-16-shippable/opt:
-        description: "Android 4.0 api-16+ PGO instrumented"
+    android-arm-shippable/opt:
+        description: "Android 4.0 Arm PGO instrumented"
         index:
             product: mobile
-            job-name: instrumented-android-api-16
+            job-name: instrumented-android-arm
         shipping-product: fennec
         treeherder:
-            platform: android-4-0-armv7-api16/pgo
+            platform: android-4-0-armv7/pgo
         worker-type: b-linux
         worker:
             docker-image: {in-tree: android-build}
@@ -162,7 +162,7 @@ jobs:
         run:
             config:
                 - builds/releng_base_android_64_builds.py
-            custom-build-variant-cfg: api-16-profile-generate
+            custom-build-variant-cfg: arm-profile-generate
             tooltool-downloads: internal
         fetches:
             toolchain:
