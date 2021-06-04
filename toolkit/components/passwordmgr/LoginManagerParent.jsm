@@ -44,7 +44,10 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("LoginManagerParent");
   return logger.log.bind(logger);
 });
-
+XPCOMUtils.defineLazyGetter(this, "debug", () => {
+  let logger = LoginHelper.createLogger("LoginManagerParent");
+  return logger.debug.bind(logger);
+});
 const EXPORTED_SYMBOLS = ["LoginManagerParent"];
 
 /**
@@ -556,12 +559,14 @@ class LoginManagerParent extends JSWindowActorParent {
         acceptDifferentSubdomains: LoginHelper.includeOtherSubdomainsInLookup,
         relatedRealms: relatedRealmsOrigins,
       });
-      debug(
-        "Adding related logins on page load",
-        logins.map(l => l.origin)
-      );
-    }
 
+      if (LoginHelper.relatedRealmsEnabled) {
+        debug(
+          "Adding related logins on page load",
+          logins.map(l => l.origin)
+        );
+      }
+    }
     log("sendLoginDataToChild:", logins.length, "deduped logins");
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
