@@ -639,6 +639,8 @@ class ClassBodyLexicalEnvironmentObject
   ClassBodyScope& scope() const {
     return ScopedLexicalEnvironmentObject::scope().as<ClassBodyScope>();
   }
+
+  static uint32_t privateBrandSlot() { return JSSLOT_FREE(&class_); }
 };
 
 // Global and non-syntactic lexical environments are extensible.
