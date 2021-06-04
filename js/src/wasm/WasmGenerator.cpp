@@ -379,10 +379,11 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   // Determine whether parallel or sequential compilation is to be used and
   // initialize the CompileTasks that will be used in either mode.
 
-  MOZ_ASSERT(GetHelperThreadCount() > 1);
+  MOZ_ASSERT(GetHelperThreadCount() >= 1);
 
   uint32_t numTasks;
-  if (CanUseExtraThreads() && GetHelperThreadCPUCount() > 1) {
+  if (CanUseExtraThreads() && GetHelperThreadCPUCount() > 1 &&
+      GetHelperThreadCount() > 1) {
     parallel_ = true;
     numTasks = 2 * GetMaxWasmCompilationThreads();
   } else {
