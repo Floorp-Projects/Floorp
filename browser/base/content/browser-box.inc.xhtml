@@ -1,0 +1,34 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<hbox flex="1" id="browser">
+  <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
+    <box id="sidebar-header" align="center">
+      <toolbarbutton id="sidebar-switcher-target" flex="1" class="tabbable">
+        <image id="sidebar-icon" consumeanchor="sidebar-switcher-target"/>
+        <label id="sidebar-title" crop="end" flex="1" control="sidebar"/>
+        <image id="sidebar-switcher-arrow"/>
+      </toolbarbutton>
+      <image id="sidebar-throbber"/>
+# To ensure the button label's intrinsic width doesn't expand the sidebar
+# if the label is long, the button needs flex=1.
+# To ensure the button doesn't expand unnecessarily for short labels, the
+# spacer should significantly out-flex the button.
+      <spacer flex="1000"/>
+      <toolbarbutton id="sidebar-close" class="close-icon tabbable" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="SidebarUI.hide();"/>
+    </box>
+    <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
+              style="min-width: 14em; width: 18em; max-width: 36em;" tooltip="aHTMLTooltip"/>
+  </vbox>
+
+  <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
+  <vbox id="appcontent" flex="1">
+    <!-- gHighPriorityNotificationBox will be added here lazily. -->
+    <tabbox id="tabbrowser-tabbox"
+            flex="1" tabcontainer="tabbrowser-tabs">
+      <tabpanels id="tabbrowser-tabpanels"
+                  flex="1" class="plain" selectedIndex="0"/>
+    </tabbox>
+  </vbox>
+</hbox>
