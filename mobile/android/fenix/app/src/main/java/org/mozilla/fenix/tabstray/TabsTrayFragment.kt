@@ -72,6 +72,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     private val selectionBannerBinding = ViewBoundFeatureWrapper<SelectionBannerBinding>()
     private val selectionHandleBinding = ViewBoundFeatureWrapper<SelectionHandleBinding>()
     private val tabsTrayCtaBinding = ViewBoundFeatureWrapper<TabsTrayInfoBannerBinding>()
+    private val secureTabsTrayBinding = ViewBoundFeatureWrapper<SecureTabsTrayBinding>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -263,6 +264,16 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 store = tabsTrayStore,
                 handle = handle,
                 containerLayout = tab_wrapper
+            ),
+            owner = this,
+            view = view
+        )
+
+        secureTabsTrayBinding.set(
+            feature = SecureTabsTrayBinding(
+                store = tabsTrayStore,
+                settings = requireComponents.settings,
+                tabsTrayFragment = this
             ),
             owner = this,
             view = view
