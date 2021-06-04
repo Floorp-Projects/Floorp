@@ -1561,7 +1561,7 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
 
   // `EmitterScope::lookupPrivate()` requires `.privateBrand` to be stored in a
   // predictable slot: the first slot available in the environment object,
-  // `JSSLOT_FREE(&ClassBodyLexicalEnvironmentObject::class_)`. We assume that
+  // `ClassBodyLexicalEnvironmentObject::privateBrandSlot()`. We assume that
   // if `.privateBrand` is first in the scope, it will be stored there.
   MOZ_ASSERT_IF(!privateBrand.empty(),
                 GetScopeDataTrailingNames(bindings)[0].name() ==
