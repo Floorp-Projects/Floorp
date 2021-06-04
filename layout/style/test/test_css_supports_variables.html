@@ -27,7 +27,6 @@ function runTest()
     "(color: var(--a) )",
     "(color: var( --a ) )",
     "(color: var(--a, ))",
-    "(color: var(--))",
     "(color: var(--a,/**/a))",
     "(color: 1px var(--a))",
     "(color: var(--a) 1px)",
@@ -45,7 +44,6 @@ function runTest()
     "(color: var(--\\30))",
     "(color: var(--\\d800))",
     "(color: var(--\\ffffff))",
-    "(color: var(--",
     "(color: var(--a",
     "(color: var(--a , ",
     "(color: var(--a, ",
@@ -88,7 +86,6 @@ function runTest()
     "(--a: '",
     "(--a: '\\",
     "(--a: \\",
-    "(--: a)",
   ];
 
   var failingConditions = [
@@ -104,6 +101,8 @@ function runTest()
     "(color: var(--a) \"\n",
     "(color: var(--a) url(\"\n",
     "(color: var(a))",
+    "(color: var(--",
+    "(color: var(--))",
 
     "(--a: var(--b,))",
     "(--a: var(--b,/**/))",
@@ -118,6 +117,7 @@ function runTest()
     "(--a: \"\n",
     "(--a: url(\"\n",
     "(--a: var(a))",
+    "(--: a)",
   ];
 
   var passingDeclarations = [
@@ -150,7 +150,6 @@ function runTest()
     ["color", "var(--a, '"],
     ["color", "var(--a, '\\"],
     ["color", "var(--a, \\"],
-    ["color", "var(--"],
 
     ["--a", " var(--b)"],
     ["--a", "var(--b)"],
@@ -185,7 +184,6 @@ function runTest()
     ["--a ", "'"],
     ["--a ", "'\\"],
     ["--a ", "\\"],
-    ["--", "a"],
   ];
 
   var failingDeclarations = [
@@ -202,6 +200,7 @@ function runTest()
     ["color", "var(--a) !important"],
     ["color", "var(--a) !important !important"],
     ["color", "var(a)"],
+    ["color", "var(--"],
 
     ["--a", "var(--b,)"],
     ["--a", "var(--b,/**/)"],
@@ -218,6 +217,7 @@ function runTest()
     ["--a", "url(\"\n"],
     ["--a", "var(--b))"],
     ["--a", "var(b)"],
+    ["--", "a"],
   ];
 
   passingConditions.forEach(function(aCondition) {
