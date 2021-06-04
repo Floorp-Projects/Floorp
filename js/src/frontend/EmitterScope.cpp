@@ -1043,7 +1043,7 @@ bool EmitterScope::lookupPrivate(BytecodeEmitter* bce,
 
     brandLoc = Some(NameLocation::EnvironmentCoordinate(
         BindingKind::Synthetic, hops,
-        JSSLOT_FREE(&ClassBodyLexicalEnvironmentObject::class_)));
+        ClassBodyLexicalEnvironmentObject::privateBrandSlot()));
   } else {
     brandLoc = Nothing();
   }
