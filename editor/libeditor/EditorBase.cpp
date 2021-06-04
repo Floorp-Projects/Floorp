@@ -83,7 +83,6 @@
 #include "nsCaret.h"                  // for nsCaret
 #include "nsCaseTreatment.h"
 #include "nsCharTraits.h"              // for NS_IS_HIGH_SURROGATE, etc.
-#include "nsComponentManagerUtils.h"   // for do_CreateInstance
 #include "nsContentUtils.h"            // for nsContentUtils
 #include "nsCopySupport.h"             // for nsCopySupport
 #include "nsDOMString.h"               // for DOMStringIsNull

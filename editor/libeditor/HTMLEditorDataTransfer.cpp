@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/HTMLEditor.h"
+#include "HTMLEditor.h"
 
 #include <string.h>
 
@@ -12,6 +12,7 @@
 #include "InternetCiter.h"
 #include "WSRunObject.h"
 #include "mozilla/dom/Comment.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMException.h"
@@ -46,7 +47,6 @@
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "mozilla/dom/Document.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
@@ -77,7 +77,6 @@
 
 class nsAtom;
 class nsILoadContext;
-class nsISupports;
 
 namespace mozilla {
 
@@ -1064,10 +1063,6 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
       child = std::move(previous);
     }
   }
-  return NS_OK;
-}
-
-nsresult HTMLEditor::PrepareTransferable(nsITransferable** aTransferable) {
   return NS_OK;
 }
 
@@ -2193,17 +2188,22 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
     return rv;
   }
 
-  // Get the nsITransferable interface for getting the data from the clipboard.
-  // use TextEditor::PrepareTransferable() to force unicode plaintext data.
-  nsCOMPtr<nsITransferable> transferable;
-  rv = TextEditor::PrepareTransferable(getter_AddRefs(transferable));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("TextEditor::PrepareTransferable() failed");
-    return EditorBase::ToGenericNSResult(rv);
+  if (!GetDocument()) {
+    NS_WARNING("Editor didn't have document, but ignored");
+    return NS_OK;
   }
+
+  Result<nsCOMPtr<nsITransferable>, nsresult> maybeTransferable =
+      EditorUtils::CreateTransferableForPlainText(*GetDocument());
+  if (maybeTransferable.isErr()) {
+    NS_WARNING("EditorUtils::CreateTransferableForPlainText() failed");
+    return EditorBase::ToGenericNSResult(maybeTransferable.unwrapErr());
+  }
+  nsCOMPtr<nsITransferable> transferable(maybeTransferable.unwrap());
   if (!transferable) {
     NS_WARNING(
-        "TextEditor::PrepareTransferable() returned nullptr, but ignored");
+        "EditorUtils::CreateTransferableForPlainText() returned nullptr, but "
+        "ignored");
     return NS_OK;
   }
 

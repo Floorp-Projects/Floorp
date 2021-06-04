@@ -3726,11 +3726,6 @@ class HTMLEditor final : public TextEditor,
                                            const EditorDOMPoint& aPointToInsert,
                                            bool aDoDeleteSelection);
 
-  // factored methods for handling insertion of data from transferables
-  // (drag&drop or clipboard)
-  virtual nsresult PrepareTransferable(
-      nsITransferable** aTransferable) override;
-
   class HTMLTransferablePreparer;
   nsresult PrepareHTMLTransferable(nsITransferable** aTransferable) const;
 
