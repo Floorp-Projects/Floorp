@@ -493,22 +493,6 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
     editActionData.NotifyOfDispatchingClipboardEvent();
   }
 
-  if (IsHTMLEditor()) {
-    editActionData.InitializeDataTransferWithClipboard(
-        SettingDataTransfer::eWithFormat, aClipboardType);
-    nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-    if (NS_FAILED(rv)) {
-      NS_WARNING_ASSERTION(
-          rv == NS_ERROR_EDITOR_ACTION_CANCELED,
-          "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
-      return EditorBase::ToGenericNSResult(rv);
-    }
-    rv = MOZ_KnownLive(AsHTMLEditor())->PasteInternal(aClipboardType);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::PasteInternal() failed");
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
   if (!GetDocument()) {
     NS_WARNING("The editor didn't have document, but ignored");
     return NS_OK;

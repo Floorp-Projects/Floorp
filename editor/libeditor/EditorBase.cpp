@@ -1730,10 +1730,7 @@ bool EditorBase::IsCopyCommandEnabled() const {
 }
 
 NS_IMETHODIMP EditorBase::Paste(int32_t aClipboardType) {
-  nsresult rv =
-      MOZ_KnownLive(AsTextEditor())->PasteAsAction(aClipboardType, true);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "TextEditor::PasteAsAction() failed");
-  return rv;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult EditorBase::PrepareToInsertContent(

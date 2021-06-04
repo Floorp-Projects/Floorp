@@ -814,6 +814,23 @@ class EditorBase : public nsIEditor,
   virtual bool CanPasteTransferable(nsITransferable* aTransferable) = 0;
 
   /**
+   * PasteAsAction() pastes clipboard content to Selection.  This method
+   * may dispatch ePaste event first.  If its defaultPrevent() is called,
+   * this does nothing but returns NS_OK.
+   *
+   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
+   *                            nsIClipboard::kSelectionClipboard.
+   * @param aDispatchPasteEvent true if this should dispatch ePaste event
+   *                            before pasting.  Otherwise, false.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsAction(
+      int32_t aClipboardType, bool aDispatchPasteEvent,
+      nsIPrincipal* aPrincipal = nullptr) = 0;
+
+  /**
    * Paste aTransferable at Selection.
    *
    * @param aTransferable       Must not be nullptr.
