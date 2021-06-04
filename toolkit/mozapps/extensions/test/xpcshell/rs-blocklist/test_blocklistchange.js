@@ -233,7 +233,6 @@ const BLOCKLIST_DATA = {
 // - regexps blocks are converted to hard blocks.
 // - Version ranges are expanded to cover all known versions.
 if (useMLBF) {
-  Assert.ok(Services.prefs.getBoolPref("extensions.blocklist.useMLBF.stashes"));
   for (let [key, blocks] of Object.entries(BLOCKLIST_DATA)) {
     BLOCKLIST_DATA[key] = [];
     for (let block of blocks) {

@@ -12,9 +12,6 @@ Services.prefs.setBoolPref(
   !Services.prefs.getBoolPref("extensions.blocklist.useMLBF")
 );
 
-// The test requires stashes to be enabled.
-Services.prefs.setBoolPref("extensions.blocklist.useMLBF.stashes", true);
-
 Services.scriptloader.loadSubScript(
   Services.io.newFileURI(do_get_file("test_blocklistchange.js")).spec,
   this
