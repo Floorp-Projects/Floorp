@@ -11,16 +11,17 @@ import androidx.lifecycle.asLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tab.collections.TabCollectionStorage
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
+import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.utils.Mockable
 
 @Mockable
@@ -59,15 +60,21 @@ class TabCollectionStorage(
         }
     }
 
-    suspend fun createCollection(title: String, sessions: List<TabSessionState>) = ioScope.launch {
-        val id = collectionStorage.createCollection(title, sessions)
-        notifyObservers { onCollectionCreated(title, sessions, id) }
-    }.join()
+    suspend fun createCollection(title: String, sessions: List<TabSessionState>): Long? {
+        return withContext(ioScope.coroutineContext) {
+            val id = collectionStorage.createCollection(title, sessions)
+            notifyObservers { onCollectionCreated(title, sessions, id) }
+            id
+        }
+    }
 
-    suspend fun addTabsToCollection(tabCollection: TabCollection, sessions: List<TabSessionState>) = ioScope.launch {
-        collectionStorage.addTabsToCollection(tabCollection, sessions)
-        notifyObservers { onTabsAdded(tabCollection, sessions) }
-    }.join()
+    suspend fun addTabsToCollection(tabCollection: TabCollection, sessions: List<TabSessionState>): Long? {
+        return withContext(ioScope.coroutineContext) {
+            val id = collectionStorage.addTabsToCollection(tabCollection, sessions)
+            notifyObservers { onTabsAdded(tabCollection, sessions) }
+            id
+        }
+    }
 
     fun getCollections(): LiveData<List<TabCollection>> {
         return collectionStorage.getCollections().asLiveData()

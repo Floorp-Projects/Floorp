@@ -100,6 +100,11 @@ class DefaultNavigationInteractor(
     private val bookmarksUseCase: BookmarksUseCase,
     private val tabsTrayStore: TabsTrayStore,
     private val collectionStorage: TabCollectionStorage,
+    private val showCollectionSnackbar: (
+        tabSize: Int,
+        isNewCollection: Boolean,
+        collectionToSelect: Long?
+    ) -> Unit,
     private val accountManager: FxaAccountManager,
     private val ioDispatcher: CoroutineContext
 ) : NavigationInteractor {
@@ -170,18 +175,21 @@ class DefaultNavigationInteractor(
 
         CollectionsDialog(
             storage = collectionStorage,
-            onPositiveButtonClick = { existingCollection ->
+            sessionList = browserStore.getTabSessionState(tabs),
+            onPositiveButtonClick = { id, isNewCollection ->
                 tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
 
                 // If collection is null, a new one was created.
-                val event = if (existingCollection == null) {
+                val event = if (isNewCollection) {
                     Event.CollectionSaved(browserStore.state.normalTabs.size, tabs.size)
                 } else {
                     Event.CollectionTabsAdded(browserStore.state.normalTabs.size, tabs.size)
                 }
-                metrics.track(event)
+                id?.apply {
+                    showCollectionSnackbar(tabs.size, isNewCollection, id)
+                }
 
-                browserStore.getTabSessionState(tabs)
+                metrics.track(event)
             },
             onNegativeButtonClick = {
                 tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)

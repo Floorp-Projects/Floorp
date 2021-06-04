@@ -48,8 +48,13 @@ import org.mozilla.fenix.tabstray.browser.SelectionHandleBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding.VisibilityModifier
 import org.mozilla.fenix.tabstray.ext.showWithTheme
+import org.mozilla.fenix.tabstray.ext.anchorWithAction
 import org.mozilla.fenix.utils.allowUndo
 import kotlin.math.max
+import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.tabstray.ext.make
+import org.mozilla.fenix.tabstray.ext.orDefault
+import org.mozilla.fenix.tabstray.ext.message
 
 @Suppress("TooManyFunctions", "LargeClass")
 class TabsTrayFragment : AppCompatDialogFragment() {
@@ -114,6 +119,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 dismissTabTrayAndNavigateHome = ::dismissTabsTrayAndNavigateHome,
                 bookmarksUseCase = requireComponents.useCases.bookmarksUseCases,
                 collectionStorage = requireComponents.core.tabCollectionStorage,
+                showCollectionSnackbar = ::showCollectionSnackbar,
                 accountManager = requireComponents.backgroundServices.accountManager,
                 ioDispatcher = Dispatchers.IO
             )
@@ -367,6 +373,32 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         // This should always be the last thing we do because nothing (e.g. telemetry)
         // is guaranteed after that.
         dismissAllowingStateLoss()
+    }
+
+    @VisibleForTesting
+    internal fun showCollectionSnackbar(
+        tabSize: Int,
+        isNewCollection: Boolean = false,
+        collectionToSelect: Long?
+    ) {
+        val anchor = if (requireComponents.settings.accessibilityServicesEnabled) {
+            null
+        } else {
+            new_tab_button
+        }
+
+        FenixSnackbar
+            .make(requireView())
+            .message(tabSize, isNewCollection)
+            .anchorWithAction(anchor) {
+                findNavController().navigateBlockingForAsyncNavGraph(
+                    TabsTrayFragmentDirections.actionGlobalHome(
+                        focusOnAddressBar = false,
+                        focusOnCollection = collectionToSelect.orDefault()
+                    )
+                )
+                dismissTabsTray()
+            }.show()
     }
 
     companion object {

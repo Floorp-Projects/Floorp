@@ -54,6 +54,7 @@ class NavigationInteractorTest {
     private val bookmarksUseCase: BookmarksUseCase = mockk(relaxed = true)
     private val context: Context = mockk(relaxed = true)
     private val collectionStorage: TabCollectionStorage = mockk(relaxed = true)
+    private val showCollectionSnackbar: (Int, Boolean, Long?) -> Unit = mockk(relaxed = true)
     private val accountManager: FxaAccountManager = mockk(relaxed = true)
     private val activity: HomeActivity = mockk(relaxed = true)
 
@@ -80,6 +81,7 @@ class NavigationInteractorTest {
             bookmarksUseCase,
             tabsTrayStore,
             collectionStorage,
+            showCollectionSnackbar,
             accountManager,
             testDispatcher
         )
@@ -247,6 +249,7 @@ class NavigationInteractorTest {
             bookmarksUseCase,
             tabsTrayStore,
             collectionStorage,
+            showCollectionSnackbar,
             accountManager,
             coroutineContext
         )

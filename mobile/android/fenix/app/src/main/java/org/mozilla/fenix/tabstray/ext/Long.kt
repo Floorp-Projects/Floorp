@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-object AndroidComponents {
-    const val VERSION = "91.0.20210604143054"
-}
+package org.mozilla.fenix.tabstray.ext
+
+/**
+ * A helper that will return the default value of -1L for the home fragment navigation if Long is null.
+ */
+internal fun Long?.orDefault() = this ?: -1L

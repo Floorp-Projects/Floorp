@@ -912,7 +912,6 @@ class SmokeTest {
         }
     }
 
-    @Ignore("Disabling until re-implemented by #19090")
     @Test
     fun verifyExpandedCollectionItemsTest() {
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

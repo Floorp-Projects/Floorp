@@ -5,6 +5,7 @@
 package org.mozilla.fenix.collections
 
 import io.mockk.MockKAnnotations
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -77,6 +78,9 @@ class DefaultCollectionCreationControllerTest {
         browserStore.dispatch(
             TabListAction.AddMultipleTabsAction(listOf(tab1, tab2))
         ).joinBlocking()
+
+        coEvery { tabCollectionStorage.addTabsToCollection(any(), any()) } returns 1L
+        coEvery { tabCollectionStorage.createCollection(any(), any()) } returns 1L
 
         val tabs = listOf(
             Tab("session-1", "", "", ""),
@@ -166,7 +170,6 @@ class DefaultCollectionCreationControllerTest {
     fun `WHEN selectCollection is called THEN add tabs should be added to collection`() {
         val tab1 = createTab("https://www.mozilla.org", id = "session-1")
         val tab2 = createTab("https://www.mozilla.org", id = "session-2")
-
         browserStore.dispatch(
             TabListAction.AddMultipleTabsAction(listOf(tab1, tab2))
         ).joinBlocking()
@@ -175,6 +178,8 @@ class DefaultCollectionCreationControllerTest {
             Tab("session-1", "", "", "")
         )
         val collection = mockk<TabCollection>()
+        coEvery { tabCollectionStorage.addTabsToCollection(any(), any()) } returns 1L
+        coEvery { tabCollectionStorage.createCollection(any(), any()) } returns 1L
 
         controller.selectCollection(collection, tabs)
 
