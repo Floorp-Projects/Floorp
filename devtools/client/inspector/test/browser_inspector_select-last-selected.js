@@ -54,6 +54,12 @@ var TEST_DATA = [
 ];
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   const { inspector } = await openInspectorForURL(PAGE_1);
 
   for (const { url, nodeToSelect, selectedNode } of TEST_DATA) {

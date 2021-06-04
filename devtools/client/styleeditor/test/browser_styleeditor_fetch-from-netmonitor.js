@@ -10,6 +10,12 @@ const EMPTY_TEST_URL = TEST_BASE_HTTP + "doc_empty.html";
 const TEST_URL = TEST_BASE_HTTP + "doc_fetch_from_netmonitor.html";
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   info("Opening netmonitor");
   // Navigate first to an empty document in order to:
   // * avoid introducing a cross process navigation when calling navigateTo()

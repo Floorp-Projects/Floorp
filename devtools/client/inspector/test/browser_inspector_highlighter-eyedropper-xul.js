@@ -11,6 +11,12 @@ const TEST_URL_2 =
   "data:text/html;charset=utf-8,<h1 style='color:red'>HTML test page</h1>";
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Check the inspector toolbar");

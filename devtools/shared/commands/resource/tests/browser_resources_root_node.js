@@ -14,6 +14,12 @@
  * an empty page.
  */
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   // Open a test tab
   const tab = await addTab("data:text/html,Root Node tests");
 
@@ -69,6 +75,12 @@ add_task(async function() {
  * Test that the watchRootNode API provides the expected node fronts.
  */
 add_task(async function testRootNodeFrontIsCorrect() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   const tab = await addTab("data:text/html,<div id=div1>");
 
   const { client, resourceCommand, targetCommand } = await initResourceCommand(

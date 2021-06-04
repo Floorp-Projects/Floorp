@@ -10,6 +10,12 @@ const IFRAME_URL = URL_ROOT_ORG_SSL + "fission_iframe.html";
 const SECOND_PAGE_URL = "https://example.org/document-builder.sjs?html=org";
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   // Enabled fission prefs
   await pushPref("devtools.browsertoolbox.fission", true);
   // Disable the preloaded process as it gets created lazily and may interfere
