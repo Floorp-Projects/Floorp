@@ -118,9 +118,8 @@ class HighlightersOverlay {
    */
   constructor(inspector) {
     this.inspector = inspector;
-    this.inspectorFront = this.inspector.inspectorFront;
     this.store = this.inspector.store;
-    this.target = this.inspector.currentTarget;
+
     this.telemetry = this.inspector.telemetry;
     this.maxGridHighlighters = Services.prefs.getIntPref(
       "devtools.gridinspector.maxHighlighters"
@@ -219,7 +218,6 @@ class HighlightersOverlay {
       { onAvailable: this._onResourceAvailable }
     );
 
-    this.target.on("will-navigate", this.onWillNavigate);
     this.walkerEventListener = new WalkerEventListener(this.inspector, {
       "display-change": this.onDisplayChange,
     });
@@ -227,6 +225,12 @@ class HighlightersOverlay {
     EventEmitter.decorate(this);
   }
 
+  get inspectorFront() {
+    return this.inspector.inspectorFront;
+  }
+  get target() {
+    return this.inspector.currentTarget;
+  }
   // FIXME: Shim for HighlightersOverlay.parentGridHighlighters
   // Remove after updating tests to stop accessing this map directly. Bug 1683153
   get parentGridHighlighters() {
@@ -1367,8 +1371,7 @@ class HighlightersOverlay {
       return;
     }
 
-    const inspectorFront = await this.target.getFront("inspector");
-    const nodeFront = await inspectorFront.walker.findNodeFront(selectors);
+    const nodeFront = await this.inspectorFront.walker.findNodeFront(selectors);
 
     if (nodeFront) {
       await showFunction(nodeFront, options);
@@ -1893,7 +1896,6 @@ class HighlightersOverlay {
       { onAvailable: this._onResourceAvailable }
     );
 
-    this.target.off("will-navigate", this.onWillNavigate);
     this.walkerEventListener.destroy();
     this.walkerEventListener = null;
 
@@ -1903,10 +1905,8 @@ class HighlightersOverlay {
     this._lastHovered = null;
 
     this.inspector = null;
-    this.inspectorFront = null;
     this.state = null;
     this.store = null;
-    this.target = null;
     this.telemetry = null;
 
     this.geometryEditorHighlighterShown = null;
