@@ -6,7 +6,7 @@
 // and RegExps for each. See bug 897735.
 
 // useMLBF=true only supports blocking by version+ID, not by other fields.
-Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+enable_blocklist_v2_instead_of_useMLBF();
 
 const BLOCKLIST_DATA = {
   extensions: [

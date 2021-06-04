@@ -32,14 +32,15 @@ add_task(async function setup() {
   BlocklistGlobal.ExtensionBlocklistRS.ensureInitialized();
   BlocklistGlobal.GfxBlocklistRS._ensureInitialized();
 
+  // ExtensionBlocklistMLBF is covered by test_blocklist_mlbf_dump.js.
   gBlocklistClients = [
     {
       client: BlocklistGlobal.ExtensionBlocklistRS._client,
-      testData: ["i808", "i720", "i539"],
+      expectHasDump: IS_ANDROID,
     },
     {
       client: BlocklistGlobal.GfxBlocklistRS._client,
-      testData: ["g204", "g200", "g36"],
+      expectHasDump: !IS_ANDROID,
     },
   ];
 
@@ -48,20 +49,14 @@ add_task(async function setup() {
 
 add_task(
   async function test_initial_dump_is_loaded_as_synced_when_collection_is_empty() {
-    for (let { client } of gBlocklistClients) {
-      if (
-        IS_ANDROID &&
-        client.collectionName !=
-          BlocklistGlobal.ExtensionBlocklistRS._client.collectionName
-      ) {
-        // On Android we don't ship the dumps of gfx.
-        continue;
-      }
-      Assert.ok(
+    for (let { client, expectHasDump } of gBlocklistClients) {
+      Assert.equal(
         await RemoteSettingsUtils.hasLocalDump(
           client.bucketName,
           client.collectionName
-        )
+        ),
+        expectHasDump,
+        `Expected initial remote settings dump for ${client.collectionName}`
       );
     }
   }

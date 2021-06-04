@@ -4,7 +4,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 // useMLBF=true only supports blocking by version+ID, not by regexp.
-Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+enable_blocklist_v2_instead_of_useMLBF();
 
 const BLOCKLIST_DATA = [
   {
