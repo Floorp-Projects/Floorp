@@ -31,10 +31,13 @@ Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 Services.prefs.setBoolPref("extensions.webextPermissionPrompts", false);
 
-// TODO bug 1649896: Create new test file for MLBF-specific tests.
+// TODO bug 1649906: strip blocklist v2-specific parts of this test.
+// All specific logic is already covered by other test files, but the tests
+// here trigger the logic via higher-level methods, so it may make sense to
+// keep this file even after the removal of blocklist v2.
 const useMLBF = Services.prefs.getBoolPref(
   "extensions.blocklist.useMLBF",
-  false
+  true
 );
 
 var testserver = createHttpServer({ hosts: ["example.com"] });

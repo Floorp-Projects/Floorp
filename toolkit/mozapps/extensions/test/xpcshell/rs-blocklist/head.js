@@ -17,6 +17,16 @@ const MLBF_RECORD = {
   generation_time: 1577833200000,
 };
 
+function enable_blocklist_v2_instead_of_useMLBF() {
+  Blocklist.allowDeprecatedBlocklistV2 = true;
+  Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+  // Sanity check: blocklist v2 has been enabled.
+  Assert.ok(
+    !!Blocklist.ExtensionBlocklist._updateEntries,
+    "ExtensionBlocklistRS should have been enabled"
+  );
+}
+
 async function load_mlbf_record_as_blob() {
   const url = Services.io.newFileURI(
     do_get_file("../data/mlbf-blocked1-unblocked2.bin")
