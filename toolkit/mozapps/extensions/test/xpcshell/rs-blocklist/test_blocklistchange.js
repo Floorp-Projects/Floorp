@@ -31,30 +31,10 @@ Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 Services.prefs.setBoolPref("extensions.webextPermissionPrompts", false);
 
-if (AppConstants.platform == "android") {
-  // test_blocklistchange_v2.js tests blocklist v2, so we should flip the pref
-  // to enable the v3 blocklist on Android.
-  Assert.ok(
-    _TEST_NAME.includes("test_blocklistchange"),
-    `Expected _TEST_NAME to be test_blocklistchange{,_v2}.js`
-  );
-  if (_TEST_NAME.includes("test_blocklistchange.js")) {
-    Assert.equal(
-      Services.prefs.getBoolPref("extensions.blocklist.useMLBF"),
-      false,
-      "Blocklist v3 disabled by default on Android"
-    );
-    Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
-  }
-}
-
-// TODO bug 1649906: strip blocklist v2-specific parts of this test.
-// All specific logic is already covered by other test files, but the tests
-// here trigger the logic via higher-level methods, so it may make sense to
-// keep this file even after the removal of blocklist v2.
+// TODO bug 1649896: Create new test file for MLBF-specific tests.
 const useMLBF = Services.prefs.getBoolPref(
   "extensions.blocklist.useMLBF",
-  true
+  false
 );
 
 var testserver = createHttpServer({ hosts: ["example.com"] });
@@ -253,6 +233,7 @@ const BLOCKLIST_DATA = {
 // - regexps blocks are converted to hard blocks.
 // - Version ranges are expanded to cover all known versions.
 if (useMLBF) {
+  Assert.ok(Services.prefs.getBoolPref("extensions.blocklist.useMLBF.stashes"));
   for (let [key, blocks] of Object.entries(BLOCKLIST_DATA)) {
     BLOCKLIST_DATA[key] = [];
     for (let block of blocks) {

@@ -3,7 +3,7 @@
  */
 
 // useMLBF=true only supports hard blocks, not soft blocks.
-enable_blocklist_v2_instead_of_useMLBF();
+Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
 
 // Tests that an appDisabled add-on that becomes softBlocked remains disabled
 // when becoming appEnabled

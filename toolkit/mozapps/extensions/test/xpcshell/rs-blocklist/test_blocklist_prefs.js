@@ -7,7 +7,7 @@
 
 // useMLBF=true only supports blocking, not resetting prefs, since extensions
 // cannot set arbitrary prefs any more after the removal of legacy addons.
-enable_blocklist_v2_instead_of_useMLBF();
+Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
 
 const BLOCKLIST_DATA = [
   {

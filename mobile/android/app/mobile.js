@@ -161,9 +161,6 @@ pref("xpinstall.whitelist.add", "https://addons.mozilla.org");
 pref("extensions.langpacks.signatures.required", true);
 pref("xpinstall.signatures.required", true);
 
-// Use blocklist v2 until blocklist v3 is enabled on Android - bug 1639050
-pref("extensions.blocklist.useMLBF", false);
-
 // Disable add-ons that are not installed by the user in all scopes by default (See the SCOPE
 // constants in AddonManager.jsm for values to use here, and Bug 1405528 for a rationale).
 pref("extensions.autoDisableScopes", 15);
