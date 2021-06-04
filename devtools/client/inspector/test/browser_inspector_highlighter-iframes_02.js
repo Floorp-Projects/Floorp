@@ -17,19 +17,26 @@ add_task(async function() {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
   const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
 
+  await assertMarkupViewAsTree(
+    `
+    body
+      div id="outer"
+      iframe!ignore-children`,
+    "body",
+    inspector
+  );
+
   info("Switch to the iframe context.");
   await switchToFrameContext(1, toolbox, inspector);
 
-  info("Check navigation was successful.");
-  const hasOuterNode = await testActor.hasNode("#outer");
-  ok(!hasOuterNode, "Check testActor has no access to outer element");
-  const hasTestNode = await testActor.hasNode("#inner");
-  ok(hasTestNode, "Check testActor has access to inner element");
-
   info("Check the markup view is rendered correctly after switching frames");
-  const innerFront = await getNodeFront("#inner", inspector);
-  const innerContainer = inspector.markup.getContainer(innerFront);
-  ok(innerContainer, "Markup view is rendering the #inner node");
+  await assertMarkupViewAsTree(
+    `
+    body
+      div id="inner"`,
+    "body",
+    inspector
+  );
 
   info("Check highlighting is correct after switching iframe context");
   await selectAndHighlightNode("#inner", inspector);

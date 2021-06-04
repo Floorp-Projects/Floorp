@@ -11,7 +11,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector } = await openInspectorForURL(TEST_URI);
 
   info("Create new iframe and add it to the page.");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
@@ -34,7 +34,7 @@ add_task(async function() {
     });
   });
   ok(
-    await testActor.hasNode("iframe"),
+    await hasMatchingElementInContentPage("iframe"),
     "The iframe has been added to the page"
   );
 

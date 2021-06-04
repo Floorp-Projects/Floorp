@@ -5,7 +5,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 // Tests for menuitem functionality that doesn't fit into any specific category
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
   await testShowDOMProperties();
   await testDuplicateNode();
   await testDeleteNode();
@@ -61,7 +61,7 @@ add_task(async function() {
     deleteNode.click();
     await updated;
 
-    ok(!(await testActor.hasNode("#delete")), "Node deleted");
+    ok(!(await hasMatchingElementInContentPage("#delete")), "Node deleted");
   }
 
   async function testDeleteTextNode() {

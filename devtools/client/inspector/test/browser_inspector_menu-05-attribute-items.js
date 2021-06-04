@@ -7,7 +7,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
   await selectNode("#attributes", inspector);
 
   await testAddAttribute();
@@ -26,7 +26,9 @@ add_task(async function() {
     EventUtils.synthesizeKey("KEY_Enter");
     await onMutation;
 
-    const hasAttribute = testActor.hasNode("#attributes.u-hidden");
+    const hasAttribute = await hasMatchingElementInContentPage(
+      "#attributes.u-hidden"
+    );
     ok(hasAttribute, "attribute was successfully added");
   }
 
@@ -84,7 +86,7 @@ add_task(async function() {
     EventUtils.synthesizeKey("KEY_Enter");
     await onMutation;
 
-    const isAttributeChanged = await testActor.hasNode(
+    const isAttributeChanged = await hasMatchingElementInContentPage(
       "#attributes[data-edit='edited']"
     );
     ok(isAttributeChanged, "attribute was successfully edited");
@@ -103,7 +105,9 @@ add_task(async function() {
     removeAttribute.click();
     await onMutation;
 
-    const hasAttribute = await testActor.hasNode("#attributes[data-remove]");
+    const hasAttribute = await hasMatchingElementInContentPage(
+      "#attributes[data-remove]"
+    );
     ok(!hasAttribute, "attribute was successfully removed");
   }
 

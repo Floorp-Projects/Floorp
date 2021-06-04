@@ -138,14 +138,6 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("boolean"),
       },
     },
-    hasNode: {
-      request: {
-        selector: Arg(0, "string"),
-      },
-      response: {
-        value: RetVal("boolean"),
-      },
-    },
     getBoundingClientRect: {
       request: {
         selector: Arg(0, "string"),
@@ -455,16 +447,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
   hasPseudoClassLock: function(selector, pseudo) {
     const node = this._querySelector(selector);
     return InspectorUtils.hasPseudoClassLock(node, pseudo);
-  },
-
-  hasNode: function(selector) {
-    try {
-      // _querySelector throws if the node doesn't exists
-      this._querySelector(selector);
-      return true;
-    } catch (e) {
-      return false;
-    }
   },
 
   /**
