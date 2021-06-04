@@ -8655,6 +8655,55 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     }
   }
 
+  if (Style()->GetPseudoType() == PseudoStyleType::scrolledContent) {
+    // Per spec, the grid area is included in a grid container's scrollable
+    // overflow region [1], as well as the padding on the end-edge sides that
+    // would satisfy the requirements of 'place-content: end' alignment [2].
+    //
+    // Note that we include the padding from all sides of the grid area, not
+    // just the end sides; this is fine because the grid area is relative to our
+    // content-box origin. The inflated bounds won't go beyond our padding-box
+    // edges on the start sides.
+    //
+    // The margin areas of grid item boxes are also included in the scrollable
+    // overflow region [2].
+    //
+    // [1] https://drafts.csswg.org/css-grid-1/#overflow
+    // [2] https://drafts.csswg.org/css-overflow-3/#scrollable
+
+    // Synthesize a grid area covering all columns and rows, and compute its
+    // rect relative to our border-box.
+    //
+    // Note: the grid columns and rows exist only if there is an explicit grid;
+    // or when an implicit grid is needed to place any grid items. See
+    // nsGridContainerFrame::Grid::PlaceGridItems().
+    const auto numCols =
+        static_cast<int32_t>(gridReflowInput.mCols.mSizes.Length());
+    const auto numRows =
+        static_cast<int32_t>(gridReflowInput.mRows.mSizes.Length());
+    if (numCols > 0 && numRows > 0) {
+      const GridArea gridArea(LineRange(0, numCols), LineRange(0, numRows));
+      const LogicalRect gridAreaRect =
+          gridReflowInput.ContainingBlockFor(gridArea) +
+          LogicalPoint(wm, bp.IStart(wm), bp.BStart(wm));
+
+      MOZ_ASSERT(bp == aReflowInput.ComputedLogicalPadding(wm),
+                 "A scrolled inner frame shouldn't have any border!");
+      const LogicalMargin& padding = bp;
+      nsRect physicalGridAreaRectWithPadding =
+          gridAreaRect.GetPhysicalRect(wm, containerSize);
+      physicalGridAreaRectWithPadding.Inflate(padding.GetPhysicalMargin(wm));
+      aDesiredSize.mOverflowAreas.UnionAllWith(physicalGridAreaRectWithPadding);
+    }
+
+    nsRect gridItemMarginBoxBounds;
+    for (const auto& item : gridReflowInput.mGridItems) {
+      gridItemMarginBoxBounds =
+          gridItemMarginBoxBounds.Union(item.mFrame->GetMarginRect());
+    }
+    aDesiredSize.mOverflowAreas.UnionAllWith(gridItemMarginBoxBounds);
+  }
+
   // TODO: fix align-tracks alignment in fragments
   if ((IsMasonry(eLogicalAxisBlock) && !prevInFlow) ||
       IsMasonry(eLogicalAxisInline)) {
