@@ -10800,6 +10800,10 @@ apigee.io
 appspacehosted.com
 appspaceusercontent.com
 
+// Appudo UG (haftungsbeschränkt) : https://www.appudo.com
+// Submitted by Alexander Hochbaum <admin@appudo.com>
+appudo.net
+
 // Aptible : https://www.aptible.com/
 // Submitted by Thomas Orozco <thomas@aptible.com>
 on-aptible.com
@@ -11140,11 +11144,6 @@ cupcake.is
 // Curv UG : https://curv-labs.de/
 // Submitted by Marvin Wiesner <Marvin@curv-labs.de>
 curv.dev
-
-// Curvegrid Inc. : https://www.curvegrid.com/
-// Submitted by Pierre Rousset <security@curvegrid.com>
-multibaas.app
-multibaas.com
 
 // Customer OCI - Oracle Dyn https://cloud.oracle.com/home https://dyn.com/dns/
 // Submitted by Gregory Drake <support@dyn.com>
@@ -11953,7 +11952,6 @@ gsj.bz
 // GitHub, Inc.
 // Submitted by Patrick Toomey <security@github.com>
 githubusercontent.com
-github.dev
 githubpreview.dev
 github.io
 
@@ -13034,6 +13032,13 @@ dyn53.io
 // Submitted by Zulfais <pc@co.bn>
 co.bn
 
+// Postman, Inc : https://postman.com
+// Submitted by Rahul Dhawan <security@postman.com>
+postman-echo.com
+pstmn.io
+mock.pstmn.io
+httpbin.org
+
 // prgmr.com : https://prgmr.com/
 // Submitted by Sarah Newman <owner@prgmr.com>
 xen.prgmr.com
@@ -13164,6 +13169,10 @@ hzc.io
 wellbeingzone.eu
 wellbeingzone.co.uk
 
+// Rico Developments Limited : https://adimo.co
+// Submitted by Colin Brown <hello@adimo.co>
+adimo.co.uk
+
 // Rochester Institute of Technology : http://www.rit.edu/
 // Submitted by Jennifer Herting <jchits@rit.edu>
 git-pages.rit.edu
@@ -13223,6 +13232,10 @@ seidat.net
 // Senseering GmbH : https://www.senseering.de
 // Submitted by Felix Mönckemeyer <f.moenckemeyer@senseering.de>
 senseering.net
+
+// Sendmsg: https://www.sendmsg.co.il
+// Submitted by Assaf Stern <domains@comstar.co.il>
+minisite.ms
 
 // Service Magnet : https://myservicemagnet.com
 // Submitted by Dave Sanders <dave@myservicemagnet.com>
