@@ -40,7 +40,7 @@ updatebot:
     maintainer-bz: krosylight@mozilla.com
     tasks:
       - type: vendoring
-        enabled: True
+        enabled: False
 
 vendoring:
   url: https://gitlab.com/wg1/jpeg-xl.git
