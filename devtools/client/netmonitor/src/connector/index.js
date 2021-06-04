@@ -115,8 +115,6 @@ class Connector {
 
     this.removeListeners();
 
-    this.currentTarget.off("will-navigate", this.willNavigate);
-
     this.webConsoleFront = null;
     this.dataProvider = null;
   }
@@ -133,17 +131,6 @@ class Connector {
     if (!targetFront.isTopLevel) {
       return;
     }
-
-    if (isTargetSwitching) {
-      this.willNavigate();
-    }
-
-    // Listener for `will-navigate` event is (un)registered outside
-    // of the `addListeners` and `removeListeners` methods since
-    // these are used to pause/resume the connector.
-    // Paused network panel should be automatically resumed when page
-    // reload, so `will-navigate` listener needs to be there all the time.
-    targetFront.on("will-navigate", this.willNavigate);
 
     this.webConsoleFront = await this.currentTarget.getFront("console");
 
@@ -368,8 +355,17 @@ class Connector {
       return;
     }
 
-    // Netmonitor does not support dom-loading, nor will-navigate events yet.
-    if (resource.name != "dom-interactive" && resource.name != "dom-complete") {
+    // Netmonitor does not support dom-loading
+    if (
+      resource.name != "dom-interactive" &&
+      resource.name != "dom-complete" &&
+      resource.name != "will-navigate"
+    ) {
+      return;
+    }
+
+    if (resource.name == "will-navigate") {
+      this.willNavigate();
       return;
     }
 
