@@ -2209,6 +2209,8 @@ pref("extensions.abuseReport.amoDetailsURL", "https://services.addons.mozilla.or
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
+pref("extensions.blocklist.useMLBF", false);
+pref("extensions.blocklist.useMLBF.stashes", false);
 // Required blocklist freshness for OneCRL OCSP bypass (default is 30 hours)
 // Note that this needs to exceed the interval at which we update OneCRL data,
 // configured in services.settings.poll_interval .
@@ -2224,7 +2226,9 @@ pref("services.blocklist.bucket", "blocklists");
 pref("services.blocklist.addons.collection", "addons");
 pref("services.blocklist.addons.checked", 0);
 pref("services.blocklist.addons.signer", "remote-settings.content-signature.mozilla.org");
+pref("services.blocklist.addons-mlbf.collection", "addons-bloomfilters");
 pref("services.blocklist.addons-mlbf.checked", 0);
+pref("services.blocklist.addons-mlbf.signer", "remote-settings.content-signature.mozilla.org");
 pref("services.blocklist.plugins.collection", "plugins");
 pref("services.blocklist.plugins.checked", 0);
 pref("services.blocklist.plugins.signer", "remote-settings.content-signature.mozilla.org");

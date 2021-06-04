@@ -5928,6 +5928,29 @@ blocklist:
     record_in_processes:
       - main
 
+  mlbf_stashes:
+    bug_numbers:
+      - 1633466
+      - 1649960
+      - 1689274
+    description: >
+      Keep track of whether the bloomfilter-based blocklist engine uses stashes from the
+      addons-bloomfilters collection, together with an infrequently updated base bloomfilter.
+      If false, the latest (full) bloom filter is downloaded on every update of the addon blocklist.
+      This metric is only meaningful if mlbf_enabled is true.
+    expires: "95"
+    kind: boolean
+    release_channel_collection: opt-out
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+      - lgreco@mozilla.com
+      - awagner@mozilla.com
+      - rwu@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
   mlbf_source:
     bug_numbers:
       - 1662857
@@ -5984,7 +6007,7 @@ blocklist:
       - 1689274
     description: >
       Keep track of the timestamp of the oldest stash of the addons blocklist.
-      Only meaningful when mlbf_enabled is true.
+      Only meaningful when mlbf_enabled and mlbf_stashes are true.
       The value is a datetime string in UTC format, or "Missing Date" when unavailable.
     expires: "95"
     kind: string
@@ -6006,7 +6029,7 @@ blocklist:
       - 1689274
     description: >
       Keep track of the timestamp of the most recent stash of the addons blocklist.
-      Only meaningful when mlbf_enabled is true.
+      Only meaningful when mlbf_enabled and mlbf_stashes are true.
       The value is a datetime string in UTC format, or "Missing Date" when unavailable.
     expires: "95"
     kind: string
