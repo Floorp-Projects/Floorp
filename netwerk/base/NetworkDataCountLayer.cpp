@@ -18,7 +18,7 @@ static PRIOMethods* sNetworkDataCountLayerMethodsPtr = nullptr;
 
 class NetworkDataCountSecret {
  public:
-  NetworkDataCountSecret() {}
+  NetworkDataCountSecret() = default;
 
   uint64_t mSentBytes = 0;
   uint64_t mReceivedBytes = 0;

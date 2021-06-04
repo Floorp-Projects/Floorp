@@ -438,7 +438,7 @@ bool HttpChannelParent::DoAsyncOpen(
   }
   httpChannel->SetTimingEnabled(true);
   if (mPBOverride != kPBOverride_Unset) {
-    httpChannel->SetPrivate(mPBOverride == kPBOverride_Private ? true : false);
+    httpChannel->SetPrivate(mPBOverride == kPBOverride_Private);
   }
 
   if (doResumeAt) httpChannel->ResumeAt(startPos, entityID);
@@ -457,8 +457,9 @@ bool HttpChannelParent::DoAsyncOpen(
     httpChannel->SetTopWindowURI(topWindowUri);
   }
 
-  if (aLoadFlags != nsIRequest::LOAD_NORMAL)
+  if (aLoadFlags != nsIRequest::LOAD_NORMAL) {
     httpChannel->SetLoadFlags(aLoadFlags);
+  }
 
   if (aForceMainDocumentChannel) {
     httpChannel->SetIsMainDocumentChannel(true);
@@ -512,7 +513,7 @@ bool HttpChannelParent::DoAsyncOpen(
       do_QueryInterface(static_cast<nsIChannel*>(httpChannel.get()));
   if (cacheChannel) {
     cacheChannel->SetCacheKey(aCacheKey);
-    for (auto& data : aPreferredAlternativeTypes) {
+    for (const auto& data : aPreferredAlternativeTypes) {
       cacheChannel->PreferAlternativeDataType(data.type(), data.contentType(),
                                               data.deliverAltData());
     }
@@ -649,7 +650,7 @@ bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId) {
     // redirected-to channel may not support PB
     nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryObject(mChannel);
     if (pbChannel) {
-      pbChannel->SetPrivate(mPBOverride == kPBOverride_Private ? true : false);
+      pbChannel->SetPrivate(mPBOverride == kPBOverride_Private);
     }
   }
 
@@ -1128,7 +1129,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   if (httpChannelImpl) {
     httpChannelImpl->GetCacheToken(getter_AddRefs(cacheEntry));
     mCacheEntry = do_QueryInterface(cacheEntry);
-    args.cacheEntryAvailable() = mCacheEntry ? true : false;
+    args.cacheEntryAvailable() = static_cast<bool>(mCacheEntry);
 
     httpChannelImpl->GetCacheKey(&args.cacheKey());
     httpChannelImpl->GetAlternativeDataType(args.altDataType());

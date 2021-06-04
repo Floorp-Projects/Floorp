@@ -368,7 +368,8 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
             inflateEnd(&d_stream);
             mStreamEnded = true;
             break;
-          } else if (code == Z_OK) {
+          }
+          if (code == Z_OK) {
             if (bytesWritten) {
               rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
                                       (char*)mOutBuffer, bytesWritten);
@@ -450,7 +451,8 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
             inflateEnd(&d_stream);
             mStreamEnded = true;
             break;
-          } else if (code == Z_OK) {
+          }
+          if (code == Z_OK) {
             if (bytesWritten) {
               rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
                                       (char*)mOutBuffer, bytesWritten);

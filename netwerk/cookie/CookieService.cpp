@@ -1321,7 +1321,6 @@ bool CookieService::GetTokenValue(nsACString::const_char_iterator& aIter,
   lastSpace = aIter;
   if (lastSpace != start) {
     while (--lastSpace != start && iswhitespace(*lastSpace)) {
-      continue;
     }
     ++lastSpace;
   }
@@ -1331,7 +1330,6 @@ bool CookieService::GetTokenValue(nsACString::const_char_iterator& aIter,
   if (aEqualsFound) {
     // find <value>
     while (++aIter != aEndIter && iswhitespace(*aIter)) {
-      continue;
     }
 
     start = aIter;
@@ -1346,7 +1344,6 @@ bool CookieService::GetTokenValue(nsACString::const_char_iterator& aIter,
     if (aIter != start) {
       lastSpace = aIter;
       while (--lastSpace != start && iswhitespace(*lastSpace)) {
-        continue;
       }
 
       aTokenValue.Rebind(start, ++lastSpace);
@@ -1586,8 +1583,7 @@ CookieStatus CookieService::CheckPrefs(
   // don't let unsupported scheme sites get/set cookies (could be a security
   // issue)
   if (!CookieCommons::IsSchemeSupported(aHostURI)) {
-    COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
-                      aHostURI, aCookieHeader,
+    COOKIE_LOGFAILURE(!aCookieHeader.IsVoid(), aHostURI, aCookieHeader,
                       "non http/https sites cannot read cookies");
     return STATUS_REJECTED_WITH_ERROR;
   }
@@ -1596,8 +1592,7 @@ CookieStatus CookieService::CheckPrefs(
       BasePrincipal::CreateContentPrincipal(aHostURI, aOriginAttrs);
 
   if (!principal) {
-    COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
-                      aHostURI, aCookieHeader,
+    COOKIE_LOGFAILURE(!aCookieHeader.IsVoid(), aHostURI, aCookieHeader,
                       "non-content principals cannot get/set cookies");
     return STATUS_REJECTED_WITH_ERROR;
   }
@@ -1609,8 +1604,7 @@ CookieStatus CookieService::CheckPrefs(
   if (NS_SUCCEEDED(rv)) {
     switch (cookiePermission) {
       case nsICookiePermission::ACCESS_DENY:
-        COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
-                          aHostURI, aCookieHeader,
+        COOKIE_LOGFAILURE(!aCookieHeader.IsVoid(), aHostURI, aCookieHeader,
                           "cookies are blocked for this site");
         CookieLogging::LogMessageToConsole(
             aCRC, aHostURI, nsIScriptError::warningFlag,
@@ -1650,8 +1644,7 @@ CookieStatus CookieService::CheckPrefs(
       return STATUS_ACCEPTED;
     }
 
-    COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
-                      aHostURI, aCookieHeader,
+    COOKIE_LOGFAILURE(!aCookieHeader.IsVoid(), aHostURI, aCookieHeader,
                       "cookies are disabled in trackers");
     if (aIsThirdPartySocialTrackingResource) {
       *aRejectedReason =
@@ -1671,8 +1664,8 @@ CookieStatus CookieService::CheckPrefs(
   if (aCookieJarSettings->GetCookieBehavior() ==
           nsICookieService::BEHAVIOR_REJECT &&
       !aStorageAccessPermissionGranted) {
-    COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
-                      aHostURI, aCookieHeader, "cookies are disabled");
+    COOKIE_LOGFAILURE(!aCookieHeader.IsVoid(), aHostURI, aCookieHeader,
+                      "cookies are disabled");
     *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL;
     return STATUS_REJECTED;
   }
@@ -1682,8 +1675,8 @@ CookieStatus CookieService::CheckPrefs(
     if (aCookieJarSettings->GetCookieBehavior() ==
             nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
         !aStorageAccessPermissionGranted) {
-      COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
-                        aHostURI, aCookieHeader, "context is third party");
+      COOKIE_LOGFAILURE(!aCookieHeader.IsVoid(), aHostURI, aCookieHeader,
+                        "context is third party");
       CookieLogging::LogMessageToConsole(
           aCRC, aHostURI, nsIScriptError::warningFlag,
           CONSOLE_REJECTION_CATEGORY, "CookieRejectedThirdParty"_ns,
@@ -1696,8 +1689,8 @@ CookieStatus CookieService::CheckPrefs(
 
     if (aCookieJarSettings->GetLimitForeignContexts() &&
         !aStorageAccessPermissionGranted && aNumOfCookies == 0) {
-      COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
-                        aHostURI, aCookieHeader, "context is third party");
+      COOKIE_LOGFAILURE(!aCookieHeader.IsVoid(), aHostURI, aCookieHeader,
+                        "context is third party");
       CookieLogging::LogMessageToConsole(
           aCRC, aHostURI, nsIScriptError::warningFlag,
           CONSOLE_REJECTION_CATEGORY, "CookieRejectedThirdParty"_ns,
@@ -1850,11 +1843,7 @@ bool CookieService::CheckPath(CookieStruct& aCookieData,
     return false;
   }
 
-  if (aCookieData.path().Contains('\t')) {
-    return false;
-  }
-
-  return true;
+  return !aCookieData.path().Contains('\t');
 }
 
 // CheckPrefixes
@@ -2010,7 +1999,7 @@ CookieService::CookieExistsNative(const nsACString& aHost,
       CookieCommons::GetBaseDomainFromHost(mTLDService, aHost, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  CookieListIter iter;
+  CookieListIter iter{};
   CookieStorage* storage = PickStorage(*aOriginAttributes);
   *aFoundCookie = storage->FindCookie(baseDomain, *aOriginAttributes, aHost,
                                       aName, aPath, iter);

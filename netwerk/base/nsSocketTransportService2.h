@@ -251,7 +251,7 @@ class nsSocketTransportService final : public nsPISocketTransportService,
       PRIntervalTime now);  // computes ideal poll timeout
   nsresult DoPollIteration(TimeDuration* pollDuration);
   // perfoms a single poll iteration
-  int32_t Poll(TimeDuration* pollDuration, PRIntervalTime now);
+  int32_t Poll(TimeDuration* pollDuration, PRIntervalTime ts);
   // calls PR_Poll.  the out param
   // interval indicates the poll
   // duration in seconds.
@@ -303,7 +303,7 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   // <1> the less-or-equal port number of the range to remap
   // <2> the port number to remap to, when the given port number falls to the
   // range
-  typedef CopyableTArray<Tuple<uint16_t, uint16_t, uint16_t>> TPortRemapping;
+  using TPortRemapping = CopyableTArray<Tuple<uint16_t, uint16_t, uint16_t>>;
   Maybe<TPortRemapping> mPortRemapping;
 
   // Called on the socket thread to apply the mapping build on the main thread

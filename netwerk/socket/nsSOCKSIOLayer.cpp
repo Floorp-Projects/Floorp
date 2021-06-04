@@ -320,7 +320,8 @@ class Buffer {
   Buffer<Size - sizeof(IPv6Addr)> WriteNetAddr(const NetAddr* aAddr) {
     if (aAddr->raw.family == AF_INET) {
       return Write(aAddr->inet.ip);
-    } else if (aAddr->raw.family == AF_INET6) {
+    }
+    if (aAddr->raw.family == AF_INET6) {
       return Write(aAddr->inet6.ip.u8);
     }
     MOZ_ASSERT_UNREACHABLE("Unknown address family");
@@ -563,7 +564,8 @@ PRStatus nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc* fd) {
       if (c == PR_WOULD_BLOCK_ERROR || c == PR_IN_PROGRESS_ERROR) {
         mState = SOCKS_CONNECTING_TO_PROXY;
         return status;
-      } else if (IsLocalProxy()) {
+      }
+      if (IsLocalProxy()) {
         LOGERROR(("socks: connect to domain socket failed (%d)", c));
         PR_SetError(PR_CONNECT_REFUSED_ERROR, 0);
         mState = SOCKS_FAILED;
@@ -797,7 +799,8 @@ PRStatus nsSOCKSSocketInfo::ReadV5AuthResponse() {
   if (mProxyUsername.IsEmpty() && authMethod == 0x00) {  // no auth
     LOGDEBUG(("socks5: server allows connection without authentication"));
     return WriteV5ConnectRequest();
-  } else if (!mProxyUsername.IsEmpty() && authMethod == 0x02) {  // username/pw
+  }
+  if (!mProxyUsername.IsEmpty() && authMethod == 0x02) {  // username/pw
     LOGDEBUG(("socks5: auth method accepted by server"));
     return WriteV5UsernameRequest();
   } else {  // 0xFF signals error
@@ -1246,7 +1249,8 @@ PRStatus nsSOCKSSocketInfo::ReadFromSocket(PRFileDesc* fd) {
         LOGERROR(("socks: proxy server closed connection"));
         HandshakeFinished(PR_CONNECT_REFUSED_ERROR);
         return PR_FAILURE;
-      } else if (PR_GetError() == PR_WOULD_BLOCK_ERROR) {
+      }
+      if (PR_GetError() == PR_WOULD_BLOCK_ERROR) {
         LOGDEBUG(("socks: ReadFromSocket(), want read"));
       }
       break;

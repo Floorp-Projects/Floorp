@@ -46,7 +46,7 @@ class ThrottleQueue : public nsIInputChannelThrottleQueue,
 
   struct ThrottleEntry {
     TimeStamp mTime;
-    uint32_t mBytesRead;
+    uint32_t mBytesRead = 0;
   };
 
   nsTArray<ThrottleEntry> mReadEvents;

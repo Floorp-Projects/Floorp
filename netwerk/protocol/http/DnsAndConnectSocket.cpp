@@ -1292,16 +1292,15 @@ nsresult DnsAndConnectSocket::TransportSetup::OnLookupComplete(
     if (dnsAndSock->mEnt->mConnInfo->IsHttp3()) {
       mState = TransportSetup::TransportSetupState::RESOLVED;
       return status;
-    } else {
-      nsresult rv = SetupStreams(dnsAndSock);
-      if (NS_SUCCEEDED(rv)) {
-        mState = TransportSetup::TransportSetupState::CONNECTING;
-      } else {
-        CloseAll();
-        mState = TransportSetup::TransportSetupState::DONE;
-      }
-      return rv;
     }
+    nsresult rv = SetupStreams(dnsAndSock);
+    if (NS_SUCCEEDED(rv)) {
+      mState = TransportSetup::TransportSetupState::CONNECTING;
+    } else {
+      CloseAll();
+      mState = TransportSetup::TransportSetupState::DONE;
+    }
+    return rv;
   }
 
   // DNS lookup status failed

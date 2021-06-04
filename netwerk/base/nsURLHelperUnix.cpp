@@ -26,19 +26,21 @@ nsresult net_GetURLSpecFromActualFile(nsIFile* aFile, nsACString& result) {
   NS_CopyUnicodeToNative(path, ePath);
 
   // Use UTF8 version if conversion was successful
-  if (nativePath == ePath)
+  if (nativePath == ePath) {
     CopyUTF16toUTF8(path, ePath);
-  else
+  } else {
     ePath = nativePath;
+  }
 
   nsAutoCString escPath;
   constexpr auto prefix = "file://"_ns;
 
   // Escape the path with the directory mask
-  if (NS_EscapeURL(ePath.get(), -1, esc_Directory + esc_Forced, escPath))
+  if (NS_EscapeURL(ePath.get(), -1, esc_Directory + esc_Forced, escPath)) {
     escPath.Insert(prefix, 0);
-  else
+  } else {
     escPath.Assign(prefix + ePath);
+  }
 
   // esc_Directory does not escape the semicolons, so if a filename
   // contains semicolons we need to manually escape them.
@@ -86,17 +88,19 @@ nsresult net_GetFileFromURLSpec(const nsACString& aURL, nsIFile** result) {
   if (IsUtf8(path)) {
     // speed up the start-up where UTF-8 is the native charset
     // (e.g. on recent Linux distributions)
-    if (NS_IsNativeUTF8())
+    if (NS_IsNativeUTF8()) {
       rv = localFile->InitWithNativePath(path);
-    else
+    } else {
       rv = localFile->InitWithPath(NS_ConvertUTF8toUTF16(path));
+    }
     // XXX In rare cases, a valid UTF-8 string can be valid as a native
     // encoding (e.g. 0xC5 0x83 is valid both as UTF-8 and Windows-125x).
     // However, the chance is very low that a meaningful word in a legacy
     // encoding is valid as UTF-8.
-  } else
+  } else {
     // if path is not in UTF-8, assume it is encoded in the native charset
     rv = localFile->InitWithNativePath(path);
+  }
 
   if (NS_FAILED(rv)) return rv;
 

@@ -16,7 +16,7 @@ TEST(TestSocketTransportService, PortRemappingPreferenceReading)
       do_GetService("@mozilla.org/network/socket-transport-service;1");
   ASSERT_TRUE(service);
 
-  auto sts = gSocketTransportService;
+  auto* sts = gSocketTransportService;
   ASSERT_TRUE(sts);
 
   sts->Dispatch(

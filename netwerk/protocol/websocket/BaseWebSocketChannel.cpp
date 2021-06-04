@@ -267,10 +267,11 @@ NS_IMETHODIMP
 BaseWebSocketChannel::GetScheme(nsACString& aScheme) {
   LOG(("BaseWebSocketChannel::GetScheme() %p\n", this));
 
-  if (mEncrypted)
+  if (mEncrypted) {
     aScheme.AssignLiteral("wss");
-  else
+  } else {
     aScheme.AssignLiteral("ws");
+  }
   return NS_OK;
 }
 
@@ -278,10 +279,11 @@ NS_IMETHODIMP
 BaseWebSocketChannel::GetDefaultPort(int32_t* aDefaultPort) {
   LOG(("BaseWebSocketChannel::GetDefaultPort() %p\n", this));
 
-  if (mEncrypted)
+  if (mEncrypted) {
     *aDefaultPort = kDefaultWSSPort;
-  else
+  } else {
     *aDefaultPort = kDefaultWSPort;
+  }
   return NS_OK;
 }
 

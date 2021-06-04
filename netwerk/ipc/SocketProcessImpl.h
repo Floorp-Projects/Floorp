@@ -16,7 +16,7 @@ namespace net {
 // It is instantiated as a singleton in XRE_InitChildProcess.
 class SocketProcessImpl final : public mozilla::ipc::ProcessChild {
  protected:
-  typedef mozilla::ipc::ProcessChild ProcessChild;
+  using ProcessChild = mozilla::ipc::ProcessChild;
 
  public:
   explicit SocketProcessImpl(ProcessId aParentPid);

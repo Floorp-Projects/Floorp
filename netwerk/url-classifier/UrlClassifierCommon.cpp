@@ -583,12 +583,8 @@ bool UrlClassifierCommon::IsTrackingClassificationFlag(uint32_t aFlag) {
 
 // static
 bool UrlClassifierCommon::IsSocialTrackingClassificationFlag(uint32_t aFlag) {
-  if (aFlag & nsIClassifiedChannel::ClassificationFlags::
-                  CLASSIFIED_ANY_SOCIAL_TRACKING) {
-    return true;
-  }
-
-  return false;
+  return (aFlag & nsIClassifiedChannel::ClassificationFlags::
+                      CLASSIFIED_ANY_SOCIAL_TRACKING) != 0;
 }
 
 // static

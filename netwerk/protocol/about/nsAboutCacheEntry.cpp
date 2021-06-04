@@ -215,15 +215,17 @@ nsresult nsAboutCacheEntry::Channel::ParseURI(nsIURI* uri,
 
   keyBegin = begin;
   keyEnd = end;
-  if (!FindInReadable("?storage="_ns, keyBegin, keyEnd))
+  if (!FindInReadable("?storage="_ns, keyBegin, keyEnd)) {
     return NS_ERROR_FAILURE;
+  }
 
   valBegin = keyEnd;  // the value of the storage key starts after the key
 
   keyBegin = keyEnd;
   keyEnd = end;
-  if (!FindInReadable("&context="_ns, keyBegin, keyEnd))
+  if (!FindInReadable("&context="_ns, keyBegin, keyEnd)) {
     return NS_ERROR_FAILURE;
+  }
 
   storageName.Assign(Substring(valBegin, keyBegin));
   valBegin = keyEnd;  // the value of the context key starts after the key

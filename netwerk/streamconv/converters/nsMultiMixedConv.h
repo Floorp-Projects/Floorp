@@ -135,7 +135,7 @@ class nsMultiMixedConv : public nsIStreamConverter {
   explicit nsMultiMixedConv();
 
  protected:
-  typedef mozilla::IncrementalTokenizer::Token Token;
+  using Token = mozilla::IncrementalTokenizer::Token;
 
   virtual ~nsMultiMixedConv() = default;
 
@@ -220,7 +220,7 @@ class nsMultiMixedConv : public nsIStreamConverter {
   // of that data during a single tokenizer input feed.  This is always
   // flushed right after we fed the tokenizer.
   nsACString::const_char_iterator mRawData;
-  nsACString::size_type mRawDataLength;
+  nsACString::size_type mRawDataLength{0};
 
   // At the start we don't know if the server will be sending boundary with
   // or without the leading dashes.
