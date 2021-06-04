@@ -238,12 +238,27 @@ add_task(async function test_network_markers_service_worker_use() {
       contentPid
     );
 
-    const parentNetworkMarkers = getInflatedNetworkMarkers(parentThread);
+    // By logging a few information about the threads we make debugging easier.
+    logInformationForThread("parentThread information", parentThread);
+    logInformationForThread("contentThread information", contentThread);
+
+    const parentNetworkMarkers = getInflatedNetworkMarkers(parentThread)
+      // When we load a page, Firefox will check the service worker freshness
+      // after a few seconds. So when the test lasts a long time (with some test
+      // environments) we might see spurious markers about that that we're not
+      // interesting in in this part of the test. They're only present in the
+      // parent process.
+      .filter(marker => !marker.data.URI.includes(serviceWorkerFileName));
     const contentNetworkMarkers = getInflatedNetworkMarkers(contentThread);
 
     // Here are some logs to ease debugging.
-    info(JSON.stringify(parentNetworkMarkers, null, 2));
-    info(JSON.stringify(contentNetworkMarkers, null, 2));
+    info(
+      "Parent network markers: " + JSON.stringify(parentNetworkMarkers, null, 2)
+    );
+    info(
+      "Content network markers: " +
+        JSON.stringify(contentNetworkMarkers, null, 2)
+    );
 
     const parentPairs = getPairsOfNetworkMarkers(parentNetworkMarkers);
     const contentPairs = getPairsOfNetworkMarkers(contentNetworkMarkers);
