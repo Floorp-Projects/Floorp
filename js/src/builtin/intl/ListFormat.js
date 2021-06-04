@@ -86,7 +86,7 @@ function getListFormatInternals(obj) {
  * This later work occurs in |resolveListFormatInternals|; steps not noted
  * here occur there.
  */
-function InitializeListFormat(listFormat, locales, options, supportsTypeAndStyle) {
+function InitializeListFormat(listFormat, locales, options) {
     assert(IsObject(listFormat), "InitializeListFormat called with non-object");
     assert(GuardToListFormat(listFormat) !== null, "InitializeListFormat called with non-ListFormat");
 
@@ -128,19 +128,13 @@ function InitializeListFormat(listFormat, locales, options, supportsTypeAndStyle
 
     // Compute formatting options.
 
-    // Supporting all "type" and "style" options requires draft APIs in ICU 67,
-    // which may not be available when compiling against a system ICU.
-
     // Steps 12-13.
-    var type = GetOption(options, "type", "string",
-                         supportsTypeAndStyle ? ["conjunction", "disjunction", "unit"] : ["conjunction"],
+    var type = GetOption(options, "type", "string", ["conjunction", "disjunction", "unit"],
                          "conjunction");
     lazyListFormatData.type = type;
 
     // Steps 14-15.
-    var style = GetOption(options, "style", "string",
-                          supportsTypeAndStyle ? ["long", "short", "narrow"] : ["long"],
-                          "long");
+    var style = GetOption(options, "style", "string", ["long", "short", "narrow"], "long");
     lazyListFormatData.style = style;
 
     // We've done everything that must be done now: mark the lazy data as fully

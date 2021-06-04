@@ -7166,13 +7166,11 @@ static bool GetICUOptions(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#  ifndef U_HIDE_DRAFT_API
   str = intl::CallICU(cx, ucal_getHostTimeZone);
   if (!str ||
       !JS_DefineProperty(cx, info, "host-timezone", str, JSPROP_ENUMERATE)) {
     return false;
   }
-#  endif
 #endif
 
   args.rval().setObject(*info);
