@@ -85,6 +85,7 @@
 #include "base/message_loop.h"
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
+#include "mozilla/AvailableMemoryTracker.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CountingAllocatorBase.h"
 #include "mozilla/UniquePtr.h"
@@ -461,6 +462,7 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
   mozilla::SharedThreadPool::InitStatics();
 
   mozilla::scache::StartupCache::GetSingleton();
+  mozilla::AvailableMemoryTracker::Init();
 
   // Notify observers of xpcom autoregistration start
   NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_CATEGORY, nullptr,
