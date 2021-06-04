@@ -6,7 +6,7 @@ var testData = [
         options: {
             numberingSystem: "latn",
         },
-        canonical: "xtg-u-nu-latn-x-cel-gaulish",
+        canonical: "xtg-u-nu-latn",
         extensions: {
             numberingSystem: "latn",
         },
@@ -18,7 +18,7 @@ var testData = [
             region: "FR",
             numberingSystem: "latn",
         },
-        canonical: "xtg-FR-u-nu-latn-x-cel-gaulish",
+        canonical: "xtg-FR-u-nu-latn",
         extensions: {
             numberingSystem: "latn",
         },

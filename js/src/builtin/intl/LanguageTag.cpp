@@ -337,7 +337,7 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
   // Replace deprecated language, region, and variant subtags with their
   // preferred mappings.
 
-  if (!updateGrandfatheredMappings(cx)) {
+  if (!updateLegacyMappings(cx)) {
     return false;
   }
 
@@ -346,7 +346,10 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
     performComplexLanguageMappings();
   }
 
-  // No script replacements are currently present.
+  // Replace deprecated script subtags with their preferred values.
+  if (script().present()) {
+    scriptMapping(script_);
+  }
 
   // Replace deprecated region subtags with their preferred values.
   if (region().present()) {

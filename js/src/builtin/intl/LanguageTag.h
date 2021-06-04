@@ -216,6 +216,7 @@ class MOZ_STACK_CLASS LanguageTag final {
   static bool complexLanguageMapping(const LanguageSubtag& language);
 
  private:
+  static bool scriptMapping(ScriptSubtag& script);
   static bool regionMapping(RegionSubtag& region);
   static bool complexRegionMapping(const RegionSubtag& region);
 
@@ -223,7 +224,10 @@ class MOZ_STACK_CLASS LanguageTag final {
   void performComplexRegionMappings();
   [[nodiscard]] bool performVariantMappings(JSContext* cx);
 
-  [[nodiscard]] bool updateGrandfatheredMappings(JSContext* cx);
+  [[nodiscard]] bool updateLegacyMappings(JSContext* cx);
+
+  static bool signLanguageMapping(LanguageSubtag& language,
+                                  const RegionSubtag& region);
 
   static const char* replaceTransformExtensionType(
       mozilla::Span<const char> key, mozilla::Span<const char> type);
