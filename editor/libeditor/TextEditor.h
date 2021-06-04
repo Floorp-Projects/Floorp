@@ -210,13 +210,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   using EditorBase::SetAttributeOrEquivalent;
 
   /**
-   * DeleteSelectionByDragAsAction() removes selection and dispatch "input"
-   * event whose inputType is "deleteByDrag".
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteSelectionByDragAsAction(bool aDispatchInputEvent);
-
-  /**
    * Replace existed string with aString.  Caller must guarantee that there
    * is a placeholder transaction which will have the transaction.
    *
