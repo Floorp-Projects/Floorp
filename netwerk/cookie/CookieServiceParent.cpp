@@ -40,7 +40,7 @@ void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray* aCookieList) {
   nsTArray<OriginAttributes> attrsList;
   for (uint32_t i = 0; i < len; i++) {
     nsCOMPtr<nsICookie> xpcCookie = do_QueryElementAt(aCookieList, i);
-    auto cookie = static_cast<Cookie*>(xpcCookie.get());
+    auto* cookie = static_cast<Cookie*>(xpcCookie.get());
     attrs = cookie->OriginAttributesRef();
     cookieStruct = cookie->ToIPC();
     if (cookie->IsHttpOnly()) {
@@ -56,7 +56,7 @@ void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray* aCookieList) {
 void CookieServiceParent::RemoveAll() { Unused << SendRemoveAll(); }
 
 void CookieServiceParent::RemoveCookie(nsICookie* aCookie) {
-  auto cookie = static_cast<Cookie*>(aCookie);
+  auto* cookie = static_cast<Cookie*>(aCookie);
   const OriginAttributes& attrs = cookie->OriginAttributesRef();
   CookieStruct cookieStruct = cookie->ToIPC();
   if (cookie->IsHttpOnly()) {
@@ -66,7 +66,7 @@ void CookieServiceParent::RemoveCookie(nsICookie* aCookie) {
 }
 
 void CookieServiceParent::AddCookie(nsICookie* aCookie) {
-  auto cookie = static_cast<Cookie*>(aCookie);
+  auto* cookie = static_cast<Cookie*>(aCookie);
   const OriginAttributes& attrs = cookie->OriginAttributesRef();
   CookieStruct cookieStruct = cookie->ToIPC();
   if (cookie->IsHttpOnly()) {

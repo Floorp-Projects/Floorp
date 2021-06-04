@@ -57,9 +57,9 @@ nsresult nsHttpChunkedDecoder::HandleChunkedContent(
 
       *contentRead += amt;
       buf += amt;
-    } else if (mReachedEOF)
+    } else if (mReachedEOF) {
       break;  // done
-    else {
+    } else {
       uint32_t bytesConsumed = 0;
 
       nsresult rv = ParseChunkRemaining(buf, count, &bytesConsumed);

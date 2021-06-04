@@ -29,7 +29,7 @@ namespace net {
 
 #define IO_ACTIVITY_ENABLED_PREF "io.activity.enabled"
 
-typedef nsTHashMap<nsCStringHashKey, dom::IOActivityDataDictionary> Activities;
+using Activities = nsTHashMap<nsCStringHashKey, dom::IOActivityDataDictionary>;
 
 // IOActivityMonitor has several roles:
 // - maintains an IOActivity per resource and updates it

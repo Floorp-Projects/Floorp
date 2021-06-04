@@ -91,7 +91,7 @@ class ASpdySession : public nsAHttpTransaction {
   virtual bool CanAcceptWebsocket() = 0;
 };
 
-typedef bool (*ALPNCallback)(nsISupports*);  // nsISSLSocketControl is typical
+using ALPNCallback = bool (*)(nsISupports*);  // nsISSLSocketControl is typical
 
 // this is essentially a single instantiation as a member of nsHttpHandler.
 // It could be all static except using static ctors of XPCOM objects is a

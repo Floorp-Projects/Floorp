@@ -30,8 +30,8 @@ class nsInputStreamPump final : public nsIInputStreamPump,
   ~nsInputStreamPump() = default;
 
  public:
-  typedef mozilla::RecursiveMutexAutoLock RecursiveMutexAutoLock;
-  typedef mozilla::RecursiveMutexAutoUnlock RecursiveMutexAutoUnlock;
+  using RecursiveMutexAutoLock = mozilla::RecursiveMutexAutoLock;
+  using RecursiveMutexAutoUnlock = mozilla::RecursiveMutexAutoUnlock;
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSIINPUTSTREAMPUMP
@@ -46,8 +46,7 @@ class nsInputStreamPump final : public nsIInputStreamPump,
                          bool closeWhenDone = false,
                          nsIEventTarget* mainThreadTarget = nullptr);
 
-  typedef void (*PeekSegmentFun)(void* closure, const uint8_t* buf,
-                                 uint32_t bufLen);
+  using PeekSegmentFun = void (*)(void*, const uint8_t*, uint32_t);
   /**
    * Peek into the first chunk of data that's in the stream. Note that this
    * method will not call the callback when there is no data in the stream.

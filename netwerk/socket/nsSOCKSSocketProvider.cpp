@@ -21,10 +21,11 @@ nsresult nsSOCKSSocketProvider::CreateV4(nsISupports* aOuter, REFNSIID aIID,
   nsresult rv;
   nsCOMPtr<nsISocketProvider> inst =
       new nsSOCKSSocketProvider(NS_SOCKS_VERSION_4);
-  if (!inst)
+  if (!inst) {
     rv = NS_ERROR_OUT_OF_MEMORY;
-  else
+  } else {
     rv = inst->QueryInterface(aIID, aResult);
+  }
   return rv;
 }
 
@@ -33,10 +34,11 @@ nsresult nsSOCKSSocketProvider::CreateV5(nsISupports* aOuter, REFNSIID aIID,
   nsresult rv;
   nsCOMPtr<nsISocketProvider> inst =
       new nsSOCKSSocketProvider(NS_SOCKS_VERSION_5);
-  if (!inst)
+  if (!inst) {
     rv = NS_ERROR_OUT_OF_MEMORY;
-  else
+  } else {
     rv = inst->QueryInterface(aIID, aResult);
+  }
   return rv;
 }
 

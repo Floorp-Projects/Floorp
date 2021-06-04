@@ -48,7 +48,7 @@ nsresult LoadInfoArgsToLoadInfo(
 
 namespace net {
 
-typedef nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>> RedirectHistoryArray;
+using RedirectHistoryArray = nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>;
 
 /**
  * Class that provides an nsILoadInfo implementation.
@@ -280,7 +280,7 @@ class LoadInfo final : public nsILoadInfo {
   nsWeakPtr mContextForTopLevelLoad;
   nsSecurityFlags mSecurityFlags;
   uint32_t mSandboxFlags;
-  uint32_t mTriggeringSandboxFlags;
+  uint32_t mTriggeringSandboxFlags = 0;
   nsContentPolicyType mInternalContentPolicyType;
   LoadTainting mTainting = LoadTainting::Basic;
   bool mBlockAllMixedContent = false;

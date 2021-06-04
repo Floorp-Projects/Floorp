@@ -749,7 +749,7 @@ TEST(TestCookie, TestCookieMain)
       do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv0);
   ASSERT_TRUE(NS_SUCCEEDED(rv0));
 
-  nsCOMPtr<nsICookieManager> cookieMgr2 = cookieMgr;
+  const nsCOMPtr<nsICookieManager>& cookieMgr2 = cookieMgr;
   ASSERT_TRUE(cookieMgr2);
 
   mozilla::OriginAttributes attrs;
@@ -797,10 +797,11 @@ TEST(TestCookie, TestCookieMain)
   for (const auto& cookie : cookies) {
     nsAutoCString name;
     cookie->GetName(name);
-    if (name.EqualsLiteral("test2"))
+    if (name.EqualsLiteral("test2")) {
       expiredCookie = cookie;
-    else if (name.EqualsLiteral("test3"))
+    } else if (name.EqualsLiteral("test3")) {
       newDomainCookie = cookie;
+    }
   }
   EXPECT_EQ(cookies.Length(), 3ul);
   // check the httpOnly attribute of the second cookie is honored

@@ -10,8 +10,7 @@
 #include "nsThreadUtils.h"
 #include <algorithm>
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 NS_IMPL_ADDREF(CacheFileInputStream)
 NS_IMETHODIMP_(MozExternalRefCountType)
@@ -715,5 +714,4 @@ size_t CacheFileInputStream::SizeOfIncludingThis(
   return mallocSizeOf(this);
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

@@ -90,7 +90,7 @@ class nsHttpConnectionInfo final : public ARefBase {
   // mRoutedPort and mNPNToken will be replaced as well.
   already_AddRefed<nsHttpConnectionInfo> CloneAndAdoptHTTPSSVCRecord(
       nsISVCBRecord* aRecord) const;
-  void CloneAsDirectRoute(nsHttpConnectionInfo** outParam);
+  void CloneAsDirectRoute(nsHttpConnectionInfo** outCI);
   [[nodiscard]] nsresult CreateWildCard(nsHttpConnectionInfo** outParam);
 
   const char* ProxyHost() const {
@@ -226,27 +226,28 @@ class nsHttpConnectionInfo final : public ARefBase {
  private:
   void Init(const nsACString& host, int32_t port, const nsACString& npnToken,
             const nsACString& username, nsProxyInfo* proxyInfo,
-            const OriginAttributes& originAttributes, bool EndToEndSSL,
+            const OriginAttributes& originAttributes, bool e2eSSL,
             bool aIsHttp3);
   void SetOriginServer(const nsACString& host, int32_t port);
 
   nsCString mOrigin;
-  int32_t mOriginPort;
+  int32_t mOriginPort = 0;
   nsCString mRoutedHost;
   int32_t mRoutedPort;
 
   nsCString mHashKey;
   nsCString mUsername;
   nsCOMPtr<nsProxyInfo> mProxyInfo;
-  bool mUsingHttpProxy;
-  bool mUsingHttpsProxy;
-  bool mEndToEndSSL;
-  bool mUsingConnect;  // if will use CONNECT with http proxy
+  bool mUsingHttpProxy = false;
+  bool mUsingHttpsProxy = false;
+  bool mEndToEndSSL = false;
+  // if will use CONNECT with http proxy
+  bool mUsingConnect = false;
   nsCString mNPNToken;
   OriginAttributes mOriginAttributes;
   nsIRequest::TRRMode mTRRMode;
 
-  uint32_t mTlsFlags;
+  uint32_t mTlsFlags = 0;
   uint16_t mIsTrrServiceChannel : 1;
   uint16_t mIPv4Disabled : 1;
   uint16_t mIPv6Disabled : 1;
@@ -254,7 +255,7 @@ class nsHttpConnectionInfo final : public ARefBase {
   bool mLessThanTls13;  // This will be set to true if we negotiate less than
                         // tls1.3. If the tls version is till not know or it
                         // is 1.3 or greater the value will be false.
-  bool mIsHttp3;
+  bool mIsHttp3 = false;
 
   bool mHasIPHintAddress = false;
   nsCString mEchConfig;

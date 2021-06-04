@@ -68,7 +68,7 @@ void net_CoalesceDirs(netCoalesceFlags flags, char* path);
  * @param inURL     URL spec
  * @return true if the given spec represents an absolute URL
  */
-bool net_IsAbsoluteURL(const nsACString& inURL);
+bool net_IsAbsoluteURL(const nsACString& uri);
 
 /**
  * Extract URI-Scheme if possible
@@ -137,7 +137,7 @@ void net_ToLowerCase(char* str);
  * then |end| is returned.  stops prematurely if a null byte is encountered,
  * and returns the address of the null byte.
  */
-char* net_FindCharInSet(const char* str, const char* end, const char* set);
+char* net_FindCharInSet(const char* iter, const char* stop, const char* set);
 
 /**
  * returns pointer to first character of |str| NOT in the given set.  if all
@@ -145,13 +145,14 @@ char* net_FindCharInSet(const char* str, const char* end, const char* set);
  * included in |set|, then stops prematurely if a null byte is encountered,
  * and returns the address of the null byte.
  */
-char* net_FindCharNotInSet(const char* str, const char* end, const char* set);
+char* net_FindCharNotInSet(const char* iter, const char* stop, const char* set);
 
 /**
  * returns pointer to last character of |str| NOT in the given set.  if all
  * characters are in the given set, then |str - 1| is returned.
  */
-char* net_RFindCharNotInSet(const char* str, const char* end, const char* set);
+char* net_RFindCharNotInSet(const char* stop, const char* iter,
+                            const char* set);
 
 /**
  * Parses a content-type header and returns the content type and

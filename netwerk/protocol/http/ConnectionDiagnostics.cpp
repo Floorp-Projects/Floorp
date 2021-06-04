@@ -47,7 +47,7 @@ void nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase*) {
   mLogData.AppendPrintf("mNumActiveConns = %d\n", mNumActiveConns);
   mLogData.AppendPrintf("mNumIdleConns = %d\n", mNumIdleConns);
 
-  for (RefPtr<ConnectionEntry> ent : mCT.Values()) {
+  for (const RefPtr<ConnectionEntry>& ent : mCT.Values()) {
     mLogData.AppendPrintf(
         "   AtActiveConnectionLimit = %d\n",
         AtActiveConnectionLimit(ent, NS_HTTP_ALLOW_KEEPALIVE));
@@ -148,8 +148,8 @@ void nsHttpConnection::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("    iskeepalive = %d  dontReuse = %d isReused = %d\n",
                    IsKeepAlive(), mDontReuse, mIsReused);
 
-  log.AppendPrintf("    mTransaction = %d mSpdySession = %d\n",
-                   !!mTransaction.get(), !!mSpdySession.get());
+  log.AppendPrintf("    mTransaction = %d mSpdySession = %d\n", !!mTransaction,
+                   !!mSpdySession);
 
   PRIntervalTime now = PR_IntervalNow();
   log.AppendPrintf("    time since last read = %ums\n",
@@ -205,12 +205,13 @@ void Http2Session::PrintDiagnostics(nsCString& log) {
                    PR_IntervalToMilliseconds(now - mLastReadEpoch));
   log.AppendPrintf("     Idle for Data Activity = %ums\n",
                    PR_IntervalToMilliseconds(now - mLastDataReadEpoch));
-  if (mPingSentEpoch)
+  if (mPingSentEpoch) {
     log.AppendPrintf("     Ping Outstanding (ping) = %ums, expired = %d\n",
                      PR_IntervalToMilliseconds(now - mPingSentEpoch),
                      now - mPingSentEpoch >= gHttpHandler->SpdyPingTimeout());
-  else
+  } else {
     log.AppendPrintf("     No Ping Outstanding\n");
+  }
 }
 
 void nsHttpTransaction::PrintDiagnostics(nsCString& log) {

@@ -290,7 +290,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
   nsDeque<OutboundMessage> mOutgoingPongMessages;
   uint32_t mHdrOutToSend;
   uint8_t* mHdrOut;
-  uint8_t mOutHeader[kCopyBreak + 16];
+  uint8_t mOutHeader[kCopyBreak + 16]{0};
   UniquePtr<PMCECompression> mPMCECompressor;
   uint32_t mDynamicOutputSize;
   uint8_t* mDynamicOutput;

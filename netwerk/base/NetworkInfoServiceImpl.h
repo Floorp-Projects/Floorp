@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace net {
 
-typedef nsTHashMap<nsCStringHashKey, nsCString> AddrMapType;
+using AddrMapType = nsTHashMap<nsCStringHashKey, nsCString>;
 
 nsresult DoListAddresses(AddrMapType& aAddrMap);
 

@@ -23,8 +23,8 @@ class SocketProcessBridgeChild final : public PSocketProcessBridgeChild,
   NS_DECL_NSIOBSERVER
 
   static already_AddRefed<SocketProcessBridgeChild> GetSingleton();
-  typedef MozPromise<RefPtr<SocketProcessBridgeChild>, nsCString, false>
-      GetPromise;
+  using GetPromise =
+      MozPromise<RefPtr<SocketProcessBridgeChild>, nsCString, false>;
   static RefPtr<GetPromise> GetSocketProcessBridge();
 
   mozilla::ipc::IPCResult RecvTest();

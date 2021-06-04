@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "gtest/gtest.h"
 #include "nsServiceManagerUtils.h"
 #include "../../../xpcom/threads/nsThreadManager.h"
@@ -12,7 +14,7 @@
 #define TEST_ASSIGNED_PAC_URL "http://assignedpac/pac.dat"
 #define WPAD_PREF 4
 #define NETWORK_PROXY_TYPE_PREF_NAME "network.proxy.type"
-#define GETTING_NETWORK_PROXY_TYPE_FAILED -1
+#define GETTING_NETWORK_PROXY_TYPE_FAILED (-1)
 
 nsCString WPADOptionResult;
 
@@ -146,7 +148,7 @@ class TestPACMan : public ::testing::Test {
   nsCOMPtr<nsIDHCPClient> GetPACManDHCPCient() { return mPACMan->mDHCPClient; }
 
   void SetPACManDHCPCient(nsCOMPtr<nsIDHCPClient> aValue) {
-    mPACMan->mDHCPClient = aValue;
+    mPACMan->mDHCPClient = std::move(aValue);
   }
 
   void AssertPACSpecEqualTo(const char* aExpected) {

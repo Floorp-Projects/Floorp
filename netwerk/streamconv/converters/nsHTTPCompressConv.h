@@ -43,14 +43,6 @@ class nsIStringInputStream;
 namespace mozilla {
 namespace net {
 
-typedef enum {
-  HTTP_COMPRESS_GZIP,
-  HTTP_COMPRESS_DEFLATE,
-  HTTP_COMPRESS_COMPRESS,
-  HTTP_COMPRESS_BROTLI,
-  HTTP_COMPRESS_IDENTITY
-} CompressMode;
-
 class BrotliWrapper {
  public:
   BrotliWrapper()
@@ -60,11 +52,11 @@ class BrotliWrapper {
         mRequest(nullptr),
         mContext(nullptr),
         mSourceOffset(0) {
-    BrotliDecoderStateInit(&mState, 0, 0, 0);
+    BrotliDecoderStateInit(&mState, nullptr, nullptr, nullptr);
   }
   ~BrotliWrapper() { BrotliDecoderStateCleanup(&mState); }
 
-  BrotliDecoderState mState;
+  BrotliDecoderState mState{};
   Atomic<size_t, Relaxed> mTotalOut;
   nsresult mStatus;
   Atomic<bool, Relaxed> mBrotliStateIsStreamEnd;
@@ -89,6 +81,14 @@ class nsHTTPCompressConv : public nsIStreamConverter,
   NS_DECL_NSISTREAMCONVERTER
 
   nsHTTPCompressConv();
+
+  using CompressMode = enum {
+    HTTP_COMPRESS_GZIP,
+    HTTP_COMPRESS_DEFLATE,
+    HTTP_COMPRESS_COMPRESS,
+    HTTP_COMPRESS_BROTLI,
+    HTTP_COMPRESS_IDENTITY
+  };
 
  private:
   virtual ~nsHTTPCompressConv();
@@ -124,7 +124,7 @@ class nsHTTPCompressConv : public nsIStreamConverter,
   z_stream d_stream;
   unsigned mLen, hMode, mSkipCount, mFlags;
 
-  uint32_t check_header(nsIInputStream* iStr, uint32_t streamLen, nsresult* rv);
+  uint32_t check_header(nsIInputStream* iStr, uint32_t streamLen, nsresult* rs);
 
   Atomic<uint32_t, Relaxed> mDecodedDataLength;
 
