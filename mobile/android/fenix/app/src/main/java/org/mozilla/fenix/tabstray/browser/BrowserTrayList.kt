@@ -63,7 +63,7 @@ class BrowserTrayList @JvmOverloads constructor(
         TabsTouchHelper(
             observable = adapter as TabsAdapter,
             onViewHolderTouched = { swipeToDelete.isSwipeable },
-            onViewHolderDraw = { context.components.settings.listTabView }
+            onViewHolderDraw = { context.components.settings.gridTabView.not() }
         )
     }
 

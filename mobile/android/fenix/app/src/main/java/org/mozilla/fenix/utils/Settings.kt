@@ -321,14 +321,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
                 numberOfAppLaunches > APP_LAUNCHES_TO_SHOW_DEFAULT_BROWSER_CARD
     }
 
-    var listTabView by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_tab_view_list),
-        default = true
-    )
-
     var gridTabView by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_tab_view_grid),
-        default = false
+        default = true
     )
 
     var manuallyCloseTabs by booleanPreference(

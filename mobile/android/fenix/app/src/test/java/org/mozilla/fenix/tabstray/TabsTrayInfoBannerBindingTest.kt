@@ -80,7 +80,7 @@ class TabsTrayInfoBannerBindingTest {
     @Test
     fun `WHEN dismiss THEN auto close tabs info banner will not open tab settings`() {
         view.visibility = GONE
-        settings.listTabView = false
+        settings.gridTabView = true
 
         val binding =
             TabsTrayInfoBannerBinding(

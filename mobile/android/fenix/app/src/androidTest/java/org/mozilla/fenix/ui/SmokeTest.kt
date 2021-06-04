@@ -1096,7 +1096,6 @@ class SmokeTest {
             verifyExistingOpenTabs("Test_Page_1")
             verifyCloseTabsButton("Test_Page_1")
             verifyOpenedTabThumbnail()
-            verifyBrowserTabsTrayURL("localhost")
             verifyTabTrayOverflowMenu(true)
             verifyNewTabButton()
         }
