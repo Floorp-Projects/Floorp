@@ -2147,6 +2147,13 @@ class EditorBase : public nsIEditor,
                                            const EditorDOMPoint& aPointToInsert,
                                            bool aDoDeleteSelection);
 
+  /**
+   * Return true if the data is safe to insert as the source and destination
+   * principals match, or we are in a editor context where this doesn't matter.
+   * Otherwise, the data must be sanitized first.
+   */
+  bool IsSafeToInsertData(const Document* aSourceDoc) const;
+
  protected:  // Called by helper classes.
   /**
    * OnStartToHandleTopLevelEditSubAction() is called when
