@@ -538,6 +538,8 @@ static bool get_gles_status(EGLDisplay dpy,
         }
         free(renderDeviceName);
 #endif
+      } else {
+        record_value("MESA_ACCELERATED\nFALSE\n");
       }
     }
   }
