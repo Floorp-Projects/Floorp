@@ -168,95 +168,95 @@ class nsAHttpConnection : public nsISupports {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
 
-#define NS_DECL_NSAHTTPCONNECTION(fwdObject)                               \
-  [[nodiscard]] nsresult OnHeadersAvailable(                               \
-      nsAHttpTransaction*, nsHttpRequestHead*, nsHttpResponseHead*,        \
-      bool* reset) override;                                               \
-  void CloseTransaction(nsAHttpTransaction*, nsresult) override;           \
-  [[nodiscard]] nsresult TakeTransport(                                    \
-      nsISocketTransport**, nsIAsyncInputStream**, nsIAsyncOutputStream**) \
-      override;                                                            \
-  bool IsPersistent() override;                                            \
-  bool IsReused() override;                                                \
-  void DontReuse() override;                                               \
-  [[nodiscard]] nsresult PushBack(const char*, uint32_t) override;         \
-  already_AddRefed<HttpConnectionBase> TakeHttpConnection() override;      \
-  already_AddRefed<HttpConnectionBase> HttpConnection() override;          \
-  void TopBrowsingContextIdChanged(uint64_t id) override;                  \
-  /*                                                                       \
-     Thes methods below have automatic definitions that just forward the   \
-     function to a lower level connection object                           \
-  */                                                                       \
-  void GetConnectionInfo(nsHttpConnectionInfo** result) override {         \
-    if (!(fwdObject)) {                                                    \
-      *result = nullptr;                                                   \
-      return;                                                              \
-    }                                                                      \
-    return (fwdObject)->GetConnectionInfo(result);                         \
-  }                                                                        \
-  void GetSecurityInfo(nsISupports** result) override {                    \
-    if (!(fwdObject)) {                                                    \
-      *result = nullptr;                                                   \
-      return;                                                              \
-    }                                                                      \
-    return (fwdObject)->GetSecurityInfo(result);                           \
-  }                                                                        \
-  [[nodiscard]] nsresult ResumeSend() override {                           \
-    if (!(fwdObject)) return NS_ERROR_FAILURE;                             \
-    return (fwdObject)->ResumeSend();                                      \
-  }                                                                        \
-  [[nodiscard]] nsresult ResumeRecv() override {                           \
-    if (!(fwdObject)) return NS_ERROR_FAILURE;                             \
-    return (fwdObject)->ResumeRecv();                                      \
-  }                                                                        \
-  [[nodiscard]] nsresult ForceSend() override {                            \
-    if (!(fwdObject)) return NS_ERROR_FAILURE;                             \
-    return (fwdObject)->ForceSend();                                       \
-  }                                                                        \
-  [[nodiscard]] nsresult ForceRecv() override {                            \
-    if (!(fwdObject)) return NS_ERROR_FAILURE;                             \
-    return (fwdObject)->ForceRecv();                                       \
-  }                                                                        \
-  nsISocketTransport* Transport() override {                               \
-    if (!(fwdObject)) return nullptr;                                      \
-    return (fwdObject)->Transport();                                       \
-  }                                                                        \
-  HttpVersion Version() override {                                         \
-    return (fwdObject) ? (fwdObject)->Version()                            \
-                       : mozilla::net::HttpVersion::UNKNOWN;               \
-  }                                                                        \
-  bool IsProxyConnectInProgress() override {                               \
-    return (!fwdObject) ? false : (fwdObject)->IsProxyConnectInProgress(); \
-  }                                                                        \
-  bool LastTransactionExpectedNoContent() override {                       \
-    return (!fwdObject) ? false                                            \
-                        : (fwdObject)->LastTransactionExpectedNoContent(); \
-  }                                                                        \
-  void SetLastTransactionExpectedNoContent(bool val) override {            \
-    if (fwdObject) (fwdObject)->SetLastTransactionExpectedNoContent(val);  \
-  }                                                                        \
-  int64_t BytesWritten() override {                                        \
-    return fwdObject ? (fwdObject)->BytesWritten() : 0;                    \
-  }                                                                        \
-  void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) override {  \
-    if (fwdObject) (fwdObject)->SetSecurityCallbacks(aCallbacks);          \
-  }                                                                        \
-  void SetTrafficCategory(HttpTrafficCategory aCategory) override {        \
-    if (fwdObject) (fwdObject)->SetTrafficCategory(aCategory);             \
-  }                                                                        \
-  nsresult GetSelfAddr(NetAddr* addr) override {                           \
-    if (!(fwdObject)) return NS_ERROR_FAILURE;                             \
-    return (fwdObject)->GetSelfAddr(addr);                                 \
-  }                                                                        \
-  nsresult GetPeerAddr(NetAddr* addr) override {                           \
-    if (!(fwdObject)) return NS_ERROR_FAILURE;                             \
-    return (fwdObject)->GetPeerAddr(addr);                                 \
-  }                                                                        \
-  bool ResolvedByTRR() override {                                          \
-    return (!fwdObject) ? false : (fwdObject)->ResolvedByTRR();            \
-  }                                                                        \
-  bool GetEchConfigUsed() override {                                       \
-    return (!fwdObject) ? false : (fwdObject)->GetEchConfigUsed();         \
+#define NS_DECL_NSAHTTPCONNECTION(fwdObject)                                 \
+  [[nodiscard]] nsresult OnHeadersAvailable(                                 \
+      nsAHttpTransaction*, nsHttpRequestHead*, nsHttpResponseHead*,          \
+      bool* reset) override;                                                 \
+  void CloseTransaction(nsAHttpTransaction*, nsresult) override;             \
+  [[nodiscard]] nsresult TakeTransport(                                      \
+      nsISocketTransport**, nsIAsyncInputStream**, nsIAsyncOutputStream**)   \
+      override;                                                              \
+  bool IsPersistent() override;                                              \
+  bool IsReused() override;                                                  \
+  void DontReuse() override;                                                 \
+  [[nodiscard]] nsresult PushBack(const char*, uint32_t) override;           \
+  already_AddRefed<HttpConnectionBase> TakeHttpConnection() override;        \
+  already_AddRefed<HttpConnectionBase> HttpConnection() override;            \
+  void TopBrowsingContextIdChanged(uint64_t id) override;                    \
+  /*                                                                         \
+     Thes methods below have automatic definitions that just forward the     \
+     function to a lower level connection object                             \
+  */                                                                         \
+  void GetConnectionInfo(nsHttpConnectionInfo** result) override {           \
+    if (!(fwdObject)) {                                                      \
+      *result = nullptr;                                                     \
+      return;                                                                \
+    }                                                                        \
+    return (fwdObject)->GetConnectionInfo(result);                           \
+  }                                                                          \
+  void GetSecurityInfo(nsISupports** result) override {                      \
+    if (!(fwdObject)) {                                                      \
+      *result = nullptr;                                                     \
+      return;                                                                \
+    }                                                                        \
+    return (fwdObject)->GetSecurityInfo(result);                             \
+  }                                                                          \
+  [[nodiscard]] nsresult ResumeSend() override {                             \
+    if (!(fwdObject)) return NS_ERROR_FAILURE;                               \
+    return (fwdObject)->ResumeSend();                                        \
+  }                                                                          \
+  [[nodiscard]] nsresult ResumeRecv() override {                             \
+    if (!(fwdObject)) return NS_ERROR_FAILURE;                               \
+    return (fwdObject)->ResumeRecv();                                        \
+  }                                                                          \
+  [[nodiscard]] nsresult ForceSend() override {                              \
+    if (!(fwdObject)) return NS_ERROR_FAILURE;                               \
+    return (fwdObject)->ForceSend();                                         \
+  }                                                                          \
+  [[nodiscard]] nsresult ForceRecv() override {                              \
+    if (!(fwdObject)) return NS_ERROR_FAILURE;                               \
+    return (fwdObject)->ForceRecv();                                         \
+  }                                                                          \
+  nsISocketTransport* Transport() override {                                 \
+    if (!(fwdObject)) return nullptr;                                        \
+    return (fwdObject)->Transport();                                         \
+  }                                                                          \
+  HttpVersion Version() override {                                           \
+    return (fwdObject) ? (fwdObject)->Version()                              \
+                       : mozilla::net::HttpVersion::UNKNOWN;                 \
+  }                                                                          \
+  bool IsProxyConnectInProgress() override {                                 \
+    return (!(fwdObject)) ? false : (fwdObject)->IsProxyConnectInProgress(); \
+  }                                                                          \
+  bool LastTransactionExpectedNoContent() override {                         \
+    return (!(fwdObject)) ? false                                            \
+                          : (fwdObject)->LastTransactionExpectedNoContent(); \
+  }                                                                          \
+  void SetLastTransactionExpectedNoContent(bool val) override {              \
+    if (fwdObject) (fwdObject)->SetLastTransactionExpectedNoContent(val);    \
+  }                                                                          \
+  int64_t BytesWritten() override {                                          \
+    return (fwdObject) ? (fwdObject)->BytesWritten() : 0;                    \
+  }                                                                          \
+  void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) override {    \
+    if (fwdObject) (fwdObject)->SetSecurityCallbacks(aCallbacks);            \
+  }                                                                          \
+  void SetTrafficCategory(HttpTrafficCategory aCategory) override {          \
+    if (fwdObject) (fwdObject)->SetTrafficCategory(aCategory);               \
+  }                                                                          \
+  nsresult GetSelfAddr(NetAddr* addr) override {                             \
+    if (!(fwdObject)) return NS_ERROR_FAILURE;                               \
+    return (fwdObject)->GetSelfAddr(addr);                                   \
+  }                                                                          \
+  nsresult GetPeerAddr(NetAddr* addr) override {                             \
+    if (!(fwdObject)) return NS_ERROR_FAILURE;                               \
+    return (fwdObject)->GetPeerAddr(addr);                                   \
+  }                                                                          \
+  bool ResolvedByTRR() override {                                            \
+    return (!(fwdObject)) ? false : (fwdObject)->ResolvedByTRR();            \
+  }                                                                          \
+  bool GetEchConfigUsed() override {                                         \
+    return (!(fwdObject)) ? false : (fwdObject)->GetEchConfigUsed();         \
   }
 
 // ThrottleResponse deliberately ommited since we want different implementation

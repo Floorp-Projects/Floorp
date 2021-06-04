@@ -16,7 +16,7 @@ class UrlClassifierFeatureFlash final : public UrlClassifierFeatureBase {
  public:
   struct FlashFeature;
 
-  static void GetFeatureNames(nsTArray<nsCString>& aNames);
+  static void GetFeatureNames(nsTArray<nsCString>& aArray);
 
   static void MaybeShutdown();
 

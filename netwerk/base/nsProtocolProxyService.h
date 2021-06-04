@@ -25,7 +25,7 @@ class nsISystemProxySettings;
 namespace mozilla {
 namespace net {
 
-typedef nsTHashMap<nsCStringHashKey, uint32_t> nsFailedProxyTable;
+using nsFailedProxyTable = nsTHashMap<nsCStringHashKey, uint32_t>;
 
 class nsPACMan;
 class nsProxyInfo;
@@ -90,7 +90,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    *        This can be the name of a fully-qualified preference, or it can
    *        be null, in which case all preferences will be initialized.
    */
-  void PrefsChanged(nsIPrefBranch* prefs, const char* name);
+  void PrefsChanged(nsIPrefBranch* prefBranch, const char* pref);
 
   /**
    * This method is called to create a nsProxyInfo instance from the given
@@ -108,7 +108,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    *
    * @return A pointer beyond the parsed proxy string (never null).
    */
-  const char* ExtractProxyInfo(const char* proxy, uint32_t aResolveFlags,
+  const char* ExtractProxyInfo(const char* start, uint32_t aResolveFlags,
                                nsProxyInfo** result);
 
   /**
@@ -117,7 +117,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param pacURI
    *        The URI spec of the PAC file to load.
    */
-  nsresult ConfigureFromPAC(const nsCString& pacURI, bool forceReload);
+  nsresult ConfigureFromPAC(const nsCString& spec, bool forceReload);
 
   /**
    * This method builds a list of nsProxyInfo objects from the given PAC-
@@ -143,7 +143,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param result
    *        Upon return, this parameter holds the generated key.
    */
-  void GetProxyKey(nsProxyInfo* pi, nsCString& result);
+  void GetProxyKey(nsProxyInfo* pi, nsCString& key);
 
   /**
    * @return Seconds since start of session.
@@ -187,7 +187,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    *        of structure when you call this method.  This parameter must not
    *        be null.
    */
-  nsresult GetProtocolInfo(nsIURI* uri, nsProtocolInfo* result);
+  nsresult GetProtocolInfo(nsIURI* uri, nsProtocolInfo* info);
 
   /**
    * This method is an internal version nsIProtocolProxyService::newProxyInfo
@@ -220,8 +220,8 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
                                  const nsACString& aProxyAuthorizationHeader,
                                  const nsACString& aConnectionIsolationKey,
                                  uint32_t flags, uint32_t timeout,
-                                 nsIProxyInfo* next, uint32_t aResolveFlags,
-                                 nsIProxyInfo** result);
+                                 nsIProxyInfo* aFailoverProxy,
+                                 uint32_t aResolveFlags, nsIProxyInfo** result);
 
   /**
    * This method is an internal version of Resolve that does not query PAC.
@@ -258,7 +258,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * asynchronously) to provide the updated proxyinfo list.
    */
   bool ApplyFilter(FilterLink const* filterLink, nsIChannel* channel,
-                   const nsProtocolInfo& info, nsCOMPtr<nsIProxyInfo> proxyInfo,
+                   const nsProtocolInfo& info, nsCOMPtr<nsIProxyInfo> list,
                    nsIProxyProtocolFilterResult* callback);
 
   /**
@@ -270,7 +270,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param proxyInfo
    *        The proxy info list to be modified.  This is an inout param.
    */
-  void PruneProxyInfo(const nsProtocolInfo& info, nsIProxyInfo** proxyInfo);
+  void PruneProxyInfo(const nsProtocolInfo& info, nsIProxyInfo** list);
 
   /**
    * This method is a simple wrapper around PruneProxyInfo that takes the
@@ -290,7 +290,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param hostFilters
    *        A "no-proxy-for" exclusion list.
    */
-  void LoadHostFilters(const nsACString& hostFilters);
+  void LoadHostFilters(const nsACString& aFilters);
 
   /**
    * This method checks the given URI against mHostFiltersArray.
@@ -344,7 +344,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
     bool is_ipaddr;
     int32_t port;
     union {
-      HostInfoIP ip;
+      HostInfoIP ip{};
       HostInfoName name;
     };
 

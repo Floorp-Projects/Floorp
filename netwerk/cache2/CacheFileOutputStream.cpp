@@ -12,8 +12,7 @@
 #include "mozilla/DebugOnly.h"
 #include <algorithm>
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 NS_IMPL_ADDREF(CacheFileOutputStream)
 NS_IMETHODIMP_(MozExternalRefCountType)
@@ -462,5 +461,4 @@ size_t CacheFileOutputStream::SizeOfIncludingThis(
   return mallocSizeOf(this);
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

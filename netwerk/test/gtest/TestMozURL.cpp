@@ -343,9 +343,7 @@ TEST(TestMozURL, UrlTestData)
       reader->parse(data.BeginReading(), data.EndReading(), &root, nullptr));
   ASSERT_TRUE(root.isArray());
 
-  for (uint32_t index = 0; index < root.size(); index++) {
-    const Json::Value& item = root[index];
-
+  for (auto& item : root) {
     if (!item.isObject()) {
       continue;
     }

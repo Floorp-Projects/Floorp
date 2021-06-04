@@ -27,7 +27,7 @@ class CacheFileChunkBuffer {
 
   explicit CacheFileChunkBuffer(CacheFileChunk* aChunk);
 
-  nsresult EnsureBufSize(uint32_t aSize);
+  nsresult EnsureBufSize(uint32_t aBufSize);
   void CopyFrom(CacheFileChunkBuffer* aOther);
   nsresult FillInvalidRanges(CacheFileChunkBuffer* aOther,
                              CacheFileUtils::ValidityMap* aMap);

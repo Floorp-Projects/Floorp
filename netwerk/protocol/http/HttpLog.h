@@ -53,7 +53,7 @@ extern LazyLogModule gHttpLog;
   MOZ_LOG(mozilla::net::gHttpLog, mozilla::LogLevel::Verbose, args)
 #define LOG(args) LOG4(args)
 #define LOGTIME(start, args) \
-  MOZ_LOG_TIME(mozilla::net::gHttpLog, mozilla::LogLevel::Debug, &start, args)
+  MOZ_LOG_TIME(mozilla::net::gHttpLog, mozilla::LogLevel::Debug, &(start), args)
 
 #define LOG1_ENABLED() \
   MOZ_LOG_TEST(mozilla::net::gHttpLog, mozilla::LogLevel::Error)

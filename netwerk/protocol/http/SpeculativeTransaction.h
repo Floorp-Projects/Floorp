@@ -52,7 +52,7 @@ class SpeculativeTransaction : public NullHttpTransaction {
   void InvokeCallback();
 
  protected:
-  virtual ~SpeculativeTransaction();
+  virtual ~SpeculativeTransaction() = default;
 
  private:
   Maybe<uint32_t> mParallelSpeculativeConnectLimit;

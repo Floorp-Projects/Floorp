@@ -44,7 +44,7 @@ static nsresult ToUTF8(const nsACString& aString, const nsACString& aCharset,
     return NS_ERROR_INVALID_ARG;
   }
 
-  auto encoding = Encoding::ForLabelNoReplacement(aCharset);
+  const auto* encoding = Encoding::ForLabelNoReplacement(aCharset);
   if (!encoding) {
     return NS_ERROR_UCONV_NOCONV;
   }
@@ -168,8 +168,9 @@ nsresult nsMIMEHeaderParamImpl::DoGetParameter(
     return NS_OK;
   }
 
-  if (aTryLocaleCharset && !NS_IsNativeUTF8())
+  if (aTryLocaleCharset && !NS_IsNativeUTF8()) {
     return NS_CopyNativeToUnicode(str1, aResult);
+  }
 
   CopyASCIItoUTF16(str1, aResult);
   return NS_OK;
@@ -402,16 +403,18 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
   const char* str = aHeaderValue;
 
   // skip leading white space.
-  for (; *str && nsCRT::IsAsciiSpace(*str); ++str)
+  for (; *str && nsCRT::IsAsciiSpace(*str); ++str) {
     ;
+  }
   const char* start = str;
 
   // aParamName is empty. return the first (possibly) _unnamed_ 'parameter'
   // For instance, return 'inline' in the following case:
   // Content-Disposition: inline; filename=.....
   if (!aParamName || !*aParamName) {
-    for (; *str && *str != ';' && !nsCRT::IsAsciiSpace(*str); ++str)
+    for (; *str && *str != ';' && !nsCRT::IsAsciiSpace(*str); ++str) {
       ;
+    }
     if (str == start) return NS_ERROR_FIRST_HEADER_FIELD_COMPONENT_EMPTY;
 
     *aResult = (char*)moz_xmemdup(start, (str - start) + 1);
@@ -420,12 +423,14 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
   }
 
   /* Skip forward to first ';' */
-  for (; *str && *str != ';' && *str != ','; ++str)
+  for (; *str && *str != ';' && *str != ','; ++str) {
     ;
+  }
   if (*str) str++;
   /* Skip over following whitespace */
-  for (; *str && nsCRT::IsAsciiSpace(*str); ++str)
+  for (; *str && nsCRT::IsAsciiSpace(*str); ++str) {
     ;
+  }
 
   // Some broken http servers just specify parameters
   // like 'filename' without specifying disposition
@@ -475,8 +480,9 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
 
     // Skip forward to the end of this token.
     for (; *str && !nsCRT::IsAsciiSpace(*str) && *str != '=' && *str != ';';
-         str++)
+         str++) {
       ;
+    }
     nameEnd = str;
 
     int32_t nameLen = nameEnd - nameStart;
@@ -511,10 +517,11 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
       ++str;
       valueStart = str;
       for (valueEnd = str; *valueEnd; ++valueEnd) {
-        if (*valueEnd == '\\' && *(valueEnd + 1))
+        if (*valueEnd == '\\' && *(valueEnd + 1)) {
           ++valueEnd;
-        else if (*valueEnd == '"')
+        } else if (*valueEnd == '"') {
           break;
+        }
       }
       str = valueEnd;
       // *valueEnd != null means that *valueEnd is quote character.
@@ -684,15 +691,17 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
   if (caseBResult && !charsetB.IsEmpty()) {
     // check that the 2231/5987 result decodes properly given the
     // specified character set
-    if (!IsValidOctetSequenceForCharset(charsetB, caseBResult))
+    if (!IsValidOctetSequenceForCharset(charsetB, caseBResult)) {
       caseBResult = nullptr;
+    }
   }
 
   if (caseCDResult && !charsetCD.IsEmpty()) {
     // check that the 2231/5987 result decodes properly given the
     // specified character set
-    if (!IsValidOctetSequenceForCharset(charsetCD, caseCDResult))
+    if (!IsValidOctetSequenceForCharset(charsetCD, caseCDResult)) {
       caseCDResult = nullptr;
+    }
   }
 
   if (caseBResult) {
@@ -963,8 +972,9 @@ char* DecodeQ(const char* in, uint32_t length) {
     switch (*in) {
       case '=':
         // check if |in| in the form of '=hh'  where h is [0-9a-fA-F].
-        if (length < 3 || !ISHEXCHAR(in[1]) || !ISHEXCHAR(in[2]))
+        if (length < 3 || !ISHEXCHAR(in[1]) || !ISHEXCHAR(in[2])) {
           goto badsyntax;
+        }
         PR_sscanf(in + 1, "%2X", &c);
         *out++ = (char)c;
         in += 3;
@@ -1088,10 +1098,11 @@ void CopyRawHeader(const char* aInput, uint32_t aLen,
   } else {  // replace each octet with Unicode replacement char in UTF-8.
     for (uint32_t i = 0; i < aLen; i++) {
       c = uint8_t(*aInput++);
-      if (c & 0x80)
+      if (c & 0x80) {
         aOutput.Append(REPLACEMENT_CHAR);
-      else
+      } else {
         aOutput.Append(char(c));
+      }
     }
   }
 }
@@ -1101,9 +1112,9 @@ nsresult DecodeQOrBase64Str(const char* aEncoded, size_t aLen, char aQOrBase64,
   char* decodedText;
   bool b64alloc = false;
   NS_ASSERTION(aQOrBase64 == 'Q' || aQOrBase64 == 'B', "Should be 'Q' or 'B'");
-  if (aQOrBase64 == 'Q')
+  if (aQOrBase64 == 'Q') {
     decodedText = DecodeQ(aEncoded, aLen);
-  else if (aQOrBase64 == 'B') {
+  } else if (aQOrBase64 == 'B') {
     decodedText = PL_Base64Decode(aEncoded, aLen, nullptr);
     b64alloc = true;
   } else {

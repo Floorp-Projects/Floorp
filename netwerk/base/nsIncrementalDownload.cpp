@@ -53,8 +53,9 @@ static nsresult WriteToFile(nsIFile* lf, const char* data, uint32_t len,
   rv = lf->OpenNSPRFileDesc(flags, mode, &fd);
   if (NS_FAILED(rv)) return rv;
 
-  if (len)
+  if (len) {
     rv = PR_Write(fd, data, len) == int32_t(len) ? NS_OK : NS_ERROR_FAILURE;
+  }
 
   PR_Close(fd);
   return rv;
@@ -173,8 +174,9 @@ nsresult nsIncrementalDownload::FlushChunk() {
 void nsIncrementalDownload::UpdateProgress() {
   mLastProgressUpdate = PR_Now();
 
-  if (mProgressSink)
+  if (mProgressSink) {
     mProgressSink->OnProgress(this, mCurrentSize + mChunkLen, mTotalSize);
+  }
 }
 
 nsresult nsIncrementalDownload::CallOnStartRequest() {
@@ -527,9 +529,10 @@ nsIncrementalDownload::OnStartRequest(nsIRequest* request) {
       bool confirmedOK = false;
 
       rv = http->GetResponseHeader("Content-Range"_ns, buf);
-      if (NS_FAILED(rv))
+      if (NS_FAILED(rv)) {
         return rv;  // it isn't a useful 206 without a CONTENT-RANGE of some
-                    // sort
+      }
+      // sort
 
       // Content-Range: bytes 0-299999/25604694
       int32_t p = buf.Find("bytes ");
@@ -583,8 +586,9 @@ nsIncrementalDownload::OnStartRequest(nsIRequest* request) {
     rv = http->GetURI(getter_AddRefs(mFinalURI));
     if (NS_FAILED(rv)) return rv;
     Unused << http->GetResponseHeader("Etag"_ns, mPartialValidator);
-    if (StringBeginsWith(mPartialValidator, "W/"_ns))
+    if (StringBeginsWith(mPartialValidator, "W/"_ns)) {
       mPartialValidator.Truncate();  // don't use weak validators
+    }
     if (mPartialValidator.IsEmpty()) {
       rv = http->GetResponseHeader("Last-Modified"_ns, mPartialValidator);
       if (NS_FAILED(rv)) {
@@ -605,8 +609,10 @@ nsIncrementalDownload::OnStartRequest(nsIRequest* request) {
         NS_WARNING("server returned invalid Content-Range header!");
         return NS_ERROR_UNEXPECTED;
       }
-      if (PR_sscanf(buf.get() + slash + 1, "%lld", (int64_t*)&mTotalSize) != 1)
+      if (PR_sscanf(buf.get() + slash + 1, "%lld", (int64_t*)&mTotalSize) !=
+          1) {
         return NS_ERROR_UNEXPECTED;
+      }
     } else {
       rv = http->GetContentLength(&mTotalSize);
       if (NS_FAILED(rv)) return rv;
@@ -694,8 +700,9 @@ nsIncrementalDownload::OnDataAvailable(nsIRequest* request,
     }
   }
 
-  if (PR_Now() > mLastProgressUpdate + UPDATE_PROGRESS_INTERVAL)
+  if (PR_Now() > mLastProgressUpdate + UPDATE_PROGRESS_INTERVAL) {
     UpdateProgress();
+  }
 
   return NS_OK;
 }

@@ -219,10 +219,10 @@ class nsHttpConnection final : public HttpConnectionBase,
   void SetupSSL();
 
   // Start the Spdy transaction handler when NPN indicates spdy/*
-  void StartSpdy(nsISSLSocketControl* ssl, SpdyVersion versionLevel);
+  void StartSpdy(nsISSLSocketControl* ssl, SpdyVersion spdyVersion);
   // Like the above, but do the bare minimum to do 0RTT data, so we can back
   // it out, if necessary
-  void Start0RTTSpdy(SpdyVersion versionLevel);
+  void Start0RTTSpdy(SpdyVersion spdyVersion);
 
   // Helpers for Start*Spdy
   nsresult TryTakeSubTransactions(nsTArray<RefPtr<nsAHttpTransaction> >& list);
