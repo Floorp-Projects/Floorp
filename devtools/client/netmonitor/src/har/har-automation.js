@@ -64,19 +64,14 @@ HarAutomation.prototype = {
       [this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
       {
         onAvailable: resources => {
+          if (resources.find(r => r.name == "will-navigate")) {
+            this.pageLoadBegin();
+          }
           if (resources.find(r => r.name == "dom-complete")) {
             this.pageLoadDone();
           }
         },
         ignoreExistingResources: true,
-      }
-    );
-    await this.toolbox.commands.targetCommand.watchTargets(
-      [this.toolbox.commands.targetCommand.TYPES.FRAME],
-      ({ targetFront }) => {
-        if (targetFront.isTopLevel) {
-          targetFront.on("will-navigate", this.pageLoadBegin.bind(this));
-        }
       }
     );
   },
