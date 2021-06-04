@@ -581,9 +581,9 @@ mochitest-webgl1-core:
         by-test-platform:
             .*-ccov.*/.*: []
             android.*: []
-            linux.*64-qr/debug: ['fission', 'webrender-sw', 'webgl-ipc', 'wayland']
-            (linux.*64|macosx.*64|windows10-64)(-shippable)?-qr/(debug|opt): ['fission', 'webgl-ipc']
-            linux.*64-asan-qr/opt: ['fission', 'webgl-ipc']
+            linux.*64-qr/debug: ['fission', 'fission-webgl-ipc', 'webrender-sw', 'webgl-ipc', 'wayland']
+            (linux.*64|macosx.*64|windows10-64)(-shippable)?-qr/(debug|opt): ['fission', 'fission-webgl-ipc', 'webgl-ipc']
+            linux.*64-asan-qr/opt: ['fission', 'fission-webgl-ipc', 'webgl-ipc']
             default: ['webgl-ipc']
     e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
