@@ -10,6 +10,12 @@
 menupopup,
 panel {
   min-width: 1px;
+  --panel-padding: 0;
+  --panel-color: MenuText;
+  --panel-background: Menu;
+  --panel-border-radius: 0;
+  --panel-border-color: ThreeDShadow;
+  --panel-width: initial;
 }
 
 /* ::::: arrow panel ::::: */
@@ -32,12 +38,12 @@ panel[type="arrow"][side="right"] {
 :is(panel, menupopup)::part(content) {
   display: -moz-box;
   -moz-box-flex: 1;
-  padding: var(--panel-padding, 0);
-  color: var(--panel-color, MenuText);
-  background: var(--panel-background, Menu);
-  border-radius: var(--panel-border-radius, 0);
-  border: 1px solid var(--panel-border-color, ThreeDShadow);
-  width: var(--panel-width, initial);
+  padding: var(--panel-padding);
+  color: var(--panel-color);
+  background: var(--panel-background);
+  border-radius: var(--panel-border-radius);
+  border: 1px solid var(--panel-border-color);
+  width: var(--panel-width);
 }
 
 :is(panel, menupopup)[orient=vertical]::part(content) {

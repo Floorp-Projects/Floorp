@@ -814,6 +814,23 @@ class EditorBase : public nsIEditor,
   virtual bool CanPasteTransferable(nsITransferable* aTransferable) = 0;
 
   /**
+   * PasteAsAction() pastes clipboard content to Selection.  This method
+   * may dispatch ePaste event first.  If its defaultPrevent() is called,
+   * this does nothing but returns NS_OK.
+   *
+   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
+   *                            nsIClipboard::kSelectionClipboard.
+   * @param aDispatchPasteEvent true if this should dispatch ePaste event
+   *                            before pasting.  Otherwise, false.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsAction(
+      int32_t aClipboardType, bool aDispatchPasteEvent,
+      nsIPrincipal* aPrincipal = nullptr) = 0;
+
+  /**
    * Paste aTransferable at Selection.
    *
    * @param aTransferable       Must not be nullptr.
@@ -2120,6 +2137,40 @@ class EditorBase : public nsIEditor,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult
   InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) = 0;
 
+  /**
+   * PrepareInsertContent() is a helper method of InsertTextAt(),
+   * HTMLEditor::HTMLWithContextInserter::Run().  They insert content coming
+   * from clipboard or drag and drop.  Before that, they may need to remove
+   * selected contents and adjust selection.  This does them instead.
+   *
+   * @param aPointToInsert      Point to insert.  Must be set.  Callers
+   *                            shouldn't use this instance after calling this
+   *                            method because this method may cause changing
+   *                            the DOM tree and Selection.
+   * @param aDoDeleteSelection  true if selected content should be removed.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult PrepareToInsertContent(
+      const EditorDOMPoint& aPointToInsert, bool aDoDeleteSelection);
+
+  /**
+   * InsertTextAt() inserts aStringToInsert at aPointToInsert.
+   *
+   * @param aStringToInsert     The string which you want to insert.
+   * @param aPointToInsert      The insertion point.
+   * @param aDoDeleteSelection  true if you want this to delete selected
+   *                            content.  Otherwise, false.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTextAt(const nsAString& aStringToInsert,
+                                           const EditorDOMPoint& aPointToInsert,
+                                           bool aDoDeleteSelection);
+
+  /**
+   * Return true if the data is safe to insert as the source and destination
+   * principals match, or we are in a editor context where this doesn't matter.
+   * Otherwise, the data must be sanitized first.
+   */
+  bool IsSafeToInsertData(const Document* aSourceDoc) const;
+
  protected:  // Called by helper classes.
   /**
    * OnStartToHandleTopLevelEditSubAction() is called when
@@ -2430,6 +2481,13 @@ class EditorBase : public nsIEditor,
     MOZ_ASSERT_UNREACHABLE("Invalid nsIEditor::EDirection value");
     return HowToHandleCollapsedRange::Ignore;
   }
+
+  /**
+   * DeleteSelectionByDragAsAction() removes selection and dispatch "input"
+   * event whose inputType is "deleteByDrag".
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteSelectionByDragAsAction(bool aDispatchInputEvent);
 
   /**
    * DeleteSelectionWithTransaction() removes selected content or content

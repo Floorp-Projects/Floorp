@@ -18,13 +18,8 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
   const browser = ui.getViewportBrowser();
 
   for (const mv in [true, false]) {
-    const reloadNeeded = await ui.updateTouchSimulation(mv);
-    if (reloadNeeded) {
-      info("Reload is needed -- waiting for it.");
-      const reload = waitForViewportLoad(ui);
-      browser.reload();
-      await reload;
-    }
+    await ui.updateTouchSimulation(mv);
+
     info("Setting focus on the browser.");
     browser.focus();
 

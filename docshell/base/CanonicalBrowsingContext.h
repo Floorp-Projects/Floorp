@@ -11,6 +11,7 @@
 #include "mozilla/dom/MediaControlKeySource.h"
 #include "mozilla/dom/BrowsingContextWebProgress.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStoreRestoreData.h"
 #include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/ipc/IdType.h"
@@ -47,7 +48,6 @@ class FeaturePolicy;
 struct LoadURIOptions;
 class MediaController;
 struct LoadingSessionHistoryInfo;
-class SessionHistoryEntry;
 class SSCacheCopy;
 class WindowGlobalParent;
 
@@ -58,6 +58,7 @@ struct RemotenessChangeOptions {
   bool mReplaceBrowsingContext = false;
   uint64_t mSpecificGroupId = 0;
   bool mTryUseBFCache = false;
+  RefPtr<SessionHistoryEntry> mActiveSessionHistoryEntry;
 };
 
 // CanonicalBrowsingContext is a BrowsingContext living in the parent
@@ -322,6 +323,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     mPriorityActive = aIsActive;
   }
 
+  void SetTouchEventsOverride(dom::TouchEventsOverride, ErrorResult& aRv);
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -462,6 +465,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   RefPtr<nsSecureBrowserUI> mSecureBrowserUI;
   RefPtr<BrowsingContextWebProgress> mWebProgress;
+
+  nsCOMPtr<nsIWebProgressListener> mDocShellProgressBridge;
   RefPtr<nsBrowserStatusFilter> mStatusFilter;
 
   RefPtr<FeaturePolicy> mContainerFeaturePolicy;

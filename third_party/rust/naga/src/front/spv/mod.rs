@@ -31,20 +31,21 @@ mod error;
 mod flow;
 mod function;
 mod image;
+mod null;
 
 use convert::*;
-use error::Error;
+pub use error::Error;
 use flow::*;
 use function::*;
 
 use crate::{
     arena::{Arena, Handle},
-    FastHashMap, FastHashSet,
+    FastHashMap,
 };
 
 use num_traits::cast::FromPrimitive;
 use petgraph::graphmap::GraphMap;
-use std::{convert::TryInto, num::NonZeroU32, path::PathBuf};
+use std::{convert::TryInto, mem, num::NonZeroU32, path::PathBuf};
 
 pub const SUPPORTED_CAPABILITIES: &[spirv::Capability] = &[
     spirv::Capability::Shader,
@@ -64,11 +65,17 @@ pub const SUPPORTED_CAPABILITIES: &[spirv::Capability] = &[
     spirv::Capability::StorageImageExtendedFormats,
     spirv::Capability::Sampled1D,
     spirv::Capability::SampledCubeArray,
+    spirv::Capability::Int8,
+    spirv::Capability::Int16,
+    spirv::Capability::Int64,
     // tricky ones
     spirv::Capability::UniformBufferArrayDynamicIndexing,
     spirv::Capability::StorageBufferArrayDynamicIndexing,
 ];
-pub const SUPPORTED_EXTENSIONS: &[&str] = &["SPV_KHR_vulkan_memory_model"];
+pub const SUPPORTED_EXTENSIONS: &[&str] = &[
+    "SPV_KHR_storage_buffer_storage_class",
+    "SPV_KHR_vulkan_memory_model",
+];
 pub const SUPPORTED_EXT_SETS: &[&str] = &["GLSL.std.450"];
 
 #[derive(Copy, Clone)]
@@ -185,6 +192,28 @@ impl crate::ImageDimension {
     }
 }
 
+//TODO: should this be shared with `crate::proc::wgsl::layout` logic?
+fn get_alignment(ty: Handle<crate::Type>, arena: &Arena<crate::Type>) -> crate::Alignment {
+    use crate::TypeInner as Ti;
+    match arena[ty].inner {
+        Ti::Scalar { width, .. } => crate::Alignment::new(width as u32).unwrap(),
+        Ti::Vector { size, width, .. }
+        | Ti::Matrix {
+            rows: size, width, ..
+        } => {
+            let count = if size >= crate::VectorSize::Tri { 4 } else { 2 };
+            crate::Alignment::new((count * width) as u32).unwrap()
+        }
+        Ti::Pointer { .. } | Ti::ValuePointer { .. } => crate::Alignment::new(1).unwrap(),
+        Ti::Array { stride, .. } => crate::Alignment::new(stride).unwrap(),
+        Ti::Struct { ref level, .. } => match *level {
+            crate::StructLevel::Root => crate::Alignment::new(1).unwrap(),
+            crate::StructLevel::Normal { alignment } => alignment,
+        },
+        Ti::Image { .. } | Ti::Sampler { .. } => crate::Alignment::new(1).unwrap(),
+    }
+}
+
 type MemberIndex = u32;
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -256,7 +285,11 @@ impl Decoration {
                 interpolation,
                 sampling,
                 ..
-            } => Ok(crate::Binding::Location { location, interpolation, sampling }),
+            } => Ok(crate::Binding::Location {
+                location,
+                interpolation,
+                sampling,
+            }),
             _ => Err(Error::MissingDecoration(spirv::Decoration::Location)),
         }
     }
@@ -331,6 +364,7 @@ struct Assignment {
     value: Handle<crate::Expression>,
 }
 
+#[derive(PartialEq)]
 enum ExtendedClass {
     Global(crate::StorageClass),
     Input,
@@ -343,6 +377,8 @@ pub struct Options {
     /// so by default we flip the Y coordinate of the `BuiltIn::Position`.
     /// This flag can be used to avoid this.
     pub adjust_coordinate_space: bool,
+    /// Only allow shaders with the known set of capabilities.
+    pub strict_capabilities: bool,
     pub flow_graph_dump_prefix: Option<PathBuf>,
 }
 
@@ -350,6 +386,7 @@ impl Default for Options {
     fn default() -> Self {
         Options {
             adjust_coordinate_space: true,
+            strict_capabilities: false,
             flow_graph_dump_prefix: None,
         }
     }
@@ -366,7 +403,7 @@ pub struct Parser<I> {
     handle_sampling: FastHashMap<Handle<crate::GlobalVariable>, image::SamplingFlags>,
     lookup_type: FastHashMap<spirv::Word, LookupType>,
     lookup_void_type: Option<spirv::Word>,
-    lookup_storage_buffer_types: FastHashSet<Handle<crate::Type>>,
+    lookup_storage_buffer_types: FastHashMap<Handle<crate::Type>, crate::StorageAccess>,
     // Lookup for samplers and sampled images, storing flags on how they are used.
     lookup_constant: FastHashMap<spirv::Word, LookupConstant>,
     lookup_variable: FastHashMap<spirv::Word, LookupVariable>,
@@ -403,7 +440,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             lookup_member: FastHashMap::default(),
             lookup_type: FastHashMap::default(),
             lookup_void_type: None,
-            lookup_storage_buffer_types: FastHashSet::default(),
+            lookup_storage_buffer_types: FastHashMap::default(),
             lookup_constant: FastHashMap::default(),
             lookup_variable: FastHashMap::default(),
             lookup_expression: FastHashMap::default(),
@@ -589,6 +626,57 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         Ok(())
     }
 
+    /// A more complicated version of the binary op,
+    /// where we force the operand to have the same type as the result.
+    /// This is mostly needed for "i++" and "i--" coming from GLSL.
+    fn parse_expr_binary_op_sign_adjusted(
+        &mut self,
+        expressions: &mut Arena<crate::Expression>,
+        op: crate::BinaryOperator,
+        types: &Arena<crate::Type>,
+    ) -> Result<(), Error> {
+        let result_type_id = self.next()?;
+        let result_id = self.next()?;
+        let p1_id = self.next()?;
+        let p2_id = self.next()?;
+
+        let p1_lexp = self.lookup_expression.lookup(p1_id)?;
+        let p2_lexp = self.lookup_expression.lookup(p2_id)?;
+        let result_lookup_ty = self.lookup_type.lookup(result_type_id)?;
+        let kind = types[result_lookup_ty.handle].inner.scalar_kind().unwrap();
+
+        let expr = crate::Expression::Binary {
+            op,
+            left: if p1_lexp.type_id == result_type_id {
+                p1_lexp.handle
+            } else {
+                expressions.append(crate::Expression::As {
+                    expr: p1_lexp.handle,
+                    kind,
+                    convert: None,
+                })
+            },
+            right: if p2_lexp.type_id == result_type_id {
+                p2_lexp.handle
+            } else {
+                expressions.append(crate::Expression::As {
+                    expr: p2_lexp.handle,
+                    kind,
+                    convert: None,
+                })
+            },
+        };
+
+        self.lookup_expression.insert(
+            result_id,
+            LookupExpression {
+                handle: expressions.append(expr),
+                type_id: result_type_id,
+            },
+        );
+        Ok(())
+    }
+
     fn parse_expr_shift_op(
         &mut self,
         expressions: &mut Arena<crate::Expression>,
@@ -605,7 +693,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let p2_handle = expressions.append(crate::Expression::As {
             expr: p2_lexp.handle,
             kind: crate::ScalarKind::Uint,
-            convert: false,
+            convert: None,
         });
 
         let expr = crate::Expression::Binary {
@@ -711,8 +799,8 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         function_id: spirv::Word,
         expressions: &mut Arena<crate::Expression>,
         local_arena: &mut Arena<crate::LocalVariable>,
+        const_arena: &mut Arena<crate::Constant>,
         type_arena: &Arena<crate::Type>,
-        const_arena: &Arena<crate::Constant>,
         global_arena: &Arena<crate::GlobalVariable>,
     ) -> Result<ControlFlowNode, Error> {
         let mut block = Vec::new();
@@ -821,7 +909,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         },
                     );
                 }
-                Op::AccessChain => {
+                Op::AccessChain | Op::InBoundsAccessChain => {
                     struct AccessExpression {
                         base_handle: Handle<crate::Expression>,
                         type_id: spirv::Word,
@@ -905,29 +993,34 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                                     },
                                 }
                             }
-                            // we can't dynamically index matrices, so expecting constant index here
                             crate::TypeInner::Matrix { .. } => {
-                                let index = index_maybe
-                                    .ok_or_else(|| Error::InvalidAccess(index_expr_data.clone()))?;
                                 let load_override = match acex.load_override {
                                     // We are indexing inside a row-major matrix
                                     Some(LookupLoadOverride::Loaded(load_expr)) => {
-                                        let sub_expr =
+                                        let index = index_maybe.ok_or_else(|| {
+                                            Error::InvalidAccess(index_expr_data.clone())
+                                        })?;
+                                        let sub_handle =
                                             expressions.append(crate::Expression::AccessIndex {
                                                 base: load_expr,
                                                 index,
                                             });
-                                        Some(LookupLoadOverride::Loaded(sub_expr))
+                                        Some(LookupLoadOverride::Loaded(sub_handle))
                                     }
                                     _ => None,
                                 };
+                                let sub_expr = match index_maybe {
+                                    Some(index) => crate::Expression::AccessIndex {
+                                        base: acex.base_handle,
+                                        index,
+                                    },
+                                    None => crate::Expression::Access {
+                                        base: acex.base_handle,
+                                        index: index_expr.handle,
+                                    },
+                                };
                                 AccessExpression {
-                                    base_handle: expressions.append(
-                                        crate::Expression::AccessIndex {
-                                            base: acex.base_handle,
-                                            index,
-                                        },
-                                    ),
+                                    base_handle: expressions.append(sub_expr),
                                     type_id: type_lookup
                                         .base_id
                                         .ok_or(Error::InvalidAccessType(acex.type_id))?,
@@ -1251,11 +1344,27 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     inst.expect(4)?;
                     self.parse_expr_unary_op(expressions, crate::UnaryOperator::Negate)?;
                 }
-                Op::IAdd | Op::FAdd => {
+                Op::IAdd => {
+                    inst.expect(5)?;
+                    self.parse_expr_binary_op_sign_adjusted(
+                        expressions,
+                        crate::BinaryOperator::Add,
+                        type_arena,
+                    )?;
+                }
+                Op::FAdd => {
                     inst.expect(5)?;
                     self.parse_expr_binary_op(expressions, crate::BinaryOperator::Add)?;
                 }
-                Op::ISub | Op::FSub => {
+                Op::ISub => {
+                    inst.expect(5)?;
+                    self.parse_expr_binary_op_sign_adjusted(
+                        expressions,
+                        crate::BinaryOperator::Subtract,
+                        type_arena,
+                    )?;
+                }
+                Op::FSub => {
                     inst.expect(5)?;
                     self.parse_expr_binary_op(expressions, crate::BinaryOperator::Subtract)?;
                 }
@@ -1323,6 +1432,29 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         },
                     );
                 }
+                Op::OuterProduct => {
+                    inst.expect(5)?;
+
+                    let result_type_id = self.next()?;
+                    let result_id = self.next()?;
+                    let left_id = self.next()?;
+                    let right_id = self.next()?;
+                    let left_lexp = self.lookup_expression.lookup(left_id)?;
+                    let right_lexp = self.lookup_expression.lookup(right_id)?;
+                    let expr = crate::Expression::Math {
+                        fun: crate::MathFunction::Outer,
+                        arg: left_lexp.handle,
+                        arg1: Some(right_lexp.handle),
+                        arg2: None,
+                    };
+                    self.lookup_expression.insert(
+                        result_id,
+                        LookupExpression {
+                            handle: expressions.append(expr),
+                            type_id: result_type_id,
+                        },
+                    );
+                }
                 // Bitwise instructions
                 Op::Not => {
                     inst.expect(4)?;
@@ -1373,19 +1505,37 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     let extra = inst.expect_at_least(5)?;
                     self.parse_image_load(extra, type_arena, global_arena, expressions)?;
                 }
-                Op::ImageSampleImplicitLod
-                | Op::ImageSampleExplicitLod
-                | Op::ImageSampleProjImplicitLod
-                | Op::ImageSampleProjExplicitLod => {
+                Op::ImageSampleImplicitLod | Op::ImageSampleExplicitLod => {
                     let extra = inst.expect_at_least(5)?;
-                    self.parse_image_sample(extra, type_arena, global_arena, expressions)?;
+                    let options = image::SamplingOptions {
+                        compare: false,
+                        project: false,
+                    };
+                    self.parse_image_sample(extra, options, type_arena, global_arena, expressions)?;
                 }
-                Op::ImageSampleDrefImplicitLod
-                | Op::ImageSampleDrefExplicitLod
-                | Op::ImageSampleProjDrefImplicitLod
-                | Op::ImageSampleProjDrefExplicitLod => {
+                Op::ImageSampleProjImplicitLod | Op::ImageSampleProjExplicitLod => {
+                    let extra = inst.expect_at_least(5)?;
+                    let options = image::SamplingOptions {
+                        compare: false,
+                        project: true,
+                    };
+                    self.parse_image_sample(extra, options, type_arena, global_arena, expressions)?;
+                }
+                Op::ImageSampleDrefImplicitLod | Op::ImageSampleDrefExplicitLod => {
                     let extra = inst.expect_at_least(6)?;
-                    self.parse_image_sample_dref(extra, type_arena, global_arena, expressions)?;
+                    let options = image::SamplingOptions {
+                        compare: true,
+                        project: false,
+                    };
+                    self.parse_image_sample(extra, options, type_arena, global_arena, expressions)?;
+                }
+                Op::ImageSampleProjDrefImplicitLod | Op::ImageSampleProjDrefExplicitLod => {
+                    let extra = inst.expect_at_least(6)?;
+                    let options = image::SamplingOptions {
+                        compare: true,
+                        project: true,
+                    };
+                    self.parse_image_sample(extra, options, type_arena, global_arena, expressions)?;
                 }
                 Op::ImageQuerySize => {
                     inst.expect(4)?;
@@ -1438,41 +1588,78 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
                     let v1_lexp = self.lookup_expression.lookup(v1_id)?;
                     let v1_lty = self.lookup_type.lookup(v1_lexp.type_id)?;
+                    let v1_handle = v1_lexp.handle;
                     let n1 = match type_arena[v1_lty.handle].inner {
-                        crate::TypeInner::Vector { size, .. } => size as u8,
+                        crate::TypeInner::Vector { size, .. } => size as u32,
                         _ => return Err(Error::InvalidInnerType(v1_lexp.type_id)),
                     };
-                    let v1_handle = v1_lexp.handle;
                     let v2_lexp = self.lookup_expression.lookup(v2_id)?;
                     let v2_lty = self.lookup_type.lookup(v2_lexp.type_id)?;
+                    let v2_handle = v2_lexp.handle;
                     let n2 = match type_arena[v2_lty.handle].inner {
-                        crate::TypeInner::Vector { size, .. } => size as u8,
+                        crate::TypeInner::Vector { size, .. } => size as u32,
                         _ => return Err(Error::InvalidInnerType(v2_lexp.type_id)),
                     };
-                    let v2_handle = v2_lexp.handle;
 
-                    let mut components = Vec::with_capacity(inst.wc as usize - 5);
-                    for _ in 0..components.capacity() {
-                        let index = self.next()?;
-                        let expr = if index < n1 as u32 {
-                            crate::Expression::AccessIndex {
-                                base: v1_handle,
-                                index,
-                            }
-                        } else if index < n1 as u32 + n2 as u32 {
-                            crate::Expression::AccessIndex {
-                                base: v2_handle,
-                                index: index - n1 as u32,
-                            }
-                        } else {
-                            return Err(Error::InvalidAccessIndex(index));
-                        };
-                        components.push(expressions.append(expr));
+                    self.temp_bytes.clear();
+                    let mut max_component = 0;
+                    for _ in 5..inst.wc as usize {
+                        let mut index = self.next()?;
+                        if index == !0 {
+                            // treat Undefined as X
+                            index = 0;
+                        }
+                        max_component = max_component.max(index);
+                        self.temp_bytes.push(index as u8);
                     }
-                    let expr = crate::Expression::Compose {
-                        ty: self.lookup_type.lookup(result_type_id)?.handle,
-                        components,
+
+                    // Check for swizzle first.
+                    let expr = if max_component < n1 {
+                        use crate::SwizzleComponent as Sc;
+                        let size = match self.temp_bytes.len() {
+                            2 => crate::VectorSize::Bi,
+                            3 => crate::VectorSize::Tri,
+                            _ => crate::VectorSize::Quad,
+                        };
+                        let mut pattern = [Sc::X; 4];
+                        for (pat, index) in pattern.iter_mut().zip(self.temp_bytes.drain(..)) {
+                            *pat = match index {
+                                0 => Sc::X,
+                                1 => Sc::Y,
+                                2 => Sc::Z,
+                                _ => Sc::W,
+                            };
+                        }
+                        crate::Expression::Swizzle {
+                            size,
+                            vector: v1_handle,
+                            pattern,
+                        }
+                    } else {
+                        // Fall back to access + compose
+                        let mut components = Vec::with_capacity(self.temp_bytes.len());
+                        for index in self.temp_bytes.drain(..).map(|i| i as u32) {
+                            let expr = if index < n1 {
+                                crate::Expression::AccessIndex {
+                                    base: v1_handle,
+                                    index,
+                                }
+                            } else if index < n1 + n2 {
+                                crate::Expression::AccessIndex {
+                                    base: v2_handle,
+                                    index: index - n1,
+                                }
+                            } else {
+                                return Err(Error::InvalidAccessIndex(index));
+                            };
+                            components.push(expressions.append(expr));
+                        }
+                        crate::Expression::Compose {
+                            ty: self.lookup_type.lookup(result_type_id)?.handle,
+                            components,
+                        }
                     };
+
                     self.lookup_expression.insert(
                         result_id,
                         LookupExpression {
@@ -1485,7 +1672,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 | Op::ConvertSToF
                 | Op::ConvertUToF
                 | Op::ConvertFToU
-                | Op::ConvertFToS => {
+                | Op::ConvertFToS
+                | Op::FConvert
+                | Op::UConvert
+                | Op::SConvert => {
                     inst.expect_at_least(4)?;
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
@@ -1493,15 +1683,21 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
                     let value_lexp = self.lookup_expression.lookup(value_id)?;
                     let ty_lookup = self.lookup_type.lookup(result_type_id)?;
-                    let kind = type_arena[ty_lookup.handle]
-                        .inner
-                        .scalar_kind()
-                        .ok_or(Error::InvalidAsType(ty_lookup.handle))?;
+                    let (kind, width) = match type_arena[ty_lookup.handle].inner {
+                        crate::TypeInner::Scalar { kind, width }
+                        | crate::TypeInner::Vector { kind, width, .. } => (kind, width),
+                        crate::TypeInner::Matrix { width, .. } => (crate::ScalarKind::Float, width),
+                        _ => return Err(Error::InvalidAsType(ty_lookup.handle)),
+                    };
 
                     let expr = crate::Expression::As {
                         expr: value_lexp.handle,
                         kind,
-                        convert: inst.op != Op::Bitcast,
+                        convert: if inst.op == Op::Bitcast {
+                            None
+                        } else {
+                            Some(width)
+                        },
                     };
                     self.lookup_expression.insert(
                         result_id,
@@ -1563,83 +1759,122 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     }
                     let inst_id = self.next()?;
                     let gl_op = Glo::from_u32(inst_id).ok_or(Error::UnsupportedExtInst(inst_id))?;
-                    let fun = match gl_op {
-                        Glo::Round => Mf::Round,
-                        Glo::Trunc => Mf::Trunc,
-                        Glo::FAbs | Glo::SAbs => Mf::Abs,
-                        Glo::FSign | Glo::SSign => Mf::Sign,
-                        Glo::Floor => Mf::Floor,
-                        Glo::Ceil => Mf::Ceil,
-                        Glo::Fract => Mf::Fract,
-                        Glo::Sin => Mf::Sin,
-                        Glo::Cos => Mf::Cos,
-                        Glo::Tan => Mf::Tan,
-                        Glo::Asin => Mf::Asin,
-                        Glo::Acos => Mf::Acos,
-                        Glo::Atan => Mf::Atan,
-                        Glo::Sinh => Mf::Sinh,
-                        Glo::Cosh => Mf::Cosh,
-                        Glo::Tanh => Mf::Tanh,
-                        Glo::Atan2 => Mf::Atan2,
-                        Glo::Pow => Mf::Pow,
-                        Glo::Exp => Mf::Exp,
-                        Glo::Log => Mf::Log,
-                        Glo::Exp2 => Mf::Exp2,
-                        Glo::Log2 => Mf::Log2,
-                        Glo::Sqrt => Mf::Sqrt,
-                        Glo::InverseSqrt => Mf::InverseSqrt,
-                        Glo::Determinant => Mf::Determinant,
-                        Glo::Modf => Mf::Modf,
-                        Glo::FMin | Glo::UMin | Glo::SMin | Glo::NMin => Mf::Min,
-                        Glo::FMax | Glo::UMax | Glo::SMax | Glo::NMax => Mf::Max,
-                        Glo::FClamp | Glo::UClamp | Glo::SClamp | Glo::NClamp => Mf::Clamp,
-                        Glo::FMix => Mf::Mix,
-                        Glo::Step => Mf::Step,
-                        Glo::SmoothStep => Mf::SmoothStep,
-                        Glo::Fma => Mf::Fma,
-                        Glo::Frexp => Mf::Frexp, //TODO: FrexpStruct?
-                        Glo::Ldexp => Mf::Ldexp,
-                        Glo::Length => Mf::Length,
-                        Glo::Distance => Mf::Distance,
-                        Glo::Cross => Mf::Cross,
-                        Glo::Normalize => Mf::Normalize,
-                        Glo::FaceForward => Mf::FaceForward,
-                        Glo::Reflect => Mf::Reflect,
-                        _ => return Err(Error::UnsupportedExtInst(inst_id)),
-                    };
 
-                    let arg_count = fun.argument_count();
-                    inst.expect(base_wc + arg_count as u16)?;
-                    let arg = {
-                        let arg_id = self.next()?;
-                        self.lookup_expression.lookup(arg_id)?.handle
-                    };
-                    let arg1 = if arg_count > 1 {
-                        let arg_id = self.next()?;
-                        Some(self.lookup_expression.lookup(arg_id)?.handle)
-                    } else {
-                        None
-                    };
-                    let arg2 = if arg_count > 2 {
-                        let arg_id = self.next()?;
-                        Some(self.lookup_expression.lookup(arg_id)?.handle)
-                    } else {
-                        None
-                    };
+                    if gl_op == Glo::Radians || gl_op == Glo::Degrees {
+                        inst.expect(base_wc + 1)?;
+                        let arg = {
+                            let arg_id = self.next()?;
+                            self.lookup_expression.lookup(arg_id)?.handle
+                        };
 
-                    let expr = crate::Expression::Math {
-                        fun,
-                        arg,
-                        arg1,
-                        arg2,
-                    };
-                    self.lookup_expression.insert(
-                        result_id,
-                        LookupExpression {
-                            handle: expressions.append(expr),
-                            type_id: result_type_id,
-                        },
-                    );
+                        let constant_handle = const_arena.fetch_or_append(crate::Constant {
+                            name: None,
+                            specialization: None,
+                            inner: crate::ConstantInner::Scalar {
+                                width: 4,
+                                value: crate::ScalarValue::Float(match gl_op {
+                                    Glo::Radians => std::f64::consts::PI / 180.0,
+                                    Glo::Degrees => 180.0 / std::f64::consts::PI,
+                                    _ => unreachable!(),
+                                }),
+                            },
+                        });
+
+                        let expr_handle =
+                            expressions.append(crate::Expression::Constant(constant_handle));
+
+                        self.lookup_expression.insert(
+                            result_id,
+                            LookupExpression {
+                                handle: expressions.append(crate::Expression::Binary {
+                                    op: crate::BinaryOperator::Multiply,
+                                    left: arg,
+                                    right: expr_handle,
+                                }),
+                                type_id: result_type_id,
+                            },
+                        );
+                    } else {
+                        let fun = match gl_op {
+                            Glo::Round => Mf::Round,
+                            Glo::Trunc => Mf::Trunc,
+                            Glo::FAbs | Glo::SAbs => Mf::Abs,
+                            Glo::FSign | Glo::SSign => Mf::Sign,
+                            Glo::Floor => Mf::Floor,
+                            Glo::Ceil => Mf::Ceil,
+                            Glo::Fract => Mf::Fract,
+                            Glo::Sin => Mf::Sin,
+                            Glo::Cos => Mf::Cos,
+                            Glo::Tan => Mf::Tan,
+                            Glo::Asin => Mf::Asin,
+                            Glo::Acos => Mf::Acos,
+                            Glo::Atan => Mf::Atan,
+                            Glo::Sinh => Mf::Sinh,
+                            Glo::Cosh => Mf::Cosh,
+                            Glo::Tanh => Mf::Tanh,
+                            Glo::Atan2 => Mf::Atan2,
+                            Glo::Pow => Mf::Pow,
+                            Glo::Exp => Mf::Exp,
+                            Glo::Log => Mf::Log,
+                            Glo::Exp2 => Mf::Exp2,
+                            Glo::Log2 => Mf::Log2,
+                            Glo::Sqrt => Mf::Sqrt,
+                            Glo::InverseSqrt => Mf::InverseSqrt,
+                            Glo::MatrixInverse => Mf::Inverse,
+                            Glo::Determinant => Mf::Determinant,
+                            Glo::Modf => Mf::Modf,
+                            Glo::FMin | Glo::UMin | Glo::SMin | Glo::NMin => Mf::Min,
+                            Glo::FMax | Glo::UMax | Glo::SMax | Glo::NMax => Mf::Max,
+                            Glo::FClamp | Glo::UClamp | Glo::SClamp | Glo::NClamp => Mf::Clamp,
+                            Glo::FMix => Mf::Mix,
+                            Glo::Step => Mf::Step,
+                            Glo::SmoothStep => Mf::SmoothStep,
+                            Glo::Fma => Mf::Fma,
+                            Glo::Frexp => Mf::Frexp, //TODO: FrexpStruct?
+                            Glo::Ldexp => Mf::Ldexp,
+                            Glo::Length => Mf::Length,
+                            Glo::Distance => Mf::Distance,
+                            Glo::Cross => Mf::Cross,
+                            Glo::Normalize => Mf::Normalize,
+                            Glo::FaceForward => Mf::FaceForward,
+                            Glo::Reflect => Mf::Reflect,
+                            Glo::Refract => Mf::Refract,
+                            _ => return Err(Error::UnsupportedExtInst(inst_id)),
+                        };
+
+                        let arg_count = fun.argument_count();
+                        inst.expect(base_wc + arg_count as u16)?;
+                        let arg = {
+                            let arg_id = self.next()?;
+                            self.lookup_expression.lookup(arg_id)?.handle
+                        };
+                        let arg1 = if arg_count > 1 {
+                            let arg_id = self.next()?;
+                            Some(self.lookup_expression.lookup(arg_id)?.handle)
+                        } else {
+                            None
+                        };
+                        let arg2 = if arg_count > 2 {
+                            let arg_id = self.next()?;
+                            Some(self.lookup_expression.lookup(arg_id)?.handle)
+                        } else {
+                            None
+                        };
+
+                        let expr = crate::Expression::Math {
+                            fun,
+                            arg,
+                            arg1,
+                            arg2,
+                        };
+                        self.lookup_expression.insert(
+                            result_id,
+                            LookupExpression {
+                                handle: expressions.append(expr),
+                                type_id: result_type_id,
+                            },
+                        );
+                    }
                 }
                 // Relational and Logical Instructions
                 Op::LogicalNot => {
@@ -1675,7 +1910,9 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 | Op::FOrdLessThanEqual
                 | Op::FUnordLessThanEqual
                 | Op::FOrdGreaterThanEqual
-                | Op::FUnordGreaterThanEqual => {
+                | Op::FUnordGreaterThanEqual
+                | Op::LogicalEqual
+                | Op::LogicalNotEqual => {
                     inst.expect(5)?;
                     let operator = map_binary_operator(inst.op)?;
                     self.parse_expr_binary_op(expressions, operator)?;
@@ -1743,7 +1980,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 Op::Switch => {
                     inst.expect_at_least(3)?;
                     let selector = self.next()?;
-                    let default = self.next()?;
+                    let default_id = self.next()?;
 
                     let selector_lexp = &self.lookup_expression[&selector];
                     let selector_lty = self.lookup_type.lookup(selector_lexp.type_id)?;
@@ -1756,7 +1993,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                             expressions.append(crate::Expression::As {
                                 kind: crate::ScalarKind::Sint,
                                 expr: selector_lexp.handle,
-                                convert: false,
+                                convert: None,
                             })
                         }
                         crate::TypeInner::Scalar {
@@ -1775,7 +2012,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
                     break Terminator::Switch {
                         selector,
-                        default,
+                        default_id,
                         targets,
                     };
                 }
@@ -1814,6 +2051,102 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 Op::Fwidth | Op::FwidthFine | Op::FwidthCoarse => {
                     self.parse_expr_derivative(expressions, crate::DerivativeAxis::Width)?;
                 }
+                Op::ArrayLength => {
+                    inst.expect(5)?;
+                    let result_type_id = self.next()?;
+                    let result_id = self.next()?;
+                    let structure_id = self.next()?;
+                    let member_index = self.next()?;
+
+                    // We're assuming that the validation pass, if it's run, will catch if the
+                    // wrong types or parameters are supplied here.
+
+                    let structure_ptr = self.lookup_expression.lookup(structure_id)?;
+
+                    let member_ptr = expressions.append(crate::Expression::AccessIndex {
+                        base: structure_ptr.handle,
+                        index: member_index,
+                    });
+
+                    let length = expressions.append(crate::Expression::ArrayLength(member_ptr));
+
+                    self.lookup_expression.insert(
+                        result_id,
+                        LookupExpression {
+                            handle: length,
+                            type_id: result_type_id,
+                        },
+                    );
+                }
+                Op::CopyMemory => {
+                    inst.expect_at_least(3)?;
+                    let target_id = self.next()?;
+                    let source_id = self.next()?;
+                    let _memory_access = if inst.wc != 3 {
+                        inst.expect(4)?;
+                        spirv::MemoryAccess::from_bits(self.next()?)
+                            .ok_or(Error::InvalidParameter(Op::CopyMemory))?
+                    } else {
+                        spirv::MemoryAccess::NONE
+                    };
+
+                    // TODO: check if the source and target types are the same?
+                    let target = self.lookup_expression.lookup(target_id)?;
+                    let source = self.lookup_expression.lookup(source_id)?;
+
+                    // This operation is practically the same as loading and then storing, I think.
+                    let value_expr = expressions.append(crate::Expression::Load {
+                        pointer: source.handle,
+                    });
+
+                    block.extend(emitter.finish(expressions));
+                    block.push(crate::Statement::Store {
+                        pointer: target.handle,
+                        value: value_expr,
+                    });
+
+                    emitter.start(expressions);
+                }
+                Op::ControlBarrier => {
+                    inst.expect(4)?;
+                    let exec_scope_id = self.next()?;
+                    let _mem_scope_raw = self.next()?;
+                    let semantics_id = self.next()?;
+                    let exec_scope_const = self.lookup_constant.lookup(exec_scope_id)?;
+                    let semantics_const = self.lookup_constant.lookup(semantics_id)?;
+                    let exec_scope = match const_arena[exec_scope_const.handle].inner {
+                        crate::ConstantInner::Scalar {
+                            value: crate::ScalarValue::Uint(raw),
+                            width: _,
+                        } => raw as u32,
+                        _ => return Err(Error::InvalidBarrierScope(exec_scope_id)),
+                    };
+                    let semantics = match const_arena[semantics_const.handle].inner {
+                        crate::ConstantInner::Scalar {
+                            value: crate::ScalarValue::Uint(raw),
+                            width: _,
+                        } => raw as u32,
+                        _ => return Err(Error::InvalidBarrierMemorySemantics(semantics_id)),
+                    };
+                    if exec_scope == spirv::Scope::Workgroup as u32 {
+                        let mut flags = crate::Barrier::empty();
+                        flags.set(
+                            crate::Barrier::STORAGE,
+                            semantics & spirv::MemorySemantics::UNIFORM_MEMORY.bits() != 0,
+                        );
+                        flags.set(
+                            crate::Barrier::WORK_GROUP,
+                            semantics
+                                & (spirv::MemorySemantics::SUBGROUP_MEMORY
+                                    | spirv::MemorySemantics::WORKGROUP_MEMORY)
+                                    .bits()
+                                != 0,
+                        );
+                        block.push(crate::Statement::Barrier(flags));
+                    } else {
+                        log::warn!("Unsupported barrier execution scope: {}", exec_scope);
+                    }
+                }
                 _ => return Err(Error::UnsupportedInstruction(self.state, inst.op)),
             }
         };
@@ -1826,6 +2159,9 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             block,
             terminator,
             merge,
+            construct: petgraph::graph::node_index(0),
+            position: 0,
+            visited: false,
         })
     }
 
@@ -1876,46 +2212,61 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         }
     }
 
-    fn patch_function_call_statements(
-        &self,
-        statements: &mut [crate::Statement],
-    ) -> Result<(), Error> {
+    /// Walk the statement tree and patch it in the following cases:
+    /// 1. Function call targets are replaced by `deferred_function_calls` map
+    /// 2. Lift the contents of "If" that only breaks on rejection, onto the parent after it.
+    /// 3. Lift the contents of "Switch" that only has a default, onto the parent after it.
+    fn patch_statements(&self, statements: &mut crate::Block) -> Result<(), Error> {
         use crate::Statement as S;
-        for statement in statements.iter_mut() {
-            match *statement {
+        let mut i = 0usize;
+        while i < statements.len() {
+            match statements[i] {
                 S::Emit(_) => {}
                 S::Block(ref mut block) => {
-                    self.patch_function_call_statements(block)?;
+                    self.patch_statements(block)?;
                 }
                 S::If {
                     condition: _,
                     ref mut accept,
                     ref mut reject,
                 } => {
-                    self.patch_function_call_statements(accept)?;
-                    self.patch_function_call_statements(reject)?;
+                    if let [S::Break] = reject[..] {
+                        // uplift "accept" into the parent
+                        let extracted = mem::replace(accept, Vec::new());
+                        statements.splice(i + 1..i + 1, extracted.into_iter());
+                    } else {
+                        self.patch_statements(reject)?;
+                        self.patch_statements(accept)?;
+                    }
                 }
                 S::Switch {
                     selector: _,
                     ref mut cases,
                     ref mut default,
                 } => {
-                    for case in cases.iter_mut() {
-                        self.patch_function_call_statements(&mut case.body)?;
+                    if cases.is_empty() {
+                        // uplift "default" into the parent
+                        let extracted = mem::replace(default, Vec::new());
+                        statements.splice(i + 1..i + 1, extracted.into_iter());
+                    } else {
+                        for case in cases.iter_mut() {
+                            self.patch_statements(&mut case.body)?;
+                        }
+                        self.patch_statements(default)?;
                     }
-                    self.patch_function_call_statements(default)?;
                 }
                 S::Loop {
                     ref mut body,
                     ref mut continuing,
                 } => {
-                    self.patch_function_call_statements(body)?;
-                    self.patch_function_call_statements(continuing)?;
+                    self.patch_statements(body)?;
+                    self.patch_statements(continuing)?;
                 }
                 S::Break
                 | S::Continue
                 | S::Return { .. }
                 | S::Kill
+                | S::Barrier(_)
                 | S::Store { .. }
                 | S::ImageStore { .. } => {}
                 S::Call {
@@ -1925,18 +2276,19 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     *function = *self.lookup_function.lookup(fun_id)?;
                 }
             }
+            i += 1;
         }
         Ok(())
     }
 
-    fn patch_function_calls(&self, fun: &mut crate::Function) -> Result<(), Error> {
+    fn patch_function(&self, fun: &mut crate::Function) -> Result<(), Error> {
         for (_, expr) in fun.expressions.iter_mut() {
             if let crate::Expression::Call(ref mut function) = *expr {
                 let fun_id = self.deferred_function_calls[function.index()];
                 *function = *self.lookup_function.lookup(fun_id)?;
             }
         }
-        self.patch_function_call_statements(&mut fun.body)?;
+        self.patch_statements(&mut fun.body)?;
         Ok(())
     }
 
@@ -1993,6 +2345,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 Op::SourceExtension => self.parse_source_extension(inst),
                 Op::Name => self.parse_name(inst),
                 Op::MemberName => self.parse_member_name(inst),
+                Op::ModuleProcessed => self.parse_module_processed(inst),
                 Op::Decorate => self.parse_decorate(inst),
                 Op::MemberDecorate => self.parse_member_decorate(inst),
                 Op::TypeVoid => self.parse_type_void(inst),
@@ -2026,11 +2379,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
         log::info!("Patching...");
         {
-            use std::mem::take;
             let mut nodes = petgraph::algo::toposort(&self.function_call_graph, None)
                 .map_err(|cycle| Error::FunctionCallCycle(cycle.node_id()))?;
             nodes.reverse(); // we need dominated first
-            let mut functions = take(&mut module.functions).into_inner();
+            let mut functions = mem::take(&mut module.functions).into_inner();
             for fun_id in nodes {
                 if fun_id > !(functions.len() as u32) {
                     // skip all the fake IDs registered for the entry points
@@ -2038,17 +2390,17 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 let handle = self.lookup_function.get_mut(&fun_id).unwrap();
                 // take out the function from the old array
-                let fun = take(&mut functions[handle.index()]);
+                let fun = mem::take(&mut functions[handle.index()]);
                 // add it to the newly formed arena, and adjust the lookup
                 *handle = module.functions.append(fun);
             }
         }
-        // patch all the function calls
+        // patch all the functions
         for (_, fun) in module.functions.iter_mut() {
-            self.patch_function_calls(fun)?;
+            self.patch_function(fun)?;
         }
         for ep in module.entry_points.iter_mut() {
-            self.patch_function_calls(&mut ep.function)?;
+            self.patch_function(&mut ep.function)?;
         }
 
         // Check all the images and samplers to have consistent comparison property.
@@ -2081,7 +2433,11 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let cap =
             spirv::Capability::from_u32(capability).ok_or(Error::UnknownCapability(capability))?;
         if !SUPPORTED_CAPABILITIES.contains(&cap) {
-            return Err(Error::UnsupportedCapability(cap));
+            if self.options.strict_capabilities {
+                return Err(Error::UnsupportedCapability(cap));
+            } else {
+                log::warn!("Unknown capability {:?}", cap);
+            }
         }
         Ok(())
     }
@@ -2251,6 +2607,17 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             .entry((id, member))
             .or_default()
             .name = Some(name);
+        Ok(())
+    }
+
+    fn parse_module_processed(&mut self, inst: Instruction) -> Result<(), Error> {
+        self.switch(ModuleState::Name, inst.op)?;
+        inst.expect_at_least(2)?;
+        let (_info, left) = self.next_string(inst.wc - 1)?;
+        //Note: string is ignored
+        if left != 0 {
+            return Err(Error::InvalidOperand);
+        }
         Ok(())
     }
 
@@ -2471,7 +2838,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             | crate::TypeInner::ValuePointer { class, .. } => class,
             _ if self
                 .lookup_storage_buffer_types
-                .contains(&base_lookup_ty.handle) =>
+                .contains_key(&base_lookup_ty.handle) =>
             {
                 crate::StorageClass::Storage
             }
@@ -2579,8 +2946,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let parent_decor = self.future_decor.remove(&id);
         let block_decor = parent_decor.as_ref().and_then(|decor| decor.block.clone());
 
+        let mut struct_alignment = crate::Alignment::new(1).unwrap();
         let mut members = Vec::<crate::StructMember>::with_capacity(inst.wc as usize - 2);
         let mut member_lookups = Vec::with_capacity(members.capacity());
+        let mut storage_access = crate::StorageAccess::empty();
         for i in 0..u32::from(inst.wc) - 2 {
             let type_id = self.next()?;
             let ty = self.lookup_type.lookup(type_id)?.handle;
@@ -2589,23 +2958,23 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 .remove(&(id, i))
                 .unwrap_or_default();
 
+            let mut member_access = crate::StorageAccess::all();
+            if decor.flags.contains(DecorationFlags::NON_READABLE) {
+                member_access &= !crate::StorageAccess::LOAD;
+            }
+            if decor.flags.contains(DecorationFlags::NON_WRITABLE) {
+                member_access &= !crate::StorageAccess::STORE;
+            }
+            storage_access |= member_access;
+
             member_lookups.push(LookupMember {
                 type_id,
                 row_major: decor.matrix_major == Some(Majority::Row),
             });
 
             let binding = decor.io_binding().ok();
-            let offset = match decor.offset {
-                Some(offset) => offset,
-                None => match members.last() {
-                    Some(member) => {
-                        //TODO: is this needed?
-                        // If offsets are required, we can just put 0 here
-                        member.offset + module.types[member.ty].inner.span(&module.constants)
-                    }
-                    None => 0,
-                },
-            };
+            // I/O structs don't have to have offsets, others do
+            let offset = decor.offset.unwrap_or(0);
 
             if let crate::TypeInner::Matrix {
                 columns: _,
@@ -2620,6 +2989,9 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
             }
 
+            let alignment = get_alignment(ty, &module.types);
+            struct_alignment = struct_alignment.max(alignment);
+
             members.push(crate::StructMember {
                 name: decor.name,
                 ty,
@@ -2628,22 +3000,19 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             });
         }
 
-        //TODO: we should be able to do better than this.
-        const STRUCT_ALIGNMENT: u32 = 16;
-
         let inner = crate::TypeInner::Struct {
             level: match block_decor {
                 Some(_) => crate::StructLevel::Root,
                 None => crate::StructLevel::Normal {
-                    alignment: crate::Alignment::new(STRUCT_ALIGNMENT).unwrap(),
+                    alignment: struct_alignment,
                 },
             },
             span: match members.last() {
                 Some(member) => {
                     let end = member.offset + module.types[member.ty].inner.span(&module.constants);
-                    ((end - 1) | (STRUCT_ALIGNMENT - 1)) + 1
+                    ((end - 1) | (struct_alignment.get() - 1)) + 1
                 }
-                None => STRUCT_ALIGNMENT,
+                None => 4, //do we support this?
             },
             members,
         };
@@ -2653,7 +3022,8 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         });
 
         if block_decor == Some(Block { buffer: true }) {
-            self.lookup_storage_buffer_types.insert(ty_handle);
+            self.lookup_storage_buffer_types
+                .insert(ty_handle, storage_access);
         }
         for (i, member_lookup) in member_lookups.into_iter().enumerate() {
             self.lookup_member
@@ -2780,7 +3150,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         module: &mut crate::Module,
     ) -> Result<(), Error> {
         self.switch(ModuleState::Type, inst.op)?;
-        inst.expect_at_least(3)?;
+        inst.expect_at_least(4)?;
         let type_id = self.next()?;
         let id = self.next()?;
         let type_lookup = self.lookup_type.lookup(type_id)?;
@@ -2793,7 +3163,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             } => {
                 let low = self.next()?;
                 let high = if width > 4 {
-                    inst.expect(4)?;
+                    inst.expect(5)?;
                     self.next()?
                 } else {
                     0
@@ -2807,20 +3177,17 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 kind: crate::ScalarKind::Sint,
                 width,
             } => {
-                use std::cmp::Ordering;
                 let low = self.next()?;
-                let high = match width.cmp(&4) {
-                    Ordering::Less => return Err(Error::InvalidTypeWidth(u32::from(width))),
-                    Ordering::Greater => {
-                        inst.expect(4)?;
-                        self.next()?
-                    }
-                    Ordering::Equal => 0,
+                let high = if width > 4 {
+                    inst.expect(5)?;
+                    self.next()?
+                } else {
+                    0
                 };
                 crate::ConstantInner::Scalar {
                     width,
                     value: crate::ScalarValue::Sint(
-                        ((u64::from(high) << 32) | u64::from(low)) as i64,
+                        (i64::from(high as i32) << 32) | ((i64::from(low as i32) << 32) >> 32),
                     ),
                 }
             }
@@ -2832,11 +3199,11 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 let extended = match width {
                     4 => f64::from(f32::from_bits(low)),
                     8 => {
-                        inst.expect(4)?;
+                        inst.expect(5)?;
                         let high = self.next()?;
                         f64::from_bits((u64::from(high) << 32) | u64::from(low))
                     }
-                    _ => return Err(Error::InvalidTypeWidth(u32::from(width))),
+                    _ => return Err(Error::InvalidTypeWidth(width as u32)),
                 };
                 crate::ConstantInner::Scalar {
                     width,
@@ -2907,37 +3274,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let type_lookup = self.lookup_type.lookup(type_id)?;
         let ty = type_lookup.handle;
 
-        fn make_scalar_inner(kind: crate::ScalarKind, width: crate::Bytes) -> crate::ConstantInner {
-            crate::ConstantInner::Scalar {
-                width,
-                value: match kind {
-                    crate::ScalarKind::Uint => crate::ScalarValue::Uint(0),
-                    crate::ScalarKind::Sint => crate::ScalarValue::Sint(0),
-                    crate::ScalarKind::Float => crate::ScalarValue::Float(0.0),
-                    crate::ScalarKind::Bool => crate::ScalarValue::Bool(false),
-                },
-            }
-        }
-
-        let inner = match module.types[ty].inner {
-            crate::TypeInner::Scalar { kind, width } => make_scalar_inner(kind, width),
-            crate::TypeInner::Vector { size, kind, width } => {
-                let mut components = Vec::with_capacity(size as usize);
-                for _ in 0..size as usize {
-                    components.push(module.constants.fetch_or_append(crate::Constant {
-                        name: None,
-                        specialization: None,
-                        inner: make_scalar_inner(kind, width),
-                    }));
-                }
-                crate::ConstantInner::Composite { ty, components }
-            }
-            //TODO: handle matrices, arrays, and structures
-            ref other => {
-                log::warn!("null constant type {:?}", other);
-                return Err(Error::UnsupportedType(type_lookup.handle));
-            }
-        };
+        let inner = null::generate_null_constant(ty, &mut module.types, &mut module.constants)?;
 
         self.lookup_constant.insert(
             id,
@@ -2996,35 +3333,48 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         } else {
             None
         };
-        let dec = self.future_decor.remove(&id).unwrap_or_default();
+        let mut dec = self.future_decor.remove(&id).unwrap_or_default();
 
-        let mut effective_ty = self.lookup_type.lookup(type_id)?.handle;
-        let is_storage = match module.types[effective_ty].inner {
+        let original_ty = self.lookup_type.lookup(type_id)?.handle;
+        let (effective_ty, is_storage) = match module.types[original_ty].inner {
             crate::TypeInner::Pointer { base, class } => {
-                effective_ty = base;
-                class == crate::StorageClass::Storage
+                (base, class == crate::StorageClass::Storage)
             }
             crate::TypeInner::Image {
                 class: crate::ImageClass::Storage(_),
                 ..
-            } => true,
-            _ => false,
+            } => (original_ty, true),
+            _ => (original_ty, false),
         };
-        let ext_class = if self.lookup_storage_buffer_types.contains(&effective_ty) {
-            ExtendedClass::Global(crate::StorageClass::Storage)
-        } else {
-            map_storage_class(storage_class)?
-        };
+        let (ext_class, type_storage_access) =
+            match self.lookup_storage_buffer_types.get(&effective_ty) {
+                Some(&access) => (ExtendedClass::Global(crate::StorageClass::Storage), access),
+                None => (
+                    map_storage_class(storage_class)?,
+                    crate::StorageAccess::all(),
+                ),
+            };
+
+        // Fix empty name for gl_PerVertex struct generated by glslang
+        if let crate::TypeInner::Pointer { .. } = module.types[original_ty].inner {
+            if ext_class == ExtendedClass::Input || ext_class == ExtendedClass::Output {
+                if let Some(ref dec_name) = dec.name {
+                    if dec_name.is_empty() {
+                        dec.name = Some("perVertexStruct".to_string())
+                    }
+                }
+            }
+        }
 
         let (inner, var) = match ext_class {
             ExtendedClass::Global(class) => {
                 let storage_access = if is_storage {
-                    let mut access = crate::StorageAccess::all();
+                    let mut access = type_storage_access;
                     if dec.flags.contains(DecorationFlags::NON_READABLE) {
-                        access ^= crate::StorageAccess::LOAD;
+                        access &= !crate::StorageAccess::LOAD;
                     }
                     if dec.flags.contains(DecorationFlags::NON_WRITABLE) {
-                        access ^= crate::StorageAccess::STORE;
+                        access &= !crate::StorageAccess::STORE;
                     }
                     access
                 } else {
@@ -3043,6 +3393,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             }
             ExtendedClass::Input => {
                 let binding = dec.io_binding()?;
+                let mut unsigned_ty = effective_ty;
                 if let crate::Binding::BuiltIn(built_in) = binding {
                     let needs_inner_uint = match built_in {
                         crate::BuiltIn::BaseInstance
@@ -3068,8 +3419,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         needs_inner_uint,
                         module.types[effective_ty].inner.scalar_kind(),
                     ) {
-                        log::warn!("Treating {:?} as unsigned", built_in);
-                        effective_ty = module
+                        unsigned_ty = module
                             .types
                             .fetch_or_append(crate::Type { name: None, inner });
                     }
@@ -3085,20 +3435,73 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 };
                 let inner = Variable::Input(crate::FunctionArgument {
                     name: dec.name,
-                    ty: effective_ty,
+                    ty: unsigned_ty,
                     binding: Some(binding),
                 });
                 (inner, var)
             }
             ExtendedClass::Output => {
-                // For output interface blocks. this would be a structure.
+                // For output interface blocks, this would be a structure.
                 let binding = dec.io_binding().ok();
+                let init = match binding {
+                    Some(crate::Binding::BuiltIn(built_in)) => {
+                        match null::generate_default_built_in(
+                            Some(built_in),
+                            effective_ty,
+                            &mut module.types,
+                            &mut module.constants,
+                        ) {
+                            Ok(handle) => Some(handle),
+                            Err(e) => {
+                                log::warn!("Failed to initialize output built-in: {}", e);
+                                None
+                            }
+                        }
+                    }
+                    Some(crate::Binding::Location { .. }) => None,
+                    None => match module.types[effective_ty].inner {
+                        crate::TypeInner::Struct { ref members, .. } => {
+                            // A temporary to avoid borrowing `module.types`
+                            let pairs = members
+                                .iter()
+                                .map(|member| {
+                                    let built_in = match member.binding {
+                                        Some(crate::Binding::BuiltIn(built_in)) => Some(built_in),
+                                        _ => None,
+                                    };
+                                    (built_in, member.ty)
+                                })
+                                .collect::<Vec<_>>();
+
+                            let mut components = Vec::with_capacity(members.len());
+                            for (built_in, member_ty) in pairs {
+                                let handle = null::generate_default_built_in(
+                                    built_in,
+                                    member_ty,
+                                    &mut module.types,
+                                    &mut module.constants,
+                                )?;
+                                components.push(handle);
+                            }
+                            Some(module.constants.append(crate::Constant {
+                                name: None,
+                                specialization: None,
+                                inner: crate::ConstantInner::Composite {
+                                    ty: effective_ty,
+                                    components,
+                                },
+                            }))
+                        }
+                        _ => None,
+                    },
+                };
+
                 let var = crate::GlobalVariable {
                     name: dec.name,
                     class: crate::StorageClass::Private,
                     binding: None,
                     ty: effective_ty,
-                    init: None,
+                    init,
                     storage_access: crate::StorageAccess::empty(),
                 };
                 let inner = Variable::Output(crate::FunctionResult {

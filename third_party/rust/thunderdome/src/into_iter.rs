@@ -2,7 +2,7 @@ use std::iter::{ExactSizeIterator, FusedIterator};
 
 use crate::arena::{Arena, Index};
 
-/// Iterator typed used when an Arena is turned [`IntoIterator`][IntoIterator].
+/// Iterator typed used when an Arena is turned [`IntoIterator`].
 pub struct IntoIter<T> {
     pub(crate) arena: Arena<T>,
     pub(crate) slot: u32,
@@ -32,7 +32,7 @@ impl<T> Iterator for IntoIter<T> {
             // If this entry is occupied, this method will mark it as an empty.
             // Otherwise, we'll continue looping until we've removed all
             // occupied entries from the arena.
-            if let Some((index, value)) = self.arena.remove_entry_by_slot(slot) {
+            if let Some((index, value)) = self.arena.remove_by_slot(slot) {
                 return Some((index, value));
             }
         }

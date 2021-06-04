@@ -297,12 +297,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
   _updateExperimentState() {
     Services.telemetry.setEventRecordingEnabled(
       TELEMETRY_EVENT_CATEGORY,
-      NimbusFeatures.urlbar.getValue().quickSuggestEnabled
+      UrlbarPrefs.get("quickSuggestEnabled")
     );
     // QuickSuggest is only loaded by the UrlBar on it's first query, however
     // there is work it can preload when idle instead of starting it on user
     // input. Referencing it here will trigger its import and init.
-    if (NimbusFeatures.urlbar.getValue().quickSuggestEnabled) {
+    if (UrlbarPrefs.get("quickSuggestEnabled")) {
       UrlbarQuickSuggest; // eslint-disable-line no-unused-expressions
     }
   }

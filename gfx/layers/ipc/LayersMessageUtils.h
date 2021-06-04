@@ -1016,12 +1016,14 @@ struct ParamTraits<mozilla::layers::ZoomTarget> {
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.targetRect);
     WriteParam(aMsg, aParam.elementBoundingRect);
+    WriteParam(aMsg, aParam.documentRelativePointerPosition);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->targetRect) &&
-            ReadParam(aMsg, aIter, &aResult->elementBoundingRect));
+            ReadParam(aMsg, aIter, &aResult->elementBoundingRect) &&
+            ReadParam(aMsg, aIter, &aResult->documentRelativePointerPosition));
   }
 };
 

@@ -183,8 +183,7 @@ async function testChangingValues(inspector, boxmodel) {
   const doc = boxmodel.document;
 
   const onUpdated = waitForUpdate(inspector);
-  await setAttributeInBrowser(
-    gBrowser.selectedBrowser,
+  await setContentPageElementAttribute(
     "div",
     "style",
     "height:150px;padding-right:50px;top:50px"

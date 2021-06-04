@@ -466,7 +466,7 @@ nsresult PasteCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
                                  nsIPrincipal* aPrincipal) const {
   nsresult rv = aTextEditor.PasteAsAction(nsIClipboard::kGlobalClipboard, true,
                                           aPrincipal);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "TextEditor::PasteAsAction() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::PasteAsAction() failed");
   return rv;
 }
 

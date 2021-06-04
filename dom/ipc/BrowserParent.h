@@ -307,10 +307,8 @@ class BrowserParent final : public PBrowserParent,
 
   already_AddRefed<nsIBrowser> GetBrowser();
 
-  bool ReconstructWebProgressAndRequest(
-      const WebProgressData& aWebProgressData, const RequestData& aRequestData,
-      nsIWebProgress** aOutWebProgress, nsIRequest** aOutRequest,
-      CanonicalBrowsingContext** aOutBrowsingContext);
+  already_AddRefed<CanonicalBrowsingContext> BrowsingContextForWebProgress(
+      const WebProgressData& aWebProgressData);
 
   mozilla::ipc::IPCResult RecvSessionStoreUpdate(
       const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
@@ -548,9 +546,6 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvLockNativePointer();
 
   mozilla::ipc::IPCResult RecvUnlockNativePointer();
-
-  void SendMouseEvent(const nsAString& aType, float aX, float aY,
-                      int32_t aButton, int32_t aClickCount, int32_t aModifiers);
 
   /**
    * The following Send*Event() marks aEvent as posted to remote process if

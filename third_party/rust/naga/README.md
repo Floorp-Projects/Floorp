@@ -4,8 +4,9 @@
 [![Crates.io](https://img.shields.io/crates/v/naga.svg?label=naga)](https://crates.io/crates/naga)
 [![Docs.rs](https://docs.rs/naga/badge.svg)](https://docs.rs/naga)
 [![Build Status](https://github.com/gfx-rs/naga/workflows/pipeline/badge.svg)](https://github.com/gfx-rs/naga/actions)
+[![codecov.io](https://codecov.io/gh/gfx-rs/naga/branch/master/graph/badge.svg?token=9VOKYO8BM2)](https://codecov.io/gh/gfx-rs/naga)
 
-This is an experimental shader translation library for the needs of gfx-rs project and WebGPU.
+The shader translation library for the needs of [wgpu](https://github.com/gfx-rs/wgpu) and [gfx-rs](https://github.com/gfx-rs/gfx) projects.
 
 ## Supported end-points
 
@@ -14,9 +15,8 @@ Everything is still work-in-progress, but some end-points are usable:
 Front-end       |       Status       | Feature | Notes |
 --------------- | ------------------ | ------- | ----- |
 SPIR-V (binary) | :white_check_mark: | spv-in  |       |
-WGSL            | :white_check_mark: | wgsl-in |       |
-GLSL            | :ok:               | glsl-in | Vulkan flavor is expected |
-Rust            |                    |         |       |
+WGSL            | :white_check_mark: | wgsl-in | Fully validated |
+GLSL            | :construction:     | glsl-in | Temporarily broken |
 
 Back-end        |       Status       | Feature  | Notes |
 --------------- | ------------------ | -------- | ----- |
@@ -34,9 +34,10 @@ DOT (GraphViz)  | :ok:               | dot-out  | Not a shading language |
 
 ## Conversion tool
 
-Naga includes a default binary target "convert", which allows to test the conversion of different code paths.
+Naga includes a default binary target, which allows to test the conversion of different code paths.
 ```bash
-cargo run --features spv-in -- my_shader.spv # dump the IR module to debug output
+cargo run --features wgsl-in -- my_shader.wgsl # validate only
+cargo run --features spv-in -- my_shader.spv my_shader.txt # dump the IR module into a file
 cargo run --features spv-in,msl-out -- my_shader.spv my_shader.metal --flow-dir flow-dir # convert the SPV to Metal, also dump the SPIR-V flow graph to `flow-dir`
 cargo run --features wgsl-in,glsl-out -- my_shader.wgsl my_shader.vert --profile es310 # convert the WGSL to GLSL vertex stage under ES 3.20 profile
 ```
@@ -62,4 +63,5 @@ make validate-msl # for Metal shaders, requires XCode command-line tools install
 make validate-glsl # for OpenGL shaders, requires GLSLang installed
 make validate-dot # for dot files, requires GraphViz installed
 make validate-wgsl # for WGSL shaders
+make validate-hlsl # for HLSL shaders. Note: this Make target makes use of the "sh" shell. This is not the default shell in Windows.
 ```

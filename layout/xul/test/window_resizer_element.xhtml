@@ -147,7 +147,9 @@ function anchoredPopupShown(event)
   event.target.hidePopup();
 }
 
-window.arguments[0].SimpleTest.waitForFocus(doTest, window);
+SimpleTest.executeSoon(() => {
+  window.arguments[0].SimpleTest.waitForFocus(doTest, window);
+});
 ]]></script>
 
 <resizer id="outside" dir="bottomend" element="outside-container"/>

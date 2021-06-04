@@ -11,14 +11,11 @@
 .tab-icon-image:not([src], [pinned], [crashed], [sharing], [pictureinpicture]),
 .tab-icon-image[busy],
 .tab-throbber:not([busy]),
-.tab-icon-sound:not([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]),
-.tab-icon-sound[pinned],
 .tab-sharing-icon-overlay,
 .tab-icon-overlay {
   display: none;
 }
 
-@media (-moz-proton) {
 :root[uidensity=compact] .tab-secondary-label,
 .tab-secondary-label:not([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]),
 .tab-secondary-label:not([activemedia-blocked]) > .tab-icon-sound-blocked-label,
@@ -38,29 +35,6 @@
 .tab-icon-overlay:is([soundplaying], [muted], [activemedia-blocked], [pictureinpicture], [crashed]) {
   display: revert;
 }
-} /*** END proton ***/
-
-@media not (-moz-proton) {
-.tab-icon-sound:not([activemedia-blocked]) > .tab-icon-sound-blocked-label,
-.tab-icon-sound[muted][activemedia-blocked] > .tab-icon-sound-blocked-label,
-.tab-icon-sound[activemedia-blocked] > .tab-icon-sound-playing-label,
-.tab-icon-sound[muted] > .tab-icon-sound-playing-label,
-.tab-icon-sound[pictureinpicture] > .tab-icon-sound-playing-label,
-.tab-icon-sound[pictureinpicture] > .tab-icon-sound-muted-label,
-.tab-icon-sound:not([pictureinpicture]) > .tab-icon-sound-pip-label,
-.tab-icon-sound:not([muted]) > .tab-icon-sound-muted-label {
-  display: none;
-}
-
-.tab-sharing-icon-overlay[sharing]:not([selected]),
-.tab-icon-overlay[soundplaying][pinned],
-.tab-icon-overlay[muted][pinned],
-.tab-icon-overlay[activemedia-blocked][pinned],
-.tab-icon-overlay[pictureinpicture],
-.tab-icon-overlay[crashed] {
-  display: -moz-box;
-}
-} /*** END !proton ***/
 
 .tabbrowser-tab {
   --tab-label-mask-size: 2em;

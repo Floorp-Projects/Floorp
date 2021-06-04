@@ -103,10 +103,7 @@ ordered by the size of the allocations they made:
 
 ![](../img/memory-tool-call-stack.png)
 \
-The structure of this view is very much like the structure of the [Call
-Tree](call_tree.md), only it shows
-allocations rather than processor samples. So, for example, the first
-entry says that:
+The first entry says that:
 
 -   4,832,592 bytes, comprising 93% of the total heap usage, were
     allocated in a function at line 35 of \"alloc.js\", **or in

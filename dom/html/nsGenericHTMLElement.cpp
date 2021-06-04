@@ -16,6 +16,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/StaticPrefs_html5.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_accessibility.h"
@@ -2433,6 +2434,57 @@ bool nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
   }
 
   return focused;
+}
+
+void nsGenericHTMLElement::HandleKeyboardActivation(
+    EventChainPostVisitor& aVisitor) {
+  const auto message = aVisitor.mEvent->mMessage;
+  if (message != eKeyDown && message != eKeyUp && message != eKeyPress) {
+    return;
+  }
+
+  const WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
+  if (nsEventStatus_eIgnore != aVisitor.mEventStatus) {
+    if (message == eKeyUp && keyEvent->mKeyCode == NS_VK_SPACE) {
+      // Unset the flag even if the event is default-prevented or something.
+      UnsetFlags(HTML_ELEMENT_ACTIVE_FOR_KEYBOARD);
+    }
+    return;
+  }
+
+  bool shouldActivate = false;
+  switch (message) {
+    case eKeyDown:
+      if (keyEvent->mKeyCode == NS_VK_SPACE) {
+        SetFlags(HTML_ELEMENT_ACTIVE_FOR_KEYBOARD);
+      }
+      return;
+    case eKeyPress:
+      shouldActivate = keyEvent->mKeyCode == NS_VK_RETURN;
+      if (keyEvent->mKeyCode == NS_VK_SPACE) {
+        // Consume 'space' key to prevent scrolling the page down.
+        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      }
+      break;
+    case eKeyUp:
+      shouldActivate = keyEvent->mKeyCode == NS_VK_SPACE &&
+                       HasFlag(HTML_ELEMENT_ACTIVE_FOR_KEYBOARD);
+      if (shouldActivate) {
+        UnsetFlags(HTML_ELEMENT_ACTIVE_FOR_KEYBOARD);
+      }
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("why didn't we bail out earlier?");
+      break;
+  }
+
+  if (!shouldActivate) {
+    return;
+  }
+
+  DispatchSimulatedClick(this, aVisitor.mEvent->IsTrusted(),
+                         aVisitor.mPresContext);
+  aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
 }
 
 nsresult nsGenericHTMLElement::DispatchSimulatedClick(

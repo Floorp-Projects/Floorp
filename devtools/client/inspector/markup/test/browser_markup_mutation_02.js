@@ -60,8 +60,7 @@ const TEST_DATA = [
     desc: "Adding an attribute should flash the attribute",
     attribute: "test-name",
     mutate: async function(testActor) {
-      await setAttributeInBrowser(
-        gBrowser.selectedBrowser,
+      await setContentPageElementAttribute(
         ".list",
         "test-name",
         "value-" + Date.now()
@@ -74,8 +73,7 @@ const TEST_DATA = [
       "attribute",
     attribute: "one:two",
     mutate: async function(testActor) {
-      await setAttributeInBrowser(
-        gBrowser.selectedBrowser,
+      await setContentPageElementAttribute(
         ".list",
         "one:two",
         "value-" + Date.now()
@@ -86,8 +84,7 @@ const TEST_DATA = [
     desc: "Editing an attribute should flash the attribute",
     attribute: "class",
     mutate: async function(testActor) {
-      await setAttributeInBrowser(
-        gBrowser.selectedBrowser,
+      await setContentPageElementAttribute(
         ".list",
         "class",
         "list value-" + Date.now()

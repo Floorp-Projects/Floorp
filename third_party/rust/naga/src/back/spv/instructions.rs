@@ -350,6 +350,13 @@ impl super::Instruction {
     //  Constant-Creation Instructions
     //
 
+    pub(super) fn constant_null(result_type_id: Word, id: Word) -> Self {
+        let mut instruction = Self::new(Op::ConstantNull);
+        instruction.set_type(result_type_id);
+        instruction.set_result(id);
+        instruction
+    }
+
     pub(super) fn constant_true(result_type_id: Word, id: Word) -> Self {
         let mut instruction = Self::new(Op::ConstantTrue);
         instruction.set_type(result_type_id);
@@ -463,6 +470,20 @@ impl super::Instruction {
             instruction.add_operand(*index_id);
         }
 
+        instruction
+    }
+
+    pub(super) fn array_length(
+        result_type_id: Word,
+        id: Word,
+        structure_id: Word,
+        array_member: Word,
+    ) -> Self {
+        let mut instruction = Self::new(Op::ArrayLength);
+        instruction.set_type(result_type_id);
+        instruction.set_result(id);
+        instruction.add_operand(structure_id);
+        instruction.add_operand(array_member);
         instruction
     }
 
@@ -594,6 +615,14 @@ impl super::Instruction {
         instruction
     }
 
+    pub(super) fn image_query(op: Op, result_type_id: Word, id: Word, image: Word) -> Self {
+        let mut instruction = Self::new(op);
+        instruction.set_type(result_type_id);
+        instruction.set_result(id);
+        instruction.add_operand(image);
+        instruction
+    }
+
     //
     //  Conversion Instructions
     //
@@ -659,6 +688,26 @@ impl super::Instruction {
         instruction
     }
 
+    pub(super) fn vector_shuffle(
+        result_type_id: Word,
+        id: Word,
+        v1_id: Word,
+        v2_id: Word,
+        components: &[Word],
+    ) -> Self {
+        let mut instruction = Self::new(Op::VectorShuffle);
+        instruction.set_type(result_type_id);
+        instruction.set_result(id);
+        instruction.add_operand(v1_id);
+        instruction.add_operand(v2_id);
+
+        for &component in components {
+            instruction.add_operand(component);
+        }
+
+        instruction
+    }
+
     //
     // Arithmetic Instructions
     //
@@ -677,6 +726,14 @@ impl super::Instruction {
         instruction
     }
 
+    pub(super) fn relational(op: Op, result_type_id: Word, id: Word, expr_id: Word) -> Self {
+        let mut instruction = Self::new(op);
+        instruction.set_type(result_type_id);
+        instruction.set_result(id);
+        instruction.add_operand(expr_id);
+        instruction
+    }
+
     //
     // Bit Instructions
     //
@@ -689,24 +746,8 @@ impl super::Instruction {
     // Derivative Instructions
     //
 
-    pub(super) fn derive_x(result_type_id: Word, id: Word, expr_id: Word) -> Self {
-        let mut instruction = Self::new(Op::DPdx);
-        instruction.set_type(result_type_id);
-        instruction.set_result(id);
-        instruction.add_operand(expr_id);
-        instruction
-    }
-
-    pub(super) fn derive_y(result_type_id: Word, id: Word, expr_id: Word) -> Self {
-        let mut instruction = Self::new(Op::DPdy);
-        instruction.set_type(result_type_id);
-        instruction.set_result(id);
-        instruction.add_operand(expr_id);
-        instruction
-    }
-
-    pub(super) fn derive_width(result_type_id: Word, id: Word, expr_id: Word) -> Self {
-        let mut instruction = Self::new(Op::Fwidth);
+    pub(super) fn derivative(op: Op, result_type_id: Word, id: Word, expr_id: Word) -> Self {
+        let mut instruction = Self::new(op);
         instruction.set_type(result_type_id);
         instruction.set_result(id);
         instruction.add_operand(expr_id);
@@ -812,4 +853,18 @@ impl super::Instruction {
     //
     //  Primitive Instructions
     //
+
+    // Barriers
+
+    pub(super) fn control_barrier(
+        exec_scope_id: Word,
+        mem_scope_id: Word,
+        semantics_id: Word,
+    ) -> Self {
+        let mut instruction = Self::new(Op::ControlBarrier);
+        instruction.add_operand(exec_scope_id);
+        instruction.add_operand(mem_scope_id);
+        instruction.add_operand(semantics_id);
+        instruction
+    }
 }

@@ -1181,11 +1181,6 @@ extern mozilla::Atomic<JS::BuildIdOp> GetBuildId;
 
 extern JS::FilenameValidationCallback gFilenameValidationCallback;
 
-// This callback is set by js::SetHelperThreadTaskCallback and may be null.
-// See comment in jsapi.h.
-// Returns false if the thread pool fails to dispatch.
-extern bool (*HelperThreadTaskCallback)(js::UniquePtr<js::RunnableTask>);
-
 } /* namespace js */
 
 #endif /* vm_Runtime_h */

@@ -756,7 +756,7 @@ function makeVisitResult(
     uri,
     iconUri,
     providerName,
-    tags = null,
+    tags = [],
     heuristic = false,
     source = UrlbarUtils.RESULT_SOURCE.HISTORY,
   }
@@ -775,8 +775,8 @@ function makeVisitResult(
     payload.icon = `page-icon:${uri}`;
   }
 
-  if (!heuristic || tags) {
-    payload.tags = [tags || [], UrlbarUtils.HIGHLIGHT.TYPED];
+  if (!heuristic && tags) {
+    payload.tags = [tags, UrlbarUtils.HIGHLIGHT.TYPED];
   }
 
   let result = new UrlbarResult(

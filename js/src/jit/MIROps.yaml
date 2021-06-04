@@ -425,7 +425,6 @@
 - name: WasmBoxValue
   operands:
     def: Value
-  type_policy: none
   result_type: RefOrNull
   congruent_to: if_operands_equal
   alias_set: none

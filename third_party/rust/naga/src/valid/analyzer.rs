@@ -322,6 +322,10 @@ impl FunctionInfo {
                 non_uniform_result: self.add_ref(value),
                 requirements: UniformityRequirements::empty(),
             },
+            E::Swizzle { vector, .. } => Uniformity {
+                non_uniform_result: self.add_ref(vector),
+                requirements: UniformityRequirements::empty(),
+            },
             E::Compose { ref components, .. } => {
                 let non_uniform_result = components
                     .iter()
@@ -568,6 +572,13 @@ impl FunctionInfo {
                 S::Kill => FunctionUniformity {
                     result: Uniformity::new(),
                     exit: ExitFlags::MAY_KILL,
+                },
+                S::Barrier(_) => FunctionUniformity {
+                    result: Uniformity {
+                        non_uniform_result: None,
+                        requirements: UniformityRequirements::WORK_GROUP_BARRIER,
+                    },
+                    exit: ExitFlags::empty(),
                 },
                 S::Block(ref b) => self.process_block(b, other_functions, disruptor)?,
                 S::If {

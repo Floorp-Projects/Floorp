@@ -525,7 +525,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void SetWatchedByDevTools(bool aWatchedByDevTools, ErrorResult& aRv);
 
   dom::TouchEventsOverride TouchEventsOverride() const;
-  void SetTouchEventsOverride(dom::TouchEventsOverride, ErrorResult& aRv);
 
   bool FullscreenAllowed() const;
 

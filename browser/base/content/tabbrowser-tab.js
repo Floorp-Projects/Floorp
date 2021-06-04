@@ -8,25 +8,12 @@
 // a block to prevent accidentally leaking globals onto `window`.
 {
   class MozTabbrowserTab extends MozElements.MozTab {
-    static get markup() {
-      let background = gProton
-        ? `
-        <vbox class="tab-background">
-          <hbox class="tab-context-line"/>
-          <hbox class="tab-loading-burst proton" flex="1"/>
-        </vbox>
-`
-        : `
-        <vbox class="tab-background">
-          <hbox class="tab-line"/>
-          <spacer flex="1" class="tab-background-inner"/>
-          <hbox class="tab-context-line"/>
-        </vbox>
-`;
-      return `
+    static markup = `
       <stack class="tab-stack" flex="1">
-        ${background}
-        <hbox class="tab-loading-burst"/>
+        <vbox class="tab-background">
+          <hbox class="tab-context-line"/>
+          <hbox class="tab-loading-burst" flex="1"/>
+        </vbox>
         <hbox class="tab-content" align="center">
           <stack class="tab-icon-stack">
             <hbox class="tab-throbber" layer="true"/>
@@ -35,14 +22,7 @@
             <image class="tab-sharing-icon-overlay" role="presentation"/>
             <image class="tab-icon-overlay" role="presentation"/>
           </stack>
-          <hbox class="tab-label-container"
-                onoverflow="this.setAttribute('textoverflow', 'true');"
-                onunderflow="this.removeAttribute('textoverflow');"
-                flex="1">
-            <label class="tab-text tab-label" role="presentation"/>
-          </hbox>
-          <image class="tab-icon-sound" role="presentation"/>
-          <vbox class="tab-label-container proton"
+          <vbox class="tab-label-container"
                 onoverflow="this.setAttribute('textoverflow', 'true');"
                 onunderflow="this.removeAttribute('textoverflow');"
                 align="start"
@@ -60,7 +40,6 @@
         </hbox>
       </stack>
       `;
-    }
 
     constructor() {
       super();
@@ -101,9 +80,7 @@
         ".tab-background": "selected=visuallyselected,fadein,multiselected",
         ".tab-line":
           "selected=visuallyselected,multiselected,before-multiselected",
-        ".tab-loading-burst.proton": "pinned,bursting,notselectedsinceload",
-        ".tab-loading-burst:not(.proton)":
-          "pinned,bursting,notselectedsinceload",
+        ".tab-loading-burst": "pinned,bursting,notselectedsinceload",
         ".tab-content":
           "pinned,selected=visuallyselected,titlechanged,attention",
         ".tab-icon-stack":
@@ -119,15 +96,9 @@
           "sharing,pictureinpicture,crashed,busy,soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked",
         ".tab-label-container":
           "pinned,selected=visuallyselected,labeldirection",
-        ".tab-label-container.proton":
-          "pinned,selected=visuallyselected,labeldirection",
         ".tab-label":
           "text=label,accesskey,fadein,pinned,selected=visuallyselected,attention",
-        ".tab-label-container.proton .tab-label":
-          "text=label,accesskey,fadein,pinned,selected=visuallyselected,attention",
-        ".tab-icon-sound":
-          "soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked,pictureinpicture",
-        ".tab-label-container.proton .tab-secondary-label":
+        ".tab-label-container .tab-secondary-label":
           "soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked,pictureinpicture",
         ".tab-close-button": "fadein,pinned,selected=visuallyselected",
       };
@@ -263,22 +234,7 @@
     }
 
     get _overPlayingIcon() {
-      // TODO (bug 1702652): Simplify this getter during Proton cleanup
-      let iconVisible =
-        this.soundPlaying || this.muted || this.activeMediaBlocked;
-
-      let soundPlayingIcon = this.soundPlayingIcon;
-      let overlayIcon = this.overlayIcon;
-      return (
-        (soundPlayingIcon && soundPlayingIcon.matches(":hover")) ||
-        (overlayIcon && overlayIcon.matches(":hover") && iconVisible)
-      );
-    }
-
-    get soundPlayingIcon() {
-      return gProton
-        ? this.querySelector(".tab-icon-overlay")
-        : this.querySelector(".tab-icon-sound");
+      return this.overlayIcon?.matches(":hover");
     }
 
     get overlayIcon() {
@@ -313,7 +269,7 @@
       if (event.target.classList.contains("tab-close-button")) {
         this.mOverCloseButton = true;
       }
-      if (gProton && this._overPlayingIcon) {
+      if (this._overPlayingIcon) {
         const selectedTabs = gBrowser.selectedTabs;
         const contextTabInSelection = selectedTabs.includes(this);
         const affectedTabsLength = contextTabInSelection
@@ -338,7 +294,7 @@
       if (event.target.classList.contains("tab-close-button")) {
         this.mOverCloseButton = false;
       }
-      if (gProton && event.target == this.overlayIcon) {
+      if (event.target == this.overlayIcon) {
         this.setSecondaryTabTooltipLabel(null);
       }
       this._mouseleave();
@@ -371,7 +327,6 @@
         this.style.MozUserFocus = "ignore";
       } else if (
         event.target.classList.contains("tab-close-button") ||
-        event.target.classList.contains("tab-icon-sound") ||
         event.target.classList.contains("tab-icon-overlay")
       ) {
         eventMaySelectTab = false;
@@ -437,7 +392,6 @@
       if (
         gBrowser.multiSelectedTabsCount > 0 &&
         !event.target.classList.contains("tab-close-button") &&
-        !event.target.classList.contains("tab-icon-sound") &&
         !event.target.classList.contains("tab-icon-overlay")
       ) {
         // Tabs were previously multi-selected and user clicks on a tab
@@ -446,9 +400,8 @@
       }
 
       if (
-        event.target.classList.contains("tab-icon-sound") ||
-        (event.target.classList.contains("tab-icon-overlay") &&
-          (this.soundPlaying || this.muted || this.activeMediaBlocked))
+        event.target.classList.contains("tab-icon-overlay") &&
+        (this.soundPlaying || this.muted || this.activeMediaBlocked)
       ) {
         if (this.multiselected) {
           gBrowser.toggleMuteAudioOnMultiSelectedTabs(this);
@@ -488,10 +441,7 @@
         tabContainer._closeTabByDblclick &&
         this._selectedOnFirstMouseDown &&
         this.selected &&
-        !(
-          event.target.classList.contains("tab-icon-sound") ||
-          event.target.classList.contains("tab-icon-overlay")
-        )
+        !event.target.classList.contains("tab-icon-overlay")
       ) {
         gBrowser.removeTab(this, {
           animate: true,

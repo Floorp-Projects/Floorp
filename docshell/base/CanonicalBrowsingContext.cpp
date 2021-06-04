@@ -21,7 +21,6 @@
 #include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/MediaControlService.h"
 #include "mozilla/dom/ContentPlaybackController.h"
-#include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/DocumentLoadListener.h"
@@ -161,16 +160,61 @@ nsISecureBrowserUI* CanonicalBrowsingContext::GetSecureBrowserUI() {
   return mSecureBrowserUI;
 }
 
+namespace {
+// The DocShellProgressBridge is attached to a root content docshell loaded in
+// the parent process. Notifications are paired up with the docshell which they
+// came from, so that they can be fired to the correct
+// BrowsingContextWebProgress and bubble through this tree separately.
+//
+// Notifications are filtered by a nsBrowserStatusFilter before being received
+// by the DocShellProgressBridge.
+class DocShellProgressBridge : public nsIWebProgressListener {
+ public:
+  NS_DECL_ISUPPORTS
+  // NOTE: This relies in the expansion of `NS_FORWARD_SAFE` and all listener
+  // methods accepting an `aWebProgress` argument. If this changes in the
+  // future, this may need to be written manually.
+  NS_FORWARD_SAFE_NSIWEBPROGRESSLISTENER(GetTargetContext(aWebProgress))
+
+  explicit DocShellProgressBridge(uint64_t aTopContextId)
+      : mTopContextId(aTopContextId) {}
+
+ private:
+  virtual ~DocShellProgressBridge() = default;
+
+  nsIWebProgressListener* GetTargetContext(nsIWebProgress* aWebProgress) {
+    RefPtr<CanonicalBrowsingContext> context;
+    if (nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aWebProgress)) {
+      context = docShell->GetBrowsingContext()->Canonical();
+    } else {
+      context = CanonicalBrowsingContext::Get(mTopContextId);
+    }
+    return context && !context->IsDiscarded() ? context->GetWebProgress()
+                                              : nullptr;
+  }
+
+  uint64_t mTopContextId = 0;
+};
+
+NS_IMPL_ISUPPORTS(DocShellProgressBridge, nsIWebProgressListener)
+}  // namespace
+
 void CanonicalBrowsingContext::MaybeAddAsProgressListener(
     nsIWebProgress* aWebProgress) {
-  if (!GetWebProgress()) {
+  // Only add as a listener if the created docshell is a toplevel content
+  // docshell. We'll get notifications for all of our subframes through a single
+  // listener.
+  if (!IsTopContent()) {
     return;
   }
-  if (!mStatusFilter) {
+
+  if (!mDocShellProgressBridge) {
+    mDocShellProgressBridge = new DocShellProgressBridge(Id());
     mStatusFilter = new nsBrowserStatusFilter();
-    mStatusFilter->AddProgressListener(GetWebProgress(),
+    mStatusFilter->AddProgressListener(mDocShellProgressBridge,
                                        nsIWebProgress::NOTIFY_ALL);
   }
+
   aWebProgress->AddProgressListener(mStatusFilter, nsIWebProgress::NOTIFY_ALL);
 }
 
@@ -181,9 +225,10 @@ void CanonicalBrowsingContext::ReplacedBy(
   MOZ_ASSERT(!aNewContext->mSessionHistory);
   MOZ_ASSERT(IsTop() && aNewContext->IsTop());
   if (mStatusFilter) {
-    mStatusFilter->RemoveProgressListener(mWebProgress);
+    mStatusFilter->RemoveProgressListener(mDocShellProgressBridge);
     mStatusFilter = nullptr;
   }
+  mWebProgress->ContextReplaced(aNewContext);
   aNewContext->mWebProgress = std::move(mWebProgress);
 
   // Use the Transaction for the fields which need to be updated whether or not
@@ -2357,9 +2402,14 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
   return bfcacheCombo == 0;
 }
 
+void CanonicalBrowsingContext::SetTouchEventsOverride(
+    dom::TouchEventsOverride aOverride, ErrorResult& aRv) {
+  SetTouchEventsOverrideInternal(aOverride, aRv);
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CanonicalBrowsingContext, BrowsingContext,
                                    mSessionHistory, mContainerFeaturePolicy,
-                                   mCurrentBrowserParent,
+                                   mCurrentBrowserParent, mWebProgress,
                                    mSessionStoreSessionStorageUpdateTimer)
 
 NS_IMPL_ADDREF_INHERITED(CanonicalBrowsingContext, BrowsingContext)

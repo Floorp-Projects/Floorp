@@ -28,27 +28,34 @@ var logging_and_doubletap_prefs = [
   ["apz.test.logging_enabled", true],
 ];
 
+var disable_default_zoomin_and_doubletap_prefs = [
+  ...doubletap_prefs,
+  ["apz.doubletapzoom.defaultzoomin", "1.0"],
+];
+
 var subtests = [
   {"file": "helper_doubletap_zoom_smooth.html", "prefs": longeranimation_visualviewport_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_fixedpos_overflow.html", "prefs": logging_and_doubletap_prefs},
-  {"file": "helper_doubletap_zoom_hscrollable.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_hscrollable.html", "prefs": disable_default_zoomin_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_scrolled_overflowhidden.html", "prefs": doubletap_prefs},
   {"file": "helper_doubletap_zoom_shadowdom.html", "prefs": doubletap_prefs},
-  {"file": "helper_doubletap_zoom_tablecell.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_tablecell.html", "prefs": disable_default_zoomin_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_gencon.html", "prefs": doubletap_prefs},
   {"file": "helper_doubletap_zoom_hscrollable2.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_nothing.html", "prefs": doubletap_prefs},
 ];
 
 if (getPlatform() == "mac") {
   subtests.push(
     {"file": "helper_doubletap_zoom_smooth.html?touchpad", "prefs": longeranimation_visualviewport_and_doubletap_prefs},
     {"file": "helper_doubletap_zoom_fixedpos_overflow.html?touchpad", "prefs": logging_and_doubletap_prefs},
-    {"file": "helper_doubletap_zoom_hscrollable.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_hscrollable.html?touchpad", "prefs": disable_default_zoomin_and_doubletap_prefs},
     {"file": "helper_doubletap_zoom_scrolled_overflowhidden.html?touchpad", "prefs": doubletap_prefs},
     {"file": "helper_doubletap_zoom_shadowdom.html?touchpad", "prefs": doubletap_prefs},
-    {"file": "helper_doubletap_zoom_tablecell.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_tablecell.html?touchpad", "prefs": disable_default_zoomin_and_doubletap_prefs},
     {"file": "helper_doubletap_zoom_gencon.html?touchpad", "prefs": doubletap_prefs},
     {"file": "helper_doubletap_zoom_hscrollable2.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_nothing.html?touchpad", "prefs": doubletap_prefs},
   );
 }
 

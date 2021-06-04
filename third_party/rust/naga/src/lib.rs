@@ -150,6 +150,7 @@ pub enum BuiltIn {
     BaseInstance,
     BaseVertex,
     ClipDistance,
+    CullDistance,
     InstanceIndex,
     PointSize,
     VertexIndex,
@@ -444,7 +445,7 @@ pub struct Constant {
 }
 
 /// A literal scalar value, used in constants.
-#[derive(Debug, PartialEq, Clone, Copy, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum ScalarValue {
@@ -480,7 +481,7 @@ pub enum Binding {
     Location {
         location: u32,
         interpolation: Option<Interpolation>,
-        sampling: Option<Sampling>
+        sampling: Option<Sampling>,
     },
 }
 
@@ -630,6 +631,7 @@ pub enum MathFunction {
     Normalize,
     FaceForward,
     Reflect,
+    Refract,
     // computational
     Sign,
     Fma,
@@ -679,6 +681,35 @@ pub enum ImageQuery {
     NumSamples,
 }
 
+/// Component selection for a vector swizzle.
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "deserialize", derive(Deserialize))]
+pub enum SwizzleComponent {
+    ///
+    X = 0,
+    ///
+    Y = 1,
+    ///
+    Z = 2,
+    ///
+    W = 3,
+}
+
+bitflags::bitflags! {
+    /// Memory barrier flags.
+    #[cfg_attr(feature = "serialize", derive(Serialize))]
+    #[cfg_attr(feature = "deserialize", derive(Deserialize))]
+    #[derive(Default)]
+    pub struct Barrier: u32 {
+        /// Barrier affects all `StorageClass::Storage` accesses.
+        const STORAGE = 0x1;
+        /// Barrier affects all `StorageClass::WorkGroup` accesses.
+        const WORK_GROUP = 0x2;
+    }
+}
+
 /// An expression that can be evaluated to obtain a value.
 ///
 /// This is a Single Static Assignment (SSA) scheme similar to SPIR-V.
@@ -703,6 +734,12 @@ pub enum Expression {
     Splat {
         size: VectorSize,
         value: Handle<Expression>,
+    },
+    /// Vector swizzle.
+    Swizzle {
+        size: VectorSize,
+        vector: Handle<Expression>,
+        pattern: [SwizzleComponent; 4],
     },
     /// Composite expression.
     Compose {
@@ -784,12 +821,17 @@ pub enum Expression {
         expr: Handle<Expression>,
         /// Target scalar kind.
         kind: ScalarKind,
-        /// True = conversion needs to take place; False = bitcast.
-        convert: bool,
+        /// If provided, converts to the specified byte width.
+        /// Otherwise, bitcast.
+        convert: Option<Bytes>,
     },
     /// Result of calling another function.
     Call(Handle<Function>),
     /// Get the length of an array.
+    /// The expression must resolve to a pointer to an array with a dynamic size.
+    ///
+    /// This doesn't match the semantics of spirv's `OpArrayLength`, which must be passed
+    /// a pointer to a structure containing a runtime array in its' last field.
     ArrayLength(Handle<Expression>),
 }
 
@@ -844,6 +886,10 @@ pub enum Statement {
     Return { value: Option<Handle<Expression>> },
     /// Aborts the current shader execution.
     Kill,
+    /// Synchronize invocations within the work group.
+    /// The `Barrier` flags control which memory accesses should be synchronized.
+    /// If empty, this becomes purely an execution barrier.
+    Barrier(Barrier),
     /// Stores a value at an address.
     ///
     /// This statement is a barrier for any operations on the

@@ -134,6 +134,14 @@ impl VisibilityShared {
     }
 }
 
+struct CompiledShader {
+    library: metal::Library,
+    function: metal::Function,
+    wg_size: metal::MTLSize,
+    rasterizing: bool,
+    sized_bindings: Vec<naga::ResourceBinding>,
+}
+
 #[derive(Debug)]
 pub struct Device {
     pub(crate) shared: Arc<Shared>,
@@ -141,7 +149,6 @@ pub struct Device {
     memory_types: Vec<adapter::MemoryType>,
     features: hal::Features,
     pub online_recording: OnlineRecording,
-    pub always_prefer_naga: bool,
     #[cfg(any(feature = "pipeline-cache", feature = "cross"))]
     spv_options: naga::back::spv::Options,
 }
@@ -264,21 +271,6 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         #[cfg(any(feature = "pipeline-cache", feature = "cross"))]
         let spv_options = {
             use naga::back::spv;
-            let capabilities = [
-                spv::Capability::Shader,
-                spv::Capability::Matrix,
-                spv::Capability::InputAttachment,
-                spv::Capability::Sampled1D,
-                spv::Capability::Image1D,
-                spv::Capability::SampledBuffer,
-                spv::Capability::ImageBuffer,
-                spv::Capability::ImageQuery,
-                spv::Capability::DerivativeControl,
-                //TODO: fill out the rest
-            ]
-            .iter()
-            .cloned()
-            .collect();
             let mut flags = spv::WriterFlags::empty();
             flags.set(spv::WriterFlags::DEBUG, cfg!(debug_assertions));
             flags.set(
@@ -288,7 +280,8 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             spv::Options {
                 lang_version: (1, 0),
                 flags,
-                capabilities,
+                // doesn't matter since we send it through SPIRV-Cross
+                capabilities: None,
             }
         };
 
@@ -298,7 +291,6 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             memory_types: self.memory_types.clone(),
             features: requested_features,
             online_recording: OnlineRecording::default(),
-            always_prefer_naga: false,
             #[cfg(any(feature = "pipeline-cache", feature = "cross"))]
             spv_options,
         };
@@ -683,7 +675,7 @@ impl Device {
         profiling::scope!("compile_shader_library_naga");
 
         let get_module_info = || {
-            profiling::scope!("naga::write_string");
+            profiling::scope!("naga::msl::write_string");
 
             let (source, info) = match naga::back::msl::write_string(
                 &shader.module,
@@ -781,13 +773,13 @@ impl Device {
         primitive_class: MTLPrimitiveTopologyClass,
         pipeline_cache: Option<&n::PipelineCache>,
         stage: naga::ShaderStage,
-    ) -> Result<(metal::Library, metal::Function, metal::MTLSize, bool), pso::CreationError> {
+    ) -> Result<CompiledShader, pso::CreationError> {
         let _profiling_tag = match stage {
             naga::ShaderStage::Vertex => "vertex",
             naga::ShaderStage::Fragment => "fragment",
             naga::ShaderStage::Compute => "compute",
         };
-        profiling::scope!("load_shader", [_profiling_tag]);
+        profiling::scope!("load_shader", _profiling_tag);
 
         let device = &self.shared.device;
 
@@ -808,22 +800,21 @@ impl Device {
         };
 
         let info = {
-            let mut result = Err(String::new());
-            if ep.module.prefer_naga {
-                result = match ep.module.naga {
-                    Ok(ref shader) => Self::compile_shader_library_naga(
-                        device,
-                        shader,
-                        &layout.naga_options,
-                        &pipeline_options,
-                        #[cfg(feature = "pipeline-cache")]
-                        ep.module.spv_hash,
-                        #[cfg(feature = "pipeline-cache")]
-                        pipeline_cache.as_ref().map(|cache| &cache.spv_to_msl),
-                    ),
-                    Err(ref e) => Err(e.clone()),
-                }
-            }
+            #[cfg_attr(not(feature = "cross"), allow(unused_mut))]
+            let mut result = match ep.module.naga {
+                Ok(ref shader) => Self::compile_shader_library_naga(
+                    device,
+                    shader,
+                    &layout.naga_options,
+                    &pipeline_options,
+                    #[cfg(feature = "pipeline-cache")]
+                    ep.module.spv_hash,
+                    #[cfg(feature = "pipeline-cache")]
+                    pipeline_cache.as_ref().map(|cache| &cache.spv_to_msl),
+                ),
+                Err(ref e) => Err(e.clone()),
+            };
+
             #[cfg(feature = "cross")]
             if result.is_err() {
                 result = Self::compile_shader_library_cross(
@@ -835,26 +826,33 @@ impl Device {
                     stage,
                 );
             }
-            if result.is_err() && !ep.module.prefer_naga {
-                result = match ep.module.naga {
-                    Ok(ref shader) => Self::compile_shader_library_naga(
-                        device,
-                        shader,
-                        &layout.naga_options,
-                        &pipeline_options,
-                        #[cfg(feature = "pipeline-cache")]
-                        ep.module.spv_hash,
-                        #[cfg(feature = "pipeline-cache")]
-                        pipeline_cache.as_ref().map(|cache| &cache.spv_to_msl),
-                    ),
-                    Err(ref e) => Err(e.clone()),
-                }
-            }
             result.map_err(|e| {
                 let error = format!("Error compiling the shader {:?}", e);
                 pso::CreationError::ShaderCreationError(stage.into(), error)
             })?
         };
+
+        // collect sizes indices
+        let mut sized_bindings = Vec::new();
+        if let Ok(ref shader) = ep.module.naga {
+            for (_handle, var) in shader.module.global_variables.iter() {
+                if let naga::TypeInner::Struct { ref members, .. } =
+                    shader.module.types[var.ty].inner
+                {
+                    if let Some(member) = members.last() {
+                        if let naga::TypeInner::Array {
+                            size: naga::ArraySize::Dynamic,
+                            ..
+                        } = shader.module.types[member.ty].inner
+                        {
+                            // Note: unwraps are fine, since the MSL is already generated
+                            let br = var.binding.clone().unwrap();
+                            sized_bindings.push(br);
+                        }
+                    }
+                }
+            }
+        }
 
         let lib = info.library.clone();
         let entry_key = (stage, ep.entry.to_string());
@@ -897,7 +895,13 @@ impl Device {
             pso::CreationError::ShaderCreationError(stage.into(), error)
         })?;
 
-        Ok((lib, mtl_function, wg_size, info.rasterization_enabled))
+        Ok(CompiledShader {
+            library: lib,
+            function: mtl_function,
+            wg_size,
+            rasterizing: info.rasterization_enabled,
+            sized_bindings,
+        })
     }
 
     fn make_sampler_descriptor(
@@ -1105,26 +1109,35 @@ impl hal::device::Device<Backend> for Device {
         Is: Iterator<Item = &'a n::DescriptorSetLayout>,
         Ic: Iterator<Item = (pso::ShaderStageFlags, Range<u32>)>,
     {
+        #[derive(Debug)]
         struct StageInfo {
             stage: naga::ShaderStage,
             counters: n::ResourceData<ResourceIndex>,
             push_constant_buffer: Option<ResourceIndex>,
+            sizes_buffer: Option<ResourceIndex>,
+            sizes_count: u8,
         }
         let mut stage_infos = [
             StageInfo {
                 stage: naga::ShaderStage::Vertex,
                 counters: n::ResourceData::new(),
                 push_constant_buffer: None,
+                sizes_buffer: None,
+                sizes_count: 0,
             },
             StageInfo {
                 stage: naga::ShaderStage::Fragment,
                 counters: n::ResourceData::new(),
                 push_constant_buffer: None,
+                sizes_buffer: None,
+                sizes_count: 0,
             },
             StageInfo {
                 stage: naga::ShaderStage::Compute,
                 counters: n::ResourceData::new(),
                 push_constant_buffer: None,
+                sizes_buffer: None,
+                sizes_count: 0,
             },
         ];
         let mut binding_map = BTreeMap::default();
@@ -1167,11 +1180,13 @@ impl hal::device::Device<Backend> for Device {
         for (set_index, set_layout) in set_layouts.enumerate() {
             // remember where the resources for this set start at each shader stage
             let mut dynamic_buffers = Vec::new();
+            let mut sized_buffer_bindings = Vec::new();
             let offsets = n::MultiStageResourceCounters {
                 vs: stage_infos[0].counters.clone(),
                 ps: stage_infos[1].counters.clone(),
                 cs: stage_infos[2].counters.clone(),
             };
+
             match *set_layout {
                 n::DescriptorSetLayout::Emulated {
                     layouts: ref desc_layouts,
@@ -1190,6 +1205,19 @@ impl hal::device::Device<Backend> for Device {
                         );
                     }
                     for layout in desc_layouts.iter() {
+                        if layout.content.contains(n::DescriptorContent::SIZED_BUFFER) {
+                            sized_buffer_bindings.push((layout.binding, layout.stages));
+                            if layout.stages.contains(pso::ShaderStageFlags::VERTEX) {
+                                stage_infos[0].sizes_count += 1;
+                            }
+                            if layout.stages.contains(pso::ShaderStageFlags::FRAGMENT) {
+                                stage_infos[1].sizes_count += 1;
+                            }
+                            if layout.stages.contains(pso::ShaderStageFlags::COMPUTE) {
+                                stage_infos[2].sizes_count += 1;
+                            }
+                        }
+
                         if layout
                             .content
                             .contains(n::DescriptorContent::DYNAMIC_BUFFER)
@@ -1212,6 +1240,7 @@ impl hal::device::Device<Backend> for Device {
                                 },
                             });
                         }
+
                         for info in stage_infos.iter_mut() {
                             if !layout.stages.contains(info.stage.into()) {
                                 continue;
@@ -1277,14 +1306,24 @@ impl hal::device::Device<Backend> for Device {
             infos.alloc().init(n::DescriptorSetInfo {
                 offsets,
                 dynamic_buffers,
+                sized_buffer_bindings,
             });
         }
 
         // Finally, make sure we fit the limits
-        for info in stage_infos.iter() {
-            assert!(info.counters.buffers <= self.shared.private_caps.max_buffers_per_stage);
-            assert!(info.counters.textures <= self.shared.private_caps.max_textures_per_stage);
-            assert!(info.counters.samplers <= self.shared.private_caps.max_samplers_per_stage);
+        for info in stage_infos.iter_mut() {
+            // handle the sizes buffer assignment and shader overrides
+            if info.sizes_count != 0 {
+                info.sizes_buffer = Some(info.counters.buffers);
+                info.counters.buffers += 1;
+            }
+            if info.counters.buffers > self.shared.private_caps.max_buffers_per_stage
+                || info.counters.textures > self.shared.private_caps.max_textures_per_stage
+                || info.counters.samplers > self.shared.private_caps.max_samplers_per_stage
+            {
+                log::error!("Resource limit exceeded: {:?}", info);
+                return Err(d::OutOfMemory::Host);
+            }
         }
 
         #[cfg(feature = "cross")]
@@ -1386,16 +1425,31 @@ impl hal::device::Device<Backend> for Device {
             inline_samplers,
             spirv_cross_compatibility: cfg!(feature = "cross"),
             fake_missing_bindings: false,
-            push_constants_map: naga::back::msl::PushConstantsMap {
-                vs_buffer: stage_infos[0]
-                    .push_constant_buffer
-                    .map(|buffer_index| buffer_index as naga::back::msl::Slot),
-                fs_buffer: stage_infos[1]
-                    .push_constant_buffer
-                    .map(|buffer_index| buffer_index as naga::back::msl::Slot),
-                cs_buffer: stage_infos[2]
-                    .push_constant_buffer
-                    .map(|buffer_index| buffer_index as naga::back::msl::Slot),
+            per_stage_map: naga::back::msl::PerStageMap {
+                vs: naga::back::msl::PerStageResources {
+                    push_constant_buffer: stage_infos[0]
+                        .push_constant_buffer
+                        .map(|buffer_index| buffer_index as naga::back::msl::Slot),
+                    sizes_buffer: stage_infos[0]
+                        .sizes_buffer
+                        .map(|buffer_index| buffer_index as naga::back::msl::Slot),
+                },
+                fs: naga::back::msl::PerStageResources {
+                    push_constant_buffer: stage_infos[1]
+                        .push_constant_buffer
+                        .map(|buffer_index| buffer_index as naga::back::msl::Slot),
+                    sizes_buffer: stage_infos[1]
+                        .sizes_buffer
+                        .map(|buffer_index| buffer_index as naga::back::msl::Slot),
+                },
+                cs: naga::back::msl::PerStageResources {
+                    push_constant_buffer: stage_infos[2]
+                        .push_constant_buffer
+                        .map(|buffer_index| buffer_index as naga::back::msl::Slot),
+                    sizes_buffer: stage_infos[2]
+                        .sizes_buffer
+                        .map(|buffer_index| buffer_index as naga::back::msl::Slot),
+                },
             },
         };
 
@@ -1578,7 +1632,7 @@ impl hal::device::Device<Backend> for Device {
             (&main_pass.attachments, &main_pass.subpasses[index as usize])
         };
 
-        let (desc_vertex_buffers, attributes, input_assembler, vs) =
+        let (desc_vertex_buffers, attributes, input_assembler, vs_ep) =
             match pipeline_desc.primitive_assembler {
                 pso::PrimitiveAssemblerDesc::Vertex {
                     tessellation: Some(_),
@@ -1633,30 +1687,25 @@ impl hal::device::Device<Backend> for Device {
         }
 
         // Vertex shader
-        let (vs_lib, vs_function, _, enable_rasterization) = self.load_shader(
-            vs,
+        let vs = self.load_shader(
+            vs_ep,
             pipeline_layout,
             primitive_class,
             cache,
             naga::ShaderStage::Vertex,
         )?;
-        pipeline.set_vertex_function(Some(&vs_function));
+
+        pipeline.set_vertex_function(Some(&vs.function));
 
         // Fragment shader
-        let fs_function;
-        let fs_lib = match pipeline_desc.fragment {
-            Some(ref ep) => {
-                let (lib, fun, _, _) = self.load_shader(
-                    ep,
-                    pipeline_layout,
-                    primitive_class,
-                    cache,
-                    naga::ShaderStage::Fragment,
-                )?;
-                fs_function = fun;
-                pipeline.set_fragment_function(Some(&fs_function));
-                Some(lib)
-            }
+        let fs = match pipeline_desc.fragment {
+            Some(ref ep) => Some(self.load_shader(
+                ep,
+                pipeline_layout,
+                primitive_class,
+                cache,
+                naga::ShaderStage::Fragment,
+            )?),
             None => {
                 // TODO: This is a workaround for what appears to be a Metal validation bug
                 // A pixel format is required even though no attachments are provided
@@ -1669,7 +1718,10 @@ impl hal::device::Device<Backend> for Device {
             }
         };
 
-        pipeline.set_rasterization_enabled(enable_rasterization);
+        if let Some(ref compiled) = fs {
+            pipeline.set_fragment_function(Some(&compiled.function));
+        }
+        pipeline.set_rasterization_enabled(vs.rasterizing);
 
         // Assign target formats
         let blend_targets = pipeline_desc
@@ -1869,17 +1921,40 @@ impl hal::device::Device<Backend> for Device {
             pipeline.set_binary_archives(&[&binary_archive.inner]);
         }
 
+        let (fs_lib, ps_sized_bindings) = match fs {
+            Some(compiled) => (Some(compiled.library), compiled.sized_bindings),
+            None => (None, Vec::new()),
+        };
+
         let pipeline_state = device
             // Replace this with `new_render_pipeline_state_with_fail_on_binary_archive_miss`
             // to debug that the cache is actually working.
             .new_render_pipeline_state(&pipeline)
             .map(|raw| n::GraphicsPipeline {
-                vs_lib,
+                vs_lib: vs.library,
                 fs_lib,
                 raw,
                 primitive_type,
-                vs_pc_info: pipeline_desc.layout.push_constants.vs,
-                ps_pc_info: pipeline_desc.layout.push_constants.ps,
+                vs_info: n::PipelineStageInfo {
+                    push_constants: pipeline_desc.layout.push_constants.vs,
+                    sizes_slot: pipeline_desc
+                        .layout
+                        .naga_options
+                        .per_stage_map
+                        .vs
+                        .sizes_buffer,
+                    sized_bindings: vs.sized_bindings,
+                },
+                ps_info: n::PipelineStageInfo {
+                    push_constants: pipeline_desc.layout.push_constants.ps,
+                    sizes_slot: pipeline_desc
+                        .layout
+                        .naga_options
+                        .per_stage_map
+                        .fs
+                        .sizes_buffer,
+                    sized_bindings: ps_sized_bindings,
+                },
                 rasterizer_state,
                 depth_bias,
                 depth_stencil_desc: pipeline_desc.depth_stencil.clone(),
@@ -1917,14 +1992,14 @@ impl hal::device::Device<Backend> for Device {
         trace!("create_compute_pipeline {:?}", pipeline_desc);
         let pipeline = metal::ComputePipelineDescriptor::new();
 
-        let (cs_lib, cs_function, work_group_size, _) = self.load_shader(
+        let cs = self.load_shader(
             &pipeline_desc.shader,
             &pipeline_desc.layout,
             MTLPrimitiveTopologyClass::Unspecified,
             cache,
             naga::ShaderStage::Compute,
         )?;
-        pipeline.set_compute_function(Some(&cs_function));
+        pipeline.set_compute_function(Some(&cs.function));
         if let Some(name) = pipeline_desc.label {
             pipeline.set_label(name);
         }
@@ -1942,10 +2017,19 @@ impl hal::device::Device<Backend> for Device {
             .lock()
             .new_compute_pipeline_state(&pipeline)
             .map(|raw| n::ComputePipeline {
-                cs_lib,
+                cs_lib: cs.library,
                 raw,
-                work_group_size,
-                pc_info: pipeline_desc.layout.push_constants.cs,
+                work_group_size: cs.wg_size,
+                info: n::PipelineStageInfo {
+                    push_constants: pipeline_desc.layout.push_constants.cs,
+                    sizes_slot: pipeline_desc
+                        .layout
+                        .naga_options
+                        .per_stage_map
+                        .cs
+                        .sizes_buffer,
+                    sized_bindings: cs.sized_bindings,
+                },
             })
             .map_err(|err| {
                 error!("PSO creation failed: {}", err);
@@ -1981,25 +2065,34 @@ impl hal::device::Device<Backend> for Device {
     ) -> Result<n::ShaderModule, d::ShaderError> {
         profiling::scope!("create_shader_module");
         Ok(n::ShaderModule {
-            prefer_naga: self.always_prefer_naga,
             #[cfg(feature = "cross")]
             spv: raw_data.to_vec(),
             #[cfg(feature = "pipeline-cache")]
             spv_hash: fxhash::hash64(raw_data),
-            naga: {
+            naga: if cfg!(feature = "cross") {
+                Err("Cross is enabled".into())
+            } else {
                 let options = naga::front::spv::Options {
                     adjust_coordinate_space: !self.features.contains(hal::Features::NDC_Y_UP),
+                    strict_capabilities: true,
                     flow_graph_dump_prefix: None,
                 };
-                let parser = naga::front::spv::Parser::new(raw_data.iter().cloned(), &options);
-                match parser.parse() {
+                let parse_result = {
+                    profiling::scope!("naga::spv::parse");
+                    let parser = naga::front::spv::Parser::new(raw_data.iter().cloned(), &options);
+                    parser.parse()
+                };
+                match parse_result {
                     Ok(module) => {
                         debug!("Naga module {:#?}", module);
-                        match naga::valid::Validator::new(naga::valid::ValidationFlags::empty())
-                            .validate(&module)
+                        match naga::valid::Validator::new(
+                            naga::valid::ValidationFlags::empty(),
+                            naga::valid::Capabilities::PUSH_CONSTANT,
+                        )
+                        .validate(&module)
                         {
                             Ok(info) => Ok(d::NagaShader { module, info }),
-                            Err(e) => Err(format!("Naga validation: {:?}", e)),
+                            Err(e) => Err(format!("Naga validation: {}", e)),
                         }
                     }
                     Err(e) => Err(format!("Naga parsing: {:?}", e)),
@@ -2022,7 +2115,6 @@ impl hal::device::Device<Backend> for Device {
         };
 
         Ok(n::ShaderModule {
-            prefer_naga: true,
             #[cfg(feature = "pipeline-cache")]
             spv_hash: fxhash::hash64(&spv),
             #[cfg(feature = "cross")]
@@ -2437,10 +2529,20 @@ impl hal::device::Device<Backend> for Device {
                             debug_assert!(
                                 range.start + sub.offset + sub.size.unwrap_or(0) <= range.end
                             );
+                            let raw_binding_size = match sub.size {
+                                Some(size) => size,
+                                None => range.end - range.start - sub.offset,
+                            };
                             data.buffers[counters.buffers as usize] = (
                                 layout.stages,
                                 Some(AsNative::from(raw)),
                                 range.start + sub.offset,
+                                layout.binding,
+                                if layout.content.contains(n::DescriptorContent::SIZED_BUFFER) {
+                                    raw_binding_size.min(u32::MAX as buffer::Offset - 1) as u32
+                                } else {
+                                    !0
+                                },
                             );
                         }
                     }
@@ -2551,6 +2653,7 @@ impl hal::device::Device<Backend> for Device {
         memory_type: hal::MemoryTypeId,
         size: u64,
     ) -> Result<n::Memory, d::AllocationError> {
+        profiling::scope!("allocate_memory");
         let (storage, cache) = MemoryTypes::describe(memory_type.0);
         let device = self.shared.device.lock();
         debug!("allocate_memory type {:?} of size {}", memory_type, size);
@@ -2580,6 +2683,7 @@ impl hal::device::Device<Backend> for Device {
     }
 
     unsafe fn free_memory(&self, memory: n::Memory) {
+        profiling::scope!("free_memory");
         debug!("free_memory of size {}", memory.size);
         if let n::MemoryHeap::Public(_, ref cpu_buffer) = memory.heap {
             debug!("\tbacked by cpu buffer {:?}", cpu_buffer.as_ptr());
@@ -2647,6 +2751,7 @@ impl hal::device::Device<Backend> for Device {
         offset: u64,
         buffer: &mut n::Buffer,
     ) -> Result<(), d::BindError> {
+        profiling::scope!("bind_buffer_memory");
         let (size, name) = match buffer {
             n::Buffer::Unbound { size, name, .. } => (*size, name),
             n::Buffer::Bound { .. } => panic!("Unexpected Buffer::Bound"),
@@ -2791,6 +2896,7 @@ impl hal::device::Device<Backend> for Device {
         _sparse: memory::SparseFlags,
         view_caps: image::ViewCapabilities,
     ) -> Result<n::Image, image::CreationError> {
+        profiling::scope!("create_image");
         debug!(
             "create_image {:?} with {} mips of {:?} {:?} and usage {:?} with {:?}",
             kind, mip_levels, format, tiling, usage, view_caps
@@ -2979,6 +3085,7 @@ impl hal::device::Device<Backend> for Device {
         offset: u64,
         image: &mut n::Image,
     ) -> Result<(), d::BindError> {
+        profiling::scope!("bind_image_memory");
         let like = {
             let (descriptor, mip_sizes, name) = match image.like {
                 n::ImageLike::Unbound {
@@ -3050,6 +3157,8 @@ impl hal::device::Device<Backend> for Device {
         _usage: image::Usage,
         range: image::SubresourceRange,
     ) -> Result<n::ImageView, image::ViewCreationError> {
+        profiling::scope!("create_image_view");
+
         let mtl_format = match self
             .shared
             .private_caps

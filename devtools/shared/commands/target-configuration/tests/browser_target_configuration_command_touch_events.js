@@ -11,6 +11,9 @@ add_task(async function() {
   // Disable click hold and double tap zooming as it might interfere with the test
   await pushPref("ui.click_hold_context_menus", false);
   await pushPref("apz.allow_double_tap_zooming", false);
+  // We turn server-side target switching on so touch simulation is enabled when navigating
+  // to a different origin (See Bug 1704029).
+  await pushPref("devtools.target-switching.server.enabled", true);
 
   const tab = await addTab(TEST_URI);
 
@@ -28,13 +31,12 @@ add_task(async function() {
   });
 
   info("Enable touch simulation");
-  await targetConfigurationCommand.setTouchEventsOverride("enabled");
+  await targetConfigurationCommand.updateConfiguration({
+    touchEventsOverride: "enabled",
+  });
   await checkTopLevelDocumentTouchSimulation({ enabled: true });
   await checkIframeTouchSimulation({
     enabled: true,
-    // touch events are not emitted in remote frame when fission is enabled.
-    // This should be removed in Bug 1704028.
-    skipTouchEventsCheck: Services.appinfo.fissionAutostart,
   });
 
   info("Reload the page");
@@ -59,9 +61,6 @@ add_task(async function() {
   );
   await checkIframeTouchSimulation({
     enabled: true,
-    // touch events are not emitted in remote frame when fission is enabled.
-    // This should be removed in Bug 1704028.
-    skipTouchEventsCheck: Services.appinfo.fissionAutostart,
   });
 
   info(
@@ -91,9 +90,6 @@ add_task(async function() {
   await checkTopLevelDocumentTouchSimulation({ enabled: true });
   await checkIframeTouchSimulation({
     enabled: true,
-    // touch events are not emitted in remote frame when fission is enabled.
-    // This should be removed in Bug 1704028.
-    skipTouchEventsCheck: Services.appinfo.fissionAutostart,
   });
 
   const previousBrowsingContextId = gBrowser.selectedBrowser.browsingContext.id;
@@ -124,9 +120,6 @@ add_task(async function() {
   );
   await checkTopLevelDocumentTouchSimulation({
     enabled: true,
-    // The touch simulator isn't working after a new browsing context is created.
-    // This should be removed in Bug 1704029.
-    skipTouchEventsCheck: true,
   });
 
   is(
@@ -136,10 +129,6 @@ add_task(async function() {
   );
   await checkIframeTouchSimulation({
     enabled: true,
-    // The touch simulator isn't working after a new browsing context is created,
-    // and touch events are not emitted in remote frame when fission is enabled.
-    // This can be removed once Bug 1704029 and Bug 1704028 are resolved.
-    skipTouchEventsCheck: true,
   });
 
   info(
@@ -234,10 +223,7 @@ async function isTouchEventEmitted(browserOrBrowsingContext) {
   return result !== "TIMEOUT";
 }
 
-async function checkTopLevelDocumentTouchSimulation({
-  enabled,
-  skipTouchEventsCheck = false,
-}) {
+async function checkTopLevelDocumentTouchSimulation({ enabled }) {
   is(
     await matchesCoarsePointer(gBrowser.selectedBrowser),
     enabled,
@@ -245,10 +231,6 @@ async function checkTopLevelDocumentTouchSimulation({
       enabled ? "enabled" : "disabled"
     } on the top level document`
   );
-
-  if (skipTouchEventsCheck) {
-    return;
-  }
 
   is(
     await isTouchEventEmitted(gBrowser.selectedBrowser),
@@ -269,20 +251,13 @@ function getIframeBrowsingContext() {
   );
 }
 
-async function checkIframeTouchSimulation({
-  enabled,
-  skipTouchEventsCheck = false,
-}) {
+async function checkIframeTouchSimulation({ enabled }) {
   const iframeBC = await getIframeBrowsingContext();
   is(
     await matchesCoarsePointer(iframeBC),
     enabled,
     `The touch simulation is ${enabled ? "enabled" : "disabled"} on the iframe`
   );
-
-  if (skipTouchEventsCheck) {
-    return;
-  }
 
   is(
     await isTouchEventEmitted(iframeBC),

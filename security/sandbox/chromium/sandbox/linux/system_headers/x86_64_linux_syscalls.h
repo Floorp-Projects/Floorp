@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-/* Constructed by running a vim macro over
-   linux-kernel/arch/x86/entry/syscalls/syscall_64.tbl
-   version 39a38bcba4ab6e5285b07675b0e42c96eec35e67
-   which is close to Linux 5.4.
-*/
+/* Constructed by running:
+ * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/arch/x86/entry/syscalls/syscall_64.tbl?h=v5.8
+ *   | grep -vE '^#|^$'
+ *   | awk '{ if ($2 != "x32") { print "#if !defined(__NR_" $3 ")\n#define __NR_" $3 " " $1 "\n#endif\n"; } }'
+ * */
+
 #ifndef SANDBOX_LINUX_SYSTEM_HEADERS_X86_64_LINUX_SYSCALLS_H_
 #define SANDBOX_LINUX_SYSTEM_HEADERS_X86_64_LINUX_SYSCALLS_H_
 
@@ -1400,6 +1401,18 @@
 
 #if !defined(__NR_clone3)
 #define __NR_clone3 435
+#endif
+
+#if !defined(__NR_openat2)
+#define __NR_openat2 437
+#endif
+
+#if !defined(__NR_pidfd_getfd)
+#define __NR_pidfd_getfd 438
+#endif
+
+#if !defined(__NR_faccessat2)
+#define __NR_faccessat2 439
 #endif
 
 #endif  // SANDBOX_LINUX_SYSTEM_HEADERS_X86_64_LINUX_SYSCALLS_H_

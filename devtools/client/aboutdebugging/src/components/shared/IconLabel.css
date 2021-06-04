@@ -25,3 +25,9 @@
   width: calc(var(--base-unit) * 4);
   height: calc(var(--base-unit) * 4);
 }
+
+@media(-moz-toolbar-prefers-color-scheme: dark) {
+  .icon-label__icon {
+    fill: var(--white-100);
+  }
+}

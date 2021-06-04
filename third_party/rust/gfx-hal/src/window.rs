@@ -89,8 +89,11 @@ pub enum SwapchainError {
     /// Window in use
     #[error("Window is in use")]
     WindowInUse,
+    /// Accecssing the underlying NSView from wrong thread https://github.com/gfx-rs/gfx/issues/3704
+    #[error("Accecssing NSView from wrong thread")]
+    WrongThread,
     /// Unknown error.
-    #[error("Swapchain can't be created for an unlknown reason")]
+    #[error("Swapchain can't be created for an unknown reason")]
     Unknown,
 }
 

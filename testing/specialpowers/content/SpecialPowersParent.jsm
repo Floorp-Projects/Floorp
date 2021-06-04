@@ -685,7 +685,7 @@ class SpecialPowersParent extends JSWindowActorParent {
    * This will get requests from our API in the window and process them in chrome for it
    **/
   // eslint-disable-next-line complexity
-  receiveMessage(aMessage) {
+  async receiveMessage(aMessage) {
     let startTime = Cu.now();
     // Try block so we can use a finally statement to add a profiler marker
     // despite all the return statements.
@@ -712,6 +712,23 @@ class SpecialPowersParent extends JSWindowActorParent {
           } else {
             Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
           }
+          return undefined;
+
+        case "EnsureFocus":
+          let bc = aMessage.data.browsingContext;
+          // Send a message to the child telling it to focus the window.
+          // If the message responds with a browsing context, then
+          // a child browsing context in a subframe should be focused.
+          // Iterate until nothing is returned and we get to the most
+          // deeply nested subframe that should be focused.
+          do {
+            let spParent = bc.currentWindowGlobal.getActor("SpecialPowers");
+            if (spParent) {
+              bc = await spParent.sendQuery("EnsureFocus", {
+                blurSubframe: aMessage.data.blurSubframe,
+              });
+            }
+          } while (bc && !aMessage.data.blurSubframe);
           return undefined;
 
         case "SpecialPowers.Focus":

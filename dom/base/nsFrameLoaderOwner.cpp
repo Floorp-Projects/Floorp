@@ -132,32 +132,19 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
       networkCreated = mFrameLoader->IsNetworkCreated();
 
       MOZ_ASSERT_IF(aOptions.mTryUseBFCache, aOptions.mReplaceBrowsingContext);
-      if (aOptions.mTryUseBFCache) {
-        if (bc) {
-          SessionHistoryEntry* she =
-              bc->Canonical()->GetActiveSessionHistoryEntry();
-          if (she) {
-            MOZ_LOG(
-                gSHIPBFCacheLog, LogLevel::Debug,
-                ("nsFrameLoaderOwner::ChangeRemotenessCommon: store the old "
-                 "page in bfcache"));
-            Unused << bc->SetIsInBFCache(true);
-            if (she->GetFrameLoader()) {
-              MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-                      ("nsFrameLoaderOwner::ChangeRemotenessCommon: active "
-                       "session history entry "
-                       "has already an nsFrameLoader!, FIXME"));
-              MOZ_DIAGNOSTIC_ASSERT(false,
-                                    "The current session history entry has "
-                                    "already an nsFrameLoader!");
-              RefPtr<nsFrameLoader> oldFrameLoader = she->GetFrameLoader();
-              she->SetFrameLoader(nullptr);
-              oldFrameLoader->Destroy();
-            }
-            she->SetFrameLoader(mFrameLoader);
-            // Session history owns now the frameloader.
-            mFrameLoader = nullptr;
-          }
+      if (aOptions.mTryUseBFCache && bc) {
+        SessionHistoryEntry* she =
+            bc->Canonical()->GetActiveSessionHistoryEntry();
+        bool useBFCache = she && she == aOptions.mActiveSessionHistoryEntry &&
+                          !she->GetFrameLoader();
+        if (useBFCache) {
+          MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
+                  ("nsFrameLoaderOwner::ChangeRemotenessCommon: store the old "
+                   "page in bfcache"));
+          Unused << bc->SetIsInBFCache(true);
+          she->SetFrameLoader(mFrameLoader);
+          // Session history owns now the frameloader.
+          mFrameLoader = nullptr;
         }
       }
 

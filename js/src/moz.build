@@ -158,6 +158,7 @@ EXPORTS.js += [
     "../public/GCVector.h",
     "../public/HashTable.h",
     "../public/HeapAPI.h",
+    "../public/HelperThreadAPI.h",
     "../public/Id.h",
     "../public/Initialization.h",
     "../public/JSON.h",

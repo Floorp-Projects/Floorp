@@ -394,33 +394,22 @@ XPCOMUtils.defineLazyGetter(this, "gHighPriorityNotificationBox", () => {
   return new MozElements.NotificationBox(element => {
     element.classList.add("global-notificationbox");
     element.setAttribute("notificationside", "top");
-    element.toggleAttribute("prepend-notifications", gProton);
-    if (gProton) {
-      // With Proton enabled all notification boxes are at the top, built into the browser chrome.
-      let tabNotifications = document.getElementById("tab-notification-deck");
-      // With Proton enabled, notification messages use the CSS box model. When using
-      // negative margins on those notification messages to animate them in or out,
-      // if the ancestry of that node is all using the XUL box model, strange glitches
-      // arise. We sidestep this by containing the global notification box within a
-      // <div> that has CSS block layout.
-      let outer = document.createElement("div");
-      outer.appendChild(element);
-      gNavToolbox.insertBefore(outer, tabNotifications);
-    } else {
-      document.getElementById("appcontent").prepend(element);
-    }
+    element.setAttribute("prepend-notifications", true);
+    // Notification messages use the CSS box model. When using
+    // negative margins on those notification messages to animate them in or out,
+    // if the ancestry of that node is all using the XUL box model, strange glitches
+    // arise. We sidestep this by containing the global notification box within a
+    // <div> that has CSS block layout.
+    let outer = document.createElement("div");
+    outer.appendChild(element);
+    let tabNotifications = document.getElementById("tab-notification-deck");
+    gNavToolbox.insertBefore(outer, tabNotifications);
   });
 });
 
 // Regular notification bars shown at the bottom of the window.
 XPCOMUtils.defineLazyGetter(this, "gNotificationBox", () => {
-  return gProton
-    ? gHighPriorityNotificationBox
-    : new MozElements.NotificationBox(element => {
-        element.classList.add("global-notificationbox");
-        element.setAttribute("notificationside", "bottom");
-        document.getElementById("browser-bottombox").appendChild(element);
-      });
+  return gHighPriorityNotificationBox;
 });
 
 XPCOMUtils.defineLazyGetter(this, "InlineSpellCheckerUI", () => {
@@ -547,22 +536,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-/* Work around the pref callback being run after the document has been unlinked.
-   See bug 1543537. */
-var docWeak = Cu.getWeakReference(document);
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProton",
-  "browser.proton.enabled",
-  false,
-  (pref, oldValue, newValue) => {
-    let doc = docWeak.get();
-    if (doc) {
-      doc.documentElement.toggleAttribute("proton", newValue);
-    }
-  }
-);
-
 /* Temporary pref while the dust settles around the updated tooltip design
    for tabs and bookmarks toolbar. This will eventually be removed and
    browser.proton.enabled will be used instead. */
@@ -570,14 +543,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gProtonPlacesTooltip",
   "browser.proton.places-tooltip.enabled",
-  false
-);
-
-/* Temporary pref while the Proton doorhangers work stablizes. */
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProtonDoorhangers",
-  "browser.proton.doorhangers.enabled",
   false
 );
 
@@ -1700,8 +1665,6 @@ var gBrowserInit = {
     ) {
       document.documentElement.setAttribute("icon", "main-window");
     }
-
-    document.documentElement.toggleAttribute("proton", gProton);
 
     // Call this after we set attributes that might change toolbars' computed
     // text color.
@@ -7540,7 +7503,7 @@ var IndexedDBPromptHelper = {
           Ci.nsIPermissionManager.ALLOW_ACTION
         );
       },
-      disableHighlight: gProtonDoorhangers,
+      disableHighlight: true,
     };
 
     var secondaryActions = [
@@ -7639,7 +7602,7 @@ var CanvasPermissionPromptHelper = {
           state && state.checkboxChecked
         );
       },
-      disableHighlight: gProtonDoorhangers,
+      disableHighlight: true,
     };
 
     let secondaryActions = [
@@ -7813,9 +7776,7 @@ var WebAuthnPromptHelper = {
       }
     };
 
-    if (gProtonDoorhangers) {
-      mainAction.disableHighlight = true;
-    }
+    mainAction.disableHighlight = true;
 
     this._tid = tid;
     this._current = PopupNotifications.show(

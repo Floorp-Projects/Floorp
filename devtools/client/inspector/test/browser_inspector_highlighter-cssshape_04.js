@@ -76,7 +76,7 @@ async function testPolygonMovePoint(config) {
   await mouse.down(x, y);
   await mouse.move(x + dx, y + dy);
   await mouse.up();
-  await testActor.reflow();
+  await reflowContentPage();
   info("Waiting for rule view changed from shape change");
   await onRuleViewChanged;
 
@@ -121,7 +121,7 @@ async function testPolygonAddPoint(config) {
   await mouse.down(x1, y1);
   await mouse.move(x2, y1);
   await mouse.up();
-  await testActor.reflow();
+  await reflowContentPage();
 
   let newPointX = x2;
   let newPointY = (y1 + y2) / 2;
@@ -136,7 +136,7 @@ async function testPolygonAddPoint(config) {
     gBrowser.selectedTab.linkedBrowser
   );
 
-  await testActor.reflow();
+  await reflowContentPage();
   info("Waiting for rule view changed from shape change");
   await onRuleViewChanged;
 
@@ -249,7 +249,7 @@ async function testCircleMoveCenter(config) {
   await mouse.down(cxPixel, cyPixel, selector);
   await mouse.move(cxPixel + dx, cyPixel + dy, selector);
   await mouse.up(cxPixel + dx, cyPixel + dy, selector);
-  await testActor.reflow();
+  await reflowContentPage();
   info("Waiting for shape changes to apply");
   await onShapeChangeApplied;
 
@@ -321,7 +321,7 @@ async function testEllipseMoveRadius(config) {
   await mouse.down(rxPixel, cyPixel, selector);
   await mouse.move(rxPixel + dx, cyPixel, selector);
   await mouse.up(rxPixel + dx, cyPixel, selector);
-  await testActor.reflow();
+  await reflowContentPage();
 
   info("Moving ellipse ry");
   const onShapeChangeApplied = highlighters.once(
@@ -330,7 +330,7 @@ async function testEllipseMoveRadius(config) {
   await mouse.down(cxPixel, ryPixel, selector);
   await mouse.move(cxPixel, ryPixel - dy, selector);
   await mouse.up(cxPixel, ryPixel - dy, selector);
-  await testActor.reflow();
+  await reflowContentPage();
   await onShapeChangeApplied;
 
   const definition = await getComputedPropertyValue(
@@ -401,7 +401,7 @@ async function testInsetMoveEdges(config) {
   await mouse.down(xCenter, top, selector);
   await mouse.move(xCenter, top + dy, selector);
   await mouse.up(xCenter, top + dy, selector);
-  await testActor.reflow();
+  await reflowContentPage();
   await onShapeChangeApplied;
 
   // TODO: Test bottom inset marker after Bug 1456777 is fixed.
@@ -416,7 +416,7 @@ async function testInsetMoveEdges(config) {
   await mouse.down(left, yCenter, selector);
   await mouse.move(left + dx, yCenter, selector);
   await mouse.up(left + dx, yCenter, selector);
-  await testActor.reflow();
+  await reflowContentPage();
   await onShapeChangeApplied;
 
   info("Moving inset right");
@@ -426,7 +426,7 @@ async function testInsetMoveEdges(config) {
   await mouse.down(right, yCenter, selector);
   await mouse.move(right + dx, yCenter, selector);
   await mouse.up(right + dx, yCenter, selector);
-  await testActor.reflow();
+  await reflowContentPage();
   await onShapeChangeApplied;
 
   const definition = await getComputedPropertyValue(

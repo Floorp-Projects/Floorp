@@ -25,7 +25,7 @@ fn main() {
         QueueAttribute::Serial,
     );
 
-    // Enable `dispatch-queue` feature to use dispatch queues,
+    // Enable `dispatch` feature to use dispatch queues,
     // otherwise unsafe `from_queue_handle` is available for use with native APIs.
     let shared_event_listener = SharedEventListener::from_queue(&my_queue);
 
