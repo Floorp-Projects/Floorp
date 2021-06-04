@@ -57,6 +57,12 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 
   // Overrides of nsIEditor
   NS_IMETHOD GetTextLength(int32_t* aCount) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) override {
+    const nsresult rv = TextEditor::PasteAsAction(aClipboardType, true);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HTMLEditor::PasteAsAction() failed");
+    return rv;
+  }
 
   // Shouldn't be used internally, but we need these using declarations for
   // avoiding warnings of clang.
@@ -85,22 +91,9 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 
   virtual dom::EventTarget* GetDOMEventTarget() const override;
 
-  /**
-   * PasteAsAction() pastes clipboard content to Selection.  This method
-   * may dispatch ePaste event first.  If its defaultPrevent() is called,
-   * this does nothing but returns NS_OK.
-   *
-   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
-   *                            nsIClipboard::kSelectionClipboard.
-   * @param aDispatchPasteEvent true if this should dispatch ePaste event
-   *                            before pasting.  Otherwise, false.
-   * @param aPrincipal          Set subject principal if it may be called by
-   *                            JS.  If set to nullptr, will be treated as
-   *                            called by system.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult PasteAsAction(int32_t aClipboardType,
-                                            bool aDispatchPasteEvent,
-                                            nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
+                nsIPrincipal* aPrincipal = nullptr) override;
 
   MOZ_CAN_RUN_SCRIPT nsresult
   PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
