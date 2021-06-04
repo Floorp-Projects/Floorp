@@ -1,7 +1,6 @@
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import { GlobalOverrider } from "test/unit/utils";
-import { PlacesFeed } from "lib/PlacesFeed.jsm";
-const { BookmarksObserver, PlacesObserver } = PlacesFeed;
+import injector from "inject!lib/PlacesFeed.jsm";
 
 const FAKE_BOOKMARK = {
   bookmarkGuid: "xi31",
@@ -20,10 +19,16 @@ const SOURCES = {
 
 const BLOCKED_EVENT = "newtab-linkBlocked"; // The event dispatched in NewTabUtils when a link is blocked;
 
+const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
+
 describe("PlacesFeed", () => {
+  let PlacesFeed;
+  let BookmarksObserver;
+  let PlacesObserver;
   let globals;
   let sandbox;
   let feed;
+  let shortURLStub;
   beforeEach(() => {
     globals = new GlobalOverrider();
     sandbox = globals.sandbox;
@@ -55,6 +60,11 @@ describe("PlacesFeed", () => {
     sandbox.spy(global.Services.obs, "addObserver");
     sandbox.spy(global.Services.obs, "removeObserver");
     sandbox.spy(global.Cu, "reportError");
+    shortURLStub = sandbox
+      .stub()
+      .callsFake(site =>
+        site.url.replace(/(.com|.ca)/, "").replace("https://", "")
+      );
 
     global.Services.io.newURI = spec => ({
       mutate: () => ({
@@ -77,6 +87,11 @@ describe("PlacesFeed", () => {
         };
       },
     };
+    ({ PlacesFeed } = injector({
+      "lib/ShortURL.jsm": { shortURL: shortURLStub },
+    }));
+    BookmarksObserver = PlacesFeed.BookmarksObserver;
+    PlacesObserver = PlacesFeed.PlacesObserver;
     feed = new PlacesFeed();
     feed.store = { dispatch: sinon.spy() };
   });
@@ -101,6 +116,50 @@ describe("PlacesFeed", () => {
     assert.calledOnce(feed.store.dispatch);
     assert.equal(feed.store.dispatch.firstCall.args[0].type, action.type);
   });
+
+  describe("#addToBlockedTopSitesSponsors", () => {
+    let spy;
+    beforeEach(() => {
+      sandbox
+        .stub(global.Services.prefs, "getStringPref")
+        .withArgs(TOP_SITES_BLOCKED_SPONSORS_PREF)
+        .returns(`["foo","bar"]`);
+      spy = sandbox.spy(global.Services.prefs, "setStringPref");
+    });
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it("should add the blocked sponsors to the blocklist", () => {
+      feed.addToBlockedTopSitesSponsors([
+        { url: "test.com" },
+        { url: "test1.com" },
+      ]);
+
+      assert.calledOnce(spy);
+      const [, sponsors] = spy.firstCall.args;
+      assert.deepEqual(
+        new Set(["foo", "bar", "test", "test1"]),
+        new Set(JSON.parse(sponsors))
+      );
+    });
+
+    it("should not add duplicate sponsors to the blocklist", () => {
+      feed.addToBlockedTopSitesSponsors([
+        { url: "foo.com" },
+        { url: "bar.com" },
+        { url: "test.com" },
+      ]);
+
+      assert.calledOnce(spy);
+      const [, sponsors] = spy.firstCall.args;
+      assert.deepEqual(
+        new Set(["foo", "bar", "test"]),
+        new Set(JSON.parse(sponsors))
+      );
+    });
+  });
+
   describe("#onAction", () => {
     it("should add bookmark, history, places, blocked observers on INIT", () => {
       feed.onAction({ type: at.INIT });
@@ -160,6 +219,16 @@ describe("PlacesFeed", () => {
         url: "apple.com",
         pocket_id: 1234,
       });
+    });
+    it("should update the blocked top sites sponsors", () => {
+      sandbox.stub(feed, "addToBlockedTopSitesSponsors");
+      feed.onAction({
+        type: at.BLOCK_URL,
+        data: [{ url: "foo.com", pocket_id: 1234, isSponsoredTopSite: 1 }],
+      });
+      assert.calledWith(feed.addToBlockedTopSitesSponsors, [
+        { url: "foo.com" },
+      ]);
     });
     it("should bookmark a url on BOOKMARK_URL", () => {
       const data = { url: "pear.com", title: "A pear" };
