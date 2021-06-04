@@ -5,7 +5,8 @@
  */
 
 [Pref="dom.gamepad.non_standard_events.enabled",
- Exposed=Window]
+ Exposed=Window,
+ SecureContext]
 interface GamepadButtonEvent : GamepadEvent
 {
   constructor(DOMString type,
