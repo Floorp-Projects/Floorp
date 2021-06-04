@@ -29,6 +29,7 @@ const SEARCH_SHORTCUTS_HAVE_PINNED_PREF =
 const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 const CONTILE_ENABLED_PREF = "browser.topsites.contile.enabled";
+const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 
 function FakeTippyTopProvider() {}
 FakeTippyTopProvider.prototype = {
@@ -2026,6 +2027,10 @@ describe("Top Sites Feed", () => {
         .stub(global.Services.prefs, "getBoolPref")
         .withArgs(CONTILE_ENABLED_PREF)
         .returns(true);
+      sandbox
+        .stub(global.Services.prefs, "getStringPref")
+        .withArgs(TOP_SITES_BLOCKED_SPONSORS_PREF)
+        .returns(`["foo","bar"]`);
     });
     afterEach(() => {
       sandbox.restore();
@@ -2060,6 +2065,46 @@ describe("Top Sites Feed", () => {
 
       assert.ok(fetched);
       assert.equal(feed._contile.sites.length, 2);
+    });
+
+    it("should filter the blocked sponsors", async () => {
+      fetchStub.resolves({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            tiles: [
+              {
+                url: "https://www.test.com",
+                image_url: "images/test-com.png",
+                click_url: "https://www.test-click.com",
+                impression_url: "https://www.test-impression.com",
+                name: "test",
+              },
+              {
+                url: "https://foo.com",
+                image_url: "images/foo-com.png",
+                click_url: "https://www.foo-click.com",
+                impression_url: "https://www.foo-impression.com",
+                name: "foo",
+              },
+              {
+                url: "https://bar.com",
+                image_url: "images/bar-com.png",
+                click_url: "https://www.bar-click.com",
+                impression_url: "https://www.bar-impression.com",
+                name: "bar",
+              },
+            ],
+          }),
+      });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(fetched);
+      // Both "foo" and "bar" should be filtered
+      assert.equal(feed._contile.sites.length, 1);
+      assert.equal(feed._contile.sites[0].url, "https://www.test.com");
     });
 
     it("should handle errors properly from Contile", async () => {
