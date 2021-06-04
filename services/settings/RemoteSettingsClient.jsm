@@ -243,6 +243,7 @@ class RemoteSettingsClient extends EventEmitter {
   constructor(
     collectionName,
     {
+      bucketName,
       bucketNamePref,
       signerName,
       filterFunc,
@@ -253,6 +254,7 @@ class RemoteSettingsClient extends EventEmitter {
     super(["sync"]); // emitted events
 
     this.collectionName = collectionName;
+    this.bucketName = bucketName;
     this.signerName = signerName;
     this.filterFunc = filterFunc;
     this.localFields = localFields;
@@ -264,18 +266,21 @@ class RemoteSettingsClient extends EventEmitter {
     // or when pulling data from a dev server.
     this.verifySignature = AppConstants.REMOTE_SETTINGS_VERIFY_SIGNATURE;
 
-    // The bucket preference value can be changed (eg. `main` to `main-preview`) in order
-    // to preview the changes to be approved in a real client.
-    this.bucketNamePref = bucketNamePref;
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "bucketName",
-      this.bucketNamePref,
-      null,
-      () => {
-        this.db.identifier = this.identifier;
-      }
-    );
+    if (!bucketName) {
+      // TODO bug 1702759: Remove bucketNamePref.
+      // The bucket preference value can be changed (eg. `main` to `main-preview`) in order
+      // to preview the changes to be approved in a real client.
+      this.bucketNamePref = bucketNamePref;
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "bucketName",
+        this.bucketNamePref,
+        null,
+        () => {
+          this.db.identifier = this.identifier;
+        }
+      );
+    }
 
     XPCOMUtils.defineLazyGetter(
       this,
