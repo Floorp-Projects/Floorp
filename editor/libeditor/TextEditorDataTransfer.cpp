@@ -17,7 +17,6 @@
 #include "mozilla/dom/StaticRange.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -39,48 +38,9 @@
 #include "nsXPCOM.h"
 #include "nscore.h"
 
-class nsILoadContext;
-class nsISupports;
-
 namespace mozilla {
 
 using namespace dom;
-
-nsresult TextEditor::PrepareTransferable(nsITransferable** aOutTransferable) {
-  MOZ_ASSERT(aOutTransferable);
-  MOZ_ASSERT(!*aOutTransferable);
-
-  // Create generic Transferable for getting the data
-  nsresult rv;
-  nsCOMPtr<nsITransferable> transferable =
-      do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("do_CreateInstance() failed to create nsITransferable instance");
-    return rv;
-  }
-
-  if (!transferable) {
-    NS_WARNING("do_CreateInstance() returned nullptr, but ignored");
-    return NS_OK;
-  }
-
-  RefPtr<Document> document = GetDocument();
-  nsILoadContext* loadContext = document ? document->GetLoadContext() : nullptr;
-  DebugOnly<nsresult> rvIgnored = transferable->Init(loadContext);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "nsITransferable::Init() failed, but ignored");
-
-  rvIgnored = transferable->AddDataFlavor(kUnicodeMime);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "nsITransferable::AddDataFlavor(kUnicodeMime) failed, but ignored");
-  rvIgnored = transferable->AddDataFlavor(kMozTextInternal);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "nsITransferable::AddDataFlavor(kMozTextInternal) failed, but ignored");
-  transferable.forget(aOutTransferable);
-  return NS_OK;
-}
 
 nsresult TextEditor::InsertTextFromTransferable(
     nsITransferable* aTransferable) {
@@ -533,7 +493,7 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
     editActionData.NotifyOfDispatchingClipboardEvent();
   }
 
-  if (AsHTMLEditor()) {
+  if (IsHTMLEditor()) {
     editActionData.InitializeDataTransferWithClipboard(
         SettingDataTransfer::eWithFormat, aClipboardType);
     nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
@@ -549,6 +509,11 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
     return EditorBase::ToGenericNSResult(rv);
   }
 
+  if (!GetDocument()) {
+    NS_WARNING("The editor didn't have document, but ignored");
+    return NS_OK;
+  }
+
   // The data will be initialized in InsertTextFromTransferable() if we're not
   // an HTMLEditor.  Therefore, we cannot dispatch "beforeinput" here.
 
@@ -562,15 +527,17 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
   }
 
   // Get the nsITransferable interface for getting the data from the clipboard
-  nsCOMPtr<nsITransferable> transferable;
-  rv = PrepareTransferable(getter_AddRefs(transferable));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("TextEditor::PrepareTransferable() failed");
-    return EditorBase::ToGenericNSResult(rv);
+  Result<nsCOMPtr<nsITransferable>, nsresult> maybeTransferable =
+      EditorUtils::CreateTransferableForPlainText(*GetDocument());
+  if (maybeTransferable.isErr()) {
+    NS_WARNING("EditorUtils::CreateTransferableForPlainText() failed");
+    return EditorBase::ToGenericNSResult(maybeTransferable.unwrapErr());
   }
+  nsCOMPtr<nsITransferable> transferable(maybeTransferable.unwrap());
   if (NS_WARN_IF(!transferable)) {
     NS_WARNING(
-        "TextEditor::PrepareTransferable() returned nullptr, but ignored");
+        "EditorUtils::CreateTransferableForPlainText() returned nullptr, but "
+        "ignored");
     return NS_OK;  // XXX Why?
   }
   // Get the Data from the clipboard.
