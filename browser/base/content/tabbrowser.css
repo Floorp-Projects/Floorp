@@ -35,7 +35,7 @@
 }
 
 .tab-sharing-icon-overlay[sharing]:not([selected]),
-.tab-icon-overlay:is([soundplaying], [muted], [activemedia-blocked], [pictureinpicture], [crashed]) {
+.tab-icon-overlay:is([soundplaying], [muted], [activemedia-blocked], [crashed]) {
   display: revert;
 }
 } /*** END proton ***/
