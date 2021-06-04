@@ -1,7 +1,9 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_MX{
     %%Parent{"es_419"}
+    AuxExemplarCharacters{"[à ă â å ä ã ā æ ç è ĕ ê ë ē ì ĭ î ï ī ò ŏ ô ö ø ō œ ù ŭ û ū ÿ]"}
     MoreInformation{"[...]"}
     NumberElements{
         latn{
@@ -89,14 +91,13 @@ es_MX{
             }
         }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
-                "H:mm:ss zzzz",
-                "H:mm:ss z",
-                "H:mm:ss",
-                "H:mm",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
                 "d MMM, y G",
@@ -108,11 +109,7 @@ es_MX{
                 "{1} {0}",
             }
             availableFormats{
-                GyMMM{"MMM y G"}
-                GyMMMEd{"E, d MMM y G"}
-                GyMMMd{"d MMM y G"}
                 MMMEd{"E d MMM"}
-                MMMd{"d MMM"}
                 h{"hh a"}
                 hm{"hh:mm a"}
                 hms{"hh:mm:ss a"}
@@ -145,26 +142,18 @@ es_MX{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "a. m.",
-                "p. m.",
-            }
-            AmPmMarkersAbbr{
-                "a. m.",
-                "p. m.",
-            }
             DateTimePatterns{
-                "H:mm:ss zzzz",
-                "H:mm:ss z",
-                "H:mm:ss",
-                "H:mm",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y",
                 "d 'de' MMMM 'de' y",
                 "d MMM y",
                 "dd/MM/yy",
                 "{1} {0}",
-                "{1} 'a' 'las' {0}",
-                "{1} 'a' 'las' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -174,8 +163,6 @@ es_MX{
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
                 GyMMMd{"d MMM y G"}
-                Hm{"H:mm"}
-                Hms{"H:mm:ss"}
                 Hmsv{"HH:mm:ss v"}
                 Hmsvvvv{"HH:mm:ss (vvvv)"}
                 Hmv{"HH:mm v"}
@@ -184,7 +171,7 @@ es_MX{
                 MMdd{"dd/MM"}
                 yMEd{"E, d/M/y"}
                 yMM{"MM/y"}
-                yMMMEd{"EEE, d 'de' MMMM 'de' y"}
+                yMMMEd{"EEE, d 'de' MMM 'de' y"}
                 yQQQ{"QQQ y"}
             }
             dayNames{
@@ -208,16 +195,6 @@ es_MX{
                         morning2{"mañana"}
                         night1{"de la noche"}
                         noon{"del mediodía"}
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    wide{
-                        am{"a. m."}
-                        pm{"p. m."}
                     }
                 }
             }
@@ -350,7 +327,6 @@ es_MX{
         phonetic_alphabet{"Alfabeto fonético"}
         sign_standard_symbols{"Símbolos de señales/estándar"}
         smiley{"cara sonriente"}
-        south_asian_scripts{"Sistemas de escritura de Asia Meridional"}
         southeast_asian_scripts{"Sistemas de escritura de Asia Sudoriental"}
         symbols{"Símbolos"}
         tone_marks{"Marcas tonales"}
@@ -364,7 +340,7 @@ es_MX{
         day-narrow{
             relativeTime{
                 future{
-                    one{"+{0} día"}
+                    one{"dentro de {0} día"}
                     other{"en {0} días"}
                 }
             }
@@ -382,9 +358,6 @@ es_MX{
         }
         dayOfYear-short{
             dn{"día del a"}
-        }
-        dayperiod{
-            dn{"a. m./p. m."}
         }
         dayperiod-narrow{
             dn{"a. m./p. m."}
@@ -428,22 +401,6 @@ es_MX{
                 }
             }
         }
-        minute-narrow{
-            relativeTime{
-                future{
-                    one{"en {0} min"}
-                    other{"en {0} min"}
-                }
-            }
-        }
-        minute-short{
-            relativeTime{
-                future{
-                    one{"en {0} min"}
-                    other{"en {0} min"}
-                }
-            }
-        }
         mon{
             relative{
                 "-1"{"el lunes pasado"}
@@ -461,18 +418,6 @@ es_MX{
                 future{
                     one{"en {0} mes"}
                     other{"en {0} meses"}
-                }
-            }
-        }
-        month-narrow{
-            relativeTime{
-                future{
-                    one{"+{0} m"}
-                    other{"+{0} m"}
-                }
-                past{
-                    one{"-{0} m"}
-                    other{"-{0} m"}
                 }
             }
         }
@@ -498,10 +443,6 @@ es_MX{
                     one{"en {0} trim."}
                     other{"en {0} trim."}
                 }
-                past{
-                    one{"-{0} T"}
-                    other{"-{0} T"}
-                }
             }
         }
         quarter-short{
@@ -524,14 +465,6 @@ es_MX{
                 past{
                     one{"hace {0} SA"}
                     other{"hace {0} SA"}
-                }
-            }
-        }
-        second-narrow{
-            relativeTime{
-                future{
-                    one{"+{0} s"}
-                    other{"+{0} s"}
                 }
             }
         }
@@ -623,10 +556,6 @@ es_MX{
                 future{
                     one{"en {0} a"}
                     other{"en {0} a"}
-                }
-                past{
-                    one{"-{0} a"}
-                    other{"-{0} a"}
                 }
             }
         }

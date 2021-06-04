@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ti{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -807,6 +807,9 @@ ti{
         "Asia:Qatar"{
             ec{"Qatar"}
         }
+        "Asia:Qostanay"{
+            ec{"Kostanay"}
+        }
         "Asia:Qyzylorda"{
             ec{"Qyzylorda"}
         }
@@ -948,6 +951,9 @@ ti{
         "Australia:Sydney"{
             ec{"Sydney"}
         }
+        "Etc:UTC"{
+            ls{"Coordinated Universal Time"}
+        }
         "Etc:Unknown"{
             ec{"Unknown"}
         }
@@ -992,6 +998,7 @@ ti{
         }
         "Europe:Dublin"{
             ec{"Dublin"}
+            ld{"Irish Standard Time"}
         }
         "Europe:Gibraltar"{
             ec{"Gibraltar"}
@@ -1028,6 +1035,7 @@ ti{
         }
         "Europe:London"{
             ec{"London"}
+            ld{"British Summer Time"}
         }
         "Europe:Luxembourg"{
             ec{"Luxembourg"}
@@ -1209,6 +1217,9 @@ ti{
         "Pacific:Honolulu"{
             ec{"Honolulu"}
         }
+        "Pacific:Johnston"{
+            ec{"Johnston"}
+        }
         "Pacific:Kiritimati"{
             ec{"Kiritimati"}
         }
@@ -1277,6 +1288,21 @@ ti{
         }
         "Pacific:Wallis"{
             ec{"Wallis"}
+        }
+        "meta:Indonesia_Central"{
+            ls{"Central Indonesia Time"}
+        }
+        "meta:Indonesia_Eastern"{
+            ls{"Eastern Indonesia Time"}
+        }
+        "meta:Indonesia_Western"{
+            ls{"Western Indonesia Time"}
+        }
+        "meta:Malaysia"{
+            ls{"Malaysia Time"}
+        }
+        "meta:Singapore"{
+            ls{"Singapore Standard Time"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}

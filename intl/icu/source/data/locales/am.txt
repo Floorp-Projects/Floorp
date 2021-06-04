@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 am{
     Ellipsis{
         final{"{0}…"}
@@ -108,16 +109,16 @@ am{
                         other{"¤000 ሺ"}
                     }
                     1000000{
-                        one{"¤0 ሜትር"}
-                        other{"¤0 ሜትር"}
+                        one{"¤0 ሚ"}
+                        other{"¤0 ሚ"}
                     }
                     10000000{
-                        one{"¤00 ሜትር"}
-                        other{"¤00 ሜትር"}
+                        one{"¤00 ሚ"}
+                        other{"¤00 ሚ"}
                     }
                     100000000{
-                        one{"¤000 ሜትር"}
-                        other{"¤000 ሜትር"}
+                        one{"¤000 ሚ"}
+                        other{"¤000 ሚ"}
                     }
                     1000000000{
                         one{"¤0 ቢ"}
@@ -158,16 +159,16 @@ am{
                         other{"000 ሺ"}
                     }
                     1000000{
-                        one{"0 ሜትር"}
-                        other{"0 ሜትር"}
+                        one{"0 ሚ"}
+                        other{"0 ሚ"}
                     }
                     10000000{
-                        one{"00 ሜትር"}
-                        other{"00 ሜትር"}
+                        one{"00 ሚ"}
+                        other{"00 ሚ"}
                     }
                     100000000{
-                        one{"000ሜ"}
-                        other{"000ሜ"}
+                        one{"000 ሚ"}
+                        other{"000 ሚ"}
                     }
                     1000000000{
                         one{"0 ቢ"}
@@ -222,7 +223,6 @@ am{
         minimumGroupingDigits{"1"}
         traditional{"ethi"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -876,6 +876,10 @@ am{
                 MMM{"LLL"}
                 MMMEd{"E፣ MMM d"}
                 MMMMEd{"E፣ MMMM d"}
+                MMMMW{
+                    one{"ሳምንት W የ MMMM"}
+                    other{"ሳምንት W የ MMMM"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"M/d"}
@@ -2258,9 +2262,12 @@ am{
     listPattern{
         or{
             2{"{0} ወይም {1}﻿"}
-            end{"{0} ወይም {1}﻿"}
+            end{"{0}፣ ወይም {1}"}
             middle{"{0}፣ {1}"}
             start{"{0}፣ {1}"}
+        }
+        or-narrow{
+            end{"{0}፣ ወይም {1}"}
         }
         standard{
             2{"{0} እና {1}"}

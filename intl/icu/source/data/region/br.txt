@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 br{
     Countries{
         001{"Bed"}
@@ -313,5 +314,4 @@ br{
         SZ{"Swaziland"}
         TL{"Timor ar Reter"}
     }
-    Version{"37"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 my{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"အာဘီဂျန်"}
@@ -1477,9 +1477,9 @@ my{
             ls{"အရှေ့တီမော အချိန်"}
         }
         "meta:Easter"{
-            ld{"အီစတာကျွန်းနွေရာသီအချိန်"}
-            lg{"အီစတာကျွန်းအချိန်"}
-            ls{"အီစတာကျွန်းစံတော်ချိန်"}
+            ld{"အီစတာကျွန်း နွေရာသီ အချိန်"}
+            lg{"အီစတာကျွန်း အချိန်"}
+            ls{"အီစတာကျွန်း စံတော်ချိန်"}
         }
         "meta:Ecuador"{
             ls{"အီကွေဒေါ အချိန်"}
@@ -1522,7 +1522,7 @@ my{
             ls{"ဂရင်းနစ် စံတော်ချိန်"}
         }
         "meta:Galapagos"{
-            ls{"ဂါလားပါဂိုးစ်အချိန်"}
+            ls{"ဂါလားပါဂိုးစ် အချိန်"}
         }
         "meta:Gambier"{
             ls{"ဂမ်ဘီယာ အချိန်"}
@@ -1723,7 +1723,7 @@ my{
             ls{"နောဖော့ခ်ကျွန်း စံတော်ချိန်"}
         }
         "meta:Noronha"{
-            ld{"ဖာနန်ဒိုးဒီနိုးရိုးညာ နွေရာသီအချိန်"}
+            ld{"ဖာနန်ဒိုးဒီနိုးရိုးညာ နွေရာသီ အချိန်"}
             lg{"ဖာနန်ဒိုးဒီနိုးရိုးညာ အချိန်"}
             ls{"ဖာနန်ဒိုးဒီနိုးရိုးညာ စံတော်ချိန်"}
         }

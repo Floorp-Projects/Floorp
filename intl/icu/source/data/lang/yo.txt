@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 yo{
     Keys{
         calendar{"Kàlẹ́ńdà"}
@@ -13,35 +14,35 @@ yo{
     }
     Languages{
         af{"Èdè Afrikani"}
-        agq{"Ágẹ̀ẹ̀mù"}
+        agq{"Èdè Ágẹ̀ẹ̀mù"}
         ak{"Èdè Akani"}
         am{"Èdè Amariki"}
         ar{"Èdè Árábìkì"}
-        as{"Ti Assam"}
-        asa{"Asu"}
-        ast{"Asturian"}
+        as{"Èdè Ti Assam"}
+        asa{"Èdè Asu"}
+        ast{"Èdè Asturian"}
         az{"Èdè Azerbaijani"}
-        bas{"Basaa"}
+        bas{"Èdè Basaa"}
         be{"Èdè Belarusi"}
-        bem{"Béḿbà"}
-        bez{"Bẹ́nà"}
+        bem{"Èdè Béḿbà"}
+        bez{"Èdè Bẹ́nà"}
         bg{"Èdè Bugaria"}
-        bm{"Báḿbàrà"}
+        bm{"Èdè Báḿbàrà"}
         bn{"Èdè Bengali"}
         bo{"Tibetán"}
         br{"Èdè Bretoni"}
-        brx{"Bódò"}
+        brx{"Èdè Bódò"}
         bs{"Èdè Bosnia"}
         ca{"Èdè Catala"}
-        ccp{"Chakma"}
-        ce{"Chechen"}
-        ceb{"Cebuano"}
-        cgg{"Chiga"}
-        chr{"Shẹ́rókiì"}
+        ccp{"Èdè Chakma"}
+        ce{"Èdè Chechen"}
+        ceb{"Èdè Cebuano"}
+        cgg{"Èdè Chiga"}
+        chr{"Èdè Shẹ́rókiì"}
         ckb{"Ààrin Gbùngbùn Kurdish"}
-        co{"Corsican"}
-        cs{"Èdè seeki"}
-        cu{"Síláfííkì Ilé Ìjọ́sìn"}
+        co{"Èdè Corsican"}
+        cs{"Èdè Seeki"}
+        cu{"Èdè Síláfííkì Ilé Ìjọ́sìn"}
         cy{"Èdè Welshi"}
         da{"Èdè Ilẹ̀ Denmark"}
         dav{"Táítà"}
@@ -49,12 +50,12 @@ yo{
         de_AT{"Èdè Jámánì (Ọ́síríà )"}
         de_CH{"Èdè Ilẹ̀ Jámánì (Orílẹ́ède swítsàlandì)"}
         dje{"Ṣárúmà"}
-        dsb{"Ṣobíànù Ìpìlẹ̀"}
-        dua{"Duala"}
+        dsb{"Ṣóbíánù Apá Ìṣàlẹ̀"}
+        dua{"Èdè Duala"}
         dyo{"Jola-Fonyi"}
-        dz{"Dzongkha"}
-        ebu{"Ẹmbù"}
-        ee{"Ewè"}
+        dz{"Èdè Dzongkha"}
+        ebu{"Èdè Ẹmbù"}
+        ee{"Èdè Ewè"}
         el{"Èdè Giriki"}
         en{"Èdè Gẹ̀ẹ́sì"}
         en_AU{"Èdè Gẹ̀ẹ́sì (órílẹ̀-èdè Ọsirélíà)"}
@@ -70,7 +71,7 @@ yo{
         es_MX{"Èdè Sípáníìṣì (orílẹ̀-èdè Mẹ́síkò)"}
         et{"Èdè Estonia"}
         eu{"Èdè Baski"}
-        ewo{"Èwóǹdò"}
+        ewo{"Èdè Èwóǹdò"}
         fa{"Èdè Pasia"}
         ff{"Èdè Fúlàní"}
         fi{"Èdè Finisi"}
@@ -127,10 +128,10 @@ yo{
         kok{"Kónkánì"}
         ks{"Kaṣímirì"}
         ksb{"Ṣáńbálà"}
-        ksf{"Báfíà"}
-        ksh{"Colognian"}
+        ksf{"Èdè Báfíà"}
+        ksh{"Èdè Colognian"}
         ku{"Kọdiṣì"}
-        kw{"Kọ́nììṣì"}
+        kw{"Èdè Kọ́nììṣì"}
         ky{"Kírígíìsì"}
         la{"Èdè Latini"}
         lag{"Láńgì"}
@@ -214,7 +215,7 @@ yo{
         sq{"Èdè Albania"}
         sr{"Èdè Serbia"}
         st{"Èdè Sesoto"}
-        su{"Èdè Sudani"}
+        su{"Èdè Sudanísì"}
         sv{"Èdè Suwidiisi"}
         sw{"Èdè Swahili"}
         ta{"Èdè Tamili"}
@@ -245,15 +246,20 @@ yo{
         yav{"Yangbẹn"}
         yi{"Èdè Yiddishi"}
         yo{"Èdè Yorùbá"}
-        yue{"Cantonese"}
+        yue{"Èdè Cantonese"}
         zgh{"Àfẹnùkò Támásáìtì ti Mòrókò"}
-        zh{"Èdè Mandarin tí wọ́n ń sọ lórílẹ̀-èdè Ṣáínà"}
-        zh_Hant{"Èdè Ìbílẹ̀ Ṣáínà"}
+        zh{"Edè Ṣáínà"}
+        zh_Hans{"Ẹdè Ṣáínà Onírọ̀rùn"}
+        zh_Hant{"Èdè Ṣáínà Ìbílẹ̀"}
         zu{"Èdè Ṣulu"}
         zxx{"Kò sí àkóònú elédè"}
     }
+    Languages%long{
+        zh_Hans{"Èdè Mandárínì Ṣáínà Onírọ̀rùn"}
+        zh_Hant{"Èdè Mandárínì Ṣáínà Ìbílẹ̀"}
+    }
     Languages%menu{
-        zh{"Ṣáídà, Mandrínì"}
+        zh{"Edè Ṣáínà, Mandárínì"}
     }
     Languages%short{
         en_GB{"Èdè Gẹ̀ẹ́sì (GB)"}
@@ -308,17 +314,17 @@ yo{
     }
     Types{
         calendar{
-            buddhist{"Kàlẹ̀ńdà Buddhist"}
-            chinese{"Kàlẹ̀ńdà ti Ṣáìnà"}
-            dangi{"Kàlẹ̀ńdà dangi"}
-            ethiopic{"Kàlẹ̀ńdà Ẹtíópíìkì"}
+            buddhist{"Kàlẹ́ńdà Buddhist"}
+            chinese{"Kàlẹ́ńdà ti Ṣáìnà"}
+            dangi{"Kàlẹ́ńdà dangi"}
+            ethiopic{"Kàlẹ́ńdà Ẹtíópíìkì"}
             gregorian{"Kàlẹ́ńdà Gregory"}
-            hebrew{"Kàlẹ̀ńdà Hébérù"}
-            islamic{"Kàlẹ̀ńdà Lárúbáwá"}
+            hebrew{"Kàlẹ́ńdà Hébérù"}
+            islamic{"Kàlẹ́ńdà Lárúbáwá"}
             iso8601{"Kàlẹ́ńdà ISO-8601"}
-            japanese{"Kàlẹ̀ńdà ti Jàpánù"}
-            persian{"Kàlẹ̀ńdà Pásíànù"}
-            roc{"Kàlẹ̀ńdà Minguo"}
+            japanese{"Kàlẹ́ńdà ti Jàpánù"}
+            persian{"Kàlẹ́ńdà Pásíànù"}
+            roc{"Kàlẹ́ńdà Minguo"}
         }
         cf{
             account{"Ìgúnrégé Ìṣirò Owó Kọ́rẹ́ńsì"}
@@ -383,7 +389,6 @@ yo{
             tibt{"Àwọn díjíìtì Tibetán"}
         }
     }
-    Version{"37"}
     codePatterns{
         language{"Èdè: {0}"}
         script{"Ìṣọwọ́kọ̀wé: {0}"}

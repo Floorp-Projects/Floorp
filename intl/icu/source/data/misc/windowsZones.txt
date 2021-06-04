@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 windowsZones:table(nofallback){
     mapTimezones{
         "AUS Central Standard Time"{
@@ -156,7 +157,7 @@ windowsZones:table(nofallback){
         }
         "Central Pacific Standard Time"{
             001{"Pacific/Guadalcanal"}
-            AU{"Antarctica/Macquarie"}
+            AQ{"Antarctica/Casey"}
             FM{"Pacific/Ponape Pacific/Kosrae"}
             NC{"Pacific/Noumea"}
             SB{"Pacific/Guadalcanal"}
@@ -466,7 +467,7 @@ windowsZones:table(nofallback){
         }
         "Pacific Standard Time"{
             001{"America/Los_Angeles"}
-            CA{"America/Vancouver America/Dawson America/Whitehorse"}
+            CA{"America/Vancouver"}
             US{"America/Los_Angeles"}
             ZZ{"PST8PDT"}
         }
@@ -593,7 +594,6 @@ windowsZones:table(nofallback){
         }
         "Singapore Standard Time"{
             001{"Asia/Singapore"}
-            AQ{"Antarctica/Casey"}
             BN{"Asia/Brunei"}
             ID{"Asia/Makassar"}
             MY{"Asia/Kuala_Lumpur Asia/Kuching"}
@@ -634,7 +634,7 @@ windowsZones:table(nofallback){
         }
         "Tasmania Standard Time"{
             001{"Australia/Hobart"}
-            AU{"Australia/Hobart Australia/Currie"}
+            AU{"Australia/Hobart Australia/Currie Antarctica/Macquarie"}
         }
         "Tocantins Standard Time"{
             001{"America/Araguaina"}
@@ -674,7 +674,6 @@ windowsZones:table(nofallback){
         }
         "US Mountain Standard Time"{
             001{"America/Phoenix"}
-            CA{"America/Dawson_Creek America/Creston America/Fort_Nelson"}
             MX{"America/Hermosillo"}
             US{"America/Phoenix"}
             ZZ{"Etc/GMT+7"}
@@ -810,6 +809,13 @@ windowsZones:table(nofallback){
         "Yakutsk Standard Time"{
             001{"Asia/Yakutsk"}
             RU{"Asia/Yakutsk Asia/Khandyga"}
+        }
+        "Yukon Standard Time"{
+            001{"America/Whitehorse"}
+            CA{
+                "America/Whitehorse America/Creston America/Dawson America/Dawson_Cre"
+                "ek America/Fort_Nelson"
+            }
         }
     }
 }

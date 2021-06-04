@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 is{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -408,6 +408,11 @@ is{
             }
         }
         graphics{
+            dot{
+                dnam{"punktur"}
+                one{"{0} punktur"}
+                other{"{0} punktur"}
+            }
             dot-per-centimeter{
                 dnam{"punktar á sentimetra"}
                 one{"{0} punktur á sentimetra"}
@@ -455,6 +460,11 @@ is{
                 dnam{"desimetrar"}
                 one{"{0} desimetri"}
                 other{"{0} desimetrar"}
+            }
+            earth-radius{
+                dnam{"geisli jarðar"}
+                one{"{0} geisli jarðar"}
+                other{"{0} geisli jarðar"}
             }
             fathom{
                 dnam{"faðmar"}
@@ -552,6 +562,16 @@ is{
             }
         }
         light{
+            candela{
+                dnam{"kerti"}
+                one{"{0} kerti"}
+                other{"{0} kerti"}
+            }
+            lumen{
+                dnam{"lúmen"}
+                one{"{0} lúmen"}
+                other{"{0} lúmen"}
+            }
             lux{
                 dnam{"lúx"}
                 one{"{0} lúx"}
@@ -577,6 +597,11 @@ is{
                 dnam{"jarðmassar"}
                 one{"{0} jarðmassi"}
                 other{"{0} jarðmassar"}
+            }
+            grain{
+                dnam{"ögn"}
+                one{"{0} ögn"}
+                other{"{0} agnir"}
             }
             gram{
                 dnam{"grömm"}
@@ -774,7 +799,7 @@ is{
             }
             pound-force-foot{
                 dnam{"pundfet"}
-                one{"{0} pundfet"}
+                one{"{0} pund-kraftur-fet"}
                 other{"{0} pundfet"}
             }
         }
@@ -788,6 +813,10 @@ is{
                 dnam{"tunnur"}
                 one{"{0} tunna"}
                 other{"{0} tunnur"}
+            }
+            bushel{
+                one{"{0} skeppa"}
+                other{"{0} skeppur"}
             }
             centiliter{
                 dnam{"sentilítrar"}
@@ -846,6 +875,26 @@ is{
                 one{"{0} desilítri"}
                 other{"{0} desilítrar"}
             }
+            dessert-spoon{
+                dnam{"ábætisskeið"}
+                one{"{0} ábætisskeið"}
+                other{"{0} ábætisskeið"}
+            }
+            dessert-spoon-imperial{
+                dnam{"bresk ábætisskeið"}
+                one{"{0} bresk ábætisskeið"}
+                other{"{0} bresk ábætisskeið"}
+            }
+            dram{
+                dnam{"dramm"}
+                one{"{0} dramm"}
+                other{"{0} drömm"}
+            }
+            drop{
+                dnam{"dropi"}
+                one{"{0} dropi"}
+                other{"{0} dropar"}
+            }
             fluid-ounce{
                 dnam{"vökvaúnsur"}
                 one{"{0} vökvaúnsa"}
@@ -873,6 +922,11 @@ is{
                 one{"{0} hektólítri"}
                 other{"{0} hektólítrar"}
             }
+            jigger{
+                dnam{"sjúss"}
+                one{"{0} sjúss"}
+                other{"{0} sjússar"}
+            }
             liter{
                 dnam{"lítrar"}
                 one{"{0} lítri"}
@@ -889,6 +943,11 @@ is{
                 one{"{0} millilítri"}
                 other{"{0} millilítrar"}
             }
+            pinch{
+                dnam{"klípa"}
+                one{"{0} klípa"}
+                other{"{0} klípur"}
+            }
             pint{
                 dnam{"hálfpottar"}
                 one{"{0} hálfpottur"}
@@ -903,6 +962,11 @@ is{
                 dnam{"kvartar"}
                 one{"{0} kvart"}
                 other{"{0} kvartar"}
+            }
+            quart-imperial{
+                dnam{"lagarmál"}
+                one{"{0} lagarmál"}
+                other{"{0} lagarmál"}
             }
             tablespoon{
                 dnam{"matskeiðar"}
@@ -1745,6 +1809,11 @@ is{
             }
         }
         graphics{
+            dot{
+                dnam{"punktur"}
+                one{"{0} punktur"}
+                other{"{0} punktur"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 one{"{0} dpcm"}
@@ -1889,6 +1958,11 @@ is{
             }
         }
         light{
+            candela{
+                dnam{"kerti"}
+                one{"{0} kerti"}
+                other{"{0} kerti"}
+            }
             lux{
                 dnam{"lúx"}
                 one{"{0} lx"}
@@ -1911,6 +1985,11 @@ is{
             }
             earth-mass{
                 dnam{"jarðmassar"}
+            }
+            grain{
+                dnam{"ögn"}
+                one{"{0} ögn"}
+                other{"{0} agnir"}
             }
             gram{
                 dnam{"grömm"}
@@ -2020,9 +2099,9 @@ is{
                 other{"{0} hPa"}
             }
             inch-ofhg{
-                dnam{"inHg"}
-                one{"{0} inHg"}
-                other{"{0} inHg"}
+                dnam{"to Hg"}
+                one{"{0} to Hg"}
+                other{"{0} to Hg"}
             }
             millibar{
                 dnam{"mbar"}
@@ -2098,7 +2177,12 @@ is{
             barrel{
                 dnam{"tunna"}
                 one{"{0} tunna"}
-                other{"{0} tunna"}
+                other{"{0} tunnur"}
+            }
+            bushel{
+                dnam{"skeppur"}
+                one{"{0} skeppa"}
+                other{"{0} skeppur"}
             }
             centiliter{
                 dnam{"cl"}
@@ -2157,6 +2241,26 @@ is{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"ábætissk."}
+                one{"{0} ábætissk."}
+                other{"{0} ábætissk."}
+            }
+            dessert-spoon-imperial{
+                dnam{"bresk ábætissk."}
+                one{"{0} bresk ábætissk."}
+                other{"{0} bresk ábætissk."}
+            }
+            dram{
+                dnam{"dramm"}
+                one{"{0} dramm"}
+                other{"{0} drömm"}
+            }
+            drop{
+                dnam{"dropi"}
+                one{"{0} dropi"}
+                other{"{0} dropar"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -2184,6 +2288,11 @@ is{
                 one{"{0} hl"}
                 other{"{0} hl"}
             }
+            jigger{
+                dnam{"sjúss"}
+                one{"{0} sjúss"}
+                other{"{0} sjússar"}
+            }
             liter{
                 dnam{"lítrar"}
                 one{"{0} l"}
@@ -2200,6 +2309,11 @@ is{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"klípa"}
+                one{"{0} klípa"}
+                other{"{0} klípur"}
+            }
             pint{
                 dnam{"hálfp."}
                 one{"{0} hálfp."}
@@ -2214,6 +2328,11 @@ is{
                 dnam{"qts"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"lagarmál"}
+                one{"{0} lagarmál"}
+                other{"{0} lagarmál"}
             }
             tablespoon{
                 dnam{"msk"}

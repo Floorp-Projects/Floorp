@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 br{
     Currencies{
         ADP{
@@ -257,6 +258,10 @@ br{
         CLP{
             "CLP",
             "peso Chile",
+        }
+        CNH{
+            "CNH",
+            "yuan Sina (diavaez)",
         }
         CNX{
             "CNX",
@@ -1134,6 +1139,10 @@ br{
             "XTS",
             "kod moneiz amprouiñ",
         }
+        XUA{
+            "XUA",
+            "unanenn jediñ BAD",
+        }
         XXX{
             "XXX",
             "moneiz dianav",
@@ -1655,6 +1664,13 @@ br{
             one{"peso Chile"}
             other{"peso Chile"}
             two{"beso Chile"}
+        }
+        CNH{
+            few{"yuan Sina (diavaez)"}
+            many{"a yuanoù Sina (diavaez)"}
+            one{"yuan Sina (diavaez)"}
+            other{"yuan Sina (diavaez)"}
+            two{"yuan Sina (diavaez)"}
         }
         CNX{
             few{"dollar Bank poblel Sina"}
@@ -3063,6 +3079,13 @@ br{
             other{"unanenn voneiz amprouiñ"}
             two{"unanenn voneiz amprouiñ"}
         }
+        XUA{
+            few{"unanenn jediñ BAD"}
+            many{"a unanennoù jediñ BAD"}
+            one{"unanenn jediñ BAD"}
+            other{"unanenn jediñ BAD"}
+            two{"unanenn jediñ BAD"}
+        }
         XXX{
             few{"(moneiz dianav)"}
             many{"(moneiz dianav)"}
@@ -3155,5 +3178,4 @@ br{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"37"}
 }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ks{
     Keys{
         calendar{"کیلنڑر"}
@@ -610,7 +611,6 @@ ks{
         SOLBA{"ثٹولوِزا/سولبِکا بوٗلۍ"}
         TARASK{"تاراسکیٖوِکا علمہ ہِجاِ"}
     }
-    Version{"37"}
     codePatterns{
         language{"زَبان: {0}"}
         script{"رَسم الخط: {0}"}

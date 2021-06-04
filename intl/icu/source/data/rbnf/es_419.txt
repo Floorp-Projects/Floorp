@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_419{
     RBNFRules{
         OrdinalRules{
@@ -24,5 +25,4 @@ es_419{
             "0: =%digits-ordinal-masculine=;",
         }
     }
-    Version{"37"}
 }

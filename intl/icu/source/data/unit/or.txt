@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 or{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -400,6 +400,12 @@ or{
                 dnam{"ମେଗାହର୍ଜ୍"}
                 one{"{0} ମେଗାହର୍ଜ୍"}
                 other{"{0} ମେଗାହର୍ଜ୍"}
+            }
+        }
+        graphics{
+            dot{
+                one{"{0} ବିନ୍ଦୁ"}
+                other{"{0} ବି"}
             }
         }
         length{
@@ -1379,6 +1385,11 @@ or{
                 other{"{0} MHz"}
             }
         }
+        graphics{
+            dot{
+                dnam{"ବି."}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"ଆୟୁ"}
@@ -1549,6 +1560,10 @@ or{
             }
             solar-mass{
                 dnam{"ସୋଲର ମାସେସ"}
+            }
+            stone{
+                one{"{0} ଷ୍ଟ."}
+                other{"{0} ଷ୍ଟ."}
             }
             ton{
                 dnam{"ଟନ୍"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ga{
     AuxExemplarCharacters{"[å ḃ ċ ḋ ḟ ġ j k ṁ ṗ q ṡ ṫ v w x y z]"}
     ExemplarCharacters{"[a á b c d e é f g h i í l m n o ó p r s t u ú]"}
@@ -287,10 +288,11 @@ ga{
                 }
             }
             symbols{
+                approximatelySign{"≈"}
                 exponential{"E"}
                 group{","}
                 infinity{"∞"}
-                nan{"NaN"}
+                nan{"Nuimh"}
                 perMille{"‰"}
                 percentSign{"%"}
                 superscriptingExponent{"×"}
@@ -303,17 +305,16 @@ ga{
                 other{"Glac an {0}ú casadh ar dheis."}
             }
             plural{
-                few{"{0} chi, {0} cath"}
-                many{"{0} chi, {0} chath"}
-                one{"{0} ci, {0} gath"}
-                other{"{0} ci, {0} cath"}
-                two{"{0} gi, {0} gath"}
+                few{"{0} cinn, {0} huaire, {0} chat, {0} éan, {0} bhróg"}
+                many{"{0} gcinn, {0} n-uaire, {0} gcat, {0} n-éan, {0} mbróg"}
+                one{"{0} cheann, {0} uair, {0} chat, {0} éan, {0} bhróg"}
+                other{"{0} ceann, {0} uair, {0} cat, {0} éan, {0} bróg"}
+                two{"{0} cheann, {0} uair, {0} chat, {0} éan, {0} bhróig"}
             }
         }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -534,6 +535,18 @@ ga{
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
                 }
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"MM/y GGGGG – MM/y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
                 H{
                     H{"HH – HH"}
                 }
@@ -709,11 +722,11 @@ ga{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    few{"'seachtain' 'a' w 'i' Y"}
-                    many{"'seachtain' 'a' w 'i' Y"}
-                    one{"'seachtain' 'a' w 'i' Y"}
-                    other{"'seachtain' 'a' w 'i' Y"}
-                    two{"'seachtain' 'a' w 'i' Y"}
+                    few{"'seachtain' 'a' w 'in' Y"}
+                    many{"'seachtain' 'a' w 'in' Y"}
+                    one{"'seachtain' 'a' w 'in' Y"}
+                    other{"'seachtain' 'a' w 'in' Y"}
+                    two{"'seachtain' 'a' w 'in' Y"}
                 }
             }
             dayNames{
@@ -1099,9 +1112,9 @@ ga{
         food_drink{"Bia agus Deoch"}
         format{"Formáid"}
         format_whitespace{"Formáid agus Spás Bán"}
-        full_width_form_variant{"athraitheach leithid iomláin"}
+        full_width_form_variant{"leagan lánleithid"}
         geometric_shapes{"Cruthanna Geoiméadracha"}
-        half_width_form_variant{"athraitheach leathleithid"}
+        half_width_form_variant{"leagan leathleithid"}
         han_characters{"Carachtair Han"}
         han_radicals{"Fréamhacha Han"}
         hanja{"Hanaí"}
@@ -1139,7 +1152,7 @@ ga{
         punctuation{"Poncaíocht"}
         rightwards_arrows{"Saighead Dheas"}
         sign_standard_symbols{"Comharthaí/Siombailí Coitianta"}
-        small_form_variant{"athraithigh bheaga"}
+        small_form_variant{"leaganacha beaga"}
         smiley{"straoiseog"}
         smileys_people{"Straoiseoga nó Daoine"}
         south_asian_scripts{"Scripteanna na hÁise Theas"}
@@ -1151,7 +1164,7 @@ ga{
         tone_marks{"Comharthaí Toin"}
         travel{"taisteal"}
         travel_places{"Taisteal nó Áiteanna"}
-        upwards_arrows{"Saighead suas"}
+        upwards_arrows{"saigheada suas"}
         variant_forms{"Foirmeacha Malartacha"}
         vocalic_jamo{"Seamó Guthach"}
         weather{"aimsir"}
@@ -1340,14 +1353,14 @@ ga{
             }
             relativeTime{
                 future{
-                    few{"i gceann {0} huaire an chloig"}
+                    few{"i gceann {0} uair an chloig"}
                     many{"i gceann {0} n-uaire an chloig"}
                     one{"i gceann {0} uair an chloig"}
                     other{"i gceann {0} uair an chloig"}
                     two{"i gceann {0} uair an chloig"}
                 }
                 past{
-                    few{"{0} huaire an chloig ó shin"}
+                    few{"{0} uair an chloig ó shin"}
                     many{"{0} n-uaire an chloig ó shin"}
                     one{"{0} uair an chloig ó shin"}
                     other{"{0} uair an chloig ó shin"}
@@ -2195,7 +2208,7 @@ ga{
             dn{"Bliain"}
             relative{
                 "-1"{"anuraidh"}
-                "0"{"an bhliain seo"}
+                "0"{"i mbliana"}
                 "1"{"an bhliain seo chugainn"}
             }
             relativeTime{
@@ -2219,7 +2232,7 @@ ga{
             dn{"bl."}
             relative{
                 "-1"{"anuraidh"}
-                "0"{"an bhl. seo"}
+                "0"{"i mbl."}
                 "1"{"an bhl. seo chugainn"}
             }
             relativeTime{
@@ -2243,7 +2256,7 @@ ga{
             dn{"bl."}
             relative{
                 "-1"{"anuraidh"}
-                "0"{"an bhl. seo"}
+                "0"{"i mbl."}
                 "1"{"an bhl. seo chugainn"}
             }
             relativeTime{
@@ -2280,9 +2293,15 @@ ga{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            end{"{0} nó {1}"}
+        }
+        or-short{
+            end{"{0} nó {1}"}
+        }
         standard{
             2{"{0} agus {1}"}
-            end{"{0}, agus {1}"}
+            end{"{0} agus {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
@@ -2294,13 +2313,13 @@ ga{
         }
         standard-short{
             2{"{0} agus {1}"}
-            end{"{0}, agus {1}"}
+            end{"{0} agus {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
         unit{
             2{"{0} agus {1}"}
-            end{"{0}, agus {1}"}
+            end{"{0} agus {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }

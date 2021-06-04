@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fo{
     Countries{
         001{"heimur"}
@@ -183,6 +184,7 @@ fo{
         MF{"St-Martin"}
         MG{"Madagaskar"}
         MH{"Marshalloyggjar"}
+        MK{"Norður Makedónia"}
         ML{"Mali"}
         MM{"Myanmar (Burma)"}
         MN{"Mongolia"}
@@ -307,5 +309,4 @@ fo{
         FK{"Falklandsoyggjar (Islas Malvinas)"}
         SZ{"Svasiland"}
     }
-    Version{"37"}
 }

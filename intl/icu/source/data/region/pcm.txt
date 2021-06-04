@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pcm{
     Countries{
         001{"Wọld"}
@@ -312,5 +313,4 @@ pcm{
         FK{"Fọ́klánd Aílands (Íslás Malvínas)"}
         SZ{"Swáziland"}
     }
-    Version{"37"}
 }

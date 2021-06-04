@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es{
     Countries{
         001{"Mundo"}
@@ -48,7 +49,7 @@ es{
         AT{"Austria"}
         AU{"Australia"}
         AW{"Aruba"}
-        AX{"Islas Åland"}
+        AX{"Islas Aland"}
         AZ{"Azerbaiyán"}
         BA{"Bosnia y Herzegovina"}
         BB{"Barbados"}
@@ -107,7 +108,7 @@ es{
         ES{"España"}
         ET{"Etiopía"}
         EU{"Unión Europea"}
-        EZ{"zona euro"}
+        EZ{"zona del euro"}
         FI{"Finlandia"}
         FJ{"Fiyi"}
         FK{"Islas Malvinas"}
@@ -119,7 +120,7 @@ es{
         GD{"Granada"}
         GE{"Georgia"}
         GF{"Guayana Francesa"}
-        GG{"Guernsey"}
+        GG{"Guernesey"}
         GH{"Ghana"}
         GI{"Gibraltar"}
         GL{"Groenlandia"}
@@ -313,5 +314,4 @@ es{
         SZ{"Suazilandia"}
         TL{"Timor Oriental"}
     }
-    Version{"37"}
 }

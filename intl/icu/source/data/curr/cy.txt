@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 cy{
     Currencies{
         AED{
@@ -640,7 +641,7 @@ cy{
         }
         MOP{
             "MOP",
-            "Pataca Macau",
+            "pataca Macau",
         }
         MRO{
             "MRO",
@@ -1627,7 +1628,7 @@ cy{
         CAD{
             few{"doler Canada"}
             many{"doler Canada"}
-            one{"ddoler Canada"}
+            one{"doler Canada"}
             other{"doler Canada"}
             two{"doler Canada"}
             zero{"doler Canada"}
@@ -1851,7 +1852,7 @@ cy{
         EGP{
             few{"punt yr Aifft"}
             many{"punt yr Aifft"}
-            one{"bunt yr Aifft"}
+            one{"punt yr Aifft"}
             other{"punt yr Aifft"}
             two{"bunt yr Aifft"}
             zero{"punt yr Aifft"}
@@ -2755,7 +2756,7 @@ cy{
         SDG{
             few{"punt Sudan"}
             many{"punt Sudan"}
-            one{"bunt Sudan"}
+            one{"punt Sudan"}
             other{"punt Sudan"}
             two{"bunt Sudan"}
             zero{"punt Sudan"}
@@ -2787,7 +2788,7 @@ cy{
         SHP{
             few{"punt St. Helena"}
             many{"punt St. Helena"}
-            one{"bunt St. Helena"}
+            one{"punt St. Helena"}
             other{"punt St. Helena"}
             two{"bunt St. Helena"}
             zero{"punt St. Helena"}
@@ -3273,5 +3274,4 @@ cy{
         two{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"37"}
 }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hu{
     Countries{
         001{"Világ"}
@@ -73,9 +74,9 @@ hu{
         BZ{"Belize"}
         CA{"Kanada"}
         CC{"Kókusz (Keeling)-szigetek"}
-        CD{"Kongó - Kinshasa"}
+        CD{"Kongó – Kinshasa"}
         CF{"Közép-afrikai Köztársaság"}
-        CG{"Kongó - Brazzaville"}
+        CG{"Kongó – Brazzaville"}
         CH{"Svájc"}
         CI{"Elefántcsontpart"}
         CK{"Cook-szigetek"}
@@ -222,7 +223,7 @@ hu{
         PM{"Saint-Pierre és Miquelon"}
         PN{"Pitcairn-szigetek"}
         PR{"Puerto Rico"}
-        PS{"Palesztin Terület"}
+        PS{"Palesztin Autonómia"}
         PT{"Portugália"}
         PW{"Palau"}
         PY{"Paraguay"}
@@ -313,5 +314,4 @@ hu{
         SZ{"Eswatini"}
         TL{"Timor-Leste"}
     }
-    Version{"37"}
 }

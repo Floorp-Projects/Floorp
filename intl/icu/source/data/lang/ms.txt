@@ -1,9 +1,10 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ms{
     Keys{
         calendar{"Kalendar"}
-        cf{"Format Mata wang"}
+        cf{"Format Mata Wang"}
         colAlternate{"Abaikan Pengisihan Simbol"}
         colBackwards{"Pengisihan Aksen Terbalik"}
         colCaseFirst{"Penyusunan Huruf Besar/Huruf Kecil"}
@@ -73,7 +74,7 @@ ms{
         bkm{"Kom"}
         bla{"Siksika"}
         bm{"Bambara"}
-        bn{"Benggala"}
+        bn{"Benggali"}
         bo{"Tibet"}
         bpy{"Bishnupriya"}
         br{"Breton"}
@@ -474,6 +475,7 @@ ms{
         zh_Hant{"Cina Mandarin Tradisional"}
     }
     Languages%menu{
+        ckb{"Kurdi, Tengah"}
         yue{"Cina, Kantonis"}
         zh{"Cina, Mandarin"}
     }
@@ -899,7 +901,6 @@ ms{
         VALENCIA{"Valencia"}
         WADEGILE{"Perumian Wade-Giles"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — Semua"}
         category-list{"{0}: {1}"}
@@ -913,6 +914,8 @@ ms{
         strokes{
             other{"{0} Lejang"}
         }
+        subscript{"subskrip {0}"}
+        superscript{"superskrip {0}"}
     }
     codePatterns{
         language{"Bahasa: {0}"}

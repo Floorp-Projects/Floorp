@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ko{
     Currencies{
         ADP{
@@ -388,7 +389,7 @@ ko{
         }
         GBP{
             "£",
-            "파운드",
+            "영국 파운드",
         }
         GEK{
             "GEK",
@@ -1330,7 +1331,7 @@ ko{
             other{"볼리비아노"}
         }
         BRL{
-            other{"브라질 헤알"}
+            other{"브라질 레알"}
         }
         BSD{
             other{"바하마 달러"}
@@ -1417,7 +1418,7 @@ ko{
             other{"포클랜드제도 파운드"}
         }
         GBP{
-            other{"영국령 파운드 스털링"}
+            other{"영국 파운드"}
         }
         GEL{
             other{"조지아 라리"}
@@ -1762,5 +1763,4 @@ ko{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

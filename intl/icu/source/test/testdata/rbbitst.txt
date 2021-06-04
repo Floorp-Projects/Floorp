@@ -32,7 +32,7 @@
 #   [ICU4C]   source/test/testdata/rbbitst.txt
 #   [ICU4J]   main/tests/core/src/com/ibm/icu/dev/test/rbbi/rbbitst.txt
 #
-# ICU4C's copy is the master.  If any changes are made to ICU4J's copy, make sure they
+# ICU4C's copy is the primary one.  If any changes are made to ICU4J's copy, make sure they
 #  are merged back into ICU4C's copy of the file, lest they get overwritten later.
 # TODO:  figure out how to have a single copy of the file for use by both C and Java.
 
@@ -289,7 +289,7 @@
 # वृद्धिसँग ;
 <data>•वृ•द्धि•सँ•ग•</data>
 # अंतःज्ञानी  ;
-<data>•अं•तः•ज्ञा•नी••</data>
+<data>•अं•तः•ज्ञा•नी• •</data>
 # गन्नदी॑धिम ;
 <data>•ग•न्न•दी॑•धि•म•</data>
 # प्प्रप॑द्ये॒ ;
@@ -319,7 +319,7 @@
 # भर्तुर्भोगः ;
 <data>•भ•र्तु•र्भो•गः•</data>
 # शॆत्युल  ;
-<data>•शॆ•त्यु•ल••</data>
+<data>•शॆ•त्यु•ल• •</data>
 # महारॆन्य ;
 <data>•म•हा•रॆ•न्य•</data>
 # सॆक्युल ;

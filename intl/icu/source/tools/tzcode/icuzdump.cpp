@@ -137,12 +137,12 @@ public:
 
         getCutOverTimes(cutlo, cuthi);
         t = cutlo;
-        timezone->getOffset(t, FALSE, rawOffset, dstOffset, status);
+        timezone->getOffset(t, false, rawOffset, dstOffset, status);
         while (t < cuthi) {
             int32_t newRawOffset, newDstOffset;
             UDate newt = t + SEARCH_INCREMENT;
 
-            timezone->getOffset(newt, FALSE, newRawOffset, newDstOffset, status);
+            timezone->getOffset(newt, false, newRawOffset, newDstOffset, status);
 
             UBool bSameOffset = (rawOffset + dstOffset) == (newRawOffset + newDstOffset);
             UBool bSameDst = ((dstOffset != 0) && (newDstOffset != 0)) || ((dstOffset == 0) && (newDstOffset == 0));
@@ -158,7 +158,7 @@ public:
                     }
                     UDate medt = lot + ((diff / 2) / tick) * tick;
                     int32_t medRawOffset, medDstOffset;
-                    timezone->getOffset(medt, FALSE, medRawOffset, medDstOffset, status);
+                    timezone->getOffset(medt, false, medRawOffset, medDstOffset, status);
 
                     bSameOffset = (rawOffset + dstOffset) == (medRawOffset + medDstOffset);
                     bSameDst = ((dstOffset != 0) && (medDstOffset != 0)) || ((dstOffset == 0) && (medDstOffset == 0));
@@ -171,10 +171,10 @@ public:
                 }
                 // write out the boundary
                 str.remove();
-                formatter->format(lot, rawOffset + dstOffset, (dstOffset == 0 ? FALSE : TRUE), str);
+                formatter->format(lot, rawOffset + dstOffset, (dstOffset == 0 ? false : true), str);
                 out << str << " > ";
                 str.remove();
-                formatter->format(hit, newRawOffset + newDstOffset, (newDstOffset == 0 ? FALSE : TRUE), str);
+                formatter->format(hit, newRawOffset + newDstOffset, (newDstOffset == 0 ? false : true), str);
                 out << str;
                 if (linesep != NULL) {
                     out << linesep;
@@ -211,7 +211,7 @@ private:
 
 class ZoneIterator {
 public:
-    ZoneIterator(UBool bAll = FALSE) {
+    ZoneIterator(UBool bAll = false) {
         if (bAll) {
             zenum = TimeZone::createEnumeration();
         }
@@ -288,7 +288,7 @@ extern int
 main(int argc, char *argv[]) {
     int32_t low = 1902;
     int32_t high = 2038;
-    UBool bAll = FALSE;
+    UBool bAll = false;
     const char *dir = NULL;
     const char *linesep = NULL;
 
@@ -355,7 +355,7 @@ main(int argc, char *argv[]) {
 
     ZoneIterator* zit;
     if (bAll) {
-        zit = new ZoneIterator(TRUE);
+        zit = new ZoneIterator(true);
     } else {
         if (argc <= 1) {
             zit = new ZoneIterator();
@@ -402,7 +402,7 @@ main(int argc, char *argv[]) {
 
     } else {
         // stdout
-        UBool bFirst = TRUE;
+        UBool bFirst = true;
         for (;;) {
             TimeZone* tz = zit->next();
             if (tz == NULL) {
@@ -411,7 +411,7 @@ main(int argc, char *argv[]) {
             dumper.setTimeZone(tz);
             tz->getID(id);
             if (bFirst) {
-                bFirst = FALSE;
+                bFirst = false;
             } else {
                 cout << endl;
             }

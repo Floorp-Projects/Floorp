@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 af{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -730,7 +730,7 @@ af{
             ec{"Hovd"}
         }
         "Asia:Irkutsk"{
-            ec{"Irkutsk"}
+            ec{"Irkoetsk"}
         }
         "Asia:Jakarta"{
             ec{"Djakarta"}
@@ -1419,7 +1419,7 @@ af{
             ls{"Bhoetan-tyd"}
         }
         "meta:Bolivia"{
-            ls{"Bolivia-tyd"}
+            ls{"Bolivië-tyd"}
         }
         "meta:Brasilia"{
             ld{"Brasilia-somertyd"}
@@ -1560,7 +1560,7 @@ af{
             ls{"Persiese Golf-standaardtyd"}
         }
         "meta:Guyana"{
-            ls{"Guyana-tyd"}
+            ls{"Guiana-tyd"}
         }
         "meta:Hawaii_Aleutian"{
             ld{"Hawaii-Aleoete-dagligtyd"}
@@ -1601,9 +1601,9 @@ af{
             ls{"Iran-standaardtyd"}
         }
         "meta:Irkutsk"{
-            ld{"Irkutsk-somertyd"}
-            lg{"Irkutsk-tyd"}
-            ls{"Irkutsk-standaardtyd"}
+            ld{"Irkoetsk-somertyd"}
+            lg{"Irkoetsk-tyd"}
+            ls{"Irkoetsk-standaardtyd"}
         }
         "meta:Israel"{
             ld{"Israel-dagligtyd"}

@@ -1,16 +1,17 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 gl{
     Keys{
         calendar{"calendario"}
         cf{"formato de moeda"}
-        colAlternate{"Ignorar clasificación de símbolos"}
-        colBackwards{"Clasificación de acentos invertida"}
-        colCaseFirst{"Orde de maiúsculas/minúsculas"}
-        colCaseLevel{"Clasificación que distingue entre maiúsculas e minúsculas"}
-        colNormalization{"Clasificación normalizada"}
-        colNumeric{"Clasificación numérica"}
-        colStrength{"Forza de clasificación"}
+        colAlternate{"ignorar ordenación de símbolos"}
+        colBackwards{"ordenación de acentos invertida"}
+        colCaseFirst{"orde de maiúsculas/minúsculas"}
+        colCaseLevel{"ordenación que distingue entre maiúsculas e minúsculas"}
+        colNormalization{"ordenación normalizada"}
+        colNumeric{"ordenación numérica"}
+        colStrength{"forza de ordenación"}
         collation{"criterio de ordenación"}
         currency{"moeda"}
         hc{"ciclo horario (12 ou 24)"}
@@ -441,6 +442,9 @@ gl{
     Languages%short{
         az{"azerí"}
     }
+    Languages%variant{
+        ckb{"sorani"}
+    }
     Scripts{
         Arab{"árabe"}
         Armn{"armenio"}
@@ -634,7 +638,6 @@ gl{
             vaii{"Díxitos Vai"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} (todo)"}
         category-list{"{0}: {1}"}
@@ -649,6 +652,8 @@ gl{
             one{"{0} trazo"}
             other{"{0} trazos"}
         }
+        subscript{"{0} subíndice"}
+        superscript{"{0} superíndice"}
     }
     codePatterns{
         language{"Idioma: {0}"}

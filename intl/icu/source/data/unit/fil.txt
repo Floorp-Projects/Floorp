@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fil{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -398,6 +398,11 @@ fil{
             }
         }
         graphics{
+            dot{
+                dnam{"tuldok"}
+                one{"{0} tuldok"}
+                other{"{0} tuldok"}
+            }
             dot-per-centimeter{
                 dnam{"tuldok bawat sentimetro"}
                 one{"{0} tuldok bawat sentimetro"}
@@ -448,6 +453,11 @@ fil{
                 dnam{"decimetro"}
                 one{"{0} decimetro"}
                 other{"{0} na decimetro"}
+            }
+            earth-radius{
+                dnam{"earth radius"}
+                one{"{0} earth radius"}
+                other{"{0} na earth radius"}
             }
             fathom{
                 dnam{"fathoms"}
@@ -545,6 +555,16 @@ fil{
             }
         }
         light{
+            candela{
+                dnam{"candela"}
+                one{"{0} candela"}
+                other{"{0} candela"}
+            }
+            lumen{
+                dnam{"lumen"}
+                one{"{0} lumen"}
+                other{"{0} lumen"}
+            }
             lux{
                 dnam{"lux"}
                 one{"{0} lux"}
@@ -571,6 +591,11 @@ fil{
                 dnam{"Earth mass"}
                 one{"{0} Earth mass"}
                 other{"{0} Earth mass"}
+            }
+            grain{
+                dnam{"butil"}
+                one{"{0} butil"}
+                other{"{0} butil"}
             }
             gram{
                 dnam{"gramo"}
@@ -777,6 +802,11 @@ fil{
                 one{"{0} bariles"}
                 other{"{0} bariles"}
             }
+            bushel{
+                dnam{"mga bushel"}
+                one{"{0} bushel"}
+                other{"{0} mga bushel"}
+            }
             centiliter{
                 dnam{"sentilitro"}
                 one{"{0} sentilitro"}
@@ -834,6 +864,21 @@ fil{
                 one{"{0} decilitro"}
                 other{"{0} na decilitro"}
             }
+            dessert-spoon{
+                dnam{"kutsarang panghimagas"}
+                one{"{0} kutsarang panghimagas"}
+                other{"{0} kutsarang panghimagas"}
+            }
+            dessert-spoon-imperial{
+                dnam{"Imp. na kutsarang panghimagas"}
+                one{"{0} Imp. na kutsarang panghimagas"}
+                other{"{0} Imp. na kutsarang panghimagas"}
+            }
+            drop{
+                dnam{"patak"}
+                one{"{0} patak"}
+                other{"{0} patak"}
+            }
             fluid-ounce{
                 dnam{"fluid ounces"}
                 one{"{0} fluid ounce"}
@@ -877,6 +922,11 @@ fil{
                 one{"{0} mililitro"}
                 other{"{0} mililitro"}
             }
+            pinch{
+                dnam{"karampot"}
+                one{"{0} karampot"}
+                other{"{0} karampot"}
+            }
             pint{
                 dnam{"pints"}
                 one{"{0} pint"}
@@ -891,6 +941,11 @@ fil{
                 dnam{"quarts"}
                 one{"{0} quart"}
                 other{"{0} na quarts"}
+            }
+            quart-imperial{
+                dnam{"Imp. na kuwart"}
+                one{"{0} Imp. na kuwart"}
+                other{"{0} Imp. na kuwart"}
             }
             tablespoon{
                 dnam{"kutsara"}
@@ -1687,6 +1742,11 @@ fil{
             }
         }
         graphics{
+            dot{
+                dnam{"tuldok"}
+                one{"{0} tuldok"}
+                other{"{0} tuldok"}
+            }
             pixel{
                 dnam{"mga pixel"}
             }
@@ -1707,6 +1767,10 @@ fil{
                 dnam{"dm"}
                 one{"{0} dm"}
                 other{"{0} dm"}
+            }
+            earth-radius{
+                one{"{0} na R⊕"}
+                other{"{0} na R⊕"}
             }
             fathom{
                 dnam{"fathoms"}
@@ -1828,6 +1892,11 @@ fil{
                 dnam{"Earth mass"}
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
+            }
+            grain{
+                dnam{"butil"}
+                one{"{0} butil"}
+                other{"{0} butil"}
             }
             gram{
                 dnam{"gramo"}
@@ -2028,6 +2097,9 @@ fil{
             barrel{
                 dnam{"bariles"}
             }
+            bushel{
+                dnam{"mga bushel"}
+            }
             centiliter{
                 dnam{"cL"}
                 one{"{0} cL"}
@@ -2085,6 +2157,11 @@ fil{
                 one{"{0} dL"}
                 other{"{0} dL"}
             }
+            drop{
+                dnam{"patak"}
+                one{"{0} patak"}
+                other{"{0} patak"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -2123,6 +2200,11 @@ fil{
                 one{"{0} mL"}
                 other{"{0} mL"}
             }
+            pinch{
+                dnam{"karampot"}
+                one{"{0} karampot"}
+                other{"{0} karampot"}
+            }
             pint{
                 dnam{"pints"}
                 one{"{0} pt"}
@@ -2137,6 +2219,9 @@ fil{
                 dnam{"qts"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"Imp na kuwart"}
             }
             tablespoon{
                 dnam{"tbsp"}

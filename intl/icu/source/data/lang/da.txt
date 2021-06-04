@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 da{
     Keys{
         calendar{"kalender"}
@@ -177,7 +178,7 @@ da{
         fro{"oldfransk"}
         frr{"nordfrisisk"}
         frs{"østfrisisk"}
-        fur{"friulian"}
+        fur{"friulisk"}
         fy{"vestfrisisk"}
         ga{"irsk"}
         gaa{"ga"}
@@ -355,7 +356,7 @@ da{
         nan{"min-kinesisk"}
         nap{"napolitansk"}
         naq{"nama"}
-        nb{"norsk bokmål"}
+        nb{"bokmål"}
         nd{"nordndebele"}
         nds{"nedertysk"}
         ne{"nepalesisk"}
@@ -425,7 +426,7 @@ da{
         rwk{"rwa"}
         sa{"sanskrit"}
         sad{"sandawe"}
-        sah{"yakut"}
+        sah{"jakutisk"}
         sam{"samaritansk aramæisk"}
         saq{"samburu"}
         sas{"sasak"}
@@ -534,7 +535,7 @@ da{
         wo{"wolof"}
         wuu{"wu-kinesisk"}
         xal{"kalmyk"}
-        xh{"isiXhosa"}
+        xh{"xhosa"}
         xog{"soga"}
         yao{"yao"}
         yap{"yapese"}
@@ -564,9 +565,11 @@ da{
     }
     Languages%short{
         az{"azeri"}
+        en_GB{"britisk engelsk"}
         en_US{"amerikansk engelsk"}
     }
     Languages%variant{
+        ckb{"centralkurdisk"}
         ps{"pushto"}
         ug{"uighurisk"}
     }
@@ -967,7 +970,6 @@ da{
         VALLADER{"vallader"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – alle"}
         category-list{"{0}: {1}"}
@@ -982,6 +984,8 @@ da{
             one{"{0} streg"}
             other{"{0} streger"}
         }
+        subscript{"sænket skrift {0}"}
+        superscript{"hævet skrift {0}"}
     }
     codePatterns{
         language{"Sprog: {0}"}

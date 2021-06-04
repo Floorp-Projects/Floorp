@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ka{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"აბიჯანი"}
@@ -985,7 +985,7 @@ ka{
             ec{"ბრიუსელი"}
         }
         "Europe:Bucharest"{
-            ec{"ბუხარესტი"}
+            ec{"ბუქარესტი"}
         }
         "Europe:Budapest"{
             ec{"ბუდაპეშტი"}
@@ -1116,7 +1116,7 @@ ka{
             ec{"უჟგოროდი"}
         }
         "Europe:Vaduz"{
-            ec{"ვადუზი"}
+            ec{"ვადუცი"}
         }
         "Europe:Vatican"{
             ec{"ვატიკანი"}

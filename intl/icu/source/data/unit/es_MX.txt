@@ -1,20 +1,19 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_MX{
     %%Parent{"es_419"}
-    Version{"37"}
     units{
         concentr{
             milligram-per-deciliter{
-                one{"{0} mg/dL"}
-                other{"{0} mg/dL"}
+                dnam{"miligramos por decilitro"}
             }
-            millimole-per-liter{
-                dnam{"mmol/L"}
-            }
-            permillion{
-                dnam{"ppm"}
-            }
+        }
+        coordinate{
+            east{"{0} este"}
+            north{"{0} norte"}
+            south{"{0} sur"}
+            west{"{0} oeste"}
         }
         electric{
             ohm{
@@ -31,11 +30,6 @@ es_MX{
             }
         }
         length{
-            micrometer{
-                dnam{"micrometros"}
-                one{"{0} micrometro"}
-                other{"{0} micrometros"}
-            }
             mile-scandinavian{
                 dnam{"millas escandinavas"}
             }
@@ -66,11 +60,6 @@ es_MX{
                 dnam{"kelvines"}
                 one{"kelvin"}
                 other{"{0} kelvines"}
-            }
-        }
-        torque{
-            newton-meter{
-                dnam{"newton metros"}
             }
         }
         volume{
@@ -122,9 +111,6 @@ es_MX{
             }
         }
         angle{
-            arc-second{
-                dnam{"arcseg"}
-            }
             degree{
                 dnam{"º"}
             }
@@ -172,9 +158,11 @@ es_MX{
                 per{"{0}/a"}
             }
         }
-        electric{
-            volt{
-                dnam{"V"}
+        graphics{
+            dot{
+                dnam{"pto"}
+                one{"{0} pto"}
+                other{"{0} ptos"}
             }
         }
         length{

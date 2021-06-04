@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sv{
     Countries{
         001{"världen"}
@@ -14,7 +15,7 @@ sv{
         017{"Centralafrika"}
         018{"södra Afrika"}
         019{"Nord- och Sydamerika"}
-        021{"norra Amerika"}
+        021{"Norra Amerika"}
         029{"Karibien"}
         030{"Östasien"}
         034{"Sydasien"}
@@ -107,7 +108,7 @@ sv{
         ES{"Spanien"}
         ET{"Etiopien"}
         EU{"Europeiska unionen"}
-        EZ{"eurozonen"}
+        EZ{"euroområdet"}
         FI{"Finland"}
         FJ{"Fiji"}
         FK{"Falklandsöarna"}
@@ -133,7 +134,7 @@ sv{
         GU{"Guam"}
         GW{"Guinea-Bissau"}
         GY{"Guyana"}
-        HK{"Hongkong"}
+        HK{"Hongkong SAR"}
         HM{"Heardön och McDonaldöarna"}
         HN{"Honduras"}
         HR{"Kroatien"}
@@ -187,7 +188,7 @@ sv{
         ML{"Mali"}
         MM{"Myanmar (Burma)"}
         MN{"Mongoliet"}
-        MO{"Macao"}
+        MO{"Macao SAR"}
         MP{"Nordmarianerna"}
         MQ{"Martinique"}
         MR{"Mauretanien"}
@@ -261,7 +262,7 @@ sv{
         TG{"Togo"}
         TH{"Thailand"}
         TJ{"Tadzjikistan"}
-        TK{"Tokelau"}
+        TK{"Tokelauöarna"}
         TL{"Östtimor"}
         TM{"Turkmenistan"}
         TN{"Tunisien"}
@@ -298,6 +299,8 @@ sv{
         ZZ{"okänd region"}
     }
     Countries%short{
+        HK{"Hongkong"}
+        MO{"Macao"}
         PS{"Palestina"}
         UN{"FN"}
     }
@@ -307,5 +310,4 @@ sv{
         SZ{"Eswatini"}
         TL{"Timor-Leste"}
     }
-    Version{"37"}
 }

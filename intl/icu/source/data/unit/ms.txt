@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ms{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -372,6 +372,10 @@ ms{
                 dnam{"desimeter"}
                 other{"{0} desimeter"}
             }
+            earth-radius{
+                dnam{"radius bumi"}
+                other{"{0} radius bumi"}
+            }
             fathom{
                 dnam{"fathom"}
                 other{"{0} fathom"}
@@ -450,6 +454,14 @@ ms{
             }
         }
         light{
+            candela{
+                dnam{"kandela"}
+                other{"{0} kandela"}
+            }
+            lumen{
+                dnam{"lumen"}
+                other{"{0} lumen"}
+            }
             lux{
                 dnam{"lux"}
                 other{"{0} lux"}
@@ -514,7 +526,7 @@ ms{
             }
             stone{
                 dnam{"stone"}
-                other{"{0} st"}
+                other{"{0} stone"}
             }
             ton{
                 dnam{"tan"}
@@ -565,7 +577,7 @@ ms{
                 other{"{0} kilopaskal"}
             }
             megapascal{
-                dnam{"megapascal"}
+                dnam{"megapaskal"}
                 other{"{0} megapaskal"}
             }
             millibar{
@@ -640,6 +652,10 @@ ms{
                 dnam{"tong"}
                 other{"{0} tong"}
             }
+            bushel{
+                dnam{"busyel"}
+                other{"{0} busyel"}
+            }
             centiliter{
                 dnam{"sentiliter"}
                 other{"{0} sentiliter"}
@@ -686,6 +702,22 @@ ms{
                 dnam{"desiliter"}
                 other{"{0} desiliter"}
             }
+            dessert-spoon{
+                dnam{"sudu desert"}
+                other{"{0} sudu desert"}
+            }
+            dessert-spoon-imperial{
+                dnam{"sudu desert Imp."}
+                other{"{0} sudu desert Imp."}
+            }
+            dram{
+                dnam{"dram"}
+                other{"{0} dram"}
+            }
+            drop{
+                dnam{"titis"}
+                other{"{0} titis"}
+            }
             fluid-ounce{
                 dnam{"auns cecair"}
                 other{"{0} auns cecair"}
@@ -704,6 +736,9 @@ ms{
                 dnam{"hektoliter"}
                 other{"{0} hektoliter"}
             }
+            jigger{
+                dnam{"jigger"}
+            }
             liter{
                 dnam{"liter"}
                 other{"{0} liter"}
@@ -717,6 +752,10 @@ ms{
                 dnam{"mililiter"}
                 other{"{0} mililiter"}
             }
+            pinch{
+                dnam{"cubit"}
+                other{"{0} cubit"}
+            }
             pint{
                 dnam{"pain"}
                 other{"{0} pain"}
@@ -728,6 +767,10 @@ ms{
             quart{
                 dnam{"kuart"}
                 other{"{0} kuart"}
+            }
+            quart-imperial{
+                dnam{"kuart Imp."}
+                other{"{0} kuart Imp."}
             }
             tablespoon{
                 dnam{"sudu besar"}
@@ -860,7 +903,7 @@ ms{
                 other{"{0} au"}
             }
             centimeter{
-                dnam{"sentimeter"}
+                dnam{"cm"}
                 other{"{0} cm"}
                 per{"{0}/cm"}
             }
@@ -882,11 +925,11 @@ ms{
                 other{"{0} fur"}
             }
             inch{
+                dnam{"in"}
                 other{"{0}\u0022"}
                 per{"{0}/in"}
             }
             kilometer{
-                dnam{"kilometer"}
                 other{"{0} km"}
                 per{"{0}/km"}
             }
@@ -900,6 +943,7 @@ ms{
                 per{"{0}/m"}
             }
             micrometer{
+                dnam{"µm"}
                 other{"{0} µm"}
             }
             mile{
@@ -916,7 +960,7 @@ ms{
             }
             nanometer{
                 dnam{"nm"}
-                other{"{0} nm"}
+                other{"{0}nm"}
             }
             nautical-mile{
                 dnam{"btn"}
@@ -1409,7 +1453,6 @@ ms{
                 other{"{0} au"}
             }
             centimeter{
-                dnam{"sentimeter"}
                 other{"{0} cm"}
                 per{"{0}/cm"}
             }
@@ -1436,7 +1479,6 @@ ms{
                 per{"{0}/in"}
             }
             kilometer{
-                dnam{"kilometer"}
                 other{"{0} km"}
                 per{"{0}/km"}
             }
@@ -1702,6 +1744,13 @@ ms{
                 dnam{"dL"}
                 other{"{0} dL"}
             }
+            dram{
+                dnam{"dram fl"}
+            }
+            drop{
+                dnam{"titis"}
+                other{"{0} titis"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 other{"{0} fl oz"}
@@ -1732,6 +1781,10 @@ ms{
             milliliter{
                 dnam{"mL"}
                 other{"{0} mL"}
+            }
+            pinch{
+                dnam{"cubit"}
+                other{"{0} cubit"}
             }
             pint{
                 dnam{"pain"}

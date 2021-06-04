@@ -1,7 +1,9 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 so{
-    ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
+    AuxExemplarCharacters{"[a e i o p u v z]"}
+    ExemplarCharacters{"[b c d f g h j k l m n q r s t w x y]"}
     ExemplarCharactersIndex{"[B C D F G H J K L M N Q R S T W X Y]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
@@ -108,7 +110,7 @@ so{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"0 Kun"}
+                        one{"Kun"}
                         other{"0 Kun"}
                     }
                     10000{
@@ -224,6 +226,7 @@ so{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 nan{"MaL"}
             }
         }
@@ -337,7 +340,6 @@ so{
             }
         }
     }
-    Version{"37"}
     calendar{
         chinese{
             cyclicNameSets{
@@ -1941,7 +1943,7 @@ so{
         number{
             lenient{
                 "[\\-‒⁻₋−➖﹣－]",
-                "[,،٫、︐︑﹐﹑，､]",
+                "[,،٫⹁、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
             }
         }

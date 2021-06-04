@@ -16,22 +16,6 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
-  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -76,7 +60,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\..\$(IcuBinOutputDir)\icuin67d.dll</OutputFile>
+      <OutputFile>..\..\$(IcuBinOutputDir)\icuin68d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\$(IcuLibOutputDir)\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\$(IcuLibOutputDir)\icuind.lib</ImportLibrary>
     </Link>
@@ -89,7 +73,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\..\$(IcuBinOutputDir)\icuin67.dll</OutputFile>
+      <OutputFile>..\..\$(IcuBinOutputDir)\icuin68.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\$(IcuLibOutputDir)\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\$(IcuLibOutputDir)\icuin.lib</ImportLibrary>
     </Link>
@@ -193,7 +177,6 @@
     <ClCompile Include="nfrs.cpp" />
     <ClCompile Include="nfrule.cpp" />
     <ClCompile Include="nfsubs.cpp" />
-    <ClCompile Include="nounit.cpp" />
     <ClCompile Include="number_affixutils.cpp" />
     <ClCompile Include="number_asformat.cpp" />
     <ClCompile Include="number_compact.cpp" />
@@ -213,11 +196,13 @@
     <ClCompile Include="number_rounding.cpp" />
     <ClCompile Include="number_scientific.cpp" />
     <ClCompile Include="formatted_string_builder.cpp" />
+    <ClCompile Include="number_usageprefs.cpp" />
     <ClCompile Include="number_utils.cpp" />
     <ClCompile Include="number_mapper.cpp" />
     <ClCompile Include="number_multiplier.cpp" />
     <ClCompile Include="number_currencysymbols.cpp" />
     <ClCompile Include="number_skeletons.cpp" />
+    <ClCompile Include="number_symbolswrapper.cpp" />
     <ClCompile Include="number_capi.cpp" />
     <ClCompile Include="string_segment.cpp" />
     <ClCompile Include="numparse_parsednumber.cpp" />
@@ -229,12 +214,14 @@
     <ClCompile Include="numparse_affixes.cpp" />
     <ClCompile Include="numparse_compositions.cpp" />
     <ClCompile Include="numparse_validators.cpp" />
+    <ClCompile Include="numrange_capi.cpp" />
     <ClCompile Include="numrange_fluent.cpp" />
     <ClCompile Include="numrange_impl.cpp" />
     <ClCompile Include="numfmt.cpp" />
     <ClCompile Include="numsys.cpp" />
     <ClCompile Include="olsontz.cpp" />
     <ClCompile Include="persncal.cpp" />
+    <ClCompile Include="pluralranges.cpp" />
     <ClCompile Include="plurfmt.cpp" />
     <ClCompile Include="plurrule.cpp" />
     <ClCompile Include="quantityformatter.cpp" />
@@ -266,6 +253,10 @@
     <ClCompile Include="ufieldpositer.cpp" />
     <ClCompile Include="ulocdata.cpp" />
     <ClCompile Include="umsg.cpp" />
+    <ClCompile Include="units_complexconverter.cpp" />
+    <ClCompile Include="units_converter.cpp" />
+    <ClCompile Include="units_data.cpp" />
+    <ClCompile Include="units_router.cpp" />
     <ClCompile Include="unum.cpp" />
     <ClCompile Include="unumsys.cpp" />
     <ClCompile Include="upluralrules.cpp" />
@@ -401,6 +392,7 @@
     <ClInclude Include="nfsubs.h" />
     <ClInclude Include="olsontz.h" />
     <ClInclude Include="persncal.h" />
+    <ClInclude Include="pluralranges.h" />
     <ClInclude Include="plurrule_impl.h" />
     <ClInclude Include="quantityformatter.h" />
     <ClInclude Include="sharedbreakiterator.h" />
@@ -481,12 +473,14 @@
     <ClInclude Include="number_scientific.h" />
     <ClInclude Include="formatted_string_builder.h" />
     <ClInclude Include="number_types.h" />
+    <ClInclude Include="number_usageprefs.h" />
     <ClInclude Include="number_utypes.h" />
     <ClInclude Include="number_utils.h" />
     <ClInclude Include="number_mapper.h" />
     <ClInclude Include="number_multiplier.h" />
     <ClInclude Include="number_currencysymbols.h" />
     <ClInclude Include="number_skeletons.h" />
+    <ClInclude Include="number_symbolswrapper.h" />
     <ClInclude Include="string_segment.h" />
     <ClInclude Include="numparse_impl.h" />
     <ClInclude Include="numparse_symbols.h" />
@@ -500,6 +494,10 @@
     <ClInclude Include="numparse_utils.h" />
     <ClInclude Include="numrange_impl.h" />
     <ClInclude Include="formattedval_impl.h" />
+    <ClInclude Include="units_complexconverter.h" />
+    <ClInclude Include="units_converter.h" />
+    <ClInclude Include="units_data.h" />
+    <ClInclude Include="units_router.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="i18n.rc" />

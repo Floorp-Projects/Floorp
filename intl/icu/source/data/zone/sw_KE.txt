@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sw_KE{
-    Version{"37"}
     zoneStrings{
         "America:Barbados"{
             ec{"Babadosi"}
@@ -113,9 +113,6 @@ sw_KE{
             lg{"Saa za Kepuvede"}
             ls{"Saa za Wastani za Kepuvede"}
         }
-        "meta:Christmas"{
-            ls{"Saa za Kisiwa cha Krismasi"}
-        }
         "meta:Colombia"{
             ld{"Saa za Majira ya Joto za Kolombia"}
             lg{"Saa za Kolombia"}
@@ -136,9 +133,6 @@ sw_KE{
             lg{"Saa za Kisiwa cha Easter"}
             ls{"Saa za Wastani za Kisiwa cha Easter"}
         }
-        "meta:Ecuador"{
-            ls{"Saa za Ekwado"}
-        }
         "meta:French_Guiana"{
             ls{"Saa za Guiana"}
         }
@@ -149,9 +143,6 @@ sw_KE{
         }
         "meta:Gulf"{
             ls{"Saa za Wastani za Ghuba"}
-        }
-        "meta:India"{
-            ls{"Saa za Wastani za India"}
         }
         "meta:Iran"{
             ld{"Saa za Mchana za Irani"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sd{
     Currencies{
         AED{
@@ -832,7 +833,7 @@ sd{
             other{"ڀوٽاني گلٽرم"}
         }
         BWP{
-            one{"بوستواني پولا"}
+            one{"بوٽسواني پولا"}
             other{"بوستواني پولا"}
         }
         BYN{
@@ -896,7 +897,7 @@ sd{
             other{"جبوتي فرينڪ"}
         }
         DKK{
-            one{"دانش ڪرون"}
+            one{"ڊينش ڪرون"}
             other{"دانش ڪرون"}
         }
         DOP{
@@ -985,7 +986,7 @@ sd{
         }
         IDR{
             one{"انڊونيشيائي رپيه"}
-            other{"انڊونيشيائي رپيه"}
+            other{"انڊونيشيائي رپيو"}
         }
         ILS{
             one{"اسرائيلي نيو شيڪل"}
@@ -1020,7 +1021,7 @@ sd{
             other{"جاپاني يين"}
         }
         KES{
-            one{"ڪينيائي سلنگ"}
+            one{"ڪينيائي شلنگ"}
             other{"ڪينيائي سلنگ"}
         }
         KGS{
@@ -1136,11 +1137,11 @@ sd{
             other{"موزمبيق ميٽيڪل"}
         }
         NAD{
-            one{"نميبائي ڊالر"}
+            one{"نميبيائي ڊالر"}
             other{"نميبائي ڊالر"}
         }
         NGN{
-            one{"نائجريائي نائرا"}
+            one{"نائجيريائي نائرا"}
             other{"نائجريائي نائرا"}
         }
         NIO{
@@ -1264,7 +1265,7 @@ sd{
             other{"سائو ٽوم ۽ پرنسپي دوبرا"}
         }
         SYP{
-            one{"سيريائي پائونڊ"}
+            one{"شامي پائونڊ"}
             other{"سيريائي پائونڊ"}
         }
         SZL{
@@ -1280,7 +1281,7 @@ sd{
             other{"تاجڪستاني سوموني"}
         }
         TMT{
-            one{"ترڪمانستان منت"}
+            one{"ترڪمانستاني منت"}
             other{"ترڪمانستان منت"}
         }
         TND{
@@ -1380,5 +1381,4 @@ sd{
             other{"زمبائي ڪواچا"}
         }
     }
-    Version{"37"}
 }

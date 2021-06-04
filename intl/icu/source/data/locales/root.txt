@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 root{
     AuxExemplarCharacters{"[]"}
     Ellipsis{
@@ -22,6 +23,7 @@ root{
                 percentFormat{"#,##0%"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"٫"}
                 exponential{"اس"}
                 group{"٬"}
@@ -38,6 +40,7 @@ root{
         }
         arabext{
             symbols{
+                approximatelySign{"~"}
                 decimal{"٫"}
                 exponential{"×۱۰^"}
                 group{"٬"}
@@ -146,6 +149,7 @@ root{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
@@ -171,7 +175,7 @@ root{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
+    Version{"38.1"}
     calendar{
         buddhist{
             AmPmMarkers:alias{"/LOCALE/calendar/gregorian/AmPmMarkers"}
@@ -2629,11 +2633,11 @@ root{
         number{
             lenient{
                 "[\\-‐‒–⁻₋−➖﹣－]",
-                "[,،٫、︐︑﹐﹑，､]",
+                "[,،٫⹁、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
             }
             stricter{
-                "[,٫︐﹐，]",
+                "[,٫⹁︐﹐，]",
                 "[.․﹒．｡]",
             }
         }

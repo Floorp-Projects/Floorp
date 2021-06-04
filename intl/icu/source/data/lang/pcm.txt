@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pcm{
     Keys{
         calendar{"Kalẹ́nda"}
@@ -143,6 +144,7 @@ pcm{
         luo{"Luó Lángwej"}
         luy{"Luyia Lángwej"}
         lv{"Látvián Lángwej"}
+        mai{"Maítíli"}
         mas{"Masaí Lángwej"}
         mer{"Mẹ́rú Lángwej"}
         mfe{"Morísiẹ́n Lángwej"}
@@ -153,6 +155,7 @@ pcm{
         mk{"Masẹdóniá Lángwej"}
         ml{"Maléyálám Lángwej"}
         mn{"Mọngóliá Lángwej"}
+        mni{"Manípuri"}
         mr{"Marátí Lángwej"}
         ms{"Malé Lángwej"}
         mt{"Mọ́ltá Lángwej"}
@@ -195,6 +198,7 @@ pcm{
         sa{"Sánskrit"}
         sah{"Sakhá"}
         saq{"Sambúru"}
+        sat{"Sántáli"}
         sbp{"Sangu"}
         sd{"Síndí"}
         se{"Nọ́tán Sámí Lángwej"}
@@ -256,12 +260,16 @@ pcm{
         zh_Hant{"Tradíshọ́nál Mandarín Chainíz Lángwej"}
     }
     Languages%menu{
+        ckb{"Sẹ́ntrál Kọ́dísh Lángwej"}
         yue{"Chainiz Kántọniz"}
         zh{"Chainiz, Mandarin"}
     }
     Languages%short{
         en_GB{"UK Ínglish"}
         en_US{"US Ínglish"}
+    }
+    Languages%variant{
+        ckb{"Sorání Kọ́dísh Lángwej"}
     }
     Scripts{
         Arab{"Arábík"}
@@ -390,7 +398,6 @@ pcm{
             tibt{"Tíbẹt Nọ́mba-dẹm"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — ọl"}
         category-list{"{0}: {1}"}
@@ -405,6 +412,8 @@ pcm{
             one{"{0}Strok"}
             other{"{0}Strok"}
         }
+        subscript{"sọ́bskript {0}"}
+        superscript{"Súpáskript {0}"}
     }
     codePatterns{
         language{"Lángwej: {0}"}

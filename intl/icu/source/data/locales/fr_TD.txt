@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fr_TD{
-    Version{"37"}
     calendar{
         gregorian{
             DateTimePatterns{
@@ -13,10 +13,10 @@ fr_TD{
                 "d MMMM y",
                 "d MMM y",
                 "dd/MM/y",
+                "{1}, {0}",
                 "{1} 'à' {0}",
                 "{1} 'à' {0}",
-                "{1} 'à' {0}",
-                "{1} 'à' {0}",
+                "{1}, {0}",
                 "{1} {0}",
             }
         }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fr_CA{
-    Version{"37"}
     zoneStrings{
         "Africa:Ndjamena"{
             ec{"Ndjamena"}
@@ -216,11 +216,6 @@ fr_CA{
             lg{"heure du Cap-Vert"}
             ls{"heure normale du Cap-Vert"}
         }
-        "meta:Chatham"{
-            ld{"heure avancée des Îles Chatham"}
-            lg{"heure des îles Chatham"}
-            ls{"heure normale des Îles Chatham"}
-        }
         "meta:Chile"{
             ld{"heure avancée du Chili"}
             lg{"heure du Chili"}
@@ -257,19 +252,19 @@ fr_CA{
             ls{"heure normale de l’île de Pâques"}
         }
         "meta:Europe_Central"{
-            ld{"heure avancée d’Europe centrale"}
-            lg{"heure d’Europe centrale"}
-            ls{"heure normale d’Europe centrale"}
+            ld{"heure avancée de l’Europe centrale"}
+            lg{"heure de l’Europe centrale"}
+            ls{"heure normale de l’Europe centrale"}
         }
         "meta:Europe_Eastern"{
-            ld{"heure avancée d’Europe de l’Est"}
-            lg{"heure d’Europe de l’Est"}
-            ls{"heure normale d’Europe de l’Est"}
+            ld{"heure avancée de l’Europe de l’Est"}
+            lg{"heure de l’Europe de l’Est"}
+            ls{"heure normale de l’Europe de l’Est"}
         }
         "meta:Europe_Western"{
-            ld{"heure avancée d’Europe de l’Ouest"}
-            lg{"heure d’Europe de l’Ouest"}
-            ls{"heure normale d’Europe de l’Ouest"}
+            ld{"heure avancée de l’Europe de l’Ouest"}
+            lg{"heure de l’Europe de l’Ouest"}
+            ls{"heure normale de l’Europe de l’Ouest"}
         }
         "meta:Falkland"{
             ld{"heure avancée des îles Malouines"}

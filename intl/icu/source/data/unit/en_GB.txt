@@ -1,8 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_GB{
     %%Parent{"en_001"}
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -18,18 +18,15 @@ en_GB{
         }
     }
     unitsShort{
-        duration{
-            microsecond{
-                dnam{"μsecs"}
-                one{"{0} μs"}
-                other{"{0} μs"}
-            }
-        }
         volume{
             fluid-ounce-imperial{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
                 other{"{0} fl oz"}
+            }
+            jigger{
+                one{"{0} jigger"}
+                other{"{0} jiggers"}
             }
         }
     }

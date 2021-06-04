@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ur{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"عابدجان"}
@@ -1720,7 +1720,7 @@ ur{
             ls{"نیئو ٹائم"}
         }
         "meta:Norfolk"{
-            ld{"نارفوک آئلینڈ کا موسم گرما کا وقت"}
+            ld{"نارفوک آئلینڈ ڈے لائٹ وقت"}
             lg{"نارفوک آئلینڈ کا وقت"}
             ls{"نارفوک آئلینڈ کا معیاری وقت"}
         }

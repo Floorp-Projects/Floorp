@@ -840,6 +840,12 @@
     <ClInclude Include="locdistance.h">
       <Filter>locales &amp; resources</Filter>
     </ClInclude>
+    <ClInclude Include="charstrmap.h">
+      <Filter>locales &amp; resources</Filter>
+    </ClInclude>
+    <ClInclude Include="uniquecharstr.h">
+      <Filter>locales &amp; resources</Filter>
+    </ClInclude>
     <ClInclude Include="loclikelysubtags.h">
       <Filter>locales &amp; resources</Filter>
     </ClInclude>

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ms{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1292,6 +1292,11 @@ ms{
         "Pacific:Wallis"{
             ec{"Wallis"}
         }
+        "meta:Acre"{
+            ld{"Waktu Musim Panas Acre"}
+            lg{"Waktu Acre"}
+            ls{"Waktu Piawai Acre"}
+        }
         "meta:Afghanistan"{
             ls{"Waktu Afghanistan"}
         }
@@ -1313,6 +1318,11 @@ ms{
             ld{"Waktu Siang Alaska"}
             lg{"Waktu Alaska"}
             ls{"Waktu Piawai Alaska"}
+        }
+        "meta:Almaty"{
+            ld{"Waktu Musim Panas Almaty"}
+            lg{"Waktu Almaty"}
+            ls{"Waktu Piawai Almaty"}
         }
         "meta:Amazon"{
             ld{"Waktu Musim Panas Amazon"}
@@ -1353,6 +1363,11 @@ ms{
             ld{"Waktu Musim Panas Aqtau"}
             lg{"Waktu Aqtau"}
             ls{"Waktu Standard Aqtau"}
+        }
+        "meta:Aqtobe"{
+            ld{"Waktu Musim Panas Aqtobe"}
+            lg{"Waktu Aqtobe"}
+            ls{"Waktu Piawai Aqtobe"}
         }
         "meta:Arabian"{
             ld{"Waktu Siang Arab"}
@@ -1650,6 +1665,11 @@ ms{
             lg{"Waktu Lord Howe"}
             ls{"Waktu Piawai Lord Howe"}
         }
+        "meta:Macau"{
+            ld{"Waktu Musim Panas Macao"}
+            lg{"Waktu Macao"}
+            ls{"Waktu Piawai Macao"}
+        }
         "meta:Macquarie"{
             ls{"Waktu Pulau Macquarie"}
         }
@@ -1727,7 +1747,7 @@ ms{
             ls{"Waktu Niue"}
         }
         "meta:Norfolk"{
-            ld{"Waktu Musim Panas Kepulauan Norfolk"}
+            ld{"Waktu Siang Kepulauan Norfolk"}
             lg{"Waktu Kepulauan Norfolk"}
             ls{"Waktu Piawai Kepulauan Norfolk"}
         }
@@ -1735,6 +1755,9 @@ ms{
             ld{"Waktu Musim Panas Fernando de Noronha"}
             lg{"Waktu Fernando de Noronha"}
             ls{"Waktu Piawai Fernando de Noronha"}
+        }
+        "meta:North_Mariana"{
+            ls{"Waktu Kepulauan Mariana Utara"}
         }
         "meta:Novosibirsk"{
             ld{"Waktu Musim Panas Novosibirsk"}
@@ -1788,6 +1811,11 @@ ms{
         }
         "meta:Pyongyang"{
             ls{"Waktu Pyongyang"}
+        }
+        "meta:Qyzylorda"{
+            ld{"Waktu Musim Panas Qyzylorda"}
+            lg{"Waktu Qyzylorda"}
+            ls{"Waktu Piawai Qyzylorda"}
         }
         "meta:Reunion"{
             ls{"Waktu Reunion"}

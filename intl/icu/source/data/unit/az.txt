@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 az{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -15,9 +15,9 @@ az{
                 other{"{0} g qüvvəsi"}
             }
             meter-per-square-second{
-                dnam{"metr saniyə kvadratı"}
-                one{"{0} metr saniyə kvadratı"}
-                other{"{0} metr saniyə kvadratı"}
+                dnam{"metr kvadrat saniyə"}
+                one{"{0} metr kvadrat saniyə"}
+                other{"{0} metr kvadrat saniyə"}
             }
         }
         angle{
@@ -135,8 +135,8 @@ az{
             }
             permillion{
                 dnam{"milyonda hissəcik"}
-                one{"milyonda {0} hissəcik"}
-                other{"milyonda {0} hissəcik"}
+                one{"{0} milyonda hissəcik"}
+                other{"{0} milyonda hissəcik"}
             }
             permyriad{
                 dnam{"permiriada"}
@@ -403,6 +403,9 @@ az{
             }
         }
         graphics{
+            dot{
+                dnam{"dot nöqtə"}
+            }
             dot-per-centimeter{
                 dnam{"nöqtə / santimetr"}
                 one{"{0} nöqtə / santimetr"}
@@ -454,11 +457,26 @@ az{
                 one{"{0} dm"}
                 other{"{0} dm"}
             }
+            earth-radius{
+                dnam{"yer radiusu"}
+                one{"{0} yer radiusu"}
+                other{"{0} yer radiusu"}
+            }
+            fathom{
+                dnam{"fatom"}
+                one{"{0} fatom"}
+                other{"{0} fatom"}
+            }
             foot{
                 dnam{"fut"}
                 one{"{0} fut"}
                 other{"{0} fut"}
                 per{"{0}/ft"}
+            }
+            furlong{
+                dnam{"farlonq"}
+                one{"{0} farlonq"}
+                other{"{0} farlonq"}
             }
             inch{
                 dnam{"düym"}
@@ -540,6 +558,16 @@ az{
             }
         }
         light{
+            candela{
+                dnam{"kandela"}
+                one{"{0} kandela"}
+                other{"{0} kandela"}
+            }
+            lumen{
+                dnam{"lümen"}
+                one{"{0} lümen"}
+                other{"{0} lümen"}
+            }
             lux{
                 dnam{"lüks"}
                 one{"{0} lüks"}
@@ -566,6 +594,11 @@ az{
                 dnam{"yer kütləsi"}
                 one{"{0} yer kütləsi"}
                 other{"{0} yer kütləsi"}
+            }
+            grain{
+                dnam{"qranul"}
+                one{"{0} qranul"}
+                other{"{0} qranul"}
             }
             gram{
                 dnam{"qram"}
@@ -771,6 +804,11 @@ az{
             barrel{
                 dnam{"barrel"}
             }
+            bushel{
+                dnam{"buşel"}
+                one{"{0} buşel"}
+                other{"{0} buşel"}
+            }
             centiliter{
                 dnam{"santilitr"}
                 one{"{0} santilitr"}
@@ -828,6 +866,26 @@ az{
                 one{"{0} desilitr"}
                 other{"{0} desilitr"}
             }
+            dessert-spoon{
+                dnam{"dessert qaşığı"}
+                one{"{0} dessert qaşığı"}
+                other{"{0} dessert qaşığı"}
+            }
+            dessert-spoon-imperial{
+                dnam{"İmp. dessert qaşığı"}
+                one{"{0} İmp. dessert qaşığı"}
+                other{"{0} İmp. dessert qaşığı"}
+            }
+            dram{
+                dnam{"dram"}
+                one{"{0} dram"}
+                other{"{0} dram"}
+            }
+            drop{
+                dnam{"damcı"}
+                one{"{0} damcı"}
+                other{"{0} damcı"}
+            }
             fluid-ounce{
                 dnam{"maye unsiyası"}
                 one{"{0} maye unsiyası"}
@@ -871,6 +929,11 @@ az{
                 one{"{0} millilitr"}
                 other{"{0} millilitr"}
             }
+            pinch{
+                dnam{"çimdik"}
+                one{"{0} çimdik"}
+                other{"{0} çimdik"}
+            }
             pint{
                 dnam{"pint"}
                 one{"{0} pint"}
@@ -885,6 +948,11 @@ az{
                 dnam{"kvart"}
                 one{"{0} kvart"}
                 other{"{0} kvart"}
+            }
+            quart-imperial{
+                dnam{"İmp. kvarta"}
+                one{"{0} İmp. kvarta"}
+                other{"{0} İmp. kvarta"}
             }
             tablespoon{
                 dnam{"xörək qaşığı"}
@@ -1158,7 +1226,7 @@ az{
                 other{"{0} G"}
             }
             meter-per-square-second{
-                dnam{"m/s²"}
+                dnam{"metr/s²"}
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
             }
@@ -1592,11 +1660,26 @@ az{
                 one{"{0} dm"}
                 other{"{0} dm"}
             }
+            earth-radius{
+                dnam{"yer radiusu"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
+            fathom{
+                dnam{"fatom"}
+                one{"{0} fth"}
+                other{"{0} fth"}
+            }
             foot{
                 dnam{"fut"}
                 one{"{0} ft"}
                 other{"{0} ft"}
                 per{"{0}/ft"}
+            }
+            furlong{
+                dnam{"farlonq"}
+                one{"{0} farlonq"}
+                other{"{0} farlonq"}
             }
             inch{
                 dnam{"düym"}
@@ -1676,6 +1759,16 @@ az{
             }
         }
         light{
+            candela{
+                dnam{"kd"}
+                one{"{0} kd"}
+                other{"{0} kd"}
+            }
+            lumen{
+                dnam{"lm"}
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"lx"}
                 one{"{0} lx"}
@@ -1696,6 +1789,11 @@ az{
             }
             earth-mass{
                 dnam{"yer kütləsi"}
+            }
+            grain{
+                dnam{"qranul"}
+                one{"{0} qranul"}
+                other{"{0} qranul"}
             }
             gram{
                 dnam{"qram"}
@@ -1800,8 +1898,8 @@ az{
             }
             inch-ofhg{
                 dnam{"civə düymü"}
-                one{"{0} inHg"}
-                other{"{0} inHg"}
+                one{"{0} civə düymü"}
+                other{"{0} civə düymü"}
             }
             millibar{
                 dnam{"millibar"}
@@ -1874,6 +1972,11 @@ az{
                 one{"{0} ac ft"}
                 other{"{0} ac ft"}
             }
+            bushel{
+                dnam{"buşel"}
+                one{"{0} buşel"}
+                other{"{0} buşel"}
+            }
             centiliter{
                 dnam{"sL"}
                 one{"{0} sL"}
@@ -1931,6 +2034,21 @@ az{
                 one{"{0} dL"}
                 other{"{0} dL"}
             }
+            dessert-spoon{
+                dnam{"des.qaş."}
+                one{"{0} des.qaş."}
+                other{"{0} des.qaş."}
+            }
+            dessert-spoon-imperial{
+                dnam{"des.qaş. İmp."}
+                one{"{0} des.qaş. İmp"}
+                other{"{0} des.qaş. İmp."}
+            }
+            drop{
+                dnam{"damcı"}
+                one{"{0} damcı"}
+                other{"{0} damcı"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -1974,6 +2092,11 @@ az{
                 one{"{0} mL"}
                 other{"{0} mL"}
             }
+            pinch{
+                dnam{"çimdik"}
+                one{"{0} çimdik"}
+                other{"{0} çimdik"}
+            }
             pint{
                 dnam{"pt"}
                 one{"{0} pt"}
@@ -1988,6 +2111,11 @@ az{
                 dnam{"qt"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"kvarta İmp."}
+                one{"{0} kvarta İmp."}
+                other{"{0} kvarta İmp."}
             }
             tablespoon{
                 dnam{"xrqş"}

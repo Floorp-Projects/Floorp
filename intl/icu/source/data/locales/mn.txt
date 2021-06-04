@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mn{
     AuxExemplarCharacters{"[ә җ ӊ һ]"}
     Ellipsis{
@@ -215,7 +216,6 @@ mn{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -850,92 +850,92 @@ mn{
         }
     }
     characterLabel{
-        activities{"Үйл ажиллагаанууд"}
-        african_scripts{"Африк бичвэр"}
-        american_scripts{"Америк бичвэр"}
-        animal{"амьтан"}
-        animals_nature{"Ан амьтан ба байгаль"}
-        arrows{"Сум"}
+        activities{"үйл ажиллагаа"}
+        african_scripts{"Африкан скрипт"}
+        american_scripts{"Американ скрипт"}
+        animal{"ан амьтан"}
+        animals_nature{"ан амьтан ба байгаль"}
+        arrows{"сум"}
         body{"бие"}
-        box_drawing{"Хайрцаг зурах"}
-        braille{"Брайль"}
+        box_drawing{"хайрцаг зурах"}
+        braille{"брайль"}
         building{"барилга"}
-        bullets_stars{"Сум/од"}
-        consonantal_jamo{"Жамо гийгүүлэгчийн дараалал"}
-        currency_symbols{"Мөнгөн тэмдэгтийн дүрс"}
-        dash_connector{"Зураас/холбоос"}
+        bullets_stars{"сум ба од"}
+        consonantal_jamo{"жамо гийгүүлэгчийн дараалал"}
+        currency_symbols{"валютын тэмдэг"}
+        dash_connector{"зураас ба холбоос"}
         digits{"орон"}
-        dingbats{"Дүрс тэмдгүүд"}
-        divination_symbols{"Мэргийн тэмдгүүд"}
-        downwards_arrows{"Доош заасан сум"}
-        downwards_upwards_arrows{"Доош, дээш заасан сум"}
+        dingbats{"чимэг тэмдэг"}
+        divination_symbols{"мэргийн тэмдэг"}
+        downwards_arrows{"доош заасан сум"}
+        downwards_upwards_arrows{"доош, дээш заасан сум"}
         east_asian_scripts{"Зүүн Азийн бичвэр"}
-        emoji{"Эможи"}
-        european_scripts{"Европ бичвэр"}
+        emoji{"эможи"}
+        european_scripts{"Европийн скрипт"}
         female{"эмэгтэй"}
         flag{"туг"}
-        flags{"Туг"}
-        food_drink{"Хоол, унд"}
-        format{"Формат"}
-        format_whitespace{"Формат, хоосон зай"}
-        full_width_form_variant{"Бүтэн өргөн загварын хувилбар"}
-        geometric_shapes{"Геометрийн дүрсүүд"}
-        half_width_form_variant{"Өргөөшөө загварын хувилбарууд"}
-        han_characters{"Хан ханзнууд"}
+        flags{"туг"}
+        food_drink{"хоол, унд"}
+        format{"формат"}
+        format_whitespace{"формат, хоосон зай"}
+        full_width_form_variant{"бүтэн өргөн хувилбар"}
+        geometric_shapes{"геометрийн дүрс"}
+        half_width_form_variant{"хагас өргөн хувилбар"}
+        han_characters{"Хан ханз"}
         han_radicals{"Хятад язгуур"}
-        hanja{"Ханз"}
+        hanja{"ханз"}
         hanzi_simplified{"Ханз (Хялбаршуулсан)"}
         hanzi_traditional{"Ханз (Уламжлалт)"}
         heart{"зүрх"}
-        historic_scripts{"Түүхэн бичвэр"}
-        ideographic_desc_characters{"Идеографик буурах тэмдэгтүүд"}
+        historic_scripts{"түүхэн скрипт"}
+        ideographic_desc_characters{"идеографик буурах тэмдэгт"}
         japanese_kana{"Япон кана"}
-        kanbun{"Канбун"}
-        kanji{"Канжи"}
+        kanbun{"канбун"}
+        kanji{"канжи"}
         keycap{"түлхүүрийн гэр"}
-        leftwards_arrows{"Зүүн харсан сум"}
-        leftwards_rightwards_arrows{"Зүүн, баруун харсан сум"}
-        letterlike_symbols{"Үсгэн тэмдэгтүүд"}
-        limited_use{"Хязгаарлагдмал хэрэглээ"}
+        leftwards_arrows{"зүүн харсан сум"}
+        leftwards_rightwards_arrows{"зүүн, баруун харсан сум"}
+        letterlike_symbols{"үсгэн тэмдэгт"}
+        limited_use{"хязгаарлагдмал хэрэглээ"}
         male{"эрэгтэй"}
-        math_symbols{"Математикийн тэмдэгтүүд"}
+        math_symbols{"математикийн тэмдэгт"}
         middle_eastern_scripts{"Ойрх дорнодын бичвэр"}
-        miscellaneous{"Бусад"}
-        modern_scripts{"Орчин цагийн бичвэр"}
-        modifier{"Өөрчлөгч"}
-        musical_symbols{"Хөгжмийн тэмдэгтүүд"}
+        miscellaneous{"янз бүрийн"}
+        modern_scripts{"орчин цагийн скрипт"}
+        modifier{"өөрчлөгч"}
+        musical_symbols{"хөгжмийн тэмдэг"}
         nature{"байгаль"}
-        nonspacing{"Зайгүй"}
-        numbers{"Тоонууд"}
-        objects{"Дүрснүүд"}
-        other{"Бусад"}
-        paired{"Хослосон"}
+        nonspacing{"зайгүй"}
+        numbers{"тоо"}
+        objects{"объект"}
+        other{"бусад"}
+        paired{"хослосон"}
         person{"хүн"}
-        phonetic_alphabet{"Дуудлагын үсэг"}
-        pictographs{"Пиктограм"}
+        phonetic_alphabet{"дуудлагын үсэг"}
+        pictographs{"пиктограм"}
         place{"газар"}
         plant{"ургамал"}
-        punctuation{"Цэг, таслал"}
-        rightwards_arrows{"Баруун заасан сум"}
-        sign_standard_symbols{"Тэмдэг/стандарт тэмдэгт"}
-        small_form_variant{"Жижиг загварын хувилбарууд"}
+        punctuation{"цэг, таслал"}
+        rightwards_arrows{"баруун заасан сум"}
+        sign_standard_symbols{"дүрс ба тэмдэг"}
+        small_form_variant{"жижиг загварын хувилбар"}
         smiley{"инээмсэглэл"}
-        smileys_people{"Инээмсэглэлүүд ба хүмүүс"}
-        south_asian_scripts{"Өмнөд Азийн бичвэр"}
-        southeast_asian_scripts{"Зүүн өмнөд азийн бичвэр"}
-        spacing{"Зай авалт"}
+        smileys_people{"инээмсэглэл ба хүн"}
+        south_asian_scripts{"Өмнөд Азийн скрипт"}
+        southeast_asian_scripts{"Зүүн өмнөд азийн скрипт"}
+        spacing{"зай авалт"}
         sport{"спорт"}
-        symbols{"Тэмдэгүүд"}
-        technical_symbols{"Техникийн тэмдэгүүд"}
-        tone_marks{"Дууны өнгөний тэмдэглэгээ"}
+        symbols{"тэмдэг"}
+        technical_symbols{"техникийн тэмдэг"}
+        tone_marks{"дууны өнгөний тэмдэглэгээ"}
         travel{"аялал"}
-        travel_places{"Аялал, газар нутгууд"}
-        upwards_arrows{"Дээш заасан сум"}
-        variant_forms{"Хувилбарын хэлбэрүүд"}
-        vocalic_jamo{"Эгшгийн Жамо"}
+        travel_places{"аялал ба газар нутаг"}
+        upwards_arrows{"дээш заасан сум"}
+        variant_forms{"хувилбар"}
+        vocalic_jamo{"эгшгийн жамо"}
         weather{"цаг агаар"}
-        western_asian_scripts{"Баруун азийн бичвэр"}
-        whitespace{"Хоосон зай"}
+        western_asian_scripts{"Баруун азийн скрипт"}
+        whitespace{"хоосон зай"}
     }
     delimiters{
         alternateQuotationEnd{"’"}

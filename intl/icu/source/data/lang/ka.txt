@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ka{
     Keys{
         calendar{"კალენდარი"}
@@ -48,7 +49,7 @@ ka{
         ban{"ბალინური"}
         bas{"ბასა"}
         bax{"ბამუნი"}
-        be{"ბელორუსული"}
+        be{"ბელარუსული"}
         bej{"ბეჯა"}
         bem{"ბემბა"}
         bez{"ბენა"}
@@ -501,7 +502,7 @@ ka{
         zh{"ჩინური, მანდარინი"}
     }
     Languages%short{
-        en_GB{"გართ. სამ. ინგლისური"}
+        en_GB{"ინგლისური (გაერთ. სამეფო)"}
         en_US{"აშშ ინგლისური"}
     }
     Scripts{
@@ -743,7 +744,6 @@ ka{
             tibt{"ტიბეტური ციფრები"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — ყველა"}
         category-list{"{0}: {1}"}
@@ -758,6 +758,8 @@ ka{
             one{"{0} შტრიხი"}
             other{"{0} შტრიხი"}
         }
+        subscript{"ქვედა ინდექსი {0}"}
+        superscript{"ზედა ინდექსი {0}"}
     }
     codePatterns{
         language{"ენა: {0}"}

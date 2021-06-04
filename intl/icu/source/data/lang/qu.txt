@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 qu{
     Keys{
         calendar{"Intiwatana"}
@@ -66,6 +67,7 @@ qu{
         eu{"Euskera Simi"}
         ewo{"Ewondo Simi"}
         fa{"Persa Simi"}
+        fa_AF{"Dari Simi"}
         ff{"Fulah Simi"}
         fi{"Fines Simi"}
         fil{"Filipino Simi"}
@@ -136,6 +138,7 @@ qu{
         luo{"Luo Simi"}
         luy{"Luyia Simi"}
         lv{"Leton Simi"}
+        mai{"Maithili Simi"}
         mas{"Masai Simi"}
         mer{"Meru Simi"}
         mfe{"Mauriciano Simi"}
@@ -146,6 +149,7 @@ qu{
         mk{"Macedonio Simi"}
         ml{"Malayalam Simi"}
         mn{"Mongol Simi"}
+        mni{"Manipuri Simi"}
         moh{"Mohawk Simi"}
         mr{"Marathi Simi"}
         ms{"Malayo Simi"}
@@ -175,6 +179,7 @@ qu{
         os{"Osetio Simi"}
         pa{"Punyabi Simi"}
         pap{"Papiamento Simi"}
+        pcm{"Pidgin Nigeriano Simi"}
         pl{"Polaco Simi"}
         prg{"Prusiano Simi"}
         ps{"Pashto Simi"}
@@ -191,6 +196,7 @@ qu{
         sa{"Sanscrito Simi"}
         sah{"Sakha Simi"}
         saq{"Samburu Simi"}
+        sat{"Santali Simi"}
         sbp{"Sangu Simi"}
         sd{"Sindhi Simi"}
         se{"Chincha Sami Simi"}
@@ -251,13 +257,14 @@ qu{
         zh_Hans{"Chino Simplificado Simi"}
         zh_Hant{"Chino Tradicional Simi"}
         zu{"Isizulu Simi"}
-        zxx{"Sin contenido linguístico"}
+        zxx{"Manaraq simi yachana"}
     }
     Languages%long{
         zh_Hans{"Chino Mandarín Simplificado Simi"}
         zh_Hant{"Chino Mandarín Tradicional Simi"}
     }
     Languages%menu{
+        ckb{"Kurdo Simi, Chawpi"}
         yue{"Chino Cantonés Simi"}
         zh{"Chino Mandarín Simi"}
     }
@@ -265,6 +272,59 @@ qu{
         az{"Azerí Simi"}
         en_GB{"Ingles Simi (GB)"}
         en_US{"Ingles Simi (US)"}
+    }
+    Languages%variant{
+        ckb{"Kurdo Simi, Sorani"}
+    }
+    Scripts{
+        Arab{"Arabe Simi"}
+        Armn{"Armenio Simi"}
+        Beng{"Bangla Simi"}
+        Bopo{"Bopomofo Simi"}
+        Brai{"Braile"}
+        Cyrl{"Cirilico"}
+        Deva{"Devanagari"}
+        Ethi{"Etiope"}
+        Geor{"Georgiano"}
+        Grek{"Griego Simi"}
+        Gujr{"Gujarati Simi"}
+        Guru{"Gurmukhi Simi"}
+        Hanb{"Han with Bopomofo"}
+        Hang{"Hangul"}
+        Hani{"Han"}
+        Hans{"Simplificado"}
+        Hant{"Tradicional"}
+        Hebr{"Hebreo Simi"}
+        Hira{"Hiragana"}
+        Hrkt{"Japones silabico sananpakuna"}
+        Jamo{"Jamo"}
+        Jpan{"Japones Simi"}
+        Kana{"Katakana"}
+        Khmr{"Khmer"}
+        Knda{"Kannada Simi"}
+        Kore{"Coreano Simi"}
+        Laoo{"Lao Simi"}
+        Latn{"Latin Simi"}
+        Mlym{"Malayalam Simi"}
+        Mong{"Mongol Simi"}
+        Mymr{"Myanmar"}
+        Orya{"Odia Simi"}
+        Sinh{"Cingales Simi"}
+        Taml{"Tamil Simi"}
+        Telu{"Tegulu Simi"}
+        Thaa{"Thaana Simi"}
+        Thai{"Tailandes Simi"}
+        Tibt{"Tibetano Simi"}
+        Zmth{"Matimatica Willay"}
+        Zsye{"Emoji"}
+        Zsym{"Unanchakuna"}
+        Zxxx{"Mana qillqasqa"}
+        Zyyy{"Common Simi"}
+        Zzzz{"Mana yachasqa Qillqa"}
+    }
+    Scripts%stand-alone{
+        Hans{"Simplificado Han"}
+        Hant{"Tradicional Han"}
     }
     Types{
         calendar{
@@ -343,5 +403,4 @@ qu{
             tibt{"Tibetano Sananpakuna"}
         }
     }
-    Version{"37"}
 }

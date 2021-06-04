@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bo{
     Countries{
         001{"འཛམ་གླིང་།"}
@@ -15,5 +16,4 @@ bo{
         US{"ཨ་མེ་རི་ཀ།"}
         ZZ{"མིའི་ཤེས་རྟོགས་མ་བྱུང་བའི་ཁོར་ཡུག"}
     }
-    Version{"37"}
 }

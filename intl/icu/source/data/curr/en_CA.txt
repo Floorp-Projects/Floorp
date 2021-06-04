@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_CA{
     %%Parent{"en_001"}
     Currencies{
@@ -12,11 +13,4 @@ en_CA{
             "Venezuelan Bolívar",
         }
     }
-    CurrencyPlurals{
-        ILS{
-            one{"Israeli new sheqel"}
-            other{"Israeli new sheqels"}
-        }
-    }
-    Version{"37"}
 }

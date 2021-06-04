@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 uk{
     AuxExemplarCharacters{
         "[{а\u0301} {е\u0301} ё {є\u0301} {и\u0301} {і\u0301} {ї\u0301} {о\u0301} {у"
@@ -293,7 +294,6 @@ uk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -925,7 +925,6 @@ uk{
                         afternoon1{"день"}
                         am{"дп"}
                         evening1{"вечір"}
-                        midnight{"опівніч"}
                         morning1{"ранок"}
                         night1{"ніч"}
                         noon{"полудень"}
@@ -1814,8 +1813,8 @@ uk{
         han_characters{"китайський ієрогліф"}
         han_radicals{"ієрогліфічний ключ"}
         hanja{"ханча"}
-        hanzi_simplified{"ханьцзи (спрощена)"}
-        hanzi_traditional{"ханьцзи (традиційна)"}
+        hanzi_simplified{"ханьцзи (спрощене письмо)"}
+        hanzi_traditional{"ханьцзи (традиційне письмо)"}
         heart{"серце"}
         historic_scripts{"історичне письмо"}
         ideographic_desc_characters{"ідеографічний описовий знак"}
@@ -2032,16 +2031,16 @@ uk{
             }
             relativeTime{
                 future{
-                    few{"через {0} пʼятниці"}
-                    many{"через {0} пʼятниць"}
-                    one{"через {0} пʼятницю"}
-                    other{"через {0} пʼятниці"}
+                    few{"через {0} пт"}
+                    many{"через {0} пт"}
+                    one{"через {0} пт"}
+                    other{"через {0} пт"}
                 }
                 past{
-                    few{"{0} пʼятниці тому"}
-                    many{"{0} пʼятниць тому"}
-                    one{"{0} пʼятницю тому"}
-                    other{"{0} пʼятниці тому"}
+                    few{"{0} пт тому"}
+                    many{"{0} пт тому"}
+                    one{"{0} пт тому"}
+                    other{"{0} пт тому"}
                 }
             }
         }

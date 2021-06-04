@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 et{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -409,6 +409,11 @@ et{
             }
         }
         graphics{
+            dot{
+                dnam{"punkt"}
+                one{"{0} punkt"}
+                other{"{0} punkti"}
+            }
             dot-per-centimeter{
                 dnam{"punkte sentimeetri kohta"}
                 one{"{0} punkt sentimeetri kohta"}
@@ -461,6 +466,11 @@ et{
                 dnam{"detsimeetrid"}
                 one{"{0} detsimeeter"}
                 other{"{0} detsimeetrit"}
+            }
+            earth-radius{
+                dnam{"Maa raadius"}
+                one{"{0} Maa raadius"}
+                other{"{0} Maa raadiust"}
             }
             fathom{
                 dnam{"süllad"}
@@ -542,9 +552,9 @@ et{
                 other{"{0} pikomeetrit"}
             }
             point{
-                dnam{"punktid"}
-                one{"{0} punkt"}
-                other{"{0} punkti"}
+                dnam{"tüpograafilised punktid"}
+                one{"{0} tüpograafiline punkt"}
+                other{"{0} tüpograafilist punkti"}
             }
             solar-radius{
                 dnam{"Päikese raadiused"}
@@ -558,6 +568,16 @@ et{
             }
         }
         light{
+            candela{
+                dnam{"kandela"}
+                one{"{0} kandela"}
+                other{"{0} kandelat"}
+            }
+            lumen{
+                dnam{"luumen"}
+                one{"{0} luumen"}
+                other{"{0} luumenit"}
+            }
             lux{
                 dnam{"luks"}
                 one{"{0} luks"}
@@ -582,6 +602,11 @@ et{
                 dnam{"Maa massid"}
                 one{"{0} Maa massi"}
                 other{"{0} Maa massi"}
+            }
+            grain{
+                dnam{"graan"}
+                one{"{0} graan"}
+                other{"{0} graani"}
             }
             gram{
                 dnam{"grammid"}
@@ -856,6 +881,26 @@ et{
                 one{"{0} detsiliiter"}
                 other{"{0} detsiliitrit"}
             }
+            dessert-spoon{
+                dnam{"dessertlusikas"}
+                one{"{0} dessertlusikas"}
+                other{"{0} dessertlusikat"}
+            }
+            dessert-spoon-imperial{
+                dnam{"inglise dessertlusikas"}
+                one{"{0} inglise dessertlusikas"}
+                other{"{0} inglise dessertlusikat"}
+            }
+            dram{
+                dnam{"drahm"}
+                one{"{0} drahm"}
+                other{"{0} drahmi"}
+            }
+            drop{
+                dnam{"tilk"}
+                one{"{0} tilk"}
+                other{"{0} tilka"}
+            }
             fluid-ounce{
                 dnam{"vedelikuuntsid"}
                 one{"{0} vedelikuunts"}
@@ -883,6 +928,11 @@ et{
                 one{"{0} hektoliiter"}
                 other{"{0} hektoliitrit"}
             }
+            jigger{
+                dnam{"pits"}
+                one{"{0} pits"}
+                other{"{0} pitsi"}
+            }
             liter{
                 dnam{"liitrid"}
                 one{"{0} liiter"}
@@ -899,6 +949,11 @@ et{
                 one{"{0} milliliiter"}
                 other{"{0} milliliitrit"}
             }
+            pinch{
+                dnam{"näputäis"}
+                one{"{0} näputäis"}
+                other{"{0} näputäit"}
+            }
             pint{
                 dnam{"pindid"}
                 one{"{0} pint"}
@@ -913,6 +968,11 @@ et{
                 dnam{"kvardid"}
                 one{"{0} kvart"}
                 other{"{0} kvarti"}
+            }
+            quart-imperial{
+                dnam{"inglise kvart"}
+                one{"{0} inglise kvart"}
+                other{"{0} inglise kvarti"}
             }
             tablespoon{
                 dnam{"supilusikad"}
@@ -1614,6 +1674,11 @@ et{
             }
         }
         graphics{
+            dot{
+                dnam{"p"}
+                one{"{0} p"}
+                other{"{0} p"}
+            }
             dot-per-centimeter{
                 one{"{0} dpcm"}
                 other{"{0} dpcm"}
@@ -1784,6 +1849,11 @@ et{
                 dnam{"Maa massid"}
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
+            }
+            grain{
+                dnam{"graan"}
+                one{"{0} graan"}
+                other{"{0} graani"}
             }
             gram{
                 dnam{"grammid"}
@@ -2049,6 +2119,21 @@ et{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon-imperial{
+                dnam{"ingl dl"}
+                one{"{0} ingl dl"}
+                other{"{0} ingl dl"}
+            }
+            dram{
+                dnam{"drahm vedelikku"}
+                one{"{0} drahm vedelikku"}
+                other{"{0} drahmi vedelikku"}
+            }
+            drop{
+                dnam{"tilk"}
+                one{"{0} tilk"}
+                other{"{0} tilka"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -2076,6 +2161,11 @@ et{
                 one{"{0} hl"}
                 other{"{0} hl"}
             }
+            jigger{
+                dnam{"pits"}
+                one{"{0} pits"}
+                other{"{0} pitsi"}
+            }
             liter{
                 dnam{"liitrid"}
                 one{"{0} l"}
@@ -2092,6 +2182,11 @@ et{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"näputäis"}
+                one{"{0} näputäis"}
+                other{"{0} näputäit"}
+            }
             pint{
                 dnam{"pindid"}
                 one{"{0} pt"}
@@ -2106,6 +2201,11 @@ et{
                 dnam{"kvart"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"ingl kvart"}
+                one{"{0} ingl kvart"}
+                other{"{0} ingl kvarti"}
             }
             tablespoon{
                 dnam{"spl"}

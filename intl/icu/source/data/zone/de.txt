@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 de{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1553,7 +1553,7 @@ de{
             ls{"Französisch-Guayana-Zeit"}
         }
         "meta:French_Southern"{
-            ls{"Französische Süd- und Antarktisgebiete-Zeit"}
+            ls{"Französische-Süd-und-Antarktisgebiete-Zeit"}
         }
         "meta:GMT"{
             ls{"Mittlere Greenwich-Zeit"}
@@ -1607,10 +1607,10 @@ de{
             ls{"Chowd-Normalzeit"}
         }
         "meta:India"{
-            ls{"Indische Zeit"}
+            ls{"Indische Normalzeit"}
         }
         "meta:Indian_Ocean"{
-            ls{"Indischer Ozean-Zeit"}
+            ls{"Indischer-Ozean-Zeit"}
         }
         "meta:Indochina"{
             ls{"Indochina-Zeit"}
@@ -1768,9 +1768,9 @@ de{
             ls{"Norfolkinsel-Normalzeit"}
         }
         "meta:Noronha"{
-            ld{"Fernando de Noronha-Sommerzeit"}
-            lg{"Fernando de Noronha-Zeit"}
-            ls{"Fernando de Noronha-Normalzeit"}
+            ld{"Fernando-de-Noronha-Sommerzeit"}
+            lg{"Fernando-de-Noronha-Zeit"}
+            ls{"Fernando-de-Noronha-Normalzeit"}
         }
         "meta:North_Mariana"{
             ls{"Nördliche-Marianen-Zeit"}
@@ -1781,9 +1781,9 @@ de{
             ls{"Nowosibirsk-Normalzeit"}
         }
         "meta:Omsk"{
-            ld{"Omsk-Sommerzeit"}
-            lg{"Omsk-Zeit"}
-            ls{"Omsk-Normalzeit"}
+            ld{"Omsker Sommerzeit"}
+            lg{"Omsker Zeit"}
+            ls{"Omsker Normalzeit"}
         }
         "meta:Pakistan"{
             ld{"Pakistanische Sommerzeit"}
@@ -1858,7 +1858,7 @@ de{
             ls{"Seychellen-Zeit"}
         }
         "meta:Singapore"{
-            ls{"Singapur-Zeit"}
+            ls{"Singapurische Normalzeit"}
         }
         "meta:Solomon"{
             ls{"Salomonen-Zeit"}
@@ -1940,9 +1940,9 @@ de{
             ls{"Wallis-und-Futuna-Zeit"}
         }
         "meta:Yakutsk"{
-            ld{"Jakutsk-Sommerzeit"}
-            lg{"Jakutsk-Zeit"}
-            ls{"Jakutsk-Normalzeit"}
+            ld{"Jakutsker Sommerzeit"}
+            lg{"Jakutsker Zeit"}
+            ls{"Jakutsker Normalzeit"}
         }
         "meta:Yekaterinburg"{
             ld{"Jekaterinburg-Sommerzeit"}

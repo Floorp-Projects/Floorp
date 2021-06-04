@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pl{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidżan"}
@@ -1409,6 +1409,9 @@ pl{
             lg{"czas Bangladesz"}
             ls{"Bangladesz (czas standardowy)"}
         }
+        "meta:Bhutan"{
+            ls{"czas Bhutan"}
+        }
         "meta:Bolivia"{
             ls{"czas Boliwia"}
         }
@@ -1416,6 +1419,9 @@ pl{
             ld{"Brasília (czas letni)"}
             lg{"czas Brasília"}
             ls{"Brasília (czas standardowy)"}
+        }
+        "meta:Brunei"{
+            ls{"czas Brunei"}
         }
         "meta:Cape_Verde"{
             ld{"Wyspy Zielonego Przylądka (czas letni)"}
@@ -1465,6 +1471,9 @@ pl{
             ld{"Kuba (czas letni)"}
             lg{"czas Kuba"}
             ls{"Kuba (czas standardowy)"}
+        }
+        "meta:Davis"{
+            ls{"czas Davis"}
         }
         "meta:DumontDUrville"{
             ls{"czas Dumont-d’Urville"}
@@ -1525,6 +1534,9 @@ pl{
         }
         "meta:GMT"{
             ls{"czas uniwersalny"}
+        }
+        "meta:Galapagos"{
+            ls{"czas Galapagos"}
         }
         "meta:Gambier"{
             ls{"czas Wyspy Gambiera"}
@@ -1622,6 +1634,9 @@ pl{
             lg{"czas Korea"}
             ls{"Korea (czas standardowy)"}
         }
+        "meta:Kosrae"{
+            ls{"czas Kosrae"}
+        }
         "meta:Krasnoyarsk"{
             ld{"Krasnojarsk (czas letni)"}
             lg{"czas Krasnojarsk"}
@@ -1637,6 +1652,9 @@ pl{
             ld{"Lord Howe (czas letni)"}
             lg{"czas Lord Howe"}
             ls{"Lord Howe (czas standardowy)"}
+        }
+        "meta:Macquarie"{
+            ls{"czas Macquarie"}
         }
         "meta:Magadan"{
             ld{"Magadan (czas letni)"}
@@ -1659,6 +1677,9 @@ pl{
             ld{"Mauritius (czas letni)"}
             lg{"czas Mauritius"}
             ls{"Mauritius (czas standardowy)"}
+        }
+        "meta:Mawson"{
+            ls{"czas Mawson"}
         }
         "meta:Mexico_Northwest"{
             ld{"Meksyk Północno-Zachodni (czas letni)"}
@@ -1683,6 +1704,12 @@ pl{
         "meta:Myanmar"{
             ls{"czas Mjanma"}
         }
+        "meta:Nauru"{
+            ls{"czas Nauru"}
+        }
+        "meta:Nepal"{
+            ls{"czas Nepal"}
+        }
         "meta:New_Caledonia"{
             ld{"Nowa Kaledonia (czas letni)"}
             lg{"czas Nowa Kaledonia"}
@@ -1697,6 +1724,14 @@ pl{
             ld{"Nowa Fundlandia (czas letni)"}
             lg{"czas Nowa Fundlandia"}
             ls{"Nowa Fundlandia (czas standardowy)"}
+        }
+        "meta:Niue"{
+            ls{"czas Niue"}
+        }
+        "meta:Norfolk"{
+            ld{"Norfolk (czas letni)"}
+            lg{"czas Norfolk"}
+            ls{"Norfolk (czas standardowy)"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronha (czas letni)"}
@@ -1717,6 +1752,9 @@ pl{
             ld{"Pakistan (czas letni)"}
             lg{"czas Pakistan"}
             ls{"Pakistan (czas standardowy)"}
+        }
+        "meta:Palau"{
+            ls{"czas Palau"}
         }
         "meta:Papua_New_Guinea"{
             ls{"czas Papua-Nowa Gwinea"}
@@ -1744,11 +1782,20 @@ pl{
             lg{"czas Saint-Pierre i Miquelon"}
             ls{"Saint-Pierre i Miquelon (czas standardowy)"}
         }
+        "meta:Pitcairn"{
+            ls{"czas Pitcairn"}
+        }
         "meta:Ponape"{
             ls{"czas Pohnpei"}
         }
         "meta:Pyongyang"{
             ls{"czas Pjongjang"}
+        }
+        "meta:Reunion"{
+            ls{"czas Reunion"}
+        }
+        "meta:Rothera"{
+            ls{"czas Rothera"}
         }
         "meta:Sakhalin"{
             ld{"Sachalin (czas letni)"}
@@ -1780,6 +1827,12 @@ pl{
         "meta:Suriname"{
             ls{"czas Surinam"}
         }
+        "meta:Syowa"{
+            ls{"czas Syowa"}
+        }
+        "meta:Tahiti"{
+            ls{"czas Tahiti"}
+        }
         "meta:Taipei"{
             ld{"Tajpej (czas letni)"}
             lg{"czas Tajpej"}
@@ -1787,6 +1840,9 @@ pl{
         }
         "meta:Tajikistan"{
             ls{"czas Tadżykistan"}
+        }
+        "meta:Tokelau"{
+            ls{"czas Tokelau"}
         }
         "meta:Tonga"{
             ld{"Tonga (czas letni)"}
@@ -1800,6 +1856,9 @@ pl{
             ld{"Turkmenistan (czas letni)"}
             lg{"czas Turkmenistan"}
             ls{"Turkmenistan (czas standardowy)"}
+        }
+        "meta:Tuvalu"{
+            ls{"czas Tuvalu"}
         }
         "meta:Uruguay"{
             ld{"Urugwaj (czas letni)"}
@@ -1831,6 +1890,9 @@ pl{
         }
         "meta:Vostok"{
             ls{"czas Wostok"}
+        }
+        "meta:Wake"{
+            ls{"czas Wake"}
         }
         "meta:Wallis"{
             ls{"czas Wallis i Futuna"}

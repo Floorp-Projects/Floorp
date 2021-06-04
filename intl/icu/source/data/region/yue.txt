@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 yue{
     Countries{
         001{"世界"}
@@ -309,5 +310,4 @@ yue{
         FK{"福克蘭群島 (馬爾維納斯群島)"}
         SZ{"斯威士蘭"}
     }
-    Version{"37"}
 }

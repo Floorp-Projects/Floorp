@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ar{
     Keys{
         calendar{"التقويم"}
@@ -795,9 +796,9 @@ ar{
             ungegn{"يو إن جي إي جي إن"}
         }
         ms{
-            metric{"نظام متري"}
-            uksystem{"نظام المملكة المتحدة"}
-            ussystem{"نظام الولايات المتحدة"}
+            metric{"النظام المتري"}
+            uksystem{"نظام القياس البريطاني"}
+            ussystem{"نظام القياس الأمريكي"}
         }
         numbers{
             arab{"الأرقام العربية الهندية"}
@@ -862,7 +863,6 @@ ar{
         VALENCIA{"بلنسية"}
         WADEGILE{"المندرين باللاتينية - ويد–جيلز"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} - الكل"}
         category-list{"{0}: {1}"}
@@ -881,6 +881,8 @@ ar{
             two{"ضغطتان ({0})"}
             zero{"{0} ضغطة"}
         }
+        subscript{"نظام الكتابة تحت السطر {0}"}
+        superscript{"نظام الكتابة فوق السطر {0}"}
     }
     codePatterns{
         language{"اللغة: {0}"}

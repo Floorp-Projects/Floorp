@@ -1,14 +1,17 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 jv{
     Countries{
         001{"Donya"}
         002{"Afrika"}
+        003{"Amérika Lor"}
         005{"Amérika Kidul"}
         009{"Oséania"}
         011{"Afrika Kulon"}
         013{"Amérika Tengah"}
         014{"Afrika Wétan"}
+        015{"Afrika Lor"}
         017{"Afrika Sisih Tengah"}
         018{"Afrika Sisih Kidul"}
         019{"Amérika"}
@@ -27,6 +30,7 @@ jv{
         145{"Asia Kulon"}
         150{"Éropah"}
         151{"Éropah Wétan"}
+        154{"Éropah Lor"}
         155{"Éropah Kulon"}
         202{"Afrika Kidule Sahara"}
         419{"Amérika Latin"}
@@ -141,6 +145,7 @@ jv{
         IE{"Républik Irlan"}
         IL{"Israèl"}
         IM{"Pulo Man"}
+        IN{"Indhia"}
         IO{"Wilayah Inggris nang Segoro Hindia"}
         IQ{"Irak"}
         IR{"Iran"}
@@ -156,6 +161,7 @@ jv{
         KI{"Kiribati"}
         KM{"Komoro"}
         KN{"Saint Kits lan Nèvis"}
+        KP{"Korea Lor"}
         KR{"Koréa Kidul"}
         KW{"Kuwait"}
         KY{"Kapuloan Kéman"}
@@ -178,6 +184,7 @@ jv{
         MF{"Santa Martin"}
         MG{"Madagaskar"}
         MH{"Kapuloan Marshall"}
+        MK{"Républik Makédonia Lor"}
         ML{"Mali"}
         MM{"Myanmar (Burma)"}
         MN{"Mongolia"}
@@ -204,6 +211,7 @@ jv{
         NP{"Népal"}
         NR{"Nauru"}
         NU{"Niue"}
+        NZ{"Selandia Anyar"}
         OM{"Oman"}
         PA{"Panama"}
         PE{"Peru"}
@@ -305,5 +313,4 @@ jv{
         SZ{"(Swasiland)"}
         TL{"Timor Wétan"}
     }
-    Version{"37"}
 }

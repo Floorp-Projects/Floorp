@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 xh{
     AuxExemplarCharacters{"[]"}
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
@@ -20,7 +21,6 @@ xh{
             }
         }
     }
-    Version{"37"}
     calendar{
         gregorian{
             AmPmMarkers{

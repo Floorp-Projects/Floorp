@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pl{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -213,7 +213,7 @@ pl{
             mile-per-gallon{
                 dnam{"mile na galon"}
                 few{"{0} mile na galon"}
-                many{"{0} mili na galon"}
+                many{"{0} mil na galon"}
                 one{"{0} mila na galon"}
                 other{"{0} mili na galon"}
             }
@@ -238,7 +238,7 @@ pl{
                 few{"{0} bity"}
                 many{"{0} bitów"}
                 one{"{0} bit"}
-                other{"{0} bitu"}
+                other{"{0} bita"}
             }
             byte{
                 dnam{"bajty"}
@@ -252,7 +252,7 @@ pl{
                 few{"{0} gigabity"}
                 many{"{0} gigabitów"}
                 one{"{0} gigabit"}
-                other{"{0} gigabitu"}
+                other{"{0} gigabita"}
             }
             gigabyte{
                 dnam{"gigabajty"}
@@ -266,7 +266,7 @@ pl{
                 few{"{0} kilobity"}
                 many{"{0} kilobitów"}
                 one{"{0} kilobit"}
-                other{"{0} kilobitu"}
+                other{"{0} kilobita"}
             }
             kilobyte{
                 dnam{"kilobajty"}
@@ -280,7 +280,7 @@ pl{
                 few{"{0} megabity"}
                 many{"{0} megabitów"}
                 one{"{0} megabit"}
-                other{"{0} megabitu"}
+                other{"{0} megabita"}
             }
             megabyte{
                 dnam{"megabajty"}
@@ -301,7 +301,7 @@ pl{
                 few{"{0} terabity"}
                 many{"{0} terabitów"}
                 one{"{0} terabit"}
-                other{"{0} terabitu"}
+                other{"{0} terabita"}
             }
             terabyte{
                 dnam{"terabajty"}
@@ -320,12 +320,12 @@ pl{
                 other{"{0} wieku"}
             }
             day{
-                dnam{"dni"}
-                few{"{0} dni"}
-                many{"{0} dni"}
-                one{"{0} dzień"}
-                other{"{0} dnia"}
-                per{"{0} na dzień"}
+                dnam{"doby"}
+                few{"{0} doby"}
+                many{"{0} dób"}
+                one{"{0} doba"}
+                other{"{0} doby"}
+                per{"{0} na dobę"}
             }
             decade{
                 dnam{"dekady"}
@@ -591,6 +591,20 @@ pl{
                 one{"{0} decymetr"}
                 other{"{0} decymetra"}
             }
+            earth-radius{
+                dnam{"promień Ziemi"}
+                few{"{0} promienie Ziemi"}
+                many{"{0} promieni Ziemi"}
+                one{"{0} promień Ziemi"}
+                other{"{0} promienia Ziemi"}
+            }
+            fathom{
+                dnam{"sążnie"}
+                few{"{0} sążnie"}
+                many{"{0} sążni"}
+                one{"{0} sążeń"}
+                other{"{0} sążnia"}
+            }
             foot{
                 dnam{"stopy"}
                 few{"{0} stopy"}
@@ -598,6 +612,13 @@ pl{
                 one{"{0} stopa"}
                 other{"{0} stopy"}
                 per{"{0} na stopę"}
+            }
+            furlong{
+                dnam{"furlongi"}
+                few{"{0} furlongi"}
+                many{"{0} furlongów"}
+                one{"{0} furlong"}
+                other{"{0} furlonga"}
             }
             inch{
                 dnam{"cale"}
@@ -709,6 +730,20 @@ pl{
             }
         }
         light{
+            candela{
+                dnam{"kandela"}
+                few{"{0} kandele"}
+                many{"{0} kandeli"}
+                one{"{0} kandela"}
+                other{"{0} kandeli"}
+            }
+            lumen{
+                dnam{"lumen"}
+                few{"{0} lumeny"}
+                many{"{0} lumenów"}
+                one{"{0} lumen"}
+                other{"{0} lumena"}
+            }
             lux{
                 dnam{"luksy"}
                 few{"{0} luksy"}
@@ -733,18 +768,25 @@ pl{
                 other{"{0} karata"}
             }
             dalton{
-                dnam{"daltony"}
-                few{"{0} daltony"}
-                many{"{0} daltonów"}
-                one{"{0} dalton"}
-                other{"{0} daltona"}
+                dnam{"jednostki masy atomowej"}
+                few{"{0} jednostki masy atomowej"}
+                many{"{0} jednostek masy atomowej"}
+                one{"{0} jednostka masy atomowej"}
+                other{"{0} jednostki masy atomowej"}
             }
             earth-mass{
                 dnam{"masy Ziemi"}
                 few{"{0} masy Ziemi"}
                 many{"{0} mas Ziemi"}
                 one{"{0} masa Ziemi"}
-                other{"{0} masa Ziemi"}
+                other{"{0} masy Ziemi"}
+            }
+            grain{
+                dnam{"grany"}
+                few{"{0} grany"}
+                many{"{0} granów"}
+                one{"{0} gran"}
+                other{"{0} grana"}
             }
             gram{
                 dnam{"gramy"}
@@ -812,6 +854,13 @@ pl{
                 many{"{0} mas Słońca"}
                 one{"{0} masa Słońca"}
                 other{"{0} masy Słońca"}
+            }
+            stone{
+                dnam{"kamień"}
+                few{"{0} kamienie"}
+                many{"{0} kamieni"}
+                one{"{0} kamień"}
+                other{"{0} kamienia"}
             }
             ton{
                 dnam{"krótkie tony"}
@@ -1010,7 +1059,7 @@ pl{
                 few{"{0} stopofunty"}
                 many{"{0} stopofuntów"}
                 one{"{0} stopofunt"}
-                other{"{0} stopofunt"}
+                other{"{0} stopofunta"}
             }
         }
         volume{
@@ -1027,6 +1076,13 @@ pl{
                 many{"{0} baryłek"}
                 one{"{0} baryłka"}
                 other{"{0} baryłki"}
+            }
+            bushel{
+                dnam{"buszle"}
+                few{"{0} buszle"}
+                many{"{0} buszli"}
+                one{"{0} buszel"}
+                other{"{0} buszla"}
             }
             centiliter{
                 dnam{"centylitry"}
@@ -1087,11 +1143,11 @@ pl{
                 other{"{0} jarda sześciennego"}
             }
             cup{
-                dnam{"ćwierćkwarty"}
-                few{"{0} ćwierćkwarty"}
-                many{"{0} ćwierćkwart"}
-                one{"{0} ćwierćkwarta"}
-                other{"{0} ćwierćkwarty"}
+                dnam{"ćwierćkwarty amerykańske"}
+                few{"{0} ćwierćkwarty amerykańskie"}
+                many{"{0} ćwierćkwart amerykańskich"}
+                one{"{0} ćwierćkwarta amerykańska"}
+                other{"{0} ćwierćkwarty amerykańskiej"}
             }
             cup-metric{
                 dnam{"ćwierćkwarty metryczne"}
@@ -1107,27 +1163,55 @@ pl{
                 one{"{0} decylitr"}
                 other{"{0} decylitra"}
             }
+            dessert-spoon{
+                dnam{"łyżki deserowe"}
+                few{"{0} łyżki deserowe"}
+                many{"{0} łyżek deserowych"}
+                one{"{0} łyżka deserowa"}
+                other{"{0} łyżki deserowej"}
+            }
+            dessert-spoon-imperial{
+                dnam{"imperialna łyżeczka deserowa"}
+                few{"{0} imperialne łyżeczki deserowe"}
+                many{"{0} imperialnych łyżeczek deserowych"}
+                one{"{0} imperialna łyżeczka deserowa"}
+                other{"{0} imperialnej łyżeczki deserowej"}
+            }
+            dram{
+                dnam{"drachmy płynu"}
+                few{"{0} drachmy płynu"}
+                many{"{0} drachm płynu"}
+                one{"{0} drachma płynu"}
+                other{"{0} drachmy płynu"}
+            }
+            drop{
+                dnam{"krople"}
+                few{"{0} krople"}
+                many{"{0} kropli"}
+                one{"{0} kropla"}
+                other{"{0} kropli"}
+            }
             fluid-ounce{
-                dnam{"uncje płynu"}
-                few{"{0} uncje płynu"}
-                many{"{0} uncji płynu"}
-                one{"{0} uncja płynu"}
-                other{"{0} uncji płynu"}
+                dnam{"uncje płynu amerykańskie"}
+                few{"{0} uncje płynu amerykańskie"}
+                many{"{0} uncji płynu amerykańskich"}
+                one{"{0} uncja płynu amerykańska"}
+                other{"{0} uncji płynu amerykańskiej"}
             }
             fluid-ounce-imperial{
-                dnam{"uncje płynu imp."}
-                few{"{0} uncje płynu imp."}
-                many{"{0} uncji płynu imp."}
-                one{"{0} uncja płynu imp."}
-                other{"{0} uncji płynu imp."}
+                dnam{"uncje płynu angielskie"}
+                few{"{0} uncje płynu angielskie"}
+                many{"{0} uncji płynu angielskich"}
+                one{"{0} uncja płynu angielska"}
+                other{"{0} uncji płynu angielskiej"}
             }
             gallon{
-                dnam{"galony"}
-                few{"{0} galony"}
-                many{"{0} galonów"}
-                one{"{0} galon"}
-                other{"{0} galona"}
-                per{"{0} na galon"}
+                dnam{"galony amerykańskie"}
+                few{"{0} galony amerykańskie"}
+                many{"{0} galonów amerykańskich"}
+                one{"{0} galon amerykański"}
+                other{"{0} galona amerykańskiego"}
+                per{"{0} na galon amerykański"}
             }
             gallon-imperial{
                 dnam{"galony angielskie"}
@@ -1143,6 +1227,13 @@ pl{
                 many{"{0} hektolitrów"}
                 one{"{0} hektolitr"}
                 other{"{0} hektolitra"}
+            }
+            jigger{
+                dnam{"jiggery"}
+                few{"{0} jiggery"}
+                many{"{0} jiggerów"}
+                one{"{0} jigger"}
+                other{"{0} jiggera"}
             }
             liter{
                 dnam{"litry"}
@@ -1166,12 +1257,19 @@ pl{
                 one{"{0} mililitr"}
                 other{"{0} mililitra"}
             }
+            pinch{
+                dnam{"szczypty"}
+                few{"{0} szczypty"}
+                many{"{0} szczypt"}
+                one{"{0} szczypta"}
+                other{"{0} szczypty"}
+            }
             pint{
-                dnam{"półkwarty"}
-                few{"{0} półkwarty"}
-                many{"{0} półkwart"}
-                one{"{0} półkwarta"}
-                other{"{0} półkwarty"}
+                dnam{"półkwarty amerykańskie"}
+                few{"{0} półkwarty amerykańskie"}
+                many{"{0} półkwart amerykańskich"}
+                one{"{0} półkwarta amerykańska"}
+                other{"{0} półkwarty amerykańskiej"}
             }
             pint-metric{
                 dnam{"półkwarty metryczne"}
@@ -1181,11 +1279,18 @@ pl{
                 other{"{0} półkwarty metrycznej"}
             }
             quart{
-                dnam{"kwarty"}
-                few{"{0} kwarty"}
-                many{"{0} kwart"}
-                one{"{0} kwarta"}
-                other{"{0} kwarty"}
+                dnam{"kwarty amerykańskie"}
+                few{"{0} kwarty amerykańskie"}
+                many{"{0} kwart amerykańskich"}
+                one{"{0} kwarta amerykańska"}
+                other{"{0} kwarty amerykańskiej"}
+            }
+            quart-imperial{
+                dnam{"kwarty angielskie"}
+                few{"{0} kwarty angielskie"}
+                many{"{0} kwart angielskich"}
+                one{"{0} kwarta angielska"}
+                other{"{0} kwarty angielskiej"}
             }
             tablespoon{
                 dnam{"łyżki stołowe"}
@@ -1245,7 +1350,7 @@ pl{
         }
         duration{
             day{
-                dnam{"dzień"}
+                dnam{"doba"}
                 few{"{0} d."}
                 many{"{0} d."}
                 one{"{0} d."}
@@ -1442,9 +1547,6 @@ pl{
                 one{"{0} mol"}
                 other{"{0} mola"}
             }
-            permillion{
-                dnam{"części/milion"}
-            }
             permyriad{
                 few{"{0}‱"}
                 many{"{0}‱"}
@@ -1484,6 +1586,10 @@ pl{
         }
         coordinate{
             dnam{"kierunek"}
+            east{"{0}°E"}
+            north{"{0}°N"}
+            south{"{0}°S"}
+            west{"{0}°W"}
         }
         digital{
             bit{
@@ -1510,12 +1616,12 @@ pl{
                 other{"{0} w."}
             }
             day{
-                dnam{"dni"}
-                few{"{0} dni"}
-                many{"{0} dni"}
-                one{"{0} dzień"}
-                other{"{0} dnia"}
-                per{"{0}/dzień"}
+                dnam{"doby"}
+                few{"{0} doby"}
+                many{"{0} dób"}
+                one{"{0} doba"}
+                other{"{0} doby"}
+                per{"{0}/dobę"}
             }
             decade{
                 dnam{"dek"}
@@ -1640,13 +1746,18 @@ pl{
                 one{"{0} j.a."}
                 other{"{0} j.a."}
             }
+            fathom{
+                few{"{0} fm"}
+                many{"{0} fm"}
+                one{"{0} fm"}
+                other{"{0} fm"}
+            }
             foot{
                 dnam{"stopy"}
-                few{"{0} stopy"}
-                many{"{0} stóp"}
-                one{"{0} stopa"}
-                other{"{0} stopy"}
-                per{"{0}/stopa"}
+                few{"{0} ft"}
+                many{"{0} ft"}
+                one{"{0} ft"}
+                other{"{0} ft"}
             }
             inch{
                 dnam{"cale"}
@@ -1687,14 +1798,27 @@ pl{
                 other{"{0} R☉"}
             }
             yard{
-                dnam{"jardy"}
-                few{"{0} jardy"}
-                many{"{0} jardów"}
-                one{"{0} jard"}
-                other{"{0} jarda"}
+                few{"{0} yd"}
+                many{"{0} yd"}
+                one{"{0} yd"}
+                other{"{0} yd"}
             }
         }
         light{
+            candela{
+                dnam{"cd"}
+                few{"{0} cd"}
+                many{"{0} cd"}
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                dnam{"lm"}
+                few{"{0} lm"}
+                many{"{0} lm"}
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
             solar-luminosity{
                 few{"{0} L☉"}
                 many{"{0} L☉"}
@@ -1711,7 +1835,6 @@ pl{
                 other{"{0} kt"}
             }
             dalton{
-                dnam{"daltony"}
                 few{"{0} Da"}
                 many{"{0} Da"}
                 one{"{0} Da"}
@@ -1722,6 +1845,13 @@ pl{
                 many{"{0} M⊕"}
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
+            }
+            grain{
+                dnam{"gr"}
+                few{"{0} gr"}
+                many{"{0} gr"}
+                one{"{0} gr"}
+                other{"{0} gr"}
             }
             gram{
                 dnam{"g"}
@@ -1739,6 +1869,12 @@ pl{
                 many{"{0} M☉"}
                 one{"{0} M☉"}
                 other{"{0} M☉"}
+            }
+            stone{
+                few{"{0} st"}
+                many{"{0} st"}
+                one{"{0} st"}
+                other{"{0} st"}
             }
             ton{
                 dnam{"krótkie tony"}
@@ -1775,8 +1911,22 @@ pl{
                 one{"{0} MPa"}
                 other{"{0} MPa"}
             }
+            millimeter-ofhg{
+                dnam{"mmHg"}
+                few{"{0} mmHg"}
+                many{"{0} mmHg"}
+                one{"{0} mmHg"}
+                other{"{0} mmHg"}
+            }
         }
         speed{
+            kilometer-per-hour{
+                dnam{"km/godz."}
+                few{"{0} km/godz."}
+                many{"{0} km/godz."}
+                one{"{0} km/godz."}
+                other{"{0} km/godz."}
+            }
             knot{
                 dnam{"w."}
                 few{"{0} w."}
@@ -1868,11 +2018,11 @@ pl{
                 other{"{0} jarda sześc."}
             }
             cup{
-                dnam{"ćwierćkwarty"}
-                few{"{0} ćwierćkwarty"}
-                many{"{0} ćwierćkwart"}
-                one{"{0} ćwierćkwarta"}
-                other{"{0} ćwierćkwarty"}
+                dnam{"ćwierćkwarty am."}
+                few{"{0} ćwierćkwarty am."}
+                many{"{0} ćwierćkwart am."}
+                one{"{0} ćwierćkwarta am."}
+                other{"{0} ćwierćkwarty am."}
             }
             cup-metric{
                 dnam{"ćwierćkwarty metr."}
@@ -1888,27 +2038,55 @@ pl{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"ł. deser."}
+                few{"{0} ł. deser."}
+                many{"{0} ł. deser."}
+                one{"{0} ł. deser."}
+                other{"{0} ł. deser."}
+            }
+            dessert-spoon-imperial{
+                dnam{"ł. deser. ang."}
+                few{"{0} ł. deser. ang."}
+                many{"{0} ł. deser. ang."}
+                one{"{0} ł. deser. ang."}
+                other{"{0} ł. deser. ang."}
+            }
+            dram{
+                dnam{"drachmy"}
+                few{"{0} drachmy"}
+                many{"{0} drachm"}
+                one{"{0} drachma"}
+                other{"{0} drachmy"}
+            }
+            drop{
+                dnam{"krople"}
+                few{"{0} krople"}
+                many{"{0} kropli"}
+                one{"{0} kropla"}
+                other{"{0} kropli"}
+            }
             fluid-ounce{
-                dnam{"fl oz"}
-                few{"{0} fl oz"}
-                many{"{0} fl oz"}
-                one{"{0} fl oz"}
-                other{"{0} fl oz"}
+                dnam{"fl oz am."}
+                few{"{0} fl oz am."}
+                many{"{0} fl oz am."}
+                one{"{0} fl oz am."}
+                other{"{0} fl oz am."}
             }
             fluid-ounce-imperial{
-                dnam{"fl oz imp."}
-                few{"{0} fl oz imp."}
-                many{"{0} fl oz imp."}
-                one{"{0} fl oz imp."}
-                other{"{0} fl oz imp."}
+                dnam{"fl oz ang."}
+                few{"{0} fl oz ang."}
+                many{"{0} fl oz ang."}
+                one{"{0} fl oz ang."}
+                other{"{0} fl oz ang."}
             }
             gallon{
-                dnam{"gal"}
-                few{"{0} gal"}
-                many{"{0} gal"}
-                one{"{0} gal"}
-                other{"{0} gal"}
-                per{"{0}/gal"}
+                dnam{"gal am."}
+                few{"{0} gal am."}
+                many{"{0} gal am."}
+                one{"{0} gal am."}
+                other{"{0} gal am."}
+                per{"{0}/gal am."}
             }
             gallon-imperial{
                 dnam{"gal ang."}
@@ -1924,6 +2102,13 @@ pl{
                 many{"{0} hl"}
                 one{"{0} hl"}
                 other{"{0} hl"}
+            }
+            jigger{
+                dnam{"jiggery"}
+                few{"{0} jiggery"}
+                many{"{0} jiggerów"}
+                one{"{0} jigger"}
+                other{"{0} jiggera"}
             }
             liter{
                 dnam{"litry"}
@@ -1942,12 +2127,19 @@ pl{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"szcz."}
+                few{"{0} szcz."}
+                many{"{0} szcz."}
+                one{"{0} szcz."}
+                other{"{0} szcz."}
+            }
             pint{
-                dnam{"półkwarty"}
-                few{"{0} półkwarty"}
-                many{"{0} półkwart"}
-                one{"{0} półkwarta"}
-                other{"{0} półkwarty"}
+                dnam{"półkwarty am."}
+                few{"{0} półkwarty am."}
+                many{"{0} półkwart am."}
+                one{"{0} półkwarta am."}
+                other{"{0} półkwarty am."}
             }
             pint-metric{
                 dnam{"półkwarty metr."}
@@ -1957,11 +2149,18 @@ pl{
                 other{"{0} półkwarty metr."}
             }
             quart{
-                dnam{"kwarty"}
-                few{"{0} kwarty"}
-                many{"{0} kwart"}
-                one{"{0} kwarta"}
-                other{"{0} kwarty"}
+                dnam{"kwarty am."}
+                few{"{0} kwarty am."}
+                many{"{0} kwart am."}
+                one{"{0} kwarta am."}
+                other{"{0} kwarty am."}
+            }
+            quart-imperial{
+                dnam{"kwarty ang."}
+                few{"{0} kwarty ang."}
+                many{"{0} kwart ang."}
+                one{"{0} kwarta ang."}
+                other{"{0} kwarty ang."}
             }
             tablespoon{
                 dnam{"ł. stoł."}

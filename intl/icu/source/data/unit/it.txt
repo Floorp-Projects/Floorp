@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 it{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -106,6 +106,7 @@ it{
         }
         compound{
             per{"{0} al {1}"}
+            times{"{0} {1}"}
         }
         concentr{
             karat{
@@ -408,6 +409,26 @@ it{
             }
         }
         graphics{
+            dot{
+                dnam{"punto"}
+                one{"{0} punto"}
+                other{"{0} punti"}
+            }
+            dot-per-centimeter{
+                dnam{"punti per centimetro"}
+                one{"{0} punto per centimetro"}
+                other{"{0} punti per centimetro"}
+            }
+            dot-per-inch{
+                dnam{"punti per pollice"}
+                one{"{0} punto per pollice"}
+                other{"{0} punti per pollice"}
+            }
+            megapixel{
+                dnam{"megapixel"}
+                one{"{0} megapixel"}
+                other{"{0} megapixel"}
+            }
             pixel{
                 dnam{"pixel"}
                 one{"{0} pixel"}
@@ -417,6 +438,11 @@ it{
                 dnam{"pixel per centimetro"}
                 one{"{0} pixel per centimetro"}
                 other{"{0} pixel per centimetro"}
+            }
+            pixel-per-inch{
+                dnam{"pixel per pollice"}
+                one{"{0} pixel per pollice"}
+                other{"{0} pixel per pollice"}
             }
         }
         length{
@@ -436,11 +462,26 @@ it{
                 one{"{0} decimetro"}
                 other{"{0} decimetri"}
             }
+            earth-radius{
+                dnam{"raggio terrestre"}
+                one{"{0} raggio terrestre"}
+                other{"{0} raggi terrestri"}
+            }
+            fathom{
+                dnam{"braccia"}
+                one{"{0} braccio"}
+                other{"{0} braccia"}
+            }
             foot{
                 dnam{"piedi"}
                 one{"{0} piede"}
                 other{"{0} piedi"}
                 per{"{0} per piede"}
+            }
+            furlong{
+                dnam{"furlong"}
+                one{"{0} furlong"}
+                other{"{0} furlong"}
             }
             inch{
                 dnam{"pollici"}
@@ -507,8 +548,8 @@ it{
             }
             point{
                 dnam{"punti"}
-                one{"{0} punto"}
-                other{"{0} punti"}
+                one{"{0} punto tipografico"}
+                other{"{0} punti tipografici"}
             }
             solar-radius{
                 dnam{"raggi solari"}
@@ -522,6 +563,16 @@ it{
             }
         }
         light{
+            candela{
+                dnam{"candela"}
+                one{"{0} candela"}
+                other{"{0} candele"}
+            }
+            lumen{
+                dnam{"lumen"}
+                one{"{0} lumen"}
+                other{"{0} lumen"}
+            }
             lux{
                 dnam{"lux"}
                 one{"{0} lux"}
@@ -548,6 +599,11 @@ it{
                 dnam{"masse terrestri"}
                 one{"{0} massa terrestre"}
                 other{"{0} masse terrestri"}
+            }
+            grain{
+                dnam{"grano"}
+                one{"{0} grano"}
+                other{"{0} grani"}
             }
             gram{
                 dnam{"grammi"}
@@ -597,6 +653,11 @@ it{
                 dnam{"masse solari"}
                 one{"{0} massa solare"}
                 other{"{0} masse solari"}
+            }
+            stone{
+                dnam{"stone"}
+                one{"{0} stone"}
+                other{"{0} stone"}
             }
             ton{
                 dnam{"tonnellate"}
@@ -672,6 +733,11 @@ it{
                 one{"{0} millimetro di mercurio"}
                 other{"{0} millimetri di mercurio"}
             }
+            pascal{
+                dnam{"pascal"}
+                one{"{0} pascal"}
+                other{"{0} pascal"}
+            }
             pound-force-per-square-inch{
                 dnam{"libbre per pollice quadrato"}
                 one{"{0} libbra per pollice quadrato"}
@@ -685,7 +751,7 @@ it{
                 other{"{0} chilometri orari"}
             }
             knot{
-                dnam{"nodo"}
+                dnam{"nodi"}
                 one{"{0} nodo"}
                 other{"{0} nodi"}
             }
@@ -730,7 +796,7 @@ it{
             }
             pound-force-foot{
                 dnam{"libbre-piede"}
-                one{"{0} libbra-piede"}
+                one{"{0} libbra-forza piede"}
                 other{"{0} libbre-piedi"}
             }
         }
@@ -807,6 +873,26 @@ it{
                 one{"{0} decilitro"}
                 other{"{0} decilitri"}
             }
+            dessert-spoon{
+                dnam{"cucchiaino da dessert"}
+                one{"{0} cucchiaino da dessert"}
+                other{"{0} cucchiaini da dessert"}
+            }
+            dessert-spoon-imperial{
+                dnam{"cucchiaino da dessert imperiale"}
+                one{"{0} cucchiaino da dessert imperiale"}
+                other{"{0} cucchiaini da dessert imperiali"}
+            }
+            dram{
+                dnam{"dramma"}
+                one{"{0} dramma"}
+                other{"{0} dramme"}
+            }
+            drop{
+                dnam{"goccia"}
+                one{"{0} goccia"}
+                other{"{0} gocce"}
+            }
             fluid-ounce{
                 dnam{"once fluide"}
                 one{"{0} oncia fluida"}
@@ -834,6 +920,10 @@ it{
                 one{"{0} ettolitro"}
                 other{"{0} ettolitri"}
             }
+            jigger{
+                one{"{0} jigger"}
+                other{"{0} jigger"}
+            }
             liter{
                 dnam{"litri"}
                 one{"{0} litro"}
@@ -850,6 +940,11 @@ it{
                 one{"{0} millilitro"}
                 other{"{0} millilitri"}
             }
+            pinch{
+                dnam{"pizzico"}
+                one{"{0} pizzico"}
+                other{"{0} pizzichi"}
+            }
             pint{
                 dnam{"pinte"}
                 one{"{0} pinta"}
@@ -865,13 +960,18 @@ it{
                 one{"{0} quarto"}
                 other{"{0} quarti"}
             }
+            quart-imperial{
+                dnam{"quarto imperiale"}
+                one{"{0} quarto imperiale"}
+                other{"{0} quarti imperiali"}
+            }
             tablespoon{
                 dnam{"cucchiai da tavola"}
                 one{"{0} cucchiaio da tavola"}
                 other{"{0} cucchiai da tavola"}
             }
             teaspoon{
-                dnam{"cucchiai da tè"}
+                dnam{"cucchiaio da tè"}
                 one{"{0} cucchiaio da tè"}
                 other{"{0} cucchiai da tè"}
             }
@@ -1108,6 +1208,7 @@ it{
                 other{"{0}km³"}
             }
             cubic-mile{
+                dnam{"mi³"}
                 one{"{0}mi³"}
                 other{"{0}mi³"}
             }
@@ -1321,7 +1422,7 @@ it{
                 other{"{0} MB"}
             }
             petabyte{
-                dnam{"PByte"}
+                dnam{"PB"}
                 one{"{0} PB"}
                 other{"{0} PB"}
             }
@@ -1491,6 +1592,13 @@ it{
                 other{"{0} MHz"}
             }
         }
+        graphics{
+            dot{
+                dnam{"punto"}
+                one{"{0} p"}
+                other{"{0} p"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"au"}
@@ -1507,6 +1615,10 @@ it{
                 dnam{"dm"}
                 one{"{0} dm"}
                 other{"{0} dm"}
+            }
+            fathom{
+                one{"{0} fm"}
+                other{"{0} fm"}
             }
             foot{
                 dnam{"ft"}
@@ -1605,6 +1717,11 @@ it{
                 dnam{"Da"}
                 one{"{0} Da"}
                 other{"{0} Da"}
+            }
+            grain{
+                dnam{"grano"}
+                one{"{0} grano"}
+                other{"{0} grani"}
             }
             gram{
                 dnam{"grammi"}
@@ -1847,6 +1964,16 @@ it{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dram{
+                dnam{"dramma liquida"}
+                one{"{0} dr liq"}
+                other{"{0} dr liq"}
+            }
+            drop{
+                dnam{"goccia"}
+                one{"{0} goccia"}
+                other{"{0} gocce"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -1890,6 +2017,11 @@ it{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"pizzico"}
+                one{"{0} pizzico"}
+                other{"{0} pizzichi"}
+            }
             pint{
                 dnam{"pt"}
                 one{"{0} pt"}
@@ -1904,6 +2036,11 @@ it{
                 dnam{"qt"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"imp qt"}
+                one{"{0} imp qt"}
+                other{"{0} imp qt"}
             }
             tablespoon{
                 dnam{"tbsp"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 it{
     Keys{
         calendar{"Calendario"}
@@ -132,7 +133,7 @@ it{
         crs{"creolo delle Seychelles"}
         cs{"ceco"}
         csb{"kashubian"}
-        cu{"slavo della Chiesa"}
+        cu{"slavo ecclesiastico"}
         cv{"ciuvascio"}
         cy{"gallese"}
         da{"danese"}
@@ -244,7 +245,7 @@ it{
         hr{"croato"}
         hsb{"alto sorabo"}
         hsn{"xiang"}
-        ht{"haitiano"}
+        ht{"creolo haitiano"}
         hu{"ungherese"}
         hup{"hupa"}
         hy{"armeno"}
@@ -482,7 +483,7 @@ it{
         rwk{"rwa"}
         sa{"sanscrito"}
         sad{"sandawe"}
-        sah{"yakut"}
+        sah{"sacha"}
         sam{"aramaico samaritano"}
         saq{"samburu"}
         sas{"sasak"}
@@ -639,6 +640,8 @@ it{
         zh_Hant{"cinese mandarino tradizionale"}
     }
     Languages%menu{
+        ckb{"curdo centrale"}
+        yue{"cinese (cantonese)"}
         zh{"cinese (mandarino)"}
     }
     Languages%short{
@@ -647,6 +650,7 @@ it{
     }
     Scripts{
         Afak{"afaka"}
+        Aghb{"albanese caucasico"}
         Arab{"arabo"}
         Aran{"nastaliq"}
         Armi{"aramaico imperiale"}
@@ -688,7 +692,7 @@ it{
         Grek{"greco"}
         Gujr{"gujarati"}
         Guru{"gurmukhi"}
-        Hanb{"hanb"}
+        Hanb{"han, bopomofo"}
         Hang{"hangul"}
         Hani{"han"}
         Hano{"hanunoo"}
@@ -1028,7 +1032,6 @@ it{
         VALENCIA{"valenziano"}
         WADEGILE{"romanizzazione Wade-Giles"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — Tutto"}
         category-list{"{0}: {1}"}
@@ -1043,6 +1046,8 @@ it{
             one{"{0} tratto"}
             other{"{0} tratti"}
         }
+        subscript{"pedice {0}"}
+        superscript{"apice {0}"}
     }
     codePatterns{
         language{"Lingua: {0}"}

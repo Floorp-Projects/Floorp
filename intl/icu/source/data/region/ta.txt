@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ta{
     Countries{
         001{"உலகம்"}
@@ -313,5 +314,4 @@ ta{
         FK{"ஃபாக்லாந்து தீவுகள் (இஸ்லாஸ் மால்வினஸ்)"}
         TL{"கிழக்கு தைமூர்"}
     }
-    Version{"37"}
 }

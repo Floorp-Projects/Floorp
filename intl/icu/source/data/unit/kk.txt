@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kk{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -408,6 +408,11 @@ kk{
             }
         }
         graphics{
+            dot{
+                dnam{"нүкте"}
+                one{"{0} нүкте"}
+                other{"{0} нүкте"}
+            }
             dot-per-centimeter{
                 dnam{"нүкте/сантиметр"}
                 one{"{0} нүкте/сантиметр"}
@@ -461,11 +466,26 @@ kk{
                 one{"{0} дециметр"}
                 other{"{0} дециметр"}
             }
+            earth-radius{
+                dnam{"Жер радиусы"}
+                one{"{0} Жер радиусы"}
+                other{"{0} Жер радиусы"}
+            }
+            fathom{
+                dnam{"фатом"}
+                one{"{0} фатом"}
+                other{"{0} фатом"}
+            }
             foot{
                 dnam{"фут"}
                 one{"{0} фут"}
                 other{"{0} фут"}
                 per{"{0}/фут"}
+            }
+            furlong{
+                dnam{"фурлонг"}
+                one{"{0} фурлонг"}
+                other{"{0} фурлонг"}
             }
             inch{
                 dnam{"дюйм"}
@@ -547,6 +567,16 @@ kk{
             }
         }
         light{
+            candela{
+                dnam{"кандела"}
+                one{"{0} кандела"}
+                other{"{0} кандела"}
+            }
+            lumen{
+                dnam{"люмен"}
+                one{"{0} люмен"}
+                other{"{0} люмен"}
+            }
             lux{
                 dnam{"люкс"}
                 one{"{0} люкс"}
@@ -573,6 +603,11 @@ kk{
                 dnam{"Жер массасы"}
                 one{"{0} жер массасы"}
                 other{"{0} жер массасы"}
+            }
+            grain{
+                dnam{"гран"}
+                one{"{0} гран"}
+                other{"{0} гран"}
             }
             gram{
                 dnam{"грамм"}
@@ -622,6 +657,11 @@ kk{
                 dnam{"Күн массасы"}
                 one{"{0} Күн массасы"}
                 other{"{0} Күн массасы"}
+            }
+            stone{
+                dnam{"стоун"}
+                one{"{0} стоун"}
+                other{"{0} стоун"}
             }
             ton{
                 dnam{"тонна"}
@@ -780,6 +820,11 @@ kk{
                 one{"{0} баррель"}
                 other{"{0} баррель"}
             }
+            bushel{
+                dnam{"бушель"}
+                one{"{0} бушель"}
+                other{"{0} бушель"}
+            }
             centiliter{
                 dnam{"сантилитр"}
                 one{"{0} cантилитр"}
@@ -837,6 +882,26 @@ kk{
                 one{"{0} децилитр"}
                 other{"{0} децилитр"}
             }
+            dessert-spoon{
+                dnam{"десерт қасығы"}
+                one{"{0} десерт қасығы"}
+                other{"{0} десерт қасығы"}
+            }
+            dessert-spoon-imperial{
+                dnam{"британдық десерт қасығы"}
+                one{"{0} британдық десерт қасығы"}
+                other{"{0} британдық десерт қасығы"}
+            }
+            dram{
+                dnam{"драхма"}
+                one{"{0} драхма"}
+                other{"{0} драхма"}
+            }
+            drop{
+                dnam{"тамшы"}
+                one{"{0} тамшы"}
+                other{"{0} тамшы"}
+            }
             fluid-ounce{
                 dnam{"сұйық унция"}
                 one{"{0} сұйық унция"}
@@ -864,6 +929,11 @@ kk{
                 one{"{0} гектолитр"}
                 other{"{0} гектолитр"}
             }
+            jigger{
+                dnam{"джиггер"}
+                one{"{0} джиггер"}
+                other{"{0} джиггер"}
+            }
             liter{
                 dnam{"литр"}
                 one{"{0} литр"}
@@ -880,6 +950,11 @@ kk{
                 one{"{0} миллилитр"}
                 other{"{0} миллилитр"}
             }
+            pinch{
+                dnam{"шөкім"}
+                one{"{0} шөкім"}
+                other{"{0} шөкім"}
+            }
             pint{
                 dnam{"пинта"}
                 one{"{0} пинта"}
@@ -894,6 +969,11 @@ kk{
                 dnam{"кварта"}
                 one{"{0} кварта"}
                 other{"{0} кварта"}
+            }
+            quart-imperial{
+                dnam{"британдық кварта"}
+                one{"{0} британдық кварта"}
+                other{"{0} британдық кварта"}
             }
             tablespoon{
                 dnam{"ас қасық"}
@@ -1557,6 +1637,11 @@ kk{
             }
         }
         graphics{
+            dot{
+                dnam{"нүкте"}
+                one{"{0} нүкте"}
+                other{"{0} нүкте"}
+            }
             dot-per-centimeter{
                 dnam{"нүкте/см"}
                 one{"{0} нүкте/см"}
@@ -1600,11 +1685,21 @@ kk{
                 one{"{0} дм"}
                 other{"{0} дм"}
             }
+            fathom{
+                dnam{"фатом"}
+                one{"{0} fth"}
+                other{"{0} fth"}
+            }
             foot{
                 dnam{"фут"}
                 one{"{0} фут"}
                 other{"{0} фут"}
                 per{"{0}/фут"}
+            }
+            furlong{
+                dnam{"фурлонг"}
+                one{"{0} фурлонг"}
+                other{"{0} фурлонг"}
             }
             inch{
                 dnam{"дюйм"}
@@ -1671,8 +1766,8 @@ kk{
             }
             point{
                 dnam{"пункт"}
-                one{"{0} ұпай"}
-                other{"{0} ұпай"}
+                one{"{0} пункт"}
+                other{"{0} пункт"}
             }
             solar-radius{
                 dnam{"R☉"}
@@ -1686,6 +1781,16 @@ kk{
             }
         }
         light{
+            candela{
+                dnam{"Кд"}
+                one{"{0} Кд"}
+                other{"{0} Кд"}
+            }
+            lumen{
+                dnam{"лм"}
+                one{"{0} лм"}
+                other{"{0} лм"}
+            }
             lux{
                 dnam{"люкс"}
                 one{"{0} лк"}
@@ -1712,6 +1817,11 @@ kk{
                 dnam{"M⊕"}
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
+            }
+            grain{
+                dnam{"гран"}
+                one{"{0} гран"}
+                other{"{0} гран"}
             }
             gram{
                 dnam{"грамм"}
@@ -1761,6 +1871,11 @@ kk{
                 dnam{"M☉"}
                 one{"{0} M☉"}
                 other{"{0} M☉"}
+            }
+            stone{
+                dnam{"стоун"}
+                one{"{0} стоун"}
+                other{"{0} стоун"}
             }
             ton{
                 dnam{"тонна"}
@@ -1919,6 +2034,10 @@ kk{
                 one{"{0} bbl"}
                 other{"{0} bbl"}
             }
+            bushel{
+                one{"{0} bu"}
+                other{"{0} bu"}
+            }
             centiliter{
                 dnam{"сл"}
                 one{"{0} cл"}
@@ -1975,6 +2094,26 @@ kk{
                 one{"{0} дл"}
                 other{"{0} дл"}
             }
+            dessert-spoon{
+                dnam{"дес. қас."}
+                one{"{0} дес. қас."}
+                other{"{0} дес. қас."}
+            }
+            dessert-spoon-imperial{
+                dnam{"брит. дес. қас."}
+                one{"{0} брит. дес. қас."}
+                other{"{0} брит. дес. қас."}
+            }
+            dram{
+                dnam{"сұйық драхма"}
+                one{"{0} сұй. драхма"}
+                other{"{0} сұй. драхма"}
+            }
+            drop{
+                dnam{"тамшы"}
+                one{"{0} тамшы"}
+                other{"{0} тамшы"}
+            }
             fluid-ounce{
                 dnam{"сұй. унц."}
                 one{"{0} сұй. унц."}
@@ -2002,6 +2141,11 @@ kk{
                 one{"{0} гл"}
                 other{"{0} гл"}
             }
+            jigger{
+                dnam{"джиггер"}
+                one{"{0} джиггер"}
+                other{"{0} джиггер"}
+            }
             liter{
                 dnam{"литр"}
                 one{"{0} л"}
@@ -2018,6 +2162,11 @@ kk{
                 one{"{0} мл"}
                 other{"{0} мл"}
             }
+            pinch{
+                dnam{"шөкім"}
+                one{"{0} шөкім"}
+                other{"{0} шөкім"}
+            }
             pint{
                 dnam{"пинта"}
                 one{"{0} pt"}
@@ -2032,6 +2181,11 @@ kk{
                 dnam{"qt"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"брит. кварта"}
+                one{"{0} брит. кварта"}
+                other{"{0} брит. кварта"}
             }
             tablespoon{
                 dnam{"ас қ."}

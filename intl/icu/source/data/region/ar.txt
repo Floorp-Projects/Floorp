@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ar{
     Countries{
         001{"العالم"}
@@ -311,5 +312,4 @@ ar{
         SZ{"سوازيلاند"}
         TL{"تيمور الشرقية"}
     }
-    Version{"37"}
 }

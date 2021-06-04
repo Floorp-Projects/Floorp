@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pt{
     Currencies{
         ADP{
@@ -588,7 +589,7 @@ pt{
         }
         LKR{
             "LKR",
-            "Rupia do Sri Lanka",
+            "Rupia cingalesa",
         }
         LRD{
             "LRD",
@@ -672,7 +673,7 @@ pt{
         }
         MMK{
             "MMK",
-            "Quiat de Myanmar",
+            "Quiate mianmarense",
         }
         MNT{
             "MNT",
@@ -680,7 +681,7 @@ pt{
         }
         MOP{
             "MOP",
-            "Pataca de Macau",
+            "Pataca macaense",
         }
         MRO{
             "MRO",
@@ -1885,8 +1886,8 @@ pt{
             other{"Libras libanesas"}
         }
         LKR{
-            one{"Rupia do Sri Lanka"}
-            other{"Rupias do Sri Lanka"}
+            one{"Rupia cingalesa"}
+            other{"Rupias cingalesas"}
         }
         LRD{
             one{"Dólar liberiano"}
@@ -1969,16 +1970,16 @@ pt{
             other{"Francos de Mali"}
         }
         MMK{
-            one{"Quiat de Myanmar"}
-            other{"Quiat de Myanmar"}
+            one{"Quiate mianmarense"}
+            other{"Quiates mianmarenses"}
         }
         MNT{
             one{"Tugrik mongol"}
             other{"Tugriks mongóis"}
         }
         MOP{
-            one{"Pataca de Macau"}
-            other{"Patacas de Macau"}
+            one{"Pataca macaense"}
+            other{"Patacas macaenses"}
         }
         MRO{
             one{"Ouguiya mauritana (1973–2017)"}
@@ -2501,5 +2502,4 @@ pt{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

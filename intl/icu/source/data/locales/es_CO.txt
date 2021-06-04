@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_CO{
     %%Parent{"es_419"}
     NumberElements{
@@ -13,7 +14,6 @@ es_CO{
             }
         }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -99,14 +99,6 @@ es_CO{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "a. m.",
-                "p. m.",
-            }
-            AmPmMarkersAbbr{
-                "a. m.",
-                "p. m.",
-            }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
@@ -117,8 +109,8 @@ es_CO{
                 "d/MM/y",
                 "d/MM/yy",
                 "{1}, {0}",
-                "{1} 'a' 'las' {0}",
-                "{1} 'a' 'las' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
                 "{1}, {0}",
                 "{1}, {0}",
             }
@@ -132,8 +124,6 @@ es_CO{
                 MMMd{"d 'de' MMM"}
                 MMMdd{"d 'de' MMM"}
                 yMEd{"EEE, d/M/y"}
-                yMMM{"MMM 'de' y"}
-                yMMMd{"d 'de' MMM 'de' y"}
             }
             dayNames{
                 format{
@@ -170,16 +160,10 @@ es_CO{
                 }
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
                         noon{"m."}
-                        pm{"p. m."}
                     }
                     narrow{
                         noon{"m."}
-                    }
-                    wide{
-                        am{"a. m."}
-                        pm{"p. m."}
                     }
                 }
             }
@@ -296,11 +280,6 @@ es_CO{
                     }
                 }
             }
-        }
-    }
-    fields{
-        dayperiod{
-            dn{"a. m./p. m."}
         }
     }
 }

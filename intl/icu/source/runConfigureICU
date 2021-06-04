@@ -36,7 +36,7 @@ the runConfigureICU command:
 
 The following names can be supplied as the argument for platform:
 
-    AIX                 Use the IBM Visual Age xlc_r/xlC_r compilers on AIX
+    AIX                 Use the IBM XL xlclang/xlclang compilers on AIX
     AIX/GCC             Use the GNU gcc/g++ compilers on AIX
     Cygwin              Use the GNU gcc/g++ compilers on Cygwin
     Cygwin/MSVC         Use the Microsoft Visual C++ compiler on Cygwin
@@ -49,7 +49,7 @@ The following names can be supplied as the argument for platform:
     Linux/gcc           Use the GNU gcc/g++ compilers on Linux
     Linux/ECC           Use the Intel ECC compiler on Linux
     Linux/ICC           Use the Intel ICC compiler on Linux
-    Linux/VA            Use the IBM Visual Age compiler on Power PC Linux
+    Linux/VA            Use the IBM XL compiler on Power PC Linux
     MacOSX              Use the default compilers on MacOS X (Darwin)
     MacOSX/GCC          Use the GNU gcc/g++ compilers on MacOSX (Darwin)
     MinGW               Use the GNU gcc/g++ compilers on MinGW
@@ -134,17 +134,17 @@ fi
 case $platform in
     AIX)
         THE_OS=AIX
-        THE_COMP="xlC_r"
-        CC=`which xlc_r`; export CC
+        THE_COMP="xlclang"
+        CC=`which xlclang`; export CC
         if [ ! -x $CC ]; then
-           echo "ERROR: xlc_r was not found, please check the PATH to make sure it is correct."; exit 1
+           echo "ERROR: xlclang was not found, please check the PATH to make sure it is correct."; exit 1
         fi
-        CXX=`which xlC_r`; export CXX
+        CXX=`which xlclang++`; export CXX
         if [ ! -x $CXX ]; then
-           echo "ERROR: xlC_r was not found, please check the PATH to make sure it is correct."; exit 1
+           echo "ERROR: xlclang++ was not found, please check the PATH to make sure it is correct."; exit 1
         fi
-        RELEASE_CFLAGS="-O2 -qmaxmem=-1"
-        RELEASE_CXXFLAGS="-O2 -qmaxmem=-1"
+        RELEASE_CFLAGS="-O3"
+        RELEASE_CXXFLAGS="-O3"
         ;;
     AIX/GCC)
         THE_OS=AIX
@@ -228,11 +228,11 @@ case $platform in
         ;;
     Linux/VA)
         THE_OS="Linux"
-        THE_COMP="IBM Visual Age C++ Compiler"
-        CC=`which xlc_r`; export CC
-        CXX=`which xlC_r`; export CXX
-        RELEASE_CFLAGS="-O2 -qmaxmem=-1"
-        RELEASE_CXXFLAGS="-O2 -qmaxmem=-1"
+        THE_COMP="IBM XL C++ Compiler"
+        CC=`which xlclang`; export CC
+        CXX=`which xlclang++`; export CXX
+        RELEASE_CFLAGS="-O3"
+        RELEASE_CXXFLAGS="-O3"
         ;;
     Linux/gcc)
         THE_OS="Linux"

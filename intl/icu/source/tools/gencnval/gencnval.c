@@ -32,6 +32,7 @@
 #include "cstring.h"
 #include "uinvchar.h"
 #include "filestrm.h"
+#include "toolutil.h"
 #include "unicode/uclean.h"
 #include "unewdata.h"
 #include "uoptions.h"

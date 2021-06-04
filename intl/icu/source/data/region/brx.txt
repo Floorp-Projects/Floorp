@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 brx{
     Countries{
         001{"दुनिया"}
@@ -280,5 +281,4 @@ brx{
         ZW{"ज़ीम्बाब्वे"}
         ZZ{"अज्ञात या अवैध प्रदेश"}
     }
-    Version{"37"}
 }

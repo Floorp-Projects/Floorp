@@ -50,7 +50,8 @@ DEFS += -DT_CTEST_IMPLEMENTATION
 LDFLAGS += $(LDFLAGSCTESTFW)
 LIBS = $(LIBICUTOOLUTIL) $(LIBICUI18N) $(LIBICUUC) $(DEFAULT_LIBS)
 
-OBJECTS = ctest.o tstdtmod.o testdata.o datamap.o uperf.o ucln_ct.o
+SOURCES = $(shell cat $(srcdir)/sources.txt)
+OBJECTS = $(patsubst %.cpp,%.o,$(patsubst %.c,%.o, $(SOURCES)))
 
 STATIC_OBJECTS = $(OBJECTS:.o=.$(STATIC_O))
 

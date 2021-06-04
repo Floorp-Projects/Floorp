@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 uz{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -129,9 +129,9 @@ uz{
                 other{"{0} promille"}
             }
             permillion{
-                dnam{"millionning ulushi"}
-                one{"milliondan {0}"}
-                other{"milliondan {0}"}
+                dnam{"qism/million"}
+                one{"{0} qism/million"}
+                other{"{0} qism/million"}
             }
             permyriad{
                 dnam{"promiriada"}
@@ -398,6 +398,11 @@ uz{
             }
         }
         graphics{
+            dot{
+                dnam{"piksel"}
+                one{"{0} piksel"}
+                other{"{0} piksel"}
+            }
             dot-per-centimeter{
                 dnam{"nuqta/santimetr"}
                 one{"{0} nuqta/santimetr"}
@@ -449,11 +454,26 @@ uz{
                 one{"{0} detsimetr"}
                 other{"{0} detsimetr"}
             }
+            earth-radius{
+                dnam{"yer radiusi"}
+                one{"{0} yer radiusi"}
+                other{"{0} yer radiusi"}
+            }
+            fathom{
+                dnam{"fatom"}
+                one{"{0} fatom"}
+                other{"{0} fatom"}
+            }
             foot{
                 dnam{"fut"}
                 one{"{0} fut"}
                 other{"{0} fut"}
                 per{"{0}/fut"}
+            }
+            furlong{
+                dnam{"farlong"}
+                one{"{0} farlong"}
+                other{"{0} farlong"}
             }
             inch{
                 dnam{"duym"}
@@ -535,6 +555,16 @@ uz{
             }
         }
         light{
+            candela{
+                dnam{"kandela"}
+                one{"{0} kandela"}
+                other{"{0} kandela"}
+            }
+            lumen{
+                dnam{"lumen"}
+                one{"{0} lumen"}
+                other{"{0} lumen"}
+            }
             lux{
                 dnam{"lyuks"}
                 one{"{0} lyuks"}
@@ -561,6 +591,11 @@ uz{
                 dnam{"Yer massasi"}
                 one{"{0} Yer massasi"}
                 other{"{0} Yer massasi"}
+            }
+            grain{
+                dnam{"gran"}
+                one{"{0} gran"}
+                other{"{0} gran"}
             }
             gram{
                 dnam{"gramm"}
@@ -610,6 +645,11 @@ uz{
                 dnam{"quyosh massasi"}
                 one{"{0} quyosh massasi"}
                 other{"{0} quyosh massasi"}
+            }
+            stone{
+                dnam{"tosh"}
+                one{"{0} tosh"}
+                other{"{0} tosh"}
             }
             ton{
                 dnam{"amerika tonnasi"}
@@ -691,9 +731,9 @@ uz{
                 other{"{0} paskal"}
             }
             pound-force-per-square-inch{
-                dnam{"funt/kvadrat duym"}
-                one{"{0} funt/kvadrat duym"}
-                other{"{0} funt/kvadrat duym"}
+                dnam{"funt/duym kvadrat"}
+                one{"{0} funt/duym kvadrat"}
+                other{"{0} funt/duym kvadrat"}
             }
         }
         speed{
@@ -748,7 +788,7 @@ uz{
             }
             pound-force-foot{
                 dnam{"funt-fut"}
-                one{"{0} funt-fut"}
+                one{"{0} funt-kuch-fut"}
                 other{"{0} funt-fut"}
             }
         }
@@ -762,6 +802,11 @@ uz{
                 dnam{"barrel"}
                 one{"{0} barrel"}
                 other{"{0} barrel"}
+            }
+            bushel{
+                dnam{"bushel"}
+                one{"{0} bushel"}
+                other{"{0} bushel"}
             }
             centiliter{
                 dnam{"santilitr"}
@@ -820,6 +865,26 @@ uz{
                 one{"{0} detsilitr"}
                 other{"{0} detsilitr"}
             }
+            dessert-spoon{
+                dnam{"desert qoshiq"}
+                one{"{0} desert qoshiq"}
+                other{"{0} desert qoshiq"}
+            }
+            dessert-spoon-imperial{
+                dnam{"imp. desert qoshiq"}
+                one{"{0} imp. desert qoshiq"}
+                other{"{0} imp. desert qoshiq"}
+            }
+            dram{
+                dnam{"draxma"}
+                one{"{0} draxma"}
+                other{"{0} draxma"}
+            }
+            drop{
+                dnam{"tomchi"}
+                one{"{0} tomchi"}
+                other{"{0} tomchi"}
+            }
             fluid-ounce{
                 dnam{"suyuq unsiya"}
                 one{"{0} suyuq unsiya"}
@@ -847,6 +912,11 @@ uz{
                 one{"{0} gektolitr"}
                 other{"{0} gektolitr"}
             }
+            jigger{
+                dnam{"qadah"}
+                one{"{0} qadah"}
+                other{"{0} qadah"}
+            }
             liter{
                 dnam{"litr"}
                 one{"{0} litr"}
@@ -863,6 +933,11 @@ uz{
                 one{"{0} millilitr"}
                 other{"{0} millilitr"}
             }
+            pinch{
+                dnam{"chimdim"}
+                one{"{0} chimdim"}
+                other{"{0} chimdim"}
+            }
             pint{
                 dnam{"pint"}
                 one{"{0} pint"}
@@ -877,6 +952,11 @@ uz{
                 dnam{"kvart"}
                 one{"{0} kvart"}
                 other{"{0} kvart"}
+            }
+            quart-imperial{
+                dnam{"imp kvarta"}
+                one{"{0} imp. kvarta"}
+                other{"{0} imp. kvarta"}
             }
             tablespoon{
                 dnam{"osh qoshiq"}
@@ -1001,6 +1081,11 @@ uz{
                 dnam{"yil"}
                 one{"{0} yil"}
                 other{"{0} yil"}
+            }
+        }
+        graphics{
+            dot{
+                dnam{"piksel"}
             }
         }
         length{
@@ -1272,9 +1357,9 @@ uz{
                 other{"{0}‰"}
             }
             permillion{
-                dnam{"ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
+                dnam{"qism/million"}
+                one{"{0} qism/million"}
+                other{"{0} qism/million"}
             }
             permyriad{
                 dnam{"promiriada"}
@@ -1541,6 +1626,11 @@ uz{
             }
         }
         graphics{
+            dot{
+                dnam{"piksel"}
+                one{"{0} piksel"}
+                other{"{0} piksel"}
+            }
             dot-per-centimeter{
                 dnam{"nuqta/sm"}
                 one{"{0} nuqta/sm"}
@@ -1594,11 +1684,26 @@ uz{
                 one{"{0} dm"}
                 other{"{0} dm"}
             }
+            earth-radius{
+                dnam{"yer radiusi"}
+                one{"{0} yer radiusi"}
+                other{"{0} yer radiusi"}
+            }
+            fathom{
+                dnam{"fatom"}
+                one{"{0} fatom"}
+                other{"{0} fatom"}
+            }
             foot{
                 dnam{"fut"}
                 one{"{0} fut"}
                 other{"{0} fut"}
                 per{"{0} fut"}
+            }
+            furlong{
+                dnam{"farlong"}
+                one{"{0} farlong"}
+                other{"{0} farlong"}
             }
             inch{
                 dnam{"duym"}
@@ -1680,6 +1785,16 @@ uz{
             }
         }
         light{
+            candela{
+                dnam{"kandela"}
+                one{"{0} kandela"}
+                other{"{0} kandela"}
+            }
+            lumen{
+                dnam{"lm"}
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"lk"}
                 one{"{0} lk"}
@@ -1706,6 +1821,11 @@ uz{
                 dnam{"Yer massasi"}
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
+            }
+            grain{
+                dnam{"gran"}
+                one{"{0} gran"}
+                other{"{0} gran"}
             }
             gram{
                 dnam{"gramm"}
@@ -1755,6 +1875,11 @@ uz{
                 dnam{"quyosh massasi"}
                 one{"{0} M☉"}
                 other{"{0} M☉"}
+            }
+            stone{
+                dnam{"tosh"}
+                one{"{0} tosh"}
+                other{"{0} tosh"}
             }
             ton{
                 dnam{"amer. t"}
@@ -1811,9 +1936,9 @@ uz{
                 other{"{0} gPa"}
             }
             inch-ofhg{
-                dnam{"dy sim.ust"}
-                one{"{0} dy sim.ust"}
-                other{"{0} dy sim.ust"}
+                dnam{"inHg"}
+                one{"{0} inHg"}
+                other{"{0} inHg"}
             }
             kilopascal{
                 dnam{"kPa"}
@@ -1831,9 +1956,8 @@ uz{
                 other{"{0} mbar"}
             }
             millimeter-ofhg{
-                dnam{"mm sim.ust"}
-                one{"{0} mm sim.ust"}
-                other{"{0} mm sim.ust"}
+                one{"{0} mmHg"}
+                other{"{0} mmHg"}
             }
             pascal{
                 dnam{"Pa"}
@@ -1841,9 +1965,9 @@ uz{
                 other{"{0} Pa"}
             }
             pound-force-per-square-inch{
-                dnam{"funt/kv.dy"}
-                one{"{0} funt/kv.dy"}
-                other{"{0} funt/kv.dy"}
+                dnam{"funt/dy.kv"}
+                one{"{0} funt/dy.kv"}
+                other{"{0} funt/dy.kv"}
             }
         }
         speed{
@@ -1897,9 +2021,9 @@ uz{
                 other{"{0} N⋅m"}
             }
             pound-force-foot{
-                dnam{"funt-fut"}
-                one{"{0} funt-fut"}
-                other{"{0} funt-fut"}
+                dnam{"funt-kuch-fut"}
+                one{"{0} funt-kuch-fut"}
+                other{"{0} funt-kuch-fut"}
             }
         }
         volume{
@@ -1912,6 +2036,11 @@ uz{
                 dnam{"barrel"}
                 one{"{0} barrel"}
                 other{"{0} barrel"}
+            }
+            bushel{
+                dnam{"bushel"}
+                one{"{0} bushel"}
+                other{"{0} bushel"}
             }
             centiliter{
                 dnam{"sL"}
@@ -1970,6 +2099,26 @@ uz{
                 one{"{0} dL"}
                 other{"{0} dL"}
             }
+            dessert-spoon{
+                dnam{"desert qoshiq"}
+                one{"{0} desert qoshiq"}
+                other{"{0} desert qoshiq"}
+            }
+            dessert-spoon-imperial{
+                dnam{"imp desert qoshiq"}
+                one{"{0} imp desert qoshiq"}
+                other{"{0} imp desert qoshiq"}
+            }
+            dram{
+                dnam{"suyuqlik draxmasi"}
+                one{"{0} suyuqlik draxmasi"}
+                other{"{0} suyuqlik draxmasi"}
+            }
+            drop{
+                dnam{"tomchi"}
+                one{"{0} tomchi"}
+                other{"{0} tomchi"}
+            }
             fluid-ounce{
                 dnam{"suyuq unsiya"}
                 one{"{0} suyuq unsiya"}
@@ -1997,6 +2146,11 @@ uz{
                 one{"{0} gL"}
                 other{"{0} gL"}
             }
+            jigger{
+                dnam{"qadah"}
+                one{"{0} qadah"}
+                other{"{0} qadah"}
+            }
             liter{
                 dnam{"litr"}
                 one{"{0} L"}
@@ -2013,6 +2167,11 @@ uz{
                 one{"{0} mL"}
                 other{"{0} mL"}
             }
+            pinch{
+                dnam{"chimdim"}
+                one{"{0} chimdim"}
+                other{"{0} chimdim"}
+            }
             pint{
                 dnam{"pint"}
                 one{"{0} pint"}
@@ -2027,6 +2186,11 @@ uz{
                 dnam{"kvart"}
                 one{"{0} kvart"}
                 other{"{0} kvart"}
+            }
+            quart-imperial{
+                dnam{"imp kvarta"}
+                one{"{0} imp. kvarta"}
+                other{"{0} imp. kvarta"}
             }
             tablespoon{
                 dnam{"osh qoshiq"}

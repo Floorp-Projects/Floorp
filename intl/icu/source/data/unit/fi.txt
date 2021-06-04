@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fi{
-    Version{"37"}
     durationUnits{
         hm{"h.mm"}
         hms{"h.mm.ss"}
@@ -139,9 +139,9 @@ fi{
                 other{"{0} promillea"}
             }
             permillion{
-                dnam{"ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
+                dnam{"miljoonasosat"}
+                one{"{0} miljoonasosa"}
+                other{"{0} miljoonasosaa"}
             }
             permyriad{
                 dnam{"peruspiste"}
@@ -246,6 +246,11 @@ fi{
                 one{"{0} päivä"}
                 other{"{0} päivää"}
                 per{"{0} / päivä"}
+            }
+            decade{
+                dnam{"vuosikymmenet"}
+                one{"{0} vuosikymmen"}
+                other{"{0} vuosikymmentä"}
             }
             hour{
                 dnam{"tunnit"}
@@ -397,6 +402,13 @@ fi{
                 other{"{0} megahertsiä"}
             }
         }
+        graphics{
+            dot{
+                dnam{"piste"}
+                one{"{0} piste"}
+                other{"{0} pistettä"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"astronomiset yksiköt"}
@@ -413,6 +425,11 @@ fi{
                 dnam{"desimetrit"}
                 one{"{0} desimetri"}
                 other{"{0} desimetriä"}
+            }
+            earth-radius{
+                dnam{"Maan säteet"}
+                one{"{0} Maan säde"}
+                other{"{0} Maan sädettä"}
             }
             fathom{
                 dnam{"sylet"}
@@ -510,6 +527,16 @@ fi{
             }
         }
         light{
+            candela{
+                dnam{"kandelat"}
+                one{"{0} kandela"}
+                other{"{0} kandelaa"}
+            }
+            lumen{
+                dnam{"luumenit"}
+                one{"{0} luumen"}
+                other{"{0} luumenia"}
+            }
             lux{
                 dnam{"luksit"}
                 one{"{0} luksi"}
@@ -536,6 +563,11 @@ fi{
                 dnam{"Maan massat"}
                 one{"{0} Maan massa"}
                 other{"{0} Maan massaa"}
+            }
+            grain{
+                dnam{"graanit"}
+                one{"{0} graani"}
+                other{"{0} graania"}
             }
             gram{
                 dnam{"grammat"}
@@ -647,8 +679,8 @@ fi{
             }
             inch-ofhg{
                 dnam{"elohopeatuumat"}
-                one{"{0} tuuma elohopeaa"}
-                other{"{0} tuumaa elohopeaa"}
+                one{"{0} elohopeatuuma"}
+                other{"{0} elohopeatuumaa"}
             }
             kilopascal{
                 dnam{"kilopascalit"}
@@ -667,8 +699,8 @@ fi{
             }
             millimeter-ofhg{
                 dnam{"elohopeamillimetrit"}
-                one{"{0} millimetri elohopeaa"}
-                other{"{0} millimetriä elohopeaa"}
+                one{"{0} elohopeamillimetri"}
+                other{"{0} elohopeamillimetriä"}
             }
             pascal{
                 dnam{"pascalit"}
@@ -810,6 +842,26 @@ fi{
                 one{"{0} desilitra"}
                 other{"{0} desilitraa"}
             }
+            dessert-spoon{
+                dnam{"jälkiruokalusikat"}
+                one{"{0} jälkiruokalusikka"}
+                other{"{0} jälkiruokalusikkaa"}
+            }
+            dessert-spoon-imperial{
+                dnam{"Imp. jälkiruokalusikat"}
+                one{"{0} imp. jälkiruokalusikka"}
+                other{"{0} imp. jälkiruokalusikkaa"}
+            }
+            dram{
+                dnam{"dramit"}
+                one{"{0} dram"}
+                other{"{0} dramia"}
+            }
+            drop{
+                dnam{"tipat"}
+                one{"{0} tippa"}
+                other{"{0} tippaa"}
+            }
             fluid-ounce{
                 dnam{"nesteunssit"}
                 one{"{0} nesteunssi"}
@@ -837,6 +889,11 @@ fi{
                 one{"{0} hehtolitra"}
                 other{"{0} hehtolitraa"}
             }
+            jigger{
+                dnam{"jiggerit"}
+                one{"{0} jigger"}
+                other{"{0} jiggeriä"}
+            }
             liter{
                 dnam{"litrat"}
                 one{"{0} litra"}
@@ -853,6 +910,11 @@ fi{
                 one{"{0} millilitra"}
                 other{"{0} millilitraa"}
             }
+            pinch{
+                dnam{"ripaus"}
+                one{"{0} ripaus"}
+                other{"{0} ripausta"}
+            }
             pint{
                 dnam{"pintit"}
                 one{"{0} pint"}
@@ -867,6 +929,11 @@ fi{
                 dnam{"neljännesgallonat"}
                 one{"{0} neljännesgallona"}
                 other{"{0} neljännesgallonaa"}
+            }
+            quart-imperial{
+                dnam{"Imp. neljännesgallonat"}
+                one{"{0} imp. neljännesgallona"}
+                other{"{0} imp. neljännesgallonaa"}
             }
             tablespoon{
                 dnam{"ruokalusikat"}
@@ -2152,6 +2219,13 @@ fi{
                 other{"{0} MHz"}
             }
         }
+        graphics{
+            dot{
+                dnam{"piste"}
+                one{"{0} piste"}
+                other{"{0} pistettä"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"au"}
@@ -2286,6 +2360,11 @@ fi{
             earth-mass{
                 dnam{"Maan massat"}
             }
+            grain{
+                dnam{"graanit"}
+                one{"{0} graani"}
+                other{"{0} graania"}
+            }
             gram{
                 dnam{"g"}
                 one{"{0} g"}
@@ -2395,9 +2474,9 @@ fi{
                 other{"{0} mbar"}
             }
             millimeter-ofhg{
-                dnam{"mm Hg"}
-                one{"{0} mm Hg"}
-                other{"{0} mm Hg"}
+                dnam{"mmHg"}
+                one{"{0} mmHg"}
+                other{"{0} mmHg"}
             }
             pound-force-per-square-inch{
                 dnam{"psi"}
@@ -2532,6 +2611,26 @@ fi{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"jrkl"}
+                one{"{0} jrkl"}
+                other{"{0} jrkl"}
+            }
+            dessert-spoon-imperial{
+                dnam{"imp. jrkl"}
+                one{"{0} imp. jrkl"}
+                other{"{0} imp. jrkl"}
+            }
+            dram{
+                dnam{"dramit"}
+                one{"{0} dram"}
+                other{"{0} dramia"}
+            }
+            drop{
+                dnam{"tipat"}
+                one{"{0} tippa"}
+                other{"{0} tippaa"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -2557,6 +2656,11 @@ fi{
                 one{"{0} hl"}
                 other{"{0} hl"}
             }
+            jigger{
+                dnam{"jiggerit"}
+                one{"{0} jigger"}
+                other{"{0} jiggeriä"}
+            }
             liter{
                 dnam{"l"}
                 one{"{0} l"}
@@ -2572,6 +2676,11 @@ fi{
                 dnam{"ml"}
                 one{"{0} ml"}
                 other{"{0} ml"}
+            }
+            pinch{
+                dnam{"ripaus"}
+                one{"{0} ripaus"}
+                other{"{0} ripausta"}
             }
             pint{
                 dnam{"pt"}

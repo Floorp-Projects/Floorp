@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 eu{
     Currencies{
         AED{
@@ -281,7 +282,7 @@ eu{
         }
         JMD{
             "JMD",
-            "Jamaikako dolarra",
+            "dolar jamaikarra",
         }
         JOD{
             "JOD",
@@ -401,7 +402,7 @@ eu{
         }
         MVR{
             "MVR",
-            "errupia maldivarra",
+            "rufiyaa maldivarra",
         }
         MWK{
             "MWK",
@@ -429,7 +430,7 @@ eu{
         }
         NIO{
             "NIO",
-            "córdoba nikaraguarra",
+            "cordoba nikaraguarra",
         }
         NOK{
             "NOK",
@@ -573,7 +574,7 @@ eu{
         }
         TOP{
             "TOP",
-            "Tongako Paʻanga",
+            "paʻanga tongatarra",
         }
         TRY{
             "TRY",
@@ -593,7 +594,7 @@ eu{
         }
         UAH{
             "UAH",
-            "Ukrainako hryvnia",
+            "hryvnia ukrainarra",
         }
         UGX{
             "UGX",
@@ -1152,8 +1153,8 @@ eu{
             other{"errupia mauriziar"}
         }
         MVR{
-            one{"errupia maldivar"}
-            other{"errupia maldivar"}
+            one{"rufiyaa maldivar"}
+            other{"rufiyaa maldivar"}
         }
         MWK{
             one{"kwacha malawiar"}
@@ -1180,8 +1181,8 @@ eu{
             other{"naira nigeriar"}
         }
         NIO{
-            one{"córdoba nikaraguar"}
-            other{"córdoba nikaraguar"}
+            one{"cordoba nikaraguar"}
+            other{"cordoba nikaraguar"}
         }
         NOK{
             one{"koroa norvegiar"}
@@ -1205,7 +1206,7 @@ eu{
         }
         PEN{
             one{"sol perutar"}
-            other{"Peruko sol"}
+            other{"sol perutar"}
         }
         PGK{
             one{"kina gineaberriar"}
@@ -1324,8 +1325,8 @@ eu{
             other{"dinar tunisiar"}
         }
         TOP{
-            one{"Tongako Paʻanga"}
-            other{"Tongako Paʻanga"}
+            one{"paʻanga tongatar"}
+            other{"paʻanga tongatar"}
         }
         TRY{
             one{"lira turkiar"}
@@ -1344,8 +1345,8 @@ eu{
             other{"txelin tanzaniar"}
         }
         UAH{
-            one{"Ukrainako hryvnia"}
-            other{"Ukrainako hryvnia"}
+            one{"hryvnia ukrainar"}
+            other{"hryvnia ukrainar"}
         }
         UGX{
             one{"txelin ugandar"}
@@ -1413,12 +1414,11 @@ eu{
         }
         ZMW{
             one{"kwacha zambiar"}
-            other{"Zambiako kwacha"}
+            other{"kwacha zambiar"}
         }
     }
     CurrencyUnitPatterns{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

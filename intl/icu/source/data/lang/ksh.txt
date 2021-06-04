@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ksh{
     Keys{
         calendar{"dä Kalländer"}
@@ -512,7 +513,6 @@ ksh{
         VALENCIA{"valenzijaanesche Dijaläk"}
         WADEGILE{"lateijnesche Ömschreff noh Wade-Giles"}
     }
-    Version{"37"}
     codePatterns{
         language{"de Schprohch afjekööz met „{0}“"}
         script{"de Schreff afjekööz met „{0}“"}

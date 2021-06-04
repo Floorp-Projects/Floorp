@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 de_AT{
     ExemplarCharactersIndex{"[A Ä B C D E F G H I J K L M N O Ö P Q R S T U Ü V W X Y Z]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
@@ -14,7 +15,6 @@ de_AT{
             }
         }
     }
-    Version{"37"}
     calendar{
         gregorian{
             dayPeriod{

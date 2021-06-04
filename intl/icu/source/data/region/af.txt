@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 af{
     Countries{
         001{"Wêreld"}
@@ -81,7 +82,7 @@ af{
         CK{"Cookeilande"}
         CL{"Chili"}
         CM{"Kameroen"}
-        CN{"Sjina"}
+        CN{"China"}
         CO{"Colombië"}
         CP{"Clippertoneiland"}
         CR{"Costa Rica"}
@@ -133,7 +134,7 @@ af{
         GU{"Guam"}
         GW{"Guinee-Bissau"}
         GY{"Guyana"}
-        HK{"Hongkong SAS Sjina"}
+        HK{"Hongkong SAS China"}
         HM{"Heardeiland en McDonaldeilande"}
         HN{"Honduras"}
         HR{"Kroasië"}
@@ -187,7 +188,7 @@ af{
         ML{"Mali"}
         MM{"Mianmar (Birma)"}
         MN{"Mongolië"}
-        MO{"Macau SAS Sjina"}
+        MO{"Macau SAS China"}
         MP{"Noord-Mariane-eilande"}
         MQ{"Martinique"}
         MR{"Mauritanië"}
@@ -222,7 +223,7 @@ af{
         PM{"Sint Pierre en Miquelon"}
         PN{"Pitcairneilande"}
         PR{"Puerto Rico"}
-        PS{"Palestynse gebiede"}
+        PS{"Palestynse Grondgebiede"}
         PT{"Portugal"}
         PW{"Palau"}
         PY{"Paraguay"}
@@ -241,7 +242,7 @@ af{
         SG{"Singapoer"}
         SH{"Sint Helena"}
         SI{"Slowenië"}
-        SJ{"Svalbard en Jan Mayen"}
+        SJ{"Spitsbergen en Jan Mayen"}
         SK{"Slowakye"}
         SL{"Sierra Leone"}
         SM{"San Marino"}
@@ -308,9 +309,7 @@ af{
     Countries%variant{
         CD{"Kongo (DRK)"}
         CG{"Kongo (Republiek die)"}
-        CI{"Cote d’Ivoire"}
         CZ{"Tsjeggiese Republiek"}
         FK{"Falklandeilande (Malvinas)"}
     }
-    Version{"37"}
 }

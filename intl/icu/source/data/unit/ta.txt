@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ta{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -408,6 +408,11 @@ ta{
             }
         }
         graphics{
+            dot{
+                dnam{"புள்ளி"}
+                one{"{0}புள்ளி"}
+                other{"{0}புள்ளி"}
+            }
             dot-per-centimeter{
                 dnam{"புள்ளிகள் / சென்டிமீட்டர்"}
                 one{"{0} புள்ளி / சென்டிமீட்டர்"}
@@ -461,11 +466,26 @@ ta{
                 one{"{0} டெசிமீட்டர்"}
                 other{"{0} டெசிமீட்டர்கள்"}
             }
+            earth-radius{
+                dnam{"புவி ஆரம்"}
+                one{"{0} புவி ஆரம்"}
+                other{"{0} புவி ஆரம்"}
+            }
+            fathom{
+                dnam{"ஃபேதம்கள்"}
+                one{"{0} ஃபேதம்"}
+                other{"{0} ஃபேதம்கள்"}
+            }
             foot{
                 dnam{"அடி"}
                 one{"{0} அடி"}
                 other{"{0} அடி"}
                 per{"{0}/அடி"}
+            }
+            furlong{
+                dnam{"பர்லாங்குகள்"}
+                one{"{0} பர்லாங்கு"}
+                other{"{0} பர்லாங்குகள்"}
             }
             inch{
                 dnam{"அங்குலங்கள்"}
@@ -547,6 +567,16 @@ ta{
             }
         }
         light{
+            candela{
+                dnam{"கேண்டலா"}
+                one{"{0} கேண்டலா"}
+                other{"{0} கேண்டலா"}
+            }
+            lumen{
+                dnam{"லூமன்"}
+                one{"{0} லூமன்"}
+                other{"{0} லூமன்"}
+            }
             lux{
                 dnam{"லக்ஸ்"}
                 one{"{0} லக்ஸ்"}
@@ -573,6 +603,11 @@ ta{
                 dnam{"புவித் திணிவுகள்"}
                 one{"{0} புவித் திணிவு"}
                 other{"{0} புவித் திணிவுகள்"}
+            }
+            grain{
+                dnam{"கிரைன்"}
+                one{"{0} கிரைன்"}
+                other{"{0} கிரைன்"}
             }
             gram{
                 dnam{"கிராம்கள்"}
@@ -785,6 +820,11 @@ ta{
                 one{"{0} பீப்பாய்"}
                 other{"{0} பீப்பாய்கள்"}
             }
+            bushel{
+                dnam{"புசல்கள்"}
+                one{"{0} புசல்"}
+                other{"{0} புசல்கள்"}
+            }
             centiliter{
                 dnam{"சென்டிலிட்டர்கள்"}
                 one{"{0} சென்டிலிட்டர்"}
@@ -842,6 +882,26 @@ ta{
                 one{"{0} டெசிலிட்டர்"}
                 other{"{0} டெசிலிட்டர்கள்"}
             }
+            dessert-spoon{
+                dnam{"இனிப்புக் கரண்டி"}
+                one{"{0} இனிப்புக் கரண்டி"}
+                other{"{0} இனிப்புக் கரண்டி"}
+            }
+            dessert-spoon-imperial{
+                dnam{"இம்பீரியல் இனிப்புக் கரண்டி"}
+                one{"{0} இம்பீரியல் இனிப்புக் கரண்டி"}
+                other{"{0} இம்பீரியல் இனிப்புக் கரண்டி"}
+            }
+            dram{
+                dnam{"டிராம்"}
+                one{"{0} டிராம்"}
+                other{"{0} டிராம்"}
+            }
+            drop{
+                dnam{"துளி"}
+                one{"{0} துளி"}
+                other{"{0} துளி"}
+            }
             fluid-ounce{
                 dnam{"திரவ அவுன்ஸ்"}
                 one{"{0} திரவ அவுன்ஸ்"}
@@ -869,6 +929,11 @@ ta{
                 one{"{0} ஹெக்டோலிட்டர்"}
                 other{"{0} ஹெக்டோலிட்டர்கள்"}
             }
+            jigger{
+                dnam{"ஜிகர்"}
+                one{"{0} ஜிகர்"}
+                other{"{0} ஜிகர்"}
+            }
             liter{
                 dnam{"லிட்டர்கள்"}
                 one{"{0} லிட்டர்"}
@@ -885,6 +950,11 @@ ta{
                 one{"{0} மில்லிலிட்டர்"}
                 other{"{0} மில்லிலிட்டர்கள்"}
             }
+            pinch{
+                dnam{"சிட்டிகை"}
+                one{"{0} சிட்டிகை"}
+                other{"{0} சிட்டிகை"}
+            }
             pint{
                 dnam{"பின்ட்கள்"}
                 one{"{0} பின்ட்"}
@@ -899,6 +969,11 @@ ta{
                 dnam{"குவார்ட்ஸ்"}
                 one{"{0} குவார்ட்"}
                 other{"{0} குவார்ட்ஸ்"}
+            }
+            quart-imperial{
+                dnam{"இம்பீரியல் குவார்ட்"}
+                one{"{0} இம்பீரியல் குவார்ட்"}
+                other{"{0} இம்பீரியல் குவார்ட்"}
             }
             tablespoon{
                 dnam{"மேஜைக்கரண்டி"}
@@ -1618,6 +1693,11 @@ ta{
             }
         }
         graphics{
+            dot{
+                dnam{"புள்ளி"}
+                one{"{0} புள்ளி"}
+                other{"{0} புள்ளி"}
+            }
             dot-per-centimeter{
                 dnam{"பு / செ.மீ"}
                 one{"{0} பு / செ.மீ"}
@@ -1671,11 +1751,21 @@ ta{
                 one{"{0} டெ.மீ"}
                 other{"{0} டெ.மீ"}
             }
+            fathom{
+                dnam{"ஃபே."}
+                one{"{0} ஃபே."}
+                other{"{0} ஃபே."}
+            }
             foot{
                 dnam{"அடி"}
                 one{"{0} அடி"}
                 other{"{0} அடி"}
                 per{"{0}/அடி"}
+            }
+            furlong{
+                dnam{"பர்"}
+                one{"{0} பர்"}
+                other{"{0} பர்"}
             }
             inch{
                 dnam{"அங்குலங்கள்"}
@@ -1755,6 +1845,16 @@ ta{
             }
         }
         light{
+            candela{
+                dnam{"கேண்ட."}
+                one{"{0} கேண்ட."}
+                other{"{0} கேண்ட."}
+            }
+            lumen{
+                dnam{"லூம."}
+                one{"{0} லூம."}
+                other{"{0} லூம."}
+            }
             lux{
                 dnam{"லக்ஸ்"}
                 one{"{0} லக்."}
@@ -1772,9 +1872,16 @@ ta{
             }
             dalton{
                 dnam{"டால்ட்டன்ஸ்"}
+                one{"{0} டா."}
+                other{"{0} டா."}
             }
             earth-mass{
                 dnam{"புவித் திணிவுகள்"}
+            }
+            grain{
+                dnam{"கிரைன்"}
+                one{"{0} கிரைன்"}
+                other{"{0} கிரைன்"}
             }
             gram{
                 dnam{"கிராம்கள்"}
@@ -1982,6 +2089,13 @@ ta{
             }
             barrel{
                 dnam{"பீப்பாய்"}
+                one{"{0} பீப்."}
+                other{"{0} பீப்."}
+            }
+            bushel{
+                dnam{"புசல்கள்"}
+                one{"{0} புச."}
+                other{"{0} புச."}
             }
             centiliter{
                 dnam{"செ.லி."}
@@ -2040,10 +2154,35 @@ ta{
                 one{"{0} டெ.லி."}
                 other{"{0} டெ.லி."}
             }
+            dessert-spoon{
+                dnam{"இ.க."}
+                one{"{0} இ.க."}
+                other{"{0} இ.க."}
+            }
+            dessert-spoon-imperial{
+                dnam{"இ.க. இம்பீ."}
+                one{"{0} இ.க. இம்பீ."}
+                other{"{0} இ.க. இம்பீ."}
+            }
+            dram{
+                dnam{"டிரா.தி."}
+                one{"{0} டிரா.தி."}
+                other{"{0} டிரா.தி."}
+            }
+            drop{
+                dnam{"துளி"}
+                one{"{0} துளி"}
+                other{"{0} துளி"}
+            }
             fluid-ounce{
                 dnam{"தி. அவு."}
                 one{"{0} தி. அவு."}
                 other{"{0} தி. அவு."}
+            }
+            fluid-ounce-imperial{
+                dnam{"இம்பீ. தி. அவு."}
+                one{"{0} தி. அவு. இம்பீ."}
+                other{"{0} தி. அவு. இம்பீ."}
             }
             gallon{
                 dnam{"கேல."}
@@ -2062,6 +2201,11 @@ ta{
                 one{"{0} ஹெ.லி."}
                 other{"{0} ஹெ.லி."}
             }
+            jigger{
+                dnam{"ஜிக."}
+                one{"{0} ஜிக."}
+                other{"{0} ஜிக."}
+            }
             liter{
                 dnam{"லிட்டர்கள்"}
                 one{"{0} லி."}
@@ -2078,6 +2222,11 @@ ta{
                 one{"{0} மிலி"}
                 other{"{0} மிலி"}
             }
+            pinch{
+                dnam{"சிட்டி"}
+                one{"{0} சிட்டி"}
+                other{"{0} சிட்டி"}
+            }
             pint{
                 dnam{"பின்ட்கள்"}
                 one{"{0} பின்."}
@@ -2092,6 +2241,11 @@ ta{
                 dnam{"குவாட்."}
                 one{"{0} குவாட்."}
                 other{"{0} குவாட்."}
+            }
+            quart-imperial{
+                dnam{"குவாட். இம்பீ."}
+                one{"{0} குவாட். இம்பீ."}
+                other{"{0} குவாட். இம்பீ."}
             }
             tablespoon{
                 dnam{"மே.க."}

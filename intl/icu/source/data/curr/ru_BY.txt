@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ru_BY{
     Currencies{
         BYN{
@@ -14,5 +15,4 @@ ru_BY{
     Currencies%narrow{
         BYN{"Br"}
     }
-    Version{"37"}
 }

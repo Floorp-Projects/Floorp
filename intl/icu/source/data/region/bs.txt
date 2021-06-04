@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bs{
     Countries{
         001{"Svijet"}
@@ -83,10 +84,10 @@ bs{
         CM{"Kamerun"}
         CN{"Kina"}
         CO{"Kolumbija"}
-        CP{"Ostrvo Kliperton"}
+        CP{"Ostrvo Clipperton"}
         CR{"Kostarika"}
         CU{"Kuba"}
-        CV{"Kape Verde"}
+        CV{"Zelenortska Ostrva"}
         CW{"Kurasao"}
         CX{"Božićno ostrvo"}
         CY{"Kipar"}
@@ -119,7 +120,7 @@ bs{
         GD{"Grenada"}
         GE{"Gruzija"}
         GF{"Francuska Gvajana"}
-        GG{"Gernzi"}
+        GG{"Guernsey"}
         GH{"Gana"}
         GI{"Gibraltar"}
         GL{"Grenland"}
@@ -134,7 +135,7 @@ bs{
         GW{"Gvineja-Bisao"}
         GY{"Gvajana"}
         HK{"Hong Kong (SAR Kina)"}
-        HM{"Herd i arhipelag MekDonald"}
+        HM{"Ostrvo Heard i arhipelag McDonald"}
         HN{"Honduras"}
         HR{"Hrvatska"}
         HT{"Haiti"}
@@ -308,10 +309,8 @@ bs{
     Countries%variant{
         CD{"DR Kongo"}
         CG{"Republika Kongo"}
-        CI{"Obala Bjelokosti"}
         CZ{"Češka Republika"}
         FK{"Folklandska (Malvinska) ostrva"}
         SZ{"Svazilend"}
     }
-    Version{"37"}
 }

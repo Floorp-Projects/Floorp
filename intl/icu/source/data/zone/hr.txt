@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hr{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -898,7 +898,7 @@ hr{
             ec{"Kanari"}
         }
         "Atlantic:Cape_Verde"{
-            ec{"Zelenortski Otoci"}
+            ec{"Cape Verde"}
         }
         "Atlantic:Faeroe"{
             ec{"Ferojski otoci"}
@@ -1149,13 +1149,13 @@ hr{
             ec{"Chagos"}
         }
         "Indian:Christmas"{
-            ec{"Božićni otok"}
+            ec{"Christmas"}
         }
         "Indian:Cocos"{
-            ec{"Kokosovi otoci"}
+            ec{"Cocos"}
         }
         "Indian:Comoro"{
-            ec{"Komori"}
+            ec{"Comoro"}
         }
         "Indian:Kerguelen"{
             ec{"Kerguelen"}
@@ -1188,7 +1188,7 @@ hr{
             ec{"Chatham"}
         }
         "Pacific:Easter"{
-            ec{"Uskršnji otok"}
+            ec{"Easter"}
         }
         "Pacific:Efate"{
             ec{"Efate"}
@@ -1821,10 +1821,10 @@ hr{
             ls{"standardno vrijeme za Sveti Petar i Mikelon"}
         }
         "meta:Pitcairn"{
-            ls{"vrijeme Pitcairna"}
+            ls{"pitcairnsko vrijeme"}
         }
         "meta:Ponape"{
-            ls{"vrijeme Ponapea"}
+            ls{"ponapejsko vrijeme"}
         }
         "meta:Pyongyang"{
             ls{"pjongjanško vrijeme"}

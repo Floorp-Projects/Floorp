@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 chr{
     Keys{
         calendar{"ᏅᏙ ᏗᏎᏍᏗ"}
@@ -549,7 +550,6 @@ chr{
             tibt{"ᏘᏇᏔᏂ ᏗᏎᏍᏗ"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — ᏂᎦᏓ"}
         category-list{"{0}: {1}"}
@@ -563,6 +563,8 @@ chr{
             one{"{0} ᏗᎬᏂᎸᎯ"}
             other{"{0} ᏗᎬᏂᎸᎯ"}
         }
+        subscript{"ᎡᎳᏗ ᎤᏍᏗ ᎪᏪᎳ {0}"}
+        superscript{"ᎦᎸᎳᏗ ᎤᏍᏗ ᎪᏪᎳ {0}"}
     }
     codePatterns{
         language{"ᎦᏬᏂᎯᏍᏗ: {0}"}

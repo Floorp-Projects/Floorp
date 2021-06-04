@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 it{
     AuxExemplarCharacters{"[ª á â å ä ã æ ç ê ë í î ï ñ º ô ö õ ø œ ß ú û ü ÿ]"}
     Ellipsis{
@@ -34,7 +35,7 @@ it{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"0 mille"}
+                        one{"mille"}
                         other{"0 mila"}
                     }
                     10000{
@@ -212,7 +213,6 @@ it{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -688,12 +688,12 @@ it{
             intervalFormats{
                 Bh{
                     B{"h B – h B"}
-                    h{"h–h B"}
+                    h{"h – h B"}
                 }
                 Bhm{
                     B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
                 }
                 Gy{
                     G{"y G – y G"}
@@ -718,7 +718,7 @@ it{
                 GyMMMEd{
                     G{"E d MMM y G – E d MMM y G"}
                     M{"E d MMM – E d MMM y G"}
-                    d{"E d MMM – d E MMM y G"}
+                    d{"E d MMM – E d MMM y G"}
                     y{"E d MMM y – E d MMM y G"}
                 }
                 GyMMMd{
@@ -1138,7 +1138,7 @@ it{
             }
         }
         day-narrow{
-            dn{"g"}
+            dn{"g."}
             relative{
                 "-1"{"ieri"}
                 "-2"{"l’altro ieri"}
@@ -1158,7 +1158,7 @@ it{
             }
         }
         day-short{
-            dn{"g"}
+            dn{"g."}
             relative{
                 "-1"{"ieri"}
                 "-2"{"l’altro ieri"}
@@ -1285,7 +1285,7 @@ it{
             }
         }
         hour-short{
-            dn{"h."}
+            dn{"h"}
             relativeTime{
                 future{
                     one{"tra {0} h"}
@@ -1582,11 +1582,11 @@ it{
             dn{"s"}
             relativeTime{
                 future{
-                    one{"tra {0} s"}
+                    one{"tra {0} sec."}
                     other{"tra {0} sec."}
                 }
                 past{
-                    one{"{0} s fa"}
+                    one{"{0} sec. fa"}
                     other{"{0} sec. fa"}
                 }
             }
@@ -1817,11 +1817,11 @@ it{
         week-narrow{
             dn{"sett."}
             relative{
-                "-1"{"settimana scorsa"}
-                "0"{"questa settimana"}
-                "1"{"settimana prossima"}
+                "-1"{"sett. scorsa"}
+                "0"{"questa sett."}
+                "1"{"sett. prossima"}
             }
-            relativePeriod{"la settimana del {0}"}
+            relativePeriod{"la sett. del {0}"}
             relativeTime{
                 future{
                     one{"tra {0} sett."}
@@ -1836,11 +1836,11 @@ it{
         week-short{
             dn{"sett."}
             relative{
-                "-1"{"settimana scorsa"}
-                "0"{"questa settimana"}
-                "1"{"settimana prossima"}
+                "-1"{"sett. scorsa"}
+                "0"{"questa sett."}
+                "1"{"sett. prossima"}
             }
-            relativePeriod{"la settimana del {0}"}
+            relativePeriod{"la sett. del {0}"}
             relativeTime{
                 future{
                     one{"tra {0} sett."}

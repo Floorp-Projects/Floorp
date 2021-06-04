@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ki{
     AuxExemplarCharacters{"[f l p q s v x z]"}
     ExemplarCharacters{"[a b c d e g h i ĩ j k m n o r t u ũ w y]"}
@@ -12,7 +13,6 @@ ki{
             }
         }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{

@@ -74,7 +74,8 @@ PKGMODE=dll
 INSTALLTO=$(libdir)
 endif
 
-OBJECTS = uconv.o uwmsg.o
+SOURCES = $(shell cat $(srcdir)/sources.txt)
+OBJECTS = $(patsubst %.cpp,%.o,$(patsubst %.c,%.o, $(SOURCES)))
 
 DEPS = $(OBJECTS:.o=.d)
 

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bem{
     AuxExemplarCharacters{"[d h q r v x z]"}
     ExemplarCharacters{"[a b c e f g i j k l m n o p s {sh} t u w y]"}
@@ -12,7 +13,6 @@ bem{
             }
         }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{

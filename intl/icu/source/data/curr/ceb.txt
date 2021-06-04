@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ceb{
     Currencies{
         AED{
@@ -612,7 +613,7 @@ ceb{
         }
         XXX{
             "¤",
-            "Wala Nahibaluan nga Currency",
+            "Wala Nailhi nga Kwarta",
         }
         YER{
             "YER",
@@ -1237,8 +1238,8 @@ ceb{
             other{"Mga CFP franc"}
         }
         XXX{
-            one{"(wala nahibaluan nga yunit sa currency)"}
-            other{"(wala nahibaluan nga currency)"}
+            one{"(wala mailhi nga yunit sa kwarta)"}
+            other{"(wala mailhi nga kwarta)"}
         }
         YER{
             one{"Yemeni rial"}
@@ -1257,5 +1258,4 @@ ceb{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"37"}
 }

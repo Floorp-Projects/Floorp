@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 nb{
     AuxExemplarCharacters{"[á ǎ ã č ç đ è ê í ń ñ ŋ š ŧ ú ü ž ä ö]"}
     Ellipsis{
@@ -546,11 +547,11 @@ nb{
                         other{"0 millioner"}
                     }
                     10000000{
-                        one{"00 million"}
+                        one{"00 millioner"}
                         other{"00 millioner"}
                     }
                     100000000{
-                        one{"000 million"}
+                        one{"000 millioner"}
                         other{"000 millioner"}
                     }
                     1000000000{
@@ -558,11 +559,11 @@ nb{
                         other{"0 milliarder"}
                     }
                     10000000000{
-                        one{"00 milliard"}
+                        one{"00 milliarder"}
                         other{"00 milliarder"}
                     }
                     100000000000{
-                        one{"000 milliard"}
+                        one{"000 milliarder"}
                         other{"000 milliarder"}
                     }
                     1000000000000{
@@ -682,6 +683,7 @@ nb{
                 }
             }
             symbols{
+                approximatelySign{"ca."}
                 decimal{","}
                 exponential{"E"}
                 group{" "}
@@ -1280,7 +1282,6 @@ nb{
             }
         }
     }
-    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -3908,8 +3909,8 @@ nb{
                 "d. MMM y G",
                 "d.M.y G",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'kl'. {0}",
+                "{1} 'kl'. {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -4121,7 +4122,7 @@ nb{
                 "d. MMM y",
                 "dd.MM.y",
                 "{1}, {0}",
-                "{1} {0}",
+                "{1} 'kl'. {0}",
                 "{1} 'kl'. {0}",
                 "{1}, {0}",
                 "{1}, {0}",
@@ -4136,8 +4137,8 @@ nb{
                 E{"ccc"}
                 EBhm{"E h:mm B"}
                 EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
+                EHm{"E 'kl'. HH:mm"}
+                EHms{"E 'kl'. HH:mm:ss"}
                 Ed{"E d."}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -4171,7 +4172,7 @@ nb{
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M.y"}
-                yMEd{"E d.MM.y"}
+                yMEd{"E d.M.y"}
                 yMM{"MM.y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E d. MMM y"}
@@ -4282,12 +4283,12 @@ nb{
                         night1{"nt."}
                     }
                     wide{
-                        afternoon1{"ettermiddagen"}
-                        evening1{"kvelden"}
+                        afternoon1{"på ettermiddagen"}
+                        evening1{"på kvelden"}
                         midnight{"midnatt"}
-                        morning1{"morgenen"}
-                        morning2{"formiddagen"}
-                        night1{"natten"}
+                        morning1{"på morgenen"}
+                        morning2{"på formiddagen"}
+                        night1{"på natten"}
                     }
                 }
                 stand-alone{
@@ -4435,21 +4436,21 @@ nb{
                 }
                 fallback{"{0}–{1}"}
                 h{
-                    a{"h a – h a"}
+                    a{"h a–h a"}
                     h{"h–h a"}
                 }
                 hm{
-                    a{"h:mm a – h:mm a"}
+                    a{"h:mm a–h:mm a"}
                     h{"h:mm–h:mm a"}
                     m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"h:mm a – h:mm a v"}
+                    a{"h:mm a–h:mm a v"}
                     h{"h:mm–h:mm a v"}
                     m{"h:mm–h:mm a v"}
                 }
                 hv{
-                    a{"h a – h a v"}
+                    a{"h a–h a v"}
                     h{"h–h a v"}
                 }
                 y{
@@ -6541,8 +6542,8 @@ nb{
         full_width_form_variant{"fullbreddeformvarianter"}
         geometric_shapes{"geometriske figurer"}
         half_width_form_variant{"halvbreddeformvarianter"}
-        han_characters{"Han-tegn"}
-        han_radicals{"Han-radikaler"}
+        han_characters{"han-tegn"}
+        han_radicals{"han-radikaler"}
         hanja{"hanja"}
         hanzi_simplified{"hanzi (forenklet)"}
         hanzi_traditional{"hanzi (tradisjonell)"}

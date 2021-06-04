@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 id{
     Countries{
         001{"Dunia"}
@@ -122,7 +123,7 @@ id{
         GG{"Guernsey"}
         GH{"Ghana"}
         GI{"Gibraltar"}
-        GL{"Grinlandia"}
+        GL{"Greenland"}
         GM{"Gambia"}
         GN{"Guinea"}
         GP{"Guadeloupe"}
@@ -155,7 +156,7 @@ id{
         JO{"Yordania"}
         JP{"Jepang"}
         KE{"Kenya"}
-        KG{"Kirgistan"}
+        KG{"Kirgizstan"}
         KH{"Kamboja"}
         KI{"Kiribati"}
         KM{"Komoro"}
@@ -164,7 +165,7 @@ id{
         KR{"Korea Selatan"}
         KW{"Kuwait"}
         KY{"Kepulauan Cayman"}
-        KZ{"Kazakstan"}
+        KZ{"Kazakhstan"}
         LA{"Laos"}
         LB{"Lebanon"}
         LC{"Saint Lucia"}
@@ -175,7 +176,7 @@ id{
         LT{"Lituania"}
         LU{"Luksemburg"}
         LV{"Latvia"}
-        LY{"Libia"}
+        LY{"Libya"}
         MA{"Maroko"}
         MC{"Monako"}
         MD{"Moldova"}
@@ -256,14 +257,14 @@ id{
         SZ{"eSwatini"}
         TA{"Tristan da Cunha"}
         TC{"Kepulauan Turks dan Caicos"}
-        TD{"Cad"}
-        TF{"Wilayah Selatan Perancis"}
+        TD{"Chad"}
+        TF{"Wilayah Selatan Prancis"}
         TG{"Togo"}
         TH{"Thailand"}
         TJ{"Tajikistan"}
         TK{"Tokelau"}
         TL{"Timor Leste"}
-        TM{"Turkimenistan"}
+        TM{"Turkmenistan"}
         TN{"Tunisia"}
         TO{"Tonga"}
         TR{"Turki"}
@@ -273,7 +274,7 @@ id{
         TZ{"Tanzania"}
         UA{"Ukraina"}
         UG{"Uganda"}
-        UM{"Kepulauan Terluar A.S."}
+        UM{"Kepulauan Terluar AS"}
         UN{"Perserikatan Bangsa-Bangsa"}
         US{"Amerika Serikat"}
         UY{"Uruguay"}
@@ -303,15 +304,13 @@ id{
         MO{"Makau"}
         PS{"Palestina"}
         UN{"PBB"}
-        US{"A.S."}
+        US{"AS"}
     }
     Countries%variant{
         CD{"Kongo (RDK)"}
         CG{"Kongo (Republik)"}
         CZ{"Republik Ceko"}
         FK{"Kepulauan Falkland (Malvinas)"}
-        SZ{"Swaziland"}
         TL{"Timor Timur"}
     }
-    Version{"37"}
 }

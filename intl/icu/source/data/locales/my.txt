@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 my{
     AuxExemplarCharacters{
         "[၀႐ ၁႑ ၂႒ ၃႓ ၄႔ ၅႕ ၆႖ ၇႗ ၈႘ ၉႙ ၵ ၚ ၽ ၾ ၐ ၑ ၥ ဨ ဢ ၒ ၓ ၔ ၕ \u1033 ၖ ၗ \u1058 "
@@ -176,7 +177,7 @@ my{
                 other{"{0} အုပ်မြောက်"}
             }
             plural{
-                other{"{0}ရက်"}
+                other{"{0} ရက်"}
             }
         }
         minimumGroupingDigits{"1"}
@@ -203,7 +204,6 @@ my{
         }
         native{"mymr"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -1677,29 +1677,37 @@ my{
         or{
             2{"{0} သို့မဟုတ် {1}"}
             end{"{0} သို့မဟုတ် {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
+            middle{"{0}၊ {1}"}
+            start{"{0}၊ {1}"}
+        }
+        or-narrow{
+            middle{"{0}၊ {1}"}
         }
         or-short{
+            middle{"{0}၊ {1}"}
             start{"{0} ၊ {1}"}
         }
         standard{
             2{"{0}နှင့် {1}"}
             end{"{0}နှင့် {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
+            middle{"{0}၊ {1}"}
+            start{"{0}၊ {1}"}
+        }
+        standard-narrow{
+            middle{"{0}၊ {1}"}
+            start{"{0}၊ {1}"}
         }
         standard-short{
             2{"{0}နှင့် {1}"}
             end{"{0}နှင့် {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
+            middle{"{0}၊ {1}"}
+            start{"{0}၊ {1}"}
         }
         unit{
             2{"{0}နှင့်{1}"}
             end{"{0}နှင့် {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
+            middle{"{0}၊ {1}"}
+            start{"{0}၊ {1}"}
         }
         unit-narrow{
             2{"{0}နှင့် {1}"}
@@ -1710,8 +1718,8 @@ my{
         unit-short{
             2{"{0}နှင့် {1}"}
             end{"{0}နှင့် {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
+            middle{"{0}၊ {1}"}
+            start{"{0}၊ {1}"}
         }
     }
     measurementSystemNames{

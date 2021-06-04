@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fr_CH{
     NumberElements{
         latn{
@@ -11,7 +12,6 @@ fr_CH{
             }
         }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -95,10 +95,10 @@ fr_CH{
                 "d MMMM y",
                 "d MMM y",
                 "dd.MM.yy",
+                "{1}, {0}",
                 "{1} 'à' {0}",
                 "{1} 'à' {0}",
-                "{1} 'à' {0}",
-                "{1} 'à' {0}",
+                "{1}, {0}",
                 "{1} {0}",
             }
             availableFormats{

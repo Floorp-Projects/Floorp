@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 te{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"అబిడ్జాన్"}
@@ -1752,7 +1752,7 @@ te{
             ls{"నియూ సమయం"}
         }
         "meta:Norfolk"{
-            ld{"నార్ఫోక్ దీవి వేసవి సమయం"}
+            ld{"నార్ఫోక్ దీవి పగటి సమయం"}
             lg{"నార్ఫోక్ దీవి సమయం"}
             ls{"నార్ఫోక్ దీవి ప్రామాణిక సమయం"}
         }

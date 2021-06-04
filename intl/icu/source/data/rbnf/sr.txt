@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr{
     RBNFRules{
         SpelloutRules{
@@ -147,5 +148,4 @@ sr{
             "400: <%spellout-cardinal-feminine<\u0441\u0442\u043E>%%ordti>;",
         }
     }
-    Version{"37"}
 }

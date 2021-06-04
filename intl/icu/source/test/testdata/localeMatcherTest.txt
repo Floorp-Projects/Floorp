@@ -1,5 +1,5 @@
 # © 2017 and later: Unicode, Inc. and others.
-# License & terms of use: http://www.unicode.org/copyright.html#License
+# License & terms of use: http://www.unicode.org/copyright.html
 #
 # Data-driven test for the language/locale matcher.
 # Format:
@@ -279,7 +279,7 @@ und-TW >> zh-Hant
 zh-Hant >> und-TW
 zh >> und-TW
 
-** test: testMatchGrandfatheredCode
+** test: testMatchLegacyCode
 
 @supported=fr, i-klingon, en-Latn-US
 en-GB-oed >> en-Latn-US
@@ -984,7 +984,7 @@ x-bork >> x-bork
 x-piglatin >> x-bork
 x-bork >> x-bork
 
-** test: MatchGrandfatheredCode
+** test: MatchLegacyCode
 @supported=fr, i-klingon, en-Latn-US
 en-GB-oed >> en-Latn-US
 i-klingon >> tlh
@@ -1525,7 +1525,7 @@ en >> null
 x-piglatin >> fr
 x-bork >> x-bork
 
-** test: grandfathered codes
+** test: legacy codes
 @supported=fr, i-klingon, en-Latn-US
 en-GB-oed >> en-Latn-US
 i-klingon >> tlh

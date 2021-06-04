@@ -1,12 +1,21 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zh{
     AuxExemplarCharacters{
-        "[乒 乓 仂 仓 伞 侣 傈 傣 僳 冥 凉 刨 匕 卑 卞 厘 厦 厨 吕 呣 唇 啤 啮 喱 嗅 噘 噢 坝 堤 墟 奎 妆 婴 媚 宅 寺 尬 尴"
-        " 屑 屿 巽 巾 弓 彗 惊 戟 扔 扰 扳 抛 挂 捂 摇 撅 撤 杆 杖 柜 柱 栗 栽 桶 棍 棕 棺 楔 楠 榈 槟 橙 洒 浆 涌 淇 滕 滚"
-        " 滩 灾 烛 烟 焰 煎 犬 猫 瑚 瓢 甫 皱 盆 盔 盲 眨 眯 瞌 矿 碑 祈 祭 祷 禄 稻 竿 笼 筒 篷 粟 粮 纠 纬 缆 缎 耸 脚 舔"
-        " 舵 艇 艮 芽 苜 苞 菇 菱 葫 葵 蒸 蓿 蔽 薯 蘑 蚂 蛛 蜗 蜘 蜡 蝎 蝴 螃 裹 谍 谬 豚 账 跤 踪 躬 轴 辐 迹 郁 鄙 酢 钉"
-        " 钥 钮 钯 铂 铅 铛 锄 锑 锚 锤 镑 闺 阱 隧 雕 霾 靴 靶 鞠 颠 馏 驼 骆 髦 魁 鲤 鲸 鳄 鸽]"
+        "[乒 乓 乳 仂 仓 伞 伪 侣 傈 傣 僳 僵 冥 冻 净 凉 凸 刨 刮 剃 剽 劈 勺 匕 匠 匮 卑 卜 卞 卦 厕 厘 厦 厨 叮 吕 吴 呕"
+        " 呣 咒 哨 哺 唇 啤 啮 喱 嗅 嘘 嘟 噘 噜 噢 嚏 坏 坝 垫 堤 堵 墅 墓 墙 墟 壳 壶 奎 奸 妆 姜 娥 婴 媚 孪 宅 宠 宫 寺"
+        " 尬 尴 尸 屈 屎 屑 屡 履 屿 岩 巽 巾 帆 帚 帜 帧 庇 庵 弓 彗 御 徽 怜 恒 恤 恳 悬 悯 惊 惫 愤 戟 扔 扰 扳 抖 抛 拄"
+        " 拇 拐 挂 挎 捂 捏 掘 掠 揭 搏 携 摇 撅 撕 撤 攀 敞 斑 斧 昙 晕 朔 杆 杖 杠 枯 柄 柑 柜 柠 柩 柱 柿 栓 栗 栽 桔 桶"
+        " 梨 棍 棕 棺 椒 楔 楠 榄 榈 槌 槟 槿 横 橄 橇 橘 橙 橡 檬 汁 沐 沫 泪 泵 洁 洒 浆 浣 涂 涌 涎 涕 涩 淇 渗 湘 滕 滚"
+        " 滩 澡 灾 炽 烘 烙 烛 烟 烹 焊 焙 焰 煎 熏 燥 犀 犄 犬 犸 狡 狸 猎 猕 猩 猫 猬 猾 猿 獭 獾 瑚 瓢 瓮 甫 畜 疟 皂 皱"
+        " 皿 盆 盐 盔 盗 盥 盲 眨 眩 眯 睿 瞌 瞒 瞪 矿 砖 砸 碑 祈 祭 祷 禄 禽 秃 稻 稽 窃 窄 窥 竖 竿 笆 笺 笼 筐 筒 筝 筷"
+        " 箸 篓 篱 篷 粑 粟 粥 粮 粽 絮 纠 纫 纬 纱 纹 绒 绣 绳 绷 缄 缆 缎 缝 罩 羹 翱 耸 聋 肌 肢 肺 脏 脚 腋 腕 腮 膀 膏"
+        " 舔 舵 艇 艮 艳 芙 芽 苜 苞 苣 苹 茄 莓 莴 菇 菌 菠 菱 萎 萝 葩 葫 葬 葱 葵 蒜 蒲 蒸 蓄 蓿 蔬 蔽 蕉 蕾 薯 蘑 蚂 蚊"
+        " 蚓 蚝 蚯 蛆 蛎 蛐 蛛 蛰 蛾 蜗 蜘 蜡 蜥 蜴 蝇 蝎 蝙 蝠 蝴 螂 螃 螺 蟀 蟋 蟑 蠕 衫 衬 袜 裙 裹 褂 讶 讽 诊 诱 谍 谎"
+        " 谚 谬 豚 豹 账 贷 赣 趾 跆 跛 跤 跨 跪 踪 蹄 蹈 蹦 蹬 躬 躺 轴 轿 辐 辣 迹 郁 鄙 酢 酥 酪 酱 醺 钉 钞 钥 钩 钮 钯"
+        " 钳 铂 铅 铛 铰 锄 锑 锚 锤 锯 镐 镑 镖 闺 闽 阱 隧 雀 雌 雕 霜 霾 靴 靶 鞠 颈 颜 颠 颤 飓 饪 饵 饺 馍 馏 驰 驼 骂"
+        " 骄 骆 骰 骷 骼 髅 髦 鬈 魁 鱿 鲤 鲨 鲸 鳄 鸢 鸵 鸽 鹉 鹦 黏 黛 鼬 龇]"
     }
     Ellipsis{
         final{"{0}…"}
@@ -705,7 +714,6 @@ zh{
             }
         }
     }
-    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -808,13 +816,13 @@ zh{
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"vah:mm至ah:mm"}
-                    h{"vah:mm至h:mm"}
-                    m{"vah:mm至h:mm"}
+                    a{"v ah:mm至ah:mm"}
+                    h{"v ah:mm至h:mm"}
+                    m{"v ah:mm至h:mm"}
                 }
                 hv{
-                    a{"vah时至ah时"}
-                    h{"vah时至h时"}
+                    a{"v ah时至ah时"}
+                    h{"v ah时至h时"}
                 }
                 y{
                     y{"Gy–y年"}
@@ -1074,11 +1082,11 @@ zh{
                     m{"HH:mm至HH:mm"}
                 }
                 Hmv{
-                    H{"HH:mm至HH:mm v"}
-                    m{"HH:mm至HH:mm v"}
+                    H{"v HH:mm至HH:mm"}
+                    m{"v HH:mm至HH:mm"}
                 }
                 Hv{
-                    H{"HH–HH v"}
+                    H{"v HH–HH"}
                 }
                 M{
                     M{"L至L"}
@@ -1116,13 +1124,13 @@ zh{
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"vah:mm至ah:mm"}
-                    h{"vah:mm至h:mm"}
-                    m{"vah:mm至h:mm"}
+                    a{"v ah:mm至ah:mm"}
+                    h{"v ah:mm至h:mm"}
+                    m{"v ah:mm至h:mm"}
                 }
                 hv{
-                    a{"vah至ah时"}
-                    h{"vah至h时"}
+                    a{"v ah至ah时"}
+                    h{"v ah至h时"}
                 }
                 y{
                     y{"rU至rU"}
@@ -1838,6 +1846,44 @@ zh{
                     h{"Bh:mm至h:mm"}
                     m{"Bh:mm至h:mm"}
                 }
+                Gy{
+                    G{"Gy年 – Gy年"}
+                    y{"Gy年–y年"}
+                }
+                GyM{
+                    G{"GGGGGy-MM – GGGGGy-MM"}
+                    M{"GGGGGy-MM – y-MM"}
+                    y{"GGGGGy-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGGy-MM-ddE – GGGGGy-MM-ddE"}
+                    M{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    d{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    y{"GGGGGy-MM-ddE – y-MM-ddE"}
+                }
+                GyMMM{
+                    G{"Gy年MMM – Gy年MMM"}
+                    M{"Gy年MMM–MMM"}
+                    y{"Gy年MMM – y年MMM"}
+                }
+                GyMMMEd{
+                    G{"Gy年MMMd日E – Gy年MMMd日E"}
+                    M{"Gy年MMMd日E – MMMd日E"}
+                    d{"Gy年MMMd日E – MMMd日E"}
+                    y{"Gy年MMMd日E – y年MMMd日E"}
+                }
+                GyMMMd{
+                    G{"Gy年MMMd日 – Gy年MMMd日"}
+                    M{"Gy年MMMd日 – MMMd日"}
+                    d{"Gy年MMMd日–d日"}
+                    y{"Gy年MMMd日 – y年MMMd日"}
+                }
+                GyMd{
+                    G{"GGGGGy-MM-dd – GGGGGy-MM-dd"}
+                    M{"GGGGGy-MM-dd – y-MM-dd"}
+                    d{"GGGGGy-MM-dd – y-MM-dd"}
+                    y{"GGGGGy-MM-dd – y-MM-dd"}
+                }
                 Hmv{
                     H{"v HH:mm – HH:mm"}
                     m{"v HH:mm – HH:mm"}
@@ -1878,13 +1924,13 @@ zh{
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"vah:mm至ah:mm"}
-                    h{"vah:mm至h:mm"}
-                    m{"vah:mm至h:mm"}
+                    a{"v ah:mm至ah:mm"}
+                    h{"v ah:mm至h:mm"}
+                    m{"v ah:mm至h:mm"}
                 }
                 hv{
-                    a{"vah时至ah时"}
-                    h{"vah时至h时"}
+                    a{"v ah时至ah时"}
+                    h{"v ah时至h时"}
                 }
                 y{
                     y{"Gy–y年"}
@@ -1945,10 +1991,10 @@ zh{
                 "y年M月d日",
                 "y年M月d日",
                 "y/M/d",
+                "{1}{0}",
+                "{1}{0}",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}{0}",
                 "{1} {0}",
             }
             appendItems{
@@ -2176,6 +2222,44 @@ zh{
                     h{"Bh:mm至h:mm"}
                     m{"Bh:mm至h:mm"}
                 }
+                Gy{
+                    G{"Gy年 – Gy年"}
+                    y{"Gy年–y年"}
+                }
+                GyM{
+                    G{"GGGGGy-MM – GGGGGy-MM"}
+                    M{"GGGGGy-MM – y-MM"}
+                    y{"GGGGGy-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGGy-MM-ddE – GGGGGy-MM-ddE"}
+                    M{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    d{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    y{"GGGGGy-MM-ddE – y-MM-ddE"}
+                }
+                GyMMM{
+                    G{"Gy年MMM – Gy年MMM"}
+                    M{"Gy年MMM–MMM"}
+                    y{"Gy年MMM – y年MMM"}
+                }
+                GyMMMEd{
+                    G{"Gy年MMMd日E – Gy年MMMd日E"}
+                    M{"Gy年MMMd日E – MMMd日E"}
+                    d{"Gy年MMMd日E – MMMd日E"}
+                    y{"Gy年MMMd日E – y年MMMd日E"}
+                }
+                GyMMMd{
+                    G{"Gy年MMMd日 – Gy年MMMd日"}
+                    M{"Gy年MMMd日 – MMMd日"}
+                    d{"Gy年MMMd–d日"}
+                    y{"Gy年MMMd日 – y年MMMd日"}
+                }
+                GyMd{
+                    G{"GGGGGy-MM-dd – GGGGGy-MM-dd"}
+                    M{"GGGGGy-MM-dd – y-MM-dd"}
+                    d{"GGGGGy-MM-dd – y-MM-dd"}
+                    y{"GGGGGy-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -2226,13 +2310,13 @@ zh{
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"vah:mm至ah:mm"}
-                    h{"vah:mm至h:mm"}
-                    m{"vah:mm至h:mm"}
+                    a{"v ah:mm至ah:mm"}
+                    h{"v ah:mm至h:mm"}
+                    m{"v ah:mm至h:mm"}
                 }
                 hv{
-                    a{"vah时至ah时"}
-                    h{"vah时至h时"}
+                    a{"v ah时至ah时"}
+                    h{"v ah时至h时"}
                 }
                 y{
                     y{"y–y年"}
@@ -2504,13 +2588,13 @@ zh{
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"vah:mm至ah:mm"}
-                    h{"vah:mm至h:mm"}
-                    m{"vah:mm至h:mm"}
+                    a{"v ah:mm至ah:mm"}
+                    h{"v ah:mm至h:mm"}
+                    m{"v ah:mm至h:mm"}
                 }
                 hv{
-                    a{"vah时至ah时"}
-                    h{"vah时至h时"}
+                    a{"v ah时至ah时"}
+                    h{"v ah时至h时"}
                 }
                 y{
                     y{"Gy–y年"}
@@ -2736,13 +2820,13 @@ zh{
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"vah:mm至ah:mm"}
-                    h{"vah:mm至h:mm"}
-                    m{"vah:mm至h:mm"}
+                    a{"v ah:mm至ah:mm"}
+                    h{"v ah:mm至h:mm"}
+                    m{"v ah:mm至h:mm"}
                 }
                 hv{
-                    a{"vah时至ah时"}
-                    h{"vah时至h时"}
+                    a{"v ah时至ah时"}
+                    h{"v ah时至h时"}
                 }
                 y{
                     y{"Gy–y年"}
@@ -2974,7 +3058,7 @@ zh{
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
-                "Gyy-MM-dd",
+                "Gy-MM-dd",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -3846,7 +3930,7 @@ zh{
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
-                "Gyy/M/d",
+                "Gy/M/d",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -3943,13 +4027,13 @@ zh{
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"vah:mm至ah:mm"}
-                    h{"vah:mm至h:mm"}
-                    m{"vah:mm至h:mm"}
+                    a{"v ah:mm至ah:mm"}
+                    h{"v ah:mm至h:mm"}
+                    m{"v ah:mm至h:mm"}
                 }
                 hv{
-                    a{"vah时至ah时"}
-                    h{"vah时至h时"}
+                    a{"v ah时至ah时"}
+                    h{"v ah时至h时"}
                 }
                 y{
                     y{"Gy–y年"}
@@ -4031,7 +4115,7 @@ zh{
         ideographic_desc_characters{"表意文字描述符"}
         japanese_kana{"日语假名"}
         kanbun{"汉文训读"}
-        kanji{"日文汉字"}
+        kanji{"日语汉字"}
         keycap{"按键"}
         leftwards_arrows{"向左箭头"}
         leftwards_rightwards_arrows{"左右箭头"}

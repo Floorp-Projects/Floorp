@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sl{
     Currencies{
         ADP{
@@ -204,7 +205,7 @@ sl{
         }
         CDF{
             "CDF",
-            "kongoški frank",
+            "kongovski frank",
         }
         CHE{
             "CHE",
@@ -1261,7 +1262,7 @@ sl{
             two{"avstralska dolarja"}
         }
         AWG{
-            few{"arubski florin"}
+            few{"arubski florini"}
             one{"arubski florin"}
             other{"arubskih florinov"}
             two{"arubska florina"}
@@ -1375,10 +1376,10 @@ sl{
             two{"kanadska dolarja"}
         }
         CDF{
-            few{"kongoški frank"}
-            one{"kongoški frank"}
-            other{"kongoških frankov"}
-            two{"kongoška franka"}
+            few{"kongovski franki"}
+            one{"kongovski frank"}
+            other{"kongovskih frankov"}
+            two{"kongovska franka"}
         }
         CHF{
             few{"švicarski franki"}
@@ -1585,10 +1586,10 @@ sl{
             two{"indonezijski rupiji"}
         }
         ILS{
-            few{"izraelski šekeli"}
+            few{"izraelski šekli"}
             one{"izraelski šekel"}
-            other{"izraelskih šekelov"}
-            two{"izraelska šekela"}
+            other{"izraelskih šeklov"}
+            two{"izraelska šekla"}
         }
         INR{
             few{"indijske rupije"}
@@ -1677,7 +1678,7 @@ sl{
         KYD{
             few{"kajmanski dolarji"}
             one{"kajmanski dolar"}
-            other{"kajmanski dolar"}
+            other{"kajmanskih dolarjev"}
             two{"kajmanska dolarja"}
         }
         KZT{
@@ -2143,10 +2144,10 @@ sl{
             two{"samoanski tali"}
         }
         XAF{
-            few{"franki CFA BEAC"}
+            few{"srednjeafriški franki CFA"}
             one{"srednjeafriški frank CFA"}
-            other{"srednjeafriški frank CFA"}
-            two{"franka CFA BEAC"}
+            other{"srednjeafriških frankov CFA"}
+            two{"srednjeafriška franka CFA"}
         }
         XCD{
             few{"vzhodnokaribski dolarji"}
@@ -2155,10 +2156,10 @@ sl{
             two{"vzhodnokaribska dolarja"}
         }
         XOF{
-            few{"franki CFA BCEAO"}
+            few{"zahodnoafriški franki CFA"}
             one{"zahodnoafriški frank CFA"}
-            other{"zahodnoafriški frank CFA"}
-            two{"franka CFA BCEAO"}
+            other{"zahodnoafriških frankov CFA"}
+            two{"zahodnoafriška franka CFA"}
         }
         XPF{
             few{"franki CFP"}
@@ -2197,5 +2198,4 @@ sl{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"37"}
 }

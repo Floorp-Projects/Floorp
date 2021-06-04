@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sw_KE{
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
     NumberElements{
@@ -148,7 +149,6 @@ sw_KE{
             }
         }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -167,9 +167,6 @@ sw_KE{
                 "{1}, {0}",
             }
         }
-    }
-    characterLabel{
-        middle_eastern_scripts{"hati za Mashariki ya Kati"}
     }
     measurementSystemNames{
         metric{"Kipimo"}

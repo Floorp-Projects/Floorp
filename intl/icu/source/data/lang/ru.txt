@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ru{
     Keys{
         calendar{"календарь"}
@@ -564,7 +565,7 @@ ru{
     }
     Languages%menu{
         ars{"арабская (недждийский)"}
-        ckb{"курдская (сорани)"}
+        ckb{"курдский (сорани)"}
         yue{"юэ"}
         zh{"севернокитайский"}
     }
@@ -915,6 +916,7 @@ ru{
         AREVMDA{"Западно-армянский"}
         BAKU1926{"Унифицированный тюрско-латинский алфавит"}
         FONIPA{"Международный фонетический алфавит"}
+        KKCOR{"Общая орфография"}
         MONOTON{"Монотонный"}
         PINYIN{"Пиньинь"}
         POLYTON{"Многотональный"}
@@ -926,7 +928,6 @@ ru{
         VALENCIA{"Валенсийский"}
         WADEGILE{"Система Уэйда – Джайлза"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — все"}
         category-list{"{0}: {1}"}
@@ -943,6 +944,8 @@ ru{
             one{"{0} черта"}
             other{"{0} черты"}
         }
+        subscript{"подстрочные {0}"}
+        superscript{"надстрочные {0}"}
     }
     codePatterns{
         language{"Язык: {0}"}

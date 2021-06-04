@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ga{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1106,7 +1106,7 @@ ga{
             ec{"Taillinn"}
         }
         "Europe:Tirane"{
-            ec{"Tirane"}
+            ec{"Tiorána"}
         }
         "Europe:Ulyanovsk"{
             ec{"Ulyanovsk"}
@@ -1306,7 +1306,7 @@ ga{
             ls{"Am Oirthear na hAfraice"}
         }
         "meta:Africa_Southern"{
-            ls{"Am Caighdeánach na hAfraice Theas"}
+            ls{"Am na hAfraice Theas"}
         }
         "meta:Africa_Western"{
             ld{"Am Samhraidh Iarthar na hAfraice"}
@@ -1329,19 +1329,19 @@ ga{
             ls{"Am Caighdeánach na hAmasóine"}
         }
         "meta:America_Central"{
-            ld{"Am Samhraidh Lárnach"}
-            lg{"Am Lárnach"}
-            ls{"Am Caighdeánach Lárnach"}
+            ld{"Am Samhraidh Lárnach Mheiriceá Thuaidh"}
+            lg{"Am Lárnach Mheiriceá Thuaidh"}
+            ls{"Am Caighdeánach Lárnach Mheiriceá Thuaidh"}
         }
         "meta:America_Eastern"{
-            ld{"Am Samhraidh an Oirthir"}
-            lg{"Am an Oirthir"}
-            ls{"Am Caighdeánach an Oirthir"}
+            ld{"Am Samhraidh Oirthear Mheiriceá Thuaidh"}
+            lg{"Am Oirthear Mheiriceá Thuaidh"}
+            ls{"Am Caighdeánach Oirthear Mheiriceá Thuaidh"}
         }
         "meta:America_Mountain"{
-            ld{"Am Samhraidh na Sléibhte"}
-            lg{"Am na Sléibhte"}
-            ls{"Am Caighdeánach na Sléibhte"}
+            ld{"Am Samhraidh Sléibhte Mheiriceá Thuaidh"}
+            lg{"Am Sléibhte Mheiriceá Thuaidh"}
+            ls{"Am Caighdeánach Sléibhte Mheiriceá Thuaidh"}
         }
         "meta:America_Pacific"{
             ld{"Am Samhraidh an Aigéin Chiúin"}
@@ -1864,7 +1864,7 @@ ga{
             ls{"Am Caighdeánach Shingeapór"}
         }
         "meta:Solomon"{
-            ls{"Am Oileáin Sholomón"}
+            ls{"Am Oileáin Sholaimh"}
         }
         "meta:South_Georgia"{
             ls{"Am na Seoirsia Theas"}
@@ -1903,7 +1903,7 @@ ga{
             ls{"Am Caighdeánach na Tuircméanastáine"}
         }
         "meta:Tuvalu"{
-            ls{"Am Thuvalu"}
+            ls{"Am Thúvalú"}
         }
         "meta:Uruguay"{
             ld{"Am Samhraidh Uragua"}
@@ -1940,7 +1940,7 @@ ga{
             ls{"Am Oileán Wake"}
         }
         "meta:Wallis"{
-            ls{"Am Vailís agus Futúna"}
+            ls{"Am Wallis agus Futuna"}
         }
         "meta:Yakutsk"{
             ld{"Am Samhraidh Iacútsc"}

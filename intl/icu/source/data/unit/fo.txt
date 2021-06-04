@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fo{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -398,6 +398,11 @@ fo{
             }
         }
         graphics{
+            dot{
+                dnam{"punkt"}
+                one{"{0} punkt"}
+                other{"{0} punkt"}
+            }
             dot-per-centimeter{
                 dnam{"punkt fyri hvønn sentimetur"}
                 one{"{0} punkt fyri hvønn sentimetur"}
@@ -449,11 +454,26 @@ fo{
                 one{"{0} desimetur"}
                 other{"{0} desimetrar"}
             }
+            earth-radius{
+                dnam{"radius á jørðuni"}
+                one{"{0} radius á jørðuni"}
+                other{"{0} radius á jørðuni"}
+            }
+            fathom{
+                dnam{"favnar"}
+                one{"{0} favnur"}
+                other{"{0} favnar"}
+            }
             foot{
                 dnam{"føtur"}
                 one{"{0} fótur"}
                 other{"{0} føtur"}
                 per{"{0}/fót"}
+            }
+            furlong{
+                dnam{"furlongrar"}
+                one{"{0} furlongur"}
+                other{"{0} furlongrar"}
             }
             inch{
                 dnam{"tummar"}
@@ -519,9 +539,9 @@ fo{
                 other{"{0} picometrar"}
             }
             point{
-                dnam{"punkt"}
-                one{"{0} punkt"}
-                other{"{0} punkt"}
+                dnam{"prikkar"}
+                one{"{0} prikkur"}
+                other{"{0} prikkar"}
             }
             solar-radius{
                 dnam{"sólarradii"}
@@ -535,6 +555,16 @@ fo{
             }
         }
         light{
+            candela{
+                dnam{"candela"}
+                one{"{0} candela"}
+                other{"{0} candela"}
+            }
+            lumen{
+                dnam{"lumen"}
+                one{"{0} lumen"}
+                other{"{0} lumen"}
+            }
             lux{
                 dnam{"luks"}
                 one{"{0} luks"}
@@ -610,6 +640,11 @@ fo{
                 dnam{"sólarmassi"}
                 one{"{0} sólarmassi"}
                 other{"{0} sólarmassar"}
+            }
+            stone{
+                dnam{"stones"}
+                one{"{0} stone"}
+                other{"{0} stones"}
             }
             ton{
                 dnam{"stutt tons"}
@@ -687,13 +722,13 @@ fo{
             }
             pascal{
                 dnam{"pascal"}
-                one{"{0} Pascal"}
-                other{"{0} Pascal"}
+                one{"{0} pascal"}
+                other{"{0} pascal"}
             }
             pound-force-per-square-inch{
-                dnam{"psi"}
-                one{"{0} psi"}
-                other{"{0} psi"}
+                dnam{"pund fyri hvønn kvadrattumma"}
+                one{"pund fyri hvønn kvadrattumma"}
+                other{"{0} pund fyri hvønn kvadrattumma"}
             }
         }
         speed{
@@ -763,6 +798,11 @@ fo{
                 one{"{0} tunna"}
                 other{"{0} tunnur"}
             }
+            bushel{
+                dnam{"skeppur"}
+                one{"{0} skeppa"}
+                other{"{0} skeppur"}
+            }
             centiliter{
                 dnam{"sentilitrar"}
                 one{"{0} sentilitur"}
@@ -820,6 +860,26 @@ fo{
                 one{"{0} desilitur"}
                 other{"{0} desilitrar"}
             }
+            dessert-spoon{
+                dnam{"dessertskeið"}
+                one{"{0} dessertskeið"}
+                other{"{0} dessertskeiðir"}
+            }
+            dessert-spoon-imperial{
+                dnam{"bretsk dessertskeið"}
+                one{"{0} bretsk dessertskeið"}
+                other{"{0} bretskar dessertskeiðir"}
+            }
+            dram{
+                dnam{"drammur"}
+                one{"{0} drammur"}
+                other{"{0} drammar"}
+            }
+            drop{
+                dnam{"dropi"}
+                one{"{0} dropi"}
+                other{"{0} dropar"}
+            }
             fluid-ounce{
                 dnam{"flótandi unsur"}
                 one{"{0} flótandi unsa"}
@@ -847,6 +907,11 @@ fo{
                 one{"{0} hektolitur"}
                 other{"{0} hektolitrar"}
             }
+            jigger{
+                dnam{"snapsur"}
+                one{"{0} snapsur"}
+                other{"{0} snapsar"}
+            }
             liter{
                 dnam{"litrar"}
                 one{"{0} litur"}
@@ -863,6 +928,11 @@ fo{
                 one{"{0} millilitur"}
                 other{"{0} millilitrar"}
             }
+            pinch{
+                dnam{"vet"}
+                one{"{0} vet"}
+                other{"{0} vet"}
+            }
             pint{
                 dnam{"pints"}
                 one{"{0} pint"}
@@ -877,6 +947,11 @@ fo{
                 dnam{"quarts"}
                 one{"{0} quart"}
                 other{"{0} quarts"}
+            }
+            quart-imperial{
+                dnam{"bretskur quart"}
+                one{"{0} bretskur quart"}
+                other{"{0} bretskir quartar"}
             }
             tablespoon{
                 dnam{"súpiskeiðir"}
@@ -930,6 +1005,7 @@ fo{
         }
         concentr{
             percent{
+                dnam{"%"}
                 one{"{0} %"}
                 other{"{0} %"}
             }
@@ -1457,6 +1533,11 @@ fo{
             }
         }
         graphics{
+            dot{
+                dnam{"punkt"}
+                one{"{0} punkt"}
+                other{"{0} punkt"}
+            }
             megapixel{
                 dnam{"megaskíggjadeplar"}
             }
@@ -1481,11 +1562,21 @@ fo{
                 one{"{0} dm"}
                 other{"{0} dm"}
             }
+            fathom{
+                dnam{"favnar"}
+                one{"{0} favnur"}
+                other{"{0} favnar"}
+            }
             foot{
                 dnam{"føtur"}
                 one{"{0} fótur"}
                 other{"{0} føtur"}
                 per{"{0}/fót"}
+            }
+            furlong{
+                dnam{"furlongrar"}
+                one{"{0} furlongur"}
+                other{"{0} furlongrar"}
             }
             inch{
                 dnam{"tum."}
@@ -1551,9 +1642,9 @@ fo{
                 other{"{0} pm"}
             }
             point{
-                dnam{"pkt"}
-                one{"{0} pkt"}
-                other{"{0} pkt"}
+                dnam{"prikkar"}
+                one{"{0} prikkur"}
+                other{"{0} prikkar"}
             }
             solar-radius{
                 dnam{"sólarradii"}
@@ -1633,6 +1724,11 @@ fo{
             solar-mass{
                 dnam{"sólarmassi"}
             }
+            stone{
+                dnam{"stones"}
+                one{"{0} stone"}
+                other{"{0} stones"}
+            }
             ton{
                 dnam{"stutt t"}
                 one{"{0} stutt t"}
@@ -1698,7 +1794,7 @@ fo{
                 other{"{0} mmHg"}
             }
             pascal{
-                dnam{"pascal"}
+                dnam{"Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"psi"}
@@ -1761,6 +1857,11 @@ fo{
                 one{"{0} tunna"}
                 other{"{0} tunnur"}
             }
+            bushel{
+                dnam{"skeppur"}
+                one{"{0} skeppa"}
+                other{"{0} skeppur"}
+            }
             centiliter{
                 dnam{"cl"}
                 one{"{0} cl"}
@@ -1818,6 +1919,26 @@ fo{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"dessertsk."}
+                one{"{0} dessertsk."}
+                other{"{0} dessertsk."}
+            }
+            dessert-spoon-imperial{
+                dnam{"bretsk dessertsk."}
+                one{"{0} bretsk dessertsk."}
+                other{"{0} bretskar dessertsk."}
+            }
+            dram{
+                dnam{"drammur"}
+                one{"{0} drammur"}
+                other{"{0} drammar"}
+            }
+            drop{
+                dnam{"dropi"}
+                one{"{0} dropi"}
+                other{"{0} dropar"}
+            }
             fluid-ounce{
                 dnam{"flótandi unsur"}
                 one{"{0} flótandi unsa"}
@@ -1845,6 +1966,11 @@ fo{
                 one{"{0} hl"}
                 other{"{0} hl"}
             }
+            jigger{
+                dnam{"snapsur"}
+                one{"{0} snapsur"}
+                other{"{0} snapsar"}
+            }
             liter{
                 dnam{"l"}
                 one{"{0} l"}
@@ -1861,6 +1987,11 @@ fo{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"vet"}
+                one{"{0} vet"}
+                other{"{0} vet"}
+            }
             pint{
                 dnam{"pints"}
                 one{"{0} pint"}
@@ -1875,6 +2006,11 @@ fo{
                 dnam{"quarts"}
                 one{"{0} quart"}
                 other{"{0} quarts"}
+            }
+            quart-imperial{
+                dnam{"bretskur quart"}
+                one{"{0} bretskur quart"}
+                other{"{0} bretskir quartar"}
             }
             tablespoon{
                 dnam{"súpisk."}

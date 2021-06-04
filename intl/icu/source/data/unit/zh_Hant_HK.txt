@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zh_Hant_HK{
-    Version{"37"}
     units{
         acceleration{
             meter-per-square-second{
@@ -52,9 +52,6 @@ zh_Hant_HK{
             millimole-per-liter{
                 dnam{"每公升毫摩爾"}
                 other{"每公升 {0} 毫摩爾"}
-            }
-            permillion{
-                other{"{0} ppm"}
             }
         }
         consumption{
@@ -174,10 +171,20 @@ zh_Hant_HK{
                 other{"{0} pt"}
             }
         }
+        light{
+            candela{
+                dnam{"坎德拉"}
+                other{"{0} 坎德拉"}
+            }
+        }
         mass{
             dalton{
                 dnam{"道爾頓"}
                 other{"{0} 道爾頓"}
+            }
+            grain{
+                dnam{"格令"}
+                other{"{0}格令"}
             }
             gram{
                 per{"{0} 每克"}
@@ -748,7 +755,17 @@ zh_Hant_HK{
                 other{"{0} pt"}
             }
         }
+        light{
+            candela{
+                dnam{"坎德拉"}
+                other{"{0} 坎德拉"}
+            }
+        }
         mass{
+            grain{
+                dnam{"格令"}
+                other{"{0} 格令"}
+            }
             gram{
                 per{"{0} 每克"}
             }
@@ -781,10 +798,6 @@ zh_Hant_HK{
             inch-ofhg{
                 dnam{"英吋汞柱"}
                 other{"{0} 英吋汞柱"}
-            }
-            pascal{
-                dnam{"帕"}
-                other{"{0} 帕"}
             }
             pound-force-per-square-inch{
                 dnam{"磅每平方吋"}

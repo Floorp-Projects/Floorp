@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ks{
     AuxExemplarCharacters{"[\u200E\u200F \u064E \u064F \u0650 \u0654 \u0655 \u065F \u0656 \u0657]"}
     ExemplarCharacters{
@@ -36,7 +37,6 @@ ks{
         }
         native{"arabext"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{

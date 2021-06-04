@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr_Latn{
     %%Parent{"root"}
     Keys{
@@ -114,6 +115,7 @@ sr_Latn{
         dar{"darginski"}
         dav{"taita"}
         de{"nemački"}
+        de_AT{"austrijski nemački"}
         de_CH{"švajcarski visoki nemački"}
         del{"delaverski"}
         den{"slejvi"}
@@ -531,6 +533,10 @@ sr_Latn{
         zxx{"bez lingvističkog sadržaja"}
         zza{"zaza"}
     }
+    Languages%long{
+        zh_Hans{"pojednostavljeni mandarinski kineski"}
+        zh_Hant{"tradicionalni mandarinski kineski"}
+    }
     Languages%menu{
         yue{"kantonski kineski"}
         zh{"mandarinski kineski"}
@@ -853,7 +859,6 @@ sr_Latn{
         TARASK{"Taraskijevička ortografija"}
         VALENCIA{"Valencijska"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — sve"}
         category-list{"{0}: {1}"}
@@ -869,6 +874,8 @@ sr_Latn{
             one{"{0} potez"}
             other{"{0} poteza"}
         }
+        subscript{"napisano ispod {0}"}
+        superscript{"napisano iznad {0}"}
     }
     codePatterns{
         language{"Jezik: {0}"}

@@ -1,11 +1,12 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ko{
     Countries{
         001{"세계"}
         002{"아프리카"}
         003{"북아메리카"}
-        005{"남아메리카(남미)"}
+        005{"남아메리카"}
         009{"오세아니아"}
         011{"서부 아프리카"}
         013{"중앙 아메리카"}
@@ -83,7 +84,7 @@ ko{
         CM{"카메룬"}
         CN{"중국"}
         CO{"콜롬비아"}
-        CP{"클립퍼튼 섬"}
+        CP{"클리퍼턴섬"}
         CR{"코스타리카"}
         CU{"쿠바"}
         CV{"카보베르데"}
@@ -143,7 +144,7 @@ ko{
         ID{"인도네시아"}
         IE{"아일랜드"}
         IL{"이스라엘"}
-        IM{"맨 섬"}
+        IM{"맨섬"}
         IN{"인도"}
         IO{"영국령 인도양 식민지"}
         IQ{"이라크"}
@@ -220,7 +221,7 @@ ko{
         PK{"파키스탄"}
         PL{"폴란드"}
         PM{"생피에르 미클롱"}
-        PN{"핏케언 섬"}
+        PN{"핏케언 제도"}
         PR{"푸에르토리코"}
         PS{"팔레스타인 지구"}
         PT{"포르투갈"}
@@ -228,7 +229,7 @@ ko{
         PY{"파라과이"}
         QA{"카타르"}
         QO{"오세아니아 외곽"}
-        RE{"리유니온"}
+        RE{"레위니옹"}
         RO{"루마니아"}
         RS{"세르비아"}
         RU{"러시아"}
@@ -274,7 +275,7 @@ ko{
         UA{"우크라이나"}
         UG{"우간다"}
         UM{"미국령 해외 제도"}
-        UN{"유엔"}
+        UN{"국제연합"}
         US{"미국"}
         UY{"우루과이"}
         UZ{"우즈베키스탄"}
@@ -301,6 +302,7 @@ ko{
         HK{"홍콩"}
         MO{"마카오"}
         PS{"팔레스타인"}
+        UN{"유엔"}
     }
     Countries%variant{
         CD{"콩고민주공화국"}
@@ -311,5 +313,4 @@ ko{
         SZ{"스와질란드"}
         TL{"티모르레스테"}
     }
-    Version{"37"}
 }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_DK{
     %%Parent{"en_150"}
     Currencies{
@@ -8,5 +9,4 @@ en_DK{
             "Danish Krone",
         }
     }
-    Version{"37"}
 }

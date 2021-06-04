@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sw_KE{
     Countries{
         202{"Kusini mwa Jangwa la Sahara"}
@@ -12,13 +13,9 @@ sw_KE{
         BY{"Belarusi"}
         CC{"Visiwa vya Kokos (Keeling)"}
         CD{"Kongo - Kinshasa"}
-        CI{"Ivorikosti"}
         CV{"Kepuvede"}
-        CY{"Saiprasi"}
-        DK{"Denmaki"}
         EA{"Keuta na Melilla"}
         EC{"Ekwado"}
-        FM{"Mikronesia"}
         GA{"Gaboni"}
         GL{"Grinilandi"}
         GP{"Gwadelupe"}
@@ -40,7 +37,6 @@ sw_KE{
         MM{"Myama (Burma)"}
         MQ{"Martiniki"}
         MS{"Montserati"}
-        MV{"Maldivi"}
         NC{"Nyukaledonia"}
         NE{"Nijeri"}
         NO{"Norwe"}
@@ -66,10 +62,8 @@ sw_KE{
         VA{"Mji wa Vatikani"}
         VG{"Visiwa vya Virgin vya Uingereza"}
         VI{"Visiwa vya Virgin vya Marekani"}
-        VN{"Vietnamu"}
         XA{"Kiinitoni cha kigeni"}
         XB{"Pseudo-Bidi"}
         YT{"Mayote"}
     }
-    Version{"37"}
 }

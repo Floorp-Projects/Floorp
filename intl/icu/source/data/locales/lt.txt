@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lt{
     AuxExemplarCharacters{
         "[á à ã {ą\u0301} {ą\u0303} {ch} {dz} {dž} é è ẽ {ę\u0301} {ę\u0303} {ė"
@@ -264,6 +265,7 @@ lt{
                 }
             }
             symbols{
+                approximatelySign{"∼"}
                 decimal{","}
                 exponential{"×10^"}
                 group{" "}
@@ -292,7 +294,6 @@ lt{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{

@@ -1,7 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 root{
-    Version{"37"}
+    Version{"38.1"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -344,6 +345,10 @@ root{
             }
         }
         graphics{
+            dot{
+                dnam{"dot"}
+                other{"{0} dot"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 other{"{0} dpcm"}
@@ -386,6 +391,10 @@ root{
             decimeter{
                 dnam{"dm"}
                 other{"{0} dm"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
+                other{"{0} R⊕"}
             }
             fathom{
                 dnam{"fm"}
@@ -465,6 +474,14 @@ root{
             }
         }
         light{
+            candela{
+                dnam{"cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                dnam{"lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"lx"}
                 other{"{0} lx"}
@@ -486,6 +503,10 @@ root{
             earth-mass{
                 dnam{"M⊕"}
                 other{"{0} M⊕"}
+            }
+            grain{
+                dnam{"grain"}
+                other{"{0} grain"}
             }
             gram{
                 dnam{"gram"}
@@ -709,6 +730,22 @@ root{
                 dnam{"dL"}
                 other{"{0} dL"}
             }
+            dessert-spoon{
+                dnam{"dstspn"}
+                other{"{0} dstspn"}
+            }
+            dessert-spoon-imperial{
+                dnam{"dstspn Imp"}
+                other{"{0} dstspn Imp"}
+            }
+            dram{
+                dnam{"dram fluid"}
+                other{"{0} dram fl"}
+            }
+            drop{
+                dnam{"drop"}
+                other{"{0} drop"}
+            }
             fluid-ounce{
                 dnam{"US fl oz"}
                 other{"{0} fl oz US"}
@@ -731,6 +768,10 @@ root{
                 dnam{"hL"}
                 other{"{0} hL"}
             }
+            jigger{
+                dnam{"jigger"}
+                other{"{0} jigger"}
+            }
             liter{
                 dnam{"liter"}
                 other{"{0} l"}
@@ -744,6 +785,10 @@ root{
                 dnam{"mL"}
                 other{"{0} mL"}
             }
+            pinch{
+                dnam{"pinch"}
+                other{"{0} pinch"}
+            }
             pint{
                 dnam{"pt"}
                 other{"{0} pt"}
@@ -755,6 +800,10 @@ root{
             quart{
                 dnam{"qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"qt Imp"}
+                other{"{0} qt Imp."}
             }
             tablespoon{
                 dnam{"tbsp"}

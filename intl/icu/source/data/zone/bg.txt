@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bg{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиджан"}
@@ -958,7 +958,7 @@ bg{
             ls{"Координирано универсално време"}
         }
         "Etc:Unknown"{
-            ec{"неизвестен"}
+            ec{"неизвестен град"}
         }
         "Europe:Amsterdam"{
             ec{"Амстердам"}
@@ -1903,7 +1903,7 @@ bg{
         gmtZeroFormat{"Гринуич"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0}"}
-        regionFormatDaylight{"{0}, лятно часово време"}
+        regionFormatDaylight{"{0} – лятно часово време"}
         regionFormatStandard{"{0} – стандартно време"}
     }
 }

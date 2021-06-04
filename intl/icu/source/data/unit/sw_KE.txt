@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sw_KE{
-    Version{"37"}
     units{
         duration{
             decade{
@@ -42,12 +42,7 @@ sw_KE{
                 one{"maikromita {0}"}
                 other{"maikromita {0}"}
             }
-            mile-scandinavian{
-                one{"maili {0} ya skandinavia"}
-                other{"maili {0} za skandinavia"}
-            }
             solar-radius{
-                dnam{"nusu vipenyo vya jua"}
                 one{"nusu kipenyo {0} cha jua"}
                 other{"nusu vipenyo {0} vya jua"}
             }
@@ -106,18 +101,9 @@ sw_KE{
                 one{"maikromita {0}"}
                 other{"maikromita {0}"}
             }
-            mile-scandinavian{
-                one{"smi {0}"}
-                other{"smi {0}"}
-            }
             parsec{
-                one{"{0} pc"}
+                one{"pc {0}"}
                 other{"kila sekunde {0}"}
-            }
-            solar-radius{
-                dnam{"nusu vipenyo vya jua"}
-                one{"R☉ {0}"}
-                other{"R☉ {0}"}
             }
         }
         pressure{
@@ -126,9 +112,9 @@ sw_KE{
                 one{"baa {0}"}
                 other{"baa {0}"}
             }
-            inch-ofhg{
-                one{"inHg {0}"}
-                other{"inHg {0}"}
+            millimeter-ofhg{
+                one{"mmHg {0}"}
+                other{"mm Hg {0}"}
             }
         }
     }

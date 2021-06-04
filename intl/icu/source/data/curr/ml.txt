@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ml{
     Currencies{
         ADP{
@@ -1116,9 +1117,11 @@ ml{
         }
     }
     Currencies%narrow{
+        AMD{"֏"}
         AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        AZN{"₼"}
         BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
@@ -1146,6 +1149,7 @@ ml{
         FKP{"£"}
         GBP{"£"}
         GEL{"₾"}
+        GHS{"GH₵"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -2245,5 +2249,4 @@ ml{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

@@ -48,7 +48,8 @@ DYNAMICCXXFLAGS = $(SHAREDLIBCXXFLAGS)
 CPPFLAGS += -I$(top_srcdir)/common $(LIBCPPFLAGS)
 LDFLAGS += $(LDFLAGSICUDT)
 
-OBJECTS = stubdata.o
+SOURCES = $(shell cat $(srcdir)/sources.txt)
+OBJECTS = $(SOURCES:.cpp=.o)
 
 ## Header files to install
 HEADERS = 

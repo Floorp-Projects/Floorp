@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bs_Cyrl{
     %%Parent{"root"}
     Countries{
@@ -313,5 +314,4 @@ bs_Cyrl{
         FK{"Фокландска Острва (Малвинска)"}
         TL{"Тимор-Лесте (Источни Тимор)"}
     }
-    Version{"37"}
 }

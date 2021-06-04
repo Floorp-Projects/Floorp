@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 vi{
     Countries{
         001{"Thế giới"}
@@ -133,7 +134,7 @@ vi{
         GU{"Guam"}
         GW{"Guinea-Bissau"}
         GY{"Guyana"}
-        HK{"Hồng Kông, Trung Quốc"}
+        HK{"Đặc khu Hành chính Hồng Kông, Trung Quốc"}
         HM{"Quần đảo Heard và McDonald"}
         HN{"Honduras"}
         HR{"Croatia"}
@@ -187,7 +188,7 @@ vi{
         ML{"Mali"}
         MM{"Myanmar (Miến Điện)"}
         MN{"Mông Cổ"}
-        MO{"Macao, Trung Quốc"}
+        MO{"Đặc khu Hành chính Macao, Trung Quốc"}
         MP{"Quần đảo Bắc Mariana"}
         MQ{"Martinique"}
         MR{"Mauritania"}
@@ -253,7 +254,7 @@ vi{
         SV{"El Salvador"}
         SX{"Sint Maarten"}
         SY{"Syria"}
-        SZ{"Swaziland"}
+        SZ{"Eswatini"}
         TA{"Tristan da Cunha"}
         TC{"Quần đảo Turks và Caicos"}
         TD{"Chad"}
@@ -282,7 +283,7 @@ vi{
         VC{"St. Vincent và Grenadines"}
         VE{"Venezuela"}
         VG{"Quần đảo Virgin thuộc Anh"}
-        VI{"Quần đảo Virgin thuộc Mỹ"}
+        VI{"Quần đảo Virgin thuộc Hoa Kỳ"}
         VN{"Việt Nam"}
         VU{"Vanuatu"}
         WF{"Wallis và Futuna"}
@@ -308,8 +309,7 @@ vi{
         CI{"Bờ Biển Ngà"}
         CZ{"Cộng hòa Séc"}
         FK{"Quần đảo Falkland (Islas Malvinas)"}
-        SZ{"Eswatini"}
+        SZ{"Swaziland"}
         TL{"Đông Timor"}
     }
-    Version{"37"}
 }

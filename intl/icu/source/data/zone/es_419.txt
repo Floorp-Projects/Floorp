@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_419{
-    Version{"37"}
     zoneStrings{
         "America:Fort_Nelson"{
             ec{"Fuerte Nelson"}
@@ -19,13 +19,19 @@ es_419{
             ec{"Islas Canarias"}
         }
         "Etc:UTC"{
-            ls{"Hora Universal Coordinada"}
+            ls{"hora universal coordinada"}
+        }
+        "Etc:Unknown"{
+            ec{"ciudad desconocida"}
         }
         "Europe:Busingen"{
             ec{"Büsingen"}
         }
         "Europe:Dublin"{
             ld{"hora estándar de Irlanda"}
+        }
+        "Europe:Guernsey"{
+            ec{"Guernsey"}
         }
         "Pacific:Wake"{
             ec{"Isla Wake"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ml{
     Countries{
         001{"ലോകം"}
@@ -187,7 +188,7 @@ ml{
         ML{"മാലി"}
         MM{"മ്യാൻമാർ (ബർമ്മ)"}
         MN{"മംഗോളിയ"}
-        MO{"മക്കാവു (SAR) ചൈന"}
+        MO{"മക്കാവു SAR ചൈന"}
         MP{"ഉത്തര മറിയാനാ ദ്വീപുകൾ"}
         MQ{"മാർട്ടിനിക്ക്"}
         MR{"മൗറിറ്റാനിയ"}
@@ -253,7 +254,7 @@ ml{
         SV{"എൽ സാൽവദോർ"}
         SX{"സിന്റ് മാർട്ടെൻ"}
         SY{"സിറിയ"}
-        SZ{"സ്വാസിലാന്റ്"}
+        SZ{"സ്വാസിലൻഡ്"}
         TA{"ട്രിസ്റ്റൻ ഡ കൂന"}
         TC{"ടർക്ക്‌സും കെയ്‌ക്കോ ദ്വീപുകളും"}
         TD{"ഛാഡ്"}
@@ -298,7 +299,6 @@ ml{
         ZZ{"അജ്ഞാത പ്രദേശം"}
     }
     Countries%short{
-        GB{"യു.കെ."}
         HK{"ഹോങ്കോങ്"}
         MO{"മക്കാവു"}
         PS{"പലസ്‌തീൻ"}
@@ -314,5 +314,4 @@ ml{
         SZ{"സ്വിറ്റ്സർലൻഡ്"}
         TL{"കിഴക്കൻ തിമോർ"}
     }
-    Version{"37"}
 }

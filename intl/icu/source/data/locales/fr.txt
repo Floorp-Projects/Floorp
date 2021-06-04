@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fr{
     AuxExemplarCharacters{"[á å ä ã ā ć ē í ì ī ĳ ñ ó ò ö õ ø ř š ſ ß ú ǔ]"}
     Ellipsis{
@@ -42,6 +43,7 @@ fr{
             patternsLong{
                 decimalFormat{
                     1000{
+                        1{"mille"}
                         one{"0 millier"}
                         other{"0 mille"}
                     }
@@ -194,6 +196,7 @@ fr{
                 }
             }
             symbols{
+                approximatelySign{"≃"}
                 decimal{","}
                 exponential{"E"}
                 group{" "}
@@ -214,6 +217,7 @@ fr{
                 other{"Prenez la {0}e à droite."}
             }
             plural{
+                many{"{0} de jours"}
                 one{"{0} jour"}
                 other{"{0} jours"}
             }
@@ -221,7 +225,6 @@ fr{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -893,10 +896,10 @@ fr{
                 "d MMMM y",
                 "d MMM y",
                 "dd/MM/y",
+                "{1}, {0}",
                 "{1} 'à' {0}",
                 "{1} 'à' {0}",
-                "{1} 'à' {0}",
-                "{1} 'à' {0}",
+                "{1}, {0}",
                 "{1} {0}",
             }
             appendItems{

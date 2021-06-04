@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sat{
     Languages{
         de{"ᱡᱟᱨᱢᱟᱱ"}
@@ -66,7 +67,6 @@ sat{
             latn{"ᱣᱮᱥᱴᱟᱨᱱ ᱮᱞ"}
         }
     }
-    Version{"37"}
     codePatterns{
         language{"ᱯᱟᱹᱨᱥᱤ: {0}"}
         script{"ᱪᱤᱠᱤ/ᱦᱟᱨᱚᱯᱺ {0}"}

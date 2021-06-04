@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 de_CH{
-    Version{"37"}
     units{
         area{
             square-foot{
@@ -23,6 +23,11 @@ de_CH{
                 per{"{0} pro Fuss"}
             }
         }
+        mass{
+            grain{
+                dnam{"Messerspitze"}
+            }
+        }
         volume{
             cubic-foot{
                 dnam{"Kubikfuss"}
@@ -34,6 +39,9 @@ de_CH{
                 other{"{0} gal Imp."}
                 per{"{0}/gal Imp."}
             }
+            jigger{
+                dnam{"Schuss"}
+            }
         }
     }
     unitsShort{
@@ -42,11 +50,31 @@ de_CH{
                 dnam{"Fuss"}
             }
         }
+        mass{
+            grain{
+                dnam{"Messerspitze"}
+                other{"{0} Msp."}
+            }
+        }
         volume{
+            dram{
+                dnam{"Dram"}
+                one{"{0} dr."}
+                other{"{0} dr."}
+            }
             gallon-imperial{
                 one{"{0} gal Imp."}
                 other{"{0} gal Imp."}
                 per{"{0}/gal Imp."}
+            }
+            jigger{
+                dnam{"Schuss"}
+                one{"Schuss"}
+                other{"{0} Schuss"}
+            }
+            pinch{
+                one{"{0} Prise"}
+                other{"{0} Prise"}
             }
         }
     }

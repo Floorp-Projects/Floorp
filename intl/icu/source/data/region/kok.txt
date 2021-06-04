@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kok{
     Countries{
         001{"जग"}
@@ -75,7 +76,7 @@ kok{
         CC{"कोकोस (कीलिंग) आयलँड"}
         CD{"कोंगो - किंशासा"}
         CF{"मध्य अफ्रीकी लोकसत्तकराज्य"}
-        CG{"काँगो - ब्राझाविला"}
+        CG{"कोंगो - ब्राझाविला"}
         CH{"स्विट्ज़रलैंड"}
         CI{"कोत द’ईवोआर"}
         CK{"कुक आयलँड्स"}
@@ -305,7 +306,7 @@ kok{
         US{"युएस"}
     }
     Countries%variant{
-        CD{"काँगो (डीआरसी)"}
+        CD{"कोंगो (डीआरसी)"}
         CG{"कोंगो (प्रजासत्ताक)"}
         CI{"आयवोरी कोस्ट"}
         CZ{"चेक लोकसत्ताक"}
@@ -313,5 +314,4 @@ kok{
         SZ{"स्वाझिलँड"}
         TL{"ईस्ट तिमूर"}
     }
-    Version{"37"}
 }

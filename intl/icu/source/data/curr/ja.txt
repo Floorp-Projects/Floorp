@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ja{
     Currencies{
         ADP{
@@ -80,7 +81,7 @@ ja{
         }
         AWG{
             "AWG",
-            "アルバ ギルダー",
+            "アルバ フロリン",
         }
         AZM{
             "AZM",
@@ -1371,7 +1372,7 @@ ja{
             other{"オーストラリア ドル"}
         }
         AWG{
-            other{"アルバ ギルダー"}
+            other{"アルバ フロリン"}
         }
         AZM{
             other{"アゼルバイジャン マナト (1993–2006)"}
@@ -2223,5 +2224,4 @@ ja{
     CurrencyUnitPatterns{
         other{"{0}{1}"}
     }
-    Version{"37"}
 }

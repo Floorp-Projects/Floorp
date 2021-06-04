@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ak{
     RBNFRules{
         SpelloutRules{
@@ -57,5 +58,4 @@ ak{
             "2: a-\u025B-t\u0254-so-=%spellout-cardinal=;",
         }
     }
-    Version{"37"}
 }

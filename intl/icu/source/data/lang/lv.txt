@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lv{
     Keys{
         calendar{"Kalendārs"}
@@ -552,6 +553,9 @@ lv{
     Languages%short{
         en_GB{"angļu (Lielbritānija)"}
     }
+    Languages%variant{
+        ckb{"sorani kurdu"}
+    }
     Scripts{
         Arab{"arābu"}
         Armi{"aramiešu"}
@@ -806,13 +810,12 @@ lv{
         VALENCIA{"valensiešu"}
         WADEGILE{"Veida-Džailza romanizācija"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — visas"}
         category-list{"{0}: {1}"}
         compatibility{"{0} — saderība"}
         enclosed{"{0} — noslēgtās"}
-        extended{"{0} — paplašinātās"}
+        extended{"{0} — speciālās"}
         historic{"{0} — vēsturiskās"}
         miscellaneous{"{0} — dažādi"}
         other{"{0} — citas"}
@@ -822,6 +825,8 @@ lv{
             other{"{0} vilkumi"}
             zero{"{0} vilkumu"}
         }
+        subscript{"apakšraksts {0}"}
+        superscript{"augšraksts {0}"}
     }
     codePatterns{
         language{"Valoda: {0}"}

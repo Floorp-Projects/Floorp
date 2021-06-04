@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pt_PT{
-    Version{"37"}
     zoneStrings{
         "Africa:Addis_Ababa"{
             ec{"Adis-Abeba"}
@@ -129,9 +129,6 @@ pt_PT{
         "Asia:Rangoon"{
             ec{"Yangon"}
         }
-        "Asia:Saigon"{
-            ec{"Cidade de Ho Chi Minh"}
-        }
         "Asia:Taipei"{
             ec{"Taipé"}
         }
@@ -188,6 +185,9 @@ pt_PT{
         }
         "Europe:San_Marino"{
             ec{"São Marinho"}
+        }
+        "Europe:Tallinn"{
+            ec{"Talim"}
         }
         "Indian:Christmas"{
             ec{"Ilha do Natal"}
@@ -702,7 +702,9 @@ pt_PT{
             ls{"Hora de Niuê"}
         }
         "meta:Norfolk"{
-            ls{"Hora da Ilha Norfolk"}
+            ld{"Hora de verão da Ilha Norfolk"}
+            lg{"Hora da Ilha Norfolk"}
+            ls{"Hora padrão da Ilha Norfolk"}
         }
         "meta:Noronha"{
             ld{"Hora de verão de Fernando de Noronha"}

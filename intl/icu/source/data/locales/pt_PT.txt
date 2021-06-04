@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pt_PT{
     Ellipsis{
         final{"{0}…"}
@@ -160,6 +161,7 @@ pt_PT{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 group{" "}
             }
         }
@@ -171,7 +173,6 @@ pt_PT{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -274,6 +275,44 @@ pt_PT{
                 yyyyQQQQ{"QQQQ 'de' y G"}
             }
             intervalFormats{
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"MM/y GGGGG – MM/y GGGGG"}
+                    M{"MM/y – MM/y GGGGG"}
+                    y{"MM/y – MM/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, d/MM/y GGGGG – E, d/MM/y GGGGG"}
+                    M{"E, d/MM/y – E, d/MM/y GGGGG"}
+                    d{"E, d/MM/y – E, d/MM/y GGGGG"}
+                    y{"E, d/MM/y – E, d/MM/y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, d 'de' MMMM, y G – E, d 'de' MMMM, y G"}
+                    M{"E, d 'de' MMMM – E, d 'de' MMMM, y G"}
+                    d{"E, d 'de' MMMM – E, d 'de' MMMM, y G"}
+                    y{"E, d 'de' MMMM, y – E, d 'de' MMMM, y G"}
+                }
+                GyMMMd{
+                    G{"d 'de' MMMM, y G – d 'de' MMMM, y G"}
+                    M{"d 'de' MMMM – d 'de' MMMM, y G"}
+                    d{"d – d 'de' MMMM, y G"}
+                    y{"d 'de' MMMM, y – d 'de' MMMM, y G"}
+                }
+                GyMd{
+                    G{"d/MM/y GGGGG – d/MM/y GGGGG"}
+                    M{"d/MM/y – d/MM/y GGGGG"}
+                    d{"d/MM/y – d/MM/y GGGGG"}
+                    y{"d/MM/y – d/MM/y GGGGG"}
+                }
                 M{
                     M{"MM–MM"}
                 }
@@ -379,6 +418,15 @@ pt_PT{
                         "S",
                         "S",
                     }
+                    short{
+                        "dom.",
+                        "seg.",
+                        "ter.",
+                        "qua.",
+                        "qui.",
+                        "sex.",
+                        "sáb.",
+                    }
                 }
                 stand-alone{
                     abbreviated{
@@ -434,25 +482,11 @@ pt_PT{
                 }
             }
             intervalFormats{
-                Gy{
-                    G{"y G – y G"}
-                    y{"y – y G"}
-                }
-                GyM{
-                    G{"M/y GGGGG – M/y GGGGG"}
-                    M{"M/y – M/y GGGGG"}
-                    y{"M/y – M/y GGGGG"}
-                }
                 GyMEd{
                     G{"E, d/M/y GGGGG – E, d/M/y GGGGG"}
                     M{"E, d/M/y – E, d/M/y GGGGG"}
                     d{"E, d/M/y – E, d/M/y GGGGG"}
                     y{"E, d/M/y – E, d/M/y GGGGG"}
-                }
-                GyMMM{
-                    G{"MMM y G – MMM y G"}
-                    M{"MMM – MMM y G"}
-                    y{"MMM y – MMM y G"}
                 }
                 GyMMMEd{
                     G{"E, d MMM y G – E, d MMM y G"}
@@ -673,8 +707,8 @@ pt_PT{
                     other{"+{0} dias"}
                 }
                 past{
-                    one{"há {0} dias"}
-                    other{"há {0} dias"}
+                    one{"-{0} dia"}
+                    other{"-{0} dias"}
                 }
             }
         }
@@ -1126,12 +1160,6 @@ pt_PT{
                     other{"dentro de {0} sem."}
                 }
             }
-        }
-        weekday-narrow{
-            dn{"dia da semana"}
-        }
-        weekday-short{
-            dn{"dia da semana"}
         }
         year{
             relativeTime{

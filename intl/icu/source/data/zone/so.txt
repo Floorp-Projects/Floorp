@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 so{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjaan"}
@@ -787,7 +787,7 @@ so{
             ec{"Farow"}
         }
         "Atlantic:Madeira"{
-            ec{"Madeera"}
+            ec{"Madira"}
         }
         "Atlantic:Reykjavik"{
             ec{"Reykjafik"}
@@ -848,7 +848,7 @@ so{
             ec{"Atens"}
         }
         "Europe:Belgrade"{
-            ec{"Bilgaraydh"}
+            ec{"Belgaraydh"}
         }
         "Europe:Berlin"{
             ec{"Barliin"}
@@ -894,7 +894,7 @@ so{
             ec{"Jaarsey"}
         }
         "Europe:Kiev"{
-            ec{"Kiyf"}
+            ec{"Kiyeef"}
         }
         "Europe:Kirov"{
             ec{"Kiroof"}
@@ -907,10 +907,10 @@ so{
             ld{"Waqtiga Xagaaga ee Biritishka"}
         }
         "Europe:Luxembourg"{
-            ec{"Luksembaag"}
+            ec{"Luksemberg"}
         }
         "Europe:Madrid"{
-            ec{"Maadriid"}
+            ec{"Madriid"}
         }
         "Europe:Mariehamn"{
             ec{"Maarihaam"}
@@ -979,7 +979,7 @@ so{
             ec{"Fatikaan"}
         }
         "Europe:Vienna"{
-            ec{"Fiyaana"}
+            ec{"Fiyeena"}
         }
         "Europe:Vilnius"{
             ec{"Finiyuus"}
@@ -988,13 +988,13 @@ so{
             ec{"Folgograd"}
         }
         "Europe:Zagreb"{
-            ec{"Sagreb"}
+            ec{"Saqrib"}
         }
         "Europe:Zaporozhye"{
             ec{"Saborosey"}
         }
         "Europe:Zurich"{
-            ec{"Surij"}
+            ec{"Suurikh"}
         }
         "Indian:Antananarivo"{
             ec{"Antananarifo"}
@@ -1368,7 +1368,7 @@ so{
             ls{"Waqtiga Koonfurta Faransiiska & Antaarktik"}
         }
         "meta:GMT"{
-            ls{"Waqtiga Celceliska Giriinwij"}
+            ls{"Wakhtiga Giriinwij"}
         }
         "meta:Galapagos"{
             ls{"Waqtiga Galabagos"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ccp{
     Currencies{
         ADP{
@@ -1804,5 +1805,4 @@ ccp{
             other{"𑄎𑄟𑄴𑄝𑄨𑄠𑄚𑄴 𑄇𑄧𑄤𑄌"}
         }
     }
-    Version{"37"}
 }

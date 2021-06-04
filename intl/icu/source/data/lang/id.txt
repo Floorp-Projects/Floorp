@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 id{
     Keys{
         calendar{"Kalender"}
@@ -174,8 +175,6 @@ id{
         fo{"Faroe"}
         fon{"Fon"}
         fr{"Prancis"}
-        fr_CA{"Perancis (Kanada)"}
-        fr_CH{"Perancis (Swiss)"}
         frc{"Prancis Cajun"}
         frm{"Prancis Abad Pertengahan"}
         fro{"Prancis Kuno"}
@@ -564,12 +563,14 @@ id{
         zen{"Zenaga"}
         zgh{"Tamazight Maroko Standar"}
         zh{"Tionghoa"}
-        zh_Hans{"Tionghoa (Aksara Sederhana)"}
-        zh_Hant{"Tionghoa (Aksara Tradisional)"}
         zu{"Zulu"}
         zun{"Zuni"}
         zxx{"Tidak ada konten linguistik"}
         zza{"Zaza"}
+    }
+    Languages%long{
+        zh_Hans{"Tionghoa Mandarin (Sederhana)"}
+        zh_Hant{"Tionghoa Mandarin (Tradisional)"}
     }
     Languages%menu{
         yue{"Tionghoa, Kanton"}
@@ -577,7 +578,6 @@ id{
     }
     Languages%short{
         az{"Azeri"}
-        en_GB{"Inggris (U.K.)"}
     }
     Languages%variant{
         ps{"Pushto"}
@@ -610,7 +610,7 @@ id{
         Cprt{"Siprus"}
         Cyrl{"Sirilik"}
         Cyrs{"Gereja Slavonia Sirilik Lama"}
-        Deva{"Devanagari"}
+        Deva{"Dewanagari"}
         Dsrt{"Deseret"}
         Dupl{"Stenografi Duployan"}
         Egyd{"Demotik Mesir"}
@@ -745,7 +745,7 @@ id{
         Zsym{"Simbol"}
         Zxxx{"Tidak Tertulis"}
         Zyyy{"Umum"}
-        Zzzz{"Skrip Tak Dikenal"}
+        Zzzz{"Skrip Tidak Dikenal"}
     }
     Scripts%stand-alone{
         Hans{"Han Sederhana"}
@@ -852,7 +852,7 @@ id{
         ms{
             metric{"Sistem Metrik"}
             uksystem{"Sistem Pengukuran Imperial"}
-            ussystem{"Sistem Pengukuran A.S."}
+            ussystem{"Sistem Pengukuran AS"}
         }
         numbers{
             arab{"Angka Arab Timur"}
@@ -862,7 +862,7 @@ id{
             bali{"Angka Bali"}
             beng{"Angka Bengali"}
             cham{"Angka Cham"}
-            deva{"Angka Devanagari"}
+            deva{"Angka Dewanagari"}
             ethi{"Angka Etiopia"}
             finance{"Angka Finansial"}
             fullwide{"Angka Lebar Penuh"}
@@ -954,20 +954,21 @@ id{
         VALENCIA{"Valencia"}
         WADEGILE{"Wade-Giles Latin"}
     }
-    Version{"37"}
     characterLabelPattern{
-        all{"{0} — Semua"}
+        all{"{0} — semua"}
         category-list{"{0}: {1}"}
-        compatibility{"{0} — Kompatibilitas"}
-        enclosed{"{0} — Terlampir"}
+        compatibility{"{0} — kompatibilitas"}
+        enclosed{"{0} — terlampir"}
         extended{"{0} — diperluas"}
-        historic{"{0} — Historis"}
-        miscellaneous{"{0} — Lain-lain"}
-        other{"{0} — Lainnya"}
+        historic{"{0} — historis"}
+        miscellaneous{"{0} — lain-lain"}
+        other{"{0} — lainnya"}
         scripts{"skrip — {0}"}
         strokes{
-            other{"{0} Goresan"}
+            other{"{0} goresan"}
         }
+        subscript{"subskrip {0}"}
+        superscript{"superskrip {0}"}
     }
     codePatterns{
         language{"Bahasa: {0}"}

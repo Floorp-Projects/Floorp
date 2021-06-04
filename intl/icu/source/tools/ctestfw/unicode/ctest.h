@@ -228,7 +228,7 @@ log_data_err(const char *pattern, ...);
 
 /**
  * Log a known issue.
- * @param ticket ticket number such as "12345" for ICU tickets or "cldrbug:6636" for CLDR tickets.
+ * @param ticket ticket number such as "ICU-12345" for ICU tickets or "CLDR-6636" for CLDR tickets.
  * @param fmt ...  sprintf-style format, optional message. can be NULL.
  * @return TRUE if known issue test should be skipped, FALSE if it should be run
  */

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lrc{
     AuxExemplarCharacters{
         "[\u200B\u200C\u200D\u200E\u200F \u064B \u064C \u064D \u064E \u064F \u0650 "
@@ -36,7 +37,6 @@ lrc{
         }
         native{"arabext"}
     }
-    Version{"37"}
     calendar{
         default{"persian"}
         generic{

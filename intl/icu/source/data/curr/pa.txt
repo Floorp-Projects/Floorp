@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pa{
     Currencies{
         AED{
@@ -1194,7 +1195,7 @@ pa{
             other{"ਈਰਾਨੀ ਰਿਆਲ"}
         }
         ISK{
-            one{"ਆਈਸਲੈਂਡਿਕ ਕਰੌਨ"}
+            one{"ਆਈਸਲੈਂਡੀ ਕਰੋਨਾ"}
             other{"ਆਈਸਲੈਂਡੀ ਕਰੋਨਾ"}
         }
         JMD{
@@ -1458,7 +1459,7 @@ pa{
             other{"ਸਾਉ ਟੋਮੀ ਐਂਡ ਪ੍ਰਿੰਸਪੀ ਡੋਬਰਾ (1977–2017)"}
         }
         STN{
-            one{"ਸਾਉ ਟੋਮੀ ਅਤੇ ਪ੍ਰਿੰਸਪੀ ਡੋਬਰਾ"}
+            one{"ਸਾਉ ਟੋਮੀ ਐਂਡ ਪ੍ਰਿੰਸਪੀ ਡੋਬਰਾ"}
             other{"ਸਾਉ ਟੋਮੀ ਐਂਡ ਪ੍ਰਿੰਸਪੀ ਡੋਬਰਾ"}
         }
         SUR{
@@ -1614,5 +1615,4 @@ pa{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

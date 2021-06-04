@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bs{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1513,11 +1513,17 @@ bs{
             ld{"Centralnoevropsko ljetno vrijeme"}
             lg{"Centralnoevropsko vrijeme"}
             ls{"Centralnoevropsko standardno vrijeme"}
+            sd{"CEST"}
+            sg{"CET"}
+            ss{"CET"}
         }
         "meta:Europe_Eastern"{
             ld{"Istočnoevropsko ljetno vrijeme"}
             lg{"Istočnoevropsko vrijeme"}
             ls{"Istočnoevropsko standardno vrijeme"}
+            sd{"EEST"}
+            sg{"EET"}
+            ss{"EET"}
         }
         "meta:Europe_Further_Eastern"{
             ls{"Dalekoistočnoevropsko vrijeme"}
@@ -1526,6 +1532,9 @@ bs{
             ld{"Zapadnoevropsko ljetno vrijeme"}
             lg{"Zapadnoevropsko vrijeme"}
             ls{"Zapadnoevropsko standardno vrijeme"}
+            sd{"WEST"}
+            sg{"WET"}
+            ss{"WET"}
         }
         "meta:Falkland"{
             ld{"Folklandsko ljetno vrijeme"}
@@ -1545,6 +1554,7 @@ bs{
         }
         "meta:GMT"{
             ls{"Griničko vrijeme"}
+            ss{"GMT"}
         }
         "meta:Galapagos"{
             ls{"Galapagosko vrijeme"}

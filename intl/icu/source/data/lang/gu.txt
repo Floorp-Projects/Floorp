@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 gu{
     Keys{
         calendar{"કેલેન્ડર"}
@@ -800,8 +801,8 @@ gu{
             strict{"ચુસ્ત રેખા વિરામ પ્રકાર"}
         }
         m0{
-            bgn{"BGN"}
-            ungegn{"UNGEGN"}
+            bgn{"US BGN"}
+            ungegn{"UN GEGN"}
         }
         ms{
             metric{"દશાંશ પદ્ધતિ"}
@@ -855,7 +856,6 @@ gu{
         PINYIN{"પિનયિન રોમનાઇઝેશન"}
         WADEGILE{"વેડ-ગિલ્સ રોમનાઇઝેશન"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — તમામ"}
         category-list{"{0}: {1}"}
@@ -870,6 +870,8 @@ gu{
             one{"{0} સ્ટ્રોક્સ"}
             other{"{0} સ્ટ્રોક્સ"}
         }
+        subscript{"સબસ્ક્રિપ્ટ {0}"}
+        superscript{"સુપરસ્ક્રિપ્ટ {0}"}
     }
     codePatterns{
         language{"ભાષા: {0}"}
