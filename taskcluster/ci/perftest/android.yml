@@ -23,7 +23,7 @@ hw-g5:
     description: Run ./mach perftest on a G5
     treeherder:
         symbol: perftest-g5
-    platform: android-hw-g5-7-0-arm7-shippable/opt
+    platform: android-hw-g5-7-0-arm7-api-16-shippable/opt
 
 hw-p2:
     worker-type: t-bitbar-gw-perf-p2
@@ -37,7 +37,7 @@ hw-g5-view-fenix:
     description: Run VIEW perftest on Fenix on a G5
     treeherder:
         symbol: perftest(view-fenix)
-    platform: android-hw-g5-7-0-arm7-shippable/opt
+    platform: android-hw-g5-7-0-arm7-api-16-shippable/opt
     attributes:
         cron: true
         batch: true
@@ -98,7 +98,7 @@ hw-g5-view-gv:
     description: Run VIEW perftest on GV on a G5
     treeherder:
         symbol: perftest(view-gv)
-    platform: android-hw-g5-7-0-arm7-shippable/opt
+    platform: android-hw-g5-7-0-arm7-api-16-shippable/opt
     attributes:
         cron: true
     run:
@@ -157,7 +157,7 @@ hw-g5-main-fenix:
     description: Run main (home activity) perftest on Fenix on a G5
     treeherder:
         symbol: perftest(main-fenix)
-    platform: android-hw-g5-7-0-arm7-shippable/opt
+    platform: android-hw-g5-7-0-arm7-api-16-shippable/opt
     attributes:
         cron: false
     run:
@@ -222,7 +222,7 @@ hw-g5-perfstats-gv:
     description: Run PerfStats perftest on GeckoView on a G5
     treeherder:
         symbol: perftest(perfstats-gv)
-    platform: android-hw-g5-7-0-arm7-shippable/opt
+    platform: android-hw-g5-7-0-arm7-api-16-shippable/opt
     attributes:
         cron: false
     run:
@@ -280,7 +280,7 @@ hw-g5-perfstats-fenix:
     description: Run PerfStats perftest on Fenix on a G5
     treeherder:
         symbol: perftest(perfstats-fenix)
-    platform: android-hw-g5-7-0-arm7-shippable/opt
+    platform: android-hw-g5-7-0-arm7-api-16-shippable/opt
     attributes:
         cron: false
     run:

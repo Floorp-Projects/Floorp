@@ -14,7 +14,7 @@ ac_add_options --with-gradle
 # We want to use (and populate!) the local Nexus repositories.
 export GRADLE_MAVEN_REPOSITORIES="http://localhost:8081/nexus/content/repositories/google/","http://localhost:8081/nexus/content/repositories/central/","http://localhost:8081/nexus/content/repositories/gradle-plugins/"
 
-# From here on, just like ../android-arm/nightly.
+# From here on, just like ../android-api-16-frontend/nightly.
 
 . "$topsrcdir/build/mozconfig.no-compile"
 
@@ -34,7 +34,7 @@ ac_add_options --with-branding=mobile/android/branding/nightly
 export MOZILLA_OFFICIAL=1
 
 # mozconfigs/common.override would be here, but it needs to be last in the file.
-# End ../android-arm/nightly.
+# End ../android-api-16-frontend/nightly.
 
 # Disable Keyfile Loading (and checks) since dependency fetching doesn't need these keys.
 # This overrides the settings in the common android mozconfig
