@@ -656,17 +656,6 @@ skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty
 # Tests not yet updated for https://github.com/tc39/intl-displaynames-v2
 skip script test262/intl402/DisplayNames/prototype/resolvedOptions/return-object.js
 
-# UTS 35 (rev38) changed "cel-gaulish" to canonicalise to "xtg" instead of "xtg-x-cel-gaulish".
-skip script test262/intl402/Intl/getCanonicalLocales/preferred-grandfathered.js
-skip script test262/intl402/Locale/extensions-grandfathered.js
-skip script test262/intl402/Locale/likely-subtags-grandfathered.js
-
-# UTS 35 (rev38) changed "sgn-GR" to canonicalise to "gss" instead of keeping it as "sgn-GR".
-skip script test262/intl402/Intl/getCanonicalLocales/canonicalized-tags.js
-
-# UTS 35 (rev38) changed "ja-latn-hepburn-heploc" to canonicalise to "ja-Latn-alalc97".
-skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
-
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
