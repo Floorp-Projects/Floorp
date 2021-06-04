@@ -584,8 +584,7 @@ impl<'a> CustomPropertiesBuilder<'a> {
                     match result {
                         Ok(new_value) => new_value,
                         Err(..) => {
-                            // Don't touch the map, this has the same effect as
-                            // making it compute to the inherited one.
+                            map.remove(name);
                             return;
                         },
                     }
@@ -659,8 +658,7 @@ impl<'a> CustomPropertiesBuilder<'a> {
             None => return self.inherited.cloned(),
         };
         if self.may_have_cycles {
-            let inherited = self.inherited.as_ref().map(|m| &***m);
-            substitute_all(&mut map, inherited, self.device);
+            substitute_all(&mut map, self.device);
         }
         map.shrink_to_fit();
         Some(Arc::new(map))
@@ -673,7 +671,6 @@ impl<'a> CustomPropertiesBuilder<'a> {
 /// It does cycle dependencies removal at the same time as substitution.
 fn substitute_all(
     custom_properties_map: &mut CustomPropertiesMap,
-    inherited: Option<&CustomPropertiesMap>,
     device: &Device,
 ) {
     // The cycle dependencies removal in this function is a variant
@@ -711,10 +708,7 @@ fn substitute_all(
         /// all unfinished strong connected components.
         stack: SmallVec<[usize; 5]>,
         map: &'a mut CustomPropertiesMap,
-        /// The inherited variables. We may need to restore some if we fail
-        /// substitution.
-        inherited: Option<&'a CustomPropertiesMap>,
-        /// to resolve the environment to substitute `env()` variables.
+        /// To resolve the environment to substitute `env()` variables.
         device: &'a Device,
     }
 
@@ -856,16 +850,8 @@ fn substitute_all(
                 context.map.insert(name, computed_value);
             },
             Err(..) => {
-                // This is invalid, reset it to the unset (inherited) value.
-                let inherited = context.inherited.and_then(|m| m.get(&name)).cloned();
-                match inherited {
-                    Some(computed_value) => {
-                        context.map.insert(name, computed_value);
-                    },
-                    None => {
-                        context.map.remove(&name);
-                    },
-                };
+                // This is invalid, reset it to the guaranteed-invalid value.
+                context.map.remove(&name);
             },
         }
 
@@ -883,7 +869,6 @@ fn substitute_all(
             stack: SmallVec::new(),
             var_info: SmallVec::new(),
             map: custom_properties_map,
-            inherited,
             device,
         };
         traverse(name, &mut context);
