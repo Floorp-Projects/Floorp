@@ -420,9 +420,8 @@ void HttpChannelChild::OnStartRequest(
   MOZ_ASSERT(!aRequestHeaders.HasHeader(nsHttp::Cookie));
   MOZ_ASSERT(!nsHttpResponseHead(aResponseHead).HasHeader(nsHttp::Set_Cookie));
 
-  if (aUseResponseHead && !mCanceled) {
+  if (aUseResponseHead && !mCanceled)
     mResponseHead = MakeUnique<nsHttpResponseHead>(aResponseHead);
-  }
 
   if (!aArgs.securityInfoSerialization().IsEmpty()) {
     [[maybe_unused]] nsresult rv = NS_DeserializeObject(
@@ -1800,11 +1799,10 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult aResult) {
     targetLoadInfoForwarder.emplace(args);
   }
 
-  if (CanSend()) {
+  if (CanSend())
     SendRedirect2Verify(aResult, *headerTuples, sourceRequestBlockingReason,
                         targetLoadInfoForwarder, loadFlags, referrerInfo,
                         redirectURI, corsPreflightArgs);
-  }
 
   return NS_OK;
 }

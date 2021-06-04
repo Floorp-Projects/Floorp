@@ -45,7 +45,7 @@ class SubstitutingProtocolHandler {
                   nsIURI* aBaseURI, nsIURI** aResult);
 
   [[nodiscard]] nsresult CollectSubstitutions(
-      nsTArray<SubstitutionMapping>& aMappings);
+      nsTArray<SubstitutionMapping>& aResources);
 
  protected:
   virtual ~SubstitutingProtocolHandler() = default;

@@ -108,8 +108,8 @@ UDPClientListener::OnPacketReceived(nsIUDPSocket* socket,
       ADD_FAILURE();
     }
     return NS_OK;
-  }
-  if (TEST_OUTPUT_STREAM != phase || !CheckMessageContent(message, RESPONSE)) {
+  } else if (TEST_OUTPUT_STREAM != phase ||
+             !CheckMessageContent(message, RESPONSE)) {
     mResult = NS_ERROR_FAILURE;
   }
 
@@ -172,8 +172,7 @@ UDPServerListener::OnPacketReceived(nsIUDPSocket* socket,
       ADD_FAILURE();
     }
     return NS_OK;
-  }
-  if (TEST_MULTICAST == phase && CheckMessageContent(message, REQUEST)) {
+  } else if (TEST_MULTICAST == phase && CheckMessageContent(message, REQUEST)) {
     mResult = NS_OK;
   } else if (TEST_SEND_API != phase ||
              !CheckMessageContent(message, RESPONSE)) {

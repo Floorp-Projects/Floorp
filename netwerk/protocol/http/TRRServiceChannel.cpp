@@ -445,9 +445,8 @@ nsresult TRRServiceChannel::BeginConnect() {
   // Adjust mCaps according to our request headers:
   //  - If "Connection: close" is set as a request header, then do not bother
   //    trying to establish a keep-alive connection.
-  if (mRequestHead.HasHeaderValue(nsHttp::Connection, "close")) {
+  if (mRequestHead.HasHeaderValue(nsHttp::Connection, "close"))
     mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE);
-  }
 
   if (gHttpHandler->CriticalRequestPrioritization()) {
     if (mClassOfService & nsIClassOfService::Leader) {
@@ -497,9 +496,8 @@ nsresult TRRServiceChannel::ContinueOnBeforeConnect() {
   LOG(("TRRServiceChannel::ContinueOnBeforeConnect [this=%p]\n", this));
 
   // ensure that we are using a valid hostname
-  if (!net_IsValidHostName(nsDependentCString(mConnectionInfo->Origin()))) {
+  if (!net_IsValidHostName(nsDependentCString(mConnectionInfo->Origin())))
     return NS_ERROR_UNKNOWN_HOST;
-  }
 
   if (LoadIsTRRServiceChannel()) {
     mCaps |= NS_HTTP_LARGE_KEEPALIVE;
@@ -808,9 +806,8 @@ nsresult TRRServiceChannel::CallOnStartRequest() {
     StoreOnStartRequestCalled(true);
   });
 
-  if (mResponseHead && !mResponseHead->HasContentCharset()) {
+  if (mResponseHead && !mResponseHead->HasContentCharset())
     mResponseHead->SetContentCharset(mContentCharsetHint);
-  }
 
   LOG(("  calling mListener->OnStartRequest [this=%p, listener=%p]\n", this,
        mListener.get()));
@@ -1341,11 +1338,10 @@ void TRRServiceChannel::DoAsyncAbort(nsresult aStatus) {
 
 NS_IMETHODIMP
 TRRServiceChannel::GetProxyInfo(nsIProxyInfo** result) {
-  if (!mConnectionInfo) {
+  if (!mConnectionInfo)
     *result = mProxyInfo;
-  } else {
+  else
     *result = mConnectionInfo->ProxyInfo();
-  }
   NS_IF_ADDREF(*result);
   return NS_OK;
 }
@@ -1435,91 +1431,82 @@ void TRRServiceChannel::DoNotifyListenerCleanup() {}
 
 NS_IMETHODIMP
 TRRServiceChannel::GetDomainLookupStart(TimeStamp* _retval) {
-  if (mTransaction) {
+  if (mTransaction)
     *_retval = mTransaction->GetDomainLookupStart();
-  } else {
+  else
     *_retval = mTransactionTimings.domainLookupStart;
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TRRServiceChannel::GetDomainLookupEnd(TimeStamp* _retval) {
-  if (mTransaction) {
+  if (mTransaction)
     *_retval = mTransaction->GetDomainLookupEnd();
-  } else {
+  else
     *_retval = mTransactionTimings.domainLookupEnd;
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TRRServiceChannel::GetConnectStart(TimeStamp* _retval) {
-  if (mTransaction) {
+  if (mTransaction)
     *_retval = mTransaction->GetConnectStart();
-  } else {
+  else
     *_retval = mTransactionTimings.connectStart;
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TRRServiceChannel::GetTcpConnectEnd(TimeStamp* _retval) {
-  if (mTransaction) {
+  if (mTransaction)
     *_retval = mTransaction->GetTcpConnectEnd();
-  } else {
+  else
     *_retval = mTransactionTimings.tcpConnectEnd;
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TRRServiceChannel::GetSecureConnectionStart(TimeStamp* _retval) {
-  if (mTransaction) {
+  if (mTransaction)
     *_retval = mTransaction->GetSecureConnectionStart();
-  } else {
+  else
     *_retval = mTransactionTimings.secureConnectionStart;
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TRRServiceChannel::GetConnectEnd(TimeStamp* _retval) {
-  if (mTransaction) {
+  if (mTransaction)
     *_retval = mTransaction->GetConnectEnd();
-  } else {
+  else
     *_retval = mTransactionTimings.connectEnd;
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TRRServiceChannel::GetRequestStart(TimeStamp* _retval) {
-  if (mTransaction) {
+  if (mTransaction)
     *_retval = mTransaction->GetRequestStart();
-  } else {
+  else
     *_retval = mTransactionTimings.requestStart;
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TRRServiceChannel::GetResponseStart(TimeStamp* _retval) {
-  if (mTransaction) {
+  if (mTransaction)
     *_retval = mTransaction->GetResponseStart();
-  } else {
+  else
     *_retval = mTransactionTimings.responseStart;
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TRRServiceChannel::GetResponseEnd(TimeStamp* _retval) {
-  if (mTransaction) {
+  if (mTransaction)
     *_retval = mTransaction->GetResponseEnd();
-  } else {
+  else
     *_retval = mTransactionTimings.responseEnd;
-  }
   return NS_OK;
 }
 

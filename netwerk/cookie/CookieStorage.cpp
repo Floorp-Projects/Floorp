@@ -48,6 +48,7 @@ class CompareCookiesByAge {
 // Other non-expired cookies are sorted by their age.
 class CookieIterComparator {
  private:
+  CompareCookiesByAge mAgeComparator;
   int64_t mCurrentTime;
 
  public:
@@ -64,7 +65,7 @@ class CookieIterComparator {
       return false;
     }
 
-    return mozilla::net::CompareCookiesByAge::LessThan(lhs, rhs);
+    return mAgeComparator.LessThan(lhs, rhs);
   }
 };
 
@@ -277,7 +278,7 @@ void CookieStorage::RemoveCookie(const nsACString& aBaseDomain,
                                  const nsACString& aHost,
                                  const nsACString& aName,
                                  const nsACString& aPath) {
-  CookieListIter matchIter{};
+  CookieListIter matchIter;
   RefPtr<Cookie> cookie;
   if (FindCookie(aBaseDomain, aOriginAttributes, aHost, aName, aPath,
                  matchIter)) {
@@ -402,7 +403,7 @@ void CookieStorage::AddCookie(nsIConsoleReportCollector* aCRC,
                               bool aFromHttp) {
   int64_t currentTime = aCurrentTimeInUsec / PR_USEC_PER_SEC;
 
-  CookieListIter exactIter{};
+  CookieListIter exactIter;
   bool foundCookie = false;
   foundCookie = FindCookie(aBaseDomain, aOriginAttributes, aCookie->Host(),
                            aCookie->Name(), aCookie->Path(), exactIter);

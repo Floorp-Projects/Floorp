@@ -64,7 +64,7 @@ class Predictor final : public nsINetworkPredictor,
   static void UpdateCacheability(nsIURI* sourceURI, nsIURI* targetURI,
                                  uint32_t httpStatus,
                                  nsHttpRequestHead& requestHead,
-                                 nsHttpResponseHead* responseHead,
+                                 nsHttpResponseHead* reqponseHead,
                                  nsILoadContextInfo* lci, bool isTracking);
 
  private:

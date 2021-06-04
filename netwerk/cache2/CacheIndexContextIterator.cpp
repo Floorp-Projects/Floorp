@@ -7,7 +7,8 @@
 #include "CacheIndex.h"
 #include "nsString.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 CacheIndexContextIterator::CacheIndexContextIterator(CacheIndex* aIndex,
                                                      bool aAddNew,
@@ -28,4 +29,5 @@ void CacheIndexContextIterator::AddRecords(
   }
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

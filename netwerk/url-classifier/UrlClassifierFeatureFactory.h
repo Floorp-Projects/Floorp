@@ -30,7 +30,7 @@ class UrlClassifierFeatureFactory final {
   static nsIUrlClassifierFeature* GetFeatureLoginReputation();
 
   static already_AddRefed<nsIUrlClassifierFeature> GetFeatureByName(
-      const nsACString& aName);
+      const nsACString& aFeatureName);
 
   static void GetFeatureNames(nsTArray<nsCString>& aArray);
 

@@ -109,6 +109,7 @@ class nsNestedAboutURI final : public nsSimpleNestedURI {
     }
 
     [[nodiscard]] NS_IMETHOD Finalize(nsIURI** aURI) override {
+      mURI->mMutable = false;
       mURI.forget(aURI);
       return NS_OK;
     }
@@ -125,6 +126,12 @@ class nsNestedAboutURI final : public nsSimpleNestedURI {
                                           nsIURI* aBaseURI) override {
       mURI = new nsNestedAboutURI(aInnerURI, aBaseURI);
       return NS_OK;
+    }
+
+    void ResetMutable() {
+      if (mURI) {
+        mURI->mMutable = true;
+      }
     }
 
     friend class nsNestedAboutURI;

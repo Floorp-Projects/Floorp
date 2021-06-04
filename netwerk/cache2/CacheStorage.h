@@ -21,7 +21,7 @@ namespace net {
 
 // This dance is needed to make CacheEntryTable declarable-only in headers
 // w/o exporting CacheEntry.h file to make nsNetModule.cpp compilable.
-using TCacheEntryTable = nsRefPtrHashtable<nsCStringHashKey, CacheEntry>;
+typedef nsRefPtrHashtable<nsCStringHashKey, CacheEntry> TCacheEntryTable;
 class CacheEntryTable : public TCacheEntryTable {
  public:
   enum EType { MEMORY_ONLY, ALL_ENTRIES };

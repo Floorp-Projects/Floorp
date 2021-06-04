@@ -41,7 +41,8 @@
 // XXX add necessary include file for ftruncate (or equivalent)
 #endif
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 #define kOpenHandlesLimit 128
 #define kMetadataWriteDelay 5000
@@ -69,7 +70,11 @@ bool CacheFileHandle::DispatchRelease() {
       NewNonOwningRunnableMethod("net::CacheFileHandle::Release", this,
                                  &CacheFileHandle::Release),
       nsIEventTarget::DISPATCH_NORMAL);
-  return NS_SUCCEEDED(rv);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  return true;
 }
 
 NS_IMPL_ADDREF(CacheFileHandle)
@@ -264,7 +269,7 @@ void CacheFileHandles::HandleHashKey::AddHandle(CacheFileHandle* aHandle) {
 void CacheFileHandles::HandleHashKey::RemoveHandle(CacheFileHandle* aHandle) {
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
-  DebugOnly<bool> found{};
+  DebugOnly<bool> found;
   found = mHandles.RemoveElement(aHandle);
   MOZ_ASSERT(found);
 }
@@ -282,7 +287,7 @@ CacheFileHandles::HandleHashKey::GetNewestHandle() {
 }
 
 void CacheFileHandles::HandleHashKey::GetHandles(
-    nsTArray<RefPtr<CacheFileHandle>>& aResult) {
+    nsTArray<RefPtr<CacheFileHandle> >& aResult) {
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
   for (uint32_t i = 0; i < mHandles.Length(); ++i) {
@@ -460,7 +465,7 @@ void CacheFileHandles::RemoveHandle(CacheFileHandle* aHandle) {
 }
 
 void CacheFileHandles::GetAllHandles(
-    nsTArray<RefPtr<CacheFileHandle>>* _retval) {
+    nsTArray<RefPtr<CacheFileHandle> >* _retval) {
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
   for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
     iter.Get()->GetHandles(*_retval);
@@ -468,7 +473,7 @@ void CacheFileHandles::GetAllHandles(
 }
 
 void CacheFileHandles::GetActiveHandles(
-    nsTArray<RefPtr<CacheFileHandle>>* _retval) {
+    nsTArray<RefPtr<CacheFileHandle> >* _retval) {
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
   for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<CacheFileHandle> handle = iter.Get()->GetNewestHandle();
@@ -491,7 +496,7 @@ uint32_t CacheFileHandles::HandleCount() { return mTable.Count(); }
 void CacheFileHandles::Log(CacheFileHandlesEntry* entry) {
   LOG(("CacheFileHandles::Log() BEGIN [entry=%p]", entry));
 
-  nsTArray<RefPtr<CacheFileHandle>> array;
+  nsTArray<RefPtr<CacheFileHandle> > array;
   aEntry->GetHandles(array);
 
   for (uint32_t i = 0; i < array.Length(); ++i) {
@@ -592,7 +597,7 @@ class IOPerfReportEvent {
     // average value. Do not add the value to the filtered stats when the event
     // had to wait in a long queue.
     uint32_t eventCounter = aIOThread->EventCounter();
-    bool shortOnly = eventCounter - mEventCounter >= 5;
+    bool shortOnly = eventCounter - mEventCounter < 5 ? false : true;
 
     CacheFileUtils::CachePerfStats::AddValue(mType, duration, shortOnly);
   }
@@ -657,7 +662,7 @@ class OpenFileEvent : public Runnable, public IOPerfReportEvent {
   }
 
  protected:
-  SHA1Sum::Hash mHash{};
+  SHA1Sum::Hash mHash;
   uint32_t mFlags;
   nsCOMPtr<CacheFileIOListener> mCallback;
   RefPtr<CacheFileIOManager> mIOMan;
@@ -845,7 +850,7 @@ class DoomFileByKeyEvent : public Runnable {
   }
 
  protected:
-  SHA1Sum::Hash mHash{};
+  SHA1Sum::Hash mHash;
   nsCOMPtr<CacheFileIOListener> mCallback;
   RefPtr<CacheFileIOManager> mIOMan;
 };
@@ -1204,7 +1209,7 @@ void CacheFileIOManager::ShutdownInternal() {
   }
 
   // close all handles and delete all associated files
-  nsTArray<RefPtr<CacheFileHandle>> handles;
+  nsTArray<RefPtr<CacheFileHandle> > handles;
   mHandles.GetAllHandles(&handles);
   handles.AppendElements(mSpecialHandles);
 
@@ -1417,7 +1422,7 @@ nsresult CacheFileIOManager::ScheduleMetadataWriteInternal(CacheFile* aFile) {
   }
 
   if (mScheduledMetadataWrites.IndexOf(aFile) !=
-      nsTArray<RefPtr<mozilla::net::CacheFile>>::NoIndex) {
+      mScheduledMetadataWrites.NoIndex) {
     return NS_OK;
   }
 
@@ -1466,7 +1471,7 @@ nsresult CacheFileIOManager::ShutdownMetadataWriteScheduling() {
 void CacheFileIOManager::ShutdownMetadataWriteSchedulingInternal() {
   MOZ_ASSERT(IsOnIOThreadOrCeased());
 
-  nsTArray<RefPtr<CacheFile>> files = std::move(mScheduledMetadataWrites);
+  nsTArray<RefPtr<CacheFile> > files = std::move(mScheduledMetadataWrites);
   for (uint32_t i = 0; i < files.Length(); ++i) {
     CacheFile* file = files[i];
     file->WriteMetadataIfNeeded();
@@ -1485,7 +1490,7 @@ CacheFileIOManager::Notify(nsITimer* aTimer) {
 
   mMetadataWritesTimer = nullptr;
 
-  nsTArray<RefPtr<CacheFile>> files = std::move(mScheduledMetadataWrites);
+  nsTArray<RefPtr<CacheFile> > files = std::move(mScheduledMetadataWrites);
   for (uint32_t i = 0; i < files.Length(); ++i) {
     CacheFile* file = files[i];
     file->WriteMetadataIfNeeded();
@@ -2290,7 +2295,7 @@ nsresult CacheFileIOManager::MaybeReleaseNSPRHandleInternal(
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
   if (aHandle->mFD) {
-    DebugOnly<bool> found{};
+    DebugOnly<bool> found;
     found = mHandlesByLastUsed.RemoveElement(aHandle);
     MOZ_ASSERT(found);
   }
@@ -2960,7 +2965,7 @@ nsresult CacheFileIOManager::EvictAllInternal() {
   }
 
   // Doom all active handles
-  nsTArray<RefPtr<CacheFileHandle>> handles;
+  nsTArray<RefPtr<CacheFileHandle> > handles;
   mHandles.GetActiveHandles(&handles);
 
   for (uint32_t i = 0; i < handles.Length(); ++i) {
@@ -3082,7 +3087,7 @@ nsresult CacheFileIOManager::EvictByContextInternal(
   NS_ConvertUTF16toUTF8 origin(aOrigin);
 
   // Doom all active handles that matches the load context
-  nsTArray<RefPtr<CacheFileHandle>> handles;
+  nsTArray<RefPtr<CacheFileHandle> > handles;
   mHandles.GetActiveHandles(&handles);
 
   for (uint32_t i = 0; i < handles.Length(); ++i) {
@@ -3923,7 +3928,7 @@ void CacheFileIOManager::NSPRHandleUsed(CacheFileHandle* aHandle) {
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
   MOZ_ASSERT(aHandle->mFD);
 
-  DebugOnly<bool> found{};
+  DebugOnly<bool> found;
   found = mHandlesByLastUsed.RemoveElement(aHandle);
   MOZ_ASSERT(found);
 
@@ -4216,4 +4221,5 @@ size_t CacheFileIOManager::SizeOfIncludingThis(
   return mallocSizeOf(gInstance) + SizeOfExcludingThis(mallocSizeOf);
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

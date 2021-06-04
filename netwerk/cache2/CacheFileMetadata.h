@@ -220,7 +220,7 @@ class CacheFileMetadata final : public CacheFileIOListener,
                // to elements
   uint32_t mBufSize;
   char* mWriteBuf;
-  CacheFileMetadataHeader mMetaHdr{0};
+  CacheFileMetadataHeader mMetaHdr;
   uint32_t mElementsSize;
   bool mIsDirty : 1;
   bool mAnonymous : 1;

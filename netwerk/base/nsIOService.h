@@ -26,7 +26,7 @@
 #include "nsTHashSet.h"
 #include "nsWeakReference.h"
 
-#define NS_N(x) (sizeof(x) / sizeof(*(x)))
+#define NS_N(x) (sizeof(x) / sizeof(*x))
 
 // We don't want to expose this observer topic.
 // Intended internal use only for remoting offline/inline events.
@@ -158,8 +158,7 @@ class nsIOService final : public nsIIOService,
   nsresult GetCachedProtocolHandler(const char* scheme,
                                     nsIProtocolHandler** hdlrResult,
                                     uint32_t start = 0, uint32_t end = 0);
-  nsresult CacheProtocolHandler(const char* scheme,
-                                nsIProtocolHandler* handler);
+  nsresult CacheProtocolHandler(const char* scheme, nsIProtocolHandler* hdlr);
 
   nsresult InitializeCaptivePortalService();
   nsresult RecheckCaptivePortalIfLocalRedirect(nsIChannel* newChan);

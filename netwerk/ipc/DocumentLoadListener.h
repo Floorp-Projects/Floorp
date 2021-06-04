@@ -59,7 +59,7 @@ struct StreamFilterRequest {
     }
   }
   RefPtr<ChildEndpointPromise::Private> mPromise;
-  base::ProcessId mChildProcessId = 0;
+  base::ProcessId mChildProcessId;
   mozilla::ipc::Endpoint<extensions::PStreamFilterChild> mChildEndpoint;
 };
 }  // namespace net
@@ -119,8 +119,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
     bool mSwitchedProcess = false;
   };
 
-  using OpenPromise =
-      MozPromise<OpenPromiseSucceededType, OpenPromiseFailedType, true>;
+  typedef MozPromise<OpenPromiseSucceededType, OpenPromiseFailedType,
+                     true /* isExclusive */>
+      OpenPromise;
 
   // Interface which may be provided when performing an <object> or <embed> load
   // with `DocumentLoadListener`, to allow upgrading the Object load to a proper
@@ -168,7 +169,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
       nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
       uint64_t aInnerWindowId, nsLoadFlags aLoadFlags,
       nsContentPolicyType aContentPolicyType, bool aUrgentStart,
-      base::ProcessId aPid, ObjectUpgradeHandler* aObjectUpgradeHandler,
+      base::ProcessId aPid, ObjectUpgradeHandler* aUpgradeHandler,
       nsresult* aRv);
 
   // Creates a DocumentLoadListener entirely in the parent process and opens it,
@@ -400,9 +401,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
     bool mIsThirdParty;
   };
 
-  using IParentChannelFunction = mozilla::Variant<
+  typedef mozilla::Variant<
       nsIHttpChannel::FlashPluginState, ClassifierMatchedInfoParams,
-      ClassifierMatchedTrackingInfoParams, ClassificationFlagsParams>;
+      ClassifierMatchedTrackingInfoParams, ClassificationFlagsParams>
+      IParentChannelFunction;
 
   // Store a list of all the attribute setters that have been called on this
   // channel, so that we can repeat them on the real channel that we redirect
@@ -425,14 +427,15 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   struct LogMimeTypeMismatchParams {
     nsCString mMessageName;
-    bool mWarning = false;
+    bool mWarning;
     nsString mURL;
     nsString mContentType;
   };
 
-  using SecurityWarningFunction =
-      mozilla::Variant<ReportSecurityMessageParams, LogBlockedCORSRequestParams,
-                       LogMimeTypeMismatchParams>;
+  typedef mozilla::Variant<ReportSecurityMessageParams,
+                           LogBlockedCORSRequestParams,
+                           LogMimeTypeMismatchParams>
+      SecurityWarningFunction;
   nsTArray<SecurityWarningFunction> mSecurityWarningFunctions;
 
   struct OnStartRequestParams {
@@ -451,9 +454,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   struct OnAfterLastPartParams {
     nsresult status;
   };
-  using StreamListenerFunction =
-      mozilla::Variant<OnStartRequestParams, OnDataAvailableParams,
-                       OnStopRequestParams, OnAfterLastPartParams>;
+  typedef mozilla::Variant<OnStartRequestParams, OnDataAvailableParams,
+                           OnStopRequestParams, OnAfterLastPartParams>
+      StreamListenerFunction;
   // TODO Backtrack this.
   // The set of nsIStreamListener functions that got called on this
   // listener, so that we can replay them onto the replacement channel's

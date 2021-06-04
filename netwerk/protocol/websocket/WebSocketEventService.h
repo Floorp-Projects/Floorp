@@ -89,7 +89,7 @@ class WebSocketEventService final : public nsIWebSocketEventService,
   bool HasListeners() const;
   void Shutdown();
 
-  using WindowListeners = nsTArray<nsCOMPtr<nsIWebSocketEventListener>>;
+  typedef nsTArray<nsCOMPtr<nsIWebSocketEventListener>> WindowListeners;
 
   nsTHashMap<nsUint32HashKey, nsWeakPtr> mWebSocketImplMap;
 

@@ -327,11 +327,10 @@ void PendingPACQuery::Complete(nsresult status, const nsACString& pacString) {
   if (!mCallback) return;
   RefPtr<ExecuteCallback> runnable = new ExecuteCallback(mCallback, status);
   runnable->SetPACString(pacString);
-  if (mOnMainThreadOnly) {
+  if (mOnMainThreadOnly)
     mPACMan->Dispatch(runnable.forget());
-  } else {
+  else
     runnable->Run();
-  }
 }
 
 void PendingPACQuery::UseAlternatePACFile(const nsACString& pacURL) {
@@ -339,11 +338,10 @@ void PendingPACQuery::UseAlternatePACFile(const nsACString& pacURL) {
 
   RefPtr<ExecuteCallback> runnable = new ExecuteCallback(mCallback, NS_OK);
   runnable->SetPACURL(pacURL);
-  if (mOnMainThreadOnly) {
+  if (mOnMainThreadOnly)
     mPACMan->Dispatch(runnable.forget());
-  } else {
+  else
     runnable->Run();
-  }
 }
 
 NS_IMETHODIMP
@@ -764,9 +762,8 @@ void nsPACMan::CancelPendingQ(nsresult status, bool aShutdown) {
 
 void nsPACMan::ProcessPendingQ() {
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
-  while (ProcessPending()) {
+  while (ProcessPending())
     ;
-  }
 
   if (mShutdown) {
     mPAC.Shutdown();
@@ -898,11 +895,10 @@ nsPACMan::OnStreamComplete(nsIStreamLoader* loader, nsISupports* context,
     OnLoadFailure();
   }
 
-  if (NS_SUCCEEDED(status)) {
+  if (NS_SUCCEEDED(status))
     PostProcessPendingQ();
-  } else {
+  else
     PostCancelPendingQ(status);
-  }
 
   return NS_OK;
 }

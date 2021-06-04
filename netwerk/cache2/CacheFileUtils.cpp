@@ -14,7 +14,9 @@
 #include <algorithm>
 #include "mozilla/Unused.h"
 
-namespace mozilla::net::CacheFileUtils {
+namespace mozilla {
+namespace net {
+namespace CacheFileUtils {
 
 // This designates the format for the "alt-data" metadata.
 // When the format changes we need to update the version.
@@ -663,4 +665,6 @@ void BuildAlternativeDataInfo(const char* aInfo, int64_t aOffset,
   _retval.Append(aInfo);
 }
 
-}  // namespace mozilla::net::CacheFileUtils
+}  // namespace CacheFileUtils
+}  // namespace net
+}  // namespace mozilla
