@@ -200,6 +200,12 @@ class EmitterScope : public Nestable<EmitterScope> {
 
   mozilla::Maybe<NameLocation> locationBoundInScope(TaggedParserAtomIndex name,
                                                     EmitterScope* target);
+
+  // For a given emitter scope, return the number of enclosing environments in
+  // the current compilation (this excludes environments that could enclose the
+  // compilation, like would happen for an eval copmilation).
+  static uint32_t CountEnclosingCompilationEnvironments(
+      BytecodeEmitter* bce, EmitterScope* emitterScope);
 };
 
 } /* namespace frontend */

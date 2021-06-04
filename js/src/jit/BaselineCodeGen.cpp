@@ -3545,6 +3545,32 @@ void BaselineInterpreterCodeGen::emitGetAliasedVar(ValueOperand dest) {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emitGetAliasedDebugVar(ValueOperand dest) {
+  frame.syncStack(0);
+  Register env = R0.scratchReg();
+  // Load the right environment object.
+  masm.loadPtr(frame.addressOfEnvironmentChain(), env);
+
+  prepareVMCall();
+  pushBytecodePCArg();
+  pushArg(env);
+
+  using Fn =
+      bool (*)(JSContext*, JSObject * env, jsbytecode*, MutableHandleValue);
+  return callVM<Fn, LoadAliasedDebugVar>();
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_GetAliasedDebugVar() {
+  if (!emitGetAliasedDebugVar(R0)) {
+    return false;
+  }
+
+  frame.push(R0);
+  return true;
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_GetAliasedVar() {
   emitGetAliasedVar(R0);
 

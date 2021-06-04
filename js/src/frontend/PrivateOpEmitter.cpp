@@ -43,8 +43,6 @@ bool PrivateOpEmitter::emitLoad(TaggedParserAtomIndex name,
 }
 
 bool PrivateOpEmitter::emitLoadPrivateBrand() {
-  // Call this only if the binding kind guarantees a private brand exists.
-  MOZ_ASSERT(loc_->bindingKind() == BindingKind::PrivateMethod);
   return emitLoad(TaggedParserAtomIndex::WellKnown::dotPrivateBrand(),
                   *brandLoc_);
 }
@@ -93,7 +91,7 @@ bool PrivateOpEmitter::emitReference() {
     return false;
   }
 
-  if (loc_->bindingKind() == BindingKind::PrivateMethod) {
+  if (brandLoc_) {
     if (!emitLoadPrivateBrand()) {
       //            [stack] OBJ BRAND
       return false;
@@ -128,7 +126,7 @@ bool PrivateOpEmitter::emitGet() {
 
   //                [stack] OBJ NAME
 
-  if (loc_->bindingKind() == BindingKind::PrivateMethod) {
+  if (brandLoc_) {
     // Note that the decision of what we leave on the stack depends on kind_,
     // not loc_->bindingKind().  We can't emit code for a call just because this
     // private member is a method. `obj.#method` is allowed without a call,
@@ -226,7 +224,7 @@ bool PrivateOpEmitter::emitAssignment() {
 
   //                [stack] OBJ KEY RHS
 
-  if (loc_->bindingKind() == BindingKind::PrivateMethod) {
+  if (brandLoc_) {
     if (!bce_->emit2(JSOp::ThrowMsg,
                      uint8_t(ThrowMsgKind::AssignToPrivateMethod))) {
       return false;

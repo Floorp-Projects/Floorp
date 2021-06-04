@@ -1458,7 +1458,13 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       }
       break;
     }
-
+    case JOF_DEBUGCOORD: {
+      EnvironmentCoordinate ec(pc);
+      if (!sp->jsprintf("(hops = %u, slot = %u)", ec.hops(), ec.slot())) {
+        return 0;
+      }
+      break;
+    }
     case JOF_ATOM: {
       RootedValue v(cx, StringValue(script->getAtom(pc)));
       UniqueChars bytes = ToDisassemblySource(cx, v);

@@ -69,8 +69,8 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
   // orignal scope provided.
   //
   // NOTE: This is used to compute the ThisBinding kind and to allow access to
-  //       private fields, while other contextual information only uses the
-  //       actual scope passed to the compile.
+  //       private fields and methods, while other contextual information only
+  //       uses the actual scope passed to the compile.
   JS::Rooted<Scope*> effectiveScope(
       cx, determineEffectiveScope(maybeNonDefaultEnclosingScope, enclosingEnv));
 
@@ -86,7 +86,8 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
     if (!cacheEnclosingScopeBindingForEval(cx, input, parserAtoms)) {
       return false;
     }
-    if (!cachePrivateFieldsForEval(cx, input, effectiveScope, parserAtoms)) {
+    if (!cachePrivateFieldsForEval(cx, input, enclosingEnv, effectiveScope,
+                                   parserAtoms)) {
       return false;
     }
   }
@@ -222,9 +223,9 @@ void ScopeContext::cacheEnclosingScope(Scope* enclosingScope) {
 #endif
 }
 
-/* static */
 Scope* ScopeContext::determineEffectiveScope(Scope* scope,
                                              JSObject* environment) {
+  MOZ_ASSERT(effectiveScopeHops == 0);
   // If the scope-chain is non-syntactic, we may still determine a more precise
   // effective-scope to use instead.
   if (environment && scope->hasOnChain(ScopeKind::NonSyntactic)) {
@@ -235,6 +236,9 @@ Scope* ScopeContext::determineEffectiveScope(Scope* scope,
       JSObject* unwrapped = env;
       if (env->is<DebugEnvironmentProxy>()) {
         unwrapped = &env->as<DebugEnvironmentProxy>().environment();
+#ifdef DEBUG
+        enclosingEnvironmentIsDebugProxy_ = true;
+#endif
       }
 
       if (unwrapped->is<CallObject>()) {
@@ -243,6 +247,7 @@ Scope* ScopeContext::determineEffectiveScope(Scope* scope,
       }
 
       env = env->enclosingEnvironment();
+      effectiveScopeHops++;
     }
   }
 
@@ -356,6 +361,7 @@ static bool IsPrivateField(JSAtom* atom) {
 
 bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
                                              CompilationInput& input,
+                                             JSObject* enclosingEnvironment,
                                              Scope* effectiveScope,
                                              ParserAtomsTable& parserAtoms) {
   if (!input.options.privateClassFields) {
@@ -365,36 +371,42 @@ bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
   effectiveScopePrivateFieldCache_.emplace();
 
   // We compute an environment coordinate relative to the effective scope
-  // environment. In order to safely consume these environment coordinates, they
-  // need to be appropriately mapped at the calling context.
-  uint32_t hops = 0;
+  // environment. In order to safely consume these environment coordinates,
+  // we re-map them to include the hops to get the to the effective scope:
+  // see EmitterScope::lookupPrivate
+  uint32_t hops = effectiveScopeHops;
   for (ScopeIter si(effectiveScope); si; si++) {
-    if (si.scope()->kind() != ScopeKind::ClassBody) {
-      continue;
-    }
-    uint32_t slots = 0;
-    for (js::BindingIter bi(si.scope()); bi; bi++) {
-      if (bi.kind() == BindingKind::PrivateMethod ||
-          (bi.kind() == BindingKind::Synthetic && IsPrivateField(bi.name()))) {
-        auto parserName =
-            parserAtoms.internJSAtom(cx, input.atomCache, bi.name());
-        if (!parserName) {
-          return false;
-        }
+    if (si.scope()->kind() == ScopeKind::ClassBody) {
+      uint32_t slots = 0;
+      for (js::BindingIter bi(si.scope()); bi; bi++) {
+        if (bi.kind() == BindingKind::PrivateMethod ||
+            (bi.kind() == BindingKind::Synthetic &&
+             IsPrivateField(bi.name()))) {
+          auto parserName =
+              parserAtoms.internJSAtom(cx, input.atomCache, bi.name());
+          if (!parserName) {
+            return false;
+          }
 
-        NameLocation loc =
-            NameLocation::EnvironmentCoordinate(bi.kind(), hops, slots);
+          NameLocation loc =
+              NameLocation::DebugEnvironmentCoordinate(bi.kind(), hops, slots);
 
-        if (!effectiveScopePrivateFieldCache_->put(parserName, loc)) {
-          ReportOutOfMemory(cx);
-          return false;
+          if (!effectiveScopePrivateFieldCache_->put(parserName, loc)) {
+            ReportOutOfMemory(cx);
+            return false;
+          }
         }
+        slots++;
       }
-      slots++;
     }
-    if (si.scope()->hasEnvironment()) {
-      hops++;
-    }
+
+    // Hops is only consumed by GetAliasedDebugVar, which uses this to
+    // traverse the debug environment chain. See the [SMDOC] for Debug
+    // Environment Chain, which explains why we don't check for
+    // isEnvironment when computing hops here (basically, debug proxies
+    // pretend all scopes have environments, even if they were actually
+    // optimized out).
+    hops++;
   }
 
   return true;
@@ -595,6 +607,11 @@ bool ScopeContext::effectiveScopePrivateFieldCacheHas(
 
 mozilla::Maybe<NameLocation> ScopeContext::getPrivateFieldLocation(
     TaggedParserAtomIndex name) {
+  // The locations returned by this method are only valid for
+  // traversing debug environments.
+  //
+  // See the comment in cachePrivateFieldsForEval
+  MOZ_ASSERT(enclosingEnvironmentIsDebugProxy_);
   auto p = effectiveScopePrivateFieldCache_->lookup(name);
   if (!p) {
     return mozilla::Nothing();

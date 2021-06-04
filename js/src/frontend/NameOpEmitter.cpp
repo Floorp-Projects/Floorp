@@ -78,8 +78,12 @@ bool NameOpEmitter::emitGet() {
       }
       break;
     case NameLocation::Kind::EnvironmentCoordinate:
-      if (!bce_->emitEnvCoordOp(JSOp::GetAliasedVar,
-                                loc_.environmentCoordinate())) {
+    case NameLocation::Kind::DebugEnvironmentCoordinate:
+      if (!bce_->emitEnvCoordOp(
+              loc_.kind() == NameLocation::Kind::EnvironmentCoordinate
+                  ? JSOp::GetAliasedVar
+                  : JSOp::GetAliasedDebugVar,
+              loc_.environmentCoordinate())) {
         //          [stack] VAL
         return false;
       }
@@ -123,6 +127,11 @@ bool NameOpEmitter::emitGet() {
           //        [stack] CALLEE UNDEF
           return false;
         }
+        break;
+      case NameLocation::Kind::DebugEnvironmentCoordinate:
+        MOZ_CRASH(
+            "DebugEnvironmentCoordinate should only be used to get the private "
+            "brand, and so should never call.");
         break;
       case NameLocation::Kind::DynamicAnnexBVar:
         MOZ_CRASH(
@@ -186,6 +195,8 @@ bool NameOpEmitter::prepareForRhs() {
     case NameLocation::Kind::ArgumentSlot:
       break;
     case NameLocation::Kind::FrameSlot:
+      break;
+    case NameLocation::Kind::DebugEnvironmentCoordinate:
       break;
     case NameLocation::Kind::EnvironmentCoordinate:
       break;
@@ -349,6 +360,9 @@ bool NameOpEmitter::emitAssignment() {
       }
       break;
     }
+    case NameLocation::Kind::DebugEnvironmentCoordinate:
+      MOZ_CRASH("Shouldn't be assigning to a private brand");
+      break;
   }
 
 #ifdef DEBUG
