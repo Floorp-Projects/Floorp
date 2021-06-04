@@ -200,7 +200,7 @@ partial interface Navigator {
 
 // https://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html#navigator-interface-extension
 partial interface Navigator {
-  [Throws, Pref="dom.gamepad.enabled", SecureContext]
+  [Throws, Pref="dom.gamepad.enabled"]
   sequence<Gamepad?> getGamepads();
 };
 partial interface Navigator {
