@@ -2483,6 +2483,13 @@ class EditorBase : public nsIEditor,
   }
 
   /**
+   * DeleteSelectionByDragAsAction() removes selection and dispatch "input"
+   * event whose inputType is "deleteByDrag".
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteSelectionByDragAsAction(bool aDispatchInputEvent);
+
+  /**
    * DeleteSelectionWithTransaction() removes selected content or content
    * around caret with transactions and remove empty inclusive ancestor
    * inline elements of collapsed selection after removing the contents.
