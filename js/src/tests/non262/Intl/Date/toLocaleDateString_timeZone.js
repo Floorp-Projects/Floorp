@@ -21,12 +21,12 @@ const tests = [
     {
         timeZone: "Europe/Paris", locale: "fr",
         options: { timeZoneName: "long" },
-        result: "06/12/2012 à heure normale d’Europe centrale",
+        result: "06/12/2012, heure normale d’Europe centrale",
     },
     {
         timeZone: "Asia/Shanghai", locale: "zh-Hans-CN",
         options: { timeZoneName: "long" },
-        result: "2012/12/6 中国标准时间",
+        result: "2012/12/6中国标准时间",
     },
     {
         timeZone: { toString: () => "Australia/Melbourne" }, locale: "en-AU",
