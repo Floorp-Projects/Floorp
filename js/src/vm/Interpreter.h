@@ -687,6 +687,8 @@ JSObject* FunWithProtoOperation(JSContext* cx, HandleFunction fun,
 bool SetPropertySuper(JSContext* cx, HandleObject obj, HandleValue receiver,
                       HandlePropertyName id, HandleValue rval, bool strict);
 
+bool LoadAliasedDebugVar(JSContext* cx, JSObject* env, jsbytecode* pc,
+                         MutableHandleValue result);
 } /* namespace js */
 
 #endif /* vm_Interpreter_h */

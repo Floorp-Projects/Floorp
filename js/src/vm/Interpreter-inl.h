@@ -12,6 +12,7 @@
 #include "jsnum.h"
 
 #include "jit/Ion.h"
+#include "js/friend/DumpFunctions.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeUtil.h"  // JSDVG_SEARCH_STACK
@@ -561,6 +562,9 @@ static MOZ_ALWAYS_INLINE bool CheckPrivateFieldOperation(JSContext* cx,
       return false;
     }
   }
+
+  // js::DumpValue(idval.get());
+  // js::DumpValue(val.get());
 
   MOZ_ASSERT(idval.isSymbol());
   MOZ_ASSERT(idval.toSymbol()->isPrivateName());

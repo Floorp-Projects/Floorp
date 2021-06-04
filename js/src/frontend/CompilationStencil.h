@@ -89,6 +89,14 @@ struct ScopeContext {
   mozilla::Maybe<EffectiveScopePrivateFieldCache>
       effectiveScopePrivateFieldCache_;
 
+#ifdef DEBUG
+  bool enclosingEnvironmentIsDebugProxy_ = false;
+#endif
+
+  // How many hops required to navigate from 'enclosingScope' to effective
+  // scope.
+  uint32_t effectiveScopeHops = 0;
+
   uint32_t enclosingScopeEnvironmentChainLength = 0;
 
   // Eval and arrow scripts also inherit the "this" environment -- used by
@@ -154,12 +162,13 @@ struct ScopeContext {
   void computeInScope(Scope* enclosingScope);
   void cacheEnclosingScope(Scope* enclosingScope);
 
-  static Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
+  Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
 
   bool cacheEnclosingScopeBindingForEval(JSContext* cx, CompilationInput& input,
                                          ParserAtomsTable& parserAtoms);
 
   bool cachePrivateFieldsForEval(JSContext* cx, CompilationInput& input,
+                                 JSObject* enclosingEnvironment,
                                  Scope* effectiveScope,
                                  ParserAtomsTable& parserAtoms);
 
