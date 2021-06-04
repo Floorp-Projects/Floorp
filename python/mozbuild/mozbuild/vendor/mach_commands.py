@@ -171,5 +171,14 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
     def vendor_python(self, command_context, **kwargs):
         from mozbuild.vendor.vendor_python import VendorPython
 
+        if sys.version_info[:2] != (3, 6):
+            print(
+                "You must use Python 3.6 to vendor Python packages. If you don't "
+                "have Python 3.6, you can request that your package be added by "
+                "creating a bug: \n"
+                "https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox%20Build%20System&component=Mach%20Core"  # noqa F401
+            )
+            return 1
+
         vendor_command = self._spawn(VendorPython)
         vendor_command.vendor(**kwargs)
