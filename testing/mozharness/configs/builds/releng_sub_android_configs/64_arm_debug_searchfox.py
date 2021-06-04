@@ -3,6 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 config = {
-    "stage_platform": "android-api-16",
-    "src_mozconfig": "mobile/android/config/mozconfigs/android-api-16/nightly",
+    "stage_platform": "android-arm-debug",
+    "env": {
+        "SCCACHE_DISABLE": "1",
+    },
+    "src_mozconfig": "mobile/android/config/mozconfigs/android-arm/debug-searchfox",
+    "debug_build": True,
 }

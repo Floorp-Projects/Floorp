@@ -85,15 +85,15 @@ jobs:
                 - linux64-clang
                 - linux64-minidump-stackwalk
 
-    android-api-16-shippable/opt:
-        description: "Android 4.0 api-16+ Profile Generation"
+    android-arm-shippable/opt:
+        description: "Android 4.0 Arm Profile Generation"
         shipping-phase: build
         shipping-product: fennec
         index:
             product: mobile
-            job-name: android-api-16-profile
+            job-name: android-arm-profile
         treeherder:
-            platform: android-4-0-armv7-api16/pgo
+            platform: android-4-0-armv7/pgo
         worker-type: t-linux-xlarge-pgo
         worker:
             chain-of-trust: true

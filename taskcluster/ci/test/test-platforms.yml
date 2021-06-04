@@ -497,29 +497,29 @@ android-em-7.0-x86_64-qr/debug:
 
 # android-hw-g5-7-0 Motorola Moto G5 Android 7.0
 
-android-hw-g5-7-0-arm7-api-16/opt:
-    build-platform: android-api-16/opt
+android-hw-g5-7-0-arm7/opt:
+    build-platform: android-arm/opt
     test-sets:
         - android-hw-browsertime
         - android-hw-arm7-raptor-cpu-memory
         - android-hw-arm7-raptor-cpu-memory-power
 
-android-hw-g5-7-0-arm7-api-16-shippable/opt:
-    build-platform: android-api-16-shippable/opt
+android-hw-g5-7-0-arm7-shippable/opt:
+    build-platform: android-arm-shippable/opt
     test-sets:
         - android-hw-browsertime
         - android-hw-arm7-raptor-cpu-memory
         - android-hw-arm7-raptor-cpu-memory-power
 
-android-hw-g5-7-0-arm7-api-16-qr/opt:
-    build-platform: android-api-16/opt
+android-hw-g5-7-0-arm7-qr/opt:
+    build-platform: android-arm/opt
     test-sets:
         - android-hw-browsertime
         - android-hw-arm7-raptor-cpu-memory
         - android-hw-arm7-raptor-cpu-memory-power
 
-android-hw-g5-7-0-arm7-api-16-shippable-qr/opt:
-    build-platform: android-api-16-shippable/opt
+android-hw-g5-7-0-arm7-shippable-qr/opt:
+    build-platform: android-arm-shippable/opt
     test-sets:
         - android-hw-browsertime
         - android-hw-arm7-raptor-cpu-memory
@@ -527,24 +527,24 @@ android-hw-g5-7-0-arm7-api-16-shippable-qr/opt:
 
 # android-hw-p2-8-0 Google Pixel 2 Android 8.0
 
-android-hw-p2-8-0-arm7-api-16/opt:
-    build-platform: android-api-16/opt
+android-hw-p2-8-0-arm7/opt:
+    build-platform: android-arm/opt
     test-sets:
         - android-hw-browsertime
         - android-hw-arm7-pgo-unittests
         - android-hw-arm7-raptor-cpu-memory
         - android-hw-arm7-raptor-cpu-memory-power
 
-android-hw-p2-8-0-arm7-api-16-shippable/opt:
-    build-platform: android-api-16-shippable/opt
+android-hw-p2-8-0-arm7-shippable/opt:
+    build-platform: android-arm-shippable/opt
     test-sets:
         - android-hw-browsertime
         - android-hw-arm7-pgo-unittests
         - android-hw-arm7-raptor-cpu-memory
         - android-hw-arm7-raptor-cpu-memory-power
 
-android-hw-p2-8-0-arm7-api-16/debug:
-    build-platform: android-api-16/debug
+android-hw-p2-8-0-arm7/debug:
+    build-platform: android-arm/debug
     test-sets:
         - android-hw-arm7-debug-unittests
 

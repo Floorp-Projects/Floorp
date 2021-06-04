@@ -36,7 +36,7 @@ _PERMALINKS = {
     + "aarch64-opt/artifacts/public/build/geckoview_example.apk",
     "gve_nightly_api16": _ROOT_URL
     + _GV_BUILDS
-    + "api-16-opt/artifacts/public/build/geckoview_example.apk",
+    + "arm-opt/artifacts/public/build/geckoview_example.apk",
     "refbrow_nightly_aarch64": _ROOT_URL
     + _REFBROW_BUILDS.format(architecture="arm64-v8a"),
     "refbrow_nightly_api16": _ROOT_URL

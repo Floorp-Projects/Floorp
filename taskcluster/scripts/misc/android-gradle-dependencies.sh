@@ -10,7 +10,7 @@ cd $GECKO_PATH
 
 . taskcluster/scripts/misc/android-gradle-dependencies/before.sh
 
-export MOZCONFIG=mobile/android/config/mozconfigs/android-api-16-gradle-dependencies/nightly
+export MOZCONFIG=mobile/android/config/mozconfigs/android-arm-gradle-dependencies/nightly
 ./mach build
 ./mach android gradle-dependencies
 
