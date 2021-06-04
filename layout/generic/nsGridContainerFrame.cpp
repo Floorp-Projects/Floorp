@@ -2586,6 +2586,18 @@ struct nsGridContainerFrame::Tracks {
     return mSizes[aLine].mPosition;
   }
 
+  nscoord SumOfGridTracksAndGaps() {
+    return SumOfGridTracks() + SumOfGridGaps();
+  }
+
+  nscoord SumOfGridTracks() const {
+    nscoord result = 0;
+    for (const TrackSize& size : mSizes) {
+      result += size.mBase;
+    }
+    return result;
+  }
+
   nscoord SumOfGridGaps() const {
     auto len = mSizes.Length();
     return MOZ_LIKELY(len > 1) ? (len - 1) * mGridGap : 0;
@@ -6477,12 +6489,8 @@ void nsGridContainerFrame::Tracks::StretchFlexibleTracks(
       // the grid container’s min-width/height (or larger than the grid
       // container’s max-width/height), then redo this step, treating the free
       // space as definite [...]"
-      nscoord newSize = 0;
-      for (auto& sz : mSizes) {
-        newSize += sz.mBase;
-      }
       const auto sumOfGridGaps = SumOfGridGaps();
-      newSize += sumOfGridGaps;
+      nscoord newSize = SumOfGridTracks() + sumOfGridGaps;
       if (newSize > maxSize) {
         aAvailableSize = maxSize;
       } else if (newSize < minSize) {
@@ -9220,11 +9228,7 @@ nscoord nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
                                    NS_UNCONSTRAINEDSIZE, constraint);
 
   if (MOZ_LIKELY(!IsSubgrid())) {
-    nscoord length = 0;
-    for (const TrackSize& sz : state.mCols.mSizes) {
-      length += sz.mBase;
-    }
-    return length + state.mCols.SumOfGridGaps();
+    return state.mCols.SumOfGridTracksAndGaps();
   }
   const auto& last = state.mCols.mSizes.LastElement();
   return last.mPosition + last.mBase;
