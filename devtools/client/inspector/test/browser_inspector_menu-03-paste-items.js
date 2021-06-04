@@ -34,7 +34,7 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   await testPasteOuterHTMLMenu();
   await testPasteInnerHTMLMenu();
@@ -71,7 +71,7 @@ add_task(async function() {
       "Clipboard content was pasted into the node's outer HTML."
     );
     ok(
-      !(await testActor.hasNode(outerHTMLSelector)),
+      !(await hasMatchingElementInContentPage(outerHTMLSelector)),
       "The original node was removed."
     );
   }
@@ -107,7 +107,7 @@ add_task(async function() {
       "Clipboard content was pasted into the node's inner HTML."
     );
     ok(
-      await testActor.hasNode(innerHTMLSelector),
+      await hasMatchingElementInContentPage(innerHTMLSelector),
       "The original node has been preserved."
     );
     await undoChange(inspector);
