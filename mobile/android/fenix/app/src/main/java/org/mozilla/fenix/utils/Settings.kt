@@ -727,11 +727,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true
     )
 
-    var shouldShowGridViewBanner by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_should_show_grid_view_banner),
-        default = true
-    )
-
     @VisibleForTesting(otherwise = PRIVATE)
     internal val trackingProtectionOnboardingCount = counterPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_onboarding),
