@@ -28,98 +28,74 @@ addTest(async function setup() {
   runNextTest();
 });
 
-addTest(function testLargeImage() {
+addTest(async function testLargeImage() {
   // Select the image node from the test page
-  gWalker.querySelector(gWalker.rootNode, ".big-horizontal").then(img => {
-    ok(img, "Image node found in the test page");
-    ok(img.getImageData, "Image node has the getImageData function");
-
-    img.getImageData(100).then(imageData => {
-      ok(imageData.data, "Image data actor was sent back");
-      ok(imageData.size, "Image size info was sent back too");
-      is(imageData.size.naturalWidth, 5333, "Natural width of the image correct");
-      is(imageData.size.naturalHeight, 3000, "Natural width of the image correct");
-      ok(imageData.size.resized, "Image was resized");
-
-      // eslint-disable-next-line max-nested-callbacks
-      imageData.data.string().then(str => {
-        ok(str, "We have an image data string!");
-        testResizing(imageData, str);
-      });
-    });
-  });
+  const img = await gWalker.querySelector(gWalker.rootNode, ".big-horizontal");
+  ok(img, "Image node found in the test page");
+  ok(img.getImageData, "Image node has the getImageData function");
+  const imageData = await img.getImageData(100);
+  ok(imageData.data, "Image data actor was sent back");
+  ok(imageData.size, "Image size info was sent back too");
+  is(imageData.size.naturalWidth, 5333, "Natural width of the image correct");
+  is(imageData.size.naturalHeight, 3000, "Natural width of the image correct");
+  ok(imageData.size.resized, "Image was resized");
+  const str = await imageData.data.string();
+  ok(str, "We have an image data string!");
+  testResizing(imageData, str);
 });
 
-addTest(function testLargeCanvas() {
+addTest(async function testLargeCanvas() {
   // Select the canvas node from the test page
-  gWalker.querySelector(gWalker.rootNode, ".big-vertical").then(canvas => {
-    ok(canvas, "Image node found in the test page");
-    ok(canvas.getImageData, "Image node has the getImageData function");
-
-    canvas.getImageData(350).then(imageData => {
-      ok(imageData.data, "Image data actor was sent back");
-      ok(imageData.size, "Image size info was sent back too");
-      is(imageData.size.naturalWidth, 1000, "Natural width of the image correct");
-      is(imageData.size.naturalHeight, 2000, "Natural width of the image correct");
-      ok(imageData.size.resized, "Image was resized");
-
-      // eslint-disable-next-line max-nested-callbacks
-      imageData.data.string().then(str => {
-        ok(str, "We have an image data string!");
-        testResizing(imageData, str);
-      });
-    });
-  });
+  const canvas = await gWalker.querySelector(gWalker.rootNode, ".big-vertical");
+  ok(canvas, "Image node found in the test page");
+  ok(canvas.getImageData, "Image node has the getImageData function");
+  const imageData = await canvas.getImageData(350);
+  ok(imageData.data, "Image data actor was sent back");
+  ok(imageData.size, "Image size info was sent back too");
+  is(imageData.size.naturalWidth, 1000, "Natural width of the image correct");
+  is(imageData.size.naturalHeight, 2000, "Natural width of the image correct");
+  ok(imageData.size.resized, "Image was resized");
+  const str = await imageData.data.string();
+  ok(str, "We have an image data string!");
+  testResizing(imageData, str);
 });
 
-addTest(function testSmallImage() {
+addTest(async function testSmallImage() {
   // Select the small image node from the test page
-  gWalker.querySelector(gWalker.rootNode, ".small").then(img => {
-    ok(img, "Image node found in the test page");
-    ok(img.getImageData, "Image node has the getImageData function");
-
-    img.getImageData().then(imageData => {
-      ok(imageData.data, "Image data actor was sent back");
-      ok(imageData.size, "Image size info was sent back too");
-      is(imageData.size.naturalWidth, 245, "Natural width of the image correct");
-      is(imageData.size.naturalHeight, 240, "Natural width of the image correct");
-      ok(!imageData.size.resized, "Image was NOT resized");
-
-      // eslint-disable-next-line max-nested-callbacks
-      imageData.data.string().then(str => {
-        ok(str, "We have an image data string!");
-        testResizing(imageData, str);
-      });
-    });
-  });
+  const img = await gWalker.querySelector(gWalker.rootNode, ".small");
+  ok(img, "Image node found in the test page");
+  ok(img.getImageData, "Image node has the getImageData function");
+  const imageData = await img.getImageData();
+  ok(imageData.data, "Image data actor was sent back");
+  ok(imageData.size, "Image size info was sent back too");
+  is(imageData.size.naturalWidth, 245, "Natural width of the image correct");
+  is(imageData.size.naturalHeight, 240, "Natural width of the image correct");
+  ok(!imageData.size.resized, "Image was NOT resized");
+  const str = await imageData.data.string();
+  ok(str, "We have an image data string!");
+  testResizing(imageData, str);
 });
 
-addTest(function testDataImage() {
+addTest(async function testDataImage() {
   // Select the data image node from the test page
-  gWalker.querySelector(gWalker.rootNode, ".data").then(img => {
-    ok(img, "Image node found in the test page");
-    ok(img.getImageData, "Image node has the getImageData function");
-
-    img.getImageData(14).then(imageData => {
-      ok(imageData.data, "Image data actor was sent back");
-      ok(imageData.size, "Image size info was sent back too");
-      is(imageData.size.naturalWidth, 28, "Natural width of the image correct");
-      is(imageData.size.naturalHeight, 28, "Natural width of the image correct");
-      ok(imageData.size.resized, "Image was resized");
-
-      // eslint-disable-next-line max-nested-callbacks
-      imageData.data.string().then(str => {
-        ok(str, "We have an image data string!");
-        testResizing(imageData, str);
-      });
-    });
-  });
+  const img = await gWalker.querySelector(gWalker.rootNode, ".data");
+  ok(img, "Image node found in the test page");
+  ok(img.getImageData, "Image node has the getImageData function");
+  const imageData = await img.getImageData(14);
+  ok(imageData.data, "Image data actor was sent back");
+  ok(imageData.size, "Image size info was sent back too");
+  is(imageData.size.naturalWidth, 28, "Natural width of the image correct");
+  is(imageData.size.naturalHeight, 28, "Natural width of the image correct");
+  ok(imageData.size.resized, "Image was resized");
+  const str = await imageData.data.string();
+  ok(str, "We have an image data string!");
+  testResizing(imageData, str);
 });
 
-addTest(function testNonImgOrCanvasElements() {
-  gWalker.querySelector(gWalker.rootNode, "body").then(body => {
-    ensureRejects(body.getImageData(), "Invalid element").then(runNextTest);
-  });
+addTest(async function testNonImgOrCanvasElements() {
+  const body = await gWalker.querySelector(gWalker.rootNode, "body");
+  await ensureRejects(body.getImageData(), "Invalid element");
+  runNextTest();
 });
 
 addTest(function cleanup() {
