@@ -413,6 +413,17 @@ class BaseAssemblerX64 : public BaseAssembler {
     m_formatter.twoByteOp64(OP2_IMUL_GvEv, offset, base, dst);
   }
 
+  void imulq_ir(int32_t value, RegisterID src, RegisterID dst) {
+    spew("imulq      $%d, %s, %s", value, GPReg64Name(src), GPReg64Name(dst));
+    if (CAN_SIGN_EXTEND_8_32(value)) {
+      m_formatter.oneByteOp64(OP_IMUL_GvEvIb, src, dst);
+      m_formatter.immediate8s(value);
+    } else {
+      m_formatter.oneByteOp64(OP_IMUL_GvEvIz, src, dst);
+      m_formatter.immediate32(value);
+    }
+  }
+
   void cqo() {
     spew("cqo        ");
     m_formatter.oneByteOp64(OP_CDQ);
