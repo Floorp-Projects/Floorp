@@ -22,7 +22,7 @@
         { varName:"--var",     expectedValue:"value",   style:"--var:value",                testName:"variable"},
         { varName:"--v",       expectedValue:"value",   style:"--v:value",                  testName:"single char variable"},
         { varName:"---",       expectedValue:"value",   style:"---:value",                  testName:"single char '-' variable"},
-        { varName:"--",        expectedValue:"value",   style:"--:value",                   testName:"no char variable"},
+        { varName:"--",        expectedValue:"",        style:"--:value",                   testName:"no char variable"},
         { varName:"--var",     expectedValue:" ",       style:"--var: ",                    testName:"white space value (single space)"},
         { varName:"--var",     expectedValue:"  ",      style:"--var:  ",                   testName:"white space value (double space)"},
         { varName:"--var",     expectedValue:"value2",  style:"--var:value1; --var:value2", testName:"overwrite"},
