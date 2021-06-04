@@ -2586,18 +2586,6 @@ struct nsGridContainerFrame::Tracks {
     return mSizes[aLine].mPosition;
   }
 
-  nscoord SumOfGridTracksAndGaps() {
-    return SumOfGridTracks() + SumOfGridGaps();
-  }
-
-  nscoord SumOfGridTracks() const {
-    nscoord result = 0;
-    for (const TrackSize& size : mSizes) {
-      result += size.mBase;
-    }
-    return result;
-  }
-
   nscoord SumOfGridGaps() const {
     auto len = mSizes.Length();
     return MOZ_LIKELY(len > 1) ? (len - 1) * mGridGap : 0;
@@ -6489,8 +6477,12 @@ void nsGridContainerFrame::Tracks::StretchFlexibleTracks(
       // the grid container’s min-width/height (or larger than the grid
       // container’s max-width/height), then redo this step, treating the free
       // space as definite [...]"
+      nscoord newSize = 0;
+      for (auto& sz : mSizes) {
+        newSize += sz.mBase;
+      }
       const auto sumOfGridGaps = SumOfGridGaps();
-      nscoord newSize = SumOfGridTracks() + sumOfGridGaps;
+      newSize += sumOfGridGaps;
       if (newSize > maxSize) {
         aAvailableSize = maxSize;
       } else if (newSize < minSize) {
@@ -8655,55 +8647,6 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     }
   }
 
-  if (Style()->GetPseudoType() == PseudoStyleType::scrolledContent) {
-    // Per spec, the grid area is included in a grid container's scrollable
-    // overflow region [1], as well as the padding on the end-edge sides that
-    // would satisfy the requirements of 'place-content: end' alignment [2].
-    //
-    // Note that we include the padding from all sides of the grid area, not
-    // just the end sides; this is fine because the grid area is relative to our
-    // content-box origin. The inflated bounds won't go beyond our padding-box
-    // edges on the start sides.
-    //
-    // The margin areas of grid item boxes are also included in the scrollable
-    // overflow region [2].
-    //
-    // [1] https://drafts.csswg.org/css-grid-1/#overflow
-    // [2] https://drafts.csswg.org/css-overflow-3/#scrollable
-
-    // Synthesize a grid area covering all columns and rows, and compute its
-    // rect relative to our border-box.
-    //
-    // Note: the grid columns and rows exist only if there is an explicit grid;
-    // or when an implicit grid is needed to place any grid items. See
-    // nsGridContainerFrame::Grid::PlaceGridItems().
-    const auto numCols =
-        static_cast<int32_t>(gridReflowInput.mCols.mSizes.Length());
-    const auto numRows =
-        static_cast<int32_t>(gridReflowInput.mRows.mSizes.Length());
-    if (numCols > 0 && numRows > 0) {
-      const GridArea gridArea(LineRange(0, numCols), LineRange(0, numRows));
-      const LogicalRect gridAreaRect =
-          gridReflowInput.ContainingBlockFor(gridArea) +
-          LogicalPoint(wm, bp.IStart(wm), bp.BStart(wm));
-
-      MOZ_ASSERT(bp == aReflowInput.ComputedLogicalPadding(wm),
-                 "A scrolled inner frame shouldn't have any border!");
-      const LogicalMargin& padding = bp;
-      nsRect physicalGridAreaRectWithPadding =
-          gridAreaRect.GetPhysicalRect(wm, containerSize);
-      physicalGridAreaRectWithPadding.Inflate(padding.GetPhysicalMargin(wm));
-      aDesiredSize.mOverflowAreas.UnionAllWith(physicalGridAreaRectWithPadding);
-    }
-
-    nsRect gridItemMarginBoxBounds;
-    for (const auto& item : gridReflowInput.mGridItems) {
-      gridItemMarginBoxBounds =
-          gridItemMarginBoxBounds.Union(item.mFrame->GetMarginRect());
-    }
-    aDesiredSize.mOverflowAreas.UnionAllWith(gridItemMarginBoxBounds);
-  }
-
   // TODO: fix align-tracks alignment in fragments
   if ((IsMasonry(eLogicalAxisBlock) && !prevInFlow) ||
       IsMasonry(eLogicalAxisInline)) {
@@ -9277,7 +9220,11 @@ nscoord nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
                                    NS_UNCONSTRAINEDSIZE, constraint);
 
   if (MOZ_LIKELY(!IsSubgrid())) {
-    return state.mCols.SumOfGridTracksAndGaps();
+    nscoord length = 0;
+    for (const TrackSize& sz : state.mCols.mSizes) {
+      length += sz.mBase;
+    }
+    return length + state.mCols.SumOfGridGaps();
   }
   const auto& last = state.mCols.mSizes.LastElement();
   return last.mPosition + last.mBase;
