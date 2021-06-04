@@ -445,9 +445,9 @@ add_task(async function test_download_cached() {
 add_task(clear_state);
 
 add_task(async function test_download_from_dump() {
-  const bucketNamePref = "services.testing.custom-bucket-name-in-this-test";
-  Services.prefs.setCharPref(bucketNamePref, "dump-bucket");
-  const client = RemoteSettings("dump-collection", { bucketNamePref });
+  const client = RemoteSettings("dump-collection", {
+    bucketName: "dump-bucket",
+  });
 
   // Temporarily replace the resource:-URL with another resource:-URL.
   const orig_RESOURCE_BASE_URL = Downloader._RESOURCE_BASE_URL;

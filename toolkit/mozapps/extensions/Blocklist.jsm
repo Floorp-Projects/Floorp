@@ -153,11 +153,8 @@ const PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS =
   "services.blocklist.addons.checked";
 const PREF_BLOCKLIST_ADDONS_SIGNER = "services.blocklist.addons.signer";
 // Blocklist v3 - MLBF format.
-const PREF_BLOCKLIST_ADDONS3_COLLECTION =
-  "services.blocklist.addons-mlbf.collection";
 const PREF_BLOCKLIST_ADDONS3_CHECKED_SECONDS =
   "services.blocklist.addons-mlbf.checked";
-const PREF_BLOCKLIST_ADDONS3_SIGNER = "services.blocklist.addons-mlbf.signer";
 
 const BlocklistTelemetry = {
   init() {
@@ -1113,14 +1110,10 @@ this.ExtensionBlocklistMLBF = {
       return;
     }
     this._initialized = true;
-    this._client = RemoteSettings(
-      Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS3_COLLECTION),
-      {
-        bucketNamePref: PREF_BLOCKLIST_BUCKET,
-        lastCheckTimePref: PREF_BLOCKLIST_ADDONS3_CHECKED_SECONDS,
-        signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS3_SIGNER),
-      }
-    );
+    this._client = RemoteSettings("addons-bloomfilters", {
+      bucketName: "blocklists",
+      lastCheckTimePref: PREF_BLOCKLIST_ADDONS3_CHECKED_SECONDS,
+    });
     this._onUpdate = this._onUpdate.bind(this);
     this._client.on("sync", this._onUpdate);
   },
