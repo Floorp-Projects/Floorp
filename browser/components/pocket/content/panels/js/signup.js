@@ -9,6 +9,9 @@ It does not contain any logic for saving or communication with the extension or 
 var PKT_PANEL_OVERLAY = function(options) {
   this.inited = false;
   this.active = false;
+  this.translations = {};
+  this.dictJSON = {};
+
   this.initCloseTabEvents = function() {
     function clickHelper(selector, source) {
       document.querySelector(selector)?.addEventListener(`click`, event => {
@@ -27,6 +30,11 @@ var PKT_PANEL_OVERLAY = function(options) {
     clickHelper(`.signup-btn-email`, `sign_up_2`);
     clickHelper(`.pkt_ext_login`, `log_in`);
   };
+
+  this.getTranslations = function() {
+    this.dictJSON = window.pocketStrings;
+  };
+
   this.create = function() {
     const parser = new DOMParser();
     let elBody = document.querySelector(`body`);
@@ -44,11 +52,11 @@ var PKT_PANEL_OVERLAY = function(options) {
     }
     this.active = true;
 
-    const templateData = {
-      pockethost,
-      utmCampaign: "firefox_door_hanger_menu",
-      utmSource: "control",
-    };
+    // set translations
+    this.getTranslations();
+    this.dictJSON.pockethost = pockethost;
+    this.dictJSON.utmCampaign = "firefox_door_hanger_menu";
+    this.dictJSON.utmSource = "control";
 
     // extra modifier class for language
     if (language) {
@@ -58,7 +66,7 @@ var PKT_PANEL_OVERLAY = function(options) {
     // Create actual content
     elBody.append(
       parser.parseFromString(
-        Handlebars.templates.signup_shell(templateData),
+        Handlebars.templates.signup_shell(this.dictJSON),
         `text/html`
       ).documentElement
     );

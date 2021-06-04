@@ -5,11 +5,20 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = ["AboutPocketParent"];
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "pktApi",
   "chrome://pocket/content/pktApi.jsm"
 );
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+XPCOMUtils.defineLazyGetter(this, "gPocketBundle", function() {
+  return Services.strings.createBundle(
+    "chrome://browser/locale/pocket.properties"
+  );
+});
 
 class AboutPocketParent extends JSWindowActorParent {
   sendResponseMessageToPanel(messageId, panelId, payload) {
@@ -22,6 +31,25 @@ class AboutPocketParent extends JSWindowActorParent {
 
   async receiveMessage(message) {
     switch (message.name) {
+      case "PKT_initL10N": {
+        var strings = {};
+        for (let str of gPocketBundle.getSimpleEnumeration()) {
+          if (str.key in message.data.payload) {
+            strings[str.key] = gPocketBundle.formatStringFromName(
+              str.key,
+              message.data.payload[str.key]
+            );
+          } else {
+            strings[str.key] = str.value;
+          }
+        }
+
+        this.sendResponseMessageToPanel("PKT_initL10N", message.data.panelId, {
+          strings,
+          dir: Services.locale.isAppLocaleRTL ? "rtl" : "ltr",
+        });
+        break;
+      }
       case "PKT_show_signup": {
         this.browsingContext.topChromeWindow?.pktUI.onShowSignup();
         break;
