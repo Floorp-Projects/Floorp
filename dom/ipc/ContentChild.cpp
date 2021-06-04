@@ -4644,6 +4644,13 @@ OpenBSDPledgePromises(const nsACString& aPath) {
 }
 
 void ExpandUnveilPath(nsAutoCString& path) {
+  // Expand $XDG_RUNTIME_DIR to the environment variable, or ~/.cache
+  nsCString xdgRuntimeDir(PR_GetEnv("XDG_RUNTIME_DIR"));
+  if (xdgRuntimeDir.IsEmpty()) {
+    xdgRuntimeDir = "~/.cache";
+  }
+  path.ReplaceSubstring("$XDG_RUNTIME_DIR", xdgRuntimeDir.get());
+
   // Expand $XDG_CONFIG_HOME to the environment variable, or ~/.config
   nsCString xdgConfigHome(PR_GetEnv("XDG_CONFIG_HOME"));
   if (xdgConfigHome.IsEmpty()) {
@@ -4773,7 +4780,7 @@ bool StartOpenBSDSandbox(GeckoProcessType type) {
       OpenBSDFindPledgeUnveilFilePath("unveil.main", unveilFile);
 
       // Ensure dconf dir exists before we veil the filesystem
-      nsAutoCString dConf("$XDG_CACHE_HOME/dconf");
+      nsAutoCString dConf("$XDG_RUNTIME_DIR/dconf");
       ExpandUnveilPath(dConf);
       MkdirP(dConf);
       break;
