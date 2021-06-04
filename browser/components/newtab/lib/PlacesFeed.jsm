@@ -8,6 +8,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
+const { shortURL } = ChromeUtils.import(
+  "resource://activity-stream/lib/ShortURL.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -27,6 +30,11 @@ ChromeUtils.defineModuleGetter(
 
 const LINK_BLOCKED_EVENT = "newtab-linkBlocked";
 const PLACES_LINKS_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for places links changed events
+
+// The pref to store the blocked sponsors of the sponsored Top Sites.
+// The value of this pref is an array (JSON serialized) of hostnames of the
+// blocked sponsors.
+const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 
 /**
  * Observer - a wrapper around history/bookmark observers to add the QueryInterface.
@@ -438,6 +446,24 @@ class PlacesFeed {
     urlBar.addEventListener("paste", checkFirstChange);
   }
 
+  /**
+   * Add the hostnames of the given urls to the Top Sites sponsor blocklist.
+   *
+   * @param {array} urls
+   *   An array of the objects structured as `{ url }`
+   */
+  addToBlockedTopSitesSponsors(urls) {
+    const blockedPref = JSON.parse(
+      Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
+    );
+    const merged = new Set([...blockedPref, ...urls.map(url => shortURL(url))]);
+
+    Services.prefs.setStringPref(
+      TOP_SITES_BLOCKED_SPONSORS_PREF,
+      JSON.stringify([...merged])
+    );
+  }
+
   onAction(action) {
     switch (action.type) {
       case at.INIT:
@@ -457,10 +483,17 @@ class PlacesFeed {
       }
       case at.BLOCK_URL: {
         if (action.data) {
+          let sponsoredTopSites = [];
           action.data.forEach(site => {
-            const { url, pocket_id } = site;
+            const { url, pocket_id, isSponsoredTopSite } = site;
             NewTabUtils.activityStreamLinks.blockURL({ url, pocket_id });
+            if (isSponsoredTopSite) {
+              sponsoredTopSites.push({ url });
+            }
           });
+          if (sponsoredTopSites.length) {
+            this.addToBlockedTopSitesSponsors(sponsoredTopSites);
+          }
         }
         break;
       }
