@@ -8,8 +8,7 @@
  */
 
 [Pref="dom.gamepad.extensions.enabled",
- Exposed=Window,
- SecureContext]
+ Exposed=Window]
 interface GamepadPose
 {
   readonly attribute boolean hasOrientation;

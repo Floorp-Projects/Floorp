@@ -405,21 +405,21 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "GainNode", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "Gamepad", insecureContext: false },
+  { name: "Gamepad", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "GamepadAxisMoveEvent", insecureContext: false },
+  { name: "GamepadAxisMoveEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "GamepadButtonEvent", insecureContext: false },
+  { name: "GamepadButtonEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "GamepadButton", insecureContext: false },
+  { name: "GamepadButton", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "GamepadEvent", insecureContext: false },
+  { name: "GamepadEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "GamepadHapticActuator", insecureContext: false },
+  { name: "GamepadHapticActuator", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "GamepadLightIndicator", insecureContext: false, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "GamepadPose", insecureContext: false },
+  { name: "GamepadPose", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "GamepadTouch", insecureContext: false, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
