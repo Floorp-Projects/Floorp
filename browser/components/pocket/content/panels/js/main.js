@@ -98,21 +98,7 @@ function onDOMLoaded() {
     window.thePKT_PANEL = thePKT_PANEL;
     thePKT_PANEL.init();
   }
-
-  // send an async message to get string data
-  thePKT_PANEL.sendMessage(
-    "PKT_initL10N",
-    {
-      pockethomeparagraph: ["Pocket"],
-    },
-    function(resp) {
-      const { data } = resp;
-      window.pocketStrings = data.strings;
-      // Set the writing system direction
-      document.documentElement.setAttribute("dir", data.dir);
-      window.thePKT_PANEL.create();
-    }
-  );
+  window.thePKT_PANEL.create();
 }
 
 if (document.readyState != `loading`) {
