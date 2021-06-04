@@ -3043,7 +3043,6 @@ impl Renderer {
             let tile = &composite_state.tiles[item.key];
 
             let clip_rect = item.rectangle;
-            let tile_rect = composite_state.get_device_rect(&tile.local_rect, tile.transform_index);
 
             // Work out the draw params based on the tile surface
             let (instance, textures, shader_params) = match tile.surface {
@@ -3051,7 +3050,7 @@ impl Renderer {
                     let dummy = TextureSource::Dummy;
                     let image_buffer_kind = dummy.image_buffer_kind();
                     let instance = CompositeInstance::new(
-                        tile_rect,
+                        tile.rect,
                         clip_rect,
                         color.premultiplied(),
                         tile.z_id,
@@ -3065,7 +3064,7 @@ impl Renderer {
                 }
                 CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture } } => {
                     let instance = CompositeInstance::new(
-                        tile_rect,
+                        tile.rect,
                         clip_rect,
                         PremultipliedColorF::WHITE,
                         tile.z_id,
@@ -3106,7 +3105,7 @@ impl Renderer {
 
                             (
                                 CompositeInstance::new_yuv(
-                                    tile_rect,
+                                    tile.rect,
                                     clip_rect,
                                     tile.z_id,
                                     color_space,
@@ -3132,7 +3131,7 @@ impl Renderer {
                                 uv_rect.uv1.y = y;
                             }
                             let instance = CompositeInstance::new_rgb(
-                                tile_rect,
+                                tile.rect,
                                 clip_rect,
                                 PremultipliedColorF::WHITE,
                                 tile.z_id,
@@ -3156,7 +3155,7 @@ impl Renderer {
                     let dummy = TextureSource::Dummy;
                     let image_buffer_kind = dummy.image_buffer_kind();
                     let instance = CompositeInstance::new(
-                        tile_rect,
+                        tile.rect,
                         clip_rect,
                         PremultipliedColorF::BLACK,
                         tile.z_id,
@@ -3259,26 +3258,22 @@ impl Renderer {
             // Clear tiles overwrite whatever is under them, so they are treated as opaque.
             let is_opaque = tile.kind != TileKind::Alpha;
 
-            let device_tile_box = composite_state.get_device_rect(
-                &tile.local_rect,
-                tile.transform_index
-            );
-
             // Determine a clip rect to apply to this tile, depending on what
             // the partial present mode is.
             let partial_clip_rect = match partial_present_mode {
                 Some(PartialPresentMode::Single { dirty_rect }) => dirty_rect,
-                None => device_tile_box,
+                None => tile.rect,
             };
 
             // Simple compositor needs the valid rect in device space to match clip rect
-            let device_valid_rect = composite_state
-                .get_device_rect(&tile.local_valid_rect, tile.transform_index);
+            let valid_device_rect = tile.valid_rect.translate(
+                tile.rect.min.to_vector()
+            );
 
-            let rect = device_tile_box
-                .intersection_unchecked(&tile.device_clip_rect)
+            let rect = tile.rect
+                .intersection_unchecked(&tile.clip_rect)
                 .intersection_unchecked(&partial_clip_rect)
-                .intersection_unchecked(&device_valid_rect);
+                .intersection_unchecked(&valid_device_rect);
 
             if rect.is_empty() {
                 continue;
@@ -4205,11 +4200,16 @@ impl Renderer {
                     if tile.kind == TileKind::Clear {
                         continue;
                     }
-                    let dirty_rect = composite_state.get_device_rect(
-                        &tile.local_dirty_rect,
-                        tile.transform_index,
-                    );
-                    combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+                    let tile_dirty_rect = tile.dirty_rect.translate(tile.rect.min.to_vector());
+                    let transformed_dirty_rect = if let Some(transform) = tile.transform {
+                        transform.outer_transformed_box2d(&tile_dirty_rect)
+                    } else {
+                        Some(tile_dirty_rect)
+                    };
+
+                    if let Some(dirty_rect) = transformed_dirty_rect {
+                        combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+                    }
                 }
 
                 let combined_dirty_rect = combined_dirty_rect.round();
@@ -4376,14 +4376,12 @@ impl Renderer {
                     if tile.kind == TileKind::Clear {
                         continue;
                     }
-                    if !tile.local_dirty_rect.is_empty() {
-                        if let CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::Native { id, .. } } = tile.surface {
-                            let valid_rect = frame.composite_state.get_surface_rect(
-                                &tile.local_valid_rect,
-                                &tile.local_rect.origin,
-                                tile.transform_index,
-                            ).to_i32();
-
+                    if !tile.dirty_rect.is_empty() {
+                        if let CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::Native { id, .. } } =
+                            tile.surface {
+                            let valid_rect = tile.valid_rect
+                                .round()
+                                .to_i32();
                             compositor.invalidate_tile(id, valid_rect);
                         }
                     }
