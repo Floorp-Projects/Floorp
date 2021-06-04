@@ -49,6 +49,12 @@ const TEST_URL =
 `);
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   info("Open the inspector to a blank page.");
   const { inspector, testActor } = await openInspectorForURL("about:blank");
 

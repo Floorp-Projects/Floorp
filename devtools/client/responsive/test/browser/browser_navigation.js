@@ -13,6 +13,12 @@ const DUMMY_3_URL = "http://example.com/browser/devtools/";
 addRDMTask(
   null,
   async function() {
+    // Disable bfcache for Fission for now.
+    // If Fission is disabled, the pref is no-op.
+    await SpecialPowers.pushPrefEnv({
+      set: [["fission.bfcacheInParent", false]],
+    });
+
     await SpecialPowers.pushPrefEnv({
       set: [["browser.navigation.requireUserInteraction", false]],
     });

@@ -15,6 +15,12 @@ const TEST_URI = `http://example.org/document-builder.sjs?html=<meta charset=utf
 const { Toolbox } = require("devtools/client/framework/toolbox");
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   // Make sure we start the test with the split console disabled.
   // ⚠️ In this test it's important to _not_ enable the console.
   await pushPref("devtools.toolbox.splitconsoleEnabled", false);

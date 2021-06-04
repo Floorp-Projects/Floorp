@@ -5,6 +5,12 @@
 // Test hovering in a script that is paused on load
 // and doesn't have functions.
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   const dbg = await initDebugger("doc-scripts.html");
 
   const onNavigated = navigate(dbg, "doc-on-load.html");

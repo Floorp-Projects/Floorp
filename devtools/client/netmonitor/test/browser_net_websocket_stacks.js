@@ -48,6 +48,12 @@ const EXPECTED_REQUESTS = {
 };
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   // Load a different URL first to instantiate the network monitor before we
   // load the page we're really interested in.
   const { monitor } = await initNetMonitor(SIMPLE_URL, { requestCount: 1 });
