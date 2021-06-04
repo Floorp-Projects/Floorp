@@ -87,6 +87,7 @@ if [ "x$SYS_NAME" = "xDarwin" ]; then
   CONFIGS="x64_False_arm64_mac x64_True_arm64_mac x64_False_x64_mac x64_True_x64_mac"
   IS_DARWIN=1
 elif [ "x$SYS_NAME" = "xMINGW32_NT-6.2" ]; then
+  export DEPOT_TOOLS_WIN_TOOLCHAIN=0
   CONFIGS="x64_True_x64_win x64_False_x64_win x64_True_x86_win x64_False_x86_win"
   IS_WIN=1
 else
