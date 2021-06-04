@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 config = {
-    "stage_platform": "android-arm-debug",
-    "src_mozconfig": "mobile/android/config/mozconfigs/android-arm/debug-beta",
+    "stage_platform": "android-api-16-debug",
+    "src_mozconfig": "mobile/android/config/mozconfigs/android-api-16/debug-beta",
     "debug_build": True,
 }

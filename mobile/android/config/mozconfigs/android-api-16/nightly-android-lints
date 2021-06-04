@@ -13,7 +13,7 @@ NO_NDK=1
 
 ac_add_options --disable-tests
 
-# From here on, like ../android-arm/nightly.
+# From here on, like ../android-api-16/nightly.
 
 # Android
 # Warning: Before increasing the with-android-min-sdk value, please note several places in and out
@@ -29,7 +29,7 @@ ac_add_options --with-branding=mobile/android/branding/nightly
 export MOZILLA_OFFICIAL=1
 
 # mozconfigs/common.override would be here, but it needs to be last in the file.
-# End ../android-arm/nightly.
+# End ../android-api-16/nightly.
 
 # Disable Keyfile Loading (and checks) since.
 # This overrides the settings in the common android mozconfig

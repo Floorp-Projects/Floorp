@@ -441,7 +441,7 @@ jobs:
                 export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
                 python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
-            platform: android-hw-p2-8-0-arm7/debug
+            platform: android-hw-p2-8-0-arm7-api-16/debug
             symbol: WR(wrench)
         when:
             files-changed:
@@ -485,7 +485,7 @@ jobs:
                 export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
                 python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
-            platform: android-hw-p2-8-0-arm7/opt
+            platform: android-hw-p2-8-0-arm7-api-16/opt
             symbol: WR(wrench)
         when:
             files-changed:

@@ -9,7 +9,7 @@ config = {
         "MOZ_OBJDIR": "%(abs_obj_dir)s",
     },
     "vcs_share_base": "/builds/hg-shared",
-    "mozconfig": "src/mobile/android/config/mozconfigs/android-arm/l10n-nightly",
+    "mozconfig": "src/mobile/android/config/mozconfigs/android-api-16/l10n-nightly",
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/src",
