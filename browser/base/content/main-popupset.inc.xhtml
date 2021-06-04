@@ -1,0 +1,614 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<popupset id="mainPopupSet">
+  <menupopup id="tabContextMenu"
+             onpopupshowing="if (event.target == this) TabContextMenu.updateContextMenu(this);"
+             onpopuphidden="if (event.target == this) TabContextMenu.contextTab = null;">
+    <menuitem id="context_openANewTab" data-lazy-l10n-id="tab-context-new-tab"
+              oncommand="gBrowser.addAdjacentNewTab(TabContextMenu.contextTab)"/>
+    <menuseparator/>
+    <menuitem id="context_reloadTab" data-lazy-l10n-id="reload-tab"
+              oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
+    <menuitem id="context_reloadSelectedTabs" data-lazy-l10n-id="reload-tabs" hidden="true"
+              oncommand="gBrowser.reloadMultiSelectedTabs();"/>
+    <menuitem id="context_toggleMuteTab" oncommand="TabContextMenu.contextTab.toggleMuteAudio();"/>
+    <menuitem id="context_toggleMuteSelectedTabs" hidden="true"
+              oncommand="gBrowser.toggleMuteAudioOnMultiSelectedTabs(TabContextMenu.contextTab);"/>
+    <menuitem id="context_pinTab" data-lazy-l10n-id="pin-tab"
+              oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
+    <menuitem id="context_unpinTab" data-lazy-l10n-id="unpin-tab" hidden="true"
+              oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
+    <menuitem id="context_pinSelectedTabs" data-lazy-l10n-id="pin-selected-tabs" hidden="true"
+              oncommand="gBrowser.pinMultiSelectedTabs();"/>
+    <menuitem id="context_unpinSelectedTabs" data-lazy-l10n-id="unpin-selected-tabs" hidden="true"
+              oncommand="gBrowser.unpinMultiSelectedTabs();"/>
+    <menuitem id="context_duplicateTab" data-lazy-l10n-id="duplicate-tab"
+              oncommand="duplicateTabIn(TabContextMenu.contextTab, 'tab');"/>
+    <menuitem id="context_duplicateTabs" data-lazy-l10n-id="duplicate-tabs"
+              oncommand="TabContextMenu.duplicateSelectedTabs();"/>
+    <menuseparator/>
+    <menuitem id="context_bookmarkSelectedTabs"
+              hidden="true"
+              data-lazy-l10n-id="bookmark-selected-tabs"
+              oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueSelectedPages);"/>
+    <menuitem id="context_bookmarkTab"
+              data-lazy-l10n-id="bookmark-tab"
+              oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.getUniquePages([TabContextMenu.contextTab]));"/>
+    <menu id="context_moveTabOptions"
+          data-lazy-l10n-id="tab-context-move-tabs"
+          data-l10n-args='{"tabCount": 1}'>
+      <menupopup id="moveTabOptionsMenu">
+        <menuitem id="context_moveToStart"
+                  data-lazy-l10n-id="move-to-start"
+                  tbattr="tabbrowser-multiple"
+                  oncommand="gBrowser.moveTabsToStart(TabContextMenu.contextTab);"/>
+        <menuitem id="context_moveToEnd"
+                  data-lazy-l10n-id="move-to-end"
+                  tbattr="tabbrowser-multiple"
+                  oncommand="gBrowser.moveTabsToEnd(TabContextMenu.contextTab);"/>
+        <menuitem id="context_openTabInWindow" data-lazy-l10n-id="move-to-new-window"
+                  tbattr="tabbrowser-multiple"
+                  oncommand="gBrowser.replaceTabsWithWindow(TabContextMenu.contextTab);"/>
+      </menupopup>
+    </menu>
+    <menu id="context_sendTabToDevice"
+          class="sync-ui-item">
+      <menupopup id="context_sendTabToDevicePopupMenu"
+                 onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle, TabContextMenu.contextTab.multiselected);"/>
+    </menu>
+    <menu id="context_reopenInContainer"
+          data-lazy-l10n-id="tab-context-open-in-new-container-tab"
+          hidden="true">
+      <menupopup oncommand="TabContextMenu.reopenInContainer(event);"
+                 onpopupshowing="TabContextMenu.createReopenInContainerMenu(event);"/>
+    </menu>
+    <menuitem id="context_selectAllTabs" data-lazy-l10n-id="select-all-tabs"
+              oncommand="gBrowser.selectAllTabs();"/>
+    <menuseparator/>
+    <menuitem id="context_closeTab"
+              data-lazy-l10n-id="tab-context-close-tabs"
+              data-l10n-args='{"tabCount": 1}'
+              oncommand="TabContextMenu.closeContextTabs();"/>
+    <menu id="context_closeTabOptions"
+          data-lazy-l10n-id="tab-context-close-multiple-tabs">
+      <menupopup id="closeTabOptions">
+        <menuitem id="context_closeTabsToTheStart" data-lazy-l10n-id="close-tabs-to-the-start"
+                  oncommand="gBrowser.removeTabsToTheStartFrom(TabContextMenu.contextTab, {animate: true});"/>
+        <menuitem id="context_closeTabsToTheEnd" data-lazy-l10n-id="close-tabs-to-the-end"
+                  oncommand="gBrowser.removeTabsToTheEndFrom(TabContextMenu.contextTab, {animate: true});"/>
+        <menuitem id="context_closeOtherTabs" data-lazy-l10n-id="close-other-tabs"
+                  oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
+      </menupopup>
+    </menu>
+    <menuitem id="context_undoCloseTab"
+              data-lazy-l10n-id="tab-context-reopen-closed-tabs"
+              data-l10n-args='{"tabCount": 1}'
+              observes="History:UndoCloseTab"/>
+  </menupopup>
+
+  <!-- bug 415444/582485: event.stopPropagation is here for the cloned version
+       of this menupopup, to prevent already-handled clicks on menu items from
+       propagating to the back or forward button.
+  -->
+  <menupopup id="backForwardMenu"
+             onpopupshowing="return FillHistoryMenu(event.target);"
+             oncommand="gotoHistoryIndex(event); event.stopPropagation();"/>
+  <tooltip id="aHTMLTooltip" page="true"/>
+  <tooltip id="remoteBrowserTooltip"/>
+
+  <menupopup id="new-tab-button-popup"
+             onpopupshowing="return CreateContainerTabMenu(event);"/>
+  <!-- for search and content formfill/pw manager -->
+
+  <panel is="autocomplete-richlistbox-popup"
+         type="autocomplete-richlistbox"
+         id="PopupAutoComplete"
+         role="group"
+         noautofocus="true"
+         hidden="true"
+         overflowpadding="4"
+         norolluponanchor="true"
+         nomaxresults="true" />
+
+  <!-- for search with one-off buttons -->
+  <panel is="search-autocomplete-richlistbox-popup"
+         type="autocomplete-richlistbox"
+         id="PopupSearchAutoComplete"
+         orient="vertical"
+         role="group"
+         noautofocus="true"
+         hidden="true" />
+
+  <html:template id="dateTimePickerTemplate">
+    <!-- for date/time picker. consumeoutsideclicks is set to never, so that
+         clicks on the anchored input box are never consumed. -->
+    <panel id="DateTimePickerPanel"
+           type="arrow"
+           orient="vertical"
+           noautofocus="true"
+           norolluponanchor="true"
+           consumeoutsideclicks="never"
+           level="parent"
+           tabspecific="true">
+    </panel>
+  </html:template>
+
+  <!-- for select dropdowns. The menupopup is what shows the list of options,
+       and the popuponly menulist makes things like the menuactive attributes
+       work correctly on the menupopup. ContentSelectDropdown expects the
+       popuponly menulist to be its immediate parent. -->
+  <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
+    <menupopup rolluponmousewheel="true"
+               activateontab="true" position="after_start"
+               level="parent"
+#ifdef XP_WIN
+               consumeoutsideclicks="false" ignorekeys="shortcuts"
+#endif
+      />
+  </menulist>
+
+  <html:template id="printPreviewStackTemplate">
+    <stack class="previewStack" rendering="true" flex="1" previewtype="primary">
+      <vbox class="previewRendering" flex="1">
+        <h1 class="print-pending-label" data-l10n-id="printui-loading"></h1>
+      </vbox>
+    </stack>
+  </html:template>
+
+  <html:template id="invalidFormTemplate">
+    <!-- for invalid form error message -->
+    <panel id="invalid-form-popup" type="arrow" orient="vertical" noautofocus="true" level="parent">
+      <description/>
+    </panel>
+  </html:template>
+
+  <html:template id="editBookmarkPanelTemplate">
+    <panel id="editBookmarkPanel"
+           class="panel-no-padding"
+           type="arrow"
+           orient="vertical"
+           ignorekeys="true"
+           hidden="true"
+           tabspecific="true"
+           aria-labelledby="editBookmarkPanelTitle">
+      <box class="panel-header">
+        <html:h1 id="editBookmarkPanelTitle"/>
+        <toolbarbutton tabindex="0" id="editBookmarkPanelInfoButton" class="panel-info-button" oncommand="StarUI.toggleRecommendation();" >
+          <image/>
+        </toolbarbutton>
+      </box>
+      <toolbarseparator id="editBookmarkHeaderSeparator"></toolbarseparator>
+      <vbox class="panel-subview-body">
+        <html:div id="editBookmarkPanelInfoArea">
+          <html:div id="editBookmarkPanelRecommendation"></html:div>
+          <html:div id="editBookmarkPanelFaviconContainer">
+            <html:img id="editBookmarkPanelFavicon"/>
+          </html:div>
+          <html:div id="editBookmarkPanelImage"></html:div>
+        </html:div>
+        <toolbarseparator id="editBookmarkSeparator"></toolbarseparator>
+#include ../../components/places/content/editBookmarkPanel.inc.xhtml
+        <vbox id="editBookmarkPanelBottomContent"
+              flex="1">
+          <checkbox id="editBookmarkPanel_showForNewBookmarks"
+                    data-l10n-id="bookmark-panel-show-editor-checkbox"
+                    oncommand="StarUI.onShowForNewBookmarksCheckboxCommand();"/>
+        </vbox>
+        <hbox id="editBookmarkPanelBottomButtons"
+              class="panel-footer"
+              data-l10n-id="bookmark-panel"
+              data-l10n-attrs="style">
+#ifndef XP_UNIX
+          <button id="editBookmarkPanelDoneButton"
+                  class="editBookmarkPanelBottomButton"
+                  data-l10n-id="bookmark-panel-save-button"
+                  default="true"
+                  oncommand="StarUI.panel.hidePopup();"/>
+          <button id="editBookmarkPanelRemoveButton"
+                  class="editBookmarkPanelBottomButton"
+                  oncommand="StarUI.removeBookmarkButtonCommand();"/>
+#else
+          <button id="editBookmarkPanelRemoveButton"
+                  class="editBookmarkPanelBottomButton"
+                  oncommand="StarUI.removeBookmarkButtonCommand();"/>
+          <button id="editBookmarkPanelDoneButton"
+                  class="editBookmarkPanelBottomButton"
+                  data-l10n-id="bookmark-panel-save-button"
+                  default="true"
+                  oncommand="StarUI.panel.hidePopup();"/>
+#endif
+        </hbox>
+      </vbox>
+    </panel>
+  </html:template>
+
+  <html:template id="UITourTooltipTemplate">
+    <!-- UI tour experience -->
+    <panel id="UITourTooltip"
+           type="arrow"
+           noautofocus="true"
+           noautohide="true"
+           align="start"
+           orient="vertical"
+           role="alert">
+     <vbox>
+      <hbox id="UITourTooltipBody">
+        <image id="UITourTooltipIcon"/>
+        <vbox flex="1">
+          <hbox id="UITourTooltipTitleContainer">
+            <label id="UITourTooltipTitle" flex="1"/>
+            <toolbarbutton id="UITourTooltipClose" class="close-icon"
+                           tooltiptext="&uiTour.infoPanel.close;"/>
+          </hbox>
+          <description id="UITourTooltipDescription" flex="1"/>
+        </vbox>
+      </hbox>
+      <hbox id="UITourTooltipButtons" flex="1" align="center"/>
+     </vbox>
+    </panel>
+  </html:template>
+  <html:template id="UITourHighlightTemplate">
+    <!-- type="default" forces frames to be created so that the panel's size can be determined -->
+    <panel id="UITourHighlightContainer"
+           type="default"
+           noautofocus="true"
+           noautohide="true"
+           flip="none"
+           consumeoutsideclicks="false">
+      <box id="UITourHighlight"></box>
+    </panel>
+  </html:template>
+
+  <html:template id="dialogStackTemplate">
+    <stack class="dialogStack tab-dialog-box" hidden="true">
+      <vbox class="dialogTemplate dialogOverlay" align="center" topmost="true" hidden="true">
+        <hbox class="dialogBox">
+          <browser class="dialogFrame"
+                   autoscroll="false"
+                   disablehistory="true"/>
+        </hbox>
+      </vbox>
+    </stack>
+  </html:template>
+
+  <panel id="sidebarMenu-popup"
+         class="cui-widget-panel"
+         role="group"
+         type="arrow"
+         hidden="true"
+         flip="slide"
+         orient="vertical"
+         position="bottomcenter topleft">
+    <toolbarbutton id="sidebar-switcher-bookmarks"
+                   data-l10n-id="sidebar-menu-bookmarks"
+                   class="subviewbutton"
+                   key="viewBookmarksSidebarKb"
+                   oncommand="SidebarUI.show('viewBookmarksSidebar');"/>
+    <toolbarbutton id="sidebar-switcher-history"
+                   data-l10n-id="sidebar-menu-history"
+                   class="subviewbutton"
+                   key="key_gotoHistory"
+                   oncommand="SidebarUI.show('viewHistorySidebar');"/>
+    <toolbarbutton id="sidebar-switcher-tabs"
+                   data-l10n-id="sidebar-menu-synced-tabs"
+                   class="subviewbutton sync-ui-item"
+                   oncommand="SidebarUI.show('viewTabsSidebar');"/>
+    <toolbarseparator/>
+    <!-- Extension toolbarbuttons go here. -->
+    <toolbarseparator id="sidebar-extensions-separator"/>
+    <toolbarbutton id="sidebar-reverse-position"
+                   class="subviewbutton"
+                   oncommand="SidebarUI.reversePosition()"/>
+    <toolbarseparator/>
+    <toolbarbutton data-l10n-id="sidebar-menu-close"
+                   class="subviewbutton"
+                   oncommand="SidebarUI.hide()"/>
+  </panel>
+
+  <menupopup id="toolbar-context-menu"
+             onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator')); ToolbarContextMenu.updateDownloadsAutoHide(this); ToolbarContextMenu.updateExtension(this)">
+    <menuitem oncommand="ToolbarContextMenu.openAboutAddonsForContextAction(this.parentElement)"
+              data-lazy-l10n-id="toolbar-context-menu-manage-extension"
+              contexttype="toolbaritem"
+              class="customize-context-manageExtension"/>
+    <menuitem oncommand="ToolbarContextMenu.removeExtensionForContextAction(this.parentElement)"
+              data-lazy-l10n-id="toolbar-context-menu-remove-extension"
+              contexttype="toolbaritem"
+              class="customize-context-removeExtension"/>
+    <menuitem oncommand="ToolbarContextMenu.reportExtensionForContextAction(this.parentElement, 'toolbar_context_menu')"
+              data-lazy-l10n-id="toolbar-context-menu-report-extension"
+              contexttype="toolbaritem"
+              class="customize-context-reportExtension"/>
+    <menuseparator/>
+    <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode, 'toolbar-context-menu')"
+              data-lazy-l10n-id="toolbar-context-menu-pin-to-overflow-menu"
+              contexttype="toolbaritem"
+              class="customize-context-moveToPanel"/>
+    <menuitem id="toolbar-context-autohide-downloads-button"
+              oncommand="ToolbarContextMenu.onDownloadsAutoHideChange(event);"
+              type="checkbox"
+              data-lazy-l10n-id="toolbar-context-menu-auto-hide-downloads-button-2"
+              contexttype="toolbaritem"/>
+    <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode, 'toolbar-context-menu')"
+              data-lazy-l10n-id="toolbar-context-menu-remove-from-toolbar"
+              contexttype="toolbaritem"
+              class="customize-context-removeFromToolbar"/>
+    <menuitem id="toolbar-context-openANewTab"
+              contexttype="tabbar"
+              command="cmd_newNavigatorTab"
+              data-lazy-l10n-id="toolbar-context-menu-new-tab"/>
+    <menuseparator id="toolbarNavigatorItemsMenuSeparator"/>
+    <menuitem id="toolbar-context-reloadSelectedTab"
+              contexttype="tabbar"
+              oncommand="gBrowser.reloadMultiSelectedTabs();"
+              data-lazy-l10n-id="toolbar-context-menu-reload-selected-tab"/>
+    <menuitem id="toolbar-context-reloadSelectedTabs"
+              contexttype="tabbar"
+              oncommand="gBrowser.reloadMultiSelectedTabs();"
+              data-lazy-l10n-id="toolbar-context-menu-reload-selected-tabs"/>
+    <menuitem id="toolbar-context-bookmarkSelectedTab"
+              contexttype="tabbar"
+              oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueSelectedPages);"
+              data-lazy-l10n-id="toolbar-context-menu-bookmark-selected-tab"/>
+    <menuitem id="toolbar-context-bookmarkSelectedTabs"
+              contexttype="tabbar"
+              oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueSelectedPages);"
+              data-lazy-l10n-id="toolbar-context-menu-bookmark-selected-tabs"/>
+    <menuitem id="toolbar-context-selectAllTabs"
+              contexttype="tabbar"
+              oncommand="gBrowser.selectAllTabs();"
+              data-lazy-l10n-id="toolbar-context-menu-select-all-tabs"/>
+    <menuitem id="toolbar-context-undoCloseTab"
+              contexttype="tabbar"
+              data-lazy-l10n-id="toolbar-context-menu-reopen-closed-tabs"
+              observes="History:UndoCloseTab"/>
+    <menuseparator id="toolbarItemsMenuSeparator"/>
+    <menuseparator id="viewToolbarsMenuSeparator"/>
+    <!-- XXXgijs: we're using oncommand handler here to avoid the event being
+                  redirected to the command element, thus preventing
+                  listeners on the menupopup or further up the tree from
+                  seeing the command event pass by. The observes attribute is
+                  here so that the menuitem is still disabled and re-enabled
+                  correctly. -->
+    <menuitem oncommand="gCustomizeMode.enter()"
+              observes="cmd_CustomizeToolbars"
+              class="viewCustomizeToolbar"
+              data-lazy-l10n-id="toolbar-context-menu-view-customize-toolbar-2"/>
+  </menupopup>
+
+  <menupopup id="blockedPopupOptions"
+             onpopupshowing="gPopupBlockerObserver.fillPopupList(event);"
+             onpopuphiding="gPopupBlockerObserver.onPopupHiding(event);">
+    <menuitem id="blockedPopupAllowSite"
+              accesskey="&allowPopups.accesskey;"
+              oncommand="gPopupBlockerObserver.toggleAllowPopupsForSite(event);"/>
+    <menuitem
+#ifdef XP_WIN
+              label="&editPopupSettings.label;"
+#else
+              label="&editPopupSettingsUnix.label;"
+#endif
+              accesskey="&editPopupSettings.accesskey;"
+              oncommand="gPopupBlockerObserver.editPopupSettings();"/>
+    <menuitem id="blockedPopupDontShowMessage"
+              accesskey="&dontShowMessage.accesskey;"
+              type="checkbox"
+              oncommand="gPopupBlockerObserver.dontShowMessage();"/>
+    <menuseparator id="blockedPopupsSeparator"/>
+  </menupopup>
+
+  <menupopup id="autohide-context"
+         onpopupshowing="FullScreen.getAutohide(this.firstChild);">
+    <menuitem type="checkbox" data-l10n-id="full-screen-autohide"
+              oncommand="FullScreen.setAutohide();"/>
+    <menuseparator/>
+    <menuitem data-l10n-id="full-screen-exit"
+              oncommand="BrowserFullScreen();"/>
+  </menupopup>
+
+  <menupopup id="contentAreaContextMenu" pagemenu="#page-menu-separator"
+             onpopupshowing="if (event.target != this)
+                               return true;
+                             gContextMenu = new nsContextMenu(this, event.shiftKey);
+                             if (gContextMenu.shouldDisplay)
+                               updateEditUIVisibility();
+                             return gContextMenu.shouldDisplay;"
+             onpopuphiding="if (event.target != this)
+                              return;
+                            gContextMenu.hiding(this);
+                            gContextMenu = null;
+                            updateEditUIVisibility();">
+#include browser-context.inc
+  </menupopup>
+
+  <menupopup id="pictureInPictureToggleContextMenu">
+    <menuitem label="&pictureInPictureHideToggle.label;"
+              accesskey="&pictureInPictureHideToggle.accesskey;"
+              oncommand="PictureInPicture.hideToggle();" />
+  </menupopup>
+
+#include ../../components/places/content/placesContextMenu.inc.xhtml
+
+  <panel id="ctrlTab-panel" hidden="true" norestorefocus="true" level="top" orient="vertical">
+    <hbox id="ctrlTab-previews"/>
+    <hbox id="ctrlTab-showAll-container" pack="center"/>
+  </panel>
+
+  <html:template id="pageActionPanelTemplate">
+    <panel id="pageActionPanel"
+           class="cui-widget-panel panel-no-padding"
+           role="group"
+           type="arrow"
+           hidden="true"
+           flip="slide"
+           position="bottomcenter topright"
+           tabspecific="true"
+           noautofocus="true">
+      <panelmultiview id="pageActionPanelMultiView"
+                      mainViewId="pageActionPanelMainView"
+                      viewCacheId="appMenu-viewCache">
+        <panelview id="pageActionPanelMainView"
+                   context="pageActionContextMenu"
+                   class="PanelUI-subView">
+          <vbox class="panel-subview-body"/>
+        </panelview>
+      </panelmultiview>
+    </panel>
+  </html:template>
+
+  <html:template id="confirmation-hint-wrapper">
+    <panel id="confirmation-hint"
+           role="alert"
+           type="arrow"
+           flip="slide"
+           position="bottomcenter topright"
+           tabspecific="true"
+           noautofocus="true">
+      <hbox id="confirmation-hint-checkmark-animation-container">
+       <image id="confirmation-hint-checkmark-image"/>
+      </hbox>
+      <vbox id="confirmation-hint-message-container">
+       <label id="confirmation-hint-message"/>
+       <label id="confirmation-hint-description"/>
+      </vbox>
+    </panel>
+  </html:template>
+
+  <menupopup id="pageActionContextMenu"
+             onpopupshowing="BrowserPageActions.onContextMenuShowing(event, this);">
+    <menuitem class="pageActionContextMenuItem extensionPinned extensionUnpinned manageExtensionItem"
+              oncommand="BrowserPageActions.openAboutAddonsForContextAction();"
+              data-l10n-id="page-action-manage-extension"/>
+    <menuitem class="pageActionContextMenuItem extensionPinned extensionUnpinned removeExtensionItem"
+              oncommand="BrowserPageActions.removeExtensionForContextAction();"
+              data-l10n-id="page-action-remove-extension"/>
+  </menupopup>
+
+#include ../../components/places/content/bookmarksHistoryTooltip.inc.xhtml
+
+  <tooltip id="tabbrowser-tab-tooltip"
+           class="places-tooltip"
+           onpopupshowing="gBrowser.createTooltip(event);"
+           onpopuphiding="this.removeAttribute('position')">
+    <vbox class="places-tooltip-box" flex="1">
+      <description class="tooltip-label places-tooltip-title"/>
+      <hbox>
+        <image id="places-tooltip-insecure-icon"></image>
+        <description crop="center" class="tooltip-label places-tooltip-uri uri-element"/>
+      </hbox>
+    </vbox>
+  </tooltip>
+
+  <tooltip id="back-button-tooltip">
+    <description id="back-button-tooltip-description" class="tooltip-label"/>
+    <description class="tooltip-label" data-l10n-id="navbar-tooltip-instruction"/>
+  </tooltip>
+
+  <tooltip id="forward-button-tooltip">
+    <description id="forward-button-tooltip-description" class="tooltip-label"/>
+    <description class="tooltip-label" data-l10n-id="navbar-tooltip-instruction"/>
+  </tooltip>
+
+#include popup-notifications.inc
+
+#include ../../components/customizableui/content/panelUI.inc.xhtml
+#include ../../components/controlcenter/content/identityPanel.inc.xhtml
+#include ../../components/controlcenter/content/permissionPanel.inc.xhtml
+#include ../../components/controlcenter/content/protectionsPanel.inc.xhtml
+#include ../../components/downloads/content/downloadsPanel.inc.xhtml
+#include ../../../devtools/startup/enableDevToolsPopup.inc.xhtml
+#include browser-allTabsMenu.inc.xhtml
+
+  <tooltip id="dynamic-shortcut-tooltip"
+           onpopupshowing="UpdateDynamicShortcutTooltipText(this);"/>
+
+  <menupopup id="SyncedTabsSidebarContext">
+    <menuitem data-lazy-l10n-id="synced-tabs-context-open"
+              id="syncedTabsOpenSelected" where="current"/>
+    <menuitem data-lazy-l10n-id="synced-tabs-context-open-in-new-tab"
+              id="syncedTabsOpenSelectedInTab" where="tab"/>
+    <menuitem data-lazy-l10n-id="synced-tabs-context-open-in-new-window"
+              id="syncedTabsOpenSelectedInWindow" where="window"/>
+    <menuitem data-lazy-l10n-id="synced-tabs-context-open-in-new-private-window"
+              id="syncedTabsOpenSelectedInPrivateWindow" where="window" private="true"/>
+    <menuseparator/>
+    <menuitem data-lazy-l10n-id="synced-tabs-context-bookmark-single-tab"
+              id="syncedTabsBookmarkSelected"/>
+    <menuitem data-lazy-l10n-id="synced-tabs-context-copy"
+              id="syncedTabsCopySelected"/>
+    <menuseparator/>
+    <menuitem data-lazy-l10n-id="synced-tabs-context-open-all-in-tabs"
+              id="syncedTabsOpenAllInTabs"/>
+    <menuitem data-lazy-l10n-id="synced-tabs-context-manage-devices"
+              id="syncedTabsManageDevices"
+              oncommand="gSync.openDevicesManagementPage('syncedtabs-sidebar');"/>
+    <menuitem data-lazy-l10n-id="synced-tabs-context-sync-now"
+              id="syncedTabsRefresh"/>
+  </menupopup>
+  <menupopup id="SyncedTabsSidebarTabsFilterContext"
+             class="textbox-contextmenu">
+    <menuitem data-l10n-id="text-action-undo"
+              cmd="cmd_undo"/>
+    <menuseparator/>
+    <menuitem data-l10n-id="text-action-cut"
+              cmd="cmd_cut"/>
+    <menuitem data-l10n-id="text-action-copy"
+              cmd="cmd_copy"/>
+    <menuitem data-l10n-id="text-action-paste"
+              cmd="cmd_paste"/>
+    <menuitem data-l10n-id="text-action-delete"
+              cmd="cmd_delete"/>
+    <menuseparator/>
+    <menuitem data-l10n-id="text-action-select-all"
+              cmd="cmd_selectAll"/>
+    <menuseparator/>
+    <menuitem data-lazy-l10n-id="synced-tabs-context-sync-now"
+              id="syncedTabsRefreshFilter"/>
+  </menupopup>
+
+  <hbox id="statuspanel" inactive="true">
+    <hbox id="statuspanel-inner">
+      <label id="statuspanel-label"
+             role="status"
+             aria-live="off"
+             flex="1"
+             crop="end"/>
+    </hbox>
+  </hbox>
+
+  <html:template id="sharing-tabs-warning-panel-template">
+    <panel id="sharing-tabs-warning-panel"
+           role="alert"
+           flip="slide"
+           type="arrow"
+           orient="vertical"
+           ignorekeys="true"
+           consumeoutsideclicks="never"
+           norolluponanchor="true"
+           onpopupshown="gSharedTabWarning.sharedTabWarningShown();">
+      <hbox type="window" align="start">
+        <image class="screen-icon popup-notification-icon"></image>
+        <vbox flex="1" pack="start">
+          <label>
+            <html:span id="sharing-warning-window-panel-header"
+                       role="heading"
+                       aria-level="1"
+                       data-l10n-id="sharing-warning-window"/>
+            <html:span id="sharing-warning-screen-panel-header"
+                       role="heading"
+                       aria-level="1"
+                       data-l10n-id="sharing-warning-screen"/>
+          </label>
+          <hbox align="center">
+            <button id="sharing-warning-proceed-to-tab" oncommand="gSharedTabWarning.allowSharedTabSwitch();" flex="1" data-l10n-id="sharing-warning-proceed-to-tab"/>
+          </hbox>
+          <hbox pack="start">
+            <checkbox id="sharing-warning-disable-for-session" data-l10n-id="sharing-warning-disable-for-session"/>
+          </hbox>
+        </vbox>
+      </hbox>
+    </panel>
+  </html:template>
+</popupset>

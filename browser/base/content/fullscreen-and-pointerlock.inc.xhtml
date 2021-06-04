@@ -1,0 +1,30 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<html:div id="fullscreen-and-pointerlock-wrapper">
+  <html:div id="fullscreen-warning" class="pointerlockfswarning" hidden="true">
+    <html:div class="pointerlockfswarning-domain-text">
+      <html:span class="pointerlockfswarning-domain" data-l10n-name="domain"/>
+    </html:div>
+    <html:div class="pointerlockfswarning-generic-text"
+              data-l10n-id="fullscreen-warning-no-domain"></html:div>
+    <html:button id="fullscreen-exit-button"
+                 onclick="FullScreen.exitDomFullScreen();"
+#ifdef XP_MACOSX
+                 data-l10n-id="fullscreen-exit-mac-button"
+#else
+                 data-l10n-id="fullscreen-exit-button"
+#endif
+            >
+    </html:button>
+  </html:div>
+
+  <html:div id="pointerlock-warning" class="pointerlockfswarning" hidden="true">
+    <html:div class="pointerlockfswarning-domain-text">
+      <html:span class="pointerlockfswarning-domain" data-l10n-name="domain"/>
+    </html:div>
+    <html:div class="pointerlockfswarning-generic-text"
+              data-l10n-id="pointerlock-warning-no-domain"></html:div>
+  </html:div>
+</html:div>
