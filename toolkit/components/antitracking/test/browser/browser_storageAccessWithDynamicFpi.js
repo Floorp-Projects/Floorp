@@ -319,6 +319,33 @@ add_task(async function testExceptionListPref() {
     checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
   ]);
 
+  info("set incomplete exception list pref");
+  Services.prefs.setStringPref(EXCEPTION_LIST_PREF_NAME, `${TEST_DOMAIN}`);
+
+  info("check data");
+  await Promise.all([
+    checkData(browserFirstParty, {
+      firstParty: "firstParty",
+      thirdParty: "thirdParty",
+    }),
+    checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
+  ]);
+
+  info("set exception list pref, with extra semicolons");
+  Services.prefs.setStringPref(
+    EXCEPTION_LIST_PREF_NAME,
+    `;${TEST_DOMAIN},${TEST_3RD_PARTY_DOMAIN};;`
+  );
+
+  info("check data");
+  await Promise.all([
+    checkData(browserFirstParty, {
+      firstParty: "firstParty",
+      thirdParty: "ExceptionListFirstParty",
+    }),
+    checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
+  ]);
+
   info("Removing the tab");
   BrowserTestUtils.removeTab(tabFirstParty);
   BrowserTestUtils.removeTab(tabThirdParty);
