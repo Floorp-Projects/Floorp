@@ -786,6 +786,20 @@ async function waitUntilVisitedState(tab, selectors) {
 }
 
 /**
+ * Return wether or not the passed selector matches an element in the content page.
+ *
+ * @param {string} selector
+ * @returns Promise<Boolean>
+ */
+function hasMatchingElementInContentPage(selector) {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function(
+    innerSelector
+  ) {
+    return content.document.querySelector(innerSelector) !== null;
+  });
+}
+
+/**
  * Return the number of elements matching the passed selector.
  *
  * @param {string} selector
