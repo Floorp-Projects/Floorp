@@ -103,10 +103,10 @@ static size_t ClampDefaultCPUCount(size_t cpuCount) {
 }
 
 static size_t ThreadCountForCPUCount(size_t cpuCount) {
-  // We will eventually use an external thread pool for the browser. Approximate
-  // its sizing rules here. See TaskController::GetPoolThreadCount for details.
-  MOZ_ASSERT(cpuCount > 0);
-  return cpuCount;
+  // We need at least two threads for tier-2 wasm compilations, because
+  // there's a master task that holds a thread while other threads do the
+  // compilation.
+  return std::max<size_t>(cpuCount, 2);
 }
 
 bool js::SetFakeCPUCount(size_t count) {
