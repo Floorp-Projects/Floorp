@@ -2,11 +2,16 @@
 #include <simd/simd.h>
 
 
-struct splatOutput {
-    metal::float4 member [[position]];
-};
-vertex splatOutput splat(
+metal::float4 splat(
 ) {
-    metal::float2 _e10 = ((1.0 + 2.0) - 3.0) / 4.0;
-    return splatOutput { metal::float4(_e10.x, _e10.y, _e10.x, _e10.y) + static_cast<float4>(5 % 2) };
+    return (((metal::float2(1.0) + metal::float2(2.0)) - metal::float2(3.0)) / metal::float2(4.0)).xyxy + static_cast<float4>(metal::int4(5) % metal::int4(2));
+}
+
+int unary(
+) {
+    if (!true) {
+        return 1;
+    } else {
+        return !1;
+    }
 }

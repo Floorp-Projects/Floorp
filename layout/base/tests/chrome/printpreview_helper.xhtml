@@ -1094,7 +1094,7 @@ async function runTest39() {
       { maxDifferent: 0, maxDifference: 0 };
 
   let test = "data:text/html,Unwriteable-Margins-Too-Tall-To-See-This";
-  let ref = "about:blank";
+  let ref = "data:text/html,<!-- runTest39 -->";
   await compareFiles(test, ref, {
     maxDifferent: fuzz.maxDifferent,
     maxDifference: fuzz.maxDifference,
@@ -1129,7 +1129,7 @@ async function runTest40() {
       { maxDifferent: 0, maxDifference: 0 };
 
   let test = "data:text/html,Unwriteable-Margins-Too-Wide-To-See-This";
-  let ref = "about:blank";
+  let ref = "data:text/html,<!-- runTest40 -->";
   await compareFiles(test, ref, {
     maxDifferent: fuzz.maxDifferent,
     maxDifference: fuzz.maxDifference,
@@ -1147,6 +1147,62 @@ async function runTest40() {
       settings: {
         paperWidth: 4,
         paperHeight: 5,
+      },
+    },
+  });
+
+  requestAnimationFrame(() => setTimeout(runTest41));
+}
+
+// Drawing headers/footers with very large unwriteable margins. The specific
+// bug occurs when combined unwriteable are larger than half of the page's
+// dimensions.
+async function runTest41() {
+  // This test compares a rendered page to the headers/footers that print code
+  // generates. On Windows, workaround bug 1680838. On OS X, the headers/
+  // footers are sometimes slightly offset. See bug 1714217.
+  // It's not too big a deal to have a higher fuzz factor, since when
+  // bug 1713404 occurs no headers/footers at all are rendered. These higher
+  // fuzz factors will still catch this worst case on OS X.
+  if (navigator.platform.includes("Win")) {
+    var fuzz = { maxDifferent: 133, maxDifference: 255 }; // Bug 1680838
+  }
+  else if (navigator.platform.includes("Mac")) {
+    var fuzz = { maxDifferent: 60, maxDifference: 200 }; // Bug 1714217
+  }
+  else {
+    var fuzz = { maxDifferent: 6, maxDifference: 16 };
+  }
+
+  let test = "data:text/html,<!-- runTest41 -->";
+  let ref = "printpreview_bug1713404_ref.html";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        paperWidth: 5,
+        paperHeight: 5,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        unwriteableMarginLeft: 2,
+        unwriteableMarginRight: 2,
+        unwriteableMarginTop: 2,
+        unwriteableMarginBottom: 2,
+        headerStrLeft: "|",
+        headerStrRight: "||",
+        footerStrLeft: "|||",
+        footerStrRight: "||||",
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 5,
+        paperHeight: 5,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        unwriteableMarginLeft: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginBottom: 0,
       },
     },
   });

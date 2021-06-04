@@ -33,8 +33,10 @@ line instead, such as by using ``curl``:
 
     curl -L <artifact-url> -o <file-name>
 
-Adding Try jobs to Phabricator patch
-------------------------------------
+.. _attach-job-review:
+
+Adding Try jobs to a Phabricator patch
+--------------------------------------
 
 For every patch submitted for review in Phabricator, a new Try run is automatically created.
 A link called ``Treeherder Jobs`` can be found in the ``Diff Detail`` section of the review in

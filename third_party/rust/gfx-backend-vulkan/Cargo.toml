@@ -1,6 +1,6 @@
 [package]
 name = "gfx-backend-vulkan"
-version = "0.7.0"
+version = "0.8.0"
 description = "Vulkan API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
 repository = "https://github.com/gfx-rs/gfx"
@@ -22,18 +22,20 @@ name = "gfx_backend_vulkan"
 [dependencies]
 arrayvec = "0.5"
 byteorder = "1"
-log = { version = "0.4" }
+log = "0.4"
 libc = { version = "0.2", optional = true }
 ash = "0.32"
-hal = { path = "../../hal", version = "0.7", package = "gfx-hal" }
+hal = { path = "../../hal", version = "0.8", package = "gfx-hal" }
 parking_lot = "0.11"
 smallvec = "1.0"
 raw-window-handle = "0.3"
 inplace_it = "0.3.3"
+renderdoc-sys = "0.7.1"
+libloading = "0.7"
 
 [dependencies.naga]
 git = "https://github.com/gfx-rs/naga"
-tag = "gfx-22"
+tag = "gfx-25"
 features = ["spv-out"]
 optional = true
 

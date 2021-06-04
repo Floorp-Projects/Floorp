@@ -1,6 +1,7 @@
 use super::{
     analyzer::{FunctionInfo, GlobalUse},
-    Disalignment, FunctionError, ModuleInfo, ShaderStages, TypeFlags, ValidationFlags,
+    Capabilities, Disalignment, FunctionError, ModuleInfo, ShaderStages, TypeFlags,
+    ValidationFlags,
 };
 use crate::arena::{Arena, Handle};
 
@@ -24,6 +25,8 @@ pub enum GlobalVariableError {
         required: TypeFlags,
         seen: TypeFlags,
     },
+    #[error("Capability {0:?} is not supported")]
+    UnsupportedCapability(Capabilities),
     #[error("Binding decoration is missing or not applicable")]
     InvalidBinding,
     #[error("Alignment requirements for this storage class are not met by {0:?}")]
@@ -112,7 +115,7 @@ impl VaryingContext<'_> {
                                 width,
                             },
                     ),
-                    Bi::ClipDistance => (
+                    Bi::ClipDistance | Bi::CullDistance => (
                         self.stage == St::Vertex && self.output,
                         match *ty_inner {
                             Ti::Array { base, .. } => {
@@ -208,7 +211,11 @@ impl VaryingContext<'_> {
                     return Err(VaryingError::InvalidBuiltInType(built_in));
                 }
             }
-            crate::Binding::Location { location, interpolation, sampling } => {
+            crate::Binding::Location {
+                location,
+                interpolation,
+                sampling,
+            } => {
                 if !self.location_mask.insert(location as usize) {
                     return Err(VaryingError::BindingCollision { location });
                 }
@@ -235,7 +242,8 @@ impl VaryingContext<'_> {
                         }
                     }
                     Some(_) => {
-                        if needs_interpolation && interpolation != Some(crate::Interpolation::Flat) {
+                        if needs_interpolation && interpolation != Some(crate::Interpolation::Flat)
+                        {
                             return Err(VaryingError::InvalidInterpolation);
                         }
                     }
@@ -327,11 +335,18 @@ impl super::Validator {
             crate::StorageClass::Private | crate::StorageClass::WorkGroup => {
                 (crate::StorageAccess::empty(), TypeFlags::DATA, false)
             }
-            crate::StorageClass::PushConstant => (
-                crate::StorageAccess::LOAD,
-                TypeFlags::DATA | TypeFlags::HOST_SHARED,
-                false,
-            ),
+            crate::StorageClass::PushConstant => {
+                if !self.capabilities.contains(Capabilities::PUSH_CONSTANT) {
+                    return Err(GlobalVariableError::UnsupportedCapability(
+                        Capabilities::PUSH_CONSTANT,
+                    ));
+                }
+                (
+                    crate::StorageAccess::LOAD,
+                    TypeFlags::DATA | TypeFlags::HOST_SHARED,
+                    false,
+                )
+            }
         };
 
         if !allowed_storage_access.contains(var.storage_access) {

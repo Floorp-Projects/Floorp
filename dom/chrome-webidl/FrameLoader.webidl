@@ -68,17 +68,6 @@ interface FrameLoader {
   void deactivateRemoteFrame();
 
   /**
-   * @see nsIDOMWindowUtils sendMouseEvent.
-   */
-  [Throws]
-  void sendCrossProcessMouseEvent(DOMString aType,
-                                  float aX,
-                                  float aY,
-                                  long aButton,
-                                  long aClickCount,
-                                  long aModifiers);
-
-  /**
    * Activate event forwarding from client (remote frame) to parent.
    */
   [Throws]

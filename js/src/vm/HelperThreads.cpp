@@ -21,6 +21,7 @@
 #include "jit/JitRuntime.h"
 #include "js/ContextOptions.h"      // JS::ContextOptions
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
+#include "js/HelperThreadAPI.h"
 #include "js/OffThreadScriptCompilation.h"  // JS::OffThreadToken, JS::OffThreadCompileCallback
 #include "js/SourceText.h"
 #include "js/UniquePtr.h"
@@ -109,13 +110,20 @@ static size_t ThreadCountForCPUCount(size_t cpuCount) {
 }
 
 bool js::SetFakeCPUCount(size_t count) {
+  HelperThreadState().setCpuCount(count);
+  return true;
+}
+
+void GlobalHelperThreadState::setCpuCount(size_t count) {
   // This must be called before the threads have been initialized.
   AutoLockHelperThreadState lock;
-  MOZ_ASSERT(HelperThreadState().threads(lock).empty());
+  MOZ_ASSERT(!isInitialized(lock));
 
-  HelperThreadState().cpuCount = count;
-  HelperThreadState().threadCount = ThreadCountForCPUCount(count);
-  return true;
+  // We can't do this if an external thread pool is in use.
+  MOZ_ASSERT(!dispatchTaskCallback);
+
+  cpuCount = count;
+  threadCount = ThreadCountForCPUCount(count);
 }
 
 size_t js::GetHelperThreadCount() { return HelperThreadState().threadCount; }
@@ -131,6 +139,24 @@ void JS::SetProfilingThreadCallbacks(
     JS::UnregisterThreadCallback unregisterThread) {
   HelperThreadState().registerThread = registerThread;
   HelperThreadState().unregisterThread = unregisterThread;
+}
+
+// Bug 1630189: Without MOZ_NEVER_INLINE, Windows PGO builds have a linking
+// error for HelperThreadTaskCallback.
+JS_PUBLIC_API MOZ_NEVER_INLINE void JS::SetHelperThreadTaskCallback(
+    HelperThreadTaskCallback callback, size_t threadCount) {
+  HelperThreadState().setExternalTaskCallback(callback, threadCount);
+}
+
+void GlobalHelperThreadState::setExternalTaskCallback(
+    JS::HelperThreadTaskCallback callback, size_t threadCount) {
+  AutoLockHelperThreadState lock;
+  MOZ_ASSERT(!isInitialized(lock));
+  MOZ_ASSERT(!dispatchTaskCallback);
+  MOZ_ASSERT(threadCount != 0);
+
+  dispatchTaskCallback = callback;
+  // TODO: threadCount is ignored for now.
 }
 
 bool js::StartOffThreadWasmCompile(wasm::CompileTask* task,
@@ -1301,7 +1327,7 @@ bool GlobalHelperThreadState::ensureInitialized() {
     return true;
   }
 
-  useInternalThreadPool_ = HelperThreadTaskCallback == nullptr;
+  useInternalThreadPool_ = dispatchTaskCallback == nullptr;
 
   for (size_t& i : runningTaskCount) {
     i = 0;
@@ -1358,6 +1384,8 @@ GlobalHelperThreadState::GlobalHelperThreadState()
       unregisterThread(nullptr),
       wasmTier2GeneratorsFinished_(0),
       useInternalThreadPool_(true) {
+  MOZ_ASSERT(!gHelperThreadState);
+
   cpuCount = ClampDefaultCPUCount(GetCPUCount());
   threadCount = ThreadCountForCPUCount(cpuCount);
   gcParallelThreadCount = threadCount;
@@ -1676,7 +1704,7 @@ size_t GlobalHelperThreadState::maxWasmCompilationThreads() const {
       IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER2)) {
     return 1;
   }
-  return cpuCount;
+  return std::min(cpuCount, threadCount);
 }
 
 size_t GlobalHelperThreadState::maxWasmTier2GeneratorThreads() const {
@@ -1688,14 +1716,14 @@ size_t GlobalHelperThreadState::maxPromiseHelperThreads() const {
       IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER2)) {
     return 1;
   }
-  return cpuCount;
+  return std::min(cpuCount, threadCount);
 }
 
 size_t GlobalHelperThreadState::maxParseThreads() const {
   if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_PARSE)) {
     return 1;
   }
-  return cpuCount;
+  return std::min(cpuCount, threadCount);
 }
 
 size_t GlobalHelperThreadState::maxCompressionThreads() const {
@@ -2725,6 +2753,10 @@ void HelperThread::threadLoop() {
 
     HelperThreadState().runTaskLocked(task, lock);
   }
+}
+
+void JS::RunHelperThreadTask() {
+  MOZ_CRASH("JS::RunHelperThreadTask is not yet implemented");
 }
 
 HelperThreadTask* GlobalHelperThreadState::findHighestPriorityTask(

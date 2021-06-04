@@ -193,12 +193,6 @@ extern JS_PUBLIC_API bool JS_IsBuiltinEvalFunction(JSFunction* fun);
 /** True iff fun is the Function constructor. */
 extern JS_PUBLIC_API bool JS_IsBuiltinFunctionConstructor(JSFunction* fun);
 
-/**
- * Set callback to send tasks to XPCOM thread pools
- */
-JS_PUBLIC_API void SetHelperThreadTaskCallback(
-    bool (*callback)(js::UniquePtr<js::RunnableTask>));
-
 extern JS_PUBLIC_API const char* JS_GetImplementationVersion(void);
 
 extern JS_PUBLIC_API void JS_SetWrapObjectCallbacks(

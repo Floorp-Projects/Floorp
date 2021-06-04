@@ -16,6 +16,8 @@
   --category-text: rgba(12,12,13);
   --category-text-selected: #0a84ff;
 
+  --card-separator-color: var(--grey-20);
+
   /* Dimensions from common.css #categories > .category */
   /* TODO: Values are not based on photon's 4px base distance, see bug 1501638 */
   --category-height: 48px;
@@ -99,6 +101,27 @@
   --main-subheading-heading-icon-gap: calc(var(--base-unit) * 2);
 }
 
+/* Dark Theme variables */
+
+@media  (-moz-toolbar-prefers-color-scheme: dark) {
+  :root {
+    --bg-color: rgb(28, 27, 34); /* --in-content-background-color */
+    --text-color: #eee; /* --in-content-text-color */
+
+    --box-background: rgb(35, 34, 43);
+    --box-border-color: rgba(249,249,250,0.2);
+
+    --link-color: #00ddff;
+    --link-color-active: rgb(170,242,255);
+    --link-color-hover: rgb(128,235,255);
+
+    --category-background-hover: rgba(12,12,13,0.1);
+    --category-text: rgb(238, 238, 238);
+
+    --card-separator-color: var(--grey-50);
+  }
+}
+
 /*
 * Reset some tags
 */
@@ -134,6 +157,7 @@ a {
 }
 a:hover {
   color: var(--link-color-hover);
+  text-decoration: underline;
 }
 a:active {
   color: var(--link-color-active);
@@ -417,4 +441,32 @@ Form controls
 .card__heading {
   font-size: var(--title-20-font-size); /* Note: this is from Photon Title 20 */
   font-weight: var(--title-20-font-weight); /* Note: this is from Photon Title 20 */
+}
+
+@media  (-moz-toolbar-prefers-color-scheme: dark) {
+  .card {
+    background-color: rgb(35, 34, 43);
+  }
+
+  .default-button {
+    color: var(--white-100);
+    background-color: rgb(72, 72, 84);
+  }
+
+  .default-button:enabled:hover {
+    background-color: rgb(92, 92, 106);
+  }
+
+  .sidebar__footer__icon {
+    fill: var(--white-100);
+    -moz-context-properties: fill;
+  }
+
+  .primary-button:enabled {
+    background-color: rgb(72, 72, 84);
+  }
+
+  .primary-button:enabled:hover {
+    background-color: rgb(92, 92, 106);
+  }
 }

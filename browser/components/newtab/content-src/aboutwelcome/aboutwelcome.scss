@@ -613,6 +613,14 @@ body {
       font-size: 14px;
       font-weight: normal;
       line-height: 20px;
+
+      @media (forced-colors: active) {
+        &:hover {
+          background-color: var(--in-content-button-background-hover);
+          color: var(--in-content-button-text-color-hover) !important; // sass-lint:disable-line no-important
+          text-decoration: none;
+        }
+      }
     }
 
     .secondary-cta.top {

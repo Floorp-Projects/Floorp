@@ -42,6 +42,7 @@ class NativeLayerRootWayland : public NativeLayerRoot {
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
   void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
+  void UpdateLayersOnMainThread();
   UniquePtr<NativeLayerRootSnapshotter> CreateSnapshotter() override;
   bool CommitToScreen() override;
 
@@ -58,6 +59,8 @@ class NativeLayerRootWayland : public NativeLayerRoot {
   already_AddRefed<NativeLayer> CreateLayerForExternalTexture(
       bool aIsOpaque) override;
 
+  void AfterFrameClockAfterPaint();
+
  protected:
   explicit NativeLayerRootWayland(MozContainer* aContainer);
   ~NativeLayerRootWayland() = default;
@@ -70,9 +73,12 @@ class NativeLayerRootWayland : public NativeLayerRoot {
   Mutex mMutex;
 
   nsTArray<RefPtr<NativeLayerWayland>> mSublayers;
+  nsTArray<RefPtr<NativeLayerWayland>> mSublayersOnMainThread;
   float mBackingScale = 1.0f;
   MozContainer* mContainer = nullptr;
   RefPtr<widget::WaylandShmBuffer> mShmBuffer;
+  bool mCompositorRunning = true;
+  gulong mGdkAfterPaintId = 0;
 };
 
 class NativeLayerWayland : public NativeLayer {

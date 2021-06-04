@@ -11,49 +11,341 @@ use {
     gpu_alloc_types::{AllocationFlags, DeviceMapError, MemoryDevice, MemoryPropertyFlags},
 };
 
-macro_rules! try_continue {
-    ($e:expr) => {
-        if let Some(v) = $e {
-            v
-        } else {
-            continue;
+unsafe fn opt_ptr_add(ptr: Option<NonNull<u8>>, size: u64) -> Option<NonNull<u8>> {
+    ptr.map(|ptr| {
+        // Size is within memory region started at `ptr`.
+        // size is within `chunk_size` that fits `isize`.
+        NonNull::new_unchecked(ptr.as_ptr().offset(size as isize))
+    })
+}
+
+#[derive(Debug)]
+pub(super) struct FreeList<M> {
+    array: Vec<FreeListRegion<M>>,
+    total: u64,
+    counter: u64,
+}
+
+impl<M> FreeList<M> {
+    pub fn new() -> Self {
+        FreeList {
+            array: Vec::new(),
+            total: 0,
+            counter: 0,
         }
-    };
+    }
+
+    pub fn get_block_from_new_memory(
+        &mut self,
+        memory: Arc<M>,
+        memory_size: u64,
+        ptr: Option<NonNull<u8>>,
+        align_mask: u64,
+        size: u64,
+    ) -> FreeListBlock<M> {
+        debug_assert!(size <= memory_size);
+
+        self.counter += 1;
+        self.array.push(FreeListRegion {
+            memory,
+            ptr,
+            chunk: self.counter,
+            start: 0,
+            end: memory_size,
+        });
+        self.total += memory_size;
+        self.get_block_at(self.array.len() - 1, align_mask, size)
+    }
+
+    pub fn get_block(&mut self, align_mask: u64, size: u64) -> Option<FreeListBlock<M>> {
+        match &self.array[..] {
+            [] => None,
+            [rest @ .., last] => {
+                let (index, _) = std::iter::once((rest.len(), last))
+                    .chain(rest.iter().enumerate())
+                    .find(|(_, region)| match region.end.checked_sub(size) {
+                        Some(start) => {
+                            let aligned_start = align_down(start, align_mask);
+                            aligned_start >= region.start
+                        }
+                        None => false,
+                    })?;
+
+                Some(self.get_block_at(index, align_mask, size))
+            }
+        }
+    }
+
+    fn get_block_at(&mut self, index: usize, align_mask: u64, size: u64) -> FreeListBlock<M> {
+        let region = &mut self.array[index];
+
+        let start = region.end - size;
+        let aligned_start = align_down(start, align_mask);
+
+        if aligned_start > region.start {
+            let block = FreeListBlock {
+                offset: aligned_start,
+                size: region.end - aligned_start,
+                chunk: region.chunk,
+                ptr: unsafe { opt_ptr_add(region.ptr, aligned_start - region.start) },
+                memory: region.memory.clone(),
+            };
+
+            region.end = aligned_start;
+            self.total -= block.size;
+
+            block
+        } else {
+            debug_assert_eq!(aligned_start, region.start);
+            let region = self.array.remove(index);
+            self.total -= region.end - region.start;
+            region.into_block()
+        }
+    }
+
+    pub fn insert_block(&mut self, block: FreeListBlock<M>) {
+        let block_size = block.size;
+
+        match self.array.binary_search_by(|b| b.cmp(&block)) {
+            Ok(_) => {
+                panic!("Overlapping block found in free list");
+            }
+            Err(index) if self.array.len() > index => match &mut self.array[..=index] {
+                [] => unreachable!(),
+                [next] => {
+                    debug_assert!(!next.is_suffix_block(&block));
+
+                    if next.is_prefix_block(&block) {
+                        next.merge_prefix_block(block);
+                    } else {
+                        self.array.insert(0, FreeListRegion::from_block(block));
+                    }
+                }
+                [.., prev, next] => {
+                    debug_assert!(!prev.is_prefix_block(&block));
+                    debug_assert!(!next.is_suffix_block(&block));
+
+                    if next.is_prefix_block(&block) {
+                        next.merge_prefix_block(block);
+
+                        if prev.consecutive(&next) {
+                            let next = self.array.remove(index);
+                            let prev = &mut self.array[index - 1];
+                            prev.merge(next);
+                        }
+                    } else if prev.is_suffix_block(&block) {
+                        prev.merge_suffix_block(block);
+                    } else {
+                        self.array.insert(index, FreeListRegion::from_block(block));
+                    }
+                }
+            },
+            Err(_) => match &mut self.array[..] {
+                [] => self.array.push(FreeListRegion::from_block(block)),
+                [.., prev] => {
+                    debug_assert!(!prev.is_prefix_block(&block));
+                    if prev.is_suffix_block(&block) {
+                        prev.merge_suffix_block(block);
+                    } else {
+                        self.array.push(FreeListRegion::from_block(block));
+                    }
+                }
+            },
+        }
+        self.total += block_size;
+    }
+
+    pub fn drain(&mut self, dealloc_threshold: u64) -> Option<impl Iterator<Item = M> + '_> {
+        if self.total >= dealloc_threshold {
+            // Time to deallocate
+
+            // This code was adapted from `Vec::retain`
+            let len = self.array.len();
+            let mut del = 0;
+            {
+                let regions = &mut self.array[..];
+
+                for i in 0..len {
+                    if self.total >= dealloc_threshold && is_arc_unique(&mut regions[i].memory) {
+                        del += 1;
+                    } else if del > 0 {
+                        regions.swap(i - del, i);
+                    }
+                }
+            }
+
+            if del > 0 {
+                let total = &mut self.total;
+                return Some(self.array.drain(len - del..).map(move |region| {
+                    debug_assert_eq!(region.start, 0);
+                    *total -= region.end;
+                    unsafe { arc_unwrap(region.memory) }
+                }));
+            }
+        }
+        None
+    }
+}
+
+#[derive(Debug)]
+struct FreeListRegion<M> {
+    memory: Arc<M>,
+    ptr: Option<NonNull<u8>>,
+    chunk: u64,
+    start: u64,
+    end: u64,
+}
+
+unsafe impl<M> Sync for FreeListRegion<M> where M: Sync {}
+unsafe impl<M> Send for FreeListRegion<M> where M: Send {}
+
+impl<M> FreeListRegion<M> {
+    pub fn cmp(&self, block: &FreeListBlock<M>) -> Ordering {
+        debug_assert_eq!(
+            Arc::ptr_eq(&self.memory, &block.memory),
+            self.chunk == block.chunk
+        );
+
+        if self.chunk == block.chunk {
+            debug_assert_eq!(
+                Ord::cmp(&self.start, &block.offset),
+                Ord::cmp(&self.end, &(block.offset + block.size)),
+                "Free region {{ start: {}, end: {} }} overlaps with block {{ offset: {}, size: {} }}",
+                self.start,
+                self.end,
+                block.offset,
+                block.size,
+            );
+        }
+
+        Ord::cmp(&self.chunk, &block.chunk).then(Ord::cmp(&self.start, &block.offset))
+    }
+
+    fn from_block(block: FreeListBlock<M>) -> Self {
+        FreeListRegion {
+            memory: block.memory,
+            chunk: block.chunk,
+            ptr: block.ptr,
+            start: block.offset,
+            end: block.offset + block.size,
+        }
+    }
+
+    fn into_block(self) -> FreeListBlock<M> {
+        FreeListBlock {
+            memory: self.memory,
+            chunk: self.chunk,
+            ptr: self.ptr,
+            offset: self.start,
+            size: self.end - self.start,
+        }
+    }
+
+    fn consecutive(&self, other: &Self) -> bool {
+        if self.chunk != other.chunk {
+            return false;
+        }
+
+        debug_assert!(Arc::ptr_eq(&self.memory, &other.memory));
+
+        debug_assert_eq!(
+            Ord::cmp(&self.start, &other.start),
+            Ord::cmp(&self.end, &other.end)
+        );
+
+        self.end == other.start
+    }
+
+    fn merge(&mut self, next: FreeListRegion<M>) {
+        debug_assert!(self.consecutive(&next));
+        self.end = next.end;
+    }
+
+    fn is_prefix_block(&self, block: &FreeListBlock<M>) -> bool {
+        if self.chunk != block.chunk {
+            return false;
+        }
+
+        debug_assert!(Arc::ptr_eq(&self.memory, &block.memory));
+
+        debug_assert_eq!(
+            Ord::cmp(&self.start, &block.offset),
+            Ord::cmp(&self.end, &(block.offset + block.size))
+        );
+
+        self.start == (block.offset + block.size)
+    }
+
+    fn merge_prefix_block(&mut self, block: FreeListBlock<M>) {
+        debug_assert!(self.is_prefix_block(&block));
+        self.start = block.offset;
+        self.ptr = block.ptr;
+    }
+
+    fn is_suffix_block(&self, block: &FreeListBlock<M>) -> bool {
+        if self.chunk != block.chunk {
+            return false;
+        }
+
+        debug_assert!(Arc::ptr_eq(&self.memory, &block.memory));
+
+        debug_assert_eq!(
+            Ord::cmp(&self.start, &block.offset),
+            Ord::cmp(&self.end, &(block.offset + block.size))
+        );
+
+        self.end == block.offset
+    }
+
+    fn merge_suffix_block(&mut self, block: FreeListBlock<M>) {
+        debug_assert!(self.is_suffix_block(&block));
+        self.end += block.size;
+    }
 }
 
 #[derive(Debug)]
 pub struct FreeListBlock<M> {
     pub memory: Arc<M>,
     pub ptr: Option<NonNull<u8>>,
+    pub chunk: u64,
     pub offset: u64,
     pub size: u64,
-    pub chunk: u64,
 }
 
 unsafe impl<M> Sync for FreeListBlock<M> where M: Sync {}
 unsafe impl<M> Send for FreeListBlock<M> where M: Send {}
 
-impl<M> FreeListBlock<M> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        debug_assert_eq!(
-            Arc::ptr_eq(&self.memory, &other.memory),
-            self.chunk == other.chunk
-        );
-
-        Ord::cmp(&self.chunk, &other.chunk).then(Ord::cmp(&self.offset, &other.offset))
-    }
-}
-
 #[derive(Debug)]
 pub(crate) struct FreeListAllocator<M> {
-    freelist: Vec<FreeListBlock<M>>,
-    total_free: u64,
+    freelist: FreeList<M>,
     dealloc_threshold: u64,
     chunk_size: u64,
     memory_type: u32,
     props: MemoryPropertyFlags,
     atom_mask: u64,
-    counter: u64,
+
+    total_allocations: u64,
+    total_deallocations: u64,
+}
+
+impl<M> Drop for FreeListAllocator<M> {
+    fn drop(&mut self) {
+        match Ord::cmp(&self.total_allocations, &self.total_deallocations) {
+            Ordering::Equal => {}
+            Ordering::Greater => {
+                report_error_on_drop!("Not all blocks were deallocated")
+            }
+            Ordering::Less => {
+                report_error_on_drop!("More blocks deallocated than allocated")
+            }
+        }
+
+        if !self.freelist.array.is_empty() {
+            report_error_on_drop!(
+                "FreeListAllocator has free blocks on drop. Allocator should be cleaned"
+            );
+        }
+    }
 }
 
 impl<M> FreeListAllocator<M>
@@ -72,14 +364,15 @@ where
         let chunk_size = min(chunk_size, isize::max_value());
 
         FreeListAllocator {
-            freelist: Vec::new(),
-            total_free: 0,
+            freelist: FreeList::new(),
             chunk_size,
             dealloc_threshold,
             memory_type,
             props,
             atom_mask,
-            counter: 0,
+
+            total_allocations: 0,
+            total_deallocations: 0,
         }
     }
 
@@ -105,57 +398,20 @@ where
         let align_mask = align_mask | self.atom_mask;
         let host_visible = self.host_visible();
 
-        match &mut *self.freelist {
-            [] => {}
-            [rest @ .., last] => {
-                // Iterate in this order - last and then rest from begin to end.
-
-                let iter = std::iter::once((rest.len(), last)).chain(rest.iter_mut().enumerate());
-
-                for (index, region) in iter {
-                    let offset = try_continue!(align_up(region.offset, align_mask));
-                    let next_offset = try_continue!(offset.checked_add(size));
-
-                    match Ord::cmp(&next_offset, &(offset + region.size)) {
-                        Ordering::Equal => {
-                            let region = self.freelist.remove(index);
-                            // dbg!(&region, &self.freelist);
-
-                            self.total_free -= size;
-                            return Ok(region);
-                        }
-                        Ordering::Less => {
-                            let block = FreeListBlock {
-                                chunk: region.chunk,
-                                memory: region.memory.clone(),
-                                offset: region.offset,
-                                size,
-                                ptr: region.ptr,
-                            };
-                            region.offset = next_offset;
-                            region.size -= size;
-                            ptr_advance(&mut region.ptr, size);
-
-                            // dbg!(&block, &self.freelist);
-                            self.total_free -= size;
-                            return Ok(block);
-                        }
-                        _ => {}
-                    }
-                }
-            }
+        if let Some(block) = self.freelist.get_block(align_mask, size) {
+            self.total_allocations += 1;
+            return Ok(block);
         }
 
+        // New allocation is required.
         if *allocations_remains == 0 {
-            dbg!(&self.freelist, size, align_mask);
             return Err(AllocationError::TooManyObjects);
         }
-
         let mut memory = device.allocate_memory(self.chunk_size, self.memory_type, flags)?;
-
         *allocations_remains -= 1;
         heap.alloc(self.chunk_size);
 
+        // Map host visible allocations
         let ptr = if host_visible {
             match device.map_memory(&mut memory, 0, self.chunk_size) {
                 Ok(ptr) => Some(ptr),
@@ -180,40 +436,12 @@ where
         };
 
         let memory = Arc::new(memory);
+        let block =
+            self.freelist
+                .get_block_from_new_memory(memory, self.chunk_size, ptr, align_mask, size);
 
-        let mut region = FreeListBlock {
-            chunk: self.counter,
-            ptr,
-            memory,
-            offset: 0,
-            size: self.chunk_size,
-        };
-        self.counter += 1;
-
-        if size < region.size {
-            let block = FreeListBlock {
-                chunk: region.chunk,
-                memory: region.memory.clone(),
-                offset: region.offset,
-                size,
-                ptr: region.ptr,
-            };
-
-            region.offset = size;
-            region.size -= size;
-            ptr_advance(&mut region.ptr, size);
-
-            self.total_free += region.size;
-            self.freelist.push(region);
-
-            // dbg!(&block, &self.freelist);
-            self.total_free -= size;
-            Ok(block)
-        } else {
-            debug_assert_eq!(size, region.size);
-            // dbg!(&region, &self.freelist);
-            Ok(region)
-        }
+        self.total_allocations += 1;
+        Ok(block)
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, device)))]
@@ -226,114 +454,16 @@ where
     ) {
         debug_assert!(block.size < self.chunk_size);
         debug_assert_ne!(block.size, 0);
-        let block_size = block.size;
+        self.freelist.insert_block(block);
+        self.total_deallocations += 1;
 
-        // dbg!(&block, &self.freelist);
-
-        match self.freelist.binary_search_by(|b| b.cmp(&block)) {
-            Ok(index) => {
-                debug_assert_ne!(self.freelist[index].size, 0);
-                panic!("Overlapping block found in free list: {:?}", self.freelist);
-            }
-            Err(index) => match &mut self.freelist[..=index] {
-                [] => self.freelist.push(block),
-                [next] => {
-                    if next.chunk == block.chunk {
-                        debug_assert!(Arc::ptr_eq(&next.memory, &block.memory));
-
-                        assert!(
-                            block.offset + block.size <= next.offset,
-                            "Overlapping block found in free list. {:?}",
-                            self.freelist
-                        );
-
-                        if block.offset + block.size == next.offset {
-                            next.offset = block.offset;
-                            next.size += block.size;
-                            drop(block);
-                            // dbg!(&self.freelist);
-                            return;
-                        }
-                    }
-                    self.freelist.insert(0, block);
-                    // dbg!(&self.freelist);
-                }
-                [.., prev, next] => {
-                    if next.chunk == block.chunk {
-                        debug_assert!(Arc::ptr_eq(&next.memory, &block.memory));
-
-                        assert!(
-                            block.offset + block.size <= next.offset,
-                            "Overlapping block found in free list. {:?}",
-                            self.freelist
-                        );
-
-                        if block.offset + block.size == next.offset {
-                            next.offset = block.offset;
-                            next.size += block.size;
-                            drop(block);
-
-                            if prev.chunk == next.chunk && next.offset == prev.offset + prev.size {
-                                assert!(
-                                    prev.offset + prev.size <= next.offset,
-                                    "Overlapping block found in free list. {:?}",
-                                    self.freelist
-                                );
-
-                                prev.size += next.size;
-                                self.freelist.remove(index);
-                            }
-                            // dbg!(&self.freelist);
-                            return;
-                        }
-                    }
-                    if prev.chunk == block.chunk {
-                        debug_assert!(Arc::ptr_eq(&prev.memory, &block.memory));
-
-                        assert!(
-                            prev.offset + prev.size <= block.offset,
-                            "Overlapping block found in free list. {:?}",
-                            self.freelist
-                        );
-
-                        if prev.offset + prev.size == block.offset {
-                            prev.size += block.size;
-                            drop(block);
-                            // dbg!(&self.freelist);
-                            return;
-                        }
-                    }
-
-                    self.freelist.insert(0, block);
-                    // dbg!(&self.freelist);
-                }
-            },
-        }
-
-        self.total_free += block_size;
-        if self.total_free >= self.dealloc_threshold {
-            // Code adapted from `Vec::retain`
-            let len = self.freelist.len();
-            let mut del = 0;
-            {
-                let blocks = &mut *self.freelist;
-
-                for i in 0..len {
-                    if self.total_free >= self.dealloc_threshold
-                        && is_arc_unique(&mut blocks[i].memory)
-                    {
-                        del += 1;
-                    } else if del > 0 {
-                        blocks.swap(i - del, i);
-                    }
-                }
-            }
-            if del > 0 {
-                for block in self.freelist.drain(len - del..) {
-                    let memory = arc_unwrap(block.memory);
-                    device.deallocate_memory(memory);
-                }
-            }
+        if let Some(memory) = self.freelist.drain(self.dealloc_threshold) {
+            let chunk_size = self.chunk_size;
+            memory.for_each(|m| {
+                device.deallocate_memory(m);
+                *allocations_remains += 1;
+                heap.dealloc(chunk_size);
+            });
         }
     }
 
@@ -347,24 +477,22 @@ where
     ///   and memory blocks allocated from it
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, device)))]
     pub unsafe fn cleanup(&mut self, device: &impl MemoryDevice<M>) {
-        // Code adapted from `Vec::retain`
-        let len = self.freelist.len();
-        let mut del = 0;
-        {
-            let blocks = &mut *self.freelist;
-
-            for i in 0..len {
-                if is_arc_unique(&mut blocks[i].memory) {
-                    del += 1;
-                } else if del > 0 {
-                    blocks.swap(i - del, i);
-                }
-            }
+        if let Some(memory) = self.freelist.drain(0) {
+            memory.for_each(|m| device.deallocate_memory(m));
         }
-        if del > 0 {
-            for block in self.freelist.drain(len - del..) {
-                let memory = arc_unwrap(block.memory);
-                device.deallocate_memory(memory);
+
+        #[cfg(feature = "tracing")]
+        {
+            if self.total_allocations == self.total_deallocations {
+                if !self.freelist.array.is_empty() {
+                    tracing::error!(
+                        "Some regions were not deallocated on cleanup, although all blocks are free.
+                        This is a bug in `FreeBlockAllocator`.
+                        See array of free blocks left:
+                        {:#?}",
+                        self.freelist.array,
+                    );
+                }
             }
         }
     }
@@ -382,15 +510,5 @@ where
     match r.try_into() {
         Ok(r) => core::cmp::min(l, r),
         Err(_) => l,
-    }
-}
-
-unsafe fn ptr_advance(ptr: &mut Option<NonNull<u8>>, size: u64) {
-    if let Some(ptr) = ptr {
-        *ptr = {
-            // Size is within memory region started at `ptr`.
-            // size is within `chunk_size` that fits `isize`.
-            NonNull::new_unchecked(ptr.as_ptr().offset(size as isize))
-        };
     }
 }

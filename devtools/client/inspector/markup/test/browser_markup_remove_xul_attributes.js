@@ -19,7 +19,7 @@ add_task(async function() {
 
   info("Removing panel's id attribute");
   const onMutation = inspector.once("markupmutation");
-  await removeAttributeInBrowser(gBrowser.selectedBrowser, "#test", "id");
+  await removeContentPageElementAttribute("#test", "id");
 
   info("Waiting for markupmutation");
   await onMutation;

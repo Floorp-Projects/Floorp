@@ -17,10 +17,10 @@ Where to Start
 --------------
 
 If you want a high level, nontechnical summary of how the address bar works,
-read :ref:`Nontechnical Overview`.
+read :doc:`nontechnical-overview`.
 
 If you are interested in the technical details, you might want to skip ahead to
-:ref:`Architecture Overview`.
+:doc:`overview`.
 
 Codebase
 --------

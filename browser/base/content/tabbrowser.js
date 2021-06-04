@@ -820,18 +820,13 @@
       if (!browser._notificationBox) {
         browser._notificationBox = new MozElements.NotificationBox(element => {
           element.setAttribute("notificationside", "top");
-          if (gProton) {
-            element.setAttribute(
-              "name",
-              `tab-notification-box-${this._nextNotificationBoxId++}`
-            );
-            // With Proton enabled all notification boxes are at the top, built into the browser chrome.
-            this.getTabNotificationDeck().append(element);
-            if (browser == this.selectedBrowser) {
-              this._updateVisibleNotificationBox(browser);
-            }
-          } else {
-            this.getBrowserContainer(browser).prepend(element);
+          element.setAttribute(
+            "name",
+            `tab-notification-box-${this._nextNotificationBoxId++}`
+          );
+          this.getTabNotificationDeck().append(element);
+          if (browser == this.selectedBrowser) {
+            this._updateVisibleNotificationBox(browser);
           }
         });
       }
@@ -1106,9 +1101,7 @@
 
       this._appendStatusPanel();
 
-      if (gProton) {
-        this._updateVisibleNotificationBox(newBrowser);
-      }
+      this._updateVisibleNotificationBox(newBrowser);
 
       let oldBrowserPopupsBlocked = oldBrowser.popupBlocker.getBlockedPopupCount();
       let newBrowserPopupsBlocked = newBrowser.popupBlocker.getBlockedPopupCount();
@@ -7172,11 +7165,8 @@ var TabContextMenu = {
   updateShareURLMenuItem() {
     // We only support "share URL" on macOS and on Windows 10:
     if (
-      !gProton ||
-      !(
-        AppConstants.platform == "macosx" ||
-        AppConstants.isPlatformAndVersionAtLeast("win", "6.4")
-      )
+      AppConstants.platform != "macosx" &&
+      !AppConstants.isPlatformAndVersionAtLeast("win", "6.4")
     ) {
       return;
     }

@@ -989,12 +989,12 @@
                 As(
                     expr: 47,
                     kind: Sint,
-                    convert: false,
+                    convert: None,
                 ),
                 As(
                     expr: 63,
                     kind: Float,
-                    convert: true,
+                    convert: Some(4),
                 ),
                 Compose(
                     ty: 2,
@@ -1044,7 +1044,7 @@
                 As(
                     expr: 73,
                     kind: Sint,
-                    convert: true,
+                    convert: Some(4),
                 ),
                 ImageSample(
                     image: 4,
@@ -1512,7 +1512,7 @@
             early_depth_test: None,
             workgroup_size: (0, 0, 0),
             function: (
-                name: None,
+                name: Some("fs_main_wrap"),
                 arguments: [
                     (
                         name: Some("in_normal_fs"),
@@ -1543,10 +1543,10 @@
                 )),
                 local_variables: [],
                 expressions: [
-                    GlobalVariable(6),
                     FunctionArgument(0),
-                    GlobalVariable(5),
+                    GlobalVariable(6),
                     FunctionArgument(1),
+                    GlobalVariable(5),
                     GlobalVariable(7),
                     Load(
                         pointer: 5,
@@ -1554,12 +1554,12 @@
                 ],
                 body: [
                     Store(
-                        pointer: 1,
-                        value: 2,
+                        pointer: 2,
+                        value: 1,
                     ),
                     Store(
-                        pointer: 3,
-                        value: 4,
+                        pointer: 4,
+                        value: 3,
                     ),
                     Call(
                         function: 2,

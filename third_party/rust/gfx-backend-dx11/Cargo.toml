@@ -1,6 +1,6 @@
 [package]
 name = "gfx-backend-dx11"
-version = "0.7.0"
+version = "0.8.0"
 description = "DirectX-11 API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
 repository = "https://github.com/gfx-rs/gfx"
@@ -20,15 +20,15 @@ name = "gfx_backend_dx11"
 
 [dependencies]
 arrayvec = "0.5"
-auxil = { path = "../../auxil/auxil", version = "0.8", package = "gfx-auxil", features = ["spirv_cross"] }
-hal = { path = "../../hal", version = "0.7", package = "gfx-hal" }
+auxil = { path = "../../auxil/auxil", version = "0.9", package = "gfx-auxil", features = ["spirv_cross"] }
+hal = { path = "../../hal", version = "0.8", package = "gfx-hal" }
 range-alloc = { path = "../../auxil/range-alloc", version = "0.1" }
 bitflags = "1"
 libloading = "0.7"
-log = { version = "0.4" }
+log = "0.4"
 smallvec = "1.0"
 spirv_cross = { version = "0.23", features = ["hlsl"] }
-thunderdome = "0.3"
+thunderdome = "0.4"
 parking_lot = "0.11"
 winapi = { version = "0.3", features = ["basetsd","d3d11", "d3d11_1", "d3d11sdklayers", "d3dcommon","d3dcompiler","dxgi1_2","dxgi1_3","dxgi1_4", "dxgi1_5", "dxgiformat","dxgitype","handleapi","minwindef","synchapi","unknwnbase","winbase","windef","winerror","winnt","winuser"] }
 wio = "0.2"

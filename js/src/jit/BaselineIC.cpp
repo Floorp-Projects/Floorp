@@ -620,8 +620,6 @@ bool DoToBoolFallback(JSContext* cx, BaselineFrame* frame, ICFallbackStub* stub,
   MaybeNotifyWarp(frame->outerScript(), stub);
   FallbackICSpew(cx, stub, "ToBool");
 
-  MOZ_ASSERT(!arg.isBoolean());
-
   TryAttachStub<ToBoolIRGenerator>("ToBool", cx, frame, stub, arg);
 
   bool cond = ToBoolean(arg);

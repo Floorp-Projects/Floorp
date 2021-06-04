@@ -202,19 +202,33 @@ class CargoProvider(MachCommandBase):
 class Doctor(MachCommandBase):
     """Provide commands for diagnosing common build environment problems"""
 
-    @Command("doctor", category="devenv", description="")
+    @Command(
+        "doctor",
+        category="devenv",
+        description="Diagnose and fix common development environment issues.",
+    )
     @CommandArgument(
         "--fix",
-        default=None,
+        default=False,
         action="store_true",
         help="Attempt to fix found problems.",
     )
-    def doctor(self, command_context, fix=None):
+    @CommandArgument(
+        "--verbose",
+        default=False,
+        action="store_true",
+        help="Print verbose information found by checks.",
+    )
+    def doctor(self, command_context, fix=False, verbose=False):
         self.activate_virtualenv()
-        from mozbuild.doctor import Doctor
+        from mozbuild.doctor import run_doctor
 
-        doctor = Doctor(self.topsrcdir, self.topobjdir, fix)
-        return doctor.check_all()
+        return run_doctor(
+            topsrcdir=self.topsrcdir,
+            topobjdir=self.topobjdir,
+            fix=fix,
+            verbose=verbose,
+        )
 
 
 @CommandProvider

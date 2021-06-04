@@ -42,7 +42,7 @@ class SidebarItem extends PureComponent {
       return isExternalUrl
         ? dom.a(
             {
-              className: "sidebar-item__link",
+              className: "sidebar-item__link undecorated-link",
               href: to,
               target: "_blank",
             },
@@ -50,7 +50,7 @@ class SidebarItem extends PureComponent {
           )
         : Link(
             {
-              className: "sidebar-item__link qa-sidebar-link",
+              className: "sidebar-item__link qa-sidebar-link undecorated-link",
               to,
             },
             children

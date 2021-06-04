@@ -331,8 +331,7 @@ async function testCheckbox(
   }
 
   if (typeof actionCheckbox == "boolean") {
-    checkbox.focus();
-    await EventUtils.synthesizeKey("VK_SPACE", undefined, dialogEl.ownerWindow);
+    checkbox.click();
   }
 }
 

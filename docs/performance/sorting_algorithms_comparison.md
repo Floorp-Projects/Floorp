@@ -1,10 +1,5 @@
 # Sorting algorithms comparison
 
-This article describes a simple example program that we use in two of
-the Performance guides: the guide to the [Call
-Tree](call_tree.md) and the guide to the
-[Flame Chart](https://developer.mozilla.org/en-US/docs/Tools/Performance/Flame_Chart).
-
 This program compares the performance of three different sorting
 algorithms:
 

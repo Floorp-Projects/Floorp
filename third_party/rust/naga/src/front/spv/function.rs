@@ -38,7 +38,7 @@ pub enum Terminator {
         ///
         selector: Handle<crate::Expression>,
         /// Default block of the switch case.
-        default: BlockId,
+        default_id: BlockId,
         /// Tuples of (literal, target block)
         targets: Vec<(i32, BlockId)>,
     },
@@ -107,7 +107,7 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
                         .expressions
                         .append(crate::Expression::FunctionArgument(i as u32));
                     self.lookup_expression
-                        .insert(id, LookupExpression { type_id, handle });
+                        .insert(id, LookupExpression { handle, type_id });
                     //Note: we redo the lookup in order to work around `self` borrowing
 
                     if type_id
@@ -149,8 +149,8 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
                         fun_id,
                         &mut fun.expressions,
                         &mut fun.local_variables,
+                        &mut module.constants,
                         &module.types,
-                        &module.constants,
                         &module.global_variables,
                     )?;
 
@@ -181,7 +181,7 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
             }
         }
 
-        fun.body = flow_graph.to_naga()?;
+        fun.body = flow_graph.convert_to_naga()?;
 
         // done
         let fun_handle = module.functions.append(fun);
@@ -189,7 +189,7 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
         if let Some(ep) = self.lookup_entry_point.remove(&fun_id) {
             // create a wrapping function
             let mut function = crate::Function {
-                name: None,
+                name: Some(format!("{}_wrap", ep.name)),
                 arguments: Vec::new(),
                 result: None,
                 local_variables: Arena::new(),
@@ -201,22 +201,42 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
             for &v_id in ep.variable_ids.iter() {
                 let lvar = self.lookup_variable.lookup(v_id)?;
                 if let super::Variable::Input(ref arg) = lvar.inner {
+                    let arg_expr =
+                        function
+                            .expressions
+                            .append(crate::Expression::FunctionArgument(
+                                function.arguments.len() as u32,
+                            ));
+                    let load_expr = if arg.ty == module.global_variables[lvar.handle].ty {
+                        arg_expr
+                    } else {
+                        // The only case where the type is different is if we need to treat
+                        // unsigned integer as signed.
+                        let old_len = function.expressions.len();
+                        let handle = function.expressions.append(crate::Expression::As {
+                            expr: arg_expr,
+                            kind: crate::ScalarKind::Sint,
+                            convert: Some(4),
+                        });
+                        function.body.push(crate::Statement::Emit(
+                            function.expressions.range_from(old_len),
+                        ));
+                        handle
+                    };
                     function.body.push(crate::Statement::Store {
                         pointer: function
                             .expressions
                             .append(crate::Expression::GlobalVariable(lvar.handle)),
-                        value: function
-                            .expressions
-                            .append(crate::Expression::FunctionArgument(
-                                function.arguments.len() as u32,
-                            )),
+                        value: load_expr,
                     });
+
                     let mut arg = arg.clone();
                     if ep.stage == crate::ShaderStage::Fragment {
                         if let Some(crate::Binding::Location {
                             interpolation: ref mut interpolation @ None,
                             ..
-                        }) = arg.binding {
+                        }) = arg.binding
+                        {
                             *interpolation = Some(crate::Interpolation::Perspective);
                             // default
                         }
@@ -276,33 +296,34 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
                 }
             }
 
-            if self.options.adjust_coordinate_space {
-                let position_index = members.iter().position(|member| match member.binding {
-                    Some(crate::Binding::BuiltIn(crate::BuiltIn::Position)) => true,
-                    _ => false,
-                });
-                if let Some(component_index) = position_index {
-                    // The IR is Y-up, while SPIR-V is Y-down.
-                    let old_len = function.expressions.len();
-                    let global_expr = components[component_index];
-                    let access_expr = function.expressions.append(crate::Expression::AccessIndex {
-                        base: global_expr,
-                        index: 1,
-                    });
-                    let load_expr = function.expressions.append(crate::Expression::Load {
-                        pointer: access_expr,
-                    });
-                    let neg_expr = function.expressions.append(crate::Expression::Unary {
-                        op: crate::UnaryOperator::Negate,
-                        expr: load_expr,
-                    });
-                    function.body.push(crate::Statement::Emit(
-                        function.expressions.range_from(old_len),
-                    ));
-                    function.body.push(crate::Statement::Store {
-                        pointer: access_expr,
-                        value: neg_expr,
-                    });
+            for (member_index, member) in members.iter().enumerate() {
+                match member.binding {
+                    Some(crate::Binding::BuiltIn(crate::BuiltIn::Position))
+                        if self.options.adjust_coordinate_space =>
+                    {
+                        let old_len = function.expressions.len();
+                        let global_expr = components[member_index];
+                        let access_expr =
+                            function.expressions.append(crate::Expression::AccessIndex {
+                                base: global_expr,
+                                index: 1,
+                            });
+                        let load_expr = function.expressions.append(crate::Expression::Load {
+                            pointer: access_expr,
+                        });
+                        let neg_expr = function.expressions.append(crate::Expression::Unary {
+                            op: crate::UnaryOperator::Negate,
+                            expr: load_expr,
+                        });
+                        function.body.push(crate::Statement::Emit(
+                            function.expressions.range_from(old_len),
+                        ));
+                        function.body.push(crate::Statement::Store {
+                            pointer: access_expr,
+                            value: neg_expr,
+                        });
+                    }
+                    _ => {}
                 }
             }
 

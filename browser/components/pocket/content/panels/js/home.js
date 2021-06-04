@@ -31,16 +31,16 @@ var PKT_PANEL_OVERLAY = function(options) {
     document.querySelector(`.pkt_ext_mylist`).addEventListener(`click`, e => {
       clickHelper(e, {
         source: "home_view_list",
-        url: e.target.getAttribute(`href`),
+        url: e.currentTarget.getAttribute(`href`),
       });
     });
 
-    document.querySelectorAll(`.pkt_ext_topic`).forEach((el, index) => {
+    document.querySelectorAll(`.pkt_ext_topic`).forEach((el, position) => {
       el.addEventListener(`click`, e => {
         clickHelper(e, {
           source: "home_topic",
-          url: e.target.getAttribute(`href`),
-          index,
+          url: e.currentTarget.getAttribute(`href`),
+          position,
         });
       });
     });
@@ -48,7 +48,7 @@ var PKT_PANEL_OVERLAY = function(options) {
     document.querySelector(`.pkt_ext_discover`).addEventListener(`click`, e => {
       clickHelper(e, {
         source: "home_discover",
-        url: e.target.getAttribute(`href`),
+        url: e.currentTarget.getAttribute(`href`),
       });
     });
   };

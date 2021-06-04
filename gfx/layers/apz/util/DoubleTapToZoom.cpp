@@ -186,18 +186,23 @@ ZoomTarget CalculateRectToZoomTo(
 
   RefPtr<PresShell> presShell = aRootContentDocument->GetPresShell();
   if (!presShell) {
-    return ZoomTarget{zoomOut, Nothing()};
+    return ZoomTarget{zoomOut};
   }
 
   nsIScrollableFrame* rootScrollFrame =
       presShell->GetRootScrollFrameAsScrollable();
   if (!rootScrollFrame) {
-    return ZoomTarget{zoomOut, Nothing()};
+    return ZoomTarget{zoomOut};
   }
+
+  CSSPoint documentRelativePoint =
+      CSSPoint::FromAppUnits(ViewportUtils::VisualToLayout(
+          CSSPoint::ToAppUnits(aPoint), presShell)) +
+      CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
 
   nsCOMPtr<dom::Element> element = ElementFromPoint(presShell, aPoint);
   if (!element) {
-    return ZoomTarget{zoomOut, Nothing()};
+    return ZoomTarget{zoomOut, Nothing(), Some(documentRelativePoint)};
   }
 
   FrameMetrics metrics =
@@ -209,7 +214,7 @@ ZoomTarget CalculateRectToZoomTo(
   }
 
   if (!element) {
-    return ZoomTarget{zoomOut, Nothing()};
+    return ZoomTarget{zoomOut, Nothing(), Some(documentRelativePoint)};
   }
 
   CSSPoint visualScrollOffset = metrics.GetVisualScrollOffset();
@@ -218,12 +223,6 @@ ZoomTarget CalculateRectToZoomTo(
   Maybe<CSSRect> nearestScrollClip;
   CSSRect rect = nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame,
                                                        &nearestScrollClip);
-
-  CSSPoint point = CSSPoint::FromAppUnits(
-      ViewportUtils::VisualToLayout(CSSPoint::ToAppUnits(aPoint), presShell));
-
-  CSSPoint documentRelativePoint =
-      point + CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
 
   // In some cases, like overflow: visible and overflowing content, the bounding
   // client rect of the targeted element won't contain the point the user double
@@ -276,7 +275,7 @@ ZoomTarget CalculateRectToZoomTo(
   // If the rect is already taking up most of the visible area and is
   // stretching the width of the page, then we want to zoom out instead.
   if (IsRectZoomedIn(rect, compositedArea)) {
-    return ZoomTarget{zoomOut, Nothing()};
+    return ZoomTarget{zoomOut, Nothing(), Some(documentRelativePoint)};
   }
 
   elementBoundingRect = AddHMargin(elementBoundingRect, margin, metrics);
@@ -288,7 +287,8 @@ ZoomTarget CalculateRectToZoomTo(
 
   rect.Round();
   elementBoundingRect.Round();
-  return ZoomTarget{rect, Some(elementBoundingRect)};
+  return ZoomTarget{rect, Some(elementBoundingRect),
+                    Some(documentRelativePoint)};
 }
 
 }  // namespace layers

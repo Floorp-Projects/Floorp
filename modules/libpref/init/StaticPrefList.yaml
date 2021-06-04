@@ -267,6 +267,13 @@
 # The apz prefs are explained in AsyncPanZoomController.cpp
 #---------------------------------------------------------------------------
 
+# amount we zoom in for a double tap gesture if we couldn't find any content
+# based rect to zoom to
+- name: apz.doubletapzoom.defaultzoomin
+  type: AtomicFloat
+  value: 1.2f
+  mirror: always
+
 - name: apz.scrollbarbuttonrepeat.enabled
   type: RelaxedAtomicBool
   value: true
@@ -976,14 +983,23 @@
 # 1 = always
 # 2 = never
 #
-# Default to 0 on windows, 1 elsewhere.
+# Default to 0 on windows and mac, 1 elsewhere.
 - name: browser.display.document_color_use
   type: RelaxedAtomicUint32
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
   value: 0
 #else
   value: 1
 #endif
+  mirror: always
+  rust: true
+
+# 0 = always native
+# 1 = never native
+# other = default
+- name: browser.display.windows.non_native_menus
+  type: RelaxedAtomicUint32
+  value: 2
   mirror: always
   rust: true
 
@@ -1179,12 +1195,6 @@
 
 # Enable Proton restyle. Requires restart.
 - name: browser.proton.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
-- name: browser.proton.contextmenus.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
@@ -3570,7 +3580,7 @@
 # W3C pointer events draft.
 - name: dom.w3c_pointer_events.implicit_capture
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # In case Touch API is enabled, this pref controls whether to support

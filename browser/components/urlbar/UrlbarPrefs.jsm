@@ -352,6 +352,13 @@ function makeResultBuckets({ showSearchSuggestionsFirst }) {
                 flex: 2,
                 group: UrlbarUtils.RESULT_GROUP.GENERAL,
               },
+              {
+                // We show a relatively large number of about page results because
+                // they only show up for very specific queries: those starting with
+                // `about:`.
+                flex: 2,
+                group: UrlbarUtils.RESULT_GROUP.ABOUT_PAGES,
+              },
             ],
           },
           {
@@ -546,7 +553,7 @@ class Preferences {
 
   get _nimbus() {
     if (!this.__nimbus) {
-      this.__nimbus = NimbusFeatures.urlbar.getValue();
+      this.__nimbus = NimbusFeatures.urlbar.getAllVariables();
     }
     return this.__nimbus;
   }
@@ -648,7 +655,7 @@ class Preferences {
    *
    * @param {string} name
    *   The name of the desired property in the object returned from
-   *   NimbusFeatures.urlbar.getValue().
+   *   NimbusFeatures.urlbar.getAllVariables().
    * @returns {object}
    *   An object describing the property's value with the following shape (same
    *   as _getPrefDescriptor()):

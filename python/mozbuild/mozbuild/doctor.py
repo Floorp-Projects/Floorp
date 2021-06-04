@@ -4,14 +4,14 @@
 
 from __future__ import absolute_import, print_function
 
+import enum
 import os
 import subprocess
-import six
 import sys
 
+import attr
 import psutil
 
-from distutils.util import strtobool
 from distutils.version import LooseVersion
 
 import mozpack.path as mozpath
@@ -25,8 +25,8 @@ MEMORY_THRESHOLD = 7.4
 # Minimum recommended free space on each disk, in gigabytes.
 FREESPACE_THRESHOLD = 10
 
-# Latest MozillaBuild version
-LATEST_MOZILLABUILD_VERSION = "1.11.0"
+# Latest MozillaBuild version.
+LATEST_MOZILLABUILD_VERSION = LooseVersion("3.3")
 
 DISABLE_LASTACCESS_WIN = """
 Disable the last access time feature?
@@ -37,258 +37,360 @@ https://technet.microsoft.com/en-us/library/cc785435.aspx
 """
 
 
-class Doctor(object):
-    def __init__(self, srcdir, objdir, fix):
-        self.srcdir = mozpath.normpath(srcdir)
-        self.objdir = mozpath.normpath(objdir)
-        self.srcdir_mount = self.getmount(self.srcdir)
-        self.objdir_mount = self.getmount(self.objdir)
-        self.path_mounts = [
-            ("srcdir", self.srcdir, self.srcdir_mount),
-            ("objdir", self.objdir, self.objdir_mount),
-        ]
-        self.fix = fix
-        self.results = []
+def get_mount_point(path):
+    """Return the mount point for a given path."""
+    while path != "/" and not os.path.ismount(path):
+        path = mozpath.abspath(mozpath.join(path, os.pardir))
+    return path
 
-    def check_all(self):
-        checks = ["cpu", "memory", "storage_freespace", "fs_lastaccess", "mozillabuild"]
-        for check in checks:
-            self.report(getattr(self, check))
-        good = True
-        fixable = False
-        denied = False
-        for result in self.results:
-            if result.get("status") != "GOOD":
-                good = False
-            if result.get("fixable", False):
-                fixable = True
-            if result.get("denied", False):
-                denied = True
-        if denied:
-            print('run "mach doctor --fix" AS ADMIN to re-attempt fixing your system')
-        elif False and fixable:  # elif fixable:  # 'and fixable' avoids flake8 error
-            print('run "mach doctor --fix" as admin to attempt fixing your system')
-        return int(not good)
 
-    def getmount(self, path):
-        while path != "/" and not os.path.ismount(path):
-            path = mozpath.abspath(mozpath.join(path, os.pardir))
-        return path
+class CheckStatus(enum.Enum):
+    # Check is okay.
+    OK = enum.auto()
+    # We found an issue.
+    WARNING = enum.auto()
+    # We found an issue that will break build/configure/etc.
+    FATAL = enum.auto()
+    # The check was skipped.
+    SKIPPED = enum.auto()
 
-    def prompt_bool(self, prompt, limit=5):
-        """ Prompts the user with prompt and requires a boolean value. """
-        valid = False
-        while not valid and limit > 0:
-            try:
-                choice = strtobool(six.moves.input(prompt + "[Y/N]\n"))
-                valid = True
-            except ValueError:
-                print("ERROR! Please enter a valid option!")
-                limit -= 1
 
-        if limit > 0:
-            return choice
-        else:
-            raise Exception("Error! Reached max attempts of entering option.")
+@attr.s
+class DoctorCheck:
+    # Name of the check.
+    name = attr.ib()
+    # Lines to display on screen.
+    display_text = attr.ib()
+    # `CheckStatus` for this given check.
+    status = attr.ib()
+    # Function to be called to fix the issues, if applicable.
+    fix = attr.ib(default=None)
 
-    def report(self, results):
-        # Handle single dict result or list of results.
-        if isinstance(results, dict):
-            results = [results]
-        for result in results:
-            status = result.get("status", "UNSURE")
-            if status == "SKIPPED":
-                continue
-            self.results.append(result)
-            print("{}...\t{}\n".format(result.get("desc", ""), status).expandtabs(40))
 
-    @property
-    def platform(self):
-        platform = getattr(self, "_platform", None)
-        if not platform:
-            platform = sys.platform
-            while platform[-1].isdigit():
-                platform = platform[:-1]
-            setattr(self, "_platform", platform)
-        return platform
+CHECKS = {}
 
-    @property
-    def cpu(self):
-        cpu_count = psutil.cpu_count()
-        if cpu_count < PROCESSORS_THRESHOLD:
-            status = "BAD"
-            desc = "%d logical processors detected, <%d" % (
-                cpu_count,
-                PROCESSORS_THRESHOLD,
-            )
-        else:
-            status = "GOOD"
-            desc = "%d logical processors detected, >=%d" % (
-                cpu_count,
-                PROCESSORS_THRESHOLD,
-            )
-        return {"status": status, "desc": desc}
 
-    @property
-    def memory(self):
-        memory = psutil.virtual_memory().total
-        # Convert to gigabytes.
-        memory_GB = memory / 1024 ** 3.0
-        if memory_GB < MEMORY_THRESHOLD:
-            status = "BAD"
-            desc = "%.1fGB of physical memory, <%.1fGB" % (memory_GB, MEMORY_THRESHOLD)
-        else:
-            status = "GOOD"
-            desc = "%.1fGB of physical memory, >%.1fGB" % (memory_GB, MEMORY_THRESHOLD)
-        return {"status": status, "desc": desc}
+def check(func):
+    """Decorator that registers a function as a doctor check.
 
-    @property
-    def storage_freespace(self):
-        results = []
-        desc = ""
-        mountpoint_line = self.srcdir_mount != self.objdir_mount
-        for (purpose, path, mount) in self.path_mounts:
-            desc += "%s = %s\n" % (purpose, path)
-            if not mountpoint_line:
-                mountpoint_line = True
-                continue
-            try:
-                usage = psutil.disk_usage(mount)
-                freespace, size = usage.free, usage.total
-                freespace_GB = freespace / 1024 ** 3
-                size_GB = size / 1024 ** 3
-                if freespace_GB < FREESPACE_THRESHOLD:
-                    status = "BAD"
-                    desc += "mountpoint = %s\n%dGB of %dGB free, <%dGB" % (
-                        mount,
-                        freespace_GB,
-                        size_GB,
-                        FREESPACE_THRESHOLD,
-                    )
-                else:
-                    status = "GOOD"
-                    desc += "mountpoint = %s\n%dGB of %dGB free, >=%dGB" % (
-                        mount,
-                        freespace_GB,
-                        size_GB,
-                        FREESPACE_THRESHOLD,
-                    )
-            except OSError:
-                status = "UNSURE"
-                desc += "path invalid"
-            results.append({"status": status, "desc": desc})
-        return results
+    The function should return a `DoctorCheck` or be an iterator of
+    checks.
+    """
+    CHECKS[func.__name__] = func
 
-    @property
-    def fs_lastaccess(self):
-        results = []
-        if self.platform == "win":
-            fixable = False
-            denied = False
-            # See 'fsutil behavior':
-            # https://technet.microsoft.com/en-us/library/cc785435.aspx
-            try:
-                command = "fsutil behavior query disablelastaccess".split(" ")
-                fsutil_output = subprocess.check_output(command)
-                disablelastaccess = int(fsutil_output.partition("=")[2][1])
-            except subprocess.CalledProcessError:
-                disablelastaccess = -1
-                status = "UNSURE"
-                desc = "unable to check lastaccess behavior"
-            if disablelastaccess == 1:
-                status = "GOOD"
-                desc = "lastaccess disabled systemwide"
-            elif disablelastaccess == 0:
-                if False:  # if self.fix:
-                    choice = self.prompt_bool(DISABLE_LASTACCESS_WIN)
-                    if not choice:
-                        return {
-                            "status": "BAD, NOT FIXED",
-                            "desc": "lastaccess enabled systemwide",
-                        }
-                    try:
-                        command = "fsutil behavior set disablelastaccess 1".split(" ")
-                        fsutil_output = subprocess.check_output(command)
-                        status = "GOOD, FIXED"
-                        desc = "lastaccess disabled systemwide"
-                    except subprocess.CalledProcessError as e:
-                        desc = "lastaccess enabled systemwide"
-                        if e.output.find("denied") != -1:
-                            status = "BAD, FIX DENIED"
-                            denied = True
-                        else:
-                            status = "BAD, NOT FIXED"
-                else:
-                    status = "BAD, FIXABLE"
-                    desc = "lastaccess enabled"
-                    fixable = True
-            results.append(
-                {"status": status, "desc": desc, "fixable": fixable, "denied": denied}
-            )
-        elif self.platform in ["freebsd", "linux", "openbsd"]:
-            common_mountpoint = self.srcdir_mount == self.objdir_mount
-            for (purpose, path, mount) in self.path_mounts:
-                results.append(self.check_mount_lastaccess(mount))
-                if common_mountpoint:
-                    break
-        else:
-            results.append({"status": "SKIPPED"})
-        return results
 
-    def check_mount_lastaccess(self, mount):
-        partitions = psutil.disk_partitions(all=True)
-        atime_opts = {"atime", "noatime", "relatime", "norelatime"}
-        option = ""
-        fstype = ""
-        for partition in partitions:
-            if partition.mountpoint == mount:
-                mount_opts = set(partition.opts.split(","))
-                intersection = list(atime_opts & mount_opts)
-                fstype = partition.fstype
-                if len(intersection) == 1:
-                    option = intersection[0]
-                break
+@check
+def cpu(**kwargs):
+    """Check the host machine has the recommended processing power to develop Firefox."""
+    cpu_count = psutil.cpu_count()
+    if cpu_count < PROCESSORS_THRESHOLD:
+        status = CheckStatus.WARNING
+        desc = "%d logical processors detected, <%d" % (
+            cpu_count,
+            PROCESSORS_THRESHOLD,
+        )
+    else:
+        status = CheckStatus.OK
+        desc = "%d logical processors detected, >=%d" % (
+            cpu_count,
+            PROCESSORS_THRESHOLD,
+        )
 
-        if fstype == "tmpfs":
-            status = "GOOD"
-            desc = "%s is a tmpfs so noatime/reltime is not needed" % (mount)
-        elif not option:
-            status = "BAD"
-            if self.platform == "linux":
-                option = "noatime/relatime"
-            else:
-                option = "noatime"
-            desc = "%s has no explicit %s mount option" % (mount, option)
-        elif option == "atime" or option == "norelatime":
-            status = "BAD"
-            desc = "%s has %s mount option" % (mount, option)
-        elif option == "noatime" or option == "relatime":
-            status = "GOOD"
-            desc = "%s has %s mount option" % (mount, option)
-        return {"status": status, "desc": desc}
+    return DoctorCheck(
+        name="cpu",
+        display_text=[desc],
+        status=status,
+    )
 
-    @property
-    def mozillabuild(self):
-        if self.platform != "win":
-            return {"status": "SKIPPED"}
-        MOZILLABUILD = mozpath.normpath(os.environ.get("MOZILLABUILD", ""))
-        if not MOZILLABUILD or not os.path.exists(MOZILLABUILD):
-            return {"desc": "not running under MozillaBuild"}
+
+@check
+def memory(**kwargs):
+    """Check the host machine has the recommended memory to develop Firefox."""
+    memory = psutil.virtual_memory().total
+    # Convert to gigabytes.
+    memory_GB = memory / 1024 ** 3.0
+    if memory_GB < MEMORY_THRESHOLD:
+        status = CheckStatus.WARNING
+        desc = "%.1fGB of physical memory, <%.1fGB" % (memory_GB, MEMORY_THRESHOLD)
+    else:
+        status = CheckStatus.OK
+        desc = "%.1fGB of physical memory, >%.1fGB" % (memory_GB, MEMORY_THRESHOLD)
+
+    return DoctorCheck(
+        name="memory",
+        status=status,
+        display_text=[desc],
+    )
+
+
+@check
+def storage_freespace(topsrcdir, topobjdir, **kwargs):
+    """Check the host machine has the recommended disk space to develop Firefox."""
+    topsrcdir_mount = get_mount_point(topsrcdir)
+    topobjdir_mount = get_mount_point(topobjdir)
+
+    mounts = [
+        ("topsrcdir", topsrcdir, topsrcdir_mount),
+        ("topobjdir", topobjdir, topobjdir_mount),
+    ]
+
+    mountpoint_line = topsrcdir_mount != topobjdir_mount
+    checks = []
+
+    for purpose, path, mount in mounts:
+        if not mountpoint_line:
+            mountpoint_line = True
+            continue
+
+        desc = ["%s = %s" % (purpose, path)]
+
         try:
-            with open(mozpath.join(MOZILLABUILD, "VERSION"), "r") as fh:
-                version = fh.readline()
-            if not version:
-                raise ValueError()
-            if LooseVersion(version) < LooseVersion(LATEST_MOZILLABUILD_VERSION):
-                status = "BAD"
-                desc = "MozillaBuild %s in use, <%s" % (
-                    version,
-                    LATEST_MOZILLABUILD_VERSION,
+            usage = psutil.disk_usage(mount)
+            freespace, size = usage.free, usage.total
+            freespace_GB = freespace / 1024 ** 3
+            size_GB = size / 1024 ** 3
+            if freespace_GB < FREESPACE_THRESHOLD:
+                status = CheckStatus.WARNING
+                desc.append(
+                    "mountpoint = %s\n%dGB of %dGB free, <%dGB"
+                    % (
+                        mount,
+                        freespace_GB,
+                        size_GB,
+                        FREESPACE_THRESHOLD,
+                    )
                 )
             else:
-                status = "GOOD"
-                desc = "MozillaBuild %s in use" % version
-        except (IOError, ValueError):
-            status = "UNSURE"
-            desc = "MozillaBuild version not found"
-        return {"status": status, "desc": desc}
+                status = CheckStatus.OK
+                desc.append(
+                    "mountpoint = %s\n%dGB of %dGB free, >=%dGB"
+                    % (
+                        mount,
+                        freespace_GB,
+                        size_GB,
+                        FREESPACE_THRESHOLD,
+                    )
+                )
+
+        except OSError:
+            status = CheckStatus.FATAL
+            desc.append("path invalid")
+
+        checks.append(
+            DoctorCheck(
+                name="%s mount check" % mount,
+                status=status,
+                display_text=desc,
+            )
+        )
+
+    return checks
+
+
+def fix_lastaccess_win():
+    """Run `fsutil` to fix lastaccess behaviour."""
+    try:
+        print("Disabling filesystem lastaccess")
+
+        command = ["fsutil", "behavior", "set", "disablelastaccess", "1"]
+        subprocess.check_output(command)
+
+        print("Filesystem lastaccess disabled.")
+
+    except subprocess.CalledProcessError:
+        print("Could not disable filesystem lastaccess.")
+
+
+@check
+def fs_lastaccess(topsrcdir, topobjdir, **kwargs):
+    """Check for the `lastaccess` behaviour on the filsystem, which can slow
+    down filesystem operations."""
+    if sys.platform.startswith("win"):
+        # See 'fsutil behavior':
+        # https://technet.microsoft.com/en-us/library/cc785435.aspx
+        try:
+            command = ["fsutil", "behavior", "query", "disablelastaccess"]
+            fsutil_output = subprocess.check_output(command)
+            disablelastaccess = int(fsutil_output.partition("=")[2][1])
+        except subprocess.CalledProcessError:
+            return DoctorCheck(
+                status=CheckStatus.WARNING,
+                desc=["unable to check lastaccess behavior"],
+            )
+
+        if disablelastaccess == 1:
+            return DoctorCheck(
+                status=CheckStatus.OK,
+                display_text=["lastaccess disabled systemwide"],
+            )
+        elif disablelastaccess == 0:
+            return DoctorCheck(
+                status=CheckStatus.WARNING,
+                display_text=["lastaccess enabled"],
+                fix=fix_lastaccess_win,
+            )
+
+    elif any(
+        sys.platform.startswith(prefix) for prefix in ["freebsd", "linux", "openbsd"]
+    ):
+        topsrcdir_mount = get_mount_point(topsrcdir)
+        topobjdir_mount = get_mount_point(topobjdir)
+        mounts = [
+            ("topsrcdir", topsrcdir, topsrcdir_mount),
+            ("topobjdir", topobjdir, topobjdir_mount),
+        ]
+
+        common_mountpoint = topsrcdir_mount == topobjdir_mount
+
+        mount_checks = []
+        for _purpose, _path, mount in mounts:
+            mount_checks.append(check_mount_lastaccess(mount))
+            if common_mountpoint:
+                break
+
+        return mount_checks
+
+
+def check_mount_lastaccess(mount):
+    """Check `lastaccess` behaviour for a Linux mount."""
+    partitions = psutil.disk_partitions(all=True)
+    atime_opts = {"atime", "noatime", "relatime", "norelatime"}
+    option = ""
+    fstype = ""
+    for partition in partitions:
+        if partition.mountpoint == mount:
+            mount_opts = set(partition.opts.split(","))
+            intersection = list(atime_opts & mount_opts)
+            fstype = partition.fstype
+            if len(intersection) == 1:
+                option = intersection[0]
+            break
+
+    if fstype == "tmpfs":
+        status = CheckStatus.OK
+        desc = "%s is a tmpfs so noatime/reltime is not needed" % (mount)
+    elif not option:
+        status = CheckStatus.WARNING
+        if sys.platform.startswith("linux"):
+            option = "noatime/relatime"
+        else:
+            option = "noatime"
+        desc = "%s has no explicit %s mount option" % (mount, option)
+    elif option == "atime" or option == "norelatime":
+        status = CheckStatus.WARNING
+        desc = "%s has %s mount option" % (mount, option)
+    elif option == "noatime" or option == "relatime":
+        status = CheckStatus.OK
+        desc = "%s has %s mount option" % (mount, option)
+
+    return DoctorCheck(
+        name="%s mount lastaccess" % mount,
+        status=status,
+        display_text=[desc],
+    )
+
+
+@check
+def mozillabuild(**kwargs):
+    """Check that MozillaBuild is the latest version."""
+    if not sys.platform.startswith("win"):
+        return DoctorCheck(
+            name="mozillabuild",
+            status=CheckStatus.SKIPPED,
+            display_text=["Non-Windows platform, MozillaBuild not relevant"],
+        )
+
+    MOZILLABUILD = mozpath.normpath(os.environ.get("MOZILLABUILD", ""))
+    if not MOZILLABUILD or not os.path.exists(MOZILLABUILD):
+        return DoctorCheck(
+            name="mozillabuild",
+            status=CheckStatus.WARNING,
+            display_text=["Not running under MozillaBuild."],
+        )
+
+    try:
+        with open(mozpath.join(MOZILLABUILD, "VERSION"), "r") as fh:
+            local_version = fh.readline()
+
+        if not local_version:
+            return DoctorCheck(
+                name="mozillabuild",
+                status=CheckStatus.WARNING,
+                display_text=["Could not get local MozillaBuild version."],
+            )
+
+        if LooseVersion(local_version) < LATEST_MOZILLABUILD_VERSION:
+            status = CheckStatus.WARNING
+            desc = "MozillaBuild %s in use, <%s" % (
+                local_version,
+                LATEST_MOZILLABUILD_VERSION,
+            )
+
+        else:
+            status = CheckStatus.OK
+            desc = "MozillaBuild %s in use" % local_version
+
+    except (IOError, ValueError):
+        status = CheckStatus.FATAL
+        desc = "MozillaBuild version not found"
+
+    return DoctorCheck(
+        name="mozillabuild",
+        status=status,
+        display_text=[desc],
+    )
+
+
+def run_doctor(fix=False, verbose=False, **kwargs):
+    """Run the doctor checks.
+
+    If `fix` is `True`, run fixing functions for issues that can be resolved
+    automatically.
+
+    By default, only print output from checks that result in a warning or
+    fatal issue. `verbose` will cause all output to be printed to the screen.
+    """
+    issues_found = False
+
+    fixes = []
+    for _name, check_func in CHECKS.items():
+        results = check_func(**kwargs)
+
+        if isinstance(results, DoctorCheck):
+            results = [results]
+
+        for result in results:
+            if result.status == CheckStatus.SKIPPED and not verbose:
+                continue
+
+            if result.status != CheckStatus.OK:
+                # If we ever have a non-OK status, we shouldn't print
+                # the "No issues detected" line.
+                issues_found = True
+
+            if result.status != CheckStatus.OK or verbose:
+                print("\n".join(result.display_text))
+
+            if result.fix:
+                fixes.append(result.fix)
+
+    if not issues_found:
+        print("No issues detected.")
+        return 0
+
+    # If we can fix something but the user didn't ask us to, advise
+    # them to run with `--fix`.
+    if not fix:
+        if fixes:
+            print(
+                "Some of the issues found can be fixed; run "
+                "`./mach doctor --fix` to fix them."
+            )
+        return 1
+
+    # Attempt to run the fix functions.
+    for fix in fixes:
+        try:
+            fix()
+        except Exception:
+            pass

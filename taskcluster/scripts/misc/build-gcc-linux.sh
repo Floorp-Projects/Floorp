@@ -6,6 +6,8 @@ set -e
 root_dir=$MOZ_FETCHES_DIR
 data_dir=$GECKO_PATH/build/unix/build-gcc
 
+PATH=$MOZ_FETCHES_DIR/gcc/bin:$PATH
+
 . $data_dir/build-gcc.sh
 
 pushd $root_dir/gcc-source

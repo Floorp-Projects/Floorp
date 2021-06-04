@@ -29,7 +29,7 @@ below screenshots have a profiled application open with the puffin imgui window 
 
 ## Optick
 
-* https://optick.dev
+* https://github.com/bombomby/optick
 * The upstream crate only provides binaries for windows. However it could probably be made to work by building
 optick capture code and linking against it manually. The UI is windows only.
 
@@ -57,8 +57,7 @@ This allows existing and new tracing-compatible handlers to work with profiling.
 ## Tracy
 
 * https://github.com/wolfpld/tracy
-* Cross-platform, but currently unstable on macOS. It could probably be fixed.
-(See https://github.com/wolfpld/tracy/issues/117)
+* Cross-platform (windows, macOS, linux)
 
 [![Tracy](screenshots/tracy-small.png)](screenshots/tracy.jpeg)
 
@@ -86,6 +85,9 @@ no dependencies or runtime code.
  
 This crate is intended to be **TINY**. It won't support every possible usage, just the basics. I'm open to adding
 more things but I plan to be very selective to maintain a slim size.
+
+When enabled, using a macro produces identical code as if you used the wrapped profiling API directly. So it is
+completely fine to directly use a profiler's API when this abstraction doesn't support something you want to do.
 
 ## Alternatives
 
@@ -140,20 +142,19 @@ fn my_function() {
 
 Take a look at the code for the helpful macros `register_thread!()` and `finish_frame!()`. 
 
-If you want to enable profiling in upstream crates, you'll need to enable the appropriate features in them. This also
-lets you turn them on/off per crate:
+I recommend adding features for each backend you want to use to your binary crate. This allows you to optionally compile
+in code to setup and configure a backend.
 
 ```toml
 [dependencies]
-profiling = "0.1"
-some_upstream_crate = "0.1"
+profiling = "1.0"
 
 [features]
-profile-with-puffin = ["profiling/profile-with-puffin", "some_upstream_crate/profile-with-puffin"]
-profile-with-optick = ["profiling/profile-with-optick", "some_upstream_crate/profile-with-optick"]
-profile-with-superluminal = ["profiling/profile-with-superluminal", "some_upstream_crate/profile-with-superluminal"]
-profile-with-tracing = ["profiling/profile-with-tracing", "some_upstream_crate/profile-with-tracing"]
-profile-with-tracy = ["profiling/profile-with-tracing", "some_upstream_crate/profile-with-tracy"]
+profile-with-puffin = ["profiling/profile-with-puffin"]
+profile-with-optick = ["profiling/profile-with-optick"]
+profile-with-superluminal = ["profiling/profile-with-superluminal"]
+profile-with-tracing = ["profiling/profile-with-tracing"]
+profile-with-tracy = ["profiling/profile-with-tracing"]
 ```
 
  * You can use the default feature to quickly/temporarily turn something on: `default = ["profile-with-optick"]`
@@ -161,26 +162,16 @@ profile-with-tracy = ["profiling/profile-with-tracing", "some_upstream_crate/pro
 
 ## Using from a Library
 
-Add the profiling crate to Cargo.toml Add the following features but don't enable them. Those features should only be
-enabled by the binary. If the end-user of your library doesn't use profiling, the macros in this crate will emit no code
-at all.
+Add the profiling crate to Cargo.toml:
 
 ```toml
 [dependencies]
-profiling = "0.1"
-
-[features]
-profile-with-puffin = ["profiling/profile-with-puffin"]
-profile-with-optick = ["profiling/profile-with-optick"]
-profile-with-superluminal = ["profiling/profile-with-superluminal"]
-profile-with-tracing = ["profiling/profile-with-tracing"]
-profile-with-tracy = ["profiling/profile-with-tracy"]
+profiling = "1.0"
 ```
 
-Now you can instrument your library using the API exposed via the `profiling` crate and support each profiler.
+Now you can instrument your library using the API exposed via the `profiling` crate.
 
-The downstream binary can now turn these features on per crate by enabling the appropriate features within the crate as
-described above.
+If the end-user of your library doesn't use profiling, the macros in this crate will emit no code at all.
 
 ## Feature Flags
 
@@ -190,13 +181,18 @@ described above.
  * profile-with-tracing: Enable the `tracing` crate. (This is just an abstraction layer - you'd want to hook it to do something!)
  * profile-with-tracy: Enable the `tracy-client` crate.
 
+**Only one backend can be enabled at a time!**
+
 ## Examples
 
  * simple: Shows a bare minimum requirements to do some simple instrumented profiling. Once it's running, you
    can connect to the process using optick/tracy/superluminal. Some of these are windows only!
 
 ```
-run --example simple --features="profile-with-optick,profile-with-tracy,profile-with-puffin,profile-with-superluminal" 
+run --example simple --features="profile-with-optick" 
+run --example simple --features="profile-with-tracy" 
+run --example simple --features="profile-with-puffin" 
+run --example simple --features="profile-with-superluminal" 
 ```
 
  * puffin: Launches a basic app with imgui integration showing the puffin UI. This one should run everywhere

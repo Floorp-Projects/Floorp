@@ -56,7 +56,7 @@ HTMLButtonElement::HTMLButtonElement(
                                         kButtonDefaultType->value),
       mDisabledChanged(false),
       mInInternalActivate(false),
-      mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT)) {
+      mInhibitStateRestoration(aFromParser & FROM_PARSER_FRAGMENT) {
   // Set up our default state: enabled
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }
@@ -228,25 +228,7 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   }
 
   if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
-    switch (aVisitor.mEvent->mMessage) {
-      case eKeyPress:
-      case eKeyUp: {
-        // For backwards compat, trigger buttons with space or enter
-        // (bug 25300)
-        WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
-        if ((keyEvent->mKeyCode == NS_VK_RETURN &&
-             eKeyPress == aVisitor.mEvent->mMessage) ||
-            (keyEvent->mKeyCode == NS_VK_SPACE &&
-             eKeyUp == aVisitor.mEvent->mMessage)) {
-          DispatchSimulatedClick(this, aVisitor.mEvent->IsTrusted(),
-                                 aVisitor.mPresContext);
-          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-        }
-      } break;
-
-      default:
-        break;
-    }
+    HandleKeyboardActivation(aVisitor);
     if (aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT) {
       if (mForm) {
         // Hold a strong ref while dispatching

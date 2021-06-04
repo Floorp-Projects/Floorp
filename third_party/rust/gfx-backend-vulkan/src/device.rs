@@ -15,6 +15,7 @@ use hal::{
 use std::{ffi::CString, marker::PhantomData, mem, ops::Range, ptr, sync::Arc};
 
 use crate::{command as cmd, conv, native as n, pool::RawCommandPool, window as w, Backend as B};
+use ash::vk::Handle;
 
 #[derive(Debug, Default)]
 struct GraphicsPipelineInfoBuf<'a> {
@@ -1891,11 +1892,31 @@ impl d::Device<B> for super::Device {
     }
 
     fn start_capture(&self) {
-        //TODO: RenderDoc
+        unsafe {
+            match self.shared.instance.render_doc_entry {
+                Ok(ref entry) => {
+                    entry.api.StartFrameCapture.unwrap()(
+                        self.shared.raw.handle().as_raw() as *mut _,
+                        ptr::null_mut(),
+                    );
+                }
+                Err(ref cause) => warn!("Could not start render doc frame capture: {}", cause),
+            };
+        }
     }
 
     fn stop_capture(&self) {
-        //TODO: RenderDoc
+        unsafe {
+            match self.shared.instance.render_doc_entry {
+                Ok(ref entry) => {
+                    entry.api.EndFrameCapture.unwrap()(
+                        self.shared.raw.handle().as_raw() as *mut _,
+                        ptr::null_mut(),
+                    );
+                }
+                Err(ref cause) => warn!("Could not stop render doc frame capture: {}", cause),
+            };
+        }
     }
 }
 

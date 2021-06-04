@@ -1,6 +1,6 @@
 [package]
 name = "gfx-hal"
-version = "0.7.0"
+version = "0.8.0"
 description = "gfx-rs hardware abstraction layer"
 homepage = "https://github.com/gfx-rs/gfx"
 repository = "https://github.com/gfx-rs/gfx"
@@ -20,10 +20,10 @@ path = "src/lib.rs"
 
 [dependencies]
 bitflags = "1.0"
-naga = { git = "https://github.com/gfx-rs/naga", tag = "gfx-22" }
+naga = { git = "https://github.com/gfx-rs/naga", tag = "gfx-25" }
 raw-window-handle = "0.3"
 serde = { version = "1", features = ["serde_derive"], optional = true }
 thiserror = "1"
 
 [dev-dependencies]
-gfx-backend-empty = { path = "../backend/empty", version = "0.7" }
+gfx-backend-empty = { path = "../backend/empty", version = "0.8" }

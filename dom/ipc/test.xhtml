@@ -63,17 +63,6 @@
       document.getElementById('page').setAttribute('src', url);
     }
 
-    function randomClick() {
-       // First focus the remote frame, then dispatch click. This way remote frame gets focus before
-       // mouse event.
-       document.getElementById('page').focus();
-       var frameLoader = document.getElementById('page').frameLoader;
-       var x = parseInt(Math.random() * 100);
-       var y = parseInt(Math.random() * 100);
-       frameLoader.sendCrossProcessMouseEvent("mousedown", x, y, 0, 1, 0);
-       frameLoader.sendCrossProcessMouseEvent("mouseup", x, y, 0, 1, 0);
-     }
-
     function openWindow() {
       window.open('chrome://global/content/test-ipc.xhtml', '_blank', 'chrome,resizable,width=800,height=800');
     }
@@ -236,7 +225,6 @@
   </toolbar>
   <toolbar>
     <toolbarbutton onclick="restart()" label="Recover"/>
-    <toolbarbutton onclick="randomClick()" label="random click"/>
     <toolbarbutton onclick="messageSpeed()" label="test message handling speed"/>
     <toolbarbutton onclick="listenerAddRemove()" label="test listener add/remove"/>
     <toolbarbutton onclick="enableMozAfterPaint()" label="MozAfterPaint"/>

@@ -42,6 +42,7 @@ impl StatementGraph {
                 S::Break => "Break",       //TODO: loop context
                 S::Continue => "Continue", //TODO: loop context
                 S::Kill => "Kill",         //TODO: link to the beginning
+                S::Barrier(_flags) => "Barrier",
                 S::Block(ref b) => {
                     let other = self.add(b);
                     self.flow.push((id, other, ""));
@@ -187,6 +188,17 @@ fn write_fun(
                 edges.insert("value", value);
                 (Cow::Owned(format!("Splat{:?}", size)), 3)
             }
+            E::Swizzle {
+                size,
+                vector,
+                pattern,
+            } => {
+                edges.insert("vector", vector);
+                (
+                    Cow::Owned(format!("Swizzle{:?}", &pattern[..size as usize])),
+                    3,
+                )
+            }
             E::Compose { ref components, .. } => {
                 payload = Some(Payload::Arguments(components));
                 (Cow::Borrowed("Compose"), 3)
@@ -314,9 +326,12 @@ fn write_fun(
                 expr,
                 convert,
             } => {
-                let fun = if convert { "Convert" } else { "Cast" };
                 edges.insert("", expr);
-                (Cow::Owned(format!("{}<{:?}>", fun, kind)), 3)
+                let string = match convert {
+                    Some(width) => format!("Convert<{:?},{}>", kind, width),
+                    None => format!("Bitcast<{:?}>", kind),
+                };
+                (Cow::Owned(string), 3)
             }
             E::Call(_function) => (Cow::Borrowed("Call"), 4),
             E::ArrayLength(expr) => {

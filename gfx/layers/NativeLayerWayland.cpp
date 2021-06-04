@@ -4,6 +4,7 @@
 
 #include "mozilla/layers/NativeLayerWayland.h"
 
+#include <dlfcn.h>
 #include <utility>
 #include <algorithm>
 
@@ -228,15 +229,6 @@ void NativeLayerRootWayland::SetLayers(
                            wl_fixed_from_double(bufferClip.width),
                            wl_fixed_from_double(bufferClip.height));
 
-    wl_compositor* compositor = widget::WaylandDisplayGet()->GetCompositor();
-    struct wl_region* region = wl_compositor_create_region(compositor);
-    if (layer->mIsOpaque &&
-        StaticPrefs::widget_wayland_opaque_region_enabled_AtStartup()) {
-      wl_region_add(region, 0, 0, INT32_MAX, INT32_MAX);
-    }
-    wl_surface_set_opaque_region(nativeSurface->mWlSurface, region);
-    wl_region_destroy(region);
-
     if (previousSurface) {
       wl_subsurface_place_above(nativeSurface->mWlSubsurface, previousSurface);
       previousSurface = nativeSurface->mWlSurface;
@@ -248,6 +240,105 @@ void NativeLayerRootWayland::SetLayers(
       }
       previousSurface = nativeSurface->mWlSurface;
     }
+  }
+
+  nsCOMPtr<nsIRunnable> updateLayersRunnable = NewRunnableMethod<>(
+      "layers::NativeLayerRootWayland::UpdateLayersOnMainThread", this,
+      &NativeLayerRootWayland::UpdateLayersOnMainThread);
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThreadQueue(
+      updateLayersRunnable.forget(), EventQueuePriority::Normal));
+}
+
+static void sAfterFrameClockAfterPaint(
+    GdkFrameClock* aClock, NativeLayerRootWayland* aNativeLayerRoot) {
+  aNativeLayerRoot->AfterFrameClockAfterPaint();
+}
+
+void NativeLayerRootWayland::AfterFrameClockAfterPaint() {
+  MutexAutoLock lock(mMutex);
+  wl_surface* containerSurface = moz_container_wayland_surface_lock(mContainer);
+
+  for (const RefPtr<NativeLayerWayland>& layer : mSublayersOnMainThread) {
+    wl_surface_commit(layer->mNativeSurface->mWlSurface);
+  }
+  if (containerSurface) {
+    wl_surface_commit(containerSurface);
+    moz_container_wayland_surface_unlock(mContainer, &containerSurface);
+  }
+
+  wl_display_flush(widget::WaylandDisplayGet()->GetDisplay());
+}
+
+void NativeLayerRootWayland::UpdateLayersOnMainThread() {
+  AssertIsOnMainThread();
+  MutexAutoLock lock(mMutex);
+
+  if (!mCompositorRunning) {
+    return;
+  }
+
+  static auto sGdkWaylandWindowAddCallbackSurface =
+      (void (*)(GdkWindow*, struct wl_surface*))dlsym(
+          RTLD_DEFAULT, "gdk_wayland_window_add_frame_callback_surface");
+  static auto sGdkWaylandWindowRemoveCallbackSurface =
+      (void (*)(GdkWindow*, struct wl_surface*))dlsym(
+          RTLD_DEFAULT, "gdk_wayland_window_remove_frame_callback_surface");
+
+  GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mContainer));
+  wl_surface* containerSurface = moz_container_wayland_surface_lock(mContainer);
+
+  mSublayersOnMainThread.RemoveElementsBy([&](const auto& layer) {
+    if (!mSublayers.Contains(layer)) {
+      if (layer->IsOpaque() &&
+          StaticPrefs::widget_wayland_opaque_region_enabled_AtStartup() &&
+          sGdkWaylandWindowAddCallbackSurface && gdkWindow) {
+        wl_surface* layerSurface = layer->mNativeSurface->mWlSurface;
+
+        sGdkWaylandWindowRemoveCallbackSurface(gdkWindow, layerSurface);
+
+        wl_compositor* compositor =
+            widget::WaylandDisplayGet()->GetCompositor();
+        wl_region* region = wl_compositor_create_region(compositor);
+        wl_surface_set_opaque_region(layerSurface, region);
+        wl_region_destroy(region);
+        wl_surface_commit(layerSurface);
+      }
+      return true;
+    }
+    return false;
+  });
+
+  for (const RefPtr<NativeLayerWayland>& layer : mSublayers) {
+    if (!mSublayersOnMainThread.Contains(layer)) {
+      if (layer->IsOpaque() &&
+          StaticPrefs::widget_wayland_opaque_region_enabled_AtStartup() &&
+          sGdkWaylandWindowRemoveCallbackSurface && gdkWindow) {
+        wl_surface* layerSurface = layer->mNativeSurface->mWlSurface;
+
+        sGdkWaylandWindowAddCallbackSurface(gdkWindow, layerSurface);
+
+        wl_compositor* compositor =
+            widget::WaylandDisplayGet()->GetCompositor();
+        wl_region* region = wl_compositor_create_region(compositor);
+        wl_region_add(region, 0, 0, INT32_MAX, INT32_MAX);
+        wl_surface_set_opaque_region(layerSurface, region);
+        wl_region_destroy(region);
+        wl_surface_commit(layerSurface);
+      }
+      mSublayersOnMainThread.AppendElement(layer);
+    }
+  }
+
+  if (containerSurface) {
+    wl_surface_commit(containerSurface);
+    moz_container_wayland_surface_unlock(mContainer, &containerSurface);
+  }
+
+  GdkFrameClock* frame_clock = gdk_window_get_frame_clock(gdkWindow);
+  if (!mGdkAfterPaintId) {
+    mGdkAfterPaintId =
+        g_signal_connect_after(frame_clock, "after-paint",
+                               G_CALLBACK(sAfterFrameClockAfterPaint), this);
   }
 }
 
@@ -279,6 +370,8 @@ bool NativeLayerRootWayland::CommitToScreen() {
     moz_container_wayland_surface_unlock(mContainer, &wlSurface);
   }
 
+  wl_display_flush(widget::WaylandDisplayGet()->GetDisplay());
+
   EnsureSurfaceInitialized();
   return true;
 }
@@ -290,10 +383,16 @@ void NativeLayerRootWayland::PauseCompositor() {
     UnmapLayer(layer);
   }
 
+  mCompositorRunning = false;
   mShmBuffer = nullptr;
 }
 
-bool NativeLayerRootWayland::ResumeCompositor() { return true; }
+bool NativeLayerRootWayland::ResumeCompositor() {
+  MutexAutoLock lock(mMutex);
+
+  mCompositorRunning = true;
+  return true;
+}
 
 UniquePtr<NativeLayerRootSnapshotter>
 NativeLayerRootWayland::CreateSnapshotter() {

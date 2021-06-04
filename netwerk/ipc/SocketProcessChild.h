@@ -56,6 +56,10 @@ class SocketProcessChild final
       Endpoint<mozilla::net::PSocketProcessBridgeParent>&& aEndpoint);
   mozilla::ipc::IPCResult RecvInitProfiler(
       Endpoint<mozilla::PProfilerChild>&& aEndpoint);
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+  mozilla::ipc::IPCResult RecvInitSandboxTesting(
+      Endpoint<PSandboxTestingChild>&& aEndpoint);
+#endif
   mozilla::ipc::IPCResult RecvSocketProcessTelemetryPing();
 
   PWebrtcTCPSocketChild* AllocPWebrtcTCPSocketChild(const Maybe<TabId>& tabId);

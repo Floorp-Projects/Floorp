@@ -2811,29 +2811,108 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
             assert_eq!(size % 4, 0, "Buffer sub range size must be multiple of 4");
         }
 
-        let mut desc: d3d11::D3D11_UNORDERED_ACCESS_VIEW_DESC = mem::zeroed();
-        desc.Format = dxgiformat::DXGI_FORMAT_R32_TYPELESS;
-        desc.ViewDimension = d3d11::D3D11_UAV_DIMENSION_BUFFER;
-        *desc.u.Buffer_mut() = d3d11::D3D11_BUFFER_UAV {
-            FirstElement: sub.offset as u32 / 4,
-            NumElements: sub.size.unwrap_or(buffer.requirements.size) as u32 / 4,
-            Flags: d3d11::D3D11_BUFFER_UAV_FLAG_RAW,
-        };
+        // TODO: expose this requirement to the user to enable avoiding the unaligned fill for
+        // performance
+        // FirstElement must be a multiple of 4 (since each element is 4 bytes and the
+        // offset needs to be a multiple of 16 bytes)
+        let element_offset = sub.offset as u32 / 4;
+        let num_elements = sub.size.unwrap_or(buffer.requirements.size) as u32 / 4;
 
-        let mut uav: *mut d3d11::ID3D11UnorderedAccessView = ptr::null_mut();
-        let hr = device.CreateUnorderedAccessView(
-            buffer.internal.raw as *mut _,
-            &desc,
-            &mut uav as *mut *mut _ as *mut *mut _,
-        );
-        let uav = ComPtr::from_raw(uav);
-
-        if !winerror::SUCCEEDED(hr) {
-            panic!("fill_buffer failed to make UAV failed: 0x{:x}", hr);
+        fn up_align(x: u32, alignment: u32) -> u32 {
+            (x + alignment - 1) & !(alignment - 1)
         }
 
-        self.context
-            .ClearUnorderedAccessViewUint(uav.as_raw(), &[data; 4]);
+        let aligned_element_offset = up_align(element_offset, 4);
+        let unaligned_num_elements = (aligned_element_offset - element_offset).min(num_elements);
+        let aligned_num_elements = num_elements - unaligned_num_elements;
+
+        // Use ClearUnorderedAccessViewUint to fill from the 16 byte aligned offset
+        if aligned_num_elements > 0 {
+            let mut desc: d3d11::D3D11_UNORDERED_ACCESS_VIEW_DESC = mem::zeroed();
+            desc.Format = dxgiformat::DXGI_FORMAT_R32_TYPELESS;
+            desc.ViewDimension = d3d11::D3D11_UAV_DIMENSION_BUFFER;
+            *desc.u.Buffer_mut() = d3d11::D3D11_BUFFER_UAV {
+                FirstElement: aligned_element_offset,
+                NumElements: aligned_num_elements,
+                Flags: d3d11::D3D11_BUFFER_UAV_FLAG_RAW,
+            };
+
+            let mut uav: *mut d3d11::ID3D11UnorderedAccessView = ptr::null_mut();
+            let hr = device.CreateUnorderedAccessView(
+                buffer.internal.raw as *mut _,
+                &desc,
+                &mut uav as *mut *mut _ as *mut *mut _,
+            );
+
+            if !winerror::SUCCEEDED(hr) {
+                panic!("fill_buffer failed to make UAV failed: 0x{:x}", hr);
+            }
+
+            let uav = ComPtr::from_raw(uav);
+
+            self.context
+                .ClearUnorderedAccessViewUint(uav.as_raw(), &[data; 4]);
+        }
+
+        // If there is unaligned portion at the beginning of the sub region
+        // create a new buffer with the fill data to copy into this region
+        if unaligned_num_elements > 0 {
+            debug_assert!(
+                unaligned_num_elements < 4,
+                "The number of unaligned elements is {} but it should be less than 4",
+                unaligned_num_elements
+            );
+
+            let initial_data = [data; 4];
+
+            let initial_data = d3d11::D3D11_SUBRESOURCE_DATA {
+                pSysMem: initial_data.as_ptr() as *const _,
+                SysMemPitch: 0,
+                SysMemSlicePitch: 0,
+            };
+
+            // TODO: consider using a persistent buffer like the working_buffer
+            let desc = d3d11::D3D11_BUFFER_DESC {
+                ByteWidth: core::mem::size_of_val(&initial_data) as _,
+                Usage: d3d11::D3D11_USAGE_DEFAULT,
+                BindFlags: 0,
+                CPUAccessFlags: 0,
+                MiscFlags: 0,
+                StructureByteStride: 0,
+            };
+            let mut temp_buffer = ptr::null_mut::<d3d11::ID3D11Buffer>();
+
+            assert_eq!(
+                winerror::S_OK,
+                device.CreateBuffer(
+                    &desc,
+                    &initial_data,
+                    &mut temp_buffer as *mut *mut _ as *mut *mut _,
+                )
+            );
+
+            let temp_buffer = ComPtr::from_raw(temp_buffer);
+
+            let src_box = d3d11::D3D11_BOX {
+                left: 0,
+                top: 0,
+                front: 0,
+                right: (unaligned_num_elements * core::mem::size_of::<u32>() as u32) as _,
+                bottom: 1,
+                back: 1,
+            };
+
+            self.context.CopySubresourceRegion(
+                buffer.internal.raw as _,
+                0,
+                sub.offset as _, // offset in bytes
+                0,
+                0,
+                temp_buffer.as_raw() as _,
+                0,
+                &src_box,
+            );
+        }
     }
 
     unsafe fn update_buffer(&mut self, _buffer: &Buffer, _offset: buffer::Offset, _data: &[u8]) {
@@ -2849,7 +2928,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         }
 
         for info in regions {
-            let dst_box = d3d11::D3D11_BOX {
+            let src_box = d3d11::D3D11_BOX {
                 left: info.src as _,
                 top: 0,
                 front: 0,
@@ -2866,7 +2945,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
                 0,
                 src.internal.raw as _,
                 0,
-                &dst_box,
+                &src_box,
             );
 
             if let Some(disjoint_cb) = dst.internal.disjoint_cb {
@@ -2878,7 +2957,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
                     0,
                     src.internal.raw as _,
                     0,
-                    &dst_box,
+                    &src_box,
                 );
             }
         }

@@ -21,8 +21,7 @@
 }
 } /** END not Proton **/
 
-@media (-moz-proton-contextmenus) {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-windows-non-native-menus) {
   :host,
   :root {
     /* Override some menu color variables for light browser themes. */
@@ -72,7 +71,6 @@
       --menu-icon-opacity: var(--dark-menu-icon-opacity);
     }
   }
-}
 }
 
 @media (prefers-contrast) {
