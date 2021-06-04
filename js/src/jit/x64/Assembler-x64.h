@@ -933,6 +933,9 @@ class Assembler : public AssemblerX86Shared {
     masm.popcntq_rr(src.encoding(), dest.encoding());
   }
 
+  void imulq(Imm32 imm, Register src, Register dest) {
+    masm.imulq_ir(imm.value, src.encoding(), dest.encoding());
+  }
   void imulq(Register src, Register dest) {
     masm.imulq_rr(src.encoding(), dest.encoding());
   }

@@ -139,9 +139,7 @@ let quint64 = `(module
 codegenTestX64_adhoc(
     quint64,
     'f',
-    // Bad code generation, 
-    `41 bb 05 00 00 00         mov \\$0x05, %r11d
-     49 0f af c3               imul %r11, %rax`, {no_prefix:true});
+    `48 6b c0 05               imul \\$0x05, %rax, %rax`, {no_prefix:true})
 assertEq(wasmEvalText(quint64).exports.f(-37000000000n), -37000000000n*5n)
 assertEq(wasmEvalText(quint64).exports.f(42000000000n), 42000000000n*5n)
 
