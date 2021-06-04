@@ -24,6 +24,7 @@
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
     locale/browser/customizableui/customizableWidgets.properties (%chrome/browser/customizableui/customizableWidgets.properties)
     locale/browser/uiDensity.properties            (%chrome/browser/uiDensity.properties)
+    locale/browser/pocket.properties               (%chrome/browser/pocket.properties)
     locale/browser/search.properties               (%chrome/browser/search.properties)
     locale/browser/siteData.properties             (%chrome/browser/siteData.properties)
     locale/browser/sitePermissions.properties      (%chrome/browser/sitePermissions.properties)

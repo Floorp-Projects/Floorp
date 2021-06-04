@@ -15,6 +15,7 @@ var PKT_PANEL_OVERLAY = function(options) {
   this.savedItemId = 0;
   this.savedUrl = "";
   this.premiumStatus = false;
+  this.dictJSON = {};
   this.userTags = [];
   this.tagsDropdownOpen = false;
   this.fxasignedin = false;
@@ -185,9 +186,7 @@ var PKT_PANEL_OVERLAY = function(options) {
         const text = item.name;
         if ($.trim(text).length > 25 || !$.trim(text).length) {
           if (text.length > 25) {
-            myself.showTagsLocalizedError(
-              "pocket-panel-saved-error-tag-length"
-            );
+            myself.showTagsError(myself.dictJSON.maxtaglength);
             this.changestamp = Date.now();
             setTimeout(function() {
               $(".token-input-input-token input")
@@ -208,12 +207,7 @@ var PKT_PANEL_OVERLAY = function(options) {
         $(".token-input-dropdown").addClass("token-input-dropdown-tag");
         inputwrapper
           .find(".token-input-input-token input")
-          // The token input does so element copy magic, but doesn't copy over l10n ids.
-          // So we do it manually here.
-          .attr(
-            "data-l10n-id",
-            inputwrapper.find(".pkt_ext_tag_input").attr("data-l10n-id")
-          )
+          .attr("placeholder", $(".tag-input").attr("placeholder"))
           .css("width", "200px");
         if ($(".pkt_ext_suggestedtag_detail").length) {
           $(".pkt_ext_containersaved")
@@ -354,10 +348,9 @@ var PKT_PANEL_OVERLAY = function(options) {
 
       myself.disableInput();
 
-      document.l10n.setAttributes(
-        document.querySelector(`.pkt_ext_containersaved .pkt_ext_detail h2`),
-        "pocket-panel-saved-processing-tags"
-      );
+      document.querySelector(
+        `.pkt_ext_containersaved .pkt_ext_detail h2`
+      ).textContent = myself.dictJSON.processingtags;
 
       let originaltags = [];
 
@@ -379,7 +372,7 @@ var PKT_PANEL_OVERLAY = function(options) {
           const { data } = resp;
 
           if (data.status == "success") {
-            myself.showStateFinalLocalizedMsg("pocket-panel-saved-tags-saved");
+            myself.showStateFinalMsg(myself.dictJSON.tagssaved);
           } else if (data.status == "error") {
             let elEditMsg = document.querySelector(`.pkt_ext_edit_msg`);
 
@@ -407,13 +400,9 @@ var PKT_PANEL_OVERLAY = function(options) {
         if (e.target.classList.contains(`pkt_ext_removeitem`)) {
           e.preventDefault();
           myself.disableInput();
-
-          document.l10n.setAttributes(
-            document.querySelector(
-              `.pkt_ext_containersaved .pkt_ext_detail h2`
-            ),
-            "pocket-panel-saved-processing-remove"
-          );
+          document.querySelector(
+            `.pkt_ext_containersaved .pkt_ext_detail h2`
+          ).textContent = myself.dictJSON.processingremove;
 
           thePKT_PANEL.sendMessage(
             "PKT_deleteItem",
@@ -423,9 +412,7 @@ var PKT_PANEL_OVERLAY = function(options) {
             function(resp) {
               const { data } = resp;
               if (data.status == "success") {
-                myself.showStateFinalLocalizedMsg(
-                  "pocket-panel-saved-page-removed"
-                );
+                myself.showStateFinalMsg(myself.dictJSON.pageremoved);
               } else if (data.status == "error") {
                 let elEditMsg = document.querySelector(`.pkt_ext_edit_msg`);
 
@@ -453,20 +440,16 @@ var PKT_PANEL_OVERLAY = function(options) {
         });
       });
   };
-
-  this.showTagsLocalizedError = function(l10nId) {
+  this.showTagsError = function(msg) {
     document
       .querySelector(`.pkt_ext_edit_msg`)
       ?.classList.add(`pkt_ext_edit_msg_error`, `pkt_ext_edit_msg_active`);
-    document.l10n.setAttributes(
-      document.querySelector(`.pkt_ext_edit_msg`),
-      l10nId
-    );
+    document.querySelector(`.pkt_ext_edit_msg`).textContent = msg;
     document
       .querySelector(`.pkt_ext_tag_detail`)
       ?.classList.add(`pkt_ext_tag_error`);
   };
-  this.hideTagsError = function() {
+  this.hideTagsError = function(msg) {
     document
       .querySelector(`.pkt_ext_edit_msg`)
       ?.classList.remove(`pkt_ext_edit_msg_error`, `pkt_ext_edit_msg_active`);
@@ -518,13 +501,13 @@ var PKT_PANEL_OVERLAY = function(options) {
     });
   };
   this.showStateSaved = function(initobj) {
-    document.l10n.setAttributes(
-      document.querySelector(".pkt_ext_detail h2"),
-      "pocket-panel-saved-page-saved"
-    );
+    document.querySelector(
+      `.pkt_ext_detail h2`
+    ).textContent = this.dictJSON.pagesaved;
     document
       .querySelector(`.pkt_ext_btn`)
       .classList.add(`pkt_ext_btn_disabled`);
+
     if (typeof initobj.item == "object") {
       this.savedItemId = initobj.item.item_id;
       this.savedUrl = initobj.item.given_url;
@@ -617,18 +600,15 @@ var PKT_PANEL_OVERLAY = function(options) {
       return sanitizeMap[str];
     });
   };
-  this.showStateFinalLocalizedMsg = function(l10nId) {
+  this.showStateFinalMsg = function(msg) {
     document
       .querySelector(`.pkt_ext_containersaved .pkt_ext_tag_detail`)
       .addEventListener(
         `transitionend`,
         () => {
-          document.l10n.setAttributes(
-            document.querySelector(
-              `.pkt_ext_containersaved .pkt_ext_detail h2`
-            ),
-            l10nId
-          );
+          document.querySelector(
+            `.pkt_ext_containersaved .pkt_ext_detail h2`
+          ).textContent = msg;
         },
         {
           once: true,
@@ -639,16 +619,14 @@ var PKT_PANEL_OVERLAY = function(options) {
       .querySelector(`.pkt_ext_containersaved`)
       .classList.add(`pkt_ext_container_finalstate`);
   };
-  this.showStateLocalizedError = function(headlineL10nId, detailL10nId) {
-    document.l10n.setAttributes(
-      document.querySelector(`.pkt_ext_containersaved .pkt_ext_detail h2`),
-      headlineL10nId
-    );
+  this.showStateError = function(headline, detail) {
+    document.querySelector(
+      `.pkt_ext_containersaved .pkt_ext_detail h2`
+    ).textContent = headline;
 
-    document.l10n.setAttributes(
-      document.querySelector(`.pkt_ext_containersaved .pkt_ext_detail h3`),
-      detailL10nId
-    );
+    document.querySelector(
+      `.pkt_ext_containersaved .pkt_ext_detail h3`
+    ).textContent = detail;
 
     document
       .querySelector(`.pkt_ext_containersaved`)
@@ -657,6 +635,9 @@ var PKT_PANEL_OVERLAY = function(options) {
         `pkt_ext_container_finalstate`,
         `pkt_ext_container_finalerrorstate`
       );
+  };
+  this.getTranslations = function() {
+    this.dictJSON = window.pocketStrings;
   };
 };
 
@@ -685,10 +666,11 @@ PKT_PANEL_OVERLAY.prototype = {
       this.locale = locale[1].toLowerCase();
     }
 
+    // set translations
+    this.getTranslations();
+
     // set host
-    const templateData = {
-      pockethost: this.pockethost,
-    };
+    this.dictJSON.pockethost = this.pockethost;
 
     // extra modifier class for language
     if (this.locale) {
@@ -704,7 +686,7 @@ PKT_PANEL_OVERLAY.prototype = {
       .querySelector(`body`)
       .append(
         parser.parseFromString(
-          Handlebars.templates.saved_shell(templateData),
+          Handlebars.templates.saved_shell(this.dictJSON),
           `text/html`
         ).documentElement
       );
@@ -717,7 +699,7 @@ PKT_PANEL_OVERLAY.prototype = {
       let elSubshell = document.querySelector(`body .pkt_ext_subshell`);
 
       let elPremiumShell = parser.parseFromString(
-        Handlebars.templates.saved_premiumshell(templateData),
+        Handlebars.templates.saved_premiumshell(this.dictJSON),
         `text/html`
       ).documentElement;
 
@@ -734,13 +716,24 @@ PKT_PANEL_OVERLAY.prototype = {
     thePKT_PANEL.addMessageListener("PKT_saveLink", function(resp) {
       const { data } = resp;
       if (data.status == "error") {
-        // Fallback to a generic catch all error.
-        let errorLocalizedKey =
-          data?.error?.localizedKey || "pocket-panel-saved-error-generic";
-        myself.showStateLocalizedError(
-          "pocket-panel-saved-error-not-saved",
-          errorLocalizedKey
-        );
+        if (typeof data.error == "object") {
+          if (data.error.localizedKey) {
+            myself.showStateError(
+              myself.dictJSON.pagenotsaved,
+              myself.dictJSON[data.error.localizedKey]
+            );
+          } else {
+            myself.showStateError(
+              myself.dictJSON.pagenotsaved,
+              data.error.message
+            );
+          }
+        } else {
+          myself.showStateError(
+            myself.dictJSON.pagenotsaved,
+            myself.dictJSON.errorgeneric
+          );
+        }
         return;
       }
 
