@@ -70,8 +70,8 @@ extern const char kProxyType_DIRECT[];
 // This structure is intended to be allocated on the stack
 struct nsProtocolInfo {
   nsAutoCString scheme;
-  uint32_t flags;
-  int32_t defaultPort;
+  uint32_t flags = 0;
+  int32_t defaultPort = 0;
 };
 
 //----------------------------------------------------------------------------
@@ -181,8 +181,8 @@ class nsAsyncResolveRequest final : public nsIRunnable,
     NS_DECL_NSIRUNNABLE
     NS_DECL_NSICANCELABLE
 
-    typedef std::function<nsresult(nsAsyncResolveRequest*, nsIProxyInfo*, bool)>
-        Callback;
+    using Callback =
+        std::function<nsresult(nsAsyncResolveRequest*, nsIProxyInfo*, bool)>;
 
     explicit AsyncApplyFilters(nsProtocolInfo& aInfo,
                                Callback const& aCallback);
@@ -197,7 +197,7 @@ class nsAsyncResolveRequest final : public nsIRunnable,
     nsresult AsyncProcess(nsAsyncResolveRequest* aRequest);
 
    private:
-    typedef nsProtocolProxyService::FilterLink FilterLink;
+    using FilterLink = nsProtocolProxyService::FilterLink;
 
     virtual ~AsyncApplyFilters();
     // Processes the next filter and loops until a filter is successfully
@@ -288,13 +288,14 @@ class nsAsyncResolveRequest final : public nsIRunnable,
   }
 
   nsresult DispatchCallback() {
-    if (mDispatched)  // Only need to dispatch once
+    if (mDispatched) {  // Only need to dispatch once
       return NS_OK;
+    }
 
     nsresult rv = NS_DispatchToCurrentThread(this);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
       NS_WARNING("unable to dispatch callback event");
-    else {
+    } else {
       mDispatched = true;
       return NS_OK;
     }
@@ -396,8 +397,9 @@ class nsAsyncResolveRequest final : public nsIRunnable,
                                                 mResolveFlags, true);
       }
 
-      if (NS_FAILED(rv))
+      if (NS_FAILED(rv)) {
         mCallback->OnProxyAvailable(this, mChannel, nullptr, rv);
+      }
 
       // do not call onproxyavailable() in SUCCESS case - the newRequest will
       // take care of that
@@ -712,9 +714,9 @@ static void proxy_GetStringPref(nsIPrefBranch* aPrefBranch, const char* aPref,
                                 nsCString& aResult) {
   nsAutoCString temp;
   nsresult rv = aPrefBranch->GetCharPref(aPref, temp);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     aResult.Truncate();
-  else {
+  } else {
     aResult.Assign(temp);
     // all of our string prefs are hostnames, so we should remove any
     // whitespace characters that the user might have unknowingly entered.
@@ -726,20 +728,22 @@ static void proxy_GetIntPref(nsIPrefBranch* aPrefBranch, const char* aPref,
                              int32_t& aResult) {
   int32_t temp;
   nsresult rv = aPrefBranch->GetIntPref(aPref, &temp);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     aResult = -1;
-  else
+  } else {
     aResult = temp;
+  }
 }
 
 static void proxy_GetBoolPref(nsIPrefBranch* aPrefBranch, const char* aPref,
                               bool& aResult) {
   bool temp;
   nsresult rv = aPrefBranch->GetBoolPref(aPref, &temp);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     aResult = false;
-  else
+  } else {
     aResult = temp;
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -992,37 +996,45 @@ void nsProtocolProxyService::PrefsChanged(nsIPrefBranch* prefBranch,
     }
   }
 
-  if (!pref || !strcmp(pref, PROXY_PREF("http")))
+  if (!pref || !strcmp(pref, PROXY_PREF("http"))) {
     proxy_GetStringPref(prefBranch, PROXY_PREF("http"), mHTTPProxyHost);
+  }
 
-  if (!pref || !strcmp(pref, PROXY_PREF("http_port")))
+  if (!pref || !strcmp(pref, PROXY_PREF("http_port"))) {
     proxy_GetIntPref(prefBranch, PROXY_PREF("http_port"), mHTTPProxyPort);
+  }
 
-  if (!pref || !strcmp(pref, PROXY_PREF("ssl")))
+  if (!pref || !strcmp(pref, PROXY_PREF("ssl"))) {
     proxy_GetStringPref(prefBranch, PROXY_PREF("ssl"), mHTTPSProxyHost);
+  }
 
-  if (!pref || !strcmp(pref, PROXY_PREF("ssl_port")))
+  if (!pref || !strcmp(pref, PROXY_PREF("ssl_port"))) {
     proxy_GetIntPref(prefBranch, PROXY_PREF("ssl_port"), mHTTPSProxyPort);
+  }
 
-  if (!pref || !strcmp(pref, PROXY_PREF("socks")))
+  if (!pref || !strcmp(pref, PROXY_PREF("socks"))) {
     proxy_GetStringPref(prefBranch, PROXY_PREF("socks"), mSOCKSProxyTarget);
+  }
 
-  if (!pref || !strcmp(pref, PROXY_PREF("socks_port")))
+  if (!pref || !strcmp(pref, PROXY_PREF("socks_port"))) {
     proxy_GetIntPref(prefBranch, PROXY_PREF("socks_port"), mSOCKSProxyPort);
+  }
 
   if (!pref || !strcmp(pref, PROXY_PREF("socks_version"))) {
     int32_t version;
     proxy_GetIntPref(prefBranch, PROXY_PREF("socks_version"), version);
     // make sure this preference value remains sane
-    if (version == 5)
+    if (version == 5) {
       mSOCKSProxyVersion = 5;
-    else
+    } else {
       mSOCKSProxyVersion = 4;
+    }
   }
 
-  if (!pref || !strcmp(pref, PROXY_PREF("socks_remote_dns")))
+  if (!pref || !strcmp(pref, PROXY_PREF("socks_remote_dns"))) {
     proxy_GetBoolPref(prefBranch, PROXY_PREF("socks_remote_dns"),
                       mSOCKSProxyRemoteDNS);
+  }
 
   if (!pref || !strcmp(pref, PROXY_PREF("proxy_over_tls"))) {
     proxy_GetBoolPref(prefBranch, PROXY_PREF("proxy_over_tls"), mProxyOverTLS);
@@ -1034,9 +1046,10 @@ void nsProtocolProxyService::PrefsChanged(nsIPrefBranch* prefBranch,
     reloadPAC = reloadPAC || mProxyConfig == PROXYCONFIG_WPAD;
   }
 
-  if (!pref || !strcmp(pref, PROXY_PREF("failover_timeout")))
+  if (!pref || !strcmp(pref, PROXY_PREF("failover_timeout"))) {
     proxy_GetIntPref(prefBranch, PROXY_PREF("failover_timeout"),
                      mFailedProxyTimeout);
+  }
 
   if (!pref || !strcmp(pref, PROXY_PREF("no_proxies_on"))) {
     rv = prefBranch->GetCharPref(PROXY_PREF("no_proxies_on"), tempString);
@@ -1046,8 +1059,9 @@ void nsProtocolProxyService::PrefsChanged(nsIPrefBranch* prefBranch,
   // We're done if not using something that could give us a PAC URL
   // (PAC, WPAD or System)
   if (mProxyConfig != PROXYCONFIG_PAC && mProxyConfig != PROXYCONFIG_WPAD &&
-      mProxyConfig != PROXYCONFIG_SYSTEM)
+      mProxyConfig != PROXYCONFIG_SYSTEM) {
     return;
+  }
 
   // OK, we need to reload the PAC file if:
   //  1) network.proxy.type changed, or
@@ -1131,8 +1145,9 @@ bool nsProtocolProxyService::CanUseProxy(nsIURI* aURI, int32_t defaultPort) {
       proxy_MaskIPv6Addr(masked, hinfo->ip.mask_len);
 
       // check for a match
-      if (memcmp(&masked, &hinfo->ip.addr, sizeof(PRIPv6Addr)) == 0)
+      if (memcmp(&masked, &hinfo->ip.addr, sizeof(PRIPv6Addr)) == 0) {
         return false;  // proxy disallowed
+      }
     } else {
       uint32_t host_len = host.Length();
       uint32_t filter_host_len = hinfo->name.host_len;
@@ -1225,14 +1240,15 @@ const char* nsProtocolProxyService::ExtractProxyInfo(const char* start,
       }
       break;
     case 6:
-      if (nsCRT::strncasecmp(start, kProxyType_DIRECT, 6) == 0)
+      if (nsCRT::strncasecmp(start, kProxyType_DIRECT, 6) == 0) {
         type = kProxyType_DIRECT;
-      else if (nsCRT::strncasecmp(start, kProxyType_SOCKS4, 6) == 0)
+      } else if (nsCRT::strncasecmp(start, kProxyType_SOCKS4, 6) == 0) {
         type = kProxyType_SOCKS4;
-      else if (nsCRT::strncasecmp(start, kProxyType_SOCKS5, 6) == 0)
+      } else if (nsCRT::strncasecmp(start, kProxyType_SOCKS5, 6) == 0) {
         // map "SOCKS5" to "socks" to match contract-id of registered
         // SOCKS-v5 socket provider.
         type = kProxyType_SOCKS;
+      }
       break;
   }
   if (type) {
@@ -1241,8 +1257,9 @@ const char* nsProtocolProxyService::ExtractProxyInfo(const char* start,
     // If it's a SOCKS5 proxy, do name resolution on the server side.
     // We could use this with SOCKS4a servers too, but they might not
     // support it.
-    if (type == kProxyType_SOCKS || mSOCKSProxyRemoteDNS)
+    if (type == kProxyType_SOCKS || mSOCKSProxyRemoteDNS) {
       flags |= nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST;
+    }
 
     // extract host:port
     start = sp;
@@ -1441,8 +1458,9 @@ void nsProtocolProxyService::ProcessPACString(const nsCString& pacString,
       if (last) {
         NS_ASSERTION(last->mNext == nullptr, "leaking nsProxyInfo");
         last->mNext = pi;
-      } else
+      } else {
         first = pi;
+      }
       last = pi;
     }
   }
@@ -1460,9 +1478,9 @@ nsProtocolProxyService::ReloadPAC() {
   if (NS_FAILED(rv)) return NS_OK;
 
   nsAutoCString pacSpec;
-  if (type == PROXYCONFIG_PAC)
+  if (type == PROXYCONFIG_PAC) {
     prefs->GetCharPref(PROXY_PREF("autoconfig_url"), pacSpec);
-  else if (type == PROXYCONFIG_SYSTEM) {
+  } else if (type == PROXYCONFIG_SYSTEM) {
     if (mSystemProxySettings) {
       AsyncConfigureFromPAC(true, true);
     } else {
@@ -1470,8 +1488,9 @@ nsProtocolProxyService::ReloadPAC() {
     }
   }
 
-  if (!pacSpec.IsEmpty() || type == PROXYCONFIG_WPAD)
+  if (!pacSpec.IsEmpty() || type == PROXYCONFIG_WPAD) {
     ConfigureFromPAC(pacSpec, true);
+  }
   return NS_OK;
 }
 
@@ -1672,8 +1691,9 @@ nsProtocolProxyService::GetFailoverForProxy(nsIProxyInfo* aProxy, nsIURI* aURI,
   // We only support failover when a PAC file is configured, either
   // directly or via system settings
   if (mProxyConfig != PROXYCONFIG_PAC && mProxyConfig != PROXYCONFIG_WPAD &&
-      mProxyConfig != PROXYCONFIG_SYSTEM)
+      mProxyConfig != PROXYCONFIG_SYSTEM) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   // Verify that |aProxy| is one of our nsProxyInfo objects.
   nsCOMPtr<nsProxyInfo> pi = do_QueryInterface(aProxy);
@@ -1699,7 +1719,7 @@ nsProtocolProxyService::GetFailoverForProxy(nsIProxyInfo* aProxy, nsIURI* aURI,
 namespace {  // anon
 
 class ProxyFilterPositionComparator {
-  typedef RefPtr<nsProtocolProxyService::FilterLink> FilterLinkRef;
+  using FilterLinkRef = RefPtr<nsProtocolProxyService::FilterLink>;
 
  public:
   bool Equals(const FilterLinkRef& a, const FilterLinkRef& b) const {
@@ -1711,7 +1731,7 @@ class ProxyFilterPositionComparator {
 };
 
 class ProxyFilterObjectComparator {
-  typedef RefPtr<nsProtocolProxyService::FilterLink> FilterLinkRef;
+  using FilterLinkRef = RefPtr<nsProtocolProxyService::FilterLink>;
 
  public:
   bool Equals(const FilterLinkRef& link, const nsISupports* obj) const {
@@ -2054,8 +2074,9 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
   *usePACThread = false;
   *result = nullptr;
 
-  if (!(info.flags & nsIProtocolHandler::ALLOWS_PROXY))
+  if (!(info.flags & nsIProtocolHandler::ALLOWS_PROXY)) {
     return NS_OK;  // Can't proxy this (filters may not override)
+  }
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = GetProxyURI(channel, getter_AddRefs(uri));
@@ -2069,8 +2090,9 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
   // if proxies are enabled and this host:port combo is supposed to use a
   // proxy, check for a proxy.
   if ((mProxyConfig == PROXYCONFIG_DIRECT) ||
-      !CanUseProxy(uri, info.defaultPort))
+      !CanUseProxy(uri, info.defaultPort)) {
     return NS_OK;
+  }
 
   bool mainThreadOnly;
   if (mSystemProxySettings && mProxyConfig == PROXYCONFIG_SYSTEM &&
@@ -2156,8 +2178,9 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
   // proxy, check for a proxy.
   if (mProxyConfig == PROXYCONFIG_DIRECT ||
       (mProxyConfig == PROXYCONFIG_MANUAL &&
-       !CanUseProxy(uri, info.defaultPort)))
+       !CanUseProxy(uri, info.defaultPort))) {
     return NS_OK;
+  }
 
   // Proxy auto config magic...
   if (mProxyConfig == PROXYCONFIG_PAC || mProxyConfig == PROXYCONFIG_WPAD) {
@@ -2180,13 +2203,15 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
   if ((flags & RESOLVE_PREFER_SOCKS_PROXY) && !mSOCKSProxyTarget.IsEmpty() &&
       (IsHostLocalTarget(mSOCKSProxyTarget) || mSOCKSProxyPort > 0)) {
     host = &mSOCKSProxyTarget;
-    if (mSOCKSProxyVersion == 4)
+    if (mSOCKSProxyVersion == 4) {
       type = kProxyType_SOCKS4;
-    else
+    } else {
       type = kProxyType_SOCKS;
+    }
     port = mSOCKSProxyPort;
-    if (mSOCKSProxyRemoteDNS)
+    if (mSOCKSProxyRemoteDNS) {
       proxyFlags |= nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST;
+    }
   } else if ((flags & RESOLVE_PREFER_HTTPS_PROXY) &&
              !mHTTPSProxyHost.IsEmpty() && mHTTPSProxyPort > 0) {
     host = &mHTTPSProxyHost;
@@ -2207,13 +2232,15 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
   } else if (!mSOCKSProxyTarget.IsEmpty() &&
              (IsHostLocalTarget(mSOCKSProxyTarget) || mSOCKSProxyPort > 0)) {
     host = &mSOCKSProxyTarget;
-    if (mSOCKSProxyVersion == 4)
+    if (mSOCKSProxyVersion == 4) {
       type = kProxyType_SOCKS4;
-    else
+    } else {
       type = kProxyType_SOCKS;
+    }
     port = mSOCKSProxyPort;
-    if (mSOCKSProxyRemoteDNS)
+    if (mSOCKSProxyRemoteDNS) {
       proxyFlags |= nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST;
+    }
   }
 
   if (type) {
@@ -2304,10 +2331,11 @@ void nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo& info,
       if ((iter->Type() == kProxyType_HTTP) ||
           (iter->Type() == kProxyType_HTTPS)) {
         // reject!
-        if (last)
+        if (last) {
           last->mNext = iter->mNext;
-        else
+        } else {
           head = iter->mNext;
+        }
         nsProxyInfo* next = iter->mNext;
         iter->mNext = nullptr;
         iter->Release();
@@ -2347,10 +2375,11 @@ void nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo& info,
         nsProxyInfo* reject = iter;
 
         iter = iter->mNext;
-        if (last)
+        if (last) {
           last->mNext = iter;
-        else
+        } else {
           head = iter;
+        }
 
         reject->mNext = nullptr;
         NS_RELEASE(reject);
@@ -2371,8 +2400,9 @@ void nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo& info,
   }
 
   // if only DIRECT was specified then return no proxy info, and we're done.
-  if (head && !head->mNext && head->mType == kProxyType_DIRECT)
+  if (head && !head->mNext && head->mType == kProxyType_DIRECT) {
     NS_RELEASE(head);
+  }
 
   *list = head;  // Transfer ownership
 

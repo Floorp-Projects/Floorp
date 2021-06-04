@@ -138,7 +138,7 @@ bool WebSocketFrameData::ReadIPCParams(const IPC::Message* aMessage,
     if (!ReadParam(aMessage, aIter, &bit)) { \
       return false;                          \
     }                                        \
-    x = bit;                                 \
+    (x) = bit;                               \
   }
 
   ReadParamHelper(mFinBit);

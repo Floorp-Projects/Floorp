@@ -84,8 +84,9 @@ nsUnknownDecoder::nsUnknownDecoder()
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
     bool val;
-    if (NS_SUCCEEDED(prefs->GetBoolPref("security.requireHTMLsuffix", &val)))
+    if (NS_SUCCEEDED(prefs->GetBoolPref("security.requireHTMLsuffix", &val))) {
       mRequireHTMLsuffix = val;
+    }
   }
 }
 

@@ -94,8 +94,9 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI) {
   // http://standards.freedesktop.org/desktop-entry-spec/latest/ar01s02.html
   nsAutoCString leafName;
   nsresult rv = aFile->GetNativeLeafName(leafName);
-  if (NS_FAILED(rv) || !StringEndsWith(leafName, ".desktop"_ns))
+  if (NS_FAILED(rv) || !StringEndsWith(leafName, ".desktop"_ns)) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   bool isFile = false;
   rv = aFile->IsFile(&isFile);

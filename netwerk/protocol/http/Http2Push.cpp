@@ -327,8 +327,9 @@ nsresult Http2PushedStream::GetBufferedData(char* buf, uint32_t count,
   nsresult rv = mBufferedPush->GetBufferedData(buf, count, countWritten);
   if (NS_FAILED(rv)) return rv;
 
-  if (!*countWritten)
+  if (!*countWritten) {
     rv = GetPushComplete() ? NS_BASE_STREAM_CLOSED : NS_BASE_STREAM_WOULD_BLOCK;
+  }
 
   return rv;
 }

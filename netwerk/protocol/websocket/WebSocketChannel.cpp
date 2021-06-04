@@ -215,7 +215,8 @@ class FailDelayManager {
         // Any remaining expired entries will be deleted next time Lookup
         // finds nothing, which is the most common case anyway.
         break;
-      } else if (fail->IsExpired(rightNow)) {
+      }
+      if (fail->IsExpired(rightNow)) {
         mEntries.RemoveElementAt(i);
       }
     }
@@ -481,14 +482,16 @@ class nsWSAdmissionManager {
   }
 
   int32_t IndexOf(nsCString& aStr) {
-    for (uint32_t i = 0; i < mQueue.Length(); i++)
+    for (uint32_t i = 0; i < mQueue.Length(); i++) {
       if (aStr == (mQueue[i])->mAddress) return i;
+    }
     return -1;
   }
 
   int32_t IndexOf(WebSocketChannel* aChannel) {
-    for (uint32_t i = 0; i < mQueue.Length(); i++)
+    for (uint32_t i = 0; i < mQueue.Length(); i++) {
       if (aChannel == (mQueue[i])->mChannel) return i;
+    }
     return -1;
   }
 
@@ -888,10 +891,10 @@ class PMCECompression {
   bool mNoContextTakeover;
   bool mResetDeflater;
   bool mMessageDeflated;
-  z_stream mDeflater;
-  z_stream mInflater;
+  z_stream mDeflater{};
+  z_stream mInflater{};
   const static uint32_t kBufferLen = 4096;
-  uint8_t mBuffer[kBufferLen];
+  uint8_t mBuffer[kBufferLen]{0};
 };
 
 //-----------------------------------------------------------------------------
@@ -1936,11 +1939,12 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
     MOZ_ASSERT(mCurrentOut->GetMsgType() == kMsgTypePong, "Not pong message!");
   } else {
     mCurrentOut = mOutgoingPingMessages.PopFront();
-    if (mCurrentOut)
+    if (mCurrentOut) {
       MOZ_ASSERT(mCurrentOut->GetMsgType() == kMsgTypePing,
                  "Not ping message!");
-    else
+    } else {
       mCurrentOut = mOutgoingMessages.PopFront();
+    }
   }
 
   if (!mCurrentOut) return;
@@ -2308,8 +2312,9 @@ void WebSocketChannel::DoStopSession(nsresult reason) {
     do {
       total += count;
       rv = mSocketIn->Read(buffer, 512, &count);
-      if (rv != NS_BASE_STREAM_WOULD_BLOCK && (NS_FAILED(rv) || count == 0))
+      if (rv != NS_BASE_STREAM_WOULD_BLOCK && (NS_FAILED(rv) || count == 0)) {
         mTCPClosed = true;
+      }
     } while (NS_SUCCEEDED(rv) && count > 0 && total < 32000);
   }
 
@@ -2936,8 +2941,9 @@ void WebSocketChannel::ReportConnectionTelemetry(nsresult aStatusCode) {
   if (pi) {
     nsAutoCString proxyType;
     pi->GetType(proxyType);
-    if (!proxyType.IsEmpty() && !proxyType.EqualsLiteral("direct"))
+    if (!proxyType.IsEmpty() && !proxyType.EqualsLiteral("direct")) {
       didProxy = true;
+    }
   }
 
   uint8_t value =
@@ -2977,8 +2983,9 @@ WebSocketChannel::OnLookupComplete(nsICancelable* aRequest,
     nsCOMPtr<nsIDNSAddrRecord> record = do_QueryInterface(aRecord);
     MOZ_ASSERT(record);
     nsresult rv = record->GetNextAddrAsString(mAddress);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
       LOG(("WebSocketChannel::OnLookupComplete: Failed GetNextAddr\n"));
+    }
   }
 
   LOG(("WebSocket OnLookupComplete: Proceeding to ConditionallyConnect\n"));
@@ -3029,8 +3036,9 @@ NS_IMETHODIMP
 WebSocketChannel::GetInterface(const nsIID& iid, void** result) {
   LOG(("WebSocketChannel::GetInterface() %p\n", this));
 
-  if (iid.Equals(NS_GET_IID(nsIChannelEventSink)))
+  if (iid.Equals(NS_GET_IID(nsIChannelEventSink))) {
     return QueryInterface(iid, result);
+  }
 
   if (mCallbacks) return mCallbacks->GetInterface(iid, result);
 
@@ -3074,9 +3082,10 @@ WebSocketChannel::AsyncOnChannelRedirect(
 
   if (mEncrypted && !newuriIsHttps) {
     nsAutoCString spec;
-    if (NS_SUCCEEDED(newuri->GetSpec(spec)))
+    if (NS_SUCCEEDED(newuri->GetSpec(spec))) {
       LOG(("WebSocketChannel: Redirect to %s violates encryption rule\n",
            spec.get()));
+    }
     return NS_ERROR_FAILURE;
   }
 
@@ -3150,8 +3159,9 @@ WebSocketChannel::Notify(nsITimer* timer) {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     mCloseTimer = nullptr;
-    if (mStopped || mServerClosed) /* no longer relevant */
+    if (mStopped || mServerClosed) { /* no longer relevant */
       return NS_OK;
+    }
 
     LOG(("WebSocketChannel:: Expecting Server Close - Timed Out\n"));
     AbortSession(NS_ERROR_NET_TIMEOUT);
@@ -3160,8 +3170,9 @@ WebSocketChannel::Notify(nsITimer* timer) {
 
     mOpenTimer = nullptr;
     LOG(("WebSocketChannel:: Connection Timed Out\n"));
-    if (mStopped || mServerClosed) /* no longer relevant */
+    if (mStopped || mServerClosed) { /* no longer relevant */
       return NS_OK;
+    }
 
     AbortSession(NS_ERROR_NET_TIMEOUT);
   } else if (timer == mReconnectDelayTimer) {
@@ -3221,8 +3232,9 @@ WebSocketChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
   if (mTransport) {
-    if (NS_FAILED(mTransport->GetSecurityInfo(aSecurityInfo)))
+    if (NS_FAILED(mTransport->GetSecurityInfo(aSecurityInfo))) {
       *aSecurityInfo = nullptr;
+    }
   }
   return NS_OK;
 }
@@ -3877,8 +3889,10 @@ WebSocketChannel::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   LOG(("WebSocketChannel::OnInputStreamReady() %p\n", this));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  if (!mSocketIn)  // did we we clean up the socket after scheduling InputReady?
+  if (!mSocketIn) {  // did we we clean up the socket after scheduling
+                     // InputReady?
     return NS_OK;
+  }
 
   // this is after the http upgrade - so we are speaking websockets
   char buffer[2048];

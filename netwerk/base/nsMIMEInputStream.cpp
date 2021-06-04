@@ -68,8 +68,8 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
 
   struct MOZ_STACK_CLASS ReadSegmentsState {
     nsCOMPtr<nsIInputStream> mThisStream;
-    nsWriteSegmentFun mWriter;
-    void* mClosure;
+    nsWriteSegmentFun mWriter{nullptr};
+    void* mClosure{nullptr};
   };
   static nsresult ReadSegCb(nsIInputStream* aIn, void* aClosure,
                             const char* aFromRawSegment, uint32_t aToOffset,

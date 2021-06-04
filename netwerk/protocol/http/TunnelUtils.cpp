@@ -883,7 +883,7 @@ class SocketOutWrapper : public nsIAsyncOutputStream,
   NS_IMETHOD Write(const char* aBuf, uint32_t aCount,
                    uint32_t* _retval) override;
   virtual nsresult OnReadSegment(const char* segment, uint32_t count,
-                                 uint32_t* countRead) override;
+                                 uint32_t* countWritten) override;
 
  private:
   virtual ~SocketOutWrapper() = default;

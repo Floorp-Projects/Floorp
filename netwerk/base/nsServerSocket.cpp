@@ -22,7 +22,7 @@ namespace net {
 
 //-----------------------------------------------------------------------------
 
-typedef void (nsServerSocket::*nsServerSocketFunc)(void);
+using nsServerSocketFunc = void (nsServerSocket::*)();
 
 static nsresult PostEvent(nsServerSocket* s, nsServerSocketFunc func) {
   nsCOMPtr<nsIRunnable> ev = NewRunnableMethod("net::PostEvent", s, func);
@@ -284,8 +284,9 @@ nsServerSocket::InitWithFilename(nsIFile* aPath, uint32_t aPermissions,
 
   // Create a Unix domain PRNetAddr referring to the given path.
   PRNetAddr addr;
-  if (path.Length() > sizeof(addr.local.path) - 1)
+  if (path.Length() > sizeof(addr.local.path) - 1) {
     return NS_ERROR_FILE_NAME_TOO_LONG;
+  }
   addr.local.family = PR_AF_LOCAL;
   memcpy(addr.local.path, path.get(), path.Length());
   addr.local.path[path.Length()] = '\0';
@@ -328,10 +329,11 @@ nsServerSocket::InitSpecialConnection(int32_t aPort, nsServerSocketFlag aFlags,
   PRNetAddr addr;
 
   if (aPort < 0) aPort = 0;
-  if (aFlags & nsIServerSocket::LoopbackOnly)
+  if (aFlags & nsIServerSocket::LoopbackOnly) {
     val = PR_IpAddrLoopback;
-  else
+  } else {
     val = PR_IpAddrAny;
+  }
   PR_SetNetAddr(val, PR_AF_INET, aPort, &addr);
 
   mKeepWhenOffline = ((aFlags & nsIServerSocket::KeepWhenOffline) != 0);
@@ -528,12 +530,13 @@ NS_IMETHODIMP
 nsServerSocket::GetPort(int32_t* aResult) {
   // no need to enter the lock here
   uint16_t port;
-  if (mAddr.raw.family == PR_AF_INET)
+  if (mAddr.raw.family == PR_AF_INET) {
     port = mAddr.inet.port;
-  else if (mAddr.raw.family == PR_AF_INET6)
+  } else if (mAddr.raw.family == PR_AF_INET6) {
     port = mAddr.ipv6.port;
-  else
+  } else {
     return NS_ERROR_FAILURE;
+  }
 
   *aResult = static_cast<int32_t>(NetworkEndian::readUint16(&port));
   return NS_OK;
