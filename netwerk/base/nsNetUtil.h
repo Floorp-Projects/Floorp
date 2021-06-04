@@ -81,7 +81,7 @@ already_AddRefed<nsINetUtil> do_GetNetUtil(nsresult* error = nullptr);
 // private little helper function... don't call this directly!
 nsresult net_EnsureIOService(nsIIOService** ios, nsCOMPtr<nsIIOService>& grip);
 
-nsresult NS_NewURI(nsIURI** result, const nsACString& spec,
+nsresult NS_NewURI(nsIURI** aURI, const nsACString& spec,
                    const char* charset = nullptr, nsIURI* baseURI = nullptr);
 
 nsresult NS_NewURI(nsIURI** result, const nsACString& spec,

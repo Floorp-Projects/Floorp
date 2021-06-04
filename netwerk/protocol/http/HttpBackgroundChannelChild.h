@@ -139,7 +139,7 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   ODASource mFirstODASource;
 
   // Indicate whether HttpChannelChild::ProcessOnStopRequest is called.
-  bool mOnStopRequestCalled;
+  bool mOnStopRequestCalled = false;
 
   // This is used when we receive the console report from parent process, but
   // still not get the OnStopRequest from socket process.

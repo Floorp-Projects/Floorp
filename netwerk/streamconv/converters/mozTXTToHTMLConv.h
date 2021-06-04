@@ -237,7 +237,7 @@ class mozTXTToHTMLConv : public mozITXTToHTMLConv {
   bool StructPhraseHit(const char16_t* aInString, int32_t aInStringLength,
                        bool col0, const char16_t* tagTXT, int32_t aTagTxtLen,
                        const char* tagHTML, const char* attributeHTML,
-                       nsAString& aOutputString, uint32_t& openTags);
+                       nsAString& aOutString, uint32_t& openTags);
 
   /**
     @param text (in), col0 (in): see GlyphHit
@@ -267,7 +267,7 @@ class mozTXTToHTMLConv : public mozITXTToHTMLConv {
     @return see StructPhraseHit
   */
   bool GlyphHit(const char16_t* aInString, int32_t aInLength, bool col0,
-                nsAString& aOutString, int32_t& glyphTextLen);
+                nsAString& aOutputString, int32_t& glyphTextLen);
 
   /**
     Check if a given url should be linkified.

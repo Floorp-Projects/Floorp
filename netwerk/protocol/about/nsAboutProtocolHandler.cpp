@@ -55,12 +55,8 @@ static bool IsSafeToLinkForUntrustedContent(nsIURI* aURI) {
 
   // The about modules for these URL types have the
   // URI_SAFE_FOR_UNTRUSTED_CONTENT and MAKE_LINKABLE flags set.
-  if (path.EqualsLiteral("blank") || path.EqualsLiteral("logo") ||
-      path.EqualsLiteral("srcdoc")) {
-    return true;
-  }
-
-  return false;
+  return path.EqualsLiteral("blank") || path.EqualsLiteral("logo") ||
+         path.EqualsLiteral("srcdoc");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,9 +298,9 @@ NS_IMPL_CLASSINFO(nsNestedAboutURI, nullptr, nsIClassInfo::THREADSAFE,
 NS_IMPL_CI_INTERFACE_GETTER0(nsNestedAboutURI)
 
 NS_INTERFACE_MAP_BEGIN(nsNestedAboutURI)
-  if (aIID.Equals(kNestedAboutURICID))
+  if (aIID.Equals(kNestedAboutURICID)) {
     foundInterface = static_cast<nsIURI*>(this);
-  else
+  } else
     NS_IMPL_QUERY_CLASSINFO(nsNestedAboutURI)
 NS_INTERFACE_MAP_END_INHERITING(nsSimpleNestedURI)
 

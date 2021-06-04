@@ -122,7 +122,7 @@ class CacheStorageService final : public nsICacheStorageService,
 
   // Invokes OnEntryInfo for the given aEntry, synchronously.
   static void GetCacheEntryInfo(CacheEntry* aEntry,
-                                EntryInfoCallback* aVisitor);
+                                EntryInfoCallback* aCallback);
 
   nsresult GetCacheIndexEntryAttrs(CacheStorage const* aStorage,
                                    const nsACString& aURI,
@@ -202,7 +202,7 @@ class CacheStorageService final : public nsICacheStorageService,
    * thrown away when forced valid
    * See nsICacheEntry.idl for more details
    */
-  bool IsForcedValidEntry(nsACString const& aEntryKeyWithContext);
+  bool IsForcedValidEntry(nsACString const& aContextEntryKey);
 
  private:
   // These are helpers for telemetry monitoring of the memory pools.

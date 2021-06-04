@@ -172,7 +172,7 @@ class Http2Stream : public nsAHttpSegmentReader,
 
   // Mirrors nsAHttpTransaction
   bool Do0RTT();
-  nsresult Finish0RTT(bool aRestart, bool aAlpnIgnored);
+  nsresult Finish0RTT(bool aRestart, bool aAlpnChanged);
 
   nsresult GetOriginAttributes(mozilla::OriginAttributes* oa);
 
@@ -242,8 +242,8 @@ class Http2Stream : public nsAHttpSegmentReader,
   // The underlying socket transport object is needed to propogate some events
   nsISocketTransport* mSocketTransport;
 
-  uint8_t mPriorityWeight;       // h2 weight
-  uint32_t mPriorityDependency;  // h2 stream id this one depends on
+  uint8_t mPriorityWeight = 0;       // h2 weight
+  uint32_t mPriorityDependency = 0;  // h2 stream id this one depends on
   uint64_t mCurrentTopBrowsingContextId;
   uint64_t mTransactionTabId;
 
@@ -325,7 +325,7 @@ class Http2Stream : public nsAHttpSegmentReader,
   // close by setting this to the max value.
   int64_t mRequestBodyLenRemaining;
 
-  uint32_t mPriority;  // geckoish weight
+  uint32_t mPriority = 0;  // geckoish weight
 
   // mClientReceiveWindow, mServerReceiveWindow, and mLocalUnacked are for flow
   // control. *window are signed because the race conditions in asynchronous

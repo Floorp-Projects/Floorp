@@ -495,8 +495,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
     Maybe<dom::TimedChannelInfo> timedChannel;
     nsCOMPtr<nsIInputStream> uploadStream;
-    uint64_t uploadStreamLength;
-    bool uploadStreamHasHeaders;
+    uint64_t uploadStreamLength = 0;
+    bool uploadStreamHasHeaders = false;
     Maybe<nsCString> contentType;
     Maybe<nsCString> contentLength;
 
@@ -1022,8 +1022,9 @@ inline void HttpAsyncAborter<T>::HandleAsyncAbort() {
   mThis->DoNotifyListener();
 
   // finally remove ourselves from the load group.
-  if (mThis->mLoadGroup)
+  if (mThis->mLoadGroup) {
     mThis->mLoadGroup->RemoveRequest(mThis, nullptr, mThis->mStatus);
+  }
 }
 
 template <class T>

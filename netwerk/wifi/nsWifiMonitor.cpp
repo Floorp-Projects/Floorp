@@ -104,7 +104,7 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener* aListener) {
   return NS_OK;
 }
 
-typedef nsTArray<nsMainThreadPtrHandle<nsIWifiListener>> WifiListenerArray;
+using WifiListenerArray = nsTArray<nsMainThreadPtrHandle<nsIWifiListener>>;
 
 class nsPassErrorToWifiListeners final : public nsIRunnable {
  public:
@@ -146,8 +146,9 @@ NS_IMETHODIMP nsWifiMonitor::Run() {
     if (mKeepGoing && NS_FAILED(rv)) {
       doError = true;
       currentListeners = MakeUnique<WifiListenerArray>(mListeners.Length());
-      for (uint32_t i = 0; i < mListeners.Length(); i++)
+      for (uint32_t i = 0; i < mListeners.Length(); i++) {
         currentListeners->AppendElement(mListeners[i].mListener);
+      }
     }
     mThreadComplete = true;
   }
@@ -187,7 +188,7 @@ NS_IMPL_ISUPPORTS(nsCallWifiListeners, nsIRunnable)
 
 NS_IMETHODIMP nsCallWifiListeners::Run() {
   LOG(("About to send data to the wifi listeners\n"));
-  for (auto& listener : mListeners) {
+  for (const auto& listener : mListeners) {
     listener->OnChange(mAccessPoints);
   }
   return NS_OK;

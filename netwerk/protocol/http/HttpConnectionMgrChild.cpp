@@ -159,7 +159,7 @@ SpeculativeConnectionOverrider::GetAllow1918(bool* aAllow) {
 }  // anonymous namespace
 
 mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvSpeculativeConnect(
-    HttpConnectionInfoCloneArgs aConnInfo,
+    const HttpConnectionInfoCloneArgs& aConnInfo,
     Maybe<SpeculativeConnectionOverriderArgs> aOverriderArgs, uint32_t aCaps,
     Maybe<PAltSvcTransactionChild*> aTrans, const bool& aFetchHTTPSRR) {
   RefPtr<nsHttpConnectionInfo> cinfo =

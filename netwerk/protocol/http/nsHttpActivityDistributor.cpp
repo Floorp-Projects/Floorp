@@ -19,8 +19,8 @@
 namespace mozilla {
 namespace net {
 
-typedef nsMainThreadPtrHolder<nsIHttpActivityObserver> ObserverHolder;
-typedef nsMainThreadPtrHandle<nsIHttpActivityObserver> ObserverHandle;
+using ObserverHolder = nsMainThreadPtrHolder<nsIHttpActivityObserver>;
+using ObserverHandle = nsMainThreadPtrHandle<nsIHttpActivityObserver>;
 
 NS_IMPL_ISUPPORTS(nsHttpActivityDistributor, nsIHttpActivityDistributor,
                   nsIHttpActivityObserver)

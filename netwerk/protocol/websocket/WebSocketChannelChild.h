@@ -25,7 +25,7 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
   friend class PWebSocketChild;
 
  public:
-  explicit WebSocketChannelChild(bool aSecure);
+  explicit WebSocketChannelChild(bool aEncrypted);
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -54,7 +54,7 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
   mozilla::ipc::IPCResult RecvOnStart(const nsCString& aProtocol,
                                       const nsCString& aExtensions,
                                       const nsString& aEffectiveURL,
-                                      const bool& aSecure,
+                                      const bool& aEncrypted,
                                       const uint64_t& aHttpChannelId);
   mozilla::ipc::IPCResult RecvOnStop(const nsresult& aStatusCode);
   mozilla::ipc::IPCResult RecvOnMessageAvailable(
@@ -66,7 +66,7 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
                                             const nsCString& aReason);
 
   void OnStart(const nsCString& aProtocol, const nsCString& aExtensions,
-               const nsString& aEffectiveURL, const bool& aSecure,
+               const nsString& aEffectiveURL, const bool& aEncrypted,
                const uint64_t& aHttpChannelId);
   void OnStop(const nsresult& aStatusCode);
   void OnMessageAvailable(const nsCString& aMsg);

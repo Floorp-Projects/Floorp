@@ -226,7 +226,7 @@ class Http2Session final : public ASpdySession,
 
   // an overload of nsAHttpSegementReader
   [[nodiscard]] virtual nsresult CommitToSegmentSize(
-      uint32_t size, bool forceCommitment) override;
+      uint32_t count, bool forceCommitment) override;
   [[nodiscard]] nsresult BufferOutput(const char*, uint32_t, uint32_t*);
   void FlushOutputQueue();
   uint32_t AmountOfOutputBuffered() {
@@ -554,7 +554,8 @@ class Http2Session final : public ASpdySession,
   // remember them put them into mReadyForWrite queue when 0RTT finishes.
   nsTArray<WeakPtr<Http2Stream>> mCannotDo0RTTStreams;
 
-  bool RealJoinConnection(const nsACString& hostname, int32_t port, bool jk);
+  bool RealJoinConnection(const nsACString& hostname, int32_t port,
+                          bool justKidding);
   bool TestOriginFrame(const nsACString& name, int32_t port);
   bool mOriginFrameActivated;
   nsTHashMap<nsCStringHashKey, bool> mOriginFrame;

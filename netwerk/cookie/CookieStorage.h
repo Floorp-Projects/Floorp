@@ -27,8 +27,8 @@ class Cookie;
 class CookieEntry : public CookieKey {
  public:
   // Hash methods
-  typedef nsTArray<RefPtr<Cookie>> ArrayType;
-  typedef ArrayType::index_type IndexType;
+  using ArrayType = nsTArray<RefPtr<Cookie>>;
+  using IndexType = ArrayType::index_type;
 
   explicit CookieEntry(KeyTypePointer aKey) : CookieKey(aKey) {}
 

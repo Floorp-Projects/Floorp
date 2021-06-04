@@ -52,7 +52,7 @@ class nsServerSocket : public nsASocketHandler, public nsIServerSocket {
 
   // lock protects access to mListener; so it is not cleared while being used.
   mozilla::Mutex mLock;
-  PRNetAddr mAddr;
+  PRNetAddr mAddr = {.raw = {0, {0}}};
   nsCOMPtr<nsIEventTarget> mListenerTarget;
   bool mAttached;
   bool mKeepWhenOffline;

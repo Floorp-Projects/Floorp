@@ -111,53 +111,53 @@ TEST(TestServerTimingHeader, HeaderParsing)
   // metric;desc="" --> ''
   testServerTimingHeader("metric;desc=\"\"", {{"metric", "0", ""}});
   // metric;desc=\\\ --> ''
-  testServerTimingHeader("metric;desc=\\\\\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\\\)", {{"metric", "0", ""}});
   // metric;desc=\\" --> ''
-  testServerTimingHeader("metric;desc=\\\\\"", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\\")", {{"metric", "0", ""}});
   // metric;desc=\"\ --> ''
-  testServerTimingHeader("metric;desc=\\\"\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\"\)", {{"metric", "0", ""}});
   // metric;desc=\"" --> ''
-  testServerTimingHeader("metric;desc=\\\"\"", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\"")", {{"metric", "0", ""}});
   // metric;desc="\\ --> ''
-  testServerTimingHeader("metric;desc=\"\\\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc="\\)", {{"metric", "0", ""}});
   // metric;desc="\" --> ''
-  testServerTimingHeader("metric;desc=\"\\\"", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc="\")", {{"metric", "0", ""}});
   // metric;desc=""\ --> ''
-  testServerTimingHeader("metric;desc=\"\"\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=""\)", {{"metric", "0", ""}});
   // metric;desc=""" --> ''
-  testServerTimingHeader("metric;desc=\"\"\"", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=""")", {{"metric", "0", ""}});
   // metric;desc=\\\\ --> ''
-  testServerTimingHeader("metric;desc=\\\\\\\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\\\\)", {{"metric", "0", ""}});
   // metric;desc=\\\" --> ''
-  testServerTimingHeader("metric;desc=\\\\\\\"", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\\\")", {{"metric", "0", ""}});
   // metric;desc=\\"\ --> ''
-  testServerTimingHeader("metric;desc=\\\\\"\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\\"\)", {{"metric", "0", ""}});
   // metric;desc=\\"" --> ''
-  testServerTimingHeader("metric;desc=\\\\\"\"", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\\"")", {{"metric", "0", ""}});
   // metric;desc=\"\\ --> ''
-  testServerTimingHeader("metric;desc=\\\"\\\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\"\\)", {{"metric", "0", ""}});
   // metric;desc=\"\" --> ''
-  testServerTimingHeader("metric;desc=\\\"\\\"", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\"\")", {{"metric", "0", ""}});
   // metric;desc=\""\ --> ''
-  testServerTimingHeader("metric;desc=\\\"\"\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\""\)", {{"metric", "0", ""}});
   // metric;desc=\""" --> ''
-  testServerTimingHeader("metric;desc=\\\"\"\"", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=\""")", {{"metric", "0", ""}});
   // metric;desc="\\\ --> ''
-  testServerTimingHeader("metric;desc=\"\\\\\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc="\\\)", {{"metric", "0", ""}});
   // metric;desc="\\" --> '\'
-  testServerTimingHeader("metric;desc=\"\\\\\"", {{"metric", "0", "\\"}});
+  testServerTimingHeader(R"(metric;desc="\\")", {{"metric", "0", "\\"}});
   // metric;desc="\"\ --> ''
-  testServerTimingHeader("metric;desc=\"\\\"\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc="\"\)", {{"metric", "0", ""}});
   // metric;desc="\"" --> '"'
-  testServerTimingHeader("metric;desc=\"\\\"\"", {{"metric", "0", "\""}});
+  testServerTimingHeader(R"(metric;desc="\"")", {{"metric", "0", "\""}});
   // metric;desc=""\\ --> ''
-  testServerTimingHeader("metric;desc=\"\"\\\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=""\\)", {{"metric", "0", ""}});
   // metric;desc=""\" --> ''
-  testServerTimingHeader("metric;desc=\"\"\\\"", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc=""\")", {{"metric", "0", ""}});
   // metric;desc="""\ --> ''
-  testServerTimingHeader("metric;desc=\"\"\"\\", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc="""\)", {{"metric", "0", ""}});
   // metric;desc="""" --> ''
-  testServerTimingHeader("metric;desc=\"\"\"\"", {{"metric", "0", ""}});
+  testServerTimingHeader(R"(metric;desc="""")", {{"metric", "0", ""}});
 
   // duplicate entry names
   testServerTimingHeader(
@@ -229,9 +229,8 @@ TEST(TestServerTimingHeader, HeaderParsing)
   testServerTimingHeader(" total;dur=123.4 ", {{"total", "123.4", ""}});
 
   // test cases for comma in quoted string
-  testServerTimingHeader(
-      "     metric ; desc=\"descr\\\"\\\";,=iption\";dur=123.4",
-      {{"metric", "123.4", "descr\"\";,=iption"}});
+  testServerTimingHeader(R"(     metric ; desc="descr\"\";,=iption";dur=123.4)",
+                         {{"metric", "123.4", "descr\"\";,=iption"}});
   testServerTimingHeader(
       " metric2;dur=\"123.4\";;desc=\",;\\\",;,\";;,  metric  ;  desc = \" "
       "\\\", ;\\\" \"; dur=123.4,",

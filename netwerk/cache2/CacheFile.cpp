@@ -30,8 +30,7 @@
 
 //#define CACHE_CHUNKS
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 class NotifyCacheFileListenerEvent : public Runnable {
  public:
@@ -1171,9 +1170,10 @@ nsresult CacheFile::SetFrecency(uint32_t aFrecency) {
 
   PostWriteTimer();
 
-  if (mHandle && !mHandle->IsDoomed())
+  if (mHandle && !mHandle->IsDoomed()) {
     CacheFileIOManager::UpdateIndexEntry(mHandle, &aFrecency, nullptr, nullptr,
                                          nullptr, nullptr);
+  }
 
   mMetadata->SetFrecency(aFrecency);
   return NS_OK;
@@ -1504,7 +1504,8 @@ nsresult CacheFile::GetChunkLocked(uint32_t aIndex, ECallerType aCaller,
     }
 
     return NS_OK;
-  } else if (off == mDataSize) {
+  }
+  if (off == mDataSize) {
     if (aCaller == WRITER) {
       // this listener is going to write to the chunk
       chunk = new CacheFileChunk(this, aIndex, true);
@@ -2074,7 +2075,7 @@ void CacheFile::RemoveInput(CacheFileInputStream* aInput, nsresult aStatus) {
   LOG(("CacheFile::RemoveInput() [this=%p, input=%p, status=0x%08" PRIx32 "]",
        this, aInput, static_cast<uint32_t>(aStatus)));
 
-  DebugOnly<bool> found;
+  DebugOnly<bool> found{};
   found = mInputs.RemoveElement(aInput);
   MOZ_ASSERT(found);
 
@@ -2241,7 +2242,7 @@ void CacheFile::NotifyListenersAboutOutputRemoval() {
   // First fail all chunk listeners that wait for non-existent chunk
   for (auto iter = mChunkListeners.Iter(); !iter.Done(); iter.Next()) {
     uint32_t idx = iter.Key();
-    auto listeners = iter.UserData();
+    auto* listeners = iter.UserData();
 
     LOG(
         ("CacheFile::NotifyListenersAboutOutputRemoval() - fail "
@@ -2360,11 +2361,7 @@ bool CacheFile::EntryWouldExceedLimit(int64_t aOffset, int64_t aSize,
     totalSize += (mAltDataOffset == -1) ? mDataSize : mAltDataOffset;
   }
 
-  if (CacheObserver::EntryIsTooBig(totalSize, !mMemoryOnly)) {
-    return true;
-  }
-
-  return false;
+  return CacheObserver::EntryIsTooBig(totalSize, !mMemoryOnly);
 }
 
 bool CacheFile::IsDirty() { return mDataIsDirty || mMetadata->IsDirty(); }
@@ -2396,8 +2393,9 @@ void CacheFile::WriteMetadataIfNeededLocked(bool aFireAndForget) {
   if (NS_FAILED(mStatus)) return;
 
   if (!IsDirty() || mOutput || mInputs.Length() || mChunks.Count() ||
-      mWritingMetadata || mOpeningFile || mKill)
+      mWritingMetadata || mOpeningFile || mKill) {
     return;
+  }
 
   if (!aFireAndForget) {
     // if aFireAndForget is set, we are called from dtor. Write
@@ -2507,7 +2505,7 @@ nsresult CacheFile::InitIndexEntry() {
   uint32_t frecency = mMetadata->GetFrecency();
 
   bool hasAltData =
-      mMetadata->GetElement(CacheFileUtils::kAltDataKey) ? true : false;
+      mMetadata->GetElement(CacheFileUtils::kAltDataKey) != nullptr;
 
   static auto toUint16 = [](const char* s) -> uint16_t {
     if (s) {
@@ -2590,5 +2588,4 @@ size_t CacheFile::SizeOfIncludingThis(
   return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
