@@ -12464,40 +12464,22 @@ void CodeGenerator::emitTypeOfName(JSValueType type, Register output) {
 void CodeGenerator::emitTypeOfCheck(JSValueType type, Register tag,
                                     Register output, Label* done,
                                     Label* oolObject) {
-  if (type == JSVAL_TYPE_OBJECT) {
-    // The input may be a callable object (result is "function") or
-    // may emulate undefined (result is "undefined"). Use an OOL path.
-    masm.branchTestObject(Assembler::Equal, tag, oolObject);
-    return;
-  }
-
   Label notMatch;
   switch (type) {
+    case JSVAL_TYPE_OBJECT:
+      // The input may be a callable object (result is "function") or
+      // may emulate undefined (result is "undefined"). Use an OOL path.
+      masm.branchTestObject(Assembler::Equal, tag, oolObject);
+      return;
     case JSVAL_TYPE_DOUBLE:
     case JSVAL_TYPE_INT32:
       masm.branchTestNumber(Assembler::NotEqual, tag, &notMatch);
       break;
-    case JSVAL_TYPE_BOOLEAN:
-      masm.branchTestBoolean(Assembler::NotEqual, tag, &notMatch);
-      break;
-    case JSVAL_TYPE_UNDEFINED:
-      masm.branchTestUndefined(Assembler::NotEqual, tag, &notMatch);
-      break;
-    case JSVAL_TYPE_NULL:
-      masm.branchTestNull(Assembler::NotEqual, tag, &notMatch);
-      break;
-    case JSVAL_TYPE_STRING:
-      masm.branchTestString(Assembler::NotEqual, tag, &notMatch);
-      break;
-    case JSVAL_TYPE_SYMBOL:
-      masm.branchTestSymbol(Assembler::NotEqual, tag, &notMatch);
-      break;
-    case JSVAL_TYPE_BIGINT:
-      masm.branchTestBigInt(Assembler::NotEqual, tag, &notMatch);
-      break;
     default:
-      MOZ_CRASH("Unsupported JSValueType");
+      masm.branchTestType(Assembler::NotEqual, tag, type, &notMatch);
+      break;
   }
+
   emitTypeOfName(type, output);
   masm.jump(done);
   masm.bind(&notMatch);
