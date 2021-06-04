@@ -173,6 +173,13 @@ add_task(async function handle_database_corruption() {
     );
   }
 
+  let fetchCount = 0;
+  const originalFetchMLBF = ExtensionBlocklistMLBF._fetchMLBF;
+  ExtensionBlocklistMLBF._fetchMLBF = function() {
+    ++fetchCount;
+    return originalFetchMLBF.apply(this, arguments);
+  };
+
   // In the fetch_invalid_mlbf_record we checked that a cached / packaged MLBF
   // attachment is used as a fallback when the record is invalid. Here we also
   // check that there is a fallback when there is no record at all.
@@ -180,28 +187,46 @@ add_task(async function handle_database_corruption() {
   // Include a dummy record in the list, to prevent RemoteSettings from
   // importing a JSON dump with unexpected records.
   await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [{}] });
+  Assert.equal(fetchCount, 1, "MLBF read once despite bad record");
   // When the collection is empty, the last known MLBF should be used anyway.
   await checkBlocklistWorks();
+  Assert.equal(fetchCount, 1, "MLBF not read again by blocklist query");
 
   // Now we also remove the cached file...
   await ExtensionBlocklistMLBF._client.db.saveAttachment(
     ExtensionBlocklistMLBF.RS_ATTACHMENT_ID,
     null
   );
+  Assert.equal(fetchCount, 1, "MLBF not read again after attachment deletion");
   // Deleting the file shouldn't cause issues because the MLBF is loaded once
   // and then kept in memory.
   await checkBlocklistWorks();
+  Assert.equal(fetchCount, 1, "MLBF not read again by blocklist query 2");
 
   // Force an update while we don't have any blocklist data nor cache.
   await ExtensionBlocklistMLBF._onUpdate();
+  Assert.equal(fetchCount, 2, "MLBF read again at forced update");
   // As a fallback, continue to use the in-memory version of the blocklist.
   await checkBlocklistWorks();
+  Assert.equal(fetchCount, 2, "MLBF not read again by blocklist query 3");
 
   // Memory gone, e.g. after a browser restart.
   delete ExtensionBlocklistMLBF._mlbfData;
+  delete ExtensionBlocklistMLBF._stashes;
   Assert.equal(
     await Blocklist.getAddonBlocklistState(blockedAddon),
     Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
     "Blocklist can't work if all blocklist data is gone"
   );
+  Assert.equal(fetchCount, 3, "MLBF read again after restart/cleared cache");
+  Assert.equal(
+    await Blocklist.getAddonBlocklistState(blockedAddon),
+    Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+    "Blocklist can still not work if all blocklist data is gone"
+  );
+  // Ideally, the client packages a dump. But if the client did not package the
+  // dump, then it should not be trying to read the data over and over again.
+  Assert.equal(fetchCount, 3, "MLBF not read again despite absence of MLBF");
+
+  ExtensionBlocklistMLBF._fetchMLBF = originalFetchMLBF;
 });
