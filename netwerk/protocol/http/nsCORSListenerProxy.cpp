@@ -152,7 +152,7 @@ class nsPreflightCache {
 
     void PurgeExpired(TimeStamp now);
     bool CheckRequest(const nsCString& aMethod,
-                      const nsTArray<nsCString>& aHeaders);
+                      const nsTArray<nsCString>& aCustomHeaders);
 
     nsCString mKey;
     nsTArray<TokenTime> mMethods;
@@ -282,7 +282,7 @@ nsPreflightCache::CacheEntry* nsPreflightCache::GetEntry(
     // Try to kick out all the expired entries.
     TimeStamp now = TimeStamp::NowLoRes();
     for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
-      auto* entry = iter.UserData();
+      auto entry = iter.UserData();
       entry->PurgeExpired(now);
 
       if (entry->mHeaders.IsEmpty() && entry->mMethods.IsEmpty()) {

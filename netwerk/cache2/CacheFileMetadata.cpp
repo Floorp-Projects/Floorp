@@ -19,7 +19,8 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "prnetdb.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 #define kMinMetadataRead 1024  // TODO find optimal value from telemetry
 #define kAlignSize 4096
@@ -32,7 +33,7 @@ namespace mozilla::net {
 #define kInitialBufSize 64
 
 // Max size of elements in bytes.
-#define kMaxElementsSize (64 * 1024)
+#define kMaxElementsSize 64 * 1024
 
 #define NOW_SECONDS() (uint32_t(PR_Now() / PR_USEC_PER_SEC))
 
@@ -62,7 +63,7 @@ CacheFileMetadata::CacheFileMetadata(CacheFileHandle* aHandle,
   mMetaHdr.mExpirationTime = nsICacheEntry::NO_EXPIRATION_TIME;
   mKey = aKey;
 
-  DebugOnly<nsresult> rv{};
+  DebugOnly<nsresult> rv;
   rv = ParseKey(aKey);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
@@ -95,7 +96,7 @@ CacheFileMetadata::CacheFileMetadata(bool aMemoryOnly, bool aPinned,
   mKey = aKey;
   mMetaHdr.mKeySize = mKey.Length();
 
-  DebugOnly<nsresult> rv{};
+  DebugOnly<nsresult> rv;
   rv = ParseKey(aKey);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
@@ -503,8 +504,7 @@ nsresult CacheFileMetadata::SetHash(uint32_t aIndex,
 
   if (aIndex > mHashCount) {
     return NS_ERROR_INVALID_ARG;
-  }
-  if (aIndex == mHashCount) {
+  } else if (aIndex == mHashCount) {
     if ((aIndex + 1) * sizeof(CacheHash::Hash16_t) > mHashArraySize) {
       // reallocate hash array buffer
       if (mHashArraySize == 0) {
@@ -1045,4 +1045,5 @@ size_t CacheFileMetadata::SizeOfIncludingThis(
   return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

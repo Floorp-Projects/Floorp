@@ -55,10 +55,10 @@ class nsDirIndexParser : public nsIDirIndexParser {
   nsCString mBuf;
   int32_t mLineStart;
   bool mHasDescription;
-  int mFormat[8]{};
+  int mFormat[8];
 
   nsresult ProcessData(nsIRequest* aRequest, nsISupports* aCtxt);
-  void ParseFormat(const char* aFormatStr);
+  void ParseFormat(const char* buf);
   void ParseData(nsIDirIndex* aIdx, char* aDataStr, int32_t lineLen);
 
   struct Field {

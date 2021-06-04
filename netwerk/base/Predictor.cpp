@@ -571,7 +571,7 @@ Predictor::PredictNative(nsIURI* targetURI, nsIURI* sourceURI,
       return NS_ERROR_INVALID_ARG;
   }
 
-  Predictor::Reason argReason{};
+  Predictor::Reason argReason;
   argReason.mPredict = reason;
 
   // First we open the regular cache entry, to ensure we don't gum up the works
@@ -727,7 +727,7 @@ bool Predictor::PredictForPageload(nsICacheEntry* entry, nsIURI* targetURI,
   if (WouldRedirect(entry, loadCount, lastLoad, globalDegradation,
                     getter_AddRefs(redirectURI))) {
     mPreconnects.AppendElement(redirectURI);
-    Predictor::Reason reason{};
+    Predictor::Reason reason;
     reason.mPredict = nsINetworkPredictor::PREDICT_LOAD;
     RefPtr<Predictor::Action> redirectAction = new Predictor::Action(
         Predictor::Action::IS_FULL_URI, Predictor::Action::DO_PREDICT, reason,
@@ -1328,7 +1328,7 @@ Predictor::LearnNative(nsIURI* targetURI, nsIURI* sourceURI,
   Telemetry::AutoCounter<Telemetry::PREDICTOR_LEARN_ATTEMPTS> learnAttempts;
   ++learnAttempts;
 
-  Predictor::Reason argReason{};
+  Predictor::Reason argReason;
   argReason.mLearn = reason;
 
   // We always open the full uri (general cache) entry first, so we don't gum up

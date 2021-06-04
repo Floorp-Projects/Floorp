@@ -16,7 +16,7 @@ class PickleIterator;
 
 // Avoid including nsDOMNavigationTiming.h here, where the canonical definition
 // of DOMHighResTimeStamp resides.
-using DOMHighResTimeStamp = double;
+typedef double DOMHighResTimeStamp;
 
 namespace IPC {
 class Message;
@@ -83,7 +83,7 @@ class WebSocketFrame final : public nsIWebSocketFrame {
 namespace IPC {
 template <>
 struct ParamTraits<mozilla::net::WebSocketFrameData> {
-  using paramType = mozilla::net::WebSocketFrameData;
+  typedef mozilla::net::WebSocketFrameData paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     aParam.WriteIPCParams(aMsg);

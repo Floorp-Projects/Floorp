@@ -41,7 +41,7 @@ class CacheIndexIterator;
 const uint16_t kIndexTimeNotAvailable = 0xFFFFU;
 const uint16_t kIndexTimeOutOfBound = 0xFFFEU;
 
-using CacheIndexHeader = struct {
+typedef struct {
   // Version of the index. The index must be ignored and deleted when the file
   // on disk was written with a newer version.
   uint32_t mVersion;
@@ -63,7 +63,7 @@ using CacheIndexHeader = struct {
   // kTelemetryReportBytesLimit a telemetry report is sent and the counter is
   // reset.
   uint32_t mKBWritten;
-};
+} CacheIndexHeader;
 
 static_assert(sizeof(CacheIndexHeader::mVersion) +
                       sizeof(CacheIndexHeader::mTimeStamp) +
@@ -74,7 +74,7 @@ static_assert(sizeof(CacheIndexHeader::mVersion) +
 
 #pragma pack(push, 1)
 struct CacheIndexRecord {
-  SHA1Sum::Hash mHash{};
+  SHA1Sum::Hash mHash;
   uint32_t mFrecency;
   OriginAttrsHash mOriginAttrsHash;
   uint16_t mOnStartTime;
@@ -128,8 +128,8 @@ class CacheIndexRecordWrapper final {
 
 class CacheIndexEntry : public PLDHashEntryHdr {
  public:
-  using KeyType = const SHA1Sum::Hash&;
-  using KeyTypePointer = const SHA1Sum::Hash*;
+  typedef const SHA1Sum::Hash& KeyType;
+  typedef const SHA1Sum::Hash* KeyTypePointer;
 
   explicit CacheIndexEntry(KeyTypePointer aKey) {
     MOZ_COUNT_CTOR(CacheIndexEntry);
@@ -338,10 +338,14 @@ class CacheIndexEntry : public PLDHashEntryHdr {
                                            nsILoadContextInfo* aInfo) {
     MOZ_ASSERT(aInfo);
 
-    return !aInfo->IsPrivate() &&
-           GetOriginAttrsHash(*aInfo->OriginAttributesPtr()) ==
-               aRec->Get()->mOriginAttrsHash &&
-           aInfo->IsAnonymous() == !!(aRec->Get()->mFlags & kAnonymousMask);
+    if (!aInfo->IsPrivate() &&
+        GetOriginAttrsHash(*aInfo->OriginAttributesPtr()) ==
+            aRec->Get()->mOriginAttrsHash &&
+        aInfo->IsAnonymous() == !!(aRec->Get()->mFlags & kAnonymousMask)) {
+      return true;
+    }
+
+    return false;
   }
 
   // Memory reporting
@@ -690,14 +694,14 @@ class CacheIndexStats {
 
  private:
   uint32_t mCount;
-  uint32_t mCountByType[nsICacheEntry::CONTENT_TYPE_LAST]{};
+  uint32_t mCountByType[nsICacheEntry::CONTENT_TYPE_LAST];
   uint32_t mNotInitialized;
   uint32_t mRemoved;
   uint32_t mDirty;
   uint32_t mFresh;
   uint32_t mEmpty;
   uint32_t mSize;
-  uint32_t mSizeByType[nsICacheEntry::CONTENT_TYPE_LAST]{};
+  uint32_t mSizeByType[nsICacheEntry::CONTENT_TYPE_LAST];
 #ifdef DEBUG
   // We completely remove the data about an entry from the stats in
   // BeforeChange() and set this flag to true. The entry is then modified,

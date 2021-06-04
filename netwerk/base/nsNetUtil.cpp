@@ -602,11 +602,10 @@ nsresult NS_MakeAbsoluteURI(nsACString& result, const nsACString& spec,
     NS_WARNING("It doesn't make sense to not supply a base URI");
     result = spec;
     rv = NS_OK;
-  } else if (spec.IsEmpty()) {
+  } else if (spec.IsEmpty())
     rv = baseURI->GetSpec(result);
-  } else {
+  else
     rv = baseURI->Resolve(spec, result);
-  }
   return rv;
 }
 
@@ -630,11 +629,10 @@ nsresult NS_MakeAbsoluteURI(nsAString& result, const nsAString& spec,
     rv = NS_OK;
   } else {
     nsAutoCString resultBuf;
-    if (spec.IsEmpty()) {
+    if (spec.IsEmpty())
       rv = baseURI->GetSpec(resultBuf);
-    } else {
+    else
       rv = baseURI->Resolve(NS_ConvertUTF16toUTF8(spec), resultBuf);
-    }
     if (NS_SUCCEEDED(rv)) CopyUTF8toUTF16(resultBuf, result);
   }
   return rv;
@@ -676,7 +674,9 @@ bool NS_StringToACE(const nsACString& idn, nsACString& result) {
   nsCOMPtr<nsIIDNService> idnSrv = do_GetService(NS_IDNSERVICE_CONTRACTID);
   if (!idnSrv) return false;
   nsresult rv = idnSrv->ConvertUTF8toACE(idn, result);
-  return NS_SUCCEEDED(rv);
+  if (NS_FAILED(rv)) return false;
+
+  return true;
 }
 
 int32_t NS_GetRealPort(nsIURI* aURI) {
@@ -1096,9 +1096,8 @@ nsresult NS_CheckPortSafety(int32_t port, const char* scheme,
 nsresult NS_CheckPortSafety(nsIURI* uri) {
   int32_t port;
   nsresult rv = uri->GetPort(&port);
-  if (NS_FAILED(rv) || port == -1) {  // port undefined or default-valued
+  if (NS_FAILED(rv) || port == -1)  // port undefined or default-valued
     return NS_OK;
-  }
   nsAutoCString scheme;
   uri->GetScheme(scheme);
   return NS_CheckPortSafety(port, scheme.get());
@@ -1109,10 +1108,9 @@ nsresult NS_NewProxyInfo(const nsACString& type, const nsACString& host,
   nsresult rv;
   nsCOMPtr<nsIProtocolProxyService> pps =
       do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv))
     rv = pps->NewProxyInfo(type, host, port, ""_ns, ""_ns, flags, UINT32_MAX,
                            nullptr, result);
-  }
   return rv;
 }
 
@@ -2263,9 +2261,8 @@ uint32_t NS_SecurityHashURI(nsIURI* aURI) {
 
   nsAutoCString scheme;
   uint32_t schemeHash = 0;
-  if (NS_SUCCEEDED(baseURI->GetScheme(scheme))) {
+  if (NS_SUCCEEDED(baseURI->GetScheme(scheme)))
     schemeHash = mozilla::HashString(scheme);
-  }
 
   // TODO figure out how to hash file:// URIs
   if (scheme.EqualsLiteral("file")) return schemeHash;  // sad face
@@ -2288,9 +2285,8 @@ uint32_t NS_SecurityHashURI(nsIURI* aURI) {
 
   nsAutoCString host;
   uint32_t hostHash = 0;
-  if (NS_SUCCEEDED(baseURI->GetAsciiHost(host))) {
+  if (NS_SUCCEEDED(baseURI->GetAsciiHost(host)))
     hostHash = mozilla::HashString(host);
-  }
 
   return mozilla::AddToHash(schemeHash, hostHash, NS_GetRealPort(baseURI));
 }
@@ -2632,9 +2628,8 @@ uint32_t NS_GetContentDispositionFromToken(const nsAString& aDispToken) {
       // Broken sites just send
       // Content-Disposition: filename="file"
       // without a disposition token... screen those out.
-      StringHead(aDispToken, 8).LowerCaseEqualsLiteral("filename")) {
+      StringHead(aDispToken, 8).LowerCaseEqualsLiteral("filename"))
     return nsIChannel::DISPOSITION_INLINE;
-  }
 
   return nsIChannel::DISPOSITION_ATTACHMENT;
 }
@@ -2652,9 +2647,8 @@ uint32_t NS_GetContentDispositionFromHeader(const nsACString& aHeader,
 
   if (NS_FAILED(rv)) {
     // special case (see bug 272541): empty disposition type handled as "inline"
-    if (rv == NS_ERROR_FIRST_HEADER_FIELD_COMPONENT_EMPTY) {
+    if (rv == NS_ERROR_FIRST_HEADER_FIELD_COMPONENT_EMPTY)
       return nsIChannel::DISPOSITION_INLINE;
-    }
     return nsIChannel::DISPOSITION_ATTACHMENT;
   }
 
@@ -2725,17 +2719,15 @@ nsresult NS_GenerateHostPort(const nsCString& host, int32_t port,
     hostLine.Assign('[');
     // scope id is not needed for Host header.
     int scopeIdPos = host.FindChar('%');
-    if (scopeIdPos == -1) {
+    if (scopeIdPos == -1)
       hostLine.Append(host);
-    } else if (scopeIdPos > 0) {
+    else if (scopeIdPos > 0)
       hostLine.Append(Substring(host, 0, scopeIdPos));
-    } else {
+    else
       return NS_ERROR_MALFORMED_URI;
-    }
     hostLine.Append(']');
-  } else {
+  } else
     hostLine.Assign(host);
-  }
   if (port != -1) {
     hostLine.Append(':');
     hostLine.AppendInt(port);
@@ -2746,7 +2738,7 @@ nsresult NS_GenerateHostPort(const nsCString& host, int32_t port,
 void NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
                      const uint8_t* aData, uint32_t aLength,
                      nsACString& aSniffedType) {
-  using ContentSnifferCache = nsCategoryCache<nsIContentSniffer>;
+  typedef nsCategoryCache<nsIContentSniffer> ContentSnifferCache;
   extern ContentSnifferCache* gNetSniffers;
   extern ContentSnifferCache* gDataSniffers;
   extern ContentSnifferCache* gORBSniffers;
@@ -3188,8 +3180,12 @@ bool NS_ShouldClassifyChannel(nsIChannel* aChannel) {
   ExtContentPolicyType type = loadInfo->GetExternalContentPolicyType();
   // Skip classifying channel triggered by system unless it is a top-level
   // load.
-  return !(loadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
-           ExtContentPolicy::TYPE_DOCUMENT != type);
+  if (loadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
+      ExtContentPolicy::TYPE_DOCUMENT != type) {
+    return false;
+  }
+
+  return true;
 }
 
 namespace mozilla {

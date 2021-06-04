@@ -60,9 +60,9 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   // The folowing functions are used by Http3Stream:
   nsresult TryActivating(const nsACString& aMethod, const nsACString& aScheme,
-                         const nsACString& aAuthorityHeader,
-                         const nsACString& aPath, const nsACString& aHeaders,
-                         uint64_t* aStreamId, Http3Stream* aStream);
+                         const nsACString& aHost, const nsACString& aPath,
+                         const nsACString& aHeaders, uint64_t* aStreamId,
+                         Http3Stream* aStream);
   void CloseSendingSide(uint64_t aStreamId);
   nsresult SendRequestBody(uint64_t aStreamId, const char* buf, uint32_t count,
                            uint32_t* countRead);

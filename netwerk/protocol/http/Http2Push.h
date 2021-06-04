@@ -37,7 +37,7 @@ class Http2PushedStream final : public Http2Stream {
   // The consumer stream is the synthetic pull stream hooked up to this push
   virtual Http2Stream* GetConsumerStream() override { return mConsumerStream; };
 
-  void SetConsumerStream(Http2Stream* consumer);
+  void SetConsumerStream(Http2Stream* aStream);
   [[nodiscard]] bool GetHashKey(nsCString& key);
 
   // override of Http2Stream
@@ -48,10 +48,10 @@ class Http2PushedStream final : public Http2Stream {
   void AdjustInitialWindow() override;
 
   nsIRequestContext* RequestContext() override { return mRequestContext; };
-  void ConnectPushedStream(Http2Stream* stream);
+  void ConnectPushedStream(Http2Stream* consumer);
 
   [[nodiscard]] bool TryOnPush();
-  [[nodiscard]] static bool TestOnPush(Http2Stream* stream);
+  [[nodiscard]] static bool TestOnPush(Http2Stream* consumer);
 
   virtual bool DeferCleanup(nsresult status) override;
   void SetDeferCleanupOnSuccess(bool val) { mDeferCleanupOnSuccess = val; }

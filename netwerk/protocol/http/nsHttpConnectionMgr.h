@@ -37,7 +37,7 @@ struct HttpRetParams;
 
 // message handlers have this signature
 class nsHttpConnectionMgr;
-using nsConnEventHandler = void (nsHttpConnectionMgr::*)(int32_t, ARefBase*);
+typedef void (nsHttpConnectionMgr::*nsConnEventHandler)(int32_t, ARefBase*);
 
 class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
                                   public nsIObserver {
@@ -57,7 +57,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   //-------------------------------------------------------------------------
 
   [[nodiscard]] nsresult CancelTransactions(nsHttpConnectionInfo*,
-                                            nsresult code);
+                                            nsresult reason);
 
   //-------------------------------------------------------------------------
   // NOTE: functions below may be called only on the socket thread.
@@ -267,8 +267,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void RecvdConnect();
 
   ConnectionEntry* GetOrCreateConnectionEntry(
-      nsHttpConnectionInfo*, bool prohibitWildCard, bool aNoHttp2,
-      bool aNoHttp3, bool* aAvailableForDispatchNow = nullptr);
+      nsHttpConnectionInfo*, bool allowWildCard, bool aNoHttp2, bool aNoHttp3,
+      bool* aAvailableForDispatchNow = nullptr);
 
   [[nodiscard]] nsresult MakeNewConnection(
       ConnectionEntry* ent, PendingTransactionInfo* pendingTransInfo);
@@ -431,7 +431,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // @param excludeActive: skip active tabid transactions.
   void ResumeReadOf(
       nsClassHashtable<nsUint64HashKey, nsTArray<RefPtr<nsHttpTransaction>>>&,
-      bool excludeForActiveTab = false);
+      bool excludeActive = false);
   void ResumeReadOf(nsTArray<RefPtr<nsHttpTransaction>>*);
 
   // Cached status of the active tab active transactions existence,

@@ -33,7 +33,8 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Telemetry.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 namespace {
 
@@ -49,7 +50,7 @@ void AppendMemoryStorageTag(nsAutoCString& key) {
 // Not defining as static or class member of CacheStorageService since
 // it would otherwise need to include CacheEntry.h and that then would
 // need to be exported to make nsNetModule.cpp compilable.
-using GlobalEntryTables = nsClassHashtable<nsCStringHashKey, CacheEntryTable>;
+typedef nsClassHashtable<nsCStringHashKey, CacheEntryTable> GlobalEntryTables;
 
 /**
  * Keeps tables of entries.  There is one entries table for each distinct load
@@ -315,9 +316,8 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
   }
 
   virtual ~WalkMemoryCacheRunnable() {
-    if (mCallback) {
+    if (mCallback)
       ProxyReleaseMainThread("WalkMemoryCacheRunnable::mCallback", mCallback);
-    }
   }
 
   virtual void OnEntryInfo(const nsACString& aURISpec,
@@ -1097,16 +1097,14 @@ bool CacheStorageService::RemoveEntry(CacheEntry* aEntry,
   }
 
   CacheEntryTable* entries;
-  if (sGlobalEntryTables->Get(aEntry->GetStorageID(), &entries)) {
+  if (sGlobalEntryTables->Get(aEntry->GetStorageID(), &entries))
     RemoveExactEntry(entries, entryKey, aEntry, false /* don't overwrite */);
-  }
 
   nsAutoCString memoryStorageID(aEntry->GetStorageID());
   AppendMemoryStorageTag(memoryStorageID);
 
-  if (sGlobalEntryTables->Get(memoryStorageID, &entries)) {
+  if (sGlobalEntryTables->Get(memoryStorageID, &entries))
     RemoveExactEntry(entries, entryKey, aEntry, false /* don't overwrite */);
-  }
 
   return true;
 }
@@ -1721,9 +1719,8 @@ class CacheEntryDoomByKeyCallback : public CacheFileIOListener,
 };
 
 CacheEntryDoomByKeyCallback::~CacheEntryDoomByKeyCallback() {
-  if (mCallback) {
+  if (mCallback)
     ProxyReleaseMainThread("CacheEntryDoomByKeyCallback::mCallback", mCallback);
-  }
 }
 
 NS_IMETHODIMP CacheEntryDoomByKeyCallback::OnFileDoomed(
@@ -1911,7 +1908,7 @@ nsresult CacheStorageService::DoomStorageEntries(
     CacheEntryTable* diskEntries;
     if (memoryEntries && sGlobalEntryTables->Get(aContextKey, &diskEntries)) {
       for (const auto& memoryEntry : *memoryEntries) {
-        const auto& entry = memoryEntry.GetData();
+        auto entry = memoryEntry.GetData();
         RemoveExactEntry(diskEntries, memoryEntry.GetKey(), entry, false);
       }
     }
@@ -2338,4 +2335,5 @@ CacheStorageService::Flush(nsIObserver* aObserver) {
   return thread->Dispatch(r, CacheIOThread::WRITE);
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

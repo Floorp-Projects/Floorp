@@ -80,10 +80,10 @@ class HttpTransactionChild final : public PHttpTransactionChild,
   // Initialize the *real* nsHttpTransaction. See |nsHttpTransaction::Init|
   // for the parameters.
   [[nodiscard]] nsresult InitInternal(
-      uint32_t caps, const HttpConnectionInfoCloneArgs& infoArgs,
-      nsHttpRequestHead* requestHead,
-      nsIInputStream* requestBody,  // use the trick in bug 1277681
-      uint64_t requestContentLength, bool requestBodyHasHeaders,
+      uint32_t caps, const HttpConnectionInfoCloneArgs& aArgs,
+      nsHttpRequestHead* reqHeaders,
+      nsIInputStream* reqBody,  // use the trick in bug 1277681
+      uint64_t reqContentLength, bool reqBodyIncludesHeaders,
       uint64_t topLevelOuterContentWindowId, uint8_t httpTrafficCategory,
       uint64_t requestContextID, uint32_t classOfService, uint32_t initialRwin,
       bool responseTimeoutEnabled, uint64_t channelId,

@@ -832,7 +832,7 @@ nsIPrincipal* LoadInfo::FindPrincipalToInherit(nsIChannel* aChannel) {
     Unused << aChannel->GetOriginalURI(getter_AddRefs(uri));
   }
 
-  auto* prin = BasePrincipal::Cast(mTriggeringPrincipal);
+  auto prin = BasePrincipal::Cast(mTriggeringPrincipal);
   return prin->PrincipalToInherit(uri);
 }
 

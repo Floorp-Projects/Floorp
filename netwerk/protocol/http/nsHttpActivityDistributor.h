@@ -15,8 +15,8 @@ namespace net {
 
 class nsHttpActivityDistributor : public nsIHttpActivityDistributor {
  public:
-  using ObserverArray =
-      nsTArray<nsMainThreadPtrHandle<nsIHttpActivityObserver>>;
+  typedef nsTArray<nsMainThreadPtrHandle<nsIHttpActivityObserver> >
+      ObserverArray;
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIHTTPACTIVITYOBSERVER
   NS_DECL_NSIHTTPACTIVITYDISTRIBUTOR

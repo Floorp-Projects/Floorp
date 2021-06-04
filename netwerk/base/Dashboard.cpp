@@ -1148,10 +1148,10 @@ nsresult Dashboard::TestNewConnection(ConnectionData* aConnectionData) {
   return rv;
 }
 
-using ErrorEntry = struct {
+typedef struct {
   nsresult key;
   const char* error;
-};
+} ErrorEntry;
 
 #undef ERROR
 #define ERROR(key, val) \

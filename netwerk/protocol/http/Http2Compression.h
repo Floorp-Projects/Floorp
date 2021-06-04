@@ -125,15 +125,15 @@ class Http2Decompressor final : public Http2BaseCompressor {
   [[nodiscard]] nsresult DoLiteralNeverIndexed();
   [[nodiscard]] nsresult DoContextUpdate();
 
-  [[nodiscard]] nsresult DecodeInteger(uint32_t prefixLen, uint32_t& accum);
+  [[nodiscard]] nsresult DecodeInteger(uint32_t prefixLen, uint32_t& result);
   [[nodiscard]] nsresult OutputHeader(uint32_t index);
   [[nodiscard]] nsresult OutputHeader(const nsACString& name,
                                       const nsACString& value);
 
   [[nodiscard]] nsresult CopyHeaderString(uint32_t index, nsACString& name);
-  [[nodiscard]] nsresult CopyStringFromInput(uint32_t bytes, nsACString& val);
+  [[nodiscard]] nsresult CopyStringFromInput(uint32_t index, nsACString& val);
   uint8_t ExtractByte(uint8_t bitsLeft, uint32_t& bytesConsumed);
-  [[nodiscard]] nsresult CopyHuffmanStringFromInput(uint32_t bytes,
+  [[nodiscard]] nsresult CopyHuffmanStringFromInput(uint32_t index,
                                                     nsACString& val);
   [[nodiscard]] nsresult DecodeHuffmanCharacter(
       const HuffmanIncomingTable* table, uint8_t& c, uint32_t& bytesConsumed,

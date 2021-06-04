@@ -139,7 +139,7 @@ class CacheFileHandles {
   already_AddRefed<CacheFileHandle> NewHandle(const SHA1Sum::Hash*,
                                               bool aPriority,
                                               CacheFileHandle::PinningStatus);
-  void RemoveHandle(CacheFileHandle* aHandle);
+  void RemoveHandle(CacheFileHandle* aHandlle);
   void GetAllHandles(nsTArray<RefPtr<CacheFileHandle> >* _retval);
   void GetActiveHandles(nsTArray<RefPtr<CacheFileHandle> >* _retval);
   void ClearAll();
@@ -155,8 +155,8 @@ class CacheFileHandles {
 
   class HandleHashKey : public PLDHashEntryHdr {
    public:
-    using KeyType = const SHA1Sum::Hash&;
-    using KeyTypePointer = const SHA1Sum::Hash*;
+    typedef const SHA1Sum::Hash& KeyType;
+    typedef const SHA1Sum::Hash* KeyTypePointer;
 
     explicit HandleHashKey(KeyTypePointer aKey) {
       MOZ_COUNT_CTOR(HandleHashKey);
@@ -316,7 +316,7 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
   static nsresult EvictIfOverLimit();
   static nsresult EvictAll();
   static nsresult EvictByContext(nsILoadContextInfo* aLoadContextInfo,
-                                 bool aPinned, const nsAString& aOrigin);
+                                 bool aPinning, const nsAString& aOrigin);
 
   static nsresult InitIndexEntry(CacheFileHandle* aHandle,
                                  OriginAttrsHash aOriginAttrsHash,
@@ -384,7 +384,7 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
                          bool aTruncate);
   nsresult DoomFileInternal(
       CacheFileHandle* aHandle,
-      PinningDoomRestriction aPinningDoomRestriction = NO_RESTRICTION);
+      PinningDoomRestriction aPinningStatusRestriction = NO_RESTRICTION);
   nsresult DoomFileByKeyInternal(const SHA1Sum::Hash* aHash);
   nsresult MaybeReleaseNSPRHandleInternal(CacheFileHandle* aHandle,
                                           bool aIgnoreShutdownLag = false);
@@ -396,7 +396,7 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
   nsresult OverLimitEvictionInternal();
   nsresult EvictAllInternal();
   nsresult EvictByContextInternal(nsILoadContextInfo* aLoadContextInfo,
-                                  bool aPinned, const nsAString& aOrigin);
+                                  bool aPinning, const nsAString& aOrigin);
 
   nsresult TrashDirectory(nsIFile* aFile);
   static void OnTrashTimer(nsITimer* aTimer, void* aClosure);

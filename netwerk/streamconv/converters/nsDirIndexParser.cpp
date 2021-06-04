@@ -94,11 +94,10 @@ nsresult nsDirIndexParser::Init() {
 
   nsresult rv;
   // XXX not threadsafe
-  if (gRefCntParser++ == 0) {
+  if (gRefCntParser++ == 0)
     rv = CallGetService(NS_ITEXTTOSUBURI_CONTRACTID, &gTextToSubURI);
-  } else {
+  else
     rv = NS_OK;
-  }
 
   return rv;
 }
@@ -178,17 +177,15 @@ void nsDirIndexParser::ParseFormat(const char* aFormatStr) {
   mFormat[0] = -1;
 
   do {
-    while (*aFormatStr && nsCRT::IsAsciiSpace(char16_t(*aFormatStr))) {
+    while (*aFormatStr && nsCRT::IsAsciiSpace(char16_t(*aFormatStr)))
       ++aFormatStr;
-    }
 
     if (!*aFormatStr) break;
 
     nsAutoCString name;
     int32_t len = 0;
-    while (aFormatStr[len] && !nsCRT::IsAsciiSpace(char16_t(aFormatStr[len]))) {
+    while (aFormatStr[len] && !nsCRT::IsAsciiSpace(char16_t(aFormatStr[len])))
       ++len;
-    }
     name.Append(aFormatStr, len);
     aFormatStr += len;
 
@@ -315,11 +312,10 @@ void nsDirIndexParser::ParseData(nsIDirIndex* aIdx, char* aDataStr,
       case FIELD_CONTENTLENGTH: {
         int64_t len;
         int32_t status = PR_sscanf(value, "%lld", &len);
-        if (status == 1) {
+        if (status == 1)
           aIdx->SetSize(len);
-        } else {
+        else
           aIdx->SetSize(UINT64_MAX);  // UINT64_MAX means unknown
-        }
       } break;
       case FIELD_LASTMODIFIED: {
         PRTime tm;

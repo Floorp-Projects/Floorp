@@ -360,7 +360,7 @@ nsresult Http3Session::ProcessEvents() {
 
   // We need an array to pick up header data or a resumption token.
   nsTArray<uint8_t> data;
-  Http3Event event{};
+  Http3Event event;
   event.tag = Http3Event::Tag::NoEvent;
 
   nsresult rv = mHttp3Connection->GetEvent(&event, data);
@@ -745,8 +745,9 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
         mCannotDo0RTTStreams.AppendElement(stream);
       }
       return true;
+    } else {
+      m0RTTStreams.AppendElement(stream);
     }
-    m0RTTStreams.AppendElement(stream);
   }
 
   if (!mFirstHttpTransaction && !IsConnected()) {
@@ -1758,7 +1759,7 @@ void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
 
   Telemetry::Accumulate(Telemetry::HTTP3_CONNECTION_CLOSE_CODE_3, key, value);
 
-  Http3Stats stats{};
+  Http3Stats stats;
   mHttp3Connection->GetStats(&stats);
 
   if (stats.packets_tx > 0) {

@@ -41,13 +41,13 @@ class nsFileStreamBase : public nsISeekableStream, public nsIFileMetadata {
   virtual ~nsFileStreamBase();
 
   nsresult Close();
-  nsresult Available(uint64_t* aResult);
-  nsresult Read(char* aBuf, uint32_t aCount, uint32_t* aResult);
+  nsresult Available(uint64_t* _retval);
+  nsresult Read(char* aBuf, uint32_t aCount, uint32_t* _retval);
   nsresult ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
                         uint32_t aCount, uint32_t* _retval);
-  nsresult IsNonBlocking(bool* aNonBlocking);
+  nsresult IsNonBlocking(bool* _retval);
   nsresult Flush();
-  nsresult Write(const char* aBuf, uint32_t aCount, uint32_t* result);
+  nsresult Write(const char* aBuf, uint32_t aCount, uint32_t* _retval);
   nsresult WriteFrom(nsIInputStream* aFromStream, uint32_t aCount,
                      uint32_t* _retval);
   nsresult WriteSegments(nsReadSegmentFun aReader, void* aClosure,
@@ -76,8 +76,8 @@ class nsFileStreamBase : public nsISeekableStream, public nsIFileMetadata {
 
   struct OpenParams {
     nsCOMPtr<nsIFile> localFile;
-    int32_t ioFlags = 0;
-    int32_t perm = 0;
+    int32_t ioFlags;
+    int32_t perm;
   };
 
   /**

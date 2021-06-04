@@ -851,9 +851,8 @@ void nsHttpConnection::SetupSSL() {
   LOG1(("nsHttpConnection::SetupSSL %p caps=0x%X %s\n", this, mTransactionCaps,
         mConnInfo->HashKey().get()));
 
-  if (mSetupSSLCalled) {  // do only once
+  if (mSetupSSLCalled)  // do only once
     return;
-  }
   mSetupSSLCalled = true;
 
   if (mNPNComplete) return;
@@ -868,7 +867,7 @@ void nsHttpConnection::SetupSSL() {
 
   // if we are connected to the proxy with TLS, start the TLS
   // flow immediately without waiting for a CONNECT sequence.
-  DebugOnly<nsresult> rv{};
+  DebugOnly<nsresult> rv;
   if (mInSpdyTunnel) {
     rv = InitSSLParams(false, true);
   } else {
@@ -1232,11 +1231,10 @@ nsresult nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction* trans,
   bool explicitClose =
       responseHead->HasHeaderValue(nsHttp::Connection, "close") ||
       responseHead->HasHeaderValue(nsHttp::Proxy_Connection, "close");
-  if (!explicitClose) {
+  if (!explicitClose)
     explicitKeepAlive =
         responseHead->HasHeaderValue(nsHttp::Connection, "keep-alive") ||
         responseHead->HasHeaderValue(nsHttp::Proxy_Connection, "keep-alive");
-  }
 
   // deal with 408 Server Timeouts
   uint16_t responseStatus = responseHead->Status();
@@ -1262,7 +1260,10 @@ nsresult nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction* trans,
   if ((responseHead->Version() < HttpVersion::v1_1) ||
       (requestHead->Version() < HttpVersion::v1_1)) {
     // HTTP/1.0 connections are by default NOT persistent
-    mKeepAlive = explicitKeepAlive;
+    if (explicitKeepAlive)
+      mKeepAlive = true;
+    else
+      mKeepAlive = false;
   } else {
     // HTTP/1.1 connections are by default persistent
     mKeepAlive = !explicitClose;
@@ -1283,11 +1284,10 @@ nsresult nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction* trans,
 
     if (mUsingSpdyVersion == SpdyVersion::NONE) {
       const char* cp = nsCRT::strcasestr(keepAlive.get(), "timeout=");
-      if (cp) {
+      if (cp)
         mIdleTimeout = PR_SecondsToInterval((uint32_t)atoi(cp + 8));
-      } else {
+      else
         mIdleTimeout = gHttpHandler->IdleTimeout() * mDefaultTimeoutFactor;
-      }
 
       cp = nsCRT::strcasestr(keepAlive.get(), "max=");
       if (cp) {
@@ -1420,9 +1420,8 @@ nsresult nsHttpConnection::TakeTransport(nsISocketTransport** aTransport,
                                          nsIAsyncOutputStream** aOutputStream) {
   if (mUsingSpdyVersion != SpdyVersion::NONE) return NS_ERROR_FAILURE;
   if (mTransaction && !mTransaction->IsDone()) return NS_ERROR_IN_PROGRESS;
-  if (!(mSocketTransport && mSocketIn && mSocketOut)) {
+  if (!(mSocketTransport && mSocketIn && mSocketOut))
     return NS_ERROR_NOT_INITIALIZED;
-  }
 
   if (mInputOverflow) mSocketIn = mInputOverflow.forget();
 
@@ -1864,11 +1863,11 @@ nsresult nsHttpConnection::OnReadSegment(const char* buf, uint32_t count,
   }
 
   nsresult rv = mSocketOut->Write(buf, count, countRead);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv))
     mSocketOutCondition = rv;
-  } else if (*countRead == 0) {
+  else if (*countRead == 0)
     mSocketOutCondition = NS_BASE_STREAM_CLOSED;
-  } else {
+  else {
     mLastWriteTime = PR_IntervalNow();
     mSocketOutCondition = NS_OK;  // reset condition
     if (!mProxyConnectInProgress) mTotalBytesWritten += *countRead;
@@ -2042,13 +2041,12 @@ nsresult nsHttpConnection::OnWriteSegment(char* buf, uint32_t count,
   }
 
   nsresult rv = mSocketIn->Read(buf, count, countWritten);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv))
     mSocketInCondition = rv;
-  } else if (*countWritten == 0) {
+  else if (*countWritten == 0)
     mSocketInCondition = NS_BASE_STREAM_CLOSED;
-  } else {
+  else
     mSocketInCondition = NS_OK;  // reset condition
-  }
 
   return mSocketInCondition;
 }
@@ -2184,7 +2182,7 @@ nsresult nsHttpConnection::MakeConnectString(nsAHttpTransaction* trans,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  DebugOnly<nsresult> rv{};
+  DebugOnly<nsresult> rv;
 
   rv = nsHttpHandler::GenerateHostPort(
       nsDependentCString(trans->ConnectionInfo()->Origin()),

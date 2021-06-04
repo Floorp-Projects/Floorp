@@ -36,7 +36,7 @@ class CacheIOThread final : public nsIThreadObserver {
 
   CacheIOThread();
 
-  using EventQueue = nsTArray<nsCOMPtr<nsIRunnable>>;
+  typedef nsTArray<nsCOMPtr<nsIRunnable>> EventQueue;
 
   enum ELevel : uint32_t {
     OPEN_PRIORITY,
