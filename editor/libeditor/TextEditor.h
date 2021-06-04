@@ -485,12 +485,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) override;
 
-  /**
-   * Factored methods for handling insertion of data from transferables
-   * (drag&drop or clipboard).
-   */
-  virtual nsresult PrepareTransferable(nsITransferable** transferable);
-
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertTextFromTransferable(nsITransferable* transferable);
 
