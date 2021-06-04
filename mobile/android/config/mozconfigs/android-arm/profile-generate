@@ -1,4 +1,4 @@
-. "$topsrcdir/mobile/android/config/mozconfigs/android-api-16/nightly"
+. "$topsrcdir/mobile/android/config/mozconfigs/android-arm/nightly"
 
 mk_add_options "export MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES=0"
 

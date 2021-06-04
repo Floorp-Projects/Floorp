@@ -49,7 +49,7 @@ job-defaults:
         secrets: true
         mozconfig-variant: null
         tooltool-downloads: internal
-        custom-build-variant-cfg: api-16
+        custom-build-variant-cfg: arm
         # Note: These settings are only honored by nightly (i.e. shipping) builds
         update-channel:
             by-release-type:
@@ -96,7 +96,7 @@ jobs:
         dependencies:
             android-x86-shippable: build-android-x86-shippable/opt
             android-x86_64-shippable: build-android-x86_64-shippable/opt
-            android-api-16-shippable: build-android-api-16-shippable/opt
+            android-arm-shippable: build-android-arm-shippable/opt
             android-aarch64-shippable: build-android-aarch64-shippable/opt
         worker:
             env:

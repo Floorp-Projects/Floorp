@@ -7,8 +7,8 @@ from __future__ import absolute_import, print_function
 # The values correspond to entries at
 # https://tools.taskcluster.net/index/artifacts/#gecko.v2.mozilla-central.latest/gecko.v2.mozilla-central.latest
 JOB_CHOICES = {
-    "android-api-16-opt",
-    "android-api-16-debug",
+    "android-arm-opt",
+    "android-arm-debug",
     "android-x86-opt",
     "android-x86_64-opt",
     "android-x86_64-debug",

@@ -19,7 +19,7 @@ only-for-attributes:
     - shippable
 
 not-for-build-platforms:
-    - android-api-16-shippable/opt
+    - android-arm-shippable/opt
     - android-x86_64-shippable/opt
     - android-x86-shippable/opt
     - android-aarch64-shippable/opt

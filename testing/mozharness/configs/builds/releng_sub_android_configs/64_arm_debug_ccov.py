@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 config = {
-    "stage_platform": "android-api-16-debug-ccov",
-    "src_mozconfig": "mobile/android/config/mozconfigs/android-api-16/debug-ccov",
+    "stage_platform": "android-arm-debug-ccov",
+    "src_mozconfig": "mobile/android/config/mozconfigs/android-arm/debug-ccov",
     "debug_build": True,
     "postflight_build_mach_commands": [
         [

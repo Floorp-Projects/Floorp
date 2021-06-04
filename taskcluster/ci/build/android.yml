@@ -43,14 +43,14 @@ job-defaults:
             - linux64-nasm
             - linux64-node
 
-android-api-16/debug:
-    description: "Android 4.0 api-16+ Debug"
+android-arm/debug:
+    description: "Android 4.0 Arm Debug"
     index:
-        job-name: android-api-16-debug
+        job-name: android-arm-debug
     attributes:
         enable-full-crashsymbols: true
     treeherder:
-        platform: android-4-0-armv7-api16/debug
+        platform: android-4-0-armv7/debug
         symbol: B
     worker-type: b-linux
     worker:
@@ -60,7 +60,7 @@ android-api-16/debug:
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: api-16-debug
+        custom-build-variant-cfg: arm-debug
     use-sccache: true
     fetches:
         toolchain:
@@ -143,14 +143,14 @@ android-x86-shippable/opt:
         toolchain:
             - linux64-clang
 
-android-api-16/opt:
-    description: "Android 4.0 api-16+ Opt"
+android-arm/opt:
+    description: "Android 4.0 Arm Opt"
     index:
-        job-name: android-api-16-opt
+        job-name: android-arm-opt
     attributes:
         enable-full-crashsymbols: true
     treeherder:
-        platform: android-4-0-armv7-api16/opt
+        platform: android-4-0-armv7/opt
         symbol: B
     run-on-projects: ['integration']
     worker-type: b-linux
@@ -161,15 +161,15 @@ android-api-16/opt:
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: api-16
+        custom-build-variant-cfg: arm
     use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
             - linux64-sccache
 
-android-api-16-shippable/opt:
-    description: "Android 4.0 api-16+ Shippable"
+android-arm-shippable/opt:
+    description: "Android 4.0 Arm Shippable"
     use-pgo: true
     attributes:
         enable-full-crashsymbols: true
@@ -177,10 +177,10 @@ android-api-16-shippable/opt:
     shipping-phase: build
     shipping-product: fennec
     index:
-        job-name: android-api-16-opt
+        job-name: android-arm-opt
         type: android-shippable-with-multi-l10n
     treeherder:
-        platform: android-4-0-armv7-api16-shippable/opt
+        platform: android-4-0-armv7-shippable/opt
         symbol: Bpgo(B)
     run-on-projects: ['release']
     worker-type: b-linux
@@ -193,7 +193,7 @@ android-api-16-shippable/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
-        custom-build-variant-cfg: api-16
+        custom-build-variant-cfg: arm
     fetches:
         toolchain:
             - linux64-clang
@@ -249,7 +249,7 @@ android-aarch64/debug:
 
 android-aarch64-shippable/opt:
     description: "Android 5.0 AArch64 Shippable"
-    use-pgo: android-api-16-shippable/opt
+    use-pgo: android-arm-shippable/opt
     attributes:
         enable-full-crashsymbols: true
         shippable: true
@@ -380,14 +380,14 @@ android-x86_64/debug-isolated-process:
             - linux64-clang
             - linux64-sccache
 
-android-api-16-gcp/debug:
-    description: "Android 4.0 api-16+ Debug - built on GCP"
+android-arm-gcp/debug:
+    description: "Android 4.0 Arm Debug - built on GCP"
     index:
-        job-name: android-api-16-gcp-debug
+        job-name: android-arm-gcp-debug
     attributes:
         enable-full-crashsymbols: true
     treeherder:
-        platform: android-4-0-armv7-api16/debug
+        platform: android-4-0-armv7/debug
         symbol: Bg
         tier: 3
     worker-type: b-linux-gcp
@@ -398,7 +398,7 @@ android-api-16-gcp/debug:
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: api-16-debug
+        custom-build-variant-cfg: arm-debug
     use-sccache: true
     fetches:
         toolchain:
@@ -435,14 +435,14 @@ android-x86-gcp/opt:
     optimization:
         skip-unless-backstop: null
 
-android-api-16-gcp/opt:
-    description: "Android 4.0 api-16+ Opt - built on GCP"
+android-arm-gcp/opt:
+    description: "Android 4.0 Arm Opt - built on GCP"
     index:
-        job-name: android-api-16-gcp-opt
+        job-name: android-arm-gcp-opt
     attributes:
         enable-full-crashsymbols: true
     treeherder:
-        platform: android-4-0-armv7-api16/opt
+        platform: android-4-0-armv7/opt
         symbol: Bg
         tier: 3
     worker-type: b-linux-gcp
@@ -453,7 +453,7 @@ android-api-16-gcp/opt:
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: api-16
+        custom-build-variant-cfg: arm
     use-sccache: true
     fetches:
         toolchain:
