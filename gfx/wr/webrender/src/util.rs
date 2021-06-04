@@ -128,7 +128,6 @@ impl<T> VecHelper<T> for Vec<T> {
 //           way the current spatial tree works.
 #[derive(Debug, Clone, Copy, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScaleOffset {
     pub scale: default::Vector2D<f32>,
     pub offset: default::Vector2D<f32>,
