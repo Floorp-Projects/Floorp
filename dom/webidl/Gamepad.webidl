@@ -10,7 +10,8 @@
  */
 
 [Pref="dom.gamepad.enabled",
- Exposed=Window]
+ Exposed=Window,
+ SecureContext]
 interface GamepadButton {
   readonly    attribute boolean pressed;
   readonly    attribute boolean touched;
@@ -34,7 +35,8 @@ enum GamepadMappingType {
 };
 
 [Pref="dom.gamepad.enabled",
- Exposed=Window]
+ Exposed=Window,
+ SecureContext]
 interface Gamepad {
   /**
    * An identifier, unique per type of device.
