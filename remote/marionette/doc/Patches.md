@@ -14,7 +14,7 @@ granted commit access level 1 you will have permission to use the
 
 This is a good try syntax to use when testing Marionette changes:
 
-	-b do -p linux,linux64,macosx64,win64,android-api-16 -u marionette,marionette-headless,xpcshell,web-platform-tests,firefox-ui-functional -t none
+	-b do -p linux,linux64,macosx64,win64,android-arm -u marionette,marionette-headless,xpcshell,web-platform-tests,firefox-ui-functional -t none
 
 You can also use the `marionette` [try preset]:
 

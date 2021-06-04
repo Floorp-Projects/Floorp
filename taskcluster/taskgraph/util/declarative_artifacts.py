@@ -11,12 +11,12 @@ from taskgraph.util.scriptworker import generate_beetmover_upstream_artifacts
 
 _ARTIFACT_ID_PER_PLATFORM = {
     "android-aarch64-opt": "geckoview-default-arm64-v8a",
-    "android-api-16-opt": "geckoview-default-armeabi-v7a",
+    "android-arm-opt": "geckoview-default-armeabi-v7a",
     "android-x86-opt": "geckoview-default-x86",
     "android-x86_64-opt": "geckoview-default-x86_64",
     "android-geckoview-fat-aar-opt": "geckoview-default",
     "android-aarch64-shippable": "geckoview{update_channel}-arm64-v8a",
-    "android-api-16-shippable": "geckoview{update_channel}-armeabi-v7a",
+    "android-arm-shippable": "geckoview{update_channel}-armeabi-v7a",
     "android-x86-shippable": "geckoview{update_channel}-x86",
     "android-x86_64-shippable": "geckoview{update_channel}-x86_64",
     "android-geckoview-fat-aar-shippable": "geckoview{update_channel}",

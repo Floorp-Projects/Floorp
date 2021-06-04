@@ -104,8 +104,8 @@ jobs:
 # kind-dependencies above.
 #     android-build-vs-previous-try:
 #         symbol: A
-#         new: build-android-api-16/opt
-#         original: {index-search: gecko.v2.try.revision.aabd5deb0156f9b55ab60ad6a01ebfc4580bf2e1.mobile.android-api-16-opt}
+#         new: build-android-arm/opt
+#         original: {index-search: gecko.v2.try.revision.aabd5deb0156f9b55ab60ad6a01ebfc4580bf2e1.mobile.android-arm-opt}
 #     linux64-build-vs-previous-try:
 #         symbol: L
 #         new: build-linux64/opt

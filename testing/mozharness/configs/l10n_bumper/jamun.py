@@ -39,7 +39,7 @@ config = {
             "revision_url": "https://l10n.mozilla.org/shipping/l10n-changesets?av=fennec%(MAJOR_VERSION)s",
             "platform_configs": [
                 {
-                    "platforms": ["android-api-16", "android"],
+                    "platforms": ["android-arm", "android"],
                     "path": "mobile/android/locales/all-locales",
                 },
                 {

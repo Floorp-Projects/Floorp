@@ -7,9 +7,9 @@ job-defaults:
     suite: raptor
     run-on-projects:
         by-test-platform:
-            android-hw-p2-.*-api-16/(?!opt).*: []
-            android-hw-p2-.*-api-16-shippable/opt: []
-            android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
+            android-hw-p2-.*-arm7/(?!opt).*: []
+            android-hw-p2-.*-arm7-shippable/opt: []
+            android-hw(?!-p2).*(?<!-arm7-shippable)/opt.*: []
             default: [mozilla-central]
     target: geckoview_example.apk
     test-manifest-loader: null  # don't load tests in the taskgraph
