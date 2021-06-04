@@ -6,6 +6,12 @@
 const TEST_RELOAD_URL = `${URL_ROOT}/inspectedwindow-reload-target.sjs`;
 
 async function setup(pageUrl) {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   const extension = ExtensionTestUtils.loadExtension({
     background() {
       // This is just an empty extension used to ensure that the caller extension uuid

@@ -8,6 +8,12 @@ const TEST_DOCUMENT = "target_configuration_test_doc.sjs";
 const TEST_URI = URL_ROOT_COM_SSL + TEST_DOCUMENT;
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   // Disable click hold and double tap zooming as it might interfere with the test
   await pushPref("ui.click_hold_context_menus", false);
   await pushPref("apz.allow_double_tap_zooming", false);

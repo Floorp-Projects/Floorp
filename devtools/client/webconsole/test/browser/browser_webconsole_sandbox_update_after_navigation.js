@@ -13,6 +13,12 @@ const TEST_URI1 = "http://example.com/" + BASE_URI;
 const TEST_URI2 = "http://example.org/" + BASE_URI;
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   await pushPref("devtools.webconsole.persistlog", false);
 
   const hud = await openNewTabAndConsole(TEST_URI1);

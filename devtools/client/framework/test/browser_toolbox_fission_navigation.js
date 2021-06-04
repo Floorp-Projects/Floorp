@@ -8,6 +8,12 @@ const EXAMPLE_NET_URI =
   "http://example.net/document-builder.sjs?html=<div id=net>net";
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   info("Test with server side target switching ENABLED");
   await pushPref("devtools.target-switching.server.enabled", true);
   await testCase();

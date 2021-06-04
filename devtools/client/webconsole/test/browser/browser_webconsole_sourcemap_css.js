@@ -26,6 +26,12 @@ const PAGE_URL = `data:text/html,
 </html>`;
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   await pushPref("devtools.source-map.client-service.enabled", true);
   await pushPref("devtools.webconsole.filter.css", true);
 

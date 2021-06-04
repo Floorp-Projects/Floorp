@@ -24,6 +24,12 @@ registerCleanupFunction(async function() {
 });
 
 add_task(async function task() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   info("Add an empty tab and open the console");
   const hud = await openNewTabAndConsole("");
 

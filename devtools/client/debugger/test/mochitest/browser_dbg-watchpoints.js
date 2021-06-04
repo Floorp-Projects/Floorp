@@ -8,6 +8,12 @@
 // then removing and adding a watchpoint during the same pause
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   const dbg = await initDebugger("doc-sources.html");
 
   // Do not await for navigation as an early breakpoint pauses the document load
