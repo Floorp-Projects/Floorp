@@ -114,7 +114,7 @@ describe("<CollectionCardGrid>", () => {
     assert.ok(!wrapper.exists(".ds-collection-card-grid"));
   });
 
-  it("should dispath telemety events on dismiss", () => {
+  it("should dispatch telemety events on dismiss", () => {
     wrapper.instance().onDismissClick();
 
     const firstCall = dispatchStub.getCall(0);
@@ -123,9 +123,9 @@ describe("<CollectionCardGrid>", () => {
 
     assert.equal(firstCall.args[0].type, "BLOCK_URL");
     assert.deepEqual(firstCall.args[0].data, [
-      { url: "123", pocket_id: undefined },
-      { url: "456", pocket_id: undefined },
-      { url: "789", pocket_id: undefined },
+      { url: "123", pocket_id: undefined, isSponsoredTopSite: undefined },
+      { url: "456", pocket_id: undefined, isSponsoredTopSite: undefined },
+      { url: "789", pocket_id: undefined, isSponsoredTopSite: undefined },
     ]);
 
     assert.equal(secondCall.args[0].type, "TELEMETRY_USER_EVENT");
