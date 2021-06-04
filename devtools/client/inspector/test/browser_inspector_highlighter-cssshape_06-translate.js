@@ -34,7 +34,7 @@ async function teardown(config) {
 }
 
 async function testTranslate(config) {
-  const { testActor, helper, highlighters } = config;
+  const { helper, highlighters } = config;
   const options = { transformMode: true };
   const property = "clip-path";
 
@@ -58,7 +58,7 @@ async function testTranslate(config) {
     await mouse.down(x, y, selector);
     await mouse.move(x + dx, y + dy, selector);
     await mouse.up(x + dx, y + dy, selector);
-    await testActor.reflow();
+    await reflowContentPage();
     await onShapeChangeApplied;
 
     let newBB = await getBoundingBoxInPx({ selector, ...config });
@@ -72,7 +72,7 @@ async function testTranslate(config) {
     await mouse.down(x + dx, y + dy, selector);
     await mouse.move(x, y, selector);
     await mouse.up(x, y, selector);
-    await testActor.reflow();
+    await reflowContentPage();
     await onShapeChangeApplied;
 
     newBB = await getBoundingBoxInPx({ selector, ...config });
