@@ -137,7 +137,18 @@ add_task(async function test_toggle_preferences() {
     "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
   });
 
+  // The pref should be ignored by default.
   Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+  assertTelemetryScalars({
+    "blocklist.mlbf_enabled": true,
+    "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
+  });
+
+  // Explicitly enabling blocklist v2 via a test-only API works.
+  // The test helper expects blocklist v3 to have been enabled by default,
+  // so restore the pref before calling enable_blocklist_v2_instead_of_useMLBF:
+  Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
+  enable_blocklist_v2_instead_of_useMLBF();
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": false,
     "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),

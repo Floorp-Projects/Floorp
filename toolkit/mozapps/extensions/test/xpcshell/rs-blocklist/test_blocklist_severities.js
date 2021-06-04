@@ -5,7 +5,7 @@
 
 // useMLBF=true only supports one type of severity (hard block). The value of
 // appDisabled in the extension blocklist is checked in test_blocklist_mlbf.js.
-Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+enable_blocklist_v2_instead_of_useMLBF();
 
 const URI_EXTENSION_BLOCKLIST_DIALOG =
   "chrome://mozapps/content/extensions/blocklist.xhtml";
