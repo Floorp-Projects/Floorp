@@ -6624,6 +6624,7 @@ class MGuardNumberToIntPtrIndex : public MUnaryInstruction,
 // Perform !-operation
 class MNot : public MUnaryInstruction, public TestPolicy::Data {
   bool operandIsNeverNaN_;
+  TypeDataList observedTypes_;
 
   explicit MNot(MDefinition* input)
       : MUnaryInstruction(classOpcode, input), operandIsNeverNaN_(false) {
@@ -6642,6 +6643,11 @@ class MNot : public MUnaryInstruction, public TestPolicy::Data {
 
   INSTRUCTION_HEADER(Not)
   TRIVIAL_NEW_WRAPPERS
+
+  void setObservedTypes(const TypeDataList& observed) {
+    observedTypes_ = observed;
+  }
+  const TypeDataList& observedTypes() const { return observedTypes_; }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
