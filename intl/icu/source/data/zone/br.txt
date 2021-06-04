@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 br{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1015,6 +1015,9 @@ br{
             lg{"eur Europa ar Reter"}
             ls{"eur cʼhoañv Europa ar Reter"}
         }
+        "meta:Europe_Further_Eastern"{
+            ls{"eur Kaliningrad"}
+        }
         "meta:Europe_Western"{
             ld{"eur hañv Europa ar Cʼhornôg"}
             lg{"eur Europa ar Cʼhornôg"}
@@ -1071,6 +1074,11 @@ br{
         }
         "meta:Guyana"{
             ls{"eur Guyana"}
+        }
+        "meta:Hawaii_Aleutian"{
+            ld{"eur hañv Hawaii hag an Aleouted"}
+            lg{"eur Hawaii hag an Aleouted"}
+            ls{"eur cʼhoañv Hawaii hag an Aleouted"}
         }
         "meta:Hong_Kong"{
             ld{"eur hañv Hong Kong"}
@@ -1148,6 +1156,11 @@ br{
         "meta:Line_Islands"{
             ls{"eur Line Islands"}
         }
+        "meta:Lord_Howe"{
+            ld{"eur hañv Lord Howe"}
+            lg{"eur Lord Howe"}
+            ls{"eur cʼhoañv Lord Howe"}
+        }
         "meta:Macau"{
             ld{"eur hañv Macau"}
             lg{"eur Macau"}
@@ -1185,6 +1198,11 @@ br{
             ld{"eur hañv Gwalarn Mecʼhiko"}
             lg{"eur Gwalarn Mecʼhiko"}
             ls{"eur cʼhoañv Gwalarn Mecʼhiko"}
+        }
+        "meta:Mexico_Pacific"{
+            ld{"eur hañv an Habask mecʼhikan"}
+            lg{"eur an Habask mecʼhikan"}
+            ls{"eur cʼhoañv an Habask mecʼhikan"}
         }
         "meta:Mongolia"{
             ld{"eur hañv Ulaanbaatar"}
@@ -1233,6 +1251,9 @@ br{
             lg{"eur Fernando de Noronha"}
             ls{"eur cʼhoañv Fernando de Noronha"}
         }
+        "meta:North_Mariana"{
+            ls{"eur Mariana an Norzh"}
+        }
         "meta:Novosibirsk"{
             ld{"eur hañv Novosibirsk"}
             lg{"eur Novosibirsk"}
@@ -1279,6 +1300,9 @@ br{
         }
         "meta:Pitcairn"{
             ls{"eur Pitcairn"}
+        }
+        "meta:Ponape"{
+            ls{"eur Pohnpei"}
         }
         "meta:Pyongyang"{
             ls{"eur Pʼyongyang"}

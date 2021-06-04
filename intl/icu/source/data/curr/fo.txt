@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fo{
     Currencies{
         AED{
@@ -56,7 +57,7 @@ fo{
         }
         BGN{
             "BGN",
-            "Bulgaria lev",
+            "Bulgarskur Lev",
         }
         BHD{
             "BHD",
@@ -96,7 +97,7 @@ fo{
         }
         BYN{
             "BYN",
-            "Hvítarussland ruble",
+            "Hvítarussiskur Ruble",
         }
         BYR{
             "BYR",
@@ -108,7 +109,7 @@ fo{
         }
         CAD{
             "CA$",
-            "Kanada dollari",
+            "Kanadiskur dollari",
         }
         CDF{
             "CDF",
@@ -152,7 +153,7 @@ fo{
         }
         CZK{
             "CZK",
-            "Kekkia koruna",
+            "Kekkiskt Koruna",
         }
         DJF{
             "DJF",
@@ -244,7 +245,7 @@ fo{
         }
         HUF{
             "HUF",
-            "Ungarn forint",
+            "Ungarskur Forintur",
         }
         IDR{
             "IDR",
@@ -344,7 +345,7 @@ fo{
         }
         MDL{
             "MDL",
-            "Moldova leu",
+            "Moldovanskur Leu",
         }
         MGA{
             "MGA",
@@ -448,7 +449,7 @@ fo{
         }
         PLN{
             "PLN",
-            "Pólland zloty",
+            "Pólskur Zloty",
         }
         PYG{
             "PYG",
@@ -812,8 +813,8 @@ fo{
             other{"Bangladesj taka"}
         }
         BGN{
-            one{"Bulgaria lev"}
-            other{"Bulgaria lev"}
+            one{"bulgarskur lev"}
+            other{"bulgarskir leva"}
         }
         BHD{
             one{"Barein dinar"}
@@ -852,8 +853,8 @@ fo{
             other{"Botsvana pular"}
         }
         BYN{
-            one{"Hvítarussland ruble"}
-            other{"Hvítarussland ruble"}
+            one{"hvítarussiskur ruble"}
+            other{"hvítarussiskir ruble"}
         }
         BYR{
             one{"Hvítarussland ruble (2000–2016)"}
@@ -864,8 +865,8 @@ fo{
             other{"Belis dollarar"}
         }
         CAD{
-            one{"Kanada dollari"}
-            other{"Kanada dollarar"}
+            one{"kanadiskur dollari"}
+            other{"kanadiskir dollarar"}
         }
         CDF{
             one{"Kongo frankur"}
@@ -908,8 +909,8 @@ fo{
             other{"Grønhøvdaoyggjar escudo"}
         }
         CZK{
-            one{"Kekkia koruna"}
-            other{"Kekkia koruna"}
+            one{"kekkiskt koruna"}
+            other{"kekkiskar korunur"}
         }
         DJF{
             one{"Djibuti frankur"}
@@ -1000,8 +1001,8 @@ fo{
             other{"Haiti gourde"}
         }
         HUF{
-            one{"Ungarn forint"}
-            other{"Ungarn forint"}
+            one{"ungarskur forintur"}
+            other{"ungarskir forintar"}
         }
         IDR{
             one{"Indonesia rupiah"}
@@ -1100,8 +1101,8 @@ fo{
             other{"Marokko dirham"}
         }
         MDL{
-            one{"Moldova leu"}
-            other{"Moldova leu"}
+            one{"moldovanskur leu"}
+            other{"moldovanskir lei"}
         }
         MGA{
             one{"Madagaskar ariary"}
@@ -1204,8 +1205,8 @@ fo{
             other{"Pakistan rupis"}
         }
         PLN{
-            one{"Pólland zloty"}
-            other{"Pólland zloty"}
+            one{"pólskur zloty"}
+            other{"pólskir zloty"}
         }
         PYG{
             one{"Paraguai guarani"}
@@ -1420,5 +1421,4 @@ fo{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

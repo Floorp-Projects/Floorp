@@ -695,9 +695,10 @@ u_scanf_integer_handler(UFILE       *input,
 
     int32_t         len;
     void            *num        = (void*) (args[0].ptrValue);
-    UNumberFormat   *format;
+    UNumberFormat   *format, *localFormat;
     int32_t         parsePos    = 0;
     int32_t         skipped;
+    int32_t         parseIntOnly = 0;
     UErrorCode      status      = U_ZERO_ERROR;
     int64_t         result;
 
@@ -722,11 +723,20 @@ u_scanf_integer_handler(UFILE       *input,
     if(format == 0)
         return 0;
 
+    /* for integer types, do not attempt to parse fractions */
+    localFormat = unum_clone(format, &status);
+    if(U_FAILURE(status))
+        return 0;
+
+    if(info->fSpec == 'd' || info->fSpec == 'i' || info->fSpec == 'u')
+        parseIntOnly = 1;
+    unum_setAttribute(localFormat, UNUM_PARSE_INT_ONLY, parseIntOnly);
+
     /* Skip the positive prefix. ICU normally can't handle this due to strict parsing. */
-    skipped += u_scanf_skip_leading_positive_sign(input, format, &status);
+    skipped += u_scanf_skip_leading_positive_sign(input, localFormat, &status);
 
     /* parse the number */
-    result = unum_parseInt64(format, input->str.fPos, len, &parsePos, &status);
+    result = unum_parseInt64(localFormat, input->str.fPos, len, &parsePos, &status);
 
     /* mask off any necessary bits */
     if (!info->fSkipArg) {
@@ -740,6 +750,9 @@ u_scanf_integer_handler(UFILE       *input,
 
     /* update the input's position to reflect consumed data */
     input->str.fPos += parsePos;
+
+    /* cleanup cloned formatter */
+    unum_close(localFormat);
 
     /* we converted 1 arg */
     *argConverted = !info->fSkipArg;

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_419{
     Keys{
         colNormalization{"orden normalizado"}
@@ -105,7 +106,6 @@ es_419{
             wara{"dígitos en Warang Citi"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         enclosed{"{0} — Adjunto"}
         extended{"{0} — Extendido"}

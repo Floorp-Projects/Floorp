@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ko{
     Keys{
         calendar{"달력"}
@@ -150,7 +151,6 @@ ko{
         el{"그리스어"}
         elx{"엘람어"}
         en{"영어"}
-        en_AU{"영어(호주)"}
         enm{"중세 영어"}
         eo{"에스페란토어"}
         es{"스페인어"}
@@ -454,7 +454,7 @@ ko{
         shi{"타셸히트어"}
         shn{"샨어"}
         shu{"차디언 아라비아어"}
-        si{"스리랑카어"}
+        si{"싱할라어"}
         sid{"시다모어"}
         sk{"슬로바키아어"}
         sl{"슬로베니아어"}
@@ -574,6 +574,9 @@ ko{
     Languages%short{
         az{"아제리어"}
     }
+    Languages%variant{
+        ckb{"쿠르드어(소라니)"}
+    }
     Scripts{
         Afak{"아파카 문자"}
         Aghb{"코카시안 알바니아 문자"}
@@ -643,7 +646,7 @@ ko{
         Khmr{"크메르 문자"}
         Khoj{"코즈키 문자"}
         Knda{"칸나다 문자"}
-        Kore{"한국어"}
+        Kore{"한국 문자"}
         Kpel{"크펠레 문자"}
         Kthi{"카이시 문자"}
         Lana{"란나 문자"}
@@ -934,7 +937,6 @@ ko{
         VAIDIKA{"바이디카"}
         VALLADER{"발라더"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — 전체"}
         category-list{"{0}: {1}"}
@@ -948,6 +950,8 @@ ko{
         strokes{
             other{"{0}획"}
         }
+        subscript{"아래 첨자 {0}"}
+        superscript{"위 첨자 {0}"}
     }
     codePatterns{
         language{"언어: {0}"}

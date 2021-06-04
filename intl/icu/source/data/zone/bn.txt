@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bn{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"আবিদজান"}
@@ -1292,6 +1292,11 @@ bn{
         "Pacific:Wallis"{
             ec{"ওলিস"}
         }
+        "meta:Acre"{
+            ld{"একর গ্রীষ্মকাল সময়"}
+            lg{"একর সময়"}
+            ls{"একর মানক সময়"}
+        }
         "meta:Afghanistan"{
             ls{"আফগানিস্তান সময়"}
         }
@@ -1500,7 +1505,7 @@ bn{
             ls{"পূর্ব ইউরোপীয় মানক সময়"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"অতিরিক্ত-পূর্ব ইউরোপীয় সময়"}
+            ls{"প্রান্তীয় পূর্ব ইউরোপীয় সময়"}
         }
         "meta:Europe_Western"{
             ld{"পশ্চিম ইউরোপীয় গ্রীষ্মকালীন সময়"}

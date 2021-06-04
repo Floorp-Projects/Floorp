@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ast{
     Keys{
         calendar{"calendariu"}
@@ -1005,7 +1006,6 @@ ast{
         VALENCIA{"valencianu"}
         WADEGILE{"romanización de Wade-Giles"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — too"}
         category-list{"{0}: {1}"}

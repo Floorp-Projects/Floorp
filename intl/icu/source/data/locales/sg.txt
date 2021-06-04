@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sg{
     AuxExemplarCharacters{"[c q x]"}
     ExemplarCharacters{"[a â ä b d e ê ë f g h i î ï j k l m n o ô ö p r s t u ù û ü v w y z]"}
@@ -16,7 +17,6 @@ sg{
             }
         }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{

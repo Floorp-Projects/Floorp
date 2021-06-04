@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ca{
     Keys{
         calendar{"calendari"}
@@ -279,7 +280,7 @@ ca{
         kj{"kuanyama"}
         kk{"kazakh"}
         kkj{"kako"}
-        kl{"grenlandès"}
+        kl{"groenlandès"}
         kln{"kalenjin"}
         km{"khmer"}
         kmb{"kimbundu"}
@@ -602,6 +603,7 @@ ca{
         zh_Hant{"xinès mandarí (tradicional)"}
     }
     Languages%menu{
+        ckb{"sorani"}
         yue{"xinès, cantonès"}
         zh{"xinès, mandarí"}
     }
@@ -671,7 +673,7 @@ ca{
         Hira{"hiragana"}
         Hluw{"jeroglífic anatoli"}
         Hmng{"pahawh hmong"}
-        Hrkt{"katakana o hiragana"}
+        Hrkt{"sil·labaris japonesos"}
         Hung{"hongarès antic"}
         Inds{"escriptura de la vall de l’Indus"}
         Ital{"cursiva antiga"}
@@ -1011,7 +1013,6 @@ ca{
         VALLADER{"baix engiadinès"}
         WADEGILE{"romanització Wade-Giles"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — tot"}
         category-list{"{0}: {1}"}
@@ -1026,6 +1027,8 @@ ca{
             one{"{0} traç"}
             other{"{0} traços"}
         }
+        subscript{"subíndex {0}"}
+        superscript{"superíndex {0}"}
     }
     codePatterns{
         language{"Idioma: {0}"}

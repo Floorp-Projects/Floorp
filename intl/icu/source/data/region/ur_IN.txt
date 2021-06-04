@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ur_IN{
     Countries{
         AC{"جزیرہ اسینشن"}
@@ -29,5 +30,4 @@ ur_IN{
     Countries%variant{
         FK{"جزائر فاکلینڈ (اسلاس مالویناس)"}
     }
-    Version{"37"}
 }

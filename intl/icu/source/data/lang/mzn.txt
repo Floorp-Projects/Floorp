@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mzn{
     Languages{
         ab{"آبخازی"}
@@ -264,7 +265,6 @@ mzn{
     Scripts%stand-alone{
         Hant{"استاندارد ِسنتی هانت"}
     }
-    Version{"37"}
     codePatterns{
         language{"زوون: {0}"}
         script{"اسکریپت: {0}"}

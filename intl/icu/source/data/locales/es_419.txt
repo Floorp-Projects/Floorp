@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_419{
     NumberElements{
         latn{
@@ -90,12 +91,12 @@ es_419{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 group{","}
             }
         }
     }
-    Version{"37"}
     calendar{
         coptic{
             monthNames{
@@ -243,14 +244,6 @@ es_419{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "a.m.",
-                "p.m.",
-            }
-            AmPmMarkersAbbr{
-                "a.m.",
-                "p.m.",
-            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -261,8 +254,8 @@ es_419{
                 "d MMM y",
                 "d/M/yy",
                 "{1} {0}",
-                "{1} 'a' 'las' {0}",
-                "{1} 'a' 'las' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -275,9 +268,9 @@ es_419{
                 Hms{"HH:mm:ss"}
                 MMMdd{"dd-MMM"}
                 yMEd{"E d/M/y"}
-                yMMM{"MMMM 'de' y"}
+                yMMM{"MMM 'de' y"}
                 yMMMEd{"E, d 'de' MMM 'de' y"}
-                yMMMd{"d 'de' MMMM 'de' y"}
+                yMMMd{"d 'de' MMM 'de' y"}
                 yQQQ{"QQQ 'de' y"}
             }
             dayNames{
@@ -293,6 +286,15 @@ es_419{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "dom.",
+                        "lun.",
+                        "mar.",
+                        "mié.",
+                        "jue.",
+                        "vie.",
+                        "sáb.",
+                    }
                     narrow{
                         "D",
                         "L",
@@ -301,18 +303,6 @@ es_419{
                         "J",
                         "V",
                         "S",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"a.m."}
-                        pm{"p.m."}
-                    }
-                    wide{
-                        am{"a.m."}
-                        pm{"p.m."}
                     }
                 }
             }
@@ -744,9 +734,6 @@ es_419{
         }
         dayOfYear-short{
             dn{"día del año"}
-        }
-        dayperiod{
-            dn{"a.m./p.m."}
         }
         dayperiod-narrow{
             dn{"a.m./p.m."}

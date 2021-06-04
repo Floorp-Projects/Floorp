@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bo{
     Languages{
         bo{"བོད་སྐད་"}
@@ -21,5 +22,4 @@ bo{
         Tibt{"བོད་ཡིག་"}
         Zxxx{"སྙན་བརྒྱུད། ཡིག་རིགས་སུ་མ་བཀོད་པའི་ཟིན་ཐོ།"}
     }
-    Version{"37"}
 }

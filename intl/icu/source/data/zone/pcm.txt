@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pcm{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Ábijan"}
@@ -1704,7 +1704,7 @@ pcm{
             ls{"Niúẹ Taim"}
         }
         "meta:Norfolk"{
-            ld{"Nọ́rfọ́lk Aíland Họ́t Sízin Taim"}
+            ld{"Nọ́rfọ́lk Aíland Délaít Taim"}
             lg{"Nọ́rfọ́lk Aíland Taim"}
             ls{"Nọ́rfọ́lk Aíland Fíksd Taim"}
         }

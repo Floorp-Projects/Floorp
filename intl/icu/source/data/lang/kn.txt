@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kn{
     Keys{
         calendar{"ಕ್ಯಾಲೆಂಡರ್"}
@@ -84,7 +85,7 @@ kn{
         car{"ಕಾರಿಬ್"}
         cch{"ಅಟ್ಸಮ್"}
         ccp{"ಚಕ್ಮಾ"}
-        ce{"ಚೆಚನ್"}
+        ce{"ಚಚೆನ್"}
         ceb{"ಸೆಬುವಾನೊ"}
         cgg{"ಚಿಗಾ"}
         ch{"ಕಮೊರೊ"}
@@ -543,11 +544,12 @@ kn{
         zza{"ಜಾಝಾ"}
     }
     Languages%long{
+        zh_Hans{"ಸರಳೀಕೃತ ಮ್ಯಾಂಡರಿನ್ ಚೈನೀಸ್"}
         zh_Hant{"ಸಾಂಪ್ರದಾಯಿಕ ಮ್ಯಾಂಡರಿನ್ ಚೈನೀಸ್"}
     }
     Languages%menu{
         yue{"ಚೈನೀಸ್, ಕ್ಯಾಂಟೊನೀಸ್"}
-        zh{"ಚೈನೀಸ್, ಮಂಡಾರಿನ್"}
+        zh{"ಚೈನೀಸ್, ಮ್ಯಾಂಡರಿನ್"}
     }
     Languages%short{
         az{"ಅಝೆರಿ"}
@@ -686,7 +688,7 @@ kn{
         Xsux{"ಸುಮೇರೋ-ಅಕ್ಕಾಡಿಯನ್ ಕ್ಯೂನಿಫಾರ್ಮ್"}
         Yiii{"ಯಿ"}
         Zinh{"ಇನ್‍ಹೆರಿಟೆಡ್"}
-        Zmth{"ಗಣೀತ ಸಂಕೇತಲಿಪಿ"}
+        Zmth{"ಗಣಿತ ಸಂಕೇತಲಿಪಿ"}
         Zsye{"ಎಮೋಜಿ"}
         Zsym{"ಸಂಕೇತಗಳು"}
         Zxxx{"ಅಲಿಖಿತ"}
@@ -842,7 +844,10 @@ kn{
             vaii{"ವಾಯ್ ಅಂಕೆಗಳು"}
         }
     }
-    Version{"37"}
+    Variants{
+        PINYIN{"ಪಿನ್‌ಯಿನ್ ರೋಮನೈಸೇಶನ್"}
+        WADEGILE{"ವೇಡ್-ಗೈಲ್ಸ್ ರೋಮನೈಸೇಶನ್"}
+    }
     characterLabelPattern{
         all{"{0} — ಎಲ್ಲ"}
         category-list{"{0}: {1}"}
@@ -857,6 +862,8 @@ kn{
             one{"{0} ಸ್ಟ್ರೋಕ್"}
             other{"{0} ಸ್ಟ್ರೋಕ್‌ಗಳು"}
         }
+        subscript{"ಅಡಿಬರಹ {0}"}
+        superscript{"ತಲೆಬರಹ {0}"}
     }
     codePatterns{
         language{"ಭಾಷೆ: {0}"}

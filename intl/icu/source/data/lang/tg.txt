@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 tg{
     Languages{
         af{"африкаанс"}
@@ -151,7 +152,7 @@ tg{
         to{"тонганӣ"}
         tr{"туркӣ"}
         tt{"тоторӣ"}
-        tzm{"тамазайти атласи марказӣ"}
+        tzm{"тамазайти Атласи Марказӣ"}
         ug{"ӯйғурӣ"}
         uk{"украинӣ"}
         und{"забони номаълум"}
@@ -201,7 +202,6 @@ tg{
             latn{"Рақамҳои ғарбӣ"}
         }
     }
-    Version{"37"}
     codePatterns{
         language{"{0}"}
         script{"{0}"}

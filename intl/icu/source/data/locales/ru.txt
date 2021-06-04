@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ru{
     AuxExemplarCharacters{
         "[{а\u0301} {е\u0301} {и\u0301} {о\u0301} {у\u0301} {ы\u0301} {э\u0301} {ю"
@@ -264,6 +265,7 @@ ru{
                 }
             }
             symbols{
+                approximatelySign{"≈"}
                 decimal{","}
                 exponential{"E"}
                 group{" "}
@@ -292,7 +294,6 @@ ru{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{

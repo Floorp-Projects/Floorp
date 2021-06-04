@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 si{
     AuxExemplarCharacters{"[\u200B\u200C\u200D ඎ ඏ ඐ ඦ ෳ]"}
     Ellipsis{
@@ -196,6 +197,7 @@ si{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
@@ -221,7 +223,6 @@ si{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -1908,7 +1909,7 @@ si{
         date{
             lenient{
                 "[\\--/]",
-                "[\\:∶]",
+                "[\\:∶︓﹕：]",
             }
         }
         general{
@@ -1917,8 +1918,8 @@ si{
                 "['ʼ՚᾽᾿’＇]",
                 "[%٪﹪％]",
                 "[؉‰]",
-                "[\$﹩＄$]",
-                "[£₤]",
+                "[\$﹩＄]",
+                "[£₤￡]",
                 "[¥￥]",
                 "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
@@ -1926,7 +1927,7 @@ si{
         }
         number{
             lenient{
-                "[\\-‒⁻₋−➖﹣－]",
+                "[\\-‐‒–⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
             }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sw_CD{
     Countries{
         030{"Asia Mashariki"}
@@ -8,8 +9,6 @@ sw_CD{
         BJ{"Benini"}
         CI{"Kodivaa"}
         CX{"Kisiwa cha Christmas"}
-        CY{"Saiprasi"}
-        DK{"Denmaki"}
         HR{"Kroeshia"}
         JO{"Yordani"}
         LB{"Lebanoni"}
@@ -18,7 +17,6 @@ sw_CD{
         LV{"Lativia"}
         MA{"Moroko"}
         MM{"Myama"}
-        MV{"Maldivi"}
         NE{"Nijeri"}
         NG{"Nijeria"}
         NO{"Norwe"}
@@ -30,7 +28,5 @@ sw_CD{
         ST{"Sao Tome na Prinsipe"}
         TD{"Chadi"}
         TL{"Timori ya Mashariki"}
-        VN{"Vietnamu"}
     }
-    Version{"37"}
 }

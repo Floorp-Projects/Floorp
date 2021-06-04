@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zu{
     Currencies{
         AED{
@@ -121,6 +122,10 @@ zu{
         CLP{
             "CLP",
             "i-Chilean Peso",
+        }
+        CNH{
+            "CNH",
+            "i-CNH",
         }
         CNY{
             "CN¥",
@@ -1400,5 +1405,4 @@ zu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

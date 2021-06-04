@@ -1,10 +1,15 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_419{
     Currencies{
-        CAD{
-            "CAD",
-            "dólar canadiense",
+        ANG{
+            "ANG",
+            "florín de las Antillas Neerlandesas",
+        }
+        BMD{
+            "BMD",
+            "dólar de Bermudas",
         }
         EUR{
             "EUR",
@@ -13,6 +18,10 @@ es_419{
         MWK{
             "MWK",
             "kwacha malauí",
+        }
+        NIO{
+            "NIO",
+            "córdoba nicaragüense",
         }
         THB{
             "THB",
@@ -39,13 +48,25 @@ es_419{
         VEF{"BsF"}
     }
     CurrencyPlurals{
+        ANG{
+            one{"florín de las Antillas Neerlandesas"}
+            other{"florines de las Antillas Neerlandesas"}
+        }
         BGN{
             one{"lev búlgaro"}
             other{"leva búlgaros"}
         }
+        BMD{
+            one{"dólar de Bermudas"}
+            other{"dólares de Bermudas"}
+        }
         MWK{
             one{"kwacha malauí"}
             other{"kwachas malauís"}
+        }
+        NIO{
+            one{"córdoba nicaragüense"}
+            other{"córdobas nicaragüenses"}
         }
         THB{
             one{"baht tailandes"}
@@ -60,5 +81,4 @@ es_419{
             other{"(moneda desconocida)"}
         }
     }
-    Version{"37"}
 }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sk{
     AuxExemplarCharacters{"[à ă â å ā æ ç è ĕ ê ë ē ì ĭ î ï ī ñ ò ŏ ö ő ø ō œ ř ù ŭ û ü ű ū ÿ]"}
     Ellipsis{
@@ -261,6 +262,7 @@ sk{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{","}
                 exponential{"e"}
                 group{" "}
@@ -289,7 +291,6 @@ sk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{

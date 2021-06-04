@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pcm{
     AuxExemplarCharacters{"[à c è {ẹ\u0300} ì ò {ọ\u0300} q ù x]"}
     Ellipsis{
@@ -214,7 +215,6 @@ pcm{
         }
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -429,10 +429,10 @@ pcm{
                 Ed{"d E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
-                Gy{"y G"}
-                GyMMM{"MMM y G"}
-                GyMMMEd{"E, d MMM y G"}
-                GyMMMd{"d MMM y G"}
+                Gy{"G y"}
+                GyMMM{"G y MMM"}
+                GyMMMEd{"G y MMM d, E"}
+                GyMMMd{"G y MMM d"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -468,7 +468,7 @@ pcm{
                 yQQQQ{"QQQQ y"}
                 yw{
                     one{"'Wik' w 'fọ' Y"}
-                    other{"'week' w 'of' Y"}
+                    other{"'Wiik' w 'fọ' Y"}
                 }
             }
             dayNames{
@@ -594,42 +594,42 @@ pcm{
                     m{"h:mm–h:mm B"}
                 }
                 Gy{
-                    G{"y G – y G"}
-                    y{"y–y G"}
+                    G{"Gy – Gy"}
+                    y{"G y–y"}
                 }
                 GyM{
-                    G{"MM-y GGGGG – MM-y GGGGG"}
-                    M{"MM-y – MM-y GGGGG"}
-                    y{"MM-y – MM-y GGGGG"}
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
                 }
                 GyMEd{
-                    G{"E, dd-MM-y GGGGG – E, dd-MM-y GGGGG"}
-                    M{"E, dd-MM-y – E, dd-MM-y GGGGG"}
-                    d{"E, dd-MM-y – E, dd-MM-y GGGGG"}
-                    y{"E, dd-MM-y – E, dd-MM-y GGGGG"}
+                    G{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
                 }
                 GyMMM{
-                    G{"MMM y G – MMM y G"}
-                    M{"MMM–MMM y G"}
-                    y{"MMM y – MMM y G"}
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
                 }
                 GyMMMEd{
-                    G{"E, d MMM y G – E, d MMM y G"}
-                    M{"E, d MMM – E, d MMM y G"}
-                    d{"E, d MMM – E, d MMM y G"}
-                    y{"E, d MMM y – E, d MMM y G"}
+                    G{"G y MMM d, E – G y MMM"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
                 }
                 GyMMMd{
-                    G{"d MMM y G – d MMM y G"}
-                    M{"d MMM – d MMM y G"}
-                    d{"d–d MMM y G"}
-                    y{"d MMM y – d MMM y G"}
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
                 }
                 GyMd{
-                    G{"dd-MM-y GGGGG – dd-MM-y GGGGG"}
-                    M{"dd-MM-y – dd-MM-y GGGGG"}
-                    d{"dd-MM-y – dd-MM-y GGGGG"}
-                    y{"dd-MM-y – dd-MM-y GGGGG"}
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 H{
                     H{"HH–HH"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lv{
     Currencies{
         AED{
@@ -870,6 +871,7 @@ lv{
         FKP{"£"}
         GBP{"£"}
         GEL{"₾"}
+        GHS{"GHS"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1821,5 +1823,4 @@ lv{
         other{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"37"}
 }

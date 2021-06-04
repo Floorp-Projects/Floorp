@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hi{
     AuxExemplarCharacters{"[\u200C\u200D]"}
     Ellipsis{
@@ -224,9 +225,9 @@ hi{
         }
         minimalPairs{
             ordinal{
-                few{"तीसरा दाहिना मोड़ लें."}
+                few{"{0} दाहिना मोड़ लें."}
                 many{"{0}ठा दाहिना मोड़ लें."}
-                one{"पहला दाहिना मोड़ लें."}
+                one{"{0}ला दाहिना मोड़ लें."}
                 other{"{0}वां दाहिना मोड़ लें."}
                 two{"{0}रा दाहिना मोड़ लें."}
             }
@@ -238,8 +239,74 @@ hi{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"37"}
     calendar{
+        buddhist{
+            availableFormats{
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                MMMMd{"d MMMM"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M/y GGGGG"}
+                yyyyMEd{"E, d/M/y GGGGG"}
+                yyyyMMMEd{"E, d MMM y G"}
+                yyyyMMMM{"MMMM y G"}
+                yyyyMd{"d/M`/y GGGGG"}
+            }
+            eras{
+                abbreviated{
+                    "बौद्ध संवत",
+                }
+                narrow{
+                    "बौद्ध संवत",
+                }
+                wide{
+                    "बौद्ध संवत",
+                }
+            }
+            intervalFormats{
+                Gy{
+                    G{"G y – G y"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"M/y GGGGG – M/y GGGGG"}
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, d/M/y GGGGG – E, d/M/y GGGGG"}
+                    M{"E, d/M/y – E, d/M/y GGGGG"}
+                    d{"E, d/M/y – E, d/M/y GGGGG"}
+                    y{"E, d/M/y – E, d/M/y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, d MMM y G – E, d MMM y G"}
+                    M{"E, d MMM – E, d MMM y G"}
+                    d{"E, d MMM – E, d MMM y G"}
+                    y{"E, d MMM y – E, d MMM y G"}
+                }
+                GyMMMd{
+                    G{"d MMM y G – d MMM y G"}
+                    M{"d MMM – d MMM y G"}
+                    d{"d – d MMM y G"}
+                    y{"d MMM y – d MMM y G"}
+                }
+                GyMd{
+                    G{"d/M/y GGGGG – d/M/y GGGGG"}
+                    M{"d/M/y – d/M/y GGGGG"}
+                    d{"d/M/y – d/M/y GGGGG"}
+                    y{"d/M/y – d/M/y GGGGG"}
+                }
+            }
+        }
         ethiopic{
             monthNames{
                 format{
@@ -904,9 +971,48 @@ hi{
             }
         }
         indian{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "d/M/y GGGGG",
+                "{1}, {0}",
+                "{1} को {0}",
+                "{1} को {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                MMMMd{"d MMMM"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M/y GGGGG"}
+                yyyyMEd{"E, d/M/y GGGGG"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMd{"d MMM y G"}
+                yyyyMd{"d/M/y GGGGG"}
+            }
             eras{
                 abbreviated{
                     "शक",
+                }
+            }
+            intervalFormats{
+                GyM{
+                    G{"GGGGG M/y – GGGGG M/y"}
+                    M{"GGGGG M/y – M/"}
+                    y{"GGGGG M/y – M/y"}
+                }
+                GyMd{
+                    d{"GGGGG d/M/y – d/M/y"}
                 }
             }
             monthNames{

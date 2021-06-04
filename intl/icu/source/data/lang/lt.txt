@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lt{
     Keys{
         calendar{"kalendorius"}
@@ -1029,7 +1030,6 @@ lt{
         VALENCIA{"Valenciečiai"}
         WADEGILE{"Wade-Giles Romanization"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – visi"}
         category-list{"{0}: {1}"}
@@ -1046,6 +1046,8 @@ lt{
             one{"{0} brūkšnys"}
             other{"{0} brūkšnių"}
         }
+        subscript{"apatinis indeksas {0}"}
+        superscript{"viršutinis indeksas {0}"}
     }
     codePatterns{
         language{"Kalba: {0}"}

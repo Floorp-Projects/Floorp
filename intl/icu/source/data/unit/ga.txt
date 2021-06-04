@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ga{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -78,7 +78,7 @@ ga{
                 two{"{0} acra"}
             }
             dunam{
-                dnam{"dunaim"}
+                dnam{"dúnaim"}
                 few{"{0} dhunam"}
                 many{"{0} ndunam"}
                 one{"{0} dunam"}
@@ -160,8 +160,8 @@ ga{
         }
         concentr{
             karat{
-                dnam{"carait óir"}
-                few{"{0} charat óir"}
+                dnam{"carait"}
+                few{"{0} charat"}
                 many{"{0} gcarat óir"}
                 one{"{0} charat óir"}
                 other{"{0} carat óir"}
@@ -209,17 +209,17 @@ ga{
             }
             permillion{
                 dnam{"codanna sa mhilliún"}
-                few{"{0} sa mhilliún"}
-                many{"{0} sa mhilliún"}
-                one{"{0} sa mhilliún"}
-                other{"{0} sa mhilliún"}
-                two{"{0} sa mhilliún"}
+                few{"{0} chuid sa mhilliún"}
+                many{"{0} gcuid sa mhilliún"}
+                one{"{0} chuid sa mhilliún"}
+                other{"{0} cuid sa mhilliún"}
+                two{"{0} chuid sa mhilliún"}
             }
             permyriad{
-                dnam{"permeiriad"}
+                dnam{"faoin deich míle"}
                 few{"{0}‱"}
                 many{"{0}‱"}
-                one{"{0} permeiriad"}
+                one{"{0} faoin deich míle"}
                 other{"{0}‱"}
                 two{"{0}‱"}
             }
@@ -331,7 +331,7 @@ ga{
                 two{"{0} mheigibheart"}
             }
             petabyte{
-                dnam{"peitibheart"}
+                dnam{"peitibhearta"}
                 few{"{0} PB"}
                 many{"{0} PB"}
                 one{"{0} peitibheart"}
@@ -496,10 +496,10 @@ ga{
         }
         energy{
             british-thermal-unit{
-                dnam{"aonad teirmeach Briotanach"}
+                dnam{"teas-aonaid Bhriotanacha"}
                 few{"{0} Btu"}
                 many{"{0} Btu"}
-                one{"{0} aonad teirmeach Briontanach"}
+                one{"{0} theas-aonad Briotanach"}
                 other{"{0} aonad teirmeach Briotanach"}
                 two{"{0} Btu"}
             }
@@ -512,11 +512,11 @@ ga{
                 two{"{0} chalra"}
             }
             electronvolt{
-                dnam{"leictravoltaí"}
+                dnam{"leictreonvoltanna"}
                 few{"{0} eV"}
                 many{"{0} eV"}
                 one{"{0} leictreavolta"}
-                other{"{0} leictreavoltaí"}
+                other{"{0} leictreonvolta"}
                 two{"{0} eV"}
             }
             foodcalorie{
@@ -560,12 +560,12 @@ ga{
                 two{"{0} chileavatuair"}
             }
             therm-us{
-                dnam{"teirmeacha US"}
-                few{"{0} theirm US"}
-                many{"{0} dteirm US"}
-                one{"{0} teirm US"}
-                other{"{0} teirm US"}
-                two{"{0} theirm US"}
+                dnam{"teirmeacha SAM"}
+                few{"{0} theirm SAM"}
+                many{"{0} dteirm SAM"}
+                one{"{0} teirm SAM"}
+                other{"{0} teirm SAM"}
+                two{"{0} theirm SAM"}
             }
         }
         force{
@@ -621,56 +621,69 @@ ga{
             }
         }
         graphics{
+            dot{
+                dnam{"ponc"}
+                few{"{0} phonc"}
+                many{"{0} bponc"}
+                one{"{0} phonc"}
+                other{"{0} ponc"}
+                two{"{0} phonc"}
+            }
             dot-per-centimeter{
                 dnam{"poncanna sa cheintiméadar"}
-                few{"{0} dpcm"}
-                many{"{0} dpcm"}
-                one{"{0} ponc sa cheintiméadar"}
-                other{"{0} poncanna sa cheintiméadar"}
-                two{"{0} dpcm"}
+                few{"{0} phonc sa cheintiméadar"}
+                many{"{0} bponc sa cheintiméadar"}
+                one{"{0} phonc sa cheintiméadar"}
+                other{"{0} ponc sa cheintiméadar"}
+                two{"{0} phonc sa cheintiméadar"}
             }
             dot-per-inch{
                 dnam{"poncanna san orlach"}
-                few{"{0} dpi"}
-                many{"{0} dpi"}
-                one{"{0} ponc san orlach"}
-                other{"{0} poncanna san orlach"}
-                two{"{0} dpi"}
+                few{"{0} phonc san orlach"}
+                many{"{0} bponc san orlach"}
+                one{"{0} phonc san orlach"}
+                other{"{0} ponc san orlach"}
+                two{"{0} phonc san orlach"}
             }
             em{
-                dnam{"eim chlógrafach"}
+                dnam{"eim chlóghrafach"}
+                few{"{0} eim"}
+                many{"{0} n-eim"}
+                one{"{0} eim"}
+                other{"{0} eim"}
+                two{"{0} eim"}
             }
             megapixel{
                 dnam{"meigiphicteilíní"}
-                few{"{0} MP"}
-                many{"{0} MP"}
-                one{"{0} meigiphicteilín"}
+                few{"{0} mheigiphicteilín"}
+                many{"{0} meigiphicteilín"}
+                one{"{0} mheigiphicteilín"}
                 other{"{0} meigiphicteilín"}
-                two{"{0} MP"}
+                two{"{0} mheigiphicteilín"}
             }
             pixel{
                 dnam{"picteilíní"}
-                few{"{0} px"}
-                many{"{0} px"}
-                one{"{0} picteilín"}
+                few{"{0} phicteilín"}
+                many{"{0} bpicteilín"}
+                one{"{0} phicteilín"}
                 other{"{0} picteilín"}
-                two{"{0} px"}
+                two{"{0} phicteilín"}
             }
             pixel-per-centimeter{
                 dnam{"picteilíní sa cheintiméadar"}
-                few{"{0} ppcm"}
-                many{"{0} ppcm"}
-                one{"{0} picteilín sa cheintiméadar"}
-                other{"{0} picteilíní sa cheintiméadar"}
-                two{"{0} ppcm"}
+                few{"{0} phicteilín sa cheintiméadar"}
+                many{"{0} bpicteilín sa cheintiméadar"}
+                one{"{0} phicteilín sa cheintiméadar"}
+                other{"{0} picteilín sa cheintiméadar"}
+                two{"{0} phicteilín sa cheintiméadar"}
             }
             pixel-per-inch{
                 dnam{"picteilíní san orlach"}
-                few{"{0} ppi"}
-                many{"{0} ppi"}
-                one{"{0} picteilín san orlach"}
+                few{"{0} phicteilín san orlach"}
+                many{"{0} bpicteilín san orlach"}
+                one{"{0} phicteilín san orlach"}
                 other{"{0} picteilín san orlach"}
-                two{"{0} ppi"}
+                two{"{0} phicteilín san orlach"}
             }
         }
         length{
@@ -698,6 +711,14 @@ ga{
                 one{"{0} deiciméadar"}
                 other{"{0} deiciméadar"}
                 two{"{0} dheiciméadar"}
+            }
+            earth-radius{
+                dnam{"ga an domhain"}
+                few{"{0} gha an domhain"}
+                many{"{0} nga an domhain"}
+                one{"{0} gha an domhain"}
+                other{"{0} ga an domhain"}
+                two{"{0} gha an domhain"}
             }
             fathom{
                 dnam{"feánna"}
@@ -832,12 +853,12 @@ ga{
                 two{"{0} phointe"}
             }
             solar-radius{
-                dnam{"raonta gréine"}
-                few{"{0} R☉"}
-                many{"{0} R☉"}
-                one{"{0} raon gréine"}
-                other{"{0} raon gréine"}
-                two{"{0} R☉"}
+                dnam{"grianghathanna"}
+                few{"{0} ghriangha"}
+                many{"{0} ngriangha"}
+                one{"{0} ghriangha"}
+                other{"{0} griangha"}
+                two{"{0} ghriangha"}
             }
             yard{
                 dnam{"slata"}
@@ -849,6 +870,22 @@ ga{
             }
         }
         light{
+            candela{
+                dnam{"caindéile"}
+                few{"{0} chaindéile"}
+                many{"{0} gcaindéile"}
+                one{"{0} chaindéile"}
+                other{"{0} caindéile"}
+                two{"{0} chaindéile"}
+            }
+            lumen{
+                dnam{"lúman"}
+                few{"{0} lúman"}
+                many{"{0} lúman"}
+                one{"{0} lúman"}
+                other{"{0} lúman"}
+                two{"{0} lúman"}
+            }
             lux{
                 dnam{"lucsa"}
                 few{"{0} lucsa"}
@@ -858,12 +895,12 @@ ga{
                 two{"{0} lucsa"}
             }
             solar-luminosity{
-                dnam{"lonrachtaí gréine"}
+                dnam{"grianlonrachas"}
                 few{"{0} L☉"}
                 many{"{0} L☉"}
-                one{"{0} lonracht ghréine"}
-                other{"{0} lonracht ghréine"}
-                two{"{0} L☉"}
+                one{"{0} ghrianlonrachas"}
+                other{"{0} grianlonrachas"}
+                two{"{0} ghrianlonrachas"}
             }
         }
         mass{
@@ -890,6 +927,14 @@ ga{
                 one{"mais an Domhain"}
                 other{"{0} mais an Domhain"}
                 two{"{0} mhais an Domhain"}
+            }
+            grain{
+                dnam{"gráinne"}
+                few{"{0} ghráinne"}
+                many{"{0} ngráinne"}
+                one{"{0} ghráinne"}
+                other{"{0} gráinne"}
+                two{"{0} ghráinne"}
             }
             gram{
                 dnam{"graim"}
@@ -963,7 +1008,7 @@ ga{
                 dnam{"maiseanna gréine"}
                 few{"{0} mhais ghréine"}
                 many{"{0} mais ghréine"}
-                one{"{0} mais ghréine"}
+                one{"{0} mhais ghréine"}
                 other{"{0} mais ghréine"}
                 two{"{0} mhais ghréine"}
             }
@@ -1036,15 +1081,15 @@ ga{
         }
         pressure{
             atmosphere{
-                dnam{"atmaisféar"}
-                few{"{0} atm"}
-                many{"{0} atm"}
+                dnam{"atmaisféir"}
+                few{"{0} atmaisféar"}
+                many{"{0} n-atmaisféar"}
                 one{"{0} atmaisféar"}
                 other{"{0} atmaisféar"}
-                two{"{0} atm"}
+                two{"{0} atmaisféar"}
             }
             bar{
-                dnam{"barraí"}
+                dnam{"bair"}
                 few{"{0} bharra"}
                 many{"{0} mbarra"}
                 one{"{0} bharra"}
@@ -1071,7 +1116,7 @@ ga{
                 dnam{"cileapascail"}
                 few{"{0} kPa"}
                 many{"{0} kPa"}
-                one{"{0} cileapascal"}
+                one{"{0} chileapascal"}
                 other{"{0} kPa"}
                 two{"{0} kPa"}
             }
@@ -1079,7 +1124,7 @@ ga{
                 dnam{"meigeapascail"}
                 few{"{0} MPa"}
                 many{"{0} MPa"}
-                one{"meigeapascal"}
+                one{"{0} mheigeapascal"}
                 other{"{0} meigeapascal"}
                 two{"{0} MPa"}
             }
@@ -1092,12 +1137,20 @@ ga{
                 two{"{0} mhilleabar"}
             }
             millimeter-ofhg{
-                dnam{"milliméadair mhearcair"}
+                dnam{"milliméadair mearcair"}
                 few{"{0} mhilliméadar mearcair"}
                 many{"{0} milliméadar mearcair"}
                 one{"{0} mhilliméadar mearcair"}
                 other{"{0} milliméadar mearcair"}
                 two{"{0} mhilliméadar mearcair"}
+            }
+            pascal{
+                dnam{"Pascail"}
+                few{"{0} phascal"}
+                many{"{0} bpascal"}
+                one{"{0} phascal"}
+                other{"{0} pascal"}
+                two{"{0} phascal"}
             }
             pound-force-per-square-inch{
                 dnam{"puint san orlach cearnach"}
@@ -1181,9 +1234,9 @@ ga{
                 dnam{"méadar niútain"}
                 few{"{0} N⋅m"}
                 many{"{0} N⋅m"}
-                one{"{0} méadar niútain"}
+                one{"{0} mhéadar niútain"}
                 other{"{0} méadar niútain"}
-                two{"{0} N⋅m"}
+                two{"{0} mhéadar niútain"}
             }
             pound-force-foot{
                 dnam{"punt-troigh"}
@@ -1309,6 +1362,38 @@ ga{
                 other{"{0} deicilítear"}
                 two{"{0} dheicilítear"}
             }
+            dessert-spoon{
+                dnam{"spúnóga milseoige"}
+                few{"{0} spúnóg mhilseoige"}
+                many{"{0} spúnóg mhilseoige"}
+                one{"{0} spúnóg mhilseoige"}
+                other{"{0} spúnóg mhilseoige"}
+                two{"{0} spúnóg mhilseoige"}
+            }
+            dessert-spoon-imperial{
+                dnam{"spúnóga milseoige impiriúla"}
+                few{"{0} spúnóg mhilseoige impiriúla"}
+                many{"{0} spúnóg mhilseoige impiriúla"}
+                one{"{0} spúnóg mhilseoige impiriúil"}
+                other{"{0} spúnóg mhilseoige impiriúol"}
+                two{"{0} spúnóg mhilseoige impiriúla"}
+            }
+            dram{
+                dnam{"dram leachtach"}
+                few{"{0} dhram leachtacha"}
+                many{"{0} ndram leachtacha"}
+                one{"{0} dram leachtach"}
+                other{"{0} dram leachtach"}
+                two{"{0} dhram leachtacha"}
+            }
+            drop{
+                dnam{"braon"}
+                few{"{0} bhraon"}
+                many{"{0} mbraon"}
+                one{"{0} bhraon"}
+                other{"{0} braon"}
+                two{"{0} bhraon"}
+            }
             fluid-ounce{
                 dnam{"unsaí leachtacha"}
                 few{"{0} unsa leachtacha"}
@@ -1323,7 +1408,7 @@ ga{
                 many{"{0} fl oz Imp."}
                 one{"{0} unsa leachtach impiriúil"}
                 other{"{0} fl oz Imp."}
-                two{"{0} unsa leachtach impiriúil"}
+                two{"{0} unsa leachtacha impiriúla"}
             }
             gallon{
                 dnam{"galúin"}
@@ -1351,6 +1436,14 @@ ga{
                 other{"{0} heictilítear"}
                 two{"{0} heictilítear"}
             }
+            jigger{
+                dnam{"miosúr"}
+                few{"{0} mhiosúr"}
+                many{"{0} miosúr"}
+                one{"{0} mhiosúr"}
+                other{"{0} miosúr"}
+                two{"{0} mhiosúr"}
+            }
             liter{
                 dnam{"lítir"}
                 few{"{0} lítear"}
@@ -1376,6 +1469,14 @@ ga{
                 other{"{0} millilítear"}
                 two{"{0} mhillilítear"}
             }
+            pinch{
+                dnam{"pinse"}
+                few{"{0} phinse"}
+                many{"{0} bpinse"}
+                one{"{0} phinse"}
+                other{"{0} pinse"}
+                two{"{0} phinse"}
+            }
             pint{
                 dnam{"piontaí"}
                 few{"{0} phionta"}
@@ -1399,6 +1500,14 @@ ga{
                 one{"{0} chárt"}
                 other{"{0} cárt"}
                 two{"{0} chárt"}
+            }
+            quart-imperial{
+                dnam{"cárt impiriúil"}
+                few{"{0} chárt impiriúla"}
+                many{"{0} gcárt impiriúla"}
+                one{"{0} chárt impiriúil"}
+                other{"{0} cárt impiriúil"}
+                two{"{0} chárt impiriúla"}
             }
             tablespoon{
                 dnam{"spúnóga boird"}
@@ -3125,12 +3234,12 @@ ga{
                 two{"{0} kWh"}
             }
             therm-us{
-                dnam{"teirmeacha US"}
-                few{"{0} theirm US"}
-                many{"{0} dteirm US"}
-                one{"{0} teirm US"}
-                other{"{0} teirm US"}
-                two{"{0} theirm US"}
+                dnam{"teirmeacha SAM"}
+                few{"{0} theirm SAM"}
+                many{"{0} dteirm SAM"}
+                one{"{0} teirm SAM"}
+                other{"{0} teirm SAM"}
+                two{"{0} theirm SAM"}
             }
         }
         force{
@@ -3186,6 +3295,22 @@ ga{
             }
         }
         graphics{
+            dot{
+                dnam{"ponc"}
+                few{"{0} phonc"}
+                many{"{0} bponc"}
+                one{"{0} phonc"}
+                other{"{0} ponc"}
+                two{"{0} phonc"}
+            }
+            em{
+                dnam{"eim"}
+                few{"{0} eim"}
+                many{"{0} n-eim"}
+                one{"{0} eim"}
+                other{"{0} eim"}
+                two{"{0} eim"}
+            }
             megapixel{
                 dnam{"meigiphicteilíní"}
             }
@@ -3410,6 +3535,14 @@ ga{
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
                 two{"{0} M⊕"}
+            }
+            grain{
+                dnam{"gráinne"}
+                few{"{0} ghráinne"}
+                many{"{0} ngráinne"}
+                one{"{0} ghráinne"}
+                other{"{0} gráinne"}
+                two{"{0} ghráinne"}
             }
             gram{
                 dnam{"graim"}
@@ -3829,6 +3962,38 @@ ga{
                 other{"{0} dl"}
                 two{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"spmhil"}
+                few{"{0} spmhil"}
+                many{"{0} spmhil"}
+                one{"{0} spmhil"}
+                other{"{0} spmhil"}
+                two{"{0} spmhil"}
+            }
+            dessert-spoon-imperial{
+                dnam{"spmhil imp"}
+                few{"{0} spmhil imp"}
+                many{"{0} spmhil imp"}
+                one{"{0} spmhil imp"}
+                other{"{0} spmhil imp"}
+                two{"{0} spmhil imp"}
+            }
+            dram{
+                dnam{"dr l."}
+                few{"{0} dr l."}
+                many{"{0} dr l."}
+                one{"{0} dr l."}
+                other{"{0} dr l."}
+                two{"{0} dr l."}
+            }
+            drop{
+                dnam{"braon"}
+                few{"{0} bhraon"}
+                many{"{0} mbraon"}
+                one{"{0} bhraon"}
+                other{"{0} braon"}
+                two{"{0} bhraon"}
+            }
             fluid-ounce{
                 dnam{"unsaí leacht."}
                 few{"{0} unsa l."}
@@ -3871,6 +4036,14 @@ ga{
                 other{"{0} hl"}
                 two{"{0} hl"}
             }
+            jigger{
+                dnam{"miosúr"}
+                few{"{0} mhiosúr"}
+                many{"{0} miosúr"}
+                one{"{0} mhiosúr"}
+                other{"{0} miosúr"}
+                two{"{0} mhiosúr"}
+            }
             liter{
                 dnam{"lítir"}
                 few{"{0} l"}
@@ -3896,6 +4069,14 @@ ga{
                 other{"{0} ml"}
                 two{"{0} ml"}
             }
+            pinch{
+                dnam{"pinse"}
+                few{"{0} phinse"}
+                many{"{0} bpinse"}
+                one{"{0} phinse"}
+                other{"{0} pinse"}
+                two{"{0} phinse"}
+            }
             pint{
                 dnam{"piontaí"}
                 few{"{0} pt"}
@@ -3919,6 +4100,14 @@ ga{
                 one{"{0} chárt"}
                 other{"{0} cárt"}
                 two{"{0} chárt"}
+            }
+            quart-imperial{
+                dnam{"cárt impiriúil"}
+                few{"{0} chárt impiriúla"}
+                many{"{0} gcárt impiriúla"}
+                one{"{0} chárt impiriúil"}
+                other{"{0} cárt impiriúil"}
+                two{"{0} chárt impiriúla"}
             }
             tablespoon{
                 dnam{"spbh"}

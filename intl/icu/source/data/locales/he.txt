@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 he{
     AuxExemplarCharacters{
         "[\u05BD\u05C4\u200E\u200F \u05B0 \u05B1 \u05B2 \u05B3 \u05B4 \u05B5 \u05B6 "
@@ -124,150 +125,150 @@ he{
             patternsShort{
                 currencyFormat{
                     1000{
-                        many{"¤0K"}
-                        one{"¤ 0K"}
-                        other{"¤ 0K"}
-                        two{"¤ 0K"}
+                        many{"¤0K‏"}
+                        one{"¤0K‏"}
+                        other{"¤0K‏"}
+                        two{"¤0K‏"}
                     }
                     10000{
-                        many{"¤00K"}
-                        one{"¤00K"}
-                        other{"¤ 00K"}
-                        two{"¤00K"}
+                        many{"¤00K‏"}
+                        one{"¤00K‏"}
+                        other{"¤00K‏"}
+                        two{"¤00K‏"}
                     }
                     100000{
-                        many{"¤000K"}
-                        one{"¤000K"}
-                        other{"¤000K"}
-                        two{"¤000K"}
+                        many{"¤000K‏"}
+                        one{"¤000K‏"}
+                        other{"¤000K‏"}
+                        two{"¤000K‏"}
                     }
                     1000000{
-                        many{"¤0M"}
-                        one{"¤0M"}
-                        other{"¤0M"}
-                        two{"¤0M"}
+                        many{"¤0M‏"}
+                        one{"¤0M‏"}
+                        other{"¤0M‏"}
+                        two{"¤0M‏"}
                     }
                     10000000{
-                        many{"¤00M"}
-                        one{"¤00M"}
-                        other{"¤00M"}
-                        two{"¤00M"}
+                        many{"¤00M‏"}
+                        one{"¤00M‏"}
+                        other{"¤00M‏"}
+                        two{"¤00M‏"}
                     }
                     100000000{
-                        many{"¤000M"}
-                        one{"¤000M"}
-                        other{"¤000M"}
-                        two{"¤000M"}
+                        many{"¤000M‏"}
+                        one{"¤000M‏"}
+                        other{"¤000M‏"}
+                        two{"¤000M‏"}
                     }
                     1000000000{
-                        many{"¤0B"}
-                        one{"¤0B"}
-                        other{"¤0B"}
-                        two{"¤0B"}
+                        many{"¤0B‏"}
+                        one{"¤0B‏"}
+                        other{"¤0B‏"}
+                        two{"¤0B‏"}
                     }
                     10000000000{
-                        many{"¤00B"}
-                        one{"¤00B"}
-                        other{"¤00B"}
-                        two{"¤00B"}
+                        many{"¤00B‏"}
+                        one{"¤00B‏"}
+                        other{"¤00B‏"}
+                        two{"¤00B‏"}
                     }
                     100000000000{
-                        many{"¤000B"}
-                        one{"¤000B"}
-                        other{"¤000B"}
-                        two{"¤000B"}
+                        many{"¤000B‏"}
+                        one{"¤000B‏"}
+                        other{"¤000B‏"}
+                        two{"¤000B‏"}
                     }
                     1000000000000{
-                        many{"¤0T"}
-                        one{"¤0T"}
-                        other{"¤0T"}
-                        two{"¤0T"}
+                        many{"¤0T‏"}
+                        one{"¤0T‏"}
+                        other{"¤0T‏"}
+                        two{"¤0T‏"}
                     }
                     10000000000000{
-                        many{"¤00T"}
-                        one{"¤00T"}
-                        other{"¤00T"}
-                        two{"¤00T"}
+                        many{"¤00T‏"}
+                        one{"¤00T‏"}
+                        other{"¤00T‏"}
+                        two{"¤00T‏"}
                     }
                     100000000000000{
-                        many{"¤000T"}
-                        one{"¤000T"}
-                        other{"¤000T"}
-                        two{"¤000T"}
+                        many{"¤000T‏"}
+                        one{"¤000T‏"}
+                        other{"¤000T‏"}
+                        two{"¤000T‏"}
                     }
                 }
                 decimalFormat{
                     1000{
-                        many{"0K"}
-                        one{"0K"}
-                        other{"0K"}
-                        two{"0K"}
+                        many{"0K‏"}
+                        one{"0K‏"}
+                        other{"0K‏"}
+                        two{"0K‏"}
                     }
                     10000{
-                        many{"00K"}
-                        one{"00K"}
-                        other{"00K"}
-                        two{"00K"}
+                        many{"00K‏"}
+                        one{"00K‏"}
+                        other{"00K‏"}
+                        two{"00K‏"}
                     }
                     100000{
-                        many{"000K"}
-                        one{"000K"}
-                        other{"000K"}
-                        two{"000K"}
+                        many{"000K‏"}
+                        one{"000K‏"}
+                        other{"000K‏"}
+                        two{"000K‏"}
                     }
                     1000000{
-                        many{"0M"}
-                        one{"0M"}
-                        other{"0M"}
-                        two{"0M"}
+                        many{"0M‏"}
+                        one{"0M‏"}
+                        other{"0M‏"}
+                        two{"0M‏"}
                     }
                     10000000{
-                        many{"00M"}
-                        one{"00M"}
-                        other{"00M"}
-                        two{"00M"}
+                        many{"00M‏"}
+                        one{"00M‏"}
+                        other{"00M‏"}
+                        two{"00M‏"}
                     }
                     100000000{
-                        many{"000M"}
-                        one{"000M"}
-                        other{"000M"}
-                        two{"000M"}
+                        many{"000M‏"}
+                        one{"000M‏"}
+                        other{"000M‏"}
+                        two{"000M‏"}
                     }
                     1000000000{
-                        many{"0B"}
-                        one{"0B"}
-                        other{"0B"}
-                        two{"0B"}
+                        many{"0B‏"}
+                        one{"0B‏"}
+                        other{"0B‏"}
+                        two{"0B‏"}
                     }
                     10000000000{
-                        many{"00B"}
-                        one{"00B"}
-                        other{"00B"}
-                        two{"00B"}
+                        many{"00B‏"}
+                        one{"00B‏"}
+                        other{"00B‏"}
+                        two{"00B‏"}
                     }
                     100000000000{
-                        many{"000B"}
-                        one{"000B"}
-                        other{"000B"}
-                        two{"000B"}
+                        many{"000B‏"}
+                        one{"000B‏"}
+                        other{"000B‏"}
+                        two{"000B‏"}
                     }
                     1000000000000{
-                        many{"0T"}
-                        one{"0T"}
-                        other{"0T"}
-                        two{"0T"}
+                        many{"0T‏"}
+                        one{"0T‏"}
+                        other{"0T‏"}
+                        two{"0T‏"}
                     }
                     10000000000000{
-                        many{"00T"}
-                        one{"00T"}
-                        other{"00T"}
-                        two{"00T"}
+                        many{"00T‏"}
+                        one{"00T‏"}
+                        other{"00T‏"}
+                        two{"00T‏"}
                     }
                     100000000000000{
-                        many{"000T"}
-                        one{"000T"}
-                        other{"000T"}
-                        two{"000T"}
+                        many{"000T‏"}
+                        one{"000T‏"}
+                        other{"000T‏"}
+                        two{"000T‏"}
                     }
                 }
             }
@@ -301,7 +302,6 @@ he{
         native{"latn"}
         traditional{"hebr"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -2971,7 +2971,7 @@ he{
                 "0"{"השבוע"}
                 "1"{"השבוע הבא"}
             }
-            relativePeriod{"השבוע של"}
+            relativePeriod{"השבוע של {0}"}
             relativeTime{
                 future{
                     many{"בעוד {0} שבועות"}

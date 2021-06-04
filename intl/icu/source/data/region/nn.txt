@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 nn{
     Countries{
         001{"verda"}
@@ -14,7 +15,7 @@ nn{
         017{"Sentral-Afrika"}
         018{"Sørlege Afrika"}
         019{"Amerika"}
-        021{"nordlege Amerika"}
+        021{"Nordlege Amerika"}
         029{"Karibia"}
         030{"Aust-Asia"}
         034{"Sør-Asia"}
@@ -31,6 +32,7 @@ nn{
         151{"Aust-Europa"}
         154{"Nord-Europa"}
         155{"Vest-Europa"}
+        202{"Afrika sør for Sahara"}
         419{"Latin-Amerika"}
         AC{"Ascension"}
         AD{"Andorra"}
@@ -105,6 +107,7 @@ nn{
         ER{"Eritrea"}
         ES{"Spania"}
         ET{"Etiopia"}
+        EU{"Den europeiske unionen"}
         EZ{"eurosona"}
         FI{"Finland"}
         FJ{"Fiji"}
@@ -126,12 +129,12 @@ nn{
         GP{"Guadeloupe"}
         GQ{"Ekvatorial-Guinea"}
         GR{"Hellas"}
-        GS{"Sør-Georgia og Sør-Sandwichøyene"}
+        GS{"Sør-Georgia og Sør-Sandwichøyane"}
         GT{"Guatemala"}
         GU{"Guam"}
         GW{"Guinea-Bissau"}
         GY{"Guyana"}
-        HK{"Hongkong S.A.R. Kina"}
+        HK{"Hongkong SAR Kina"}
         HM{"Heardøya og McDonaldøyane"}
         HN{"Honduras"}
         HR{"Kroatia"}
@@ -143,7 +146,7 @@ nn{
         IL{"Israel"}
         IM{"Man"}
         IN{"India"}
-        IO{"Det britiske territoriet I Indiahavet"}
+        IO{"Det britiske territoriet i Indiahavet"}
         IQ{"Irak"}
         IR{"Iran"}
         IS{"Island"}
@@ -178,14 +181,14 @@ nn{
         MC{"Monaco"}
         MD{"Moldova"}
         ME{"Montenegro"}
-        MF{"Saint Martin"}
+        MF{"Saint-Martin"}
         MG{"Madagaskar"}
         MH{"Marshalløyane"}
         MK{"Nord-Makedonia"}
         ML{"Mali"}
         MM{"Myanmar (Burma)"}
         MN{"Mongolia"}
-        MO{"Macao S.A.R. Kina"}
+        MO{"Macao SAR Kina"}
         MP{"Nord-Marianane"}
         MQ{"Martinique"}
         MR{"Mauritania"}
@@ -220,7 +223,7 @@ nn{
         PM{"Saint-Pierre-et-Miquelon"}
         PN{"Pitcairn"}
         PR{"Puerto Rico"}
-        PS{"Palestinsk territorium"}
+        PS{"Det palestinske området"}
         PT{"Portugal"}
         PW{"Palau"}
         PY{"Paraguay"}
@@ -251,7 +254,7 @@ nn{
         SV{"El Salvador"}
         SX{"Sint Maarten"}
         SY{"Syria"}
-        SZ{"Swaziland"}
+        SZ{"Eswatini"}
         TA{"Tristan da Cunha"}
         TC{"Turks- og Caicosøyane"}
         TD{"Tsjad"}
@@ -260,7 +263,7 @@ nn{
         TH{"Thailand"}
         TJ{"Tadsjikistan"}
         TK{"Tokelau"}
-        TL{"Timor-Leste (Aust-Timor)"}
+        TL{"Aust-Timor"}
         TM{"Turkmenistan"}
         TN{"Tunisia"}
         TO{"Tonga"}
@@ -285,6 +288,8 @@ nn{
         VU{"Vanuatu"}
         WF{"Wallis og Futuna"}
         WS{"Samoa"}
+        XA{"pseudospråk – aksentar"}
+        XB{"pseudospråk – RTL"}
         XK{"Kosovo"}
         YE{"Jemen"}
         YT{"Mayotte"}
@@ -302,7 +307,6 @@ nn{
         CD{"Den demokratiske republikken Kongo"}
         CG{"Republikken Kongo"}
         FK{"Falklandsøyane (Islas Malvinas)"}
-        TL{"Aust-Timor"}
+        SZ{"Swaziland"}
     }
-    Version{"37"}
 }

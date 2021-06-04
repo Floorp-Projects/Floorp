@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bas{
     Languages{
         ak{"Hɔp u akan"}
@@ -48,5 +49,4 @@ bas{
         zh{"Hɔp u kinà"}
         zu{"Hɔp u zulù"}
     }
-    Version{"37"}
 }

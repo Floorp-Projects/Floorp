@@ -282,7 +282,7 @@ int  main(int argc, char **argv) {
     //
     //  Put the source rules into a UnicodeString
     //
-    UnicodeString ruleSourceS(FALSE, ruleSourceU, destCap);
+    UnicodeString ruleSourceS(false, ruleSourceU, destCap);
 
     //
     //  Create the break iterator from the rules

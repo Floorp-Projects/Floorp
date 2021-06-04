@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sd{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -16,13 +16,13 @@ sd{
             }
             meter-per-square-second{
                 dnam{"ميٽر في سيڪنڊ اسڪوائر"}
-                one{"{0} m/s²"}
+                one{"{0} ميٽر في سيڪنڊ اسڪوائر"}
                 other{"{0} ميٽر في سيڪنڊ اسڪوائر"}
             }
         }
         angle{
             arc-minute{
-                dnam{"آرڪ منٽز"}
+                dnam{"آرڪ منٽس"}
                 one{"{0} آرڪ منٽز"}
                 other{"{0} آرڪ منٽز"}
             }
@@ -105,7 +105,7 @@ sd{
             }
         }
         compound{
-            per{"في {1} تي {0}"}
+            per{"{0} في {1}"}
             times{"{0}⋅{1}"}
         }
         concentr{
@@ -141,7 +141,7 @@ sd{
             }
             permillion{
                 dnam{"حصا في ملين"}
-                one{"{0} حصا في ملين"}
+                one{"{0} حصو في ملين"}
                 other{"{0} حصا في ملين"}
             }
             permyriad{
@@ -153,7 +153,7 @@ sd{
         consumption{
             liter-per-100-kilometer{
                 dnam{"ليٽرز في 100 ڪلو ميٽر"}
-                one{"{0} L/100km"}
+                one{"{0} ليٽر في 100 ڪلوميٽر"}
                 other{"{0} ليٽرز في 100 ڪلو ميٽر"}
             }
             liter-per-kilometer{
@@ -188,7 +188,7 @@ sd{
             byte{
                 dnam{"بائيٽز"}
                 one{"{0} بائيٽ"}
-                other{"{0} بائيٽز"}
+                other{"{0} بائيٽس"}
             }
             gigabit{
                 dnam{"گيگا بٽز"}
@@ -201,7 +201,7 @@ sd{
                 other{"{0} گيگا بائيٽز"}
             }
             kilobit{
-                dnam{"ڪلو بٽز"}
+                dnam{"ڪلو بٽس"}
                 one{"{0} ڪلو بٽز"}
                 other{"{0} ڪلو بٽز"}
             }
@@ -312,7 +312,6 @@ sd{
                 other{"{0} ایمپئیر"}
             }
             milliampere{
-                dnam{"ملي ايمپئير"}
                 one{"{0} ملي ايمپئير"}
                 other{"{0} ملي ايمپئير"}
             }
@@ -324,7 +323,7 @@ sd{
             volt{
                 dnam{"وولٽز"}
                 one{"{0} وولٽ"}
-                other{"{0} وولٽز"}
+                other{"{0} وولٽس"}
             }
         }
         energy{
@@ -365,7 +364,7 @@ sd{
             }
             kilowatt-hour{
                 dnam{"ڪلو واٽ في ڪلاڪ"}
-                one{"{0} ڪلو واٽ في ڪلڪ"}
+                one{"{0} ڪلو واٽ في ڪلاڪ"}
                 other{"{0} ڪلو واٽ في ڪلڪ"}
             }
             therm-us{
@@ -425,7 +424,7 @@ sd{
                 other{"{0} ems"}
             }
             megapixel{
-                dnam{"ميگا پگزلس"}
+                dnam{"ميگا پڪسلز"}
                 one{"{0} ميگا پگزل"}
                 other{"{0} ميگا پگزلس"}
             }
@@ -548,6 +547,11 @@ sd{
             }
         }
         light{
+            lumen{
+                dnam{"ليومن"}
+                one{"{0} ليومن"}
+                other{"{0} ليومن"}
+            }
             lux{
                 dnam{"لڪس"}
                 one{"{0} لڪس"}
@@ -574,6 +578,11 @@ sd{
                 dnam{"ارٿ ماسز"}
                 one{"{0} ارٿ ماس"}
                 other{"{0} ارٿ ماسز"}
+            }
+            grain{
+                dnam{"گرين"}
+                one{"{0} گرين"}
+                other{"{0} گرين"}
             }
             gram{
                 dnam{"گرامَ"}
@@ -642,7 +651,7 @@ sd{
                 other{"{0} هارس پاور"}
             }
             kilowatt{
-                dnam{"ڪلو واٽز"}
+                dnam{"ڪلو واٽس"}
                 one{"{0} ڪلو واٽ"}
                 other{"{0} ڪلو واٽز"}
             }
@@ -680,7 +689,7 @@ sd{
             }
             inch-ofhg{
                 dnam{"مرڪري جا انچز"}
-                one{"مرڪري جا {0} انچز"}
+                one{"مرڪري جو {0} انچ"}
                 other{"مرڪري جا {0} انچز"}
             }
             kilopascal{
@@ -710,7 +719,7 @@ sd{
             }
             pound-force-per-square-inch{
                 dnam{"پائونڊز في اسڪوائر انچ"}
-                one{"{0} psi"}
+                one{"{0} پائونڊ في اسڪوائر انچ"}
                 other{"{0} پائونڊز في اسڪوائر انچ"}
             }
         }
@@ -1001,14 +1010,14 @@ sd{
         mass{
             gram{
                 dnam{"گرام"}
-                one{"{0}گـ."}
-                other{"{0}گـ."}
+                one{"{0}g"}
+                other{"{0}g"}
                 per{"{0}/گـ."}
             }
             kilogram{
-                dnam{"ڪ.گـ."}
-                one{"{0}ڪ.گـ."}
-                other{"{0}ڪ.گـ."}
+                dnam{"kg"}
+                one{"{0}kg"}
+                other{"{0} kg"}
                 per{"{0}/ڪ.گـ."}
             }
             metric-ton{
@@ -1031,7 +1040,7 @@ sd{
         }
         temperature{
             celsius{
-                dnam{"ڊگري سيلسيس"}
+                dnam{"°C"}
                 one{"{0}°C"}
                 other{"{0}°C"}
             }
@@ -1177,9 +1186,8 @@ sd{
                 other{"{0}‰"}
             }
             permillion{
-                dnam{"حصا في ملين"}
-                one{"{0} حصا في ملين"}
-                other{"{0} حصا في ملين"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
             }
             permyriad{
                 dnam{"پيرمائيرڊ"}
@@ -1200,13 +1208,13 @@ sd{
             }
             mile-per-gallon{
                 dnam{"ميل في گيلن"}
-                one{"{0} ميل في گيلن"}
-                other{"{0} ميل في گيلن"}
+                one{"{0} mpg"}
+                other{"{0} mpg"}
             }
             mile-per-gallon-imperial{
                 dnam{"ميل في امپيريل گيلن"}
-                one{"{0} ميل في امپيريل گيلن"}
-                other{"{0} ميل في امپيريل گيلن"}
+                one{"{0} mpg Imp."}
+                other{"{0} mpg Imp."}
             }
         }
         coordinate{
@@ -1228,14 +1236,12 @@ sd{
                 other{"{0} بائيٽ"}
             }
             gigabit{
-                dnam{"گيگا بٽ"}
-                one{"{0} گيگا بٽز"}
-                other{"{0} گيگا بٽز"}
+                one{"{0} Gb"}
+                other{"{0} Gb"}
             }
             gigabyte{
-                dnam{"گيگا بائيٽ"}
-                one{"{0} گيگا بائيٽز"}
-                other{"{0} گيگا بائيٽز"}
+                one{"{0} GB"}
+                other{"{0} GB"}
             }
             kilobit{
                 dnam{"ڪلو بٽ"}
@@ -1244,7 +1250,7 @@ sd{
             }
             kilobyte{
                 dnam{"ڪلو بائيٽ"}
-                one{"{0} ڪلو بائيٽز"}
+                one{"{0} ڪلو بائيٽ"}
                 other{"{0} ڪلو بائيٽز"}
             }
             megabit{
@@ -1253,24 +1259,20 @@ sd{
                 other{"{0} ميگا بٽز"}
             }
             megabyte{
-                dnam{"ميگا بائيٽ"}
-                one{"{0} ميگا بائيٽز"}
-                other{"{0} ميگا بائيٽز"}
+                one{"{0} MB"}
+                other{"{0} MB"}
             }
             petabyte{
-                dnam{"پيرا بائيٽس"}
-                one{"{0} پيرا بائيٽس"}
-                other{"{0} پيرا بائيٽس"}
+                one{"{0} PB"}
+                other{"{0} PB"}
             }
             terabit{
-                dnam{"ٽيرا بٽز"}
-                one{"{0} ٽيرا بٽز"}
-                other{"{0} ٽيرا بٽز"}
+                one{"{0} Tb"}
+                other{"{0} Tb"}
             }
             terabyte{
-                dnam{"ٽيرا بائيٽز"}
-                one{"{0} ٽيرا بائيٽز"}
-                other{"{0} ٽيرا بائيٽز"}
+                one{"{0} TB"}
+                other{"{0} TB"}
             }
         }
         duration{
@@ -1350,8 +1352,8 @@ sd{
             }
             milliampere{
                 dnam{"ملي ايمپئير"}
-                one{"{0} ملي ايمپئير"}
-                other{"{0} ملي ايمپئير"}
+                one{"{0} ملي ايمپيئر"}
+                other{"{0} ملي ايمپيئر"}
             }
             ohm{
                 dnam{"اوهمس"}
@@ -1397,8 +1399,8 @@ sd{
             }
             kilojoule{
                 dnam{"ڪلو جول"}
-                one{"{0} ڪلو جول"}
-                other{"{0} ڪلو جول"}
+                one{"{0} kJ"}
+                other{"{0} kJ"}
             }
             kilowatt-hour{
                 dnam{"ڪلو واٽ في ڪلاڪ"}
@@ -1558,8 +1560,8 @@ sd{
         light{
             lux{
                 dnam{"لڪس"}
-                one{"{0} لڪس"}
-                other{"{0} لڪس"}
+                one{"{0} lx"}
+                other{"{0} lx"}
             }
             solar-luminosity{
                 dnam{"سولر ليومينوسائيٽيز"}
@@ -1583,32 +1585,32 @@ sd{
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
             }
+            grain{
+                dnam{"گرين"}
+                one{"{0} گرين"}
+                other{"{0} گرين"}
+            }
             gram{
                 dnam{"گرامَ"}
-                one{"{0} گـ"}
-                other{"{0} گـ."}
-                per{"{0}/گـ."}
+                one{"{0} g"}
+                other{"{0} g"}
             }
             kilogram{
                 dnam{"ڪلو گرام"}
                 one{"{0} ڪلو گرام"}
-                other{"{0} ڪ.گـ."}
-                per{"{0}/ڪ.گـ."}
+                other{"{0} kg"}
             }
             metric-ton{
-                dnam{"ٽَـ"}
-                one{"{0} ٽَـ"}
-                other{"{0} ٽَـ"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
             microgram{
-                dnam{"مائڪرو گرام"}
-                one{"{0} مائڪرو گرام"}
-                other{"{0} مائڪرو گرام"}
+                one{"{0} µg"}
+                other{"{0} µg"}
             }
             milligram{
-                dnam{"مـ.گـ."}
-                one{"{0} مـ.گـ."}
-                other{"{0} مـ.گـ."}
+                one{"{0} mg"}
+                other{"{0} mg"}
             }
             ounce{
                 dnam{"اونس"}
@@ -1672,9 +1674,8 @@ sd{
         }
         pressure{
             atmosphere{
-                dnam{"ايٽماس فيئر"}
-                one{"{0} ايٽماس فيئر"}
-                other{"{0} ايٽماس فيئر"}
+                one{"{0} atm"}
+                other{"{0} atm"}
             }
             bar{
                 dnam{"بار"}
@@ -1682,14 +1683,12 @@ sd{
                 other{"{0} بارس"}
             }
             hectopascal{
-                dnam{"هيڪٽوپاسڪلز"}
-                one{"{0} هيڪٽوپاسڪلز"}
-                other{"{0} هيڪٽوپاسڪلز"}
+                one{"{0} hPa"}
+                other{"{0} hPa"}
             }
             inch-ofhg{
-                dnam{"مرڪري جا انچز"}
-                one{"مرڪري جا {0} انچز"}
-                other{"مرڪري جا {0} انچز"}
+                one{"{0} inHg"}
+                other{"{0} inHg"}
             }
             kilopascal{
                 dnam{"kPa"}
@@ -1702,17 +1701,14 @@ sd{
                 other{"{0} MPa"}
             }
             millibar{
-                dnam{"ملي بارز"}
-                one{"{0} ملي بارز"}
-                other{"{0} ملي بارز"}
+                one{"{0} mbar"}
+                other{"{0} mbar"}
             }
             millimeter-ofhg{
-                dnam{"مرڪري جو ملي ميٽر"}
-                one{"مرڪري جو {0} ملي ميٽر"}
-                other{"مرڪري جو {0} ملي ميٽر"}
+                one{"{0} mmHg"}
+                other{"{0} mm Hg"}
             }
             pound-force-per-square-inch{
-                dnam{"پائونڊز في اسڪوائر انچ"}
                 one{"{0} psi"}
                 other{"{0} psi"}
             }
@@ -1741,24 +1737,20 @@ sd{
         }
         temperature{
             celsius{
-                dnam{"ڊگري سيلسيس"}
-                one{"{0} ڊگري سيلسيس"}
-                other{"{0} ڊگري سيلسيس"}
+                one{"{0}°C"}
+                other{"{0}°C"}
             }
             fahrenheit{
-                dnam{"ڊگريز فارن هائيٽ"}
-                one{"{0} ڊگريز فارن هائيٽ"}
-                other{"{0} ڊگريز فارن هائيٽ"}
+                one{"{0}°F"}
+                other{"{0}°F"}
             }
             generic{
-                dnam{"ڊگري"}
-                one{"{0} ڊگري"}
-                other{"{0} ڊگري"}
+                one{"{0}°"}
+                other{"{0}°"}
             }
             kelvin{
-                dnam{"ڪيلونز"}
-                one{"{0} ڪيلونز"}
-                other{"{0} ڪيلونز"}
+                one{"{0} K"}
+                other{"{0} K"}
             }
         }
         torque{

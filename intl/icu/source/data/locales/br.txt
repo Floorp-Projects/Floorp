@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 br{
     AuxExemplarCharacters{"[á à ă â å ä ã ā æ c ç é è ĕ ë ē í ì ĭ î ï ī ó ò ŏ ô ö ø ō œ q ú ŭ û ü ū ÿ]"}
     Ellipsis{
@@ -10,7 +11,7 @@ br{
         word-initial{"… {0}"}
         word-medial{"{0} … {1}"}
     }
-    ExemplarCharacters{"[a b {ch} {cʼh} d e ê f g h i j k l m n ñ o p r s t u ù v w x y z]"}
+    ExemplarCharacters{"[a b {cʼh} {ch} d e ê f g h i j k l m n ñ o p r s t u ù v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P R S T U V W X Y Z]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[\\- ‑ , ; \\: ! ? . ( ) \\[ \\] \\{ \\}]"}
@@ -23,6 +24,7 @@ br{
                 percentFormat{"#,##0 %"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"٫"}
                 exponential{"اس"}
                 group{"٬"}
@@ -419,6 +421,7 @@ br{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{","}
                 exponential{"E"}
                 group{" "}
@@ -558,7 +561,6 @@ br{
             }
         }
     }
-    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1418,18 +1420,18 @@ br{
             monthNames{
                 format{
                     abbreviated{
-                        "kentañ miz",
-                        "eil miz",
-                        "trede miz",
-                        "pevare miz",
-                        "pempvet miz",
-                        "cʼhwecʼhvet miz",
-                        "seizhvet miz",
-                        "eizhvet miz",
-                        "navet miz",
-                        "dekvet miz",
-                        "unnekvet miz",
-                        "daouzekvet miz",
+                        "miz 1",
+                        "miz 2",
+                        "miz 3",
+                        "miz 4",
+                        "miz 5",
+                        "miz 6",
+                        "miz 7",
+                        "miz 8",
+                        "miz 9",
+                        "miz 10",
+                        "miz 11",
+                        "miz 12",
                     }
                     narrow{
                         "1",
@@ -1462,18 +1464,18 @@ br{
                 }
                 stand-alone{
                     abbreviated{
-                        "kentañ miz",
-                        "eil miz",
-                        "trede miz",
-                        "pevare miz",
-                        "pempvet miz",
-                        "cʼhwecʼhvet miz",
-                        "seizhvet miz",
-                        "eizhvet miz",
-                        "navet miz",
-                        "dekvet miz",
-                        "unnekvet miz",
-                        "daouzekvet miz",
+                        "miz 1",
+                        "miz 2",
+                        "miz 3",
+                        "miz 4",
+                        "miz 5",
+                        "miz 6",
+                        "miz 7",
+                        "miz 8",
+                        "miz 9",
+                        "miz 10",
+                        "miz 11",
+                        "miz 12",
                     }
                     narrow{
                         "1",
@@ -5106,37 +5108,63 @@ br{
         animals_nature{"loened pe natur"}
         arrows{"biroù"}
         body{"korf"}
+        box_drawing{"rizennoù"}
         braille{"skritur Braille"}
         building{"savadur"}
         bullets_stars{"krug pe steredenn"}
+        consonantal_jamo{"kensonennoù jamo"}
         currency_symbols{"arouez moneiz"}
+        dash_connector{"barrennig pe kennasker"}
         digits{"sifr"}
+        dingbats{"arouez Dingbat"}
         divination_symbols{"arouez divinouriezh"}
+        east_asian_scripts{"skriturioù Azia ar Reter"}
         european_scripts{"skritur europat"}
         female{"benel"}
         flag{"banniel"}
         flags{"bannieloù"}
         food_drink{"boued hag evaj"}
         format{"furmad"}
+        format_whitespace{"furmad hag esaouennoù"}
+        han_characters{"arouezennoù han"}
         han_radicals{"gwrizienn han"}
+        hanja{"arouezenn hanja"}
+        hanzi_simplified{"arouezennoù han (eeunaet)"}
+        hanzi_traditional{"arouezennoù han (hengounel)"}
+        heart{"kalon"}
         historic_scripts{"skritur istorel"}
+        male{"gourel"}
+        math_symbols{"arouez matematikel"}
+        middle_eastern_scripts{"skriturioù Reter-Kreiz"}
+        miscellaneous{"liesseurt"}
         modern_scripts{"skritur modern"}
         modifier{"kemmañ"}
         nature{"natur"}
         numbers{"niveroù"}
         objects{"tra"}
+        other{"all"}
         person{"den"}
         phonetic_alphabet{"lizherenneg soniadel"}
         pictographs{"piktogramm"}
         place{"lecʼh"}
         plant{"plant"}
         punctuation{"poentadur"}
+        sign_standard_symbols{"sin pe arouez"}
+        small_form_variant{"adstummoù bihan"}
         smiley{"fromlun"}
+        smileys_people{"fromlun pe den"}
+        south_asian_scripts{"skriturioù Azia ar Su"}
+        southeast_asian_scripts{"skriturioù Azia ar Gevred"}
         sport{"sport"}
         symbols{"arouez"}
+        technical_symbols{"arouez teknikel"}
         travel{"beaj"}
-        travel_places{"beaj ha lecʼhioù"}
+        travel_places{"beaj pe lecʼh"}
+        variant_forms{"adstumm"}
+        vocalic_jamo{"bogalennoù jamo"}
         weather{"amzer"}
+        western_asian_scripts{"skriturioù Azia ar Cʼhonôg"}
+        whitespace{"esaouenn"}
     }
     delimiters{
         alternateQuotationEnd{"”"}
@@ -5349,6 +5377,9 @@ br{
         }
         minute{
             dn{"munut"}
+            relative{
+                "0"{"ar munut-mañ"}
+            }
             relativeTime{
                 future{
                     few{"a-benn {0} munut"}

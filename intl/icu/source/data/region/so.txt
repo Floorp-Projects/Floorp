@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 so{
     Countries{
         001{"Dunida"}
@@ -35,7 +36,7 @@ so{
         419{"Laatiin Ameerika"}
         AC{"Jasiiradda Asensiyoon"}
         AD{"Andora"}
-        AE{"Imaaraadka Carabta ee Midoobay"}
+        AE{"Midawga Imaaraatka Carabta"}
         AF{"Afgaanistaan"}
         AG{"Antigua & Barbuuda"}
         AI{"Anguula"}
@@ -52,7 +53,7 @@ so{
         AZ{"Asarbajan"}
         BA{"Boosniya & Harsegofina"}
         BB{"Baarbadoos"}
-        BD{"Bangladesh"}
+        BD{"Bangaladhesh"}
         BE{"Biljam"}
         BF{"Burkiina Faaso"}
         BG{"Bulgaariya"}
@@ -61,7 +62,7 @@ so{
         BJ{"Biniin"}
         BL{"St. Baathelemiy"}
         BM{"Barmuuda"}
-        BN{"Buruneeya"}
+        BN{"Buruneey"}
         BO{"Boliifiya"}
         BQ{"Karibiyaan Nadarlands"}
         BR{"Baraasiil"}
@@ -185,7 +186,7 @@ so{
         MH{"Jasiiradda Maarshal"}
         MK{"Masedooniya Waqooyi"}
         ML{"Maali"}
-        MM{"Miyanmar"}
+        MM{"Mayanmar"}
         MN{"Mongooliya"}
         MO{"Makaaw"}
         MP{"Jasiiradda Waqooyiga Mariaana"}
@@ -194,10 +195,10 @@ so{
         MS{"Montserrat"}
         MT{"Maalta"}
         MU{"Mawrishiyaas"}
-        MV{"Maaldiqeen"}
+        MV{"Maaldiifis"}
         MW{"Malaawi"}
         MX{"Meksiko"}
-        MY{"Malaysia"}
+        MY{"Malaysiya"}
         MZ{"Musambiik"}
         NA{"Namiibiya"}
         NC{"Jasiiradda Niyuu Kaledooniya"}
@@ -215,14 +216,14 @@ so{
         PA{"Baanama"}
         PE{"Beeru"}
         PF{"Booliyneesiya Faransiiska"}
-        PG{"Babua Niyuu Gini"}
+        PG{"Babwa Niyuu Gini"}
         PH{"Filibiin"}
         PK{"Bakistaan"}
         PL{"Booland"}
         PM{"Saint Pierre and Miquelon"}
         PN{"Bitkairn"}
         PR{"Bueerto Riiko"}
-        PS{"Falastiin Daanka galbeed iyo Qasa"}
+        PS{"Dhulka Falastiiniyiinta daanta galbeed iyo marinka qasa"}
         PT{"Bortugaal"}
         PW{"Balaaw"}
         PY{"Baraguaay"}
@@ -239,7 +240,7 @@ so{
         SD{"Suudaan"}
         SE{"Iswidhan"}
         SG{"Singaboor"}
-        SH{"Saint Helena"}
+        SH{"Saynt Helena"}
         SI{"Islofeeniya"}
         SJ{"Jasiiradda Sfaldbaad & Jaan Mayen"}
         SK{"Islofaakiya"}
@@ -277,7 +278,7 @@ so{
         UN{"Qaramada Midoobay"}
         US{"Maraykanka"}
         UY{"Uruguwaay"}
-        UZ{"Uusbakistaan"}
+        UZ{"Usbakistan"}
         VA{"Faatikaan"}
         VC{"St. Finsent & Girenadiins"}
         VE{"Fenisuweela"}
@@ -308,7 +309,6 @@ so{
         CZ{"Jamhuuriyadda Jek"}
         FK{"Jasiiradaha Fookland"}
         SZ{"Iswaasilaan"}
-        TL{"Timoor Bari"}
+        TL{"Bariga Timor"}
     }
-    Version{"37"}
 }

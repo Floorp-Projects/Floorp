@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ha{
     AuxExemplarCharacters{"[á à â é è ê í ì î ó ò ô p q {r\u0303} ú ù û v x]"}
     ExemplarCharacters{"[a b ɓ c d ɗ e f g h i j k ƙ l m n o r s {sh} t {ts} u w y ƴ z ʼ]"}
@@ -7,6 +8,9 @@ ha{
     ExemplarCharactersPunctuation{"[\\- ‑ , ; \\: ! ? . ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\} ′ ″]"}
     NumberElements{
         latn{
+            miscPatterns{
+                atLeast{"{0}+"}
+            }
             patternsLong{
                 decimalFormat{
                     1000{
@@ -162,8 +166,13 @@ ha{
                 }
             }
         }
+        minimalPairs{
+            plural{
+                one{"rana {0}"}
+                other{"ranaku {0}"}
+            }
+        }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -175,11 +184,11 @@ ha{
                 "d MMMM, y G",
                 "d MMM, y G",
                 "d/M/yy GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{0}, {1}",
+                "{0} 'da' {1}",
+                "{0} 'da' {1}",
+                "{0}, {1}",
+                "{0}, {1}",
             }
             availableFormats{
                 MEd{"E, M/d"}
@@ -202,8 +211,8 @@ ha{
                 "Yamma",
             }
             AmPmMarkersAbbr{
-                "AM",
-                "PM",
+                "SF",
+                "YM",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -214,11 +223,11 @@ ha{
                 "d MMMM, y",
                 "d MMM, y",
                 "d/M/yy",
+                "{1}, {0}",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'da' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             availableFormats{
                 Ed{"E, d"}
@@ -229,6 +238,10 @@ ha{
                 MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
+                MMMMW{
+                    one{"'satin' W 'cikin' MMMM"}
+                    other{"'satin' W 'cikin' MMMM"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"M/d"}
@@ -246,6 +259,10 @@ ha{
                 yMd{"y-MM-dd"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"'sati' w 'cikin' Y"}
+                    other{"'sati' w 'cikin' Y"}
+                }
             }
             dayNames{
                 format{
@@ -328,16 +345,16 @@ ha{
             dayPeriod{
                 stand-alone{
                     abbreviated{
-                        am{"AM"}
-                        pm{"PM"}
+                        am{"SF"}
+                        pm{"YM"}
                     }
                     narrow{
-                        am{"AM"}
-                        pm{"PM"}
+                        am{"SF"}
+                        pm{"YM"}
                     }
                     wide{
-                        am{"AM"}
-                        pm{"PM"}
+                        am{"SF"}
+                        pm{"YM"}
                     }
                 }
             }
@@ -356,7 +373,7 @@ ha{
                 }
                 wide%variant{
                     "K.H.Y",
-                    "sananne Zamani",
+                    "Sanannen Zamani",
                 }
             }
             intervalFormats{
@@ -537,11 +554,47 @@ ha{
     }
     fields{
         day{
-            dn{"Kwana"}
+            dn{"kwana"}
             relative{
                 "-1"{"jiya"}
                 "0"{"yau"}
                 "1"{"gobe"}
+            }
+            relativeTime{
+                future{
+                    one{"a cikin rana {0}"}
+                    other{"a cikin kwanaki {0}"}
+                }
+                past{
+                    one{"rana da ya gabata {0}"}
+                    other{"kwanaki da suka gabata {0}"}
+                }
+            }
+        }
+        day-narrow{
+            dn{"kwana"}
+            relativeTime{
+                future{
+                    one{"a cikin rana {0}"}
+                    other{"a cikin kwanaki {0}"}
+                }
+                past{
+                    one{"rana da ya gabata {0}"}
+                    other{"kwanaki da suka gabata {0}"}
+                }
+            }
+        }
+        day-short{
+            dn{"kwana"}
+            relativeTime{
+                future{
+                    one{"a cikin rana {0}"}
+                    other{"a cikin kwanaki {0}"}
+                }
+                past{
+                    one{"rana da ya gabata {0}"}
+                    other{"kwanaki da suka gabata {0}"}
+                }
             }
         }
         dayOfYear{
@@ -554,10 +607,10 @@ ha{
             dn{"Kwanan Shekara"}
         }
         dayperiod{
-            dn{"Lokuttan rana"}
+            dn{"SF/YM"}
         }
         era{
-            dn{"Zamani"}
+            dn{"zamani"}
         }
         fri{
             relative{
@@ -611,7 +664,7 @@ ha{
             }
         }
         hour{
-            dn{"Awa"}
+            dn{"awa"}
             relative{
                 "0"{"wannan awa"}
             }
@@ -627,6 +680,7 @@ ha{
             }
         }
         hour-narrow{
+            dn{"awa"}
             relativeTime{
                 future{
                     one{"cikin {0} awa"}
@@ -639,6 +693,7 @@ ha{
             }
         }
         hour-short{
+            dn{"awa"}
             relativeTime{
                 future{
                     one{"cikin {0} awa"}
@@ -651,7 +706,7 @@ ha{
             }
         }
         minute{
-            dn{"Minti"}
+            dn{"minti"}
             relative{
                 "0"{"wannan mintin"}
             }
@@ -667,6 +722,7 @@ ha{
             }
         }
         minute-narrow{
+            dn{"minti"}
             relativeTime{
                 future{
                     one{"cikin {0} minti"}
@@ -679,6 +735,7 @@ ha{
             }
         }
         minute-short{
+            dn{"minti"}
             relativeTime{
                 future{
                     one{"cikin {0} minti"}
@@ -742,33 +799,101 @@ ha{
             }
         }
         month{
-            dn{"Wata"}
+            dn{"wata"}
             relative{
-                "-1"{"watan daya gabata"}
+                "-1"{"watan da ya gabata"}
                 "0"{"wannan watan"}
                 "1"{"wata na gaba"}
+            }
+            relativeTime{
+                future{
+                    one{"a cikin watan {0}"}
+                    other{"a cikin watanni {0}"}
+                }
+                past{
+                    one{"watan da ya gabata"}
+                    other{"watanni da suka gabata {0}}"}
+                }
             }
         }
         month-narrow{
+            dn{"wata"}
             relative{
                 "-1"{"watan da ya gabata"}
                 "0"{"wannan watan"}
                 "1"{"wata na gaba"}
+            }
+            relativeTime{
+                future{
+                    one{"a cikin watan {0}"}
+                    other{"a cikin watan {0}"}
+                }
+                past{
+                    one{"watan da ya gabata {0}"}
+                    other{"watan da ya gabata {0}"}
+                }
             }
         }
         month-short{
+            dn{"wata"}
             relative{
                 "-1"{"watan da ya gabata"}
                 "0"{"wannan watan"}
                 "1"{"wata na gaba"}
             }
+            relativeTime{
+                future{
+                    one{"a cikin watan {0}"}
+                    other{"a cikin watan {0}"}
+                }
+                past{
+                    one{"watan da ya gabata"}
+                    other{"watan da ya gabata {0}"}
+                }
+            }
         }
         quarter{
-            dn{"Kwata"}
+            dn{"kwata"}
             relative{
                 "-1"{"kwatan karshe"}
                 "0"{"wannan kwatan"}
                 "1"{"kwata na gaba"}
+            }
+            relativeTime{
+                future{
+                    one{"a cikin kwata {0}"}
+                    other{"a cikin kwatas {0}"}
+                }
+                past{
+                    one{"kwata da suka gabata {0}"}
+                    other{"kwatas da suka gabata {0}"}
+                }
+            }
+        }
+        quarter-narrow{
+            dn{"kwata"}
+            relativeTime{
+                future{
+                    one{"a cikin kwata {0}"}
+                    other{"a cikin kwatas {0}"}
+                }
+                past{
+                    one{"kwata da suka gabata {0}"}
+                    other{"kwatas da suka gabata {0}"}
+                }
+            }
+        }
+        quarter-short{
+            dn{"kwata"}
+            relativeTime{
+                future{
+                    one{"a cikin kwata {0}"}
+                    other{"a cikin kwatas {0}"}
+                }
+                past{
+                    one{"kwata da suka gabata {0}"}
+                    other{"kwatas da suka gabata {0}"}
+                }
             }
         }
         sat{
@@ -823,7 +948,7 @@ ha{
             }
         }
         second{
-            dn{"Daƙiƙa"}
+            dn{"daƙiƙa"}
             relative{
                 "0"{"yanzu"}
             }
@@ -1067,26 +1192,60 @@ ha{
             }
         }
         week{
-            dn{"Mako"}
-            relative{
-                "-1"{"satin da ya gabata"}
-                "0"{"wannan satin"}
-                "1"{"sati na gaba"}
-            }
-        }
-        week-narrow{
+            dn{"mako"}
             relative{
                 "-1"{"satin da ya gabata"}
                 "0"{"wannan satin"}
                 "1"{"sati na gaba"}
             }
             relativePeriod{"sati na {0}"}
+            relativeTime{
+                future{
+                    one{"a cikin mako {0}"}
+                    other{"a cikin makonni {0}"}
+                }
+                past{
+                    one{"mako da ya gabata {0}"}
+                    other{"makonni da suka gabata {0}"}
+                }
+            }
         }
-        week-short{
+        week-narrow{
+            dn{"mako"}
             relative{
                 "-1"{"satin da ya gabata"}
                 "0"{"wannan satin"}
                 "1"{"sati na gaba"}
+            }
+            relativePeriod{"sati na {0}"}
+            relativeTime{
+                future{
+                    one{"a cikin mako {0}"}
+                    other{"a cikin mako {0}"}
+                }
+                past{
+                    one{"mako da suka gabata {0}"}
+                    other{"mako da ya gabata {0}"}
+                }
+            }
+        }
+        week-short{
+            dn{"mako"}
+            relative{
+                "-1"{"satin da ya gabata"}
+                "0"{"wannan satin"}
+                "1"{"sati na gaba"}
+            }
+            relativePeriod{"sati na {0}"}
+            relativeTime{
+                future{
+                    one{"a cikin mako {0}"}
+                    other{"a cikin mako {0}"}
+                }
+                past{
+                    one{"mako da ya gabata {0}"}
+                    other{"mako da ya gabata {0}"}
+                }
             }
         }
         weekOfMonth{
@@ -1099,7 +1258,7 @@ ha{
             dn{"Makon Wata"}
         }
         weekday{
-            dn{"Rana mako"}
+            dn{"ranar mako"}
         }
         weekdayOfMonth{
             dn{"Ranar Aikin Wata"}
@@ -1111,25 +1270,49 @@ ha{
             dn{"Ranar Aikin Wata"}
         }
         year{
-            dn{"Shekara"}
+            dn{"shekara"}
             relative{
                 "-1"{"bara"}
                 "0"{"bana"}
                 "1"{"badi"}
+            }
+            relativeTime{
+                future{
+                    one{"a shekarar {0}"}
+                    other{"a shekaru {0}"}
+                }
+                past{
+                    one{"shekara da suka gabata {0}"}
+                    other{"shekara da suka gabata {0}"}
+                }
             }
         }
         year-narrow{
+            dn{"shekara"}
             relative{
                 "-1"{"bara"}
                 "0"{"bana"}
                 "1"{"badi"}
             }
+            relativeTime{
+                past{
+                    one{"shekara da suka gabata {0}"}
+                    other{"shekara da suka gabata {0}"}
+                }
+            }
         }
         year-short{
+            dn{"shekara"}
             relative{
                 "-1"{"bara"}
                 "0"{"bana"}
                 "1"{"badi"}
+            }
+            relativeTime{
+                past{
+                    one{"shekara da suka gabata {0}"}
+                    other{"shekara da suka gabata {0}"}
+                }
             }
         }
         zone{
@@ -1151,7 +1334,7 @@ ha{
         }
         standard{
             2{"{0} da {1}"}
-            end{"{0} da {1}"}
+            end{"{0}, da {1}"}
         }
         unit{
             2{"{0}, {1}"}

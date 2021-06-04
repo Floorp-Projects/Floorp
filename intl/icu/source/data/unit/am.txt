@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 am{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -383,6 +383,11 @@ am{
             }
         }
         graphics{
+            dot{
+                dnam{"ነቁጥ"}
+                one{"{0} ነቁጥ"}
+                other{"{0} ነቁጥ"}
+            }
             dot-per-centimeter{
                 dnam{"ነበሴሜ"}
                 one{"{0} ነበሴሜ"}
@@ -392,6 +397,9 @@ am{
                 dnam{"ነበኢ"}
                 one{"{0} ነበኢ"}
                 other{"{0} ነበኢ"}
+            }
+            em{
+                dnam{"ታይፖግራፊክ em"}
             }
             megapixel{
                 dnam{"ሜጋ ፒክስል"}
@@ -431,11 +439,21 @@ am{
                 one{"{0} ዴሲ ሜትር"}
                 other{"{0} ዴሲ ሜትር"}
             }
+            fathom{
+                dnam{"ተዳክሞዎች"}
+                one{"{0} ተዳክሞ"}
+                other{"{0} ተዳክሞዎች"}
+            }
             foot{
                 dnam{"ጫማ"}
                 one{"{0} ጫማ"}
                 other{"{0} ጫማ"}
                 per{"{0}/ጫማ"}
+            }
+            furlong{
+                dnam{"ፈሎን"}
+                one{"{0} ፈሎን"}
+                other{"{0} ፈሎን"}
             }
             inch{
                 dnam{"ኢንች"}
@@ -505,6 +523,11 @@ am{
                 one{"{0} ነጥብ"}
                 other{"{0} ነጥብ"}
             }
+            solar-radius{
+                dnam{"ሶላር ራዲ"}
+                one{"{0} ሶላር ዳዲየስ"}
+                other{"{0} ሶላር ራዲ"}
+            }
             yard{
                 dnam{"ያርድ"}
                 one{"{0} ያርድ"}
@@ -512,6 +535,16 @@ am{
             }
         }
         light{
+            candela{
+                dnam{"ካንዴላ"}
+                one{"{0} ካንዴላ"}
+                other{"{0} ካንዴላ"}
+            }
+            lumen{
+                dnam{"ቱቦ ቀዳዳ"}
+                one{"{0} ቱቦ ቀዳዳ"}
+                other{"{0} ቱቦ ቀዳዳ"}
+            }
             lux{
                 dnam{"lx"}
                 one{"{0} lx"}
@@ -523,6 +556,21 @@ am{
                 dnam{"CD"}
                 one{"{0} CD"}
                 other{"{0} CD"}
+            }
+            dalton{
+                dnam{"ዳተንስ"}
+                one{"{0} ዳተንስ"}
+                other{"{0} ዳተንስ"}
+            }
+            earth-mass{
+                dnam{"ኤርዝማስስ"}
+                one{"{0} ኤርዝማስስ"}
+                other{"{0} ኤርዝማስስ"}
+            }
+            grain{
+                dnam{"ጥራ ጥሬ"}
+                one{"{0} ጥራ ጥሬ"}
+                other{"{0} ጥራ ጥሬ"}
             }
             gram{
                 dnam{"ግራም"}
@@ -567,6 +615,16 @@ am{
                 one{"{0} ፓውንድ"}
                 other{"{0} ፓውንድ"}
                 per{"{0}/ፓውንድ"}
+            }
+            solar-mass{
+                dnam{"ሶላር ማስስ"}
+                one{"{0} ሶላር ማስስ"}
+                other{"{0} ሶላር ማስስ"}
+            }
+            stone{
+                dnam{"ድንጋይ"}
+                one{"{0} ድንጋይ"}
+                other{"{0} ድንጋይ"}
             }
             ton{
                 dnam{"ቶን"}
@@ -720,6 +778,11 @@ am{
                 one{"{0} በርሜል"}
                 other{"{0} በርሜሎች"}
             }
+            bushel{
+                dnam{"ዳውላ"}
+                one{"{0} ዳውላ"}
+                other{"{0} ዳውላ"}
+            }
             centiliter{
                 dnam{"ሴንቲ ሊትር"}
                 one{"{0} ሴንቲ ሊትር"}
@@ -777,10 +840,35 @@ am{
                 one{"{0} ዴሲ ሊትር"}
                 other{"{0} ዴሲ ሊትር"}
             }
+            dessert-spoon{
+                dnam{"የመምድረ በዳ ማንኪያ"}
+                one{"{0} የመምድረ በዳ ማንኪያ"}
+                other{"{0} የመምድረ በዳ ማንኪያ"}
+            }
+            dessert-spoon-imperial{
+                dnam{"የምድረ በዳ ማንኪያ"}
+                one{"{0} የምድረ በዳ ማንኪያ"}
+                other{"{0} የምድረ በዳ ማንኪያ"}
+            }
+            dram{
+                dnam{"የክብደት መለኪያ"}
+                one{"{0} የክብደት መለኪያ"}
+                other{"{0} የክብደት መለኪያ"}
+            }
+            drop{
+                dnam{"ጠብታ"}
+                one{"{0} ጠብታ"}
+                other{"{0} ጠብታ"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
                 other{"{0} fl oz"}
+            }
+            fluid-ounce-imperial{
+                dnam{"Imp. fluid ኦንስስ"}
+                one{"{0} Imp. fluid ኦንስስ"}
+                other{"{0} Imp. fluid ኦንስስ"}
             }
             gallon{
                 dnam{"gal"}
@@ -799,6 +887,11 @@ am{
                 one{"{0} hL"}
                 other{"{0} hL"}
             }
+            jigger{
+                dnam{"ሙጃሌ"}
+                one{"{0} ሙጃሌ"}
+                other{"{0} ሙጃሌ"}
+            }
             liter{
                 dnam{"ሊትር"}
                 one{"{0} ሊትር"}
@@ -815,6 +908,11 @@ am{
                 one{"{0} ሚሊ ሊትር"}
                 other{"{0} ሚሊ ሊትር"}
             }
+            pinch{
+                dnam{"ቁንጥ"}
+                one{"{0} ቁንጥ"}
+                other{"{0} ቁንጥ"}
+            }
             pint{
                 dnam{"pt"}
                 one{"{0} pt"}
@@ -829,6 +927,11 @@ am{
                 dnam{"qt"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"የፈሳሽ መለኪያ"}
+                one{"{0} የፈሳሽ መለኪያ"}
+                other{"{0} የፈሳሽ መለኪያ"}
             }
             tablespoon{
                 dnam{"tbsp"}
@@ -1472,6 +1575,11 @@ am{
             }
         }
         graphics{
+            dot{
+                dnam{"ነቁጥ"}
+                one{"{0} ነቁጥ"}
+                other{"{0} ነቁጥ"}
+            }
             dot-per-centimeter{
                 dnam{"ነበሴሜ"}
                 one{"{0} ነበሴሜ"}
@@ -1520,11 +1628,21 @@ am{
                 one{"{0} ዴሜ"}
                 other{"{0} ዴሜ"}
             }
+            fathom{
+                dnam{"ተዳክሞዎች"}
+                one{"{0} ተዳክሞ"}
+                other{"{0} ተዳክሞ"}
+            }
             foot{
                 dnam{"ጫማ"}
                 one{"{0} ጫማ"}
                 other{"{0} ጫማ"}
                 per{"{0}/ጫማ"}
+            }
+            furlong{
+                dnam{"ፈሎን"}
+                one{"{0} ፈሎን"}
+                other{"{0} ፈሎን"}
             }
             inch{
                 dnam{"ኢንች"}
@@ -1594,6 +1712,9 @@ am{
                 one{"{0} ነጥብ"}
                 other{"{0} ነጥብ"}
             }
+            solar-radius{
+                dnam{"ሶላር ራዲ"}
+            }
             yard{
                 dnam{"ያርድ"}
                 one{"{0} ያርድ"}
@@ -1601,6 +1722,16 @@ am{
             }
         }
         light{
+            candela{
+                dnam{"ካንዴላ"}
+                one{"{0} ካንዴላ"}
+                other{"{0} ካንዴላ"}
+            }
+            lumen{
+                dnam{"ቱቦ ቀዳዳ"}
+                one{"{0} ቱቦ ቀዳዳ"}
+                other{"{0} ቱቦ ቀዳዳ"}
+            }
             lux{
                 dnam{"lx"}
                 one{"{0} lx"}
@@ -1612,6 +1743,17 @@ am{
                 dnam{"CD"}
                 one{"{0} CD"}
                 other{"{0} CD"}
+            }
+            dalton{
+                dnam{"ዳተንስ"}
+            }
+            earth-mass{
+                dnam{"ኤርዝማስስ"}
+            }
+            grain{
+                dnam{"ጥራ ጥሬ"}
+                one{"{0} ጥራ ጥሬ"}
+                other{"{0} ጥራ ጥሬ"}
             }
             gram{
                 dnam{"ግራም"}
@@ -1656,6 +1798,14 @@ am{
                 one{"{0} ፓውንድ"}
                 other{"{0} ፓውንድ"}
                 per{"{0}/ፓውንድ"}
+            }
+            solar-mass{
+                dnam{"ሶላር ማስስ"}
+            }
+            stone{
+                dnam{"ድንጋይ"}
+                one{"{0} ድንጋይ"}
+                other{"{0} ድንጋይ"}
             }
             ton{
                 dnam{"ቶን"}
@@ -1809,6 +1959,11 @@ am{
                 one{"{0} በርሜል"}
                 other{"{0} በርሜል"}
             }
+            bushel{
+                dnam{"ዳውላ"}
+                one{"{0} ዳውላ"}
+                other{"{0} ዳውላ"}
+            }
             centiliter{
                 dnam{"ሴሊ"}
                 one{"{0} ሴሊ"}
@@ -1866,6 +2021,26 @@ am{
                 one{"{0} ዴሊ"}
                 other{"{0} ዴሊ"}
             }
+            dessert-spoon{
+                dnam{"የመምድረ በዳ ማንኪያ"}
+                one{"{0} የመምድረ በዳ ማንኪያ"}
+                other{"{0} የመምድረ በዳ ማንኪያ"}
+            }
+            dessert-spoon-imperial{
+                dnam{"የምድረ በዳ ማንኪያ"}
+                one{"{0} የምድረ በዳ ማንኪያ"}
+                other{"{0} የምድረ በዳ ማንኪያ"}
+            }
+            dram{
+                dnam{"የክብደት መለኪያ"}
+                one{"{0} የክብደት መለኪያ"}
+                other{"{0} የክብደት መለኪያ"}
+            }
+            drop{
+                dnam{"ጠብታ"}
+                one{"{0} ጠብታ"}
+                other{"{0} ጠብታ"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -1888,6 +2063,11 @@ am{
                 one{"{0} hL"}
                 other{"{0} hL"}
             }
+            jigger{
+                dnam{"ሙጃሌ"}
+                one{"{0} ሙጃሌ"}
+                other{"{0} ሙጃሌ"}
+            }
             liter{
                 dnam{"ሊትር"}
                 one{"{0} ሊ"}
@@ -1904,6 +2084,11 @@ am{
                 one{"{0} ሚሊ ሊትር"}
                 other{"{0} ሚሊ ሊትር"}
             }
+            pinch{
+                dnam{"ቁንጥ"}
+                one{"{0} ቁንጥ"}
+                other{"{0} ቁንጥ"}
+            }
             pint{
                 dnam{"pt"}
                 one{"{0} pt"}
@@ -1918,6 +2103,11 @@ am{
                 dnam{"qt"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"የፈሳሽ መለኪያ"}
+                one{"{0} የፈሳሽ መለኪያ"}
+                other{"{0} የፈሳሽ መለኪያ"}
             }
             tablespoon{
                 dnam{"tbsp"}

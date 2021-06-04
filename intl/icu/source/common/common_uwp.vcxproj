@@ -52,10 +52,6 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
-  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -129,7 +125,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <AdditionalDependencies>vccorlib.lib;msvcrt.lib;vcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\..\$(IcuBinOutputDir)\icuuc67.dll</OutputFile>
+      <OutputFile>..\..\$(IcuBinOutputDir)\icuuc68.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\$(IcuLibOutputDir)\icuuc.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\$(IcuLibOutputDir)\icuuc.lib</ImportLibrary>
     </Link>
@@ -152,7 +148,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>vccorlibd.lib;msvcrtd.lib;vcruntimed.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\..\$(IcuBinOutputDir)\icuuc67d.dll</OutputFile>
+      <OutputFile>..\..\$(IcuBinOutputDir)\icuuc68d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\$(IcuLibOutputDir)\icuucd.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\$(IcuLibOutputDir)\icuucd.lib</ImportLibrary>
     </Link>
@@ -480,6 +476,8 @@
     <ClInclude Include="localeprioritylist.h" />
     <ClInclude Include="locbased.h" />
     <ClInclude Include="locdistance.h" />
+    <ClInclude Include="charstrmap.h" />
+    <ClInclude Include="uniquecharstr.h" />
     <ClInclude Include="loclikelysubtags.h" />
     <ClInclude Include="locutil.h" />
     <ClInclude Include="lsr.h" />

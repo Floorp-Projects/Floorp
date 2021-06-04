@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fil{
     Currencies{
         AED{
@@ -556,7 +557,7 @@ fil{
         }
         STN{
             "STN",
-            "São Tomé & Príncipe Dobra (2018)",
+            "São Tomé & Príncipe Dobra",
         }
         SYP{
             "SYP",
@@ -1437,5 +1438,4 @@ fil{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

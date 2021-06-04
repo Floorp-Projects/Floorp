@@ -1,8 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_150{
     %%Parent{"en_001"}
-    Version{"37"}
     zoneStrings{
         "meta:Europe_Central"{
             sd{"CEST"}

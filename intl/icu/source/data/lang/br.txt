@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 br{
     Keys{
         calendar{"deiziadur"}
@@ -7,6 +8,7 @@ br{
         collation{"doare rummañ"}
         currency{"moneiz"}
         hc{"kelcʼhiad eurioù"}
+        lb{"stil torr linenn"}
         ms{"reizhiad vuzuliañ"}
         numbers{"niveroù"}
     }
@@ -148,6 +150,7 @@ br{
         eu{"euskareg"}
         ewo{"ewondo"}
         fa{"perseg"}
+        fa_AF{"dareg"}
         fan{"fang"}
         fat{"fanti"}
         ff{"fula"}
@@ -542,7 +545,7 @@ br{
         yue{"kantoneg"}
         za{"zhuang"}
         zap{"zapoteg"}
-        zbl{"Bliss"}
+        zbl{"arouezioù Bliss"}
         zea{"zelandeg"}
         zen{"zenaga"}
         zgh{"tamacheg Maroko standart"}
@@ -559,6 +562,7 @@ br{
         zh_Hant{"sinaeg mandarinek hengounel"}
     }
     Languages%menu{
+        ckb{"kurdeg kreiz"}
         yue{"sinaeg, kantoneg"}
         zh{"sinaeg, mandarineg"}
     }
@@ -683,6 +687,7 @@ br{
             roc{"deiziadur Republik Sina"}
         }
         cf{
+            account{"furmad unanenn jediñ"}
             standard{"furmad moneiz standart"}
         }
         collation{
@@ -707,6 +712,11 @@ br{
             h12{"reizhiad 12 eurvezh (1–12)"}
             h23{"reizhiad 24 eurvezh (0–23)"}
             h24{"reizhiad 24 eurvezh (1–24)"}
+        }
+        lb{
+            loose{"stil torr linenn lezober"}
+            normal{"stil torr linenn boas"}
+            strict{"stil torr linenn strizh"}
         }
         ms{
             metric{"reizhiad vetrek"}
@@ -800,6 +810,7 @@ br{
         BISKE{"rannyezh San Giorgio/Bila"}
         BOHORIC{"lizherenneg Bohorič"}
         BOONT{"boontling"}
+        BORNHOLM{"rannyezh Bornholm"}
         CISAUP{"kizalpeg"}
         COLB1945{"emglev 1945 war reizhskrivadur portugaleg Brazil"}
         CORNU{"saozneg Kerne-Veur"}
@@ -878,14 +889,25 @@ br{
         WADEGILE{"romanekadur Wade-Giles"}
         XSISTEMO{"esperanteg sistem X"}
     }
-    Version{"37"}
     characterLabelPattern{
+        all{"{0} — holl"}
+        category-list{"{0} : {1}"}
+        compatibility{"{0} — kenglotusted"}
         enclosed{"{0} — kelcʼhiet"}
         extended{"{0} — astennet"}
         historic{"{0} — istorel"}
         miscellaneous{"{0} — liesseurt"}
         other{"{0} — all"}
         scripts{"skriturioù — {0}"}
+        strokes{
+            few{"{0} linenn"}
+            many{"{0} a linennoù"}
+            one{"{0} linenn"}
+            other{"{0} linenn"}
+            two{"{0} linenn"}
+        }
+        subscript{"isskridad {0}"}
+        superscript{"usskridad {0}"}
     }
     codePatterns{
         language{"yezh : {0}"}

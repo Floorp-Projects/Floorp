@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 jgo{
     Countries{
         001{"Mbí"}
@@ -85,5 +86,4 @@ jgo{
         ZW{"Zimbámbwɛ"}
         ZZ{"ŋgɔŋ yi pɛ́ ká kɛ́ jʉɔ"}
     }
-    Version{"37"}
 }

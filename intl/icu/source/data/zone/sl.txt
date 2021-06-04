@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sl{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžan"}
@@ -901,7 +901,7 @@ sl{
             ec{"Zelenortski otoki"}
         }
         "Atlantic:Faeroe"{
-            ec{"Faroe"}
+            ec{"Ferski otoki"}
         }
         "Atlantic:Madeira"{
             ec{"Madeira"}
@@ -1720,9 +1720,9 @@ sl{
             ls{"Niuejski čas"}
         }
         "meta:Norfolk"{
-            ld{"Norfolški otoki poletni čas"}
-            lg{"Norfolški otoki čas"}
-            ls{"Norfolški otoki standardni čas"}
+            ld{"Poletni čas: Norfolški otoki"}
+            lg{"Čas: Norfolški otoki"}
+            ls{"Standardni čas: Norfolški otoki"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronški poletni čas"}

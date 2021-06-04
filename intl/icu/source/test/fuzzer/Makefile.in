@@ -73,7 +73,9 @@ distclean-local: clean-local
 	$(RMV) Makefile
 
 check-local: all-local
-	$(foreach trgt,$(FUZZER_TARGETS), echo $(trgt); $(INVOKE) ./$(trgt) \
+	# Create a dummy test case file with content "abc123"
+	echo "abc123" > dummytestcase
+	$(foreach trgt,$(FUZZER_TARGETS), echo $(trgt); $(INVOKE) ./$(trgt) dummytestcase -q \
             $(TEST_OUTPUT_OPTS) || exit \
             $(IOTEST_OPTS);)
 

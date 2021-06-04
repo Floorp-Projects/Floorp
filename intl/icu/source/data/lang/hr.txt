@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hr{
     Keys{
         calendar{"kalendar"}
@@ -572,6 +573,7 @@ hr{
         az{"azerski"}
     }
     Languages%variant{
+        ckb{"kurdski, soranski"}
         ps{"puštu"}
     }
     Scripts{
@@ -825,10 +827,10 @@ hr{
             npinyin{"Numerički"}
         }
         hc{
-            h11{"12-satni format (0-11)"}
-            h12{"12-satni format (1-12)"}
-            h23{"24-satni format (0-23)"}
-            h24{"24-satni format (1-24)"}
+            h11{"12-satni format (0 – 11)"}
+            h12{"12-satni format (0 – 12)"}
+            h23{"24-satni format (0 – 23)"}
+            h24{"24-satni format (1 – 24)"}
         }
         lb{
             loose{"slobodni stil prijeloma retka"}
@@ -928,7 +930,6 @@ hr{
         VALENCIA{"valencijski"}
         WADEGILE{"Wade-Giles romanizacija"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – sve"}
         category-list{"{0}: {1}"}
@@ -944,6 +945,8 @@ hr{
             one{"{0} potez"}
             other{"{0} poteza"}
         }
+        subscript{"indeks {0}"}
+        superscript{"eksponent {0}"}
     }
     codePatterns{
         language{"Jezik: {0}"}

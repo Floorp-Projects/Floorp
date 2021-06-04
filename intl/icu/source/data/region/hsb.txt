@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hsb{
     Countries{
         001{"swět"}
@@ -271,6 +272,7 @@ hsb{
         UA{"Ukraina"}
         UG{"Uganda"}
         UM{"Ameriska Oceaniska"}
+        UN{"Zjednoćene narody"}
         US{"Zjednoćene staty Ameriki"}
         UY{"Uruguay"}
         UZ{"Uzbekistan"}
@@ -305,5 +307,4 @@ hsb{
         FK{"Falklandske kupy (Malwiny)"}
         TL{"Wuchodny Timor"}
     }
-    Version{"37"}
 }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 de{
     AuxExemplarCharacters{
         "[á à ă â å ã ā æ ç é è ĕ ê ë ē ğ í ì ĭ î ï İ ī ı ñ ó ò ŏ ô ø ō œ ş ú ù ŭ û ū"
@@ -192,6 +193,7 @@ de{
                 }
             }
             symbols{
+                approximatelySign{"≈"}
                 decimal{","}
                 exponential{"E"}
                 group{"."}
@@ -218,7 +220,6 @@ de{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -1755,7 +1756,7 @@ de{
         consonantal_jamo{"Jamo-Konsonanten"}
         currency_symbols{"Währungssymbole"}
         dash_connector{"Gedankenstrich/Bindestrich"}
-        digits{"Stellen"}
+        digits{"Ziffern"}
         dingbats{"Zierrat"}
         divination_symbols{"Wahrsagezeichen"}
         downwards_arrows{"Abwärtspfeile"}
@@ -1800,7 +1801,7 @@ de{
         numbers{"Ziffern"}
         objects{"Objekte"}
         other{"Andere"}
-        paired{"Gepaart"}
+        paired{"Paarig"}
         person{"Person"}
         phonetic_alphabet{"Phonetisches Alphabet"}
         pictographs{"Piktogramme"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ig{
     AuxExemplarCharacters{
         "[á à ā c é è ē í ì ī {ị\u0301} {ị\u0300} ḿ {m\u0300} ń ǹ ó ò ō {ọ\u0301} {ọ"
@@ -76,6 +77,46 @@ ig{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
             }
+            patternsShort{
+                currencyFormat{
+                    1000{
+                        other{"¤0K"}
+                    }
+                    10000{
+                        other{"¤00K"}
+                    }
+                    100000{
+                        other{"¤000K"}
+                    }
+                    1000000{
+                        other{"¤0M"}
+                    }
+                    10000000{
+                        other{"¤00M"}
+                    }
+                    100000000{
+                        other{"¤000M"}
+                    }
+                    1000000000{
+                        other{"¤0G"}
+                    }
+                    10000000000{
+                        other{"¤00G"}
+                    }
+                    100000000000{
+                        other{"¤000G"}
+                    }
+                    1000000000000{
+                        other{"¤0T"}
+                    }
+                    10000000000000{
+                        other{"¤00T"}
+                    }
+                    100000000000000{
+                        other{"¤000T"}
+                    }
+                }
+            }
             symbols{
                 decimal{"."}
                 exponential{"E"}
@@ -101,7 +142,6 @@ ig{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -203,7 +243,7 @@ ig{
             dayNames{
                 format{
                     abbreviated{
-                        "Ụka",
+                        "Sọn",
                         "Mọn",
                         "Tiu",
                         "Wen",
@@ -232,7 +272,7 @@ ig{
                 }
                 stand-alone{
                     abbreviated{
-                        "Ụka",
+                        "Sọn",
                         "Mọn",
                         "Tiu",
                         "Wen",
@@ -530,6 +570,46 @@ ig{
             }
         }
     }
+    characterLabel{
+        animal{"anụmanụ"}
+        animals_nature{"anụmanụ ma ọbụ ụwa"}
+        arrows{"arọ"}
+        body{"ahụ"}
+        box_drawing{"ịgbe osese"}
+        building{"ulọ"}
+        currency_symbols{"akara ego"}
+        divination_symbols{"akara ịgba afa"}
+        downwards_arrows{"arọ ala"}
+        downwards_upwards_arrows{"arọ elụ ala"}
+        female{"nwanyị"}
+        food_drink{"nrị & ịhe ọnụnụ"}
+        heart{"obi"}
+        leftwards_arrows{"arọ aka ekpe"}
+        leftwards_rightwards_arrows{"arọ aka nrị aka ekpe"}
+        male{"nwoke"}
+        math_symbols{"akara matị"}
+        musical_symbols{"akara ụrị"}
+        nature{"ụwa"}
+        nonspacing{"enweghịọhere"}
+        numbers{"ọnụọgụgụ"}
+        objects{"ịhe"}
+        other{"ọzọ"}
+        person{"mmadụ"}
+        place{"ebe"}
+        plant{"ahịha"}
+        punctuation{"akara edemede"}
+        rightwards_arrows{"arọ aka nrị"}
+        sign_standard_symbols{"ịrịba ama maọbụ akara"}
+        spacing{"ọhere"}
+        sport{"egwụregwụ"}
+        symbols{"akara"}
+        technical_symbols{"akara teknịkal"}
+        tone_marks{"ụda akara"}
+        travel{"njem"}
+        travel_places{"njem maọbụ ebe"}
+        upwards_arrows{"arọ elụ"}
+        weather{"ụdịdịụbọchị"}
+    }
     fields{
         day{
             dn{"Ụbọchị"}
@@ -553,17 +633,77 @@ ig{
                 "1"{"Echi"}
             }
         }
+        dayOfYear{
+            dn{"ụbọchị na afọ"}
+        }
+        dayOfYear-short{
+            dn{"Ụbọchị na afọ"}
+        }
         dayperiod{
+            dn{"N’ụtụtụ/N’abalị"}
+        }
+        dayperiod-narrow{
+            dn{"N’ụtụtụ/N’abalị"}
+        }
+        dayperiod-short{
             dn{"N’ụtụtụ/N’abalị"}
         }
         era{
             dn{"Agba"}
         }
+        fri{
+            relative{
+                "-1"{"Ụbọchị faraịde gara aga"}
+                "0"{"ụbọchị Faraịde a"}
+                "1"{"ụbọchị Faraịde na abịa"}
+            }
+        }
+        fri-narrow{
+            relative{
+                "-1"{"ụbọchị Faraịde gara aga"}
+                "0"{"ụbọchị Faraịde a"}
+                "1"{"ụọchị Faraịde na abịa"}
+            }
+        }
+        fri-short{
+            relative{
+                "-1"{"ụbọchị Faraịde gara aga"}
+                "0"{"ụbọchị Faraịde a"}
+                "1"{"ụbọchị na abịa"}
+            }
+        }
         hour{
             dn{"Elekere"}
+            relative{
+                "0"{"elekere a"}
+            }
         }
         minute{
             dn{"Nkeji"}
+            relative{
+                "0"{"nkejị a"}
+            }
+        }
+        mon{
+            relative{
+                "-1"{"ụbọchị Mọnde gara aga"}
+                "0"{"ụbọchị Mọnde a"}
+                "1"{"ụbọchị Monde a"}
+            }
+        }
+        mon-narrow{
+            relative{
+                "-1"{"ụbọchị Monde gara aga"}
+                "0"{"ụbọchị Monde a"}
+                "1"{"ụbọchị Monde na abịa"}
+            }
+        }
+        mon-short{
+            relative{
+                "-1"{"Mon gara aga"}
+                "0"{"ụbọchị Mọnde a"}
+                "1"{"ụbọchị Mọnde na abịa"}
+            }
         }
         month{
             dn{"Ọnwa"}
@@ -589,6 +729,11 @@ ig{
         }
         quarter{
             dn{"Ọnwa atọ n’afọ"}
+            relative{
+                "-1"{"Nkejị keanọ gara aga"}
+                "0"{"nkejị keanọ a"}
+                "1"{"nkejị keanọ na abịa"}
+            }
         }
         quarter-narrow{
             dn{"Ọnwa atọ n’afọ"}
@@ -596,14 +741,122 @@ ig{
         quarter-short{
             dn{"Ọnwa atọ n’afọ"}
         }
+        sat{
+            relative{
+                "-1"{"ụbọchị Satụde gara aga"}
+                "0"{"ụbọchị Satụde a"}
+                "1"{"ụbọchị Satụde na abịa"}
+            }
+        }
+        sat-narrow{
+            relative{
+                "-1"{"ụbọchị Satụde gara aga"}
+                "0"{"ụbọchị Satụde a"}
+                "1"{"ụbọchị Satụde na abịa"}
+            }
+        }
+        sat-short{
+            relative{
+                "-1"{"Ụbọchị Satụde gara aga"}
+                "0"{"ụbọchị Satụde a"}
+                "1"{"ụbọchị Satụde na abịa"}
+            }
+        }
         second{
             dn{"Tịm kọm"}
+            relative{
+                "0"{"ụgbụa"}
+            }
         }
         second-narrow{
             dn{"Tịm kọm"}
         }
         second-short{
             dn{"Tịm kọm"}
+        }
+        sun{
+            relative{
+                "-1"{"Ụbọchị ụka gara aga"}
+                "0"{"ụbọchị ụka a"}
+                "1"{"ụbọchị ụka na abịa"}
+            }
+        }
+        sun-narrow{
+            relative{
+                "-1"{"ụbọchị ụka gara aga"}
+                "0"{"ụbọchị ụka a"}
+                "1"{"ụbọchị ụka na abịa"}
+            }
+        }
+        sun-short{
+            relative{
+                "-1"{"ụbọchị ụka gara aga"}
+                "0"{"ubochị ụka a"}
+                "1"{"ụbọchị ụka na abịa"}
+            }
+        }
+        thu{
+            relative{
+                "-1"{"ụbọchị Tọsdee gara aga"}
+                "0"{"ụbọchị Tọsdee a"}
+                "1"{"ụbọchị Tọsdee na abịa"}
+            }
+        }
+        thu-narrow{
+            relative{
+                "-1"{"ụbọchị Tọsdee gara aga"}
+                "0"{"ụbọchị Tọsdee a"}
+                "1"{"ụbọchị Tọsdee na abịa"}
+            }
+        }
+        thu-short{
+            relative{
+                "-1"{"Ụbọchị Tọsdee gara aga"}
+                "0"{"ụbọchị Tọsdee a"}
+                "1"{"ụbọchị Tọsdee na abịa"}
+            }
+        }
+        tue{
+            relative{
+                "-1"{"ụbọchị Tuesde gara aga"}
+                "0"{"ụbọchị Tuesde a"}
+                "1"{"ụbọchị Tuesde na abịa"}
+            }
+        }
+        tue-narrow{
+            relative{
+                "-1"{"ụbọchị Tuesde gara aga"}
+                "0"{"ụbọchị Tuesde a"}
+                "1"{"ụbọchị Tuesde na abịa"}
+            }
+        }
+        tue-short{
+            relative{
+                "-1"{"ụbọchị Tụesde gara aga"}
+                "0"{"ụbọchị Tuesde a"}
+                "1"{"ụbọchị Tuesde na abịa"}
+            }
+        }
+        wed{
+            relative{
+                "-1"{"ụbọchị wednesde gara aga"}
+                "0"{"ụbọchị Wednesde a"}
+                "1"{"ụbọchị Wednesde na abịa"}
+            }
+        }
+        wed-narrow{
+            relative{
+                "-1"{"ụbọchị Wednesde gara ag"}
+                "0"{"ụbọchị Wednesde a"}
+                "1"{"ụbọchị Wednesde a"}
+            }
+        }
+        wed-short{
+            relative{
+                "-1"{"ụbọchị Wednesde gara ag"}
+                "0"{"ụbọchị Wednesde a"}
+                "1"{"ụbọchị Wednesde na abịa"}
+            }
         }
         week{
             dn{"Izu"}
@@ -630,8 +883,32 @@ ig{
             }
             relativePeriod{"Izu nke{0}"}
         }
+        weekOfMonth{
+            dn{"ịzụ ọnwa"}
+        }
+        weekOfMonth-narrow{
+            dn{"ịzụ ọnwa"}
+        }
+        weekOfMonth-short{
+            dn{"ịzụ ọnwa"}
+        }
         weekday{
             dn{"Ụbọchị izu"}
+        }
+        weekday-narrow{
+            dn{"Ụbọchị ịzụ"}
+        }
+        weekday-short{
+            dn{"Ụbọchị ịzụ"}
+        }
+        weekdayOfMonth{
+            dn{"Ụbọchị ịzụ na ọnwa"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"Ụbọchị ịzụ na ọnwa"}
+        }
+        weekdayOfMonth-short{
+            dn{"Ụbọchị ịzụ na ọnwa"}
         }
         year{
             dn{"Afọ"}

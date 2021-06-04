@@ -52,10 +52,6 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
-  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -190,7 +186,7 @@
       <ProgramDataBaseFileName>.\x86\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuin67.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuin68.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib32uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -207,7 +203,7 @@
       <ProgramDataBaseFileName>.\x86\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuin67d.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuin68d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib32uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -224,7 +220,7 @@
       <ProgramDataBaseFileName>.\x64\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuin67.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuin68.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib64uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -241,7 +237,7 @@
       <ProgramDataBaseFileName>.\x64\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuin67d.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuin68d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib64uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -258,7 +254,7 @@
       <ProgramDataBaseFileName>.\ARM\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuin67.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuin68.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARMuwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -275,7 +271,7 @@
       <ProgramDataBaseFileName>.\ARM\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuin67d.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuin68d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARMuwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -292,7 +288,7 @@
       <ProgramDataBaseFileName>.\ARM64\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARM64uwp\icuin67.dll</OutputFile>
+      <OutputFile>..\..\binARM64uwp\icuin68.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARM64uwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARM64uwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARM64uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -309,7 +305,7 @@
       <ProgramDataBaseFileName>.\ARM64\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARM64uwp\icuin67d.dll</OutputFile>
+      <OutputFile>..\..\binARM64uwp\icuin68d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARM64uwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARM64uwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARM64uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -414,7 +410,6 @@
     <ClCompile Include="nfrs.cpp" />
     <ClCompile Include="nfrule.cpp" />
     <ClCompile Include="nfsubs.cpp" />
-    <ClCompile Include="nounit.cpp" />
     <ClCompile Include="number_affixutils.cpp" />
     <ClCompile Include="number_asformat.cpp" />
     <ClCompile Include="number_compact.cpp" />
@@ -434,11 +429,13 @@
     <ClCompile Include="number_rounding.cpp" />
     <ClCompile Include="number_scientific.cpp" />
     <ClCompile Include="formatted_string_builder.cpp" />
+    <ClCompile Include="number_usageprefs.cpp" />
     <ClCompile Include="number_utils.cpp" />
     <ClCompile Include="number_mapper.cpp" />
     <ClCompile Include="number_multiplier.cpp" />
     <ClCompile Include="number_currencysymbols.cpp" />
     <ClCompile Include="number_skeletons.cpp" />
+    <ClCompile Include="number_symbolswrapper.cpp" />
     <ClCompile Include="number_capi.cpp" />
     <ClCompile Include="string_segment.cpp" />
     <ClCompile Include="numparse_parsednumber.cpp" />
@@ -450,12 +447,14 @@
     <ClCompile Include="numparse_affixes.cpp" />
     <ClCompile Include="numparse_compositions.cpp" />
     <ClCompile Include="numparse_validators.cpp" />
+    <ClCompile Include="numrange_capi.cpp" />
     <ClCompile Include="numrange_fluent.cpp" />
     <ClCompile Include="numrange_impl.cpp" />
     <ClCompile Include="numfmt.cpp" />
     <ClCompile Include="numsys.cpp" />
     <ClCompile Include="olsontz.cpp" />
     <ClCompile Include="persncal.cpp" />
+    <ClCompile Include="pluralranges.cpp" />
     <ClCompile Include="plurfmt.cpp" />
     <ClCompile Include="plurrule.cpp" />
     <ClCompile Include="quantityformatter.cpp" />
@@ -485,6 +484,10 @@
     <ClCompile Include="ufieldpositer.cpp" />
     <ClCompile Include="ulocdata.cpp" />
     <ClCompile Include="umsg.cpp" />
+    <ClCompile Include="units_complexconverter.cpp" />
+    <ClCompile Include="units_converter.cpp" />
+    <ClCompile Include="units_data.cpp" />
+    <ClCompile Include="units_router.cpp" />
     <ClCompile Include="unum.cpp" />
     <ClCompile Include="unumsys.cpp" />
     <ClCompile Include="upluralrules.cpp" />
@@ -620,6 +623,7 @@
     <ClInclude Include="nfsubs.h" />
     <ClInclude Include="olsontz.h" />
     <ClInclude Include="persncal.h" />
+    <ClInclude Include="pluralranges.h" />
     <ClInclude Include="plurrule_impl.h" />
     <ClInclude Include="quantityformatter.h" />
     <ClInclude Include="sharedbreakiterator.h" />
@@ -700,12 +704,14 @@
     <ClInclude Include="number_scientific.h" />
     <ClInclude Include="formatted_string_builder.h" />
     <ClInclude Include="number_types.h" />
+    <ClInclude Include="number_usageprefs.h" />
     <ClInclude Include="number_utypes.h" />
     <ClInclude Include="number_utils.h" />
     <ClInclude Include="number_mapper.h" />
     <ClInclude Include="number_multiplier.h" />
     <ClInclude Include="number_currencysymbols.h" />
     <ClInclude Include="number_skeletons.h" />
+    <ClInclude Include="number_symbolswrapper.h" />
     <ClInclude Include="string_segment.h" />
     <ClInclude Include="numparse_impl.h" />
     <ClInclude Include="numparse_symbols.h" />
@@ -719,6 +725,10 @@
     <ClInclude Include="numparse_utils.h" />
     <ClInclude Include="numrange_impl.h" />
     <ClInclude Include="formattedval_impl.h" />
+    <ClInclude Include="units_complexconverter.h" />
+    <ClInclude Include="units_converter.h" />
+    <ClInclude Include="units_data.h" />
+    <ClInclude Include="units_router.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="i18n.rc" />

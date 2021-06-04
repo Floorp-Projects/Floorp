@@ -16,7 +16,7 @@
 # Note that the entire block for the supplementary Unicode planes is
 # marked unassigned because they are handled algorithmically.
 # Similarly, some of the BMP mappings are marked as unassigned for the same reason.
-# See http://userguide.icu-project.org/conversion/data#TOC-State-table-syntax-in-.ucm-files
+# See https://unicode-org.github.io/icu/userguide/conversion/data#state-table-syntax-in-ucm-files
 
 # States 0..2:
 # Mostly assigned sequences, with branches in the lead bytes

@@ -98,7 +98,7 @@ usage()
     echo "Copyright (c) 2002-2013, International Business Machines Corporation and others. All Rights Reserved."
     echo
     echo "NOTE: Please consider using the pkg-config (.pc) files instead of icu-config."
-    echo " See: <http://userguide.icu-project.org/howtouseicu#TOC-pkg-config> "
+    echo " See: <https://unicode-org.github.io/icu/userguide/howtouseicu> "
 }
 
 ## Check the sanity of current variables

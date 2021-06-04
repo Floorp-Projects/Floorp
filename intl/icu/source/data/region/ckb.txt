@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ckb{
     Countries{
         001{"جیهان"}
@@ -302,5 +303,4 @@ ckb{
         CD{"کۆماری دیموکراتیی کۆنگۆ"}
         CG{"کۆماری کۆنگۆ"}
     }
-    Version{"37"}
 }

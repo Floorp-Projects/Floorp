@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ta{
     AuxExemplarCharacters{"[\u200C\u200D]"}
     Ellipsis{
@@ -14,10 +15,7 @@ ta{
         "[அ ஆ இ ஈ உ ஊ எ ஏ ஐ ஒ ஓ ஔ ஃ க ங ச ஞ ட ண த ந ப ம ய ர ல வ ழ ள ற ன ஜ ஷ ஸ ஹ ா ி "
         "\u0BC0 ு ூ ெ ே ை ொ ோ ௌ \u0BCD]"
     }
-    ExemplarCharactersIndex{
-        "[அ ஆ இ ஈ உ ஊ எ ஏ ஐ ஒ ஓ ஔ க ங ச ஞ ட ண த ந ப ம ய ர ல வ ழ ள ற ன ஜ ஶ ஷ ஸ ஹ {க"
-        "\u0BCDஷ}]"
-    }
+    ExemplarCharactersIndex{"[அ ஆ இ ஈ உ ஊ எ ஏ ஐ ஒ ஓ ஔ க ங ச ஞ ட ண த ந ப ம ய ர ல வ ழ ள ற ன]"}
     ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0௦ 1௧ 2௨ 3௩ 4௪ 5௫ 6௬ 7௭ 8௮ 9௯]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
@@ -242,7 +240,6 @@ ta{
         }
         traditional{"taml"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sw{
     Keys{
         calendar{"Kalenda"}
@@ -7,9 +8,9 @@ sw{
         colAlternate{"Puuza Upangaji Alama"}
         colBackwards{"Upangaji Uliogeuzwa wa Kiinitoni"}
         colCaseFirst{"Upangaji wa Herufi kubwa/Herufi ndogo"}
-        colCaseLevel{"Upangaji Unaoathiriwa na Herufi"}
+        colCaseLevel{"Upangaji Kulingana na Ukubwa wa Herufi"}
         colNormalization{"Upangaji wa Kawaida"}
-        colNumeric{"Upangaji wa Namba"}
+        colNumeric{"Upangaji kwa Nambari"}
         colStrength{"Nguvu ya Upangaji"}
         collation{"Mpangilio"}
         currency{"Sarafu"}
@@ -129,6 +130,7 @@ sw{
         eu{"Kibaski"}
         ewo{"Kiewondo"}
         fa{"Kiajemi"}
+        fa_AF{"Kiajemi (Afganistani)"}
         ff{"Kifulani"}
         fi{"Kifini"}
         fil{"Kifilipino"}
@@ -165,7 +167,7 @@ sw{
         hil{"Kihiligaynon"}
         hit{"Kihiti"}
         hmn{"Kihmong"}
-        hr{"Kikroeshia"}
+        hr{"Kikorasia"}
         hsb{"Kisobia cha Ukanda wa Juu"}
         ht{"Kihaiti"}
         hu{"Kihungaria"}
@@ -203,7 +205,7 @@ sw{
         kfo{"Kikoro"}
         kg{"Kikongo"}
         kha{"Kikhasi"}
-        khq{"Koyra Chiini"}
+        khq{"Kikoyra Chiini"}
         ki{"Kikikuyu"}
         kj{"Kikwanyama"}
         kk{"Kikazakh"}
@@ -280,7 +282,7 @@ sw{
         ms{"Kimalei"}
         mt{"Kimalta"}
         mua{"Kimundang"}
-        mul{"Lugha Nyingi"}
+        mul{"Lugha nyingi"}
         mus{"Kikriki"}
         mwl{"Kimirandi"}
         my{"Kiburma"}
@@ -330,6 +332,7 @@ sw{
         prg{"Kiprussia"}
         ps{"Kipashto"}
         pt{"Kireno"}
+        pt_BR{"Kireno (Brazili)"}
         pt_PT{"Kireno (Ulaya)"}
         qu{"Kikechua"}
         quc{"Kʼicheʼ"}
@@ -360,7 +363,7 @@ sw{
         sdh{"Kikurdi cha Kusini"}
         se{"Kisami cha Kaskazini"}
         seh{"Kisena"}
-        ses{"Koyraboro Senni"}
+        ses{"Kikoyraboro Senni"}
         sg{"Kisango"}
         sh{"Kiserbia-kroeshia"}
         shi{"Kitachelhit"}
@@ -411,7 +414,7 @@ sw{
         tum{"Kitumbuka"}
         tvl{"Kituvalu"}
         tw{"Twi"}
-        twq{"Kitasawaq"}
+        twq{"Kitasawak"}
         ty{"Kitahiti"}
         tyv{"Kituva"}
         tzm{"Kitamazighati cha Atlasi ya Kati"}
@@ -419,7 +422,7 @@ sw{
         ug{"Kiuyghur"}
         uk{"Kiukraini"}
         umb{"Umbundu"}
-        und{"Lugha Isiyojulikana"}
+        und{"Lugha isiyojulikana"}
         ur{"Kiurdu"}
         uz{"Kiuzbeki"}
         vai{"Kivai"}
@@ -452,6 +455,7 @@ sw{
         zza{"Kizaza"}
     }
     Languages%long{
+        zh_Hans{"Kichina (Kilichorahisishwa)"}
         zh_Hant{"Kichina (cha jadi)"}
     }
     Languages%menu{
@@ -470,7 +474,7 @@ sw{
         Armn{"Kiarmenia"}
         Beng{"Kibengali"}
         Bopo{"Kibopomofo"}
-        Brai{"Braille"}
+        Brai{"Nukta nundu"}
         Cyrl{"Kisiriliki"}
         Deva{"Kidevanagari"}
         Ethi{"Kiethiopia"}
@@ -534,7 +538,7 @@ sw{
             iso8601{"Kalenda ya ISO-8601"}
             japanese{"Kalenda ya Kijapani"}
             persian{"Kalenda ya Kiajemi"}
-            roc{"Kalenda ya Minguo"}
+            roc{"Kalenda ya Jamhuri ya Uchina"}
         }
         cf{
             account{"Mpangilio wa Kihasibu wa Sarafu"}
@@ -610,8 +614,8 @@ sw{
         }
         ms{
             metric{"Mfumo wa Metriki"}
-            uksystem{"Mfumo wa UK"}
-            ussystem{"Mfumo wa US"}
+            uksystem{"Mfumo wa Vipimo wa Uingereza"}
+            ussystem{"Mfumo wa Vipimo wa Marekani"}
         }
         numbers{
             arab{"Nambari za Kiarabu/Kihindi"}
@@ -636,10 +640,10 @@ sw{
             hebr{"Nambari za Kiebrania"}
             jpan{"Nambari za Kijapani"}
             jpanfin{"Nambari za Kifedha za Kijapani"}
-            khmr{"Nambari za Kikhmer"}
+            khmr{"Nambari za Kikambodia"}
             knda{"Nambari za Kikannada"}
             laoo{"Nambari za Kilao"}
-            latn{"Nambari za Magharibi"}
+            latn{"Nambari za Nchi za Magharibi"}
             mlym{"Nambari za Malayalam"}
             mong{"Nambari za Kimongolia"}
             mymr{"Nambari za Myanmar"}
@@ -656,7 +660,6 @@ sw{
             vaii{"Dijiti za Vai"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — zote"}
         category-list{"{0}: {1}"}
@@ -671,6 +674,8 @@ sw{
             one{"mshazari {0}"}
             other{"mishazari {0}"}
         }
+        subscript{"herufichini {0}"}
+        superscript{"herufijuu {0}"}
     }
     codePatterns{
         language{"Lugha: {0}"}

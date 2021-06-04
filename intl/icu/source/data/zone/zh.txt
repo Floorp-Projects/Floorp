@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zh{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"阿比让"}
@@ -991,7 +991,7 @@ zh{
             ec{"布达佩斯"}
         }
         "Europe:Busingen"{
-            ec{"比辛根"}
+            ec{"布辛根"}
         }
         "Europe:Chisinau"{
             ec{"基希讷乌"}
@@ -1523,7 +1523,7 @@ zh{
             ls{"东欧标准时间"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"远东标准时间"}
+            ls{"欧洲极东时间"}
         }
         "meta:Europe_Western"{
             ld{"西欧夏令时间"}

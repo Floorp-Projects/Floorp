@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kea{
     Keys{
         calendar{"Kalendáriu"}
@@ -91,7 +92,7 @@ kea{
         gag{"gagauz"}
         gl{"galegu"}
         gn{"guarani"}
-        gsw{"alemon suísu"}
+        gsw{"alemon suisu"}
         gu{"gujarati"}
         guz{"gusii"}
         gv{"manks"}
@@ -209,7 +210,7 @@ kea{
         to{"tonganes"}
         tr{"turku"}
         tt{"tatar"}
-        tzm{"tamazait di Atlas Sentral"}
+        tzm{"tamaziti di Atlas Sentral"}
         ug{"uigur"}
         uk{"ukranianu"}
         und{"língua diskonxedu"}
@@ -290,11 +291,17 @@ kea{
         calendar{
             buddhist{"Kalendáriu budista"}
             chinese{"Kalendáriu xines"}
+            coptic{"Kalendáriu kopta"}
             dangi{"Kalendáriu dangi"}
             ethiopic{"Kalendáriu etiópiku"}
+            ethiopic-amete-alem{"Kalendáriu etíopi ameti alem"}
             gregorian{"Kalendáriu Gregorianu"}
             hebrew{"Kalendáriu ebraiku"}
+            indian{"Kalendáriu nasional indianu"}
             islamic{"Kalendáriu islámiku"}
+            islamic-civil{"Kalendáriu islámiku (sivil)"}
+            islamic-tbla{"Kalendáriu islámiku (astronómiku)"}
+            islamic-umalqura{"Kalendáriu islámiku (Umm al-Qura)"}
             iso8601{"Kalendáriu ISO-8601"}
             japanese{"Kalendáriu japones"}
             persian{"Kalendáriu persa"}
@@ -329,7 +336,6 @@ kea{
             latn{"Nunbru osidental"}
         }
     }
-    Version{"37"}
     codePatterns{
         language{"Lingua: {0}"}
         script{"Skrita: {0}"}

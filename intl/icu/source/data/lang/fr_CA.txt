@@ -1,14 +1,13 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fr_CA{
     Languages{
         ady{"adygué"}
         ang{"vieil anglais"}
         ar_001{"arabe standard moderne"}
-        asa{"assou"}
-        az{"azerbaïdjanais"}
+        asa{"asou"}
         bbj{"ghomala"}
-        bez{"bena"}
         bik{"bicol"}
         byn{"bilen"}
         byv{"medumba"}
@@ -20,6 +19,7 @@ fr_CA{
         de_CH{"allemand suisse"}
         den{"slave"}
         dgr{"tlicho"}
+        ebu{"embou"}
         en_AU{"anglais australien"}
         en_CA{"anglais canadien"}
         en_GB{"anglais britannique"}
@@ -30,7 +30,6 @@ fr_CA{
         fr_CH{"français suisse"}
         frc{"cajun"}
         frp{"franco-provençal"}
-        gbz{"dari"}
         goh{"vieux haut-allemand"}
         gu{"gujarati"}
         ii{"yi de Sichuan"}
@@ -39,7 +38,6 @@ fr_CA{
         kl{"kalaallisut"}
         ks{"kashmiri"}
         ksb{"chambala"}
-        ksh{"kölsch"}
         liv{"live"}
         lu{"luba-katanga"}
         lzh{"chinois classique"}
@@ -99,7 +97,7 @@ fr_CA{
         Hant{"idéogrammes han traditionnels"}
         Hrkt{"syllabaires japonais"}
         Olck{"ol chiki"}
-        Zsye{"zsye"}
+        Zsye{"émoji"}
     }
     Scripts%stand-alone{
         Hans{"caractères chinois simplifiés"}
@@ -129,7 +127,6 @@ fr_CA{
             mong{"Chiffres mongols"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         category-list{"{0} : {1}"}
     }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 vi{
     ExemplarCharacters{
         "[a à ả ã á ạ ă ằ ẳ ẵ ắ ặ â ầ ẩ ẫ ấ ậ b c d đ e è ẻ ẽ é ẹ ê ề ể ễ ế ệ f g h i"
@@ -146,6 +147,7 @@ vi{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{","}
                 exponential{"E"}
                 group{"."}
@@ -159,19 +161,8 @@ vi{
                 superscriptingExponent{"×"}
             }
         }
-        minimalPairs{
-            ordinal{
-                one{"Rẽ vào lối rẽ thứ nhất bên phải."}
-                other{"Rẽ vào lối rẽ thứ {0} bên phải."}
-            }
-            plural{
-                one{"Rẽ vào lối rẽ thứ nhất bên phải."}
-                other{"Rẽ vào lối rẽ thứ {0} bên phải."}
-            }
-        }
         minimumGroupingDigits{"1"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1094,7 +1085,7 @@ vi{
             eras{
                 abbreviated{
                     "Trước CN",
-                    "sau CN",
+                    "Sau CN",
                 }
                 abbreviated%variant{
                     "trước CN",
@@ -1105,12 +1096,12 @@ vi{
                     "sau CN",
                 }
                 wide{
-                    "Trước CN",
-                    "sau CN",
+                    "Trước Thiên Chúa",
+                    "Sau Công Nguyên",
                 }
                 wide%variant{
-                    "trước CN",
-                    "CN",
+                    "Trước Công Nguyên",
+                    "Công Nguyên",
                 }
             }
             intervalFormats{
@@ -1761,7 +1752,10 @@ vi{
         day-short{
             dn{"Ngày"}
             relative{
+                "-1"{"hôm qua"}
                 "-2"{"Hôm kia"}
+                "0"{"hôm nay"}
+                "1"{"ngày mai"}
                 "2"{"Ngày kia"}
             }
             relativeTime{
@@ -2482,6 +2476,10 @@ vi{
             middle{"{0} {1}"}
             start{"{0} {1}"}
         }
+        unit-short{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+        }
     }
     measurementSystemNames{
         UK{"Hệ Anh"}
@@ -2511,7 +2509,7 @@ vi{
         number{
             lenient{
                 "[\\-‒⁻₋−➖﹣－]",
-                "[,،٫、︐︑﹐﹑，､]",
+                "[,،٫⹁、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
             }
         }

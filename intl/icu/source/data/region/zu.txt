@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zu{
     Countries{
         001{"umhlaba"}
@@ -107,6 +108,7 @@ zu{
         ES{"i-Spain"}
         ET{"i-Ethiopia"}
         EU{"i-European Union"}
+        EZ{"I-Eurozone"}
         FI{"i-Finland"}
         FJ{"i-Fiji"}
         FK{"i-Falkland Islands"}
@@ -312,5 +314,4 @@ zu{
         FK{"i-Falkland Islands (Islas Malvinas)"}
         TL{"i-East Timor"}
     }
-    Version{"37"}
 }

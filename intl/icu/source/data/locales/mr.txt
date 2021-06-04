@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mr{
     AuxExemplarCharacters{"[\u200C\u200D]"}
     Ellipsis{
@@ -243,7 +244,6 @@ mr{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -641,16 +641,12 @@ mr{
         }
         gregorian{
             AmPmMarkers{
-                "म.पू.",
-                "म.उ.",
-            }
-            AmPmMarkersAbbr{
-                "म.पू.",
-                "म.उ.",
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
-                "स",
-                "सं",
+                "a",
+                "p",
             }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -840,7 +836,7 @@ mr{
                 stand-alone{
                     abbreviated{
                         afternoon1{"दुपार"}
-                        am{"म.पू."}
+                        am{"AM"}
                         evening1{"संध्याकाळ"}
                         evening2{"सायंकाळ"}
                         midnight{"मध्यरात्र"}
@@ -848,11 +844,11 @@ mr{
                         morning2{"सकाळ"}
                         night1{"रात्र"}
                         noon{"मध्यान्ह"}
-                        pm{"म.उ."}
+                        pm{"PM"}
                     }
                     narrow{
                         afternoon1{"दु"}
-                        am{"म.पू."}
+                        am{"AM"}
                         evening1{"सं"}
                         evening2{"सा"}
                         midnight{"म.रा."}
@@ -860,11 +856,11 @@ mr{
                         morning2{"स"}
                         night1{"रात्र"}
                         noon{"म"}
-                        pm{"म.उ."}
+                        pm{"PM"}
                     }
                     wide{
                         afternoon1{"दुपार"}
-                        am{"म.पू."}
+                        am{"AM"}
                         evening1{"संध्याकाळ"}
                         evening2{"सायंकाळ"}
                         midnight{"मध्यरात्र"}
@@ -872,7 +868,7 @@ mr{
                         morning2{"सकाळ"}
                         night1{"रात्र"}
                         noon{"मध्यान्ह"}
-                        pm{"म.उ."}
+                        pm{"PM"}
                     }
                 }
             }
@@ -1712,13 +1708,13 @@ mr{
             dn{"वर्षातील दिवस"}
         }
         dayperiod{
-            dn{"[म.पू./म.उ.]"}
+            dn{"AM/PM"}
         }
         dayperiod-narrow{
-            dn{"[म.पू./म.उ.]"}
+            dn{"AM/PM"}
         }
         dayperiod-short{
-            dn{"[म.पू./म.उ.]"}
+            dn{"AM/PM"}
         }
         era{
             dn{"युग"}
@@ -2474,6 +2470,9 @@ mr{
             end{"{0}, किंवा {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
+        }
+        or-short{
+            end{"{0} किंवा {1}"}
         }
         standard{
             2{"{0} आणि {1}"}

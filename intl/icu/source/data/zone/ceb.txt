@@ -1,8 +1,11 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ceb{
-    Version{"37"}
     zoneStrings{
+        "Asia:Saigon"{
+            ec{"Siyudad sa Ho Chi Minh"}
+        }
         "Etc:UTC"{
             ls{"Gikoordinar nga Kinatibuk-ang Oras"}
         }
@@ -68,7 +71,7 @@ ceb{
             ls{"Tamdanang Oras sa Apia"}
         }
         "meta:Arabian"{
-            ld{"Oras sa Adlawan sa Arabia"}
+            ld{"Oras sa Tag-init sa Arabia"}
             lg{"Oras sa Arabia"}
             ls{"Tamdanang Oras sa Arabia"}
         }
@@ -160,9 +163,9 @@ ceb{
             ls{"Tamdanang Oras sa Chile"}
         }
         "meta:China"{
-            ld{"Oras sa Adlawan sa China"}
-            lg{"Oras sa China"}
-            ls{"Tamdanang Oras sa China"}
+            ld{"Oras sa Tag-init sa Tsina"}
+            lg{"Oras sa Tsina"}
+            ls{"Tamdanang Oras sa Tsina"}
         }
         "meta:Choibalsan"{
             ld{"Oras sa Tag-init sa Choibalsan"}
@@ -308,7 +311,7 @@ ceb{
             ls{"Oras sa Western Indonesia"}
         }
         "meta:Iran"{
-            ld{"Oras sa Adlawan sa Iran"}
+            ld{"Oras sa Tag-init sa Iran"}
             lg{"Oras sa Iran"}
             ls{"Tamdanang Oras sa Iran"}
         }
@@ -318,7 +321,7 @@ ceb{
             ls{"Tamdanang Oras sa Irkutsk"}
         }
         "meta:Israel"{
-            ld{"Oras sa Adlawan sa Israel"}
+            ld{"Oras sa Tag-init sa Israel"}
             lg{"Oras sa Israel"}
             ls{"Tamdanang Oras sa Israel"}
         }
@@ -334,7 +337,7 @@ ceb{
             ls{"Oras sa West Kazakhstan"}
         }
         "meta:Korea"{
-            ld{"Oras sa Adlawan sa Korea"}
+            ld{"Oras sa Tag-init sa Korea"}
             lg{"Oras sa Korea"}
             ls{"Tamdanang Oras sa Korea"}
         }
@@ -533,7 +536,7 @@ ceb{
             ls{"Oras sa Tahiti"}
         }
         "meta:Taipei"{
-            ld{"Oras sa Adlawan sa Taipei"}
+            ld{"Oras sa Tag-init sa Taipei"}
             lg{"Oras sa Taipei"}
             ls{"Tamdanang Oras sa Taipei"}
         }

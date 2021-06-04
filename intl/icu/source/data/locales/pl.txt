@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pl{
     AuxExemplarCharacters{"[à â å ä æ ç é è ê ë î ï ô ö œ q ß ù û ü v x ÿ]"}
     Ellipsis{
@@ -7,7 +8,7 @@ pl{
         word-initial{"…{0}"}
     }
     ExemplarCharacters{"[a ą b c ć d e ę f g h i j k l ł m n ń o ó p r s ś t u w y z ź ż]"}
-    ExemplarCharactersIndex{"[A Ą B C Ć D E Ę F G H I J K L Ł M N Ń O Ó P Q R S Ś T U V W X Y Z Ź Ż]"}
+    ExemplarCharactersIndex{"[A B C Ć D E F G H I J K L Ł M N O Ó P Q R S Ś T U V W X Y Z Ź Ż]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ ‑ – — , ; \\: ! ? . … ' \u0022 ” „ « » ( ) \\[ \\] \\{ \\} § @ * / "
@@ -282,7 +283,6 @@ pl{
         }
         minimumGroupingDigits{"2"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -947,7 +947,6 @@ pl{
                 d{
                     d{"d–d"}
                 }
-                fallback{"{0}–{1}"}
                 h{
                     a{"h a–h a"}
                     h{"h–h a"}
@@ -2670,7 +2669,7 @@ pl{
         number{
             lenient{
                 "[\\-‒⁻₋−➖﹣－]",
-                "[,،٫、︐︑﹐﹑，､]",
+                "[,،٫⹁、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
             }
         }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 tr{
     Keys{
         calendar{"Takvim"}
@@ -437,7 +438,7 @@ tr{
         oc{"Oksitan dili"}
         oj{"Ojibva dili"}
         om{"Oromo dili"}
-        or{"Oriya Dili"}
+        or{"Oriya dili"}
         os{"Osetçe"}
         osa{"Osage"}
         ota{"Osmanlı Türkçesi"}
@@ -648,7 +649,7 @@ tr{
     }
     Languages%menu{
         ars{"Arapça, Necd"}
-        ckb{"Kürtçe, Sorani"}
+        ckb{"Kürtçe, Orta"}
         yue{"Çince, Kantonca"}
         zh{"Çince, Mandarin"}
     }
@@ -656,6 +657,9 @@ tr{
         az{"Azerice"}
         en_GB{"Birleşik Krallık İngilizcesi"}
         en_US{"ABD İngilizcesi"}
+    }
+    Languages%variant{
+        ckb{"Kürtçe, Sorani"}
     }
     Scripts{
         Afak{"Afaka"}
@@ -1051,7 +1055,6 @@ tr{
         VALENCIA{"Valensiyaca"}
         WADEGILE{"Wade-Giles (Latin Alfabesinde Yazımı)"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — tümü"}
         category-list{"{0}: {1}"}
@@ -1066,6 +1069,8 @@ tr{
             one{"{0} çizgi"}
             other{"{0} çizgi"}
         }
+        subscript{"alt simge {0}"}
+        superscript{"üst simge {0}"}
     }
     codePatterns{
         language{"Dil: {0}"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 nl{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -399,6 +399,11 @@ nl{
             }
         }
         graphics{
+            dot{
+                dnam{"punt"}
+                one{"dot"}
+                other{"{0} dot"}
+            }
             dot-per-centimeter{
                 dnam{"dots per centimeter"}
                 one{"{0} dot per centimeter"}
@@ -575,6 +580,11 @@ nl{
                 one{"{0} aardmassa"}
                 other{"{0} aardmassa"}
             }
+            grain{
+                dnam{"grein"}
+                one{"{0} grein"}
+                other{"{0} grein"}
+            }
             gram{
                 dnam{"gram"}
                 one{"{0} gram"}
@@ -588,9 +598,9 @@ nl{
                 per{"{0} per kilogram"}
             }
             metric-ton{
-                dnam{"tonne"}
-                one{"{0} tonne"}
-                other{"{0} tonnes"}
+                dnam{"metrische ton"}
+                one{"{0} metrische ton"}
+                other{"{0} metrische ton"}
             }
             microgram{
                 dnam{"microgram"}
@@ -772,7 +782,7 @@ nl{
             pound-force-foot{
                 dnam{"pound-feet"}
                 one{"{0} pound-force-foot"}
-                other{"{0} pound-feet"}
+                other{"{0} pound-force-feet"}
             }
         }
         volume{
@@ -848,6 +858,26 @@ nl{
                 one{"{0} deciliter"}
                 other{"{0} deciliter"}
             }
+            dessert-spoon{
+                dnam{"dessertlepel"}
+                one{"{0} dessertlepel"}
+                other{"{0} dessertlepels"}
+            }
+            dessert-spoon-imperial{
+                dnam{"imp. dessertlepel"}
+                one{"{0} imp. dessertlepel"}
+                other{"{0} imp. dessertlepels"}
+            }
+            dram{
+                dnam{"drachme"}
+                one{"{0} drachme"}
+                other{"{0} drachme"}
+            }
+            drop{
+                dnam{"druppel"}
+                one{"{0} druppel"}
+                other{"{0} druppels"}
+            }
             fluid-ounce{
                 dnam{"fluid ounce"}
                 one{"{0} fluid ounce"}
@@ -875,6 +905,10 @@ nl{
                 one{"{0} hectoliter"}
                 other{"{0} hectoliter"}
             }
+            jigger{
+                one{"{0} jigger"}
+                other{"{0} jiggers"}
+            }
             liter{
                 dnam{"liter"}
                 one{"{0} liter"}
@@ -891,6 +925,11 @@ nl{
                 one{"{0} milliliter"}
                 other{"{0} milliliter"}
             }
+            pinch{
+                dnam{"snufje"}
+                one{"{0} snufje"}
+                other{"{0} snufjes"}
+            }
             pint{
                 dnam{"pint"}
                 one{"{0} pint"}
@@ -905,6 +944,11 @@ nl{
                 dnam{"quart"}
                 one{"{0} quart"}
                 other{"{0} quart"}
+            }
+            quart-imperial{
+                dnam{"imp. quart"}
+                one{"{0} imp. quart"}
+                other{"{0} imp. quarts"}
             }
             tablespoon{
                 dnam{"eetlepel"}
@@ -2065,6 +2109,10 @@ nl{
             }
         }
         graphics{
+            dot{
+                one{"{0} dot"}
+                other{"{0} dot"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 one{"{0} dpcm"}
@@ -2220,6 +2268,11 @@ nl{
                 dnam{"CD"}
                 one{"{0} CD"}
                 other{"{0} CD"}
+            }
+            grain{
+                dnam{"grein"}
+                one{"{0} grein"}
+                other{"{0} grein"}
             }
             gram{
                 dnam{"g"}
@@ -2394,6 +2447,13 @@ nl{
                 other{"{0} K"}
             }
         }
+        torque{
+            newton-meter{
+                dnam{"Nm"}
+                one{"{0} Nm"}
+                other{"{0} Nm"}
+            }
+        }
         volume{
             acre-foot{
                 dnam{"acre ft"}
@@ -2462,6 +2522,26 @@ nl{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"des l"}
+                one{"{0} des l"}
+                other{"{0} des l"}
+            }
+            dessert-spoon-imperial{
+                dnam{"imp. des l"}
+                one{"{0} imp. des l"}
+                other{"{0} imp. des lpls"}
+            }
+            dram{
+                dnam{"drachme"}
+                one{"{0} fl dr"}
+                other{"{0} fl dr"}
+            }
+            drop{
+                dnam{"druppel"}
+                one{"{0} druppel"}
+                other{"{0} druppels"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -2500,6 +2580,11 @@ nl{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"snufje"}
+                one{"{0} snufje"}
+                other{"{0} snufje"}
+            }
             pint{
                 dnam{"pt"}
                 one{"{0} pt"}
@@ -2514,6 +2599,11 @@ nl{
                 dnam{"qt"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"imp. qt"}
+                one{"{0} imp. qt"}
+                other{"{0} imp. qt"}
             }
             tablespoon{
                 dnam{"el"}

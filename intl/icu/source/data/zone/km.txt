@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 km{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"អាប៊ីដ្យាន"}
@@ -1010,7 +1010,7 @@ km{
             ec{"ហ្គេនស៊ី"}
         }
         "Europe:Helsinki"{
-            ec{"ហែលស៊ិងគី"}
+            ec{"ហែលស៊ិនគី"}
         }
         "Europe:Isle_of_Man"{
             ec{"អែលអុហ្វម៉ែន"}
@@ -1074,7 +1074,7 @@ km{
             ec{"ប្រាក"}
         }
         "Europe:Riga"{
-            ec{"រីហ្គា"}
+            ec{"រីហ្កា"}
         }
         "Europe:Rome"{
             ec{"រ៉ូម"}
@@ -1335,9 +1335,9 @@ km{
             ls{"ម៉ោងស្តង់ដារ​នៅតំបន់ភ្នំនៃទ្វីប​អាមេរិក​​​ខាង​ជើង"}
         }
         "meta:America_Pacific"{
-            ld{"ម៉ោង​​ពេលថ្ងៃនៅទ្វីប​អាមរិក​ខាង​ជើងភាគខាងលិច"}
-            lg{"ម៉ោង​​នៅទ្វីប​អាមរិក​ខាង​ជើងភាគខាងលិច"}
-            ls{"ម៉ោងស្តង់ដារ​​​នៅទ្វីប​អាមរិក​ខាង​ជើងភាគខាងលិច"}
+            ld{"ម៉ោងពេលថ្ងៃនៅប៉ាស៊ីហ្វិកអាមេរិក"}
+            lg{"ម៉ោងនៅប៉ាស៊ីហ្វិកអាមេរិក"}
+            ls{"ម៉ោងស្ដង់ដារនៅប៉ាស៊ីហ្វិកអាមេរិក"}
         }
         "meta:Apia"{
             ld{"ម៉ោង​ពេល​ថ្ងៃ​នៅ​អាប្យា"}
@@ -1711,7 +1711,7 @@ km{
         }
         "meta:Norfolk"{
             ld{"ម៉ោងនៅ​ណ័រហ្វក់នា​រដូវ​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ​កោះ​ន័រហ្វក់"}
+            lg{"ម៉ោង​នៅ​កោះ​ណ័រហ្វក់"}
             ls{"ម៉ោង​ស្ដង់ដារ​នៅ​ណ័រហ្វក់"}
         }
         "meta:Noronha"{

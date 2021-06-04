@@ -12,21 +12,18 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
-  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <OutDir>.\data\tmp\$(Platform)\</OutDir>
     <IntDir>.\data\build\</IntDir>
     <MakeCFG>$(Platform)\$(Configuration)</MakeCFG>
+    <DebugBuild Condition="'$(Configuration)'=='Debug'">true</DebugBuild>
     <!-- The ICU projects use "Win32" to mean "x86", so we need to special case it. -->
     <OutDir Condition="'$(Platform)'=='Win32'">.\data\tmp\x86\</OutDir>
     <MakeCFG Condition="'$(Platform)'=='Win32'">x86\$(Configuration)</MakeCFG>
     <!-- NMake -->
-    <NMakeBuildCommandLine>NMAKE /f makedata.mak ICUMAKE="$(ProjectDir)\" CFG=$(MakeCFG)</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>NMAKE /f makedata.mak ICUMAKE="$(ProjectDir)\" CFG=$(MakeCFG) DEBUG=$(DebugBuild)</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>NMAKE /f makedata.mak ICUMAKE="$(ProjectDir)\" CFG=$(MakeCFG) clean all</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>NMAKE /f makedata.mak ICUMAKE="$(ProjectDir)\" CFG=$(MakeCFG) clean</NMakeCleanCommandLine>
     <NMakeOutput/>

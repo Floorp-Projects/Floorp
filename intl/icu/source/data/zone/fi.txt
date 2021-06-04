@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fi{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -812,6 +812,9 @@ fi{
         }
         "Asia:Qatar"{
             ec{"Qatar"}
+        }
+        "Asia:Qostanay"{
+            ec{"Kostanai"}
         }
         "Asia:Qyzylorda"{
             ec{"Qızılorda"}

@@ -26,7 +26,8 @@ CPPFLAGS += -I$(top_srcdir)/common -I$(srcdir)/../toolutil -I$(top_srcdir)/tools
 CPPFLAGS+= -I$(top_srcdir)/i18n
 LIBS = $(LIBCTESTFW) $(LIBICUTOOLUTIL) $(LIBICUI18N) $(LIBICUUC) $(DEFAULT_LIBS) $(LIB_M)
 
-OBJECTS = gentest.o genres32.o
+SOURCES = $(shell cat $(srcdir)/sources.txt)
+OBJECTS = $(SOURCES:.c=.o)
 
 DEPS = $(OBJECTS:.o=.d)
 

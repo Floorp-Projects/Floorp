@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fil{
     Keys{
         calendar{"Kalendaryo"}
@@ -107,7 +108,7 @@ fil{
         eka{"Ekajuk"}
         el{"Greek"}
         en{"Ingles"}
-        en_AU{"Ingles ng Australya"}
+        en_AU{"Ingles ng Australia"}
         en_CA{"Ingles sa Canada"}
         en_GB{"Ingles na British"}
         en_US{"Ingles na American"}
@@ -674,7 +675,6 @@ fil{
         PINYIN{"Pinyin Romanization"}
         WADEGILE{"Wade-Giles Romanization"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — lahat"}
         category-list{"{0}: {1}"}

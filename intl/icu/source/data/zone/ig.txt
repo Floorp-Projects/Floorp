@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ig{
-    Version{"37"}
     zoneStrings{
         "America:Araguaina"{
             ec{"Araguaina"}
@@ -219,6 +219,9 @@ ig{
             ld{"Oge Okpomọkụ Mpaghara Ọwụwa Anyanwụ Europe"}
             lg{"Oge Mpaghara Ọwụwa Anyanwụ Europe"}
             ls{"Oge Izugbe Mpaghara Ọwụwa Anyanwụ Europe"}
+        }
+        "meta:Europe_Further_Eastern"{
+            ls{"Further-eastern European Time"}
         }
         "meta:Europe_Western"{
             ld{"Oge Okpomọkụ Mpaghara Ọdịda Anyanwụ Europe"}

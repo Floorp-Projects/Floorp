@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr_Latn{
     %%Parent{"root"}
     Currencies{
@@ -1540,7 +1541,7 @@ sr_Latn{
         CRC{
             few{"kostarikanska kolona"}
             one{"kostarikanski kolon"}
-            other{"kostarikanski koloni"}
+            other{"kostarikanskih kolona"}
         }
         CSD{
             few{"stara srpska dinara"}
@@ -2658,5 +2659,4 @@ sr_Latn{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

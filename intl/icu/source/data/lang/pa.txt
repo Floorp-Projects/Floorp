@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 pa{
     Keys{
         calendar{"ਕੈਲੰਡਰ"}
@@ -203,7 +204,7 @@ pa{
         ks{"ਕਸ਼ਮੀਰੀ"}
         ksb{"ਸ਼ੰਬਾਲਾ"}
         ksf{"ਬਫ਼ੀਆ"}
-        ksh{"ਕਲੋਗਨੀਅਨ"}
+        ksh{"ਕਲੋਨੀਅਨ"}
         ku{"ਕੁਰਦਿਸ਼"}
         kum{"ਕੁਮੀਕ"}
         kv{"ਕੋਮੀ"}
@@ -416,9 +417,7 @@ pa{
         yo{"ਯੋਰੂਬਾ"}
         yue{"ਕੈਂਟੋਨੀਜ਼"}
         zgh{"ਮਿਆਰੀ ਮੋਰੋਕੇਨ ਟਾਮਾਜ਼ਿਕ"}
-        zh{"ਚੀਨੀ (ਮੈਂਡਰਿਨ)"}
-        zh_Hans{"ਚੀਨੀ (ਸਰਲ)"}
-        zh_Hant{"ਚੀਨੀ (ਰਵਾਇਤੀ)"}
+        zh{"ਚੀਨੀ"}
         zu{"ਜ਼ੁਲੂ"}
         zun{"ਜ਼ੂਨੀ"}
         zxx{"ਬੋਲੀ ਸੰਬੰਧੀ ਕੋਈ ਸਮੱਗਰੀ ਨਹੀਂ"}
@@ -429,11 +428,15 @@ pa{
         zh_Hant{"ਚੀਨੀ ਮੈਂਡਰਿਨ (ਰਵਾਇਤੀ)"}
     }
     Languages%menu{
+        ckb{"ਕੁਰਦਿਸ਼, ਕੇਂਦਰੀ"}
         yue{"ਚੀਨੀ, ਕੈਂਟੋਨੀਜ਼"}
         zh{"ਚੀਨੀ, ਮੈਂਡਰਿਨ"}
     }
     Languages%short{
         az{"ਅਜ਼ੇਰੀ"}
+    }
+    Languages%variant{
+        ckb{"ਕੁਰਦਿਸ਼, ਸੋਰਾਨੀ"}
     }
     Scripts{
         Arab{"ਅਰਬੀ"}
@@ -442,7 +445,7 @@ pa{
         Beng{"ਬੰਗਾਲੀ"}
         Bopo{"ਬੋਪੋਮੋਫੋ"}
         Brai{"ਬਰੇਲ"}
-        Cyrl{"ਸਿਰੀਲਿਕ"}
+        Cyrl{"ਸਿਰਿਲਿਕ"}
         Deva{"ਦੇਵਨਾਗਰੀ"}
         Ethi{"ਇਥੀਓਪਿਕ"}
         Geor{"ਜਾਰਜੀਆਈ"}
@@ -575,7 +578,6 @@ pa{
             tibt{"ਤਿੱਬਤੀ ਅੰਕ"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — ਸਭ"}
         category-list{"{0}: {1}"}
@@ -590,6 +592,8 @@ pa{
             one{"{0} ਸਟਰੋਕ"}
             other{"{0} ਸਟਰੋਕ"}
         }
+        subscript{"ਹੇਠ-ਲਿਖਿਆ {0}"}
+        superscript{"ਉੱਪਰ-ਲਿਖਿਆ {0}"}
     }
     codePatterns{
         language{"ਬੋਲੀ: {0}"}

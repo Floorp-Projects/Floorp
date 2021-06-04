@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 be{
     Keys{
         calendar{"каляндар"}
@@ -439,11 +440,15 @@ be{
         zh_Hant{"паўночнакітайская (традыцыйныя іерогліфы)"}
     }
     Languages%menu{
+        ckb{"курдская, сарані"}
         yue{"кітайская, кантонскі дыялект"}
         zh{"кітайская, паўночныя дыялекты"}
     }
     Languages%short{
         en_GB{"вялікабрытанская англійская"}
+    }
+    Languages%variant{
+        ckb{"сарані"}
     }
     Scripts{
         Arab{"арабскае"}
@@ -573,7 +578,6 @@ be{
             tibt{"тыбецкія лічбы"}
         }
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — Усё"}
         category-list{"{0}: {1}"}
@@ -590,6 +594,8 @@ be{
             one{"{0} штрых"}
             other{"{0} штрыха"}
         }
+        subscript{"{0} - ніжні індэкс"}
+        superscript{"{0} - верхні індэкс"}
     }
     codePatterns{
         language{"Мова: {0}"}

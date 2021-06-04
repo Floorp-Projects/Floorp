@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 nl{
     Keys{
         calendar{"kalender"}
@@ -71,7 +72,7 @@ nl{
         bax{"Bamoun"}
         bbc{"Batak Toba"}
         bbj{"Ghomala’"}
-        be{"Wit-Russisch"}
+        be{"Belarussisch"}
         bej{"Beja"}
         bem{"Bemba"}
         bew{"Betawi"}
@@ -378,7 +379,7 @@ nl{
         ms{"Maleis"}
         mt{"Maltees"}
         mua{"Mundang"}
-        mul{"Meerdere talen"}
+        mul{"meerdere talen"}
         mus{"Creek"}
         mwl{"Mirandees"}
         mwr{"Marwari"}
@@ -635,6 +636,7 @@ nl{
         az{"Azeri"}
     }
     Languages%variant{
+        ckb{"Koerdisch, Soranî"}
         ps{"Pashto"}
     }
     Scripts{
@@ -656,7 +658,7 @@ nl{
         Blis{"Blissymbolen"}
         Bopo{"Bopomofo"}
         Brah{"Brahmi"}
-        Brai{"Braille"}
+        Brai{"braille"}
         Bugi{"Buginees"}
         Buhd{"Buhid"}
         Cakm{"Chakma"}
@@ -827,9 +829,9 @@ nl{
         Yiii{"Yi"}
         Zanb{"vierkant Zanabazar"}
         Zinh{"Overgeërfd"}
-        Zmth{"Wiskundige notatie"}
+        Zmth{"wiskundige notatie"}
         Zsye{"emoji"}
-        Zsym{"Symbolen"}
+        Zsym{"symbolen"}
         Zxxx{"ongeschreven"}
         Zyyy{"algemeen"}
         Zzzz{"onbekend schriftsysteem"}
@@ -1133,7 +1135,6 @@ nl{
         WADEGILE{"Wade-Giles-romanisering"}
         XSISTEMO{"X-sistemo"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — alle"}
         category-list{"{0}: {1}"}

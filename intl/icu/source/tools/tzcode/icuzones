@@ -17,7 +17,19 @@
 Zone	Etc/Unknown	0	-	Unknown
 
 # SystemV time zones.
-# The Olson systemv file has these commented out.
+# IANA tzdb file 'systemv' file has these SystemV/* zones commented out up to 2020a.
+# 'systemv' file was removed in 2020b. We keep them in this supplemental zone data
+# file for compatibility purpose.
+
+# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+Rule	SystemV	min	1973	-	Apr	lastSun	2:00	1:00	D
+Rule	SystemV	min	1973	-	Oct	lastSun	2:00	0	S
+Rule	SystemV	1974	only	-	Jan	6	2:00	1:00	D
+Rule	SystemV	1974	only	-	Nov	lastSun	2:00	0	S
+Rule	SystemV	1975	only	-	Feb	23	2:00	1:00	D
+Rule	SystemV	1975	only	-	Oct	lastSun	2:00	0	S
+Rule	SystemV	1976	max	-	Apr	lastSun	2:00	1:00	D
+Rule	SystemV	1976	max	-	Oct	lastSun	2:00	0	S
 
 # Zone	NAME		GMTOFF	RULES/SAVE	FORMAT	[UNTIL]
 Zone	SystemV/AST4ADT	-4:00	SystemV		A%sT
@@ -33,6 +45,11 @@ Zone	SystemV/MST7	-7:00	-		MST
 Zone	SystemV/PST8	-8:00	-		PST
 Zone	SystemV/YST9	-9:00	-		YST
 Zone	SystemV/HST10	-10:00	-		HST
+
+# pacificnew
+# IANA tzdb file 'pacificnew' used to contain a Link for US/Pacific-New.
+# 'pacificnew' file was removed in 2020b. We keep the Link here for compatibility.
+Link America/Los_Angeles US/Pacific-New
 
 
 # The list below is for supporting legacy ICU zone aliases.

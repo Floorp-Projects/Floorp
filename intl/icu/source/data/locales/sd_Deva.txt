@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sd_Deva{
     %%Parent{"root"}
     AuxExemplarCharacters{"[\u200C\u200D]"}
@@ -17,7 +18,6 @@ sd_Deva{
         default{"latn"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -285,8 +285,20 @@ sd_Deva{
         dayperiod{
             dn{"ॾींहु/रातु"}
         }
+        era{
+            dn{"दौर"}
+        }
         hour{
             dn{"कलाक"}
+        }
+        minute{
+            dn{"मिंटु"}
+        }
+        minute-narrow{
+            dn{"मिंटु"}
+        }
+        minute-short{
+            dn{"मिंटु"}
         }
         month{
             dn{"महीनो"}
@@ -302,6 +314,9 @@ sd_Deva{
         }
         weekday{
             dn{"हफ्ते जो ॾींहु"}
+        }
+        year{
+            dn{"साल"}
         }
         year-short{
             dn{"साल"}

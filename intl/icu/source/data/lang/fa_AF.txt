@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fa_AF{
     Languages{
         ab{"افریکانس"}
@@ -19,7 +20,6 @@ fa_AF{
         ja{"جاپانی"}
         ko{"کوریایی"}
         ksh{"کلنی"}
-        kw{"کورنی"}
         ky{"قرغزی"}
         lus{"میزویی"}
         mai{"مایتیلی"}
@@ -46,5 +46,4 @@ fa_AF{
     Scripts{
         Mong{"مغلی"}
     }
-    Version{"37"}
 }

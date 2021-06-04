@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bs{
     Keys{
         calendar{"Kalendar"}
@@ -552,11 +553,14 @@ bs{
         ps{"pušto"}
     }
     Scripts{
+        Afak{"afaka pismo"}
         Arab{"arapsko pismo"}
         Armi{"imperijsko aramejsko pismo"}
         Armn{"armensko pismo"}
         Avst{"avestansko pismo"}
         Bali{"balijsko pismo"}
+        Bamu{"bamum pismo"}
+        Bass{"bassa vah pismo"}
         Batk{"batak pismo"}
         Beng{"bengalsko pismo"}
         Blis{"blisimbolično pismo"}
@@ -585,6 +589,7 @@ bs{
         Geor{"gruzijsko pismo"}
         Glag{"glagoljica"}
         Goth{"gotika"}
+        Gran{"grantha pismo"}
         Grek{"grčko pismo"}
         Gujr{"pismo gudžarati"}
         Guru{"pismo gurmuki"}
@@ -596,6 +601,7 @@ bs{
         Hant{"tradicionalno"}
         Hebr{"hebrejsko pismo"}
         Hira{"pismo hiragana"}
+        Hluw{"anatolijski hijeroglifi"}
         Hmng{"pahawh hmong pismo"}
         Hrkt{"katakana ili hiragana"}
         Hung{"Staromađarsko pismo"}
@@ -604,12 +610,15 @@ bs{
         Jamo{"pismo jamo"}
         Java{"javansko pismo"}
         Jpan{"japansko pismo"}
+        Jurc{"jurchen pismo"}
         Kali{"kajah li pismo"}
         Kana{"pismo katakana"}
         Khar{"karošti pismo"}
         Khmr{"kmersko pismo"}
+        Khoj{"khojki pismo"}
         Knda{"pismo kanada"}
         Kore{"korejsko pismo"}
+        Kpel{"kpelle pismo"}
         Kthi{"kaićansko pismo"}
         Lana{"lanna pismo"}
         Laoo{"laosko pismo"}
@@ -620,23 +629,33 @@ bs{
         Limb{"limbu pismo"}
         Lina{"linearno A pismo"}
         Linb{"linearno B pismo"}
+        Lisu{"fraser pismo"}
+        Loma{"loma pismo"}
         Lyci{"lisijsko pismo"}
         Lydi{"lidijsko pismo"}
         Mand{"mandeansko pismo"}
         Mani{"manihejsko pismo"}
         Maya{"majanski hijeroglifi"}
+        Mend{"mende pismo"}
+        Merc{"meroitski kurziv"}
         Mero{"meroitik pismo"}
         Mlym{"malajalamsko pismo"}
         Mong{"mongolsko pismo"}
         Moon{"mesečevo pismo"}
+        Mroo{"mro pismo"}
         Mtei{"meitei majek pismo"}
         Mymr{"mijanmarsko pismo"}
+        Narb{"staro sjevernoarapsko pismo"}
+        Nbat{"nabatejsko pismo"}
+        Nkgb{"naxi geba pismo"}
         Nkoo{"n’ko pismo"}
+        Nshu{"nushu pismo"}
         Ogam{"ogham pismo"}
         Olck{"ol čiki pismo"}
         Orkh{"orkhon pismo"}
         Orya{"pismo orija"}
         Osma{"osmanja pismo"}
+        Palm{"palmyrene pismo"}
         Perm{"staro permiksko pismo"}
         Phag{"phags-pa pismo"}
         Phli{"pisani pahlavi"}
@@ -650,19 +669,25 @@ bs{
         Runr{"runsko pismo"}
         Samr{"samaritansko pismo"}
         Sara{"sarati pismo"}
+        Sarb{"staro južnoarapsko pismo"}
         Saur{"sauraštra pismo"}
         Sgnw{"znakovno pismo"}
         Shaw{"šavian pismo"}
+        Shrd{"sharada pismo"}
+        Sind{"khudawadi pismo"}
         Sinh{"pismo sinhala"}
+        Sora{"sora sompeng pismo"}
         Sylo{"siloti nagri pismo"}
         Syrc{"sirijsko pismo"}
         Syre{"sirijsko estrangelo pismo"}
         Syrj{"zapadnosirijsko pismo"}
         Syrn{"pismo istočne Sirije"}
         Tagb{"tagbanva pismo"}
+        Takr{"takri pismo"}
         Tale{"tai le pismo"}
         Talu{"novo tai lue pismo"}
         Taml{"tamilsko pismo"}
+        Tang{"tangut pismo"}
         Tavt{"tai viet pismo"}
         Telu{"pismo telugu"}
         Teng{"tengvar pismo"}
@@ -671,9 +696,12 @@ bs{
         Thaa{"pismo tana"}
         Thai{"tajlandsko pismo"}
         Tibt{"tibetansko pismo"}
+        Tirh{"tirhuta pismo"}
         Ugar{"ugaritsko pismo"}
         Vaii{"vai pismo"}
         Visp{"vidljivi govor"}
+        Wara{"varang kshiti pismo"}
+        Wole{"woleai pismo"}
         Xpeo{"staropersijsko pismo"}
         Xsux{"sumersko-akadsko kuneiform pismo"}
         Yiii{"ji pismo"}
@@ -696,8 +724,10 @@ bs{
         calendar{
             buddhist{"budistički kalendar"}
             chinese{"kineski kalendar"}
+            coptic{"Koptski kalendar"}
             dangi{"dangi kalendar"}
             ethiopic{"etiopski kalendar"}
+            ethiopic-amete-alem{"Etiopski kalendar \u0022Amete Alem\u0022"}
             gregorian{"gregorijanski kalendar"}
             hebrew{"hebrejski kalendar"}
             indian{"Indijski nacionalni kalendar"}
@@ -712,6 +742,34 @@ bs{
             account{"računovodstveni format valute"}
             standard{"standardni format valute"}
         }
+        colAlternate{
+            non-ignorable{"Poredaj simbole"}
+            shifted{"Poredaj zanemarujući simbole"}
+        }
+        colBackwards{
+            no{"Poredaj naglaske normalno"}
+            yes{"Poredaj naglaske obrnuto"}
+        }
+        colCaseFirst{
+            lower{"Prvo poredaj mala slova"}
+            no{"Poredaj po normalnom poretku veličine slova"}
+            upper{"Poredaj prvo velika slova"}
+        }
+        colCaseLevel{
+            no{"Poredaj zanemarujući veličinu"}
+            yes{"Poredaj u skladu s veličinom slova"}
+        }
+        colNormalization{
+            no{"Poredaj bez normalizacije"}
+            yes{"Poredaj unikod normalizirano"}
+        }
+        colStrength{
+            identical{"Poredaj sve"}
+            primary{"Poredaj samo po osnovnim slovima"}
+            quaternary{"Poredaj po naglascima/veličini/širini/pismu kana"}
+            secondary{"Poredaj po naglasku"}
+            tertiary{"Poredaj po naglascima/veličini/širini"}
+        }
         collation{
             big5han{"Tradicionalno kinesko sortiranje"}
             ducet{"standardno Unicode sortiranje"}
@@ -719,6 +777,7 @@ bs{
             phonebook{"Sortiranje kao telefonski imenik"}
             pinyin{"Pinjin sortiranje"}
             search{"općenito pretraživanje"}
+            searchjl{"Pretraživanje po početnom suglasniku hangula"}
             standard{"standardno sortiranje"}
             stroke{"Sortiranje po broju crta"}
             traditional{"Tradicionalno sortiranje"}
@@ -726,6 +785,7 @@ bs{
         d0{
             fwidth{"Široki"}
             hwidth{"Uski"}
+            npinyin{"Numerički"}
         }
         hc{
             h11{"12-satni format (0-11)"}
@@ -783,26 +843,36 @@ bs{
             telu{"brojevi pisma telugu"}
             thai{"tajlandski brojevi"}
             tibt{"tibetanski brojevi"}
+            traditional{"Tradicionalni brojevi"}
         }
     }
     Variants{
         1606NICT{"Francuski iz kasnog srednjeg veka do 1606."}
         1694ACAD{"Rani moderni francuski"}
         1901{"Tradicionalna nemačka ortografija"}
+        1959ACAD{"Akademski"}
         1994{"Standardizovana rezijanska ortografija"}
         1996{"Nemačka ortografija 1996"}
+        ALUKU{"Aluku dijalekt"}
         AREVELA{"Istočni jermenski"}
         AREVMDA{"Zapadno-jermenski"}
         BAKU1926{"Ujedinjeni turski latinični alfabet"}
         BISKE{"San Đorđijo/Bila dijalekt"}
         BOONT{"Buntling"}
+        EMODENG{"Rani moderni engleski"}
         FONIPA{"IPA fonetika"}
         FONUPA{"UPA fonetika"}
+        KKCOR{"Uobičajena ortografija"}
+        KSCOR{"Standardna ortografija"}
         LIPAW{"Lipovac dijalekt rezijanski"}
+        METELKO{"Metelčica"}
         MONOTON{"Monotonik"}
         NEDIS{"Natison dijalekt"}
         NJIVA{"Gnjiva/Njiva dijalekt"}
+        NULIK{"Moderni volapuk"}
         OSOJS{"Oseako/Osojane dijalekt"}
+        PAMAKA{"Pamaka dijalekt"}
+        PINYIN{"Pinjinska romanizacija"}
         POLYTON{"Politonik"}
         POSIX{"Kompjuter"}
         REVISED{"Revidirana ortigrafija"}
@@ -812,24 +882,28 @@ bs{
         SCOUSE{"Skauz"}
         SOLBA{"Stolvica/Solbica dijalekt"}
         TARASK{"Taraskijevica ortografija"}
+        UCCOR{"Ujedinjena ortografija"}
+        UCRCOR{"Ujedinjena revidirana ortografija"}
         VALENCIA{"Valencijski"}
+        WADEGILE{"Vejd-Žajl romanizacija"}
     }
-    Version{"37"}
     characterLabelPattern{
-        all{"{0} — sve"}
+        all{"{0} – sve"}
         category-list{"{0}: {1}"}
-        compatibility{"{0} — kompatibilno"}
-        enclosed{"{0} — okruženo"}
-        extended{"{0} — produženo"}
-        historic{"{0} — staro"}
-        miscellaneous{"{0} — razno"}
-        other{"{0} — ostalo"}
-        scripts{"Pisma — {0}"}
+        compatibility{"{0} – kompatibilno"}
+        enclosed{"{0} – priloženo"}
+        extended{"{0} – produženo"}
+        historic{"{0} – staro"}
+        miscellaneous{"{0} – razno"}
+        other{"{0} – ostalo"}
+        scripts{"pisma – {0}"}
         strokes{
-            few{"{0} potezi"}
+            few{"{0} poteza"}
             one{"{0} potez"}
-            other{"{0} potezi"}
+            other{"{0} poteza"}
         }
+        subscript{"indeks {0}"}
+        superscript{"eksponent {0}"}
     }
     codePatterns{
         language{"Jezik: {0}"}

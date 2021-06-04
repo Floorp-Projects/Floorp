@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kea{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -131,8 +131,8 @@ kea{
                 other{"{0} milha pur galãu"}
             }
             mile-per-gallon-imperial{
-                dnam{"milha pur galãu imperial"}
-                other{"{0} milha pur galãu imperial"}
+                dnam{"milha pur galãu britániku"}
+                other{"{0} milha pur galãu britániku"}
             }
         }
         coordinate{
@@ -327,6 +327,10 @@ kea{
             }
         }
         graphics{
+            dot{
+                dnam{"pontu"}
+                other{"{0} pontu"}
+            }
             dot-per-centimeter{
                 dnam{"pontu pur sentímeru"}
                 other{"{0} pontu pur sentímetru"}
@@ -369,6 +373,10 @@ kea{
             decimeter{
                 dnam{"desímetru"}
                 other{"{0} desímetru"}
+            }
+            earth-radius{
+                dnam{"raiu di Tera"}
+                other{"{0} raiu di Tera"}
             }
             foot{
                 dnam{"pe"}
@@ -426,10 +434,6 @@ kea{
                 dnam{"pikómetru"}
                 other{"{0} pikómetru"}
             }
-            point{
-                dnam{"pontu"}
-                other{"{0} pontu"}
-            }
             solar-radius{
                 dnam{"raiu solar"}
                 other{"{0} raiu solar"}
@@ -440,6 +444,14 @@ kea{
             }
         }
         light{
+            candela{
+                dnam{"kandela"}
+                other{"{0} kandela"}
+            }
+            lumen{
+                dnam{"lumen"}
+                other{"{0} lumen"}
+            }
             lux{
                 dnam{"lux"}
                 other{"{0} lux"}
@@ -461,6 +473,10 @@ kea{
             earth-mass{
                 dnam{"masa di Tera"}
                 other{"{0} masa di Tera"}
+            }
+            grain{
+                dnam{"grãu"}
+                other{"{0} grãu"}
             }
             gram{
                 dnam{"grama"}
@@ -672,13 +688,29 @@ kea{
                 dnam{"desilitru"}
                 other{"{0} desilitru"}
             }
+            dessert-spoon{
+                dnam{"kudjer di subrimeza"}
+                other{"{0} kudjer di subrimeza"}
+            }
+            dessert-spoon-imperial{
+                dnam{"kudjer di subrimeza britániku"}
+                other{"{0} kudjer di subrimeza britániku"}
+            }
+            dram{
+                dnam{"drakma fluídu"}
+                other{"{0} drakma fluídu"}
+            }
+            drop{
+                dnam{"gota"}
+                other{"{0} gota"}
+            }
             fluid-ounce{
                 dnam{"ónsa fluídu"}
                 other{"{0} ónsa fluídu"}
             }
             fluid-ounce-imperial{
-                dnam{"ónsa fluídu imperial"}
-                other{"{0} ónsa fluídu imperial"}
+                dnam{"ónsa fluídu britániku"}
+                other{"{0} ónsa fluídu britániku"}
             }
             gallon{
                 dnam{"galãu"}
@@ -686,13 +718,17 @@ kea{
                 per{"{0} pur galãu"}
             }
             gallon-imperial{
-                dnam{"galãu imperial"}
-                other{"{0} galãu imperial"}
-                per{"{0} pur galãu imperial"}
+                dnam{"galãu britániku"}
+                other{"{0} galãu britániku"}
+                per{"{0} pur galãu britániku"}
             }
             hectoliter{
                 dnam{"ektolitru"}
                 other{"{0} ektolitru"}
+            }
+            jigger{
+                dnam{"kopu di xot"}
+                other{"{0} kopu di xot"}
             }
             liter{
                 dnam{"litru"}
@@ -707,6 +743,10 @@ kea{
                 dnam{"mililitru"}
                 other{"{0} mililitru"}
             }
+            pinch{
+                dnam{"pitada"}
+                other{"{0} pitada"}
+            }
             pint{
                 dnam{"pint"}
                 other{"{0} pint"}
@@ -718,6 +758,10 @@ kea{
             quart{
                 dnam{"kuart"}
                 other{"{0} kuart"}
+            }
+            quart-imperial{
+                dnam{"kuart britániku"}
+                other{"{0} kuart britániku"}
             }
             tablespoon{
                 dnam{"kudjer di sopa"}
@@ -915,8 +959,8 @@ kea{
                 other{"{0} mpg"}
             }
             mile-per-gallon-imperial{
-                dnam{"milha/gal imp."}
-                other{"{0} mpg imp."}
+                dnam{"milha/gal brit."}
+                other{"{0} mpg brit."}
             }
         }
         coordinate{
@@ -1161,11 +1205,7 @@ kea{
                 other{"{0} pm"}
             }
             point{
-                dnam{"pontu"}
                 other{"{0} pt"}
-            }
-            solar-radius{
-                dnam{"raiu solar"}
             }
             yard{
                 dnam{"yd"}
@@ -1182,6 +1222,10 @@ kea{
             carat{
                 dnam{"kt"}
                 other{"{0} kt"}
+            }
+            grain{
+                dnam{"grãu"}
+                other{"{0} grãu"}
             }
             gram{
                 dnam{"g"}
@@ -1246,13 +1290,25 @@ kea{
                 dnam{"dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon-imperial{
+                dnam{"dstspn brit."}
+                other{"{0} dstspn brit."}
+            }
+            dram{
+                dnam{"drakma fl."}
+                other{"{0} drakma fl."}
+            }
+            drop{
+                dnam{"gota"}
+                other{"{0} gota"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 other{"{0} fl oz"}
             }
             fluid-ounce-imperial{
-                dnam{"fl oz imp."}
-                other{"{0} fl oz imp."}
+                dnam{"fl oz brit."}
+                other{"{0} fl oz brit."}
             }
             gallon{
                 dnam{"gal"}
@@ -1260,13 +1316,17 @@ kea{
                 per{"{0}/gal"}
             }
             gallon-imperial{
-                dnam{"gal imp."}
-                other{"{0} gal imp."}
-                per{"{0}/gal imp."}
+                dnam{"gal brit."}
+                other{"{0} gal brit."}
+                per{"{0}/gal brit."}
             }
             hectoliter{
                 dnam{"hl"}
                 other{"{0} hl"}
+            }
+            jigger{
+                dnam{"kopu x."}
+                other{"{0} kopu x."}
             }
             liter{
                 dnam{"l"}
@@ -1279,6 +1339,10 @@ kea{
                 dnam{"ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"pit."}
+                other{"{0} pit."}
+            }
             pint{
                 dnam{"pt"}
                 other{"{0} pt"}
@@ -1290,6 +1354,10 @@ kea{
             quart{
                 dnam{"qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"qt brit."}
+                other{"{0} qt brit."}
             }
             tablespoon{
                 dnam{"ks"}

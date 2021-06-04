@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lo{
     RBNFRules{
         OrdinalRules{
@@ -43,5 +44,4 @@ lo{
             "0: \u0E17\u0E35\u0E48\u200B=%spellout-cardinal=;",
         }
     }
-    Version{"37"}
 }

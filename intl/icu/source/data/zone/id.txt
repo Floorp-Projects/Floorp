@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 id{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1663,7 +1663,7 @@ id{
             ls{"Waktu Standar Krasnoyarsk"}
         }
         "meta:Kyrgystan"{
-            ls{"Waktu Kirghizia"}
+            ls{"Waktu Kirgizstan"}
         }
         "meta:Lanka"{
             ls{"Waktu Lanka"}
@@ -1725,9 +1725,9 @@ id{
             ls{"Waktu Standar Ulan Bator"}
         }
         "meta:Moscow"{
-            ld{"Waktu Musim Panas Moskwa"}
-            lg{"Waktu Moskwa"}
-            ls{"Waktu Standar Moskwa"}
+            ld{"Waktu Musim Panas Moskow"}
+            lg{"Waktu Moskow"}
+            ls{"Waktu Standar Moskow"}
         }
         "meta:Myanmar"{
             ls{"Waktu Myanmar"}
@@ -1757,9 +1757,9 @@ id{
             ls{"Waktu Niue"}
         }
         "meta:Norfolk"{
-            ld{"Waktu Musim Panas Kepulauan Norfolk"}
-            lg{"Waktu Kepulauan Norfolk"}
-            ls{"Waktu Standar Kepulauan Norfolk"}
+            ld{"Waktu Musim Panas Pulau Norfolk"}
+            lg{"Waktu Pulau Norfolk"}
+            ls{"Waktu Standar Pulau Norfolk"}
         }
         "meta:Noronha"{
             ld{"Waktu Musim Panas Fernando de Noronha"}

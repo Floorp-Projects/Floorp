@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fo{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1038,7 +1038,7 @@ fo{
         }
         "Europe:London"{
             ec{"London"}
-            ld{"Stóra Bretland summartíð"}
+            ld{"Bretsk summartíð"}
         }
         "Europe:Luxembourg"{
             ec{"Luksemborg"}
@@ -1710,9 +1710,9 @@ fo{
             ls{"Niue tíð"}
         }
         "meta:Norfolk"{
-            ld{"Norfolksoyggj summartíð"}
-            lg{"Norfolksoyggj tíð"}
-            ls{"Norfolksoyggj vanlig tíð"}
+            ld{"Norfolkoyggj summartíð"}
+            lg{"Norfolkoyggj tíð"}
+            ls{"Norfolkoyggj vanlig tíð"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronha summartíð"}

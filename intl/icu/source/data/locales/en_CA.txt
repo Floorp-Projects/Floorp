@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_CA{
     %%Parent{"en_001"}
     NumberElements{
@@ -9,7 +10,6 @@ en_CA{
             }
         }
     }
-    Version{"37"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -440,6 +440,18 @@ en_CA{
                 }
             }
         }
+        mon-narrow{
+            relativeTime{
+                future{
+                    one{"in {0} M"}
+                    other{"in {0} Mo’s"}
+                }
+                past{
+                    one{"{0} M ago"}
+                    other{"{0} Mo’s ago"}
+                }
+            }
+        }
         mon-short{
             relativeTime{
                 future{
@@ -708,15 +720,6 @@ en_CA{
                     other{"{0} yrs. ago"}
                 }
             }
-        }
-    }
-    listPattern{
-        standard-narrow{
-            2{"{0} and {1}"}
-            end{"{0}, and {1}"}
-        }
-        standard-short{
-            end{"{0}, and {1}"}
         }
     }
 }

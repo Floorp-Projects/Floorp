@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es{
     Keys{
         calendar{"calendario"}
@@ -569,6 +570,7 @@ es{
         az{"azerí"}
     }
     Languages%variant{
+        ckb{"kurdo central"}
         ps{"pastú"}
         ug{"uygur"}
     }
@@ -861,7 +863,6 @@ es{
         VALENCIA{"Valenciano"}
         WADEGILE{"Romanización Wade-Giles"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — Todo"}
         category-list{"{0}: {1}"}
@@ -876,6 +877,8 @@ es{
             one{"{0} trazo"}
             other{"{0} trazos"}
         }
+        subscript{"Subíndice {0}"}
+        superscript{"Superíndice {0}"}
     }
     codePatterns{
         language{"Idioma: {0}"}

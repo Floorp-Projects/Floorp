@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sl{
     AuxExemplarCharacters{
         "[á à ă â å ä ā æ ç ć đ é è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ö ø ō œ q ú ù ŭ û ü"
@@ -279,16 +280,15 @@ sl{
                 other{"V {0}. križišču zavijte desno."}
             }
             plural{
-                few{"{0} ure"}
-                one{"{0} ura"}
-                other{"{0} ur"}
-                two{"{0} uri"}
+                few{"{0} dnevi"}
+                one{"{0} dan"}
+                other{"{0} dni"}
+                two{"{0} dneva"}
             }
         }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{

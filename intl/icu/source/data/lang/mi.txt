@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mi{
     Languages{
         de{"Tiamana"}
@@ -19,7 +20,7 @@ mi{
         fr_CH{"Wīwī Huiterangi"}
         it{"Ītariana"}
         ja{"Hapanihi"}
-        mi{"Māori"}
+        mi{"te reo Māori"}
         pt{"Pōtikī"}
         pt_BR{"Pōtikī Parahi"}
         pt_PT{"Pōtikī Uropi"}
@@ -60,7 +61,6 @@ mi{
             latn{"Ngā Mati Pākehā"}
         }
     }
-    Version{"37"}
     codePatterns{
         language{"Reo: {0}"}
         script{"Momotuhi: {0}"}

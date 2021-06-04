@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ceb{
     Languages{
         ar{"Arabic"}
@@ -8,7 +9,7 @@ ceb{
         ceb{"Binisaya"}
         de{"Aleman"}
         de_AT{"Austriano nga Aleman"}
-        de_CH{"Swiss nga Taas nga Aleman"}
+        de_CH{"Taas nga Aleman sa Switzerland"}
         en{"Ingles"}
         en_AU{"Ingles sa Australia"}
         en_CA{"Ingles sa Canada"}
@@ -20,7 +21,7 @@ ceb{
         es_MX{"Espanyol sa Mexico"}
         fr{"Pranses"}
         fr_CA{"Pranses sa Canada"}
-        fr_CH{"Swiss nga Pranses"}
+        fr_CH{"Pranses sa Switzerland"}
         hi{"Hindi"}
         id{"Indonesian"}
         it{"Italiano"}
@@ -78,7 +79,6 @@ ceb{
             latn{"Mga Western Digit"}
         }
     }
-    Version{"37"}
     codePatterns{
         language{"Lengguwahe: {0}"}
         script{"Script: {0}"}

@@ -179,9 +179,9 @@ int  main(int argc, char **argv) {
         copyright = U_COPYRIGHT_STRING;
     }
 
-    UBool quiet = FALSE;
+    UBool quiet = false;
     if (options[9].doesOccur) {
-      quiet = TRUE;
+      quiet = true;
     }
 
 #if UCONFIG_NO_REGULAR_EXPRESSIONS || UCONFIG_NO_NORMALIZATION || UCONFIG_NO_FILE_IO

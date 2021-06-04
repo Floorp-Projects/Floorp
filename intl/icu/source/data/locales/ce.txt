@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ce{
     ExemplarCharacters{
         "[а {аь} б в г {гӏ} д е ё ж з и {ий} й к {кк} {ккх} {кх} {кь} {кӏ} л м н о {о"
@@ -193,7 +194,6 @@ ce{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -1018,7 +1018,7 @@ ce{
         }
         week-short{
             dn{"кӀир."}
-            relativePeriod{"кӀирнахь"}
+            relativePeriod{"кӀирнахь {0}"}
             relativeTime{
                 future{
                     one{"{0} кӀир. даьлча"}

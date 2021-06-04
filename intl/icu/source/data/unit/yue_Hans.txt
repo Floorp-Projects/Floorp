@@ -1,8 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 yue_Hans{
     %%Parent{"root"}
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -338,6 +338,10 @@ yue_Hans{
             }
         }
         graphics{
+            dot{
+                dnam{"圆点"}
+                other{"{0} 个圆点"}
+            }
             dot-per-centimeter{
                 dnam{"每厘米点数"}
                 other{"{0} 点/厘米"}
@@ -380,6 +384,10 @@ yue_Hans{
             decimeter{
                 dnam{"公寸"}
                 other{"{0} 公寸"}
+            }
+            earth-radius{
+                dnam{"地球半径"}
+                other{"{0} 地球半径"}
             }
             fathom{
                 dnam{"英寻"}
@@ -459,6 +467,14 @@ yue_Hans{
             }
         }
         light{
+            candela{
+                dnam{"坎德拉"}
+                other{"{0} 坎德拉"}
+            }
+            lumen{
+                dnam{"流明"}
+                other{"{0} 流明"}
+            }
             lux{
                 dnam{"勒克斯"}
                 other{"{0} 勒克斯"}
@@ -480,6 +496,10 @@ yue_Hans{
             earth-mass{
                 dnam{"地球质量"}
                 other{"{0} 地球质量"}
+            }
+            grain{
+                dnam{"喱"}
+                other{"{0}格令"}
             }
             gram{
                 dnam{"克"}
@@ -703,6 +723,22 @@ yue_Hans{
                 dnam{"公合"}
                 other{"{0} 公合"}
             }
+            dessert-spoon{
+                dnam{"甜品匙"}
+                other{"{0}甜品匙"}
+            }
+            dessert-spoon-imperial{
+                dnam{"英制甜品匙"}
+                other{"英制甜品匙{0}匙"}
+            }
+            dram{
+                dnam{"英制液量打兰"}
+                other{"{0}英制液量打兰"}
+            }
+            drop{
+                dnam{"滴"}
+                other{"{0}滴"}
+            }
             fluid-ounce{
                 dnam{"液盎司"}
                 other{"{0} 液盎司"}
@@ -725,6 +761,10 @@ yue_Hans{
                 dnam{"公石"}
                 other{"{0} 公石"}
             }
+            jigger{
+                dnam{"量酒杯"}
+                other{"量酒器{0}杯"}
+            }
             liter{
                 dnam{"公升"}
                 other{"{0} 公升"}
@@ -738,6 +778,10 @@ yue_Hans{
                 dnam{"毫升"}
                 other{"{0} 毫升"}
             }
+            pinch{
+                dnam{"小撮"}
+                other{"{0} 小撮"}
+            }
             pint{
                 dnam{"品脱"}
                 other{"{0} 品脱"}
@@ -749,6 +793,10 @@ yue_Hans{
             quart{
                 dnam{"夸脱"}
                 other{"{0} 夸脱"}
+            }
+            quart-imperial{
+                dnam{"英制夸脱"}
+                other{"{0} 英制夸脱"}
             }
             tablespoon{
                 dnam{"汤匙"}
@@ -1531,6 +1579,10 @@ yue_Hans{
             }
         }
         graphics{
+            dot{
+                dnam{"圆点"}
+                other{"{0} 个圆点"}
+            }
             dot-per-centimeter{
                 dnam{"每厘米点数"}
                 other{"{0} 点/厘米"}
@@ -1573,6 +1625,10 @@ yue_Hans{
             decimeter{
                 dnam{"公寸"}
                 other{"{0} 公寸"}
+            }
+            earth-radius{
+                dnam{"地球半径"}
+                other{"{0} 地球半径"}
             }
             fathom{
                 dnam{"fm"}
@@ -1652,6 +1708,14 @@ yue_Hans{
             }
         }
         light{
+            candela{
+                dnam{"坎德拉"}
+                other{"{0} 坎德拉"}
+            }
+            lumen{
+                dnam{"流明"}
+                other{"{0} 流明"}
+            }
             lux{
                 dnam{"勒克斯"}
                 other{"{0} 勒克斯"}
@@ -1673,6 +1737,10 @@ yue_Hans{
             earth-mass{
                 dnam{"地球质量"}
                 other{"{0} 地球质量"}
+            }
+            grain{
+                dnam{"喱"}
+                other{"{0} 喱"}
             }
             gram{
                 dnam{"克"}
@@ -1896,6 +1964,22 @@ yue_Hans{
                 dnam{"公合"}
                 other{"{0} 公合"}
             }
+            dessert-spoon{
+                dnam{"甜品匙"}
+                other{"{0}甜品匙"}
+            }
+            dessert-spoon-imperial{
+                dnam{"英制甜品匙"}
+                other{"{0}英制甜品匙"}
+            }
+            dram{
+                dnam{"英制液量打兰"}
+                other{"{0}英制液量打兰"}
+            }
+            drop{
+                dnam{"滴"}
+                other{"{0}滴"}
+            }
             fluid-ounce{
                 dnam{"液盎司"}
                 other{"{0} 液盎司"}
@@ -1918,6 +2002,10 @@ yue_Hans{
                 dnam{"公石"}
                 other{"{0} 公石"}
             }
+            jigger{
+                dnam{"量酒杯"}
+                other{"量酒器{0}杯"}
+            }
             liter{
                 dnam{"公升"}
                 other{"{0} 升"}
@@ -1931,6 +2019,10 @@ yue_Hans{
                 dnam{"毫升"}
                 other{"{0} 毫升"}
             }
+            pinch{
+                dnam{"小撮"}
+                other{"{0} 小撮"}
+            }
             pint{
                 dnam{"品脱"}
                 other{"{0} 品脱"}
@@ -1942,6 +2034,10 @@ yue_Hans{
             quart{
                 dnam{"夸脱"}
                 other{"{0} 夸脱"}
+            }
+            quart-imperial{
+                dnam{"英制夸脱"}
+                other{"{0} 英制夸脱"}
             }
             tablespoon{
                 dnam{"汤匙"}

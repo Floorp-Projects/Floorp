@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 da{
     Countries{
         001{"Verden"}
@@ -298,7 +299,6 @@ da{
         ZZ{"Ukendt område"}
     }
     Countries%short{
-        GB{"UK"}
         HK{"Hongkong"}
         MO{"Macao"}
         PS{"Palæstina"}
@@ -312,5 +312,4 @@ da{
         SZ{"Swaziland"}
         TL{"Østtimor"}
     }
-    Version{"37"}
 }

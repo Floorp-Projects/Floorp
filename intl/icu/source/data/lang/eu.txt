@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 eu{
     Keys{
         calendar{"Egutegia"}
@@ -418,7 +419,7 @@ eu{
         yue{"kantonera"}
         zgh{"amazigera estandarra"}
         zh{"txinera"}
-        zh_Hans{"txinera soildua"}
+        zh_Hans{"txinera sinplifikatu"}
         zh_Hant{"txinera tradizionala"}
         zu{"zuluera"}
         zun{"zuñia"}
@@ -635,7 +636,6 @@ eu{
         SCOTLAND{"ESKOZIAR INGELESA"}
         VALENCIA{"VALENTZIERA"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} — Guztiak"}
         category-list{"{0}: {1}"}
@@ -647,9 +647,11 @@ eu{
         other{"{0} — Bestelakoak"}
         scripts{"Scriptak — {0}"}
         strokes{
-            one{"{0} trazuak"}
-            other{"{0} trazuak"}
+            one{"{0} trazu"}
+            other{"{0} trazu"}
         }
+        subscript{"{0} azpi-indizea"}
+        superscript{"{0} goi-indizea"}
     }
     codePatterns{
         language{"{0}"}

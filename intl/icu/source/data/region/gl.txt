@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 gl{
     Countries{
         001{"Mundo"}
@@ -311,7 +312,6 @@ gl{
         CI{"Costa do Marfil"}
         CZ{"República Checa"}
         FK{"Illas Malvinas (Falkland)"}
-        SZ{"Suacilandia"}
+        SZ{"Swazilandia"}
     }
-    Version{"37"}
 }

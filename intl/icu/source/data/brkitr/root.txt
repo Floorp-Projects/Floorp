@@ -1,7 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 root{
-    Version{"37"}
+    Version{"38.1"}
     boundaries{
         grapheme:process(dependency){"char.brk"}
         line:process(dependency){"line.brk"}

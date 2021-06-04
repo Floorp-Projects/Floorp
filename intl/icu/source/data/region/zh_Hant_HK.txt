@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zh_Hant_HK{
     Countries{
         013{"中美洲"}
@@ -50,6 +51,7 @@ zh_Hant_HK{
         LC{"聖盧西亞"}
         LI{"列支敦士登"}
         LR{"利比里亞"}
+        LS{"萊索托"}
         ME{"黑山"}
         ML{"馬里"}
         MR{"毛里塔尼亞"}
@@ -81,7 +83,6 @@ zh_Hant_HK{
         TC{"特克斯和凱科斯群島"}
         TD{"乍得"}
         TF{"法屬南部領地"}
-        TG{"多哥共和國"}
         TO{"湯加"}
         TT{"千里達和多巴哥"}
         TV{"圖瓦盧"}
@@ -95,5 +96,8 @@ zh_Hant_HK{
         ZM{"贊比亞"}
         ZW{"津巴布韋"}
     }
-    Version{"37"}
+    Countries%short{
+        HK{"中國香港"}
+        MO{"中國澳門"}
+    }
 }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 likelySubtags:table(nofallback){
     aa{"aa_Latn_ET"}
     aai{"aai_Latn_ZZ"}
@@ -267,7 +268,7 @@ likelySubtags:table(nofallback){
     cy{"cy_Latn_GB"}
     da{"da_Latn_DK"}
     dad{"dad_Latn_ZZ"}
-    daf{"daf_Latn_ZZ"}
+    daf{"daf_Latn_CI"}
     dag{"dag_Latn_ZZ"}
     dah{"dah_Latn_ZZ"}
     dak{"dak_Latn_US"}
@@ -290,7 +291,7 @@ likelySubtags:table(nofallback){
     dje{"dje_Latn_NE"}
     dnj{"dnj_Latn_CI"}
     dob{"dob_Latn_ZZ"}
-    doi{"doi_Arab_IN"}
+    doi{"doi_Deva_IN"}
     dop{"dop_Latn_ZZ"}
     dow{"dow_Latn_ZZ"}
     drh{"drh_Mong_CN"}
@@ -339,6 +340,7 @@ likelySubtags:table(nofallback){
     eu{"eu_Latn_ES"}
     ewo{"ewo_Latn_CM"}
     ext{"ext_Latn_ES"}
+    eza{"eza_Latn_ZZ"}
     fa{"fa_Arab_IR"}
     faa{"faa_Latn_ZZ"}
     fab{"fab_Latn_ZZ"}
@@ -462,7 +464,6 @@ likelySubtags:table(nofallback){
     he{"he_Hebr_IL"}
     hhy{"hhy_Latn_ZZ"}
     hi{"hi_Deva_IN"}
-    hi_Latn{"hi_Latn_IN"}
     hia{"hia_Latn_ZZ"}
     hif{"hif_Latn_FJ"}
     hig{"hig_Latn_ZZ"}
@@ -530,6 +531,7 @@ likelySubtags:table(nofallback){
     ja{"ja_Jpan_JP"}
     jab{"jab_Latn_ZZ"}
     jam{"jam_Latn_JM"}
+    jar{"jar_Latn_ZZ"}
     jbo{"jbo_Latn_001"}
     jbu{"jbu_Latn_ZZ"}
     jen{"jen_Latn_ZZ"}
@@ -639,7 +641,6 @@ likelySubtags:table(nofallback){
     krs{"krs_Latn_ZZ"}
     kru{"kru_Deva_IN"}
     ks{"ks_Arab_IN"}
-    ks_Deva{"ks_Deva_IN"}
     ksb{"ksb_Latn_TZ"}
     ksd{"ksd_Latn_ZZ"}
     ksf{"ksf_Latn_CM"}
@@ -673,6 +674,7 @@ likelySubtags:table(nofallback){
     kxa{"kxa_Latn_ZZ"}
     kxc{"kxc_Ethi_ZZ"}
     kxe{"kxe_Latn_ZZ"}
+    kxl{"kxl_Deva_IN"}
     kxm{"kxm_Thai_TH"}
     kxp{"kxp_Arab_PK"}
     kxw{"kxw_Latn_ZZ"}
@@ -684,6 +686,7 @@ likelySubtags:table(nofallback){
     ky_TR{"ky_Latn_TR"}
     kye{"kye_Latn_ZZ"}
     kyx{"kyx_Latn_ZZ"}
+    kzh{"kzh_Arab_ZZ"}
     kzj{"kzj_Latn_MY"}
     kzr{"kzr_Latn_ZZ"}
     kzt{"kzt_Latn_MY"}
@@ -840,7 +843,6 @@ likelySubtags:table(nofallback){
     mro{"mro_Mroo_BD"}
     ms{"ms_Latn_MY"}
     ms_CC{"ms_Arab_CC"}
-    ms_ID{"ms_Latn_ID"}
     mt{"mt_Latn_MT"}
     mtc{"mtc_Latn_ZZ"}
     mtf{"mtf_Latn_ZZ"}
@@ -1218,7 +1220,7 @@ likelySubtags:table(nofallback){
     tr{"tr_Latn_TR"}
     tru{"tru_Latn_TR"}
     trv{"trv_Latn_TW"}
-    trw{"trw_Arab_ZZ"}
+    trw{"trw_Arab_PK"}
     ts{"ts_Latn_ZA"}
     tsd{"tsd_Grek_GR"}
     tsf{"tsf_Deva_NP"}
@@ -1377,7 +1379,7 @@ likelySubtags:table(nofallback){
     und_Cyrl{"ru_Cyrl_RU"}
     und_Cyrl_AL{"mk_Cyrl_AL"}
     und_Cyrl_BA{"sr_Cyrl_BA"}
-    und_Cyrl_GE{"ab_Cyrl_GE"}
+    und_Cyrl_GE{"os_Cyrl_GE"}
     und_Cyrl_GR{"mk_Cyrl_GR"}
     und_Cyrl_MD{"uk_Cyrl_MD"}
     und_Cyrl_RO{"bg_Cyrl_RO"}
@@ -1405,7 +1407,7 @@ likelySubtags:table(nofallback){
     und_ER{"ti_Ethi_ER"}
     und_ES{"es_Latn_ES"}
     und_ET{"am_Ethi_ET"}
-    und_EU{"en_Latn_GB"}
+    und_EU{"en_Latn_IE"}
     und_EZ{"de_Latn_EZ"}
     und_Egyp{"egy_Egyp_EG"}
     und_Elba{"sq_Elba_AL"}
@@ -1711,6 +1713,7 @@ likelySubtags:table(nofallback){
     urt{"urt_Latn_ZZ"}
     urw{"urw_Latn_ZZ"}
     usa{"usa_Latn_ZZ"}
+    uth{"uth_Latn_ZZ"}
     utr{"utr_Latn_ZZ"}
     uvh{"uvh_Latn_ZZ"}
     uvl{"uvl_Latn_ZZ"}
@@ -1840,7 +1843,6 @@ likelySubtags:table(nofallback){
     zh_Hant{"zh_Hant_TW"}
     zh_ID{"zh_Hant_ID"}
     zh_MO{"zh_Hant_MO"}
-    zh_MY{"zh_Hant_MY"}
     zh_PA{"zh_Hant_PA"}
     zh_PF{"zh_Hant_PF"}
     zh_PH{"zh_Hant_PH"}

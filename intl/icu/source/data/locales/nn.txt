@@ -1,14 +1,28 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 nn{
     AuxExemplarCharacters{"[á ǎ č ç đ è ê ń ñ ŋ š ŧ ü ž ä ö]"}
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+        word-final{"{0} …"}
+        word-initial{"… {0}"}
+        word-medial{"{0} … {1}"}
+    }
     ExemplarCharacters{"[a à b c d e é f g h i j k l m n o ó ò ô p q r s t u v w x y z æ ø å]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z Æ Ø Å]"}
     ExemplarCharactersNumbers{"[  , % ‰ + − 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
+    }
     NumberElements{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"ca. {0}"}
                 atLeast{"≥{0}"}
                 range{"{0}‒{1}"}
             }
@@ -72,6 +86,7 @@ nn{
                 }
             }
             symbols{
+                approximatelySign{"≈"}
                 decimal{","}
                 exponential{"E"}
                 group{" "}
@@ -98,7 +113,6 @@ nn{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -153,6 +167,44 @@ nn{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                Gy{
+                    G{"y G–y G"}
+                    y{"y–y G"}
+                }
+                GyM{
+                    G{"MM.y GGGGG–MM.y GGGGG"}
+                    M{"MM.y–MM.y GGGGG"}
+                    y{"MM.y–MM.y GGGGG"}
+                }
+                GyMEd{
+                    G{"E dd.MM.y GGGGG–E dd.MM.y GGGGG"}
+                    M{"E dd.MM.y–E dd.MM.y GGGGG"}
+                    d{"E dd.MM.y–E dd.MM.y GGGGG"}
+                    y{"E dd.MM.y–E dd.MM.y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G–MMM y G"}
+                    M{"MMM–MMM y G"}
+                    y{"MMM y–MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E d. MMM y G–E d. MMM y G"}
+                    M{"E d. MMM–E d. MMM y G"}
+                    d{"E d. MMM–E d. MMM y G"}
+                    y{"E d. MMM y–E d. MMM y G"}
+                }
+                GyMMMd{
+                    G{"d. MMM y G–d. MMM y G"}
+                    M{"d. MMM–d. MMM y G"}
+                    d{"d.–d. MMM y G"}
+                    y{"d. MMM y–d. MMM y G"}
+                }
+                GyMd{
+                    G{"dd.MM.y GGGGG–dd.MM.y GGGGG"}
+                    M{"dd.MM.y–dd.MM.y GGGGG"}
+                    d{"dd.MM.y–dd.MM.y GGGGG"}
+                    y{"dd.MM.y–dd.MM.y GGGGG"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -452,6 +504,44 @@ nn{
                 }
             }
             intervalFormats{
+                Gy{
+                    G{"y G–y G"}
+                    y{"y–y G"}
+                }
+                GyM{
+                    G{"MM.y GGGGG–MM.y GGGGG"}
+                    M{"MM.y–MM.y GGGGG"}
+                    y{"MM.y–MM.y GGGGG"}
+                }
+                GyMEd{
+                    G{"E dd.MM.y GGGGG–E dd.MM.y GGGGG"}
+                    M{"E dd.MM.y–E dd.MM.y GGGGG"}
+                    d{"E dd.MM.y–E dd.MM.y GGGGG"}
+                    y{"E dd.MM.y–E dd.MM.y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G–MMM y G"}
+                    M{"MMM–MMM y G"}
+                    y{"MMM y–MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E d. MMM y G–E d. MMM y G"}
+                    M{"E d. MMM–E d. MMM y G"}
+                    d{"E d. MMM–E d. MMM y G"}
+                    y{"E d. MMM y–E d. MMM y G"}
+                }
+                GyMMMd{
+                    G{"d. MMM y G–d. MMM y G"}
+                    M{"d. MMM–d. MMM y G"}
+                    d{"d.–d. MMM y G"}
+                    y{"d. MMM y–d. MMM y G"}
+                }
+                GyMd{
+                    G{"dd.MM.y GGGGG–dd.MM.y GGGGG"}
+                    M{"dd.MM.y–dd.MM.y GGGGG"}
+                    d{"dd.MM.y–dd.MM.y GGGGG"}
+                    y{"dd.MM.y–dd.MM.y GGGGG"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -681,7 +771,7 @@ nn{
         }
     }
     characterLabel{
-        activities{"aktivitet"}
+        activities{"aktivitetar"}
         african_scripts{"afrikanske skriftsystem"}
         american_scripts{"amerikanske skriftsystem"}
         animal{"dyr"}
@@ -690,13 +780,13 @@ nn{
         body{"kropp"}
         box_drawing{"ruteteikning"}
         braille{"punktskrift"}
-        building{"bygnad"}
-        bullets_stars{"punktteikn/stjerne"}
+        building{"bygning"}
+        bullets_stars{"punktteikn/stjerner"}
         consonantal_jamo{"konsonantal jamo"}
         currency_symbols{"valutasymbol"}
         dash_connector{"tankestrek/bindeteikn"}
-        digits{"sifre"}
-        dingbats{"dingbat"}
+        digits{"siffer"}
+        dingbats{"dingbats"}
         divination_symbols{"spådomssymbol"}
         downwards_arrows{"piler som peiker nedover"}
         downwards_upwards_arrows{"piler som peiker nedover og oppover"}
@@ -746,12 +836,12 @@ nn{
         pictographs{"piktogram"}
         place{"stad"}
         plant{"plante"}
-        punctuation{"skilleteikn"}
+        punctuation{"skiljeteikn"}
         rightwards_arrows{"piler som peiker til høgre"}
         sign_standard_symbols{"teikn eller symbol"}
         small_form_variant{"små variantar"}
         smiley{"smilefjes"}
-        smileys_people{"smilefjes eller person"}
+        smileys_people{"smilefjes og personar"}
         south_asian_scripts{"sørasiatiske skriftsystem"}
         southeast_asian_scripts{"søraustasiatiske skriftsystem"}
         spacing{"med breidd"}
@@ -760,7 +850,7 @@ nn{
         technical_symbols{"tekniske symbol"}
         tone_marks{"tonemerke"}
         travel{"reise"}
-        travel_places{"reise eller stadar"}
+        travel_places{"reise og stadar"}
         upwards_arrows{"pil som peiker oppover"}
         variant_forms{"variantar"}
         vocalic_jamo{"vokalisk jamo"}
@@ -831,13 +921,13 @@ nn{
             dn{"dag i året"}
         }
         dayperiod{
-            dn{"f.m./e.m."}
+            dn{"a.m./p.m."}
         }
         dayperiod-narrow{
-            dn{"f.m./e.m."}
+            dn{"am/pm"}
         }
         dayperiod-short{
-            dn{"f.m./e.m."}
+            dn{"am/pm"}
         }
         era{
             dn{"tidsalder"}
@@ -1066,7 +1156,7 @@ nn{
             }
         }
         month-short{
-            dn{"mnd."}
+            dn{"md."}
             relativeTime{
                 future{
                     one{"om {0} md."}
@@ -1454,7 +1544,6 @@ nn{
         }
         week-short{
             dn{"veke"}
-            relativePeriod{"veka med {0}"}
             relativeTime{
                 future{
                     one{"om {0} v."}
@@ -1473,7 +1562,7 @@ nn{
             dn{"veke i md."}
         }
         weekOfMonth-short{
-            dn{"veke i mnd."}
+            dn{"veke i md."}
         }
         weekday{
             dn{"vekedag"}
@@ -1491,7 +1580,7 @@ nn{
             dn{"veked. i md."}
         }
         weekdayOfMonth-short{
-            dn{"veked. i mnd."}
+            dn{"veked. i md."}
         }
         year{
             dn{"år"}
@@ -1548,9 +1637,35 @@ nn{
         }
     }
     listPattern{
+        or{
+            2{"{0} eller {1}"}
+            end{"{0} eller {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} og {1}"}
             end{"{0} og {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-narrow{
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
+        }
+        unit-short{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{

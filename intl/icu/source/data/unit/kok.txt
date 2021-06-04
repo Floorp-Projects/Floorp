@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kok{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -9,6 +9,10 @@ kok{
     }
     units{
         acceleration{
+            g-force{
+                dnam{"जी-फोर्स"}
+                other{"{0} जी-फोर्स"}
+            }
             meter-per-square-second{
                 dnam{"मी/से²"}
                 other{"{0} मी/से²"}
@@ -84,7 +88,8 @@ kok{
             }
         }
         compound{
-            per{"{1} क {0}"}
+            per{"{0} दर {1}"}
+            times{"{0}-{1}"}
         }
         concentr{
             karat{
@@ -111,6 +116,14 @@ kok{
                 dnam{"दरमायल"}
                 other{"{0} दरमायल"}
             }
+            permillion{
+                dnam{"पार्ट पर मिलियन"}
+                other{"{0} पार्ट पर मिलियन"}
+            }
+            permyriad{
+                dnam{"परमिरियड"}
+                other{"{0} परमिरियड"}
+            }
         }
         consumption{
             liter-per-100-kilometer{
@@ -120,6 +133,14 @@ kok{
             liter-per-kilometer{
                 dnam{"लिटर/किलोमीटर"}
                 other{"{0} लिटर/किलोमीटर"}
+            }
+            mile-per-gallon{
+                dnam{"मैल दर गॅलोन"}
+                other{"{0} मैल दर गॅलोन"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"मैल दर इंपिरियल गॅलोन"}
+                other{"{0} मैल दर इंपिरियल गॅलोन"}
             }
         }
         coordinate{
@@ -237,8 +258,13 @@ kok{
                 dnam{"एम्पियर"}
                 other{"{0} एम्पियर"}
             }
+            milliampere{
+                dnam{"मिलिएम्पियर"}
+                other{"{0} मिलिएम्पियर"}
+            }
             ohm{
                 dnam{"ओम"}
+                other{"{0} ओम"}
             }
             volt{
                 dnam{"वोल्ट"}
@@ -276,6 +302,10 @@ kok{
                 dnam{"न्युटन"}
                 other{"{0} न्युटन"}
             }
+            pound-force{
+                dnam{"पावंड ऑफ फोर्स"}
+                other{"{0} पावंड ऑफ फोर्स"}
+            }
         }
         frequency{
             gigahertz{
@@ -296,6 +326,10 @@ kok{
             }
         }
         graphics{
+            dot{
+                dnam{"ठिपको"}
+                other{"{0}ठिपको"}
+            }
             dot-per-centimeter{
                 dnam{"दर सेंटिमीटर ठिपके"}
                 other{"दर सेंटिमीटर ठिपके {0}"}
@@ -339,10 +373,22 @@ kok{
                 dnam{"डेसीमीटर"}
                 other{"{0} डेसीमीटर"}
             }
+            earth-radius{
+                dnam{"पृथ्वी त्रिज्या"}
+                other{"{0} पृथ्वी त्रिज्या"}
+            }
+            fathom{
+                dnam{"फॅदम"}
+                other{"{0} फॅदम"}
+            }
             foot{
                 dnam{"फूट"}
                 other{"{0} फूट"}
                 per{"दर फूट {0}"}
+            }
+            furlong{
+                dnam{"फर्लांग"}
+                other{"{0} फर्लांग"}
             }
             inch{
                 dnam{"इंच"}
@@ -388,8 +434,8 @@ kok{
                 other{"{0} नॉटिकल्स मायल्स"}
             }
             parsec{
-                dnam{"पॅरासे"}
-                other{"{0} पॅरासे"}
+                dnam{"पासेक्स"}
+                other{"{0} पासेक्स"}
             }
             picometer{
                 dnam{"पिकोमीटर"}
@@ -408,10 +454,40 @@ kok{
                 other{"{0} यार्ड"}
             }
         }
+        light{
+            candela{
+                dnam{"कॅन्डेला"}
+                other{"{0} कॅन्डेला"}
+            }
+            lumen{
+                dnam{"ल्युमन"}
+                other{"{0} ल्युमन"}
+            }
+            lux{
+                dnam{"लक्स"}
+                other{"{0} लक्स"}
+            }
+            solar-luminosity{
+                dnam{"सौर ल्युमिनोसायटिस"}
+                other{"{0} सौर ल्युमिनोसायटिस"}
+            }
+        }
         mass{
             carat{
                 dnam{"कॅरट"}
                 other{"{0} कॅरट"}
+            }
+            dalton{
+                dnam{"डाल्टन"}
+                other{"{0} डाल्टन"}
+            }
+            earth-mass{
+                dnam{"पृथ्वी वस्तुमान"}
+                other{"{0} पृथ्वी वस्तुमान"}
+            }
+            grain{
+                dnam{"कण"}
+                other{"{0} कण"}
             }
             gram{
                 dnam{"ग्राम"}
@@ -431,9 +507,27 @@ kok{
                 dnam{"मिलिग्राम"}
                 other{"{0} मिलिग्राम"}
             }
+            ounce{
+                dnam{"औंस"}
+                other{"{0} औंस"}
+                per{"{0} दर औंस"}
+            }
+            ounce-troy{
+                dnam{"ट्रॉय औंस"}
+                other{"{0} ट्रॉय औंस"}
+            }
             pound{
                 dnam{"पौंड"}
                 other{"{0} पौंड"}
+                per{"{0} दर पौंड"}
+            }
+            solar-mass{
+                dnam{"सौर वस्तुमान"}
+                other{"{0} सौर वस्तुमान"}
+            }
+            stone{
+                dnam{"स्टोन"}
+                other{"{0} स्टोन"}
             }
             ton{
                 dnam{"टन"}
@@ -475,15 +569,47 @@ kok{
                 dnam{"पट्टी"}
                 other{"{0} पट्ट्यो"}
             }
+            hectopascal{
+                dnam{"हेक्टोपास्कल"}
+                other{"{0} हेक्टोपास्कल"}
+            }
+            inch-ofhg{
+                dnam{"इंचेस ऑफ मर्क्युरी"}
+                other{"{0} इंचेस ऑफ मर्क्युरी"}
+            }
+            kilopascal{
+                dnam{"किलोपास्कल"}
+                other{"{0} किलोपास्कल"}
+            }
+            megapascal{
+                dnam{"मेगापास्कल"}
+                other{"{0} किलोपास्कल्स"}
+            }
+            millibar{
+                dnam{"मिलिबार"}
+                other{"{0} मिलिबार"}
+            }
+            millimeter-ofhg{
+                dnam{"मिलिमीटर ऑफ मर्क्युरी"}
+                other{"{0} मिलिमीटर ऑफ मर्क्युरी"}
+            }
             pascal{
                 dnam{"पास्कल"}
                 other{"{0} पास्कल"}
+            }
+            pound-force-per-square-inch{
+                dnam{"पावंड दर चौरस इंच"}
+                other{"{0} पावंड दर चौरस इंच"}
             }
         }
         speed{
             kilometer-per-hour{
                 dnam{"किमी/व"}
                 other{"{0} किमी/व"}
+            }
+            knot{
+                dnam{"नॉट"}
+                other{"{0} नॉट"}
             }
             meter-per-second{
                 dnam{"मी/से"}
@@ -513,6 +639,10 @@ kok{
                 dnam{"न्युटन-मीटर"}
                 other{"{0} न्युटन-मीटर"}
             }
+            pound-force-foot{
+                dnam{"पावंड-फूट"}
+                other{"{0} पावंड-फूट"}
+            }
         }
         volume{
             acre-foot{
@@ -523,18 +653,26 @@ kok{
                 dnam{"बॅरल"}
                 other{"{0} बॅरल"}
             }
+            bushel{
+                dnam{"बुशेल्स"}
+                other{"{0} बुशेल्स"}
+            }
+            centiliter{
+                dnam{"सेंटिलीटर"}
+                other{"{0} सेंटिलीटर"}
+            }
             cubic-centimeter{
-                dnam{"सेमी³"}
-                other{"{0} सेमी³"}
-                per{"{0}/सेमी³"}
+                dnam{"क्युबीक सेंटीमीटर"}
+                other{"{0} क्युबीक सेंटीमीटर"}
+                per{"{0} दर क्युबीक सेंटीमीटर"}
             }
             cubic-foot{
-                dnam{"फू³"}
-                other{"{0} फू³"}
+                dnam{"क्युबीक फूट"}
+                other{"{0} क्युबीक फूट"}
             }
             cubic-inch{
-                dnam{"इं³"}
-                other{"{0} इं³"}
+                dnam{"क्युबीक इंच"}
+                other{"{0} क्युबीक इंच"}
             }
             cubic-kilometer{
                 dnam{"क्युबीक किलोमीटर"}
@@ -546,12 +684,12 @@ kok{
                 per{"{0}/मी³"}
             }
             cubic-mile{
-                dnam{"मा³"}
-                other{"{0} मा³"}
+                dnam{"क्युबीक मील"}
+                other{"{0} क्युबीक मील"}
             }
             cubic-yard{
-                dnam{"या³"}
-                other{"{0} या³"}
+                dnam{"क्युबीक यार्ड"}
+                other{"{0} क्युबीक यार्ड"}
             }
             cup{
                 dnam{"कप"}
@@ -561,14 +699,50 @@ kok{
                 dnam{"मॅट्रिक कप"}
                 other{"{0} मॅट्रिक कप"}
             }
+            deciliter{
+                dnam{"डेसिलीटर"}
+                other{"{0} डेसिलीटर"}
+            }
+            dessert-spoon{
+                dnam{"डिझर्ट कुलेर"}
+                other{"{0} डिझर्ट कुलेर"}
+            }
+            dessert-spoon-imperial{
+                dnam{"इंपिरियल डिझर्ट कुलेर"}
+                other{"{0} इंप. डिझर्ट कुलेर"}
+            }
+            dram{
+                dnam{"ड्रॅम"}
+                other{"{0} ड्रॅम"}
+            }
+            drop{
+                dnam{"थेंबो"}
+                other{"{0} थेंबो"}
+            }
             fluid-ounce{
                 dnam{"फ्लुइड औंस"}
                 other{"{0} फ्लुइड औंस"}
+            }
+            fluid-ounce-imperial{
+                dnam{"इंपिरियल फ्लुइड औंस"}
+                other{"{0} इंप. फ्लुइड औंस"}
             }
             gallon{
                 dnam{"गॅलोन"}
                 other{"{0} गॅलोन"}
                 per{"दर गॅलोन {0}"}
+            }
+            gallon-imperial{
+                dnam{"इंपिरियल गॅलोन"}
+                other{"{0} इंप. गॅलोन"}
+                per{"{0} दर इंप. गॅलोन"}
+            }
+            hectoliter{
+                dnam{"हॅक्टोलीटर"}
+            }
+            jigger{
+                dnam{"जिगर"}
+                other{"{0} जिगर"}
             }
             liter{
                 dnam{"लिटर"}
@@ -583,9 +757,25 @@ kok{
                 dnam{"मिलिलिटर"}
                 other{"{0} मिलिलिटर"}
             }
+            pinch{
+                dnam{"चिमटी"}
+                other{"{0} चिमटी"}
+            }
+            pint{
+                dnam{"पाइंट"}
+                other{"{0} पाइंट"}
+            }
+            pint-metric{
+                dnam{"मॅट्रिक पाइंट"}
+                other{"{0} मॅट्रिक पाइंट"}
+            }
             quart{
                 dnam{"क्वार्त"}
                 other{"{0} क्वार्त"}
+            }
+            quart-imperial{
+                dnam{"इंपिरियल क्वार्त"}
+                other{"{0} इंप. क्वार्त"}
             }
             tablespoon{
                 dnam{"व्हडलें कुलेर"}
@@ -598,6 +788,10 @@ kok{
         }
     }
     unitsNarrow{
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
+        }
         coordinate{
             dnam{"दिका"}
             east{"{0}उदें"}
@@ -689,7 +883,7 @@ kok{
     unitsShort{
         acceleration{
             g-force{
-                dnam{"g-force"}
+                dnam{"जी-फोर्स"}
                 other{"{0} G"}
             }
             meter-per-square-second{
@@ -814,11 +1008,11 @@ kok{
                 other{"{0} लि/किमी"}
             }
             mile-per-gallon{
-                dnam{"mpg US"}
-                other{"{0} mpg US"}
+                dnam{"मैल/गॅ"}
+                other{"{0} mpg"}
             }
             mile-per-gallon-imperial{
-                dnam{"mpg Imp."}
+                dnam{"मैल/गॅ इंप."}
                 other{"{0} mpg Imp."}
             }
         }
@@ -938,11 +1132,11 @@ kok{
                 other{"{0} ए"}
             }
             milliampere{
-                dnam{"mA"}
+                dnam{"मिलिएम्प"}
                 other{"{0} mA"}
             }
             ohm{
-                dnam{"ओम्स"}
+                dnam{"ओम"}
                 other{"{0} Ω"}
             }
             volt{
@@ -994,7 +1188,7 @@ kok{
                 other{"{0} न्यु"}
             }
             pound-force{
-                dnam{"lbf"}
+                dnam{"पावंड-फोर्स"}
                 other{"{0} lbf"}
             }
         }
@@ -1017,6 +1211,10 @@ kok{
             }
         }
         graphics{
+            dot{
+                dnam{"ठिपको"}
+                other{"{0} ठिपको"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 other{"{0} dpcm"}
@@ -1060,10 +1258,22 @@ kok{
                 dnam{"डेमी"}
                 other{"{0} डेमी"}
             }
+            earth-radius{
+                dnam{"R⊕"}
+                other{"{0} R⊕"}
+            }
+            fathom{
+                dnam{"फॅदम"}
+                other{"{0} fth"}
+            }
             foot{
                 dnam{"फूट"}
                 other{"{0} फूट"}
                 per{"{0}/ft"}
+            }
+            furlong{
+                dnam{"फर्लांग"}
+                other{"{0} fur"}
             }
             inch{
                 dnam{"इंच"}
@@ -1109,7 +1319,7 @@ kok{
                 other{"{0} nmi"}
             }
             parsec{
-                dnam{"pc"}
+                dnam{"पासेक"}
                 other{"{0} pc"}
             }
             picometer{
@@ -1130,12 +1340,20 @@ kok{
             }
         }
         light{
+            candela{
+                dnam{"cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                dnam{"lm"}
+                other{"{0} lm"}
+            }
             lux{
-                dnam{"lx"}
+                dnam{"लक्स"}
                 other{"{0} lx"}
             }
             solar-luminosity{
-                dnam{"L☉"}
+                dnam{"सौर ल्युमिनोसायटिस"}
                 other{"{0} L☉"}
             }
         }
@@ -1145,12 +1363,16 @@ kok{
                 other{"{0} कॅ"}
             }
             dalton{
-                dnam{"Da"}
+                dnam{"डाल्टन"}
                 other{"{0} Da"}
             }
             earth-mass{
-                dnam{"M⊕"}
+                dnam{"पृथ्वी वस्तुमान"}
                 other{"{0} M⊕"}
+            }
+            grain{
+                dnam{"कण"}
+                other{"{0} कण"}
             }
             gram{
                 dnam{"ग्राम"}
@@ -1175,22 +1397,26 @@ kok{
                 other{"{0} मिग्रा"}
             }
             ounce{
-                dnam{"oz"}
+                dnam{"औंस"}
                 other{"{0} oz"}
-                per{"{0}/oz"}
+                per{"{0}/औंस"}
             }
             ounce-troy{
-                dnam{"oz t"}
+                dnam{"औंस ट्रॉय"}
                 other{"{0} oz t"}
             }
             pound{
-                dnam{"lb"}
+                dnam{"पौंड"}
                 other{"{0} lb"}
-                per{"{0}/lb"}
+                per{"{0}/पौंड"}
             }
             solar-mass{
-                dnam{"M☉"}
+                dnam{"सौर वस्तुमान"}
                 other{"{0} M☉"}
+            }
+            stone{
+                dnam{"स्टोन"}
+                other{"{0} स्टोन"}
             }
             ton{
                 dnam{"टन"}
@@ -1271,7 +1497,7 @@ kok{
                 other{"{0} किमी/व"}
             }
             knot{
-                dnam{"kn"}
+                dnam{"नॉट"}
                 other{"{0} kn"}
             }
             meter-per-second{
@@ -1307,18 +1533,22 @@ kok{
                 other{"{0} N⋅m"}
             }
             pound-force-foot{
-                dnam{"lbf⋅ft"}
+                dnam{"पावंड-फूट"}
                 other{"{0} lbf⋅ft"}
             }
         }
         volume{
             acre-foot{
                 dnam{"एकर फू"}
-                other{"{0} ए फू"}
+                other{"{0} ac ft"}
             }
             barrel{
                 dnam{"बॅरल"}
                 other{"{0} बॅरल"}
+            }
+            bushel{
+                dnam{"बुशेल्स"}
+                other{"{0} bu"}
             }
             centiliter{
                 dnam{"cL"}
@@ -1330,12 +1560,12 @@ kok{
                 per{"{0}/सेमी³"}
             }
             cubic-foot{
-                dnam{"फू³"}
-                other{"{0} फू³"}
+                dnam{"फूट³"}
+                other{"{0} ft³"}
             }
             cubic-inch{
                 dnam{"इंच³"}
-                other{"{0} इ³"}
+                other{"{0} in³"}
             }
             cubic-kilometer{
                 dnam{"किमी³"}
@@ -1351,8 +1581,8 @@ kok{
                 other{"{0} mi³"}
             }
             cubic-yard{
-                dnam{"या³"}
-                other{"{0} या³"}
+                dnam{"यार्ड³"}
+                other{"{0} yd³"}
             }
             cup{
                 dnam{"कप"}
@@ -1365,6 +1595,22 @@ kok{
             deciliter{
                 dnam{"dL"}
                 other{"{0} dL"}
+            }
+            dessert-spoon{
+                dnam{"डिझ. कुलेर"}
+                other{"{0} dstspn"}
+            }
+            dessert-spoon-imperial{
+                dnam{"डिझ. कुलेर इंप"}
+                other{"{0} dstspn Imp"}
+            }
+            dram{
+                dnam{"ड्रॅम फ्लुइड"}
+                other{"{0} ड्रॅम फ्लु"}
+            }
+            drop{
+                dnam{"थेंबो"}
+                other{"{0} थेंबो"}
             }
             fluid-ounce{
                 dnam{"US fl oz"}
@@ -1380,13 +1626,17 @@ kok{
                 per{"{0}/गॅलो युएस"}
             }
             gallon-imperial{
-                dnam{"Imp. gal"}
-                other{"{0} gal Imp."}
-                per{"{0}/gal Imp."}
+                dnam{"इंप.गॅलोन"}
+                other{"{0} गॅल इंप."}
+                per{"{0}/गॅलोन इंप."}
             }
             hectoliter{
                 dnam{"hL"}
                 other{"{0} hL"}
+            }
+            jigger{
+                dnam{"जिगर"}
+                other{"{0} जिगर"}
             }
             liter{
                 dnam{"लिटर"}
@@ -1401,8 +1651,12 @@ kok{
                 dnam{"मिलि"}
                 other{"{0} मिलि"}
             }
+            pinch{
+                dnam{"चिमटी"}
+                other{"{0} चिमटी"}
+            }
             pint{
-                dnam{"pt"}
+                dnam{"पाइंट"}
                 other{"{0} pt"}
             }
             pint-metric{
@@ -1412,6 +1666,10 @@ kok{
             quart{
                 dnam{"क्वा"}
                 other{"{0} क्वा"}
+            }
+            quart-imperial{
+                dnam{"क्वार्त इंप"}
+                other{"{0} qt Imp."}
             }
             tablespoon{
                 dnam{"tbsp"}

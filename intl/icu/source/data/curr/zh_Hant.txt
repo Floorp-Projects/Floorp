@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zh_Hant{
     %%Parent{"root"}
     Currencies{
@@ -1216,6 +1217,7 @@ zh_Hant{
         TWD{"NT$"}
     }
     Currencies%narrow{
+        AMD{"֏"}
         AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
@@ -2224,5 +2226,4 @@ zh_Hant{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

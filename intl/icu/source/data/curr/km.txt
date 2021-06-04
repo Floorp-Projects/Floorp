@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 km{
     Currencies{
         AED{
@@ -72,7 +73,7 @@ km{
         }
         BND{
             "BND",
-            "ដុល្លារ​ប្រុយណេ",
+            "ដុល្លារព្រុយណេ",
         }
         BOB{
             "BOB",
@@ -124,11 +125,11 @@ km{
         }
         CNH{
             "CNH",
-            "យ៉ន់ចិន (ក្រៅប្រទេស)",
+            "យ័នចិន (ក្រៅប្រទេស)",
         }
         CNY{
             "CN¥",
-            "យ៉ន់​ចិន",
+            "យ័នចិន",
         }
         COP{
             "COP",
@@ -416,7 +417,7 @@ km{
         }
         NIO{
             "NIO",
-            "ខឌូបា​នីការ៉ាហ្គា",
+            "ខឌូបា​នីការ៉ាហ្កា",
         }
         NOK{
             "NOK",
@@ -761,9 +762,6 @@ km{
         ALL{
             other{"លិក​អាល់បានី"}
         }
-        AMD{
-            other{"ដ្រាំ អាមេនី"}
-        }
         ANG{
             other{"ហ្គីឌិន​ហុល្លង់​អង់ទីលៀន"}
         }
@@ -804,7 +802,7 @@ km{
             other{"ដុល្លារ​ប៊ឺមុយដា"}
         }
         BND{
-            other{"ដុល្លារ​ប្រុយណេ"}
+            other{"ដុល្លារព្រុយណេ"}
         }
         BOB{
             other{"បូលីវីណូ​បូលីវី"}
@@ -843,10 +841,10 @@ km{
             other{"ប៉េសូឈីលី"}
         }
         CNH{
-            other{"យ៉ន់ចិន (ក្រៅប្រទេស)"}
+            other{"យ័នចិន (ក្រៅប្រទេស)"}
         }
         CNY{
-            other{"យ៉ន់​ចិន"}
+            other{"យ័នចិន"}
         }
         COP{
             other{"ប៉េសូកូឡុំប៊ី"}
@@ -1062,7 +1060,7 @@ km{
             other{"ណៃរ៉ា​នីហ្សេរីយ៉ា"}
         }
         NIO{
-            other{"ខឌូបា​នីការ៉ាហ្គា"}
+            other{"ខឌូបា​នីការ៉ាហ្កា"}
         }
         NOK{
             other{"ក្រូណេ​ន័រវ៉េ"}
@@ -1242,5 +1240,4 @@ km{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fa{
     Countries{
         001{"جهان"}
@@ -307,10 +308,10 @@ fa{
     Countries%variant{
         CD{"کنگو (جمهوری دموکراتیک)"}
         CG{"کنگو (جمهوری)"}
+        CI{"ساحل‌عاج"}
         CZ{"جمهوری چک"}
         FK{"جزایر فالکلند (ایسلاس مالویناس)"}
         SZ{"سوازیلند"}
         TL{"تیمور شرقی"}
     }
-    Version{"37"}
 }

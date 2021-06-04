@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 gd{
     Countries{
         001{"An Saoghal"}
@@ -241,7 +242,7 @@ gd{
         SG{"Singeapòr"}
         SH{"Eilean Naomh Eilidh"}
         SI{"An t-Slòbhain"}
-        SJ{"Svalbard agus Jan Mayen"}
+        SJ{"Svalbard is Jan Mayen"}
         SK{"An t-Slòbhac"}
         SL{"Siarra Leòmhann"}
         SM{"San Marino"}
@@ -313,5 +314,4 @@ gd{
         SZ{"Dùthaich nan Suasaidh"}
         TL{"Tìomor an Ear"}
     }
-    Version{"37"}
 }

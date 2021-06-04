@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bg{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -161,14 +161,14 @@ bg{
                 other{"{0} литра на километър"}
             }
             mile-per-gallon{
-                dnam{"мили с един галон"}
-                one{"{0} миля с един галон"}
-                other{"{0} мили с един галон"}
+                dnam{"мили на галон"}
+                one{"{0} миля на галон"}
+                other{"{0} мили на галон"}
             }
             mile-per-gallon-imperial{
-                dnam{"мили с един британски галон"}
-                one{"{0} миля с един британски галон"}
-                other{"{0} мили с един британски галон"}
+                dnam{"мили на имперски галон"}
+                one{"{0} миля на имперски галон"}
+                other{"{0} мили на имперски галон"}
             }
         }
         coordinate{
@@ -408,6 +408,11 @@ bg{
             }
         }
         graphics{
+            dot{
+                dnam{"точка"}
+                one{"{0} точка"}
+                other{"{0} точки"}
+            }
             dot-per-centimeter{
                 dnam{"точки на сантиметър"}
                 one{"{0} точка на сантиметър"}
@@ -459,11 +464,26 @@ bg{
                 one{"{0} дециметър"}
                 other{"{0} дециметра"}
             }
+            earth-radius{
+                dnam{"земен радиус"}
+                one{"{0} земен радиус"}
+                other{"{0} земни радиуса"}
+            }
+            fathom{
+                dnam{"фатоми"}
+                one{"{0} фатом"}
+                other{"{0} фатома"}
+            }
             foot{
                 dnam{"футове"}
                 one{"{0} фут"}
                 other{"{0} фута"}
                 per{"{0} на фут"}
+            }
+            furlong{
+                dnam{"фърлонги"}
+                one{"{0} фърлонг"}
+                other{"{0} фърлонга"}
             }
             inch{
                 dnam{"инчове"}
@@ -545,6 +565,16 @@ bg{
             }
         }
         light{
+            candela{
+                dnam{"кандела"}
+                one{"{0} кандела"}
+                other{"{0} кандели"}
+            }
+            lumen{
+                dnam{"лумен"}
+                one{"{0} лумен"}
+                other{"{0} лумена"}
+            }
             lux{
                 dnam{"луксове"}
                 one{"{0} лукс"}
@@ -572,6 +602,11 @@ bg{
                 one{"{0} маса на Земята"}
                 other{"{0} маси на Земята"}
             }
+            grain{
+                dnam{"гран"}
+                one{"{0} гран"}
+                other{"{0} грана"}
+            }
             gram{
                 dnam{"грамове"}
                 one{"{0} грам"}
@@ -585,9 +620,9 @@ bg{
                 per{"{0} на килограм"}
             }
             metric-ton{
-                dnam{"тонове"}
-                one{"{0} тон"}
-                other{"{0} тона"}
+                dnam{"метрични тонове"}
+                one{"{0} метричен тон"}
+                other{"{0} метрични тона"}
             }
             microgram{
                 dnam{"микрограмове"}
@@ -620,6 +655,11 @@ bg{
                 dnam{"слънчеви маси"}
                 one{"{0} слънчева маса"}
                 other{"{0} слънчеви маси"}
+            }
+            stone{
+                dnam{"стоунове"}
+                one{"{0} стоун"}
+                other{"{0} стоуна"}
             }
             ton{
                 dnam{"къси тонове"}
@@ -762,9 +802,9 @@ bg{
                 other{"{0} нютон-метра"}
             }
             pound-force-foot{
-                dnam{"фунт-футове"}
-                one{"{0} фунт-фут"}
-                other{"{0} фунт-фута"}
+                dnam{"паунд-футове"}
+                one{"{0} паунд-фут сила"}
+                other{"{0} паунд-фута"}
             }
         }
         volume{
@@ -777,6 +817,11 @@ bg{
                 dnam{"барели"}
                 one{"{0} барел"}
                 other{"{0} барела"}
+            }
+            bushel{
+                dnam{"бушели"}
+                one{"{0} бушел"}
+                other{"{0} бушела"}
             }
             centiliter{
                 dnam{"сентилитри"}
@@ -835,19 +880,34 @@ bg{
                 one{"{0} децилитър"}
                 other{"{0} децилитра"}
             }
+            dessert-spoon{
+                dnam{"десертна лъжица"}
+                one{"{0} десертна лъжица"}
+                other{"{0} десертни лъжици"}
+            }
+            dram{
+                dnam{"драм"}
+                one{"{0} драм"}
+                other{"{0} драма"}
+            }
+            drop{
+                dnam{"капка"}
+                one{"{0} капка"}
+                other{"{0} капки"}
+            }
             fluid-ounce{
                 dnam{"течни унции"}
                 one{"{0} течна унция"}
                 other{"{0} течни унции"}
             }
             fluid-ounce-imperial{
-                dnam{"Британски течни унции"}
-                one{"{0} британска течна унция"}
-                other{"{0} британски течни унции"}
+                dnam{"имперски течни унции"}
+                one{"{0} имперска течна унция"}
+                other{"{0} имперски течни унции"}
             }
             gallon{
                 dnam{"галони"}
-                one{"{0} галона"}
+                one{"{0} галон"}
                 other{"{0} галона"}
                 per{"{0} на галон"}
             }
@@ -861,6 +921,11 @@ bg{
                 dnam{"хектолитри"}
                 one{"{0} хектолитър"}
                 other{"{0} хектолитра"}
+            }
+            jigger{
+                dnam{"джигър"}
+                one{"{0} джигър"}
+                other{"{0} джигъра"}
             }
             liter{
                 dnam{"литри"}
@@ -878,6 +943,11 @@ bg{
                 one{"{0} милилитър"}
                 other{"{0} милилитра"}
             }
+            pinch{
+                dnam{"щипка"}
+                one{"{0} щипка"}
+                other{"{0} щипки"}
+            }
             pint{
                 dnam{"пинти"}
                 one{"{0} пинта"}
@@ -892,6 +962,11 @@ bg{
                 dnam{"кварти"}
                 one{"{0} кварта"}
                 other{"{0} кварти"}
+            }
+            quart-imperial{
+                dnam{"имперска кварта"}
+                one{"{0} имперска кварта"}
+                other{"{0} имперски кварти"}
             }
             tablespoon{
                 dnam{"супени лъжици"}
@@ -1388,6 +1463,11 @@ bg{
                 other{"{0} д"}
                 per{"{0}/д"}
             }
+            decade{
+                dnam{"декада"}
+                one{"{0} декада"}
+                other{"{0} декади"}
+            }
             hour{
                 dnam{"часове"}
                 one{"{0} ч"}
@@ -1541,6 +1621,11 @@ bg{
             }
         }
         graphics{
+            dot{
+                dnam{"точка"}
+                one{"{0} точка"}
+                other{"{0} точки"}
+            }
             em{
                 dnam{"ем"}
             }
@@ -1562,9 +1647,22 @@ bg{
                 one{"{0} dm"}
                 other{"{0} dm"}
             }
+            earth-radius{
+                dnam{"R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
+            fathom{
+                one{"{0} fth"}
+                other{"{0} fth"}
+            }
             foot{
                 one{"{0} ft"}
                 other{"{0} ft"}
+            }
+            furlong{
+                one{"{0} fur"}
+                other{"{0} fur"}
             }
             inch{
                 one{"{0} in"}
@@ -1622,7 +1720,6 @@ bg{
                 other{"{0} pc"}
             }
             picometer{
-                dnam{"пикометри"}
                 one{"{0} pm"}
                 other{"{0} pm"}
             }
@@ -1641,6 +1738,16 @@ bg{
             }
         }
         light{
+            candela{
+                dnam{"cd"}
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                dnam{"lm"}
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"lx"}
                 one{"{0} lx"}
@@ -1665,6 +1772,11 @@ bg{
             earth-mass{
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
+            }
+            grain{
+                dnam{"гран"}
+                one{"{0} гран"}
+                other{"{0} грана"}
             }
             gram{
                 dnam{"g"}
@@ -1710,6 +1822,10 @@ bg{
             solar-mass{
                 one{"{0} M☉"}
                 other{"{0} M☉"}
+            }
+            stone{
+                one{"{0} st"}
+                other{"{0} st"}
             }
             ton{
                 one{"{0} tn"}
@@ -1856,6 +1972,11 @@ bg{
                 one{"{0} bbl"}
                 other{"{0} bbl"}
             }
+            bushel{
+                dnam{"бушели"}
+                one{"{0} bu"}
+                other{"{0} bu"}
+            }
             centiliter{
                 dnam{"cl"}
                 one{"{0} cl"}
@@ -1909,6 +2030,26 @@ bg{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"дес. лъжица"}
+                one{"{0} дес. лъжица"}
+                other{"{0} дес. лъжици"}
+            }
+            dessert-spoon-imperial{
+                dnam{"брит. дес. лъжица"}
+                one{"{0} брит. дес. лъжица"}
+                other{"{0} брит. дес. лъжици"}
+            }
+            dram{
+                dnam{"течен драм"}
+                one{"{0} теч. драм"}
+                other{"{0} теч. драма"}
+            }
+            drop{
+                dnam{"капка"}
+                one{"{0} капка"}
+                other{"{0} капки"}
+            }
             fluid-ounce{
                 one{"{0} fl oz US"}
                 other{"{0} fl oz US"}
@@ -1925,13 +2066,18 @@ bg{
             gallon-imperial{
                 dnam{"имп. галон"}
                 one{"{0} имп. галон"}
-                other{"{0} имп. гал."}
+                other{"{0} имп. галона"}
                 per{"{0}/имп. галон"}
             }
             hectoliter{
                 dnam{"hl"}
                 one{"{0} hl"}
                 other{"{0} hl"}
+            }
+            jigger{
+                dnam{"джигър"}
+                one{"{0} джигър"}
+                other{"{0} джигъра"}
             }
             liter{
                 dnam{"l"}
@@ -1949,6 +2095,11 @@ bg{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"щипка"}
+                one{"{0} щипка"}
+                other{"{0} щипки"}
+            }
             pint{
                 one{"{0} pt"}
                 other{"{0} pt"}
@@ -1961,6 +2112,11 @@ bg{
             quart{
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"имп. кварта"}
+                one{"{0} имп. кварта"}
+                other{"{0} имп. кварти"}
             }
             tablespoon{
                 dnam{"с. л."}

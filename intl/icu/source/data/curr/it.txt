@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 it{
     Currencies{
         ADP{
@@ -443,7 +444,7 @@ it{
             "nuovo siclo israeliano",
         }
         INR{
-            "₹",
+            "INR",
             "rupia indiana",
         }
         IQD{
@@ -589,7 +590,11 @@ it{
         }
         MKD{
             "MKD",
-            "denar macedone",
+            "dinaro macedone",
+        }
+        MKN{
+            "MKN",
+            "dinaro macedone (1992–1993)",
         }
         MLF{
             "MLF",
@@ -964,7 +969,7 @@ it{
             "bolívar venezuelano",
         }
         VND{
-            "₫",
+            "VND",
             "dong vietnamita",
         }
         VUV{
@@ -1081,7 +1086,7 @@ it{
         }
         ZMW{
             "ZMW",
-            "kwacha dello Zambia",
+            "kwacha zambiano",
         }
         ZRN{
             "ZRN",
@@ -1218,7 +1223,7 @@ it{
         }
         ANG{
             one{"fiorino delle Antille olandesi"}
-            other{"fiorino delle Antille olandesi"}
+            other{"fiorini delle Antille olandesi"}
         }
         AOA{
             one{"kwanza angolano"}
@@ -1472,6 +1477,10 @@ it{
             one{"corona islandese"}
             other{"corone islandesi"}
         }
+        ITL{
+            one{"lire italiane"}
+            other{"lire italiane"}
+        }
         JMD{
             one{"dollaro giamaicano"}
             other{"dollari giamaicani"}
@@ -1486,7 +1495,7 @@ it{
         }
         KES{
             one{"scellino keniota"}
-            other{"scellini keniota"}
+            other{"scellini kenioti"}
         }
         KGS{
             one{"som kirghiso"}
@@ -1563,6 +1572,10 @@ it{
         MKD{
             one{"dinaro macedone"}
             other{"dinari macedoni"}
+        }
+        MKN{
+            one{"dinaro macedone (1992–1993)"}
+            other{"dinari macedoni (1992–1993)"}
         }
         MMK{
             one{"kyat di Myanmar"}
@@ -1877,5 +1890,4 @@ it{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

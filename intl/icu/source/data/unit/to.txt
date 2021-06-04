@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 to{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -337,6 +337,10 @@ to{
             }
         }
         graphics{
+            dot{
+                dnam{"toti"}
+                other{"toti ʻe {0}"}
+            }
             dot-per-centimeter{
                 dnam{"toti he senitimita"}
                 other{"toti ʻe {0} he senitimita"}
@@ -379,6 +383,10 @@ to{
             decimeter{
                 dnam{"tesimita"}
                 other{"tesimita ʻe {0}"}
+            }
+            earth-radius{
+                dnam{"lētiasi fakamāmani"}
+                other{"lētiasi fakamāmani ʻe {0}"}
             }
             fathom{
                 dnam{"ofa"}
@@ -458,6 +466,14 @@ to{
             }
         }
         light{
+            candela{
+                dnam{"kaniteli"}
+                other{"kaniteli ʻe {0}"}
+            }
+            lumen{
+                dnam{"lumeni"}
+                other{"lumeni ʻe {0}"}
+            }
             lux{
                 dnam{"lukisi"}
                 other{"lukisi ʻe {0}"}
@@ -479,6 +495,10 @@ to{
             earth-mass{
                 dnam{"mamafa ʻo māmani"}
                 other{"mamafa ʻo māmani ʻe {0}"}
+            }
+            grain{
+                dnam{"tenga"}
+                other{"tenga ʻe {0}"}
             }
             gram{
                 dnam{"kalami"}
@@ -702,6 +722,22 @@ to{
                 dnam{"tesilita"}
                 other{"tesilita ʻe {0}"}
             }
+            dessert-spoon{
+                dnam{"sēpuni puteni"}
+                other{"sēpuni puteni ʻe {0}"}
+            }
+            dessert-spoon-imperial{
+                dnam{"sēpuni puteni fakaʻemipaea"}
+                other{"sēpuni puteni fakaʻemipaea ʻe {0}"}
+            }
+            dram{
+                dnam{"talamu tafe"}
+                other{"talamu tafe ʻe {0}"}
+            }
+            drop{
+                dnam{"tulutā"}
+                other{"tulutā ʻe {0}"}
+            }
             fluid-ounce{
                 dnam{"ʻaunise tafe"}
                 other{"ʻaunise tafe ʻe {0}"}
@@ -724,6 +760,10 @@ to{
                 dnam{"hēkitolita"}
                 other{"hēkitolita ʻe {0}"}
             }
+            jigger{
+                dnam{"sike"}
+                other{"sike ʻe {0}"}
+            }
             liter{
                 dnam{"lita"}
                 other{"lita ʻe {0}"}
@@ -737,6 +777,10 @@ to{
                 dnam{"mililita"}
                 other{"mililita ʻe {0}"}
             }
+            pinch{
+                dnam{"kiʻimeʻi"}
+                other{"kiʻimeʻi ʻe {0}"}
+            }
             pint{
                 dnam{"painite"}
                 other{"painite ʻe {0}"}
@@ -748,6 +792,10 @@ to{
             quart{
                 dnam{"kuata"}
                 other{"kuata ʻe {0}"}
+            }
+            quart-imperial{
+                dnam{"kuata fakaʻemipaea"}
+                other{"kuata fakaʻemipaea ʻe {0}"}
             }
             tablespoon{
                 dnam{"sēpuni tēpile"}
@@ -857,7 +905,7 @@ to{
                 other{"{0} mi/kā"}
             }
             mile-per-gallon-imperial{
-                other{"{0}m/kāʻe"}
+                other{"{0}m/kāʻem"}
             }
         }
         coordinate{
@@ -1438,8 +1486,8 @@ to{
                 other{"mi ʻe {0}/kā"}
             }
             mile-per-gallon-imperial{
-                dnam{"mi/kāʻem"}
-                other{"mi ʻe {0}/kāʻem"}
+                dnam{"mi/kā-ʻem"}
+                other{"mi ʻe {0}/kā-ʻem"}
             }
         }
         coordinate{
@@ -1635,6 +1683,10 @@ to{
             }
         }
         graphics{
+            dot{
+                dnam{"toti"}
+                other{"toti ʻe {0}"}
+            }
             dot-per-centimeter{
                 dnam{"toti/sm"}
                 other{"toti ʻe {0}/sm"}
@@ -1677,6 +1729,10 @@ to{
             decimeter{
                 dnam{"tm"}
                 other{"tm ʻe {0}"}
+            }
+            earth-radius{
+                dnam{"L⊕"}
+                other{"L⊕ ʻe {0}"}
             }
             fathom{
                 dnam{"ofa"}
@@ -1756,6 +1812,14 @@ to{
             }
         }
         light{
+            candela{
+                dnam{"ktl"}
+                other{"ktl ʻe {0}"}
+            }
+            lumen{
+                dnam{"lm"}
+                other{"lm ʻe {0}"}
+            }
             lux{
                 dnam{"lx"}
                 other{"lx ʻe {0}"}
@@ -1777,6 +1841,10 @@ to{
             earth-mass{
                 dnam{"mamafa ⊕"}
                 other{"mamafa ⊕ ʻe {0}"}
+            }
+            grain{
+                dnam{"tenga"}
+                other{"tenga ʻe {0}"}
             }
             gram{
                 dnam{"k"}
@@ -1996,6 +2064,22 @@ to{
                 dnam{"tl"}
                 other{"tl ʻe {0}"}
             }
+            dessert-spoon{
+                dnam{"sēpu"}
+                other{"sēpu ʻe {0}"}
+            }
+            dessert-spoon-imperial{
+                dnam{"sēpu-ʻem"}
+                other{"sēpu-ʻem ʻe {0}"}
+            }
+            dram{
+                dnam{"tlmu-tf"}
+                other{"tlmu-tf ʻe {0}"}
+            }
+            drop{
+                dnam{"tltā"}
+                other{"tltā ʻe {0}"}
+            }
             fluid-ounce{
                 dnam{"ʻau-tf"}
                 other{"ʻau-tf ʻe {0}"}
@@ -2010,13 +2094,17 @@ to{
                 per{"{0}/kā"}
             }
             gallon-imperial{
-                dnam{"kāʻem"}
-                other{"kāʻem ʻe {0}"}
-                per{"{0} / kāʻem"}
+                dnam{"kāʻ-em"}
+                other{"kā-ʻem ʻe {0}"}
+                per{"{0} / kā-ʻem"}
             }
             hectoliter{
                 dnam{"hl"}
                 other{"hl ʻe {0}"}
+            }
+            jigger{
+                dnam{"sike"}
+                other{"sike ʻe {0}"}
             }
             liter{
                 dnam{"l"}
@@ -2031,6 +2119,10 @@ to{
                 dnam{"ml"}
                 other{"ml ʻe {0}"}
             }
+            pinch{
+                dnam{"kiʻimeʻi"}
+                other{"kiʻimeʻi ʻe {0}"}
+            }
             pint{
                 dnam{"pt"}
                 other{"pt ʻe {0}"}
@@ -2042,6 +2134,10 @@ to{
             quart{
                 dnam{"ku"}
                 other{"ku ʻe {0}"}
+            }
+            quart-imperial{
+                dnam{"ku-ʻem"}
+                other{"ku-ʻem ʻe {0}"}
             }
             tablespoon{
                 dnam{"sētē"}

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ku{
     Keys{
         calendar{"salname"}
@@ -268,7 +269,6 @@ ku{
             roman{"hejmarên romî"}
         }
     }
-    Version{"37"}
     codePatterns{
         language{"ziman: {0}"}
         script{"nivîs: {0}"}

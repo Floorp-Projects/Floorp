@@ -26,6 +26,7 @@
 #include "ucm.h"
 #include "makeconv.h"
 #include "genmbcs.h"
+#include "toolutil.h"
 
 /*
  * TODO: Split this file into toUnicode, SBCSFromUnicode and MBCSFromUnicode files.

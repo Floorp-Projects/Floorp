@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 uk{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абіджан"}
@@ -637,7 +637,7 @@ uk{
             ec{"Восток"}
         }
         "Arctic:Longyearbyen"{
-            ec{"Лонґйїр"}
+            ec{"Лонгʼїр"}
         }
         "Asia:Aden"{
             ec{"Аден"}
@@ -673,7 +673,7 @@ uk{
             ec{"Баку"}
         }
         "Asia:Bangkok"{
-            ec{"Банґкок"}
+            ec{"Бангкок"}
         }
         "Asia:Barnaul"{
             ec{"Барнаул"}
@@ -763,7 +763,7 @@ uk{
             ec{"Куала-Лумпур"}
         }
         "Asia:Kuching"{
-            ec{"Кучінґ"}
+            ec{"Кучинг"}
         }
         "Asia:Kuwait"{
             ec{"Кувейт"}
@@ -817,7 +817,7 @@ uk{
             ec{"Кизилорда"}
         }
         "Asia:Rangoon"{
-            ec{"Янґон"}
+            ec{"Янгон"}
         }
         "Asia:Riyadh"{
             ec{"Ер-Ріяд"}
@@ -973,7 +973,7 @@ uk{
             ec{"Афіни"}
         }
         "Europe:Belgrade"{
-            ec{"Белґрад"}
+            ec{"Белград"}
         }
         "Europe:Berlin"{
             ec{"Берлін"}
@@ -997,17 +997,17 @@ uk{
             ec{"Кишинів"}
         }
         "Europe:Copenhagen"{
-            ec{"Копенгаґен"}
+            ec{"Копенгаген"}
         }
         "Europe:Dublin"{
             ec{"Дублін"}
             ld{"за літнім часом в Ірландії"}
         }
         "Europe:Gibraltar"{
-            ec{"Ґібралтар"}
+            ec{"Гібралтар"}
         }
         "Europe:Guernsey"{
-            ec{"Ґернсі"}
+            ec{"Гернсі"}
         }
         "Europe:Helsinki"{
             ec{"Гельсінкі"}
@@ -1041,7 +1041,7 @@ uk{
             ld{"за літнім часом у Великій Британії"}
         }
         "Europe:Luxembourg"{
-            ec{"Люксембурґ"}
+            ec{"Люксембург"}
         }
         "Europe:Madrid"{
             ec{"Мадрид"}
@@ -1083,7 +1083,7 @@ uk{
             ec{"Самара"}
         }
         "Europe:San_Marino"{
-            ec{"Сан-Маріно"}
+            ec{"Сан-Марино"}
         }
         "Europe:Sarajevo"{
             ec{"Сараєво"}
@@ -1134,7 +1134,7 @@ uk{
             ec{"Варшава"}
         }
         "Europe:Zagreb"{
-            ec{"Заґреб"}
+            ec{"Загреб"}
         }
         "Europe:Zaporozhye"{
             ec{"Запоріжжя"}
@@ -1209,13 +1209,13 @@ uk{
             ec{"Ґалапаґос"}
         }
         "Pacific:Gambier"{
-            ec{"Ґамбʼєр"}
+            ec{"Гамбʼє"}
         }
         "Pacific:Guadalcanal"{
-            ec{"Ґуадалканал"}
+            ec{"Гуадалканал"}
         }
         "Pacific:Guam"{
-            ec{"Ґуам"}
+            ec{"Гуам"}
         }
         "Pacific:Honolulu"{
             ec{"Гонолулу"}
@@ -1269,7 +1269,7 @@ uk{
             ec{"Порт-Морсбі"}
         }
         "Pacific:Rarotonga"{
-            ec{"Раротонґа"}
+            ec{"Раротонга"}
         }
         "Pacific:Saipan"{
             ec{"Сайпан"}
@@ -1281,7 +1281,7 @@ uk{
             ec{"Тарава"}
         }
         "Pacific:Tongatapu"{
-            ec{"Тонґатапу"}
+            ec{"Тонгатапу"}
         }
         "Pacific:Truk"{
             ec{"Чуук"}
@@ -1529,7 +1529,7 @@ uk{
             ls{"за часом на Французьких Південних і Антарктичних територіях"}
         }
         "meta:GMT"{
-            ls{"за Ґрінвічем"}
+            ls{"за Гринвічем"}
         }
         "meta:Galapagos"{
             ls{"за часом Ґалапаґосу"}
@@ -1820,7 +1820,7 @@ uk{
             ls{"за часом на Сейшельських Островах"}
         }
         "meta:Singapore"{
-            ls{"за часом у Сінґапурі"}
+            ls{"за часом у Сінгапурі"}
         }
         "meta:Solomon"{
             ls{"за часом на Соломонових Островах"}
@@ -1849,9 +1849,9 @@ uk{
             ls{"за часом на островах Токелау"}
         }
         "meta:Tonga"{
-            ld{"за літнім часом на островах Тонґа"}
-            lg{"за часом на островах Тонґа"}
-            ls{"за стандартним часом на островах Тонґа"}
+            ld{"за літнім часом на островах Тонга"}
+            lg{"за часом на островах Тонга"}
+            ls{"за стандартним часом на островах Тонга"}
         }
         "meta:Truk"{
             ls{"за часом на островах Чуук"}

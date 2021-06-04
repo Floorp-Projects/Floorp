@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hu{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -403,6 +403,11 @@ hu{
             }
         }
         graphics{
+            dot{
+                dnam{"képpont"}
+                one{"képpont"}
+                other{"{0} képpont"}
+            }
             dot-per-centimeter{
                 dnam{"pont per centiméter"}
                 one{"{0} pont per centiméter"}
@@ -456,11 +461,26 @@ hu{
                 one{"{0} deciméter"}
                 other{"{0} deciméter"}
             }
+            earth-radius{
+                dnam{"földsugár"}
+                one{"{0} földsugár"}
+                other{"{0} földsugár"}
+            }
+            fathom{
+                dnam{"öl"}
+                one{"{0} öl"}
+                other{"{0} öl"}
+            }
             foot{
                 dnam{"láb"}
                 one{"{0} láb"}
                 other{"{0} láb"}
                 per{"{0}/láb"}
+            }
+            furlong{
+                dnam{"furlong"}
+                one{"{0} furlong"}
+                other{"{0} furlong"}
             }
             inch{
                 dnam{"hüvelyk"}
@@ -542,6 +562,16 @@ hu{
             }
         }
         light{
+            candela{
+                dnam{"kandela"}
+                one{"{0} kandela"}
+                other{"{0} kandela"}
+            }
+            lumen{
+                dnam{"lumen"}
+                one{"{0} lumen"}
+                other{"{0} lumen"}
+            }
             lux{
                 dnam{"lux"}
                 one{"{0} lux"}
@@ -568,6 +598,11 @@ hu{
                 dnam{"Föld-tömeg"}
                 one{"{0} Föld-tömeg"}
                 other{"{0} Föld-tömeg"}
+            }
+            grain{
+                dnam{"grain"}
+                one{"{0} grain"}
+                other{"{0} grain"}
             }
             gram{
                 dnam{"gramm"}
@@ -624,9 +659,9 @@ hu{
                 other{"{0} stone"}
             }
             ton{
-                dnam{"tonna"}
-                one{"{0} tonna"}
-                other{"{0} tonna"}
+                dnam{"amerikai tonna"}
+                one{"{0} amerikai tonna"}
+                other{"{0} amerikai tonna"}
             }
         }
         power{
@@ -775,6 +810,11 @@ hu{
                 one{"{0} hordó"}
                 other{"{0} hordó"}
             }
+            bushel{
+                dnam{"véka"}
+                one{"{0} véka"}
+                other{"{0} véka"}
+            }
             centiliter{
                 dnam{"centiliter"}
                 one{"{0} centiliter"}
@@ -832,6 +872,26 @@ hu{
                 one{"{0} deciliter"}
                 other{"{0} deciliter"}
             }
+            dessert-spoon{
+                dnam{"desszertkanál"}
+                one{"{0} desszertkanál"}
+                other{"{0} desszertkanál"}
+            }
+            dessert-spoon-imperial{
+                dnam{"bir. desszertkanál"}
+                one{"{0} bir. desszertkanál"}
+                other{"{0} bir. desszertkanál"}
+            }
+            dram{
+                dnam{"dram"}
+                one{"{0} dram"}
+                other{"{0} dram"}
+            }
+            drop{
+                dnam{"csepp"}
+                one{"{0} csepp"}
+                other{"{0} csepp"}
+            }
             fluid-ounce{
                 dnam{"folyadékuncia"}
                 one{"{0} folyadékuncia"}
@@ -859,6 +919,11 @@ hu{
                 one{"{0} hektoliter"}
                 other{"{0} hektoliter"}
             }
+            jigger{
+                dnam{"adagolópohár"}
+                one{"{0} adagolópohár"}
+                other{"{0} adagolópohár"}
+            }
             liter{
                 dnam{"liter"}
                 one{"{0} liter"}
@@ -875,6 +940,11 @@ hu{
                 one{"{0} milliliter"}
                 other{"{0} milliliter"}
             }
+            pinch{
+                dnam{"csipet"}
+                one{"{0} csipet"}
+                other{"{0} csipet"}
+            }
             pint{
                 dnam{"pint"}
                 one{"{0} pint"}
@@ -889,6 +959,11 @@ hu{
                 dnam{"quart"}
                 one{"{0} quart"}
                 other{"{0} quart"}
+            }
+            quart-imperial{
+                dnam{"birodalmi kvart"}
+                one{"{0} birodalmi kvart"}
+                other{"{0} birodalmi kvart"}
             }
             tablespoon{
                 dnam{"evőkanál"}
@@ -995,8 +1070,8 @@ hu{
                 per{"{0}/nap"}
             }
             hour{
-                dnam{"h"}
-                one{"{0} h"}
+                dnam{"ó"}
+                one{"{0} ó"}
                 other{"{0} h"}
                 per{"{0}/h"}
             }
@@ -1006,9 +1081,9 @@ hu{
                 other{"{0} ms"}
             }
             minute{
-                dnam{"min"}
-                one{"{0} min"}
-                other{"{0} min"}
+                dnam{"p"}
+                one{"{0} p"}
+                other{"{0} p"}
                 per{"{0}/min"}
             }
             month{
@@ -1456,9 +1531,9 @@ hu{
             }
             hour{
                 dnam{"h"}
-                one{"{0} h"}
-                other{"{0} h"}
-                per{"{0}/h"}
+                one{"{0} ó"}
+                other{"{0} ó"}
+                per{"{0}/ó"}
             }
             microsecond{
                 dnam{"μs"}
@@ -1471,10 +1546,10 @@ hu{
                 other{"{0} ms"}
             }
             minute{
-                dnam{"min"}
-                one{"{0} min"}
-                other{"{0} min"}
-                per{"{0}/min"}
+                dnam{"p"}
+                one{"{0} p"}
+                other{"{0} p"}
+                per{"{0}/p"}
             }
             month{
                 dnam{"hónap"}
@@ -1588,6 +1663,11 @@ hu{
             }
         }
         graphics{
+            dot{
+                dnam{"képpont"}
+                one{"{0} képpont"}
+                other{"{0} képpont"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 one{"{0} dpcm"}
@@ -1622,11 +1702,21 @@ hu{
                 one{"{0} dm"}
                 other{"{0} dm"}
             }
+            fathom{
+                dnam{"öl"}
+                one{"{0} öl"}
+                other{"{0} öl"}
+            }
             foot{
                 dnam{"láb"}
                 one{"{0} láb"}
                 other{"{0} láb"}
                 per{"{0}/láb"}
+            }
+            furlong{
+                dnam{"furlong"}
+                one{"{0} fur"}
+                other{"{0} fur"}
             }
             inch{
                 dnam{"hüvelyk"}
@@ -1717,6 +1807,11 @@ hu{
                 dnam{"Kt"}
                 one{"{0} Kt"}
                 other{"{0} Kt"}
+            }
+            grain{
+                dnam{"grain"}
+                one{"{0} grain"}
+                other{"{0} grain"}
             }
             gram{
                 dnam{"gram"}
@@ -1823,8 +1918,8 @@ hu{
             }
             millimeter-ofhg{
                 dnam{"Hgmm"}
-                one{"{0} mm Hg"}
-                other{"{0} mm Hg"}
+                one{"{0} Hgmm"}
+                other{"{0} Hgmm"}
             }
             pascal{
                 dnam{"Pa"}
@@ -1899,6 +1994,11 @@ hu{
                 one{"{0} hordó"}
                 other{"{0} hordó"}
             }
+            bushel{
+                dnam{"véka"}
+                one{"{0} véka"}
+                other{"{0} véka"}
+            }
             centiliter{
                 dnam{"cl"}
                 one{"{0} cl"}
@@ -1956,6 +2056,26 @@ hu{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"desszertkanál"}
+                one{"{0} desszertkanál"}
+                other{"{0} desszertkanál"}
+            }
+            dessert-spoon-imperial{
+                dnam{"bir. desszertkanál"}
+                one{"{0} bir. desszertkanál"}
+                other{"{0} bir. desszertkanál"}
+            }
+            dram{
+                dnam{"fluid dram"}
+                one{"{0} fl dram"}
+                other{"{0} fl dram"}
+            }
+            drop{
+                dnam{"csepp"}
+                one{"{0} csepp"}
+                other{"{0} csepp"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -1983,6 +2103,11 @@ hu{
                 one{"{0} hl"}
                 other{"{0} hl"}
             }
+            jigger{
+                dnam{"adagolópohár"}
+                one{"{0} adagolópohár"}
+                other{"{0} adagolópohár"}
+            }
             liter{
                 dnam{"l"}
                 one{"{0} l"}
@@ -1999,6 +2124,11 @@ hu{
                 one{"{0} ml"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"csipet"}
+                one{"{0} csipet"}
+                other{"{0} csipet"}
+            }
             pint{
                 dnam{"pt"}
                 one{"{0} pt"}
@@ -2013,6 +2143,11 @@ hu{
                 dnam{"qt"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"bir. qt"}
+                one{"{0} bir. qt"}
+                other{"{0} bir. qt"}
             }
             tablespoon{
                 dnam{"ek."}

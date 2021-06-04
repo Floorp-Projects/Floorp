@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bs{
     Currencies{
         ADP{
@@ -84,11 +85,15 @@ bs{
         }
         BAD{
             "BAD",
-            "Bosansko-Hercegovački dinar",
+            "Bosanskohercegovački dinar",
         }
         BAM{
             "KM",
             "Bosanskohercegovačka konvertibilna marka",
+        }
+        BAN{
+            "BAN",
+            "Bosanskohercegovački novi dinar",
         }
         BBD{
             "BBD",
@@ -113,6 +118,10 @@ bs{
         BGL{
             "BGL",
             "Bugarski tvrdi lev",
+        }
+        BGM{
+            "BGM",
+            "Bugarski socijalistički lev",
         }
         BGN{
             "BGN",
@@ -234,6 +243,10 @@ bs{
             "CHW",
             "WIR franak",
         }
+        CLE{
+            "CLE",
+            "Čileanski eskudo",
+        }
         CLF{
             "CLF",
             "Čileanski unidades de fomento",
@@ -246,6 +259,10 @@ bs{
             "CNH",
             "Kineski juan (izvanteritorijalni)",
         }
+        CNX{
+            "CNX",
+            "Dolar kineske narodne banke",
+        }
         CNY{
             "CNY",
             "Kineski juan",
@@ -253,6 +270,10 @@ bs{
         COP{
             "COP",
             "Kolumbijski pezos",
+        }
+        COU{
+            "COU",
+            "Kolumbijski Unidade real de valor",
         }
         CRC{
             "CRC",
@@ -609,6 +630,14 @@ bs{
         MAF{
             "MAF",
             "Marokanski franak",
+        }
+        MCF{
+            "MCF",
+            "Monegaskaški franak",
+        }
+        MDC{
+            "MDC",
+            "Moldavski kupon",
         }
         MDL{
             "MDL",
@@ -1122,6 +1151,10 @@ bs{
             "YUN",
             "Jugoslovenski konvertibilni dinar",
         }
+        YUR{
+            "YUR",
+            "Jugoslovenski reformirani dinar",
+        }
         ZAL{
             "ZAL",
             "Južnoafrički rand (finansijski)",
@@ -1324,6 +1357,16 @@ bs{
             one{"argentinski austral"}
             other{"argentinski australs"}
         }
+        ARL{
+            few{"argentinska pezosa leja"}
+            one{"argentinski pezos lej"}
+            other{"argentinskih pezosa leja"}
+        }
+        ARM{
+            few{"argentinska pezosa moned nacional"}
+            one{"argentinski pezos monedo nacional"}
+            other{"argentinskih pezosa monedo nacional"}
+        }
         ARP{
             few{"argentinska pezosa (1983–1985)"}
             one{"argentinski pezo (1983–1985)"}
@@ -1360,14 +1403,19 @@ bs{
             other{"azerbejdžanskih manata"}
         }
         BAD{
-            few{"Bosansko-Hercegovačka dinara"}
-            one{"bosansko-hercegovački dinar"}
-            other{"bosansko-hercegovačkih dinara"}
+            few{"Bosanskohercegovačka dinara"}
+            one{"bosanskohercegovački dinar"}
+            other{"bosanskohercegovačkih dinara"}
         }
         BAM{
             few{"bosanskohercegovačke konvertibilne marke"}
             one{"bosanskohercegovačka konvertibilna marka"}
             other{"bosanskohercegovačkih konvertibilnih maraka"}
+        }
+        BAN{
+            few{"bosanskohercegovački novi dinari"}
+            one{"bosanskohercegovački novi dinar"}
+            other{"bosanskohercegovački novi dinar"}
         }
         BBD{
             few{"barbadoska dolara"}
@@ -1398,6 +1446,11 @@ bs{
             few{"bugarska tvrda leva"}
             one{"bugarski tvrdi lev"}
             other{"bugarskih tvrdih leva"}
+        }
+        BGM{
+            few{"bugarska socijalistička leva"}
+            one{"bugarski socijalistički lev"}
+            other{"bugarskih socijalističkih leva"}
         }
         BGN{
             few{"bugarska leva"}
@@ -1549,6 +1602,11 @@ bs{
             one{"WIR franak"}
             other{"WIR franak"}
         }
+        CLE{
+            few{"čileanska eskuda"}
+            one{"čileanski eskudo"}
+            other{"čileanskih eskuda"}
+        }
         CLF{
             few{"čileanska unidades de fomentos"}
             one{"čileanski unidades de fomentos"}
@@ -1563,6 +1621,11 @@ bs{
             few{"kineska juana (izvanteritorijalni)"}
             one{"kineski juan (izvanteritorijalni)"}
             other{"kineskih juana (izvanteritorijalni)"}
+        }
+        CNX{
+            few{"dolara kineske narodne banke"}
+            one{"dolar kineske narodne banke"}
+            other{"dolara kineske narodne banke"}
         }
         CNY{
             few{"kineska juana"}
@@ -2018,6 +2081,16 @@ bs{
             few{"marokanska franka"}
             one{"marokanski franak"}
             other{"marokanski franak"}
+        }
+        MCF{
+            few{"monegaskaška franka"}
+            one{"monegaskaški franak"}
+            other{"monegaskaških franaka"}
+        }
+        MDC{
+            few{"moldovanska kupona"}
+            one{"moldovanski kupon"}
+            other{"moldovanskih kupona"}
         }
         MDL{
             few{"moldavska leja"}
@@ -2659,6 +2732,11 @@ bs{
             one{"jugoslovenski konvertibilni dinar"}
             other{"jugoslovenskih konvertibilnih dinara"}
         }
+        YUR{
+            few{"jugoslovenska reformirana dinara"}
+            one{"jugoslovenski reformirani dinar"}
+            other{"jugoslovenskih reformiranih dinara"}
+        }
         ZAL{
             few{"južnoafrička randa (financijska)"}
             one{"južnoafrički rand (financijski)"}
@@ -2710,5 +2788,4 @@ bs{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"37"}
 }

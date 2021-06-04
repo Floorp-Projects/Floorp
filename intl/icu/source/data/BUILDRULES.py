@@ -362,7 +362,7 @@ def generate_misc(config, io, common_vars):
         RepeatedExecutionRequest(
             name = "misc_res",
             category = "misc",
-            dep_targets = [],
+            dep_targets = [DepTarget("cnvalias")], # ICU-21175
             input_files = input_files,
             output_files = output_files,
             tool = IcuTool("genrb"),

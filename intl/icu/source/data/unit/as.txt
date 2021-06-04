@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 as{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -424,11 +424,26 @@ as{
                 one{"{0} ডেচিমিটাৰ"}
                 other{"{0} ডেচিমিটাৰ"}
             }
+            earth-radius{
+                dnam{"পৃথিৱীৰ ব্যাসাৰ্ধ"}
+                one{"{0} পৃথিৱীৰ ব্যাসাৰ্ধ"}
+                other{"{0} পৃথিৱীৰ ব্যাসাৰ্ধ"}
+            }
+            fathom{
+                dnam{"ফাথম"}
+                one{"{0} ফাথম"}
+                other{"{0} ফাথম"}
+            }
             foot{
                 dnam{"ফুট"}
                 one{"{0} ফুট"}
                 other{"{0} ফুট"}
                 per{"{0} প্ৰতি ফুট"}
+            }
+            furlong{
+                dnam{"ফাৰ্লং"}
+                one{"{0} ফাৰ্লং"}
+                other{"{0} ফাৰ্লং"}
             }
             inch{
                 dnam{"ইঞ্চি"}
@@ -510,6 +525,16 @@ as{
             }
         }
         light{
+            candela{
+                dnam{"কেণ্ডেলা"}
+                one{"{0} কেণ্ডেলা"}
+                other{"{0} কেণ্ডেলা"}
+            }
+            lumen{
+                dnam{"লুমেন"}
+                one{"{0} লুমেন"}
+                other{"{0} লুমেন"}
+            }
             lux{
                 dnam{"লাক্স"}
                 one{"{0} লাক্স"}
@@ -536,6 +561,11 @@ as{
                 dnam{"আৰ্থ মাছ"}
                 one{"{0} আৰ্থ মাছ"}
                 other{"{0} আৰ্থ মাছ"}
+            }
+            grain{
+                dnam{"গ্ৰেইন"}
+                one{"{0} গ্ৰেইন"}
+                other{"{0} গ্ৰেইন"}
             }
             gram{
                 dnam{"গ্ৰাম"}
@@ -585,6 +615,11 @@ as{
                 dnam{"সৌৰ ভৰ"}
                 one{"{0} সৌৰ ভৰ"}
                 other{"{0} সৌৰ ভৰ"}
+            }
+            stone{
+                dnam{"ষ্ট’ন"}
+                one{"{0} ষ্ট'ন"}
+                other{"{0} ষ্ট'ন"}
             }
             ton{
                 dnam{"টন"}
@@ -661,9 +696,9 @@ as{
                 other{"{0} মিলিমিটাৰ মাৰ্কিউৰী"}
             }
             pound-force-per-square-inch{
-                dnam{"প্ৰতি বৰ্গ ইঞ্চি পাউণ্ড"}
-                one{"{0} প্ৰতি বৰ্গ ইঞ্চি পাউণ্ড"}
-                other{"{0} প্ৰতি বৰ্গ ইঞ্চি পাউণ্ড"}
+                dnam{"প্ৰতি বৰ্গ ইঞ্চিত পাউণ্ড"}
+                one{"{0} প্ৰতি বৰ্গ ইঞ্চিত পাউণ্ড"}
+                other{"{0} প্ৰতি বৰ্গ ইঞ্চিত পাউণ্ড"}
             }
         }
         speed{
@@ -733,6 +768,11 @@ as{
                 one{"{0} বেৰেল"}
                 other{"{0} বেৰেল"}
             }
+            bushel{
+                dnam{"বুশ্বেল"}
+                one{"{0} বুশ্লেল"}
+                other{"{0} বুশ্বেল"}
+            }
             centiliter{
                 dnam{"ছেণ্টিলিটাৰ"}
                 one{"{0} ছেণ্টিলিটাৰ"}
@@ -790,6 +830,26 @@ as{
                 one{"{0} ডেচিলিটাৰ"}
                 other{"{0} ডেচিলিটাৰ"}
             }
+            dessert-spoon{
+                dnam{"ডেজাৰ্ট চামুচ"}
+                one{"{0} ডেজাৰ্ট চামুচ"}
+                other{"{0} ডেজাৰ্ট চামুচ"}
+            }
+            dessert-spoon-imperial{
+                dnam{"ইম্পেৰিয়েল ডেজাৰ্ট চামুচ"}
+                one{"{0} ইম্পেৰিয়েল ডেজাৰ্ট চামুচ"}
+                other{"{0} ইম্পেৰিয়েল ডেজাৰ্ট চামুচ"}
+            }
+            dram{
+                dnam{"ড্ৰাম"}
+                one{"{0} ড্ৰাম"}
+                other{"{0} ড্ৰাম"}
+            }
+            drop{
+                dnam{"ড্ৰপ"}
+                one{"{0} ড্ৰপ"}
+                other{"{0} ড্ৰপ"}
+            }
             fluid-ounce{
                 dnam{"ফ্লুইড আউন্স"}
                 one{"{0} ফ্লুইড আউন্স"}
@@ -817,6 +877,11 @@ as{
                 one{"{0} হেক্টোলিটাৰ"}
                 other{"{0} হেক্টোলিটাৰ"}
             }
+            jigger{
+                dnam{"জিগাৰ"}
+                one{"{0} জিগাৰ"}
+                other{"{0} জিগাৰ"}
+            }
             liter{
                 dnam{"লিটাৰ"}
                 one{"{0} লিটাৰ"}
@@ -833,6 +898,11 @@ as{
                 one{"{0} মিলিলিটাৰ"}
                 other{"{0} মিলিলিটাৰ"}
             }
+            pinch{
+                dnam{"পিঞ্চ"}
+                one{"{0} পিঞ্চ"}
+                other{"{0} পিঞ্চ"}
+            }
             pint{
                 dnam{"পিণ্ট"}
                 one{"{0} পিণ্ট"}
@@ -847,6 +917,11 @@ as{
                 dnam{"কোৱাৰ্ট"}
                 one{"{0} কোৱাৰ্ট"}
                 other{"{0} কোৱাৰ্ট"}
+            }
+            quart-imperial{
+                dnam{"ইম্পেৰিয়েল কুৱাৰ্ট"}
+                one{"{0} ইম্পেৰিয়েল কুৱাৰ্ট"}
+                other{"{0} ইম্পেৰিয়েল কুৱাৰ্ট"}
             }
             tablespoon{
                 dnam{"টেব’লস্পুন"}
@@ -1400,11 +1475,21 @@ as{
                 one{"{0} ডেঃ মিঃ"}
                 other{"{0} ডেঃ মিঃ"}
             }
+            fathom{
+                dnam{"ফাথম"}
+                one{"{0} ফাথম"}
+                other{"{0} ফাথম"}
+            }
             foot{
                 dnam{"ফুট"}
                 one{"{0} ফুঃ"}
                 other{"{0} ফুঃ"}
                 per{"{0}/ফুঃ"}
+            }
+            furlong{
+                dnam{"ফাৰ্লং"}
+                one{"{0} ফাৰ্লং"}
+                other{"{0} ফাৰ্লং"}
             }
             inch{
                 dnam{"ইঞ্চি"}
@@ -1513,6 +1598,11 @@ as{
                 one{"{0} M⊕"}
                 other{"{0} M⊕"}
             }
+            grain{
+                dnam{"গ্ৰেইন"}
+                one{"{0} গ্ৰেইন"}
+                other{"{0} গ্ৰেইন"}
+            }
             gram{
                 dnam{"গ্ৰাম"}
                 one{"{0} গ্ৰাঃ"}
@@ -1561,6 +1651,11 @@ as{
                 dnam{"সৌৰ ভৰ"}
                 one{"{0} M☉"}
                 other{"{0} M☉"}
+            }
+            stone{
+                dnam{"ষ্ট’ন"}
+                one{"{0} ষ্ট'ন"}
+                other{"{0} ষ্ট'ন"}
             }
             ton{
                 dnam{"টন"}
@@ -1709,6 +1804,9 @@ as{
                 one{"{0} bbl"}
                 other{"{0} bbl"}
             }
+            bushel{
+                dnam{"বুশ্বেল"}
+            }
             centiliter{
                 dnam{"ছেঃ লিঃ"}
                 one{"{0} ছেঃ লিঃ"}
@@ -1766,6 +1864,16 @@ as{
                 one{"{0} ডেঃ লিঃ"}
                 other{"{0} ডেঃ লিঃ"}
             }
+            dram{
+                dnam{"ড্ৰাম তৰল পদাৰ্থ"}
+                one{"{0} ড্ৰাম তৰল পদাৰ্থ"}
+                other{"{0} ড্ৰাম তৰল পদাৰ্থ"}
+            }
+            drop{
+                dnam{"ড্ৰপ"}
+                one{"{0} ড্ৰপ"}
+                other{"{0} ড্ৰপ"}
+            }
             fluid-ounce{
                 dnam{"ফ্লুঃ আঃ"}
                 one{"{0} ফ্লুঃ আঃ"}
@@ -1793,6 +1901,11 @@ as{
                 one{"{0} হেঃ লিঃ"}
                 other{"{0} হেঃ লিঃ"}
             }
+            jigger{
+                dnam{"জিগাৰ"}
+                one{"{0} জিগাৰ"}
+                other{"{0} জিগাৰ"}
+            }
             liter{
                 dnam{"লিটাৰ"}
                 one{"{0} লিঃ"}
@@ -1808,6 +1921,11 @@ as{
                 dnam{"মিঃ লিঃ"}
                 one{"{0} মিঃ লিঃ"}
                 other{"{0} মিঃ লিঃ"}
+            }
+            pinch{
+                dnam{"পিঞ্চ"}
+                one{"{0} পিঞ্চ"}
+                other{"{0} পিঞ্চ"}
             }
             pint{
                 dnam{"পিণ্ট"}

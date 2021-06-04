@@ -1,9 +1,11 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ur{
     AuxExemplarCharacters{
         "[؀؁؂؃\u200C\u200D\u200E\u200F \u064B \u064C \u064D \u064E \u064F \u0650 "
-        "\u0651 \u0652 \u0654 \u0656 \u0657 \u0658 \u0670 ۃ ٻ ٺ ټ ٽ ي]"
+        "\u0651 \u0652 \u0654 \u0656 \u0657 \u0658 \u0670 أ آ ں ؤ ۂ ۃ ئ ٻ ة ٺ ټ ٽ ه ي"
+        "]"
     }
     Ellipsis{
         final{"{0}…"}
@@ -14,8 +16,8 @@ ur{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{
-        "[ا أ آ ب پ ت ٹ ث ج چ ح خ د ڈ ذ ر ڑ ز ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن ں و ؤ ہ"
-        " ۂ ھ ء ی ئ ے ة ه]"
+        "[ا ب پ ت ٹ ث ج چ ح خ د ڈ ذ ر ڑ ز ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن و ہ ھ ء ی ے"
+        "]"
     }
     ExemplarCharactersIndex{
         "[ا ب پ ت ٹ ث ج چ ح خ د ڈ ذ ر ڑ ز ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن و ہ ھ ء ی ے"
@@ -33,6 +35,7 @@ ur{
                 scientificFormat{"#E0"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"٫"}
                 exponential{"×۱۰^"}
                 group{"٬"}
@@ -216,6 +219,7 @@ ur{
                 }
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
@@ -242,7 +246,6 @@ ur{
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -1315,9 +1318,9 @@ ur{
                         "محرم",
                         "صفر",
                         "ربیع الاوّل",
-                        "ربیع الثّانی",
+                        "ربیع الثانی",
                         "جمادی الاوّل",
-                        "جمادی الثّانی",
+                        "جمادی الثانی",
                         "رجب",
                         "شعبان",
                         "رمضان",
@@ -2439,7 +2442,7 @@ ur{
                 "[%٪﹪％]",
                 "[؉‰]",
                 "[\$﹩＄$]",
-                "[£₤]",
+                "[£₤￡]",
                 "[¥￥]",
                 "[₩￦]",
                 "[₨₹{Rp}{Rs}]",

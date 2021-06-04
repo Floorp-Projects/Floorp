@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ru_UA{
     Countries{
         AC{"О-в Вознесения"}
@@ -13,5 +14,4 @@ ru_UA{
         TL{"Тимор-Лесте"}
         UM{"Малые Тихоокеанские Отдаленные Острова США"}
     }
-    Version{"37"}
 }

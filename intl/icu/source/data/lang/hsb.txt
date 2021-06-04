@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hsb{
     Keys{
         calendar{"protyka"}
@@ -374,7 +375,6 @@ hsb{
             tibt{"tibetske cyfry"}
         }
     }
-    Version{"37"}
     codePatterns{
         language{"rěč: {0}"}
         script{"pismo: {0}"}

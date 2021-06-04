@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ko{
     AuxExemplarCharacters{
         "[ᄀ-ᄒ ᅡ-ᅵ ᆨ-ᇂ 丘 串 乃 久 乖 九 乞 乫 乾 亂 亘 交 京 仇 今 介 件 价 企 伋 伎 伽 佳 佶 侃 來 侊 供 係 俓 俱 個"
@@ -207,7 +208,6 @@ ko{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         buddhist{
             availableFormats{
@@ -301,6 +301,52 @@ ko{
                 yyyyQQQQ{"r년(U년) QQQQ"}
             }
             cyclicNameSets{
+                dayParts{
+                    format{
+                        abbreviated{
+                            "자",
+                            "축",
+                            "인",
+                            "묘",
+                            "진",
+                            "사",
+                            "오",
+                            "미",
+                            "신",
+                            "유",
+                            "술",
+                            "해",
+                        }
+                        narrow{
+                            "자",
+                            "축",
+                            "인",
+                            "묘",
+                            "진",
+                            "사",
+                            "오",
+                            "미",
+                            "신",
+                            "유",
+                            "술",
+                            "해",
+                        }
+                        wide{
+                            "자",
+                            "축",
+                            "인",
+                            "묘",
+                            "진",
+                            "사",
+                            "오",
+                            "미",
+                            "신",
+                            "유",
+                            "술",
+                            "해",
+                        }
+                    }
+                }
                 solarTerms{
                     format{
                         abbreviated{
@@ -394,6 +440,24 @@ ko{
                             "신유",
                             "임술",
                             "계해",
+                        }
+                    }
+                }
+                zodiacs{
+                    format{
+                        abbreviated{
+                            "쥐",
+                            "소",
+                            "호랑이",
+                            "토끼",
+                            "용",
+                            "뱀",
+                            "말",
+                            "양",
+                            "원숭이",
+                            "닭",
+                            "개",
+                            "돼지",
                         }
                     }
                 }
@@ -916,10 +980,10 @@ ko{
                 Ehm{"E a h:mm"}
                 Ehms{"E a h:mm:ss"}
                 Gy{"G y년"}
-                GyMMM{"G y년 MMM월"}
-                GyMMMEEEEd{"G y년 MMM월 d일 EEEE"}
-                GyMMMEd{"G y년 MMM월 d일 (E)"}
-                GyMMMd{"G y년 MMM월 d일"}
+                GyMMM{"G y년 M월"}
+                GyMMMEEEEd{"G y년 M월 d일 EEEE"}
+                GyMMMEd{"G y년 M월 d일 (E)"}
+                GyMMMd{"G y년 M월 d일"}
                 H{"H시"}
                 HHmmss{"HH:mm:ss"}
                 Hm{"HH:mm"}
@@ -928,10 +992,10 @@ ko{
                 MEEEEd{"M. d. EEEE"}
                 MEd{"M. d. (E)"}
                 MMM{"LLL"}
-                MMMEEEEd{"MMM월 d일 EEEE"}
-                MMMEd{"MMM월 d일 (E)"}
-                MMMMd{"MMMM월 d일"}
-                MMMd{"MMM월 d일"}
+                MMMEEEEd{"M월 d일 EEEE"}
+                MMMEd{"M월 d일 (E)"}
+                MMMMd{"M월 d일"}
+                MMMd{"M월 d일"}
                 Md{"M. d."}
                 d{"d일"}
                 h{"a h시"}
@@ -943,11 +1007,11 @@ ko{
                 yyyyM{"G y. M."}
                 yyyyMEEEEd{"G y. M. d. EEEE"}
                 yyyyMEd{"G y. M. d. (E)"}
-                yyyyMMM{"G y년 MMM월"}
-                yyyyMMMEEEEd{"G y년 MMM월 d일 EEEE"}
-                yyyyMMMEd{"G y년 MMM월 d일 (E)"}
-                yyyyMMMM{"G y년 MMMM월"}
-                yyyyMMMd{"G y년 MMM월 d일"}
+                yyyyMMM{"G y년 M월"}
+                yyyyMMMEEEEd{"G y년 M월 d일 EEEE"}
+                yyyyMMMEd{"G y년 M월 d일 (E)"}
+                yyyyMMMM{"G y년 M월"}
+                yyyyMMMd{"G y년 M월 d일"}
                 yyyyMd{"G y. M. d."}
                 yyyyQQQ{"G y년 QQQ"}
                 yyyyQQQQ{"G y년 QQQQ"}
@@ -978,21 +1042,21 @@ ko{
                     y{"GGGGG y년 M월 d일 E요일 ~ y년 M월 d일 E요일"}
                 }
                 GyMMM{
-                    G{"G y년 MMM ~ G y년 MMM"}
-                    M{"G y년 MMM ~ y년 MMM"}
-                    y{"G y년 MMM ~ y년 MMM"}
+                    G{"G y년 M월 ~ G y년 M월"}
+                    M{"G y년 M월 ~ y년 M월"}
+                    y{"G y년 M월 ~ y년 M월"}
                 }
                 GyMMMEd{
-                    G{"G y년 MMM d일 E요일 ~ G y년 MMM d일 E요일"}
-                    M{"G y년 MMM d일 E요일 ~ MMM d일 E요일"}
-                    d{"G y년 MMM d일 e요일 – MMM d일 e요일"}
-                    y{"G y년 MMM d일 E요일 ~ y년 MMM d일 E요일"}
+                    G{"G y년 M월 d일 E요일 ~ G y년 M월 d일 E요일"}
+                    M{"G y년 M월 d일 E요일 ~ M월 d일 E요일"}
+                    d{"G y년 M월 d일 e요일 – M월 d일 e요일"}
+                    y{"G y년 M월 d일 E요일 ~ y년 M월 d일 E요일"}
                 }
                 GyMMMd{
-                    G{"G y년 MMM d일 ~ y년 MMM d일"}
-                    M{"G y년 MMM d일 ~ MMM d일"}
-                    d{"G y년 MMM d일 ~ d일"}
-                    y{"G y년 MMM d일 ~ MMM y년 d일"}
+                    G{"G y년 M월 d일 ~ y년 M월 d일"}
+                    M{"G y년 M월 d일 ~ M월 d일"}
+                    d{"G y년 M월 d일 ~ d일"}
+                    y{"G y년 M월 d일 ~ y년 M월 d일"}
                 }
                 GyMd{
                     G{"GGGGG y년 M월 d일 ~ GGGGG y년 M월 d일"}
@@ -1022,7 +1086,7 @@ ko{
                     d{"M. d (E) ~ M. d (E)"}
                 }
                 MMM{
-                    M{"MMM ~ MMM"}
+                    M{"M월 ~ M월"}
                 }
                 MMMEEEEd{
                     M{"M월 d일 EEEE ~ M월 d일 EEEE"}

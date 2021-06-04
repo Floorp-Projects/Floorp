@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mua{
     AuxExemplarCharacters{"[q x]"}
     ExemplarCharacters{"[a ã b ɓ c d ɗ e ë ǝ f g h i ĩ j k l m n ŋ o õ p r s t u v ṽ w y z]"}
@@ -19,7 +20,6 @@ mua{
             }
         }
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{

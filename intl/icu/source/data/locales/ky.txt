@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ky{
     AuxExemplarCharacters{"[в ф ц щ ь]"}
     Ellipsis{
@@ -214,7 +215,6 @@ ky{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -841,7 +841,7 @@ ky{
         }
     }
     characterLabel{
-        activities{"аракеттер"}
+        activities{"аракет"}
         african_scripts{"африка жазуулары"}
         american_scripts{"америка жазуулары"}
         animal{"жаныбар"}
@@ -851,10 +851,10 @@ ky{
         box_drawing{"кутуча чийүү"}
         braille{"Брайль"}
         building{"имарат"}
-        bullets_stars{"маркерлер/жылдызчалар"}
+        bullets_stars{"маркер же жылдызча"}
         consonantal_jamo{"үнсүз жамо"}
         currency_symbols{"валюта белгилери"}
-        dash_connector{"тире/байламта"}
+        dash_connector{"тире же байламта"}
         digits{"сандар"}
         dingbats{"полиграфиялык белгилер"}
         divination_symbols{"төлгө белгиси"}
@@ -869,9 +869,9 @@ ky{
         food_drink{"тамак-аш жана суусундуктар"}
         format{"формат"}
         format_whitespace{"формат жана боштук"}
-        full_width_form_variant{"Толук жазы формасынын варианттары"}
+        full_width_form_variant{"толук жазы формасынын варианттары"}
         geometric_shapes{"геометриялык фигуралар"}
-        half_width_form_variant{"Жарым жазы формасынын варианттары"}
+        half_width_form_variant{"жарым жазы формасынын варианттары"}
         han_characters{"Хань белгилери"}
         han_radicals{"Хань уңгулары"}
         hanja{"Ханья"}
@@ -1764,9 +1764,15 @@ ky{
     listPattern{
         or{
             2{"{0} же {1}"}
-            end{"{0}, же {1}"}
+            end{"{0} же {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
+        }
+        or-narrow{
+            end{"{0} же {1}"}
+        }
+        or-short{
+            end{"{0} же {1}"}
         }
         standard{
             2{"{0} жана {1}"}

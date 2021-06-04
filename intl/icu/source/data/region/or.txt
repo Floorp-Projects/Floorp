@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 or{
     Countries{
         001{"ବିଶ୍ୱ"}
@@ -312,5 +313,4 @@ or{
         SZ{"ସ୍ୱାଜିଲ୍ୟାଣ୍ଡ"}
         TL{"ପୂର୍ବ ତିମୋର୍‌"}
     }
-    Version{"37"}
 }

@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lo{
     AuxExemplarCharacters{"[\u200B ໐ ໑ ໒ ໓ ໔ ໕ ໖ ໗ ໘ ໙]"}
     Ellipsis{
@@ -249,12 +250,11 @@ lo{
                 nan{"ບໍ່​ແມ່ນ​ໂຕ​ເລກ"}
                 perMille{"‰"}
                 percentSign{"%"}
-                superscriptingExponent{"×"}
             }
         }
         minimalPairs{
             ordinal{
-                one{"ລ້ຽວຂວາທຳອິດ."}
+                one{"ລ້ຽວຂວາໂຕທີ {0}."}
                 other{"ລ້ຽວຂວາທີ {0}."}
             }
             plural{
@@ -263,8 +263,14 @@ lo{
         }
         native{"laoo"}
     }
-    Version{"37"}
     calendar{
+        buddhist{
+            eras{
+                abbreviated{
+                    "ພ.ສ.",
+                }
+            }
+        }
         chinese{
             DateTimePatterns{
                 "H ໂມງ m ນາທີ ss ວິນາທີ zzzz",
@@ -2088,7 +2094,7 @@ lo{
         sport{"ກິລາ"}
         symbols{"ສັນຍາລັກ"}
         technical_symbols{"ສັນຍາລັກທາງເຕັກນິກ"}
-        tone_marks{"ັວັນນະຍຸດ"}
+        tone_marks{"ວັນນະຍຸດ"}
         travel{"ທ່ອງທ່ຽວ"}
         travel_places{"ທ່ອງທ່ຽວ ແລະ ສະຖານທີ່ຕ່າງໆ"}
         upwards_arrows{"ລູກສອນຊີ້ຂຶ້ນເທິງ"}
@@ -2780,9 +2786,12 @@ lo{
             end{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            end{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} ແລະ {1}"}
-            end{"{0}, {1}"}
+            end{"{0} ແລະ {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }

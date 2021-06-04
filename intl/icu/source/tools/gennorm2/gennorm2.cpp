@@ -104,7 +104,7 @@ main(int argc, char* argv[]) {
             "Reads the infiles with normalization data and\n"
             "creates a binary file, or a C source file (--csource), with the data,\n"
             "or writes a data file with the combined data (--combined).\n"
-            "See http://userguide.icu-project.org/transforms/normalization#TOC-Data-File-Syntax\n"
+            "See https://unicode-org.github.io/icu/userguide/transforms/normalization#data-file-syntax\n"
             "\n"
             "Alternate usage: %s [-options] a.txt b.txt minus p.txt q.txt -o outputfilename\n"
             "\n"

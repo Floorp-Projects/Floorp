@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 th{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -126,8 +126,8 @@ th{
         }
         consumption{
             liter-per-100-kilometer{
-                dnam{"ลิตรต่อ100 กิโลเมตร"}
-                other{"{0} ลิตรต่อ100 กิโลเมตร"}
+                dnam{"ลิตรต่อ 100 กิโลเมตร"}
+                other{"{0} ลิตรต่อ 100 กิโลเมตร"}
             }
             liter-per-kilometer{
                 dnam{"ลิตรต่อกิโลเมตร"}
@@ -337,6 +337,9 @@ th{
             }
         }
         graphics{
+            dot{
+                dnam{"ดอท"}
+            }
             dot-per-centimeter{
                 dnam{"จุดต่อเซนติเมตร"}
                 other{"{0} จุดต่อเซนติเมตร"}
@@ -376,10 +379,22 @@ th{
                 dnam{"เดซิเมตร"}
                 other{"{0} เดซิเมตร"}
             }
+            earth-radius{
+                dnam{"รัศมีของโลก"}
+                other{"{0} รัศมีของโลก"}
+            }
+            fathom{
+                dnam{"ฟาทอม"}
+                other{"{0} ฟาทอม"}
+            }
             foot{
                 dnam{"ฟุต"}
                 other{"{0} ฟุต"}
                 per{"{0} ต่อฟุต"}
+            }
+            furlong{
+                dnam{"เฟอร์ลอง"}
+                other{"{0} เฟอร์ลอง"}
             }
             inch{
                 dnam{"นิ้ว"}
@@ -446,6 +461,14 @@ th{
             }
         }
         light{
+            candela{
+                dnam{"แรงเทียน"}
+                other{"{0} แรงเทียน"}
+            }
+            lumen{
+                dnam{"ลูเมน"}
+                other{"{0} ลูเมน"}
+            }
             lux{
                 dnam{"ลักซ์"}
                 other{"{0} ลักซ์"}
@@ -467,6 +490,10 @@ th{
             earth-mass{
                 dnam{"มวลของโลก"}
                 other{"{0} มวลของโลก"}
+            }
+            grain{
+                dnam{"เกรน"}
+                other{"{0} เกรน"}
             }
             gram{
                 dnam{"กรัม"}
@@ -507,6 +534,10 @@ th{
             solar-mass{
                 dnam{"มวลดวงอาทิตย์"}
                 other{"{0} มวลดวงอาทิตย์"}
+            }
+            stone{
+                dnam{"สโตน"}
+                other{"{0} สโตน"}
             }
             ton{
                 dnam{"ตัน"}
@@ -636,6 +667,10 @@ th{
                 dnam{"บาร์เรล"}
                 other{"{0} บาร์เรล"}
             }
+            bushel{
+                dnam{"บุชเชล"}
+                other{"{0} บุชเชล"}
+            }
             centiliter{
                 dnam{"เซนติลิตร"}
                 other{"{0} เซนติลิตร"}
@@ -682,6 +717,22 @@ th{
                 dnam{"เดซิลิตร"}
                 other{"{0} เดซิลิตร"}
             }
+            dessert-spoon{
+                dnam{"ช้อนขนม"}
+                other{"{0} ช้อนขนม"}
+            }
+            dessert-spoon-imperial{
+                dnam{"ช้อนขนม - อังกฤษ"}
+                other{"{0} ช้อนขนม - อังกฤษ"}
+            }
+            dram{
+                dnam{"แดรม"}
+                other{"{0} แดรม"}
+            }
+            drop{
+                dnam{"หยด"}
+                other{"{0} หยด"}
+            }
             fluid-ounce{
                 dnam{"ฟลูอิดออนซ์"}
                 other{"{0} ฟลูอิดออนซ์"}
@@ -704,6 +755,10 @@ th{
                 dnam{"เฮกโตลิตร"}
                 other{"{0} เฮกโตลิตร"}
             }
+            jigger{
+                dnam{"จิกเกอร์"}
+                other{"{0} จิกเกอร์"}
+            }
             liter{
                 dnam{"ลิตร"}
                 other{"{0} ลิตร"}
@@ -717,6 +772,10 @@ th{
                 dnam{"มิลลิลิตร"}
                 other{"{0} มิลลิลิตร"}
             }
+            pinch{
+                dnam{"หยิบมือ"}
+                other{"{0} หยิบมือ"}
+            }
             pint{
                 dnam{"ไพนต์"}
                 other{"{0} ไพนต์"}
@@ -728,6 +787,10 @@ th{
             quart{
                 dnam{"ควอร์ต"}
                 other{"{0} ควอร์ต"}
+            }
+            quart-imperial{
+                dnam{"ควอร์ตอังกฤษ"}
+                other{"{0} ควอร์ตอังกฤษ"}
             }
             tablespoon{
                 dnam{"ช้อนโต๊ะ"}
@@ -781,7 +844,7 @@ th{
         }
         consumption{
             liter-per-100-kilometer{
-                dnam{"ล. /100 กม."}
+                dnam{"ล./100กม."}
                 other{"{0} ล./100กม."}
             }
         }
@@ -1066,7 +1129,7 @@ th{
         consumption{
             liter-per-100-kilometer{
                 dnam{"ล./100 กม."}
-                other{"{0} ล./100กม."}
+                other{"{0} ล./100 กม."}
             }
             liter-per-kilometer{
                 dnam{"ลิตร/กม."}
@@ -1271,6 +1334,12 @@ th{
                 other{"{0} MHz"}
             }
         }
+        graphics{
+            dot{
+                dnam{"ดอท"}
+                other{"{0} ดอท"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"หน่วยดาราศาสตร์"}
@@ -1285,10 +1354,16 @@ th{
                 dnam{"ดม."}
                 other{"{0} ดม."}
             }
+            fathom{
+                dnam{"ฟาทอม"}
+            }
             foot{
                 dnam{"ฟุต"}
                 other{"{0} ฟุต"}
                 per{"{0}/ฟุต"}
+            }
+            furlong{
+                dnam{"เฟอร์ลอง"}
             }
             inch{
                 dnam{"นิ้ว"}
@@ -1373,6 +1448,10 @@ th{
             earth-mass{
                 dnam{"มวลของโลก"}
             }
+            grain{
+                dnam{"เกรน"}
+                other{"{0} เกรน"}
+            }
             gram{
                 dnam{"กรัม"}
                 other{"{0} ก."}
@@ -1411,6 +1490,9 @@ th{
             }
             solar-mass{
                 dnam{"มวลดวงอาทิตย์"}
+            }
+            stone{
+                dnam{"สโตน"}
             }
             ton{
                 dnam{"ตัน"}
@@ -1517,6 +1599,9 @@ th{
             barrel{
                 dnam{"บาร์เรล"}
             }
+            bushel{
+                dnam{"บุชเชล"}
+            }
             centiliter{
                 dnam{"ซล."}
                 other{"{0} ซล."}
@@ -1563,6 +1648,21 @@ th{
                 dnam{"ดล."}
                 other{"{0} ดล."}
             }
+            dessert-spoon{
+                dnam{"ช้อนขนม"}
+                other{"{0} ช้อนขนม"}
+            }
+            dessert-spoon-imperial{
+                dnam{"ช้อนขนม - อังกฤษ"}
+                other{"{0} ช้อนขนม - อังกฤษ"}
+            }
+            dram{
+                dnam{"แดรมของเหลว"}
+            }
+            drop{
+                dnam{"หยด"}
+                other{"{0} หยด"}
+            }
             fluid-ounce{
                 dnam{"ฟลูอิดออนซ์"}
                 other{"{0} ฟลูอิดออนซ์"}
@@ -1581,6 +1681,10 @@ th{
                 dnam{"ฮล."}
                 other{"{0} ฮล."}
             }
+            jigger{
+                dnam{"จิกเกอร์"}
+                other{"{0} จิกเกอร์"}
+            }
             liter{
                 dnam{"ลิตร"}
                 other{"{0} ล."}
@@ -1593,6 +1697,10 @@ th{
             milliliter{
                 dnam{"มล."}
                 other{"{0} มล."}
+            }
+            pinch{
+                dnam{"หยิบมือ"}
+                other{"{0} หยิบมือ"}
             }
             pint{
                 dnam{"ไพนต์"}

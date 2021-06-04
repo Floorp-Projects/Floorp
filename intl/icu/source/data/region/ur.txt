@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ur{
     Countries{
         001{"دنیا"}
@@ -12,7 +13,7 @@ ur{
         014{"مشرقی افریقہ"}
         015{"شمالی افریقہ"}
         017{"وسطی افریقہ"}
-        018{"جنوبی افریقہ کے علاقہ"}
+        018{"جنوبی افریقہ کا علاقہ"}
         019{"امیریکاز"}
         021{"شمالی امریکہ کا علاقہ"}
         029{"کریبیائی"}
@@ -288,7 +289,7 @@ ur{
         WF{"ویلیز اور فیوٹیونا"}
         WS{"ساموآ"}
         XA{"بناوٹی لہجے"}
-        XB{"مصنوعی بیڑی"}
+        XB{"بناوٹی دو سمتی"}
         XK{"کوسووو"}
         YE{"یمن"}
         YT{"مایوٹ"}
@@ -313,5 +314,4 @@ ur{
         SZ{"سوازی لینڈ"}
         TL{"مشرقی تیمور"}
     }
-    Version{"37"}
 }

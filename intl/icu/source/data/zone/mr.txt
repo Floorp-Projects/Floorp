@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mr{
-    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"अबिद्जान"}
@@ -1013,7 +1013,7 @@ mr{
             ec{"हेलसिंकी"}
         }
         "Europe:Isle_of_Man"{
-            ec{"आइल ऑफ मॅन"}
+            ec{"आयल ऑफ मॅन"}
         }
         "Europe:Istanbul"{
             ec{"इस्तंबूल"}
@@ -1140,7 +1140,7 @@ mr{
             ec{"झापोरोझे"}
         }
         "Europe:Zurich"{
-            ec{"झुरिच"}
+            ec{"झुरिक"}
         }
         "Indian:Antananarivo"{
             ec{"अंटानानारिवो"}
@@ -1326,7 +1326,7 @@ mr{
         }
         "meta:Amazon"{
             ld{"अ‍ॅमेझॉन उन्हाळी वेळ"}
-            lg{"अॅमेझॉन वेळ"}
+            lg{"अ‍ॅमेझॉन वेळ"}
             ls{"अ‍ॅमेझॉन प्रमाण वेळ"}
         }
         "meta:America_Central"{
@@ -1520,7 +1520,7 @@ mr{
             ls{"पूर्व युरोपियन प्रमाण वेळ"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"अग्र-पौर्वात्य यूरोपीयन वेळ"}
+            ls{"अग्र-पौर्वात्य युरोपीयन वेळ"}
         }
         "meta:Europe_Western"{
             ld{"पश्चिम युरोपियन उन्हाळी वेळ"}

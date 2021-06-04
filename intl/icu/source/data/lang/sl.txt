@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sl{
     Keys{
         calendar{"koledar"}
@@ -138,11 +139,12 @@ sl{
         en{"angleščina"}
         en_AU{"avstralska angleščina"}
         en_CA{"kanadska angleščina"}
-        en_GB{"angleščina (VB)"}
-        en_US{"angleščina (ZDA)"}
+        en_GB{"britanska angleščina"}
+        en_US{"ameriška angleščina"}
         enm{"srednja angleščina"}
         eo{"esperanto"}
         es{"španščina"}
+        es_419{"latinskoameriška španščina"}
         es_ES{"evropska španščina"}
         es_MX{"mehiška španščina"}
         et{"estonščina"}
@@ -194,7 +196,7 @@ sl{
         hai{"haidščina"}
         haw{"havajščina"}
         he{"hebrejščina"}
-        hi{"hindujščina"}
+        hi{"hindijščina"}
         hil{"hiligajnonščina"}
         hit{"hetitščina"}
         hmn{"hmonščina"}
@@ -307,7 +309,7 @@ sl{
         men{"mende"}
         mer{"meru"}
         mfe{"morisjenščina"}
-        mg{"malagaščina"}
+        mg{"malgaščina"}
         mga{"srednja irščina"}
         mgh{"makuva-meto"}
         mgo{"meta"}
@@ -500,7 +502,7 @@ sl{
         vai{"vajščina"}
         ve{"venda"}
         vi{"vietnamščina"}
-        vo{"volapuk"}
+        vo{"volapik"}
         vot{"votjaščina"}
         vun{"vunjo"}
         wa{"valonščina"}
@@ -573,12 +575,12 @@ sl{
         Grek{"grški"}
         Gujr{"gudžaratski"}
         Guru{"gurmuki"}
-        Hanb{"Han + Bopomofo"}
+        Hanb{"han + bopomofo"}
         Hang{"hangul"}
         Hani{"kanji"}
         Hano{"hanunski"}
-        Hans{"poenostavljena pisava han"}
-        Hant{"tradicionalna pisava han"}
+        Hans{"poenostavljena pisava"}
+        Hant{"tradicionalna pisava"}
         Hebr{"hebrejski"}
         Hira{"hiragana"}
         Hmng{"pahavhmonska zlogovna pisava"}
@@ -586,7 +588,7 @@ sl{
         Hung{"staroogrski"}
         Inds{"induški"}
         Ital{"staroitalski"}
-        Jamo{"Jamo"}
+        Jamo{"jamo"}
         Java{"javanski"}
         Jpan{"japonski"}
         Kali{"karenski"}
@@ -662,6 +664,10 @@ sl{
         Zxxx{"nenapisano"}
         Zyyy{"splošno"}
         Zzzz{"neznan ali neveljaven zapis"}
+    }
+    Scripts%stand-alone{
+        Hans{"poenostavljena pisava han"}
+        Hant{"tradicionalna pisava han"}
     }
     Scripts%variant{
         Arab{"perzijskoarabski"}
@@ -878,7 +884,6 @@ sl{
         VALENCIA{"valencijski pravopis"}
         WADEGILE{"romanizacija Wade-Giles"}
     }
-    Version{"37"}
     characterLabelPattern{
         all{"{0} – vse"}
         category-list{"{0}: {1}"}
@@ -890,11 +895,13 @@ sl{
         other{"{0} – drugo"}
         scripts{"pisave – {0}"}
         strokes{
-            few{"{0} potez"}
+            few{"{0} poteze"}
             one{"{0} poteza"}
             other{"{0} potez"}
             two{"{0} potezi"}
         }
+        subscript{"podpisano {0}"}
+        superscript{"nadpisano {0}"}
     }
     codePatterns{
         language{"Jezik: {0}"}

@@ -3,31 +3,31 @@
 
 compact-short percent unit-width-narrow
   es-MX
-    0 %
-    92 k
-    -0.22 %
+    0%
+    92 k%
+    -0.22%
   zh-TW
     0%
-    9.2萬
+    9.2萬%
     -0.22%
   bn-BD
     ০%
-    ৯২ হা
+    ৯২ হা%
     -০.২২%
 
 compact-short percent unit-width-full-name
   es-MX
-    0 %
-    92 k
-    -0.22 %
+    0 por ciento
+    92 k por ciento
+    -0.22 por ciento
   zh-TW
     0%
-    9.2萬
+    9.2萬%
     -0.22%
   bn-BD
-    ০%
-    ৯২ হা
-    -০.২২%
+    ০শতাংশ
+    ৯২ হাশতাংশ
+    -০.২২শতাংশ
 
 compact-short currency/EUR unit-width-narrow
   es-MX
@@ -73,9 +73,9 @@ compact-short measure-unit/length-furlong unit-width-narrow
 
 compact-short measure-unit/length-furlong unit-width-full-name
   es-MX
-    0 fur
-    92 k fur
-    -0.22 fur
+    0 furlongs
+    92 k furlongs
+    -0.22 furlongs
   zh-TW
     0 化朗
     9.2萬 化朗
@@ -101,17 +101,17 @@ scientific/+ee/sign-always percent unit-width-narrow
 
 scientific/+ee/sign-always percent unit-width-full-name
   es-MX
-    0E+00 %
-    9.182736E+04 %
-    -2.2222E-01 %
+    0E+00 por ciento
+    9.182736E+04 por ciento
+    -2.2222E-01 por ciento
   zh-TW
     0E+00%
     9.182736E+04%
     -2.2222E-01%
   bn-BD
-    ০E+০০%
-    ৯.১৮২৭৩৬E+০৪%
-    -২.২২২২E-০১%
+    ০E+০০শতাংশ
+    ৯.১৮২৭৩৬E+০৪শতাংশ
+    -২.২২২২E-০১শতাংশ
 
 scientific/+ee/sign-always currency/EUR unit-width-narrow
   es-MX
@@ -157,9 +157,9 @@ scientific/+ee/sign-always measure-unit/length-furlong unit-width-narrow
 
 scientific/+ee/sign-always measure-unit/length-furlong unit-width-full-name
   es-MX
-    0E+00 fur
-    9.182736E+04 fur
-    -2.2222E-01 fur
+    0E+00 furlongs
+    9.182736E+04 furlongs
+    -2.2222E-01 furlongs
   zh-TW
     0E+00 化朗
     9.182736E+04 化朗
@@ -172,57 +172,57 @@ scientific/+ee/sign-always measure-unit/length-furlong unit-width-full-name
 compact-short percent precision-integer
   es-MX
     0 %
-    92 k
+    92 k %
     -0 %
   zh-TW
     0%
-    9萬
+    9萬%
     -0%
   bn-BD
     ০%
-    ৯২ হা
+    ৯২ হা%
     -০%
 
 compact-short percent .000
   es-MX
     0.000 %
-    91.827 k
+    91.827 k %
     -0.222 %
   zh-TW
     0.000%
-    9.183萬
+    9.183萬%
     -0.222%
   bn-BD
     ০.০০০%
-    ৯১.৮২৭ হা
+    ৯১.৮২৭ হা%
     -০.২২২%
 
 compact-short percent .##/@@@+
   es-MX
     0 %
-    91.83 k
+    91.83 k %
     -0.222 %
   zh-TW
     0%
-    9.18萬
+    9.18萬%
     -0.222%
   bn-BD
     ০%
-    ৯১.৮৩ হা
+    ৯১.৮৩ হা%
     -০.২২২%
 
 compact-short percent @@
   es-MX
     0.0 %
-    92 k
+    92 k %
     -0.22 %
   zh-TW
     0.0%
-    9.2萬
+    9.2萬%
     -0.22%
   bn-BD
     ০.০%
-    ৯২ হা
+    ৯২ হা%
     -০.২২%
 
 compact-short currency/EUR precision-integer
@@ -508,15 +508,15 @@ scientific/+ee/sign-always measure-unit/length-furlong @@
 compact-short percent rounding-mode-floor
   es-MX
     0 %
-    91 k
+    91 k %
     -0.23 %
   zh-TW
     0%
-    9.1萬
+    9.1萬%
     -0.23%
   bn-BD
     ০%
-    ৯১ হা
+    ৯১ হা%
     -০.২৩%
 
 compact-short currency/EUR rounding-mode-floor
@@ -592,15 +592,15 @@ scientific/+ee/sign-always measure-unit/length-furlong rounding-mode-floor
 compact-short percent integer-width/##00
   es-MX
     00 %
-    92 k
+    92 k %
     -00.22 %
   zh-TW
     00%
-    09.2萬
+    09.2萬%
     -00.22%
   bn-BD
     ০০%
-    ৯২ হা
+    ৯২ হা%
     -০০.২২%
 
 compact-short currency/EUR integer-width/##00
@@ -676,15 +676,15 @@ scientific/+ee/sign-always measure-unit/length-furlong integer-width/##00
 compact-short percent scale/0.5
   es-MX
     0 %
-    46 k
+    46 k %
     -0.11 %
   zh-TW
     0%
-    4.6萬
+    4.6萬%
     -0.11%
   bn-BD
     ০%
-    ৪৬ হা
+    ৪৬ হা%
     -০.১১%
 
 compact-short currency/EUR scale/0.5
@@ -760,15 +760,15 @@ scientific/+ee/sign-always measure-unit/length-furlong scale/0.5
 compact-short percent group-on-aligned
   es-MX
     0 %
-    92 k
+    92 k %
     -0.22 %
   zh-TW
     0%
-    9.2萬
+    9.2萬%
     -0.22%
   bn-BD
     ০%
-    ৯২ হা
+    ৯২ হা%
     -০.২২%
 
 compact-short currency/EUR group-on-aligned
@@ -844,15 +844,15 @@ scientific/+ee/sign-always measure-unit/length-furlong group-on-aligned
 compact-short percent latin
   es-MX
     0 %
-    92 k
+    92 k %
     -0.22 %
   zh-TW
     0%
-    9.2萬
+    9.2萬%
     -0.22%
   bn-BD
     0%
-    92 হা
+    92 হা%
     -0.22%
 
 compact-short currency/EUR latin
@@ -928,15 +928,15 @@ scientific/+ee/sign-always measure-unit/length-furlong latin
 compact-short percent sign-accounting-except-zero
   es-MX
     0 %
-    +92 k
+    +92 k %
     -0.22 %
   zh-TW
     0%
-    +9.2萬
+    +9.2萬%
     -0.22%
   bn-BD
     ০%
-    +৯২ হা
+    +৯২ হা%
     -০.২২%
 
 compact-short currency/EUR sign-accounting-except-zero
@@ -1012,15 +1012,15 @@ scientific/+ee/sign-always measure-unit/length-furlong sign-accounting-except-ze
 compact-short percent decimal-always
   es-MX
     0. %
-    92. k
+    92. k %
     -0.22 %
   zh-TW
     0.%
-    9.2萬
+    9.2萬%
     -0.22%
   bn-BD
     ০.%
-    ৯২. হা
+    ৯২. হা%
     -০.২২%
 
 compact-short currency/EUR decimal-always
@@ -3139,59 +3139,59 @@ percent unit-width-narrow @@
 
 percent unit-width-full-name precision-integer
   es-MX
-    0 %
-    91,827 %
-    -0 %
+    0 por ciento
+    91,827 por ciento
+    -0 por ciento
   zh-TW
     0%
     91,827%
     -0%
   bn-BD
-    ০%
-    ৯১,৮২৭%
-    -০%
+    ০শতাংশ
+    ৯১,৮২৭শতাংশ
+    -০শতাংশ
 
 percent unit-width-full-name .000
   es-MX
-    0.000 %
-    91,827.364 %
-    -0.222 %
+    0.000 por ciento
+    91,827.364 por ciento
+    -0.222 por ciento
   zh-TW
     0.000%
     91,827.364%
     -0.222%
   bn-BD
-    ০.০০০%
-    ৯১,৮২৭.৩৬৪%
-    -০.২২২%
+    ০.০০০শতাংশ
+    ৯১,৮২৭.৩৬৪শতাংশ
+    -০.২২২শতাংশ
 
 percent unit-width-full-name .##/@@@+
   es-MX
-    0 %
-    91,827.36 %
-    -0.222 %
+    0 por ciento
+    91,827.36 por ciento
+    -0.222 por ciento
   zh-TW
     0%
     91,827.36%
     -0.222%
   bn-BD
-    ০%
-    ৯১,৮২৭.৩৬%
-    -০.২২২%
+    ০শতাংশ
+    ৯১,৮২৭.৩৬শতাংশ
+    -০.২২২শতাংশ
 
 percent unit-width-full-name @@
   es-MX
-    0.0 %
-    92,000 %
-    -0.22 %
+    0.0 por ciento
+    92,000 por ciento
+    -0.22 por ciento
   zh-TW
     0.0%
     92,000%
     -0.22%
   bn-BD
-    ০.০%
-    ৯২,০০০%
-    -০.২২%
+    ০.০শতাংশ
+    ৯২,০০০শতাংশ
+    -০.২২শতাংশ
 
 currency/EUR unit-width-narrow precision-integer
   es-MX
@@ -3363,9 +3363,9 @@ measure-unit/length-furlong unit-width-narrow @@
 
 measure-unit/length-furlong unit-width-full-name precision-integer
   es-MX
-    0 fur
-    91,827 fur
-    -0 fur
+    0 furlongs
+    91,827 furlongs
+    -0 furlongs
   zh-TW
     0 化朗
     91,827 化朗
@@ -3377,9 +3377,9 @@ measure-unit/length-furlong unit-width-full-name precision-integer
 
 measure-unit/length-furlong unit-width-full-name .000
   es-MX
-    0.000 fur
-    91,827.364 fur
-    -0.222 fur
+    0.000 furlongs
+    91,827.364 furlongs
+    -0.222 furlongs
   zh-TW
     0.000 化朗
     91,827.364 化朗
@@ -3391,9 +3391,9 @@ measure-unit/length-furlong unit-width-full-name .000
 
 measure-unit/length-furlong unit-width-full-name .##/@@@+
   es-MX
-    0 fur
-    91,827.36 fur
-    -0.222 fur
+    0 furlongs
+    91,827.36 furlongs
+    -0.222 furlongs
   zh-TW
     0 化朗
     91,827.36 化朗
@@ -3405,9 +3405,9 @@ measure-unit/length-furlong unit-width-full-name .##/@@@+
 
 measure-unit/length-furlong unit-width-full-name @@
   es-MX
-    0.0 fur
-    92,000 fur
-    -0.22 fur
+    0.0 furlongs
+    92,000 furlongs
+    -0.22 furlongs
   zh-TW
     0.0 化朗
     92,000 化朗
@@ -3433,17 +3433,17 @@ percent unit-width-narrow rounding-mode-floor
 
 percent unit-width-full-name rounding-mode-floor
   es-MX
-    0 %
-    91,827.3645 %
-    -0.22222 %
+    0 por ciento
+    91,827.3645 por ciento
+    -0.22222 por ciento
   zh-TW
     0%
     91,827.3645%
     -0.22222%
   bn-BD
-    ০%
-    ৯১,৮২৭.৩৬৪৫%
-    -০.২২২২২%
+    ০শতাংশ
+    ৯১,৮২৭.৩৬৪৫শতাংশ
+    -০.২২২২২শতাংশ
 
 currency/EUR unit-width-narrow rounding-mode-floor
   es-MX
@@ -3489,9 +3489,9 @@ measure-unit/length-furlong unit-width-narrow rounding-mode-floor
 
 measure-unit/length-furlong unit-width-full-name rounding-mode-floor
   es-MX
-    0 fur
-    91,827.3645 fur
-    -0.22222 fur
+    0 furlongs
+    91,827.3645 furlongs
+    -0.22222 furlongs
   zh-TW
     0 化朗
     91,827.3645 化朗
@@ -3517,17 +3517,17 @@ percent unit-width-narrow integer-width/##00
 
 percent unit-width-full-name integer-width/##00
   es-MX
-    00 %
-    1827.3645 %
-    -00.22222 %
+    00 por ciento
+    1827.3645 por ciento
+    -00.22222 por ciento
   zh-TW
     00%
     1,827.3645%
     -00.22222%
   bn-BD
-    ০০%
-    ১,৮২৭.৩৬৪৫%
-    -০০.২২২২২%
+    ০০শতাংশ
+    ১,৮২৭.৩৬৪৫শতাংশ
+    -০০.২২২২২শতাংশ
 
 currency/EUR unit-width-narrow integer-width/##00
   es-MX
@@ -3573,9 +3573,9 @@ measure-unit/length-furlong unit-width-narrow integer-width/##00
 
 measure-unit/length-furlong unit-width-full-name integer-width/##00
   es-MX
-    00 fur
-    1827.3645 fur
-    -00.22222 fur
+    00 furlongs
+    1827.3645 furlongs
+    -00.22222 furlongs
   zh-TW
     00 化朗
     1,827.3645 化朗
@@ -3601,17 +3601,17 @@ percent unit-width-narrow scale/0.5
 
 percent unit-width-full-name scale/0.5
   es-MX
-    0 %
-    45,913.68225 %
-    -0.11111 %
+    0 por ciento
+    45,913.68225 por ciento
+    -0.11111 por ciento
   zh-TW
     0%
     45,913.68225%
     -0.11111%
   bn-BD
-    ০%
-    ৪৫,৯১৩.৬৮২২৫%
-    -০.১১১১১%
+    ০শতাংশ
+    ৪৫,৯১৩.৬৮২২৫শতাংশ
+    -০.১১১১১শতাংশ
 
 currency/EUR unit-width-narrow scale/0.5
   es-MX
@@ -3657,9 +3657,9 @@ measure-unit/length-furlong unit-width-narrow scale/0.5
 
 measure-unit/length-furlong unit-width-full-name scale/0.5
   es-MX
-    0 fur
-    45,913.68225 fur
-    -0.11111 fur
+    0 furlongs
+    45,913.68225 furlongs
+    -0.11111 furlongs
   zh-TW
     0 化朗
     45,913.68225 化朗
@@ -3685,17 +3685,17 @@ percent unit-width-narrow group-on-aligned
 
 percent unit-width-full-name group-on-aligned
   es-MX
-    0 %
-    91,827.3645 %
-    -0.22222 %
+    0 por ciento
+    91,827.3645 por ciento
+    -0.22222 por ciento
   zh-TW
     0%
     91,827.3645%
     -0.22222%
   bn-BD
-    ০%
-    ৯১,৮২৭.৩৬৪৫%
-    -০.২২২২২%
+    ০শতাংশ
+    ৯১,৮২৭.৩৬৪৫শতাংশ
+    -০.২২২২২শতাংশ
 
 currency/EUR unit-width-narrow group-on-aligned
   es-MX
@@ -3741,9 +3741,9 @@ measure-unit/length-furlong unit-width-narrow group-on-aligned
 
 measure-unit/length-furlong unit-width-full-name group-on-aligned
   es-MX
-    0 fur
-    91,827.3645 fur
-    -0.22222 fur
+    0 furlongs
+    91,827.3645 furlongs
+    -0.22222 furlongs
   zh-TW
     0 化朗
     91,827.3645 化朗
@@ -3769,17 +3769,17 @@ percent unit-width-narrow latin
 
 percent unit-width-full-name latin
   es-MX
-    0 %
-    91,827.3645 %
-    -0.22222 %
+    0 por ciento
+    91,827.3645 por ciento
+    -0.22222 por ciento
   zh-TW
     0%
     91,827.3645%
     -0.22222%
   bn-BD
-    0%
-    91,827.3645%
-    -0.22222%
+    0শতাংশ
+    91,827.3645শতাংশ
+    -0.22222শতাংশ
 
 currency/EUR unit-width-narrow latin
   es-MX
@@ -3825,9 +3825,9 @@ measure-unit/length-furlong unit-width-narrow latin
 
 measure-unit/length-furlong unit-width-full-name latin
   es-MX
-    0 fur
-    91,827.3645 fur
-    -0.22222 fur
+    0 furlongs
+    91,827.3645 furlongs
+    -0.22222 furlongs
   zh-TW
     0 化朗
     91,827.3645 化朗
@@ -3853,17 +3853,17 @@ percent unit-width-narrow sign-accounting-except-zero
 
 percent unit-width-full-name sign-accounting-except-zero
   es-MX
-    0 %
-    +91,827.3645 %
-    -0.22222 %
+    0 por ciento
+    +91,827.3645 por ciento
+    -0.22222 por ciento
   zh-TW
     0%
     +91,827.3645%
     -0.22222%
   bn-BD
-    ০%
-    +৯১,৮২৭.৩৬৪৫%
-    -০.২২২২২%
+    ০শতাংশ
+    +৯১,৮২৭.৩৬৪৫শতাংশ
+    -০.২২২২২শতাংশ
 
 currency/EUR unit-width-narrow sign-accounting-except-zero
   es-MX
@@ -3909,9 +3909,9 @@ measure-unit/length-furlong unit-width-narrow sign-accounting-except-zero
 
 measure-unit/length-furlong unit-width-full-name sign-accounting-except-zero
   es-MX
-    0 fur
-    +91,827.3645 fur
-    -0.22222 fur
+    0 furlongs
+    +91,827.3645 furlongs
+    -0.22222 furlongs
   zh-TW
     0 化朗
     +91,827.3645 化朗
@@ -3937,17 +3937,17 @@ percent unit-width-narrow decimal-always
 
 percent unit-width-full-name decimal-always
   es-MX
-    0. %
-    91,827.3645 %
-    -0.22222 %
+    0. por ciento
+    91,827.3645 por ciento
+    -0.22222 por ciento
   zh-TW
     0.%
     91,827.3645%
     -0.22222%
   bn-BD
-    ০.%
-    ৯১,৮২৭.৩৬৪৫%
-    -০.২২২২২%
+    ০.শতাংশ
+    ৯১,৮২৭.৩৬৪৫শতাংশ
+    -০.২২২২২শতাংশ
 
 currency/EUR unit-width-narrow decimal-always
   es-MX
@@ -3993,9 +3993,9 @@ measure-unit/length-furlong unit-width-narrow decimal-always
 
 measure-unit/length-furlong unit-width-full-name decimal-always
   es-MX
-    0. fur
-    91,827.3645 fur
-    -0.22222 fur
+    0. furlongs
+    91,827.3645 furlongs
+    -0.22222 furlongs
   zh-TW
     0. 化朗
     91,827.3645 化朗

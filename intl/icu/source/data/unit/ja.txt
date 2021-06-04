@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ja{
-    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -338,6 +338,9 @@ ja{
             }
         }
         graphics{
+            dot{
+                dnam{"ドット"}
+            }
             dot-per-centimeter{
                 dnam{"ドット/cm"}
                 other{"{0} ドット/cm"}
@@ -379,6 +382,10 @@ ja{
             decimeter{
                 dnam{"デシメートル"}
                 other{"{0} デシメートル"}
+            }
+            earth-radius{
+                dnam{"地球半径"}
+                other{"{0} 地球半径"}
             }
             fathom{
                 dnam{"ファゾム"}
@@ -458,6 +465,14 @@ ja{
             }
         }
         light{
+            candela{
+                dnam{"カンデラ"}
+                other{"{0} カンデラ"}
+            }
+            lumen{
+                dnam{"ルーメン"}
+                other{"{0} ルーメン"}
+            }
             lux{
                 dnam{"ルクス"}
                 other{"{0} ルクス"}
@@ -479,6 +494,10 @@ ja{
             earth-mass{
                 dnam{"地球質量"}
                 other{"{0} 地球質量"}
+            }
+            grain{
+                dnam{"グレーン"}
+                other{"{0} グレーン"}
             }
             gram{
                 dnam{"グラム"}
@@ -702,6 +721,22 @@ ja{
                 dnam{"デシリットル"}
                 other{"{0} デシリットル"}
             }
+            dessert-spoon{
+                dnam{"中さじ"}
+                other{"中さじ {0}"}
+            }
+            dessert-spoon-imperial{
+                dnam{"英デザートスプーン"}
+                other{"{0} 英デザートスプーン"}
+            }
+            dram{
+                dnam{"ドラム"}
+                other{"{0} ドラム"}
+            }
+            drop{
+                dnam{"滴"}
+                other{"{0} 滴"}
+            }
             fluid-ounce{
                 dnam{"液量オンス"}
                 other{"{0} 液量オンス"}
@@ -724,6 +759,10 @@ ja{
                 dnam{"ヘクトリットル"}
                 other{"{0} ヘクトリットル"}
             }
+            jigger{
+                dnam{"ジガー"}
+                other{"{0} ジガー"}
+            }
             liter{
                 dnam{"リットル"}
                 other{"{0} リットル"}
@@ -737,6 +776,10 @@ ja{
                 dnam{"ミリリットル"}
                 other{"{0} ミリリットル"}
             }
+            pinch{
+                dnam{"つまみ"}
+                other{"{0} つまみ"}
+            }
             pint{
                 dnam{"パイント"}
                 other{"{0} パイント"}
@@ -748,6 +791,10 @@ ja{
             quart{
                 dnam{"クォート"}
                 other{"{0} クォート"}
+            }
+            quart-imperial{
+                dnam{"英クォート"}
+                other{"{0} 英クォート"}
             }
             tablespoon{
                 dnam{"大さじ"}
@@ -1579,6 +1626,10 @@ ja{
             }
         }
         graphics{
+            dot{
+                dnam{"ドット"}
+                other{"{0} ドット"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 other{"{0} dpcm"}
@@ -1621,6 +1672,10 @@ ja{
             decimeter{
                 dnam{"デシメートル"}
                 other{"{0} dm"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
+                other{"{0} R⊕"}
             }
             fathom{
                 dnam{"ファゾム"}
@@ -1700,6 +1755,14 @@ ja{
             }
         }
         light{
+            candela{
+                dnam{"cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                dnam{"lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"ルクス"}
                 other{"{0} lx"}
@@ -1721,6 +1784,10 @@ ja{
             earth-mass{
                 dnam{"地球質量"}
                 other{"{0} M⊕"}
+            }
+            grain{
+                dnam{"グレーン"}
+                other{"{0} グレーン"}
             }
             gram{
                 dnam{"グラム"}
@@ -1944,6 +2011,22 @@ ja{
                 dnam{"デシリットル"}
                 other{"{0} dL"}
             }
+            dessert-spoon{
+                dnam{"中さじ"}
+                other{"中さじ {0}"}
+            }
+            dessert-spoon-imperial{
+                dnam{"英デザートスプーン"}
+                other{"{0} 英デザートスプーン"}
+            }
+            dram{
+                dnam{"液量ドラム"}
+                other{"{0} 液量ドラム"}
+            }
+            drop{
+                dnam{"滴"}
+                other{"{0} 滴"}
+            }
             fluid-ounce{
                 dnam{"液量オンス"}
                 other{"{0} fl oz"}
@@ -1966,6 +2049,10 @@ ja{
                 dnam{"ヘクトリットル"}
                 other{"{0} hL"}
             }
+            jigger{
+                dnam{"ジガー"}
+                other{"{0} ジガー"}
+            }
             liter{
                 dnam{"リットル"}
                 other{"{0} L"}
@@ -1979,6 +2066,10 @@ ja{
                 dnam{"ミリリットル"}
                 other{"{0} ml"}
             }
+            pinch{
+                dnam{"つまみ"}
+                other{"{0} つまみ"}
+            }
             pint{
                 dnam{"パイント"}
                 other{"{0} pt"}
@@ -1990,6 +2081,10 @@ ja{
             quart{
                 dnam{"クォート"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"英クォート"}
+                other{"{0} qt Imp."}
             }
             tablespoon{
                 dnam{"大さじ"}
