@@ -16,7 +16,6 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.fetch.Client
-import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
@@ -168,7 +167,7 @@ class AwesomeBarFeature(
     /**
      * Add a [AwesomeBar.SuggestionProvider] for browsing history to the [AwesomeBar].
      *
-     * @param historyStorage and instance of the [BookmarksStorage] used to query matching bookmarks.
+     * @param historyStorage an instance of the [HistoryStorage] used to query matching history.
      * @param loadUrlUseCase the use case invoked to load the url when the user clicks on the suggestion.
      * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
      * highest scored suggestion URL.
