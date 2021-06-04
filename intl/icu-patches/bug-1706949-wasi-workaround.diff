@@ -2,9 +2,6 @@
 #
 # WASI issue: https://github.com/WebAssembly/wasi-sdk/issues/180
 
-diff --git a/intl/icu-patches/bug-1706949-wasi-workaround.diff b/intl/icu-patches/bug-1706949-wasi-workaround.diff
-new file mode 100644
-index 000000000000..e69de29bb2d1
 diff --git a/intl/icu/source/common/putilimp.h b/intl/icu/source/common/putilimp.h
 index d9c90cf4e756..410770aa7c0d 100644
 --- a/intl/icu/source/common/putilimp.h
@@ -679,7 +676,7 @@ diff --git a/intl/icu/source/i18n/unicode/numberrangeformatter.h b/intl/icu/sour
 index 4d436a769453..5adb09285797 100644
 --- a/intl/icu/source/i18n/unicode/numberrangeformatter.h
 +++ b/intl/icu/source/i18n/unicode/numberrangeformatter.h
-@@ -10,13 +10,16 @@
+@@ -10,7 +10,6 @@
  
  #if !UCONFIG_NO_FORMATTING
  
@@ -687,8 +684,9 @@ index 4d436a769453..5adb09285797 100644
  #include "unicode/appendable.h"
  #include "unicode/fieldpos.h"
  #include "unicode/formattedvalue.h"
- #include "unicode/fpositer.h"
+@@ -18,6 +17,10 @@
  #include "unicode/numberformatter.h"
+ #include "unicode/unumberrangeformatter.h"
  
 +#ifndef __wasi__
 +#include <atomic>
