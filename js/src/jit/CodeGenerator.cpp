@@ -10568,10 +10568,9 @@ void CodeGenerator::visitNotV(LNotV* lir) {
   Label* ifTruthy = ool->label1();
   Label* ifFalsy = ool->label2();
 
-  // TODO: Optimize polymorphic Not
-  TypeDataList dummy;
+  TypeDataList observed = lir->mir()->observedTypes();
   testValueTruthyKernel(ToValue(lir, LNotV::Input), lir->temp1(), lir->temp2(),
-                        ToFloatRegister(lir->tempFloat()), dummy, ifTruthy,
+                        ToFloatRegister(lir->tempFloat()), observed, ifTruthy,
                         ifFalsy, ool);
 
   Label join;
