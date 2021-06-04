@@ -486,13 +486,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) override;
 
   /**
-   * Return true if the data is safe to insert as the source and destination
-   * principals match, or we are in a editor context where this doesn't matter.
-   * Otherwise, the data must be sanitized first.
-   */
-  bool IsSafeToInsertData(const Document* aSourceDoc) const;
-
-  /**
    * Factored methods for handling insertion of data from transferables
    * (drag&drop or clipboard).
    */

@@ -24,12 +24,9 @@
 #include "nsFocusManager.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIPrincipal.h"
 #include "nsIFormControl.h"
 #include "nsISupportsPrimitives.h"
@@ -666,37 +663,6 @@ bool TextEditor::CanPasteTransferable(nsITransferable* aTransferable) {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "nsITransferable::GetTransferData(kUnicodeMime) failed");
   return NS_SUCCEEDED(rv) && data;
-}
-
-bool TextEditor::IsSafeToInsertData(const Document* aSourceDoc) const {
-  // Try to determine whether we should use a sanitizing fragment sink
-  bool isSafe = false;
-
-  RefPtr<Document> destdoc = GetDocument();
-  NS_ASSERTION(destdoc, "Where is our destination doc?");
-
-  nsCOMPtr<nsIDocShell> docShell;
-  if (RefPtr<BrowsingContext> bc = destdoc->GetBrowsingContext()) {
-    RefPtr<BrowsingContext> root = bc->Top();
-    MOZ_ASSERT(root, "root should not be null");
-
-    docShell = root->GetDocShell();
-  }
-
-  isSafe = docShell && docShell->GetAppType() == nsIDocShell::APP_TYPE_EDITOR;
-
-  if (!isSafe && aSourceDoc) {
-    nsIPrincipal* srcPrincipal = aSourceDoc->NodePrincipal();
-    nsIPrincipal* destPrincipal = destdoc->NodePrincipal();
-    NS_ASSERTION(srcPrincipal && destPrincipal,
-                 "How come we don't have a principal?");
-    DebugOnly<nsresult> rvIgnored =
-        srcPrincipal->Subsumes(destPrincipal, &isSafe);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "nsIPrincipal::Subsumes() failed, but ignored");
-  }
-
-  return isSafe;
 }
 
 }  // namespace mozilla
