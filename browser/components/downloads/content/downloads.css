@@ -88,7 +88,6 @@
   max-width: unset;
 }
 
-@media (-moz-proton-doorhangers) {
 #downloadsPanel-blockedSubview,
 #downloadsPanel-mainView {
   font: caption;
@@ -104,4 +103,3 @@
   padding: 0.62em;
   margin: 0.62em 0 0;
 }
-} /** END Proton **/
