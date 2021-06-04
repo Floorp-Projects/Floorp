@@ -35,6 +35,7 @@ static FeatureMap sSupportedFeatures[] = {
     {"display-capture", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"web-share", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
+    {"gamepad", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
 };
 
 /*
@@ -48,7 +49,6 @@ static FeatureMap sExperimentalFeatures[] = {
     // policy.
     {"autoplay", FeaturePolicyUtils::FeaturePolicyValue::eAll},
     {"encrypted-media", FeaturePolicyUtils::FeaturePolicyValue::eAll},
-    {"gamepad", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"midi", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"payment", FeaturePolicyUtils::FeaturePolicyValue::eAll},
     {"document-domain", FeaturePolicyUtils::FeaturePolicyValue::eAll},

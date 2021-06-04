@@ -8,7 +8,8 @@
  */
 
 [Pref="dom.gamepad.enabled",
- Exposed=Window]
+ Exposed=Window,
+ SecureContext]
 interface GamepadEvent : Event
 {
   constructor(DOMString type, optional GamepadEventInit eventInitDict = {});
