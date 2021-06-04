@@ -277,26 +277,30 @@ var pktUI = (function() {
 
     // Send error message for invalid url
     if (!isValidURL()) {
-      let errorData = {
-        localizedKey: "pocket-panel-saved-error-only-links",
+      // TODO: Pass key for localized error in error object
+      let error = {
+        message: "Only links can be saved",
+        localizedKey: "onlylinkssaved",
       };
       pktUIMessaging.sendErrorMessageToPanel(
         saveLinkMessageId,
         _panelId,
-        errorData
+        error
       );
       return;
     }
 
     // Check online state
     if (!navigator.onLine) {
-      let errorData = {
-        localizedKey: "pocket-panel-saved-error-no-internet",
+      // TODO: Pass key for localized error in error object
+      let error = {
+        message:
+          "You must be connected to the Internet in order to save to Pocket. Please connect to the Internet and try again.",
       };
       pktUIMessaging.sendErrorMessageToPanel(
         saveLinkMessageId,
         _panelId,
-        errorData
+        error
       );
       return;
     }
@@ -367,16 +371,17 @@ var pktUI = (function() {
           return;
         }
 
-        // For unknown server errors, use a generic catch-all error message
-        let errorData = {
-          localizedKey: "pocket-panel-saved-error-generic",
-        };
+        // If there is no error message in the error use a
+        // complete catch-all
+        var errorMessage =
+          error.message || "There was an error when trying to save to Pocket.";
+        var panelError = { message: errorMessage };
 
         // Send error message to panel
         pktUIMessaging.sendErrorMessageToPanel(
           saveLinkMessageId,
           _panelId,
-          errorData
+          panelError
         );
       },
     };
