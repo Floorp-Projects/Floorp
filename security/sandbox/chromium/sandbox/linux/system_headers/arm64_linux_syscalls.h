@@ -4,8 +4,8 @@
 
 /* Constructed by running:
  * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/include/uapi/asm-generic/unistd.h?h=v5.8
- *   | grep '^#define' | sed -e 's/__NR3264_/__NR_/g' | grep '__NR_'
- *   | awk '{ if ($2 != $3) { print "#if !defined(" $2 ")\n#define " $2 " " $3 "\n#endif\n"; } }'
+ *   | grep '^#define' | grep -v '__NR3264_' | grep '__NR_'
+ *   | awk '{ if ($2 != $3 && $3 != 440) { print "#if !defined(" $2 ")\n#define " $2 " " $3 "\n#endif\n"; } }
  * */
 
 #ifndef SANDBOX_LINUX_SYSTEM_HEADERS_ARM64_LINUX_SYSCALLS_H_
@@ -1275,66 +1275,6 @@
 
 #if !defined(__NR_faccessat2)
 #define __NR_faccessat2 439
-#endif
-
-#if !defined(__NR_syscalls)
-#define __NR_syscalls 440
-#endif
-
-#if !defined(__NR_newfstatat)
-#define __NR_newfstatat __NR_fstatat
-#endif
-
-#if !defined(__NR_fcntl64)
-#define __NR_fcntl64 __NR_fcntl
-#endif
-
-#if !defined(__NR_statfs64)
-#define __NR_statfs64 __NR_statfs
-#endif
-
-#if !defined(__NR_fstatfs64)
-#define __NR_fstatfs64 __NR_fstatfs
-#endif
-
-#if !defined(__NR_truncate64)
-#define __NR_truncate64 __NR_truncate
-#endif
-
-#if !defined(__NR_ftruncate64)
-#define __NR_ftruncate64 __NR_ftruncate
-#endif
-
-#if !defined(__NR_llseek)
-#define __NR_llseek __NR_lseek
-#endif
-
-#if !defined(__NR_sendfile64)
-#define __NR_sendfile64 __NR_sendfile
-#endif
-
-#if !defined(__NR_fstatat64)
-#define __NR_fstatat64 __NR_fstatat
-#endif
-
-#if !defined(__NR_fstat64)
-#define __NR_fstat64 __NR_fstat
-#endif
-
-#if !defined(__NR_mmap2)
-#define __NR_mmap2 __NR_mmap
-#endif
-
-#if !defined(__NR_fadvise64_64)
-#define __NR_fadvise64_64 __NR_fadvise64
-#endif
-
-#if !defined(__NR_stat64)
-#define __NR_stat64 __NR_stat
-#endif
-
-#if !defined(__NR_lstat64)
-#define __NR_lstat64 __NR_lstat
 #endif
 
 #endif  // SANDBOX_LINUX_SYSTEM_HEADERS_ARM64_LINUX_SYSCALLS_H_
