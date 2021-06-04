@@ -920,11 +920,13 @@ fxa_tab:
       - sync
     extra_keys:
       flow_id:
+        type: string
         description: >
           A guid, unique for the URL being sent but common for all target
           devices. The value is randomly generated so can not identify details
           about the user or tab.
       stream_id:
+        type: string
         description: >
           A guid, unique for both the URL being sent and the target device. The
           value is randomly generated so can not identify details about the
@@ -947,13 +949,16 @@ fxa_tab:
       - sync
     extra_keys:
       flow_id:
+        type: string
         description: >
           A guid, unique for the URL being sent but common for all target
           devices.
       stream_id:
+        type: string
         description: >
           A guid, unique for both the URL being sent and the target device.
       reason:
+        type: string
         description: >
           The reason we discovered the tab. Will be one of 'push', 'push-missed'
           or 'poll'.

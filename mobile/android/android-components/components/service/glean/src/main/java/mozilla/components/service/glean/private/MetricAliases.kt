@@ -6,13 +6,15 @@ package mozilla.components.service.glean.private
 
 typealias Lifetime = mozilla.telemetry.glean.private.Lifetime
 typealias NoExtraKeys = mozilla.telemetry.glean.private.NoExtraKeys
+typealias NoExtras = mozilla.telemetry.glean.private.NoExtras
+typealias EventExtras = mozilla.telemetry.glean.private.EventExtras
 typealias NoReasonCodes = mozilla.telemetry.glean.private.NoReasonCodes
 
 typealias BooleanMetricType = mozilla.telemetry.glean.private.BooleanMetricType
 typealias CounterMetricType = mozilla.telemetry.glean.private.CounterMetricType
 typealias CustomDistributionMetricType = mozilla.telemetry.glean.private.CustomDistributionMetricType
 typealias DatetimeMetricType = mozilla.telemetry.glean.private.DatetimeMetricType
-typealias EventMetricType<T> = mozilla.telemetry.glean.private.EventMetricType<T>
+typealias EventMetricType<T, E> = mozilla.telemetry.glean.private.EventMetricType<T, E>
 typealias HistogramMetricBase = mozilla.telemetry.glean.private.HistogramBase
 typealias HistogramType = mozilla.telemetry.glean.private.HistogramType
 typealias LabeledMetricType<T> = mozilla.telemetry.glean.private.LabeledMetricType<T>
