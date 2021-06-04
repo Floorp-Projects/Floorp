@@ -953,6 +953,20 @@ add_task(async function test_bucketname_changes_when_bucket_pref_changes() {
 });
 add_task(clear_state);
 
+add_task(async function test_bucket_pref_ignored_when_bucketName_set() {
+  let clientWithBucket = RemoteSettings("coll", { bucketName: "buck" });
+  equal(clientWithBucket.collectionName, "coll");
+  equal(clientWithBucket.bucketName, "buck");
+
+  Services.prefs.setCharPref(
+    "services.settings.default_bucket",
+    "coll-preview"
+  );
+
+  equal(clientWithBucket.bucketName, "buck");
+});
+add_task(clear_state);
+
 add_task(
   async function test_get_loads_default_records_from_a_local_dump_if_preview_collection() {
     if (IS_ANDROID) {
