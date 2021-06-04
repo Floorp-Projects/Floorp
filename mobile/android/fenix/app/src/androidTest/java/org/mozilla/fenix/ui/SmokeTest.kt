@@ -407,9 +407,9 @@ class SmokeTest {
         }
     }
 
-    @Ignore("Failing, see https://github.com/mozilla-mobile/fenix/issues/18647")
     @Test
     fun customTrackingProtectionSettingsTest() {
+        val genericWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val trackingPage = TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
 
         homeScreen {
@@ -422,10 +422,14 @@ class SmokeTest {
         }.goBackToHomeScreen {}
 
         navigationToolbar {
-        }.openTrackingProtectionTestPage(trackingPage.url, true) {}
+            // browsing a basic page to allow GV to load on a fresh run
+        }.enterURLAndEnterToBrowser(genericWebPage.url) {
+        }.openNavigationToolbar {
+        }.openTrackingProtectionTestPage(trackingPage.url, true) {
+            dismissTrackingOnboarding()
+        }
 
         enhancedTrackingProtection {
-            dismissTrackingOnboarding()
         }.openEnhancedTrackingProtectionSheet {
             verifyTrackingCookiesBlocked()
             verifyCryptominersBlocked()
