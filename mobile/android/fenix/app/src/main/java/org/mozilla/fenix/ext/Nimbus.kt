@@ -29,6 +29,7 @@ fun <T> NimbusApi.withExperiment(featureId: FeatureId, transform: (String?) -> T
  *
  * Short-hand for ` org.mozilla.experiments.nimbus.NimbusApi.getExperimentBranch`.
  */
+@Suppress("TooGenericExceptionCaught")
 fun NimbusApi.withExperiment(featureId: FeatureId) =
     try {
         getExperimentBranch(featureId.jsonName)
