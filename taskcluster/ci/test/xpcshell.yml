@@ -63,7 +63,6 @@ xpcshell:
             default: 5
     max-run-time:
         by-test-platform:
-            macosx1014-64(-shippable|-devedition|-asan)?(-qr)?/.*: 5400
             windows.*(-shippable)/opt: 5400
             .*64-ccov(-qr)?/.*: 7200
             .*-tsan/opt: 7200
