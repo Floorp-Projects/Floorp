@@ -373,21 +373,22 @@ windows10-32-mingwclang/opt:
 macosx1015-64-shippable/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
-        - macosx64-talos
         - awsy
         - browsertime
+        - macosx64-talos
 
 macosx1015-64-shippable-qr/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
-        - macosx64-talos
         - awsy
         - browsertime
+        - desktop-screenshot-capture
+        - macosx1015-64-qr-tests
+        - macosx64-talos
         - raptor-chrome
         - raptor-firefox
         - raptor-firefox-power
         - talos-profiling
-        - macosx1015-64-qr-tests
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
@@ -405,11 +406,13 @@ macosx1015-64-devedition/opt:
 macosx1015-64-devedition-qr/opt:
     build-platform: macosx64-devedition/opt
     test-sets:
+        - macosx1015-64-qr-tests
         - web-platform-tests
 
 macosx1015-64-qr/opt:
     build-platform: macosx64/opt
     test-sets:
+        - desktop-screenshot-capture
         - macosx1015-64-qr-failure-tests
         - macosx1015-64-qr-tests
         - web-platform-tests
@@ -427,29 +430,11 @@ macosx1015-64-ccov-qr/opt:
     test-sets:
         - macosx1015-64-qr-tests
 
-macosx1014-64-qr/opt:
-    build-platform: macosx64/opt
-    test-sets:
-        - macosx1014-64-qr-tests
-        - desktop-screenshot-capture
-
 macosx1014-64-shippable-qr/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
-        - macosx1014-64-qr-tests
-        - desktop-screenshot-capture
         - browsertime
-        - talos
-
-macosx1014-64-devedition-qr/opt:
-    build-platform: macosx64-devedition/opt
-    test-sets:
-        - macosx1014-64-qr-tests
-
-macosx1014-64-qr/debug:
-    build-platform: macosx64/debug
-    test-sets:
-        - macosx1014-64-qr-tests
+        - macosx64-talos
 
 ##
 # Android platforms (matching /android-em.*/)
