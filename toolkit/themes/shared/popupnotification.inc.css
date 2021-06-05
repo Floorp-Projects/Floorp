@@ -77,6 +77,17 @@
   flex: 1;
 }
 
+@media not (-moz-proton-doorhangers) {
+.popup-notification-dropmarker {
+  flex: none;
+  padding: 0 15px !important;
+}
+
+.popup-notification-learnmore-link {
+  margin-top: .5em !important;
+}
+} /** END not Proton **/
+
 .popup-notification-dropmarker > .button-box > hbox {
   display: none;
 }
@@ -102,6 +113,7 @@
 }
 
 /** PopupNotifications **/
+@media (-moz-proton-doorhangers) {
 popupnotification {
   font: caption;
 }
@@ -251,3 +263,4 @@ popupnotification {
   text-decoration: underline;
   margin-block: 0 8px;
 }
+} /*** END proton ***/
