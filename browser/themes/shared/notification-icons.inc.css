@@ -222,6 +222,7 @@
   margin-inline-end: 0;
 }
 
+@media (-moz-proton-doorhangers) {
 #webRTC-preview:not([hidden]) {
   min-width: 368px;
   min-height: 10em;
@@ -263,12 +264,51 @@
   margin-top: 0 !important;
   font-size: 0.75em;
 }
+} /** END Proton **/
 
 @media not (-moz-proton) {
 #notification-popup-box {
   padding: 5px 0;
   margin: -5px 0;
   padding-inline-end: 5px;
+}
+} /** END not Proton **/
+
+@media not (-moz-proton-doorhangers) {
+#webRTC-preview:not([hidden]) {
+  border-radius: 4px;
+  border: 1px solid var(--panel-separator-color);
+  min-width: 300px;
+  min-height: 10em;
+  -moz-box-orient: vertical;
+}
+
+#webRTC-previewVideo {
+  width: 300px;
+  /* If we don't set the min-width, width is ignored. */
+  min-width: 300px;
+  min-height: 10em;
+  max-height: 200px;
+}
+
+#webRTC-previewWarningBox {
+  background: rgba(255,217,99,.8) url("chrome://browser/skin/warning.svg") no-repeat .75em .75em;
+  color: #000;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin: 0;
+  padding: .5em;
+  padding-inline-start: calc(1.5em + 16px);
+  border-top: 1px solid var(--panel-separator-color);
+}
+
+.popup-subitem {
+  list-style-image: url("chrome://browser/skin/notification-icons/popup-subitem.svg");
+  margin-inline-start: 42px;
+}
+
+#permission-popup-menulist {
+  margin-inline-end: 2px;
 }
 } /** END not Proton **/
 
@@ -460,6 +500,7 @@
 %endif
 
 /* UPDATE */
+@media (-moz-proton-doorhangers) {
 .popup-notification-icon[popupid="update-available"],
 .popup-notification-icon[popupid="update-downloading"],
 .popup-notification-icon[popupid="update-manual"],
@@ -475,3 +516,20 @@
   -moz-context-properties: fill;
   fill: var(--panel-banner-item-warning-icon-bgcolor);
 }
+} /** END Proton **/
+
+@media not (-moz-proton-doorhangers) {
+.popup-notification-icon[popupid="update-available"],
+.popup-notification-icon[popupid="update-downloading"],
+.popup-notification-icon[popupid="update-manual"],
+.popup-notification-icon[popupid="update-other-instance"],
+.popup-notification-icon[popupid="update-restart"] {
+  background: #74BF43 url(chrome://browser/skin/notification-icons/update.svg) no-repeat center;
+  border-radius: 50%;
+}
+
+.popup-notification-icon[popupid="update-unsupported"] {
+  background: #FFE900 url(chrome://browser/skin/notification-icons/update.svg) no-repeat center;
+  border-radius: 50%;
+}
+} /** END not Proton **/
