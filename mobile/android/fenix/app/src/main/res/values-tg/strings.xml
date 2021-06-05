@@ -1594,6 +1594,21 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Лутфан, рақами корти кредитии дурустро ворид намоед</string>
 
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Барои дидани кортҳои нигоҳдошташуда, қулфро кушоед</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Кортҳои кредитии худро муҳофизат кунед</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Барои муҳофизат кардани кортҳои кредитии нигоҳдошташудаи худ аз дастрасии озод, агар касе дигар аз дастгоҳи шумо истифода барад, шаклвораи қулфи экран, рамзи PIN ё ниҳонвожаеро барои дастгоҳи худ танзим намоед.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Ҳозир насб кунед</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Дертар</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Қулфи дастгоҳи худро кушоед</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Барои истифодаи маълумоти кортҳои кредитии нигоҳдошташуда, қулфро кушоед</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Илова кардани низоми ҷустуҷӯӣ</string>
     <!-- Title of the Edit search engine screen -->

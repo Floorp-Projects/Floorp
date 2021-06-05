@@ -81,11 +81,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Яшерү</string>
 
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Көйләүләргә күчү</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Яшерү</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Яңа таб</string>
@@ -411,8 +406,12 @@
     <string name="preferences_tracking_protection_settings">Күзәтелүдән саклау</string>
     <!-- Preference switch for tracking protection -->
     <string name="preferences_tracking_protection">Күзәтелүдән саклау</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Интернетта Сезне күзәтүче эчтәлек һәм скриптларны блоклау</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Чыгармалар</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Күзәтелүдән саклау бу сайтлар өчен cүнгән</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Барлык сайтлар өчен дә кабызу</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
@@ -426,8 +425,14 @@
     <string name="preferences_marketing_data">Маркетинг мәгълүматлары</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Тикшеренүләр</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Mozilla-га тикшеренүләр урнаштырырга һәм үткәрергә рөхсәт итү</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Тәҗрибәләр</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Mozilla-га эксперименталь мөмкинлекләр өчен мәгълүмат урнаштырырга һәм җыярга рөхсәт итү</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Ватылулар хәбәрчесе</string>
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">Mozilla урнашу хезмәте</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
@@ -436,6 +441,8 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Синхронлауны кабызу</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Эш өстәле компьютерындагы Firefox-та ялгау кодын сканерлау</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Керү</string>
 
@@ -465,6 +472,8 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Караңгы төсле</string>
 
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Батареяны саклау режимын исәпкә алу</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Җиһаз темасына иярү</string>
 
@@ -495,8 +504,6 @@
     <string name="library_new_tab">Яңа таб</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Биттән табу</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Синхронланган таблар</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Уку исемлеге</string>
     <!-- Menu Item Label for Search in Library -->

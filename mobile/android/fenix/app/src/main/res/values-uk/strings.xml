@@ -93,13 +93,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Відхилити</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Змініть вигляд відкритих вкладок. Перейдіть до налаштувань і виберіть подання вкладок сіткою.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Перейти до налаштувань</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Відхилити</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Нова вкладка</string>
@@ -354,7 +347,7 @@
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Автозавершення URL-адрес</string>
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">Відкривати посилання в програмах</string>
+    <string name="preferences_open_links_in_apps">Відкривати посилання у програмах</string>
 
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Зовнішній менеджер завантажень</string>
@@ -554,8 +547,6 @@
     <string name="library_new_tab">Нова вкладка</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Знайти на сторінці</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Синхронізовані вкладки</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Список читання</string>
     <!-- Menu Item Label for Search in Library -->
