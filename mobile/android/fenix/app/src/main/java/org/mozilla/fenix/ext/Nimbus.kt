@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ext
 
 import mozilla.components.service.nimbus.NimbusApi
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.experiments.nimbus.Variables
 import org.mozilla.fenix.experiments.FeatureId
 
@@ -20,7 +21,7 @@ import org.mozilla.fenix.experiments.FeatureId
  * is passed a `null`.
  */
 fun <T> NimbusApi.withExperiment(featureId: FeatureId, transform: (String?) -> T): T {
-    return transform(getExperimentBranch(featureId.jsonName))
+    return transform(withExperiment(featureId))
 }
 
 /**
@@ -29,7 +30,12 @@ fun <T> NimbusApi.withExperiment(featureId: FeatureId, transform: (String?) -> T
  * Short-hand for ` org.mozilla.experiments.nimbus.NimbusApi.getExperimentBranch`.
  */
 fun NimbusApi.withExperiment(featureId: FeatureId) =
-    getExperimentBranch(featureId.jsonName)
+    try {
+        getExperimentBranch(featureId.jsonName)
+    } catch (e: Throwable) {
+        Logger.error("Failed to getExperimentBranch(${featureId.jsonName})", e)
+        null
+    }
 
 /**
  * Get the variables needed to configure the feature given by `featureId`.
