@@ -153,9 +153,11 @@ panelview[mainview] > .panel-header {
   transition: height var(--panelui-subview-transition-duration);
 }
 
+@media (-moz-proton-doorhangers) {
 :is(panel, menupopup)::part(arrow) {
   display: none;
 }
+} /** END Proton **/
 
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
   #tabbrowser-tabs {
@@ -1653,3 +1655,11 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 /**
  * End Dialogs
  */
+
+@media not (-moz-proton-doorhangers) {
+/* Password update/save doorhanger */
+#password-notification-username,
+#password-notification-password {
+  margin-inline-start: 6px;
+}
+} /** END not Proton **/
