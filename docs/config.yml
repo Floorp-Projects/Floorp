@@ -73,6 +73,7 @@ redirects:
     modules/libpref/libpref: modules/libpref
     python/mach: mach
     python/python: python
+    setup/getting_set_up.html: contributing/contributing_to_mozilla.html
     taskcluster/taskcluster: taskcluster
     testing/geckodriver/geckodriver: testing/geckodriver
     testing/marionette/marionette: testing/marionette
@@ -85,3 +86,4 @@ redirects:
     tools/lint/coding-style: code-quality/coding-style
     tools/static-analysis/index.html: code-quality/static-analysis.html
     xpcom/xpcom: xpcom
+
