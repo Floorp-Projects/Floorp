@@ -980,10 +980,6 @@ nscoord nsBulletFrame::GetListStyleAscent() const {
   if (list->mCounterStyle.IsAnonymous()) {
     return fm->MaxAscent();
   }
-  // NOTE(emilio): @counter-style can override most of the styles from this
-  // list, and we still return the changed ascent. Do we care about that?
-  //
-  // https://github.com/w3c/csswg-drafts/issues/3584
   nsAtom* style = list->mCounterStyle.AsAtom();
   if (style == nsGkAtoms::disc || style == nsGkAtoms::circle ||
       style == nsGkAtoms::square) {
