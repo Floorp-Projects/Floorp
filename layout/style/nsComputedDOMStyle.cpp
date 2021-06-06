@@ -2161,11 +2161,11 @@ bool nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord) {
   }
 
   if (lh.IsMozBlockHeight()) {
-    AssertFlushedPendingReflows();
-
     if (!mInnerFrame) {
       return false;
     }
+
+    AssertFlushedPendingReflows();
 
     if (nsLayoutUtils::IsNonWrapperBlock(mInnerFrame)) {
       blockHeight = mInnerFrame->GetContentRect().height;
