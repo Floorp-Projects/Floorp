@@ -22,6 +22,7 @@
 #include "nsUnicodeProperties.h"
 #include "nsXULAppAPI.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
@@ -1238,12 +1239,46 @@ void gfxPlatformFontList::StartCmapLoadingFromFamily(uint32_t aStartIndex) {
 }
 
 class LoadCmapsRunnable : public CancelableRunnable {
+  class WillShutdownObserver : public nsIObserver {
+   public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+
+    explicit WillShutdownObserver(LoadCmapsRunnable* aRunnable)
+        : mRunnable(aRunnable) {}
+
+    void Remove() {
+      nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+      if (obs) {
+        obs->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
+      }
+      mRunnable = nullptr;
+    }
+
+   protected:
+    virtual ~WillShutdownObserver() = default;
+
+    LoadCmapsRunnable* mRunnable;
+  };
+
  public:
   explicit LoadCmapsRunnable(uint32_t aGeneration, uint32_t aFamilyIndex)
       : CancelableRunnable("gfxPlatformFontList::LoadCmapsRunnable"),
         mGeneration(aGeneration),
         mStartIndex(aFamilyIndex),
-        mIndex(aFamilyIndex) {}
+        mIndex(aFamilyIndex) {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (obs) {
+      mObserver = new WillShutdownObserver(this);
+      obs->AddObserver(mObserver, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, false);
+    }
+  }
+
+  virtual ~LoadCmapsRunnable() {
+    if (mObserver) {
+      mObserver->Remove();
+    }
+  }
 
   // Reset the current family index, if the value passed is earlier than our
   // original starting position. We don't "reset" if it would move the current
@@ -1310,12 +1345,33 @@ class LoadCmapsRunnable : public CancelableRunnable {
   uint32_t mStartIndex;
   uint32_t mIndex;
   bool mIsCanceled = false;
+
+  RefPtr<WillShutdownObserver> mObserver;
 };
+
+NS_IMPL_ISUPPORTS(LoadCmapsRunnable::WillShutdownObserver, nsIObserver)
+
+NS_IMETHODIMP
+LoadCmapsRunnable::WillShutdownObserver::Observe(nsISupports* aSubject,
+                                                 const char* aTopic,
+                                                 const char16_t* aData) {
+  if (!nsCRT::strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID)) {
+    if (mRunnable) {
+      mRunnable->Cancel();
+    }
+  } else {
+    MOZ_ASSERT_UNREACHABLE("unexpected notification topic");
+  }
+  return NS_OK;
+}
 
 void gfxPlatformFontList::StartCmapLoading(uint32_t aGeneration,
                                            uint32_t aStartIndex) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   if (aGeneration != SharedFontList()->GetGeneration()) {
+    return;
+  }
+  if (AppShutdown::IsShuttingDown()) {
     return;
   }
   if (mLoadCmapsRunnable) {
@@ -2712,6 +2768,9 @@ void gfxPlatformFontList::InitializeFamily(uint32_t aGeneration,
   if (list->GetGeneration() != aGeneration) {
     return;
   }
+  if (AppShutdown::IsShuttingDown()) {
+    return;
+  }
   if (aFamilyIndex >= list->NumFamilies()) {
     return;
   }
@@ -2733,6 +2792,9 @@ void gfxPlatformFontList::SetCharacterMap(uint32_t aGeneration,
   if (list->GetGeneration() != aGeneration) {
     return;
   }
+  if (AppShutdown::IsShuttingDown()) {
+    return;
+  }
   fontlist::Face* face = static_cast<fontlist::Face*>(aFacePtr.ToPtr(list));
   if (face) {
     face->mCharacterMap = GetShmemCharMap(&aMap);
@@ -2748,6 +2810,9 @@ void gfxPlatformFontList::SetupFamilyCharMap(
     return;
   }
   if (list->GetGeneration() != aGeneration) {
+    return;
+  }
+  if (AppShutdown::IsShuttingDown()) {
     return;
   }
 
@@ -2801,6 +2866,9 @@ bool gfxPlatformFontList::InitOtherFamilyNames(uint32_t aGeneration,
     return false;
   }
   if (list->GetGeneration() != aGeneration) {
+    return false;
+  }
+  if (AppShutdown::IsShuttingDown()) {
     return false;
   }
   return InitOtherFamilyNames(aDefer);
