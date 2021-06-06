@@ -1,9 +1,9 @@
-Welcome to the Firefox codebase!
---------------------------------
+Contributing to Mozilla projects
+================================
 
 This page is here to help you get from "I want to build Firefox"
 to "I'm building my own Firefox" to "I can contribute to Firefox".
-So if you'd like to help Mozilla build the best web browser in the
+So if you'd like to help Mozilla build the best web browsers in the
 world, you're in the right place.
 
 .. rubric:: Need help?
@@ -27,29 +27,30 @@ or contact Mike Hoye directly at mhoye@mozilla.com.
 What skills do I need?
 ----------------------
 
-Mozilla is a large project and we are thrilled to have contributors with
+Mozilla maintains small and large projects and we are thrilled to have contributors with
 very diverse skills:
 
 -  If you know **C++,** **Rust,** **JavaScript,** **HTML** or **CSS**,
-   you can contribute to the core layers of Firefox and many other Mozilla
-   projects.
--  If you know **Rust**, you can also contribute to the Rust programming
-   language itself, and `Servo <https://servo.org/>`_, the web browser engine
-   designed for parallelism and safety.
--  If you know **Java**, you can contribute to Firefox on Android,
-   `Firefox Focus for
-   Android <https://github.com/mozilla-mobile/focus-android>`_ .
+   you can :ref:`contribute to the core layers <Firefox Contributors' Quick Reference>` of
+   Firefox and many other Mozilla projects.
+-  If you know **Rust**, you can also contribute to the `Rust programming
+   language <https://github.com/rust-lang/rust>`_ itself, numerous crates like `grcov <https://github.com/mozilla/grcov/>`_
+   or `Servo <https://servo.org/>`_, the web browser engine designed for parallelism and safety.
 -  If you know **Kotlin**, you can contribute to `Firefox
-   Preview <https://github.com/mozilla-mobile/fenix>`_ (code name:
+   for Android <https://github.com/mozilla-mobile/fenix>`_ (code name:
    "Fenix").
 -  If you know **Swift**, you can contribute to `Firefox for
    iOS <https://github.com/mozilla-mobile/firefox-ios>`_ and `Firefox
-   Focus for iOS <https://github.com/mozilla-mobile/focus-ios>`_
+   Focus for iOS <https://github.com/mozilla-mobile/focus-ios>`_.
+-  If you know **C++**, you can contribute to our `VPN client <https://github.com/mozilla-mobile/mozilla-vpn-client>`_.
 -  If you know **Python**, you can contribute to our web services,
-   including Firefox Sync and Firefox Accounts
+   including Firefox Sync and Firefox Accounts.
 -  If you know **Make**, **shell**, **Perl**, or **Python**, you can
-   contribute to our build systems, release engineering, and automation
--  If you know **C**, you can contribute to NSS, Opus, and Daala
+   contribute to our build systems, release engineering, and automation.
+-  If you know **Go** or **JavaScript**, you can contribute to `TaskCluster
+   <https://github.com/taskcluster/taskcluster>`_  our CI infrastructure.
+-  If you know **C**, you can contribute to `NSS <https://developer.mozilla.org/docs/Mozilla/Projects/NSS>`_,
+   `Opus <https://opus-codec.org/>`_, and `Daala <https://wiki.xiph.org/Daala>`_.
 -  There are even many ways to contribute to the Mozilla mission without
    programming. If getting involved in design, support, translation,
    testing, or other types of contributions sparks your interest please
@@ -61,5 +62,3 @@ Perhaps you do not know programming yet, but you want to start learning?
 There are `plenty of
 resources <https://developer.mozilla.org/learn>`_ available on
 the MDN Web Docs!
-
-Read on for information about how to set up your machine to build Firefox.
