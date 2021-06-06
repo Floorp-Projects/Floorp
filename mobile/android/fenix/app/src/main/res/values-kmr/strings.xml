@@ -94,13 +94,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Bigire</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Tu dikarî raxistina hilpekînên vekirî biguherînî. Here sazkariyan û ji bin &quot;xuyabûna hilpekînan&quot; grîdê hilbijêre.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Here sazkariyan</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Bigire</string>
-
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -416,6 +409,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s - %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Kartên krediyê</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Navnîşan</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Hilpekînên hatine stendin</string>
@@ -447,9 +445,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Zêdetir bizane</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Bi temamî hat girtin, ji bo vekirinê here Sazkariyan.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetrî</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -460,6 +455,8 @@
     <string name="preferences_marketing_data">Daneyên bazarkirinê</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Daneyên têkildarî taybetiyên %1$sê ku tu bi kar tînî bi Leanpluma em xizmeta bazara mobîl jê dikirin re parve dike.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Daneyên bikaranînê yên bingehîn bi hevkara me ya kar Adjustê tên parvekirin</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Lêkolîn</string>
 
@@ -547,8 +544,6 @@
     <string name="library_new_tab">Hilpekîna nû</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Di rûpelê de bibîne</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Hilpekînên senkronîzekirî</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Lîsteya xwendinê</string>
     <!-- Menu Item Label for Search in Library -->
@@ -798,8 +793,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s hate jêbirin</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Peldankê tevlî bike</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Favorî hat afirandin.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Favorî hat hilanîn!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1456,10 +1449,8 @@
     <string name="preferences_passwords_autofill">Bixweber dagire</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Hesaban senkronîze bike</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Vekirî</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Girtî</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Hesaban di navbera amûran de sync bike</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Dîsa girê bide</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1560,6 +1551,8 @@
 
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Kartan di navbera amûran de senkronîze bike</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Karda syncê</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Kredîkartekê lê zêde bike</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1588,6 +1581,23 @@
     <string name="credit_cards_cancel_button">Betal</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Kartên tomarkirî</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Tika ye hejmereke derbasdar ya karta krediyê binivîse</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Ji bo kartên xwe yên qeydkirî bibînî kilîdê rake</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Kartên xwe yên krediyê bixe ewlehiyê</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Nîgareke kilîdê, PIN yan jî şîfreyekê diyar bike ji bo ku gava amûra te bikeve destê kesên din kartên te yên krediyê bên parastin.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Niha saz bike</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Paşê</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Kilîda amûra xwe veke</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Kilîdê rake ku dikaribî agahiyên kartên krediyê yên tomarkirî bi kar bînî</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Motora lêgerînê tevlî bike</string>
@@ -1752,19 +1762,13 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Rake</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Ji %s’ê fêdeya herî zêde bibînin.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Ji bo agahiyên zêdetir, bitikîne</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Tiştên ku ji te re girîng in berhev bike</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Lêgerîn, malper û hilpekînên wekhev, bike kom da ku paşê tu karibî xwe zû bigihînî wan.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Tu li ser vê telefonê di gerokeke din a Firefoxê de wekî %s têketî yê. Tu dixwazî bi vî hesabî têkevî?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Tu dikarî vê malperê bi hêsanî li ekrana Malê ya telefona xwe zêde bikî û dikarî vê malperê bilez û wekî ku bernamokek be bi kar bînî.</string>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Jorê</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Bigire</string>
+
 </resources>

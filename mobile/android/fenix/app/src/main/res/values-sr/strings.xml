@@ -20,10 +20,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Ваши приватни језичци биће приказани овде.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 отворен језичак. Додирните за пребацивање језичака.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -94,13 +90,6 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">Погледај опције</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Одбаци</string>
-
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Промените приказ отворених језичака. Идите у подешавања и одаберите мрежу под приказом језичака.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Иди у подешавања</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Одбаци</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -181,6 +170,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Прилагоди приказ за читање</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Додај</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Уреди</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Није могуће повезивање. Непозната URL шема.</string>
@@ -411,6 +405,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s на %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Кредитне картице</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Адресе</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Примљени језичци</string>
@@ -440,9 +439,6 @@
     <string name="exceptions_empty_message_description">Изузеци омогућавају онемогућавање заштите од праћења за одабране странице.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Сазнајте више</string>
-
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Искључено је глобално, за укључивање идите на Подешавања.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Телеметрија</string>
@@ -542,8 +538,6 @@
     <string name="library_new_tab">Нови језичак</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Пронађи на страници</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Синхронизовани језичци</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Списак за читање</string>
     <!-- Menu Item Label for Search in Library -->
@@ -604,12 +598,16 @@
     <string name="tabs_header_private_title">Приватна сесија</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Приватни језичци</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Синхронизовани језичци</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Додај језичак</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Додај приватни језичак</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Приватно</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Синхронизација</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Отворени језичци</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -620,6 +618,8 @@
     <string name="tab_tray_menu_item_share">Дели све језичке</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Недавно затворени језичци</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Подешавања налога</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Подешавања језичака</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -789,8 +789,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s избрисано</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Додај фасциклу</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Забелешка је направљена.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Забелешка је сачувана!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -975,6 +973,8 @@
     <string name="share_link_all_apps_subheader">Све радње</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Недавно затворено</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Синхронизација</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Пријави се на Sync</string>
 
@@ -1167,9 +1167,6 @@
     <string name="onboarding_header">Добро дошли у апликацију %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Већ имате налог?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Упознајте се са апликацијом %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Погледајте шта је ново</string>
 
@@ -1178,10 +1175,8 @@
     <string name="onboarding_whats_new_description">Имате питање о новом дизајну апликације %s? Желите ли да знате шта је промењено?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Овде потражите одговоре</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Почните са синхронизовањем забелешки, лозинки и других делова са вашим Firefox налогом.</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Сазнајте више</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Синхронизујте Firefox на више уређаја</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1190,8 +1185,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Да, пријави ме</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Пријава у току</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Пријава у Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Пријави се</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Остави ме пријављеног</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1199,27 +1194,12 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Неуспех при пријављивању</string>
 
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Аутоматска приватност</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Подешавања приватности и безбедности блокирају трагаче, злонамерни софтвер и компаније које вас прате.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандардно (подразумевано)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Блокира мање пратилаца. Странице ће се нормално учитавати.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Строго (препоручено)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Строго</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Блокира више пратилаца, огласа и скочних прозора. Странице се учитавају брже, али неке функције можда неће радити.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Одлучите се</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Пробајте прегледати једном руком с доњом алатном траком или је померите према горе.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Прегледајте приватно</string>
     <!-- text for the private browsing onboarding card description
@@ -1232,7 +1212,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Ваша приватност</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Дизајнирали смо %s тако да имате пуну контролу над оним што делите на мрежи и са нама.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Прочитајте наше обавештење о приватности</string>
@@ -1246,8 +1226,6 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Изаберите вашу тему</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Штедите батерију и сачувајте вид укључивањем тамног режима.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Самостално</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1304,14 +1282,10 @@
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандардно (подразумевано)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Блокира мање пратилаца. Странице ће се нормално учитавати.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Шта се блокира стандардном заштитом од праћења</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Строго</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Блокира више пратилаца, огласа и скочних прозора. Странице се учитавају брже, али неке функције можда неће радити.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Шта се блокира строгом заштитом од праћења</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1454,10 +1428,6 @@
     <string name="preferences_passwords_autofill">Самостално попуњавање</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Синхронизуј пријаве</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Укључено</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Искључено</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Поново повежи</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1559,8 +1529,43 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Подаци су шифровани</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Синхронизуј картице на уређајима</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Синхронизуј картице</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Додај кредитну картицу</string>
+
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Управљај сачуваним картицама</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Додај картицу</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Уреди картицу</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Број картице</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Датум истека</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Име на картици</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Надимак картице</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Обриши картицу</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Обриши картицу</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Сачувај</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Сачувај</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Откажи</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Сачуване картице</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Подеси сада</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Касније</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Откључајте ваш уређај</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Додај претраживач</string>
@@ -1724,20 +1729,13 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Уклони</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Искористите %s у потпуности.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Кликните за више детаља</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Сакупљајте ствари које су вам важне</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Групишите сличне претраге, странице и језичке за брз приступ касније.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Пријављени сте као %s у другом Firefox прегледачу, на овом телефону. Желите ли да се пријавите са тим налогом?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Ову страницу можете лако додати на почетни екран вашег телефона за тренутни приступ и брже прегледање.</string>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Иди нагоре</string>
 
-    </resources>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Затвори</string>
+
+</resources>
