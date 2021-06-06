@@ -156,7 +156,7 @@ function test_property(property)
     var value_has_variable_reference = resolved_value != null;
     var is_system_font = property == "font" && value in gSystemFont;
 
-    var colon = value == "var(--a)" ? ":" : ": ";
+    var colon = ": ";
     gDeclaration.setProperty(property, value, "");
 
     var idx;
