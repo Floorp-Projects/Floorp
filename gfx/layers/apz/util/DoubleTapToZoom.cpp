@@ -187,6 +187,15 @@ static CSSRect AddVMargin(const CSSRect& aRect, const CSSCoord& aMargin,
   return rect;
 }
 
+static bool IsReplacedElement(const nsCOMPtr<dom::Element>& aElement) {
+  if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
+    if (frame->IsFrameOfType(nsIFrame::eReplaced)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 ZoomTarget CalculateRectToZoomTo(
     const RefPtr<dom::Document>& aRootContentDocument, const CSSPoint& aPoint) {
   // Ensure the layout information we get is up-to-date.
@@ -262,14 +271,51 @@ ZoomTarget CalculateRectToZoomTo(
 
   CSSRect elementBoundingRect = rect;
 
+  // Generally we zoom to the width of some element, but sometimes we zoom to
+  // the height. We set this to true when that happens so that we can add a
+  // vertical margin to the rect, otherwise it looks weird.
+  bool heightConstrained = false;
+
   // If the element is taller than the visible area of the page scale
   // the height of the |rect| so that it has the same aspect ratio as
   // the root frame.  The clipped |rect| is centered on the y value of
   // the touch point. This allows tall narrow elements to be zoomed.
-  if (!rect.IsEmpty() && compositedArea.Width() > 0.0f) {
+  if (!rect.IsEmpty() && compositedArea.Width() > 0.0f &&
+      compositedArea.Height() > 0.0f) {
+    // Calculate the height of the rect if it had the same aspect ratio as
+    // compositedArea.
     const float widthRatio = rect.Width() / compositedArea.Width();
     float targetHeight = compositedArea.Height() * widthRatio;
-    if (targetHeight < rect.Height()) {
+
+    // We don't want to cut off the top or bottoms of replaced elements that are
+    // square or wider in aspect ratio.
+
+    // If it's a replaced element and we would otherwise trim it's height below
+    if (IsReplacedElement(element) && targetHeight < rect.Height() &&
+        // If the target rect is at most 1.1x away from being square or wider
+        // aspect ratio
+        rect.Height() < 1.1 * rect.Width() &&
+        // and our compositedArea is wider than it is tall
+        compositedArea.Width() >= compositedArea.Height()) {
+      heightConstrained = true;
+      // Expand the width of the rect so that it fills compositedArea so that if
+      // we are already zoomed to this element then the IsRectZoomedIn call
+      // below returns true so that we zoom out. This won't change what we
+      // actually zoom to as we are just making the rect the same aspect ratio
+      // as compositedArea.
+      float targetWidth =
+          rect.Height() * compositedArea.Width() / compositedArea.Height();
+      MOZ_ASSERT(targetWidth > rect.Width());
+      if (targetWidth > rect.Width()) {
+        rect.x -= (targetWidth - rect.Width()) / 2;
+        rect.SetWidth(targetWidth);
+        // keep elementBoundingRect containing rect
+        elementBoundingRect = rect;
+      }
+
+    } else if (targetHeight < rect.Height()) {
+      // Trim the height so that the target rect has the same aspect ratio as
+      // compositedArea, centering it around the user tap point.
       float newY = documentRelativePoint.y - (targetHeight * 0.5f);
       if ((newY + targetHeight) > rect.YMost()) {
         rect.MoveByY(rect.Height() - targetHeight);
@@ -282,6 +328,10 @@ ZoomTarget CalculateRectToZoomTo(
 
   const CSSCoord margin = 15;
   rect = AddHMargin(rect, margin, metrics);
+
+  if (heightConstrained) {
+    rect = AddVMargin(rect, margin, metrics);
+  }
 
   // If the rect is already taking up most of the visible area and is
   // stretching the width of the page, then we want to zoom out instead.
