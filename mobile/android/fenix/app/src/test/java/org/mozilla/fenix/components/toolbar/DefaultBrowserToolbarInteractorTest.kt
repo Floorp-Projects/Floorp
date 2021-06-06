@@ -7,17 +7,18 @@ import io.mockk.verify
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInteractor
 
-class BrowserInteractorTest {
+class DefaultBrowserToolbarInteractorTest {
 
     @RelaxedMockK lateinit var browserToolbarController: BrowserToolbarController
     @RelaxedMockK lateinit var browserToolbarMenuController: BrowserToolbarMenuController
-    lateinit var interactor: BrowserInteractor
+    lateinit var interactor: DefaultBrowserToolbarInteractor
 
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        interactor = BrowserInteractor(
+        interactor = DefaultBrowserToolbarInteractor(
             browserToolbarController,
             browserToolbarMenuController
         )

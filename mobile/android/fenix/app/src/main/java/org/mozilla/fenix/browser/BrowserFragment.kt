@@ -89,7 +89,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 selected = getCurrentTab()?.let {
                         activity?.components?.core?.store?.state?.findTab(it.id)?.readerState?.active
                     } ?: false,
-                listener = browserInteractor::onReaderModePressed
+                listener = browserToolbarInteractor::onReaderModePressed
             )
 
         browserToolbarView.view.addPageAction(readerModeAction)

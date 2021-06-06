@@ -23,8 +23,8 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBehavior
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.support.utils.URLStringUtils
-import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.customtabs.CustomTabToolbarIntegration
 import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
 import org.mozilla.fenix.ext.bookmarkStorage
@@ -35,23 +35,12 @@ import org.mozilla.fenix.utils.ToolbarPopupWindow
 import java.lang.ref.WeakReference
 import mozilla.components.browser.toolbar.behavior.ToolbarPosition as MozacToolbarPosition
 
-interface BrowserToolbarViewInteractor {
-    fun onBrowserToolbarPaste(text: String)
-    fun onBrowserToolbarPasteAndGo(text: String)
-    fun onBrowserToolbarClicked()
-    fun onBrowserToolbarMenuItemTapped(item: ToolbarMenu.Item)
-    fun onTabCounterClicked()
-    fun onTabCounterMenuItemTapped(item: TabCounterMenu.Item)
-    fun onScrolled(offset: Int)
-    fun onReaderModePressed(enabled: Boolean)
-}
-
 @ExperimentalCoroutinesApi
 @SuppressWarnings("LargeClass")
 class BrowserToolbarView(
     private val container: ViewGroup,
     private val toolbarPosition: ToolbarPosition,
-    private val interactor: BrowserToolbarViewInteractor,
+    private val interactor: BrowserToolbarInteractor,
     private val customTabSession: CustomTabSessionState?,
     private val lifecycleOwner: LifecycleOwner
 ) : LayoutContainer {

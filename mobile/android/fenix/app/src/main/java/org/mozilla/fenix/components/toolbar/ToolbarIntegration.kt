@@ -25,6 +25,7 @@ import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
@@ -88,7 +89,7 @@ class DefaultToolbarIntegration(
     lifecycleOwner: LifecycleOwner,
     sessionId: String? = null,
     isPrivate: Boolean,
-    interactor: BrowserToolbarViewInteractor,
+    interactor: BrowserToolbarInteractor,
     engine: Engine
 ) : ToolbarIntegration(
     context = context,
