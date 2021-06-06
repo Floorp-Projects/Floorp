@@ -1080,9 +1080,9 @@ impl PropertyDeclarationBlock {
                 // AppendableValue::Css.
                 let mut v = CssString::new();
                 let value = match appendable_value {
-                    AppendableValue::Css(css) => {
+                    AppendableValue::Css { css, with_variables } => {
                         debug_assert!(!css.is_empty());
-                        appendable_value
+                        AppendableValue::Css { css, with_variables }
                     },
                     other => {
                         append_declaration_value(&mut v, other)?;
@@ -1094,13 +1094,14 @@ impl PropertyDeclarationBlock {
                             continue;
                         }
 
-                        AppendableValue::Css({
+                        AppendableValue::Css {
                             // Safety: serialization only generates valid utf-8.
                             #[cfg(feature = "gecko")]
-                            unsafe { v.as_str_unchecked() }
+                            css: unsafe { v.as_str_unchecked() },
                             #[cfg(feature = "servo")]
-                            &v
-                        })
+                            css: &v,
+                            with_variables: false,
+                        }
                     },
                 };
 
@@ -1182,7 +1183,12 @@ where
     DeclarationsForShorthand(ShorthandId, I),
     /// A raw CSS string, coming for example from a property with CSS variables,
     /// or when storing a serialized shorthand value before appending directly.
-    Css(&'a str),
+    Css {
+        /// The raw CSS string.
+        css: &'a str,
+        /// Whether the original serialization contained variables or not.
+        with_variables: bool,
+    },
 }
 
 /// Potentially appends whitespace after the first (property: value;) pair.
@@ -1207,7 +1213,7 @@ where
     I: Iterator<Item = &'a PropertyDeclaration>,
 {
     match appendable_value {
-        AppendableValue::Css(css) => dest.write_str(css),
+        AppendableValue::Css { css, .. } => dest.write_str(css),
         AppendableValue::Declaration(decl) => decl.to_css(dest),
         AppendableValue::DeclarationsForShorthand(shorthand, decls) => {
             shorthand.longhands_to_css(decls, &mut CssWriter::new(dest))
@@ -1230,7 +1236,25 @@ where
     handle_first_serialization(dest, is_first_serialization)?;
 
     property_name.to_css(&mut CssWriter::new(dest))?;
-    dest.write_str(": ")?;
+    dest.write_char(':')?;
+
+    // for normal parsed values, add a space between key: and value
+    match appendable_value {
+        AppendableValue::Declaration(decl) => {
+            if !decl.value_is_unparsed() {
+                // For normal parsed values, add a space between key: and value.
+                dest.write_str(" ")?
+            }
+        },
+        AppendableValue::Css { with_variables, .. } => {
+            if !with_variables {
+                dest.write_str(" ")?
+            }
+        },
+        // Currently append_serialization is only called with a Css or
+        // a Declaration AppendableValue.
+        AppendableValue::DeclarationsForShorthand(..) => unreachable!(),
+    }
 
     append_declaration_value(dest, appendable_value)?;
 
