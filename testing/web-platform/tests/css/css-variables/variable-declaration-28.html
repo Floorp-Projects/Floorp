@@ -3,18 +3,19 @@
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <!DOCTYPE html>
-<title>CSS Test: Test declaring a non-custom property with invalid syntax due to having a variable reference whose fallback contains no tokens.</title>
+<title>CSS Test: Test declaring a variable with invalid syntax due to having no tokens.</title>
 <link rel="author" title="Cameron McCormack" href="mailto:cam@mcc.id.au">
-<link rel="help" href="http://www.w3.org/TR/css-variables-1/#using-variables">
+<link rel="help" href="http://www.w3.org/TR/css-variables-1/#syntax">
 <link rel="match" href="support/color-green-ref.html">
 <style>
-body {
-  --a: crimson;
+p {
   color: red;
 }
 p {
-  color: green;
-  color: var(--a,);
+  color: orange;
+  --a: green;
+  --a:;
+  color: var(--a);
 }
 </style>
 <p>This text must be green.</p>
