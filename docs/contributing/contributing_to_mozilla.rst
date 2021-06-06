@@ -2,7 +2,7 @@ Welcome to the Firefox codebase!
 --------------------------------
 
 This page is here to help you get from "I want to build Firefox"
-to "I'm building my own Firefox" to "I can contribute to Firefox". 
+to "I'm building my own Firefox" to "I can contribute to Firefox".
 So if you'd like to help Mozilla build the best web browser in the
 world, you're in the right place.
 
@@ -22,7 +22,7 @@ challenge, and we're always looking for ways to improve this process: making
 Mozilla more open, accessible, and easier to participate with. If you're
 having any trouble following this documentation, or hit a barrier you
 can't get around, please join us in the the Introduction room on Matrix
-or contact Mike Hoye directly at mhoye@mozilla.com. 
+or contact Mike Hoye directly at mhoye@mozilla.com.
 
 What skills do I need?
 ----------------------
@@ -32,7 +32,7 @@ very diverse skills:
 
 -  If you know **C++,** **Rust,** **JavaScript,** **HTML** or **CSS**,
    you can contribute to the core layers of Firefox and many other Mozilla
-   projects. 
+   projects.
 -  If you know **Rust**, you can also contribute to the Rust programming
    language itself, and `Servo <https://servo.org/>`_, the web browser engine
    designed for parallelism and safety.
