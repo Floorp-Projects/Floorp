@@ -21,10 +21,6 @@ const workerDescriptorSpec = generateActorSpec({
       request: {},
       response: RetVal("json"),
     },
-    push: {
-      request: {},
-      response: RetVal("json"),
-    },
   },
 
   events: {
