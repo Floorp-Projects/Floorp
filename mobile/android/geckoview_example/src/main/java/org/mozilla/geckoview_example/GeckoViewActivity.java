@@ -1779,51 +1779,39 @@ public class GeckoViewActivity
         }
 
         @Override
-        public void onContentPermissionRequest(final GeckoSession session, final String uri,
-                                             final int type, final Callback callback) {
+        public GeckoResult<Integer> onContentPermissionRequest(final GeckoSession session, final ContentPermission perm) {
             final int resId;
-            Callback contentPermissionCallback = callback;
-            if (PERMISSION_GEOLOCATION == type) {
-                resId = R.string.request_geolocation;
-            } else if (PERMISSION_DESKTOP_NOTIFICATION == type) {
-                if (mShowNotificationsRejected) {
-                    Log.w(LOGTAG, "Desktop notifications already denied by user.");
-                    callback.reject();
-                    return;
-                }
-                resId = R.string.request_notification;
-                contentPermissionCallback = new ExampleNotificationCallback(callback);
-            } else if (PERMISSION_PERSISTENT_STORAGE == type) {
-                if (mAcceptedPersistentStorage.contains(uri)) {
-                    Log.w(LOGTAG, "Persistent Storage for " + uri + " already granted by user.");
-                    callback.grant();
-                    return;
-                }
-                resId = R.string.request_storage;
-                contentPermissionCallback = new ExamplePersistentStorageCallback(callback, uri);
-            } else if (PERMISSION_XR == type) {
-                resId = R.string.request_xr;
-            } else if (PERMISSION_AUTOPLAY_AUDIBLE == type || PERMISSION_AUTOPLAY_INAUDIBLE == type) {
-                if (!mAllowAutoplay.value()) {
-                    Log.d(LOGTAG, "Rejecting autoplay request");
-                    callback.reject();
-                } else {
-                    Log.d(LOGTAG, "Granting autoplay request");
-                    callback.grant();
-                }
-                return;
-            } else if (PERMISSION_MEDIA_KEY_SYSTEM_ACCESS == type) {
-                resId = R.string.request_media_key_system_access;
-            } else {
-                Log.w(LOGTAG, "Unknown permission: " + type);
-                callback.reject();
-                return;
+            switch (perm.permission) {
+                case PERMISSION_GEOLOCATION:
+                    resId = R.string.request_geolocation;
+                    break;
+                case PERMISSION_DESKTOP_NOTIFICATION:
+                    resId = R.string.request_notification;
+                    break;
+                case PERMISSION_PERSISTENT_STORAGE:
+                    resId = R.string.request_storage;
+                    break;
+                case PERMISSION_XR:
+                    resId = R.string.request_xr;
+                    break;
+                case PERMISSION_AUTOPLAY_AUDIBLE:
+                case PERMISSION_AUTOPLAY_INAUDIBLE:
+                    if (!mAllowAutoplay.value()) {
+                        return GeckoResult.fromValue(ContentPermission.VALUE_DENY);
+                    } else {
+                        return GeckoResult.fromValue(ContentPermission.VALUE_ALLOW);
+                    }
+                case PERMISSION_MEDIA_KEY_SYSTEM_ACCESS:
+                    resId = R.string.request_media_key_system_access;
+                    break;
+                default:
+                    return GeckoResult.fromValue(ContentPermission.VALUE_DENY);
             }
 
-            final String title = getString(resId, Uri.parse(uri).getAuthority());
+            final String title = getString(resId, Uri.parse(perm.uri).getAuthority());
             final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
                     mTabSessionManager.getCurrentSession().getPromptDelegate();
-            prompt.onPermissionPrompt(session, title, contentPermissionCallback);
+            return prompt.onPermissionPrompt(session, title, perm);
         }
 
         private String[] normalizeMediaName(final MediaSource[] sources) {
