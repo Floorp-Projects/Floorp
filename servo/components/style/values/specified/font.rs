@@ -11,9 +11,8 @@ use crate::values::computed::font::{FamilyName, FontFamilyList, FontStyleAngle, 
 use crate::values::computed::{font as computed, Length, NonNegativeLength};
 use crate::values::computed::{Angle as ComputedAngle, Percentage as ComputedPercentage};
 use crate::values::computed::{CSSPixelLength, Context, ToComputedValue};
-use crate::values::computed::FontSizeAdjust as ComputedFontSizeAdjust;
 use crate::values::generics::font::VariationValue;
-use crate::values::generics::font::{self as generics, FeatureTagValue, FontSettings, FontTag, GenericFontSizeAdjust};
+use crate::values::generics::font::{self as generics, FeatureTagValue, FontSettings, FontTag};
 use crate::values::generics::NonNegative;
 use crate::values::specified::length::{FontBaseSize, AU_PER_PT, AU_PER_PX};
 use crate::values::specified::{AllowQuirks, Angle, Integer, LengthPercentage};
@@ -739,13 +738,16 @@ impl Parse for FamilyName {
     }
 }
 
-/// Preserve the readability of text when font fallback occurs
 #[derive(
-    Clone, Copy, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss, ToShmem,
+    Clone, Copy, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToCss, ToShmem,
 )]
-#[allow(missing_docs)]
+/// Preserve the readability of text when font fallback occurs
 pub enum FontSizeAdjust {
-    Value(GenericFontSizeAdjust<NonNegativeNumber>),
+    /// None variant
+    None,
+    /// Number variant
+    Number(NonNegativeNumber),
+    /// system font
     #[css(skip)]
     System(SystemFont),
 }
@@ -754,53 +756,34 @@ impl FontSizeAdjust {
     #[inline]
     /// Default value of font-size-adjust
     pub fn none() -> Self {
-        FontSizeAdjust::Value(GenericFontSizeAdjust::None)
+        FontSizeAdjust::None
     }
 
     system_font_methods!(FontSizeAdjust, font_size_adjust);
 }
 
-impl Parse for FontSizeAdjust {
-    fn parse<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        let location = input.current_source_location();
-        if let Ok(ident) = input.try_parse(|i| i.expect_ident_cloned()) {
-            let basis_enabled = static_prefs::pref!("layout.css.font-size-adjust.basis.enabled");
-            let basis = match_ignore_ascii_case! { &ident,
-                "none" => return Ok(FontSizeAdjust::none()),
-                // Check for size adjustment basis keywords if enabled.
-                "ex" if basis_enabled => GenericFontSizeAdjust::Ex,
-                "cap" if basis_enabled => GenericFontSizeAdjust::Cap,
-                "ch" if basis_enabled => GenericFontSizeAdjust::Ch,
-                "ic" if basis_enabled => GenericFontSizeAdjust::Ic,
-                // Unknown (or disabled) keyword.
-                _ => return Err(location.new_custom_error(
-                    ::selectors::parser::SelectorParseErrorKind::UnexpectedIdent(ident)
-                )),
-            };
-            let value = NonNegativeNumber::parse(context, input)?;
-            return Ok(FontSizeAdjust::Value(basis(value)));
-        }
-        // Without a basis keyword, the number refers to the 'ex' metric.
-        let value = NonNegativeNumber::parse(context, input)?;
-        Ok(FontSizeAdjust::Value(GenericFontSizeAdjust::Ex(value)))
-    }
-}
-
 impl ToComputedValue for FontSizeAdjust {
-    type ComputedValue = ComputedFontSizeAdjust;
+    type ComputedValue = computed::FontSizeAdjust;
 
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
         match *self {
-            FontSizeAdjust::Value(v) => v.to_computed_value(context),
+            FontSizeAdjust::None => computed::FontSizeAdjust::None,
+            FontSizeAdjust::Number(ref n) => {
+                // The computed version handles clamping of animated values
+                // itself.
+                computed::FontSizeAdjust::Number(n.to_computed_value(context).0)
+            },
             FontSizeAdjust::System(_) => self.compute_system(context),
         }
     }
 
-    fn from_computed_value(computed: &ComputedFontSizeAdjust) -> Self {
-        Self::Value(ToComputedValue::from_computed_value(computed))
+    fn from_computed_value(computed: &computed::FontSizeAdjust) -> Self {
+        match *computed {
+            computed::FontSizeAdjust::None => FontSizeAdjust::None,
+            computed::FontSizeAdjust::Number(v) => {
+                FontSizeAdjust::Number(NonNegativeNumber::from_computed_value(&v.into()))
+            },
+        }
     }
 }
 
