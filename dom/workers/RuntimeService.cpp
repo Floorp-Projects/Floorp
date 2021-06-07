@@ -301,6 +301,8 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
           GetWorkerPref<bool>("experimental.private_fields"_ns))
       .setPrivateClassMethods(
           GetWorkerPref<bool>("experimental.private_methods"_ns))
+      .setErgnomicBrandChecks(
+          GetWorkerPref<bool>("experimental.ergonomic_brand_checks"_ns))
       .setTopLevelAwait(GetWorkerPref<bool>("experimental.top_level_await"_ns));
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
