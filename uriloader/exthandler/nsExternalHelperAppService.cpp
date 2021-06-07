@@ -324,6 +324,24 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
   }
 #elif defined(ANDROID)
   return NS_ERROR_FAILURE;
+#elif defined(XP_WIN)
+  // On windows, use default downloads directory if pref is set
+  const char* directory_to_save_file =
+      StaticPrefs::browser_download_improvements_to_download_panel()
+          ? NS_WIN_DEFAULT_DOWNLOAD_DIR
+          : NS_OS_TEMP_DIR;
+  nsresult rv =
+      NS_GetSpecialDirectory(directory_to_save_file, getter_AddRefs(dir));
+  NS_ENSURE_SUCCESS(rv, rv);
+#elif defined(XP_UNIX)
+  // On unix, use default downloads directory if pref is set
+  const char* directory_to_save_file =
+      StaticPrefs::browser_download_improvements_to_download_panel()
+          ? NS_UNIX_DEFAULT_DOWNLOAD_DIR
+          : NS_OS_TEMP_DIR;
+  nsresult rv =
+      NS_GetSpecialDirectory(directory_to_save_file, getter_AddRefs(dir));
+  NS_ENSURE_SUCCESS(rv, rv);
 #else
   // On all other platforms, we default to the systems temporary directory.
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
