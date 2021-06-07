@@ -1,0 +1,7 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+ac_add_options --enable-geckoview-lite
+
+. "$topsrcdir/mobile/android/config/mozconfigs/android-x86_64/debug"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

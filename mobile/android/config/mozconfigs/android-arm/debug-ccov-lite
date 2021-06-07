@@ -1,0 +1,22 @@
+. "$topsrcdir/build/mozconfig.artifact.automation"
+
+NO_CACHE=1
+NO_NDK=1
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+# Global options
+ac_add_options --enable-debug
+ac_add_options --enable-java-coverage
+
+# Android
+ac_add_options --target=arm-linux-androideabi
+ac_add_options --enable-geckoview-lite
+
+. "$topsrcdir/mobile/android/config/mozconfigs/android-arm/debug"
+
+. "$topsrcdir/build/mozconfig.artifact"
+
+ac_add_options --with-branding=mobile/android/branding/nightly
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"
