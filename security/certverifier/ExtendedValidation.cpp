@@ -1028,6 +1028,16 @@ static const struct EVInfo kEVInfos[] = {
     "A1UEAxMWQ2VydHVtIFRydXN0ZWQgUm9vdCBDQQ==",
     "Hr9ZULjJgDdMBvfrVU+17Q==",
   },
+  {
+    // CN=ANF Secure Server Root CA,OU=ANF CA Raiz,O=ANF Autoridad de Certificacion,C=ES,serialNumber=G63287510
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0xFB, 0x8F, 0xEC, 0x75, 0x91, 0x69, 0xB9, 0x10, 0x6B, 0x1E, 0x51, 0x16, 0x44, 0xC6, 0x18, 0xC5, 0x13, 0x04, 0x37, 0x3F, 0x6C, 0x06, 0x43, 0x08, 0x8D, 0x8B, 0xEF, 0xFD, 0x1B, 0x99, 0x75, 0x99 },
+    "MIGEMRIwEAYDVQQFEwlHNjMyODc1MTAxCzAJBgNVBAYTAkVTMScwJQYDVQQKEx5B"
+    "TkYgQXV0b3JpZGFkIGRlIENlcnRpZmljYWNpb24xFDASBgNVBAsTC0FORiBDQSBS"
+    "YWl6MSIwIAYDVQQDExlBTkYgU2VjdXJlIFNlcnZlciBSb290IENB",
+    "DdPjvGz5a7E=",
+  },
     // clang-format on
 };
 
