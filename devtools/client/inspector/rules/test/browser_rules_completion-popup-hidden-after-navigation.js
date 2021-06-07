@@ -9,7 +9,7 @@ const TEST_URI = "<h1 style='font: 24px serif'></h1>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, view, testActor } = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   info("Test autocompletion popup is hidden after page navigation");
 
@@ -35,7 +35,7 @@ add_task(async function() {
   ok(view.popup && view.popup.isOpen, "Popup should be opened");
 
   info("Reloading the page");
-  await reloadPage(inspector, testActor);
+  await refreshTab();
 
   ok(!(view.popup && view.popup.isOpen), "Popup should be closed");
 });

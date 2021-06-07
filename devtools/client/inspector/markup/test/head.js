@@ -57,18 +57,6 @@ function loadHelperScript(filePath) {
 }
 
 /**
- * Reload the current page
- * @return a promise that resolves when the inspector has emitted the event
- * new-root
- */
-function reloadPage(inspector, testActor) {
-  info("Reloading the page");
-  const newRoot = inspector.once("new-root");
-  testActor.reload();
-  return newRoot;
-}
-
-/**
  * Get the MarkupContainer object instance that corresponds to the given
  * NodeFront
  * @param {NodeFront} nodeFront

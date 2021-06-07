@@ -21,7 +21,7 @@ add_task(async function() {
   isnot(y, 0, "window scrolled vertically.");
 
   info("Reloading page.");
-  await testActor.reload();
+  await refreshTab();
 
   info("Waiting for markupview to load after reload.");
   await markupLoaded;
