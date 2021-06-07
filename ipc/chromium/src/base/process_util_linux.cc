@@ -13,6 +13,10 @@
 
 #include "algorithm"
 
+#if defined(MOZ_CODE_COVERAGE)
+#  include "nsString.h"
+#endif
+
 #if defined(MOZ_ENABLE_FORKSERVER)
 #  include <stdlib.h>
 #  include <sys/types.h>
