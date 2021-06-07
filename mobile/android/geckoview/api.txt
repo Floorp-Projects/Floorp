@@ -1705,6 +1705,8 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String, @Nullable String);
     method @AnyThread public void setPermission(@NonNull GeckoSession.PermissionDelegate.ContentPermission, int);
+    method @AnyThread @DeprecationSchedule(id="setpermission-string",version=93) public void setPermission(@NonNull String, int, int);
+    method @AnyThread @DeprecationSchedule(id="setpermission-string",version=93) public void setPermission(@NonNull String, @Nullable String, boolean, int, int);
   }
 
   public static class StorageController.ClearFlags {
