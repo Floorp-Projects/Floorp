@@ -652,12 +652,6 @@ class SmokeTest {
         enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionNotice()
         }.closeNotificationPopup {}
-
-        browserScreen {
-        }.openThreeDotMenu {
-        }.openReportSiteIssue {
-            verifyUrl("webcompat.com/issues/new")
-        }
     }
 
     @Test
@@ -1234,9 +1228,7 @@ class SmokeTest {
         )
 
         customTabScreen {
-            browserScreen {
-                verifyPageContent(customTabPage.content)
-            }
+            verifyCustomTabCloseButton()
         }.openMainMenu {
             verifyPoweredByTextIsDisplayed()
             verifyCustomMenuItem(customMenuItem)
@@ -1261,9 +1253,7 @@ class SmokeTest {
         )
 
         customTabScreen {
-            browserScreen {
-                verifyPageContent(customTabPage.content)
-            }
+            verifyCustomTabCloseButton()
         }.openMainMenu {
         }.clickOpenInBrowserButton {
             verifyTabCounter("1")

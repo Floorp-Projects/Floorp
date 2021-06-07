@@ -2,6 +2,7 @@ package org.mozilla.fenix.ui.robots
 
 import android.widget.RelativeLayout
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingResourceTimeoutException
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
@@ -17,6 +18,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
@@ -38,9 +40,23 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 
 class SettingsSubMenuAddonsManagerRobot {
     fun verifyAddonPrompt(addonName: String) = assertAddonPrompt(addonName)
+
     fun clickInstallAddon(addonName: String) = selectInstallAddon(addonName)
-    fun verifyDownloadAddonPrompt(addonName: String, activityTestRule: ActivityTestRule<HomeActivity>) =
-        assertDownloadingAddonPrompt(addonName, activityTestRule)
+
+    fun verifyDownloadAddonPrompt(
+        addonName: String,
+        activityTestRule: ActivityTestRule<HomeActivity>
+    ) {
+        try {
+            assertDownloadingAddonPrompt(addonName, activityTestRule)
+        } catch (e: IdlingResourceTimeoutException) {
+            if (mDevice.findObject(UiSelector().text("Failed to install $addonName")).exists()) {
+                clickInstallAddon(addonName)
+                acceptInstallAddon()
+                assertDownloadingAddonPrompt(addonName, activityTestRule)
+            }
+        }
+    }
 
     fun cancelInstallAddon() = cancelInstall()
     fun acceptInstallAddon() = allowInstall()

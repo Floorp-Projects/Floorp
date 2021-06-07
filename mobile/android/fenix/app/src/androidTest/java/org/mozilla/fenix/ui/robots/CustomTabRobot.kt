@@ -7,6 +7,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiSelector
@@ -29,7 +30,10 @@ class CustomTabRobot {
     }
 
     fun verifyPoweredByTextIsDisplayed() {
-        mDevice.findObject(UiSelector().textContains("POWERED BY $appName"))
+        assertTrue(
+            mDevice.findObject(UiSelector().textContains("POWERED BY $appName"))
+                .waitForExists(waitingTime)
+        )
     }
 
     fun verifyOpenInBrowserButtonExists() {
@@ -43,7 +47,11 @@ class CustomTabRobot {
     fun verifyRefreshButtonExists() = assertTrue(refreshButton().waitForExists(waitingTime))
 
     fun verifyCustomMenuItem(label: String) {
-        assertTrue(mDevice.findObject(UiSelector().text(label)).exists())
+        assertTrue(mDevice.findObject(UiSelector().text(label)).waitForExists(waitingTime))
+    }
+
+    fun verifyCustomTabCloseButton() {
+        closeButton().check(matches(isDisplayed()))
     }
 
     class Transition {
@@ -82,3 +90,5 @@ private fun refreshButton() = mDevice.findObject(UiSelector().description("Refre
 private fun forwardButton() = mDevice.findObject(UiSelector().description("Forward"))
 
 private fun backButton() = mDevice.findObject(UiSelector().description("Back"))
+
+private fun closeButton() = onView(withContentDescription("Return to previous app"))
