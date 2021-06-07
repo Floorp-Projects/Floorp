@@ -5,9 +5,11 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+var { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 let h2Port;
 let h3Port;
+let h3NoResponsePort;
 let trrServer;
 
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
@@ -31,6 +33,10 @@ function setup() {
   Assert.notEqual(h3Port, null);
   Assert.notEqual(h3Port, "");
 
+  h3NoResponsePort = env.get("MOZHTTP3_PORT_NO_RESPONSE");
+  Assert.notEqual(h3NoResponsePort, null);
+  Assert.notEqual(h3NoResponsePort, "");
+
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
 
   Services.prefs.setBoolPref("network.dns.upgrade_with_https_rr", true);
@@ -51,6 +57,7 @@ registerCleanupFunction(async () => {
     "network.dns.httpssvc.http3_fast_fallback_timeout"
   );
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
+  Services.prefs.clearUserPref("network.dns.localDomains");
   if (trrServer) {
     await trrServer.stop();
   }
@@ -622,6 +629,10 @@ add_task(async function testFastfallbackToH2() {
     "network.dns.httpssvc.http3_fast_fallback_timeout",
     1
   );
+  Services.prefs.setCharPref(
+    "network.dns.localDomains",
+    "test.fastfallback1.com"
+  );
 
   await trrServer.registerDoHAnswers("test.fastfallback.com", "HTTPS", {
     answers: [
@@ -635,7 +646,7 @@ add_task(async function testFastfallbackToH2() {
           name: "test.fastfallback1.com",
           values: [
             { key: "alpn", value: "h3-27" },
-            { key: "port", value: h3Port },
+            { key: "port", value: h3NoResponsePort },
             { key: "echconfig", value: "456..." },
           ],
         },

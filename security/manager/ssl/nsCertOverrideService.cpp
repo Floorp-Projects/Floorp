@@ -833,6 +833,13 @@ nsCertOverrideService::
 }
 
 NS_IMETHODIMP
+nsCertOverrideService::GetSecurityCheckDisabled(bool* aDisabled) {
+  MutexAutoLock lock(mMutex);
+  *aDisabled = mDisableAllSecurityCheck;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCertOverrideService::GetOverrides(
     /*out*/ nsTArray<RefPtr<nsICertOverride>>& retval) {
   MutexAutoLock lock(mMutex);

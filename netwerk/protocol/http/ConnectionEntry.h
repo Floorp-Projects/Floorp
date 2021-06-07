@@ -101,6 +101,9 @@ class ConnectionEntry {
   // Remove a particular DnsAndConnectSocket from the mDnsAndConnectSocket array
   bool RemoveDnsAndConnectSocket(DnsAndConnectSocket*);
 
+  bool MaybeProcessCoalescingKeys(nsIDNSAddrRecord* dnsRecord,
+                                  bool aIsHttp3 = false);
+
   // Spdy sometimes resolves the address in the socket manager in order
   // to re-coalesce sharded HTTP hosts. The dotted decimal address is
   // combined with the Anonymous flag and OA from the connection information

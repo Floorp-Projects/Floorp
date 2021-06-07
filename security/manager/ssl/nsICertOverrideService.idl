@@ -214,4 +214,6 @@ interface nsICertOverrideService : nsISupports {
    *                  hasMatchingOverride always return true.
    */
   void setDisableAllSecurityChecksAndLetAttackersInterceptMyData(in boolean aDisable);
+
+  readonly attribute boolean securityCheckDisabled;
 };
