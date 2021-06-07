@@ -567,9 +567,8 @@ class GeckoViewNavigation extends GeckoViewModule {
         return {
           uri: Services.io.createExposableURI(p.principal.URI).displaySpec,
           principal: E10SUtils.serializePrincipal(p.principal),
-          perm: p.type,
+          type: p.type,
           value: p.capability,
-          contextId: p.principal.originAttributes.geckoViewSessionContextId,
           privateMode: p.principal.privateBrowsingId != 0,
         };
       });
