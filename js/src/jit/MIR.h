@@ -7230,13 +7230,13 @@ class MLoadDataViewElement : public MTernaryInstruction,
 class MLoadTypedArrayElementHole : public MBinaryInstruction,
                                    public SingleObjectPolicy::Data {
   Scalar::Type arrayType_;
-  bool allowDouble_;
+  bool forceDouble_;
 
   MLoadTypedArrayElementHole(MDefinition* object, MDefinition* index,
-                             Scalar::Type arrayType, bool allowDouble)
+                             Scalar::Type arrayType, bool forceDouble)
       : MBinaryInstruction(classOpcode, object, index),
         arrayType_(arrayType),
-        allowDouble_(allowDouble) {
+        forceDouble_(forceDouble) {
     setResultType(MIRType::Value);
     setMovable();
     MOZ_ASSERT(index->type() == MIRType::IntPtr);
@@ -7249,9 +7249,9 @@ class MLoadTypedArrayElementHole : public MBinaryInstruction,
   NAMED_OPERANDS((0, object), (1, index))
 
   Scalar::Type arrayType() const { return arrayType_; }
-  bool allowDouble() const { return allowDouble_; }
+  bool forceDouble() const { return forceDouble_; }
   bool fallible() const {
-    return arrayType_ == Scalar::Uint32 && !allowDouble_;
+    return arrayType_ == Scalar::Uint32 && !forceDouble_;
   }
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isLoadTypedArrayElementHole()) {
@@ -7262,7 +7262,7 @@ class MLoadTypedArrayElementHole : public MBinaryInstruction,
     if (arrayType() != other->arrayType()) {
       return false;
     }
-    if (allowDouble() != other->allowDouble()) {
+    if (forceDouble() != other->forceDouble()) {
       return false;
     }
     return congruentIfOperandsEqual(other);
