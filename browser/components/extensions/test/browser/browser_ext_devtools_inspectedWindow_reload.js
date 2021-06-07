@@ -8,6 +8,14 @@ requestLongerTimeout(4);
 
 loadTestSubscript("head_devtools.js");
 
+// Allow rejections related to closing the devtools toolbox too soon after the test
+// has already verified the details that were relevant for that test case
+// (e.g. this was triggering an intermittent failure in shippable optimized
+// builds, tracked Bug 1707644).
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /Connection closed, pending request to/
+);
+
 const TEST_ORIGIN = "http://mochi.test:8888";
 const TEST_BASE = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
