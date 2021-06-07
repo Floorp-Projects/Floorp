@@ -212,14 +212,15 @@ static double FindClosestSize(FT_Face aFace, double aSize) {
 void gfxFT2FontBase::InitMetrics() {
   mFUnitsConvFactor = 0.0;
 
-  if (MOZ_UNLIKELY(GetStyle()->size <= 0.0) ||
-      MOZ_UNLIKELY(GetStyle()->sizeAdjust == 0.0)) {
+  if (MOZ_UNLIKELY(mStyle.AdjustedSizeMustBeZero())) {
     memset(&mMetrics, 0, sizeof(mMetrics));  // zero initialize
     mSpaceGlyph = GetGlyph(' ');
     return;
   }
 
-  if (GetStyle()->sizeAdjust > 0.0 && mFTSize == 0.0) {
+  if (FontSizeAdjust::Tag(mStyle.sizeAdjustBasis) !=
+          FontSizeAdjust::Tag::None &&
+      mStyle.sizeAdjust >= 0.0 && mFTSize == 0.0) {
     // If font-size-adjust is in effect, we need to get metrics in order to
     // determine the aspect ratio, then compute the final adjusted size and
     // re-initialize metrics.
@@ -228,11 +229,37 @@ void gfxFT2FontBase::InitMetrics() {
     mFTSize = 1.0;
     InitMetrics();
     // Now do the font-size-adjust calculation and set the final size.
-    gfxFloat aspect = mMetrics.xHeight / mMetrics.emHeight;
-    mAdjustedSize = GetStyle()->GetAdjustedSize(aspect);
-    // Ensure the FT_Face will be reconfigured for the new size next time we
-    // need to use it.
-    mFTFace->ForgetLockOwner(this);
+    gfxFloat aspect;
+    switch (FontSizeAdjust::Tag(mStyle.sizeAdjustBasis)) {
+      default:
+        MOZ_ASSERT_UNREACHABLE("unhandled sizeAdjustBasis?");
+        aspect = 0.0;
+        break;
+      case FontSizeAdjust::Tag::Ex:
+        aspect = mMetrics.xHeight / mAdjustedSize;
+        break;
+      case FontSizeAdjust::Tag::Cap:
+        aspect = mMetrics.capHeight / mAdjustedSize;
+        break;
+      case FontSizeAdjust::Tag::Ch:
+        aspect =
+            mMetrics.zeroWidth > 0.0 ? mMetrics.zeroWidth / mAdjustedSize : 0.5;
+        break;
+      case FontSizeAdjust::Tag::Ic: {
+        // We might want to add an icWidth field to the Metrics struct,
+        // especially when we implement 'ic' as a CSS unit, but for now
+        // we can look it up here if required.
+        gfxFloat advance = GetCharAdvance(0x6C34);
+        aspect = advance > 0 ? advance / mAdjustedSize : 1.0;
+        break;
+      }
+    }
+    if (aspect > 0.0) {
+      mAdjustedSize = mStyle.GetAdjustedSize(aspect);
+      // Ensure the FT_Face will be reconfigured for the new size next time we
+      // need to use it.
+      mFTFace->ForgetLockOwner(this);
+    }
   }
 
   // Set mAdjustedSize if it hasn't already been set by a font-size-adjust
@@ -438,19 +465,27 @@ void gfxFT2FontBase::InitMetrics() {
     mMetrics.zeroWidth = -1.0;  // indicates not found
   }
 
-  // Prefering a measured x over sxHeight because sxHeight doesn't consider
-  // hinting, but maybe the x extents are not quite right in some fancy
-  // script fonts.  CSS 2.1 suggests possibly using the height of an "o",
-  // which would have a more consistent glyph across fonts.
+  // If we didn't get a usable x-height or cap-height above, try measuring
+  // specific glyphs. This can be affected by hinting, leading to erratic
+  // behavior across font sizes and system configuration, so we prefer to
+  // use the metrics directly from the font if possible.
+  // Using glyph bounds for x-height or cap-height may not really be right,
+  // if fonts have fancy swashes etc. For x-height, CSS 2.1 suggests possibly
+  // using the height of an "o", which may be more consistent across fonts,
+  // but then curve-overshoot should also be accounted for.
   gfxFloat xWidth;
   gfxRect xBounds;
-  if (GetCharExtents('x', &xWidth, &xBounds) && xBounds.y < 0.0) {
-    mMetrics.xHeight = -xBounds.y;
-    mMetrics.aveCharWidth = std::max(mMetrics.aveCharWidth, xWidth);
+  if (mMetrics.xHeight == 0.0) {
+    if (GetCharExtents('x', &xWidth, &xBounds) && xBounds.y < 0.0) {
+      mMetrics.xHeight = -xBounds.y;
+      mMetrics.aveCharWidth = std::max(mMetrics.aveCharWidth, xWidth);
+    }
   }
 
-  if (GetCharExtents('H', nullptr, &xBounds) && xBounds.y < 0.0) {
-    mMetrics.capHeight = -xBounds.y;
+  if (mMetrics.capHeight == 0.0) {
+    if (GetCharExtents('H', nullptr, &xBounds) && xBounds.y < 0.0) {
+      mMetrics.capHeight = -xBounds.y;
+    }
   }
 
   mMetrics.aveCharWidth = std::max(mMetrics.aveCharWidth, mMetrics.zeroWidth);
