@@ -110,19 +110,12 @@ async function onTargetAvailable({ targetFront, isTargetSwitching }) {
     return;
   }
 
-  // The will-navigate event will be missed when using target switching,
-  // however `navigate` corresponds more or less to the load event, so it
-  // should still be received on the new target.
-  actions.willNavigate({ url: targetFront.url });
-
   // At this point, we expect the target and its thread to be attached.
   const { threadFront } = targetFront;
   if (!threadFront) {
     console.error("The thread for", targetFront, "isn't attached.");
     return;
   }
-
-  targetFront.on("will-navigate", actions.willNavigate);
 
   await threadFront.reconfigure({
     observeAsmJS: true,
@@ -142,9 +135,6 @@ async function onTargetAvailable({ targetFront, isTargetSwitching }) {
 }
 
 function onTargetDestroyed({ targetFront }) {
-  if (targetFront.isTopLevel) {
-    targetFront.off("will-navigate", actions.willNavigate);
-  }
   actions.removeTarget(targetFront);
 }
 
@@ -178,7 +168,9 @@ async function onBreakpointAvailable(breakpoints) {
 
 function onDocumentEventAvailable(events) {
   for (const event of events) {
-    if (event.name == "dom-complete") {
+    if (event.name == "will-navigate") {
+      actions.willNavigate({ url: event.newURI });
+    } else if (event.name == "dom-complete") {
       actions.navigated();
     }
   }
