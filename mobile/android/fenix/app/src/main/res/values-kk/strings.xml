@@ -91,13 +91,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Тайдыру</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Ашық беттер жаймасын өзгерту. Баптауларға өтіп, беттер көрінісі астындағы торды таңдаңыз.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Баптауларға өту</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Тайдыру</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Жаңа бет</string>
@@ -538,8 +531,6 @@
     <string name="library_new_tab">Жаңа бет</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Беттен табу</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Синхрондалған беттер</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Оқу тізімі</string>
     <!-- Menu Item Label for Search in Library -->
@@ -1597,6 +1588,9 @@
     <string name="credit_cards_warning_dialog_later">Кейінірек</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Құрылғының бұғаттауын ашыңыз</string>
+
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Сақталған несиелік карта ақпаратын қолдану үшін бұғаттауын ашыңыз</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Іздеу жүйесін қосу</string>
