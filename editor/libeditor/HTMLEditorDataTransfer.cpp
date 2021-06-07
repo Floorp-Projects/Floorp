@@ -21,6 +21,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FileReader.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/StaticRange.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
@@ -90,6 +91,44 @@ static bool FindIntegerAfterString(const char* aLeadingString,
                                    const nsCString& aCStr,
                                    int32_t& foundNumber);
 static void RemoveFragComments(nsCString& aStr);
+
+nsresult HTMLEditor::InsertDroppedDataTransferAsAction(
+    AutoEditActionDataSetter& aEditActionData, DataTransfer& aDataTransfer,
+    const EditorDOMPoint& aDroppedAt, Document* aSrcDocument) {
+  MOZ_ASSERT(aEditActionData.GetEditAction() == EditAction::eDrop);
+  MOZ_ASSERT(GetEditAction() == EditAction::eDrop);
+  MOZ_ASSERT(aDroppedAt.IsSet());
+  MOZ_ASSERT(aDataTransfer.MozItemCount() > 0);
+
+  aEditActionData.InitializeDataTransfer(&aDataTransfer);
+  RefPtr<StaticRange> targetRange = StaticRange::Create(
+      aDroppedAt.GetContainer(), aDroppedAt.Offset(), aDroppedAt.GetContainer(),
+      aDroppedAt.Offset(), IgnoreErrors());
+  NS_WARNING_ASSERTION(targetRange && targetRange->IsPositioned(),
+                       "Why did we fail to create collapsed static range at "
+                       "dropped position?");
+  if (targetRange && targetRange->IsPositioned()) {
+    aEditActionData.AppendTargetRange(*targetRange);
+  }
+  nsresult rv = aEditActionData.MaybeDispatchBeforeInputEvent();
+  if (NS_FAILED(rv)) {
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "MaybeDispatchBeforeInputEvent() failed");
+    return rv;
+  }
+  uint32_t numItems = aDataTransfer.MozItemCount();
+  for (uint32_t i = 0; i < numItems; ++i) {
+    DebugOnly<nsresult> rvIgnored = InsertFromDataTransfer(
+        &aDataTransfer, i, aSrcDocument, aDroppedAt, false);
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_OK;
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "HTMLEditor::InsertFromDataTransfer() failed, but ignored");
+  }
+  return NS_OK;
+}
 
 nsresult HTMLEditor::LoadHTML(const nsAString& aInputString) {
   MOZ_ASSERT(IsEditActionDataAvailable());
