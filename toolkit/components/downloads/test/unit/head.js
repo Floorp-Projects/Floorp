@@ -537,6 +537,33 @@ function promiseDownloadStarted(aDownload) {
 }
 
 /**
+ * Waits for a download to finish.
+ *
+ * @param aDownload
+ *        The Download object to wait upon.
+ *
+ * @return {Promise}
+ * @resolves When the download succeeded or errored.
+ * @rejects Never.
+ */
+function promiseDownloadFinished(aDownload) {
+  return new Promise(resolve => {
+    // Wait for the download to finish.
+    let onchange = function() {
+      if (aDownload.succeeded || aDownload.error) {
+        aDownload.onchange = null;
+        resolve();
+      }
+    };
+
+    // Register for the notification, but also call the function directly in
+    // case the download already reached the expected progress.
+    aDownload.onchange = onchange;
+    onchange();
+  });
+}
+
+/**
  * Waits for a download to finish, in case it has not finished already.
  *
  * @param aDownload
