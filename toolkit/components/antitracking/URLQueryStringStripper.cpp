@@ -6,11 +6,13 @@
 #include "URLQueryStringStripper.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 
 #include "nsEffectiveTLDService.h"
+#include "nsIPrefBranch.h"
 #include "nsISupportsImpl.h"
 #include "nsIURI.h"
 #include "nsIURIMutator.h"
@@ -18,12 +20,18 @@
 #include "nsURLHelper.h"
 
 namespace {
+static const char kPRefQueryStrippingList[] =
+    "privacy.query_stripping.strip_list";
+static const char kPRefQueryStrippingAllowList[] =
+    "privacy.query_stripping.allow_list";
+
 mozilla::StaticRefPtr<mozilla::URLQueryStringStripper> gQueryStringStripper;
+
 }  // namespace
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS(URLQueryStringStripper, nsIURLQueryStrippingListObserver)
+NS_IMPL_ISUPPORTS(URLQueryStringStripper, nsIObserver)
 
 URLQueryStringStripper* URLQueryStringStripper::GetOrCreate() {
   if (!gQueryStringStripper) {
@@ -37,6 +45,23 @@ URLQueryStringStripper* URLQueryStringStripper::GetOrCreate() {
   }
 
   return gQueryStringStripper;
+}
+
+NS_IMETHODIMP
+URLQueryStringStripper::Observe(nsISupports* aSubject, const char* aTopic,
+                                const char16_t* aData) {
+  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    nsDependentString data(aData);
+
+    if (data.EqualsLiteral(kPRefQueryStrippingList)) {
+      PopulateStripList();
+    }
+
+    if (data.EqualsLiteral(kPRefQueryStrippingAllowList)) {
+      PopulateAllowList();
+    }
+  }
+  return NS_OK;
 }
 
 /* static */
@@ -55,18 +80,17 @@ bool URLQueryStringStripper::Strip(nsIURI* aURI, nsCOMPtr<nsIURI>& aOutput) {
 }
 
 void URLQueryStringStripper::Init() {
-  mService = do_GetService("@mozilla.org/query-stripping-list-service;1");
-  NS_ENSURE_TRUE_VOID(mService);
+  Preferences::AddStrongObserver(this, kPRefQueryStrippingList);
+  Preferences::AddStrongObserver(this, kPRefQueryStrippingAllowList);
 
-  mService->RegisterAndRunObserver(this);
+  PopulateStripList();
+  PopulateAllowList();
 }
 
 void URLQueryStringStripper::Shutdown() {
+  Preferences::RemoveObserver(this, kPRefQueryStrippingList);
+  Preferences::RemoveObserver(this, kPRefQueryStrippingAllowList);
   mList.Clear();
-  mAllowList.Clear();
-
-  mService->UnregisterObserver(this);
-  mService = nullptr;
 }
 
 bool URLQueryStringStripper::StripQueryString(nsIURI* aURI,
@@ -128,28 +152,28 @@ bool URLQueryStringStripper::CheckAllowList(nsIURI* aURI) {
   return mAllowList.Contains(baseDomain);
 }
 
-void URLQueryStringStripper::PopulateStripList(const nsAString& aList) {
+void URLQueryStringStripper::PopulateStripList() {
+  nsAutoString stripList;
+  Preferences::GetString(kPRefQueryStrippingList, stripList);
+  ToLowerCase(stripList);
+
   mList.Clear();
 
-  for (const nsAString& item : aList.Split(' ')) {
+  for (const nsAString& item : stripList.Split(' ')) {
     mList.Insert(item);
   }
 }
 
-void URLQueryStringStripper::PopulateAllowList(const nsACString& aList) {
+void URLQueryStringStripper::PopulateAllowList() {
+  nsAutoCString allowList;
+  Preferences::GetCString(kPRefQueryStrippingAllowList, allowList);
+  ToLowerCase(allowList);
+
   mAllowList.Clear();
 
-  for (const nsACString& item : aList.Split(',')) {
+  for (const nsACString& item : allowList.Split(',')) {
     mAllowList.Insert(item);
   }
-}
-
-NS_IMETHODIMP
-URLQueryStringStripper::OnQueryStrippingListUpdate(
-    const nsAString& aStripList, const nsACString& aAllowList) {
-  PopulateStripList(aStripList);
-  PopulateAllowList(aAllowList);
-  return NS_OK;
 }
 
 }  // namespace mozilla
