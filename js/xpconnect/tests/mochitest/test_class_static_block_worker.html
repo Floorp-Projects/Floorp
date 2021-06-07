@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test class static fields</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript">
+      // Make sure static classes parse in regular context too:
+      class B {
+        static { this.x = 12; }
+      }
+      is(B.x, 12, "static block set class value");
+      console.log("script");
+      function go() {
+        SimpleTest.waitForExplicitFinish();
+
+        let worker = new Worker('class_static_worker.js');
+
+        console.log("message")
+        worker.onmessage = function(e) {
+
+          is(e.data, 12, "correctly allocated class-static containing-class in worker");
+          SimpleTest.finish();
+        }
+        worker.postMessage("get");
+        info("Messages posted");
+      }
+      go();
+    </script>
+  </head>
+
+</html>
