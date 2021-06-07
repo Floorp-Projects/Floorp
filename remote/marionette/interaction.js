@@ -15,14 +15,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.jsm",
 
-  accessibility: "chrome://marionette/content/accessibility.js",
-  atom: "chrome://marionette/content/atom.js",
-  element: "chrome://marionette/content/element.js",
-  error: "chrome://marionette/content/error.js",
-  event: "chrome://marionette/content/event.js",
-  Log: "chrome://marionette/content/log.js",
-  pprint: "chrome://marionette/content/format.js",
-  TimedPromise: "chrome://marionette/content/sync.js",
+  accessibility: "chrome://remote/content/marionette/accessibility.js",
+  atom: "chrome://remote/content/marionette/atom.js",
+  element: "chrome://remote/content/marionette/element.js",
+  error: "chrome://remote/content/marionette/error.js",
+  event: "chrome://remote/content/marionette/event.js",
+  Log: "chrome://remote/content/marionette/log.js",
+  pprint: "chrome://remote/content/marionette/format.js",
+  TimedPromise: "chrome://remote/content/marionette/sync.js",
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);

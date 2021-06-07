@@ -16,14 +16,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
 
-  AppInfo: "chrome://marionette/content/appinfo.js",
-  assert: "chrome://marionette/content/assert.js",
-  capture: "chrome://marionette/content/capture.js",
-  error: "chrome://marionette/content/error.js",
-  Log: "chrome://marionette/content/log.js",
-  navigate: "chrome://marionette/content/navigate.js",
-  print: "chrome://marionette/content/print.js",
-  windowManager: "chrome://marionette/content/window-manager.js",
+  AppInfo: "chrome://remote/content/marionette/appinfo.js",
+  assert: "chrome://remote/content/marionette/assert.js",
+  capture: "chrome://remote/content/marionette/capture.js",
+  error: "chrome://remote/content/marionette/error.js",
+  Log: "chrome://remote/content/marionette/log.js",
+  navigate: "chrome://remote/content/marionette/navigate.js",
+  print: "chrome://remote/content/marionette/print.js",
+  windowManager: "chrome://remote/content/marionette/window-manager.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -114,11 +114,11 @@ reftest.Runner = class {
       kind: "JSWindowActor",
       parent: {
         moduleURI:
-          "chrome://marionette/content/actors/MarionetteReftestParent.jsm",
+          "chrome://remote/content/marionette/actors/MarionetteReftestParent.jsm",
       },
       child: {
         moduleURI:
-          "chrome://marionette/content/actors/MarionetteReftestChild.jsm",
+          "chrome://remote/content/marionette/actors/MarionetteReftestChild.jsm",
         events: {
           load: { mozSystemGroup: true, capture: true },
         },
@@ -187,7 +187,7 @@ reftest.Runner = class {
     assert.positiveInteger(height);
 
     let reftestWin = this.parentWindow.open(
-      "chrome://marionette/content/reftest.xhtml",
+      "chrome://remote/content/marionette/reftest.xhtml",
       "reftest",
       `chrome,height=${height},width=${width}`
     );

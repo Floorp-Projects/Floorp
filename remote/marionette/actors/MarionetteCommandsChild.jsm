@@ -15,17 +15,17 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
-  action: "chrome://marionette/content/action.js",
-  atom: "chrome://marionette/content/atom.js",
-  element: "chrome://marionette/content/element.js",
-  error: "chrome://marionette/content/error.js",
-  evaluate: "chrome://marionette/content/evaluate.js",
-  event: "chrome://marionette/content/event.js",
-  interaction: "chrome://marionette/content/interaction.js",
-  legacyaction: "chrome://marionette/content/legacyaction.js",
-  Log: "chrome://marionette/content/log.js",
-  sandbox: "chrome://marionette/content/evaluate.js",
-  Sandboxes: "chrome://marionette/content/evaluate.js",
+  action: "chrome://remote/content/marionette/action.js",
+  atom: "chrome://remote/content/marionette/atom.js",
+  element: "chrome://remote/content/marionette/element.js",
+  error: "chrome://remote/content/marionette/error.js",
+  evaluate: "chrome://remote/content/marionette/evaluate.js",
+  event: "chrome://remote/content/marionette/event.js",
+  interaction: "chrome://remote/content/marionette/interaction.js",
+  legacyaction: "chrome://remote/content/marionette/legacyaction.js",
+  Log: "chrome://remote/content/marionette/log.js",
+  sandbox: "chrome://remote/content/marionette/evaluate.js",
+  Sandboxes: "chrome://remote/content/marionette/evaluate.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());

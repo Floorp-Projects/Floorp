@@ -12,8 +12,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  error: "chrome://marionette/content/error.js",
-  MarionettePrefs: "chrome://marionette/content/prefs.js",
+  error: "chrome://remote/content/marionette/error.js",
+  MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
 });
 
 /** @namespace */

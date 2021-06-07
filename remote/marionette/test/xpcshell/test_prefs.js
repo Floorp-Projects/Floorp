@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 const { Branch, EnvironmentPrefs, MarionettePrefs } = ChromeUtils.import(
-  "chrome://marionette/content/prefs.js"
+  "chrome://remote/content/marionette/prefs.js"
 );
 
 function reset() {

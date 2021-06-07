@@ -13,11 +13,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
-  BulkPacket: "chrome://marionette/content/packets.js",
-  executeSoon: "chrome://marionette/content/sync.js",
-  JSONPacket: "chrome://marionette/content/packets.js",
-  Packet: "chrome://marionette/content/packets.js",
-  StreamUtils: "chrome://marionette/content/stream-utils.js",
+  BulkPacket: "chrome://remote/content/marionette/packets.js",
+  executeSoon: "chrome://remote/content/marionette/sync.js",
+  JSONPacket: "chrome://remote/content/marionette/packets.js",
+  Packet: "chrome://remote/content/marionette/packets.js",
+  StreamUtils: "chrome://remote/content/marionette/stream-utils.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "Pipe", () => {

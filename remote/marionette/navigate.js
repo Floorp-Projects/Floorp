@@ -12,14 +12,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  error: "chrome://marionette/content/error.js",
+  error: "chrome://remote/content/marionette/error.js",
   EventDispatcher:
-    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
-  Log: "chrome://marionette/content/log.js",
-  modal: "chrome://marionette/content/modal.js",
-  PageLoadStrategy: "chrome://marionette/content/session.js",
-  TimedPromise: "chrome://marionette/content/sync.js",
-  truncate: "chrome://marionette/content/format.js",
+    "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
+  Log: "chrome://remote/content/marionette/log.js",
+  modal: "chrome://remote/content/marionette/modal.js",
+  PageLoadStrategy: "chrome://remote/content/marionette/session.js",
+  TimedPromise: "chrome://remote/content/marionette/sync.js",
+  truncate: "chrome://remote/content/marionette/format.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());

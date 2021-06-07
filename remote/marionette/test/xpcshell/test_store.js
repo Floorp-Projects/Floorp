@@ -1,5 +1,5 @@
 const { element, ReferenceStore, WebElement } = ChromeUtils.import(
-  "chrome://marionette/content/element.js"
+  "chrome://remote/content/marionette/element.js"
 );
 
 const SVG_NS = "http://www.w3.org/2000/svg";

@@ -21,15 +21,15 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.jsm",
 
-  accessibility: "chrome://marionette/content/accessibility.js",
-  allowAllCerts: "chrome://marionette/content/cert.js",
-  AppInfo: "chrome://marionette/content/appinfo.js",
-  assert: "chrome://marionette/content/assert.js",
+  accessibility: "chrome://remote/content/marionette/accessibility.js",
+  allowAllCerts: "chrome://remote/content/marionette/cert.js",
+  AppInfo: "chrome://remote/content/marionette/appinfo.js",
+  assert: "chrome://remote/content/marionette/assert.js",
   clearActionInputState:
-    "chrome://marionette/content/actors/MarionetteCommandsChild.jsm",
-  error: "chrome://marionette/content/error.js",
-  Log: "chrome://marionette/content/log.js",
-  pprint: "chrome://marionette/content/format.js",
+    "chrome://remote/content/marionette/actors/MarionetteCommandsChild.jsm",
+  error: "chrome://remote/content/marionette/error.js",
+  Log: "chrome://remote/content/marionette/log.js",
+  pprint: "chrome://remote/content/marionette/format.js",
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
