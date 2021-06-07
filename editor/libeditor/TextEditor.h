@@ -27,7 +27,6 @@ class InsertNodeTransaction;
 enum class EditSubAction : int32_t;
 
 namespace dom {
-class DragEvent;
 class Selection;
 }  // namespace dom
 
@@ -125,12 +124,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 
   MOZ_CAN_RUN_SCRIPT nsresult
   InsertLineBreakAsAction(nsIPrincipal* aPrincipal = nullptr) override;
-
-  /**
-   * OnDrop() is called from EditorEventListener::Drop that is handler of drop
-   * event.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult OnDrop(dom::DragEvent* aDropEvent);
 
   /**
    * ComputeTextValue() computes plaintext value of this editor.  This may be
