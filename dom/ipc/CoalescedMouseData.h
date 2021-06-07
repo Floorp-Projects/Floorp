@@ -31,24 +31,14 @@ class CoalescedMouseData final : public CoalescedInputData<WidgetMouseEvent> {
                    const uint64_t& aInputBlockId);
 };
 
-class CoalescedMouseMoveFlusher final : public nsARefreshObserver {
+class CoalescedMouseMoveFlusher final : public CoalescedInputFlusher {
  public:
   explicit CoalescedMouseMoveFlusher(BrowserChild* aBrowserChild);
 
-  virtual void WillRefresh(mozilla::TimeStamp aTime) override;
-
-  NS_INLINE_DECL_REFCOUNTING(CoalescedMouseMoveFlusher, override)
-
-  void StartObserver();
-  void RemoveObserver();
+  void WillRefresh(mozilla::TimeStamp aTime) override;
 
  private:
-  ~CoalescedMouseMoveFlusher();
-
-  nsRefreshDriver* GetRefreshDriver();
-
-  BrowserChild* mBrowserChild;
-  RefPtr<nsRefreshDriver> mRefreshDriver;
+  ~CoalescedMouseMoveFlusher() override;
 };
 
 }  // namespace dom
