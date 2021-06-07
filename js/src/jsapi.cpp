@@ -1368,6 +1368,14 @@ JS_PUBLIC_API bool JS::ZoneIsCollecting(JS::Zone* zone) {
   return zone->wasGCStarted();
 }
 
+JS_PUBLIC_API bool JS::AtomsZoneIsCollecting(JSRuntime* runtime) {
+  return runtime->activeGCInAtomsZone();
+}
+
+JS_PUBLIC_API bool JS::IsAtomsZone(JS::Zone* zone) {
+  return zone->isAtomsZone();
+}
+
 JS_PUBLIC_API bool JS_AddWeakPointerZonesCallback(JSContext* cx,
                                                   JSWeakPointerZonesCallback cb,
                                                   void* data) {
