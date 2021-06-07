@@ -5566,7 +5566,8 @@ public class GeckoSession {
                 }
             }
 
-            private static String convertType(final int type, final boolean privateMode) {
+            // This also gets used in StorageController, so it's package rather than private.
+            /* package */ static String convertType(final int type, final boolean privateMode) {
                 switch (type) {
                     case PERMISSION_GEOLOCATION:
                         return "geolocation";

@@ -154,6 +154,23 @@ const GeckoViewStorageController = {
         );
         break;
       }
+      case "GeckoView:SetPermissionByURI": {
+        const uri = Services.io.newURI(aData.uri);
+        const principal = Services.scriptSecurityManager.createContentPrincipal(
+          uri,
+          {
+            geckoViewSessionContextId: aData.contextId ?? undefined,
+            privateBrowsingId: aData.privateId,
+          }
+        );
+        Services.perms.addFromPrincipal(
+          principal,
+          aData.perm,
+          aData.newValue,
+          Ci.nsIPermissionManager.EXPIRE_NEVER
+        );
+        break;
+      }
     }
   },
 
