@@ -351,7 +351,8 @@ class nsXULPopupManager final : public nsIDOMEventListener,
 
   // nsIRollupListener
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual bool Rollup(uint32_t aCount, bool aFlush, const nsIntPoint* pos,
+  virtual bool Rollup(uint32_t aCount, bool aFlush,
+                      const mozilla::LayoutDeviceIntPoint* pos,
                       nsIContent** aLastRolledUp) override;
   virtual bool ShouldRollupOnMouseWheelEvent() override;
   virtual bool ShouldConsumeOnMouseWheelEvent() override;
