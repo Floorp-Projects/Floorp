@@ -6304,13 +6304,12 @@ nsresult TSFTextStore::OnMouseButtonEventInternal(
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::OnMouseButtonEventInternal("
-           "aIMENotification={ mEventMessage=%s, mOffset=%u, mCursorPos={ "
-           "mX=%d, mY=%d }, mCharRect={ mX=%d, mY=%d, mWidth=%d, mHeight=%d }, "
+           "aIMENotification={ mEventMessage=%s, mOffset=%u, mCursorPos=%s, "
+           "mCharRect={ mX=%d, mY=%d, mWidth=%d, mHeight=%d }, "
            "mButton=%s, mButtons=%s, mModifiers=%s })",
            this, ToChar(aIMENotification.mMouseButtonEventData.mEventMessage),
            aIMENotification.mMouseButtonEventData.mOffset,
-           aIMENotification.mMouseButtonEventData.mCursorPos.mX,
-           aIMENotification.mMouseButtonEventData.mCursorPos.mY,
+           ToString(aIMENotification.mMouseButtonEventData.mCursorPos).c_str(),
            aIMENotification.mMouseButtonEventData.mCharRect.mX,
            aIMENotification.mMouseButtonEventData.mCharRect.mY,
            aIMENotification.mMouseButtonEventData.mCharRect.mWidth,
@@ -6327,8 +6326,8 @@ nsresult TSFTextStore::OnMouseButtonEventInternal(
   }
   nsIntRect charRect =
       aIMENotification.mMouseButtonEventData.mCharRect.AsIntRect();
-  nsIntPoint cursorPos =
-      aIMENotification.mMouseButtonEventData.mCursorPos.AsIntPoint();
+  LayoutDeviceIntPoint cursorPos =
+      aIMENotification.mMouseButtonEventData.mCursorPos;
   ULONG quadrant = 1;
   if (charRect.Width() > 0) {
     int32_t cursorXInChar = cursorPos.x - charRect.X();

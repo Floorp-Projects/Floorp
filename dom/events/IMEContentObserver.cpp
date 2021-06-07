@@ -717,8 +717,8 @@ bool IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   notification.mMouseButtonEventData.mEventMessage = aMouseEvent->mMessage;
   notification.mMouseButtonEventData.mOffset =
       queryCharAtPointEvent.mReply->StartOffset();
-  notification.mMouseButtonEventData.mCursorPos.Set(
-      queryCharAtPointEvent.mRefPoint.ToUnknownPoint());
+  notification.mMouseButtonEventData.mCursorPos =
+      queryCharAtPointEvent.mRefPoint;
   notification.mMouseButtonEventData.mCharRect.Set(
       queryCharAtPointEvent.mReply->mRect.ToUnknownRect());
   notification.mMouseButtonEventData.mButton = aMouseEvent->mButton;
