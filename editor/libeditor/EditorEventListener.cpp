@@ -890,9 +890,10 @@ nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
   aDragEvent->StopImmediatePropagation();
 
   if (aDragEvent->WidgetEventPtr()->mMessage == eDrop) {
-    RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
-    nsresult rv = textEditor->OnDrop(aDragEvent);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "TextEditor::OnDrop() failed");
+    RefPtr<EditorBase> editorBase = mEditorBase;
+    nsresult rv = editorBase->HandleDropEvent(aDragEvent);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "EditorBase::HandleDropEvent() failed");
     return rv;
   }
 

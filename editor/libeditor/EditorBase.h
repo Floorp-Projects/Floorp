@@ -477,6 +477,12 @@ class EditorBase : public nsIEditor,
     return mTransactionManager->RemoveTransactionListener(aListener);
   }
 
+  /**
+   * HandleDropEvent() is called from EditorEventListener::Drop that is handler
+   * of drop event.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult HandleDropEvent(dom::DragEvent* aDropEvent);
+
   MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent);
 
