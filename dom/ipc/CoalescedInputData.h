@@ -9,9 +9,14 @@
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
+#include "nsRefreshObservers.h"
+
+class nsRefreshDriver;
 
 namespace mozilla {
 namespace dom {
+
+class BrowserChild;
 
 template <class InputEventType>
 class CoalescedInputData {
@@ -46,6 +51,25 @@ class CoalescedInputData {
   uint64_t GetInputBlockId() { return mInputBlockId; }
 };
 
+class CoalescedInputFlusher : public nsARefreshObserver {
+ public:
+  explicit CoalescedInputFlusher(BrowserChild* aBrowserChild);
+
+  virtual void WillRefresh(mozilla::TimeStamp aTime) override = 0;
+
+  NS_INLINE_DECL_REFCOUNTING(CoalescedInputFlusher, override)
+
+  void StartObserver();
+  void RemoveObserver();
+
+ protected:
+  virtual ~CoalescedInputFlusher();
+
+  nsRefreshDriver* GetRefreshDriver();
+
+  BrowserChild* mBrowserChild;
+  RefPtr<nsRefreshDriver> mRefreshDriver;
+};
 }  // namespace dom
 }  // namespace mozilla
 
