@@ -416,6 +416,7 @@ class HomeFragment : Fragment() {
             }
 
             view.tab_button.setOnClickListener {
+                requireComponents.analytics.metrics.track(Event.StartOnHomeOpenTabsTray)
                 openTabsTray()
             }
 

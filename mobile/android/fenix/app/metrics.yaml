@@ -5813,3 +5813,30 @@ set_default_setting_experiment:
     notification_emails:
       - firefox-android-team@mozilla.com
     expires: "2021-10-01"
+start_on_home:
+  enter_home_screen:
+    type: event
+    description: |
+      Know how often user lands on Homescreen upon opening the app.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/19881
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/19885
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2022-06-16"
+  open_tabs_tray:
+    type: event
+    description: |
+      Know how often users open the tab tray.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/19881
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/19885
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2022-06-16"

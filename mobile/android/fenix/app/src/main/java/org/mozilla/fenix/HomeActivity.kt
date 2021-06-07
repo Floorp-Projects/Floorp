@@ -223,6 +223,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             shouldNavigateBrowserFragmentOnCouldStart(savedInstanceState)
         ) {
             navigateToBrowserOnColdStart()
+        } else {
+            components.analytics.metrics.track(Event.StartOnHomeEnterHomeScreen)
         }
 
         Performance.processIntentIfPerformanceTest(intent, this)

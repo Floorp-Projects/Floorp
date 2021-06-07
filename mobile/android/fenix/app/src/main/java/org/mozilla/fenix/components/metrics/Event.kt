@@ -239,6 +239,10 @@ sealed class Event {
     // Browser Toolbar
     object BrowserToolbarHomeButtonClicked : Event()
 
+    // Start on Home
+    object StartOnHomeEnterHomeScreen : Event()
+    object StartOnHomeOpenTabsTray : Event()
+
     // Interaction events with extras
 
     data class TopSiteSwipeCarousel(val page: Int) : Event() {

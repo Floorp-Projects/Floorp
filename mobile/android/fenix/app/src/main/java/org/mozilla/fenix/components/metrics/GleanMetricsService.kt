@@ -51,6 +51,7 @@ import org.mozilla.fenix.GleanMetrics.SearchSuggestions
 import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.GleanMetrics.SetDefaultNewtabExperiment
 import org.mozilla.fenix.GleanMetrics.SetDefaultSettingExperiment
+import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
@@ -839,6 +840,14 @@ private val Event.wrapper: EventWrapper<*>?
 
         is Event.BrowserToolbarHomeButtonClicked -> EventWrapper<NoExtraKeys>(
             { Events.browserToolbarHomeTapped.record(it) }
+        )
+
+        is Event.StartOnHomeEnterHomeScreen -> EventWrapper<NoExtraKeys>(
+            { StartOnHome.enterHomeScreen.record(it) }
+        )
+
+        is Event.StartOnHomeOpenTabsTray -> EventWrapper<NoExtraKeys>(
+            { StartOnHome.openTabsTray.record(it) }
         )
 
         // Don't record other events in Glean:
