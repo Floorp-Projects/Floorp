@@ -37,7 +37,6 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::thread;
 use std::time;
-use webdriver::capabilities::CapabilitiesMatching;
 use webdriver::command::WebDriverCommand::{
     AcceptAlert, AddCookie, CloseWindow, DeleteCookie, DeleteCookies, DeleteSession, DismissAlert,
     ElementClear, ElementClick, ElementSendKeys, ExecuteAsyncScript, ExecuteScript, Extension,
@@ -66,6 +65,7 @@ use webdriver::response::{
     NewWindowResponse, TimeoutsResponse, ValueResponse, WebDriverResponse, WindowRectResponse,
 };
 use webdriver::server::{Session, WebDriverHandler};
+use webdriver::{capabilities::CapabilitiesMatching, server::SessionTeardownKind};
 
 #[derive(Debug, PartialEq, Deserialize)]
 struct MarionetteHandshake {
@@ -155,10 +155,10 @@ impl MarionetteHandler {
         MarionetteConnection::new(host, port, browser, session)
     }
 
-    fn close_connection(&mut self) {
+    fn close_connection(&mut self, wait_for_shutdown: bool) {
         if let Ok(connection) = self.connection.get_mut() {
             if let Some(conn) = connection.take() {
-                if let Err(e) = conn.close(false) {
+                if let Err(e) = conn.close(wait_for_shutdown) {
                     error!("Failed to close browser connection: {}", e)
                 }
             }
@@ -223,21 +223,18 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
         }
     }
 
-    fn delete_session(&mut self, session: &Option<Session>) {
-        if let Some(ref s) = *session {
-            let delete_session = WebDriverMessage {
-                session_id: Some(s.id.clone()),
-                command: WebDriverCommand::DeleteSession,
-            };
-            let _ = self.handle_command(session, delete_session);
-        }
-        self.close_connection();
+    fn teardown_session(&mut self, kind: SessionTeardownKind) {
+        let wait_for_shutdown = match kind {
+            SessionTeardownKind::Deleted => true,
+            SessionTeardownKind::NotDeleted => false,
+        };
+        self.close_connection(wait_for_shutdown);
     }
 }
 
 impl Drop for MarionetteHandler {
     fn drop(&mut self) {
-        self.close_connection();
+        self.close_connection(false);
     }
 }
 
@@ -1151,9 +1148,9 @@ impl MarionetteConnection {
         Ok(data)
     }
 
-    fn close(self, force: bool) -> WebDriverResult<()> {
+    fn close(self, wait_for_shutdown: bool) -> WebDriverResult<()> {
         self.stream.shutdown(Shutdown::Both)?;
-        self.browser.close(force)?;
+        self.browser.close(wait_for_shutdown)?;
         Ok(())
     }
 
