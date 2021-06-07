@@ -1283,6 +1283,15 @@ inline void js::GCMarker::eagerlyMarkChildren(JSLinearString* linearStr) {
   // Use iterative marking to avoid blowing out the stack.
   while (linearStr->hasBase()) {
     linearStr = linearStr->base();
+
+    // It's possible to observe a rope as the base of a linear string if we
+    // process barriers during rope flattening. See the assignment of base in
+    // JSRope::flattenInternal's finish_node section.
+    if (static_cast<JSString*>(linearStr)->isRope()) {
+      MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
+      break;
+    }
+
     MOZ_ASSERT(linearStr->JSString::isLinear());
     if (linearStr->isPermanentAtom()) {
       break;
