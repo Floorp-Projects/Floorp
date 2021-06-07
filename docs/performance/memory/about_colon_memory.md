@@ -168,7 +168,7 @@ there are various things worth pointing out.
     that is not measured by any memory reporter. This is typically
     10--20% of "explicit". If it gets higher, it indicates that
     additional memory reporters should be added.
-    [DMD](DMD.md")
+    [DMD](./dmd.md)
     can be used to determine where these memory reporters should be
     added.
 -   There are measurements for other content such as images and workers,

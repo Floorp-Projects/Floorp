@@ -4,7 +4,7 @@
 high-quality power-related measurements. It is most useful for getting
 CPU, GPU and wakeup measurements in a precise and easily scriptable
 fashion (unlike [Activity Monitor and
-top](/activity_monitor_and_top))
+top](activity_monitor_and_top.md))
 especially in combination with
 [rapl](tools_power_rapl.md) via the
 `mach power` command. This document describes the version of
