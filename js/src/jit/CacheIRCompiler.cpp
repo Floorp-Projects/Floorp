@@ -2877,7 +2877,7 @@ bool CacheIRCompiler::emitInt32RightShiftResult(Int32OperandId lhsId,
 
 bool CacheIRCompiler::emitInt32URightShiftResult(Int32OperandId lhsId,
                                                  Int32OperandId rhsId,
-                                                 bool allowDouble) {
+                                                 bool forceDouble) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
@@ -2892,7 +2892,7 @@ bool CacheIRCompiler::emitInt32URightShiftResult(Int32OperandId lhsId,
 
   masm.mov(lhs, scratch);
   masm.flexibleRshift32(rhs, scratch);
-  if (allowDouble) {
+  if (forceDouble) {
     ScratchDoubleScope fpscratch(masm);
     masm.convertUInt32ToDouble(scratch, fpscratch);
     masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
@@ -5253,7 +5253,7 @@ static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
 
 bool CacheIRCompiler::emitLoadTypedArrayElementResult(
     ObjOperandId objId, IntPtrOperandId indexId, Scalar::Type elementType,
-    bool handleOOB, bool allowDoubleForUint32) {
+    bool handleOOB, bool forceDoubleForUint32) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
@@ -5321,7 +5321,7 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
     masm.tagValue(JSVAL_TYPE_BIGINT, *bigInt, output.valueReg());
   } else {
     MacroAssembler::Uint32Mode uint32Mode =
-        allowDoubleForUint32 ? MacroAssembler::Uint32Mode::ForceDouble
+        forceDoubleForUint32 ? MacroAssembler::Uint32Mode::ForceDouble
                              : MacroAssembler::Uint32Mode::FailOnDouble;
     masm.loadFromTypedArray(elementType, source, output.valueReg(), uint32Mode,
                             scratch1, failure->label());
@@ -5359,7 +5359,7 @@ static void EmitDataViewBoundsCheck(MacroAssembler& masm, size_t byteSize,
 bool CacheIRCompiler::emitLoadDataViewValueResult(
     ObjOperandId objId, IntPtrOperandId offsetId,
     BooleanOperandId littleEndianId, Scalar::Type elementType,
-    bool allowDoubleForUint32) {
+    bool forceDoubleForUint32) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
@@ -5458,7 +5458,7 @@ bool CacheIRCompiler::emitLoadDataViewValueResult(
       break;
     case Scalar::Uint32: {
       MacroAssembler::Uint32Mode uint32Mode =
-          allowDoubleForUint32 ? MacroAssembler::Uint32Mode::ForceDouble
+          forceDoubleForUint32 ? MacroAssembler::Uint32Mode::ForceDouble
                                : MacroAssembler::Uint32Mode::FailOnDouble;
       masm.boxUint32(outputScratch, output.valueReg(), uint32Mode,
                      failure->label());
