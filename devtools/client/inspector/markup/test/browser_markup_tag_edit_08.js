@@ -15,15 +15,15 @@ const LONG_ATTRIBUTE_COLLAPSED =
 /* eslint-enable */
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   await inspector.markup.expandAll();
-  await testCollapsedLongAttribute(inspector, testActor);
-  await testModifyInlineStyleWithQuotes(inspector, testActor);
-  await testEditingAttributeWithMixedQuotes(inspector, testActor);
+  await testCollapsedLongAttribute(inspector);
+  await testModifyInlineStyleWithQuotes(inspector);
+  await testEditingAttributeWithMixedQuotes(inspector);
 });
 
-async function testCollapsedLongAttribute(inspector, testActor) {
+async function testCollapsedLongAttribute(inspector) {
   info("Try to modify the collapsed long attribute, making sure it expands.");
 
   info("Adding test attributes to the node");
@@ -35,15 +35,11 @@ async function testCollapsedLongAttribute(inspector, testActor) {
   await setContentPageElementAttribute("#node24", "data-long", LONG_ATTRIBUTE);
   await onMutation;
 
-  await assertAttributes(
-    "#node24",
-    {
-      id: "node24",
-      class: "",
-      "data-long": LONG_ATTRIBUTE,
-    },
-    testActor
-  );
+  await assertAttributes("#node24", {
+    id: "node24",
+    class: "",
+    "data-long": LONG_ATTRIBUTE,
+  });
 
   const { editor } = await focusNode("#node24", inspector);
   const attr = editor.attrElements.get("data-long").querySelector(".editable");
@@ -63,30 +59,22 @@ async function testCollapsedLongAttribute(inspector, testActor) {
     .querySelector(".attr-value").textContent;
   is(visibleAttrText, LONG_ATTRIBUTE_COLLAPSED);
 
-  await assertAttributes(
-    "#node24",
-    {
-      id: "node24",
-      class: "",
-      "data-long": LONG_ATTRIBUTE,
-      "data-short": "ABC",
-    },
-    testActor
-  );
+  await assertAttributes("#node24", {
+    id: "node24",
+    class: "",
+    "data-long": LONG_ATTRIBUTE,
+    "data-short": "ABC",
+  });
 }
 
-async function testModifyInlineStyleWithQuotes(inspector, testActor) {
+async function testModifyInlineStyleWithQuotes(inspector) {
   info('Modify inline style containing "');
 
-  await assertAttributes(
-    "#node26",
-    {
-      id: "node26",
-      style:
-        'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F");',
-    },
-    testActor
-  );
+  await assertAttributes("#node26", {
+    id: "node26",
+    style:
+      'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F");',
+  });
 
   const onMutated = inspector.once("markupmutation");
   const { editor } = await focusNode("#node26", inspector);
@@ -111,28 +99,20 @@ async function testModifyInlineStyleWithQuotes(inspector, testActor) {
 
   await onMutated;
 
-  await assertAttributes(
-    "#node26",
-    {
-      id: "node26",
-      style:
-        'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.com%2F");',
-    },
-    testActor
-  );
+  await assertAttributes("#node26", {
+    id: "node26",
+    style:
+      'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.com%2F");',
+  });
 }
 
-async function testEditingAttributeWithMixedQuotes(inspector, testActor) {
+async function testEditingAttributeWithMixedQuotes(inspector) {
   info("Modify class containing \" and '");
 
-  await assertAttributes(
-    "#node27",
-    {
-      id: "node27",
-      class: "Double \" and single '",
-    },
-    testActor
-  );
+  await assertAttributes("#node27", {
+    id: "node27",
+    class: "Double \" and single '",
+  });
 
   const onMutated = inspector.once("markupmutation");
   const { editor } = await focusNode("#node27", inspector);
@@ -153,12 +133,8 @@ async function testEditingAttributeWithMixedQuotes(inspector, testActor) {
 
   await onMutated;
 
-  await assertAttributes(
-    "#node27",
-    {
-      id: "node27",
-      class: "\" \" and ' '",
-    },
-    testActor
-  );
+  await assertAttributes("#node27", {
+    id: "node27",
+    class: "\" \" and ' '",
+  });
 }

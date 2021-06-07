@@ -10,19 +10,15 @@ const TEST_URL = `data:text/html,
 
 add_task(async function() {
   info("Opening the inspector on the test page");
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Selecting the test node");
   await focusNode("#test-div", inspector);
 
   info("Verify attributes, only ID should be there for now");
-  await assertAttributes(
-    "#test-div",
-    {
-      id: "test-div",
-    },
-    testActor
-  );
+  await assertAttributes("#test-div", {
+    id: "test-div",
+  });
 
   info("Focus the ID attribute and change its content");
   const { editor } = await getContainerForSelector("#test-div", inspector);
@@ -36,23 +32,15 @@ add_task(async function() {
   await mutated;
 
   info("Verify attributes, should have ID, class and style");
-  await assertAttributes(
-    "#test-div",
-    {
-      id: "test-div",
-      class: "newclass",
-      style: "color:green",
-    },
-    testActor
-  );
+  await assertAttributes("#test-div", {
+    id: "test-div",
+    class: "newclass",
+    style: "color:green",
+  });
 
   info("Trying to undo the change");
   await undoChange(inspector);
-  await assertAttributes(
-    "#test-div",
-    {
-      id: "test-div",
-    },
-    testActor
-  );
+  await assertAttributes("#test-div", {
+    id: "test-div",
+  });
 });

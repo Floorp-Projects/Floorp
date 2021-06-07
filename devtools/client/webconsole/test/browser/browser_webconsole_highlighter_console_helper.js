@@ -44,7 +44,11 @@ add_task(async function() {
   );
 
   ok(true, "correct output for $0 after setting $0.textContent");
-  const { textContent } = await testActor.getNodeInfo("h1");
+  const textContent = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.document.querySelector("h1").textContent
+  );
   is(textContent, newH1Content, "node successfully updated");
 });
 

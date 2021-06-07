@@ -78,7 +78,11 @@ async function runEditOuterHTMLTest(test, inspector, testActor) {
       selectedNodeFront,
       "Original node (grabbed by selector) is selected"
     );
-    const { outerHTML } = await testActor.getNodeInfo(test.selector);
+
+    const outerHTML = await getContentPageElementProperty(
+      test.selector,
+      "outerHTML"
+    );
     is(outerHTML, test.newHTML, "Outer HTML has been updated");
   }
 
