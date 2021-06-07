@@ -4,7 +4,6 @@
 ac_add_options --enable-debug
 
 # Android
-ac_add_options --with-android-min-sdk=21
 ac_add_options --target=x86_64-linux-android
 
 export MOZILLA_OFFICIAL=1
