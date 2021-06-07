@@ -139,7 +139,7 @@ If not, maybe you'll be able to contribute with one by the time you fix your bug
 
 We have several types of automated tests to help us when developing.
 
-Some, like the linting tests, address coding style; others address functionality, such as unit and integration tests. This page has more [details on types of tests and how to run them](../tests/).
+Some, like the linting tests, address coding style; others address functionality, such as unit and integration tests. This page has more [details on types of tests and how to run them](../tests/writing-tests.md).
 
 You might want to run the unit and integration types of tests quite frequently, to confirm you're not breaking anything else. Depending on what you're doing, it might be even possible to run just one test file which addresses the specific change you're implementing:
 

@@ -92,7 +92,7 @@ Intel processors have model-specific registers (MSRs) containing
 measurements of how much time is spent in different C-states, and tools
 such as [powermetrics](powermetrics.md)
 (Mac), powertop and
-[turbostat](/turbostat.md) (Linux) can
+[turbostat](turbostat.md) (Linux) can
 expose this information.
 
 A *wakeup* occurs when a core or package transitions from an idle state

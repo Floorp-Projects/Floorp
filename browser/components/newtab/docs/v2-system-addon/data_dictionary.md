@@ -141,7 +141,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
 | ``card_type``              | [Optional] ("bookmark", "pocket", "trending", "pinned", "search", "spoc", "organic")                                                                 | :one:            |
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
-| ``context_id``             | [Optional] An identifier used by the sponsored TopSites telemetry pings.                                                                       | :one:            |
+| ``context_id``             | [Optional] An identifier used by the sponsored TopSites telemetry pings.                                                                             | :one:            |
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
 | ``search_vendor``          | [Optional] the vendor of the search shortcut, one of ("google", "amazon", "wikipedia", "duckduckgo", "bing", etc.). This field only exists when      |                  |
 |                            | ``card_type = "search"``                                                                                                                             | :one:            |
@@ -334,7 +334,7 @@ This encoding mapping was defined in `system-addon/lib/TelemetryFeed.jsm`
 +-------------------+------------------------+
 | `showCFRFeatures` | 128 (10000000)         |
 +-------------------+------------------------+
-| `showSponsoredTopSites` | 256 (100000000)   |
+| `showSponsoredTopSites` | 256 (100000000)  |
 +-------------------+------------------------+
 ```
 

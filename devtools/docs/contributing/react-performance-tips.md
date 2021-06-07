@@ -153,7 +153,7 @@ The smaller the tree is, the faster the algorithm is. So it's
 useful to limit the changes to a subtree of the full tree. Note that the use of
 `shouldComponentUpdate` or `PureComponent` alleviates this issue by cutting off
 entire branches from the rendering tree, [we discuss this in more details
-below](shouldcomponentupdate-and-purecomponent-avoiding-renders-altogether).
+below](#shouldcomponentupdate-and-purecomponent-avoiding-renders-altogether).
 
 Try to change the state as close as possible to where your UI
 should change (close in the components tree).

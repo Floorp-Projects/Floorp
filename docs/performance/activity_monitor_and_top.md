@@ -38,14 +38,14 @@ The power-related columns are as follows.
 -   **Idle wake Ups**:
     -   In Mac OS 10.9 this measured "package idle exit" wakeups. This
         is the same value as
-        [powermetrics](/powermetrics.md)'
+        [powermetrics](./powermetrics.md)'
         "Pkg idle" measurement (i.e.
         `task_power_info::task_platform_idle_wakeups` obtained from the
         `task_info` function.)
     -   In Mac OS 10.10 it appears to have been changed to measure
         interrupt-level wakeups (a superset of idle wakeups), which are
         less interesting. This is the same value as
-        [powermetrics](/powermetrics.md)'
+        [powermetrics](./powermetrics.md)'
         "Intr" measurement (i.e.
         `task_power_info::task_interrupt_wakeups` obtained from the
         `task_info` function.)
@@ -57,7 +57,7 @@ The power-related columns are as follows.
 
 Activity Monitor can be useful for cursory measurements, but for more
 precise and detailed measurements other tools such as
-[powermetrics](/powermetrics.md) are better.
+[powermetrics](./powermetrics.md) are better.
 
 ### What does "Energy Impact" measure?
 
