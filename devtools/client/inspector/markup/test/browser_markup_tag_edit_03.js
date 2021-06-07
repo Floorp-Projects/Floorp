@@ -9,7 +9,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
                   <div id='retag-me'><div id='retag-me-2'></div></div>`;
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   await inspector.markup.expandAll();
 
@@ -20,16 +20,19 @@ add_task(async function() {
   let container = await getContainerForSelector("#retag-me", inspector);
   ok(container.expanded, "The container is expanded");
 
-  let parentInfo = await testActor.getNodeInfo("#retag-me");
   is(
-    parentInfo.tagName.toLowerCase(),
+    (await getContentPageElementProperty("#retag-me", "tagName")).toLowerCase(),
     "div",
     "We've got #retag-me element, it's a DIV"
   );
-  is(parentInfo.numChildren, 1, "#retag-me has one child");
-  let childInfo = await testActor.getNodeInfo("#retag-me > *");
   is(
-    childInfo.attributes[0].value,
+    await getContentPageElementProperty("#retag-me", "childElementCount"),
+    1,
+    "#retag-me has one child"
+  );
+
+  is(
+    await getContentPageElementProperty("#retag-me > *", "id"),
     "retag-me-2",
     "#retag-me's only child is #retag-me-2"
   );
@@ -46,12 +49,19 @@ add_task(async function() {
   ok(container.selected, "The container is still selected");
 
   info("Checking that the tagname change was done");
-  parentInfo = await testActor.getNodeInfo("#retag-me");
-  is(parentInfo.tagName.toLowerCase(), "p", "The #retag-me element is now a P");
-  is(parentInfo.numChildren, 1, "#retag-me still has one child");
-  childInfo = await testActor.getNodeInfo("#retag-me > *");
+
   is(
-    childInfo.attributes[0].value,
+    (await getContentPageElementProperty("#retag-me", "tagName")).toLowerCase(),
+    "p",
+    "The #retag-me element is now a P"
+  );
+  is(
+    await getContentPageElementProperty("#retag-me", "childElementCount"),
+    1,
+    "#retag-me still has one child"
+  );
+  is(
+    await getContentPageElementProperty("#retag-me > *", "id"),
     "retag-me-2",
     "#retag-me's only child is #retag-me-2"
   );

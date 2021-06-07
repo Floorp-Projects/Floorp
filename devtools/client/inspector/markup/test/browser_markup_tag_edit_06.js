@@ -90,6 +90,6 @@ var TEST_DATA = [
 ];
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
-  await runAddAttributesTests(TEST_DATA, "div", inspector, testActor);
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  await runAddAttributesTests(TEST_DATA, "div", inspector);
 });
