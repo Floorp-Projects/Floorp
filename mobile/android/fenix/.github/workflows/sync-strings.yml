@@ -15,7 +15,10 @@ jobs:
     steps:
       - name: "Discover Fenix Beta Version"
         id: fenix-beta-version
-        uses: mozilla-mobile/fenix-beta-version@1.1.0
+        uses: mozilla-mobile/fenix-beta-version@2.0.0
+      - name: "Skip non-beta versions"
+        uses: andymckay/cancel-action@0.2
+        if: steps.fenix-beta-version.outputs.fenix-beta-version == ""
       - name: "Checkout Master Branch"
         uses: actions/checkout@v2
         with:
