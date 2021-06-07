@@ -173,6 +173,10 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Edit</string>
 
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Home screen</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Unable to connect. Unrecognizable URL scheme.</string>

@@ -312,6 +312,14 @@ class DefaultBrowserToolbarControllerTest {
         verify(exactly = 0) { engineView.setVerticalClipping(10) }
     }
 
+    @Test
+    fun handleHomeButtonClick() {
+        val controller = createController()
+        controller.handleHomeButtonClick()
+
+        verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome()) }
+    }
+
     private fun createController(
         activity: HomeActivity = this.activity,
         customTabSessionId: String? = null

@@ -76,6 +76,14 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             )
         }
 
+        val homeAction = BrowserToolbar.Button(
+            imageDrawable = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_home)!!,
+            contentDescription = requireContext().getString(R.string.browser_toolbar_home),
+            listener = browserToolbarInteractor::onHomeButtonClicked
+        )
+
+        browserToolbarView.view.addNavigationAction(homeAction)
+
         val readerModeAction =
             BrowserToolbar.ToggleButton(
                 image = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_readermode)!!,

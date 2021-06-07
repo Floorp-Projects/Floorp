@@ -68,4 +68,11 @@ class DefaultBrowserToolbarInteractorTest {
 
         verify { browserToolbarMenuController.handleToolbarItemInteraction(item) }
     }
+
+    @Test
+    fun onHomeButtonClicked() {
+        interactor.onHomeButtonClicked()
+
+        verify { browserToolbarController.handleHomeButtonClick() }
+    }
 }

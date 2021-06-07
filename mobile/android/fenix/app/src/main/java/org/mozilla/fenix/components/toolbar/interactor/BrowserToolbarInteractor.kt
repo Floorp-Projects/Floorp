@@ -22,6 +22,11 @@ interface BrowserToolbarInteractor {
     fun onTabCounterMenuItemTapped(item: TabCounterMenu.Item)
     fun onScrolled(offset: Int)
     fun onReaderModePressed(enabled: Boolean)
+
+    /**
+     * Navigates to the Home screen. Called when a user taps on the Home button.
+     */
+    fun onHomeButtonClicked()
 }
 
 /**
@@ -67,5 +72,9 @@ class DefaultBrowserToolbarInteractor(
 
     override fun onReaderModePressed(enabled: Boolean) {
         browserToolbarController.handleReaderModePressed(enabled)
+    }
+
+    override fun onHomeButtonClicked() {
+        browserToolbarController.handleHomeButtonClick()
     }
 }
