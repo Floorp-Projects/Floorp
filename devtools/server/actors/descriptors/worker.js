@@ -15,15 +15,12 @@
 /* eslint-disable no-throw-literal */
 
 const { Ci } = require("chrome");
-const ChromeUtils = require("ChromeUtils");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/shared/protocol");
 const {
   workerDescriptorSpec,
 } = require("devtools/shared/specs/descriptors/worker");
-
-loader.lazyRequireGetter(this, "ChromeUtils");
 
 loader.lazyRequireGetter(
   this,
@@ -94,11 +91,6 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
       }
 
       if (!this._attached) {
-        const isServiceWorker =
-          this._dbg.type == Ci.nsIWorkerDebugger.TYPE_SERVICE;
-        if (isServiceWorker) {
-          this._preventServiceWorkerShutdown();
-        }
         this._dbg.addListener(this._dbgListener);
         this._attached = true;
       }
@@ -161,18 +153,6 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
       }
     },
 
-    push() {
-      if (this._dbg.type !== Ci.nsIWorkerDebugger.TYPE_SERVICE) {
-        return { error: "wrongType" };
-      }
-      const registration = this._getServiceWorkerRegistrationInfo();
-      const originAttributes = ChromeUtils.originAttributesToSuffix(
-        this._dbg.principal.originAttributes
-      );
-      swm.sendPushEvent(originAttributes, registration.scope);
-      return { type: "pushed" };
-    },
-
     _onWorkerClose() {
       this.destroy();
     },
@@ -185,11 +165,6 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
       return swm.getRegistrationByPrincipal(this._dbg.principal, this._dbg.url);
     },
 
-    _getServiceWorkerInfo() {
-      const registration = this._getServiceWorkerRegistrationInfo();
-      return registration.getWorkerByID(this._dbg.serviceWorkerID);
-    },
-
     _detach() {
       if (this._threadActor !== null) {
         this._transport.close();
@@ -197,55 +172,8 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
         this._threadActor = null;
       }
 
-      // If the worker is already destroyed, nsIWorkerDebugger.type throws
-      // (_dbg.closed appears to be false when it throws)
-      let type;
-      try {
-        type = this._dbg.type;
-      } catch (e) {
-        // nothing
-      }
-
-      const isServiceWorker = type == Ci.nsIWorkerDebugger.TYPE_SERVICE;
-      if (isServiceWorker) {
-        this._allowServiceWorkerShutdown();
-      }
-
       this._dbg.removeListener(this._dbgListener);
       this._attached = false;
-    },
-
-    /**
-     * Automatically disable the internal sw timeout that shut them down by calling
-     * nsIWorkerInfo.attachDebugger().
-     * This can be removed when Bug 1496997 lands.
-     */
-    _preventServiceWorkerShutdown() {
-      if (swm.isParentInterceptEnabled()) {
-        // In parentIntercept mode, the worker target actor cannot call attachDebugger
-        // because this API can only be called from the parent process. This will be
-        // done by the worker target front.
-        return;
-      }
-
-      const worker = this._getServiceWorkerInfo();
-      if (worker) {
-        worker.attachDebugger();
-      }
-    },
-
-    /**
-     * Allow the service worker to time out. See _preventServiceWorkerShutdown.
-     */
-    _allowServiceWorkerShutdown() {
-      if (swm.isParentInterceptEnabled()) {
-        return;
-      }
-
-      const worker = this._getServiceWorkerInfo();
-      if (worker) {
-        worker.detachDebugger();
-      }
     },
   }
 );
