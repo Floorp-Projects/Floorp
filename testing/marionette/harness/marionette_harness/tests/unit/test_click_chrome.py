@@ -21,7 +21,7 @@ class TestClickChrome(WindowManagerMixin, MarionetteTestCase):
         super(TestClickChrome, self).tearDown()
 
     def test_click(self):
-        win = self.open_chrome_window("chrome://marionette/content/test.xhtml")
+        win = self.open_chrome_window("chrome://remote/content/marionette/test.xhtml")
         self.marionette.switch_to_window(win)
 
         def checked():

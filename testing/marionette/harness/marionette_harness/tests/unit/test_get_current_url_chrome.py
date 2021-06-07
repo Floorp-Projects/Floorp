@@ -29,7 +29,7 @@ class TestGetCurrentUrlChrome(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.marionette.get_url(), chrome_url)
 
     def test_no_browser_window(self):
-        win = self.open_chrome_window("chrome://marionette/content/test.xhtml")
+        win = self.open_chrome_window("chrome://remote/content/marionette/test.xhtml")
         self.marionette.switch_to_window(win)
 
         chrome_url = self.marionette.execute_script("return window.location.href;")

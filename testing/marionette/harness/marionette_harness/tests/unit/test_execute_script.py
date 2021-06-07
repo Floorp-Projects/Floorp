@@ -448,7 +448,9 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
 
     def test_unmarshal_element_collection(self):
         try:
-            win = self.open_chrome_window("chrome://marionette/content/test.xhtml")
+            win = self.open_chrome_window(
+                "chrome://remote/content/marionette/test.xhtml"
+            )
             self.marionette.switch_to_window(win)
 
             expected = self.marionette.find_elements(By.TAG_NAME, "input")

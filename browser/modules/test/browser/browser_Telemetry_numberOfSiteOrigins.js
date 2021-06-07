@@ -21,7 +21,7 @@ const gTestRoot = getRootDirectory(gTestPath).replace(
 );
 
 const { TimedPromise } = ChromeUtils.import(
-  "chrome://marionette/content/sync.js"
+  "chrome://remote/content/marionette/sync.js"
 );
 
 async function run_test(count) {

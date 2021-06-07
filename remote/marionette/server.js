@@ -14,16 +14,16 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 
-  assert: "chrome://marionette/content/assert.js",
-  Command: "chrome://marionette/content/message.js",
-  DebuggerTransport: "chrome://marionette/content/transport.js",
-  error: "chrome://marionette/content/error.js",
-  GeckoDriver: "chrome://marionette/content/driver.js",
-  Log: "chrome://marionette/content/log.js",
-  MarionettePrefs: "chrome://marionette/content/prefs.js",
-  Message: "chrome://marionette/content/message.js",
-  Response: "chrome://marionette/content/message.js",
-  WebElement: "chrome://marionette/content/element.js",
+  assert: "chrome://remote/content/marionette/assert.js",
+  Command: "chrome://remote/content/marionette/message.js",
+  DebuggerTransport: "chrome://remote/content/marionette/transport.js",
+  error: "chrome://remote/content/marionette/error.js",
+  GeckoDriver: "chrome://remote/content/marionette/driver.js",
+  Log: "chrome://remote/content/marionette/log.js",
+  MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
+  Message: "chrome://remote/content/marionette/message.js",
+  Response: "chrome://remote/content/marionette/message.js",
+  WebElement: "chrome://remote/content/marionette/element.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());

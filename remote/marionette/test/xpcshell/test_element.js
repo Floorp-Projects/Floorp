@@ -9,9 +9,9 @@ const {
   ContentWebWindow,
   element,
   WebElement,
-} = ChromeUtils.import("chrome://marionette/content/element.js");
+} = ChromeUtils.import("chrome://remote/content/marionette/element.js");
 const { InvalidArgumentError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
+  "chrome://remote/content/marionette/error.js"
 );
 
 const SVG_NS = "http://www.w3.org/2000/svg";

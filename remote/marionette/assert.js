@@ -14,11 +14,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
 
-  AppInfo: "chrome://marionette/content/appinfo.js",
-  browser: "chrome://marionette/content/browser.js",
-  error: "chrome://marionette/content/error.js",
-  evaluate: "chrome://marionette/content/evaluate.js",
-  pprint: "chrome://marionette/content/format.js",
+  AppInfo: "chrome://remote/content/marionette/appinfo.js",
+  browser: "chrome://remote/content/marionette/browser.js",
+  error: "chrome://remote/content/marionette/error.js",
+  evaluate: "chrome://remote/content/marionette/evaluate.js",
+  pprint: "chrome://remote/content/marionette/format.js",
 });
 
 /**

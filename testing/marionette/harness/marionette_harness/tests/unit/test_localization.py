@@ -22,13 +22,13 @@ class TestL10n(MarionetteTestCase):
         self.l10n = L10n(self.marionette)
 
     def test_localize_entity(self):
-        dtds = ["chrome://marionette/content/test_dialog.dtd"]
+        dtds = ["chrome://remote/content/marionette/test_dialog.dtd"]
         value = self.l10n.localize_entity(dtds, "testDialog.title")
 
         self.assertEqual(value, "Test Dialog")
 
     def test_localize_entity_invalid_arguments(self):
-        dtds = ["chrome://marionette/content/test_dialog.dtd"]
+        dtds = ["chrome://remote/content/marionette/test_dialog.dtd"]
 
         self.assertRaises(
             NoSuchElementException, self.l10n.localize_entity, dtds, "notExistent"
@@ -41,7 +41,7 @@ class TestL10n(MarionetteTestCase):
         )
 
     def test_localize_property(self):
-        properties = ["chrome://marionette/content/test_dialog.properties"]
+        properties = ["chrome://remote/content/marionette/test_dialog.properties"]
 
         value = self.l10n.localize_property(properties, "testDialog.title")
         self.assertEqual(value, "Test Dialog")

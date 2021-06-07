@@ -188,10 +188,10 @@ var whitelist = [
     platforms: ["linux", "macosx"],
   },
   // Bug 1344267
-  { file: "chrome://marionette/content/test.xhtml" },
-  { file: "chrome://marionette/content/test_dialog.properties" },
-  { file: "chrome://marionette/content/test_dialog.xhtml" },
-  { file: "chrome://marionette/content/test_menupopup.xhtml" },
+  { file: "chrome://remote/content/marionette/test.xhtml" },
+  { file: "chrome://remote/content/marionette/test_dialog.properties" },
+  { file: "chrome://remote/content/marionette/test_dialog.xhtml" },
+  { file: "chrome://remote/content/marionette/test_menupopup.xhtml" },
   // Bug 1348559
   { file: "chrome://pippki/content/resetpassword.xhtml" },
   // Bug 1337345
@@ -334,7 +334,7 @@ if (!isDevtools) {
 }
 
 if (AppConstants.MOZ_CODE_COVERAGE) {
-  whitelist.add("chrome://marionette/content/PerTestCoverageUtils.jsm");
+  whitelist.add("chrome://remote/content/marionette/PerTestCoverageUtils.jsm");
 }
 
 const gInterestingCategories = new Set([

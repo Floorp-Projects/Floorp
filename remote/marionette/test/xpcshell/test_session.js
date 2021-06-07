@@ -10,9 +10,11 @@ const { Preferences } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { AppInfo } = ChromeUtils.import(
-  "chrome://marionette/content/appinfo.js"
+  "chrome://remote/content/marionette/appinfo.js"
 );
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
+const { error } = ChromeUtils.import(
+  "chrome://remote/content/marionette/error.js"
+);
 const {
   Capabilities,
   PageLoadStrategy,
@@ -20,7 +22,7 @@ const {
   Timeouts,
   UnhandledPromptBehavior,
   WebDriverSession,
-} = ChromeUtils.import("chrome://marionette/content/session.js");
+} = ChromeUtils.import("chrome://remote/content/marionette/session.js");
 
 add_test(function test_WebDriverSession_ctor() {
   const session = new WebDriverSession();

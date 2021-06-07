@@ -14,10 +14,10 @@ const {
   waitForLoadEvent,
   waitForMessage,
   waitForObserverTopic,
-} = ChromeUtils.import("chrome://marionette/content/sync.js");
+} = ChromeUtils.import("chrome://remote/content/marionette/sync.js");
 
 const { EventDispatcher } = ChromeUtils.import(
-  "chrome://marionette/content/actors/MarionetteEventsParent.jsm"
+  "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm"
 );
 
 /**
@@ -119,7 +119,7 @@ add_test(function test_executeSoon_callback() {
   // executeSoon() is already defined for xpcshell in head.js. As such import
   // our implementation into a custom namespace.
   let sync = {};
-  ChromeUtils.import("chrome://marionette/content/sync.js", sync);
+  ChromeUtils.import("chrome://remote/content/marionette/sync.js", sync);
 
   for (let func of ["foo", null, true, [], {}]) {
     Assert.throws(() => sync.executeSoon(func), /TypeError/);

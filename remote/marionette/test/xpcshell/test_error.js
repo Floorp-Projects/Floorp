@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
+const { error } = ChromeUtils.import(
+  "chrome://remote/content/marionette/error.js"
+);
 
 function notok(condition) {
   ok(!condition);

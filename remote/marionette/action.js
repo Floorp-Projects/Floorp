@@ -14,13 +14,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppInfo: "chrome://marionette/content/appinfo.js",
-  assert: "chrome://marionette/content/assert.js",
-  element: "chrome://marionette/content/element.js",
-  error: "chrome://marionette/content/error.js",
-  event: "chrome://marionette/content/event.js",
-  pprint: "chrome://marionette/content/format.js",
-  Sleep: "chrome://marionette/content/sync.js",
+  AppInfo: "chrome://remote/content/marionette/appinfo.js",
+  assert: "chrome://remote/content/marionette/assert.js",
+  element: "chrome://remote/content/marionette/element.js",
+  error: "chrome://remote/content/marionette/error.js",
+  event: "chrome://remote/content/marionette/event.js",
+  pprint: "chrome://remote/content/marionette/format.js",
+  Sleep: "chrome://remote/content/marionette/sync.js",
 });
 
 // TODO? With ES 2016 and Symbol you can make a safer approximation

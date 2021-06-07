@@ -9,14 +9,14 @@ const {
   registerCommandsActor,
   unregisterCommandsActor,
 } = ChromeUtils.import(
-  "chrome://marionette/content/actors/MarionetteCommandsParent.jsm"
+  "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm"
 );
 const {
   EventDispatcher,
   registerEventsActor,
   unregisterEventsActor,
 } = ChromeUtils.import(
-  "chrome://marionette/content/actors/MarionetteEventsParent.jsm"
+  "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm"
 );
 
 registerCleanupFunction(function() {

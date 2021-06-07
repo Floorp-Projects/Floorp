@@ -33,7 +33,9 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
         self.assertNotIn(new_window, self.marionette.window_handles)
 
     def test_close_chrome_window_for_non_browser_window(self):
-        new_window = self.open_chrome_window("chrome://marionette/content/test.xhtml")
+        new_window = self.open_chrome_window(
+            "chrome://remote/content/marionette/test.xhtml"
+        )
         self.marionette.switch_to_window(new_window)
 
         self.assertIn(new_window, self.marionette.chrome_window_handles)

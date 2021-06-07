@@ -21,11 +21,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
 
-  assert: "chrome://marionette/content/assert.js",
-  atom: "chrome://marionette/content/atom.js",
-  error: "chrome://marionette/content/error.js",
-  PollPromise: "chrome://marionette/content/sync.js",
-  pprint: "chrome://marionette/content/format.js",
+  assert: "chrome://remote/content/marionette/assert.js",
+  atom: "chrome://remote/content/marionette/atom.js",
+  error: "chrome://remote/content/marionette/error.js",
+  PollPromise: "chrome://remote/content/marionette/sync.js",
+  pprint: "chrome://remote/content/marionette/format.js",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

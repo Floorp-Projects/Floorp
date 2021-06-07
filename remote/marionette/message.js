@@ -11,9 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  assert: "chrome://marionette/content/assert.js",
-  error: "chrome://marionette/content/error.js",
-  truncate: "chrome://marionette/content/format.js",
+  assert: "chrome://remote/content/marionette/assert.js",
+  error: "chrome://remote/content/marionette/error.js",
+  truncate: "chrome://remote/content/marionette/format.js",
 });
 
 /** Representation of the packets transproted over the wire. */

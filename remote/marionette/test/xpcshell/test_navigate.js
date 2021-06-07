@@ -8,7 +8,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const { navigate } = ChromeUtils.import(
-  "chrome://marionette/content/navigate.js"
+  "chrome://remote/content/marionette/navigate.js"
 );
 
 const topContext = {

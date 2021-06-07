@@ -11,7 +11,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 class TestTextChrome(WindowManagerMixin, MarionetteTestCase):
     def setUp(self):
         super(TestTextChrome, self).setUp()
-        win = self.open_chrome_window("chrome://marionette/content/test.xhtml")
+        win = self.open_chrome_window("chrome://remote/content/marionette/test.xhtml")
         self.marionette.switch_to_window(win)
 
         self.marionette.set_context("chrome")
