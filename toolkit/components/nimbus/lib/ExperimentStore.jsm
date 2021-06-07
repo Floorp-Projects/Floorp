@@ -98,6 +98,16 @@ class ExperimentStore extends SharedDataMap {
     super(sharedDataKey || DEFAULT_STORE_ID, options);
   }
 
+  async init() {
+    await super.init();
+
+    this.getAllActive().forEach(experiment => {
+      experiment.featureIds?.forEach(feature =>
+        this._emitFeatureUpdate(feature, "feature-experiment-loaded")
+      );
+    });
+  }
+
   /**
    * Given a feature identifier, find an active experiment that matches that feature identifier.
    * This assumes, for now, that there is only one active experiment per feature per browser.
