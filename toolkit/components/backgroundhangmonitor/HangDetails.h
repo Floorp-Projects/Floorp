@@ -96,6 +96,8 @@ class SubmitPersistedPermahangRunnable final : public Runnable {
   nsCOMPtr<nsIFile> mPermahangFile;
 };
 
+void ReadModuleInformation(HangStack& stack);
+
 }  // namespace mozilla
 
 #endif  // mozilla_HangDetails_h

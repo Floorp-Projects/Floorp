@@ -702,6 +702,23 @@ var Impl = {
       payloadObj.slowSQL = protect(() => Telemetry.slowSQL);
       payloadObj.fileIOReports = protect(() => Telemetry.fileIOReports);
       payloadObj.lateWrites = protect(() => Telemetry.lateWrites);
+      for (let stack of payloadObj.lateWrites?.stacks || []) {
+        for (let i = 0; i < stack.length; i++) {
+          // NOTE: this mirrors the same code in BHRTelemetryService.jsm.
+          // Here we strip any string with a :// in it that isn't a chrome://
+          // or resource:// URL. This is not completely robust, but we are
+          // already trying to protect against this by only including dynamic
+          // strings from the opt-in AUTO_PROFILER_..._NONSENSITIVE macros.
+          let match = /[^\s]+:\/\/.*/.exec(stack[i]);
+          if (
+            match &&
+            !match[0].startsWith("chrome://") &&
+            !match[0].startsWith("resource://")
+          ) {
+            stack[i] = stack[i].replace(match[0], "(excluded)");
+          }
+        }
+      }
 
       payloadObj.addonDetails = protect(() =>
         AddonManagerPrivate.getTelemetryDetails()
