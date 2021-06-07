@@ -10,7 +10,6 @@
 #include "nsStringFwd.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/URLQueryStringStripper.h"
 
 using namespace mozilla;
@@ -39,45 +38,10 @@ void DoTest(const nsACString& aTestURL, const nsACString& aExpectedURL,
   }
 }
 
-class StripListObserver final : public nsIURLQueryStrippingListObserver {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIURLQUERYSTRIPPINGLISTOBSERVER
-
-  bool IsStillWaiting() { return mWaitingObserver; }
-  void StartWaitingObserver() { mWaitingObserver = true; }
-
-  StripListObserver() : mWaitingObserver(false) {
-    mService = do_GetService("@mozilla.org/query-stripping-list-service;1");
-    mService->RegisterAndRunObserver(this);
-  }
-
- private:
-  ~StripListObserver() {
-    mService->UnregisterObserver(this);
-    mService = nullptr;
-  }
-
-  bool mWaitingObserver;
-  nsCOMPtr<nsIURLQueryStrippingListService> mService;
-};
-
-NS_IMPL_ISUPPORTS(StripListObserver, nsIURLQueryStrippingListObserver)
-
-NS_IMETHODIMP
-StripListObserver::OnQueryStrippingListUpdate(const nsAString& aStripList,
-                                              const nsACString& aAllowList) {
-  mWaitingObserver = false;
-  return NS_OK;
-}
-
 TEST(TestURLQueryStringStripper, TestPrefDisabled)
 {
   // Disable the query string stripping by the pref and make sure the stripping
   // is disabled.
-  // Note that we don't need to run a dummy test to create the
-  // URLQueryStringStripper here because the stripper will never be created if
-  // the query stripping is disabled.
   Preferences::SetCString(kPrefQueryStrippingList, "fooBar foobaz");
   Preferences::SetBool(kPrefQueryStrippingEnabled, false);
 
@@ -89,20 +53,8 @@ TEST(TestURLQueryStringStripper, TestPrefDisabled)
 TEST(TestURLQueryStringStripper, TestEmptyStripList)
 {
   // Make sure there is no error if the strip list is empty.
-  Preferences::SetBool(kPrefQueryStrippingEnabled, true);
-
-  // To create the URLQueryStringStripper, we need to run a dummy test after
-  // the query stripping is enabled. By doing this, the stripper will be
-  // initiated and we are good to test.
-  DoTest("https://example.com/"_ns, ""_ns, false);
-
-  // Set the strip list to empty and wait until the pref setting is set to the
-  // stripper.
-  RefPtr<StripListObserver> observer = new StripListObserver();
-  observer->StartWaitingObserver();
   Preferences::SetCString(kPrefQueryStrippingList, "");
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
-      [&]() -> bool { return !observer->IsStillWaiting(); }));
+  Preferences::SetBool(kPrefQueryStrippingEnabled, true);
 
   DoTest("https://example.com/"_ns, ""_ns, false);
   DoTest("https://example.com/?Barfoo=123"_ns, ""_ns, false);
@@ -111,18 +63,8 @@ TEST(TestURLQueryStringStripper, TestEmptyStripList)
 
 TEST(TestURLQueryStringStripper, TestStripping)
 {
-  Preferences::SetBool(kPrefQueryStrippingEnabled, true);
-
-  // A dummy test to initiate the URLQueryStringStripper.
-  DoTest("https://example.com/"_ns, ""_ns, false);
-
-  // Set the pref and create an observer to wait the pref setting is set to the
-  // stripper.
-  RefPtr<StripListObserver> observer = new StripListObserver();
-  observer->StartWaitingObserver();
   Preferences::SetCString(kPrefQueryStrippingList, "fooBar foobaz");
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
-      [&]() -> bool { return !observer->IsStillWaiting(); }));
+  Preferences::SetBool(kPrefQueryStrippingEnabled, true);
 
   // Test the stripping.
   DoTest("https://example.com/"_ns, ""_ns, false);
@@ -143,10 +85,7 @@ TEST(TestURLQueryStringStripper, TestStripping)
          "https://example.com/?AfoobazB=123"_ns, false);
 
   // Change the strip list pref to see if it is updated properly.
-  observer->StartWaitingObserver();
   Preferences::SetCString(kPrefQueryStrippingList, "Barfoo bazfoo");
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
-      [&]() -> bool { return !observer->IsStillWaiting(); }));
 
   DoTest("https://example.com/?fooBar=123"_ns, ""_ns, false);
   DoTest("https://example.com/?fooBar=123&foobaz"_ns, ""_ns, false);
