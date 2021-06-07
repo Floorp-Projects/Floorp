@@ -344,7 +344,7 @@ class SubtestResult(Result):
             rv["disabled"] = list(self.disabled)
         bugs = self.bugs - self.parent.bugs
         if bugs:
-            rv["bugs"] = bugs
+            rv["bugs"] = list(bugs)
         return rv
 
     def is_triaged(self):
