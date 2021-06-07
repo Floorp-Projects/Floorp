@@ -90,7 +90,7 @@ add_task(async function test_search_icon() {
   await SpecialPowers.spawn(tab, [expectedIconURL], async function(iconURL) {
     is(
       content.document.body.getAttribute("style"),
-      `--newtab-search-icon:url(${iconURL});`,
+      `--newtab-search-icon: url(${iconURL});`,
       "Should have the correct icon URL for the logo"
     );
   });
