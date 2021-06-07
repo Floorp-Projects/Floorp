@@ -27,15 +27,6 @@
 }
 
 @media (-moz-windows-default-theme) {
-  @media not (-moz-proton-doorhangers) {
-  @item@[verdict="Malware"]:not(:hover) {
-    color: #aa1b08;
-  }
-
-  :root[lwt-popup-brighttext] @item@[verdict="Malware"]:not(:hover) {
-    color: #ff0039;
-  }
-  } /** END not Proton **/
 
   /* Use unified color for the progressbar on default theme */
   .downloadProgress::-moz-progress-bar {
