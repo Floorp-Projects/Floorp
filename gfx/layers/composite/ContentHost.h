@@ -104,8 +104,6 @@ class ContentHostBase : public ContentHost {
     return mBufferRect.TopLeft() - mBufferRotation;
   }
 
-  gfx::IntPoint GetBufferRotation() { return mBufferRotation.ToUnknownPoint(); }
-
  protected:
   gfx::IntRect mBufferRect;
   nsIntPoint mBufferRotation;

@@ -11,6 +11,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Unused.h"
 
 #define LOG_FONTLIST(args) \
   MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), LogLevel::Debug, args)
@@ -231,34 +232,46 @@ void Family::AddFaces(FontList* aList, const nsTArray<Face::InitData>& aFaces) {
   }
 }
 
-void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
-                                  nsTArray<Face*>& aFaceList,
-                                  bool aIgnoreSizeTolerance) const {
+bool Family::FindAllFacesForStyleInternal(FontList* aList,
+                                          const gfxFontStyle& aStyle,
+                                          nsTArray<Face*>& aFaceList) const {
   MOZ_ASSERT(aFaceList.IsEmpty());
   if (!IsInitialized()) {
-    return;
+    return false;
   }
 
   Pointer* facePtrs = Faces(aList);
   if (!facePtrs) {
-    return;
+    return false;
   }
 
-  // If the family has only one face, we simply return it; no further
-  // checking needed.
+  // Depending on the kind of family, we have to do varying amounts of work
+  // to figure out what face(s) to use for the requested style properties.
+
+  // If the family has only one face, we simply use it; no further style
+  // checking needed. (However, for bitmap fonts we may still need to check
+  // whether the size is acceptable.)
   if (NumFaces() == 1) {
     MOZ_ASSERT(!facePtrs[0].IsNull());
-    aFaceList.AppendElement(static_cast<Face*>(facePtrs[0].ToPtr(aList)));
-    return;
+    Face* face = static_cast<Face*>(facePtrs[0].ToPtr(aList));
+    if (face && face->HasValidDescriptor()) {
+      aFaceList.AppendElement(face);
+#ifdef MOZ_WIDGET_GTK
+      if (face->mSize) {
+        return true;
+      }
+#endif
+    }
+    return false;
   }
 
   // Most families are "simple", having just Regular/Bold/Italic/BoldItalic,
   // or some subset of these. In this case, we have exactly 4 entries in
   // mAvailableFonts, stored in the above order; note that some of the entries
   // may be nullptr. We can then pick the required entry based on whether the
-  // request is for bold or non-bold, italic or non-italic, without running the
-  // more complex matching algorithm used for larger families with many weights
-  // and/or widths.
+  // request is for bold or non-bold, italic or non-italic, without running
+  // the more complex matching algorithm used for larger families with many
+  // weights and/or widths.
 
   if (mIsSimple) {
     // Family has no more than the "standard" 4 faces, at fixed indexes;
@@ -270,15 +283,20 @@ void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
     uint8_t faceIndex =
         (wantItalic ? kItalicMask : 0) | (wantBold ? kBoldMask : 0);
 
-    // if the desired style is available, return it directly
+    // If the desired style is available, use it directly.
     Face* face = static_cast<Face*>(facePtrs[faceIndex].ToPtr(aList));
     if (face && face->HasValidDescriptor()) {
       aFaceList.AppendElement(face);
-      return;
+#ifdef MOZ_WIDGET_GTK
+      if (face->mSize) {
+        return true;
+      }
+#endif
+      return false;
     }
 
-    // order to check fallback faces in a simple family, depending on requested
-    // style
+    // Order to check fallback faces in a simple family, depending on the
+    // requested style.
     static const uint8_t simpleFallbacks[4][3] = {
         {kBoldFaceIndex, kItalicFaceIndex,
          kBoldItalicFaceIndex},  // fallback sequence for Regular
@@ -294,7 +312,12 @@ void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
       face = static_cast<Face*>(facePtrs[order[trial]].ToPtr(aList));
       if (face && face->HasValidDescriptor()) {
         aFaceList.AppendElement(face);
-        return;
+#ifdef MOZ_WIDGET_GTK
+        if (face->mSize) {
+          return true;
+        }
+#endif
+        return false;
       }
     }
 
@@ -302,7 +325,7 @@ void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
     // can happen if we're on a stylo thread and caught the font list being
     // updated; in that case we just fail quietly and let font fallback do
     // something for the time being.
-    return;
+    return false;
   }
 
   // Pick the font(s) that are closest to the desired weight, style, and
@@ -315,9 +338,11 @@ void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
   // normal platform fonts with a single font entry for each
   // weight/style/stretch combination, only the last matched font entry will
   // be added.
-
   double minDistance = INFINITY;
   Face* matched = nullptr;
+  // Keep track of whether we've included any non-scalable font resources in
+  // the selected set.
+  bool anyNonScalable = false;
   for (uint32_t i = 0; i < NumFaces(); i++) {
     Face* face = static_cast<Face*>(facePtrs[i].ToPtr(aList));
     if (face) {
@@ -332,6 +357,11 @@ void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
       } else if (distance == minDistance) {
         if (matched) {
           aFaceList.AppendElement(matched);
+#ifdef MOZ_WIDGET_GTK
+          if (matched->mSize) {
+            anyNonScalable = true;
+          }
+#endif
         }
         matched = face;
       }
@@ -341,7 +371,69 @@ void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
   MOZ_ASSERT(matched, "didn't match a font within a family");
   if (matched) {
     aFaceList.AppendElement(matched);
+#ifdef MOZ_WIDGET_GTK
+    if (matched->mSize) {
+      anyNonScalable = true;
+    }
+#endif
   }
+
+  return anyNonScalable;
+}
+
+void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
+                                  nsTArray<Face*>& aFaceList,
+                                  bool aIgnoreSizeTolerance) const {
+#ifdef MOZ_WIDGET_GTK
+  bool anyNonScalable =
+#else
+  Unused <<
+#endif
+      FindAllFacesForStyleInternal(aList, aStyle, aFaceList);
+
+#ifdef MOZ_WIDGET_GTK
+  // aFaceList now contains whatever faces are the best style match for
+  // the requested style. If specifically-sized bitmap faces are supported,
+  // we need to additionally filter the list to choose the appropriate size.
+  //
+  // It would be slightly more efficient to integrate this directly into the
+  // face-selection algorithm above, but it's a rare case that doesn't apply
+  // at all to most font families.
+  //
+  // Currently we only support pixel-sized bitmap font faces on Linux/Gtk (i.e.
+  // when using the gfxFcPlatformFontList implementation), so this filtering is
+  // not needed on other platforms.
+  //
+  // (Note that color-bitmap emoji fonts like Apple Color Emoji or Noto Color
+  // Emoji don't count here; they package multiple bitmap sizes into a single
+  // OpenType wrapper, so they appear as a single "scalable" face in our list.)
+  if (anyNonScalable) {
+    uint16_t best = 0;
+    gfxFloat dist = 0.0;
+    for (const auto& f : aFaceList) {
+      if (f->mSize == 0) {
+        // Scalable face; no size distance to compute.
+        continue;
+      }
+      gfxFloat d = fabs(gfxFloat(f->mSize) - aStyle.size);
+      if (!aIgnoreSizeTolerance && (d * 5.0 > f->mSize)) {
+        continue;  // Too far from the requested size, ignore.
+      }
+      // If we haven't found a "best" bitmap size yet, or if this is a better
+      // match, remember it.
+      if (!best || d < dist) {
+        best = f->mSize;
+        dist = d;
+      }
+    }
+    // Discard all faces except the chosen "best" size; or if no pixel size was
+    // chosen, all except scalable faces.
+    // This may eliminate *all* faces in the family, if all were bitmaps and
+    // none was a good enough size match, in which case we'll fall back to the
+    // next font-family name.
+    aFaceList.RemoveElementsBy([=](const auto& e) { return e->mSize != best; });
+  }
+#endif
 }
 
 Face* Family::FindFaceForStyle(FontList* aList, const gfxFontStyle& aStyle,
