@@ -347,70 +347,81 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     }
   }
 
-  if (IsTextEditor()) {
-    AutoTArray<nsString, 5> textArray;
-    textArray.SetCapacity(numItems);
-    uint32_t textLength = 0;
-    for (uint32_t i = 0; i < numItems; ++i) {
-      nsCOMPtr<nsIVariant> data;
-      dataTransfer->GetDataAtNoSecurityCheck(u"text/plain"_ns, i,
-                                             getter_AddRefs(data));
-      if (!data) {
-        continue;
-      }
-      // Use nsString to avoid copying its storage to textArray.
-      nsString insertText;
-      data->GetAsAString(insertText);
-      if (insertText.IsEmpty()) {
-        continue;
-      }
-      textArray.AppendElement(insertText);
-      textLength += insertText.Length();
-    }
-    // Use nsString to avoid copying its storage to editActionData.
-    nsString data;
-    data.SetCapacity(textLength);
-    // Join the text array from end to start because we insert each items
-    // in the dataTransfer at same point from start to end.  Although I
-    // don't know whether this is intentional behavior.
-    for (nsString& text : Reversed(textArray)) {
-      data.Append(text);
-    }
-    // Use native line breaks for compatibility with Chrome.
-    // XXX Although, somebody has already converted native line breaks to
-    //     XP line breaks.
-    editActionData.SetData(data);
-
-    nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-    if (NS_FAILED(rv)) {
-      NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
-                           "MaybeDispatchBeforeInputEvent() failed");
-      return EditorBase::ToGenericNSResult(rv);
-    }
-
-    // Then, insert the text.  Note that we shouldn't need to walk the array
-    // anymore because nobody should listen to mutation events of anonymous
-    // text node in <input>/<textarea>.
-    nsContentUtils::PlatformToDOMLineBreaks(data);
-    DebugOnly<nsresult> rvIgnored = InsertTextAt(data, droppedAt, false);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_OK;
-    }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "EditorBase::InsertTextAt() failed, but ignored");
-  } else {
-    nsresult rv = MOZ_KnownLive(AsHTMLEditor())
-                      ->InsertDroppedDataTransferAsAction(
-                          editActionData, *dataTransfer, droppedAt, srcdoc);
-    if (rv == NS_ERROR_EDITOR_DESTROYED ||
-        rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-      return EditorBase::ToGenericNSResult(rv);
-    }
+  nsresult rv = InsertDroppedDataTransferAsAction(editActionData, *dataTransfer,
+                                                  droppedAt, srcdoc);
+  if (rv == NS_ERROR_EDITOR_DESTROYED ||
+      rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
+    return EditorBase::ToGenericNSResult(rv);
   }
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::InsertDroppedDataTransferAsAction() failed, but ignored");
 
-  nsresult rv = ScrollSelectionFocusIntoView();
+  rv = ScrollSelectionFocusIntoView();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::ScrollSelectionFocusIntoView() failed");
+  return rv;
+}
+
+nsresult TextEditor::InsertDroppedDataTransferAsAction(
+    AutoEditActionDataSetter& aEditActionData, DataTransfer& aDataTransfer,
+    const EditorDOMPoint& aDroppedAt, Document* aSrcDocument) {
+  MOZ_ASSERT(aEditActionData.GetEditAction() == EditAction::eDrop);
+  MOZ_ASSERT(GetEditAction() == EditAction::eDrop);
+  MOZ_ASSERT(aDroppedAt.IsSet());
+  MOZ_ASSERT(aDataTransfer.MozItemCount() > 0);
+
+  uint32_t numItems = aDataTransfer.MozItemCount();
+  AutoTArray<nsString, 5> textArray;
+  textArray.SetCapacity(numItems);
+  uint32_t textLength = 0;
+  for (uint32_t i = 0; i < numItems; ++i) {
+    nsCOMPtr<nsIVariant> data;
+    aDataTransfer.GetDataAtNoSecurityCheck(u"text/plain"_ns, i,
+                                           getter_AddRefs(data));
+    if (!data) {
+      continue;
+    }
+    // Use nsString to avoid copying its storage to textArray.
+    nsString insertText;
+    data->GetAsAString(insertText);
+    if (insertText.IsEmpty()) {
+      continue;
+    }
+    textArray.AppendElement(insertText);
+    textLength += insertText.Length();
+  }
+  // Use nsString to avoid copying its storage to aEditActionData.
+  nsString data;
+  data.SetCapacity(textLength);
+  // Join the text array from end to start because we insert each items
+  // in the aDataTransfer at same point from start to end.  Although I
+  // don't know whether this is intentional behavior.
+  for (nsString& text : Reversed(textArray)) {
+    data.Append(text);
+  }
+  // Use native line breaks for compatibility with Chrome.
+  // XXX Although, somebody has already converted native line breaks to
+  //     XP line breaks.
+  aEditActionData.SetData(data);
+
+  nsresult rv = aEditActionData.MaybeDispatchBeforeInputEvent();
+  if (NS_FAILED(rv)) {
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "MaybeDispatchBeforeInputEvent() failed");
+    return rv;
+  }
+
+  // Then, insert the text.  Note that we shouldn't need to walk the array
+  // anymore because nobody should listen to mutation events of anonymous
+  // text node in <input>/<textarea>.
+  nsContentUtils::PlatformToDOMLineBreaks(data);
+  rv = InsertTextAt(data, aDroppedAt, false);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::InsertTextAt() failed, but ignored");
   return rv;
 }
 

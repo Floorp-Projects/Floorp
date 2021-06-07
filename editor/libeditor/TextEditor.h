@@ -362,6 +362,11 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult HandleInsertText(
       EditSubAction aEditSubAction, const nsAString& aInsertionString) override;
 
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertDroppedDataTransferAsAction(
+      AutoEditActionDataSetter& aEditActionData,
+      dom::DataTransfer& aDataTransfer, const EditorDOMPoint& aDroppedAt,
+      dom::Document* aSrcDocument) override;
+
   /**
    * HandleDeleteSelectionInternal() is a helper method of
    * HandleDeleteSelection().  Must be called only when the instance is

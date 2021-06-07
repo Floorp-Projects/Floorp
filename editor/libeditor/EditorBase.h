@@ -2483,6 +2483,24 @@ class EditorBase : public nsIEditor,
   }
 
   /**
+   * InsertDroppedDataTransferAsAction() inserts all data items in aDataTransfer
+   * at aDroppedAt unless the editor is destroyed.
+   *
+   * @param aEditActionData     The edit action data whose edit action must be
+   *                            EditAction::eDrop.
+   * @param aDataTransfer       The data transfer object which is dropped.
+   * @param aDroppedAt          The DOM tree position whether aDataTransfer
+   *                            is dropped.
+   * @param aSrcDocument        Source document which has the dragging item.
+   *                            May be nullptr if it comes from another app.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult
+  InsertDroppedDataTransferAsAction(AutoEditActionDataSetter& aEditActionData,
+                                    dom::DataTransfer& aDataTransfer,
+                                    const EditorDOMPoint& aDroppedAt,
+                                    dom::Document* aSrcDocument) = 0;
+
+  /**
    * DeleteSelectionByDragAsAction() removes selection and dispatch "input"
    * event whose inputType is "deleteByDrag".
    */
