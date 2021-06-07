@@ -35,7 +35,7 @@ function chanPromise(chan, listener) {
   });
 }
 
-function makeChan() {
+function makeH2Chan() {
   let chan = NetUtil.newChannel({
     uri: httpsUri,
     loadUsingSystemPrincipal: true,
@@ -74,22 +74,24 @@ add_task(async function test_version1_enabled_1() {
   Services.prefs.setBoolPref("network.http.http3.support_version1", true);
   let listener = new Http3Listener();
   listener.version1enabled = true;
-  let chan = makeChan("https://foo.example.com/");
+  let chan = makeH2Chan("https://foo.example.com/");
   await chanPromise(chan, listener);
 });
 
 add_task(async function test_version1_disabled() {
+  Services.obs.notifyObservers(null, "net:cancel-all-connections");
   Services.prefs.setBoolPref("network.http.http3.support_version1", false);
   let listener = new Http3Listener();
   listener.version1enabled = false;
-  let chan = makeChan("https://foo.example.com/");
+  let chan = makeH2Chan("https://foo.example.com/");
   await chanPromise(chan, listener);
 });
 
 add_task(async function test_version1_enabled_2() {
+  Services.obs.notifyObservers(null, "net:cancel-all-connections");
   Services.prefs.setBoolPref("network.http.http3.support_version1", true);
   let listener = new Http3Listener();
   listener.version1enabled = true;
-  let chan = makeChan("https://foo.example.com/");
+  let chan = makeH2Chan("https://foo.example.com/");
   await chanPromise(chan, listener);
 });

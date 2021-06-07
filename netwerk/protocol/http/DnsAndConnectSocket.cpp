@@ -686,58 +686,11 @@ DnsAndConnectSocket::OnTransportStatus(nsITransport* trans, nsresult status,
   // just completed. We can't do coalescing if using a proxy because the
   // ip addresses are not available to the client.
 
+  nsCOMPtr<nsIDNSAddrRecord> dnsRecord(
+      do_GetInterface(mPrimaryTransport.mSocketTransport));
   if (status == NS_NET_STATUS_CONNECTING_TO && gHttpHandler->IsSpdyEnabled() &&
-      gHttpHandler->CoalesceSpdy() && mEnt && mEnt->mConnInfo &&
-      mEnt->mConnInfo->EndToEndSSL() && mEnt->AllowHttp2() &&
-      !mEnt->mConnInfo->UsingProxy() && mEnt->mCoalescingKeys.IsEmpty()) {
-    nsCOMPtr<nsIDNSAddrRecord> dnsRecord(
-        do_GetInterface(mPrimaryTransport.mSocketTransport));
-    nsTArray<NetAddr> addressSet;
-    nsresult rv = NS_ERROR_NOT_AVAILABLE;
-    if (dnsRecord) {
-      rv = dnsRecord->GetAddresses(addressSet);
-    }
-
-    if (NS_SUCCEEDED(rv) && !addressSet.IsEmpty()) {
-      for (uint32_t i = 0; i < addressSet.Length(); ++i) {
-        if ((addressSet[i].raw.family == AF_INET &&
-             addressSet[i].inet.ip == 0) ||
-            (addressSet[i].raw.family == AF_INET6 &&
-             addressSet[i].inet6.ip.u64[0] == 0 &&
-             addressSet[i].inet6.ip.u64[1] == 0)) {
-          // Bug 1680249 - Don't create the coalescing key if the ip address is
-          // `0.0.0.0` or `::`.
-          LOG((
-              "DnsAndConnectSocket: skip creating Coalescing Key for host [%s]",
-              mEnt->mConnInfo->Origin()));
-          continue;
-        }
-        nsCString* newKey = mEnt->mCoalescingKeys.AppendElement(nsCString());
-        newKey->SetLength(kIPv6CStrBufSize + 26);
-        addressSet[i].ToStringBuffer(newKey->BeginWriting(), kIPv6CStrBufSize);
-        newKey->SetLength(strlen(newKey->BeginReading()));
-        if (mEnt->mConnInfo->GetAnonymous()) {
-          newKey->AppendLiteral("~A:");
-        } else {
-          newKey->AppendLiteral("~.:");
-        }
-        if (mEnt->mConnInfo->GetFallbackConnection()) {
-          newKey->AppendLiteral("~F:");
-        } else {
-          newKey->AppendLiteral("~.:");
-        }
-        newKey->AppendInt(mEnt->mConnInfo->OriginPort());
-        newKey->AppendLiteral("/[");
-        nsAutoCString suffix;
-        mEnt->mConnInfo->GetOriginAttributes().CreateSuffix(suffix);
-        newKey->Append(suffix);
-        newKey->AppendLiteral("]viaDNS");
-        LOG((
-            "DnsAndConnectSocket::OnTransportStatus "
-            "STATUS_CONNECTING_TO Established New Coalescing Key # %d for host "
-            "%s [%s]",
-            i, mEnt->mConnInfo->Origin(), newKey->get()));
-      }
+      gHttpHandler->CoalesceSpdy() && mEnt) {
+    if (mEnt->MaybeProcessCoalescingKeys(dnsRecord)) {
       gHttpHandler->ConnMgr()->ProcessSpdyPendingQ(mEnt);
     }
   }
@@ -1014,6 +967,14 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupConn(
   } else {
     RefPtr<HttpConnectionUDP> connUDP = do_QueryObject(conn);
     rv = connUDP->Init(ent->mConnInfo, mDNSRecord, status, callbacks, cap);
+    if (NS_SUCCEEDED(rv)) {
+      if (gHttpHandler->IsHttp3Enabled() && gHttpHandler->CoalesceSpdy() &&
+          ent) {
+        if (ent->MaybeProcessCoalescingKeys(mDNSRecord, true)) {
+          gHttpHandler->ConnMgr()->ProcessSpdyPendingQ(ent);
+        }
+      }
+    }
   }
 
   bool resetPreference = false;

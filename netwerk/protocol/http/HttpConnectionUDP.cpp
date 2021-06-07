@@ -66,97 +66,98 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
     // SetSecurityCallbacks.
     mCallbacks = new nsMainThreadPtrHolder<nsIInterfaceRequestor>(
         "HttpConnectionUDP::mCallbacks", callbacks, false);
-  } else {
-    nsCOMPtr<nsIDNSAddrRecord> dnsAddrRecord = do_QueryInterface(dnsRecord);
-    MOZ_ASSERT(dnsAddrRecord);
-    if (!dnsAddrRecord) {
-      return NS_ERROR_FAILURE;
-    }
-    dnsAddrRecord->IsTRR(&mResolvedByTRR);
-    NetAddr peerAddr;
-    nsresult rv = dnsAddrRecord->GetNextAddr(
-        mConnInfo->GetRoutedHost().IsEmpty() ? mConnInfo->OriginPort()
-                                             : mConnInfo->RoutedPort(),
-        &peerAddr);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    return mErrorBeforeConnect;
+  }
 
-    mSocket = do_CreateInstance("@mozilla.org/network/udp-socket;1", &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+  nsCOMPtr<nsIDNSAddrRecord> dnsAddrRecord = do_QueryInterface(dnsRecord);
+  MOZ_ASSERT(dnsAddrRecord);
+  if (!dnsAddrRecord) {
+    return NS_ERROR_FAILURE;
+  }
+  dnsAddrRecord->IsTRR(&mResolvedByTRR);
+  NetAddr peerAddr;
+  nsresult rv = dnsAddrRecord->GetNextAddr(mConnInfo->GetRoutedHost().IsEmpty()
+                                               ? mConnInfo->OriginPort()
+                                               : mConnInfo->RoutedPort(),
+                                           &peerAddr);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-    // We need an address here so that we can convey the IP version of the
-    // socket.
-    NetAddr local;
-    memset(&local, 0, sizeof(local));
-    local.raw.family = peerAddr.raw.family;
-    rv = mSocket->InitWithAddress(&local, nullptr, false, 1);
-    if (NS_FAILED(rv)) {
-      mSocket = nullptr;
-      return rv;
-    }
+  mSocket = do_CreateInstance("@mozilla.org/network/udp-socket;1", &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-    rv = mSocket->SetRecvBufferSize(
-        StaticPrefs::network_http_http3_recvBufferSize());
-    if (NS_FAILED(rv)) {
-      LOG(("HttpConnectionUDP::Init SetRecvBufferSize failed %d [this=%p]",
-           static_cast<uint32_t>(rv), this));
-      mSocket->Close();
-      mSocket = nullptr;
-      return rv;
-    }
+  // We need an address here so that we can convey the IP version of the
+  // socket.
+  NetAddr local;
+  memset(&local, 0, sizeof(local));
+  local.raw.family = peerAddr.raw.family;
+  rv = mSocket->InitWithAddress(&local, nullptr, false, 1);
+  if (NS_FAILED(rv)) {
+    mSocket = nullptr;
+    return rv;
+  }
 
-    // get the resulting socket address.
-    rv = mSocket->GetLocalAddr(getter_AddRefs(mSelfAddr));
-    if (NS_FAILED(rv)) {
-      mSocket->Close();
-      mSocket = nullptr;
-      return rv;
-    }
+  rv = mSocket->SetRecvBufferSize(
+      StaticPrefs::network_http_http3_recvBufferSize());
+  if (NS_FAILED(rv)) {
+    LOG(("HttpConnectionUDP::Init SetRecvBufferSize failed %d [this=%p]",
+         static_cast<uint32_t>(rv), this));
+    mSocket->Close();
+    mSocket = nullptr;
+    return rv;
+  }
 
-    uint32_t controlFlags = 0;
-    if (caps & NS_HTTP_LOAD_ANONYMOUS) {
-      controlFlags |= nsISocketProvider::ANONYMOUS_CONNECT;
-    }
-    if (mConnInfo->GetPrivate()) {
-      controlFlags |= nsISocketProvider::NO_PERMANENT_STORAGE;
-    }
-    if (((caps & NS_HTTP_BE_CONSERVATIVE) || mConnInfo->GetBeConservative()) &&
-        gHttpHandler->ConnMgr()->BeConservativeIfProxied(
-            mConnInfo->ProxyInfo())) {
-      controlFlags |= nsISocketProvider::BE_CONSERVATIVE;
-    }
+  // get the resulting socket address.
+  rv = mSocket->GetLocalAddr(getter_AddRefs(mSelfAddr));
+  if (NS_FAILED(rv)) {
+    mSocket->Close();
+    mSocket = nullptr;
+    return rv;
+  }
 
-    mPeerAddr = new nsNetAddr(&peerAddr);
-    mHttp3Session = new Http3Session();
-    rv = mHttp3Session->Init(mConnInfo, mSelfAddr, mPeerAddr, this,
-                             controlFlags, callbacks);
-    if (NS_FAILED(rv)) {
-      LOG(
-          ("HttpConnectionUDP::Init mHttp3Session->Init failed "
-           "[this=%p rv=%x]\n",
-           this, static_cast<uint32_t>(rv)));
-      mSocket->Close();
-      mSocket = nullptr;
-      mHttp3Session = nullptr;
-      return rv;
-    }
+  uint32_t controlFlags = 0;
+  if (caps & NS_HTTP_LOAD_ANONYMOUS) {
+    controlFlags |= nsISocketProvider::ANONYMOUS_CONNECT;
+  }
+  if (mConnInfo->GetPrivate()) {
+    controlFlags |= nsISocketProvider::NO_PERMANENT_STORAGE;
+  }
+  if (((caps & NS_HTTP_BE_CONSERVATIVE) || mConnInfo->GetBeConservative()) &&
+      gHttpHandler->ConnMgr()->BeConservativeIfProxied(
+          mConnInfo->ProxyInfo())) {
+    controlFlags |= nsISocketProvider::BE_CONSERVATIVE;
+  }
 
-    // See explanation for non-strictness of this operation in
-    // SetSecurityCallbacks.
-    mCallbacks = new nsMainThreadPtrHolder<nsIInterfaceRequestor>(
-        "HttpConnectionUDP::mCallbacks", callbacks, false);
+  mPeerAddr = new nsNetAddr(&peerAddr);
+  mHttp3Session = new Http3Session();
+  rv = mHttp3Session->Init(mConnInfo, mSelfAddr, mPeerAddr, this, controlFlags,
+                           callbacks);
+  if (NS_FAILED(rv)) {
+    LOG(
+        ("HttpConnectionUDP::Init mHttp3Session->Init failed "
+         "[this=%p rv=%x]\n",
+         this, static_cast<uint32_t>(rv)));
+    mSocket->Close();
+    mSocket = nullptr;
+    mHttp3Session = nullptr;
+    return rv;
+  }
 
-    // Call SyncListen at the end of this function. This call will actually
-    // attach the sockte to SocketTransportService.
-    rv = mSocket->SyncListen(this);
-    if (NS_FAILED(rv)) {
-      mSocket->Close();
-      mSocket = nullptr;
-      return rv;
-    }
+  // See explanation for non-strictness of this operation in
+  // SetSecurityCallbacks.
+  mCallbacks = new nsMainThreadPtrHolder<nsIInterfaceRequestor>(
+      "HttpConnectionUDP::mCallbacks", callbacks, false);
+
+  // Call SyncListen at the end of this function. This call will actually
+  // attach the sockte to SocketTransportService.
+  rv = mSocket->SyncListen(this);
+  if (NS_FAILED(rv)) {
+    mSocket->Close();
+    mSocket = nullptr;
+    return rv;
   }
 
   return NS_OK;
