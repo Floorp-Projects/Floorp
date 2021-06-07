@@ -266,7 +266,7 @@ class AutofillDelegateTest : BaseSessionTest() {
         })
 
         assertThat("Initial auto-fill count should match",
-                   countAutofillNodes(), equalTo(14))
+                   countAutofillNodes(), equalTo(16))
 
         // Now wait for the nodes to clear.
         mainSession.loadTestPath(HELLO_HTML_PATH)
@@ -301,7 +301,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             }
         })
         assertThat("Should have auto-fill fields again",
-                   countAutofillNodes(), equalTo(14))
+                   countAutofillNodes(), equalTo(16))
         assertThat("Should not have focused field",
                    countAutofillNodes({ it.focused }), equalTo(0))
 
@@ -325,9 +325,9 @@ class AutofillDelegateTest : BaseSessionTest() {
         // Hidden elements are ignored.
         // TODO: Is this actually correct? Should the whole focused branch be
         // visible or just the nodes as described above?
-        assertThat("Should have seven visible nodes",
+        assertThat("Should have nine visible nodes",
                    countAutofillNodes({ node -> node.visible }),
-                   equalTo(6))
+                   equalTo(8))
 
         mainSession.evaluateJS("document.querySelector('#pass2').blur()")
         sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
