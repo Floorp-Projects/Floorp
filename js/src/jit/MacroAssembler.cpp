@@ -110,27 +110,21 @@ void MacroAssembler::storeToTypedBigIntArray(Scalar::Type arrayType,
 }
 
 void MacroAssembler::boxUint32(Register source, ValueOperand dest,
-                               bool allowDouble, Label* fail) {
-  if (allowDouble) {
-    // If the value fits in an int32, store an int32 type tag.
-    // Else, convert the value to double and box it.
-    Label done, isDouble;
-    branchTest32(Assembler::Signed, source, source, &isDouble);
-    {
+                               Uint32Mode mode, Label* fail) {
+  switch (mode) {
+    // Fail if the value does not fit in an int32.
+    case Uint32Mode::FailOnDouble: {
+      branchTest32(Assembler::Signed, source, source, fail);
       tagValue(JSVAL_TYPE_INT32, source, dest);
-      jump(&done);
+      break;
     }
-    bind(&isDouble);
-    {
+    case Uint32Mode::ForceDouble: {
+      // Always convert the value to double.
       ScratchDoubleScope fpscratch(*this);
       convertUInt32ToDouble(source, fpscratch);
       boxDouble(fpscratch, dest, fpscratch);
+      break;
     }
-    bind(&done);
-  } else {
-    // Fail if the value does not fit in an int32.
-    branchTest32(Assembler::Signed, source, source, fail);
-    tagValue(JSVAL_TYPE_INT32, source, dest);
   }
 }
 
@@ -195,7 +189,7 @@ template void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType,
 template <typename T>
 void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
                                         const ValueOperand& dest,
-                                        bool allowDouble, Register temp,
+                                        Uint32Mode uint32Mode, Register temp,
                                         Label* fail) {
   switch (arrayType) {
     case Scalar::Int8:
@@ -211,7 +205,7 @@ void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
     case Scalar::Uint32:
       // Don't clobber dest when we could fail, instead use temp.
       load32(src, temp);
-      boxUint32(temp, dest, allowDouble, fail);
+      boxUint32(temp, dest, uint32Mode, fail);
       break;
     case Scalar::Float32: {
       ScratchDoubleScope dscratch(*this);
@@ -239,12 +233,12 @@ void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
 template void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType,
                                                  const Address& src,
                                                  const ValueOperand& dest,
-                                                 bool allowDouble,
+                                                 Uint32Mode uint32Mode,
                                                  Register temp, Label* fail);
 template void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType,
                                                  const BaseIndex& src,
                                                  const ValueOperand& dest,
-                                                 bool allowDouble,
+                                                 Uint32Mode uint32Mode,
                                                  Register temp, Label* fail);
 
 template <typename T>

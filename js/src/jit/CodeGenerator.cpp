@@ -12879,8 +12879,11 @@ void CodeGenerator::visitLoadTypedArrayElementHole(
   Scalar::Type arrayType = lir->mir()->arrayType();
   Label fail;
   BaseIndex source(scratch, index, ScaleFromScalarType(arrayType));
-  masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(),
-                          out.scratchReg(), &fail);
+  MacroAssembler::Uint32Mode uint32Mode =
+      lir->mir()->allowDouble() ? MacroAssembler::Uint32Mode::ForceDouble
+                                : MacroAssembler::Uint32Mode::FailOnDouble;
+  masm.loadFromTypedArray(arrayType, source, out, uint32Mode, out.scratchReg(),
+                          &fail);
   masm.jump(&done);
 
   masm.bind(&outOfBounds);
