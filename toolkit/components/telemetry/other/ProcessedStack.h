@@ -36,10 +36,6 @@ class ProcessedStack {
     // The index to pass to GetModule to get the module this program counter
     // was in.
     uint16_t mModIndex;
-    // For non-module-offset frames (such as JS frames), this contains the raw
-    // string representation. If this is non-empty, mOffset and mModIndex can
-    // be ignored.
-    nsCString mString;
   };
   struct Module {
     // The file name, /foo/bar/libxul.so for example.
@@ -123,7 +119,6 @@ struct ParamTraits<mozilla::Telemetry::ProcessedStack::Frame> {
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mOffset);
     WriteParam(aMsg, aParam.mModIndex);
-    WriteParam(aMsg, aParam.mString);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -133,10 +128,6 @@ struct ParamTraits<mozilla::Telemetry::ProcessedStack::Frame> {
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mModIndex)) {
-      return false;
-    }
-
-    if (!ReadParam(aMsg, aIter, &aResult->mString)) {
       return false;
     }
 

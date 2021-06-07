@@ -6,7 +6,6 @@
 
 #include <algorithm>
 
-#include "mozilla/HangDetails.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/ProcessedStack.h"
@@ -14,7 +13,6 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/ThreadStackHelper.h"
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -81,6 +79,13 @@ class SHA1Stream {
   mozilla::SHA1Sum mSHA1;
 };
 
+static void RecordStackWalker(uint32_t aFrameNumber, void* aPC, void* aSP,
+                              void* aClosure) {
+  std::vector<uintptr_t>* stack =
+      static_cast<std::vector<uintptr_t>*>(aClosure);
+  stack->push_back(reinterpret_cast<uintptr_t>(aPC));
+}
+
 /**************************** Late-Write Observer  ****************************/
 
 /**
@@ -124,13 +129,9 @@ void LateWriteObserver::Observe(
   // concurrently from many writes, so we use multiple temporary files.
   std::vector<uintptr_t> rawStack;
 
-  mozilla::HangStack stack;
-  nsCString runnableName;
-#ifdef MOZ_GECKO_PROFILER
-  mozilla::ThreadStackHelper stackHelper;
-  stackHelper.GetStack(stack, runnableName, true);
-  ReadModuleInformation(stack);
-#endif
+  MozStackWalk(RecordStackWalker, nullptr, /* maxFrames */ 0, &rawStack);
+  mozilla::Telemetry::ProcessedStack stack =
+      mozilla::Telemetry::GetStackAndModules(rawStack);
 
   nsTAutoString<char_type> nameAux(mProfileDirectory);
   nameAux.AppendLiteral(NS_SLASH "Telemetry.LateWriteTmpXXXXXX");
@@ -169,82 +170,28 @@ void LateWriteObserver::Observe(
 
   SHA1Stream sha1Stream(stream);
 
-  size_t numModules = stack.modules().Length();
+  size_t numModules = stack.GetNumModules();
   sha1Stream.Printf("%u\n", (unsigned)numModules);
   for (size_t i = 0; i < numModules; ++i) {
-    auto& module = stack.modules()[i];
-    sha1Stream.Printf("%s %s\n", module.breakpadId().get(),
-                      NS_ConvertUTF16toUTF8(module.name()).get());
+    mozilla::Telemetry::ProcessedStack::Module module = stack.GetModule(i);
+    sha1Stream.Printf("%s %s\n", module.mBreakpadId.get(),
+                      NS_ConvertUTF16toUTF8(module.mName).get());
   }
 
-  size_t numFrames = stack.stack().Length();
+  size_t numFrames = stack.GetStackSize();
   sha1Stream.Printf("%u\n", (unsigned)numFrames);
   for (size_t i = 0; i < numFrames; ++i) {
-    auto& entry = stack.stack()[i];
-
-    // NOTE: we prefix every frame line with either "s " or "o " to indicate
-    // that it is a string frame or an offset into a module, respectively.
-    // The s and o will not be included in the resulting telemetry ping.
-    switch (entry.type()) {
-      case mozilla::HangEntry::TnsCString: {
-        if (entry.get_nsCString().Length()) {
-          sha1Stream.Printf("s %s\n", entry.get_nsCString().get());
-        }
-        break;
-      }
-      case mozilla::HangEntry::THangEntryBufOffset: {
-        uint32_t offset = entry.get_HangEntryBufOffset().index();
-
-        if (NS_WARN_IF(stack.strbuffer().IsEmpty() ||
-                       offset >= stack.strbuffer().Length())) {
-          MOZ_ASSERT_UNREACHABLE("Corrupted offset data");
-          break;
-        }
-
-        if (stack.strbuffer().LastElement() != '\0') {
-          MOZ_ASSERT_UNREACHABLE("Corrupted strbuffer data");
-          break;
-        }
-
-        // We know this offset is safe because of the previous checks.
-        const int8_t* start = stack.strbuffer().Elements() + offset;
-        if (start[0]) {
-          sha1Stream.Printf("s %s\n", reinterpret_cast<const char*>(start));
-        }
-        break;
-      }
-      case mozilla::HangEntry::THangEntryModOffset: {
-        auto& mo = entry.get_HangEntryModOffset();
-        sha1Stream.Printf("o %d %x\n", mo.module(), mo.offset());
-        break;
-      }
-      case mozilla::HangEntry::THangEntryProgCounter: {
-        sha1Stream.Printf("s (unresolved)\n");
-        break;
-      }
-      case mozilla::HangEntry::THangEntryContent: {
-        sha1Stream.Printf("s (content script)\n");
-        break;
-      }
-      case mozilla::HangEntry::THangEntryJit: {
-        sha1Stream.Printf("s (jit frame)");
-        break;
-      }
-      case mozilla::HangEntry::THangEntryWasm: {
-        sha1Stream.Printf("s (wasm)");
-        break;
-      }
-      case mozilla::HangEntry::THangEntryChromeScript: {
-        sha1Stream.Printf("s (chrome script)");
-        break;
-      }
-      case mozilla::HangEntry::THangEntrySuppressed: {
-        sha1Stream.Printf("s (profiling suppressed)");
-        break;
-      }
-      default:
-        MOZ_CRASH("Unsupported HangEntry type?");
-    }
+    const mozilla::Telemetry::ProcessedStack::Frame& frame = stack.GetFrame(i);
+    // NOTE: We write the offsets, while the atos tool expects a value with
+    // the virtual address added. For example, running otool -l on the the
+    // firefox binary shows
+    //      cmd LC_SEGMENT_64
+    //      cmdsize 632
+    //      segname __TEXT
+    //      vmaddr 0x0000000100000000
+    // so to print the line matching the offset 123 one has to run
+    // atos -o firefox 0x100000123.
+    sha1Stream.Printf("%d %x\n", frame.mModIndex, (unsigned)frame.mOffset);
   }
 
   mozilla::SHA1Sum::Hash sha1;
