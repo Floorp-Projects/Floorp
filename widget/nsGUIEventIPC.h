@@ -695,26 +695,6 @@ struct ParamTraits<mozilla::widget::NativeIMEContext> {
 };
 
 template <>
-struct ParamTraits<mozilla::widget::IMENotification::Rect> {
-  typedef mozilla::widget::IMENotification::Rect paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mX);
-    WriteParam(aMsg, aParam.mY);
-    WriteParam(aMsg, aParam.mWidth);
-    WriteParam(aMsg, aParam.mHeight);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mX) &&
-           ReadParam(aMsg, aIter, &aResult->mY) &&
-           ReadParam(aMsg, aIter, &aResult->mWidth) &&
-           ReadParam(aMsg, aIter, &aResult->mHeight);
-  }
-};
-
-template <>
 struct ParamTraits<mozilla::widget::IMENotification::SelectionChangeDataBase> {
   typedef mozilla::widget::IMENotification::SelectionChangeDataBase paramType;
 
