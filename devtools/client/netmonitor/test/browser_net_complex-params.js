@@ -304,7 +304,7 @@ async function testRequestWithoutRequestData(monitor, requestListItem) {
   );
   is(
     tabpanel.querySelector(".empty-notice").textContent,
-    L10N.getStr("paramsEmptyText"),
+    L10N.getStr("paramsNoPayloadText"),
     "The empty notice should be correct."
   );
 }
