@@ -68,7 +68,6 @@ class VendorPython(MozbuildObject):
                         tmp,
                         "--no-binary",
                         ":all:",
-                        "--disable-pip-version-check",
                     ]
                 )
                 self._extract(tmp, vendor_dir, keep_extra_files)
