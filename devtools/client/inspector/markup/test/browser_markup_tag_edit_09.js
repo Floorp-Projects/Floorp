@@ -8,16 +8,16 @@
 const TEST_URL = URL_ROOT + "doc_markup_svg_attributes.html";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   await inspector.markup.expandAll();
   await selectNode("svg", inspector);
 
-  await testWellformedMixedCase(inspector, testActor);
-  await testMalformedMixedCase(inspector, testActor);
+  await testWellformedMixedCase(inspector);
+  await testMalformedMixedCase(inspector);
 });
 
-async function testWellformedMixedCase(inspector, testActor) {
+async function testWellformedMixedCase(inspector) {
   info(
     "Modifying a mixed-case attribute, " +
       "expecting the attribute's case to be preserved"
@@ -38,18 +38,14 @@ async function testWellformedMixedCase(inspector, testActor) {
   EventUtils.sendKey("return", inspector.panelWin);
   await onMutated;
 
-  await assertAttributes(
-    "svg",
-    {
-      viewBox: "0 0 1 1",
-      width: "200",
-      height: "200",
-    },
-    testActor
-  );
+  await assertAttributes("svg", {
+    viewBox: "0 0 1 1",
+    width: "200",
+    height: "200",
+  });
 }
 
-async function testMalformedMixedCase(inspector, testActor) {
+async function testMalformedMixedCase(inspector) {
   info(
     "Modifying a malformed, mixed-case attribute, " +
       "expecting the attribute's case to be preserved"
@@ -70,13 +66,9 @@ async function testMalformedMixedCase(inspector, testActor) {
   EventUtils.sendKey("return", inspector.panelWin);
   await onMutated;
 
-  await assertAttributes(
-    "svg",
-    {
-      viewBox: "<>",
-      width: "200",
-      height: "200",
-    },
-    testActor
-  );
+  await assertAttributes("svg", {
+    viewBox: "<>",
+    width: "200",
+    height: "200",
+  });
 }

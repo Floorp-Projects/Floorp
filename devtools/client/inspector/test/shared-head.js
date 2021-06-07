@@ -851,6 +851,26 @@ function setContentPageElementProperty(selector, propertyName, propertyValue) {
 }
 
 /**
+ * Get all the attributes for a DOM Node living in the content page.
+ *
+ * @param {String} selector The node selector
+ * @returns {Array<Object>} An array of {name, value} objects.
+ */
+async function getContentPageElementAttributes(selector) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector],
+    _selector => {
+      const node = content.document.querySelector(_selector);
+      return Array.from(node.attributes).map(({ name, value }) => ({
+        name,
+        value,
+      }));
+    }
+  );
+}
+
+/**
  * Get an attribute on a DOM Node living in the content page.
  *
  * @param {String} selector The node selector
