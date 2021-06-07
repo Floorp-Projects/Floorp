@@ -14,6 +14,7 @@
 #include "sslt.h"
 #include "ssl.h"
 #include "mozilla/net/SSLTokensCache.h"
+#include "nsICertOverrideService.h"
 
 using namespace mozilla;
 
@@ -120,6 +121,20 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
   // handshake has completed.
   if (!mHandshakeCompleted || !HasServerCert()) {
     return NS_OK;
+  }
+
+  // Security checks can only be skipped when running xpcshell tests.
+  if (PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
+    nsCOMPtr<nsICertOverrideService> overrideService =
+        do_GetService(NS_CERTOVERRIDE_CONTRACTID);
+    if (overrideService) {
+      bool securityCheckDisabled = false;
+      overrideService->GetSecurityCheckDisabled(&securityCheckDisabled);
+      if (securityCheckDisabled) {
+        *_retval = true;
+        return NS_OK;
+      }
+    }
   }
 
   // If the cert has error bits (e.g. it is untrusted) then do not join.
