@@ -5754,6 +5754,12 @@
     type: bool
     value: false
     mirror: always
+
+# Experimental support for class static blocks in JavaScript.
+-   name: javascript.options.experimental.class_static_blocks
+    type: bool
+    value: false
+    mirror: always
 #endif  // NIGHTLY_BUILD
 
   # Support for Private Fields in JavaScript.
