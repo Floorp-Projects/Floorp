@@ -1,24 +1,5 @@
-<!DOCTYPE html>
-<meta charset="utf-8" />
-<title>FormData: Upload files in UTF-8 fetch()</title>
-<link
-  rel="help"
-  href="https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#multipart-form-data"
-/>
-<link
-  rel="help"
-  href="https://html.spec.whatwg.org/multipage/dnd.html#datatransferitemlist"
-/>
-<link rel="help" href="https://w3c.github.io/FileAPI/#file-constructor" />
-<link
-  rel="author"
-  title="Benjamin C. Wiley Sittler"
-  href="mailto:bsittler@chromium.org"
-/>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="../support/send-file-formdata-helper.js"></script>
-<script>
+// META: title=FormData: FormData: Upload files in UTF-8 fetch()
+// META: script=../support/send-file-formdata-helper.js
   "use strict";
 
   formDataPostFileUploadTest({
@@ -50,4 +31,3 @@
     fileNameSource: "Unicode",
     fileBaseName: `file-for-upload-in-form-${kTestChars}.txt`,
   });
-</script>
