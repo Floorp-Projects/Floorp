@@ -122,11 +122,15 @@
 
   function disableCoalescing() {
     return SpecialPowers.pushPrefEnv({"set": [["dom.events.compress.touchmove",
+                                               false],
+                                              ["dom.events.coalesce.touchmove",
                                                false]]});
   }
 
   function enableCoalescing() {
     return SpecialPowers.pushPrefEnv({"set": [["dom.events.compress.touchmove",
+                                               true],
+                                              ["dom.events.coalesce.touchmove",
                                                true]]});
   }
 

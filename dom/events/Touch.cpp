@@ -184,6 +184,14 @@ bool Touch::Equals(Touch* aTouch) const {
          mRadius.x == aTouch->mRadius.x && mRadius.y == aTouch->mRadius.y;
 }
 
+void Touch::SetSameAs(const Touch* aTouch) {
+  mRefPoint = aTouch->mRefPoint;
+  mForce = aTouch->mForce;
+  mRotationAngle = aTouch->mRotationAngle;
+  mRadius.x = aTouch->mRadius.x;
+  mRadius.y = aTouch->mRadius.y;
+}
+
 JSObject* Touch::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return Touch_Binding::Wrap(aCx, this, aGivenProto);
 }
