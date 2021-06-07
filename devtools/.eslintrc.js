@@ -116,7 +116,6 @@ module.exports = {
         "client/responsive.html/browser/content.js",
         "client/shared/browser-loader.js",
         "server/actors/webconsole/content-process-forward.js",
-        "server/actors/worker/service-worker-process.js",
         "server/startup/content-process.js",
         "server/startup/frame.js",
         "shared/base-loader.js",
