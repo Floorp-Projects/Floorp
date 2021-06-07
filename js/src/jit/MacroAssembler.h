@@ -4569,7 +4569,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
     bind(&done);
   }
 
-  void boxUint32(Register source, ValueOperand dest, bool allowDouble,
+  enum class Uint32Mode { FailOnDouble, ForceDouble };
+
+  void boxUint32(Register source, ValueOperand dest, Uint32Mode uint32Mode,
                  Label* fail);
 
   template <typename T>
@@ -4578,7 +4580,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   template <typename T>
   void loadFromTypedArray(Scalar::Type arrayType, const T& src,
-                          const ValueOperand& dest, bool allowDouble,
+                          const ValueOperand& dest, Uint32Mode uint32Mode,
                           Register temp, Label* fail);
 
   template <typename T>
