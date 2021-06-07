@@ -499,7 +499,14 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
     },
     isErrorPage
   );
-  BrowserTestUtils.loadURI(browser, uri);
+
+  // if we're navigating to the same page we're already on, use reloadTab instead as the
+  // behavior slightly differs from loadURI (e.g. scroll position isn't keps with the latter).
+  if (uri === browser.currentURI.spec) {
+    gBrowser.reloadTab(gBrowser.selectedTab);
+  } else {
+    BrowserTestUtils.loadURI(browser, uri);
+  }
 
   info(`Waiting for page to be loaded…`);
   await onBrowserLoaded;
