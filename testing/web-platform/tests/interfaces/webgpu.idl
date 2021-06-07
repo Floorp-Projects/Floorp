@@ -12,7 +12,7 @@ dictionary GPUObjectDescriptorBase {
 };
 
 [Exposed=Window]
-interface GPUAdapterLimits {
+interface GPUSupportedLimits {
     readonly attribute unsigned long maxTextureDimension1D;
     readonly attribute unsigned long maxTextureDimension2D;
     readonly attribute unsigned long maxTextureDimension3D;
@@ -65,7 +65,7 @@ enum GPUPowerPreference {
 interface GPUAdapter {
     readonly attribute DOMString name;
     [SameObject] readonly attribute GPUSupportedFeatures features;
-    [SameObject] readonly attribute GPUAdapterLimits limits;
+    [SameObject] readonly attribute GPUSupportedLimits limits;
 
     Promise<GPUDevice> requestDevice(optional GPUDeviceDescriptor descriptor = {});
 };
@@ -87,7 +87,7 @@ enum GPUFeatureName {
 [Exposed=(Window, DedicatedWorker), Serializable]
 interface GPUDevice : EventTarget {
     [SameObject] readonly attribute GPUSupportedFeatures features;
-    readonly attribute object limits;
+    [SameObject] readonly attribute GPUSupportedLimits limits;
 
     [SameObject] readonly attribute GPUQueue queue;
 
@@ -994,6 +994,7 @@ dictionary GPUSwapChainDescriptor : GPUObjectDescriptorBase {
     required GPUTextureFormat format;
     GPUTextureUsageFlags usage = 0x10;  // GPUTextureUsage.RENDER_ATTACHMENT
     GPUCanvasCompositingAlphaMode compositingAlphaMode = "opaque";
+    GPUExtent3D size;
 };
 
 [Exposed=Window]
