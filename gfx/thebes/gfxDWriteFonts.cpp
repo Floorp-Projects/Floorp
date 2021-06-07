@@ -153,13 +153,52 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
     mFontFace->GetMetrics(&fontMetrics);
   }
 
-  if (mStyle.sizeAdjust >= 0.0) {
-    gfxFloat aspect =
-        (gfxFloat)fontMetrics.xHeight / fontMetrics.designUnitsPerEm;
-    mAdjustedSize = mStyle.GetAdjustedSize(aspect);
-  } else {
-    mAdjustedSize = GetAdjustedSize();
+  if (GetAdjustedSize() > 0.0 && mStyle.sizeAdjust >= 0.0 &&
+      FontSizeAdjust::Tag(mStyle.sizeAdjustBasis) !=
+          FontSizeAdjust::Tag::None) {
+    // For accurate measurement during the font-size-adjust computations;
+    // these may be reset later according to the adjusted size.
+    mUseSubpixelPositions = true;
+    mFUnitsConvFactor = float(mAdjustedSize / fontMetrics.designUnitsPerEm);
+    gfxFloat aspect;
+    switch (FontSizeAdjust::Tag(mStyle.sizeAdjustBasis)) {
+      default:
+        MOZ_ASSERT_UNREACHABLE("unhandled sizeAdjustBasis?");
+        aspect = 0.0;
+        break;
+      case FontSizeAdjust::Tag::Ex:
+        aspect = (gfxFloat)fontMetrics.xHeight / fontMetrics.designUnitsPerEm;
+        break;
+      case FontSizeAdjust::Tag::Cap:
+        aspect = (gfxFloat)fontMetrics.capHeight / fontMetrics.designUnitsPerEm;
+        break;
+      case FontSizeAdjust::Tag::Ch: {
+        aspect = GetCharAdvance('0');
+        if (aspect < 0.0) {
+          // '0' not found, default to 0.5em.
+          aspect = 0.5;
+        } else {
+          aspect /= mAdjustedSize;
+        }
+        break;
+      }
+      case FontSizeAdjust::Tag::Ic:
+        aspect = GetCharAdvance(0x6C34);
+        if (aspect < 0.0) {
+          // U+6C34 not found, default to 1em.
+          aspect = 1.0;
+        } else {
+          aspect /= mAdjustedSize;
+        }
+        break;
+    }
+    if (aspect > 0.0) {
+      mAdjustedSize = mStyle.GetAdjustedSize(aspect);
+    }
   }
+
+  // Update now that we've adjusted the size if necessary.
+  mFUnitsConvFactor = float(mAdjustedSize / fontMetrics.designUnitsPerEm);
 
   // Note that GetMeasuringMode depends on mAdjustedSize
   if ((anAAOption == gfxFont::kAntialiasDefault && UsingClearType() &&
@@ -168,6 +207,8 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
     mUseSubpixelPositions = true;
     // note that this may be reset to FALSE if we determine that a bitmap
     // strike is going to be used
+  } else {
+    mUseSubpixelPositions = false;
   }
 
   gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
@@ -184,8 +225,6 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
 
   mMetrics = new gfxFont::Metrics;
   ::memset(mMetrics, 0, sizeof(*mMetrics));
-
-  mFUnitsConvFactor = float(mAdjustedSize / fontMetrics.designUnitsPerEm);
 
   mMetrics->xHeight = fontMetrics.xHeight * mFUnitsConvFactor;
   mMetrics->capHeight = fontMetrics.capHeight * mFUnitsConvFactor;
@@ -248,22 +287,14 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
   }
 
   if (mMetrics->aveCharWidth < 1) {
-    ucs = L'x';
-    if (SUCCEEDED(mFontFace->GetGlyphIndices(&ucs, 1, &glyph)) && glyph != 0) {
-      mMetrics->aveCharWidth = MeasureGlyphWidth(glyph);
-    }
+    mMetrics->aveCharWidth = GetCharAdvance('x');
     if (mMetrics->aveCharWidth < 1) {
       // Let's just assume the X is square.
       mMetrics->aveCharWidth = fontMetrics.xHeight * mFUnitsConvFactor;
     }
   }
 
-  ucs = L'0';
-  if (SUCCEEDED(mFontFace->GetGlyphIndices(&ucs, 1, &glyph)) && glyph != 0) {
-    mMetrics->zeroWidth = MeasureGlyphWidth(glyph);
-  } else {
-    mMetrics->zeroWidth = -1.0;  // indicates not found
-  }
+  mMetrics->zeroWidth = GetCharAdvance('0');
 
   mMetrics->underlineOffset = fontMetrics.underlinePosition * mFUnitsConvFactor;
   mMetrics->underlineSize = fontMetrics.underlineThickness * mFUnitsConvFactor;
