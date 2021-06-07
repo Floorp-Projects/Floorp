@@ -523,3 +523,33 @@ add_task(async function test_isEnabled_backwards_compatible() {
   );
   Assert.ok(exposureSpy.calledOnce, "Exposure event sent");
 });
+
+add_task(async function test_onUpdate_before_store_ready() {
+  let sandbox = sinon.createSandbox();
+  const feature = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+  const stub = sandbox.stub();
+  const manager = ExperimentFakes.manager();
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+  sandbox.stub(manager.store, "getAllActive").returns([
+    ExperimentFakes.experiment("foo-experiment", {
+      featureIds: ["foo"],
+      branch: { slug: "control", feature: { featureId: "foo", value: null } },
+    }),
+  ]);
+
+  // We register for updates before the store finished loading experiments
+  // from disk
+  feature.onUpdate(stub);
+
+  await manager.onStartup();
+
+  Assert.ok(
+    stub.calledOnce,
+    "Called on startup after loading experiments from disk"
+  );
+  Assert.equal(
+    stub.firstCall.args[1],
+    "feature-experiment-loaded",
+    "Called for the expected reason"
+  );
+});
