@@ -6977,8 +6977,9 @@ void nsWindow::UserActivity() {
   }
 }
 
-nsIntPoint nsWindow::GetTouchCoordinates(WPARAM wParam, LPARAM lParam) {
-  nsIntPoint ret;
+LayoutDeviceIntPoint nsWindow::GetTouchCoordinates(WPARAM wParam,
+                                                   LPARAM lParam) {
+  LayoutDeviceIntPoint ret;
   uint32_t cInputs = LOWORD(wParam);
   if (cInputs != 1) {
     // Just return 0,0 if there isn't exactly one touch point active
@@ -8358,7 +8359,7 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
 
   if (nativeMessage == WM_TOUCH || nativeMessage == WM_LBUTTONDOWN ||
       nativeMessage == WM_POINTERDOWN) {
-    nsIntPoint pos;
+    LayoutDeviceIntPoint pos;
     if (nativeMessage == WM_TOUCH) {
       if (nsWindow* win = WinUtils::GetNSWindowPtr(aWnd)) {
         pos = win->GetTouchCoordinates(aWParam, aLParam);
@@ -8368,7 +8369,7 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
       pt.x = GET_X_LPARAM(aLParam);
       pt.y = GET_Y_LPARAM(aLParam);
       ::ClientToScreen(aWnd, &pt);
-      pos = nsIntPoint(pt.x, pt.y);
+      pos = LayoutDeviceIntPoint(pt.x, pt.y);
     }
 
     nsIContent* lastRollup;

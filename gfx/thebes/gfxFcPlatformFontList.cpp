@@ -205,7 +205,8 @@ static FontStretch MapFcWidth(int aFcWidth) {
 
 static void GetFontProperties(FcPattern* aFontPattern, WeightRange* aWeight,
                               StretchRange* aStretch,
-                              SlantStyleRange* aSlantStyle) {
+                              SlantStyleRange* aSlantStyle,
+                              uint16_t* aSize = nullptr) {
   // weight
   int weight;
   if (FcPatternGetInteger(aFontPattern, FC_WEIGHT, 0, &weight) !=
@@ -230,6 +231,24 @@ static void GetFontProperties(FcPattern* aFontPattern, WeightRange* aWeight,
     *aSlantStyle = SlantStyleRange(FontSlantStyle::Oblique());
   } else if (slant > 0) {
     *aSlantStyle = SlantStyleRange(FontSlantStyle::Italic());
+  }
+
+  if (aSize) {
+    // pixel size, or zero if scalable
+    FcBool scalable;
+    if (FcPatternGetBool(aFontPattern, FC_SCALABLE, 0, &scalable) ==
+            FcResultMatch &&
+        scalable) {
+      *aSize = 0;
+    } else {
+      double size;
+      if (FcPatternGetDouble(aFontPattern, FC_PIXEL_SIZE, 0, &size) ==
+          FcResultMatch) {
+        *aSize = uint16_t(NS_round(size));
+      } else {
+        *aSize = 0;
+      }
+    }
   }
 }
 
@@ -1667,10 +1686,11 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
     WeightRange weight(FontWeight::Normal());
     StretchRange stretch(FontStretch::Normal());
     SlantStyleRange style(FontSlantStyle::Normal());
-    GetFontProperties(aPattern, &weight, &stretch, &style);
+    uint16_t size;
+    GetFontProperties(aPattern, &weight, &stretch, &style, &size);
 
-    auto initData =
-        fontlist::Face::InitData{descriptor, 0, false, weight, stretch, style};
+    auto initData = fontlist::Face::InitData{descriptor, 0,       size, false,
+                                             weight,     stretch, style};
 
     // Add entries for any other localized family names. (Most fonts only have
     // a single family name, so the first call to GetString will usually fail).
