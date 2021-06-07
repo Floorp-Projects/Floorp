@@ -224,8 +224,11 @@ fn set_prefs(
         prefs.insert("devtools.debugger.prompt-connection", Pref::new(false));
     }
 
-    prefs.insert("marionette.log.level", logging::max_level().into());
     prefs.insert("marionette.port", Pref::new(port));
+    prefs.insert("webdriver.log.level", logging::max_level().into());
+
+    // Deprecated with geckodriver 0.30.0, but left for backward compatibility.
+    prefs.insert("marionette.log.level", logging::max_level().into());
 
     prefs.write().map_err(|e| {
         WebDriverError::new(
@@ -293,14 +296,14 @@ mod tests {
 
     // This is not a pretty test, mostly due to the nature of
     // mozprofile's and MarionetteHandler's APIs, but we have had
-    // several regressions related to marionette.log.level.
+    // several regressions related to webdriver.log.level.
     #[test]
-    fn test_marionette_log_level() {
+    fn test_webdriver_log_level() {
         let mut profile = Profile::new().unwrap();
         set_prefs(2828, &mut profile, false, vec![], false).ok();
         let user_prefs = profile.user_prefs().unwrap();
 
-        let pref = user_prefs.get("marionette.log.level").unwrap();
+        let pref = user_prefs.get("webdriver.log.level").unwrap();
         let value = match pref.value {
             PrefValue::String(ref s) => s,
             _ => panic!(),
