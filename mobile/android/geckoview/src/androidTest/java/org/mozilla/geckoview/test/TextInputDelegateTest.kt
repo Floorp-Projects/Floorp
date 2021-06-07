@@ -791,6 +791,44 @@ class TextInputDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun editorInfo_defaultByInputType() {
+        assumeThat("type attribute is input element only", id, equalTo("#input"))
+        // Disable this with WebRender due to unexpected abort by mozilla::gl::GLContext::fTexSubImage2D
+        // (Bug 1706688, Bug 1710060 and etc)
+        assumeThat(sessionRule.env.isWebrender and sessionRule.env.isDebugBuild, equalTo(false))
+
+        mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
+        mainSession.loadTestPath(FORMS_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        for (inputType in listOf("#email1", "#pass1", "#search1", "#tel1", "#url1")) {
+            mainSession.evaluateJS("document.querySelector('$inputType').focus()")
+            mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
+
+            val editorInfo = EditorInfo()
+            mainSession.textInput.onCreateInputConnection(editorInfo)
+            assertThat("EditorInfo.inputType of $inputType", editorInfo.inputType, equalTo(
+                when (inputType) {
+                    "#email1" -> InputType.TYPE_CLASS_TEXT or
+                                 InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+                    "#pass1" -> InputType.TYPE_CLASS_TEXT or
+                                InputType.TYPE_TEXT_VARIATION_PASSWORD
+                    "#search1" -> InputType.TYPE_CLASS_TEXT or
+                                  InputType.TYPE_TEXT_FLAG_AUTO_CORRECT or
+                                  InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE or
+                                  InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                    "#tel1" -> InputType.TYPE_CLASS_PHONE
+                    "#url1" -> InputType.TYPE_CLASS_TEXT or
+                               InputType.TYPE_TEXT_VARIATION_URI
+                    else -> 0
+                }))
+
+            mainSession.evaluateJS("document.querySelector('$inputType').blur()")
+            mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
+        }
+    }
+
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
     @Test fun editorInfo_enterKeyHint() {
         // no way to set enterkeyhint on designmode.
         assumeThat("Not in designmode", id, not(equalTo("#designmode")))

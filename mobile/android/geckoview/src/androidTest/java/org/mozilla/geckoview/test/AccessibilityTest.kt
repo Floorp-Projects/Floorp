@@ -1185,7 +1185,7 @@ class AccessibilityTest : BaseSessionTest() {
         waitForInitialFocus()
 
         assertThat("Initial auto-fill count should match",
-                   countAutoFillNodes(), equalTo(14))
+                   countAutoFillNodes(), equalTo(18))
         assertThat("Password auto-fill count should match",
                    countAutoFillNodes({ it.isPassword }), equalTo(4))
 
@@ -1199,7 +1199,7 @@ class AccessibilityTest : BaseSessionTest() {
         mainSession.goBack()
         waitForInitialFocus()
         assertThat("Should have auto-fill fields again",
-                   countAutoFillNodes(), equalTo(14))
+                   countAutoFillNodes(), equalTo(18))
         assertThat("Should not have focused field",
                    countAutoFillNodes({ it.isFocused }), equalTo(0))
 
