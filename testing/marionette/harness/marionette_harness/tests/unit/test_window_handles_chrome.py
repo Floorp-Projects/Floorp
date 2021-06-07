@@ -14,7 +14,7 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
     def setUp(self):
         super(TestWindowHandles, self).setUp()
 
-        self.chrome_dialog = "chrome://marionette/content/test_dialog.xhtml"
+        self.chrome_dialog = "chrome://remote/content/marionette/test_dialog.xhtml"
 
         self.marionette.set_context("chrome")
 

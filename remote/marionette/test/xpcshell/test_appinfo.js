@@ -5,7 +5,7 @@
 "use strict";
 
 const { AppInfo } = ChromeUtils.import(
-  "chrome://marionette/content/appinfo.js"
+  "chrome://remote/content/marionette/appinfo.js"
 );
 
 // Minimal xpcshell tests for AppInfo; Services.appinfo.* is not available

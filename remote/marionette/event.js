@@ -13,8 +13,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppInfo: "chrome://marionette/content/appinfo.js",
-  element: "chrome://marionette/content/element.js",
+  AppInfo: "chrome://remote/content/marionette/appinfo.js",
+  element: "chrome://remote/content/marionette/element.js",
 });
 
 /** Provides functionality for creating and sending DOM events. */

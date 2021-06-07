@@ -11,7 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  StreamUtils: "chrome://marionette/content/stream-utils.js",
+  StreamUtils: "chrome://remote/content/marionette/stream-utils.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "unicodeConverter", () => {

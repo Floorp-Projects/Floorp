@@ -17,11 +17,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  capture: "chrome://marionette/content/capture.js",
-  element: "chrome://marionette/content/element.js",
-  error: "chrome://marionette/content/error.js",
-  evaluate: "chrome://marionette/content/evaluate.js",
-  Log: "chrome://marionette/content/log.js",
+  capture: "chrome://remote/content/marionette/capture.js",
+  element: "chrome://remote/content/marionette/element.js",
+  error: "chrome://remote/content/marionette/error.js",
+  evaluate: "chrome://remote/content/marionette/evaluate.js",
+  Log: "chrome://remote/content/marionette/log.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -365,11 +365,11 @@ function registerCommandsActor() {
       kind: "JSWindowActor",
       parent: {
         moduleURI:
-          "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
+          "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm",
       },
       child: {
         moduleURI:
-          "chrome://marionette/content/actors/MarionetteCommandsChild.jsm",
+          "chrome://remote/content/marionette/actors/MarionetteCommandsChild.jsm",
       },
 
       allFrames: true,

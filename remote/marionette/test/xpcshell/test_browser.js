@@ -1,5 +1,5 @@
 const { Context } = ChromeUtils.import(
-  "chrome://marionette/content/browser.js"
+  "chrome://remote/content/marionette/browser.js"
 );
 
 add_test(function test_Context() {

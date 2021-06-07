@@ -12,9 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  assert: "chrome://marionette/content/assert.js",
-  error: "chrome://marionette/content/error.js",
-  pprint: "chrome://marionette/content/format.js",
+  assert: "chrome://remote/content/marionette/assert.js",
+  error: "chrome://remote/content/marionette/error.js",
+  pprint: "chrome://remote/content/marionette/format.js",
 });
 
 const IPV4_PORT_EXPR = /:\d+$/;

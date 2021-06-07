@@ -11,7 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  pprint: "chrome://marionette/content/format.js",
+  pprint: "chrome://remote/content/marionette/format.js",
 });
 
 const ERRORS = new Set([

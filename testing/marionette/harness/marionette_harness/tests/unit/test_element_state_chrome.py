@@ -15,7 +15,9 @@ class TestElementState(WindowManagerMixin, MarionetteTestCase):
 
         self.marionette.set_context("chrome")
 
-        self.win = self.open_chrome_window("chrome://marionette/content/test.xhtml")
+        self.win = self.open_chrome_window(
+            "chrome://remote/content/marionette/test.xhtml"
+        )
         self.marionette.switch_to_window(self.win)
 
     def tearDown(self):

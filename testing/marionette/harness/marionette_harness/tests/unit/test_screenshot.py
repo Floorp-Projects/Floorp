@@ -166,7 +166,9 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         )
 
     def open_dialog(self):
-        return self.open_chrome_window("chrome://marionette/content/test_dialog.xhtml")
+        return self.open_chrome_window(
+            "chrome://remote/content/marionette/test_dialog.xhtml"
+        )
 
     def test_capture_different_context(self):
         """Check that screenshots in content and chrome are different."""

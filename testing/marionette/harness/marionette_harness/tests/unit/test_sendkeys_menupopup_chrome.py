@@ -21,7 +21,7 @@ class TestSendkeysMenupopup(WindowManagerMixin, MarionetteTestCase):
 
         self.marionette.set_context("chrome")
         new_window = self.open_chrome_window(
-            "chrome://marionette/content/test_menupopup.xhtml"
+            "chrome://remote/content/marionette/test_menupopup.xhtml"
         )
         self.marionette.switch_to_window(new_window)
 

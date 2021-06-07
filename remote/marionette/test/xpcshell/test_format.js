@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { pprint, truncate } = ChromeUtils.import(
-  "chrome://marionette/content/format.js"
+  "chrome://remote/content/marionette/format.js"
 );
 
 const MAX_STRING_LENGTH = 250;

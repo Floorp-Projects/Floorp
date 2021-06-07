@@ -5,8 +5,12 @@
 "use strict";
 /* eslint-disable no-array-constructor, no-new-object */
 
-const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
+const { assert } = ChromeUtils.import(
+  "chrome://remote/content/marionette/assert.js"
+);
+const { error } = ChromeUtils.import(
+  "chrome://remote/content/marionette/error.js"
+);
 
 add_test(function test_acyclic() {
   assert.acyclic({});

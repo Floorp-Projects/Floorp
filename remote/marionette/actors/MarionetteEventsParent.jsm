@@ -17,7 +17,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
-  Log: "chrome://marionette/content/log.js",
+  Log: "chrome://remote/content/marionette/log.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -55,11 +55,11 @@ function registerEventsActor() {
       kind: "JSWindowActor",
       parent: {
         moduleURI:
-          "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
+          "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
       },
       child: {
         moduleURI:
-          "chrome://marionette/content/actors/MarionetteEventsChild.jsm",
+          "chrome://remote/content/marionette/actors/MarionetteEventsChild.jsm",
         events: {
           beforeunload: { capture: true },
           DOMContentLoaded: { mozSystemGroup: true },
