@@ -619,6 +619,13 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     return AppUnitsToIntCSSPixels(DevPixelsToAppUnits(aPixels));
   }
 
+  mozilla::CSSIntPoint DevPixelsToIntCSSPixels(
+      const mozilla::LayoutDeviceIntPoint& aPoint) {
+    return mozilla::CSSIntPoint(
+        AppUnitsToIntCSSPixels(DevPixelsToAppUnits(aPoint.x)),
+        AppUnitsToIntCSSPixels(DevPixelsToAppUnits(aPoint.y)));
+  }
+
   float DevPixelsToFloatCSSPixels(int32_t aPixels) const {
     return AppUnitsToFloatCSSPixels(DevPixelsToAppUnits(aPixels));
   }

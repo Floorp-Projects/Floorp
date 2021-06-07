@@ -2228,10 +2228,10 @@ nsresult IMMHandler::OnMouseButtonEvent(
   // char :            JCH1|JCH2|JCH3
   // offset:           0011 1122 2233
   // positioning:      2301 2301 2301
-  nsIntPoint cursorPos =
-      aIMENotification.mMouseButtonEventData.mCursorPos.AsIntPoint();
-  nsIntRect charRect =
-      aIMENotification.mMouseButtonEventData.mCharRect.AsIntRect();
+  LayoutDeviceIntPoint cursorPos =
+      aIMENotification.mMouseButtonEventData.mCursorPos;
+  LayoutDeviceIntRect charRect =
+      aIMENotification.mMouseButtonEventData.mCharRect;
   int32_t cursorXInChar = cursorPos.x - charRect.X();
   // The event might hit to zero-width character, see bug 694913.
   // The reason might be:

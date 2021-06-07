@@ -157,7 +157,10 @@ struct Face {
     nsCString mDescriptor;  // descriptor that can be used to instantiate a
                             // platform font reference
     uint16_t mIndex;        // an index used with descriptor (on some platforms)
-    bool mFixedPitch;       // is the face fixed-pitch (monospaced)?
+#ifdef MOZ_WIDGET_GTK
+    uint16_t mSize;  // pixel size if bitmap; zero indicates scalable
+#endif
+    bool mFixedPitch;                  // is the face fixed-pitch (monospaced)?
     mozilla::WeightRange mWeight;      // CSS font-weight value
     mozilla::StretchRange mStretch;    // CSS font-stretch value
     mozilla::SlantStyleRange mStyle;   // CSS font-style value
@@ -169,11 +172,15 @@ struct Face {
   Face(FontList* aList, const InitData& aData)
       : mDescriptor(aList, aData.mDescriptor),
         mIndex(aData.mIndex),
+#ifdef MOZ_WIDGET_GTK
+        mSize(aData.mSize),
+#endif
         mFixedPitch(aData.mFixedPitch),
         mWeight(aData.mWeight),
         mStretch(aData.mStretch),
         mStyle(aData.mStyle),
-        mCharacterMap(Pointer::Null()) {}
+        mCharacterMap(Pointer::Null()) {
+  }
 
   bool HasValidDescriptor() const {
     return !mDescriptor.IsNull() && mIndex != uint16_t(-1);
@@ -183,6 +190,9 @@ struct Face {
 
   String mDescriptor;
   uint16_t mIndex;
+#ifdef MOZ_WIDGET_GTK
+  uint16_t mSize;
+#endif
   bool mFixedPitch;
   mozilla::WeightRange mWeight;
   mozilla::StretchRange mStretch;
@@ -309,6 +319,11 @@ struct Family {
   void SetupFamilyCharMap(FontList* aList);
 
  private:
+  // Returns true if there are specifically-sized bitmap faces in the list,
+  // so size selection still needs to be done. (Currently only on Linux.)
+  bool FindAllFacesForStyleInternal(FontList* aList, const gfxFontStyle& aStyle,
+                                    nsTArray<Face*>& aFaceList) const;
+
   std::atomic<uint32_t> mFaceCount;
   String mKey;
   String mName;

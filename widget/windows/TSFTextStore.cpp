@@ -6304,17 +6304,12 @@ nsresult TSFTextStore::OnMouseButtonEventInternal(
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::OnMouseButtonEventInternal("
-           "aIMENotification={ mEventMessage=%s, mOffset=%u, mCursorPos={ "
-           "mX=%d, mY=%d }, mCharRect={ mX=%d, mY=%d, mWidth=%d, mHeight=%d }, "
-           "mButton=%s, mButtons=%s, mModifiers=%s })",
+           "aIMENotification={ mEventMessage=%s, mOffset=%u, mCursorPos=%s, "
+           "mCharRect=%s, mButton=%s, mButtons=%s, mModifiers=%s })",
            this, ToChar(aIMENotification.mMouseButtonEventData.mEventMessage),
            aIMENotification.mMouseButtonEventData.mOffset,
-           aIMENotification.mMouseButtonEventData.mCursorPos.mX,
-           aIMENotification.mMouseButtonEventData.mCursorPos.mY,
-           aIMENotification.mMouseButtonEventData.mCharRect.mX,
-           aIMENotification.mMouseButtonEventData.mCharRect.mY,
-           aIMENotification.mMouseButtonEventData.mCharRect.mWidth,
-           aIMENotification.mMouseButtonEventData.mCharRect.mHeight,
+           ToString(aIMENotification.mMouseButtonEventData.mCursorPos).c_str(),
+           ToString(aIMENotification.mMouseButtonEventData.mCharRect).c_str(),
            GetMouseButtonName(aIMENotification.mMouseButtonEventData.mButton),
            GetMouseButtonsName(aIMENotification.mMouseButtonEventData.mButtons)
                .get(),
@@ -6325,10 +6320,10 @@ nsresult TSFTextStore::OnMouseButtonEventInternal(
   if (offset > static_cast<uint32_t>(LONG_MAX)) {
     return NS_OK;
   }
-  nsIntRect charRect =
-      aIMENotification.mMouseButtonEventData.mCharRect.AsIntRect();
-  nsIntPoint cursorPos =
-      aIMENotification.mMouseButtonEventData.mCursorPos.AsIntPoint();
+  LayoutDeviceIntRect charRect =
+      aIMENotification.mMouseButtonEventData.mCharRect;
+  LayoutDeviceIntPoint cursorPos =
+      aIMENotification.mMouseButtonEventData.mCursorPos;
   ULONG quadrant = 1;
   if (charRect.Width() > 0) {
     int32_t cursorXInChar = cursorPos.x - charRect.X();
