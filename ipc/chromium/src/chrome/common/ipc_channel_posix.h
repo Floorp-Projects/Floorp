@@ -11,6 +11,7 @@
 
 #include <sys/socket.h>  // for CMSG macros
 
+#include <atomic>
 #include <string>
 #include <vector>
 #include <list>
@@ -139,7 +140,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   bool processing_incoming_;
 
   // This flag is set after we've closed the channel.
-  bool closed_;
+  std::atomic<bool> closed_;
 
   // We keep track of the PID of the other side of this channel so that we can
   // record this when generating logs of IPC messages.
@@ -165,7 +166,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // read output_queue_length_ from any thread (if we're OK getting an
   // occasional out-of-date or bogus value).  We use output_queue_length_ to
   // implement Unsound_NumQueuedMessages.
-  size_t output_queue_length_;
+  std::atomic<size_t> output_queue_length_;
 
   ScopedRunnableMethodFactory<ChannelImpl> factory_;
 

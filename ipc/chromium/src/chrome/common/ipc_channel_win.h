@@ -10,6 +10,7 @@
 #include "chrome/common/ipc_channel.h"
 #include "chrome/common/ipc_message.h"
 
+#include <atomic>
 #include <string>
 
 #include "base/message_loop.h"
@@ -112,7 +113,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   bool processing_incoming_;
 
   // This flag is set after Close() is run on the channel.
-  bool closed_;
+  std::atomic<bool> closed_;
 
   // We keep track of the PID of the other side of this channel so that we can
   // record this when generating logs of IPC messages.
@@ -122,7 +123,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   // read output_queue_length_ from any thread (if we're OK getting an
   // occasional out-of-date or bogus value).  We use output_queue_length_ to
   // implement Unsound_NumQueuedMessages.
-  size_t output_queue_length_;
+  std::atomic<size_t> output_queue_length_;
 
   ScopedRunnableMethodFactory<ChannelImpl> factory_;
 
