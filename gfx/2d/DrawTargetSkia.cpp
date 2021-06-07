@@ -273,7 +273,7 @@ static sk_sp<SkImage> GetSkImageForSurface(SourceSurface* aSurface,
     releaseProc = ReleaseTemporarySurface;
   }
 
-  DataSourceSurface* surf = dataSurface.take();
+  DataSourceSurface* surf = aSurface->GetDataSurface().take();
 
   // Skia doesn't support RGBX surfaces so ensure that the alpha value is opaque
   // white.
