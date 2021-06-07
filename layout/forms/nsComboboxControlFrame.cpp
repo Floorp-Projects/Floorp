@@ -1433,7 +1433,7 @@ void nsComboboxControlFrame::SetInitialChildList(ChildListID aListID,
 // nsIRollupListener
 //----------------------------------------------------------------------
 bool nsComboboxControlFrame::Rollup(uint32_t aCount, bool aFlush,
-                                    const nsIntPoint* pos,
+                                    const LayoutDeviceIntPoint* pos,
                                     nsIContent** aLastRolledUp) {
   if (aLastRolledUp) {
     *aLastRolledUp = nullptr;

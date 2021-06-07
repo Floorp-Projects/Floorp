@@ -201,7 +201,7 @@ bool nsXULPopupManager::RollupNativeMenu() {
 }
 
 bool nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
-                               const nsIntPoint* pos,
+                               const LayoutDeviceIntPoint* pos,
                                nsIContent** aLastRolledUp) {
   if (aLastRolledUp) {
     *aLastRolledUp = nullptr;
@@ -302,8 +302,7 @@ bool nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
       // event will get consumed, so here only a quick coordinates check is
       // done rather than a slower complete check of what is at that location.
       nsPresContext* presContext = item->Frame()->PresContext();
-      CSSIntPoint posCSSPixels(presContext->DevPixelsToIntCSSPixels(pos->x),
-                               presContext->DevPixelsToIntCSSPixels(pos->y));
+      CSSIntPoint posCSSPixels = presContext->DevPixelsToIntCSSPixels(*pos);
       if (anchorRect.Contains(posCSSPixels)) {
         if (consumeResult == ConsumeOutsideClicks_ParentOnly) {
           consume = true;
