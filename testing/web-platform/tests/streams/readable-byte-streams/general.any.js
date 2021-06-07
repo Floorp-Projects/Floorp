@@ -1078,7 +1078,6 @@ promise_test(t => {
     cancel(r) {
       if (cancelCount === 0) {
         reason = r;
-        controller.byobRequest.respond(0);
       }
 
       ++cancelCount;
@@ -1091,12 +1090,13 @@ promise_test(t => {
   const reader = stream.getReader({ mode: 'byob' });
 
   const readPromise = reader.read(new Uint8Array(1)).then(result => {
-    assert_true(result.done);
+    assert_true(result.done, 'result.done');
+    assert_equals(result.value, undefined, 'result.value');
   });
 
   const cancelPromise = reader.cancel(passedReason).then(result => {
-    assert_equals(result, undefined);
-    assert_equals(cancelCount, 1);
+    assert_equals(result, undefined, 'cancel() return value should be fulfilled with undefined');
+    assert_equals(cancelCount, 1, 'cancel() should be called only once');
     assert_equals(reason, passedReason, 'reason should equal the passed reason');
   });
 
@@ -1133,7 +1133,7 @@ promise_test(() => {
 
     const promise = reader.read(new Uint16Array(1)).then(result => {
       assert_true(result.done, 'result.done');
-      assert_equals(result.value.constructor, Uint16Array, 'result.value');
+      assert_equals(result.value, undefined, 'result.value');
     });
 
     assert_equals(pullCount, 1, '1 pull() should have been made in response to partial fill by enqueue()');
@@ -1141,11 +1141,7 @@ promise_test(() => {
     assert_equals(viewInfos[0].byteLength, 2, 'byteLength before enqueue() shouild be 2');
     assert_equals(viewInfos[1].byteLength, 1, 'byteLength after enqueue() should be 1');
 
-
     reader.cancel();
-
-    // Tell that the buffer given via pull() is returned.
-    controller.byobRequest.respond(0);
 
     assert_equals(pullCount, 1, 'pull() should only be called once');
     return promise;
@@ -2045,6 +2041,7 @@ promise_test(() => {
 }, 'calling respondWithNewView() twice on the same byobRequest should throw');
 
 promise_test(() => {
+  let controller;
   let byobRequest;
   let resolvePullCalledPromise;
   const pullCalledPromise = new Promise(resolve => {
@@ -2052,8 +2049,44 @@ promise_test(() => {
   });
   let resolvePull;
   const rs = new ReadableStream({
-    pull(controller) {
-      byobRequest = controller.byobRequest;
+    start(c) {
+      controller = c;
+    },
+    pull(c) {
+      byobRequest = c.byobRequest;
+      resolvePullCalledPromise();
+      return new Promise(resolve => {
+        resolvePull = resolve;
+      });
+    },
+    type: 'bytes'
+  });
+  const reader = rs.getReader({ mode: 'byob' });
+  const readPromise = reader.read(new Uint8Array(16));
+  return pullCalledPromise.then(() => {
+    controller.close();
+    byobRequest.respond(0);
+    resolvePull();
+    return readPromise.then(() => {
+      assert_throws_js(TypeError, () => byobRequest.respond(0), 'respond() should throw');
+    });
+  });
+}, 'calling respond(0) twice on the same byobRequest should throw even when closed');
+
+promise_test(() => {
+  let controller;
+  let byobRequest;
+  let resolvePullCalledPromise;
+  const pullCalledPromise = new Promise(resolve => {
+    resolvePullCalledPromise = resolve;
+  });
+  let resolvePull;
+  const rs = new ReadableStream({
+    start(c) {
+      controller = c;
+    },
+    pull(c) {
+      byobRequest = c.byobRequest;
       resolvePullCalledPromise();
       return new Promise(resolve => {
         resolvePull = resolve;
@@ -2065,13 +2098,11 @@ promise_test(() => {
   const readPromise = reader.read(new Uint8Array(16));
   return pullCalledPromise.then(() => {
     const cancelPromise = reader.cancel('meh');
+    assert_throws_js(TypeError, () => byobRequest.respond(0), 'respond() should throw');
     resolvePull();
-    byobRequest.respond(0);
-    return Promise.all([readPromise, cancelPromise]).then(() => {
-      assert_throws_js(TypeError, () => byobRequest.respond(0), 'respond() should throw');
-    });
+    return Promise.all([readPromise, cancelPromise]);
   });
-}, 'calling respond(0) twice on the same byobRequest should throw even when closed');
+}, 'calling respond() should throw when canceled');
 
 promise_test(() => {
   let resolvePullCalledPromise;
