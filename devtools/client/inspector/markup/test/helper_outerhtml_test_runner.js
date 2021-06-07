@@ -16,14 +16,13 @@
  * @param {Array} tests See runEditOuterHTMLTest for the structure
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * opened
- * @param {TestActorFront} testActor The current TestActorFront instance
  * @return a promise that resolves when the tests have run
  */
-function runEditOuterHTMLTests(tests, inspector, testActor) {
+function runEditOuterHTMLTests(tests, inspector) {
   info("Running " + tests.length + " edit-outer-html tests");
   return (async function() {
     for (const step of tests) {
-      await runEditOuterHTMLTest(step, inspector, testActor);
+      await runEditOuterHTMLTest(step, inspector);
     }
   })();
 }
@@ -39,10 +38,9 @@ function runEditOuterHTMLTests(tests, inspector, testActor) {
  *        after the new outer-html has been inserted. Should be used to verify
  *        the actual DOM, see if it corresponds to the newHTML string provided
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
- * @param {TestActorFront} testActor The current TestActorFront instance
  * opened
  */
-async function runEditOuterHTMLTest(test, inspector, testActor) {
+async function runEditOuterHTMLTest(test, inspector) {
   info("Running an edit outerHTML test on '" + test.selector + "'");
   await selectNode(test.selector, inspector);
 
@@ -70,7 +68,6 @@ async function runEditOuterHTMLTest(test, inspector, testActor) {
       pageNodeFront,
       selectedNodeFront,
       inspector,
-      testActor,
     });
   } else {
     is(
