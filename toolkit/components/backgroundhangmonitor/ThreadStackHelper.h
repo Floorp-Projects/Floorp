@@ -10,7 +10,6 @@
 #ifdef MOZ_GECKO_PROFILER
 
 #  include "js/ProfilingStack.h"
-#  include "GeckoProfiler.h"
 #  include "HangDetails.h"
 #  include "mozilla/Span.h"
 #  include "nsThread.h"

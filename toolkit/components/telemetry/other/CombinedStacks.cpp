@@ -30,11 +30,6 @@ const Telemetry::ProcessedStack::Module& CombinedStacks::GetModule(
 void CombinedStacks::AddFrame(
     size_t aStackIndex, const ProcessedStack::Frame& aFrame,
     const std::function<const ProcessedStack::Module&(int)>& aModuleGetter) {
-  if (aFrame.mString.Length()) {
-    mStacks[aStackIndex].push_back(aFrame);
-    return;
-  }
-
   uint16_t modIndex;
   if (aFrame.mModIndex == std::numeric_limits<uint16_t>::max()) {
     modIndex = aFrame.mModIndex;
@@ -234,33 +229,24 @@ JSObject* CreateJSStackObject(JSContext* cx, const CombinedStacks& stacks) {
     const uint32_t pcCount = stack.size();
     for (size_t pcIndex = 0; pcIndex < pcCount; ++pcIndex) {
       const Telemetry::ProcessedStack::Frame& frame = stack[pcIndex];
-      if (frame.mString.Length()) {
-        JS::Rooted<JSString*> str(
-            cx,
-            JS_NewStringCopyN(cx, frame.mString.get(), frame.mString.Length()));
-        if (!JS_DefineElement(cx, pcArray, pcIndex, str, JSPROP_ENUMERATE)) {
-          return nullptr;
-        }
-      } else {
-        JS::Rooted<JSObject*> framePair(cx, JS::NewArrayObject(cx, 0));
-        if (!framePair) {
-          return nullptr;
-        }
-        int modIndex = (std::numeric_limits<uint16_t>::max() == frame.mModIndex)
-                           ? -1
-                           : frame.mModIndex;
-        if (!JS_DefineElement(cx, framePair, 0, modIndex, JSPROP_ENUMERATE)) {
-          return nullptr;
-        }
-        if (!JS_DefineElement(cx, framePair, 1,
-                              static_cast<double>(frame.mOffset),
-                              JSPROP_ENUMERATE)) {
-          return nullptr;
-        }
-        if (!JS_DefineElement(cx, pcArray, pcIndex, framePair,
-                              JSPROP_ENUMERATE)) {
-          return nullptr;
-        }
+      JS::Rooted<JSObject*> framePair(cx, JS::NewArrayObject(cx, 0));
+      if (!framePair) {
+        return nullptr;
+      }
+      int modIndex = (std::numeric_limits<uint16_t>::max() == frame.mModIndex)
+                         ? -1
+                         : frame.mModIndex;
+      if (!JS_DefineElement(cx, framePair, 0, modIndex, JSPROP_ENUMERATE)) {
+        return nullptr;
+      }
+      if (!JS_DefineElement(cx, framePair, 1,
+                            static_cast<double>(frame.mOffset),
+                            JSPROP_ENUMERATE)) {
+        return nullptr;
+      }
+      if (!JS_DefineElement(cx, pcArray, pcIndex, framePair,
+                            JSPROP_ENUMERATE)) {
+        return nullptr;
       }
     }
   }
