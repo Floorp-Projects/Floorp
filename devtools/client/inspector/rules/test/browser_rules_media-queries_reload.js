@@ -24,12 +24,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {
-    inspector,
-    view: ruleView,
-    testActor,
-    toolbox,
-  } = await openRuleView();
+  const { inspector, view: ruleView, toolbox } = await openRuleView();
   const hostWindow = toolbox.win.parent;
 
   const originalWidth = hostWindow.outerWidth;
@@ -44,7 +39,7 @@ add_task(async function() {
   ok(true, "Small viewport media query inspected");
 
   info("Reload the current page");
-  await reloadPage(inspector, testActor);
+  await refreshTab();
   await selectNode("div", inspector);
 
   info("Resize window so the media query for large viewports applies");

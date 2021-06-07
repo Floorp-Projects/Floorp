@@ -13,7 +13,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, view, testActor } = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   await selectNode("#id1", inspector);
   await modifyRuleViewWidth("300px", view, inspector);
@@ -24,7 +24,7 @@ add_task(async function() {
   await modifyRuleViewWidth("50px", view, inspector);
   await assertRuleAndMarkupViewWidth("id2", "50px", view, inspector);
 
-  await reloadPage(inspector, testActor);
+  await refreshTab();
 
   await selectNode("#id1", inspector);
   await assertRuleAndMarkupViewWidth("id1", "200px", view, inspector);

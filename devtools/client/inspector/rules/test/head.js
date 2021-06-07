@@ -444,22 +444,6 @@ var togglePropStatus = async function(view, textProp) {
 };
 
 /**
- * Reload the current page and wait for the inspector to be initialized after
- * the navigation
- *
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @param {TestActor} testActor
- *        The current instance of the TestActor
- */
-async function reloadPage(inspector, testActor) {
-  const onNewRoot = inspector.once("new-root");
-  await testActor.reload();
-  await onNewRoot;
-  await inspector.markup._waitForChildren();
-}
-
-/**
  * Create a new rule by clicking on the "add rule" button.
  * This will leave the selector inplace-editor active.
  *
