@@ -3,6 +3,32 @@
     {
       "stash": {
         "blocked": [
+          "tagsearch@com:1.1.16",
+          "searchquick@com:1.2.10",
+          "moviesearch@com:1.1.15",
+          "moviesearch@com:1.1.7",
+          "imagesearch2@com:1.1.17",
+          "tagsearch@com:1.1.15",
+          "quicklinks@com:1.1.16",
+          "moviesearch@com:1.1.13",
+          "tagsearch@com:1.1.6",
+          "quicktab@com:1.1.16",
+          "searchquick@com:1.2.9",
+          "searchquick@com:1.1.16",
+          "moviesearch@com:1.1.11",
+          "moviesearch@com:1.1.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1622680686281,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1622745308351,
+      "id": "99ab32c9-e5a5-44ca-8884-d16263911bee",
+      "last_modified": 1622745481616
+    },
+    {
+      "stash": {
+        "blocked": [
           "{9e642d9b-defb-4faa-a22d-af4b10579817}:1.0.9",
           "{9e642d9b-defb-4faa-a22d-af4b10579817}:1.0.10",
           "{9e642d9b-defb-4faa-a22d-af4b10579817}:1.0.8",
