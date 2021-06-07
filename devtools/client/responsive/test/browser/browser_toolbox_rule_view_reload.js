@@ -25,12 +25,12 @@ addRDMTaskWithPreAndPost(
     return ruleViewValues;
   },
   async function task({ preTaskValue }) {
-    const { inspector, testActor, view } = preTaskValue;
+    const { inspector, view } = preTaskValue;
 
     info("Reload the current page");
     const onNewRoot = inspector.once("new-root");
     const onRuleViewRefreshed = inspector.once("rule-view-refreshed");
-    await testActor.reload();
+    await refreshTab();
     await onNewRoot;
     await inspector.markup._waitForChildren();
     await onRuleViewRefreshed;

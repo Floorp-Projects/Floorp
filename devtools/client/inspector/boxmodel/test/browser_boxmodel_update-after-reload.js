@@ -8,14 +8,14 @@
 add_task(async function() {
   const tab = await addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
   const browser = tab.linkedBrowser;
-  const { inspector, boxmodel, testActor } = await openLayoutView();
+  const { inspector, boxmodel } = await openLayoutView();
 
   info("Test that the box model view works on the first page");
   await assertBoxModelView(inspector, boxmodel, browser);
 
   info("Reload the page");
   const onMarkupLoaded = waitForMarkupLoaded(inspector);
-  await testActor.reload();
+  await refreshTab();
   await onMarkupLoaded;
 
   info("Test that the box model view works on the reloaded page");

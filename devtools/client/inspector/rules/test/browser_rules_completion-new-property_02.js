@@ -54,13 +54,13 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { toolbox, inspector, view, testActor } = await openRuleView();
+  const { toolbox, inspector, view } = await openRuleView();
 
   info("Test autocompletion after 1st page load");
   await runAutocompletionTest(toolbox, inspector, view);
 
   info("Test autocompletion after page navigation");
-  await reloadPage(inspector, testActor);
+  await refreshTab();
   await runAutocompletionTest(toolbox, inspector, view);
 });
 
