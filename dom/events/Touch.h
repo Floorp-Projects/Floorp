@@ -49,6 +49,9 @@ class Touch final : public nsISupports,
 
   bool Equals(Touch* aTouch) const;
 
+  // Update this touch's touch area to be the same as aTouch
+  void SetSameAs(const Touch* aTouch);
+
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
