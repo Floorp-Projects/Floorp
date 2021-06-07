@@ -609,7 +609,7 @@ body {
 
     .secondary {
       background: none;
-      color: var(--in-content-link-color) !important; // sass-lint:disable-line no-important
+      color: var(--in-content-link-color);
       font-size: 14px;
       font-weight: normal;
       line-height: 20px;
@@ -617,7 +617,7 @@ body {
       @media (forced-colors: active) {
         &:hover {
           background-color: var(--in-content-button-background-hover);
-          color: var(--in-content-button-text-color-hover) !important; // sass-lint:disable-line no-important
+          color: var(--in-content-button-text-color-hover);
           text-decoration: none;
         }
       }
@@ -630,11 +630,11 @@ body {
       z-index: 2;
 
       button {
-        color: #FFF !important; // sass-lint:disable-line no-important
+        color: #FFF;
 
         &:hover {
           background-color: #5B5B66;
-          color: #E0E0E6 !important; // sass-lint:disable-line no-important
+          color: #E0E0E6;
         }
       }
     }
@@ -645,12 +645,14 @@ body {
       transition: var(--transition);
 
       .indicator {
-        width: 6px;
-        height: 6px;
-        background: var(--checkbox-border-color);
+        width: 0;
+        height: 0;
+        border: 3px solid var(--checkbox-border-color);
+        background-color: initial;
+        opacity: initial;
 
         &.current {
-          background: var(--checkbox-checked-bgcolor);
+          border-color: var(--checkbox-checked-bgcolor);
         }
       }
     }
