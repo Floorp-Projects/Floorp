@@ -37,8 +37,7 @@ void nsAuthSambaNTLM::Shutdown() {
     mToChildFD = nullptr;
   }
   if (mChildPID) {
-    int32_t exitCode;
-    PR_WaitProcess(mChildPID, &exitCode);
+    PR_KillProcess(mChildPID);
     mChildPID = nullptr;
   }
 }
