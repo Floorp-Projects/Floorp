@@ -91,7 +91,7 @@ jobs:
             job-name: android-geckoview-fat-aar-opt
             type: shippable-with-multi-l10n
         treeherder:
-            platform: android-4-0-geckoview-fat-aar-shippable/opt
+            platform: android-5-0-geckoview-fat-aar-shippable/opt
             symbol: Bgv
         dependencies:
             android-x86-shippable: build-android-x86-shippable/opt
@@ -101,6 +101,36 @@ jobs:
         worker:
             env:
                 PERFHERDER_EXTRA_OPTIONS: android-geckoview-fat-aar-nightly
+        run:
+            actions: [get-secrets, build, multi-l10n]
+            config:
+                - builds/releng_base_android_64_builds.py
+                - taskcluster_nightly.py
+        optimization:
+            skip-unless-backstop: null
+
+    android-geckoview-fat-aar-shippable-lite/opt:
+        description: "Android GeckoView Lite multi-architecture fat AAR Shippable"
+        attributes:
+            shippable: true
+            enable-full-crashsymbols: true
+            disable-push-apk: true
+        shipping-phase: build
+        shipping-product: fennec
+        index:
+            job-name: android-geckoview-fat-aar-opt-lite
+            type: shippable-with-multi-l10n
+        treeherder:
+            platform: android-4-1-geckoview-fat-aar-shippable/opt
+            symbol: Bgvl
+        dependencies:
+            android-x86-shippable: build-android-x86-shippable-lite/opt
+            android-x86_64-shippable: build-android-x86_64-shippable-lite/opt
+            android-arm-shippable: build-android-arm-shippable-lite/opt
+            android-aarch64-shippable: build-android-aarch64-shippable-lite/opt
+        worker:
+            env:
+                PERFHERDER_EXTRA_OPTIONS: android-geckoview-fat-aar-nightly-lite
         run:
             actions: [get-secrets, build, multi-l10n]
             config:
