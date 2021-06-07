@@ -1727,7 +1727,7 @@
     index: IntPtrId
     elementType: ScalarTypeImm
     handleOOB: BoolImm
-    allowDoubleForUint32: BoolImm
+    forceDoubleForUint32: BoolImm
 
 - name: LoadDataViewValueResult
   shared: true
@@ -1738,7 +1738,7 @@
     offset: IntPtrId
     littleEndian: BooleanId
     elementType: ScalarTypeImm
-    allowDoubleForUint32: BoolImm
+    forceDoubleForUint32: BoolImm
 
 - name: StoreDataViewValueResult
   shared: true
@@ -2259,7 +2259,7 @@
   args:
     lhs: Int32Id
     rhs: Int32Id
-    allowDouble: BoolImm
+    forceDouble: BoolImm
 
 - name: Int32NotResult
   shared: true
