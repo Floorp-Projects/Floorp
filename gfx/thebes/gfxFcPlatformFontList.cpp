@@ -259,8 +259,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
       mFontPattern(aFontPattern),
       mFTFaceInitialized(false),
       mIgnoreFcCharmap(aIgnoreFcCharmap),
-      mHasVariationsInitialized(false),
-      mAspect(0.0) {
+      mHasVariationsInitialized(false) {
   GetFontProperties(aFontPattern, &mWeightRange, &mStretchRange, &mStyleRange);
 }
 
@@ -318,8 +317,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
       mFTFace(std::move(aFace)),
       mFTFaceInitialized(true),
       mIgnoreFcCharmap(true),
-      mHasVariationsInitialized(false),
-      mAspect(0.0) {
+      mHasVariationsInitialized(false) {
   mWeightRange = aWeight;
   mStyleRange = aStyle;
   mStretchRange = aStretch;
@@ -336,8 +334,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
     : gfxFT2FontEntryBase(aFaceName),
       mFontPattern(aFontPattern),
       mFTFaceInitialized(false),
-      mHasVariationsInitialized(false),
-      mAspect(0.0) {
+      mHasVariationsInitialized(false) {
   mWeightRange = aWeight;
   mStyleRange = aStyle;
   mStretchRange = aStretch;
@@ -492,49 +489,70 @@ hb_blob_t* gfxFontconfigFontEntry::GetFontTable(uint32_t aTableTag) {
   return gfxFontEntry::GetFontTable(aTableTag);
 }
 
-double gfxFontconfigFontEntry::GetAspect() {
-  if (mAspect != 0.0) {
-    return mAspect;
-  }
-
-  // try to compute aspect from OS/2 metrics if available
-  AutoTable os2Table(this, TRUETYPE_TAG('O', 'S', '/', '2'));
-  if (os2Table) {
-    uint16_t upem = UnitsPerEm();
-    if (upem != kInvalidUPEM) {
-      uint32_t len;
-      auto os2 =
-          reinterpret_cast<const OS2Table*>(hb_blob_get_data(os2Table, &len));
-      if (uint16_t(os2->version) >= 2) {
-        if (len >= offsetof(OS2Table, sxHeight) + sizeof(int16_t) &&
-            int16_t(os2->sxHeight) > 0.1 * upem) {
-          mAspect = double(int16_t(os2->sxHeight)) / upem;
-          return mAspect;
+double gfxFontconfigFontEntry::GetAspect(uint8_t aSizeAdjustBasis) {
+  using FontSizeAdjust = gfxFont::FontSizeAdjust;
+  if (FontSizeAdjust::Tag(aSizeAdjustBasis) == FontSizeAdjust::Tag::Ex ||
+      FontSizeAdjust::Tag(aSizeAdjustBasis) == FontSizeAdjust::Tag::Cap) {
+    // try to compute aspect from OS/2 metrics if available
+    AutoTable os2Table(this, TRUETYPE_TAG('O', 'S', '/', '2'));
+    if (os2Table) {
+      uint16_t upem = UnitsPerEm();
+      if (upem != kInvalidUPEM) {
+        uint32_t len;
+        const auto* os2 =
+            reinterpret_cast<const OS2Table*>(hb_blob_get_data(os2Table, &len));
+        if (uint16_t(os2->version) >= 2) {
+          // XXX(jfkthame) Other implementations don't have the check for
+          // values <= 0.1em; should we drop that here? Just require it to be
+          // a positive number?
+          if (FontSizeAdjust::Tag(aSizeAdjustBasis) ==
+              FontSizeAdjust::Tag::Ex) {
+            if (len >= offsetof(OS2Table, sxHeight) + sizeof(int16_t) &&
+                int16_t(os2->sxHeight) > 0.1 * upem) {
+              return double(int16_t(os2->sxHeight)) / upem;
+            }
+          }
+          if (FontSizeAdjust::Tag(aSizeAdjustBasis) ==
+              FontSizeAdjust::Tag::Cap) {
+            if (len >= offsetof(OS2Table, sCapHeight) + sizeof(int16_t) &&
+                int16_t(os2->sCapHeight) > 0.1 * upem) {
+              return double(int16_t(os2->sCapHeight)) / upem;
+            }
+          }
         }
       }
     }
   }
 
-  // default to aspect = 0.5 if the code below fails
-  mAspect = 0.5;
-
-  // create a font to calculate x-height / em-height
+  // create a font to calculate the requested aspect
   gfxFontStyle s;
-  s.size = 100.0;  // pick large size to avoid possible hinting artifacts
+  s.size = 256.0;  // pick large size to reduce hinting artifacts
   RefPtr<gfxFont> font = FindOrMakeFont(&s);
   if (font) {
     const gfxFont::Metrics& metrics =
         font->GetMetrics(nsFontMetrics::eHorizontal);
-
-    // The factor of 0.1 ensures that xHeight is sane so fonts don't
-    // become huge.  Strictly ">" ensures that xHeight and emHeight are
-    // not both zero.
-    if (metrics.xHeight > 0.1 * metrics.emHeight) {
-      mAspect = metrics.xHeight / metrics.emHeight;
+    if (metrics.emHeight == 0) {
+      return 0;
+    }
+    switch (FontSizeAdjust::Tag(aSizeAdjustBasis)) {
+      case FontSizeAdjust::Tag::Ex:
+        return metrics.xHeight / metrics.emHeight;
+      case FontSizeAdjust::Tag::Cap:
+        return metrics.capHeight / metrics.emHeight;
+      case FontSizeAdjust::Tag::Ch:
+        return metrics.zeroWidth > 0 ? metrics.zeroWidth / metrics.emHeight
+                                     : 0.5;
+      case FontSizeAdjust::Tag::Ic: {
+        gfxFloat advance = font->GetCharAdvance(0x6C34);
+        return advance > 0 ? advance / metrics.emHeight : 1.0;
+      }
+      default:
+        break;
     }
   }
 
-  return mAspect;
+  MOZ_ASSERT_UNREACHABLE("failed to compute size-adjust aspect");
+  return 0.5;
 }
 
 static void PrepareFontOptions(FcPattern* aPattern, int* aOutLoadFlags,
@@ -759,8 +777,10 @@ gfxFontconfigFontEntry::UnscaledFontCache::Lookup(const std::string& aFile,
 
 static inline gfxFloat SizeForStyle(gfxFontconfigFontEntry* aEntry,
                                     const gfxFontStyle& aStyle) {
-  return aStyle.sizeAdjust >= 0.0 ? aStyle.GetAdjustedSize(aEntry->GetAspect())
-                                  : aStyle.size * aEntry->mSizeAdjust;
+  return StyleFontSizeAdjust::Tag(aStyle.sizeAdjustBasis) !=
+                 StyleFontSizeAdjust::Tag::None
+             ? aStyle.GetAdjustedSize(aEntry->GetAspect(aStyle.sizeAdjustBasis))
+             : aStyle.size * aEntry->mSizeAdjust;
 }
 
 static double ChooseFontSize(gfxFontconfigFontEntry* aEntry,

@@ -107,7 +107,7 @@ class gfxFontconfigFontEntry final : public gfxFT2FontEntryBase {
   nsresult CopyFontTable(uint32_t aTableTag, nsTArray<uint8_t>&) override;
   hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 
-  double GetAspect();
+  double GetAspect(uint8_t aSizeAdjustBasis);
 
  protected:
   virtual ~gfxFontconfigFontEntry();
@@ -134,8 +134,6 @@ class gfxFontconfigFontEntry final : public gfxFT2FontEntryBase {
   // the FreeType face.
   bool mHasVariations;
   bool mHasVariationsInitialized;
-
-  double mAspect;
 
   class UnscaledFontCache {
    public:
