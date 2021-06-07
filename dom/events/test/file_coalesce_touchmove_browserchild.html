@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>touchmove coalescing</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+  var receivedSingleTouch = false;
+  var receivedMultiTouch = false;
+  // This test does three things:
+  //   1. Ensures adding a new touch to existing touchmove events
+  //      will not be coalesced with the previous single touch touchmove events
+  //   2. Ensures touchstart flushes the coalesced touchmove events
+  //   3. Ensures touchend flushes the coalesced touchmove event
+  async function testBrowserChildCoalescing() {
+    var ret = new Promise(function(resolve) {
+      SpecialPowers.loadChromeScript(function() {
+        var element = this.actorParent.rootFrameLoader.ownerElement;
+        var rect = element.getBoundingClientRect();
+        var win = element.ownerDocument.defaultView;
+        var utils = win.windowUtils;
+        var x = rect.x + (rect.width / 2);
+        var y = Math.floor(rect.y + (rect.height / 4));
+        var endYForFirstTouch = Math.floor(rect.y + ((rect.height / 4) * 2));
+        var endYForSecondTouch = Math.floor(rect.y + ((rect.height / 4) * 4));
+        utils.sendTouchEvent("touchstart", [0], [x], [y], [1], [1], [0], [1],
+                             0, false);
+        while (y != endYForFirstTouch) {
+          utils.sendTouchEvent("touchmove", [0], [x], [y], [1], [1], [0], [1],
+                               0, false);
+          ++y;
+        }
+
+        // Add a new touch and move this touch
+        utils.sendTouchEvent("touchstart", [0, 1], [x, x], [endYForFirstTouch, endYForFirstTouch], [1, 1], [1, 1], [0, 0], [1, 1],
+                             0, false);
+        while (y != endYForSecondTouch) {
+          utils.sendTouchEvent("touchmove", [0, 1], [x, x], [endYForFirstTouch, y], [1, 1], [1, 1], [0, 0], [1, 1],
+                               0, false);
+          ++y;
+        }
+
+        utils.sendTouchEvent("touchend", [0, 1], [x, x], [endYForFirstTouch, endYForSecondTouch], [1, 1], [1, 1], [0, 0], [1, 1],
+                             0, false);
+      });
+
+      let touchStartCount = 0;
+      let shouldReceiveMultiTouch = false;
+      let receivedTouchEnd = false;
+
+      window.addEventListener("touchstart", function() {
+        ++touchStartCount;
+        if (touchStartCount == 2) {
+          shouldReceiveMultiTouch = true;
+        }
+      }, true);
+
+
+      window.addEventListener("touchmove", function(e) {
+        if (receivedTouchEnd) {
+          ok(false, "Shouldn't get any touchmove events after touchend");
+        }
+
+        // Make touchmove handling slow
+        var start = performance.now();
+        while (performance.now() < (start + 10));
+
+        if (shouldReceiveMultiTouch) {
+          is(e.touches.length, 2, "Should get two touches for multi touch");
+          receivedMultiTouch = true;
+        } else {
+          is(e.touches.length, 1, "Should get one touch for single touch");
+          receivedSingleTouch = true;
+        }
+      }, true);
+
+      window.addEventListener("touchend", async function(e) {
+        receivedTouchEnd = true;
+        // Request a tick to ensure touchend has successfully flushed
+        // coalesced touchmove events
+        await new Promise(r => {
+          window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(r);
+          });
+        });
+
+        resolve();
+      }, {once: true});
+    });
+
+    return ret;
+  }
+
+  async function runTests() {
+    await SpecialPowers.pushPrefEnv({"set": [["dom.events.coalesce.touchmove", true]]});
+
+    await testBrowserChildCoalescing();
+
+    ok(receivedSingleTouch, "Should've got single touch");
+    ok(receivedMultiTouch, "Should've got multi touch");
+
+    opener.setTimeout("SimpleTest.finish()");
+
+    window.close();
+  }
+
+  function init() {
+    SpecialPowers.pushPrefEnv({"set": [["dom.w3c_touch_events.enabled", true]]},
+                              runTests);
+  }
+  </script>
+</head>
+<body onload="SimpleTest.waitForFocus(init);">
+</body>
+</html>
