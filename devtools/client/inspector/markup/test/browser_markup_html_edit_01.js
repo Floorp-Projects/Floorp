@@ -105,7 +105,7 @@ const TEST_URL =
   "</html>";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
   inspector.markup._frame.focus();
-  await runEditOuterHTMLTests(TEST_DATA, inspector, testActor);
+  await runEditOuterHTMLTests(TEST_DATA, inspector);
 });
