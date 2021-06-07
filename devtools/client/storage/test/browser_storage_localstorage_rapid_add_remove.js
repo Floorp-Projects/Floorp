@@ -19,14 +19,14 @@ add_task(async function() {
   }
 });
 
-function* addRemove(name) {
-  yield SpecialPowers.spawn(gBrowser.selectedBrowser, [name], innerName => {
+async function addRemove(name) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [name], innerName => {
     content.localStorage.setItem(innerName, "true");
     content.localStorage.removeItem(innerName);
   });
 
   info("Waiting for store objects to be changed");
-  yield gUI.once("store-objects-edit");
+  await gUI.once("store-objects-edit");
 
   ok(isTableEmpty(), `Table empty after rapid add/remove of "${name}"`);
 }
