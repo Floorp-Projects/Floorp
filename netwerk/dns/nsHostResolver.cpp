@@ -1350,11 +1350,18 @@ void nsHostResolver::MaybeRenewHostRecord(nsHostRecord* aRec) {
 void nsHostResolver::MaybeRenewHostRecordLocked(nsHostRecord* aRec) {
   mLock.AssertCurrentThreadOwns();
   if (aRec->isInList()) {
+    MOZ_DIAGNOSTIC_ASSERT(!mHighQ.contains(aRec), "Already in high queue");
+    MOZ_DIAGNOSTIC_ASSERT(!mMediumQ.contains(aRec), "Already in med queue");
+    MOZ_DIAGNOSTIC_ASSERT(!mLowQ.contains(aRec), "Already in low queue");
+
+    bool inEvictionQ = mEvictionQ.contains(aRec);
+    MOZ_DIAGNOSTIC_ASSERT(inEvictionQ, "Should be in eviction queue");
     // we're already on the eviction queue. This is a renewal
-    MOZ_ASSERT(mEvictionQSize);
-    AssertOnQ(aRec, mEvictionQ);
     aRec->remove();
-    mEvictionQSize--;
+    if (inEvictionQ) {
+      MOZ_DIAGNOSTIC_ASSERT(mEvictionQSize > 0);
+      mEvictionQSize--;
+    }
   }
 }
 
@@ -1837,8 +1844,8 @@ static bool different_rrset(AddrInfo* rrset1, AddrInfo* rrset2) {
 
 void nsHostResolver::AddToEvictionQ(nsHostRecord* rec) {
   if (rec->isInList()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mEvictionQ.contains(rec),
-                          "Already in eviction queue");
+    bool inEvictionQ = mEvictionQ.contains(rec);
+    MOZ_DIAGNOSTIC_ASSERT(!inEvictionQ, "Already in eviction queue");
     MOZ_DIAGNOSTIC_ASSERT(!mHighQ.contains(rec), "Already in high queue");
     MOZ_DIAGNOSTIC_ASSERT(!mMediumQ.contains(rec), "Already in med queue");
     MOZ_DIAGNOSTIC_ASSERT(!mLowQ.contains(rec), "Already in low queue");
@@ -1847,6 +1854,10 @@ void nsHostResolver::AddToEvictionQ(nsHostRecord* rec) {
     // Bug 1678117 - it's not clear why this can happen, but let's fix it
     // for release users.
     rec->remove();
+    if (inEvictionQ) {
+      MOZ_DIAGNOSTIC_ASSERT(mEvictionQSize > 0);
+      mEvictionQSize--;
+    }
   }
   mEvictionQ.insertBack(rec);
   if (mEvictionQSize < mMaxCacheEntries) {
