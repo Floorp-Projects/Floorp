@@ -16,9 +16,3 @@
 .popup-notification-primary-button {
   order: -1;
 }
-
-@media not (-moz-proton-doorhangers) {
-.popup-notification-secondary-button:not([hidden="true"]) ~ .popup-notification-primary-button:not([default]) {
-  border-inline-end: 1px solid var(--panel-separator-color);
-}
-} /** END not Proton **/

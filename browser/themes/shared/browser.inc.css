@@ -764,28 +764,6 @@ menupopup::part(drop-indicator) {
   flex: 1;
 }
 
-@media not (-moz-proton-doorhangers) {
-.webRTC-selectDevice-label {
-  margin-top: 6px;
-  font-weight: 600;
-}
-
-#webRTC-selectCamera-icon,
-#webRTC-selectMicrophone-icon {
-  display: none;
-}
-
-#webRTC-selectWindow-menulist {
-  margin-inline: 2px;
-}
-
-.ac-has-end-icon {
-  /* Password manager's username field icon width + icon end margin */
-  padding-inline-end: calc(12px + 8px);
-}
-} /** END not Proton **/
-
-@media (-moz-proton-doorhangers) {
 popupnotificationcontent {
   margin-block-start: 8px;
 }
@@ -883,7 +861,6 @@ popupnotificationcontent {
   font-weight: 600;
   margin-top: 0;
 }
-} /** END Proton **/
 
 #tab-notification-deck {
   display: block;
