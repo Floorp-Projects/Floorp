@@ -9,7 +9,8 @@ use neqo_http3::Error as Http3Error;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
 use neqo_qpack::QpackSettings;
 use neqo_transport::{
-    ConnectionParameters, Error as TransportError, Output, QuicVersion, RandomConnectionIdGenerator,
+    CongestionControlAlgorithm, ConnectionParameters, Error as TransportError, Output, QuicVersion,
+    RandomConnectionIdGenerator,
 };
 use nserror::*;
 use nsstring::*;
@@ -92,7 +93,9 @@ impl NeqoHttp3Conn {
             Rc::new(RefCell::new(RandomConnectionIdGenerator::new(3))),
             local,
             remote,
-            ConnectionParameters::default().quic_version(quic_version),
+            ConnectionParameters::default()
+                .quic_version(quic_version)
+                .cc_algorithm(CongestionControlAlgorithm::Cubic),
             &http3_settings,
             Instant::now(),
         ) {
