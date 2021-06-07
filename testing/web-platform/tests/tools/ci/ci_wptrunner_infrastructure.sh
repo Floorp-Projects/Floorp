@@ -14,7 +14,8 @@ main() {
     ./wpt manifest --rebuild -p ~/meta/MANIFEST.json
     for PRODUCT in "${PRODUCTS[@]}"; do
         if [[ "$PRODUCT" == "chrome" ]]; then
-            test_infrastructure "--binary=$(which google-chrome-unstable) --channel dev" "$1"
+            # Taskcluster machines do not have GPUs, so use software rendering via --enable-swiftshader.
+            test_infrastructure "--binary=$(which google-chrome-unstable) --enable-swiftshader --channel dev" "$1"
         else
             test_infrastructure "--binary=~/build/firefox/firefox" "$1"
         fi
