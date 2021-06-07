@@ -136,13 +136,13 @@ jobs:
                 - wasi-sysroot
 
     android-arm-shippable/opt:
-        description: "Android 4.0 Arm PGO instrumented"
+        description: "Android 4.1 Arm PGO instrumented"
         index:
             product: mobile
             job-name: instrumented-android-arm
         shipping-product: fennec
         treeherder:
-            platform: android-4-0-armv7/pgo
+            platform: android-4-1-armv7/pgo
         worker-type: b-linux
         worker:
             docker-image: {in-tree: android-build}
