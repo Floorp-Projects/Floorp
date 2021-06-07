@@ -48,7 +48,7 @@ loader.lazyGetter(this, "SourcePreview", function() {
 const { div, input, label, span, h2 } = dom;
 
 const JSON_SCOPE_NAME = L10N.getStr("jsonScopeName");
-const REQUEST_EMPTY_TEXT = L10N.getStr("paramsEmptyText");
+const REQUEST_EMPTY_TEXT = L10N.getStr("paramsNoPayloadText");
 const REQUEST_FILTER_TEXT = L10N.getStr("paramsFilterText");
 const REQUEST_FORM_DATA = L10N.getStr("paramsFormData");
 const REQUEST_POST_PAYLOAD = L10N.getStr("paramsPostPayload");
