@@ -1,0 +1,90 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package mozilla.components.browser.session.ext
+
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.support.test.mock
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class SessionExtensionsTest {
+
+    @Test
+    fun `toTabSessionState - Can convert tab session with parent tab`() {
+        val session = Session("https://mozilla.org")
+        session.parentId = "session"
+
+        val tabState = session.toTabSessionState()
+        assertEquals(tabState.id, session.id)
+        assertEquals(tabState.content.url, session.url)
+        assertEquals(tabState.parentId, session.parentId)
+        assertEquals(tabState.source, session.source)
+        assertEquals(SessionState.Source.NONE, tabState.source)
+        assertNull(tabState.contextId)
+    }
+
+    @Test
+    fun `toTabSessionState - Can convert tab session with contextId`() {
+        val session = Session("https://mozilla.org", contextId = "1")
+        val tabState = session.toTabSessionState()
+        assertEquals(tabState.id, session.id)
+        assertEquals(tabState.content.url, session.url)
+        assertEquals(tabState.source, session.source)
+        assertEquals(SessionState.Source.NONE, tabState.source)
+        assertEquals(tabState.contextId, session.contextId)
+    }
+
+    @Test
+    fun `toTabSessionState - Can convert tab session with source`() {
+        val session = Session("https://mozilla.org", source = SessionState.Source.ACTION_VIEW)
+        val tabState = session.toTabSessionState()
+        assertEquals(tabState.id, session.id)
+        assertEquals(tabState.content.url, session.url)
+        assertNull(tabState.contextId)
+        assertEquals(tabState.source, session.source)
+        assertEquals(SessionState.Source.ACTION_VIEW, tabState.source)
+    }
+
+    @Test
+    fun `toCustomTabSessionState - Can convert custom tab session`() {
+        val session = Session("https://mozilla.org")
+        session.customTabConfig = CustomTabConfig()
+
+        val customTabState = session.toCustomTabSessionState()
+        assertEquals(customTabState.id, session.id)
+        assertEquals(customTabState.content.url, session.url)
+        assertEquals(SessionState.Source.CUSTOM_TAB, customTabState.source)
+        assertEquals(customTabState.contextId, session.contextId)
+        assertSame(customTabState.config, session.customTabConfig)
+        assertNull(customTabState.contextId)
+    }
+
+    @Test
+    fun `toCustomTabSessionState - Can convert custom tab session with contextId`() {
+        val session = Session("https://mozilla.org", contextId = "1")
+        session.customTabConfig = CustomTabConfig()
+
+        val customTabState = session.toCustomTabSessionState()
+        assertEquals(customTabState.id, session.id)
+        assertEquals(customTabState.content.url, session.url)
+        assertEquals(SessionState.Source.CUSTOM_TAB, customTabState.source)
+        assertEquals(customTabState.contextId, session.contextId)
+        assertSame(customTabState.config, session.customTabConfig)
+        assertEquals(customTabState.contextId, session.contextId)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `toCustomTabSessionState - Throws exception when converting a non-custom tab session`() {
+        val session: Session = mock()
+        session.toCustomTabSessionState()
+    }
+}

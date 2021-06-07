@@ -19,7 +19,7 @@ import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.ext.putWebAppManifest
 import mozilla.components.feature.pwa.ext.toCustomTabConfig
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.feature.tabs.CustomTabsUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.utils.toSafeIntent
 
 /**
@@ -27,7 +27,7 @@ import mozilla.components.support.utils.toSafeIntent
  */
 class WebAppIntentProcessor(
     private val store: BrowserStore,
-    private val addTabUseCase: CustomTabsUseCases.AddWebAppTabUseCase,
+    private val addTabUseCase: TabsUseCases.AddNewTabUseCase,
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
     private val storage: ManifestStorage
 ) : IntentProcessor {
@@ -83,6 +83,7 @@ class WebAppIntentProcessor(
     private fun createSession(webAppManifest: WebAppManifest, url: String): String {
         return addTabUseCase.invoke(
             url = url,
+            selectTab = false,
             source = Source.HOME_SCREEN,
             webAppManifest = webAppManifest,
             customTabConfig = webAppManifest.toCustomTabConfig()

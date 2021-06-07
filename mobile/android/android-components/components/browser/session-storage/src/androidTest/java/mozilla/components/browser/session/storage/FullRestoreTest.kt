@@ -9,7 +9,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.gecko.GeckoEngine
-import mozilla.components.browser.state.engine.EngineMiddleware
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -43,8 +45,9 @@ class FullRestoreTest {
             // Set up
             // -------------------------------------------------------------------------------------
 
-            val store = createStore(engine)
-            val tabsUseCases = TabsUseCases(store)
+            val (sessionManager, store) = createSessionManagerAndStore(engine)
+
+            val tabsUseCases = TabsUseCases(store, sessionManager)
 
             // -------------------------------------------------------------------------------------
             // Add a tab
@@ -71,8 +74,8 @@ class FullRestoreTest {
 
             val storage = SessionStorage(context, engine)
 
-            val newStore = createStore(engine)
-            val newUseCases = TabsUseCases(newStore)
+            val (newSessionManager, newStore) = createSessionManagerAndStore(engine)
+            val newUseCases = TabsUseCases(newStore, newSessionManager)
 
             assertNull(newStore.state.selectedTab)
 
@@ -91,13 +94,26 @@ class FullRestoreTest {
         }
     }
 
-    private fun createStore(
+    private fun createSessionManagerAndStore(
         engine: Engine
-    ): BrowserStore {
+    ): Pair<SessionManager, BrowserStore> {
         return runBlocking(Dispatchers.Main) {
-            BrowserStore(middleware = EngineMiddleware.create(engine))
+            val lookup = SessionManagerLookup()
+
+            val store = BrowserStore(middleware = EngineMiddleware.create(engine, lookup::lookup))
+
+            val sessionManager = SessionManager(engine, store)
+            lookup.sessionManager = sessionManager
+
+            Pair(sessionManager, store)
         }
     }
+}
+
+private class SessionManagerLookup {
+    var sessionManager: SessionManager? = null
+
+    fun lookup(tabId: String): Session? = sessionManager!!.findSessionById(tabId)
 }
 
 private fun waitFor(timeoutMs: Long = 10000, cadence: Long = 100, predicate: () -> Boolean) {

@@ -15,22 +15,22 @@ internal object EngineStateReducer {
      * of a [SessionState].
      */
     fun reduce(state: BrowserState, action: EngineAction): BrowserState = when (action) {
-        is EngineAction.LinkEngineSessionAction -> state.copyWithEngineState(action.tabId) {
+        is EngineAction.LinkEngineSessionAction -> state.copyWithEngineState(action.sessionId) {
             it.copy(
                 engineSession = action.engineSession,
                 timestamp = action.timestamp
             )
         }
-        is EngineAction.UnlinkEngineSessionAction -> state.copyWithEngineState(action.tabId) {
+        is EngineAction.UnlinkEngineSessionAction -> state.copyWithEngineState(action.sessionId) {
             it.copy(
                 engineSession = null,
                 engineObserver = null
             )
         }
-        is EngineAction.UpdateEngineSessionObserverAction -> state.copyWithEngineState(action.tabId) {
+        is EngineAction.UpdateEngineSessionObserverAction -> state.copyWithEngineState(action.sessionId) {
             it.copy(engineObserver = action.engineSessionObserver)
         }
-        is EngineAction.UpdateEngineSessionStateAction -> state.copyWithEngineState(action.tabId) { engineState ->
+        is EngineAction.UpdateEngineSessionStateAction -> state.copyWithEngineState(action.sessionId) { engineState ->
             if (engineState.crashed) {
                 // We ignore state updates for a crashed engine session. We want to keep the last state until
                 // this tab gets restored (or closed).
@@ -38,9 +38,6 @@ internal object EngineStateReducer {
             } else {
                 engineState.copy(engineSessionState = action.engineSessionState)
             }
-        }
-        is EngineAction.UpdateEngineSessionInitializingAction -> state.copyWithEngineState(action.tabId) {
-            it.copy(initializing = action.initializing)
         }
         is EngineAction.SuspendEngineSessionAction,
         is EngineAction.CreateEngineSessionAction,

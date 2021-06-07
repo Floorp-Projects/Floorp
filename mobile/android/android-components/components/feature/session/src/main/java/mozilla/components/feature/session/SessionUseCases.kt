@@ -4,22 +4,28 @@
 
 package mozilla.components.feature.session
 
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.EngineAction
-import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
-import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 
 /**
  * Contains use cases related to the session feature.
+ *
+ * @param sessionManager the application's [SessionManager].
+ * @param onNoSession When invoking a use case that requires a (selected) [Session] and when no [Session] is available
+ * this (optional) lambda will be invoked to create a [Session]. The default implementation creates a [Session] and adds
+ * it to the [SessionManager].
  */
 class SessionUseCases(
     store: BrowserStore,
-    onNoTab: (String) -> TabSessionState = { url ->
-        createTab(url).apply { store.dispatch(TabListAction.AddTabAction(this)) }
+    sessionManager: SessionManager,
+    onNoSession: (String) -> Session = { url ->
+        Session(url).apply { sessionManager.add(this) }
     }
 ) {
 
@@ -39,13 +45,14 @@ class SessionUseCases(
 
     class DefaultLoadUrlUseCase internal constructor(
         private val store: BrowserStore,
-        private val onNoTab: (String) -> TabSessionState
+        private val sessionManager: SessionManager,
+        private val onNoSession: (String) -> Session
     ) : LoadUrlUseCase {
 
         /**
          * Loads the provided URL using the currently selected session. If
          * there's no selected session a new session will be created using
-         * [onNoTab].
+         * [onNoSession].
          *
          * @param url The URL to be loaded using the selected session.
          * @param flags The [LoadUrlFlags] to use when loading the provided url.
@@ -56,13 +63,13 @@ class SessionUseCases(
             flags: LoadUrlFlags,
             additionalHeaders: Map<String, String>?
         ) {
-            this.invoke(url, store.state.selectedTabId, flags, additionalHeaders)
+            this.invoke(url, sessionManager.selectedSession?.id, flags, additionalHeaders)
         }
 
         /**
          * Loads the provided URL using the specified session. If no session
          * is provided the currently selected session will be used. If there's
-         * no selected session a new session will be created using [onNoTab].
+         * no selected session a new session will be created using [onNoSession].
          *
          * @param url The URL to be loaded using the provided session.
          * @param sessionId the ID of the session for which the URL should be loaded.
@@ -76,8 +83,8 @@ class SessionUseCases(
             additionalHeaders: Map<String, String>? = null
         ) {
             val loadSessionId = sessionId
-                ?: store.state.selectedTabId
-                ?: onNoTab.invoke(url).id
+                ?: sessionManager.selectedSession?.id
+                ?: onNoSession.invoke(url).id
 
             store.dispatch(EngineAction.LoadUrlAction(
                 loadSessionId,
@@ -90,7 +97,8 @@ class SessionUseCases(
 
     class LoadDataUseCase internal constructor(
         private val store: BrowserStore,
-        private val onNoTab: (String) -> TabSessionState
+        private val sessionManager: SessionManager,
+        private val onNoSession: (String) -> Session
     ) {
         /**
          * Loads the provided data based on the mime type using the provided session (or the
@@ -100,12 +108,12 @@ class SessionUseCases(
             data: String,
             mimeType: String,
             encoding: String = "UTF-8",
-            tabId: String? = store.state.selectedTabId
+            session: Session? = sessionManager.selectedSession
         ) {
-            val loadTabId = tabId ?: onNoTab.invoke("about:blank").id
+            val loadSession = session ?: onNoSession.invoke("about:blank")
 
             store.dispatch(EngineAction.LoadDataAction(
-                loadTabId,
+                loadSession.id,
                 data,
                 mimeType,
                 encoding
@@ -114,46 +122,67 @@ class SessionUseCases(
     }
 
     class ReloadUrlUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
+        private val sessionManager: SessionManager
     ) {
         /**
          * Reloads the current URL of the provided session (or the currently
          * selected session if none is provided).
          *
-         * @param tabId the ID of the tab for which the reload should be triggered.
+         * @param session the session for which reload should be triggered.
          * @param flags the [LoadUrlFlags] to use when reloading the given session.
          */
         operator fun invoke(
-            tabId: String? = store.state.selectedTabId,
+            session: Session? = sessionManager.selectedSession,
             flags: LoadUrlFlags = LoadUrlFlags.none()
         ) {
-            if (tabId == null) {
+            if (session == null) {
                 return
             }
 
             store.dispatch(EngineAction.ReloadAction(
-                tabId,
+                session.id,
                 flags
             ))
+        }
+
+        /**
+         * Reloads the current page of the tab with the given [tabId].
+         *
+         * @param tabId id of the tab that should be reloaded
+         * @param flags the [LoadUrlFlags] to use when reloading the given tabId.
+         */
+        operator fun invoke(tabId: String, flags: LoadUrlFlags = LoadUrlFlags.none()) {
+            sessionManager.findSessionById(tabId)?.let {
+                invoke(it, flags)
+            }
         }
     }
 
     class StopLoadingUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
+        private val sessionManager: SessionManager
     ) {
         /**
          * Stops the current URL of the provided session from loading.
          *
-         * @param tabId the ID of the tab for which loading should be stopped.
+         * @param session the session for which loading should be stopped.
          */
-        operator fun invoke(
-            tabId: String? = store.state.selectedTabId
-        ) {
-            if (tabId == null) {
+        operator fun invoke(session: Session? = sessionManager.selectedSession) {
+            if (session == null) {
                 return
             }
 
-            store.state.findTabOrCustomTab(tabId)
+            invoke(session.id)
+        }
+
+        /**
+         * Stops the current URL of the provided session from loading.
+         *
+         * @param sessionId the ID of the session for which loading should be stopped.
+         */
+        operator fun invoke(sessionId: String) {
+            store.state.findTabOrCustomTab(sessionId)
                 ?.engineState
                 ?.engineSession
                 ?.stopLoading()
@@ -161,39 +190,53 @@ class SessionUseCases(
     }
 
     class GoBackUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
+        private val sessionManager: SessionManager
     ) {
         /**
-         * Navigates back in the history of the currently selected tab
+         * Navigates back in the history of the currently selected session
          */
-        operator fun invoke(
-            tabId: String? = store.state.selectedTabId
-        ) {
-            if (tabId == null) {
+        operator fun invoke(session: Session? = sessionManager.selectedSession) {
+            if (session == null) {
                 return
             }
 
             store.dispatch(EngineAction.GoBackAction(
-                tabId
+                session.id
             ))
+        }
+
+        /**
+         * Navigates back in the history of the tab with the given [tabId].
+         */
+        operator fun invoke(tabId: String) {
+            sessionManager.findSessionById(tabId)?.let {
+                invoke(it)
+            }
         }
     }
 
     class GoForwardUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
+        private val sessionManager: SessionManager
     ) {
         /**
          * Navigates forward in the history of the currently selected session
          */
-        operator fun invoke(
-            tabId: String? = store.state.selectedTabId
-        ) {
-            if (tabId == null) {
+        operator fun invoke(session: Session? = sessionManager.selectedSession) {
+            if (session == null) {
                 return
             }
 
+            invoke(session.id)
+        }
+
+        /**
+         * Navigates forward in the history of the provided session.
+         */
+        operator fun invoke(sessionId: String) {
             store.dispatch(EngineAction.GoForwardAction(
-                tabId
+                sessionId
             ))
         }
     }
@@ -202,7 +245,8 @@ class SessionUseCases(
      * Use case to jump to an arbitrary history index in a session's backstack.
      */
     class GoToHistoryIndexUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
+        private val sessionManager: SessionManager
     ) {
         /**
          * Navigates to a specific index in the [HistoryState] of the given session.
@@ -212,57 +256,118 @@ class SessionUseCases(
          * @param session the session whose [HistoryState] is being accessed, defaulting
          * to the selected session.
          */
-        operator fun invoke(
-            index: Int,
-            tabId: String? = store.state.selectedTabId
-        ) {
-            if (tabId == null) {
+        operator fun invoke(index: Int, session: Session? = sessionManager.selectedSession) {
+            if (session == null) {
                 return
             }
 
             store.dispatch(EngineAction.GoToHistoryIndexAction(
-                tabId,
+                session.id,
                 index
             ))
+        }
+
+        /**
+         * Navigates to a specific index in the [HistoryState] of the given session.
+         * Invalid index values will be ignored.
+         *
+         * @param index the index in the session's [HistoryState] to navigate to.
+         * @param sessionId the ID of the session whose [HistoryState] is being accessed,
+         * defaulting to the ID of the selected session.
+         */
+        operator fun invoke(index: Int, sessionId: String? = sessionManager.selectedSession?.id) {
+            if (sessionId == null) {
+                return
+            }
+
+            store.dispatch(EngineAction.GoToHistoryIndexAction(
+                sessionId,
+                index
+            ))
+        }
+
+        /**
+         * Navigates to a specific index in the [HistoryState] of the selected session.
+         * Invalid index values will be ignored.
+         *
+         * @param index the index in the session's [HistoryState] to navigate to.
+         */
+        operator fun invoke(index: Int) {
+            invoke(index, sessionManager.selectedSession)
         }
     }
 
     class RequestDesktopSiteUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
+        private val sessionManager: SessionManager
     ) {
         /**
          * Requests the desktop version of the current session and reloads the page.
          */
-        operator fun invoke(
-            enable: Boolean,
-            tabId: String? = store.state.selectedTabId
-        ) {
-            if (tabId == null) {
+        operator fun invoke(enable: Boolean, session: Session? = sessionManager.selectedSession) {
+            if (session == null) {
                 return
             }
 
+            invoke(enable, session.id)
+        }
+
+        /**
+         * Requests the desktop version of the provides session and reloads the page.
+         */
+        operator fun invoke(enable: Boolean, sessionId: String) {
             store.dispatch(EngineAction.ToggleDesktopModeAction(
-                tabId,
+                sessionId,
                 enable
             ))
         }
     }
 
     class ExitFullScreenUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
+        private val sessionManager: SessionManager
     ) {
         /**
          * Exits fullscreen mode of the current session.
          */
-        operator fun invoke(
-            tabId: String? = store.state.selectedTabId
-        ) {
-            if (tabId == null) {
+        operator fun invoke(session: Session? = sessionManager.selectedSession) {
+            if (session == null) {
                 return
             }
 
             store.dispatch(EngineAction.ExitFullScreenModeAction(
-                tabId
+                session.id
+            ))
+        }
+
+        /**
+         * Exits fullscreen mode of the tab with the given [tabId].
+         */
+        operator fun invoke(tabId: String) {
+            sessionManager.findSessionById(tabId)?.let { invoke(it) }
+        }
+    }
+
+    class ClearDataUseCase internal constructor(
+        private val store: BrowserStore,
+        private val sessionManager: SessionManager
+    ) {
+        /**
+         * Clears all user data sources available.
+         */
+        operator fun invoke(
+            session: Session? = sessionManager.selectedSession,
+            data: BrowsingData = BrowsingData.all()
+        ) {
+            sessionManager.engine.clearData(data)
+
+            if (session == null) {
+                return
+            }
+
+            store.dispatch(EngineAction.ClearDataAction(
+                session.id,
+                data
             ))
         }
     }
@@ -314,15 +419,16 @@ class SessionUseCases(
         }
     }
 
-    val loadUrl: DefaultLoadUrlUseCase by lazy { DefaultLoadUrlUseCase(store, onNoTab) }
-    val loadData: LoadDataUseCase by lazy { LoadDataUseCase(store, onNoTab) }
-    val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(store) }
-    val stopLoading: StopLoadingUseCase by lazy { StopLoadingUseCase(store) }
-    val goBack: GoBackUseCase by lazy { GoBackUseCase(store) }
-    val goForward: GoForwardUseCase by lazy { GoForwardUseCase(store) }
-    val goToHistoryIndex: GoToHistoryIndexUseCase by lazy { GoToHistoryIndexUseCase(store) }
-    val requestDesktopSite: RequestDesktopSiteUseCase by lazy { RequestDesktopSiteUseCase(store) }
-    val exitFullscreen: ExitFullScreenUseCase by lazy { ExitFullScreenUseCase(store) }
+    val loadUrl: DefaultLoadUrlUseCase by lazy { DefaultLoadUrlUseCase(store, sessionManager, onNoSession) }
+    val loadData: LoadDataUseCase by lazy { LoadDataUseCase(store, sessionManager, onNoSession) }
+    val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(store, sessionManager) }
+    val stopLoading: StopLoadingUseCase by lazy { StopLoadingUseCase(store, sessionManager) }
+    val goBack: GoBackUseCase by lazy { GoBackUseCase(store, sessionManager) }
+    val goForward: GoForwardUseCase by lazy { GoForwardUseCase(store, sessionManager) }
+    val goToHistoryIndex: GoToHistoryIndexUseCase by lazy { GoToHistoryIndexUseCase(store, sessionManager) }
+    val requestDesktopSite: RequestDesktopSiteUseCase by lazy { RequestDesktopSiteUseCase(store, sessionManager) }
+    val exitFullscreen: ExitFullScreenUseCase by lazy { ExitFullScreenUseCase(store, sessionManager) }
+    val clearData: ClearDataUseCase by lazy { ClearDataUseCase(store, sessionManager) }
     val crashRecovery: CrashRecoveryUseCase by lazy { CrashRecoveryUseCase(store) }
     val purgeHistory: PurgeHistoryUseCase by lazy { PurgeHistoryUseCase(store) }
 }

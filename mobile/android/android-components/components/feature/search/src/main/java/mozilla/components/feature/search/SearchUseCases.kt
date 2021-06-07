@@ -147,13 +147,21 @@ class SearchUseCases(
                 return
             }
 
-            val id = tabsUseCases.addTab(
-                searchUrl,
-                parentId = parentSessionId,
-                source = source,
-                selectTab = selected,
-                private = private
-            )
+            val id = if (private) {
+                tabsUseCases.addPrivateTab(
+                    searchUrl,
+                    parentId = parentSessionId,
+                    source = source,
+                    selectTab = selected
+                )
+            } else {
+                tabsUseCases.addTab(
+                    searchUrl,
+                    parentId = parentSessionId,
+                    source = source,
+                    selectTab = selected
+                )
+            }
 
             store.dispatch(ContentAction.UpdateSearchTermsAction(id, searchTerms))
         }

@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.PlacesException
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -28,10 +29,6 @@ import org.mockito.Mockito.verifyZeroInteractions
 import java.io.File
 import java.lang.IllegalStateException
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.state.action.BrowserAction
-import mozilla.components.browser.state.action.TabListAction
-import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
@@ -45,8 +42,8 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.whenever
 import mozilla.components.support.test.eq
-import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import org.json.JSONObject
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import java.lang.IllegalArgumentException
@@ -224,9 +221,8 @@ class FennecMigratorTest {
         assertEquals(4, bookmarksStore.searchBookmarks("mozilla").size)
 
         // Can add another migration type, and it will be the only one to run.
-        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(middleware))
-        val tabsUseCases = TabsUseCases(store = store)
+        val sessionManager: SessionManager = mock()
+        val tabsUseCases = TabsUseCases(store = mock(), sessionManager = sessionManager)
 
         val expandedMigrator = FennecMigrator.Builder(testContext, mock())
             .setCoroutineContext(this.coroutineContext)
@@ -251,9 +247,7 @@ class FennecMigratorTest {
                 assertEquals(1, this.version)
             }
 
-            middleware.assertLastAction(TabListAction.RestoreAction::class) { action ->
-                assertEquals(6, action.tabs.size)
-            }
+            verify(sessionManager, times(1)).restore(mozilla.components.support.test.any(), anyString())
         }
 
         // Running this migrator again does nothing.

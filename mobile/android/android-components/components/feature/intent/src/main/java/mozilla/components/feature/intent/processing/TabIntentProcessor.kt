@@ -93,7 +93,11 @@ class TabIntentProcessor(
     }
 
     private fun addNewTab(url: String, source: Source) {
-        tabsUseCases.addTab(url, source = source, flags = LoadUrlFlags.external(), private = isPrivate)
+        if (isPrivate) {
+            tabsUseCases.addPrivateTab(url, source = source, flags = LoadUrlFlags.external())
+        } else {
+            tabsUseCases.addTab(url, source = source, flags = LoadUrlFlags.external())
+        }
     }
 
     /**

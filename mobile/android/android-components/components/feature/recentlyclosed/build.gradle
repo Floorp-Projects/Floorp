@@ -58,6 +58,7 @@ dependencies {
     implementation Dependencies.androidx_lifecycle_livedata
     kapt Dependencies.androidx_room_compiler
 
+    testImplementation project(':browser-session')
     testImplementation project(':feature-session')
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')

@@ -18,7 +18,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.pwa.intent.WebAppIntentProcessor.Companion.ACTION_VIEW_PWA
-import mozilla.components.feature.tabs.CustomTabsUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -75,7 +75,7 @@ class TrustedWebActivityIntentProcessorTest {
         }
 
         val customTabsStore: CustomTabsServiceStore = mock()
-        val addTabUseCase: CustomTabsUseCases.AddCustomTabUseCase = mock()
+        val addTabUseCase: TabsUseCases.AddNewTabUseCase = mock()
 
         val processor = TrustedWebActivityIntentProcessor(addTabUseCase, mock(), mock(), customTabsStore)
         assertTrue(processor.process(intent))

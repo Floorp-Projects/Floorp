@@ -46,6 +46,7 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
 
+    testImplementation project(':browser-session')
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
 }

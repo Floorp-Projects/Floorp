@@ -9,6 +9,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.session.middleware.undo.UndoMiddleware
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.action.TabListAction
@@ -89,12 +91,17 @@ class RecentlyClosedMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
         val tab2 = createTab("https://www.firefox.com", private = false, id = "5678")
 
+        var sessionManager: SessionManager? = null
+        val lookup: () -> SessionManager = { sessionManager!! }
+
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(tab, tab2)
             ),
-            middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
+            middleware = listOf(UndoMiddleware(lookup, mainScope = scope), middleware)
         )
+
+        sessionManager = SessionManager(engine = mock(), store = store)
 
         store.dispatch(TabListAction.RemoveTabsAction(listOf("1234", "5678"))).joinBlocking()
         store.dispatch(UndoAction.ClearRecoverableTabs(store.state.undoHistory.tag)).joinBlocking()
@@ -129,12 +136,17 @@ class RecentlyClosedMiddlewareTest {
 
         val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
 
+        var sessionManager: SessionManager? = null
+        val lookup: () -> SessionManager = { sessionManager!! }
+
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(tab)
             ),
-            middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
+            middleware = listOf(UndoMiddleware(lookup, mainScope = scope), middleware)
         )
+
+        sessionManager = SessionManager(engine = mock(), store = store)
 
         store.dispatch(TabListAction.RemoveTabAction("1234")).joinBlocking()
         store.dispatch(UndoAction.ClearRecoverableTabs(store.state.undoHistory.tag)).joinBlocking()
@@ -186,12 +198,17 @@ class RecentlyClosedMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
         val tab2 = createTab("https://www.firefox.com", private = true, id = "3456")
 
+        var sessionManager: SessionManager? = null
+        val lookup: () -> SessionManager = { sessionManager!! }
+
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(tab, tab2)
             ),
-            middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
+            middleware = listOf(UndoMiddleware(lookup, mainScope = scope), middleware)
         )
+
+        sessionManager = SessionManager(engine = mock(), store = store)
 
         store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
         store.dispatch(UndoAction.ClearRecoverableTabs(store.state.undoHistory.tag)).joinBlocking()
@@ -221,12 +238,17 @@ class RecentlyClosedMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
         val tab2 = createTab("https://www.firefox.com", private = true, id = "3456")
 
+        var sessionManager: SessionManager? = null
+        val lookup: () -> SessionManager = { sessionManager!! }
+
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(tab, tab2)
             ),
-            middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
+            middleware = listOf(UndoMiddleware(lookup, mainScope = scope), middleware)
         )
+
+        sessionManager = SessionManager(engine = mock(), store = store)
 
         store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
         store.dispatch(UndoAction.ClearRecoverableTabs(store.state.undoHistory.tag)).joinBlocking()
@@ -253,21 +275,26 @@ class RecentlyClosedMiddlewareTest {
         val storage = mockStorage()
         val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
 
+        var sessionManager: SessionManager? = null
+        val lookup: () -> SessionManager = { sessionManager!! }
+
         val store = BrowserStore(
-            middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
+            middleware = listOf(UndoMiddleware(lookup, mainScope = scope), middleware)
         )
 
-        store.dispatch(TabListAction.AddTabAction(createTab("https://www.mozilla.org", id = "tab1"))).joinBlocking()
-        store.dispatch(TabListAction.AddTabAction(createTab("https://www.firefox.com", id = "tab2"))).joinBlocking()
-        store.dispatch(TabListAction.AddTabAction(createTab("https://getpocket.com", id = "tab3"))).joinBlocking()
-        store.dispatch(TabListAction.AddTabAction(createTab("https://theverge.com", id = "tab4"))).joinBlocking()
-        store.dispatch(TabListAction.AddTabAction(createTab("https://www.google.com", id = "tab5"))).joinBlocking()
+        sessionManager = SessionManager(engine = mock(), store = store)
+        sessionManager.add(Session("https://www.mozilla.org", id = "tab1"))
+        sessionManager.add(Session("https://www.firefox.com", id = "tab2"))
+        sessionManager.add(Session("https://getpocket.com", id = "tab3"))
+        sessionManager.add(Session("https://theverge.com", id = "tab4"))
+        sessionManager.add(Session("https://www.google.com", id = "tab5"))
+
         assertEquals(5, store.state.tabs.size)
 
-        store.dispatch(TabListAction.RemoveTabAction("tab2")).joinBlocking()
-        store.dispatch(TabListAction.RemoveTabAction("tab3")).joinBlocking()
-        store.dispatch(TabListAction.RemoveTabAction("tab1")).joinBlocking()
-        store.dispatch(TabListAction.RemoveTabAction("tab5")).joinBlocking()
+        sessionManager.remove(sessionManager.findSessionById("tab2")!!)
+        sessionManager.remove(sessionManager.findSessionById("tab3")!!)
+        sessionManager.remove(sessionManager.findSessionById("tab1")!!)
+        sessionManager.remove(sessionManager.findSessionById("tab5")!!)
 
         store.dispatch(UndoAction.ClearRecoverableTabs(store.state.undoHistory.tag)).joinBlocking()
 

@@ -11,7 +11,7 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import mozilla.components.browser.state.engine.EngineMiddleware
+import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
@@ -365,6 +365,7 @@ class SessionFeatureTest {
         ),
         middleware = EngineMiddleware.create(
             engine = mock(),
+            sessionLookup = { null },
             scope = scope
         )
     )

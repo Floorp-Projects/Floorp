@@ -48,6 +48,7 @@ dependencies {
 
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
+    testImplementation project(':browser-session')
     testImplementation project(':feature-tabs')
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
@@ -57,6 +58,7 @@ dependencies {
 
     androidTestImplementation project(':browser-engine-gecko')
     androidTestImplementation project(':support-android-test')
+    androidTestImplementation project(':browser-session')
     androidTestImplementation project(':feature-tabs')
     androidTestImplementation Dependencies.androidx_test_core
     androidTestImplementation Dependencies.androidx_test_runner

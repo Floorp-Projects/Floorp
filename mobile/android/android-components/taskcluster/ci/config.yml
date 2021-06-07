@@ -15,6 +15,7 @@ treeherder:
         browser-icons: browser-icons
         browser-menu: browser-menu
         browser-menu2: browser-menu2
+        browser-session: browser-session
         browser-session-storage: browser-session-storage
         browser-state: browser-state
         browser-storage-memory: browser-storage-memory

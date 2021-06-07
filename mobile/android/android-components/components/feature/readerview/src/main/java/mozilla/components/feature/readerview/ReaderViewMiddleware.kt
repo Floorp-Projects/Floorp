@@ -62,7 +62,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
             // (e.g. via a tabs tray fragment). In order to disconnect the port as
             // early as possible it's best to do it here directly.
             is EngineAction.UnlinkEngineSessionAction -> {
-                context.state.findTab(action.tabId)?.engineState?.engineSession?.let {
+                context.state.findTab(action.sessionId)?.engineState?.engineSession?.let {
                     extensionController.disconnectPort(it, READER_VIEW_EXTENSION_ID)
                 }
                 true
@@ -109,7 +109,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
                 context.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.tabId, true))
             }
             is EngineAction.LinkEngineSessionAction -> {
-                context.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(action.tabId, true))
+                context.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(action.sessionId, true))
             }
             is ReaderAction.UpdateReaderActiveUrlAction -> {
                 // When a tab is restored, the reader page will connect, but we won't get a
