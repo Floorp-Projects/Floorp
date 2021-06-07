@@ -59,20 +59,11 @@ Build Platforms
    Windows 2012 x64 DevEdition, ,
    Windows MinGW, Tom Ritter, "| the Tor project uses MinGW; make sure we test that for them
    | Only runs on autoland, m-c and m-esr"
-   Android 4.0 API16+, , "| All Android jobs are for GeckoView. Fenix nightly uses m-c, Fenix beta => m-b, Fenix release => m-r and Focus uses m-r.
+   Android 4.1 API16+, , "| All Android jobs are for GeckoView. Fenix nightly uses m-c, Fenix beta => m-b, Fenix release => m-r and Focus uses m-r.
    | We run these tests in the CI to make sure that GeckoView tests do not regress."
-   Android 4.0 API16+ Beta, James Willcox (Snorp), To ship/test Android 4.1 on arm v7 CPU
-   Android 4.0 API16+ Release, , To ship/test Android 4.1 on arm v7 CPU
-   Android 4.0 API16+ GeckoView multi-arch fat AAR, ,
-   Android 4.2 x86, ,
-   Android 4.2 x86 Beta, ,
-   Android 4.2 x86 Release, , 
-   Android 4.2 x86, , 
-   Android 4.2 x86 Beta, , 
-   Android 4.2 x86 Release, , 
-   Android 4.3 API16+, ,
-   Android 4.3 API16+ Beta, ,
-   Android 4.3 API16+ Release, ,
+   Android 4.1 API16+ Beta, Agi Sferro, To ship/test Android 4.1 on arm v7 CPU
+   Android 4.1 API16+ Release, , To ship/test Android 4.1 on arm v7 CPU
+   Android 4.1 API16+ GeckoView multi-arch fat AAR, ,
    Android 5.0 AArch64, ,
    Android 5.0 AArch64 Beta, , 
    Android 5.0 AArch64 Release, , 

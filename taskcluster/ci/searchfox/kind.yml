@@ -157,7 +157,7 @@ jobs:
         index:
             job-name: android-armv7-searchfox-debug
         treeherder:
-            platform: android-4-0-armv7/debug
+            platform: android-4-1-armv7/debug
         worker-type: b-linux
         worker:
             docker-image: {in-tree: android-build}

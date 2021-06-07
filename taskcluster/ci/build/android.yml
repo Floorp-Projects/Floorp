@@ -68,13 +68,13 @@ android-arm/debug:
             - linux64-sccache
 
 android-x86/opt:
-    description: "Android 4.2 x86 Opt"
+    description: "Android 4.1 x86 Opt"
     index:
         job-name: android-x86-opt
     attributes:
         enable-full-crashsymbols: true
     treeherder:
-        platform: android-4-2-x86/opt
+        platform: android-4-1-x86/opt
         symbol: B
     run-on-projects: ['integration']
     worker-type: b-linux
@@ -96,7 +96,7 @@ android-x86-fuzzing/debug:
     index:
         job-name: android-x86-fuzzing-debug
     treeherder:
-        platform: android-4-2-x86/debug
+        platform: android-4-1-x86/debug
         symbol: Bf
     worker-type: b-linux
     worker:
@@ -115,7 +115,7 @@ android-x86-fuzzing/debug:
         skip-unless-expanded: null
 
 android-x86-shippable/opt:
-    description: "Android 4.2 x86 Shippable"
+    description: "Android 4.1 x86 Shippable"
     attributes:
         enable-full-crashsymbols: true
         shippable: true
@@ -125,7 +125,7 @@ android-x86-shippable/opt:
         job-name: android-x86-opt
         type: android-shippable
     treeherder:
-        platform: android-4-2-x86-shippable/opt
+        platform: android-4-1-x86-shippable/opt
         symbol: B
     run-on-projects: ['release']
     worker-type: b-linux
@@ -409,13 +409,13 @@ android-arm-gcp/debug:
 
 
 android-x86-gcp/opt:
-    description: "Android 4.2 x86 Opt - built on GCP"
+    description: "Android 4.1 x86 Opt - built on GCP"
     index:
         job-name: android-x86-gcp-opt
     attributes:
         enable-full-crashsymbols: true
     treeherder:
-        platform: android-4-2-x86/opt
+        platform: android-4-1-x86/opt
         symbol: Bg
         tier: 3
     worker-type: b-linux-gcp
