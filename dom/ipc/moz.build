@@ -92,6 +92,7 @@ UNIFIED_SOURCES += [
     "BrowserHost.cpp",
     "BrowserParent.cpp",
     "ClonedErrorHolder.cpp",
+    "CoalescedInputData.cpp",
     "CoalescedMouseData.cpp",
     "CoalescedWheelData.cpp",
     "ColorPickerParent.cpp",
