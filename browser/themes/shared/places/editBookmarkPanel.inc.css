@@ -15,6 +15,7 @@
 #editBookmarkPanelInfoArea {
   overflow: hidden;
   position: relative;
+  padding: 4px var(--arrowpanel-padding) 0;
 }
 
 #editBookmarkPanelRecommendation {
@@ -162,13 +163,8 @@ html|img#editBookmarkPanelFavicon[src] {
   margin-inline: 16px;
 }
 
-@media (-moz-proton-doorhangers) {
 #editBookmarkPanel {
   font: caption;
-}
-
-#editBookmarkPanelInfoArea {
-  padding: 4px var(--arrowpanel-padding) 0;
 }
 
 #editBookmarkPanelRows > vbox:not(#editBMPanel_nameRow) {
@@ -277,30 +273,3 @@ html|img#editBookmarkPanelFavicon[src] {
 #editBookmarkPanelRows > vbox > hbox > html|input:focus-visible {
   outline: 2px solid var(--focus-outline-color);
 }
-} /** END Proton **/
-
-@media not (-moz-proton-doorhangers) {
-#editBookmarkPanelInfoArea {
-  margin: 6px 8px 0;
-}
-
-#editBookmarkPanelBottomContent {
-  padding-top: 0;
-}
-
-.editBookmarkPanelBottomButton {
-  flex: 1;
-}
-
-.editBookmarkPanelBottomButton:not(:last-child) {
-  border-inline-end: 1px solid var(--panel-separator-color);
-}
-
-#editBookmarkPanelImage {
-  margin: 0 2px;
-}
-
-#editBookmarkSeparator {
-  display: none;
-}
-} /** END not Proton **/
