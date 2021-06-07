@@ -45,3 +45,7 @@ LOCAL_INCLUDES += [
 RESOURCE_FILES += [
     "test.properties",
 ]
+
+CRASHTEST_MANIFESTS += [
+    "crashtests/crashtests.list"
+]
