@@ -1,0 +1,17 @@
+# Regression test - ensure we don't crash when we encounter a
+# transform hierarchy that has different coordinate systems but
+# results in a final transform that is 2d-axis-aligned
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [50, 50, 262, 262]
+      transform: rotate(45)
+      items:
+        - type: stacking-context
+          bounds: [0, 0, 262, 262]
+          transform: rotate(-45)
+          items:
+            - image: checkerboard(2,16,16)
+              bounds: [0, 0, 262, 262]
+              prefer-compositor-surface: true
