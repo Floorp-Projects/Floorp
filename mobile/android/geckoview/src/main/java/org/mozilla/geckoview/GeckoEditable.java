@@ -1887,6 +1887,13 @@ import android.view.inputmethod.EditorInfo;
             return;
         }
 
+        if (unboundedOldEnd >= Integer.MAX_VALUE / 2) {
+            // Integer.MAX_VALUE / 2 is a magic number to synchronize all.
+            // (See GeckoEditableSupport::FlushIMEText.)
+            // Previous text transactions are unnecessary now, so we have to ignore it.
+            mActions.clear();
+        }
+
         final int currentLength = mText.getCurrentText().length();
         final int oldEnd = unboundedOldEnd > currentLength ? currentLength : unboundedOldEnd;
         final int newEnd = start + text.length();
