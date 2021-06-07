@@ -70,9 +70,6 @@ Review groups
    * - #linter-reviewers
      - tools/lint/*
      - `Member list <https://phabricator.services.mozilla.com/project/members/119/>`__
-   * - #marionette-reviewers
-     - Changes to Marionette
-     - `Member list <https://phabricator.services.mozilla.com/project/members/117/>`__
    * - #mozbase
      - Changes to Mozbase
      - `Member list <https://phabricator.services.mozilla.com/project/members/113/>`__
@@ -85,9 +82,6 @@ Review groups
    * - #preferences-reviewers
      - Firefox for Desktop Preferences (Options) user interface
      - `Member list <https://phabricator.services.mozilla.com/project/members/132/>`__
-   * - #remote-protocol-reviewers
-     - Remote protocol
-     - `Member list <https://phabricator.services.mozilla.com/project/members/101/>`__
    * - #remote-debugging-reviewers
      - Remote Debugging UI & tools
      - `Member list <https://phabricator.services.mozilla.com/project/members/108/>`__
@@ -101,7 +95,7 @@ Review groups
      - System addons maintained by the Web Compatibility team
      - `Member list <https://phabricator.services.mozilla.com/project/members/124/>`__
    * - #webdriver-reviewers
-     - Marionette and Geckodriver in Firefox
+     - Marionette and geckodriver (including MozBase Rust), and Remote Protocol with WebDriver BiDi, and CDP.
      - `Member list <https://phabricator.services.mozilla.com/project/members/103/>`__
    * - #webidl
      - Changes related to WebIDL
