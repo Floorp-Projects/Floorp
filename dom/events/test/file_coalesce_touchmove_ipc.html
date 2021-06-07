@@ -158,7 +158,7 @@
     opener.ok(multiTouchMovesWithoutCoalescing > multiTouchMovesWithCoalescing,
        "Coalescing should reduce the number of multitouch touchmove events");
 
-    opener.setTimeout("SimpleTest.finish()");
+    opener.finish_ipc();
     window.close();
   }
 

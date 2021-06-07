@@ -8,8 +8,12 @@
   <script>
     SimpleTest.waitForExplicitFinish();
 
+    function finish_ipc() {
+      window.open("file_coalesce_touchmove_browserchild.html");
+    }
+
     function start() {
-      window.open("file_coalesce_touchmove.html");
+      window.open("file_coalesce_touchmove_ipc.html");
     }
   </script>
 </head>
