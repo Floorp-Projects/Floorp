@@ -14,6 +14,25 @@
 using namespace js;
 using namespace js::jit;
 
+// There are two constants which control whether a loop is LICM'd or is left
+// unchanged.  For rationale see comment in jit::LICM() below.
+//
+// A bit of quick profiling with the wasm Embenchen suite on x64 shows that
+// the threshold pair (100,25) has either no effect or gives a small net
+// reduction in memory traffic, compared to unconstrained LICMing.  Halving
+// them to (50,12) gives a small overall increase in memory traffic,
+// suggesting it excludes too many loops from LICM.  Doubling them to (200,50)
+// gives a win that is even smaller than (100,25), hence (100,25) seems the
+// best choice.
+//
+// If a loop has more than this number of basic blocks in its body, it won't
+// be LICM'd.
+static constexpr size_t LargestAllowedLoop = 100;
+
+// If a loop contains an MTableSwitch instruction that has more than this many
+// successors, it won't be LICM'd.
+static constexpr size_t LargestAllowedTableSwitch = 25;
+
 // Test whether any instruction in the loop possiblyCalls().
 static bool LoopContainsPossibleCall(MIRGraph& graph, MBasicBlock* header,
                                      MBasicBlock* backedge) {
@@ -33,6 +52,39 @@ static bool LoopContainsPossibleCall(MIRGraph& graph, MBasicBlock* header,
         JitSpew(JitSpew_LICM, "    Possible call found at %s%u", ins->opName(),
                 ins->id());
 #endif
+        return true;
+      }
+    }
+
+    if (block == backedge) {
+      break;
+    }
+  }
+  return false;
+}
+
+// Tests whether any instruction in the loop is a table-switch with more than
+// `LargestAllowedTableSwitch` successors.  If it returns true, it also
+// returns the actual number of successors of the instruction in question,
+// although that is used only for statistics/debug printing.
+static bool LoopContainsBigTableSwitch(MIRGraph& graph, MBasicBlock* header,
+                                       /*OUT*/ size_t* numSuccessors) {
+  MBasicBlock* backedge = header->backedge();
+
+  for (auto i(graph.rpoBegin(header));; ++i) {
+    MOZ_ASSERT(i != graph.rpoEnd(),
+               "Reached end of graph searching for blocks in loop");
+    MBasicBlock* block = *i;
+    if (!block->isMarked()) {
+      continue;
+    }
+
+    for (auto insIter(block->begin()), insEnd(block->end()); insIter != insEnd;
+         ++insIter) {
+      MInstruction* ins = *insIter;
+      if (ins->isTableSwitch() &&
+          ins->toTableSwitch()->numSuccessors() > LargestAllowedTableSwitch) {
+        *numSuccessors = ins->toTableSwitch()->numSuccessors();
         return true;
       }
     }
@@ -145,7 +197,8 @@ static void MoveDeferredOperands(MInstruction* ins, MInstruction* hoistPoint,
     MoveDeferredOperands(opIns, hoistPoint, hasCalls);
 
 #ifdef JS_JITSPEW
-    JitSpew(JitSpew_LICM, "    Hoisting %s%u (now that a user will be hoisted)",
+    JitSpew(JitSpew_LICM,
+            "      Hoisting %s%u (now that a user will be hoisted)",
             opIns->opName(), opIns->id());
 #endif
 
@@ -163,7 +216,7 @@ static void VisitLoopBlock(MBasicBlock* block, MBasicBlock* header,
 #ifdef JS_JITSPEW
       if (IsHoistableIgnoringDependency(ins, hasCalls)) {
         JitSpew(JitSpew_LICM,
-                "    %s%u isn't hoistable due to dependency on %s%u",
+                "      %s%u isn't hoistable due to dependency on %s%u",
                 ins->opName(), ins->id(), ins->dependency()->opName(),
                 ins->dependency()->id());
       }
@@ -176,7 +229,7 @@ static void VisitLoopBlock(MBasicBlock* block, MBasicBlock* header,
     // use, to minimize register pressure.
     if (RequiresHoistedUse(ins, hasCalls)) {
 #ifdef JS_JITSPEW
-      JitSpew(JitSpew_LICM, "    %s%u will be hoisted only if its users are",
+      JitSpew(JitSpew_LICM, "      %s%u will be hoisted only if its users are",
               ins->opName(), ins->id());
 #endif
       continue;
@@ -186,7 +239,7 @@ static void VisitLoopBlock(MBasicBlock* block, MBasicBlock* header,
     MoveDeferredOperands(ins, hoistPoint, hasCalls);
 
 #ifdef JS_JITSPEW
-    JitSpew(JitSpew_LICM, "    Hoisting %s%u", ins->opName(), ins->id());
+    JitSpew(JitSpew_LICM, "      Hoisting %s%u", ins->opName(), ins->id());
 #endif
 
     // Move the instruction to the hoistPoint.
@@ -219,6 +272,10 @@ static void VisitLoop(MIRGraph& graph, MBasicBlock* header) {
       continue;
     }
 
+#ifdef JS_JITSPEW
+    JitSpew(JitSpew_LICM, "    Visiting block%u", block->id());
+#endif
+
     VisitLoopBlock(block, header, hoistPoint, hasCalls);
 
     if (block == backedge) {
@@ -242,19 +299,61 @@ bool jit::LICM(MIRGenerator* mir, MIRGraph& graph) {
     size_t numBlocks = MarkLoopBlocks(graph, header, &canOsr);
 
     if (numBlocks == 0) {
-      JitSpew(JitSpew_LICM, "  Loop with header block%u isn't actually a loop",
+      JitSpew(JitSpew_LICM,
+              "  Skipping loop with header block%u -- contains zero blocks",
               header->id());
       continue;
     }
 
-    // Hoisting out of a loop that has an entry from the OSR block in
-    // addition to its normal entry is tricky. In theory we could clone
-    // the instruction and insert phis.
-    if (!canOsr) {
-      VisitLoop(graph, header);
-    } else {
+    // There are various reasons why we might choose not to LICM a given loop:
+    //
+    // (a) Hoisting out of a loop that has an entry from the OSR block in
+    //     addition to its normal entry is tricky.  In theory we could clone
+    //     the instruction and insert phis.  In practice we don't bother.
+    //
+    // (b) If the loop contains a large number of blocks, we play safe and
+    //     punt, in order to reduce the risk of creating excessive register
+    //     pressure by hoisting lots of values out of the loop.  In a larger
+    //     loop there's more likely to be duplication of invariant expressions
+    //     within the loop body, and that duplication will be GVN'd but only
+    //     within the scope of the loop body, so there's less loss from not
+    //     lifting them out of the loop entirely.
+    //
+    // (c) If the loop contains a multiway switch with many successors, there
+    //     could be paths with low probabilities, from which LICMing will be a
+    //     net loss, especially if a large number of values are hoisted out.
+    //     See bug 1708381 for a spectacular example and bug 1712078 for
+    //     further discussion.
+    //
+    // It's preferable to perform test (c) only if (a) and (b) pass since (c)
+    // is more expensive to determine -- requiring a visit to all the MIR
+    // nodes -- than (a) or (b), which only involve visiting all blocks.
+
+    bool doVisit = true;
+    if (canOsr) {
       JitSpew(JitSpew_LICM, "  Skipping loop with header block%u due to OSR",
               header->id());
+      doVisit = false;
+    } else if (numBlocks > LargestAllowedLoop) {
+      JitSpew(JitSpew_LICM,
+              "  Skipping loop with header block%u "
+              "due to too many blocks (%u > thresh %u)",
+              header->id(), (uint32_t)numBlocks, (uint32_t)LargestAllowedLoop);
+      doVisit = false;
+    } else {
+      size_t switchSize = 0;
+      if (LoopContainsBigTableSwitch(graph, header, &switchSize)) {
+        JitSpew(JitSpew_LICM,
+                "  Skipping loop with header block%u "
+                "due to oversize tableswitch (%u > thresh %u)",
+                header->id(), (uint32_t)switchSize,
+                (uint32_t)LargestAllowedTableSwitch);
+        doVisit = false;
+      }
+    }
+
+    if (doVisit) {
+      VisitLoop(graph, header);
     }
 
     UnmarkLoopBlocks(graph, header);
