@@ -11,9 +11,3 @@ or seriously develop one we can land and run internally.  While being written fo
   compiler-explorer.rst
   writing-matchers.rst
 
-The above Table of Contents presents the full breadth of information.  A quick-start guide follows.
-
-Quick-State Guide
------------------
-
-TODO
