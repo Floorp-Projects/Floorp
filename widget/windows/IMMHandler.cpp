@@ -2228,8 +2228,8 @@ nsresult IMMHandler::OnMouseButtonEvent(
   // char :            JCH1|JCH2|JCH3
   // offset:           0011 1122 2233
   // positioning:      2301 2301 2301
-  nsIntPoint cursorPos =
-      aIMENotification.mMouseButtonEventData.mCursorPos.AsIntPoint();
+  LayoutDeviceIntPoint cursorPos =
+      aIMENotification.mMouseButtonEventData.mCursorPos;
   nsIntRect charRect =
       aIMENotification.mMouseButtonEventData.mCharRect.AsIntRect();
   int32_t cursorXInChar = cursorPos.x - charRect.X();
