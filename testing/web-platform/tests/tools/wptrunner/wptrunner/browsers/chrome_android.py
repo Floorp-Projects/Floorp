@@ -117,11 +117,12 @@ class LogcatRunner(object):
 
     def on_output(self, line):
         data = {
+            "action": "process_output",
             "process": "LOGCAT",
             "command": "logcat",
             "data": line
         }
-        self._send_message("log", "process_output", data)
+        self._send_message("log", data)
 
 
 class ChromeAndroidBrowserBase(Browser):
