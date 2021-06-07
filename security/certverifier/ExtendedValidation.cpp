@@ -1008,6 +1008,26 @@ static const struct EVInfo kEVInfos[] = {
     "R21iSDEZMBcGA1UEAxMQR0xPQkFMVFJVU1QgMjAyMA==",
     "Wku9WvtPilv6ZeU=",
   },
+  {
+    // CN=Certum Extended Validation ECC CA,OU=Certum Certification Authority,O=Asseco Data Systems S.A.,C=PL
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x6B, 0x32, 0x80, 0x85, 0x62, 0x53, 0x18, 0xAA, 0x50, 0xD1, 0x73, 0xC9, 0x8D, 0x8B, 0xDA, 0x09, 0xD5, 0x7E, 0x27, 0x41, 0x3D, 0x11, 0x4C, 0xF7, 0x87, 0xA0, 0xF5, 0xD0, 0x6C, 0x03, 0x0C, 0xF6 },
+    "MHQxCzAJBgNVBAYTAlBMMSEwHwYDVQQKExhBc3NlY28gRGF0YSBTeXN0ZW1zIFMu"
+    "QS4xJzAlBgNVBAsTHkNlcnR1bSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTEZMBcG"
+    "A1UEAxMQQ2VydHVtIEVDLTM4NCBDQQ==",
+    "eI8nXIESUiClBNAt3bpz9A==",
+  },
+  {
+    // CN=Certum Extended Validation RSA CA,OU=Certum Certification Authority,O=Asseco Data Systems S.A.,C=PL
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0xFE, 0x76, 0x96, 0x57, 0x38, 0x55, 0x77, 0x3E, 0x37, 0xA9, 0x5E, 0x7A, 0xD4, 0xD9, 0xCC, 0x96, 0xC3, 0x01, 0x57, 0xC1, 0x5D, 0x31, 0x76, 0x5B, 0xA9, 0xB1, 0x57, 0x04, 0xE1, 0xAE, 0x78, 0xFD },
+    "MHoxCzAJBgNVBAYTAlBMMSEwHwYDVQQKExhBc3NlY28gRGF0YSBTeXN0ZW1zIFMu"
+    "QS4xJzAlBgNVBAsTHkNlcnR1bSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTEfMB0G"
+    "A1UEAxMWQ2VydHVtIFRydXN0ZWQgUm9vdCBDQQ==",
+    "Hr9ZULjJgDdMBvfrVU+17Q==",
+  },
     // clang-format on
 };
 
