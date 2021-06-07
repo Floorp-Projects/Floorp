@@ -143,7 +143,7 @@ class CreditCardEditorViewTest {
 
         val calendar = Calendar.getInstance()
 
-        val billingName = "Banana Apple"
+        var billingName = "Banana Apple"
         val cardNumber = "2221000000000000"
         val expiryMonth = 5
         val expiryYear = calendar.get(Calendar.YEAR)
@@ -155,10 +155,67 @@ class CreditCardEditorViewTest {
         view.save_button.performClick()
 
         verify {
-            creditCardEditorView.validateCreditCard()
+            creditCardEditorView.validateForm()
         }
 
-        assertFalse(creditCardEditorView.validateCreditCard())
+        assertFalse(creditCardEditorView.validateForm())
+
+        verify(exactly = 0) {
+            interactor.onSaveCreditCard(
+                NewCreditCardFields(
+                    billingName = billingName,
+                    plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
+                    cardNumberLast4 = "0000",
+                    expiryMonth = expiryMonth.toLong(),
+                    expiryYear = expiryYear.toLong(),
+                    cardType = CreditCardNetworkType.MASTERCARD.cardName
+                )
+            )
+        }
+
+        billingName = ""
+        view.name_on_card_input.text = billingName.toEditable()
+
+        view.save_button.performClick()
+
+        assertFalse(creditCardEditorView.validateForm())
+
+        verify(exactly = 0) {
+            interactor.onSaveCreditCard(
+                NewCreditCardFields(
+                    billingName = billingName,
+                    plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
+                    cardNumberLast4 = "0000",
+                    expiryMonth = expiryMonth.toLong(),
+                    expiryYear = expiryYear.toLong(),
+                    cardType = CreditCardNetworkType.MASTERCARD.cardName
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN invalid name on card WHEN the save button is clicked THEN interactor is not called`() {
+        creditCardEditorView.bind(getInitialCreditCardEditorState())
+
+        val calendar = Calendar.getInstance()
+
+        val billingName = "       "
+        val cardNumber = "2221000000000000"
+        val expiryMonth = 5
+        val expiryYear = calendar.get(Calendar.YEAR)
+
+        view.card_number_input.text = cardNumber.toEditable()
+        view.name_on_card_input.text = billingName.toEditable()
+        view.expiry_month_drop_down.setSelection(expiryMonth - 1)
+
+        view.save_button.performClick()
+
+        verify {
+            creditCardEditorView.validateForm()
+        }
+
+        assertFalse(creditCardEditorView.validateForm())
 
         verify(exactly = 0) {
             interactor.onSaveCreditCard(
@@ -192,10 +249,10 @@ class CreditCardEditorViewTest {
         view.save_button.performClick()
 
         verify {
-            creditCardEditorView.validateCreditCard()
+            creditCardEditorView.validateForm()
         }
 
-        assertTrue(creditCardEditorView.validateCreditCard())
+        assertTrue(creditCardEditorView.validateForm())
 
         verify {
             interactor.onSaveCreditCard(

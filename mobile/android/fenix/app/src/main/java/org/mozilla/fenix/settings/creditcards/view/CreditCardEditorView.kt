@@ -73,7 +73,7 @@ class CreditCardEditorView(
     internal fun saveCreditCard(state: CreditCardEditorState) {
         containerView.hideKeyboard()
 
-        if (validateCreditCard()) {
+        if (validateForm()) {
             val cardNumber = card_number_input.text.toString().toCreditCardNumber()
 
             if (state.isEditing) {
@@ -103,20 +103,32 @@ class CreditCardEditorView(
     /**
      * Validates the credit card information entered by the user.
      *
-     * @return true if the credit card is valid, false otherwise.
+     * @return true if the credit card information is valid, false otherwise.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun validateCreditCard(): Boolean {
+    internal fun validateForm(): Boolean {
         var isValid = true
 
         if (card_number_input.text.toString().validateCreditCardNumber()) {
             card_number_layout.error = null
             card_number_title.setTextColor(containerView.context.getColorFromAttr(R.attr.primaryText))
         } else {
+            isValid = false
+
             card_number_layout.error =
                 containerView.context.getString(R.string.credit_cards_number_validation_error_message)
             card_number_title.setTextColor(containerView.context.getColorFromAttr(R.attr.destructive))
+        }
+
+        if (name_on_card_input.text.toString().isNotBlank()) {
+            name_on_card_layout.error = null
+            name_on_card_title.setTextColor(containerView.context.getColorFromAttr(R.attr.primaryText))
+        } else {
             isValid = false
+
+            name_on_card_layout.error =
+                containerView.context.getString(R.string.credit_cards_name_on_card_validation_error_message)
+            name_on_card_title.setTextColor(containerView.context.getColorFromAttr(R.attr.destructive))
         }
 
         return isValid

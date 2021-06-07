@@ -1546,6 +1546,8 @@
     <string name="credit_cards_saved_cards">Saved cards</string>
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Please enter a valid credit card number</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Please fill out this field</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Unlock to view your saved cards</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
