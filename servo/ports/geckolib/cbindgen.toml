@@ -80,7 +80,6 @@ include = [
   "BorderStyle",
   "OutlineStyle",
   "CaptionSide",
-  "FontSizeAdjust",
   "ComputedFontStretchRange",
   "ComputedFontStyleDescriptor",
   "ComputedFontWeightRange",
