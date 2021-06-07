@@ -14,7 +14,6 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Selection.h"
-#include "mozilla/dom/StaticRange.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -197,7 +196,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
         }
       }
       // Otherwise, must be the content is in HTMLEditor.
-      else if (AsHTMLEditor()) {
+      else if (IsHTMLEditor()) {
         editorToDeleteSelection = this;
       } else {
         editorToDeleteSelection =
@@ -287,7 +286,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   // Before inserting dropping content, we need to move focus for compatibility
   // with Chrome and firing "beforeinput" event on new editing host.
   RefPtr<Element> focusedElement, newFocusedElement;
-  if (!AsHTMLEditor()) {
+  if (IsTextEditor()) {
     newFocusedElement = GetExposedRoot();
     focusedElement = IsActiveInDOMWindow() ? newFocusedElement : nullptr;
   } else if (!AsHTMLEditor()->IsInDesignMode()) {
@@ -340,7 +339,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     // If focus is changed to different element and we're handling drop in
     // contenteditable, we cannot handle it without focus.  So, we should give
     // it up.
-    if (AsHTMLEditor() && !AsHTMLEditor()->IsInDesignMode() &&
+    if (IsHTMLEditor() && !AsHTMLEditor()->IsInDesignMode() &&
         NS_WARN_IF(newFocusedElement !=
                    AsHTMLEditor()->GetActiveEditingHost())) {
       editActionData.Abort();
@@ -348,7 +347,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     }
   }
 
-  if (!AsHTMLEditor()) {
+  if (IsTextEditor()) {
     AutoTArray<nsString, 5> textArray;
     textArray.SetCapacity(numItems);
     uint32_t textLength = 0;
@@ -400,32 +399,12 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "EditorBase::InsertTextAt() failed, but ignored");
   } else {
-    editActionData.InitializeDataTransfer(dataTransfer);
-    RefPtr<StaticRange> targetRange = StaticRange::Create(
-        droppedAt.GetContainer(), droppedAt.Offset(), droppedAt.GetContainer(),
-        droppedAt.Offset(), IgnoreErrors());
-    NS_WARNING_ASSERTION(targetRange && targetRange->IsPositioned(),
-                         "Why did we fail to create collapsed static range at "
-                         "dropped position?");
-    if (targetRange && targetRange->IsPositioned()) {
-      editActionData.AppendTargetRange(*targetRange);
-    }
-    nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-    if (NS_FAILED(rv)) {
-      NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
-                           "MaybeDispatchBeforeInputEvent() failed");
+    nsresult rv = MOZ_KnownLive(AsHTMLEditor())
+                      ->InsertDroppedDataTransferAsAction(
+                          editActionData, *dataTransfer, droppedAt, srcdoc);
+    if (rv == NS_ERROR_EDITOR_DESTROYED ||
+        rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
       return EditorBase::ToGenericNSResult(rv);
-    }
-    RefPtr<HTMLEditor> htmlEditor(AsHTMLEditor());
-    for (uint32_t i = 0; i < numItems; ++i) {
-      DebugOnly<nsresult> rvIgnored = htmlEditor->InsertFromDataTransfer(
-          dataTransfer, i, srcdoc, droppedAt, false);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_OK;
-      }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "HTMLEditor::InsertFromDataTransfer() failed, but ignored");
     }
   }
 
