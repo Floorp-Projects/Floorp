@@ -40,9 +40,9 @@ struct nsFont final {
 
   // The aspect-value (ie., the ratio actualsize:actualxheight) that any
   // actual physical font created from this font structure must have when
-  // rendering or measuring a string. The value must be nonnegative.
-  mozilla::StyleFontSizeAdjust sizeAdjust =
-      mozilla::StyleFontSizeAdjust::None();
+  // rendering or measuring a string. A value of -1.0 means no adjustment
+  // needs to be done; otherwise the value must be nonnegative.
+  float sizeAdjust = -1.0f;
 
   // The estimated background color behind the text. Enables a special
   // rendering mode when NS_GET_A(.) > 0. Only used for text in the chrome.

@@ -6842,13 +6842,6 @@
   mirror: always
   rust: true
 
-# Is the optional adjustment-basis value for font-size-adjust enabled?
-- name: layout.css.font-size-adjust.basis.enabled
-  type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-  rust: true
-
 # Visibility level of font families available to CSS font-matching:
 #   1 - only base system fonts
 #   2 - also fonts from optional language packs
