@@ -24,10 +24,6 @@
   outline-offset: -2px;
 }
 
-:root[lwt-popup-brighttext] @item@[verdict="Malware"]:not(:hover) {
-  color: #ff0039;
-}
-
 .downloadProgress::-moz-progress-bar {
   background-color: #3c9af8;
 }
