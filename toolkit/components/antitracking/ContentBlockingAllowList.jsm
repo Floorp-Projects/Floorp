@@ -147,7 +147,7 @@ const ContentBlockingAllowList = {
         p,
         "trackingprotection",
         Services.perms.ALLOW_ACTION,
-        Ci.nsIPermissionManager.EXPIRE_SESSION
+        Ci.nsIPermissionManager.EXPIRE_NEVER
       )
     );
   },
