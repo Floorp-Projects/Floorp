@@ -165,7 +165,7 @@ We very much welcome your help in doing version control archeology
 to make this happen!
 
 The practical details of working on the Marionette code is outlined
-in [CONTRIBUTING.md], but generally you do not have to re-build
+in [Contributing.md], but generally you do not have to re-build
 Firefox when changing code.  Any change to remote/marionette/*.js
 will be picked up on restarting Firefox.  The only notable exception
 is remote/components/marionette.js, which does require
@@ -178,7 +178,7 @@ a re-build.
 [copying header]: https://www.mozilla.org/en-US/MPL/headers/
 [public domain]: https://creativecommons.org/publicdomain/zero/1.0/
 [MPL]: https://www.mozilla.org/en-US/MPL/2.0/
-[CONTRIBUTING.md]: ../CONTRIBUTING.md
+[Contributing.md]: ./Contributing.md
 
 
 Python
