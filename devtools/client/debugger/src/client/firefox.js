@@ -35,6 +35,16 @@ export async function onConnect(commands, _resourceCommand, _actions, store) {
     await targetCommand.startListening();
   }
 
+  // We should probably only pass descriptor informations from here
+  // so only pass if that's a WebExtension toolbox.
+  // And let actions.willNavigate/NAVIGATE pass the current/selected thread
+  // from onTargetAvailable
+  await actions.connect(
+    targetFront.url,
+    targetFront.threadFront.actor,
+    targetFront.isWebExtension
+  );
+
   await targetCommand.watchTargets(
     targetCommand.ALL_TYPES,
     onTargetAvailable,
@@ -100,13 +110,10 @@ async function onTargetAvailable({ targetFront, isTargetSwitching }) {
     return;
   }
 
-  if (isTargetSwitching) {
-    // Simulate navigation actions when target switching.
-    // The will-navigate event will be missed when using target switching,
-    // however `navigate` corresponds more or less to the load event, so it
-    // should still be received on the new target.
-    actions.willNavigate({ url: targetFront.url });
-  }
+  // The will-navigate event will be missed when using target switching,
+  // however `navigate` corresponds more or less to the load event, so it
+  // should still be received on the new target.
+  actions.willNavigate({ url: targetFront.url });
 
   // At this point, we expect the target and its thread to be attached.
   const { threadFront } = targetFront;
@@ -130,12 +137,6 @@ async function onTargetAvailable({ targetFront, isTargetSwitching }) {
   // Initialize the event breakpoints on the thread up front so that
   // they are active once attached.
   actions.addEventListenerBreakpoints([]).catch(e => console.error(e));
-
-  await actions.connect(
-    targetFront.url,
-    threadFront.actor,
-    targetFront.isWebExtension
-  );
 
   await actions.addTarget(targetFront);
 }
