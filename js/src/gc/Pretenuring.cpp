@@ -175,11 +175,14 @@ bool AllocSite::invalidateScript(GCRuntime* gc) {
   }
 
   if (invalidationLimitReached()) {
-    state_ = State::Unknown;
+    MOZ_ASSERT(state_ == State::Unknown);
     return false;
   }
 
   invalidationCount++;
+  if (invalidationLimitReached()) {
+    state_ = State::Unknown;
+  }
 
   JSContext* cx = gc->rt->mainContextFromOwnThread();
   jit::Invalidate(cx, script_,
