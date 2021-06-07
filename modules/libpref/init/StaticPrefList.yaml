@@ -3045,7 +3045,7 @@
 # is set to true then this pref has no effect)
 - name: dom.security.https_first_pbm
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 - name: dom.security.unexpected_system_load_telemetry_enabled
