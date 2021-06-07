@@ -123,6 +123,12 @@
                 android:layout_weight="1"
                 android:orientation="vertical">
 
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:labelFor="@id/expiry_month_drop_down"
+                    android:text="@string/credit_cards_expiration_date_month" />
+
                 <androidx.appcompat.widget.AppCompatSpinner
                     android:id="@+id/expiry_month_drop_down"
                     android:layout_width="match_parent"
@@ -141,6 +147,12 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="0.8"
                 android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:labelFor="@id/expiry_year_drop_down"
+                    android:text="@string/credit_cards_expiration_date_year" />
 
                 <androidx.appcompat.widget.AppCompatSpinner
                     android:id="@+id/expiry_year_drop_down"
