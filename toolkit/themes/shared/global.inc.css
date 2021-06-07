@@ -145,7 +145,12 @@ xul|label[disabled="true"] {
 
 .autoscroller {
   appearance: none;
+
+  /* Resets the native styles in windows and macOS */
+  border: none;
+  background-color: transparent;
   -moz-window-shadow: none;
+
   --autoscroll-background-image: url("chrome://global/skin/icons/autoscroll.svg");
   --panel-border-color: transparent;
   --panel-padding: 0;
