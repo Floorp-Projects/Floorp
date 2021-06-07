@@ -638,7 +638,7 @@ struct IMENotification final {
         mMouseButtonEventData.mEventMessage = eVoidEvent;
         mMouseButtonEventData.mOffset = UINT32_MAX;
         mMouseButtonEventData.mCursorPos.MoveTo(0, 0);
-        mMouseButtonEventData.mCharRect.Set(nsIntRect(0, 0, 0, 0));
+        mMouseButtonEventData.mCharRect.SetRect(0, 0, 0, 0);
         mMouseButtonEventData.mButton = -1;
         mMouseButtonEventData.mButtons = 0;
         mMouseButtonEventData.mModifiers = 0;
@@ -713,18 +713,6 @@ struct IMENotification final {
   }
 
   IMEMessage mMessage;
-
-  struct Rect {
-    int32_t mX;
-    int32_t mY;
-    int32_t mWidth;
-    int32_t mHeight;
-
-    void Set(const nsIntRect& aRect) {
-      aRect.GetRect(&mX, &mY, &mWidth, &mHeight);
-    }
-    nsIntRect AsIntRect() const { return nsIntRect(mX, mY, mWidth, mHeight); }
-  };
 
   // NOTIFY_IME_OF_SELECTION_CHANGE specific data
   struct SelectionChangeDataBase {
@@ -914,7 +902,7 @@ struct IMENotification final {
     // Cursor position in pixels relative to the widget
     LayoutDeviceIntPoint mCursorPos;
     // Character rect in pixels under the cursor relative to the widget
-    Rect mCharRect;
+    LayoutDeviceIntRect mCharRect;
     // The value of WidgetMouseEventBase::button and buttons
     int16_t mButton;
     int16_t mButtons;
