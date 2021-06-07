@@ -188,6 +188,7 @@ The JSON dump will serve as the default dataset for ``.get()``, instead of doing
 Now, when ``RemoteSettings("some-key").get()`` is called from an empty profile, the ``some-key.json`` file is going to be loaded before the results are returned.
 
 JSON dumps in the tree are periodically updated by ``taskcluster/docker/periodic-updates/scripts/periodic_file_updates.sh``.
+If your collection's in-tree dump should not be kept up to date by this automation, place the JSON file in ``services/settings/static-dumps/`` instead.
 
 .. note::
 
