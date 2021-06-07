@@ -31,6 +31,7 @@ import java.util.List;
 public class ContentBlockingController {
     private static final String LOGTAG = "GeckoContentBlocking";
 
+    @DeprecationSchedule(version = 93, id = "content-blocking-exception")
     @AnyThread
     public static class ContentBlockingException {
         private final @NonNull String mEncodedPrincipal;
@@ -98,6 +99,7 @@ public class ContentBlockingController {
      * @param session A {@link GeckoSession} whose site will be removed from the content
      *                blocking exceptions list.
      */
+    @DeprecationSchedule(version = 93, id = "content-blocking-exception")
     @UiThread
     public void removeException(final @NonNull GeckoSession session) {
         final GeckoBundle msg = new GeckoBundle(1);
@@ -113,6 +115,7 @@ public class ContentBlockingController {
      * @param exception A {@link ContentBlockingException} which will be removed from the
      *                  content blocking exception list.
      */
+    @DeprecationSchedule(version = 93, id = "content-blocking-exception")
     @AnyThread
     public void removeException(final @NonNull ContentBlockingException exception) {
         final GeckoBundle msg = new GeckoBundle(1);
@@ -130,6 +133,7 @@ public class ContentBlockingController {
      * @return A {@link GeckoResult} which resolves to a Boolean indicating whether or
      *         not the current site is on the exception list.
      */
+    @DeprecationSchedule(version = 93, id = "content-blocking-exception")
     @UiThread
     public @NonNull GeckoResult<Boolean> checkException(final @NonNull GeckoSession session) {
         final GeckoBundle msg = new GeckoBundle(1);
@@ -161,6 +165,7 @@ public class ContentBlockingController {
      * @return A List of {@link ContentBlockingException} which can be used to restore or
      *         inspect the current exception list.
      */
+    @DeprecationSchedule(version = 93, id = "content-blocking-exception")
     @UiThread
     public @NonNull GeckoResult<List<ContentBlockingException>> saveExceptionList() {
         return EventDispatcher.getInstance()
@@ -173,6 +178,7 @@ public class ContentBlockingController {
      *
      * @param list A List of {@link ContentBlockingException} originally created by {@link #saveExceptionList}.
      */
+    @DeprecationSchedule(version = 93, id = "content-blocking-exception")
     @AnyThread
     public void restoreExceptionList(final @NonNull List<ContentBlockingException> list) {
         final GeckoBundle bundle = new GeckoBundle(2);
@@ -193,6 +199,7 @@ public class ContentBlockingController {
     /**
      * Clear the content blocking exception list entirely.
      */
+    @DeprecationSchedule(version = 93, id = "content-blocking-exception")
     @UiThread
     public void clearExceptionList() {
         EventDispatcher.getInstance().dispatch("ContentBlocking:ClearList", null);
