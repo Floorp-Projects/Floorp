@@ -104,6 +104,7 @@ class GeckoViewStartup {
             "GeckoView:GetAllPermissions",
             "GeckoView:GetPermissionsByURI",
             "GeckoView:SetPermission",
+            "GeckoView:SetPermissionByURI",
           ],
         });
 
