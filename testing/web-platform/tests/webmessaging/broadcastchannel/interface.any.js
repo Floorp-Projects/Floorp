@@ -1,9 +1,3 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
-
 test(() => assert_throws_js(TypeError, () => new BroadcastChannel()),
   'Should throw if no name is provided');
 
@@ -69,5 +63,3 @@ test(() => {
     c.close();
     assert_throws_dom('InvalidStateError', () => c.postMessage(Symbol()));
   }, 'postMessage should throw InvalidStateError after close, even with uncloneable data');
-
-</script>
