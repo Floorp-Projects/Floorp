@@ -9581,7 +9581,9 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
   aSystemFont->size = Length::FromPixels(fontStyle.size);
 
   // aSystemFont->langGroup = fontStyle.langGroup;
-  aSystemFont->sizeAdjust = fontStyle.sizeAdjust;
+  aSystemFont->sizeAdjust = fontStyle.sizeAdjust < 0.0
+                                ? StyleFontSizeAdjust::None()
+                                : StyleFontSizeAdjust::Ex(fontStyle.sizeAdjust);
 
   if (aFontID == LookAndFeel::FontID::MozField ||
       aFontID == LookAndFeel::FontID::MozButton ||
