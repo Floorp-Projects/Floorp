@@ -429,16 +429,6 @@ nsresult nsFocusManager::SetFocusedWindowWithCallerType(
     // pass false for aFocusChanged so that the caret does not get updated
     // and scrolling does not occur.
     SetFocusInner(frameElement, 0, false, true, aActionId);
-  } else {
-    // this is a top-level window. If the window has a child frame focused,
-    // clear the focus. Otherwise, focus should already be in this frame, or
-    // already cleared. This ensures that focus will be in this frame and not
-    // in a child.
-    nsIContent* content = windowToFocus->GetFocusedElement();
-    if (content) {
-      if (nsCOMPtr<nsPIDOMWindowOuter> childWindow = GetContentWindow(content))
-        ClearFocus(windowToFocus);
-    }
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> rootWindow = windowToFocus->GetPrivateRoot();
@@ -882,8 +872,7 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
       // focus somewhere else, so just clear the focus in the toplevel window
       // so that no element is focused.
       //
-      // This check does not work correctly in Fission:
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1613054
+      // The Fission case is handled in FlushAndCheckIfFocusable().
       Document* subdoc = aDocument->GetSubDocumentFor(content);
       if (subdoc) {
         nsCOMPtr<nsIDocShell> docShell = subdoc->GetDocShell();
