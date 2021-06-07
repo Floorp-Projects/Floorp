@@ -1,3 +1,5 @@
+.. _using_clang_query:
+
 Using clang-query
 =================
 
@@ -49,7 +51,7 @@ More examples are available `in the documentation <https://clang.llvm.org/docs/L
             `-IntegerLiteral 'int' 42
     
     AST Dump in 'IgnoreUnlessSpelledInSource' mode for all dialects:
-    
+
     FunctionDecl
     `-CompoundStmt
       `-ReturnStmt
@@ -97,7 +99,7 @@ clang-query automatically binds ``root`` to the match, but we also bound the nam
   
   Match #1: 
   
-  testfile.cpp:1:1: note: "x" binds here 
+  testfile.cpp:1:1: note: "x" binds here
   int addtwo(int num) 
   ^~~~~~~~~~~~~~~~~~~ 
   
@@ -159,7 +161,7 @@ This section tracks some patches; they are currently not used, but we may want t
 
 - Plumbing:
 
- - `mapAnyOf <https://reviews.llvm.org/D94127>`_) (`Example of usage <https://reviews.llvm.org/D94131>`_)
+ - `mapAnyOf() <https://reviews.llvm.org/D94127>`_ (`Example of usage <https://reviews.llvm.org/D94131>`_)
  - `Make cxxOperatorCallExpr matchers API-compatible with n-ary operators <https://reviews.llvm.org/D94128>`_
  - `CXXRewrittenBinaryOperator <https://reviews.llvm.org/D94130>`_
 
