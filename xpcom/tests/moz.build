@@ -46,6 +46,4 @@ RESOURCE_FILES += [
     "test.properties",
 ]
 
-CRASHTEST_MANIFESTS += [
-    "crashtests/crashtests.list"
-]
+CRASHTEST_MANIFESTS += ["crashtests/crashtests.list"]
