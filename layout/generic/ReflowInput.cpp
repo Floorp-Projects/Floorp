@@ -92,10 +92,6 @@ static nscoord FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame) {
     return margin;
   }
 
-  // NOTE(emilio): @counter-style can override some of the styles from this
-  // list, and we won't add margin to the counter.
-  //
-  // See https://github.com/w3c/csswg-drafts/issues/3584
   nsAtom* type = list->mCounterStyle.AsAtom();
   if (type != nsGkAtoms::none && type != nsGkAtoms::disc &&
       type != nsGkAtoms::circle && type != nsGkAtoms::square &&
