@@ -172,6 +172,8 @@ NS_IMPL_ISUPPORTS(ContentListener, nsIDOMEventListener)
 
 static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 
+static uint32_t sConsecutiveTouchMoveCount = 0;
+
 typedef nsTHashMap<nsUint64HashKey, BrowserChild*> BrowserChildMap;
 static BrowserChildMap* sBrowserChildren;
 StaticMutex sBrowserChildrenMutex;
@@ -369,6 +371,10 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       Preferences::GetBool("dom.event.coalesce_mouse_move");
   if (mCoalesceMouseMoveEvents) {
     mCoalescedMouseEventFlusher = new CoalescedMouseMoveFlusher(this);
+  }
+
+  if (StaticPrefs::dom_events_coalesce_touchmove()) {
+    mCoalescedTouchMoveEventFlusher = new CoalescedTouchMoveFlusher(this);
   }
 }
 
@@ -863,6 +869,11 @@ void BrowserChild::DestroyWindow() {
   if (mCoalescedMouseEventFlusher) {
     mCoalescedMouseEventFlusher->RemoveObserver();
     mCoalescedMouseEventFlusher = nullptr;
+  }
+
+  if (mCoalescedTouchMoveEventFlusher) {
+    mCoalescedTouchMoveEventFlusher->RemoveObserver();
+    mCoalescedTouchMoveEventFlusher = nullptr;
   }
 
   if (mSessionStoreListener) {
@@ -1461,6 +1472,25 @@ mozilla::ipc::IPCResult BrowserChild::RecvStopIMEStateManagement() {
   return IPC_OK();
 }
 
+void BrowserChild::ProcessPendingColaescedTouchData() {
+  MOZ_ASSERT(StaticPrefs::dom_events_coalesce_touchmove());
+
+  if (mCoalescedTouchData.IsEmpty()) {
+    return;
+  }
+
+  if (mCoalescedTouchMoveEventFlusher) {
+    mCoalescedTouchMoveEventFlusher->RemoveObserver();
+  }
+
+  UniquePtr<WidgetTouchEvent> touchMoveEvent =
+      mCoalescedTouchData.TakeCoalescedEvent();
+  Unused << RecvRealTouchEvent(*touchMoveEvent,
+                               mCoalescedTouchData.GetScrollableLayerGuid(),
+                               mCoalescedTouchData.GetInputBlockId(),
+                               mCoalescedTouchData.GetApzResponse());
+}
+
 void BrowserChild::ProcessPendingCoalescedMouseDataAndDispatchEvents() {
   if (!mCoalesceMouseMoveEvents || !mCoalescedMouseEventFlusher) {
     // We don't enable mouse coalescing or we are destroying BrowserChild.
@@ -1783,6 +1813,14 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
   MOZ_LOG(sApzChildLog, LogLevel::Debug,
           ("Receiving touch event of type %d\n", aEvent.mMessage));
 
+  if (aEvent.mMessage == eTouchEnd || aEvent.mMessage == eTouchStart) {
+    ProcessPendingColaescedTouchData();
+  }
+
+  if (aEvent.mMessage != eTouchMove) {
+    sConsecutiveTouchMoveCount = 0;
+  }
+
   WidgetTouchEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
 
@@ -1835,7 +1873,32 @@ mozilla::ipc::IPCResult BrowserChild::RecvNormalPriorityRealTouchEvent(
 mozilla::ipc::IPCResult BrowserChild::RecvRealTouchMoveEvent(
     const WidgetTouchEvent& aEvent, const ScrollableLayerGuid& aGuid,
     const uint64_t& aInputBlockId, const nsEventStatus& aApzResponse) {
-  if (!RecvRealTouchEvent(aEvent, aGuid, aInputBlockId, aApzResponse)) {
+  ++sConsecutiveTouchMoveCount;
+
+  // Only start to coalesce the second touchmove to ensure the first
+  // touchmove isn't overridden by the second one.
+  if (StaticPrefs::dom_events_coalesce_touchmove() &&
+      mCoalescedTouchMoveEventFlusher && sConsecutiveTouchMoveCount > 1) {
+    MOZ_ASSERT(aEvent.mMessage == eTouchMove);
+    if (mCoalescedTouchData.IsEmpty() ||
+        mCoalescedTouchData.CanCoalesce(aEvent, aGuid, aInputBlockId,
+                                        aApzResponse)) {
+      mCoalescedTouchData.Coalesce(aEvent, aGuid, aInputBlockId, aApzResponse);
+    } else {
+      UniquePtr<WidgetTouchEvent> touchMoveEvent =
+          mCoalescedTouchData.TakeCoalescedEvent();
+
+      mCoalescedTouchData.Coalesce(aEvent, aGuid, aInputBlockId, aApzResponse);
+
+      if (!RecvRealTouchEvent(*touchMoveEvent,
+                              mCoalescedTouchData.GetScrollableLayerGuid(),
+                              mCoalescedTouchData.GetInputBlockId(),
+                              mCoalescedTouchData.GetApzResponse())) {
+        return IPC_FAIL_NO_REASON(this);
+      }
+    }
+    mCoalescedTouchMoveEventFlusher->StartObserver();
+  } else if (!RecvRealTouchEvent(aEvent, aGuid, aInputBlockId, aApzResponse)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

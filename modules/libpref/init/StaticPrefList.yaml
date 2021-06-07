@@ -2030,6 +2030,14 @@
   value: true
   mirror: always
 
+# In addition to the above IPC layer compresison, allow touchmove
+# events to be further coalesced in the child side after they
+# are sent.
+- name: dom.events.coalesce.touchmove
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether to expose test interfaces of various sorts
 - name: dom.expose_test_interfaces
   type: bool
