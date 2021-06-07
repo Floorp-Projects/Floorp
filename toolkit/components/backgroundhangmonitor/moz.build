@@ -42,6 +42,7 @@ EXPORTS.mozilla += [
     "BackgroundHangMonitor.h",
     "HangAnnotations.h",
     "HangDetails.h",
+    "ThreadStackHelper.h",
 ]
 
 UNIFIED_SOURCES += [

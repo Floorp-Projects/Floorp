@@ -73,13 +73,10 @@ BHRTelemetryService.prototype = Object.freeze({
       if (Array.isArray(stack[i]) && stack[i][0] !== -1) {
         stack[i][0] = moduleIdxs[stack[i][0]];
       } else if (typeof stack[i] == "string") {
-        // This is just a precaution - we don't currently know of sensitive
-        // URLs being included in label frames' dynamic strings which we
-        // include here, but this is just an added guard. Here we strip any
-        // string with a :// in it that isn't a chrome:// or resource://
-        // URL. This is not completely robust, but we are already trying to
-        // protect against this by only including dynamic strings from the
-        // opt-in AUTO_PROFILER_..._NONSENSITIVE macros.
+        // Here we strip any string with a :// in it that isn't a chrome://
+        // or resource:// URL. This is not completely robust, but we are
+        // already trying to protect against this by only including dynamic
+        // strings from the opt-in AUTO_PROFILER_..._NONSENSITIVE macros.
         let match = /[^\s]+:\/\/.*/.exec(stack[i]);
         if (
           match &&
