@@ -26,11 +26,6 @@ else
   MOZ_ANDROID_MIN_SDK_VERSION=21
 fi
 
-# There are several entry points into the Firefox application.  These are the names of some of the classes that are
-# listed in the Android manifest.  They are specified in here to avoid hard-coding them in source code files.
-MOZ_ANDROID_APPLICATION_CLASS=org.mozilla.gecko.GeckoApplication
-MOZ_ANDROID_BROWSER_INTENT_CLASS=org.mozilla.gecko.BrowserApp
-
 MOZ_NO_SMART_CARDS=1
 
 MOZ_RAW=1
