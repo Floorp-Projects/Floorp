@@ -18,7 +18,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h"
 #include "RemoteServiceWorkerRegistrationImpl.h"
-#include "ServiceWorkerRegistrationImpl.h"
 
 namespace mozilla {
 namespace dom {
@@ -71,12 +70,8 @@ ServiceWorkerRegistration::CreateForMainThread(
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<Inner> inner;
-  if (ServiceWorkerParentInterceptEnabled()) {
-    inner = new RemoteServiceWorkerRegistrationImpl(aDescriptor);
-  } else {
-    inner = new ServiceWorkerRegistrationMainThread(aDescriptor);
-  }
+  const RefPtr<Inner> inner =
+      new RemoteServiceWorkerRegistrationImpl(aDescriptor);
 
   RefPtr<ServiceWorkerRegistration> registration =
       new ServiceWorkerRegistration(aWindow->AsGlobal(), aDescriptor, inner);
@@ -97,12 +92,8 @@ ServiceWorkerRegistration::CreateForWorker(
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  RefPtr<Inner> inner;
-  if (ServiceWorkerParentInterceptEnabled()) {
-    inner = new RemoteServiceWorkerRegistrationImpl(aDescriptor);
-  } else {
-    inner = new ServiceWorkerRegistrationWorkerThread(aDescriptor);
-  }
+  const RefPtr<Inner> inner =
+      new RemoteServiceWorkerRegistrationImpl(aDescriptor);
 
   RefPtr<ServiceWorkerRegistration> registration =
       new ServiceWorkerRegistration(aGlobal, aDescriptor, inner);

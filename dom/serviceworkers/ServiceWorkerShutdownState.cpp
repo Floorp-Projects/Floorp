@@ -141,8 +141,7 @@ void ReportServiceWorkerShutdownProgress(uint32_t aShutdownStateId) {
 
 void MaybeReportServiceWorkerShutdownProgress(const ServiceWorkerOpArgs& aArgs,
                                               bool aShutdownCompleted) {
-  if (!ServiceWorkerParentInterceptEnabled() ||
-      (XRE_IsParentProcess() && !XRE_IsE10sParentProcess())) {
+  if (XRE_IsParentProcess() && !XRE_IsE10sParentProcess()) {
     return;
   }
 

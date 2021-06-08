@@ -8,14 +8,6 @@ const { Ci, Cc } = require("chrome");
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "swm",
-  "@mozilla.org/serviceworkers/manager;1",
-  "nsIServiceWorkerManager"
-);
-
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { getSystemInfo } = require("devtools/shared/system");
 const { deviceSpec } = require("devtools/shared/specs/device");
@@ -43,10 +35,7 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
 
   getDescription: function() {
     return Object.assign({}, getSystemInfo(), {
-      // ServiceWorker debugging is only supported when parent-intercept is
-      // enabled. This cannot change at runtime, so it can be treated as a
-      // constant for the device.
-      canDebugServiceWorkers: swm.isParentInterceptEnabled(),
+      canDebugServiceWorkers: true,
     });
   },
 
