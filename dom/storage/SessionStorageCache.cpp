@@ -89,30 +89,15 @@ SessionStorageCache::~SessionStorageCache() {
   }
 }
 
-SessionStorageCache::DataSet* SessionStorageCache::Set(
-    DataSetType aDataSetType) {
-  if (aDataSetType == eDefaultSetType) {
-    return &mDefaultSet;
-  }
-
-  MOZ_ASSERT(aDataSetType == eSessionSetType);
-
-  return &mSessionSet;
+int64_t SessionStorageCache::GetOriginQuotaUsage() {
+  return mDataSet.mOriginQuotaUsage;
 }
 
-int64_t SessionStorageCache::GetOriginQuotaUsage(DataSetType aDataSetType) {
-  return Set(aDataSetType)->mOriginQuotaUsage;
-}
+uint32_t SessionStorageCache::Length() { return mDataSet.mKeys.Count(); }
 
-uint32_t SessionStorageCache::Length(DataSetType aDataSetType) {
-  return Set(aDataSetType)->mKeys.Count();
-}
-
-void SessionStorageCache::Key(DataSetType aDataSetType, uint32_t aIndex,
-                              nsAString& aResult) {
+void SessionStorageCache::Key(uint32_t aIndex, nsAString& aResult) {
   aResult.SetIsVoid(true);
-  for (auto iter = Set(aDataSetType)->mKeys.ConstIter(); !iter.Done();
-       iter.Next()) {
+  for (auto iter = mDataSet.mKeys.ConstIter(); !iter.Done(); iter.Next()) {
     if (aIndex == 0) {
       aResult = iter.Key();
       return;
@@ -121,31 +106,26 @@ void SessionStorageCache::Key(DataSetType aDataSetType, uint32_t aIndex,
   }
 }
 
-void SessionStorageCache::GetItem(DataSetType aDataSetType,
-                                  const nsAString& aKey, nsAString& aResult) {
+void SessionStorageCache::GetItem(const nsAString& aKey, nsAString& aResult) {
   // not using AutoString since we don't want to copy buffer to result
   nsString value;
-  if (!Set(aDataSetType)->mKeys.Get(aKey, &value)) {
+  if (!mDataSet.mKeys.Get(aKey, &value)) {
     SetDOMStringToNull(value);
   }
   aResult = value;
 }
 
-void SessionStorageCache::GetKeys(DataSetType aDataSetType,
-                                  nsTArray<nsString>& aKeys) {
-  AppendToArray(aKeys, Set(aDataSetType)->mKeys.Keys());
+void SessionStorageCache::GetKeys(nsTArray<nsString>& aKeys) {
+  AppendToArray(aKeys, mDataSet.mKeys.Keys());
 }
 
-nsresult SessionStorageCache::SetItem(DataSetType aDataSetType,
-                                      const nsAString& aKey,
+nsresult SessionStorageCache::SetItem(const nsAString& aKey,
                                       const nsAString& aValue,
                                       nsString& aOldValue,
                                       bool aRecordWriteInfo) {
   int64_t delta = 0;
-  DataSet* dataSet = Set(aDataSetType);
-  MOZ_ASSERT(dataSet);
 
-  if (!dataSet->mKeys.Get(aKey, &aOldValue)) {
+  if (!mDataSet.mKeys.Get(aKey, &aOldValue)) {
     SetDOMStringToNull(aOldValue);
 
     // We only consider key size if the key doesn't exist before.
@@ -160,121 +140,101 @@ nsresult SessionStorageCache::SetItem(DataSetType aDataSetType,
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
 
-  if (!dataSet->ProcessUsageDelta(delta)) {
+  if (!mDataSet.ProcessUsageDelta(delta)) {
     return NS_ERROR_DOM_QUOTA_EXCEEDED_ERR;
   }
 
   if (aRecordWriteInfo && XRE_IsContentProcess()) {
     if (DOMStringIsNull(aOldValue)) {
-      dataSet->mWriteOptimizer.InsertItem(aKey, aValue);
+      mDataSet.mWriteOptimizer.InsertItem(aKey, aValue);
     } else {
-      dataSet->mWriteOptimizer.UpdateItem(aKey, aValue);
+      mDataSet.mWriteOptimizer.UpdateItem(aKey, aValue);
     }
   }
 
-  dataSet->mKeys.InsertOrUpdate(aKey, nsString(aValue));
+  mDataSet.mKeys.InsertOrUpdate(aKey, nsString(aValue));
   return NS_OK;
 }
 
-nsresult SessionStorageCache::RemoveItem(DataSetType aDataSetType,
-                                         const nsAString& aKey,
+nsresult SessionStorageCache::RemoveItem(const nsAString& aKey,
                                          nsString& aOldValue,
                                          bool aRecordWriteInfo) {
-  DataSet* dataSet = Set(aDataSetType);
-  MOZ_ASSERT(dataSet);
-
-  if (!dataSet->mKeys.Get(aKey, &aOldValue)) {
+  if (!mDataSet.mKeys.Get(aKey, &aOldValue)) {
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
 
   // Recalculate the cached data size
-  dataSet->ProcessUsageDelta(-(static_cast<int64_t>(aOldValue.Length()) +
+  mDataSet.ProcessUsageDelta(-(static_cast<int64_t>(aOldValue.Length()) +
                                static_cast<int64_t>(aKey.Length())));
 
   if (aRecordWriteInfo && XRE_IsContentProcess()) {
-    dataSet->mWriteOptimizer.DeleteItem(aKey);
+    mDataSet.mWriteOptimizer.DeleteItem(aKey);
   }
 
-  dataSet->mKeys.Remove(aKey);
+  mDataSet.mKeys.Remove(aKey);
   return NS_OK;
 }
 
-void SessionStorageCache::Clear(DataSetType aDataSetType,
-                                bool aByUserInteraction,
+void SessionStorageCache::Clear(bool aByUserInteraction,
                                 bool aRecordWriteInfo) {
-  DataSet* dataSet = Set(aDataSetType);
-  MOZ_ASSERT(dataSet);
-
-  dataSet->ProcessUsageDelta(-dataSet->mOriginQuotaUsage);
+  mDataSet.ProcessUsageDelta(-mDataSet.mOriginQuotaUsage);
 
   if (aRecordWriteInfo && XRE_IsContentProcess()) {
-    dataSet->mWriteOptimizer.Truncate();
+    mDataSet.mWriteOptimizer.Truncate();
   }
 
-  dataSet->mKeys.Clear();
+  mDataSet.mKeys.Clear();
 }
 
-void SessionStorageCache::ResetWriteInfos(DataSetType aDataSetType) {
-  Set(aDataSetType)->mWriteOptimizer.Reset();
+void SessionStorageCache::ResetWriteInfos() {
+  mDataSet.mWriteOptimizer.Reset();
 }
 
 already_AddRefed<SessionStorageCache> SessionStorageCache::Clone() const {
   RefPtr<SessionStorageCache> cache = new SessionStorageCache();
 
-  cache->mDefaultSet.mOriginQuotaUsage = mDefaultSet.mOriginQuotaUsage;
-  for (const auto& keyEntry : mDefaultSet.mKeys) {
-    cache->mDefaultSet.mKeys.InsertOrUpdate(keyEntry.GetKey(),
-                                            keyEntry.GetData());
-    cache->mDefaultSet.mWriteOptimizer.InsertItem(keyEntry.GetKey(),
-                                                  keyEntry.GetData());
-  }
-
-  cache->mSessionSet.mOriginQuotaUsage = mSessionSet.mOriginQuotaUsage;
-  for (const auto& keyEntry : mSessionSet.mKeys) {
-    cache->mSessionSet.mKeys.InsertOrUpdate(keyEntry.GetKey(),
-                                            keyEntry.GetData());
-    cache->mSessionSet.mWriteOptimizer.InsertItem(keyEntry.GetKey(),
-                                                  keyEntry.GetData());
+  cache->mDataSet.mOriginQuotaUsage = mDataSet.mOriginQuotaUsage;
+  for (const auto& keyEntry : mDataSet.mKeys) {
+    cache->mDataSet.mKeys.InsertOrUpdate(keyEntry.GetKey(), keyEntry.GetData());
+    cache->mDataSet.mWriteOptimizer.InsertItem(keyEntry.GetKey(),
+                                               keyEntry.GetData());
   }
 
   return cache.forget();
 }
 
-nsTArray<SSSetItemInfo> SessionStorageCache::SerializeData(
-    DataSetType aDataSetType) {
+nsTArray<SSSetItemInfo> SessionStorageCache::SerializeData() {
   nsTArray<SSSetItemInfo> data;
-  for (const auto& keyEntry : Set(aDataSetType)->mKeys) {
+  for (const auto& keyEntry : mDataSet.mKeys) {
     data.EmplaceBack(nsString{keyEntry.GetKey()}, keyEntry.GetData());
   }
   return data;
 }
 
-nsTArray<SSWriteInfo> SessionStorageCache::SerializeWriteInfos(
-    DataSetType aDataSetType) {
+nsTArray<SSWriteInfo> SessionStorageCache::SerializeWriteInfos() {
   nsTArray<SSWriteInfo> writeInfos;
-  Set(aDataSetType)->mWriteOptimizer.Enumerate(writeInfos);
+  mDataSet.mWriteOptimizer.Enumerate(writeInfos);
   return writeInfos;
 }
 
 void SessionStorageCache::DeserializeData(
-    DataSetType aDataSetType, const nsTArray<SSSetItemInfo>& aData) {
-  Clear(aDataSetType, false, /* aRecordWriteInfo */ false);
+    const nsTArray<SSSetItemInfo>& aData) {
+  Clear(false, /* aRecordWriteInfo */ false);
   for (const auto& keyValuePair : aData) {
     nsString oldValue;
-    SetItem(aDataSetType, keyValuePair.key(), keyValuePair.value(), oldValue,
-            false);
+    SetItem(keyValuePair.key(), keyValuePair.value(), oldValue, false);
   }
 }
 
 void SessionStorageCache::DeserializeWriteInfos(
-    DataSetType aDataSetType, const nsTArray<SSWriteInfo>& aInfos) {
+    const nsTArray<SSWriteInfo>& aInfos) {
   for (const auto& writeInfo : aInfos) {
     switch (writeInfo.type()) {
       case SSWriteInfo::TSSSetItemInfo: {
         const SSSetItemInfo& info = writeInfo.get_SSSetItemInfo();
 
         nsString oldValue;
-        SetItem(aDataSetType, info.key(), info.value(), oldValue,
+        SetItem(info.key(), info.value(), oldValue,
                 /* aRecordWriteInfo */ false);
 
         break;
@@ -284,14 +244,14 @@ void SessionStorageCache::DeserializeWriteInfos(
         const SSRemoveItemInfo& info = writeInfo.get_SSRemoveItemInfo();
 
         nsString oldValue;
-        RemoveItem(aDataSetType, info.key(), oldValue,
+        RemoveItem(info.key(), oldValue,
                    /* aRecordWriteInfo */ false);
 
         break;
       }
 
       case SSWriteInfo::TSSClearInfo: {
-        Clear(aDataSetType, false, /* aRecordWriteInfo */ false);
+        Clear(false, /* aRecordWriteInfo */ false);
 
         break;
       }
