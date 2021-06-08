@@ -912,76 +912,6 @@ void ServiceWorkerGlobalScope::EventListenerAdded(nsAtom* aType) {
   }
 }
 
-namespace {
-
-class SkipWaitingResultRunnable final : public WorkerRunnable {
-  RefPtr<PromiseWorkerProxy> mPromiseProxy;
-
- public:
-  SkipWaitingResultRunnable(WorkerPrivate* aWorkerPrivate,
-                            PromiseWorkerProxy* aPromiseProxy)
-      : WorkerRunnable(aWorkerPrivate), mPromiseProxy(aPromiseProxy) {
-    AssertIsOnMainThread();
-  }
-
-  virtual bool WorkerRun(JSContext* aCx,
-                         WorkerPrivate* aWorkerPrivate) override {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-
-    RefPtr<Promise> promise = mPromiseProxy->WorkerPromise();
-    promise->MaybeResolveWithUndefined();
-
-    // Release the reference on the worker thread.
-    mPromiseProxy->CleanUp();
-
-    return true;
-  }
-};
-
-class WorkerScopeSkipWaitingRunnable final : public Runnable {
-  RefPtr<PromiseWorkerProxy> mPromiseProxy;
-  nsCString mScope;
-
- public:
-  WorkerScopeSkipWaitingRunnable(PromiseWorkerProxy* aPromiseProxy,
-                                 const nsCString& aScope)
-      : mozilla::Runnable("WorkerScopeSkipWaitingRunnable"),
-        mPromiseProxy(aPromiseProxy),
-        mScope(aScope) {
-    MOZ_ASSERT(aPromiseProxy);
-  }
-
-  NS_IMETHOD
-  Run() override {
-    AssertIsOnMainThread();
-
-    MutexAutoLock lock(mPromiseProxy->Lock());
-    if (mPromiseProxy->CleanedUp()) {
-      return NS_OK;
-    }
-
-    WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
-    MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
-
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (swm) {
-      swm->SetSkipWaitingFlag(workerPrivate->GetPrincipal(), mScope,
-                              workerPrivate->ServiceWorkerID());
-    }
-
-    RefPtr<SkipWaitingResultRunnable> runnable =
-        new SkipWaitingResultRunnable(workerPrivate, mPromiseProxy);
-
-    if (!runnable->Dispatch()) {
-      NS_WARNING("Failed to dispatch SkipWaitingResultRunnable to the worker.");
-    }
-    return NS_OK;
-  }
-};
-
-}  // namespace
-
 already_AddRefed<Promise> ServiceWorkerGlobalScope::SkipWaiting(
     ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -992,35 +922,18 @@ already_AddRefed<Promise> ServiceWorkerGlobalScope::SkipWaiting(
     return nullptr;
   }
 
-  if (ServiceWorkerParentInterceptEnabled()) {
-    using MozPromiseType =
-        decltype(mWorkerPrivate
-                     ->SetServiceWorkerSkipWaitingFlag())::element_type;
-    auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<MozPromiseType>>(this);
+  using MozPromiseType =
+      decltype(mWorkerPrivate->SetServiceWorkerSkipWaitingFlag())::element_type;
+  auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<MozPromiseType>>(this);
 
-    mWorkerPrivate->SetServiceWorkerSkipWaitingFlag()
-        ->Then(GetCurrentSerialEventTarget(), __func__,
-               [holder, promise](const MozPromiseType::ResolveOrRejectValue&) {
-                 holder->Complete();
-                 promise->MaybeResolveWithUndefined();
-               })
-        ->Track(*holder);
+  mWorkerPrivate->SetServiceWorkerSkipWaitingFlag()
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [holder, promise](const MozPromiseType::ResolveOrRejectValue&) {
+               holder->Complete();
+               promise->MaybeResolveWithUndefined();
+             })
+      ->Track(*holder);
 
-    return promise.forget();
-  }
-
-  RefPtr<PromiseWorkerProxy> promiseProxy =
-      PromiseWorkerProxy::Create(mWorkerPrivate, promise);
-  if (!promiseProxy) {
-    promise->MaybeResolveWithUndefined();
-    return promise.forget();
-  }
-
-  RefPtr<WorkerScopeSkipWaitingRunnable> runnable =
-      new WorkerScopeSkipWaitingRunnable(promiseProxy,
-                                         NS_ConvertUTF16toUTF8(mScope));
-
-  MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(runnable.forget()));
   return promise.forget();
 }
 

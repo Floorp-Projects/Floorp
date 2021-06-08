@@ -106,7 +106,7 @@ class SharedWorkerInterfaceRequestor final : public nsIInterfaceRequestor {
 
   SharedWorkerInterfaceRequestor() {
     // This check must match the code nsDocShell::Create.
-    if (!ServiceWorkerParentInterceptEnabled() || XRE_IsParentProcess()) {
+    if (XRE_IsParentProcess()) {
       mSWController = new ServiceWorkerInterceptController();
     }
   }
