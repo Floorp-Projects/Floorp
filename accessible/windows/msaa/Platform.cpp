@@ -123,12 +123,11 @@ void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
 }
 
 void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
-  MsaaAccessible::FireWinEvent(WrapperFor(aTarget), aEventType);
+  MsaaAccessible::FireWinEvent(aTarget, aEventType);
 }
 
 void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t, bool) {
-  MsaaAccessible::FireWinEvent(WrapperFor(aTarget),
-                               nsIAccessibleEvent::EVENT_STATE_CHANGE);
+  MsaaAccessible::FireWinEvent(aTarget, nsIAccessibleEvent::EVENT_STATE_CHANGE);
 }
 
 void a11y::ProxyFocusEvent(RemoteAccessible* aTarget,
@@ -146,20 +145,28 @@ void a11y::ProxyFocusEvent(RemoteAccessible* aTarget,
   }
 
   AccessibleWrap::UpdateSystemCaretFor(aTarget, aCaretRect);
-  MsaaAccessible::FireWinEvent(WrapperFor(aTarget),
-                               nsIAccessibleEvent::EVENT_FOCUS);
+  MsaaAccessible::FireWinEvent(aTarget, nsIAccessibleEvent::EVENT_FOCUS);
 }
 
 void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget,
                                const LayoutDeviceIntRect& aCaretRect) {
   AccessibleWrap::UpdateSystemCaretFor(aTarget, aCaretRect);
-  MsaaAccessible::FireWinEvent(WrapperFor(aTarget),
+  MsaaAccessible::FireWinEvent(aTarget,
                                nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED);
 }
 
 void a11y::ProxyTextChangeEvent(RemoteAccessible* aText, const nsString& aStr,
                                 int32_t aStart, uint32_t aLen, bool aInsert,
                                 bool) {
+  uint32_t eventType = aInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED
+                               : nsIAccessibleEvent::EVENT_TEXT_REMOVED;
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // XXX Call ia2AccessibleText::UpdateTextChangeData once this works for
+    // RemoteAccessible.
+    MsaaAccessible::FireWinEvent(aText, eventType);
+    return;
+  }
+
   AccessibleWrap* wrapper = WrapperFor(aText);
   MOZ_ASSERT(wrapper);
   if (!wrapper) {
@@ -180,8 +187,6 @@ void a11y::ProxyTextChangeEvent(RemoteAccessible* aText, const nsString& aStr,
     ia2AccessibleText::UpdateTextChangeData(text, aInsert, aStr, aStart, aLen);
   }
 
-  uint32_t eventType = aInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED
-                               : nsIAccessibleEvent::EVENT_TEXT_REMOVED;
   MsaaAccessible::FireWinEvent(wrapper, eventType);
 }
 
@@ -189,14 +194,12 @@ void a11y::ProxyShowHideEvent(RemoteAccessible* aTarget, RemoteAccessible*,
                               bool aInsert, bool) {
   uint32_t event =
       aInsert ? nsIAccessibleEvent::EVENT_SHOW : nsIAccessibleEvent::EVENT_HIDE;
-  AccessibleWrap* wrapper = WrapperFor(aTarget);
-  MsaaAccessible::FireWinEvent(wrapper, event);
+  MsaaAccessible::FireWinEvent(aTarget, event);
 }
 
 void a11y::ProxySelectionEvent(RemoteAccessible* aTarget, RemoteAccessible*,
                                uint32_t aType) {
-  AccessibleWrap* wrapper = WrapperFor(aTarget);
-  MsaaAccessible::FireWinEvent(wrapper, aType);
+  MsaaAccessible::FireWinEvent(aTarget, aType);
 }
 
 bool a11y::IsHandlerRegistered() {
