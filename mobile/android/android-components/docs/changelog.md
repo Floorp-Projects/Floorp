@@ -71,11 +71,6 @@ permalink: /changelog/
 
 * **service-glean**
   * `ConceptFetchHttpUploader` adds support for private requests. By default, all requests are non-private.
-  * 🆙 Updated Glean to version 39.0.0 ([changelog](https://github.com/mozilla/glean/releases/tag/v39.0.0))
-    * Also includes v38.0.0 ([changelog](https://github.com/mozilla/glean/releases/tag/v38.0.0))
-    * ⚠️  Deprecation: The old event recording API is replaced by a new one, accepting a typed object. See the [event documentation](https://mozilla.github.io/glean/book/reference/metrics/event.html#recordobject) for details.
-    * Skip build info generation for libraries.
-
 
 * **lib-state**
   * 🌟️ Added `AbstractBinding` for simple features that want to observe changes to the `State` in a `Store` without needing to manually manage the CoroutineScope. This can now be handled like other `LifecycleAwareFeature` implementations:
@@ -92,6 +87,9 @@ permalink: /changelog/
 
 * **service-nimbus**
   * Added UI components for displaying a list of branches and the selected branch related to a Nimbus experiments.
+
+* **service-glean**
+  * 🆙 Updated Glean to version 38.0.0 ([changelog](https://github.com/mozilla/glean/releases/tag/v38.0.0))
 
 * **support-utils**:
   * Added `CreditCardUtils` which provides methods for retrieving the credit card issuer network from a provided card number. [#9813](https://github.com/mozilla-mobile/android-components/issues/9813)

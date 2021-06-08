@@ -22,10 +22,8 @@ browser.engagement:
       - CHANGE-ME@example.com
     extra_keys:
       key1:
-        type: string
         description: "This is key one"
       key2:
-        type: string
         description: "This is key two"
     expires: 2100-01-01
 

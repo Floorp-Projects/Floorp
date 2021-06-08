@@ -436,9 +436,9 @@ object SyncTelemetry {
             val sent = json.getJSONArray("commands_sent")
             for (i in 0..sent.length() - 1) {
                 val one = sent.getJSONObject(i)
-                val extras = FxaTab.SentExtra(
-                    flowId = one.getString("flow_id"),
-                    streamId = one.getString("stream_id")
+                val extras = mapOf(
+                    FxaTab.sentKeys.flowId to one.getString("flow_id"),
+                    FxaTab.sentKeys.streamId to one.getString("stream_id")
                 )
                 FxaTab.sent.record(extras)
             }
@@ -451,10 +451,10 @@ object SyncTelemetry {
             val recd = json.getJSONArray("commands_received")
             for (i in 0..recd.length() - 1) {
                 val one = recd.getJSONObject(i)
-                val extras = FxaTab.ReceivedExtra(
-                    flowId = one.getString("flow_id"),
-                    streamId = one.getString("stream_id"),
-                    reason = one.getString("reason")
+                val extras = mapOf(
+                    FxaTab.receivedKeys.flowId to one.getString("flow_id"),
+                    FxaTab.receivedKeys.streamId to one.getString("stream_id"),
+                    FxaTab.receivedKeys.reason to one.getString("reason")
                 )
                 FxaTab.received.record(extras)
             }
