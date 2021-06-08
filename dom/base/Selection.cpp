@@ -2865,6 +2865,8 @@ nsIFrame* Selection::GetSelectionEndPointGeometry(SelectionRegion aRegion,
       content, nodeOffset, mFrameSelection->GetHint(), &frameOffset);
   if (!frame) return nullptr;
 
+  nsFrameSelection::AdjustFrameForLineStart(frame, frameOffset);
+
   // Figure out what node type we have, then get the
   // appropriate rect for it's nodeOffset.
   bool isText = node->IsText();
