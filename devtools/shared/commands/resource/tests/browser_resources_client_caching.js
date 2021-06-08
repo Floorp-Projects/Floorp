@@ -25,7 +25,10 @@ add_task(async function() {
   await resourceCommand.watchResources(
     [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => cachedResources1.push(...resources),
+      onAvailable(resources, { areExistingResources }) {
+        ok(areExistingResources, "All resources are already existing ones");
+        cachedResources1.push(...resources);
+      },
     }
   );
 
@@ -34,7 +37,10 @@ add_task(async function() {
   await resourceCommand.watchResources(
     [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => cachedResources2.push(...resources),
+      onAvailable(resources, { areExistingResources }) {
+        ok(areExistingResources, "All resources are already existing ones");
+        cachedResources2.push(...resources);
+      },
     }
   );
 
@@ -62,12 +68,23 @@ add_task(async function() {
 
   info("Register first listener to get all available resources");
   const availableResources = [];
+  // We first get notified about existing resources
+  let shouldBeExistingResources = true;
   await resourceCommand.watchResources(
     [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => availableResources.push(...resources),
+      onAvailable(resources, { areExistingResources }) {
+        is(
+          areExistingResources,
+          shouldBeExistingResources,
+          "areExistingResources flag is correct"
+        );
+        availableResources.push(...resources);
+      },
     }
   );
+  // Then, we are notified about, new, live ones
+  shouldBeExistingResources = false;
 
   info("Add messages as additional resources");
   const additionalMessages = ["d", "e"];
@@ -82,7 +99,10 @@ add_task(async function() {
   await resourceCommand.watchResources(
     [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => cachedResources.push(...resources),
+      onAvailable(resources, { areExistingResources }) {
+        ok(areExistingResources, "All resources are already existing ones");
+        cachedResources.push(...resources);
+      },
     }
   );
 
