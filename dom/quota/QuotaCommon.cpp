@@ -241,7 +241,7 @@ template Result<SingleStepSuccessType<SingleStepResult::ReturnNullIfNoResult>,
 CreateAndExecuteSingleStepStatement<SingleStepResult::ReturnNullIfNoResult>(
     mozIStorageConnection& aConnection, const nsACString& aStatementString);
 
-#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
 MOZ_THREAD_LOCAL(const nsACString*) ScopedLogExtraInfo::sQueryValue;
 MOZ_THREAD_LOCAL(const nsACString*) ScopedLogExtraInfo::sContextValue;
 
@@ -508,7 +508,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad severity value!");
   }();
 
-#  ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+#  ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
   const auto& extraInfos = ScopedLogExtraInfo::GetExtraInfoMap();
   for (const auto& item : extraInfos) {
     extraInfosString.Append(", "_ns + nsDependentCString(item.first) + " "_ns +
@@ -544,7 +544,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
     console->LogStringMessage(message.get());
   }
 
-#  ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+#  ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
   if (const auto contextIt = extraInfos.find(ScopedLogExtraInfo::kTagContext);
       contextIt != extraInfos.cend()) {
     // For now, we don't include aExpr in the telemetry event. It might help to
