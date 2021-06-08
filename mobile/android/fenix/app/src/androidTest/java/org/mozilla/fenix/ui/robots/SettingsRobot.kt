@@ -148,15 +148,19 @@ class SettingsRobot {
         }
 
         fun openAccessibilitySubMenu(interact: SettingsSubMenuAccessibilityRobot.() -> Unit): SettingsSubMenuAccessibilityRobot.Transition {
+            scrollToElementByText("Accessibility")
 
             fun accessibilityButton() = onView(withText("Accessibility"))
-            accessibilityButton().click()
+            accessibilityButton()
+                .check(matches(isDisplayed()))
+                .click()
 
             SettingsSubMenuAccessibilityRobot().interact()
             return SettingsSubMenuAccessibilityRobot.Transition()
         }
 
         fun openLanguageSubMenu(interact: SettingsSubMenuLanguageRobot.() -> Unit): SettingsSubMenuLanguageRobot.Transition {
+            scrollToElementByText("Language")
 
             fun languageButton() = onView(withText("Language"))
             languageButton().click()
