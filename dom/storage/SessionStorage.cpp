@@ -16,11 +16,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
 
-#define DATASET                                    \
-  (!IsPrivateBrowsing() && IsSessionScopedOrLess() \
-       ? SessionStorageCache::eSessionSetType      \
-       : SessionStorageCache::eDefaultSetType)
-
 namespace mozilla {
 namespace dom {
 
@@ -55,7 +50,7 @@ int64_t SessionStorage::GetOriginQuotaUsage() const {
     return 0;
   }
 
-  return mCache->GetOriginQuotaUsage(DATASET);
+  return mCache->GetOriginQuotaUsage();
 }
 
 uint32_t SessionStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
@@ -71,7 +66,7 @@ uint32_t SessionStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
     return 0;
   }
 
-  return mCache->Length(DATASET);
+  return mCache->Length();
 }
 
 void SessionStorage::Key(uint32_t aIndex, nsAString& aResult,
@@ -87,7 +82,7 @@ void SessionStorage::Key(uint32_t aIndex, nsAString& aResult,
     return;
   }
 
-  mCache->Key(DATASET, aIndex, aResult);
+  mCache->Key(aIndex, aResult);
 }
 
 void SessionStorage::GetItem(const nsAString& aKey, nsAString& aResult,
@@ -104,7 +99,7 @@ void SessionStorage::GetItem(const nsAString& aKey, nsAString& aResult,
     return;
   }
 
-  mCache->GetItem(DATASET, aKey, aResult);
+  mCache->GetItem(aKey, aResult);
 }
 
 void SessionStorage::GetSupportedNames(nsTArray<nsString>& aKeys) {
@@ -121,7 +116,7 @@ void SessionStorage::GetSupportedNames(nsTArray<nsString>& aKeys) {
     return;
   }
 
-  mCache->GetKeys(DATASET, aKeys);
+  mCache->GetKeys(aKeys);
 }
 
 void SessionStorage::SetItem(const nsAString& aKey, const nsAString& aValue,
@@ -139,7 +134,7 @@ void SessionStorage::SetItem(const nsAString& aKey, const nsAString& aValue,
   }
 
   nsString oldValue;
-  rv = mCache->SetItem(DATASET, aKey, aValue, oldValue);
+  rv = mCache->SetItem(aKey, aValue, oldValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;
@@ -167,7 +162,7 @@ void SessionStorage::RemoveItem(const nsAString& aKey,
   }
 
   nsString oldValue;
-  rv = mCache->RemoveItem(DATASET, aKey, oldValue);
+  rv = mCache->RemoveItem(aKey, oldValue);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (rv == NS_SUCCESS_DOM_NO_OPERATION) {
@@ -189,7 +184,7 @@ void SessionStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
     return;
   }
 
-  mCache->Clear(DATASET);
+  mCache->Clear();
   BroadcastChangeNotification(VoidString(), VoidString(), VoidString());
 }
 

@@ -1767,9 +1767,7 @@ nsresult SessionStoreUtils::ConstructSessionStorageValues(
 
     auto entry = aRecord.Entries().AppendElement();
 
-    if (!entry->mValue.Entries().SetCapacity(
-            value.defaultData().Length() + value.sessionData().Length(),
-            fallible)) {
+    if (!entry->mValue.Entries().SetCapacity(value.data().Length(), fallible)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -1777,8 +1775,7 @@ nsresult SessionStoreUtils::ConstructSessionStorageValues(
       return NS_ERROR_FAILURE;
     }
 
-    ConstructSessionStorageValue(value.defaultData(), entry->mValue);
-    ConstructSessionStorageValue(value.sessionData(), entry->mValue);
+    ConstructSessionStorageValue(value.data(), entry->mValue);
   }
 
   return NS_OK;

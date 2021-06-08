@@ -34,45 +34,35 @@ class SessionStorageCache final {
 
   SessionStorageCache();
 
-  enum DataSetType {
-    eDefaultSetType,
-    eSessionSetType,
-  };
+  int64_t GetOriginQuotaUsage();
 
-  int64_t GetOriginQuotaUsage(DataSetType aDataSetType);
+  uint32_t Length();
 
-  uint32_t Length(DataSetType aDataSetType);
+  void Key(uint32_t aIndex, nsAString& aResult);
 
-  void Key(DataSetType aDataSetType, uint32_t aIndex, nsAString& aResult);
+  void GetItem(const nsAString& aKey, nsAString& aResult);
 
-  void GetItem(DataSetType aDataSetType, const nsAString& aKey,
-               nsAString& aResult);
+  void GetKeys(nsTArray<nsString>& aKeys);
 
-  void GetKeys(DataSetType aDataSetType, nsTArray<nsString>& aKeys);
+  nsresult SetItem(const nsAString& aKey, const nsAString& aValue,
+                   nsString& aOldValue, bool aRecordWriteInfo = true);
 
-  nsresult SetItem(DataSetType aDataSetType, const nsAString& aKey,
-                   const nsAString& aValue, nsString& aOldValue,
-                   bool aRecordWriteInfo = true);
+  nsresult RemoveItem(const nsAString& aKey, nsString& aOldValue,
+                      bool aRecordWriteInfo = true);
 
-  nsresult RemoveItem(DataSetType aDataSetType, const nsAString& aKey,
-                      nsString& aOldValue, bool aRecordWriteInfo = true);
+  void Clear(bool aByUserInteraction = true, bool aRecordWriteInfo = true);
 
-  void Clear(DataSetType aDataSetType, bool aByUserInteraction = true,
-             bool aRecordWriteInfo = true);
-
-  void ResetWriteInfos(DataSetType aDataSetType);
+  void ResetWriteInfos();
 
   already_AddRefed<SessionStorageCache> Clone() const;
 
-  nsTArray<SSSetItemInfo> SerializeData(DataSetType aDataSetType);
+  nsTArray<SSSetItemInfo> SerializeData();
 
-  nsTArray<SSWriteInfo> SerializeWriteInfos(DataSetType aDataSetType);
+  nsTArray<SSWriteInfo> SerializeWriteInfos();
 
-  void DeserializeData(DataSetType aDataSetType,
-                       const nsTArray<SSSetItemInfo>& aData);
+  void DeserializeData(const nsTArray<SSSetItemInfo>& aData);
 
-  void DeserializeWriteInfos(DataSetType aDataSetType,
-                             const nsTArray<SSWriteInfo>& aInfos);
+  void DeserializeWriteInfos(const nsTArray<SSWriteInfo>& aInfos);
 
   void SetActor(SessionStorageCacheChild* aActor);
 
@@ -99,10 +89,7 @@ class SessionStorageCache final {
     int64_t mOriginQuotaUsage;
   };
 
-  DataSet* Set(DataSetType aDataSetType);
-
-  DataSet mDefaultSet;
-  DataSet mSessionSet;
+  DataSet mDataSet;
 
   SessionStorageCacheChild* mActor;
   bool mLoadedOrCloned;

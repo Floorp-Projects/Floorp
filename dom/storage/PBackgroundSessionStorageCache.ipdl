@@ -38,8 +38,7 @@ union SSWriteInfo
 struct SSCacheCopy {
   nsCString originKey;
   nsCString originAttributes;
-  SSSetItemInfo[] defaultData;
-  SSSetItemInfo[] sessionData;
+  SSSetItemInfo[] data;
 };
 
 sync refcounted protocol PBackgroundSessionStorageCache
@@ -59,15 +58,14 @@ sync refcounted protocol PBackgroundSessionStorageCache
     * available without needing to consult any other threads or perform any I/O.
     */
   sync Load()
-       returns (SSSetItemInfo[] aDefaultData, SSSetItemInfo[] aSessionData);
+       returns (SSSetItemInfo[] aData);
 
   /**
    * Send changes for SessionStorageCache from a content process to the parent
    * process so that the data in the parent can be updated to be in sync with
    * the content. See SessionStorageManager documentation for more details.
    */
-  async Checkpoint(SSWriteInfo[] aDefaultWriteInfos,
-                   SSWriteInfo[] aSessionWriteInfos);
+  async Checkpoint(SSWriteInfo[] aWriteInfos);
 
  child:
    async __delete__();
