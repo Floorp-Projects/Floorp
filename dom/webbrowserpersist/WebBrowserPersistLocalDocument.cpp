@@ -1089,16 +1089,16 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn, bool* aSerializeCloneKids,
           dom::HTMLInputElement::FromNode((*aNodeOut)->AsContent());
       nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(*aNodeOut);
       switch (formControl->ControlType()) {
-        case NS_FORM_INPUT_EMAIL:
-        case NS_FORM_INPUT_SEARCH:
-        case NS_FORM_INPUT_TEXT:
-        case NS_FORM_INPUT_TEL:
-        case NS_FORM_INPUT_URL:
-        case NS_FORM_INPUT_NUMBER:
-        case NS_FORM_INPUT_RANGE:
-        case NS_FORM_INPUT_DATE:
-        case NS_FORM_INPUT_TIME:
-        case NS_FORM_INPUT_COLOR:
+        case FormControlType::InputEmail:
+        case FormControlType::InputSearch:
+        case FormControlType::InputText:
+        case FormControlType::InputTel:
+        case FormControlType::InputUrl:
+        case FormControlType::InputNumber:
+        case FormControlType::InputRange:
+        case FormControlType::InputDate:
+        case FormControlType::InputTime:
+        case FormControlType::InputColor:
           nodeAsInput->GetValue(valueStr, dom::CallerType::System);
           // Avoid superfluous value="" serialization
           if (valueStr.IsEmpty()) {
@@ -1107,11 +1107,10 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn, bool* aSerializeCloneKids,
             outElt->SetAttribute(valueAttr, valueStr, IgnoreErrors());
           }
           break;
-        case NS_FORM_INPUT_CHECKBOX:
-        case NS_FORM_INPUT_RADIO: {
-          bool checked = nodeAsInput->Checked();
-          outElt->SetDefaultChecked(checked, IgnoreErrors());
-        } break;
+        case FormControlType::InputCheckbox:
+        case FormControlType::InputRadio:
+          outElt->SetDefaultChecked(nodeAsInput->Checked(), IgnoreErrors());
+          break;
         default:
           break;
       }

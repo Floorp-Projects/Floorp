@@ -40,9 +40,9 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Button)
 namespace mozilla::dom {
 
 static const nsAttrValue::EnumTable kButtonTypeTable[] = {
-    {"button", NS_FORM_BUTTON_BUTTON},
-    {"reset", NS_FORM_BUTTON_RESET},
-    {"submit", NS_FORM_BUTTON_SUBMIT},
+    {"button", FormControlType::ButtonButton},
+    {"reset", FormControlType::ButtonReset},
+    {"submit", FormControlType::ButtonSubmit},
     {nullptr, 0}};
 
 // Default type is 'submit'.
@@ -52,8 +52,9 @@ static const nsAttrValue::EnumTable* kButtonDefaultType = &kButtonTypeTable[2];
 HTMLButtonElement::HTMLButtonElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
-    : nsGenericHTMLFormElementWithState(std::move(aNodeInfo), aFromParser,
-                                        kButtonDefaultType->value),
+    : nsGenericHTMLFormElementWithState(
+          std::move(aNodeInfo), aFromParser,
+          FormControlType(kButtonDefaultType->value)),
       mDisabledChanged(false),
       mInInternalActivate(false),
       mInhibitStateRestoration(aFromParser & FROM_PARSER_FRAGMENT) {
@@ -79,8 +80,8 @@ void HTMLButtonElement::SetCustomValidity(const nsAString& aError) {
 }
 
 void HTMLButtonElement::UpdateBarredFromConstraintValidation() {
-  SetBarredFromConstraintValidation(mType == NS_FORM_BUTTON_BUTTON ||
-                                    mType == NS_FORM_BUTTON_RESET ||
+  SetBarredFromConstraintValidation(mType == FormControlType::ButtonButton ||
+                                    mType == FormControlType::ButtonReset ||
                                     IsDisabled());
 }
 
@@ -174,7 +175,7 @@ void HTMLButtonElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 
   if (outerActivateEvent) {
     aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
-    if (mType == NS_FORM_BUTTON_SUBMIT && mForm &&
+    if (mType == FormControlType::ButtonSubmit && mForm &&
         !aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented) {
       aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
       aVisitor.mItemFlags |= NS_IN_SUBMIT_CLICK;
@@ -233,10 +234,10 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       if (mForm) {
         // Hold a strong ref while dispatching
         RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
-        if (mType == NS_FORM_BUTTON_RESET) {
+        if (mType == FormControlType::ButtonReset) {
           form->MaybeReset(this);
           aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-        } else if (mType == NS_FORM_BUTTON_SUBMIT) {
+        } else if (mType == FormControlType::ButtonSubmit) {
           form->MaybeSubmit(this);
           aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
@@ -340,9 +341,9 @@ nsresult HTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::type) {
       if (aValue) {
-        mType = aValue->GetEnumValue();
+        mType = FormControlType(aValue->GetEnumValue());
       } else {
-        mType = kButtonDefaultType->value;
+        mType = FormControlType(kButtonDefaultType->value);
       }
     }
 

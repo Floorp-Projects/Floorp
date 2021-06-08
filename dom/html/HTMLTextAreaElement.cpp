@@ -50,7 +50,8 @@ namespace mozilla::dom {
 HTMLTextAreaElement::HTMLTextAreaElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
-    : TextControlElement(std::move(aNodeInfo), aFromParser, NS_FORM_TEXTAREA),
+    : TextControlElement(std::move(aNodeInfo), aFromParser,
+                         FormControlType::Textarea),
       mValueChanged(false),
       mLastValueChangeWasInteractive(false),
       mHandlingSelect(false),

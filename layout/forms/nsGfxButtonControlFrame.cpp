@@ -78,11 +78,11 @@ nsresult nsGfxButtonControlFrame::GetDefaultLabel(nsAString& aString) const {
   nsCOMPtr<nsIFormControl> form = do_QueryInterface(mContent);
   NS_ENSURE_TRUE(form, NS_ERROR_UNEXPECTED);
 
-  int32_t type = form->ControlType();
+  auto type = form->ControlType();
   const char* prop;
-  if (type == NS_FORM_INPUT_RESET) {
+  if (type == FormControlType::InputReset) {
     prop = "Reset";
-  } else if (type == NS_FORM_INPUT_SUBMIT) {
+  } else if (type == FormControlType::InputSubmit) {
     prop = "Submit";
   } else {
     aString.Truncate();
