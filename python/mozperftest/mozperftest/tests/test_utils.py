@@ -21,6 +21,7 @@ from mozperftest.utils import (
     convert_day,
     load_class,
     checkout_python_script,
+    get_output_dir,
 )
 from mozperftest.tests.support import temp_file, requests_content, EXAMPLE_TESTS_DIR
 
@@ -191,6 +192,18 @@ def test_run_python_script_failed():
     stdout, stderr = captured
     stdout.seek(0)
     assert stdout.read().endswith("[FAILED]\n")
+
+
+def test_get_output_dir():
+    with temp_file() as temp_dir:
+        output_dir = get_output_dir(temp_dir)
+        assert output_dir.exists()
+        assert output_dir.is_dir()
+
+        output_dir = get_output_dir(output=temp_dir, folder="artifacts")
+        assert output_dir.exists()
+        assert output_dir.is_dir()
+        assert "artifacts" == output_dir.parts[-1]
 
 
 if __name__ == "__main__":

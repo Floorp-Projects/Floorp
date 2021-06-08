@@ -10,7 +10,7 @@ import re
 import shutil
 from pathlib import Path
 
-from mozperftest.utils import install_package
+from mozperftest.utils import install_package, get_output_dir
 from mozperftest.test.noderunner import NodeRunner
 from mozperftest.test.browsertime.visualtools import get_dependencies, xvfb
 
@@ -76,11 +76,7 @@ class BrowsertimeRunner(NodeRunner):
             "default": "",
             "help": "Extra options passed to browsertime.js",
         },
-        "xvfb": {
-            "action": "store_true",
-            "default": False,
-            "help": "Use xvfb",
-        },
+        "xvfb": {"action": "store_true", "default": False, "help": "Use xvfb"},
         "no-window-recorder": {
             "action": "store_true",
             "default": False,
@@ -323,16 +319,12 @@ class BrowsertimeRunner(NodeRunner):
         self.setup()
         cycles = self.get_arg("cycles", 1)
         for cycle in range(1, cycles + 1):
+
             # Build an output directory
             output = self.get_arg("output")
-            if output is not None:
-                result_dir = pathlib.Path(output, f"browsertime-results-{cycle}")
-            else:
-                result_dir = pathlib.Path(
-                    self.topsrcdir, "artifacts", f"browsertime-results-{cycle}"
-                )
-            result_dir.mkdir(parents=True, exist_ok=True)
-            result_dir = result_dir.resolve()
+            if output is None:
+                output = pathlib.Path(self.topsrcdir, "artifacts")
+            result_dir = get_output_dir(output, f"browsertime-results-{cycle}")
 
             # Run the test cycle
             metadata.run_hook(
@@ -384,7 +376,7 @@ class BrowsertimeRunner(NodeRunner):
                 option = option.strip()
                 if not option:
                     continue
-                option = option.split("=")
+                option = option.split("=", 1)
                 if len(option) != 2:
                     self.warning(
                         f"Skipping browsertime option {option} as it "
