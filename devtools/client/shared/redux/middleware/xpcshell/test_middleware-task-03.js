@@ -20,7 +20,7 @@ const {
 add_task(async function() {
   const store = applyMiddleware(task)(createStore)(reducer);
 
-  store.dispatch(generatorError());
+  store.dispatch(asyncError());
   await waitUntilState(store, () => store.getState().length === 1);
   equal(
     store.getState()[0].type,
@@ -34,8 +34,8 @@ add_task(async function() {
   );
 });
 
-function generatorError() {
-  return function*({ dispatch, getState }) {
+function asyncError() {
+  return async ({ dispatch, getState }) => {
     const error = "task-middleware-error-generator";
     throw error;
   };
