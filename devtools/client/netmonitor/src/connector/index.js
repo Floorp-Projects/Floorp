@@ -179,12 +179,12 @@ class Connector {
     }
   }
 
-  async onResourceAvailable(resources) {
+  async onResourceAvailable(resources, { areExistingResources }) {
     for (const resource of resources) {
       const { TYPES } = this.toolbox.resourceCommand;
 
       if (resource.resourceType === TYPES.DOCUMENT_EVENT) {
-        this.onDocEvent(resource);
+        this.onDocEvent(resource, { areExistingResources });
         continue;
       }
 
@@ -334,12 +334,7 @@ class Connector {
    *
    * @param {object} resource The DOCUMENT_EVENT resource
    */
-  onDocEvent(resource) {
-    if (!resource.targetFront.isTopLevel) {
-      // Only handle document events for the top level target.
-      return;
-    }
-
+  onDocEvent(resource, { areExistingResources }) {
     // Netmonitor does not support dom-loading
     if (
       resource.name != "dom-interactive" &&
@@ -350,7 +345,13 @@ class Connector {
     }
 
     if (resource.name == "will-navigate") {
-      this.willNavigate();
+      // When we open the netmonitor while the page already started loading,
+      // we don't want to clear it. So here, we ignore will-navigate events
+      // which were stored in the ResourceCommand cache and only consider
+      // the live one coming straight from the server.
+      if (!areExistingResources) {
+        this.willNavigate();
+      }
       return;
     }
 
