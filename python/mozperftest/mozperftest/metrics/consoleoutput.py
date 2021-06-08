@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from mozperftest.metrics.common import filtered_metrics, COMMON_ARGS
 from mozperftest.layers import Layer
+import os
 
 
 RESULTS_TEMPLATE = """\
@@ -20,7 +21,8 @@ class ConsoleOutput(Layer):
     """Output metrics in the console."""
 
     name = "console"
-    activated = False
+    # By default activate the console layer when running locally.
+    activated = "MOZ_AUTOMATION" not in os.environ
     arguments = COMMON_ARGS
 
     def run(self, metadata):
