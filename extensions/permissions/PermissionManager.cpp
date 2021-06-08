@@ -3153,19 +3153,6 @@ PermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal) {
   return pairs;
 }
 
-NS_IMETHODIMP
-PermissionManager::BroadcastPermissionsForPrincipalToAllContentProcesses(
-    nsIPrincipal* aPrincipal) {
-  nsTArray<ContentParent*> cps;
-  ContentParent::GetAll(cps);
-  for (ContentParent* cp : cps) {
-    nsresult rv = cp->TransmitPermissionsForPrincipal(aPrincipal);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
 bool PermissionManager::PermissionAvailable(nsIPrincipal* aPrincipal,
                                             const nsACString& aType) {
   EnsureReadCompleted();
