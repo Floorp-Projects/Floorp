@@ -473,10 +473,6 @@ var gEditItemOverlay = {
       menupopup.removeChild(menupopup.lastElementChild);
     }
 
-    if (!this.protonDoorhangersEnabled) {
-      this._folderMenuList.classList.add("panel-button");
-    }
-
     // Build the static list
     if (!this._staticFoldersListBuilt) {
       let unfiledItem = this._element("unfiledRootItem");
@@ -1345,13 +1341,6 @@ XPCOMUtils.defineLazyGetter(gEditItemOverlay, "_folderTree", () => {
   );
   return gEditItemOverlay._element("folderTree");
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  gEditItemOverlay,
-  "protonDoorhangersEnabled",
-  "browser.proton.doorhangers.enabled",
-  false
-);
 
 for (let elt of [
   "folderMenuList",
