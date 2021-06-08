@@ -36,7 +36,7 @@ class MsaaAccessible : public ia2Accessible,
   static const uint32_t kNoID = 0;
   void SetID(uint32_t aID);
 
-  static int32_t GetChildIDFor(LocalAccessible* aAccessible);
+  static int32_t GetChildIDFor(Accessible* aAccessible);
   static uint32_t GetContentProcessIdFor(dom::ContentParentId aIPCContentId);
   static void ReleaseContentProcessIdFor(dom::ContentParentId aIPCContentId);
   static void AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc);
