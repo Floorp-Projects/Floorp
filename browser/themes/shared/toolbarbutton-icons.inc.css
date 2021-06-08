@@ -88,7 +88,7 @@ toolbar[brighttext] {
   fill: transparent;
 }
 
-@keyframes reload-to-stop {
+@keyframes stop-to-reload {
   from {
     transform: translateX(0);
   }
@@ -97,7 +97,7 @@ toolbar[brighttext] {
   }
 }
 
-@keyframes stop-to-reload {
+@keyframes reload-to-stop {
   from {
     transform: translateX(0);
   }
@@ -127,13 +127,13 @@ toolbar[brighttext] {
 }
 
 #stop-reload-button[animate] > #reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  background-image: url("chrome://browser/skin/reload-to-stop.svg");
+  background-image: url("chrome://browser/skin/stop-to-reload.svg");
   width: 720px;
   height: 20px;
 }
 
 #stop-reload-button[animate] > #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  animation-name: reload-to-stop;
+  animation-name: stop-to-reload;
 }
 
 #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
@@ -142,13 +142,13 @@ toolbar[brighttext] {
 }
 
 #stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  background-image: url("chrome://browser/skin/stop-to-reload.svg");
+  background-image: url("chrome://browser/skin/reload-to-stop.svg");
   width: 320px;
   height: 20px;
 }
 
 #stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  animation-name: stop-to-reload;
+  animation-name: reload-to-stop;
 }
 
 #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {

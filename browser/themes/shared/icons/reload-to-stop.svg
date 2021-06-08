@@ -1,349 +1,191 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="20" stroke-width="4" fill="none" fill-opacity="context-fill-opacity">
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="20" stroke-width="4" fill="none" fill-opacity="context-fill-opacity">
   <defs>
-      <mask id="m1" mask-type="alpha">
-        <path id="p1" d="M1.113-.221c0 0 4.722-4.722 4.722-4.722A.633.633 0 0 0 5.383-6a.625.625 0 0 0-.44.165c0 0-4.703 4.702-4.703 4.702 0 0-.481 0-.481 0 0 0-4.702-4.702-4.702-4.702a.629.629 0 0 0-.872.02.631.631 0 0 0-.02.872c0 0 4.702 4.692 4.702 4.692 0 0 0 .502 0 .502 0 0-4.702 4.692-4.702 4.692a.633.633 0 0 0 .892.892c0 0 4.692-4.702 4.692-4.702 0 0 .502 0 .502 0 0 0 4.692 4.702 4.692 4.702A.63.63 0 0 0 6 5.383a.63.63 0 0 0-.165-.44c0 0-4.722-4.723-4.722-4.723 0 0 0-.441 0-.441z" fill="#000000" transform="translate(10 10)"/>
-      </mask>
-      <path id="p2" d="M13.358 6.013c1.087.831 1.704 1.991 1.704 1.991 0 0 .938 4.809-3.687 7.121-4.875.438-6.461-4.922-6.461-4.922m.336-.078c0 0-1.563-5.125 5.875-4.937.873 0 1.626.361 2.233.825"/>
-      <path id="p3" d="M3.375 16.375c0 0 13.063-12.813 13.063-12.813"/>
-      <path id="p4" d="M3.5 3.438c0 0 12.813 13.063 12.813 13.063"/>
-      <path id="p5" d="M2.706-2c0 0 3.993 0 3.993 0 0 0 .3-.3.3-.3 0 0 0-3.993 0-3.993a.5.5 0 0 0-.854-.354c0 0-1.459 1.459-1.459 1.459A6.948 6.948 0 0 0-.001-7c-3.859 0-7 3.141-7 7 0 3.859 3.141 7 7 7A6.97 6.97 0 0 0 6.967.678a.625.625 0 0 0-.561-.682.636.636 0 0 0-.683.562A5.726 5.726 0 0 1-.001 5.75 5.756 5.756 0 0 1-5.751 0a5.756 5.756 0 0 1 5.75-5.75c1.439 0 2.776.531 3.806 1.445 0 0-1.453 1.451-1.453 1.451A.5.5 0 0 0 2.706-2z
-M3.5 3.438c0 0 12.813 13.063 12.813 13.063"/>
-      <path id="p6" d="M-1.875 9.432c0 6.171 0 12.629 0 12.629 0 0 23.686 0 23.686 0 0 0 0-23.686 0-23.686 0 0-23.686 0-23.686 0 0 0 0 5.409 0 11.057"/>
-      <mask id="m2" mask-type="alpha">
-        <path d="M2.706-2c0 0 3.993 0 3.993 0 0 0 .3-.3.3-.3 0 0 0-3.993 0-3.993a.5.5 0 0 0-.854-.354c0 0-1.459 1.459-1.459 1.459A6.948 6.948 0 0 0-.001-7c-3.859 0-7 3.141-7 7 0 3.859 3.141 7 7 7A6.97 6.97 0 0 0 6.967.678a.625.625 0 0 0-.561-.682.636.636 0 0 0-.683.562A5.726 5.726 0 0 1-.001 5.75 5.756 5.756 0 0 1-5.751 0a5.756 5.756 0 0 1 5.75-5.75c1.439 0 2.776.531 3.806 1.445 0 0-1.453 1.451-1.453 1.451A.5.5 0 0 0 2.706-2z
-M3.5 3.438c0 0 12.813 13.063 12.813 13.063" fill="#000000" transform="translate(10 10)"/>
-      </mask>
+    <path id="p1" d="M7.272 5.586c-3.647 1.048-3.685 3.897-3.17 5.68.821 2.842 2.696 5.371 6.835 4.918.389-.043 1.68-.478 2.125-.559 2.508-1.254 3.069-3.243 3.342-4.8.23-1.314-1.092-3.759-1.092-3.759 0 0-1.187-2.566-4.187-1.878-1.594-.04-2.858.112-3.853.398"/>
+    <path id="p2" d="M11.989-1.5C5.203-1.5-2.5-1.5-2.5-1.5c0 0 0 24.608 0 24.608 0 0 24.608 0 24.608 0 0 0 0-24.608 0-24.608 0 0-4.775 0-10.119 0"/>
+    <path id="p3" d="M2.706-2c0 0 3.993 0 3.993 0 0 0 .3-.3.3-.3 0 0 0-3.993 0-3.993a.5.5 0 0 0-.854-.354c0 0-1.459 1.459-1.459 1.459A6.948 6.948 0 0 0-.001-7c-3.859 0-7 3.141-7 7 0 3.859 3.141 7 7 7A6.97 6.97 0 0 0 6.967.678a.625.625 0 0 0-.561-.682.636.636 0 0 0-.683.562A5.726 5.726 0 0 1-.001 5.75 5.756 5.756 0 0 1-5.751 0a5.756 5.756 0 0 1 5.75-5.75c1.439 0 2.776.531 3.806 1.445 0 0-1.453 1.451-1.453 1.451A.5.5 0 0 0 2.706-2z"/>
+    <path id="p4" d="M1.113-.221c0 0 4.722-4.722 4.722-4.722A.633.633 0 0 0 5.383-6a.625.625 0 0 0-.44.165c0 0-4.703 4.702-4.703 4.702 0 0-.481 0-.481 0 0 0-4.702-4.702-4.702-4.702a.629.629 0 0 0-.872.02.631.631 0 0 0-.02.872c0 0 4.702 4.692 4.702 4.692 0 0 0 .502 0 .502 0 0-4.702 4.692-4.702 4.692a.633.633 0 0 0 .892.892c0 0 4.692-4.702 4.692-4.702 0 0 .502 0 .502 0 0 0 4.692 4.702 4.692 4.702A.63.63 0 0 0 6 5.383a.63.63 0 0 0-.165-.44c0 0-4.722-4.723-4.722-4.723 0 0 0-.441 0-.441z"/>
+    <path id="p5" d="M3.375 16.375c0 0 13.063-12.813 13.063-12.813"/>
+    <path id="p6" d="M3.5 3.438c0 0 12.813 13.063 12.813 13.063"/>
+    <mask id="m1" mask-type="alpha">
+      <use href="#p4" fill="#000000" transform="translate(10 10)"/>
+    </mask>
   </defs>
-
   <svg viewBox="0 0 20 20" width="20" height="20">
-    <g>
-      <g mask="url(#m1)">
-        <use href="#p3" stroke="context-fill"/>
-      </g>
-      <g mask="url(#m1)">
-        <use href="#p4" stroke="context-fill"/>
-      </g>
+    <defs>
+      <mask id="a" mask-type="alpha">
+        <use href="#p3" fill="#000000" transform="translate(10 10)"/>
+      </mask>
+    </defs>
+    <g mask="url(#a)" stroke="context-fill" stroke-width="8">
+      <use href="#p1"/>
+      <use href="#p2"/>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="20">
-    <g>
-      <g mask="url(#m1)">
-        <use href="#p3" stroke="context-fill"/>
-      </g>
-      <g mask="url(#m1)">
-        <use href="#p4" stroke="context-fill"/>
-      </g>
+    <defs>
+      <mask id="c" mask-type="alpha">
+        <use href="#p3" fill="#000000" transform="rotate(41.674 -8.137 18.137)"/>
+      </mask>
+    </defs>
+    <g mask="url(#c)" stroke="context-fill" stroke-width="8">
+      <use href="#p1"/>
+      <use href="#p2"/>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="40">
-    <g>
-      <g mask="url(#m1)">
-        <use href="#p3" stroke="context-fill"/>
-      </g>
-      <g mask="url(#m1)">
-        <use href="#p4" stroke="context-fill"/>
-      </g>
+    <defs>
+      <mask id="e" mask-type="alpha">
+        <use href="#p3" fill="#000000" transform="rotate(122.138 2.236 7.764)"/>
+      </mask>
+    </defs>
+    <g mask="url(#e)" stroke="context-fill" stroke-width="8">
+      <use href="#p1"/>
+      <use href="#p2"/>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="60">
-    <g>
-      <g mask="url(#m1)">
-        <use href="#p3" stroke="context-fill"/>
-      </g>
-      <g mask="url(#m1)">
-        <use href="#p4" stroke="context-fill"/>
-      </g>
+    <defs>
+      <mask id="g" mask-type="alpha">
+        <use href="#p3" fill="#000000" transform="rotate(-179.685 5.014 4.986)"/>
+      </mask>
+    </defs>
+    <g mask="url(#g)" stroke="context-fill" stroke-width="8">
+      <use href="#p1"/>
+      <use href="#p2"/>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="80">
-    <g>
-      <g mask="url(#m1)">
-        <use href="#p3" stroke="context-fill"/>
-      </g>
-      <g mask="url(#m1)">
-        <use href="#p4" stroke="context-fill"/>
-      </g>
+    <defs>
+      <mask id="i" mask-type="alpha">
+        <use href="#p3" fill="#000000" transform="rotate(-138.043 6.917 3.083)"/>
+      </mask>
+    </defs>
+    <g mask="url(#i)" stroke="context-fill" stroke-width="8">
+      <use href="#p1"/>
+      <use href="#p2"/>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="100">
-    <g>
-      <g mask="url(#m1)">
-        <use href="#p3" stroke="context-fill"/>
-      </g>
-      <g mask="url(#m1)">
-        <use href="#p4" stroke="context-fill"/>
-      </g>
+    <defs>
+      <mask id="k" mask-type="alpha">
+        <use href="#p3" fill="#000000" transform="rotate(-106.603 8.727 1.273)"/>
+      </mask>
+    </defs>
+    <g mask="url(#k)" stroke="context-fill" stroke-width="8">
+      <path d="M8.297 5.357c-4.661.778-4.755 3.972-4.195 5.909.821 2.842 2.696 5.371 6.835 4.918.389-.043 1.68-.478 2.125-.559 2.508-1.254 3.069-3.243 3.342-4.8.012-.069.02-.141.024-.216"/>
+      <path d="M14.726-1.5C7.477-1.5-2.5-1.5-2.5-1.5c0 0 0 24.608 0 24.608 0 0 24.608 0 24.608 0 0 0 0-.726 0-1.929"/>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="120">
+    <defs>
+      <mask id="o" mask-type="alpha">
+        <use href="#p3" fill="#000000" transform="rotate(-82.066 10.745 -.745)"/>
+      </mask>
+    </defs>
     <g>
-      <g mask="url(#m1)">
-        <use href="#p3" stroke="context-fill"/>
-      </g>
-      <g mask="url(#m1)">
-        <use href="#p4" stroke="context-fill"/>
+      <g mask="url(#o)" stroke="context-fill" stroke-width="8">
+        <path d="M9.341 5.23c-5.689.453-5.838 3.964-5.239 6.036.467 1.617 1.275 3.133 2.648 4.055"/>
+        <path d="M17.462-1.5c-7.131 0-19.962 0-19.962 0 0 0 0 10.326 0 17.6"/>
       </g>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="140">
+    <defs>
+      <mask id="r" mask-type="alpha">
+        <use href="#p3" fill="#000000" transform="rotate(-62.555 13.23 -3.23)"/>
+      </mask>
+    </defs>
     <g>
       <g mask="url(#m1)">
-        <path stroke="context-fill" stroke-width="4" d="M9.003 10.855c3.537-3.469 7.435-7.293 7.435-7.293"/>
+        <path stroke="context-fill" d="M3.5 3.438c0 0 2.618 2.669 5.486 5.594"/>
       </g>
-      <g mask="url(#m1)">
-        <use href="#p4" stroke="context-fill"/>
+      <g mask="url(#r)" stroke="context-fill" stroke-width="8">
+        <path d="M11.125 5.188c-2.026-.051-3.518.208-4.603.658"/>
+        <path d="M22.108-1.5c0 0-6.074 0-12.186 0"/>
       </g>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="160">
-    <g>
-      <g mask="url(#m1)">
-        <path stroke="context-fill" stroke-width="4" d="M14.003 5.95c1.44-1.412 2.435-2.388 2.435-2.388"/>
-      </g>
-      <g mask="url(#m1)">
-        <use href="#p4" stroke="context-fill"/>
-      </g>
+    <g mask="url(#m1)">
+      <path stroke="context-fill" d="M3.5 3.438c0 0 6.727 6.858 10.432 10.636"/>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="180">
-    <defs>
-      <mask id="D" mask-type="alpha">
-        <use href="#p5" fill="#000000" transform="rotate(35.537 -10.603 20.603)"/>
-      </mask>
-    </defs>
-    <g>
-      <g mask="url(#m1)">
-        <use href="#p4" stroke="context-fill"/>
-      </g>
-      <g mask="url(#D)" stroke="context-fill" stroke-width="8">
-        <path d="M13.358 6.013c1.087.831 1.704 1.991 1.704 1.991 0 0 .09.461.077 1.166"/>
-        <path d="M-1.875 9.432c0 4.538 0 9.232 0 11.398"/>
-      </g>
+    <g mask="url(#m1)">
+      <use href="#p6" stroke="context-fill"/>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="200">
-    <defs>
-      <mask id="G" mask-type="alpha">
-        <use href="#p5" fill="#000000" transform="rotate(75.225 -1.49 11.49)"/>
-      </mask>
-    </defs>
     <g>
       <g mask="url(#m1)">
-        <path stroke="context-fill" stroke-width="4" d="M3.5 3.438c0 0 3.824 3.898 7.293 7.435"/>
+        <use href="#p6" stroke="context-fill"/>
       </g>
-      <g mask="url(#G)" stroke="context-fill" stroke-width="8">
-        <path d="M13.358 6.013c1.087.831 1.704 1.991 1.704 1.991 0 0 .54 2.767-1.219 5.113"/>
-        <path d="M-1.875 9.432c0 6.171 0 12.629 0 12.629 0 0 5.634 0 11.407 0"/>
+      <g mask="url(#m1)">
+        <path stroke="context-fill" d="M3.375 16.375c0 0 2.502-2.454 5.315-5.214"/>
       </g>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="220">
-    <defs>
-      <mask id="J" mask-type="alpha">
-        <use href="#p5" fill="#000000" transform="rotate(115.499 1.845 8.155)"/>
-      </mask>
-    </defs>
     <g>
       <g mask="url(#m1)">
-        <path stroke="context-fill" stroke-width="4" d="M3.5 3.438c0 0 .976.995 2.388 2.435"/>
+        <use href="#p6" stroke="context-fill"/>
       </g>
-      <g mask="url(#J)" stroke="context-fill" stroke-width="8">
-        <path d="M13.358 6.013c1.087.831 1.704 1.991 1.704 1.991 0 0 .938 4.809-3.687 7.121-.354.032-.69.033-1.01.008"/>
-        <path d="M-1.875 9.432c0 6.171 0 12.629 0 12.629 0 0 23.686 0 23.686 0 0 0 0-.126 0-.36"/>
+      <g mask="url(#m1)">
+        <path stroke="context-fill" d="M3.375 16.375c0 0 6.455-6.331 10.29-10.093"/>
       </g>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="240">
-    <defs>
-      <mask id="K" mask-type="alpha">
-        <use href="#p5" fill="#000000" transform="rotate(155.076 3.895 6.105)"/>
-      </mask>
-    </defs>
-    <g mask="url(#K)" stroke="context-fill" stroke-width="8">
-      <path d="M13.358 6.013c1.087.831 1.704 1.991 1.704 1.991 0 0 .938 4.809-3.687 7.121-2.086.187-3.57-.687-4.585-1.748"/>
-      <path d="M-1.875 9.432c0 6.171 0 12.629 0 12.629 0 0 23.686 0 23.686 0 0 0 0-6.412 0-12.563"/>
+    <g>
+      <g mask="url(#m1)">
+        <use href="#p6" stroke="context-fill"/>
+      </g>
+      <g mask="url(#m1)">
+        <use href="#p5" stroke="context-fill"/>
+      </g>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="260">
-    <defs>
-      <mask id="M" mask-type="alpha">
-        <use href="#p5" fill="#000000" transform="rotate(-166.799 5.579 4.421)"/>
-      </mask>
-    </defs>
-    <g mask="url(#M)" stroke="context-fill" stroke-width="8">
-      <path d="M13.358 6.013c1.087.831 1.704 1.991 1.704 1.991 0 0 .938 4.809-3.687 7.121-4.875.438-6.461-4.922-6.461-4.922m.336-.078c0 0-.012-.039-.029-.11"/>
-      <path d="M-1.875 9.432c0 6.171 0 12.629 0 12.629 0 0 23.686 0 23.686 0 0 0 0-23.686 0-23.686 0 0-.119 0-.34 0"/>
+    <g>
+      <g mask="url(#m1)">
+        <use href="#p6" stroke="context-fill"/>
+      </g>
+      <g mask="url(#m1)">
+        <use href="#p5" stroke="context-fill"/>
+      </g>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="280">
-    <defs>
-      <mask id="O" mask-type="alpha">
-        <use href="#p5" fill="#000000" transform="rotate(-130.721 7.293 2.707)"/>
-      </mask>
-    </defs>
-    <g mask="url(#O)" stroke="context-fill" stroke-width="8">
-      <path d="M13.358 6.013c1.087.831 1.704 1.991 1.704 1.991 0 0 .938 4.809-3.687 7.121-4.875.438-6.461-4.922-6.461-4.922m.336-.078c0 0-.594-1.947.692-3.396"/>
-      <path d="M-1.875 9.432c0 6.171 0 12.629 0 12.629 0 0 23.686 0 23.686 0 0 0 0-23.686 0-23.686 0 0-5.246 0-10.801 0"/>
+    <g>
+      <g mask="url(#m1)">
+        <use href="#p6" stroke="context-fill"/>
+      </g>
+      <g mask="url(#m1)">
+        <use href="#p5" stroke="context-fill"/>
+      </g>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="300">
-    <defs>
-      <mask id="Q" mask-type="alpha">
-        <use href="#p5" fill="#000000" transform="rotate(-97.27 9.403 .597)"/>
-      </mask>
-    </defs>
-    <g mask="url(#Q)" stroke="context-fill" stroke-width="8">
-      <path d="M13.358 6.013c1.087.831 1.704 1.991 1.704 1.991 0 0 .938 4.809-3.687 7.121-4.875.438-6.461-4.922-6.461-4.922m.336-.078c0 0-1.178-3.862 3.376-4.758"/>
-      <path d="M-1.875 9.432c0 6.171 0 12.629 0 12.629 0 0 23.686 0 23.686 0 0 0 0-23.686 0-23.686 0 0-13.306 0-19.972 0"/>
+    <g>
+      <g mask="url(#m1)">
+        <use href="#p6" stroke="context-fill"/>
+      </g>
+      <g mask="url(#m1)">
+        <use href="#p5" stroke="context-fill"/>
+      </g>
     </g>
   </svg>
   <svg viewBox="0 0 20 20" width="20" height="20" x="320">
-    <defs>
-      <mask id="S" mask-type="alpha">
-        <use href="#p5" fill="#000000" transform="rotate(-67.09 12.541 -2.541)"/>
-      </mask>
-    </defs>
-    <g mask="url(#S)" stroke="context-fill" stroke-width="8">
-      <path d="M13.358 6.013c1.087.831 1.704 1.991 1.704 1.991 0 0 .938 4.809-3.687 7.121-4.875.438-6.461-4.922-6.461-4.922m.336-.078c0 0-1.562-5.121 5.865-4.937"/>
-      <path d="M-1.875 9.432c0 6.171 0 12.629 0 12.629 0 0 23.686 0 23.686 0 0 0 0-23.686 0-23.686 0 0-23.686 0-23.686 0 0 0 0 1.511 0 3.77"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="340">
-    <defs>
-      <mask id="U" mask-type="alpha">
-        <use href="#p5" fill="#000000" transform="rotate(-40.971 18.383 -8.383)"/>
-      </mask>
-    </defs>
-    <g mask="url(#U)" stroke="context-fill" stroke-width="8">
-      <path d="M13.358 6.013c1.087.831 1.704 1.991 1.704 1.991 0 0 .938 4.809-3.687 7.121-4.875.438-6.461-4.922-6.461-4.922m.336-.078c0 0-1.563-5.125 5.875-4.937.616 0 1.172.18 1.659.449"/>
-      <path d="M-1.875 9.432c0 6.171 0 12.629 0 12.629 0 0 23.686 0 23.686 0 0 0 0-23.686 0-23.686 0 0-23.686 0-23.686 0 0 0 0 4.164 0 9.001"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="360">
-    <defs>
-      <mask id="W" mask-type="alpha">
-        <use href="#p5" fill="#000000" transform="rotate(-19.959 33.416 -23.416)"/>
-      </mask>
-    </defs>
-    <g mask="url(#W)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="380">
-    <defs>
-      <mask id="Y" mask-type="alpha">
-        <use href="#p5" fill="#000000" transform="rotate(-5.539 108.353 -98.354)"/>
-      </mask>
-    </defs>
-    <g mask="url(#Y)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="400">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="420">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="440">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="460">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="480">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="500">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="520">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="540">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="560">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="580">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="600">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="620">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="640">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="660">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="680">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="700">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
-    </g>
-  </svg>
-  <svg viewBox="0 0 20 20" width="20" height="20" x="720">
-    <g mask="url(#m2)" stroke="context-fill" stroke-width="8">
-      <use href="#p2"/>
-      <use href="#p6"/>
+    <g>
+      <g mask="url(#m1)">
+        <use href="#p6" stroke="context-fill"/>
+      </g>
+      <g mask="url(#m1)">
+        <use href="#p5" stroke="context-fill"/>
+      </g>
     </g>
   </svg>
 </svg>
