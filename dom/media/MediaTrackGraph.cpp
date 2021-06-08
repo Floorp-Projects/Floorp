@@ -134,41 +134,14 @@ void NativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
   MOZ_ASSERT(inputInfo.mChannels >= 1 && inputInfo.mChannels <= 8,
              "Support up to 8 channels");
 
-  CheckedInt<size_t> bufferSize(sizeof(AudioDataValue));
-  bufferSize *= inputInfo.mFrames;
-  bufferSize *= inputInfo.mChannels;
-  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
-  AutoTArray<const AudioDataValue*, 8> channels;
-  if (inputInfo.mChannels == 1) {
-    PodCopy(static_cast<AudioDataValue*>(buffer->Data()), inputInfo.mBuffer,
-            inputInfo.mFrames);
-    channels.AppendElement(static_cast<AudioDataValue*>(buffer->Data()));
-  } else {
-    channels.SetLength(inputInfo.mChannels);
-    AutoTArray<AudioDataValue*, 8> writeChannels;
-    writeChannels.SetLength(inputInfo.mChannels);
-    AudioDataValue* samples = static_cast<AudioDataValue*>(buffer->Data());
-
-    size_t offset = 0;
-    for (uint32_t i = 0; i < inputInfo.mChannels; ++i) {
-      channels[i] = writeChannels[i] = samples + offset;
-      offset += inputInfo.mFrames;
-    }
-
-    DeinterleaveAndConvertBuffer(inputInfo.mBuffer, inputInfo.mFrames,
-                                 inputInfo.mChannels,
-                                 writeChannels.Elements());
-  }
+  GetData<AudioSegment>()->Clear();
+  GetData<AudioSegment>()->AppendFromInterleavedBuffer(
+      inputInfo.mBuffer, inputInfo.mFrames, inputInfo.mChannels,
+      PRINCIPAL_HANDLE_NONE);
 
   LOG(LogLevel::Verbose,
       ("NativeInputTrack %p Appending %zu frames of raw audio", this,
        inputInfo.mFrames));
-
-  MOZ_ASSERT(inputInfo.mChannels == channels.Length());
-  GetData<AudioSegment>()->Clear();
-  GetData<AudioSegment>()->AppendFrames(buffer.forget(), channels,
-                                        static_cast<int32_t>(inputInfo.mFrames),
-                                        PRINCIPAL_HANDLE_NONE);
 }
 
 uint32_t NativeInputTrack::NumberOfChannels() const {
