@@ -47,7 +47,7 @@ class AboutPrivateBrowsingChild extends RemotePageChild {
   }
 
   PrivateBrowsingFeatureConfig() {
-    const config = NimbusFeatures.privatebrowsing.getValue({
+    const config = NimbusFeatures.privatebrowsing.getAllVariables({
       sendExposureEvent: true,
     });
 
