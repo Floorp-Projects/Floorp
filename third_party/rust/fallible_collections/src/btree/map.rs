@@ -683,6 +683,7 @@ impl<K: Ord, V> BTreeMap<K, V> {
     /// assert_eq!(map.contains_key(&2), false);
     /// ```
 
+    #[inline]
     pub fn contains_key<Q: ?Sized>(&self, key: &Q) -> bool
     where
         K: Borrow<Q>,
@@ -1252,6 +1253,7 @@ impl<'a, K: 'a, V: 'a> IntoIterator for &'a BTreeMap<K, V> {
 impl<'a, K: 'a, V: 'a> Iterator for Iter<'a, K, V> {
     type Item = (&'a K, &'a V);
 
+    #[inline]
     fn next(&mut self) -> Option<(&'a K, &'a V)> {
         if self.length == 0 {
             None
@@ -1261,6 +1263,7 @@ impl<'a, K: 'a, V: 'a> Iterator for Iter<'a, K, V> {
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.length, Some(self.length))
     }
@@ -1280,6 +1283,7 @@ impl<'a, K: 'a, V: 'a> DoubleEndedIterator for Iter<'a, K, V> {
 }
 
 impl<K, V> ExactSizeIterator for Iter<'_, K, V> {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.length
     }
@@ -1298,6 +1302,7 @@ impl<'a, K: 'a, V: 'a> IntoIterator for &'a mut BTreeMap<K, V> {
     type Item = (&'a K, &'a mut V);
     type IntoIter = IterMut<'a, K, V>;
 
+    #[inline(always)]
     fn into_iter(self) -> IterMut<'a, K, V> {
         self.iter_mut()
     }
@@ -1306,6 +1311,7 @@ impl<'a, K: 'a, V: 'a> IntoIterator for &'a mut BTreeMap<K, V> {
 impl<'a, K: 'a, V: 'a> Iterator for IterMut<'a, K, V> {
     type Item = (&'a K, &'a mut V);
 
+    #[inline]
     fn next(&mut self) -> Option<(&'a K, &'a mut V)> {
         if self.length == 0 {
             None
@@ -1315,6 +1321,7 @@ impl<'a, K: 'a, V: 'a> Iterator for IterMut<'a, K, V> {
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.length, Some(self.length))
     }
@@ -1332,6 +1339,7 @@ impl<'a, K: 'a, V: 'a> DoubleEndedIterator for IterMut<'a, K, V> {
 }
 
 impl<K, V> ExactSizeIterator for IterMut<'_, K, V> {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.length
     }
@@ -1415,6 +1423,7 @@ impl<K, V> Iterator for IntoIter<K, V> {
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.length, Some(self.length))
     }
@@ -1459,6 +1468,7 @@ impl<K, V> DoubleEndedIterator for IntoIter<K, V> {
 }
 
 impl<K, V> ExactSizeIterator for IntoIter<K, V> {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.length
     }
@@ -1469,22 +1479,26 @@ impl<K, V> FusedIterator for IntoIter<K, V> {}
 impl<'a, K, V> Iterator for Keys<'a, K, V> {
     type Item = &'a K;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a K> {
         self.inner.next().map(|(k, _)| k)
     }
 
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
 }
 
 impl<'a, K, V> DoubleEndedIterator for Keys<'a, K, V> {
+    #[inline]
     fn next_back(&mut self) -> Option<&'a K> {
         self.inner.next_back().map(|(k, _)| k)
     }
 }
 
 impl<K, V> ExactSizeIterator for Keys<'_, K, V> {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.inner.len()
     }
@@ -1493,6 +1507,7 @@ impl<K, V> ExactSizeIterator for Keys<'_, K, V> {
 impl<K, V> FusedIterator for Keys<'_, K, V> {}
 
 impl<K, V> Clone for Keys<'_, K, V> {
+    #[inline(always)]
     fn clone(&self) -> Self {
         Keys {
             inner: self.inner.clone(),
@@ -1503,22 +1518,26 @@ impl<K, V> Clone for Keys<'_, K, V> {
 impl<'a, K, V> Iterator for Values<'a, K, V> {
     type Item = &'a V;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a V> {
         self.inner.next().map(|(_, v)| v)
     }
 
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
 }
 
 impl<'a, K, V> DoubleEndedIterator for Values<'a, K, V> {
+    #[inline]
     fn next_back(&mut self) -> Option<&'a V> {
         self.inner.next_back().map(|(_, v)| v)
     }
 }
 
 impl<K, V> ExactSizeIterator for Values<'_, K, V> {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.inner.len()
     }
@@ -1527,6 +1546,7 @@ impl<K, V> ExactSizeIterator for Values<'_, K, V> {
 impl<K, V> FusedIterator for Values<'_, K, V> {}
 
 impl<K, V> Clone for Values<'_, K, V> {
+    #[inline(always)]
     fn clone(&self) -> Self {
         Values {
             inner: self.inner.clone(),
@@ -1537,6 +1557,7 @@ impl<K, V> Clone for Values<'_, K, V> {
 impl<'a, K, V> Iterator for Range<'a, K, V> {
     type Item = (&'a K, &'a V);
 
+    #[inline]
     fn next(&mut self) -> Option<(&'a K, &'a V)> {
         if self.front == self.back {
             None
@@ -1549,22 +1570,26 @@ impl<'a, K, V> Iterator for Range<'a, K, V> {
 impl<'a, K, V> Iterator for ValuesMut<'a, K, V> {
     type Item = &'a mut V;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a mut V> {
         self.inner.next().map(|(_, v)| v)
     }
 
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
 }
 
 impl<'a, K, V> DoubleEndedIterator for ValuesMut<'a, K, V> {
+    #[inline]
     fn next_back(&mut self) -> Option<&'a mut V> {
         self.inner.next_back().map(|(_, v)| v)
     }
 }
 
 impl<K, V> ExactSizeIterator for ValuesMut<'_, K, V> {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.inner.len()
     }
@@ -1605,6 +1630,7 @@ impl<'a, K, V> Range<'a, K, V> {
 }
 
 impl<'a, K, V> DoubleEndedIterator for Range<'a, K, V> {
+    #[inline]
     fn next_back(&mut self) -> Option<(&'a K, &'a V)> {
         if self.front == self.back {
             None
@@ -1649,6 +1675,7 @@ impl<'a, K, V> Range<'a, K, V> {
 impl<K, V> FusedIterator for Range<'_, K, V> {}
 
 impl<K, V> Clone for Range<'_, K, V> {
+    #[inline]
     fn clone(&self) -> Self {
         Range {
             front: self.front,
@@ -1660,6 +1687,7 @@ impl<K, V> Clone for Range<'_, K, V> {
 impl<'a, K, V> Iterator for RangeMut<'a, K, V> {
     type Item = (&'a K, &'a mut V);
 
+    #[inline]
     fn next(&mut self) -> Option<(&'a K, &'a mut V)> {
         if self.front == self.back {
             None
@@ -1706,6 +1734,7 @@ impl<'a, K, V> RangeMut<'a, K, V> {
 }
 
 impl<'a, K, V> DoubleEndedIterator for RangeMut<'a, K, V> {
+    #[inline]
     fn next_back(&mut self) -> Option<(&'a K, &'a mut V)> {
         if self.front == self.back {
             None
@@ -1754,6 +1783,7 @@ impl<'a, K, V> RangeMut<'a, K, V> {
 }
 
 impl<K: Ord, V> FromIterator<(K, V)> for BTreeMap<K, V> {
+    #[inline]
     fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> BTreeMap<K, V> {
         let mut map = BTreeMap::new();
         map.extend(iter);
@@ -1771,6 +1801,7 @@ impl<K: Ord, V> Extend<(K, V)> for BTreeMap<K, V> {
 }
 
 impl<'a, K: Ord + Copy, V: Copy> Extend<(&'a K, &'a V)> for BTreeMap<K, V> {
+    #[inline]
     fn extend<I: IntoIterator<Item = (&'a K, &'a V)>>(&mut self, iter: I) {
         self.extend(iter.into_iter().map(|(&key, &value)| (key, value)));
     }
@@ -1786,6 +1817,7 @@ impl<K: Hash, V: Hash> Hash for BTreeMap<K, V> {
 
 impl<K: Ord, V> Default for BTreeMap<K, V> {
     /// Creates an empty `BTreeMap<K, V>`.
+    #[inline(always)]
     fn default() -> BTreeMap<K, V> {
         BTreeMap::new()
     }
@@ -2057,6 +2089,7 @@ impl<K, V> BTreeMap<K, V> {
     /// assert_eq!(keys, [1, 2]);
     /// ```
 
+    #[inline(always)]
     pub fn keys<'a>(&'a self) -> Keys<'a, K, V> {
         Keys { inner: self.iter() }
     }
@@ -2078,6 +2111,7 @@ impl<K, V> BTreeMap<K, V> {
     /// assert_eq!(values, ["hello", "goodbye"]);
     /// ```
 
+    #[inline(always)]
     pub fn values<'a>(&'a self) -> Values<'a, K, V> {
         Values { inner: self.iter() }
     }
@@ -2104,6 +2138,7 @@ impl<K, V> BTreeMap<K, V> {
     ///                     String::from("goodbye!")]);
     /// ```
 
+    #[inline(always)]
     pub fn values_mut(&mut self) -> ValuesMut<'_, K, V> {
         ValuesMut {
             inner: self.iter_mut(),
@@ -2125,6 +2160,7 @@ impl<K, V> BTreeMap<K, V> {
     /// assert_eq!(a.len(), 1);
     /// ```
 
+    #[inline(always)]
     pub fn len(&self) -> usize {
         self.length
     }
@@ -2144,6 +2180,7 @@ impl<K, V> BTreeMap<K, V> {
     /// assert!(!a.is_empty());
     /// ```
 
+    #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -2208,6 +2245,7 @@ impl<'a, K: Ord, V> Entry<'a, K, V> {
     /// assert_eq!(map.entry("poneyland").key(), &"poneyland");
     /// ```
 
+    #[inline]
     pub fn key(&self) -> &K {
         match *self {
             Occupied(ref entry) => entry.key(),
@@ -2287,6 +2325,7 @@ impl<'a, K: Ord, V> VacantEntry<'a, K, V> {
     /// assert_eq!(map.entry("poneyland").key(), &"poneyland");
     /// ```
 
+    #[inline(always)]
     pub fn key(&self) -> &K {
         &self.key
     }
@@ -2305,7 +2344,7 @@ impl<'a, K: Ord, V> VacantEntry<'a, K, V> {
     ///     v.into_key();
     /// }
     /// ```
-
+    #[inline(always)]
     pub fn into_key(self) -> K {
         self.key
     }
@@ -2381,6 +2420,7 @@ impl<'a, K: Ord, V> OccupiedEntry<'a, K, V> {
     /// assert_eq!(map.entry("poneyland").key(), &"poneyland");
     /// ```
 
+    #[inline]
     pub fn key(&self) -> &K {
         self.handle.reborrow().into_kv().0
     }
@@ -2405,6 +2445,7 @@ impl<'a, K: Ord, V> OccupiedEntry<'a, K, V> {
     /// // println!("{}", map["poneyland"]);
     /// ```
 
+    #[inline]
     pub fn remove_entry(self) -> (K, V) {
         self.remove_kv()
     }
@@ -2425,6 +2466,7 @@ impl<'a, K: Ord, V> OccupiedEntry<'a, K, V> {
     /// }
     /// ```
 
+    #[inline]
     pub fn get(&self) -> &V {
         self.handle.reborrow().into_kv().1
     }
@@ -2455,7 +2497,7 @@ impl<'a, K: Ord, V> OccupiedEntry<'a, K, V> {
     /// }
     /// assert_eq!(map["poneyland"], 24);
     /// ```
-
+    #[inline]
     pub fn get_mut(&mut self) -> &mut V {
         self.handle.kv_mut().1
     }
@@ -2481,7 +2523,7 @@ impl<'a, K: Ord, V> OccupiedEntry<'a, K, V> {
     /// }
     /// assert_eq!(map["poneyland"], 22);
     /// ```
-
+    #[inline]
     pub fn into_mut(self) -> &'a mut V {
         self.handle.into_kv_mut().1
     }
@@ -2503,7 +2545,7 @@ impl<'a, K: Ord, V> OccupiedEntry<'a, K, V> {
     /// }
     /// assert_eq!(map["poneyland"], 15);
     /// ```
-
+    #[inline]
     pub fn insert(&mut self, value: V) -> V {
         mem::replace(self.get_mut(), value)
     }
@@ -2525,7 +2567,7 @@ impl<'a, K: Ord, V> OccupiedEntry<'a, K, V> {
     /// // If we try to get "poneyland"'s value, it'll panic:
     /// // println!("{}", map["poneyland"]);
     /// ```
-
+    #[inline]
     pub fn remove(self) -> V {
         self.remove_kv().1
     }

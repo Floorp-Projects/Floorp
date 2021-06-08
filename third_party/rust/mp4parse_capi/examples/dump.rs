@@ -32,6 +32,12 @@ fn dump_avif(filename: &str, strictness: ParseStrictness) {
         let mut parser = std::ptr::null_mut();
         let rv = mp4parse_avif_new(&io, strictness, &mut parser);
         println!("mp4parse_avif_new -> {:?}", rv);
+        if rv == Mp4parseStatus::Ok {
+            println!(
+                "mp4parse_avif_get_image_safe -> {:?}",
+                mp4parse_avif_get_image_safe(&*parser)
+            );
+        }
     }
 }
 

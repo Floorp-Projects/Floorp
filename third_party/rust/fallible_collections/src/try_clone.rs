@@ -21,6 +21,7 @@ macro_rules! impl_try_clone {
 impl_try_clone!(u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, bool);
 
 impl<T: TryClone> TryClone for Option<T> {
+    #[inline]
     fn try_clone(&self) -> Result<Self, TryReserveError> {
         Ok(match self {
             Some(t) => Some(t.try_clone()?),
