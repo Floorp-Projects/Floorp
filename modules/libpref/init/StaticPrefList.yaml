@@ -5195,7 +5195,7 @@
 # software backend
 - name: gfx.webrender.software.unaccelerated-widget.allow
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Whether to force widgets to don't support acceleration to use WebRender
