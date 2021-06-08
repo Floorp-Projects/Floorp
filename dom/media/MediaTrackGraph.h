@@ -97,6 +97,7 @@ class MediaTrack;
 class MediaTrackGraph;
 class MediaTrackGraphImpl;
 class MediaTrackListener;
+class NativeInputTrack;
 class ProcessedMediaTrack;
 class SourceMediaTrack;
 
@@ -382,6 +383,7 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
   virtual ForwardedInputTrack* AsForwardedInputTrack() { return nullptr; }
   virtual CrossGraphTransmitter* AsCrossGraphTransmitter() { return nullptr; }
   virtual CrossGraphReceiver* AsCrossGraphReceiver() { return nullptr; }
+  virtual NativeInputTrack* AsNativeInputTrack() { return nullptr; }
 
   // These Impl methods perform the core functionality of the control methods
   // above, on the media graph thread.
