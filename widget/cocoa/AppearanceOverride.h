@@ -8,13 +8,10 @@
 
 #import <Cocoa/Cocoa.h>
 
-// Implements support for the widget.macos.respect-system-appearance pref.
-// Use MOZGlobalAppearance.sharedInstance.effectiveAppearance in all places where you would like the
-// global override to be respected.
-// The effectiveAppearance property can be key-value observed.
-//
-// Once the pref is removed, all occurrences of MOZGlobalAppearance.sharedInstance can be replaced
-// with NSApp.
+// Implements support for the prefs browser.theme.toolbar-theme and
+// widget.macos.support-dark-appearance. Use MOZGlobalAppearance.sharedInstance.effectiveAppearance
+// in all places where you would like the global override to be respected. The effectiveAppearance
+// property can be key-value observed.
 @interface MOZGlobalAppearance : NSObject <NSAppearanceCustomization>
 @property(class, readonly) MOZGlobalAppearance* sharedInstance;
 @end

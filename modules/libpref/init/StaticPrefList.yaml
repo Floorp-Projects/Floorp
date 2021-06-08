@@ -11384,22 +11384,6 @@
   value: false
   mirror: always
 
-# Whether system colors follow the document theme rather than the system on
-# chrome documents.
-- name: widget.system-colors-follow-theme
-  type: RelaxedAtomicBool
-#ifdef XP_MACOSX
-  value: true
-#else
-  # TODO(emilio): In order to enable this on GTK we need to teach
-  # nsNativeThemeGTK to draw non-system-themed widgets, which seems a bit hard,
-  # or alternatively do this only for documents which use the non-native theme.
-  #
-  # We also need to enable widget.gtk.alt-theme.dark.
-  value: false
-#endif
-  mirror: always
-
 - name: widget.window-transforms.disabled
   type: RelaxedAtomicBool
   value: false
@@ -11416,7 +11400,7 @@
   value: true
   mirror: always
 
-- name: widget.macos.respect-system-appearance
+- name: widget.macos.support-dark-appearance
   type: RelaxedAtomicBool
   value: false
   mirror: always
@@ -11431,9 +11415,8 @@
 # Whether we try to extract dark theme GTK colors.
 #
 # This has a startup performance cost (see bug 1709295), so until we need them
-# (that is, until we implement the color-scheme CSS property / meta tag / etc,
-# or we start following the firefox theme color scheme in our UI with
-# widget.system-colors-follow-theme) we keep this code pref'd off.
+# (that is, until we implement the color-scheme CSS property / meta tag / etc)
+# we keep this code pref'd off.
 - name: widget.gtk.alt-theme.dark
   type: bool
   value: false
