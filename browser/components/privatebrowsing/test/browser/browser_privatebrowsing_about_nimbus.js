@@ -46,6 +46,7 @@ function waitForTelemetryEvent(category) {
 }
 
 add_task(async function test_experiment_plain_text() {
+  await ExperimentAPI.ready();
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
     enabled: true,
@@ -93,6 +94,7 @@ add_task(async function test_experiment_plain_text() {
 });
 
 add_task(async function test_experiment_fluent() {
+  await ExperimentAPI.ready();
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
     enabled: true,
@@ -128,6 +130,7 @@ add_task(async function test_experiment_fluent() {
 });
 
 add_task(async function test_experiment_info_disabled() {
+  await ExperimentAPI.ready();
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
     enabled: true,
@@ -151,6 +154,7 @@ add_task(async function test_experiment_info_disabled() {
 });
 
 add_task(async function test_experiment_promo_disabled() {
+  await ExperimentAPI.ready();
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
     enabled: true,
@@ -174,6 +178,7 @@ add_task(async function test_experiment_promo_disabled() {
 });
 
 add_task(async function test_experiment_format_urls() {
+  await ExperimentAPI.ready();
   const LOCALE = Services.locale.appLocaleAsBCP47;
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
@@ -204,6 +209,7 @@ add_task(async function test_experiment_format_urls() {
 });
 
 add_task(async function test_experiment_click_info_telemetry() {
+  await ExperimentAPI.ready();
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
     enabled: true,
@@ -233,6 +239,7 @@ add_task(async function test_experiment_click_info_telemetry() {
 });
 
 add_task(async function test_experiment_click_promo_telemetry() {
+  await ExperimentAPI.ready();
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
     enabled: true,
