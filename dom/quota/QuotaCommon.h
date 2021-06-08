@@ -1345,7 +1345,7 @@ struct MOZ_STACK_CLASS ScopedLogExtraInfo {
   static constexpr const char kTagQuery[] = "query";
   static constexpr const char kTagContext[] = "context";
 
-#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
  private:
   static auto FindSlot(const char* aTag);
 
