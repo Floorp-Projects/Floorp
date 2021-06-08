@@ -309,10 +309,8 @@ a11y::AccType nsRangeFrame::AccessibleType() { return a11y::eHTMLRangeType; }
 
 double nsRangeFrame::GetValueAsFractionOfRange() {
   MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
-  dom::HTMLInputElement* input =
-      static_cast<dom::HTMLInputElement*>(GetContent());
-
-  MOZ_ASSERT(input->ControlType() == NS_FORM_INPUT_RANGE);
+  auto* input = static_cast<dom::HTMLInputElement*>(GetContent());
+  MOZ_ASSERT(input->ControlType() == FormControlType::InputRange);
 
   Decimal value = input->GetValueAsDecimal();
   Decimal minimum = input->GetMinimum();
@@ -343,7 +341,7 @@ Decimal nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent) {
   dom::HTMLInputElement* input =
       static_cast<dom::HTMLInputElement*>(GetContent());
 
-  MOZ_ASSERT(input->ControlType() == NS_FORM_INPUT_RANGE);
+  MOZ_ASSERT(input->ControlType() == FormControlType::InputRange);
 
   Decimal minimum = input->GetMinimum();
   Decimal maximum = input->GetMaximum();
@@ -567,7 +565,7 @@ nsresult nsRangeFrame::AttributeChanged(int32_t aNameSpaceID,
       MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
       bool typeIsRange =
           static_cast<dom::HTMLInputElement*>(GetContent())->ControlType() ==
-          NS_FORM_INPUT_RANGE;
+          FormControlType::InputRange;
       // If script changed the <input>'s type before setting these attributes
       // then we don't need to do anything since we are going to be reframed.
       if (typeIsRange) {

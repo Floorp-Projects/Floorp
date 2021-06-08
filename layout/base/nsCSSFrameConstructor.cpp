@@ -3279,11 +3279,11 @@ nsCSSFrameConstructor::FindDataByTag(const Element& aElement,
 
 #define SUPPRESS_FCDATA() FCDATA_DECL(FCDATA_SUPPRESS_FRAME, nullptr)
 #define SIMPLE_INT_CREATE(_int, _func) \
-  { _int, SIMPLE_FCDATA(_func) }
+  { int32_t(_int), SIMPLE_FCDATA(_func) }
 #define SIMPLE_INT_CHAIN(_int, _func) \
-  { _int, FCDATA_DECL(FCDATA_FUNC_IS_DATA_GETTER, _func) }
+  { int32_t(_int), FCDATA_DECL(FCDATA_FUNC_IS_DATA_GETTER, _func) }
 #define COMPLEX_INT_CREATE(_int, _func) \
-  { _int, FULL_CTOR_FCDATA(0, _func) }
+  { int32_t(_int), FULL_CTOR_FCDATA(0, _func) }
 
 #define SIMPLE_TAG_CREATE(_tag, _func) \
   { nsGkAtoms::_tag, SIMPLE_FCDATA(_func) }
@@ -3419,39 +3419,40 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindInputData(const Element& aElement,
                                      ComputedStyle& aStyle) {
   static const FrameConstructionDataByInt sInputData[] = {
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_CHECKBOX, NS_NewCheckboxRadioFrame),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_RADIO, NS_NewCheckboxRadioFrame),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_FILE, NS_NewFileControlFrame),
-      SIMPLE_INT_CHAIN(NS_FORM_INPUT_IMAGE,
+      SIMPLE_INT_CREATE(FormControlType::InputCheckbox,
+                        NS_NewCheckboxRadioFrame),
+      SIMPLE_INT_CREATE(FormControlType::InputRadio, NS_NewCheckboxRadioFrame),
+      SIMPLE_INT_CREATE(FormControlType::InputFile, NS_NewFileControlFrame),
+      SIMPLE_INT_CHAIN(FormControlType::InputImage,
                        nsCSSFrameConstructor::FindImgControlData),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_EMAIL, NS_NewTextControlFrame),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_TEXT, NS_NewTextControlFrame),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_TEL, NS_NewTextControlFrame),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_URL, NS_NewTextControlFrame),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_RANGE, NS_NewRangeFrame),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_PASSWORD, NS_NewTextControlFrame),
-      {NS_FORM_INPUT_COLOR,
+      SIMPLE_INT_CREATE(FormControlType::InputEmail, NS_NewTextControlFrame),
+      SIMPLE_INT_CREATE(FormControlType::InputText, NS_NewTextControlFrame),
+      SIMPLE_INT_CREATE(FormControlType::InputTel, NS_NewTextControlFrame),
+      SIMPLE_INT_CREATE(FormControlType::InputUrl, NS_NewTextControlFrame),
+      SIMPLE_INT_CREATE(FormControlType::InputRange, NS_NewRangeFrame),
+      SIMPLE_INT_CREATE(FormControlType::InputPassword, NS_NewTextControlFrame),
+      {int32_t(FormControlType::InputColor),
        FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewColorControlFrame,
                                   PseudoStyleType::buttonContent)},
 
-      SIMPLE_INT_CHAIN(NS_FORM_INPUT_SEARCH,
+      SIMPLE_INT_CHAIN(FormControlType::InputSearch,
                        nsCSSFrameConstructor::FindSearchControlData),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_NUMBER, NS_NewNumberControlFrame),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_TIME, NS_NewDateTimeControlFrame),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_DATE, NS_NewDateTimeControlFrame),
+      SIMPLE_INT_CREATE(FormControlType::InputNumber, NS_NewNumberControlFrame),
+      SIMPLE_INT_CREATE(FormControlType::InputTime, NS_NewDateTimeControlFrame),
+      SIMPLE_INT_CREATE(FormControlType::InputDate, NS_NewDateTimeControlFrame),
       // TODO: this is temporary until a frame is written: bug 888320
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_MONTH, NS_NewTextControlFrame),
+      SIMPLE_INT_CREATE(FormControlType::InputMonth, NS_NewTextControlFrame),
       // TODO: this is temporary until a frame is written: bug 888320
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_WEEK, NS_NewTextControlFrame),
-      SIMPLE_INT_CHAIN(NS_FORM_INPUT_DATETIME_LOCAL,
+      SIMPLE_INT_CREATE(FormControlType::InputWeek, NS_NewTextControlFrame),
+      SIMPLE_INT_CHAIN(FormControlType::InputDatetimeLocal,
                        FindDateTimeLocalInputData),
-      {NS_FORM_INPUT_SUBMIT,
+      {int32_t(FormControlType::InputSubmit),
        FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
                                   PseudoStyleType::buttonContent)},
-      {NS_FORM_INPUT_RESET,
+      {int32_t(FormControlType::InputReset),
        FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
                                   PseudoStyleType::buttonContent)},
-      {NS_FORM_INPUT_BUTTON,
+      {int32_t(FormControlType::InputButton),
        FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
                                   PseudoStyleType::buttonContent)}
       // Keeping hidden inputs out of here on purpose for so they get frames by
@@ -3463,13 +3464,13 @@ nsCSSFrameConstructor::FindInputData(const Element& aElement,
   // radio and checkbox inputs with appearance:none should be constructed
   // by display type.  (Note that we're not checking that appearance is
   // not (respectively) StyleAppearance::Radio and StyleAppearance::Checkbox.)
-  if ((controlType == NS_FORM_INPUT_CHECKBOX ||
-       controlType == NS_FORM_INPUT_RADIO) &&
+  if ((controlType == FormControlType::InputCheckbox ||
+       controlType == FormControlType::InputRadio) &&
       !aStyle.StyleDisplay()->HasAppearance()) {
     return nullptr;
   }
 
-  return FindDataByInt(controlType, aElement, aStyle, sInputData,
+  return FindDataByInt(int32_t(controlType), aElement, aStyle, sInputData,
                        ArrayLength(sInputData));
 }
 

@@ -98,7 +98,7 @@ nsNumberControlFrame* nsNumberControlFrame::GetNumberControlFrameForSpinButton(
     return nullptr;
   }
   auto* input = HTMLInputElement::FromNode(nacHost);
-  if (!input || input->ControlType() != NS_FORM_INPUT_NUMBER) {
+  if (!input || input->ControlType() != FormControlType::InputNumber) {
     return nullptr;
   }
   return do_QueryFrame(input->GetPrimaryFrame());

@@ -44,7 +44,7 @@ class InputType {
   };
 
   static UniquePtr<InputType, DoNotDelete> Create(
-      HTMLInputElement* aInputElement, uint8_t aType, void* aMemory);
+      HTMLInputElement* aInputElement, FormControlType, void* aMemory);
 
   virtual ~InputType() = default;
 

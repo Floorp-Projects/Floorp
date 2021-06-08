@@ -21,64 +21,58 @@ class HTMLFormElement;
 }  // namespace dom
 }  // namespace mozilla
 
-enum FormControlsTypes {
-  NS_FORM_FIELDSET = 1,
-  NS_FORM_OUTPUT,
-  NS_FORM_SELECT,
-  NS_FORM_TEXTAREA,
-  NS_FORM_OBJECT,
-  eFormControlsWithoutSubTypesMax,
-  // After this, all types will have sub-types which introduce new enum lists.
-  // eFormControlsWithoutSubTypesMax let us know if the previous types values
-  // are not overlapping with sub-types/masks.
+// Elements with different types, the value is used as a mask.
+// When changing the order, adding or removing elements, be sure to update
+// the static_assert checks accordingly.
+constexpr uint8_t kFormControlButtonElementMask = 0x40;  // 0b01000000
+constexpr uint8_t kFormControlInputElementMask = 0x80;   // 0b10000000
 
-  // Elements with different types, the value is used as a mask.
-  // When changing the order, adding or removing elements, be sure to update
-  // the static_assert checks accordingly.
-  NS_FORM_BUTTON_ELEMENT = 0x40,  // 0b01000000
-  NS_FORM_INPUT_ELEMENT = 0x80    // 0b10000000
+enum class FormControlType : uint8_t {
+  Fieldset = 1,
+  Output,
+  Select,
+  Textarea,
+  Object,
+
+  LastWithoutSubtypes = Object,
+
+  ButtonButton = kFormControlButtonElementMask + 1,
+  ButtonReset,
+  ButtonSubmit,
+  LastButtonElement = ButtonSubmit,
+
+  InputButton = kFormControlInputElementMask + 1,
+  InputCheckbox,
+  InputColor,
+  InputDate,
+  InputEmail,
+  InputFile,
+  InputHidden,
+  InputReset,
+  InputImage,
+  InputMonth,
+  InputNumber,
+  InputPassword,
+  InputRadio,
+  InputSearch,
+  InputSubmit,
+  InputTel,
+  InputText,
+  InputTime,
+  InputUrl,
+  InputRange,
+  InputWeek,
+  InputDatetimeLocal,
+  LastInputElement = InputDatetimeLocal,
 };
 
-enum ButtonElementTypes : uint8_t {
-  NS_FORM_BUTTON_BUTTON = NS_FORM_BUTTON_ELEMENT + 1,
-  NS_FORM_BUTTON_RESET,
-  NS_FORM_BUTTON_SUBMIT,
-  eButtonElementTypesMax
-};
-
-enum InputElementTypes : uint8_t {
-  NS_FORM_INPUT_BUTTON = NS_FORM_INPUT_ELEMENT + 1,
-  NS_FORM_INPUT_CHECKBOX,
-  NS_FORM_INPUT_COLOR,
-  NS_FORM_INPUT_DATE,
-  NS_FORM_INPUT_EMAIL,
-  NS_FORM_INPUT_FILE,
-  NS_FORM_INPUT_HIDDEN,
-  NS_FORM_INPUT_RESET,
-  NS_FORM_INPUT_IMAGE,
-  NS_FORM_INPUT_MONTH,
-  NS_FORM_INPUT_NUMBER,
-  NS_FORM_INPUT_PASSWORD,
-  NS_FORM_INPUT_RADIO,
-  NS_FORM_INPUT_SEARCH,
-  NS_FORM_INPUT_SUBMIT,
-  NS_FORM_INPUT_TEL,
-  NS_FORM_INPUT_TEXT,
-  NS_FORM_INPUT_TIME,
-  NS_FORM_INPUT_URL,
-  NS_FORM_INPUT_RANGE,
-  NS_FORM_INPUT_WEEK,
-  NS_FORM_INPUT_DATETIME_LOCAL,
-  eInputElementTypesMax
-};
-
-static_assert(static_cast<uint32_t>(eFormControlsWithoutSubTypesMax) <
-                  static_cast<uint32_t>(NS_FORM_BUTTON_ELEMENT),
+static_assert(uint8_t(FormControlType::LastWithoutSubtypes) <
+                  kFormControlButtonElementMask,
               "Too many FormControlsTypes without sub-types");
-static_assert(static_cast<uint32_t>(eButtonElementTypesMax) <
-                  static_cast<uint32_t>(NS_FORM_INPUT_ELEMENT),
+static_assert(uint8_t(FormControlType::LastButtonElement) <
+                  kFormControlInputElementMask,
               "Too many ButtonElementTypes");
-static_assert(static_cast<uint32_t>(eInputElementTypesMax) < 1 << 8,
+static_assert(uint32_t(FormControlType::LastInputElement) < (1 << 8),
               "Too many form control types");
 
 #define NS_IFORMCONTROL_IID                          \
@@ -95,7 +89,7 @@ static_assert(static_cast<uint32_t>(eInputElementTypesMax) < 1 << 8,
  */
 class nsIFormControl : public nsISupports {
  public:
-  nsIFormControl(uint8_t aType) : mType(aType) {}
+  nsIFormControl(FormControlType aType) : mType(aType) {}
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMCONTROL_IID)
 
@@ -136,7 +130,7 @@ class nsIFormControl : public nsISupports {
    * Get the type of this control as an int (see NS_FORM_* above)
    * @return the type of this control
    */
-  uint32_t ControlType() const { return mType; }
+  FormControlType ControlType() const { return mType; }
 
   /**
    * Reset this form control (as it should be when the user clicks the Reset
@@ -228,7 +222,15 @@ class nsIFormControl : public nsISupports {
    * @return whether mType corresponds to a single line text control type.
    */
   inline static bool IsSingleLineTextControl(bool aExcludePassword,
-                                             uint32_t aType);
+                                             FormControlType);
+
+  inline static bool IsButtonElement(FormControlType aType) {
+    return uint8_t(aType) & kFormControlButtonElementMask;
+  }
+
+  inline static bool IsInputElement(FormControlType aType) {
+    return uint8_t(aType) & kFormControlInputElementMask;
+  }
 
   /**
    * Returns whether this is a auto-focusable form control.
@@ -236,18 +238,19 @@ class nsIFormControl : public nsISupports {
    */
   inline bool IsAutofocusable() const;
 
-  uint8_t mType;
+  FormControlType mType;
 };
 
 bool nsIFormControl::IsSubmitControl() const {
-  uint32_t type = ControlType();
-  return type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_INPUT_IMAGE ||
-         type == NS_FORM_BUTTON_SUBMIT;
+  FormControlType type = ControlType();
+  return type == FormControlType::InputSubmit ||
+         type == FormControlType::InputImage ||
+         type == FormControlType::ButtonSubmit;
 }
 
 bool nsIFormControl::IsTextControl(bool aExcludePassword) const {
-  uint32_t type = ControlType();
-  return type == NS_FORM_TEXTAREA ||
+  FormControlType type = ControlType();
+  return type == FormControlType::Textarea ||
          IsSingleLineTextControl(aExcludePassword, type);
 }
 
@@ -257,34 +260,44 @@ bool nsIFormControl::IsSingleLineTextControl(bool aExcludePassword) const {
 
 /*static*/
 bool nsIFormControl::IsSingleLineTextControl(bool aExcludePassword,
-                                             uint32_t aType) {
-  return aType == NS_FORM_INPUT_TEXT || aType == NS_FORM_INPUT_EMAIL ||
-         aType == NS_FORM_INPUT_SEARCH || aType == NS_FORM_INPUT_TEL ||
-         aType == NS_FORM_INPUT_URL || aType == NS_FORM_INPUT_NUMBER ||
-         // TODO: those are temporary until bug 773205 is fixed.
-         aType == NS_FORM_INPUT_MONTH || aType == NS_FORM_INPUT_WEEK ||
-         (aType == NS_FORM_INPUT_DATETIME_LOCAL &&
-          !mozilla::StaticPrefs::dom_forms_datetime_local_widget()) ||
-         (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
+                                             FormControlType aType) {
+  switch (aType) {
+    case FormControlType::InputText:
+    case FormControlType::InputEmail:
+    case FormControlType::InputSearch:
+    case FormControlType::InputTel:
+    case FormControlType::InputUrl:
+    case FormControlType::InputNumber:
+    // TODO: those are temporary until bug 773205 is fixed.
+    case FormControlType::InputMonth:
+    case FormControlType::InputWeek:
+      return true;
+    case FormControlType::InputDatetimeLocal:
+      return !mozilla::StaticPrefs::dom_forms_datetime_local_widget();
+    case FormControlType::InputPassword:
+      return !aExcludePassword;
+    default:
+      return false;
+  }
 }
 
 bool nsIFormControl::IsSubmittableControl() const {
-  uint32_t type = ControlType();
-  return type == NS_FORM_OBJECT || type == NS_FORM_TEXTAREA ||
-         type == NS_FORM_SELECT || type & NS_FORM_BUTTON_ELEMENT ||
-         type & NS_FORM_INPUT_ELEMENT;
+  auto type = ControlType();
+  return type == FormControlType::Object || type == FormControlType::Textarea ||
+         type == FormControlType::Select || IsButtonElement(type) ||
+         IsInputElement(type);
 }
 
 bool nsIFormControl::AllowDraggableChildren() const {
-  uint32_t type = ControlType();
-  return type == NS_FORM_OBJECT || type == NS_FORM_FIELDSET ||
-         type == NS_FORM_OUTPUT;
+  auto type = ControlType();
+  return type == FormControlType::Object || type == FormControlType::Fieldset ||
+         type == FormControlType::Output;
 }
 
 bool nsIFormControl::IsAutofocusable() const {
-  uint32_t type = ControlType();
-  return type & NS_FORM_INPUT_ELEMENT || type & NS_FORM_BUTTON_ELEMENT ||
-         type == NS_FORM_TEXTAREA || type == NS_FORM_SELECT;
+  auto type = ControlType();
+  return IsInputElement(type) || IsButtonElement(type) ||
+         type == FormControlType::Textarea || type == FormControlType::Select;
 }
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControl, NS_IFORMCONTROL_IID)

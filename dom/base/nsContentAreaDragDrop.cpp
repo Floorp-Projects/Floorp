@@ -588,7 +588,8 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
       // Note that while <object> elements implement nsIFormControl, we should
       // really allow dragging them if they happen to be images.
       nsCOMPtr<nsIFormControl> form(do_QueryInterface(mTarget));
-      if (form && !mIsAltKeyPressed && form->ControlType() != NS_FORM_OBJECT) {
+      if (form && !mIsAltKeyPressed &&
+          form->ControlType() != FormControlType::Object) {
         *aCanDrag = false;
         return NS_OK;
       }

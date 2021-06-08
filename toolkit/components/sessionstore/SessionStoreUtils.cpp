@@ -533,13 +533,13 @@ static void CollectInputElement(Document* aDocument,
     nsCOMPtr<nsIFormControl> formControl =
         do_QueryInterface(inputlist->Item(i));
     if (formControl) {
-      uint8_t controlType = formControl->ControlType();
-      if (controlType == NS_FORM_INPUT_PASSWORD ||
-          controlType == NS_FORM_INPUT_HIDDEN ||
-          controlType == NS_FORM_INPUT_BUTTON ||
-          controlType == NS_FORM_INPUT_IMAGE ||
-          controlType == NS_FORM_INPUT_SUBMIT ||
-          controlType == NS_FORM_INPUT_RESET) {
+      auto controlType = formControl->ControlType();
+      if (controlType == FormControlType::InputPassword ||
+          controlType == FormControlType::InputHidden ||
+          controlType == FormControlType::InputButton ||
+          controlType == FormControlType::InputImage ||
+          controlType == FormControlType::InputSubmit ||
+          controlType == FormControlType::InputReset) {
         continue;
       }
     }
@@ -560,14 +560,14 @@ static void CollectInputElement(Document* aDocument,
     }
 
     FormEntryValue value;
-    if (input->ControlType() == NS_FORM_INPUT_CHECKBOX ||
-        input->ControlType() == NS_FORM_INPUT_RADIO) {
+    if (input->ControlType() == FormControlType::InputCheckbox ||
+        input->ControlType() == FormControlType::InputRadio) {
       bool checked = input->Checked();
       if (checked == input->DefaultChecked()) {
         continue;
       }
       AppendEntry(input, id, Checkbox{checked}, aFormData);
-    } else if (input->ControlType() == NS_FORM_INPUT_FILE) {
+    } else if (input->ControlType() == FormControlType::InputFile) {
       IgnoredErrorResult rv;
       sessionstore::FileList file;
       input->MozGetFileNameArray(file.valueList(), rv);
@@ -737,13 +737,13 @@ void SessionStoreUtils::CollectFromInputElement(Document& aDocument,
     nsCOMPtr<nsIFormControl> formControl =
         do_QueryInterface(inputlist->Item(i));
     if (formControl) {
-      uint8_t controlType = formControl->ControlType();
-      if (controlType == NS_FORM_INPUT_PASSWORD ||
-          controlType == NS_FORM_INPUT_HIDDEN ||
-          controlType == NS_FORM_INPUT_BUTTON ||
-          controlType == NS_FORM_INPUT_IMAGE ||
-          controlType == NS_FORM_INPUT_SUBMIT ||
-          controlType == NS_FORM_INPUT_RESET) {
+      auto controlType = formControl->ControlType();
+      if (controlType == FormControlType::InputPassword ||
+          controlType == FormControlType::InputHidden ||
+          controlType == FormControlType::InputButton ||
+          controlType == FormControlType::InputImage ||
+          controlType == FormControlType::InputSubmit ||
+          controlType == FormControlType::InputReset) {
         continue;
       }
     }
@@ -763,15 +763,15 @@ void SessionStoreUtils::CollectFromInputElement(Document& aDocument,
       continue;
     }
 
-    if (input->ControlType() == NS_FORM_INPUT_CHECKBOX ||
-        input->ControlType() == NS_FORM_INPUT_RADIO) {
+    if (input->ControlType() == FormControlType::InputCheckbox ||
+        input->ControlType() == FormControlType::InputRadio) {
       bool checked = input->Checked();
       if (checked == input->DefaultChecked()) {
         continue;
       }
       AppendValueToCollectedData(input, id, checked, aGeneratedCount,
                                  std::forward<ArgsT>(args)...);
-    } else if (input->ControlType() == NS_FORM_INPUT_FILE) {
+    } else if (input->ControlType() == FormControlType::InputFile) {
       IgnoredErrorResult rv;
       nsTArray<nsString> result;
       input->MozGetFileNameArray(result, rv);
@@ -1008,7 +1008,7 @@ static void SetElementAsObject(JSContext* aCx, Element* aElement,
                                JS::Handle<JS::Value> aObject) {
   RefPtr<HTMLInputElement> input = HTMLInputElement::FromNode(aElement);
   if (input) {
-    if (input->ControlType() == NS_FORM_INPUT_FILE) {
+    if (input->ControlType() == FormControlType::InputFile) {
       CollectedFileListValue value;
       if (value.Init(aCx, aObject)) {
         SetElementAsFiles(input, value);
@@ -1215,7 +1215,7 @@ void RestoreFormEntry(Element* aNode, const FormEntryValue& aValue) {
       break;
     case Type::TFileList: {
       if (RefPtr<HTMLInputElement> input = HTMLInputElement::FromNode(aNode);
-          input && input->ControlType() == NS_FORM_INPUT_FILE) {
+          input && input->ControlType() == FormControlType::InputFile) {
         CollectedFileListValue value;
         value.mFileList = aValue.get_FileList().valueList().Clone();
         SetElementAsFiles(input, value);

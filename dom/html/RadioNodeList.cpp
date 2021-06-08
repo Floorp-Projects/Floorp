@@ -21,8 +21,8 @@ JSObject* RadioNodeList::WrapObject(JSContext* aCx,
 }
 
 HTMLInputElement* GetAsRadio(nsIContent* node) {
-  HTMLInputElement* el = HTMLInputElement::FromNode(node);
-  if (el && el->ControlType() == NS_FORM_INPUT_RADIO) {
+  auto* el = HTMLInputElement::FromNode(node);
+  if (el && el->ControlType() == FormControlType::InputRadio) {
     return el;
   }
   return nullptr;

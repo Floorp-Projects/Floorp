@@ -1330,7 +1330,7 @@ static void GetActionHint(nsIContent& aContent, nsAString& aActionHint) {
     return;
   }
 
-  if (control->ControlType() == NS_FORM_INPUT_SEARCH) {
+  if (control->ControlType() == FormControlType::InputSearch) {
     aActionHint.AssignLiteral("search");
     return;
   }
