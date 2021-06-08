@@ -5,4 +5,4 @@ mozdebug==0.3.0
 pillow==8.2.0
 urllib3[secure]==1.26.4
 requests==2.25.1
-six==1.15.0
+six==1.16.0
