@@ -66,7 +66,7 @@ class MsaaAccessible : public ia2Accessible,
 
   void MsaaShutdown();
 
-  static IDispatch* NativeAccessible(LocalAccessible* aAccessible);
+  static IDispatch* NativeAccessible(Accessible* aAccessible);
 
   static MsaaAccessible* GetFrom(Accessible* aAcc);
 
