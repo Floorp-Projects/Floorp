@@ -273,7 +273,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             feature = SecureTabsTrayBinding(
                 store = tabsTrayStore,
                 settings = requireComponents.settings,
-                tabsTrayFragment = this
+                fragment = this
             ),
             owner = this,
             view = view

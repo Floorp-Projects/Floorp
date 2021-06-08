@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.tabstray
 
+import androidx.fragment.app.Fragment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
@@ -21,7 +22,7 @@ import org.mozilla.fenix.utils.Settings
 class SecureTabsTrayBinding(
     store: TabsTrayStore,
     private val settings: Settings,
-    private val tabsTrayFragment: TabsTrayFragment
+    private val fragment: Fragment
 ) : AbstractBinding<TabsTrayState>(store) {
 
     override suspend fun onState(flow: Flow<TabsTrayState>) {
@@ -33,9 +34,9 @@ class SecureTabsTrayBinding(
             }
             .collect { state ->
                 if (state.selectedPage == Page.PrivateTabs) {
-                    tabsTrayFragment.secure()
+                    fragment.secure()
                 } else if (!settings.lastKnownMode.isPrivate) {
-                    tabsTrayFragment.removeSecure()
+                    fragment.removeSecure()
                 }
             }
     }
