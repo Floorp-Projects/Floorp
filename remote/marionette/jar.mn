@@ -42,7 +42,6 @@ remote.jar:
   content/marionette/reftest.xhtml (chrome/reftest.xhtml)
   content/marionette/reftest-content.js (reftest-content.js)
   content/marionette/server.js (server.js)
-  content/marionette/session.js (session.js)
   content/marionette/stream-utils.js (stream-utils.js)
   content/marionette/sync.js (sync.js)
   content/marionette/transport.js (transport.js)
