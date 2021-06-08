@@ -1,16 +1,10 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>File constructor</title>
-<link rel=help href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-file">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id="log"></div>
-<script>
+// META: title=File constructor
+
 const to_string_obj = { toString: () => 'a string' };
 const to_string_throws = { toString: () => { throw new Error('expected'); } };
 
 test(function() {
-  assert_true("File" in window, "window should have a File property.");
+  assert_true("File" in globalThis, "globalThis should have a File property.");
 }, "File interface object exists");
 
 test(t => {
@@ -155,5 +149,3 @@ test(t => {
                    () => new File(['bits'], 'name.txt', {type: to_string_throws}),
                    'Constructor should propagate exceptions');
 }, 'Property bag propagates exceptions');
-
-</script>
