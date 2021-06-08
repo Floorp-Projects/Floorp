@@ -6531,8 +6531,8 @@ nsIFrame::ISizeComputationResult nsIFrame::ComputeISizeValue(
     gfxContext* aRenderingContext, const WritingMode aWM,
     const LogicalSize& aContainingBlockSize,
     const LogicalSize& aContentEdgeToBoxSizing, nscoord aBoxSizingToMarginEdge,
-    ExtremumLength aSize, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    ExtremumLength aSize, Maybe<nscoord> aAvailableISizeOverride,
+    const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) {
   // If 'this' is a container for font size inflation, then shrink
   // wrapping inside of it should not apply font size inflation.
   AutoMaybeDisableFontInflation an(this);
@@ -6569,7 +6569,6 @@ nsIFrame::ISizeComputationResult nsIFrame::ComputeISizeValue(
                           ? AspectRatioUsage::ToComputeISize
                           : AspectRatioUsage::None};
     case ExtremumLength::FitContentFunction:
-      // TODO: Finish this in the following patches.
     case ExtremumLength::MozFitContent: {
       nscoord pref = NS_UNCONSTRAINEDSIZE;
       nscoord min = 0;
@@ -6581,9 +6580,13 @@ nsIFrame::ISizeComputationResult nsIFrame::ComputeISizeValue(
         pref = GetPrefISize(aRenderingContext);
         min = GetMinISize(aRenderingContext);
       }
-      nscoord fill =
-          aContainingBlockSize.ISize(aWM) -
-          (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing.ISize(aWM));
+
+      nscoord fill = aAvailableISizeOverride
+                         ? *aAvailableISizeOverride
+                         : aContainingBlockSize.ISize(aWM) -
+                               (aBoxSizingToMarginEdge +
+                                aContentEdgeToBoxSizing.ISize(aWM));
+
       if (MOZ_UNLIKELY(
               aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize))) {
         min = std::min(min, fill);
