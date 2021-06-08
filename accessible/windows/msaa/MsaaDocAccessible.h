@@ -39,11 +39,11 @@ class MsaaDocAccessible : public ia2AccessibleHypertext {
   /**
    * Manage the mapping from id to Accessible.
    */
-  void AddID(uint32_t aID, AccessibleWrap* aAcc) {
+  void AddID(uint32_t aID, Accessible* aAcc) {
     mIDToAccessibleMap.InsertOrUpdate(aID, aAcc);
   }
   void RemoveID(uint32_t aID) { mIDToAccessibleMap.Remove(aID); }
-  AccessibleWrap* GetAccessibleByID(uint32_t aID) const {
+  Accessible* GetAccessibleByID(uint32_t aID) const {
     return mIDToAccessibleMap.Get(aID);
   }
 
@@ -61,7 +61,7 @@ class MsaaDocAccessible : public ia2AccessibleHypertext {
   /*
    * This provides a mapping from 32 bit id to accessible objects.
    */
-  nsTHashMap<nsUint32HashKey, AccessibleWrap*> mIDToAccessibleMap;
+  nsTHashMap<nsUint32HashKey, Accessible*> mIDToAccessibleMap;
 };
 
 }  // namespace a11y
