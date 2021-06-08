@@ -282,6 +282,9 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   void SetValueToURLValue(const mozilla::StyleComputedUrl* aURL,
                           nsROCSSPrimitiveValue* aValue);
 
+  void SetValueFromFitContentFunction(nsROCSSPrimitiveValue* aValue,
+                                      const mozilla::LengthPercentage&);
+
   void SetValueToSize(nsROCSSPrimitiveValue* aValue, const mozilla::StyleSize&);
 
   void SetValueToLengthPercentageOrAuto(nsROCSSPrimitiveValue* aValue,

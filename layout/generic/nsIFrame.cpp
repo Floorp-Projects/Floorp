@@ -2332,7 +2332,7 @@ template <typename SizeOrMaxSize>
 static inline bool IsIntrinsicKeyword(const SizeOrMaxSize& aSize) {
   // All keywords other than auto/none/-moz-available depend on intrinsic sizes.
   return aSize.IsMaxContent() || aSize.IsMinContent() ||
-         aSize.IsMozFitContent();
+         aSize.IsMozFitContent() || aSize.IsFitContentFunction();
 }
 
 bool nsIFrame::CanBeDynamicReflowRoot() const {
@@ -6568,6 +6568,8 @@ nsIFrame::ISizeComputationResult nsIFrame::ComputeISizeValue(
       return {result, intrinsicSizeFromAspectRatio
                           ? AspectRatioUsage::ToComputeISize
                           : AspectRatioUsage::None};
+    case ExtremumLength::FitContentFunction:
+      // TODO: Finish this in the following patches.
     case ExtremumLength::MozFitContent: {
       nscoord pref = NS_UNCONSTRAINEDSIZE;
       nscoord min = 0;

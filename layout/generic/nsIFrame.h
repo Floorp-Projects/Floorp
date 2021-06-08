@@ -3078,7 +3078,7 @@ class nsIFrame : public nsQueryFrame {
   bool HasIntrinsicKeywordForBSize() const {
     const auto& bSize = StylePosition()->BSize(GetWritingMode());
     return bSize.IsMozFitContent() || bSize.IsMinContent() ||
-           bSize.IsMaxContent();
+           bSize.IsMaxContent() || bSize.IsFitContentFunction();
   }
   /**
    * Helper method to create a view for a frame.  Only used by a few sub-classes
@@ -4776,6 +4776,7 @@ class nsIFrame : public nsQueryFrame {
     MaxContent,
     MozAvailable,
     MozFitContent,
+    FitContentFunction,
   };
 
   template <typename SizeOrMaxSize>
@@ -4789,6 +4790,8 @@ class nsIFrame : public nsQueryFrame {
         return mozilla::Some(ExtremumLength::MozAvailable);
       case SizeOrMaxSize::Tag::MozFitContent:
         return mozilla::Some(ExtremumLength::MozFitContent);
+      case SizeOrMaxSize::Tag::FitContentFunction:
+        return mozilla::Some(ExtremumLength::FitContentFunction);
       default:
         return mozilla::Nothing();
     }
