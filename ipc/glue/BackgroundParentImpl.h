@@ -318,6 +318,10 @@ class BackgroundParentImpl : public PBackgroundParent,
   mozilla::ipc::IPCResult RecvRemoveBackgroundSessionStorageManager(
       const uint64_t& aTopContextId) override;
 
+  mozilla::ipc::IPCResult RecvLoadSessionStorageManagerData(
+      const uint64_t& aTopContextId,
+      nsTArray<mozilla::dom::SSCacheCopy>&& aOriginCacheCopy) override;
+
   mozilla::ipc::IPCResult RecvGetSessionStorageManagerData(
       const uint64_t& aTopContextId, const uint32_t& aSizeLimit,
       const bool& aCancelSessionStoreTimer,
