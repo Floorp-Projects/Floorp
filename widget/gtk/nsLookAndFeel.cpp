@@ -1699,11 +1699,7 @@ void nsLookAndFeel::RecordLookAndFeelSpecificTelemetry() {
 
   // Whether the current Gtk theme uses something other than a solid color
   // background for scrollbar parts.
-  bool scrollbarUsesImage =
-      WidgetUsesImage(MOZ_GTK_SCROLLBAR_VERTICAL) ||
-      WidgetUsesImage(MOZ_GTK_SCROLLBAR_CONTENTS_VERTICAL) ||
-      WidgetUsesImage(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL) ||
-      WidgetUsesImage(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
+  bool scrollbarUsesImage = !ShouldHonorThemeScrollbarColors();
   mozilla::Telemetry::ScalarSet(
       mozilla::Telemetry::ScalarID::WIDGET_GTK_THEME_SCROLLBAR_USES_IMAGES,
       scrollbarUsesImage);
