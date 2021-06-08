@@ -503,6 +503,7 @@ bool ScriptedProxyHandler::isExtensible(JSContext* cx, HandleObject proxy,
   return true;
 }
 
+// ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93
 // 9.5.5 Proxy.[[GetOwnProperty]](P)
 bool ScriptedProxyHandler::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject proxy, HandleId id,
