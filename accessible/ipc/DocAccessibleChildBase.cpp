@@ -6,6 +6,7 @@
 
 #include "mozilla/a11y/DocAccessibleChildBase.h"
 #include "mozilla/a11y/RemoteAccessible.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 #include "LocalAccessible-inl.h"
 
@@ -17,7 +18,9 @@ void DocAccessibleChildBase::SerializeTree(LocalAccessible* aRoot,
                                            nsTArray<AccessibleData>& aTree) {
   uint64_t id = reinterpret_cast<uint64_t>(aRoot->UniqueID());
 #if defined(XP_WIN)
-  int32_t msaaId = MsaaAccessible::GetChildIDFor(aRoot);
+  int32_t msaaId = StaticPrefs::accessibility_cache_enabled_AtStartup()
+                       ? 0
+                       : MsaaAccessible::GetChildIDFor(aRoot);
 #endif
   a11y::role role = aRoot->Role();
   uint32_t childCount = aRoot->ChildCount();
