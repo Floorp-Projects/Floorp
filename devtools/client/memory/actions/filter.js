@@ -5,6 +5,7 @@
 
 const { actions } = require("devtools/client/memory/constants");
 const { refresh } = require("devtools/client/memory/actions/refresh");
+const { debounce } = require("devtools/shared/debounce");
 
 const setFilterString = (exports.setFilterString = function(filterString) {
   return {
@@ -17,21 +18,14 @@ const setFilterString = (exports.setFilterString = function(filterString) {
 // when the filter string is updated. This helps us avoid doing any work while
 // the user is still typing.
 const FILTER_INPUT_DEBOUNCE_MS = 250;
-
-// The timer id for the debounced census refresh.
-let timerId = null;
+const debouncedRefreshDispatcher = debounce(
+  (dispatch, heapWorker) => dispatch(refresh(heapWorker)),
+  FILTER_INPUT_DEBOUNCE_MS
+);
 
 exports.setFilterStringAndRefresh = function(filterString, heapWorker) {
   return ({ dispatch, getState }) => {
     dispatch(setFilterString(filterString));
-
-    if (timerId !== null) {
-      clearTimeout(timerId);
-    }
-
-    timerId = setTimeout(
-      () => dispatch(refresh(heapWorker)),
-      FILTER_INPUT_DEBOUNCE_MS
-    );
+    debouncedRefreshDispatcher(dispatch, heapWorker);
   };
 };
