@@ -236,10 +236,12 @@ uint32_t OuterDocAccessible::ChildCount() const {
   uint32_t result = mChildren.Length();
   if (!result &&
 #if defined(XP_WIN)
-      // On Windows, as well as returning 1 for a remote document in the parent
-      // process, we also need to return 1 in a content process for an OOP
-      // iframe.
-      RemoteChildDocAccessible()
+      ((StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+        RemoteChildDoc()) ||
+       // On Windows with the cache disabled, as well as returning 1 for a
+       // remote document in the parent process, we also need to return 1 in a
+       // content process for an OOP iframe.
+       RemoteChildDocAccessible())
 #else
       RemoteChildDoc()
 #endif

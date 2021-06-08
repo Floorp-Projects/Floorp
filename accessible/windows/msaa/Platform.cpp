@@ -17,6 +17,7 @@
 #include "mozilla/mscom/InterceptorLog.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/Utils.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
@@ -72,6 +73,13 @@ void a11y::PlatformShutdown() {
 }
 
 void a11y::ProxyCreated(RemoteAccessible* aProxy) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    MsaaAccessible* msaa = MsaaAccessible::Create(aProxy);
+    msaa->AddRef();
+    aProxy->SetWrapper(reinterpret_cast<uintptr_t>(msaa));
+    return;
+  }
+
   AccessibleWrap* wrapper = nullptr;
   if (aProxy->IsDoc()) {
     wrapper = new DocRemoteAccessibleWrap(aProxy);
@@ -86,6 +94,22 @@ void a11y::ProxyCreated(RemoteAccessible* aProxy) {
 }
 
 void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
+  if (aProxy->IsDoc() && nsWinUtils::IsWindowEmulationStarted()) {
+    aProxy->AsDoc()->SetEmulatedWindowHandle(nullptr);
+  }
+
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    MsaaAccessible* msaa =
+        reinterpret_cast<MsaaAccessible*>(aProxy->GetWrapper());
+    if (!msaa) {
+      return;
+    }
+    msaa->MsaaShutdown();
+    aProxy->SetWrapper(0);
+    msaa->Release();
+    return;
+  }
+
   AccessibleWrap* wrapper =
       reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
 
@@ -93,11 +117,6 @@ void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
   // RecvPDocAccessibleConstructor failed then aProxy->GetWrapper() will be
   // null.
   if (!wrapper) return;
-
-  if (aProxy->IsDoc() && nsWinUtils::IsWindowEmulationStarted()) {
-    aProxy->AsDoc()->SetEmulatedWindowHandle(nullptr);
-  }
-
   wrapper->Shutdown();
   aProxy->SetWrapper(0);
   wrapper->Release();
