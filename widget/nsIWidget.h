@@ -1212,30 +1212,6 @@ class nsIWidget : public nsISupports {
   virtual void SetDrawsTitle(bool aDrawTitle) {}
 
   /**
-   * These values are used to communicate the expected window apperance via
-   * SetWindowAppearance (see function comment below for more info):
-   * eSystem: Use the system default window appearance, which can be light or
-   *          dark.
-   * eLight:  Use the light window appearance, regardless of the current system
-   *          window appearance.
-   * eDark:   Use the dark window appearance, regardless of the current system
-   *          window appearance.
-   */
-  enum WindowAppearance { eSystem, eLight, eDark };
-
-  /**
-   * Allows overriding the window's light/dark appearance. This is used for
-   * windows whose light/dark look can differ from the system-wide look, and
-   * allows the window decorations to better match the window contents, for
-   * example ensuring sufficient contrast for the window buttons. The window
-   * appearance affects the look of the window frame, window buttons, titlebars
-   * and vibrant sidebars, and various -moz-default-appearance types.
-   *
-   * Ignored on non-Mac platforms.
-   */
-  virtual void SetWindowAppearance(WindowAppearance aAppearance) {}
-
-  /**
    * Hide window chrome (borders, buttons) for this widget.
    *
    */
