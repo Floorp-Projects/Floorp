@@ -3568,8 +3568,8 @@ impl ClipBatcher {
                         tile: None,
                     };
 
-                    let map_local_to_world = SpaceMapper::new_with_target(
-                        ROOT_SPATIAL_NODE_INDEX,
+                    let map_local_to_raster = SpaceMapper::new_with_target(
+                        root_spatial_node_index,
                         clip_instance.spatial_node_index,
                         WorldRect::max_rect().to_rect(),
                         spatial_tree,
@@ -3591,12 +3591,12 @@ impl ClipBatcher {
                         // to the shader and also set up a scissor rect for the overall target bounds to
                         // ensure nothing is drawn outside the target. If for some reason we can't map the
                         // rect back to local space, we also fall back to just using a scissor rectangle.
-                        let world_rect =
+                        let raster_rect =
                             sub_rect.translate(actual_rect.min.to_vector()) / surface_device_pixel_scale;
-                        let (clip_transform_id, local_rect, scissor) = match map_local_to_world.unmap(&world_rect.to_rect()) {
+                        let (clip_transform_id, local_rect, scissor) = match map_local_to_raster.unmap(&raster_rect.to_rect()) {
                             Some(local_rect)
                                 if clip_transform_id.transform_kind() == TransformedRectKind::AxisAligned &&
-                                   !map_local_to_world.get_transform().has_perspective_component() => {
+                                   !map_local_to_raster.get_transform().has_perspective_component() => {
                                     match local_rect.intersection(&rect) {
                                         Some(local_rect) => (clip_transform_id, local_rect, None),
                                         None => return,
@@ -3638,11 +3638,11 @@ impl ClipBatcher {
 
                         for tile in clip_store.visible_mask_tiles(&clip_instance) {
                             let tile_sub_rect = if clip_is_axis_aligned {
-                                let tile_world_rect = map_local_to_world
+                                let tile_raster_rect = map_local_to_raster
                                     .map(&tile.tile_rect)
                                     .expect("bug: should always map as axis-aligned")
                                     .to_box2d();
-                                let tile_device_rect = tile_world_rect * surface_device_pixel_scale;
+                                let tile_device_rect = tile_raster_rect * surface_device_pixel_scale;
                                 tile_device_rect
                                     .translate(-actual_rect.min.to_vector())
                                     .round_out()
@@ -3669,7 +3669,7 @@ impl ClipBatcher {
                     // the image boundaries will be properly initialized.
                     if is_first_clip &&
                         (!clip_is_axis_aligned ||
-                         !(map_local_to_world.map(&rect).expect("bug: should always map as axis-aligned")
+                         !(map_local_to_raster.map(&rect).expect("bug: should always map as axis-aligned")
                             * surface_device_pixel_scale).contains_rect(&actual_rect.to_rect())) {
                         clear_to_one = true;
                     }
