@@ -1326,45 +1326,46 @@ void nsLookAndFeel::PerThemeData::Init() {
       !mIsDark && IsGtkThemeCompatibleWithHTMLColors();
 
   GdkRGBA color;
-  // Colors that we pass to content processes through RemoteLookAndFeel.
-  if (ShouldHonorThemeScrollbarColors()) {
-    // Some themes style the <trough>, while others style the <scrollbar>
-    // itself, so we look at both and compose the colors.
-    style = GetStyleContext(MOZ_GTK_SCROLLBAR_VERTICAL);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
-                                           &color);
-    mThemedScrollbar = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
-                                           &color);
-    mThemedScrollbarInactive = GDK_RGBA_TO_NS_RGBA(color);
+  // Some themes style the <trough>, while others style the <scrollbar>
+  // itself, so we look at both and compose the colors.
+  style = GetStyleContext(MOZ_GTK_SCROLLBAR_VERTICAL);
+  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
+  mThemedScrollbar = GDK_RGBA_TO_NS_RGBA(color);
+  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
+                                         &color);
+  mThemedScrollbarInactive = GDK_RGBA_TO_NS_RGBA(color);
 
-    style = GetStyleContext(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
-                                           &color);
-    mThemedScrollbar =
-        NS_ComposeColors(mThemedScrollbar, GDK_RGBA_TO_NS_RGBA(color));
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
-                                           &color);
-    mThemedScrollbarInactive =
-        NS_ComposeColors(mThemedScrollbarInactive, GDK_RGBA_TO_NS_RGBA(color));
+  style = GetStyleContext(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
+  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
+  mThemedScrollbar =
+      NS_ComposeColors(mThemedScrollbar, GDK_RGBA_TO_NS_RGBA(color));
+  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
+                                         &color);
+  mThemedScrollbarInactive =
+      NS_ComposeColors(mThemedScrollbarInactive, GDK_RGBA_TO_NS_RGBA(color));
 
-    mMozScrollbar = mThemedScrollbar;
+  mMozScrollbar = mThemedScrollbar;
 
-    style = GetStyleContext(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
-                                           &color);
-    mThemedScrollbarThumb = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_PRELIGHT,
-                                           &color);
-    mThemedScrollbarThumbHover = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_background_color(
-        style, GtkStateFlags(GTK_STATE_FLAG_PRELIGHT | GTK_STATE_FLAG_ACTIVE),
-        &color);
-    mThemedScrollbarThumbActive = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
-                                           &color);
-    mThemedScrollbarThumbInactive = GDK_RGBA_TO_NS_RGBA(color);
-  } else {
+  style = GetStyleContext(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
+  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
+  mThemedScrollbarThumb = GDK_RGBA_TO_NS_RGBA(color);
+  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_PRELIGHT,
+                                         &color);
+  mThemedScrollbarThumbHover = GDK_RGBA_TO_NS_RGBA(color);
+  gtk_style_context_get_background_color(
+      style, GtkStateFlags(GTK_STATE_FLAG_PRELIGHT | GTK_STATE_FLAG_ACTIVE),
+      &color);
+  mThemedScrollbarThumbActive = GDK_RGBA_TO_NS_RGBA(color);
+  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
+                                         &color);
+  mThemedScrollbarThumbInactive = GDK_RGBA_TO_NS_RGBA(color);
+
+  // Make sure that the thumb is visible, at least.
+  const bool fallbackToUnthemedColors = !ShouldHonorThemeScrollbarColors() ||
+                                        !NS_GET_A(mThemedScrollbarThumb) ||
+                                        !NS_GET_A(mThemedScrollbarThumbHover) ||
+                                        !NS_GET_A(mThemedScrollbarThumbActive);
+  if (fallbackToUnthemedColors) {
     mMozScrollbar = mThemedScrollbar = widget::sScrollbarColor.ToABGR();
     mThemedScrollbarInactive = widget::sScrollbarColor.ToABGR();
     mThemedScrollbarThumb = widget::sScrollbarThumbColor.ToABGR();
