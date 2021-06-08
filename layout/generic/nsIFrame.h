@@ -3358,6 +3358,17 @@ class nsIFrame : public nsQueryFrame {
       const mozilla::StyleSize& aStyleSize,
       const mozilla::StyleMaxSize& aStyleMaxSize) const;
 
+  // Type of preferred size/min size/max size.
+  enum class SizeProperty { Size, MinSize, MaxSize };
+  /**
+   * This is simliar to the above method but accepts LengthPercentage. Return
+   * true if the frame's preferred size property or max size property contains
+   * a percentage value that should be resolved against zero. For min size, it
+   * always returns true.
+   */
+  bool IsPercentageResolvedAgainstZero(const mozilla::LengthPercentage& aSize,
+                                       SizeProperty aProperty) const;
+
   /**
    * Returns true if the frame is a block wrapper.
    */
