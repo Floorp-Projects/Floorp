@@ -1056,7 +1056,7 @@ class nsDocShell final : public nsDocLoader,
   // LoadGroup.
   void SetLoadGroupDefaultLoadFlags(nsLoadFlags aLoadFlags);
 
-  void SetTitleOnHistoryEntry();
+  void SetTitleOnHistoryEntry(bool aUpdateEntryInSessionHistory);
 
   void SetScrollRestorationIsManualOnHistoryEntry(nsISHEntry* aSHEntry,
                                                   bool aIsManual);
