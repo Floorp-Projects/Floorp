@@ -67,14 +67,6 @@ class NativeInputTrack : public ProcessedMediaTrack {
   // Other Graph Thread APIs
   void InitDataHolderIfNeeded();
 
-  // Any thread
-  NativeInputTrack* AsNativeInputTrack() override { return this; }
-
- public:
-  // Only accessed on the graph thread.
-  nsTArray<RefPtr<AudioDataListener>> mDataUsers;
-
- private:
   struct BufferInfo {
     AudioDataValue* mBuffer = nullptr;
     size_t mFrames = 0;
@@ -93,7 +85,17 @@ class NativeInputTrack : public ProcessedMediaTrack {
       mChannels = 0;
     }
   };
+  // TODO: Return data from GetData<AudioSegment>() instead
+  Maybe<BufferInfo> GetInputBufferData();
 
+  // Any thread
+  NativeInputTrack* AsNativeInputTrack() override { return this; }
+
+ public:
+  // Only accessed on the graph thread.
+  nsTArray<RefPtr<AudioDataListener>> mDataUsers;
+
+ private:
   class AudioDataBuffers {
    public:
     AudioDataBuffers() = default;

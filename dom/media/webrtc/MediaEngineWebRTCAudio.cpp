@@ -625,7 +625,8 @@ AudioInputProcessing::AudioInputProcessing(
       mLiveBufferingAppended(0),
       mPrincipal(aPrincipalHandle),
       mEnabled(false),
-      mEnded(false) {}
+      mEnded(false),
+      mInputProcessed(true) {}
 
 void AudioInputProcessing::Disconnect(MediaTrackGraphImpl* aGraph) {
   // This method is just for asserts.
@@ -1079,6 +1080,32 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
   }
 }
 
+void AudioInputProcessing::ProcessInput(MediaTrackGraphImpl* aGraph,
+                                        const AudioDataValue* aBuffer,
+                                        size_t aFrames, TrackRate aRate,
+                                        uint32_t aChannels) {
+  MOZ_ASSERT(aGraph);
+  MOZ_ASSERT(aGraph->OnGraphThread());
+
+  if (mEnded || !mEnabled || !mLiveFramesAppended || mInputProcessed ||
+      !aBuffer) {
+    return;
+  }
+
+  // If some processing is necessary, packetize and insert in the WebRTC.org
+  // code. Otherwise, directly insert the mic data in the MTG, bypassing all
+  // processing.
+  if (PassThrough(aGraph)) {
+    InsertInGraph<AudioDataValue>(aGraph, aBuffer, aFrames, aChannels);
+  } else {
+    PacketizeAndProcess(aGraph, aBuffer, aFrames, aRate, aChannels);
+  }
+
+  // One NotifyInputData might have multiple following ProcessInput calls, but
+  // we only process one input per NotifyInputData call.
+  mInputProcessed = true;
+}
+
 template <typename T>
 void AudioInputProcessing::InsertInGraph(MediaTrackGraphImpl* aGraph,
                                          const T* aBuffer, size_t aFrames,
@@ -1131,6 +1158,8 @@ void AudioInputProcessing::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
   if (mPacketizerInput) {
     mPacketizerInput->Clear();
   }
+  // Stop processing input
+  mInputProcessed = true;
 }
 
 // Called back on GraphDriver thread!
@@ -1152,14 +1181,8 @@ void AudioInputProcessing::NotifyInputData(MediaTrackGraphImpl* aGraph,
     mLiveBufferingAppended = aAlreadyBuffered;
   }
 
-  // If some processing is necessary, packetize and insert in the WebRTC.org
-  // code. Otherwise, directly insert the mic data in the MTG, bypassing all
-  // processing.
-  if (PassThrough(aGraph)) {
-    InsertInGraph<AudioDataValue>(aGraph, aBuffer, aFrames, aChannels);
-  } else {
-    PacketizeAndProcess(aGraph, aBuffer, aFrames, aRate, aChannels);
-  }
+  // Ask to process input data
+  mInputProcessed = false;
 }
 
 #define ResetProcessingIfNeeded(_processing)                         \
@@ -1192,6 +1215,7 @@ void AudioInputProcessing::DeviceChanged(MediaTrackGraphImpl* aGraph) {
 
 void AudioInputProcessing::End() {
   mEnded = true;
+  mInputProcessed = true;  // Stop processing input data
   mSegment.Clear();
 }
 
@@ -1249,6 +1273,31 @@ void AudioInputTrack::DestroyImpl() {
 void AudioInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                    uint32_t aFlags) {
   TRACE_COMMENT("AudioInputTrack %p", this);
+
+  // Check if there is a connected NativeInputTrack
+  NativeInputTrack* source = nullptr;
+  if (!mInputs.IsEmpty()) {
+    for (const MediaInputPort* input : mInputs) {
+      MOZ_ASSERT(input->GetSource());
+      if (input->GetSource()->AsNativeInputTrack()) {
+        source = input->GetSource()->AsNativeInputTrack();
+        break;
+      }
+    }
+  }
+
+  // Push the input data from the connected NativeInputTrack to mInputProcessing
+  if (source) {
+    Maybe<NativeInputTrack::BufferInfo> inputInfo =
+        source->GetInputBufferData();
+    if (inputInfo) {
+      MOZ_ASSERT(GraphImpl()->GraphRate() == mSampleRate);
+      mInputProcessing->ProcessInput(GraphImpl(), inputInfo->mBuffer,
+                                     inputInfo->mFrames, mSampleRate,
+                                     inputInfo->mChannels);
+    }
+  }
+
   bool ended = false;
   mInputProcessing->Pull(
       GraphImpl(), aFrom, aTo, TrackTimeToGraphTime(GetEnd()),
