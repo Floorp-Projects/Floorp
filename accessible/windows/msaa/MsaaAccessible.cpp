@@ -855,11 +855,14 @@ MsaaAccessible::get_accParent(IDispatch __RPC_FAR* __RPC_FAR* ppdispParent) {
 
   *ppdispParent = nullptr;
 
-  LocalAccessible* localAcc = LocalAcc();
-  if (!localAcc) return CO_E_OBJNOTCONNECTED;
+  if (!mAcc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
 
-  LocalAccessible* xpParentAcc = localAcc->LocalParent();
+  Accessible* xpParentAcc = mAcc->Parent();
   if (!xpParentAcc) return S_FALSE;
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup() ||
+             xpParentAcc->IsLocal());
 
   *ppdispParent = NativeAccessible(xpParentAcc);
   return S_OK;
@@ -871,12 +874,11 @@ MsaaAccessible::get_accChildCount(long __RPC_FAR* pcountChildren) {
 
   *pcountChildren = 0;
 
-  LocalAccessible* localAcc = LocalAcc();
-  if (!localAcc) return CO_E_OBJNOTCONNECTED;
+  if (!mAcc) return CO_E_OBJNOTCONNECTED;
 
-  if (nsAccUtils::MustPrune(localAcc)) return S_OK;
+  if (nsAccUtils::MustPrune(mAcc)) return S_OK;
 
-  *pcountChildren = localAcc->ChildCount();
+  *pcountChildren = mAcc->ChildCount();
   return S_OK;
 }
 
@@ -1483,9 +1485,9 @@ MsaaAccessible::accNavigate(
   if (accessible) {
     return accessible->accNavigate(navDir, kVarChildIdSelf, pvarEndUpAt);
   }
+  MOZ_ASSERT(!mAcc->IsProxy());
 
-  LocalAccessible* localAcc = LocalAcc();
-  LocalAccessible* navAccessible = nullptr;
+  Accessible* navAccessible = nullptr;
   Maybe<RelationType> xpRelation;
 
 #define RELATIONTYPE(geckoType, stringType, atkType, msaaType, ia2Type) \
@@ -1495,34 +1497,34 @@ MsaaAccessible::accNavigate(
 
   switch (navDir) {
     case NAVDIR_FIRSTCHILD:
-      if (localAcc->IsProxy()) {
-        if (!nsAccUtils::MustPrune(localAcc->Proxy())) {
-          navAccessible = WrapperFor(localAcc->Proxy()->RemoteFirstChild());
-        }
-      } else {
-        if (!nsAccUtils::MustPrune(localAcc))
-          navAccessible = localAcc->LocalFirstChild();
+      if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+          XRE_IsContentProcess() && mAcc->IsOuterDoc()) {
+        // With the cache disabled, we need to be able to return a COM proxy for
+        // an OOP iframe. The COM proxy is wrapped in a
+        // RemoteIframeDocRemoteAccessibleWrap, which can only be retrieved
+        // using the LocalAccessible hierarchy.
+        navAccessible = LocalAcc()->LocalFirstChild();
+      } else if (!nsAccUtils::MustPrune(mAcc)) {
+        navAccessible = mAcc->FirstChild();
       }
       break;
     case NAVDIR_LASTCHILD:
-      if (localAcc->IsProxy()) {
-        if (!nsAccUtils::MustPrune(localAcc->Proxy())) {
-          navAccessible = WrapperFor(localAcc->Proxy()->RemoteLastChild());
-        }
-      } else {
-        if (!nsAccUtils::MustPrune(localAcc))
-          navAccessible = localAcc->LocalLastChild();
+      if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+          XRE_IsContentProcess() && mAcc->IsOuterDoc()) {
+        // With the cache disabled, we need to be able to return a COM proxy for
+        // an OOP iframe. The COM proxy is wrapped in a
+        // RemoteIframeDocRemoteAccessibleWrap, which can only be retrieved
+        // using the LocalAccessible hierarchy.
+        navAccessible = LocalAcc()->LocalLastChild();
+      } else if (!nsAccUtils::MustPrune(mAcc)) {
+        navAccessible = mAcc->LastChild();
       }
       break;
     case NAVDIR_NEXT:
-      navAccessible = localAcc->IsProxy()
-                          ? WrapperFor(localAcc->Proxy()->RemoteNextSibling())
-                          : localAcc->LocalNextSibling();
+      navAccessible = mAcc->NextSibling();
       break;
     case NAVDIR_PREVIOUS:
-      navAccessible = localAcc->IsProxy()
-                          ? WrapperFor(localAcc->Proxy()->RemotePrevSibling())
-                          : localAcc->LocalPrevSibling();
+      navAccessible = mAcc->PrevSibling();
       break;
     case NAVDIR_DOWN:
     case NAVDIR_LEFT:
@@ -1542,7 +1544,10 @@ MsaaAccessible::accNavigate(
   pvarEndUpAt->vt = VT_EMPTY;
 
   if (xpRelation) {
-    Relation rel = localAcc->RelationByType(*xpRelation);
+    if (mAcc->IsRemote()) {
+      return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+    }
+    Relation rel = mAcc->AsLocal()->RelationByType(*xpRelation);
     navAccessible = rel.Next();
   }
 
