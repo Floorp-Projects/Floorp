@@ -5107,29 +5107,31 @@ nsDocShell::SetTitle(const nsAString& aTitle) {
 
   // Update SessionHistory with the document's title.
   if (mLoadType != LOAD_BYPASS_HISTORY && mLoadType != LOAD_ERROR_PAGE) {
-    SetTitleOnHistoryEntry();
+    SetTitleOnHistoryEntry(true);
   }
 
   return NS_OK;
 }
 
-void nsDocShell::SetTitleOnHistoryEntry() {
+void nsDocShell::SetTitleOnHistoryEntry(bool aUpdateEntryInSessionHistory) {
   if (mOSHE) {
     mOSHE->SetTitle(mTitle);
   }
 
   if (mActiveEntry && mBrowsingContext) {
     mActiveEntry->SetTitle(mTitle);
-    if (XRE_IsParentProcess()) {
-      SessionHistoryEntry* entry =
-          mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
-      if (entry) {
-        entry->SetTitle(mTitle);
+    if (aUpdateEntryInSessionHistory) {
+      if (XRE_IsParentProcess()) {
+        SessionHistoryEntry* entry =
+            mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
+        if (entry) {
+          entry->SetTitle(mTitle);
+        }
+      } else {
+        mozilla::Unused
+            << ContentChild::GetSingleton()->SendSessionHistoryEntryTitle(
+                   mBrowsingContext, mTitle);
       }
-    } else {
-      mozilla::Unused
-          << ContentChild::GetSingleton()->SendSessionHistoryEntryTitle(
-                 mBrowsingContext, mTitle);
     }
   }
 }
@@ -8874,6 +8876,11 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
           ("nsDocShell::HandleSameDocumentNavigation %p %s -> %s", this,
            mCurrentURI->GetSpecOrDefault().get(),
            aLoadState->URI()->GetSpecOrDefault().get()));
+
+  RefPtr<Document> doc = GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  doc->DoNotifyPossibleTitleChange();
+
   nsCOMPtr<nsIURI> currentURI = mCurrentURI;
 
   // Save the position of the scrollers.
@@ -8911,8 +8918,6 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   }
 
   // Set the doc's URI according to the new history entry's URI.
-  RefPtr<Document> doc = GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
   doc->SetDocumentURI(aLoadState->URI());
 
   /* This is a anchor traversal within the same page.
@@ -9063,10 +9068,10 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
      * SH menus in go/back/forward buttons won't be empty for this.
      * Note, this happens on mOSHE (and mActiveEntry in the future) because of
      * the code above.
-     * XXX HandleSameDocumentNavigation needs to be made work with
-     *     session-history-in-parent, and then this might not be needed.
+     * Note, when session history lives in the parent process, this does not
+     * update the title there.
      */
-    SetTitleOnHistoryEntry();
+    SetTitleOnHistoryEntry(false);
   } else {
     if (aLoadState->LoadIsFromSessionHistory()) {
       MOZ_LOG(
@@ -9083,7 +9088,9 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
 
       // Set the title for the SH entry for this target url so that
       // SH menus in go/back/forward buttons won't be empty for this.
-      SetTitleOnHistoryEntry();
+      // Note, when session history lives in the parent process, this does not
+      // update the title there.
+      SetTitleOnHistoryEntry(false);
     } else {
       Maybe<bool> scrollRestorationIsManual;
       if (mActiveEntry) {
@@ -11304,6 +11311,9 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
                                          nsIURI* aCurrentURI, bool aEqualURIs) {
   // Implements
   // https://html.spec.whatwg.org/multipage/history.html#url-and-history-update-steps
+
+  // If we have a pending title change, handle it before creating a new entry.
+  aDocument->DoNotifyPossibleTitleChange();
 
   // Step 2, if aReplace is false: Create a new entry in the session
   // history. This will erase all SHEntries after the new entry and make this
