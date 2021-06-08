@@ -29,7 +29,6 @@ const CHROME_ONLY_TOGGLES = [
   "-moz-gtk-csd-reversed-placement",
   "-moz-proton",
   "-moz-proton-modals",
-  "-moz-proton-doorhangers",
   "-moz-proton-places-tooltip",
 ];
 
