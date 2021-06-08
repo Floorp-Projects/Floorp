@@ -1605,6 +1605,30 @@ static bool IsDisplayContents(const nsIContent* aContent) {
   return aContent->IsElement() && aContent->AsElement()->IsDisplayContents();
 }
 
+bool nsFrameSelection::AdjustFrameForLineStart(nsIFrame*& aFrame,
+                                               int32_t& aFrameOffset) {
+  if (!aFrame->HasSignificantTerminalNewline()) {
+    return false;
+  }
+
+  int32_t start;
+  int32_t end;
+  aFrame->GetOffsets(start, end);
+  if (aFrameOffset != end) {
+    return false;
+  }
+
+  nsIFrame* nextSibling = aFrame->GetNextSibling();
+  if (!nextSibling) {
+    return false;
+  }
+
+  aFrame = nextSibling;
+  aFrame->GetOffsets(start, end);
+  aFrameOffset = start;
+  return true;
+}
+
 // static
 nsIFrame* nsFrameSelection::GetFrameForNodeOffset(nsIContent* aNode,
                                                   int32_t aOffset,

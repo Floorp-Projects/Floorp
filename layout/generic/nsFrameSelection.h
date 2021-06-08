@@ -428,6 +428,8 @@ class nsFrameSelection final {
 
   bool IsValidSelectionPoint(nsINode* aNode) const;
 
+  static bool AdjustFrameForLineStart(nsIFrame*& aFrame, int32_t& aFrameOffset);
+
   /**
    * Given a node and its child offset, return the nsIFrame and the offset into
    * that frame.
