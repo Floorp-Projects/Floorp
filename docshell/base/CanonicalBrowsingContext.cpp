@@ -740,12 +740,12 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
           }
         }
 
-        if (loadFromSessionHistory) {
-          // XXX Synchronize browsing context tree and session history tree?
-          shistory->UpdateIndex();
-        } else if (addEntry) {
+        if (!loadFromSessionHistory && addEntry) {
           shistory->AddEntry(mActiveEntry, aPersist);
         }
+        // XXX Synchronize browsing context tree and session history tree?
+        // UpdateIndexWithEntry updates the index and clears the requestedIndex.
+        shistory->UpdateIndexWithEntry(mActiveEntry);
       } else {
         // FIXME The old implementations adds it to the parent's mLSHE if there
         //       is one, need to figure out if that makes sense here (peterv
@@ -759,9 +759,6 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
                                                          this);
           }
           mActiveEntry = newActiveEntry;
-          // FIXME UpdateIndex() here may update index too early (but even the
-          //       old implementation seems to have similar issues).
-          shistory->UpdateIndex();
         } else if (addEntry) {
           if (mActiveEntry) {
             if (LOAD_TYPE_HAS_FLAGS(
@@ -791,6 +788,10 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
             }
           }
         }
+        // FIXME UpdateIndex() here may update index too early (but even the
+        //       old implementation seems to have similar issues).
+        // UpdateIndexWithEntry updates the index and clears the requestedIndex.
+        shistory->UpdateIndexWithEntry(mActiveEntry);
       }
 
       ResetSHEntryHasUserInteractionCache();
@@ -2334,8 +2335,7 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
   uint16_t bfcacheCombo = 0;
   if (mRestoreState) {
     bfcacheCombo |= BFCacheStatus::RESTORING;
-    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-            (" * during session restore"));
+    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * during session restore"));
   }
 
   if (Group()->Toplevels().Length() > 1) {
