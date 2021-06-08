@@ -2,7 +2,7 @@ requestLongerTimeout(2);
 
 const BASE = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://example.com"
+  "https://example.com"
 );
 
 async function navigateTo(browser, urls, expectedPersist) {
