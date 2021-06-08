@@ -61,6 +61,7 @@ def get_running_env(**kwargs):
     mach_cmd.topsrcdir = config.topsrcdir
     mach_cmd.topobjdir = config.topobjdir
     mach_cmd.distdir = config.distdir
+    mach_cmd.bindir = config.bindir
     mach_cmd._mach_context = MagicMock()
     mach_cmd._mach_context.state_dir = tempfile.mkdtemp()
     mach_cmd.run_process.return_value = 0
