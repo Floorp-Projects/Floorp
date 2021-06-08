@@ -537,21 +537,29 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
       nsPromiseFlatCString(sourceFileRelativePath).get(), aSourceFileLine);
 #  endif
 
-  nsCOMPtr<nsIConsoleService> console =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  if (console) {
-    NS_ConvertUTF8toUTF16 message("QM_TRY failure ("_ns + severityString +
-                                  ")"_ns + ": '"_ns + aExpr + extraInfosString +
-                                  "', file "_ns + sourceFileRelativePath +
-                                  ":"_ns + IntToCString(aSourceFileLine));
+  // XXX We might want to allow reporting to the browsing console even when
+  // there's no context in future once we are sure that it can't spam the
+  // browser console or when we have special about:quotamanager for the
+  // reporting (instead of the browsing console).
+  // Another option is to keep the current check and rely on MOZ_LOG reporting
+  // in future once that's available.
+  if (!context.IsEmpty()) {
+    nsCOMPtr<nsIConsoleService> console =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    if (console) {
+      NS_ConvertUTF8toUTF16 message(
+          "QM_TRY failure ("_ns + severityString + ")"_ns + ": '"_ns + aExpr +
+          extraInfosString + "', file "_ns + sourceFileRelativePath + ":"_ns +
+          IntToCString(aSourceFileLine));
 
-    // The concatenation above results in a message like:
-    // QM_TRY failure (ERROR): 'MaybeRemoveLocalStorageArchiveTmpFile() failed
-    // with resultCode 0x80004005, resultName NS_ERROR_FAILURE, frameId 1,
-    // stackId 1, processId 53978, context Initialization::Storage', file
-    // dom/quota/ActorsParent.cpp:6029
+      // The concatenation above results in a message like:
+      // QM_TRY failure (ERROR): 'MaybeRemoveLocalStorageArchiveTmpFile() failed
+      // with resultCode 0x80004005, resultName NS_ERROR_FAILURE, frameId 1,
+      // stackId 1, processId 53978, context Initialization::Storage', file
+      // dom/quota/ActorsParent.cpp:6029
 
-    console->LogStringMessage(message.get());
+      console->LogStringMessage(message.get());
+    }
   }
 
   if (!context.IsEmpty()) {
