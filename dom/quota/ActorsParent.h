@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_quota_ActorsParent_h
 #define mozilla_dom_quota_ActorsParent_h
 
+#include "mozilla/dom/quota/Config.h"
+
 namespace mozilla {
 namespace dom {
 namespace quota {
