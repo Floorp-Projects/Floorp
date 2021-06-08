@@ -97,14 +97,18 @@ class ResourceCommand {
    *        List of all resources which should be fetched and observed.
    * @param {Object} options
    *        - {Function} onAvailable: This attribute is mandatory.
-   *                                  Function which will be called once per existing
-   *                                  resource and each time a resource is created.
+   *                                  Function which will be called with an array of resources
+   *                                  each time resource(s) are created.
+   *                                  A second dictionary argument with `areExistingResources` boolean
+   *                                  attribute helps knowing if that's live resources, or some coming
+   *                                  from ResourceCommand cache.
    *        - {Function} onUpdated:   This attribute is optional.
-   *                                  Function which will be called each time a resource,
-   *                                  previously notified via onAvailable is updated.
+   *                                  Function which will be called with an array of updates resources
+   *                                  each time resource(s) are updated.
+   *                                  These resources were previously notified via onAvailable.
    *        - {Function} onDestroyed: This attribute is optional.
-   *                                  Function which will be called each time a resource in
-   *                                  the remote target is destroyed.
+   *                                  Function which will be called with an array of deleted resources
+   *                                  each time resource(s) are destroyed.
    *        - {boolean} ignoreExistingResources:
    *                                  This attribute is optional. Default value is false.
    *                                  If set to true, onAvailable won't be called with
@@ -166,7 +170,7 @@ class ResourceCommand {
     // The resource cache is immediately filled when receiving the sources, but they are
     // emitted with a delay due to throttling. Since the cache can contain resources that
     // will soon be emitted, we have to flush it before adding the new listeners.
-    // Otherwise forwardCacheResources might emit resources that will also be emitted by
+    // Otherwise _forwardExistingResources might emit resources that will also be emitted by
     // the next `_notifyWatchers` call done when calling `_startListening`, which will pull the
     // "already existing" resources.
     this._notifyWatchers();
@@ -185,7 +189,7 @@ class ResourceCommand {
     }
 
     // Register the watcher just after calling _startListening in order to avoid it being called
-    // for already existing resources, which will optionally be notified via _forwardCachedResources
+    // for already existing resources, which will optionally be notified via _forwardExistingResources
     this._watchers.push({
       resources: watchedResources,
       onAvailable,
@@ -195,7 +199,7 @@ class ResourceCommand {
     });
 
     if (!ignoreExistingResources) {
-      await this._forwardCachedResources(watchedResources, onAvailable);
+      await this._forwardExistingResources(watchedResources, onAvailable);
     }
   }
 
@@ -696,7 +700,7 @@ class ResourceCommand {
       for (const { callbackType, updates } of pendingEvents) {
         try {
           if (callbackType == "available") {
-            onAvailable(updates);
+            onAvailable(updates, { areExistingResources: false });
           } else if (callbackType == "updated" && onUpdated) {
             onUpdated(updates);
           } else if (callbackType == "destroyed" && onDestroyed) {
@@ -856,12 +860,12 @@ class ResourceCommand {
     );
   }
 
-  async _forwardCachedResources(resourceTypes, onAvailable) {
-    const cachedResources = this._cache.filter(resource =>
+  async _forwardExistingResources(resourceTypes, onAvailable) {
+    const existingResources = this._cache.filter(resource =>
       resourceTypes.includes(resource.resourceType)
     );
-    if (cachedResources.length > 0) {
-      await onAvailable(cachedResources);
+    if (existingResources.length > 0) {
+      await onAvailable(existingResources, { areExistingResources: true });
     }
   }
 
