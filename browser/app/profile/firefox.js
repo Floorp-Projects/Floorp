@@ -530,6 +530,8 @@ pref("browser.privatebrowsing.promoEnabled", true);
 pref("browser.privatebrowsing.promoTitle", "");
 pref("browser.privatebrowsing.promoLinkText", "");
 pref("browser.privatebrowsing.promoLinkUrl", "");
+pref("browser.privatebrowsing.infoTitleEnabled", true);
+pref("browser.privatebrowsing.promoTitleEnabled", true);
 
 pref("browser.sessionhistory.max_entries", 50);
 
