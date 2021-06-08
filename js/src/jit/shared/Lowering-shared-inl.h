@@ -391,6 +391,17 @@ void LIRGeneratorShared::ensureDefined(MDefinition* mir) {
   }
 }
 
+bool LIRGeneratorShared::willHaveDifferentLIRNodes(MDefinition* mir1,
+                                                   MDefinition* mir2) {
+  if (mir1 != mir2) {
+    return true;
+  }
+  if (mir1->isEmittedAtUses()) {
+    return true;
+  }
+  return false;
+}
+
 template <typename LClass, typename... Args>
 LClass* LIRGeneratorShared::allocateVariadic(uint32_t numOperands,
                                              Args&&... args) {
