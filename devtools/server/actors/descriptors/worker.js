@@ -64,15 +64,12 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
       };
       if (this._dbg.type === Ci.nsIWorkerDebugger.TYPE_SERVICE) {
         /**
-         * With parent-intercept mode, the ServiceWorkerManager in content
-         * processes don't maintain ServiceWorkerRegistrations; record the
-         * ServiceWorker's ID, and this data will be merged with the
-         * corresponding registration in the parent process.
+         * The ServiceWorkerManager in content processes don't maintain
+         * ServiceWorkerRegistrations; record the ServiceWorker's ID, and
+         * this data will be merged with the corresponding registration in
+         * the parent process.
          */
-        if (
-          !swm.isParentInterceptEnabled() ||
-          !DevToolsServer.isInChildProcess
-        ) {
+        if (!DevToolsServer.isInChildProcess) {
           const registration = this._getServiceWorkerRegistrationInfo();
           form.scope = registration.scope;
           const newestWorker =
