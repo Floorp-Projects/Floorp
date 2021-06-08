@@ -122,7 +122,7 @@ class RequestRewriter(object):
             methods, destination = self.rules[split_url.path]
             if "*" in methods or request_handler.command in methods:
                 self.logger.debug("Rewriting request path %s to %s" %
-                             (request_handler.path, destination))
+                                  (request_handler.path, destination))
                 new_url = list(split_url)
                 new_url[2] = destination
                 new_url = urlunsplit(new_url)
@@ -188,9 +188,9 @@ class WebTestServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
         if bind_address:
             hostname_port = server_address
         else:
-            hostname_port = ("",server_address[1])
+            hostname_port = ("", server_address[1])
 
-        #super doesn't work here because BaseHTTPServer.HTTPServer is old-style
+        # super doesn't work here because BaseHTTPServer.HTTPServer is old-style
         BaseHTTPServer.HTTPServer.__init__(self, hostname_port, request_handler_cls, **kwargs)
 
         if config is not None:
@@ -201,8 +201,6 @@ class WebTestServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
                                ports={"http": [self.server_address[1]]}) as config:
                 assert config["ssl_config"] is None
                 Server.config = config
-
-
 
         self.ws_doc_root = ws_doc_root
         self.key_file = key_file
@@ -286,7 +284,7 @@ class BaseWebTestRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             try:
                 handler(request, response)
             except HTTPException as e:
-                response.set_error(e.code, e.message)
+                response.set_error(e.code, str(e))
             except Exception as e:
                 self.respond_with_error(response, e)
         self.logger.debug("%i %s %s (%s) %i" % (response.status[0],
@@ -406,7 +404,8 @@ class Http2WebTestRequestHandler(BaseWebTestRequestHandler):
                     elif hasattr(frame, 'stream_id'):
                         if frame.stream_id not in stream_queues:
                             queue = Queue()
-                            stream_queues[frame.stream_id] = (self.start_stream_thread(frame, queue), queue)
+                            stream_queues[frame.stream_id] = (
+                                self.start_stream_thread(frame, queue), queue)
                         stream_queues[frame.stream_id][1].put(frame)
 
                         if isinstance(frame, StreamEnded) or (hasattr(frame, "stream_ended") and frame.stream_ended):
@@ -464,7 +463,8 @@ class Http2WebTestRequestHandler(BaseWebTestRequestHandler):
         frame = queue.get(True, None)
 
         rfile, wfile = os.pipe()
-        rfile, wfile = os.fdopen(rfile, 'rb'), os.fdopen(wfile, 'wb', 0)  # needs to be unbuffer for websockets
+        rfile, wfile = os.fdopen(rfile, 'rb'), os.fdopen(
+            wfile, 'wb', 0)  # needs to be unbuffer for websockets
         stream_handler = H2HandlerCopy(self, frame, rfile)
 
         h2request = H2Request(stream_handler)
@@ -594,11 +594,12 @@ class Http2WebTestRequestHandler(BaseWebTestRequestHandler):
         try:
             return handler.frame_handler(request)
         except HTTPException as e:
-            response.set_error(e.code, e.message)
+            response.set_error(e.code, str(e))
             response.write()
         except Exception as e:
             self.respond_with_error(response, e)
             response.write()
+
 
 class H2ConnectionGuard(object):
     """H2Connection objects are not threadsafe, so this keeps thread safety"""
@@ -650,6 +651,7 @@ class H2HandlerCopy(object):
         self.request = handler.request
         self.conn = handler.conn
 
+
 class Http1WebTestRequestHandler(BaseWebTestRequestHandler):
     protocol_version = "HTTP/1.1"
 
@@ -666,7 +668,7 @@ class Http1WebTestRequestHandler(BaseWebTestRequestHandler):
 
             request_is_valid = self.parse_request()
             if not request_is_valid:
-                #parse_request() actually sends its own error responses
+                # parse_request() actually sends its own error responses
                 return
 
             self.finish_handling_h1(request_line_is_valid)
@@ -697,6 +699,7 @@ class Http1WebTestRequestHandler(BaseWebTestRequestHandler):
         if not self.raw_requestline:
             self.close_connection = True
         return True
+
 
 class WebTestHttpd(object):
     """
@@ -753,6 +756,7 @@ class WebTestHttpd(object):
       Boolean indicating whether the server is running
 
     """
+
     def __init__(self, host="127.0.0.1", port=8000,
                  server_cls=None, handler_cls=Http1WebTestRequestHandler,
                  use_ssl=False, key_file=None, certificate=None, encrypt_after_connect=False,

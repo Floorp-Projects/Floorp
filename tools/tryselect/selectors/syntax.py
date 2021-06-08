@@ -557,7 +557,7 @@ class AutoTry(object):
                 self.normalise_list(kwargs["platforms"]) if kwargs["platforms"] else {}
             )
         except ValueError as e:
-            print("Error parsing -p argument:\n%s" % e.message)
+            print("Error parsing -p argument:\n%s" % e)
             sys.exit(1)
 
         try:
@@ -567,7 +567,7 @@ class AutoTry(object):
                 else {}
             )
         except ValueError as e:
-            print("Error parsing -u argument (%s):\n%s" % (kwargs["tests"], e.message))
+            print("Error parsing -u argument (%s):\n%s" % (kwargs["tests"], e))
             sys.exit(1)
 
         try:
@@ -577,13 +577,13 @@ class AutoTry(object):
                 else []
             )
         except ValueError as e:
-            print("Error parsing -t argument:\n%s" % e.message)
+            print("Error parsing -t argument:\n%s" % e)
             sys.exit(1)
 
         try:
             jobs = self.normalise_list(kwargs["jobs"]) if kwargs["jobs"] else {}
         except ValueError as e:
-            print("Error parsing -j argument:\n%s" % e.message)
+            print("Error parsing -j argument:\n%s" % e)
             sys.exit(1)
 
         paths = []
@@ -606,7 +606,7 @@ class AutoTry(object):
         try:
             tags = self.normalise_list(kwargs["tags"]) if kwargs["tags"] else []
         except ValueError as e:
-            print("Error parsing --tags argument:\n%s" % e.message)
+            print("Error parsing --tags argument:\n%s" % e)
             sys.exit(1)
 
         extra_values = {k["dest"] for k in SyntaxParser.pass_through_arguments.values()}
@@ -668,7 +668,7 @@ class AutoTry(object):
                 kwargs["intersection"],
             )
         except ValueError as e:
-            print(e.message)
+            print(e)
             sys.exit(1)
 
         if local_artifact_build and not kwargs["no_artifact"]:

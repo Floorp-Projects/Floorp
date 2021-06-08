@@ -430,10 +430,10 @@ def load_events(filename, strict_type_checks):
         with open(filename, "r") as f:
             events = yaml.safe_load(f)
     except IOError as e:
-        ParserError("Error opening " + filename + ": " + e.message + ".").handle_now()
+        ParserError("Error opening " + filename + ": " + str(e) + ".").handle_now()
     except ParserError as e:
         ParserError(
-            "Error parsing events in " + filename + ": " + e.message + "."
+            "Error parsing events in " + filename + ": " + str(e) + "."
         ).handle_now()
 
     event_list = []
