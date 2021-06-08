@@ -2464,29 +2464,6 @@ RefPtr<GenericErrorResultPromise> ServiceWorkerManager::MaybeClaimClient(
   return MaybeClaimClient(aClientInfo, registration);
 }
 
-void ServiceWorkerManager::SetSkipWaitingFlag(nsIPrincipal* aPrincipal,
-                                              const nsCString& aScope,
-                                              uint64_t aServiceWorkerID) {
-  RefPtr<ServiceWorkerRegistrationInfo> registration =
-      GetRegistration(aPrincipal, aScope);
-  if (NS_WARN_IF(!registration)) {
-    return;
-  }
-
-  RefPtr<ServiceWorkerInfo> worker =
-      registration->GetServiceWorkerInfoById(aServiceWorkerID);
-
-  if (NS_WARN_IF(!worker)) {
-    return;
-  }
-
-  worker->SetSkipWaitingFlag();
-
-  if (worker->State() == ServiceWorkerState::Installed) {
-    registration->TryToActivateAsync();
-  }
-}
-
 void ServiceWorkerManager::UpdateClientControllers(
     ServiceWorkerRegistrationInfo* aRegistration) {
   MOZ_ASSERT(NS_IsMainThread());
