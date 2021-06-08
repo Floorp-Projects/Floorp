@@ -37,6 +37,10 @@ EXPORTS += [
     "../third_party/rust/shift_or_euc_c/include/shift_or_euc.h",
 ]
 
+
+PERFTESTS_MANIFESTS += ["benchmarks/perftest.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["benchmarks/xpcshell.ini"]
+
 with Files("**"):
     BUG_COMPONENT = ("Core", "Internationalization")
 
