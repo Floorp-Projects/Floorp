@@ -631,6 +631,8 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
   TextRecord textTransaction;
 
   nsEventStatus status = nsEventStatus_eIgnore;
+  bool causedOnlyByComposition = mIMEPendingTextChange.IsValid() &&
+                                 mIMEPendingTextChange.mCausedOnlyByComposition;
   mIMETextChangedDuringFlush = false;
 
   auto shouldAbort = [=](bool aForce) -> bool {
@@ -750,7 +752,12 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
 
   if (mIMESelectionChanged) {
     mIMESelectionChanged = false;
-    mEditable->OnSelectionChange(selStart, selEnd);
+    if (mDispatcher) {
+      // mCausedOnlyByComposition may be true on committing text.
+      // So even if true, there is no composition.
+      causedOnlyByComposition &= mDispatcher->IsComposing();
+    }
+    mEditable->OnSelectionChange(selStart, selEnd, causedOnlyByComposition);
     flushOnException();
   }
 }
