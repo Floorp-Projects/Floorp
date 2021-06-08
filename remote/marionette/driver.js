@@ -46,16 +46,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   registerEventsActor:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
-  Timeouts: "chrome://remote/content/shared/webdriver/Capabilities.jsm",
-  UnhandledPromptBehavior:
-    "chrome://remote/content/shared/webdriver/Capabilities.jsm",
+  Timeouts: "chrome://remote/content/marionette/session.js",
+  UnhandledPromptBehavior: "chrome://remote/content/marionette/session.js",
   unregisterCommandsActor:
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm",
   unregisterEventsActor:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
   waitForLoadEvent: "chrome://remote/content/marionette/sync.js",
   waitForObserverTopic: "chrome://remote/content/marionette/sync.js",
-  WebDriverSession: "chrome://remote/content/shared/webdriver/Session.jsm",
+  WebDriverSession: "chrome://remote/content/marionette/session.js",
   WebElement: "chrome://remote/content/marionette/element.js",
   WebElementEventTarget: "chrome://remote/content/marionette/dom.js",
   windowManager: "chrome://remote/content/marionette/window-manager.js",

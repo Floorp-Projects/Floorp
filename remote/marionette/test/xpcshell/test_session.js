@@ -7,6 +7,7 @@
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { AppInfo } = ChromeUtils.import(
   "chrome://remote/content/marionette/appinfo.js"
@@ -20,9 +21,51 @@ const {
   Proxy,
   Timeouts,
   UnhandledPromptBehavior,
-} = ChromeUtils.import(
-  "chrome://remote/content/shared/webdriver/Capabilities.jsm"
-);
+  WebDriverSession,
+} = ChromeUtils.import("chrome://remote/content/marionette/session.js");
+
+add_test(function test_WebDriverSession_ctor() {
+  const session = new WebDriverSession();
+
+  equal(typeof session.id, "string");
+  ok(session.capabilities instanceof Capabilities);
+
+  run_next_test();
+});
+
+add_test(function test_WebDriverSession_getters() {
+  const session = new WebDriverSession();
+
+  equal(
+    session.a11yChecks,
+    session.capabilities.get("moz:accessibilityChecks")
+  );
+  equal(session.pageLoadStrategy, session.capabilities.get("pageLoadStrategy"));
+  equal(session.proxy, session.capabilities.get("proxy"));
+  equal(
+    session.strictFileInteractability,
+    session.capabilities.get("strictFileInteractability")
+  );
+  equal(session.timeouts, session.capabilities.get("timeouts"));
+  equal(
+    session.unhandledPromptBehavior,
+    session.capabilities.get("unhandledPromptBehavior")
+  );
+
+  run_next_test();
+});
+
+add_test(function test_WebDriverSession_setters() {
+  const session = new WebDriverSession();
+
+  const timeouts = new Timeouts();
+  timeouts.pageLoad = 45;
+
+  session.timeouts = timeouts;
+  equal(session.timeouts, session.capabilities.get("timeouts"));
+
+  run_next_test();
+});
 
 add_test(function test_Timeouts_ctor() {
   let ts = new Timeouts();

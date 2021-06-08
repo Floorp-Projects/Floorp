@@ -10,24 +10,36 @@ const EXPORTED_SYMBOLS = [
   "Proxy",
   "Timeouts",
   "UnhandledPromptBehavior",
+  "WebDriverSession",
 ];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 
+  accessibility: "chrome://remote/content/marionette/accessibility.js",
+  allowAllCerts: "chrome://remote/content/marionette/cert.js",
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
   assert: "chrome://remote/content/marionette/assert.js",
+  clearActionInputState:
+    "chrome://remote/content/marionette/actors/MarionetteCommandsChild.jsm",
   error: "chrome://remote/content/marionette/error.js",
   Log: "chrome://remote/content/marionette/log.js",
   pprint: "chrome://remote/content/marionette/format.js",
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
@@ -41,6 +53,70 @@ XPCOMUtils.defineLazyGetter(this, "remoteAgent", () => {
     return null;
   }
 });
+
+/** Representation of WebDriver session. */
+class WebDriverSession {
+  constructor(capabilities) {
+    try {
+      this.capabilities = Capabilities.fromJSON(capabilities);
+    } catch (e) {
+      throw new error.SessionNotCreatedError(e);
+    }
+
+    const uuid = uuidGen.generateUUID().toString();
+    this.id = uuid.substring(1, uuid.length - 1);
+
+    if (this.capabilities.get("acceptInsecureCerts")) {
+      logger.warn("TLS certificate errors will be ignored for this session");
+      allowAllCerts.enable();
+    }
+
+    if (this.proxy.init()) {
+      logger.info(`Proxy settings initialised: ${JSON.stringify(this.proxy)}`);
+    }
+
+    // If we are testing accessibility with marionette, start a11y service in
+    // chrome first. This will ensure that we do not have any content-only
+    // services hanging around.
+    if (this.a11yChecks && accessibility.service) {
+      logger.info("Preemptively starting accessibility service in Chrome");
+    }
+  }
+
+  destroy() {
+    allowAllCerts.disable();
+
+    clearActionInputState();
+  }
+
+  get a11yChecks() {
+    return this.capabilities.get("moz:accessibilityChecks");
+  }
+
+  get pageLoadStrategy() {
+    return this.capabilities.get("pageLoadStrategy");
+  }
+
+  get proxy() {
+    return this.capabilities.get("proxy");
+  }
+
+  get strictFileInteractability() {
+    return this.capabilities.get("strictFileInteractability");
+  }
+
+  get timeouts() {
+    return this.capabilities.get("timeouts");
+  }
+
+  set timeouts(timeouts) {
+    this.capabilities.set("timeouts", timeouts);
+  }
+
+  get unhandledPromptBehavior() {
+    return this.capabilities.get("unhandledPromptBehavior");
+  }
+}
 
 /** Representation of WebDriver session timeouts. */
 class Timeouts {
