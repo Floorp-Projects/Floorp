@@ -7,6 +7,7 @@
 #include "MsaaDocAccessible.h"
 
 #include "DocAccessibleChild.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "nsWinUtils.h"
 #include "Role.h"
 
@@ -20,6 +21,29 @@ DocAccessible* MsaaDocAccessible::DocAcc() {
 /* static */
 MsaaDocAccessible* MsaaDocAccessible::GetFrom(DocAccessible* aDoc) {
   return static_cast<MsaaDocAccessible*>(MsaaAccessible::GetFrom(aDoc));
+}
+
+/* static */
+MsaaDocAccessible* MsaaDocAccessible::GetFrom(DocAccessibleParent* aDoc) {
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  return static_cast<MsaaDocAccessible*>(
+      reinterpret_cast<MsaaAccessible*>(aDoc->GetWrapper()));
+}
+
+/* static */
+MsaaDocAccessible* MsaaDocAccessible::GetFromOwned(Accessible* aAcc) {
+  if (RemoteAccessible* remoteAcc = aAcc->AsRemote()) {
+    DocAccessibleParent* doc = remoteAcc->Document();
+    if (!doc) {
+      return nullptr;
+    }
+    return MsaaDocAccessible::GetFrom(doc);
+  }
+  DocAccessible* doc = aAcc->AsLocal()->Document();
+  if (!doc) {
+    return nullptr;
+  }
+  return MsaaDocAccessible::GetFrom(doc);
 }
 
 // IUnknown
