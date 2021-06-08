@@ -1515,6 +1515,8 @@ class Document : public nsINode,
   void AddMediaElementWithMSE();
   void RemoveMediaElementWithMSE();
 
+  void DoNotifyPossibleTitleChange();
+
  protected:
   friend class nsUnblockOnloadEvent;
 
@@ -1546,7 +1548,6 @@ class Document : public nsINode,
   void DestroyElementMaps();
 
   Element* GetRootElementInternal() const;
-  void DoNotifyPossibleTitleChange();
 
   void SetPageUnloadingEventTimeStamp() {
     MOZ_ASSERT(!mPageUnloadingEventTimeStamp);
