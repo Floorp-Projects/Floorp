@@ -9,12 +9,7 @@ import json
 import os
 import sys
 
-from mach.decorators import (
-    CommandArgument,
-    CommandProvider,
-    Command,
-    SubCommand,
-)
+from mach.decorators import CommandArgument, CommandProvider, Command, SubCommand
 
 from mozbuild.base import MachCommandBase
 import mozpack.path as mozpath
@@ -135,7 +130,7 @@ class MozbuildFileCommands(MachCommandBase):
             for p, m in self._get_files_info(paths, rev=rev).items():
                 components[m.get("BUG_COMPONENT")].add(p)
         except InvalidPathException as e:
-            print(e.message)
+            print(e)
             return 1
 
         if fmt == "json":
@@ -188,7 +183,7 @@ class MozbuildFileCommands(MachCommandBase):
                 if "BUG_COMPONENT" not in m:
                     missing.add(p)
         except InvalidPathException as e:
-            print(e.message)
+            print(e)
             return 1
 
         if fmt == "json":

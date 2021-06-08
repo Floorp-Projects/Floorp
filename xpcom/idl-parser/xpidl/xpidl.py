@@ -1406,7 +1406,7 @@ class Param(object):
         try:
             return self.realtype.nativeType(self.paramtype, **kwargs)
         except IDLError as e:
-            raise IDLError(e.message, self.location)
+            raise IDLError(str(e), self.location)
         except TypeError:
             raise IDLError("Unexpected parameter attribute", self.location)
 
@@ -1420,7 +1420,7 @@ class Param(object):
         try:
             return self.realtype.rustType(self.paramtype, **kwargs)
         except IDLError as e:
-            raise IDLError(e.message, self.location)
+            raise IDLError(str(e), self.location)
         except TypeError:
             raise IDLError("Unexpected parameter attribute", self.location)
 

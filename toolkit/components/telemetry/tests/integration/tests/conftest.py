@@ -172,7 +172,7 @@ class Browser(object):
             addons = Addons(self.marionette)
             addon_id = addons.install(addon_path, temp=True)
         except MarionetteException as e:
-            pytest.fail("{} - Error installing addon: {} - ".format(e.cause, e.message))
+            pytest.fail("{} - Error installing addon: {} - ".format(e.cause, e))
         else:
             self.addon_ids.append(addon_id)
 
