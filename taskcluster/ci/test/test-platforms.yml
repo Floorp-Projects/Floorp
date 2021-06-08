@@ -447,31 +447,14 @@ android-em-7.0-x86_64/opt:
         - android-x86_64-tests
         - web-platform-tests-backlog
 
-android-em-7.0-x86_64-lite/opt:
-    build-platform: android-x86_64-lite/opt
-    test-sets:
-        - android-x86_64-tests
-        - web-platform-tests-backlog
-
 android-em-7.0-x86_64-shippable/opt:
     build-platform: android-x86_64-shippable/opt
     test-sets:
         - android-x86_64-tests
         - web-platform-tests-backlog
 
-android-em-7.0-x86_64-shippable-lite/opt:
-    build-platform: android-x86_64-shippable-lite/opt
-    test-sets:
-        - android-x86_64-tests
-        - web-platform-tests-backlog
-
 android-em-7.0-x86_64/debug:
     build-platform: android-x86_64/debug
-    test-sets:
-        - android-x86_64-tests
-
-android-em-7.0-x86_64-lite/debug:
-    build-platform: android-x86_64-lite/debug
     test-sets:
         - android-x86_64-tests
 
