@@ -721,59 +721,61 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
     return E_NOINTERFACE;
   }
 
-  AccessibleWrap* acc = LocalAcc();
-  if (!acc) {
+  if (!mAcc) {
     // mscom::Interceptor (and maybe other callers) expects either S_OK or
     // E_NOINTERFACE, so don't return CO_E_OBJNOTCONNECTED like we normally
     // would for a dead object.
     return E_NOINTERFACE;
   }
+  AccessibleWrap* localAcc = LocalAcc();
   if (IID_IUnknown == iid)
     *ppv = static_cast<IAccessible*>(this);
   else if (IID_IDispatch == iid || IID_IAccessible == iid)
     *ppv = static_cast<IAccessible*>(this);
-  else if (IID_IEnumVARIANT == iid && !acc->IsProxy()) {
+  else if (IID_IEnumVARIANT == iid && localAcc) {
     // Don't support this interface for leaf elements.
-    if (!acc->HasChildren() || nsAccUtils::MustPrune(acc)) return E_NOINTERFACE;
-
+    if (!localAcc->HasChildren() || nsAccUtils::MustPrune(localAcc)) {
+      return E_NOINTERFACE;
+    }
     *ppv = static_cast<IEnumVARIANT*>(new ChildrenEnumVariant(this));
-  } else if (IID_IServiceProvider == iid)
+  } else if (IID_IServiceProvider == iid && localAcc)
     *ppv = new ServiceProvider(this);
-  else if (IID_ISimpleDOMNode == iid && !acc->IsProxy()) {
-    if (!acc->HasOwnContent() && !acc->IsDoc()) {
+  else if (IID_ISimpleDOMNode == iid && localAcc) {
+    if (!localAcc->HasOwnContent() && !localAcc->IsDoc()) {
       return E_NOINTERFACE;
     }
 
     *ppv = static_cast<ISimpleDOMNode*>(new sdnAccessible(WrapNotNull(this)));
-  } else if (iid == IID_ISimpleDOMText && acc->IsTextLeaf() &&
-             !acc->IsProxy()) {
+  } else if (iid == IID_ISimpleDOMText && localAcc && localAcc->IsTextLeaf()) {
     statistics::ISimpleDOMUsed();
     *ppv = static_cast<ISimpleDOMText*>(new sdnTextAccessible(this));
     static_cast<IUnknown*>(*ppv)->AddRef();
     return S_OK;
   }
 
-  if (nullptr == *ppv) {
+  if (!*ppv && localAcc) {
     HRESULT hr = ia2Accessible::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr)) return hr;
   }
 
-  if (nullptr == *ppv && !acc->IsProxy()) {
+  if (!*ppv && localAcc) {
     HRESULT hr = ia2AccessibleComponent::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr)) return hr;
   }
 
-  if (nullptr == *ppv) {
+  if (!*ppv && localAcc) {
     HRESULT hr = ia2AccessibleHyperlink::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr)) return hr;
   }
 
-  if (nullptr == *ppv && !acc->IsProxy()) {
+  if (!*ppv && localAcc) {
     HRESULT hr = ia2AccessibleValue::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr)) return hr;
   }
 
   if (!*ppv && iid == IID_IGeckoCustom) {
+    MOZ_ASSERT(XRE_IsContentProcess() &&
+               !StaticPrefs::accessibility_cache_enabled_AtStartup());
     RefPtr<GeckoCustom> gkCrap = new GeckoCustom(this);
     gkCrap.forget(ppv);
     return S_OK;

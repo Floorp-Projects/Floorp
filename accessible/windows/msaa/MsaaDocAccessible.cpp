@@ -48,7 +48,7 @@ MsaaDocAccessible* MsaaDocAccessible::GetFromOwned(Accessible* aAcc) {
 
 // IUnknown
 IMPL_IUNKNOWN_QUERY_HEAD(MsaaDocAccessible)
-if (aIID == IID_ISimpleDOMDocument) {
+if (aIID == IID_ISimpleDOMDocument && LocalAcc()) {
   statistics::ISimpleDOMUsed();
   *aInstancePtr = static_cast<ISimpleDOMDocument*>(new sdnDocAccessible(this));
   static_cast<IUnknown*>(*aInstancePtr)->AddRef();
