@@ -1487,16 +1487,9 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
   if (aTrackSize.IsFitContent()) {
     // A fit-content() function.
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    nsAutoString argumentStr, fitContentStr;
-    fitContentStr.AppendLiteral("fit-content(");
     MOZ_ASSERT(aTrackSize.AsFitContent().IsBreadth(),
                "unexpected unit for fit-content() argument value");
-    SetValueToLengthPercentage(val, aTrackSize.AsFitContent().AsBreadth(),
-                               true);
-    val->GetCssText(argumentStr, IgnoreErrors());
-    fitContentStr.Append(argumentStr);
-    fitContentStr.Append(char16_t(')'));
-    val->SetString(fitContentStr);
+    SetValueFromFitContentFunction(val, aTrackSize.AsFitContent().AsBreadth());
     return val.forget();
   }
 
@@ -2245,14 +2238,32 @@ static void SetValueToExtremumLength(nsROCSSPrimitiveValue* aValue,
       return aValue->SetString("-moz-available");
     case nsIFrame::ExtremumLength::MozFitContent:
       return aValue->SetString("-moz-fit-content");
+    case nsIFrame::ExtremumLength::FitContentFunction:
+      MOZ_ASSERT_UNREACHABLE("fit-content() should be handled separately");
   }
   MOZ_ASSERT_UNREACHABLE("Unknown extremum length?");
+}
+
+void nsComputedDOMStyle::SetValueFromFitContentFunction(
+    nsROCSSPrimitiveValue* aValue, const LengthPercentage& aLength) {
+  nsAutoString argumentStr;
+  SetValueToLengthPercentage(aValue, aLength, true);
+  aValue->GetCssText(argumentStr, IgnoreErrors());
+
+  nsAutoString fitContentStr;
+  fitContentStr.AppendLiteral("fit-content(");
+  fitContentStr.Append(argumentStr);
+  fitContentStr.Append(char16_t(')'));
+  aValue->SetString(fitContentStr);
 }
 
 void nsComputedDOMStyle::SetValueToSize(nsROCSSPrimitiveValue* aValue,
                                         const StyleSize& aSize) {
   if (aSize.IsAuto()) {
     return aValue->SetString("auto");
+  }
+  if (aSize.IsFitContentFunction()) {
+    return SetValueFromFitContentFunction(aValue, aSize.AsFitContentFunction());
   }
   if (auto length = nsIFrame::ToExtremumLength(aSize)) {
     return SetValueToExtremumLength(aValue, *length);
@@ -2265,6 +2276,9 @@ void nsComputedDOMStyle::SetValueToMaxSize(nsROCSSPrimitiveValue* aValue,
                                            const StyleMaxSize& aSize) {
   if (aSize.IsNone()) {
     return aValue->SetString("none");
+  }
+  if (aSize.IsFitContentFunction()) {
+    return SetValueFromFitContentFunction(aValue, aSize.AsFitContentFunction());
   }
   if (auto length = nsIFrame::ToExtremumLength(aSize)) {
     return SetValueToExtremumLength(aValue, *length);

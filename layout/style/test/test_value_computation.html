@@ -79,9 +79,13 @@ var gSwapInitialWhenHaveFrame = {
   // When there's a frame, these keywords works out to the same as the initial
   // value, i.e. `auto`, given the prerequisites of only 'display: block'.
   "height": [ "-moz-max-content", "-moz-min-content", "-moz-fit-content",
-              "-moz-available", "max-content", "min-content" ],
+              "-moz-available", "max-content", "min-content",
+              "fit-content(100px)", "fit-content(10%)",
+              "fit-content(calc(3*25px + 50%))" ],
   "block-size": [ "-moz-max-content", "-moz-min-content", "-moz-fit-content",
-                  "-moz-available", "max-content", "min-content" ],
+                  "-moz-available", "max-content", "min-content",
+                  "fit-content(100px)", "fit-content(10%)",
+                  "fit-content(calc(3*25px + 50%))" ],
 };
 
 function swap_when_frame(property, value) {
