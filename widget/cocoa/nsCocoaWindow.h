@@ -97,8 +97,6 @@ typedef struct _nsCocoaWindowList {
 - (void)setWantsTitleDrawn:(BOOL)aDrawTitle;
 - (BOOL)wantsTitleDrawn;
 
-- (void)setWindowAppearance:(nsIWidget::WindowAppearance)aWindowAppearance;
-
 - (void)disableSetNeedsDisplay;
 - (void)enableSetNeedsDisplay;
 
@@ -316,7 +314,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void SetSupportsNativeFullscreen(bool aShow) override;
   virtual void SetWindowAnimationType(WindowAnimationType aType) override;
   virtual void SetDrawsTitle(bool aDrawTitle) override;
-  void SetWindowAppearance(nsIWidget::WindowAppearance aAppearance) override;
   virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   virtual void SetDrawsInTitlebar(bool aState) override;
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
@@ -434,8 +431,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   int32_t mNumModalDescendents;
   InputContext mInputContext;
   NSWindowAnimationBehavior mWindowAnimationBehavior;
-
-  nsIWidget::WindowAppearance mWindowAppearance;
 
  private:
   // true if Show() has been called.
