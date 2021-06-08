@@ -59,15 +59,35 @@ IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(ia2AccessibleHypertext)
 STDMETHODIMP
 MsaaDocAccessible::get_accParent(
     /* [retval][out] */ IDispatch __RPC_FAR* __RPC_FAR* ppdispParent) {
-  DocAccessible* docAcc = DocAcc();
-  if (!docAcc) {
+  if (!mAcc) {
     return CO_E_OBJNOTCONNECTED;
   }
+
+  if (mAcc->IsRemote()) {
+    MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+    DocAccessibleParent* remoteDoc = mAcc->AsRemote()->AsDoc();
+    if (nsWinUtils::IsWindowEmulationStarted() && remoteDoc->IsTopLevel()) {
+      // Window emulation is enabled and this is a top level document. Return
+      // window system accessible object.
+      HWND hwnd = remoteDoc->GetEmulatedWindowHandle();
+      MOZ_ASSERT(hwnd);
+      if (hwnd &&
+          SUCCEEDED(::AccessibleObjectFromWindow(
+              hwnd, OBJID_WINDOW, IID_IAccessible, (void**)ppdispParent))) {
+        return S_OK;
+      }
+    }
+    return MsaaAccessible::get_accParent(ppdispParent);
+  }
+
+  DocAccessible* docAcc = DocAcc();
+  MOZ_ASSERT(docAcc);
 
   // We might be a top-level document in a content process.
   DocAccessibleChild* ipcDoc = docAcc->IPCDoc();
   if (ipcDoc && static_cast<dom::BrowserChild*>(ipcDoc->Manager())
                         ->GetTopLevelDocAccessibleChild() == ipcDoc) {
+    MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
     // Emulated window proxy is only set for the top level content document when
     // emulation is enabled.
     RefPtr<IDispatch> dispParent = ipcDoc->GetEmulatedWindowIAccessible();
