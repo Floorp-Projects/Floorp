@@ -4,7 +4,7 @@
 
 use api::BorderRadius;
 use api::units::*;
-use euclid::{Point2D, Rect, Size2D, Vector2D, point2, size2};
+use euclid::{Point2D, Rect, Box2D, Size2D, Vector2D, point2, size2};
 use euclid::{default, Transform2D, Transform3D, Scale};
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 use plane_split::{Clipper, Polygon};
@@ -948,6 +948,23 @@ impl<U> MaxRect for Rect<f32, U> {
         Rect::new(
             Point2D::new(-MAX_COORD, -MAX_COORD),
             Size2D::new(2.0 * MAX_COORD, 2.0 * MAX_COORD),
+        )
+    }
+}
+
+impl<U> MaxRect for Box2D<f32, U> {
+    fn max_rect() -> Self {
+        // Having an unlimited bounding box is fine up until we try
+        // to cast it to `i32`, where we get `-2147483648` for any
+        // values larger than or equal to 2^31.
+        //
+        // Note: clamping to i32::MIN and i32::MAX is not a solution,
+        // with explanation left as an exercise for the reader.
+        const MAX_COORD: f32 = 1.0e9;
+
+        Box2D::new(
+            Point2D::new(-MAX_COORD, -MAX_COORD),
+            Point2D::new(MAX_COORD, MAX_COORD),
         )
     }
 }

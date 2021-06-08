@@ -3433,7 +3433,7 @@ impl ClipBatcher {
         let world_clip_rect = match project_rect(
             &transform.into_transform(),
             &local_clip_rect,
-            world_rect,
+            &world_rect.to_rect(),
         ) {
             Some(rect) => rect,
             None => return false,
@@ -3571,7 +3571,7 @@ impl ClipBatcher {
                     let map_local_to_world = SpaceMapper::new_with_target(
                         ROOT_SPATIAL_NODE_INDEX,
                         clip_instance.spatial_node_index,
-                        WorldRect::max_rect(),
+                        WorldRect::max_rect().to_rect(),
                         spatial_tree,
                     );
 

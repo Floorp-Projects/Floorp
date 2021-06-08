@@ -232,7 +232,7 @@ pub fn update_primitive_visibility(
     let map_surface_to_world = SpaceMapper::new_with_target(
         ROOT_SPATIAL_NODE_INDEX,
         surface.surface_spatial_node_index,
-        frame_context.global_screen_world_rect,
+        frame_context.global_screen_world_rect.to_rect(),
         frame_context.spatial_tree,
     );
 
@@ -510,7 +510,7 @@ pub fn update_primitive_visibility(
                             &map_surface_to_world,
                         ) {
                             let debug_rect = rect * frame_context.global_device_pixel_scale;
-                            frame_state.scratch.primitive.push_debug_rect(debug_rect.to_box2d(), debug_color, debug_color.scale_alpha(0.5));
+                            frame_state.scratch.primitive.push_debug_rect(debug_rect, debug_color, debug_color.scale_alpha(0.5));
                         }
                     }
                 } else if frame_context.debug_flags.contains(::api::DebugFlags::OBSCURE_IMAGES) {
@@ -526,8 +526,8 @@ pub fn update_primitive_visibility(
                             &map_surface_to_world,
                         ) {
                             let rect = rect * frame_context.global_device_pixel_scale;
-                            if rect.size.width > 70.0 && rect.size.height > 70.0 {
-                                frame_state.scratch.primitive.push_debug_rect(rect.to_box2d(), debug_colors::PURPLE, debug_colors::PURPLE);
+                            if rect.width() > 70.0 && rect.height() > 70.0 {
+                                frame_state.scratch.primitive.push_debug_rect(rect, debug_colors::PURPLE, debug_colors::PURPLE);
                             }
                         }
                     }
@@ -638,7 +638,7 @@ fn update_prim_post_visibility(
                 raster_config.clipped_bounding_rect = map_surface_to_world
                     .map(&prim_instance.vis.clip_chain.pic_clip_rect)
                     .and_then(|rect| {
-                        rect.intersection(&world_culling_rect)
+                        rect.to_box2d().intersection(&world_culling_rect)
                     })
                     .unwrap_or(WorldRect::zero());
             }
@@ -664,7 +664,7 @@ pub fn compute_conservative_visible_rect(
     let map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel> = SpaceMapper::new_with_target(
         ROOT_SPATIAL_NODE_INDEX,
         clip_chain.pic_spatial_node_index,
-        world_culling_rect,
+        world_culling_rect.to_rect(),
         spatial_tree,
     );
 
@@ -678,7 +678,7 @@ pub fn compute_conservative_visible_rect(
 
     // Unmap the world culling rect from world -> picture space. If this mapping fails due
     // to matrix weirdness, best we can do is use the clip chain's local clip rect.
-    let pic_culling_rect = match map_pic_to_world.unmap(&world_culling_rect) {
+    let pic_culling_rect = match map_pic_to_world.unmap(&world_culling_rect.to_rect()) {
         Some(rect) => rect,
         None => return clip_chain.local_clip_rect,
     };
@@ -708,6 +708,6 @@ fn calculate_prim_clipped_world_rect(
     map_surface_to_world
         .map(pic_clip_rect)
         .and_then(|world_rect| {
-            world_rect.intersection(world_culling_rect)
+            world_rect.to_box2d().intersection(world_culling_rect)
         })
 }

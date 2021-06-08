@@ -171,8 +171,8 @@ impl From<RectangleKey> for LayoutRect {
 impl From<RectangleKey> for WorldRect {
     fn from(key: RectangleKey) -> WorldRect {
         WorldRect {
-            origin: WorldPoint::new(key.x, key.y),
-            size: WorldSize::new(key.w, key.h),
+            min: WorldPoint::new(key.x, key.y),
+            max: WorldPoint::new(key.x + key.w, key.y + key.h),
         }
     }
 }
@@ -202,10 +202,10 @@ impl From<PictureRect> for RectangleKey {
 impl From<WorldRect> for RectangleKey {
     fn from(rect: WorldRect) -> RectangleKey {
         RectangleKey {
-            x: rect.origin.x,
-            y: rect.origin.y,
-            w: rect.size.width,
-            h: rect.size.height,
+            x: rect.min.x,
+            y: rect.min.y,
+            w: rect.width(),
+            h: rect.height(),
         }
     }
 }
