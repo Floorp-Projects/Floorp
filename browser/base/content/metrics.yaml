@@ -1,0 +1,22 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+
+browser.ui:
+  proton_enabled:
+    type: boolean
+    description: >
+      True if the Proton default theme is enabled.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1715129
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1715129#c3
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mconley@mozilla.com
+      - bwinton@mozilla.com
+    expires: "92"
