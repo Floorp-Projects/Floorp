@@ -308,6 +308,7 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     mIsWin10OrLater = true;
     mIsNightly = true;
     mIsEarlyBetaOrEarlier = true;
+    mHasWrSoftwareBlocklist = true;
   }
 
   void TearDown() override {
@@ -1061,4 +1062,22 @@ TEST_F(GfxConfigManager, WebRenderShaderCacheBlocked) {
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrSoftware.IsEnabled());
+}
+
+TEST_F(GfxConfigManager, WebRenderNoSoftwareBlocklist) {
+  mHasWrSoftwareBlocklist = false;
+  ConfigureWebRender();
+
+  EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWr.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrSoftware.IsEnabled());
 }
