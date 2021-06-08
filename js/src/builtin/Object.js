@@ -323,3 +323,12 @@ function ObjectFromEntries(iter) {
     return obj;
 }
 
+// Proposal https://github.com/tc39/proposal-accessible-object-hasownproperty
+// 1. Object.hasOwn ( O, P )
+function ObjectHasOwn(O, P) {
+    // Step 1.
+    var obj = ToObject(O);
+    // Step 2-3.
+    return hasOwn(P, obj);
+}
+
