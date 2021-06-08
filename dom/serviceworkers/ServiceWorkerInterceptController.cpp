@@ -37,12 +37,6 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
   if (!nsContentUtils::IsNonSubresourceRequest(aChannel)) {
     const Maybe<ServiceWorkerDescriptor>& controller =
         loadInfo->GetController();
-    // For child intercept, only checking the loadInfo controller existence.
-    if (!ServiceWorkerParentInterceptEnabled()) {
-      *aShouldIntercept = controller.isSome();
-      return NS_OK;
-    }
-
     // If the controller doesn't handle fetch events, return false
     if (controller.isSome()) {
       *aShouldIntercept = controller.ref().HandlesFetch();

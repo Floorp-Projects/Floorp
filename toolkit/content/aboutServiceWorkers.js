@@ -124,13 +124,6 @@ async function display(info, pushService) {
     );
   }
 
-  let updateButton = document.createElement("button");
-  document.l10n.setAttributes(updateButton, "update-button");
-  updateButton.onclick = function() {
-    gSWM.propagateSoftUpdate(info.principal.originAttributes, info.scope);
-  };
-  div.appendChild(updateButton);
-
   let unregisterButton = document.createElement("button");
   document.l10n.setAttributes(unregisterButton, "unregister-button");
   div.appendChild(unregisterButton);

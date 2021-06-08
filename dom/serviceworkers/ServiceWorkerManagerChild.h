@@ -28,24 +28,6 @@ class ServiceWorkerManagerChild final : public PServiceWorkerManagerChild {
 
   void ManagerShuttingDown() { mShuttingDown = true; }
 
-  mozilla::ipc::IPCResult RecvNotifyRegister(
-      const ServiceWorkerRegistrationData& aData);
-
-  mozilla::ipc::IPCResult RecvNotifySoftUpdate(
-      const OriginAttributes& aOriginAttributes, const nsString& aScope);
-
-  mozilla::ipc::IPCResult RecvNotifyUnregister(
-      const PrincipalInfo& aPrincipalInfo, const nsString& aScope);
-
-  mozilla::ipc::IPCResult RecvNotifyRemove(const nsCString& aHost);
-
-  mozilla::ipc::IPCResult RecvNotifyRemoveAll();
-
-  PServiceWorkerUpdaterChild* AllocPServiceWorkerUpdaterChild(
-      const OriginAttributes& originAttributes, const nsCString& scope);
-
-  bool DeallocPServiceWorkerUpdaterChild(PServiceWorkerUpdaterChild* aActor);
-
  private:
   ServiceWorkerManagerChild() : mShuttingDown(false) {}
 
