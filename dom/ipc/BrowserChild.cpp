@@ -1813,14 +1813,12 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
   MOZ_LOG(sApzChildLog, LogLevel::Debug,
           ("Receiving touch event of type %d\n", aEvent.mMessage));
 
-  if (StaticPrefs::dom_events_coalesce_touchmove()) {
-    if (aEvent.mMessage == eTouchEnd || aEvent.mMessage == eTouchStart) {
-      ProcessPendingColaescedTouchData();
-    }
+  if (aEvent.mMessage == eTouchEnd || aEvent.mMessage == eTouchStart) {
+    ProcessPendingColaescedTouchData();
+  }
 
-    if (aEvent.mMessage != eTouchMove) {
-      sConsecutiveTouchMoveCount = 0;
-    }
+  if (aEvent.mMessage != eTouchMove) {
+    sConsecutiveTouchMoveCount = 0;
   }
 
   WidgetTouchEvent localEvent(aEvent);
@@ -1875,33 +1873,31 @@ mozilla::ipc::IPCResult BrowserChild::RecvNormalPriorityRealTouchEvent(
 mozilla::ipc::IPCResult BrowserChild::RecvRealTouchMoveEvent(
     const WidgetTouchEvent& aEvent, const ScrollableLayerGuid& aGuid,
     const uint64_t& aInputBlockId, const nsEventStatus& aApzResponse) {
+  ++sConsecutiveTouchMoveCount;
+
   // Only start to coalesce the second touchmove to ensure the first
   // touchmove isn't overridden by the second one.
-  if (StaticPrefs::dom_events_coalesce_touchmove()) {
-    ++sConsecutiveTouchMoveCount;
-    if (mCoalescedTouchMoveEventFlusher && sConsecutiveTouchMoveCount > 1) {
-      MOZ_ASSERT(aEvent.mMessage == eTouchMove);
-      if (mCoalescedTouchData.IsEmpty() ||
-          mCoalescedTouchData.CanCoalesce(aEvent, aGuid, aInputBlockId,
-                                          aApzResponse)) {
-        mCoalescedTouchData.Coalesce(aEvent, aGuid, aInputBlockId,
-                                     aApzResponse);
-      } else {
-        UniquePtr<WidgetTouchEvent> touchMoveEvent =
-            mCoalescedTouchData.TakeCoalescedEvent();
+  if (StaticPrefs::dom_events_coalesce_touchmove() &&
+      mCoalescedTouchMoveEventFlusher && sConsecutiveTouchMoveCount > 1) {
+    MOZ_ASSERT(aEvent.mMessage == eTouchMove);
+    if (mCoalescedTouchData.IsEmpty() ||
+        mCoalescedTouchData.CanCoalesce(aEvent, aGuid, aInputBlockId,
+                                        aApzResponse)) {
+      mCoalescedTouchData.Coalesce(aEvent, aGuid, aInputBlockId, aApzResponse);
+    } else {
+      UniquePtr<WidgetTouchEvent> touchMoveEvent =
+          mCoalescedTouchData.TakeCoalescedEvent();
 
-        mCoalescedTouchData.Coalesce(aEvent, aGuid, aInputBlockId,
-                                     aApzResponse);
+      mCoalescedTouchData.Coalesce(aEvent, aGuid, aInputBlockId, aApzResponse);
 
-        if (!RecvRealTouchEvent(*touchMoveEvent,
-                                mCoalescedTouchData.GetScrollableLayerGuid(),
-                                mCoalescedTouchData.GetInputBlockId(),
-                                mCoalescedTouchData.GetApzResponse())) {
-          return IPC_FAIL_NO_REASON(this);
-        }
+      if (!RecvRealTouchEvent(*touchMoveEvent,
+                              mCoalescedTouchData.GetScrollableLayerGuid(),
+                              mCoalescedTouchData.GetInputBlockId(),
+                              mCoalescedTouchData.GetApzResponse())) {
+        return IPC_FAIL_NO_REASON(this);
       }
-      mCoalescedTouchMoveEventFlusher->StartObserver();
     }
+    mCoalescedTouchMoveEventFlusher->StartObserver();
   } else if (!RecvRealTouchEvent(aEvent, aGuid, aInputBlockId, aApzResponse)) {
     return IPC_FAIL_NO_REASON(this);
   }
