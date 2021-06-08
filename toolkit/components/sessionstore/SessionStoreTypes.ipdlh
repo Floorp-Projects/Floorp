@@ -54,16 +54,9 @@ struct FormData {
   nsString innerHTML;
 };
 
-struct StorageEntry {
-  nsCString origin;
-  nsString[] keys;
-  nsString[] values;
-};
-
 struct DocShellRestoreState {
   nsIURI URI;
   nsCString docShellCaps;
-  StorageEntry[] sessionStorage;
 };
 
 }  // sessionstore

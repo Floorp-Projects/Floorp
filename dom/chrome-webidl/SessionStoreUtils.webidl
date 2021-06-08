@@ -113,17 +113,6 @@ namespace SessionStoreUtils {
 
   boolean restoreFormData(Document document, optional CollectedData data = {});
 
-  /**
-   * Restores all sessionStorage "super cookies".
-   * @param aDocShell
-   *        A tab's docshell (containing the sessionStorage)
-   * @param aStorageData
-   *        A nested object with storage data to be restored that has hosts as
-   *        keys and per-origin session storage data as strings. For example:
-   *        {"https://example.com^userContextId=1": {"key": "value", "my_number": "123"}}
-   */
-   void restoreSessionStorage(nsIDocShell docShell, record<DOMString, record<DOMString, DOMString>> data);
-
    nsISessionStoreRestoreData constructSessionStoreRestoreData();
 
    [Throws]
@@ -134,8 +123,11 @@ namespace SessionStoreUtils {
    Promise<void> restoreDocShellState(
       CanonicalBrowsingContext browsingContext,
       UTF8String? url,
-      ByteString? docShellCaps,
-      record<UTF8String, record<DOMString, DOMString>> sessionStorage);
+      ByteString? docShellCaps);
+
+   void restoreSessionStorageFromParent(
+     CanonicalBrowsingContext browsingContext,
+     record<UTF8String, record<DOMString, DOMString>> sessionStorage);
 };
 
 [GenerateConversionToJS, GenerateInit]

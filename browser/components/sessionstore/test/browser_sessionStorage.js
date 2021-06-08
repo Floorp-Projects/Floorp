@@ -138,7 +138,7 @@ add_task(async function session_storage() {
   await TabStateFlusher.flush(browser2);
 
   let state = JSON.parse(ss.getTabState(tab2));
-  ok(!state.hasOwnProperty("storage"), "storage data was discarded");
+  is(state?.storage, null, "storage data was discarded");
 
   // Test that clearing the data in the first tab works properly within
   // the subframe
