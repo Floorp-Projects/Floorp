@@ -68,14 +68,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Nu, mulțumesc</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Accesează Firefox mai repede. Adaugă un widget pe ecranul de start.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Adaugă widget</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Nu acum</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Filă nouă</string>
@@ -124,8 +116,6 @@
     <string name="browser_menu_find_in_page">Caută în pagină</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Filă privată</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Filă nouă</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Salvează în colecție</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -187,7 +177,6 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Află mai multe</string>
 
-    <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Căutare</string>
     <!-- Text preview for larger sized widgets -->
@@ -306,6 +295,9 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notificări</string>
 
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Numele colecției</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizează acum</string>
@@ -370,9 +362,6 @@
     <string name="exceptions_empty_message_description">Excepțiile îți permit să dezactivezi protecția împotriva urmăririi pentru site-urile selectate.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Află mai multe</string>
-
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Dezactivat la nivel global, intră în Setări pentru activare.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetrie</string>
@@ -451,8 +440,8 @@
     <!-- Option in Library to open History page -->
     <string name="library_history">Istoric</string>
 
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">File sincronizate</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Caută în pagină</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Listă de lectură</string>
     <!-- Menu Item Label for Search in Library -->
@@ -526,7 +515,7 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Deschide filele</string>
     <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Șterge</string>
+	<string name="remove_top_site">Șterge</string>
 
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (mod privat)</string>
@@ -572,12 +561,10 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Fără istoric</string>
 
-    <!-- Downloads -->
-    <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Nu există descărcări aici</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d selectate</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -612,8 +599,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s șters</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Adaugă dosarul</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Marcaj creat.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Marcaj salvat!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -713,15 +698,15 @@
     <string name="tracking_protection_on">Activată</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Dezactivată</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Permite audio și video</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Blochează audio și video numai pe date celulare</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">Audio și video se vor reda pe Wi-Fi</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Blochează numai audio</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Blochează audio și video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Activat</string>
@@ -972,9 +957,6 @@
     <string name="onboarding_header">Bine ai venit pe %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Ai deja un cont?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Descoperă %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Vezi ce e nou</string>
     <!-- text for the "what's new" onboarding card description
@@ -982,47 +964,22 @@
     <string name="onboarding_whats_new_description">Ai întrebări despre %s reproiectat? Vrei să știi ce s-a schimbat?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Obține răspunsuri aici</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Începe să sincronizezi marcaje, parole și multe altele din contul Firefox.</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Află mai multe</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Ești autentificat(ă) ca %s de pe un alt browser Firefox de pe acest telefon. Vrei să te autentifici cu acest cont?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Da, conectează-mă</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Autentificare…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Intră în contul Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Rămâi deconectat</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync este activat</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Eroare de autentificare</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Confidențialitate automată</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Setările de confidențialitate și securitate blochează elementele de urmărire, softurile rău-intenționate și firmele care te urmăresc.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard (implicit)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Blochează mai puține elemente de urmărire. Paginile se vor încărca normal.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strictă (recomandat)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strictă</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Blochează mai multe elemente de urmărire, reclame și ferestre pop-up. Paginile se încarcă mai repede, dar se poate ca unele funcționalități să nu meargă.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Ia o poziție</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Încearcă navigarea cu o singură mână folosind bara de unelte de jos sau mut-o în partea de sus.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navighează privat</string>
     <!-- text for the private browsing onboarding card description
@@ -1035,10 +992,6 @@
     <string name="onboarding_private_browsing_button">Deschide setările</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Confidențialitatea ta</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Am proiectat %s să îți dea control asupra a ceea ce partajezi
-        online și ce partajezi cu noi.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Citește notificarea noastră privind confidențialitatea</string>
 
@@ -1051,8 +1004,6 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Alege o temă</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Economisește consumul bateriei și protejează-ți ochii prin activarea modului întunecat.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automat</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1105,14 +1056,10 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Află mai multe</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (implicit)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Blochează mai puține elemente de urmărire. Paginile se vor încărca normal.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ce blochează protecția standard împotriva urmăririi</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strictă</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Blochează mai multe elemente de urmărire, reclame și ferestre pop-up. Paginile se încarcă mai repede, dar se poate ca unele funcționalități să nu meargă.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ce blochează protecția strictă împotriva urmăririi</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1233,9 +1180,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Denumire comandă rapidă</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Poți adăuga cu ușurință acest site web în ecranul de pornire al telefonului pentru acces instant și o navigare mai rapidă, ca și cum ai fi într-o aplicație.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Date de autentificare și parole</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1248,10 +1192,6 @@
     <string name="preferences_passwords_autofill">Completare automată</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronizează datele de autentificare</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Activat</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Dezactivat</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Reconectare</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1462,7 +1402,7 @@
     <string name="saved_login_duplicate">Există un set de date de autentificare cu acest nume de utilizator</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Conectează alt dispozitiv.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Te rugăm să te autentifici din nou.</string>
@@ -1481,11 +1421,13 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">A fost atinsă limita de site-uri de top</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Pentru a adăuga un site de top nou, trebuie să elimini unul existent. Ține degetul pe denumirea site-ului pentru selectare și apoi atinge „Elimină”.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, am înțeles</string>
 
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Nume</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Elimină</string>
-</resources>
+
+    </resources>
