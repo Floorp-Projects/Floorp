@@ -15,7 +15,6 @@ Services.scriptloader.loadSubScript(
 );
 
 var { Toolbox } = require("devtools/client/framework/toolbox");
-const { Task } = require("devtools/shared/task");
 const asyncStorage = require("devtools/shared/async-storage");
 
 const {
