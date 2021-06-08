@@ -4800,6 +4800,10 @@ class nsIFrame : public nsQueryFrame {
   /**
    * Helper function - computes the content-box inline size for aSize, which is
    * a more complex version to resolve a StyleExtremumLength.
+   * @param aAvailableISizeOverride If this has a value, it is used as the
+   *                                available inline-size instead of
+   *                                aContainingBlockSize.ISize(aWM) when
+   *                                resolving fit-content.
    */
   struct ISizeComputationResult {
     nscoord mISize = 0;
@@ -4810,6 +4814,7 @@ class nsIFrame : public nsQueryFrame {
       const mozilla::LogicalSize& aContainingBlockSize,
       const mozilla::LogicalSize& aContentEdgeToBoxSizing,
       nscoord aBoxSizingToMarginEdge, ExtremumLength aSize,
+      Maybe<nscoord> aAvailableISizeOverride,
       const mozilla::StyleSizeOverrides& aSizeOverrides,
       mozilla::ComputeSizeFlags aFlags);
 
@@ -4837,10 +4842,15 @@ class nsIFrame : public nsQueryFrame {
     }
     auto length = ToExtremumLength(aSize);
     MOZ_ASSERT(length, "This doesn't handle none / auto");
+    Maybe<nscoord> availbleISizeOverride;
+    if (aSize.IsFitContentFunction()) {
+      availbleISizeOverride.emplace(aSize.AsFitContentFunction().Resolve(
+          aContainingBlockSize.ISize(aWM)));
+    }
     return ComputeISizeValue(aRenderingContext, aWM, aContainingBlockSize,
                              aContentEdgeToBoxSizing, aBoxSizingToMarginEdge,
                              length.valueOr(ExtremumLength::MinContent),
-                             aSizeOverrides, aFlags);
+                             availbleISizeOverride, aSizeOverrides, aFlags);
   }
 
   DisplayItemDataArray* DisplayItemData() const {
