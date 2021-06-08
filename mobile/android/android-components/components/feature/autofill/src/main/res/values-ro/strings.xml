@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Autofill: Text shown in popup in third-party app if we found a matching account, but no
+    username is saved (e.g. we only have a password). This text will be shown in place where otherwise
+    the username would be displayed. -->
+    <string name="mozac_feature_autofill_popup_no_username">(Niciun nume de utilizator)</string>
+
+    </resources>
