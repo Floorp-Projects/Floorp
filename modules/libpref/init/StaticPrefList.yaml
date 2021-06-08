@@ -3331,12 +3331,12 @@
   mirror: always
 
 - name: dom.vibrator.max_vibrate_ms
-  type: uint32_t
+  type: RelaxedAtomicUint32
   value: 10000
   mirror: always
 
 - name: dom.vibrator.max_vibrate_list_len
-  type: uint32_t
+  type: RelaxedAtomicUint32
   value: 128
   mirror: always
 
