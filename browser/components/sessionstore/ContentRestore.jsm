@@ -143,11 +143,6 @@ ContentRestoreInternal.prototype = {
       tabData.disallow
     );
 
-    if (tabData.storage && this.docShell instanceof Ci.nsIDocShell) {
-      SessionStoreUtils.restoreSessionStorage(this.docShell, tabData.storage);
-      delete tabData.storage;
-    }
-
     // Add a progress listener to correctly handle browser.loadURI()
     // calls from foreign code.
     this._progressListener = new ProgressListener(this.docShell, {

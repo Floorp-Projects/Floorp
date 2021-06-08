@@ -106,10 +106,6 @@ class SessionStoreUtils {
       Document& aDocument, const nsString& aInnerHTML,
       const nsTArray<SessionStoreRestoreData::Entry>& aEntries);
 
-  static void RestoreSessionStorage(
-      const GlobalObject& aGlobal, nsIDocShell* aDocShell,
-      const Record<nsString, Record<nsString, nsString>>& aData);
-
   static void ComposeInputData(const nsTArray<CollectedInputDataValue>& aData,
                                InputElementData& ret);
 
@@ -126,8 +122,11 @@ class SessionStoreUtils {
   static already_AddRefed<Promise> RestoreDocShellState(
       const GlobalObject& aGlobal, CanonicalBrowsingContext& aContext,
       const nsACString& aURL, const nsCString& aDocShellCaps,
-      const Record<nsCString, Record<nsString, nsString>>& aSessionStorage,
       ErrorResult& aError);
+
+  static void RestoreSessionStorageFromParent(
+      const GlobalObject& aGlobal, const CanonicalBrowsingContext& aContext,
+      const Record<nsCString, Record<nsString, nsString>>& aSessionStorage);
 
   static nsresult ConstructFormDataValues(
       JSContext* aCx, const nsTArray<sessionstore::FormEntry>& aValues,
