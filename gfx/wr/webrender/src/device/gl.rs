@@ -986,6 +986,8 @@ pub struct Capabilities {
     /// textures can be used as normal. If false, external textures can only be rendered with
     /// certain shaders, and must first be copied in to regular textures for others.
     pub supports_image_external_essl3: bool,
+    /// Whether the VAO must be rebound after an attached VBO has been orphaned.
+    pub requires_vao_rebind_after_orphaning: bool,
     /// The name of the renderer, as reported by GL
     pub renderer_name: String,
 }
@@ -1715,6 +1717,10 @@ impl Device {
             true
         };
 
+        // On some Adreno 3xx devices the vertex array object must be unbound and rebound after
+        // an attached buffer has been orphaned.
+        let requires_vao_rebind_after_orphaning = is_adreno_3xx;
+
         Device {
             gl,
             base_gl: None,
@@ -1746,6 +1752,7 @@ impl Device {
                 uses_native_clip_mask,
                 uses_native_antialiasing,
                 supports_image_external_essl3,
+                requires_vao_rebind_after_orphaning,
                 renderer_name,
             },
 
@@ -3408,6 +3415,14 @@ impl Device {
             None => {
                 self.update_vbo_data(vao.instance_vbo_id, instances, usage_hint);
             }
+        }
+
+        // On some devices the VAO must be manually unbound and rebound after an attached buffer has
+        // been orphaned. Failure to do so appeared to result in the orphaned buffer's contents
+        // being used for the subsequent draw call, rather than the new buffer's contents.
+        if self.capabilities.requires_vao_rebind_after_orphaning {
+            self.bind_vao_impl(0);
+            self.bind_vao_impl(vao.id);
         }
     }
 
