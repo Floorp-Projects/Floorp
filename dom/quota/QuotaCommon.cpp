@@ -526,7 +526,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
   const auto sourceFileRelativePath =
       detail::MakeSourceFileRelativePath(aSourceFilePath);
 
-#  ifdef DEBUG
+#  ifdef QM_LOG_ERROR_TO_CONSOLE_ENABLED
   NS_DebugBreak(
       NS_DEBUG_WARNING,
       nsAutoCString("QM_TRY failure ("_ns + severityString + ")"_ns).get(),
@@ -537,6 +537,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
       nsPromiseFlatCString(sourceFileRelativePath).get(), aSourceFileLine);
 #  endif
 
+#  ifdef QM_LOG_ERROR_TO_BROWSER_CONSOLE_ENABLED
   // XXX We might want to allow reporting to the browsing console even when
   // there's no context in future once we are sure that it can't spam the
   // browser console or when we have special about:quotamanager for the
@@ -561,7 +562,9 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
       console->LogStringMessage(message.get());
     }
   }
+#  endif
 
+#  ifdef QM_LOG_ERROR_TO_TELEMETRY_ENABLED
   if (!context.IsEmpty()) {
     // For now, we don't include aExpr in the telemetry event. It might help to
     // match locations across versions, but they might be large.
@@ -571,7 +574,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
 
       res.AppendElement(EventExtraEntry{"context"_ns, nsCString{context}});
 
-#  ifdef QM_ERROR_STACKS_ENABLED
+#    ifdef QM_ERROR_STACKS_ENABLED
       if (!frameIdString.IsEmpty()) {
         res.AppendElement(
             EventExtraEntry{"frame_id"_ns, nsCString{frameIdString}});
@@ -581,7 +584,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
         res.AppendElement(
             EventExtraEntry{"process_id"_ns, nsCString{processIdString}});
       }
-#  endif
+#    endif
 
       if (!rvName.IsEmpty()) {
         res.AppendElement(EventExtraEntry{"result"_ns, nsCString{rvName}});
@@ -606,12 +609,12 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
       res.AppendElement(
           EventExtraEntry{"source_line"_ns, IntToCString(aSourceFileLine)});
 
-#  ifdef QM_ERROR_STACKS_ENABLED
+#    ifdef QM_ERROR_STACKS_ENABLED
       if (!stackIdString.IsEmpty()) {
         res.AppendElement(
             EventExtraEntry{"stack_id"_ns, nsCString{stackIdString}});
       }
-#  endif
+#    endif
 
       return res;
     }());
@@ -619,6 +622,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
     Telemetry::RecordEvent(Telemetry::EventID::DomQuotaTry_Error_Step,
                            Nothing(), extra);
   }
+#  endif
 }
 #endif
 

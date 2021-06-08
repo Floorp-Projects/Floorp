@@ -7,7 +7,21 @@
 #ifndef DOM_QUOTA_CONFIG_H_
 #define DOM_QUOTA_CONFIG_H_
 
+#ifdef DEBUG
+#  define QM_LOG_ERROR_TO_CONSOLE_ENABLED
+#endif
+
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+#  define QM_LOG_ERROR_TO_BROWSER_CONSOLE_ENABLED
+#endif
+
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+#  define QM_LOG_ERROR_TO_TELEMETRY_ENABLED
+#endif
+
+#if defined(QM_LOG_ERROR_TO_CONSOLE_ENABLED) ||         \
+    defined(QM_LOG_ERROR_TO_BROWSER_CONSOLE_ENABLED) || \
+    defined(QM_LOG_ERROR_TO_TELEMETRY_ENABLED)
 #  define QM_LOG_ERROR_ENABLED
 #endif
 
