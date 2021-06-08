@@ -29,7 +29,7 @@ PartitionedLocalStorage::PartitionedLocalStorage(
 PartitionedLocalStorage::~PartitionedLocalStorage() = default;
 
 int64_t PartitionedLocalStorage::GetOriginQuotaUsage() const {
-  return mCache->GetOriginQuotaUsage(SessionStorageCache::eSessionSetType);
+  return mCache->GetOriginQuotaUsage();
 }
 
 uint32_t PartitionedLocalStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
@@ -39,7 +39,7 @@ uint32_t PartitionedLocalStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
     return 0;
   }
 
-  return mCache->Length(SessionStorageCache::eSessionSetType);
+  return mCache->Length();
 }
 
 void PartitionedLocalStorage::Key(uint32_t aIndex, nsAString& aResult,
@@ -50,7 +50,7 @@ void PartitionedLocalStorage::Key(uint32_t aIndex, nsAString& aResult,
     return;
   }
 
-  mCache->Key(SessionStorageCache::eSessionSetType, aIndex, aResult);
+  mCache->Key(aIndex, aResult);
 }
 
 void PartitionedLocalStorage::GetItem(const nsAString& aKey, nsAString& aResult,
@@ -61,7 +61,7 @@ void PartitionedLocalStorage::GetItem(const nsAString& aKey, nsAString& aResult,
     return;
   }
 
-  mCache->GetItem(SessionStorageCache::eSessionSetType, aKey, aResult);
+  mCache->GetItem(aKey, aResult);
 }
 
 void PartitionedLocalStorage::GetSupportedNames(nsTArray<nsString>& aKeys) {
@@ -71,7 +71,7 @@ void PartitionedLocalStorage::GetSupportedNames(nsTArray<nsString>& aKeys) {
     return;
   }
 
-  mCache->GetKeys(SessionStorageCache::eSessionSetType, aKeys);
+  mCache->GetKeys(aKeys);
 }
 
 void PartitionedLocalStorage::SetItem(const nsAString& aKey,
@@ -84,8 +84,7 @@ void PartitionedLocalStorage::SetItem(const nsAString& aKey,
   }
 
   nsString oldValue;
-  nsresult rv = mCache->SetItem(SessionStorageCache::eSessionSetType, aKey,
-                                aValue, oldValue);
+  nsresult rv = mCache->SetItem(aKey, aValue, oldValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;
@@ -105,8 +104,7 @@ void PartitionedLocalStorage::RemoveItem(const nsAString& aKey,
   }
 
   nsString oldValue;
-  nsresult rv =
-      mCache->RemoveItem(SessionStorageCache::eSessionSetType, aKey, oldValue);
+  nsresult rv = mCache->RemoveItem(aKey, oldValue);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (rv == NS_SUCCESS_DOM_NO_OPERATION) {
@@ -121,7 +119,7 @@ void PartitionedLocalStorage::Clear(nsIPrincipal& aSubjectPrincipal,
     return;
   }
 
-  mCache->Clear(SessionStorageCache::eSessionSetType);
+  mCache->Clear();
 }
 
 bool PartitionedLocalStorage::IsForkOf(const Storage* aOther) const {

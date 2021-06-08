@@ -528,13 +528,10 @@ class SessionStorageCacheParent final
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvLoad(
-      nsTArray<SSSetItemInfo>* aDefaultData,
-      nsTArray<SSSetItemInfo>* aSessionData) override;
+  mozilla::ipc::IPCResult RecvLoad(nsTArray<SSSetItemInfo>* aData) override;
 
   mozilla::ipc::IPCResult RecvCheckpoint(
-      nsTArray<SSWriteInfo>&& aDefaultWriteInfos,
-      nsTArray<SSWriteInfo>&& aSessionWriteInfos) override;
+      nsTArray<SSWriteInfo>&& aWriteInfos) override;
 
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 };

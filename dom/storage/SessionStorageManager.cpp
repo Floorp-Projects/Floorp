@@ -296,16 +296,12 @@ nsresult SessionStorageManager::LoadData(nsIPrincipal& aPrincipal,
   RefPtr<SessionStorageCacheChild> cacheActor =
       EnsureCache(originAttributes, originKey, aCache);
 
-  nsTArray<SSSetItemInfo> defaultData;
-  nsTArray<SSSetItemInfo> sessionData;
-  if (!cacheActor->SendLoad(&defaultData, &sessionData)) {
+  nsTArray<SSSetItemInfo> data;
+  if (!cacheActor->SendLoad(&data)) {
     return NS_ERROR_FAILURE;
   }
 
-  originRecord->mCache->DeserializeData(SessionStorageCache::eDefaultSetType,
-                                        defaultData);
-  originRecord->mCache->DeserializeData(SessionStorageCache::eSessionSetType,
-                                        sessionData);
+  originRecord->mCache->DeserializeData(data);
 
   originRecord->mLoaded.Flip();
   aCache.SetLoadedOrCloned();
@@ -336,22 +332,18 @@ void SessionStorageManager::CheckpointDataInternal(
   AssertIsOnMainThread();
   MOZ_ASSERT(mActor);
 
-  nsTArray<SSWriteInfo> defaultWriteInfos =
-      aCache.SerializeWriteInfos(SessionStorageCache::eDefaultSetType);
-  nsTArray<SSWriteInfo> sessionWriteInfos =
-      aCache.SerializeWriteInfos(SessionStorageCache::eSessionSetType);
+  nsTArray<SSWriteInfo> writeInfos = aCache.SerializeWriteInfos();
 
-  if (defaultWriteInfos.IsEmpty() && sessionWriteInfos.IsEmpty()) {
+  if (writeInfos.IsEmpty()) {
     return;
   }
 
   RefPtr<SessionStorageCacheChild> cacheActor =
       EnsureCache(aOriginAttrs, aOriginKey, aCache);
 
-  Unused << cacheActor->SendCheckpoint(defaultWriteInfos, sessionWriteInfos);
+  Unused << cacheActor->SendCheckpoint(writeInfos);
 
-  aCache.ResetWriteInfos(SessionStorageCache::eDefaultSetType);
-  aCache.ResetWriteInfos(SessionStorageCache::eSessionSetType);
+  aCache.ResetWriteInfos();
 }
 
 NS_IMETHODIMP
@@ -522,8 +514,7 @@ SessionStorageManager::CheckStorage(nsIPrincipal* aPrincipal, Storage* aStorage,
 }
 
 void SessionStorageManager::ClearStorages(
-    ClearStorageType aType, const OriginAttributesPattern& aPattern,
-    const nsACString& aOriginScope) {
+    const OriginAttributesPattern& aPattern, const nsACString& aOriginScope) {
   if (CanLoadData()) {
     nsresult rv = EnsureManager();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -545,13 +536,7 @@ void SessionStorageManager::ClearStorages(
       if (aOriginScope.IsEmpty() ||
           StringBeginsWith(originKeyEntry.GetKey(), aOriginScope)) {
         const auto cache = originKeyEntry.GetData()->mCache;
-        if (aType == eAll) {
-          cache->Clear(SessionStorageCache::eDefaultSetType, false);
-          cache->Clear(SessionStorageCache::eSessionSetType, false);
-        } else {
-          MOZ_ASSERT(aType == eSessionOnly);
-          cache->Clear(SessionStorageCache::eSessionSetType, false);
-        }
+        cache->Clear(false);
 
         if (CanLoadData()) {
           MOZ_ASSERT(ActorExists());
@@ -574,27 +559,27 @@ nsresult SessionStorageManager::Observe(
 
   // Clear everything, caches + database
   if (!strcmp(aTopic, "cookie-cleared")) {
-    ClearStorages(eAll, pattern, ""_ns);
+    ClearStorages(pattern, ""_ns);
     return NS_OK;
   }
 
   // Clear from caches everything that has been stored
   // while in session-only mode
   if (!strcmp(aTopic, "session-only-cleared")) {
-    ClearStorages(eSessionOnly, pattern, aOriginScope);
+    ClearStorages(pattern, aOriginScope);
     return NS_OK;
   }
 
   // Clear everything (including so and pb data) from caches and database
   // for the given domain and subdomains.
   if (!strcmp(aTopic, "browser:purge-sessionStorage")) {
-    ClearStorages(eAll, pattern, aOriginScope);
+    ClearStorages(pattern, aOriginScope);
     return NS_OK;
   }
 
   if (!strcmp(aTopic, "profile-change")) {
     // For case caches are still referenced - clear them completely
-    ClearStorages(eAll, pattern, ""_ns);
+    ClearStorages(pattern, ""_ns);
     mOATable.Clear();
     return NS_OK;
   }
@@ -689,8 +674,7 @@ BackgroundSessionStorageManager::~BackgroundSessionStorageManager() = default;
 
 void BackgroundSessionStorageManager::CopyDataToContentProcess(
     const nsACString& aOriginAttrs, const nsACString& aOriginKey,
-    nsTArray<SSSetItemInfo>& aDefaultData,
-    nsTArray<SSSetItemInfo>& aSessionData) {
+    nsTArray<SSSetItemInfo>& aData) {
   MOZ_ASSERT(XRE_IsParentProcess());
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
@@ -700,10 +684,7 @@ void BackgroundSessionStorageManager::CopyDataToContentProcess(
     return;
   }
 
-  aDefaultData =
-      originRecord->mCache->SerializeData(SessionStorageCache::eDefaultSetType);
-  aSessionData =
-      originRecord->mCache->SerializeData(SessionStorageCache::eSessionSetType);
+  aData = originRecord->mCache->SerializeData();
 }
 
 /* static */
@@ -734,35 +715,26 @@ void BackgroundSessionStorageManager::GetData(
     for (auto originIter = attributesIter.UserData()->ConstIter();
          !originIter.Done(); originIter.Next()) {
       const auto& cache = originIter.UserData()->mCache;
-      int64_t size =
-          cache->GetOriginQuotaUsage(SessionStorageCache::eDefaultSetType) +
-          cache->GetOriginQuotaUsage(SessionStorageCache::eSessionSetType);
-      if (size > aSizeLimit) {
+      if (cache->GetOriginQuotaUsage() > aSizeLimit) {
         continue;
       }
 
-      nsTArray<SSSetItemInfo> defaultData =
-          cache->SerializeData(SessionStorageCache::eDefaultSetType);
-      nsTArray<SSSetItemInfo> sessionData =
-          cache->SerializeData(SessionStorageCache::eSessionSetType);
-
-      if (defaultData.IsEmpty() && sessionData.IsEmpty()) {
+      nsTArray<SSSetItemInfo> data = cache->SerializeData();
+      if (data.IsEmpty()) {
         continue;
       }
 
       SSCacheCopy& cacheCopy = *aCacheCopyList.AppendElement();
       cacheCopy.originKey() = originIter.Key();
       cacheCopy.originAttributes() = attributesIter.Key();
-      cacheCopy.defaultData().SwapElements(defaultData);
-      cacheCopy.sessionData().SwapElements(sessionData);
+      cacheCopy.data().SwapElements(data);
     }
   }
 }
 
 void BackgroundSessionStorageManager::UpdateData(
     const nsACString& aOriginAttrs, const nsACString& aOriginKey,
-    const nsTArray<SSWriteInfo>& aDefaultWriteInfos,
-    const nsTArray<SSWriteInfo>& aSessionWriteInfos) {
+    const nsTArray<SSWriteInfo>& aWriteInfos) {
   MOZ_ASSERT(XRE_IsParentProcess());
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
@@ -772,10 +744,7 @@ void BackgroundSessionStorageManager::UpdateData(
 
   MaybeScheduleSessionStoreUpdate();
 
-  originRecord->mCache->DeserializeWriteInfos(
-      SessionStorageCache::eDefaultSetType, aDefaultWriteInfos);
-  originRecord->mCache->DeserializeWriteInfos(
-      SessionStorageCache::eSessionSetType, aSessionWriteInfos);
+  originRecord->mCache->DeserializeWriteInfos(aWriteInfos);
 }
 
 void BackgroundSessionStorageManager::SetCurrentBrowsingContextId(

@@ -1347,8 +1347,7 @@ void SessionStorageCacheParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult SessionStorageCacheParent::RecvLoad(
-    nsTArray<SSSetItemInfo>* aDefaultData,
-    nsTArray<SSSetItemInfo>* aSessionData) {
+    nsTArray<SSSetItemInfo>* aData) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(mManagerActor);
 
@@ -1357,23 +1356,20 @@ mozilla::ipc::IPCResult SessionStorageCacheParent::RecvLoad(
   RefPtr<BackgroundSessionStorageManager> manager = mManagerActor->GetManager();
   MOZ_ASSERT(manager);
 
-  manager->CopyDataToContentProcess(mOriginAttrs, mOriginKey, *aDefaultData,
-                                    *aSessionData);
+  manager->CopyDataToContentProcess(mOriginAttrs, mOriginKey, *aData);
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult SessionStorageCacheParent::RecvCheckpoint(
-    nsTArray<SSWriteInfo>&& aDefaultWriteInfos,
-    nsTArray<SSWriteInfo>&& aSessionWriteInfos) {
+    nsTArray<SSWriteInfo>&& aWriteInfos) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(mManagerActor);
 
   RefPtr<BackgroundSessionStorageManager> manager = mManagerActor->GetManager();
   MOZ_ASSERT(manager);
 
-  manager->UpdateData(mOriginAttrs, mOriginKey, aDefaultWriteInfos,
-                      aSessionWriteInfos);
+  manager->UpdateData(mOriginAttrs, mOriginKey, aWriteInfos);
 
   return IPC_OK();
 }

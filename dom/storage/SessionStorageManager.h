@@ -137,12 +137,7 @@ class SessionStorageManager final : public SessionStorageManagerBase,
                                         SessionStorageCache* aCloneFrom,
                                         RefPtr<SessionStorageCache>* aRetVal);
 
-  enum ClearStorageType {
-    eAll,
-    eSessionOnly,
-  };
-  void ClearStorages(ClearStorageType aType,
-                     const OriginAttributesPattern& aPattern,
+  void ClearStorages(const OriginAttributesPattern& aPattern,
                      const nsACString& aOriginScope);
 
   SessionStorageCacheChild* EnsureCache(const nsCString& aOriginAttrs,
@@ -190,12 +185,10 @@ class BackgroundSessionStorageManager final : public SessionStorageManagerBase {
 
   void CopyDataToContentProcess(const nsACString& aOriginAttrs,
                                 const nsACString& aOriginKey,
-                                nsTArray<SSSetItemInfo>& aDefaultData,
-                                nsTArray<SSSetItemInfo>& aSessionData);
+                                nsTArray<SSSetItemInfo>& aData);
 
   void UpdateData(const nsACString& aOriginAttrs, const nsACString& aOriginKey,
-                  const nsTArray<SSWriteInfo>& aDefaultWriteInfos,
-                  const nsTArray<SSWriteInfo>& aSessionWriteInfos);
+                  const nsTArray<SSWriteInfo>& aWriteInfos);
 
   void SetCurrentBrowsingContextId(uint64_t aBrowsingContextId);
 
