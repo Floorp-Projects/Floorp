@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function
 
 import enum
 import os
+import socket
 import subprocess
 import sys
 
@@ -80,15 +81,31 @@ def check(func):
 
 
 @check
+def dns(**kwargs):
+    """Check DNS is queryable."""
+    try:
+        socket.getaddrinfo("mozilla.org", 80)
+        return DoctorCheck(
+            name="dns",
+            status=CheckStatus.OK,
+            display_text=["DNS query for mozilla.org completed successfully."],
+        )
+
+    except socket.gaierror:
+        return DoctorCheck(
+            name="dns",
+            status=CheckStatus.FATAL,
+            display_text=["Could not query DNS for mozilla.org."],
+        )
+
+
+@check
 def cpu(**kwargs):
     """Check the host machine has the recommended processing power to develop Firefox."""
     cpu_count = psutil.cpu_count()
     if cpu_count < PROCESSORS_THRESHOLD:
         status = CheckStatus.WARNING
-        desc = "%d logical processors detected, <%d" % (
-            cpu_count,
-            PROCESSORS_THRESHOLD,
-        )
+        desc = "%d logical processors detected, <%d" % (cpu_count, PROCESSORS_THRESHOLD)
     else:
         status = CheckStatus.OK
         desc = "%d logical processors detected, >=%d" % (
@@ -96,11 +113,7 @@ def cpu(**kwargs):
             PROCESSORS_THRESHOLD,
         )
 
-    return DoctorCheck(
-        name="cpu",
-        display_text=[desc],
-        status=status,
-    )
+    return DoctorCheck(name="cpu", display_text=[desc], status=status)
 
 
 @check
@@ -116,11 +129,7 @@ def memory(**kwargs):
         status = CheckStatus.OK
         desc = "%.1fGB of physical memory, >%.1fGB" % (memory_GB, MEMORY_THRESHOLD)
 
-    return DoctorCheck(
-        name="memory",
-        status=status,
-        display_text=[desc],
-    )
+    return DoctorCheck(name="memory", status=status, display_text=[desc])
 
 
 @check
@@ -153,23 +162,13 @@ def storage_freespace(topsrcdir, topobjdir, **kwargs):
                 status = CheckStatus.WARNING
                 desc.append(
                     "mountpoint = %s\n%dGB of %dGB free, <%dGB"
-                    % (
-                        mount,
-                        freespace_GB,
-                        size_GB,
-                        FREESPACE_THRESHOLD,
-                    )
+                    % (mount, freespace_GB, size_GB, FREESPACE_THRESHOLD)
                 )
             else:
                 status = CheckStatus.OK
                 desc.append(
                     "mountpoint = %s\n%dGB of %dGB free, >=%dGB"
-                    % (
-                        mount,
-                        freespace_GB,
-                        size_GB,
-                        FREESPACE_THRESHOLD,
-                    )
+                    % (mount, freespace_GB, size_GB, FREESPACE_THRESHOLD)
                 )
 
         except OSError:
@@ -177,11 +176,7 @@ def storage_freespace(topsrcdir, topobjdir, **kwargs):
             desc.append("path invalid")
 
         checks.append(
-            DoctorCheck(
-                name="%s mount check" % mount,
-                status=status,
-                display_text=desc,
-            )
+            DoctorCheck(name="%s mount check" % mount, status=status, display_text=desc)
         )
 
     return checks
@@ -214,14 +209,12 @@ def fs_lastaccess(topsrcdir, topobjdir, **kwargs):
             disablelastaccess = int(fsutil_output.partition("=")[2][1])
         except subprocess.CalledProcessError:
             return DoctorCheck(
-                status=CheckStatus.WARNING,
-                desc=["unable to check lastaccess behavior"],
+                status=CheckStatus.WARNING, desc=["unable to check lastaccess behavior"]
             )
 
         if disablelastaccess == 1:
             return DoctorCheck(
-                status=CheckStatus.OK,
-                display_text=["lastaccess disabled systemwide"],
+                status=CheckStatus.OK, display_text=["lastaccess disabled systemwide"]
             )
         elif disablelastaccess == 0:
             return DoctorCheck(
@@ -284,9 +277,7 @@ def check_mount_lastaccess(mount):
         desc = "%s has %s mount option" % (mount, option)
 
     return DoctorCheck(
-        name="%s mount lastaccess" % mount,
-        status=status,
-        display_text=[desc],
+        name="%s mount lastaccess" % mount, status=status, display_text=[desc]
     )
 
 
@@ -334,11 +325,7 @@ def mozillabuild(**kwargs):
         status = CheckStatus.FATAL
         desc = "MozillaBuild version not found"
 
-    return DoctorCheck(
-        name="mozillabuild",
-        status=status,
-        display_text=[desc],
-    )
+    return DoctorCheck(name="mozillabuild", status=status, display_text=[desc])
 
 
 def run_doctor(fix=False, verbose=False, **kwargs):
