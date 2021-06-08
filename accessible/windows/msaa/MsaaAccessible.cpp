@@ -169,6 +169,9 @@ int32_t MsaaAccessible::GetChildIDFor(Accessible* aAccessible) {
 /* static */
 uint32_t MsaaAccessible::GetContentProcessIdFor(
     dom::ContentParentId aIPCContentId) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return 0;
+  }
   return sIDGen.GetContentProcessIDFor(aIPCContentId);
 }
 

@@ -43,6 +43,7 @@
 #include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/SimpleEnumerator.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -2469,7 +2470,8 @@ mozilla::ipc::IPCResult ContentChild::RecvActivateA11y(
   MOZ_ASSERT(aMainChromeTid != 0);
   mMainChromeTid = aMainChromeTid;
 
-  MOZ_ASSERT(aMsaaID != 0);
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup() ? !aMsaaID
+                                                                  : aMsaaID);
   mMsaaID = aMsaaID;
 #  endif  // XP_WIN
 
