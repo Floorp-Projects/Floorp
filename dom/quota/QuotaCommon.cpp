@@ -422,6 +422,17 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
     return;
   }
 
+  nsAutoCString context;
+
+#  ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
+  const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
+
+  if (const auto contextIt = extraInfoMap.find(ScopedLogExtraInfo::kTagContext);
+      contextIt != extraInfoMap.cend()) {
+    context = *contextIt->second;
+  }
+#  endif
+
   const auto severityString = [&aSeverity]() -> nsLiteralCString {
     switch (aSeverity) {
       case Severity::Error:
@@ -506,8 +517,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
 #  endif
 
 #  ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
-  const auto& extraInfos = ScopedLogExtraInfo::GetExtraInfoMap();
-  for (const auto& item : extraInfos) {
+  for (const auto& item : extraInfoMap) {
     extraInfosString.Append(", "_ns + nsDependentCString(item.first) + " "_ns +
                             *item.second);
   }
@@ -544,19 +554,16 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
     console->LogStringMessage(message.get());
   }
 
-#  ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
-  if (const auto contextIt = extraInfos.find(ScopedLogExtraInfo::kTagContext);
-      contextIt != extraInfos.cend()) {
+  if (!context.IsEmpty()) {
     // For now, we don't include aExpr in the telemetry event. It might help to
     // match locations across versions, but they might be large.
     auto extra = Some([&] {
       auto res = CopyableTArray<EventExtraEntry>{};
       res.SetCapacity(9);
 
-      res.AppendElement(EventExtraEntry{
-          "context"_ns, nsPromiseFlatCString{*contextIt->second}});
+      res.AppendElement(EventExtraEntry{"context"_ns, nsCString{context}});
 
-#    ifdef QM_ERROR_STACKS_ENABLED
+#  ifdef QM_ERROR_STACKS_ENABLED
       if (!frameIdString.IsEmpty()) {
         res.AppendElement(
             EventExtraEntry{"frame_id"_ns, nsCString{frameIdString}});
@@ -566,7 +573,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
         res.AppendElement(
             EventExtraEntry{"process_id"_ns, nsCString{processIdString}});
       }
-#    endif
+#  endif
 
       if (!rvName.IsEmpty()) {
         res.AppendElement(EventExtraEntry{"result"_ns, nsCString{rvName}});
@@ -591,12 +598,12 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
       res.AppendElement(
           EventExtraEntry{"source_line"_ns, IntToCString(aSourceFileLine)});
 
-#    ifdef QM_ERROR_STACKS_ENABLED
+#  ifdef QM_ERROR_STACKS_ENABLED
       if (!stackIdString.IsEmpty()) {
         res.AppendElement(
             EventExtraEntry{"stack_id"_ns, nsCString{stackIdString}});
       }
-#    endif
+#  endif
 
       return res;
     }());
@@ -604,7 +611,6 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
     Telemetry::RecordEvent(Telemetry::EventID::DomQuotaTry_Error_Step,
                            Nothing(), extra);
   }
-#  endif
 }
 #endif
 
