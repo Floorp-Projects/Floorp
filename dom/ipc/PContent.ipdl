@@ -53,7 +53,6 @@ include PTabContext;
 include ProtocolTypes;
 include PBackgroundSharedTypes;
 include PContentPermission;
-include ServiceWorkerConfiguration;
 include GraphicsMessages;
 include MemoryReportTypes;
 include ClientIPCTypes;
@@ -690,11 +689,6 @@ child:
      * Send the remote type associated with the content process.
      */
     async RemoteType(nsCString aRemoteType);
-
-    /**
-     * Send ServiceWorkerRegistrationData to child process.
-     */
-    async InitServiceWorkers(ServiceWorkerConfiguration aConfig);
 
     /**
      * Send BlobURLRegistrationData to child process.

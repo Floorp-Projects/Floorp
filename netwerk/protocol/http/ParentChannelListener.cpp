@@ -32,7 +32,6 @@
 
 using mozilla::Unused;
 using mozilla::dom::ServiceWorkerInterceptController;
-using mozilla::dom::ServiceWorkerParentInterceptEnabled;
 
 namespace mozilla {
 namespace net {
@@ -44,9 +43,7 @@ ParentChannelListener::ParentChannelListener(
   LOG(("ParentChannelListener::ParentChannelListener [this=%p, next=%p]", this,
        aListener));
 
-  if (ServiceWorkerParentInterceptEnabled()) {
-    mInterceptController = new ServiceWorkerInterceptController();
-  }
+  mInterceptController = new ServiceWorkerInterceptController();
 }
 
 ParentChannelListener::~ParentChannelListener() {

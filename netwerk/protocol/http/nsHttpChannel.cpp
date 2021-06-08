@@ -9303,12 +9303,10 @@ nsresult nsHttpChannel::RedirectToInterceptedChannel() {
   // Once child-side interception is removed and the internal redirect no
   // longer needs to be "hidden", then this header copying code can be
   // removed.
-  if (ServiceWorkerParentInterceptEnabled()) {
-    nsCOMPtr<nsIHttpHeaderVisitor> visitor =
-        new CopyNonDefaultHeaderVisitor(intercepted);
-    rv = VisitNonDefaultRequestHeaders(visitor);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsCOMPtr<nsIHttpHeaderVisitor> visitor =
+      new CopyNonDefaultHeaderVisitor(intercepted);
+  rv = VisitNonDefaultRequestHeaders(visitor);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mRedirectChannel = intercepted;
 
