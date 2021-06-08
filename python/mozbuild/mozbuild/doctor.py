@@ -122,6 +122,60 @@ def internet(**kwargs):
 
 
 @check
+def ssh(**kwargs):
+    """Check the status of `ssh hg.mozilla.org` for common errors."""
+    try:
+        # We expect this command to return exit code 1 even when we hit
+        # the successful code path, since we don't specify a `pash` command.
+        proc = subprocess.run(
+            ["ssh", "hg.mozilla.org"],
+            encoding="utf-8",
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
+
+        # Command output from a successful `pash` run.
+        if "has privileges to access Mercurial over" in proc.stdout:
+            return DoctorCheck(
+                name="ssh",
+                status=CheckStatus.OK,
+                display_text=["SSH is properly configured for access to hg."],
+            )
+
+        if "Permission denied" in proc.stdout:
+            # Parse thproc.stdout for username, which looks like:
+            # `<username>@hg.mozilla.org: Permission denied (reason)`
+            login_string = proc.stdout.split()[0]
+            username, _host = login_string.split("@hg.mozilla.org")
+
+            # `<username>` should be an email.
+            if "@" not in username:
+                return DoctorCheck(
+                    name="ssh",
+                    status=CheckStatus.FATAL,
+                    display_text=[
+                        "SSH username `{}` is not an email address.".format(username),
+                        "hg.mozilla.org logins should be in the form `user@domain.com`.",
+                    ],
+                )
+
+            return DoctorCheck(
+                name="ssh",
+                status=CheckStatus.WARNING,
+                display_text=[
+                    "SSH username `{}` does not have permission to push to "
+                    "hg.mozilla.org.".format(username)
+                ],
+            )
+    except subprocess.CalledProcessError:
+        return DoctorCheck(
+            name="ssh",
+            status=CheckStatus.WARNING,
+            display_text=["Could not run `ssh hg.mozilla.org`."],
+        )
+
+
+@check
 def cpu(**kwargs):
     """Check the host machine has the recommended processing power to develop Firefox."""
     cpu_count = psutil.cpu_count()
