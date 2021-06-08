@@ -37,7 +37,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.ext.runIfFragmentIsAttached
 
 /**
  * Fragment used for browsing the web within external apps.
@@ -190,23 +189,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 permissionHighlights = tab.content.permissionHighlights
             )
         nav(R.id.externalAppBrowserFragment, directions)
-    }
-
-    override fun navToTrackingProtectionPanel(tab: SessionState) {
-        requireComponents.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
-            runIfFragmentIsAttached {
-                val isEnabled = tab.trackingProtection.enabled && !contains
-                val directions =
-                    ExternalAppBrowserFragmentDirections
-                        .actionGlobalTrackingProtectionPanelDialogFragment(
-                            sessionId = tab.id,
-                            url = tab.content.url,
-                            trackingProtectionEnabled = isEnabled,
-                            gravity = getAppropriateLayoutGravity()
-                        )
-                nav(R.id.externalAppBrowserFragment, directions)
-            }
-        }
     }
 
     override fun getContextMenuCandidates(
