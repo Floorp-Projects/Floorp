@@ -44,6 +44,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/BrowserChild.h"
@@ -1760,10 +1761,15 @@ void DocAccessible::DoInitialUpdate() {
           browserChild->SetTopLevelDocAccessibleChild(ipcDoc);
 
 #if defined(XP_WIN)
-          IAccessibleHolder holder(
-              CreateHolderFromAccessible(WrapNotNull(this)));
-          MOZ_ASSERT(!holder.IsNull());
-          int32_t childID = MsaaAccessible::GetChildIDFor(this);
+          IAccessibleHolder holder;
+          int32_t childID;
+          if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+            childID = 0;
+          } else {
+            holder = CreateHolderFromAccessible(WrapNotNull(this));
+            MOZ_ASSERT(!holder.IsNull());
+            childID = MsaaAccessible::GetChildIDFor(this);
+          }
 #else
           int32_t holder = 0, childID = 0;
 #endif

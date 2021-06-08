@@ -38,6 +38,10 @@ ITypeInfo* MsaaAccessible::gTypeInfo = nullptr;
 
 /* static */
 MsaaAccessible* MsaaAccessible::Create(Accessible* aAcc) {
+  // If the cache is enabled, this should only ever be called in the parent
+  // process.
+  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup() ||
+             XRE_IsParentProcess());
   // The order of some of these is important! For example, when isRoot is true,
   // IsDoc will also be true, so we must check IsRoot first. IsTable/Cell and
   // IsHyperText are a similar case.
