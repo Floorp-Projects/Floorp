@@ -1406,9 +1406,10 @@ struct MOZ_STACK_CLASS ScopedLogExtraInfo {
 // directly, they should only be called from the QM_* macros.
 #ifdef QM_LOG_ERROR_ENABLED
 template <typename T>
-MOZ_COLD void HandleError(const char* aExpr, const T& aRv,
-                          const char* aSourceFilePath, int32_t aSourceFileLine,
-                          const Severity aSeverity) {
+MOZ_COLD MOZ_NEVER_INLINE void HandleError(const char* aExpr, const T& aRv,
+                                           const char* aSourceFilePath,
+                                           int32_t aSourceFileLine,
+                                           const Severity aSeverity) {
 #  ifdef QM_ERROR_STACKS_ENABLED
   if constexpr (std::is_same_v<T, QMResult> || std::is_same_v<T, nsresult>) {
     mozilla::dom::quota::LogError(nsDependentCString(aExpr), ResultType(aRv),
