@@ -374,6 +374,9 @@ class BackgroundParentImpl : public PBackgroundParent,
   already_AddRefed<PServiceWorkerParent> AllocPServiceWorkerParent(
       const IPCServiceWorkerDescriptor&) final;
 
+  mozilla::ipc::IPCResult RecvPServiceWorkerManagerConstructor(
+      PServiceWorkerManagerParent* aActor) override;
+
   mozilla::ipc::IPCResult RecvPServiceWorkerConstructor(
       PServiceWorkerParent* aActor,
       const IPCServiceWorkerDescriptor& aDescriptor) override;

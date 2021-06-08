@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include "nsCOMPtr.h"
-#include "nsIEffectiveTLDService.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsINamed.h"
@@ -85,7 +84,6 @@
 #include "ServiceWorkerEvents.h"
 #include "ServiceWorkerUnregisterJob.h"
 #include "ServiceWorkerUpdateJob.h"
-#include "ServiceWorkerUpdaterChild.h"
 #include "ServiceWorkerUtils.h"
 
 #ifdef PostMessage
@@ -230,7 +228,7 @@ class TeardownRunnable final : public Runnable {
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(mActor);
-    mActor->SendShutdown();
+    PServiceWorkerManagerChild::Send__delete__(mActor);
     return NS_OK;
   }
 
@@ -697,209 +695,6 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final
 
   MozPromiseHolder<ServiceWorkerRegistrationPromise> mPromiseHolder;
 };
-
-namespace {
-
-class PromiseResolverCallback final : public ServiceWorkerUpdateFinishCallback {
- public:
-  PromiseResolverCallback(ServiceWorkerUpdateFinishCallback* aCallback,
-                          GenericPromise::Private* aPromise)
-      : mCallback(aCallback), mPromise(aPromise) {
-    MOZ_DIAGNOSTIC_ASSERT(mPromise);
-  }
-
-  void UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) override {
-    MOZ_DIAGNOSTIC_ASSERT(mPromise);
-
-    if (mCallback) {
-      mCallback->UpdateSucceeded(aInfo);
-    }
-
-    MaybeResolve();
-  }
-
-  void UpdateFailed(ErrorResult& aStatus) override {
-    MOZ_DIAGNOSTIC_ASSERT(mPromise);
-
-    if (mCallback) {
-      mCallback->UpdateFailed(aStatus);
-    }
-
-    MaybeResolve();
-  }
-
- private:
-  ~PromiseResolverCallback() { MaybeResolve(); }
-
-  void MaybeResolve() {
-    if (mPromise) {
-      mPromise->Resolve(true, __func__);
-      mPromise = nullptr;
-    }
-  }
-
-  RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
-  RefPtr<GenericPromise::Private> mPromise;
-};
-
-// This runnable is used for 2 different tasks:
-// - to postpone the SoftUpdate() until the IPC SWM actor is created
-//   (aInternalMethod == false)
-// - to call the 'real' SoftUpdate when the ServiceWorkerUpdaterChild is
-//   notified by the parent (aInternalMethod == true)
-class SoftUpdateRunnable final : public CancelableRunnable {
- public:
-  SoftUpdateRunnable(const OriginAttributes& aOriginAttributes,
-                     const nsACString& aScope, bool aInternalMethod,
-                     GenericPromise::Private* aPromise)
-      : CancelableRunnable("dom::ServiceWorkerManager::SoftUpdateRunnable"),
-        mAttrs(aOriginAttributes),
-        mScope(aScope),
-        mInternalMethod(aInternalMethod),
-        mPromise(aPromise) {}
-
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (!swm) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (mInternalMethod) {
-      RefPtr<PromiseResolverCallback> callback =
-          new PromiseResolverCallback(nullptr, mPromise);
-      mPromise = nullptr;
-
-      swm->SoftUpdateInternal(mAttrs, mScope, callback);
-    } else {
-      swm->SoftUpdate(mAttrs, mScope);
-    }
-
-    return NS_OK;
-  }
-
-  nsresult Cancel() override {
-    mPromise = nullptr;
-    return NS_OK;
-  }
-
- private:
-  ~SoftUpdateRunnable() {
-    if (mPromise) {
-      mPromise->Resolve(true, __func__);
-    }
-  }
-
-  const OriginAttributes mAttrs;
-  const nsCString mScope;
-  bool mInternalMethod;
-
-  RefPtr<GenericPromise::Private> mPromise;
-};
-
-// This runnable is used for 2 different tasks:
-// - to call the 'real' Update when the ServiceWorkerUpdaterChild is
-//   notified by the parent (aType == eSuccess)
-// - an error must be propagated (aType == eFailure)
-class UpdateRunnable final : public CancelableRunnable {
- public:
-  enum Type {
-    eSuccess,
-    eFailure,
-  };
-
-  UpdateRunnable(nsIPrincipal* aPrincipal, const nsACString& aScope,
-                 nsCString aNewestWorkerScriptUrl,
-                 ServiceWorkerUpdateFinishCallback* aCallback, Type aType,
-                 GenericPromise::Private* aPromise)
-      : CancelableRunnable("dom::ServiceWorkerManager::UpdateRunnable"),
-        mPrincipal(aPrincipal),
-        mScope(aScope),
-        mNewestWorkerScriptUrl(std::move(aNewestWorkerScriptUrl)),
-        mCallback(aCallback),
-        mType(aType),
-        mPromise(aPromise) {
-    MOZ_ASSERT_IF(mType == eSuccess, !mNewestWorkerScriptUrl.IsEmpty());
-  }
-
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (!swm) {
-      return NS_ERROR_FAILURE;
-    }
-
-    MOZ_ASSERT(mPromise);
-
-    RefPtr<PromiseResolverCallback> callback =
-        new PromiseResolverCallback(mCallback, mPromise);
-    mPromise = nullptr;
-
-    if (mType == eSuccess) {
-      swm->UpdateInternal(mPrincipal, mScope, std::move(mNewestWorkerScriptUrl),
-                          callback);
-      return NS_OK;
-    }
-
-    ErrorResult error(NS_ERROR_DOM_ABORT_ERR);
-    callback->UpdateFailed(error);
-    return NS_OK;
-  }
-
-  nsresult Cancel() override {
-    mPromise = nullptr;
-    return NS_OK;
-  }
-
- private:
-  ~UpdateRunnable() {
-    if (mPromise) {
-      mPromise->Resolve(true, __func__);
-    }
-  }
-
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-  const nsCString mScope;
-  nsCString mNewestWorkerScriptUrl;
-  RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
-  Type mType;
-
-  RefPtr<GenericPromise::Private> mPromise;
-};
-
-class ResolvePromiseRunnable final : public CancelableRunnable {
- public:
-  explicit ResolvePromiseRunnable(GenericPromise::Private* aPromise)
-      : CancelableRunnable("dom::ServiceWorkerManager::ResolvePromiseRunnable"),
-        mPromise(aPromise) {}
-
-  NS_IMETHOD
-  Run() override {
-    MaybeResolve();
-    return NS_OK;
-  }
-
-  nsresult Cancel() override {
-    mPromise = nullptr;
-    return NS_OK;
-  }
-
- private:
-  ~ResolvePromiseRunnable() { MaybeResolve(); }
-
-  void MaybeResolve() {
-    if (mPromise) {
-      mPromise->Resolve(true, __func__);
-      mPromise = nullptr;
-    }
-  }
-
-  RefPtr<GenericPromise::Private> mPromise;
-};
-
-}  // namespace
 
 NS_IMETHODIMP
 ServiceWorkerManager::RegisterForTest(nsIPrincipal* aPrincipal,
@@ -1524,39 +1319,6 @@ ServiceWorkerManager::Unregister(nsIPrincipal* aPrincipal,
     RefPtr<UnregisterJobCallback> cb = new UnregisterJobCallback(aCallback);
     job->AppendResultCallback(cb);
   }
-
-  queue->ScheduleJob(job);
-  return NS_OK;
-}
-
-nsresult ServiceWorkerManager::NotifyUnregister(nsIPrincipal* aPrincipal,
-                                                const nsAString& aScope) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-
-  nsresult rv;
-
-// This is not accessible by content, and callers should always ensure scope is
-// a correct URI, so this is wrapped in DEBUG
-#ifdef DEBUG
-  nsCOMPtr<nsIURI> scopeURI;
-  rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-#endif
-
-  nsAutoCString scopeKey;
-  rv = PrincipalToScopeKey(aPrincipal, scopeKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  NS_ConvertUTF16toUTF8 scope(aScope);
-  RefPtr<ServiceWorkerJobQueue> queue = GetOrCreateJobQueue(scopeKey, scope);
-
-  RefPtr<ServiceWorkerUnregisterJob> job = new ServiceWorkerUnregisterJob(
-      aPrincipal, scope, false /* send to parent */);
 
   queue->ScheduleJob(job);
   return NS_OK;
@@ -2393,11 +2155,6 @@ bool ServiceWorkerManager::IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI,
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetServiceWorkerRegistrationInfo(aPrincipal, aURI);
 
-  // For child interception, just check the availability.
-  if (!ServiceWorkerParentInterceptEnabled()) {
-    return registration && registration->GetActive();
-  }
-
   if (!registration || !registration->GetActive()) {
     return false;
   }
@@ -2478,25 +2235,7 @@ void ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
     return;
   }
 
-  if (ServiceWorkerParentInterceptEnabled()) {
-    SoftUpdateInternal(aOriginAttributes, aScope, nullptr);
-    return;
-  }
-
-  RefPtr<GenericPromise::Private> promise =
-      new GenericPromise::Private(__func__);
-
-  RefPtr<CancelableRunnable> successRunnable =
-      new SoftUpdateRunnable(aOriginAttributes, aScope, true, promise);
-
-  RefPtr<CancelableRunnable> failureRunnable =
-      new ResolvePromiseRunnable(promise);
-
-  ServiceWorkerUpdaterChild* actor =
-      new ServiceWorkerUpdaterChild(promise, successRunnable, failureRunnable);
-
-  mActor->SendPServiceWorkerUpdaterConstructor(actor, aOriginAttributes,
-                                               nsCString(aScope));
+  SoftUpdateInternal(aOriginAttributes, aScope, nullptr);
 }
 
 namespace {
@@ -2611,27 +2350,8 @@ void ServiceWorkerManager::Update(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aNewestWorkerScriptUrl.IsEmpty());
 
-  if (ServiceWorkerParentInterceptEnabled()) {
-    UpdateInternal(aPrincipal, aScope, std::move(aNewestWorkerScriptUrl),
-                   aCallback);
-    return;
-  }
-
-  RefPtr<GenericPromise::Private> promise =
-      new GenericPromise::Private(__func__);
-
-  RefPtr<CancelableRunnable> successRunnable =
-      new UpdateRunnable(aPrincipal, aScope, std::move(aNewestWorkerScriptUrl),
-                         aCallback, UpdateRunnable::eSuccess, promise);
-
-  RefPtr<CancelableRunnable> failureRunnable = new UpdateRunnable(
-      aPrincipal, aScope, ""_ns, aCallback, UpdateRunnable::eFailure, promise);
-
-  ServiceWorkerUpdaterChild* actor =
-      new ServiceWorkerUpdaterChild(promise, successRunnable, failureRunnable);
-
-  mActor->SendPServiceWorkerUpdaterConstructor(
-      actor, aPrincipal->OriginAttributesRef(), nsCString(aScope));
+  UpdateInternal(aPrincipal, aScope, std::move(aNewestWorkerScriptUrl),
+                 aCallback);
 }
 
 void ServiceWorkerManager::UpdateInternal(
@@ -3052,7 +2772,6 @@ ServiceWorkerManager::RemoveRegistrationsByOriginAttributes(
   return NS_OK;
 }
 
-// MUST ONLY BE CALLED FROM Remove()!
 void ServiceWorkerManager::ForceUnregister(
     RegistrationDataPerPrincipal* aRegistrationData,
     ServiceWorkerRegistrationInfo* aRegistration) {
@@ -3075,53 +2794,6 @@ void ServiceWorkerManager::ForceUnregister(
   // Since Unregister is async, it is ok to call it in an enumeration.
   Unregister(aRegistration->Principal(), nullptr,
              NS_ConvertUTF8toUTF16(aRegistration->Scope()));
-}
-
-void ServiceWorkerManager::Remove(const nsACString& aHost) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-  if (NS_WARN_IF(!tldService)) {
-    return;
-  }
-
-  for (const auto& data : mRegistrationInfos.Values()) {
-    for (const auto& entry : data->mInfos) {
-      nsCOMPtr<nsIURI> scopeURI;
-      nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), entry.GetKey());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        continue;
-      }
-
-      nsAutoCString host;
-      rv = scopeURI->GetHost(host);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        continue;
-      }
-
-      // This way subdomains are also cleared.
-      bool hasRootDomain = false;
-      rv = tldService->HasRootDomain(host, aHost, &hasRootDomain);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        continue;
-      }
-
-      if (hasRootDomain) {
-        ForceUnregister(data.get(), entry.GetWeak());
-      }
-    }
-  }
-}
-
-void ServiceWorkerManager::RemoveAll() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  for (const auto& data : mRegistrationInfos.Values()) {
-    for (ServiceWorkerRegistrationInfo* reg : data->mInfos.Values()) {
-      ForceUnregister(data.get(), reg);
-    }
-  }
 }
 
 NS_IMETHODIMP
@@ -3161,27 +2833,6 @@ ServiceWorkerManager::Observe(nsISupports* aSubject, const char* aTopic,
 
   MOZ_CRASH("Received message we aren't supposed to be registered for!");
   return NS_OK;
-}
-
-NS_IMETHODIMP
-ServiceWorkerManager::PropagateSoftUpdate(
-    JS::Handle<JS::Value> aOriginAttributes, const nsAString& aScope,
-    JSContext* aCx) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  OriginAttributes attrs;
-  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  PropagateSoftUpdate(attrs, aScope);
-  return NS_OK;
-}
-
-void ServiceWorkerManager::PropagateSoftUpdate(
-    const OriginAttributes& aOriginAttributes, const nsAString& aScope) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mActor->SendPropagateSoftUpdate(aOriginAttributes, nsString(aScope));
 }
 
 NS_IMETHODIMP
