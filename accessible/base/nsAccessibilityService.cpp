@@ -48,6 +48,7 @@
 #ifdef XP_WIN
 #  include "mozilla/a11y/Compatibility.h"
 #  include "mozilla/dom/ContentChild.h"
+#  include "mozilla/StaticPrefs_accessibility.h"
 #  include "mozilla/StaticPtr.h"
 #endif
 
@@ -1222,7 +1223,8 @@ bool nsAccessibilityService::Init() {
     MOZ_ASSERT(contentChild);
     // If we were instantiated by the chrome process, GetMsaaID() will return
     // a non-zero value and we may safely continue with initialization.
-    if (!contentChild->GetMsaaID()) {
+    if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+        !contentChild->GetMsaaID()) {
       // Since we were not instantiated by chrome, we need to synchronously
       // obtain a MSAA content process id.
       contentChild->SendGetA11yContentId();
