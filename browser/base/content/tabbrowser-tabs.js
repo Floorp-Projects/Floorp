@@ -85,7 +85,16 @@
         GetDynamicShortcutTooltipText("tabs-newtab-button")
       );
 
-      window.addEventListener("resize", this);
+      let handleResize = () => {
+        this._updateCloseButtons();
+        this._handleTabSelect(true);
+      };
+      this._resizeObserver = new ResizeObserver(handleResize);
+      this._resizeObserver.observe(document.documentElement);
+      this._fullscreenMutationObserver = new MutationObserver(handleResize);
+      this._fullscreenMutationObserver.observe(document.documentElement, {
+        attributeFilter: ["inFullscreen", "inDOMFullscreen"],
+      });
 
       this.boundObserve = (...args) => this.observe(...args);
       Services.prefs.addObserver("privacy.userContext", this.boundObserve);
@@ -1730,14 +1739,6 @@
 
     handleEvent(aEvent) {
       switch (aEvent.type) {
-        case "resize":
-          if (aEvent.target != window) {
-            break;
-          }
-
-          this._updateCloseButtons();
-          this._handleTabSelect(true);
-          break;
         case "mouseout":
           // If the "related target" (the node to which the pointer went) is not
           // a child of the current document, the mouse just left the window.
