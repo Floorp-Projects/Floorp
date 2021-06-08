@@ -74,6 +74,7 @@ TEST(TestAudioInputProcessing, UnaccountedPacketizerBuffering)
                          AudioInputProcessing::BufferInfo{
                              buffer.Elements(), nrFrames, channels, rate},
                          nextTime - nrFrames);
+    aip->ProcessInput(graph, nullptr);
     aip->Pull(graph, processedTime, nextTime, segment.GetDuration(), &segment,
               true, &ended);
     EXPECT_EQ(aip->NumBufferedFrames(graph), 24U);
@@ -93,6 +94,7 @@ TEST(TestAudioInputProcessing, UnaccountedPacketizerBuffering)
                          AudioInputProcessing::BufferInfo{
                              buffer.Elements(), nrFrames, channels, rate},
                          nextTime - (2 * nrFrames));
+    aip->ProcessInput(graph, nullptr);
     aip->Pull(graph, processedTime, nextTime, segment.GetDuration(), &segment,
               true, &ended);
     EXPECT_EQ(aip->NumBufferedFrames(graph), 120U);
