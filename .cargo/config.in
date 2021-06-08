@@ -20,7 +20,7 @@ tag = "v0.4.25"
 [source."https://github.com/mozilla/mp4parse-rust"]
 git = "https://github.com/mozilla/mp4parse-rust"
 replace-with = "vendored-sources"
-rev = "dd967732ac836cc1ed5f1a7259d912c5d13e009b"
+rev = "28327103f0c01b5393dd2c97f7858f9747037330"
 
 [source."https://github.com/mozilla/cubeb-pulse-rs"]
 git = "https://github.com/mozilla/cubeb-pulse-rs"

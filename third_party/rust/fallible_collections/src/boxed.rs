@@ -23,12 +23,14 @@ pub struct TryBox<T> {
 }
 
 impl<T> TryBox<T> {
+    #[inline]
     pub fn try_new(t: T) -> Result<Self, TryReserveError> {
         Ok(Self {
-            inner: Box::try_new(t)?,
+            inner: <Box<T> as FallibleBox<T>>::try_new(t)?,
         })
     }
 
+    #[inline(always)]
     pub fn into_raw(b: TryBox<T>) -> *mut T {
         Box::into_raw(b.inner)
     }
@@ -36,6 +38,7 @@ impl<T> TryBox<T> {
     /// # Safety
     ///
     /// See std::boxed::from_raw
+    #[inline(always)]
     pub unsafe fn from_raw(raw: *mut T) -> Self {
         Self {
             inner: Box::from_raw(raw),
@@ -91,8 +94,9 @@ impl<T> FallibleBox<T> for Box<T> {
 }
 
 impl<T: TryClone> TryClone for Box<T> {
+    #[inline]
     fn try_clone(&self) -> Result<Self, TryReserveError> {
-        Self::try_new(Borrow::<T>::borrow(self).try_clone()?)
+        <Self as FallibleBox<T>>::try_new(Borrow::<T>::borrow(self).try_clone()?)
     }
 }
 
@@ -101,7 +105,7 @@ mod tests {
     use super::*;
     #[test]
     fn boxed() {
-        let mut v = Box::try_new(5).unwrap();
+        let mut v = <Box<_> as FallibleBox<_>>::try_new(5).unwrap();
         assert_eq!(*v, 5);
         *v = 3;
         assert_eq!(*v, 3);
@@ -115,7 +119,7 @@ mod tests {
 
     #[test]
     fn trybox_zst() {
-        let b = Box::try_new(()).expect("ok");
+        let b = <Box<_> as FallibleBox<_>>::try_new(()).expect("ok");
         assert_eq!(b, Box::new(()));
     }
 }

@@ -3,7 +3,6 @@ use super::FallibleVec;
 use crate::TryReserveError;
 use alloc::fmt::{Arguments, Write};
 use alloc::string::String;
-use alloc::vec::Vec;
 
 /// Take a max capacity a try allocating a string with it.
 ///
@@ -14,7 +13,7 @@ use alloc::vec::Vec;
 /// capacity, no error is return and an allocation can occurs which
 /// can lead to a panic
 pub fn try_format(max_capacity: usize, args: Arguments<'_>) -> Result<String, TryReserveError> {
-    let v = Vec::try_with_capacity(max_capacity)?;
+    let v = FallibleVec::try_with_capacity(max_capacity)?;
     let mut s = String::from_utf8(v).expect("wtf an empty vec should be valid utf8");
     s.write_fmt(args)
         .expect("a formatting trait implementation returned an error");

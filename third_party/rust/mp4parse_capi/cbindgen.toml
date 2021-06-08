@@ -25,7 +25,10 @@ parse_deps = true
 include = ["mp4parse"]
 
 [export.rename]
-# We need to declare this type in mp4parse, but we rename it in the generated
+# We need to declare these types in mp4parse, but we rename them in the generated
 # header to match mp4parse_capi naming conventions
 "ParseStrictness" = "Mp4parseStrictness"
+"ImageSpatialExtentsProperty" = "Mp4parseImageSpatialExtents"
+"ImageRotation" = "Mp4parseIrot"
+"ImageMirror" = "Mp4parseImir"
 "Indice" = "Mp4parseIndice"

@@ -121,6 +121,7 @@ box_database!(
     ItemPropertyContainerBox          0x6970_636f, // "ipco"
     ItemPropertyAssociationBox        0x6970_6d61, // "ipma"
     ColorInformationBox               0x636f_6c72, // "colr"
+    ImageSpatialExtentsProperty       0x6973_7065, // "ispe"
     PixelInformationBox               0x7069_7869, // "pixi"
     AuxiliaryTypeProperty             0x6175_7843, // "auxC"
     CleanApertureBox                  0x636c_6170, // "clap"
