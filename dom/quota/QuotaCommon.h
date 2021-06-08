@@ -9,11 +9,6 @@
 
 #include "mozilla/dom/quota/Config.h"
 
-// This must be included at the very beginning since it also contains
-// QM_ERROR_STACKS_ENABLED definition which is used below.
-// XXX Move QM_ERROR_STACKS_ENABLED definition to Config.h
-#include "mozilla/dom/QMResult.h"
-
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -33,6 +28,7 @@
 #if defined(QM_LOG_ERROR_ENABLED) && defined(QM_ERROR_STACKS_ENABLED)
 #  include "mozilla/Variant.h"
 #endif
+#include "mozilla/dom/QMResult.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"

@@ -11,4 +11,8 @@
 #  define QM_LOG_ERROR_ENABLED
 #endif
 
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+#  define QM_ERROR_STACKS_ENABLED
+#endif
+
 #endif  // DOM_QUOTA_CONFIG_H_
