@@ -16,7 +16,7 @@
 #endif
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
-#  define QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+#  define QM_SCOPED_LOG_EXTRA_INFO_ENABLED
 #endif
 
 #endif  // DOM_QUOTA_CONFIG_H_
