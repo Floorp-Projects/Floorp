@@ -1160,6 +1160,24 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvGetSessionStorageManagerData(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvLoadSessionStorageManagerData(
+    const uint64_t& aTopContextId,
+    nsTArray<mozilla::dom::SSCacheCopy>&& aOriginCacheCopy) {
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  if (BackgroundParent::IsOtherProcessActor(this)) {
+    return IPC_FAIL(this, "Wrong actor");
+  }
+
+  if (!mozilla::dom::RecvLoadSessionStorageData(aTopContextId,
+                                                std::move(aOriginCacheCopy))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  return IPC_OK();
+}
+
 already_AddRefed<dom::PFileSystemRequestParent>
 BackgroundParentImpl::AllocPFileSystemRequestParent(
     const FileSystemParams& aParams) {

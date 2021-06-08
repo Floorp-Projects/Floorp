@@ -214,6 +214,8 @@ parent:
       uint64_t aTopContextId, uint32_t aSizeLimit, bool aCancelSessionStoreTimer)
       returns(SSCacheCopy[] aCacheCopy);
 
+  async LoadSessionStorageManagerData(uint64_t aTopContextId, SSCacheCopy[] aOriginCacheCopy);
+
   async PFileSystemRequest(FileSystemParams params);
 
   async PGamepadEventChannel();

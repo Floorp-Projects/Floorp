@@ -80,6 +80,28 @@ bool RecvRemoveBackgroundSessionStorageManager(uint64_t aTopContextId) {
   return true;
 }
 
+bool RecvLoadSessionStorageData(
+    uint64_t aTopContextId,
+    nsTArray<mozilla::dom::SSCacheCopy>&& aCacheCopyList) {
+  if (aCacheCopyList.IsEmpty()) {
+    return true;
+  }
+
+  RefPtr<BackgroundSessionStorageManager> manager =
+      BackgroundSessionStorageManager::GetOrCreate(aTopContextId);
+
+  if (!manager) {
+    return true;
+  }
+
+  for (const auto& cacheInit : aCacheCopyList) {
+    manager->UpdateData(cacheInit.originAttributes(), cacheInit.originKey(),
+                        cacheInit.data());
+  }
+
+  return true;
+}
+
 bool RecvGetSessionStorageData(
     uint64_t aTopContextId, uint32_t aSizeLimit, bool aCancelSessionStoreTimer,
     ::mozilla::ipc::PBackgroundParent::GetSessionStorageManagerDataResolver&&
@@ -626,6 +648,25 @@ void BackgroundSessionStorageManager::PropagateManager(
 }
 
 // static
+void BackgroundSessionStorageManager::LoadData(
+    uint64_t aTopContextId,
+    const nsTArray<mozilla::dom::SSCacheCopy>& aCacheCopyList) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  AssertIsOnMainThread();
+
+  ::mozilla::ipc::PBackgroundChild* backgroundActor =
+      ::mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!backgroundActor)) {
+    return;
+  }
+
+  if (NS_WARN_IF(!backgroundActor->SendLoadSessionStorageManagerData(
+          aTopContextId, aCacheCopyList))) {
+    return;
+  }
+}
+
+// static
 BackgroundSessionStorageManager* BackgroundSessionStorageManager::GetOrCreate(
     uint64_t aTopContextId) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -745,6 +786,19 @@ void BackgroundSessionStorageManager::UpdateData(
   MaybeScheduleSessionStoreUpdate();
 
   originRecord->mCache->DeserializeWriteInfos(aWriteInfos);
+}
+
+void BackgroundSessionStorageManager::UpdateData(
+    const nsACString& aOriginAttrs, const nsACString& aOriginKey,
+    const nsTArray<SSSetItemInfo>& aData) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
+
+  auto* const originRecord =
+      GetOriginRecord(aOriginAttrs, aOriginKey, true, nullptr);
+  MOZ_ASSERT(originRecord);
+
+  originRecord->mCache->DeserializeData(aData);
 }
 
 void BackgroundSessionStorageManager::SetCurrentBrowsingContextId(

@@ -26,6 +26,8 @@ class OriginAttributesPattern;
 
 namespace dom {
 
+class SSCacheCopy;
+
 bool RecvShutdownBackgroundSessionStorageManagers();
 void RecvPropagateBackgroundSessionStorageManager(uint64_t aCurrentTopContextId,
                                                   uint64_t aTargetTopContextId);
@@ -35,6 +37,10 @@ bool RecvGetSessionStorageData(
     uint64_t aTopContextId, uint32_t aSizeLimit, bool aCancelSessionStoreTimer,
     ::mozilla::ipc::PBackgroundParent::GetSessionStorageManagerDataResolver&&
         aResolver);
+
+bool RecvLoadSessionStorageData(
+    uint64_t aTopContextId,
+    nsTArray<mozilla::dom::SSCacheCopy>&& aCacheCopyList);
 
 class BrowsingContext;
 class ContentParent;
@@ -175,6 +181,10 @@ class BackgroundSessionStorageManager final : public SessionStorageManagerBase {
   // process.
   static void RemoveManager(uint64_t aTopContextId);
 
+  static void LoadData(
+      uint64_t aTopContextId,
+      const nsTArray<mozilla::dom::SSCacheCopy>& aCacheCopyList);
+
   using DataPromise =
       ::mozilla::ipc::PBackgroundChild::GetSessionStorageManagerDataPromise;
   static RefPtr<DataPromise> GetData(BrowsingContext* aContext,
@@ -189,6 +199,9 @@ class BackgroundSessionStorageManager final : public SessionStorageManagerBase {
 
   void UpdateData(const nsACString& aOriginAttrs, const nsACString& aOriginKey,
                   const nsTArray<SSWriteInfo>& aWriteInfos);
+
+  void UpdateData(const nsACString& aOriginAttrs, const nsACString& aOriginKey,
+                  const nsTArray<SSSetItemInfo>& aData);
 
   void SetCurrentBrowsingContextId(uint64_t aBrowsingContextId);
 
