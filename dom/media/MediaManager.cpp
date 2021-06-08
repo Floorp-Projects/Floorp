@@ -3213,6 +3213,14 @@ RefPtr<MediaManager::DevicePromise> MediaManager::SelectAudioOutput(
                   MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                   __func__);
             }
+            if (devices->IsEmpty()) {
+              LOG("SelectAudioOutput: no devices found");
+              auto error = nsContentUtils::ResistFingerprinting(aCallerType)
+                               ? MediaMgrError::Name::NotAllowedError
+                               : MediaMgrError::Name::NotFoundError;
+              return DevicePromise::CreateAndReject(
+                  MakeRefPtr<MediaMgrError>(error), __func__);
+            }
             MozPromiseHolder<DevicePromise> holder;
             RefPtr<DevicePromise> p = holder.Ensure(__func__);
             auto task = MakeRefPtr<SelectAudioOutputTask>(
@@ -3825,15 +3833,7 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     }
     if (SelectAudioOutputTask* outputTask = task->AsSelectAudioOutputTask()) {
       if (!audioOutput) {
-        // selectAudioOutput() has checked for "denied" permission state
-        // before reporting no devices.  (This differs from getUserMedia(),
-        // which checks for no devices before checking permission.)  However,
-        // selectAudioOutput() still does not prompt before reporting no
-        // devices, so hide this information when resisting fingerprinting.
-        auto error = nsContentUtils::ResistFingerprinting(task->CallerType())
-                         ? MediaMgrError::Name::NotAllowedError
-                         : MediaMgrError::Name::NotFoundError;
-        task->Denied(error);
+        task->Denied(MediaMgrError::Name::NotAllowedError);
         return NS_OK;
       }
       outputTask->Allowed(std::move(audioOutput));
