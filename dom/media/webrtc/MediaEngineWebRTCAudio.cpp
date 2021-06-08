@@ -1083,7 +1083,7 @@ void AudioInputProcessing::ProcessInput(MediaTrackGraphImpl* aGraph,
   MOZ_ASSERT(aGraph);
   MOZ_ASSERT(aGraph->OnGraphThread());
 
-  if (mEnded || !mEnabled || !mLiveFramesAppended || !mInputData || !aSegment) {
+  if (mEnded || !mEnabled || !mLiveFramesAppended || !mInputData) {
     return;
   }
 
@@ -1095,7 +1095,12 @@ void AudioInputProcessing::ProcessInput(MediaTrackGraphImpl* aGraph,
   // code. Otherwise, directly insert the mic data in the MTG, bypassing all
   // processing.
   if (PassThrough(aGraph)) {
-    mSegment.AppendSegment(aSegment, mPrincipal);
+    if (aSegment) {
+      mSegment.AppendSegment(aSegment, mPrincipal);
+    } else {
+      InsertInGraph(aGraph, inputInfo.mBuffer, inputInfo.mFrames,
+                    inputInfo.mChannels);
+    }
   } else {
     MOZ_ASSERT(aGraph->GraphRate() == inputInfo.mRate);
     PacketizeAndProcess(aGraph, inputInfo.mBuffer, inputInfo.mFrames,
