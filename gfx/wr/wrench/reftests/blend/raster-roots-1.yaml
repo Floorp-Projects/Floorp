@@ -1,0 +1,32 @@
+# Verify that when a picture cache is both a raster root and also a blend container,
+# the readback correctly maps to local raster-space, not final device-space.
+---
+root:
+  items:
+    - type: iframe
+      id: [1, 2]
+      bounds: [0, 100, 1000, 1000]
+
+pipelines:
+  - id: [1, 2]
+    items:
+      - type: stacking-context
+        blend-container: true
+        items:
+          - type: scroll-frame
+            bounds: [0, 0, 1000, 1000]
+            content-size: [1000, 10000]
+            items:
+              - type: gradient
+                bounds: [0, 0, 100, 100]
+                start: [0, 0]
+                end: [100, 0]
+                stops: [0.0, [255, 0, 0, 1], 1.0, [0, 255, 0, 1]]
+              - type: stacking-context
+                mix-blend-mode: difference
+                items:
+                  - type: gradient
+                    bounds: [0, 0, 100, 100]
+                    start: [0, 0]
+                    end: [100, 0]
+                    stops: [0.0, [255, 0, 0, 1], 1.0, [0, 255, 0, 1]]

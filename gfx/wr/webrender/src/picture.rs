@@ -4203,8 +4203,8 @@ pub struct SurfaceInfo {
     pub device_pixel_scale: DevicePixelScale,
     /// The scale factors of the surface to raster transform.
     pub scale_factors: (f32, f32),
-    /// The allocated device rect for this surface
-    pub device_rect: Option<DeviceRect>,
+    /// The allocated raster rect for this surface
+    pub raster_rect: Option<DeviceRect>,
 }
 
 impl SurfaceInfo {
@@ -4243,12 +4243,12 @@ impl SurfaceInfo {
             inflation_factor,
             device_pixel_scale,
             scale_factors,
-            device_rect: None,
+            raster_rect: None,
         }
     }
 
-    pub fn get_device_rect(&self) -> DeviceRect {
-        self.device_rect.expect("bug: queried before surface was initialized")
+    pub fn get_raster_rect(&self) -> DeviceRect {
+        self.raster_rect.expect("bug: queried before surface was initialized")
     }
 }
 
@@ -4887,7 +4887,7 @@ impl PicturePrimitive {
                 let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
                 let mut debug_info = SliceDebugInfo::new();
                 let mut surface_tasks = Vec::with_capacity(tile_cache.tile_count());
-                let mut surface_device_rect = DeviceRect::zero();
+                let mut surface_local_rect = PictureRect::zero();
                 let device_pixel_scale = frame_state
                     .surfaces[surface_index.0]
                     .device_pixel_scale;
@@ -4903,7 +4903,7 @@ impl PicturePrimitive {
 
                 for (sub_slice_index, sub_slice) in tile_cache.sub_slices.iter_mut().enumerate() {
                     for tile in sub_slice.tiles.values_mut() {
-                        surface_device_rect = surface_device_rect.union(&tile.device_valid_rect);
+                        surface_local_rect = surface_local_rect.union(&tile.current_descriptor.local_valid_rect);
 
                         if tile.is_visible {
                             // Get the world space rect that this tile will actually occupy on screen
@@ -5269,6 +5269,12 @@ impl PicturePrimitive {
                         );
                 }
 
+                // TODO(gw): Much of the SurfaceInfo related code assumes it is in device pixels, rather than
+                //           raster pixels. Fixing that in one go is too invasive for now, but we need to
+                //           start incrementally fixing up the unit types used around here.
+                let surface_raster_rect = map_pic_to_raster.map(&surface_local_rect).expect("bug: unable to map to raster").to_box2d();
+                let surface_device_rect = surface_raster_rect.cast_unit() * device_pixel_scale;
+
                 frame_state.init_surface_tiled(
                     surface_index,
                     surface_tasks,
@@ -5633,7 +5639,7 @@ impl PicturePrimitive {
                             parent_device_pixel_scale,
                         );
 
-                        let parent_surface_rect = parent_surface.get_device_rect();
+                        let parent_surface_rect = parent_surface.get_raster_rect();
 
                         // If there is no available parent surface to read back from (for example, if
                         // the parent surface is affected by a clip that doesn't affect the child
