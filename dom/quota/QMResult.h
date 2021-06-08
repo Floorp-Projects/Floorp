@@ -7,11 +7,9 @@
 #ifndef DOM_QUOTA_QMRESULT_H_
 #define DOM_QUOTA_QMRESULT_H_
 
-#include "ErrorList.h"
+#include "mozilla/dom/quota/Config.h"
 
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
-#  define QM_ERROR_STACKS_ENABLED
-#endif
+#include "ErrorList.h"
 
 namespace mozilla {
 
