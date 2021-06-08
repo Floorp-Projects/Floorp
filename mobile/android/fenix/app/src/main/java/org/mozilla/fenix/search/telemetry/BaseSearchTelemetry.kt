@@ -52,10 +52,10 @@ abstract class BaseSearchTelemetry {
         ),
         SearchProviderModel(
             name = "baidu",
-            regexp = "^https:\\/\\/www\\.baidu\\.com\\/from=844b\\/(?:s|baidu)",
-            queryParam = "wd",
-            codeParam = "tn",
-            codePrefixes = listOf("34046034_", "monline_"),
+            regexp = "^https:\\/\\/m\\.baidu\\.com(?:.*)\\/s",
+            queryParam = "word",
+            codeParam = "from",
+            codePrefixes = listOf("1000969a"),
             followOnParams = listOf("oq")
         ),
         SearchProviderModel(

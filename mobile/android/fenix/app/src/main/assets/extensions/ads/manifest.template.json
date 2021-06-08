@@ -13,6 +13,8 @@
       "include_globs": [
         "https://www.google.*/search*",
         "https://www.bing.com/search*",
+        "https://www.baidu.com/*",
+        "https://m.baidu.com/*",
         "https://duckduckgo.com/*"
       ],
       "js": ["ads.js"],

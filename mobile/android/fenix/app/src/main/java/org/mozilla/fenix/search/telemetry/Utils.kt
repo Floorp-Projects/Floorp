@@ -22,6 +22,20 @@ internal fun getTrackKey(
 
     if (provider.codeParam.isNotEmpty()) {
         code = uri.getQueryParameter(provider.codeParam)
+        if (code.isNullOrEmpty() &&
+            provider.name == "baidu" &&
+            uri.toString().contains("from=")) {
+            code = uri.toString().substringAfter("from=", "")
+                    .substringBefore("/", "")
+        }
+
+        // Glean doesn't allow code starting with a figure
+        if (code != null && code.isNotEmpty()) {
+            val codeStart = code.first()
+            if (codeStart.isDigit()) {
+                code = "_$code"
+            }
+        }
 
         // Try cookies first because Bing has followOnCookies and valid code, but no
         // followOnParams => would tracks organic instead of sap-follow-on
@@ -33,7 +47,7 @@ internal fun getTrackKey(
         }
 
         // For Bing if it didn't have a valid cookie and for all the other search engines
-        if (hasValidCode(code, provider)) {
+        if (hasValidCode(uri.getQueryParameter(provider.codeParam), provider)) {
             val channel = uri.getQueryParameter(CHANNEL_KEY)
             val type = getSapType(provider.followOnParams, paramSet)
             return TrackKeyInfo(provider.name, type, code, channel).createTrackKey()

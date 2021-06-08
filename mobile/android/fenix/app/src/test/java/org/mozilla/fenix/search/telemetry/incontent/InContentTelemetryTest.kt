@@ -84,11 +84,11 @@ class InContentTelemetryTest {
 
     @Test
     fun `track baidu sap metric`() {
-        val url = "https://www.baidu.com/from=844b/s?wd=aaa&tn=34046034_firefox"
+        val url = "https://m.baidu.com/s?from=1000969a&word=aaa"
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
-        verify { metrics.track(Event.SearchInContent("baidu.in-content.sap.34046034_firefox")) }
+        verify { metrics.track(Event.SearchInContent("baidu.in-content.sap._1000969a")) }
     }
 
     @Test
@@ -120,11 +120,11 @@ class InContentTelemetryTest {
 
     @Test
     fun `track baidu sap-follow-on metric`() {
-        val url = "https://www.baidu.com/from=844b/s?wd=aaa&tn=34046034_firefox&oq=random"
+        val url = "https://m.baidu.com/s?from=1000969a&word=aaa&oq=random"
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
-        verify { metrics.track(Event.SearchInContent("baidu.in-content.sap-follow-on.34046034_firefox")) }
+        verify { metrics.track(Event.SearchInContent("baidu.in-content.sap-follow-on._1000969a")) }
     }
 
     @Test
@@ -165,7 +165,7 @@ class InContentTelemetryTest {
 
     @Test
     fun `track baidu organic metric`() {
-        val url = "https://www.baidu.com/from=844b/s?wd=aaa"
+        val url = "https://m.baidu.com/s?word=aaa"
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
