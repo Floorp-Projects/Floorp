@@ -52,6 +52,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
@@ -1213,7 +1214,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
 
 #  ifdef XP_WIN
     MOZ_ASSERT(aDocCOMProxy.IsNull());
-    a11y::WrapperFor(doc)->GetMsaa()->SetID(aMsaaID);
+    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      a11y::WrapperFor(doc)->GetMsaa()->SetID(aMsaaID);
+    }
     if (a11y::nsWinUtils::IsWindowEmulationStarted()) {
       doc->SetEmulatedWindowHandle(parentDoc->GetEmulatedWindowHandle());
     }
@@ -1230,17 +1233,21 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     MOZ_ASSERT(!aParentDoc && !aParentID);
     doc->SetTopLevelInContentProcess();
 #  ifdef XP_WIN
-    MOZ_ASSERT(!aDocCOMProxy.IsNull());
-    RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
-    doc->SetCOMInterface(proxy);
+    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      MOZ_ASSERT(!aDocCOMProxy.IsNull());
+      RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
+      doc->SetCOMInterface(proxy);
+    }
 #  endif
     a11y::ProxyCreated(doc);
 #  ifdef XP_WIN
-    // This *must* be called after ProxyCreated because WrapperFor will fail
-    // before that.
-    a11y::AccessibleWrap* wrapper = a11y::WrapperFor(doc);
-    MOZ_ASSERT(wrapper);
-    wrapper->GetMsaa()->SetID(aMsaaID);
+    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      // This *must* be called after ProxyCreated because WrapperFor will fail
+      // before that.
+      a11y::AccessibleWrap* wrapper = a11y::WrapperFor(doc);
+      MOZ_ASSERT(wrapper);
+      wrapper->GetMsaa()->SetID(aMsaaID);
+    }
 #  endif
     a11y::DocAccessibleParent* embedderDoc;
     uint64_t embedderID;
@@ -1274,14 +1281,18 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     doc->SetTopLevel();
     a11y::DocManager::RemoteDocAdded(doc);
 #  ifdef XP_WIN
-    a11y::WrapperFor(doc)->GetMsaa()->SetID(aMsaaID);
-    MOZ_ASSERT(!aDocCOMProxy.IsNull());
+    if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      doc->MaybeInitWindowEmulation();
+    } else {
+      a11y::WrapperFor(doc)->GetMsaa()->SetID(aMsaaID);
+      MOZ_ASSERT(!aDocCOMProxy.IsNull());
 
-    RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
-    doc->SetCOMInterface(proxy);
-    doc->MaybeInitWindowEmulation();
-    if (a11y::LocalAccessible* outerDoc = doc->OuterDocOfRemoteBrowser()) {
-      doc->SendParentCOMProxy(outerDoc);
+      RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
+      doc->SetCOMInterface(proxy);
+      doc->MaybeInitWindowEmulation();
+      if (a11y::LocalAccessible* outerDoc = doc->OuterDocOfRemoteBrowser()) {
+        doc->SendParentCOMProxy(outerDoc);
+      }
     }
 #  endif
   }
