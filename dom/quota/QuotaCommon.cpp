@@ -422,6 +422,20 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
     return;
   }
 
+  const auto severityString = [&aSeverity]() -> nsLiteralCString {
+    switch (aSeverity) {
+      case Severity::Error:
+        return "ERROR"_ns;
+      case Severity::Warning:
+        return "WARNING"_ns;
+      case Severity::Note:
+        return "NOTE"_ns;
+      case Severity::Verbose:
+        return "VERBOSE"_ns;
+    }
+    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad severity value!");
+  }();
+
   Maybe<nsresult> maybeRv;
 
 #  ifdef QM_ERROR_STACKS_ENABLED
@@ -491,23 +505,6 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
   }
 #  endif
 
-  const auto sourceFileRelativePath =
-      detail::MakeSourceFileRelativePath(aSourceFilePath);
-
-  const auto severityString = [&aSeverity]() -> nsLiteralCString {
-    switch (aSeverity) {
-      case Severity::Error:
-        return "ERROR"_ns;
-      case Severity::Warning:
-        return "WARNING"_ns;
-      case Severity::Note:
-        return "NOTE"_ns;
-      case Severity::Verbose:
-        return "VERBOSE"_ns;
-    }
-    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad severity value!");
-  }();
-
 #  ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
   const auto& extraInfos = ScopedLogExtraInfo::GetExtraInfoMap();
   for (const auto& item : extraInfos) {
@@ -515,6 +512,9 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
                             *item.second);
   }
 #  endif
+
+  const auto sourceFileRelativePath =
+      detail::MakeSourceFileRelativePath(aSourceFilePath);
 
 #  ifdef DEBUG
   NS_DebugBreak(
