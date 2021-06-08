@@ -134,7 +134,7 @@ CachingDatabaseConnection::BorrowedStatement
 CachingDatabaseConnection::CachedStatement::Borrow() const {
   AssertIsOnConnectionThread();
 
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
   return BorrowedStatement{WrapNotNull(mStatement), mQuery};
 #else
   return BorrowedStatement{WrapNotNull(mStatement)};
@@ -145,7 +145,7 @@ CachingDatabaseConnection::CachedStatement::CachedStatement(
     CachingDatabaseConnection* aConnection,
     nsCOMPtr<mozIStorageStatement> aStatement, const nsACString& aQuery)
     : mStatement(std::move(aStatement))
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
       ,
       mQuery(aQuery)
 #endif
