@@ -11,7 +11,7 @@ from mozperftest.tests.support import (
     MOZINFO,
 )
 from mozperftest.environment import TEST, SYSTEM, METRICS
-from mozperftest.test.xpcshell import XPCShellTestError
+from mozperftest.test.xpcshell import XPCShellTestError, NoPerfMetricsError
 from mozperftest import utils
 from mozperftest.test import xpcshell
 
@@ -50,6 +50,22 @@ class XPCShellTestsFail(XPCShellTests):
         return False
 
 
+class XPCShellTestsNoPerfMetrics:
+    def __init__(self, log):
+        self.log = log
+
+    def runTests(self, args):
+        self.log.suite_start("suite start")
+        self.log.test_start("test start")
+        self.log.process_output("1234", "line", "command")
+        self.log.log_raw({"action": "something"})
+        self.log.log_raw({"action": "log", "message": "message"})
+
+        self.log.test_end("test end")
+        self.log.suite_end("suite end")
+        return True
+
+
 def running_env(**kw):
     return get_running_env(flavor="xpcshell", xpcshell_mozinfo=MOZINFO, **kw)
 
@@ -76,17 +92,25 @@ def test_xpcshell_metrics(*mocked):
     assert results[0]["values"] == [1]
 
 
-@mock.patch("runxpcshelltests.XPCShellTests", new=XPCShellTestsFail)
-def test_xpcshell_metrics_fail(*mocked):
+def _test_xpcshell_fail(err, *mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_XPCSHELL_TEST)])
     sys = env.layers[SYSTEM]
     xpcshell = env.layers[TEST]
-
     try:
-        with sys as s, xpcshell as x, pytest.raises(XPCShellTestError):
+        with sys as s, xpcshell as x, pytest.raises(err):
             x(s(metadata))
     finally:
         shutil.rmtree(mach_cmd._mach_context.state_dir)
+
+
+@mock.patch("runxpcshelltests.XPCShellTests", new=XPCShellTestsFail)
+def test_xpcshell_metrics_fail(*mocked):
+    return _test_xpcshell_fail(XPCShellTestError, mocked)
+
+
+@mock.patch("runxpcshelltests.XPCShellTests", new=XPCShellTestsNoPerfMetrics)
+def test_xpcshell_no_perfmetrics(*mocked):
+    return _test_xpcshell_fail(NoPerfMetricsError, *mocked)
 
 
 @mock.patch("runxpcshelltests.XPCShellTests", new=XPCShellTests)

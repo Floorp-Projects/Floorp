@@ -14,6 +14,10 @@ class XPCShellTestError(Exception):
     pass
 
 
+class NoPerfMetricsError(Exception):
+    pass
+
+
 class XPCShellData:
     def open_data(self, data):
         return {
@@ -145,6 +149,12 @@ class XPCShell(Layer):
         for m in self.metrics:
             for key, val in m.items():
                 results[key].append(val)
+
+        if len(results.items()) == 0:
+            raise NoPerfMetricsError(
+                "No perftest results were found in the xpcshell test. Results must be "
+                'reported using:\n info("perfMetrics", { metricName: metricValue });'
+            )
 
         metadata.add_result(
             {
