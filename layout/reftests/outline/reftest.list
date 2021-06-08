@@ -13,6 +13,7 @@ skip-if(nativeThemePref) == outline-auto-002.html outline-auto-002-ref.html
 pref(layout.css.outline-style-auto.enabled,false) == outline-auto-001.html outline-auto-001-solid-ref.html
 skip-if(nativeThemePref) != outline-auto-follows-border-radius-non-native.html outline-auto-follows-border-radius-non-native-notref.html
 skip-if(nativeThemePref) == outline-auto-follows-border-radius-non-native-02.html outline-auto-follows-border-radius-non-native.html
+needs-focus skip-if(nativeThemePref) == outline-auto-suppressed-native-widget.html outline-auto-suppressed-native-widget-ref.html
 == outline-initial-1a.html outline-initial-1-ref.html
 == outline-initial-1b.html outline-initial-1-ref.html
 == outline-on-table.html outline-on-table-ref.html
