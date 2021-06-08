@@ -184,13 +184,15 @@ void MsaaAccessible::ReleaseChildID(NotNull<sdnAccessible*> aSdnAcc) {
   sIDGen.ReleaseID(aSdnAcc);
 }
 
-HWND MsaaAccessible::GetHWNDFor(LocalAccessible* aAccessible) {
+HWND MsaaAccessible::GetHWNDFor(Accessible* aAccessible) {
   if (!aAccessible) {
     return nullptr;
   }
 
-  if (aAccessible->IsProxy()) {
-    RemoteAccessible* proxy = aAccessible->Proxy();
+  LocalAccessible* localAcc = aAccessible->AsLocal();
+  if (!localAcc || localAcc->IsProxy()) {
+    RemoteAccessible* proxy =
+        localAcc ? localAcc->Proxy() : aAccessible->AsRemote();
     if (!proxy) {
       return nullptr;
     }
@@ -222,13 +224,13 @@ HWND MsaaAccessible::GetHWNDFor(LocalAccessible* aAccessible) {
     return GetHWNDFor(outerDoc);
   }
 
-  DocAccessible* document = aAccessible->Document();
+  DocAccessible* document = localAcc->Document();
   if (!document) return nullptr;
 
   // Popup lives in own windows, use its HWND until the popup window is
   // hidden to make old JAWS versions work with collapsed comboboxes (see
   // discussion in bug 379678).
-  nsIFrame* frame = aAccessible->GetFrame();
+  nsIFrame* frame = localAcc->GetFrame();
   if (frame) {
     nsIWidget* widget = frame->GetNearestWidget();
     if (widget && widget->IsVisible()) {
@@ -275,8 +277,7 @@ static bool IsHandlerInvalidationNeeded(uint32_t aEvent) {
   }
 }
 
-void MsaaAccessible::FireWinEvent(LocalAccessible* aTarget,
-                                  uint32_t aEventType) {
+void MsaaAccessible::FireWinEvent(Accessible* aTarget, uint32_t aEventType) {
   MOZ_ASSERT(XRE_IsParentProcess());
   static_assert(sizeof(gWinEventMap) / sizeof(gWinEventMap[0]) ==
                     nsIAccessibleEvent::EVENT_LAST_ENTRY,
@@ -288,10 +289,15 @@ void MsaaAccessible::FireWinEvent(LocalAccessible* aTarget,
   uint32_t winEvent = gWinEventMap[aEventType];
   if (!winEvent) return;
 
-  int32_t childID = MsaaAccessible::GetChildIDFor(aTarget);
+  Accessible* target = aTarget;
+  if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+      target->IsRemote()) {
+    target = WrapperFor(target->AsRemote());
+  }
+  int32_t childID = MsaaAccessible::GetChildIDFor(target);
   if (!childID) return;  // Can't fire an event without a child ID
 
-  HWND hwnd = GetHWNDFor(aTarget);
+  HWND hwnd = GetHWNDFor(target);
   if (!hwnd) {
     return;
   }

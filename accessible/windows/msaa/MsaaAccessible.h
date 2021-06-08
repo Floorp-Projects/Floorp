@@ -41,8 +41,8 @@ class MsaaAccessible : public ia2Accessible,
   static void ReleaseContentProcessIdFor(dom::ContentParentId aIPCContentId);
   static void AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc);
   static void ReleaseChildID(NotNull<sdnAccessible*> aSdnAcc);
-  static HWND GetHWNDFor(LocalAccessible* aAccessible);
-  static void FireWinEvent(LocalAccessible* aTarget, uint32_t aEventType);
+  static HWND GetHWNDFor(Accessible* aAccessible);
+  static void FireWinEvent(Accessible* aTarget, uint32_t aEventType);
 
   /**
    * Find an accessible by the given child ID in cached documents.
