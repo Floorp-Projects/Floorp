@@ -51,10 +51,13 @@ void LIRGeneratorX86Shared::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
   if (rhs->isConstant()) {
     ins->setOperand(1, useOrConstantAtStart(rhs));
   } else if (Assembler::HasBMI2() && !mir->isRotate()) {
-    ins->setOperand(1, lhs != rhs ? useRegister(rhs) : useRegisterAtStart(rhs));
+    ins->setOperand(1, willHaveDifferentLIRNodes(lhs, rhs)
+                           ? useRegister(rhs)
+                           : useRegisterAtStart(rhs));
   } else {
-    ins->setOperand(
-        1, lhs != rhs ? useFixed(rhs, ecx) : useFixedAtStart(rhs, ecx));
+    ins->setOperand(1, willHaveDifferentLIRNodes(lhs, rhs)
+                           ? useFixed(rhs, ecx)
+                           : useFixedAtStart(rhs, ecx));
   }
 
   defineReuseInput(ins, mir, 0);
@@ -123,8 +126,9 @@ void LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 2, 0>* ins,
                                         MDefinition* mir, MDefinition* lhs,
                                         MDefinition* rhs) {
   ins->setOperand(0, useRegisterAtStart(lhs));
-  ins->setOperand(1,
-                  lhs != rhs ? useOrConstant(rhs) : useOrConstantAtStart(rhs));
+  ins->setOperand(1, willHaveDifferentLIRNodes(lhs, rhs)
+                         ? useOrConstant(rhs)
+                         : useOrConstantAtStart(rhs));
   defineReuseInput(ins, mir, 0);
 }
 
@@ -136,7 +140,8 @@ void LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, Temps>* ins,
   // inputs must be the same location as the output.
   if (!Assembler::HasAVX()) {
     ins->setOperand(0, useRegisterAtStart(lhs));
-    ins->setOperand(1, lhs != rhs ? use(rhs) : useAtStart(rhs));
+    ins->setOperand(
+        1, willHaveDifferentLIRNodes(lhs, rhs) ? use(rhs) : useAtStart(rhs));
     defineReuseInput(ins, mir, 0);
   } else {
     ins->setOperand(0, useRegisterAtStart(lhs));
@@ -178,9 +183,11 @@ void LIRGeneratorX86Shared::lowerMulI(MMul* mul, MDefinition* lhs,
                                       MDefinition* rhs) {
   // Note: If we need a negative zero check, lhs is used twice.
   LAllocation lhsCopy = mul->canBeNegativeZero() ? use(lhs) : LAllocation();
-  LMulI* lir = new (alloc()) LMulI(
-      useRegisterAtStart(lhs),
-      lhs != rhs ? useOrConstant(rhs) : useOrConstantAtStart(rhs), lhsCopy);
+  LMulI* lir = new (alloc())
+      LMulI(useRegisterAtStart(lhs),
+            willHaveDifferentLIRNodes(lhs, rhs) ? useOrConstant(rhs)
+                                                : useOrConstantAtStart(rhs),
+            lhsCopy);
   if (mul->fallible()) {
     assignSnapshot(lir, mul->bailoutKind());
   }
@@ -789,7 +796,9 @@ void LIRGenerator::visitCopySign(MCopySign* ins) {
   // As lowerForFPU, but we want rhs to be in a FP register too.
   lir->setOperand(0, useRegisterAtStart(lhs));
   if (!Assembler::HasAVX()) {
-    lir->setOperand(1, lhs != rhs ? useRegister(rhs) : useRegisterAtStart(rhs));
+    lir->setOperand(1, willHaveDifferentLIRNodes(lhs, rhs)
+                           ? useRegister(rhs)
+                           : useRegisterAtStart(rhs));
     defineReuseInput(lir, ins, 0);
   } else {
     lir->setOperand(1, useRegisterAtStart(rhs));
@@ -945,21 +954,14 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
   // For binary ops, the Masm API always is usually (rhs, lhsDest) and requires
   // AtStart+ReuseInput for the lhs.
   //
-  // The rhs is tricky due to register allocator restrictions:
-  //  - if lhs == rhs and lhs is AtStart then rhs must be AtStart too
-  //  - if lhs != rhs and lhs is AtStart then rhs must not be AtStart,
-  //    this appears to have something to do with risk of the rhs
-  //    being clobbered.  Anyway it doesn't matter much, since the
-  //    liveness of rhs will not prevent the lhs register to be reused
-  //    for the output.
-  //
   // For a few ops, the API is actually (rhsDest, lhs) and the rules are the
   // same but the reversed.  We swapped operands above; they will be swapped
   // again in the code generator to emit the right code.
 
   LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
-  LAllocation rhsAlloc =
-      lhs != rhs ? useRegister(rhs) : useRegisterAtStart(rhs);
+  LAllocation rhsAlloc = willHaveDifferentLIRNodes(lhs, rhs)
+                             ? useRegister(rhs)
+                             : useRegisterAtStart(rhs);
   auto* lir = new (alloc())
       LWasmBinarySimd128(op, lhsDestAlloc, rhsAlloc, tempReg0, tempReg1);
   defineReuseInput(lir, ins, LWasmBinarySimd128::LhsDest);

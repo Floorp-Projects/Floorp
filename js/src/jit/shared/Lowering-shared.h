@@ -151,6 +151,19 @@ class LIRGeneratorShared {
   // writing to any definitions (excluding temps), during code generation of
   // this LInstruction. Otherwise, use atStart variants, which will lower
   // register pressure.
+  //
+  // There is an additional constraint.  Consider a MIR node with two
+  // MDefinition* operands, op1 and op2.  If the node reuses the register of op1
+  // for its output then op1 must be used as atStart.  Then, if op1 and op2
+  // represent the same LIR node then op2 must be an atStart use too; otherwise
+  // op2 must be a non-atStart use.  There is however not always a 1-1 mapping
+  // from MDefinition* to LNode*, so to determine whether two MDefinition* map
+  // to the same LNode*, ALWAYS go via the willHaveDifferentLIRNodes()
+  // predicate.  Do not use pointer equality on the MIR nodes.
+  //
+  // Do not add other conditions when using willHaveDifferentLIRNodes().  The
+  // predicate is the source of truth about whether to use atStart or not, no
+  // other conditions may apply in contexts when it is appropriate to use it.
   inline LUse use(MDefinition* mir, LUse policy);
   inline LUse use(MDefinition* mir);
   inline LUse useAtStart(MDefinition* mir);
@@ -205,6 +218,16 @@ class LIRGeneratorShared {
   // policy to already be set.
   inline void fillBoxUses(LInstruction* lir, size_t n, MDefinition* mir);
 #endif
+
+  // Test whether mir1 and mir2 may give rise to different LIR nodes even if
+  // mir1 == mir2; use it to guide the selection of the use directive for one of
+  // the nodes in the context of a reused input.  See comments above about why
+  // it's important to use this predicate and not pointer equality.
+  //
+  // This predicate may be called before or after the application of a use
+  // directive to the first of the nodes, but it is meaningless to call it after
+  // the application of a directive to the second node.
+  inline bool willHaveDifferentLIRNodes(MDefinition* mir1, MDefinition* mir2);
 
   // These create temporary register requests.
   inline LDefinition temp(LDefinition::Type type = LDefinition::GENERAL,

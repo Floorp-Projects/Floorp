@@ -57,7 +57,7 @@ void LIRGeneratorMIPSShared::lowerForALUInt64(
     LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
     MDefinition* mir, MDefinition* lhs, MDefinition* rhs) {
   ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-  ins->setInt64Operand(INT64_PIECES, lhs != rhs
+  ins->setInt64Operand(INT64_PIECES, willHaveDifferentLIRNodes(lhs, rhs)
                                          ? useInt64OrConstant(rhs)
                                          : useInt64OrConstantAtStart(rhs));
   defineInt64ReuseInput(ins, mir, 0);
@@ -73,6 +73,10 @@ void LIRGeneratorMIPSShared::lowerForMulInt64(LMulI64* ins, MMul* mir,
 #ifdef JS_CODEGEN_MIPS32
   needsTemp = true;
   cannotAliasRhs = true;
+  // See the documentation on willHaveDifferentLIRNodes; that test does not
+  // allow additional constraints.
+  MOZ_CRASH(
+      "cannotAliasRhs cannot be used the way it is used in the guard below");
   if (rhs->isConstant()) {
     int64_t constant = rhs->toConstant()->toInt64();
     int32_t shift = mozilla::FloorLog2(constant);
@@ -89,9 +93,10 @@ void LIRGeneratorMIPSShared::lowerForMulInt64(LMulI64* ins, MMul* mir,
   }
 #endif
   ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-  ins->setInt64Operand(INT64_PIECES, (lhs != rhs || cannotAliasRhs)
-                                         ? useInt64OrConstant(rhs)
-                                         : useInt64OrConstantAtStart(rhs));
+  ins->setInt64Operand(INT64_PIECES,
+                       (willHaveDifferentLIRNodes(lhs, rhs) || cannotAliasRhs)
+                           ? useInt64OrConstant(rhs)
+                           : useInt64OrConstantAtStart(rhs));
 
   if (needsTemp) {
     ins->setTemp(0, temp());
