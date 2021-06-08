@@ -4527,7 +4527,15 @@ static bool GetIntrinsicCoord(nsIFrame::ExtremumLength aStyle,
                  aProperty == PROP_MIN_WIDTH,
              "unexpected property");
 
-  if (aStyle == nsIFrame::ExtremumLength::MozAvailable) return false;
+  if (aStyle == nsIFrame::ExtremumLength::MozAvailable) {
+    return false;
+  }
+
+  if (aStyle == nsIFrame::ExtremumLength::FitContentFunction) {
+    // fit-content() should be handled by the caller.
+    return false;
+  }
+
   if (aStyle == nsIFrame::ExtremumLength::MozFitContent) {
     if (aProperty == PROP_WIDTH) return false;  // handle like 'width: auto'
     if (aProperty == PROP_MAX_WIDTH)

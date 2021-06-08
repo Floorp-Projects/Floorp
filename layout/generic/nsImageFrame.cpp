@@ -130,6 +130,7 @@ static bool DependsOnIntrinsicSize(const SizeOrMaxSize& aMinOrMaxSize) {
     case nsIFrame::ExtremumLength::MinContent:
     case nsIFrame::ExtremumLength::MaxContent:
     case nsIFrame::ExtremumLength::MozFitContent:
+    case nsIFrame::ExtremumLength::FitContentFunction:
       return true;
     case nsIFrame::ExtremumLength::MozAvailable:
       return false;
