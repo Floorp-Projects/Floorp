@@ -80,15 +80,38 @@ class Connector {
     // The owner object (NetMonitorAPI) received all events.
     this.owner = connection.owner;
 
+    if (this.hasResourceCommandSupport) {
+      this.networkFront = await this.watcherFront.getNetworkParentActor();
+    }
+
     await this.commands.targetCommand.watchTargets(
       [this.commands.targetCommand.TYPES.FRAME],
       this.onTargetAvailable
     );
 
-    await this.toolbox.resourceCommand.watchResources(
-      [this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
-      { onAvailable: this.onResourceAvailable }
-    );
+    const { TYPES } = this.toolbox.resourceCommand;
+    const targetResources = [
+      TYPES.DOCUMENT_EVENT,
+      TYPES.NETWORK_EVENT,
+      TYPES.NETWORK_EVENT_STACKTRACE,
+    ];
+
+    if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
+      targetResources.push(TYPES.WEBSOCKET);
+    }
+
+    if (
+      Services.prefs.getBoolPref(
+        "devtools.netmonitor.features.serverSentEvents"
+      )
+    ) {
+      targetResources.push(TYPES.SERVER_SENT_EVENT);
+    }
+
+    await this.toolbox.resourceCommand.watchResources(targetResources, {
+      onAvailable: this.onResourceAvailable,
+      onUpdated: this.onResourceUpdated,
+    });
   }
 
   disconnect() {
@@ -104,16 +127,24 @@ class Connector {
       this.onTargetAvailable
     );
 
+    const { TYPES } = this.toolbox.resourceCommand;
     this.toolbox.resourceCommand.unwatchResources(
-      [this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
-      { onAvailable: this.onResourceAvailable }
+      [
+        TYPES.DOCUMENT_EVENT,
+        TYPES.NETWORK_EVENT,
+        TYPES.NETWORK_EVENT_STACKTRACE,
+        TYPES.WEBSOCKET,
+        TYPES.SERVER_SENT_EVENT,
+      ],
+      {
+        onAvailable: this.onResourceAvailable,
+        onUpdated: this.onResourceUpdated,
+      }
     );
 
     if (this.actions) {
       this.actions.batchReset();
     }
-
-    this.removeListeners();
 
     this.webConsoleFront = null;
     this.dataProvider = null;
@@ -141,15 +172,10 @@ class Connector {
       resourceCommand: this.toolbox.resourceCommand,
     });
 
-    // If this is the first top level target, lets register all the listeners
-    if (!isTargetSwitching) {
-      await this.addListeners();
-    }
-
-    // Initialize Responsive Emulation front for network throttling.
-    this.responsiveFront = await this.currentTarget.getFront("responsive");
-    if (this.hasResourceCommandSupport) {
-      this.networkFront = await this.watcherFront.getNetworkParentActor();
+    // Initialize Responsive Emulation front for network throttling,
+    // only for toolboxes using Watcher and non-legacy Resources.
+    if (!this.hasResourceCommandSupport) {
+      this.responsiveFront = await this.currentTarget.getFront("responsive");
     }
   }
 
@@ -242,47 +268,6 @@ class Connector {
         this.dataProvider.onNetworkResourceUpdated(resource, update);
       }
     }
-  }
-
-  async addListeners(ignoreExistingResources = false) {
-    const targetResources = [
-      this.toolbox.resourceCommand.TYPES.NETWORK_EVENT,
-      this.toolbox.resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
-    ];
-    if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
-      targetResources.push(this.toolbox.resourceCommand.TYPES.WEBSOCKET);
-    }
-
-    if (
-      Services.prefs.getBoolPref(
-        "devtools.netmonitor.features.serverSentEvents"
-      )
-    ) {
-      targetResources.push(
-        this.toolbox.resourceCommand.TYPES.SERVER_SENT_EVENT
-      );
-    }
-
-    await this.toolbox.resourceCommand.watchResources(targetResources, {
-      onAvailable: this.onResourceAvailable,
-      onUpdated: this.onResourceUpdated,
-      ignoreExistingResources,
-    });
-  }
-
-  removeListeners() {
-    this.toolbox.resourceCommand.unwatchResources(
-      [
-        this.toolbox.resourceCommand.TYPES.NETWORK_EVENT,
-        this.toolbox.resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
-        this.toolbox.resourceCommand.TYPES.WEBSOCKET,
-        this.toolbox.resourceCommand.TYPES.SERVER_SENT_EVENT,
-      ],
-      {
-        onAvailable: this.onResourceAvailable,
-        onUpdated: this.onResourceUpdated,
-      }
-    );
   }
 
   enableActions(enable) {
