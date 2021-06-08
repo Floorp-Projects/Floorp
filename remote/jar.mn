@@ -17,8 +17,6 @@ remote.jar:
   content/shared/Sync.jsm (shared/Sync.jsm)
   content/shared/TabManager.jsm (shared/TabManager.jsm)
   content/shared/WindowManager.jsm (shared/WindowManager.jsm)
-  content/shared/webdriver/Capabilities.jsm (shared/webdriver/Capabilities.jsm)
-  content/shared/webdriver/Session.jsm (shared/webdriver/Session.jsm)
 
   # imports from external folders
   content/external/EventUtils.js (../testing/mochitest/tests/SimpleTest/EventUtils.js)
