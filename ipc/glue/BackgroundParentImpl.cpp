@@ -1313,6 +1313,15 @@ IPCResult BackgroundParentImpl::RecvStorageActivity(
   return IPC_OK();
 }
 
+IPCResult BackgroundParentImpl::RecvPServiceWorkerManagerConstructor(
+    PServiceWorkerManagerParent* const aActor) {
+  // Only the parent process is allowed to construct this actor.
+  if (BackgroundParent::IsOtherProcessActor(this)) {
+    return IPC_FAIL_NO_REASON(aActor);
+  }
+  return IPC_OK();
+}
+
 already_AddRefed<PServiceWorkerParent>
 BackgroundParentImpl::AllocPServiceWorkerParent(
     const IPCServiceWorkerDescriptor&) {

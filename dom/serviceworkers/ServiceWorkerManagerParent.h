@@ -11,8 +11,6 @@
 
 namespace mozilla {
 
-class OriginAttributes;
-
 namespace ipc {
 class BackgroundParentImpl;
 }  // namespace ipc
@@ -28,8 +26,6 @@ class ServiceWorkerManagerParent final : public PServiceWorkerManagerParent {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerManagerParent)
 
-  uint64_t ID() const { return mID; }
-
  private:
   ServiceWorkerManagerParent();
   ~ServiceWorkerManagerParent();
@@ -40,35 +36,10 @@ class ServiceWorkerManagerParent final : public PServiceWorkerManagerParent {
   mozilla::ipc::IPCResult RecvUnregister(const PrincipalInfo& aPrincipalInfo,
                                          const nsString& aScope);
 
-  mozilla::ipc::IPCResult RecvPropagateSoftUpdate(
-      const OriginAttributes& aOriginAttributes, const nsString& aScope);
-
   mozilla::ipc::IPCResult RecvPropagateUnregister(
       const PrincipalInfo& aPrincipalInfo, const nsString& aScope);
 
-  mozilla::ipc::IPCResult RecvPropagateRemove(const nsCString& aHost);
-
-  mozilla::ipc::IPCResult RecvPropagateRemoveAll();
-
-  mozilla::ipc::IPCResult RecvShutdown();
-
-  PServiceWorkerUpdaterParent* AllocPServiceWorkerUpdaterParent(
-      const OriginAttributes& aOriginAttributes, const nsCString& aScope);
-
-  virtual mozilla::ipc::IPCResult RecvPServiceWorkerUpdaterConstructor(
-      PServiceWorkerUpdaterParent* aActor,
-      const OriginAttributes& aOriginAttributes,
-      const nsCString& aScope) override;
-
-  bool DeallocPServiceWorkerUpdaterParent(PServiceWorkerUpdaterParent* aActor);
-
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-
-  RefPtr<ServiceWorkerManagerService> mService;
-
-  // We use this ID in the Service in order to avoid the sending of messages to
-  // ourself.
-  uint64_t mID;
 };
 
 }  // namespace dom

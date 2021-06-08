@@ -182,10 +182,6 @@ interface nsIServiceWorkerManager : nsISupports
   // For clear-origin-attributes-data
   void removeRegistrationsByOriginAttributes(in AString aOriginAttributes);
 
-  // It calls softUpdate() for each child process.
-  [implicit_jscontext] void propagateSoftUpdate(in jsval aOriginAttributes,
-                                                in AString aScope);
-
   // It calls unregister() in each child process. The callback is used to
   // inform when unregister() is completed on the current process.
   void propagateUnregister(in nsIPrincipal aPrincipal,

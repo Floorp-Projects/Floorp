@@ -11,7 +11,6 @@
 #include "nsPIDOMWindow.h"
 #include "RemoteServiceWorkerImpl.h"
 #include "ServiceWorkerCloneData.h"
-#include "ServiceWorkerImpl.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
 #include "ServiceWorkerRegistration.h"
@@ -48,28 +47,11 @@ bool ServiceWorkerVisible(JSContext* aCx, JSObject* aObj) {
 // static
 already_AddRefed<ServiceWorker> ServiceWorker::Create(
     nsIGlobalObject* aOwner, const ServiceWorkerDescriptor& aDescriptor) {
-  RefPtr<ServiceWorker> ref;
-  RefPtr<ServiceWorker::Inner> inner;
-
-  if (ServiceWorkerParentInterceptEnabled()) {
-    inner = new RemoteServiceWorkerImpl(aDescriptor);
-  } else {
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    NS_ENSURE_TRUE(swm, nullptr);
-
-    RefPtr<ServiceWorkerRegistrationInfo> reg =
-        swm->GetRegistration(aDescriptor.PrincipalInfo(), aDescriptor.Scope());
-    NS_ENSURE_TRUE(reg, nullptr);
-
-    RefPtr<ServiceWorkerInfo> info = reg->GetByDescriptor(aDescriptor);
-    NS_ENSURE_TRUE(info, nullptr);
-
-    inner = new ServiceWorkerImpl(info, reg);
-  }
-
+  const RefPtr<ServiceWorker::Inner> inner =
+      new RemoteServiceWorkerImpl(aDescriptor);
   NS_ENSURE_TRUE(inner, nullptr);
 
-  ref = new ServiceWorker(aOwner, aDescriptor, inner);
+  RefPtr<ServiceWorker> ref = new ServiceWorker(aOwner, aDescriptor, inner);
   return ref.forget();
 }
 
