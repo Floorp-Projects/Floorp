@@ -75,10 +75,6 @@ void gfxConfigManager::Init() {
 #endif
   mSafeMode = gfxPlatform::InSafeMode();
 
-#ifdef ANDROID
-  mHasWrSoftwareBlocklist = true;
-#endif
-
   mGfxInfo = components::GfxInfo::Service();
 
   mFeatureWr = &gfxConfig::GetFeature(Feature::WEBRENDER);
@@ -144,10 +140,6 @@ void gfxConfigManager::ConfigureWebRenderSoftware() {
                                     "FEATURE_FAILURE_USER_FORCE_DISABLED"_ns);
   } else if (gfxPlatform::DoesFissionForceWebRender()) {
     mFeatureWrSoftware->UserForceEnable("Force enabled by fission");
-  }
-
-  if (!mHasWrSoftwareBlocklist) {
-    return;
   }
 
   nsCString failureId;
