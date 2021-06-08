@@ -6816,6 +6816,13 @@
   value: false
   mirror: always
 
+# Is support for fit-content() enabled?
+- name: layout.css.fit-content-function.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for the font-display @font-face descriptor enabled?
 - name: layout.css.font-display.enabled
   type: RelaxedAtomicBool
