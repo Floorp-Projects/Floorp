@@ -1668,12 +1668,6 @@ void CounterStyle::GetCounterText(CounterValue aOrdinal,
 
     // add pad & negative, build the final result
     if (success) {
-      PadType pad;
-      GetPad(pad);
-      // We have to calculate the difference here since suffix part of negative
-      // sign may be appended to initialText later.
-      int32_t diff = pad.width - unicode::CountGraphemeClusters(
-                                     initialText.Data(), initialText.Length());
       aResult.Truncate();
       if (useNegativeSign && aOrdinal < 0) {
         NegativeType negative;
@@ -1683,6 +1677,14 @@ void CounterStyle::GetCounterText(CounterValue aOrdinal,
         // representation, so we append it directly here.
         initialText.Append(negative.after);
       }
+      PadType pad;
+      GetPad(pad);
+      int32_t diff =
+          pad.width -
+          narrow_cast<int32_t>(
+              unicode::CountGraphemeClusters(initialText.Data(),
+                                             initialText.Length()) +
+              unicode::CountGraphemeClusters(aResult.Data(), aResult.Length()));
       if (diff > 0) {
         auto length = pad.symbol.Length();
         if (diff > LENGTH_LIMIT || length > LENGTH_LIMIT ||
