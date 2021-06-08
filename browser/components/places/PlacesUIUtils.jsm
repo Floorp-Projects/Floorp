@@ -324,14 +324,7 @@ var PlacesUIUtils = {
       aParentWindow = Services.wm.getMostRecentWindow(null);
     }
 
-    if (
-      Services.prefs.getBoolPref("browser.proton.modals.enabled", false) &&
-      aParentWindow.gDialogBox
-    ) {
-      await aParentWindow.gDialogBox.open(dialogURL, aInfo);
-    } else {
-      aParentWindow.openDialog(dialogURL, "", features, aInfo);
-    }
+    aParentWindow.openDialog(dialogURL, "", features, aInfo);
 
     let bookmarkGuid =
       ("bookmarkGuid" in aInfo && aInfo.bookmarkGuid) || undefined;
