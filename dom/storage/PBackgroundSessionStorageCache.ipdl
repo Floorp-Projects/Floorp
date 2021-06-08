@@ -4,7 +4,6 @@
 
 include protocol PBackground;
 include protocol PBackgroundSessionStorageManager;
-
 include PBackgroundSharedTypes;
 
 namespace mozilla {
