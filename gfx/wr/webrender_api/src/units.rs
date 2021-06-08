@@ -99,8 +99,8 @@ pub type LayoutIntSize = Size2D<i32, LayoutPixel>;
 #[derive(Hash, Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Ord, PartialOrd)]
 pub struct WorldPixel;
 
-pub type WorldRect = Rect<f32, WorldPixel>;
-pub type WorldIntRect = Rect<i32, WorldPixel>;
+pub type WorldRect = Box2D<f32, WorldPixel>;
+pub type WorldIntRect = Box2D<i32, WorldPixel>;
 pub type WorldPoint = Point2D<f32, WorldPixel>;
 pub type WorldSize = Size2D<f32, WorldPixel>;
 pub type WorldPoint3D = Point3D<f32, WorldPixel>;
@@ -303,6 +303,22 @@ impl<U> RectExt for Rect<f32, U> {
     }
     fn bottom_right(&self) -> Self::Point {
         self.max()
+    }
+}
+
+impl<U> RectExt for Box2D<f32, U> {
+    type Point = Point2D<f32, U>;
+    fn top_left(&self) -> Self::Point {
+        self.min
+    }
+    fn top_right(&self) -> Self::Point {
+        Point2D::new(self.max.x, self.min.y)
+    }
+    fn bottom_left(&self) -> Self::Point {
+        Point2D::new(self.min.x, self.max.y)
+    }
+    fn bottom_right(&self) -> Self::Point {
+        self.max
     }
 }
 

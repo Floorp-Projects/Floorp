@@ -1257,7 +1257,7 @@ impl ClipStore {
 
         let local_bounding_rect = local_prim_rect.intersection(&local_clip_rect)?;
         let mut pic_clip_rect = prim_to_pic_mapper.map(&local_bounding_rect)?;
-        let world_clip_rect = pic_to_world_mapper.map(&pic_clip_rect)?;
+        let world_clip_rect = pic_to_world_mapper.map(&pic_clip_rect)?.to_box2d();
 
         // Now, we've collected all the clip nodes that *potentially* affect this
         // primitive region, and reduced the size of the prim region as much as possible.
@@ -1810,9 +1810,9 @@ impl ClipItemKind {
                 let outer_clip_rect = match project_rect(
                     transform,
                     &clip_rect,
-                    world_rect,
+                    &world_rect.to_rect(),
                 ) {
-                    Some(outer_clip_rect) => outer_clip_rect,
+                    Some(outer_clip_rect) => outer_clip_rect.to_box2d(),
                     None => return ClipResult::Partial,
                 };
 
@@ -2080,7 +2080,7 @@ pub fn projected_rect_contains(
         transform.transform_point2d(source_rect.bottom_left())?,
     ];
     let target_points = [
-        target_rect.origin,
+        target_rect.top_left(),
         target_rect.top_right(),
         target_rect.bottom_right(),
         target_rect.bottom_left(),
@@ -2201,7 +2201,7 @@ mod tests {
             projected_rect_contains(
                 &rect(10.0, 10.0, 0.0, 0.0),
                 &Transform3D::identity(),
-                &rect(20.0, 20.0, 10.0, 10.0),
+                &rect(20.0, 20.0, 10.0, 10.0).to_box2d(),
             ),
             "Empty rectangle is considered to include a non-empty!"
         );
