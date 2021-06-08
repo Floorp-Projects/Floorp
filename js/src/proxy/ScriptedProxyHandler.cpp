@@ -27,11 +27,11 @@ using JS::IsArrayAnswer;
 
 using mozilla::Maybe;
 
-// ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93
-// 9.1.6.2 IsCompatiblePropertyDescriptor.  BUT that method just calls
-// 9.1.6.3 ValidateAndApplyPropertyDescriptor with two additional constant
-// arguments.  Therefore step numbering is from the latter method, and
-// resulting dead code has been removed.
+// ES2022 rev 33fe30f9a6b0dc81826f2f217167a89c025779a0
+// IsCompatiblePropertyDescriptor. BUT that method just calls
+// ValidateAndApplyPropertyDescriptor with two additional constant arguments.
+// Therefore step numbering is from the latter method, and resulting dead code
+// has been removed.
 
 // If an exception should be thrown, we will set errorDetails.
 static bool IsCompatiblePropertyDescriptor(
@@ -43,7 +43,7 @@ static bool IsCompatiblePropertyDescriptor(
 
   // Step 2.
   if (current.isNothing()) {
-    // Step 2a-b,e.  As |O| is always undefined, steps 2c-d fall away.
+    // Step 2.a-b,e.  As |O| is always undefined, steps 2.c-d fall away.
     if (!extensible) {
       static const char DETAILS_NOT_EXTENSIBLE[] =
           "proxy can't report an extensible object as non-extensible";
@@ -52,6 +52,8 @@ static bool IsCompatiblePropertyDescriptor(
     return true;
   }
 
+  current->assertComplete();
+
   // Step 3.
   if (!desc.hasValue() && !desc.hasWritable() && !desc.hasGetter() &&
       !desc.hasSetter() && !desc.hasEnumerable() && !desc.hasConfigurable()) {
@@ -59,33 +61,8 @@ static bool IsCompatiblePropertyDescriptor(
   }
 
   // Step 4.
-  JSObject* currentGetter = current->hasGetter() ? current->getter() : nullptr;
-  JSObject* currentSetter = current->hasSetter() ? current->setter() : nullptr;
-  if ((!desc.hasWritable() ||
-       (current->hasWritable() && desc.writable() == current->writable())) &&
-      (!desc.hasGetter() || desc.getter() == currentGetter) &&
-      (!desc.hasSetter() || desc.setter() == currentSetter) &&
-      (!desc.hasEnumerable() || desc.enumerable() == current->enumerable()) &&
-      (!desc.hasConfigurable() ||
-       desc.configurable() == current->configurable())) {
-    if (!desc.hasValue()) {
-      return true;
-    }
-
-    RootedValue value(cx, current->value());
-    bool same = false;
-    if (!SameValue(cx, desc.value(), value, &same)) {
-      return false;
-    }
-
-    if (same) {
-      return true;
-    }
-  }
-
-  // Step 5.
   if (!current->configurable()) {
-    // Step 5a.
+    // Step 4.a.
     if (desc.hasConfigurable() && desc.configurable()) {
       static const char DETAILS_CANT_REPORT_NC_AS_C[] =
           "proxy can't report an existing non-configurable property as "
@@ -94,7 +71,7 @@ static bool IsCompatiblePropertyDescriptor(
       return true;
     }
 
-    // Step 5b.
+    // Step 4.b.
     if (desc.hasEnumerable() && desc.enumerable() != current->enumerable()) {
       static const char DETAILS_ENUM_DIFFERENT[] =
           "proxy can't report a different 'enumerable' from target when target "
@@ -104,14 +81,14 @@ static bool IsCompatiblePropertyDescriptor(
     }
   }
 
-  // Step 6.
+  // Step 5.
   if (desc.isGenericDescriptor()) {
     return true;
   }
 
-  // Step 7.
+  // Step 6.
   if (current->isDataDescriptor() != desc.isDataDescriptor()) {
-    // Steps 7a, 11.  As |O| is always undefined, steps 2b-c fall away.
+    // Steps 6.a., 10.  As |O| is always undefined, steps 6.b-c fall away.
     if (!current->configurable()) {
       static const char DETAILS_CURRENT_NC_DIFF_TYPE[] =
           "proxy can't report a different descriptor type when target is not "
@@ -121,10 +98,12 @@ static bool IsCompatiblePropertyDescriptor(
     return true;
   }
 
-  // Step 8.
+  // Step 7.
   if (current->isDataDescriptor()) {
-    MOZ_ASSERT(desc.isDataDescriptor());  // by step 7
+    MOZ_ASSERT(desc.isDataDescriptor());  // by step 6
+    // Step 7.a.
     if (!current->configurable() && !current->writable()) {
+      // Step 7.a.i.
       if (desc.hasWritable() && desc.writable()) {
         static const char DETAILS_CANT_REPORT_NW_AS_W[] =
             "proxy can't report a non-configurable, non-writable property as "
@@ -133,6 +112,7 @@ static bool IsCompatiblePropertyDescriptor(
         return true;
       }
 
+      // Step 7.a.ii.
       if (desc.hasValue()) {
         RootedValue value(cx, current->value());
         bool same;
@@ -149,27 +129,37 @@ static bool IsCompatiblePropertyDescriptor(
       }
     }
 
+    // Step 7.a.ii, 10.
     return true;
   }
 
-  // Step 9.
-  MOZ_ASSERT(current->isAccessorDescriptor());  // by step 8
-  MOZ_ASSERT(desc.isAccessorDescriptor());      // by step 7
+  // Step 8.
 
+  // Step 8.a.
+  MOZ_ASSERT(current->isAccessorDescriptor());  // by step 7
+  MOZ_ASSERT(desc.isAccessorDescriptor());      // by step 6
+
+  // Step 8.b.
   if (current->configurable()) {
     return true;
   }
-  if (desc.hasSetter() && desc.setter() != currentSetter) {
+  // Steps 8.b.i-ii.
+  if (desc.hasSetter() && desc.setter() != current->setter()) {
     static const char DETAILS_SETTERS_DIFFERENT[] =
         "proxy can't report different setters for a currently non-configurable "
         "property";
     *errorDetails = DETAILS_SETTERS_DIFFERENT;
-  } else if (desc.hasGetter() && desc.getter() != currentGetter) {
+  } else if (desc.hasGetter() && desc.getter() != current->getter()) {
     static const char DETAILS_GETTERS_DIFFERENT[] =
         "proxy can't report different getters for a currently non-configurable "
         "property";
     *errorDetails = DETAILS_GETTERS_DIFFERENT;
   }
+
+  // Step 9.
+  // |O| is always undefined.
+
+  // Step 10.
   return true;
 }
 
@@ -513,7 +503,6 @@ bool ScriptedProxyHandler::isExtensible(JSContext* cx, HandleObject proxy,
   return true;
 }
 
-// ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93
 // 9.5.5 Proxy.[[GetOwnProperty]](P)
 bool ScriptedProxyHandler::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject proxy, HandleId id,
