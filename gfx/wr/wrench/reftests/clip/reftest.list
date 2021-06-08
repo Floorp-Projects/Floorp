@@ -19,3 +19,4 @@ color_targets(1) alpha_targets(0) == clip-out-rotation.yaml blank.yaml # Unexpec
 == clip-rectangle-redundant-sc.yaml clip-rectangle-redundant-sc-ref.yaml
 fuzzy(128,707) == clip-filter-raster-root.yaml clip-filter-raster-root-ref.yaml
 == blend-container.yaml blend-container-ref.yaml
+== raster-roots-tiled-mask.yaml raster-roots-tiled-mask-ref.yaml
