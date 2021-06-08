@@ -12,6 +12,7 @@ import sys
 
 import attr
 import psutil
+import requests
 
 from distutils.version import LooseVersion
 
@@ -96,6 +97,27 @@ def dns(**kwargs):
             name="dns",
             status=CheckStatus.FATAL,
             display_text=["Could not query DNS for mozilla.org."],
+        )
+
+
+@check
+def internet(**kwargs):
+    """Check the internet is reachable via HTTPS."""
+    try:
+        resp = requests.get("https://mozilla.org")
+        resp.raise_for_status()
+
+        return DoctorCheck(
+            name="internet",
+            status=CheckStatus.OK,
+            display_text=["Internet is reachable."],
+        )
+
+    except Exception:
+        return DoctorCheck(
+            name="internet",
+            status=CheckStatus.FATAL,
+            display_text=["Could not reach a known website via HTTPS."],
         )
 
 
