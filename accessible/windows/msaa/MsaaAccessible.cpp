@@ -354,7 +354,7 @@ MsaaAccessible::ResolveChild(const VARIANT& aVarChild,
     return E_INVALIDARG;
   }
 
-  if (!LocalAcc()) {
+  if (!mAcc) {
     return CO_E_OBJNOTCONNECTED;
   }
 
@@ -376,15 +376,32 @@ MsaaAccessible::ResolveChild(const VARIANT& aVarChild,
   return S_OK;
 }
 
-static LocalAccessible* GetAccessibleInSubtree(DocAccessible* aDoc,
-                                               uint32_t aID) {
+static Accessible* GetAccessibleInSubtree(DocAccessible* aDoc, uint32_t aID) {
   Accessible* child = MsaaDocAccessible::GetFrom(aDoc)->GetAccessibleByID(aID);
-  if (child) return child->AsLocal();
+  if (child) return child;
 
   uint32_t childDocCount = aDoc->ChildDocumentCount();
   for (uint32_t i = 0; i < childDocCount; i++) {
     child = GetAccessibleInSubtree(aDoc->GetChildDocumentAt(i), aID);
-    if (child) return child->AsLocal();
+    if (child) return child;
+  }
+
+  return nullptr;
+}
+
+static Accessible* GetAccessibleInSubtree(DocAccessibleParent* aDoc,
+                                          uint32_t aID) {
+  Accessible* child = MsaaDocAccessible::GetFrom(aDoc)->GetAccessibleByID(aID);
+  if (child) {
+    return child;
+  }
+
+  size_t childDocCount = aDoc->ChildDocCount();
+  for (size_t i = 0; i < childDocCount; i++) {
+    child = GetAccessibleInSubtree(aDoc->ChildDocAt(i), aID);
+    if (child) {
+      return child;
+    }
   }
 
   return nullptr;
@@ -392,6 +409,7 @@ static LocalAccessible* GetAccessibleInSubtree(DocAccessible* aDoc,
 
 static already_AddRefed<IDispatch> GetProxiedAccessibleInSubtree(
     const DocAccessibleParent* aDoc, const VARIANT& aVarChild) {
+  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
   auto wrapper = static_cast<DocRemoteAccessibleWrap*>(WrapperFor(aDoc));
   RefPtr<IAccessible> comProxy;
   int32_t docWrapperChildId = MsaaAccessible::GetChildIDFor(wrapper);
@@ -444,31 +462,22 @@ already_AddRefed<IAccessible> MsaaAccessible::GetIAccessibleFor(
 
   RefPtr<IAccessible> result;
 
-  AccessibleWrap* localAcc = LocalAcc();
-  if (!localAcc) {
+  if (!mAcc) {
     *aIsDefunct = true;
     return nullptr;
   }
 
+  AccessibleWrap* localAcc = static_cast<AccessibleWrap*>(mAcc->AsLocal());
   if (varChild.lVal == CHILDID_SELF) {
-    localAcc->GetNativeInterface(getter_AddRefs(result));
-    if (result) {
-      return result.forget();
-    }
-    // If we're not a proxy, there's nothing more we can do to attempt to
-    // resolve the IAccessible, so we just fail.
-    if (!localAcc->IsProxy()) {
-      return nullptr;
-    }
-    // Otherwise, since we're a proxy and we have a null native interface, this
-    // indicates that we need to obtain a COM proxy. To do this, we'll replace
-    // CHILDID_SELF with our real MSAA ID and continue the search from there.
-    varChild.lVal = GetExistingID();
+    MOZ_ASSERT(!localAcc || !localAcc->IsProxy());
+    result = this;
+    return result.forget();
   }
 
   if (varChild.ulVal != GetExistingID() &&
-      (localAcc->IsProxy() ? nsAccUtils::MustPrune(localAcc->Proxy())
-                           : nsAccUtils::MustPrune(localAcc))) {
+      ((localAcc && localAcc->IsProxy())
+           ? nsAccUtils::MustPrune(localAcc->Proxy())
+           : nsAccUtils::MustPrune(mAcc))) {
     // This accessible should have no subtree in platform, return null for its
     // children.
     return nullptr;
@@ -481,8 +490,9 @@ already_AddRefed<IAccessible> MsaaAccessible::GetIAccessibleFor(
   // make sure that it is never called on proxies.
   // Bug 1422674: We must only handle remote ids here (< 0), not child indices.
   // Child indices (> 0) are handled below for both local and remote children.
-  if (XRE_IsParentProcess() && !localAcc->IsProxy() && varChild.lVal < 0 &&
-      !sIDGen.IsChromeID(varChild.lVal)) {
+  if (XRE_IsParentProcess() && localAcc && !localAcc->IsProxy() &&
+      varChild.lVal < 0 && !sIDGen.IsChromeID(varChild.lVal)) {
+    MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
     if (!localAcc->IsRootForHWND()) {
       // Bug 1422201, 1424657: accChild with a remote id is only valid on the
       // root accessible for an HWND.
@@ -496,53 +506,44 @@ already_AddRefed<IAccessible> MsaaAccessible::GetIAccessibleFor(
 
   if (varChild.lVal > 0) {
     // Gecko child indices are 0-based in contrast to indices used in MSAA.
-    MOZ_ASSERT(!localAcc->IsProxy());
-    LocalAccessible* xpAcc = localAcc->LocalChildAt(varChild.lVal - 1);
+    MOZ_ASSERT(!localAcc || !localAcc->IsProxy());
+    if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+        XRE_IsContentProcess() && localAcc->IsOuterDoc()) {
+      // With the cache disabled, we need to be able to return a COM proxy for
+      // an OOP iframe. The COM proxy is wrapped in a
+      // RemoteIframeDocRemoteAccessibleWrap, which can only be retrieved
+      // using the LocalAccessible hierarchy.
+      LocalAccessible* xpAcc = localAcc->LocalChildAt(varChild.lVal - 1);
+      if (!xpAcc) {
+        return nullptr;
+      }
+      xpAcc->GetNativeInterface(getter_AddRefs(result));
+      return result.forget();
+    }
+    Accessible* xpAcc = mAcc->ChildAt(varChild.lVal - 1);
     if (!xpAcc) {
       return nullptr;
     }
-    *aIsDefunct = xpAcc->IsDefunct();
-    static_cast<AccessibleWrap*>(xpAcc)->GetNativeInterface(
-        getter_AddRefs(result));
+    MOZ_ASSERT(xpAcc->IsRemote() || !xpAcc->AsLocal()->IsDefunct(),
+               "Shouldn't get a defunct child");
+    if (!StaticPrefs::accessibility_cache_enabled_AtStartup() && localAcc &&
+        xpAcc->IsRemote()) {
+      // We're crossing from a local OuterDoc to a DocRemoteAccessibleWrap.
+      // We must return the COM proxy.
+      MOZ_ASSERT(localAcc->IsOuterDoc());
+      xpAcc->AsRemote()->GetCOMInterface(getter_AddRefs(result));
+      return result.forget();
+    }
+    result = MsaaAccessible::GetFrom(xpAcc);
     return result.forget();
   }
 
   // If lVal negative then it is treated as child ID and we should look for
   // accessible through whole accessible subtree including subdocuments.
-  // Otherwise we treat lVal as index in parent.
-  // First handle the case that both this accessible and the id'd one are in
-  // this process.
-  if (!localAcc->IsProxy()) {
-    DocAccessible* document = localAcc->Document();
-    LocalAccessible* child =
-        GetAccessibleInSubtree(document, static_cast<uint32_t>(varChild.lVal));
-
-    // If it is a document then just return an accessible.
-    if (child && localAcc->IsDoc()) {
-      *aIsDefunct = child->IsDefunct();
-      static_cast<AccessibleWrap*>(child)->GetNativeInterface(
-          getter_AddRefs(result));
-      return result.forget();
-    }
-
-    // Otherwise check whether the accessible is a child (this path works for
-    // ARIA documents and popups).
-    LocalAccessible* parent = child;
-    while (parent && parent != document) {
-      if (parent == localAcc) {
-        *aIsDefunct = child->IsDefunct();
-        static_cast<AccessibleWrap*>(child)->GetNativeInterface(
-            getter_AddRefs(result));
-        return result.forget();
-      }
-
-      parent = parent->LocalParent();
-    }
-  }
-
-  // Now see about the case that both this accessible and the target one are
-  // proxied.
-  if (localAcc->IsProxy()) {
+  // First see about the case that both this accessible and the target one are
+  // RemoteAccessibleWraps.
+  if (localAcc && localAcc->IsProxy()) {
+    MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
     DocAccessibleParent* proxyDoc = localAcc->Proxy()->Document();
     RefPtr<IDispatch> disp = GetProxiedAccessibleInSubtree(proxyDoc, varChild);
     if (!disp) {
@@ -554,6 +555,65 @@ already_AddRefed<IAccessible> MsaaAccessible::GetIAccessibleFor(
         disp->QueryInterface(IID_IAccessible, getter_AddRefs(result));
     MOZ_ASSERT(SUCCEEDED(hr));
     return result.forget();
+  }
+
+  Accessible* doc = nullptr;
+  Accessible* child = nullptr;
+  auto id = static_cast<uint32_t>(varChild.lVal);
+  if (localAcc) {
+    DocAccessible* localDoc = localAcc->Document();
+    doc = localDoc;
+    child = GetAccessibleInSubtree(localDoc, id);
+    if (!child && StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      // Search remote documents which are descendants of this local document.
+      const auto remoteDocs = DocManager::TopLevelRemoteDocs();
+      if (!remoteDocs) {
+        return nullptr;
+      }
+      for (DocAccessibleParent* remoteDoc : *remoteDocs) {
+        LocalAccessible* outerDoc = remoteDoc->OuterDocOfRemoteBrowser();
+        if (!outerDoc || outerDoc->Document() != localDoc) {
+          // The OuterDoc isn't inside our document, so this isn't a
+          // descendant.
+          continue;
+        }
+        child = GetAccessibleInSubtree(remoteDoc, id);
+        if (child) {
+          break;
+        }
+      }
+    }
+  } else if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    DocAccessibleParent* remoteDoc = mAcc->AsRemote()->Document();
+    doc = remoteDoc;
+    child = GetAccessibleInSubtree(remoteDoc, id);
+  }
+  if (!child) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(child->IsLocal() ||
+             StaticPrefs::accessibility_cache_enabled_AtStartup());
+  MOZ_ASSERT(child->IsRemote() || !child->AsLocal()->IsDefunct(),
+             "Shouldn't get a defunct child");
+  // If this method is being called on the document we searched, we can just
+  // return child.
+  if (mAcc == doc) {
+    result = MsaaAccessible::GetFrom(child);
+    return result.forget();
+  }
+
+  // Otherwise, this method was called on a descendant, so we searched an
+  // ancestor. We must check whether child is really a descendant. This is used
+  // for ARIA documents and popups.
+  Accessible* parent = child;
+  while (parent && parent != doc) {
+    if (parent == mAcc) {
+      result = MsaaAccessible::GetFrom(child);
+      return result.forget();
+    }
+
+    parent = parent->Parent();
   }
 
   return nullptr;
@@ -827,7 +887,7 @@ MsaaAccessible::get_accChild(
   if (!ppdispChild) return E_INVALIDARG;
 
   *ppdispChild = nullptr;
-  if (!LocalAcc()) return CO_E_OBJNOTCONNECTED;
+  if (!mAcc) return CO_E_OBJNOTCONNECTED;
 
   // IAccessible::accChild is used to return this accessible or child accessible
   // at the given index or to get an accessible by child ID in the case of
