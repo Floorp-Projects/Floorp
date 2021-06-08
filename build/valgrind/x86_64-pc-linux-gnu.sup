@@ -1036,3 +1036,38 @@
    fun:_ZN5style10properties17declaration_block31parse_property_declaration_list*
    fun:_ZN124_$LT$style..stylesheets..rule_parser..NestedRuleParser$u20$as$u20$cssparser..rules_and_declarations..QualifiedRuleParser$GT$11parse_block*
 }
+
+# Suppression for Software WebRender, June 2021. See bug 1715267.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x162B199F: webrender::renderer::upload::upload_to_texture_cache+10639 (mod.rs:2045)
+#    by 0x162A7567: webrender::renderer::Renderer::update_texture_cache+5191 (mod.rs:2241)
+#    by 0x1629EF2F: webrender::renderer::Renderer::render_impl+3647 (mod.rs:1874)
+#  Uninitialised value was created by a stack allocation
+#    at 0x162AF01D: webrender::renderer::upload::upload_to_texture_cache+13 (upload.rs:50)
+{
+   Bug 1715267: webrender::renderer::upload::upload_to_texture_cache
+   Memcheck:Cond
+   fun:_ZN9webrender8renderer6upload23upload_to_texture_cache17h*
+   fun:_ZN9webrender8renderer8Renderer20update_texture_cache17h*
+   fun:_ZN9webrender8renderer8Renderer11render_impl17h*
+}
+
+# Suppression for Software WebRender, June 2021. See bug 1715290.
+#
+# 24 bytes in 1 blocks are definitely lost in loss record 3,311 of 10,861
+#    at 0x4C28FC0: malloc+112 (vg_replace_malloc.c:307)
+#    by 0x162F6CC9: wr_thread_pool_new+2729 (library/std/src/sys/unix/alloc.rs:14)
+#    by 0x11EB0814: WebRenderThreadPool (checkouts/gecko/gfx/webrender_bindings/RenderThread.cpp:1037)
+#    by 0x11EB0814: RenderThread (checkouts/gecko/gfx/webrender_bindings/RenderThread.cpp:64)
+#    by 0x11EB0814: mozilla::wr::RenderThread::Start()+116 (checkouts/gecko/gfx/webrender_bindings/RenderThread.cpp:96)
+{
+   Bug 1715290: wr_thread_pool_new / WebRenderThreadPool / RenderThread
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:wr_thread_pool_new
+   fun:WebRenderThreadPool
+   fun:RenderThread
+   fun:_ZN7mozilla2wr12RenderThread5StartEv
+}
