@@ -1419,7 +1419,8 @@ void nsComboboxControlFrame::SetInitialChildList(ChildListID aListID,
     for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
       nsCOMPtr<nsIFormControl> formControl =
           do_QueryInterface(e.get()->GetContent());
-      if (formControl && formControl->ControlType() == NS_FORM_BUTTON_BUTTON) {
+      if (formControl &&
+          formControl->ControlType() == FormControlType::ButtonButton) {
         mButtonFrame = e.get();
         break;
       }

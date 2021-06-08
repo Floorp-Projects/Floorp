@@ -18,7 +18,7 @@ namespace mozilla::dom {
 
 HTMLFieldSetElement::HTMLFieldSetElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLFormElement(std::move(aNodeInfo), NS_FORM_FIELDSET),
+    : nsGenericHTMLFormElement(std::move(aNodeInfo), FormControlType::Fieldset),
       mElements(nullptr),
       mFirstLegend(nullptr),
       mInvalidElementsCount(0) {

@@ -1229,7 +1229,7 @@ bool EditorEventListener::IsFileControlTextBox() {
     return false;
   }
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(parent);
-  return formControl->ControlType() == NS_FORM_INPUT_FILE;
+  return formControl->ControlType() == FormControlType::InputFile;
 }
 
 bool EditorEventListener::ShouldHandleNativeKeyBindings(

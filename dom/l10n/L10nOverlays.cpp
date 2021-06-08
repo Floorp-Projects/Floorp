@@ -47,9 +47,10 @@ bool L10nOverlays::IsAttrNameLocalizable(
       if (nameAtom == nsGkAtoms::value) {
         HTMLInputElement* input = HTMLInputElement::FromNode(aElement);
         if (input) {
-          uint32_t type = input->ControlType();
-          if (type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_INPUT_BUTTON ||
-              type == NS_FORM_INPUT_RESET) {
+          auto type = input->ControlType();
+          if (type == FormControlType::InputSubmit ||
+              type == FormControlType::InputButton ||
+              type == FormControlType::InputReset) {
             return true;
           }
         }

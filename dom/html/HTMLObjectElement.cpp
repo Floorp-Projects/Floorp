@@ -28,7 +28,7 @@ namespace mozilla::dom {
 HTMLObjectElement::HTMLObjectElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
-    : nsGenericHTMLFormElement(std::move(aNodeInfo), NS_FORM_OBJECT),
+    : nsGenericHTMLFormElement(std::move(aNodeInfo), FormControlType::Object),
       mIsDoneAddingChildren(!aFromParser) {
   RegisterActivityObserver();
   SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);

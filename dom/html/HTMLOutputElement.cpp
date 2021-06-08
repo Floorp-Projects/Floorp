@@ -21,7 +21,7 @@ namespace mozilla::dom {
 HTMLOutputElement::HTMLOutputElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
-    : nsGenericHTMLFormElement(std::move(aNodeInfo), NS_FORM_OUTPUT),
+    : nsGenericHTMLFormElement(std::move(aNodeInfo), FormControlType::Output),
       mValueModeFlag(eModeDefault),
       mIsDoneAddingChildren(!aFromParser) {
   AddMutationObserver(this);
