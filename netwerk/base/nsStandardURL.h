@@ -260,6 +260,9 @@ class nsStandardURL : public nsIFileURL,
   // Asserts that the URL has sane values
   void SanityCheck();
 
+  // Checks if the URL has a valid representation.
+  bool IsValid();
+
   // mSpec contains the normalized version of the URL spec (UTF-8 encoded).
   nsCString mSpec;
   int32_t mDefaultPort;

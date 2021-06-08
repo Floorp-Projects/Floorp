@@ -229,6 +229,46 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
 #endif
 }
 
+bool nsStandardURL::IsValid() {
+  auto checkSegment = [&](const nsStandardURL::URLSegment& aSeg) {
+    // Bad value
+    if (NS_WARN_IF(aSeg.mLen < -1)) {
+      return false;
+    }
+    if (aSeg.mLen == -1) {
+      return true;
+    }
+
+    // Points out of string
+    if (NS_WARN_IF(aSeg.mPos + aSeg.mLen > mSpec.Length())) {
+      return false;
+    }
+
+    // Overflow
+    if (NS_WARN_IF(aSeg.mPos + aSeg.mLen < aSeg.mPos)) {
+      return false;
+    }
+
+    return true;
+  };
+
+  bool allSegmentsValid = checkSegment(mScheme) && checkSegment(mAuthority) &&
+                          checkSegment(mUsername) && checkSegment(mPassword) &&
+                          checkSegment(mHost) && checkSegment(mPath) &&
+                          checkSegment(mFilepath) && checkSegment(mDirectory) &&
+                          checkSegment(mBasename) && checkSegment(mExtension) &&
+                          checkSegment(mQuery) && checkSegment(mRef);
+  if (!allSegmentsValid) {
+    return false;
+  }
+
+  if (mScheme.mPos != 0) {
+    return false;
+  }
+
+  return true;
+}
+
 static void CheckSegment(const nsStandardURL::URLSegment& aSeg,
                          const nsCString& aSpec) {
   MOZ_RELEASE_ASSERT(aSeg.mLen >= -1);
@@ -3321,6 +3361,10 @@ nsStandardURL::Read(nsIObjectInputStream* stream) {
 nsresult nsStandardURL::ReadPrivate(nsIObjectInputStream* stream) {
   MOZ_ASSERT(mDisplayHost.IsEmpty(), "Shouldn't have cached unicode host");
 
+  // If we exit early, make sure to clear the URL so we don't fail the sanity
+  // check in the destructor
+  auto clearOnExit = MakeScopeExit([&] { Clear(); });
+
   nsresult rv;
 
   uint32_t urlType;
@@ -3462,6 +3506,12 @@ nsresult nsStandardURL::ReadPrivate(nsIObjectInputStream* stream) {
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  if (!IsValid()) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+
+  clearOnExit.release();
 
   return NS_OK;
 }
@@ -3654,6 +3704,10 @@ bool nsStandardURL::Deserialize(const URIParams& aParams) {
     return false;
   }
 
+  // If we exit early, make sure to clear the URL so we don't fail the sanity
+  // check in the destructor
+  auto clearOnExit = MakeScopeExit([&] { Clear(); });
+
   const StandardURLParams& params = aParams.get_StandardURLParams();
 
   mURLType = params.urlType();
@@ -3714,6 +3768,12 @@ bool nsStandardURL::Deserialize(const URIParams& aParams) {
   NS_ENSURE_TRUE(
       mRef.mLen == -1 || (mRef.mPos > 0 && mSpec.CharAt(mRef.mPos - 1) == '#'),
       false);
+
+  if (!IsValid()) {
+    return false;
+  }
+
+  clearOnExit.release();
 
   return true;
 }
