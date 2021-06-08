@@ -8,15 +8,18 @@
 #include "AppearanceOverride.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_widget.h"
 
 #include "nsXULAppAPI.h"
 #include "SDKDeclarations.h"
 
-static void RespectSystemAppearancePrefChanged(const char* aPref, void* aUserInfo);
+static void SupportDarkAppearancePrefChanged(const char* aPref, void* aUserInfo);
+static void ToolbarThemePrefChanged(const char* aPref, void* aUserInfo);
 
 @interface MOZGlobalAppearance ()
 @property BOOL shouldOverrideWithAqua;
+@property NSInteger toolbarTheme;
 @end
 
 @implementation MOZGlobalAppearance
@@ -27,22 +30,36 @@ static void RespectSystemAppearancePrefChanged(const char* aPref, void* aUserInf
     sInstance = [[MOZGlobalAppearance alloc] init];
     if (XRE_IsParentProcess()) {
       mozilla::Preferences::RegisterCallbackAndCall(
-          &RespectSystemAppearancePrefChanged,
+          &SupportDarkAppearancePrefChanged,
           nsDependentCString(
-              mozilla::StaticPrefs::GetPrefName_widget_macos_respect_system_appearance()));
+              mozilla::StaticPrefs::GetPrefName_widget_macos_support_dark_appearance()));
+      mozilla::Preferences::RegisterCallbackAndCall(
+          &ToolbarThemePrefChanged,
+          nsDependentCString(mozilla::StaticPrefs::GetPrefName_browser_theme_toolbar_theme()));
     }
   }
   return sInstance;
 }
 
 + (NSSet*)keyPathsForValuesAffectingAppearance {
-  return [NSSet setWithObject:@"shouldOverrideWithAqua"];
+  return [NSSet setWithObjects:@"shouldOverrideWithAqua", @"toolbarTheme", nil];
 }
 
 - (NSAppearance*)appearance {
   if (self.shouldOverrideWithAqua) {
     // Override with aqua.
     return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+  }
+  if (@available(macOS 10.14, *)) {
+    switch (self.toolbarTheme) {  // Value for browser.theme.toolbar-theme pref
+      case 0:                     // Dark
+        return [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+      case 1:  // Light
+        return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+      case 2:  // System
+      default:
+        break;
+    }
   }
   // nil means "no override".
   return nil;
@@ -60,7 +77,8 @@ static void RespectSystemAppearancePrefChanged(const char* aPref, void* aUserInf
   if (@available(macOS 10.14, *)) {
     // Automatically notify any key-value observers of our effectiveAppearance property whenever the
     // pref or the NSApp's effectiveAppearance change.
-    return [NSSet setWithObjects:@"shouldOverrideWithAqua", @"_app.effectiveAppearance", nil];
+    return [NSSet setWithObjects:@"shouldOverrideWithAqua", @"toolbarTheme",
+                                 @"_app.effectiveAppearance", nil];
   }
   return [NSSet set];
 }
@@ -71,8 +89,16 @@ static void RespectSystemAppearancePrefChanged(const char* aPref, void* aUserInf
     return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
   }
   if (@available(macOS 10.14, *)) {
-    // Use the NSApp effectiveAppearance. This is the system appearance.
-    return NSApp.effectiveAppearance;
+    switch (self.toolbarTheme) {  // Value for browser.theme.toolbar-theme pref
+      case 0:                     // Dark
+        return [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+      case 1:  // Light
+        return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+      case 2:  // System
+      default:
+        // Use the NSApp effectiveAppearance. This is the system appearance.
+        return NSApp.effectiveAppearance;
+    }
   }
   // Use aqua on pre-10.14.
   return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
@@ -80,10 +106,18 @@ static void RespectSystemAppearancePrefChanged(const char* aPref, void* aUserInf
 
 @end
 
-static void RespectSystemAppearancePrefChanged(const char* aPref, void* aUserInfo) {
+static void SupportDarkAppearancePrefChanged(const char* aPref, void* aUserInfo) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   MOZGlobalAppearance.sharedInstance.shouldOverrideWithAqua =
-      !mozilla::StaticPrefs::widget_macos_respect_system_appearance();
+      !mozilla::StaticPrefs::widget_macos_support_dark_appearance();
+}
+
+static void ToolbarThemePrefChanged(const char* aPref, void* aUserInfo) {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  MOZGlobalAppearance.sharedInstance.toolbarTheme =
+      mozilla::StaticPrefs::browser_theme_toolbar_theme();
 }

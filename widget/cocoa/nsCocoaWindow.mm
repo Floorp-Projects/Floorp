@@ -547,8 +547,8 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
   mWindowMadeHere = true;
 
   if (@available(macOS 10.14, *)) {
-    // When the window's appearance is set to nil (no override), make sure it respects the global
-    // aqua override.
+    // Make the window respect the global appearance, which follows the browser.theme.toolbar-theme
+    // pref.
     mWindow.appearanceSource = MOZGlobalAppearance.sharedInstance;
   }
   [mWindow setWindowAppearance:mWindowAppearance];
