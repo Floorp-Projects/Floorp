@@ -89,20 +89,32 @@ toolbar[brighttext] {
 }
 
 @keyframes stop-to-reload {
+  /* pause on the first frame (step 0) for 6 frames of time */
   from {
+    /* 0 */
     transform: translateX(0);
   }
-  to {
-    transform: translateX(-700px);
+  /* resume at 7/35 and animate across the next 14 frames */
+  17.14% {
+    animation-timing-function: steps(14);
+    transform: translateX(calc(0  * -20px));
+  }
+  /* pause on the last frame for the remainder of the duration */
+  54.29% {
+    transform: translateX(calc(14 * -20px));
   }
 }
 
 @keyframes reload-to-stop {
+  /* pause on the first frame (step 0) for 6 frames of time */
   from {
+    /* 0 */
     transform: translateX(0);
+    animation-timing-function: steps(12);
   }
-  to {
-    transform: translateX(-300px);
+  /* pause at 13/15 for 3 frames */
+  86.67% {
+    transform: translateX(calc(var(--anim-frames) * -20px));
   }
 }
 
@@ -128,8 +140,18 @@ toolbar[brighttext] {
 
 #stop-reload-button[animate] > #reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   background-image: url("chrome://browser/skin/stop-to-reload.svg");
-  width: 720px;
+  /*
+    transition from stop icon to reload icon
+    pause at frame 0 for 6 ticks,
+    pause at frame 15 for 16 ticks
+    total 35 steps*/
+  --anim-frames: 14;
+  --anim-steps: calc(var(--anim-frames) + 21); /* Add steps for doing the pause at the start and end */
+  width: calc(20px * (var(--anim-frames) + 1));
   height: 20px;
+
+  /* initial state for animation */
+  transform: translateX(0);
 }
 
 #stop-reload-button[animate] > #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
@@ -137,18 +159,33 @@ toolbar[brighttext] {
 }
 
 #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  animation-timing-function: steps(35);
-  animation-duration: 0.583s;
+  animation-duration: calc(var(--anim-steps) * 16.667ms);
+
+  /* end state for animation: */
+  transform: translateX(calc(var(--anim-frames) * -20px));
 }
 
 #stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   background-image: url("chrome://browser/skin/reload-to-stop.svg");
-  width: 320px;
+  /*
+    transition from reload icon to stop icon
+    pause at end for 3 frames of time
+    pause at ...
+    total 15 steps*/
+  --anim-frames: 12;
+  --anim-steps: calc(var(--anim-frames) + 3); /* Add steps for doing the pause at the start and end */
+  width: calc(20px * (var(--anim-frames) + 1));
   height: 20px;
+
+  /* initial state for animation */
+  transform: translateX(0);
 }
 
 #stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   animation-name: reload-to-stop;
+  animation-duration: calc(var(--anim-steps) * 16.667ms);
+  /* end state for animation: */
+  transform: translateX(calc(var(--anim-frames) * -20px));
 }
 
 #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
