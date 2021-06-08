@@ -1812,10 +1812,7 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
     }
   }
 
-  // Don't paint the outline if we're asked not to draw overflow, or if the
-  // author has specified another kind of outline on focus.
-  if (aDrawOverflow == DrawOverflow::No ||
-      !aFrame->StyleOutline()->mOutlineStyle.IsAuto()) {
+  if (aDrawOverflow == DrawOverflow::No) {
     eventState &= ~NS_EVENT_STATE_FOCUSRING;
   }
 
