@@ -3,14 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import json
 import os
+import pathlib
 import re
 import signal
 import tempfile
 import threading
 
+from mozdevice import ADBDevice
 from mozlog import get_proxy_logger
 from mozperftest.layers import Layer
-from mozperftest.utils import download_file, install_package
+from mozperftest.utils import download_file, install_package, get_output_dir
 from mozprocess import ProcessHandler
 
 
@@ -67,15 +69,21 @@ class ProxyRunner(Layer):
     activated = False
 
     arguments = {
-        "record": {
+        "mode": {
             "type": str,
-            "default": None,
-            "help": "Generate a recording of the network requests during this test.",
+            "choices": ["record", "playback"],
+            "help": "Proxy server mode. Use `playback` to replay from the provided file(s). "
+            "Use `record` to generate a new recording at the path specified by `--file`. "
+            "playback - replay from provided file. "
+            "record - generate a new recording at the specified path.",
         },
-        "replay": {
+        "file": {
             "type": str,
-            "default": None,
-            "help": "A generated recording to play back during this test.",
+            "nargs": "+",
+            "help": "The playback files to replay, or the file that a recording will be saved to. "
+            "For playback, it can be any combination of the following: zip file, manifest file, "
+            "or a URL to zip/manifest file. "
+            "For recording, it's a zip fle.",
         },
     }
 
@@ -85,38 +93,69 @@ class ProxyRunner(Layer):
         self.tmpdir = None
 
     def setup(self):
-        # Install mozproxy and its vendored deps.
-        mozbase = os.path.join(self.mach_cmd.topsrcdir, "testing", "mozbase")
-        mozproxy_deps = ["mozinfo", "mozlog", "mozproxy"]
-        for i in mozproxy_deps:
-            install_package(self.mach_cmd.virtualenv_manager, os.path.join(mozbase, i))
+        try:
+            import mozproxy  # noqa: F401
+        except ImportError:
+            # Install mozproxy and its vendored deps.
+            mozbase = pathlib.Path(self.mach_cmd.topsrcdir, "testing", "mozbase")
+            mozproxy_deps = ["mozinfo", "mozlog", "mozproxy"]
+            for i in mozproxy_deps:
+                install_package(
+                    self.mach_cmd.virtualenv_manager, pathlib.Path(mozbase, i)
+                )
+
+        # set MOZ_HOST_BIN to find cerutil. Required to set certifcates on android
+        os.environ["MOZ_HOST_BIN"] = self.mach_cmd.bindir
 
     def run(self, metadata):
         self.metadata = metadata
-        replay_file = self.get_arg("replay")
+        replay_file = self.get_arg("file")
+
+        # Check if we have a replay file
+        if replay_file is None:
+            raise ValueError("Proxy file not provided!!")
+
         if replay_file is not None and replay_file.startswith("http"):
             self.tmpdir = tempfile.TemporaryDirectory()
-            target = os.path.join(self.tmpdir.name, "recording.zip")
+            target = pathlib.Path(self.tmpdir.name, "recording.zip")
             self.info("Downloading %s" % replay_file)
             download_file(replay_file, target)
             replay_file = target
 
         self.info("Setting up the proxy")
+
         command = [
             self.mach_cmd.virtualenv_manager.python_path,
             "-m",
             "mozproxy.driver",
             "--local",
-            "--binary=" + self.mach_cmd.get_binary_path(),
             "--topsrcdir=" + self.mach_cmd.topsrcdir,
             "--objdir=" + self.mach_cmd.topobjdir,
+            "--profiledir=" + self.get_arg("profile-directory"),
         ]
-        if self.get_arg("record"):
-            command.extend(["--record", self.get_arg("record")])
-        elif replay_file:
-            command.append(replay_file)
+
+        if metadata.flavor == "mobile-browser":
+            command.extend(["--tool=%s" % "mitmproxy-android"])
+            command.extend(["--binary=android"])
         else:
-            command.append(os.path.join(HERE, "example.zip"))
+            command.extend(["--tool=%s" % "mitmproxy"])
+            # XXX See bug 1712337, we need a single point where we can get the binary used from
+            command.extend(["--binary=%s" % self.get_arg("browsertime-binary")])
+
+        if self.get_arg("mode") == "record":
+            output = self.get_arg("output")
+            if output is None:
+                output = pathlib.Path(self.mach_cmd.topsrcdir, "artifacts")
+            results_dir = get_output_dir(output)
+
+            command.extend(["--mode", "record"])
+            command.append(str(pathlib.Path(results_dir, replay_file)))
+        elif self.get_arg("mode") == "playback":
+            command.extend(["--mode", "playback"])
+            command.append(str(replay_file))
+        else:
+            raise ValueError("Proxy mode not provided please provide proxy mode")
+
         print(" ".join(command))
         self.output_handler = OutputHandler()
         self.proxy = ProcessHandler(
@@ -136,14 +175,20 @@ class ProxyRunner(Layer):
 
         prefs = {
             "network.proxy.type": 1,
-            "network.proxy.http": "localhost",
+            "network.proxy.http": "127.0.0.1",
             "network.proxy.http_port": port,
-            "network.proxy.ssl": "localhost",
+            "network.proxy.ssl": "127.0.0.1",
             "network.proxy.ssl_port": port,
-            "network.proxy.no_proxies_on": "localhost",
+            "network.proxy.no_proxies_on": "127.0.0.1",
         }
         browser_prefs = metadata.get_options("browser_prefs")
         browser_prefs.update(prefs)
+
+        if metadata.flavor == "mobile-browser":
+            self.info("Setting reverse port fw for android device")
+            device = ADBDevice()
+            device.create_socket_connection("reverse", "tcp:%s" % port, "tcp:%s" % port)
+
         return metadata
 
     def teardown(self):
