@@ -22,7 +22,7 @@ const FILTER_INPUT_DEBOUNCE_MS = 250;
 let timerId = null;
 
 exports.setFilterStringAndRefresh = function(filterString, heapWorker) {
-  return function*({ dispatch, getState }) {
+  return ({ dispatch, getState }) => {
     dispatch(setFilterString(filterString));
 
     if (timerId !== null) {
