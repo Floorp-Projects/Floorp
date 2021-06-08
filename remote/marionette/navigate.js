@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
   Log: "chrome://remote/content/marionette/log.js",
   modal: "chrome://remote/content/marionette/modal.js",
-  PageLoadStrategy: "chrome://remote/content/shared/webdriver/Session.jsm",
+  PageLoadStrategy: "chrome://remote/content/shared/webdriver/Capabilities.jsm",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
   truncate: "chrome://remote/content/marionette/format.js",
 });
