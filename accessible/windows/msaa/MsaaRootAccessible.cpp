@@ -126,6 +126,9 @@ MsaaRootAccessible::get_accFocus(
   // The base implementation reported no focus.
   // Focus might be in a remote document.
   // (The base implementation can't handle this.)
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return S_FALSE;
+  }
   // Get the document in the active tab.
   RootAccessible* rootAcc = RootAcc();
   if (!rootAcc) {
