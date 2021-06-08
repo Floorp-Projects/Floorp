@@ -14,6 +14,7 @@ namespace mozilla {
 namespace a11y {
 class Accessible;
 class DocAccessible;
+class DocAccessibleParent;
 
 class MsaaDocAccessible : public ia2AccessibleHypertext {
  public:
@@ -47,6 +48,12 @@ class MsaaDocAccessible : public ia2AccessibleHypertext {
   }
 
   static MsaaDocAccessible* GetFrom(DocAccessible* aDoc);
+  static MsaaDocAccessible* GetFrom(DocAccessibleParent* aDoc);
+
+  /**
+   * Get the MsaaDocAccessible for the document which owns the given Accessible.
+   */
+  static MsaaDocAccessible* GetFromOwned(Accessible* aAcc);
 
  protected:
   using ia2AccessibleHypertext::ia2AccessibleHypertext;

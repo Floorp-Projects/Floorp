@@ -15,6 +15,7 @@
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/mscom/Interceptor.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "MsaaAccessible.h"
 #include "MsaaDocAccessible.h"
 #include "MsaaRootAccessible.h"
@@ -311,6 +312,9 @@ void MsaaAccessible::FireWinEvent(LocalAccessible* aTarget,
 }
 
 AccessibleWrap* MsaaAccessible::LocalAcc() {
+  if (!mAcc || mAcc->IsRemote() || mAcc->IsProxy()) {
+    return nullptr;
+  }
   auto acc = static_cast<AccessibleWrap*>(mAcc);
   MOZ_ASSERT(!acc || !acc->IsDefunct(),
              "mAcc defunct but MsaaShutdown wasn't called");
@@ -655,15 +659,29 @@ already_AddRefed<IAccessible> MsaaAccessible::GetRemoteIAccessibleFor(
   return nullptr;
 }
 
-IDispatch* MsaaAccessible::NativeAccessible(LocalAccessible* aAccessible) {
+IDispatch* MsaaAccessible::NativeAccessible(Accessible* aAccessible) {
   if (!aAccessible) {
     NS_WARNING("Not passing in an aAccessible");
     return nullptr;
   }
 
-  IAccessible* msaaAccessible = nullptr;
-  aAccessible->GetNativeInterface(reinterpret_cast<void**>(&msaaAccessible));
-  return static_cast<IDispatch*>(msaaAccessible);
+  RefPtr<IDispatch> disp;
+  if (aAccessible->IsProxy()) {
+    MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
+    // This is a RemoteAccessibleWrap. We must use GetNativeInterface in this
+    // case so we return the COM proxy.
+    aAccessible->AsLocal()->GetNativeInterface(getter_AddRefs(disp));
+  } else if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+             aAccessible->IsRemote()) {
+    // This is a RemoteAccessible and caching isn't enabled. We must return
+    // the COM proxy.
+    aAccessible->AsRemote()->GetCOMInterface(getter_AddRefs(disp));
+  } else {
+    disp = MsaaAccessible::GetFrom(aAccessible);
+  }
+  IDispatch* rawDisp;
+  disp.forget(&rawDisp);
+  return rawDisp;
 }
 
 ITypeInfo* MsaaAccessible::GetTI(LCID lcid) {
@@ -683,8 +701,10 @@ ITypeInfo* MsaaAccessible::GetTI(LCID lcid) {
 
 /* static */
 MsaaAccessible* MsaaAccessible::GetFrom(Accessible* aAcc) {
-  // We don't support RemoteAccessible yet.
-  MOZ_ASSERT(aAcc->IsLocal());
+  if (RemoteAccessible* remoteAcc = aAcc->AsRemote()) {
+    MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+    return reinterpret_cast<MsaaAccessible*>(remoteAcc->GetWrapper());
+  }
   return static_cast<AccessibleWrap*>(aAcc)->GetMsaa();
 }
 
