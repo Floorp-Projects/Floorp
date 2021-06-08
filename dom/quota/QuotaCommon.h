@@ -1341,10 +1341,6 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
                                            int32_t aSourceFileLine);
 #endif
 
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
-#  define QM_ENABLE_SCOPED_LOG_EXTRA_INFO
-#endif
-
 struct MOZ_STACK_CLASS ScopedLogExtraInfo {
   static constexpr const char kTagQuery[] = "query";
   static constexpr const char kTagContext[] = "context";
