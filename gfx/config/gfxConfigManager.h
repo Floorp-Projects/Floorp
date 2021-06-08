@@ -50,8 +50,7 @@ class gfxConfigManager {
         mIsNightly(false),
         mIsEarlyBetaOrEarlier(false),
         mSafeMode(false),
-        mIsWin10OrLater(false),
-        mHasWrSoftwareBlocklist(false) {}
+        mIsWin10OrLater(false) {}
 
   void Init();
 
@@ -114,7 +113,6 @@ class gfxConfigManager {
   bool mIsEarlyBetaOrEarlier;
   bool mSafeMode;
   bool mIsWin10OrLater;
-  bool mHasWrSoftwareBlocklist;
 };
 
 }  // namespace gfx
