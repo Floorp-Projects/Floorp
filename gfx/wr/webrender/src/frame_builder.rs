@@ -455,7 +455,7 @@ impl FrameBuilder {
             ROOT_SPATIAL_NODE_INDEX,
         );
         default_dirty_region.add_dirty_region(
-            frame_context.global_screen_world_rect.cast_unit(),
+            frame_context.global_screen_world_rect.to_rect().cast_unit(),
             SubSliceIndex::DEFAULT,
             frame_context.spatial_tree,
         );
@@ -558,7 +558,7 @@ impl FrameBuilder {
         let global_device_pixel_scale = DevicePixelScale::new(1.0);
 
         let output_size = scene.output_rect.size();
-        let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out().to_rect();
+        let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out();
 
         let mut composite_state = CompositeState::new(
             scene.config.compositor_kind,
@@ -726,7 +726,7 @@ impl FrameBuilder {
                     let map_local_to_world = SpaceMapper::new_with_target(
                         ROOT_SPATIAL_NODE_INDEX,
                         tile_cache.spatial_node_index,
-                        ctx.screen_world_rect,
+                        ctx.screen_world_rect.to_rect(),
                         ctx.spatial_tree,
                     );
                     let world_clip_rect = map_local_to_world

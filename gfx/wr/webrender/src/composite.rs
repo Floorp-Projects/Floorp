@@ -1266,7 +1266,7 @@ impl Occluders {
 
         // Get the reference area we will compare against.
         let world_rect = world_rect.round().to_i32();
-        let ref_area = world_rect.size.width * world_rect.size.height;
+        let ref_area = world_rect.area();
 
         // Calculate the non-overlapping area of the valid occluders.
         let cover_area = self.area(z_id, &world_rect);
@@ -1299,10 +1299,10 @@ impl Occluders {
                 // Clip the source rect to the rectangle we care about, since we only
                 // want to record area for the tile we are comparing to.
                 if let Some(rect) = occluder.world_rect.intersection(clip_rect) {
-                    let x0 = rect.origin.x;
-                    let x1 = x0 + rect.size.width;
-                    self.events.push(OcclusionEvent::new(rect.origin.y, OcclusionEventKind::Begin, x0, x1));
-                    self.events.push(OcclusionEvent::new(rect.origin.y + rect.size.height, OcclusionEventKind::End, x0, x1));
+                    let x0 = rect.min.x;
+                    let x1 = x0 + rect.width();
+                    self.events.push(OcclusionEvent::new(rect.min.y, OcclusionEventKind::Begin, x0, x1));
+                    self.events.push(OcclusionEvent::new(rect.min.y + rect.height(), OcclusionEventKind::End, x0, x1));
                 }
             }
         }
