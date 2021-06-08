@@ -17,8 +17,8 @@ import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.selector.findTab
-import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.app.links.AppLinksUseCases
@@ -29,13 +29,14 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -51,7 +52,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
-    private val trackingProtectionOverlayObserver = ViewBoundFeatureWrapper<TrackingProtectionOverlay>()
+    private val trackingProtectionOverlayObserver =
+        ViewBoundFeatureWrapper<TrackingProtectionOverlay>()
 
     private var readerModeAvailable = false
     private var pwaOnboardingObserver: PwaOnboardingObserver? = null
@@ -76,27 +78,38 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             )
         }
 
-        val homeAction = BrowserToolbar.Button(
-            imageDrawable = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_home)!!,
-            contentDescription = requireContext().getString(R.string.browser_toolbar_home),
-            listener = browserToolbarInteractor::onHomeButtonClicked
-        )
+        if (FeatureFlags.showHomeButtonFeature) {
+            val homeAction = BrowserToolbar.Button(
+                imageDrawable = AppCompatResources.getDrawable(
+                    requireContext(),
+                    R.drawable.ic_home
+                )!!,
+                contentDescription = requireContext().getString(R.string.browser_toolbar_home),
+                listener = browserToolbarInteractor::onHomeButtonClicked
+            )
 
-        browserToolbarView.view.addNavigationAction(homeAction)
+            browserToolbarView.view.addNavigationAction(homeAction)
+        }
 
         val readerModeAction =
             BrowserToolbar.ToggleButton(
-                image = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_readermode)!!,
+                image = AppCompatResources.getDrawable(
+                    requireContext(),
+                    R.drawable.ic_readermode
+                )!!,
                 imageSelected =
-                    AppCompatResources.getDrawable(requireContext(), R.drawable.ic_readermode_selected)!!,
+                AppCompatResources.getDrawable(
+                    requireContext(),
+                    R.drawable.ic_readermode_selected
+                )!!,
                 contentDescription = requireContext().getString(R.string.browser_menu_read),
                 contentDescriptionSelected = requireContext().getString(R.string.browser_menu_read_close),
                 visible = {
                     readerModeAvailable
                 },
                 selected = getCurrentTab()?.let {
-                        activity?.components?.core?.store?.state?.findTab(it.id)?.readerState?.active
-                    } ?: false,
+                    activity?.components?.core?.store?.state?.findTab(it.id)?.readerState?.active
+                } ?: false,
                 listener = browserToolbarInteractor::onReaderModePressed
             )
 
@@ -246,7 +259,11 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
-        override fun onCollectionCreated(title: String, sessions: List<TabSessionState>, id: Long?) {
+        override fun onCollectionCreated(
+            title: String,
+            sessions: List<TabSessionState>,
+            id: Long?
+        ) {
             showTabSavedToCollectionSnackbar(sessions.size, true)
         }
 
@@ -254,7 +271,10 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             showTabSavedToCollectionSnackbar(sessions.size)
         }
 
-        private fun showTabSavedToCollectionSnackbar(tabSize: Int, isNewCollection: Boolean = false) {
+        private fun showTabSavedToCollectionSnackbar(
+            tabSize: Int,
+            isNewCollection: Boolean = false
+        ) {
             view?.let { view ->
                 val messageStringRes = when {
                     isNewCollection -> {
@@ -298,8 +318,10 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             context.components.useCases.contextMenuUseCases,
             view,
             FenixSnackbarDelegate(view)
-        ) + ContextMenuCandidate.createOpenInExternalAppCandidate(requireContext(),
-            contextMenuCandidateAppLinksUseCases)
+        ) + ContextMenuCandidate.createOpenInExternalAppCandidate(
+            requireContext(),
+            contextMenuCandidateAppLinksUseCases
+        )
     }
 
     /**
