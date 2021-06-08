@@ -148,7 +148,6 @@ nsCocoaWindow::nsCocoaWindow()
       mAspectRatioLocked(false),
       mNumModalDescendents(0),
       mWindowAnimationBehavior(NSWindowAnimationBehaviorDefault),
-      mWindowAppearance(nsIWidget::WindowAppearance::eSystem),
       mWasShown(false) {
   // Disable automatic tabbing. We need to do this before we
   // orderFront any of our windows.
@@ -551,7 +550,6 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
     // pref.
     mWindow.appearanceSource = MOZGlobalAppearance.sharedInstance;
   }
-  [mWindow setWindowAppearance:mWindowAppearance];
 
   return NS_OK;
 
@@ -2447,15 +2445,6 @@ void nsCocoaWindow::SetDrawsTitle(bool aDrawTitle) {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-/* virtual */ void nsCocoaWindow::SetWindowAppearance(nsIWidget::WindowAppearance aAppearance) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-  mWindowAppearance = aAppearance;
-  [mWindow setWindowAppearance:mWindowAppearance];
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
 nsresult nsCocoaWindow::SetNonClientMargins(LayoutDeviceIntMargin& margins) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
@@ -3249,29 +3238,6 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
 - (BOOL)wantsTitleDrawn {
   return mDrawTitle;
-}
-
-- (void)setWindowAppearance:(nsIWidget::WindowAppearance)aAppearance {
-  if (@available(macOS 10.14, *)) {
-    switch (aAppearance) {
-      case nsIWidget::WindowAppearance::eLight:
-        self.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
-        break;
-      // eDark is currently disabled.
-      // The sheet window background always follows the sheetParent window's
-      // appearance. So we can only use the dark appearance if child sheet
-      // contents use text colors that are compatible with the dark appearance.
-      // But at the moment, sheet documents always use the Light ColorScheme for
-      // their system colors, resulting in black-on-dark text. See bug 1704016.
-      /*case nsIWidget::WindowAppearance::eDark:
-        self.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-        break;*/
-      default:
-        // nil means "inherit effectiveAppearance from self.appearanceSource".
-        self.appearance = nil;
-        break;
-    }
-  }
 }
 
 - (NSView*)trackingAreaView {
