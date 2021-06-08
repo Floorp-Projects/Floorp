@@ -523,12 +523,11 @@ already_AddRefed<nsDocShell> nsDocShell::Create(
   // Create our ContentListener
   ds->mContentListener = new nsDSURIContentListener(ds);
 
-  // If parent intercept is not enabled then we must forward to
-  // the network controller from docshell.  We also enable if we're
-  // in the parent process in order to support non-e10s configurations.
+  // We enable if we're in the parent process in order to support non-e10s
+  // configurations.
   // Note: This check is duplicated in SharedWorkerInterfaceRequestor's
   // constructor.
-  if (!ServiceWorkerParentInterceptEnabled() || XRE_IsParentProcess()) {
+  if (XRE_IsParentProcess()) {
     ds->mInterceptController = new ServiceWorkerInterceptController();
   }
 

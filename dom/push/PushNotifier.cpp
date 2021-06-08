@@ -94,40 +94,6 @@ nsresult PushNotifier::Dispatch(PushDispatcher& aDispatcher) {
     // Always notify XPCOM observers in the parent process.
     Unused << NS_WARN_IF(NS_FAILED(aDispatcher.NotifyObservers()));
 
-    nsTArray<ContentParent*> contentActors;
-    ContentParent::GetAll(contentActors);
-    if (!contentActors.IsEmpty() && !ServiceWorkerParentInterceptEnabled()) {
-      // At least one content process is active, so e10s must be enabled.
-      // Broadcast a message to notify observers and service workers.
-      for (uint32_t i = 0; i < contentActors.Length(); ++i) {
-        // We need to filter based on process type, only "web" AKA the default
-        // remote type is acceptable. This should not run when Fission is
-        // enabled, and we specifically don't want this for
-        // LARGE_ALLOCATION_REMOTE_TYPE, so don't use IsWebRemoteType().
-        if (contentActors[i]->GetRemoteType() != DEFAULT_REMOTE_TYPE) {
-          continue;
-        }
-
-        // Ensure that the content actor has the permissions avaliable for the
-        // principal the push is being sent for before sending the push message
-        // down.
-        Unused << contentActors[i]->TransmitPermissionsForPrincipal(
-            aDispatcher.GetPrincipal());
-        if (aDispatcher.SendToChild(contentActors[i])) {
-          // Only send the push message to the first content process to avoid
-          // multiple SWs showing the same notification. See bug 1300112.
-          break;
-        }
-      }
-      return NS_OK;
-    }
-
-    if (BrowserTabsRemoteAutostart() &&
-        !ServiceWorkerParentInterceptEnabled()) {
-      // e10s is enabled, but no content processes are active.
-      return aDispatcher.HandleNoChildProcesses();
-    }
-
     // e10s is disabled; notify workers in the parent.
     return aDispatcher.NotifyWorkers();
   }
@@ -266,15 +232,9 @@ bool PushDispatcher::ShouldNotifyWorkers() {
     return true;
   }
 
-  // If parent intercept is enabled, then we only want to notify in the parent
-  // process. Otherwise, we only want to notify in the child process.
+  // We only want to notify in the parent process.
   bool isContentProcess = XRE_GetProcessType() == GeckoProcessType_Content;
-  bool parentInterceptEnabled = ServiceWorkerParentInterceptEnabled();
-  if (parentInterceptEnabled) {
-    return !isContentProcess;
-  }
-
-  return isContentProcess;
+  return !isContentProcess;
 }
 
 nsresult PushDispatcher::DoNotifyObservers(nsISupports* aSubject,
