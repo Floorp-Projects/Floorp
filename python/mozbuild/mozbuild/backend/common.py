@@ -46,10 +46,7 @@ from mozbuild.frontend.data import (
     XPCOMComponentManifests,
     WebIDLCollection,
 )
-from mozbuild.jar import (
-    DeprecatedJarManifest,
-    JarManifestParser,
-)
+from mozbuild.jar import DeprecatedJarManifest, JarManifestParser
 from mozbuild.preprocessor import Preprocessor
 from mozpack.chrome.manifest import parse_manifest_line
 
@@ -235,9 +232,7 @@ class CommonBackend(BuildBackend):
 
         # Write out a file listing generated sources.
         with self._write_file(mozpath.join(topobjdir, "generated-sources.json")) as fh:
-            d = {
-                "sources": sorted(self._generated_sources),
-            }
+            d = {"sources": sorted(self._generated_sources)}
             json.dump(d, fh, sort_keys=True, indent=4)
 
     def _expand_libs(self, input_bin):
@@ -406,9 +401,7 @@ class CommonBackend(BuildBackend):
 
         # The code generators read their configuration from this file, so it
         # needs to be written early.
-        o = dict(
-            manifests=sorted(manifests.all_sources()),
-        )
+        o = dict(manifests=sorted(manifests.all_sources()))
 
         conf_file = mozpath.join(components_dir, "manifest-lists.json")
         with self._write_file(conf_file) as fh:
@@ -490,16 +483,13 @@ class CommonBackend(BuildBackend):
             pp.context.update(obj.defines.defines)
         pp.context.update(self.environment.defines)
         ab_cd = obj.config.substs["MOZ_UI_LOCALE"][0]
-        pp.context.update(
-            AB_CD=ab_cd,
-        )
+        pp.context.update(AB_CD=ab_cd)
         pp.out = JarManifestParser()
         try:
             pp.do_include(obj.path.full_path)
         except DeprecatedJarManifest as e:
             raise DeprecatedJarManifest(
-                "Parsing error while processing %s: %s"
-                % (obj.path.full_path, e.message)
+                "Parsing error while processing %s: %s" % (obj.path.full_path, e)
             )
         self.backend_input_files |= pp.includes
 

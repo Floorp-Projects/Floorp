@@ -192,7 +192,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         try:
             kwargs = run.setup_wptrunner(venv, **kwargs)
         except run.WptrunError as e:
-            print(e.message, file=sys.stderr)
+            print(e, file=sys.stderr)
             sys.exit(1)
 
         # This is kind of a hack; override the metadata paths so we don't use
