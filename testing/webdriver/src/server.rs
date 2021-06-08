@@ -133,12 +133,10 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
                     ),
                     command: WebDriverCommand::DeleteSession,
                 };
-                self.handler
-                    .handle_command(&self.session, delete_session)
-                    .map_or_else(
-                        |_| SessionTeardownKind::Deleted,
-                        |_| SessionTeardownKind::NotDeleted,
-                    )
+                match self.handler.handle_command(&self.session, delete_session) {
+                    Ok(_) => SessionTeardownKind::Deleted,
+                    Err(_) => SessionTeardownKind::NotDeleted,
+                }
             }
             _ => kind,
         };
