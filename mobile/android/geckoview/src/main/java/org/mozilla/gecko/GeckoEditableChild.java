@@ -231,10 +231,14 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
     }
 
     @WrapForJNI(calledFrom = "gecko", exceptionMode = "ignore")
-    private void onSelectionChange(final int start, final int end) throws RemoteException {
+    private void onSelectionChange(final int start, final int end, final boolean causedOnlyByComposition)
+            throws RemoteException {
         if (DEBUG) {
             ThreadUtils.assertOnGeckoThread();
-            Log.d(LOGTAG, "onSelectionChange(" + start + ", " + end + ")");
+            final StringBuilder sb = new StringBuilder("onSelectionChange(");
+            sb.append(start).append(", ").append(end).append(", ")
+                .append(causedOnlyByComposition).append(")");
+            Log.d(LOGTAG, sb.toString());
         }
         if (!hasEditableParent()) {
             return;
@@ -247,7 +251,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
             throw new IllegalArgumentException("invalid selection notification range");
         }
 
-        mEditableParent.onSelectionChange(mEditableChild.asBinder(), start, end);
+        mEditableParent.onSelectionChange(mEditableChild.asBinder(), start, end, causedOnlyByComposition);
     }
 
     @WrapForJNI(calledFrom = "gecko", exceptionMode = "ignore")
