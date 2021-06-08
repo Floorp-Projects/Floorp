@@ -254,6 +254,10 @@ class AudioInputTrack : public ProcessedMediaTrack {
   // Only accessed on the graph thread.
   RefPtr<AudioInputProcessing> mInputProcessing;
 
+  // Only accessed on the main thread. Link to the track producing raw audio
+  // input data. Graph thread should use mInputs to get the source
+  RefPtr<MediaInputPort> mPort;
+
   // Only accessed on the main thread. Used for bookkeeping on main thread, such
   // that CloseAudioInput can be idempotent.
   // XXX Should really be a CubebUtils::AudioDeviceID, but they aren't
