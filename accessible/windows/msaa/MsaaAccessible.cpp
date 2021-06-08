@@ -90,20 +90,14 @@ void MsaaAccessible::MsaaShutdown() {
     return;
   }
 
-  // We don't support RemoteAccessible yet.
-  MOZ_ASSERT(mAcc->IsLocal());
-  if (mAcc->AsLocal()->IsProxy()) {
+  if (mAcc->IsProxy()) {
     // For RemoteAccessibleWrap, we just need to clear mAcc.
     mAcc = nullptr;
     return;
   }
 
   if (mID != kNoID) {
-    // Don't use LocalAcc() here because it requires that the Accessible is
-    // not defunct. When shutting down, the Accessible might already be
-    // marked defunct. It's safe for us to call LocalAccessible::Document() here
-    // regardless.
-    auto doc = MsaaDocAccessible::GetFrom(mAcc->AsLocal()->Document());
+    auto doc = MsaaDocAccessible::GetFromOwned(mAcc);
     MOZ_ASSERT(doc);
     doc->RemoveID(mID);
   }
@@ -134,12 +128,11 @@ void MsaaAccessible::MsaaShutdown() {
 }
 
 void MsaaAccessible::SetID(uint32_t aID) {
-  MOZ_ASSERT(XRE_IsParentProcess() && mAcc && mAcc->IsLocal() &&
-             mAcc->AsLocal()->IsProxy());
+  MOZ_ASSERT(XRE_IsParentProcess() && mAcc && mAcc->IsProxy());
   mID = aID;
 }
 
-int32_t MsaaAccessible::GetChildIDFor(LocalAccessible* aAccessible) {
+int32_t MsaaAccessible::GetChildIDFor(Accessible* aAccessible) {
   // A child ID of the window is required, when we use NotifyWinEvent,
   // so that the 3rd party application can call back and get the IAccessible
   // the event occurred on.
@@ -155,16 +148,16 @@ int32_t MsaaAccessible::GetChildIDFor(LocalAccessible* aAccessible) {
     return id;
   }
 
-  if (!aAccessible->Document()) return 0;
+  auto doc = MsaaDocAccessible::GetFromOwned(aAccessible);
+  if (!doc) {
+    return 0;
+  }
 
   uint32_t* id = &MsaaAccessible::GetFrom(aAccessible)->mID;
   if (*id != kNoID) return *id;
 
   *id = sIDGen.GetID();
-
-  MOZ_ASSERT(!aAccessible->IsProxy());
-  auto doc = MsaaDocAccessible::GetFrom(aAccessible->Document());
-  doc->AddID(*id, static_cast<AccessibleWrap*>(aAccessible));
+  doc->AddID(*id, aAccessible);
 
   return *id;
 }
@@ -379,14 +372,13 @@ MsaaAccessible::ResolveChild(const VARIANT& aVarChild,
 
 static LocalAccessible* GetAccessibleInSubtree(DocAccessible* aDoc,
                                                uint32_t aID) {
-  LocalAccessible* child =
-      MsaaDocAccessible::GetFrom(aDoc)->GetAccessibleByID(aID);
-  if (child) return child;
+  Accessible* child = MsaaDocAccessible::GetFrom(aDoc)->GetAccessibleByID(aID);
+  if (child) return child->AsLocal();
 
   uint32_t childDocCount = aDoc->ChildDocumentCount();
   for (uint32_t i = 0; i < childDocCount; i++) {
     child = GetAccessibleInSubtree(aDoc->GetChildDocumentAt(i), aID);
-    if (child) return child;
+    if (child) return child->AsLocal();
   }
 
   return nullptr;
