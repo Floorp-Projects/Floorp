@@ -15,4 +15,8 @@
 #  define QM_ERROR_STACKS_ENABLED
 #endif
 
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+#  define QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+#endif
+
 #endif  // DOM_QUOTA_CONFIG_H_
