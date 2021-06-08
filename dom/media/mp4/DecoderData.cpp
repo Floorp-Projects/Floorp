@@ -74,8 +74,9 @@ static MediaResult UpdateTrackProtectedInfo(mozilla::TrackInfo& aConfig,
 //   sample description entry)
 // - That only a single codec is used across all sample infos, as we don't
 //   handle multiple.
-// - That only a single sample info contains crypto info, as we don't handle
-//  multiple.
+// - If more than one sample information structures contain crypto info. This
+//   case is not fatal (we don't return an error), but does record telemetry
+//   to help judge if we need more handling in gecko for multiple crypto.
 //
 // Telemetry is also recorded on the above. As of writing, the
 // telemetry is recorded to give us early warning if MP4s exist that we're not
@@ -129,13 +130,6 @@ static MediaResult VerifyAudioOrVideoInfoAndRecordTelemetry(
         RESULT_DETAIL("Multiple codecs encountered while verifying track."));
   }
 
-  if (hasMultipleCrypto) {
-    // Multiple crypto entries found. We don't handle this.
-    return MediaResult(
-        NS_ERROR_DOM_MEDIA_METADATA_ERR,
-        RESULT_DETAIL(
-            "Multiple crypto info encountered while verifying track."));
-  }
   return NS_OK;
 }
 
