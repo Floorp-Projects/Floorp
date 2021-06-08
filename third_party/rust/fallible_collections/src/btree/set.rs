@@ -253,6 +253,7 @@ impl<T: Ord> BTreeSet<T> {
     /// let mut set: BTreeSet<i32> = BTreeSet::new();
     /// ```
 
+    #[inline]
     pub fn new() -> BTreeSet<T> {
         BTreeSet {
             map: BTreeMap::new(),
@@ -282,6 +283,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert_eq!(Some(&5), set.range(4..).next());
     /// ```
 
+    #[inline]
     pub fn range<K: ?Sized, R>(&self, range: R) -> Range<'_, T>
     where
         K: Ord,
@@ -357,6 +359,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert_eq!(sym_diff, [1, 3]);
     /// ```
 
+    #[inline]
     pub fn symmetric_difference<'a>(
         &'a self,
         other: &'a BTreeSet<T>,
@@ -434,6 +437,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert_eq!(union, [1, 2]);
     /// ```
 
+    #[inline]
     pub fn union<'a>(&'a self, other: &'a BTreeSet<T>) -> Union<'a, T> {
         Union {
             a: self.iter().peekable(),
@@ -454,6 +458,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert!(v.is_empty());
     /// ```
 
+    #[inline(always)]
     pub fn clear(&mut self) {
         self.map.clear()
     }
@@ -474,6 +479,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert_eq!(set.contains(&4), false);
     /// ```
 
+    #[inline(always)]
     pub fn contains<Q: ?Sized>(&self, value: &Q) -> bool
     where
         T: Borrow<Q>,
@@ -498,6 +504,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert_eq!(set.get(&4), None);
     /// ```
 
+    #[inline(always)]
     pub fn get<Q: ?Sized>(&self, value: &Q) -> Option<&T>
     where
         T: Borrow<Q>,
@@ -524,6 +531,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert_eq!(a.is_disjoint(&b), false);
     /// ```
 
+    #[inline]
     pub fn is_disjoint(&self, other: &BTreeSet<T>) -> bool {
         self.intersection(other).next().is_none()
     }
@@ -608,6 +616,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert_eq!(set.is_superset(&sub), true);
     /// ```
 
+    #[inline(always)]
     pub fn is_superset(&self, other: &BTreeSet<T>) -> bool {
         other.is_subset(self)
     }
@@ -633,6 +642,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert_eq!(set.len(), 1);
     /// ```
 
+    #[inline]
     pub fn try_insert(&mut self, value: T) -> Result<bool, TryReserveError> {
         Ok(self.map.try_insert(value, ())?.is_none())
     }
@@ -653,6 +663,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert_eq!(set.get(&[][..]).unwrap().capacity(), 10);
     /// ```
 
+    #[inline]
     pub fn replace(&mut self, value: T) -> Result<Option<T>, TryReserveError> {
         Ok(Recover::replace(&mut self.map, value)?)
     }
@@ -676,6 +687,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert_eq!(set.remove(&2), false);
     /// ```
 
+    #[inline(always)]
     pub fn remove<Q: ?Sized>(&mut self, value: &Q) -> bool
     where
         T: Borrow<Q>,
@@ -700,6 +712,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert_eq!(set.take(&2), None);
     /// ```
 
+    #[inline(always)]
     pub fn take<Q: ?Sized>(&mut self, value: &Q) -> Option<T>
     where
         T: Borrow<Q>,
@@ -737,6 +750,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert!(a.contains(&5));
     /// ```
 
+    #[inline(always)]
     pub fn append(&mut self, other: &mut Self) {
         self.map.append(&mut other.map);
     }
@@ -771,6 +785,7 @@ impl<T: Ord> BTreeSet<T> {
     /// assert!(b.contains(&41));
     /// ```
 
+    #[inline]
     pub fn try_split_off<Q: ?Sized + Ord>(&mut self, key: &Q) -> Result<Self, TryReserveError>
     where
         T: Borrow<Q>,
@@ -810,6 +825,7 @@ impl<T> BTreeSet<T> {
     /// assert_eq!(set_iter.next(), None);
     /// ```
 
+    #[inline(always)]
     pub fn iter(&self) -> Iter<'_, T> {
         Iter {
             iter: self.map.keys(),
@@ -829,6 +845,7 @@ impl<T> BTreeSet<T> {
     /// assert_eq!(v.len(), 1);
     /// ```
 
+    #[inline(always)]
     pub fn len(&self) -> usize {
         self.map.len()
     }
@@ -846,12 +863,14 @@ impl<T> BTreeSet<T> {
     /// assert!(!v.is_empty());
     /// ```
 
+    #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 }
 
 impl<T: Ord> FromIterator<T> for BTreeSet<T> {
+    #[inline]
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> BTreeSet<T> {
         let mut set = BTreeSet::new();
         set.extend(iter);
@@ -875,6 +894,7 @@ impl<T> IntoIterator for BTreeSet<T> {
     /// let v: Vec<_> = set.into_iter().collect();
     /// assert_eq!(v, [1, 2, 3, 4]);
     /// ```
+    #[inline(always)]
     fn into_iter(self) -> IntoIter<T> {
         IntoIter {
             iter: self.map.into_iter(),
@@ -886,6 +906,7 @@ impl<'a, T> IntoIterator for &'a BTreeSet<T> {
     type Item = &'a T;
     type IntoIter = Iter<'a, T>;
 
+    #[inline(always)]
     fn into_iter(self) -> Iter<'a, T> {
         self.iter()
     }
@@ -901,6 +922,7 @@ impl<T: Ord> Extend<T> for BTreeSet<T> {
 }
 
 impl<'a, T: 'a + Ord + Copy> Extend<&'a T> for BTreeSet<T> {
+    #[inline]
     fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {
         self.extend(iter.into_iter().cloned());
     }
@@ -908,6 +930,7 @@ impl<'a, T: 'a + Ord + Copy> Extend<&'a T> for BTreeSet<T> {
 
 impl<T: Ord> Default for BTreeSet<T> {
     /// Makes an empty `BTreeSet<T>` with a reasonable choice of B.
+    #[inline(always)]
     fn default() -> BTreeSet<T> {
         BTreeSet::new()
     }
@@ -1008,6 +1031,7 @@ impl<T: Debug> Debug for BTreeSet<T> {
 }
 
 impl<T> Clone for Iter<'_, T> {
+    #[inline(always)]
     fn clone(&self) -> Self {
         Iter {
             iter: self.iter.clone(),
@@ -1018,21 +1042,26 @@ impl<T> Clone for Iter<'_, T> {
 impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
 
+    #[inline(always)]
     fn next(&mut self) -> Option<&'a T> {
         self.iter.next()
     }
+
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
 }
 
 impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
+    #[inline(always)]
     fn next_back(&mut self) -> Option<&'a T> {
         self.iter.next_back()
     }
 }
 
 impl<T> ExactSizeIterator for Iter<'_, T> {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.iter.len()
     }
@@ -1043,21 +1072,26 @@ impl<T> FusedIterator for Iter<'_, T> {}
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
 
+    #[inline]
     fn next(&mut self) -> Option<T> {
         self.iter.next().map(|(k, _)| k)
     }
+
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
 }
 
 impl<T> DoubleEndedIterator for IntoIter<T> {
+    #[inline]
     fn next_back(&mut self) -> Option<T> {
         self.iter.next_back().map(|(k, _)| k)
     }
 }
 
 impl<T> ExactSizeIterator for IntoIter<T> {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.iter.len()
     }
@@ -1066,6 +1100,7 @@ impl<T> ExactSizeIterator for IntoIter<T> {
 impl<T> FusedIterator for IntoIter<T> {}
 
 impl<T> Clone for Range<'_, T> {
+    #[inline(always)]
     fn clone(&self) -> Self {
         Range {
             iter: self.iter.clone(),
@@ -1076,12 +1111,14 @@ impl<T> Clone for Range<'_, T> {
 impl<'a, T> Iterator for Range<'a, T> {
     type Item = &'a T;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a T> {
         self.iter.next().map(|(k, _)| k)
     }
 }
 
 impl<'a, T> DoubleEndedIterator for Range<'a, T> {
+    #[inline]
     fn next_back(&mut self) -> Option<&'a T> {
         self.iter.next_back().map(|(k, _)| k)
     }
@@ -1201,6 +1238,7 @@ impl<'a, T: Ord> Iterator for SymmetricDifference<'a, T> {
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (0, Some(self.a.len() + self.b.len()))
     }
@@ -1262,6 +1300,7 @@ impl<'a, T: Ord> Iterator for Intersection<'a, T> {
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let min_len = match &self.inner {
             IntersectionInner::Stitch { small_iter, .. } => small_iter.len(),
@@ -1274,6 +1313,7 @@ impl<'a, T: Ord> Iterator for Intersection<'a, T> {
 impl<T: Ord> FusedIterator for Intersection<'_, T> {}
 
 impl<T> Clone for Union<'_, T> {
+    #[inline]
     fn clone(&self) -> Self {
         Union {
             a: self.a.clone(),

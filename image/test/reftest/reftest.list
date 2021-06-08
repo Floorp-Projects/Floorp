@@ -37,6 +37,9 @@ include gif/reftest.list
 # APNG tests
 include apng/reftest.list
 
+# AVIF tests
+include avif/reftest.list
+
 # Generic image tests
 include generic/reftest.list
 

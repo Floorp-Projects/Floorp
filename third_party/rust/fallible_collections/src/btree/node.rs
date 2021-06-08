@@ -228,7 +228,7 @@ impl<K, V> Root<K, V> {
 
     pub fn new_leaf() -> Result<Self, TryReserveError> {
         Ok(Root {
-            node: BoxedNode::from_leaf(Box::try_new(unsafe { LeafNode::new() })?),
+            node: BoxedNode::from_leaf(<Box<_> as FallibleBox<_>>::try_new(unsafe { LeafNode::new() })?),
             height: 0,
         })
     }
@@ -266,7 +266,7 @@ impl<K, V> Root<K, V> {
         &mut self,
     ) -> Result<NodeRef<marker::Mut<'_>, K, V, marker::Internal>, TryReserveError> {
         debug_assert!(!self.is_shared_root());
-        let mut new_node = Box::try_new(unsafe { InternalNode::new() })?;
+        let mut new_node = <Box<_> as FallibleBox<_>>::try_new(unsafe { InternalNode::new() })?;
         new_node.edges[0].write(unsafe { BoxedNode::from_ptr(self.node.as_ptr()) });
 
         self.node = BoxedNode::from_internal(new_node);
@@ -1193,7 +1193,7 @@ impl<'a, K, V> Handle<NodeRef<marker::Mut<'a>, K, V, marker::Leaf>, marker::KV> 
     > {
         debug_assert!(!self.node.is_shared_root());
         unsafe {
-            let mut new_node = Box::try_new(LeafNode::new())?;
+            let mut new_node = <Box<_> as FallibleBox<_>>::try_new(LeafNode::new())?;
 
             let k = ptr::read(self.node.keys().get_unchecked(self.idx));
             let v = ptr::read(self.node.vals().get_unchecked(self.idx));
@@ -1265,7 +1265,7 @@ impl<'a, K, V> Handle<NodeRef<marker::Mut<'a>, K, V, marker::Internal>, marker::
         TryReserveError,
     > {
         unsafe {
-            let mut new_node = Box::try_new(InternalNode::new())?;
+            let mut new_node = <Box<_> as FallibleBox<_>>::try_new(InternalNode::new())?;
 
             let k = ptr::read(self.node.keys().get_unchecked(self.idx));
             let v = ptr::read(self.node.vals().get_unchecked(self.idx));

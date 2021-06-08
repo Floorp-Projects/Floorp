@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "fallible_collections"
-version = "0.3.1"
+version = "0.4.2"
 authors = ["vcombey <vcombey@student.42.fr>"]
 description = "a crate which adds fallible allocation api to std collections"
 readme = "README.md"
