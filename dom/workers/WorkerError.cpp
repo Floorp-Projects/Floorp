@@ -116,26 +116,13 @@ class ReportErrorRunnable final : public WorkerDebuggeeRunnable {
       // worker error reporting will crash.  Instead, pass the error to
       // the ServiceWorkerManager to report on any controlled documents.
       if (aWorkerPrivate->IsServiceWorker()) {
-        if (ServiceWorkerParentInterceptEnabled()) {
-          RefPtr<RemoteWorkerChild> actor(
-              aWorkerPrivate->GetRemoteWorkerControllerWeakRef());
+        RefPtr<RemoteWorkerChild> actor(
+            aWorkerPrivate->GetRemoteWorkerControllerWeakRef());
 
-          Unused << NS_WARN_IF(!actor);
+        Unused << NS_WARN_IF(!actor);
 
-          if (actor) {
-            actor->ErrorPropagationOnMainThread(nullptr, false);
-          }
-
-        } else {
-          RefPtr<ServiceWorkerManager> swm =
-              ServiceWorkerManager::GetInstance();
-          if (swm) {
-            swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
-                             aWorkerPrivate->ServiceWorkerScope(),
-                             aWorkerPrivate->ScriptURL(), u""_ns, u""_ns,
-                             u""_ns, 0, 0, nsIScriptError::errorFlag,
-                             JSEXN_ERR);
-          }
+        if (actor) {
+          actor->ErrorPropagationOnMainThread(nullptr, false);
         }
 
         return true;
@@ -208,24 +195,13 @@ class ReportGenericErrorRunnable final : public WorkerDebuggeeRunnable {
     }
 
     if (aWorkerPrivate->IsServiceWorker()) {
-      if (ServiceWorkerParentInterceptEnabled()) {
-        RefPtr<RemoteWorkerChild> actor(
-            aWorkerPrivate->GetRemoteWorkerControllerWeakRef());
+      RefPtr<RemoteWorkerChild> actor(
+          aWorkerPrivate->GetRemoteWorkerControllerWeakRef());
 
-        Unused << NS_WARN_IF(!actor);
+      Unused << NS_WARN_IF(!actor);
 
-        if (actor) {
-          actor->ErrorPropagationOnMainThread(nullptr, false);
-        }
-
-      } else {
-        RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-        if (swm) {
-          swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
-                           aWorkerPrivate->ServiceWorkerScope(),
-                           aWorkerPrivate->ScriptURL(), u""_ns, u""_ns, u""_ns,
-                           0, 0, nsIScriptError::errorFlag, JSEXN_ERR);
-        }
+      if (actor) {
+        actor->ErrorPropagationOnMainThread(nullptr, false);
       }
 
       return true;

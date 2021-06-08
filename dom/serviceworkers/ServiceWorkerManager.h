@@ -219,9 +219,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
       const ClientInfo& aClientInfo,
       const ServiceWorkerDescriptor& aServiceWorker);
 
-  void SetSkipWaitingFlag(nsIPrincipal* aPrincipal, const nsCString& aScope,
-                          uint64_t aServiceWorkerID);
-
   static already_AddRefed<ServiceWorkerManager> GetInstance();
 
   void LoadRegistration(const ServiceWorkerRegistrationData& aRegistration);
