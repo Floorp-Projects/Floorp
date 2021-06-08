@@ -172,7 +172,7 @@ void GeckoViewHistory::QueryVisitedStateInParentProcess(
     }
   }
 
-  for (const NewURIEntry& entry : newEntries) {
+  for (NewURIEntry& entry : newEntries) {
     QueryVisitedState(entry.mWidget, std::move(entry.mURIs));
   }
 }
@@ -344,8 +344,8 @@ GeckoViewHistory::SetURITitle(nsIURI* aURI, const nsAString& aTitle) {
 class GetVisitedCallback final : public nsIAndroidEventCallback {
  public:
   explicit GetVisitedCallback(GeckoViewHistory* aHistory,
-                              const nsTArray<RefPtr<nsIURI>>& aURIs)
-      : mHistory(aHistory), mURIs(aURIs.Clone()) {}
+                              nsTArray<RefPtr<nsIURI>>&& aURIs)
+      : mHistory(aHistory), mURIs(std::move(aURIs)) {}
 
   NS_DECL_ISUPPORTS
 
@@ -426,8 +426,8 @@ NS_IMPL_ISUPPORTS(GetVisitedCallback, nsIAndroidEventCallback)
  * is always called in the parent process: from `GetVisited` in non-e10s, and
  * from `ContentParent::RecvGetVisited` in e10s.
  */
-void GeckoViewHistory::QueryVisitedState(
-    nsIWidget* aWidget, const nsTArray<RefPtr<nsIURI>>&& aURIs) {
+void GeckoViewHistory::QueryVisitedState(nsIWidget* aWidget,
+                                         nsTArray<RefPtr<nsIURI>>&& aURIs) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<nsWindow> window = nsWindow::From(aWidget);
   if (NS_WARN_IF(!window)) {
@@ -465,7 +465,7 @@ void GeckoViewHistory::QueryVisitedState(
   auto bundle = java::GeckoBundle::New(bundleKeys, bundleValues);
 
   nsCOMPtr<nsIAndroidEventCallback> callback =
-      new GetVisitedCallback(this, aURIs);
+      new GetVisitedCallback(this, std::move(aURIs));
 
   Unused << NS_WARN_IF(
       NS_FAILED(dispatcher->Dispatch(kGetVisitedMessage, bundle, callback)));
