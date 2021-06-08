@@ -1098,55 +1098,14 @@ void AudioInputProcessing::ProcessInput(MediaTrackGraphImpl* aGraph,
     if (aSegment) {
       mSegment.AppendSegment(aSegment, mPrincipal);
     } else {
-      InsertInGraph(aGraph, inputInfo.mBuffer, inputInfo.mFrames,
-                    inputInfo.mChannels);
+      mSegment.AppendFromInterleavedBuffer(inputInfo.mBuffer, inputInfo.mFrames,
+                                           inputInfo.mChannels, mPrincipal);
     }
   } else {
     MOZ_ASSERT(aGraph->GraphRate() == inputInfo.mRate);
     PacketizeAndProcess(aGraph, inputInfo.mBuffer, inputInfo.mFrames,
                         inputInfo.mRate, inputInfo.mChannels);
   }
-}
-
-template <typename T>
-void AudioInputProcessing::InsertInGraph(MediaTrackGraphImpl* aGraph,
-                                         const T* aBuffer, size_t aFrames,
-                                         uint32_t aChannels) {
-  if (mEnded) {
-    return;
-  }
-
-  MOZ_ASSERT(aChannels >= 1 && aChannels <= 8, "Support up to 8 channels");
-
-  CheckedInt<size_t> bufferSize(sizeof(T));
-  bufferSize *= aFrames;
-  bufferSize *= aChannels;
-  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
-  AutoTArray<const T*, 8> channels;
-  if (aChannels == 1) {
-    PodCopy(static_cast<T*>(buffer->Data()), aBuffer, aFrames);
-    channels.AppendElement(static_cast<T*>(buffer->Data()));
-  } else {
-    channels.SetLength(aChannels);
-    AutoTArray<T*, 8> write_channels;
-    write_channels.SetLength(aChannels);
-    T* samples = static_cast<T*>(buffer->Data());
-
-    size_t offset = 0;
-    for (uint32_t i = 0; i < aChannels; ++i) {
-      channels[i] = write_channels[i] = samples + offset;
-      offset += aFrames;
-    }
-
-    DeinterleaveAndConvertBuffer(aBuffer, aFrames, aChannels,
-                                 write_channels.Elements());
-  }
-
-  LOG_FRAME("AudioInputProcessing %p Appending %zu frames of raw audio", this,
-            aFrames);
-
-  MOZ_ASSERT(aChannels == channels.Length());
-  mSegment.AppendFrames(buffer.forget(), channels, aFrames, mPrincipal);
 }
 
 void AudioInputProcessing::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {

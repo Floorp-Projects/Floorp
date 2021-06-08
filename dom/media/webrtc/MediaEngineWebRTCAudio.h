@@ -166,10 +166,6 @@ class AudioInputProcessing : public AudioDataListener {
   // aSegment stores the unprocessed non-interleaved audio input data from mic
   void ProcessInput(MediaTrackGraphImpl* aGraph, const AudioSegment* aSegment);
 
-  template <typename T>
-  void InsertInGraph(MediaTrackGraphImpl* aGraph, const T* aBuffer,
-                     size_t aFrames, uint32_t aChannels);
-
   void PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
                            const AudioDataValue* aBuffer, size_t aFrames,
                            TrackRate aRate, uint32_t aChannels);
