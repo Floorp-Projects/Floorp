@@ -2643,17 +2643,6 @@ void ContentChild::PreallocInit() {
 // for telemetry.
 const nsACString& ContentChild::GetRemoteType() const { return mRemoteType; }
 
-mozilla::ipc::IPCResult ContentChild::RecvInitServiceWorkers(
-    const ServiceWorkerConfiguration& aConfig) {
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm) {
-    // browser shutdown began
-    return IPC_OK();
-  }
-  swm->LoadRegistrations(aConfig.serviceWorkerRegistrations());
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvInitBlobURLs(
     nsTArray<BlobURLRegistrationData>&& aRegistrations) {
   for (uint32_t i = 0; i < aRegistrations.Length(); ++i) {

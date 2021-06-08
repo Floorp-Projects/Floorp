@@ -19,8 +19,6 @@
 namespace mozilla {
 namespace dom {
 
-bool ServiceWorkerParentInterceptEnabled() { return true; }
-
 bool ServiceWorkerRegistrationDataIsValid(
     const ServiceWorkerRegistrationData& aData) {
   return !aData.scope().IsEmpty() && !aData.currentWorkerURL().IsEmpty() &&
