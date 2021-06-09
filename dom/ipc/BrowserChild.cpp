@@ -1536,8 +1536,12 @@ BrowserChild::GetChildToParentConversionMatrix() const {
   return LayoutDeviceToLayoutDeviceMatrix4x4::Translation(offset);
 }
 
-ScreenRect BrowserChild::GetTopLevelViewportVisibleRectInBrowserCoords() const {
-  return mTopLevelViewportVisibleRectInBrowserCoords;
+Maybe<ScreenRect> BrowserChild::GetTopLevelViewportVisibleRectInBrowserCoords()
+    const {
+  if (!mChildToParentConversionMatrix) {
+    return Nothing();
+  }
+  return Some(mTopLevelViewportVisibleRectInBrowserCoords);
 }
 
 void BrowserChild::FlushAllCoalescedMouseData() {
