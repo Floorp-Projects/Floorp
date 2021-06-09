@@ -25,7 +25,7 @@ ConnectionEntry::~ConnectionEntry() {
 
   MOZ_ASSERT(!mIdleConns.Length());
   MOZ_ASSERT(!mActiveConns.Length());
-  MOZ_ASSERT(!mDnsAndConnectSockets.Length());
+  MOZ_DIAGNOSTIC_ASSERT(!mDnsAndConnectSockets.Length());
   MOZ_ASSERT(!PendingQueueLength());
   MOZ_ASSERT(!UrgentStartQueueLength());
   MOZ_ASSERT(!mDoNotDestroy);
@@ -962,7 +962,10 @@ nsresult ConnectionEntry::CreateDnsAndConnectSocket(
   }
 
   nsresult rv = sock->Init(this);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    sock->Abandon();
+    return rv;
+  }
 
   InsertIntoDnsAndConnectSockets(sock);
 

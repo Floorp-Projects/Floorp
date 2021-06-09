@@ -78,6 +78,10 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
   void Unclaim();
 
  private:
+  // This performs checks that the DnsAndConnectSocket has been properly cleand
+  // up.
+  void CheckIsDone();
+
   /**
    * State:
    *   INIT: initial state. From this state:
