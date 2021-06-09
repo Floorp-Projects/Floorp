@@ -4333,9 +4333,11 @@ Toolbox.prototype = {
         }
       }
 
+      // Only consider top level document, and ignore remote iframes top document
       if (
         resource.resourceType === this.resourceCommand.TYPES.DOCUMENT_EVENT &&
-        resource.name === "will-navigate"
+        resource.name === "will-navigate" &&
+        resource.targetFront.isTopLevel
       ) {
         this._onWillNavigate();
         // While we will call `setErrorCount(0)` from onWillNavigate, we also need to reset

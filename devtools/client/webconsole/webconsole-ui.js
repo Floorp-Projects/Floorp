@@ -377,6 +377,25 @@ class WebConsoleUI {
     );
   }
 
+  handleDocumentEvent(resource) {
+    // Only consider top level document, and ignore remote iframes top document
+    if (!resource.targetFront.isTopLevel) {
+      return;
+    }
+
+    if (resource.name == "will-navigate") {
+      this.handleWillNavigate({
+        timeStamp: resource.time,
+        url: resource.newURI,
+      });
+    } else if (resource.name == "dom-complete") {
+      this.handleNavigated({
+        hasNativeConsoleAPI: resource.hasNativeConsoleAPI,
+      });
+    }
+    // For now, ignore all other DOCUMENT_EVENT's.
+  }
+
   /**
    * Handler for when the page is done loading.
    *
@@ -415,18 +434,7 @@ class WebConsoleUI {
     for (const resource of resources) {
       const { TYPES } = this.hud.resourceCommand;
       if (resource.resourceType === TYPES.DOCUMENT_EVENT) {
-        if (resource.name == "will-navigate") {
-          this.handleWillNavigate({
-            timeStamp: resource.time,
-            url: resource.newURI,
-          });
-        }
-        if (resource.name == "dom-complete") {
-          this.handleNavigated({
-            hasNativeConsoleAPI: resource.hasNativeConsoleAPI,
-          });
-        }
-        // For now, ignore all other DOCUMENT_EVENT's.
+        this.handleDocumentEvent(resource);
         continue;
       }
       // Ignore messages forwarded from content processes if we're in fission browser toolbox.
