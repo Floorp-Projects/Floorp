@@ -428,8 +428,9 @@ class PackageFrontend(MachCommandBase):
                     },
                     "Searching for {name} in {index}",
                 )
+                deadline = None
                 task_id = IndexSearch().should_replace_task(
-                    task, {}, task.optimization.get("index-search", [])
+                    task, {}, deadline, task.optimization.get("index-search", [])
                 )
                 if task_id in (True, False) or not artifact_name:
                     self.log(
