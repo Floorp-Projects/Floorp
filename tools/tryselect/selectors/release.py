@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
@@ -72,7 +71,7 @@ class ReleaseParser(BaseTryParser):
     task_configs = ["disable-pgo", "worker-overrides"]
 
     def __init__(self, *args, **kwargs):
-        super(ReleaseParser, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.set_defaults(migrations=[])
 
 

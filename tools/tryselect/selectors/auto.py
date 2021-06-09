@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.util.python_path import find_object
 
@@ -61,7 +60,7 @@ class AutoParser(BaseTryParser):
     ]
 
     def validate(self, args):
-        super(AutoParser, self).validate(args)
+        super().validate(args)
 
         if args.strategy:
             if ":" not in args.strategy:

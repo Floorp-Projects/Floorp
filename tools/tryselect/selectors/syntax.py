@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import re
@@ -10,7 +9,6 @@ import sys
 from collections import defaultdict
 
 import mozpack.path as mozpath
-import six
 from moztest.resolve import TestResolver
 
 from ..cli import BaseTryParser
@@ -182,13 +180,13 @@ class SyntaxParser(BaseTryParser):
             group.add_argument(arg, **opts)
 
 
-class TryArgumentTokenizer(object):
+class TryArgumentTokenizer:
     symbols = [
         ("separator", ","),
-        ("list_start", "\["),
-        ("list_end", "\]"),
-        ("item", "([^,\[\]\s][^,\[\]]+)"),
-        ("space", "\s+"),
+        ("list_start", r"\["),
+        ("list_end", r"\]"),
+        ("item", r"([^,\[\]\s][^,\[\]]+)"),
+        ("space", r"\s+"),
     ]
     token_re = re.compile("|".join("(?P<%s>%s)" % item for item in symbols))
 
@@ -202,7 +200,7 @@ class TryArgumentTokenizer(object):
                 yield symbol, data
 
 
-class TryArgumentParser(object):
+class TryArgumentParser:
     """Simple three-state parser for handling expressions
     of the from "foo[sub item, another], bar,baz". This takes
     input from the TryArgumentTokenizer and runs through a small
@@ -286,7 +284,7 @@ def parse_arg(arg):
     return parser.parse(tokenizer.tokenize(arg))
 
 
-class AutoTry(object):
+class AutoTry:
 
     # Maps from flavors to the job names needed to run that flavour
     flavor_jobs = {
@@ -432,12 +430,12 @@ class AutoTry(object):
 
         suites = tests if not intersection else {}
         paths = set()
-        for flavor, flavor_tests in six.iteritems(paths_by_flavor):
+        for flavor, flavor_tests in paths_by_flavor.items():
             suite = self.flavor_suites[flavor]
             if suite not in suites and (not intersection or suite in tests):
                 for job_name in self.flavor_jobs[flavor]:
                     for test in flavor_tests:
-                        paths.add("%s:%s" % (flavor, test))
+                        paths.add("{}:{}".format(flavor, test))
                     suites[job_name] = tests.get(suite, [])
 
         # intersection implies tests are expected
@@ -481,7 +479,7 @@ class AutoTry(object):
             parts.append("-u")
             parts.append(
                 ",".join(
-                    "%s%s" % (k, "[%s]" % ",".join(v) if v else "")
+                    "{}{}".format(k, "[%s]" % ",".join(v) if v else "")
                     for k, v in sorted(suites.items())
                 )
             )
@@ -490,7 +488,7 @@ class AutoTry(object):
             parts.append("-t")
             parts.append(
                 ",".join(
-                    "%s%s" % (k, "[%s]" % ",".join(v) if v else "")
+                    "{}{}".format(k, "[%s]" % ",".join(v) if v else "")
                     for k, v in sorted(talos.items())
                 )
             )
@@ -508,7 +506,7 @@ class AutoTry(object):
         args_by_dest = {
             v["dest"]: k for k, v in SyntaxParser.pass_through_arguments.items()
         }
-        for dest, value in six.iteritems(extras):
+        for dest, value in extras.items():
             assert dest in args_by_dest
             arg = args_by_dest[dest]
             action = SyntaxParser.pass_through_arguments[arg]["action"]
@@ -528,11 +526,11 @@ class AutoTry(object):
         rv = defaultdict(list)
         for item in items:
             parsed = parse_arg(item)
-            for key, values in six.iteritems(parsed):
+            for key, values in parsed.items():
                 rv[key].extend(values)
 
         if not allow_subitems:
-            if not all(item == [] for item in six.itervalues(rv)):
+            if not all(item == [] for item in rv.values()):
                 raise ValueError("Unexpected subitems in argument")
             return rv.keys()
         else:
@@ -567,7 +565,7 @@ class AutoTry(object):
                 else {}
             )
         except ValueError as e:
-            print("Error parsing -u argument (%s):\n%s" % (kwargs["tests"], e))
+            print("Error parsing -u argument ({}):\n{}".format(kwargs["tests"], e))
             sys.exit(1)
 
         try:
@@ -680,8 +678,8 @@ class AutoTry(object):
 
         if kwargs["verbose"] and paths_by_flavor:
             print("The following tests will be selected: ")
-            for flavor, paths in six.iteritems(paths_by_flavor):
-                print("%s: %s" % (flavor, ",".join(paths)))
+            for flavor, paths in paths_by_flavor.items():
+                print("{}: {}".format(flavor, ",".join(paths)))
 
         if kwargs["verbose"]:
             print("The following try syntax was calculated:\n%s" % msg)

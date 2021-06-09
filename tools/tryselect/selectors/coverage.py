@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import collections
 import json
@@ -126,13 +125,13 @@ all_tests, all_support_files = read_test_manifests()
 
 def download_coverage_mapping(base_revision):
     try:
-        with open(CHUNK_MAPPING_TAG_FILE, "r") as f:
+        with open(CHUNK_MAPPING_TAG_FILE) as f:
             tags = json.load(f)
             if tags["target_revision"] == base_revision:
                 return
             else:
                 print("Base revision changed.")
-    except (IOError, ValueError):
+    except (OSError, ValueError):
         print("Chunk mapping file not found.")
 
     CHUNK_MAPPING_URL_TEMPLATE = "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relman.code-coverage.production.cron.{}/artifacts/public/chunk_mapping.tar.xz"  # noqa
@@ -222,7 +221,7 @@ def is_a_test(cursor, path):
 def tests_covering_file(cursor, path):
     """Returns a set of tests that cover a given source file."""
     cursor.execute("SELECT test FROM file_to_test WHERE source=?", (path,))
-    return set(e[0] for e in cursor.fetchall())
+    return {e[0] for e in cursor.fetchall()}
 
 
 def tests_in_chunk(cursor, platform, chunk):
@@ -232,7 +231,7 @@ def tests_in_chunk(cursor, platform, chunk):
     )
     # Because of bug 1480103, some entries in this table contain both a file name and a test name,
     # separated by a space. With the split, only the file name is kept.
-    return set(e[0].split(" ")[0] for e in cursor.fetchall())
+    return {e[0].split(" ")[0] for e in cursor.fetchall()}
 
 
 def chunks_covering_file(cursor, path):
@@ -288,7 +287,7 @@ def find_tests(changed_files):
             files_no_coverage.add(path)
 
         files_covered = set(changed_files) - files_no_coverage
-        test_files = set(s.replace("\\", "/") for s in test_files)
+        test_files = {s.replace("\\", "/") for s in test_files}
 
         _print_found_tests(files_covered, files_no_coverage, test_files, test_chunks)
 

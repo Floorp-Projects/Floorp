@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
@@ -64,7 +63,7 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
 
     invalidate(cache)
     if os.path.isfile(cache):
-        with open(cache, "r") as fh:
+        with open(cache) as fh:
             return TaskGraph.from_json(json.load(fh))[1]
 
     if not os.path.isdir(cache_dir):
@@ -124,7 +123,7 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
 def filter_tasks_by_paths(tasks, paths):
     resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
     run_suites, run_tests = resolver.resolve_metadata(paths)
-    flavors = set([(t["flavor"], t.get("subsuite")) for t in run_tests])
+    flavors = {(t["flavor"], t.get("subsuite")) for t in run_tests}
 
     task_regexes = set()
     for flavor, subsuite in flavors:

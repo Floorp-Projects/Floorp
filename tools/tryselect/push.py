@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
 
 import json
 import os
@@ -69,7 +68,7 @@ def write_task_config_history(msg, try_task_config):
             os.makedirs(os.path.dirname(history_path))
         history = []
     else:
-        with open(history_path, "r") as fh:
+        with open(history_path) as fh:
             history = fh.read().strip().splitlines()
 
     history.insert(0, json.dumps([msg, try_task_config]))
@@ -176,7 +175,7 @@ def push_to_try(
 
     # Format the commit message
     closed_tree_string = " ON A CLOSED TREE" if closed_tree else ""
-    commit_message = "%s%s\n\nPushed via `mach try %s`" % (
+    commit_message = "{}{}\n\nPushed via `mach try {}`".format(
         msg,
         closed_tree_string,
         method,
