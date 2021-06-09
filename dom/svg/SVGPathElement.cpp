@@ -295,7 +295,20 @@ bool SVGPathElement::AttributeDefinesGeometry(const nsAtom* aName) {
 bool SVGPathElement::IsMarkable() { return true; }
 
 void SVGPathElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
-  // FIXME: We will resolve mark points in the patch series.
+  auto callback = [aMarks](const ComputedStyle* s) {
+    const nsStyleSVGReset* styleSVGReset = s->StyleSVGReset();
+    if (styleSVGReset->mD.IsPath()) {
+      Span<const StylePathCommand> path =
+          styleSVGReset->mD.AsPath()._0.AsSpan();
+      SVGPathData::GetMarkerPositioningData(path, aMarks);
+    }
+  };
+
+  if (StaticPrefs::layout_css_d_property_enabled() &&
+      SVGGeometryProperty::DoForComputedStyle(this, callback)) {
+    return;
+  }
+
   mD.GetAnimValue().GetMarkerPositioningData(aMarks);
 }
 
