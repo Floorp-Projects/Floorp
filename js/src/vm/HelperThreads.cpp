@@ -79,11 +79,13 @@ bool js::CreateHelperThreadsState() {
 }
 
 void js::DestroyHelperThreadsState() {
+  AutoLockHelperThreadState lock;
+
   if (!gHelperThreadState) {
     return;
   }
 
-  gHelperThreadState->finish();
+  gHelperThreadState->finish(lock);
   js_delete(gHelperThreadState);
   gHelperThreadState = nullptr;
 }
@@ -1394,8 +1396,7 @@ GlobalHelperThreadState::GlobalHelperThreadState()
   MOZ_ASSERT(cpuCount > 0, "GetCPUCount() seems broken");
 }
 
-void GlobalHelperThreadState::finish() {
-  AutoLockHelperThreadState lock;
+void GlobalHelperThreadState::finish(AutoLockHelperThreadState& lock) {
 
   if (!isInitialized(lock)) {
     return;
