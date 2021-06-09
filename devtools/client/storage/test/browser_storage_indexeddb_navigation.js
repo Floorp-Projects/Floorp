@@ -8,8 +8,6 @@
 
 requestLongerTimeout(3);
 
-const TARGET_SWITCHING_PREF = "devtools.target-switching.server.enabled";
-
 // test without target switching
 add_task(async function() {
   await testNavigation(true);
@@ -17,7 +15,7 @@ add_task(async function() {
 
 // test with target switching enabled
 add_task(async function() {
-  await pushPref(TARGET_SWITCHING_PREF, true);
+  enableTargetSwitching();
   await testNavigation();
 });
 
