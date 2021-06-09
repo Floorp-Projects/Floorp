@@ -29,8 +29,13 @@ EXPORTS.mozilla.extensions += [
 # test the API request forwarding mechanism without tying it to
 # a specific WebExtensions API.
 UNIFIED_SOURCES += ["ExtensionMockAPI.cpp"]
-
 EXPORTS.mozilla.extensions += ["ExtensionMockAPI.h"]
+
+# Propagate the build config to be able to use it in souce code preprocessing
+# (used in mozilla::extensions::ExtensionAPIAllowed to disable the webidl
+# bindings in non-nightly builds).
+if CONFIG["MOZ_WEBEXT_WEBIDL_ENABLED"]:
+    DEFINES["MOZ_WEBEXT_WEBIDL_ENABLED"] = True
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
