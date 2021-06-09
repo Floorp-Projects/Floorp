@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body >
+<input />
+<script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  function runTest() {
+    function checkResult() {
+      ok(true, "didn't crash");
+      SimpleTest.finish();
+    }
+
+    // Dispatch an vsync event to the queue
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+      });
+    });
+
+    // Dispatch the first input tasks. Since there's a vsync
+    // task in the queue, so this task takes the priority and runs
+    // first.
+    SpecialPowers.Services.tm.dispatchToMainThread(function() {
+      let secondInputRun = false;
+
+      // Dispatch the second input task to the queue.
+      SpecialPowers.Services.tm.dispatchToMainThread(function() {
+        secondInputRun = true;
+      }, SpecialPowers.Ci.nsIRunnablePriority.PRIORITY_INPUT_HIGH);
+
+      // Inner event loop runs and picks the second input task to run.
+      SpecialPowers.Services.tm.spinEventLoopUntil(
+        "Test(vsync_alignment_inner_event_loop.html)", () => secondInputRun);
+
+      setTimeout(checkResult, 0);
+    }, SpecialPowers.Ci.nsIRunnablePriority.PRIORITY_INPUT_HIGH);
+  }
+
+  SpecialPowers.pushPrefEnv({
+      set: [["dom.input_events.strict_input_vsync_alignment", true]]
+  }, runTest());
+</script>
+</body>
+</html>

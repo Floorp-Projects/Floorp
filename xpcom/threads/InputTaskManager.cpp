@@ -67,6 +67,9 @@ int32_t InputTaskManager::GetPriorityModifierForEventLoopTurn(
 void InputTaskManager::WillRunTask() {
   TaskManager::WillRunTask();
   mStartTimes.AppendElement(TimeStamp::Now());
+  if (StaticPrefs::dom_input_events_strict_input_vsync_alignment()) {
+    mInputPriorityController.WillRunTask();
+  }
 }
 
 void InputTaskManager::DidRunTask() {
@@ -74,10 +77,6 @@ void InputTaskManager::DidRunTask() {
   MOZ_ASSERT(!mStartTimes.IsEmpty());
   TimeStamp start = mStartTimes.PopLastElement();
   InputEventStatistics::Get().UpdateInputDuration(TimeStamp::Now() - start);
-
-  if (StaticPrefs::dom_input_events_strict_input_vsync_alignment()) {
-    mInputPriorityController.DidRunTask();
-  }
 }
 
 int32_t
@@ -166,7 +165,7 @@ void InputTaskManager::InputPriorityController::LeavePendingVsyncState(
   mMaxInputTasksToRun = 0;
 }
 
-void InputTaskManager::InputPriorityController::DidRunTask() {
+void InputTaskManager::InputPriorityController::WillRunTask() {
   MOZ_ASSERT(StaticPrefs::dom_input_events_strict_input_vsync_alignment());
 
   switch (mInputVsyncState) {
