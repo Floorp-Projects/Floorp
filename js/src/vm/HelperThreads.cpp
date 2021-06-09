@@ -191,9 +191,10 @@ void js::StartOffThreadWasmTier2Generator(wasm::UniqueTier2GeneratorTask task) {
 }
 
 bool GlobalHelperThreadState::submitTask(wasm::UniqueTier2GeneratorTask task) {
-  MOZ_ASSERT(CanUseExtraThreads());
-
   AutoLockHelperThreadState lock;
+
+  MOZ_ASSERT(isInitialized(lock));
+
   if (!wasmTier2GeneratorWorklist(lock).append(task.get())) {
     return false;
   }
@@ -205,7 +206,7 @@ bool GlobalHelperThreadState::submitTask(wasm::UniqueTier2GeneratorTask task) {
 
 static void CancelOffThreadWasmTier2GeneratorLocked(
     AutoLockHelperThreadState& lock) {
-  if (!CanUseExtraThreads()) {
+  if (!HelperThreadState().isInitialized(lock)) {
     return;
   }
 
@@ -262,7 +263,7 @@ bool js::StartOffThreadIonCompile(jit::IonCompileTask* task,
 
 bool GlobalHelperThreadState::submitTask(
     jit::IonCompileTask* task, const AutoLockHelperThreadState& locked) {
-  MOZ_ASSERT(CanUseExtraThreads());
+  MOZ_ASSERT(isInitialized(locked));
 
   if (!ionWorklist(locked).append(task)) {
     return false;
@@ -289,7 +290,7 @@ bool js::StartOffThreadIonFree(jit::IonCompileTask* task,
 
 bool GlobalHelperThreadState::submitTask(
     UniquePtr<jit::IonFreeTask> task, const AutoLockHelperThreadState& locked) {
-  MOZ_ASSERT(CanUseExtraThreads());
+  MOZ_ASSERT(isInitialized(locked));
 
   if (!ionFreeList(locked).append(std::move(task))) {
     return false;
@@ -368,7 +369,7 @@ static bool IonCompileTaskMatches(const CompilationSelector& selector,
 
 static void CancelOffThreadIonCompileLocked(const CompilationSelector& selector,
                                             AutoLockHelperThreadState& lock) {
-  if (!CanUseExtraThreads()) {
+  if (!HelperThreadState().isInitialized(lock)) {
     return;
   }
 
@@ -445,11 +446,11 @@ void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
 
 #ifdef DEBUG
 bool js::HasOffThreadIonCompile(Realm* realm) {
-  if (!CanUseExtraThreads()) {
+  AutoLockHelperThreadState lock;
+
+  if (!HelperThreadState().isInitialized(lock)) {
     return false;
   }
-
-  AutoLockHelperThreadState lock;
 
   GlobalHelperThreadState::IonCompileTaskVector& worklist =
       HelperThreadState().ionWorklist(lock);
@@ -930,7 +931,7 @@ void MultiScriptsDecodeTask::parse(JSContext* cx) {
 
 static void WaitForOffThreadParses(JSRuntime* rt,
                                    AutoLockHelperThreadState& lock) {
-  if (!CanUseExtraThreads()) {
+  if (!HelperThreadState().isInitialized(lock)) {
     return;
   }
 
@@ -1333,9 +1334,11 @@ bool GlobalHelperThreadState::ensureInitialized() {
   }
 
   if (!ensureThreadCount(threadCount, lock)) {
+    finishThreads(lock);
     return false;
   }
 
+  MOZ_ASSERT(threadCount != 0);
   isInitialized_ = true;
   return true;
 }
@@ -1392,46 +1395,43 @@ GlobalHelperThreadState::GlobalHelperThreadState()
 }
 
 void GlobalHelperThreadState::finish() {
-  finishThreads();
+  AutoLockHelperThreadState lock;
+
+  if (!isInitialized(lock)) {
+    return;
+  }
+
+  finishThreads(lock);
 
   // Make sure there are no Ion free tasks left. We check this here because,
   // unlike the other tasks, we don't explicitly block on this when
   // destroying a runtime.
-  AutoLockHelperThreadState lock;
   auto& freeList = ionFreeList(lock);
   while (!freeList.empty()) {
     UniquePtr<jit::IonFreeTask> task = std::move(freeList.back());
     freeList.popBack();
     jit::FreeIonCompileTask(task->compileTask());
   }
+
   destroyHelperContexts(lock);
 }
 
-void GlobalHelperThreadState::finishThreads() {
+void GlobalHelperThreadState::finishThreads(AutoLockHelperThreadState& lock) {
   HelperThreadVector oldThreads;
 
-  {
-    AutoLockHelperThreadState lock;
+  waitForAllThreadsLocked(lock);
 
-    if (useInternalThreadPool(lock) && threads(lock).empty()) {
-      return;
-    }
-
-    MOZ_ASSERT(CanUseExtraThreads());
-
-    waitForAllThreadsLocked(lock);
-
-    if (!useInternalThreadPool(lock)) {
-      return;
-    }
-
-    terminating_ = true;
-
-    notifyAll(GlobalHelperThreadState::PRODUCER, lock);
-
-    std::swap(threads_, oldThreads);
+  if (!useInternalThreadPool(lock)) {
+    return;
   }
 
+  terminating_ = true;
+
+  notifyAll(GlobalHelperThreadState::PRODUCER, lock);
+
+  std::swap(threads_, oldThreads);
+
+  AutoUnlockHelperThreadState unlock(lock);
   for (auto& thread : oldThreads) {
     thread->join();
   }
