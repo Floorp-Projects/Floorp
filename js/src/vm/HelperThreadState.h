@@ -340,6 +340,19 @@ class GlobalHelperThreadState {
     return helperTasks_;
   }
 
+  bool canStartWasmCompile(const AutoLockHelperThreadState& lock,
+                           wasm::CompileMode mode);
+
+  bool canStartWasmTier1CompileTask(const AutoLockHelperThreadState& lock);
+  bool canStartWasmTier2CompileTask(const AutoLockHelperThreadState& lock);
+  bool canStartWasmTier2GeneratorTask(const AutoLockHelperThreadState& lock);
+  bool canStartPromiseHelperTask(const AutoLockHelperThreadState& lock);
+  bool canStartIonCompileTask(const AutoLockHelperThreadState& lock);
+  bool canStartIonFreeTask(const AutoLockHelperThreadState& lock);
+  bool canStartParseTask(const AutoLockHelperThreadState& lock);
+  bool canStartCompressionTask(const AutoLockHelperThreadState& lock);
+  bool canStartGCParallelTask(const AutoLockHelperThreadState& lock);
+
   HelperThreadTask* maybeGetWasmCompile(const AutoLockHelperThreadState& lock,
                                         wasm::CompileMode mode);
 
@@ -404,7 +417,7 @@ class GlobalHelperThreadState {
       JSContext* cx, JS::OffThreadToken* token);
 
   bool hasActiveThreads(const AutoLockHelperThreadState&);
-  bool hasQueuedTasks(const AutoLockHelperThreadState& locked);
+  bool canStartTasks(const AutoLockHelperThreadState& locked);
   void waitForAllThreads();
   void waitForAllThreadsLocked(AutoLockHelperThreadState&);
 

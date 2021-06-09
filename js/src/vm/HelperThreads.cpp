@@ -1514,12 +1514,20 @@ void GlobalHelperThreadState::waitForAllThreadsLocked(
     AutoLockHelperThreadState& lock) {
   CancelOffThreadWasmTier2GeneratorLocked(lock);
 
-  while (hasActiveThreads(lock) || hasQueuedTasks(lock)) {
+  while (hasActiveThreads(lock) || canStartTasks(lock)) {
     wait(lock, CONSUMER);
   }
 
   MOZ_ASSERT(!hasActiveThreads(lock));
-  MOZ_ASSERT(!hasQueuedTasks(lock));
+  MOZ_ASSERT(gcParallelWorklist(lock).isEmpty());
+  MOZ_ASSERT(ionWorklist(lock).empty());
+  MOZ_ASSERT(wasmWorklist(lock, wasm::CompileMode::Tier1).empty());
+  MOZ_ASSERT(promiseHelperTasks(lock).empty());
+  MOZ_ASSERT(parseWorklist(lock).empty());
+  MOZ_ASSERT(compressionWorklist(lock).empty());
+  MOZ_ASSERT(ionFreeList(lock).empty());
+  MOZ_ASSERT(wasmWorklist(lock, wasm::CompileMode::Tier2).empty());
+  MOZ_ASSERT(wasmTier2GeneratorWorklist(lock).empty());
 }
 
 // A task can be a "master" task, ie, it will block waiting for other worker
@@ -1743,8 +1751,27 @@ HelperThreadTask* GlobalHelperThreadState::maybeGetWasmTier2CompileTask(
 
 HelperThreadTask* GlobalHelperThreadState::maybeGetWasmCompile(
     const AutoLockHelperThreadState& lock, wasm::CompileMode mode) {
-  if (wasmWorklist(lock, mode).empty()) {
+  if (!canStartWasmCompile(lock, mode)) {
     return nullptr;
+  }
+
+  return wasmWorklist(lock, mode).popCopyFront();
+}
+
+bool GlobalHelperThreadState::canStartWasmTier1CompileTask(
+    const AutoLockHelperThreadState& lock) {
+  return canStartWasmCompile(lock, wasm::CompileMode::Tier1);
+}
+
+bool GlobalHelperThreadState::canStartWasmTier2CompileTask(
+    const AutoLockHelperThreadState& lock) {
+  return canStartWasmCompile(lock, wasm::CompileMode::Tier2);
+}
+
+bool GlobalHelperThreadState::canStartWasmCompile(
+    const AutoLockHelperThreadState& lock, wasm::CompileMode mode) {
+  if (wasmWorklist(lock, mode).empty()) {
+    return false;
   }
 
   // Parallel compilation and background compilation should be disabled on
@@ -1788,36 +1815,43 @@ HelperThreadTask* GlobalHelperThreadState::maybeGetWasmCompile(
     threadType = THREAD_TYPE_WASM_COMPILE_TIER1;
   }
 
-  if (!threads || !checkTaskThreadLimit(threadType, threads, lock)) {
-    return nullptr;
-  }
-
-  return wasmWorklist(lock, mode).popCopyFront();
+  return threads != 0 && checkTaskThreadLimit(threadType, threads, lock);
 }
 
 HelperThreadTask* GlobalHelperThreadState::maybeGetWasmTier2GeneratorTask(
     const AutoLockHelperThreadState& lock) {
-  if (wasmTier2GeneratorWorklist(lock).empty() ||
-      !checkTaskThreadLimit(THREAD_TYPE_WASM_GENERATOR_TIER2,
-                            maxWasmTier2GeneratorThreads(),
-                            /*isMaster=*/true, lock)) {
+  if (!canStartWasmTier2GeneratorTask(lock)) {
     return nullptr;
   }
 
   return wasmTier2GeneratorWorklist(lock).popCopy();
 }
 
+bool GlobalHelperThreadState::canStartWasmTier2GeneratorTask(
+    const AutoLockHelperThreadState& lock) {
+  return !wasmTier2GeneratorWorklist(lock).empty() &&
+         checkTaskThreadLimit(THREAD_TYPE_WASM_GENERATOR_TIER2,
+                              maxWasmTier2GeneratorThreads(),
+                              /*isMaster=*/true, lock);
+}
+
 HelperThreadTask* GlobalHelperThreadState::maybeGetPromiseHelperTask(
     const AutoLockHelperThreadState& lock) {
-  // PromiseHelperTasks can be wasm compilation tasks that in turn block on
-  // wasm compilation so set isMaster = true.
-  if (promiseHelperTasks(lock).empty() ||
-      !checkTaskThreadLimit(THREAD_TYPE_PROMISE_TASK, maxPromiseHelperThreads(),
-                            /*isMaster=*/true, lock)) {
+  if (!canStartPromiseHelperTask(lock)) {
     return nullptr;
   }
 
   return promiseHelperTasks(lock).popCopy();
+}
+
+bool GlobalHelperThreadState::canStartPromiseHelperTask(
+    const AutoLockHelperThreadState& lock) {
+  // PromiseHelperTasks can be wasm compilation tasks that in turn block on
+  // wasm compilation so set isMaster = true.
+  return !promiseHelperTasks(lock).empty() &&
+         checkTaskThreadLimit(THREAD_TYPE_PROMISE_TASK,
+                              maxPromiseHelperThreads(),
+                              /*isMaster=*/true, lock);
 }
 
 static bool IonCompileTaskHasHigherPriority(jit::IonCompileTask* first,
@@ -1836,24 +1870,34 @@ static bool IonCompileTaskHasHigherPriority(jit::IonCompileTask* first,
 
 HelperThreadTask* GlobalHelperThreadState::maybeGetIonCompileTask(
     const AutoLockHelperThreadState& lock) {
-  if (ionWorklist(lock).empty() ||
-      !checkTaskThreadLimit(THREAD_TYPE_ION, maxIonCompilationThreads(),
-                            lock)) {
+  if (!canStartIonCompileTask(lock)) {
     return nullptr;
   }
 
   return highestPriorityPendingIonCompile(lock);
 }
 
+bool GlobalHelperThreadState::canStartIonCompileTask(
+    const AutoLockHelperThreadState& lock) {
+  return !ionWorklist(lock).empty() &&
+         checkTaskThreadLimit(THREAD_TYPE_ION, maxIonCompilationThreads(),
+                              lock);
+}
+
 HelperThreadTask* GlobalHelperThreadState::maybeGetIonFreeTask(
     const AutoLockHelperThreadState& lock) {
-  if (ionFreeList(lock).empty()) {
+  if (!canStartIonFreeTask(lock)) {
     return nullptr;
   }
 
   UniquePtr<jit::IonFreeTask> task = std::move(ionFreeList(lock).back());
   ionFreeList(lock).popBack();
   return task.release();
+}
+
+bool GlobalHelperThreadState::canStartIonFreeTask(
+    const AutoLockHelperThreadState& lock) {
+  return !ionFreeList(lock).empty();
 }
 
 jit::IonCompileTask* GlobalHelperThreadState::highestPriorityPendingIonCompile(
@@ -1877,13 +1921,7 @@ jit::IonCompileTask* GlobalHelperThreadState::highestPriorityPendingIonCompile(
 
 HelperThreadTask* GlobalHelperThreadState::maybeGetParseTask(
     const AutoLockHelperThreadState& lock) {
-  // Parse tasks that end up compiling asm.js in turn may use Wasm compilation
-  // threads to generate machine code.  We have no way (at present) to know
-  // ahead of time whether a parse task is going to parse asm.js content or
-  // not, so we just assume that all parse tasks are master tasks.
-  if (parseWorklist(lock).empty() ||
-      !checkTaskThreadLimit(THREAD_TYPE_PARSE, maxParseThreads(),
-                            /*isMaster=*/true, lock)) {
+  if (!canStartParseTask(lock)) {
     return nullptr;
   }
 
@@ -1893,11 +1931,20 @@ HelperThreadTask* GlobalHelperThreadState::maybeGetParseTask(
   return task.release();
 }
 
+bool GlobalHelperThreadState::canStartParseTask(
+    const AutoLockHelperThreadState& lock) {
+  // Parse tasks that end up compiling asm.js in turn may use Wasm compilation
+  // threads to generate machine code.  We have no way (at present) to know
+  // ahead of time whether a parse task is going to parse asm.js content or not,
+  // so we just assume that all parse tasks are master tasks.
+  return !parseWorklist(lock).empty() &&
+         checkTaskThreadLimit(THREAD_TYPE_PARSE, maxParseThreads(),
+                              /*isMaster=*/true, lock);
+}
+
 HelperThreadTask* GlobalHelperThreadState::maybeGetCompressionTask(
     const AutoLockHelperThreadState& lock) {
-  if (compressionWorklist(lock).empty() ||
-      !checkTaskThreadLimit(THREAD_TYPE_COMPRESS, maxCompressionThreads(),
-                            lock)) {
+  if (!canStartCompressionTask(lock)) {
     return nullptr;
   }
 
@@ -1905,6 +1952,13 @@ HelperThreadTask* GlobalHelperThreadState::maybeGetCompressionTask(
   UniquePtr<SourceCompressionTask> task = std::move(worklist.back());
   worklist.popBack();
   return task.release();
+}
+
+bool GlobalHelperThreadState::canStartCompressionTask(
+    const AutoLockHelperThreadState& lock) {
+  return !compressionWorklist(lock).empty() &&
+         checkTaskThreadLimit(THREAD_TYPE_COMPRESS, maxCompressionThreads(),
+                              lock);
 }
 
 void GlobalHelperThreadState::startHandlingCompressionTasks(
@@ -1947,13 +2001,18 @@ bool GlobalHelperThreadState::submitTask(
 
 HelperThreadTask* GlobalHelperThreadState::maybeGetGCParallelTask(
     const AutoLockHelperThreadState& lock) {
-  if (gcParallelWorklist(lock).isEmpty() ||
-      !checkTaskThreadLimit(THREAD_TYPE_GCPARALLEL, maxGCParallelThreads(lock),
-                            lock)) {
+  if (!canStartGCParallelTask(lock)) {
     return nullptr;
   }
 
   return gcParallelWorklist(lock).popFirst();
+}
+
+bool GlobalHelperThreadState::canStartGCParallelTask(
+    const AutoLockHelperThreadState& lock) {
+  return !gcParallelWorklist(lock).isEmpty() &&
+         checkTaskThreadLimit(THREAD_TYPE_GCPARALLEL,
+                              maxGCParallelThreads(lock), lock);
 }
 
 static void LeaveParseTaskZone(JSRuntime* rt, ParseTask* task) {
@@ -2694,14 +2753,14 @@ const GlobalHelperThreadState::Selector GlobalHelperThreadState::selectors[] = {
     &GlobalHelperThreadState::maybeGetWasmTier2CompileTask,
     &GlobalHelperThreadState::maybeGetWasmTier2GeneratorTask};
 
-bool GlobalHelperThreadState::hasQueuedTasks(
+bool GlobalHelperThreadState::canStartTasks(
     const AutoLockHelperThreadState& lock) {
-  return !gcParallelWorklist(lock).isEmpty() || !ionWorklist(lock).empty() ||
-         !wasmWorklist(lock, wasm::CompileMode::Tier1).empty() ||
-         !promiseHelperTasks(lock).empty() || !parseWorklist(lock).empty() ||
-         !compressionWorklist(lock).empty() || !ionFreeList(lock).empty() ||
-         !wasmWorklist(lock, wasm::CompileMode::Tier2).empty() ||
-         !wasmTier2GeneratorWorklist(lock).empty();
+  return canStartGCParallelTask(lock) || canStartIonCompileTask(lock) ||
+         canStartWasmTier1CompileTask(lock) ||
+         canStartPromiseHelperTask(lock) || canStartParseTask(lock) ||
+         canStartCompressionTask(lock) || canStartIonFreeTask(lock) ||
+         canStartWasmTier2CompileTask(lock) ||
+         canStartWasmTier2GeneratorTask(lock);
 }
 
 HelperThread::AutoProfilerLabel::AutoProfilerLabel(
