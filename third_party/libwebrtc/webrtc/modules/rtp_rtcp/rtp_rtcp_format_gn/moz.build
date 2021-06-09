@@ -25,7 +25,8 @@ LOCAL_INCLUDES += [
     "/ipc/glue",
     "/media/libyuv/libyuv/include/",
     "/third_party/libwebrtc/webrtc/",
-    "/third_party/libwebrtc/webrtc/common_video/include/"
+    "/third_party/libwebrtc/webrtc/common_video/include/",
+    "/tools/profiler/public"
 ]
 
 SOURCES += [

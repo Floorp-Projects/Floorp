@@ -27,7 +27,8 @@ LOCAL_INCLUDES += [
     "/third_party/libwebrtc/webrtc/",
     "/third_party/libwebrtc/webrtc/common_video/include/",
     "/third_party/libwebrtc/webrtc/modules/audio_coding/include/",
-    "/third_party/libwebrtc/webrtc/modules/include/"
+    "/third_party/libwebrtc/webrtc/modules/include/",
+    "/tools/profiler/public"
 ]
 
 SOURCES += [

@@ -24,7 +24,8 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/ipc/glue",
     "/media/libopus/include/",
-    "/third_party/libwebrtc/webrtc/"
+    "/third_party/libwebrtc/webrtc/",
+    "/tools/profiler/public"
 ]
 
 UNIFIED_SOURCES += [
