@@ -12,7 +12,7 @@
 
 #if !defined(OS_WIN) && !defined(OS_NETBSD) && !defined(OS_OPENBSD)
 #  include <pthread.h>
-#  include "SharedMemoryBasic.h"
+#  include "mozilla/ipc/SharedMemoryBasic.h"
 #  include "mozilla/Atomics.h"
 #endif
 

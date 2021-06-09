@@ -9,10 +9,10 @@
 
 #include "base/file_descriptor_posix.h"
 
-#include "SharedMemory.h"
+#include "mozilla/ipc/SharedMemory.h"
 
 #ifdef FUZZING
-#  include "SharedMemoryFuzzer.h"
+#  include "mozilla/ipc/SharedMemoryFuzzer.h"
 #endif
 
 //

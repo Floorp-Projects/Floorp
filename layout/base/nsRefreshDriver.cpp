@@ -77,7 +77,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Telemetry.h"
 
-#include "BackgroundChild.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "VsyncSource.h"
 #include "mozilla/VsyncDispatcher.h"

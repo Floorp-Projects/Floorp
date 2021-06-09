@@ -6,7 +6,7 @@
 
 #include "SharedRGBImage.h"
 #include "ImageTypes.h"         // for ImageFormat::SHARED_RGB, etc
-#include "Shmem.h"              // for Shmem
+#include "mozilla/ipc/Shmem.h"  // for Shmem
 #include "gfx2DGlue.h"          // for ImageFormatToSurfaceFormat, etc
 #include "gfxPlatform.h"        // for gfxPlatform, gfxImageFormat
 #include "mozilla/gfx/Point.h"  // for IntSIze

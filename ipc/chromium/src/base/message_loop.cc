@@ -38,7 +38,7 @@
 #  include "TracedTaskCommon.h"
 #endif
 
-#include "MessagePump.h"
+#include "mozilla/ipc/MessagePump.h"
 #include "nsThreadUtils.h"
 
 using base::Time;

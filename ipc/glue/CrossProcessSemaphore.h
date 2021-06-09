@@ -14,7 +14,7 @@
 #if !defined(OS_WIN) && !defined(OS_MACOSX)
 #  include <pthread.h>
 #  include <semaphore.h>
-#  include "SharedMemoryBasic.h"
+#  include "mozilla/ipc/SharedMemoryBasic.h"
 #  include "mozilla/Atomics.h"
 #endif
 

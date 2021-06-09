@@ -13,7 +13,7 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/FileDescriptor.h"
-#include "ProtocolUtils.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 using base::ProcessHandle;
 

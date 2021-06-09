@@ -12,7 +12,7 @@
 #include "GMPServiceChild.h"
 #include "GMPServiceParent.h"
 #include "GMPVideoDecoderParent.h"
-#include "GeckoChildProcessHost.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Document.h"

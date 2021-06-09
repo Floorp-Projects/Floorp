@@ -11,7 +11,7 @@
 #  include "mozilla/sandboxTarget.h"
 #endif
 
-#include "ProcessUtils.h"
+#include "mozilla/ipc/ProcessUtils.h"
 
 namespace mozilla {
 

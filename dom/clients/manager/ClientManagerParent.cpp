@@ -6,7 +6,7 @@
 
 #include "ClientManagerParent.h"
 
-#include "BackgroundParent.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "ClientHandleParent.h"
 #include "ClientManagerOpParent.h"
 #include "ClientManagerService.h"

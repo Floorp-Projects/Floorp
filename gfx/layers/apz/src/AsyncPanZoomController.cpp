@@ -82,13 +82,13 @@
 #include "nsPoint.h"      // for nsIntPoint
 #include "nsStyleConsts.h"
 #include "nsTimingFunction.h"
-#include "nsTArray.h"                // for nsTArray, nsTArray_Impl, etc
-#include "nsThreadUtils.h"           // for NS_IsMainThread
-#include "nsViewportInfo.h"          // for kViewportMinScale, kViewportMaxScale
-#include "prsystem.h"                // for PR_GetPhysicalMemorySize
-#include "SharedMemoryBasic.h"       // for SharedMemoryBasic
-#include "ScrollSnap.h"              // for ScrollSnapUtils
-#include "ScrollAnimationPhysics.h"  // for ComputeAcceleratedWheelDelta
+#include "nsTArray.h"        // for nsTArray, nsTArray_Impl, etc
+#include "nsThreadUtils.h"   // for NS_IsMainThread
+#include "nsViewportInfo.h"  // for kViewportMinScale, kViewportMaxScale
+#include "prsystem.h"        // for PR_GetPhysicalMemorySize
+#include "mozilla/ipc/SharedMemoryBasic.h"  // for SharedMemoryBasic
+#include "ScrollSnap.h"                     // for ScrollSnapUtils
+#include "ScrollAnimationPhysics.h"         // for ComputeAcceleratedWheelDelta
 #include "SmoothMsdScrollAnimation.h"
 #include "SmoothScrollAnimation.h"
 #include "WheelScrollAnimation.h"

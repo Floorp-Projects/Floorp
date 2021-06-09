@@ -8,10 +8,10 @@
 #define mozilla_ipc_SharedMemoryBasic_chromium_h
 
 #include "base/shared_memory.h"
-#include "SharedMemory.h"
+#include "mozilla/ipc/SharedMemory.h"
 
 #ifdef FUZZING
-#  include "SharedMemoryFuzzer.h"
+#  include "mozilla/ipc/SharedMemoryFuzzer.h"
 #endif
 
 #include "nsDebug.h"

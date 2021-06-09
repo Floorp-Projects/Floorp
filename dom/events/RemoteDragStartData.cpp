@@ -11,7 +11,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/DOMTypes.h"
-#include "ProtocolUtils.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 using namespace mozilla::ipc;
 

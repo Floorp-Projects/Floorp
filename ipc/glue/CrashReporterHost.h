@@ -13,7 +13,7 @@
 #include "base/process.h"
 #include "nsExceptionHandler.h"
 #include "nsThreadUtils.h"
-#include "ProtocolUtils.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 namespace mozilla {
 namespace ipc {

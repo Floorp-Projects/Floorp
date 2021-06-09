@@ -10,12 +10,12 @@
 #include "base/file_descriptor_posix.h"
 #include "base/process.h"
 
-#include "SharedMemory.h"
+#include "mozilla/ipc/SharedMemory.h"
 #include <mach/port.h>
 #include "chrome/common/mach_ipc_mac.h"
 
 #ifdef FUZZING
-#  include "SharedMemoryFuzzer.h"
+#  include "mozilla/ipc/SharedMemoryFuzzer.h"
 #endif
 
 //

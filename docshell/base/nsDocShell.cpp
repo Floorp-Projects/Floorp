@@ -234,7 +234,7 @@
 #include "mozilla/NullPrincipal.h"
 #include "Navigator.h"
 #include "prenv.h"
-#include "URIUtils.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "sslerr.h"
 #include "mozpkix/pkix.h"
 #include "NSSErrorsService.h"

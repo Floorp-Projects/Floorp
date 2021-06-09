@@ -6,7 +6,7 @@
 #include "GPUProcessImpl.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "nsXPCOM.h"
-#include "ProcessUtils.h"
+#include "mozilla/ipc/ProcessUtils.h"
 
 #if defined(OS_WIN) && defined(MOZ_SANDBOX)
 #  include "mozilla/sandboxTarget.h"
