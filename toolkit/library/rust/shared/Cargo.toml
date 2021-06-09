@@ -56,6 +56,7 @@ unic-langid-ffi = { path = "../../../../intl/locale/rust/unic-langid-ffi" }
 fluent-langneg = { version = "0.13", features = ["cldr"] }
 fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" }
 rust_minidump_writer_linux = { path = "../../../crashreporter/rust_minidump_writer_linux", optional = true }
+gecko-profiler = { path = "../../../../tools/profiler/rust-api"}
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
 # version less than or equal to what we link to. This isn't a problem because we
@@ -95,7 +96,7 @@ cranelift_arm32 = ["jsrust_shared/cranelift_arm32"]
 cranelift_arm64 = ["jsrust_shared/cranelift_arm64"]
 cranelift_none = ["jsrust_shared/cranelift_none"]
 smoosh = ["jsrust_shared/smoosh"]
-gecko_profiler = ["profiler_helper", "geckoservo/gecko_profiler"]
+gecko_profiler = ["gecko-profiler/enabled", "profiler_helper", "geckoservo/gecko_profiler"]
 gecko_profiler_parse_elf = ["profiler_helper/parse_elf"]
 new_xulstore = ["xulstore"]
 libfuzzer = []
