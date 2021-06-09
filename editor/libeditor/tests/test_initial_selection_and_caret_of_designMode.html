@@ -1,0 +1,57 @@
+<!doctype html>
+<head>
+  <title>Test for initial selection and caret at turning on the designMode with user interaction</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<p>foo</p>
+<button onclick="document.designMode = 'on'">click</button>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  synthesizeMouseAtCenter(document.querySelector("button"), {});
+
+  is(
+    document.activeElement,
+    document.body,
+    "The <body> element should be active"
+  );
+  is(
+    getSelection().focusNode,
+    document.body.firstChild.firstChild,
+    "The focus node should be the text node in the first paragraph"
+  );
+  is(
+    getSelection().anchorNode,
+    document.body.firstChild.firstChild,
+    "The anchor node should be the text node in the first paragraph"
+  );
+  is(
+    getSelection().focusOffset,
+    0,
+    "The focus offset should be 0"
+  );
+  is(
+    getSelection().anchorOffset,
+    0,
+    "The anchor offset should be 0"
+  );
+
+  function getHTMLEditor() {
+    return SpecialPowers.wrap(window).docShell.editingSession?.getEditorForWindow(window);
+  }
+  ok(
+    getHTMLEditor().selectionController.getCaretEnabled(),
+    "The caret should be enabled"
+  );
+  ok(
+    getHTMLEditor().selectionController.caretVisible,
+    "The caret should be visible"
+  );
+
+  document.designMode = "off";
+
+  SimpleTest.finish();
+});
+</script>
