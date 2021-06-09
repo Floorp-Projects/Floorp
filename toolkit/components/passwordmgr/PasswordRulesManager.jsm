@@ -21,6 +21,9 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return logger.log.bind(logger);
 });
 
+const IMPROVED_PASSWORD_GENERATION_HISTOGRAM =
+  "PWMGR_NUM_IMPROVED_GENERATED_PASSWORDS";
+
 const EXPORTED_SYMBOLS = ["PasswordRulesManagerParent"];
 
 /**
@@ -101,10 +104,11 @@ class PasswordRulesManagerParent extends JSWindowActorParent {
         break;
       }
     }
-
+    let isCustomRule = false;
     // If we found a matching result, use that to generate a stronger password.
     // Otherwise, generate a password using the default rules set.
     if (currentRecord?.Domain) {
+      isCustomRule = true;
       log(
         `Password rules for origin: ${currentRecord.Domain}, ${currentRecord["password-rules"]}`
       );
@@ -112,9 +116,15 @@ class PasswordRulesManagerParent extends JSWindowActorParent {
         currentRecord["password-rules"]
       );
       let mapOfRules = this._transformRulesToMap(currentRules);
+      Services.telemetry
+        .getHistogramById(IMPROVED_PASSWORD_GENERATION_HISTOGRAM)
+        .add(isCustomRule);
       return PasswordGenerator.generatePassword({ rules: mapOfRules });
     }
     log(`No password rules for ${uri}, generating standard password.`);
+    Services.telemetry
+      .getHistogramById(IMPROVED_PASSWORD_GENERATION_HISTOGRAM)
+      .add(isCustomRule);
     return PasswordGenerator.generatePassword({});
   }
 }
