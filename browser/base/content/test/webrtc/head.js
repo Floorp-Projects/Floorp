@@ -705,6 +705,15 @@ async function promiseRequestDevice(
   );
 }
 
+async function promiseRequestAudioOutput() {
+  info("requesting audio output");
+  const bc = gBrowser.selectedBrowser;
+  return SpecialPowers.spawn(bc, [], async function() {
+    const global = content.wrappedJSObject;
+    global.requestAudioOutput();
+  });
+}
+
 async function stopTracks(
   aKind,
   aAlreadyStopped,
