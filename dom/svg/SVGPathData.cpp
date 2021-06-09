@@ -761,6 +761,83 @@ static float AngleOfVector(const Point& cp1, const Point& cp2) {
   return static_cast<float>(AngleOfVector(cp1 - cp2));
 }
 
+// This implements F.6.5 and F.6.6 of
+// http://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes
+static std::tuple<float, float, float, float>
+/* rx, ry, segStartAngle, segEndAngle */
+ComputeSegAnglesAndCorrectRadii(const Point& aSegStart, const Point& aSegEnd,
+                                const float aAngle, const bool aLargeArcFlag,
+                                const bool aSweepFlag, const float aRx,
+                                const float aRy) {
+  float rx = fabs(aRx);  // F.6.6.1
+  float ry = fabs(aRy);
+
+  // F.6.5.1:
+  const float angle = static_cast<float>(aAngle * M_PI / 180.0);
+  double x1p = cos(angle) * (aSegStart.x - aSegEnd.x) / 2.0 +
+               sin(angle) * (aSegStart.y - aSegEnd.y) / 2.0;
+  double y1p = -sin(angle) * (aSegStart.x - aSegEnd.x) / 2.0 +
+               cos(angle) * (aSegStart.y - aSegEnd.y) / 2.0;
+
+  // This is the root in F.6.5.2 and the numerator under that root:
+  double root;
+  double numerator =
+      rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p;
+
+  if (numerator >= 0.0) {
+    root = sqrt(numerator / (rx * rx * y1p * y1p + ry * ry * x1p * x1p));
+    if (aLargeArcFlag == aSweepFlag) root = -root;
+  } else {
+    // F.6.6 step 3 - |numerator < 0.0|. This is equivalent to the result
+    // of F.6.6.2 (lamedh) being greater than one. What we have here is
+    // ellipse radii that are too small for the ellipse to reach between
+    // segStart and segEnd. We scale the radii up uniformly so that the
+    // ellipse is just big enough to fit (i.e. to the point where there is
+    // exactly one solution).
+
+    double lamedh =
+        1.0 - numerator / (rx * rx * ry * ry);  // equiv to eqn F.6.6.2
+    double s = sqrt(lamedh);
+    rx = static_cast<float>((double)rx * s);  // F.6.6.3
+    ry = static_cast<float>((double)ry * s);
+    root = 0.0;
+  }
+
+  double cxp = root * rx * y1p / ry;  // F.6.5.2
+  double cyp = -root * ry * x1p / rx;
+
+  double theta =
+      AngleOfVector(Point(static_cast<float>((x1p - cxp) / rx),
+                          static_cast<float>((y1p - cyp) / ry)));  // F.6.5.5
+  double delta =
+      AngleOfVector(Point(static_cast<float>((-x1p - cxp) / rx),
+                          static_cast<float>((-y1p - cyp) / ry))) -  // F.6.5.6
+      theta;
+  if (!aSweepFlag && delta > 0) {
+    delta -= 2.0 * M_PI;
+  } else if (aSweepFlag && delta < 0) {
+    delta += 2.0 * M_PI;
+  }
+
+  double tx1, ty1, tx2, ty2;
+  tx1 = -cos(angle) * rx * sin(theta) - sin(angle) * ry * cos(theta);
+  ty1 = -sin(angle) * rx * sin(theta) + cos(angle) * ry * cos(theta);
+  tx2 = -cos(angle) * rx * sin(theta + delta) -
+        sin(angle) * ry * cos(theta + delta);
+  ty2 = -sin(angle) * rx * sin(theta + delta) +
+        cos(angle) * ry * cos(theta + delta);
+
+  if (delta < 0.0f) {
+    tx1 = -tx1;
+    ty1 = -ty1;
+    tx2 = -tx2;
+    ty2 = -ty2;
+  }
+
+  return {rx, ry, static_cast<float>(atan2(ty1, tx1)),
+          static_cast<float>(atan2(ty2, tx2))};
+}
+
 void SVGPathData::GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const {
   // This code should assume that ANY type of segment can appear at ANY index.
   // It should also assume that segments such as M and Z can appear in weird
@@ -859,9 +936,9 @@ void SVGPathData::GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const {
 
       case PATHSEG_ARC_ABS:
       case PATHSEG_ARC_REL: {
-        double rx = mData[i];
-        double ry = mData[i + 1];
-        double angle = mData[i + 2];
+        float rx = mData[i];
+        float ry = mData[i + 1];
+        float angle = mData[i + 2];
         bool largeArcFlag = mData[i + 3] != 0.0f;
         bool sweepFlag = mData[i + 4] != 0.0f;
         if (segType == PATHSEG_ARC_ABS) {
@@ -896,71 +973,10 @@ void SVGPathData::GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const {
           i += 7;
           break;
         }
-        rx = fabs(rx);  // F.6.6.1
-        ry = fabs(ry);
 
-        // F.6.5.1:
-        angle = angle * M_PI / 180.0;
-        double x1p = cos(angle) * (segStart.x - segEnd.x) / 2.0 +
-                     sin(angle) * (segStart.y - segEnd.y) / 2.0;
-        double y1p = -sin(angle) * (segStart.x - segEnd.x) / 2.0 +
-                     cos(angle) * (segStart.y - segEnd.y) / 2.0;
-
-        // This is the root in F.6.5.2 and the numerator under that root:
-        double root;
-        double numerator =
-            rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p;
-
-        if (numerator >= 0.0) {
-          root = sqrt(numerator / (rx * rx * y1p * y1p + ry * ry * x1p * x1p));
-          if (largeArcFlag == sweepFlag) root = -root;
-        } else {
-          // F.6.6 step 3 - |numerator < 0.0|. This is equivalent to the result
-          // of F.6.6.2 (lamedh) being greater than one. What we have here is
-          // ellipse radii that are too small for the ellipse to reach between
-          // segStart and segEnd. We scale the radii up uniformly so that the
-          // ellipse is just big enough to fit (i.e. to the point where there is
-          // exactly one solution).
-
-          double lamedh =
-              1.0 - numerator / (rx * rx * ry * ry);  // equiv to eqn F.6.6.2
-          double s = sqrt(lamedh);
-          rx *= s;  // F.6.6.3
-          ry *= s;
-          root = 0.0;
-        }
-
-        double cxp = root * rx * y1p / ry;  // F.6.5.2
-        double cyp = -root * ry * x1p / rx;
-
-        double theta, delta;
-        theta = AngleOfVector(
-            Point((x1p - cxp) / rx, (y1p - cyp) / ry));  // F.6.5.5
-        delta = AngleOfVector(
-                    Point((-x1p - cxp) / rx, (-y1p - cyp) / ry)) -  // F.6.5.6
-                theta;
-        if (!sweepFlag && delta > 0)
-          delta -= 2.0 * M_PI;
-        else if (sweepFlag && delta < 0)
-          delta += 2.0 * M_PI;
-
-        double tx1, ty1, tx2, ty2;
-        tx1 = -cos(angle) * rx * sin(theta) - sin(angle) * ry * cos(theta);
-        ty1 = -sin(angle) * rx * sin(theta) + cos(angle) * ry * cos(theta);
-        tx2 = -cos(angle) * rx * sin(theta + delta) -
-              sin(angle) * ry * cos(theta + delta);
-        ty2 = -sin(angle) * rx * sin(theta + delta) +
-              cos(angle) * ry * cos(theta + delta);
-
-        if (delta < 0.0f) {
-          tx1 = -tx1;
-          ty1 = -ty1;
-          tx2 = -tx2;
-          ty2 = -ty2;
-        }
-
-        segStartAngle = static_cast<float>(atan2(ty1, tx1));
-        segEndAngle = static_cast<float>(atan2(ty2, tx2));
+        std::tie(rx, ry, segStartAngle, segEndAngle) =
+            ComputeSegAnglesAndCorrectRadii(segStart, segEnd, angle,
+                                            largeArcFlag, sweepFlag, rx, ry);
         i += 7;
         break;
       }
@@ -1162,9 +1178,9 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
       }
       case StylePathCommand::Tag::EllipticalArc: {
         const auto& arc = cmd.elliptical_arc;
-        double rx = arc.rx;
-        double ry = arc.ry;
-        double angle = arc.angle;
+        float rx = arc.rx;
+        float ry = arc.ry;
+        float angle = arc.angle;
         bool largeArcFlag = arc.large_arc_flag._0;
         bool sweepFlag = arc.sweep_flag._0;
         Point radii(arc.rx, arc.ry);
@@ -1197,71 +1213,10 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
           segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
           break;
         }
-        rx = fabs(rx);  // F.6.6.1
-        ry = fabs(ry);
 
-        // F.6.5.1:
-        angle = angle * M_PI / 180.0;
-        double x1p = cos(angle) * (segStart.x - segEnd.x) / 2.0 +
-                     sin(angle) * (segStart.y - segEnd.y) / 2.0;
-        double y1p = -sin(angle) * (segStart.x - segEnd.x) / 2.0 +
-                     cos(angle) * (segStart.y - segEnd.y) / 2.0;
-
-        // This is the root in F.6.5.2 and the numerator under that root:
-        double root;
-        double numerator =
-            rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p;
-
-        if (numerator >= 0.0) {
-          root = sqrt(numerator / (rx * rx * y1p * y1p + ry * ry * x1p * x1p));
-          if (largeArcFlag == sweepFlag) root = -root;
-        } else {
-          // F.6.6 step 3 - |numerator < 0.0|. This is equivalent to the result
-          // of F.6.6.2 (lamedh) being greater than one. What we have here is
-          // ellipse radii that are too small for the ellipse to reach between
-          // segStart and segEnd. We scale the radii up uniformly so that the
-          // ellipse is just big enough to fit (i.e. to the point where there is
-          // exactly one solution).
-
-          double lamedh =
-              1.0 - numerator / (rx * rx * ry * ry);  // equiv to eqn F.6.6.2
-          double s = sqrt(lamedh);
-          rx *= s;  // F.6.6.3
-          ry *= s;
-          root = 0.0;
-        }
-
-        double cxp = root * rx * y1p / ry;  // F.6.5.2
-        double cyp = -root * ry * x1p / rx;
-
-        double theta, delta;
-        theta = AngleOfVector(
-            Point((x1p - cxp) / rx, (y1p - cyp) / ry));  // F.6.5.5
-        delta = AngleOfVector(
-                    Point((-x1p - cxp) / rx, (-y1p - cyp) / ry)) -  // F.6.5.6
-                theta;
-        if (!sweepFlag && delta > 0)
-          delta -= 2.0 * M_PI;
-        else if (sweepFlag && delta < 0)
-          delta += 2.0 * M_PI;
-
-        double tx1, ty1, tx2, ty2;
-        tx1 = -cos(angle) * rx * sin(theta) - sin(angle) * ry * cos(theta);
-        ty1 = -sin(angle) * rx * sin(theta) + cos(angle) * ry * cos(theta);
-        tx2 = -cos(angle) * rx * sin(theta + delta) -
-              sin(angle) * ry * cos(theta + delta);
-        ty2 = -sin(angle) * rx * sin(theta + delta) +
-              cos(angle) * ry * cos(theta + delta);
-
-        if (delta < 0.0f) {
-          tx1 = -tx1;
-          ty1 = -ty1;
-          tx2 = -tx2;
-          ty2 = -ty2;
-        }
-
-        segStartAngle = static_cast<float>(atan2(ty1, tx1));
-        segEndAngle = static_cast<float>(atan2(ty2, tx2));
+        std::tie(rx, ry, segStartAngle, segEndAngle) =
+            ComputeSegAnglesAndCorrectRadii(segStart, segEnd, angle,
+                                            largeArcFlag, sweepFlag, rx, ry);
         break;
       }
       case StylePathCommand::Tag::HorizontalLineTo: {
