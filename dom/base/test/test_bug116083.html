@@ -62,11 +62,8 @@ function hasExpectedFlavors() {
   ok(cb.hasDataMatchingFlavors(["text/unicode"], cb.kGlobalClipboard),
      "The clipboard has text/unicode");
 
-  // Android only supports plain text
-  if (!navigator.appVersion.includes("Android")) {
-    ok(cb.hasDataMatchingFlavors(["text/html"], cb.kGlobalClipboard),
-       "The clipboard has text/html");
-  }
+  ok(cb.hasDataMatchingFlavors(["text/html"], cb.kGlobalClipboard),
+     "The clipboard has text/html");
 
   if (navigator.appVersion.includes("Win")) {
     ok(cb.hasDataMatchingFlavors(["application/x-moz-nativehtml"], cb.kGlobalClipboard),
