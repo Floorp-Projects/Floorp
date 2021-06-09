@@ -19,19 +19,7 @@ namespace net {
 
 Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
                          Http3Session* session)
-    : mSendState(PREPARING_HEADERS),
-      mRecvState(BEFORE_HEADERS),
-      mStreamId(UINT64_MAX),
-      mSession(session),
-      mTransaction(httpTransaction),
-      mQueued(false),
-      mDataReceived(false),
-      mResetRecv(false),
-      mRequestBodyLenRemaining(0),
-      mTotalSent(0),
-      mTotalRead(0),
-      mFin(false),
-      mSendingBlockedByFlowControlCount(0) {
+    : mSession(session), mTransaction(httpTransaction) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG3(("Http3Stream::Http3Stream [this=%p]", this));
 }

@@ -63,13 +63,7 @@ class nsProxyInfo final : public nsIProxyInfo {
  private:
   friend class nsProtocolProxyService;
 
-  explicit nsProxyInfo(const char* type = nullptr)
-      : mType(type),
-        mPort(-1),
-        mFlags(0),
-        mResolveFlags(0),
-        mTimeout(UINT32_MAX),
-        mNext(nullptr) {}
+  explicit nsProxyInfo(const char* type = nullptr) : mType(type) {}
 
   nsProxyInfo(const nsACString& aType, const nsACString& aHost, int32_t aPort,
               const nsACString& aUsername, const nsACString& aPassword,
@@ -85,13 +79,13 @@ class nsProxyInfo final : public nsIProxyInfo {
   nsCString mPassword;
   nsCString mProxyAuthorizationHeader;
   nsCString mConnectionIsolationKey;
-  int32_t mPort;
-  uint32_t mFlags;
+  int32_t mPort{-1};
+  uint32_t mFlags{0};
   // We need to read on multiple threads, but don't need to sync on anything
   // else
-  Atomic<uint32_t, Relaxed> mResolveFlags;
-  uint32_t mTimeout;
-  nsProxyInfo* mNext;
+  Atomic<uint32_t, Relaxed> mResolveFlags{0};
+  uint32_t mTimeout{UINT32_MAX};
+  nsProxyInfo* mNext{nullptr};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsProxyInfo, NS_PROXYINFO_IID)

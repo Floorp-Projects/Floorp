@@ -17,9 +17,6 @@ using mozilla::dom::RootingCx;
 NS_IMPL_ISUPPORTS(ArrayBufferInputStream, nsIArrayBufferInputStream,
                   nsIInputStream);
 
-ArrayBufferInputStream::ArrayBufferInputStream()
-    : mBufferLength(0), mPos(0), mClosed(false) {}
-
 NS_IMETHODIMP
 ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
                                 uint64_t aByteOffset, uint64_t aLength) {

@@ -32,11 +32,7 @@ class nsBlockOnBackgroundThreadEvent : public Runnable {
 nsDeleteDir* nsDeleteDir::gInstance = nullptr;
 
 nsDeleteDir::nsDeleteDir()
-    : mLock("nsDeleteDir.mLock"),
-      mCondVar(mLock, "nsDeleteDir.mCondVar"),
-      mNotified(false),
-      mShutdownPending(false),
-      mStopDeleting(false) {
+    : mLock("nsDeleteDir.mLock"), mCondVar(mLock, "nsDeleteDir.mCondVar") {
   NS_ASSERTION(gInstance == nullptr, "multiple nsCacheService instances!");
 }
 

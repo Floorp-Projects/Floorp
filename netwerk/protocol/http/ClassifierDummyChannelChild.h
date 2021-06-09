@@ -26,8 +26,8 @@ class ClassifierDummyChannelChild final : public PClassifierDummyChannelChild {
                      const std::function<void(bool)>& aCallback);
 
   // Used by PNeckoChild only!
-  ClassifierDummyChannelChild();
-  ~ClassifierDummyChannelChild();
+  ClassifierDummyChannelChild() = default;
+  ~ClassifierDummyChannelChild() = default;
 
  private:
   void Initialize(nsIHttpChannel* aChannel, nsIURI* aURI, bool aIsThirdParty,
@@ -38,7 +38,7 @@ class ClassifierDummyChannelChild final : public PClassifierDummyChannelChild {
   nsCOMPtr<nsIHttpChannel> mChannel;
   nsCOMPtr<nsIURI> mURI;
   std::function<void(bool)> mCallback;
-  bool mIsThirdParty;
+  bool mIsThirdParty{false};
 };
 
 }  // namespace net

@@ -284,8 +284,9 @@ nsresult nsHttpAuthEntry::AddPath(const char* aPath) {
   nsHttpAuthPath* tempPtr = mRoot;
   while (tempPtr) {
     const char* curpath = tempPtr->mPath;
-    if (strncmp(aPath, curpath, strlen(curpath)) == 0)
+    if (strncmp(aPath, curpath, strlen(curpath)) == 0) {
       return NS_OK;  // subpath already exists in the list
+    }
 
     tempPtr = tempPtr->mNext;
   }
@@ -299,10 +300,11 @@ nsresult nsHttpAuthEntry::AddPath(const char* aPath) {
   memcpy(newAuthPath->mPath, aPath, newpathLen + 1);
   newAuthPath->mNext = nullptr;
 
-  if (!mRoot)
+  if (!mRoot) {
     mRoot = newAuthPath;  // first entry
-  else
+  } else {
     mTail->mNext = newAuthPath;  // Append newAuthPath
+  }
 
   // update the tail pointer.
   mTail = newAuthPath;

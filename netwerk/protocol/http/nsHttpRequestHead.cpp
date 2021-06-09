@@ -16,15 +16,7 @@
 namespace mozilla {
 namespace net {
 
-nsHttpRequestHead::nsHttpRequestHead()
-    : mMethod("GET"_ns),
-      mVersion(HttpVersion::v1_1),
-      mParsedMethod(kMethod_Get),
-      mHTTPS(false),
-      mRecursiveMutex("nsHttpRequestHead.mRecursiveMutex"),
-      mInVisitHeaders(false) {
-  MOZ_COUNT_CTOR(nsHttpRequestHead);
-}
+nsHttpRequestHead::nsHttpRequestHead() { MOZ_COUNT_CTOR(nsHttpRequestHead); }
 
 nsHttpRequestHead::nsHttpRequestHead(const nsHttpRequestHead& aRequestHead)
     : mRecursiveMutex("nsHttpRequestHead.mRecursiveMutex"),
@@ -149,7 +141,7 @@ nsresult nsHttpRequestHead::SetHeader(const nsACString& h, const nsACString& v,
                             nsHttpHeaderArray::eVarietyRequestOverride);
 }
 
-nsresult nsHttpRequestHead::SetHeader(nsHttpAtom h, const nsACString& v,
+nsresult nsHttpRequestHead::SetHeader(const nsHttpAtom& h, const nsACString& v,
                                       bool m /*= false*/) {
   RecursiveMutexAutoLock mon(mRecursiveMutex);
 
@@ -162,7 +154,7 @@ nsresult nsHttpRequestHead::SetHeader(nsHttpAtom h, const nsACString& v,
 }
 
 nsresult nsHttpRequestHead::SetHeader(
-    nsHttpAtom h, const nsACString& v, bool m,
+    const nsHttpAtom& h, const nsACString& v, bool m,
     nsHttpHeaderArray::HeaderVariety variety) {
   RecursiveMutexAutoLock mon(mRecursiveMutex);
 
@@ -183,13 +175,13 @@ nsresult nsHttpRequestHead::SetEmptyHeader(const nsACString& h) {
   return mHeaders.SetEmptyHeader(h, nsHttpHeaderArray::eVarietyRequestOverride);
 }
 
-nsresult nsHttpRequestHead::GetHeader(nsHttpAtom h, nsACString& v) {
+nsresult nsHttpRequestHead::GetHeader(const nsHttpAtom& h, nsACString& v) {
   v.Truncate();
   RecursiveMutexAutoLock mon(mRecursiveMutex);
   return mHeaders.GetHeader(h, v);
 }
 
-nsresult nsHttpRequestHead::ClearHeader(nsHttpAtom h) {
+nsresult nsHttpRequestHead::ClearHeader(const nsHttpAtom& h) {
   RecursiveMutexAutoLock mon(mRecursiveMutex);
 
   if (mInVisitHeaders) {
@@ -210,17 +202,17 @@ void nsHttpRequestHead::ClearHeaders() {
   mHeaders.Clear();
 }
 
-bool nsHttpRequestHead::HasHeader(nsHttpAtom h) {
+bool nsHttpRequestHead::HasHeader(const nsHttpAtom& h) {
   RecursiveMutexAutoLock mon(mRecursiveMutex);
   return mHeaders.HasHeader(h);
 }
 
-bool nsHttpRequestHead::HasHeaderValue(nsHttpAtom h, const char* v) {
+bool nsHttpRequestHead::HasHeaderValue(const nsHttpAtom& h, const char* v) {
   RecursiveMutexAutoLock mon(mRecursiveMutex);
   return mHeaders.HasHeaderValue(h, v);
 }
 
-nsresult nsHttpRequestHead::SetHeaderOnce(nsHttpAtom h, const char* v,
+nsresult nsHttpRequestHead::SetHeaderOnce(const nsHttpAtom& h, const char* v,
                                           bool merge /*= false */) {
   RecursiveMutexAutoLock mon(mRecursiveMutex);
 

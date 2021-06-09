@@ -41,18 +41,14 @@ class nsInputStreamTransport : public nsITransport,
   NS_DECL_NSIINPUTSTREAMCALLBACK
 
   nsInputStreamTransport(nsIInputStream* source, bool closeWhenDone)
-      : mMutex("nsInputStreamTransport::mMutex"),
-        mSource(source),
-        mOffset(0),
-        mCloseWhenDone(closeWhenDone),
-        mInProgress(false) {
+      : mSource(source), mCloseWhenDone(closeWhenDone) {
     mAsyncSource = do_QueryInterface(mSource);
   }
 
  private:
   virtual ~nsInputStreamTransport() = default;
 
-  Mutex mMutex;
+  Mutex mMutex{"nsInputStreamTransport::mMutex"};
 
   // This value is protected by mutex.
   nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
@@ -67,12 +63,12 @@ class nsInputStreamTransport : public nsITransport,
   // It can be null.
   nsCOMPtr<nsIAsyncInputStream> mAsyncSource;
 
-  int64_t mOffset;
+  int64_t mOffset{0};
   const bool mCloseWhenDone;
 
   // this variable serves as a lock to prevent the state of the transport
   // from being modified once the copy is in progress.
-  bool mInProgress;
+  bool mInProgress{false};
 };
 
 NS_IMPL_ADDREF(nsInputStreamTransport);
@@ -248,9 +244,7 @@ nsInputStreamTransport::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
 nsStreamTransportService::nsStreamTransportService()
     : mScheduledDelayedRunnables(
-          "nsStreamTransportService.mScheduledDelayedRunnables"),
-      mShutdownLock("nsStreamTransportService.mShutdownLock"),
-      mIsShutdown(false) {}
+          "nsStreamTransportService.mScheduledDelayedRunnables") {}
 
 nsStreamTransportService::~nsStreamTransportService() {
   NS_ASSERTION(!mPool, "thread pool wasn't shutdown");

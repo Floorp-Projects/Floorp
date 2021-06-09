@@ -205,10 +205,7 @@ static LinkedList<nsStandardURL> gAllURLs;
 #endif
 
 nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
-    : mDefaultPort(-1),
-      mPort(-1),
-      mDisplayHost(nullptr),
-      mURLType(URLTYPE_STANDARD),
+    : mURLType(URLTYPE_STANDARD),
       mSupportsFileURL(aSupportsFileURL),
       mCheckedIfHostA(false) {
   LOG(("Creating nsStandardURL @%p\n", this));

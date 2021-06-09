@@ -302,31 +302,7 @@ void AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded) {
 // nsHttpChannel <public>
 //-----------------------------------------------------------------------------
 
-nsHttpChannel::nsHttpChannel()
-    : HttpAsyncAborter<nsHttpChannel>(this),
-      mCacheDisposition(kCacheUnresolved),
-      mLogicalOffset(0),
-      mPostID(0),
-      mRequestTime(0),
-      mSuspendTotalTime(0),
-      mRedirectType(0),
-      mCacheOpenWithPriority(false),
-      mCacheQueueSizeWhenOpen(0),
-      mCachedContentIsValid(false),
-      mIsAuthChannel(false),
-      mAuthRetryPending(false),
-      mPushedStreamId(0),
-      mLocalBlocklist(false),
-      mOnTailUnblock(nullptr),
-      mWarningReporter(nullptr),
-      mIsReadingFromCache(false),
-      mFirstResponseSource(RESPONSE_PENDING),
-      mRaceCacheWithNetwork(false),
-      mRaceDelay(0),
-      mIgnoreCacheEntry(false),
-      mRCWNLock("nsHttpChannel.mRCWNLock"),
-      mProxyConnectResponseCode(0),
-      mDidReval(false) {
+nsHttpChannel::nsHttpChannel() : HttpAsyncAborter<nsHttpChannel>(this) {
   LOG(("Creating nsHttpChannel [this=%p]\n", this));
   mChannelCreationTime = PR_Now();
   mChannelCreationTimestamp = TimeStamp::Now();
@@ -9081,9 +9057,8 @@ nsHttpChannel::Notify(nsITimer* aTimer) {
   }
   if (aTimer == mNetworkTriggerTimer) {
     return TriggerNetwork();
-  } else {
-    MOZ_CRASH("Unknown timer");
   }
+  MOZ_CRASH("Unknown timer");
 
   return NS_OK;
 }

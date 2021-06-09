@@ -212,16 +212,16 @@ class CacheFileMetadata final : public CacheFileIOListener,
 
   RefPtr<CacheFileHandle> mHandle;
   nsCString mKey;
-  CacheHash::Hash16_t* mHashArray;
-  uint32_t mHashArraySize;
-  uint32_t mHashCount;
-  int64_t mOffset;
-  char* mBuf;  // used for parsing, then points
-               // to elements
-  uint32_t mBufSize;
-  char* mWriteBuf;
+  CacheHash::Hash16_t* mHashArray{nullptr};
+  uint32_t mHashArraySize{0};
+  uint32_t mHashCount{0};
+  int64_t mOffset{0};
+  // used for parsing, then points to elements
+  char* mBuf{nullptr};
+  uint32_t mBufSize{0};
+  char* mWriteBuf{nullptr};
   CacheFileMetadataHeader mMetaHdr{0};
-  uint32_t mElementsSize;
+  uint32_t mElementsSize{0};
   bool mIsDirty : 1;
   bool mAnonymous : 1;
   bool mAllocExactSize : 1;
