@@ -189,6 +189,35 @@ bool SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(
   return true;
 }
 
+/* static */
+bool SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(
+    Span<const StylePathCommand> aPath, FallibleTArray<double>* aOutput) {
+  SVGPathTraversalState state;
+
+  aOutput->Clear();
+
+  bool firstMoveToIsChecked = false;
+  for (const auto& cmd : aPath) {
+    SVGPathSegUtils::TraversePathSegment(cmd, state);
+    if (!std::isfinite(state.length)) {
+      return false;
+    }
+
+    // We skip all moveto commands except for the initial moveto.
+    if (!cmd.IsMoveTo() || !firstMoveToIsChecked) {
+      if (!aOutput->AppendElement(state.length, fallible)) {
+        return false;
+      }
+    }
+
+    if (cmd.IsMoveTo() && !firstMoveToIsChecked) {
+      firstMoveToIsChecked = true;
+    }
+  }
+
+  return true;
+}
+
 uint32_t SVGPathData::GetPathSegAtLength(float aDistance) const {
   // TODO [SVGWG issue] get specified what happen if 'aDistance' < 0, or
   // 'aDistance' > the length of the path, or the seg list is empty.
