@@ -4007,7 +4007,7 @@
 # If session history is stored in the parent process, enable bfcache for it.
 - name: fission.bfcacheInParent
   type: bool
-  value: false
+  value: true
   mirror: always
   do_not_use_directly: true
 
