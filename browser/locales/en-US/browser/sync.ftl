@@ -14,13 +14,13 @@ fxa-signout-dialog2-button = Sign out
 fxa-signout-dialog2-checkbox = Delete data from this device (passwords, history, bookmarks, etc.)
 
 fxa-menu-sync-settings =
-    .label = Sync Settings
+    .label = Sync settings
 fxa-menu-turn-on-sync =
-    .value = Turn on Sync
-fxa-menu-turn-on-sync-default = Turn on Sync
+    .value = Turn on sync
+fxa-menu-turn-on-sync-default = Turn on sync
 
 fxa-menu-connect-another-device =
-    .label = Connect Another Device…
+    .label = Connect another device…
 
 fxa-menu-sign-out =
-    .label = Sign Out…
+    .label = Sign out…
