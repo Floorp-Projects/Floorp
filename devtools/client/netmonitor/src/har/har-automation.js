@@ -64,10 +64,19 @@ HarAutomation.prototype = {
       [this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
       {
         onAvailable: resources => {
-          if (resources.find(r => r.name == "will-navigate")) {
+          // Only consider top level document, and ignore remote iframes top document
+          if (
+            resources.find(
+              r => r.name == "will-navigate" && r.targetFront.isTopLevel
+            )
+          ) {
             this.pageLoadBegin();
           }
-          if (resources.find(r => r.name == "dom-complete")) {
+          if (
+            resources.find(
+              r => r.name == "dom-complete" && r.targetFront.isTopLevel
+            )
+          ) {
             this.pageLoadDone();
           }
         },
