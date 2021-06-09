@@ -23,7 +23,8 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/third_party/libwebrtc/webrtc/"
+    "/third_party/libwebrtc/webrtc/",
+    "/tools/profiler/public"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

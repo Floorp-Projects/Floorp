@@ -30,7 +30,8 @@ LOCAL_INCLUDES += [
     "/third_party/libwebrtc/webrtc/common_audio/vad/include/",
     "/third_party/libwebrtc/webrtc/modules/audio_device/dummy/",
     "/third_party/libwebrtc/webrtc/modules/audio_device/include/",
-    "/third_party/libwebrtc/webrtc/modules/include/"
+    "/third_party/libwebrtc/webrtc/modules/include/",
+    "/tools/profiler/public"
 ]
 
 UNIFIED_SOURCES += [
