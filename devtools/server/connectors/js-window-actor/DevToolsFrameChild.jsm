@@ -245,6 +245,21 @@ class DevToolsFrameChild extends JSWindowActorChild {
       actor: targetActor,
     });
 
+    // Immediately queue a message for the parent process,
+    // in order to ensure that the JSWindowActorTransport is instantiated
+    // before any packet is sent from the content process.
+    // As the order of messages is guaranteed to be delivered in the order they
+    // were queued, we don't have to wait for anything around this sendAsyncMessage call.
+    // In theory, the FrameTargetActor may emit events in its constructor.
+    // If it does, such RDP packets may be lost.
+    // The important point here is to send this message before processing the watchedData,
+    // which will start the Watcher and start emitting resources on the target actor.
+    this.sendAsyncMessage("DevToolsFrameChild:connectFromContent", {
+      watcherActorID,
+      forwardingPrefix,
+      actor: targetActor.form(),
+    });
+
     // Pass initialization data to the target actor
     for (const type in watchedData) {
       // `watchedData` will also contain `browserId` and `watcherTraits`,
@@ -255,21 +270,6 @@ class DevToolsFrameChild extends JSWindowActorChild {
       }
       targetActor.addWatcherDataEntry(type, entries);
     }
-
-    // Immediately queue a message for the parent process,
-    // in order to ensure that the JSWindowActorTransport is instantiated
-    // before any packet is sent from the content process.
-    // As the order of messages is quaranteed to be delivered in the order they
-    // were queued, we don't have to wait for anything around this sendAsyncMessage call.
-    // In theory, the FrameTargetActor may emit events in its constructor.
-    // If it does, such RDP packets may be lost. But in practice, no events
-    // are emitted during its construction. Instead the frontend will start
-    // the communication first.
-    this.sendAsyncMessage("DevToolsFrameChild:connectFromContent", {
-      watcherActorID,
-      forwardingPrefix,
-      actor: targetActor.form(),
-    });
   }
 
   _destroyTargetActor(watcherActorID) {
