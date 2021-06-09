@@ -24,7 +24,7 @@ def group_tasks(config, tasks):
 
     groups = group_by_fn(config, tasks)
 
-    for combinations in groups.itervalues():
+    for combinations in groups.values():
         dependencies = [copy.deepcopy(t) for t in combinations]
         yield dependencies
 

@@ -20,7 +20,7 @@ schema = Schema({
     Required(
         'dependent-tasks',
         'dictionary of dependent tasks, keyed by kind',
-    ): {basestring: Task},
+    ): {str: Task},
 })
 
 
@@ -66,7 +66,7 @@ def get_primary_dep(config, dep_tasks):
     is the primary dependency. If it's undefined, return the first dep.
     """
     primary_dependencies = config.get('primary-dependency')
-    if isinstance(primary_dependencies, basestring):
+    if isinstance(primary_dependencies, str):
         primary_dependencies = [primary_dependencies]
     if not primary_dependencies:
         assert len(dep_tasks) == 1, "Must define a primary-dependency!"

@@ -20,7 +20,7 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
 
         return task.attributes.get("release-type", "") == parameters["release_type"]
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task("nightly")
@@ -32,7 +32,7 @@ def target_tasks_nightly(full_task_graph, parameters, graph_config):
         # See bug 1628413 for more context.
         return task.attributes.get("nightly", False) and task.kind != "push-apk"
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task("nightly-on-google-play")
@@ -48,7 +48,7 @@ def target_tasks_nightly_on_google_play(full_task_graph, parameters, graph_confi
             task.kind not in ("browsertime", "visual-metrics", "raptor")
         )
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 def _filter_fennec(fennec_type, task, parameters):
@@ -59,7 +59,7 @@ def _filter_fennec(fennec_type, task, parameters):
 def target_tasks_fennec_nightly(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a production build signed with the fennec key."""
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if _filter_fennec("production", t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if _filter_fennec("production", t, parameters)]
 
 
 @_target_task("bump_android_components")
@@ -69,7 +69,7 @@ def target_tasks_bump_android_components(full_task_graph, parameters, graph_conf
     def filter(task, parameters):
         return task.attributes.get("bump-type", "") == "android-components"
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task("screenshots")
@@ -79,4 +79,4 @@ def target_tasks_screnshots(full_task_graph, parameters, graph_config):
     def filter(task, parameters):
         return task.attributes.get("screenshots", False)
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]

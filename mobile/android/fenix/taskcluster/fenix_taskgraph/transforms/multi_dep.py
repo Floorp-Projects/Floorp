@@ -20,7 +20,7 @@ def build_name_and_attributes(config, tasks):
     for task in tasks:
         task["dependencies"] = {
             dep_key: dep.label
-            for dep_key, dep in _get_all_deps(task).iteritems()
+            for dep_key, dep in _get_all_deps(task).items()
         }
         primary_dep = task["primary-dependency"]
         copy_of_attributes = primary_dep.attributes.copy()

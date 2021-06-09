@@ -25,7 +25,7 @@ extend_parameters_schema({
 
 def get_decision_parameters(graph_config, parameters):
     parameters.setdefault("release_type", "")
-    head_tag = parameters["head_tag"].decode("utf-8")
+    head_tag = parameters["head_tag"]
     parameters["version"] = head_tag[1:] if head_tag else ""
 
     pr_number = os.environ.get("MOBILE_PULL_REQUEST_NUMBER", None)
@@ -54,5 +54,5 @@ def get_decision_parameters(graph_config, parameters):
         else:
             raise ValueError("Unsupported version type: {}".format(version.version_type))
 
-        parameters["next_version"] = str(next_version).decode("utf-8")
+        parameters["next_version"] = str(next_version)
         parameters["release_type"] = release_type

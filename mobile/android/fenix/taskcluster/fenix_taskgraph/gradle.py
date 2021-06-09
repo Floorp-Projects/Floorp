@@ -40,14 +40,14 @@ def _fetch_all_variants():
 def _run_gradle_process(gradle_command, **kwargs):
     gradle_properties = [
         '-P{property_name}={value}'.format(property_name=property_name, value=value)
-        for property_name, value in kwargs.iteritems()
+        for property_name, value in kwargs.items()
     ]
 
-    process = subprocess.Popen(["./gradlew", "--no-daemon", "--quiet", gradle_command] + gradle_properties, stdout=subprocess.PIPE)
+    process = subprocess.Popen(["./gradlew", "--no-daemon", "--quiet", gradle_command] + gradle_properties, stdout=subprocess.PIPE, universal_newlines=True)
     output, err = process.communicate()
     exit_code = process.wait()
 
-    if exit_code is not 0:
+    if exit_code != 0:
         raise RuntimeError("Gradle command returned error: {}".format(exit_code))
 
     return output

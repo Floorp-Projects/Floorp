@@ -12,4 +12,6 @@ $CURL --output "$SDK_ZIP_LOCATION" "https://dl.google.com/android/repository/sdk
 echo "$ANDROID_SDK_SHA256  $SDK_ZIP_LOCATION" | sha256sum --check
 unzip -d "$ANDROID_SDK_ROOT" "$SDK_ZIP_LOCATION"
 rm "$SDK_ZIP_LOCATION"
+
+export JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk-amd64"
 yes | "${ANDROID_SDK_ROOT}/tools/bin/sdkmanager" --licenses
