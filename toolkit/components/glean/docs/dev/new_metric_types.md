@@ -101,7 +101,7 @@ they're both implemented in C++ and share much of their implementation.
 The overall design is to build the C++ API atop the Multi-Language Architecture's
 (MLA's) FFI, then build the JS API atop the C++ API.
 This allows features like the
-[Glean Interface For Firefox Telemetry (GIFFT)](gifft.md)
+[Glean Interface For Firefox Telemetry (GIFFT)](../user/gifft.md)
 that target only C++ and JS to be more simply implemented in the C++ layer.
 Exceptions to this (where the JS uses the FFI directly) are discouraged.
 
@@ -224,7 +224,7 @@ There are four pieces to this:
   add your sub metric type's map as a list item in the `submetric_maps` `mod` of
   [`rust.jinja2`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/build_scripts/glean_parser_ext/templates/rust.jinja2).
 - Following the pattern of the others, add a `fog_{your labeled metric name here}_get()` FFI API to
-  [`api/src/ffi/mod.rs`]().
+  `api/src/ffi/mod.rs`.
   This is what C++ and JS will use to allocate and retrieve sub metric instances by id.
 
 #### C++

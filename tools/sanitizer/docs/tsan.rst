@@ -47,7 +47,7 @@ Creating Try builds
 
 If for some reason you can't use the pre-built binaries mentioned in the
 previous section (e.g. you need to test a patch), you can either build
-Firefox yourself (see the following section) or use the :ref:`try server <Try Server>`
+Firefox yourself (see the following section) or use the :ref:`try server <Pushing to Try>`
 to create the customized build for you. Pushing to try requires L1 commit
 access. If you don't have this access yet you can request access (see
 `Becoming A Mozilla
@@ -261,6 +261,8 @@ Intermittent Race Reports
 Unfortunately, the TSan algorithm does not guarantee, that a race is detected 100% of the
 time. Intermittent failures with TSan are (to a certain degree) to be expected and the races
 involved should be filed and fixed to solve the problem.
+
+.. _Frequently Asked Questions about TSan:
 
 Frequently Asked Questions about TSan
 -------------------------------------

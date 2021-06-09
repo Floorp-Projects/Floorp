@@ -22,4 +22,4 @@ Documentation has two try jobs associated :
 .. note::
 
    To learn more about setting up try server or
-   using a different selector head over to :ref:`try server documentation <Try Server>`
+   using a different selector head over to :ref:`try server documentation <Pushing to Try>`
