@@ -69,13 +69,13 @@
 
   &.customize-animate-enter-done,
   &.customize-animate-enter-active {
-    box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow);
+    box-shadow: var(--customize-menu-second-shadow);
     visibility: visible;
     transform: translateX(0);
   }
 
   &.customize-animate-exit-active {
-    box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow);
+    box-shadow: var(--customize-menu-second-shadow);
   }
 
   .close-button {
