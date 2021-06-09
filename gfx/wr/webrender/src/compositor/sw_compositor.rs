@@ -13,7 +13,7 @@ use std::thread;
 use crate::{
     api::units::*, api::ColorDepth, api::ExternalImageId, api::ImageRendering, api::YuvColorSpace, Compositor,
     CompositorCapabilities, CompositorSurfaceTransform, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
-    host_utils::{thread_started, thread_stopped}, MappableCompositor, SWGLCompositeSurfaceInfo,
+    profiler, MappableCompositor, SWGLCompositeSurfaceInfo,
 };
 
 pub struct SwTile {
@@ -473,14 +473,14 @@ impl SwCompositeThread {
             // overhead.
             .stack_size(32 * 1024)
             .spawn(move || {
-                thread_started(thread_name);
+                profiler::register_thread(thread_name);
                 // Process any available jobs. This will return a non-Ok
                 // result when the job queue is dropped, causing the thread
                 // to eventually exit.
                 while let Some((job, band)) = info.take_job(true) {
                     info.process_job(job, band);
                 }
-                thread_stopped();
+                profiler::unregister_thread();
             })
             .expect("Failed creating SwComposite thread");
         result
