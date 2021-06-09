@@ -565,7 +565,7 @@ crashed-subframe-submit =
 ## Bookmarks panels, menus and toolbar
 
 bookmarks-manage-bookmarks =
-  .label = Manage Bookmarks
+  .label = Manage bookmarks
 bookmarks-recent-bookmarks-panel-subheader = Recent Bookmarks
 bookmarks-toolbar-chevron =
   .tooltiptext = Show more bookmarks
