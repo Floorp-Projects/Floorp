@@ -75,6 +75,7 @@ IPDL_SOURCES += [
 
 XPIDL_SOURCES += [
     "extIWebNavigation.idl",
+    "mozIExtensionAPIRequestHandling.idl",
     "mozIExtensionProcessScript.idl",
 ]
 

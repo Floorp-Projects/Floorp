@@ -91,6 +91,10 @@ UniquePtr<SerializedStackHolder> GetCurrentStackForNetMonitor(JSContext* aCx) {
   MOZ_ASSERT_IF(!NS_IsMainThread(),
                 GetCurrentThreadWorkerPrivate()->IsWatchedByDevTools());
 
+  return GetCurrentStack(aCx);
+}
+
+UniquePtr<SerializedStackHolder> GetCurrentStack(JSContext* aCx) {
   UniquePtr<SerializedStackHolder> stack = MakeUnique<SerializedStackHolder>();
   stack->SerializeCurrentStack(aCx);
   return stack;
