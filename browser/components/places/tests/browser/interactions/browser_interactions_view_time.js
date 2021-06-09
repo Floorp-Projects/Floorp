@@ -110,7 +110,11 @@ add_task(async function test_interactions_background_tab() {
   BrowserTestUtils.removeTab(tab2);
 
   // This is checking a non-action, so let the event queue clear to try and
-  // detect any unexpected database writes.
+  // detect any unexpected database writes. We wait for a few ticks to
+  // make it more likely. however if this fails it may show up as an
+  // intermittent.
+  await TestUtils.waitForTick();
+  await TestUtils.waitForTick();
   await TestUtils.waitForTick();
 
   Assert.equal(

@@ -152,6 +152,14 @@ class _Interactions {
    *   The browser object associated with the interaction.
    */
   registerEndOfInteraction(browser) {
+    // Not having a browser passed to us probably means the tab has gone away
+    // before we received the notification - due to the tab being a background
+    // tab. Since that will be a non-active tab, it is acceptable that we don't
+    // update the interaction. When switching away from active tabs, a TabSelect
+    // notification is generated which we handle elsewhere.
+    if (!browser) {
+      return;
+    }
     this.logConsole.debug("End of interaction");
 
     this.#updateInteraction(browser);
