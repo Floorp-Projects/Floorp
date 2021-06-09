@@ -3633,6 +3633,7 @@ pref("signon.capture.inputChanges.enabled", true);
 pref("signon.formlessCapture.enabled",      true);
 pref("signon.formRemovalCapture.enabled",   true);
 pref("signon.generation.available",               true);
+pref("signon.improvedPasswordRules.enabled", true);
 pref("signon.backup.enabled",               true);
 pref("signon.generation.confidenceThreshold",     "0.75");
 pref("signon.generation.enabled",                 true);
