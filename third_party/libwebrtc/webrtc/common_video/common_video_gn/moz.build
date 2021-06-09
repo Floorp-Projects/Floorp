@@ -26,7 +26,8 @@ LOCAL_INCLUDES += [
     "/media/libyuv/libyuv/include/",
     "/media/libyuv/libyuv/include/",
     "/third_party/libwebrtc/webrtc/",
-    "/third_party/libwebrtc/webrtc/common_video/include/"
+    "/third_party/libwebrtc/webrtc/common_video/include/",
+    "/tools/profiler/public"
 ]
 
 UNIFIED_SOURCES += [

@@ -33,7 +33,8 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/ipc/glue",
     "/third_party/libwebrtc/webrtc/",
-    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/include/"
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/include/",
+    "/tools/profiler/public"
 ]
 
 UNIFIED_SOURCES += [
