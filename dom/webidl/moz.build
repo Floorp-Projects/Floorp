@@ -1057,6 +1057,12 @@ WEBIDL_FILES += [
     "ExtensionPort.webidl",
 ]
 
+# The following is not a real WebExtensions API, it is a test WebIDL
+# interface that includes a collection of the cases useful to unit
+# test the API request forwarding mechanism without tying it to
+# a specific WebExtensions API.
+WEBIDL_FILES += ["ExtensionMockAPI.webidl"]
+
 # We only expose our prefable test interfaces in debug builds, just to be on
 # the safe side.
 if CONFIG["MOZ_DEBUG"] and CONFIG["ENABLE_TESTS"]:
