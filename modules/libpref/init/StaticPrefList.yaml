@@ -1200,6 +1200,12 @@
   mirror: always
   rust: true
 
+- name: browser.proton.modals.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+  rust: true
+
 - name: browser.proton.places-tooltip.enabled
   type: RelaxedAtomicBool
   value: false

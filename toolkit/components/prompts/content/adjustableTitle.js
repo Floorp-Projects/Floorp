@@ -167,7 +167,7 @@ const AdjustableTitle = {
 
   init() {
     // Only run this if we're embedded and proton modals are enabled.
-    if (!window.docShell.chromeEventHandler) {
+    if (!window.docShell.chromeEventHandler || !PromptUtils.protonModals) {
       return;
     }
 
