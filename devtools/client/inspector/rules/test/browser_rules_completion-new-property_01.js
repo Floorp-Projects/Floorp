@@ -6,6 +6,10 @@
 // Tests that CSS property names are autocompleted and cycled correctly when
 // creating a new property in the rule view.
 
+const D_PROPERTY_ENABLED = SpecialPowers.getBoolPref(
+  "layout.css.d-property.enabled"
+);
+
 // format :
 //  [
 //    what key to press,
@@ -18,9 +22,11 @@ const OPEN = true,
 var testData = [
   ["d", "display", OPEN, SELECTED],
   ["VK_DOWN", "dominant-baseline", OPEN, SELECTED],
+  D_PROPERTY_ENABLED ? ["VK_DOWN", "d", OPEN, SELECTED] : [],
   ["VK_DOWN", "direction", OPEN, SELECTED],
   ["VK_DOWN", "display", OPEN, SELECTED],
   ["VK_UP", "direction", OPEN, SELECTED],
+  D_PROPERTY_ENABLED ? ["VK_UP", "d", OPEN, SELECTED] : [],
   ["VK_UP", "dominant-baseline", OPEN, SELECTED],
   ["VK_UP", "display", OPEN, SELECTED],
   ["VK_BACK_SPACE", "d", !OPEN, !SELECTED],
@@ -59,6 +65,9 @@ async function runAutocompletionTest(toolbox, inspector, view) {
 
   info("Starting to test for css property completion");
   for (let i = 0; i < testData.length; i++) {
+    if (testData[i].length == 0) {
+      continue;
+    }
     await testCompletion(testData[i], editor, view);
   }
 }

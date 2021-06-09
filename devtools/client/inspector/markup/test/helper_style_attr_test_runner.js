@@ -42,6 +42,11 @@ async function runStyleAttributeAutocompleteTests(inspector, testData) {
   for (let i = 0; i < testData.length; i++) {
     const data = testData[i];
 
+    // Skip empty key.
+    if (data.length == 0) {
+      continue;
+    }
+
     // Expect a markupmutation event at the last iteration since that's when the
     // attribute is actually created.
     const onMutation =

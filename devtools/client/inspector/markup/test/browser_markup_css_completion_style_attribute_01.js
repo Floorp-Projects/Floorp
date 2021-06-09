@@ -16,6 +16,10 @@ loadHelperScript("helper_style_attr_test_runner.js");
 
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 
+const D_PROPERTY_ENABLED = SpecialPowers.getBoolPref(
+  "layout.css.d-property.enabled"
+);
+
 // test data format :
 //  [
 //    what key to press,
@@ -35,8 +39,9 @@ const TEST_DATA = [
   ["d", 'style="display', 8, 14, true],
   ["VK_TAB", 'style="display', 14, 14, true],
   ["VK_TAB", 'style="dominant-baseline', 24, 24, true],
+  D_PROPERTY_ENABLED ? ["VK_TAB", 'style="d', 8, 8, true] : [],
   ["VK_TAB", 'style="direction', 16, 16, true],
-  ["click_1", 'style="display', 14, 14, false],
+  [D_PROPERTY_ENABLED ? "click_2" : "click_1", 'style="display', 14, 14, false],
   [":", 'style="display:block', 15, 20, true],
   ["n", 'style="display:none', 16, 19, false],
   ["VK_BACK_SPACE", 'style="display:n', 16, 16, false],
