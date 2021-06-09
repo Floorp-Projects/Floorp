@@ -7,7 +7,6 @@ black:
         - python/mozbuild/mozbuild/fork_interpose.py
         - python/mozbuild/mozbuild/test/frontend/data/reader-error-syntax/moz.build
         - testing/mozharness/configs/test/test_malformed.py
-        - testing/web-platform/mozilla/tests/tools/wptserve_py2
         - testing/web-platform/tests
     extensions:
         - build
