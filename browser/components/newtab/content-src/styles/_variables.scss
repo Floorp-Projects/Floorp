@@ -119,17 +119,14 @@ $newtab-card-darktheme-line-color: #B9B7CC;
 $newtab-card-separator-line-color: #E1E0E6;
 $newtab-card-darktheme-separator-line-color: #53515F;
 $newtab-card-tint: rgba(0, 0, 0, 0.15);
-
-$newtab-card-firstshadow: 0 2px 6px rgba(58, 57, 68, 0.2);
-$newtab-card-secondshadow: 0 2px 14px rgba(58, 57, 68, 0.2);
-$newtab-card-darktheme-firstshadow: 0 2px 6px rgba(28, 27, 34, 0.5);
-$newtab-card-darktheme-secondshadow: 0 2px 14px rgba(28, 27, 34, 0.5);
-
+$newtab-card-firstshadow: rgba(9, 32, 77, 0.12);
+$newtab-card-darktheme-firstshadow: rgba(21, 20, 26, 0.5);
+$newtab-card-secondshadow: rgba(29, 17, 51, 0.12);
+$newtab-darktheme-card-secondshadow: rgba(21, 20, 26, 0.75);
 $newtab-focus-outline-color: rgba(0, 96, 223, 0.25);
 $newtab-darktheme-focus-outline-color: rgba(80, 145, 241, 0.5);
 $newtab-darktheme-focus-border: #B5D3FF;
 $newtab-darktheme-focus-border-selected: #B5D3FF;
-
 $newtab-darktheme-primary-action-background: #4484E2;
 $newtab-primary-action-background-off: #E9E9E9;
 $newtab-darktheme-primary-action-background-off: #6A6A6F;
@@ -139,6 +136,8 @@ $newtab-card-secondary-action-background-active: #E2E2E6;
 $newtab-card-darktheme-secondary-action-background-active: #6F6F74;
 $newtab-card-darktheme-hover-color: rgba(180, 180, 180, 0.1);
 $newtab-card-hover-color: rgba(0, 0, 0, 0.05);
+$newtab-tile-shadow-secondary: rgba(29, 17, 51, 0.2);
+$newtab-tile-darktheme-shadow-secondary: rgba(21, 20, 26, 0.75);
 $newtab-card-secondary-text-color: #585165;
 $newtab-card-darktheme-secondary-text-color: #B1B1BD;
 

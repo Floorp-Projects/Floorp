@@ -16,7 +16,7 @@
     }
 
     .card {
-      box-shadow: var(--newtab-card-first-shadow);
+      box-shadow: 0 3px 8px var(--newtab-card-first-shadow), 0 0 2px var(--newtab-card-second-shadow);
       border-radius: $border-radius-new;
     }
 
