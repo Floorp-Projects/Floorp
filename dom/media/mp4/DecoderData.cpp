@@ -89,9 +89,8 @@ static MediaResult VerifyAudioOrVideoInfoAndRecordTelemetry(
       Telemetry::MEDIA_MP4_PARSE_NUM_SAMPLE_DESCRIPTION_ENTRIES,
       audioOrVideoInfo->sample_info_count);
 
-  bool hasCrypto = false;
   bool hasMultipleCodecs = false;
-  bool hasMultipleCrypto = false;
+  uint32_t cryptoCount = 0;
   Mp4parseCodec codecType = audioOrVideoInfo->sample_info[0].codec_type;
   for (uint32_t i = 0; i < audioOrVideoInfo->sample_info_count; i++) {
     if (audioOrVideoInfo->sample_info[0].codec_type != codecType) {
@@ -100,10 +99,7 @@ static MediaResult VerifyAudioOrVideoInfoAndRecordTelemetry(
 
     // Update our encryption info if any is present on the sample info.
     if (audioOrVideoInfo->sample_info[i].protected_data.is_encrypted) {
-      if (hasCrypto) {
-        hasMultipleCrypto = true;
-      }
-      hasCrypto = true;
+      cryptoCount += 1;
     }
   }
 
@@ -112,10 +108,13 @@ static MediaResult VerifyAudioOrVideoInfoAndRecordTelemetry(
           MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CODECS,
       hasMultipleCodecs);
 
+  // Accumulate if we have multiple (2 or more) crypto entries.
+  // TODO(1715283): rework this to count number of crypto entries + gather
+  // richer data.
   Telemetry::Accumulate(
       Telemetry::
           MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CRYPTO,
-      hasMultipleCrypto);
+      cryptoCount >= 2);
 
   if (audioOrVideoInfo->sample_info_count == 0) {
     return MediaResult(
