@@ -354,17 +354,28 @@ class NavigationDelegateTest : BaseSessionTest() {
         privateSession.loadUri(secureUri)
         privateSession.waitForPageStop()
 
+        var onLoadCalledCounter = 0
         privateSession.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 0)
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
                 return null
             }
 
-            @AssertCalled(count = 1)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                onLoadCalledCounter++
                 return null
             }
         })
+
+        val httpsFirstPBMPref = "dom.security.https_first_pbm"
+        val httpsFirstPBMPrefValue = (sessionRule.getPrefs(httpsFirstPBMPref)[0] as Boolean)
+        if (httpsFirstPBMPrefValue) {
+            // if https-first is enabled we get two calls to onLoadRequest
+            // (1) http://example.com/ and  (2) https://example.com/
+            assertThat("Assert count privateSession.onLoadRequest", onLoadCalledCounter, equalTo(2))
+        } else {
+            assertThat("Assert count privateSession.onLoadRequest", onLoadCalledCounter, equalTo(1))
+        }
 
         sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.HTTPS_ONLY_PRIVATE)
 
