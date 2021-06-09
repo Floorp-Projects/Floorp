@@ -65,7 +65,7 @@ downloads-cmd-show-description =
   }
 
 downloads-cmd-show-downloads =
-    .label = Show Downloads Folder
+    .label = Show downloads folder
 downloads-cmd-retry =
     .tooltiptext = Retry
 downloads-cmd-retry-panel =
