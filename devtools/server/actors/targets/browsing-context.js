@@ -554,11 +554,14 @@ const browsingContextTargetPrototype = {
     );
     assert(this.actorID, "Actor should have an actorID.");
 
+    const innerWindowId = this.window ? getInnerId(this.window) : null;
+
     const response = {
       actor: this.actorID,
       browsingContextID: this.browsingContextID,
       // True for targets created by JSWindowActors, see constructor JSDoc.
       followWindowGlobalLifeCycle: this.followWindowGlobalLifeCycle,
+      innerWindowId,
       isTopLevelTarget: this.isTopLevelTarget,
       traits: {
         // @backward-compat { version 64 } Exposes a new trait to help identify

@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-
 const EventEmitter = require("devtools/shared/event-emitter");
 const { LocalizationHelper, ELLIPSIS } = require("devtools/shared/l10n");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
@@ -318,11 +317,13 @@ class StorageUI {
       const { resourceKey } = resource;
 
       // NOTE: We might be getting more than 1 resource per storage type when
-      //       we have remote frames, so we need an array to store these.
+      //       we have remote frames in content process resources, so we need
+      //       an array to store these.
       if (!this.storageResources[resourceKey]) {
         this.storageResources[resourceKey] = [];
       }
       this.storageResources[resourceKey].push(resource);
+
       resource.on(
         "single-store-update",
         this._onStoreUpdate.bind(this, resource)
@@ -353,7 +354,8 @@ class StorageUI {
       this.storageResources[type] = this.storageResources[type].filter(
         storage => {
           // Note that the storage front may already be destroyed,
-          // and have a null targetFront attribute. So also remove all already destroyed fronts.
+          // and have a null targetFront attribute. So also remove all already
+          // destroyed fronts.
           return !storage.isDestroyed() && storage.targetFront != targetFront;
         }
       );

@@ -8,7 +8,20 @@
 
 requestLongerTimeout(3);
 
+const TARGET_SWITCHING_PREF = "devtools.target-switching.server.enabled";
+
+// test without target switching
 add_task(async function() {
+  await testNavigation(true);
+});
+
+// test with target switching enabled
+add_task(async function() {
+  await pushPref(TARGET_SWITCHING_PREF, true);
+  await testNavigation();
+});
+
+async function testNavigation(shallCleanup = false) {
   const URL1 = URL_ROOT_COM + "storage-indexeddb-simple.html";
   const URL2 = URL_ROOT_NET + "storage-indexeddb-simple-alt.html";
 
@@ -30,10 +43,7 @@ add_task(async function() {
 
   // clear db before navigating to a new domain
   info("Removing database…");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-    const win = content.wrappedJSObject;
-    await win.clear();
-  });
+  await clearStorage();
 
   // Check second domain
   await navigateTo(URL2);
@@ -48,4 +58,22 @@ add_task(async function() {
   // TODO: select tree and check on storage data.
   // We cannot do it yet since we do not detect newly created indexed db's when
   // navigating. See Bug 1273802
-});
+
+  // reload the current tab, and check again
+  await refreshTab();
+  // wait for storage tree refresh, and check host
+  info("Checking storage tree…");
+  await waitUntil(() => isInTree(doc, ["indexedDB", "http://example.net"]));
+
+  // clean up if needed
+  if (shallCleanup) {
+    await clearStorage();
+  }
+}
+
+async function clearStorage() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    const win = content.wrappedJSObject;
+    await win.clear();
+  });
+}
