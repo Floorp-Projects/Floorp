@@ -52,6 +52,7 @@ directive = "; skip-if: !wasmThreadsEnabled()"
 [[repos]]
 name = "simd"
 url = "https://github.com/WebAssembly/simd"
+branch = "main"
 parent = "spec"
 # Skip in jit-test when it's not enabled
 directive = "; skip-if: !wasmSimdEnabled()"
