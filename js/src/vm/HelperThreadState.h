@@ -166,6 +166,10 @@ class GlobalHelperThreadState {
   // pool is used.
   JS::HelperThreadTaskCallback dispatchTaskCallback = nullptr;
 
+  // The number of tasks dispatched to the external thread pool that have not
+  // started running yet.
+  size_t externalTasksPending_ = 0;
+
   bool isInitialized_ = false;
 
   bool useInternalThreadPool_ = true;
@@ -465,6 +469,7 @@ class GlobalHelperThreadState {
   bool submitTask(GCParallelTask* task,
                   const AutoLockHelperThreadState& locked);
   void runTaskLocked(HelperThreadTask* task, AutoLockHelperThreadState& lock);
+  void runTaskFromExternalThread(AutoLockHelperThreadState& lock);
 
   using Selector = HelperThreadTask* (
       GlobalHelperThreadState::*)(const AutoLockHelperThreadState&);
