@@ -229,6 +229,7 @@ fn set_prefs(
 
     // Deprecated with geckodriver 0.30.0, but left for backward compatibility.
     prefs.insert("marionette.log.level", logging::max_level().into());
+    prefs.insert("remote.log.level", logging::max_level().into());
 
     prefs.write().map_err(|e| {
         WebDriverError::new(
