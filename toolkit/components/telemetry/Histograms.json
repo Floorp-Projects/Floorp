@@ -6379,7 +6379,7 @@
     "releaseChannelCollection": "opt-out",
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "expires_in_version": "92",
+    "expires_in_version": "95",
     "keyed": true,
     "kind": "exponential",
     "low": 1,
