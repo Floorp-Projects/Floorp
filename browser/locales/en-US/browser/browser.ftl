@@ -388,6 +388,8 @@ popup-select-microphone-device =
     .accesskey = M
 popup-select-microphone-icon =
     .tooltiptext = Microphone
+popup-select-speaker-icon =
+    .tooltiptext = Speakers
 popup-all-windows-shared = All visible windows on your screen will be shared.
 
 popup-screen-sharing-block =

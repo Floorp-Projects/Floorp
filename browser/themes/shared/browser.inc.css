@@ -799,6 +799,10 @@ popupnotificationcontent {
   list-style-image: url("chrome://browser/skin/notification-icons/microphone.svg");
 }
 
+#webRTC-selectSpeaker-icon {
+  list-style-image: url("chrome://global/skin/media/audio.svg");
+}
+
 .popup-notification-body :is(description, label, checkbox, input) {
   margin-inline: 0;
 }
