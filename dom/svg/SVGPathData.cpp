@@ -1075,6 +1075,309 @@ void SVGPathData::GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const {
   }
 }
 
+// Basically, this is identical to the above function, but replace |mData| with
+// |aPath|. We probably can factor out some identical calculation, but I believe
+// the above one will be removed because we will use any kind of array of
+// StylePathCommand for SVG d attribute in the future.
+/* static */
+void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
+                                           nsTArray<SVGMark>* aMarks) {
+  if (aPath.IsEmpty()) {
+    return;
+  }
+
+  auto toGfxPoint = [](const StyleCoordPair& aPair) {
+    return Point(aPair._0, aPair._1);
+  };
+
+  auto isCubicType = [](StylePathCommand::Tag aType) {
+    return aType == StylePathCommand::Tag::CurveTo ||
+           aType == StylePathCommand::Tag::SmoothCurveTo;
+  };
+
+  auto isQuadraticType = [](StylePathCommand::Tag aType) {
+    return aType == StylePathCommand::Tag::QuadBezierCurveTo ||
+           aType == StylePathCommand::Tag::SmoothQuadBezierCurveTo;
+  };
+
+  // info on current [sub]path (reset every M command):
+  Point pathStart(0.0, 0.0);
+  float pathStartAngle = 0.0f;
+  uint32_t pathStartIndex = 0;
+
+  // info on previous segment:
+  StylePathCommand::Tag prevSegType = StylePathCommand::Tag::Unknown;
+  Point prevSegEnd(0.0, 0.0);
+  float prevSegEndAngle = 0.0f;
+  Point prevCP;  // if prev seg was a bezier, this was its last control point
+
+  StylePathCommand::Tag segType = StylePathCommand::Tag::Unknown;
+  for (const StylePathCommand& cmd : aPath) {
+    segType = cmd.tag;
+    Point& segStart = prevSegEnd;
+    Point segEnd;
+    float segStartAngle, segEndAngle;
+
+    switch (segType)  // to find segStartAngle, segEnd and segEndAngle
+    {
+      case StylePathCommand::Tag::ClosePath:
+        segEnd = pathStart;
+        segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
+        break;
+
+      case StylePathCommand::Tag::MoveTo: {
+        const Point& p = toGfxPoint(cmd.move_to.point);
+        pathStart = segEnd =
+            cmd.move_to.absolute == StyleIsAbsolute::Yes ? p : segStart + p;
+        pathStartIndex = aMarks->Length();
+        // If authors are going to specify multiple consecutive moveto commands
+        // with markers, me might as well make the angle do something useful:
+        segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
+        break;
+      }
+      case StylePathCommand::Tag::LineTo: {
+        const Point& p = toGfxPoint(cmd.line_to.point);
+        segEnd =
+            cmd.line_to.absolute == StyleIsAbsolute::Yes ? p : segStart + p;
+        segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
+        break;
+      }
+      case StylePathCommand::Tag::CurveTo: {
+        Point cp1 = toGfxPoint(cmd.curve_to.control1);
+        Point cp2 = toGfxPoint(cmd.curve_to.control2);
+        segEnd = toGfxPoint(cmd.curve_to.point);
+
+        if (cmd.curve_to.absolute == StyleIsAbsolute::No) {
+          cp1 += segStart;
+          cp2 += segStart;
+          segEnd += segStart;
+        }
+
+        prevCP = cp2;
+        segStartAngle = AngleOfVector(
+            cp1 == segStart ? (cp1 == cp2 ? segEnd : cp2) : cp1, segStart);
+        segEndAngle = AngleOfVector(
+            segEnd, cp2 == segEnd ? (cp1 == cp2 ? segStart : cp1) : cp2);
+        break;
+      }
+      case StylePathCommand::Tag::QuadBezierCurveTo: {
+        Point cp1 = toGfxPoint(cmd.quad_bezier_curve_to.control1);
+        segEnd = toGfxPoint(cmd.quad_bezier_curve_to.point);
+
+        if (cmd.quad_bezier_curve_to.absolute == StyleIsAbsolute::No) {
+          cp1 += segStart;
+          segEnd += segStart;  // set before setting tcp2!
+        }
+
+        prevCP = cp1;
+        segStartAngle = AngleOfVector(cp1 == segStart ? segEnd : cp1, segStart);
+        segEndAngle = AngleOfVector(segEnd, cp1 == segEnd ? segStart : cp1);
+        break;
+      }
+      case StylePathCommand::Tag::EllipticalArc: {
+        const auto& arc = cmd.elliptical_arc;
+        double rx = arc.rx;
+        double ry = arc.ry;
+        double angle = arc.angle;
+        bool largeArcFlag = arc.large_arc_flag._0;
+        bool sweepFlag = arc.sweep_flag._0;
+        Point radii(arc.rx, arc.ry);
+        segEnd = toGfxPoint(arc.point);
+        if (arc.absolute == StyleIsAbsolute::No) {
+          segEnd += segStart;
+        }
+
+        // See section F.6 of SVG 1.1 for details on what we're doing here:
+        // http://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes
+
+        if (segStart == segEnd) {
+          // F.6.2 says "If the endpoints (x1, y1) and (x2, y2) are identical,
+          // then this is equivalent to omitting the elliptical arc segment
+          // entirely." We take that very literally here, not adding a mark, and
+          // not even setting any of the 'prev' variables so that it's as if
+          // this arc had never existed; note the difference this will make e.g.
+          // if the arc is proceeded by a bezier curve and followed by a
+          // "smooth" bezier curve of the same degree!
+          continue;
+        }
+
+        // Below we have funny interleaving of F.6.6 (Correction of out-of-range
+        // radii) and F.6.5 (Conversion from endpoint to center
+        // parameterization) which is designed to avoid some unnecessary
+        // calculations.
+
+        if (rx == 0.0 || ry == 0.0) {
+          // F.6.6 step 1 - straight line or coincidental points
+          segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
+          break;
+        }
+        rx = fabs(rx);  // F.6.6.1
+        ry = fabs(ry);
+
+        // F.6.5.1:
+        angle = angle * M_PI / 180.0;
+        double x1p = cos(angle) * (segStart.x - segEnd.x) / 2.0 +
+                     sin(angle) * (segStart.y - segEnd.y) / 2.0;
+        double y1p = -sin(angle) * (segStart.x - segEnd.x) / 2.0 +
+                     cos(angle) * (segStart.y - segEnd.y) / 2.0;
+
+        // This is the root in F.6.5.2 and the numerator under that root:
+        double root;
+        double numerator =
+            rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p;
+
+        if (numerator >= 0.0) {
+          root = sqrt(numerator / (rx * rx * y1p * y1p + ry * ry * x1p * x1p));
+          if (largeArcFlag == sweepFlag) root = -root;
+        } else {
+          // F.6.6 step 3 - |numerator < 0.0|. This is equivalent to the result
+          // of F.6.6.2 (lamedh) being greater than one. What we have here is
+          // ellipse radii that are too small for the ellipse to reach between
+          // segStart and segEnd. We scale the radii up uniformly so that the
+          // ellipse is just big enough to fit (i.e. to the point where there is
+          // exactly one solution).
+
+          double lamedh =
+              1.0 - numerator / (rx * rx * ry * ry);  // equiv to eqn F.6.6.2
+          double s = sqrt(lamedh);
+          rx *= s;  // F.6.6.3
+          ry *= s;
+          root = 0.0;
+        }
+
+        double cxp = root * rx * y1p / ry;  // F.6.5.2
+        double cyp = -root * ry * x1p / rx;
+
+        double theta, delta;
+        theta = AngleOfVector(
+            Point((x1p - cxp) / rx, (y1p - cyp) / ry));  // F.6.5.5
+        delta = AngleOfVector(
+                    Point((-x1p - cxp) / rx, (-y1p - cyp) / ry)) -  // F.6.5.6
+                theta;
+        if (!sweepFlag && delta > 0)
+          delta -= 2.0 * M_PI;
+        else if (sweepFlag && delta < 0)
+          delta += 2.0 * M_PI;
+
+        double tx1, ty1, tx2, ty2;
+        tx1 = -cos(angle) * rx * sin(theta) - sin(angle) * ry * cos(theta);
+        ty1 = -sin(angle) * rx * sin(theta) + cos(angle) * ry * cos(theta);
+        tx2 = -cos(angle) * rx * sin(theta + delta) -
+              sin(angle) * ry * cos(theta + delta);
+        ty2 = -sin(angle) * rx * sin(theta + delta) +
+              cos(angle) * ry * cos(theta + delta);
+
+        if (delta < 0.0f) {
+          tx1 = -tx1;
+          ty1 = -ty1;
+          tx2 = -tx2;
+          ty2 = -ty2;
+        }
+
+        segStartAngle = static_cast<float>(atan2(ty1, tx1));
+        segEndAngle = static_cast<float>(atan2(ty2, tx2));
+        break;
+      }
+      case StylePathCommand::Tag::HorizontalLineTo: {
+        if (cmd.horizontal_line_to.absolute == StyleIsAbsolute::Yes) {
+          segEnd = Point(cmd.horizontal_line_to.x, segStart.y);
+        } else {
+          segEnd = segStart + Point(cmd.horizontal_line_to.x, 0.0f);
+        }
+        segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
+        break;
+      }
+      case StylePathCommand::Tag::VerticalLineTo: {
+        if (cmd.vertical_line_to.absolute == StyleIsAbsolute::Yes) {
+          segEnd = Point(segStart.x, cmd.vertical_line_to.y);
+        } else {
+          segEnd = segStart + Point(0.0f, cmd.vertical_line_to.y);
+        }
+        segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
+        break;
+      }
+      case StylePathCommand::Tag::SmoothCurveTo: {
+        Point cp1 = isCubicType(prevSegType) ? segStart * 2 - prevCP : segStart;
+        Point cp2 = toGfxPoint(cmd.smooth_curve_to.control2);
+        segEnd = toGfxPoint(cmd.smooth_curve_to.point);
+
+        if (cmd.smooth_curve_to.absolute == StyleIsAbsolute::No) {
+          cp2 += segStart;
+          segEnd += segStart;
+        }
+
+        prevCP = cp2;
+        segStartAngle = AngleOfVector(
+            cp1 == segStart ? (cp1 == cp2 ? segEnd : cp2) : cp1, segStart);
+        segEndAngle = AngleOfVector(
+            segEnd, cp2 == segEnd ? (cp1 == cp2 ? segStart : cp1) : cp2);
+        break;
+      }
+      case StylePathCommand::Tag::SmoothQuadBezierCurveTo: {
+        Point cp1 =
+            isQuadraticType(prevSegType) ? segStart * 2 - prevCP : segStart;
+        segEnd =
+            cmd.smooth_quad_bezier_curve_to.absolute == StyleIsAbsolute::Yes
+                ? toGfxPoint(cmd.smooth_quad_bezier_curve_to.point)
+                : segStart + toGfxPoint(cmd.smooth_quad_bezier_curve_to.point);
+
+        prevCP = cp1;
+        segStartAngle = AngleOfVector(cp1 == segStart ? segEnd : cp1, segStart);
+        segEndAngle = AngleOfVector(segEnd, cp1 == segEnd ? segStart : cp1);
+        break;
+      }
+      case StylePathCommand::Tag::Unknown:
+        // Leave any existing marks in aMarks so we have a visual indication of
+        // when things went wrong.
+        MOZ_ASSERT_UNREACHABLE("Unknown segment type - path corruption?");
+        return;
+    }
+
+    // Set the angle of the mark at the start of this segment:
+    if (aMarks->Length()) {
+      SVGMark& mark = aMarks->LastElement();
+      if (!IsMoveto(segType) && IsMoveto(prevSegType)) {
+        // start of new subpath
+        pathStartAngle = mark.angle = segStartAngle;
+      } else if (IsMoveto(segType) && !IsMoveto(prevSegType)) {
+        // end of a subpath
+        if (prevSegType != StylePathCommand::Tag::ClosePath) {
+          mark.angle = prevSegEndAngle;
+        }
+      } else if (!(segType == StylePathCommand::Tag::ClosePath &&
+                   prevSegType == StylePathCommand::Tag::ClosePath)) {
+        mark.angle =
+            SVGContentUtils::AngleBisect(prevSegEndAngle, segStartAngle);
+      }
+    }
+
+    // Add the mark at the end of this segment, and set its position:
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    aMarks->AppendElement(SVGMark(static_cast<float>(segEnd.x),
+                                  static_cast<float>(segEnd.y), 0.0f,
+                                  SVGMark::eMid));
+
+    if (segType == StylePathCommand::Tag::ClosePath &&
+        prevSegType != StylePathCommand::Tag::ClosePath) {
+      aMarks->LastElement().angle = aMarks->ElementAt(pathStartIndex).angle =
+          SVGContentUtils::AngleBisect(segEndAngle, pathStartAngle);
+    }
+
+    prevSegType = segType;
+    prevSegEnd = segEnd;
+    prevSegEndAngle = segEndAngle;
+  }
+
+  if (aMarks->Length()) {
+    if (prevSegType != StylePathCommand::Tag::ClosePath) {
+      aMarks->LastElement().angle = prevSegEndAngle;
+    }
+    aMarks->LastElement().type = SVGMark::eEnd;
+    aMarks->ElementAt(0).type = SVGMark::eStart;
+  }
+}
+
 size_t SVGPathData::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   return mData.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }

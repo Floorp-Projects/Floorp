@@ -149,6 +149,9 @@ class SVGPathData {
 
   void GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const;
 
+  static void GetMarkerPositioningData(Span<const StylePathCommand> aPath,
+                                       nsTArray<SVGMark>* aMarks);
+
   /**
    * Returns true, except on OOM, in which case returns false.
    */
