@@ -55,7 +55,6 @@ CubebDeviceEnumerator::CubebDeviceEnumerator()
   // Ensure the MTA thread exists and gets instantiated before the
   // CubebDeviceEnumerator so that this instance will always gets destructed
   // before the MTA thread gets shutdown.
-  mozilla::mscom::EnsureMTA();
   mozilla::mscom::EnsureMTA([&]() -> void {
 #endif
     int rv = cubeb_register_device_collection_changed(
