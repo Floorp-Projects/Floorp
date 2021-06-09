@@ -23,6 +23,7 @@ if CONFIG["MOZ_WEBRTC"]:
         "/media/libyuv/libyuv/include",
         "/third_party/libwebrtc",
         "/third_party/libwebrtc/webrtc",
+        "/tools/profiler/public",
     ]
 
     if CONFIG["OS_TARGET"] == "Android":
