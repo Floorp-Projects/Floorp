@@ -168,14 +168,6 @@ interface nsIX509Cert : nsISupports {
   readonly attribute unsigned long certType;
 
   /**
-   * A comma separated list of localized strings representing the contents of
-   * the certificate's key usage extension, if present. The empty string if the
-   * certificate doesn't have the key usage extension, or has an empty extension.
-   */
-  [must_use]
-  readonly attribute AString keyUsages;
-
-  /**
    *  Obtain a raw binary encoding of this certificate
    *  in DER format.
    *
