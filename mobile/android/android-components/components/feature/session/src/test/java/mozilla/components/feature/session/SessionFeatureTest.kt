@@ -11,8 +11,10 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
@@ -25,12 +27,14 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -351,7 +355,32 @@ class SessionFeatureTest {
         verify(view).release()
     }
 
-    private fun prepareStore(): BrowserStore = BrowserStore(
+    @Test
+    fun `presenter observes crash state and does not create new engine session immediately`() {
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = prepareStore(middleware)
+
+        val actualView: View = mock()
+        val view: EngineView = mock()
+        doReturn(actualView).`when`(view).asView()
+
+        val engineSession: EngineSession = mock()
+        store.dispatch(EngineAction.LinkEngineSessionAction("A", engineSession)).joinBlocking()
+
+        val feature = SessionFeature(store, mock(), view, tabId = "A")
+        verify(view, never()).render(any())
+        feature.start()
+
+        store.dispatch(CrashAction.SessionCrashedAction("A")).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+        verify(view, atLeastOnce()).release()
+        middleware.assertNotDispatched(EngineAction.CreateEngineSessionAction::class)
+    }
+
+    private fun prepareStore(
+        middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>? = null
+    ): BrowserStore = BrowserStore(
         BrowserState(
             tabs = listOf(
                 createTab("https://www.mozilla.org", id = "A"),
@@ -363,7 +392,7 @@ class SessionFeatureTest {
             ),
             selectedTabId = "B"
         ),
-        middleware = EngineMiddleware.create(
+        middleware = (if (middleware != null) listOf(middleware) else emptyList()) + EngineMiddleware.create(
             engine = mock(),
             scope = scope
         )

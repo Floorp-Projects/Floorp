@@ -21,11 +21,17 @@ internal class CrashMiddleware : Middleware<BrowserState, BrowserAction> {
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
+
+        next(action)
+
+        // We need to do this after updating the crashed flag in the reducer
+        // because we want observers to see the crash state change before the
+        // engine session is cleared. This way the observers can react to
+        // crashes and will not request a new engine session until the user
+        // explicitly asked to restore the session.
         if (action is CrashAction.SessionCrashedAction) {
             onCrash(context, action)
         }
-
-        next(action)
     }
 
     private fun onCrash(
