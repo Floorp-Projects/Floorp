@@ -22,8 +22,14 @@ NS_INTERFACE_MAP_END
 
 ExtensionEventManager::ExtensionEventManager(nsIGlobalObject* aGlobal,
                                              const nsAString& aNamespace,
-                                             const nsAString& aEventName)
-    : mGlobal(aGlobal), mAPINamespace(aNamespace), mEventName(aEventName) {
+                                             const nsAString& aEventName,
+                                             const nsAString& aObjectType,
+                                             const nsAString& aObjectId)
+    : mGlobal(aGlobal),
+      mAPINamespace(aNamespace),
+      mEventName(aEventName),
+      mAPIObjectType(aObjectType),
+      mAPIObjectId(aObjectId) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
 }
 
