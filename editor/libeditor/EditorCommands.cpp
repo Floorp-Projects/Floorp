@@ -7,11 +7,11 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"  // for mozilla::detail::Any
-#include "mozilla/TextEditor.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCommandParams.h"
@@ -47,9 +47,9 @@ NS_IMETHODIMP EditorCommand::IsCommandEnabled(const char* aCommandName,
   }
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  TextEditor* textEditor = editor ? editor->AsTextEditor() : nullptr;
+  EditorBase* editorBase = editor ? editor->AsEditorBase() : nullptr;
   *aIsEnabled = IsCommandEnabled(GetInternalCommand(aCommandName),
-                                 MOZ_KnownLive(textEditor));
+                                 MOZ_KnownLive(editorBase));
   return NS_OK;
 }
 
@@ -63,7 +63,7 @@ NS_IMETHODIMP EditorCommand::DoCommand(const char* aCommandName,
     return NS_ERROR_INVALID_ARG;
   }
   nsresult rv = DoCommand(GetInternalCommand(aCommandName),
-                          MOZ_KnownLive(*editor->AsTextEditor()), nullptr);
+                          MOZ_KnownLive(*editor->AsEditorBase()), nullptr);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "Failed to do command from nsIControllerCommand::DoCommand()");
@@ -85,7 +85,7 @@ NS_IMETHODIMP EditorCommand::DoCommandParams(const char* aCommandName,
   EditorCommandParamType paramType = EditorCommand::GetParamType(command);
   if (paramType == EditorCommandParamType::None) {
     nsresult rv = DoCommandParam(
-        command, MOZ_KnownLive(*editor->AsTextEditor()), nullptr);
+        command, MOZ_KnownLive(*editor->AsEditorBase()), nullptr);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "Failed to do command from nsIControllerCommand::DoCommandParams()");
@@ -103,7 +103,7 @@ NS_IMETHODIMP EditorCommand::DoCommandParams(const char* aCommandName,
         }
       }
       nsresult rv = DoCommandParam(
-          command, boolParam, MOZ_KnownLive(*editor->AsTextEditor()), nullptr);
+          command, boolParam, MOZ_KnownLive(*editor->AsEditorBase()), nullptr);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
           "Failed to do command from nsIControllerCommand::DoCommandParams()");
@@ -120,7 +120,7 @@ NS_IMETHODIMP EditorCommand::DoCommandParams(const char* aCommandName,
     if (!params) {
       nsresult rv =
           DoCommandParam(command, VoidString(),
-                         MOZ_KnownLive(*editor->AsTextEditor()), nullptr);
+                         MOZ_KnownLive(*editor->AsEditorBase()), nullptr);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "Failed to do command from "
                            "nsIControllerCommand::DoCommandParams()");
@@ -133,7 +133,7 @@ NS_IMETHODIMP EditorCommand::DoCommandParams(const char* aCommandName,
         NS_ConvertUTF8toUTF16 stringParam(cStringParam);
         nsresult rv =
             DoCommandParam(command, stringParam,
-                           MOZ_KnownLive(*editor->AsTextEditor()), nullptr);
+                           MOZ_KnownLive(*editor->AsEditorBase()), nullptr);
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "Failed to do command from "
                              "nsIControllerCommand::DoCommandParams()");
@@ -145,7 +145,7 @@ NS_IMETHODIMP EditorCommand::DoCommandParams(const char* aCommandName,
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                            "Failed to get string from STATE_ATTRIBUTE");
       rv = DoCommandParam(command, stringParam,
-                          MOZ_KnownLive(*editor->AsTextEditor()), nullptr);
+                          MOZ_KnownLive(*editor->AsEditorBase()), nullptr);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "Failed to do command from "
                            "nsIControllerCommand::DoCommandParams()");
@@ -159,7 +159,7 @@ NS_IMETHODIMP EditorCommand::DoCommandParams(const char* aCommandName,
     if (!params) {
       nsresult rv =
           DoCommandParam(command, VoidCString(),
-                         MOZ_KnownLive(*editor->AsTextEditor()), nullptr);
+                         MOZ_KnownLive(*editor->AsEditorBase()), nullptr);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
           "Failed to do command from nsIControllerCommand::DoCommandParams()");
@@ -172,7 +172,7 @@ NS_IMETHODIMP EditorCommand::DoCommandParams(const char* aCommandName,
         return rv;
       }
       rv = DoCommandParam(command, cStringParam,
-                          MOZ_KnownLive(*editor->AsTextEditor()), nullptr);
+                          MOZ_KnownLive(*editor->AsEditorBase()), nullptr);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
           "Failed to do command from nsIControllerCommand::DoCommandParams()");
@@ -186,7 +186,7 @@ NS_IMETHODIMP EditorCommand::DoCommandParams(const char* aCommandName,
     if (!params) {
       nsresult rv =
           DoCommandParam(command, VoidString(),
-                         MOZ_KnownLive(*editor->AsTextEditor()), nullptr);
+                         MOZ_KnownLive(*editor->AsEditorBase()), nullptr);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
           "Failed to do command from nsIControllerCommand::DoCommandParams()");
@@ -208,7 +208,7 @@ NS_IMETHODIMP EditorCommand::DoCommandParams(const char* aCommandName,
       return NS_ERROR_NOT_IMPLEMENTED;
     }
     nsresult rv = DoCommandParam(
-        command, stringParam, MOZ_KnownLive(*editor->AsTextEditor()), nullptr);
+        command, stringParam, MOZ_KnownLive(*editor->AsEditorBase()), nullptr);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "Failed to do command from nsIControllerCommand::DoCommandParams()");
@@ -222,7 +222,7 @@ NS_IMETHODIMP EditorCommand::DoCommandParams(const char* aCommandName,
       transferable = do_QueryInterface(supports);
     }
     nsresult rv = DoCommandParam(
-        command, transferable, MOZ_KnownLive(*editor->AsTextEditor()), nullptr);
+        command, transferable, MOZ_KnownLive(*editor->AsEditorBase()), nullptr);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "Failed to do command from nsIControllerCommand::DoCommandParams()");
@@ -243,7 +243,7 @@ NS_IMETHODIMP EditorCommand::GetCommandStateParams(
   if (editor) {
     return GetCommandStateParams(GetInternalCommand(aCommandName),
                                  MOZ_KnownLive(*aParams->AsCommandParams()),
-                                 MOZ_KnownLive(editor->AsTextEditor()),
+                                 MOZ_KnownLive(editor->AsEditorBase()),
                                  nullptr);
   }
   nsCOMPtr<nsIEditingSession> editingSession =
@@ -265,25 +265,25 @@ NS_IMETHODIMP EditorCommand::GetCommandStateParams(
 StaticRefPtr<UndoCommand> UndoCommand::sInstance;
 
 bool UndoCommand::IsCommandEnabled(Command aCommand,
-                                   TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                   EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable() && aTextEditor->CanUndo();
+  return aEditorBase->IsSelectionEditable() && aEditorBase->CanUndo();
 }
 
-nsresult UndoCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+nsresult UndoCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
                                 nsIPrincipal* aPrincipal) const {
-  nsresult rv = aTextEditor.UndoAsAction(1, aPrincipal);
+  nsresult rv = aEditorBase.UndoAsAction(1, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::UndoAsAction() failed");
   return rv;
 }
 
 nsresult UndoCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -293,25 +293,25 @@ nsresult UndoCommand::GetCommandStateParams(
 StaticRefPtr<RedoCommand> RedoCommand::sInstance;
 
 bool RedoCommand::IsCommandEnabled(Command aCommand,
-                                   TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                   EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable() && aTextEditor->CanRedo();
+  return aEditorBase->IsSelectionEditable() && aEditorBase->CanRedo();
 }
 
-nsresult RedoCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+nsresult RedoCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
                                 nsIPrincipal* aPrincipal) const {
-  nsresult rv = aTextEditor.RedoAsAction(1, aPrincipal);
+  nsresult rv = aEditorBase.RedoAsAction(1, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::RedoAsAction() failed");
   return rv;
 }
 
 nsresult RedoCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -321,26 +321,26 @@ nsresult RedoCommand::GetCommandStateParams(
 StaticRefPtr<CutCommand> CutCommand::sInstance;
 
 bool CutCommand::IsCommandEnabled(Command aCommand,
-                                  TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                  EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable() &&
-         aTextEditor->IsCutCommandEnabled();
+  return aEditorBase->IsSelectionEditable() &&
+         aEditorBase->IsCutCommandEnabled();
 }
 
-nsresult CutCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+nsresult CutCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
                                nsIPrincipal* aPrincipal) const {
-  nsresult rv = aTextEditor.CutAsAction(aPrincipal);
+  nsresult rv = aEditorBase.CutAsAction(aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::CutAsAction() failed");
   return rv;
 }
 
 nsresult CutCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -350,34 +350,34 @@ nsresult CutCommand::GetCommandStateParams(
 StaticRefPtr<CutOrDeleteCommand> CutOrDeleteCommand::sInstance;
 
 bool CutOrDeleteCommand::IsCommandEnabled(Command aCommand,
-                                          TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                          EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable();
+  return aEditorBase->IsSelectionEditable();
 }
 
 nsresult CutOrDeleteCommand::DoCommand(Command aCommand,
-                                       TextEditor& aTextEditor,
+                                       EditorBase& aEditorBase,
                                        nsIPrincipal* aPrincipal) const {
-  dom::Selection* selection = aTextEditor.GetSelection();
+  dom::Selection* selection = aEditorBase.GetSelection();
   if (selection && selection->IsCollapsed()) {
-    nsresult rv = aTextEditor.DeleteSelectionAsAction(
+    nsresult rv = aEditorBase.DeleteSelectionAsAction(
         nsIEditor::eNext, nsIEditor::eStrip, aPrincipal);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "EditorBase::DeleteSelectionAsAction() failed");
     return rv;
   }
-  nsresult rv = aTextEditor.CutAsAction(aPrincipal);
+  nsresult rv = aEditorBase.CutAsAction(aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::CutAsAction() failed");
   return rv;
 }
 
 nsresult CutOrDeleteCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -387,25 +387,25 @@ nsresult CutOrDeleteCommand::GetCommandStateParams(
 StaticRefPtr<CopyCommand> CopyCommand::sInstance;
 
 bool CopyCommand::IsCommandEnabled(Command aCommand,
-                                   TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                   EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return aTextEditor->IsCopyCommandEnabled();
+  return aEditorBase->IsCopyCommandEnabled();
 }
 
-nsresult CopyCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+nsresult CopyCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
                                 nsIPrincipal* aPrincipal) const {
   // Shouldn't cause "beforeinput" event so that we don't need to specify
   // the given principal.
-  return aTextEditor.Copy();
+  return aEditorBase.Copy();
 }
 
 nsresult CopyCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -415,19 +415,19 @@ nsresult CopyCommand::GetCommandStateParams(
 StaticRefPtr<CopyOrDeleteCommand> CopyOrDeleteCommand::sInstance;
 
 bool CopyOrDeleteCommand::IsCommandEnabled(Command aCommand,
-                                           TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                           EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable();
+  return aEditorBase->IsSelectionEditable();
 }
 
 nsresult CopyOrDeleteCommand::DoCommand(Command aCommand,
-                                        TextEditor& aTextEditor,
+                                        EditorBase& aEditorBase,
                                         nsIPrincipal* aPrincipal) const {
-  dom::Selection* selection = aTextEditor.GetSelection();
+  dom::Selection* selection = aEditorBase.GetSelection();
   if (selection && selection->IsCollapsed()) {
-    nsresult rv = aTextEditor.DeleteSelectionAsAction(
+    nsresult rv = aEditorBase.DeleteSelectionAsAction(
         nsIEditor::eNextWord, nsIEditor::eStrip, aPrincipal);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "EditorBase::DeleteSelectionAsAction() failed");
@@ -435,16 +435,16 @@ nsresult CopyOrDeleteCommand::DoCommand(Command aCommand,
   }
   // Shouldn't cause "beforeinput" event so that we don't need to specify
   // the given principal.
-  nsresult rv = aTextEditor.Copy();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "TextEditor::Copy() failed");
+  nsresult rv = aEditorBase.Copy();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::Copy() failed");
   return rv;
 }
 
 nsresult CopyOrDeleteCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -454,27 +454,27 @@ nsresult CopyOrDeleteCommand::GetCommandStateParams(
 StaticRefPtr<PasteCommand> PasteCommand::sInstance;
 
 bool PasteCommand::IsCommandEnabled(Command aCommand,
-                                    TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                    EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable() &&
-         aTextEditor->CanPaste(nsIClipboard::kGlobalClipboard);
+  return aEditorBase->IsSelectionEditable() &&
+         aEditorBase->CanPaste(nsIClipboard::kGlobalClipboard);
 }
 
-nsresult PasteCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+nsresult PasteCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
                                  nsIPrincipal* aPrincipal) const {
-  nsresult rv = aTextEditor.PasteAsAction(nsIClipboard::kGlobalClipboard, true,
+  nsresult rv = aEditorBase.PasteAsAction(nsIClipboard::kGlobalClipboard, true,
                                           aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::PasteAsAction() failed");
   return rv;
 }
 
 nsresult PasteCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -484,37 +484,37 @@ nsresult PasteCommand::GetCommandStateParams(
 StaticRefPtr<PasteTransferableCommand> PasteTransferableCommand::sInstance;
 
 bool PasteTransferableCommand::IsCommandEnabled(Command aCommand,
-                                                TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                                EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable() &&
-         aTextEditor->CanPasteTransferable(nullptr);
+  return aEditorBase->IsSelectionEditable() &&
+         aEditorBase->CanPasteTransferable(nullptr);
 }
 
 nsresult PasteTransferableCommand::DoCommand(Command aCommand,
-                                             TextEditor& aTextEditor,
+                                             EditorBase& aEditorBase,
                                              nsIPrincipal* aPrincipal) const {
   return NS_ERROR_FAILURE;
 }
 
 nsresult PasteTransferableCommand::DoCommandParam(
     Command aCommand, nsITransferable* aTransferableParam,
-    TextEditor& aTextEditor, nsIPrincipal* aPrincipal) const {
+    EditorBase& aEditorBase, nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aTransferableParam)) {
     return NS_ERROR_INVALID_ARG;
   }
   nsresult rv =
-      aTextEditor.PasteTransferableAsAction(aTransferableParam, aPrincipal);
+      aEditorBase.PasteTransferableAsAction(aTransferableParam, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::PasteTransferableAsAction() failed");
   return rv;
 }
 
 nsresult PasteTransferableCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
-  if (NS_WARN_IF(!aTextEditor)) {
+  if (NS_WARN_IF(!aEditorBase)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -530,7 +530,7 @@ nsresult PasteTransferableCommand::GetCommandStateParams(
   }
 
   return aParams.SetBool(STATE_ENABLED,
-                         aTextEditor->CanPasteTransferable(trans));
+                         aEditorBase->CanPasteTransferable(trans));
 }
 
 /******************************************************************************
@@ -540,27 +540,27 @@ nsresult PasteTransferableCommand::GetCommandStateParams(
 StaticRefPtr<SwitchTextDirectionCommand> SwitchTextDirectionCommand::sInstance;
 
 bool SwitchTextDirectionCommand::IsCommandEnabled(
-    Command aCommand, TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+    Command aCommand, EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable();
+  return aEditorBase->IsSelectionEditable();
 }
 
 nsresult SwitchTextDirectionCommand::DoCommand(Command aCommand,
-                                               TextEditor& aTextEditor,
+                                               EditorBase& aEditorBase,
                                                nsIPrincipal* aPrincipal) const {
-  nsresult rv = aTextEditor.ToggleTextDirectionAsAction(aPrincipal);
+  nsresult rv = aEditorBase.ToggleTextDirectionAsAction(aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::ToggleTextDirectionAsAction() failed");
   return rv;
 }
 
 nsresult SwitchTextDirectionCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -570,22 +570,22 @@ nsresult SwitchTextDirectionCommand::GetCommandStateParams(
 StaticRefPtr<DeleteCommand> DeleteCommand::sInstance;
 
 bool DeleteCommand::IsCommandEnabled(Command aCommand,
-                                     TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                     EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
   // We can generally delete whenever the selection is editable.  However,
   // cmd_delete doesn't make sense if the selection is collapsed because it's
   // directionless.
-  bool isEnabled = aTextEditor->IsSelectionEditable();
+  bool isEnabled = aEditorBase->IsSelectionEditable();
 
   if (aCommand == Command::Delete && isEnabled) {
-    return aTextEditor->CanDeleteSelection();
+    return aEditorBase->CanDeleteSelection();
   }
   return isEnabled;
 }
 
-nsresult DeleteCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+nsresult DeleteCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
                                   nsIPrincipal* aPrincipal) const {
   nsIEditor::EDirection deleteDir = nsIEditor::eNone;
   switch (aCommand) {
@@ -616,7 +616,7 @@ nsresult DeleteCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
     default:
       MOZ_CRASH("Unrecognized nsDeleteCommand");
   }
-  nsresult rv = aTextEditor.DeleteSelectionAsAction(
+  nsresult rv = aEditorBase.DeleteSelectionAsAction(
       deleteDir, nsIEditor::eStrip, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DeleteSelectionAsAction() failed");
@@ -624,10 +624,10 @@ nsresult DeleteCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
 }
 
 nsresult DeleteCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -637,31 +637,31 @@ nsresult DeleteCommand::GetCommandStateParams(
 StaticRefPtr<SelectAllCommand> SelectAllCommand::sInstance;
 
 bool SelectAllCommand::IsCommandEnabled(Command aCommand,
-                                        TextEditor* aTextEditor) const {
+                                        EditorBase* aEditorBase) const {
   // You can always select all, unless the selection is editable,
   // and the editable region is empty!
-  if (!aTextEditor) {
+  if (!aEditorBase) {
     return true;
   }
 
   // You can select all if there is an editor which is non-empty
-  return !aTextEditor->IsEmpty();
+  return !aEditorBase->IsEmpty();
 }
 
-nsresult SelectAllCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+nsresult SelectAllCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
                                      nsIPrincipal* aPrincipal) const {
   // Shouldn't cause "beforeinput" event so that we don't need to specify
   // aPrincipal.
-  nsresult rv = aTextEditor.SelectAll();
+  nsresult rv = aEditorBase.SelectAll();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::SelectAll() failed");
   return rv;
 }
 
 nsresult SelectAllCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -671,11 +671,11 @@ nsresult SelectAllCommand::GetCommandStateParams(
 StaticRefPtr<SelectionMoveCommands> SelectionMoveCommands::sInstance;
 
 bool SelectionMoveCommands::IsCommandEnabled(Command aCommand,
-                                             TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                             EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable();
+  return aEditorBase->IsSelectionEditable();
 }
 
 static const struct ScrollCommand {
@@ -731,9 +731,9 @@ static const struct PhysicalCommand {
      nsISelectionController::MOVE_DOWN, 1}};
 
 nsresult SelectionMoveCommands::DoCommand(Command aCommand,
-                                          TextEditor& aTextEditor,
+                                          EditorBase& aEditorBase,
                                           nsIPrincipal* aPrincipal) const {
-  RefPtr<dom::Document> document = aTextEditor.GetDocument();
+  RefPtr<dom::Document> document = aEditorBase.GetDocument();
   if (document) {
     // Most of the commands below (possibly all of them) need layout to
     // be up to date.
@@ -741,7 +741,7 @@ nsresult SelectionMoveCommands::DoCommand(Command aCommand,
   }
 
   nsCOMPtr<nsISelectionController> selectionController =
-      aTextEditor.GetSelectionController();
+      aEditorBase.GetSelectionController();
   if (NS_WARN_IF(!selectionController)) {
     return NS_ERROR_FAILURE;
   }
@@ -799,10 +799,10 @@ nsresult SelectionMoveCommands::DoCommand(Command aCommand,
 }
 
 nsresult SelectionMoveCommands::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -812,15 +812,15 @@ nsresult SelectionMoveCommands::GetCommandStateParams(
 StaticRefPtr<InsertPlaintextCommand> InsertPlaintextCommand::sInstance;
 
 bool InsertPlaintextCommand::IsCommandEnabled(Command aCommand,
-                                              TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                              EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable();
+  return aEditorBase->IsSelectionEditable();
 }
 
 nsresult InsertPlaintextCommand::DoCommand(Command aCommand,
-                                           TextEditor& aTextEditor,
+                                           EditorBase& aEditorBase,
                                            nsIPrincipal* aPrincipal) const {
   // XXX InsertTextAsAction() is not same as OnInputText().  However, other
   //     commands to insert line break or paragraph separator use OnInput*().
@@ -829,14 +829,14 @@ nsresult InsertPlaintextCommand::DoCommand(Command aCommand,
   //     transactions to the top transaction since its name may not be
   //     nsGkAtoms::TypingTxnName.
   DebugOnly<nsresult> rvIgnored =
-      aTextEditor.InsertTextAsAction(u""_ns, aPrincipal);
+      aEditorBase.InsertTextAsAction(u""_ns, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "EditorBase::InsertTextAsAction() failed, but ignored");
   return NS_OK;
 }
 
 nsresult InsertPlaintextCommand::DoCommandParam(
-    Command aCommand, const nsAString& aStringParam, TextEditor& aTextEditor,
+    Command aCommand, const nsAString& aStringParam, EditorBase& aEditorBase,
     nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(aStringParam.IsVoid())) {
     return NS_ERROR_INVALID_ARG;
@@ -849,17 +849,17 @@ nsresult InsertPlaintextCommand::DoCommandParam(
   //     transactions to the top transaction since its name may not be
   //     nsGkAtoms::TypingTxnName.
   DebugOnly<nsresult> rvIgnored =
-      aTextEditor.InsertTextAsAction(aStringParam, aPrincipal);
+      aEditorBase.InsertTextAsAction(aStringParam, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "EditorBase::InsertTextAsAction() failed, but ignored");
   return NS_OK;
 }
 
 nsresult InsertPlaintextCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -869,38 +869,38 @@ nsresult InsertPlaintextCommand::GetCommandStateParams(
 StaticRefPtr<InsertParagraphCommand> InsertParagraphCommand::sInstance;
 
 bool InsertParagraphCommand::IsCommandEnabled(Command aCommand,
-                                              TextEditor* aTextEditor) const {
-  if (!aTextEditor || aTextEditor->IsSingleLineEditor()) {
+                                              EditorBase* aEditorBase) const {
+  if (!aEditorBase || aEditorBase->IsSingleLineEditor()) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable();
+  return aEditorBase->IsSelectionEditable();
 }
 
 nsresult InsertParagraphCommand::DoCommand(Command aCommand,
-                                           TextEditor& aTextEditor,
+                                           EditorBase& aEditorBase,
                                            nsIPrincipal* aPrincipal) const {
-  if (aTextEditor.IsSingleLineEditor()) {
+  if (aEditorBase.IsSingleLineEditor()) {
     return NS_ERROR_FAILURE;
   }
-  if (aTextEditor.IsHTMLEditor()) {
-    nsresult rv = MOZ_KnownLive(aTextEditor.AsHTMLEditor())
+  if (aEditorBase.IsHTMLEditor()) {
+    nsresult rv = MOZ_KnownLive(aEditorBase.AsHTMLEditor())
                       ->InsertParagraphSeparatorAsAction(aPrincipal);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::InsertParagraphSeparatorAsAction() failed");
     return rv;
   }
-  nsresult rv = aTextEditor.InsertLineBreakAsAction(aPrincipal);
+  nsresult rv = aEditorBase.InsertLineBreakAsAction(aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::InsertLineBreakAsAction() failed");
   return rv;
 }
 
 nsresult InsertParagraphCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -910,30 +910,30 @@ nsresult InsertParagraphCommand::GetCommandStateParams(
 StaticRefPtr<InsertLineBreakCommand> InsertLineBreakCommand::sInstance;
 
 bool InsertLineBreakCommand::IsCommandEnabled(Command aCommand,
-                                              TextEditor* aTextEditor) const {
-  if (!aTextEditor || aTextEditor->IsSingleLineEditor()) {
+                                              EditorBase* aEditorBase) const {
+  if (!aEditorBase || aEditorBase->IsSingleLineEditor()) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable();
+  return aEditorBase->IsSelectionEditable();
 }
 
 nsresult InsertLineBreakCommand::DoCommand(Command aCommand,
-                                           TextEditor& aTextEditor,
+                                           EditorBase& aEditorBase,
                                            nsIPrincipal* aPrincipal) const {
-  if (aTextEditor.IsSingleLineEditor()) {
+  if (aEditorBase.IsSingleLineEditor()) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = aTextEditor.InsertLineBreakAsAction(aPrincipal);
+  nsresult rv = aEditorBase.InsertLineBreakAsAction(aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::InsertLineBreakAsAction() failed");
   return rv;
 }
 
 nsresult InsertLineBreakCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommand, aTextEditor));
+                         IsCommandEnabled(aCommand, aEditorBase));
 }
 
 /******************************************************************************
@@ -943,18 +943,18 @@ nsresult InsertLineBreakCommand::GetCommandStateParams(
 StaticRefPtr<PasteQuotationCommand> PasteQuotationCommand::sInstance;
 
 bool PasteQuotationCommand::IsCommandEnabled(Command aCommand,
-                                             TextEditor* aTextEditor) const {
-  if (!aTextEditor) {
+                                             EditorBase* aEditorBase) const {
+  if (!aEditorBase) {
     return false;
   }
-  return !aTextEditor->IsSingleLineEditor() &&
-         aTextEditor->CanPaste(nsIClipboard::kGlobalClipboard);
+  return !aEditorBase->IsSingleLineEditor() &&
+         aEditorBase->CanPaste(nsIClipboard::kGlobalClipboard);
 }
 
 nsresult PasteQuotationCommand::DoCommand(Command aCommand,
-                                          TextEditor& aTextEditor,
+                                          EditorBase& aEditorBase,
                                           nsIPrincipal* aPrincipal) const {
-  nsresult rv = aTextEditor.PasteAsQuotationAsAction(
+  nsresult rv = aEditorBase.PasteAsQuotationAsAction(
       nsIClipboard::kGlobalClipboard, true, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::PasteAsQuotationAsAction() failed");
@@ -962,13 +962,13 @@ nsresult PasteQuotationCommand::DoCommand(Command aCommand,
 }
 
 nsresult PasteQuotationCommand::GetCommandStateParams(
-    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, EditorBase* aEditorBase,
     nsIEditingSession* aEditingSession) const {
-  if (!aTextEditor) {
+  if (!aEditorBase) {
     return NS_OK;
   }
   aParams.SetBool(STATE_ENABLED,
-                  aTextEditor->CanPaste(nsIClipboard::kGlobalClipboard));
+                  aEditorBase->CanPaste(nsIClipboard::kGlobalClipboard));
   return NS_OK;
 }
 
