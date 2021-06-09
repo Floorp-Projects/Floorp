@@ -163,11 +163,11 @@ size_t TypeDef::serializedSize() const {
   size_t size = sizeof(kind_);
   switch (kind_) {
     case TypeDefKind::Struct: {
-      size += sizeof(structType_);
+      size += structType_.serializedSize();
       break;
     }
     case TypeDefKind::Func: {
-      size += sizeof(funcType_);
+      size += funcType_.serializedSize();
       break;
     }
     case TypeDefKind::None: {
@@ -201,13 +201,16 @@ uint8_t* TypeDef::serialize(uint8_t* cursor) const {
 
 const uint8_t* TypeDef::deserialize(const uint8_t* cursor) {
   cursor = ReadBytes(cursor, &kind_, sizeof(kind_));
+  // kind_ was replaced -- call in-place constructors for union members.
   switch (kind_) {
     case TypeDefKind::Struct: {
-      cursor = structType_.deserialize(cursor);
+      StructType* structType = new (&structType_) StructType();
+      cursor = structType->deserialize(cursor);
       break;
     }
     case TypeDefKind::Func: {
-      cursor = funcType_.deserialize(cursor);
+      FuncType* funcType = new (&funcType_) FuncType();
+      cursor = funcType->deserialize(cursor);
       break;
     }
     case TypeDefKind::None: {
