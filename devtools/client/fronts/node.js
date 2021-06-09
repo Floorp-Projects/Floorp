@@ -281,7 +281,11 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.numChildren;
   }
   get remoteFrame() {
-    return BROWSER_TOOLBOX_FISSION_ENABLED && this._form.remoteFrame;
+    if (!BROWSER_TOOLBOX_FISSION_ENABLED && this.targetFront.isParentProcess) {
+      return false;
+    }
+
+    return this._form.remoteFrame;
   }
   get hasEventListeners() {
     return this._form.hasEventListeners;

@@ -20,3 +20,19 @@ add_task(async function() {
               id="com"`;
   await assertMarkupViewAsTree(tree, "#root", inspector);
 });
+
+// Test regular remote frames
+const FRAME_URL = `http://example.com/document-builder.sjs?html=<div>com`;
+const TEST_REMOTE_FRAME = `http://example.net/document-builder.sjs?html=<div id="net-root"><iframe src="${FRAME_URL}"></iframe></div>`;
+add_task(async function() {
+  const { inspector } = await openInspectorForURL(TEST_REMOTE_FRAME);
+  const tree = `
+    id="net-root"
+      iframe
+        #document
+          html
+            head
+            body
+              com`;
+  await assertMarkupViewAsTree(tree, "#net-root", inspector);
+});
