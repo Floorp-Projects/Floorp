@@ -1159,8 +1159,6 @@ function renderSimpleTable(caption, headings, data) {
 }
 
 class FoldEffect {
-  static allSections = [];
-
   constructor(
     target,
     {
@@ -1174,6 +1172,7 @@ class FoldEffect {
   render() {
     this.target.classList.add("fold-target");
     this.trigger = renderElement("div", { className: "fold-trigger" });
+    this.trigger.classList.add(this.showMsg, this.hideMsg);
     this.collapse();
     this.trigger.onclick = () => {
       if (this.target.classList.contains("fold-closed")) {
@@ -1182,7 +1181,6 @@ class FoldEffect {
         this.collapse();
       }
     };
-    FoldEffect.allSections.push(this);
     return this.trigger;
   }
 
@@ -1197,14 +1195,22 @@ class FoldEffect {
   }
 
   static expandAll() {
-    for (const section of FoldEffect.allSections) {
-      section.expand();
+    for (const target of document.getElementsByClassName("fold-closed")) {
+      target.classList.remove("fold-closed");
+    }
+    for (const trigger of document.getElementsByClassName("fold-trigger")) {
+      const hideMsg = trigger.classList[2];
+      document.l10n.setAttributes(trigger, hideMsg);
     }
   }
 
   static collapseAll() {
-    for (const section of FoldEffect.allSections) {
-      section.collapse();
+    for (const target of document.getElementsByClassName("fold-target")) {
+      target.classList.add("fold-closed");
+    }
+    for (const trigger of document.getElementsByClassName("fold-trigger")) {
+      const showMsg = trigger.classList[1];
+      document.l10n.setAttributes(trigger, showMsg);
     }
   }
 }
