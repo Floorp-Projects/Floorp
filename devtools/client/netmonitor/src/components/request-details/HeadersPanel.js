@@ -188,11 +188,14 @@ class HeadersPanel extends Component {
             3
           )})`;
         } else {
-          preHeaderText = `${method} ${
-            urlDetails.url.split(
-              requestHeaders.headers.find(ele => ele.name === "Host").value
-            )[1]
-          } ${httpVersion}`;
+          const hostHeader = requestHeaders.headers.find(
+            ele => ele.name === "Host"
+          );
+          if (hostHeader) {
+            preHeaderText = `${method} ${
+              urlDetails.url.split(hostHeader.value)[1]
+            } ${httpVersion}`;
+          }
           result = `${title} (${getFormattedSize(
             writeHeaderText(requestHeaders.headers, preHeaderText).length,
             3
@@ -353,10 +356,11 @@ class HeadersPanel extends Component {
       const rawHeaderType = this.getRawHeaderType(path);
       switch (rawHeaderType) {
         case "REQUEST":
+          const hostHeader = requestHeaders.headers.find(
+            ele => ele.name === "Host"
+          );
           preHeaderText = `${method} ${
-            urlDetails.url.split(
-              requestHeaders.headers.find(ele => ele.name === "Host").value
-            )[1]
+            hostHeader ? urlDetails.url.split(hostHeader.value)[1] : "<unknown>"
           } ${httpVersion}`;
           value = writeHeaderText(requestHeaders.headers, preHeaderText).trim();
           break;
