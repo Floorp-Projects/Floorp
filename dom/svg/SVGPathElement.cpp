@@ -230,6 +230,8 @@ SVGPathElement::IsAttributeMapped(const nsAtom* name) const {
   static const MappedAttributeEntry* const map[] = {sMarkersMap};
 
   return FindAttributeDependence(name, map) ||
+         (StaticPrefs::layout_css_d_property_enabled() &&
+          name == nsGkAtoms::d) ||
          SVGPathElementBase::IsAttributeMapped(name);
 }
 
