@@ -24,9 +24,14 @@ class Function;
 
 namespace extensions {
 
-// A class that represents a callback parameter (passed to addListener /
-// removeListener), instances of this class are received by the
-// mozIExtensionAPIRequestHandler as a property of the mozIExtensionAPIRequest.
+#define SLOT_SEND_RESPONSE_CALLBACK_INSTANCE 0
+
+// A class that represents a callback parameter passed to WebExtensions API
+// addListener / removeListener methods.
+//
+// Instances of this class are sent to the mozIExtensionAPIRequestHandler as
+// a property of the mozIExtensionAPIRequest.
+//
 // The mozIExtensionEventListener xpcom interface provides methods that allow
 // the mozIExtensionAPIRequestHandler running in the Main Thread to call the
 // underlying callback Function on its owning thread.
@@ -38,6 +43,7 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
   using CleanupCallback = std::function<void()>;
   using ListenerCallOptions = mozIExtensionListenerCallOptions;
   using APIObjectType = ListenerCallOptions::APIObjectType;
+  using CallbackType = ListenerCallOptions::CallbackType;
 
   static already_AddRefed<ExtensionEventListener> Create(
       nsIGlobalObject* aGlobal, dom::Function* aCallback,
@@ -84,7 +90,7 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
 
   ~ExtensionEventListener() { Cleanup(); };
 
-  // Accessed on any main and on the owning threads.
+  // Accessed on the main and on the owning threads.
   RefPtr<dom::ThreadSafeWorkerRef> mWorkerRef;
 
   // Accessed only on the owning thread.
@@ -106,6 +112,7 @@ class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
  public:
   using ListenerCallOptions = mozIExtensionListenerCallOptions;
   using APIObjectType = ListenerCallOptions::APIObjectType;
+  using CallbackType = ListenerCallOptions::CallbackType;
 
   ExtensionListenerCallWorkerRunnable(
       const RefPtr<ExtensionEventListener>& aExtensionEventListener,
@@ -116,18 +123,24 @@ class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
                        WorkerThreadUnchangedBusyCount),
         mListener(aExtensionEventListener),
         mArgsHolder(std::move(aArgsHolder)),
+        mPromiseResult(std::move(aPromiseRetval)),
         mAPIObjectType(APIObjectType::NONE),
-        mPromiseResult(std::move(aPromiseRetval)) {
+        mCallbackArgType(CallbackType::CALLBACK_NONE) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aExtensionEventListener);
 
     if (aCallOptions) {
       aCallOptions->GetApiObjectType(&mAPIObjectType);
+      aCallOptions->GetCallbackType(&mCallbackArgType);
     }
   }
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   bool WorkerRun(JSContext* aCx, dom::WorkerPrivate* aWorkerPrivate) override;
+
+  bool IsCallResultCancelled() {
+    return mIsCallResultCancelled;
+  }
 
  private:
   ~ExtensionListenerCallWorkerRunnable() {
@@ -153,10 +166,16 @@ class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
   RefPtr<ExtensionEventListener> mListener;
   UniquePtr<dom::StructuredCloneHolder> mArgsHolder;
   RefPtr<dom::Promise> mPromiseResult;
+  bool mIsCallResultCancelled = false;
   // Call Options.
   APIObjectType mAPIObjectType;
+  CallbackType mCallbackArgType;
 };
 
+// A class attached to the promise that should be resolved once the extension
+// event listener call has been handled, responsible for serializing resolved
+// values or rejected errors on the listener's owning thread and sending them to
+// the extension event listener caller running on the main thread.
 class ExtensionListenerCallPromiseResultHandler
     : public dom::PromiseNativeHandler {
  public:
@@ -184,13 +203,11 @@ class ExtensionListenerCallPromiseResultHandler
   void WorkerRunCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                          PromiseCallbackType aCallbackType);
 
-  // Only set to handle promise results coming from an ExtensionEventListener
-  // instance running on the main thread.
-  RefPtr<dom::Promise> mOutPromise;
-
-  // Only set to handle results coming from a ExtensionEventListener originated
-  // from a extension worker thread.
+  // Set and accessed only on the owning worker thread.
   RefPtr<dom::ThreadSafeWorkerRef> mWorkerRef;
+
+  // Reference to the runnable created on and owned by the main thread,
+  // accessed on the worker thread and released on the owning thread.
   RefPtr<ExtensionListenerCallWorkerRunnable> mWorkerRunnable;
 };
 
