@@ -136,8 +136,8 @@ nsresult TextEditor::Init(Document& aDoc, Element* aRoot,
 
   rv = InitEditorContentAndSelection();
   if (NS_FAILED(rv)) {
-    NS_WARNING("TextEditor::InitEditorContentAndSelection() failed");
-    // XXX Sholdn't we expose `NS_ERROR_EDITOR_DESTROYED` even though this
+    NS_WARNING("EditorBase::InitEditorContentAndSelection() failed");
+    // XXX Shouldn't we expose `NS_ERROR_EDITOR_DESTROYED` even though this
     //     is a public method?
     mInitSucceeded = false;
     return EditorBase::ToGenericNSResult(rv);

@@ -441,13 +441,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   virtual ~TextEditor();
 
   /**
-   * InitEditorContentAndSelection() may insert a padding `<br>` element for
-   * if it's required in the anonymous `<div>` element and collapse selection
-   * at the end if there is no selection ranges.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InitEditorContentAndSelection();
-
-  /**
    * CanEchoPasswordNow() returns true if currently we can echo password.
    * If it's direct user input such as pasting or dropping text, this
    * returns false even if we may echo password.

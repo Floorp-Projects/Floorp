@@ -153,9 +153,9 @@ template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
 nsresult HTMLEditor::InitEditorContentAndSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsresult rv = TextEditor::InitEditorContentAndSelection();
+  nsresult rv = EditorBase::InitEditorContentAndSelection();
   if (NS_FAILED(rv)) {
-    NS_WARNING("TextEditor::InitEditorContentAndSelection() failed");
+    NS_WARNING("EditorBase::InitEditorContentAndSelection() failed");
     return rv;
   }
 
