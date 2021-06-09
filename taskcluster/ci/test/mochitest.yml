@@ -442,7 +442,8 @@ mochitest-media:
     variants:
         by-test-platform:
             .*-ccov.*/.*: []
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'socketprocess']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'socketprocess', 'fission']
+            android-em-7.*: ['fission']
             android.*: ['socketprocess']
             linux.*64-qr/debug: ['webrender-sw', 'fission', 'fission-webgl-ipc', 'wayland']
             default: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
