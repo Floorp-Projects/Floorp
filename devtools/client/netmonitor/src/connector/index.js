@@ -335,6 +335,11 @@ class Connector {
    * @param {object} resource The DOCUMENT_EVENT resource
    */
   onDocEvent(resource, { areExistingResources }) {
+    if (!resource.targetFront.isTopLevel) {
+      // Only consider top level document, and ignore remote iframes top document
+      return;
+    }
+
     // Netmonitor does not support dom-loading
     if (
       resource.name != "dom-interactive" &&
