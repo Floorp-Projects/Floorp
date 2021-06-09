@@ -9763,7 +9763,8 @@ ComputedStyle* nsLayoutUtils::StyleForScrollbar(nsIFrame* aScrollbarPart) {
   return style.get();
 }
 
-// NOTE: Returns Nothing() if |aFrame| is not in out-of-process.
+// NOTE: Returns Nothing() if |aFrame| is not in out-of-process or if we haven't
+// received enough information from APZ.
 static Maybe<ScreenRect> GetFrameVisibleRectOnScreen(const nsIFrame* aFrame) {
   // We actually want the in-process top prescontext here.
   nsPresContext* topContextInProcess =
@@ -9790,6 +9791,14 @@ static Maybe<ScreenRect> GetFrameVisibleRectOnScreen(const nsIFrame* aFrame) {
     return Some(ScreenRect());
   }
 
+  Maybe<ScreenRect> visibleRect =
+      browserChild->GetTopLevelViewportVisibleRectInBrowserCoords();
+  if (!visibleRect) {
+    // We are unsure if we haven't received the transformed rectangle of the
+    // iframe's visible area.
+    return Nothing();
+  }
+
   nsIFrame* rootFrame = topContextInProcess->PresShell()->GetRootFrame();
   nsRect transformedToIFrame = nsLayoutUtils::TransformFrameRectToAncestor(
       aFrame, aFrame->GetRectRelativeToSelf(), rootFrame);
@@ -9802,9 +9811,7 @@ static Maybe<ScreenRect> GetFrameVisibleRectOnScreen(const nsIFrame* aFrame) {
           rectInLayoutDevicePixel),
       PixelCastJustification::ContentProcessIsLayerInUiProcess);
 
-  return Some(
-      browserChild->GetTopLevelViewportVisibleRectInBrowserCoords().Intersect(
-          transformedToRoot));
+  return Some(visibleRect->Intersect(transformedToRoot));
 }
 
 // static
