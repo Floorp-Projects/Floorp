@@ -40,6 +40,7 @@ std::unique_ptr<TaskController> TaskController::sSingleton;
 thread_local size_t mThreadPoolIndex = -1;
 std::atomic<uint64_t> Task::sCurrentTaskSeqNo = 0;
 
+const int32_t kMinimumPoolThreadCount = 2;
 const int32_t kMaximumPoolThreadCount = 8;
 
 /* static */
@@ -50,13 +51,8 @@ int32_t TaskController::GetPoolThreadCount() {
 
   int32_t numCores = std::max<int32_t>(1, PR_GetNumberOfProcessors());
 
-  if (numCores == 1) {
-    return 1;
-  }
-  if (numCores == 2) {
-    return 2;
-  }
-  return std::min<int32_t>(kMaximumPoolThreadCount, numCores - 1);
+  return std::clamp<int32_t>(numCores - 1, kMinimumPoolThreadCount,
+                             kMaximumPoolThreadCount);
 }
 
 #if defined(MOZ_COLLECTING_RUNNABLE_TELEMETRY)
