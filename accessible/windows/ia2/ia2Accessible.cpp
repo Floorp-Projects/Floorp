@@ -77,10 +77,13 @@ ia2Accessible::get_nRelations(long* aNRelations) {
   if (!aNRelations) return E_INVALIDARG;
   *aNRelations = 0;
 
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   AccessibleWrap* acc = LocalAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
-
-  MOZ_ASSERT(!acc->IsProxy());
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs); idx++) {
     if (sRelationTypePairs[idx].second == IA2_RELATION_NULL) continue;
@@ -97,10 +100,13 @@ ia2Accessible::get_relation(long aRelationIndex,
   if (!aRelation || aRelationIndex < 0) return E_INVALIDARG;
   *aRelation = nullptr;
 
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   AccessibleWrap* acc = LocalAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
-
-  MOZ_ASSERT(!acc->IsProxy());
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   long relIdx = 0;
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs); idx++) {
@@ -132,10 +138,13 @@ ia2Accessible::get_relations(long aMaxRelations,
   if (!aRelation || !aNRelations || aMaxRelations <= 0) return E_INVALIDARG;
   *aNRelations = 0;
 
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   AccessibleWrap* acc = LocalAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
-
-  MOZ_ASSERT(!acc->IsProxy());
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   for (uint32_t idx = 0;
        idx < ArrayLength(sRelationTypePairs) && *aNRelations < aMaxRelations;
@@ -194,10 +203,14 @@ ia2Accessible::role(long* aRole) {
 // XXX Use MOZ_CAN_RUN_SCRIPT_BOUNDARY for now due to bug 1543294.
 MOZ_CAN_RUN_SCRIPT_BOUNDARY STDMETHODIMP
 ia2Accessible::scrollTo(enum IA2ScrollType aScrollType) {
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   AccessibleWrap* acc = LocalAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
-  MOZ_ASSERT(!acc->IsProxy());
   RefPtr<PresShell> presShell = acc->Document()->PresShellPtr();
   nsCOMPtr<nsIContent> content = acc->GetContent();
   nsCoreUtils::ScrollTo(presShell, content, aScrollType);
@@ -208,8 +221,13 @@ ia2Accessible::scrollTo(enum IA2ScrollType aScrollType) {
 STDMETHODIMP
 ia2Accessible::scrollToPoint(enum IA2CoordinateType aCoordType, long aX,
                              long aY) {
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   AccessibleWrap* acc = LocalAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   uint32_t geckoCoordType =
       (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE)
@@ -232,8 +250,13 @@ ia2Accessible::get_groupPosition(long* aGroupLevel, long* aSimilarItemsInGroup,
   *aSimilarItemsInGroup = 0;
   *aPositionInGroup = 0;
 
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   AccessibleWrap* acc = LocalAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   GroupPos groupPos = acc->GroupPosition();
 
@@ -256,10 +279,13 @@ ia2Accessible::get_states(AccessibleStates* aStates) {
 
   // XXX: bug 344674 should come with better approach that we have here.
 
-  AccessibleWrap* acc = LocalAcc();
-  if (!acc) {
+  if (!Acc()) {
     *aStates = IA2_STATE_DEFUNCT;
     return S_OK;
+  }
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
   }
 
   uint64_t state;
@@ -387,8 +413,13 @@ ia2Accessible::get_locale(IA2Locale* aLocale) {
   // Two-letter primary codes are reserved for [ISO639] language abbreviations.
   // Any two-letter subcode is understood to be a [ISO3166] country code.
 
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   AccessibleWrap* acc = LocalAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   nsAutoString lang;
   acc->Language(lang);
@@ -427,8 +458,13 @@ ia2Accessible::get_attributes(BSTR* aAttributes) {
   if (!aAttributes) return E_INVALIDARG;
   *aAttributes = nullptr;
 
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   AccessibleWrap* acc = LocalAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
@@ -459,8 +495,13 @@ ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
   *aAccessible = nullptr;
   *aCaretOffset = -1;
 
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   AccessibleWrap* acc = LocalAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   int32_t caretOffset = -1;
   LocalAccessible* accWithCaret =
@@ -496,8 +537,13 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
   }
   if (!relationType) return E_INVALIDARG;
 
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   AccessibleWrap* acc = LocalAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   nsTArray<LocalAccessible*> targets;
   MOZ_ASSERT(!acc->IsProxy());
@@ -529,8 +575,13 @@ ia2Accessible::get_selectionRanges(IA2Range** aRanges, long* aNRanges) {
 
   *aNRanges = 0;
 
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   AccessibleWrap* acc = LocalAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   AutoTArray<TextRange, 1> ranges;
   acc->Document()->SelectionRanges(&ranges);
