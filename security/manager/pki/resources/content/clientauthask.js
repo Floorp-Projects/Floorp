@@ -6,6 +6,32 @@
 /* import-globals-from pippki.js */
 "use strict";
 
+const { asn1js } = ChromeUtils.import(
+  "chrome://global/content/certviewer/asn1js_bundle.js"
+);
+const { pkijs } = ChromeUtils.import(
+  "chrome://global/content/certviewer/pkijs_bundle.js"
+);
+const { pvutils } = ChromeUtils.import(
+  "chrome://global/content/certviewer/pvutils_bundle.js"
+);
+
+const { Integer, fromBER } = asn1js.asn1js;
+const { Certificate } = pkijs.pkijs;
+const { fromBase64, stringToArrayBuffer } = pvutils.pvutils;
+
+const { certDecoderInitializer } = ChromeUtils.import(
+  "chrome://global/content/certviewer/certDecoder.js"
+);
+const { parse, pemToDER } = certDecoderInitializer(
+  Integer,
+  fromBER,
+  Certificate,
+  fromBase64,
+  stringToArrayBuffer,
+  crypto
+);
+
 /**
  * @file Implements the functionality of clientauthask.xhtml: a dialog that allows
  *       a user pick a client certificate for TLS client authentication.
@@ -55,7 +81,7 @@ var certArray;
  */
 var rememberBox;
 
-function onLoad() {
+async function onLoad() {
   bundle = document.getElementById("pippki_bundle");
   let rememberSetting = Services.prefs.getBoolPref(
     "security.remember_cert_checkbox_default_setting"
@@ -98,7 +124,7 @@ function onLoad() {
     }
   }
 
-  setDetails();
+  await setDetails();
   document.addEventListener("dialogaccept", doOK);
   document.addEventListener("dialogcancel", doCancel);
 
@@ -111,7 +137,7 @@ function onLoad() {
 /**
  * Populates the details section with information concerning the selected cert.
  */
-function setDetails() {
+async function setDetails() {
   let index = parseInt(document.getElementById("nicknames").value);
   let cert = certArray.queryElementAt(index, Ci.nsIX509Cert);
 
@@ -123,10 +149,11 @@ function setDetails() {
       cert.validity.notAfterLocalTime,
     ]),
   ];
-  let keyUsages = cert.keyUsages;
-  if (keyUsages) {
+  let parsedCert = await parse(pemToDER(cert.getBase64DERString()));
+  let keyUsages = parsedCert.ext.keyUsages;
+  if (keyUsages && keyUsages.purposes.length > 0) {
     detailLines.push(
-      bundle.getFormattedString("clientAuthKeyUsages", [keyUsages])
+      bundle.getFormattedString("clientAuthKeyUsages", [keyUsages.purposes])
     );
   }
   let emailAddresses = cert.getEmailAddresses();
@@ -146,8 +173,8 @@ function setDetails() {
   document.getElementById("details").value = detailLines.join("\n");
 }
 
-function onCertSelected() {
-  setDetails();
+async function onCertSelected() {
+  await setDetails();
 }
 
 function doOK() {

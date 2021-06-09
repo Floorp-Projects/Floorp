@@ -48,15 +48,10 @@ function openClientAuthDialog(cert) {
     certList,
     returnVals
   );
-  return new Promise((resolve, reject) => {
-    win.addEventListener(
-      "load",
-      function() {
-        executeSoon(() => resolve([win, returnVals]));
-      },
-      { once: true }
-    );
-  });
+  return TestUtils.topicObserved("cert-dialog-loaded").then(() => [
+    win,
+    returnVals,
+  ]);
 }
 
 /**
