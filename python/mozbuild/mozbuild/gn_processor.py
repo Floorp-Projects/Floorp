@@ -151,18 +151,9 @@ def find_deps(all_targets, target):
 def filter_gn_config(gn_result, config, sandbox_vars, input_vars, gn_target):
     # Translates the raw output of gn into just what we'll need to generate a
     # mozbuild configuration.
-    gn_out = {
-        "targets": {},
-        "sandbox_vars": sandbox_vars,
-        "gn_gen_args": input_vars,
-    }
+    gn_out = {"targets": {}, "sandbox_vars": sandbox_vars, "gn_gen_args": input_vars}
 
-    gn_mozbuild_vars = (
-        "MOZ_DEBUG",
-        "OS_TARGET",
-        "HOST_CPU_ARCH",
-        "CPU_ARCH",
-    )
+    gn_mozbuild_vars = ("MOZ_DEBUG", "OS_TARGET", "HOST_CPU_ARCH", "CPU_ARCH")
 
     mozbuild_args = {k: config.substs.get(k) for k in gn_mozbuild_vars}
     gn_out["mozbuild_args"] = mozbuild_args
@@ -338,6 +329,7 @@ def process_gn_config(
             "!/ipc/ipdl/_ipdlheaders",
             "/ipc/chromium/src",
             "/ipc/glue",
+            "/tools/profiler/public",
         ]
         # These get set via VC project file settings for normal GYP builds.
         # TODO: Determine if these defines are needed for GN builds.
@@ -345,9 +337,7 @@ def process_gn_config(
             context_attrs["DEFINES"]["UNICODE"] = True
             context_attrs["DEFINES"]["_UNICODE"] = True
 
-        context_attrs["COMPILE_FLAGS"] = {
-            "OS_INCLUDES": [],
-        }
+        context_attrs["COMPILE_FLAGS"] = {"OS_INCLUDES": []}
 
         for key, value in sandbox_vars.items():
             if context_attrs.get(key) and isinstance(context_attrs[key], list):
@@ -496,10 +486,7 @@ def write_mozbuild(
                 ("MOZ_DEBUG",),
                 ("OS_TARGET",),
                 ("CPU_ARCH",),
-                (
-                    "MOZ_DEBUG",
-                    "OS_TARGET",
-                ),
+                ("MOZ_DEBUG", "OS_TARGET"),
                 ("OS_TARGET", "CPU_ARCH"),
                 ("OS_TARGET", "CPU_ARCH", "MOZ_DEBUG"),
                 ("MOZ_DEBUG", "OS_TARGET", "CPU_ARCH", "HOST_CPU_ARCH"),
@@ -590,13 +577,7 @@ def generate_gn_config(
         [str(input_variables[k]) for k in sorted(input_variables.keys())]
     )
     out_dir = mozpath.join(output, "gn-output")
-    gen_args = [
-        config.substs["GN"],
-        "gen",
-        out_dir,
-        gn_args,
-        "--ide=json",
-    ]
+    gen_args = [config.substs["GN"], "gen", out_dir, gn_args, "--ide=json"]
     print('Running "%s"' % " ".join(gen_args), file=sys.stderr)
     subprocess.check_call(gen_args, cwd=srcdir, stderr=subprocess.STDOUT)
 

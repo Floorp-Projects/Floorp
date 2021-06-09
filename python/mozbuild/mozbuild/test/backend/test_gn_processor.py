@@ -17,17 +17,9 @@ from mozbuild.test.backend.common import BackendTester
 
 import mozpack.path as mozpath
 
-from mozbuild.gn_processor import (
-    GnMozbuildWriterBackend,
-    find_common_attrs,
-)
+from mozbuild.gn_processor import GnMozbuildWriterBackend, find_common_attrs
 
-from mozbuild.frontend.data import (
-    ComputedFlags,
-    StaticLibrary,
-    Sources,
-    UnifiedSources,
-)
+from mozbuild.frontend.data import ComputedFlags, StaticLibrary, Sources, UnifiedSources
 
 
 class TestGnMozbuildWriter(BackendTester):
@@ -138,6 +130,7 @@ class TestGnMozbuildWriter(BackendTester):
                 + mozpath.join(
                     flags_obj.topsrcdir, "trunk", "webrtc", "modules", "include"
                 ),
+                "-I" + mozpath.join(flags_obj.topsrcdir, "tools", "profiler", "public"),
             ]
         )
         self.assertEqual(set(flags_obj.flags["LOCAL_INCLUDES"]), expected_includes)
@@ -147,15 +140,8 @@ class TestGnMozbuildWriter(BackendTester):
 class TestGnMozbuildFactoring(unittest.TestCase):
 
     test_attrs = {
-        "LOCAL_INCLUDES": [
-            "!/ipc/ipdl/_ipdlheaders",
-            "/ipc/chromium/src",
-            "/ipc/glue",
-        ],
-        "DEFINES": {
-            "UNICODE": True,
-            "DEBUG": True,
-        },
+        "LOCAL_INCLUDES": ["!/ipc/ipdl/_ipdlheaders", "/ipc/chromium/src", "/ipc/glue"],
+        "DEFINES": {"UNICODE": True, "DEBUG": True},
         "LIBRARY_NAME": "Foo",
     }
 
@@ -214,11 +200,7 @@ class TestGnMozbuildFactoring(unittest.TestCase):
         self.assertEqual(common_attrs["DEFINES"], {"UNICODE": True})
         self.assertEqual(dict_subset_attrs["DEFINES"], {})
         self.assertEqual(
-            overlapping_dict_attrs["DEFINES"],
-            {
-                "DEBUG": True,
-                "MOZ_DEBUG": True,
-            },
+            overlapping_dict_attrs["DEFINES"], {"DEBUG": True, "MOZ_DEBUG": True}
         )
 
     def test_common_attrs(self):
