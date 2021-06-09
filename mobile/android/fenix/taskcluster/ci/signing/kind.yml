@@ -19,12 +19,16 @@ group-by: build-type
 job-template:
     description: Sign Fenix
     worker: {}
-    signing-format: autograph_apk
+    signing-format:
+        by-build-type:
+            beta-mozillaonline: autograph_apk_mozillaonline
+            release-mozillaonline: autograph_apk_mozillaonline
+            default: autograph_apk
     index:
         by-tasks-for:
             (action|cron|github-release):
                 by-build-type:
-                    (nightly|debug|nightly-simulation|beta|release):
+                    (nightly|debug|nightly-simulation|beta|beta-mozillaonline|release|release-mozillaonline):
                         type: signing
                     default: {}
             default: {}
@@ -33,14 +37,17 @@ job-template:
             # No test job runs on push against this build type. Although we do want nightly-simulation
             # signed to use it in the gecko trees.
             # We want beta on push so that we detect problem before shipping it
-            (nightly-simulation|beta-firebase|android-test-beta|nightly-firebase|android-test-nightly): [github-push]
+            (nightly-simulation|beta-firebase|android-test-beta|android-test-mozillaonline|nightly-firebase|android-test-nightly): [github-push]
             default: []
     treeherder:
         job-symbol:
             by-build-type:
                 android-test.+: Bats
+                android-test-mozillaonline: Bats-mo
                 beta-firebase: Bfs
                 nightly-firebase: Bfs
+                beta-mozillaonline: Bmos
+                release-mozillaonline: Bmos
                 default: Bs
         kind: build
         platform: android-all/opt

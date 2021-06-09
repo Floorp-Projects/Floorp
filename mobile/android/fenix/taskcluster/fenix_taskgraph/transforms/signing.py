@@ -18,7 +18,7 @@ transforms = TransformSequence()
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("run-on-tasks-for",):
+        for key in ("run-on-tasks-for", "signing-format"):
             resolve_keyed_by(
                 task,
                 key,
@@ -56,7 +56,7 @@ def set_signing_type(config, tasks):
         ):
             if task["attributes"]["build-type"] in ("beta", "release"):
                 signing_type = "fennec-production-signing"
-            elif task["attributes"]["build-type"] in ("nightly", "android-test-nightly"):
+            elif task["attributes"]["build-type"] in ("nightly", "android-test-nightly", "beta-mozillaonline", "release-mozillaonline"):
                 signing_type = "production-signing"
         task.setdefault("worker", {})["signing-type"] = signing_type
         yield task

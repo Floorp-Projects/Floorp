@@ -75,6 +75,14 @@ def build_gradle_command(config, tasks):
         yield task
 
 @transforms.add
+def extra_gradle_options(config, tasks):
+    for task in tasks:
+        for extra in task["run"].pop("gradle-extra-options", []):
+            task["run"]["gradlew"].append(extra)
+
+        yield task
+
+@transforms.add
 def add_test_build_type(config, tasks):
     for task in tasks:
         test_build_type = task["run"].pop("test-build-type", "")
