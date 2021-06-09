@@ -1132,6 +1132,13 @@ bool SVGElement::UpdateDeclarationBlockFromPath(
   // SVGPathData::mData is fallible but rust binding accepts nsTArray only, so
   // we need to point to one or the other. Fortunately, fallible and infallible
   // array types can be implicitly converted provided they are const.
+  //
+  // FIXME: here we just convert the data structure from cpp verion into rust
+  // version. We don't do any normalization for the path data from d attribute.
+  // Based on the current discussion of https://github.com/w3c/svgwg/issues/321,
+  // we may have to convert the relative commands into absolute commands.
+  // The normalization should be fixed in Bug 1489392. Besides, Bug 1714238
+  // will use the same data structure, so we may simplify this more.
   const nsTArray<float>& asInFallibleArray = pathData.RawData();
   Servo_DeclarationBlock_SetPathValue(aBlock.Raw(), eCSSProperty_d,
                                       &asInFallibleArray);
@@ -1155,6 +1162,7 @@ class MOZ_STACK_CLASS MappedAttrParser {
 
   void TellStyleAlreadyParsedResult(nsAtom const* aAtom,
                                     SVGAnimatedLength const& aLength);
+  void TellStyleAlreadyParsedResult(const SVGAnimatedPathSegList& aPath);
 
   // If we've parsed any values for mapped attributes, this method returns the
   // already_AddRefed css::Declaration that incorporates the parsed
@@ -1241,6 +1249,15 @@ void MappedAttrParser::TellStyleAlreadyParsedResult(
                                                SVGElement::ValToUse::Base);
 }
 
+void MappedAttrParser::TellStyleAlreadyParsedResult(
+    const SVGAnimatedPathSegList& aPath) {
+  if (!mDecl) {
+    mDecl = new DeclarationBlock();
+  }
+  SVGElement::UpdateDeclarationBlockFromPath(*mDecl, aPath,
+                                             SVGElement::ValToUse::Base);
+}
+
 already_AddRefed<DeclarationBlock> MappedAttrParser::GetDeclarationBlock() {
   return mDecl.forget();
 }
@@ -1294,23 +1311,32 @@ void SVGElement::UpdateContentDeclarationBlock() {
       }
     }
 
-    nsAutoString value;
-    mAttrs.AttrAt(i)->ToString(value);
-
-    // FIXME: Now we still have to parse twice for d property because we are
-    // using the different data structure in SVG and CSS. This will be fixed in
-    // the patch series.
     if (attrName->Equals(nsGkAtoms::d, kNameSpaceID_None)) {
-      // The value of d attribute is a raw svg path string. We convert it as a
-      // path() to align the syntax in CSS parser. We will drop this in the
-      // later patch.
-      nsAutoString path;
-      path.AppendLiteral("path(\"");
-      path.Append(value);
-      path.AppendLiteral("\")");
-      value = path;
+      const auto* path = GetAnimPathSegList();
+      // Note: Only SVGPathElement has d attribute.
+      MOZ_ASSERT(
+          path,
+          "SVGPathElement should have the non-null SVGAnimatedPathSegList");
+      // The attribute should have been already successfully parsed.
+      // We want to go through the optimized path to tell the style system
+      // the result directly, rather than let it parse the same thing again.
+      mappedAttrParser.TellStyleAlreadyParsedResult(*path);
+      // Some other notes:
+      // The syntax of CSS d property is different from SVG d attribute.
+      // 1. CSS d proeprty accepts:  none | path(<quoted string>);
+      // 2. SVG d attribtue accepts: none | <string>
+      // So we cannot use css parser to parse the SVG d attribute directly.
+      // Besides, |mAttrs.AttrAt(i)| removes the quotes already, so the svg path
+      // in |mAttrs.AttrAt(i)| would be something like `M0,0L1,1z` without the
+      // quotes. So css tokenizer cannot recognize this as a quoted string, and
+      // so svg_path::SVGPathData::parse() doesn't work for this. Fortunately,
+      // we still can rely on the parsed result from
+      // SVGElement::ParseAttribute() for d attribute.
+      continue;
     }
 
+    nsAutoString value;
+    mAttrs.AttrAt(i)->ToString(value);
     mappedAttrParser.ParseMappedAttrValue(attrName->Atom(), value);
   }
   mContentDeclarationBlock = mappedAttrParser.GetDeclarationBlock();
