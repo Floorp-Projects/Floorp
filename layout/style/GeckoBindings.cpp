@@ -1595,12 +1595,6 @@ void Gecko_AddPropertyToSet(nsCSSPropertyIDSet* aPropertySet,
     ptr->~nsStyle##name();                                             \
   }
 
-void Gecko_RegisterProfilerThread(const char* name) {
-  PROFILER_REGISTER_THREAD(name);
-}
-
-void Gecko_UnregisterProfilerThread() { PROFILER_UNREGISTER_THREAD(); }
-
 #ifdef MOZ_GECKO_PROFILER
 void Gecko_Construct_AutoProfilerLabel(AutoProfilerLabel* aAutoLabel,
                                        JS::ProfilingCategoryPair aCatPair) {
