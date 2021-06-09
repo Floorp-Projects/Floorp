@@ -279,6 +279,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "clip-path",
       "column-count",
       "column-rule-width",
+      "d",
       "filter",
       "font-stretch",
       "font-variation-settings",

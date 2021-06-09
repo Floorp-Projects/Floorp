@@ -3068,6 +3068,7 @@ exports.CSS_PROPERTIES = {
       "rx",
       "ry",
       "r",
+      "d",
       "table-layout",
       "text-overflow",
       "text-decoration-line",
@@ -10994,6 +10995,10 @@ exports.PREFERENCES = [
   [
     "backdrop-filter",
     "layout.css.backdrop-filter.enabled"
+  ],
+  [
+    "d",
+    "layout.css.d-property.enabled"
   ],
   [
     "font-variation-settings",

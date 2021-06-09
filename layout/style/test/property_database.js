@@ -13063,6 +13063,29 @@ gCSSProperties["scrollbar-width"] = {
   invalid_values: ["1px"],
 };
 
+const pathValues = {
+  other_values: [
+    "path('')",
+    "path(' ')",
+    "path('M 10 10 20 20 H 90 V 90 Z')",
+    "path('M10 10 20,20H90V90Z')",
+    "path('M 10 10 C 20 20, 40 20, 50 10')",
+    "path('M 10 80 C 40 10, 65 10, 95 80 S 1.5e2 150, 180 80')",
+    "path('M 10 80 Q 95 10 180 80')",
+    "path('M 10 80 Q 52.5 10, 95 80 T 180 80')",
+    "path('M 80 80 A 45 45, 0, 0, 0, 1.25e2 1.25e2 L 125 80 Z')",
+    "path('M100-200h20z')",
+    "path('M10,10L20.6.5z')",
+  ],
+  invalid_values: [
+    "path()",
+    "path(a)",
+    "path('M 10 Z')",
+    "path('M 10-10 20')",
+    "path('M 10 10 C 20 20 40 20')",
+  ],
+};
+
 if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
   gCSSProperties["offset"] = {
     domProp: "offset",
@@ -13113,18 +13136,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
-    other_values: [
-      "path('')",
-      "path(' ')",
-      "path('M 10 10 20 20 H 90 V 90 Z')",
-      "path('M10 10 20,20H90V90Z')",
-      "path('M 10 10 C 20 20, 40 20, 50 10')",
-      "path('M 10 80 C 40 10, 65 10, 95 80 S 1.5e2 150, 180 80')",
-      "path('M 10 80 Q 95 10 180 80')",
-      "path('M 10 80 Q 52.5 10, 95 80 T 180 80')",
-      "path('M 80 80 A 45 45, 0, 0, 0, 1.25e2 1.25e2 L 125 80 Z')",
-      "path('M100-200h20z')",
-      "path('M10,10L20.6.5z')",
+    other_values: pathValues.other_values.concat([
       "ray(45deg closest-side)",
       "ray(0rad farthest-side)",
       "ray(0.5turn closest-corner contain)",
@@ -13132,18 +13144,13 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
       "ray(sides 180deg)",
       "ray(contain farthest-side 180deg)",
       "ray(calc(180deg - 45deg) farthest-side)",
-    ],
-    invalid_values: [
-      "path()",
-      "path(a)",
-      "path('M 10 Z')",
-      "path('M 10-10 20')",
-      "path('M 10 10 C 20 20 40 20')",
+    ]),
+    invalid_values: pathValues.invalid_values.concat([
       "ray(0deg)",
       "ray(closest-side)",
       "ray(0deg, closest-side)",
       "ray(contain 0deg closest-side contain)",
-    ],
+    ]),
   };
 
   gCSSProperties["offset-distance"] = {
@@ -13194,6 +13201,17 @@ if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
     "path(nonzero)",
     "path(abs, 'M 10 10 L 10 10 z')"
   );
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.d-property.enabled")) {
+  gCSSProperties["d"] = {
+    domProp: "d",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: pathValues.other_values,
+    invalid_values: pathValues.invalid_values,
+  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.step-position-jump.enabled")) {
