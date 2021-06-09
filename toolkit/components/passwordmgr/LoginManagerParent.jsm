@@ -22,6 +22,13 @@ XPCOMUtils.defineLazyGetter(this, "LoginRelatedRealmsParent", () => {
   return new LoginRelatedRealmsParent();
 });
 
+XPCOMUtils.defineLazyGetter(this, "PasswordRulesManager", () => {
+  const { PasswordRulesManagerParent } = ChromeUtils.import(
+    "resource://gre/modules/PasswordRulesManager.jsm"
+  );
+  return new PasswordRulesManagerParent();
+});
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -667,7 +674,9 @@ class LoginManagerParent extends JSWindowActorParent {
         (isProbablyANewPasswordField &&
           Services.logins.getLoginSavingEnabled(formOrigin)))
     ) {
-      generatedPassword = this.getGeneratedPassword();
+      // We either generate a new password here, or grab the previously generated password
+      // if we're still on the same domain when we generated the password
+      generatedPassword = await this.getGeneratedPassword();
       let potentialConflictingLogins = await Services.logins.searchLoginsAsync({
         origin: formOrigin,
         formActionOrigin: actionOrigin,
@@ -709,7 +718,7 @@ class LoginManagerParent extends JSWindowActorParent {
     return this.browsingContext;
   }
 
-  getGeneratedPassword() {
+  async getGeneratedPassword() {
     if (
       !LoginHelper.enabled ||
       !LoginHelper.generationAvailable ||
@@ -744,8 +753,14 @@ class LoginManagerParent extends JSWindowActorParent {
        * merge/overwrite via a doorhanger.
        */
       storageGUID: null,
-      value: PasswordGenerator.generatePassword(),
     };
+    if (LoginHelper.improvedPasswordRulesEnabled) {
+      generatedPW.value = await PasswordRulesManager.generatePassword(
+        browsingContext.currentWindowGlobal.documentURI
+      );
+    } else {
+      generatedPW.value = PasswordGenerator.generatePassword({});
+    }
 
     // Add these observers when a password is assigned.
     if (!gGeneratedPasswordObserver.addedObserver) {

@@ -19,6 +19,7 @@ async function task_setup() {
   Services.logins.removeAllUserFacingLogins();
   LoginTestUtils.resetGeneratedPasswordsCache();
   await cleanupPasswordNotifications();
+  await LoginTestUtils.remoteSettings.setupImprovedPasswordRules();
 }
 
 async function setup_withOneLogin(username = "username", password = "pass1") {

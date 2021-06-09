@@ -647,4 +647,29 @@ LoginTestUtils.remoteSettings = {
     let db = await RemoteSettings(this.relatedRealmsCollection).db;
     await db.importChanges({}, 12345678);
   },
+  improvedPasswordRulesCollection: "password-rules",
+
+  async setupImprovedPasswordRules(
+    origin = "example.com",
+    rules = "minlength: 6; maxlength: 16; required: lower, upper; required: digit; required: [&<>'\"!#$%(),:;=?[^`{|}~]]; max-consecutive: 2;"
+  ) {
+    let db = await RemoteSettings(this.improvedPasswordRulesCollection).db;
+    await db.clear();
+    await db.create({
+      id: "some-fake-ID",
+      Domain: origin,
+      "password-rules": rules,
+    });
+    await db.create({
+      id: "some-fake-ID-2",
+      Domain: origin,
+      "password-rules": rules,
+    });
+    await db.importChanges({}, 1234567);
+  },
+  async cleanImprovedPasswordRules() {
+    let db = await RemoteSettings(this.improvedPasswordRulesCollection).db;
+    await db.clear();
+    await db.importChanges({}, 1234);
+  },
 };

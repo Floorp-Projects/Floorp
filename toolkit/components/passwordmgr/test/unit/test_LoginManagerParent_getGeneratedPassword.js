@@ -14,6 +14,13 @@ add_task(async function test_getGeneratedPassword() {
   Services.prefs.setBoolPref("signon.generation.available", true);
   Services.prefs.setBoolPref("signon.generation.enabled", true);
 
+  // Setup the improved rules collection since the improved password rules
+  // pref is on by default. Otherwise any interaciton with LMP.getGeneratedPassword()
+  // will take a long time to complete
+  if (LoginHelper.improvedPasswordRulesEnabled) {
+    await LoginTestUtils.remoteSettings.setupImprovedPasswordRules();
+  }
+
   let LMP = new LoginManagerParent();
   LMP.useBrowsingContext(99);
 
@@ -24,7 +31,7 @@ add_task(async function test_getGeneratedPassword() {
     "Empty cache to start"
   );
 
-  equal(LMP.getGeneratedPassword(), null, "Null with no BrowsingContext");
+  equal(await LMP.getGeneratedPassword(), null, "Null with no BrowsingContext");
 
   ok(
     LoginManagerParent._browsingContextGlobal,
@@ -44,6 +51,7 @@ add_task(async function test_getGeneratedPassword() {
           documentPrincipal: Services.scriptSecurityManager.createContentPrincipalFromOrigin(
             "https://www.example.com^userContextId=6"
           ),
+          documentURI: Services.io.newURI("https://www.example.com"),
         },
       };
     });
@@ -51,8 +59,7 @@ add_task(async function test_getGeneratedPassword() {
     LoginManagerParent._browsingContextGlobal.get(99),
     "Checking BrowsingContext.get(99) stub"
   );
-
-  let password1 = LMP.getGeneratedPassword();
+  let password1 = await LMP.getGeneratedPassword();
   notEqual(password1, null, "Check password was returned");
   equal(
     password1.length,
@@ -71,7 +78,7 @@ add_task(async function test_getGeneratedPassword() {
     password1,
     "Cache key and value"
   );
-  let password2 = LMP.getGeneratedPassword();
+  let password2 = await LMP.getGeneratedPassword();
   equal(
     password1,
     password2,
@@ -89,10 +96,11 @@ add_task(async function test_getGeneratedPassword() {
           documentPrincipal: Services.scriptSecurityManager.createContentPrincipalFromOrigin(
             "https://www.mozilla.org^userContextId=2"
           ),
+          documentURI: Services.io.newURI("https://www.example.com"),
         },
       };
     });
-  let password3 = LMP.getGeneratedPassword();
+  let password3 = await LMP.getGeneratedPassword();
   notEqual(
     password2,
     password3,
@@ -107,20 +115,24 @@ add_task(async function test_getGeneratedPassword() {
   info("Now checks cases where null should be returned");
 
   Services.prefs.setBoolPref("signon.rememberSignons", false);
-  equal(LMP.getGeneratedPassword(), null, "Prevented when pwmgr disabled");
+  equal(
+    await LMP.getGeneratedPassword(),
+    null,
+    "Prevented when pwmgr disabled"
+  );
   Services.prefs.setBoolPref("signon.rememberSignons", true);
 
   Services.prefs.setBoolPref("signon.generation.available", false);
-  equal(LMP.getGeneratedPassword(), null, "Prevented when unavailable");
+  equal(await LMP.getGeneratedPassword(), null, "Prevented when unavailable");
   Services.prefs.setBoolPref("signon.generation.available", true);
 
   Services.prefs.setBoolPref("signon.generation.enabled", false);
-  equal(LMP.getGeneratedPassword(), null, "Prevented when disabled");
+  equal(await LMP.getGeneratedPassword(), null, "Prevented when disabled");
   Services.prefs.setBoolPref("signon.generation.enabled", true);
 
   LMP.useBrowsingContext(123);
   equal(
-    LMP.getGeneratedPassword(),
+    await LMP.getGeneratedPassword(),
     null,
     "Prevented when browsingContext is missing"
   );
