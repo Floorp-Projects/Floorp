@@ -21,7 +21,6 @@ CompiledModules(
     "connect.js",
     "context.js",
     "dbg.js",
-    "defer.js",
     "DevToolsUtils.js",
     "environment.js",
     "expressions.js",
