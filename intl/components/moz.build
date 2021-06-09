@@ -7,9 +7,7 @@ EXPORTS.mozilla.intl = [
     "src/DateTimeFormat.h",
     "src/ICU4CGlue.h",
     "src/NumberFormat.h",
-    # Bug 1704509: Remove NumberFormatterSkeleton.h from public API once we have
-    # an unified PluralRules implementation.
-    "src/NumberFormatterSkeleton.h",
+    "src/PluralRules.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -17,6 +15,7 @@ UNIFIED_SOURCES += [
     "src/NumberFormat.cpp",
     "src/NumberFormatFields.cpp",
     "src/NumberFormatterSkeleton.cpp",
+    "src/PluralRules.cpp",
 ]
 
 if not CONFIG["JS_STANDALONE"]:
