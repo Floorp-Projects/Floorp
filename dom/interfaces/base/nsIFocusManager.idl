@@ -67,6 +67,8 @@ interface nsIFocusManager : nsISupports
    * that set as the focused element. This process repeats downwards until a
    * non-frame element is found.
    * The setter for this attribute defaults to CallerType::System.
+   * If focus is in another process, this is null in content processes and
+   * the closest ancestor in the parent process.
    */
   attribute mozIDOMWindowProxy focusedWindow;
 
