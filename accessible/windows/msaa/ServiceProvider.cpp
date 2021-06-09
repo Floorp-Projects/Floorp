@@ -36,15 +36,16 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
   if (!aInstancePtr) return E_INVALIDARG;
 
   *aInstancePtr = nullptr;
-  AccessibleWrap* acc = mMsaa->LocalAcc();
+  Accessible* acc = mMsaa->Acc();
   if (!acc) {
     return CO_E_OBJNOTCONNECTED;
   }
+  AccessibleWrap* localAcc = mMsaa->LocalAcc();
 
   // UIA IAccessibleEx
   if (aGuidService == IID_IAccessibleEx &&
-      Preferences::GetBool("accessibility.uia.enable")) {
-    uiaRawElmProvider* accEx = new uiaRawElmProvider(acc);
+      Preferences::GetBool("accessibility.uia.enable") && localAcc) {
+    uiaRawElmProvider* accEx = new uiaRawElmProvider(localAcc);
     HRESULT hr = accEx->QueryInterface(aIID, aInstancePtr);
     if (FAILED(hr)) delete accEx;
 
@@ -61,13 +62,13 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
       0x3571,
       0x4d8f,
       {0x95, 0x21, 0x07, 0xed, 0x28, 0xfb, 0x07, 0x2e}};
-  if (aGuidService == SID_IAccessibleContentDocument) {
+  if (aGuidService == SID_IAccessibleContentDocument && localAcc) {
     if (aIID != IID_IAccessible) return E_NOINTERFACE;
 
     // If acc is within an OOP iframe document, the top level document
     // lives in a different process.
     if (XRE_IsContentProcess()) {
-      RootAccessible* root = acc->RootAccessible();
+      RootAccessible* root = localAcc->RootAccessible();
       // root will be null if acc is the ApplicationAccessible.
       if (root) {
         DocAccessibleChild* ipcDoc = root->IPCDoc();
@@ -82,7 +83,7 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
       }
     }
 
-    Relation rel = acc->RelationByType(RelationType::CONTAINING_TAB_PANE);
+    Relation rel = localAcc->RelationByType(RelationType::CONTAINING_TAB_PANE);
     AccessibleWrap* tabDoc = static_cast<AccessibleWrap*>(rel.Next());
     if (!tabDoc) return E_NOINTERFACE;
 
