@@ -20,9 +20,6 @@ with Files('compare-locales/**'):
 with Files('dlmanager/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files('enum34/**'):
-    BUG_COMPONENT = ('Release Engineering', 'General')
-
 with Files('fluent.migrate/**'):
     BUG_COMPONENT = ('Localization Infrastructure and Tools', 'Fluent Migration')
 
