@@ -9,3 +9,9 @@
 #include "ProfilerBindings.h"
 
 #include "GeckoProfiler.h"
+
+void gecko_profiler_register_thread(const char* aName) {
+  PROFILER_REGISTER_THREAD(aName);
+}
+
+void gecko_profiler_unregister_thread() { PROFILER_UNREGISTER_THREAD(); }

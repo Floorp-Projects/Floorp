@@ -14,7 +14,8 @@
 
 extern "C" {
 
-// TODO: Add the profiler API bindings here.
+void gecko_profiler_register_thread(const char* aName);
+void gecko_profiler_unregister_thread();
 
 }  // extern "C"
 
