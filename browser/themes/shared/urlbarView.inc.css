@@ -636,6 +636,9 @@
 .urlbarView-url {
   overflow: hidden;
   color: var(--urlbar-popup-url-color);
+  /* Increase line-height to avoid cutting overhanging glyphs due to masking on
+     the element */
+  line-height: 1.4;
 }
 
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-no-wrap >.urlbarView-action,
@@ -708,6 +711,9 @@
 .urlbarView-tags {
   overflow: hidden;
   display: flex;
+  /* Increase line-height to avoid cutting overhanging glyphs due to masking on
+     the element */
+  line-height: 1.4;
 }
 
 .urlbarView-tag {
