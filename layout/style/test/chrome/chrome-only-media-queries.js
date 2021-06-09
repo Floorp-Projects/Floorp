@@ -28,7 +28,6 @@ const CHROME_ONLY_TOGGLES = [
   "-moz-gtk-csd-close-button",
   "-moz-gtk-csd-reversed-placement",
   "-moz-proton",
-  "-moz-proton-modals",
   "-moz-proton-places-tooltip",
 ];
 
