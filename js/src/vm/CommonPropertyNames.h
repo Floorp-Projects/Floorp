@@ -157,6 +157,7 @@
   MACRO_(export, export_, "export")                                            \
   MACRO_(extends, extends, "extends")                                          \
   MACRO_(false, false_, "false")                                               \
+  MACRO_(few, few, "few")                                                      \
   MACRO_(fieldOffsets, fieldOffsets, "fieldOffsets")                           \
   MACRO_(fieldTypes, fieldTypes, "fieldTypes")                                 \
   MACRO_(fileName, fileName, "fileName")                                       \
@@ -286,6 +287,7 @@
   MACRO_(lookupGetter, lookupGetter, "__lookupGetter__")                       \
   MACRO_(lookupSetter, lookupSetter, "__lookupSetter__")                       \
   MACRO_(ltr, ltr, "ltr")                                                      \
+  MACRO_(many, many, "many")                                                   \
   MACRO_(MapConstructorInit, MapConstructorInit, "MapConstructorInit")         \
   MACRO_(MapIterator, MapIterator, "Map Iterator")                             \
   MACRO_(maxColumn, maxColumn, "maxColumn")                                    \
@@ -355,6 +357,7 @@
   MACRO_(objectUndefined, objectUndefined, "[object Undefined]")               \
   MACRO2(of, of, "of")                                                         \
   MACRO_(offset, offset, "offset")                                             \
+  MACRO_(one, one, "one")                                                      \
   MACRO_(optimizedOut, optimizedOut, "optimizedOut")                           \
   MACRO_(other, other, "other")                                                \
   MACRO_(outOfMemory, outOfMemory, "out of memory")                            \
@@ -467,6 +470,7 @@
   MACRO_(toUTCString, toUTCString, "toUTCString")                              \
   MACRO_(true, true_, "true")                                                  \
   MACRO_(try, try_, "try")                                                     \
+  MACRO_(two, two, "two")                                                      \
   MACRO_(type, type, "type")                                                   \
   MACRO_(typeof, typeof_, "typeof")                                            \
   MACRO_(uint8, uint8, "uint8")                                                \
@@ -530,6 +534,7 @@
   MACRO_(year, year, "year")                                                   \
   MACRO_(yearName, yearName, "yearName")                                       \
   MACRO_(yield, yield, "yield")                                                \
+  MACRO_(zero, zero, "zero")                                                   \
   /* Type names must be contiguous and ordered; see js::TypeName. */           \
   MACRO_(undefined, undefined, "undefined")                                    \
   MACRO_(object, object, "object")                                             \

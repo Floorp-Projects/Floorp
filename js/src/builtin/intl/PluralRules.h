@@ -12,9 +12,9 @@
 #include "js/RootingAPI.h"
 #include "vm/NativeObject.h"
 
-struct UFormattedNumber;
-struct UNumberFormatter;
-struct UPluralRules;
+namespace mozilla::intl {
+class PluralRules;
+}
 
 namespace js {
 
@@ -25,55 +25,27 @@ class PluralRulesObject : public NativeObject {
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
   static constexpr uint32_t UPLURAL_RULES_SLOT = 1;
-  static constexpr uint32_t UNUMBER_FORMATTER_SLOT = 2;
-  static constexpr uint32_t UFORMATTED_NUMBER_SLOT = 3;
-  static constexpr uint32_t SLOT_COUNT = 4;
+  static constexpr uint32_t SLOT_COUNT = 2;
 
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
 
-  // Estimated memory use for UNumberFormatter and UFormattedNumber
-  // (see IcuMemoryUsage).
-  static constexpr size_t UNumberFormatterEstimatedMemoryUse = 750;
-
   // Estimated memory use for UPluralRules (see IcuMemoryUsage).
-  static constexpr size_t UPluralRulesEstimatedMemoryUse = 2976;
+  // Includes usage for UNumberFormat since our PluralRules impl
+  // contains a NumberFormat object.
+  static constexpr size_t UPluralRulesEstimatedMemoryUse = 3726;
 
-  UPluralRules* getPluralRules() const {
+  mozilla::intl::PluralRules* getPluralRules() const {
     const auto& slot = getFixedSlot(UPLURAL_RULES_SLOT);
     if (slot.isUndefined()) {
       return nullptr;
     }
-    return static_cast<UPluralRules*>(slot.toPrivate());
+    return static_cast<mozilla::intl::PluralRules*>(slot.toPrivate());
   }
 
-  void setPluralRules(UPluralRules* pluralRules) {
+  void setPluralRules(mozilla::intl::PluralRules* pluralRules) {
     setFixedSlot(UPLURAL_RULES_SLOT, PrivateValue(pluralRules));
-  }
-
-  UNumberFormatter* getNumberFormatter() const {
-    const auto& slot = getFixedSlot(UNUMBER_FORMATTER_SLOT);
-    if (slot.isUndefined()) {
-      return nullptr;
-    }
-    return static_cast<UNumberFormatter*>(slot.toPrivate());
-  }
-
-  void setNumberFormatter(UNumberFormatter* formatter) {
-    setFixedSlot(UNUMBER_FORMATTER_SLOT, PrivateValue(formatter));
-  }
-
-  UFormattedNumber* getFormattedNumber() const {
-    const auto& slot = getFixedSlot(UFORMATTED_NUMBER_SLOT);
-    if (slot.isUndefined()) {
-      return nullptr;
-    }
-    return static_cast<UFormattedNumber*>(slot.toPrivate());
-  }
-
-  void setFormattedNumber(UFormattedNumber* formatted) {
-    setFixedSlot(UFORMATTED_NUMBER_SLOT, PrivateValue(formatted));
   }
 
  private:

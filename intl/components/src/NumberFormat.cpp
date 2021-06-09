@@ -7,6 +7,7 @@
 #include "ScopedICUObject.h"
 
 #include "unicode/unumberformatter.h"
+#include "unicode/upluralrules.h"
 
 namespace mozilla {
 namespace intl {
@@ -45,6 +46,26 @@ Result<Ok, NumberFormat::FormatError> NumberFormat::initialize(
     }
   }
   return Err(FormatError::InternalError);
+}
+
+Result<int32_t, NumberFormat::FormatError> NumberFormat::selectFormatted(
+    double number, char16_t* keyword, int32_t keywordSize,
+    UPluralRules* pluralRules) const {
+  MOZ_ASSERT(keyword && pluralRules);
+  UErrorCode status = U_ZERO_ERROR;
+
+  if (format(number).isErr()) {
+    return Err(NumberFormat::FormatError::InternalError);
+  }
+
+  int32_t utf16KeywordLength = uplrules_selectFormatted(
+      pluralRules, mFormattedNumber, keyword, keywordSize, &status);
+
+  if (U_FAILURE(status)) {
+    return Err(NumberFormat::FormatError::InternalError);
+  }
+
+  return utf16KeywordLength;
 }
 
 bool NumberFormat::formatInternal(double number) const {
