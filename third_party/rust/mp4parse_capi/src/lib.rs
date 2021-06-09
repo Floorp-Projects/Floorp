@@ -973,6 +973,9 @@ fn mp4parse_get_track_video_info_safe(
             VideoCodecSpecific::AV1Config(_) => Mp4parseCodec::Av1,
             VideoCodecSpecific::AVCConfig(_) => Mp4parseCodec::Avc,
             VideoCodecSpecific::H263Config(_) => Mp4parseCodec::H263,
+            #[cfg(feature = "mp4v")]
+            VideoCodecSpecific::ESDSConfig(_) => Mp4parseCodec::Mp4v,
+            #[cfg(not(feature = "mp4v"))]
             VideoCodecSpecific::ESDSConfig(_) =>
             // MP4V (14496-2) video is unsupported.
             {

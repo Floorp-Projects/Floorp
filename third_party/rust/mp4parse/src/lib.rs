@@ -407,6 +407,8 @@ pub struct ES_Descriptor {
     pub extended_audio_object_type: Option<u16>,
     pub audio_sample_rate: Option<u32>,
     pub audio_channel_count: Option<u16>,
+    #[cfg(feature = "mp4v")]
+    pub video_codec: CodecType,
     pub codec_esds: TryVec<u8>,
     pub decoder_specific_data: TryVec<u8>, // Data in DECODER_SPECIFIC_TAG
 }
@@ -902,7 +904,7 @@ impl AvifContext {
         match &item.image_data {
             IsobmffItem::Location(extent) => {
                 for mdat in &self.item_storage {
-                    if let Some(slice) = mdat.get(&extent) {
+                    if let Some(slice) = mdat.get(extent) {
                         return slice;
                     }
                 }
@@ -3725,6 +3727,14 @@ fn get_audio_object_type(bit_reader: &mut BitReader) -> Result<u16> {
 
 /// See MPEG-4 Systems (ISO 14496-1:2010) § 7.2.6.7 and probably 14496-3 somewhere?
 fn read_ds_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
+    #[cfg(feature = "mp4v")]
+    // Check if we are in a Visual esda Box.
+    if esds.video_codec != CodecType::Unknown {
+        esds.decoder_specific_data.extend_from_slice(data)?;
+        return Ok(());
+    }
+
+    // We are in an Audio esda Box.
     let frequency_table = vec![
         (0x0, 96000),
         (0x1, 88200),
@@ -3898,6 +3908,14 @@ fn read_surround_channel_count(bit_reader: &mut BitReader, channels: u8) -> Resu
 fn read_dc_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
     let des = &mut Cursor::new(data);
     let object_profile = des.read_u8()?;
+
+    #[cfg(feature = "mp4v")]
+    {
+        esds.video_codec = match object_profile {
+            0x20..=0x24 => CodecType::MP4V,
+            _ => CodecType::Unknown,
+        };
+    }
 
     // Skip uninteresting fields.
     skip(des, 12)?;
@@ -4214,16 +4232,27 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleEntry>
                 if name != BoxType::MP4VideoSampleEntry || codec_specific.is_some() {
                     return Err(Error::InvalidData("malformed video sample entry"));
                 }
-                let (_, _) = read_fullbox_extra(&mut b.content)?;
-                // Subtract 4 extra to offset the members of fullbox not
-                // accounted for in head.offset
-                let esds_size = b
-                    .head
-                    .size
-                    .checked_sub(b.head.offset + 4)
-                    .expect("offset invalid");
-                let esds = read_buf(&mut b.content, esds_size)?;
-                codec_specific = Some(VideoCodecSpecific::ESDSConfig(esds));
+                #[cfg(not(feature = "mp4v"))]
+                {
+                    let (_, _) = read_fullbox_extra(&mut b.content)?;
+                    // Subtract 4 extra to offset the members of fullbox not
+                    // accounted for in head.offset
+                    let esds_size = b
+                        .head
+                        .size
+                        .checked_sub(b.head.offset + 4)
+                        .expect("offset invalid");
+                    let esds = read_buf(&mut b.content, esds_size)?;
+                    codec_specific = Some(VideoCodecSpecific::ESDSConfig(esds));
+                }
+                #[cfg(feature = "mp4v")]
+                {
+                    // Read ES_Descriptor inside an esds box.
+                    // See ISOBMFF (ISO 14496-1:2010 §7.2.6.5)
+                    let esds = read_esds(&mut b)?;
+                    codec_specific =
+                        Some(VideoCodecSpecific::ESDSConfig(esds.decoder_specific_data));
+                }
             }
             BoxType::ProtectionSchemeInfoBox => {
                 if name != BoxType::ProtectedVisualSampleEntry {

@@ -44,6 +44,7 @@ criterion = "0.3"
 3gpp = []
 meta-xml = []
 unstable-api = []
+mp4v = []
 
 [[bench]]
 name = "avif_benchmark"
