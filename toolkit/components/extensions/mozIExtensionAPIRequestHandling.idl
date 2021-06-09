@@ -13,6 +13,12 @@ interface mozIExtensionServiceWorkerInfo : nsISupports
   readonly attribute AString scriptURL;
   readonly attribute AString clientInfoId;
 };
+
+[scriptable, builtinclass, uuid(e68e3c19-1b35-4112-8faa-5c5b84086a5b)]
+interface mozIExtensionEventListener : nsISupports
+{
+  void callListener(in Array<jsval> args);
+};
  
 [scriptable, builtinclass, uuid(0fee1c8f-e363-46a6-bd0c-d3c3338e2534)]
 interface mozIExtensionAPIRequest : nsISupports
@@ -53,6 +59,9 @@ interface mozIExtensionAPIRequest : nsISupports
 
   // Set for requests coming from an extension service worker.
   readonly attribute mozIExtensionServiceWorkerInfo serviceWorkerInfo;
+
+  // Set for `addListener`/`removeListener` API requests.
+  readonly attribute mozIExtensionEventListener eventListener;
 };
 
 [scriptable, uuid(59fd4097-d88e-40fd-8664-fedd8ab67ab6)]
