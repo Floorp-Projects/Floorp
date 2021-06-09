@@ -44,7 +44,10 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
   }
 
   get remoteFrame() {
-    return BROWSER_TOOLBOX_FISSION_ENABLED && this._form.remoteFrame;
+    if (!BROWSER_TOOLBOX_FISSION_ENABLED && this.targetFront.isParentProcess) {
+      return false;
+    }
+    return this._form.remoteFrame;
   }
 
   get role() {
@@ -311,7 +314,8 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
    */
   async getAncestry(accessible) {
     const ancestry = await super.getAncestry(accessible);
-    if (!BROWSER_TOOLBOX_FISSION_ENABLED) {
+
+    if (!BROWSER_TOOLBOX_FISSION_ENABLED && this.targetFront.isParentProcess) {
       // Do not try to get the ancestry across the remote frame hierarchy.
       return ancestry;
     }
