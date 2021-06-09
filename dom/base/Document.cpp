@@ -57,6 +57,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DocLoadingTimelineMarker.h"
 #include "mozilla/DocumentStyleRootIterator.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/EditorCommands.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/ErrorResult.h"
@@ -5074,7 +5075,7 @@ Document::AutoEditorCommandTarget::AutoEditorCommandTarget(
   mHTMLEditor = nullptr;
 }
 
-TextEditor* Document::AutoEditorCommandTarget::GetTargetEditor() const {
+EditorBase* Document::AutoEditorCommandTarget::GetTargetEditor() const {
   using CommandOnTextEditor = InternalCommandData::CommandOnTextEditor;
   switch (mCommandData.mCommandOnTextEditor) {
     case CommandOnTextEditor::Enabled:
@@ -5095,7 +5096,7 @@ bool Document::AutoEditorCommandTarget::IsEditable(Document* aDocument) const {
     // we're editable.
     doc->FlushPendingNotifications(FlushType::Frames);
   }
-  TextEditor* targetEditor = GetTargetEditor();
+  EditorBase* targetEditor = GetTargetEditor();
   if (targetEditor && targetEditor->IsTextEditor()) {
     // FYI: When `disabled` attribute is set, `TextEditor` treats it as
     //      "readonly" too.
@@ -5105,7 +5106,7 @@ bool Document::AutoEditorCommandTarget::IsEditable(Document* aDocument) const {
 }
 
 bool Document::AutoEditorCommandTarget::IsCommandEnabled() const {
-  TextEditor* targetEditor = GetTargetEditor();
+  EditorBase* targetEditor = GetTargetEditor();
   if (!targetEditor) {
     return false;
   }
@@ -5118,7 +5119,7 @@ nsresult Document::AutoEditorCommandTarget::DoCommand(
     nsIPrincipal* aPrincipal) const {
   MOZ_ASSERT(!DoNothing());
   MOZ_ASSERT(mEditorCommand);
-  TextEditor* targetEditor = GetTargetEditor();
+  EditorBase* targetEditor = GetTargetEditor();
   if (!targetEditor) {
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
@@ -5133,7 +5134,7 @@ nsresult Document::AutoEditorCommandTarget::DoCommandParam(
     const ParamType& aParam, nsIPrincipal* aPrincipal) const {
   MOZ_ASSERT(!DoNothing());
   MOZ_ASSERT(mEditorCommand);
-  TextEditor* targetEditor = GetTargetEditor();
+  EditorBase* targetEditor = GetTargetEditor();
   if (!targetEditor) {
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
@@ -5146,7 +5147,7 @@ nsresult Document::AutoEditorCommandTarget::DoCommandParam(
 nsresult Document::AutoEditorCommandTarget::GetCommandStateParams(
     nsCommandParams& aParams) const {
   MOZ_ASSERT(mEditorCommand);
-  TextEditor* targetEditor = GetTargetEditor();
+  EditorBase* targetEditor = GetTargetEditor();
   if (!targetEditor) {
     return NS_OK;
   }
@@ -5732,8 +5733,7 @@ nsresult Document::TurnEditingOff() {
   if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
     if (RefPtr<TextControlElement> textControlElement =
             TextControlElement::FromNodeOrNull(fm->GetFocusedElement())) {
-      RefPtr<TextEditor> textEditor = textControlElement->GetTextEditor();
-      if (textEditor) {
+      if (RefPtr<TextEditor> textEditor = textControlElement->GetTextEditor()) {
         textEditor->ReinitializeSelection(*textControlElement);
       }
     }

@@ -20,7 +20,7 @@ class nsRange;
 class nsIWidget;
 
 namespace mozilla {
-class TextEditor;
+class EditorBase;
 namespace dom {
 class Selection;
 }
@@ -400,7 +400,7 @@ class HyperTextAccessible : public AccessibleWrap {
    * Return the editor associated with the accessible.
    * The result may be either TextEditor or HTMLEditor.
    */
-  virtual already_AddRefed<TextEditor> GetEditor() const;
+  virtual already_AddRefed<EditorBase> GetEditor() const;
 
   /**
    * Return DOM selection object for the accessible.

@@ -35,11 +35,11 @@ class nsPresContext;
 
 namespace mozilla {
 
+class EditorBase;
 class EnterLeaveDispatcher;
 class EventStates;
 class IMEContentObserver;
 class ScrollbarsForWheel;
-class TextEditor;
 class WheelTransaction;
 
 namespace dom {
@@ -326,7 +326,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   /**
    * HandleMiddleClickPaste() handles middle mouse button event as pasting
-   * clipboard text.  Note that if aTextEditor is nullptr, this only
+   * clipboard text.  Note that if aEditorBase is nullptr, this only
    * dispatches ePaste event because it's necessary for some web apps which
    * want to implement their own editor and supports middle click paste.
    *
@@ -335,7 +335,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * @param aMouseEvent             The eMouseClick event which caused the
    *                                paste.
    * @param aStatus                 The event status of aMouseEvent.
-   * @param aTextEditor             TextEditor which may be pasted the
+   * @param aEditorBase             EditorBase which may be pasted the
    *                                clipboard text by the middle click.
    *                                If there is no editor for aMouseEvent,
    *                                set nullptr.
@@ -344,7 +344,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   nsresult HandleMiddleClickPaste(PresShell* aPresShell,
                                   WidgetMouseEvent* aMouseEvent,
                                   nsEventStatus* aStatus,
-                                  TextEditor* aTextEditor);
+                                  EditorBase* aEditorBase);
 
  protected:
   /*

@@ -6,6 +6,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DeclarationBlock.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
@@ -2496,7 +2497,7 @@ nsresult nsGenericHTMLElement::DispatchSimulatedClick(
   return EventDispatcher::Dispatch(ToSupports(aElement), aPresContext, &event);
 }
 
-already_AddRefed<TextEditor> nsGenericHTMLElement::GetAssociatedEditor() {
+already_AddRefed<EditorBase> nsGenericHTMLElement::GetAssociatedEditor() {
   // If contenteditable is ever implemented, it might need to do something
   // different here?
 
@@ -2509,9 +2510,8 @@ void nsGenericHTMLElement::SyncEditorsOnSubtree(nsIContent* content) {
   /* Sync this node */
   nsGenericHTMLElement* element = FromNode(content);
   if (element) {
-    RefPtr<TextEditor> textEditor = element->GetAssociatedEditor();
-    if (textEditor) {
-      textEditor->SyncRealTimeSpell();
+    if (RefPtr<EditorBase> editorBase = element->GetAssociatedEditor()) {
+      editorBase->SyncRealTimeSpell();
     }
   }
 

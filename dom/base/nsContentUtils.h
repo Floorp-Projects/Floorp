@@ -140,6 +140,7 @@ class PropertyDescriptor;
 
 namespace mozilla {
 class Dispatcher;
+class EditorBase;
 class ErrorResult;
 class EventListenerManager;
 class HTMLEditor;
@@ -1501,7 +1502,7 @@ class nsContentUtils {
    * @param aEditorInputType    The inputType value of InputEvent.
    *                            If aEventTarget won't dispatch "input" event
    *                            with InputEvent, set EditorInputType::eUnknown.
-   * @param aTextEditor         Optional.  If this is called by editor,
+   * @param aEditorBase         Optional.  If this is called by editor,
    *                            editor should set this.  Otherwise, leave
    *                            nullptr.
    * @param aOptions            Optional.  If aEditorInputType value requires
@@ -1518,7 +1519,7 @@ class nsContentUtils {
   MOZ_CAN_RUN_SCRIPT static nsresult DispatchInputEvent(
       Element* aEventTarget, mozilla::EventMessage aEventMessage,
       mozilla::EditorInputType aEditorInputType,
-      mozilla::TextEditor* aTextEditor, mozilla::InputEventOptions&& aOptions,
+      mozilla::EditorBase* aEditorBase, mozilla::InputEventOptions&& aOptions,
       nsEventStatus* aEventStatus = nullptr);
 
   /**
@@ -2714,8 +2715,8 @@ class nsContentUtils {
    * even if there is no active editing host.
    * Note that this does not return editor in descendant documents.
    */
-  static mozilla::TextEditor* GetActiveEditor(nsPresContext* aPresContext);
-  static mozilla::TextEditor* GetActiveEditor(nsPIDOMWindowOuter* aWindow);
+  static mozilla::EditorBase* GetActiveEditor(nsPresContext* aPresContext);
+  static mozilla::EditorBase* GetActiveEditor(nsPIDOMWindowOuter* aWindow);
 
   /**
    * Returns `TextEditor` which manages `aAnonymousContent` if there is.

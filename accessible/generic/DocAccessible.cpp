@@ -41,11 +41,11 @@
 #include "nsTHashSet.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_accessibility.h"
-#include "mozilla/TextEditor.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/DocumentType.h"
@@ -239,8 +239,8 @@ uint64_t DocAccessible::NativeState() const {
     state |= states::INVISIBLE | states::OFFSCREEN;
   }
 
-  RefPtr<TextEditor> textEditor = GetEditor();
-  state |= textEditor ? states::EDITABLE : states::READONLY;
+  RefPtr<EditorBase> editorBase = GetEditor();
+  state |= editorBase ? states::EDITABLE : states::READONLY;
 
   return state;
 }
@@ -295,7 +295,7 @@ void DocAccessible::TakeFocus() const {
 }
 
 // HyperTextAccessible method
-already_AddRefed<TextEditor> DocAccessible::GetEditor() const {
+already_AddRefed<EditorBase> DocAccessible::GetEditor() const {
   // Check if document is editable (designMode="on" case). Otherwise check if
   // the html:body (for HTML document case) or document element is editable.
   if (!mDocumentNode->HasFlag(NODE_IS_EDITABLE) &&
