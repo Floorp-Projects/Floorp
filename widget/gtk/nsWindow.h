@@ -633,7 +633,10 @@ class nsWindow final : public nsBaseWidget {
   bool IsInPopupHierarchy();
   void AddWindowToPopupHierarchy();
   void UpdateWaylandPopupHierarchy();
-  void WaylandPopupHierarchyUpdateByLayout();
+  void WaylandPopupHierarchyHideByLayout(
+      nsTArray<nsIWidget*>* aLayoutWidgetHierarchy);
+  void WaylandPopupHierarchyMarkByLayout(
+      nsTArray<nsIWidget*>* aLayoutWidgetHierarchy);
   void CloseAllPopupsBeforeRemotePopup();
   void WaylandPopupHideClosedPopups();
   void WaylandPopupMove(bool aUseMoveToRect);
