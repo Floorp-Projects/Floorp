@@ -206,7 +206,7 @@ class GlobalHelperThreadState {
   [[nodiscard]] bool ensureInitialized();
   [[nodiscard]] bool ensureThreadCount(size_t count,
                                        const AutoLockHelperThreadState& lock);
-  void finish();
+  void finish(AutoLockHelperThreadState& lock);
   void finishThreads(AutoLockHelperThreadState& lock);
 
   void setCpuCount(size_t count);
