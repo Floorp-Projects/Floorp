@@ -124,6 +124,7 @@ MOCHITEST_MANIFESTS += [
 MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.ini"]
 XPCSHELL_TESTS_MANIFESTS += [
     "test/xpcshell/native_messaging.ini",
+    "test/xpcshell/webidl-api/xpcshell.ini",
     "test/xpcshell/xpcshell-e10s.ini",
     "test/xpcshell/xpcshell-legacy-ep.ini",
     "test/xpcshell/xpcshell-remote.ini",
