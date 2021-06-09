@@ -494,7 +494,6 @@ static bool TieringBeneficial(uint32_t codeSize) {
     return false;
   }
 
-  MOZ_ASSERT(GetHelperThreadCount() >= cpuCount);
 
   // Compute the max number of threads available to do actual background
   // compilation work.
@@ -502,9 +501,9 @@ static bool TieringBeneficial(uint32_t codeSize) {
   uint32_t workers = GetMaxWasmCompilationThreads();
 
   // The number of cores we will use is bounded both by the CPU count and the
-  // worker count.
+  // worker count, since the worker count already takes this into account.
 
-  uint32_t cores = std::min(cpuCount, workers);
+  uint32_t cores = workers;
 
   SystemClass cls = ClassifySystem();
 
