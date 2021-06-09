@@ -319,7 +319,7 @@
       <menuitem id="bookmarksShowAll"
                 command="Browser:ShowAllBookmarks"
                 key="manBookmarkKb"
-                data-l10n-id="menu-bookmarks-show-all"/>
+                data-l10n-id="menu-bookmarks-manage"/>
       <menuseparator id="organizeBookmarksSeparator"/>
       <menuitem id="menu_bookmarkThisPage"
                 command="Browser:AddBookmarkAs"
