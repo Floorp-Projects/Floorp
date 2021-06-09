@@ -198,7 +198,6 @@ enum class DeviceFamily : uint8_t {
   Bug1207665,
   Bug1447141,
   AmdR600,
-  NvidiaBlockWebRender,
   NvidiaRolloutWebRender,
   IntelRolloutWebRender,
   IntelModernRolloutWebRender,
