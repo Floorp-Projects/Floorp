@@ -187,29 +187,32 @@ add_task(async function test_subframes_focus() {
               content.browsingContext.top,
               descChild + "activeBrowsingContext"
             );
-            if (!isOop) {
-              // XXXndeakin bug 1709125 will fix this for oop mode.
-              Assert.ok(
-                content.document.hasFocus(),
-                descChild + "hasFocus: " + content.browsingContext.id
-              );
-            }
+            Assert.ok(
+              content.document.hasFocus(),
+              descChild + "hasFocus: " + content.browsingContext.id
+            );
 
             // If a child browsing context is expected to be focused, the focusedWindow
             // should be set to that instead and the active element should be an iframe.
             // Otherwise, the focused window should be this window, and the active
             // element should be the document's body element.
             if (childBC) {
-              // Only check this for in-process iframes.
-              // XXX This fails in fission mode. The frame structure is:
+              // The frame structure is:
               //    A1
               //      -> B
               //      -> A2
               // where A and B are two processes. The frame A2 starts out focused. When B is
-              // focused, A1's focus is updated correctly, however if window.focus() is then
-              // called on A1, process A's focusedWindow is set to A2, yet its active
-              // focused element is the frame for B.
-              if (!isOop) {
+              // focused, A1's focus is updated correctly.
+
+              // In Fission mode, childBC.window returns a non-null proxy even if OOP
+              if (isOop) {
+                Assert.equal(
+                  Services.focus.focusedWindow,
+                  null,
+                  descChild + "focusedWindow"
+                );
+                Assert.ok(!childBC.docShell, descChild + "childBC.docShell");
+              } else {
                 Assert.equal(
                   Services.focus.focusedWindow,
                   childBC.window,
