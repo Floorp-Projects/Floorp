@@ -68,7 +68,6 @@ mozilla.pth:third_party/python/mock-1.0.0
 mozilla.pth:third_party/python/mohawk
 mozilla.pth:third_party/python/more-itertools
 mozilla.pth:third_party/python/mozilla-version
-mozilla.pth:third_party/python/pathlib2
 mozilla.pth:third_party/python/pathspec
 mozilla.pth:third_party/python/pep487/lib
 mozilla.pth:third_party/python/pluggy

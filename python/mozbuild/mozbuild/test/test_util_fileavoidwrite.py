@@ -7,7 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import locale
 import pytest
-import pathlib2
+import pathlib
 from mozbuild.util import FileAvoidWrite
 from mozunit import main
 
@@ -15,7 +15,7 @@ from mozunit import main
 @pytest.fixture
 def tmp_path(tmpdir):
     """Backport of the tmp_path fixture from pytest 3.9.1."""
-    return pathlib2.Path(str(tmpdir))
+    return pathlib.Path(str(tmpdir))
 
 
 def test_overwrite_contents(tmp_path):
