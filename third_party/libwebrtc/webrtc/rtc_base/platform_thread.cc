@@ -26,6 +26,8 @@
 #include <lwp.h>
 #endif
 
+#include "MicroGeckoProfiler.h"
+
 namespace rtc {
 
 PlatformThreadId CurrentThreadId() {
@@ -240,6 +242,9 @@ void PlatformThread::Run() {
   // Attach the worker thread checker to this thread.
   RTC_DCHECK(spawned_thread_checker_.CalledOnValidThread());
   rtc::SetCurrentThreadName(name_.c_str());
+
+  char stacktop;
+  AutoRegisterProfiler profiler(name_.c_str(), &stacktop);
 
   if (run_function_) {
     SetPriority(priority_);
