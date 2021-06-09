@@ -27,7 +27,9 @@ class InteractionsParent extends JSWindowActorParent {
         break;
       case "Interactions:PageHide":
         Interactions.registerEndOfInteraction(
-          this.browsingContext.embedderElement
+          // This could be null if the browsing context has already gone away,
+          // e.g. on tab close.
+          this.browsingContext?.embedderElement
         );
         break;
     }
