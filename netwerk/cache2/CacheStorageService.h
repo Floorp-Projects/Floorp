@@ -397,8 +397,7 @@ class CacheStorageService final : public nsICacheStorageService,
    public:
     IOThreadSuspender()
         : Runnable("net::CacheStorageService::IOThreadSuspender"),
-          mMon("IOThreadSuspender"),
-          mSignaled(false) {}
+          mMon("IOThreadSuspender") {}
     void Notify();
 
    private:
@@ -406,7 +405,7 @@ class CacheStorageService final : public nsICacheStorageService,
     NS_IMETHOD Run() override;
 
     Monitor mMon;
-    bool mSignaled;
+    bool mSignaled{false};
   };
 
   RefPtr<IOThreadSuspender> mActiveIOSuspender;

@@ -27,7 +27,7 @@ class nsBufferedStream : public nsISeekableStream {
   NS_DECL_NSISEEKABLESTREAM
   NS_DECL_NSITELLABLESTREAM
 
-  nsBufferedStream();
+  nsBufferedStream() = default;
 
   void Close();
 
@@ -39,26 +39,26 @@ class nsBufferedStream : public nsISeekableStream {
   NS_IMETHOD Fill() = 0;
   NS_IMETHOD Flush() = 0;
 
-  uint32_t mBufferSize;
-  char* mBuffer;
+  uint32_t mBufferSize{0};
+  char* mBuffer{nullptr};
 
   // mBufferStartOffset is the offset relative to the start of mStream.
-  int64_t mBufferStartOffset;
+  int64_t mBufferStartOffset{0};
 
   // mCursor is the read cursor for input streams, or write cursor for
   // output streams, and is relative to mBufferStartOffset.
-  uint32_t mCursor;
+  uint32_t mCursor{0};
 
   // mFillPoint is the amount available in the buffer for input streams,
   // or the high watermark of bytes written into the buffer, and therefore
   // is relative to mBufferStartOffset.
-  uint32_t mFillPoint;
+  uint32_t mFillPoint{0};
 
   nsCOMPtr<nsISupports> mStream;  // cast to appropriate subclass
 
-  bool mBufferDisabled;
-  bool mEOF;  // True if mStream is at EOF
-  uint8_t mGetBufferCount;
+  bool mBufferDisabled{false};
+  bool mEOF{false};  // True if mStream is at EOF
+  uint8_t mGetBufferCount{0};
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +86,7 @@ class nsBufferedInputStream final : public nsBufferedStream,
   NS_DECL_NSIASYNCINPUTSTREAMLENGTH
   NS_DECL_NSIINPUTSTREAMLENGTHCALLBACK
 
-  nsBufferedInputStream();
+  nsBufferedInputStream() : nsBufferedStream() {}
 
   static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
@@ -120,7 +120,7 @@ class nsBufferedInputStream final : public nsBufferedStream,
   NS_IMETHOD Fill() override;
   NS_IMETHOD Flush() override { return NS_OK; }  // no-op for input streams
 
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex{"nsBufferedInputStream::mMutex"};
 
   // This value is protected by mutex.
   nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
@@ -128,11 +128,11 @@ class nsBufferedInputStream final : public nsBufferedStream,
   // This value is protected by mutex.
   nsCOMPtr<nsIInputStreamLengthCallback> mAsyncInputStreamLengthCallback;
 
-  bool mIsIPCSerializable;
-  bool mIsAsyncInputStream;
-  bool mIsCloneableInputStream;
-  bool mIsInputStreamLength;
-  bool mIsAsyncInputStreamLength;
+  bool mIsIPCSerializable{true};
+  bool mIsAsyncInputStream{false};
+  bool mIsCloneableInputStream{false};
+  bool mIsInputStreamLength{false};
+  bool mIsAsyncInputStreamLength{false};
 };
 
 ////////////////////////////////////////////////////////////////////////////////

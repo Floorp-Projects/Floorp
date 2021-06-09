@@ -263,7 +263,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   }
   TransactionObserver* GetTransactionObserver() { return mTransactionObserver; }
 
-  CacheDisposition mCacheDisposition;
+  CacheDisposition mCacheDisposition{kCacheUnresolved};
 
  protected:
   virtual ~nsHttpChannel();
@@ -555,7 +555,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   nsCOMPtr<nsIRequest> mTransactionPump;
   RefPtr<HttpTransactionShell> mTransaction;
 
-  uint64_t mLogicalOffset;
+  uint64_t mLogicalOffset{0};
 
   // cache specific data
   nsCOMPtr<nsICacheEntry> mCacheEntry;
@@ -574,8 +574,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   RefPtr<nsInputStreamPump> mCachePump;
   UniquePtr<nsHttpResponseHead> mCachedResponseHead;
   nsCOMPtr<nsISupports> mCachedSecurityInfo;
-  uint32_t mPostID;
-  uint32_t mRequestTime;
+  uint32_t mPostID{0};
+  uint32_t mRequestTime{0};
 
   nsTArray<StreamFilterRequest> mStreamFilterRequests;
 
@@ -589,21 +589,21 @@ class nsHttpChannel final : public HttpBaseChannel,
 #endif
   // Total time the channel spent suspended. This value is reported to
   // telemetry in nsHttpChannel::OnStartRequest().
-  uint32_t mSuspendTotalTime;
+  uint32_t mSuspendTotalTime{0};
 
   friend class AutoRedirectVetoNotifier;
   friend class HttpAsyncAborter<nsHttpChannel>;
 
-  uint32_t mRedirectType;
+  uint32_t mRedirectType{0};
 
   static const uint32_t WAIT_FOR_CACHE_ENTRY = 1;
 
-  bool mCacheOpenWithPriority;
-  uint32_t mCacheQueueSizeWhenOpen;
+  bool mCacheOpenWithPriority{false};
+  uint32_t mCacheQueueSizeWhenOpen{0};
 
-  Atomic<bool, Relaxed> mCachedContentIsValid;
-  Atomic<bool> mIsAuthChannel;
-  Atomic<bool> mAuthRetryPending;
+  Atomic<bool, Relaxed> mCachedContentIsValid{false};
+  Atomic<bool> mIsAuthChannel{false};
+  Atomic<bool> mAuthRetryPending{false};
 
   // clang-format off
   // state flags
@@ -688,12 +688,12 @@ class nsHttpChannel final : public HttpBaseChannel,
   // Needed for accurate DNS timing
   RefPtr<nsDNSPrefetch> mDNSPrefetch;
 
-  uint32_t mPushedStreamId;
+  uint32_t mPushedStreamId{0};
   RefPtr<HttpTransactionShell> mTransWithPushedStream;
 
   // True if the channel's principal was found on a phishing, malware, or
   // tracking (if tracking protection is enabled) blocklist
-  bool mLocalBlocklist;
+  bool mLocalBlocklist{false};
 
   [[nodiscard]] nsresult WaitForRedirectCallback();
   void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);
@@ -713,7 +713,8 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   // A function we trigger when untail callback is triggered by our request
   // context in case this channel was tail-blocked.
-  nsresult (nsHttpChannel::*mOnTailUnblock)();
+  using TailUnblockCallback = nsresult (nsHttpChannel::*)();
+  TailUnblockCallback mOnTailUnblock{nullptr};
   // Called on untail when tailed during AsyncOpen execution.
   nsresult AsyncOpenOnTailUnblock();
   // Called on untail when tailed because of being a tracking resource.
@@ -725,7 +726,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   RefPtr<HttpChannelSecurityWarningReporter> mWarningReporter;
 
   // True if the channel is reading from cache.
-  Atomic<bool> mIsReadingFromCache;
+  Atomic<bool> mIsReadingFromCache{false};
 
   // These next members are only used in unit tests to delay the call to
   // cache->AsyncOpenURI in order to race the cache with the network.
@@ -739,7 +740,7 @@ class nsHttpChannel final : public HttpBaseChannel,
     RESPONSE_FROM_CACHE = 1,   // response coming from cache. no network.
     RESPONSE_FROM_NETWORK = 2  // response coming from the network
   };
-  Atomic<ResponseSource, Relaxed> mFirstResponseSource;
+  Atomic<ResponseSource, Relaxed> mFirstResponseSource{RESPONSE_PENDING};
 
   // Determines if it's possible and advisable to race the network request
   // with the cache fetch, and proceeds to do so.
@@ -765,15 +766,15 @@ class nsHttpChannel final : public HttpBaseChannel,
   bool mStaleRevalidation = false;
   // Will be true if the onCacheEntryAvailable callback is not called by the
   // time we send the network request
-  Atomic<bool> mRaceCacheWithNetwork;
-  uint32_t mRaceDelay;
+  Atomic<bool> mRaceCacheWithNetwork{false};
+  uint32_t mRaceDelay{0};
   // If true then OnCacheEntryAvailable should ignore the entry, because
   // SetupTransaction removed conditional headers and decisions made in
   // OnCacheEntryCheck are no longer valid.
-  bool mIgnoreCacheEntry;
+  bool mIgnoreCacheEntry{false};
   // Lock preventing SetupTransaction/MaybeCreateCacheEntryWhenRCWN and
   // OnCacheEntryCheck being called at the same time.
-  mozilla::Mutex mRCWNLock;
+  mozilla::Mutex mRCWNLock{"nsHttpChannel.mRCWNLock"};
 
   TimeStamp mNavigationStartTimeStamp;
 
@@ -787,7 +788,7 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   // We update the value of mProxyConnectResponseCode when OnStartRequest is
   // called and reset the value when we switch to another failover proxy.
-  int32_t mProxyConnectResponseCode;
+  int32_t mProxyConnectResponseCode{0};
 
   // If mHTTPSSVCRecord has value, it means OnHTTPSRRAvailable() is called and
   // we got the result of HTTPS RR query. Otherwise, it means we are still
@@ -804,7 +805,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   virtual void DoAsyncAbort(nsresult aStatus) override;
 
  private:  // cache telemetry
-  bool mDidReval;
+  bool mDidReval{false};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpChannel, NS_HTTPCHANNEL_IID)

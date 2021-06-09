@@ -69,24 +69,25 @@ class nsHttpRequestHead {
 
   [[nodiscard]] nsresult SetHeader(const nsACString& h, const nsACString& v,
                                    bool m = false);
-  [[nodiscard]] nsresult SetHeader(nsHttpAtom h, const nsACString& v,
+  [[nodiscard]] nsresult SetHeader(const nsHttpAtom& h, const nsACString& v,
                                    bool m = false);
-  [[nodiscard]] nsresult SetHeader(nsHttpAtom h, const nsACString& v, bool m,
+  [[nodiscard]] nsresult SetHeader(const nsHttpAtom& h, const nsACString& v,
+                                   bool m,
                                    nsHttpHeaderArray::HeaderVariety variety);
   [[nodiscard]] nsresult SetEmptyHeader(const nsACString& h);
-  [[nodiscard]] nsresult GetHeader(nsHttpAtom h, nsACString& v);
+  [[nodiscard]] nsresult GetHeader(const nsHttpAtom& h, nsACString& v);
 
-  [[nodiscard]] nsresult ClearHeader(nsHttpAtom h);
+  [[nodiscard]] nsresult ClearHeader(const nsHttpAtom& h);
   void ClearHeaders();
 
-  bool HasHeaderValue(nsHttpAtom h, const char* v);
+  bool HasHeaderValue(const nsHttpAtom& h, const char* v);
   // This function returns true if header is set even if it is an empty
   // header.
-  bool HasHeader(nsHttpAtom h);
+  bool HasHeader(const nsHttpAtom& h);
   void Flatten(nsACString&, bool pruneProxyHeaders = false);
 
   // Don't allow duplicate values
-  [[nodiscard]] nsresult SetHeaderOnce(nsHttpAtom h, const char* v,
+  [[nodiscard]] nsresult SetHeaderOnce(const nsHttpAtom& h, const char* v,
                                        bool merge = false);
 
   bool IsSafeMethod();
@@ -119,8 +120,8 @@ class nsHttpRequestHead {
  private:
   // All members must be copy-constructable and assignable
   nsHttpHeaderArray mHeaders;
-  nsCString mMethod;
-  HttpVersion mVersion;
+  nsCString mMethod{"GET"_ns};
+  HttpVersion mVersion{HttpVersion::v1_1};
 
   // mRequestURI and mPath are strings instead of an nsIURI
   // because this is used off the main thread
@@ -128,15 +129,15 @@ class nsHttpRequestHead {
   nsCString mPath;
 
   nsCString mOrigin;
-  ParsedMethodType mParsedMethod;
-  bool mHTTPS;
+  ParsedMethodType mParsedMethod{kMethod_Get};
+  bool mHTTPS{false};
 
   // We are using RecursiveMutex instead of a Mutex because VisitHeader
   // function calls nsIHttpHeaderVisitor::VisitHeader while under lock.
-  RecursiveMutex mRecursiveMutex;
+  RecursiveMutex mRecursiveMutex{"nsHttpRequestHead.mRecursiveMutex"};
 
   // During VisitHeader we sould not allow cal to SetHeader.
-  bool mInVisitHeaders;
+  bool mInVisitHeaders{false};
 
   friend struct IPC::ParamTraits<nsHttpRequestHead>;
 };

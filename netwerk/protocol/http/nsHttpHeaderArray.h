@@ -83,12 +83,13 @@ class nsHttpHeaderArray {
   void ClearHeader(const nsHttpAtom& h);
 
   // Find the location of the given header value, or null if none exists.
-  const char* FindHeaderValue(nsHttpAtom header, const char* value) const {
+  const char* FindHeaderValue(const nsHttpAtom& header,
+                              const char* value) const {
     return nsHttp::FindToken(PeekHeader(header), value, HTTP_HEADER_VALUE_SEPS);
   }
 
   // Determine if the given header value exists.
-  bool HasHeaderValue(nsHttpAtom header, const char* value) const {
+  bool HasHeaderValue(const nsHttpAtom& header, const char* value) const {
     return FindHeaderValue(header, value) != nullptr;
   }
 
@@ -145,9 +146,9 @@ class nsHttpHeaderArray {
  private:
   // LookupEntry function will never return eVarietyResponseNetOriginal.
   // It will ignore original headers from the network.
-  int32_t LookupEntry(nsHttpAtom header, const nsEntry**) const;
-  int32_t LookupEntry(nsHttpAtom header, nsEntry**);
-  [[nodiscard]] nsresult MergeHeader(nsHttpAtom header, nsEntry* entry,
+  int32_t LookupEntry(const nsHttpAtom& header, const nsEntry**) const;
+  int32_t LookupEntry(const nsHttpAtom& header, nsEntry**);
+  [[nodiscard]] nsresult MergeHeader(const nsHttpAtom& header, nsEntry* entry,
                                      const nsACString& value,
                                      HeaderVariety variety);
   [[nodiscard]] nsresult SetHeader_internal(const nsHttpAtom& header,
@@ -156,14 +157,14 @@ class nsHttpHeaderArray {
                                             HeaderVariety variety);
 
   // Header cannot be merged: only one value possible
-  bool IsSingletonHeader(nsHttpAtom header);
+  bool IsSingletonHeader(const nsHttpAtom& header);
   // Header cannot be merged, and subsequent values should be ignored
-  bool IsIgnoreMultipleHeader(nsHttpAtom header);
+  bool IsIgnoreMultipleHeader(const nsHttpAtom& header);
 
   // Subset of singleton headers: should never see multiple, different
   // instances of these, else something fishy may be going on (like CLRF
   // injection)
-  bool IsSuspectDuplicateHeader(nsHttpAtom header);
+  bool IsSuspectDuplicateHeader(const nsHttpAtom& header);
 
   // All members must be copy-constructable and assignable
   CopyableTArray<nsEntry> mHeaders;
@@ -176,7 +177,7 @@ class nsHttpHeaderArray {
 // nsHttpHeaderArray <private>: inline functions
 //-----------------------------------------------------------------------------
 
-inline int32_t nsHttpHeaderArray::LookupEntry(nsHttpAtom header,
+inline int32_t nsHttpHeaderArray::LookupEntry(const nsHttpAtom& header,
                                               const nsEntry** entry) const {
   uint32_t index = 0;
   while (index != UINT32_MAX) {
@@ -193,7 +194,7 @@ inline int32_t nsHttpHeaderArray::LookupEntry(nsHttpAtom header,
   return index;
 }
 
-inline int32_t nsHttpHeaderArray::LookupEntry(nsHttpAtom header,
+inline int32_t nsHttpHeaderArray::LookupEntry(const nsHttpAtom& header,
                                               nsEntry** entry) {
   uint32_t index = 0;
   while (index != UINT32_MAX) {
@@ -209,7 +210,7 @@ inline int32_t nsHttpHeaderArray::LookupEntry(nsHttpAtom header,
   return index;
 }
 
-inline bool nsHttpHeaderArray::IsSingletonHeader(nsHttpAtom header) {
+inline bool nsHttpHeaderArray::IsSingletonHeader(const nsHttpAtom& header) {
   return header == nsHttp::Content_Type ||
          header == nsHttp::Content_Disposition ||
          header == nsHttp::Content_Length || header == nsHttp::User_Agent ||
@@ -226,7 +227,8 @@ inline bool nsHttpHeaderArray::IsSingletonHeader(nsHttpAtom header) {
 
 // These are headers for which, in the presence of multiple values, we only
 // consider the first.
-inline bool nsHttpHeaderArray::IsIgnoreMultipleHeader(nsHttpAtom header) {
+inline bool nsHttpHeaderArray::IsIgnoreMultipleHeader(
+    const nsHttpAtom& header) {
   // https://tools.ietf.org/html/rfc6797#section-8:
   //
   //     If a UA receives more than one STS header field in an HTTP
@@ -236,7 +238,7 @@ inline bool nsHttpHeaderArray::IsIgnoreMultipleHeader(nsHttpAtom header) {
 }
 
 [[nodiscard]] inline nsresult nsHttpHeaderArray::MergeHeader(
-    nsHttpAtom header, nsEntry* entry, const nsACString& value,
+    const nsHttpAtom& header, nsEntry* entry, const nsACString& value,
     nsHttpHeaderArray::HeaderVariety variety) {
   if (value.IsEmpty()) return NS_OK;  // merge of empty header = no-op
 
@@ -274,7 +276,8 @@ inline bool nsHttpHeaderArray::IsIgnoreMultipleHeader(nsHttpAtom header) {
   return NS_OK;
 }
 
-inline bool nsHttpHeaderArray::IsSuspectDuplicateHeader(nsHttpAtom header) {
+inline bool nsHttpHeaderArray::IsSuspectDuplicateHeader(
+    const nsHttpAtom& header) {
   bool retval = header == nsHttp::Content_Length ||
                 header == nsHttp::Content_Disposition ||
                 header == nsHttp::Location;

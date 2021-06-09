@@ -22,8 +22,6 @@ namespace net {
 
 NS_IMPL_ISUPPORTS0(HttpConnectionMgrParent)
 
-HttpConnectionMgrParent::HttpConnectionMgrParent() : mShutDown(false) {}
-
 nsresult HttpConnectionMgrParent::Init(
     uint16_t maxUrgentExcessiveConns, uint16_t maxConnections,
     uint16_t maxPersistentConnectionsPerHost,

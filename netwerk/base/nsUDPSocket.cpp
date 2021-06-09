@@ -221,15 +221,7 @@ FallibleTArray<uint8_t>& nsUDPMessage::GetDataAsTArray() { return mData; }
 // nsUDPSocket
 //-----------------------------------------------------------------------------
 
-nsUDPSocket::nsUDPSocket()
-    : mLock("nsUDPSocket.mLock"),
-      mFD(nullptr),
-      mOriginAttributes(),
-      mAttached(false),
-      mByteReadCount(0),
-      mByteWriteCount(0) {
-  this->mAddr.inet = {};
-  mAddr.raw.family = PR_AF_UNSPEC;
+nsUDPSocket::nsUDPSocket() {
   // we want to be able to access the STS directly, and it may not have been
   // constructed yet.  the STS constructor sets gSocketTransportService.
   if (!gSocketTransportService) {

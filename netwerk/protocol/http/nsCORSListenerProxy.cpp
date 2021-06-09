@@ -448,7 +448,7 @@ class CheckOriginHeader final : public nsIHttpHeaderVisitor {
  public:
   NS_DECL_ISUPPORTS
 
-  CheckOriginHeader() : mHeaderCount(0) {}
+  CheckOriginHeader() = default;
 
   NS_IMETHOD
   VisitHeader(const nsACString& aHeader, const nsACString& aValue) override {
@@ -463,7 +463,7 @@ class CheckOriginHeader final : public nsIHttpHeaderVisitor {
   }
 
  private:
-  uint32_t mHeaderCount;
+  uint32_t mHeaderCount{0};
 
   ~CheckOriginHeader() = default;
 };

@@ -249,23 +249,8 @@ NS_INTERFACE_MAP_BEGIN(CacheIndex)
 NS_INTERFACE_MAP_END
 
 CacheIndex::CacheIndex()
-    : mState(INITIAL),
-      mShuttingDown(false),
-      mIndexNeedsUpdate(false),
-      mRemovingAll(false),
-      mIndexOnDiskIsValid(false),
-      mDontMarkIndexClean(false),
-      mIndexTimeStamp(0),
-      mUpdateEventPending(false),
-      mSkipEntries(0),
-      mProcessEntries(0),
-      mRWBuf(nullptr),
-      mRWBufSize(0),
-      mRWBufPos(0),
-      mRWPending(false),
-      mJournalReadSuccessfully(false),
-      mAsyncGetDiskConsumptionBlocked(false),
-      mTotalBytesWritten(0) {
+
+{
   sLock.AssertCurrentThreadOwns();
   LOG(("CacheIndex::CacheIndex [this=%p]", this));
   MOZ_ASSERT(!gInstance, "multiple CacheIndex instances!");

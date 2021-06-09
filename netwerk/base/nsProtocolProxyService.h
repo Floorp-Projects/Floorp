@@ -341,19 +341,19 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
  protected:
   // simplified array of filters defined by this struct
   struct HostInfo {
-    bool is_ipaddr;
-    int32_t port;
+    bool is_ipaddr{false};
+    int32_t port{0};
+    // other members intentionally uninitialized
     union {
-      HostInfoIP ip{};
+      HostInfoIP ip;
       HostInfoName name;
     };
 
-    HostInfo()
-        : is_ipaddr(false),
-          port(0) { /* other members intentionally uninitialized */
-    }
+    HostInfo() = default;
     ~HostInfo() {
-      if (!is_ipaddr && name.host) free(name.host);
+      if (!is_ipaddr && name.host) {
+        free(name.host);
+      }
     }
   };
 
@@ -364,7 +364,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
 
  protected:
   // Indicates if local hosts (plain hostnames, no dots) should use the proxy
-  bool mFilterLocalHosts;
+  bool mFilterLocalHosts{false};
 
   // Holds an array of HostInfo objects
   nsTArray<UniquePtr<HostInfo>> mHostFiltersArray;
@@ -372,36 +372,37 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
   // Filters, always sorted by the position.
   nsTArray<RefPtr<FilterLink>> mFilters;
 
-  uint32_t mProxyConfig;
+  uint32_t mProxyConfig{PROXYCONFIG_DIRECT};
 
   nsCString mHTTPProxyHost;
-  int32_t mHTTPProxyPort;
+  int32_t mHTTPProxyPort{-1};
 
   nsCString mHTTPSProxyHost;
-  int32_t mHTTPSProxyPort;
+  int32_t mHTTPSProxyPort{-1};
 
   // mSOCKSProxyTarget could be a host, a domain socket path,
   // or a named-pipe name.
   nsCString mSOCKSProxyTarget;
-  int32_t mSOCKSProxyPort;
-  int32_t mSOCKSProxyVersion;
-  bool mSOCKSProxyRemoteDNS;
-  bool mProxyOverTLS;
-  bool mWPADOverDHCPEnabled;
+  int32_t mSOCKSProxyPort{-1};
+  int32_t mSOCKSProxyVersion{4};
+  bool mSOCKSProxyRemoteDNS{false};
+  bool mProxyOverTLS{true};
+  bool mWPADOverDHCPEnabled{false};
 
   RefPtr<nsPACMan> mPACMan;  // non-null if we are using PAC
   nsCOMPtr<nsISystemProxySettings> mSystemProxySettings;
 
   PRTime mSessionStart;
   nsFailedProxyTable mFailedProxies;
-  int32_t mFailedProxyTimeout;
+  // 30 minute default
+  int32_t mFailedProxyTimeout{30 * 60};
 
  private:
   nsresult AsyncResolveInternal(nsIChannel* channel, uint32_t flags,
                                 nsIProtocolProxyCallback* callback,
                                 nsICancelable** result, bool isSyncOK,
                                 nsISerialEventTarget* mainThreadEventTarget);
-  bool mIsShutdown;
+  bool mIsShutdown{false};
   nsCOMPtr<nsITimer> mReloadPACTimer;
 };
 

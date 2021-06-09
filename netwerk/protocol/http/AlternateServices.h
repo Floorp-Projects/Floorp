@@ -134,7 +134,7 @@ class AltSvcMapping {
 
   OriginAttributes mOriginAttributes;
 
-  bool mSyncOnlyOnSuccess;
+  bool mSyncOnlyOnSuccess{false};
   bool mIsHttp3;
 };
 
@@ -180,7 +180,7 @@ class TransactionObserver final : public nsIStreamListener {
 
 class AltSvcCache {
  public:
-  AltSvcCache() : mStorageEpoch(0) {}
+  AltSvcCache() = default;
   virtual ~AltSvcCache() = default;
   void UpdateAltServiceMapping(
       AltSvcMapping* map, nsProxyInfo* pi, nsIInterfaceRequestor*,
@@ -207,7 +207,7 @@ class AltSvcCache {
   already_AddRefed<AltSvcMapping> LookupMapping(const nsCString& key,
                                                 bool privateBrowsing);
   RefPtr<DataStorage> mStorage;
-  int32_t mStorageEpoch;
+  int32_t mStorageEpoch{0};
 };
 
 // This class is used to write the validated result to AltSvcMapping when the

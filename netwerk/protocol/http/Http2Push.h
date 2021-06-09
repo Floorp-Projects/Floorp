@@ -75,9 +75,9 @@ class Http2PushedStream final : public Http2Stream {
 
  private:
   virtual ~Http2PushedStream() = default;
-  Http2Stream*
-      mConsumerStream;  // paired request stream that consumes from
-                        // real http/2 one.. null until a match is made.
+  // paired request stream that consumes from real http/2 one.. null until a
+  // match is made.
+  Http2Stream* mConsumerStream{nullptr};
 
   nsCOMPtr<nsIRequestContext> mRequestContext;
 
@@ -87,9 +87,9 @@ class Http2PushedStream final : public Http2Stream {
   mozilla::TimeStamp mLastRead;
 
   nsCString mHashKey;
-  nsresult mStatus;
-  bool mPushCompleted;  // server push FIN received
-  bool mDeferCleanupOnSuccess;
+  nsresult mStatus{NS_OK};
+  bool mPushCompleted{false};  // server push FIN received
+  bool mDeferCleanupOnSuccess{true};
 
   // mDeferCleanupOnPush prevents Http2Session::CleanupStream() from
   // destroying the push stream on an error code during the period between
@@ -97,8 +97,8 @@ class Http2PushedStream final : public Http2Stream {
   // for that event to create a synthetic pull stream attached to this
   // object. That synthetic pull will become mConsuemerStream.
   // Ths is essentially a delete protecting reference.
-  bool mDeferCleanupOnPush;
-  bool mOnPushFailed;
+  bool mDeferCleanupOnPush{false};
+  bool mOnPushFailed{false};
   nsCString mRequestString;
   nsCString mResourceUrl;
 
@@ -122,15 +122,15 @@ class Http2PushTransactionBuffer final : public nsAHttpTransaction {
 
   const static uint32_t kDefaultBufferSize = 4096;
 
-  nsresult mStatus;
-  nsHttpRequestHead* mRequestHead;
-  Http2PushedStream* mPushStream;
-  bool mIsDone;
+  nsresult mStatus{NS_OK};
+  nsHttpRequestHead* mRequestHead{nullptr};
+  Http2PushedStream* mPushStream{nullptr};
+  bool mIsDone{false};
 
   UniquePtr<char[]> mBufferedHTTP1;
-  uint32_t mBufferedHTTP1Size;
-  uint32_t mBufferedHTTP1Used;
-  uint32_t mBufferedHTTP1Consumed;
+  uint32_t mBufferedHTTP1Size{kDefaultBufferSize};
+  uint32_t mBufferedHTTP1Used{0};
+  uint32_t mBufferedHTTP1Consumed{0};
 };
 
 class Http2PushedStreamWrapper : public nsISupports {

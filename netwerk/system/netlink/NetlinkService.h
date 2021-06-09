@@ -62,7 +62,7 @@ class NetlinkService : public nsIRunnable {
   void EnqueueRtMsg(uint8_t aFamily, void* aAddress);
   void RemovePendingMsg();
 
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex{"NetlinkService::mMutex"};
 
   void OnNetlinkMessage(int aNetlinkSocket);
   void OnLinkMessage(struct nlmsghdr* aNlh);
@@ -83,28 +83,28 @@ class NetlinkService : public nsIRunnable {
 
   nsCOMPtr<nsIThread> mThread;
 
-  bool mInitialScanFinished;
+  bool mInitialScanFinished{false};
 
   // A pipe to signal shutdown with.
-  int mShutdownPipe[2]{};
+  int mShutdownPipe[2]{-1, -1};
 
   // IP addresses that are used to check the route for public traffic.
   struct in_addr mRouteCheckIPv4 {};
   struct in6_addr mRouteCheckIPv6 {};
 
   pid_t mPid;
-  uint32_t mMsgId;
+  uint32_t mMsgId{0};
 
-  bool mLinkUp;
+  bool mLinkUp{true};
 
   // Flag indicating that network ID could change and should be recalculated.
   // Calculation is postponed until we receive responses to all enqueued
   // messages.
-  bool mRecalculateNetworkId;
+  bool mRecalculateNetworkId{false};
 
   // Flag indicating that network change event needs to be sent even if
   // network ID hasn't changed.
-  bool mSendNetworkChangeEvent;
+  bool mSendNetworkChangeEvent{false};
 
   // Time stamp of setting mRecalculateNetworkId to true
   mozilla::TimeStamp mTriggerTime;

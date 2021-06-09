@@ -42,7 +42,7 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
   virtual ~nsMIMEInputStream() = default;
 
  public:
-  nsMIMEInputStream();
+  nsMIMEInputStream() = default;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
@@ -84,9 +84,9 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
   nsTArray<HeaderEntry> mHeaders;
 
   nsCOMPtr<nsIInputStream> mStream;
-  bool mStartedReading;
+  bool mStartedReading{false};
 
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex{"nsMIMEInputStream::mMutex"};
 
   // This is protected by mutex.
   nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
@@ -125,9 +125,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CI_INTERFACE_GETTER(nsMIMEInputStream, nsIMIMEInputStream,
                             nsIAsyncInputStream, nsIInputStream,
                             nsISeekableStream, nsITellableStream)
-
-nsMIMEInputStream::nsMIMEInputStream()
-    : mStartedReading(false), mMutex("nsMIMEInputStream::mMutex") {}
 
 NS_IMETHODIMP
 nsMIMEInputStream::AddHeader(const char* aName, const char* aValue) {

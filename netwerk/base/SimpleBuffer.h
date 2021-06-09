@@ -21,19 +21,19 @@ namespace net {
 
 class SimpleBufferPage : public LinkedListElement<SimpleBufferPage> {
  public:
-  SimpleBufferPage() : mReadOffset(0), mWriteOffset(0) {}
+  SimpleBufferPage() = default;
   static const size_t kSimpleBufferPageSize = 32000;
 
  private:
   friend class SimpleBuffer;
   char mBuffer[kSimpleBufferPageSize]{0};
-  size_t mReadOffset;
-  size_t mWriteOffset;
+  size_t mReadOffset{0};
+  size_t mWriteOffset{0};
 };
 
 class SimpleBuffer {
  public:
-  SimpleBuffer();
+  SimpleBuffer() = default;
   ~SimpleBuffer() = default;
 
   nsresult Write(char* src, size_t len);   // return OK or OUT_OF_MEMORY
@@ -44,9 +44,9 @@ class SimpleBuffer {
  private:
   NS_DECL_OWNINGTHREAD
 
-  nsresult mStatus;
+  nsresult mStatus{NS_OK};
   AutoCleanLinkedList<SimpleBufferPage> mBufferList;
-  size_t mAvailable;
+  size_t mAvailable{0};
 };
 
 }  // namespace net

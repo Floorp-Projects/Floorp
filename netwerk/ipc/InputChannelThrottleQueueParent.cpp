@@ -50,9 +50,6 @@ InputChannelThrottleQueueParent::Release(void) {
   return count;
 }
 
-InputChannelThrottleQueueParent::InputChannelThrottleQueueParent()
-    : mBytesProcessed(0), mMeanBytesPerSecond(0), mMaxBytesPerSecond(0) {}
-
 mozilla::ipc::IPCResult InputChannelThrottleQueueParent::RecvRecordRead(
     const uint32_t& aBytesRead) {
   mBytesProcessed += aBytesRead;
