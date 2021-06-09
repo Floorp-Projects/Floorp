@@ -41,7 +41,6 @@ DevToolsModules(
     "node-attribute-parser.js",
     "options-view.js",
     "output-parser.js",
-    "poller.js",
     "prefs.js",
     "react-utils.js",
     "screenshot.js",
