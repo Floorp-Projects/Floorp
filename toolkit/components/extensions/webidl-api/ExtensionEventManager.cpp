@@ -7,13 +7,31 @@
 
 #include "mozilla/dom/ExtensionEventManagerBinding.h"
 #include "nsIGlobalObject.h"
+#include "ExtensionEventListener.h"
 
 namespace mozilla {
 namespace extensions {
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(ExtensionEventManager);
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionEventManager);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionEventManager)
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionEventManager, mGlobal);
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionEventManager)
+  tmp->mListeners.clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionEventManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ExtensionEventManager)
+  for (auto iter = tmp->mListeners.iter(); !iter.done(); iter.next()) {
+    aCallbacks.Trace(&iter.get().mutableKey(), "mListeners key", aClosure);
+  }
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionEventManager)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -31,6 +49,26 @@ ExtensionEventManager::ExtensionEventManager(nsIGlobalObject* aGlobal,
       mAPIObjectType(aObjectType),
       mAPIObjectId(aObjectId) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
+
+  RefPtr<ExtensionEventManager> self = this;
+  mozilla::HoldJSObjects(this);
+}
+
+ExtensionEventManager::~ExtensionEventManager() {
+  ReleaseListeners();
+  mozilla::DropJSObjects(this);
+};
+
+void ExtensionEventManager::ReleaseListeners() {
+  if (mListeners.empty()) {
+    return;
+  }
+
+  for (auto iter = mListeners.iter(); !iter.done(); iter.next()) {
+    iter.get().value()->Cleanup();
+  }
+
+  mListeners.clear();
 }
 
 JSObject* ExtensionEventManager::WrapObject(JSContext* aCx,
@@ -42,13 +80,75 @@ nsIGlobalObject* ExtensionEventManager::GetParentObject() const {
   return mGlobal;
 }
 
+void ExtensionEventManager::AddListener(
+    JSContext* aCx, dom::Function& aCallback,
+    const dom::Optional<JS::Handle<JSObject*>>& aOptions, ErrorResult& aRv) {
+  auto* cb = aCallback.CallbackOrNull();
+  if (cb == nullptr) {
+    ThrowUnexpectedError(aCx, aRv);
+    return;
+  }
+
+  RefPtr<ExtensionEventManager> self = this;
+
+  IgnoredErrorResult rv;
+  RefPtr<ExtensionEventListener> wrappedCb = ExtensionEventListener::Create(
+      mGlobal, &aCallback,
+      [self = std::move(self)]() { self->ReleaseListeners(); }, rv);
+
+  if (NS_WARN_IF(rv.Failed())) {
+    ThrowUnexpectedError(aCx, aRv);
+    return;
+  }
+
+  RefPtr<ExtensionEventListener> storedWrapper = wrappedCb;
+  if (!mListeners.put(cb, std::move(storedWrapper))) {
+    ThrowUnexpectedError(aCx, aRv);
+    return;
+  }
+
+  auto request = SendAddListener(mEventName);
+  request->Run(mGlobal, aCx, {}, wrappedCb, aRv);
+}
+
+void ExtensionEventManager::RemoveListener(dom::Function& aCallback,
+                                           ErrorResult& aRv) {
+  auto* cb = aCallback.CallbackOrNull();
+  const auto& ptr = mListeners.lookup(cb);
+
+  // Return earlier if the listener wasn't found
+  if (!ptr) {
+    return;
+  }
+
+  RefPtr<ExtensionEventListener> wrappedCb = ptr->value();
+
+  dom::AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mGlobal))) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  JSContext* cx = jsapi.cx();
+  auto request = SendRemoveListener(mEventName);
+  request->Run(mGlobal, cx, {}, wrappedCb, aRv);
+
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  mListeners.remove(cb);
+
+  wrappedCb->Cleanup();
+}
+
 bool ExtensionEventManager::HasListener(dom::Function& aCallback,
                                         ErrorResult& aRv) const {
-  return false;
+  return mListeners.has(aCallback.CallbackOrNull());
 }
 
 bool ExtensionEventManager::HasListeners(ErrorResult& aRv) const {
-  return false;
+  return !mListeners.empty();
 }
 
 }  // namespace extensions

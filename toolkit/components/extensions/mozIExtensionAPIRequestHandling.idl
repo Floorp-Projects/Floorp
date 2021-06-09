@@ -17,6 +17,7 @@ interface mozIExtensionServiceWorkerInfo : nsISupports
 [scriptable, builtinclass, uuid(e68e3c19-1b35-4112-8faa-5c5b84086a5b)]
 interface mozIExtensionEventListener : nsISupports
 {
+  [can_run_script]
   void callListener(in Array<jsval> args);
 };
  
