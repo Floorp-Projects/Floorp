@@ -35,6 +35,7 @@
 #include "mozilla/dom/WorkerStatus.h"
 #include "mozilla/dom/workerinternals/JSSettings.h"
 #include "mozilla/dom/workerinternals/Queue.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIContentSecurityPolicy.h"
@@ -166,6 +167,14 @@ class WorkerPrivate final : public RelativeTimeline {
 
     // No need to lock here since this is only ever modified by the same thread.
     return mDebuggerRegistered;
+  }
+
+  bool ExtensionAPIAllowed() {
+    // This method should never be actually called if the extension background
+    // service worker is disabled by pref.
+    MOZ_ASSERT(
+        StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup());
+    return mExtensionAPIAllowed;
   }
 
   void SetIsDebuggerRegistered(bool aDebuggerRegistered) {
@@ -1331,6 +1340,14 @@ class WorkerPrivate final : public RelativeTimeline {
   // Protected by mMutex.
   bool mDebuggerReady;
   nsTArray<RefPtr<WorkerRunnable>> mDelayedDebuggeeRunnables;
+
+  // Whether this worker should have access to the WebExtension API bindings
+  // (currently only the Extension Background ServiceWorker declared in the
+  // extension manifest is allowed to access any WebExtension API bindings).
+  // This default to false, and it is eventually set to true by
+  // RemoteWorkerChild::ExecWorkerOnMainThread if the needed conditions
+  // are met.
+  bool mExtensionAPIAllowed;
 
   // mIsInAutomation is true when we're running in test automation.
   // We expose some extra testing functions in that case.
