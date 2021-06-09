@@ -42,20 +42,20 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URL = TEST_URL_ROOT + "doc_some_test_page.html";
 
-add_task(function*() {
-yield addTab(TEST_URL_ROOT);
-let {toolbox, inspector, view} = yield openRuleView();
-yield selectNode("#testNode", inspector);
-yield checkSomethingFirst(view);
-yield checkSomethingElse(view);
+add_task(async function() {
+	await addTab(TEST_URL_ROOT);
+	let {toolbox, inspector, view} = await openRuleView();
+	await selectNode("#testNode", inspector);
+	await checkSomethingFirst(view);
+	await checkSomethingElse(view);
 });
 
-function* checkSomethingFirst(view) {
-/* ... do something ... this function can yield */
+async function checkSomethingFirst(view) {
+/* ... do something ... this function can await */
 }
 
-function* checkSomethingElse(view) {
-/* ... do something ... this function can yield */
+async function checkSomethingElse(view) {
+/* ... do something ... this function can await */
 }
 ```
 
@@ -133,25 +133,15 @@ Most browser chrome DevTools tests are asynchronous. One of the reasons why they
 Here are a few things to keep in mind with regards to asynchronous testing:
 
 * `head.js` already calls `waitForExplicitFinish()` so there's no need for your new test to do it too.
-* Using `add_task` with a generator function means that you can yield calls to functions that return promises. It also means your main test function can be written to almost look like synchronous code, by adding `yield` before calls to asynchronous functions. For example:
+* Using `add_task` with an async function means that you can await calls to functions that return promises. It also means your main test function can be written to almost look like synchronous code, by adding `await` before calls to asynchronous functions. For example:
 
 ```javascript
 for (let test of testData) {
-	yield testCompletion(test, editor, view);
+	await testCompletion(test, editor, view);
 }
 ```
 
 Each call to `testCompletion` is asynchronous, but the code doesn't need to rely on nested callbacks and maintain an index, a standard for loop can be used.
-
-<!--TODO: I think the following paragraph might be slightly outdated-->
-
-* Define your test functions as generators that yield, no need for them to be tasks since they are called from one already. In some cases you'll need to return promises anyway (if you're adding a new helper function to head.js for example). If this is the case, it sometimes is best to define your function like so:
-
-```javascript
-let myHelperFunction = Task.async(function*() {
-	...
-});
-```
 
 ## Writing clean, maintainable test code
 
@@ -177,9 +167,7 @@ Not really a comment, but don't forget to "use strict";
 
 ### Callbacks and promises
 
-Avoid multiple nested callbacks or chained promises. They make it hard to read the code.
-
-Thanks to `add_task`, it's easy to write asynchronous code that looks like flat, synchronous, code.
+Avoid multiple nested callbacks or chained promises. They make it hard to read the code. Use async/await instead.
 
 ### Clean up after yourself
 
@@ -200,18 +188,18 @@ If your test is just a sequence of functions being called to do the same thing o
 
 ```javascript
 const TESTS = [
-	{desc: "add a class", cssSelector: "#id1", makeChanges: function*() {...}},
-	{desc: "change href", cssSelector: "a.the-link", makeChanges: function*() {...}},
+	{desc: "add a class", cssSelector: "#id1", makeChanges: async function() {...}},
+	{desc: "change href", cssSelector: "a.the-link", makeChanges: async function() {...}},
 	...
 ];
 
-add_task(function*() {
-	yield addTab("...");
-	let {toolbox, inspector} = yield openInspector();
+add_task(async function() {
+	await addTab("...");
+	let {toolbox, inspector} = await openInspector();
 	for (let step of TESTS) {
 	  info("Testing step: " + step.desc);
-	  yield selectNode(step.cssSelector, inspector);
-	  yield step.makeChanges();
+	  await selectNode(step.cssSelector, inspector);
+	  await step.makeChanges();
 	}
 });
 ```
