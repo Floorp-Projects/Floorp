@@ -72,7 +72,6 @@ exclude =
     testing/marionette/harness/marionette_harness/tests,
     testing/mochitest/pywebsocket3,
     testing/mozharness/configs/test/test_malformed.py,
-    testing/web-platform/mozilla/tests/tools/wptserve_py2,
     testing/web-platform/tests,
     tools/lint/test/files,
     tools/infer/test/*.configure,
