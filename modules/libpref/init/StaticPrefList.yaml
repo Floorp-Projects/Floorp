@@ -11420,7 +11420,7 @@
 
 - name: widget.macos.support-dark-appearance
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 #endif
 
