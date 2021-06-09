@@ -93,6 +93,8 @@ bug you are working on and ``test.bin`` is the attached testcase.
 If the CI builds don't meet your requirements and you need a local build instead,
 you can follow the steps below to create one:
 
+.. _Local build requirements and flags:
+
 Local build requirements and flags
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -402,6 +404,7 @@ What this does is
    tool
 -  write statistics to the ``libfuzzer-stunparser.stats`` file
 
+.. _JS Engine Specifics:
 
 JS Engine Specifics
 ~~~~~~~~~~~~~~~~~~~

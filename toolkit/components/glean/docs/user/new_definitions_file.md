@@ -13,7 +13,7 @@ with some few twists.
 
 Firefox Desktop is made of multiple processes.
 You can record data from any process in Firefox Desktop
-[subject to certain conditions](ipc.md).
+[subject to certain conditions](../dev/ipc.md).
 
 If you will be recording data to this metric in multiple processes,
 you should make yourself aware of those conditions.

@@ -60,7 +60,7 @@ Random API Usage
 
 Randomly testing APIs is especially helpful with parts of software that
 expose a well-defined interface (see also :ref:`Well-defined
-behavior and Safety`). If this interface is additionally exposed to
+behavior and Safety <Well defined behaviour and safety>`). If this interface is additionally exposed to
 untrusted parties/content, then this is a strong sign that random API
 testing would be worthwhile here, also for security reasons. APIs can be
 anything from C++ layer code to APIs offered in the browser.
@@ -82,7 +82,7 @@ example an automated browser that surfs through the web and randomly
 performs actions such as scrolling, zooming and clicking links. The nice
 thing about this approach is that you likely find many issues that the
 end-user also experiences. However, this approach typically suffers from
-bad reproducibility (see also :ref:`Reproducibility`) and is therefore
+bad reproducibility (see also :ref:`Reproducibility <Reproducibility>`) and is therefore
 often of limited use.
 
 An example for a fuzzing tool using this technique is `Android
@@ -101,7 +101,7 @@ time there are two common things you will be confronted with:
 find all sorts of bugs in various corners of your component, even
 obscure ones. This automatically leads to a larger number of bugs that
 either don’t seem to be bugs (see also the :ref:`Well-defined behavior and
-safety` section below) or that don’t seem to be important bugs.
+safety <Well defined behaviour and safety>` section below) or that don’t seem to be important bugs.
 
 Fixing these bugs is still important for the fuzzers because ignoring them
 in fuzzing costs resources (performance, human resources) and might even
@@ -267,6 +267,8 @@ External I/O like network or file interactions are bad for performance
 and can introduce additional non-determinism. Providing interfaces to
 process data directly from memory instead is usually much more helpful.
 
+.. _Well defined behaviour and safety:
+
 Well-defined Behavior and Safety
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -288,6 +290,8 @@ a way the fuzzer can recognize and distinguish them from undesired
 crashes. However, keep in mind that crashes in general can be disruptive
 to the fuzzing process. Performance is an important aspect of fuzzing
 and frequent crashes can severely degrade performance.
+
+.. _Reproducibility:
 
 Reproducibility
 ~~~~~~~~~~~~~~~
