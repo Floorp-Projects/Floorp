@@ -3,5 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ///! Profiler Rust API
+mod thread;
 
-mod thread {}
+pub use thread::*;
