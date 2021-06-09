@@ -50,13 +50,13 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _pdf_manager = __w_pdfjs_require__(7);
 
-var _writer = __w_pdfjs_require__(64);
+var _writer = __w_pdfjs_require__(82);
 
 var _is_node = __w_pdfjs_require__(4);
 
-var _message_handler = __w_pdfjs_require__(88);
+var _message_handler = __w_pdfjs_require__(107);
 
-var _worker_stream = __w_pdfjs_require__(89);
+var _worker_stream = __w_pdfjs_require__(108);
 
 var _core_utils = __w_pdfjs_require__(9);
 
@@ -125,7 +125,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.9.273';
+    const workerVersion = '2.10.87';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -162,9 +162,9 @@ class WorkerMessageHandler {
         await pdfManager.ensureDoc("checkFirstPage");
       }
 
-      const [numPages, fingerprint, isPureXfa] = await Promise.all([pdfManager.ensureDoc("numPages"), pdfManager.ensureDoc("fingerprint"), pdfManager.ensureDoc("isPureXfa")]);
+      const [numPages, fingerprint, htmlForXfa] = await Promise.all([pdfManager.ensureDoc("numPages"), pdfManager.ensureDoc("fingerprint"), pdfManager.ensureDoc("htmlForXfa")]);
 
-      if (isPureXfa) {
+      if (htmlForXfa) {
         const task = new WorkerTask("loadXfaFonts");
         startWorkerTask(task);
         await pdfManager.loadXfaFonts(handler, task).catch(reason => {}).then(() => finishWorkerTask(task));
@@ -173,7 +173,7 @@ class WorkerMessageHandler {
       return {
         numPages,
         fingerprint,
-        isPureXfa
+        htmlForXfa
       };
     }
 
@@ -355,7 +355,10 @@ class WorkerMessageHandler {
         disableFontFace: data.disableFontFace,
         ignoreErrors: data.ignoreErrors,
         isEvalSupported: data.isEvalSupported,
-        fontExtraProperties: data.fontExtraProperties
+        fontExtraProperties: data.fontExtraProperties,
+        useSystemFonts: data.useSystemFonts,
+        cMapUrl: data.cMapUrl,
+        standardFontDataUrl: data.standardFontDataUrl
       };
       getPdfManager(data, evaluatorOptions, data.enableXfa).then(function (newPdfManager) {
         if (terminated) {
@@ -426,13 +429,6 @@ class WorkerMessageHandler {
     }) {
       return pdfManager.getPage(pageIndex).then(function (page) {
         return pdfManager.ensure(page, "jsActions");
-      });
-    });
-    handler.on("GetPageXfa", function wphSetupGetXfa({
-      pageIndex
-    }) {
-      return pdfManager.getPage(pageIndex).then(function (page) {
-        return pdfManager.ensure(page, "xfaData");
       });
     });
     handler.on("GetOutline", function wphSetupGetOutline(data) {
@@ -908,6 +904,7 @@ exports.StreamType = StreamType;
 const FontType = {
   UNKNOWN: "UNKNOWN",
   TYPE1: "TYPE1",
+  TYPE1STANDARD: "TYPE1STANDARD",
   TYPE1C: "TYPE1C",
   CIDFONTTYPE0: "CIDFONTTYPE0",
   CIDFONTTYPE0C: "CIDFONTTYPE0C",
@@ -1044,6 +1041,7 @@ const UNSUPPORTED_FEATURES = {
   errorOperatorList: "errorOperatorList",
   errorFontToUnicode: "errorFontToUnicode",
   errorFontLoadNative: "errorFontLoadNative",
+  errorFontBuildPath: "errorFontBuildPath",
   errorFontGetPath: "errorFontGetPath",
   errorMarkedContent: "errorMarkedContent"
 };
@@ -1447,7 +1445,7 @@ class Util {
 }
 
 exports.Util = Util;
-const PDFStringTranslateTable = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2D8, 0x2C7, 0x2C6, 0x2D9, 0x2DD, 0x2DB, 0x2DA, 0x2DC, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2022, 0x2020, 0x2021, 0x2026, 0x2014, 0x2013, 0x192, 0x2044, 0x2039, 0x203A, 0x2212, 0x2030, 0x201E, 0x201C, 0x201D, 0x2018, 0x2019, 0x201A, 0x2122, 0xFB01, 0xFB02, 0x141, 0x152, 0x160, 0x178, 0x17D, 0x131, 0x142, 0x153, 0x161, 0x17E, 0, 0x20AC];
+const PDFStringTranslateTable = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2d8, 0x2c7, 0x2c6, 0x2d9, 0x2dd, 0x2db, 0x2da, 0x2dc, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2022, 0x2020, 0x2021, 0x2026, 0x2014, 0x2013, 0x192, 0x2044, 0x2039, 0x203a, 0x2212, 0x2030, 0x201e, 0x201c, 0x201d, 0x2018, 0x2019, 0x201a, 0x2122, 0xfb01, 0xfb02, 0x141, 0x152, 0x160, 0x178, 0x17d, 0x131, 0x142, 0x153, 0x161, 0x17e, 0, 0x20ac];
 
 function stringToPDFString(str) {
   const length = str.length,
@@ -1492,8 +1490,7 @@ function stringToUTF16BEString(str) {
 
   for (let i = 0, ii = str.length; i < ii; i++) {
     const char = str.charCodeAt(i);
-    buf.push(String.fromCharCode(char >> 8 & 0xff));
-    buf.push(String.fromCharCode(char & 0xff));
+    buf.push(String.fromCharCode(char >> 8 & 0xff), String.fromCharCode(char & 0xff));
   }
 
   return buf.join("");
@@ -1744,20 +1741,28 @@ class Dict {
   }
 
   getArray(key1, key2, key3) {
-    let value = this.get(key1, key2, key3);
+    let value = this._map[key1];
 
-    if (!Array.isArray(value) || !this.xref) {
-      return value;
+    if (value === undefined && key2 !== undefined) {
+      value = this._map[key2];
+
+      if (value === undefined && key3 !== undefined) {
+        value = this._map[key3];
+      }
     }
 
-    value = value.slice();
+    if (value instanceof Ref && this.xref) {
+      value = this.xref.fetch(value, this.suppressEncryption);
+    }
 
-    for (let i = 0, ii = value.length; i < ii; i++) {
-      if (!(value[i] instanceof Ref)) {
-        continue;
+    if (Array.isArray(value)) {
+      value = value.slice();
+
+      for (let i = 0, ii = value.length; i < ii; i++) {
+        if (value[i] instanceof Ref && this.xref) {
+          value[i] = this.xref.fetch(value[i], this.suppressEncryption);
+        }
       }
-
-      value[i] = this.xref.fetch(value[i], this.suppressEncryption);
     }
 
     return value;
@@ -3427,32 +3432,30 @@ var _stream = __w_pdfjs_require__(10);
 
 var _annotation = __w_pdfjs_require__(12);
 
-var _crypto = __w_pdfjs_require__(65);
+var _base_stream = __w_pdfjs_require__(6);
 
-var _catalog = __w_pdfjs_require__(57);
+var _crypto = __w_pdfjs_require__(83);
+
+var _catalog = __w_pdfjs_require__(75);
 
 var _parser = __w_pdfjs_require__(17);
 
-var _object_loader = __w_pdfjs_require__(63);
+var _object_loader = __w_pdfjs_require__(81);
 
-var _operator_list = __w_pdfjs_require__(55);
+var _operator_list = __w_pdfjs_require__(73);
 
 var _evaluator = __w_pdfjs_require__(15);
 
 var _decode_stream = __w_pdfjs_require__(19);
 
-var _struct_tree = __w_pdfjs_require__(62);
+var _struct_tree = __w_pdfjs_require__(80);
 
-var _factory = __w_pdfjs_require__(67);
+var _factory = __w_pdfjs_require__(85);
 
-var _xref = __w_pdfjs_require__(87);
+var _xref = __w_pdfjs_require__(106);
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
-
-function isAnnotationRenderable(annotation, intent) {
-  return intent === "display" && annotation.viewable || intent === "print" && annotation.printable;
-}
 
 class Page {
   constructor({
@@ -3464,6 +3467,7 @@ class Page {
     globalIdFactory,
     fontCache,
     builtInCMapCache,
+    standardFontDataCache,
     globalImageCache,
     nonBlendModesSet,
     xfaFactory
@@ -3475,6 +3479,7 @@ class Page {
     this.ref = ref;
     this.fontCache = fontCache;
     this.builtInCMapCache = builtInCMapCache;
+    this.standardFontDataCache = standardFontDataCache;
     this.globalImageCache = globalImageCache;
     this.nonBlendModesSet = nonBlendModesSet;
     this.evaluatorOptions = pdfManager.evaluatorOptions;
@@ -3518,7 +3523,7 @@ class Page {
   }
 
   get content() {
-    return this.pageDict.get("Contents");
+    return this.pageDict.getArray("Contents");
   }
 
   get resources() {
@@ -3527,11 +3532,7 @@ class Page {
 
   _getBoundingBox(name) {
     if (this.xfaData) {
-      const {
-        width,
-        height
-      } = this.xfaData.attributes.style;
-      return [0, 0, parseInt(width), parseInt(height)];
+      return this.xfaData.bbox;
     }
 
     const box = this._getInheritableProperty(name, true);
@@ -3602,30 +3603,24 @@ class Page {
   }
 
   getContentStream() {
-    const content = this.content;
-    let stream;
-
-    if (Array.isArray(content)) {
-      const xref = this.xref;
-      const streams = [];
-
-      for (const subStream of content) {
-        streams.push(xref.fetchIfRef(subStream));
+    return this.pdfManager.ensure(this, "content").then(content => {
+      if (content instanceof _base_stream.BaseStream) {
+        return content;
       }
 
-      stream = new _decode_stream.StreamsSequenceStream(streams);
-    } else if ((0, _primitives.isStream)(content)) {
-      stream = content;
-    } else {
-      stream = new _stream.NullStream();
-    }
+      if (Array.isArray(content)) {
+        return new _decode_stream.StreamsSequenceStream(content);
+      }
 
-    return stream;
+      return new _stream.NullStream();
+    });
   }
 
   get xfaData() {
     if (this.xfaFactory) {
-      return (0, _util.shadow)(this, "xfaData", this.xfaFactory.getPage(this.pageIndex));
+      return (0, _util.shadow)(this, "xfaData", {
+        bbox: this.xfaFactory.getBoundingBox(this.pageIndex)
+      });
     }
 
     return (0, _util.shadow)(this, "xfaData", null);
@@ -3639,6 +3634,7 @@ class Page {
       idFactory: this._localIdFactory,
       fontCache: this.fontCache,
       builtInCMapCache: this.builtInCMapCache,
+      standardFontDataCache: this.standardFontDataCache,
       globalImageCache: this.globalImageCache,
       options: this.evaluatorOptions
     });
@@ -3646,7 +3642,7 @@ class Page {
       const newRefsPromises = [];
 
       for (const annotation of annotations) {
-        if (!isAnnotationRenderable(annotation, "print")) {
+        if (!annotation.mustBePrinted(annotationStorage)) {
           continue;
         }
 
@@ -3679,7 +3675,7 @@ class Page {
     renderInteractiveForms,
     annotationStorage
   }) {
-    const contentStreamPromise = this.pdfManager.ensure(this, "getContentStream");
+    const contentStreamPromise = this.getContentStream();
     const resourcesPromise = this.loadResources(["ColorSpace", "ExtGState", "Font", "Pattern", "Properties", "Shading", "XObject"]);
     const partialEvaluator = new _evaluator.PartialEvaluator({
       xref: this.xref,
@@ -3688,6 +3684,7 @@ class Page {
       idFactory: this._localIdFactory,
       fontCache: this.fontCache,
       builtInCMapCache: this.builtInCMapCache,
+      standardFontDataCache: this.standardFontDataCache,
       globalImageCache: this.globalImageCache,
       options: this.evaluatorOptions
     });
@@ -3719,7 +3716,7 @@ class Page {
       const opListPromises = [];
 
       for (const annotation of annotations) {
-        if (isAnnotationRenderable(annotation, intent) && !annotation.isHidden(annotationStorage)) {
+        if (intent === "display" && annotation.mustBeViewed(annotationStorage) || intent === "print" && annotation.mustBePrinted(annotationStorage)) {
           opListPromises.push(annotation.getOperatorList(partialEvaluator, task, renderInteractiveForms, annotationStorage).catch(function (reason) {
             (0, _util.warn)("getOperatorList - ignoring annotation data during " + `"${task.name}" task: "${reason}".`);
             return null;
@@ -3751,7 +3748,7 @@ class Page {
     sink,
     combineTextItems
   }) {
-    const contentStreamPromise = this.pdfManager.ensure(this, "getContentStream");
+    const contentStreamPromise = this.getContentStream();
     const resourcesPromise = this.loadResources(["ExtGState", "Font", "Properties", "XObject"]);
     const dataPromises = Promise.all([contentStreamPromise, resourcesPromise]);
     return dataPromises.then(([contentStream]) => {
@@ -3762,6 +3759,7 @@ class Page {
         idFactory: this._localIdFactory,
         fontCache: this.fontCache,
         builtInCMapCache: this.builtInCMapCache,
+        standardFontDataCache: this.standardFontDataCache,
         globalImageCache: this.globalImageCache,
         options: this.evaluatorOptions
       });
@@ -3799,7 +3797,7 @@ class Page {
       const annotationsData = [];
 
       for (let i = 0, ii = annotations.length; i < ii; i++) {
-        if (!intent || isAnnotationRenderable(annotations[i], intent)) {
+        if (!intent || intent === "display" && annotations[i].viewable || intent === "print" && annotations[i].printable) {
           annotationsData.push(annotations[i].data);
         }
       }
@@ -4162,8 +4160,12 @@ class PDFDocument {
     return (0, _util.shadow)(this, "xfaFaxtory", null);
   }
 
-  get isPureXfa() {
-    return this.xfaFactory !== null;
+  get htmlForXfa() {
+    if (this.xfaFactory) {
+      return this.xfaFactory.getPages();
+    }
+
+    return null;
   }
 
   async loadXfaFonts(handler, task) {
@@ -4187,13 +4189,17 @@ class PDFDocument {
       return;
     }
 
+    const options = Object.assign(Object.create(null), this.pdfManager.evaluatorOptions);
+    options.useSystemFonts = false;
     const partialEvaluator = new _evaluator.PartialEvaluator({
       xref: this.xref,
       handler,
       pageIndex: -1,
       idFactory: this._globalIdFactory,
       fontCache: this.catalog.fontCache,
-      builtInCMapCache: this.catalog.builtInCMapCache
+      builtInCMapCache: this.catalog.builtInCMapCache,
+      standardFontDataCache: this.catalog.standardFontDataCache,
+      options
     });
     const operatorList = new _operator_list.OperatorList();
     const initialState = {
@@ -4219,7 +4225,7 @@ class PDFDocument {
 
       const fontFamily = descriptor.get("FontFamily");
       const fontWeight = descriptor.get("FontWeight");
-      const italicAngle = descriptor.get("ItalicAngle");
+      const italicAngle = -descriptor.get("ItalicAngle");
       const cssFontInfo = {
         fontFamily,
         fontWeight,
@@ -4413,6 +4419,7 @@ class PDFDocument {
         globalIdFactory: this._globalIdFactory,
         fontCache: catalog.fontCache,
         builtInCMapCache: catalog.builtInCMapCache,
+        standardFontDataCache: catalog.standardFontDataCache,
         globalImageCache: catalog.globalImageCache,
         nonBlendModesSet: catalog.nonBlendModesSet,
         xfaFactory: this.xfaFactory
@@ -4430,6 +4437,7 @@ class PDFDocument {
         globalIdFactory: this._globalIdFactory,
         fontCache: catalog.fontCache,
         builtInCMapCache: catalog.builtInCMapCache,
+        standardFontDataCache: catalog.standardFontDataCache,
         globalImageCache: catalog.globalImageCache,
         nonBlendModesSet: catalog.nonBlendModesSet,
         xfaFactory: null
@@ -4578,19 +4586,19 @@ var _default_appearance = __w_pdfjs_require__(13);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _catalog = __w_pdfjs_require__(57);
+var _catalog = __w_pdfjs_require__(75);
 
 var _colorspace = __w_pdfjs_require__(14);
 
-var _file_spec = __w_pdfjs_require__(59);
+var _file_spec = __w_pdfjs_require__(77);
 
-var _object_loader = __w_pdfjs_require__(63);
+var _object_loader = __w_pdfjs_require__(81);
 
-var _operator_list = __w_pdfjs_require__(55);
+var _operator_list = __w_pdfjs_require__(73);
 
 var _stream = __w_pdfjs_require__(10);
 
-var _writer = __w_pdfjs_require__(64);
+var _writer = __w_pdfjs_require__(82);
 
 class AnnotationFactory {
   static create(xref, ref, pdfManager, idFactory, collectFields) {
@@ -4891,14 +4899,24 @@ class Annotation {
     return this._hasFlag(flags, _util.AnnotationFlag.PRINT) && !this._hasFlag(flags, _util.AnnotationFlag.INVISIBLE);
   }
 
-  isHidden(annotationStorage) {
+  mustBeViewed(annotationStorage) {
     const storageEntry = annotationStorage && annotationStorage.get(this.data.id);
 
     if (storageEntry && storageEntry.hidden !== undefined) {
-      return storageEntry.hidden;
+      return !storageEntry.hidden;
     }
 
-    return this._hasFlag(this.flags, _util.AnnotationFlag.HIDDEN);
+    return this.viewable && !this._hasFlag(this.flags, _util.AnnotationFlag.HIDDEN);
+  }
+
+  mustBePrinted(annotationStorage) {
+    const storageEntry = annotationStorage && annotationStorage.get(this.data.id);
+
+    if (storageEntry && storageEntry.print !== undefined) {
+      return storageEntry.print;
+    }
+
+    return this.printable;
   }
 
   get viewable() {
@@ -5292,6 +5310,8 @@ class MarkupAnnotation extends Annotation {
     strokeColor,
     fillColor,
     blendMode,
+    strokeAlpha,
+    fillAlpha,
     pointsCallback
   }) {
     let minX = Number.MAX_VALUE;
@@ -5349,6 +5369,14 @@ class MarkupAnnotation extends Annotation {
 
     if (blendMode) {
       gsDict.set("BM", _primitives.Name.get(blendMode));
+    }
+
+    if (typeof strokeAlpha === "number") {
+      gsDict.set("CA", strokeAlpha);
+    }
+
+    if (typeof fillAlpha === "number") {
+      gsDict.set("ca", fillAlpha);
     }
 
     const stateDict = new _primitives.Dict(xref);
@@ -5550,9 +5578,7 @@ class WidgetAnnotation extends Annotation {
     bufferOriginal.push("\nendobj\n");
     const bufferNew = [`${newRef.num} ${newRef.gen} obj\n`];
     (0, _writer.writeDict)(appearanceDict, bufferNew, newTransform);
-    bufferNew.push(" stream\n");
-    bufferNew.push(appearance);
-    bufferNew.push("\nendstream\nendobj\n");
+    bufferNew.push(" stream\n", appearance, "\nendstream\nendobj\n");
     return [{
       ref: this.ref,
       data: bufferOriginal.join(""),
@@ -6424,20 +6450,33 @@ class LineAnnotation extends MarkupAnnotation {
 
     if (!this.appearance) {
       const strokeColor = this.color ? Array.from(this.color).map(c => c / 255) : [0, 0, 0];
-      const borderWidth = this.borderStyle.width;
+      const strokeAlpha = parameters.dict.get("CA");
+      let fillColor = null,
+          interiorColor = parameters.dict.getArray("IC");
 
-      if ((0, _util.isArrayEqual)(this.rectangle, [0, 0, 0, 0])) {
-        this.rectangle = [this.data.lineCoordinates[0] - 2 * borderWidth, this.data.lineCoordinates[1] - 2 * borderWidth, this.data.lineCoordinates[2] + 2 * borderWidth, this.data.lineCoordinates[3] + 2 * borderWidth];
+      if (interiorColor) {
+        interiorColor = getRgbColor(interiorColor);
+        fillColor = interiorColor ? Array.from(interiorColor).map(c => c / 255) : null;
+      }
+
+      const fillAlpha = fillColor ? strokeAlpha : null;
+      const borderWidth = this.borderStyle.width || 1,
+            borderAdjust = 2 * borderWidth;
+      const bbox = [this.data.lineCoordinates[0] - borderAdjust, this.data.lineCoordinates[1] - borderAdjust, this.data.lineCoordinates[2] + borderAdjust, this.data.lineCoordinates[3] + borderAdjust];
+
+      if (!_util.Util.intersect(this.rectangle, bbox)) {
+        this.rectangle = bbox;
       }
 
       this._setDefaultAppearance({
         xref: parameters.xref,
         extra: `${borderWidth} w`,
         strokeColor,
+        fillColor,
+        strokeAlpha,
+        fillAlpha,
         pointsCallback: (buffer, points) => {
-          buffer.push(`${lineCoordinates[0]} ${lineCoordinates[1]} m`);
-          buffer.push(`${lineCoordinates[2]} ${lineCoordinates[3]} l`);
-          buffer.push("S");
+          buffer.push(`${lineCoordinates[0]} ${lineCoordinates[1]} m`, `${lineCoordinates[2]} ${lineCoordinates[3]} l`, "S");
           return [points[0].x - borderWidth, points[1].x + borderWidth, points[3].y - borderWidth, points[1].y + borderWidth];
         }
       });
@@ -6453,19 +6492,24 @@ class SquareAnnotation extends MarkupAnnotation {
 
     if (!this.appearance) {
       const strokeColor = this.color ? Array.from(this.color).map(c => c / 255) : [0, 0, 0];
-      let fillColor = null;
-      let interiorColor = parameters.dict.getArray("IC");
+      const strokeAlpha = parameters.dict.get("CA");
+      let fillColor = null,
+          interiorColor = parameters.dict.getArray("IC");
 
       if (interiorColor) {
         interiorColor = getRgbColor(interiorColor);
         fillColor = interiorColor ? Array.from(interiorColor).map(c => c / 255) : null;
       }
 
+      const fillAlpha = fillColor ? strokeAlpha : null;
+
       this._setDefaultAppearance({
         xref: parameters.xref,
         extra: `${this.borderStyle.width} w`,
         strokeColor,
         fillColor,
+        strokeAlpha,
+        fillAlpha,
         pointsCallback: (buffer, points) => {
           const x = points[2].x + this.borderStyle.width / 2;
           const y = points[2].y + this.borderStyle.width / 2;
@@ -6494,6 +6538,7 @@ class CircleAnnotation extends MarkupAnnotation {
 
     if (!this.appearance) {
       const strokeColor = this.color ? Array.from(this.color).map(c => c / 255) : [0, 0, 0];
+      const strokeAlpha = parameters.dict.get("CA");
       let fillColor = null;
       let interiorColor = parameters.dict.getArray("IC");
 
@@ -6502,6 +6547,7 @@ class CircleAnnotation extends MarkupAnnotation {
         fillColor = interiorColor ? Array.from(interiorColor).map(c => c / 255) : null;
       }
 
+      const fillAlpha = fillColor ? strokeAlpha : null;
       const controlPointsDistance = 4 / 3 * Math.tan(Math.PI / (2 * 4));
 
       this._setDefaultAppearance({
@@ -6509,6 +6555,8 @@ class CircleAnnotation extends MarkupAnnotation {
         extra: `${this.borderStyle.width} w`,
         strokeColor,
         fillColor,
+        strokeAlpha,
+        fillAlpha,
         pointsCallback: (buffer, points) => {
           const x0 = points[0].x + this.borderStyle.width / 2;
           const y0 = points[0].y - this.borderStyle.width / 2;
@@ -6518,12 +6566,7 @@ class CircleAnnotation extends MarkupAnnotation {
           const yMid = y0 + (y1 - y0) / 2;
           const xOffset = (x1 - x0) / 2 * controlPointsDistance;
           const yOffset = (y1 - y0) / 2 * controlPointsDistance;
-          buffer.push(`${xMid} ${y1} m`);
-          buffer.push(`${xMid + xOffset} ${y1} ${x1} ${yMid + yOffset} ${x1} ${yMid} c`);
-          buffer.push(`${x1} ${yMid - yOffset} ${xMid + xOffset} ${y0} ${xMid} ${y0} c`);
-          buffer.push(`${xMid - xOffset} ${y0} ${x0} ${yMid - yOffset} ${x0} ${yMid} c`);
-          buffer.push(`${x0} ${yMid + yOffset} ${xMid - xOffset} ${y1} ${xMid} ${y1} c`);
-          buffer.push("h");
+          buffer.push(`${xMid} ${y1} m`, `${xMid + xOffset} ${y1} ${x1} ${yMid + yOffset} ${x1} ${yMid} c`, `${x1} ${yMid - yOffset} ${xMid + xOffset} ${y0} ${xMid} ${y0} c`, `${xMid - xOffset} ${y0} ${x0} ${yMid - yOffset} ${x0} ${yMid} c`, `${x0} ${yMid + yOffset} ${xMid - xOffset} ${y1} ${xMid} ${y1} c`, "h");
 
           if (fillColor) {
             buffer.push("B");
@@ -6559,12 +6602,27 @@ class PolylineAnnotation extends MarkupAnnotation {
 
     if (!this.appearance) {
       const strokeColor = this.color ? Array.from(this.color).map(c => c / 255) : [0, 0, 0];
-      const borderWidth = this.borderStyle.width || 1;
+      const strokeAlpha = parameters.dict.get("CA");
+      const borderWidth = this.borderStyle.width || 1,
+            borderAdjust = 2 * borderWidth;
+      const bbox = [Infinity, Infinity, -Infinity, -Infinity];
+
+      for (const vertex of this.data.vertices) {
+        bbox[0] = Math.min(bbox[0], vertex.x - borderAdjust);
+        bbox[1] = Math.min(bbox[1], vertex.y - borderAdjust);
+        bbox[2] = Math.max(bbox[2], vertex.x + borderAdjust);
+        bbox[3] = Math.max(bbox[3], vertex.y + borderAdjust);
+      }
+
+      if (!_util.Util.intersect(this.rectangle, bbox)) {
+        this.rectangle = bbox;
+      }
 
       this._setDefaultAppearance({
         xref: parameters.xref,
         extra: `${borderWidth} w`,
         strokeColor,
+        strokeAlpha,
         pointsCallback: (buffer, points) => {
           const vertices = this.data.vertices;
 
@@ -6623,12 +6681,29 @@ class InkAnnotation extends MarkupAnnotation {
 
     if (!this.appearance) {
       const strokeColor = this.color ? Array.from(this.color).map(c => c / 255) : [0, 0, 0];
-      const borderWidth = this.borderStyle.width || 1;
+      const strokeAlpha = parameters.dict.get("CA");
+      const borderWidth = this.borderStyle.width || 1,
+            borderAdjust = 2 * borderWidth;
+      const bbox = [Infinity, Infinity, -Infinity, -Infinity];
+
+      for (const inkLists of this.data.inkLists) {
+        for (const vertex of inkLists) {
+          bbox[0] = Math.min(bbox[0], vertex.x - borderAdjust);
+          bbox[1] = Math.min(bbox[1], vertex.y - borderAdjust);
+          bbox[2] = Math.max(bbox[2], vertex.x + borderAdjust);
+          bbox[3] = Math.max(bbox[3], vertex.y + borderAdjust);
+        }
+      }
+
+      if (!_util.Util.intersect(this.rectangle, bbox)) {
+        this.rectangle = bbox;
+      }
 
       this._setDefaultAppearance({
         xref: parameters.xref,
         extra: `${borderWidth} w`,
         strokeColor,
+        strokeAlpha,
         pointsCallback: (buffer, points) => {
           for (const inkList of this.data.inkLists) {
             for (let i = 0, ii = inkList.length; i < ii; i++) {
@@ -6653,19 +6728,23 @@ class HighlightAnnotation extends MarkupAnnotation {
     const quadPoints = this.data.quadPoints = getQuadPoints(parameters.dict, null);
 
     if (quadPoints) {
-      if (!this.appearance) {
+      const resources = this.appearance && this.appearance.dict.get("Resources");
+
+      if (!this.appearance || !(resources && resources.has("ExtGState"))) {
+        if (this.appearance) {
+          (0, _util.warn)("HighlightAnnotation - ignoring built-in appearance stream.");
+        }
+
         const fillColor = this.color ? Array.from(this.color).map(c => c / 255) : [1, 1, 0];
+        const fillAlpha = parameters.dict.get("CA");
 
         this._setDefaultAppearance({
           xref: parameters.xref,
           fillColor,
           blendMode: "Multiply",
+          fillAlpha,
           pointsCallback: (buffer, points) => {
-            buffer.push(`${points[0].x} ${points[0].y} m`);
-            buffer.push(`${points[1].x} ${points[1].y} l`);
-            buffer.push(`${points[3].x} ${points[3].y} l`);
-            buffer.push(`${points[2].x} ${points[2].y} l`);
-            buffer.push("f");
+            buffer.push(`${points[0].x} ${points[0].y} m`, `${points[1].x} ${points[1].y} l`, `${points[3].x} ${points[3].y} l`, `${points[2].x} ${points[2].y} l`, "f");
             return [points[0].x, points[1].x, points[3].y, points[1].y];
           }
         });
@@ -6686,15 +6765,15 @@ class UnderlineAnnotation extends MarkupAnnotation {
     if (quadPoints) {
       if (!this.appearance) {
         const strokeColor = this.color ? Array.from(this.color).map(c => c / 255) : [0, 0, 0];
+        const strokeAlpha = parameters.dict.get("CA");
 
         this._setDefaultAppearance({
           xref: parameters.xref,
           extra: "[] 0 d 1 w",
           strokeColor,
+          strokeAlpha,
           pointsCallback: (buffer, points) => {
-            buffer.push(`${points[2].x} ${points[2].y} m`);
-            buffer.push(`${points[3].x} ${points[3].y} l`);
-            buffer.push("S");
+            buffer.push(`${points[2].x} ${points[2].y} m`, `${points[3].x} ${points[3].y} l`, "S");
             return [points[0].x, points[1].x, points[3].y, points[1].y];
           }
         });
@@ -6715,11 +6794,13 @@ class SquigglyAnnotation extends MarkupAnnotation {
     if (quadPoints) {
       if (!this.appearance) {
         const strokeColor = this.color ? Array.from(this.color).map(c => c / 255) : [0, 0, 0];
+        const strokeAlpha = parameters.dict.get("CA");
 
         this._setDefaultAppearance({
           xref: parameters.xref,
           extra: "[] 0 d 1 w",
           strokeColor,
+          strokeAlpha,
           pointsCallback: (buffer, points) => {
             const dy = (points[0].y - points[2].y) / 6;
             let shift = dy;
@@ -6755,15 +6836,15 @@ class StrikeOutAnnotation extends MarkupAnnotation {
     if (quadPoints) {
       if (!this.appearance) {
         const strokeColor = this.color ? Array.from(this.color).map(c => c / 255) : [0, 0, 0];
+        const strokeAlpha = parameters.dict.get("CA");
 
         this._setDefaultAppearance({
           xref: parameters.xref,
           extra: "[] 0 d 1 w",
           strokeColor,
+          strokeAlpha,
           pointsCallback: (buffer, points) => {
-            buffer.push(`${(points[0].x + points[2].x) / 2}` + ` ${(points[0].y + points[2].y) / 2} m`);
-            buffer.push(`${(points[1].x + points[3].x) / 2}` + ` ${(points[1].y + points[3].y) / 2} l`);
-            buffer.push("S");
+            buffer.push(`${(points[0].x + points[2].x) / 2} ` + `${(points[0].y + points[2].y) / 2} m`, `${(points[1].x + points[3].x) / 2} ` + `${(points[1].y + points[3].y) / 2} l`, "S");
             return [points[0].x, points[1].x, points[3].y, points[1].y];
           }
         });
@@ -7999,21 +8080,23 @@ var _fonts_utils = __w_pdfjs_require__(38);
 
 var _encodings = __w_pdfjs_require__(37);
 
-var _unicode = __w_pdfjs_require__(40);
-
 var _standard_fonts = __w_pdfjs_require__(41);
 
-var _pattern = __w_pdfjs_require__(48);
+var _unicode = __w_pdfjs_require__(40);
+
+var _pattern = __w_pdfjs_require__(49);
 
 var _to_unicode_map = __w_pdfjs_require__(42);
 
-var _function = __w_pdfjs_require__(49);
+var _function = __w_pdfjs_require__(50);
 
 var _parser = __w_pdfjs_require__(17);
 
-var _image_utils = __w_pdfjs_require__(51);
+var _image_utils = __w_pdfjs_require__(52);
 
-var _bidi = __w_pdfjs_require__(52);
+var _stream = __w_pdfjs_require__(10);
+
+var _bidi = __w_pdfjs_require__(53);
 
 var _colorspace = __w_pdfjs_require__(14);
 
@@ -8023,22 +8106,25 @@ var _glyphlist = __w_pdfjs_require__(39);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _metrics = __w_pdfjs_require__(53);
+var _metrics = __w_pdfjs_require__(54);
 
-var _murmurhash = __w_pdfjs_require__(54);
+var _xfa_fonts = __w_pdfjs_require__(55);
 
-var _stream = __w_pdfjs_require__(10);
+var _murmurhash = __w_pdfjs_require__(72);
 
-var _operator_list = __w_pdfjs_require__(55);
+var _operator_list = __w_pdfjs_require__(73);
 
-var _image = __w_pdfjs_require__(56);
+var _image = __w_pdfjs_require__(74);
 
 const DefaultPartialEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
   disableFontFace: false,
   ignoreErrors: false,
   isEvalSupported: true,
-  fontExtraProperties: false
+  fontExtraProperties: false,
+  useSystemFonts: true,
+  cMapUrl: null,
+  standardFontDataUrl: null
 });
 const PatternType = {
   TILING: 1,
@@ -8164,6 +8250,7 @@ class PartialEvaluator {
     idFactory,
     fontCache,
     builtInCMapCache,
+    standardFontDataCache,
     globalImageCache,
     options = null
   }) {
@@ -8173,6 +8260,7 @@ class PartialEvaluator {
     this.idFactory = idFactory;
     this.fontCache = fontCache;
     this.builtInCMapCache = builtInCMapCache;
+    this.standardFontDataCache = standardFontDataCache;
     this.globalImageCache = globalImageCache;
     this.options = options || DefaultPartialEvaluatorOptions;
     this.parsingType3Font = false;
@@ -8187,9 +8275,9 @@ class PartialEvaluator {
     return (0, _util.shadow)(this, "_pdfFunctionFactory", pdfFunctionFactory);
   }
 
-  clone(newOptions = DefaultPartialEvaluatorOptions) {
+  clone(newOptions = null) {
     const newEvaluator = Object.create(this);
-    newEvaluator.options = newOptions;
+    newEvaluator.options = Object.assign(Object.create(null), this.options, newOptions);
     return newEvaluator;
   }
 
@@ -8319,33 +8407,75 @@ class PartialEvaluator {
       return cachedData;
     }
 
-    const readableStream = this.handler.sendWithStream("FetchBuiltInCMap", {
-      name
-    });
-    const reader = readableStream.getReader();
-    const data = await new Promise(function (resolve, reject) {
-      function pump() {
-        reader.read().then(function ({
-          value,
-          done
-        }) {
-          if (done) {
-            return;
-          }
+    let data;
 
-          resolve(value);
-          pump();
-        }, reject);
+    if (this.options.cMapUrl !== null) {
+      const url = `${this.options.cMapUrl}${name}.bcmap`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`fetchBuiltInCMap: failed to fetch file "${url}" with "${response.statusText}".`);
       }
 
-      pump();
-    });
+      data = {
+        cMapData: new Uint8Array(await response.arrayBuffer()),
+        compressionType: _util.CMapCompressionType.BINARY
+      };
+    } else {
+      data = await this.handler.sendWithPromise("FetchBuiltInCMap", {
+        name
+      });
+    }
 
     if (data.compressionType !== _util.CMapCompressionType.NONE) {
       this.builtInCMapCache.set(name, data);
     }
 
     return data;
+  }
+
+  async fetchStandardFontData(name) {
+    const cachedData = this.standardFontDataCache.get(name);
+
+    if (cachedData) {
+      return new _stream.Stream(cachedData);
+    }
+
+    if (!this.options.disableFontFace) {
+      if (this.options.useSystemFonts && name !== "Symbol" && name !== "ZapfDingbats") {
+        return null;
+      }
+    }
+
+    const standardFontNameToFileName = (0, _standard_fonts.getFontNameToFileMap)(),
+          filename = standardFontNameToFileName[name];
+    let data;
+
+    if (this.options.standardFontDataUrl !== null) {
+      const url = `${this.options.standardFontDataUrl}${filename}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        (0, _util.warn)(`fetchStandardFontData: failed to fetch file "${url}" with "${response.statusText}".`);
+      } else {
+        data = await response.arrayBuffer();
+      }
+    } else {
+      try {
+        data = await this.handler.sendWithPromise("FetchStandardFontData", {
+          filename
+        });
+      } catch (e) {
+        (0, _util.warn)(`fetchStandardFontData: failed to fetch file "${filename}" with "${e}".`);
+      }
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    this.standardFontDataCache.set(name, data);
+    return new _stream.Stream(data);
   }
 
   async buildFormXObject(resources, xobj, smask, operatorList, task, initialState, localColorSpaceCache) {
@@ -8359,7 +8489,8 @@ class PartialEvaluator {
       bbox = null;
     }
 
-    let optionalContent = null;
+    let optionalContent = null,
+        groupOptions;
 
     if (dict.has("OC")) {
       optionalContent = await this.parseMarkedContentProps(dict.get("OC"), resources);
@@ -8369,7 +8500,7 @@ class PartialEvaluator {
     const group = dict.get("Group");
 
     if (group) {
-      var groupOptions = {
+      groupOptions = {
         matrix,
         bbox,
         smask,
@@ -8712,7 +8843,7 @@ class PartialEvaluator {
           loadedName: "g_font_error",
           font: new _fonts.ErrorFont(`Type3 font load error: ${reason}`),
           dict: translated.font,
-          extraProperties: this.options.fontExtraProperties
+          evaluatorOptions: this.options
         });
       });
     }).then(translated => {
@@ -8730,7 +8861,7 @@ class PartialEvaluator {
       const isAddToPathSet = !!(state.textRenderingMode & _util.TextRenderingMode.ADD_TO_PATH_FLAG);
 
       if (isAddToPathSet || state.fillColorSpace.name === "Pattern" || font.disableFontFace || this.options.disableFontFace) {
-        PartialEvaluator.buildFontPaths(font, glyphs, this.handler);
+        PartialEvaluator.buildFontPaths(font, glyphs, this.handler, this.options);
       }
     }
 
@@ -8867,7 +8998,7 @@ class PartialEvaluator {
         loadedName: "g_font_error",
         font: new _fonts.ErrorFont(`Font "${fontName}" is not available.`),
         dict: font,
-        extraProperties: this.options.fontExtraProperties
+        evaluatorOptions: this.options
       });
     };
 
@@ -8994,7 +9125,7 @@ class PartialEvaluator {
         loadedName: font.loadedName,
         font: translatedFont,
         dict: font,
-        extraProperties: this.options.fontExtraProperties
+        evaluatorOptions: this.options
       }));
     }).catch(reason => {
       this.handler.send("UnsupportedFeature", {
@@ -9014,7 +9145,7 @@ class PartialEvaluator {
         loadedName: font.loadedName,
         font: new _fonts.ErrorFont(reason instanceof Error ? reason.message : reason),
         dict: font,
-        extraProperties: this.options.fontExtraProperties
+        evaluatorOptions: this.options
       }));
     });
     return fontCapability.promise;
@@ -9817,7 +9948,7 @@ class PartialEvaluator {
       const font = textState.font;
       const tsm = [textState.fontSize * textState.textHScale, 0, 0, textState.fontSize, 0, textState.textRise];
 
-      if (font.isType3Font && textState.fontSize <= 1 && !(0, _util.isArrayEqual)(textState.fontMatrix, _util.FONT_IDENTITY_MATRIX)) {
+      if (font.isType3Font && (textState.fontSize <= 1 || font.isCharBBox) && !(0, _util.isArrayEqual)(textState.fontMatrix, _util.FONT_IDENTITY_MATRIX)) {
         const glyphHeight = font.bbox[3] - font.bbox[1];
 
         if (glyphHeight > 0) {
@@ -9933,6 +10064,14 @@ class PartialEvaluator {
 
     function handleSetFont(fontName, fontRef) {
       return self.loadFont(fontName, fontRef, resources).then(function (translated) {
+        if (!translated.font.isType3Font) {
+          return translated;
+        }
+
+        return translated.loadType3Data(self, resources, task).catch(function () {}).then(function () {
+          return translated;
+        });
+      }).then(function (translated) {
         textState.font = translated.font;
         textState.fontMatrix = translated.font.fontMatrix || _util.FONT_IDENTITY_MATRIX;
       });
@@ -11265,10 +11404,11 @@ class PartialEvaluator {
     toUnicode,
     cssFontInfo
   }) {
+    const isType3Font = type === "Type3";
     let properties;
 
     if (!descriptor) {
-      if (type === "Type3") {
+      if (isType3Font) {
         descriptor = new _primitives.Dict(null);
         descriptor.set("FontName", _primitives.Name.get(type));
         descriptor.set("FontBBox", dict.getArray("FontBBox") || [0, 0, 0, 0]);
@@ -11286,14 +11426,25 @@ class PartialEvaluator {
         properties = {
           type,
           name: baseFontName,
+          loadedName: baseDict.loadedName,
           widths: metrics.widths,
           defaultWidth: metrics.defaultWidth,
           flags,
           firstChar,
           lastChar,
-          toUnicode
+          toUnicode,
+          isType3Font
         };
         const widths = dict.get("Widths");
+        const standardFontName = (0, _standard_fonts.getStandardFontName)(baseFontName);
+        let file = null;
+
+        if (standardFontName) {
+          properties.isStandardFont = true;
+          file = await this.fetchStandardFontData(standardFontName);
+          properties.isInternalFont = !!file;
+        }
+
         return this.extractDataStructures(dict, dict, properties).then(newProperties => {
           if (widths) {
             const glyphWidths = [];
@@ -11308,7 +11459,7 @@ class PartialEvaluator {
             newProperties.widths = this.buildCharCodeToWidth(metrics.widths, newProperties);
           }
 
-          return new _fonts.Font(baseFontName, null, newProperties);
+          return new _fonts.Font(baseFontName, file, newProperties);
         });
       }
     }
@@ -11324,7 +11475,7 @@ class PartialEvaluator {
       baseFont = _primitives.Name.get(baseFont);
     }
 
-    if (type !== "Type3") {
+    if (!isType3Font) {
       const fontNameStr = fontName && fontName.name;
       const baseFontStr = baseFont && baseFont.name;
 
@@ -11343,7 +11494,7 @@ class PartialEvaluator {
       throw new _util.FormatError("invalid font name");
     }
 
-    let fontFile;
+    let fontFile, subtype, length1, length2, length3;
 
     try {
       fontFile = descriptor.get("FontFile", "FontFile2", "FontFile3");
@@ -11356,17 +11507,39 @@ class PartialEvaluator {
       fontFile = new _stream.NullStream();
     }
 
+    let isStandardFont = false;
+    let isInternalFont = false;
+    let glyphScaleFactors = null;
+
     if (fontFile) {
       if (fontFile.dict) {
-        var subtype = fontFile.dict.get("Subtype");
+        const subtypeEntry = fontFile.dict.get("Subtype");
 
-        if (subtype) {
-          subtype = subtype.name;
+        if (subtypeEntry instanceof _primitives.Name) {
+          subtype = subtypeEntry.name;
         }
 
-        var length1 = fontFile.dict.get("Length1");
-        var length2 = fontFile.dict.get("Length2");
-        var length3 = fontFile.dict.get("Length3");
+        length1 = fontFile.dict.get("Length1");
+        length2 = fontFile.dict.get("Length2");
+        length3 = fontFile.dict.get("Length3");
+      }
+    } else if (cssFontInfo) {
+      const standardFontName = (0, _xfa_fonts.getXfaFontName)(fontName.name);
+
+      if (standardFontName) {
+        cssFontInfo.fontFamily = `${cssFontInfo.fontFamily}-PdfJS-XFA`;
+        glyphScaleFactors = standardFontName.factors || null;
+        fontFile = await this.fetchStandardFontData(standardFontName.name);
+        isInternalFont = !!fontFile;
+        type = "TrueType";
+      }
+    } else if (type === "Type1") {
+      const standardFontName = (0, _standard_fonts.getStandardFontName)(fontName.name);
+
+      if (standardFontName) {
+        isStandardFont = true;
+        fontFile = await this.fetchStandardFontData(standardFontName);
+        isInternalFont = !!fontFile;
       }
     }
 
@@ -11378,6 +11551,8 @@ class PartialEvaluator {
       length1,
       length2,
       length3,
+      isStandardFont,
+      isInternalFont,
       loadedName: baseDict.loadedName,
       composite,
       fixedPitch: false,
@@ -11385,15 +11560,16 @@ class PartialEvaluator {
       firstChar,
       lastChar,
       toUnicode,
-      bbox: descriptor.getArray("FontBBox"),
+      bbox: descriptor.getArray("FontBBox") || dict.getArray("FontBBox"),
       ascent: descriptor.get("Ascent"),
       descent: descriptor.get("Descent"),
       xHeight: descriptor.get("XHeight"),
       capHeight: descriptor.get("CapHeight"),
       flags: descriptor.get("Flags"),
       italicAngle: descriptor.get("ItalicAngle"),
-      isType3Font: false,
-      cssFontInfo
+      isType3Font,
+      cssFontInfo,
+      scaleFactors: glyphScaleFactors
     };
 
     if (composite) {
@@ -11414,22 +11590,31 @@ class PartialEvaluator {
 
     return this.extractDataStructures(dict, baseDict, properties).then(newProperties => {
       this.extractWidths(dict, descriptor, newProperties);
-
-      if (type === "Type3") {
-        newProperties.isType3Font = true;
-      }
-
       return new _fonts.Font(fontName.name, fontFile, newProperties);
     });
   }
 
-  static buildFontPaths(font, glyphs, handler) {
+  static buildFontPaths(font, glyphs, handler, evaluatorOptions) {
     function buildPath(fontChar) {
-      if (font.renderer.hasBuiltPath(fontChar)) {
-        return;
-      }
+      const glyphName = `${font.loadedName}_path_${fontChar}`;
 
-      handler.send("commonobj", [`${font.loadedName}_path_${fontChar}`, "FontPath", font.renderer.getPathJs(fontChar)]);
+      try {
+        if (font.renderer.hasBuiltPath(fontChar)) {
+          return;
+        }
+
+        handler.send("commonobj", [glyphName, "FontPath", font.renderer.getPathJs(fontChar)]);
+      } catch (reason) {
+        if (evaluatorOptions.ignoreErrors) {
+          handler.send("UnsupportedFeature", {
+            featureId: _util.UNSUPPORTED_FEATURES.errorFontBuildPath
+          });
+          (0, _util.warn)(`buildFontPaths - ignoring ${glyphName} glyph: "${reason}".`);
+          return;
+        }
+
+        throw reason;
+      }
     }
 
     for (const glyph of glyphs) {
@@ -11460,12 +11645,12 @@ class TranslatedFont {
     loadedName,
     font,
     dict,
-    extraProperties = false
+    evaluatorOptions
   }) {
     this.loadedName = loadedName;
     this.font = font;
     this.dict = dict;
-    this._extraProperties = extraProperties;
+    this._evaluatorOptions = evaluatorOptions || DefaultPartialEvaluatorOptions;
     this.type3Loaded = null;
     this.type3Dependencies = font.isType3Font ? new Set() : null;
     this.sent = false;
@@ -11477,7 +11662,7 @@ class TranslatedFont {
     }
 
     this.sent = true;
-    handler.send("commonobj", [this.loadedName, "Font", this.font.exportData(this._extraProperties)]);
+    handler.send("commonobj", [this.loadedName, "Font", this.font.exportData(this._evaluatorOptions.fontExtraProperties)]);
   }
 
   fallback(handler) {
@@ -11486,8 +11671,7 @@ class TranslatedFont {
     }
 
     this.font.disableFontFace = true;
-    const glyphs = this.font.glyphCacheValues;
-    PartialEvaluator.buildFontPaths(this.font, glyphs, handler);
+    PartialEvaluator.buildFontPaths(this.font, this.font.glyphCacheValues, handler, this._evaluatorOptions);
   }
 
   loadType3Data(evaluator, resources, task) {
@@ -11499,9 +11683,9 @@ class TranslatedFont {
       throw new Error("Must be a Type3 font.");
     }
 
-    const type3Options = Object.create(evaluator.options);
-    type3Options.ignoreErrors = false;
-    const type3Evaluator = evaluator.clone(type3Options);
+    const type3Evaluator = evaluator.clone({
+      ignoreErrors: false
+    });
     type3Evaluator.parsingType3Font = true;
     const translatedFont = this.font,
           type3Dependencies = this.type3Dependencies;
@@ -11509,6 +11693,7 @@ class TranslatedFont {
     const charProcs = this.dict.get("CharProcs");
     const fontResources = this.dict.get("Resources") || resources;
     const charProcOperatorList = Object.create(null);
+    const isEmptyBBox = !translatedFont.bbox || (0, _util.isArrayEqual)(translatedFont.bbox, [0, 0, 0, 0]);
 
     for (const key of charProcs.getKeys()) {
       loadCharProcsPromise = loadCharProcsPromise.then(() => {
@@ -11521,7 +11706,7 @@ class TranslatedFont {
           operatorList
         }).then(() => {
           if (operatorList.fnArray[0] === _util.OPS.setCharWidthAndBounds) {
-            this._removeType3ColorOperators(operatorList);
+            this._removeType3ColorOperators(operatorList, isEmptyBBox);
           }
 
           charProcOperatorList[key] = operatorList.getIR();
@@ -11537,13 +11722,31 @@ class TranslatedFont {
       });
     }
 
-    this.type3Loaded = loadCharProcsPromise.then(function () {
+    this.type3Loaded = loadCharProcsPromise.then(() => {
       translatedFont.charProcOperatorList = charProcOperatorList;
+
+      if (this._bbox) {
+        translatedFont.isCharBBox = true;
+        translatedFont.bbox = this._bbox;
+      }
     });
     return this.type3Loaded;
   }
 
-  _removeType3ColorOperators(operatorList) {
+  _removeType3ColorOperators(operatorList, isEmptyBBox = false) {
+    if (isEmptyBBox) {
+      if (!this._bbox) {
+        this._bbox = [Infinity, Infinity, -Infinity, -Infinity];
+      }
+
+      const charBBox = _util.Util.normalizeRect(operatorList.argsArray[0].slice(2));
+
+      this._bbox[0] = Math.min(this._bbox[0], charBBox[0]);
+      this._bbox[1] = Math.min(this._bbox[1], charBBox[1]);
+      this._bbox[2] = Math.max(this._bbox[2], charBBox[2]);
+      this._bbox[3] = Math.max(this._bbox[3], charBBox[3]);
+    }
+
     let i = 1,
         ii = operatorList.length;
 
@@ -13711,7 +13914,7 @@ class Parser {
     if (this.tryShift() && (0, _primitives.isCmd)(this.buf2, "endstream")) {
       this.shift();
     } else {
-      const ENDSTREAM_SIGNATURE = new Uint8Array([0x65, 0x6E, 0x64, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6D]);
+      const ENDSTREAM_SIGNATURE = new Uint8Array([0x65, 0x6e, 0x64, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d]);
 
       let actualLength = this._findStreamLength(startPos, ENDSTREAM_SIGNATURE);
 
@@ -16810,12 +17013,10 @@ function decodePatternDictionary(mmr, patternWidth, patternHeight, maxPatternInd
       at.push({
         x: -3,
         y: -1
-      });
-      at.push({
+      }, {
         x: 2,
         y: -2
-      });
-      at.push({
+      }, {
         x: -2,
         y: -2
       });
@@ -16884,12 +17085,10 @@ function decodeHalftoneRegion(mmr, patterns, template, regionWidth, regionHeight
       at.push({
         x: -3,
         y: -1
-      });
-      at.push({
+      }, {
         x: 2,
         y: -2
-      });
-      at.push({
+      }, {
         x: -2,
         y: -2
       });
@@ -22788,15 +22987,17 @@ var _cff_font = __w_pdfjs_require__(43);
 
 var _font_renderer = __w_pdfjs_require__(44);
 
+var _glyf = __w_pdfjs_require__(45);
+
 var _cmap = __w_pdfjs_require__(16);
 
-var _opentype_file_builder = __w_pdfjs_require__(45);
+var _opentype_file_builder = __w_pdfjs_require__(46);
 
 var _core_utils = __w_pdfjs_require__(9);
 
 var _stream = __w_pdfjs_require__(10);
 
-var _type1_font = __w_pdfjs_require__(46);
+var _type1_font = __w_pdfjs_require__(47);
 
 const PRIVATE_USE_AREAS = [[0xe000, 0xf8ff], [0x100000, 0x10fffd]];
 const PDF_GLYPH_SPACE_UNITS = 1000;
@@ -22823,6 +23024,10 @@ function adjustWidths(properties) {
 }
 
 function adjustToUnicode(properties, builtInEncoding) {
+  if (properties.isInternalFont) {
+    return;
+  }
+
   if (properties.hasIncludedToUnicodeMap) {
     return;
   }
@@ -22855,7 +23060,8 @@ function adjustToUnicode(properties, builtInEncoding) {
 }
 
 class Glyph {
-  constructor(fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont) {
+  constructor(originalCharCode, fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont) {
+    this.originalCharCode = originalCharCode;
     this.fontChar = fontChar;
     this.unicode = unicode;
     this.accent = accent;
@@ -22866,8 +23072,8 @@ class Glyph {
     this.isInFont = isInFont;
   }
 
-  matchesForCache(fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont) {
-    return this.fontChar === fontChar && this.unicode === unicode && this.accent === accent && this.width === width && this.vmetric === vmetric && this.operatorListId === operatorListId && this.isSpace === isSpace && this.isInFont === isInFont;
+  matchesForCache(originalCharCode, fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont) {
+    return this.originalCharCode === originalCharCode && this.fontChar === fontChar && this.unicode === unicode && this.accent === accent && this.width === width && this.vmetric === vmetric && this.operatorListId === operatorListId && this.isSpace === isSpace && this.isInFont === isInFont;
   }
 
 }
@@ -23301,12 +23507,16 @@ function createPostTable(properties) {
   return "\x00\x03\x00\x00" + (0, _util.string32)(angle) + "\x00\x00" + "\x00\x00" + (0, _util.string32)(properties.fixedPitch) + "\x00\x00\x00\x00" + "\x00\x00\x00\x00" + "\x00\x00\x00\x00" + "\x00\x00\x00\x00";
 }
 
+function createPostscriptName(name) {
+  return name.replace(/[^\x21-\x7E]|[[\](){}<>/%]/g, "").slice(0, 63);
+}
+
 function createNameTable(name, proto) {
   if (!proto) {
     proto = [[], []];
   }
 
-  const strings = [proto[0][0] || "Original licence", proto[0][1] || name, proto[0][2] || "Unknown", proto[0][3] || "uniqueID", proto[0][4] || name, proto[0][5] || "Version 0.11", proto[0][6] || "", proto[0][7] || "Unknown", proto[0][8] || "Unknown", proto[0][9] || "Unknown"];
+  const strings = [proto[0][0] || "Original licence", proto[0][1] || name, proto[0][2] || "Unknown", proto[0][3] || "uniqueID", proto[0][4] || name, proto[0][5] || "Version 0.11", proto[0][6] || createPostscriptName(name), proto[0][7] || "Unknown", proto[0][8] || "Unknown", proto[0][9] || "Unknown"];
   const stringsUnicode = [];
   let i, ii, j, jj, str;
 
@@ -23353,7 +23563,8 @@ class Font {
     this.isType3Font = properties.isType3Font;
     this.missingFile = false;
     this.cssFontInfo = properties.cssFontInfo;
-    this.glyphCache = Object.create(null);
+    this._charsCache = Object.create(null);
+    this._glyphCache = Object.create(null);
     this.isSerifFont = !!(properties.flags & _fonts_utils.FontFlags.Serif);
     this.isSymbolicFont = !!(properties.flags & _fonts_utils.FontFlags.Symbolic);
     this.isMonospace = !!(properties.flags & _fonts_utils.FontFlags.FixedPitch);
@@ -23455,7 +23666,7 @@ class Font {
     }
 
     this.data = data;
-    this.fontType = (0, _fonts_utils.getFontType)(type, subtype);
+    this.fontType = (0, _fonts_utils.getFontType)(type, subtype, properties.isStandardFont);
     this.fontMatrix = properties.fontMatrix;
     this.widths = properties.widths;
     this.defaultWidth = properties.defaultWidth;
@@ -23490,7 +23701,7 @@ class Font {
     const name = this.name;
     const type = this.type;
     const subtype = this.subtype;
-    let fontName = name.replace(/[,_]/g, "-").replace(/\s/g, "");
+    let fontName = (0, _fonts_utils.normalizeFontName)(name);
     const stdFontMap = (0, _standard_fonts.getStdFontMap)(),
           nonStdFontMap = (0, _standard_fonts.getNonStdFontMap)();
     const isStandardFont = !!stdFontMap[fontName];
@@ -23585,7 +23796,7 @@ class Font {
     }
 
     this.loadedName = fontName.split("-")[0];
-    this.fontType = (0, _fonts_utils.getFontType)(type, subtype);
+    this.fontType = (0, _fonts_utils.getFontType)(type, subtype, properties.isStandardFont);
   }
 
   checkAndRepair(name, font, properties) {
@@ -24744,6 +24955,44 @@ class Font {
     font.pos = (font.start || 0) + tables.maxp.offset;
     const version = font.getInt32();
     const numGlyphs = font.getUint16();
+
+    if (properties.scaleFactors && properties.scaleFactors.length === numGlyphs && isTrueType) {
+      const {
+        scaleFactors
+      } = properties;
+      const isGlyphLocationsLong = int16(tables.head.data[50], tables.head.data[51]);
+      const glyphs = new _glyf.GlyfTable({
+        glyfTable: tables.glyf.data,
+        isGlyphLocationsLong,
+        locaTable: tables.loca.data,
+        numGlyphs
+      });
+      glyphs.scale(scaleFactors);
+      const {
+        glyf,
+        loca,
+        isLocationLong
+      } = glyphs.write();
+      tables.glyf.data = glyf;
+      tables.loca.data = loca;
+
+      if (isLocationLong !== !!isGlyphLocationsLong) {
+        tables.head.data[50] = 0;
+        tables.head.data[51] = isLocationLong ? 1 : 0;
+      }
+
+      const metrics = tables.hmtx.data;
+
+      for (let i = 0; i < numGlyphs; i++) {
+        const j = 4 * i;
+        const advanceWidth = Math.round(scaleFactors[i] * int16(metrics[j], metrics[j + 1]));
+        metrics[j] = advanceWidth >> 8 & 0xff;
+        metrics[j + 1] = advanceWidth & 0xff;
+        const lsb = Math.round(scaleFactors[i] * signedInt16(metrics[j + 2], metrics[j + 3]));
+        writeSignedInt16(metrics, j + 2, lsb);
+      }
+    }
+
     let numGlyphsOut = numGlyphs + 1;
     let dupFirstEntry = true;
 
@@ -25011,8 +25260,15 @@ class Font {
     }
 
     const mapping = font.getGlyphMapping(properties);
-    const newMapping = adjustMapping(mapping, font.hasGlyphId.bind(font), glyphZeroId);
-    this.toFontChar = newMapping.toFontChar;
+    let newMapping = null;
+    let newCharCodeToGlyphId = mapping;
+
+    if (!properties.cssFontInfo) {
+      newMapping = adjustMapping(mapping, font.hasGlyphId.bind(font), glyphZeroId);
+      this.toFontChar = newMapping.toFontChar;
+      newCharCodeToGlyphId = newMapping.charCodeToGlyphId;
+    }
+
     const numGlyphs = font.numGlyphs;
 
     function getCharCodes(charCodeToGlyphId, glyphId) {
@@ -25044,7 +25300,7 @@ class Font {
 
     const seacs = font.seacs;
 
-    if (_fonts_utils.SEAC_ANALYSIS_ENABLED && seacs && seacs.length) {
+    if (newMapping && _fonts_utils.SEAC_ANALYSIS_ENABLED && seacs && seacs.length) {
       const matrix = properties.fontMatrix || _util.FONT_IDENTITY_MATRIX;
       const charset = font.getCharset();
       const seacMap = Object.create(null);
@@ -25090,8 +25346,8 @@ class Font {
     const unitsPerEm = 1 / (properties.fontMatrix || _util.FONT_IDENTITY_MATRIX)[0];
     const builder = new _opentype_file_builder.OpenTypeFileBuilder("\x4F\x54\x54\x4F");
     builder.addTable("CFF ", font.data);
-    builder.addTable("OS/2", createOS2Table(properties, newMapping.charCodeToGlyphId));
-    builder.addTable("cmap", createCmapTable(newMapping.charCodeToGlyphId, numGlyphs));
+    builder.addTable("OS/2", createOS2Table(properties, newCharCodeToGlyphId));
+    builder.addTable("cmap", createCmapTable(newCharCodeToGlyphId, numGlyphs));
     builder.addTable("head", "\x00\x01\x00\x00" + "\x00\x00\x10\x00" + "\x00\x00\x00\x00" + "\x5F\x0F\x3C\xF5" + "\x00\x00" + safeString16(unitsPerEm) + "\x00\x00\x00\x00\x9e\x0b\x7e\x27" + "\x00\x00\x00\x00\x9e\x0b\x7e\x27" + "\x00\x00" + safeString16(properties.descent) + "\x0F\xFF" + safeString16(properties.ascent) + string16(properties.italicAngle ? 2 : 0) + "\x00\x11" + "\x00\x00" + "\x00\x00" + "\x00\x00");
     builder.addTable("hhea", "\x00\x01\x00\x00" + safeString16(properties.ascent) + safeString16(properties.descent) + "\x00\x00" + "\xFF\xFF" + "\x00\x00" + "\x00\x00" + "\x00\x00" + safeString16(properties.capHeight) + safeString16(Math.tan(properties.italicAngle) * properties.xHeight) + "\x00\x00" + "\x00\x00" + "\x00\x00" + "\x00\x00" + "\x00\x00" + "\x00\x00" + string16(numGlyphs));
     builder.addTable("hmtx", function fontFieldsHmtx() {
@@ -25215,58 +25471,53 @@ class Font {
       }
     }
 
-    let glyph = this.glyphCache[charcode];
+    let glyph = this._glyphCache[charcode];
 
-    if (!glyph || !glyph.matchesForCache(fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont)) {
-      glyph = new Glyph(fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont);
-      this.glyphCache[charcode] = glyph;
+    if (!glyph || !glyph.matchesForCache(charcode, fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont)) {
+      glyph = new Glyph(charcode, fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont);
+      this._glyphCache[charcode] = glyph;
     }
 
     return glyph;
   }
 
   charsToGlyphs(chars) {
-    let charsCache = this.charsCache;
-    let glyphs, glyph, charcode;
+    let glyphs = this._charsCache[chars];
 
-    if (charsCache) {
-      glyphs = charsCache[chars];
-
-      if (glyphs) {
-        return glyphs;
-      }
-    }
-
-    if (!charsCache) {
-      charsCache = this.charsCache = Object.create(null);
+    if (glyphs) {
+      return glyphs;
     }
 
     glyphs = [];
-    const charsCacheKey = chars;
-    let i = 0,
-        ii;
 
     if (this.cMap) {
-      const c = Object.create(null);
+      const c = Object.create(null),
+            ii = chars.length;
+      let i = 0;
 
-      while (i < chars.length) {
+      while (i < ii) {
         this.cMap.readCharCode(chars, i, c);
-        charcode = c.charcode;
-        const length = c.length;
+        const {
+          charcode,
+          length
+        } = c;
         i += length;
-        const isSpace = length === 1 && chars.charCodeAt(i - 1) === 0x20;
-        glyph = this._charToGlyph(charcode, isSpace);
+
+        const glyph = this._charToGlyph(charcode, length === 1 && chars.charCodeAt(i - 1) === 0x20);
+
         glyphs.push(glyph);
       }
     } else {
-      for (i = 0, ii = chars.length; i < ii; ++i) {
-        charcode = chars.charCodeAt(i);
-        glyph = this._charToGlyph(charcode, charcode === 0x20);
+      for (let i = 0, ii = chars.length; i < ii; ++i) {
+        const charcode = chars.charCodeAt(i);
+
+        const glyph = this._charToGlyph(charcode, charcode === 0x20);
+
         glyphs.push(glyph);
       }
     }
 
-    return charsCache[charsCacheKey] = glyphs;
+    return this._charsCache[chars] = glyphs;
   }
 
   getCharPositions(chars) {
@@ -25292,7 +25543,7 @@ class Font {
   }
 
   get glyphCacheValues() {
-    return Object.values(this.glyphCache);
+    return Object.values(this._glyphCache);
   }
 
   encodeString(str) {
@@ -25962,6 +26213,9 @@ const CFFParser = function CFFParserClosure() {
         } else if (value === 11) {
           state.stackSize = stackSize;
           return true;
+        } else if (value === 0 && j === data.length) {
+          data[j - 1] = 14;
+          validationCommand = CharstringValidationData[14];
         } else {
           validationCommand = CharstringValidationData[value];
         }
@@ -25981,6 +26235,12 @@ const CFFParser = function CFFParserClosure() {
           if ("min" in validationCommand) {
             if (!state.undefStack && stackSize < validationCommand.min) {
               (0, _util.warn)("Not enough parameters for " + validationCommand.id + "; actual: " + stackSize + ", expected: " + validationCommand.min);
+
+              if (stackSize === 0) {
+                data[j - 1] = 14;
+                return true;
+              }
+
               return false;
             }
           }
@@ -25995,7 +26255,7 @@ const CFFParser = function CFFParserClosure() {
               (0, _util.warn)("Found too many parameters for stack-clearing command");
             }
 
-            if (stackSize > 0 && stack[stackSize - 1] >= 0) {
+            if (stackSize > 0) {
               state.width = stack[stackSize - 1];
             }
           }
@@ -27285,6 +27545,7 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.getFontType = getFontType;
+exports.normalizeFontName = normalizeFontName;
 exports.recoverGlyphName = recoverGlyphName;
 exports.type1FontGlyphMapping = type1FontGlyphMapping;
 exports.SEAC_ANALYSIS_ENABLED = exports.MacStandardGlyphOrdering = exports.FontFlags = void 0;
@@ -27314,9 +27575,13 @@ exports.FontFlags = FontFlags;
 const MacStandardGlyphOrdering = [".notdef", ".null", "nonmarkingreturn", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quotesingle", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "grave", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "Adieresis", "Aring", "Ccedilla", "Eacute", "Ntilde", "Odieresis", "Udieresis", "aacute", "agrave", "acircumflex", "adieresis", "atilde", "aring", "ccedilla", "eacute", "egrave", "ecircumflex", "edieresis", "iacute", "igrave", "icircumflex", "idieresis", "ntilde", "oacute", "ograve", "ocircumflex", "odieresis", "otilde", "uacute", "ugrave", "ucircumflex", "udieresis", "dagger", "degree", "cent", "sterling", "section", "bullet", "paragraph", "germandbls", "registered", "copyright", "trademark", "acute", "dieresis", "notequal", "AE", "Oslash", "infinity", "plusminus", "lessequal", "greaterequal", "yen", "mu", "partialdiff", "summation", "product", "pi", "integral", "ordfeminine", "ordmasculine", "Omega", "ae", "oslash", "questiondown", "exclamdown", "logicalnot", "radical", "florin", "approxequal", "Delta", "guillemotleft", "guillemotright", "ellipsis", "nonbreakingspace", "Agrave", "Atilde", "Otilde", "OE", "oe", "endash", "emdash", "quotedblleft", "quotedblright", "quoteleft", "quoteright", "divide", "lozenge", "ydieresis", "Ydieresis", "fraction", "currency", "guilsinglleft", "guilsinglright", "fi", "fl", "daggerdbl", "periodcentered", "quotesinglbase", "quotedblbase", "perthousand", "Acircumflex", "Ecircumflex", "Aacute", "Edieresis", "Egrave", "Iacute", "Icircumflex", "Idieresis", "Igrave", "Oacute", "Ocircumflex", "apple", "Ograve", "Uacute", "Ucircumflex", "Ugrave", "dotlessi", "circumflex", "tilde", "macron", "breve", "dotaccent", "ring", "cedilla", "hungarumlaut", "ogonek", "caron", "Lslash", "lslash", "Scaron", "scaron", "Zcaron", "zcaron", "brokenbar", "Eth", "eth", "Yacute", "yacute", "Thorn", "thorn", "minus", "multiply", "onesuperior", "twosuperior", "threesuperior", "onehalf", "onequarter", "threequarters", "franc", "Gbreve", "gbreve", "Idotaccent", "Scedilla", "scedilla", "Cacute", "cacute", "Ccaron", "ccaron", "dcroat"];
 exports.MacStandardGlyphOrdering = MacStandardGlyphOrdering;
 
-function getFontType(type, subtype) {
+function getFontType(type, subtype, isStandardFont = false) {
   switch (type) {
     case "Type1":
+      if (isStandardFont) {
+        return _util.FontType.TYPE1STANDARD;
+      }
+
       return subtype === "Type1C" ? _util.FontType.TYPE1C : _util.FontType.TYPE1;
 
     case "CIDFontType0":
@@ -27366,7 +27631,19 @@ function type1FontGlyphMapping(properties, builtInEncoding, glyphNames) {
   let glyphId, charCode, baseEncoding;
   const isSymbolicFont = !!(properties.flags & FontFlags.Symbolic);
 
-  if (properties.baseEncodingName) {
+  if (properties.isInternalFont) {
+    baseEncoding = builtInEncoding;
+
+    for (charCode = 0; charCode < baseEncoding.length; charCode++) {
+      glyphId = glyphNames.indexOf(baseEncoding[charCode]);
+
+      if (glyphId >= 0) {
+        charCodeToGlyphId[charCode] = glyphId;
+      } else {
+        charCodeToGlyphId[charCode] = 0;
+      }
+    }
+  } else if (properties.baseEncodingName) {
     baseEncoding = (0, _encodings.getEncoding)(properties.baseEncodingName);
 
     for (charCode = 0; charCode < baseEncoding.length; charCode++) {
@@ -27425,6 +27702,10 @@ function type1FontGlyphMapping(properties, builtInEncoding, glyphNames) {
   }
 
   return charCodeToGlyphId;
+}
+
+function normalizeFontName(name) {
+  return name.replace(/[,_]/g, "-").replace(/\s/g, "");
 }
 
 /***/ }),
@@ -27969,11 +28250,28 @@ function reverseIfRtl(chars) {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.getSymbolsFonts = exports.getSupplementalGlyphMapForCalibri = exports.getSupplementalGlyphMapForArialBlack = exports.getStdFontMap = exports.getSerifFonts = exports.getNonStdFontMap = exports.getGlyphMapForStandardFonts = void 0;
+exports.getStandardFontName = getStandardFontName;
+exports.getSymbolsFonts = exports.getSupplementalGlyphMapForCalibri = exports.getSupplementalGlyphMapForArialBlack = exports.getStdFontMap = exports.getSerifFonts = exports.getNonStdFontMap = exports.getGlyphMapForStandardFonts = exports.getFontNameToFileMap = void 0;
 
 var _core_utils = __w_pdfjs_require__(9);
 
+var _fonts_utils = __w_pdfjs_require__(38);
+
 const getStdFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
+  t["Times-Roman"] = "Times-Roman";
+  t.Helvetica = "Helvetica";
+  t.Courier = "Courier";
+  t.Symbol = "Symbol";
+  t["Times-Bold"] = "Times-Bold";
+  t["Helvetica-Bold"] = "Helvetica-Bold";
+  t["Courier-Bold"] = "Courier-Bold";
+  t.ZapfDingbats = "ZapfDingbats";
+  t["Times-Italic"] = "Times-Italic";
+  t["Helvetica-Oblique"] = "Helvetica-Oblique";
+  t["Courier-Oblique"] = "Courier-Oblique";
+  t["Times-BoldItalic"] = "Times-BoldItalic";
+  t["Helvetica-BoldOblique"] = "Helvetica-BoldOblique";
+  t["Courier-BoldOblique"] = "Courier-BoldOblique";
   t.ArialNarrow = "Helvetica";
   t["ArialNarrow-Bold"] = "Helvetica-Bold";
   t["ArialNarrow-BoldItalic"] = "Helvetica-BoldOblique";
@@ -27994,7 +28292,6 @@ const getStdFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
   t["Arial-BoldMT"] = "Helvetica-Bold";
   t["Arial-ItalicMT"] = "Helvetica-Oblique";
   t.ArialMT = "Helvetica";
-  t["Courier-Bold"] = "Courier-Bold";
   t["Courier-BoldItalic"] = "Courier-BoldOblique";
   t["Courier-Italic"] = "Courier-Oblique";
   t.CourierNew = "Courier";
@@ -28005,12 +28302,8 @@ const getStdFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
   t["CourierNewPS-BoldMT"] = "Courier-Bold";
   t["CourierNewPS-ItalicMT"] = "Courier-Oblique";
   t.CourierNewPSMT = "Courier";
-  t.Helvetica = "Helvetica";
-  t["Helvetica-Bold"] = "Helvetica-Bold";
   t["Helvetica-BoldItalic"] = "Helvetica-BoldOblique";
-  t["Helvetica-BoldOblique"] = "Helvetica-BoldOblique";
   t["Helvetica-Italic"] = "Helvetica-Oblique";
-  t["Helvetica-Oblique"] = "Helvetica-Oblique";
   t["Symbol-Bold"] = "Symbol";
   t["Symbol-BoldItalic"] = "Symbol";
   t["Symbol-Italic"] = "Symbol";
@@ -28031,6 +28324,27 @@ const getStdFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
   t["TimesNewRomanPSMT-Italic"] = "Times-Italic";
 });
 exports.getStdFontMap = getStdFontMap;
+const getFontNameToFileMap = (0, _core_utils.getLookupTableFactory)(function (t) {
+  t.Courier = "FoxitFixed.pfb";
+  t["Courier-Bold"] = "FoxitFixedBold.pfb";
+  t["Courier-BoldOblique"] = "FoxitFixedBoldItalic.pfb";
+  t["Courier-Oblique"] = "FoxitFixedItalic.pfb";
+  t.Helvetica = "FoxitSans.pfb";
+  t["Helvetica-Bold"] = "FoxitSansBold.pfb";
+  t["Helvetica-BoldOblique"] = "FoxitSansBoldItalic.pfb";
+  t["Helvetica-Oblique"] = "FoxitSansItalic.pfb";
+  t["Times-Roman"] = "FoxitSerif.pfb";
+  t["Times-Bold"] = "FoxitSerifBold.pfb";
+  t["Times-BoldItalic"] = "FoxitSerifBoldItalic.pfb";
+  t["Times-Italic"] = "FoxitSerifItalic.pfb";
+  t.Symbol = "FoxitSymbol.pfb";
+  t.ZapfDingbats = "FoxitDingbats.pfb";
+  t["LiberationSans-Regular"] = "LiberationSans-Regular.ttf";
+  t["LiberationSans-Bold"] = "LiberationSans-Bold.ttf";
+  t["LiberationSans-Italic"] = "LiberationSans-Italic.ttf";
+  t["LiberationSans-BoldItalic"] = "LiberationSans-BoldItalic.ttf";
+});
+exports.getFontNameToFileMap = getFontNameToFileMap;
 const getNonStdFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
   t.Calibri = "Helvetica";
   t["Calibri-Bold"] = "Helvetica-Bold";
@@ -28703,6 +29017,12 @@ const getSupplementalGlyphMapForCalibri = (0, _core_utils.getLookupTableFactory)
 });
 exports.getSupplementalGlyphMapForCalibri = getSupplementalGlyphMapForCalibri;
 
+function getStandardFontName(name) {
+  const fontName = (0, _fonts_utils.normalizeFontName)(name);
+  const stdFontMap = getStdFontMap();
+  return stdFontMap[fontName];
+}
+
 /***/ }),
 /* 42 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
@@ -28876,7 +29196,12 @@ class CFFFont {
       return charCodeToGlyphId;
     }
 
-    const encoding = cff.encoding ? cff.encoding.encoding : null;
+    let encoding = cff.encoding ? cff.encoding.encoding : null;
+
+    if (properties.isInternalFont) {
+      encoding = properties.defaultEncoding;
+    }
+
     charCodeToGlyphId = (0, _fonts_utils.type1FontGlyphMapping)(properties, encoding, charsets);
     return charCodeToGlyphId;
   }
@@ -29173,8 +29498,7 @@ function compileGlyf(code, cmds, font) {
       if (subglyph) {
         cmds.push({
           cmd: "save"
-        });
-        cmds.push({
+        }, {
           cmd: "transform",
           args: [scaleX, scale01, scale10, scaleY, x, y]
         });
@@ -29516,8 +29840,7 @@ function compileCharString(charStringCode, cmds, font, glyphId) {
             x = stack.pop();
             cmds.push({
               cmd: "save"
-            });
-            cmds.push({
+            }, {
               cmd: "translate",
               args: [x, y]
             });
@@ -29740,16 +30063,29 @@ class CompiledFont {
   }
 
   getPathJs(unicode) {
-    const cmap = lookupCmap(this.cmap, unicode);
-    let fn = this.compiledGlyphs[cmap.glyphId];
+    const {
+      charCode,
+      glyphId
+    } = lookupCmap(this.cmap, unicode);
+    let fn = this.compiledGlyphs[glyphId];
 
     if (!fn) {
-      fn = this.compileGlyph(this.glyphs[cmap.glyphId], cmap.glyphId);
-      this.compiledGlyphs[cmap.glyphId] = fn;
+      try {
+        fn = this.compileGlyph(this.glyphs[glyphId], glyphId);
+        this.compiledGlyphs[glyphId] = fn;
+      } catch (ex) {
+        this.compiledGlyphs[glyphId] = NOOP;
+
+        if (this.compiledCharCodeToGlyphId[charCode] === undefined) {
+          this.compiledCharCodeToGlyphId[charCode] = glyphId;
+        }
+
+        throw ex;
+      }
     }
 
-    if (this.compiledCharCodeToGlyphId[cmap.charCode] === undefined) {
-      this.compiledCharCodeToGlyphId[cmap.charCode] = cmap.glyphId;
+    if (this.compiledCharCodeToGlyphId[charCode] === undefined) {
+      this.compiledCharCodeToGlyphId[charCode] = glyphId;
     }
 
     return fn;
@@ -29773,18 +30109,15 @@ class CompiledFont {
       }
     }
 
-    const cmds = [];
-    cmds.push({
+    const cmds = [{
       cmd: "save"
-    });
-    cmds.push({
+    }, {
       cmd: "transform",
       args: fontMatrix.slice()
-    });
-    cmds.push({
+    }, {
       cmd: "scale",
       args: ["size", "-size"]
-    });
+    }];
     this.compileGlyphImpl(code, cmds, glyphId);
     cmds.push({
       cmd: "restore"
@@ -29797,8 +30130,11 @@ class CompiledFont {
   }
 
   hasBuiltPath(unicode) {
-    const cmap = lookupCmap(this.cmap, unicode);
-    return this.compiledGlyphs[cmap.glyphId] !== undefined && this.compiledCharCodeToGlyphId[cmap.charCode] !== undefined;
+    const {
+      charCode,
+      glyphId
+    } = lookupCmap(this.cmap, unicode);
+    return this.compiledGlyphs[glyphId] !== undefined && this.compiledCharCodeToGlyphId[charCode] !== undefined;
   }
 
 }
@@ -29886,6 +30222,662 @@ exports.FontRendererFactory = FontRendererFactory;
 
 /***/ }),
 /* 45 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.GlyfTable = void 0;
+const ON_CURVE_POINT = 1 << 0;
+const X_SHORT_VECTOR = 1 << 1;
+const Y_SHORT_VECTOR = 1 << 2;
+const REPEAT_FLAG = 1 << 3;
+const X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR = 1 << 4;
+const Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR = 1 << 5;
+const OVERLAP_SIMPLE = 1 << 6;
+const ARG_1_AND_2_ARE_WORDS = 1 << 0;
+const ARGS_ARE_XY_VALUES = 1 << 1;
+const WE_HAVE_A_SCALE = 1 << 3;
+const MORE_COMPONENTS = 1 << 5;
+const WE_HAVE_AN_X_AND_Y_SCALE = 1 << 6;
+const WE_HAVE_A_TWO_BY_TWO = 1 << 7;
+const WE_HAVE_INSTRUCTIONS = 1 << 8;
+
+class GlyfTable {
+  constructor({
+    glyfTable,
+    isGlyphLocationsLong,
+    locaTable,
+    numGlyphs
+  }) {
+    this.glyphs = [];
+    const loca = new DataView(locaTable.buffer, locaTable.byteOffset, locaTable.byteLength);
+    const glyf = new DataView(glyfTable.buffer, glyfTable.byteOffset, glyfTable.byteLength);
+    const offsetSize = isGlyphLocationsLong ? 4 : 2;
+    let prev = isGlyphLocationsLong ? loca.getUint32(0) : 2 * loca.getUint16(0);
+    let pos = 0;
+
+    for (let i = 0; i < numGlyphs; i++) {
+      pos += offsetSize;
+      const next = isGlyphLocationsLong ? loca.getUint32(pos) : 2 * loca.getUint16(pos);
+
+      if (next === prev) {
+        this.glyphs.push(new Glyph({}));
+        continue;
+      }
+
+      const glyph = Glyph.parse(prev, glyf);
+      this.glyphs.push(glyph);
+      prev = next;
+    }
+  }
+
+  getSize() {
+    return this.glyphs.reduce((a, g) => {
+      const size = g.getSize();
+      return a + (size + 3 & ~3);
+    }, 0);
+  }
+
+  write() {
+    const totalSize = this.getSize();
+    const glyfTable = new DataView(new ArrayBuffer(totalSize));
+    const isLocationLong = totalSize > 0x1fffe;
+    const offsetSize = isLocationLong ? 4 : 2;
+    const locaTable = new DataView(new ArrayBuffer((this.glyphs.length + 1) * offsetSize));
+
+    if (isLocationLong) {
+      locaTable.setUint32(0, 0);
+    } else {
+      locaTable.setUint16(0, 0);
+    }
+
+    let pos = 0;
+    let locaIndex = 0;
+
+    for (const glyph of this.glyphs) {
+      pos += glyph.write(pos, glyfTable);
+      pos = pos + 3 & ~3;
+      locaIndex += offsetSize;
+
+      if (isLocationLong) {
+        locaTable.setUint32(locaIndex, pos);
+      } else {
+        locaTable.setUint16(locaIndex, pos >> 1);
+      }
+    }
+
+    return {
+      isLocationLong,
+      loca: new Uint8Array(locaTable.buffer),
+      glyf: new Uint8Array(glyfTable.buffer)
+    };
+  }
+
+  scale(factors) {
+    for (let i = 0, ii = this.glyphs.length; i < ii; i++) {
+      this.glyphs[i].scale(factors[i]);
+    }
+  }
+
+}
+
+exports.GlyfTable = GlyfTable;
+
+class Glyph {
+  constructor({
+    header = null,
+    simple = null,
+    composites = null
+  }) {
+    this.header = header;
+    this.simple = simple;
+    this.composites = composites;
+  }
+
+  static parse(pos, glyf) {
+    const [read, header] = GlyphHeader.parse(pos, glyf);
+    pos += read;
+
+    if (header.numberOfContours < 0) {
+      const composites = [];
+
+      while (true) {
+        const [n, composite] = CompositeGlyph.parse(pos, glyf);
+        pos += n;
+        composites.push(composite);
+
+        if (!(composite.flags & MORE_COMPONENTS)) {
+          break;
+        }
+      }
+
+      return new Glyph({
+        header,
+        composites
+      });
+    }
+
+    const simple = SimpleGlyph.parse(pos, glyf, header.numberOfContours);
+    return new Glyph({
+      header,
+      simple
+    });
+  }
+
+  getSize() {
+    if (!this.header) {
+      return 0;
+    }
+
+    const size = this.simple ? this.simple.getSize() : this.composites.reduce((a, c) => a + c.getSize(), 0);
+    return this.header.getSize() + size;
+  }
+
+  write(pos, buf) {
+    if (!this.header) {
+      return 0;
+    }
+
+    const spos = pos;
+    pos += this.header.write(pos, buf);
+
+    if (this.simple) {
+      pos += this.simple.write(pos, buf);
+    } else {
+      for (const composite of this.composites) {
+        pos += composite.write(pos, buf);
+      }
+    }
+
+    return pos - spos;
+  }
+
+  scale(factor) {
+    if (!this.header) {
+      return;
+    }
+
+    const xMiddle = (this.header.xMin + this.header.xMax) / 2;
+    this.header.scale(xMiddle, factor);
+
+    if (this.simple) {
+      this.simple.scale(xMiddle, factor);
+    } else {
+      for (const composite of this.composites) {
+        composite.scale(xMiddle, factor);
+      }
+    }
+  }
+
+}
+
+class GlyphHeader {
+  constructor({
+    numberOfContours,
+    xMin,
+    yMin,
+    xMax,
+    yMax
+  }) {
+    this.numberOfContours = numberOfContours;
+    this.xMin = xMin;
+    this.yMin = yMin;
+    this.xMax = xMax;
+    this.yMax = yMax;
+  }
+
+  static parse(pos, glyf) {
+    return [10, new GlyphHeader({
+      numberOfContours: glyf.getInt16(pos),
+      xMin: glyf.getInt16(pos + 2),
+      yMin: glyf.getInt16(pos + 4),
+      xMax: glyf.getInt16(pos + 6),
+      yMax: glyf.getInt16(pos + 8)
+    })];
+  }
+
+  getSize() {
+    return 10;
+  }
+
+  write(pos, buf) {
+    buf.setInt16(pos, this.numberOfContours);
+    buf.setInt16(pos + 2, this.xMin);
+    buf.setInt16(pos + 4, this.yMin);
+    buf.setInt16(pos + 6, this.xMax);
+    buf.setInt16(pos + 8, this.yMax);
+    return 10;
+  }
+
+  scale(x, factor) {
+    this.xMin = Math.round(x + (this.xMin - x) * factor);
+    this.xMax = Math.round(x + (this.xMax - x) * factor);
+  }
+
+}
+
+class Contour {
+  constructor({
+    flags,
+    xCoordinates,
+    yCoordinates
+  }) {
+    this.xCoordinates = xCoordinates;
+    this.yCoordinates = yCoordinates;
+    this.flags = flags;
+  }
+
+}
+
+class SimpleGlyph {
+  constructor({
+    contours,
+    instructions
+  }) {
+    this.contours = contours;
+    this.instructions = instructions;
+  }
+
+  static parse(pos, glyf, numberOfContours) {
+    const endPtsOfContours = [];
+
+    for (let i = 0; i < numberOfContours; i++) {
+      const endPt = glyf.getUint16(pos);
+      pos += 2;
+      endPtsOfContours.push(endPt);
+    }
+
+    const numberOfPt = endPtsOfContours[numberOfContours - 1] + 1;
+    const instructionLength = glyf.getUint16(pos);
+    pos += 2;
+    const instructions = new Uint8Array(glyf).slice(pos, pos + instructionLength);
+    pos += instructionLength;
+    const flags = [];
+
+    for (let i = 0; i < numberOfPt; pos++, i++) {
+      let flag = glyf.getUint8(pos);
+      flags.push(flag);
+
+      if (flag & REPEAT_FLAG) {
+        const count = glyf.getUint8(++pos);
+        flag = flag ^ REPEAT_FLAG;
+
+        for (let m = 0; m < count; m++) {
+          flags.push(flag);
+        }
+
+        i += count;
+      }
+    }
+
+    const allXCoordinates = [];
+    let xCoordinates = [];
+    let yCoordinates = [];
+    let pointFlags = [];
+    const contours = [];
+    let endPtsOfContoursIndex = 0;
+    let lastCoordinate = 0;
+
+    for (let i = 0; i < numberOfPt; i++) {
+      const flag = flags[i];
+
+      if (flag & X_SHORT_VECTOR) {
+        const x = glyf.getUint8(pos++);
+        lastCoordinate += flag & X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR ? x : -x;
+        xCoordinates.push(lastCoordinate);
+      } else if (flag & X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR) {
+        xCoordinates.push(lastCoordinate);
+      } else {
+        lastCoordinate += glyf.getInt16(pos);
+        pos += 2;
+        xCoordinates.push(lastCoordinate);
+      }
+
+      if (endPtsOfContours[endPtsOfContoursIndex] === i) {
+        endPtsOfContoursIndex++;
+        allXCoordinates.push(xCoordinates);
+        xCoordinates = [];
+      }
+    }
+
+    lastCoordinate = 0;
+    endPtsOfContoursIndex = 0;
+
+    for (let i = 0; i < numberOfPt; i++) {
+      const flag = flags[i];
+
+      if (flag & Y_SHORT_VECTOR) {
+        const y = glyf.getUint8(pos++);
+        lastCoordinate += flag & Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR ? y : -y;
+        yCoordinates.push(lastCoordinate);
+      } else if (flag & Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR) {
+        yCoordinates.push(lastCoordinate);
+      } else {
+        lastCoordinate += glyf.getInt16(pos);
+        pos += 2;
+        yCoordinates.push(lastCoordinate);
+      }
+
+      pointFlags.push(flag & ON_CURVE_POINT | flag & OVERLAP_SIMPLE);
+
+      if (endPtsOfContours[endPtsOfContoursIndex] === i) {
+        xCoordinates = allXCoordinates[endPtsOfContoursIndex];
+        endPtsOfContoursIndex++;
+        contours.push(new Contour({
+          flags: pointFlags,
+          xCoordinates,
+          yCoordinates
+        }));
+        yCoordinates = [];
+        pointFlags = [];
+      }
+    }
+
+    return new SimpleGlyph({
+      contours,
+      instructions
+    });
+  }
+
+  getSize() {
+    let size = this.contours.length * 2 + 2 + this.instructions.length;
+    let lastX = 0;
+    let lastY = 0;
+
+    for (const contour of this.contours) {
+      size += contour.flags.length;
+
+      for (let i = 0, ii = contour.xCoordinates.length; i < ii; i++) {
+        const x = contour.xCoordinates[i];
+        const y = contour.yCoordinates[i];
+        let abs = Math.abs(x - lastX);
+
+        if (abs > 255) {
+          size += 2;
+        } else if (abs > 0) {
+          size += 1;
+        }
+
+        lastX = x;
+        abs = Math.abs(y - lastY);
+
+        if (abs > 255) {
+          size += 2;
+        } else if (abs > 0) {
+          size += 1;
+        }
+
+        lastY = y;
+      }
+    }
+
+    return size;
+  }
+
+  write(pos, buf) {
+    const spos = pos;
+    const xCoordinates = [];
+    const yCoordinates = [];
+    const flags = [];
+    let lastX = 0;
+    let lastY = 0;
+
+    for (const contour of this.contours) {
+      for (let i = 0, ii = contour.xCoordinates.length; i < ii; i++) {
+        let flag = contour.flags[i];
+        const x = contour.xCoordinates[i];
+        let delta = x - lastX;
+
+        if (delta === 0) {
+          flag = flag | X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR;
+          xCoordinates.push(0);
+        } else {
+          const abs = Math.abs(delta);
+
+          if (abs <= 255) {
+            flag = flag | (delta >= 0 ? X_SHORT_VECTOR | X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR : X_SHORT_VECTOR);
+            xCoordinates.push(abs);
+          } else {
+            xCoordinates.push(delta);
+          }
+        }
+
+        lastX = x;
+        const y = contour.yCoordinates[i];
+        delta = y - lastY;
+
+        if (delta === 0) {
+          flag = flag | Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR;
+          yCoordinates.push(0);
+        } else {
+          const abs = Math.abs(delta);
+
+          if (abs <= 255) {
+            flag = flag | (delta >= 0 ? Y_SHORT_VECTOR | Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR : Y_SHORT_VECTOR);
+            yCoordinates.push(abs);
+          } else {
+            yCoordinates.push(delta);
+          }
+        }
+
+        lastY = y;
+        flags.push(flag);
+      }
+
+      buf.setUint16(pos, xCoordinates.length - 1);
+      pos += 2;
+    }
+
+    buf.setUint16(pos, this.instructions.length);
+    pos += 2;
+
+    if (this.instructions.length) {
+      new Uint8Array(buf.buffer, 0, buf.buffer.byteLength).set(this.instructions, pos);
+      pos += this.instructions.length;
+    }
+
+    for (const flag of flags) {
+      buf.setUint8(pos++, flag);
+    }
+
+    for (let i = 0, ii = xCoordinates.length; i < ii; i++) {
+      const x = xCoordinates[i];
+      const flag = flags[i];
+
+      if (flag & X_SHORT_VECTOR) {
+        buf.setUint8(pos++, x);
+      } else if (!(flag & X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR)) {
+        buf.setInt16(pos, x);
+        pos += 2;
+      }
+    }
+
+    for (let i = 0, ii = yCoordinates.length; i < ii; i++) {
+      const y = yCoordinates[i];
+      const flag = flags[i];
+
+      if (flag & Y_SHORT_VECTOR) {
+        buf.setUint8(pos++, y);
+      } else if (!(flag & Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR)) {
+        buf.setInt16(pos, y);
+        pos += 2;
+      }
+    }
+
+    return pos - spos;
+  }
+
+  scale(x, factor) {
+    for (const contour of this.contours) {
+      if (contour.xCoordinates.length === 0) {
+        continue;
+      }
+
+      for (let i = 0, ii = contour.xCoordinates.length; i < ii; i++) {
+        contour.xCoordinates[i] = Math.round(x + (contour.xCoordinates[i] - x) * factor);
+      }
+    }
+  }
+
+}
+
+class CompositeGlyph {
+  constructor({
+    flags,
+    glyphIndex,
+    argument1,
+    argument2,
+    transf,
+    instructions
+  }) {
+    this.flags = flags;
+    this.glyphIndex = glyphIndex;
+    this.argument1 = argument1;
+    this.argument2 = argument2;
+    this.transf = transf;
+    this.instructions = instructions;
+  }
+
+  static parse(pos, glyf) {
+    const spos = pos;
+    const transf = [];
+    let flags = glyf.getUint16(pos);
+    const glyphIndex = glyf.getUint16(pos + 2);
+    pos += 4;
+    let argument1, argument2;
+
+    if (flags & ARG_1_AND_2_ARE_WORDS) {
+      if (flags & ARGS_ARE_XY_VALUES) {
+        argument1 = glyf.getInt16(pos);
+        argument2 = glyf.getInt16(pos + 2);
+      } else {
+        argument1 = glyf.getUint16(pos);
+        argument2 = glyf.getUint16(pos + 2);
+      }
+
+      pos += 4;
+      flags = flags ^ ARG_1_AND_2_ARE_WORDS;
+    } else {
+      argument1 = glyf.getUint8(pos);
+      argument2 = glyf.getUint8(pos + 1);
+
+      if (flags & ARGS_ARE_XY_VALUES) {
+        const abs1 = argument1 & 0x7f;
+        argument1 = argument1 & 0x80 ? -abs1 : abs1;
+        const abs2 = argument2 & 0x7f;
+        argument2 = argument2 & 0x80 ? -abs2 : abs2;
+      }
+
+      pos += 2;
+    }
+
+    if (flags & WE_HAVE_A_SCALE) {
+      transf.push(glyf.getUint16(pos));
+      pos += 2;
+    } else if (flags & WE_HAVE_AN_X_AND_Y_SCALE) {
+      transf.push(glyf.getUint16(pos), glyf.getUint16(pos + 2));
+      pos += 4;
+    } else if (flags & WE_HAVE_A_TWO_BY_TWO) {
+      transf.push(glyf.getUint16(pos), glyf.getUint16(pos + 2), glyf.getUint16(pos + 4), glyf.getUint16(pos + 6));
+      pos += 8;
+    }
+
+    let instructions = null;
+
+    if (flags & WE_HAVE_INSTRUCTIONS) {
+      const instructionLength = glyf.getUint16(pos);
+      pos += 2;
+      instructions = new Uint8Array(glyf).slice(pos, pos + instructionLength);
+      pos += instructionLength;
+    }
+
+    return [pos - spos, new CompositeGlyph({
+      flags,
+      glyphIndex,
+      argument1,
+      argument2,
+      transf,
+      instructions
+    })];
+  }
+
+  getSize() {
+    let size = 2 + 2 + this.transf.length * 2;
+
+    if (this.flags & WE_HAVE_INSTRUCTIONS) {
+      size += 2 + this.instructions.length;
+    }
+
+    size += 2;
+
+    if (this.flags & 2) {
+      if (!(this.argument1 >= -128 && this.argument1 <= 127 && this.argument2 >= -128 && this.argument2 <= 127)) {
+        size += 2;
+      }
+    } else {
+      if (!(this.argument1 >= 0 && this.argument1 <= 255 && this.argument2 >= 0 && this.argument2 <= 255)) {
+        size += 2;
+      }
+    }
+
+    return size;
+  }
+
+  write(pos, buf) {
+    const spos = pos;
+
+    if (this.flags & ARGS_ARE_XY_VALUES) {
+      if (!(this.argument1 >= -128 && this.argument1 <= 127 && this.argument2 >= -128 && this.argument2 <= 127)) {
+        this.flags = this.flags | ARG_1_AND_2_ARE_WORDS;
+      }
+    } else {
+      if (!(this.argument1 >= 0 && this.argument1 <= 255 && this.argument2 >= 0 && this.argument2 <= 255)) {
+        this.flags = this.flags | ARG_1_AND_2_ARE_WORDS;
+      }
+    }
+
+    buf.setUint16(pos, this.flags);
+    buf.setUint16(pos + 2, this.glyphIndex);
+    pos += 4;
+
+    if (this.flags & ARG_1_AND_2_ARE_WORDS) {
+      if (this.flags & ARGS_ARE_XY_VALUES) {
+        buf.setInt16(pos, this.argument1);
+        buf.setInt16(pos + 2, this.argument2);
+      } else {
+        buf.setUint16(pos, this.argument1);
+        buf.setUint16(pos + 2, this.argument2);
+      }
+
+      pos += 4;
+    } else {
+      buf.setUint8(pos, this.argument1);
+      buf.setUint8(pos + 1, this.argument2);
+      pos += 2;
+    }
+
+    if (this.flags & WE_HAVE_INSTRUCTIONS) {
+      buf.setUint16(pos, this.instructions.length);
+      pos += 2;
+
+      if (this.instructions.length) {
+        new Uint8Array(buf.buffer, 0, buf.buffer.byteLength).set(this.instructions, pos);
+        pos += this.instructions.length;
+      }
+    }
+
+    return pos - spos;
+  }
+
+  scale(x, factor) {}
+
+}
+
+/***/ }),
+/* 46 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -30025,7 +31017,7 @@ class OpenTypeFileBuilder {
 exports.OpenTypeFileBuilder = OpenTypeFileBuilder;
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -30043,7 +31035,7 @@ var _core_utils = __w_pdfjs_require__(9);
 
 var _stream = __w_pdfjs_require__(10);
 
-var _type1_parser = __w_pdfjs_require__(47);
+var _type1_parser = __w_pdfjs_require__(48);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -30390,7 +31382,7 @@ class Type1Font {
 exports.Type1Font = Type1Font;
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -31113,7 +32105,7 @@ const Type1Parser = function Type1ParserClosure() {
 exports.Type1Parser = Type1Parser;
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -31142,18 +32134,12 @@ const ShadingType = {
   TENSOR_PATCH_MESH: 7
 };
 
-const Pattern = function PatternClosure() {
-  function Pattern() {
-    (0, _util.unreachable)("should not call Pattern constructor");
+class Pattern {
+  constructor() {
+    (0, _util.unreachable)("Cannot initialize Pattern.");
   }
 
-  Pattern.prototype = {
-    getPattern: function Pattern_getPattern(ctx) {
-      (0, _util.unreachable)(`Should not call Pattern.getStyle: ${ctx}`);
-    }
-  };
-
-  Pattern.parseShading = function (shading, matrix, xref, res, handler, pdfFunctionFactory, localColorSpaceCache) {
+  static parseShading(shading, matrix, xref, res, handler, pdfFunctionFactory, localColorSpaceCache) {
     const dict = (0, _primitives.isStream)(shading) ? shading.dict : shading;
     const type = dict.get("ShadingType");
 
@@ -31161,13 +32147,13 @@ const Pattern = function PatternClosure() {
       switch (type) {
         case ShadingType.AXIAL:
         case ShadingType.RADIAL:
-          return new Shadings.RadialAxial(dict, matrix, xref, res, pdfFunctionFactory, localColorSpaceCache);
+          return new RadialAxialShading(dict, matrix, xref, res, pdfFunctionFactory, localColorSpaceCache);
 
         case ShadingType.FREE_FORM_MESH:
         case ShadingType.LATTICE_FORM_MESH:
         case ShadingType.COONS_PATCH_MESH:
         case ShadingType.TENSOR_PATCH_MESH:
-          return new Shadings.Mesh(shading, matrix, xref, res, pdfFunctionFactory, localColorSpaceCache);
+          return new MeshShading(shading, matrix, xref, res, pdfFunctionFactory, localColorSpaceCache);
 
         default:
           throw new _util.FormatError("Unsupported ShadingType: " + type);
@@ -31181,23 +32167,37 @@ const Pattern = function PatternClosure() {
         featureId: _util.UNSUPPORTED_FEATURES.shadingPattern
       });
       (0, _util.warn)(ex);
-      return new Shadings.Dummy();
+      return new DummyShading();
     }
-  };
+  }
 
-  return Pattern;
-}();
+}
 
 exports.Pattern = Pattern;
-const Shadings = {};
-Shadings.SMALL_NUMBER = 1e-6;
 
-Shadings.RadialAxial = function RadialAxialClosure() {
-  function RadialAxial(dict, matrix, xref, resources, pdfFunctionFactory, localColorSpaceCache) {
+class BaseShading {
+  static get SMALL_NUMBER() {
+    return (0, _util.shadow)(this, "SMALL_NUMBER", 1e-6);
+  }
+
+  constructor() {
+    if (this.constructor === BaseShading) {
+      (0, _util.unreachable)("Cannot initialize BaseShading.");
+    }
+  }
+
+  getIR() {
+    (0, _util.unreachable)("Abstract method `getIR` called.");
+  }
+
+}
+
+class RadialAxialShading extends BaseShading {
+  constructor(dict, matrix, xref, resources, pdfFunctionFactory, localColorSpaceCache) {
+    super();
     this.matrix = matrix;
     this.coordsArr = dict.getArray("Coords");
     this.shadingType = dict.get("ShadingType");
-    this.type = "Pattern";
 
     const cs = _colorspace.ColorSpace.parse({
       cs: dict.getRaw("ColorSpace") || dict.getRaw("CS"),
@@ -31207,7 +32207,6 @@ Shadings.RadialAxial = function RadialAxialClosure() {
       localColorSpaceCache
     });
 
-    this.cs = cs;
     const bbox = dict.getArray("BBox");
 
     if (Array.isArray(bbox) && bbox.length === 4) {
@@ -31279,47 +32278,45 @@ Shadings.RadialAxial = function RadialAxialClosure() {
 
     if (!extendStart) {
       colorStops.unshift([0, background]);
-      colorStops[1][0] += Shadings.SMALL_NUMBER;
+      colorStops[1][0] += BaseShading.SMALL_NUMBER;
     }
 
     if (!extendEnd) {
-      colorStops[colorStops.length - 1][0] -= Shadings.SMALL_NUMBER;
+      colorStops[colorStops.length - 1][0] -= BaseShading.SMALL_NUMBER;
       colorStops.push([1, background]);
     }
 
     this.colorStops = colorStops;
   }
 
-  RadialAxial.prototype = {
-    getIR: function RadialAxial_getIR() {
-      const coordsArr = this.coordsArr;
-      const shadingType = this.shadingType;
-      let type, p0, p1, r0, r1;
+  getIR() {
+    const coordsArr = this.coordsArr;
+    const shadingType = this.shadingType;
+    let type, p0, p1, r0, r1;
 
-      if (shadingType === ShadingType.AXIAL) {
-        p0 = [coordsArr[0], coordsArr[1]];
-        p1 = [coordsArr[2], coordsArr[3]];
-        r0 = null;
-        r1 = null;
-        type = "axial";
-      } else if (shadingType === ShadingType.RADIAL) {
-        p0 = [coordsArr[0], coordsArr[1]];
-        p1 = [coordsArr[3], coordsArr[4]];
-        r0 = coordsArr[2];
-        r1 = coordsArr[5];
-        type = "radial";
-      } else {
-        (0, _util.unreachable)(`getPattern type unknown: ${shadingType}`);
-      }
-
-      return ["RadialAxial", type, this.bbox, this.colorStops, p0, p1, r0, r1, this.matrix];
+    if (shadingType === ShadingType.AXIAL) {
+      p0 = [coordsArr[0], coordsArr[1]];
+      p1 = [coordsArr[2], coordsArr[3]];
+      r0 = null;
+      r1 = null;
+      type = "axial";
+    } else if (shadingType === ShadingType.RADIAL) {
+      p0 = [coordsArr[0], coordsArr[1]];
+      p1 = [coordsArr[3], coordsArr[4]];
+      r0 = coordsArr[2];
+      r1 = coordsArr[5];
+      type = "radial";
+    } else {
+      (0, _util.unreachable)(`getPattern type unknown: ${shadingType}`);
     }
-  };
-  return RadialAxial;
-}();
 
-Shadings.Mesh = function MeshClosure() {
-  function MeshStreamReader(stream, context) {
+    return ["RadialAxial", type, this.bbox, this.colorStops, p0, p1, r0, r1, this.matrix];
+  }
+
+}
+
+class MeshStreamReader {
+  constructor(stream, context) {
     this.stream = stream;
     this.context = context;
     this.buffer = 0;
@@ -31330,96 +32327,227 @@ Shadings.Mesh = function MeshClosure() {
     this.tmpCsCompsBuf = context.colorFn ? new Float32Array(csNumComps) : this.tmpCompsBuf;
   }
 
-  MeshStreamReader.prototype = {
-    get hasData() {
-      if (this.stream.end) {
-        return this.stream.pos < this.stream.end;
-      }
+  get hasData() {
+    if (this.stream.end) {
+      return this.stream.pos < this.stream.end;
+    }
 
-      if (this.bufferLength > 0) {
-        return true;
-      }
-
-      const nextByte = this.stream.getByte();
-
-      if (nextByte < 0) {
-        return false;
-      }
-
-      this.buffer = nextByte;
-      this.bufferLength = 8;
+    if (this.bufferLength > 0) {
       return true;
-    },
+    }
 
-    readBits: function MeshStreamReader_readBits(n) {
-      let buffer = this.buffer;
-      let bufferLength = this.bufferLength;
+    const nextByte = this.stream.getByte();
 
-      if (n === 32) {
-        if (bufferLength === 0) {
-          return (this.stream.getByte() << 24 | this.stream.getByte() << 16 | this.stream.getByte() << 8 | this.stream.getByte()) >>> 0;
+    if (nextByte < 0) {
+      return false;
+    }
+
+    this.buffer = nextByte;
+    this.bufferLength = 8;
+    return true;
+  }
+
+  readBits(n) {
+    let buffer = this.buffer;
+    let bufferLength = this.bufferLength;
+
+    if (n === 32) {
+      if (bufferLength === 0) {
+        return (this.stream.getByte() << 24 | this.stream.getByte() << 16 | this.stream.getByte() << 8 | this.stream.getByte()) >>> 0;
+      }
+
+      buffer = buffer << 24 | this.stream.getByte() << 16 | this.stream.getByte() << 8 | this.stream.getByte();
+      const nextByte = this.stream.getByte();
+      this.buffer = nextByte & (1 << bufferLength) - 1;
+      return (buffer << 8 - bufferLength | (nextByte & 0xff) >> bufferLength) >>> 0;
+    }
+
+    if (n === 8 && bufferLength === 0) {
+      return this.stream.getByte();
+    }
+
+    while (bufferLength < n) {
+      buffer = buffer << 8 | this.stream.getByte();
+      bufferLength += 8;
+    }
+
+    bufferLength -= n;
+    this.bufferLength = bufferLength;
+    this.buffer = buffer & (1 << bufferLength) - 1;
+    return buffer >> bufferLength;
+  }
+
+  align() {
+    this.buffer = 0;
+    this.bufferLength = 0;
+  }
+
+  readFlag() {
+    return this.readBits(this.context.bitsPerFlag);
+  }
+
+  readCoordinate() {
+    const bitsPerCoordinate = this.context.bitsPerCoordinate;
+    const xi = this.readBits(bitsPerCoordinate);
+    const yi = this.readBits(bitsPerCoordinate);
+    const decode = this.context.decode;
+    const scale = bitsPerCoordinate < 32 ? 1 / ((1 << bitsPerCoordinate) - 1) : 2.3283064365386963e-10;
+    return [xi * scale * (decode[1] - decode[0]) + decode[0], yi * scale * (decode[3] - decode[2]) + decode[2]];
+  }
+
+  readComponents() {
+    const numComps = this.context.numComps;
+    const bitsPerComponent = this.context.bitsPerComponent;
+    const scale = bitsPerComponent < 32 ? 1 / ((1 << bitsPerComponent) - 1) : 2.3283064365386963e-10;
+    const decode = this.context.decode;
+    const components = this.tmpCompsBuf;
+
+    for (let i = 0, j = 4; i < numComps; i++, j += 2) {
+      const ci = this.readBits(bitsPerComponent);
+      components[i] = ci * scale * (decode[j + 1] - decode[j]) + decode[j];
+    }
+
+    const color = this.tmpCsCompsBuf;
+
+    if (this.context.colorFn) {
+      this.context.colorFn(components, 0, color, 0);
+    }
+
+    return this.context.colorSpace.getRgb(color, 0);
+  }
+
+}
+
+const getB = function getBClosure() {
+  function buildB(count) {
+    const lut = [];
+
+    for (let i = 0; i <= count; i++) {
+      const t = i / count,
+            t_ = 1 - t;
+      lut.push(new Float32Array([t_ * t_ * t_, 3 * t * t_ * t_, 3 * t * t * t_, t * t * t]));
+    }
+
+    return lut;
+  }
+
+  const cache = [];
+  return function (count) {
+    if (!cache[count]) {
+      cache[count] = buildB(count);
+    }
+
+    return cache[count];
+  };
+}();
+
+class MeshShading extends BaseShading {
+  static get MIN_SPLIT_PATCH_CHUNKS_AMOUNT() {
+    return (0, _util.shadow)(this, "MIN_SPLIT_PATCH_CHUNKS_AMOUNT", 3);
+  }
+
+  static get MAX_SPLIT_PATCH_CHUNKS_AMOUNT() {
+    return (0, _util.shadow)(this, "MAX_SPLIT_PATCH_CHUNKS_AMOUNT", 20);
+  }
+
+  static get TRIANGLE_DENSITY() {
+    return (0, _util.shadow)(this, "TRIANGLE_DENSITY", 20);
+  }
+
+  constructor(stream, matrix, xref, resources, pdfFunctionFactory, localColorSpaceCache) {
+    super();
+
+    if (!(0, _primitives.isStream)(stream)) {
+      throw new _util.FormatError("Mesh data is not a stream");
+    }
+
+    const dict = stream.dict;
+    this.matrix = matrix;
+    this.shadingType = dict.get("ShadingType");
+    const bbox = dict.getArray("BBox");
+
+    if (Array.isArray(bbox) && bbox.length === 4) {
+      this.bbox = _util.Util.normalizeRect(bbox);
+    } else {
+      this.bbox = null;
+    }
+
+    const cs = _colorspace.ColorSpace.parse({
+      cs: dict.getRaw("ColorSpace") || dict.getRaw("CS"),
+      xref,
+      resources,
+      pdfFunctionFactory,
+      localColorSpaceCache
+    });
+
+    this.background = dict.has("Background") ? cs.getRgb(dict.get("Background"), 0) : null;
+    const fnObj = dict.getRaw("Function");
+    const fn = fnObj ? pdfFunctionFactory.createFromArray(fnObj) : null;
+    this.coords = [];
+    this.colors = [];
+    this.figures = [];
+    const decodeContext = {
+      bitsPerCoordinate: dict.get("BitsPerCoordinate"),
+      bitsPerComponent: dict.get("BitsPerComponent"),
+      bitsPerFlag: dict.get("BitsPerFlag"),
+      decode: dict.getArray("Decode"),
+      colorFn: fn,
+      colorSpace: cs,
+      numComps: fn ? 1 : cs.numComps
+    };
+    const reader = new MeshStreamReader(stream, decodeContext);
+    let patchMesh = false;
+
+    switch (this.shadingType) {
+      case ShadingType.FREE_FORM_MESH:
+        this._decodeType4Shading(reader);
+
+        break;
+
+      case ShadingType.LATTICE_FORM_MESH:
+        const verticesPerRow = dict.get("VerticesPerRow") | 0;
+
+        if (verticesPerRow < 2) {
+          throw new _util.FormatError("Invalid VerticesPerRow");
         }
 
-        buffer = buffer << 24 | this.stream.getByte() << 16 | this.stream.getByte() << 8 | this.stream.getByte();
-        const nextByte = this.stream.getByte();
-        this.buffer = nextByte & (1 << bufferLength) - 1;
-        return (buffer << 8 - bufferLength | (nextByte & 0xff) >> bufferLength) >>> 0;
-      }
+        this._decodeType5Shading(reader, verticesPerRow);
 
-      if (n === 8 && bufferLength === 0) {
-        return this.stream.getByte();
-      }
+        break;
 
-      while (bufferLength < n) {
-        buffer = buffer << 8 | this.stream.getByte();
-        bufferLength += 8;
-      }
+      case ShadingType.COONS_PATCH_MESH:
+        this._decodeType6Shading(reader);
 
-      bufferLength -= n;
-      this.bufferLength = bufferLength;
-      this.buffer = buffer & (1 << bufferLength) - 1;
-      return buffer >> bufferLength;
-    },
-    align: function MeshStreamReader_align() {
-      this.buffer = 0;
-      this.bufferLength = 0;
-    },
-    readFlag: function MeshStreamReader_readFlag() {
-      return this.readBits(this.context.bitsPerFlag);
-    },
-    readCoordinate: function MeshStreamReader_readCoordinate() {
-      const bitsPerCoordinate = this.context.bitsPerCoordinate;
-      const xi = this.readBits(bitsPerCoordinate);
-      const yi = this.readBits(bitsPerCoordinate);
-      const decode = this.context.decode;
-      const scale = bitsPerCoordinate < 32 ? 1 / ((1 << bitsPerCoordinate) - 1) : 2.3283064365386963e-10;
-      return [xi * scale * (decode[1] - decode[0]) + decode[0], yi * scale * (decode[3] - decode[2]) + decode[2]];
-    },
-    readComponents: function MeshStreamReader_readComponents() {
-      const numComps = this.context.numComps;
-      const bitsPerComponent = this.context.bitsPerComponent;
-      const scale = bitsPerComponent < 32 ? 1 / ((1 << bitsPerComponent) - 1) : 2.3283064365386963e-10;
-      const decode = this.context.decode;
-      const components = this.tmpCompsBuf;
+        patchMesh = true;
+        break;
 
-      for (let i = 0, j = 4; i < numComps; i++, j += 2) {
-        const ci = this.readBits(bitsPerComponent);
-        components[i] = ci * scale * (decode[j + 1] - decode[j]) + decode[j];
-      }
+      case ShadingType.TENSOR_PATCH_MESH:
+        this._decodeType7Shading(reader);
 
-      const color = this.tmpCsCompsBuf;
+        patchMesh = true;
+        break;
 
-      if (this.context.colorFn) {
-        this.context.colorFn(components, 0, color, 0);
-      }
-
-      return this.context.colorSpace.getRgb(color, 0);
+      default:
+        (0, _util.unreachable)("Unsupported mesh type.");
+        break;
     }
-  };
 
-  function decodeType4Shading(mesh, reader) {
-    const coords = mesh.coords;
-    const colors = mesh.colors;
+    if (patchMesh) {
+      this._updateBounds();
+
+      for (let i = 0, ii = this.figures.length; i < ii; i++) {
+        this._buildFigureFromPatch(i);
+      }
+    }
+
+    this._updateBounds();
+
+    this._packData();
+  }
+
+  _decodeType4Shading(reader) {
+    const coords = this.coords;
+    const colors = this.colors;
     const operators = [];
     const ps = [];
     let verticesLeft = 0;
@@ -31460,16 +32588,16 @@ Shadings.Mesh = function MeshClosure() {
       reader.align();
     }
 
-    mesh.figures.push({
+    this.figures.push({
       type: "triangles",
       coords: new Int32Array(ps),
       colors: new Int32Array(ps)
     });
   }
 
-  function decodeType5Shading(mesh, reader, verticesPerRow) {
-    const coords = mesh.coords;
-    const colors = mesh.colors;
+  _decodeType5Shading(reader, verticesPerRow) {
+    const coords = this.coords;
+    const colors = this.colors;
     const ps = [];
 
     while (reader.hasData) {
@@ -31480,7 +32608,7 @@ Shadings.Mesh = function MeshClosure() {
       colors.push(color);
     }
 
-    mesh.figures.push({
+    this.figures.push({
       type: "lattice",
       coords: new Int32Array(ps),
       colors: new Int32Array(ps),
@@ -31488,116 +32616,9 @@ Shadings.Mesh = function MeshClosure() {
     });
   }
 
-  const MIN_SPLIT_PATCH_CHUNKS_AMOUNT = 3;
-  const MAX_SPLIT_PATCH_CHUNKS_AMOUNT = 20;
-  const TRIANGLE_DENSITY = 20;
-
-  const getB = function getBClosure() {
-    function buildB(count) {
-      const lut = [];
-
-      for (let i = 0; i <= count; i++) {
-        const t = i / count,
-              t_ = 1 - t;
-        lut.push(new Float32Array([t_ * t_ * t_, 3 * t * t_ * t_, 3 * t * t * t_, t * t * t]));
-      }
-
-      return lut;
-    }
-
-    const cache = [];
-    return function getB(count) {
-      if (!cache[count]) {
-        cache[count] = buildB(count);
-      }
-
-      return cache[count];
-    };
-  }();
-
-  function buildFigureFromPatch(mesh, index) {
-    const figure = mesh.figures[index];
-    (0, _util.assert)(figure.type === "patch", "Unexpected patch mesh figure");
-    const coords = mesh.coords,
-          colors = mesh.colors;
-    const pi = figure.coords;
-    const ci = figure.colors;
-    const figureMinX = Math.min(coords[pi[0]][0], coords[pi[3]][0], coords[pi[12]][0], coords[pi[15]][0]);
-    const figureMinY = Math.min(coords[pi[0]][1], coords[pi[3]][1], coords[pi[12]][1], coords[pi[15]][1]);
-    const figureMaxX = Math.max(coords[pi[0]][0], coords[pi[3]][0], coords[pi[12]][0], coords[pi[15]][0]);
-    const figureMaxY = Math.max(coords[pi[0]][1], coords[pi[3]][1], coords[pi[12]][1], coords[pi[15]][1]);
-    let splitXBy = Math.ceil((figureMaxX - figureMinX) * TRIANGLE_DENSITY / (mesh.bounds[2] - mesh.bounds[0]));
-    splitXBy = Math.max(MIN_SPLIT_PATCH_CHUNKS_AMOUNT, Math.min(MAX_SPLIT_PATCH_CHUNKS_AMOUNT, splitXBy));
-    let splitYBy = Math.ceil((figureMaxY - figureMinY) * TRIANGLE_DENSITY / (mesh.bounds[3] - mesh.bounds[1]));
-    splitYBy = Math.max(MIN_SPLIT_PATCH_CHUNKS_AMOUNT, Math.min(MAX_SPLIT_PATCH_CHUNKS_AMOUNT, splitYBy));
-    const verticesPerRow = splitXBy + 1;
-    const figureCoords = new Int32Array((splitYBy + 1) * verticesPerRow);
-    const figureColors = new Int32Array((splitYBy + 1) * verticesPerRow);
-    let k = 0;
-    const cl = new Uint8Array(3),
-          cr = new Uint8Array(3);
-    const c0 = colors[ci[0]],
-          c1 = colors[ci[1]],
-          c2 = colors[ci[2]],
-          c3 = colors[ci[3]];
-    const bRow = getB(splitYBy),
-          bCol = getB(splitXBy);
-
-    for (let row = 0; row <= splitYBy; row++) {
-      cl[0] = (c0[0] * (splitYBy - row) + c2[0] * row) / splitYBy | 0;
-      cl[1] = (c0[1] * (splitYBy - row) + c2[1] * row) / splitYBy | 0;
-      cl[2] = (c0[2] * (splitYBy - row) + c2[2] * row) / splitYBy | 0;
-      cr[0] = (c1[0] * (splitYBy - row) + c3[0] * row) / splitYBy | 0;
-      cr[1] = (c1[1] * (splitYBy - row) + c3[1] * row) / splitYBy | 0;
-      cr[2] = (c1[2] * (splitYBy - row) + c3[2] * row) / splitYBy | 0;
-
-      for (let col = 0; col <= splitXBy; col++, k++) {
-        if ((row === 0 || row === splitYBy) && (col === 0 || col === splitXBy)) {
-          continue;
-        }
-
-        let x = 0,
-            y = 0;
-        let q = 0;
-
-        for (let i = 0; i <= 3; i++) {
-          for (let j = 0; j <= 3; j++, q++) {
-            const m = bRow[row][i] * bCol[col][j];
-            x += coords[pi[q]][0] * m;
-            y += coords[pi[q]][1] * m;
-          }
-        }
-
-        figureCoords[k] = coords.length;
-        coords.push([x, y]);
-        figureColors[k] = colors.length;
-        const newColor = new Uint8Array(3);
-        newColor[0] = (cl[0] * (splitXBy - col) + cr[0] * col) / splitXBy | 0;
-        newColor[1] = (cl[1] * (splitXBy - col) + cr[1] * col) / splitXBy | 0;
-        newColor[2] = (cl[2] * (splitXBy - col) + cr[2] * col) / splitXBy | 0;
-        colors.push(newColor);
-      }
-    }
-
-    figureCoords[0] = pi[0];
-    figureColors[0] = ci[0];
-    figureCoords[splitXBy] = pi[3];
-    figureColors[splitXBy] = ci[1];
-    figureCoords[verticesPerRow * splitYBy] = pi[12];
-    figureColors[verticesPerRow * splitYBy] = ci[2];
-    figureCoords[verticesPerRow * splitYBy + splitXBy] = pi[15];
-    figureColors[verticesPerRow * splitYBy + splitXBy] = ci[3];
-    mesh.figures[index] = {
-      type: "lattice",
-      coords: figureCoords,
-      colors: figureColors,
-      verticesPerRow
-    };
-  }
-
-  function decodeType6Shading(mesh, reader) {
-    const coords = mesh.coords;
-    const colors = mesh.colors;
+  _decodeType6Shading(reader) {
+    const coords = this.coords;
+    const colors = this.colors;
     const ps = new Int32Array(16);
     const cs = new Int32Array(4);
 
@@ -31717,7 +32738,7 @@ Shadings.Mesh = function MeshClosure() {
       coords.push([(-4 * coords[ps[12]][0] - coords[ps[3]][0] + 6 * (coords[ps[8]][0] + coords[ps[13]][0]) - 2 * (coords[ps[0]][0] + coords[ps[15]][0]) + 3 * (coords[ps[11]][0] + coords[ps[1]][0])) / 9, (-4 * coords[ps[12]][1] - coords[ps[3]][1] + 6 * (coords[ps[8]][1] + coords[ps[13]][1]) - 2 * (coords[ps[0]][1] + coords[ps[15]][1]) + 3 * (coords[ps[11]][1] + coords[ps[1]][1])) / 9]);
       ps[10] = coords.length;
       coords.push([(-4 * coords[ps[15]][0] - coords[ps[0]][0] + 6 * (coords[ps[11]][0] + coords[ps[14]][0]) - 2 * (coords[ps[12]][0] + coords[ps[3]][0]) + 3 * (coords[ps[2]][0] + coords[ps[8]][0])) / 9, (-4 * coords[ps[15]][1] - coords[ps[0]][1] + 6 * (coords[ps[11]][1] + coords[ps[14]][1]) - 2 * (coords[ps[12]][1] + coords[ps[3]][1]) + 3 * (coords[ps[2]][1] + coords[ps[8]][1])) / 9]);
-      mesh.figures.push({
+      this.figures.push({
         type: "patch",
         coords: new Int32Array(ps),
         colors: new Int32Array(cs)
@@ -31725,9 +32746,9 @@ Shadings.Mesh = function MeshClosure() {
     }
   }
 
-  function decodeType7Shading(mesh, reader) {
-    const coords = mesh.coords;
-    const colors = mesh.colors;
+  _decodeType7Shading(reader) {
+    const coords = this.coords;
+    const colors = this.colors;
     const ps = new Int32Array(16);
     const cs = new Int32Array(4);
 
@@ -31855,7 +32876,7 @@ Shadings.Mesh = function MeshClosure() {
           break;
       }
 
-      mesh.figures.push({
+      this.figures.push({
         type: "patch",
         coords: new Int32Array(ps),
         colors: new Int32Array(cs)
@@ -31863,27 +32884,107 @@ Shadings.Mesh = function MeshClosure() {
     }
   }
 
-  function updateBounds(mesh) {
-    let minX = mesh.coords[0][0],
-        minY = mesh.coords[0][1],
+  _buildFigureFromPatch(index) {
+    const figure = this.figures[index];
+    (0, _util.assert)(figure.type === "patch", "Unexpected patch mesh figure");
+    const coords = this.coords,
+          colors = this.colors;
+    const pi = figure.coords;
+    const ci = figure.colors;
+    const figureMinX = Math.min(coords[pi[0]][0], coords[pi[3]][0], coords[pi[12]][0], coords[pi[15]][0]);
+    const figureMinY = Math.min(coords[pi[0]][1], coords[pi[3]][1], coords[pi[12]][1], coords[pi[15]][1]);
+    const figureMaxX = Math.max(coords[pi[0]][0], coords[pi[3]][0], coords[pi[12]][0], coords[pi[15]][0]);
+    const figureMaxY = Math.max(coords[pi[0]][1], coords[pi[3]][1], coords[pi[12]][1], coords[pi[15]][1]);
+    let splitXBy = Math.ceil((figureMaxX - figureMinX) * MeshShading.TRIANGLE_DENSITY / (this.bounds[2] - this.bounds[0]));
+    splitXBy = Math.max(MeshShading.MIN_SPLIT_PATCH_CHUNKS_AMOUNT, Math.min(MeshShading.MAX_SPLIT_PATCH_CHUNKS_AMOUNT, splitXBy));
+    let splitYBy = Math.ceil((figureMaxY - figureMinY) * MeshShading.TRIANGLE_DENSITY / (this.bounds[3] - this.bounds[1]));
+    splitYBy = Math.max(MeshShading.MIN_SPLIT_PATCH_CHUNKS_AMOUNT, Math.min(MeshShading.MAX_SPLIT_PATCH_CHUNKS_AMOUNT, splitYBy));
+    const verticesPerRow = splitXBy + 1;
+    const figureCoords = new Int32Array((splitYBy + 1) * verticesPerRow);
+    const figureColors = new Int32Array((splitYBy + 1) * verticesPerRow);
+    let k = 0;
+    const cl = new Uint8Array(3),
+          cr = new Uint8Array(3);
+    const c0 = colors[ci[0]],
+          c1 = colors[ci[1]],
+          c2 = colors[ci[2]],
+          c3 = colors[ci[3]];
+    const bRow = getB(splitYBy),
+          bCol = getB(splitXBy);
+
+    for (let row = 0; row <= splitYBy; row++) {
+      cl[0] = (c0[0] * (splitYBy - row) + c2[0] * row) / splitYBy | 0;
+      cl[1] = (c0[1] * (splitYBy - row) + c2[1] * row) / splitYBy | 0;
+      cl[2] = (c0[2] * (splitYBy - row) + c2[2] * row) / splitYBy | 0;
+      cr[0] = (c1[0] * (splitYBy - row) + c3[0] * row) / splitYBy | 0;
+      cr[1] = (c1[1] * (splitYBy - row) + c3[1] * row) / splitYBy | 0;
+      cr[2] = (c1[2] * (splitYBy - row) + c3[2] * row) / splitYBy | 0;
+
+      for (let col = 0; col <= splitXBy; col++, k++) {
+        if ((row === 0 || row === splitYBy) && (col === 0 || col === splitXBy)) {
+          continue;
+        }
+
+        let x = 0,
+            y = 0;
+        let q = 0;
+
+        for (let i = 0; i <= 3; i++) {
+          for (let j = 0; j <= 3; j++, q++) {
+            const m = bRow[row][i] * bCol[col][j];
+            x += coords[pi[q]][0] * m;
+            y += coords[pi[q]][1] * m;
+          }
+        }
+
+        figureCoords[k] = coords.length;
+        coords.push([x, y]);
+        figureColors[k] = colors.length;
+        const newColor = new Uint8Array(3);
+        newColor[0] = (cl[0] * (splitXBy - col) + cr[0] * col) / splitXBy | 0;
+        newColor[1] = (cl[1] * (splitXBy - col) + cr[1] * col) / splitXBy | 0;
+        newColor[2] = (cl[2] * (splitXBy - col) + cr[2] * col) / splitXBy | 0;
+        colors.push(newColor);
+      }
+    }
+
+    figureCoords[0] = pi[0];
+    figureColors[0] = ci[0];
+    figureCoords[splitXBy] = pi[3];
+    figureColors[splitXBy] = ci[1];
+    figureCoords[verticesPerRow * splitYBy] = pi[12];
+    figureColors[verticesPerRow * splitYBy] = ci[2];
+    figureCoords[verticesPerRow * splitYBy + splitXBy] = pi[15];
+    figureColors[verticesPerRow * splitYBy + splitXBy] = ci[3];
+    this.figures[index] = {
+      type: "lattice",
+      coords: figureCoords,
+      colors: figureColors,
+      verticesPerRow
+    };
+  }
+
+  _updateBounds() {
+    let minX = this.coords[0][0],
+        minY = this.coords[0][1],
         maxX = minX,
         maxY = minY;
 
-    for (let i = 1, ii = mesh.coords.length; i < ii; i++) {
-      const x = mesh.coords[i][0],
-            y = mesh.coords[i][1];
+    for (let i = 1, ii = this.coords.length; i < ii; i++) {
+      const x = this.coords[i][0],
+            y = this.coords[i][1];
       minX = minX > x ? x : minX;
       minY = minY > y ? y : minY;
       maxX = maxX < x ? x : maxX;
       maxY = maxY < y ? y : maxY;
     }
 
-    mesh.bounds = [minX, minY, maxX, maxY];
+    this.bounds = [minX, minY, maxX, maxY];
   }
 
-  function packData(mesh) {
+  _packData() {
     let i, ii, j, jj;
-    const coords = mesh.coords;
+    const coords = this.coords;
     const coordsPacked = new Float32Array(coords.length * 2);
 
     for (i = 0, j = 0, ii = coords.length; i < ii; i++) {
@@ -31892,8 +32993,8 @@ Shadings.Mesh = function MeshClosure() {
       coordsPacked[j++] = xy[1];
     }
 
-    mesh.coords = coordsPacked;
-    const colors = mesh.colors;
+    this.coords = coordsPacked;
+    const colors = this.colors;
     const colorsPacked = new Uint8Array(colors.length * 3);
 
     for (i = 0, j = 0, ii = colors.length; i < ii; i++) {
@@ -31903,8 +33004,8 @@ Shadings.Mesh = function MeshClosure() {
       colorsPacked[j++] = c[2];
     }
 
-    mesh.colors = colorsPacked;
-    const figures = mesh.figures;
+    this.colors = colorsPacked;
+    const figures = this.figures;
 
     for (i = 0, ii = figures.length; i < ii; i++) {
       const figure = figures[i],
@@ -31918,112 +33019,18 @@ Shadings.Mesh = function MeshClosure() {
     }
   }
 
-  function Mesh(stream, matrix, xref, resources, pdfFunctionFactory, localColorSpaceCache) {
-    if (!(0, _primitives.isStream)(stream)) {
-      throw new _util.FormatError("Mesh data is not a stream");
-    }
-
-    const dict = stream.dict;
-    this.matrix = matrix;
-    this.shadingType = dict.get("ShadingType");
-    this.type = "Pattern";
-    const bbox = dict.getArray("BBox");
-
-    if (Array.isArray(bbox) && bbox.length === 4) {
-      this.bbox = _util.Util.normalizeRect(bbox);
-    } else {
-      this.bbox = null;
-    }
-
-    const cs = _colorspace.ColorSpace.parse({
-      cs: dict.getRaw("ColorSpace") || dict.getRaw("CS"),
-      xref,
-      resources,
-      pdfFunctionFactory,
-      localColorSpaceCache
-    });
-
-    this.cs = cs;
-    this.background = dict.has("Background") ? cs.getRgb(dict.get("Background"), 0) : null;
-    const fnObj = dict.getRaw("Function");
-    const fn = fnObj ? pdfFunctionFactory.createFromArray(fnObj) : null;
-    this.coords = [];
-    this.colors = [];
-    this.figures = [];
-    const decodeContext = {
-      bitsPerCoordinate: dict.get("BitsPerCoordinate"),
-      bitsPerComponent: dict.get("BitsPerComponent"),
-      bitsPerFlag: dict.get("BitsPerFlag"),
-      decode: dict.getArray("Decode"),
-      colorFn: fn,
-      colorSpace: cs,
-      numComps: fn ? 1 : cs.numComps
-    };
-    const reader = new MeshStreamReader(stream, decodeContext);
-    let patchMesh = false;
-
-    switch (this.shadingType) {
-      case ShadingType.FREE_FORM_MESH:
-        decodeType4Shading(this, reader);
-        break;
-
-      case ShadingType.LATTICE_FORM_MESH:
-        const verticesPerRow = dict.get("VerticesPerRow") | 0;
-
-        if (verticesPerRow < 2) {
-          throw new _util.FormatError("Invalid VerticesPerRow");
-        }
-
-        decodeType5Shading(this, reader, verticesPerRow);
-        break;
-
-      case ShadingType.COONS_PATCH_MESH:
-        decodeType6Shading(this, reader);
-        patchMesh = true;
-        break;
-
-      case ShadingType.TENSOR_PATCH_MESH:
-        decodeType7Shading(this, reader);
-        patchMesh = true;
-        break;
-
-      default:
-        (0, _util.unreachable)("Unsupported mesh type.");
-        break;
-    }
-
-    if (patchMesh) {
-      updateBounds(this);
-
-      for (let i = 0, ii = this.figures.length; i < ii; i++) {
-        buildFigureFromPatch(this, i);
-      }
-    }
-
-    updateBounds(this);
-    packData(this);
+  getIR() {
+    return ["Mesh", this.shadingType, this.coords, this.colors, this.figures, this.bounds, this.matrix, this.bbox, this.background];
   }
 
-  Mesh.prototype = {
-    getIR: function Mesh_getIR() {
-      return ["Mesh", this.shadingType, this.coords, this.colors, this.figures, this.bounds, this.matrix, this.bbox, this.background];
-    }
-  };
-  return Mesh;
-}();
+}
 
-Shadings.Dummy = function DummyClosure() {
-  function Dummy() {
-    this.type = "Pattern";
+class DummyShading extends BaseShading {
+  getIR() {
+    return ["Dummy"];
   }
 
-  Dummy.prototype = {
-    getIR: function Dummy_getIR() {
-      return ["Dummy"];
-    }
-  };
-  return Dummy;
-}();
+}
 
 function getTilingPatternIR(operatorList, dict, color) {
   const matrix = dict.getArray("Matrix");
@@ -32043,7 +33050,7 @@ function getTilingPatternIR(operatorList, dict, color) {
 }
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -32058,9 +33065,9 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _util = __w_pdfjs_require__(2);
 
-var _ps_parser = __w_pdfjs_require__(50);
+var _ps_parser = __w_pdfjs_require__(51);
 
-var _image_utils = __w_pdfjs_require__(51);
+var _image_utils = __w_pdfjs_require__(52);
 
 class PDFFunctionFactory {
   constructor({
@@ -33476,7 +34483,7 @@ const PostScriptCompiler = function PostScriptCompilerClosure() {
 exports.PostScriptCompiler = PostScriptCompiler;
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -33729,7 +34736,7 @@ class PostScriptLexer {
 exports.PostScriptLexer = PostScriptLexer;
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -34055,7 +35062,7 @@ class GlobalImageCache {
 exports.GlobalImageCache = GlobalImageCache;
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -34067,8 +35074,8 @@ exports.bidi = bidi;
 
 var _util = __w_pdfjs_require__(2);
 
-var baseTypes = ["BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "S", "B", "S", "WS", "B", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "B", "B", "B", "S", "WS", "ON", "ON", "ET", "ET", "ET", "ON", "ON", "ON", "ON", "ON", "ES", "CS", "ES", "CS", "CS", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "CS", "ON", "ON", "ON", "ON", "ON", "ON", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "ON", "ON", "ON", "ON", "ON", "ON", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "ON", "ON", "ON", "ON", "BN", "BN", "BN", "BN", "BN", "BN", "B", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "CS", "ON", "ET", "ET", "ET", "ET", "ON", "ON", "ON", "ON", "L", "ON", "ON", "BN", "ON", "ON", "ET", "ET", "EN", "EN", "ON", "L", "ON", "ON", "ON", "EN", "L", "ON", "ON", "ON", "ON", "ON", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "ON", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "ON", "L", "L", "L", "L", "L", "L", "L", "L"];
-var arabicTypes = ["AN", "AN", "AN", "AN", "AN", "AN", "ON", "ON", "AL", "ET", "ET", "AL", "CS", "AL", "ON", "ON", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "AL", "AL", "", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "AN", "AN", "AN", "AN", "AN", "AN", "AN", "AN", "AN", "AN", "ET", "AN", "AN", "AL", "AL", "AL", "NSM", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "AN", "ON", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "AL", "AL", "NSM", "NSM", "ON", "NSM", "NSM", "NSM", "NSM", "AL", "AL", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "AL", "AL", "AL", "AL", "AL", "AL"];
+const baseTypes = ["BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "S", "B", "S", "WS", "B", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "B", "B", "B", "S", "WS", "ON", "ON", "ET", "ET", "ET", "ON", "ON", "ON", "ON", "ON", "ES", "CS", "ES", "CS", "CS", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "CS", "ON", "ON", "ON", "ON", "ON", "ON", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "ON", "ON", "ON", "ON", "ON", "ON", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "ON", "ON", "ON", "ON", "BN", "BN", "BN", "BN", "BN", "BN", "B", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "CS", "ON", "ET", "ET", "ET", "ET", "ON", "ON", "ON", "ON", "L", "ON", "ON", "BN", "ON", "ON", "ET", "ET", "EN", "EN", "ON", "L", "ON", "ON", "ON", "EN", "L", "ON", "ON", "ON", "ON", "ON", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "ON", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "L", "ON", "L", "L", "L", "L", "L", "L", "L", "L"];
+const arabicTypes = ["AN", "AN", "AN", "AN", "AN", "AN", "ON", "ON", "AL", "ET", "ET", "AL", "CS", "AL", "ON", "ON", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "AL", "AL", "", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "AN", "AN", "AN", "AN", "AN", "AN", "AN", "AN", "AN", "AN", "ET", "AN", "AN", "AL", "AL", "AL", "NSM", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "AN", "ON", "NSM", "NSM", "NSM", "NSM", "NSM", "NSM", "AL", "AL", "NSM", "NSM", "ON", "NSM", "NSM", "NSM", "NSM", "AL", "AL", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "EN", "AL", "AL", "AL", "AL", "AL", "AL"];
 
 function isOdd(i) {
   return (i & 1) !== 0;
@@ -34079,7 +35086,9 @@ function isEven(i) {
 }
 
 function findUnequal(arr, start, value) {
-  for (var j = start, jj = arr.length; j < jj; ++j) {
+  let j, jj;
+
+  for (j = start, jj = arr.length; j < jj; ++j) {
     if (arr[j] !== value) {
       return j;
     }
@@ -34089,14 +35098,14 @@ function findUnequal(arr, start, value) {
 }
 
 function setValues(arr, start, end, value) {
-  for (var j = start; j < end; ++j) {
+  for (let j = start; j < end; ++j) {
     arr[j] = value;
   }
 }
 
 function reverseValues(arr, start, end) {
-  for (var i = start, j = end - 1; i < j; ++i, --j) {
-    var temp = arr[i];
+  for (let i = start, j = end - 1; i < j; ++i, --j) {
+    const temp = arr[i];
     arr[i] = arr[j];
     arr[j] = temp;
   }
@@ -34117,12 +35126,12 @@ function createBidiText(str, isLTR, vertical = false) {
   };
 }
 
-var chars = [];
-var types = [];
+const chars = [];
+const types = [];
 
 function bidi(str, startLevel, vertical) {
-  var isLTR = true;
-  var strLength = str.length;
+  let isLTR = true;
+  const strLength = str.length;
 
   if (strLength === 0 || vertical) {
     return createBidiText(str, isLTR, vertical);
@@ -34130,13 +35139,13 @@ function bidi(str, startLevel, vertical) {
 
   chars.length = strLength;
   types.length = strLength;
-  var numBidi = 0;
-  var i, ii;
+  let numBidi = 0;
+  let i, ii;
 
   for (i = 0; i < strLength; ++i) {
     chars[i] = str.charAt(i);
-    var charCode = str.charCodeAt(i);
-    var charType = "L";
+    const charCode = str.charCodeAt(i);
+    let charType = "L";
 
     if (charCode <= 0x00ff) {
       charType = baseTypes[charCode];
@@ -34174,16 +35183,16 @@ function bidi(str, startLevel, vertical) {
     }
   }
 
-  var levels = [];
+  const levels = [];
 
   for (i = 0; i < strLength; ++i) {
     levels[i] = startLevel;
   }
 
-  var e = isOdd(startLevel) ? "R" : "L";
-  var sor = e;
-  var eor = sor;
-  var lastType = sor;
+  const e = isOdd(startLevel) ? "R" : "L";
+  const sor = e;
+  const eor = sor;
+  let lastType = sor;
 
   for (i = 0; i < strLength; ++i) {
     if (types[i] === "NSM") {
@@ -34194,7 +35203,7 @@ function bidi(str, startLevel, vertical) {
   }
 
   lastType = sor;
-  var t;
+  let t;
 
   for (i = 0; i < strLength; ++i) {
     t = types[i];
@@ -34226,9 +35235,7 @@ function bidi(str, startLevel, vertical) {
 
   for (i = 0; i < strLength; ++i) {
     if (types[i] === "EN") {
-      var j;
-
-      for (j = i - 1; j >= 0; --j) {
+      for (let j = i - 1; j >= 0; --j) {
         if (types[j] !== "ET") {
           break;
         }
@@ -34236,7 +35243,7 @@ function bidi(str, startLevel, vertical) {
         types[j] = "EN";
       }
 
-      for (j = i + 1; j < strLength; ++j) {
+      for (let j = i + 1; j < strLength; ++j) {
         if (types[j] !== "ET") {
           break;
         }
@@ -34268,14 +35275,14 @@ function bidi(str, startLevel, vertical) {
 
   for (i = 0; i < strLength; ++i) {
     if (types[i] === "ON") {
-      var end = findUnequal(types, i + 1, "ON");
-      var before = sor;
+      const end = findUnequal(types, i + 1, "ON");
+      let before = sor;
 
       if (i > 0) {
         before = types[i - 1];
       }
 
-      var after = eor;
+      let after = eor;
 
       if (end + 1 < strLength) {
         after = types[end + 1];
@@ -34319,9 +35326,9 @@ function bidi(str, startLevel, vertical) {
     }
   }
 
-  var highestLevel = -1;
-  var lowestOddLevel = 99;
-  var level;
+  let highestLevel = -1;
+  let lowestOddLevel = 99;
+  let level;
 
   for (i = 0, ii = levels.length; i < ii; ++i) {
     level = levels[i];
@@ -34336,7 +35343,7 @@ function bidi(str, startLevel, vertical) {
   }
 
   for (level = highestLevel; level >= lowestOddLevel; --level) {
-    var start = -1;
+    let start = -1;
 
     for (i = 0, ii = levels.length; i < ii; ++i) {
       if (levels[i] < level) {
@@ -34355,7 +35362,7 @@ function bidi(str, startLevel, vertical) {
   }
 
   for (i = 0, ii = chars.length; i < ii; ++i) {
-    var ch = chars[i];
+    const ch = chars[i];
 
     if (ch === "<" || ch === ">") {
       chars[i] = "";
@@ -34366,7 +35373,7 @@ function bidi(str, startLevel, vertical) {
 }
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -37319,7 +38326,347 @@ const getMetrics = (0, _core_utils.getLookupTableFactory)(function (t) {
 exports.getMetrics = getMetrics;
 
 /***/ }),
-/* 54 */
+/* 55 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.getXfaFontName = getXfaFontName;
+
+var _calibri_bold = __w_pdfjs_require__(56);
+
+var _calibri_bold_italic = __w_pdfjs_require__(57);
+
+var _calibri_italic = __w_pdfjs_require__(58);
+
+var _calibri_regular = __w_pdfjs_require__(59);
+
+var _core_utils = __w_pdfjs_require__(9);
+
+var _helvetica_bold = __w_pdfjs_require__(60);
+
+var _helvetica_bold_italic = __w_pdfjs_require__(61);
+
+var _helvetica_italic = __w_pdfjs_require__(62);
+
+var _helvetica_regular = __w_pdfjs_require__(63);
+
+var _myriadpro_bold = __w_pdfjs_require__(64);
+
+var _myriadpro_bold_italic = __w_pdfjs_require__(65);
+
+var _myriadpro_italic = __w_pdfjs_require__(66);
+
+var _myriadpro_regular = __w_pdfjs_require__(67);
+
+var _fonts_utils = __w_pdfjs_require__(38);
+
+var _segoeui_bold = __w_pdfjs_require__(68);
+
+var _segoeui_bold_italic = __w_pdfjs_require__(69);
+
+var _segoeui_italic = __w_pdfjs_require__(70);
+
+var _segoeui_regular = __w_pdfjs_require__(71);
+
+const getXFAFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
+  t["MyriadPro-Regular"] = {
+    name: "LiberationSans-Regular",
+    factors: _myriadpro_regular.MyriadProRegularFactors
+  };
+  t["MyriadPro-Bold"] = {
+    name: "LiberationSans-Bold",
+    factors: _myriadpro_bold.MyriadProBoldFactors
+  };
+  t["MyriadPro-It"] = {
+    name: "LiberationSans-Italic",
+    factors: _myriadpro_italic.MyriadProItalicFactors
+  };
+  t["MyriadPro-BoldIt"] = {
+    name: "LiberationSans-BoldItalic",
+    factors: _myriadpro_bold_italic.MyriadProBoldItalicFactors
+  };
+  t.ArialMT = {
+    name: "LiberationSans-Regular"
+  };
+  t["Arial-BoldMT"] = {
+    name: "LiberationSans-Bold"
+  };
+  t["Arial-ItalicMT"] = {
+    name: "LiberationSans-Italic"
+  };
+  t["Arial-BoldItalicMT"] = {
+    name: "LiberationSans-BoldItalic"
+  };
+  t["Calibri-Regular"] = {
+    name: "LiberationSans-Regular",
+    factors: _calibri_regular.CalibriRegularFactors
+  };
+  t["Calibri-Bold"] = {
+    name: "LiberationSans-Bold",
+    factors: _calibri_bold.CalibriBoldFactors
+  };
+  t["Calibri-Italic"] = {
+    name: "LiberationSans-Italic",
+    factors: _calibri_italic.CalibriItalicFactors
+  };
+  t["Calibri-BoldItalic"] = {
+    name: "LiberationSans-BoldItalic",
+    factors: _calibri_bold_italic.CalibriBoldItalicFactors
+  };
+  t["Segoeui-Regular"] = {
+    name: "LiberationSans-Regular",
+    factors: _segoeui_regular.SegoeuiRegularFactors
+  };
+  t["Segoeui-Bold"] = {
+    name: "LiberationSans-Bold",
+    factors: _segoeui_bold.SegoeuiBoldFactors
+  };
+  t["Segoeui-Italic"] = {
+    name: "LiberationSans-Italic",
+    factors: _segoeui_italic.SegoeuiItalicFactors
+  };
+  t["Segoeui-BoldItalic"] = {
+    name: "LiberationSans-BoldItalic",
+    factors: _segoeui_bold_italic.SegoeuiBoldItalicFactors
+  };
+  t["Helvetica-Regular"] = {
+    name: "LiberationSans-Regular",
+    factors: _helvetica_regular.HelveticaRegularFactors
+  };
+  t["Helvetica-Bold"] = {
+    name: "LiberationSans-Bold",
+    factors: _helvetica_bold.HelveticaBoldFactors
+  };
+  t["Helvetica-Italic"] = {
+    name: "LiberationSans-Italic",
+    factors: _helvetica_italic.HelveticaItalicFactors
+  };
+  t["Helvetica-BoldItalic"] = {
+    name: "LiberationSans-BoldItalic",
+    factors: _helvetica_bold_italic.HelveticaBoldItalicFactors
+  };
+});
+
+function getXfaFontName(name) {
+  const fontName = (0, _fonts_utils.normalizeFontName)(name);
+  const fontMap = getXFAFontMap();
+  return fontMap[fontName];
+}
+
+/***/ }),
+/* 56 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.CalibriBoldFactors = void 0;
+const CalibriBoldFactors = [1.3877, 1, 0.83908, 0.77539, 0.77539, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.7762, 0.7762, 0.73293, 0.73293, 0.73293, 0.73293, 0.73293, 0.73293, 0.82577, 0.87289, 0.87289, 0.88506, 0.80367, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.88656, 0.73133, 0.73133, 0.57184, 0.87356, 0.6965, 0.88506, 0.91133, 0.7514, 0.81921, 0.68156, 0.81921, 0.81921, 1, 0.81921, 0.87356, 1, 0.99862, 0.99862, 1, 0.91075, 0.87356, 0.95958, 0.76229, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.56289, 0.95958, 0.59526, 0.59526, 0.75727, 0.75727, 1, 0.69225, 0.69225, 0.89019, 0.70424, 1, 0.91926, 0.70823, 1.04924, 1.04924, 0.9121, 0.9121, 0.9121, 1, 0.9121, 0.9121, 0.86943, 0.87402, 0.86943, 0.86943, 0.86943, 0.86943, 0.86943, 0.86943, 0.86943, 0.84896, 0.81235, 0.86943, 0.82001, 0.87508, 0.87508, 0.86943, 0.79795, 0.9762, 0.87356, 0.99819, 0.88198, 0.77958, 0.77958, 0.77958, 1, 0.79795, 0.70864, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.70864, 0.70864, 0.70864, 0.70864, 1, 0.78275, 0.81055, 0.81055, 0.81055, 0.81055, 1, 0.86943, 0.79795, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.77892, 0.77892, 0.56029, 0.90399, 0.90399, 0.88653, 0.96017, 0.96017, 0.96017, 0.96017, 0.96017, 0.82577, 0.7648, 0.77892, 0.77892, 0.77892, 0.77892, 0.77892, 0.78257, 0.78257, 0.78257, 0.78257, 0.78257, 0.88762, 0.88762, 0.88762, 0.88762, 0.90323, 1, 0.88762, 0.8715, 0.8715, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.88762, 0.96108, 0.96108, 0.88762, 0.97566, 0.80352, 0.88762, 0.90747, 0.88762, 0.88762, 1.31006, 1.81055, 0.90527, 0.90527, 1.81055, 1.53711, 0.94434, 0.85284, 0.85284, 1.2798, 0.92138, 0.88762, 0.8785, 1.54657, 1.69808, 0.8936, 1, 0.88331, 0.88331, 0.97507, 0.97507, 1.15543, 1, 1.7801, 1.42259, 0.75241, 0.75241, 1.20528, 1, 1, 0.75241, 0.75241, 0.75241, 0.75241, 0.91056, 0.89552, 0.78287, 0.91027, 1.20528, 1, 1, 0.82845, 0.92794, 1, 1, 1.13254, 0.89552, 1, 0.8785, 0.89552, 0.89552, 0.83016, 0.93125, 0.85592, 0.87842, 1, 1.24487, 1, 1.06303, 0.90747, 1, 1, 0.91133, 0.70674, 0.88401, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.91133, 1, 0.71143, 0.90518, 0.90527, 0.89552, 0.8785, 0.90518, 0.96399, 1.01407, 0.85284, 0.85356, 1.23108, 0.89049, 0.89049, 0.8785, 0.97801, 0.97171, 0.97801, 0.95015, 1, 1, 1, 0.91133, 0.88525, 1, 0.56892, 0.91133, 1, 0.83406, 0.77618, 0.84021, 0.77618, 0.77618, 1, 0.77618, 0.90807, 0.90176, 1, 0.85284, 0.90747, 0.96839, 0.96839, 1.03372, 1.03372, 0.8785, 0.89608, 0.8785, 1, 1.44947, 1.45894, 1, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.90167, 0.88401, 1.17534, 1.37077, 0.8941, 0.8941, 0.9716, 1, 1, 1, 0.88401, 1.02988, 1.02988, 1.02988, 1.02988, 0.88401, 0.91916, 0.91916, 0.86304, 0.86077, 1, 0.86304, 0.88401, 0.88401, 0.87445, 0.79468, 1, 0.88175, 0.85284, 0.90747, 1, 0.91133, 0.85284, 0.9297, 1.08004, 0.94903, 1, 0.91488, 0.70645, 1, 1, 0.85284, 1, 0.92099, 0.85284, 1, 1, 0.8785, 0.8785, 0.87802, 0.8785, 1, 0.91133, 1, 0.90747, 0.8785, 0.84723, 0.89552, 0.8801, 0.8801, 0.8801, 0.8801, 0.8801, 0.89291, 0.94721, 0.8801, 0.8801, 0.8801, 0.84971, 0.84971, 0.8801, 0.8801, 0.91133, 0.83489, 0.82845, 0.78864, 0.99862, 1.12401, 1.19118, 0.69825, 0.89049, 0.89049, 0.8801, 0.8785, 1.07463, 0.93548, 0.93548, 1.08696, 0.81988, 0.96134, 1.06152, 0.84107, 0.97747, 0.75638, 0.85284, 0.90747, 0.95018, 0.97926, 0.8785, 0.75859, 0.75859, 0.92482, 0.87012, 0.87012, 0.87012, 0.92794, 0.92794, 0.92794, 0.92794, 0.98152, 0.91343, 0.91343, 0.90747, 0.91343, 1, 0.68787, 0.85284, 0.85714, 0.98387, 1, 0.7173, 0.7173, 0.7173, 0.7173, 0.7173, 1, 1, 0.89552, 0.91133, 0.81499, 1, 1, 0.79586, 0.78216, 0.91133, 1.54657, 1, 1, 0.91133, 0.77192, 1, 1.04106, 0.87965, 1.06452, 0.75841, 1, 1.00813, 0.8785, 0.91133, 0.88525, 0.84133, 1.33431, 1, 0.95161, 0.72021, 1, 1, 1, 1, 0.91133, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.89552, 0.90363, 1, 1, 1.01466, 1.0088, 1, 0.75806, 0.81055, 1.04106, 1, 0.82845, 0.73133, 0.90264, 0.90518, 0.90548, 1, 1, 1.4956, 0.93835, 1, 1, 2.2807, 1, 1, 1, 0.90727, 0.90727, 0.8785, 1, 0.94211, 0.94211, 0.94211, 0.94211, 0.8785, 0.8785, 0.85075, 0.95794, 0.95794, 0.95794, 0.95794, 0.95794, 0.82616, 0.86513, 0.85162, 0.85162, 0.85162, 0.85162, 0.91133, 0.85162, 0.79492, 0.79492, 0.79492, 0.79492, 0.91133, 0.79109];
+exports.CalibriBoldFactors = CalibriBoldFactors;
+
+/***/ }),
+/* 57 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.CalibriBoldItalicFactors = void 0;
+const CalibriBoldItalicFactors = [1.3877, 1, 0.83908, 0.77539, 0.77539, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.7762, 0.7762, 0.71805, 0.71805, 0.71805, 0.71805, 0.71805, 0.71805, 0.82577, 0.87289, 0.87289, 0.88506, 0.86036, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.88116, 0.73133, 0.73133, 0.57118, 0.87356, 0.6965, 0.88506, 0.91133, 0.7514, 0.81921, 0.67174, 0.81921, 0.81921, 1, 0.81921, 0.87356, 1, 0.99862, 0.99862, 1, 0.91075, 0.87356, 0.95958, 0.76467, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.56347, 0.95958, 0.59526, 0.59526, 0.75727, 0.75727, 1, 0.69225, 0.69225, 0.89019, 0.70424, 1, 0.91926, 0.70823, 1.04924, 1.04924, 0.90872, 0.90872, 0.90872, 1, 0.90872, 0.90872, 0.85938, 0.87402, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.87179, 0.80346, 0.85938, 0.79179, 0.87068, 0.87068, 0.85938, 0.79795, 0.97447, 0.87891, 0.97466, 0.87068, 0.77958, 0.77958, 0.77958, 1, 0.79795, 0.69766, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.69766, 0.69766, 0.69766, 0.69766, 1, 0.7957, 0.81055, 0.81055, 0.81055, 0.81055, 1, 0.86441, 0.79795, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.77892, 0.77892, 0.55853, 0.90399, 0.90399, 0.88653, 0.96068, 0.96068, 0.96068, 0.96068, 0.96068, 0.82577, 0.74889, 0.77892, 0.77892, 0.77892, 0.77892, 0.77892, 0.78257, 0.78257, 0.78257, 0.78257, 0.78257, 0.94908, 0.94908, 0.94908, 0.94908, 0.90323, 1, 0.94908, 0.85887, 0.85887, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.94908, 0.94252, 0.94252, 0.94908, 0.97566, 0.80352, 0.94908, 0.90747, 0.94908, 0.94908, 1.3107, 1.81055, 0.90616, 0.90527, 1.81055, 1.53711, 0.94434, 0.85284, 0.85284, 1.2798, 0.92138, 0.94908, 0.86411, 1.529, 1.69808, 0.87411, 1, 0.88331, 0.88331, 0.97507, 0.97507, 1.15543, 1, 1.7801, 1.42259, 0.74012, 0.74012, 1.20528, 1, 1, 0.74012, 0.74012, 0.74012, 0.74012, 0.91056, 0.89552, 0.78022, 0.91027, 1.20528, 1, 1, 0.82845, 0.92794, 1, 1, 1.13254, 0.89552, 1, 0.86411, 0.89552, 0.89552, 0.79538, 0.92726, 0.85592, 0.8728, 1, 1.24487, 1, 1.48387, 0.90747, 1, 1, 0.91133, 0.70088, 0.88401, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.91133, 1, 0.71094, 0.88323, 0.90527, 0.89552, 0.86331, 0.88323, 0.95612, 0.95612, 0.85284, 0.85356, 1.23108, 0.8753, 0.8753, 0.8785, 0.97801, 0.97171, 0.97801, 0.95015, 1, 1, 1, 0.91133, 0.88525, 1, 0.56892, 0.91133, 1, 0.83406, 0.86411, 0.84021, 0.86411, 0.86411, 1, 0.86411, 0.90807, 0.90176, 1, 0.85284, 0.90747, 0.96839, 0.96839, 1.03372, 1.03372, 0.86331, 0.8777, 0.86331, 1, 1.44947, 1.45894, 1, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.90167, 0.88401, 1.17534, 1.37077, 0.8941, 0.8941, 0.9716, 1, 1, 1, 0.88401, 1.02988, 1.02988, 1.02988, 1.02988, 0.88401, 0.91916, 0.91916, 0.86304, 0.84814, 1, 0.86304, 0.88401, 0.88401, 0.87445, 0.77312, 1, 0.88175, 0.85284, 0.90747, 1, 0.91133, 0.85284, 0.9297, 1.08004, 0.94903, 1, 0.9039, 0.70645, 1, 1, 0.85284, 1, 0.91822, 0.85284, 1, 1, 0.86331, 0.86331, 0.86906, 0.86331, 1, 0.91133, 1, 0.90747, 0.86331, 0.84723, 0.89552, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86549, 0.94721, 0.86331, 0.86331, 0.86331, 0.86015, 0.86015, 0.86331, 0.86331, 0.91133, 0.83489, 0.82845, 0.78864, 0.99862, 1.19129, 1.19118, 0.69825, 0.89049, 0.89049, 0.86331, 0.86411, 1.07463, 0.93548, 0.93548, 1.08696, 0.81988, 0.96134, 1.06152, 0.83326, 0.99375, 0.81344, 0.85284, 0.90747, 0.95018, 0.95452, 0.86411, 0.75859, 0.75859, 0.92482, 0.87012, 0.87012, 0.87012, 0.92794, 0.89807, 0.92794, 0.92794, 0.98152, 0.90464, 0.90464, 0.90747, 0.90464, 1, 0.68787, 0.85284, 0.87581, 0.98387, 1, 0.70852, 0.70852, 0.70852, 0.70852, 0.70852, 1, 1, 0.89552, 0.91133, 0.81499, 1, 1, 0.82046, 0.76422, 0.91133, 1.56239, 1, 1, 0.91133, 0.77192, 1, 1.04106, 0.96057, 1.06452, 0.75841, 1, 1.02189, 0.86411, 0.91133, 0.88525, 0.84133, 1.33431, 1, 0.95161, 0.72021, 1, 1, 1, 1, 0.91133, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.89552, 0.90363, 1, 1, 1.01466, 1.0088, 1, 0.75806, 0.81055, 1.04106, 1, 0.82845, 0.73133, 0.90631, 0.88323, 0.85174, 1, 1, 1.4956, 0.92972, 1, 1, 2.2807, 1, 1, 1, 0.90727, 0.90727, 0.86331, 1, 0.92733, 0.92733, 0.92733, 0.92733, 0.86331, 0.86331, 0.84372, 0.95794, 0.95794, 0.95794, 0.95794, 0.95794, 0.82616, 0.85668, 0.84548, 0.84548, 0.84548, 0.84548, 0.91133, 0.84548, 0.79492, 0.79492, 0.79492, 0.79492, 0.91133, 0.74081];
+exports.CalibriBoldItalicFactors = CalibriBoldItalicFactors;
+
+/***/ }),
+/* 58 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.CalibriItalicFactors = void 0;
+const CalibriItalicFactors = [1.3877, 1, 0.8675, 0.76318, 0.76318, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.81552, 0.81552, 0.72346, 0.72346, 0.72346, 0.72346, 0.72346, 0.72346, 0.77818, 0.85193, 0.85193, 0.86477, 0.84134, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.86698, 0.73206, 0.73206, 0.6192, 0.86275, 0.7363, 0.86477, 0.91133, 0.7522, 0.81105, 0.7286, 0.81105, 0.81105, 1, 0.81105, 0.86275, 1, 0.99862, 0.99862, 1, 0.90872, 0.86275, 0.90685, 0.77896, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.64824, 0.90685, 0.6377, 0.6377, 0.77892, 0.77892, 1, 0.75593, 0.75593, 0.85871, 0.76032, 1, 0.98156, 0.77261, 1.02638, 1.02638, 0.89249, 0.89249, 0.89249, 1, 0.89249, 0.89249, 0.84118, 0.8667, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.87291, 0.85696, 0.84118, 0.82411, 0.84557, 0.84557, 0.84118, 0.77452, 0.90782, 0.85984, 0.903, 0.85374, 0.75186, 0.75186, 0.75186, 1, 0.77452, 0.67789, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.67789, 0.67789, 0.67789, 0.67789, 1, 0.76466, 0.79776, 0.79776, 0.79776, 0.79776, 1, 0.84369, 0.77452, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.7306, 0.7306, 0.56321, 0.88844, 0.88844, 0.85066, 0.94309, 0.94309, 0.94309, 0.94309, 0.94309, 0.77818, 0.75828, 0.7306, 0.7306, 0.7306, 0.7306, 0.7306, 0.76659, 0.76659, 0.76659, 0.76659, 0.76659, 0.9245, 0.9245, 0.9245, 0.9245, 0.87683, 1, 0.9245, 0.84843, 0.84843, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.9245, 0.99058, 0.99058, 0.9245, 1.02269, 0.90861, 0.9245, 0.90747, 0.9245, 0.9245, 1.28809, 1.81055, 0.90572, 0.90749, 1.81055, 1.55469, 0.94434, 1.06139, 0.85284, 1.2798, 0.88071, 0.9245, 0.9245, 1.38313, 1.77256, 0.92393, 1, 0.94152, 0.94152, 1.10369, 1.10369, 1.1437, 1, 1.91729, 1.42259, 0.83203, 0.83203, 1.18622, 1, 1, 0.83203, 0.83203, 0.83203, 0.83203, 0.92229, 0.89552, 0.78086, 0.91027, 1.18622, 1, 1, 0.96309, 0.89807, 1, 1, 1.13254, 0.89552, 1, 0.9245, 0.89552, 0.89552, 0.8875, 0.99034, 0.84737, 0.942, 1, 1.17889, 1, 1.48387, 0.90747, 1, 1, 0.91133, 0.67009, 0.82601, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.91133, 1, 0.68994, 0.85865, 0.90527, 0.89552, 0.9245, 0.85865, 1.03667, 1.03667, 0.85284, 0.85284, 1.23108, 0.94635, 0.94635, 0.94469, 1.17223, 1.11523, 0.97801, 1.09842, 1, 1, 1, 0.91133, 0.84426, 1, 0.54873, 0.91133, 1, 0.82616, 0.9245, 0.8916, 0.9245, 0.9245, 1, 0.9245, 0.86331, 0.8739, 1, 0.85284, 0.90747, 0.92098, 0.92098, 1.0176, 1.0176, 0.9245, 0.93591, 0.9245, 1, 1.44947, 1.40909, 1, 1.03297, 0.82601, 0.82601, 0.82601, 0.82601, 0.82601, 1.05611, 0.82601, 1.19658, 1.33512, 0.8941, 0.8941, 0.97622, 1, 1, 1, 1.03297, 1.23516, 1.23516, 1.23516, 1.23516, 0.82601, 1.07692, 1.07692, 0.90918, 0.90918, 1, 0.90918, 1.03297, 1.03297, 0.94048, 0.9375, 1, 0.93407, 0.85284, 0.90747, 1, 0.91133, 0.85284, 1.09231, 1.0336, 1.11429, 1, 0.94959, 0.71353, 1, 1, 0.85284, 1, 0.98217, 0.85284, 1, 1, 0.9245, 0.9245, 0.92534, 0.9245, 1, 0.91133, 1, 0.90747, 0.9245, 0.89746, 0.89552, 0.92274, 0.92274, 0.92274, 0.92274, 0.92274, 0.86291, 0.93695, 0.92274, 0.92274, 0.92274, 0.89404, 0.89404, 0.92274, 0.92274, 0.91133, 0.79801, 0.80504, 0.76288, 0.99862, 1.16359, 1.15642, 0.69825, 0.86651, 0.86651, 0.92274, 0.9245, 1.09091, 0.91056, 0.91056, 1.07806, 0.80395, 0.90861, 1.03809, 0.83437, 1.00225, 0.82507, 0.85284, 0.90747, 0.97094, 0.97248, 0.9245, 0.83319, 0.75859, 1.1293, 1.2566, 1.2566, 1.2566, 1.12308, 1.12308, 1.12308, 1.12308, 1.15601, 1.02933, 1.02933, 0.90747, 1.02933, 1, 0.68787, 0.85284, 0.88832, 0.96334, 1, 0.77832, 0.77832, 0.77832, 0.77832, 0.77832, 1, 1, 0.89552, 0.91133, 0.774, 1, 1, 0.88178, 0.84438, 0.91133, 1.39543, 1, 1, 0.91133, 0.7589, 1, 1.20562, 1.03525, 1.23023, 0.97655, 1, 1.0297, 0.9245, 0.91133, 0.84426, 0.80972, 1.35191, 1, 0.95161, 0.70508, 1, 1, 1, 1, 0.91133, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.89552, 0.90186, 1, 1, 1.0088, 1.0044, 1, 0.739, 0.79776, 1.20562, 1, 0.96309, 0.73206, 0.89693, 0.85865, 0.90933, 1, 1, 1.4956, 0.97858, 1, 1, 2.01462, 1, 1, 1, 1.05859, 1.05859, 0.9245, 1, 0.9849, 0.9849, 0.9849, 0.9849, 0.9245, 0.9245, 0.8916, 0.98986, 0.98986, 0.98986, 0.98986, 0.98986, 0.86621, 0.84153, 0.89453, 0.89453, 0.89453, 0.89453, 0.91133, 0.89453, 0.79004, 0.79004, 0.79004, 0.79004, 0.91133, 0.75026];
+exports.CalibriItalicFactors = CalibriItalicFactors;
+
+/***/ }),
+/* 59 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.CalibriRegularFactors = void 0;
+const CalibriRegularFactors = [1.3877, 1, 0.8675, 0.76318, 0.76318, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.86686, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.81552, 0.81552, 0.73834, 0.73834, 0.73834, 0.73834, 0.73834, 0.73834, 0.77818, 0.85193, 0.85193, 0.86477, 0.84503, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.86901, 0.73206, 0.73206, 0.62267, 0.86275, 0.74359, 0.86477, 0.91133, 0.7522, 0.81105, 0.75443, 0.81105, 0.81105, 1, 0.81105, 0.86275, 1, 0.99862, 0.99862, 1, 0.90872, 0.86275, 0.90685, 0.77741, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.65649, 0.90685, 0.6377, 0.6377, 0.77892, 0.77892, 1, 0.75593, 0.75593, 0.85746, 0.76032, 1, 0.98156, 0.77261, 1.02638, 1.02638, 0.89385, 0.89385, 0.89385, 1, 0.89385, 0.89385, 0.85122, 0.8667, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.88831, 0.88254, 0.85122, 0.85498, 0.85311, 0.85311, 0.85122, 0.77452, 0.95165, 0.86275, 0.89772, 0.86503, 0.75186, 0.75186, 0.75186, 1, 0.77452, 0.68887, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.68887, 0.68887, 0.68887, 0.68887, 1, 0.74171, 0.79776, 0.79776, 0.79776, 0.79776, 1, 0.85122, 0.77452, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.7306, 0.7306, 0.56963, 0.88844, 0.88844, 0.85066, 0.94258, 0.94258, 0.94258, 0.94258, 0.94258, 0.77818, 0.75657, 0.7306, 0.7306, 0.7306, 0.7306, 0.7306, 0.76659, 0.76659, 0.76659, 0.76659, 0.76659, 0.86128, 0.86128, 0.86128, 0.86128, 0.87683, 0.86128, 0.8693, 0.8693, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.86128, 0.98142, 0.98142, 0.86128, 1.02269, 0.90861, 0.86128, 0.90747, 0.86128, 0.86128, 1.28809, 1.81055, 0.90527, 0.90527, 1.81055, 1.55469, 0.94434, 1.06139, 0.85284, 1.2798, 0.88071, 0.86128, 0.94469, 1.39016, 1.77256, 0.9236, 1, 0.94152, 0.94152, 1.10369, 1.10369, 1.1437, 1.91729, 1.42259, 0.8457, 0.8457, 1.18622, 0.8457, 0.8457, 0.8457, 0.8457, 0.92229, 0.89552, 0.81209, 0.91027, 1.18622, 1, 0.96309, 0.89807, 1.13254, 0.89552, 0.94469, 0.89552, 0.89552, 0.92454, 0.9921, 0.84737, 0.94035, 1, 1.17889, 1.48387, 0.90747, 1, 1, 0.91133, 0.67742, 0.82601, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.91133, 0.69043, 0.89464, 0.90527, 0.89552, 0.94469, 0.89464, 1.02191, 1.02191, 0.85284, 0.85356, 1.23108, 0.96576, 0.96576, 0.94469, 1.17223, 1.11523, 0.97801, 1.09842, 1, 1, 1, 0.91133, 0.84426, 0.54873, 0.91133, 0.82616, 0.84636, 0.89258, 0.84636, 0.84636, 1, 0.84636, 0.86331, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.8739, 0.85284, 0.90747, 0.92098, 0.92098, 1.0176, 1.0176, 0.94469, 0.95786, 0.94469, 1, 1.44947, 1.40909, 1.03297, 0.82601, 0.82601, 0.82601, 0.82601, 0.82601, 1.05611, 0.82601, 1.19658, 1.33512, 0.8941, 0.8941, 0.97622, 1, 1, 1, 1.03297, 1.23516, 1.23516, 1.23516, 1.23516, 0.82601, 1.07692, 1.07692, 0.90918, 0.90918, 1, 0.90918, 1.03297, 1.03297, 0.92578, 0.90452, 1, 1.11842, 0.85284, 0.90747, 1, 0.91133, 0.85284, 1.09231, 1.0336, 1.11429, 1, 0.95897, 0.71353, 1, 1, 0.85284, 1, 0.95424, 0.85284, 1, 1, 0.94469, 0.94469, 0.95877, 0.94469, 1, 0.91133, 1, 0.90747, 0.94469, 0.89746, 0.89552, 0.9482, 0.9482, 0.9482, 0.9482, 0.9482, 0.90016, 0.93695, 0.9482, 0.9482, 0.9482, 0.89181, 0.89181, 0.9482, 0.9482, 0.91133, 0.79801, 0.80504, 0.76288, 0.99862, 1.08707, 1.15642, 0.69825, 0.86651, 0.86651, 0.9482, 0.94469, 1.09091, 0.91056, 0.91056, 1.07806, 0.80395, 0.90861, 1.03809, 0.84286, 1.00452, 0.80113, 0.85284, 0.90747, 0.97094, 0.99247, 0.94469, 0.83319, 0.75859, 1.1293, 1.2566, 1.2566, 1.2566, 1.12308, 1.12308, 1.12308, 1.12308, 1.15601, 1.04692, 1.04692, 0.90747, 1.04692, 1, 0.68787, 0.85284, 0.89442, 0.96334, 1, 0.78223, 0.78223, 0.78223, 0.78223, 0.78223, 1, 1, 0.89552, 0.91133, 0.774, 1, 0.86155, 0.85208, 0.91133, 1.39016, 1, 1, 0.91133, 0.7589, 1, 1.20562, 0.98022, 1.23023, 0.92188, 1, 0.9561, 0.94469, 0.91133, 0.84426, 0.80972, 1.35191, 0.95161, 0.70508, 1, 1, 1, 1, 0.91133, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.89552, 0.90186, 1, 1, 1.0088, 1.0044, 1, 0.739, 0.79776, 1.20562, 1, 0.96309, 0.73206, 0.88844, 0.89464, 0.96766, 1, 1, 1.4956, 1.07185, 0.99413, 0.96334, 1.08065, 0.99331, 1, 1, 2.01462, 1, 1, 1, 1, 1.05859, 1.05859, 0.94469, 1, 0.99018, 0.99018, 0.99018, 0.99018, 0.94469, 0.94469, 0.90332, 0.98986, 0.98986, 0.98986, 0.98986, 0.98986, 0.86621, 0.83969, 0.90527, 0.90527, 0.90527, 0.90527, 0.91133, 0.90527, 0.79004, 0.79004, 0.79004, 0.79004, 0.91133, 0.78848];
+exports.CalibriRegularFactors = CalibriRegularFactors;
+
+/***/ }),
+/* 60 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.HelveticaBoldFactors = void 0;
+const HelveticaBoldFactors = [0.76116, 1, 0.99977, 1, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.85148, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 0.99997, 0.99977, 1.00026, 0.99977, 0.99973, 1.00026, 1.00022, 0.99988, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 1.00042, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00078, 1.0006, 0.99973, 0.99973, 0.99977, 0.99977, 0.99977, 1.00026, 1.00026, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 1.00013, 1.00022, 1.00036, 1.00022, 1.00022, 1.00022, 1.00001, 1.00024, 0.99977, 0.9999, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99984, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99973, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 1.00069, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 0.99977, 1.00035, 0.99977, 1.00019, 0.99944, 1.00001, 1.00008, 1.00021, 0.99926, 1.00035, 1.00035, 0.99942, 1.00048, 0.99999, 0.99977, 1.00022, 1.00035, 1.00001, 0.99977, 1.00026, 0.99989, 1.00057, 1.00001, 0.99936, 1.00052, 1.00012, 0.99996, 1.00043, 1, 1.00035, 0.9994, 0.99976, 1.00035, 1.00038, 0.99971, 1.00019, 0.9994, 1.00001, 1.0006, 1.00044, 0.99973, 1.00023, 1.00047, 1, 0.99942, 0.99989, 0.99973, 1.00052, 1.00041, 1.00119, 1.00037, 0.99973, 0.99973, 1.00002, 0.99986, 1.00041, 1.00041, 0.99902, 0.9996, 1.00034, 0.99999, 1.00026, 0.99999, 1.00026, 0.99973, 1.00052, 0.99973, 1, 0.99973, 1.00041, 1.00075, 0.9994, 1.0003, 0.99999, 1, 1.00041, 0.99955, 1, 0.99915, 1.0005, 1.00026, 1.00119, 0.99955, 0.99973, 1.0006, 0.99911, 1.0006, 1.00026, 0.99972, 1.00026, 0.99902, 0.99973, 1.00035, 1, 0.99999, 1, 0.99971, 1.00047, 1.00023, 0.99973, 1.00041, 1.00041, 0.99973, 0.99977, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1, 1, 1, 1, 1, 1.00003, 1.00003, 0.99959, 0.9999, 0.99973, 1.00026, 1.0006, 1.00077, 0.99942, 1.41144, 0.99959, 0.99959, 0.99998, 0.99998, 0.99998, 1, 1.00077, 0.99972, 0.99973, 0.99973, 0.99998, 1, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 1.00055, 0.99999, 0.99998, 1, 0.99962, 0.99998, 1.0006, 1, 1, 1.00025, 0.99973, 1, 1.00026, 0.99973, 0.99973, 1.03374, 1.00026, 1.00024, 0.99927, 0.9995, 0.99998, 1, 1.00034, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 1.00026, 0.99973, 1.00082, 0.99962, 1.00003, 0.99915, 0.99984, 1.00026, 1.00026, 1.00026, 0.99998, 0.99999, 0.99998, 0.99998, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 1.00026, 1.00026, 1.00026, 1.00042, 0.99999, 0.99998, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 0.99561, 0.99999, 0.99999, 0.99977, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.00069, 0.99973, 0.99973, 1.0006, 1.0006, 0.99973, 1.03828, 1.0006, 0.99999, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 1.0006, 0.99972, 1.0006, 1.40579, 0.99982, 0.60299, 1, 1, 1.00003, 1.00106, 0.99867, 1.00003, 1, 1, 1.00026, 1.00026, 0.9993, 1.00026, 1.00026, 0.99973, 1, 1.00031, 1.00026, 0.99973, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00016, 0.99998, 1.00026, 1.00026, 1.00026, 1.00032, 1.00032, 1.00026, 1.00026, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99998, 0.99998, 0.99972, 0.99982, 1.0006, 1, 1.00023, 0.99954, 1.00049, 1.00003, 1.06409, 1.20985, 0.99945, 1.00026, 1.00026, 1.00026, 0.99974, 1, 1, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.00087, 0.99959, 0.99959, 1.00031, 0.99959, 0.99959, 1.00025, 1.00003, 1.00056, 0.99998, 1.41144, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 0.99988, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 0.99998, 0.99935, 0.99998, 0.8121, 0.99998, 1.00087, 1.00026, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 0.99998, 0.99998, 1, 1.00001, 0.99561, 0.99973, 1.00041, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1.00026, 1.41144, 0.99995, 0.99995, 0.99995, 0.99995, 1.00026, 1.00026, 0.99973, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99973, 0.9993, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 1, 1, 1, 0.99973, 0.99902];
+exports.HelveticaBoldFactors = HelveticaBoldFactors;
+
+/***/ }),
+/* 61 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.HelveticaBoldItalicFactors = void 0;
+const HelveticaBoldItalicFactors = [0.76116, 1, 0.99977, 1, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91155, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 1, 0.99977, 1.00026, 0.99977, 0.99973, 1.00026, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 0.99971, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99969, 1.0006, 0.99973, 0.99973, 0.99977, 0.99977, 0.99977, 1.00026, 1.00026, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 0.9998, 1.00022, 0.99972, 1.00022, 1.00022, 1.00022, 1.00001, 0.99968, 1.00032, 1.00047, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99944, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99981, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 0.99966, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 0.99977, 0.99999, 0.99977, 1.00038, 0.99977, 1.00001, 1.00001, 0.99973, 1.00066, 0.99967, 0.99967, 1.00041, 0.99998, 0.99999, 0.99977, 1.00022, 0.99967, 1.00001, 0.99977, 1.00026, 0.99964, 1.00031, 1.00001, 0.99999, 0.99999, 1, 1.00023, 1, 1, 0.99999, 1.00035, 1.00001, 0.99999, 0.99966, 1.00029, 1.00038, 1.00035, 1.00001, 1.0006, 1.0006, 0.99973, 0.99978, 1.00001, 1.00057, 0.99989, 0.99964, 0.99973, 0.99977, 0.99999, 1.00058, 0.99973, 0.99973, 0.99973, 0.99955, 0.9995, 1.00026, 1.00026, 1.00032, 0.99989, 1.00034, 0.99999, 1.00026, 1.00026, 1.00026, 0.99973, 0.45998, 0.99973, 1.00026, 0.99973, 1.00001, 0.99999, 0.99982, 0.99994, 0.99996, 1, 1.00042, 1.00044, 1.00029, 1.00023, 1.00044, 1.00026, 0.99949, 1.00002, 0.99973, 1.0006, 1.0006, 1.0006, 0.99975, 1.00026, 1.00026, 1.00032, 0.99973, 0.99967, 1, 1.00026, 1, 0.99971, 0.99978, 1, 0.99973, 0.99981, 0.99981, 0.99973, 0.99977, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1.00049, 1, 1.00098, 1, 1, 1, 1, 1.00003, 1.00003, 0.99959, 0.9999, 0.99973, 1.00026, 1.0006, 1.00077, 1.00064, 1.41144, 0.99959, 0.99959, 0.99998, 0.99998, 0.99998, 1, 1.00077, 0.99972, 0.99973, 0.99973, 0.99998, 1, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 1.00063, 0.99999, 0.99998, 1, 0.99962, 0.99998, 1.0006, 1, 1, 1.00025, 0.99973, 1, 1.00026, 0.99973, 0.99973, 1.0044, 1.00026, 1.00024, 0.99942, 0.9995, 0.99998, 1, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 1.00026, 0.99973, 1.00101, 1.00101, 1.00003, 0.99915, 0.99984, 1.00026, 1.00026, 1.00026, 0.99998, 0.99999, 0.99998, 0.99998, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 1.00026, 1.00026, 1.00026, 1.00042, 0.99999, 0.99998, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 0.99561, 0.99999, 0.99999, 0.99977, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.00014, 0.99973, 0.99973, 1.0006, 1.0006, 0.99973, 1.01011, 1.0006, 0.99999, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 1.0006, 0.99972, 1.0006, 1.40579, 0.99982, 0.60299, 1, 1, 1.00003, 1.00106, 1.01322, 1.00003, 1, 1, 1.00026, 1.00026, 0.9993, 1.00026, 1.00026, 0.99973, 1, 1.00031, 1.00026, 0.99973, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00016, 0.99998, 1.00026, 1.00026, 1.00026, 0.99943, 0.99943, 1.00026, 1.00026, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99998, 0.99998, 0.99972, 0.99982, 1.0006, 1, 1, 1.00055, 1.00012, 1.00003, 1.06409, 1.20985, 1.00007, 1.00026, 1.00026, 1.00026, 0.99974, 1, 1, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.00087, 0.99959, 0.99959, 1.00031, 0.99959, 0.99959, 1.00025, 1.00003, 0.99923, 0.99998, 1.41144, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 1.00064, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 0.99998, 1.00076, 0.99998, 0.8121, 0.99998, 1.00069, 1.00026, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 0.99998, 0.99998, 1, 1.00001, 0.99967, 0.99973, 0.98685, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1.00026, 1.41144, 0.99948, 0.99948, 0.99948, 0.99948, 1.00026, 1.00026, 0.99973, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99973, 1.00065, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 1, 1, 1, 0.99973, 1.00061];
+exports.HelveticaBoldItalicFactors = HelveticaBoldItalicFactors;
+
+/***/ }),
+/* 62 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.HelveticaItalicFactors = void 0;
+const HelveticaItalicFactors = [0.76116, 1, 1.00001, 1, 1, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91221, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 1.00054, 0.99977, 0.99977, 0.99977, 0.99973, 1.00026, 1.00022, 0.99945, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 0.99946, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00084, 1.0006, 1, 1, 1.00001, 1.00001, 1.00001, 0.99973, 0.99973, 1.00001, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 1.00013, 1.00022, 1.00007, 1.00022, 1.00022, 1.00022, 1.00001, 1.0001, 1.00054, 1.00052, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00065, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99973, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 0.99933, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 1.00001, 1.00019, 1.00001, 1.0001, 0.99986, 1.00001, 1.00001, 1.00001, 1.00038, 0.99954, 0.99954, 0.9994, 1.00066, 0.99999, 0.99977, 1.00022, 1.00054, 1.00001, 0.99977, 1.00026, 0.99975, 1.0001, 1.00001, 0.99993, 0.9995, 0.99955, 1.00016, 0.99978, 0.99974, 1.00019, 1.00022, 0.99955, 1.00053, 0.99962, 1.00027, 1.0001, 1.00068, 1.00001, 1.0006, 1.0006, 1, 1.00008, 0.99957, 0.99972, 0.9994, 0.99975, 0.99973, 1.00089, 1.00005, 0.99967, 1.00048, 0.99973, 0.99973, 1.00002, 1.00034, 0.99973, 0.99973, 0.99964, 1.00006, 1.00066, 0.99947, 0.99973, 0.98894, 0.99973, 1, 0.44898, 1, 0.99946, 1, 1.00039, 1.00082, 0.99991, 0.99991, 0.99985, 1.00022, 1.00023, 1.00061, 1.00006, 0.99966, 0.99895, 0.99973, 1.00019, 1.0008, 1, 0.99924, 0.99924, 0.99924, 0.99983, 1.00044, 0.99973, 0.99964, 1, 1.00051, 1, 0.99973, 1, 1.00423, 0.99925, 0.99999, 0.99973, 0.99945, 0.99945, 0.99973, 1.00001, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1.00049, 1.00245, 1, 1, 1, 0.99949, 1.00003, 0.99959, 0.99987, 0.99973, 0.99973, 1.0006, 1.0009, 0.99949, 1.41144, 1.00005, 1.00005, 1.0006, 1.0006, 0.99998, 1, 1.0009, 0.99972, 1, 1, 0.99998, 1, 1, 1, 1, 1, 1, 0.99998, 0.99973, 1.00019, 0.99999, 0.99998, 1, 0.99962, 1.0006, 1.0006, 1, 1, 1.00025, 0.99973, 1, 0.99973, 0.99973, 0.99973, 1.0288, 0.99973, 1.00024, 1.0006, 0.9995, 0.99998, 1, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99897, 0.99897, 1.00003, 1.00003, 0.99984, 0.99968, 0.99968, 0.99973, 1.0006, 1, 0.99998, 1.0006, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 0.99973, 0.99973, 0.99973, 1.00042, 0.99999, 0.99998, 1, 0.99924, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00034, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 1.00035, 0.99999, 0.99999, 0.99977, 0.99924, 0.99924, 0.99924, 0.99924, 0.99924, 1.0006, 0.99924, 0.99924, 1, 1, 1, 1, 0.99924, 0.99924, 0.99962, 1.06311, 0.99924, 1.00024, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 0.99924, 0.95317, 0.99924, 1.40579, 0.99999, 0.60299, 1, 1, 1.00003, 1.00267, 1.01487, 1.00003, 1, 1, 0.99973, 0.99973, 1.00041, 0.99973, 0.99973, 0.99973, 1, 1.00031, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.00016, 0.99998, 0.99973, 0.99973, 0.99973, 1.00025, 1.00025, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 0.99973, 0.99973, 0.9998, 0.99998, 0.99998, 0.96329, 0.99982, 1.0006, 1, 1.00023, 0.99947, 1.00012, 1.00003, 1.06409, 1.20985, 1.00063, 0.99973, 0.99973, 1.00026, 1.00006, 0.99998, 0.99998, 0.99998, 0.99924, 0.99924, 0.99924, 0.99924, 1.00043, 0.99998, 0.99998, 0.8254, 0.99998, 0.99998, 1.00025, 1.00003, 1.00043, 0.99998, 1.41144, 1, 1, 1, 1, 1, 1, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 0.99995, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 1.0006, 0.99994, 1.0006, 0.89547, 1.0006, 0.99911, 0.99973, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 1.0006, 0.99998, 1, 1.00001, 0.99954, 0.99973, 0.98332, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 0.99973, 1.41144, 1.00036, 1.00036, 1.00036, 1.00036, 0.99973, 0.99973, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1, 1.0005, 1, 1, 1, 1, 0.99973, 1, 1, 1, 1, 1, 0.99973, 0.99918];
+exports.HelveticaItalicFactors = HelveticaItalicFactors;
+
+/***/ }),
+/* 63 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.HelveticaRegularFactors = void 0;
+const HelveticaRegularFactors = [0.76116, 1, 1.00001, 1, 1, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99928, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91621, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 0.99977, 0.99977, 1.00013, 0.99977, 0.99973, 1.00026, 1.00022, 1.0004, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 1.00019, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00055, 1.0006, 1, 1, 1.00001, 1.00001, 1.00001, 0.99973, 0.99973, 1.00005, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 0.99941, 1.00022, 0.99947, 1.00022, 1.00022, 1.00022, 1.00001, 1.00019, 0.99977, 0.99946, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99945, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 1.00015, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 0.99982, 0.99982, 1, 1.00001, 0.99962, 1.00001, 1.00092, 0.99964, 1.00001, 0.99928, 0.99963, 0.99999, 1.00035, 1.00035, 1.00082, 0.99962, 0.99999, 0.99977, 1.00022, 1.00035, 1.00001, 0.99977, 1.00026, 0.9996, 0.99967, 1.00001, 1.00034, 1.00074, 1.00054, 1.00053, 1.00063, 0.99971, 0.99962, 1.00035, 0.99975, 0.99977, 1.00047, 1.00029, 1.00092, 1.00035, 1.00001, 1.0006, 1.0006, 1, 0.99988, 0.99975, 1, 1.00082, 0.9996, 0.99973, 1.00043, 0.99953, 1.0007, 0.99915, 0.99973, 0.99973, 1.00008, 0.99892, 1.00073, 1.00073, 1.00114, 0.99915, 1.00073, 0.99955, 0.99973, 1.00092, 0.99973, 1, 0.99998, 1, 1.0003, 1, 1.00043, 1.00001, 0.99969, 1.0003, 1, 1.00035, 1.00001, 0.9995, 1, 1.00092, 0.99968, 0.99973, 1.0007, 0.9995, 1, 0.99924, 1.0006, 0.99924, 0.99972, 1.00062, 0.99973, 1.00114, 1, 1.00035, 1, 0.99955, 1, 0.99971, 0.99925, 1.00023, 0.99973, 0.99978, 0.99978, 0.99973, 1.00001, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1, 1, 1, 1, 1, 0.99949, 1.00003, 0.99959, 0.99987, 0.99973, 0.99973, 1.0006, 1.0009, 0.99966, 1.41144, 1.00005, 1.00005, 1.0006, 1.0006, 0.99998, 1.0009, 0.99972, 1, 1, 0.99998, 1, 1, 1, 1, 0.99998, 0.99973, 1.00019, 0.99999, 0.99998, 0.99962, 1.0006, 1.0006, 1.00025, 0.99973, 0.99973, 0.99973, 0.99973, 1.04596, 0.99973, 1.00024, 1.00065, 0.9995, 0.99998, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 0.99973, 1, 0.99973, 0.99973, 0.99973, 1.00045, 1.00045, 1.00003, 0.99915, 0.99984, 0.99973, 0.99973, 0.99973, 1.0006, 1, 0.99998, 1.0006, 1, 0.99999, 1, 0.99973, 1.00002, 0.99973, 0.99973, 0.99973, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 1.00026, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99998, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 0.99973, 0.99973, 0.99973, 1.00042, 0.99999, 0.99998, 0.99924, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00034, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 1.00035, 0.99999, 0.99999, 0.99977, 0.99924, 0.99924, 0.99924, 0.99924, 0.99924, 1.0006, 0.99924, 0.99924, 1, 1, 1, 1, 0.99924, 0.99924, 1, 1.02572, 0.99924, 1.00005, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 0.99924, 0.95317, 0.99924, 1.40579, 0.99999, 0.60299, 1, 1, 1.00003, 1.00267, 0.96499, 1.00003, 1, 1, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 0.99973, 1, 1.00031, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.00016, 0.99998, 0.99973, 0.99973, 0.99973, 1.00031, 1.00031, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 0.99973, 0.99973, 0.9998, 0.99998, 0.99998, 0.96329, 0.99982, 1.0006, 1, 1.00023, 0.99933, 1.00008, 1.00003, 1.06409, 1.20985, 1.00015, 0.99973, 0.99973, 1.00026, 1.00006, 0.99998, 0.99998, 0.99998, 0.99924, 0.99924, 0.99924, 0.99924, 1.00043, 0.99998, 0.99998, 0.8254, 0.99998, 0.99998, 1.00025, 1.00003, 1.00027, 0.99998, 1.41144, 1, 1, 1, 1, 1, 1, 0.99999, 0.99973, 0.99973, 1.00002, 1.40579, 0.9997, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 1.0006, 0.99995, 1.0006, 0.84533, 1.0006, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 0.99998, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 1.0006, 0.99998, 1, 1.00001, 0.99561, 0.99973, 1.00073, 1, 1, 0.99998, 1, 1, 1, 1, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1, 0.99973, 1.41144, 1.00023, 1.00023, 1.00023, 1.00023, 0.99973, 0.99973, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1, 1.00055, 1, 1, 1, 1, 0.99973, 1, 1, 1, 1, 1, 0.99973, 1.00019];
+exports.HelveticaRegularFactors = HelveticaRegularFactors;
+
+/***/ }),
+/* 64 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.MyriadProBoldFactors = void 0;
+const MyriadProBoldFactors = [1.36898, 1, 0.90838, 0.868, 0.868, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.91945, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.83637, 0.83637, 0.82391, 0.82391, 0.82391, 0.82391, 0.82391, 0.82391, 0.91905, 0.96376, 0.96376, 0.97484, 0.90157, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.95417, 0.80061, 0.80061, 0.75261, 0.95407, 0.87992, 0.97484, 0.99793, 0.86275, 0.8768, 0.8019, 0.8768, 0.8768, 1, 0.8768, 0.95407, 1, 1, 1, 1, 0.97069, 0.95407, 1.0258, 0.887, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 0.82976, 1.0258, 0.73901, 0.73901, 0.85022, 0.85022, 1, 0.83655, 0.83655, 0.97153, 0.83655, 1, 0.83655, 0.84638, 1.0156, 1.0156, 0.95546, 0.95546, 0.95546, 1, 0.95546, 0.95546, 0.92179, 0.936, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92796, 0.97268, 0.92179, 0.96034, 0.92179, 0.92179, 0.92179, 0.87107, 0.95638, 0.92361, 0.91709, 0.92179, 0.82114, 0.82114, 0.82114, 1, 0.87107, 0.8096, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.8096, 0.8096, 1, 0.8096, 1, 0.96318, 0.89713, 0.89713, 0.89713, 0.89713, 1, 0.92436, 0.86958, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.93704, 0.93704, 0.83689, 0.94438, 0.94438, 0.95353, 0.94083, 0.94083, 0.94083, 0.94083, 0.94083, 0.91905, 0.89192, 0.90406, 0.90406, 0.90406, 0.90406, 0.90406, 0.9446, 0.9446, 0.9446, 0.9446, 0.9446, 0.94938, 0.94938, 0.94938, 0.94938, 0.90088, 1, 0.94938, 0.9031, 0.9031, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.94938, 0.94836, 0.94836, 0.94938, 0.93884, 0.83181, 0.94938, 1.08595, 0.94938, 0.94938, 1, 1, 1, 1, 1, 1, 1, 1.02058, 1.02058, 1.16661, 0.78966, 0.94938, 0.97898, 1.18777, 1.01149, 0.96174, 1, 0.80687, 0.80687, 0.94292, 0.94292, 0.90088, 1, 1.01149, 0.96544, 0.81093, 0.81093, 0.90088, 1, 1, 0.81093, 0.81093, 0.81093, 0.81093, 0.90088, 0.99793, 0.87548, 1, 0.90088, 1, 1, 0.78076, 0.93582, 1, 1, 0.91882, 0.99793, 1, 0.97571, 0.94219, 0.94219, 0.84313, 0.97571, 0.89022, 0.9498, 1, 0.90088, 1, 0.9358, 1.08595, 1, 1, 0.99793, 0.90088, 0.98621, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.99793, 1, 1, 0.94938, 1, 0.89903, 0.95933, 0.94938, 0.98607, 1.0373, 1.02058, 1, 1.36145, 0.95933, 0.95933, 0.93969, 0.80479, 1, 0.80479, 1.024, 1, 1, 1, 0.99793, 1, 1, 0.99793, 0.99793, 1, 1, 0.9577, 0.92601, 0.9577, 0.9577, 1, 0.9577, 0.98225, 0.90088, 1, 1.02058, 1.08595, 0.8361, 0.8361, 0.81079, 0.81079, 0.95933, 0.95933, 0.95933, 1, 1, 0.90088, 1, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 1.01591, 0.98621, 1.05486, 1.30692, 1, 1, 1, 1, 1, 1, 0.98621, 1.0078, 1.0078, 1.0078, 1.0078, 0.98621, 1.0474, 1.0474, 0.97455, 0.98275, 1, 0.97455, 0.98981, 0.98981, 0.9314, 0.73977, 1, 0.73903, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.16161, 1.033, 1, 0.9672, 0.54324, 1, 1, 1.02058, 1, 0.95617, 1.02058, 1, 1, 0.95933, 0.95933, 0.8271, 0.95933, 1, 0.99793, 1, 1.08595, 0.95933, 0.91701, 0.98894, 0.9446, 0.9446, 0.9446, 0.9446, 0.9446, 0.91964, 0.90088, 0.9446, 0.9446, 0.9446, 0.86774, 0.86774, 0.9446, 0.9446, 0.99793, 1, 0.99642, 0.99642, 1, 1.0213, 1.05686, 1, 0.9446, 0.9446, 0.9446, 0.97898, 0.97455, 0.94292, 0.94292, 1.17173, 0.9897, 0.93582, 1.285, 1, 0.99394, 0.78367, 1.02058, 1.08595, 0.80535, 0.96361, 0.97407, 0.72851, 0.72851, 0.83734, 0.918, 0.908, 0.908, 0.93582, 1, 0.93582, 0.93582, 0.86209, 0.97646, 0.97646, 1.0732, 0.97646, 1, 0.62295, 1, 0.9553, 0.90088, 1, 0.78036, 0.78036, 0.78036, 1, 0.78036, 1, 1, 1.00872, 0.99793, 1, 1, 1, 0.86832, 1, 0.99793, 1.19137, 1, 1, 0.99793, 0.76169, 1, 1.10208, 1.0128, 1.10208, 0.77452, 1, 1.05453, 0.97898, 0.99793, 1, 0.99642, 0.90088, 1, 0.90989, 0.65, 1, 1, 1, 1, 0.99793, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.89903, 1, 0.72706, 0.96694, 1, 1, 1, 1, 0.89713, 1.10208, 0.90088, 0.78076, 1, 1, 1, 1, 0.96694, 1, 1, 1, 1, 1, 0.74854, 0.93582, 1, 1, 1, 1, 0.95442, 1, 0.95871, 0.95871, 0.95871, 0.95871, 0.95442, 0.95442, 0.95298, 0.97579, 0.97579, 0.97579, 0.97579, 0.97579, 0.9332, 1.05993, 0.94039, 0.94039, 0.94039, 0.94039, 0.99793, 0.94039, 0.938, 0.938, 0.938, 0.938, 0.99793, 0.95776];
+exports.MyriadProBoldFactors = MyriadProBoldFactors;
+
+/***/ }),
+/* 65 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.MyriadProBoldItalicFactors = void 0;
+const MyriadProBoldItalicFactors = [1.36898, 1, 0.85576, 0.845, 0.845, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.80591, 0.80591, 0.80729, 0.80729, 0.80729, 0.80729, 0.80729, 0.80729, 0.85308, 0.94299, 0.94299, 0.95961, 0.94729, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.92098, 0.77512, 0.77512, 0.66862, 0.92222, 0.7927, 0.95961, 0.97276, 0.83655, 0.86523, 0.7805, 0.86523, 0.86523, 1, 0.86523, 0.92222, 1, 1, 1, 1, 0.92222, 0.92222, 0.98621, 0.86036, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.69323, 0.98621, 0.71743, 0.71743, 0.81698, 0.81698, 1, 0.79726, 0.79726, 0.92655, 0.79726, 1, 0.79726, 0.81691, 0.98558, 0.98558, 0.92222, 0.92222, 0.92222, 1, 0.92222, 0.92222, 0.90637, 0.909, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.92346, 0.89711, 0.90637, 0.88127, 0.90251, 0.90251, 0.90637, 0.83809, 0.93157, 0.90976, 0.83392, 0.90637, 0.80729, 0.80729, 0.80729, 1, 0.83809, 0.76463, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.76463, 0.76463, 1, 0.76463, 1, 0.94523, 0.86275, 0.86275, 0.86275, 0.86275, 1, 0.90637, 0.83659, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.83509, 0.83509, 0.72459, 0.90699, 0.90699, 0.91605, 0.9154, 0.9154, 0.9154, 0.9154, 0.9154, 0.85308, 0.85359, 0.85458, 0.85458, 0.85458, 0.85458, 0.85458, 0.90531, 0.90531, 0.90531, 0.90531, 0.90531, 0.99613, 0.99613, 0.99613, 0.99613, 1.18616, 1, 0.99613, 0.85811, 0.85811, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99613, 0.92886, 0.92886, 0.99613, 0.92222, 0.80178, 0.99613, 1.08595, 0.99613, 0.99613, 1, 1, 1, 1, 1, 1, 1, 1.02058, 1.02058, 1.16148, 0.76813, 0.99613, 0.91677, 1.21296, 0.8578, 0.90557, 1, 0.80687, 0.80687, 0.94292, 0.94292, 1.18616, 1, 0.8578, 0.95973, 0.78216, 0.78216, 1.18616, 1, 1, 0.78216, 0.78216, 0.78216, 0.78216, 1.18616, 0.97276, 0.81539, 1, 1.18616, 1, 1, 0.78076, 0.93582, 1, 1, 0.91339, 0.97276, 1, 0.91677, 0.9332, 0.9332, 0.76783, 0.91677, 0.89022, 0.90276, 1, 1.18616, 1, 1.30628, 1.08595, 1, 1, 0.97276, 1.18616, 0.95381, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.97276, 1, 1, 0.90083, 1, 0.89903, 0.92168, 0.90083, 0.91324, 0.91324, 1.02058, 1, 1.36145, 0.92168, 0.92168, 0.9135, 0.80779, 1, 0.80779, 0.98796, 1, 1, 1, 0.97276, 1, 1, 0.97276, 0.97276, 1, 1, 0.9135, 0.86847, 0.9135, 0.9135, 1, 0.9135, 0.94951, 1.18616, 1, 1.02058, 1.08595, 0.82891, 0.82711, 0.80479, 0.80178, 0.92168, 0.92168, 0.92168, 1, 1, 1.18616, 1, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.97096, 0.95381, 1.05486, 1.23026, 1, 1, 1, 1, 1, 1, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.98981, 0.98981, 0.95298, 0.9224, 1, 0.95298, 0.95381, 0.95381, 0.85408, 0.6894, 1, 0.74321, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.20006, 1.0006, 1, 0.93459, 0.71526, 1, 1, 1.02058, 1, 0.92699, 1.02058, 1, 1, 0.92168, 0.92168, 0.79464, 0.92168, 1, 0.97276, 1, 1.08595, 0.92168, 0.86847, 0.97276, 0.91513, 0.91513, 0.91513, 0.91513, 0.91513, 0.87514, 1.18616, 0.91513, 0.91513, 0.91513, 0.85923, 0.85923, 0.91513, 0.91513, 0.97276, 1, 0.99043, 0.99043, 1, 1.08074, 1.04864, 1, 0.91677, 0.91677, 0.91513, 0.92004, 0.96736, 0.94292, 0.94292, 1.14542, 0.97733, 0.93582, 1.26, 1, 0.97355, 0.80487, 1.02058, 1.08595, 0.79199, 0.89398, 0.91677, 0.71541, 0.71541, 0.81625, 0.896, 0.896, 0.896, 0.91782, 1, 0.91782, 0.91782, 0.83266, 0.95077, 0.95077, 1.03493, 0.95077, 1, 0.55509, 1, 0.93481, 1.18616, 1, 0.748, 0.748, 0.748, 1, 0.748, 1, 1, 0.99973, 0.97276, 1, 1, 1, 0.88159, 1, 0.97276, 1.17337, 1, 1, 0.97276, 0.78694, 1, 1.04502, 1.05214, 1.04502, 0.72651, 1, 0.99531, 0.92332, 0.97276, 1, 0.99043, 1.18616, 1, 1.00899, 0.698, 1, 1, 1, 1, 0.97276, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.89903, 1, 0.66227, 0.96694, 1, 1, 1, 1, 0.86275, 1.04502, 1.18616, 0.78076, 1, 1, 1, 1, 0.96694, 1, 1, 1, 1, 1, 0.85633, 0.93582, 1, 1, 1, 1, 0.91677, 1, 0.90646, 0.90646, 0.90646, 0.90646, 0.91677, 0.91677, 0.92061, 0.94236, 0.94236, 0.94236, 0.94236, 0.94236, 0.89544, 1.0051, 0.89364, 0.89364, 0.89364, 0.89364, 0.97276, 0.89364, 0.9, 0.9, 0.9, 0.9, 0.97276, 0.86842];
+exports.MyriadProBoldItalicFactors = MyriadProBoldItalicFactors;
+
+/***/ }),
+/* 66 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.MyriadProItalicFactors = void 0;
+const MyriadProItalicFactors = [1.36898, 1, 0.85158, 0.773, 0.773, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.77812, 0.77812, 0.76852, 0.76852, 0.76852, 0.76852, 0.76852, 0.76852, 0.78112, 0.89591, 0.89591, 0.90561, 0.88836, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.87396, 0.70466, 0.70466, 0.62264, 0.86822, 0.7646, 0.90561, 0.88465, 0.76125, 0.80094, 0.76449, 0.80094, 0.80094, 1, 0.80094, 0.86822, 1, 1, 1, 1, 0.86822, 0.86822, 0.83864, 0.81402, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.65351, 0.83864, 0.728, 0.728, 0.77212, 0.77212, 1, 0.79475, 0.79475, 0.85308, 0.79475, 1, 0.79475, 0.80553, 0.93637, 0.93637, 0.87514, 0.87514, 0.87514, 1, 0.87514, 0.87514, 0.8588, 0.867, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.89386, 0.89947, 0.8588, 0.86026, 0.85751, 0.85751, 0.8588, 0.76013, 0.82565, 0.85701, 0.77899, 0.8588, 0.72421, 0.72421, 0.72421, 1, 0.76013, 0.69866, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.69866, 0.69866, 1, 0.69866, 1, 0.89058, 0.77598, 0.77598, 0.77598, 0.77598, 1, 0.8588, 0.76013, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.8156, 0.8156, 0.69461, 0.85991, 0.85991, 0.80811, 0.87832, 0.87832, 0.87832, 0.87832, 0.87832, 0.78112, 0.82352, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.8562, 0.8562, 0.8562, 0.8562, 0.8562, 0.93859, 0.93859, 0.93859, 0.93859, 1.15012, 1, 0.93859, 0.8075, 0.8075, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.93859, 0.9486, 0.9486, 0.93859, 0.88307, 0.77025, 0.93859, 1.08595, 0.93859, 0.93859, 1, 1, 1, 1, 1, 1, 1, 1.27014, 1.02058, 1.06383, 0.70926, 0.93859, 0.94399, 1.18417, 0.83537, 0.93298, 1, 0.85034, 0.85034, 1.0222, 1.0222, 1.15012, 1, 0.83537, 0.79121, 0.846, 0.846, 1.15012, 1, 1, 0.846, 0.846, 0.846, 0.846, 1.15012, 0.88465, 0.77487, 1, 1.15012, 1, 1, 0.75945, 0.75945, 1, 1, 0.9161, 0.88465, 1, 0.94399, 0.86847, 0.86847, 0.8544, 0.94399, 0.79519, 0.93942, 1, 1.15012, 1, 1.03901, 1.08595, 1, 1, 0.88465, 1.15012, 0.82424, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.88465, 1, 1, 0.81453, 1, 0.89903, 0.96017, 0.81453, 0.92388, 0.92388, 1.02058, 1, 1.36145, 0.96186, 0.96186, 0.9278, 0.84943, 1, 0.70869, 1.0186, 1, 1, 1, 0.88465, 1, 1, 0.88465, 0.88465, 1, 1, 0.94219, 0.878, 0.94219, 0.94219, 1, 0.94219, 0.88075, 1.15012, 1, 1.02058, 1.08595, 0.73541, 0.73361, 0.73572, 0.73572, 0.96017, 0.96017, 0.96017, 1, 1, 1.15012, 1, 1.03075, 0.82424, 0.82424, 0.82424, 0.82424, 0.82424, 1.02738, 0.82424, 1.02119, 1.06233, 1, 1, 1, 1, 1, 1, 1.03075, 1.03075, 1.03075, 1.03075, 1.03075, 0.82424, 1.02175, 1.02175, 0.912, 0.922, 1, 0.912, 1.03075, 1.03075, 0.88787, 0.83911, 1, 0.66266, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.05233, 1.06676, 1, 0.96998, 0.69353, 1, 1, 1.02058, 1, 0.95829, 1.02058, 1, 1, 0.96017, 0.96017, 0.86865, 0.96017, 1, 0.88465, 1, 1.08595, 0.96017, 0.88, 0.88465, 0.93859, 0.93859, 0.93859, 0.93859, 0.93859, 0.84759, 1.15012, 0.93859, 0.93859, 0.93859, 0.86799, 0.86799, 0.93859, 0.93859, 0.88465, 1, 0.9005, 0.9005, 1, 0.94565, 0.9446, 1, 0.8562, 0.8562, 0.93859, 0.94399, 0.91974, 0.85283, 0.85283, 1.04828, 0.86936, 0.75945, 1.124, 1, 0.93969, 0.78815, 1.02058, 1.08595, 0.74948, 0.85769, 0.94399, 0.69046, 0.62864, 0.85639, 1.027, 1.027, 1.027, 0.87321, 1, 0.87321, 0.87321, 0.86948, 0.95493, 0.95493, 0.98391, 0.95493, 1, 0.53609, 1, 0.93758, 1.15313, 1, 0.746, 0.746, 0.746, 1, 0.746, 1, 1, 0.90083, 0.88465, 1, 1, 1, 0.89217, 1, 0.88465, 1.17337, 1, 1, 0.88465, 0.75187, 1, 1.12658, 1.03737, 1.12658, 0.88417, 1, 0.95119, 0.94578, 0.88465, 1, 0.9005, 1.15012, 1, 1.08106, 0.669, 1, 1, 1, 1, 0.88465, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.89903, 1, 0.65507, 0.9219, 1, 1, 1, 1, 0.77598, 1.12658, 1.15012, 0.75945, 1, 1, 1, 1, 0.9219, 1, 1, 1, 1, 1, 0.85034, 0.75945, 1, 1, 1, 1, 0.94578, 1, 0.91123, 0.91123, 0.91123, 0.91123, 0.94578, 0.94578, 0.91, 0.979, 0.979, 0.979, 0.979, 0.979, 0.882, 0.93559, 0.882, 0.882, 0.882, 0.882, 0.88465, 0.882, 0.83, 0.83, 0.83, 0.83, 0.88465, 0.84596];
+exports.MyriadProItalicFactors = MyriadProItalicFactors;
+
+/***/ }),
+/* 67 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.MyriadProRegularFactors = void 0;
+const MyriadProRegularFactors = [1.36898, 1, 0.91755, 0.788, 0.788, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.92138, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.8126, 0.8126, 0.80314, 0.80314, 0.80314, 0.80314, 0.80314, 0.80314, 0.85608, 0.92222, 0.92222, 0.92915, 0.92819, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.90991, 0.73764, 0.73764, 0.7154, 0.90284, 0.86169, 0.92915, 0.92241, 0.79726, 0.83051, 0.81884, 0.83051, 0.83051, 1, 0.83051, 0.90284, 1, 1, 1, 1, 0.90976, 0.90284, 0.86023, 0.82873, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.80513, 0.86023, 0.74, 0.74, 0.8126, 0.8126, 1, 0.84869, 0.84869, 0.91172, 0.84869, 1, 0.84869, 0.85588, 0.96518, 0.96518, 0.91115, 0.91115, 0.91115, 1, 0.91115, 0.91115, 0.8858, 0.894, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.94307, 0.98612, 0.8858, 0.94007, 0.8858, 0.8858, 0.8858, 0.79761, 0.89992, 0.87791, 0.81992, 0.8858, 0.74498, 0.74498, 0.74498, 1, 0.79761, 0.73914, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.73914, 0.73914, 1, 0.73914, 1, 0.89297, 0.81363, 0.81363, 0.81363, 0.81363, 1, 0.8858, 0.79611, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.88157, 0.88157, 0.82528, 0.89591, 0.89591, 0.83659, 0.89633, 0.89633, 0.89633, 0.89633, 0.89633, 0.85608, 0.83089, 0.8111, 0.8111, 0.8111, 0.8111, 0.8111, 0.90531, 0.90531, 0.90531, 0.90531, 0.90531, 0.86667, 0.86667, 0.86667, 0.86667, 0.90088, 0.86667, 0.86936, 0.86936, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.86667, 0.95308, 0.95308, 0.86667, 0.90706, 0.78105, 0.86667, 1.08595, 0.86667, 0.86667, 1, 1, 1, 1, 1, 1, 1, 1.27014, 1.02058, 1.0664, 0.72601, 0.86667, 1.0231, 1.22736, 0.92006, 0.97358, 1, 0.85034, 0.85034, 1.0222, 1.0222, 0.90088, 0.92006, 0.80549, 0.896, 0.896, 0.90088, 0.896, 0.896, 0.896, 0.896, 0.90088, 0.92241, 0.87064, 1, 0.90088, 1, 0.74505, 0.74505, 0.91882, 0.92241, 1.01411, 0.89903, 0.89903, 0.93372, 1.01411, 0.79519, 0.98088, 1, 0.90088, 1.03901, 1.08595, 1, 1, 0.92241, 0.90088, 0.84224, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.92241, 1, 0.90083, 1, 0.89903, 0.99793, 0.90083, 0.98699, 0.98699, 1.02058, 1, 1.36145, 0.99793, 0.99793, 0.97276, 0.82784, 1, 0.69067, 1.05099, 1, 1, 1, 0.92241, 1, 0.92241, 0.92241, 1, 1.00512, 0.928, 1.00512, 1.00512, 1, 1.00512, 0.89713, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.90088, 1.02058, 1.08595, 0.75339, 0.75339, 0.76575, 0.76575, 0.99793, 0.99793, 0.99793, 1, 1, 0.90088, 1.05326, 0.84224, 0.84224, 0.84224, 0.84224, 0.84224, 1.07469, 0.84224, 1.02119, 1.1536, 1, 1, 1, 1, 1, 1, 1.05326, 1.06226, 1.06226, 1.06226, 1.06226, 0.84224, 1.09377, 1.09377, 0.938, 0.986, 1, 0.938, 1.06226, 1.06226, 0.944, 0.83704, 1, 0.81441, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.05638, 1.08927, 1, 1.00119, 0.54324, 1, 1, 1.02058, 1, 0.95978, 1.02058, 1, 1, 0.99793, 0.99793, 0.91887, 0.99793, 1, 0.92241, 1, 1.08595, 0.99793, 0.938, 0.89364, 0.98714, 0.98714, 0.98714, 0.98714, 0.98714, 0.91434, 0.90088, 0.98714, 0.98714, 0.98714, 0.88888, 0.88888, 0.98714, 0.98714, 0.92241, 1, 0.91009, 0.91009, 1, 0.93484, 0.97198, 1, 0.89876, 0.89876, 0.98714, 1.0231, 0.95325, 0.85283, 0.85283, 1.07257, 0.89073, 0.74505, 1.156, 1, 0.99007, 0.80442, 1.02058, 1.08595, 0.74705, 0.91879, 1.01231, 0.73002, 0.66466, 0.94935, 1.06904, 1.06304, 1.06304, 0.93173, 1, 0.93173, 0.93173, 0.98472, 0.98196, 0.98196, 1.024, 0.98196, 1, 0.56866, 1, 0.98972, 0.90088, 1, 0.792, 0.792, 0.792, 1, 0.792, 1, 1, 0.9332, 0.92241, 1, 1, 0.89762, 1, 0.92241, 1.23456, 1, 1, 0.92241, 0.71119, 1, 1.19137, 1.04552, 1.19137, 0.904, 1, 0.96017, 1.0231, 0.92241, 1, 0.91009, 0.90088, 0.90388, 0.619, 1, 1, 1, 1, 0.92241, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.89903, 1, 0.76305, 0.9219, 1, 1, 1, 1, 0.81363, 1.19137, 0.90088, 0.74505, 1, 1, 1, 1, 0.9219, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.72458, 0.74505, 1, 1, 1, 1, 1, 0.99074, 1, 0.95817, 0.95817, 0.95817, 0.95817, 0.99074, 0.99074, 0.962, 1.01915, 1.01915, 1.01915, 1.01915, 1.01915, 0.926, 0.96705, 0.942, 0.942, 0.942, 0.942, 0.92241, 0.942, 0.856, 0.856, 0.856, 0.856, 0.92241, 0.92761];
+exports.MyriadProRegularFactors = MyriadProRegularFactors;
+
+/***/ }),
+/* 68 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.SegoeuiBoldFactors = void 0;
+const SegoeuiBoldFactors = [1.76738, 1, 0.97363, 0.93506, 0.93506, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 1.01149, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.88776, 0.88776, 0.8641, 0.8641, 0.8641, 0.8641, 0.8641, 0.8641, 0.98243, 1.02096, 1.02096, 1.02096, 0.97826, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 1.09251, 0.79795, 0.79795, 0.7676, 1.06085, 0.98167, 1.02096, 1.03424, 0.85132, 0.914, 0.85134, 0.914, 0.914, 1, 0.914, 1.06085, 1, 0.99862, 0.99862, 1, 1.06085, 1.06085, 1.1406, 0.97138, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.01134, 1.1406, 0.8007, 0.8007, 0.89858, 0.89858, 1, 0.83693, 0.83693, 1.0388, 0.83693, 1, 0.83693, 0.83693, 1.14889, 1.14889, 1.09398, 1.09398, 1.09398, 1, 1.09398, 1.09398, 0.97489, 0.93994, 0.97426, 0.97489, 0.97426, 0.97426, 0.97426, 0.97489, 0.97489, 0.95493, 1.03089, 0.97489, 1.02546, 0.97489, 0.97489, 0.97426, 0.92094, 0.99346, 1.0595, 1.02112, 0.97489, 0.90399, 0.90399, 0.90399, 1, 0.92094, 0.84041, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.84041, 0.84041, 0.84041, 0.84041, 1, 0.94793, 0.95923, 0.95923, 0.95923, 0.95923, 1, 0.97489, 0.92094, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 0.90996, 0.90996, 0.84097, 1.00135, 1.00135, 1, 1.06467, 1.06467, 1.06467, 1.06467, 1.06467, 0.98243, 0.86039, 0.90996, 0.90996, 0.90996, 0.90996, 0.90996, 0.99361, 0.99361, 0.99361, 0.99361, 0.99361, 0.96752, 0.96752, 0.96752, 0.96752, 0.91056, 1, 0.96752, 0.93136, 0.93136, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.96752, 1.03574, 1.03574, 0.96752, 1.17647, 0.81525, 0.96752, 1.29004, 0.96752, 0.96752, 0.86182, 0.94434, 0.86279, 0.86279, 0.94434, 1, 1, 1.2107, 1.2107, 1.16939, 0.97847, 0.96752, 1.01519, 1.56942, 1.16579, 1.0192, 1, 0.94856, 0.94856, 1.1085, 1.1085, 1.03959, 1, 1.16579, 1.20642, 0.86304, 0.86304, 1.15103, 1, 1, 0.86304, 0.86304, 0.86304, 0.86304, 0.64663, 1.03424, 0.96268, 1.42603, 1.15103, 1, 1.04315, 0.81378, 0.9754, 1, 1, 1.18622, 1, 1, 1.01359, 0.73047, 0.73047, 1.03057, 1.03517, 0.94994, 1.00886, 1.34163, 1.3871, 1, 0.87815, 1.28826, 1, 1, 1.03424, 0.75953, 1.02285, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 1.03424, 1, 0.91211, 0.97278, 1, 0.89903, 0.99041, 0.97278, 0.97531, 1.02597, 1.2107, 1.21172, 1, 1.0008, 1.0008, 0.97122, 0.9824, 0.96039, 0.9824, 1.15103, 1, 1.42603, 1, 1.03424, 1.15749, 1, 1.03424, 1.03424, 1, 0.93503, 1.01359, 1.01932, 1.01359, 1.01359, 1, 1.01359, 1.02798, 0.94282, 1, 1.2107, 1.29004, 1.04478, 1.04478, 1.03372, 1.03372, 0.98561, 1.00879, 0.98561, 1.15296, 1, 1.21994, 1, 1.02285, 1.02285, 1.02285, 1.02285, 1.02285, 1.02285, 1.08692, 1.02285, 1.13973, 2.10339, 1, 1, 0.9716, 1.42603, 1.42603, 1, 1.02285, 1.18102, 1.18102, 1.18102, 1.18102, 1.02285, 1.02285, 1.02285, 1.00527, 1.02277, 1, 1.00527, 1.02285, 1.02285, 0.98683, 0.9455, 1, 0.90418, 1.2107, 1.29004, 1, 1.03424, 1.2107, 1.07733, 1.18874, 1.13005, 1, 1.0302, 0.75155, 1, 1, 1.2107, 1.222, 1.0016, 1.2107, 1, 1, 0.99041, 0.99041, 0.96692, 0.99041, 1, 1.03424, 1, 1.29004, 0.99041, 0.99561, 1.06497, 1.0008, 1, 1.0008, 1, 1, 0.97931, 0.79912, 1, 1.0008, 1.0008, 0.98439, 0.98439, 1.0008, 1.0008, 1.03424, 1.15749, 1.15749, 1.14169, 0.99862, 1.10818, 1.24866, 0.69825, 1.0008, 1.0008, 1, 1.01519, 0.91572, 1.1085, 1.1085, 1.16897, 0.97529, 0.9754, 1.25635, 1.19687, 1.04983, 0.90434, 1.2107, 1.28826, 0.96085, 1.0499, 1.01359, 0.71703, 0.71703, 1.04016, 0.98633, 0.98633, 0.98633, 1.04394, 1.04394, 1.04394, 1.04394, 1.23203, 1.02258, 1.02258, 1.18416, 1.02258, 1, 1.18622, 1, 0.99921, 0.81378, 1, 0.79104, 0.79104, 0.79104, 0.79104, 0.79104, 1, 1.02956, 0.8727, 1.03424, 1.10948, 1, 1, 0.8965, 0.93803, 1.03424, 1.59578, 1, 1.2886, 1.03424, 0.90137, 1, 1.16862, 1.23085, 1.16862, 1.07034, 1, 1.13189, 1.01519, 1.03424, 1.15749, 1.17389, 1.15103, 1, 0.95161, 0.771, 0.87025, 0.87025, 0.87025, 0.87025, 1.03424, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.74627, 0.75155, 0.99297, 1.21408, 1.21408, 1.21408, 1, 1.18328, 0.95923, 1.16862, 1.01173, 0.81378, 0.79795, 1.09466, 0.97278, 1.02065, 1, 1.21408, 1.24633, 1.12454, 1, 1, 1, 0.9754, 1, 1, 1.09193, 1.09193, 0.99041, 1, 1.06628, 1.06628, 1.06628, 1.06628, 0.99041, 0.99041, 0.97454, 1.02511, 1.02511, 1.02511, 1.02511, 1.02511, 0.99298, 1.07237, 0.96752, 0.96752, 0.96752, 0.96752, 1.03424, 0.96752, 0.95801, 0.95801, 0.95801, 0.95801, 1.03424, 1.0106];
+exports.SegoeuiBoldFactors = SegoeuiBoldFactors;
+
+/***/ }),
+/* 69 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.SegoeuiBoldItalicFactors = void 0;
+const SegoeuiBoldItalicFactors = [1.76738, 1, 0.97363, 0.94385, 0.94385, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 1.00811, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.89723, 0.89723, 0.87897, 0.87897, 0.87897, 0.87897, 0.87897, 0.87897, 0.9817, 1.0426, 1.0426, 1.0426, 1.09818, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 1.10466, 0.79429, 0.79429, 0.77702, 1.05815, 0.99137, 1.0426, 1.036, 0.85292, 0.91149, 0.86869, 0.91149, 0.91149, 1, 0.91149, 1.05815, 1, 0.99862, 0.99862, 1, 1.05815, 1.05815, 1.1406, 0.97441, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 0.95253, 1.1406, 0.79631, 0.79631, 0.90128, 0.90128, 1, 0.83853, 0.83853, 1.06662, 0.83853, 1, 0.83853, 0.83853, 1.04396, 1.04396, 1.10615, 1.10615, 1.10615, 1, 1.10615, 1.10615, 0.97552, 0.91602, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.98999, 1.07205, 0.97552, 1.0347, 0.97552, 0.97552, 0.97552, 0.94436, 1.00356, 1.04694, 1.01945, 0.97552, 0.88641, 0.88641, 0.88641, 1, 0.94436, 0.80527, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.80527, 0.80527, 0.80527, 0.80527, 1, 0.98015, 0.96083, 0.96083, 0.95923, 0.96083, 1, 0.97552, 0.94436, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 0.91142, 0.91142, 0.86142, 1.00135, 1.00135, 1, 1.06777, 1.06777, 1.06777, 1.06777, 1.06777, 0.9817, 0.84918, 0.91142, 0.91142, 0.91142, 0.91142, 0.91142, 0.99361, 0.99361, 0.99361, 0.99361, 0.99361, 1.06585, 1.06585, 1.06585, 1.06585, 1.31818, 1, 1.06585, 0.96705, 0.96705, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.06585, 1.04961, 1.04961, 1.06585, 1.10953, 0.83284, 1.06585, 1.29004, 1.06585, 1.06585, 0.86224, 0.94434, 0.86364, 0.86279, 0.94434, 1, 1, 1.21237, 1.21237, 1.16939, 0.97847, 1.06585, 0.97042, 1.57293, 1.16579, 0.99607, 1, 0.95107, 0.95107, 1.11144, 1.11144, 1.31818, 1, 1.16579, 1.20502, 0.83055, 0.83055, 1.31818, 1, 1, 0.83055, 0.83055, 0.83055, 0.83055, 1.31818, 1.036, 0.93491, 1.42603, 1.31818, 1, 1.04315, 0.81378, 0.9754, 1, 1, 1.18754, 1, 1, 0.97042, 0.72959, 0.72959, 1.0033, 0.97042, 0.94994, 1.008, 1.34163, 1.31818, 1, 1.27126, 1.29004, 1, 1, 1.036, 1.31818, 1.14236, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 1.036, 1, 0.91406, 0.93503, 1, 0.89903, 0.97922, 0.93503, 0.9898, 0.9898, 1.21237, 1.21339, 1, 1.00639, 1.00639, 0.93125, 1.03959, 0.96039, 1.03959, 1.1261, 1, 1.42603, 1, 1.036, 1.15574, 1, 1.036, 1.036, 1, 0.93327, 0.97042, 1.02897, 0.97042, 0.97042, 1, 0.97042, 0.98721, 1.31818, 1, 1.21237, 1.29004, 1.05356, 1.05356, 1.03372, 1.03372, 0.97922, 0.97922, 0.97922, 1.15296, 1, 1.31818, 1, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.04302, 1.14236, 1.13904, 2.10339, 1, 1, 0.9716, 1.42603, 1.42603, 1, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 0.94552, 1.01582, 1.01054, 1.00518, 1, 1.01054, 1.14236, 1.14236, 0.97981, 1.09125, 1, 0.90418, 1.21237, 1.29004, 1, 1.03336, 1.21237, 1.23199, 1.18775, 1.19508, 1, 1.02471, 0.79487, 1, 1, 1.21237, 1.222, 1.02186, 1.21237, 1, 1, 0.97922, 0.97922, 1.01034, 0.97922, 1, 1.036, 1, 1.29004, 0.97922, 1, 1.02809, 0.94165, 0.94165, 0.94165, 0.94165, 0.94165, 0.91981, 1.31818, 0.94165, 0.94165, 0.94165, 1.00351, 1.00351, 0.94165, 0.94165, 1.036, 1.15574, 1.15574, 1.13934, 0.99862, 1.26781, 1.24866, 0.69825, 0.94165, 0.94165, 0.94165, 0.97042, 0.91484, 1.11144, 1.11144, 1.16798, 0.97639, 0.9754, 1.26514, 1.16541, 1.10687, 0.99314, 1.21237, 1.29004, 0.96085, 1.04232, 0.97042, 0.73541, 0.73541, 1.04016, 0.98633, 0.98633, 0.98633, 1.04745, 1.04394, 1.04745, 1.04745, 1.23203, 1.0276, 1.0276, 1.18416, 1.0276, 1, 1.18622, 1, 0.98387, 1.31818, 1, 0.78929, 0.78929, 0.78929, 0.78929, 0.78929, 1, 1.02956, 0.87357, 1.036, 1.15574, 1, 1, 0.93377, 0.93028, 1.036, 1.59754, 1, 1.2886, 1.036, 0.90068, 1, 1.1261, 1.35125, 1.16862, 1.05403, 1, 1.11121, 0.97042, 1.036, 1.15574, 1.17389, 1.31818, 1, 0.95161, 0.771, 0.87025, 0.87025, 0.87025, 0.87025, 1.036, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.74627, 0.75155, 0.98946, 1.21261, 1.24047, 1.24047, 1, 1.1349, 0.96083, 1.1261, 1.31818, 0.81378, 0.79429, 1.09097, 0.93503, 0.96609, 1, 1.21261, 1.24633, 1.09125, 1, 1, 1, 0.9754, 1, 1, 1.13269, 1.13269, 0.97922, 1, 1.07514, 1.07514, 1.07514, 1.07514, 0.97922, 0.97922, 0.95874, 1.02197, 1.02197, 1.02197, 1.02197, 1.02197, 0.98507, 1.08578, 0.96752, 0.96752, 0.96752, 0.96752, 1.036, 0.96752, 0.97168, 0.97168, 0.97168, 0.97168, 1.036, 0.95134];
+exports.SegoeuiBoldItalicFactors = SegoeuiBoldItalicFactors;
+
+/***/ }),
+/* 70 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.SegoeuiItalicFactors = void 0;
+const SegoeuiItalicFactors = [1.76738, 1, 0.94729, 0.85498, 0.85498, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.85944, 0.85944, 0.88506, 0.88506, 0.88506, 0.88506, 0.88506, 0.88506, 0.8858, 0.9858, 0.9858, 0.9858, 0.9607, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 1.03849, 0.74817, 0.74817, 0.71022, 0.98039, 0.90883, 0.9858, 0.96927, 0.80016, 0.88449, 0.82791, 0.88449, 0.88449, 1, 0.88449, 0.98039, 1, 0.99862, 0.99862, 1, 0.98039, 0.98039, 0.95782, 0.84421, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.84171, 0.95782, 0.69238, 0.69238, 0.89898, 0.89898, 1, 0.83231, 0.83231, 0.98316, 0.84723, 1, 0.84723, 0.83231, 0.98183, 0.98183, 1.03989, 1.03989, 1.03989, 1, 1.03989, 1.03989, 0.96924, 0.92383, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 1.01284, 1.05734, 0.96924, 0.99877, 0.96924, 0.96924, 0.96924, 0.86237, 0.90082, 0.97642, 0.97296, 0.96924, 0.80595, 0.80595, 0.80595, 1, 0.86237, 0.74524, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.74524, 0.74524, 0.74524, 0.74524, 1, 0.86075, 0.86091, 0.86091, 0.85771, 0.86091, 1, 0.96924, 0.86237, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.83089, 0.83089, 0.77596, 0.95402, 0.95402, 0.94143, 0.98448, 0.98448, 0.98448, 0.98448, 0.98448, 0.8858, 0.78614, 0.83089, 0.83089, 0.83089, 0.83089, 0.83089, 0.93285, 0.93285, 0.93285, 0.93285, 0.93285, 0.97454, 0.97454, 0.97454, 0.97454, 1.04839, 1, 0.97454, 0.92916, 0.92916, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.97454, 1.0976, 1.0976, 0.97454, 1.15373, 0.78032, 0.97454, 1.24822, 0.97454, 0.97454, 0.86182, 0.94434, 0.86321, 0.8649, 0.94434, 1, 1, 1.45994, 1.17308, 1.07403, 0.94565, 0.97454, 0.97454, 1.39016, 0.92481, 0.98205, 1, 0.91082, 0.91082, 1.0949, 1.0949, 1.04839, 1, 0.92481, 1.15621, 0.87207, 0.87207, 1.04839, 1, 1, 0.87207, 0.87207, 0.87207, 0.87207, 1.04839, 0.96927, 0.99821, 1.42603, 1.04839, 1, 1.04315, 0.78383, 0.78383, 1, 1, 1.23393, 1, 1, 0.97454, 0.67603, 0.67603, 0.95391, 0.97454, 0.94261, 1.05097, 1.34163, 1.04839, 1, 0.81965, 1.24822, 1, 1, 0.96927, 1.04839, 0.93146, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.96927, 1, 0.73584, 0.87533, 1, 0.89903, 1.01054, 0.87533, 1.04, 1.04, 1.17308, 1.17308, 1, 1.03342, 1.03342, 0.93854, 1.14763, 0.95996, 0.95748, 1.06151, 1, 1.42603, 1, 0.96927, 1.09836, 1, 0.96927, 0.96927, 1, 0.87709, 0.97454, 1.03809, 0.97454, 0.97454, 1, 0.97454, 0.88409, 1.04839, 1, 1.17308, 1.24822, 0.9245, 0.9245, 0.94868, 0.94868, 1.00176, 1.00176, 1.00176, 1.15296, 1, 1.04839, 1, 1.16484, 0.93146, 0.93146, 0.93146, 0.93146, 0.93146, 1.12761, 0.93146, 1.14589, 1.96791, 1, 1, 0.97622, 1.42603, 1.42603, 1, 1.16484, 1.2, 1.2, 1.2, 1.2, 0.93146, 1.08132, 1.08132, 0.98047, 1.02148, 1, 0.98047, 1.16484, 1.16484, 1.0119, 1.04861, 1, 0.78755, 1.17308, 1.24822, 1, 0.96927, 1.17308, 1.31868, 1.17984, 1.23736, 1, 1.02989, 0.63218, 1, 1, 1.17308, 1.22135, 1.04724, 1.17308, 1, 1, 1.01054, 1.01054, 0.9857, 1.01054, 1, 0.96927, 1, 1.24822, 1.01054, 1.0127, 1.06234, 0.96225, 0.96225, 0.96225, 0.96225, 0.96225, 0.90171, 1.04839, 0.96225, 0.96225, 0.96225, 1.0326, 1.0326, 0.96225, 0.96225, 0.96927, 1.09836, 1.13525, 1.09836, 0.99862, 1.1781, 1.22326, 0.69825, 0.8761, 0.8761, 0.96225, 0.97454, 0.85273, 0.91349, 0.91349, 1.083, 0.92586, 0.78383, 1.21191, 1.01473, 1.11826, 0.8965, 1.17308, 1.24822, 0.91578, 1.0557, 0.97454, 0.77349, 0.70424, 1.05365, 1.12317, 1.12317, 1.12317, 0.94945, 0.94945, 0.94945, 0.94945, 1.18414, 1.06598, 1.06598, 1.18416, 1.06598, 1, 1.20808, 1, 0.97783, 1.04839, 1, 0.79004, 0.79004, 0.79004, 0.79004, 0.79004, 1, 1.06483, 0.80597, 0.96927, 1.01522, 1, 1, 0.94818, 0.93574, 0.96927, 1.42531, 1, 1.2886, 0.96927, 0.86438, 1, 1.16344, 1.30679, 1.16344, 1.02759, 1, 1.05401, 0.97454, 0.96927, 1.09836, 1.15222, 1.04839, 1, 0.81965, 0.77295, 0.87025, 0.87025, 0.87025, 0.87025, 0.96927, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 0.74627, 0.75155, 0.98946, 1.20088, 1.09971, 1.09971, 1, 1.09971, 0.86091, 1.16344, 1.04839, 0.78383, 0.74817, 1.03754, 0.87533, 0.98705, 1, 1.20088, 1.24633, 1.07497, 1, 1, 1, 0.78032, 1, 1, 1.10742, 1.10742, 1.00351, 1, 1.0675, 1.0675, 1.0675, 1.0675, 1.00351, 1.00351, 0.94629, 0.9973, 0.9973, 0.9973, 0.9973, 0.9973, 0.91016, 1.02732, 0.96777, 0.96777, 0.96777, 0.96777, 0.96927, 0.96777, 0.9043, 0.9043, 0.9043, 0.9043, 0.96927, 0.95364];
+exports.SegoeuiItalicFactors = SegoeuiItalicFactors;
+
+/***/ }),
+/* 71 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.SegoeuiRegularFactors = void 0;
+const SegoeuiRegularFactors = [1.76738, 1, 0.96706, 0.86035, 0.86035, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.96635, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.85944, 0.85944, 0.85734, 0.85734, 0.85734, 0.85734, 0.85734, 0.85734, 0.88433, 0.97093, 0.97093, 0.97093, 0.96491, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 1.03444, 0.75842, 0.75842, 0.72727, 0.9831, 0.92366, 0.97093, 0.96927, 0.79936, 0.88198, 0.85638, 0.88198, 0.88198, 1, 0.88198, 0.9831, 1, 0.99862, 0.99862, 1, 0.9831, 0.9831, 0.95782, 0.84784, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.98601, 0.95782, 0.71387, 0.71387, 0.86969, 0.86969, 1, 0.84636, 0.84636, 0.94152, 0.84636, 1, 0.84636, 0.84636, 1.07796, 1.07796, 1.03584, 1.03584, 1.03584, 1, 1.03584, 1.03584, 0.96924, 0.93066, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 1.0098, 1.09799, 0.96924, 1.03405, 0.96924, 0.96924, 0.96924, 0.83968, 0.94492, 0.98715, 0.9287, 0.96924, 0.82826, 0.82826, 0.82826, 1, 0.83968, 0.79649, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.79649, 0.79649, 0.79649, 0.79649, 1, 0.83491, 0.85771, 0.85771, 0.85771, 0.85771, 1, 0.96924, 0.83968, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.8287, 0.8287, 0.77968, 0.95132, 0.95132, 0.93119, 0.98965, 0.98965, 0.98965, 0.98965, 0.98965, 0.88433, 0.78437, 0.8287, 0.8287, 0.8287, 0.8287, 0.8287, 0.93365, 0.93365, 0.93365, 0.93365, 0.93365, 0.91484, 0.91484, 0.91484, 0.91484, 0.84751, 0.91484, 0.93575, 0.93575, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.91484, 1.0625, 1.0625, 0.91484, 1.19985, 0.78032, 0.91484, 1.24822, 0.91484, 0.91484, 0.86182, 0.94434, 0.86279, 0.86279, 0.94434, 1, 1, 1.45786, 1.1714, 1.07152, 0.94084, 0.91484, 1.05707, 1.3638, 0.92105, 0.95246, 1, 0.90351, 0.90351, 1.08612, 1.08612, 0.91202, 0.92105, 1.16039, 0.92383, 0.92383, 1.11437, 0.92383, 0.92383, 0.92383, 0.92383, 0.61584, 0.96927, 1.02512, 1.42603, 1.11437, 1.04315, 0.78032, 0.78032, 1.20808, 0.99912, 1.05882, 0.67428, 0.67428, 1.0969, 1.05882, 0.94261, 1.04912, 1.34163, 1.2434, 0.81818, 1.24644, 1, 1, 0.96927, 0.60411, 0.8717, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.96927, 0.73291, 0.9403, 1, 0.89903, 1.01756, 0.9403, 0.98248, 0.98248, 1.1714, 1.17238, 1, 1.03424, 1.03424, 1.00527, 1.02285, 0.95996, 0.85337, 1.12654, 1, 1.42603, 1, 0.96927, 1.11358, 0.96927, 0.96927, 0.87796, 1.05882, 1.03809, 1.05882, 1.05882, 1, 1.05882, 0.89049, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.80499, 1.1714, 1.24822, 0.90957, 0.90957, 0.94868, 0.94868, 1.01756, 1.01756, 1.01756, 1.15296, 1, 0.97361, 1.09011, 0.8717, 0.8717, 0.8717, 0.8717, 0.8717, 1.11551, 0.8717, 1.14589, 1.9697, 1, 1, 0.97622, 1.42603, 1.42603, 1, 1.09011, 1.2, 1.2, 1.2, 1.2, 0.8717, 1.09011, 1.09011, 0.99414, 1.04785, 1, 0.99414, 1.09011, 1.09011, 0.99609, 1.0536, 1, 0.94298, 1.1714, 1.24822, 1, 0.96927, 1.1714, 1.08571, 1.18083, 1.23297, 1, 1.034, 0.75155, 1, 1, 1.1714, 1.22135, 1.00169, 1.1714, 1, 1, 1.01756, 1.01756, 1.00323, 1.01756, 1, 0.96927, 1, 1.24822, 1.01756, 1.05176, 1.06234, 1.05356, 1.05356, 1.05356, 1.05356, 1.05356, 0.98293, 0.55572, 1.05356, 1.05356, 1.05356, 1.03502, 1.03502, 1.05356, 1.05356, 0.96927, 1.10539, 1.11593, 1.08665, 0.99862, 1.05937, 1.17914, 0.69825, 0.95923, 0.95923, 1.05356, 1.05707, 0.85273, 0.90616, 0.90616, 1.083, 0.92037, 0.78032, 1.20996, 1.01518, 1.07831, 0.9087, 1.1714, 1.24644, 0.91578, 1.05205, 1.05882, 0.80597, 0.73381, 1.10454, 1.13196, 1.13196, 1.13196, 1.03077, 1.03077, 1.03077, 1.03077, 1.2046, 1.04399, 1.04399, 1.18416, 1.04399, 1, 1.20808, 1, 1.03004, 0.84164, 1, 0.84863, 0.84863, 0.84863, 0.84863, 0.84863, 1, 1.06483, 0.80597, 0.96927, 1.06967, 1, 0.93117, 0.95542, 0.96927, 1.40246, 1, 1.2886, 0.96927, 0.86507, 1, 1.21968, 1.23362, 1.21968, 1.17318, 1, 1.05443, 1.05707, 0.96927, 1.10539, 1.14169, 1.01173, 0.81818, 0.77295, 0.87025, 0.87025, 0.87025, 0.87025, 0.96927, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 0.74627, 0.75155, 0.98594, 1.20088, 1.09971, 1.09971, 1, 1.05425, 0.85771, 1.21968, 0.93109, 0.78032, 0.75842, 1.03719, 0.9403, 1.04021, 1, 1.20088, 1.24633, 1.05425, 1.09971, 1.09971, 1.09971, 1.07497, 1, 1, 1, 0.78032, 1, 1, 1, 1.10938, 1.10938, 1.01756, 1, 1.01071, 1.01071, 1.01071, 1.01071, 1.01756, 1.01756, 0.95801, 1.00068, 1.00068, 1.00068, 1.00068, 1.00068, 0.91797, 0.99346, 0.96777, 0.96777, 0.96777, 0.96777, 0.96927, 0.96777, 0.9043, 0.9043, 0.9043, 0.9043, 0.96927, 1.00221];
+exports.SegoeuiRegularFactors = SegoeuiRegularFactors;
+
+/***/ }),
+/* 72 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -37444,7 +38791,7 @@ class MurmurHash3_64 {
 exports.MurmurHash3_64 = MurmurHash3_64;
 
 /***/ }),
-/* 55 */
+/* 73 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -37456,403 +38803,423 @@ exports.OperatorList = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-const QueueOptimizer = function QueueOptimizerClosure() {
-  function addState(parentState, pattern, checkFn, iterateFn, processFn) {
-    let state = parentState;
+function addState(parentState, pattern, checkFn, iterateFn, processFn) {
+  let state = parentState;
 
-    for (let i = 0, ii = pattern.length - 1; i < ii; i++) {
-      const item = pattern[i];
-      state = state[item] || (state[item] = []);
-    }
-
-    state[pattern[pattern.length - 1]] = {
-      checkFn,
-      iterateFn,
-      processFn
-    };
+  for (let i = 0, ii = pattern.length - 1; i < ii; i++) {
+    const item = pattern[i];
+    state = state[item] || (state[item] = []);
   }
 
-  function handlePaintSolidColorImageMask(iFirstSave, count, fnArray, argsArray) {
-    const iFirstPIMXO = iFirstSave + 2;
-    let i;
+  state[pattern[pattern.length - 1]] = {
+    checkFn,
+    iterateFn,
+    processFn
+  };
+}
 
-    for (i = 0; i < count; i++) {
-      const arg = argsArray[iFirstPIMXO + 4 * i];
-      const imageMask = arg.length === 1 && arg[0];
+function handlePaintSolidColorImageMask(iFirstSave, count, fnArray, argsArray) {
+  const iFirstPIMXO = iFirstSave + 2;
+  let i;
 
-      if (imageMask && imageMask.width === 1 && imageMask.height === 1 && (!imageMask.data.length || imageMask.data.length === 1 && imageMask.data[0] === 0)) {
-        fnArray[iFirstPIMXO + 4 * i] = _util.OPS.paintSolidColorImageMask;
-        continue;
-      }
+  for (i = 0; i < count; i++) {
+    const arg = argsArray[iFirstPIMXO + 4 * i];
+    const imageMask = arg.length === 1 && arg[0];
 
-      break;
+    if (imageMask && imageMask.width === 1 && imageMask.height === 1 && (!imageMask.data.length || imageMask.data.length === 1 && imageMask.data[0] === 0)) {
+      fnArray[iFirstPIMXO + 4 * i] = _util.OPS.paintSolidColorImageMask;
+      continue;
     }
 
-    return count - i;
+    break;
   }
 
-  const InitialState = [];
-  addState(InitialState, [_util.OPS.save, _util.OPS.transform, _util.OPS.paintInlineImageXObject, _util.OPS.restore], null, function iterateInlineImageGroup(context, i) {
-    const fnArray = context.fnArray;
-    const iFirstSave = context.iCurr - 3;
-    const pos = (i - iFirstSave) % 4;
+  return count - i;
+}
 
-    switch (pos) {
-      case 0:
-        return fnArray[i] === _util.OPS.save;
+const InitialState = [];
+addState(InitialState, [_util.OPS.save, _util.OPS.transform, _util.OPS.paintInlineImageXObject, _util.OPS.restore], null, function iterateInlineImageGroup(context, i) {
+  const fnArray = context.fnArray;
+  const iFirstSave = context.iCurr - 3;
+  const pos = (i - iFirstSave) % 4;
 
-      case 1:
-        return fnArray[i] === _util.OPS.transform;
+  switch (pos) {
+    case 0:
+      return fnArray[i] === _util.OPS.save;
 
-      case 2:
-        return fnArray[i] === _util.OPS.paintInlineImageXObject;
+    case 1:
+      return fnArray[i] === _util.OPS.transform;
 
-      case 3:
-        return fnArray[i] === _util.OPS.restore;
+    case 2:
+      return fnArray[i] === _util.OPS.paintInlineImageXObject;
+
+    case 3:
+      return fnArray[i] === _util.OPS.restore;
+  }
+
+  throw new Error(`iterateInlineImageGroup - invalid pos: ${pos}`);
+}, function foundInlineImageGroup(context, i) {
+  const MIN_IMAGES_IN_INLINE_IMAGES_BLOCK = 10;
+  const MAX_IMAGES_IN_INLINE_IMAGES_BLOCK = 200;
+  const MAX_WIDTH = 1000;
+  const IMAGE_PADDING = 1;
+  const fnArray = context.fnArray,
+        argsArray = context.argsArray;
+  const curr = context.iCurr;
+  const iFirstSave = curr - 3;
+  const iFirstTransform = curr - 2;
+  const iFirstPIIXO = curr - 1;
+  const count = Math.min(Math.floor((i - iFirstSave) / 4), MAX_IMAGES_IN_INLINE_IMAGES_BLOCK);
+
+  if (count < MIN_IMAGES_IN_INLINE_IMAGES_BLOCK) {
+    return i - (i - iFirstSave) % 4;
+  }
+
+  let maxX = 0;
+  const map = [];
+  let maxLineHeight = 0;
+  let currentX = IMAGE_PADDING,
+      currentY = IMAGE_PADDING;
+
+  for (let q = 0; q < count; q++) {
+    const transform = argsArray[iFirstTransform + (q << 2)];
+    const img = argsArray[iFirstPIIXO + (q << 2)][0];
+
+    if (currentX + img.width > MAX_WIDTH) {
+      maxX = Math.max(maxX, currentX);
+      currentY += maxLineHeight + 2 * IMAGE_PADDING;
+      currentX = 0;
+      maxLineHeight = 0;
     }
 
-    throw new Error(`iterateInlineImageGroup - invalid pos: ${pos}`);
-  }, function foundInlineImageGroup(context, i) {
-    const MIN_IMAGES_IN_INLINE_IMAGES_BLOCK = 10;
-    const MAX_IMAGES_IN_INLINE_IMAGES_BLOCK = 200;
-    const MAX_WIDTH = 1000;
-    const IMAGE_PADDING = 1;
-    const fnArray = context.fnArray,
-          argsArray = context.argsArray;
-    const curr = context.iCurr;
-    const iFirstSave = curr - 3;
-    const iFirstTransform = curr - 2;
-    const iFirstPIIXO = curr - 1;
-    const count = Math.min(Math.floor((i - iFirstSave) / 4), MAX_IMAGES_IN_INLINE_IMAGES_BLOCK);
+    map.push({
+      transform,
+      x: currentX,
+      y: currentY,
+      w: img.width,
+      h: img.height
+    });
+    currentX += img.width + 2 * IMAGE_PADDING;
+    maxLineHeight = Math.max(maxLineHeight, img.height);
+  }
 
-    if (count < MIN_IMAGES_IN_INLINE_IMAGES_BLOCK) {
-      return i - (i - iFirstSave) % 4;
+  const imgWidth = Math.max(maxX, currentX) + IMAGE_PADDING;
+  const imgHeight = currentY + maxLineHeight + IMAGE_PADDING;
+  const imgData = new Uint8ClampedArray(imgWidth * imgHeight * 4);
+  const imgRowSize = imgWidth << 2;
+
+  for (let q = 0; q < count; q++) {
+    const data = argsArray[iFirstPIIXO + (q << 2)][0].data;
+    const rowSize = map[q].w << 2;
+    let dataOffset = 0;
+    let offset = map[q].x + map[q].y * imgWidth << 2;
+    imgData.set(data.subarray(0, rowSize), offset - imgRowSize);
+
+    for (let k = 0, kk = map[q].h; k < kk; k++) {
+      imgData.set(data.subarray(dataOffset, dataOffset + rowSize), offset);
+      dataOffset += rowSize;
+      offset += imgRowSize;
     }
 
-    let maxX = 0;
-    const map = [];
-    let maxLineHeight = 0;
-    let currentX = IMAGE_PADDING,
-        currentY = IMAGE_PADDING;
+    imgData.set(data.subarray(dataOffset - rowSize, dataOffset), offset);
 
-    for (let q = 0; q < count; q++) {
-      const transform = argsArray[iFirstTransform + (q << 2)];
-      const img = argsArray[iFirstPIIXO + (q << 2)][0];
-
-      if (currentX + img.width > MAX_WIDTH) {
-        maxX = Math.max(maxX, currentX);
-        currentY += maxLineHeight + 2 * IMAGE_PADDING;
-        currentX = 0;
-        maxLineHeight = 0;
-      }
-
-      map.push({
-        transform,
-        x: currentX,
-        y: currentY,
-        w: img.width,
-        h: img.height
-      });
-      currentX += img.width + 2 * IMAGE_PADDING;
-      maxLineHeight = Math.max(maxLineHeight, img.height);
+    while (offset >= 0) {
+      data[offset - 4] = data[offset];
+      data[offset - 3] = data[offset + 1];
+      data[offset - 2] = data[offset + 2];
+      data[offset - 1] = data[offset + 3];
+      data[offset + rowSize] = data[offset + rowSize - 4];
+      data[offset + rowSize + 1] = data[offset + rowSize - 3];
+      data[offset + rowSize + 2] = data[offset + rowSize - 2];
+      data[offset + rowSize + 3] = data[offset + rowSize - 1];
+      offset -= imgRowSize;
     }
+  }
 
-    const imgWidth = Math.max(maxX, currentX) + IMAGE_PADDING;
-    const imgHeight = currentY + maxLineHeight + IMAGE_PADDING;
-    const imgData = new Uint8ClampedArray(imgWidth * imgHeight * 4);
-    const imgRowSize = imgWidth << 2;
+  fnArray.splice(iFirstSave, count * 4, _util.OPS.paintInlineImageXObjectGroup);
+  argsArray.splice(iFirstSave, count * 4, [{
+    width: imgWidth,
+    height: imgHeight,
+    kind: _util.ImageKind.RGBA_32BPP,
+    data: imgData
+  }, map]);
+  return iFirstSave + 1;
+});
+addState(InitialState, [_util.OPS.save, _util.OPS.transform, _util.OPS.paintImageMaskXObject, _util.OPS.restore], null, function iterateImageMaskGroup(context, i) {
+  const fnArray = context.fnArray;
+  const iFirstSave = context.iCurr - 3;
+  const pos = (i - iFirstSave) % 4;
 
-    for (let q = 0; q < count; q++) {
-      const data = argsArray[iFirstPIIXO + (q << 2)][0].data;
-      const rowSize = map[q].w << 2;
-      let dataOffset = 0;
-      let offset = map[q].x + map[q].y * imgWidth << 2;
-      imgData.set(data.subarray(0, rowSize), offset - imgRowSize);
+  switch (pos) {
+    case 0:
+      return fnArray[i] === _util.OPS.save;
 
-      for (let k = 0, kk = map[q].h; k < kk; k++) {
-        imgData.set(data.subarray(dataOffset, dataOffset + rowSize), offset);
-        dataOffset += rowSize;
-        offset += imgRowSize;
-      }
+    case 1:
+      return fnArray[i] === _util.OPS.transform;
 
-      imgData.set(data.subarray(dataOffset - rowSize, dataOffset), offset);
+    case 2:
+      return fnArray[i] === _util.OPS.paintImageMaskXObject;
 
-      while (offset >= 0) {
-        data[offset - 4] = data[offset];
-        data[offset - 3] = data[offset + 1];
-        data[offset - 2] = data[offset + 2];
-        data[offset - 1] = data[offset + 3];
-        data[offset + rowSize] = data[offset + rowSize - 4];
-        data[offset + rowSize + 1] = data[offset + rowSize - 3];
-        data[offset + rowSize + 2] = data[offset + rowSize - 2];
-        data[offset + rowSize + 3] = data[offset + rowSize - 1];
-        offset -= imgRowSize;
-      }
-    }
+    case 3:
+      return fnArray[i] === _util.OPS.restore;
+  }
 
-    fnArray.splice(iFirstSave, count * 4, _util.OPS.paintInlineImageXObjectGroup);
-    argsArray.splice(iFirstSave, count * 4, [{
-      width: imgWidth,
-      height: imgHeight,
-      kind: _util.ImageKind.RGBA_32BPP,
-      data: imgData
-    }, map]);
-    return iFirstSave + 1;
-  });
-  addState(InitialState, [_util.OPS.save, _util.OPS.transform, _util.OPS.paintImageMaskXObject, _util.OPS.restore], null, function iterateImageMaskGroup(context, i) {
-    const fnArray = context.fnArray;
-    const iFirstSave = context.iCurr - 3;
-    const pos = (i - iFirstSave) % 4;
+  throw new Error(`iterateImageMaskGroup - invalid pos: ${pos}`);
+}, function foundImageMaskGroup(context, i) {
+  const MIN_IMAGES_IN_MASKS_BLOCK = 10;
+  const MAX_IMAGES_IN_MASKS_BLOCK = 100;
+  const MAX_SAME_IMAGES_IN_MASKS_BLOCK = 1000;
+  const fnArray = context.fnArray,
+        argsArray = context.argsArray;
+  const curr = context.iCurr;
+  const iFirstSave = curr - 3;
+  const iFirstTransform = curr - 2;
+  const iFirstPIMXO = curr - 1;
+  let count = Math.floor((i - iFirstSave) / 4);
+  count = handlePaintSolidColorImageMask(iFirstSave, count, fnArray, argsArray);
 
-    switch (pos) {
-      case 0:
-        return fnArray[i] === _util.OPS.save;
+  if (count < MIN_IMAGES_IN_MASKS_BLOCK) {
+    return i - (i - iFirstSave) % 4;
+  }
 
-      case 1:
-        return fnArray[i] === _util.OPS.transform;
+  let isSameImage = false;
+  let iTransform, transformArgs;
+  const firstPIMXOArg0 = argsArray[iFirstPIMXO][0];
+  const firstTransformArg0 = argsArray[iFirstTransform][0],
+        firstTransformArg1 = argsArray[iFirstTransform][1],
+        firstTransformArg2 = argsArray[iFirstTransform][2],
+        firstTransformArg3 = argsArray[iFirstTransform][3];
 
-      case 2:
-        return fnArray[i] === _util.OPS.paintImageMaskXObject;
+  if (firstTransformArg1 === firstTransformArg2) {
+    isSameImage = true;
+    iTransform = iFirstTransform + 4;
+    let iPIMXO = iFirstPIMXO + 4;
 
-      case 3:
-        return fnArray[i] === _util.OPS.restore;
-    }
+    for (let q = 1; q < count; q++, iTransform += 4, iPIMXO += 4) {
+      transformArgs = argsArray[iTransform];
 
-    throw new Error(`iterateImageMaskGroup - invalid pos: ${pos}`);
-  }, function foundImageMaskGroup(context, i) {
-    const MIN_IMAGES_IN_MASKS_BLOCK = 10;
-    const MAX_IMAGES_IN_MASKS_BLOCK = 100;
-    const MAX_SAME_IMAGES_IN_MASKS_BLOCK = 1000;
-    const fnArray = context.fnArray,
-          argsArray = context.argsArray;
-    const curr = context.iCurr;
-    const iFirstSave = curr - 3;
-    const iFirstTransform = curr - 2;
-    const iFirstPIMXO = curr - 1;
-    let count = Math.floor((i - iFirstSave) / 4);
-    count = handlePaintSolidColorImageMask(iFirstSave, count, fnArray, argsArray);
-
-    if (count < MIN_IMAGES_IN_MASKS_BLOCK) {
-      return i - (i - iFirstSave) % 4;
-    }
-
-    let isSameImage = false;
-    let iTransform, transformArgs;
-    const firstPIMXOArg0 = argsArray[iFirstPIMXO][0];
-    const firstTransformArg0 = argsArray[iFirstTransform][0],
-          firstTransformArg1 = argsArray[iFirstTransform][1],
-          firstTransformArg2 = argsArray[iFirstTransform][2],
-          firstTransformArg3 = argsArray[iFirstTransform][3];
-
-    if (firstTransformArg1 === firstTransformArg2) {
-      isSameImage = true;
-      iTransform = iFirstTransform + 4;
-      let iPIMXO = iFirstPIMXO + 4;
-
-      for (let q = 1; q < count; q++, iTransform += 4, iPIMXO += 4) {
-        transformArgs = argsArray[iTransform];
-
-        if (argsArray[iPIMXO][0] !== firstPIMXOArg0 || transformArgs[0] !== firstTransformArg0 || transformArgs[1] !== firstTransformArg1 || transformArgs[2] !== firstTransformArg2 || transformArgs[3] !== firstTransformArg3) {
-          if (q < MIN_IMAGES_IN_MASKS_BLOCK) {
-            isSameImage = false;
-          } else {
-            count = q;
-          }
-
-          break;
-        }
-      }
-    }
-
-    if (isSameImage) {
-      count = Math.min(count, MAX_SAME_IMAGES_IN_MASKS_BLOCK);
-      const positions = new Float32Array(count * 2);
-      iTransform = iFirstTransform;
-
-      for (let q = 0; q < count; q++, iTransform += 4) {
-        transformArgs = argsArray[iTransform];
-        positions[q << 1] = transformArgs[4];
-        positions[(q << 1) + 1] = transformArgs[5];
-      }
-
-      fnArray.splice(iFirstSave, count * 4, _util.OPS.paintImageMaskXObjectRepeat);
-      argsArray.splice(iFirstSave, count * 4, [firstPIMXOArg0, firstTransformArg0, firstTransformArg1, firstTransformArg2, firstTransformArg3, positions]);
-    } else {
-      count = Math.min(count, MAX_IMAGES_IN_MASKS_BLOCK);
-      const images = [];
-
-      for (let q = 0; q < count; q++) {
-        transformArgs = argsArray[iFirstTransform + (q << 2)];
-        const maskParams = argsArray[iFirstPIMXO + (q << 2)][0];
-        images.push({
-          data: maskParams.data,
-          width: maskParams.width,
-          height: maskParams.height,
-          transform: transformArgs
-        });
-      }
-
-      fnArray.splice(iFirstSave, count * 4, _util.OPS.paintImageMaskXObjectGroup);
-      argsArray.splice(iFirstSave, count * 4, [images]);
-    }
-
-    return iFirstSave + 1;
-  });
-  addState(InitialState, [_util.OPS.save, _util.OPS.transform, _util.OPS.paintImageXObject, _util.OPS.restore], function (context) {
-    const argsArray = context.argsArray;
-    const iFirstTransform = context.iCurr - 2;
-    return argsArray[iFirstTransform][1] === 0 && argsArray[iFirstTransform][2] === 0;
-  }, function iterateImageGroup(context, i) {
-    const fnArray = context.fnArray,
-          argsArray = context.argsArray;
-    const iFirstSave = context.iCurr - 3;
-    const pos = (i - iFirstSave) % 4;
-
-    switch (pos) {
-      case 0:
-        return fnArray[i] === _util.OPS.save;
-
-      case 1:
-        if (fnArray[i] !== _util.OPS.transform) {
-          return false;
+      if (argsArray[iPIMXO][0] !== firstPIMXOArg0 || transformArgs[0] !== firstTransformArg0 || transformArgs[1] !== firstTransformArg1 || transformArgs[2] !== firstTransformArg2 || transformArgs[3] !== firstTransformArg3) {
+        if (q < MIN_IMAGES_IN_MASKS_BLOCK) {
+          isSameImage = false;
+        } else {
+          count = q;
         }
 
-        const iFirstTransform = context.iCurr - 2;
-        const firstTransformArg0 = argsArray[iFirstTransform][0];
-        const firstTransformArg3 = argsArray[iFirstTransform][3];
-
-        if (argsArray[i][0] !== firstTransformArg0 || argsArray[i][1] !== 0 || argsArray[i][2] !== 0 || argsArray[i][3] !== firstTransformArg3) {
-          return false;
-        }
-
-        return true;
-
-      case 2:
-        if (fnArray[i] !== _util.OPS.paintImageXObject) {
-          return false;
-        }
-
-        const iFirstPIXO = context.iCurr - 1;
-        const firstPIXOArg0 = argsArray[iFirstPIXO][0];
-
-        if (argsArray[i][0] !== firstPIXOArg0) {
-          return false;
-        }
-
-        return true;
-
-      case 3:
-        return fnArray[i] === _util.OPS.restore;
+        break;
+      }
     }
+  }
 
-    throw new Error(`iterateImageGroup - invalid pos: ${pos}`);
-  }, function (context, i) {
-    const MIN_IMAGES_IN_BLOCK = 3;
-    const MAX_IMAGES_IN_BLOCK = 1000;
-    const fnArray = context.fnArray,
-          argsArray = context.argsArray;
-    const curr = context.iCurr;
-    const iFirstSave = curr - 3;
-    const iFirstTransform = curr - 2;
-    const iFirstPIXO = curr - 1;
-    const firstPIXOArg0 = argsArray[iFirstPIXO][0];
-    const firstTransformArg0 = argsArray[iFirstTransform][0];
-    const firstTransformArg3 = argsArray[iFirstTransform][3];
-    const count = Math.min(Math.floor((i - iFirstSave) / 4), MAX_IMAGES_IN_BLOCK);
-
-    if (count < MIN_IMAGES_IN_BLOCK) {
-      return i - (i - iFirstSave) % 4;
-    }
-
+  if (isSameImage) {
+    count = Math.min(count, MAX_SAME_IMAGES_IN_MASKS_BLOCK);
     const positions = new Float32Array(count * 2);
-    let iTransform = iFirstTransform;
+    iTransform = iFirstTransform;
 
     for (let q = 0; q < count; q++, iTransform += 4) {
-      const transformArgs = argsArray[iTransform];
+      transformArgs = argsArray[iTransform];
       positions[q << 1] = transformArgs[4];
       positions[(q << 1) + 1] = transformArgs[5];
     }
 
-    const args = [firstPIXOArg0, firstTransformArg0, firstTransformArg3, positions];
-    fnArray.splice(iFirstSave, count * 4, _util.OPS.paintImageXObjectRepeat);
-    argsArray.splice(iFirstSave, count * 4, args);
-    return iFirstSave + 1;
-  });
-  addState(InitialState, [_util.OPS.beginText, _util.OPS.setFont, _util.OPS.setTextMatrix, _util.OPS.showText, _util.OPS.endText], null, function iterateShowTextGroup(context, i) {
-    const fnArray = context.fnArray,
-          argsArray = context.argsArray;
-    const iFirstSave = context.iCurr - 4;
-    const pos = (i - iFirstSave) % 5;
+    fnArray.splice(iFirstSave, count * 4, _util.OPS.paintImageMaskXObjectRepeat);
+    argsArray.splice(iFirstSave, count * 4, [firstPIMXOArg0, firstTransformArg0, firstTransformArg1, firstTransformArg2, firstTransformArg3, positions]);
+  } else {
+    count = Math.min(count, MAX_IMAGES_IN_MASKS_BLOCK);
+    const images = [];
 
-    switch (pos) {
-      case 0:
-        return fnArray[i] === _util.OPS.beginText;
-
-      case 1:
-        return fnArray[i] === _util.OPS.setFont;
-
-      case 2:
-        return fnArray[i] === _util.OPS.setTextMatrix;
-
-      case 3:
-        if (fnArray[i] !== _util.OPS.showText) {
-          return false;
-        }
-
-        const iFirstSetFont = context.iCurr - 3;
-        const firstSetFontArg0 = argsArray[iFirstSetFont][0];
-        const firstSetFontArg1 = argsArray[iFirstSetFont][1];
-
-        if (argsArray[i][0] !== firstSetFontArg0 || argsArray[i][1] !== firstSetFontArg1) {
-          return false;
-        }
-
-        return true;
-
-      case 4:
-        return fnArray[i] === _util.OPS.endText;
+    for (let q = 0; q < count; q++) {
+      transformArgs = argsArray[iFirstTransform + (q << 2)];
+      const maskParams = argsArray[iFirstPIMXO + (q << 2)][0];
+      images.push({
+        data: maskParams.data,
+        width: maskParams.width,
+        height: maskParams.height,
+        transform: transformArgs
+      });
     }
 
-    throw new Error(`iterateShowTextGroup - invalid pos: ${pos}`);
-  }, function (context, i) {
-    const MIN_CHARS_IN_BLOCK = 3;
-    const MAX_CHARS_IN_BLOCK = 1000;
-    const fnArray = context.fnArray,
-          argsArray = context.argsArray;
-    const curr = context.iCurr;
-    const iFirstBeginText = curr - 4;
-    const iFirstSetFont = curr - 3;
-    const iFirstSetTextMatrix = curr - 2;
-    const iFirstShowText = curr - 1;
-    const iFirstEndText = curr;
-    const firstSetFontArg0 = argsArray[iFirstSetFont][0];
-    const firstSetFontArg1 = argsArray[iFirstSetFont][1];
-    let count = Math.min(Math.floor((i - iFirstBeginText) / 5), MAX_CHARS_IN_BLOCK);
+    fnArray.splice(iFirstSave, count * 4, _util.OPS.paintImageMaskXObjectGroup);
+    argsArray.splice(iFirstSave, count * 4, [images]);
+  }
 
-    if (count < MIN_CHARS_IN_BLOCK) {
-      return i - (i - iFirstBeginText) % 5;
-    }
+  return iFirstSave + 1;
+});
+addState(InitialState, [_util.OPS.save, _util.OPS.transform, _util.OPS.paintImageXObject, _util.OPS.restore], function (context) {
+  const argsArray = context.argsArray;
+  const iFirstTransform = context.iCurr - 2;
+  return argsArray[iFirstTransform][1] === 0 && argsArray[iFirstTransform][2] === 0;
+}, function iterateImageGroup(context, i) {
+  const fnArray = context.fnArray,
+        argsArray = context.argsArray;
+  const iFirstSave = context.iCurr - 3;
+  const pos = (i - iFirstSave) % 4;
 
-    let iFirst = iFirstBeginText;
+  switch (pos) {
+    case 0:
+      return fnArray[i] === _util.OPS.save;
 
-    if (iFirstBeginText >= 4 && fnArray[iFirstBeginText - 4] === fnArray[iFirstSetFont] && fnArray[iFirstBeginText - 3] === fnArray[iFirstSetTextMatrix] && fnArray[iFirstBeginText - 2] === fnArray[iFirstShowText] && fnArray[iFirstBeginText - 1] === fnArray[iFirstEndText] && argsArray[iFirstBeginText - 4][0] === firstSetFontArg0 && argsArray[iFirstBeginText - 4][1] === firstSetFontArg1) {
-      count++;
-      iFirst -= 5;
-    }
+    case 1:
+      if (fnArray[i] !== _util.OPS.transform) {
+        return false;
+      }
 
-    let iEndText = iFirst + 4;
+      const iFirstTransform = context.iCurr - 2;
+      const firstTransformArg0 = argsArray[iFirstTransform][0];
+      const firstTransformArg3 = argsArray[iFirstTransform][3];
 
-    for (let q = 1; q < count; q++) {
-      fnArray.splice(iEndText, 3);
-      argsArray.splice(iEndText, 3);
-      iEndText += 2;
-    }
+      if (argsArray[i][0] !== firstTransformArg0 || argsArray[i][1] !== 0 || argsArray[i][2] !== 0 || argsArray[i][3] !== firstTransformArg3) {
+        return false;
+      }
 
-    return iEndText + 1;
-  });
+      return true;
 
-  function QueueOptimizer(queue) {
+    case 2:
+      if (fnArray[i] !== _util.OPS.paintImageXObject) {
+        return false;
+      }
+
+      const iFirstPIXO = context.iCurr - 1;
+      const firstPIXOArg0 = argsArray[iFirstPIXO][0];
+
+      if (argsArray[i][0] !== firstPIXOArg0) {
+        return false;
+      }
+
+      return true;
+
+    case 3:
+      return fnArray[i] === _util.OPS.restore;
+  }
+
+  throw new Error(`iterateImageGroup - invalid pos: ${pos}`);
+}, function (context, i) {
+  const MIN_IMAGES_IN_BLOCK = 3;
+  const MAX_IMAGES_IN_BLOCK = 1000;
+  const fnArray = context.fnArray,
+        argsArray = context.argsArray;
+  const curr = context.iCurr;
+  const iFirstSave = curr - 3;
+  const iFirstTransform = curr - 2;
+  const iFirstPIXO = curr - 1;
+  const firstPIXOArg0 = argsArray[iFirstPIXO][0];
+  const firstTransformArg0 = argsArray[iFirstTransform][0];
+  const firstTransformArg3 = argsArray[iFirstTransform][3];
+  const count = Math.min(Math.floor((i - iFirstSave) / 4), MAX_IMAGES_IN_BLOCK);
+
+  if (count < MIN_IMAGES_IN_BLOCK) {
+    return i - (i - iFirstSave) % 4;
+  }
+
+  const positions = new Float32Array(count * 2);
+  let iTransform = iFirstTransform;
+
+  for (let q = 0; q < count; q++, iTransform += 4) {
+    const transformArgs = argsArray[iTransform];
+    positions[q << 1] = transformArgs[4];
+    positions[(q << 1) + 1] = transformArgs[5];
+  }
+
+  const args = [firstPIXOArg0, firstTransformArg0, firstTransformArg3, positions];
+  fnArray.splice(iFirstSave, count * 4, _util.OPS.paintImageXObjectRepeat);
+  argsArray.splice(iFirstSave, count * 4, args);
+  return iFirstSave + 1;
+});
+addState(InitialState, [_util.OPS.beginText, _util.OPS.setFont, _util.OPS.setTextMatrix, _util.OPS.showText, _util.OPS.endText], null, function iterateShowTextGroup(context, i) {
+  const fnArray = context.fnArray,
+        argsArray = context.argsArray;
+  const iFirstSave = context.iCurr - 4;
+  const pos = (i - iFirstSave) % 5;
+
+  switch (pos) {
+    case 0:
+      return fnArray[i] === _util.OPS.beginText;
+
+    case 1:
+      return fnArray[i] === _util.OPS.setFont;
+
+    case 2:
+      return fnArray[i] === _util.OPS.setTextMatrix;
+
+    case 3:
+      if (fnArray[i] !== _util.OPS.showText) {
+        return false;
+      }
+
+      const iFirstSetFont = context.iCurr - 3;
+      const firstSetFontArg0 = argsArray[iFirstSetFont][0];
+      const firstSetFontArg1 = argsArray[iFirstSetFont][1];
+
+      if (argsArray[i][0] !== firstSetFontArg0 || argsArray[i][1] !== firstSetFontArg1) {
+        return false;
+      }
+
+      return true;
+
+    case 4:
+      return fnArray[i] === _util.OPS.endText;
+  }
+
+  throw new Error(`iterateShowTextGroup - invalid pos: ${pos}`);
+}, function (context, i) {
+  const MIN_CHARS_IN_BLOCK = 3;
+  const MAX_CHARS_IN_BLOCK = 1000;
+  const fnArray = context.fnArray,
+        argsArray = context.argsArray;
+  const curr = context.iCurr;
+  const iFirstBeginText = curr - 4;
+  const iFirstSetFont = curr - 3;
+  const iFirstSetTextMatrix = curr - 2;
+  const iFirstShowText = curr - 1;
+  const iFirstEndText = curr;
+  const firstSetFontArg0 = argsArray[iFirstSetFont][0];
+  const firstSetFontArg1 = argsArray[iFirstSetFont][1];
+  let count = Math.min(Math.floor((i - iFirstBeginText) / 5), MAX_CHARS_IN_BLOCK);
+
+  if (count < MIN_CHARS_IN_BLOCK) {
+    return i - (i - iFirstBeginText) % 5;
+  }
+
+  let iFirst = iFirstBeginText;
+
+  if (iFirstBeginText >= 4 && fnArray[iFirstBeginText - 4] === fnArray[iFirstSetFont] && fnArray[iFirstBeginText - 3] === fnArray[iFirstSetTextMatrix] && fnArray[iFirstBeginText - 2] === fnArray[iFirstShowText] && fnArray[iFirstBeginText - 1] === fnArray[iFirstEndText] && argsArray[iFirstBeginText - 4][0] === firstSetFontArg0 && argsArray[iFirstBeginText - 4][1] === firstSetFontArg1) {
+    count++;
+    iFirst -= 5;
+  }
+
+  let iEndText = iFirst + 4;
+
+  for (let q = 1; q < count; q++) {
+    fnArray.splice(iEndText, 3);
+    argsArray.splice(iEndText, 3);
+    iEndText += 2;
+  }
+
+  return iEndText + 1;
+});
+
+class NullOptimizer {
+  constructor(queue) {
     this.queue = queue;
+  }
+
+  _optimize() {}
+
+  push(fn, args) {
+    this.queue.fnArray.push(fn);
+    this.queue.argsArray.push(args);
+
+    this._optimize();
+  }
+
+  flush() {}
+
+  reset() {}
+
+}
+
+class QueueOptimizer extends NullOptimizer {
+  constructor(queue) {
+    super(queue);
     this.state = null;
     this.context = {
       iCurr: 0,
@@ -37863,116 +39230,92 @@ const QueueOptimizer = function QueueOptimizerClosure() {
     this.lastProcessed = 0;
   }
 
-  QueueOptimizer.prototype = {
-    _optimize() {
-      const fnArray = this.queue.fnArray;
-      let i = this.lastProcessed,
-          ii = fnArray.length;
-      let state = this.state;
-      let match = this.match;
+  _optimize() {
+    const fnArray = this.queue.fnArray;
+    let i = this.lastProcessed,
+        ii = fnArray.length;
+    let state = this.state;
+    let match = this.match;
 
-      if (!state && !match && i + 1 === ii && !InitialState[fnArray[i]]) {
-        this.lastProcessed = ii;
-        return;
-      }
+    if (!state && !match && i + 1 === ii && !InitialState[fnArray[i]]) {
+      this.lastProcessed = ii;
+      return;
+    }
 
-      const context = this.context;
+    const context = this.context;
 
-      while (i < ii) {
-        if (match) {
-          const iterate = (0, match.iterateFn)(context, i);
+    while (i < ii) {
+      if (match) {
+        const iterate = (0, match.iterateFn)(context, i);
 
-          if (iterate) {
-            i++;
-            continue;
-          }
-
-          i = (0, match.processFn)(context, i + 1);
-          ii = fnArray.length;
-          match = null;
-          state = null;
-
-          if (i >= ii) {
-            break;
-          }
-        }
-
-        state = (state || InitialState)[fnArray[i]];
-
-        if (!state || Array.isArray(state)) {
+        if (iterate) {
           i++;
           continue;
         }
 
-        context.iCurr = i;
-        i++;
-
-        if (state.checkFn && !(0, state.checkFn)(context)) {
-          state = null;
-          continue;
-        }
-
-        match = state;
+        i = (0, match.processFn)(context, i + 1);
+        ii = fnArray.length;
+        match = null;
         state = null;
+
+        if (i >= ii) {
+          break;
+        }
       }
 
-      this.state = state;
-      this.match = match;
-      this.lastProcessed = i;
-    },
+      state = (state || InitialState)[fnArray[i]];
 
-    push(fn, args) {
-      this.queue.fnArray.push(fn);
-      this.queue.argsArray.push(args);
-
-      this._optimize();
-    },
-
-    flush() {
-      while (this.match) {
-        const length = this.queue.fnArray.length;
-        this.lastProcessed = (0, this.match.processFn)(this.context, length);
-        this.match = null;
-        this.state = null;
-
-        this._optimize();
+      if (!state || Array.isArray(state)) {
+        i++;
+        continue;
       }
-    },
 
-    reset() {
-      this.state = null;
-      this.match = null;
-      this.lastProcessed = 0;
+      context.iCurr = i;
+      i++;
+
+      if (state.checkFn && !(0, state.checkFn)(context)) {
+        state = null;
+        continue;
+      }
+
+      match = state;
+      state = null;
     }
 
-  };
-  return QueueOptimizer;
-}();
-
-const NullOptimizer = function NullOptimizerClosure() {
-  function NullOptimizer(queue) {
-    this.queue = queue;
+    this.state = state;
+    this.match = match;
+    this.lastProcessed = i;
   }
 
-  NullOptimizer.prototype = {
-    push(fn, args) {
-      this.queue.fnArray.push(fn);
-      this.queue.argsArray.push(args);
-    },
+  flush() {
+    while (this.match) {
+      const length = this.queue.fnArray.length;
+      this.lastProcessed = (0, this.match.processFn)(this.context, length);
+      this.match = null;
+      this.state = null;
 
-    flush() {},
+      this._optimize();
+    }
+  }
 
-    reset() {}
+  reset() {
+    this.state = null;
+    this.match = null;
+    this.lastProcessed = 0;
+  }
 
-  };
-  return NullOptimizer;
-}();
+}
 
-const OperatorList = function OperatorListClosure() {
-  const CHUNK_SIZE = 1000;
-  const CHUNK_SIZE_ABOUT = CHUNK_SIZE - 5;
+class OperatorList {
+  static get CHUNK_SIZE() {
+    return (0, _util.shadow)(this, "CHUNK_SIZE", 1000);
+  }
 
-  function OperatorList(intent, streamSink) {
+  static get CHUNK_SIZE_ABOUT() {
+    return (0, _util.shadow)(this, "CHUNK_SIZE_ABOUT", OperatorList.CHUNK_SIZE - 5);
+  }
+
+  constructor(intent, streamSink) {
     this._streamSink = streamSink;
     this.fnArray = [];
     this.argsArray = [];
@@ -37989,124 +39332,121 @@ const OperatorList = function OperatorListClosure() {
     this._resolved = streamSink ? null : Promise.resolve();
   }
 
-  OperatorList.prototype = {
-    get length() {
-      return this.argsArray.length;
-    },
+  get length() {
+    return this.argsArray.length;
+  }
 
-    get ready() {
-      return this._resolved || this._streamSink.ready;
-    },
+  get ready() {
+    return this._resolved || this._streamSink.ready;
+  }
 
-    get totalLength() {
-      return this._totalLength + this.length;
-    },
+  get totalLength() {
+    return this._totalLength + this.length;
+  }
 
-    addOp(fn, args) {
-      this.optimizer.push(fn, args);
-      this.weight++;
+  addOp(fn, args) {
+    this.optimizer.push(fn, args);
+    this.weight++;
 
-      if (this._streamSink) {
-        if (this.weight >= CHUNK_SIZE) {
-          this.flush();
-        } else if (this.weight >= CHUNK_SIZE_ABOUT && (fn === _util.OPS.restore || fn === _util.OPS.endText)) {
-          this.flush();
-        }
+    if (this._streamSink) {
+      if (this.weight >= OperatorList.CHUNK_SIZE) {
+        this.flush();
+      } else if (this.weight >= OperatorList.CHUNK_SIZE_ABOUT && (fn === _util.OPS.restore || fn === _util.OPS.endText)) {
+        this.flush();
       }
-    },
+    }
+  }
 
-    addDependency(dependency) {
-      if (this.dependencies.has(dependency)) {
-        return;
-      }
-
-      this.dependencies.add(dependency);
-      this.addOp(_util.OPS.dependency, [dependency]);
-    },
-
-    addDependencies(dependencies) {
-      for (const dependency of dependencies) {
-        this.addDependency(dependency);
-      }
-    },
-
-    addOpList(opList) {
-      if (!(opList instanceof OperatorList)) {
-        (0, _util.warn)('addOpList - ignoring invalid "opList" parameter.');
-        return;
-      }
-
-      for (const dependency of opList.dependencies) {
-        this.dependencies.add(dependency);
-      }
-
-      for (let i = 0, ii = opList.length; i < ii; i++) {
-        this.addOp(opList.fnArray[i], opList.argsArray[i]);
-      }
-    },
-
-    getIR() {
-      return {
-        fnArray: this.fnArray,
-        argsArray: this.argsArray,
-        length: this.length
-      };
-    },
-
-    get _transfers() {
-      const transfers = [];
-      const {
-        fnArray,
-        argsArray,
-        length
-      } = this;
-
-      for (let i = 0; i < length; i++) {
-        switch (fnArray[i]) {
-          case _util.OPS.paintInlineImageXObject:
-          case _util.OPS.paintInlineImageXObjectGroup:
-          case _util.OPS.paintImageMaskXObject:
-            const arg = argsArray[i][0];
-            ;
-
-            if (!arg.cached) {
-              transfers.push(arg.data.buffer);
-            }
-
-            break;
-        }
-      }
-
-      return transfers;
-    },
-
-    flush(lastChunk = false) {
-      this.optimizer.flush();
-      const length = this.length;
-      this._totalLength += length;
-
-      this._streamSink.enqueue({
-        fnArray: this.fnArray,
-        argsArray: this.argsArray,
-        lastChunk,
-        length
-      }, 1, this._transfers);
-
-      this.dependencies.clear();
-      this.fnArray.length = 0;
-      this.argsArray.length = 0;
-      this.weight = 0;
-      this.optimizer.reset();
+  addDependency(dependency) {
+    if (this.dependencies.has(dependency)) {
+      return;
     }
 
-  };
-  return OperatorList;
-}();
+    this.dependencies.add(dependency);
+    this.addOp(_util.OPS.dependency, [dependency]);
+  }
+
+  addDependencies(dependencies) {
+    for (const dependency of dependencies) {
+      this.addDependency(dependency);
+    }
+  }
+
+  addOpList(opList) {
+    if (!(opList instanceof OperatorList)) {
+      (0, _util.warn)('addOpList - ignoring invalid "opList" parameter.');
+      return;
+    }
+
+    for (const dependency of opList.dependencies) {
+      this.dependencies.add(dependency);
+    }
+
+    for (let i = 0, ii = opList.length; i < ii; i++) {
+      this.addOp(opList.fnArray[i], opList.argsArray[i]);
+    }
+  }
+
+  getIR() {
+    return {
+      fnArray: this.fnArray,
+      argsArray: this.argsArray,
+      length: this.length
+    };
+  }
+
+  get _transfers() {
+    const transfers = [];
+    const {
+      fnArray,
+      argsArray,
+      length
+    } = this;
+
+    for (let i = 0; i < length; i++) {
+      switch (fnArray[i]) {
+        case _util.OPS.paintInlineImageXObject:
+        case _util.OPS.paintInlineImageXObjectGroup:
+        case _util.OPS.paintImageMaskXObject:
+          const arg = argsArray[i][0];
+          ;
+
+          if (!arg.cached) {
+            transfers.push(arg.data.buffer);
+          }
+
+          break;
+      }
+    }
+
+    return transfers;
+  }
+
+  flush(lastChunk = false) {
+    this.optimizer.flush();
+    const length = this.length;
+    this._totalLength += length;
+
+    this._streamSink.enqueue({
+      fnArray: this.fnArray,
+      argsArray: this.argsArray,
+      lastChunk,
+      length
+    }, 1, this._transfers);
+
+    this.dependencies.clear();
+    this.fnArray.length = 0;
+    this.argsArray.length = 0;
+    this.weight = 0;
+    this.optimizer.reset();
+  }
+
+}
 
 exports.OperatorList = OperatorList;
 
 /***/ }),
-/* 56 */
+/* 74 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -38779,7 +40119,7 @@ class PDFImage {
 exports.PDFImage = PDFImage;
 
 /***/ }),
-/* 57 */
+/* 75 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -38795,20 +40135,24 @@ var _core_utils = __w_pdfjs_require__(9);
 
 var _util = __w_pdfjs_require__(2);
 
-var _name_number_tree = __w_pdfjs_require__(58);
+var _name_number_tree = __w_pdfjs_require__(76);
 
 var _colorspace = __w_pdfjs_require__(14);
 
-var _file_spec = __w_pdfjs_require__(59);
+var _file_spec = __w_pdfjs_require__(77);
 
-var _image_utils = __w_pdfjs_require__(51);
+var _image_utils = __w_pdfjs_require__(52);
 
-var _metadata_parser = __w_pdfjs_require__(60);
+var _metadata_parser = __w_pdfjs_require__(78);
 
-var _struct_tree = __w_pdfjs_require__(62);
+var _struct_tree = __w_pdfjs_require__(80);
 
 function fetchDestination(dest) {
-  return (0, _primitives.isDict)(dest) ? dest.get("D") : dest;
+  if (dest instanceof _primitives.Dict) {
+    dest = dest.get("D");
+  }
+
+  return Array.isArray(dest) ? dest : null;
 }
 
 class Catalog {
@@ -38823,6 +40167,7 @@ class Catalog {
 
     this.fontCache = new _primitives.RefSetCache();
     this.builtInCMapCache = new Map();
+    this.standardFontDataCache = new Map();
     this.globalImageCache = new _image_utils.GlobalImageCache();
     this.pageKidsCountCache = new _primitives.RefSetCache();
     this.pageIndexCache = new _primitives.RefSetCache();
@@ -39326,12 +40671,18 @@ class Catalog {
 
     if (obj instanceof _name_number_tree.NameTree) {
       for (const [key, value] of obj.getAll()) {
-        dests[key] = fetchDestination(value);
+        const dest = fetchDestination(value);
+
+        if (dest) {
+          dests[key] = dest;
+        }
       }
     } else if (obj instanceof _primitives.Dict) {
       obj.forEach(function (key, value) {
-        if (value) {
-          dests[key] = fetchDestination(value);
+        const dest = fetchDestination(value);
+
+        if (dest) {
+          dests[key] = dest;
         }
       });
     }
@@ -39339,11 +40690,28 @@ class Catalog {
     return (0, _util.shadow)(this, "destinations", dests);
   }
 
-  getDestination(destinationId) {
+  getDestination(id) {
     const obj = this._readDests();
 
-    if (obj instanceof _name_number_tree.NameTree || obj instanceof _primitives.Dict) {
-      return fetchDestination(obj.get(destinationId) || null);
+    if (obj instanceof _name_number_tree.NameTree) {
+      const dest = fetchDestination(obj.get(id));
+
+      if (dest) {
+        return dest;
+      }
+
+      const allDest = this.destinations[id];
+
+      if (allDest) {
+        (0, _util.warn)(`Found "${id}" at an incorrect position in the NameTree.`);
+        return allDest;
+      }
+    } else if (obj instanceof _primitives.Dict) {
+      const dest = fetchDestination(obj.get(id));
+
+      if (dest) {
+        return dest;
+      }
     }
 
     return null;
@@ -39845,6 +41213,7 @@ class Catalog {
 
       this.fontCache.clear();
       this.builtInCMapCache.clear();
+      this.standardFontDataCache.clear();
     });
   }
 
@@ -40226,7 +41595,7 @@ class Catalog {
 exports.Catalog = Catalog;
 
 /***/ }),
-/* 58 */
+/* 76 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -40365,17 +41734,6 @@ class NameOrNumberTree {
           return xref.fetchIfRef(entries[m + 1]);
         }
       }
-
-      (0, _util.info)(`Falling back to an exhaustive search, for key "${key}", ` + `in "${this._type}" tree.`);
-
-      for (let m = 0, mm = entries.length; m < mm; m += 2) {
-        const currentKey = xref.fetchIfRef(entries[m]);
-
-        if (currentKey === key) {
-          (0, _util.warn)(`The "${key}" key was found at an incorrect, ` + `i.e. out-of-order, position in "${this._type}" tree.`);
-          return xref.fetchIfRef(entries[m + 1]);
-        }
-      }
     }
 
     return null;
@@ -40402,7 +41760,7 @@ class NumberTree extends NameOrNumberTree {
 exports.NumberTree = NumberTree;
 
 /***/ }),
-/* 59 */
+/* 77 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -40506,7 +41864,7 @@ class FileSpec {
 exports.FileSpec = FileSpec;
 
 /***/ }),
-/* 60 */
+/* 78 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -40516,7 +41874,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.MetadataParser = void 0;
 
-var _xml_parser = __w_pdfjs_require__(61);
+var _xml_parser = __w_pdfjs_require__(79);
 
 class MetadataParser {
   constructor(data) {
@@ -40645,7 +42003,7 @@ class MetadataParser {
 exports.MetadataParser = MetadataParser;
 
 /***/ }),
-/* 61 */
+/* 79 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -40789,7 +42147,7 @@ class XMLParserBase {
       }
     }
 
-    while (pos < s.length && !isWhitespace(s, pos) && s[pos] !== ">" && s[pos] !== "/") {
+    while (pos < s.length && !isWhitespace(s, pos) && s[pos] !== ">" && s[pos] !== "?" && s[pos] !== "/") {
       ++pos;
     }
 
@@ -41192,7 +42550,7 @@ class SimpleXMLParser extends XMLParserBase {
 exports.SimpleXMLParser = SimpleXMLParser;
 
 /***/ }),
-/* 62 */
+/* 80 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -41206,7 +42564,7 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _util = __w_pdfjs_require__(2);
 
-var _name_number_tree = __w_pdfjs_require__(58);
+var _name_number_tree = __w_pdfjs_require__(76);
 
 const MAX_DEPTH = 40;
 const StructElementType = {
@@ -41555,7 +42913,7 @@ class StructTreePage {
 exports.StructTreePage = StructTreePage;
 
 /***/ }),
-/* 63 */
+/* 81 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -41703,7 +43061,7 @@ class ObjectLoader {
 exports.ObjectLoader = ObjectLoader;
 
 /***/ }),
-/* 64 */
+/* 82 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -41720,9 +43078,9 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _xml_parser = __w_pdfjs_require__(61);
+var _xml_parser = __w_pdfjs_require__(79);
 
-var _crypto = __w_pdfjs_require__(65);
+var _crypto = __w_pdfjs_require__(83);
 
 function writeDict(dict, buffer, transform) {
   buffer.push("<<");
@@ -41744,8 +43102,7 @@ function writeStream(stream, buffer, transform) {
     string = transform.encryptString(string);
   }
 
-  buffer.push(string);
-  buffer.push("\nendstream\n");
+  buffer.push(string, "\nendstream\n");
 }
 
 function writeArray(array, buffer, transform) {
@@ -41950,8 +43307,7 @@ function incrementalUpdate({
     maxOffset = Math.max(maxOffset, baseOffset);
     xrefTableData.push([1, baseOffset, Math.min(ref.gen, 0xffff)]);
     baseOffset += data.length;
-    indexes.push(ref.num);
-    indexes.push(1);
+    indexes.push(ref.num, 1);
     buffer.push(data);
   }
 
@@ -41993,7 +43349,7 @@ function incrementalUpdate({
 }
 
 /***/ }),
-/* 65 */
+/* 83 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -42008,7 +43364,7 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _decrypt_stream = __w_pdfjs_require__(66);
+var _decrypt_stream = __w_pdfjs_require__(84);
 
 class ARCFourCipher {
   constructor(key) {
@@ -43224,7 +44580,7 @@ class CipherTransform {
 }
 
 const CipherTransformFactory = function CipherTransformFactoryClosure() {
-  const defaultPasswordBytes = new Uint8Array([0x28, 0xBF, 0x4E, 0x5E, 0x4E, 0x75, 0x8A, 0x41, 0x64, 0x00, 0x4E, 0x56, 0xFF, 0xFA, 0x01, 0x08, 0x2E, 0x2E, 0x00, 0xB6, 0xD0, 0x68, 0x3E, 0x80, 0x2F, 0x0C, 0xA9, 0xFE, 0x64, 0x53, 0x69, 0x7A]);
+  const defaultPasswordBytes = new Uint8Array([0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41, 0x64, 0x00, 0x4e, 0x56, 0xff, 0xfa, 0x01, 0x08, 0x2e, 0x2e, 0x00, 0xb6, 0xd0, 0x68, 0x3e, 0x80, 0x2f, 0x0c, 0xa9, 0xfe, 0x64, 0x53, 0x69, 0x7a]);
 
   function createEncryptionKey20(revision, password, ownerPassword, ownerValidationSalt, ownerKeySalt, uBytes, userPassword, userValidationSalt, userKeySalt, ownerEncryption, userEncryption, perms) {
     if (password) {
@@ -43586,7 +44942,7 @@ const CipherTransformFactory = function CipherTransformFactoryClosure() {
 exports.CipherTransformFactory = CipherTransformFactory;
 
 /***/ }),
-/* 66 */
+/* 84 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -43645,7 +45001,7 @@ class DecryptStream extends _decode_stream.DecodeStream {
 exports.DecryptStream = DecryptStream;
 
 /***/ }),
-/* 67 */
+/* 85 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -43655,29 +45011,51 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XFAFactory = void 0;
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
-var _bind = __w_pdfjs_require__(71);
+var _bind = __w_pdfjs_require__(90);
 
-var _parser = __w_pdfjs_require__(75);
+var _parser = __w_pdfjs_require__(94);
 
 class XFAFactory {
   constructor(data) {
     try {
       this.root = new _parser.XFAParser().parse(XFAFactory._createDocument(data));
       this.form = new _bind.Binder(this.root).bind();
-      this.pages = this.form[_xfa_object.$toHTML]();
+
+      this._createPages();
     } catch (e) {
       console.log(e);
     }
   }
 
-  getPage(pageIndex) {
-    return this.pages.children[pageIndex];
+  _createPages() {
+    this.pages = this.form[_xfa_object.$toHTML]();
+    this.dims = this.pages.children.map(c => {
+      const {
+        width,
+        height
+      } = c.attributes.style;
+      return [0, 0, parseInt(width), parseInt(height)];
+    });
+  }
+
+  getBoundingBox(pageIndex) {
+    return this.dims[pageIndex];
   }
 
   get numberPages() {
-    return this.pages.children.length;
+    return this.dims.length;
+  }
+
+  getPages() {
+    if (!this.pages) {
+      this._createPages();
+    }
+
+    const pages = this.pages;
+    this.pages = null;
+    return pages;
   }
 
   static _createDocument(data) {
@@ -43693,7 +45071,7 @@ class XFAFactory {
 exports.XFAFactory = XFAFactory;
 
 /***/ }),
-/* 68 */
+/* 86 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -43701,18 +45079,24 @@ exports.XFAFactory = XFAFactory;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.XmlObject = exports.XFAObjectArray = exports.XFAObject = exports.XFAAttribute = exports.StringObject = exports.OptionObject = exports.Option10 = exports.Option01 = exports.IntegerObject = exports.ContentObject = exports.$uid = exports.$toStyle = exports.$toHTML = exports.$text = exports.$setValue = exports.$setSetAttributes = exports.$setId = exports.$resolvePrototypes = exports.$removeChild = exports.$onText = exports.$onChildCheck = exports.$onChild = exports.$nsAttributes = exports.$nodeName = exports.$namespaceId = exports.$isTransparent = exports.$isDescendent = exports.$isDataValue = exports.$insertAt = exports.$indexOf = exports.$hasSettableValue = exports.$hasItem = exports.$global = exports.$getRealChildrenByNameIt = exports.$getParent = exports.$getChildrenByNameIt = exports.$getChildrenByName = exports.$getChildrenByClass = exports.$getChildren = exports.$getAttributeIt = exports.$finalize = exports.$extra = exports.$dump = exports.$data = exports.$content = exports.$consumed = exports.$clone = exports.$cleanup = exports.$clean = exports.$childrenToHTML = exports.$appendChild = exports.$acceptWhitespace = void 0;
+exports.XmlObject = exports.XFAObjectArray = exports.XFAObject = exports.XFAAttribute = exports.StringObject = exports.OptionObject = exports.Option10 = exports.Option01 = exports.IntegerObject = exports.ContentObject = exports.$uid = exports.$toStyle = exports.$toHTML = exports.$text = exports.$setValue = exports.$setSetAttributes = exports.$setId = exports.$searchNode = exports.$root = exports.$resolvePrototypes = exports.$removeChild = exports.$onText = exports.$onChildCheck = exports.$onChild = exports.$nsAttributes = exports.$nodeName = exports.$namespaceId = exports.$isTransparent = exports.$isDescendent = exports.$isDataValue = exports.$isCDATAXml = exports.$insertAt = exports.$indexOf = exports.$ids = exports.$hasSettableValue = exports.$hasItem = exports.$global = exports.$getRealChildrenByNameIt = exports.$getParent = exports.$getNextPage = exports.$getDataValue = exports.$getChildrenByNameIt = exports.$getChildrenByName = exports.$getChildrenByClass = exports.$getChildren = exports.$getAvailableSpace = exports.$getAttributeIt = exports.$flushHTML = exports.$finalize = exports.$extra = exports.$dump = exports.$data = exports.$content = exports.$consumed = exports.$clone = exports.$cleanup = exports.$clean = exports.$childrenToHTML = exports.$break = exports.$appendChild = exports.$addHTML = exports.$acceptWhitespace = void 0;
 
-var _utils = __w_pdfjs_require__(69);
+var _utils = __w_pdfjs_require__(87);
 
 var _util = __w_pdfjs_require__(2);
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
+
+var _som = __w_pdfjs_require__(89);
 
 const $acceptWhitespace = Symbol();
 exports.$acceptWhitespace = $acceptWhitespace;
+const $addHTML = Symbol();
+exports.$addHTML = $addHTML;
 const $appendChild = Symbol();
 exports.$appendChild = $appendChild;
+const $break = Symbol();
+exports.$break = $break;
 const $childrenToHTML = Symbol();
 exports.$childrenToHTML = $childrenToHTML;
 const $clean = Symbol();
@@ -43733,18 +45117,26 @@ const $extra = Symbol("extra");
 exports.$extra = $extra;
 const $finalize = Symbol();
 exports.$finalize = $finalize;
+const $flushHTML = Symbol();
+exports.$flushHTML = $flushHTML;
 const $getAttributeIt = Symbol();
 exports.$getAttributeIt = $getAttributeIt;
+const $getAvailableSpace = Symbol();
+exports.$getAvailableSpace = $getAvailableSpace;
 const $getChildrenByClass = Symbol();
 exports.$getChildrenByClass = $getChildrenByClass;
 const $getChildrenByName = Symbol();
 exports.$getChildrenByName = $getChildrenByName;
 const $getChildrenByNameIt = Symbol();
 exports.$getChildrenByNameIt = $getChildrenByNameIt;
+const $getDataValue = Symbol();
+exports.$getDataValue = $getDataValue;
 const $getRealChildrenByNameIt = Symbol();
 exports.$getRealChildrenByNameIt = $getRealChildrenByNameIt;
 const $getChildren = Symbol();
 exports.$getChildren = $getChildren;
+const $getNextPage = Symbol();
+exports.$getNextPage = $getNextPage;
 const $getParent = Symbol();
 exports.$getParent = $getParent;
 const $global = Symbol();
@@ -43753,10 +45145,14 @@ const $hasItem = Symbol();
 exports.$hasItem = $hasItem;
 const $hasSettableValue = Symbol();
 exports.$hasSettableValue = $hasSettableValue;
+const $ids = Symbol();
+exports.$ids = $ids;
 const $indexOf = Symbol();
 exports.$indexOf = $indexOf;
 const $insertAt = Symbol();
 exports.$insertAt = $insertAt;
+const $isCDATAXml = Symbol();
+exports.$isCDATAXml = $isCDATAXml;
 const $isDataValue = Symbol();
 exports.$isDataValue = $isDataValue;
 const $isDescendent = Symbol();
@@ -43778,8 +45174,12 @@ const $onText = Symbol();
 exports.$onText = $onText;
 const $removeChild = Symbol();
 exports.$removeChild = $removeChild;
+const $root = Symbol("root");
+exports.$root = $root;
 const $resolvePrototypes = Symbol();
 exports.$resolvePrototypes = $resolvePrototypes;
+const $searchNode = Symbol();
+exports.$searchNode = $searchNode;
 const $setId = Symbol();
 exports.$setId = $setId;
 const $setSetAttributes = Symbol();
@@ -43809,6 +45209,8 @@ const _dataValue = Symbol();
 
 const _defaultValue = Symbol();
 
+const _filteredChildrenGenerator = Symbol();
+
 const _getPrototype = Symbol();
 
 const _getUnsetAttributes = Symbol();
@@ -43820,6 +45222,8 @@ const _max = Symbol();
 const _options = Symbol();
 
 const _parent = Symbol("parent");
+
+const _resolvePrototypesHelper = Symbol();
 
 const _setAttributes = Symbol();
 
@@ -43880,6 +45284,10 @@ class XFAObject {
     return false;
   }
 
+  [$isCDATAXml]() {
+    return false;
+  }
+
   [$setId](ids) {
     if (this.id && this[$namespaceId] === _namespaces.NamespaceIds.template.id) {
       ids.set(this.id, this);
@@ -43932,7 +45340,7 @@ class XFAObject {
   }
 
   [$isTransparent]() {
-    return this.name === "";
+    return !this.name;
   }
 
   [$lastAttribute]() {
@@ -44024,30 +45432,79 @@ class XFAObject {
   }
 
   [$toHTML]() {
+    return _utils.HTMLResult.EMPTY;
+  }
+
+  *[_filteredChildrenGenerator](filter, include) {
+    for (const node of this[$getChildren]()) {
+      if (!filter || include === filter.has(node[$nodeName])) {
+        const availableSpace = this[$getAvailableSpace]();
+        const res = node[$toHTML](availableSpace);
+
+        if (!res.success) {
+          this[$extra].failingNode = node;
+        }
+
+        yield res;
+      }
+    }
+  }
+
+  [$flushHTML]() {
     return null;
   }
+
+  [$addHTML](html, bbox) {
+    this[$extra].children.push(html);
+  }
+
+  [$getAvailableSpace]() {}
 
   [$childrenToHTML]({
     filter = null,
     include = true
   }) {
-    const res = [];
-    this[$getChildren]().forEach(node => {
-      if (!filter || include === filter.has(node[$nodeName])) {
-        const html = node[$toHTML]();
+    if (!this[$extra].generator) {
+      this[$extra].generator = this[_filteredChildrenGenerator](filter, include);
+    } else {
+      const availableSpace = this[$getAvailableSpace]();
+      const res = this[$extra].failingNode[$toHTML](availableSpace);
 
-        if (html) {
-          res.push(html);
-        }
+      if (!res.success) {
+        return false;
       }
-    });
-    return res;
+
+      if (res.html) {
+        this[$addHTML](res.html, res.bbox);
+      }
+
+      delete this[$extra].failingNode;
+    }
+
+    while (true) {
+      const gen = this[$extra].generator.next();
+
+      if (gen.done) {
+        break;
+      }
+
+      const res = gen.value;
+
+      if (!res.success) {
+        return false;
+      }
+
+      if (res.html) {
+        this[$addHTML](res.html, res.bbox);
+      }
+    }
+
+    this[$extra].generator = null;
+    return true;
   }
 
   [$setSetAttributes](attributes) {
-    if (attributes.use || attributes.id) {
-      this[_setAttributes] = new Set(Object.keys(attributes));
-    }
+    this[_setAttributes] = new Set(Object.keys(attributes));
   }
 
   [_getUnsetAttributes](protoAttributes) {
@@ -44058,57 +45515,93 @@ class XFAObject {
 
   [$resolvePrototypes](ids, ancestors = new Set()) {
     for (const child of this[_children]) {
-      const proto = child[_getPrototype](ids, ancestors);
+      child[_resolvePrototypesHelper](ids, ancestors);
+    }
+  }
 
-      if (proto) {
-        child[_applyPrototype](proto, ids, ancestors);
-      } else {
-        child[$resolvePrototypes](ids, ancestors);
-      }
+  [_resolvePrototypesHelper](ids, ancestors) {
+    const proto = this[_getPrototype](ids, ancestors);
+
+    if (proto) {
+      this[_applyPrototype](proto, ids, ancestors);
+    } else {
+      this[$resolvePrototypes](ids, ancestors);
     }
   }
 
   [_getPrototype](ids, ancestors) {
     const {
-      use
+      use,
+      usehref
     } = this;
 
-    if (use && use.startsWith("#")) {
-      const id = use.slice(1);
-      const proto = ids.get(id);
-      this.use = "";
+    if (!use && !usehref) {
+      return null;
+    }
 
-      if (!proto) {
-        (0, _util.warn)(`XFA - Invalid prototype id: ${id}.`);
-        return null;
+    let proto = null;
+    let somExpression = null;
+    let id = null;
+    let ref = use;
+
+    if (usehref) {
+      ref = usehref;
+
+      if (usehref.startsWith("#som(") && usehref.endsWith(")")) {
+        somExpression = usehref.slice("#som(".length, usehref.length - 1);
+      } else if (usehref.startsWith(".#som(") && usehref.endsWith(")")) {
+        somExpression = usehref.slice(".#som(".length, usehref.length - 1);
+      } else if (usehref.startsWith("#")) {
+        id = usehref.slice(1);
+      } else if (usehref.startsWith(".#")) {
+        id = usehref.slice(2);
       }
+    } else if (use.startsWith("#")) {
+      id = use.slice(1);
+    } else {
+      somExpression = use;
+    }
 
-      if (proto[$nodeName] !== this[$nodeName]) {
-        (0, _util.warn)(`XFA - Incompatible prototype: ${proto[$nodeName]} !== ${this[$nodeName]}.`);
-        return null;
+    this.use = this.usehref = "";
+
+    if (id) {
+      proto = ids.get(id);
+    } else {
+      proto = (0, _som.searchNode)(ids.get($root), this, somExpression, true, false);
+
+      if (proto) {
+        proto = proto[0];
       }
+    }
 
-      if (ancestors.has(proto)) {
-        (0, _util.warn)(`XFA - Cycle detected in prototypes use.`);
-        return null;
-      }
+    if (!proto) {
+      (0, _util.warn)(`XFA - Invalid prototype reference: ${ref}.`);
+      return null;
+    }
 
-      ancestors.add(proto);
+    if (proto[$nodeName] !== this[$nodeName]) {
+      (0, _util.warn)(`XFA - Incompatible prototype: ${proto[$nodeName]} !== ${this[$nodeName]}.`);
+      return null;
+    }
 
-      const protoProto = proto[_getPrototype](ids, ancestors);
+    if (ancestors.has(proto)) {
+      (0, _util.warn)(`XFA - Cycle detected in prototypes use.`);
+      return null;
+    }
 
-      if (!protoProto) {
-        ancestors.delete(proto);
-        return proto;
-      }
+    ancestors.add(proto);
 
-      proto[_applyPrototype](protoProto, ids, ancestors);
+    const protoProto = proto[_getPrototype](ids, ancestors);
 
+    if (!protoProto) {
       ancestors.delete(proto);
       return proto;
     }
 
-    return null;
+    proto[_applyPrototype](protoProto, ids, ancestors);
+
+    ancestors.delete(proto);
+    return proto;
   }
 
   [_applyPrototype](proto, ids, ancestors) {
@@ -44142,7 +45635,7 @@ class XFAObject {
 
       if (value instanceof XFAObjectArray) {
         for (const child of value[_children]) {
-          child[$resolvePrototypes](ids, ancestors);
+          child[_resolvePrototypesHelper](ids, ancestors);
         }
 
         for (let i = value[_children].length, ii = protoValue[_children].length; i < ii; i++) {
@@ -44153,7 +45646,7 @@ class XFAObject {
 
             this[_children].push(child);
 
-            child[$resolvePrototypes](ids, newAncestors);
+            child[_resolvePrototypesHelper](ids, ancestors);
           } else {
             break;
           }
@@ -44164,6 +45657,11 @@ class XFAObject {
 
       if (value !== null) {
         value[$resolvePrototypes](ids, ancestors);
+
+        if (protoValue) {
+          value[_applyPrototype](protoValue, ids, ancestors);
+        }
+
         continue;
       }
 
@@ -44174,7 +45672,7 @@ class XFAObject {
 
         this[_children].push(child);
 
-        child[$resolvePrototypes](ids, newAncestors);
+        child[_resolvePrototypesHelper](ids, ancestors);
       }
     }
   }
@@ -44412,13 +45910,13 @@ class XmlObject extends XFAObject {
 
   [$toHTML]() {
     if (this[$nodeName] === "#text") {
-      return {
+      return _utils.HTMLResult.success({
         name: "#text",
         value: this[$content]
-      };
+      });
     }
 
-    return null;
+    return _utils.HTMLResult.EMPTY;
   }
 
   [$getChildren](name = null) {
@@ -44483,10 +45981,26 @@ class XmlObject extends XFAObject {
 
   [$isDataValue]() {
     if (this[_dataValue] === null) {
-      return this[_children].length === 0;
+      return this[_children].length === 0 || this[_children][0][$namespaceId] === _namespaces.NamespaceIds.xhtml.id;
     }
 
     return this[_dataValue];
+  }
+
+  [$getDataValue]() {
+    if (this[_dataValue] === null) {
+      if (this[_children].length === 0) {
+        return this[$content].trim();
+      }
+
+      if (this[_children][0][$namespaceId] === _namespaces.NamespaceIds.xhtml.id) {
+        return this[_children][0][$text]().trim();
+      }
+
+      return null;
+    }
+
+    return this[$content].trim();
   }
 
   [$dump]() {
@@ -44608,8 +46122,8 @@ class Option10 extends IntegerObject {
 exports.Option10 = Option10;
 
 /***/ }),
-/* 69 */
-/***/ ((__unused_webpack_module, exports) => {
+/* 87 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
 
@@ -44625,11 +46139,16 @@ exports.getMeasurement = getMeasurement;
 exports.getRatio = getRatio;
 exports.getRelevant = getRelevant;
 exports.getStringOption = getStringOption;
+exports.HTMLResult = void 0;
+
+var _util = __w_pdfjs_require__(2);
+
 const dimConverters = {
   pt: x => x,
   cm: x => x / 2.54 * 72,
   mm: x => x / (10 * 2.54) * 72,
-  in: x => x * 72
+  in: x => x * 72,
+  px: x => x
 };
 const measurementPattern = /([+-]?[0-9]+\.?[0-9]*)(.*)/;
 
@@ -44832,8 +46351,31 @@ function getBBox(data) {
   };
 }
 
+class HTMLResult {
+  static get FAILURE() {
+    return (0, _util.shadow)(this, "FAILURE", new HTMLResult(false, null, null));
+  }
+
+  static get EMPTY() {
+    return (0, _util.shadow)(this, "EMPTY", new HTMLResult(true, null, null));
+  }
+
+  constructor(success, html, bbox) {
+    this.success = success;
+    this.html = html;
+    this.bbox = bbox;
+  }
+
+  static success(html, bbox = null) {
+    return new HTMLResult(true, html, bbox);
+  }
+
+}
+
+exports.HTMLResult = HTMLResult;
+
 /***/ }),
-/* 70 */
+/* 88 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -44909,7 +46451,341 @@ const NamespaceIds = {
 exports.NamespaceIds = NamespaceIds;
 
 /***/ }),
-/* 71 */
+/* 89 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.createDataNode = createDataNode;
+exports.searchNode = searchNode;
+
+var _xfa_object = __w_pdfjs_require__(86);
+
+var _util = __w_pdfjs_require__(2);
+
+const namePattern = /^[^.[]+/;
+const indexPattern = /^[^\]]+/;
+const operators = {
+  dot: 0,
+  dotDot: 1,
+  dotHash: 2,
+  dotBracket: 3,
+  dotParen: 4
+};
+const shortcuts = new Map([["$data", (root, current) => root.datasets.data], ["$template", (root, current) => root.template], ["$connectionSet", (root, current) => root.connectionSet], ["$form", (root, current) => root.form], ["$layout", (root, current) => root.layout], ["$host", (root, current) => root.host], ["$dataWindow", (root, current) => root.dataWindow], ["$event", (root, current) => root.event], ["!", (root, current) => root.datasets], ["$xfa", (root, current) => root], ["xfa", (root, current) => root], ["$", (root, current) => current]]);
+const somCache = new WeakMap();
+
+function parseIndex(index) {
+  index = index.trim();
+
+  if (index === "*") {
+    return Infinity;
+  }
+
+  return parseInt(index, 10) || 0;
+}
+
+function parseExpression(expr, dotDotAllowed) {
+  let match = expr.match(namePattern);
+
+  if (!match) {
+    return null;
+  }
+
+  let [name] = match;
+  const parsed = [{
+    name,
+    cacheName: "." + name,
+    index: 0,
+    js: null,
+    formCalc: null,
+    operator: operators.dot
+  }];
+  let pos = name.length;
+
+  while (pos < expr.length) {
+    const spos = pos;
+    const char = expr.charAt(pos++);
+
+    if (char === "[") {
+      match = expr.slice(pos).match(indexPattern);
+
+      if (!match) {
+        (0, _util.warn)("XFA - Invalid index in SOM expression");
+        return null;
+      }
+
+      parsed[parsed.length - 1].index = parseIndex(match[0]);
+      pos += match[0].length + 1;
+      continue;
+    }
+
+    let operator;
+
+    switch (expr.charAt(pos)) {
+      case ".":
+        if (!dotDotAllowed) {
+          return null;
+        }
+
+        pos++;
+        operator = operators.dotDot;
+        break;
+
+      case "#":
+        pos++;
+        operator = operators.dotHash;
+        break;
+
+      case "[":
+        operator = operators.dotBracket;
+        break;
+
+      case "(":
+        operator = operators.dotParen;
+        break;
+
+      default:
+        operator = operators.dot;
+        break;
+    }
+
+    match = expr.slice(pos).match(namePattern);
+
+    if (!match) {
+      break;
+    }
+
+    [name] = match;
+    pos += name.length;
+    parsed.push({
+      name,
+      cacheName: expr.slice(spos, pos),
+      operator,
+      index: 0,
+      js: null,
+      formCalc: null
+    });
+  }
+
+  return parsed;
+}
+
+function searchNode(root, container, expr, dotDotAllowed = true, useCache = true) {
+  const parsed = parseExpression(expr, dotDotAllowed);
+
+  if (!parsed) {
+    return null;
+  }
+
+  const fn = shortcuts.get(parsed[0].name);
+  let i = 0;
+  let isQualified;
+
+  if (fn) {
+    isQualified = true;
+    root = [fn(root, container)];
+    i = 1;
+  } else {
+    isQualified = container === null;
+    root = [container || root];
+  }
+
+  for (let ii = parsed.length; i < ii; i++) {
+    const {
+      name,
+      cacheName,
+      operator,
+      index
+    } = parsed[i];
+    const nodes = [];
+
+    for (const node of root) {
+      if (!(node instanceof _xfa_object.XFAObject)) {
+        continue;
+      }
+
+      let children, cached;
+
+      if (useCache) {
+        cached = somCache.get(node);
+
+        if (!cached) {
+          cached = new Map();
+          somCache.set(node, cached);
+        }
+
+        children = cached.get(cacheName);
+      }
+
+      if (!children) {
+        switch (operator) {
+          case operators.dot:
+            children = node[_xfa_object.$getChildrenByName](name, false);
+            break;
+
+          case operators.dotDot:
+            children = node[_xfa_object.$getChildrenByName](name, true);
+            break;
+
+          case operators.dotHash:
+            children = node[_xfa_object.$getChildrenByClass](name);
+
+            if (children instanceof _xfa_object.XFAObjectArray) {
+              children = children.children;
+            } else {
+              children = [children];
+            }
+
+            break;
+
+          default:
+            break;
+        }
+
+        if (useCache) {
+          cached.set(cacheName, children);
+        }
+      }
+
+      if (children.length > 0) {
+        nodes.push(children);
+      }
+    }
+
+    if (nodes.length === 0 && !isQualified && i === 0) {
+      const parent = container[_xfa_object.$getParent]();
+
+      container = parent;
+
+      if (!container) {
+        return null;
+      }
+
+      i = -1;
+      root = [container];
+      continue;
+    }
+
+    if (isFinite(index)) {
+      root = nodes.filter(node => index < node.length).map(node => node[index]);
+    } else {
+      root = nodes.reduce((acc, node) => acc.concat(node), []);
+    }
+  }
+
+  if (root.length === 0) {
+    return null;
+  }
+
+  return root;
+}
+
+function createNodes(root, path) {
+  let node = null;
+
+  for (const {
+    name,
+    index
+  } of path) {
+    for (let i = 0, ii = !isFinite(index) ? 0 : index; i <= ii; i++) {
+      node = new _xfa_object.XmlObject(root[_xfa_object.$namespaceId], name);
+
+      root[_xfa_object.$appendChild](node);
+    }
+
+    root = node;
+  }
+
+  return node;
+}
+
+function createDataNode(root, container, expr) {
+  const parsed = parseExpression(expr);
+
+  if (!parsed) {
+    return null;
+  }
+
+  if (parsed.some(x => x.operator === operators.dotDot)) {
+    return null;
+  }
+
+  const fn = shortcuts.get(parsed[0].name);
+  let i = 0;
+
+  if (fn) {
+    root = fn(root, container);
+    i = 1;
+  } else {
+    root = container || root;
+  }
+
+  for (let ii = parsed.length; i < ii; i++) {
+    const {
+      name,
+      operator,
+      index
+    } = parsed[i];
+
+    if (!isFinite(index)) {
+      parsed[i].index = 0;
+      return createNodes(root, parsed.slice(i));
+    }
+
+    let children;
+
+    switch (operator) {
+      case operators.dot:
+        children = root[_xfa_object.$getChildrenByName](name, false);
+        break;
+
+      case operators.dotDot:
+        children = root[_xfa_object.$getChildrenByName](name, true);
+        break;
+
+      case operators.dotHash:
+        children = root[_xfa_object.$getChildrenByClass](name);
+
+        if (children instanceof _xfa_object.XFAObjectArray) {
+          children = children.children;
+        } else {
+          children = [children];
+        }
+
+        break;
+
+      default:
+        break;
+    }
+
+    if (children.length === 0) {
+      return createNodes(root, parsed.slice(i));
+    }
+
+    if (index < children.length) {
+      const child = children[index];
+
+      if (!(child instanceof _xfa_object.XFAObject)) {
+        (0, _util.warn)(`XFA - Cannot create a node.`);
+        return null;
+      }
+
+      root = child;
+    } else {
+      parsed[i].index = children.length - index;
+      return createNodes(root, parsed.slice(i));
+    }
+  }
+
+  return null;
+}
+
+/***/ }),
+/* 90 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -44919,13 +46795,13 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.Binder = void 0;
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
-var _template = __w_pdfjs_require__(72);
+var _template = __w_pdfjs_require__(91);
 
-var _som = __w_pdfjs_require__(74);
+var _som = __w_pdfjs_require__(89);
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -44972,7 +46848,7 @@ class Binder {
   _bindValue(formNode, data, picture) {
     if (formNode[_xfa_object.$hasSettableValue]()) {
       if (data[_xfa_object.$isDataValue]()) {
-        const value = data[_xfa_object.$content].trim();
+        const value = data[_xfa_object.$getDataValue]();
 
         formNode[_xfa_object.$setValue](createText(value));
 
@@ -44995,7 +46871,7 @@ class Binder {
     }
   }
 
-  _findDataByNameToConsume(name, dataNode, global) {
+  _findDataByNameToConsume(name, isValue, dataNode, global) {
     if (!name) {
       return null;
     }
@@ -45004,10 +46880,17 @@ class Binder {
 
     for (let i = 0; i < 3; i++) {
       generator = dataNode[_xfa_object.$getRealChildrenByNameIt](name, false, true);
-      match = generator.next().value;
 
-      if (match) {
-        return match;
+      while (true) {
+        match = generator.next().value;
+
+        if (!match) {
+          break;
+        }
+
+        if (isValue === match[_xfa_object.$isDataValue]()) {
+          return match;
+        }
       }
 
       if (dataNode[_xfa_object.$namespaceId] === _namespaces.NamespaceIds.datasets.id && dataNode[_xfa_object.$nodeName] === "data") {
@@ -45021,7 +46904,7 @@ class Binder {
       return null;
     }
 
-    generator = this.datasets[_xfa_object.$getRealChildrenByNameIt](name, false, false);
+    generator = this.data[_xfa_object.$getRealChildrenByNameIt](name, false, false);
 
     while (true) {
       match = generator.next().value;
@@ -45317,6 +47200,8 @@ class Binder {
       if (child.bind) {
         switch (child.bind.match) {
           case "none":
+            this._bindElement(child, dataNode);
+
             continue;
 
           case "global":
@@ -45326,6 +47211,9 @@ class Binder {
           case "dataRef":
             if (!child.bind.ref) {
               (0, _util.warn)(`XFA - ref is empty in node ${child[_xfa_object.$nodeName]}.`);
+
+              this._bindElement(child, dataNode);
+
               continue;
             }
 
@@ -45353,7 +47241,9 @@ class Binder {
             match[_xfa_object.$consumed] = true;
           }
 
-          match = [match];
+          this._bindElement(child, match);
+
+          continue;
         } else {
           if (this._isConsumeData()) {
             match = match.filter(node => !node[_xfa_object.$consumed]);
@@ -45382,7 +47272,7 @@ class Binder {
           const matches = [];
 
           while (matches.length < max) {
-            const found = this._findDataByNameToConsume(child.name, dataNode, global);
+            const found = this._findDataByNameToConsume(child.name, child[_xfa_object.$hasSettableValue](), dataNode, global);
 
             if (!found) {
               break;
@@ -45400,6 +47290,10 @@ class Binder {
             match = new _xfa_object.XmlObject(dataNode[_xfa_object.$namespaceId], child.name);
 
             dataNode[_xfa_object.$appendChild](match);
+
+            this._bindElement(child, match);
+
+            continue;
           }
 
           match = [match];
@@ -45414,6 +47308,10 @@ class Binder {
 
         this._bindOccurrences(child, match, picture);
       } else if (min > 0) {
+        this._setProperties(child, dataNode);
+
+        this._bindItems(child, dataNode);
+
         this._bindElement(child, dataNode);
       } else {
         uselessNodes.push(child);
@@ -45428,7 +47326,7 @@ class Binder {
 exports.Binder = Binder;
 
 /***/ }),
-/* 72 */
+/* 91 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -45438,17 +47336,23 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.Value = exports.Text = exports.TemplateNamespace = exports.Template = exports.SetProperty = exports.Items = exports.Field = exports.BindItems = void 0;
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
-var _html_utils = __w_pdfjs_require__(73);
+var _layout = __w_pdfjs_require__(92);
 
-var _utils = __w_pdfjs_require__(69);
+var _html_utils = __w_pdfjs_require__(93);
+
+var _utils = __w_pdfjs_require__(87);
 
 var _util = __w_pdfjs_require__(2);
 
+var _som = __w_pdfjs_require__(89);
+
 const TEMPLATE_NS_ID = _namespaces.NamespaceIds.template.id;
+const SVG_NS = "http://www.w3.org/2000/svg";
+const MAX_ATTEMPTS_FOR_LRTB_LAYOUT = 2;
 
 function _setValue(templateNode, value) {
   if (!templateNode.value) {
@@ -45460,6 +47364,116 @@ function _setValue(templateNode, value) {
   }
 
   templateNode.value[_xfa_object.$setValue](value);
+}
+
+function getRoot(node) {
+  let parent = node[_xfa_object.$getParent]();
+
+  while (!(parent instanceof Template)) {
+    parent = parent[_xfa_object.$getParent]();
+  }
+
+  return parent;
+}
+
+function getTransformedBBox(node) {
+  let w = node.w === "" ? NaN : node.w;
+  let h = node.h === "" ? NaN : node.h;
+  let [centerX, centerY] = [0, 0];
+
+  switch (node.anchorType || "") {
+    case "bottomCenter":
+      [centerX, centerY] = [w / 2, h];
+      break;
+
+    case "bottomLeft":
+      [centerX, centerY] = [0, h];
+      break;
+
+    case "bottomRight":
+      [centerX, centerY] = [w, h];
+      break;
+
+    case "middleCenter":
+      [centerX, centerY] = [w / 2, h / 2];
+      break;
+
+    case "middleLeft":
+      [centerX, centerY] = [0, h / 2];
+      break;
+
+    case "middleRight":
+      [centerX, centerY] = [w, h / 2];
+      break;
+
+    case "topCenter":
+      [centerX, centerY] = [w / 2, 0];
+      break;
+
+    case "topRight":
+      [centerX, centerY] = [w, 0];
+      break;
+  }
+
+  let x;
+  let y;
+
+  switch (node.rotate || 0) {
+    case 0:
+      [x, y] = [-centerX, -centerY];
+      break;
+
+    case 90:
+      [x, y] = [-centerY, centerX];
+      [w, h] = [h, -w];
+      break;
+
+    case 180:
+      [x, y] = [centerX, centerY];
+      [w, h] = [-w, -h];
+      break;
+
+    case 270:
+      [x, y] = [centerY, -centerX];
+      [w, h] = [-h, w];
+      break;
+  }
+
+  return [node.x + x + Math.min(0, w), node.y + y + Math.min(0, h), Math.abs(w), Math.abs(h)];
+}
+
+const NOTHING = 0;
+const NOSPACE = 1;
+const VALID = 2;
+
+function checkDimensions(node, space) {
+  const [x, y, w, h] = getTransformedBBox(node);
+
+  if (node.w === 0 || node.h === 0) {
+    return VALID;
+  }
+
+  if (node.w !== "" && Math.round(x + w - space.width) > 1) {
+    const area = getRoot(node)[_xfa_object.$extra].currentContentArea;
+
+    if (x + w > area.w) {
+      return NOTHING;
+    }
+
+    return NOSPACE;
+  }
+
+  if (node.h !== "" && Math.round(y + h - space.height) > 1) {
+    const area = getRoot(node)[_xfa_object.$extra].currentContentArea;
+
+    if (y + h > area.h) {
+      return NOTHING;
+    }
+
+    return NOSPACE;
+  }
+
+  return VALID;
 }
 
 class AppearanceFilter extends _xfa_object.StringObject {
@@ -45499,6 +47513,70 @@ class Arc extends _xfa_object.XFAObject {
     this.fill = null;
   }
 
+  [_xfa_object.$toHTML]() {
+    const edge = this.edge ? this.edge : new Edge({});
+
+    const edgeStyle = edge[_xfa_object.$toStyle]();
+
+    const style = Object.create(null);
+
+    if (this.fill) {
+      Object.assign(style, this.fill[_xfa_object.$toStyle]());
+    } else {
+      style.fill = "transparent";
+    }
+
+    style.strokeWidth = (0, _html_utils.measureToString)(Math.round(edge.thickness));
+    style.stroke = edgeStyle.color;
+    let arc;
+    const attributes = {
+      xmlns: SVG_NS,
+      style: {
+        position: "absolute",
+        width: "100%",
+        height: "100%"
+      }
+    };
+
+    if (this.startAngle === 0 && this.sweepAngle === 360) {
+      arc = {
+        name: "ellipse",
+        attributes: {
+          xmlns: SVG_NS,
+          cx: "50%",
+          cy: "50%",
+          rx: "50%",
+          ry: "50%",
+          style
+        }
+      };
+    } else {
+      const startAngle = this.startAngle * Math.PI / 180;
+      const sweepAngle = this.sweepAngle * Math.PI / 180;
+      const largeArc = this.sweepAngle - this.startAngle > 180 ? 1 : 0;
+      const [x1, y1, x2, y2] = [50 * (1 + Math.cos(startAngle)), 50 * (1 - Math.sin(startAngle)), 50 * (1 + Math.cos(sweepAngle)), 50 * (1 - Math.sin(sweepAngle))];
+      arc = {
+        name: "path",
+        attributes: {
+          xmlns: SVG_NS,
+          d: `M ${x1} ${y1} A 50 50 0 ${largeArc} 0 ${x2} ${y2}`,
+          vectorEffect: "non-scaling-stroke",
+          style
+        }
+      };
+      Object.assign(attributes, {
+        viewBox: "0 0 100 100",
+        preserveAspectRatio: "none"
+      });
+    }
+
+    return _utils.HTMLResult.success({
+      name: "svg",
+      children: [arc],
+      attributes
+    });
+  }
+
 }
 
 class Area extends _xfa_object.XFAObject {
@@ -45507,7 +47585,7 @@ class Area extends _xfa_object.XFAObject {
     this.colSpan = (0, _utils.getInteger)({
       data: attributes.colSpan,
       defaultValue: 1,
-      validate: n => n >= 1
+      validate: n => n >= 1 || n === -1
     });
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -45531,30 +47609,56 @@ class Area extends _xfa_object.XFAObject {
     return true;
   }
 
-  [_xfa_object.$toHTML]() {
-    this[_xfa_object.$extra] = Object.create(null);
+  [_xfa_object.$addHTML](html, bbox) {
+    const [x, y, w, h] = bbox;
+    this[_xfa_object.$extra].width = Math.max(this[_xfa_object.$extra].width, x + w);
+    this[_xfa_object.$extra].height = Math.max(this[_xfa_object.$extra].height, y + h);
+
+    this[_xfa_object.$extra].children.push(html);
+  }
+
+  [_xfa_object.$getAvailableSpace]() {
+    return this[_xfa_object.$extra].availableSpace;
+  }
+
+  [_xfa_object.$toHTML](availableSpace) {
     const style = (0, _html_utils.toStyle)(this, "position");
     const attributes = {
       style,
       id: this[_xfa_object.$uid],
-      class: "xfaArea"
+      class: ["xfaArea"]
     };
 
     if (this.name) {
       attributes.xfaName = this.name;
     }
 
-    const children = this[_xfa_object.$childrenToHTML]({
-      filter: new Set(["area", "draw", "field", "subform", "subformSet"]),
-      include: true
-    });
+    const children = [];
+    this[_xfa_object.$extra] = {
+      children,
+      width: 0,
+      height: 0,
+      availableSpace
+    };
 
+    if (!this[_xfa_object.$childrenToHTML]({
+      filter: new Set(["area", "draw", "field", "exclGroup", "subform", "subformSet"]),
+      include: true
+    })) {
+      delete this[_xfa_object.$extra];
+      return _utils.HTMLResult.empty;
+    }
+
+    style.width = (0, _html_utils.measureToString)(this[_xfa_object.$extra].width);
+    style.height = (0, _html_utils.measureToString)(this[_xfa_object.$extra].height);
     const html = {
       name: "div",
       attributes,
       children
     };
-    return html;
+    const bbox = [this.x, this.y, this[_xfa_object.$extra].width, this[_xfa_object.$extra].height];
+    delete this[_xfa_object.$extra];
+    return _utils.HTMLResult.success(html, bbox);
   }
 
 }
@@ -45674,8 +47778,8 @@ class BooleanElement extends _xfa_object.Option01 {
     this.usehref = attributes.usehref || "";
   }
 
-  [_xfa_object.$toHTML]() {
-    return this[_xfa_object.$content] === 1;
+  [_xfa_object.$toHTML](availableSpace) {
+    return _utils.HTMLResult.success(this[_xfa_object.$content] === 1);
   }
 
 }
@@ -45697,7 +47801,7 @@ class Border extends _xfa_object.XFAObject {
     this.margin = null;
   }
 
-  [_xfa_object.$toStyle](widths, margins) {
+  [_xfa_object.$toStyle]() {
     const edges = this.edge.children.slice();
 
     if (edges.length < 4) {
@@ -45708,38 +47812,39 @@ class Border extends _xfa_object.XFAObject {
       }
     }
 
-    if (widths) {
-      for (let i = 0; i < 4; i++) {
-        widths[i] = edges[i].thickness;
-      }
-    }
+    const edgeStyles = edges.map(node => {
+      const style = node[_xfa_object.$toStyle]();
 
-    const edgeStyles = edges.map(node => node[_xfa_object.$toStyle]());
-    const cornerStyles = this.corner.children.map(node => node[_xfa_object.$toStyle]());
-    let style;
+      style.color = style.color || "#000000";
+      return style;
+    });
+    const widths = edges.map(edge => edge.thickness);
+    const insets = [0, 0, 0, 0];
 
     if (this.margin) {
-      style = this.margin[_xfa_object.$toStyle]();
+      insets[0] = this.margin.topInset;
+      insets[1] = this.margin.rightInset;
+      insets[2] = this.margin.bottomInset;
+      insets[3] = this.margin.leftInset;
+    }
 
-      if (margins) {
-        margins[0] = this.margin.topInset;
-        margins[1] = this.margin.rightInset;
-        margins[2] = this.margin.bottomInset;
-        margins[3] = this.margin.leftInset;
-      }
-    } else {
-      style = Object.create(null);
+    this[_xfa_object.$extra] = {
+      widths,
+      insets
+    };
+    const style = Object.create(null);
+
+    if (this.margin) {
+      Object.assign(style, this.margin[_xfa_object.$toStyle]());
     }
 
     if (this.fill) {
       Object.assign(style, this.fill[_xfa_object.$toStyle]());
     }
 
-    style.borderWidth = edgeStyles.map(s => s.width).join(" ");
-    style.borderColor = edgeStyles.map(s => s.color).join(" ");
-    style.borderStyle = edgeStyles.map(s => s.style).join(" ");
+    if (this.corner.children.some(node => node.radius !== 0)) {
+      const cornerStyles = this.corner.children.map(node => node[_xfa_object.$toStyle]());
 
-    if (cornerStyles.length > 0) {
       if (cornerStyles.length === 2 || cornerStyles.length === 3) {
         const last = cornerStyles[cornerStyles.length - 1];
 
@@ -45760,8 +47865,14 @@ class Border extends _xfa_object.XFAObject {
       case "inactive":
         style.borderStyle = "none";
         break;
+
+      default:
+        style.borderStyle = edgeStyles.map(s => s.style).join(" ");
+        break;
     }
 
+    style.borderWidth = edgeStyles.map(s => s.width).join(" ");
+    style.borderColor = edgeStyles.map(s => s.color).join(" ");
     return style;
   }
 
@@ -45830,6 +47941,11 @@ class BreakBefore extends _xfa_object.XFAObject {
     this.script = null;
   }
 
+  [_xfa_object.$toHTML](availableSpace) {
+    this[_xfa_object.$extra] = {};
+    return _utils.HTMLResult.FAILURE;
+  }
+
 }
 
 class Button extends _xfa_object.XFAObject {
@@ -45842,14 +47958,16 @@ class Button extends _xfa_object.XFAObject {
     this.extras = null;
   }
 
-  [_xfa_object.$toHTML]() {
-    return {
+  [_xfa_object.$toHTML](availableSpace) {
+    return _utils.HTMLResult.success({
       name: "button",
       attributes: {
-        class: "xfaButton",
+        id: this[_xfa_object.$uid],
+        class: ["xfaButton"],
         style: {}
-      }
-    };
+      },
+      children: []
+    });
   }
 
 }
@@ -45888,15 +48006,15 @@ class Caption extends _xfa_object.XFAObject {
     _setValue(this, value);
   }
 
-  [_xfa_object.$toHTML]() {
+  [_xfa_object.$toHTML](availableSpace) {
     if (!this.value) {
-      return null;
+      return _utils.HTMLResult.EMPTY;
     }
 
-    const value = this.value[_xfa_object.$toHTML]();
+    const value = this.value[_xfa_object.$toHTML](availableSpace).html;
 
     if (!value) {
-      return null;
+      return _utils.HTMLResult.EMPTY;
     }
 
     const children = [];
@@ -45915,22 +48033,33 @@ class Caption extends _xfa_object.XFAObject {
     switch (this.placement) {
       case "left":
       case "right":
-        style.minWidth = (0, _html_utils.measureToString)(this.reserve);
+        if (this.reserve > 0) {
+          style.width = (0, _html_utils.measureToString)(this.reserve);
+        } else {
+          style.minWidth = (0, _html_utils.measureToString)(this.reserve);
+        }
+
         break;
 
       case "top":
       case "bottom":
-        style.minHeight = (0, _html_utils.measureToString)(this.reserve);
+        if (this.reserve > 0) {
+          style.height = (0, _html_utils.measureToString)(this.reserve);
+        } else {
+          style.minHeight = (0, _html_utils.measureToString)(this.reserve);
+        }
+
         break;
     }
 
-    return {
+    return _utils.HTMLResult.success({
       name: "div",
       attributes: {
-        style
+        style,
+        class: ["xfaCaption"]
       },
       children
-    };
+    });
   }
 
 }
@@ -45979,79 +48108,54 @@ class CheckButton extends _xfa_object.XFAObject {
     this.margin = null;
   }
 
-  [_xfa_object.$toHTML]() {
-    const style = (0, _html_utils.toStyle)(this, "border", "margin");
+  [_xfa_object.$toHTML](availableSpace) {
+    const style = (0, _html_utils.toStyle)("margin");
     const size = (0, _html_utils.measureToString)(this.size);
     style.width = style.height = size;
-    let mark, radius;
+    let type;
+    let className;
+    let groupId;
+    let id;
 
-    if (this.shape === "square") {
-      mark = "▪";
-      radius = "10%";
+    const fieldId = this[_xfa_object.$getParent]()[_xfa_object.$getParent]()[_xfa_object.$uid];
+
+    const container = this[_xfa_object.$getParent]()[_xfa_object.$getParent]()[_xfa_object.$getParent]();
+
+    if (container instanceof ExclGroup) {
+      groupId = container[_xfa_object.$uid];
+      type = "radio";
+      className = "xfaRadio";
+      id = `${fieldId}-radio`;
     } else {
-      mark = "●";
-      radius = "50%";
+      type = "checkbox";
+      className = "xfaCheckbox";
     }
 
-    if (!style.borderRadius) {
-      style.borderRadius = radius;
-    }
-
-    if (this.mark !== "default") {
-      switch (this.mark) {
-        case "check":
-          mark = "✓";
-          break;
-
-        case "circle":
-          mark = "●";
-          break;
-
-        case "cross":
-          mark = "✕";
-          break;
-
-        case "diamond":
-          mark = "♦";
-          break;
-
-        case "square":
-          mark = "▪";
-          break;
-
-        case "star":
-          mark = "★";
-          break;
+    const input = {
+      name: "input",
+      attributes: {
+        class: [className],
+        style,
+        fieldId,
+        type
       }
+    };
+
+    if (id) {
+      input.attributes.id = id;
     }
 
-    if (size !== "10px") {
-      style.fontSize = size;
-      style.lineHeight = size;
-      style.width = size;
-      style.height = size;
+    if (groupId) {
+      input.attributes.name = groupId;
     }
 
-    return {
+    return _utils.HTMLResult.success({
       name: "label",
       attributes: {
-        class: "xfaLabel"
+        class: ["xfaLabel"]
       },
-      children: [{
-        name: "input",
-        attributes: {
-          class: "xfaCheckbox",
-          type: "checkbox"
-        }
-      }, {
-        name: "span",
-        attributes: {
-          class: "xfaCheckboxMark",
-          mark,
-          style
-        }
-      }]
-    };
+      children: [input]
+    });
   }
 
 }
@@ -46074,22 +48178,52 @@ class ChoiceList extends _xfa_object.XFAObject {
     this.margin = null;
   }
 
-  [_xfa_object.$toHTML]() {
+  [_xfa_object.$toHTML](availableSpace) {
     const style = (0, _html_utils.toStyle)(this, "border", "margin");
-    return {
+
+    const ui = this[_xfa_object.$getParent]();
+
+    const field = ui[_xfa_object.$getParent]();
+
+    const children = [];
+
+    if (field.items.children.length > 0) {
+      const displayed = field.items.children[0][_xfa_object.$toHTML]().html;
+
+      const values = field.items.children[1] ? field.items.children[1][_xfa_object.$toHTML]().html : [];
+
+      for (let i = 0, ii = displayed.length; i < ii; i++) {
+        children.push({
+          name: "option",
+          attributes: {
+            value: values[i] || displayed[i]
+          },
+          value: displayed[i]
+        });
+      }
+    }
+
+    const selectAttributes = {
+      class: ["xfaSelect"],
+      fieldId: this[_xfa_object.$getParent]()[_xfa_object.$getParent]()[_xfa_object.$uid],
+      style
+    };
+
+    if (this.open === "multiSelect") {
+      selectAttributes.multiple = true;
+    }
+
+    return _utils.HTMLResult.success({
       name: "label",
       attributes: {
-        class: "xfaLabel"
+        class: ["xfaLabel"]
       },
       children: [{
         name: "select",
-        attributes: {
-          class: "xfaSelect",
-          multiple: this.open === "multiSelect",
-          style
-        }
+        children,
+        attributes: selectAttributes
       }]
-    };
+    });
   }
 
 }
@@ -46101,7 +48235,7 @@ class Color extends _xfa_object.XFAObject {
     this.id = attributes.id || "";
     this.use = attributes.use || "";
     this.usehref = attributes.usehref || "";
-    this.value = (0, _utils.getColor)(attributes.value);
+    this.value = attributes.value ? (0, _utils.getColor)(attributes.value) : "";
     this.extras = null;
   }
 
@@ -46110,7 +48244,7 @@ class Color extends _xfa_object.XFAObject {
   }
 
   [_xfa_object.$toStyle]() {
-    return _util.Util.makeHexColor(this.value.r, this.value.g, this.value.b);
+    return this.value ? _util.Util.makeHexColor(this.value.r, this.value.g, this.value.b) : null;
   }
 
 }
@@ -46160,7 +48294,7 @@ class ContentArea extends _xfa_object.XFAObject {
     this.extras = null;
   }
 
-  [_xfa_object.$toHTML]() {
+  [_xfa_object.$toHTML](availableSpace) {
     const left = (0, _html_utils.measureToString)(this.x);
     const top = (0, _html_utils.measureToString)(this.y);
     const style = {
@@ -46170,15 +48304,15 @@ class ContentArea extends _xfa_object.XFAObject {
       width: (0, _html_utils.measureToString)(this.w),
       height: (0, _html_utils.measureToString)(this.h)
     };
-    return {
+    return _utils.HTMLResult.success({
       name: "div",
       children: [],
       attributes: {
         style,
-        class: "xfaContentarea",
+        class: ["xfaContentarea"],
         id: this[_xfa_object.$uid]
       }
-    };
+    });
   }
 
 }
@@ -46205,7 +48339,7 @@ class Corner extends _xfa_object.XFAObject {
 
   [_xfa_object.$toStyle]() {
     const style = (0, _html_utils.toStyle)(this, "visibility");
-    style.radius = (0, _html_utils.measureToString)(this.radius);
+    style.radius = (0, _html_utils.measureToString)(this.join === "square" ? 0 : this.radius);
     return style;
   }
 
@@ -46224,8 +48358,8 @@ class DateElement extends _xfa_object.ContentObject {
     this[_xfa_object.$content] = new Date(this[_xfa_object.$content].trim());
   }
 
-  [_xfa_object.$toHTML]() {
-    return this[_xfa_object.$content].toString();
+  [_xfa_object.$toHTML](availableSpace) {
+    return _utils.HTMLResult.success(this[_xfa_object.$content].toString());
   }
 
 }
@@ -46243,8 +48377,8 @@ class DateTime extends _xfa_object.ContentObject {
     this[_xfa_object.$content] = new Date(this[_xfa_object.$content].trim());
   }
 
-  [_xfa_object.$toHTML]() {
-    return this[_xfa_object.$content].toString();
+  [_xfa_object.$toHTML](availableSpace) {
+    return _utils.HTMLResult.success(this[_xfa_object.$content].toString());
   }
 
 }
@@ -46263,23 +48397,24 @@ class DateTimeEdit extends _xfa_object.XFAObject {
     this.margin = null;
   }
 
-  [_xfa_object.$toHTML]() {
+  [_xfa_object.$toHTML](availableSpace) {
     const style = (0, _html_utils.toStyle)(this, "border", "font", "margin");
     const html = {
       name: "input",
       attributes: {
         type: "text",
-        class: "xfaTextfield",
+        fieldId: this[_xfa_object.$getParent]()[_xfa_object.$getParent]()[_xfa_object.$uid],
+        class: ["xfaTextfield"],
         style
       }
     };
-    return {
+    return _utils.HTMLResult.success({
       name: "label",
       attributes: {
-        class: "xfaLabel"
+        class: ["xfaLabel"]
       },
       children: [html]
-    };
+    });
   }
 
 }
@@ -46308,8 +48443,8 @@ class Decimal extends _xfa_object.ContentObject {
     this[_xfa_object.$content] = isNaN(number) ? null : number;
   }
 
-  [_xfa_object.$toHTML]() {
-    return this[_xfa_object.$content] !== null ? this[_xfa_object.$content].toString() : "";
+  [_xfa_object.$toHTML](availableSpace) {
+    return _utils.HTMLResult.success(this[_xfa_object.$content] !== null ? this[_xfa_object.$content].toString() : "");
   }
 
 }
@@ -46374,7 +48509,7 @@ class Draw extends _xfa_object.XFAObject {
     this.colSpan = (0, _utils.getInteger)({
       data: attributes.colSpan,
       defaultValue: 1,
-      validate: x => x >= 1
+      validate: n => n >= 1 || n === -1
     });
     this.h = attributes.h ? (0, _utils.getMeasurement)(attributes.h) : "";
     this.hAlign = (0, _utils.getStringOption)(attributes.hAlign, ["left", "center", "justify", "justifyAll", "radix", "right"]);
@@ -46416,57 +48551,111 @@ class Draw extends _xfa_object.XFAObject {
     _setValue(this, value);
   }
 
-  [_xfa_object.$toHTML]() {
-    if (!this.value) {
-      return null;
+  [_xfa_object.$toHTML](availableSpace) {
+    if (this.presence === "hidden" || this.presence === "inactive") {
+      return _utils.HTMLResult.EMPTY;
     }
 
-    const style = (0, _html_utils.toStyle)(this, "font", "hAlign", "dimensions", "position", "presence", "rotate", "anchorType", "borderMarginPadding");
-    const clazz = ["xfaDraw"];
+    (0, _html_utils.fixDimensions)(this);
+
+    if (this.w !== "" && this.h === "" && this.value) {
+      const text = this.value[_xfa_object.$text]();
+
+      if (text) {
+        const {
+          height
+        } = (0, _html_utils.layoutText)(text, this.font.size, {
+          width: this.w,
+          height: Infinity
+        });
+        this.h = height || "";
+      }
+    }
+
+    switch (checkDimensions(this, availableSpace)) {
+      case NOTHING:
+        return _utils.HTMLResult.EMPTY;
+
+      case NOSPACE:
+        return _utils.HTMLResult.FAILURE;
+
+      default:
+        break;
+    }
+
+    const style = (0, _html_utils.toStyle)(this, "font", "hAlign", "dimensions", "position", "presence", "rotate", "anchorType", "border", "margin");
+    const classNames = ["xfaDraw"];
 
     if (this.font) {
-      clazz.push("xfaFont");
+      classNames.push("xfaFont");
     }
 
     const attributes = {
       style,
       id: this[_xfa_object.$uid],
-      class: clazz.join(" ")
+      class: classNames
     };
 
     if (this.name) {
       attributes.xfaName = this.name;
     }
 
-    let html = {
+    const html = {
       name: "div",
       attributes,
       children: []
     };
-    const value = this.value ? this.value[_xfa_object.$toHTML]() : null;
+    const bbox = (0, _html_utils.computeBbox)(this, html, availableSpace);
+    const value = this.value ? this.value[_xfa_object.$toHTML](availableSpace).html : null;
 
     if (value === null) {
-      return html;
+      return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
     }
 
     html.children.push(value);
 
-    if (this.para && value.attributes.class === "xfaRich") {
-      const paraStyle = this.para[_xfa_object.$toStyle]();
+    if (value.attributes.class && value.attributes.class.includes("xfaRich")) {
+      if (this.h === "") {
+        style.height = "auto";
+      }
 
-      if (!value.attributes.style) {
-        value.attributes.style = paraStyle;
-      } else {
-        for (const [key, val] of Object.entries(paraStyle)) {
-          if (!(key in value.attributes.style)) {
-            value.attributes.style[key] = val;
+      if (this.w === "") {
+        style.width = "auto";
+      }
+
+      if (this.para) {
+        attributes.style.display = "flex";
+        attributes.style.flexDirection = "column";
+
+        switch (this.para.vAlign) {
+          case "top":
+            attributes.style.justifyContent = "start";
+            break;
+
+          case "bottom":
+            attributes.style.justifyContent = "end";
+            break;
+
+          case "middle":
+            attributes.style.justifyContent = "center";
+            break;
+        }
+
+        const paraStyle = this.para[_xfa_object.$toStyle]();
+
+        if (!value.attributes.style) {
+          value.attributes.style = paraStyle;
+        } else {
+          for (const [key, val] of Object.entries(paraStyle)) {
+            if (!(key in value.attributes.style)) {
+              value.attributes.style[key] = val;
+            }
           }
         }
       }
     }
 
-    html = (0, _html_utils.addExtraDivForMargin)(html);
-    return html;
+    return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
   }
 
 }
@@ -46490,7 +48679,7 @@ class Edge extends _xfa_object.XFAObject {
     Object.assign(style, {
       linecap: this.cap,
       width: (0, _html_utils.measureToString)(this.thickness),
-      color: this.color ? this.color[_xfa_object.$toHTML]() : "#000000",
+      color: this.color ? this.color[_xfa_object.$toStyle]() : "#000000",
       style: ""
     });
 
@@ -46660,6 +48849,10 @@ class ExData extends _xfa_object.ContentObject {
     this.usehref = attributes.usehref || "";
   }
 
+  [_xfa_object.$isCDATAXml]() {
+    return this.contentType === "text/html";
+  }
+
   [_xfa_object.$onChild](child) {
     if (this.contentType === "text/html" && child[_xfa_object.$namespaceId] === _namespaces.NamespaceIds.xhtml.id) {
       this[_xfa_object.$content] = child;
@@ -46674,12 +48867,12 @@ class ExData extends _xfa_object.ContentObject {
     return false;
   }
 
-  [_xfa_object.$toHTML]() {
+  [_xfa_object.$toHTML](availableSpace) {
     if (this.contentType !== "text/html" || !this[_xfa_object.$content]) {
-      return null;
+      return _utils.HTMLResult.EMPTY;
     }
 
-    return this[_xfa_object.$content][_xfa_object.$toHTML]();
+    return this[_xfa_object.$content][_xfa_object.$toHTML](availableSpace);
   }
 
 }
@@ -46720,7 +48913,7 @@ class ExclGroup extends _xfa_object.XFAObject {
     this.colSpan = (0, _utils.getInteger)({
       data: attributes.colSpan,
       defaultValue: 1,
-      validate: x => x >= 1
+      validate: n => n >= 1 || n === -1
     });
     this.h = attributes.h ? (0, _utils.getMeasurement)(attributes.h) : "";
     this.hAlign = (0, _utils.getStringOption)(attributes.hAlign, ["left", "center", "justify", "justifyAll", "radix", "right"]);
@@ -46783,28 +48976,146 @@ class ExclGroup extends _xfa_object.XFAObject {
     }
   }
 
-  [_xfa_object.$toHTML]() {
-    if (!this.value) {
-      return null;
+  [_xfa_object.$flushHTML]() {
+    return (0, _layout.flushHTML)(this);
+  }
+
+  [_xfa_object.$addHTML](html, bbox) {
+    (0, _layout.addHTML)(this, html, bbox);
+  }
+
+  [_xfa_object.$getAvailableSpace]() {
+    return (0, _layout.getAvailableSpace)(this);
+  }
+
+  [_xfa_object.$toHTML](availableSpace) {
+    if (this.presence === "hidden" || this.presence === "inactive" || this.h === 0 || this.w === 0) {
+      return _utils.HTMLResult.EMPTY;
     }
 
-    const style = (0, _html_utils.toStyle)(this, "dimensions", "position", "anchorType");
+    (0, _html_utils.fixDimensions)(this);
+    const children = [];
     const attributes = {
-      style,
-      id: this[_xfa_object.$uid],
-      class: "xfaExclgroup"
+      id: this[_xfa_object.$uid]
     };
 
-    const children = this[_xfa_object.$childrenToHTML]({
-      filter: new Set(["field"]),
-      include: true
+    if (!this[_xfa_object.$extra]) {
+      this[_xfa_object.$extra] = Object.create(null);
+    }
+
+    Object.assign(this[_xfa_object.$extra], {
+      children,
+      attributes,
+      attempt: 0,
+      availableSpace,
+      width: 0,
+      height: 0,
+      prevHeight: 0,
+      currentWidth: 0
     });
 
-    return {
+    switch (checkDimensions(this, availableSpace)) {
+      case NOTHING:
+        return _utils.HTMLResult.EMPTY;
+
+      case NOSPACE:
+        return _utils.HTMLResult.FAILURE;
+
+      default:
+        break;
+    }
+
+    availableSpace = {
+      width: this.w === "" ? availableSpace.width : this.w,
+      height: this.h === "" ? availableSpace.height : this.h
+    };
+    const filter = new Set(["field"]);
+
+    if (this.layout === "row") {
+      const columnWidths = this[_xfa_object.$getParent]().columnWidths;
+
+      if (Array.isArray(columnWidths) && columnWidths.length > 0) {
+        this[_xfa_object.$extra].columnWidths = columnWidths;
+        this[_xfa_object.$extra].currentColumn = 0;
+      }
+    }
+
+    const style = (0, _html_utils.toStyle)(this, "anchorType", "dimensions", "position", "presence", "border", "margin", "hAlign");
+    const classNames = ["xfaExclgroup"];
+    const cl = (0, _html_utils.layoutClass)(this);
+
+    if (cl) {
+      classNames.push(cl);
+    }
+
+    attributes.style = style;
+    attributes.class = classNames;
+
+    if (this.name) {
+      attributes.xfaName = this.name;
+    }
+
+    let failure;
+
+    if (this.layout === "lr-tb" || this.layout === "rl-tb") {
+      for (; this[_xfa_object.$extra].attempt < MAX_ATTEMPTS_FOR_LRTB_LAYOUT; this[_xfa_object.$extra].attempt++) {
+        if (this[_xfa_object.$childrenToHTML]({
+          filter,
+          include: true
+        })) {
+          break;
+        }
+      }
+
+      failure = this[_xfa_object.$extra].attempt === 2;
+    } else {
+      failure = !this[_xfa_object.$childrenToHTML]({
+        filter,
+        include: true
+      });
+    }
+
+    if (failure) {
+      if (this.layout === "position") {
+        delete this[_xfa_object.$extra];
+      }
+
+      return _utils.HTMLResult.FAILURE;
+    }
+
+    let marginH = 0;
+    let marginV = 0;
+
+    if (this.margin) {
+      marginH = this.margin.leftInset + this.margin.rightInset;
+      marginV = this.margin.topInset + this.margin.bottomInset;
+    }
+
+    if (this.w === "") {
+      style.width = (0, _html_utils.measureToString)(this[_xfa_object.$extra].width + marginH);
+    }
+
+    if (this.h === "") {
+      style.height = (0, _html_utils.measureToString)(this[_xfa_object.$extra].height + marginV);
+    }
+
+    const html = {
       name: "div",
       attributes,
       children
     };
+    let bbox;
+
+    if (this.w !== "" && this.h !== "") {
+      bbox = [this.x, this.y, this.w, this.h];
+    } else {
+      const width = this.w === "" ? marginH + this[_xfa_object.$extra].width : this.w;
+      const height = this.h === "" ? marginV + this[_xfa_object.$extra].height : this.h;
+      bbox = [this.x, this.y, width, height];
+    }
+
+    delete this[_xfa_object.$extra];
+    return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
   }
 
 }
@@ -46853,7 +49164,7 @@ class Field extends _xfa_object.XFAObject {
     this.colSpan = (0, _utils.getInteger)({
       data: attributes.colSpan,
       defaultValue: 1,
-      validate: x => x >= 1
+      validate: n => n >= 1 || n === -1
     });
     this.h = attributes.h ? (0, _utils.getMeasurement)(attributes.h) : "";
     this.hAlign = (0, _utils.getStringOption)(attributes.hAlign, ["left", "center", "justify", "justifyAll", "radix", "right"]);
@@ -46903,22 +49214,35 @@ class Field extends _xfa_object.XFAObject {
     _setValue(this, value);
   }
 
-  [_xfa_object.$toHTML]() {
-    if (!this.ui) {
-      return null;
+  [_xfa_object.$toHTML](availableSpace) {
+    if (!this.ui || this.presence === "hidden" || this.presence === "inactive" || this.h === 0 || this.w === 0) {
+      return _utils.HTMLResult.EMPTY;
     }
 
-    const style = (0, _html_utils.toStyle)(this, "font", "dimensions", "position", "rotate", "anchorType", "presence", "borderMarginPadding");
-    const clazz = ["xfaField"];
+    (0, _html_utils.fixDimensions)(this);
+
+    switch (checkDimensions(this, availableSpace)) {
+      case NOTHING:
+        return _utils.HTMLResult.EMPTY;
+
+      case NOSPACE:
+        return _utils.HTMLResult.FAILURE;
+
+      default:
+        break;
+    }
+
+    const style = (0, _html_utils.toStyle)(this, "font", "dimensions", "position", "rotate", "anchorType", "presence", "margin", "hAlign");
+    const classNames = ["xfaField"];
 
     if (this.font) {
-      clazz.push("xfaFont");
+      classNames.push("xfaFont");
     }
 
     const attributes = {
       style,
       id: this[_xfa_object.$uid],
-      class: clazz.join(" ")
+      class: classNames
     };
 
     if (this.name) {
@@ -46926,72 +49250,92 @@ class Field extends _xfa_object.XFAObject {
     }
 
     const children = [];
-    let html = {
+    const html = {
       name: "div",
       attributes,
       children
     };
-    const ui = this.ui ? this.ui[_xfa_object.$toHTML]() : null;
+    const borderStyle = this.border ? this.border[_xfa_object.$toStyle]() : null;
+    const bbox = (0, _html_utils.computeBbox)(this, html, availableSpace);
+    const ui = this.ui ? this.ui[_xfa_object.$toHTML]().html : null;
 
     if (!ui) {
-      return html;
+      Object.assign(style, borderStyle);
+      return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
     }
 
     if (!ui.attributes.style) {
       ui.attributes.style = Object.create(null);
     }
 
+    if (this.ui.button) {
+      Object.assign(ui.attributes.style, borderStyle);
+    } else {
+      Object.assign(style, borderStyle);
+    }
+
     children.push(ui);
 
-    if (this.value && ui.name !== "button") {
-      ui.children[0].attributes.value = this.value[_xfa_object.$toHTML]().value;
+    if (this.value) {
+      if (this.ui.imageEdit) {
+        ui.children.push(this.value[_xfa_object.$toHTML]().html);
+      } else if (!this.ui.button) {
+        const value = this.value[_xfa_object.$toHTML]().html;
+
+        if (value) {
+          if (ui.children[0].name === "textarea") {
+            ui.children[0].attributes.textContent = value.value;
+          } else {
+            ui.children[0].attributes.value = value.value;
+          }
+        }
+      }
     }
 
-    const caption = this.caption ? this.caption[_xfa_object.$toHTML]() : null;
+    const caption = this.caption ? this.caption[_xfa_object.$toHTML]().html : null;
 
     if (!caption) {
-      return html;
+      return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
     }
 
-    if (ui.name === "button") {
-      ui.attributes.style.background = style.background;
-      delete style.background;
-
+    if (this.ui.button) {
       if (caption.name === "div") {
         caption.name = "span";
       }
 
-      ui.children = [caption];
-      return html;
+      ui.children.push(caption);
+      return _utils.HTMLResult.success(html, bbox);
+    }
+
+    if (!ui.attributes.class) {
+      ui.attributes.class = [];
     }
 
     ui.children.splice(0, 0, caption);
 
     switch (this.caption.placement) {
       case "left":
-        ui.attributes.style.flexDirection = "row";
+        ui.attributes.class.push("xfaLeft");
         break;
 
       case "right":
-        ui.attributes.style.flexDirection = "row-reverse";
+        ui.attributes.class.push("xfaRight");
         break;
 
       case "top":
-        ui.attributes.style.flexDirection = "column";
+        ui.attributes.class.push("xfaTop");
         break;
 
       case "bottom":
-        ui.attributes.style.flexDirection = "column-reverse";
+        ui.attributes.class.push("xfaBottom");
         break;
 
       case "inline":
-        delete ui.attributes.class;
-        caption.attributes.style.float = "left";
+        ui.attributes.class.push("xfaLeft");
         break;
     }
 
-    html = (0, _html_utils.addExtraDivForMargin)(html);
-    return html;
+    return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
   }
 
 }
@@ -47015,6 +49359,20 @@ class Fill extends _xfa_object.XFAObject {
   }
 
   [_xfa_object.$toStyle]() {
+    const parent = this[_xfa_object.$getParent]();
+
+    let propName = "color";
+
+    if (parent instanceof Border) {
+      propName = "background";
+    }
+
+    if (parent instanceof Rectangle) {
+      propName = "fill";
+    }
+
+    const style = Object.create(null);
+
     for (const name of Object.getOwnPropertyNames(this)) {
       if (name === "extras" || name === "color") {
         continue;
@@ -47026,18 +49384,15 @@ class Fill extends _xfa_object.XFAObject {
         continue;
       }
 
-      return {
-        color: obj[_xfa_object.$toStyle](this.color)
-      };
+      style[propName] = obj[_xfa_object.$toStyle](this.color);
+      return style;
     }
 
     if (this.color) {
-      return {
-        background: this.color[_xfa_object.$toStyle]()
-      };
+      style[propName] = this.color[_xfa_object.$toStyle]();
     }
 
-    return {};
+    return style;
   }
 
 }
@@ -47083,8 +49438,8 @@ class Float extends _xfa_object.ContentObject {
     this[_xfa_object.$content] = isNaN(number) ? null : number;
   }
 
-  [_xfa_object.$toHTML]() {
-    return this[_xfa_object.$content] !== null ? this[_xfa_object.$content].toString() : "";
+  [_xfa_object.$toHTML](availableSpace) {
+    return _utils.HTMLResult.success(this[_xfa_object.$content] !== null ? this[_xfa_object.$content].toString() : "");
   }
 
 }
@@ -47136,17 +49491,15 @@ class Font extends _xfa_object.XFAObject {
 
   [_xfa_object.$toStyle]() {
     const style = (0, _html_utils.toStyle)(this, "fill");
-    const color = style.background;
+    const color = style.color;
 
     if (color) {
       if (color === "#000000") {
-        delete style.background;
+        delete style.color;
       } else if (!color.startsWith("#")) {
+        style.background = color;
         style.backgroundClip = "text";
         style.color = "transparent";
-      } else {
-        style.color = color;
-        delete style.background;
       }
     }
 
@@ -47182,13 +49535,13 @@ class Font extends _xfa_object.XFAObject {
       style.fontStyle = this.posture;
     }
 
-    const fontSize = (0, _html_utils.measureToString)(this.size);
+    const fontSize = (0, _html_utils.measureToString)(0.99 * this.size);
 
     if (fontSize !== "10px") {
       style.fontSize = fontSize;
     }
 
-    style.fontFamily = this.typeface;
+    style.fontFamily = (0, _html_utils.getFonts)(this.typeface);
 
     if (this.underline !== 0) {
       style.textDecoration = "underline";
@@ -47284,29 +49637,26 @@ class Image extends _xfa_object.StringObject {
   }
 
   [_xfa_object.$toHTML]() {
-    const html = {
-      name: "img",
-      attributes: {
-        class: "xfaImage",
-        style: {}
-      }
-    };
-
-    if (this.href) {
-      html.attributes.src = new URL(this.href);
-      return html;
+    if (this.href || !this[_xfa_object.$content]) {
+      return _utils.HTMLResult.EMPTY;
     }
 
     if (this.transferEncoding === "base64") {
-      const buffer = Uint8Array.from(atob(this[_xfa_object.$content]), c => c.charCodeAt(0));
+      const buffer = (0, _util.stringToBytes)(atob(this[_xfa_object.$content]));
       const blob = new Blob([buffer], {
         type: this.contentType
       });
-      html.attributes.src = URL.createObjectURL(blob);
-      return html;
+      return _utils.HTMLResult.success({
+        name: "img",
+        attributes: {
+          class: ["xfaImage"],
+          style: {},
+          src: URL.createObjectURL(blob)
+        }
+      });
     }
 
-    return null;
+    return _utils.HTMLResult.EMPTY;
   }
 
 }
@@ -47321,6 +49671,18 @@ class ImageEdit extends _xfa_object.XFAObject {
     this.border = null;
     this.extras = null;
     this.margin = null;
+  }
+
+  [_xfa_object.$toHTML](availableSpace) {
+    if (this.data === "embed") {
+      return _utils.HTMLResult.success({
+        name: "div",
+        children: [],
+        attributes: {}
+      });
+    }
+
+    return _utils.HTMLResult.EMPTY;
   }
 
 }
@@ -47339,8 +49701,8 @@ class Integer extends _xfa_object.ContentObject {
     this[_xfa_object.$content] = isNaN(number) ? null : number;
   }
 
-  [_xfa_object.$toHTML]() {
-    return this[_xfa_object.$content] !== null ? this[_xfa_object.$content].toString() : "";
+  [_xfa_object.$toHTML](availableSpace) {
+    return _utils.HTMLResult.success(this[_xfa_object.$content] !== null ? this[_xfa_object.$content].toString() : "");
   }
 
 }
@@ -47385,6 +49747,16 @@ class Items extends _xfa_object.XFAObject {
 
   [_xfa_object.$hasItem](value) {
     return this.hasOwnProperty(value[_xfa_object.$nodeName]) && this[value[_xfa_object.$nodeName]].children.some(node => node[_xfa_object.$content] === value[_xfa_object.$content]);
+  }
+
+  [_xfa_object.$toHTML]() {
+    const output = [];
+
+    for (const child of this[_xfa_object.$getChildren]()) {
+      output.push(child[_xfa_object.$text]());
+    }
+
+    return _utils.HTMLResult.success(output);
   }
 
 }
@@ -47436,6 +49808,59 @@ class Line extends _xfa_object.XFAObject {
     this.use = attributes.use || "";
     this.usehref = attributes.usehref || "";
     this.edge = null;
+  }
+
+  [_xfa_object.$toHTML]() {
+    const parent = this[_xfa_object.$getParent]()[_xfa_object.$getParent]();
+
+    const edge = this.edge ? this.edge : new Edge({});
+
+    const edgeStyle = edge[_xfa_object.$toStyle]();
+
+    const style = Object.create(null);
+    style.strokeWidth = (0, _html_utils.measureToString)(Math.round(edge.thickness));
+    style.stroke = edgeStyle.color;
+    let x1, y1, x2, y2;
+    let width = "100%";
+    let height = "100%";
+
+    if (parent.w <= edge.thickness) {
+      [x1, y1, x2, y2] = ["50%", 0, "50%", "100%"];
+      width = style.strokeWidth;
+    } else if (parent.h <= edge.thickness) {
+      [x1, y1, x2, y2] = [0, "50%", "100%", "50%"];
+      height = style.strokeWidth;
+    } else {
+      if (this.slope === "\\") {
+        [x1, y1, x2, y2] = [0, 0, "100%", "100%"];
+      } else {
+        [x1, y1, x2, y2] = [0, "100%", "100%", 0];
+      }
+    }
+
+    const line = {
+      name: "line",
+      attributes: {
+        xmlns: SVG_NS,
+        x1,
+        y1,
+        x2,
+        y2,
+        style
+      }
+    };
+    return _utils.HTMLResult.success({
+      name: "svg",
+      children: [line],
+      attributes: {
+        xmlns: SVG_NS,
+        width,
+        height,
+        style: {
+          position: "absolute"
+        }
+      }
+    });
   }
 
 }
@@ -47567,23 +49992,24 @@ class NumericEdit extends _xfa_object.XFAObject {
     this.margin = null;
   }
 
-  [_xfa_object.$toHTML]() {
+  [_xfa_object.$toHTML](availableSpace) {
     const style = (0, _html_utils.toStyle)(this, "border", "font", "margin");
     const html = {
       name: "input",
       attributes: {
         type: "text",
-        class: "xfaTextfield",
+        fieldId: this[_xfa_object.$getParent]()[_xfa_object.$getParent]()[_xfa_object.$uid],
+        class: ["xfaTextfield"],
         style
       }
     };
-    return {
+    return _utils.HTMLResult.success({
       name: "label",
       attributes: {
-        class: "xfaLabel"
+        class: ["xfaLabel"]
       },
       children: [html]
-    };
+    });
   }
 
 }
@@ -47683,33 +50109,75 @@ class PageArea extends _xfa_object.XFAObject {
     this.subform = new _xfa_object.XFAObjectArray();
   }
 
-  [_xfa_object.$toHTML]() {
-    if (this.contentArea.children.length === 0) {
-      return null;
+  [_xfa_object.$getNextPage]() {
+    if (!this[_xfa_object.$extra]) {
+      this[_xfa_object.$extra] = {
+        numberOfUse: 1
+      };
     }
 
-    const children = this[_xfa_object.$childrenToHTML]({
-      filter: new Set(["area", "draw", "field", "subform", "contentArea"]),
-      include: true
-    });
+    const parent = this[_xfa_object.$getParent]();
 
-    const contentArea = children.find(node => node.attributes.class === "xfaContentarea");
+    if (parent.relation === "orderedOccurrence") {
+      if (this.occur && (this.occur.max === -1 || this[_xfa_object.$extra].numberOfUse < this.occur.max)) {
+        this[_xfa_object.$extra].numberOfUse += 1;
+        return this;
+      }
+    }
+
+    delete this[_xfa_object.$extra];
+    return parent[_xfa_object.$getNextPage]();
+  }
+
+  [_xfa_object.$getAvailableSpace]() {
+    return {
+      width: Infinity,
+      height: Infinity
+    };
+  }
+
+  [_xfa_object.$toHTML]() {
+    if (!this[_xfa_object.$extra]) {
+      this[_xfa_object.$extra] = {
+        numberOfUse: 1
+      };
+    }
+
+    const children = [];
+    this[_xfa_object.$extra].children = children;
     const style = Object.create(null);
 
     if (this.medium && this.medium.short && this.medium.long) {
       style.width = (0, _html_utils.measureToString)(this.medium.short);
       style.height = (0, _html_utils.measureToString)(this.medium.long);
-    } else {}
 
-    return {
+      if (this.medium.orientation === "landscape") {
+        const x = style.width;
+        style.width = style.height;
+        style.height = x;
+      }
+    } else {
+      (0, _util.warn)("XFA - No medium specified in pageArea: please file a bug.");
+    }
+
+    this[_xfa_object.$childrenToHTML]({
+      filter: new Set(["area", "draw", "field", "subform"]),
+      include: true
+    });
+
+    this[_xfa_object.$childrenToHTML]({
+      filter: new Set(["contentArea"]),
+      include: true
+    });
+
+    return _utils.HTMLResult.success({
       name: "div",
       children,
       attributes: {
         id: this[_xfa_object.$uid],
         style
-      },
-      contentArea
-    };
+      }
+    });
   }
 
 }
@@ -47730,17 +50198,70 @@ class PageSet extends _xfa_object.XFAObject {
     this.pageSet = new _xfa_object.XFAObjectArray();
   }
 
-  [_xfa_object.$toHTML]() {
-    return {
-      name: "div",
-      children: this[_xfa_object.$childrenToHTML]({
-        filter: new Set(["pageArea", "pageSet"]),
-        include: true
-      }),
-      attributes: {
-        id: this[_xfa_object.$uid]
+  [_xfa_object.$getNextPage]() {
+    if (!this[_xfa_object.$extra]) {
+      this[_xfa_object.$extra] = {
+        numberOfUse: 1,
+        currentIndex: -1
+      };
+    }
+
+    if (this.relation === "orderedOccurrence") {
+      if (this[_xfa_object.$extra].currentIndex + 1 < this.pageArea.children.length) {
+        this[_xfa_object.$extra].currentIndex += 1;
+        return this.pageArea.children[this[_xfa_object.$extra].currentIndex];
       }
-    };
+
+      if (this[_xfa_object.$extra].currentIndex + 1 < this.pageSet.children.length) {
+        this[_xfa_object.$extra].currentIndex += 1;
+        return this.pageSet.children[this[_xfa_object.$extra].currentIndex];
+      }
+
+      if (this.occur && (this.occur.max === -1 || this[_xfa_object.$extra].numberOfUse < this.occur.max)) {
+        this[_xfa_object.$extra].numberOfUse += 1;
+        this[_xfa_object.$extra].currentIndex = 0;
+
+        if (this.pageArea.children.length > 0) {
+          return this.pageArea.children[0];
+        }
+
+        return this.pageSet.children[0][_xfa_object.$getNextPage]();
+      }
+
+      delete this[_xfa_object.$extra];
+
+      const parent = this[_xfa_object.$getParent]();
+
+      if (parent instanceof PageSet) {
+        return parent[_xfa_object.$getNextPage]();
+      }
+
+      return this[_xfa_object.$getNextPage]();
+    }
+
+    const pageNumber = getRoot(this)[_xfa_object.$extra].pageNumber;
+
+    const parity = pageNumber % 2 === 0 ? "even" : "odd";
+    const position = pageNumber === 0 ? "first" : "rest";
+    let page = this.pageArea.children.find(p => p.oddOrEven === parity && p.pagePosition === position);
+
+    if (page) {
+      return page;
+    }
+
+    page = this.pageArea.children.find(p => p.oddOrEven === "any" && p.pagePosition === position);
+
+    if (page) {
+      return page;
+    }
+
+    page = this.pageArea.children.find(p => p.oddOrEven === "any" && p.pagePosition === "any");
+
+    if (page) {
+      return page;
+    }
+
+    return this.pageArea.children[0];
   }
 
 }
@@ -47797,9 +50318,10 @@ class Para extends _xfa_object.XFAObject {
 
     if (this.textIndent !== "") {
       style.textIndent = (0, _html_utils.measureToString)(this.textIndent);
+      (0, _html_utils.fixTextIndent)(style);
     }
 
-    if (this.lineHeight !== "") {
+    if (this.lineHeight > 0) {
       style.lineHeight = (0, _html_utils.measureToString)(this.lineHeight);
     }
 
@@ -48058,6 +50580,52 @@ class Rectangle extends _xfa_object.XFAObject {
     this.fill = null;
   }
 
+  [_xfa_object.$toHTML]() {
+    const edge = this.edge.children.length ? this.edge.children[0] : new Edge({});
+
+    const edgeStyle = edge[_xfa_object.$toStyle]();
+
+    const style = Object.create(null);
+
+    if (this.fill) {
+      Object.assign(style, this.fill[_xfa_object.$toStyle]());
+    } else {
+      style.fill = "transparent";
+    }
+
+    style.strokeWidth = (0, _html_utils.measureToString)(2 * edge.thickness);
+    style.stroke = edgeStyle.color;
+    const corner = this.corner.children.length ? this.corner.children[0] : new Corner({});
+
+    const cornerStyle = corner[_xfa_object.$toStyle]();
+
+    const rect = {
+      name: "rect",
+      attributes: {
+        xmlns: SVG_NS,
+        width: "100%",
+        height: "100%",
+        x: 0,
+        y: 0,
+        rx: cornerStyle.radius,
+        ry: cornerStyle.radius,
+        style
+      }
+    };
+    return _utils.HTMLResult.success({
+      name: "svg",
+      children: [rect],
+      attributes: {
+        xmlns: SVG_NS,
+        style: {
+          position: "absolute"
+        },
+        width: "100%",
+        height: "100%"
+      }
+    });
+  }
+
 }
 
 class RefElement extends _xfa_object.StringObject {
@@ -48206,7 +50774,7 @@ class Subform extends _xfa_object.XFAObject {
     this.colSpan = (0, _utils.getInteger)({
       data: attributes.colSpan,
       defaultValue: 1,
-      validate: x => x >= 1
+      validate: n => n >= 1 || n === -1
     });
     this.columnWidths = (attributes.columnWidths || "").trim().split(/\s+/).map(x => x === "-1" ? -1 : (0, _utils.getMeasurement)(x));
     this.h = attributes.h ? (0, _utils.getMeasurement)(attributes.h) : "";
@@ -48261,10 +50829,80 @@ class Subform extends _xfa_object.XFAObject {
     this.subformSet = new _xfa_object.XFAObjectArray();
   }
 
-  [_xfa_object.$toHTML]() {
-    this[_xfa_object.$extra] = Object.create(null);
+  [_xfa_object.$flushHTML]() {
+    return (0, _layout.flushHTML)(this);
+  }
 
-    if (this.layout === "row") {
+  [_xfa_object.$addHTML](html, bbox) {
+    (0, _layout.addHTML)(this, html, bbox);
+  }
+
+  [_xfa_object.$getAvailableSpace]() {
+    return (0, _layout.getAvailableSpace)(this);
+  }
+
+  [_xfa_object.$toHTML](availableSpace) {
+    if (this[_xfa_object.$extra] && this[_xfa_object.$extra].afterBreakAfter) {
+      const ret = this[_xfa_object.$extra].afterBreakAfter;
+      delete this[_xfa_object.$extra];
+      return ret;
+    }
+
+    if (this.presence === "hidden" || this.presence === "inactive") {
+      return _utils.HTMLResult.EMPTY;
+    }
+
+    if (this.breakBefore.children.length > 1 || this.breakAfter.children.length > 1) {
+      (0, _util.warn)("XFA - Several breakBefore or breakAfter in subforms: please file a bug.");
+    }
+
+    (0, _html_utils.fixDimensions)(this);
+    const children = [];
+    const attributes = {
+      id: this[_xfa_object.$uid]
+    };
+
+    if (!this[_xfa_object.$extra]) {
+      this[_xfa_object.$extra] = Object.create(null);
+    }
+
+    Object.assign(this[_xfa_object.$extra], {
+      children,
+      attributes,
+      attempt: 0,
+      availableSpace,
+      width: 0,
+      height: 0,
+      prevHeight: 0,
+      currentWidth: 0
+    });
+
+    if (this.breakBefore.children.length >= 1) {
+      const breakBefore = this.breakBefore.children[0];
+
+      if (!breakBefore[_xfa_object.$extra]) {
+        breakBefore[_xfa_object.$extra] = true;
+
+        getRoot(this)[_xfa_object.$break](breakBefore);
+
+        return _utils.HTMLResult.FAILURE;
+      }
+    }
+
+    switch (checkDimensions(this, availableSpace)) {
+      case NOTHING:
+        return _utils.HTMLResult.EMPTY;
+
+      case NOSPACE:
+        return _utils.HTMLResult.FAILURE;
+
+      default:
+        break;
+    }
+
+    const filter = new Set(["area", "draw", "exclGroup", "field", "subform", "subformSet"]);
+
+    if (this.layout.includes("row")) {
       const columnWidths = this[_xfa_object.$getParent]().columnWidths;
 
       if (Array.isArray(columnWidths) && columnWidths.length > 0) {
@@ -48273,59 +50911,91 @@ class Subform extends _xfa_object.XFAObject {
       }
     }
 
-    const parent = this[_xfa_object.$getParent]();
-
-    let page = null;
-
-    if (parent[_xfa_object.$nodeName] === "template") {
-      if (this.pageSet !== null) {
-        this[_xfa_object.$extra].pageNumber = 0;
-      } else {
-        (0, _util.warn)("XFA - No pageSet in root subform");
-      }
-    } else if (parent[_xfa_object.$extra] && parent[_xfa_object.$extra].pageNumber !== undefined) {
-      const pageNumber = parent[_xfa_object.$extra].pageNumber;
-      const pageAreas = parent.pageSet.pageArea.children;
-      parent[_xfa_object.$extra].pageNumber = (parent[_xfa_object.$extra].pageNumber + 1) % pageAreas.length;
-      page = pageAreas[pageNumber][_xfa_object.$toHTML]();
-    }
-
-    const style = (0, _html_utils.toStyle)(this, "dimensions", "position", "presence");
-    const clazz = ["xfaSubform"];
+    const style = (0, _html_utils.toStyle)(this, "anchorType", "dimensions", "position", "presence", "border", "margin", "hAlign");
+    const classNames = ["xfaSubform"];
     const cl = (0, _html_utils.layoutClass)(this);
 
     if (cl) {
-      clazz.push(cl);
+      classNames.push(cl);
     }
 
-    const attributes = {
-      style,
-      id: this[_xfa_object.$uid],
-      class: clazz.join(" ")
-    };
+    attributes.style = style;
+    attributes.class = classNames;
 
     if (this.name) {
       attributes.xfaName = this.name;
     }
 
-    const children = this[_xfa_object.$childrenToHTML]({
-      filter: new Set(["area", "draw", "field", "subform", "subformSet"]),
-      include: true
-    });
+    let failure;
+
+    if (this.layout === "lr-tb" || this.layout === "rl-tb") {
+      for (; this[_xfa_object.$extra].attempt < MAX_ATTEMPTS_FOR_LRTB_LAYOUT; this[_xfa_object.$extra].attempt++) {
+        if (this[_xfa_object.$childrenToHTML]({
+          filter,
+          include: true
+        })) {
+          break;
+        }
+      }
+
+      failure = this[_xfa_object.$extra].attempt === 2;
+    } else {
+      failure = !this[_xfa_object.$childrenToHTML]({
+        filter,
+        include: true
+      });
+    }
+
+    if (failure) {
+      if (this.layout === "position") {
+        delete this[_xfa_object.$extra];
+      }
+
+      return _utils.HTMLResult.FAILURE;
+    }
+
+    let marginH = 0;
+    let marginV = 0;
+
+    if (this.margin) {
+      marginH = this.margin.leftInset + this.margin.rightInset;
+      marginV = this.margin.topInset + this.margin.bottomInset;
+    }
+
+    if (this.w === "") {
+      style.width = (0, _html_utils.measureToString)(this[_xfa_object.$extra].width + marginH);
+    }
+
+    if (this.h === "") {
+      style.height = (0, _html_utils.measureToString)(this[_xfa_object.$extra].height + marginV);
+    }
 
     const html = {
       name: "div",
       attributes,
       children
     };
+    let bbox;
 
-    if (page) {
-      page.contentArea.children.push(html);
-      delete page.contentArea;
-      return page;
+    if (this.w !== "" && this.h !== "") {
+      bbox = [this.x, this.y, this.w, this.h];
+    } else {
+      const width = this.w === "" ? marginH + this[_xfa_object.$extra].width : this.w;
+      const height = this.h === "" ? marginV + this[_xfa_object.$extra].height : this.h;
+      bbox = [this.x, this.y, width, height];
     }
 
-    return html;
+    if (this.breakAfter.children.length >= 1) {
+      const breakAfter = this.breakAfter.children[0];
+
+      getRoot(this)[_xfa_object.$break](breakAfter);
+
+      this[_xfa_object.$extra].afterBreakAfter = _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
+      return _utils.HTMLResult.FAILURE;
+    }
+
+    delete this[_xfa_object.$extra];
+    return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
   }
 
 }
@@ -48349,6 +51019,29 @@ class SubformSet extends _xfa_object.XFAObject {
     this.breakBefore = new _xfa_object.XFAObjectArray();
     this.subform = new _xfa_object.XFAObjectArray();
     this.subformSet = new _xfa_object.XFAObjectArray();
+  }
+
+  [_xfa_object.$toHTML]() {
+    const children = [];
+
+    if (!this[_xfa_object.$extra]) {
+      this[_xfa_object.$extra] = Object.create(null);
+    }
+
+    this[_xfa_object.$extra].children = children;
+
+    this[_xfa_object.$childrenToHTML]({
+      filter: new Set(["subform", "subformSet"]),
+      include: true
+    });
+
+    return _utils.HTMLResult.success({
+      name: "div",
+      children,
+      attributes: {
+        id: this[_xfa_object.$uid]
+      }
+    });
   }
 
 }
@@ -48429,15 +51122,187 @@ class Template extends _xfa_object.XFAObject {
     }
   }
 
-  [_xfa_object.$toHTML]() {
-    if (this.subform.children.length > 0) {
-      return this.subform.children[0][_xfa_object.$toHTML]();
+  [_xfa_object.$break](node) {
+    this[_xfa_object.$extra].breakingNode = node;
+  }
+
+  [_xfa_object.$searchNode](expr, container) {
+    if (expr.startsWith("#")) {
+      return [this[_xfa_object.$ids].get(expr.slice(1))];
     }
 
-    return {
+    return (0, _som.searchNode)(this, container, expr, true, true);
+  }
+
+  [_xfa_object.$toHTML]() {
+    if (!this.subform.children.length) {
+      return _utils.HTMLResult.success({
+        name: "div",
+        children: []
+      });
+    }
+
+    this[_xfa_object.$extra] = {
+      breakingNode: null,
+      pageNumber: 1,
+      pagePosition: "first",
+      oddOrEven: "odd",
+      blankOrNotBlank: "nonBlank"
+    };
+    const root = this.subform.children[0];
+    const pageAreas = root.pageSet.pageArea.children;
+    const mainHtml = {
       name: "div",
       children: []
     };
+    let pageArea = null;
+    let breakBefore = null;
+    let breakBeforeTarget = null;
+
+    if (root.breakBefore.children.length >= 1) {
+      breakBefore = root.breakBefore.children[0];
+      breakBeforeTarget = breakBefore.target;
+    } else if (root.subform.children.length >= 1 && root.subform.children[0].breakBefore.children.length >= 1) {
+      breakBefore = root.subform.children[0].breakBefore.children[0];
+      breakBeforeTarget = breakBefore.target;
+    } else if (root.break && root.break.beforeTarget) {
+      breakBefore = root.break;
+      breakBeforeTarget = breakBefore.beforeTarget;
+    } else if (root.subform.children.length >= 1 && root.subform.children[0].break && root.subform.children[0].break.beforeTarget) {
+      breakBefore = root.subform.children[0].break;
+      breakBeforeTarget = breakBefore.beforeTarget;
+    }
+
+    if (breakBefore) {
+      const target = this[_xfa_object.$searchNode](breakBeforeTarget, breakBefore[_xfa_object.$getParent]());
+
+      if (target instanceof PageArea) {
+        pageArea = target;
+        breakBefore[_xfa_object.$extra] = {};
+      }
+    }
+
+    if (!pageArea) {
+      pageArea = pageAreas[0];
+    }
+
+    const pageAreaParent = pageArea[_xfa_object.$getParent]();
+
+    pageAreaParent[_xfa_object.$extra] = {
+      numberOfUse: 1,
+      currentIndex: pageAreaParent.pageArea.children.indexOf(pageArea)
+    };
+    let targetPageArea;
+    let leader = null;
+    let trailer = null;
+
+    while (true) {
+      targetPageArea = null;
+
+      const page = pageArea[_xfa_object.$toHTML]().html;
+
+      mainHtml.children.push(page);
+
+      if (leader) {
+        page.children.push(leader[_xfa_object.$toHTML](page[_xfa_object.$extra].space).html);
+        leader = null;
+      }
+
+      if (trailer) {
+        page.children.push(trailer[_xfa_object.$toHTML](page[_xfa_object.$extra].space).html);
+        trailer = null;
+      }
+
+      const contentAreas = pageArea.contentArea.children;
+      const htmlContentAreas = page.children.filter(node => node.attributes.class.includes("xfaContentarea"));
+
+      for (let i = 0, ii = contentAreas.length; i < ii; i++) {
+        const contentArea = this[_xfa_object.$extra].currentContentArea = contentAreas[i];
+        const space = {
+          width: contentArea.w,
+          height: contentArea.h
+        };
+
+        if (leader) {
+          htmlContentAreas[i].children.push(leader[_xfa_object.$toHTML](space).html);
+          leader = null;
+        }
+
+        if (trailer) {
+          htmlContentAreas[i].children.push(trailer[_xfa_object.$toHTML](space).html);
+          trailer = null;
+        }
+
+        let html = root[_xfa_object.$toHTML](space);
+
+        if (html.success) {
+          if (html.html) {
+            htmlContentAreas[i].children.push(html.html);
+          }
+
+          return mainHtml;
+        }
+
+        let mustBreak = false;
+
+        if (this[_xfa_object.$extra].breakingNode) {
+          const node = this[_xfa_object.$extra].breakingNode;
+          this[_xfa_object.$extra].breakingNode = null;
+
+          if (node.targetType === "auto") {
+            i--;
+            continue;
+          }
+
+          const startNew = node.startNew === 1;
+
+          if (node.leader) {
+            leader = this[_xfa_object.$searchNode](node.leader, node[_xfa_object.$getParent]());
+            leader = leader ? leader[0] : null;
+          }
+
+          if (node.trailer) {
+            trailer = this[_xfa_object.$searchNode](node.trailer, node[_xfa_object.$getParent]());
+            trailer = trailer ? trailer[0] : null;
+          }
+
+          let target = null;
+
+          if (node.target) {
+            target = this[_xfa_object.$searchNode](node.target, node[_xfa_object.$getParent]());
+            target = target ? target[0] : target;
+          }
+
+          if (node.targetType === "pageArea") {
+            if (startNew) {
+              mustBreak = true;
+            } else if (target === pageArea || !(target instanceof PageArea)) {
+              i--;
+              continue;
+            } else {
+              targetPageArea = target;
+              mustBreak = true;
+            }
+          } else if (target === "contentArea" || !(target instanceof ContentArea)) {
+            i--;
+            continue;
+          }
+        }
+
+        html = root[_xfa_object.$flushHTML]();
+
+        if (html) {
+          htmlContentAreas[i].children.push(html);
+        }
+
+        if (mustBreak) {
+          break;
+        }
+      }
+
+      this[_xfa_object.$extra].pageNumber += 1;
+      pageArea = targetPageArea || pageArea[_xfa_object.$getNextPage]();
+    }
   }
 
 }
@@ -48459,6 +51324,10 @@ class Text extends _xfa_object.ContentObject {
     this.usehref = attributes.usehref || "";
   }
 
+  [_xfa_object.$acceptWhitespace]() {
+    return true;
+  }
+
   [_xfa_object.$onChild](child) {
     if (child[_xfa_object.$namespaceId] === _namespaces.NamespaceIds.xhtml.id) {
       this[_xfa_object.$content] = child;
@@ -48469,12 +51338,20 @@ class Text extends _xfa_object.ContentObject {
     return false;
   }
 
-  [_xfa_object.$toHTML]() {
+  [_xfa_object.$onText](str) {
+    if (this[_xfa_object.$content] instanceof _xfa_object.XFAObject) {
+      return;
+    }
+
+    super[_xfa_object.$onText](str);
+  }
+
+  [_xfa_object.$toHTML](availableSpace) {
     if (typeof this[_xfa_object.$content] === "string") {
       const html = {
         name: "span",
         attributes: {
-          class: "xfaRich",
+          class: ["xfaRich"],
           style: {}
         },
         value: this[_xfa_object.$content]
@@ -48512,10 +51389,10 @@ class Text extends _xfa_object.ContentObject {
         });
       }
 
-      return html;
+      return _utils.HTMLResult.success(html);
     }
 
-    return this[_xfa_object.$content][_xfa_object.$toHTML]();
+    return this[_xfa_object.$content][_xfa_object.$toHTML](availableSpace);
   }
 
 }
@@ -48546,7 +51423,7 @@ class TextEdit extends _xfa_object.XFAObject {
     this.margin = null;
   }
 
-  [_xfa_object.$toHTML]() {
+  [_xfa_object.$toHTML](availableSpace) {
     const style = (0, _html_utils.toStyle)(this, "border", "font", "margin");
     let html;
 
@@ -48554,7 +51431,8 @@ class TextEdit extends _xfa_object.XFAObject {
       html = {
         name: "textarea",
         attributes: {
-          class: "xfaTextfield",
+          fieldId: this[_xfa_object.$getParent]()[_xfa_object.$getParent]()[_xfa_object.$uid],
+          class: ["xfaTextfield"],
           style
         }
       };
@@ -48563,19 +51441,20 @@ class TextEdit extends _xfa_object.XFAObject {
         name: "input",
         attributes: {
           type: "text",
-          class: "xfaTextfield",
+          fieldId: this[_xfa_object.$getParent]()[_xfa_object.$getParent]()[_xfa_object.$uid],
+          class: ["xfaTextfield"],
           style
         }
       };
     }
 
-    return {
+    return _utils.HTMLResult.success({
       name: "label",
       attributes: {
-        class: "xfaLabel"
+        class: ["xfaLabel"]
       },
       children: [html]
-    };
+    });
   }
 
 }
@@ -48593,8 +51472,8 @@ class Time extends _xfa_object.StringObject {
     this[_xfa_object.$content] = new Date(this[_xfa_object.$content]);
   }
 
-  [_xfa_object.$toHTML]() {
-    return this[_xfa_object.$content].toString();
+  [_xfa_object.$toHTML](availableSpace) {
+    return _utils.HTMLResult.success(this[_xfa_object.$content].toString());
   }
 
 }
@@ -48677,7 +51556,7 @@ class Ui extends _xfa_object.XFAObject {
     this.textEdit = null;
   }
 
-  [_xfa_object.$toHTML]() {
+  [_xfa_object.$toHTML](availableSpace) {
     for (const name of Object.getOwnPropertyNames(this)) {
       if (name === "extras" || name === "picture") {
         continue;
@@ -48689,10 +51568,10 @@ class Ui extends _xfa_object.XFAObject {
         continue;
       }
 
-      return obj[_xfa_object.$toHTML]();
+      return obj[_xfa_object.$toHTML](availableSpace);
     }
 
-    return null;
+    return _utils.HTMLResult.EMPTY;
   }
 
 }
@@ -48742,6 +51621,19 @@ class Value extends _xfa_object.XFAObject {
   }
 
   [_xfa_object.$setValue](value) {
+    const parent = this[_xfa_object.$getParent]();
+
+    if (parent instanceof Field) {
+      if (parent.ui && parent.ui.imageEdit) {
+        if (!this.image) {
+          this.image = new Image({});
+        }
+
+        this.image[_xfa_object.$content] = value[_xfa_object.$content];
+        return;
+      }
+    }
+
     const valueName = value[_xfa_object.$nodeName];
 
     if (this[valueName] !== null) {
@@ -48764,7 +51656,27 @@ class Value extends _xfa_object.XFAObject {
     this[_xfa_object.$appendChild](value);
   }
 
-  [_xfa_object.$toHTML]() {
+  [_xfa_object.$text]() {
+    if (this.exData) {
+      return this.exData[_xfa_object.$content][_xfa_object.$text]().trim();
+    }
+
+    for (const name of Object.getOwnPropertyNames(this)) {
+      if (name === "image") {
+        continue;
+      }
+
+      const obj = this[name];
+
+      if (obj instanceof _xfa_object.XFAObject) {
+        return (obj[_xfa_object.$content] || "").toString().trim();
+      }
+    }
+
+    return null;
+  }
+
+  [_xfa_object.$toHTML](availableSpace) {
     for (const name of Object.getOwnPropertyNames(this)) {
       const obj = this[name];
 
@@ -48772,10 +51684,10 @@ class Value extends _xfa_object.XFAObject {
         continue;
       }
 
-      return obj[_xfa_object.$toHTML]();
+      return obj[_xfa_object.$toHTML](availableSpace);
     }
 
-    return null;
+    return _utils.HTMLResult.EMPTY;
   }
 
 }
@@ -49278,7 +52190,7 @@ class TemplateNamespace {
 exports.TemplateNamespace = TemplateNamespace;
 
 /***/ }),
-/* 73 */
+/* 92 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -49286,14 +52198,199 @@ exports.TemplateNamespace = TemplateNamespace;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.addExtraDivForMargin = addExtraDivForMargin;
+exports.addHTML = addHTML;
+exports.flushHTML = flushHTML;
+exports.getAvailableSpace = getAvailableSpace;
+
+var _xfa_object = __w_pdfjs_require__(86);
+
+var _html_utils = __w_pdfjs_require__(93);
+
+function flushHTML(node) {
+  if (!node[_xfa_object.$extra]) {
+    return null;
+  }
+
+  const attributes = node[_xfa_object.$extra].attributes;
+  const html = {
+    name: "div",
+    attributes,
+    children: node[_xfa_object.$extra].children
+  };
+
+  if (node[_xfa_object.$extra].failingNode) {
+    const htmlFromFailing = node[_xfa_object.$extra].failingNode[_xfa_object.$flushHTML]();
+
+    if (htmlFromFailing) {
+      html.children.push(htmlFromFailing);
+    }
+  }
+
+  if (html.children.length === 0) {
+    return null;
+  }
+
+  node[_xfa_object.$extra].children = [];
+  delete node[_xfa_object.$extra].line;
+  return html;
+}
+
+function addHTML(node, html, bbox) {
+  const extra = node[_xfa_object.$extra];
+  const availableSpace = extra.availableSpace;
+
+  switch (node.layout) {
+    case "position":
+      {
+        const [x, y, w, h] = bbox;
+        extra.width = Math.max(extra.width, x + w);
+        extra.height = Math.max(extra.height, y + h);
+        extra.children.push(html);
+        break;
+      }
+
+    case "lr-tb":
+    case "rl-tb":
+      if (!extra.line || extra.attempt === 1) {
+        extra.line = {
+          name: "div",
+          attributes: {
+            class: [node.layout === "lr-tb" ? "xfaLr" : "xfaRl"]
+          },
+          children: []
+        };
+        extra.children.push(extra.line);
+      }
+
+      extra.line.children.push(html);
+
+      if (extra.attempt === 0) {
+        const [,, w, h] = bbox;
+        extra.currentWidth += w;
+        extra.height = Math.max(extra.height, extra.prevHeight + h);
+      } else {
+        const [,, w, h] = bbox;
+        extra.width = Math.max(extra.width, extra.currentWidth);
+        extra.currentWidth = w;
+        extra.prevHeight = extra.height;
+        extra.height += h;
+        extra.attempt = 0;
+      }
+
+      break;
+
+    case "rl-row":
+    case "row":
+      {
+        extra.children.push(html);
+        const [,, w, h] = bbox;
+        extra.width += w;
+        extra.height = Math.max(extra.height, h);
+        const height = (0, _html_utils.measureToString)(extra.height);
+
+        for (const child of extra.children) {
+          child.attributes.style.height = height;
+        }
+
+        break;
+      }
+
+    case "table":
+      {
+        const [,, w, h] = bbox;
+        extra.width = Math.min(availableSpace.width, Math.max(extra.width, w));
+        extra.height += h;
+        extra.children.push(html);
+        break;
+      }
+
+    case "tb":
+      {
+        const [,,, h] = bbox;
+        extra.width = availableSpace.width;
+        extra.height += h;
+        extra.children.push(html);
+        break;
+      }
+  }
+}
+
+function getAvailableSpace(node) {
+  const availableSpace = node[_xfa_object.$extra].availableSpace;
+  const [marginW, marginH] = node.margin ? [node.margin.leftInset + node.margin.rightInset, node.margin.topInset + node.margin.leftInset] : [0, 0];
+
+  switch (node.layout) {
+    case "lr-tb":
+    case "rl-tb":
+      switch (node[_xfa_object.$extra].attempt) {
+        case 0:
+          return {
+            width: availableSpace.width - marginW - node[_xfa_object.$extra].currentWidth,
+            height: availableSpace.height - marginH - node[_xfa_object.$extra].prevHeight
+          };
+
+        case 1:
+          return {
+            width: availableSpace.width - marginW,
+            height: availableSpace.height - marginH - node[_xfa_object.$extra].height
+          };
+
+        default:
+          return {
+            width: Infinity,
+            height: availableSpace.height - marginH - node[_xfa_object.$extra].prevHeight
+          };
+      }
+
+    case "rl-row":
+    case "row":
+      const width = node[_xfa_object.$extra].columnWidths.slice(node[_xfa_object.$extra].currentColumn).reduce((a, x) => a + x);
+
+      return {
+        width,
+        height: availableSpace.height - marginH
+      };
+
+    case "table":
+    case "tb":
+      return {
+        width: availableSpace.width - marginW,
+        height: availableSpace.height - marginH - node[_xfa_object.$extra].height
+      };
+
+    case "position":
+    default:
+      return availableSpace;
+  }
+}
+
+/***/ }),
+/* 93 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.computeBbox = computeBbox;
+exports.createWrapper = createWrapper;
+exports.fixDimensions = fixDimensions;
+exports.fixTextIndent = fixTextIndent;
+exports.getFonts = getFonts;
 exports.layoutClass = layoutClass;
+exports.layoutText = layoutText;
 exports.measureToString = measureToString;
 exports.toStyle = toStyle;
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
+
+var _utils = __w_pdfjs_require__(87);
 
 var _util = __w_pdfjs_require__(2);
+
+const wordNonWordRegex = new RegExp("([\\p{N}\\p{L}\\p{M}]+)|([^\\p{N}\\p{L}\\p{M}]+)", "gu");
+const wordFirstRegex = new RegExp("^[\\p{N}\\p{L}\\p{M}]", "u");
 
 function measureToString(m) {
   if (typeof m === "string") {
@@ -49305,6 +52402,12 @@ function measureToString(m) {
 
 const converters = {
   anchorType(node, style) {
+    const parent = node[_xfa_object.$getParent]();
+
+    if (!parent || parent.layout && parent.layout !== "position") {
+      return;
+    }
+
     if (!("transform" in style)) {
       style.transform = "";
     }
@@ -49347,12 +52450,25 @@ const converters = {
   dimensions(node, style) {
     const parent = node[_xfa_object.$getParent]();
 
-    const extra = parent[_xfa_object.$extra];
     let width = node.w;
+    const height = node.h;
 
-    if (extra && extra.columnWidths) {
-      width = extra.columnWidths[extra.currentColumn];
-      extra.currentColumn = (extra.currentColumn + 1) % extra.columnWidths.length;
+    if (parent.layout && parent.layout.includes("row")) {
+      const extra = parent[_xfa_object.$extra];
+      const colSpan = node.colSpan;
+      let w;
+
+      if (colSpan === -1) {
+        w = extra.columnWidths.slice(extra.currentColumn).reduce((a, x) => a + x, 0);
+        extra.currentColumn = 0;
+      } else {
+        w = extra.columnWidths.slice(extra.currentColumn, extra.currentColumn + colSpan).reduce((a, x) => a + x, 0);
+        extra.currentColumn = (extra.currentColumn + node.colSpan) % extra.columnWidths.length;
+      }
+
+      if (!isNaN(w)) {
+        width = node.w = w;
+      }
     }
 
     if (width !== "") {
@@ -49364,11 +52480,13 @@ const converters = {
         style.maxWidth = measureToString(node.maxW);
       }
 
-      style.minWidth = measureToString(node.minW);
+      if (parent.layout === "position") {
+        style.minWidth = measureToString(node.minW);
+      }
     }
 
-    if (node.h !== "") {
-      style.height = measureToString(node.h);
+    if (height !== "") {
+      style.height = measureToString(height);
     } else {
       style.height = "auto";
 
@@ -49376,7 +52494,9 @@ const converters = {
         style.maxHeight = measureToString(node.maxH);
       }
 
-      style.minHeight = measureToString(node.minH);
+      if (parent.layout === "position") {
+        style.minHeight = measureToString(node.minH);
+      }
     }
   },
 
@@ -49417,42 +52537,214 @@ const converters = {
   },
 
   hAlign(node, style) {
-    switch (node.hAlign) {
-      case "justifyAll":
-        style.textAlign = "justify-all";
-        break;
+    if (node[_xfa_object.$nodeName] === "para") {
+      switch (node.hAlign) {
+        case "justifyAll":
+          style.textAlign = "justify-all";
+          break;
 
-      case "radix":
-        style.textAlign = "left";
-        break;
+        case "radix":
+          style.textAlign = "left";
+          break;
 
-      default:
-        style.textAlign = node.hAlign;
+        default:
+          style.textAlign = node.hAlign;
+      }
+    } else {
+      switch (node.hAlign) {
+        case "left":
+          style.alignSelf = "start";
+          break;
+
+        case "center":
+          style.alignSelf = "center";
+          break;
+
+        case "right":
+          style.alignSelf = "end";
+          break;
+      }
     }
   },
 
-  borderMarginPadding(node, style) {
-    const borderWidths = [0, 0, 0, 0];
-    const marginWidths = [0, 0, 0, 0];
-    const marginNode = node.margin ? [node.margin.topInset, node.margin.rightInset, node.margin.bottomInset, node.margin.leftInset] : [0, 0, 0, 0];
-
-    if (node.border) {
-      Object.assign(style, node.border[_xfa_object.$toStyle](borderWidths, marginWidths));
-    }
-
-    if (borderWidths.every(x => x === 0)) {
-      if (node.margin) {
-        Object.assign(style, node.margin[_xfa_object.$toStyle]());
-      }
-
-      style.padding = style.margin;
-      delete style.margin;
-    } else {
-      style.padding = measureToString(marginNode[0] - borderWidths[0] - marginWidths[0]) + " " + measureToString(marginNode[1] - borderWidths[1] - marginWidths[1]) + " " + measureToString(marginNode[2] - borderWidths[2] - marginWidths[2]) + " " + measureToString(marginNode[3] - borderWidths[3] - marginWidths[3]);
+  margin(node, style) {
+    if (node.margin) {
+      style.margin = node.margin[_xfa_object.$toStyle]().margin;
     }
   }
 
 };
+
+function layoutText(text, fontSize, space) {
+  let width = 0;
+  let height = 0;
+  let totalWidth = 0;
+  const lineHeight = fontSize * 1.5;
+  const averageCharSize = fontSize * 0.4;
+  const maxCharOnLine = Math.floor(space.width / averageCharSize);
+  const chunks = text.match(wordNonWordRegex);
+  let treatedChars = 0;
+  let i = 0;
+  let chunk = chunks[0];
+
+  while (chunk) {
+    const w = chunk.length * averageCharSize;
+
+    if (width + w <= space.width) {
+      width += w;
+      treatedChars += chunk.length;
+      chunk = chunks[i++];
+      continue;
+    }
+
+    if (!wordFirstRegex.test(chunk) || chunk.length > maxCharOnLine) {
+      const numOfCharOnLine = Math.floor((space.width - width) / averageCharSize);
+      chunk = chunk.slice(numOfCharOnLine);
+      treatedChars += numOfCharOnLine;
+
+      if (height + lineHeight > space.height) {
+        return {
+          width: 0,
+          height: 0,
+          splitPos: treatedChars
+        };
+      }
+
+      totalWidth = Math.max(width, totalWidth);
+      width = 0;
+      height += lineHeight;
+      continue;
+    }
+
+    if (height + lineHeight > space.height) {
+      return {
+        width: 0,
+        height: 0,
+        splitPos: treatedChars
+      };
+    }
+
+    totalWidth = Math.max(width, totalWidth);
+    width = w;
+    height += lineHeight;
+    chunk = chunks[i++];
+  }
+
+  if (totalWidth === 0) {
+    totalWidth = width;
+  }
+
+  if (totalWidth !== 0) {
+    height += lineHeight;
+  }
+
+  return {
+    width: totalWidth,
+    height,
+    splitPos: -1
+  };
+}
+
+function computeBbox(node, html, availableSpace) {
+  let bbox;
+
+  if (node.w !== "" && node.h !== "") {
+    bbox = [node.x, node.y, node.w, node.h];
+  } else {
+    if (!availableSpace) {
+      return null;
+    }
+
+    let width = node.w;
+
+    if (width === "") {
+      if (node.maxW === 0) {
+        const parent = node[_xfa_object.$getParent]();
+
+        if (parent.layout === "position" && parent.w !== "") {
+          width = 0;
+        } else {
+          width = node.minW;
+        }
+      } else {
+        width = Math.min(node.maxW, availableSpace.width);
+      }
+
+      html.attributes.style.width = measureToString(width);
+    }
+
+    let height = node.h;
+
+    if (height === "") {
+      if (node.maxH === 0) {
+        const parent = node[_xfa_object.$getParent]();
+
+        if (parent.layout === "position" && parent.h !== "") {
+          height = 0;
+        } else {
+          height = node.minH;
+        }
+      } else {
+        height = Math.min(node.maxH, availableSpace.height);
+      }
+
+      html.attributes.style.height = measureToString(height);
+    }
+
+    bbox = [node.x, node.y, width, height];
+  }
+
+  return bbox;
+}
+
+function fixDimensions(node) {
+  const parent = node[_xfa_object.$getParent]();
+
+  if (parent.layout && parent.layout.includes("row")) {
+    const extra = parent[_xfa_object.$extra];
+    const colSpan = node.colSpan;
+    let width;
+
+    if (colSpan === -1) {
+      width = extra.columnWidths.slice(extra.currentColumn).reduce((a, w) => a + w, 0);
+    } else {
+      width = extra.columnWidths.slice(extra.currentColumn, extra.currentColumn + colSpan).reduce((a, w) => a + w, 0);
+    }
+
+    if (!isNaN(width)) {
+      node.w = width;
+    }
+  }
+
+  if (parent.w && node.w) {
+    node.w = Math.min(parent.w, node.w);
+  }
+
+  if (parent.h && node.h) {
+    node.h = Math.min(parent.h, node.h);
+  }
+
+  if (parent.layout && parent.layout !== "position") {
+    node.x = node.y = 0;
+
+    if (parent.layout === "tb") {
+      if (parent.w !== "" && (node.w === "" || node.w === 0 || node.w > parent.w)) {
+        node.w = parent.w;
+      }
+    }
+  }
+
+  if (node.layout === "position") {
+    node.minW = node.minH = 0;
+    node.maxW = node.maxH = Infinity;
+  } else {
+    if (node.layout === "table") {
+      if (node.w === "" && Array.isArray(node.columnWidths)) {
+        node.w = node.columnWidths.reduce((a, x) => a + x, 0);
+      }
+    }
+  }
+}
 
 function layoutClass(node) {
   switch (node.layout) {
@@ -49512,350 +52804,119 @@ function toStyle(node, ...names) {
   return style;
 }
 
-function addExtraDivForMargin(html) {
-  const style = html.attributes.style;
+function createWrapper(node, html) {
+  const {
+    attributes
+  } = html;
+  const {
+    style
+  } = attributes;
+  const wrapper = {
+    name: "div",
+    attributes: {
+      class: ["xfaWrapper"],
+      style: Object.create(null)
+    },
+    children: [html]
+  };
+  attributes.class.push("xfaWrapped");
 
-  if (style.margin) {
-    const padding = style.margin;
-    delete style.margin;
-    const width = style.width || "auto";
-    const height = style.height || "auto";
-    style.width = "100%";
-    style.height = "100%";
-    return {
+  if (node.border) {
+    const {
+      widths,
+      insets
+    } = node.border[_xfa_object.$extra];
+    let shiftH = 0;
+    let shiftW = 0;
+
+    switch (node.border.hand) {
+      case "even":
+        shiftW = widths[0] / 2;
+        shiftH = widths[3] / 2;
+        break;
+
+      case "left":
+        shiftW = widths[0];
+        shiftH = widths[3];
+        break;
+    }
+
+    const insetsW = insets[1] + insets[3];
+    const insetsH = insets[0] + insets[2];
+    const border = {
       name: "div",
       attributes: {
+        class: ["xfaBorder"],
         style: {
-          padding,
-          width,
-          height
+          top: `${insets[0] - widths[0] + shiftW}px`,
+          left: `${insets[3] - widths[3] + shiftH}px`,
+          width: insetsW ? `calc(100% - ${insetsW}px)` : "100%",
+          height: insetsH ? `calc(100% - ${insetsH}px)` : "100%"
         }
       },
-      children: [html]
+      children: []
     };
+
+    for (const key of ["border", "borderWidth", "borderColor", "borderRadius", "borderStyle"]) {
+      if (style[key] !== undefined) {
+        border.attributes.style[key] = style[key];
+        delete style[key];
+      }
+    }
+
+    wrapper.children.push(border);
   }
 
-  return html;
+  for (const key of ["background", "backgroundClip", "top", "left", "width", "height", "minWidth", "minHeight", "maxWidth", "maxHeight", "transform", "transformOrigin"]) {
+    if (style[key] !== undefined) {
+      wrapper.attributes.style[key] = style[key];
+      delete style[key];
+    }
+  }
+
+  if (style.position === "absolute") {
+    wrapper.attributes.style.position = "absolute";
+  } else {
+    wrapper.attributes.style.position = "relative";
+  }
+
+  delete style.position;
+
+  if (style.alignSelf) {
+    wrapper.attributes.style.alignSelf = style.alignSelf;
+    delete style.alignSelf;
+  }
+
+  return wrapper;
+}
+
+function fixTextIndent(styles) {
+  const indent = (0, _utils.getMeasurement)(styles.textIndent, "0px");
+
+  if (indent >= 0) {
+    return;
+  }
+
+  const align = styles.textAlign || "left";
+
+  if (align === "left" || align === "right") {
+    const name = "padding" + (align === "left" ? "Left" : "Right");
+    const padding = (0, _utils.getMeasurement)(styles[name], "0px");
+    styles[name] = `${padding - indent}px`;
+  }
+}
+
+function getFonts(family) {
+  if (family.startsWith("'") || family.startsWith('"')) {
+    family = family.slice(1, family.length - 1);
+  }
+
+  const fonts = [`"${family}"`, `"${family}-PdfJS-XFA"`];
+  return fonts.join(",");
 }
 
 /***/ }),
-/* 74 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.createDataNode = createDataNode;
-exports.searchNode = searchNode;
-
-var _xfa_object = __w_pdfjs_require__(68);
-
-var _util = __w_pdfjs_require__(2);
-
-const namePattern = /^[^.[]+/;
-const indexPattern = /^[^\]]+/;
-const operators = {
-  dot: 0,
-  dotDot: 1,
-  dotHash: 2,
-  dotBracket: 3,
-  dotParen: 4
-};
-const shortcuts = new Map([["$data", (root, current) => root.datasets.data], ["$template", (root, current) => root.template], ["$connectionSet", (root, current) => root.connectionSet], ["$form", (root, current) => root.form], ["$layout", (root, current) => root.layout], ["$host", (root, current) => root.host], ["$dataWindow", (root, current) => root.dataWindow], ["$event", (root, current) => root.event], ["!", (root, current) => root.datasets], ["$xfa", (root, current) => root], ["xfa", (root, current) => root], ["$", (root, current) => current]]);
-const somCache = new WeakMap();
-
-function parseIndex(index) {
-  index = index.trim();
-
-  if (index === "*") {
-    return Infinity;
-  }
-
-  return parseInt(index, 10) || 0;
-}
-
-function parseExpression(expr, dotDotAllowed) {
-  let match = expr.match(namePattern);
-
-  if (!match) {
-    return null;
-  }
-
-  let [name] = match;
-  const parsed = [{
-    name,
-    cacheName: "." + name,
-    index: 0,
-    js: null,
-    formCalc: null,
-    operator: operators.dot
-  }];
-  let pos = name.length;
-
-  while (pos < expr.length) {
-    const spos = pos;
-    const char = expr.charAt(pos++);
-
-    if (char === "[") {
-      match = expr.slice(pos).match(indexPattern);
-
-      if (!match) {
-        (0, _util.warn)("XFA - Invalid index in SOM expression");
-        return null;
-      }
-
-      parsed[parsed.length - 1].index = parseIndex(match[0]);
-      pos += match[0].length + 1;
-      continue;
-    }
-
-    let operator;
-
-    switch (expr.charAt(pos)) {
-      case ".":
-        if (!dotDotAllowed) {
-          return null;
-        }
-
-        pos++;
-        operator = operators.dotDot;
-        break;
-
-      case "#":
-        pos++;
-        operator = operators.dotHash;
-        break;
-
-      case "[":
-        operator = operators.dotBracket;
-        break;
-
-      case "(":
-        operator = operators.dotParen;
-        break;
-
-      default:
-        operator = operators.dot;
-        break;
-    }
-
-    match = expr.slice(pos).match(namePattern);
-
-    if (!match) {
-      break;
-    }
-
-    [name] = match;
-    pos += name.length;
-    parsed.push({
-      name,
-      cacheName: expr.slice(spos, pos),
-      operator,
-      index: 0,
-      js: null,
-      formCalc: null
-    });
-  }
-
-  return parsed;
-}
-
-function searchNode(root, container, expr, dotDotAllowed = true, useCache = true) {
-  const parsed = parseExpression(expr, dotDotAllowed);
-
-  if (!parsed) {
-    return null;
-  }
-
-  const fn = shortcuts.get(parsed[0].name);
-  let i = 0;
-  let isQualified;
-
-  if (fn) {
-    isQualified = true;
-    root = [fn(root, container)];
-    i = 1;
-  } else {
-    isQualified = container === null;
-    root = [container || root];
-  }
-
-  for (let ii = parsed.length; i < ii; i++) {
-    const {
-      name,
-      cacheName,
-      operator,
-      index
-    } = parsed[i];
-    const nodes = [];
-
-    for (const node of root) {
-      if (!(node instanceof _xfa_object.XFAObject)) {
-        continue;
-      }
-
-      let children, cached;
-
-      if (useCache) {
-        cached = somCache.get(node);
-
-        if (!cached) {
-          cached = new Map();
-          somCache.set(node, cached);
-        }
-
-        children = cached.get(cacheName);
-      }
-
-      if (!children) {
-        switch (operator) {
-          case operators.dot:
-            children = node[_xfa_object.$getChildrenByName](name, false);
-            break;
-
-          case operators.dotDot:
-            children = node[_xfa_object.$getChildrenByName](name, true);
-            break;
-
-          case operators.dotHash:
-            children = node[_xfa_object.$getChildrenByClass](name);
-
-            if (children instanceof _xfa_object.XFAObjectArray) {
-              children = children.children;
-            } else {
-              children = [children];
-            }
-
-            break;
-
-          default:
-            break;
-        }
-
-        if (useCache) {
-          cached.set(cacheName, children);
-        }
-      }
-
-      if (children.length > 0) {
-        nodes.push(children);
-      }
-    }
-
-    if (nodes.length === 0 && !isQualified && i === 0) {
-      const parent = container[_xfa_object.$getParent]();
-
-      container = parent;
-
-      if (!container) {
-        return null;
-      }
-
-      i = -1;
-      root = [container];
-      continue;
-    }
-
-    if (isFinite(index)) {
-      root = nodes.filter(node => index < node.length).map(node => node[index]);
-    } else {
-      root = nodes.reduce((acc, node) => acc.concat(node), []);
-    }
-  }
-
-  if (root.length === 0) {
-    return null;
-  }
-
-  return root;
-}
-
-function createNodes(root, path) {
-  let node = null;
-
-  for (const {
-    name,
-    index
-  } of path) {
-    for (let i = 0; i <= index; i++) {
-      node = new _xfa_object.XmlObject(root[_xfa_object.$namespaceId], name);
-
-      root[_xfa_object.$appendChild](node);
-    }
-
-    root = node;
-  }
-
-  return node;
-}
-
-function createDataNode(root, container, expr) {
-  const parsed = parseExpression(expr);
-
-  if (!parsed) {
-    return null;
-  }
-
-  if (parsed.some(x => x.operator === operators.dotDot)) {
-    return null;
-  }
-
-  const fn = shortcuts.get(parsed[0].name);
-  let i = 0;
-
-  if (fn) {
-    root = fn(root, container);
-    i = 1;
-  } else {
-    root = container || root;
-  }
-
-  for (let ii = parsed.length; i < ii; i++) {
-    const {
-      cacheName,
-      index
-    } = parsed[i];
-
-    if (!isFinite(index)) {
-      parsed[i].index = 0;
-      return createNodes(root, parsed.slice(i));
-    }
-
-    const cached = somCache.get(root);
-
-    if (!cached) {
-      (0, _util.warn)(`XFA - createDataNode must be called after searchNode.`);
-      return null;
-    }
-
-    const children = cached.get(cacheName);
-
-    if (children.length === 0) {
-      return createNodes(root, parsed.slice(i));
-    }
-
-    if (index < children.length) {
-      const child = children[index];
-
-      if (!(child instanceof _xfa_object.XFAObject)) {
-        (0, _util.warn)(`XFA - Cannot create a node.`);
-        return null;
-      }
-
-      root = child;
-    } else {
-      parsed[i].index = children.length - index;
-      return createNodes(root, parsed.slice(i));
-    }
-  }
-
-  return null;
-}
-
-/***/ }),
-/* 75 */
+/* 94 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -49865,11 +52926,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XFAParser = void 0;
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
-var _xml_parser = __w_pdfjs_require__(61);
+var _xml_parser = __w_pdfjs_require__(79);
 
-var _builder = __w_pdfjs_require__(76);
+var _builder = __w_pdfjs_require__(95);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -49882,6 +52943,7 @@ class XFAParser extends _xml_parser.XMLParserBase {
     this._current = this._builder.buildRoot(this._ids);
     this._errorCode = _xml_parser.XMLParserErrorCode.NoError;
     this._whiteRegex = /^\s+$/;
+    this._nbsps = /\xa0+/g;
   }
 
   parse(data) {
@@ -49897,6 +52959,8 @@ class XFAParser extends _xml_parser.XMLParserBase {
   }
 
   onText(text) {
+    text = text.replace(this._nbsps, match => match.slice(1) + " ");
+
     if (this._current[_xfa_object.$acceptWhitespace]()) {
       this._current[_xfa_object.$onText](text);
 
@@ -50010,6 +53074,14 @@ class XFAParser extends _xml_parser.XMLParserBase {
   onEndElement(name) {
     const node = this._current;
 
+    if (node[_xfa_object.$isCDATAXml]() && typeof node[_xfa_object.$content] === "string") {
+      const parser = new XFAParser();
+      const root = parser.parse(node[_xfa_object.$content]);
+      node[_xfa_object.$content] = null;
+
+      node[_xfa_object.$onChild](root);
+    }
+
     node[_xfa_object.$finalize]();
 
     this._current = this._stack.pop();
@@ -50030,7 +53102,7 @@ class XFAParser extends _xml_parser.XMLParserBase {
 exports.XFAParser = XFAParser;
 
 /***/ }),
-/* 76 */
+/* 95 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -50040,25 +53112,23 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.Builder = void 0;
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
-var _setup = __w_pdfjs_require__(77);
+var _setup = __w_pdfjs_require__(96);
 
-var _template = __w_pdfjs_require__(72);
+var _template = __w_pdfjs_require__(91);
 
-var _unknown = __w_pdfjs_require__(86);
+var _unknown = __w_pdfjs_require__(105);
 
 var _util = __w_pdfjs_require__(2);
-
-const _ids = Symbol();
 
 class Root extends _xfa_object.XFAObject {
   constructor(ids) {
     super(-1, "root", Object.create(null));
     this.element = null;
-    this[_ids] = ids;
+    this[_xfa_object.$ids] = ids;
   }
 
   [_xfa_object.$onChild](child) {
@@ -50070,7 +53140,11 @@ class Root extends _xfa_object.XFAObject {
     super[_xfa_object.$finalize]();
 
     if (this.element.template instanceof _template.Template) {
-      this.element.template[_xfa_object.$resolvePrototypes](this[_ids]);
+      this[_xfa_object.$ids].set(_xfa_object.$root, this.element);
+
+      this.element.template[_xfa_object.$resolvePrototypes](this[_xfa_object.$ids]);
+
+      this.element.template[_xfa_object.$ids] = this[_xfa_object.$ids];
     }
   }
 
@@ -50246,7 +53320,7 @@ class Builder {
 exports.Builder = Builder;
 
 /***/ }),
-/* 77 */
+/* 96 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -50256,23 +53330,23 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.NamespaceSetUp = void 0;
 
-var _config = __w_pdfjs_require__(78);
+var _config = __w_pdfjs_require__(97);
 
-var _connection_set = __w_pdfjs_require__(79);
+var _connection_set = __w_pdfjs_require__(98);
 
-var _datasets = __w_pdfjs_require__(80);
+var _datasets = __w_pdfjs_require__(99);
 
-var _locale_set = __w_pdfjs_require__(81);
+var _locale_set = __w_pdfjs_require__(100);
 
-var _signature = __w_pdfjs_require__(82);
+var _signature = __w_pdfjs_require__(101);
 
-var _stylesheet = __w_pdfjs_require__(83);
+var _stylesheet = __w_pdfjs_require__(102);
 
-var _template = __w_pdfjs_require__(72);
+var _template = __w_pdfjs_require__(91);
 
-var _xdp = __w_pdfjs_require__(84);
+var _xdp = __w_pdfjs_require__(103);
 
-var _xhtml = __w_pdfjs_require__(85);
+var _xhtml = __w_pdfjs_require__(104);
 
 const NamespaceSetUp = {
   config: _config.ConfigNamespace,
@@ -50288,7 +53362,7 @@ const NamespaceSetUp = {
 exports.NamespaceSetUp = NamespaceSetUp;
 
 /***/ }),
-/* 78 */
+/* 97 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -50298,11 +53372,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.ConfigNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
-var _utils = __w_pdfjs_require__(69);
+var _utils = __w_pdfjs_require__(87);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -50400,7 +53474,7 @@ class Area extends _xfa_object.XFAObject {
     this.level = (0, _utils.getInteger)({
       data: attributes.level,
       defaultValue: 0,
-      validator: n => n >= 1 && n <= 3
+      validate: n => n >= 1 && n <= 3
     });
     this.name = (0, _utils.getStringOption)(attributes.name, ["", "barcode", "coreinit", "deviceDriver", "font", "general", "layout", "merge", "script", "signature", "sourceSet", "templateCache"]);
   }
@@ -50674,7 +53748,7 @@ class Equate extends _xfa_object.XFAObject {
     this.force = (0, _utils.getInteger)({
       data: attributes.force,
       defaultValue: 1,
-      validator: n => n === 0
+      validate: n => n === 0
     });
     this.from = attributes.from || "";
     this.to = attributes.to || "";
@@ -51007,12 +54081,12 @@ class PageOffset extends _xfa_object.XFAObject {
     this.x = (0, _utils.getInteger)({
       data: attributes.x,
       defaultValue: "useXDCSetting",
-      validator: n => true
+      validate: n => true
     });
     this.y = (0, _utils.getInteger)({
       data: attributes.y,
       defaultValue: "useXDCSetting",
-      validator: n => true
+      validate: n => true
     });
   }
 
@@ -51430,7 +54504,7 @@ class TemplateCache extends _xfa_object.XFAObject {
     this.maxEntries = (0, _utils.getInteger)({
       data: attributes.maxEntries,
       defaultValue: 5,
-      validator: n => n >= 0
+      validate: n => n >= 0
     });
   }
 
@@ -52177,7 +55251,7 @@ class ConfigNamespace {
 exports.ConfigNamespace = ConfigNamespace;
 
 /***/ }),
-/* 79 */
+/* 98 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52187,9 +55261,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.ConnectionSetNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
 const CONNECTION_SET_NS_ID = _namespaces.NamespaceIds.connectionSet.id;
 
@@ -52391,7 +55465,7 @@ class ConnectionSetNamespace {
 exports.ConnectionSetNamespace = ConnectionSetNamespace;
 
 /***/ }),
-/* 80 */
+/* 99 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52401,9 +55475,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.DatasetsNamespace = void 0;
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
 const DATASETS_NS_ID = _namespaces.NamespaceIds.datasets.id;
 
@@ -52457,7 +55531,7 @@ class DatasetsNamespace {
 exports.DatasetsNamespace = DatasetsNamespace;
 
 /***/ }),
-/* 81 */
+/* 100 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52467,11 +55541,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.LocaleSetNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
-var _utils = __w_pdfjs_require__(69);
+var _utils = __w_pdfjs_require__(87);
 
 const LOCALE_SET_NS_ID = _namespaces.NamespaceIds.localeSet.id;
 
@@ -52795,7 +55869,7 @@ class LocaleSetNamespace {
 exports.LocaleSetNamespace = LocaleSetNamespace;
 
 /***/ }),
-/* 82 */
+/* 101 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52805,9 +55879,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.SignatureNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
 const SIGNATURE_NS_ID = _namespaces.NamespaceIds.signature.id;
 
@@ -52836,7 +55910,7 @@ class SignatureNamespace {
 exports.SignatureNamespace = SignatureNamespace;
 
 /***/ }),
-/* 83 */
+/* 102 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52846,9 +55920,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.StylesheetNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
 const STYLESHEET_NS_ID = _namespaces.NamespaceIds.stylesheet.id;
 
@@ -52877,7 +55951,7 @@ class StylesheetNamespace {
 exports.StylesheetNamespace = StylesheetNamespace;
 
 /***/ }),
-/* 84 */
+/* 103 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52887,9 +55961,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XdpNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
 const XDP_NS_ID = _namespaces.NamespaceIds.xdp.id;
 
@@ -52931,7 +56005,7 @@ class XdpNamespace {
 exports.XdpNamespace = XdpNamespace;
 
 /***/ }),
-/* 85 */
+/* 104 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52941,17 +56015,17 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XhtmlNamespace = void 0;
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
-var _utils = __w_pdfjs_require__(69);
+var _html_utils = __w_pdfjs_require__(93);
 
-var _html_utils = __w_pdfjs_require__(73);
+var _utils = __w_pdfjs_require__(87);
 
 const XHTML_NS_ID = _namespaces.NamespaceIds.xhtml.id;
 const VALID_STYLES = new Set(["color", "font", "font-family", "font-size", "font-stretch", "font-style", "font-weight", "margin", "margin-bottom", "margin-left", "margin-right", "margin-top", "letter-spacing", "line-height", "orphans", "page-break-after", "page-break-before", "page-break-inside", "tab-interval", "tab-stop", "text-align", "text-decoration", "text-indent", "vertical-align", "widows", "kerning-mode", "xfa-font-horizontal-scale", "xfa-font-vertical-scale", "xfa-spacerun", "xfa-tab-stops"]);
-const StyleMapping = new Map([["page-break-after", "breakAfter"], ["page-break-before", "breakBefore"], ["page-break-inside", "breakInside"], ["kerning-mode", value => value === "none" ? "none" : "normal"], ["xfa-font-horizontal-scale", value => `scaleX(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-font-vertical-scale", value => `scaleY(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-spacerun", ""], ["xfa-tab-stops", ""], ["font-size", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["letter-spacing", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["line-height", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-bottom", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-left", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-right", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-top", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))]]);
+const StyleMapping = new Map([["page-break-after", "breakAfter"], ["page-break-before", "breakBefore"], ["page-break-inside", "breakInside"], ["kerning-mode", value => value === "none" ? "none" : "normal"], ["xfa-font-horizontal-scale", value => `scaleX(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-font-vertical-scale", value => `scaleY(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-spacerun", ""], ["xfa-tab-stops", ""], ["font-size", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["letter-spacing", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["line-height", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-bottom", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-left", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-right", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-top", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["text-indent", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["font-family", value => (0, _html_utils.getFonts)(value)]]);
 const spacesRegExp = /\s+/g;
 const crlfRegExp = /[\r\n]+/g;
 
@@ -52990,6 +56064,7 @@ function mapStyle(styleStr) {
     }
   }
 
+  (0, _html_utils.fixTextIndent)(style);
   return style;
 }
 
@@ -53025,16 +56100,27 @@ class XhtmlObject extends _xfa_object.XmlObject {
     }
   }
 
-  [_xfa_object.$toHTML]() {
-    return {
+  [_xfa_object.$toHTML](availableSpace) {
+    const children = [];
+    this[_xfa_object.$extra] = {
+      children
+    };
+
+    this[_xfa_object.$childrenToHTML]({});
+
+    if (children.length === 0 && !this[_xfa_object.$content]) {
+      return _utils.HTMLResult.EMPTY;
+    }
+
+    return _utils.HTMLResult.success({
       name: this[_xfa_object.$nodeName],
       attributes: {
         href: this.href,
         style: mapStyle(this.style)
       },
-      children: this[_xfa_object.$childrenToHTML]({}),
+      children,
       value: this[_xfa_object.$content] || ""
-    };
+    });
   }
 
 }
@@ -53059,11 +56145,20 @@ class Body extends XhtmlObject {
     super(attributes, "body");
   }
 
-  [_xfa_object.$toHTML]() {
-    const html = super[_xfa_object.$toHTML]();
+  [_xfa_object.$toHTML](availableSpace) {
+    const res = super[_xfa_object.$toHTML](availableSpace);
 
-    html.attributes.class = "xfaRich";
-    return html;
+    const {
+      html
+    } = res;
+
+    if (!html) {
+      return _utils.HTMLResult.EMPTY;
+    }
+
+    html.name = "div";
+    html.attributes.class = ["xfaRich"];
+    return res;
   }
 
 }
@@ -53077,10 +56172,10 @@ class Br extends XhtmlObject {
     return "\n";
   }
 
-  [_xfa_object.$toHTML]() {
-    return {
+  [_xfa_object.$toHTML](availableSpace) {
+    return _utils.HTMLResult.success({
       name: "br"
-    };
+    });
   }
 
 }
@@ -53090,36 +56185,41 @@ class Html extends XhtmlObject {
     super(attributes, "html");
   }
 
-  [_xfa_object.$toHTML]() {
-    const children = this[_xfa_object.$childrenToHTML]({});
+  [_xfa_object.$toHTML](availableSpace) {
+    const children = [];
+    this[_xfa_object.$extra] = {
+      children
+    };
+
+    this[_xfa_object.$childrenToHTML]({});
 
     if (children.length === 0) {
-      return {
+      return _utils.HTMLResult.success({
         name: "div",
         attributes: {
-          class: "xfaRich",
+          class: ["xfaRich"],
           style: {}
         },
         value: this[_xfa_object.$content] || ""
-      };
+      });
     }
 
     if (children.length === 1) {
       const child = children[0];
 
-      if (child.attributes && child.attributes.class === "xfaRich") {
-        return child;
+      if (child.attributes && child.attributes.class.includes("xfaRich")) {
+        return _utils.HTMLResult.success(child);
       }
     }
 
-    return {
+    return _utils.HTMLResult.success({
       name: "div",
       attributes: {
-        class: "xfaRich",
+        class: ["xfaRich"],
         style: {}
       },
       children
-    };
+    });
   }
 
 }
@@ -53148,6 +56248,10 @@ class Ol extends XhtmlObject {
 class P extends XhtmlObject {
   constructor(attributes) {
     super(attributes, "p");
+  }
+
+  [_xfa_object.$text]() {
+    return super[_xfa_object.$text]() + "\n";
   }
 
 }
@@ -53246,7 +56350,7 @@ class XhtmlNamespace {
 exports.XhtmlNamespace = XhtmlNamespace;
 
 /***/ }),
-/* 86 */
+/* 105 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -53256,9 +56360,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.UnknownNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(70);
+var _namespaces = __w_pdfjs_require__(88);
 
-var _xfa_object = __w_pdfjs_require__(68);
+var _xfa_object = __w_pdfjs_require__(86);
 
 class UnknownNamespace {
   constructor(nsId) {
@@ -53274,7 +56378,7 @@ class UnknownNamespace {
 exports.UnknownNamespace = UnknownNamespace;
 
 /***/ }),
-/* 87 */
+/* 106 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -53292,7 +56396,7 @@ var _parser = __w_pdfjs_require__(17);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _crypto = __w_pdfjs_require__(65);
+var _crypto = __w_pdfjs_require__(83);
 
 class XRef {
   constructor(stream, pdfManager) {
@@ -54091,7 +57195,7 @@ class XRef {
 exports.XRef = XRef;
 
 /***/ }),
-/* 88 */
+/* 107 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -54591,7 +57695,7 @@ class MessageHandler {
 exports.MessageHandler = MessageHandler;
 
 /***/ }),
-/* 89 */
+/* 108 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -54786,8 +57890,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.9.273';
-const pdfjsBuild = 'e394da586';
+const pdfjsVersion = '2.10.87';
+const pdfjsBuild = 'c4cb71b68';
 })();
 
 /******/ 	return __webpack_exports__;

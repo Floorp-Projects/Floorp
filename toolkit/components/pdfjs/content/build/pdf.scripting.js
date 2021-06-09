@@ -1504,11 +1504,7 @@ class AForm {
     }
 
     sepStyle = Math.min(Math.max(0, Math.floor(sepStyle)), 4);
-    buf.push("%,");
-    buf.push(sepStyle);
-    buf.push(".");
-    buf.push(nDec.toString());
-    buf.push("f");
+    buf.push("%,", sepStyle, ".", nDec.toString(), "f");
 
     if (!bCurrencyPrepend) {
       buf.push(strCurrency);
@@ -4180,6 +4176,10 @@ Object.defineProperty(exports, "__esModule", ({
 exports.ProxyHandler = void 0;
 
 class ProxyHandler {
+  constructor() {
+    this.nosend = new Set(["delay"]);
+  }
+
   get(obj, prop) {
     if (prop in obj._expandos) {
       const val = obj._expandos[prop];
@@ -4215,7 +4215,7 @@ class ProxyHandler {
       const old = obj[prop];
       obj[prop] = value;
 
-      if (obj._send && obj._id !== null && typeof old !== "function") {
+      if (!this.nosend.has(prop) && obj._send && obj._id !== null && typeof old !== "function") {
         const data = {
           id: obj._id
         };
@@ -4902,8 +4902,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.9.273';
-const pdfjsBuild = 'e394da586';
+const pdfjsVersion = '2.10.87';
+const pdfjsBuild = 'c4cb71b68';
 })();
 
 /******/ 	return __webpack_exports__;
