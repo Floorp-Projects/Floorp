@@ -25,6 +25,6 @@ MFBT_API bool& BeginProcessRuntimeInit() {
 
 MFBT_API void EndProcessRuntimeInit() { gLock.UnlockExclusive(); }
 
-}  //  namespace detail
+}  // namespace detail
 }  // namespace mscom
 }  // namespace mozilla
