@@ -30,6 +30,7 @@ class MsaaAccessible : public ia2Accessible,
  public:
   static MsaaAccessible* Create(Accessible* aAcc);
 
+  Accessible* Acc() { return mAcc; }
   AccessibleWrap* LocalAcc();
 
   uint32_t GetExistingID() const { return mID; }
