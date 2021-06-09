@@ -166,13 +166,9 @@ class GlobalHelperThreadState {
   // pool is used.
   JS::HelperThreadTaskCallback dispatchTaskCallback = nullptr;
 
-  // The number of tasks dispatched to the external thread pool that have not
-  // started running yet.
-  size_t externalTasksPending_ = 0;
-
   bool isInitialized_ = false;
 
-  bool useInternalThreadPool_ = true;
+  bool useInternalThreadPool_;
 
   ParseTask* removeFinishedParseTask(JSContext* cx, ParseTaskKind kind,
                                      JS::OffThreadToken* token);
@@ -206,8 +202,8 @@ class GlobalHelperThreadState {
   [[nodiscard]] bool ensureInitialized();
   [[nodiscard]] bool ensureThreadCount(size_t count,
                                        const AutoLockHelperThreadState& lock);
-  void finish(AutoLockHelperThreadState& lock);
-  void finishThreads(AutoLockHelperThreadState& lock);
+  void finish();
+  void finishThreads();
 
   void setCpuCount(size_t count);
 
@@ -239,9 +235,7 @@ class GlobalHelperThreadState {
             mozilla::TimeDuration timeout = mozilla::TimeDuration::Forever());
   void notifyAll(CondVar which, const AutoLockHelperThreadState&);
 
-  bool useInternalThreadPool(const AutoLockHelperThreadState& lock) const {
-    return useInternalThreadPool_;
-  }
+  bool useInternalThreadPool(const AutoLockHelperThreadState& locked);
 
   bool isTerminating(const AutoLockHelperThreadState& locked) const {
     return terminating_;
@@ -344,19 +338,6 @@ class GlobalHelperThreadState {
     return helperTasks_;
   }
 
-  bool canStartWasmCompile(const AutoLockHelperThreadState& lock,
-                           wasm::CompileMode mode);
-
-  bool canStartWasmTier1CompileTask(const AutoLockHelperThreadState& lock);
-  bool canStartWasmTier2CompileTask(const AutoLockHelperThreadState& lock);
-  bool canStartWasmTier2GeneratorTask(const AutoLockHelperThreadState& lock);
-  bool canStartPromiseHelperTask(const AutoLockHelperThreadState& lock);
-  bool canStartIonCompileTask(const AutoLockHelperThreadState& lock);
-  bool canStartIonFreeTask(const AutoLockHelperThreadState& lock);
-  bool canStartParseTask(const AutoLockHelperThreadState& lock);
-  bool canStartCompressionTask(const AutoLockHelperThreadState& lock);
-  bool canStartGCParallelTask(const AutoLockHelperThreadState& lock);
-
   HelperThreadTask* maybeGetWasmCompile(const AutoLockHelperThreadState& lock,
                                         wasm::CompileMode mode);
 
@@ -421,9 +402,9 @@ class GlobalHelperThreadState {
       JSContext* cx, JS::OffThreadToken* token);
 
   bool hasActiveThreads(const AutoLockHelperThreadState&);
-  bool canStartTasks(const AutoLockHelperThreadState& locked);
-  void waitForAllTasks();
-  void waitForAllTasksLocked(AutoLockHelperThreadState&);
+  bool hasQueuedTasks(const AutoLockHelperThreadState& locked);
+  void waitForAllThreads();
+  void waitForAllThreadsLocked(AutoLockHelperThreadState&);
 
   bool checkTaskThreadLimit(ThreadType threadType, size_t maxThreads,
                             bool isMaster,
@@ -454,8 +435,6 @@ class GlobalHelperThreadState {
 
   void dispatch(const AutoLockHelperThreadState& locked);
 
-  void runTask(HelperThreadTask* task, AutoLockHelperThreadState& lock);
-
  public:
   bool submitTask(wasm::UniqueTier2GeneratorTask task);
   bool submitTask(wasm::CompileTask* task, wasm::CompileMode mode);
@@ -471,7 +450,6 @@ class GlobalHelperThreadState {
   bool submitTask(GCParallelTask* task,
                   const AutoLockHelperThreadState& locked);
   void runTaskLocked(HelperThreadTask* task, AutoLockHelperThreadState& lock);
-  void runTaskFromExternalThread(AutoLockHelperThreadState& lock);
 
   using Selector = HelperThreadTask* (
       GlobalHelperThreadState::*)(const AutoLockHelperThreadState&);
