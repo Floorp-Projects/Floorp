@@ -31,6 +31,7 @@ if CONFIG["MOZ_REPLACE_MALLOC_STATIC"] and (CONFIG["MOZ_DMD"] or CONFIG["MOZ_PHC
 if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
         "dbghelp",
+        "ntdll",
     ]
 
 if CONFIG["MOZ_LINKER"] and CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
