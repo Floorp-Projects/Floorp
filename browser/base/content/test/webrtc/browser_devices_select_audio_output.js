@@ -40,6 +40,14 @@ async function deny() {
   await observerPromise;
 }
 
+async function escape() {
+  const observerPromise = expectObserverCalled("getUserMedia:response:deny");
+  await promiseMessage(permissionError, () => {
+    EventUtils.synthesizeKey("KEY_Escape");
+  });
+  await observerPromise;
+}
+
 var gTests = [
   {
     desc: 'User clicks "Allow"',
@@ -56,6 +64,16 @@ var gTests = [
     run: async function checkBlock() {
       await requestAudioOutputExpectingPrompt();
       await deny();
+    },
+  },
+  {
+    desc: 'User presses "Esc"',
+    run: async function checkBlock() {
+      await requestAudioOutputExpectingPrompt();
+      await escape();
+      info("selectAudioOutput() after Esc should prompt again.");
+      await requestAudioOutputExpectingPrompt();
+      await allow();
     },
   },
 ];
