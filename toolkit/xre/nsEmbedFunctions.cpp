@@ -50,7 +50,7 @@
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "chrome/common/ipc_channel.h"
 #  include "mozilla/jni/Utils.h"
-#  include "ProcessUtils.h"
+#  include "mozilla/ipc/ProcessUtils.h"
 #endif  //  defined(MOZ_WIDGET_ANDROID)
 
 #include "mozilla/AbstractThread.h"

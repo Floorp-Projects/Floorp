@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include "FileDescriptor.h"
+#include "mozilla/ipc/FileDescriptor.h"
 #include "base/shared_memory.h"
 #include "mozilla/Maybe.h"
 

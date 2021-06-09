@@ -28,6 +28,7 @@
 #include "mozilla/net/TRRServiceChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
+#include "mozilla/ipc/ProcessUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RemoteLazyInputStreamChild.h"
 #include "mozilla/Telemetry.h"
@@ -40,7 +41,6 @@
 #include "nsNSSComponent.h"
 #include "nsSocketTransportService2.h"
 #include "nsThreadManager.h"
-#include "ProcessUtils.h"
 #include "SocketProcessBridgeParent.h"
 
 #if defined(XP_WIN)

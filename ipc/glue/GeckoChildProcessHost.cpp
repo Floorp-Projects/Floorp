@@ -723,7 +723,7 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
               [this](const LaunchResults& aResults) {
                 {
                   if (!OpenPrivilegedHandle(base::GetProcId(aResults.mHandle))
-#ifdef XP_WIN
+                          #ifdef XP_WIN
                       // If we failed in opening the process handle, try harder
                       // by duplicating one.
                       && !::DuplicateHandle(

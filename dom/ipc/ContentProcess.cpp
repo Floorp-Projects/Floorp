@@ -23,7 +23,7 @@
 #endif
 
 #include "nsAppRunner.h"
-#include "ProcessUtils.h"
+#include "mozilla/ipc/ProcessUtils.h"
 
 using mozilla::ipc::IOThreadChild;
 

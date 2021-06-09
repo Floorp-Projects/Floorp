@@ -12,7 +12,7 @@
 #include "nsTArray.h"
 #include "mozilla/layers/TextureSourceProvider.h"
 
-#include "SharedMemory.h"
+#include "mozilla/ipc/SharedMemory.h"
 
 class MachReceiveMessage;
 

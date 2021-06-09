@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RDDProcessHost.h"
 
-#include "ProcessUtils.h"
+#include "mozilla/ipc/ProcessUtils.h"
 #include "RDDChild.h"
 #include "chrome/common/process_watcher.h"
 #include "mozilla/Preferences.h"

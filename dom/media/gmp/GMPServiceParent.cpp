@@ -11,7 +11,7 @@
 #include "GMPLog.h"
 #include "GMPParent.h"
 #include "GMPVideoDecoderParent.h"
-#include "GeckoChildProcessHost.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "base/task.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
