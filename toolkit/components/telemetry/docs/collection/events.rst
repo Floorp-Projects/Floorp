@@ -132,7 +132,7 @@ The following event properties are valid:
 - ``products`` *(required, list of strings)*: A list of products the event can be recorded on. Currently supported values are:
 
   - ``firefox`` - Collected in Firefox Desktop for submission via Firefox Telemetry.
-  - ``fennec`` - Collected in Firefox for Android for submission via Firefox Mobile Telemetry.
+  - ``thunderbird`` - Collected in Thunderbird for submission via Thunderbird Telemetry.
 
 - ``operating_systems`` *(optional, list of strings)*: This field restricts recording to certain operating systems only. It defaults to ``all``. Currently supported values are:
 
