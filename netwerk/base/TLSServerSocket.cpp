@@ -26,8 +26,6 @@ namespace net {
 // TLSServerSocket
 //-----------------------------------------------------------------------------
 
-TLSServerSocket::TLSServerSocket() : mServerCert(nullptr) {}
-
 NS_IMPL_ISUPPORTS_INHERITED(TLSServerSocket, nsServerSocket, nsITLSServerSocket)
 
 nsresult TLSServerSocket::SetSocketDefaults() {
@@ -266,16 +264,6 @@ TLSServerSecurityObserverProxy::OnHandshakeDoneRunnable::Run() {
 
 NS_IMPL_ISUPPORTS(TLSServerConnectionInfo, nsITLSServerConnectionInfo,
                   nsITLSClientStatus)
-
-TLSServerConnectionInfo::TLSServerConnectionInfo()
-    : mServerSocket(nullptr),
-      mTransport(nullptr),
-      mPeerCert(nullptr),
-      mTlsVersionUsed(TLS_VERSION_UNKNOWN),
-      mKeyLength(0),
-      mMacLength(0),
-      mLock("TLSServerConnectionInfo.mLock"),
-      mSecurityObserver(nullptr) {}
 
 TLSServerConnectionInfo::~TLSServerConnectionInfo() {
   RefPtr<nsITLSServerSecurityObserver> observer;

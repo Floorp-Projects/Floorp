@@ -61,7 +61,7 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator {
 
   [[nodiscard]] nsresult CalculateHA2(const nsCString& http_method,
                                       const nsCString& http_uri_path,
-                                      uint16_t qop, const char* body_digest,
+                                      uint16_t qop, const char* bodyDigest,
                                       char* result);
 
   [[nodiscard]] nsresult ParseChallenge(const char* challenge,
@@ -82,7 +82,7 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator {
 
  protected:
   nsCOMPtr<nsICryptoHash> mVerifier;
-  char mHashBuf[DIGEST_LENGTH];
+  char mHashBuf[DIGEST_LENGTH]{0};
 
   static StaticRefPtr<nsHttpDigestAuth> gSingleton;
 };

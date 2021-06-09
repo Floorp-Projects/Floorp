@@ -189,26 +189,27 @@ class CacheFile final : public CacheFileChunkListener,
 
   nsresult InitIndexEntry();
 
-  mozilla::Mutex mLock;
-  bool mOpeningFile;
-  bool mReady;
-  bool mMemoryOnly;
-  bool mSkipSizeCheck;
-  bool mOpenAsMemoryOnly;
-  bool mPinned;
-  bool mPriority;
-  bool mDataAccessed;
-  bool mDataIsDirty;
-  bool mWritingMetadata;
-  bool mPreloadWithoutInputStreams;
-  uint32_t mPreloadChunkCount;
-  nsresult mStatus;
-  int64_t mDataSize;       // Size of the whole data including eventual
-                           // alternative data represenation.
-  int64_t mAltDataOffset;  // If there is alternative data present, it
-                           // contains size of the original data, i.e.
-                           // offset where alternative data starts.
-                           // Otherwise it is -1.
+  mozilla::Mutex mLock{"CacheFile.mLock"};
+  bool mOpeningFile{false};
+  bool mReady{false};
+  bool mMemoryOnly{false};
+  bool mSkipSizeCheck{false};
+  bool mOpenAsMemoryOnly{false};
+  bool mPinned{false};
+  bool mPriority{false};
+  bool mDataAccessed{false};
+  bool mDataIsDirty{false};
+  bool mWritingMetadata{false};
+  bool mPreloadWithoutInputStreams{true};
+  uint32_t mPreloadChunkCount{0};
+  nsresult mStatus{NS_OK};
+  // Size of the whole data including eventual alternative data represenation.
+  int64_t mDataSize{-1};
+
+  // If there is alternative data present, it contains size of the original
+  // data, i.e. offset where alternative data starts. Otherwise it is -1.
+  int64_t mAltDataOffset{-1};
+
   nsCString mKey;
   nsCString mAltDataType;  // The type of the saved alt-data. May be empty.
 
@@ -216,7 +217,7 @@ class CacheFile final : public CacheFileChunkListener,
   RefPtr<CacheFileMetadata> mMetadata;
   nsCOMPtr<CacheFileListener> mListener;
   nsCOMPtr<CacheFileIOListener> mDoomAfterOpenListener;
-  Atomic<bool, Relaxed> mKill;
+  Atomic<bool, Relaxed> mKill{false};
 
   nsRefPtrHashtable<nsUint32HashKey, CacheFileChunk> mChunks;
   nsClassHashtable<nsUint32HashKey, ChunkListeners> mChunkListeners;
@@ -231,7 +232,7 @@ class CacheFile final : public CacheFileChunkListener,
   nsTArray<RefPtr<CacheFileChunk>> mDiscardedChunks;
 
   nsTArray<CacheFileInputStream*> mInputs;
-  CacheFileOutputStream* mOutput;
+  CacheFileOutputStream* mOutput{nullptr};
 
   nsTArray<RefPtr<nsISupports>> mObjsToRelease;
 };

@@ -517,9 +517,7 @@ size_t CacheFileHandles::SizeOfExcludingThis(
 class ShutdownEvent : public Runnable {
  public:
   ShutdownEvent()
-      : Runnable("net::ShutdownEvent"),
-        mMonitor("ShutdownEvent.mMonitor"),
-        mNotified(false) {}
+      : Runnable("net::ShutdownEvent"), mMonitor("ShutdownEvent.mMonitor") {}
 
  protected:
   ~ShutdownEvent() = default;
@@ -565,7 +563,7 @@ class ShutdownEvent : public Runnable {
 
  protected:
   mozilla::Monitor mMonitor;
-  bool mNotified;
+  bool mNotified{false};
 };
 
 // Class responsible for reporting IO performance stats
@@ -1104,12 +1102,8 @@ StaticRefPtr<CacheFileIOManager> CacheFileIOManager::gInstance;
 NS_IMPL_ISUPPORTS(CacheFileIOManager, nsITimerCallback, nsINamed)
 
 CacheFileIOManager::CacheFileIOManager()
-    : mShuttingDown(false),
-      mTreeCreated(false),
-      mTreeCreationFailed(false),
-      mOverLimitEvicting(false),
-      mCacheSizeOnHardLimit(false),
-      mRemovingTrashDirs(false) {
+
+{
   LOG(("CacheFileIOManager::CacheFileIOManager [this=%p]", this));
   MOZ_ASSERT(!gInstance, "multiple CacheFileIOManager instances!");
 }

@@ -31,13 +31,7 @@ namespace mozilla {
 namespace net {
 
 GIOChannelChild::GIOChannelChild(nsIURI* aUri)
-    : mIPCOpen(false),
-      mEventQ(new ChannelEventQueue(static_cast<nsIChildChannel*>(this))),
-      mCanceled(false),
-      mSuspendCount(0),
-      mIsPending(false),
-      mStartPos(0),
-      mSuspendSent(false) {
+    : mEventQ(new ChannelEventQueue(static_cast<nsIChildChannel*>(this))) {
   SetURI(aUri);
   // We could support thread retargeting, but as long as we're being driven by
   // IPDL on the main thread it doesn't buy us anything.

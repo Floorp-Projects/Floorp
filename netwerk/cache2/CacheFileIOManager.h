@@ -442,7 +442,7 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
   TimeStamp mStartTime;
   // Set true on the IO thread, CLOSE level as part of the internal shutdown
   // procedure.
-  bool mShuttingDown;
+  bool mShuttingDown{false};
   RefPtr<CacheIOThread> mIOThread;
   nsCOMPtr<nsIFile> mCacheDirectory;
 #if defined(MOZ_WIDGET_ANDROID)
@@ -452,19 +452,19 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
   // w/o the profile name in the path.  Here it is stored.
   nsCOMPtr<nsIFile> mCacheProfilelessDirectory;
 #endif
-  bool mTreeCreated;
-  bool mTreeCreationFailed;
+  bool mTreeCreated{false};
+  bool mTreeCreationFailed{false};
   CacheFileHandles mHandles;
   nsTArray<CacheFileHandle*> mHandlesByLastUsed;
   nsTArray<CacheFileHandle*> mSpecialHandles;
   nsTArray<RefPtr<CacheFile> > mScheduledMetadataWrites;
   nsCOMPtr<nsITimer> mMetadataWritesTimer;
-  bool mOverLimitEvicting;
+  bool mOverLimitEvicting{false};
   // When overlimit eviction is too slow and cache size reaches 105% of the
   // limit, this flag is set and no other content is cached to prevent
   // uncontrolled cache growing.
-  bool mCacheSizeOnHardLimit;
-  bool mRemovingTrashDirs;
+  bool mCacheSizeOnHardLimit{false};
+  bool mRemovingTrashDirs{false};
   nsCOMPtr<nsITimer> mTrashTimer;
   nsCOMPtr<nsIFile> mTrashDir;
   nsCOMPtr<nsIDirectoryEnumerator> mTrashDirEnumerator;

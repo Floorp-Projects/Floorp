@@ -47,13 +47,6 @@ class nsAsyncVerifyRedirectCallbackEvent : public Runnable {
   nsresult mResult;
 };
 
-nsAsyncRedirectVerifyHelper::nsAsyncRedirectVerifyHelper()
-    : mFlags(0),
-      mWaitingForRedirectCallback(false),
-      mCallbackInitiated(false),
-      mExpectedCallbacks(0),
-      mResult(NS_OK) {}
-
 nsAsyncRedirectVerifyHelper::~nsAsyncRedirectVerifyHelper() {
   NS_ASSERTION(NS_FAILED(mResult) || mExpectedCallbacks == 0,
                "Did not receive all required callbacks!");

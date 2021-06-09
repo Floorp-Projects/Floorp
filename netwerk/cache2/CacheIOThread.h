@@ -111,12 +111,12 @@ class CacheIOThread final : public nsIThreadObserver {
 
   static CacheIOThread* sSelf;
 
-  mozilla::Monitor mMonitor;
-  PRThread* mThread;
+  mozilla::Monitor mMonitor{"CacheIOThread"};
+  PRThread* mThread{nullptr};
   UniquePtr<detail::BlockingIOWatcher> mBlockingIOWatcher;
-  Atomic<nsIThread*> mXPCOMThread;
-  Atomic<uint32_t, Relaxed> mLowestLevelWaiting;
-  uint32_t mCurrentlyExecutingLevel;
+  Atomic<nsIThread*> mXPCOMThread{nullptr};
+  Atomic<uint32_t, Relaxed> mLowestLevelWaiting{LAST_LEVEL};
+  uint32_t mCurrentlyExecutingLevel{0};
 
   // Keeps the length of the each event queue, since LoopOneLevel moves all
   // events into a local array.
@@ -124,20 +124,20 @@ class CacheIOThread final : public nsIThreadObserver {
 
   EventQueue mEventQueue[LAST_LEVEL];
   // Raised when nsIEventTarget.Dispatch() is called on this thread
-  Atomic<bool, Relaxed> mHasXPCOMEvents;
+  Atomic<bool, Relaxed> mHasXPCOMEvents{false};
   // See YieldAndRerun() above
-  bool mRerunCurrentEvent;
+  bool mRerunCurrentEvent{false};
   // Signal to process all pending events and then shutdown
   // Synchronized by mMonitor
-  bool mShutdown;
+  bool mShutdown{false};
   // If > 0 there is currently an I/O operation on the thread that
   // can be canceled when after shutdown, see the Shutdown() method
   // for usage. Made a counter to allow nesting of the Cancelable class.
-  Atomic<uint32_t, Relaxed> mIOCancelableEvents;
+  Atomic<uint32_t, Relaxed> mIOCancelableEvents{0};
   // Event counter that increases with every event processed.
-  Atomic<uint32_t, Relaxed> mEventCounter;
+  Atomic<uint32_t, Relaxed> mEventCounter{0};
 #ifdef DEBUG
-  bool mInsideLoop;
+  bool mInsideLoop{true};
 #endif
 };
 

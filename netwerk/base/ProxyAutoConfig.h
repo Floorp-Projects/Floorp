@@ -89,13 +89,13 @@ class ProxyAutoConfig {
   bool MyIPAddressTryHost(const nsCString& hostName, unsigned int timeout,
                           const JS::CallArgs& aArgs, bool* aResult);
 
-  JSContextWrapper* mJSContext;
-  bool mJSNeedsSetup;
-  bool mShutdown;
+  JSContextWrapper* mJSContext{nullptr};
+  bool mJSNeedsSetup{false};
+  bool mShutdown{true};
   nsCString mConcatenatedPACData;
   nsCString mPACURI;
-  bool mIncludePath;
-  uint32_t mExtraHeapSize;
+  bool mIncludePath{false};
+  uint32_t mExtraHeapSize{0};
   nsCString mRunningHost;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;

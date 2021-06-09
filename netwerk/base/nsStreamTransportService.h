@@ -49,8 +49,8 @@ class nsStreamTransportService final : public nsIStreamTransportService,
 
   DataMutex<nsTArray<RefPtr<DelayedRunnable>>> mScheduledDelayedRunnables;
 
-  mozilla::Mutex mShutdownLock;
-  bool mIsShutdown;
+  mozilla::Mutex mShutdownLock{"nsStreamTransportService.mShutdownLock"};
+  bool mIsShutdown{false};
 };
 
 }  // namespace net
