@@ -13,6 +13,7 @@
 #include "SVGCircleElement.h"
 #include "SVGEllipseElement.h"
 #include "SVGGeometryProperty.h"
+#include "SVGPathElement.h"
 #include "SVGRectElement.h"
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
@@ -142,6 +143,10 @@ bool SVGGeometryElement::IsGeometryChangedViaCSS(
   }
   if (name == nsGkAtoms::ellipse) {
     return SVGEllipseElement::IsLengthChangedViaCSS(aNewStyle, aOldStyle);
+  }
+  if (name == nsGkAtoms::path) {
+    return StaticPrefs::layout_css_d_property_enabled() &&
+           SVGPathElement::IsDPropertyChangedViaCSS(aNewStyle, aOldStyle);
   }
   return false;
 }

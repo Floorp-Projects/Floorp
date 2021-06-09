@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<title>Test for getPathSegAtLength for d property</title>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+
+<style>
+svg {
+  width: 10%;
+  height: 10%;
+  background: #eee;
+}
+svg path {
+  fill: none;
+  stroke: #000;
+}
+</style>
+
+<div id="log"></div>
+
+<svg viewBox="0 0 20 10">
+  <path id='target1' d="M2,2 L8,8 L12,4"/>
+</svg>
+<svg viewBox="0 0 20 10">
+  <path id='target2' style='d: path("M2,2 L8,8 L12,4")' />
+</svg>
+
+<script>
+/* global test, assert_equals */
+
+'use strict';
+
+test(function() {
+  let target1 = document.getElementById('target1');
+  let target2 = document.getElementById('target2');
+  assert_equals(target1.getPathSegAtLength(5), 1);
+  assert_equals(target2.getPathSegAtLength(5), 1);
+
+  assert_equals(target1.getPathSegAtLength(10), 2);
+  assert_equals(target2.getPathSegAtLength(10), 2);
+}, "getPathSegAtLength works properly on both d attribute and d property");
+
+test(function() {
+  let target = document.getElementById('target1');
+  target.style.d = 'path("M2,2 h3 v5")';
+  assert_equals(target.getPathSegAtLength(5), 2);
+}, "getPathSegAtLength works properly after updating d property");
+
+</script>
