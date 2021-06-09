@@ -83,7 +83,8 @@ class ExtensionAPIRequestForwarder {
  private:
   already_AddRefed<ExtensionAPIRequest> CreateAPIRequest(
       nsIGlobalObject* aGlobal, JSContext* aCx,
-      const dom::Sequence<JS::Value>& aArgs, ErrorResult& aRv);
+      const dom::Sequence<JS::Value>& aArgs, ExtensionEventListener* aListener,
+      ErrorResult& aRv);
 
   APIRequestType mRequestType;
   ExtensionAPIRequestTarget mRequestTarget;
@@ -113,8 +114,28 @@ class RequestWorkerRunnable : public dom::WorkerMainThreadRunnable {
   RequestWorkerRunnable(dom::WorkerPrivate* aWorkerPrivate,
                         ExtensionAPIRequestForwarder* aOuterAPIRequest);
 
+  /**
+   * Init a request runnable for AddListener and RemoveListener API requests
+   * (which do have an event callback callback and do not expect any return
+   * value).
+   */
   void Init(nsIGlobalObject* aGlobal, JSContext* aCx,
-            const dom::Sequence<JS::Value>& aArgs, ErrorResult& aRv);
+            const dom::Sequence<JS::Value>& aArgs,
+            ExtensionEventListener* aListener, ErrorResult& aRv);
+
+  /**
+   * Init a request runnable for CallFunctionNoReturn API requests (which do
+   * do not expect any return value).
+   */
+  void Init(nsIGlobalObject* aGlobal, JSContext* aCx,
+            const dom::Sequence<JS::Value>& aArgs, ErrorResult& aRv) {
+    Init(aGlobal, aCx, aArgs, nullptr, aRv);
+  }
+
+  /**
+   * Init a request runnable for CallAsyncFunction API requests (which do
+   * expect a promise as return value).
+   */
   void Init(nsIGlobalObject* aGlobal, JSContext* aCx,
             const dom::Sequence<JS::Value>& aArgs,
             const RefPtr<dom::Promise>& aPromiseRetval, ErrorResult& aRv);
@@ -149,6 +170,9 @@ class RequestWorkerRunnable : public dom::WorkerMainThreadRunnable {
   Maybe<UniquePtr<dom::StructuredCloneHolder>> mArgsHolder;
   Maybe<UniquePtr<dom::SerializedStackHolder>> mStackHolder;
   Maybe<dom::ClientInfo> mClientInfo;
+
+  // Only set for addListener/removeListener API requests.
+  RefPtr<ExtensionEventListener> mEventListener;
 
   // The outer request object is kept alive by the caller for the
   // entire life of the inner worker runnable.
