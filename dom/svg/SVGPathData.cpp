@@ -199,6 +199,23 @@ uint32_t SVGPathData::GetPathSegAtLength(float aDistance) const {
          1;  // -1 because while loop takes us 1 too far
 }
 
+/* static */
+uint32_t SVGPathData::GetPathSegAtLength(Span<const StylePathCommand> aPath,
+                                         float aDistance) {
+  uint32_t segIndex = 0;
+  SVGPathTraversalState state;
+
+  for (const auto& cmd : aPath) {
+    SVGPathSegUtils::TraversePathSegment(cmd, state);
+    if (state.length >= aDistance) {
+      return segIndex;
+    }
+    segIndex++;
+  }
+
+  return std::max(1U, segIndex) - 1;
+}
+
 /**
  * The SVG spec says we have to paint stroke caps for zero length subpaths:
  *
@@ -508,6 +525,16 @@ already_AddRefed<Path> SVGPathData::BuildPathForMeasuring() const {
   RefPtr<PathBuilder> builder =
       drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
   return BuildPath(builder, StyleStrokeLinecap::Butt, 0);
+}
+
+/* static */
+already_AddRefed<Path> SVGPathData::BuildPathForMeasuring(
+    Span<const StylePathCommand> aPath) {
+  RefPtr<DrawTarget> drawTarget =
+      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+  RefPtr<PathBuilder> builder =
+      drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
+  return BuildPath(aPath, builder, StyleStrokeLinecap::Butt, 0);
 }
 
 // We could simplify this function because this is only used by CSS motion path

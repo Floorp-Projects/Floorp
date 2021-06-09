@@ -57,6 +57,19 @@ void SVGPathElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPathElement)
 
 uint32_t SVGPathElement::GetPathSegAtLength(float distance) {
+  uint32_t seg = 0;
+  auto callback = [&](const ComputedStyle* s) {
+    const nsStyleSVGReset* styleSVGReset = s->StyleSVGReset();
+    if (styleSVGReset->mD.IsPath()) {
+      seg = SVGPathData::GetPathSegAtLength(
+          styleSVGReset->mD.AsPath()._0.AsSpan(), distance);
+    }
+  };
+
+  if (StaticPrefs::layout_css_d_property_enabled() &&
+      SVGGeometryProperty::DoForComputedStyle(this, callback)) {
+    return seg;
+  }
   return mD.GetAnimValue().GetPathSegAtLength(distance);
 }
 
@@ -207,10 +220,16 @@ SVGPathElement::CreateSVGPathSegCurvetoQuadraticSmoothRel(float x, float y) {
 }
 
 already_AddRefed<DOMSVGPathSegList> SVGPathElement::PathSegList() {
+  // FIXME: This should be removed by Bug 1388931, so we don't add this extra
+  // API from style system. This WebIDL API only supports the SVG d attribute
+  // for now.
   return DOMSVGPathSegList::GetDOMWrapper(mD.GetBaseValKey(), this, false);
 }
 
 already_AddRefed<DOMSVGPathSegList> SVGPathElement::AnimatedPathSegList() {
+  // FIXME: This should be removed by Bug 1388931, so we don't add this extra
+  // API from style system. This WebIDL API only supports the SVG d attribute
+  // for now.
   return DOMSVGPathSegList::GetDOMWrapper(mD.GetAnimValKey(), this, true);
 }
 
@@ -219,7 +238,17 @@ already_AddRefed<DOMSVGPathSegList> SVGPathElement::AnimatedPathSegList() {
 
 /* virtual */
 bool SVGPathElement::HasValidDimensions() const {
-  return !mD.GetAnimValue().IsEmpty();
+  bool hasPath = false;
+  auto callback = [&](const ComputedStyle* s) {
+    const nsStyleSVGReset* styleSVGReset = s->StyleSVGReset();
+    hasPath =
+        styleSVGReset->mD.IsPath() && !styleSVGReset->mD.AsPath()._0.IsEmpty();
+  };
+
+  SVGGeometryProperty::DoForComputedStyle(this, callback);
+  // If hasPath is false, we may disable the pref of d property, so we fallback
+  // to check mD.
+  return hasPath || !mD.GetAnimValue().IsEmpty();
 }
 
 //----------------------------------------------------------------------
@@ -236,7 +265,24 @@ SVGPathElement::IsAttributeMapped(const nsAtom* name) const {
 }
 
 already_AddRefed<Path> SVGPathElement::GetOrBuildPathForMeasuring() {
-  return mD.GetAnimValue().BuildPathForMeasuring();
+  if (!StaticPrefs::layout_css_d_property_enabled()) {
+    return mD.GetAnimValue().BuildPathForMeasuring();
+  }
+
+  // FIXME: Bug 1715387, the IDL methods should flush style, but internal
+  // callers shouldn't. We have to make sure we flush the style well from the
+  // caller.
+
+  RefPtr<Path> path;
+  bool success = SVGGeometryProperty::DoForComputedStyle(
+      this, [&path](const ComputedStyle* s) {
+        const auto& d = s->StyleSVGReset()->mD;
+        if (d.IsNone()) {
+          return;
+        }
+        path = SVGPathData::BuildPathForMeasuring(d.AsPath()._0.AsSpan());
+      });
+  return success ? path.forget() : mD.GetAnimValue().BuildPathForMeasuring();
 }
 
 //----------------------------------------------------------------------
@@ -249,6 +295,7 @@ bool SVGPathElement::AttributeDefinesGeometry(const nsAtom* aName) {
 bool SVGPathElement::IsMarkable() { return true; }
 
 void SVGPathElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
+  // FIXME: We will resolve mark points in the patch series.
   mD.GetAnimValue().GetMarkerPositioningData(aMarks);
 }
 
@@ -262,20 +309,44 @@ already_AddRefed<Path> SVGPathElement::BuildPath(PathBuilder* aBuilder) {
 
   auto strokeLineCap = StyleStrokeLinecap::Butt;
   Float strokeWidth = 0;
+  RefPtr<Path> path;
+  const bool useDProperty = StaticPrefs::layout_css_d_property_enabled();
 
-  SVGGeometryProperty::DoForComputedStyle(this, [&](const ComputedStyle* s) {
-    const nsStyleSVG* style = s->StyleSVG();
+  auto callback = [&](const ComputedStyle* s) {
+    const nsStyleSVG* styleSVG = s->StyleSVG();
     // Note: the path that we return may be used for hit-testing, and SVG
     // exposes hit-testing of strokes that are not actually painted. For that
     // reason we do not check for eStyleSVGPaintType_None or check the stroke
     // opacity here.
-    if (style->mStrokeLinecap != StyleStrokeLinecap::Butt) {
-      strokeLineCap = style->mStrokeLinecap;
+    if (styleSVG->mStrokeLinecap != StyleStrokeLinecap::Butt) {
+      strokeLineCap = styleSVG->mStrokeLinecap;
       strokeWidth = SVGContentUtils::GetStrokeWidth(this, s, nullptr);
     }
-  });
 
+    if (!useDProperty) {
+      return;
+    }
+
+    const auto& d = s->StyleSVGReset()->mD;
+    if (d.IsPath()) {
+      path = SVGPathData::BuildPath(d.AsPath()._0.AsSpan(), aBuilder,
+                                    strokeLineCap, strokeWidth);
+    }
+  };
+
+  bool success = SVGGeometryProperty::DoForComputedStyle(this, callback);
+  if (success && useDProperty) {
+    return path.forget();
+  }
+
+  // Fallback to use the d attribute if it exists.
   return mD.GetAnimValue().BuildPath(aBuilder, strokeLineCap, strokeWidth);
+}
+
+/* static */
+bool SVGPathElement::IsDPropertyChangedViaCSS(const ComputedStyle& aNewStyle,
+                                              const ComputedStyle& aOldStyle) {
+  return aNewStyle.StyleSVGReset()->mD != aOldStyle.StyleSVGReset()->mD;
 }
 
 }  // namespace dom
