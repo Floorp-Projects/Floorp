@@ -7,6 +7,8 @@
         android:id="@+id/tray_list_item"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/tab_tray_list_bottom_padding"
         android:visibility="gone"/>
 
     <TextView

@@ -13,6 +13,8 @@
         android:id="@+id/synced_tabs_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/tab_tray_list_bottom_padding"
         tools:listitem="@layout/sync_tabs_list_item"/>
 
 </org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsTrayLayout>

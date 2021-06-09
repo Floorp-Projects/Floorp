@@ -151,8 +151,6 @@
         android:id="@+id/tabsTray"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingBottom="140dp"
         android:scrollbarStyle="outsideOverlay"
         android:scrollbars="vertical"
         android:orientation="horizontal"
