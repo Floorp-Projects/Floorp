@@ -39,7 +39,6 @@ use webrender::sw_compositor::SwCompositor;
 use webrender::{
     api::units::*,
     api::*,
-    host_utils::{thread_started, thread_stopped},
     render_api::*,
     set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle, Compositor, CompositorCapabilities,
     CompositorConfig, CompositorSurfaceTransform, DebugFlags, Device, MappableCompositor, MappedTileInfo,
@@ -886,6 +885,14 @@ extern "C" {
 struct GeckoProfilerHooks;
 
 impl ProfilerHooks for GeckoProfilerHooks {
+    fn register_thread(&self, thread_name: &str) {
+        gecko_profiler::register_thread(thread_name);
+    }
+
+    fn unregister_thread(&self) {
+        gecko_profiler::unregister_thread();
+    }
+
     fn begin_marker(&self, label: &CStr) {
         unsafe {
             gecko_profiler_start_marker(label.as_ptr());
@@ -1081,10 +1088,10 @@ pub extern "C" fn wr_thread_pool_new(low_priority: bool) -> *mut WrThreadPool {
             }
             let name = format!("WRWorker{}#{}", priority_tag, idx);
             register_thread_with_profiler(name.clone());
-            thread_started(&name);
+            gecko_profiler::register_thread(&name);
         })
         .exit_handler(|_idx| {
-            thread_stopped();
+            gecko_profiler::unregister_thread();
         })
         .build();
 

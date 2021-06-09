@@ -5819,6 +5819,7 @@ dependencies = [
  "euclid",
  "foreign-types",
  "fxhash",
+ "gecko-profiler",
  "gleam",
  "log",
  "nsstring",

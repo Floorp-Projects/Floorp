@@ -97,7 +97,6 @@ use crate::render_target::{RenderTargetKind, BlitJob};
 use crate::texture_cache::{TextureCache, TextureCacheConfig};
 use crate::tile_cache::PictureCacheDebugInfo;
 use crate::util::drain_filter;
-use crate::host_utils::{thread_started, thread_stopped};
 use crate::rectangle_occlusion as occlusion;
 use upload::{upload_to_texture_cache, UploadTexturePool};
 
@@ -1150,10 +1149,10 @@ impl Renderer {
                     .thread_name(|idx|{ format!("WRWorker#{}", idx) })
                     .start_handler(move |idx| {
                         register_thread_with_profiler(format!("WRWorker#{}", idx));
-                        thread_started(&format!("WRWorker#{}", idx));
+                        profiler::register_thread(&format!("WRWorker#{}", idx));
                     })
                     .exit_handler(move |_idx| {
-                        thread_stopped();
+                        profiler::unregister_thread();
                     })
                     .build();
                 Arc::new(worker.unwrap())
@@ -1177,7 +1176,7 @@ impl Renderer {
 
         thread::Builder::new().name(scene_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(scene_thread_name.clone());
-            thread_started(&scene_thread_name);
+            profiler::register_thread(&scene_thread_name);
 
             let mut scene_builder = SceneBuilderThread::new(
                 config,
@@ -1188,7 +1187,7 @@ impl Renderer {
             );
             scene_builder.run();
 
-            thread_stopped();
+            profiler::unregister_thread();
         })?;
 
         let low_priority_scene_tx = if options.support_low_priority_transactions {
@@ -1200,12 +1199,12 @@ impl Renderer {
 
             thread::Builder::new().name(lp_scene_thread_name.clone()).spawn(move || {
                 register_thread_with_profiler(lp_scene_thread_name.clone());
-                thread_started(&lp_scene_thread_name);
+                profiler::register_thread(&lp_scene_thread_name);
 
                 let mut scene_builder = lp_builder;
                 scene_builder.run();
 
-                thread_stopped();
+                profiler::unregister_thread();
             })?;
 
             low_priority_scene_tx
@@ -1228,7 +1227,7 @@ impl Renderer {
         let enable_multithreading = options.enable_multithreading;
         thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(rb_thread_name.clone());
-            thread_started(&rb_thread_name);
+            profiler::register_thread(&rb_thread_name);
 
             let texture_cache = TextureCache::new(
                 max_internal_texture_size,
@@ -1264,7 +1263,7 @@ impl Renderer {
                 namespace_alloc_by_client,
             );
             backend.run();
-            thread_stopped();
+            profiler::unregister_thread();
         })?;
 
         let debug_method = if !options.enable_gpu_markers {

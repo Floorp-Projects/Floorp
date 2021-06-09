@@ -20,6 +20,7 @@ fxhash = "0.2.1"
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 swgl = { path = "../wr/swgl" }
 wr_malloc_size_of = { path = "../wr/wr_malloc_size_of" }
+gecko-profiler = { path = "../../tools/profiler/rust-api" }
 
 [dependencies.webrender]
 path = "../wr/webrender"
