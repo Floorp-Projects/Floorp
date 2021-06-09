@@ -8,6 +8,8 @@ import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.components.tips.Tip
+import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
+import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
 
 /**
  * Interface for tab related actions in the [SessionControlInteractor].
@@ -204,14 +206,16 @@ interface ExperimentCardInteractor {
 
 /**
  * Interactor for the Home screen.
- * Provides implementations for the CollectionInteractor, OnboardingInteractor,
- * TabSessionInteractor and TopSiteInteractor.
+ * Provides implementations for the CollectionInteractor, OnboardingInteractor, TopSiteInteractor,
+ * TipInteractor, TabSessionInteractor, ToolbarInteractor, ExperimentCardInteractor, and
+ * RecentTabInteractor.
  */
 @SuppressWarnings("TooManyFunctions")
 class SessionControlInteractor(
-    private val controller: SessionControlController
+    private val controller: SessionControlController,
+    private val recentTabController: RecentTabController
 ) : CollectionInteractor, OnboardingInteractor, TopSiteInteractor, TipInteractor,
-    TabSessionInteractor, ToolbarInteractor, ExperimentCardInteractor {
+    TabSessionInteractor, ToolbarInteractor, ExperimentCardInteractor, RecentTabInteractor {
     override fun onCollectionAddTabTapped(collection: TabCollection) {
         controller.handleCollectionAddTabTapped(collection)
     }
@@ -314,5 +318,13 @@ class SessionControlInteractor(
 
     override fun onCloseExperimentCardClicked() {
         controller.handleCloseExperimentCard()
+    }
+
+    override fun onRecentTabClicked(tabId: String) {
+        recentTabController.handleRecentTabClicked(tabId)
+    }
+
+    override fun onRecentTabShowAllClicked() {
+        recentTabController.handleRecentTabShowAllClicked()
     }
 }

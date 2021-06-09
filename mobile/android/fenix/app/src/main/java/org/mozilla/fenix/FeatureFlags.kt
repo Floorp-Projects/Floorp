@@ -33,4 +33,9 @@ object FeatureFlags {
      * Enables the Home button in the browser toolbar to navigate back to the home screen.
      */
     val showHomeButtonFeature = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables the "recent" tabs feature in the home screen.
+     */
+    val showRecentTabsFeature = Config.channel.isNightlyOrDebug
 }

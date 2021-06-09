@@ -369,6 +369,12 @@
         <item name="fontFamily">@font/metropolis_semibold</item>
     </style>
 
+    <style name="Header20TextStyle" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">?primaryText</item>
+        <item name="android:textSize">20sp</item>
+        <item name="fontFamily">@font/metropolis_semibold</item>
+    </style>
+
     <style name="Header16TextStyle" parent="TextAppearance.MaterialComponents.Body1">
         <item name="android:textColor">?primaryText</item>
         <item name="android:textSize">16sp</item>
@@ -395,6 +401,12 @@
 
     <style name="Body16TextStyle" parent="TextAppearance.MaterialComponents.Body1">
         <item name="android:textColor">?primaryText</item>
+    </style>
+
+    <style name="Button12TextStyle" parent="TextAppearance.MaterialComponents.Button">
+        <item name="android:textSize">12sp</item>
+        <item name="fontFamily">@font/metropolis</item>
+        <item name="android:textAllCaps">false</item>
     </style>
 
     <style name="SubtitleTextStyle" parent="TextAppearance.MaterialComponents.Body1">

@@ -133,7 +133,8 @@ class DefaultSessionControlControllerTest {
             mode = Mode.Normal,
             topSites = emptyList(),
             showCollectionPlaceholder = true,
-            showSetAsDefaultBrowserCard = true
+            showSetAsDefaultBrowserCard = true,
+            recentTabs = emptyList()
         )
 
         every { navController.currentDestination } returns mockk {

@@ -8,6 +8,7 @@ import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -56,7 +57,8 @@ class HomeFragmentStoreTest {
             mode = currentMode.getCurrentMode(),
             topSites = emptyList(),
             showCollectionPlaceholder = true,
-            showSetAsDefaultBrowserCard = true
+            showSetAsDefaultBrowserCard = true,
+            recentTabs = emptyList()
         )
 
         homeFragmentStore = HomeFragmentStore(homeFragmentState)
@@ -99,6 +101,17 @@ class HomeFragmentStoreTest {
     }
 
     @Test
+    fun `Test changing the recent tabs in HomeFragmentStore`() = runBlocking {
+        assertEquals(0, homeFragmentStore.state.recentTabs.size)
+
+        // Add 2 TabSessionState to the HomeFragmentStore.
+        val recentTabs: List<TabSessionState> = listOf(mockk(), mockk())
+        homeFragmentStore.dispatch(HomeFragmentAction.RecentTabsChange(recentTabs)).join()
+
+        assertEquals(recentTabs, homeFragmentStore.state.recentTabs)
+    }
+
+    @Test
     fun `Test changing hiding collections placeholder`() = runBlocking {
         assertTrue(homeFragmentStore.state.showCollectionPlaceholder)
 
@@ -127,22 +140,26 @@ class HomeFragmentStoreTest {
             // Verify that the default state of the HomeFragment is correct.
             assertEquals(0, homeFragmentStore.state.collections.size)
             assertEquals(0, homeFragmentStore.state.topSites.size)
+            assertEquals(0, homeFragmentStore.state.recentTabs.size)
             assertEquals(Mode.Normal, homeFragmentStore.state.mode)
 
             val collections: List<TabCollection> = listOf(mockk())
             val topSites: List<TopSite> = listOf(mockk(), mockk())
+            val recentTabs: List<TabSessionState> = listOf(mockk(), mockk())
 
             homeFragmentStore.dispatch(
                 HomeFragmentAction.Change(
                     collections = collections,
                     mode = Mode.Private,
                     topSites = topSites,
-                    showCollectionPlaceholder = true
+                    showCollectionPlaceholder = true,
+                    recentTabs = recentTabs
                 )
             ).join()
 
             assertEquals(1, homeFragmentStore.state.collections.size)
-            assertEquals(Mode.Private, homeFragmentStore.state.mode)
             assertEquals(2, homeFragmentStore.state.topSites.size)
+            assertEquals(2, homeFragmentStore.state.recentTabs.size)
+            assertEquals(Mode.Private, homeFragmentStore.state.mode)
         }
 }

@@ -85,6 +85,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -101,6 +102,7 @@ import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.components.tips.providers.MasterPasswordTipProvider
 import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.ext.asRecentTabs
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
@@ -111,7 +113,9 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.mozonline.showPrivacyPopWindow
+import org.mozilla.fenix.home.recenttabs.controller.DefaultRecentTabsController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
+import org.mozilla.fenix.home.sessioncontrol.RecentTabsListFeature
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
@@ -171,6 +175,7 @@ class HomeFragment : Fragment() {
     private lateinit var currentMode: CurrentMode
 
     private val topSitesFeature = ViewBoundFeatureWrapper<TopSitesFeature>()
+    private val recentTabsListFeature = ViewBoundFeatureWrapper<RecentTabsListFeature>()
 
     @VisibleForTesting
     internal var getMenuButton: () -> MenuButton? = { menuButton }
@@ -228,7 +233,8 @@ class HomeFragment : Fragment() {
                         ).getTip()
                     },
                     showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome,
-                    showSetAsDefaultBrowserCard = components.settings.shouldShowSetAsDefaultBrowserCard()
+                    showSetAsDefaultBrowserCard = components.settings.shouldShowSetAsDefaultBrowserCard(),
+                    recentTabs = components.core.store.state.asRecentTabs()
                 )
             )
         }
@@ -243,8 +249,19 @@ class HomeFragment : Fragment() {
             view = view
         )
 
+        if (FeatureFlags.showRecentTabsFeature) {
+            recentTabsListFeature.set(
+                feature = RecentTabsListFeature(
+                    browserStore = components.core.store,
+                    homeStore = homeFragmentStore
+                ),
+                owner = viewLifecycleOwner,
+                view = view
+            )
+        }
+
         _sessionControlInteractor = SessionControlInteractor(
-            DefaultSessionControlController(
+            controller = DefaultSessionControlController(
                 activity = activity,
                 settings = components.settings,
                 engine = components.core.engine,
@@ -263,6 +280,10 @@ class HomeFragment : Fragment() {
                 showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
                 showTabTray = ::openTabsTray,
                 handleSwipedItemDeletionCancel = ::handleSwipedItemDeletionCancel
+            ),
+            recentTabController = DefaultRecentTabsController(
+                selectTabUseCase = components.useCases.tabsUseCases.selectTab,
+                navController = findNavController()
             )
         )
 
@@ -577,7 +598,8 @@ class HomeFragment : Fragment() {
                         )
                     ).getTip()
                 },
-                showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome
+                showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome,
+                recentTabs = components.core.store.state.asRecentTabs()
             )
         )
 

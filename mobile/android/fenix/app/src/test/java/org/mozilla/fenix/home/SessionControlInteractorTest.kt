@@ -10,18 +10,20 @@ import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 
 class SessionControlInteractorTest {
 
     private val controller: DefaultSessionControlController = mockk(relaxed = true)
+    private val recentTabController: RecentTabController = mockk(relaxed = true)
 
     private lateinit var interactor: SessionControlInteractor
 
     @Before
     fun setup() {
-        interactor = SessionControlInteractor(controller)
+        interactor = SessionControlInteractor(controller, recentTabController)
     }
 
     @Test
@@ -127,5 +129,18 @@ class SessionControlInteractorTest {
     fun onTopSiteMenuOpened() {
         interactor.onTopSiteMenuOpened()
         verify { controller.handleMenuOpened() }
+    }
+
+    @Test
+    fun onRecentTabClicked() {
+        val tabId = "tabId"
+        interactor.onRecentTabClicked(tabId)
+        verify { recentTabController.handleRecentTabClicked(tabId) }
+    }
+
+    @Test
+    fun onRecentTabShowAllClicked() {
+        interactor.onRecentTabShowAllClicked()
+        verify { recentTabController.handleRecentTabShowAllClicked() }
     }
 }

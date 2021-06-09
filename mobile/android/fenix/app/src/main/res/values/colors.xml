@@ -300,6 +300,9 @@
         <item>@color/collection_icon_color_yellow</item>
     </array>
 
+    <!-- Home screen -->
+    <color name="home_show_all_button_text">@color/photonDarkGrey05</color>
+
     <!-- Library buttons -->
     <color name="library_sessions_icon_background">#B9F0FD</color>
     <color name="library_sessions_icon">#0E214A</color>

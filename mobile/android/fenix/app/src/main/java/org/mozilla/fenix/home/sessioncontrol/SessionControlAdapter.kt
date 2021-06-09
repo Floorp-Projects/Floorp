@@ -12,6 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.ui.widgets.WidgetSiteItemView
@@ -36,6 +37,8 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTh
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingToolbarPositionPickerViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTrackingProtectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingWhatsNewViewHolder
+import org.mozilla.fenix.home.recenttabs.view.RecentTabViewHolder
+import org.mozilla.fenix.home.recenttabs.view.RecentTabsHeaderViewHolder
 import org.mozilla.fenix.home.tips.ButtonTipViewHolder
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
@@ -131,6 +134,11 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
 
     object OnboardingWhatsNew : AdapterItem(OnboardingWhatsNewViewHolder.LAYOUT_ID)
 
+    object RecentTabsHeader : AdapterItem(RecentTabsHeaderViewHolder.LAYOUT_ID)
+    data class RecentTabItem(val tab: TabSessionState) : AdapterItem(RecentTabViewHolder.LAYOUT_ID) {
+        override fun sameAs(other: AdapterItem) = other is RecentTabItem && tab.id == other.tab.id
+    }
+
     /**
      * True if this item represents the same value as other. Used by [AdapterItemDiffCallback].
      */
@@ -211,7 +219,8 @@ class SessionControlAdapter(
                 view
             )
             ExperimentDefaultBrowserCardViewHolder.LAYOUT_ID -> ExperimentDefaultBrowserCardViewHolder(view, interactor)
-
+            RecentTabsHeaderViewHolder.LAYOUT_ID -> RecentTabsHeaderViewHolder(view, interactor)
+            RecentTabViewHolder.LAYOUT_ID -> RecentTabViewHolder(view, interactor)
             else -> throw IllegalStateException()
         }
     }
@@ -263,6 +272,9 @@ class SessionControlAdapter(
             is OnboardingAutomaticSignInViewHolder -> holder.bind(
                 (item as AdapterItem.OnboardingAutomaticSignIn).state.withAccount
             )
+            is RecentTabViewHolder -> {
+                holder.bindTab((item as AdapterItem.RecentTabItem).tab)
+            }
         }
     }
 }
