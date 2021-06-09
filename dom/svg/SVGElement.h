@@ -200,6 +200,9 @@ class SVGElement : public SVGElementBase  // nsIContent
                                                nsCSSPropertyID aPropId,
                                                const SVGAnimatedLength& aLength,
                                                ValToUse aValToUse);
+  static bool UpdateDeclarationBlockFromPath(
+      DeclarationBlock& aBlock, const SVGAnimatedPathSegList& aPath,
+      ValToUse aValToUse);
 
   nsAttrValue WillChangeLength(uint8_t aAttrEnum,
                                const mozAutoDocUpdate& aProofOfUpdate);
