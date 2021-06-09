@@ -12,8 +12,8 @@ this.takeshot = (function() {
 
   communication.register(
     "screenshotPage",
-    (sender, selectedPos, isFullPage, devicePixelRatio) => {
-      return screenshotPage(selectedPos, isFullPage, devicePixelRatio);
+    (sender, selectedPos, screenshotType, devicePixelRatio) => {
+      return screenshotPage(selectedPos, screenshotType, devicePixelRatio);
     }
   );
 
@@ -21,7 +21,7 @@ this.takeshot = (function() {
     return getZoomFactor();
   });
 
-  function screenshotPage(pos, isFullPage, devicePixelRatio) {
+  function screenshotPage(pos, screenshotType, devicePixelRatio) {
     let zoomFactor = getZoomFactor();
     pos.width = Math.min(pos.right - pos.left, MAX_CANVAS_DIMENSION);
     pos.height = Math.min(pos.bottom - pos.top, MAX_CANVAS_DIMENSION);
@@ -29,7 +29,10 @@ this.takeshot = (function() {
     // If we are printing the full page or a truncated full page,
     // we must pass in this rectangle to preview the entire image
     let options = { format: "png" };
-    if (isFullPage) {
+    if (
+      screenshotType === "fullPage" ||
+      screenshotType === "fullPageTruncated"
+    ) {
       let rectangle = {
         x: 0,
         y: 0,
@@ -42,7 +45,7 @@ this.takeshot = (function() {
       // performance problems), we set the devicePixelRatio to 1.
       devicePixelRatio = 1;
       options.scale = 1 / zoomFactor;
-    } else {
+    } else if (screenshotType != "visible") {
       let rectangle = {
         x: pos.left,
         y: pos.top,

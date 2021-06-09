@@ -48,11 +48,10 @@ this.shooter = (function() {
     let promise = Promise.resolve(dataUrl);
 
     if (!dataUrl) {
-      let isFullPage = type === "fullPage" || type == "fullPageTruncated";
       promise = callBackground(
         "screenshotPage",
         selectedPos.toJSON(),
-        isFullPage,
+        type,
         window.devicePixelRatio
       );
     }
