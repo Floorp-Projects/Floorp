@@ -1278,6 +1278,21 @@ void SVGElement::UpdateContentDeclarationBlock() {
 
     nsAutoString value;
     mAttrs.AttrAt(i)->ToString(value);
+
+    // FIXME: Now we still have to parse twice for d property because we are
+    // using the different data structure in SVG and CSS. This will be fixed in
+    // the patch series.
+    if (attrName->Equals(nsGkAtoms::d, kNameSpaceID_None)) {
+      // The value of d attribute is a raw svg path string. We convert it as a
+      // path() to align the syntax in CSS parser. We will drop this in the
+      // later patch.
+      nsAutoString path;
+      path.AppendLiteral("path(\"");
+      path.Append(value);
+      path.AppendLiteral("\")");
+      value = path;
+    }
+
     mappedAttrParser.ParseMappedAttrValue(attrName->Atom(), value);
   }
   mContentDeclarationBlock = mappedAttrParser.GetDeclarationBlock();
