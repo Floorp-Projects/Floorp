@@ -167,8 +167,8 @@ Required Fields
 - ``products``: A list of products the scalar can be recorded on. Currently supported values are:
 
   - ``firefox`` - Collected in Firefox Desktop for submission via Firefox Telemetry.
-  - ``fennec`` - Collected in Firefox for Android for submission via Firefox Mobile Telemetry.
   - ``geckoview_streaming`` - See :doc:`this guide <../start/report-gecko-telemetry-in-glean>` for how to stream data through geckoview to the Glean SDK.
+  - ``thunderbird`` - Collected in Thunderbird for submission via Thunderbird Telemetry.
 
 - ``record_in_processes``: A list of processes the scalar is allowed to record in. Currently supported values are:
 
