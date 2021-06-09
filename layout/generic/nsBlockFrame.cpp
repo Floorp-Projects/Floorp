@@ -6749,10 +6749,14 @@ void nsBlockFrame::ReflowPushedFloats(BlockReflowInput& aState,
       continue;
     }
 
-    // Always call FlowAndPlaceFloat; we might need to place this float
-    // if didn't belong to this block the last time it was reflowed.
-    aState.FlowAndPlaceFloat(f);
-    ConsiderChildOverflow(aOverflowAreas, f);
+    // Always call FlowAndPlaceFloat; we might need to place this float if it
+    // didn't belong to this block the last time it was reflowed.  Note that if
+    // the float doesn't get placed, we don't consider its overflow region.
+    // (Not-getting-placed means it didn't fit and we pushed it instead of
+    // placing it, and its position could be stale.)
+    if (aState.FlowAndPlaceFloat(f)) {
+      ConsiderChildOverflow(aOverflowAreas, f);
+    }
 
     nsIFrame* next = !prev ? mFloats.FirstChild() : prev->GetNextSibling();
     if (next == f) {

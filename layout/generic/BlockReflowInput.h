@@ -126,11 +126,12 @@ class BlockReflowInput {
       nsFloatManager::SavedState* aState) const;
 
   /*
-   * The following functions all return true if they were able to
-   * place the float, false if the float did not fit in available
-   * space.
-   * aLineLayout is null when we are reflowing pushed floats (because
-   * they are not associated with a line box).
+   * The following functions all return true if they were able to place the
+   * float, false if the float did not fit in available space.
+   *
+   * Note: if these functions return false, then the float's position and size
+   * should be considered stale/invalid (until the float is successfully
+   * placed).
    */
   bool AddFloat(nsLineLayout* aLineLayout, nsIFrame* aFloat,
                 nscoord aAvailableISize);
