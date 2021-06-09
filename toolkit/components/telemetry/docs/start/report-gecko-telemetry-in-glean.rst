@@ -47,7 +47,7 @@ The first step is to add the relevant tag (i.e. ``geckoview_streaming``) to the 
   {
     "CHECKERBOARD_DURATION": {
       "record_in_processes": ["main", "content", "gpu"],
-      "products": ["firefox", "fennec", "geckoview", "geckoview_streaming"],
+      "products": ["firefox", "geckoview_streaming", "thunderbird"],
       "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "somebody@mozilla.com"],
       "bug_numbers": [1238040, 1539309],
       "releaseChannelCollection": "opt-out",
@@ -98,7 +98,7 @@ Consider the ``IPC_MESSAGE_SIZE2`` histogram:
   {
     "IPC_MESSAGE_SIZE2": {
       "record_in_processes": ["main", "content", "gpu"],
-      "products": ["firefox", "fennec", "geckoview"],
+      "products": ["firefox", "thunderbird"],
       "alert_emails": ["hchang@mozilla.com"],
       "bug_numbers": [1353159],
       "expires_in_version": "60",
@@ -194,9 +194,8 @@ The first step is to add the relevant Gecko scalar with its streaming telemetry 
         - rhunt@mozilla.com
       products:
         - 'firefox'
-        - 'fennec'
-        - 'geckoview'
         - 'geckoview_streaming'
+        - 'thunderbird'
       record_in_processes:
         - 'main'
 
