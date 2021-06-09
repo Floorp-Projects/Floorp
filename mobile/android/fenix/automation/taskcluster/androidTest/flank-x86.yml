@@ -60,4 +60,6 @@ flank:
   ## which don't support ansi codes, to avoid corrupted output use single or verbose.
   ## The output style `compact` is used to produce less detailed output, it prints just Args, test and matrix count, weblinks, cost, and result reports.
   output-style: compact
-
+  ### Full Junit Result flag
+  ## Enable create additional local junit result on local storage with failure nodes on passed flaky tests.
+  full-junit-result: true
