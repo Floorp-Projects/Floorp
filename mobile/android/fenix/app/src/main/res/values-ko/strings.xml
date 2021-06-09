@@ -100,13 +100,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">닫기</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">열린 탭의 레이아웃을 변경하세요. 설정으로 이동하여 탭 보기에서 그리드를 선택하세요.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">설정으로 이동</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">닫기</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">새 탭</string>
@@ -192,6 +185,10 @@
     <string name="browser_menu_add">추가</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">편집</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">홈 화면</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -560,8 +557,6 @@
     <string name="library_new_tab">새 탭</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">페이지에서 찾기</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">동기화된 탭</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">읽기 목록</string>
     <!-- Menu Item Label for Search in Library -->
@@ -607,6 +602,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">한 달 후</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">홈에서 시작</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">4시간 후</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">항상</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">안 함</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">수동으로 닫기</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1619,6 +1623,10 @@
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">유효 기간</string>
 
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">유효 기간 월</string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">유효 기간 년</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">카드상의 이름</string>
     <!-- The header for the nickname for a credit card -->
@@ -1640,6 +1648,8 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">유효한 신용 카드 번호를 입력해 주세요</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">이 항목을 입력하세요.</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">저장된 카드를 보려면 잠금 해제</string>
     <!-- Title of warning dialog if users have no device authentication set up -->

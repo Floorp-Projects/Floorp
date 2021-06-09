@@ -94,13 +94,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Dispensar</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Altere a disposição dos separadores abertos. Aceda às configurações e selecione grelha sob vista de separadores.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Ir para as definições</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Ignorar</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Novo separador</string>
@@ -183,6 +176,10 @@
     <string name="browser_menu_add">Adicionar</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Editar</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Ecrã inicial</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -413,6 +410,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s no %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Cartões de crédito</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Moradas</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Separadores recebidos</string>
@@ -543,8 +545,6 @@
     <string name="library_new_tab">Novo separador</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Localizar na página</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Separadores sincronizados</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Lista de leitura</string>
     <!-- Menu Item Label for Search in Library -->
@@ -590,6 +590,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Depois de um mês</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Começar no ecrã inicial</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Depois de quatro horas</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Sempre</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Nunca</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Fechar manualmente</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1455,10 +1464,8 @@
     <string name="preferences_passwords_autofill">Preenchimento automático</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronização de credenciais</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Ativada</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Desativada</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sincronizar credenciais entre dispositivos</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Voltar a ligar</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1559,6 +1566,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Os dados são encriptados</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizar cartões entre dispositivos</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sincronizar cartões</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Adicionar cartão de crédito</string>
 
@@ -1572,6 +1581,10 @@
     <string name="credit_cards_card_number">Número do cartão</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Data de expiração</string>
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">Mês da data de expiração</string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">Ano da data de expiração</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Nome no cartão</string>
     <!-- The header for the nickname for a credit card -->
@@ -1589,6 +1602,25 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Cartões guardados</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Por favor, introduza um número de cartão de crédito válido</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Por favor preencha este campo</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Desbloquear para ver os cartões guardados</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Proteja os seus cartões de crédito</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Configure um padrão, PIN ou palavra-passe de bloqueio do dispositivo para impedir que os seus cartões de crédito guardados sejam acedidos por outra pessoa que tenha acesso ao seu dispositivo.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Configurar agora</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Mais tarde</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Desbloquear o seu dispositivo</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Desbloquear para utilizar as informações de cartão de crédito armazenadas</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Adicionar motor de pesquisa</string>
@@ -1758,4 +1790,10 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Clique para mais detalhes</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Navegar para cima</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Fechar</string>
+
+</resources>

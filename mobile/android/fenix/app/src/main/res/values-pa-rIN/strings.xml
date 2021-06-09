@@ -98,13 +98,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">ਖ਼ਾਰਜ ਕਰੋ</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">ਖੁੱਲ੍ਹੀਆਂ ਟੈਬਾਂ ਦੇ ਖਾਤੇ ਨੂੰ ਬਦਲੋ। ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ ਅਤੇ ਟੈਬ ਵੇਖਣ ਲਈ ਗਿੱਡ ਚੁਣੋ।</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">ਖ਼ਾਰਜ ਕਰੋ</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">ਨਵੀਂ ਟੈਬ</string>
@@ -560,8 +553,6 @@
     <string name="library_new_tab">ਨਵੀਂ ਟੈਬ</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">ਸਫ਼ੇ ‘ਚ ਲੱਭੋ</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">ਪੜ੍ਹਨ ਸੂਚੀ</string>
     <!-- Menu Item Label for Search in Library -->
@@ -1611,6 +1602,21 @@
 
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">ਵਾਜਬ ਕਰੈਡਿਟ ਕਾਰਡ ਨੰਬਰ ਦਿਓ ਜੀ</string>
+
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">ਆਪਣੇ ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡ ਵੇਖਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">ਆਪਣੇ ਕਰੈਡਿਟ ਕਾਰਡ ਸੁਰੱਖਿਅਤ ਕਰੋ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">ਆਪਣੀ ਡਿਵਾਇਸ ਲਈ ਲਾਕ ਪੈਟਰਨ, ਪਿੰਨ, ਜਾਂ ਪਾਸਵਰਡ ਸੈੱਟ ਕਰੋ ਤਾਂ ਜੋ ਕਿਸੇ ਹੋਰ ਹੱਥ ਤੁਹਾਡਾ ਡਿਵਾਇਸ ਹੋਣ ਉੱਤੇ ਤੁਹਾਡੇ ਸੰਭਾਲੇ ਪਾਸਵਰਡ ਸੁਰੱਖਿਅਤ ਰਹਿਣ।</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">ਹੁਣੇ ਸੈਟ ਅੱਪ ਕਰੋ</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">ਬਾਦ \'ਚ</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">ਆਪਣਾ ਡਿਵਾਇਸ ਅਣ-ਲਾਕ ਕਰੋ</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">ਸੰਭਾਲੀ ਕਰੈਡਿਟ ਕਾਰਡ ਜਾਣਕਾਰੀ ਵਰਤਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ਖੋਜ ਇੰਜਣ ਜੋੜੋ</string>
