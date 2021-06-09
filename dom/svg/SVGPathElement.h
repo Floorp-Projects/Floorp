@@ -116,6 +116,9 @@ class SVGPathElement final : public SVGPathElementBase {
   already_AddRefed<DOMSVGPathSegList> PathSegList();
   already_AddRefed<DOMSVGPathSegList> AnimatedPathSegList();
 
+  static bool IsDPropertyChangedViaCSS(const ComputedStyle& aNewStyle,
+                                       const ComputedStyle& aOldStyle);
+
  protected:
   SVGAnimatedPathSegList mD;
 };

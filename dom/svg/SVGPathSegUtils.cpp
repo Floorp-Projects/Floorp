@@ -6,7 +6,8 @@
 
 #include "SVGPathSegUtils.h"
 
-#include "mozilla/ArrayUtils.h"  // MOZ_ARRAY_LENGTH
+#include "mozilla/ArrayUtils.h"        // MOZ_ARRAY_LENGTH
+#include "mozilla/ServoStyleConsts.h"  // StylePathCommand
 #include "gfx2DGlue.h"
 #include "SVGPathDataParser.h"
 #include "nsMathUtils.h"
@@ -407,6 +408,167 @@ void SVGPathSegUtils::TraversePathSegment(const float* aData,
       "gTraverseFuncTable is out of date");
   uint32_t type = DecodeType(aData[0]);
   gTraverseFuncTable[type](aData + 1, aState);
+}
+
+// Basically, this is just a variant version of the above TraverseXXX functions.
+// We just put those function inside this and use StylePathCommand instead.
+// This function and the above ones should be dropped by Bug 1388931.
+/* static */
+void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
+                                          SVGPathTraversalState& aState) {
+  auto toGfxPoint = [](const StyleCoordPair& aPair) {
+    return Point(aPair._0, aPair._1);
+  };
+
+  switch (aCommand.tag) {
+    case StylePathCommand::Tag::ClosePath:
+      TraverseClosePath(nullptr, aState);
+      break;
+    case StylePathCommand::Tag::MoveTo: {
+      const Point& p = toGfxPoint(aCommand.move_to.point);
+      aState.start = aState.pos =
+          aCommand.move_to.absolute == StyleIsAbsolute::Yes ? p
+                                                            : aState.pos + p;
+      if (aState.ShouldUpdateLengthAndControlPoints()) {
+        // aState.length is unchanged, since move commands don't affect path=
+        // length.
+        aState.cp1 = aState.cp2 = aState.start;
+      }
+      break;
+    }
+    case StylePathCommand::Tag::LineTo: {
+      Point to = aCommand.line_to.absolute == StyleIsAbsolute::Yes
+                     ? toGfxPoint(aCommand.line_to.point)
+                     : aState.pos + toGfxPoint(aCommand.line_to.point);
+      if (aState.ShouldUpdateLengthAndControlPoints()) {
+        aState.length += CalcDistanceBetweenPoints(aState.pos, to);
+        aState.cp1 = aState.cp2 = to;
+      }
+      aState.pos = to;
+      break;
+    }
+    case StylePathCommand::Tag::CurveTo: {
+      const bool isRelative = aCommand.curve_to.absolute == StyleIsAbsolute::No;
+      Point to = isRelative ? aState.pos + toGfxPoint(aCommand.curve_to.point)
+                            : toGfxPoint(aCommand.curve_to.point);
+      if (aState.ShouldUpdateLengthAndControlPoints()) {
+        Point cp1 = toGfxPoint(aCommand.curve_to.control1);
+        Point cp2 = toGfxPoint(aCommand.curve_to.control2);
+        if (isRelative) {
+          cp1 += aState.pos;
+          cp2 += aState.pos;
+        }
+        aState.length +=
+            (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
+        aState.cp2 = cp2;
+        aState.cp1 = to;
+      }
+      aState.pos = to;
+      break;
+    }
+    case StylePathCommand::Tag::QuadBezierCurveTo: {
+      const bool isRelative = aCommand.curve_to.absolute == StyleIsAbsolute::No;
+      Point to =
+          isRelative
+              ? aState.pos + toGfxPoint(aCommand.quad_bezier_curve_to.point)
+              : toGfxPoint(aCommand.quad_bezier_curve_to.point);
+      if (aState.ShouldUpdateLengthAndControlPoints()) {
+        Point cp = isRelative
+                       ? aState.pos +
+                             toGfxPoint(aCommand.quad_bezier_curve_to.control1)
+                       : toGfxPoint(aCommand.quad_bezier_curve_to.control1);
+        aState.length += (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
+        aState.cp1 = cp;
+        aState.cp2 = to;
+      }
+      aState.pos = to;
+      break;
+    }
+    case StylePathCommand::Tag::EllipticalArc: {
+      Point to = aCommand.elliptical_arc.absolute == StyleIsAbsolute::Yes
+                     ? toGfxPoint(aCommand.elliptical_arc.point)
+                     : aState.pos + toGfxPoint(aCommand.elliptical_arc.point);
+      if (aState.ShouldUpdateLengthAndControlPoints()) {
+        const auto& arc = aCommand.elliptical_arc;
+        float dist = 0;
+        Point radii(arc.rx, arc.ry);
+        if (radii.x == 0.0f || radii.y == 0.0f) {
+          dist = CalcDistanceBetweenPoints(aState.pos, to);
+        } else {
+          Point bez[4] = {aState.pos, Point(0, 0), Point(0, 0), Point(0, 0)};
+          SVGArcConverter converter(aState.pos, to, radii, arc.angle,
+                                    arc.large_arc_flag._0, arc.sweep_flag._0);
+          while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
+            dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
+            bez[0] = bez[3];
+          }
+        }
+        aState.length += dist;
+        aState.cp1 = aState.cp2 = to;
+      }
+      aState.pos = to;
+      break;
+    }
+    case StylePathCommand::Tag::HorizontalLineTo: {
+      Point to(aCommand.horizontal_line_to.absolute == StyleIsAbsolute::Yes
+                   ? aCommand.horizontal_line_to.x
+                   : aState.pos.x + aCommand.horizontal_line_to.x,
+               aState.pos.y);
+      if (aState.ShouldUpdateLengthAndControlPoints()) {
+        aState.length += std::fabs(to.x - aState.pos.x);
+        aState.cp1 = aState.cp2 = to;
+      }
+      aState.pos = to;
+      break;
+    }
+    case StylePathCommand::Tag::VerticalLineTo: {
+      Point to(aState.pos.x,
+               aCommand.vertical_line_to.absolute == StyleIsAbsolute::Yes
+                   ? aCommand.vertical_line_to.y
+                   : aState.pos.y + aCommand.vertical_line_to.y);
+      if (aState.ShouldUpdateLengthAndControlPoints()) {
+        aState.length += std::fabs(to.y - aState.pos.y);
+        aState.cp1 = aState.cp2 = to;
+      }
+      aState.pos = to;
+      break;
+    }
+    case StylePathCommand::Tag::SmoothCurveTo: {
+      const bool isRelative =
+          aCommand.smooth_curve_to.absolute == StyleIsAbsolute::No;
+      Point to = isRelative
+                     ? aState.pos + toGfxPoint(aCommand.smooth_curve_to.point)
+                     : toGfxPoint(aCommand.smooth_curve_to.point);
+      if (aState.ShouldUpdateLengthAndControlPoints()) {
+        Point cp1 = aState.pos - (aState.cp2 - aState.pos);
+        Point cp2 =
+            isRelative
+                ? aState.pos + toGfxPoint(aCommand.smooth_curve_to.control2)
+                : toGfxPoint(aCommand.smooth_curve_to.control2);
+        aState.length +=
+            (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
+        aState.cp2 = cp2;
+        aState.cp1 = to;
+      }
+      aState.pos = to;
+      break;
+    }
+    case StylePathCommand::Tag::SmoothQuadBezierCurveTo: {
+      Point to = aCommand.smooth_curve_to.absolute == StyleIsAbsolute::Yes
+                     ? toGfxPoint(aCommand.smooth_curve_to.point)
+                     : aState.pos + toGfxPoint(aCommand.smooth_curve_to.point);
+      if (aState.ShouldUpdateLengthAndControlPoints()) {
+        Point cp = aState.pos - (aState.cp1 - aState.pos);
+        aState.length += (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
+        aState.cp1 = cp;
+        aState.cp2 = to;
+      }
+      aState.pos = to;
+      break;
+    }
+    case StylePathCommand::Tag::Unknown:
+      MOZ_ASSERT_UNREACHABLE("Unacceptable path segment type");
+  }
 }
 
 }  // namespace mozilla
