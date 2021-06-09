@@ -1110,7 +1110,6 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
       nullptr,  // SHA-1 telemetry
       nullptr,  // pinning telemetry
       &certificateTransparencyInfo,
-      nullptr,  // CRLite telemetry,
       &isBuiltCertChainRootBuiltInRoot);
 
   if (rv != Success) {

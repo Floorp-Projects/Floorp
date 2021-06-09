@@ -479,8 +479,7 @@ Result CertVerifier::VerifyCert(
     /*optional out*/ KeySizeStatus* keySizeStatus,
     /*optional out*/ SHA1ModeResult* sha1ModeResult,
     /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo,
-    /*optional out*/ CertificateTransparencyInfo* ctInfo,
-    /*optional out*/ CRLiteLookupResult* crliteLookupResult) {
+    /*optional out*/ CertificateTransparencyInfo* ctInfo) {
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("Top of VerifyCert\n"));
 
   MOZ_ASSERT(cert);
@@ -635,9 +634,6 @@ Result CertVerifier::VerifyCert(
         if (pinningTelemetryInfo) {
           pinningTelemetryInfo->Reset();
         }
-        if (crliteLookupResult) {
-          *crliteLookupResult = CRLiteLookupResult::NeverChecked;
-        }
 
         NSSCertDBTrustDomain trustDomain(
             trustSSL, evOCSPFetching, mOCSPCache, pinArg, mOCSPTimeoutSoft,
@@ -646,7 +642,7 @@ Result CertVerifier::VerifyCert(
             sha1ModeConfigurations[i], mNetscapeStepUpPolicy, mCRLiteMode,
             mCRLiteCTMergeDelaySeconds, originAttributes, mThirdPartyRootInputs,
             mThirdPartyIntermediateInputs, extraCertificates, builtChain,
-            pinningTelemetryInfo, crliteLookupResult, hostname);
+            pinningTelemetryInfo, hostname);
         rv = BuildCertChainForOneKeyUsage(
             trustDomain, certDER, time,
             KeyUsage::digitalSignature,  // (EC)DHE
@@ -720,9 +716,6 @@ Result CertVerifier::VerifyCert(
           if (pinningTelemetryInfo) {
             pinningTelemetryInfo->Reset();
           }
-          if (crliteLookupResult) {
-            *crliteLookupResult = CRLiteLookupResult::NeverChecked;
-          }
 
           NSSCertDBTrustDomain trustDomain(
               trustSSL, defaultOCSPFetching, mOCSPCache, pinArg,
@@ -732,7 +725,7 @@ Result CertVerifier::VerifyCert(
               mNetscapeStepUpPolicy, mCRLiteMode, mCRLiteCTMergeDelaySeconds,
               originAttributes, mThirdPartyRootInputs,
               mThirdPartyIntermediateInputs, extraCertificates, builtChain,
-              pinningTelemetryInfo, crliteLookupResult, hostname);
+              pinningTelemetryInfo, hostname);
           rv = BuildCertChainForOneKeyUsage(
               trustDomain, certDER, time,
               KeyUsage::digitalSignature,  //(EC)DHE
@@ -911,7 +904,6 @@ Result CertVerifier::VerifySSLServerCert(
     /*optional out*/ SHA1ModeResult* sha1ModeResult,
     /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo,
     /*optional out*/ CertificateTransparencyInfo* ctInfo,
-    /*optional out*/ CRLiteLookupResult* crliteLookupResult,
     /*optional out*/ bool* isBuiltCertChainRootBuiltInRoot) {
   MOZ_ASSERT(peerCert);
   // XXX: MOZ_ASSERT(pinarg);
@@ -931,12 +923,12 @@ Result CertVerifier::VerifySSLServerCert(
 
   // CreateCertErrorRunnable assumes that CheckCertHostname is only called
   // if VerifyCert succeeded.
-  Result rv = VerifyCert(peerCert.get(), certificateUsageSSLServer, time,
-                         pinarg, PromiseFlatCString(hostname).get(), builtChain,
-                         flags, extraCertificates, stapledOCSPResponse,
-                         sctsFromTLS, originAttributes, evStatus,
-                         ocspStaplingStatus, keySizeStatus, sha1ModeResult,
-                         pinningTelemetryInfo, ctInfo, crliteLookupResult);
+  Result rv =
+      VerifyCert(peerCert.get(), certificateUsageSSLServer, time, pinarg,
+                 PromiseFlatCString(hostname).get(), builtChain, flags,
+                 extraCertificates, stapledOCSPResponse, sctsFromTLS,
+                 originAttributes, evStatus, ocspStaplingStatus, keySizeStatus,
+                 sha1ModeResult, pinningTelemetryInfo, ctInfo);
   if (rv != Success) {
     if (rv == Result::ERROR_UNKNOWN_ISSUER &&
         CertIsSelfSigned(peerCert, pinarg)) {
