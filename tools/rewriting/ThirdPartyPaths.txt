@@ -166,6 +166,7 @@ third_party/
 toolkit/components/certviewer/content/vendor/
 toolkit/components/jsoncpp/
 toolkit/components/normandy/vendor/
+toolkit/components/passwordmgr/PasswordRulesParser.jsm
 toolkit/components/protobuf/
 toolkit/components/url-classifier/chromium/
 toolkit/components/utils/mozjexl.js
