@@ -7,32 +7,32 @@
 
 #include "FilteredContentIterator.h"  // for FilteredContentIterator
 #include "mozilla/Assertions.h"       // for MOZ_ASSERT, etc
+#include "mozilla/EditorBase.h"       // for EditorBase
 #include "mozilla/EditorUtils.h"      // for AutoTransactionBatchExternal
+#include "mozilla/mozalloc.h"         // for operator new, etc
+#include "mozilla/UniquePtr.h"        // for UniquePtr
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
-#include "mozilla/mozalloc.h"    // for operator new, etc
-#include "mozilla/TextEditor.h"  // for TextEditor
-#include "nsAString.h"           // for nsAString::Length, etc
-#include "nsContentUtils.h"      // for nsContentUtils
-#include "nsComposeTxtSrvFilter.h"
-#include "nsDebug.h"                   // for NS_ENSURE_TRUE, etc
-#include "nsDependentSubstring.h"      // for Substring
-#include "nsError.h"                   // for NS_OK, NS_ERROR_FAILURE, etc
-#include "nsGenericHTMLElement.h"      // for nsGenericHTMLElement
-#include "nsIContent.h"                // for nsIContent, etc
-#include "nsID.h"                      // for NS_GET_IID
-#include "nsIEditor.h"                 // for nsIEditor, etc
-#include "nsIEditorSpellCheck.h"       // for nsIEditorSpellCheck, etc
-#include "nsINode.h"                   // for nsINode
-#include "nsISelectionController.h"    // for nsISelectionController, etc
-#include "nsISupportsBase.h"           // for nsISupports
-#include "nsISupportsUtils.h"          // for NS_IF_ADDREF, NS_ADDREF, etc
 #include "mozilla/intl/WordBreaker.h"  // for WordRange, WordBreaker
-#include "nsRange.h"                   // for nsRange
-#include "nsString.h"                  // for nsString, nsAutoString
-#include "nscore.h"                    // for nsresult, NS_IMETHODIMP, etc
-#include "mozilla/UniquePtr.h"         // for UniquePtr
+#include "nsAString.h"                 // for nsAString::Length, etc
+#include "nsContentUtils.h"            // for nsContentUtils
+#include "nsComposeTxtSrvFilter.h"
+#include "nsDebug.h"                 // for NS_ENSURE_TRUE, etc
+#include "nsDependentSubstring.h"    // for Substring
+#include "nsError.h"                 // for NS_OK, NS_ERROR_FAILURE, etc
+#include "nsGenericHTMLElement.h"    // for nsGenericHTMLElement
+#include "nsIContent.h"              // for nsIContent, etc
+#include "nsID.h"                    // for NS_GET_IID
+#include "nsIEditor.h"               // for nsIEditor, etc
+#include "nsIEditorSpellCheck.h"     // for nsIEditorSpellCheck, etc
+#include "nsINode.h"                 // for nsINode
+#include "nsISelectionController.h"  // for nsISelectionController, etc
+#include "nsISupportsBase.h"         // for nsISupports
+#include "nsISupportsUtils.h"        // for NS_IF_ADDREF, NS_ADDREF, etc
+#include "nsRange.h"                 // for nsRange
+#include "nsString.h"                // for nsString, nsAutoString
+#include "nscore.h"                  // for nsresult, NS_IMETHODIMP, etc
 
 namespace mozilla {
 
@@ -86,7 +86,7 @@ NS_INTERFACE_MAP_BEGIN(TextServicesDocument)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(TextServicesDocument)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION(TextServicesDocument, mDocument, mSelCon, mTextEditor,
+NS_IMPL_CYCLE_COLLECTION(TextServicesDocument, mDocument, mSelCon, mEditorBase,
                          mFilteredIter, mPrevTextBlock, mNextTextBlock, mExtent)
 
 nsresult TextServicesDocument::InitWithEditor(nsIEditor* aEditor) {
@@ -137,7 +137,7 @@ nsresult TextServicesDocument::InitWithEditor(nsIEditor* aEditor) {
     }
   }
 
-  mTextEditor = aEditor->AsTextEditor();
+  mEditorBase = aEditor->AsEditorBase();
 
   rv = aEditor->AddEditActionListener(this);
 
@@ -836,7 +836,7 @@ nsresult TextServicesDocument::ScrollSelectionIntoView() {
 }
 
 nsresult TextServicesDocument::DeleteSelection() {
-  if (NS_WARN_IF(!mTextEditor) || NS_WARN_IF(!SelectionIsValid())) {
+  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!SelectionIsValid())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -964,8 +964,8 @@ nsresult TextServicesDocument::DeleteSelection() {
   AdjustContentIterator();
 
   // Now delete the actual content!
-  RefPtr<TextEditor> textEditor = mTextEditor;
-  nsresult rv = textEditor->DeleteSelectionAsAction(nsIEditor::ePrevious,
+  OwningNonNull<EditorBase> editorBase = *mEditorBase;
+  nsresult rv = editorBase->DeleteSelectionAsAction(nsIEditor::ePrevious,
                                                     nsIEditor::eStrip);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1082,7 +1082,7 @@ nsresult TextServicesDocument::DeleteSelection() {
 }
 
 nsresult TextServicesDocument::InsertText(const nsAString& aText) {
-  if (NS_WARN_IF(!mTextEditor) || NS_WARN_IF(!SelectionIsValid())) {
+  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!SelectionIsValid())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1106,12 +1106,12 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // AutoTransactionBatchExternal grabs mTextEditor, so, we don't need to grab
+  // AutoTransactionBatchExternal grabs mEditorBase, so, we don't need to grab
   // the instance with local variable here.
-  RefPtr<TextEditor> textEditor = mTextEditor;
-  AutoTransactionBatchExternal treatAsOneTransaction(*textEditor);
+  OwningNonNull<EditorBase> editorBase = *mEditorBase;
+  AutoTransactionBatchExternal treatAsOneTransaction(editorBase);
 
-  nsresult rv = textEditor->InsertTextAsAction(aText);
+  nsresult rv = editorBase->InsertTextAsAction(aText);
   if (NS_FAILED(rv)) {
     NS_WARNING("InsertTextAsAction() failed");
     return rv;
