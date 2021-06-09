@@ -27,8 +27,10 @@ async function setup() { // eslint-disable-line no-unused-vars
 }
 
 async function clear() { // eslint-disable-line no-unused-vars
-  await new Promise(resolve => {
-    indexedDB.deleteDatabase(DB_NAME).onsuccess = resolve;
+  await new Promise((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(DB_NAME)
+    request.onsuccess = resolve;
+    request.onerror = () => reject(Error("Error deleting DB"));
   });
 }
 </script>

@@ -6,7 +6,18 @@
 
 "use strict";
 
+// test without target switching
 add_task(async function() {
+  await testNavigation();
+});
+
+// test with target switching enabled
+add_task(async function() {
+  enableTargetSwitching();
+  await testNavigation();
+});
+
+async function testNavigation() {
   const URL1 = buildURLWithContent(
     "example.com",
     `<h1>example.com</h1>` +
@@ -41,7 +52,13 @@ add_task(async function() {
   // wait for storage tree refresh, and check host
   info("Waiting for storage tree to refresh and show correct host…");
   await waitUntil(() => isInTree(doc, ["localStorage", "http://example.net"]));
+
+  // reload the current tab and check data
+  await refreshTab();
+  // wait for storage tree refresh, and check host
+  info("Waiting for storage tree to refresh and show correct host…");
+  await waitUntil(() => isInTree(doc, ["localStorage", "http://example.net"]));
   // check the table for values
   await selectTreeItem(["localStorage", "http://example.net"]);
   checkStorageData("foo", "bar");
-});
+}
