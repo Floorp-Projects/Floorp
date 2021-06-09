@@ -6824,7 +6824,7 @@
 # Is support for d property for SVG path element?
 - name: layout.css.d-property.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Are we emulating -moz-{inline}-box layout using CSS flexbox?
