@@ -46,7 +46,8 @@ bool VsyncParent::NotifyVsync(const VsyncEvent& aVsync) {
   nsCOMPtr<nsIRunnable> vsyncEvent = NewRunnableMethod<VsyncEvent>(
       "dom::VsyncParent::DispatchVsyncEvent", this,
       &VsyncParent::DispatchVsyncEvent, aVsync);
-  MOZ_ALWAYS_SUCCEEDS(mInitialThread->Dispatch(vsyncEvent, NS_DISPATCH_NORMAL));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToThreadQueue(
+      vsyncEvent.forget(), mInitialThread, EventQueuePriority::Vsync));
   return true;
 }
 
