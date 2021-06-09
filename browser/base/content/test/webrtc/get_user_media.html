@@ -72,6 +72,17 @@ async function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
     message("error: " + err);
   }
 }
+
+async function requestAudioOutput() {
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  try {
+    await navigator.mediaDevices.selectAudioOutput();
+    message("ok");
+  } catch (err) {
+    message("error: " + err);
+  }
+}
+
 message("pending");
 
 function stopTracks(aKind) {
