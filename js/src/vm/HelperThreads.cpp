@@ -156,7 +156,8 @@ void GlobalHelperThreadState::setExternalTaskCallback(
   MOZ_ASSERT(threadCount != 0);
 
   dispatchTaskCallback = callback;
-  // TODO: threadCount is ignored for now.
+  this->threadCount = threadCount;
+  useInternalThreadPool_ = false;
 }
 
 bool js::StartOffThreadWasmCompile(wasm::CompileTask* task,
@@ -1327,8 +1328,6 @@ bool GlobalHelperThreadState::ensureInitialized() {
     return true;
   }
 
-  useInternalThreadPool_ = dispatchTaskCallback == nullptr;
-
   for (size_t& i : runningTaskCount) {
     i = 0;
   }
@@ -1382,8 +1381,7 @@ GlobalHelperThreadState::GlobalHelperThreadState()
       totalCountRunningTasks(0),
       registerThread(nullptr),
       unregisterThread(nullptr),
-      wasmTier2GeneratorsFinished_(0),
-      useInternalThreadPool_(true) {
+      wasmTier2GeneratorsFinished_(0) {
   MOZ_ASSERT(!gHelperThreadState);
 
   cpuCount = ClampDefaultCPUCount(GetCPUCount());
@@ -1391,17 +1389,6 @@ GlobalHelperThreadState::GlobalHelperThreadState()
   gcParallelThreadCount = threadCount;
 
   MOZ_ASSERT(cpuCount > 0, "GetCPUCount() seems broken");
-}
-
-static inline bool dispatchToExternalThreadPool() {
-  static const bool kDispatchToExt =
-      !!getenv("MOZ_JS_DISPATCH_TO_EXTERNAL_THREAD_POOL");
-  return kDispatchToExt;
-}
-
-bool GlobalHelperThreadState::useInternalThreadPool(
-    const AutoLockHelperThreadState& locked) {
-  return dispatchToExternalThreadPool() ? useInternalThreadPool_ : true;
 }
 
 void GlobalHelperThreadState::finish() {
