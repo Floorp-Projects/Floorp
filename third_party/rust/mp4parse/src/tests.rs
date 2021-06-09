@@ -1039,8 +1039,10 @@ fn read_stsd_mp4v() {
         0x2e, 0xa6, 0x60, 0x16, 0xf4, 0x01, 0xf4, 0x24, 0xc8, 0x01, 0xe5, 0x16, 0x84, 0x3c, 0x14,
         0x63, 0x06, 0x01, 0x02,
     ];
-
+    #[cfg(not(feature = "mp4v"))]
     let esds_specific_data = &mp4v[90..];
+    #[cfg(feature = "mp4v")]
+    let esds_specific_data = &mp4v[112..151];
     println!("esds_specific_data {:?}", esds_specific_data);
 
     let mut stream = make_box(BoxSize::Auto, b"mp4v", |s| s.append_bytes(mp4v.as_slice()));
