@@ -29,9 +29,9 @@ add_task(async function common_initialize() {
     ],
   });
   if (LoginHelper.relatedRealmsEnabled) {
-    LoginTestUtils.remoteSettings.setupWebsitesWithSharedCredentials();
-    registerCleanupFunction(function() {
-      LoginTestUtils.remoteSettings.cleanWebsitesWithSharedCredentials();
+    await LoginTestUtils.remoteSettings.setupWebsitesWithSharedCredentials();
+    registerCleanupFunction(async function() {
+      await LoginTestUtils.remoteSettings.cleanWebsitesWithSharedCredentials();
     });
   }
 });

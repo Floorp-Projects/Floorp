@@ -27,6 +27,14 @@ if (LoginHelper.relatedRealmsEnabled) {
     await rsPromise;
   };
 }
+if (LoginHelper.improvedPasswordRulesEnabled) {
+  let rsPromise = LoginTestUtils.remoteSettings.setupImprovedPasswordRules({
+    rules: "",
+  });
+  async () => {
+    await rsPromise;
+  };
+}
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
