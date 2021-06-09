@@ -30,7 +30,6 @@ glean_parser==3.4.0
 jsmin==2.1.0
 json-e==2.7.0
 mozilla-version==0.3.4
-pathlib2==2.3.2
 pathspec==0.8
 pip-tools==5.5.0
 ply==3.10
