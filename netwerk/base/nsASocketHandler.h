@@ -14,21 +14,25 @@
 
 class nsASocketHandler : public nsISupports {
  public:
-  nsASocketHandler() = default;
+  nsASocketHandler()
+      : mCondition(NS_OK),
+        mPollFlags(0),
+        mPollTimeout(UINT16_MAX),
+        mIsPrivate(false) {}
 
   //
   // this condition variable will be checked to determine if the socket
   // handler should be detached.  it must only be accessed on the socket
   // thread.
   //
-  nsresult mCondition{NS_OK};
+  nsresult mCondition;
 
   //
   // these flags can only be modified on the socket transport thread.
   // the socket transport service will check these flags before calling
   // PR_Poll.
   //
-  uint16_t mPollFlags{0};
+  uint16_t mPollFlags;
 
   //
   // this value specifies the maximum amount of time in seconds that may be
@@ -39,9 +43,9 @@ class nsASocketHandler : public nsISupports {
   // timeout error checking.  (i.e., a timeout value of UINT16_MAX is
   // never reached.)
   //
-  uint16_t mPollTimeout{UINT16_MAX};
+  uint16_t mPollTimeout;
 
-  bool mIsPrivate{false};
+  bool mIsPrivate;
 
   //
   // called to service a socket

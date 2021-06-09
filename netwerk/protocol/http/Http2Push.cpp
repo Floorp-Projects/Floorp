@@ -113,8 +113,14 @@ Http2PushedStream::Http2PushedStream(
     uint64_t aCurrentForegroundTabOuterContentWindowId)
     : Http2Stream(aTransaction, aSession, 0,
                   aCurrentForegroundTabOuterContentWindowId),
+      mConsumerStream(nullptr),
       mAssociatedTransaction(aAssociatedStream->Transaction()),
-      mBufferedPush(aTransaction) {
+      mBufferedPush(aTransaction),
+      mStatus(NS_OK),
+      mPushCompleted(false),
+      mDeferCleanupOnSuccess(true),
+      mDeferCleanupOnPush(false),
+      mOnPushFailed(false) {
   LOG3(("Http2PushedStream ctor this=%p 0x%X\n", this, aID));
   mStreamID = aID;
   MOZ_ASSERT(!(aID & 1));  // must be even to be a pushed stream
@@ -365,7 +371,14 @@ void Http2PushedStream::TopBrowsingContextIdChanged(uint64_t id) {
 
 NS_IMPL_ISUPPORTS0(Http2PushTransactionBuffer)
 
-Http2PushTransactionBuffer::Http2PushTransactionBuffer() {
+Http2PushTransactionBuffer::Http2PushTransactionBuffer()
+    : mStatus(NS_OK),
+      mRequestHead(nullptr),
+      mPushStream(nullptr),
+      mIsDone(false),
+      mBufferedHTTP1Size(kDefaultBufferSize),
+      mBufferedHTTP1Used(0),
+      mBufferedHTTP1Consumed(0) {
   mBufferedHTTP1 = MakeUnique<char[]>(mBufferedHTTP1Size);
 }
 

@@ -188,31 +188,61 @@ class nsSOCKSSocketInfo : public nsISOCKSSocketInfo, public nsIDNSListener {
   }
 
  private:
-  State mState{SOCKS_INITIAL};
-  uint8_t* mData{nullptr};
-  uint8_t* mDataIoPtr{nullptr};
-  uint32_t mDataLength{0};
-  uint32_t mReadOffset{0};
-  uint32_t mAmountToRead{0};
+  State mState;
+  uint8_t* mData;
+  uint8_t* mDataIoPtr;
+  uint32_t mDataLength;
+  uint32_t mReadOffset;
+  uint32_t mAmountToRead;
   nsCOMPtr<nsIDNSRecord> mDnsRec;
   nsCOMPtr<nsICancelable> mLookup;
-  nsresult mLookupStatus{NS_ERROR_NOT_INITIALIZED};
-  PRFileDesc* mFD{nullptr};
+  nsresult mLookupStatus;
+  PRFileDesc* mFD;
 
   nsCString mDestinationHost;
   nsCOMPtr<nsIProxyInfo> mProxy;
-  int32_t mVersion{-1};  // SOCKS version 4 or 5
-  int32_t mDestinationFamily{AF_INET};
-  uint32_t mFlags{0};
-  uint32_t mTlsFlags{0};
+  int32_t mVersion;  // SOCKS version 4 or 5
+  int32_t mDestinationFamily;
+  uint32_t mFlags;
+  uint32_t mTlsFlags;
   NetAddr mInternalProxyAddr;
   NetAddr mExternalProxyAddr;
   NetAddr mDestinationAddr;
-  PRIntervalTime mTimeout{PR_INTERVAL_NO_TIMEOUT};
+  PRIntervalTime mTimeout;
   nsCString mProxyUsername;  // Cache, from mProxy
 };
 
-nsSOCKSSocketInfo::nsSOCKSSocketInfo() {
+nsSOCKSSocketInfo::nsSOCKSSocketInfo()
+    : mState(SOCKS_INITIAL),
+      mDataIoPtr(nullptr),
+      mDataLength(0),
+      mReadOffset(0),
+      mAmountToRead(0),
+      mLookupStatus(NS_ERROR_NOT_INITIALIZED),
+      mFD(nullptr),
+      mVersion(-1),
+      mDestinationFamily(AF_INET),
+      mFlags(0),
+      mTlsFlags(0),
+      mTimeout(PR_INTERVAL_NO_TIMEOUT) {
+  this->mInternalProxyAddr.inet.family = 0;
+  this->mInternalProxyAddr.inet6.family = 0;
+  this->mInternalProxyAddr.inet6.port = 0;
+  this->mInternalProxyAddr.inet6.flowinfo = 0;
+  this->mInternalProxyAddr.inet6.scope_id = 0;
+  this->mInternalProxyAddr.local.family = 0;
+  this->mExternalProxyAddr.inet.family = 0;
+  this->mExternalProxyAddr.inet6.family = 0;
+  this->mExternalProxyAddr.inet6.port = 0;
+  this->mExternalProxyAddr.inet6.flowinfo = 0;
+  this->mExternalProxyAddr.inet6.scope_id = 0;
+  this->mExternalProxyAddr.local.family = 0;
+  this->mDestinationAddr.inet.family = 0;
+  this->mDestinationAddr.inet6.family = 0;
+  this->mDestinationAddr.inet6.port = 0;
+  this->mDestinationAddr.inet6.flowinfo = 0;
+  this->mDestinationAddr.inet6.scope_id = 0;
+  this->mDestinationAddr.local.family = 0;
   mData = new uint8_t[BUFFER_SIZE];
 
   mInternalProxyAddr.raw.family = AF_INET;
@@ -260,7 +290,7 @@ nsSOCKSSocketInfo::nsSOCKSSocketInfo() {
 template <size_t Size>
 class Buffer {
  public:
-  Buffer() = default;
+  Buffer() : mBuf(nullptr), mLength(0) {}
 
   explicit Buffer(uint8_t* aBuf, size_t aLength = 0)
       : mBuf(aBuf), mLength(aLength) {}
@@ -334,8 +364,8 @@ class Buffer {
     return result;
   }
 
-  uint8_t* mBuf{nullptr};
-  size_t mLength{0};
+  uint8_t* mBuf;
+  size_t mLength;
 };
 
 void nsSOCKSSocketInfo::Init(int32_t version, int32_t family,
@@ -773,10 +803,11 @@ PRStatus nsSOCKSSocketInfo::ReadV5AuthResponse() {
   if (!mProxyUsername.IsEmpty() && authMethod == 0x02) {  // username/pw
     LOGDEBUG(("socks5: auth method accepted by server"));
     return WriteV5UsernameRequest();
-  }  // 0xFF signals error
-  LOGERROR(("socks5: server did not accept our authentication method"));
-  HandshakeFinished(PR_CONNECT_REFUSED_ERROR);
-  return PR_FAILURE;
+  } else {  // 0xFF signals error
+    LOGERROR(("socks5: server did not accept our authentication method"));
+    HandshakeFinished(PR_CONNECT_REFUSED_ERROR);
+    return PR_FAILURE;
+  }
 }
 
 PRStatus nsSOCKSSocketInfo::WriteV5UsernameRequest() {

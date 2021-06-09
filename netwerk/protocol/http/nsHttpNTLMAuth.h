@@ -16,7 +16,7 @@ class nsHttpNTLMAuth : public nsIHttpAuthenticator {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHTTPAUTHENTICATOR
 
-  nsHttpNTLMAuth() = default;
+  nsHttpNTLMAuth() : mUseNative(false) {}
 
   static already_AddRefed<nsIHttpAuthenticator> GetOrCreate();
 
@@ -25,7 +25,7 @@ class nsHttpNTLMAuth : public nsIHttpAuthenticator {
 
   // This flag indicates whether we are using the native NTLM implementation
   // or the internal one.
-  bool mUseNative{false};
+  bool mUseNative;
 
   static StaticRefPtr<nsHttpNTLMAuth> gSingleton;
 };

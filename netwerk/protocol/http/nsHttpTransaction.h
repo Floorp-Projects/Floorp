@@ -294,7 +294,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   };
 
-  Mutex mLock{"transaction lock"};
+  Mutex mLock;
 
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsITransportEventSink> mTransportSink;
@@ -304,12 +304,12 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsCOMPtr<nsIAsyncOutputStream> mPipeOut;
   nsCOMPtr<nsIRequestContext> mRequestContext;
 
-  uint64_t mChannelId{0};
+  uint64_t mChannelId;
   nsCOMPtr<nsIHttpActivityObserver> mActivityDistributor;
 
   nsCString mReqHeaderBuf;  // flattened request headers
   nsCOMPtr<nsIInputStream> mRequestStream;
-  int64_t mRequestSize{0};
+  int64_t mRequestSize;
 
   RefPtr<nsAHttpConnection> mConnection;
   RefPtr<nsHttpConnectionInfo> mConnInfo;
@@ -324,45 +324,45 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // 2. If only some records have echConfig and some not, we always fallback to
   // this origin conn info.
   RefPtr<nsHttpConnectionInfo> mOrigConnInfo;
-  nsHttpRequestHead* mRequestHead{nullptr};    // weak ref
-  nsHttpResponseHead* mResponseHead{nullptr};  // owning pointer
+  nsHttpRequestHead* mRequestHead;    // weak ref
+  nsHttpResponseHead* mResponseHead;  // owning pointer
 
-  nsAHttpSegmentReader* mReader{nullptr};
-  nsAHttpSegmentWriter* mWriter{nullptr};
+  nsAHttpSegmentReader* mReader;
+  nsAHttpSegmentWriter* mWriter;
 
   nsCString mLineBuf;  // may contain a partial line
 
-  int64_t mContentLength{-1};  // equals -1 if unknown
-  int64_t mContentRead{0};     // count of consumed content bytes
-  Atomic<int64_t, ReleaseAcquire> mTransferSize{0};  // count of received bytes
+  int64_t mContentLength;  // equals -1 if unknown
+  int64_t mContentRead;    // count of consumed content bytes
+  Atomic<int64_t, ReleaseAcquire> mTransferSize;  // count of received bytes
 
   // After a 304/204 or other "no-content" style response we will skip over
   // up to MAX_INVALID_RESPONSE_BODY_SZ bytes when looking for the next
   // response header to deal with servers that actually sent a response
   // body where they should not have. This member tracks how many bytes have
   // so far been skipped.
-  uint32_t mInvalidResponseBytesRead{0};
+  uint32_t mInvalidResponseBytesRead;
 
   RefPtr<Http2PushedStreamWrapper> mPushedStream;
-  uint32_t mInitialRwin{0};
+  uint32_t mInitialRwin;
 
-  nsHttpChunkedDecoder* mChunkedDecoder{nullptr};
+  nsHttpChunkedDecoder* mChunkedDecoder;
 
   TimingStruct mTimings;
 
-  nsresult mStatus{NS_OK};
+  nsresult mStatus;
 
-  int16_t mPriority{0};
+  int16_t mPriority;
 
-  uint16_t mRestartCount{
-      0};  // the number of times this transaction has been restarted
-  uint32_t mCaps{0};
+  uint16_t
+      mRestartCount;  // the number of times this transaction has been restarted
+  uint32_t mCaps;
 
-  HttpVersion mHttpVersion{HttpVersion::UNKNOWN};
-  uint16_t mHttpResponseCode{0};
+  HttpVersion mHttpVersion;
+  uint16_t mHttpResponseCode;
   nsCString mFlat407Headers;
 
-  uint32_t mCurrentHttpResponseHeaderSize{0};
+  uint32_t mCurrentHttpResponseHeaderSize;
 
   int32_t const THROTTLE_NO_LIMIT = -1;
   // This can have 3 possible values:
@@ -375,7 +375,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   //          stop reading and return WOULD_BLOCK from WriteSegments;
   //          transaction then waits for a call of ResumeReading that resets
   //          this member back to THROTTLE_NO_LIMIT
-  int32_t mThrottlingReadAllowance{THROTTLE_NO_LIMIT};
+  int32_t mThrottlingReadAllowance;
 
   // mCapsToClear holds flags that should be cleared in mCaps, e.g. unset
   // NS_HTTP_REFRESH_DNS when DNS refresh request has completed to avoid
@@ -384,65 +384,65 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // after the main thread modifies it. To deal with raciness, only unsetting
   // bitfields should be allowed: 'lost races' will thus err on the
   // conservative side, e.g. by going ahead with a 2nd DNS refresh.
-  Atomic<uint32_t> mCapsToClear{0};
-  Atomic<bool, ReleaseAcquire> mResponseIsComplete{false};
-  Atomic<bool, ReleaseAcquire> mClosed{false};
+  Atomic<uint32_t> mCapsToClear;
+  Atomic<bool, ReleaseAcquire> mResponseIsComplete;
+  Atomic<bool, ReleaseAcquire> mClosed;
 
   // True iff WriteSegments was called while this transaction should be
   // throttled (stop reading) Used to resume read on unblock of reading.  Conn
   // manager is responsible for calling back to resume reading.
-  bool mReadingStopped{false};
+  bool mReadingStopped;
 
   // state flags, all logically boolean, but not packed together into a
   // bitfield so as to avoid bitfield-induced races.  See bug 560579.
-  bool mConnected{false};
-  bool mActivated{false};
-  bool mHaveStatusLine{false};
-  bool mHaveAllHeaders{false};
-  bool mTransactionDone{false};
-  bool mDidContentStart{false};
-  bool mNoContent{false};  // expecting an empty entity body
-  bool mSentData{false};
-  bool mReceivedData{false};
-  bool mStatusEventPending{false};
-  bool mHasRequestBody{false};
-  bool mProxyConnectFailed{false};
-  bool mHttpResponseMatched{false};
-  bool mPreserveStream{false};
-  bool mDispatchedAsBlocking{false};
-  bool mResponseTimeoutEnabled{true};
-  bool mForceRestart{false};
-  bool mReuseOnRestart{false};
-  bool mContentDecoding{false};
-  bool mContentDecodingCheck{false};
-  bool mDeferredSendProgress{false};
-  bool mWaitingOnPipeOut{false};
+  bool mConnected;
+  bool mActivated;
+  bool mHaveStatusLine;
+  bool mHaveAllHeaders;
+  bool mTransactionDone;
+  bool mDidContentStart;
+  bool mNoContent;  // expecting an empty entity body
+  bool mSentData;
+  bool mReceivedData;
+  bool mStatusEventPending;
+  bool mHasRequestBody;
+  bool mProxyConnectFailed;
+  bool mHttpResponseMatched;
+  bool mPreserveStream;
+  bool mDispatchedAsBlocking;
+  bool mResponseTimeoutEnabled;
+  bool mForceRestart;
+  bool mReuseOnRestart;
+  bool mContentDecoding;
+  bool mContentDecodingCheck;
+  bool mDeferredSendProgress;
+  bool mWaitingOnPipeOut;
 
   bool mIsHttp3Used = false;
-  bool mDoNotRemoveAltSvc{false};
+  bool mDoNotRemoveAltSvc;
 
   // mClosed           := transaction has been explicitly closed
   // mTransactionDone  := transaction ran to completion or was interrupted
   // mResponseComplete := transaction ran to completion
 
   // For Restart-In-Progress Functionality
-  bool mReportedStart{false};
-  bool mReportedResponseHeader{false};
+  bool mReportedStart;
+  bool mReportedResponseHeader;
 
   // protected by nsHttp::GetLock()
-  bool mResponseHeadTaken{false};
+  bool mResponseHeadTaken;
   UniquePtr<nsHttpHeaderArray> mForTakeResponseTrailers;
-  bool mResponseTrailersTaken{false};
+  bool mResponseTrailersTaken;
 
   // Set when this transaction was restarted by call to Restart().  Used to tell
   // the http channel to reset proxy authentication.
-  Atomic<bool> mRestarted{false};
+  Atomic<bool> mRestarted;
 
   // The time when the transaction was submitted to the Connection Manager
   TimeStamp mPendingTime;
   TimeDuration mPendingDurationTime;
 
-  uint64_t mTopBrowsingContextId{0};
+  uint64_t mTopBrowsingContextId;
 
   // For Rate Pacing via an EventTokenBucket
  public:
@@ -473,9 +473,9 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool EligibleForThrottling() const;
 
  private:
-  bool mSubmittedRatePacing{false};
-  bool mPassedRatePacing{false};
-  bool mSynchronousRatePaceRequest{false};
+  bool mSubmittedRatePacing;
+  bool mPassedRatePacing;
+  bool mSynchronousRatePaceRequest;
   nsCOMPtr<nsICancelable> mTokenBucketCancel;
 
   void CollectTelemetryForUploads();
@@ -484,7 +484,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   uint32_t ClassOfService() { return mClassOfService; }
 
  private:
-  Atomic<uint32_t, Relaxed> mClassOfService{0};
+  Atomic<uint32_t, Relaxed> mClassOfService;
 
  public:
   // setting TunnelProvider to non-null means the transaction should only
@@ -505,30 +505,30 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   TransactionObserverFunc mTransactionObserver;
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
-  bool mResolvedByTRR{false};
+  bool mResolvedByTRR;
   bool mEchConfigUsed = false;
 
-  bool m0RTTInProgress{false};
-  bool mDoNotTryEarlyData{false};
+  bool m0RTTInProgress;
+  bool mDoNotTryEarlyData;
   enum {
     EARLY_NONE,
     EARLY_SENT,
     EARLY_ACCEPTED,
     EARLY_425
-  } mEarlyDataDisposition{EARLY_NONE};
+  } mEarlyDataDisposition;
 
   // H2 websocket support
   RefPtr<SpdyConnectTransaction> mH2WSTransaction;
 
-  HttpTrafficCategory mTrafficCategory{HttpTrafficCategory::eInvalid};
+  HttpTrafficCategory mTrafficCategory;
   bool mThroughCaptivePortal;
-  Atomic<int32_t> mProxyConnectResponseCode{0};
+  Atomic<int32_t> mProxyConnectResponseCode;
 
   OnPushCallback mOnPushCallback;
   nsTHashMap<uint32_t, RefPtr<Http2PushedStreamWrapper>> mIDToStreamMap;
 
   nsCOMPtr<nsICancelable> mDNSRequest;
-  Atomic<uint32_t, Relaxed> mHTTPSSVCReceivedStage{HTTPSSVC_NOT_USED};
+  Atomic<uint32_t, Relaxed> mHTTPSSVCReceivedStage;
   bool m421Received = false;
   nsCOMPtr<nsIDNSHTTPSSVCRecord> mHTTPSSVCRecord;
   nsTArray<RefPtr<nsISVCBRecord>> mRecordsForRetry;

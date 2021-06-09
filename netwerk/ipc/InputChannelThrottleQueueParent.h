@@ -30,16 +30,16 @@ class InputChannelThrottleQueueParent final
 
   friend class PInputChannelThrottleQueueParent;
 
-  explicit InputChannelThrottleQueueParent() = default;
+  explicit InputChannelThrottleQueueParent();
   mozilla::ipc::IPCResult RecvRecordRead(const uint32_t& aBytesRead);
   void ActorDestroy(ActorDestroyReason aWhy) override {}
 
  private:
   virtual ~InputChannelThrottleQueueParent() = default;
 
-  uint64_t mBytesProcessed{0};
-  uint32_t mMeanBytesPerSecond{0};
-  uint32_t mMaxBytesPerSecond{0};
+  uint64_t mBytesProcessed;
+  uint32_t mMeanBytesPerSecond;
+  uint32_t mMaxBytesPerSecond;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(InputChannelThrottleQueueParent,

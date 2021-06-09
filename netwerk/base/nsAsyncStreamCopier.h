@@ -59,15 +59,15 @@ class nsAsyncStreamCopier final : public nsIAsyncStreamCopier,
 
   nsCOMPtr<nsISupports> mCopierCtx;
 
-  mozilla::Mutex mLock{"nsAsyncStreamCopier.mLock"};
+  mozilla::Mutex mLock;
 
-  nsAsyncCopyMode mMode{NS_ASYNCCOPY_VIA_READSEGMENTS};
+  nsAsyncCopyMode mMode;
   uint32_t mChunkSize;
-  nsresult mStatus{NS_OK};
-  bool mIsPending{false};
-  bool mCloseSource{false};
-  bool mCloseSink{false};
-  bool mShouldSniffBuffering{false};
+  nsresult mStatus;
+  bool mIsPending;
+  bool mCloseSource;
+  bool mCloseSink;
+  bool mShouldSniffBuffering;
 
   friend class ProceedWithAsyncCopy;
   friend class AsyncApplyBufferingPolicyEvent;

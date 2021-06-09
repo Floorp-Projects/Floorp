@@ -54,8 +54,8 @@ class NullHttpChannel final : public nsINullChannel,
   TimeStamp mChannelCreationTimestamp;
   nsCOMPtr<nsIPrincipal> mResourcePrincipal;
   nsCString mTimingAllowOriginHeader;
-  bool mAllRedirectsSameOrigin{false};
-  bool mAllRedirectsPassTimingAllowCheck{false};
+  bool mAllRedirectsSameOrigin;
+  bool mAllRedirectsPassTimingAllowCheck;
 };
 
 }  // namespace net

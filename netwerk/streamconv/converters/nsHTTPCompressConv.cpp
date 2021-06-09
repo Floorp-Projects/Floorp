@@ -37,7 +37,23 @@ NS_IMPL_ISUPPORTS(nsHTTPCompressConv, nsIStreamConverter, nsIStreamListener,
                   nsIThreadRetargetableStreamListener)
 
 // nsFTPDirListingConv methods
-nsHTTPCompressConv::nsHTTPCompressConv() {
+nsHTTPCompressConv::nsHTTPCompressConv()
+    : mMode(HTTP_COMPRESS_IDENTITY),
+      mOutBuffer(nullptr),
+      mInpBuffer(nullptr),
+      mOutBufferLen(0),
+      mInpBufferLen(0),
+      mCheckHeaderDone(false),
+      mStreamEnded(false),
+      mStreamInitialized(false),
+      mDummyStreamInitialised(false),
+      d_stream{},
+      mLen(0),
+      hMode(0),
+      mSkipCount(0),
+      mFlags(0),
+      mDecodedDataLength(0),
+      mMutex("nsHTTPCompressConv") {
   LOG(("nsHttpCompresssConv %p ctor\n", this));
   if (NS_IsMainThread()) {
     mFailUncleanStops =

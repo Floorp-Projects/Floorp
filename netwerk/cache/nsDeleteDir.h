@@ -69,11 +69,11 @@ class nsDeleteDir {
   static nsDeleteDir* gInstance;
   mozilla::Mutex mLock;
   mozilla::CondVar mCondVar;
-  bool mNotified{false};
+  bool mNotified;
   nsCOMArray<nsITimer> mTimers;
   nsCOMPtr<nsISerialEventTarget> mBackgroundET;
-  bool mShutdownPending{false};
-  bool mStopDeleting{false};
+  bool mShutdownPending;
+  bool mStopDeleting;
 };
 
 #endif  // nsDeleteDir_h__

@@ -86,20 +86,19 @@ class GIOChannelChild final : public PGIOChannelChild,
  private:
   nsCOMPtr<nsIInputStream> mUploadStream;
 
-  bool mIPCOpen = false;
+  bool mIPCOpen;
   const RefPtr<ChannelEventQueue> mEventQ;
 
   bool mCanceled = false;
-  uint32_t mSuspendCount = 0;
-  ;
+  uint32_t mSuspendCount;
   bool mIsPending = false;
 
-  uint64_t mStartPos = 0;
+  uint64_t mStartPos;
   nsCString mEntityID;
 
   // Set if SendSuspend is called. Determines if SendResume is needed when
   // diverting callbacks to parent.
-  bool mSuspendSent = false;
+  bool mSuspendSent;
 };
 
 inline bool GIOChannelChild::IsSuspended() const { return mSuspendCount != 0; }

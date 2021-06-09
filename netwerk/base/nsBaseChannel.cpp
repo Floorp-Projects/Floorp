@@ -52,7 +52,21 @@ class ScopedRequestSuspender {
 //-----------------------------------------------------------------------------
 // nsBaseChannel
 
-nsBaseChannel::nsBaseChannel() : NeckoTargetHolder(nullptr) {
+nsBaseChannel::nsBaseChannel()
+    : NeckoTargetHolder(nullptr),
+      mPumpingData(false),
+      mLoadFlags(LOAD_NORMAL),
+      mQueriedProgressSink(true),
+      mSynthProgressEvents(false),
+      mAllowThreadRetargeting(true),
+      mWaitingOnAsyncRedirect(false),
+      mOpenRedirectChannel(false),
+      mRedirectFlags{0},
+      mStatus(NS_OK),
+      mContentDispositionHint(UINT32_MAX),
+      mContentLength(-1),
+      mWasOpened(false),
+      mCanceled(false) {
   mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
 }
 

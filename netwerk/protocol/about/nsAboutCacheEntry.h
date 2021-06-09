@@ -39,7 +39,7 @@ class nsAboutCacheEntry final : public nsIAboutModule {
     NS_FORWARD_SAFE_NSICHANNEL(mChannel)
     NS_FORWARD_SAFE_NSIREQUEST(mChannel)
 
-    Channel() = default;
+    Channel() : mBuffer(nullptr), mWaitingForData(false), mHexDumpState(0) {}
 
    private:
     virtual ~Channel() = default;
@@ -66,10 +66,10 @@ class nsAboutCacheEntry final : public nsIAboutModule {
     nsCOMPtr<nsILoadContextInfo> mLoadInfo;
     nsCOMPtr<nsIURI> mCacheURI;
 
-    nsCString* mBuffer{nullptr};
+    nsCString* mBuffer;
     nsCOMPtr<nsIAsyncOutputStream> mOutputStream;
-    bool mWaitingForData{false};
-    uint32_t mHexDumpState{0};
+    bool mWaitingForData;
+    uint32_t mHexDumpState;
 
     nsCOMPtr<nsIChannel> mChannel;
   };

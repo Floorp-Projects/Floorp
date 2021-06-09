@@ -33,7 +33,23 @@ static mozilla::LazyLogModule gStreamPumpLog("nsStreamPump");
 // nsInputStreamPump methods
 //-----------------------------------------------------------------------------
 
-nsInputStreamPump::nsInputStreamPump() : mOffMainThread(!NS_IsMainThread()) {}
+nsInputStreamPump::nsInputStreamPump()
+    : mState(STATE_IDLE),
+      mStreamOffset(0),
+      mStreamLength(0),
+      mSegSize(0),
+      mSegCount(0),
+      mStatus(NS_OK),
+      mSuspendCount(0),
+      mLoadFlags(LOAD_NORMAL),
+      mIsPending(false),
+      mProcessingCallbacks(false),
+      mWaitingForInputStreamReady(false),
+      mCloseWhenDone(false),
+      mRetargeting(false),
+      mAsyncStreamIsBuffered(false),
+      mOffMainThread(!NS_IsMainThread()),
+      mMutex("nsInputStreamPump") {}
 
 nsresult nsInputStreamPump::Create(nsInputStreamPump** result,
                                    nsIInputStream* stream, uint32_t segsize,

@@ -12,7 +12,6 @@
 #include "nsTHashtable.h"
 #include "nsWeakReference.h"
 #include <functional>
-#include "CookieCommons.h"
 
 class nsIArray;
 class nsICookie;
@@ -128,8 +127,8 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
   virtual void Close() = 0;
 
  protected:
-  CookieStorage() = default;
-  virtual ~CookieStorage() = default;
+  CookieStorage();
+  virtual ~CookieStorage();
 
   void Init();
 
@@ -164,7 +163,7 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
 
   nsTHashtable<CookieEntry> mHostTable;
 
-  uint32_t mCookieCount{0};
+  uint32_t mCookieCount;
 
  private:
   void PrefChanged(nsIPrefBranch* aPrefBranch);
@@ -188,12 +187,12 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
                                                   uint16_t aMaxNumberOfCookies,
                                                   int64_t aCookiePurgeAge) = 0;
 
-  int64_t mCookieOldestTime{INT64_MAX};
+  int64_t mCookieOldestTime;
 
-  uint16_t mMaxNumberOfCookies{kMaxNumberOfCookies};
-  uint16_t mMaxCookiesPerHost{kMaxCookiesPerHost};
-  uint16_t mCookieQuotaPerHost{kCookieQuotaPerHost};
-  int64_t mCookiePurgeAge{kCookiePurgeAge};
+  uint16_t mMaxNumberOfCookies;
+  uint16_t mMaxCookiesPerHost;
+  uint16_t mCookieQuotaPerHost;
+  int64_t mCookiePurgeAge;
 };
 
 }  // namespace net

@@ -74,34 +74,34 @@ class nsInputStreamPump final : public nsIInputStreamPump,
   uint32_t OnStateStop();
   nsresult CreateBufferedStreamIfNeeded();
 
-  uint32_t mState{STATE_IDLE};
+  uint32_t mState;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIEventTarget> mTargetThread;
   nsCOMPtr<nsIEventTarget> mLabeledMainThreadTarget;
   nsCOMPtr<nsIInputStream> mStream;
   nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
-  uint64_t mStreamOffset{0};
-  uint64_t mStreamLength{0};
-  uint32_t mSegSize{0};
-  uint32_t mSegCount{0};
-  nsresult mStatus{NS_OK};
-  uint32_t mSuspendCount{0};
-  uint32_t mLoadFlags{LOAD_NORMAL};
-  bool mIsPending{false};
+  uint64_t mStreamOffset;
+  uint64_t mStreamLength;
+  uint32_t mSegSize;
+  uint32_t mSegCount;
+  nsresult mStatus;
+  uint32_t mSuspendCount;
+  uint32_t mLoadFlags;
+  bool mIsPending;
   // True while in OnInputStreamReady, calling OnStateStart, OnStateTransfer
   // and OnStateStop. Used to prevent calls to AsyncWait during callbacks.
-  bool mProcessingCallbacks{false};
+  bool mProcessingCallbacks;
   // True if waiting on the "input stream ready" callback.
-  bool mWaitingForInputStreamReady{false};
-  bool mCloseWhenDone{false};
-  bool mRetargeting{false};
-  bool mAsyncStreamIsBuffered{false};
+  bool mWaitingForInputStreamReady;
+  bool mCloseWhenDone;
+  bool mRetargeting;
+  bool mAsyncStreamIsBuffered;
   // Indicate whether nsInputStreamPump is used completely off main thread.
   // If true, OnStateStop() is executed off main thread.
   bool mOffMainThread;
   // Protects state/member var accesses across multiple threads.
-  mozilla::RecursiveMutex mMutex{"nsInputStreamPump"};
+  mozilla::RecursiveMutex mMutex;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsInputStreamPump, NS_INPUT_STREAM_PUMP_IID)

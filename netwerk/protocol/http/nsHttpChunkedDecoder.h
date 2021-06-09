@@ -15,7 +15,11 @@ namespace net {
 
 class nsHttpChunkedDecoder {
  public:
-  nsHttpChunkedDecoder() = default;
+  nsHttpChunkedDecoder()
+      : mTrailers(nullptr),
+        mChunkRemaining(0),
+        mReachedEOF(false),
+        mWaitEOF(false) {}
   ~nsHttpChunkedDecoder() = default;
 
   bool ReachedEOF() { return mReachedEOF; }
@@ -38,10 +42,10 @@ class nsHttpChunkedDecoder {
 
  private:
   UniquePtr<nsHttpHeaderArray> mTrailers;
-  uint32_t mChunkRemaining{0};
+  uint32_t mChunkRemaining;
   nsCString mLineBuf;  // may hold a partial line
-  bool mReachedEOF{false};
-  bool mWaitEOF{false};
+  bool mReachedEOF;
+  bool mWaitEOF;
 };
 
 }  // namespace net

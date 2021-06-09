@@ -25,7 +25,7 @@ class nsSyncStreamListener final : public nsISyncStreamListener,
   static already_AddRefed<nsISyncStreamListener> Create();
 
  private:
-  nsSyncStreamListener() = default;
+  nsSyncStreamListener() : mStatus(NS_OK), mKeepWaiting(false), mDone(false) {}
   ~nsSyncStreamListener() = default;
 
   nsresult Init();
@@ -34,9 +34,9 @@ class nsSyncStreamListener final : public nsISyncStreamListener,
 
   nsCOMPtr<nsIInputStream> mPipeIn;
   nsCOMPtr<nsIOutputStream> mPipeOut;
-  nsresult mStatus{NS_OK};
-  bool mKeepWaiting{false};
-  bool mDone{false};
+  nsresult mStatus;
+  bool mKeepWaiting;
+  bool mDone;
 };
 
 #endif  // nsSyncStreamListener_h__

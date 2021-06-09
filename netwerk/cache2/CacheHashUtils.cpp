@@ -124,7 +124,15 @@ CacheHash::Hash16_t CacheHash::Hash16(const char* aData, uint32_t aSize,
 
 NS_IMPL_ISUPPORTS0(CacheHash)
 
-CacheHash::CacheHash(uint32_t aInitval) : mC(aInitval) {}
+CacheHash::CacheHash(uint32_t aInitval)
+    : mA(0x9e3779b9),
+      mB(0x9e3779b9),
+      mC(aInitval),
+      mPos(0),
+      mBuf(0),
+      mBufPos(0),
+      mLength(0),
+      mFinalized(false) {}
 
 void CacheHash::Feed(uint32_t aVal, uint8_t aLen) {
   switch (mPos) {

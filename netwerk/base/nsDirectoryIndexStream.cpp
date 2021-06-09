@@ -38,7 +38,8 @@
 using namespace mozilla;
 static LazyLogModule gLog("nsDirectoryIndexStream");
 
-nsDirectoryIndexStream::nsDirectoryIndexStream() {
+nsDirectoryIndexStream::nsDirectoryIndexStream()
+    : mOffset(0), mStatus(NS_OK), mPos(0) {
   MOZ_LOG(gLog, LogLevel::Debug, ("nsDirectoryIndexStream[%p]: created", this));
 }
 

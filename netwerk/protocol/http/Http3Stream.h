@@ -96,7 +96,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
     SENDING_BODY,
     EARLY_RESPONSE,
     SEND_DONE
-  } mSendState{PREPARING_HEADERS};
+  } mSendState;
 
   /**
    * RecvStreamState:
@@ -123,23 +123,23 @@ class Http3Stream final : public nsAHttpSegmentReader,
     READING_DATA,
     RECEIVED_FIN,
     RECV_DONE
-  } mRecvState{BEFORE_HEADERS};
+  } mRecvState;
 
-  uint64_t mStreamId{UINT64_MAX};
+  uint64_t mStreamId;
   Http3Session* mSession;
   RefPtr<nsAHttpTransaction> mTransaction;
   nsCString mFlatHttpRequestHeaders;
-  bool mQueued{false};
-  bool mDataReceived{false};
-  bool mResetRecv{false};
+  bool mQueued;
+  bool mDataReceived;
+  bool mResetRecv;
   nsTArray<uint8_t> mFlatResponseHeaders;
-  uint32_t mRequestBodyLenRemaining{0};
+  uint32_t mRequestBodyLenRemaining;
 
   // For Progress Events
-  uint64_t mTotalSent{0};
-  uint64_t mTotalRead{0};
+  uint64_t mTotalSent;
+  uint64_t mTotalRead;
 
-  bool mFin{false};
+  bool mFin;
 
   bool mAttempting0RTT = false;
 

@@ -320,14 +320,13 @@ nsresult nsWifiScannerDBus::SetMac(DBusMessageIter* aVariant,
 
   const uint32_t MAC_LEN = 6;
   uint8_t macAddress[MAC_LEN];
-  char* savedPtr = nullptr;
-  char* token = strtok_r(hwAddress, ":", &savedPtr);
-  for (unsigned char& macAddres : macAddress) {
+  char* token = strtok(hwAddress, ":");
+  for (uint32_t i = 0; i < ArrayLength(macAddress); i++) {
     if (!token) {
       return NS_ERROR_FAILURE;
     }
-    macAddres = strtoul(token, nullptr, 16);
-    token = strtok_r(nullptr, ":", &savedPtr);
+    macAddress[i] = strtoul(token, nullptr, 16);
+    token = strtok(nullptr, ":");
   }
   aAp->setMac(macAddress);
   return NS_OK;
