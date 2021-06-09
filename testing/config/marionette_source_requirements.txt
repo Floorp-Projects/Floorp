@@ -2,8 +2,7 @@
 
 -r mozbase_source_requirements.txt
 
-../web-platform/tests/tools/wptserve ; python_version >= '3'
-../web-platform/mozilla/tests/tools/wptserve_py2 ; python_version < '3'
+../web-platform/tests/tools/wptserve
 ../web-platform/tests/tools/third_party/certifi
 ../web-platform/tests/tools/third_party/enum ; python_version < '3'
 ../web-platform/tests/tools/third_party/h2
