@@ -1761,8 +1761,8 @@ JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {
   return str;
 }
 
-bool JS_FASTCALL js::NumberValueToStringBuffer(JSContext* cx, const Value& v,
-                                               StringBuffer& sb) {
+bool js::NumberValueToStringBuffer(JSContext* cx, const Value& v,
+                                   StringBuffer& sb) {
   /* Convert to C-string. */
   ToCStringBuf cbuf;
   const char* cstr;

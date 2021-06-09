@@ -276,7 +276,7 @@ void TypedArrayObject::setInlineElements() {
 
 /* Helper clamped uint8_t type */
 
-uint32_t JS_FASTCALL js::ClampDoubleToUint8(const double x) {
+uint32_t js::ClampDoubleToUint8(const double x) {
   // Not < so that NaN coerces to 0
   if (!(x >= 0)) {
     return 0;
