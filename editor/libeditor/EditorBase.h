@@ -2324,6 +2324,13 @@ class EditorBase : public nsIEditor,
       const nsACString& aCharset) const;
 
   /**
+   * EnsurePaddingBRElementInMultilineEditor() creates a padding `<br>` element
+   * at end of multiline text editor.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  EnsurePaddingBRElementInMultilineEditor();
+
+  /**
    * SelectAllInternal() should be used instead of SelectAll() in editor
    * because SelectAll() creates AutoEditActionSetter but we should avoid
    * to create it as far as possible.
