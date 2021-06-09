@@ -1467,19 +1467,18 @@ bool nsWindow::IsPopupInLayoutPopupChain(
   return false;
 }
 
-void nsWindow::WaylandPopupHierarchyUpdateByLayout() {
-  LOG_POPUP(("nsWindow::WaylandPopupHierarchyUpdateByLayout"));
+// Hide popups which are not in popup chain.
+void nsWindow::WaylandPopupHierarchyHideByLayout(
+    nsTArray<nsIWidget*>* aLayoutWidgetHierarchy) {
+  LOG_POPUP(("nsWindow::WaylandPopupHierarchyMarkByLayout"));
   MOZ_ASSERT(mWaylandToplevel == nullptr, "Should be called on toplevel only!");
-
-  AutoTArray<nsIWidget*, 5> layoutPopupWidgetChain;
-  GetLayoutPopupWidgetChain(&layoutPopupWidgetChain);
 
   // Hide all popups which are not in layout popup chain
   nsWindow* popup = mWaylandPopupNext;
   while (popup) {
     // Tooltips are not tracked in layout chain
     if (!popup->mPopupClosed && popup->mPopupType != ePopupTypeTooltip) {
-      if (!popup->IsPopupInLayoutPopupChain(&layoutPopupWidgetChain,
+      if (!popup->IsPopupInLayoutPopupChain(aLayoutWidgetHierarchy,
                                             /* aMustMatchParent */ false)) {
         LOG_POPUP(("  hidding popup [%p]", popup));
         popup->WaylandPopupMarkAsClosed();
@@ -1487,16 +1486,18 @@ void nsWindow::WaylandPopupHierarchyUpdateByLayout() {
     }
     popup = popup->mWaylandPopupNext;
   }
+}
 
-  // Mark popups outside of layout hierarchy to later use that information to
-  // calculate popup positions.
-  popup = mWaylandPopupNext;
+// Mark popups outside of layout hierarchy
+void nsWindow::WaylandPopupHierarchyMarkByLayout(
+    nsTArray<nsIWidget*>* aLayoutWidgetHierarchy) {
+  nsWindow* popup = mWaylandPopupNext;
   while (popup) {
     if (popup->mPopupType == ePopupTypeTooltip) {
       popup->mPopupMatchesLayout = true;
     } else if (!popup->mPopupClosed) {
-      popup->mPopupMatchesLayout =
-          popup->IsPopupInLayoutPopupChain(&layoutPopupWidgetChain, true);
+      popup->mPopupMatchesLayout = popup->IsPopupInLayoutPopupChain(
+          aLayoutWidgetHierarchy, /* aMustMatchParent */ true);
       LOG_POPUP(("  popup [%p] parent window [%p] matches layout %d\n",
                  (void*)popup, (void*)popup->mWaylandPopupPrev,
                  popup->mPopupMatchesLayout));
@@ -1798,7 +1799,11 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
   // For instance we should not connect hamburger menu on top
   // of context menu.
   // Close all popups from different layout chains if possible.
-  mWaylandToplevel->WaylandPopupHierarchyUpdateByLayout();
+  AutoTArray<nsIWidget*, 5> layoutPopupWidgetChain;
+  GetLayoutPopupWidgetChain(&layoutPopupWidgetChain);
+
+  mWaylandToplevel->WaylandPopupHierarchyHideByLayout(&layoutPopupWidgetChain);
+  mWaylandToplevel->WaylandPopupHierarchyMarkByLayout(&layoutPopupWidgetChain);
 
   // Now we have Popup hierarchy complete.
   // Find first unchanged (and still open) popup to start with hierarchy
@@ -1845,24 +1850,31 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
     changedPopup = parentOfchangedPopup->mWaylandPopupNext;
   }
 
+  GetLayoutPopupWidgetChain(&layoutPopupWidgetChain);
+  mWaylandToplevel->WaylandPopupHierarchyMarkByLayout(&layoutPopupWidgetChain);
+
   changedPopup->WaylandPopupHierarchyCalculatePositions();
 
-  // Find last popup which matches layout hierarchy.
-  nsWindow* popup = mWaylandToplevel->mWaylandPopupNext;
+  nsWindow* popup = changedPopup;
   while (popup) {
-    if (!popup->mPopupMatchesLayout) {
-      break;
+    // We can use move_to_rect only when popups in popup hierarchy matches
+    // layout hierarchy as move_to_rect request that parent/child
+    // popups are adjacent.
+    bool useMoveToRect = popup->mPopupMatchesLayout;
+    if (useMoveToRect) {
+      // We use move_to_rect when:
+      // Popup is anchored, i.e. it has an anchor defined by layout
+      // (mPopupAnchored). Popup isn't anchored but has toplevel as parent, i.e.
+      // it's first popup.
+      useMoveToRect = (popup->mPopupAnchored ||
+                       (!popup->mPopupAnchored &&
+                        popup->mWaylandPopupPrev->mWaylandToplevel == nullptr));
     }
-    popup = popup->mWaylandPopupNext;
-  }
-
-  // We can use move_to_rect only when all popups in popup hierarchy matches
-  // layout hierarchy as move_to_rect request that parent/child
-  // popups are adjacent.
-  bool useMoveToRect = (popup == nullptr);
-  popup = changedPopup;
-  while (popup) {
-    LOG_POPUP(("  popup [%p] use move-to-rect %d\n", popup, useMoveToRect));
+    LOG_POPUP(
+        ("  popup [%p] matches layout [%d] anchored [%d] first popup [%d] use "
+         "move-to-rect %d\n",
+         popup, popup->mPopupMatchesLayout, popup->mPopupAnchored,
+         popup->mWaylandPopupPrev->mWaylandToplevel == nullptr, useMoveToRect));
     popup->WaylandPopupMove(useMoveToRect);
     popup->mPopupChanged = false;
     popup = popup->mWaylandPopupNext;
