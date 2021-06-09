@@ -1071,3 +1071,15 @@
    fun:RenderThread
    fun:_ZN7mozilla2wr12RenderThread5StartEv
 }
+
+{
+   Bug 1715523 / 1715533
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:moz_xmalloc
+   fun:operator new
+   fun:MakeNotNull<RefPtr<mozilla::ProfilingStackOwner>>
+   fun:RacyRegisteredThread
+   fun:_ZN16RegisteredThreadC1EP10ThreadInfoP9nsIThreadPv
+}
