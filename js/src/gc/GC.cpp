@@ -7067,7 +7067,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
       incrementalState = State::Mark;
 
-      if (useZeal && hasZealMode(ZealMode::YieldBeforeMarking)) {
+      if (useZeal && hasZealMode(ZealMode::YieldBeforeMarking) && isIncremental) {
         break;
       }
 
