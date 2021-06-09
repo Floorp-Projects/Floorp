@@ -206,3 +206,5 @@ appmenu-taskmanager =
     .label = Task Manager
 
 appmenu-developer-tools-subheader = Browser Tools
+appmenu-developer-tools-extensions =
+    .label = Extensions for Developers
