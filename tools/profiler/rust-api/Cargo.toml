@@ -1,0 +1,12 @@
+[package]
+name = "gecko-profiler"
+version = "0.1.0"
+authors = ["The Mozilla Project Developers"]
+edition = "2018"
+
+[dependencies]
+
+[features]
+# This feature is being set by Gecko. If it's not set, all public functions and
+# structs will be no-op.
+enabled = []

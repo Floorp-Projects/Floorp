@@ -1764,6 +1764,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "gecko-profiler"
+version = "0.1.0"
+
+[[package]]
 name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
@@ -2013,6 +2017,7 @@ dependencies = [
  "fluent-langneg",
  "fluent-langneg-ffi",
  "fog_control",
+ "gecko-profiler",
  "gecko_logger",
  "geckoservo",
  "gkrust_utils",
