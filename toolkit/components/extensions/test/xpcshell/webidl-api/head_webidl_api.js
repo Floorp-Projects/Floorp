@@ -10,6 +10,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
 });
 
+add_task(function checkExtensionsWebIDLEnabled() {
+  equal(
+    AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED,
+    true,
+    "WebExtensions WebIDL bindings build time flag should be enabled"
+  );
+});
+
 function getBackgroundServiceWorkerRegistration(extension) {
   const swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
     Ci.nsIServiceWorkerManager
