@@ -5,7 +5,20 @@
 /* import-globals-from head.js */
 "use strict";
 
+const TARGET_SWITCHING_PREF = "devtools.target-switching.server.enabled";
+
+// test without target switching
 add_task(async function() {
+  await testNavigation();
+});
+
+// test with target switching enabled
+add_task(async function() {
+  await pushPref(TARGET_SWITCHING_PREF, true);
+  await testNavigation();
+});
+
+async function testNavigation() {
   const URL1 = buildURLWithContent(
     "example.com",
     `<h1>example.com</h1>` + `<script>document.cookie = "lorem=ipsum";</script>`
@@ -35,6 +48,25 @@ add_task(async function() {
   info("Waiting for storage tree to refresh and show correct host…");
   await waitUntil(() => isInTree(doc, ["cookies", "http://example.net"]));
   // check the table for values
+  // NOTE: there's an issue with the TreeWidget in which `selectedItem` is set
+  //       but we have nothing selected in the UI. See Bug 1712706.
+  //       Here we are forcing selecting a different item first.
+  await selectTreeItem(["cookies"]);
   await selectTreeItem(["cookies", "http://example.net"]);
-  checkCookieData("foo", "bar");
-});
+  info("Waiting for table data to update and show correct values");
+  await waitUntil(() => hasCookieData("foo", "bar"));
+
+  // reload the current page, and check again
+  await refreshTab();
+  // wait for storage tree refresh, and check host
+  info("Waiting for storage tree to refresh and show correct host…");
+  await waitUntil(() => isInTree(doc, ["cookies", "http://example.net"]));
+  // check the table for values
+  // NOTE: there's an issue with the TreeWidget in which `selectedItem` is set
+  //       but we have nothing selected in the UI. See Bug 1712706.
+  //       Here we are forcing selecting a different item first.
+  await selectTreeItem(["cookies"]);
+  await selectTreeItem(["cookies", "http://example.net"]);
+  info("Waiting for table data to update and show correct values");
+  await waitUntil(() => hasCookieData("foo", "bar"));
+}

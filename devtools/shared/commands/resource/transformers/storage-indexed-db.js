@@ -12,11 +12,14 @@ const { Front, types } = require("devtools/shared/protocol.js");
 
 module.exports = function({ resource, watcherFront, targetFront }) {
   if (!(resource instanceof Front) && watcherFront) {
-    // instantiate front for indexedDB storage
+    const { innerWindowId } = resource;
+
+    // it's safe to instantiate the front now, so we do it.
     resource = types.getType("indexedDB").read(resource, targetFront);
     resource.resourceType = INDEXED_DB;
     resource.resourceId = `${INDEXED_DB}-${targetFront.browsingContextID}`;
     resource.resourceKey = "indexedDB";
+    resource.innerWindowId = innerWindowId;
   }
 
   return resource;

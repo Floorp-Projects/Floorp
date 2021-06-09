@@ -12,11 +12,14 @@ const { Front, types } = require("devtools/shared/protocol.js");
 
 module.exports = function({ resource, watcherFront, targetFront }) {
   if (!(resource instanceof Front) && watcherFront) {
-    // instantiate front for cookies
+    const { innerWindowId } = resource;
+
+    // it's safe to instantiate the front now, so we do it.
     resource = types.getType("cookies").read(resource, targetFront);
     resource.resourceType = COOKIE;
     resource.resourceId = `${COOKIE}-${targetFront.browsingContextID}`;
     resource.resourceKey = "cookies";
+    resource.innerWindowId = innerWindowId;
   }
 
   return resource;
