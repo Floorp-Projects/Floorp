@@ -18,6 +18,7 @@ object Versions {
     const val jna = "5.6.0"
 
     const val androidx_appcompat = "1.3.0"
+    const val androidx_benchmark = "1.0.0"
     const val androidx_biometric = "1.1.0"
     const val androidx_coordinator_layout = "1.1.0"
     const val androidx_constraint_layout = "2.0.4"
@@ -55,6 +56,7 @@ object Versions {
 object Deps {
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
     const val tools_kotlingradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
+    const val tools_benchmarkgradle = "androidx.benchmark:benchmark-gradle-plugin:${Versions.androidx_benchmark}"
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
     const val kotlin_stdlib_jdk8 = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}"
@@ -163,6 +165,7 @@ object Deps {
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"
 
     const val androidx_annotation = "androidx.annotation:annotation:${Versions.androidx_annotation}"
+    const val androidx_benchmark_junit4 = "androidx.benchmark:benchmark-junit4:${Versions.androidx_benchmark}"
     const val androidx_biometric = "androidx.biometric:biometric:${Versions.androidx_biometric}"
     const val androidx_fragment = "androidx.fragment:fragment-ktx:${Versions.androidx_fragment}"
     const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.androidx_appcompat}"

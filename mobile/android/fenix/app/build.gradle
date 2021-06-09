@@ -8,6 +8,7 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'jacoco'
 apply plugin: 'androidx.navigation.safeargs.kotlin'
 apply plugin: 'com.google.android.gms.oss-licenses-plugin'
+apply plugin: 'androidx.benchmark'
 
 
 import com.android.build.OutputFile
@@ -17,9 +18,12 @@ import org.gradle.internal.logging.text.StyledTextOutputFactory
 
 import static org.gradle.api.tasks.testing.TestResult.ResultType
 
+apply from: 'benchmark.gradle'
+
 android {
     compileSdkVersion Config.compileSdkVersion
 
+    project.maybeConfigForJetpackBenchmark(it)
     if (project.hasProperty("testBuildType")) {
         // Allowing to configure the test build type via command line flag (./gradlew -PtestBuildType=beta ..)
         // in order to run UI tests against other build variants than debug in automation.
@@ -553,6 +557,7 @@ dependencies {
 
     androidTestImplementation Deps.androidx_junit
     androidTestImplementation Deps.androidx_work_testing
+    androidTestImplementation Deps.androidx_benchmark_junit4
     androidTestImplementation Deps.mockwebserver
     testImplementation Deps.mozilla_support_test
     testImplementation Deps.mozilla_support_test_libstate
