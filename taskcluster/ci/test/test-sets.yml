@@ -183,6 +183,8 @@ linux1804-tests:
 linux1804-qr-tests:
     - cppunit
     - crashtest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
     - gtest
     # - jittest  # See comment in linux1804-ccov-tests set.
     - jsreftest
@@ -212,6 +214,8 @@ linux1804-ccov-tests:
 linux-qr-smoketests:
     - cppunit
     - crashtest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
     - gtest
     - jsreftest
     - marionette
@@ -226,7 +230,6 @@ linux-qr-smoketests:
     - mochitest-webgl2-ext
     - reftest
     - test-verify
-    - web-platform-tests
     - xpcshell
 
 linux-talos-flex:
