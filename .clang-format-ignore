@@ -198,6 +198,7 @@ toolkit/crashreporter/breakpad-client/.*
 toolkit/crashreporter/google-breakpad/.*
 tools/fuzzing/libfuzzer/.*
 tools/profiler/core/vtune/.*
+tools/profiler/public/GeckoTraceEvent.h # modified vendored copy
 xpcom/build/mach_override.c
 xpcom/build/mach_override.h
 xpcom/io/crc32c.c
