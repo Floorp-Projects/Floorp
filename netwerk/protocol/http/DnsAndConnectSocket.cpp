@@ -73,13 +73,19 @@ DnsAndConnectSocket::DnsAndConnectSocket(nsHttpConnectionInfo* ci,
   MOZ_ASSERT(mConnInfo);
 }
 
+void DnsAndConnectSocket::CheckIsDone() {
+  MOZ_DIAGNOSTIC_ASSERT(!mPrimaryTransport.mSocketTransport);
+  MOZ_DIAGNOSTIC_ASSERT(!mPrimaryTransport.mStreamOut);
+  MOZ_DIAGNOSTIC_ASSERT(!mPrimaryTransport.mDNSRequest);
+  MOZ_DIAGNOSTIC_ASSERT(!mBackupTransport.mSocketTransport);
+  MOZ_DIAGNOSTIC_ASSERT(!mBackupTransport.mStreamOut);
+  MOZ_DIAGNOSTIC_ASSERT(!mBackupTransport.mDNSRequest);
+}
+
 DnsAndConnectSocket::~DnsAndConnectSocket() {
   LOG(("Destroying DnsAndConnectSocket [this=%p]\n", this));
-  MOZ_ASSERT(!mPrimaryTransport.mSocketTransport);
-  MOZ_ASSERT(!mBackupTransport.mSocketTransport);
   MOZ_ASSERT(mState == DnsAndSocketState::DONE);
-  MOZ_ASSERT(!mPrimaryTransport.mWaitingForConnect);
-  MOZ_ASSERT(!mBackupTransport.mWaitingForConnect);
+  CheckIsDone();
   // Check in case something goes wrong that we decrease
   // the nsHttpConnectionMgr active connection number.
   mPrimaryTransport.MaybeSetConnectingDone();
@@ -288,6 +294,7 @@ nsresult DnsAndConnectSocket::SetupEvent(SetupEvents event) {
   LOG(("DnsAndConnectSocket::SetupEvent state=%d", mState));
 
   if (mState == DnsAndSocketState::DONE) {
+    CheckIsDone();
     RefPtr<DnsAndConnectSocket> self(this);
     RefPtr<ConnectionEntry> ent =
         gHttpHandler->ConnMgr()->FindConnectionEntry(mConnInfo);
@@ -392,9 +399,10 @@ DnsAndConnectSocket::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
   LOG(("DnsAndConnectSocket::OnLookupComplete: this=%p status %" PRIx32 ".",
        this, static_cast<uint32_t>(status)));
 
+  MOZ_DIAGNOSTIC_ASSERT(request);
   RefPtr<DnsAndConnectSocket> deleteProtector(this);
 
-  if (!IsPrimary(request) && !IsBackup(request)) {
+  if (!request || (!IsPrimary(request) && !IsBackup(request))) {
     return NS_OK;
   }
 
@@ -449,9 +457,14 @@ DnsAndConnectSocket::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
 NS_IMETHODIMP
 DnsAndConnectSocket::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  MOZ_ASSERT(mPrimaryTransport.mSocketTransport ||
-             mBackupTransport.mSocketTransport);
-  MOZ_ASSERT(IsPrimary(out) || IsBackup(out), "stream mismatch");
+  MOZ_DIAGNOSTIC_ASSERT(mPrimaryTransport.mSocketTransport ||
+                        mBackupTransport.mSocketTransport);
+  MOZ_DIAGNOSTIC_ASSERT(IsPrimary(out) || IsBackup(out), "stream mismatch");
+
+  RefPtr<ConnectionEntry> ent =
+      gHttpHandler->ConnMgr()->FindConnectionEntry(mConnInfo);
+  MOZ_DIAGNOSTIC_ASSERT(ent);
+  Unused << ent;
 
   RefPtr<DnsAndConnectSocket> deleteProtector(this);
 
