@@ -11,21 +11,19 @@ appmenuitem-update-banner3 =
     .label-update-unsupported = Unable to update — system incompatible
     .label-update-restart = Update available — restart now
 
-appmenuitem-protection-dashboard-title = Protections dashboard
-appmenuitem-new-tab =
-    .label = New tab
+appmenuitem-protection-dashboard-title = Protections Dashboard
 appmenuitem-new-window =
-    .label = New window
+    .label = New Window
 appmenuitem-new-private-window =
-    .label = New private window
+    .label = New Private Window
 appmenuitem-passwords =
     .label = Passwords
 appmenuitem-addons-and-themes =
-    .label = Add-ons and themes
+    .label = Add-ons and Themes
 appmenuitem-find-in-page =
-    .label = Find in page…
+    .label = Find In Page…
 appmenuitem-more-tools =
-    .label = More tools
+    .label = More Tools
 appmenuitem-exit2 =
     .label =
         { PLATFORM() ->
@@ -51,17 +49,17 @@ appmenuitem-zoom-enlarge =
 appmenuitem-zoom-reduce =
   .label = Zoom out
 appmenuitem-fullscreen =
-  .label = Full screen
+  .label = Full Screen
 
 ## Firefox Account toolbar button and Sync panel in App menu.
 
 appmenu-remote-tabs-sign-into-sync =
-  .label = Sign in to sync…
+  .label = Sign in to Sync…
 appmenu-remote-tabs-turn-on-sync =
-  .label = Turn on sync…
+  .label = Turn on Sync…
 
-appmenuitem-fxa-toolbar-sync-now2 = Sync now
-appmenuitem-fxa-manage-account = Manage account
+appmenuitem-fxa-toolbar-sync-now2 = Sync Now
+appmenuitem-fxa-manage-account = Manage Account
 appmenu-fxa-header2 = { -fxaccount-brand-name }
 # Variables
 # $time (string) - Localized relative time since last sync (e.g. 1 second ago,
@@ -75,7 +73,7 @@ appmenu-fxa-setup-sync =
 appmenu-fxa-show-more-tabs = Show More Tabs
 
 appmenuitem-save-page =
-    .label = Save page as…
+    .label = Save Page As…
 
 ## What's New panel in App menu.
 
@@ -146,36 +144,27 @@ profiler-popup-capture-shortcut =
 ## History panel
 
 appmenu-manage-history =
-    .label = Manage history
-appmenu-reopen-all-tabs = Reopen all tabs
-appmenu-reopen-all-windows = Reopen all windows
-appmenu-restore-session =
-    .label = Restore previous session
-appmenu-clear-history =
-    .label = Clear recent history…
-appmenu-recent-history-subheader = Recent history
-appmenu-recently-closed-tabs =
-    .label = Recently closed tabs
-appmenu-recently-closed-windows =
-    .label = Recently closed windows
+    .label = Manage History
+appmenu-reopen-all-tabs = Reopen All Tabs
+appmenu-reopen-all-windows = Reopen All Windows
 
 ## Help panel
 
 appmenu-help-header =
-    .title = { -brand-shorter-name } help
+    .title = { -brand-shorter-name } Help
 appmenu-about =
     .label = About { -brand-shorter-name }
     .accesskey = A
 appmenu-get-help =
-    .label = Get help
-    .accesskey = h
+    .label = Get Help
+    .accesskey = H
 appmenu-help-more-troubleshooting-info =
-    .label = More troubleshooting information
-    .accesskey = t
+    .label = More Troubleshooting Information
+    .accesskey = T
 appmenu-help-report-site-issue =
-    .label = Report site issue…
+    .label = Report Site Issue…
 appmenu-help-feedback-page =
-    .label = Submit feedback…
+    .label = Submit Feedback…
     .accesskey = S
 
 ## appmenu-help-enter-troubleshoot-mode and appmenu-help-exit-troubleshoot-mode
@@ -185,26 +174,24 @@ appmenu-help-enter-troubleshoot-mode2 =
     .label = Troubleshoot Mode…
     .accesskey = M
 appmenu-help-exit-troubleshoot-mode =
-    .label = Turn Troubleshoot Mode off
+    .label = Turn Troubleshoot Mode Off
     .accesskey = M
 
 ## appmenu-help-report-deceptive-site and appmenu-help-not-deceptive
 ## are mutually exclusive, so it's possible to use the same accesskey for both.
 
 appmenu-help-report-deceptive-site =
-    .label = Report deceptive site…
-    .accesskey = d
+    .label = Report Deceptive Site…
+    .accesskey = D
 appmenu-help-not-deceptive =
-    .label = This isn’t a deceptive site…
-    .accesskey = d
+    .label = This Isn’t a Deceptive Site…
+    .accesskey = D
 
 ## More Tools
 
 appmenu-customizetoolbar =
-    .label = Customize toolbar…
+    .label = Customize Toolbar…
 appmenu-taskmanager =
     .label = Task Manager
 
-appmenu-developer-tools-subheader = Browser tools
-appmenu-developer-tools-extensions =
-    .label = Extensions for developers
+appmenu-developer-tools-subheader = Browser Tools

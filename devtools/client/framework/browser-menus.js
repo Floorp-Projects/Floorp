@@ -57,21 +57,10 @@ function l10n(key) {
  * @param {Boolean} isCheckbox (optional)
  *        If true, the menuitem will act as a checkbox and have an optional
  *        tick on its left.
- * @param {String} appMenuL10nId (optional)
- *        A Fluent key to set the appmenu-data-l10n-id attribute of the menuitem
- *        to. This can then be used to show a different string when cloning the
- *        menuitem to show in the AppMenu or panel contexts.
  *
  * @return XULMenuItemElement
  */
-function createMenuItem({
-  doc,
-  id,
-  label,
-  accesskey,
-  isCheckbox,
-  appMenuL10nId,
-}) {
+function createMenuItem({ doc, id, label, accesskey, isCheckbox }) {
   const menuitem = doc.createXULElement("menuitem");
   menuitem.id = id;
   menuitem.setAttribute("label", label);
@@ -81,9 +70,6 @@ function createMenuItem({
   if (isCheckbox) {
     menuitem.setAttribute("type", "checkbox");
     menuitem.setAttribute("autocheck", "false");
-  }
-  if (appMenuL10nId) {
-    menuitem.setAttribute("appmenu-data-l10n-id", appMenuL10nId);
   }
   return menuitem;
 }
@@ -120,7 +106,6 @@ function createToolMenuElements(toolDefinition, doc) {
     id: "menuitem_" + id,
     label: toolDefinition.menuLabel || toolDefinition.label,
     accesskey: toolDefinition.accesskey,
-    appMenuL10nId: toolDefinition.appMenuL10nId,
   });
   // Refer to the key in order to display the key shortcut at menu ends
   // This <key> element is being created by devtools/client/devtools-startup.js
@@ -262,7 +247,6 @@ function addTopLevelItems(doc) {
         label: l10n(l10nKey + ".label"),
         accesskey: l10n(l10nKey + ".accesskey"),
         isCheckbox: item.checkbox,
-        appMenuL10nId: item.appMenuL10nId,
       });
       menuitem.addEventListener("command", item.oncommand);
       menuItems.appendChild(menuitem);
