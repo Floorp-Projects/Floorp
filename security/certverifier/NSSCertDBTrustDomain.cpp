@@ -76,7 +76,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
     /*out*/ UniqueCERTCertList& builtChain,
     /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
-    /*optional*/ CRLiteLookupResult* crliteLookupResult,
     /*optional*/ const char* hostname)
     : mCertDBTrustType(certDBTrustType),
       mOCSPFetching(ocspFetching),
@@ -99,7 +98,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mExtraCertificates(extraCertificates),
       mBuiltChain(builtChain),
       mPinningTelemetryInfo(pinningTelemetryInfo),
-      mCRLiteLookupResult(crliteLookupResult),
       mHostname(hostname),
       mCertStorage(do_GetService(NS_CERT_STORAGE_CID)),
       mOCSPStaplingStatus(CertVerifier::OCSP_STAPLING_NEVER_CHECKED),
@@ -629,9 +627,6 @@ Result NSSCertDBTrustDomain::CheckRevocation(
     if (NS_FAILED(rv)) {
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain::CheckRevocation: CRLite call failed"));
-      if (mCRLiteLookupResult) {
-        *mCRLiteLookupResult = CRLiteLookupResult::LibraryFailure;
-      }
       if (mCRLiteMode == CRLiteMode::Enforce) {
         return Result::FATAL_ERROR_LIBRARY_FAILURE;
       }
@@ -675,9 +670,6 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       }
       if (earliestCertificateTimestamp <= filterTimestampTime &&
           crliteRevocationState == nsICertStorage::STATE_ENFORCE) {
-        if (mCRLiteLookupResult) {
-          *mCRLiteLookupResult = CRLiteLookupResult::CertificateRevoked;
-        }
         if (mCRLiteMode == CRLiteMode::Enforce) {
           MOZ_LOG(
               gCertVerifierLog, LogLevel::Debug,
@@ -692,29 +684,17 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       }
 
       if (crliteRevocationState == nsICertStorage::STATE_NOT_ENROLLED) {
-        if (mCRLiteLookupResult) {
-          *mCRLiteLookupResult = CRLiteLookupResult::IssuerNotEnrolled;
-        }
         MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
                 ("NSSCertDBTrustDomain::CheckRevocation: issuer not enrolled"));
       }
       if (filterTimestamp == 0) {
         MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
                 ("NSSCertDBTrustDomain::CheckRevocation: no timestamp"));
-        if (mCRLiteLookupResult) {
-          *mCRLiteLookupResult = CRLiteLookupResult::FilterNotAvailable;
-        }
       } else if (earliestCertificateTimestamp > filterTimestampTime) {
         MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
                 ("NSSCertDBTrustDomain::CheckRevocation: cert too new"));
-        if (mCRLiteLookupResult) {
-          *mCRLiteLookupResult = CRLiteLookupResult::CertificateTooNew;
-        }
       } else if (crliteRevocationState == nsICertStorage::STATE_UNSET) {
         certificateFoundValidInCRLiteFilter = true;
-        if (mCRLiteLookupResult) {
-          *mCRLiteLookupResult = CRLiteLookupResult::CertificateValid;
-        }
       }
     }
 
@@ -729,9 +709,6 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain::CheckRevocation: IsCertRevokedByStash "
                "failed"));
-      if (mCRLiteLookupResult) {
-        *mCRLiteLookupResult = CRLiteLookupResult::LibraryFailure;
-      }
       if (mCRLiteMode == CRLiteMode::Enforce) {
         return Result::FATAL_ERROR_LIBRARY_FAILURE;
       }
@@ -739,9 +716,6 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain::CheckRevocation: IsCertRevokedByStash "
                "returned true"));
-      if (mCRLiteLookupResult) {
-        *mCRLiteLookupResult = CRLiteLookupResult::CertRevokedByStash;
-      }
       if (mCRLiteMode == CRLiteMode::Enforce) {
         return Result::ERROR_REVOKED_CERTIFICATE;
       }

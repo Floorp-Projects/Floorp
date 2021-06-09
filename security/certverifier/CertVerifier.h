@@ -133,17 +133,6 @@ class DelegatedCredentialInfo {
   uint32_t authKeyBits;
 };
 
-enum class CRLiteLookupResult {
-  NeverChecked = 0,
-  FilterNotAvailable = 1,
-  IssuerNotEnrolled = 2,
-  CertificateTooNew = 3,
-  CertificateValid = 4,
-  CertificateRevoked = 5,
-  LibraryFailure = 6,
-  CertRevokedByStash = 7,
-};
-
 class NSSCertDBTrustDomain;
 
 class CertVerifier {
@@ -183,8 +172,7 @@ class CertVerifier {
       /*optional out*/ KeySizeStatus* keySizeStatus = nullptr,
       /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
       /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
-      /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr,
-      /*optional out*/ CRLiteLookupResult* crliteLookupResult = nullptr);
+      /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr);
 
   mozilla::pkix::Result VerifySSLServerCert(
       const UniqueCERTCertificate& peerCert, mozilla::pkix::Time time,
@@ -205,7 +193,6 @@ class CertVerifier {
       /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
       /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
       /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr,
-      /*optional out*/ CRLiteLookupResult* crliteLookupResult = nullptr,
       /*optional out*/ bool* isBuiltCertChainRootBuiltInRoot = nullptr);
 
   enum PinningMode {

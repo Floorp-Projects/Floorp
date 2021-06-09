@@ -753,8 +753,7 @@ static void CollectCertTelemetry(
     KeySizeStatus aKeySizeStatus, SHA1ModeResult aSha1ModeResult,
     const PinningTelemetryInfo& aPinningTelemetryInfo,
     const UniqueCERTCertList& aBuiltCertChain,
-    const CertificateTransparencyInfo& aCertificateTransparencyInfo,
-    const CRLiteLookupResult& aCRLiteLookupResult) {
+    const CertificateTransparencyInfo& aCertificateTransparencyInfo) {
   uint32_t evStatus = (aCertVerificationResult != Success) ? 0  // 0 = Failure
                       : (aEVStatus != EVStatus::EV)        ? 1  // 1 = DV
                                                            : 2;        // 2 = EV
@@ -791,42 +790,6 @@ static void CollectCertTelemetry(
     GatherCertificateTransparencyTelemetry(aBuiltCertChain,
                                            aEVStatus == EVStatus::EV,
                                            aCertificateTransparencyInfo);
-  }
-
-  switch (aCRLiteLookupResult) {
-    case CRLiteLookupResult::FilterNotAvailable:
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_CRLITE_RESULT::FilterNotAvailable);
-      break;
-    case CRLiteLookupResult::IssuerNotEnrolled:
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_CRLITE_RESULT::IssuerNotEnrolled);
-      break;
-    case CRLiteLookupResult::CertificateTooNew:
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_CRLITE_RESULT::CertificateTooNew);
-      break;
-    case CRLiteLookupResult::CertificateValid:
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_CRLITE_RESULT::CertificateValid);
-      break;
-    case CRLiteLookupResult::CertificateRevoked:
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_CRLITE_RESULT::CertificateRevoked);
-      break;
-    case CRLiteLookupResult::LibraryFailure:
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_CRLITE_RESULT::LibraryFailure);
-      break;
-    case CRLiteLookupResult::CertRevokedByStash:
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_CRLITE_RESULT::CertRevokedByStash);
-      break;
-    case CRLiteLookupResult::NeverChecked:
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unhandled CRLiteLookupResult value?");
-      break;
   }
 }
 
@@ -880,7 +843,6 @@ Result AuthCertificate(
   KeySizeStatus keySizeStatus = KeySizeStatus::NeverChecked;
   SHA1ModeResult sha1ModeResult = SHA1ModeResult::NeverChecked;
   PinningTelemetryInfo pinningTelemetryInfo;
-  CRLiteLookupResult crliteTelemetryInfo;
 
   nsTArray<nsTArray<uint8_t>> peerCertsBytes;
   // Don't include the end-entity certificate.
@@ -896,12 +858,12 @@ Result AuthCertificate(
       Some(std::move(peerCertsBytes)), stapledOCSPResponse,
       sctsFromTLSExtension, dcInfo, aOriginAttributes, &evStatus,
       &ocspStaplingStatus, &keySizeStatus, &sha1ModeResult,
-      &pinningTelemetryInfo, &certificateTransparencyInfo, &crliteTelemetryInfo,
+      &pinningTelemetryInfo, &certificateTransparencyInfo,
       &aIsCertChainRootBuiltInRoot);
 
   CollectCertTelemetry(rv, evStatus, ocspStaplingStatus, keySizeStatus,
                        sha1ModeResult, pinningTelemetryInfo, builtCertChain,
-                       certificateTransparencyInfo, crliteTelemetryInfo);
+                       certificateTransparencyInfo);
 
   return rv;
 }
