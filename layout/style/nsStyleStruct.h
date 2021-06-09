@@ -1923,6 +1923,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset {
 
   mozilla::StyleVectorEffect mVectorEffect;
   mozilla::StyleMaskType mMaskType;
+
+  mozilla::StyleDProperty mD;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects {

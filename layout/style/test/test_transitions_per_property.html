@@ -421,6 +421,10 @@ if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
   supported_properties["clip-path"].push(test_path_function);
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.d-property.enabled")) {
+  supported_properties["d"] = [ test_path_function ];
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
   supported_properties["font-variation-settings"] = [ test_font_variations_transition ];
 }

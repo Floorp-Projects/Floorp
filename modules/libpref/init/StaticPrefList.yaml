@@ -6821,6 +6821,12 @@
   value: true
   mirror: always
 
+# Is support for d property for SVG path element?
+- name: layout.css.d-property.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Are we emulating -moz-{inline}-box layout using CSS flexbox?
 - name: layout.css.emulate-moz-box-with-flex
   type: bool
