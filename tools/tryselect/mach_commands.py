@@ -2,14 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import importlib
 import os
 import sys
 
-import six
 from mach.decorators import (
     CommandProvider,
     Command,
@@ -31,7 +29,7 @@ and try again.
 """.lstrip()
 
 
-class get_parser(object):
+class get_parser:
     def __init__(self, selector):
         self.selector = selector
 
@@ -49,7 +47,7 @@ def generic_parser():
 
 
 @SettingsProvider
-class TryConfig(object):
+class TryConfig:
     @classmethod
     def config_settings(cls):
         from mach.registrar import Registrar
@@ -169,7 +167,7 @@ class TrySelect(MachCommandBase):
 
         to_validate = []
         kwargs.setdefault("try_config", {})
-        for cls in six.itervalues(self._mach_context.handler.parser.task_configs):
+        for cls in self._mach_context.handler.parser.task_configs.values():
             try_config = cls.try_config(**kwargs)
             if try_config is not None:
                 to_validate.append(cls)
