@@ -261,6 +261,10 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             owner = this,
             view = view
         )
+
+        if (requireArguments().getBoolean(EXTRA_MULTI_SELECT)) {
+            tabsTrayStore.dispatch(TabsTrayAction.EnterSelectMode)
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -402,6 +406,8 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     }
 
     companion object {
+        const val EXTRA_MULTI_SELECT = "enterMultiselect"
+
         // Minimum number of list items for which to show the tabs tray as expanded.
         const val EXPAND_AT_LIST_SIZE = 4
 
