@@ -40,37 +40,74 @@ struct PreservedStreamDeleter;
 
 }  // namespace detail
 
-class ProcessRuntime;
-
 // This class is OK to use as a temporary on the stack.
 class MOZ_STACK_CLASS EnsureMTA final {
  public:
+  /**
+   * This constructor just ensures that the MTA thread is up and running.
+   */
+  EnsureMTA() {
+    nsCOMPtr<nsIThread> thread = GetMTAThread();
+    MOZ_ASSERT(thread);
+    Unused << thread;
+  }
+
   enum class Option {
     Default,
-    // Forcibly dispatch to the thread returned by GetPersistentMTAThread(),
-    // even if the current thread is already inside a MTA.
-    ForceDispatchToPersistentThread,
+    // Forcibly dispatch to the thread returned by GetMTAThread(), even if the
+    // current thread is already inside a MTA.
+    ForceDispatch,
   };
 
   /**
    * Synchronously run |aClosure| on a thread living in the COM multithreaded
    * apartment. If the current thread lives inside the COM MTA, then it runs
-   * |aClosure| immediately unless |aOpt| ==
-   * Option::ForceDispatchToPersistentThread.
+   * |aClosure| immediately unless |aOpt| == Option::ForceDispatch.
    */
   template <typename FuncT>
   explicit EnsureMTA(FuncT&& aClosure, Option aOpt = Option::Default) {
-    if (aOpt != Option::ForceDispatchToPersistentThread &&
-        IsCurrentThreadMTA()) {
+    if (aOpt != Option::ForceDispatch && IsCurrentThreadMTA()) {
       // We're already on the MTA, we can run aClosure directly
       aClosure();
       return;
     }
 
     // In this case we need to run aClosure on a background thread in the MTA
-    nsCOMPtr<nsIRunnable> runnable(
-        NS_NewRunnableFunction("EnsureMTA::EnsureMTA", std::move(aClosure)));
-    SyncDispatch(std::move(runnable), aOpt);
+    nsCOMPtr<nsIThread> thread = GetMTAThread();
+    MOZ_ASSERT(thread);
+    if (!thread) {
+      return;
+    }
+
+    // Note that we might reenter the EnsureMTA constructor while we wait on
+    // this event due to APC dispatch, therefore we need a unique event object
+    // for each entry. If perf becomes an issue then we will want to maintain
+    // an array of events where the Nth event is unique to the Nth reentry.
+    nsAutoHandle event(::CreateEventW(nullptr, FALSE, FALSE, nullptr));
+    if (!event) {
+      return;
+    }
+
+    HANDLE eventHandle = event.get();
+
+    auto eventSetter = [&aClosure, eventHandle]() -> void {
+      aClosure();
+      ::SetEvent(eventHandle);
+    };
+
+    nsresult rv = thread->Dispatch(
+        NS_NewRunnableFunction("EnsureMTA", std::move(eventSetter)),
+        NS_DISPATCH_NORMAL);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    DWORD waitResult;
+    while ((waitResult = ::WaitForSingleObjectEx(event, INFINITE, TRUE)) ==
+           WAIT_IO_COMPLETION) {
+    }
+    MOZ_ASSERT(waitResult == WAIT_OBJECT_0);
   }
 
   using CreateInstanceAgileRefPromise =
@@ -136,10 +173,7 @@ class MOZ_STACK_CLASS EnsureMTA final {
   static RefPtr<CreateInstanceAgileRefPromise> CreateInstanceInternal(
       REFCLSID aClsid, REFIID aIid);
 
-  static nsCOMPtr<nsIThread> GetPersistentMTAThread();
-
-  static void SyncDispatch(nsCOMPtr<nsIRunnable>&& aRunnable, Option aOpt);
-  static void SyncDispatchToPersistentThread(nsIRunnable* aRunnable);
+  static nsCOMPtr<nsIThread> GetMTAThread();
 
   // The following function is private in order to force any consumers to be
   // declared as friends of EnsureMTA. The intention is to prevent
@@ -152,7 +186,7 @@ class MOZ_STACK_CLASS EnsureMTA final {
       return;
     }
 
-    nsCOMPtr<nsIThread> thread(GetPersistentMTAThread());
+    nsCOMPtr<nsIThread> thread(GetMTAThread());
     MOZ_ASSERT(thread);
     if (!thread) {
       return;
@@ -164,14 +198,6 @@ class MOZ_STACK_CLASS EnsureMTA final {
         NS_DISPATCH_NORMAL);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
-
-  /**
-   * This constructor just ensures that the MTA is up and running. This should
-   * only be called by ProcessRuntime.
-   */
-  EnsureMTA();
-
-  friend class mozilla::mscom::ProcessRuntime;
 
   template <typename T>
   friend struct mozilla::mscom::detail::MTADelete;

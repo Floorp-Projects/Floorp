@@ -98,7 +98,7 @@ JumpListBuilder::JumpListBuilder()
   // Instantiate mJumpListMgr in the multithreaded apartment so that proxied
   // calls on that object do not need to interact with the main thread's message
   // pump.
-  mscom::EnsureMTA([&]() {
+  mscom::EnsureMTA([this]() {
     RefPtr<ICustomDestinationList> jumpListMgr;
     HRESULT hr = ::CoCreateInstance(
         CLSID_DestinationList, nullptr, CLSCTX_INPROC_SERVER,
