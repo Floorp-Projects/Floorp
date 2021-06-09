@@ -19,8 +19,12 @@
 #include "unicode/unum.h"
 #include "unicode/unumberformatter.h"
 
+struct UPluralRules;
+
 namespace mozilla {
 namespace intl {
+
+struct PluralRulesOptions;
 
 /**
  * Configure NumberFormat options.
@@ -338,6 +342,23 @@ class NumberFormat final {
 
     return formatResult<typename B::CharType, B>(buffer);
   }
+
+  /**
+   * Formats the number and selects the keyword by using a provided
+   * UPluralRules object.
+   *
+   * https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.select
+   *
+   * TODO(1713917) This is necessary because both PluralRules and
+   * NumberFormat have a shared dependency on the raw UFormattedNumber
+   * type. Once we transition to using ICU4X, the FFI calls should no
+   * longer require such shared dependencies. At that time, this
+   * functionality should be removed from NumberFormat and invoked
+   * solely from PluralRules.
+   */
+  Result<int32_t, NumberFormat::FormatError> selectFormatted(
+      double number, char16_t* keyword, int32_t keywordSize,
+      UPluralRules* pluralRules) const;
 
  private:
   UNumberFormatter* mNumberFormatter = nullptr;
