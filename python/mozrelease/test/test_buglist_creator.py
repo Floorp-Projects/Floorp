@@ -11,7 +11,7 @@
 from __future__ import absolute_import, print_function
 
 import json
-from pathlib2 import Path
+from pathlib import Path
 
 import mozunit
 import pytest
@@ -152,9 +152,7 @@ def test_get_previous_tag_version(version, tag, previous_tag):
         u"FIREFOX_AURORA_48_BASE",
     ]
 
-    mock_hg_json = {
-        "tags": [{"tag": ff_48_tag} for ff_48_tag in ff_48_tags],
-    }
+    mock_hg_json = {"tags": [{"tag": ff_48_tag} for ff_48_tag in ff_48_tags]}
 
     assert get_previous_tag_version(product, version, tag, mock_hg_json) == previous_tag
 

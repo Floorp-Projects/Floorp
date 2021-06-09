@@ -10,7 +10,7 @@ import pytest
 
 import json
 from mozrelease.util import load as yaml_load
-from pathlib2 import Path
+from pathlib import Path
 
 from mozrelease.balrog import generate_update_properties
 from mozilla_version.gecko import GeckoVersion
