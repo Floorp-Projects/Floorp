@@ -5125,7 +5125,13 @@ impl PicturePrimitive {
                                     }
                                 }
 
-                                let content_origin_f = tile.world_tile_rect.min * device_pixel_scale;
+                                // The cast_unit() here is because the `content_origin` is expected to be in
+                                // device pixels, however we're establishing raster roots for picture cache
+                                // tiles meaning the `content_origin` needs to be in the local space of that root.
+                                // TODO(gw): `content_origin` should actually be in RasterPixels to be consistent
+                                //           with both local / screen raster modes, but this involves a lot of
+                                //           changes to render task and picture code.
+                                let content_origin_f = tile.local_tile_rect.origin.cast_unit() * device_pixel_scale;
                                 let content_origin = content_origin_f.round();
                                 debug_assert!((content_origin_f.x - content_origin.x).abs() < 0.01);
                                 debug_assert!((content_origin_f.y - content_origin.y).abs() < 0.01);
@@ -6247,13 +6253,20 @@ impl PicturePrimitive {
             let surface_to_parent_transform = frame_context.spatial_tree
                 .get_relative_transform(surface_spatial_node_index, parent_raster_node_index);
 
+            // Currently, we ensure that the scaling factor is >= 1.0 as a smaller scale factor can result in blurry output.
+            let mut min_scale = 1.0;
+
             // Check if there is perspective or if an SVG filter is applied, and thus whether a new
             // rasterization root should be established.
             let establishes_raster_root = match composite_mode {
                 PictureCompositeMode::TileCache { .. } => {
-                    // Picture caches are special cased - they never need to establish a raster root. In future,
-                    // we will probably remove TileCache as a specific composite mode.
-                    false
+                    // We may need to minify when zooming out picture cache tiles
+                    min_scale = 0.0;
+
+                    // We know that picture cache tiles are always axis-aligned, but we want to establish
+                    // raster roots for them, so that we can easily control the scale factors used depending
+                    // on whether we want to zoom in high-performance or high-quality mode.
+                    true
                 }
                 PictureCompositeMode::SvgFilter(..) => {
                     // Filters must be applied before transforms, to do this, we can mark this picture as establishing a raster root.
@@ -6274,8 +6287,7 @@ impl PicturePrimitive {
                 let scale_factors = surface_to_parent_transform.scale_factors();
 
                 // Pick the largest scale factor of the transform for the scaling factor.
-                // Currently, we ensure that the scaling factor is >= 1.0 as a smaller scale factor can result in blurry output.
-                let scaling_factor = scale_factors.0.max(scale_factors.1).max(1.0);
+                let scaling_factor = scale_factors.0.max(scale_factors.1).max(min_scale);
 
                 let device_pixel_scale = parent_device_pixel_scale * Scale::new(scaling_factor);
                 (surface_spatial_node_index, device_pixel_scale)
