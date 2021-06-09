@@ -4,8 +4,9 @@
 
 /* Constructed by running:
  * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/include/uapi/asm-generic/unistd.h?h=v5.8
- *   | grep '^#define' | grep -v '__NR3264_' | grep '__NR_'
- *   | awk '{ if ($2 != $3 && $3 != 440) { print "#if !defined(" $2 ")\n#define " $2 " " $3 "\n#endif\n"; } }
+ *   | gcc -D__BITS_PER_LONG=64 -D__ARCH_WANT_STAT64 -D__ARCH_WANT_SET_GET_RLIMIT -D__ARCH_WANT_SYS_CLONE3 -D__ARCH_WANT_RENAMEAT -E -dD -
+ *   | grep __NR | grep -vE '__NR_arch_specific_syscall|__NR_syscalls' | sort -n -k 3 | sed -e 's/__NR3264/__NR/g'
+ *   | awk '{ if ($2 != $3) { print "#if !defined(" $2 ")\n#define " $2 " " $3 "\n#endif\n"; } }
  * */
 
 #ifndef SANDBOX_LINUX_SYSTEM_HEADERS_ARM64_LINUX_SYSCALLS_H_
@@ -15,6 +16,10 @@
 
 #if !defined(__NR_io_setup)
 #define __NR_io_setup 0
+#endif
+
+#if !defined(__NR_newfstatat)
+#define __NR_newfstatat __NR_fstatat
 #endif
 
 #if !defined(__NR_io_destroy)
@@ -347,10 +352,6 @@
 
 #if !defined(__NR_fdatasync)
 #define __NR_fdatasync 83
-#endif
-
-#if !defined(__NR_sync_file_range2)
-#define __NR_sync_file_range2 84
 #endif
 
 #if !defined(__NR_sync_file_range)
@@ -993,10 +994,6 @@
 #define __NR_recvmmsg 243
 #endif
 
-#if !defined(__NR_arch_specific_syscall)
-#define __NR_arch_specific_syscall 244
-#endif
-
 #if !defined(__NR_wait4)
 #define __NR_wait4 260
 #endif
@@ -1135,86 +1132,6 @@
 
 #if !defined(__NR_kexec_file_load)
 #define __NR_kexec_file_load 294
-#endif
-
-#if !defined(__NR_clock_gettime64)
-#define __NR_clock_gettime64 403
-#endif
-
-#if !defined(__NR_clock_settime64)
-#define __NR_clock_settime64 404
-#endif
-
-#if !defined(__NR_clock_adjtime64)
-#define __NR_clock_adjtime64 405
-#endif
-
-#if !defined(__NR_clock_getres_time64)
-#define __NR_clock_getres_time64 406
-#endif
-
-#if !defined(__NR_clock_nanosleep_time64)
-#define __NR_clock_nanosleep_time64 407
-#endif
-
-#if !defined(__NR_timer_gettime64)
-#define __NR_timer_gettime64 408
-#endif
-
-#if !defined(__NR_timer_settime64)
-#define __NR_timer_settime64 409
-#endif
-
-#if !defined(__NR_timerfd_gettime64)
-#define __NR_timerfd_gettime64 410
-#endif
-
-#if !defined(__NR_timerfd_settime64)
-#define __NR_timerfd_settime64 411
-#endif
-
-#if !defined(__NR_utimensat_time64)
-#define __NR_utimensat_time64 412
-#endif
-
-#if !defined(__NR_pselect6_time64)
-#define __NR_pselect6_time64 413
-#endif
-
-#if !defined(__NR_ppoll_time64)
-#define __NR_ppoll_time64 414
-#endif
-
-#if !defined(__NR_io_pgetevents_time64)
-#define __NR_io_pgetevents_time64 416
-#endif
-
-#if !defined(__NR_recvmmsg_time64)
-#define __NR_recvmmsg_time64 417
-#endif
-
-#if !defined(__NR_mq_timedsend_time64)
-#define __NR_mq_timedsend_time64 418
-#endif
-
-#if !defined(__NR_mq_timedreceive_time64)
-#define __NR_mq_timedreceive_time64 419
-#endif
-
-#if !defined(__NR_semtimedop_time64)
-#define __NR_semtimedop_time64 420
-#endif
-
-#if !defined(__NR_rt_sigtimedwait_time64)
-#define __NR_rt_sigtimedwait_time64 421
-#endif
-
-#if !defined(__NR_futex_time64)
-#define __NR_futex_time64 422
-#endif
-
-#if !defined(__NR_sched_rr_get_interval_time64)
-#define __NR_sched_rr_get_interval_time64 423
 #endif
 
 #if !defined(__NR_pidfd_send_signal)
