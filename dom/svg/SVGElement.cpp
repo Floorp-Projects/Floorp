@@ -1120,6 +1120,24 @@ bool SVGElement::UpdateDeclarationBlockFromLength(
   return true;
 }
 
+/* static */
+bool SVGElement::UpdateDeclarationBlockFromPath(
+    DeclarationBlock& aBlock, const SVGAnimatedPathSegList& aPath,
+    ValToUse aValToUse) {
+  aBlock.AssertMutable();
+
+  const SVGPathData& pathData =
+      aValToUse == ValToUse::Anim ? aPath.GetAnimValue() : aPath.GetBaseValue();
+
+  // SVGPathData::mData is fallible but rust binding accepts nsTArray only, so
+  // we need to point to one or the other. Fortunately, fallible and infallible
+  // array types can be implicitly converted provided they are const.
+  const nsTArray<float>& asInFallibleArray = pathData.RawData();
+  Servo_DeclarationBlock_SetPathValue(aBlock.Raw(), eCSSProperty_d,
+                                      &asInFallibleArray);
+  return true;
+}
+
 //------------------------------------------------------------------------
 // Helper class: MappedAttrParser, for parsing values of mapped attributes
 
@@ -1754,14 +1772,20 @@ void SVGElement::DidChangePathSegList(const nsAttrValue& aEmptyOrOldValue,
 }
 
 void SVGElement::DidAnimatePathSegList() {
-  MOZ_ASSERT(GetPathDataAttrName(), "Animating non-existent path data?");
+  nsStaticAtom* name = GetPathDataAttrName();
+  MOZ_ASSERT(name, "Animating non-existent path data?");
 
   ClearAnyCachedPath();
 
-  nsIFrame* frame = GetPrimaryFrame();
+  // Notify style we have to update the d property because of SMIL animation.
+  if (StaticPrefs::layout_css_d_property_enabled() && name == nsGkAtoms::d) {
+    SMILOverrideStyle()->SetSMILValue(nsCSSPropertyID::eCSSProperty_d,
+                                      *GetAnimPathSegList());
+    return;
+  }
 
-  if (frame) {
-    frame->AttributeChanged(kNameSpaceID_None, GetPathDataAttrName(),
+  if (nsIFrame* frame = GetPrimaryFrame()) {
+    frame->AttributeChanged(kNameSpaceID_None, name,
                             MutationEvent_Binding::SMIL);
   }
 }

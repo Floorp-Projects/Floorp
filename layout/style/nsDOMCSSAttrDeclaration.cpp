@@ -178,6 +178,14 @@ nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
   });
 }
 
+nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
+    const nsCSSPropertyID /*aPropID*/, const SVGAnimatedPathSegList& aPath) {
+  return SetSMILValueHelper([&aPath](DeclarationBlock& aDecl) {
+    return SVGElement::UpdateDeclarationBlockFromPath(
+        aDecl, aPath, SVGElement::ValToUse::Anim);
+  });
+}
+
 void nsDOMCSSAttributeDeclaration::SetPropertyValue(
     const nsCSSPropertyID aPropID, const nsACString& aValue,
     nsIPrincipal* aSubjectPrincipal, ErrorResult& aRv) {

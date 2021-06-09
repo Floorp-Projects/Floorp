@@ -5154,6 +5154,31 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_DeclarationBlock_SetPathValue(
+    declarations: &RawServoDeclarationBlock,
+    property: nsCSSPropertyID,
+    path: &nsTArray<f32>,
+) {
+    use style::properties::PropertyDeclaration;
+    use style::values::specified::DProperty;
+
+    // 1. Decode the path data from SVG.
+    let path = match specified::SVGPathData::decode_from_f32_array(path) {
+        Ok(p) => p,
+        Err(()) => return,
+    };
+
+    // 2. Set decoded path into style.
+    let long = get_longhand_from_id!(property);
+    let prop = match_wrap_declared! { long,
+        D => if path.0.is_empty() { DProperty::None } else { DProperty::Path(path) },
+    };
+    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
+        decls.push(prop, Importance::Normal);
+    })
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_DeclarationBlock_SetNumberValue(
     declarations: &RawServoDeclarationBlock,
     property: nsCSSPropertyID,
