@@ -301,7 +301,6 @@ for var in (
     "MOZ_UNSIGNED_SYSTEM_SCOPE",
     "MOZ_UPDATE_AGENT",
     "MOZ_UPDATER",
-    "MOZ_WEBEXT_WEBIDL_ENABLED",
 ):
     if CONFIG[var]:
         DEFINES[var] = True

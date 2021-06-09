@@ -2217,7 +2217,6 @@ WorkerPrivate::WorkerPrivate(
           IsNewWorkerSecureContext(mParent, mWorkerKind, mLoadInfo)),
       mDebuggerRegistered(false),
       mDebuggerReady(true),
-      mExtensionAPIAllowed(false),
       mIsInAutomation(false),
       mId(std::move(aId)),
       mAgentClusterOpenerPolicy(aAgentClusterOpenerPolicy),
@@ -2288,16 +2287,6 @@ WorkerPrivate::WorkerPrivate(
             // their extension process, but never in content scripts in
             // content processes.
             mIsPrivilegedAddonGlobal = true;
-          }
-
-          if (StaticPrefs::
-                  extensions_backgroundServiceWorker_enabled_AtStartup() &&
-              mWorkerKind == WorkerKindService &&
-              policy->IsManifestBackgroundWorker(mScriptURL)) {
-            // Only allows ExtensionAPI for extension service workers
-            // that are declared in the extension manifest json as
-            // the background service worker.
-            mExtensionAPIAllowed = true;
           }
         }
       }
