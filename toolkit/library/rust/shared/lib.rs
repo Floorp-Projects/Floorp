@@ -43,6 +43,7 @@ extern crate prefs_parser;
 extern crate processtools;
 #[cfg(feature = "gecko_profiler")]
 extern crate profiler_helper;
+extern crate gecko_profiler;
 extern crate rsdparsa_capi;
 extern crate shift_or_euc_c;
 extern crate static_prefs;
