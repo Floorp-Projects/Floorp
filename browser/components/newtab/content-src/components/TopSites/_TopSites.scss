@@ -684,7 +684,7 @@ $letter-fallback-color: $white;
 
       .tile {
         border-radius: $nt-experience-top-sites-border-radius;
-        box-shadow: $inner-box-shadow-nte, $tile-shadow-second;
+        box-shadow: $newtab-card-firstshadow;
         background-color: var(--newtab-topsites-background-color);
         justify-content: center;
         margin: 0 auto;
