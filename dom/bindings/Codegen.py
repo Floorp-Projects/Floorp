@@ -9485,22 +9485,12 @@ class CGPerSignatureCall(CGThing):
             # Callee expects a quoted string for the context if
             # there's a context.
             context = '"%s"' % context
-
-            if idlNode.isMethod() and idlNode.getExtendedAttribute("WebExtensionStub"):
-                [
-                    nativeMethodName,
-                    argsPre,
-                    args,
-                ] = self.processWebExtensionStubAttribute(idlNode, cgThings)
-            else:
-                args = self.getArguments()
-
             cgThings.append(
                 CGCallGenerator(
                     self.needsErrorResult(),
                     needsCallerType(idlNode),
                     isChromeOnly(idlNode),
-                    args,
+                    self.getArguments(),
                     argsPre,
                     returnType,
                     self.extendedAttributes,
@@ -9556,95 +9546,6 @@ class CGPerSignatureCall(CGThing):
 
     def getArguments(self):
         return [(a, "arg" + str(i)) for i, a in enumerate(self.arguments)]
-
-    def processWebExtensionStubAttribute(self, idlNode, cgThings):
-        nativeMethodName = "CallWebExtMethod"
-        stubNameSuffix = idlNode.getExtendedAttribute("WebExtensionStub")
-        if isinstance(stubNameSuffix, list):
-            nativeMethodName += stubNameSuffix[0]
-
-        argsLength = len(self.getArguments())
-        singleVariadicArg = argsLength == 1 and self.getArguments()[0][0].variadic
-
-        # If the method signature does only include a single variadic arguments,
-        # then `arg0` is already a Sequence of JS values and we can pass that
-        # to the WebExtensions Stub method as is.
-        if singleVariadicArg:
-            argsPre = [
-                "cx",
-                'u"%s"_ns' % idlNode.identifier.name,
-                "Constify(%s)" % "arg0",
-            ]
-            args = []
-            return [nativeMethodName, argsPre, args]
-
-        argsPre = [
-            "cx",
-            'u"%s"_ns' % idlNode.identifier.name,
-            "Constify(%s)" % "args_sequence",
-        ]
-        args = []
-
-        # Determine the maximum number of elements of the js values sequence argument,
-        # skipping the last optional callback argument if any:
-        #
-        # if this WebExtensions API method does expect a last optional callback argument,
-        # then it is the callback parameter supported for chrome-compatibility
-        # reasons, and we want it as a separate argument passed to the WebExtension
-        # stub method and skip it from the js values sequence including all other
-        # arguments.
-        maxArgsSequenceLen = argsLength
-        if argsLength > 0:
-            lastArg = self.getArguments()[argsLength - 1]
-            isCallback = lastArg[0].type.tag() == IDLType.Tags.callback
-            if isCallback and lastArg[0].optional:
-                argsPre.append(
-                    "MOZ_KnownLive(NonNullHelper(Constify(%s)))" % lastArg[1]
-                )
-                maxArgsSequenceLen = argsLength - 1
-
-        cgThings.append(
-            CGGeneric(
-                dedent(
-                    fill(
-                        """
-            // Collecting all args js values into the single sequence argument
-            // passed to the webextensions stub method.
-            //
-            // NOTE: The stub method will receive the original non-normalized js values,
-            // but those arguments will still be normalized on the main thread by the 
-            // WebExtensions API request handler using the same JSONSchema defnition
-            // used by the non-webIDL webextensions API bindings.
-            AutoSequence<JS::Value> args_sequence;
-            SequenceRooter<JS::Value> args_sequence_holder(cx, &args_sequence);
-
-            // maximum number of arguments expected by the WebExtensions API method
-            // excluding the last optional chrome-compatible callback argument (which
-            // is being passed to the stub method as a separate additional argument).
-            uint32_t maxArgsSequenceLen = ${maxArgsSequenceLen};
-
-            uint32_t sequenceArgsLen = args.length() <= maxArgsSequenceLen ?
-              args.length() : maxArgsSequenceLen;
-
-            if (sequenceArgsLen > 0) {
-              if (!args_sequence.SetCapacity(sequenceArgsLen, mozilla::fallible)) {
-                JS_ReportOutOfMemory(cx);
-                return false;
-              }
-              for (uint32_t argIdx = 0; argIdx < sequenceArgsLen; ++argIdx) {
-                // OK to do infallible append here, since we ensured capacity already.
-                JS::Value& slot = *args_sequence.AppendElement();
-                slot = args[argIdx];
-              }
-            }
-            """,
-                        maxArgsSequenceLen=maxArgsSequenceLen,
-                    )
-                )
-            )
-        )
-
-        return [nativeMethodName, argsPre, args]
 
     def needsErrorResult(self):
         return "needsErrorResult" in self.extendedAttributes

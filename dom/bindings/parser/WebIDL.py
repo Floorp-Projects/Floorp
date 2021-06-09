@@ -6394,7 +6394,6 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             or identifier == "StaticClassOverride"
             or identifier == "NonEnumerable"
             or identifier == "Unexposed"
-            or identifier == "WebExtensionStub"
         ):
             # Known attributes that we don't need to do anything with here
             pass
