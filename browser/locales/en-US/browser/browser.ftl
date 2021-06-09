@@ -565,22 +565,22 @@ crashed-subframe-submit =
 ## Bookmarks panels, menus and toolbar
 
 bookmarks-manage-bookmarks =
-  .label = Manage bookmarks
-bookmarks-recent-bookmarks-panel-subheader = Recent bookmarks
+  .label = Manage Bookmarks
+bookmarks-recent-bookmarks-panel-subheader = Recent Bookmarks
 bookmarks-toolbar-chevron =
   .tooltiptext = Show more bookmarks
 bookmarks-sidebar-content =
   .aria-label = Bookmarks
 bookmarks-menu-button =
-  .label = Bookmarks menu
+  .label = Bookmarks Menu
 bookmarks-other-bookmarks-menu =
-  .label = Other bookmarks
+  .label = Other Bookmarks
 bookmarks-mobile-bookmarks-menu =
-  .label = Mobile bookmarks
+  .label = Mobile Bookmarks
 bookmarks-tools-sidebar-visibility =
   .label = { $isVisible ->
-     [true] Hide bookmarks sidebar
-    *[other] View bookmarks sidebar
+     [true] Hide Bookmarks Sidebar
+    *[other] View Bookmarks Sidebar
   }
 bookmarks-tools-toolbar-visibility-menuitem =
   .label = { $isVisible ->
@@ -589,20 +589,20 @@ bookmarks-tools-toolbar-visibility-menuitem =
   }
 bookmarks-tools-toolbar-visibility-panel =
   .label = { $isVisible ->
-     [true] Hide bookmarks toolbar
-    *[other] Show bookmarks toolbar
+     [true] Hide Bookmarks Toolbar
+    *[other] Show Bookmarks Toolbar
   }
 bookmarks-tools-menu-button-visibility =
   .label = { $isVisible ->
-     [true] Remove bookmarks menu from toolbar
-    *[other] Add bookmarks menu to toolbar
+     [true] Remove Bookmarks Menu from Toolbar
+    *[other] Add Bookmarks Menu to Toolbar
   }
 bookmarks-search =
-  .label = Search bookmarks
+  .label = Search Bookmarks
 bookmarks-tools =
   .label = Bookmarking Tools
 bookmarks-bookmark-edit-panel =
-  .label = Edit this bookmark
+  .label = Edit This Bookmark
 
 # The aria-label is a spoken label that should not include the word "toolbar" or
 # such, because screen readers already know that this container is a toolbar.
@@ -612,15 +612,15 @@ bookmarks-toolbar =
   .accesskey = B
   .aria-label = Bookmarks
 bookmarks-toolbar-menu =
-  .label = Bookmarks toolbar
+  .label = Bookmarks Toolbar
 bookmarks-toolbar-placeholder =
-  .title = Bookmarks toolbar items
+  .title = Bookmarks Toolbar Items
 bookmarks-toolbar-placeholder-button =
-  .label = Bookmarks toolbar items
+  .label = Bookmarks Toolbar Items
 
 # "Bookmark" is a verb, as in "Add current tab to bookmarks".
 bookmarks-current-tab =
-  .label = Bookmark current tab
+  .label = Bookmark Current Tab
 
 ## Library Panel items
 
