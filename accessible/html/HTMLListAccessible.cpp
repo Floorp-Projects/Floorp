@@ -55,8 +55,12 @@ nsRect HTMLLIAccessible::BoundsInAppUnits() const {
   nsRect rect = AccessibleWrap::BoundsInAppUnits();
 
   LocalAccessible* bullet = Bullet();
-  if (bullet && GetFrame()->StyleList()->mListStylePosition !=
-                    NS_STYLE_LIST_STYLE_POSITION_INSIDE) {
+  nsIFrame* frame = GetFrame();
+  MOZ_ASSERT(!(bullet && !frame), "Cannot have a bullet if there is no frame");
+
+  if (bullet && frame &&
+      frame->StyleList()->mListStylePosition !=
+          NS_STYLE_LIST_STYLE_POSITION_INSIDE) {
     nsRect bulletRect = bullet->BoundsInAppUnits();
     return rect.Union(bulletRect);
   }
