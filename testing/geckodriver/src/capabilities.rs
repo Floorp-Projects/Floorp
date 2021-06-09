@@ -154,6 +154,10 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         Ok(true)
     }
 
+    fn accept_proxy(&mut self, _: &Capabilities, _: &Capabilities) -> WebDriverResult<bool> {
+        Ok(true)
+    }
+
     fn set_window_rect(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
         Ok(true)
     }
@@ -173,8 +177,10 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         Ok(true)
     }
 
-    fn accept_proxy(&mut self, _: &Capabilities, _: &Capabilities) -> WebDriverResult<bool> {
-        Ok(true)
+    fn web_socket_url(&mut self, caps: &Capabilities) -> WebDriverResult<bool> {
+        self.browser_version(caps)?
+            .map(|v| self.compare_browser_version(&v, ">=90"))
+            .unwrap_or(Ok(false))
     }
 
     fn validate_custom(&mut self, name: &str, value: &Value) -> WebDriverResult<()> {
@@ -410,12 +416,7 @@ impl FirefoxOptions {
         }
 
         if let Some(args) = rv.args.as_ref() {
-            let os_args = parse_args(
-                args.iter()
-                    .map(OsString::from)
-                    .collect::<Vec<_>>()
-                    .iter(),
-            );
+            let os_args = parse_args(args.iter().map(OsString::from).collect::<Vec<_>>().iter());
             if let Some(path) = get_arg_value(os_args.iter(), Arg::Profile) {
                 if rv.profile.is_some() {
                     return Err(WebDriverError::new(
@@ -458,6 +459,27 @@ impl FirefoxOptions {
                 if has_fission_pref.is_none() {
                     rv.prefs
                         .push(("fission.autostart".to_owned(), Pref::new(false)));
+                }
+            }
+        }
+
+        if let Some(json) = matched.get("webSocketUrl") {
+            let use_web_socket = json.as_bool().ok_or_else(|| {
+                WebDriverError::new(
+                    ErrorStatus::InvalidArgument,
+                    "webSocketUrl is not a boolean",
+                )
+            })?;
+
+            if use_web_socket {
+                let mut remote_args = Vec::new();
+                remote_args.push("--remote-debugging-port".to_owned());
+                remote_args.push("0".to_owned());
+
+                if let Some(ref mut args) = rv.args {
+                    args.append(&mut remote_args);
+                } else {
+                    rv.args = Some(remote_args);
                 }
             }
         }
@@ -845,6 +867,52 @@ mod tests {
     }
 
     #[test]
+    fn fx_options_from_capabilities_with_websocket_url_not_set() {
+        let mut caps = Capabilities::new();
+
+        let opts = FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
+            .expect("Valid Firefox options");
+
+        assert!(
+            opts.args.is_none(),
+            "CLI arguments for Firefox unexpectedly found"
+        );
+    }
+
+    #[test]
+    fn fx_options_from_capabilities_with_websocket_url_false() {
+        let mut caps = Capabilities::new();
+        caps.insert("webSocketUrl".into(), json!(false));
+
+        let opts = FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
+            .expect("Valid Firefox options");
+
+        assert!(
+            opts.args.is_none(),
+            "CLI arguments for Firefox unexpectedly found"
+        );
+    }
+
+    #[test]
+    fn fx_options_from_capabilities_with_websocket_url_true() {
+        let mut caps = Capabilities::new();
+        caps.insert("webSocketUrl".into(), json!(true));
+
+        let opts = FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
+            .expect("Valid Firefox options");
+
+        if let Some(args) = opts.args {
+            let mut iter = args.iter();
+            assert!(iter
+                .find(|&arg| arg == &"--remote-debugging-port".to_owned())
+                .is_some());
+            assert_eq!(iter.next(), Some(&"0".to_owned()));
+        } else {
+            assert!(false, "CLI arguments for Firefox not found");
+        }
+    }
+
+    #[test]
     fn fx_options_from_capabilities_with_debugger_address_not_set() {
         let mut caps = Capabilities::new();
 
@@ -867,7 +935,7 @@ mod tests {
 
         assert!(
             opts.args.is_none(),
-            "CLI arguments for remote protocol unexpectedly found"
+            "CLI arguments for Firefox unexpectedly found"
         );
     }
 
@@ -886,7 +954,7 @@ mod tests {
                 .is_some());
             assert_eq!(iter.next(), Some(&"0".to_owned()));
         } else {
-            assert!(false, "CLI arguments for remote protocol not found");
+            assert!(false, "CLI arguments for Firefox not found");
         }
 
         assert!(opts
