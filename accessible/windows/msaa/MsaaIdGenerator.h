@@ -11,6 +11,7 @@
 
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/NotNull.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace a11y {
@@ -20,19 +21,23 @@ class sdnAccessible;
 
 /**
  * This class is responsible for generating child IDs used by our MSAA
- * implementation. Since e10s requires us to differentiate IDs based on the
- * originating process of the accessible, a portion of the ID's bits are
+ * implementation.
+ *
+ * If the accessibility cache is disabled, we must differentiate IDs based on
+ * the originating process of the accessible, so a portion of the ID's bits are
  * allocated to storing that information. The remaining bits represent the
  * unique ID of the accessible, within that content process.
  *
  * The constants kNumContentProcessIDBits and kNumUniqueIDBits in the
  * implementation are responsible for determining the proportion of bits that
  * are allocated for each purpose.
+ *
+ * If the accessibility cache is enabled, we don't need to differentiate IDs
+ * based on the originating process, so all bits of the ID are used for the
+ * unique ID.
  */
 class MsaaIdGenerator {
  public:
-  constexpr MsaaIdGenerator();
-
   uint32_t GetID();
   void ReleaseID(NotNull<MsaaAccessible*> aMsaaAcc);
   void ReleaseID(NotNull<sdnAccessible*> aSdnAcc);
@@ -50,7 +55,7 @@ class MsaaIdGenerator {
   uint32_t ResolveContentProcessID();
 
  private:
-  IDSet mIDSet;
+  UniquePtr<IDSet> mIDSet;
 };
 
 }  // namespace a11y

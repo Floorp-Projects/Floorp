@@ -12,10 +12,13 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #include "nsTHashMap.h"
 #include "sdnAccessible.h"
+
+static const uint32_t kNumFullIDBits = 31UL;
 
 // These constants may be adjusted to modify the proportion of the Child ID
 // allocated to the content ID vs proportion allocated to the unique ID. They
@@ -73,21 +76,42 @@ class MsaaIDCracker {
 
 }  // namespace detail
 
-constexpr MsaaIdGenerator::MsaaIdGenerator() : mIDSet(kNumUniqueIDBits) {}
-
 uint32_t MsaaIdGenerator::GetID() {
-  uint32_t id = mIDSet.GetID();
+  if (!mIDSet) {
+    // XXX This is only a pointer because we need to decide how many bits we
+    // need for the IDSet at runtime. Once the cache pref is gone, this no
+    // longer needs to be a pointer.
+    mIDSet =
+        MakeUnique<IDSet>(StaticPrefs::accessibility_cache_enabled_AtStartup()
+                              ? kNumFullIDBits
+                              : kNumUniqueIDBits);
+  }
+  uint32_t id = mIDSet->GetID();
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    MOZ_ASSERT(id <= ((1UL << kNumFullIDBits) - 1UL));
+    return ~id;
+  }
   MOZ_ASSERT(id <= ((1UL << kNumUniqueIDBits) - 1UL));
   return detail::BuildMsaaID(id, ResolveContentProcessID());
 }
 
 bool MsaaIdGenerator::ReleaseID(uint32_t aID) {
   MOZ_ASSERT(aID != MsaaAccessible::kNoID);
+  if (!mIDSet) {
+    // If we're in the parent process and we're trying to release an id created
+    // in a content process, mIDSet might not exist yet. Just ignore this.
+    MOZ_ASSERT(XRE_IsParentProcess());
+    return false;
+  }
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    mIDSet->ReleaseID(~aID);
+    return true;
+  }
   detail::MsaaIDCracker cracked(aID);
   if (cracked.GetContentProcessId() != ResolveContentProcessID()) {
     return false;
   }
-  mIDSet.ReleaseID(cracked.GetUniqueId());
+  mIDSet->ReleaseID(cracked.GetUniqueId());
   return true;
 }
 
@@ -108,6 +132,9 @@ void MsaaIdGenerator::ReleaseID(NotNull<sdnAccessible*> aSdnAcc) {
 }
 
 bool MsaaIdGenerator::IsChromeID(uint32_t aID) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return true;
+  }
   detail::MsaaIDCracker cracked(aID);
   return cracked.GetContentProcessId() == 0;
 }
@@ -121,6 +148,7 @@ bool MsaaIdGenerator::IsIDForThisContentProcess(uint32_t aID) {
 bool MsaaIdGenerator::IsIDForContentProcess(
     uint32_t aID, dom::ContentParentId aIPCContentProcessId) {
   MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
   detail::MsaaIDCracker cracked(aID);
   return cracked.GetContentProcessId() ==
          GetContentProcessIDFor(aIPCContentProcessId);
@@ -128,6 +156,7 @@ bool MsaaIdGenerator::IsIDForContentProcess(
 
 bool MsaaIdGenerator::IsSameContentProcessFor(uint32_t aFirstID,
                                               uint32_t aSecondID) {
+  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
   detail::MsaaIDCracker firstCracked(aFirstID);
   detail::MsaaIDCracker secondCracked(aSecondID);
   return firstCracked.GetContentProcessId() ==
