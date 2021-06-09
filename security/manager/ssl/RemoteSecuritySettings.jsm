@@ -34,14 +34,6 @@ const INTERMEDIATES_SIGNER_PREF =
   "security.remote_settings.intermediates.signer";
 const LOGLEVEL_PREF = "browser.policies.loglevel";
 
-const INTERMEDIATES_ERRORS_TELEMETRY = "INTERMEDIATE_PRELOADING_ERRORS";
-const INTERMEDIATES_PENDING_TELEMETRY =
-  "security.intermediate_preloading_num_pending";
-const INTERMEDIATES_PRELOADED_TELEMETRY =
-  "security.intermediate_preloading_num_preloaded";
-const INTERMEDIATES_UPDATE_MS_TELEMETRY =
-  "INTERMEDIATE_PRELOADING_UPDATE_TIME_MS";
-
 const ONECRL_BUCKET_PREF = "services.settings.security.onecrl.bucket";
 const ONECRL_COLLECTION_PREF = "services.settings.security.onecrl.collection";
 const ONECRL_SIGNER_PREF = "services.settings.security.onecrl.signer";
@@ -338,10 +330,6 @@ class IntermediatePreloads {
         current = await this.client.db.list();
       } catch (err) {
         log.warn(`Unable to list intermediate preloading collection: ${err}`);
-        // Re-purpose the "failedToFetch" category to indicate listing the collection failed.
-        Services.telemetry
-          .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-          .add("failedToFetch");
         return;
       }
       const toReset = current.filter(record => record.cert_import_complete);
@@ -353,10 +341,6 @@ class IntermediatePreloads {
         );
       } catch (err) {
         log.warn(`Unable to update intermediate preloading collection: ${err}`);
-        // Re-purpose the "unexpectedLength" category to indicate updating the collection failed.
-        Services.telemetry
-          .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-          .add("unexpectedLength");
         return;
       }
     }
@@ -365,10 +349,6 @@ class IntermediatePreloads {
       current = await this.client.db.list();
     } catch (err) {
       log.warn(`Unable to list intermediate preloading collection: ${err}`);
-      // Re-purpose the "failedToFetch" category to indicate listing the collection failed.
-      Services.telemetry
-        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToFetch");
       return;
     }
     const waiting = current.filter(record => !record.cert_import_complete);
@@ -383,8 +363,6 @@ class IntermediatePreloads {
       );
       return;
     }
-
-    TelemetryStopwatch.start(INTERMEDIATES_UPDATE_MS_TELEMETRY);
 
     let toDownload = waiting.slice(0, maxDownloadsPerRun);
     let recordsCertsAndSubjects = [];
@@ -412,9 +390,6 @@ class IntermediatePreloads {
     }).catch(err => err);
     if (result != Cr.NS_OK) {
       Cu.reportError(`certStorage.addCerts failed: ${result}`);
-      Services.telemetry
-        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToUpdateDB");
       return;
     }
     try {
@@ -425,39 +400,8 @@ class IntermediatePreloads {
       );
     } catch (err) {
       log.warn(`Unable to update intermediate preloading collection: ${err}`);
-      // Re-purpose the "unexpectedLength" category to indicate updating the collection failed.
-      Services.telemetry
-        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("unexpectedLength");
       return;
     }
-
-    let finalCurrent;
-    try {
-      finalCurrent = await this.client.db.list();
-    } catch (err) {
-      log.warn(`Unable to list intermediate preloading collection: ${err}`);
-      // Re-purpose the "failedToFetch" category to indicate listing the collection failed.
-      Services.telemetry
-        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToFetch");
-      return;
-    }
-    const finalWaiting = finalCurrent.filter(
-      record => !record.cert_import_complete
-    );
-
-    const countPreloaded = finalCurrent.length - finalWaiting.length;
-
-    TelemetryStopwatch.finish(INTERMEDIATES_UPDATE_MS_TELEMETRY);
-    Services.telemetry.scalarSet(
-      INTERMEDIATES_PRELOADED_TELEMETRY,
-      countPreloaded
-    );
-    Services.telemetry.scalarSet(
-      INTERMEDIATES_PENDING_TELEMETRY,
-      finalWaiting.length
-    );
 
     Services.obs.notifyObservers(
       null,
@@ -473,10 +417,6 @@ class IntermediatePreloads {
       await this.updatePreloadedIntermediates();
     } catch (err) {
       log.warn(`Unable to update intermediate preloads: ${err}`);
-
-      Services.telemetry
-        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToObserve");
     }
   }
 
@@ -547,17 +487,10 @@ class IntermediatePreloads {
       });
       dataAsString = gTextDecoder.decode(new Uint8Array(buffer));
     } catch (err) {
-      // Bug 1519273 - Log telemetry for these rejections
       if (err.name == "BadContentError") {
         log.debug(`Bad attachment content.`);
-        Services.telemetry
-          .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-          .add("unexpectedHash");
       } else {
         Cu.reportError(`Failed to download attachment: ${err}`);
-        Services.telemetry
-          .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-          .add("failedToDownloadMisc");
       }
       return result;
     }
@@ -578,13 +511,6 @@ class IntermediatePreloads {
       );
     } catch (err) {
       Cu.reportError(`Failed to decode cert: ${err}`);
-
-      // Re-purpose the "failedToUpdateNSS" telemetry tag as "failed to
-      // decode preloaded intermediate certificate"
-      Services.telemetry
-        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToUpdateNSS");
-
       return result;
     }
     result.cert = certBase64;
@@ -606,9 +532,6 @@ class IntermediatePreloads {
     }).catch(err => err);
     if (result != Cr.NS_OK) {
       Cu.reportError(`Failed to remove some intermediate certificates`);
-      Services.telemetry
-        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToRemove");
     }
   }
 }
