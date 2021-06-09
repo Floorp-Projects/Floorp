@@ -56,7 +56,7 @@ This module is responsible for
 * exposing a specific metric API in Rust
 * wrapping metric implementations for handling IPC
 * exposing FFI functionality to implement other language APIs on top.
-  See also [Adding a New Metric Type](new_metric_type.md).
+  See also [Adding a New Metric Type](new_metric_types.md).
 
 It calls into `glean` (the Glean SDK Rust Language Binding) for:
 

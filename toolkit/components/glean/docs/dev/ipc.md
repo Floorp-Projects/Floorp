@@ -114,4 +114,4 @@ handed off to C++, passed over IPC,
 then given back to `bincode` in Rust on the Parent.
 
 Rust is then responsible for turning the pending data into
-[metric API](api.md) calls on the metrics in the parent process.
+[metric API](../user/api.md) calls on the metrics in the parent process.
