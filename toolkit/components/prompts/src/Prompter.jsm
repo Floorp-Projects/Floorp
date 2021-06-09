@@ -874,7 +874,7 @@ var PromptUtilsTemp = {
   },
 
   makeAuthMessage(prompt, channel, authInfo) {
-    if (prompt.modalType != MODAL_TYPE_TAB) {
+    if (!PromptUtils.protonModals || prompt.modalType != MODAL_TYPE_TAB) {
       return this._legacyMakeAuthMessage(channel, authInfo);
     }
 
