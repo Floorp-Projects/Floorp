@@ -17,6 +17,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.component_tabstray2.*
@@ -87,7 +88,20 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         val containerView = inflater.inflate(R.layout.fragment_tab_tray_dialog, container, false)
         inflater.inflate(R.layout.component_tabstray2, containerView as ViewGroup, true)
 
-        tabsTrayStore = StoreProvider.get(this) { TabsTrayStore() }
+        val args by navArgs<TabsTrayFragmentArgs>()
+        val initialMode = if (args.enterMultiselect) {
+            TabsTrayState.Mode.Select(emptySet())
+        } else {
+            TabsTrayState.Mode.Normal
+        }
+
+        tabsTrayStore = StoreProvider.get(this) {
+            TabsTrayStore(
+                initialState = TabsTrayState(
+                    mode = initialMode
+                )
+            )
+        }
 
         fabView = LayoutInflater.from(containerView.context)
             .inflate(R.layout.component_tabstray_fab, containerView, true)

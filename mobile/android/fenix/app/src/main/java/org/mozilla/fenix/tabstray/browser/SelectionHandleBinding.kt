@@ -13,7 +13,6 @@ import androidx.core.view.updateLayoutParams
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -43,8 +42,6 @@ class SelectionHandleBinding(
 
     override suspend fun onState(flow: Flow<TabsTrayState>) {
         flow.map { it.mode }
-            // ignore initial mode update; we never start in select mode.
-            .drop(1)
             .ifChanged()
             .collect { mode ->
                 val isSelectMode = mode is Mode.Select
