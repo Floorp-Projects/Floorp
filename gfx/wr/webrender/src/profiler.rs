@@ -1174,6 +1174,12 @@ impl Profiler {
 
 /// Defines the interface for hooking up an external profiler to WR.
 pub trait ProfilerHooks : Send + Sync {
+    /// Register a thread with the profiler.
+    fn register_thread(&self, thread_name: &str);
+
+    /// Unregister a thread with the profiler.
+    fn unregister_thread(&self);
+
     /// Called at the beginning of a profile scope. The label must
     /// be a C string (null terminated).
     fn begin_marker(&self, label: &CStr);
@@ -1216,6 +1222,26 @@ pub fn set_profiler_hooks(hooks: Option<&'static dyn ProfilerHooks>) {
 /// A simple RAII style struct to manage a profile scope.
 pub struct ProfileScope {
     name: &'static CStr,
+}
+
+
+/// Register a thread with the Gecko Profiler.
+pub fn register_thread(thread_name: &str) {
+    unsafe {
+        if let Some(ref hooks) = PROFILER_HOOKS {
+            hooks.register_thread(thread_name);
+        }
+    }
+}
+
+
+/// Unregister a thread with the Gecko Profiler.
+pub fn unregister_thread() {
+    unsafe {
+        if let Some(ref hooks) = PROFILER_HOOKS {
+            hooks.unregister_thread();
+        }
+    }
 }
 
 /// Records a marker of the given duration that just ended.
