@@ -28,6 +28,7 @@ import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.lib.crash.service.GleanCrashReporterService
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import mozilla.components.service.location.LocationService
@@ -196,6 +197,7 @@ private fun createCrashReporter(context: Context): CrashReporter {
     return CrashReporter(
         context = context,
         services = services,
+        telemetryServices = listOf(GleanCrashReporterService(context)),
         promptConfiguration = CrashReporter.PromptConfiguration(
             appName = context.resources.getString(R.string.app_name)
         ),
