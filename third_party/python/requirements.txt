@@ -177,10 +177,6 @@ mozilla-version==0.3.4 \
     --hash=sha256:3ed4deb7a6fb25c83a5346ef4de08ddff9b2ddc4d16dd8fafb4a84978cc71255 \
     --hash=sha256:ce5741c2e7d12c30b53de9f79e30d6ac2a8bd4c93be711d30c7a7a08e32a094f
     # via -r requirements-mach-vendor-python.in
-pathlib2==2.3.2 \
-    --hash=sha256:8eb170f8d0d61825e09a95b38be068299ddeda82f35e96c3301a8a5e7604cb83 \
-    --hash=sha256:d1aa2a11ba7b8f7b21ab852b1fb5afb277e1bb99d5dfc663380b5015c0d80c5a
-    # via -r requirements-mach-vendor-python.in
 pathspec==0.8 \
     --hash=sha256:7d91249d21749788d07a2d0f94147accd8f845507400749ea19c1ec9054a12b0 \
     --hash=sha256:da45173eb3a6f2a5a487efba21f050af2b41948be6ab52b6a1e3ff22bb8b7061
@@ -285,7 +281,6 @@ six==1.13.0 \
     #   fluent.migrate
     #   jsonschema
     #   more-itertools
-    #   pathlib2
     #   pyrsistent
     #   pytest
     #   responses
