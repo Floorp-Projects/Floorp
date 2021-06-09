@@ -366,6 +366,8 @@ this.LoginHelper = {
   generationAvailable: null,
   generationConfidenceThreshold: null,
   generationEnabled: null,
+  improvedPasswordRulesEnabled: null,
+  improvedPasswordRulesCollection: "password-rules",
   includeOtherSubdomainsInLookup: null,
   insecureAutofill: null,
   privateBrowsingCaptureEnabled: null,
@@ -416,6 +418,9 @@ this.LoginHelper = {
     );
     this.generationEnabled = Services.prefs.getBoolPref(
       "signon.generation.enabled"
+    );
+    this.improvedPasswordRulesEnabled = Services.prefs.getBoolPref(
+      "signon.improvedPasswordRules.enabled"
     );
     this.insecureAutofill = Services.prefs.getBoolPref(
       "signon.autofillForms.http"
