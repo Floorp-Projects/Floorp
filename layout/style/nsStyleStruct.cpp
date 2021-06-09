@@ -935,7 +935,8 @@ nsStyleSVGReset::nsStyleSVGReset(const Document& aDocument)
       mStopOpacity(1.0f),
       mFloodOpacity(1.0f),
       mVectorEffect(StyleVectorEffect::None),
-      mMaskType(StyleMaskType::Luminance) {
+      mMaskType(StyleMaskType::Luminance),
+      mD(StyleDProperty::None()) {
   MOZ_COUNT_CTOR(nsStyleSVGReset);
 }
 
@@ -957,7 +958,8 @@ nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
       mStopOpacity(aSource.mStopOpacity),
       mFloodOpacity(aSource.mFloodOpacity),
       mVectorEffect(aSource.mVectorEffect),
-      mMaskType(aSource.mMaskType) {
+      mMaskType(aSource.mMaskType),
+      mD(aSource.mD) {
   MOZ_COUNT_CTOR(nsStyleSVGReset);
 }
 
@@ -1002,7 +1004,7 @@ nsChangeHint nsStyleSVGReset::CalcDifference(
 
   if (mX != aNewData.mX || mY != aNewData.mY || mCx != aNewData.mCx ||
       mCy != aNewData.mCy || mR != aNewData.mR || mRx != aNewData.mRx ||
-      mRy != aNewData.mRy) {
+      mRy != aNewData.mRy || mD != aNewData.mD) {
     hint |= nsChangeHint_InvalidateRenderingObservers | nsChangeHint_NeedReflow;
   }
 
@@ -1024,7 +1026,7 @@ nsChangeHint nsStyleSVGReset::CalcDifference(
              mLightingColor != aNewData.mLightingColor ||
              mStopOpacity != aNewData.mStopOpacity ||
              mFloodOpacity != aNewData.mFloodOpacity ||
-             mMaskType != aNewData.mMaskType) {
+             mMaskType != aNewData.mMaskType || mD != aNewData.mD) {
     hint |= nsChangeHint_RepaintFrame;
   }
 
