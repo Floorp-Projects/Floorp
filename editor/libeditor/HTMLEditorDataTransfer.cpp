@@ -1862,7 +1862,7 @@ nsresult HTMLEditor::InsertFromTransferable(nsITransferable* aTransferable,
 }
 
 static void GetStringFromDataTransfer(const DataTransfer* aDataTransfer,
-                                      const nsAString& aType, int32_t aIndex,
+                                      const nsAString& aType, uint32_t aIndex,
                                       nsString& aOutputString) {
   nsCOMPtr<nsIVariant> variant;
   DebugOnly<nsresult> rvIgnored = aDataTransfer->GetDataAtNoSecurityCheck(
@@ -1879,7 +1879,7 @@ static void GetStringFromDataTransfer(const DataTransfer* aDataTransfer,
 }
 
 nsresult HTMLEditor::InsertFromDataTransfer(const DataTransfer* aDataTransfer,
-                                            int32_t aIndex,
+                                            uint32_t aIndex,
                                             Document* aSourceDoc,
                                             const EditorDOMPoint& aDroppedAt,
                                             bool aDoDeleteSelection) {

@@ -3756,10 +3756,10 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aIndex index of aDataTransfer's item to insert.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  InsertFromDataTransfer(const dom::DataTransfer* aDataTransfer, int32_t aIndex,
-                         Document* aSourceDoc, const EditorDOMPoint& aDroppedAt,
-                         bool aDoDeleteSelection);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertFromDataTransfer(
+      const dom::DataTransfer* aDataTransfer, uint32_t aIndex,
+      Document* aSourceDoc, const EditorDOMPoint& aDroppedAt,
+      bool aDoDeleteSelection);
 
   static bool HavePrivateHTMLFlavor(nsIClipboard* clipboard);
 
