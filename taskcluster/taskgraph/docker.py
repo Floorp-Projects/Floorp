@@ -26,8 +26,9 @@ def load_image_by_name(image_name, tag=None):
     params = {"level": six.ensure_text(os.environ.get("MOZ_SCM_LEVEL", "3"))}
     tasks = load_tasks_for_kind(params, "docker-image")
     task = tasks["docker-image-{}".format(image_name)]
+    deadline = None
     task_id = IndexSearch().should_replace_task(
-        task, {}, task.optimization.get("index-search", [])
+        task, {}, deadline, task.optimization.get("index-search", [])
     )
 
     if task_id in (True, False):
