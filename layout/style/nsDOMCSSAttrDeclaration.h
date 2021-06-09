@@ -19,6 +19,7 @@ namespace mozilla {
 
 class SMILValue;
 class SVGAnimatedLength;
+class SVGAnimatedPathSegList;
 
 namespace dom {
 class DomGroup;
@@ -51,6 +52,8 @@ class nsDOMCSSAttributeDeclaration final : public nsDOMCSSDeclaration {
   nsresult SetSMILValue(const nsCSSPropertyID aPropID, const SMILValue& aValue);
   nsresult SetSMILValue(const nsCSSPropertyID aPropID,
                         const SVGAnimatedLength& aLength);
+  nsresult SetSMILValue(const nsCSSPropertyID,
+                        const mozilla::SVGAnimatedPathSegList& aPath);
 
   void SetPropertyValue(const nsCSSPropertyID aPropID, const nsACString& aValue,
                         nsIPrincipal* aSubjectPrincipal,
