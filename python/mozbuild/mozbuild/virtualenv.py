@@ -317,12 +317,6 @@ class VirtualenvManager(VirtualenvHelper):
         !windows -- This denotes that the action should only be taken when run
             on non-Windows systems.
 
-        python3 -- This denotes that the action should only be taken when run
-            on Python 3.
-
-        python2 -- This denotes that the action should only be taken when run
-            on python 2.
-
         set-variable -- Set the given environment variable; e.g.
             `set-variable FOO=1`.
 
@@ -372,10 +366,6 @@ class VirtualenvManager(VirtualenvHelper):
                 for_win = not package[0].startswith("!")
                 is_win = sys.platform == "win32"
                 if is_win == for_win:
-                    handle_package(package[1:])
-            elif package[0] in ("python2", "python3"):
-                for_python3 = package[0].endswith("3")
-                if PY3 == for_python3:
                     handle_package(package[1:])
             else:
                 raise Exception("Unknown action: %s" % package[0])
@@ -550,10 +540,7 @@ class VirtualenvManager(VirtualenvHelper):
             if req.satisfied_by is not None:
                 return
 
-        args = [
-            "install",
-            package,
-        ]
+        args = ["install", package]
 
         if vendored:
             args.extend(
@@ -591,11 +578,7 @@ class VirtualenvManager(VirtualenvHelper):
         if not os.path.isabs(path):
             path = os.path.join(self.topsrcdir, path)
 
-        args = [
-            "install",
-            "--requirement",
-            path,
-        ]
+        args = ["install", "--requirement", path]
 
         if require_hashes:
             args.append("--require-hashes")
@@ -604,12 +587,7 @@ class VirtualenvManager(VirtualenvHelper):
             args.append("--quiet")
 
         if vendored:
-            args.extend(
-                [
-                    "--no-deps",
-                    "--no-index",
-                ]
-            )
+            args.extend(["--no-deps", "--no-index"])
 
         return self._run_pip(args)
 
@@ -698,10 +676,7 @@ def verify_python_version(log_handle):
     from distutils.version import LooseVersion
 
     major, minor, micro = sys.version_info[:3]
-    minimum_python_versions = {
-        2: LooseVersion("2.7.3"),
-        3: LooseVersion("3.6.0"),
-    }
+    minimum_python_versions = {2: LooseVersion("2.7.3"), 3: LooseVersion("3.6.0")}
     our = LooseVersion("%d.%d.%d" % (major, minor, micro))
 
     if major not in minimum_python_versions or our < minimum_python_versions[major]:
