@@ -177,7 +177,7 @@ add_task(async function test_ui_state_signedin() {
   checkMenuBarItem("sync-syncnowitem");
   checkPanelHeader();
   checkFxaToolbarButtonPanel({
-    headerTitle: "Manage Account",
+    headerTitle: "Manage account",
     headerDescription: "foo@bar.com",
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
@@ -358,7 +358,7 @@ add_task(async function test_ui_state_syncdisabled() {
   checkMenuBarItem("sync-enable");
   checkPanelHeader();
   checkFxaToolbarButtonPanel({
-    headerTitle: "Manage Account",
+    headerTitle: "Manage account",
     headerDescription: "foo@bar.com",
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
