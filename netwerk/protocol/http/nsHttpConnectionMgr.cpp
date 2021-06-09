@@ -1239,15 +1239,15 @@ nsresult nsHttpConnectionMgr::MakeNewConnection(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv =
-      CreateTransport(ent, trans, trans->Caps(), false, false,
-                      trans->ClassOfService() & nsIClassOfService::UrgentStart,
-                      true, pendingTransInfo);
+  nsresult rv = ent->CreateDnsAndConnectSocket(
+      trans, trans->Caps(), false, false,
+      trans->ClassOfService() & nsIClassOfService::UrgentStart, true,
+      pendingTransInfo);
   if (NS_FAILED(rv)) {
     /* hard failure */
     LOG(
         ("nsHttpConnectionMgr::MakeNewConnection [ci = %s trans = %p] "
-         "CreateTransport() hard failure.\n",
+         "CreateDnsAndConnectSocket() hard failure.\n",
          ent->mConnInfo->HashKey().get(), trans));
     trans->Close(rv);
     if (rv == NS_ERROR_NOT_AVAILABLE) rv = NS_ERROR_FAILURE;
@@ -1744,36 +1744,6 @@ void nsHttpConnectionMgr::RecvdConnect() {
   }
 
   ConditionallyStopTimeoutTick();
-}
-
-nsresult nsHttpConnectionMgr::CreateTransport(
-    ConnectionEntry* ent, nsAHttpTransaction* trans, uint32_t caps,
-    bool speculative, bool isFromPredictor, bool urgentStart, bool allow1918,
-    PendingTransactionInfo* pendingTransInfo) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  MOZ_ASSERT((speculative && !pendingTransInfo) ||
-             (!speculative && pendingTransInfo));
-
-  RefPtr<DnsAndConnectSocket> sock = new DnsAndConnectSocket(
-      ent, trans, caps, speculative, isFromPredictor, urgentStart);
-
-  if (speculative) {
-    sock->SetAllow1918(allow1918);
-  }
-  // The socket stream holds the reference to the half open
-  // socket - so if the stream fails to init the half open
-  // will go away.
-  nsresult rv = sock->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (pendingTransInfo) {
-    DebugOnly<bool> claimed =
-        pendingTransInfo->TryClaimingDnsAndConnectSocket(sock);
-    MOZ_ASSERT(claimed);
-  }
-
-  ent->InsertIntoDnsAndConnectSockets(sock);
-  return NS_OK;
 }
 
 void nsHttpConnectionMgr::DispatchSpdyPendingQ(
@@ -3322,9 +3292,9 @@ void nsHttpConnectionMgr::DoSpeculativeConnectionInternal(
     if (aFetchHTTPSRR) {
       Unused << aTrans->FetchHTTPSRR();
     }
-    DebugOnly<nsresult> rv =
-        CreateTransport(aEnt, aTrans, aTrans->Caps(), true, isFromPredictor,
-                        false, allow1918, nullptr);
+    DebugOnly<nsresult> rv = aEnt->CreateDnsAndConnectSocket(
+        aTrans, aTrans->Caps(), true, isFromPredictor, false, allow1918,
+        nullptr);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   } else {
     LOG(
@@ -3553,6 +3523,11 @@ nsHttpConnectionMgr::FindTransactionHelper(bool removeWhenFound,
     }
   }
   return info.forget();
+}
+
+already_AddRefed<ConnectionEntry>
+nsHttpConnectionMgr::FindConnectionEntry(const nsHttpConnectionInfo* ci) {
+  return mCT.Get(ci->HashKey());
 }
 
 nsHttpConnectionMgr* nsHttpConnectionMgr::AsHttpConnectionMgr() { return this; }

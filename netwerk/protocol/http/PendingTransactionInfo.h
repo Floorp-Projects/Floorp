@@ -24,11 +24,14 @@ class PendingTransactionInfo final : public ARefBase {
   // a connection in TLS handshake phase.
   bool IsAlreadyClaimedInitializingConn();
 
-  void AbandonDnsAndConnectSocketAndForgetActiveConn();
+  // This function return a weak poointer to DnsAndConnectSocket.
+  // The pointer is used by the caller(ConnectionEntry) to remove the
+  // DnsAndConnectSocket from the internal list. PendingTransactionInfo
+  // cannot perform this opereation.
+  [[nodiscard]] nsWeakPtr ForgetDnsAndConnectSocketAndActiveConn();
 
-  // Try to claim a halfOpen socket. We can only claim it if it is not
-  // claimed yet.
-  bool TryClaimingDnsAndConnectSocket(DnsAndConnectSocket* sock);
+  // Remember associated DnsAndConnectSocket.
+  void RememberDnsAndConnectSocket(DnsAndConnectSocket* sock);
   // Similar as above, but for a ActiveConn that is performing a TLS handshake
   // and has only a NullTransaction associated.
   bool TryClaimingActiveConn(HttpConnectionBase* conn);

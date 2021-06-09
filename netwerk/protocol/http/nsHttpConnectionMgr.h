@@ -176,6 +176,9 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
                                        SpeculativeTransaction* aTrans,
                                        bool aFetchHTTPSRR);
 
+  already_AddRefed<ConnectionEntry> FindConnectionEntry(
+      const nsHttpConnectionInfo* ci);
+
  public:
   static nsAHttpConnection* MakeConnectionHandle(HttpConnectionBase* aWrapped);
   void RegisterOriginCoalescingKey(HttpConnectionBase*, const nsACString& host,
@@ -260,9 +263,6 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   [[nodiscard]] nsresult ProcessNewTransaction(nsHttpTransaction*);
   [[nodiscard]] nsresult EnsureSocketThreadTarget();
   void ReportProxyTelemetry(ConnectionEntry* ent);
-  [[nodiscard]] nsresult CreateTransport(
-      ConnectionEntry*, nsAHttpTransaction*, uint32_t, bool, bool, bool, bool,
-      PendingTransactionInfo* pendingTransInfo);
   void StartedConnect();
   void RecvdConnect();
 
