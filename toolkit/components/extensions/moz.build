@@ -65,7 +65,6 @@ TESTING_JS_MODULES += [
 DIRS += [
     "schemas",
     "storage",
-    "webidl-api",
     "webrequest",
 ]
 
@@ -75,7 +74,6 @@ IPDL_SOURCES += [
 
 XPIDL_SOURCES += [
     "extIWebNavigation.idl",
-    "mozIExtensionAPIRequestHandling.idl",
     "mozIExtensionProcessScript.idl",
 ]
 
@@ -129,11 +127,6 @@ XPCSHELL_TESTS_MANIFESTS += [
     "test/xpcshell/xpcshell-remote.ini",
     "test/xpcshell/xpcshell.ini",
 ]
-
-# Only include tests that requires the WebExtensions WebIDL API bindings
-# in builds where they are enabled (currently only on Nightly builds).
-if CONFIG["MOZ_WEBEXT_WEBIDL_ENABLED"]:
-    XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/webidl-api/xpcshell.ini"]
 
 SPHINX_TREES["webextensions"] = "docs"
 

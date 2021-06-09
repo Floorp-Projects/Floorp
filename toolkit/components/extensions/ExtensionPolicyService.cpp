@@ -54,15 +54,8 @@ using dom::Promise;
 
 static const char kDocElementInserted[] = "initial-document-element-inserted";
 
-/*****************************************************************************
- * ExtensionPolicyService
- *****************************************************************************/
-
-/* static */
-mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
+static mozIExtensionProcessScript& ProcessScript() {
   static nsCOMPtr<mozIExtensionProcessScript> sProcessScript;
-
-  MOZ_ASSERT(NS_IsMainThread());
 
   if (MOZ_UNLIKELY(!sProcessScript)) {
     sProcessScript =
@@ -73,6 +66,10 @@ mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
   }
   return *sProcessScript;
 }
+
+/*****************************************************************************
+ * ExtensionPolicyService
+ *****************************************************************************/
 
 /* static */ ExtensionPolicyService& ExtensionPolicyService::GetSingleton() {
   static RefPtr<ExtensionPolicyService> sExtensionPolicyService;
