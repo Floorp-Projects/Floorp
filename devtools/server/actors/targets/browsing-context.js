@@ -1462,16 +1462,9 @@ const browsingContextTargetPrototype = {
       this._updateChildDocShells();
     }
 
-    // If this follows WindowGlobal lifecycle, a new Target actor will be spawn for the top level
-    // target document. Only notify about in-process iframes.
-    // Note that OOP iframes won't emit window-ready and will also have their dedicated target.
-    if (this.followWindowGlobalLifeCycle && isTopLevel) {
-      return;
-    }
-
     this.emit("window-ready", {
-      window,
-      isTopLevel,
+      window: window,
+      isTopLevel: isTopLevel,
       isBFCache,
       id: getWindowID(window),
       isFrameSwitching,
@@ -1479,20 +1472,11 @@ const browsingContextTargetPrototype = {
   },
 
   _windowDestroyed(window, id = null, isFrozen = false) {
-    const isTopLevel = window == this.window;
-
-    // If this follows WindowGlobal lifecycle, this target will be destroyed, alongside its top level document.
-    // Only notify about in-process iframes.
-    // Note that OOP iframes won't emit window-ready and will also have their dedicated target.
-    if (this.followWindowGlobalLifeCycle && isTopLevel) {
-      return;
-    }
-
     this.emit("window-destroyed", {
-      window,
-      isTopLevel,
+      window: window,
+      isTopLevel: window == this.window,
       id: id || getWindowID(window),
-      isFrozen,
+      isFrozen: isFrozen,
     });
   },
 

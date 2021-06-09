@@ -399,7 +399,7 @@ function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
   const frames = dbg.selectors.getCurrentThreadFrames();
   ok(frames.length >= 1, "Got at least one frame");
   const { sourceId, line } = frames[0].location;
-  is(sourceId, expectedSourceId, "Frame has correct source");
+  ok(sourceId == expectedSourceId, "Frame has correct source");
   ok(
     line == expectedLine,
     `Frame paused at ${line}, but expected ${expectedLine}`

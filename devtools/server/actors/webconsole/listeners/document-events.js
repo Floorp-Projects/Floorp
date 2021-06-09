@@ -60,11 +60,7 @@ DocumentEventsListener.prototype = {
     // Listen to window-ready and then fake one in order to notify about dom-loading for the existing document
     EventEmitter.on(this.targetActor, "window-ready", this.onWindowReady);
     // If the target actor isn't attached yet, attach it so that it starts emitting window-ready event
-    // Only do that if this isn't a JSWindowActor based target as this won't emit window-ready anyway.
-    if (
-      !this.targetActor.attached &&
-      !this.targetActor.followWindowGlobalLifeCycle
-    ) {
+    if (!this.targetActor.attached) {
       // The target actor will emit a window-ready in the next event loop
       // for the top level document (and any existing iframe document)
       this.targetActor.attach();
