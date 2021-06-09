@@ -4843,6 +4843,7 @@ void nsFocusManager::SetFocusedBrowsingContextFromOtherProcess(
   mFocusedBrowsingContextInContent = aContext;
   mActionIdForFocusedBrowsingContextInContent = aActionId;
   mFocusedElement = nullptr;
+  mFocusedWindow = nullptr;
 }
 
 bool nsFocusManager::SetFocusedBrowsingContextInChrome(
