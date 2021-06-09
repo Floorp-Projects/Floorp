@@ -5995,6 +5995,12 @@
     do_not_use_directly: true
 #endif  // !defined(JS_CODEGEN_MIPSXX)
 
+# Whether to use the XPCOM thread pool for JS helper tasks.
+-   name: javascript.options.external_thread_pool
+    type: bool
+    value: false
+    mirror: once
+
 #---------------------------------------------------------------------------
 # Prefs starting with "layers."
 #---------------------------------------------------------------------------
