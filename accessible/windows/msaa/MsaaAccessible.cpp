@@ -805,9 +805,9 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
       return E_NOINTERFACE;
     }
     *ppv = static_cast<IEnumVARIANT*>(new ChildrenEnumVariant(this));
-  } else if (IID_IServiceProvider == iid && localAcc)
+  } else if (IID_IServiceProvider == iid) {
     *ppv = new ServiceProvider(this);
-  else if (IID_ISimpleDOMNode == iid && localAcc) {
+  } else if (IID_ISimpleDOMNode == iid && localAcc) {
     if (!localAcc->HasOwnContent() && !localAcc->IsDoc()) {
       return E_NOINTERFACE;
     }
@@ -820,7 +820,7 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
     return S_OK;
   }
 
-  if (!*ppv && localAcc) {
+  if (!*ppv) {
     HRESULT hr = ia2Accessible::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr)) return hr;
   }
