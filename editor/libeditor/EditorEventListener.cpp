@@ -1193,6 +1193,16 @@ nsresult EditorEventListener::Blur(InternalFocusEvent* aBlurEvent) {
 
   Element* focusedElement = focusManager->GetFocusedElement();
   if (!focusedElement) {
+    // If it's in the designMode, and blur occurs, the target must be the
+    // window.  If a blur event is fired and the target is an element, it
+    // must be delayed blur event at initializing the `HTMLEditor`.
+    if (mEditorBase->IsHTMLEditor() &&
+        mEditorBase->AsHTMLEditor()->IsInDesignMode()) {
+      if (nsCOMPtr<Element> targetElement =
+              do_QueryInterface(aBlurEvent->mTarget)) {
+        return NS_OK;
+      }
+    }
     RefPtr<EditorBase> editorBase(mEditorBase);
     DebugOnly<nsresult> rvIgnored = editorBase->FinalizeSelection();
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
