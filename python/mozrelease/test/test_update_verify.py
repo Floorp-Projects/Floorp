@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function
 import os
 from tempfile import mkstemp
 import unittest
-from pathlib2 import Path
+from pathlib import Path
 
 from mozrelease.update_verify import UpdateVerifyConfig, UpdateVerifyError
 
@@ -73,7 +73,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
                 "ftp_server_to": "to",
                 "mar_channel_IDs": "firefox-mozilla-booyah",
                 "updater_package": None,
-            },
+            }
         ]
         self.uvc.addRelease(
             "4.0",
