@@ -5790,6 +5790,21 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "d": {
+    "isInherited": false,
+    "subproperties": [
+      "d"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "none",
+      "path",
+      "revert",
+      "unset"
+    ]
+  },
   "direction": {
     "isInherited": true,
     "subproperties": [
