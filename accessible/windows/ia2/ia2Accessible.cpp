@@ -65,6 +65,10 @@ AccessibleWrap* ia2Accessible::LocalAcc() {
   return static_cast<MsaaAccessible*>(this)->LocalAcc();
 }
 
+Accessible* ia2Accessible::Acc() {
+  return static_cast<MsaaAccessible*>(this)->Acc();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // IAccessible2
 
@@ -157,7 +161,7 @@ ia2Accessible::role(long* aRole) {
   if (!aRole) return E_INVALIDARG;
   *aRole = 0;
 
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   if (!acc) return CO_E_OBJNOTCONNECTED;
 
 #define ROLE(_geckoRole, stringRole, atkRole, macRole, macSubrole, msaaRole, \
@@ -167,7 +171,6 @@ ia2Accessible::role(long* aRole) {
     break;
 
   a11y::role geckoRole;
-  MOZ_ASSERT(!acc->IsProxy());
   geckoRole = acc->Role();
   switch (geckoRole) {
 #include "RoleMap.h"
@@ -179,9 +182,8 @@ ia2Accessible::role(long* aRole) {
 
   // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call
   // the IA2 role a ROLE_OUTLINEITEM.
-  MOZ_ASSERT(!acc->IsProxy());
   if (geckoRole == roles::ROW) {
-    LocalAccessible* xpParent = acc->LocalParent();
+    Accessible* xpParent = acc->Parent();
     if (xpParent && xpParent->Role() == roles::TREE_TABLE)
       *aRole = ROLE_SYSTEM_OUTLINEITEM;
   }
@@ -344,7 +346,7 @@ STDMETHODIMP
 ia2Accessible::get_uniqueID(long* aUniqueID) {
   if (!aUniqueID) return E_INVALIDARG;
 
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   *aUniqueID = MsaaAccessible::GetChildIDFor(acc);
   return S_OK;
 }
@@ -354,7 +356,7 @@ ia2Accessible::get_windowHandle(HWND* aWindowHandle) {
   if (!aWindowHandle) return E_INVALIDARG;
   *aWindowHandle = 0;
 
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   if (!acc) return CO_E_OBJNOTCONNECTED;
 
   *aWindowHandle = MsaaAccessible::GetHWNDFor(acc);
@@ -366,10 +368,9 @@ ia2Accessible::get_indexInParent(long* aIndexInParent) {
   if (!aIndexInParent) return E_INVALIDARG;
   *aIndexInParent = -1;
 
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   if (!acc) return CO_E_OBJNOTCONNECTED;
 
-  MOZ_ASSERT(!acc->IsProxy());
   *aIndexInParent = acc->IndexInParent();
 
   if (*aIndexInParent == -1) return S_FALSE;
