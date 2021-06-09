@@ -22,9 +22,9 @@ class nsRange;
 
 namespace mozilla {
 
+class EditorBase;
 class FilteredContentIterator;
 class OffsetEntry;
-class TextEditor;
 
 namespace dom {
 class AbstractRange;
@@ -52,7 +52,7 @@ class TextServicesDocument final : public nsIEditActionListener {
 
   RefPtr<dom::Document> mDocument;
   nsCOMPtr<nsISelectionController> mSelCon;
-  RefPtr<TextEditor> mTextEditor;
+  RefPtr<EditorBase> mEditorBase;
   RefPtr<FilteredContentIterator> mFilteredIter;
   nsCOMPtr<nsIContent> mPrevTextBlock;
   nsCOMPtr<nsIContent> mNextTextBlock;

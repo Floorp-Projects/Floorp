@@ -9,9 +9,9 @@
 #include <utility>
 
 #include "mozilla/BinarySearch.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/Logging.h"
-#include "mozilla/TextEditor.h"
 #include "mozilla/dom/Element.h"
 
 #include "nsDebug.h"
@@ -119,17 +119,17 @@ bool NodeOffsetRange::operator==(const nsRange& aRange) const {
 
 // static
 Maybe<mozInlineSpellWordUtil> mozInlineSpellWordUtil::Create(
-    const TextEditor& aTextEditor) {
-  dom::Document* document = aTextEditor.GetDocument();
+    const EditorBase& aEditorBase) {
+  dom::Document* document = aEditorBase.GetDocument();
   if (NS_WARN_IF(!document)) {
     return Nothing();
   }
 
-  const bool isContentEditableOrDesignMode = !!aTextEditor.AsHTMLEditor();
+  const bool isContentEditableOrDesignMode = aEditorBase.IsHTMLEditor();
 
   // Find the root node for the editor. For contenteditable the mRootNode could
   // change to shadow root if the begin and end are inside the shadowDOM.
-  nsINode* rootNode = aTextEditor.GetRoot();
+  nsINode* rootNode = aEditorBase.GetRoot();
   if (NS_WARN_IF(!rootNode)) {
     return Nothing();
   }

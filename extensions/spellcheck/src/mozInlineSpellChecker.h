@@ -21,8 +21,8 @@ class mozInlineSpellResume;
 class UpdateCurrentDictionaryCallback;
 
 namespace mozilla {
+class EditorBase;
 class EditorSpellCheck;
-class TextEditor;
 enum class EditSubAction : int32_t;
 
 namespace dom {
@@ -158,7 +158,7 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   };
   static SpellCheckingState gCanEnableSpellChecking;
 
-  RefPtr<mozilla::TextEditor> mTextEditor;
+  RefPtr<mozilla::EditorBase> mEditorBase;
   RefPtr<mozilla::EditorSpellCheck> mSpellCheck;
   RefPtr<mozilla::EditorSpellCheck> mPendingSpellCheck;
 
@@ -233,7 +233,7 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   // examines the dom node in question and returns true if the inline spell
   // checker should skip the node (i.e. the text is inside of a block quote
   // or an e-mail signature...)
-  static bool ShouldSpellCheckNode(mozilla::TextEditor* aTextEditor,
+  static bool ShouldSpellCheckNode(mozilla::EditorBase* aEditorBase,
                                    nsINode* aNode);
 
   // spell check the text contained within aRange, potentially scheduling
@@ -287,7 +287,7 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
 
   nsresult ResumeCheck(mozilla::UniquePtr<mozInlineSpellStatus>&& aStatus);
 
-  // Those methods are called when mTextEditor splits a node or joins the
+  // Those methods are called when mEditorBase splits a node or joins the
   // given nodes.
   void DidSplitNode(nsINode* aExistingRightNode, nsINode* aNewLeftNode);
   void DidJoinNodes(nsINode& aRightNode, nsINode& aLeftNode);
@@ -331,8 +331,8 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   // track the number of pending spell checks and async operations that may lead
   // to spell checks, notifying observers accordingly
   void ChangeNumPendingSpellChecks(int32_t aDelta,
-                                   mozilla::TextEditor* aTextEditor = nullptr);
-  void NotifyObservers(const char* aTopic, mozilla::TextEditor* aTextEditor);
+                                   mozilla::EditorBase* aEditorBase = nullptr);
+  void NotifyObservers(const char* aTopic, mozilla::EditorBase* aEditorBase);
 
   void StartToListenToEditSubActions() { mIsListeningToEditSubActions = true; }
   void EndListeningToEditSubActions() { mIsListeningToEditSubActions = false; }
