@@ -421,10 +421,7 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None, extra_search_dirs=(
     extra_search_dirs is a convenience argument. If provided, the strings in
     the sequence will be appended to the END of the given `path`.
     """
-    try:
-        from shutil import which as shutil_which
-    except ImportError:
-        from shutil_which import which as shutil_which
+    from shutil import which as shutil_which
 
     if isinstance(path, (list, tuple)):
         path = os.pathsep.join(path)
