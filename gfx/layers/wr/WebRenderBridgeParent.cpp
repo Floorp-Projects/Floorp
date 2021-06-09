@@ -140,12 +140,6 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr,
   return reinterpret_cast<void*>(ret);
 }
 
-void gecko_profiler_register_thread(const char* name) {
-  PROFILER_REGISTER_THREAD(name);
-}
-
-void gecko_profiler_unregister_thread() { PROFILER_UNREGISTER_THREAD(); }
-
 void record_telemetry_time(mozilla::wr::TelemetryProbe aProbe,
                            uint64_t aTimeNs) {
   uint32_t time_ms = (uint32_t)(aTimeNs / 1000000);
