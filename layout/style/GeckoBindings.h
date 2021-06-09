@@ -557,9 +557,6 @@ void Gecko_AddPropertyToSet(nsCSSPropertyIDSet*, nsCSSPropertyID);
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-void Gecko_RegisterProfilerThread(const char* name);
-void Gecko_UnregisterProfilerThread();
-
 #ifdef MOZ_GECKO_PROFILER
 void Gecko_Construct_AutoProfilerLabel(mozilla::AutoProfilerLabel*,
                                        JS::ProfilingCategoryPair);

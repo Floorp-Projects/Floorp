@@ -80,6 +80,7 @@ uluru = "0.4"
 unicode-bidi = "0.3"
 unicode-segmentation = "1.0"
 void = "1.0.2"
+gecko-profiler = { path = "../../../tools/profiler/rust-api" }
 
 [build-dependencies]
 lazy_static = "1"
