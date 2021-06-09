@@ -846,13 +846,13 @@ async function reloadAndAssertClosedStreams() {
  */
 function checkDeviceSelectors(aExpectedTypes, aWindow = window) {
   for (const type of aExpectedTypes) {
-    if (!["microphone", "camera", "screen"].includes(type)) {
+    if (!["microphone", "camera", "screen", "speaker"].includes(type)) {
       throw new Error(`Bad device type name ${type}`);
     }
   }
   let document = aWindow.document;
 
-  for (let type of ["Microphone", "Camera"]) {
+  for (let type of ["Microphone", "Camera", "Speaker"]) {
     let selector = document.getElementById(`webRTC-select${type}`);
     if (!aExpectedTypes.includes(type.toLowerCase())) {
       ok(selector.hidden, `${type} selector hidden`);

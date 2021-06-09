@@ -389,7 +389,12 @@ class WebRTCParent extends JSWindowActorParent {
       return false;
     }
 
-    let { audioInputDevices, videoInputDevices, sharingScreen } = aRequest;
+    let {
+      audioInputDevices,
+      videoInputDevices,
+      audioOutputDevices,
+      sharingScreen,
+    } = aRequest;
 
     let micAllowed =
       SitePermissions.getForPrincipal(aPrincipal, "microphone").state ==
@@ -471,7 +476,8 @@ class WebRTCParent extends JSWindowActorParent {
     }
     if (
       (!audioInputDevices.length || micAllowed || activeMic) &&
-      (!videoInputDevices.length || camAllowed || activeCamera)
+      (!videoInputDevices.length || camAllowed || activeCamera) &&
+      !audioOutputDevices.length
     ) {
       let allowedDevices = [];
       if (videoInputDevices.length) {
@@ -522,6 +528,7 @@ function prompt(aActor, aBrowser, aRequest) {
   let {
     audioInputDevices,
     videoInputDevices,
+    audioOutputDevices,
     sharingScreen,
     sharingAudio,
     requestTypes,
@@ -566,19 +573,16 @@ function prompt(aActor, aBrowser, aRequest) {
 
   // If the user has already denied access once in this tab,
   // deny again without even showing the notification icon.
-  if (
-    (audioInputDevices.length &&
-      SitePermissions.getForPrincipal(principal, "microphone", aBrowser)
-        .state == SitePermissions.BLOCK) ||
-    (videoInputDevices.length &&
-      SitePermissions.getForPrincipal(
-        principal,
-        sharingScreen ? "screen" : "camera",
-        aBrowser
-      ).state == SitePermissions.BLOCK)
-  ) {
-    aActor.denyRequest(aRequest);
-    return;
+  for (const type of requestTypes) {
+    const permissionID =
+      type == "AudioCapture" ? "microphone" : type.toLowerCase();
+    if (
+      SitePermissions.getForPrincipal(principal, permissionID, aBrowser)
+        .state == SitePermissions.BLOCK
+    ) {
+      aActor.denyRequest(aRequest);
+      return;
+    }
   }
 
   // Tell the browser to refresh the identity block display in case there
@@ -606,6 +610,7 @@ function prompt(aActor, aBrowser, aRequest) {
       "getUserMedia.shareMicrophoneUnsafeDelegations2.message",
       "getUserMedia.shareScreenUnsafeDelegation2.message",
       "getUserMedia.shareAudioCaptureUnsafeDelegation2.message",
+      "selectAudioOutput.shareSpeakerUnsafeDelegation.message",
       // Combinations of the above request types last.
       "getUserMedia.shareCameraAndMicrophoneUnsafeDelegation2.message",
       "getUserMedia.shareCameraAndAudioCaptureUnsafeDelegation2.message",
@@ -619,6 +624,7 @@ function prompt(aActor, aBrowser, aRequest) {
       "getUserMedia.shareMicrophone3.message",
       "getUserMedia.shareScreen4.message",
       "getUserMedia.shareAudioCapture3.message",
+      "selectAudioOutput.shareSpeaker.message",
       // Combinations of the above request types last.
       "getUserMedia.shareCameraAndMicrophone3.message",
       "getUserMedia.shareCameraAndAudioCapture3.message",
@@ -1102,11 +1108,17 @@ function prompt(aActor, aBrowser, aRequest) {
         !sharingScreen || !videoInputDevices.length;
       doc.getElementById("webRTC-selectMicrophone").hidden =
         !audioInputDevices.length || sharingAudio;
+      doc.getElementById(
+        "webRTC-selectSpeaker"
+      ).hidden = !audioOutputDevices.length;
 
       let camMenupopup = doc.getElementById("webRTC-selectCamera-menupopup");
       let windowMenupopup = doc.getElementById("webRTC-selectWindow-menupopup");
       let micMenupopup = doc.getElementById(
         "webRTC-selectMicrophone-menupopup"
+      );
+      let speakerMenupopup = doc.getElementById(
+        "webRTC-selectSpeaker-menupopup"
       );
       let describedByIDs = ["webRTC-shareDevices-notification-description"];
       let describedBySuffix = "icon";
@@ -1131,6 +1143,13 @@ function prompt(aActor, aBrowser, aRequest) {
           describedByIDs.push("webRTC-selectMicrophone-" + describedBySuffix);
           describedByIDs.push(labelID);
         }
+      }
+
+      let labelID = "webRTC-selectSpeaker-single-device-label";
+      listDevices(speakerMenupopup, audioOutputDevices, labelID);
+      if (audioInputDevices.length == 1) {
+        describedByIDs.push("webRTC-selectSpeaker-icon");
+        describedByIDs.push(labelID);
       }
 
       // PopupNotifications knows to clear the aria-describedby attribute
@@ -1207,6 +1226,15 @@ function prompt(aActor, aBrowser, aRequest) {
             allowedDevices.push(0);
           }
         }
+        if (audioOutputDevices.length) {
+          let audioDeviceIndex = doc.getElementById(
+            "webRTC-selectSpeaker-menulist"
+          ).value;
+          let allowSpeaker = audioDeviceIndex != "-1";
+          if (allowSpeaker) {
+            allowedDevices.push(audioDeviceIndex);
+          }
+        }
 
         if (!allowedDevices.length) {
           aActor.denyRequest(aRequest);
@@ -1254,6 +1282,12 @@ function prompt(aActor, aBrowser, aRequest) {
     // Don't offer "always remember" action in maybe unsafe permission
     // delegation
     if (aRequest.shouldDelegatePermission && aRequest.secondOrigin) {
+      return false;
+    }
+
+    // "Always allow this speaker" not yet supported for
+    // selectAudioOutput().  Bug 1712892
+    if (audioOutputDevices.length) {
       return false;
     }
 
