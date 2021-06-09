@@ -342,7 +342,7 @@ void nsPageContentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // Overwrite current clip, since we're going to wrap in a transform and the
     // current clip is no longer meaningful.
     clipState.Clear();
-    clipState.ClipContainingBlockDescendants(clipRect);
+    clipState.ClipContentDescendants(clipRect);
 
     if (StaticPrefs::layout_display_list_improve_fragmentation() &&
         pageNum <= 255) {
