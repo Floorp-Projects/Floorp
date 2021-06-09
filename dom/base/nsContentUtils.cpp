@@ -4365,7 +4365,7 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTarget) {
 // static
 nsresult nsContentUtils::DispatchInputEvent(
     Element* aEventTargetElement, EventMessage aEventMessage,
-    EditorInputType aEditorInputType, TextEditor* aTextEditor,
+    EditorInputType aEditorInputType, EditorBase* aEditorBase,
     InputEventOptions&& aOptions, nsEventStatus* aEventStatus /* = nullptr */) {
   MOZ_ASSERT(aEventMessage == eEditorInput ||
              aEventMessage == eEditorBeforeInput);
@@ -4374,22 +4374,22 @@ nsresult nsContentUtils::DispatchInputEvent(
     return NS_ERROR_INVALID_ARG;
   }
 
-  // If this is called from editor, the instance should be set to aTextEditor.
+  // If this is called from editor, the instance should be set to aEditorBase.
   // Otherwise, we need to look for an editor for aEventTargetElement.
   // However, we don't need to do it for HTMLEditor since nobody shouldn't
   // dispatch "beforeinput" nor "input" event for HTMLEditor except HTMLEditor
   // itself.
   bool useInputEvent = false;
-  if (aTextEditor) {
+  if (aEditorBase) {
     useInputEvent = true;
   } else if (HTMLTextAreaElement* textAreaElement =
                  HTMLTextAreaElement::FromNode(aEventTargetElement)) {
-    aTextEditor = textAreaElement->GetTextEditorWithoutCreation();
+    aEditorBase = textAreaElement->GetTextEditorWithoutCreation();
     useInputEvent = true;
   } else if (HTMLInputElement* inputElement =
                  HTMLInputElement::FromNode(aEventTargetElement)) {
     if (inputElement->IsInputEventTarget()) {
-      aTextEditor = inputElement->GetTextEditorWithoutCreation();
+      aEditorBase = inputElement->GetTextEditorWithoutCreation();
       useInputEvent = true;
     }
   }
@@ -4424,8 +4424,8 @@ nsresult nsContentUtils::DispatchInputEvent(
       aEditorInputType == EditorInputType::eInsertReplacementText);
 
   nsCOMPtr<nsIWidget> widget;
-  if (aTextEditor) {
-    widget = aTextEditor->GetWidget();
+  if (aEditorBase) {
+    widget = aEditorBase->GetWidget();
     if (NS_WARN_IF(!widget)) {
       return NS_ERROR_FAILURE;
     }
@@ -4467,9 +4467,9 @@ nsresult nsContentUtils::DispatchInputEvent(
   // Otherwise, i.e., editor hasn't been created for the element yet,
   // we should set isComposing to false since the element can never has
   // composition without editor.
-  inputEvent.mIsComposing = aTextEditor && aTextEditor->GetComposition();
+  inputEvent.mIsComposing = aEditorBase && aEditorBase->GetComposition();
 
-  if (!aTextEditor || !aTextEditor->AsHTMLEditor()) {
+  if (!aEditorBase || aEditorBase->IsTextEditor()) {
     if (IsDataAvailableOnTextEditor(aEditorInputType)) {
       inputEvent.mData = std::move(aOptions.mData);
       MOZ_ASSERT(!inputEvent.mData.IsVoid(),
@@ -4484,7 +4484,7 @@ nsresult nsContentUtils::DispatchInputEvent(
         aOptions.mTargetRanges.IsEmpty(),
         "Target ranges for <input> and <textarea> should always be empty");
   } else {
-    MOZ_ASSERT(aTextEditor->AsHTMLEditor());
+    MOZ_ASSERT(aEditorBase->IsHTMLEditor());
     if (IsDataAvailableOnHTMLEditor(aEditorInputType)) {
       inputEvent.mData = std::move(aOptions.mData);
       MOZ_ASSERT(!inputEvent.mData.IsVoid(),
@@ -7094,7 +7094,7 @@ HTMLEditor* nsContentUtils::GetHTMLEditor(nsDocShell* aDocShell) {
 }
 
 // static
-TextEditor* nsContentUtils::GetActiveEditor(nsPresContext* aPresContext) {
+EditorBase* nsContentUtils::GetActiveEditor(nsPresContext* aPresContext) {
   if (!aPresContext) {
     return nullptr;
   }
@@ -7103,7 +7103,7 @@ TextEditor* nsContentUtils::GetActiveEditor(nsPresContext* aPresContext) {
 }
 
 // static
-TextEditor* nsContentUtils::GetActiveEditor(nsPIDOMWindowOuter* aWindow) {
+EditorBase* nsContentUtils::GetActiveEditor(nsPIDOMWindowOuter* aWindow) {
   if (!aWindow || !aWindow->GetExtantDoc()) {
     return nullptr;
   }

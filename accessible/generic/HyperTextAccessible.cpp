@@ -36,12 +36,12 @@
 #include "nsTextFragment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/TextEditor.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/HTMLHeadingElement.h"
@@ -445,10 +445,10 @@ DOMPoint HyperTextAccessible::OffsetToDOMPoint(int32_t aOffset) const {
   // 0 offset is valid even if no children. In this case the associated editor
   // is empty so return a DOM point for editor root element.
   if (aOffset == 0) {
-    RefPtr<TextEditor> textEditor = GetEditor();
-    if (textEditor) {
-      if (textEditor->IsEmpty()) {
-        return DOMPoint(textEditor->GetRoot(), 0);
+    RefPtr<EditorBase> editorBase = GetEditor();
+    if (editorBase) {
+      if (editorBase->IsEmpty()) {
+        return DOMPoint(editorBase->GetRoot(), 0);
       }
     }
   }
@@ -1593,7 +1593,7 @@ nsIntRect HyperTextAccessible::TextBounds(int32_t aStartOffset,
   return bounds;
 }
 
-already_AddRefed<TextEditor> HyperTextAccessible::GetEditor() const {
+already_AddRefed<EditorBase> HyperTextAccessible::GetEditor() const {
   if (!mContent->HasFlag(NODE_IS_EDITABLE)) {
     // If we're inside an editable container, then return that container's
     // editor
@@ -1635,7 +1635,7 @@ nsresult HyperTextAccessible::SetSelectionRange(int32_t aStartPos,
   // the selection we set here and leave the caret at the end of the text.
   // By calling GetEditor here, we ensure that editor initialization is
   // completed before we set the selection.
-  RefPtr<TextEditor> textEditor = GetEditor();
+  RefPtr<EditorBase> editorBase = GetEditor();
 
   bool isFocusable = InteractiveState() & states::FOCUSABLE;
 
@@ -1852,9 +1852,9 @@ void HyperTextAccessible::GetSelectionDOMRanges(SelectionType aSelectionType,
 
   nsINode* startNode = GetNode();
 
-  RefPtr<TextEditor> textEditor = GetEditor();
-  if (textEditor) {
-    startNode = textEditor->GetRoot();
+  RefPtr<EditorBase> editorBase = GetEditor();
+  if (editorBase) {
+    startNode = editorBase->GetRoot();
   }
 
   if (!startNode) return;

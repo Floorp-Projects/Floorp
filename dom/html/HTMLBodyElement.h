@@ -11,7 +11,7 @@
 
 namespace mozilla {
 
-class TextEditor;
+class EditorBase;
 
 namespace dom {
 
@@ -95,7 +95,7 @@ class HTMLBodyElement final : public nsGenericHTMLElement {
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
       const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  virtual already_AddRefed<TextEditor> GetAssociatedEditor() override;
+  virtual already_AddRefed<EditorBase> GetAssociatedEditor() override;
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;

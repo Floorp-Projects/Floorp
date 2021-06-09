@@ -187,6 +187,7 @@ struct nsFont;
 namespace mozilla {
 class AbstractThread;
 class StyleSheet;
+class EditorBase;
 class EditorCommand;
 class Encoding;
 class ErrorResult;
@@ -204,7 +205,6 @@ class SMILAnimationController;
 enum class StyleCursorKind : uint8_t;
 enum class StylePrefersColorScheme : uint8_t;
 enum class StyleRuleChangeKind : uint32_t;
-class TextEditor;
 template <typename>
 class OwningNonNull;
 struct URLExtraData;
@@ -4194,9 +4194,9 @@ class Document : public nsINode,
 
    private:
     // The returned editor's life is guaranteed while this instance is alive.
-    TextEditor* GetTargetEditor() const;
+    EditorBase* GetTargetEditor() const;
 
-    RefPtr<TextEditor> mActiveEditor;
+    RefPtr<EditorBase> mActiveEditor;
     RefPtr<HTMLEditor> mHTMLEditor;
     RefPtr<EditorCommand> mEditorCommand;
     const InternalCommandData& mCommandData;
