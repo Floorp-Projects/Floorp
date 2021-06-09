@@ -4634,6 +4634,16 @@ var CustomizableUI = {
       if (menuChild.localName == "menuitem") {
         subviewItem.classList.add("subviewbutton");
       }
+
+      // We make it possible to supply an alternative Fluent key when cloning
+      // this menuitem into the AppMenu or panel contexts. This is because
+      // we often use Title Case in menuitems in native menus, but want to use
+      // Sentence case in the AppMenu / panels.
+      let l10nId = menuChild.getAttribute("appmenu-data-l10n-id");
+      if (l10nId) {
+        subviewItem.setAttribute("data-l10n-id", l10nId);
+      }
+
       fragment.appendChild(subviewItem);
     }
     aSubview.appendChild(fragment);
