@@ -26,13 +26,13 @@ class nsIURI;
 struct nsSize;
 
 namespace mozilla {
+class EditorBase;
 class ErrorResult;
 class EventChainPostVisitor;
 class EventChainPreVisitor;
 class EventChainVisitor;
 class EventListenerManager;
 class EventStates;
-class TextEditor;
 class PresState;
 namespace dom {
 class ElementInternals;
@@ -836,14 +836,14 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   }
 
   /**
-   * Locates the TextEditor associated with this node.  In general this is
+   * Locates the EditorBase associated with this node.  In general this is
    * equivalent to GetEditorInternal(), but for designmode or contenteditable,
    * this may need to get an editor that's not actually on this element's
    * associated TextControlFrame.  This is used by the spellchecking routines
    * to get the editor affected by changing the spellcheck attribute on this
    * node.
    */
-  virtual already_AddRefed<mozilla::TextEditor> GetAssociatedEditor();
+  virtual already_AddRefed<mozilla::EditorBase> GetAssociatedEditor();
 
   /**
    * Get the frame's offset information for offsetTop/Left/Width/Height.

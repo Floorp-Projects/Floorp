@@ -22,6 +22,7 @@
 #include "nsNameSpaceManager.h"
 #include "mozilla/dom/ScriptSettings.h"
 
+#include "mozilla/EditorBase.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
@@ -407,7 +408,7 @@ bool HTMLTextFieldAccessible::DoAction(uint8_t aIndex) const {
   return true;
 }
 
-already_AddRefed<TextEditor> HTMLTextFieldAccessible::GetEditor() const {
+already_AddRefed<EditorBase> HTMLTextFieldAccessible::GetEditor() const {
   RefPtr<TextControlElement> textControlElement =
       TextControlElement::FromNodeOrNull(mContent);
   if (!textControlElement) {

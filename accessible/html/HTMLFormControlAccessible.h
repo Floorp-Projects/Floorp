@@ -14,7 +14,7 @@
 #include "Relation.h"
 
 namespace mozilla {
-class TextEditor;
+class EditorBase;
 namespace a11y {
 
 /**
@@ -81,7 +81,7 @@ class HTMLTextFieldAccessible : public HyperTextAccessibleWrap {
                                        HyperTextAccessibleWrap)
 
   // HyperTextAccessible
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual already_AddRefed<TextEditor> GetEditor()
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual already_AddRefed<EditorBase> GetEditor()
       const override;
 
   // LocalAccessible

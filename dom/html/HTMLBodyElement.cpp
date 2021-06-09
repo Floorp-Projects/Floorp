@@ -7,6 +7,7 @@
 #include "HTMLBodyElement.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/HTMLBodyElementBinding.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/MappedDeclarations.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/TextEditor.h"
@@ -251,11 +252,8 @@ HTMLBodyElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   return FindAttributeDependence(aAttribute, map);
 }
 
-already_AddRefed<TextEditor> HTMLBodyElement::GetAssociatedEditor() {
-  RefPtr<TextEditor> textEditor = GetTextEditorInternal();
-  if (textEditor) {
-    return textEditor.forget();
-  }
+already_AddRefed<EditorBase> HTMLBodyElement::GetAssociatedEditor() {
+  MOZ_ASSERT(!GetTextEditorInternal());
 
   // Make sure this is the actual body of the document
   if (this != OwnerDoc()->GetBodyElement()) {
