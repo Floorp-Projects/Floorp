@@ -35,6 +35,8 @@ class TelemetryLifecycleObserver(
         val lastState = pausedState ?: return
         val currentState = createTabState()
 
+        @Suppress("DEPRECATION")
+        // FIXME(#19967): Migrate to non-deprecated API.
         EngineMetrics.foregroundMetrics.record(mapOf(
             MetricsKeys.backgroundActiveTabs to lastState.activeEngineTabs.toString(),
             MetricsKeys.backgroundCrashedTabs to lastState.crashedTabs.toString(),

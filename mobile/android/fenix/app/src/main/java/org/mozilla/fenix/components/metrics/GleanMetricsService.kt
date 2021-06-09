@@ -99,10 +99,14 @@ private class EventWrapper<T : Enum<T>>(
             null
         }
 
+        @Suppress("DEPRECATION")
+        // FIXME(#19967): Migrate to non-deprecated API.
         this.recorder(extras)
     }
 }
 
+@Suppress("DEPRECATION")
+// FIXME(#19967): Migrate to non-deprecated API.
 private val Event.wrapper: EventWrapper<*>?
     get() = when (this) {
         is Event.OpenedApp -> EventWrapper(
