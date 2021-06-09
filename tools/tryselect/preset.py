@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import shlex
@@ -11,7 +10,7 @@ import subprocess
 import yaml
 
 
-class PresetHandler(object):
+class PresetHandler:
     def __init__(self, path):
         self.path = path
         self._presets = {}
@@ -19,7 +18,7 @@ class PresetHandler(object):
     @property
     def presets(self):
         if not self._presets and os.path.isfile(self.path):
-            with open(self.path, "r") as fh:
+            with open(self.path) as fh:
                 self._presets = yaml.safe_load(fh) or {}
 
         return self._presets
@@ -60,7 +59,7 @@ class PresetHandler(object):
             fh.write(str(self))
 
 
-class MergedHandler(object):
+class MergedHandler:
     def __init__(self, *paths):
         """Helper class for dealing with multiple preset files."""
         self.handlers = [PresetHandler(p) for p in paths]

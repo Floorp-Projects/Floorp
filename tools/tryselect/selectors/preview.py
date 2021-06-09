@@ -4,7 +4,6 @@
 
 """This script is intended to be called through fzf as a preview formatter."""
 
-from __future__ import absolute_import, print_function
 
 import argparse
 import os
@@ -50,14 +49,14 @@ def process_args():
 
 def plain_display(taskfile):
     """Original preview window display."""
-    with open(taskfile, "r") as f:
+    with open(taskfile) as f:
         tasklist = [line.strip() for line in f]
     print("\n".join(sorted(tasklist)))
 
 
 def duration_display(graph_cache_file, taskfile, cache_dir):
     """Preview window display with task durations + metadata."""
-    with open(taskfile, "r") as f:
+    with open(taskfile) as f:
         tasklist = [line.strip() for line in f]
 
     durations = duration_summary(graph_cache_file, tasklist, cache_dir)
