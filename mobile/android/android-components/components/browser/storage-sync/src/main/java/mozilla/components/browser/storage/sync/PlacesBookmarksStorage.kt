@@ -76,6 +76,18 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
     }
 
     /**
+     * Retrieves a list of recently added bookmarks.
+     *
+     * @param limit The maximum number of entries to return.
+     * @return The list of matching bookmark nodes up to the limit number of items.
+     */
+    override suspend fun getRecentBookmarks(limit: Int): List<BookmarkNode> {
+        return withContext(readScope.coroutineContext) {
+            reader.getRecentBookmarks(limit).map { it.asBookmarkNode() }
+        }
+    }
+
+    /**
      * Adds a new bookmark item to a given node.
      *
      * Sync behavior: will add new bookmark item to remote devices.

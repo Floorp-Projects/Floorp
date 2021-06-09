@@ -134,6 +134,11 @@ class BookmarksStorageSuggestionProviderTest {
             throw NotImplementedError()
         }
 
+        override suspend fun getRecentBookmarks(limit: Int): List<BookmarkNode> {
+            // "Not needed for the test"
+            throw NotImplementedError()
+        }
+
         override suspend fun searchBookmarks(query: String, limit: Int): List<BookmarkNode> =
             synchronized(bookmarkMap) {
                 data class Hit(val key: String, val score: Int)

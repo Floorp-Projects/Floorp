@@ -139,6 +139,18 @@ class PlacesBookmarksStorageTest {
             assertEquals(BookmarkRoot.Mobile.id, this.parentGuid)
         }
 
+        with(bookmarks.getRecentBookmarks(1)) {
+            assertEquals(insertedItem, this[0].guid)
+        }
+
+        val secondInsertedItem = bookmarks.addItem(BookmarkRoot.Unfiled.id, url, "Mozilla", 6)
+
+        with(bookmarks.getRecentBookmarks(2)) {
+            assertEquals(secondInsertedItem, this[0].guid)
+            assertEquals(insertedItem, this[1].guid)
+        }
+
+        assertTrue(bookmarks.deleteNode(secondInsertedItem))
         assertTrue(bookmarks.deleteNode(folderGuid))
 
         for (root in listOf(
