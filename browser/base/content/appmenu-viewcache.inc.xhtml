@@ -39,12 +39,12 @@
       <toolbarseparator id="appMenu-tp-separator"/>
       <toolbarbutton id="appMenu-new-window-button"
                      class="subviewbutton subviewbutton-iconic"
-                     label="&newNavigatorCmd.label;"
+                     data-l10n-id="appmenuitem-new-window"
                      key="key_newNavigator"
                      command="cmd_newNavigator"/>
       <toolbarbutton id="appMenu-private-window-button"
                      class="subviewbutton subviewbutton-iconic"
-                     label="&newPrivateWindow.label;"
+                     data-l10n-id="appmenuitem-new-private-window"
                      key="key_privatebrowsing"
                      command="Tools:PrivateBrowsing"/>
 #ifdef NIGHTLY_BUILD
@@ -60,7 +60,7 @@
                      command="Tools:NonFissionWindow"/>
 #endif
       <toolbarbutton id="appMenuRestoreLastSession"
-                     label="&appMenuHistory.restoreSession.label;"
+                     data-l10n-id="appmenu-restore-session"
                      class="subviewbutton subviewbutton-iconic"
                      command="Browser:RestoreLastSession"/>
       <toolbarseparator/>
@@ -87,7 +87,7 @@
         <toolbarseparator orient="vertical"/>
         <toolbarbutton id="appMenu-fullscreen-button"
                        class="subviewbutton subviewbutton-iconic"
-                       label="&fullScreenCmd.label;"
+                       data-l10n-id="appmenuitem-fullscreen"
                        observes="View:FullScreen"
                        type="checkbox"
                        closemenu="auto"
@@ -243,7 +243,7 @@
       <toolbarseparator id="appMenu-fxa-separator" class="proton-zap"/>
       <toolbarbutton id="appMenu-new-tab-button2"
                      class="subviewbutton"
-                     label="&tabCmd.label;"
+                     data-l10n-id="appmenuitem-new-tab"
                      key="key_newNavigatorTab"
                      command="cmd_newNavigatorTab"/>
       <toolbarbutton id="appMenu-new-window-button2"
@@ -322,7 +322,7 @@
                        tooltip="dynamic-shortcut-tooltip"/>
         <toolbarbutton id="appMenu-fullscreen-button2"
                        class="subviewbutton subviewbutton-iconic"
-                       label="&fullScreenCmd.label;"
+                       data-l10n-id="appmenuitem-fullscreen"
                        observes="View:FullScreen"
                        type="checkbox"
                        closemenu="auto"
@@ -361,26 +361,26 @@
   <panelview id="PanelUI-history" flex="1">
     <vbox class="panel-subview-body">
       <toolbarbutton id="appMenuRecentlyClosedTabs"
-                     label="&historyUndoMenu.label;"
+                     data-l10n-id="appmenu-recently-closed-tabs"
                      class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                      closemenu="none"
                      oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedTabs', this)"/>
       <toolbarbutton id="appMenuRecentlyClosedWindows"
-                     label="&historyUndoWindowMenu.label;"
+                     data-l10n-id="appmenu-recently-closed-windows"
                      class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                      closemenu="none"
                      oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedWindows', this)"/>
       <toolbarbutton id="appMenuRestoreSession"
-                     label="&appMenuHistory.restoreSession.label;"
+                     data-l10n-id="appmenu-restore-session"
                      class="subviewbutton subviewbutton-iconic"
                      command="Browser:RestoreLastSession"/>
       <toolbarseparator/>
       <toolbarbutton id="appMenuClearRecentHistory"
-                     label="&appMenuHistory.clearRecent.label;"
+                     data-l10n-id="appmenu-clear-history"
                      class="subviewbutton subviewbutton-iconic"
                      command="Tools:Sanitize"/>
       <toolbarseparator/>
-      <html:h2 id="panelMenu_recentHistory" class="subview-subheader">&appMenuHistory.recentHistory.label;</html:h2>
+      <html:h2 id="panelMenu_recentHistory" class="subview-subheader" data-l10n-id="appmenu-recent-history-subheader"></html:h2>
       <toolbaritem id="appMenu_historyMenu"
                    orient="vertical"
                    smoothscroll="false"
