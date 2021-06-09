@@ -12,6 +12,8 @@ appmenuitem-update-banner3 =
     .label-update-restart = Update available — restart now
 
 appmenuitem-protection-dashboard-title = Protections Dashboard
+appmenuitem-new-tab =
+    .label = New Tab
 appmenuitem-new-window =
     .label = New Window
 appmenuitem-new-private-window =
@@ -147,6 +149,15 @@ appmenu-manage-history =
     .label = Manage History
 appmenu-reopen-all-tabs = Reopen All Tabs
 appmenu-reopen-all-windows = Reopen All Windows
+appmenu-restore-session =
+    .label = Restore Previous Session
+appmenu-clear-history =
+    .label = Clear Recent History…
+appmenu-recent-history-subheader = Recent History
+appmenu-recently-closed-tabs =
+    .label = Recently Closed Tabs
+appmenu-recently-closed-windows =
+    .label = Recently Closed Windows
 
 ## Help panel
 
