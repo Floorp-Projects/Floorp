@@ -14,7 +14,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsTHashMap.h"
 #include "nsIChannel.h"
-#include "BackgroundUtils.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 
 namespace mozilla {
 namespace dom {

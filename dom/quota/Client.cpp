@@ -7,7 +7,7 @@
 #include "Client.h"
 
 // Global includes
-#include "BackgroundParent.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 

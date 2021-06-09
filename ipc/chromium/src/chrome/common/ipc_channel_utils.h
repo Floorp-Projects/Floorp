@@ -8,7 +8,7 @@
 #define CHROME_COMMON_IPC_CHANNEL_UTILS_H_
 
 #include "chrome/common/ipc_message.h"
-#include "MessageChannel.h"
+#include "mozilla/ipc/MessageChannel.h"
 
 namespace IPC {
 

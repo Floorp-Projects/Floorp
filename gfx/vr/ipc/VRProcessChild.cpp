@@ -8,7 +8,7 @@
 
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ipc/IOThreadChild.h"
-#include "ProcessUtils.h"
+#include "mozilla/ipc/ProcessUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

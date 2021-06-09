@@ -6,7 +6,7 @@
 #include "mozilla/DebugOnly.h"
 
 #undef LOG
-#include "IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 
 #include "nsSimpleURI.h"
 #include "nscore.h"

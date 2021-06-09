@@ -12,7 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "VRGPUChild.h"
-#include "ProcessUtils.h"
+#include "mozilla/ipc/ProcessUtils.h"
 
 namespace mozilla {
 namespace gfx {

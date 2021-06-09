@@ -24,7 +24,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/nsRedirectHistoryEntry.h"
-#include "URIUtils.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/BrowsingContext.h"

@@ -9,12 +9,12 @@
 #include "gfxConfig.h"
 #include "nsDebugImpl.h"
 #include "nsThreadManager.h"
-#include "ProcessUtils.h"
 
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/ipc/ProcessUtils.h"
 #include "mozilla/Preferences.h"
 
 #if defined(XP_WIN)

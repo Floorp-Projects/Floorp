@@ -14,7 +14,7 @@
 #include "base/shared_memory.h"
 
 #include "ContentParent.h"
-#include "ProcessUtils.h"
+#include "mozilla/ipc/ProcessUtils.h"
 #include "BrowserParent.h"
 
 #include "chrome/common/process_watcher.h"
@@ -45,7 +45,7 @@
 #include "ProcessPriorityManager.h"
 #include "SandboxHal.h"
 #include "SourceSurfaceRawData.h"
-#include "URIUtils.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "gfxPlatform.h"
 #include "gfxPlatformFontList.h"
 #include "mozilla/AutoRestore.h"

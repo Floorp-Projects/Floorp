@@ -7,7 +7,7 @@
 #include "mozilla/dom/CSPMessageUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsSerializationHelper.h"
-#include "BackgroundUtils.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 
 namespace IPC {
 

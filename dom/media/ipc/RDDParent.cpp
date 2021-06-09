@@ -46,7 +46,7 @@
 #  include "nsMacUtilsImpl.h"
 #endif
 
-#include "ProcessUtils.h"
+#include "mozilla/ipc/ProcessUtils.h"
 #include "nsDebugImpl.h"
 #include "nsThreadManager.h"
 
