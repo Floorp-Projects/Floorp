@@ -24,6 +24,8 @@ add_task(async function setup() {
   Services.prefs.setBoolPref("signon.generation.available", true);
   Services.prefs.setBoolPref("signon.generation.enabled", true);
 
+  await LoginTestUtils.remoteSettings.setupImprovedPasswordRules();
+
   sinon
     .stub(LoginManagerParent._browsingContextGlobal, "get")
     .withArgs(123)
@@ -33,6 +35,7 @@ add_task(async function setup() {
           documentPrincipal: Services.scriptSecurityManager.createContentPrincipalFromOrigin(
             "https://www.example.com^userContextId=1"
           ),
+          documentURI: Services.io.newURI("https://www.example.com"),
         },
       };
     });
