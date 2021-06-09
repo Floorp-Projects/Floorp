@@ -27,7 +27,7 @@ class TLSServerSocket final : public nsServerSocket, public nsITLSServerSocket {
   virtual nsresult SetSocketDefaults() override;
   virtual nsresult OnSocketListen() override;
 
-  TLSServerSocket() = default;
+  TLSServerSocket();
 
  private:
   virtual ~TLSServerSocket() = default;
@@ -47,7 +47,7 @@ class TLSServerConnectionInfo : public nsITLSServerConnectionInfo,
   NS_DECL_NSITLSSERVERCONNECTIONINFO
   NS_DECL_NSITLSCLIENTSTATUS
 
-  TLSServerConnectionInfo() = default;
+  TLSServerConnectionInfo();
 
  private:
   virtual ~TLSServerConnectionInfo();
@@ -60,14 +60,14 @@ class TLSServerConnectionInfo : public nsITLSServerConnectionInfo,
   // reference to the TLSServerConnectionInfo object.  This is not handed out to
   // anyone, and is only used in HandshakeCallback to close the transport in
   // case of an error.  After this, it's set to nullptr.
-  nsISocketTransport* mTransport{nullptr};
+  nsISocketTransport* mTransport;
   nsCOMPtr<nsIX509Cert> mPeerCert;
-  int16_t mTlsVersionUsed{TLS_VERSION_UNKNOWN};
+  int16_t mTlsVersionUsed;
   nsCString mCipherName;
-  uint32_t mKeyLength{0};
-  uint32_t mMacLength{0};
+  uint32_t mKeyLength;
+  uint32_t mMacLength;
   // lock protects access to mSecurityObserver
-  mozilla::Mutex mLock{"TLSServerConnectionInfo.mLock"};
+  mozilla::Mutex mLock;
   nsCOMPtr<nsITLSServerSecurityObserver> mSecurityObserver;
 };
 

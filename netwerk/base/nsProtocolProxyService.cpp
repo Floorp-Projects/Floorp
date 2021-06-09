@@ -128,7 +128,9 @@ class nsAsyncResolveRequest final : public nsIRunnable,
   nsAsyncResolveRequest(nsProtocolProxyService* pps, nsIChannel* channel,
                         uint32_t aResolveFlags,
                         nsIProtocolProxyCallback* callback)
-      : mResolveFlags(aResolveFlags),
+      : mStatus(NS_OK),
+        mDispatched(false),
+        mResolveFlags(aResolveFlags),
         mPPS(pps),
         mXPComPPS(pps),
         mChannel(channel),
@@ -420,10 +422,10 @@ class nsAsyncResolveRequest final : public nsIRunnable,
   }
 
  private:
-  nsresult mStatus{NS_OK};
+  nsresult mStatus;
   nsCString mPACString;
   nsCString mPACURL;
-  bool mDispatched{false};
+  bool mDispatched;
   uint32_t mResolveFlags;
 
   nsProtocolProxyService* mPPS;
@@ -768,7 +770,21 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CI_INTERFACE_GETTER(nsProtocolProxyService, nsIProtocolProxyService,
                             nsIProtocolProxyService2)
 
-nsProtocolProxyService::nsProtocolProxyService() : mSessionStart(PR_Now()) {}
+nsProtocolProxyService::nsProtocolProxyService()
+    : mFilterLocalHosts(false),
+      mProxyConfig(PROXYCONFIG_DIRECT),
+      mHTTPProxyPort(-1),
+      mHTTPSProxyPort(-1),
+      mSOCKSProxyPort(-1),
+      mSOCKSProxyVersion(4),
+      mSOCKSProxyRemoteDNS(false),
+      mProxyOverTLS(true),
+      mWPADOverDHCPEnabled(false),
+      mPACMan(nullptr),
+      mSessionStart(PR_Now()),
+      mFailedProxyTimeout(30 * 60)  // 30 minute default
+      ,
+      mIsShutdown(false) {}
 
 nsProtocolProxyService::~nsProtocolProxyService() {
   // These should have been cleaned up in our Observe method.
@@ -1489,7 +1505,9 @@ class nsAsyncBridgeRequest final : public nsPACManCallback {
 
   nsAsyncBridgeRequest()
       : mMutex("nsDeprecatedCallback"),
-        mCondVar(mMutex, "nsDeprecatedCallback") {}
+        mCondVar(mMutex, "nsDeprecatedCallback"),
+        mStatus(NS_OK),
+        mCompleted(false) {}
 
   void OnQueryComplete(nsresult status, const nsACString& pacString,
                        const nsACString& newPACURL) override {
@@ -1513,10 +1531,10 @@ class nsAsyncBridgeRequest final : public nsPACManCallback {
   Mutex mMutex;
   CondVar mCondVar;
 
-  nsresult mStatus{NS_OK};
+  nsresult mStatus;
   nsCString mPACString;
   nsCString mPACURL;
-  bool mCompleted{false};
+  bool mCompleted;
 };
 NS_IMPL_ISUPPORTS0(nsAsyncBridgeRequest)
 

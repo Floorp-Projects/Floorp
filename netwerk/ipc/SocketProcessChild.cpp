@@ -72,7 +72,8 @@ using namespace ipc;
 
 SocketProcessChild* sSocketProcessChild;
 
-SocketProcessChild::SocketProcessChild() {
+SocketProcessChild::SocketProcessChild()
+    : mShuttingDown(false), mMutex("SocketProcessChild::mMutex") {
   LOG(("CONSTRUCT SocketProcessChild::SocketProcessChild\n"));
   nsDebugImpl::SetMultiprocessMode("Socket");
 

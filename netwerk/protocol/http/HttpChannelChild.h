@@ -21,7 +21,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
-#include "nsICacheEntry.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIResumableChannel.h"
 #include "nsIProxiedChannel.h"
@@ -278,7 +277,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   nsCOMPtr<nsIInputStreamReceiver> mAltDataInputStreamReceiver;
 
   // Used to ensure atomicity of mBgChild and mBgInitFailCallback
-  Mutex mBgChildMutex{"HttpChannelChild::BgChildMutex"};
+  Mutex mBgChildMutex;
 
   // Associated HTTP background channel
   RefPtr<HttpBackgroundChannelChild> mBgChild;
@@ -293,36 +292,34 @@ class HttpChannelChild final : public PHttpChannelChild,
   // Target thread for delivering ODA.
   nsCOMPtr<nsIEventTarget> mODATarget;
   // Used to ensure atomicity of mNeckoTarget / mODATarget;
-  Mutex mEventTargetMutex{"HttpChannelChild::EventTargetMutex"};
+  Mutex mEventTargetMutex;
 
   TimeStamp mLastStatusReported;
 
-  uint64_t mCacheEntryId{0};
+  uint64_t mCacheEntryId;
 
   // The result of RetargetDeliveryTo for this channel.
   // |notRequested| represents OMT is not requested by the channel owner.
   LABELS_HTTP_CHILD_OMT_STATS mOMTResult =
       LABELS_HTTP_CHILD_OMT_STATS::notRequested;
 
-  uint32_t mCacheKey{0};
-  int32_t mCacheFetchCount{0};
-  uint32_t mCacheExpirationTime{
-      static_cast<uint32_t>(nsICacheEntry::NO_EXPIRATION_TIME)};
+  uint32_t mCacheKey;
+  int32_t mCacheFetchCount;
+  uint32_t mCacheExpirationTime;
 
   // If we're handling a multi-part response, then this is set to the current
   // part ID during OnStartRequest.
   Maybe<uint32_t> mMultiPartID;
 
   // To ensure only one SendDeletingChannel is triggered.
-  Atomic<bool> mDeletingChannelSent{false};
+  Atomic<bool> mDeletingChannelSent;
 
-  Atomic<bool, SequentiallyConsistent> mIsFromCache{false};
-  Atomic<bool, SequentiallyConsistent> mIsRacing{false};
+  Atomic<bool, SequentiallyConsistent> mIsFromCache;
+  Atomic<bool, SequentiallyConsistent> mIsRacing;
   // Set if we get the result and cache |mNeedToReportBytesRead|
-  Atomic<bool, SequentiallyConsistent> mCacheNeedToReportBytesReadInitialized{
-      false};
+  Atomic<bool, SequentiallyConsistent> mCacheNeedToReportBytesReadInitialized;
   // True if we need to tell the parent the size of unreported received data
-  Atomic<bool, SequentiallyConsistent> mNeedToReportBytesRead{true};
+  Atomic<bool, SequentiallyConsistent> mNeedToReportBytesRead;
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool mDoDiagnosticAssertWhenOnStopNotCalledOnDestroy = false;
@@ -343,7 +340,7 @@ class HttpChannelChild final : public PHttpChannelChild,
     // BckChild was keeping events in the queue at the destruction time!
     BCKCHILD_NON_EMPTY
   };
-  Atomic<BckChildQueueStatus> mBackgroundChildQueueFinalState{BCKCHILD_UNKNOWN};
+  Atomic<BckChildQueueStatus> mBackgroundChildQueueFinalState;
   Maybe<ActorDestroyReason> mActorDestroyReason;
 #endif
 

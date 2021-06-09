@@ -64,25 +64,25 @@ class nsPartChannel final : public nsIChannel,
   nsCOMPtr<nsIStreamListener> mListener;
   UniquePtr<mozilla::net::nsHttpResponseHead> mResponseHead;
 
-  nsresult mStatus{NS_OK};
-  nsLoadFlags mLoadFlags{0};
+  nsresult mStatus;
+  nsLoadFlags mLoadFlags;
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsCString mContentType;
   nsCString mContentCharset;
-  uint32_t mContentDisposition{0};
+  uint32_t mContentDisposition;
   nsString mContentDispositionFilename;
   nsCString mContentDispositionHeader;
-  uint64_t mContentLength{UINT64_MAX};
+  uint64_t mContentLength;
 
-  bool mIsByteRangeRequest{false};
-  int64_t mByteRangeStart{0};
-  int64_t mByteRangeEnd{0};
+  bool mIsByteRangeRequest;
+  int64_t mByteRangeStart;
+  int64_t mByteRangeEnd;
 
   uint32_t mPartID;  // unique ID that can be used to identify
                      // this part of the multipart document
-  bool mIsLastPart{false};
+  bool mIsLastPart;
 };
 
 // The nsMultiMixedConv stream converter converts a stream of type
@@ -157,26 +157,26 @@ class nsMultiMixedConv : public nsIStreamConverter {
   nsCString mContentDisposition;
   nsCString mContentSecurityPolicy;
   nsCString mRootContentSecurityPolicy;
-  uint64_t mContentLength{UINT64_MAX};
-  uint64_t mTotalSent{0};
+  uint64_t mContentLength;
+  uint64_t mTotalSent;
 
   // The following members are for tracking the byte ranges in
   // multipart/mixed content which specified the 'Content-Range:'
   // header...
-  int64_t mByteRangeStart{0};
-  int64_t mByteRangeEnd{0};
-  bool mIsByteRangeRequest{false};
+  int64_t mByteRangeStart;
+  int64_t mByteRangeEnd;
+  bool mIsByteRangeRequest;
   // This flag is set first time we create a part channel.
   // We use it to prevent duplicated OnStopRequest call on the listener
   // when we fail from some reason to ever create a part channel that
   // ensures correct notifications.
-  bool mRequestListenerNotified{false};
+  bool mRequestListenerNotified;
 
-  uint32_t mCurrentPartID{0};
+  uint32_t mCurrentPartID;
 
   // Flag preventing reenter of OnDataAvailable in case the target listener
   // ends up spinning the event loop.
-  bool mInOnDataAvailable{false};
+  bool mInOnDataAvailable;
 
   // Current state of the incremental parser
   enum EParserState {
@@ -192,7 +192,7 @@ class nsMultiMixedConv : public nsIStreamConverter {
     EPILOGUE,
 
     INIT = PREAMBLE
-  } mParserState{INIT};
+  } mParserState;
 
   // Response part header value, valid when we find a header name
   // we recognize.
@@ -206,7 +206,7 @@ class nsMultiMixedConv : public nsIStreamConverter {
     HEADER_RANGE,
     HEADER_CONTENT_SECURITY_POLICY,
     HEADER_UNKNOWN
-  } mResponseHeader{HEADER_UNKNOWN};
+  } mResponseHeader;
   // Cumulated value of a response header.
   nsCString mResponseHeaderValue;
 
@@ -219,7 +219,7 @@ class nsMultiMixedConv : public nsIStreamConverter {
   // body data begins or continues.  mRawDataLength is a cumulated length
   // of that data during a single tokenizer input feed.  This is always
   // flushed right after we fed the tokenizer.
-  nsACString::const_char_iterator mRawData{nullptr};
+  nsACString::const_char_iterator mRawData;
   nsACString::size_type mRawDataLength{0};
 
   // At the start we don't know if the server will be sending boundary with

@@ -160,7 +160,27 @@ NS_INTERFACE_MAP_BEGIN(CacheFile)
                                    mozilla::net::CacheFileChunkListener)
 NS_INTERFACE_MAP_END
 
-CacheFile::CacheFile() { LOG(("CacheFile::CacheFile() [this=%p]", this)); }
+CacheFile::CacheFile()
+    : mLock("CacheFile.mLock"),
+      mOpeningFile(false),
+      mReady(false),
+      mMemoryOnly(false),
+      mSkipSizeCheck(false),
+      mOpenAsMemoryOnly(false),
+      mPinned(false),
+      mPriority(false),
+      mDataAccessed(false),
+      mDataIsDirty(false),
+      mWritingMetadata(false),
+      mPreloadWithoutInputStreams(true),
+      mPreloadChunkCount(0),
+      mStatus(NS_OK),
+      mDataSize(-1),
+      mAltDataOffset(-1),
+      mKill(false),
+      mOutput(nullptr) {
+  LOG(("CacheFile::CacheFile() [this=%p]", this));
+}
 
 CacheFile::~CacheFile() {
   LOG(("CacheFile::~CacheFile() [this=%p]", this));

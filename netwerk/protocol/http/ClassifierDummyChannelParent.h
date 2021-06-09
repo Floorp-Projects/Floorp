@@ -21,17 +21,17 @@ class ClassifierDummyChannelParent final
  public:
   NS_INLINE_DECL_REFCOUNTING(ClassifierDummyChannelParent)
 
-  ClassifierDummyChannelParent() = default;
+  ClassifierDummyChannelParent();
 
   void Init(nsIURI* aURI, nsIURI* aTopWindowURI, nsresult aTopWindowURIResult,
             nsILoadInfo* aLoadInfo);
 
  private:
-  ~ClassifierDummyChannelParent() = default;
+  ~ClassifierDummyChannelParent();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool mIPCActive{true};
+  bool mIPCActive;
 };
 
 }  // namespace net

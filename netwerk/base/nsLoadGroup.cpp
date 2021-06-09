@@ -86,7 +86,19 @@ static void RescheduleRequest(nsIRequest* aRequest, int32_t delta) {
 }
 
 nsLoadGroup::nsLoadGroup()
-    : mRequests(&sRequestHashOps, sizeof(RequestMapEntry)) {
+    : mForegroundCount(0),
+      mLoadFlags(LOAD_NORMAL),
+      mDefaultLoadFlags(0),
+      mPriority(PRIORITY_NORMAL),
+      mRequests(&sRequestHashOps, sizeof(RequestMapEntry)),
+      mStatus(NS_OK),
+      mIsCanceling(false),
+      mDefaultLoadIsTimed(false),
+      mBrowsingContextDiscarded(false),
+      mExternalRequestContext(false),
+      mNotifyObserverAboutBackgroundRequests(false),
+      mTimedRequests(0),
+      mCachedRequests(0) {
   LOG(("LOADGROUP [%p]: Created.\n", this));
 }
 

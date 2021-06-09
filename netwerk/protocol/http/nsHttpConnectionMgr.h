@@ -200,25 +200,25 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // NOTE: these members may be accessed from any thread (use mReentrantMonitor)
   //-------------------------------------------------------------------------
 
-  ReentrantMonitor mReentrantMonitor{"nsHttpConnectionMgr.mReentrantMonitor"};
+  ReentrantMonitor mReentrantMonitor;
   nsCOMPtr<nsIEventTarget> mSocketThreadTarget;
 
   // connection limits
-  uint16_t mMaxUrgentExcessiveConns{0};
-  uint16_t mMaxConns{0};
-  uint16_t mMaxPersistConnsPerHost{0};
-  uint16_t mMaxPersistConnsPerProxy{0};
-  uint16_t mMaxRequestDelay{0};  // in seconds
-  bool mThrottleEnabled{false};
-  uint32_t mThrottleVersion{2};
-  uint32_t mThrottleSuspendFor{0};
-  uint32_t mThrottleResumeFor{0};
-  uint32_t mThrottleReadLimit{0};
-  uint32_t mThrottleReadInterval{0};
-  uint32_t mThrottleHoldTime{0};
+  uint16_t mMaxUrgentExcessiveConns;
+  uint16_t mMaxConns;
+  uint16_t mMaxPersistConnsPerHost;
+  uint16_t mMaxPersistConnsPerProxy;
+  uint16_t mMaxRequestDelay;  // in seconds
+  bool mThrottleEnabled;
+  uint32_t mThrottleVersion;
+  uint32_t mThrottleSuspendFor;
+  uint32_t mThrottleResumeFor;
+  uint32_t mThrottleReadLimit;
+  uint32_t mThrottleReadInterval;
+  uint32_t mThrottleHoldTime;
   TimeDuration mThrottleMaxTime;
-  bool mBeConservativeForProxy{true};
-  Atomic<bool, mozilla::Relaxed> mIsShuttingDown{false};
+  bool mBeConservativeForProxy;
+  Atomic<bool, mozilla::Relaxed> mIsShuttingDown;
 
   //-------------------------------------------------------------------------
   // NOTE: these members are only accessed on the socket transport thread
@@ -324,31 +324,31 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
   // Total number of active connections in all of the ConnectionEntry objects
   // that are accessed from mCT connection table.
-  uint16_t mNumActiveConns{0};
+  uint16_t mNumActiveConns;
   // Total number of idle connections in all of the ConnectionEntry objects
   // that are accessed from mCT connection table.
-  uint16_t mNumIdleConns{0};
+  uint16_t mNumIdleConns;
   // Total number of spdy or http3 connections which are a subset of the active
   // conns
-  uint16_t mNumSpdyHttp3ActiveConns{0};
+  uint16_t mNumSpdyHttp3ActiveConns;
   // Total number of connections in DnsAndConnectSockets ConnectionEntry objects
   // that are accessed from mCT connection table
-  uint32_t mNumDnsAndConnectSockets{0};
+  uint32_t mNumDnsAndConnectSockets;
 
   // Holds time in seconds for next wake-up to prune dead connections.
-  uint64_t mTimeOfNextWakeUp{UINT64_MAX};
+  uint64_t mTimeOfNextWakeUp;
   // Timer for next pruning of dead connections.
   nsCOMPtr<nsITimer> mTimer;
   // Timer for pruning stalled connections after changed network.
   nsCOMPtr<nsITimer> mTrafficTimer;
-  bool mPruningNoTraffic{false};
+  bool mPruningNoTraffic;
 
   // A 1s tick to call nsHttpConnection::ReadTimeoutTick on
   // active http/1 connections and check for orphaned half opens.
   // Disabled when there are no active or half open connections.
   nsCOMPtr<nsITimer> mTimeoutTick;
-  bool mTimeoutTickArmed{false};
-  uint32_t mTimeoutTickNext{1};
+  bool mTimeoutTickArmed;
+  uint32_t mTimeoutTickNext;
 
   //
   // the connection table
@@ -366,7 +366,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void OnMsgPrintDiagnostics(int32_t, ARefBase*);
 
   nsCString mLogData;
-  uint64_t mCurrentTopBrowsingContextId{0};
+  uint64_t mCurrentTopBrowsingContextId;
 
   // Called on a pref change
   void SetThrottlingEnabled(bool aEnable);
@@ -388,7 +388,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // V1 specific
   // Whether we are inside the "stop reading" interval, altered by the throttle
   // ticker
-  bool mThrottlingInhibitsReading{false};
+  bool mThrottlingInhibitsReading;
 
   TimeStamp mThrottlingWindowEndsAt;
 
@@ -436,8 +436,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
   // Cached status of the active tab active transactions existence,
   // saves a lot of hashtable lookups
-  bool mActiveTabTransactionsExist{false};
-  bool mActiveTabUnthrottledTransactionsExist{false};
+  bool mActiveTabTransactionsExist;
+  bool mActiveTabUnthrottledTransactionsExist;
 
   void LogActiveTransactions(char);
 

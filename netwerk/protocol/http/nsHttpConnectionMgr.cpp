@@ -53,7 +53,35 @@ NS_IMPL_ISUPPORTS(nsHttpConnectionMgr, nsIObserver)
 
 //-----------------------------------------------------------------------------
 
-nsHttpConnectionMgr::nsHttpConnectionMgr() {
+nsHttpConnectionMgr::nsHttpConnectionMgr()
+    : mReentrantMonitor("nsHttpConnectionMgr.mReentrantMonitor"),
+      mMaxUrgentExcessiveConns(0),
+      mMaxConns(0),
+      mMaxPersistConnsPerHost(0),
+      mMaxPersistConnsPerProxy(0),
+      mMaxRequestDelay(0),
+      mThrottleEnabled(false),
+      mThrottleVersion(2),
+      mThrottleSuspendFor(0),
+      mThrottleResumeFor(0),
+      mThrottleReadLimit(0),
+      mThrottleReadInterval(0),
+      mThrottleHoldTime(0),
+      mThrottleMaxTime(nullptr),
+      mBeConservativeForProxy(true),
+      mIsShuttingDown(false),
+      mNumActiveConns(0),
+      mNumIdleConns(0),
+      mNumSpdyHttp3ActiveConns(0),
+      mNumDnsAndConnectSockets(0),
+      mTimeOfNextWakeUp(UINT64_MAX),
+      mPruningNoTraffic(false),
+      mTimeoutTickArmed(false),
+      mTimeoutTickNext(1),
+      mCurrentTopBrowsingContextId(0),
+      mThrottlingInhibitsReading(false),
+      mActiveTabTransactionsExist(false),
+      mActiveTabUnthrottledTransactionsExist(false) {
   LOG(("Creating nsHttpConnectionMgr @%p\n", this));
 }
 
@@ -120,11 +148,11 @@ nsresult nsHttpConnectionMgr::Init(
 
 class BoolWrapper : public ARefBase {
  public:
-  BoolWrapper() = default;
+  BoolWrapper() : mBool(false) {}
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BoolWrapper, override)
 
  public:  // intentional!
-  bool mBool{false};
+  bool mBool;
 
  private:
   virtual ~BoolWrapper() = default;
@@ -385,13 +413,13 @@ nsresult nsHttpConnectionMgr::DoShiftReloadConnectionCleanupWithConnInfo(
 
 class SpeculativeConnectArgs : public ARefBase {
  public:
-  SpeculativeConnectArgs() = default;
+  SpeculativeConnectArgs() : mFetchHTTPSRR(false) {}
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SpeculativeConnectArgs, override)
 
  public:  // intentional!
   RefPtr<SpeculativeTransaction> mTrans;
 
-  bool mFetchHTTPSRR{false};
+  bool mFetchHTTPSRR;
 
  private:
   virtual ~SpeculativeConnectArgs() = default;

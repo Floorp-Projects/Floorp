@@ -15,18 +15,18 @@ class nsDirIndex final : public nsIDirIndex {
   ~nsDirIndex() = default;
 
  public:
-  nsDirIndex() = default;
+  nsDirIndex();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDIRINDEX
 
  protected:
-  uint32_t mType{TYPE_UNKNOWN};
+  uint32_t mType;
   nsCString mContentType;
   nsCString mLocation;
   nsString mDescription;
-  int64_t mSize{INT64_MAX};
-  PRTime mLastModified{-1LL};
+  int64_t mSize;
+  PRTime mLastModified;
 };
 
 #endif

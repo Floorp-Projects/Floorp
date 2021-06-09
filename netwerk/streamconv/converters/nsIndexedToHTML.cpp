@@ -48,6 +48,8 @@ static void AppendNonAsciiToNCR(const nsAString& in, nsCString& out) {
   }
 }
 
+nsIndexedToHTML::nsIndexedToHTML() : mExpectAbsLoc(false) {}
+
 nsresult nsIndexedToHTML::Create(nsISupports* aOuter, REFNSIID aIID,
                                  void** aResult) {
   nsresult rv;

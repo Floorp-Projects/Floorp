@@ -27,7 +27,7 @@ namespace net {
 
 class nsSimpleURI : public nsIURI, public nsISerializable, public nsISizeOf {
  protected:
-  nsSimpleURI() = default;
+  nsSimpleURI();
   virtual ~nsSimpleURI() = default;
 
  public:
@@ -108,9 +108,8 @@ class nsSimpleURI : public nsIURI, public nsISerializable, public nsISizeOf {
   nsCString mRef;   // so that URIs with different refs can share string data.
   nsCString
       mQuery;  // so that URLs with different querys can share string data.
-  bool mIsRefValid{false};  // To distinguish between empty-ref and no-ref.
-  // To distinguish between empty-query and no-query.
-  bool mIsQueryValid{false};
+  bool mIsRefValid;    // To distinguish between empty-ref and no-ref.
+  bool mIsQueryValid;  // To distinguish between empty-query and no-query.
 
  public:
   class Mutator final : public nsIURIMutator,

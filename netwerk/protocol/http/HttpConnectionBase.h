@@ -139,20 +139,20 @@ class HttpConnectionBase : public nsSupportsWeakReference {
 
  protected:
   // The capabailities associated with the most recent transaction
-  uint32_t mTransactionCaps{0};
+  uint32_t mTransactionCaps;
 
   RefPtr<nsHttpConnectionInfo> mConnInfo;
 
-  bool mExperienced{false};
+  bool mExperienced;
 
-  bool mBootstrappedTimingsSet{false};
+  bool mBootstrappedTimingsSet;
   TimingStruct mBootstrappedTimings;
 
-  Mutex mCallbacksLock{"nsHttpConnection::mCallbacksLock"};
+  Mutex mCallbacksLock;
   nsMainThreadPtrHandle<nsIInterfaceRequestor> mCallbacks;
 
   nsTArray<HttpTrafficCategory> mTrafficCategory;
-  PRIntervalTime mRtt{0};
+  PRIntervalTime mRtt;
   nsresult mErrorBeforeConnect = NS_OK;
 };
 

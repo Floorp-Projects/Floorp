@@ -346,7 +346,16 @@ ExtensionProtocolHandler::GetSingleton() {
 }
 
 ExtensionProtocolHandler::ExtensionProtocolHandler()
-    : SubstitutingProtocolHandler(EXTENSION_SCHEME) {
+    : SubstitutingProtocolHandler(EXTENSION_SCHEME)
+#if !defined(XP_WIN)
+#  if defined(XP_MACOSX)
+      ,
+      mAlreadyCheckedDevRepo(false)
+#  endif /* XP_MACOSX */
+      ,
+      mAlreadyCheckedAppDir(false)
+#endif /* ! XP_WIN */
+{
   // Note, extensions.webextensions.protocol.remote=false is for
   // debugging purposes only. With process-level sandboxing, child
   // processes (specifically content and extension processes), will

@@ -64,13 +64,13 @@ class nsSocketInputStream : public nsIAsyncInputStream {
 
  private:
   nsSocketTransport* mTransport;
-  ThreadSafeAutoRefCnt mReaderRefCnt{0};
+  ThreadSafeAutoRefCnt mReaderRefCnt;
 
   // access to these is protected by mTransport->mLock
-  nsresult mCondition{NS_OK};
+  nsresult mCondition;
   nsCOMPtr<nsIInputStreamCallback> mCallback;
-  uint32_t mCallbackFlags{0};
-  uint64_t mByteCount{0};
+  uint32_t mCallbackFlags;
+  uint64_t mByteCount;
 };
 
 //-----------------------------------------------------------------------------
@@ -97,13 +97,13 @@ class nsSocketOutputStream : public nsIAsyncOutputStream {
                                     uint32_t* countRead);
 
   nsSocketTransport* mTransport;
-  ThreadSafeAutoRefCnt mWriterRefCnt{0};
+  ThreadSafeAutoRefCnt mWriterRefCnt;
 
   // access to these is protected by mTransport->mLock
-  nsresult mCondition{NS_OK};
+  nsresult mCondition;
   nsCOMPtr<nsIOutputStreamCallback> mCallback;
-  uint32_t mCallbackFlags{0};
-  uint64_t mByteCount{0};
+  uint32_t mCallbackFlags;
+  uint64_t mByteCount;
 };
 
 //-----------------------------------------------------------------------------
@@ -275,19 +275,19 @@ class nsSocketTransport final : public nsASocketHandler,
   nsCString mHost;
   nsCString mProxyHost;
   nsCString mOriginHost;
-  uint16_t mPort{0};
+  uint16_t mPort;
   nsCOMPtr<nsIProxyInfo> mProxyInfo;
-  uint16_t mProxyPort{0};
-  uint16_t mOriginPort{0};
-  bool mProxyTransparent{false};
-  bool mProxyTransparentResolvesHost{false};
-  bool mHttpsProxy{false};
-  uint32_t mConnectionFlags{0};
+  uint16_t mProxyPort;
+  uint16_t mOriginPort;
+  bool mProxyTransparent;
+  bool mProxyTransparentResolvesHost;
+  bool mHttpsProxy;
+  uint32_t mConnectionFlags;
   // When we fail to connect using a prefered IP family, we tell the consumer to
   // reset the IP family preference on the connection entry.
-  bool mResetFamilyPreference{false};
-  uint32_t mTlsFlags{0};
-  bool mReuseAddrPort{false};
+  bool mResetFamilyPreference;
+  uint32_t mTlsFlags;
+  bool mReuseAddrPort;
 
   // The origin attributes are used to create sockets.  The first party domain
   // will eventually be used to isolate OCSP cache and is only non-empty when
@@ -309,29 +309,29 @@ class nsSocketTransport final : public nsASocketHandler,
   //-------------------------------------------------------------------------
 
   // socket state vars:
-  uint32_t mState{STATE_CLOSED};  // STATE_??? flags
-  bool mAttached{false};
-  bool mInputClosed{true};
-  bool mOutputClosed{true};
+  uint32_t mState;  // STATE_??? flags
+  bool mAttached;
+  bool mInputClosed;
+  bool mOutputClosed;
 
   // this flag is used to determine if the results of a host lookup arrive
   // recursively or not.  this flag is not protected by any lock.
-  bool mResolving{false};
+  bool mResolving;
 
   nsCOMPtr<nsICancelable> mDNSRequest;
   nsCOMPtr<nsIDNSAddrRecord> mDNSRecord;
 
   nsCString mEchConfig;
   bool mEchConfigUsed = false;
-  bool mResolvedByTRR{false};
+  bool mResolvedByTRR;
 
   // mNetAddr/mSelfAddr is valid from GetPeerAddr()/GetSelfAddr() once we have
   // reached STATE_TRANSFERRING. It must not change after that.
   void SetSocketName(PRFileDesc* fd);
   NetAddr mNetAddr;
   NetAddr mSelfAddr;  // getsockname()
-  Atomic<bool, Relaxed> mNetAddrIsSet{false};
-  Atomic<bool, Relaxed> mSelfAddrIsSet{false};
+  Atomic<bool, Relaxed> mNetAddrIsSet;
+  Atomic<bool, Relaxed> mSelfAddrIsSet;
 
   UniquePtr<NetAddr> mBindAddr;
 
@@ -363,11 +363,10 @@ class nsSocketTransport final : public nsASocketHandler,
   // socket input/output objects.  these may be accessed on any thread with
   // the exception of some specific methods (XXX).
 
-  // protects members in this section.
-  Mutex mLock{"nsSocketTransport.mLock"};
+  Mutex mLock;  // protects members in this section.
   LockedPRFileDesc mFD;
-  nsrefcnt mFDref{0};        // mFD is closed when mFDref goes to zero.
-  bool mFDconnected{false};  // mFD is available to consumer when TRUE.
+  nsrefcnt mFDref;    // mFD is closed when mFDref goes to zero.
+  bool mFDconnected;  // mFD is available to consumer when TRUE.
 
   // A delete protector reference to gSocketTransportService held for lifetime
   // of 'this'. Sometimes used interchangably with gSocketTransportService due
@@ -388,11 +387,11 @@ class nsSocketTransport final : public nsASocketHandler,
   uint16_t mTimeouts[2]{0};
 
   // linger options to use when closing
-  bool mLingerPolarity{false};
-  int16_t mLingerTimeout{0};
+  bool mLingerPolarity;
+  int16_t mLingerTimeout;
 
   // QoS setting for socket
-  uint8_t mQoSBits{0x00};
+  uint8_t mQoSBits;
 
   //
   // mFD access methods: called with mLock held.
@@ -449,14 +448,14 @@ class nsSocketTransport final : public nsASocketHandler,
 
   // True if keepalive has been enabled by the socket owner. Note: Keepalive
   // must also be enabled globally for it to be enabled in TCP.
-  bool mKeepaliveEnabled{false};
+  bool mKeepaliveEnabled;
 
   // Keepalive config (support varies by platform).
-  int32_t mKeepaliveIdleTimeS{-1};
-  int32_t mKeepaliveRetryIntervalS{-1};
-  int32_t mKeepaliveProbeCount{-1};
+  int32_t mKeepaliveIdleTimeS;
+  int32_t mKeepaliveRetryIntervalS;
+  int32_t mKeepaliveProbeCount;
 
-  bool mDoNotRetryToConnect{false};
+  bool mDoNotRetryToConnect;
 
   // Whether the port remapping has already been applied.  We definitely want to
   // prevent duplicate calls in case of chaining remapping.
