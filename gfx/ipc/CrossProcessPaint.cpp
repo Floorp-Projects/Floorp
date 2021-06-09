@@ -59,7 +59,7 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
     return PaintFragment{};
   }
 
-  IntRect rect;
+  CSSIntRect rect;
   if (!aRect) {
     nsCOMPtr<nsIWidget> widget =
         nsContentUtils::WidgetForDocument(presContext->Document());
@@ -69,9 +69,9 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
     boundsDevice.MoveTo(0, 0);
     nsRect boundsAu = LayoutDevicePixel::ToAppUnits(
         boundsDevice, presContext->AppUnitsPerDevPixel());
-    rect = gfx::RoundedOut(CSSPixel::FromAppUnits(boundsAu).ToUnknownRect());
+    rect = gfx::RoundedOut(CSSPixel::FromAppUnits(boundsAu));
   } else {
-    rect = *aRect;
+    rect = CSSIntRect::FromUnknownRect(*aRect);
   }
 
   if (rect.IsEmpty()) {
@@ -80,7 +80,8 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
     return PaintFragment{};
   }
 
-  IntSize surfaceSize = rect.Size();
+  // FIXME: Shouldn't the surface size be in device rather than CSS pixels?
+  CSSIntSize surfaceSize = rect.Size();
   surfaceSize.width *= aScale;
   surfaceSize.height *= aScale;
 
@@ -96,7 +97,7 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
 
   // Check for invalid sizes
   if (surfaceSize.width <= 0 || surfaceSize.height <= 0 ||
-      !Factory::CheckSurfaceSize(surfaceSize)) {
+      !Factory::CheckSurfaceSize(surfaceSize.ToUnknownSize())) {
     PF_LOG("Invalid surface size of (%d x %d).\n", surfaceSize.width,
            surfaceSize.height);
     return PaintFragment{};
@@ -114,7 +115,8 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
   RefPtr<DrawEventRecorderMemory> recorder =
       MakeAndAddRef<DrawEventRecorderMemory>(nullptr);
   RefPtr<DrawTarget> dt = Factory::CreateRecordingDrawTarget(
-      recorder, referenceDt, IntRect(IntPoint(0, 0), surfaceSize));
+      recorder, referenceDt,
+      IntRect(IntPoint(0, 0), surfaceSize.ToUnknownSize()));
 
   RenderDocumentFlags renderDocFlags = RenderDocumentFlags::None;
   if (!(aFlags & CrossProcessPaintFlags::DrawView)) {
@@ -125,10 +127,7 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
 
   // Perform the actual rendering
   {
-    nsRect r(nsPresContext::CSSPixelsToAppUnits(rect.x),
-             nsPresContext::CSSPixelsToAppUnits(rect.y),
-             nsPresContext::CSSPixelsToAppUnits(rect.width),
-             nsPresContext::CSSPixelsToAppUnits(rect.height));
+    nsRect r = CSSPixel::ToAppUnits(rect);
 
     RefPtr<gfxContext> thebes = gfxContext::CreateOrNull(dt);
     thebes->SetMatrix(Matrix::Scaling(aScale, aScale));
@@ -149,7 +148,7 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
   recorder->mOutputStream.mCapacity = 0;
 
   return PaintFragment{
-      surfaceSize,
+      surfaceSize.ToUnknownSize(),
       std::move(recording),
       std::move(recorder->TakeDependentSurfaces()),
   };
@@ -366,7 +365,8 @@ void CrossProcessPaint::QueueDependencies(
     RefPtr<dom::BrowserParent> browser =
         cpm->GetBrowserParentByProcessAndTabId(cpId, dependency);
     if (!browser) {
-      CPP_LOG("Skipping dependency %" PRIu64 "with no current BrowserParent.\n",
+      CPP_LOG("Skipping dependency %" PRIu64
+              " with no current BrowserParent.\n",
               (uint64_t)dependency);
       continue;
     }
@@ -374,7 +374,7 @@ void CrossProcessPaint::QueueDependencies(
         browser->GetBrowsingContext()->GetCurrentWindowGlobal();
 
     if (!wgp) {
-      CPP_LOG("Skipping dependency %" PRIu64 "with no current WGP.\n",
+      CPP_LOG("Skipping dependency %" PRIu64 " with no current WGP.\n",
               (uint64_t)dependency);
       continue;
     }
