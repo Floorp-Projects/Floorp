@@ -22,7 +22,7 @@ const {
   Timeouts,
   UnhandledPromptBehavior,
   WebDriverSession,
-} = ChromeUtils.import("chrome://remote/content/marionette/session.js");
+} = ChromeUtils.import("chrome://remote/content/shared/webdriver/Session.jsm");
 
 add_test(function test_WebDriverSession_ctor() {
   const session = new WebDriverSession();
