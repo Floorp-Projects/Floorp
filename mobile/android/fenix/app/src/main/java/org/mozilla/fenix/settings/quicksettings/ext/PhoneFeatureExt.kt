@@ -5,7 +5,7 @@
 package org.mozilla.fenix.settings.quicksettings.ext
 
 import android.content.Context
-import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.utils.Settings
 

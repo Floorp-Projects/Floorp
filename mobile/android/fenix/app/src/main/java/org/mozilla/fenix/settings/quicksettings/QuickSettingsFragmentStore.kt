@@ -7,7 +7,7 @@ package org.mozilla.fenix.settings.quicksettings
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.state.content.PermissionHighlightsState
-import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Reducer
 import mozilla.components.lib.state.State

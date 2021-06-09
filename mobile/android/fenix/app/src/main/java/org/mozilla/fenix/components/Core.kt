@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import io.sentry.Sentry
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
+import mozilla.components.browser.engine.gecko.permission.GeckoSitePermissionsStorage
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
@@ -43,6 +44,7 @@ import mozilla.components.feature.search.region.RegionMiddleware
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.middleware.LastAccessMiddleware
 import mozilla.components.feature.session.middleware.undo.UndoMiddleware
+import mozilla.components.feature.sitepermissions.OnDiskSitePermissionsStorage
 import mozilla.components.feature.top.sites.DefaultTopSitesStorage
 import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.webcompat.WebCompatFeature
@@ -77,6 +79,7 @@ import org.mozilla.fenix.settings.advanced.getSelectedLocale
 import org.mozilla.fenix.telemetry.TelemetryMiddleware
 import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.getUndoDelay
+import org.mozilla.geckoview.GeckoRuntime
 
 /**
  * Component group for all core browser functionality.
@@ -116,12 +119,7 @@ class Core(
         GeckoEngine(
             context,
             defaultSettings,
-            GeckoProvider.getOrCreateRuntime(
-                context,
-                lazyAutofillStorage,
-                lazyPasswordsStorage,
-                trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
-            )
+            geckoRuntime
         ).also {
             WebCompatFeature.install(it)
 
@@ -152,13 +150,21 @@ class Core(
     val client: Client by lazyMonitored {
         GeckoViewFetchClient(
             context,
-            GeckoProvider.getOrCreateRuntime(
-                context,
-                lazyAutofillStorage,
-                lazyPasswordsStorage,
-                trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
-            )
+            geckoRuntime
         )
+    }
+
+    val geckoRuntime: GeckoRuntime by lazyMonitored {
+        GeckoProvider.getOrCreateRuntime(
+            context,
+            lazyAutofillStorage,
+            lazyPasswordsStorage,
+            trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
+        )
+    }
+
+    val geckoSitePermissionsStorage by lazyMonitored {
+        GeckoSitePermissionsStorage(geckoRuntime, OnDiskSitePermissionsStorage(context))
     }
 
     val sessionStorage: SessionStorage by lazyMonitored {

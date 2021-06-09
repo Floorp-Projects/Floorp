@@ -14,8 +14,8 @@ import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.MockKAnnotations
 import io.mockk.impl.annotations.MockK
-import mozilla.components.feature.sitepermissions.SitePermissions
-import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
+import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action

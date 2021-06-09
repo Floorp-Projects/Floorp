@@ -5,13 +5,13 @@
 package org.mozilla.fenix.components
 
 import androidx.paging.DataSource
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
-import mozilla.components.feature.sitepermissions.SitePermissions
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage
+import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -30,7 +30,7 @@ class PermissionStorageTest {
 
         storage.add(sitePermissions)
 
-        verify { sitePermissionsStorage.save(sitePermissions) }
+        coVerify { sitePermissionsStorage.save(sitePermissions) }
     }
 
     @Test
@@ -39,11 +39,11 @@ class PermissionStorageTest {
         val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
         val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
 
-        every { sitePermissionsStorage.findSitePermissionsBy(any()) } returns sitePermissions
+        coEvery { sitePermissionsStorage.findSitePermissionsBy(any()) } returns sitePermissions
 
         val result = storage.findSitePermissionsBy("origin")
 
-        verify { sitePermissionsStorage.findSitePermissionsBy("origin") }
+        coVerify { sitePermissionsStorage.findSitePermissionsBy("origin") }
 
         assertEquals(sitePermissions, result)
     }
@@ -56,7 +56,7 @@ class PermissionStorageTest {
 
         storage.updateSitePermissions(sitePermissions)
 
-        verify { sitePermissionsStorage.update(sitePermissions) }
+        coVerify { sitePermissionsStorage.update(sitePermissions) }
     }
 
     @Test
@@ -65,11 +65,11 @@ class PermissionStorageTest {
         val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
         val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
 
-        every { sitePermissionsStorage.getSitePermissionsPaged() } returns dataSource
+        coEvery { sitePermissionsStorage.getSitePermissionsPaged() } returns dataSource
 
         val result = storage.getSitePermissionsPaged()
 
-        verify { sitePermissionsStorage.getSitePermissionsPaged() }
+        coVerify { sitePermissionsStorage.getSitePermissionsPaged() }
 
         assertEquals(dataSource, result)
     }
@@ -82,7 +82,7 @@ class PermissionStorageTest {
 
         storage.deleteSitePermissions(sitePermissions)
 
-        verify { sitePermissionsStorage.remove(sitePermissions) }
+        coVerify { sitePermissionsStorage.remove(sitePermissions) }
     }
 
     @Test
@@ -92,6 +92,6 @@ class PermissionStorageTest {
 
         storage.deleteAllSitePermissions()
 
-        verify { sitePermissionsStorage.removeAll() }
+        coVerify { sitePermissionsStorage.removeAll() }
     }
 }

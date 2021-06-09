@@ -8,8 +8,8 @@ import android.Manifest
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import mozilla.components.feature.sitepermissions.SitePermissions
-import mozilla.components.feature.sitepermissions.SitePermissions.Status
+import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals

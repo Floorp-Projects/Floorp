@@ -754,7 +754,7 @@
             app:argType="boolean" />
         <argument
             android:name="sitePermissions"
-            app:argType="mozilla.components.feature.sitepermissions.SitePermissions"
+            app:argType="mozilla.components.concept.engine.permission.SitePermissions"
             app:nullable="true" />
         <argument
             android:name="gravity"
@@ -867,7 +867,7 @@
                 app:argType="org.mozilla.fenix.settings.PhoneFeature" />
             <argument
                 android:name="sitePermissions"
-                app:argType="mozilla.components.feature.sitepermissions.SitePermissions" />
+                app:argType="mozilla.components.concept.engine.permission.SitePermissions" />
         </fragment>
 
         <fragment
@@ -879,7 +879,7 @@
                 app:popUpTo="@+id/sitePermissionsDetailsExceptionsFragment" />
             <argument
                 android:name="sitePermissions"
-                app:argType="mozilla.components.feature.sitepermissions.SitePermissions" />
+                app:argType="mozilla.components.concept.engine.permission.SitePermissions" />
         </fragment>
     </navigation>
 

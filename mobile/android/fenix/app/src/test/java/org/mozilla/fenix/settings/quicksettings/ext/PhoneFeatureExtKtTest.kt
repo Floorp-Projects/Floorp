@@ -8,7 +8,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import io.mockk.every
 import io.mockk.mockk
-import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

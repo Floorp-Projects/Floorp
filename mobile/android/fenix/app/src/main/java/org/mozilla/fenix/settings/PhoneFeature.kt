@@ -11,7 +11,7 @@ import android.content.Context
 import android.os.Parcelable
 import androidx.annotation.StringRes
 import kotlinx.android.parcel.Parcelize
-import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import org.mozilla.fenix.R
