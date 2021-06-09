@@ -520,7 +520,14 @@ ProfilerParentTracker::ProfilerParentTracker() {
 }
 
 ProfilerParentTracker::~ProfilerParentTracker() {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  // This destructor should only be called on the main thread.
+  MOZ_RELEASE_ASSERT(NS_IsMainThread() ||
+                     // OR we're not on the main thread (including if we are
+                     // past the end of `main()`), which is fine *if* there are
+                     // no ProfilerParent's still registered, in which case
+                     // nothing else will happen in this destructor anyway.
+                     // See bug 1713971 for more information.
+                     mProfilerParents.IsEmpty());
   MOZ_COUNT_DTOR(ProfilerParentTracker);
 
   // Close the channels of any profiler parents that haven't been destroyed.
