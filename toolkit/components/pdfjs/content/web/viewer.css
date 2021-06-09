@@ -34,11 +34,14 @@
 }
 
 .textLayer .highlight {
-  position: relative;
   margin: -1px;
   padding: 1px;
   background-color: rgba(180, 0, 170, 1);
   border-radius: 4px;
+}
+
+.textLayer .highlight.appended {
+  position: initial;
 }
 
 .textLayer .highlight.begin {
@@ -283,6 +286,8 @@
 .xfaLayer * {
   color: inherit;
   font: inherit;
+  font-style: inherit;
+  font-weight: inherit;
   font-kerning: inherit;
   letter-spacing: inherit;
   text-align: inherit;
@@ -290,6 +295,25 @@
   vertical-align: inherit;
   box-sizing: border-box;
   background: transparent;
+  padding: 0;
+  margin: 0;
+  pointer-events: auto;
+}
+
+.xfaLayer div {
+  pointer-events: none;
+}
+
+.xfaLayer a {
+  color: blue;
+}
+
+.xfaRich li {
+  margin-left: 3em;
+}
+
+.xfaLayer p {
+  margin-bottom: -1px;
 }
 
 .xfaFont {
@@ -323,57 +347,92 @@
   z-index: 200;
 }
 
+.xfaCaption {
+  overflow: hidden;
+  flex: 0 1 auto;
+}
+
 .xfaLabel {
+  height: 100%;
+  width: 100%;
+}
+
+.xfaLeft {
   display: flex;
   flex-direction: row;
   align-items: center;
-  width: 100%;
-  height: 100%;
 }
 
-.xfaCaption {
+.xfaLeft > .xfaCaption {
+  max-height: 100%;
+}
+
+.xfaRight {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+}
+
+.xfaRight > .xfaCaption {
+  max-height: 100%;
+}
+
+.xfaTop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.xfaTop > .xfaCaption {
+  max-width: 100%;
+}
+
+.xfaBottom {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+}
+
+.xfaBottom > .xfaCaption {
+  max-width: 100%;
+}
+
+.xfaBorder {
+  background: transparent;
+  position: absolute;
+  pointer-events: none;
+}
+
+.xfaWrapper {
+  display: flex;
+  align-items: stretch;
+}
+
+.xfaWrapped {
   flex: 1 1 auto;
+}
+
+.xfaContentArea {
+  overflow: hidden;
+}
+
+.xfaTextfield,
+.xfaSelect {
+  background-color: rgba(0, 54, 255, 0.13);
+}
+
+.xfaTextfield:focus,
+.xfaSelect:focus {
+  background-color: transparent;
 }
 
 .xfaTextfield,
 .xfaSelect {
   width: 100%;
   height: 100%;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   border: none;
   resize: none;
-}
-
-.xfaLabel > input[type="checkbox"] {
-  /* Use this trick to make the checkbox invisible but
-       but still focusable. */
-  position: absolute;
-  left: -99999px;
-}
-
-.xfaLabel > input[type="checkbox"]:focus + .xfaCheckboxMark {
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
-}
-
-.xfaCheckboxMark {
-  cursor: pointer;
-  flex: 0 0 auto;
-  border-style: solid;
-  border-width: 2px;
-  border-color: #8f8f9d;
-  font-size: 10px;
-  line-height: 10px;
-  width: 10px;
-  height: 10px;
-  text-align: center;
-  vertical-align: middle;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.xfaCheckbox:checked + .xfaCheckboxMark::after {
-  content: attr(mark);
 }
 
 .xfaButton {
@@ -388,21 +447,63 @@
   background: Highlight;
 }
 
+.xfaCheckbox,
+.xfaRadio {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
 .xfaRich {
   white-space: pre-wrap;
 }
 
-.xfaImage,
-.xfaRich {
+.xfaImage {
   width: 100%;
   height: 100%;
 }
 
+.xfaRich {
+  width: 100%;
+  height: auto;
+}
+
 .xfaLrTb,
 .xfaRlTb,
-.xfaTb,
-.xfaPosition {
-  display: block;
+.xfaTb {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.xfaLr,
+.xfaRl,
+.xfaTb > div {
+  flex: 1 1 auto;
+}
+
+.xfaLr {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.xfaLr > div {
+  flex: 1 1 auto;
+}
+
+.xfaRl {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: stretch;
+}
+
+.xfaRl > div {
+  flex: 1 1 auto;
+}
+
+.xfaTb > div {
+  justify-content: left;
 }
 
 .xfaPosition {
@@ -418,25 +519,20 @@
   align-items: center;
 }
 
-.xfaLrTb > div {
-  display: inline;
-  float: left;
-}
-
-.xfaRlTb > div {
-  display: inline;
-  float: right;
-}
-
 .xfaTable {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+}
+
+.xfaTable > div {
+  flex: 1 1 auto;
 }
 
 .xfaTable .xfaRow {
   display: flex;
   flex-direction: row;
-  flex: 1 1 auto;
+  align-items: stretch;
 }
 
 .xfaTable .xfaRow > div {
@@ -446,11 +542,25 @@
 .xfaTable .xfaRlRow {
   display: flex;
   flex-direction: row-reverse;
+  align-items: stretch;
   flex: 1;
 }
 
 .xfaTable .xfaRlRow > div {
   flex: 1;
+}
+
+@media print {
+  .xfaTextfield,
+  .xfaSelect {
+    background-color: transparent;
+  }
+
+  .xfaSelect {
+    appearance: none;
+    text-indent: 1px;
+    text-overflow: "";
+  }
 }
 
 :root {
@@ -2219,6 +2329,19 @@ html[dir="rtl"] #documentPropertiesOverlay .row > * {
 #PDFBug table {
   font-size: 10px;
 }
+#PDFBug table.showText {
+  border-collapse: collapse;
+  text-align: center;
+}
+#PDFBug table.showText,
+#PDFBug table.showText tr,
+#PDFBug table.showText td {
+  border: 1px solid black;
+  padding: 1px;
+}
+#PDFBug table.showText td.advance {
+  color: grey;
+}
 
 #viewer.textLayer-visible .textLayer {
   opacity: 1;
@@ -2292,7 +2415,8 @@ html[dir="rtl"] #documentPropertiesOverlay .row > * {
   .toolbar,
   #loadingBox,
   #errorWrapper,
-  .textLayer {
+  .textLayer,
+  .canvasWrapper {
     display: none;
   }
   #viewerContainer {
@@ -2336,7 +2460,7 @@ html[dir="rtl"] #documentPropertiesOverlay .row > * {
     height: 100%;
   }
   /* wrapper around (scaled) print canvas elements */
-  #printContainer > div {
+  #printContainer > .printedPage {
     page-break-after: always;
     page-break-inside: avoid;
 
@@ -2349,8 +2473,17 @@ html[dir="rtl"] #documentPropertiesOverlay .row > * {
     justify-content: center;
     align-items: center;
   }
-  #printContainer canvas,
-  #printContainer img {
+
+  #printContainer > .xfaPrintedPage {
+    page-break-after: always;
+    page-break-inside: avoid;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  #printContainer > .printedPage canvas,
+  #printContainer > .printedPage img {
     /* The intrinsic canvas / image size will make sure that we fit the page. */
     max-width: 100%;
     max-height: 100%;
