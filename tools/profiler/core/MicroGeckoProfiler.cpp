@@ -12,3 +12,28 @@ void uprofiler_register_thread(const char* name, void* stacktop) {
 
 void uprofiler_unregister_thread() { profiler_unregister_thread(); }
 
+// The category string will be handled later in Bug 1715047
+void uprofiler_simple_event_marker(const char* name, const char*, char phase) {
+  switch (phase) {
+    case 'B':
+      profiler_add_marker(ProfilerString8View::WrapNullTerminatedString(name),
+                          geckoprofiler::category::MEDIA_RT,
+                          {MarkerTiming::IntervalStart()});
+      break;
+    case 'E':
+      profiler_add_marker(ProfilerString8View::WrapNullTerminatedString(name),
+                          geckoprofiler::category::MEDIA_RT,
+                          {MarkerTiming::IntervalEnd()});
+      break;
+    case 'I':
+      profiler_add_marker(ProfilerString8View::WrapNullTerminatedString(name),
+                          geckoprofiler::category::MEDIA_RT,
+                          {MarkerTiming::InstantNow()});
+      break;
+    default:
+      if (getenv("MOZ_LOG_UNKNOWN_TRACE_EVENT_PHASES")) {
+        fprintf(stderr, "XXX UProfiler: phase not handled: '%c'\n", phase);
+      }
+      break;
+  }
+}
