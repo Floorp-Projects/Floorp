@@ -8,6 +8,7 @@ FINAL_TARGET_FILES.defaults.settings.main += [
     "hijack-blocklists.json",
     "language-dictionaries.json",
     "password-recipes.json",
+    "password-rules.json",
     "search-config.json",
     "search-default-override-allowlist.json",
     "search-telemetry.json",
