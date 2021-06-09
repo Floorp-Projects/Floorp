@@ -13,7 +13,7 @@
 
 namespace js {
 
-extern uint32_t JS_FASTCALL ClampDoubleToUint8(const double x);
+extern uint32_t ClampDoubleToUint8(const double x);
 
 struct uint8_clamped {
   uint8_t val;
