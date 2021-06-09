@@ -138,8 +138,11 @@ failed:
 #endif
 
 PollableEvent::PollableEvent()
-
-{
+    : mWriteFD(nullptr),
+      mReadFD(nullptr),
+      mSignaled(false),
+      mWriteFailed(false),
+      mSignalTimestampAdjusted(false) {
   MOZ_COUNT_CTOR(PollableEvent);
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   // create pair of prfiledesc that can be used as a poll()ble

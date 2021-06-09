@@ -14,6 +14,11 @@
 namespace mozilla {
 namespace net {
 
+ClassifierDummyChannelParent::ClassifierDummyChannelParent()
+    : mIPCActive(true) {}
+
+ClassifierDummyChannelParent::~ClassifierDummyChannelParent() = default;
+
 void ClassifierDummyChannelParent::Init(nsIURI* aURI, nsIURI* aTopWindowURI,
                                         nsresult aTopWindowURIResult,
                                         nsILoadInfo* aLoadInfo) {

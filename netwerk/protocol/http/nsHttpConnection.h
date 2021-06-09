@@ -22,7 +22,6 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsISupportsPriority.h"
 #include "nsITimer.h"
 
 class nsISocketTransport;
@@ -249,8 +248,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   nsCOMPtr<nsIAsyncInputStream> mSocketIn;
   nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
 
-  nsresult mSocketInCondition{NS_ERROR_NOT_INITIALIZED};
-  nsresult mSocketOutCondition{NS_ERROR_NOT_INITIALIZED};
+  nsresult mSocketInCondition;
+  nsresult mSocketOutCondition;
 
   nsCOMPtr<nsIInputStream> mProxyConnectStream;
   nsCOMPtr<nsIInputStream> mRequestStream;
@@ -260,95 +259,97 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   RefPtr<nsHttpHandler> mHttpHandler;  // keep gHttpHandler alive
 
-  PRIntervalTime mLastReadTime{0};
-  PRIntervalTime mLastWriteTime{0};
-  // max download time before dropping keep-alive status
-  PRIntervalTime mMaxHangTime{0};
+  PRIntervalTime mLastReadTime;
+  PRIntervalTime mLastWriteTime;
+  PRIntervalTime
+      mMaxHangTime;  // max download time before dropping keep-alive status
   PRIntervalTime mIdleTimeout;  // value of keep-alive: timeout=
-  PRIntervalTime mConsiderReusedAfterInterval{0};
-  PRIntervalTime mConsiderReusedAfterEpoch{0};
-  int64_t mCurrentBytesRead{0};     // data read per activation
-  int64_t mMaxBytesRead{0};         // max read in 1 activation
-  int64_t mTotalBytesRead{0};       // total data read
-  int64_t mContentBytesWritten{0};  // does not include CONNECT tunnel or TLS
+  PRIntervalTime mConsiderReusedAfterInterval;
+  PRIntervalTime mConsiderReusedAfterEpoch;
+  int64_t mCurrentBytesRead;     // data read per activation
+  int64_t mMaxBytesRead;         // max read in 1 activation
+  int64_t mTotalBytesRead;       // total data read
+  int64_t mContentBytesWritten;  // does not include CONNECT tunnel or TLS
 
   RefPtr<nsIAsyncInputStream> mInputOverflow;
 
   // Whether the first non-null transaction dispatched on this connection was
   // urgent-start or not
-  bool mUrgentStartPreferred{false};
+  bool mUrgentStartPreferred;
   // A flag to prevent reset of mUrgentStartPreferred by subsequent transactions
-  bool mUrgentStartPreferredKnown{false};
-  bool mConnectedTransport{false};
-  // assume to keep-alive by default
-  bool mKeepAlive{true};
-  bool mKeepAliveMask{true};
-  bool mDontReuse{false};
-  bool mIsReused{false};
-  bool mCompletedProxyConnect{false};
-  bool mLastTransactionExpectedNoContent{false};
-  bool mIdleMonitoring{false};
-  bool mProxyConnectInProgress{false};
-  bool mInSpdyTunnel{false};
-  bool mForcePlainText{false};
+  bool mUrgentStartPreferredKnown;
+  bool mConnectedTransport;
+  bool mKeepAlive;
+  bool mKeepAliveMask;
+  bool mDontReuse;
+  bool mIsReused;
+  bool mCompletedProxyConnect;
+  bool mLastTransactionExpectedNoContent;
+  bool mIdleMonitoring;
+  bool mProxyConnectInProgress;
+  bool mInSpdyTunnel;
+  bool mForcePlainText;
 
   // A snapshot of current number of transfered bytes
-  int64_t mTrafficCount{0};
-  bool mTrafficStamp{false};  // true then the above is set
+  int64_t mTrafficCount;
+  bool mTrafficStamp;  // true then the above is set
 
   // The number of <= HTTP/1.1 transactions performed on this connection. This
   // excludes spdy transactions.
-  uint32_t mHttp1xTransactionCount{0};
+  uint32_t mHttp1xTransactionCount;
 
   // Keep-Alive: max="mRemainingConnectionUses" provides the number of future
   // transactions (including the current one) that the server expects to allow
   // on this persistent connection.
-  uint32_t mRemainingConnectionUses{0xffffffff};
+  uint32_t mRemainingConnectionUses;
 
   // SPDY related
-  bool mNPNComplete{false};
-  bool mSetupSSLCalled{false};
+  bool mNPNComplete;
+  bool mSetupSSLCalled;
 
   // version level in use, 0 if unused
-  SpdyVersion mUsingSpdyVersion{SpdyVersion::NONE};
+  SpdyVersion mUsingSpdyVersion;
 
   RefPtr<ASpdySession> mSpdySession;
-  int32_t mPriority{nsISupportsPriority::PRIORITY_NORMAL};
-  bool mReportedSpdy{false};
+  int32_t mPriority;
+  bool mReportedSpdy;
 
   // mUsingSpdyVersion is cleared when mSpdySession is freed, this is permanent
-  bool mEverUsedSpdy{false};
+  bool mEverUsedSpdy;
 
   // mLastHttpResponseVersion stores the last response's http version seen.
-  HttpVersion mLastHttpResponseVersion{HttpVersion::v1_1};
+  HttpVersion mLastHttpResponseVersion;
 
   // If a large keepalive has been requested for any trans,
   // scale the default by this factor
-  uint32_t mDefaultTimeoutFactor{1};
+  uint32_t mDefaultTimeoutFactor;
 
-  bool mResponseTimeoutEnabled{false};
+  bool mResponseTimeoutEnabled;
 
   // Flag to indicate connection is in inital keepalive period (fast detect).
-  uint32_t mTCPKeepaliveConfig{kTCPKeepaliveDisabled};
+  uint32_t mTCPKeepaliveConfig;
   nsCOMPtr<nsITimer> mTCPKeepaliveTransitionTimer;
 
  private:
   // For ForceSend()
   static void ForceSendIO(nsITimer* aTimer, void* aClosure);
   [[nodiscard]] nsresult MaybeForceSendIO();
-  bool mForceSendPending{false};
+  bool mForceSendPending;
   nsCOMPtr<nsITimer> mForceSendTimer;
 
   // Helper variable for 0RTT handshake;
-  // Possible 0RTT has been checked.
-  bool m0RTTChecked{false};
-  // We have are sending 0RTT data and we are waiting
-  // for the end of the handsake.
-  bool mWaitingFor0RTTResponse{false};
-  int64_t mContentBytesWritten0RTT{0};
-  bool mEarlyDataNegotiated{false};  // Only used for telemetry
+  bool m0RTTChecked;             // Possible 0RTT has been
+                                 // checked.
+  bool mWaitingFor0RTTResponse;  // We have are
+                                 // sending 0RTT
+                                 // data and we
+                                 // are waiting
+                                 // for the end of
+                                 // the handsake.
+  int64_t mContentBytesWritten0RTT;
+  bool mEarlyDataNegotiated;  // Only used for telemetry
   nsCString mEarlyNegotiatedALPN;
-  bool mDid0RTTSpdy{false};
+  bool mDid0RTTSpdy;
 
   nsresult mErrorBeforeConnect = NS_OK;
 

@@ -56,7 +56,53 @@ enum TlsHandshakeResult : uint32_t {
 // nsHttpConnection <public>
 //-----------------------------------------------------------------------------
 
-nsHttpConnection::nsHttpConnection() : mHttpHandler(gHttpHandler) {
+nsHttpConnection::nsHttpConnection()
+    : mSocketInCondition(NS_ERROR_NOT_INITIALIZED),
+      mSocketOutCondition(NS_ERROR_NOT_INITIALIZED),
+      mHttpHandler(gHttpHandler),
+      mLastReadTime(0),
+      mLastWriteTime(0),
+      mMaxHangTime(0),
+      mConsiderReusedAfterInterval(0),
+      mConsiderReusedAfterEpoch(0),
+      mCurrentBytesRead(0),
+      mMaxBytesRead(0),
+      mTotalBytesRead(0),
+      mContentBytesWritten(0),
+      mUrgentStartPreferred(false),
+      mUrgentStartPreferredKnown(false),
+      mConnectedTransport(false),
+      mKeepAlive(true)  // assume to keep-alive by default
+      ,
+      mKeepAliveMask(true),
+      mDontReuse(false),
+      mIsReused(false),
+      mCompletedProxyConnect(false),
+      mLastTransactionExpectedNoContent(false),
+      mIdleMonitoring(false),
+      mProxyConnectInProgress(false),
+      mInSpdyTunnel(false),
+      mForcePlainText(false),
+      mTrafficCount(0),
+      mTrafficStamp(false),
+      mHttp1xTransactionCount(0),
+      mRemainingConnectionUses(0xffffffff),
+      mNPNComplete(false),
+      mSetupSSLCalled(false),
+      mUsingSpdyVersion(SpdyVersion::NONE),
+      mPriority(nsISupportsPriority::PRIORITY_NORMAL),
+      mReportedSpdy(false),
+      mEverUsedSpdy(false),
+      mLastHttpResponseVersion(HttpVersion::v1_1),
+      mDefaultTimeoutFactor(1),
+      mResponseTimeoutEnabled(false),
+      mTCPKeepaliveConfig(kTCPKeepaliveDisabled),
+      mForceSendPending(false),
+      m0RTTChecked(false),
+      mWaitingFor0RTTResponse(false),
+      mContentBytesWritten0RTT(0),
+      mEarlyDataNegotiated(false),
+      mDid0RTTSpdy(false) {
   LOG(("Creating nsHttpConnection @%p\n", this));
 
   // the default timeout is for when this connection has not yet processed a

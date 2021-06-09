@@ -110,7 +110,9 @@ nsresult SSLTokensCache::Shutdown() {
   return NS_OK;
 }
 
-SSLTokensCache::SSLTokensCache() { LOG(("SSLTokensCache::SSLTokensCache")); }
+SSLTokensCache::SSLTokensCache() : mCacheSize(0) {
+  LOG(("SSLTokensCache::SSLTokensCache"));
+}
 
 SSLTokensCache::~SSLTokensCache() { LOG(("SSLTokensCache::~SSLTokensCache")); }
 

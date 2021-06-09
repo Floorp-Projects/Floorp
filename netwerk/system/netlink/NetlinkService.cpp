@@ -176,7 +176,7 @@ class NetlinkAddress {
 
 class NetlinkNeighbor {
  public:
-  NetlinkNeighbor() = default;
+  NetlinkNeighbor() : mHasMAC(false) {}
 
   uint8_t Family() const { return mNeigh.ndm_family; }
   uint32_t GetIndex() const { return mNeigh.ndm_ifindex; }
@@ -239,7 +239,7 @@ class NetlinkNeighbor {
   }
 
  private:
-  bool mHasMAC{false};
+  bool mHasMAC;
   uint8_t mMAC[ETH_ALEN]{};
   in_common_addr mAddr{};
   struct ndmsg mNeigh {};
@@ -481,7 +481,7 @@ class NetlinkMsg {
   static uint8_t const kGenMsg = 1;
   static uint8_t const kRtMsg = 2;
 
-  NetlinkMsg() = default;
+  NetlinkMsg() : mIsPending(false) {}
   virtual ~NetlinkMsg() = default;
 
   virtual bool Send(int aFD) = 0;
@@ -519,7 +519,7 @@ class NetlinkMsg {
     return mIsPending;
   }
 
-  bool mIsPending{false};
+  bool mIsPending;
 };
 
 class NetlinkGenMsg : public NetlinkMsg {
@@ -630,7 +630,17 @@ bool NetlinkService::LinkInfo::UpdateStatus() {
 
 NS_IMPL_ISUPPORTS(NetlinkService, nsIRunnable)
 
-NetlinkService::NetlinkService() : mPid(getpid()) {}
+NetlinkService::NetlinkService()
+    : mMutex("NetlinkService::mMutex"),
+      mInitialScanFinished(false),
+      mMsgId(0),
+      mLinkUp(true),
+      mRecalculateNetworkId(false),
+      mSendNetworkChangeEvent(false) {
+  mPid = getpid();
+  mShutdownPipe[0] = -1;
+  mShutdownPipe[1] = -1;
+}
 
 NetlinkService::~NetlinkService() {
   MOZ_ASSERT(!mThread, "NetlinkService thread shutdown failed");

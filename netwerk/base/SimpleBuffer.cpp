@@ -10,6 +10,8 @@
 namespace mozilla {
 namespace net {
 
+SimpleBuffer::SimpleBuffer() : mStatus(NS_OK), mAvailable(0) {}
+
 nsresult SimpleBuffer::Write(char* src, size_t len) {
   NS_ASSERT_OWNINGTHREAD(SimpleBuffer);
   if (NS_FAILED(mStatus)) {

@@ -40,7 +40,7 @@ class nsServerSocket : public nsASocketHandler, public nsIServerSocket {
 
  protected:
   virtual ~nsServerSocket();
-  PRFileDesc* mFD{nullptr};
+  PRFileDesc* mFD;
   nsCOMPtr<nsIServerSocketListener> mListener;
 
  private:
@@ -51,11 +51,11 @@ class nsServerSocket : public nsASocketHandler, public nsIServerSocket {
   nsresult TryAttach();
 
   // lock protects access to mListener; so it is not cleared while being used.
-  mozilla::Mutex mLock{"nsServerSocket.mLock"};
+  mozilla::Mutex mLock;
   PRNetAddr mAddr = {.raw = {0, {0}}};
   nsCOMPtr<nsIEventTarget> mListenerTarget;
-  bool mAttached{false};
-  bool mKeepWhenOffline{false};
+  bool mAttached;
+  bool mKeepWhenOffline;
 };
 
 }  // namespace net

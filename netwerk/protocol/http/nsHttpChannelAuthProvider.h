@@ -63,7 +63,7 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
       const char* challenge, const nsHttpAuthIdentity& ident,
       nsCOMPtr<nsISupports>& session, char** result);
   [[nodiscard]] nsresult GetAuthenticator(const char* challenge,
-                                          nsCString& authType,
+                                          nsCString& scheme,
                                           nsIHttpAuthenticator** auth);
   void ParseRealm(const char* challenge, nsACString& realm);
   void GetIdentityFromURI(uint32_t authFlags, nsHttpAuthIdentity&);
@@ -77,7 +77,7 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
   [[nodiscard]] nsresult GetCredentials(const char* challenges, bool proxyAuth,
                                         nsCString& creds);
   [[nodiscard]] nsresult GetCredentialsForChallenge(const char* challenge,
-                                                    const char* authType,
+                                                    const char* scheme,
                                                     bool proxyAuth,
                                                     nsIHttpAuthenticator* auth,
                                                     nsCString& creds);
@@ -88,7 +88,7 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
                                            nsHttpAuthIdentity&);
 
   bool ConfirmAuth(const char* bundleKey, bool doYesNoPrompt);
-  void SetAuthorizationHeader(nsHttpAuthCache*, const nsHttpAtom& header,
+  void SetAuthorizationHeader(nsHttpAuthCache*, nsHttpAtom header,
                               const char* scheme, const char* host,
                               int32_t port, const char* path,
                               nsHttpAuthIdentity& ident);
@@ -134,19 +134,19 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
       bool aProxyAuth);
 
  private:
-  nsIHttpAuthenticableChannel* mAuthChannel{nullptr};  // weak ref
+  nsIHttpAuthenticableChannel* mAuthChannel;  // weak ref
 
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsProxyInfo> mProxyInfo;
   nsCString mHost;
-  int32_t mPort{-1};
-  bool mUsingSSL{false};
-  bool mProxyUsingSSL{false};
-  bool mIsPrivate{false};
+  int32_t mPort;
+  bool mUsingSSL;
+  bool mProxyUsingSSL;
+  bool mIsPrivate;
 
-  nsISupports* mProxyAuthContinuationState{nullptr};
+  nsISupports* mProxyAuthContinuationState;
   nsCString mProxyAuthType;
-  nsISupports* mAuthContinuationState{nullptr};
+  nsISupports* mAuthContinuationState;
   nsCString mAuthType;
   nsHttpAuthIdentity mIdent;
   nsHttpAuthIdentity mProxyIdent;

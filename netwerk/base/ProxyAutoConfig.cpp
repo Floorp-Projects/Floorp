@@ -430,8 +430,11 @@ static bool PACResolve(const nsCString& aHostName, NetAddr* aNetAddr,
 }
 
 ProxyAutoConfig::ProxyAutoConfig()
-
-{
+    : mJSContext(nullptr),
+      mJSNeedsSetup(false),
+      mShutdown(true),
+      mIncludePath(false),
+      mExtraHeapSize(0) {
   MOZ_COUNT_CTOR(ProxyAutoConfig);
 }
 

@@ -196,9 +196,26 @@ uint32_t nsIOService::gDefaultSegmentCount = 24;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIOService::nsIOService()
-    : mLastOfflineStateChange(PR_IntervalNow()),
+    : mOffline(true),
+      mOfflineForProfileChange(false),
+      mManageLinkStatus(false),
+      mConnectivity(true),
+      mSettingOffline(false),
+      mSetOfflineValue(false),
+      mSocketProcessLaunchComplete(false),
+      mShutdown(false),
+      mHttpHandlerAlreadyShutingDown(false),
+      mNetworkLinkServiceInitialized(false),
+      mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY),
+      mMutex("nsIOService::mMutex"),
+      mTotalRequests(0),
+      mCacheWon(0),
+      mNetWon(0),
+      mLastOfflineStateChange(PR_IntervalNow()),
       mLastConnectivityChange(PR_IntervalNow()),
-      mLastNetworkLinkChange(PR_IntervalNow()) {}
+      mLastNetworkLinkChange(PR_IntervalNow()),
+      mNetTearingDownStarted(0),
+      mSocketProcess(nullptr) {}
 
 static const char* gCallbackPrefs[] = {
     PORT_PREF_PREFIX,

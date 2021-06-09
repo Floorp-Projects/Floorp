@@ -44,7 +44,8 @@ NS_IMPL_ISUPPORTS(CacheEntryHandle, nsICacheEntry)
 
 // CacheEntryHandle
 
-CacheEntryHandle::CacheEntryHandle(CacheEntry* aEntry) : mEntry(aEntry) {
+CacheEntryHandle::CacheEntryHandle(CacheEntry* aEntry)
+    : mEntry(aEntry), mClosed(false) {
 #ifdef DEBUG
   if (!mEntry->HandlesCount()) {
     // CacheEntry.mHandlesCount must go from zero to one only under
@@ -201,16 +202,25 @@ uint64_t CacheEntry::GetNextId() {
 CacheEntry::CacheEntry(const nsACString& aStorageID, const nsACString& aURI,
                        const nsACString& aEnhanceID, bool aUseDisk,
                        bool aSkipSizeCheck, bool aPin)
-    : mURI(aURI),
+    : mFrecency(0),
+      mSortingExpirationTime(uint32_t(-1)),
+      mLock("CacheEntry"),
+      mFileStatus(NS_ERROR_NOT_INITIALIZED),
+      mURI(aURI),
       mEnhanceID(aEnhanceID),
       mStorageID(aStorageID),
       mUseDisk(aUseDisk),
       mSkipSizeCheck(aSkipSizeCheck),
+      mIsDoomed(false),
       mSecurityInfoLoaded(false),
       mPreventCallbacks(false),
       mHasData(false),
       mPinned(aPin),
       mPinningKnown(false),
+      mState(NOTLOADED),
+      mRegistration(NEVERREGISTERED),
+      mWriter(nullptr),
+      mUseCount(0),
       mCacheEntryId(GetNextId()) {
   LOG(("CacheEntry::CacheEntry [this=%p]", this));
 

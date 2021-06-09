@@ -83,6 +83,8 @@ GetFTPFallbackEncodingDoNotAddNewCallersToThisFunction() {
 NS_IMPL_ISUPPORTS(nsDirIndexParser, nsIRequestObserver, nsIStreamListener,
                   nsIDirIndexParser)
 
+nsDirIndexParser::nsDirIndexParser() : mLineStart(0), mHasDescription(false) {}
+
 nsresult nsDirIndexParser::Init() {
   mLineStart = 0;
   mHasDescription = false;
@@ -167,7 +169,7 @@ nsDirIndexParser::Field nsDirIndexParser::gFieldTable[] = {
     {nullptr, FIELD_UNKNOWN}};
 
 nsrefcnt nsDirIndexParser::gRefCntParser = 0;
-nsITextToSubURI* nsDirIndexParser::gTextToSubURI = nullptr;
+nsITextToSubURI* nsDirIndexParser::gTextToSubURI;
 
 void nsDirIndexParser::ParseFormat(const char* aFormatStr) {
   // Parse a "200" format line, and remember the fields and their

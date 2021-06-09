@@ -180,7 +180,7 @@ size_t nvPair::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-nvFIFO::nvFIFO() { InitializeStaticHeaders(); }
+nvFIFO::nvFIFO() : mByteCount(0), mTable() { InitializeStaticHeaders(); }
 
 nvFIFO::~nvFIFO() { Clear(); }
 
@@ -231,7 +231,14 @@ const nvPair* nvFIFO::operator[](size_t index) const {
   return gStaticHeaders->ObjectAt(index);
 }
 
-Http2BaseCompressor::Http2BaseCompressor() {
+Http2BaseCompressor::Http2BaseCompressor()
+    : mOutput(nullptr),
+      mMaxBuffer(kDefaultMaxBuffer),
+      mMaxBufferSetting(kDefaultMaxBuffer),
+      mSetInitialMaxBufferSizeAllowed(true),
+      mPeakSize(0),
+      mPeakCount(0),
+      mDumpTables(false) {
   mDynamicReporter = new HpackDynamicTableReporter(this);
   RegisterStrongMemoryReporter(mDynamicReporter);
 }

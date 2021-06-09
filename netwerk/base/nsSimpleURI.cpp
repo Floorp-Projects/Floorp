@@ -54,6 +54,8 @@ NS_IMPL_CI_INTERFACE_GETTER0(nsSimpleURI)
 ////////////////////////////////////////////////////////////////////////////////
 // nsSimpleURI methods:
 
+nsSimpleURI::nsSimpleURI() : mIsRefValid(false), mIsQueryValid(false) {}
+
 NS_IMPL_ADDREF(nsSimpleURI)
 NS_IMPL_RELEASE(nsSimpleURI)
 NS_INTERFACE_TABLE_HEAD(nsSimpleURI)

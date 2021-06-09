@@ -82,7 +82,27 @@ class NotifyTargetChangeRunnable final : public Runnable {
 uint32_t BackgroundFileSaver::sThreadCount = 0;
 uint32_t BackgroundFileSaver::sTelemetryMaxThreadCount = 0;
 
-BackgroundFileSaver::BackgroundFileSaver() {
+BackgroundFileSaver::BackgroundFileSaver()
+    : mControlEventTarget(nullptr),
+      mBackgroundET(nullptr),
+      mPipeOutputStream(nullptr),
+      mPipeInputStream(nullptr),
+      mObserver(nullptr),
+      mLock("BackgroundFileSaver.mLock"),
+      mWorkerThreadAttentionRequested(false),
+      mFinishRequested(false),
+      mComplete(false),
+      mStatus(NS_OK),
+      mAppend(false),
+      mInitialTarget(nullptr),
+      mInitialTargetKeepPartial(false),
+      mRenamedTarget(nullptr),
+      mRenamedTargetKeepPartial(false),
+      mAsyncCopyContext(nullptr),
+      mSha256Enabled(false),
+      mSignatureInfoEnabled(false),
+      mActualTarget(nullptr),
+      mActualTargetKeepPartial(false) {
   LOG(("Created BackgroundFileSaver [this = %p]", this));
 }
 
@@ -910,6 +930,13 @@ BackgroundFileSaverOutputStream::OnOutputStreamReady(
 
 NS_IMPL_ISUPPORTS(BackgroundFileSaverStreamListener, nsIBackgroundFileSaver,
                   nsIRequestObserver, nsIStreamListener)
+
+BackgroundFileSaverStreamListener::BackgroundFileSaverStreamListener()
+    : BackgroundFileSaver(),
+      mSuspensionLock("BackgroundFileSaverStreamListener.mSuspensionLock"),
+      mReceivedTooMuchData(false),
+      mRequest(nullptr),
+      mRequestSuspended(false) {}
 
 bool BackgroundFileSaverStreamListener::HasInfiniteBuffer() { return true; }
 

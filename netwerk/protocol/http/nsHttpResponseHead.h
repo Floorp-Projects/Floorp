@@ -38,7 +38,23 @@ namespace net {
 
 class nsHttpResponseHead {
  public:
-  nsHttpResponseHead() = default;
+  nsHttpResponseHead()
+      : mVersion(HttpVersion::v1_1),
+        mStatus(200),
+        mContentLength(-1),
+        mHasCacheControl(false),
+        mCacheControlPublic(false),
+        mCacheControlPrivate(false),
+        mCacheControlNoStore(false),
+        mCacheControlNoCache(false),
+        mCacheControlImmutable(false),
+        mCacheControlStaleWhileRevalidateSet(false),
+        mCacheControlStaleWhileRevalidate(0),
+        mCacheControlMaxAgeSet(false),
+        mCacheControlMaxAge(0),
+        mPragmaNoCache(false),
+        mRecursiveMutex("nsHttpResponseHead.mRecursiveMutex"),
+        mInVisitHeaders(false) {}
 
   nsHttpResponseHead(const nsHttpResponseHead& aOther);
   nsHttpResponseHead& operator=(const nsHttpResponseHead& aOther);
@@ -187,29 +203,29 @@ class nsHttpResponseHead {
  private:
   // All members must be copy-constructable and assignable
   nsHttpHeaderArray mHeaders;
-  HttpVersion mVersion{HttpVersion::v1_1};
-  uint16_t mStatus{200};
+  HttpVersion mVersion;
+  uint16_t mStatus;
   nsCString mStatusText;
-  int64_t mContentLength{-1};
+  int64_t mContentLength;
   nsCString mContentType;
   nsCString mContentCharset;
-  bool mHasCacheControl{false};
-  bool mCacheControlPublic{false};
-  bool mCacheControlPrivate{false};
-  bool mCacheControlNoStore{false};
-  bool mCacheControlNoCache{false};
-  bool mCacheControlImmutable{false};
-  bool mCacheControlStaleWhileRevalidateSet{false};
-  uint32_t mCacheControlStaleWhileRevalidate{0};
-  bool mCacheControlMaxAgeSet{false};
-  uint32_t mCacheControlMaxAge{0};
-  bool mPragmaNoCache{false};
+  bool mHasCacheControl;
+  bool mCacheControlPublic;
+  bool mCacheControlPrivate;
+  bool mCacheControlNoStore;
+  bool mCacheControlNoCache;
+  bool mCacheControlImmutable;
+  bool mCacheControlStaleWhileRevalidateSet;
+  uint32_t mCacheControlStaleWhileRevalidate;
+  bool mCacheControlMaxAgeSet;
+  uint32_t mCacheControlMaxAge;
+  bool mPragmaNoCache;
 
   // We are using RecursiveMutex instead of a Mutex because VisitHeader
   // function calls nsIHttpHeaderVisitor::VisitHeader while under lock.
-  mutable RecursiveMutex mRecursiveMutex{"nsHttpResponseHead.mRecursiveMutex"};
+  mutable RecursiveMutex mRecursiveMutex;
   // During VisitHeader we sould not allow cal to SetHeader.
-  bool mInVisitHeaders{false};
+  bool mInVisitHeaders;
 
   friend struct IPC::ParamTraits<nsHttpResponseHead>;
 };

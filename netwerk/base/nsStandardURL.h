@@ -74,10 +74,10 @@ class nsStandardURL : public nsIFileURL,
   // location and length of an url segment relative to mSpec
   //
   struct URLSegment {
-    uint32_t mPos{0};
-    int32_t mLen{-1};
+    uint32_t mPos;
+    int32_t mLen;
 
-    URLSegment() = default;
+    URLSegment() : mPos(0), mLen(-1) {}
     URLSegment(uint32_t pos, int32_t len) : mPos(pos), mLen(len) {}
     URLSegment(const URLSegment& aCopy) = default;
     void Reset() {
@@ -265,8 +265,8 @@ class nsStandardURL : public nsIFileURL,
 
   // mSpec contains the normalized version of the URL spec (UTF-8 encoded).
   nsCString mSpec;
-  int32_t mDefaultPort{-1};
-  int32_t mPort{-1};
+  int32_t mDefaultPort;
+  int32_t mPort;
 
   // url parts (relative to mSpec)
   URLSegment mScheme;
@@ -446,7 +446,7 @@ class nsStandardURL : public nsIFileURL,
       return NS_OK;
     }
 
-    explicit TemplatedMutator() = default;
+    explicit TemplatedMutator() : mMarkedFileURL(false) {}
 
    private:
     virtual ~TemplatedMutator() = default;

@@ -21,14 +21,14 @@ class nsHttpActivityDistributor : public nsIHttpActivityDistributor {
   NS_DECL_NSIHTTPACTIVITYOBSERVER
   NS_DECL_NSIHTTPACTIVITYDISTRIBUTOR
 
-  nsHttpActivityDistributor() = default;
+  nsHttpActivityDistributor();
 
  protected:
   virtual ~nsHttpActivityDistributor() = default;
 
   ObserverArray mObservers;
-  Mutex mLock{"nsHttpActivityDistributor.mLock"};
-  bool mActivated{false};
+  Mutex mLock;
+  bool mActivated;
 };
 
 }  // namespace net

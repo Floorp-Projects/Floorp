@@ -79,12 +79,12 @@ class CacheFileContextEvictor {
   void EvictEntries();
 
   // Whether eviction is in progress
-  bool mEvicting{false};
+  bool mEvicting;
   // Whether index is up to date. We wait with eviction until the index finishes
   // update process when it is outdated. NOTE: We also stop eviction in progress
   // when the index is found outdated, the eviction is restarted again once the
   // update process finishes.
-  bool mIndexIsUpToDate{false};
+  bool mIndexIsUpToDate;
   // Whether we already tried to restore unfinished jobs from previous run after
   // startup.
   static bool sDiskAlreadySearched;

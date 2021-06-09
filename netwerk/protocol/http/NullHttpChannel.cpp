@@ -14,7 +14,8 @@ namespace net {
 NS_IMPL_ISUPPORTS(NullHttpChannel, nsINullChannel, nsIHttpChannel,
                   nsIIdentChannel, nsITimedChannel)
 
-NullHttpChannel::NullHttpChannel() {
+NullHttpChannel::NullHttpChannel()
+    : mAllRedirectsSameOrigin(false), mAllRedirectsPassTimingAllowCheck(false) {
   mChannelCreationTime = PR_Now();
   mChannelCreationTimestamp = TimeStamp::Now();
   mAsyncOpenTime = TimeStamp::Now();

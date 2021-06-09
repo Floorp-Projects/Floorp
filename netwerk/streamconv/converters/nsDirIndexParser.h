@@ -20,7 +20,7 @@ class nsDirIndexParser : public nsIDirIndexParser {
  private:
   virtual ~nsDirIndexParser();
 
-  nsDirIndexParser() = default;
+  nsDirIndexParser();
   nsresult Init();
 
  public:
@@ -53,9 +53,9 @@ class nsDirIndexParser : public nsIDirIndexParser {
   nsCString mEncoding;
   nsCString mComment;
   nsCString mBuf;
-  int32_t mLineStart{0};
-  bool mHasDescription{false};
-  int mFormat[8]{-1};
+  int32_t mLineStart;
+  bool mHasDescription;
+  int mFormat[8]{0};
 
   nsresult ProcessData(nsIRequest* aRequest, nsISupports* aCtxt);
   void ParseFormat(const char* aFormatStr);

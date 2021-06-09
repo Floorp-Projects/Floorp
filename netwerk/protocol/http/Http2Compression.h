@@ -49,7 +49,7 @@ class nvFIFO {
   const nvPair* operator[](size_t index) const;
 
  private:
-  uint32_t mByteCount{0};
+  uint32_t mByteCount;
   nsDeque<nvPair> mTable;
 };
 
@@ -71,21 +71,21 @@ class Http2BaseCompressor {
   virtual void DumpState(const char*);
   virtual void SetMaxBufferSizeInternal(uint32_t maxBufferSize);
 
-  nsACString* mOutput{nullptr};
+  nsACString* mOutput;
   nvFIFO mHeaderTable;
 
-  uint32_t mMaxBuffer{kDefaultMaxBuffer};
-  uint32_t mMaxBufferSetting{kDefaultMaxBuffer};
-  bool mSetInitialMaxBufferSizeAllowed{true};
+  uint32_t mMaxBuffer;
+  uint32_t mMaxBufferSetting;
+  bool mSetInitialMaxBufferSizeAllowed;
 
-  uint32_t mPeakSize{0};
-  uint32_t mPeakCount{0};
+  uint32_t mPeakSize;
+  uint32_t mPeakCount;
   MOZ_INIT_OUTSIDE_CTOR
   Telemetry::HistogramID mPeakSizeID;
   MOZ_INIT_OUTSIDE_CTOR
   Telemetry::HistogramID mPeakCountID;
 
-  bool mDumpTables{false};
+  bool mDumpTables;
 
  private:
   RefPtr<HpackDynamicTableReporter> mDynamicReporter;
@@ -95,7 +95,12 @@ class Http2Compressor;
 
 class Http2Decompressor final : public Http2BaseCompressor {
  public:
-  Http2Decompressor() {
+  Http2Decompressor()
+      : mOffset(0),
+        mData(nullptr),
+        mDataLen(0),
+        mSeenNonColonHeader(false),
+        mIsPush(false) {
     mPeakSizeID = Telemetry::HPACK_PEAK_SIZE_DECOMPRESSOR;
     mPeakCountID = Telemetry::HPACK_PEAK_COUNT_DECOMPRESSOR;
   };
@@ -143,16 +148,19 @@ class Http2Decompressor final : public Http2BaseCompressor {
   nsCString mHeaderMethod;
 
   // state variables when DecodeBlock() is on the stack
-  uint32_t mOffset{0};
-  const uint8_t* mData{nullptr};
-  uint32_t mDataLen{0};
-  bool mSeenNonColonHeader{false};
-  bool mIsPush{false};
+  uint32_t mOffset;
+  const uint8_t* mData;
+  uint32_t mDataLen;
+  bool mSeenNonColonHeader;
+  bool mIsPush;
 };
 
 class Http2Compressor final : public Http2BaseCompressor {
  public:
-  Http2Compressor() {
+  Http2Compressor()
+      : mParsedContentLength(-1),
+        mBufferSizeChangeWaiting(false),
+        mLowestBufferSizeWaiting(0) {
     mPeakSizeID = Telemetry::HPACK_PEAK_SIZE_COMPRESSOR;
     mPeakCountID = Telemetry::HPACK_PEAK_COUNT_COMPRESSOR;
   };
@@ -187,9 +195,9 @@ class Http2Compressor final : public Http2BaseCompressor {
   void HuffmanAppend(const nsCString& value);
   void EncodeTableSizeChange(uint32_t newMaxSize);
 
-  int64_t mParsedContentLength{-1};
-  bool mBufferSizeChangeWaiting{false};
-  uint32_t mLowestBufferSizeWaiting{0};
+  int64_t mParsedContentLength;
+  bool mBufferSizeChangeWaiting;
+  uint32_t mLowestBufferSizeWaiting;
 };
 
 }  // namespace net

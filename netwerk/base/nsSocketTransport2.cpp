@@ -253,7 +253,11 @@ nsresult ErrorAccordingToNSPR(PRErrorCode errorCode) {
 //-----------------------------------------------------------------------------
 
 nsSocketInputStream::nsSocketInputStream(nsSocketTransport* trans)
-    : mTransport(trans) {}
+    : mTransport(trans),
+      mReaderRefCnt(0),
+      mCondition(NS_OK),
+      mCallbackFlags(0),
+      mByteCount(0) {}
 
 // called on the socket transport thread...
 //
@@ -483,7 +487,11 @@ nsSocketInputStream::AsyncWait(nsIInputStreamCallback* callback, uint32_t flags,
 //-----------------------------------------------------------------------------
 
 nsSocketOutputStream::nsSocketOutputStream(nsSocketTransport* trans)
-    : mTransport(trans) {}
+    : mTransport(trans),
+      mWriterRefCnt(0),
+      mCondition(NS_OK),
+      mCallbackFlags(0),
+      mByteCount(0) {}
 
 // called on the socket transport thread...
 //
@@ -671,10 +679,44 @@ nsSocketOutputStream::AsyncWait(nsIOutputStreamCallback* callback,
 //-----------------------------------------------------------------------------
 
 nsSocketTransport::nsSocketTransport()
-    : mFD(this),
+    : mPort(0),
+      mProxyPort(0),
+      mOriginPort(0),
+      mProxyTransparent(false),
+      mProxyTransparentResolvesHost(false),
+      mHttpsProxy(false),
+      mConnectionFlags(0),
+      mResetFamilyPreference(false),
+      mTlsFlags(0),
+      mReuseAddrPort(false),
+      mState(STATE_CLOSED),
+      mAttached(false),
+      mInputClosed(true),
+      mOutputClosed(true),
+      mResolving(false),
+      mEchConfigUsed(false),
+      mResolvedByTRR(false),
+      mNetAddrIsSet(false),
+      mSelfAddrIsSet(false),
+      mLock("nsSocketTransport.mLock"),
+      mFD(this),
+      mFDref(0),
+      mFDconnected(false),
       mSocketTransportService(gSocketTransportService),
       mInput(this),
-      mOutput(this) {
+      mOutput(this),
+      mLingerPolarity(false),
+      mLingerTimeout(0),
+      mQoSBits(0x00),
+      mKeepaliveEnabled(false),
+      mKeepaliveIdleTimeS(-1),
+      mKeepaliveRetryIntervalS(-1),
+      mKeepaliveProbeCount(-1),
+      mDoNotRetryToConnect(false) {
+  this->mNetAddr.raw.family = 0;
+  this->mNetAddr.inet = {};
+  this->mSelfAddr.raw.family = 0;
+  this->mSelfAddr.inet = {};
   SOCKET_LOG(("creating nsSocketTransport @%p\n", this));
 
   mTimeouts[TIMEOUT_CONNECT] = UINT16_MAX;     // no timeout
@@ -1944,12 +1986,9 @@ void nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status,
 #if defined(XP_UNIX)
         if (mNetAddrIsSet && mNetAddr.raw.family == AF_LOCAL) {
           mCondition = InitiateSocket();
-        } else {
-#else
-        {
+        } else
 #endif
           mCondition = ResolveHost();
-        }
 
       } else {
         SOCKET_LOG(("  ignoring redundant event\n"));

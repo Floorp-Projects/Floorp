@@ -427,7 +427,7 @@ class Predictor final : public nsINetworkPredictor,
   uint32_t ClampedPrefetchRollingLoadCount();
 
   // Our state
-  bool mInitialized{false};
+  bool mInitialized;
 
   nsTArray<nsCString> mKeysToOperateOn;
   nsTArray<nsCString> mValuesToOperateOn;
@@ -437,9 +437,9 @@ class Predictor final : public nsINetworkPredictor,
   nsCOMPtr<nsISpeculativeConnect> mSpeculativeService;
 
   nsCOMPtr<nsIURI> mStartupURI;
-  uint32_t mStartupTime{0};
-  uint32_t mLastStartupTime{0};
-  int32_t mStartupCount{1};
+  uint32_t mStartupTime;
+  uint32_t mLastStartupTime;
+  int32_t mStartupCount;
 
   nsCOMPtr<nsIDNSService> mDnsService;
 

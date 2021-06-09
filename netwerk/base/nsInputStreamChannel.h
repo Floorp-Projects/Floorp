@@ -20,7 +20,7 @@ class nsInputStreamChannel : public nsBaseChannel,
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIINPUTSTREAMCHANNEL
 
-  nsInputStreamChannel() = default;
+  nsInputStreamChannel() : mIsSrcdocChannel(false) {}
 
  protected:
   virtual ~nsInputStreamChannel() = default;
@@ -34,7 +34,7 @@ class nsInputStreamChannel : public nsBaseChannel,
   nsCOMPtr<nsIInputStream> mContentStream;
   nsCOMPtr<nsIURI> mBaseURI;
   nsString mSrcdocData;
-  bool mIsSrcdocChannel{false};
+  bool mIsSrcdocChannel;
 };
 
 }  // namespace net

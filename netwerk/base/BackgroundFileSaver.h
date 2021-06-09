@@ -117,22 +117,22 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
    * Protects the shared state between control and worker threads.  This mutex
    * is always locked for a very short time, never during input/output.
    */
-  mozilla::Mutex mLock{"BackgroundFileSaver.mLock"};
+  mozilla::Mutex mLock;
 
   /**
    * True if the worker thread is already waiting to process a change in state.
    */
-  bool mWorkerThreadAttentionRequested{false};
+  bool mWorkerThreadAttentionRequested;
 
   /**
    * True if the operation should finish as soon as possibile.
    */
-  bool mFinishRequested{false};
+  bool mFinishRequested;
 
   /**
    * True if the operation completed, with either success or failure.
    */
-  bool mComplete{false};
+  bool mComplete;
 
   /**
    * Holds the current file saver status.  This is a success status while the
@@ -140,13 +140,13 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
    * successfully.  This becomes an error status when an error occurs on the
    * worker thread, or when the operation is canceled.
    */
-  nsresult mStatus{NS_OK};
+  nsresult mStatus;
 
   /**
    * True if we should append data to the initial target file, instead of
    * overwriting it.
    */
-  bool mAppend{false};
+  bool mAppend;
 
   /**
    * This is set by the first SetTarget call on the control thread, and contains
@@ -161,7 +161,7 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
    * indicates whether mInitialTarget should be kept as partially completed,
    * rather than deleted, if the operation fails or is canceled.
    */
-  bool mInitialTargetKeepPartial{false};
+  bool mInitialTargetKeepPartial;
 
   /**
    * This is set by subsequent SetTarget calls on the control thread, and
@@ -179,7 +179,7 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
    * indicates whether mRenamedTarget should be kept as partially completed,
    * rather than deleted, if the operation fails or is canceled.
    */
-  bool mRenamedTargetKeepPartial{false};
+  bool mRenamedTargetKeepPartial;
 
   /**
    * While NS_AsyncCopy is in progress, allows canceling it.  Null otherwise.
@@ -197,7 +197,7 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
    * Whether or not to compute the hash. Must be set on the main thread before
    * setTarget is called.
    */
-  bool mSha256Enabled{false};
+  bool mSha256Enabled;
 
   /**
    * Store the signature info.
@@ -208,7 +208,7 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
    * Whether or not to extract the signature. Must be set on the main thread
    * before setTarget is called.
    */
-  bool mSignatureInfoEnabled{false};
+  bool mSignatureInfoEnabled;
 
   //////////////////////////////////////////////////////////////////////////////
   //// State handled exclusively by the worker thread
@@ -222,7 +222,7 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
    * Indicates whether mActualTarget should be kept as partially completed,
    * rather than deleted, if the operation fails or is canceled.
    */
-  bool mActualTargetKeepPartial{false};
+  bool mActualTargetKeepPartial;
 
   /**
    * Used to calculate the file hash. This keeps state across file renames and
@@ -327,7 +327,7 @@ class BackgroundFileSaverStreamListener final : public BackgroundFileSaver,
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  BackgroundFileSaverStreamListener() = default;
+  BackgroundFileSaverStreamListener();
 
  protected:
   virtual bool HasInfiniteBuffer() override;
@@ -339,13 +339,12 @@ class BackgroundFileSaverStreamListener final : public BackgroundFileSaver,
   /**
    * Protects the state related to whether the request should be suspended.
    */
-  mozilla::Mutex mSuspensionLock{
-      "BackgroundFileSaverStreamListener.mSuspensionLock"};
+  mozilla::Mutex mSuspensionLock;
 
   /**
    * Whether we should suspend the request because we received too much data.
    */
-  bool mReceivedTooMuchData{false};
+  bool mReceivedTooMuchData;
 
   /**
    * Request for which we received too much data.  This is populated when
@@ -356,7 +355,7 @@ class BackgroundFileSaverStreamListener final : public BackgroundFileSaver,
   /**
    * Whether mRequest is currently suspended.
    */
-  bool mRequestSuspended{false};
+  bool mRequestSuspended;
 
   /**
    * Called while NS_AsyncCopy is copying data.

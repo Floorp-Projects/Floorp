@@ -44,16 +44,16 @@ class WebSocketFrameData final {
   void WriteIPCParams(IPC::Message* aMessage) const;
   bool ReadIPCParams(const IPC::Message* aMessage, PickleIterator* aIter);
 
-  DOMHighResTimeStamp mTimeStamp{0};
+  DOMHighResTimeStamp mTimeStamp;
 
   bool mFinBit : 1;
   bool mRsvBit1 : 1;
   bool mRsvBit2 : 1;
   bool mRsvBit3 : 1;
   bool mMaskBit : 1;
-  uint8_t mOpCode{0};
+  uint8_t mOpCode;
 
-  uint32_t mMask{0};
+  uint32_t mMask;
 
   nsCString mPayload;
 };

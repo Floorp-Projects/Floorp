@@ -75,8 +75,38 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpTransactionParent::Release(void) {
 //-----------------------------------------------------------------------------
 
 HttpTransactionParent::HttpTransactionParent(bool aIsDocumentLoad)
-    : mIsDocumentLoad(aIsDocumentLoad) {
+    : mEventTargetMutex("HttpTransactionParent::EventTargetMutex"),
+      mResponseIsComplete(false),
+      mTransferSize(0),
+      mRequestSize(0),
+      mProxyConnectFailed(false),
+      mCanceled(false),
+      mStatus(NS_OK),
+      mSuspendCount(0),
+      mResponseHeadTaken(false),
+      mResponseTrailersTaken(false),
+      mOnStartRequestCalled(false),
+      mOnStopRequestCalled(false),
+      mResolvedByTRR(false),
+      mEchConfigUsed(false),
+      mProxyConnectResponseCode(0),
+      mChannelId(0),
+      mDataSentToChildProcess(false),
+      mIsDocumentLoad(aIsDocumentLoad),
+      mRestarted(false),
+      mCaps(0) {
   LOG(("Creating HttpTransactionParent @%p\n", this));
+
+  this->mSelfAddr.inet = {};
+  this->mPeerAddr.inet = {};
+
+#ifdef MOZ_VALGRIND
+  memset(&mSelfAddr, 0, sizeof(NetAddr));
+  memset(&mPeerAddr, 0, sizeof(NetAddr));
+#endif
+  mSelfAddr.raw.family = PR_AF_UNSPEC;
+  mPeerAddr.raw.family = PR_AF_UNSPEC;
+
   mEventQ = new ChannelEventQueue(static_cast<nsIRequest*>(this));
 }
 

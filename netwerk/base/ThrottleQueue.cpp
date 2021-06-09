@@ -234,8 +234,10 @@ NS_IMPL_ISUPPORTS(ThrottleQueue, nsIInputChannelThrottleQueue, nsITimerCallback,
                   nsINamed)
 
 ThrottleQueue::ThrottleQueue()
-
-{
+    : mMeanBytesPerSecond(0),
+      mMaxBytesPerSecond(0),
+      mBytesProcessed(0),
+      mTimerArmed(false) {
   nsresult rv;
   nsCOMPtr<nsIEventTarget> sts;
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);

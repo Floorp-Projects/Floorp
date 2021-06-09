@@ -103,7 +103,7 @@ class nsIncrementalDownload final : public nsIIncrementalDownload,
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
-  nsIncrementalDownload() = default;
+  nsIncrementalDownload();
 
  private:
   ~nsIncrementalDownload() = default;
@@ -124,22 +124,38 @@ class nsIncrementalDownload final : public nsIIncrementalDownload,
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsITimer> mTimer;
   mozilla::UniquePtr<char[]> mChunk;
-  int32_t mChunkLen{0};
-  int32_t mChunkSize{DEFAULT_CHUNK_SIZE};
-  int32_t mInterval{DEFAULT_INTERVAL};
-  int64_t mTotalSize{-1};
-  int64_t mCurrentSize{-1};
-  uint32_t mLoadFlags{LOAD_NORMAL};
-  int32_t mNonPartialCount{0};
-  nsresult mStatus{NS_OK};
-  bool mIsPending{false};
-  bool mDidOnStartRequest{false};
-  PRTime mLastProgressUpdate{0};
+  int32_t mChunkLen;
+  int32_t mChunkSize;
+  int32_t mInterval;
+  int64_t mTotalSize;
+  int64_t mCurrentSize;
+  uint32_t mLoadFlags;
+  int32_t mNonPartialCount;
+  nsresult mStatus;
+  bool mIsPending;
+  bool mDidOnStartRequest;
+  PRTime mLastProgressUpdate;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
   nsCString mPartialValidator;
-  bool mCacheBust{false};
+  bool mCacheBust;
 };
+
+nsIncrementalDownload::nsIncrementalDownload()
+    : mChunkLen(0),
+      mChunkSize(DEFAULT_CHUNK_SIZE),
+      mInterval(DEFAULT_INTERVAL),
+      mTotalSize(-1),
+      mCurrentSize(-1),
+      mLoadFlags(LOAD_NORMAL),
+      mNonPartialCount(0),
+      mStatus(NS_OK),
+      mIsPending(false),
+      mDidOnStartRequest(false),
+      mLastProgressUpdate(0),
+      mRedirectCallback(nullptr),
+      mNewRedirectChannel(nullptr),
+      mCacheBust(false) {}
 
 nsresult nsIncrementalDownload::FlushChunk() {
   NS_ASSERTION(mTotalSize != int64_t(-1), "total size should be known");
