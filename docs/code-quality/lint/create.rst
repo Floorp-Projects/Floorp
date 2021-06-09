@@ -111,13 +111,9 @@ let's call the file ``flake8_lint.py`` (`in-tree version <https://searchfox.org/
     import os
     import subprocess
     from collections import defaultdict
+    from shutil import which
 
     from mozlint import result
-
-    try:
-        from shutil import which
-    except ImportError:
-        from shutil_which import which
 
 
     FLAKE8_NOT_FOUND = """

@@ -174,10 +174,7 @@ class MachBrowsertime(MachCommandBase):
         if not AUTOMATION and host_platform().startswith("linux"):
             # On Linux ImageMagick needs to be installed manually, and `mach bootstrap` doesn't
             # do that (yet).  Provide some guidance.
-            try:
-                from shutil import which
-            except ImportError:
-                from shutil_which import which
+            from shutil import which
 
             im_programs = ("compare", "convert", "mogrify")
             for im_program in im_programs:
