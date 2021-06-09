@@ -356,6 +356,25 @@ already_AddRefed<Path> SVGPathElement::BuildPath(PathBuilder* aBuilder) {
   return mD.GetAnimValue().BuildPath(aBuilder, strokeLineCap, strokeWidth);
 }
 
+bool SVGPathElement::GetDistancesFromOriginToEndsOfVisibleSegments(
+    FallibleTArray<double>* aOutput) {
+  bool ret = false;
+  auto callback = [&ret, aOutput](const ComputedStyle* s) {
+    const auto& d = s->StyleSVGReset()->mD;
+    ret = d.IsNone() ||
+          SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(
+              d.AsPath()._0.AsSpan(), aOutput);
+  };
+
+  if (StaticPrefs::layout_css_d_property_enabled() &&
+      SVGGeometryProperty::DoForComputedStyle(this, callback)) {
+    return ret;
+  }
+
+  return mD.GetAnimValue().GetDistancesFromOriginToEndsOfVisibleSegments(
+      aOutput);
+}
+
 /* static */
 bool SVGPathElement::IsDPropertyChangedViaCSS(const ComputedStyle& aNewStyle,
                                               const ComputedStyle& aOldStyle) {

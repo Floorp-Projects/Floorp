@@ -161,6 +161,12 @@ class SVGPathData {
       FallibleTArray<double>* aOutput) const;
 
   /**
+   * This is identical to the above one but accepts StylePathCommand.
+   */
+  static bool GetDistancesFromOriginToEndsOfVisibleSegments(
+      Span<const StylePathCommand> aPath, FallibleTArray<double>* aOutput);
+
+  /**
    * This returns a path without the extra little line segments that
    * ApproximateZeroLengthSubpathSquareCaps can insert if we have square-caps.
    * See the comment for that function for more info on that.
