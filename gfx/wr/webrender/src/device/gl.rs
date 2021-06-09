@@ -1097,6 +1097,7 @@ pub struct Device {
     // debug
     inside_frame: bool,
     crash_annotator: Option<Box<dyn CrashAnnotator>>,
+    annotate_draw_call_crashes: bool,
 
     // resources
     resource_override_path: Option<PathBuf>,
@@ -1728,6 +1729,7 @@ impl Device {
             gl,
             base_gl: None,
             crash_annotator,
+            annotate_draw_call_crashes: false,
             resource_override_path,
             use_optimized_shaders,
             upload_method,
@@ -3446,11 +3448,15 @@ impl Device {
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
 
-        let _guard = CrashAnnotatorGuard::new(
-            &self.crash_annotator,
-            CrashAnnotation::DrawShader,
-            &self.bound_program_name,
-        );
+        let _guard = if self.annotate_draw_call_crashes {
+            Some(CrashAnnotatorGuard::new(
+                &self.crash_annotator,
+                CrashAnnotation::DrawShader,
+                &self.bound_program_name,
+            ))
+        } else {
+            None
+        };
 
         self.gl.draw_elements(
             gl::TRIANGLES,
@@ -3465,11 +3471,15 @@ impl Device {
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
 
-        let _guard = CrashAnnotatorGuard::new(
-            &self.crash_annotator,
-            CrashAnnotation::DrawShader,
-            &self.bound_program_name,
-        );
+        let _guard = if self.annotate_draw_call_crashes {
+            Some(CrashAnnotatorGuard::new(
+                &self.crash_annotator,
+                CrashAnnotation::DrawShader,
+                &self.bound_program_name,
+            ))
+        } else {
+            None
+        };
 
         self.gl.draw_elements(
             gl::TRIANGLES,
@@ -3484,11 +3494,15 @@ impl Device {
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
 
-        let _guard = CrashAnnotatorGuard::new(
-            &self.crash_annotator,
-            CrashAnnotation::DrawShader,
-            &self.bound_program_name,
-        );
+        let _guard = if self.annotate_draw_call_crashes {
+            Some(CrashAnnotatorGuard::new(
+                &self.crash_annotator,
+                CrashAnnotation::DrawShader,
+                &self.bound_program_name,
+            ))
+        } else {
+            None
+        };
 
         self.gl.draw_arrays(gl::POINTS, first_vertex, vertex_count);
     }
@@ -3498,11 +3512,15 @@ impl Device {
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
 
-        let _guard = CrashAnnotatorGuard::new(
-            &self.crash_annotator,
-            CrashAnnotation::DrawShader,
-            &self.bound_program_name,
-        );
+        let _guard = if self.annotate_draw_call_crashes {
+            Some(CrashAnnotatorGuard::new(
+                &self.crash_annotator,
+                CrashAnnotation::DrawShader,
+                &self.bound_program_name,
+            ))
+        } else {
+            None
+        };
 
         self.gl.draw_arrays(gl::LINES, first_vertex, vertex_count);
     }
@@ -3512,11 +3530,15 @@ impl Device {
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
 
-        let _guard = CrashAnnotatorGuard::new(
-            &self.crash_annotator,
-            CrashAnnotation::DrawShader,
-            &self.bound_program_name,
-        );
+        let _guard = if self.annotate_draw_call_crashes {
+            Some(CrashAnnotatorGuard::new(
+                &self.crash_annotator,
+                CrashAnnotation::DrawShader,
+                &self.bound_program_name,
+            ))
+        } else {
+            None
+        };
 
         self.gl.draw_elements(
             gl::TRIANGLES,
@@ -3531,11 +3553,15 @@ impl Device {
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
 
-        let _guard = CrashAnnotatorGuard::new(
-            &self.crash_annotator,
-            CrashAnnotation::DrawShader,
-            &self.bound_program_name,
-        );
+        let _guard = if self.annotate_draw_call_crashes {
+            Some(CrashAnnotatorGuard::new(
+                &self.crash_annotator,
+                CrashAnnotation::DrawShader,
+                &self.bound_program_name,
+            ))
+        } else {
+            None
+        };
 
         self.gl.draw_elements_instanced(
             gl::TRIANGLES,
