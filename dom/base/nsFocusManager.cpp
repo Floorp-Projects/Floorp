@@ -882,8 +882,7 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
       // focus somewhere else, so just clear the focus in the toplevel window
       // so that no element is focused.
       //
-      // This check does not work correctly in Fission:
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1613054
+      // The Fission case is handled in FlushAndCheckIfFocusable().
       Document* subdoc = aDocument->GetSubDocumentFor(content);
       if (subdoc) {
         nsCOMPtr<nsIDocShell> docShell = subdoc->GetDocShell();
