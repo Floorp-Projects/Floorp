@@ -289,7 +289,7 @@ add_task(async function test_deduplicate_for_unitConversion() {
 
 // These results are used in the badHeuristicBuckets tests below.  The order of
 // the results in the array isn't important because they all get added at the
-// same time.  It's the resultBuckets in each test that are important.
+// same time.  It's the resultGroups in each test that is important.
 const BAD_HEURISTIC_RESULTS = [
   // heuristic
   Object.assign(
@@ -567,7 +567,7 @@ add_task(async function test_badHeuristicsBuckets_notFirst_4() {
 });
 
 /**
- * Sets the resultBuckets pref, performs a search, and then checks the results.
+ * Sets the resultGroups pref, performs a search, and then checks the results.
  * Regardless of the buckets, the muxer should include at most one heuristic in
  * its results and it should always be the first result.
  *
@@ -578,7 +578,7 @@ add_task(async function test_badHeuristicsBuckets_notFirst_4() {
  */
 async function doBadHeuristicBucketsTest(resultBuckets, expectedResults) {
   Services.prefs.setCharPref(
-    "browser.urlbar.resultBuckets",
+    "browser.urlbar.resultGroups",
     JSON.stringify({ children: resultBuckets })
   );
 
@@ -588,5 +588,5 @@ async function doBadHeuristicBucketsTest(resultBuckets, expectedResults) {
   await UrlbarProvidersManager.startQuery(context, controller);
   Assert.deepEqual(context.results, expectedResults);
 
-  Services.prefs.clearUserPref("browser.urlbar.resultBuckets");
+  Services.prefs.clearUserPref("browser.urlbar.resultGroups");
 }
