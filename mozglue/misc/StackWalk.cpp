@@ -93,7 +93,6 @@ class FrameSkipper {
 
 #  include <windows.h>
 #  include <process.h>
-#  include <winternl.h>
 #  include <stdio.h>
 #  include <malloc.h>
 #  include "mozilla/ArrayUtils.h"
@@ -238,39 +237,6 @@ class CONTEXTGenericAccessors {
   CONTEXT& mCONTEXT;
 };
 
-#  if defined(_M_AMD64) || defined(_M_ARM64)
-static PVOID GetStackHighLimit(HANDLE aThread) {
-  // Try to retrieve the real stack base for the target thread from the Thread
-  // Environment Block (TEB), which we can find through
-  // NtQueryInformationThread.
-  struct CLIENT_ID {
-    PVOID UniqueProcess;
-    PVOID UniqueThread;
-  };
-  struct THREAD_BASIC_INFORMATION {
-    NTSTATUS ExitStatus;
-    PVOID TebBaseAddress;
-    CLIENT_ID ClientId;
-    KAFFINITY AffMask;
-    DWORD Priority;
-    DWORD BasePriority;
-  };
-  THREAD_BASIC_INFORMATION info;
-  ULONG written = 0;
-  NTSTATUS status =
-      NtQueryInformationThread(aThread, THREADINFOCLASS(0), &info,
-                               sizeof(THREAD_BASIC_INFORMATION), &written);
-  if (NT_SUCCESS(status) &&
-      written >= (offsetof(THREAD_BASIC_INFORMATION, TebBaseAddress) +
-                  sizeof(info.TebBaseAddress))) {
-    const NT_TIB* const teb = reinterpret_cast<NT_TIB*>(info.TebBaseAddress);
-    return teb->StackBase;
-  }
-
-  return nullptr;
-}
-#  endif  // defined(_M_AMD64) || defined(_M_ARM64)
-
 /**
  * Walk the stack, translating PC's found into strings and recording the
  * chain in aBuffer. For this to work properly, the DLLs must be rebased
@@ -336,14 +302,10 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
   if (sStackWalkSuppressions) {
     return;
   }
+#  endif
 
+#  if defined(_M_AMD64) || defined(_M_ARM64)
   bool firstFrame = true;
-
-  PVOID stackHighLimit = GetStackHighLimit(targetThread);
-  if (!stackHighLimit) {
-    // Fall back to be at the 1MB boundary past the known SP.
-    stackHighLimit = (PVOID)(context.SP() | 0xFFFFFu + 1);
-  }
 #  endif
 
   FrameSkipper skipper(aFirstFramePC);
@@ -389,8 +351,15 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
 
     auto currentInstr = context.PC();
 
-    // We must avoid msmpeg2vdec.dll's JIT region: they don't generate unwind
-    // data, so their JIT unwind callback just throws up its hands and
+    // If we reach a frame in JIT code, we don't have enough information to
+    // unwind, so we have to give up.
+    if (sJitCodeRegionStart && (uint8_t*)currentInstr >= sJitCodeRegionStart &&
+        (uint8_t*)currentInstr < sJitCodeRegionStart + sJitCodeRegionSize) {
+      break;
+    }
+
+    // We must also avoid msmpeg2vdec.dll's JIT region: they don't generate
+    // unwind data, so their JIT unwind callback just throws up its hands and
     // terminates the process.
     if (sMsMpegJitCodeRegionStart &&
         (uint8_t*)currentInstr >= sMsMpegJitCodeRegionStart &&
@@ -416,32 +385,8 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
       context.PC() = *reinterpret_cast<DWORD64*>(context.SP());
       context.SP() += sizeof(void*);
     } else {
-      // Something went wrong, try following BP. We expect:
-      // 0 < SP <= 64-bit-aligned BP < (2x pointers before stackHighLimit).
-      // The 2-pointer adjustment guarantees that we can read two pointers
-      // within the stack: BP itself and the return address.
-      if (!(context.SP() && context.SP() <= context.BP() &&
-            context.BP() < ((DWORD64)stackHighLimit - 2 * sizeof(void*)) &&
-            (context.BP() & 7u) == 0)) {
-        break;
-      }
-      // BP should point at the stack where the caller's BP (which may be
-      // invalid) is stored.
-      const DWORD64 callersBP = *reinterpret_cast<DWORD64*>(context.BP());
-      // The return address should be stored after that.
-      context.PC() = *(reinterpret_cast<DWORD64*>(context.BP()) + 1);
-      // And then the caller's SP should point past the stored return address,
-      // as it would have been just before the function call.
-      context.SP() = reinterpret_cast<DWORD64>(
-          reinterpret_cast<DWORD64*>(context.BP()) + 2);
-      // Validate the caller's BP against the caller's SP.
-      context.BP() = callersBP;
-      if (!(context.SP() <= context.BP() &&
-            context.BP() < (DWORD64)stackHighLimit &&
-            (context.BP() & 7u) == 0)) {
-        // Give up if the caller's BP looks invalid.
-        break;
-      }
+      // Something went wrong.
+      break;
     }
 
     addr = context.PC();
