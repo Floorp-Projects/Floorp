@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
     "ExtensionAPIRequest.cpp",
     "ExtensionAPIRequestForwarder.cpp",
     "ExtensionBrowser.cpp",
+    "ExtensionEventListener.cpp",
     "ExtensionEventManager.cpp",
 ]
 
