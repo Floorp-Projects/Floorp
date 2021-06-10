@@ -17,9 +17,9 @@ PER_INSTANCE in vec4 aClipLocalRect;
 
 struct ClipMaskInstanceImage {
     ClipMaskInstanceCommon base;
-    RectWithEndpoint tile_rect;
+    RectWithSize tile_rect;
     ivec2 resource_address;
-    RectWithEndpoint local_rect;
+    RectWithSize local_rect;
 };
 
 ClipMaskInstanceImage fetch_clip_item() {
@@ -27,9 +27,9 @@ ClipMaskInstanceImage fetch_clip_item() {
 
     cmi.base = fetch_clip_item_common();
 
-    cmi.tile_rect = RectWithEndpoint(aClipTileRect.xy, aClipTileRect.zw);
+    cmi.tile_rect = RectWithSize(aClipTileRect.xy, aClipTileRect.zw);
     cmi.resource_address = aClipDataResourceAddress;
-    cmi.local_rect = RectWithEndpoint(aClipLocalRect.xy, aClipLocalRect.zw);
+    cmi.local_rect = RectWithSize(aClipLocalRect.xy, aClipLocalRect.zw);
 
     return cmi;
 }
@@ -42,15 +42,15 @@ struct ClipImageVertexInfo {
 // This differs from write_clip_tile_vertex in that we forward transform the
 // primitive's local-space tile rect into the target space. We use scissoring
 // to ensure that the primitive does not draw outside the target bounds.
-ClipImageVertexInfo write_clip_image_vertex(RectWithEndpoint tile_rect,
-                                            RectWithEndpoint local_clip_rect,
+ClipImageVertexInfo write_clip_image_vertex(RectWithSize tile_rect,
+                                            RectWithSize local_clip_rect,
                                             Transform prim_transform,
                                             Transform clip_transform,
                                             RectWithEndpoint sub_rect,
                                             vec2 task_origin,
                                             vec2 screen_origin,
                                             float device_pixel_scale) {
-    vec2 local_pos = rect_clamp(local_clip_rect, mix(tile_rect.p0, tile_rect.p1, aPosition.xy));
+    vec2 local_pos = clamp_rect(tile_rect.p0 + aPosition.xy * tile_rect.size, local_clip_rect);
     vec4 world_pos = prim_transform.m * vec4(local_pos, 0.0, 1.0);
     vec4 final_pos = vec4(
         world_pos.xy * device_pixel_scale + (task_origin - screen_origin) * world_pos.w,
@@ -62,7 +62,7 @@ ClipImageVertexInfo write_clip_image_vertex(RectWithEndpoint tile_rect,
     init_transform_vs(
         clip_transform.is_axis_aligned
             ? vec4(vec2(-1.0e16), vec2(1.0e16))
-            : vec4(local_clip_rect.p0, local_clip_rect.p1));
+            : vec4(local_clip_rect.p0, local_clip_rect.p0 + local_clip_rect.size));
 
     ClipImageVertexInfo vi = ClipImageVertexInfo(local_pos, world_pos);
     return vi;
@@ -85,7 +85,7 @@ void main(void) {
         cmi.base.device_pixel_scale
     );
     vLocalPos = vi.local_pos;
-    vec2 uv = (vi.local_pos - cmi.tile_rect.p0) / rect_size(cmi.tile_rect);
+    vec2 uv = (vi.local_pos - cmi.tile_rect.p0) / cmi.tile_rect.size;
 
     vec2 texture_size = vec2(TEX_SIZE(sColor0));
     vec4 uv_rect = vec4(res.uv_rect.p0, res.uv_rect.p1);

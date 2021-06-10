@@ -133,18 +133,18 @@ pub struct PictureIndex(pub usize);
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Copy, Debug, Clone, MallocSizeOf, PartialEq)]
 pub struct RectangleKey {
-    pub x0: f32,
-    pub y0: f32,
-    pub x1: f32,
-    pub y1: f32,
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
 }
 
 impl RectangleKey {
     pub fn intersects(&self, other: &Self) -> bool {
-        self.x0 < other.x1
-            && other.x0 < self.x1
-            && self.y0 < other.y1
-            && other.y0 < self.y1
+        self.x < other.x + other.w
+            && other.x < self.x + self.w
+            && self.y < other.y + other.h
+            && other.y < self.y + self.h
     }
 }
 
@@ -152,18 +152,18 @@ impl Eq for RectangleKey {}
 
 impl hash::Hash for RectangleKey {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
-        self.x0.to_bits().hash(state);
-        self.y0.to_bits().hash(state);
-        self.x1.to_bits().hash(state);
-        self.y1.to_bits().hash(state);
+        self.x.to_bits().hash(state);
+        self.y.to_bits().hash(state);
+        self.w.to_bits().hash(state);
+        self.h.to_bits().hash(state);
     }
 }
 
 impl From<RectangleKey> for LayoutRect {
     fn from(key: RectangleKey) -> LayoutRect {
         LayoutRect {
-            min: LayoutPoint::new(key.x0, key.y0),
-            max: LayoutPoint::new(key.x1, key.y1),
+            origin: LayoutPoint::new(key.x, key.y),
+            size: LayoutSize::new(key.w, key.h),
         }
     }
 }
@@ -171,8 +171,8 @@ impl From<RectangleKey> for LayoutRect {
 impl From<RectangleKey> for WorldRect {
     fn from(key: RectangleKey) -> WorldRect {
         WorldRect {
-            min: WorldPoint::new(key.x0, key.y0),
-            max: WorldPoint::new(key.x1, key.y1),
+            min: WorldPoint::new(key.x, key.y),
+            max: WorldPoint::new(key.x + key.w, key.y + key.h),
         }
     }
 }
@@ -180,10 +180,10 @@ impl From<RectangleKey> for WorldRect {
 impl From<LayoutRect> for RectangleKey {
     fn from(rect: LayoutRect) -> RectangleKey {
         RectangleKey {
-            x0: rect.min.x,
-            y0: rect.min.y,
-            x1: rect.max.x,
-            y1: rect.max.y,
+            x: rect.origin.x,
+            y: rect.origin.y,
+            w: rect.size.width,
+            h: rect.size.height,
         }
     }
 }
@@ -191,10 +191,10 @@ impl From<LayoutRect> for RectangleKey {
 impl From<PictureRect> for RectangleKey {
     fn from(rect: PictureRect) -> RectangleKey {
         RectangleKey {
-            x0: rect.min.x,
-            y0: rect.min.y,
-            x1: rect.max.x,
-            y1: rect.max.y,
+            x: rect.origin.x,
+            y: rect.origin.y,
+            w: rect.size.width,
+            h: rect.size.height,
         }
     }
 }
@@ -202,10 +202,10 @@ impl From<PictureRect> for RectangleKey {
 impl From<WorldRect> for RectangleKey {
     fn from(rect: WorldRect) -> RectangleKey {
         RectangleKey {
-            x0: rect.min.x,
-            y0: rect.min.y,
-            x1: rect.max.x,
-            y1: rect.max.y,
+            x: rect.min.x,
+            y: rect.min.y,
+            w: rect.width(),
+            h: rect.height(),
         }
     }
 }
@@ -792,7 +792,10 @@ impl ClipData {
         //           same as they were, even though the origin is now always
         //           zero, since they are in the clip's local space. In future,
         //           we could reduce the GPU cache size of ClipData.
-        let rect = LayoutRect::from_size(size);
+        let rect = LayoutRect::new(
+            LayoutPoint::zero(),
+            size,
+        );
 
         ClipData {
             rect: ClipRect {
@@ -800,8 +803,8 @@ impl ClipData {
                 mode: mode as u32 as f32,
             },
             top_left: ClipCorner {
-                rect: LayoutRect::from_origin_and_size(
-                    LayoutPoint::new(rect.min.x, rect.min.y),
+                rect: LayoutRect::new(
+                    LayoutPoint::new(rect.origin.x, rect.origin.y),
                     LayoutSize::new(radii.top_left.width, radii.top_left.height),
                 ),
                 outer_radius_x: radii.top_left.width,
@@ -810,10 +813,10 @@ impl ClipData {
                 inner_radius_y: 0.0,
             },
             top_right: ClipCorner {
-                rect: LayoutRect::from_origin_and_size(
+                rect: LayoutRect::new(
                     LayoutPoint::new(
-                        rect.max.x - radii.top_right.width,
-                        rect.min.y,
+                        rect.origin.x + rect.size.width - radii.top_right.width,
+                        rect.origin.y,
                     ),
                     LayoutSize::new(radii.top_right.width, radii.top_right.height),
                 ),
@@ -823,10 +826,10 @@ impl ClipData {
                 inner_radius_y: 0.0,
             },
             bottom_left: ClipCorner {
-                rect: LayoutRect::from_origin_and_size(
+                rect: LayoutRect::new(
                     LayoutPoint::new(
-                        rect.min.x,
-                        rect.max.y - radii.bottom_left.height,
+                        rect.origin.x,
+                        rect.origin.y + rect.size.height - radii.bottom_left.height,
                     ),
                     LayoutSize::new(radii.bottom_left.width, radii.bottom_left.height),
                 ),
@@ -836,10 +839,10 @@ impl ClipData {
                 inner_radius_y: 0.0,
             },
             bottom_right: ClipCorner {
-                rect: LayoutRect::from_origin_and_size(
+                rect: LayoutRect::new(
                     LayoutPoint::new(
-                        rect.max.x - radii.bottom_right.width,
-                        rect.max.y - radii.bottom_right.height,
+                        rect.origin.x + rect.size.width - radii.bottom_right.width,
+                        rect.origin.y + rect.size.height - radii.bottom_right.height,
                     ),
                     LayoutSize::new(radii.bottom_right.width, radii.bottom_right.height),
                 ),
@@ -856,7 +859,10 @@ impl ClipData {
         //           same as they were, even though the origin is now always
         //           zero, since they are in the clip's local space. In future,
         //           we could reduce the GPU cache size of ClipData.
-        let rect = LayoutRect::from_size(size);
+        let rect = LayoutRect::new(
+            LayoutPoint::zero(),
+            size,
+        );
 
         ClipData {
             rect: ClipRect {
@@ -864,34 +870,34 @@ impl ClipData {
                 mode: mode as u32 as f32,
             },
             top_left: ClipCorner::uniform(
-                LayoutRect::from_origin_and_size(
-                    LayoutPoint::new(rect.min.x, rect.min.y),
+                LayoutRect::new(
+                    LayoutPoint::new(rect.origin.x, rect.origin.y),
                     LayoutSize::new(radius, radius),
                 ),
                 radius,
                 0.0,
             ),
             top_right: ClipCorner::uniform(
-                LayoutRect::from_origin_and_size(
-                    LayoutPoint::new(rect.max.x - radius, rect.min.y),
+                LayoutRect::new(
+                    LayoutPoint::new(rect.origin.x + rect.size.width - radius, rect.origin.y),
                     LayoutSize::new(radius, radius),
                 ),
                 radius,
                 0.0,
             ),
             bottom_left: ClipCorner::uniform(
-                LayoutRect::from_origin_and_size(
-                    LayoutPoint::new(rect.min.x, rect.max.y - radius),
+                LayoutRect::new(
+                    LayoutPoint::new(rect.origin.x, rect.origin.y + rect.size.height - radius),
                     LayoutSize::new(radius, radius),
                 ),
                 radius,
                 0.0,
             ),
             bottom_right: ClipCorner::uniform(
-                LayoutRect::from_origin_and_size(
+                LayoutRect::new(
                     LayoutPoint::new(
-                        rect.max.x - radius,
-                        rect.max.y - radius,
+                        rect.origin.x + rect.size.width - radius,
+                        rect.origin.y + rect.size.height - radius,
                     ),
                     LayoutSize::new(radius, radius),
                 ),
