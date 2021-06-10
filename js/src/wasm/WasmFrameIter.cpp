@@ -23,6 +23,7 @@
 #include "vm/JSContext.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
+#include "wasm/WasmTlsData.h"
 
 #include "jit/MacroAssembler-inl.h"
 
