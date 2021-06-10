@@ -12,6 +12,9 @@
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Translucent" />
 
+        <activity android:name=".autofill.AutofillSearchActivity"
+            android:exported="false" />
+
         <service
             android:name=".autofill.AutofillService"
             android:label="@string/app_name"

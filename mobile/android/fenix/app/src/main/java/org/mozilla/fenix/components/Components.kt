@@ -23,6 +23,7 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.autofill.AutofillConfirmActivity
+import org.mozilla.fenix.autofill.AutofillSearchActivity
 import org.mozilla.fenix.autofill.AutofillUnlockActivity
 import org.mozilla.fenix.components.metrics.AppStartupTelemetry
 import org.mozilla.fenix.ext.settings
@@ -165,6 +166,7 @@ class Components(private val context: Context) {
             publicSuffixList = publicSuffixList,
             unlockActivity = AutofillUnlockActivity::class.java,
             confirmActivity = AutofillConfirmActivity::class.java,
+            searchActivity = AutofillSearchActivity::class.java,
             applicationName = context.getString(R.string.app_name),
             httpClient = core.client
         )
