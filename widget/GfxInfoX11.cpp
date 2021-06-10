@@ -766,6 +766,8 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
                                "FEATURE_ROLLOUT_EARLY_BETA_SOFTWARE_WR", "");
 #endif
 
+#  if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || \
+      defined(__i386) || defined(__amd64__)
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::SmallAndMedium,
         BatteryStatus::All, DesktopEnvironment::All, WindowProtocol::All,
@@ -773,6 +775,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
         nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
         V(0, 0, 0, 0), "FEATURE_ROLLOUT_S_M_SCRN_SOFTWARE_WR", "");
+#endif
 
     ////////////////////////////////////
     // FEATURE_X11_EGL
