@@ -506,28 +506,27 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 
   bool exceptionHandlerIsSet = false;
   if (!CrashReporter::IsDummy()) {
+    CrashReporter::FileHandle crashTimeAnnotationFile =
+        CrashReporter::kInvalidFileHandle;
 #if defined(XP_WIN)
     if (aArgc < 1) {
       return NS_ERROR_FAILURE;
     }
+    // Pop the first argument, this is used by the WER runtime exception module
+    // which reads it from the command-line so we can just discard it here.
+    --aArgc;
+
     const char* const crashTimeAnnotationArg = aArgv[--aArgc];
-    uintptr_t crashTimeAnnotationFile =
-        static_cast<uintptr_t>(std::stoul(std::string(crashTimeAnnotationArg)));
+    crashTimeAnnotationFile = reinterpret_cast<CrashReporter::FileHandle>(
+        std::stoul(std::string(crashTimeAnnotationArg)));
 #endif
 
     if (aArgc < 1) return NS_ERROR_FAILURE;
     const char* const crashReporterArg = aArgv[--aArgc];
 
     if (IsCrashReporterEnabled(crashReporterArg)) {
-#if defined(XP_MACOSX)
-      exceptionHandlerIsSet =
-          CrashReporter::SetRemoteExceptionHandler(crashReporterArg);
-#elif defined(XP_WIN)
       exceptionHandlerIsSet = CrashReporter::SetRemoteExceptionHandler(
           crashReporterArg, crashTimeAnnotationFile);
-#else
-      exceptionHandlerIsSet = CrashReporter::SetRemoteExceptionHandler();
-#endif
 
       if (!exceptionHandlerIsSet) {
         // Bug 684322 will add better visibility into this condition
