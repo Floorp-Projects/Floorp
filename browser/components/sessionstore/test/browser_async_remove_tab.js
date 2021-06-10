@@ -97,8 +97,12 @@ add_task(async function save_worthy_tabs_remote_final() {
   // Remove the tab before the update arrives.
   let promise = promiseRemoveTabAndSessionState(tab);
 
-  // No tab state worth saving (that we know about yet).
-  ok(!isValueInClosedData(r), "closed tab not saved");
+  // With SHIP, we'll do the final tab state update sooner than we did before.
+  if (!Services.appinfo.sessionHistoryInParent) {
+    // No tab state worth saving (that we know about yet).
+    ok(!isValueInClosedData(r), "closed tab not saved");
+  }
+
   await promise;
 
   // Turns out there is a tab state worth saving.
@@ -118,8 +122,12 @@ add_task(async function save_worthy_tabs_nonremote_final() {
   // Remove the tab before the update arrives.
   let promise = promiseRemoveTabAndSessionState(tab);
 
-  // No tab state worth saving (that we know about yet).
-  ok(!isValueInClosedData(r), "closed tab not saved");
+  // With SHIP, we'll do the final tab state update sooner than we did before.
+  if (!Services.appinfo.sessionHistoryInParent) {
+    // No tab state worth saving (that we know about yet).
+    ok(!isValueInClosedData(r), "closed tab not saved");
+  }
+
   await promise;
 
   // Turns out there is a tab state worth saving.
@@ -141,8 +149,12 @@ add_task(async function dont_save_empty_tabs_final() {
   // Remove the tab before the update arrives.
   let promise = promiseRemoveTabAndSessionState(tab);
 
-  // Tab state deemed worth saving (yet).
-  ok(isValueInClosedData(r), "closed tab saved");
+  // With SHIP, we'll do the final tab state update sooner than we did before.
+  if (!Services.appinfo.sessionHistoryInParent) {
+    // Tab state deemed worth saving (yet).
+    ok(isValueInClosedData(r), "closed tab saved");
+  }
+
   await promise;
 
   // Turns out we don't want to save the tab state.
