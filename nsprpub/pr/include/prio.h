@@ -205,6 +205,7 @@ typedef enum PRSockOption
     PR_SockOpt_Broadcast,       /* enable broadcast */
     PR_SockOpt_Reuseport,       /* allow local address & port reuse on
                                  * platforms that support it */
+    PR_SockOpt_DontFrag,        /* Do not fragment flag */
     PR_SockOpt_Last
 } PRSockOption;
 
@@ -230,6 +231,7 @@ typedef struct PRSocketOptionData
         PRBool reuse_addr;          /* Allow local address reuse */
         PRBool reuse_port;          /* Allow local address & port reuse on
                                      * platforms that support it */
+        PRBool dont_fragment;       /* Do not fragment flag */
         PRBool keep_alive;          /* Keep connections alive */
         PRBool mcast_loopback;      /* IP multicast loopback */
         PRBool no_delay;            /* Don't delay send to coalesce packets */

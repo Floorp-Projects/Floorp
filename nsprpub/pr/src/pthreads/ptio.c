@@ -155,6 +155,15 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
 
 #include "primpl.h"
 
+#if defined(LINUX) || defined(ANDROID)
+#include <netinet/in.h>
+#endif
+
+#ifdef DARWIN
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#endif
+
 #ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>  /* TCP_NODELAY, TCP_MAXSEG */
 #endif
@@ -3146,6 +3155,25 @@ static PRStatus pt_GetSocketOption(PRFileDesc *fd, PRSocketOptionData *data)
                           || (sizeof(data->value.mcast_if.inet.ip) == length));
                 break;
             }
+            case PR_SockOpt_DontFrag:
+            {
+#if !defined(DARWIN) && !defined(LINUX) && !defined(ANDROID)
+                PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
+                rv = PR_FAILURE;
+#else
+                PRIntn value;
+                length = sizeof(value);
+                rv = getsockopt(
+                         fd->secret->md.osfd, level, name, (char*)&value,
+                         &length);
+#if defined(DARWIN)
+                data->value.dont_fragment = value;
+#else
+                data->value.dont_fragment = (value == IP_PMTUDISC_DO) ? 1 : 0;
+#endif
+#endif /* !(!defined(DARWIN) && !defined(LINUX) && !defined(ANDROID)) */
+                break;
+            }
             default:
                 PR_NOT_REACHED("Unknown socket option");
                 break;
@@ -3257,6 +3285,25 @@ static PRStatus pt_SetSocketOption(PRFileDesc *fd, const PRSocketOptionData *dat
                          fd->secret->md.osfd, level, name,
                          (char*)&data->value.mcast_if.inet.ip,
                          sizeof(data->value.mcast_if.inet.ip));
+                break;
+            }
+            case PR_SockOpt_DontFrag:
+            {
+#if !defined(DARWIN) && !defined(LINUX) && !defined(ANDROID)
+                PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
+                rv = PR_FAILURE;
+#else
+                PRIntn value;
+#if defined(LINUX) || defined(ANDROID)
+                value = (data->value.dont_fragment) ? IP_PMTUDISC_DO
+                                                    : IP_PMTUDISC_DONT;
+#elif defined(DARWIN)
+                value = data->value.dont_fragment;
+#endif
+                rv = setsockopt(
+                         fd->secret->md.osfd, level, name, (char*)&value,
+                         sizeof(value));
+#endif /* !defined(DARWIN) && !defined(LINUX) && !defined(ANDROID)) */
                 break;
             }
             default:
