@@ -325,6 +325,9 @@ void NativeLayerRootWayland::UpdateLayersOnMainThread() {
         wl_region_destroy(region);
         wl_surface_commit(layerSurface);
       }
+      if (mCallbackMultiplexHelper && mCallbackMultiplexHelper->IsActive()) {
+        layer->mNativeSurface->RequestFrameCallback(mCallbackMultiplexHelper);
+      }
       mSublayersOnMainThread.AppendElement(layer);
     }
   }
@@ -339,6 +342,25 @@ void NativeLayerRootWayland::UpdateLayersOnMainThread() {
     mGdkAfterPaintId =
         g_signal_connect_after(frame_clock, "after-paint",
                                G_CALLBACK(sAfterFrameClockAfterPaint), this);
+  }
+}
+
+void NativeLayerRootWayland::RequestFrameCallback(CallbackFunc aCallbackFunc,
+                                                  void* aCallbackData) {
+  MutexAutoLock lock(mMutex);
+
+  mCallbackMultiplexHelper =
+      new CallbackMultiplexHelper(aCallbackFunc, aCallbackData);
+
+  for (const RefPtr<NativeLayerWayland>& layer : mSublayersOnMainThread) {
+    layer->mNativeSurface->RequestFrameCallback(mCallbackMultiplexHelper);
+  }
+
+  wl_surface* wlSurface = moz_container_wayland_surface_lock(mContainer);
+  if (wlSurface) {
+    wl_surface_commit(wlSurface);
+    wl_display_flush(widget::WaylandDisplayGet()->GetDisplay());
+    moz_container_wayland_surface_unlock(mContainer, &wlSurface);
   }
 }
 

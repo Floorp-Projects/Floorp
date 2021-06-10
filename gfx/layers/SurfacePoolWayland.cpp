@@ -14,6 +14,37 @@ using gl::GLContextEGL;
 
 #define BACK_BUFFER_NUM 3
 
+static const struct wl_callback_listener sFrameListenerNativeSurfaceWayland = {
+    NativeSurfaceWayland::FrameCallbackHandler};
+
+CallbackMultiplexHelper::CallbackMultiplexHelper(CallbackFunc aCallbackFunc,
+                                                 void* aCallbackData)
+    : mCallbackFunc(aCallbackFunc), mCallbackData(aCallbackData) {}
+
+void CallbackMultiplexHelper::Callback(uint32_t aTime) {
+  if (!mActive) {
+    return;
+  }
+  mActive = false;
+
+  // This is likely the first of a batch of frame callbacks being processed and
+  // may trigger the setup of a successive one. In order to avoid complexity,
+  // defer calling the callback function until we had a chance to process
+  // all pending frame callbacks.
+
+  AddRef();
+  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<uint32_t>(
+      "layers::CallbackMultiplexHelper::RunCallback", this,
+      &CallbackMultiplexHelper::RunCallback, aTime);
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThreadQueue(
+      runnable.forget(), EventQueuePriority::Vsync));
+}
+
+void CallbackMultiplexHelper::RunCallback(uint32_t aTime) {
+  mCallbackFunc(mCallbackData, aTime);
+  Release();
+}
+
 RefPtr<NativeSurfaceWayland> NativeSurfaceWayland::Create(const IntSize& aSize,
                                                           GLContext* aGL) {
   if (aGL) {
@@ -41,7 +72,7 @@ RefPtr<NativeSurfaceWayland> NativeSurfaceWayland::Create(const IntSize& aSize,
 
 NativeSurfaceWayland::NativeSurfaceWayland(
     const RefPtr<nsWaylandDisplay>& aWaylandDisplay)
-    : mWaylandDisplay(aWaylandDisplay) {
+    : mMutex("NativeSurfaceWayland"), mWaylandDisplay(aWaylandDisplay) {
   wl_compositor* compositor = mWaylandDisplay->GetCompositor();
   mWlSurface = wl_compositor_create_surface(compositor);
 
@@ -58,6 +89,47 @@ NativeSurfaceWayland::~NativeSurfaceWayland() {
   g_clear_pointer(&mViewport, wp_viewport_destroy);
   g_clear_pointer(&mWlSubsurface, wl_subsurface_destroy);
   g_clear_pointer(&mWlSurface, wl_surface_destroy);
+}
+
+void NativeSurfaceWayland::RequestFrameCallback(
+    const RefPtr<CallbackMultiplexHelper>& aMultiplexHelper) {
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(aMultiplexHelper->IsActive());
+
+  // Avoid piling up old helpers if this surface does not receive callbacks
+  // for a longer time
+  mCallbackMultiplexHelpers.RemoveElementsBy(
+      [&](const auto& object) { return !object->IsActive(); });
+
+  mCallbackMultiplexHelpers.AppendElement(aMultiplexHelper);
+  if (!mCallbackRequested) {
+    wl_callback* callback = wl_surface_frame(mWlSurface);
+    wl_callback_add_listener(callback, &sFrameListenerNativeSurfaceWayland,
+                             this);
+    wl_surface_commit(mWlSurface);
+    mCallbackRequested = true;
+  }
+}
+
+void NativeSurfaceWayland::FrameCallbackHandler(wl_callback* aCallback,
+                                                uint32_t aTime) {
+  MutexAutoLock lock(mMutex);
+
+  wl_callback_destroy(aCallback);
+  mCallbackRequested = false;
+
+  for (const RefPtr<CallbackMultiplexHelper>& callbackMultiplexHelper :
+       mCallbackMultiplexHelpers) {
+    callbackMultiplexHelper->Callback(aTime);
+  }
+  mCallbackMultiplexHelpers.Clear();
+}
+
+void NativeSurfaceWayland::FrameCallbackHandler(void* aData,
+                                                wl_callback* aCallback,
+                                                uint32_t aTime) {
+  auto* surface = reinterpret_cast<NativeSurfaceWayland*>(aData);
+  surface->FrameCallbackHandler(aCallback, aTime);
 }
 
 NativeSurfaceWaylandEGL::NativeSurfaceWaylandEGL(
@@ -81,6 +153,8 @@ Maybe<GLuint> NativeSurfaceWaylandEGL::GetAsFramebuffer() {
 }
 
 void NativeSurfaceWaylandEGL::Commit(const IntRegion& aInvalidRegion) {
+  MutexAutoLock lock(mMutex);
+
   if (aInvalidRegion.IsEmpty()) {
     wl_surface_commit(mWlSurface);
     return;
@@ -100,12 +174,16 @@ void NativeSurfaceWaylandEGL::Commit(const IntRegion& aInvalidRegion) {
 }
 
 void NativeSurfaceWaylandEGL::NotifySurfaceReady() {
+  MutexAutoLock lock(mMutex);
+
   GLContextEGL* gl = GLContextEGL::Cast(mGL);
   gl->SetEGLSurfaceOverride(nullptr);
   gl->MakeCurrent();
 }
 
 void NativeSurfaceWaylandEGL::DestroyGLResources() {
+  MutexAutoLock lock(mMutex);
+
   if (mEGLSurface != EGL_NO_SURFACE) {
     GLContextEGL* egl = GLContextEGL::Cast(mGL);
     egl->mEgl->fDestroySurface(mEGLSurface);
@@ -126,6 +204,8 @@ RefPtr<DrawTarget> NativeSurfaceWaylandSHM::GetAsDrawTarget() {
 }
 
 void NativeSurfaceWaylandSHM::Commit(const IntRegion& aInvalidRegion) {
+  MutexAutoLock lock(mMutex);
+
   if (aInvalidRegion.IsEmpty()) {
     if (mCurrentBuffer) {
       ReturnBufferToPool(mCurrentBuffer);
@@ -167,6 +247,8 @@ RefPtr<WaylandShmBuffer> NativeSurfaceWaylandSHM::ObtainBufferFromPool() {
 
 void NativeSurfaceWaylandSHM::ReturnBufferToPool(
     const RefPtr<WaylandShmBuffer>& aBuffer) {
+  MutexAutoLock lock(mMutex);
+
   for (const RefPtr<WaylandShmBuffer>& buffer : mInUseBuffers) {
     if (buffer == aBuffer) {
       if (buffer->IsMatchingSize(LayoutDeviceIntSize::FromUnknownSize(mSize))) {

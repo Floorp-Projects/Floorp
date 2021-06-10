@@ -5592,16 +5592,14 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
     // Dummy call to a function in mozgtk to prevent the linker from removing
     // the dependency with --as-needed.
-    if (GdkIsX11Display()) {
-      XShmQueryExtension(DefaultXDisplay());
-    }
+    XShmQueryExtension(DefaultXDisplay());
   }
-#  ifdef MOZ_WAYLAND
-  else if (GdkIsWaylandDisplay()) {
+#endif
+#ifdef MOZ_WAYLAND
+  if (GdkIsWaylandDisplay()) {
     mSurfaceProvider.Initialize(this);
     WaylandStartVsync();
   }
-#  endif
 #endif
 
   // Set default application name when it's empty.
@@ -5841,17 +5839,29 @@ void nsWindow::PauseCompositor() {
 void nsWindow::WaylandStartVsync() {
 #ifdef MOZ_WAYLAND
   // only use for toplevel windows for now - see bug 1619246
-  if (!StaticPrefs::widget_wayland_vsync_enabled_AtStartup() ||
+  if (!GdkIsWaylandDisplay() ||
+      !StaticPrefs::widget_wayland_vsync_enabled_AtStartup() ||
       mWindowType != eWindowType_toplevel) {
     return;
   }
 
   if (!mWaylandVsyncSource) {
-    mWaylandVsyncSource = new mozilla::WaylandVsyncSource(mContainer);
+    mWaylandVsyncSource = new WaylandVsyncSource();
   }
+
   WaylandVsyncSource::WaylandDisplay& display =
       static_cast<WaylandVsyncSource::WaylandDisplay&>(
           mWaylandVsyncSource->GetGlobalDisplay());
+
+  if (mCompositorWidgetDelegate) {
+    if (RefPtr<layers::NativeLayerRoot> nativeLayerRoot =
+            mCompositorWidgetDelegate->AsGtkCompositorWidget()
+                ->GetNativeLayerRoot()) {
+      display.MaybeUpdateSource(nativeLayerRoot->AsNativeLayerRootWayland());
+    } else {
+      display.MaybeUpdateSource(mContainer);
+    }
+  }
   display.EnableMonitor();
 #endif
 }
@@ -5865,6 +5875,7 @@ void nsWindow::WaylandStopVsync() {
         static_cast<WaylandVsyncSource::WaylandDisplay&>(
             mWaylandVsyncSource->GetGlobalDisplay());
     display.DisableMonitor();
+    display.MaybeUpdateSource(nullptr);
   }
 #endif
 }
@@ -8170,8 +8181,10 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
     MOZ_ASSERT(mCompositorWidgetDelegate,
                "nsWindow::SetCompositorWidgetDelegate called with a "
                "non-PlatformCompositorWidgetDelegate");
+    WaylandStartVsync();
     MaybeResumeCompositor();
   } else {
+    WaylandStopVsync();
     mCompositorWidgetDelegate = nullptr;
   }
 }
