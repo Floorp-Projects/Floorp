@@ -32,18 +32,12 @@ void nsAccUtils::SetAccGroupAttrs(AccAttributes* aAttributes, int32_t aLevel,
   nsAutoString value;
 
   if (aLevel) {
-    value.AppendInt(aLevel);
-    aAttributes->SetAttribute(nsGkAtoms::level, value);
+    aAttributes->SetAttribute(nsGkAtoms::level, aLevel);
   }
 
   if (aSetSize && aPosInSet) {
-    value.Truncate();
-    value.AppendInt(aPosInSet);
-    aAttributes->SetAttribute(nsGkAtoms::posinset, value);
-
-    value.Truncate();
-    value.AppendInt(aSetSize);
-    aAttributes->SetAttribute(nsGkAtoms::setsize, value);
+    aAttributes->SetAttribute(nsGkAtoms::posinset, aPosInSet);
+    aAttributes->SetAttribute(nsGkAtoms::setsize, aSetSize);
   }
 }
 
@@ -142,7 +136,7 @@ void nsAccUtils::SetLiveContainerAttributes(AccAttributes* aAttributes,
     if (ancestor->IsElement() && ancestor->AsElement()->AttrValueIs(
                                      kNameSpaceID_None, nsGkAtoms::aria_atomic,
                                      nsGkAtoms::_true, eCaseMatters)) {
-      aAttributes->SetAttribute(nsGkAtoms::containerAtomic, u"true"_ns);
+      aAttributes->SetAttribute(nsGkAtoms::containerAtomic, true);
     }
 
     // container-busy attribute

@@ -19,43 +19,27 @@ StyleInfo::StyleInfo(dom::Element* aElement) : mElement(aElement) {
       nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
 }
 
-void StyleInfo::Display(nsAString& aValue) {
-  aValue.Truncate();
+already_AddRefed<nsAtom> StyleInfo::Display() {
   nsAutoCString value;
   mComputedStyle->GetComputedPropertyValue(eCSSProperty_display, value);
-  CopyUTF8toUTF16(value, aValue);
+  RefPtr<nsAtom> atomVal = NS_Atomize(value);
+  return atomVal.forget();
 }
 
-void StyleInfo::TextAlign(nsAString& aValue) {
-  aValue.Truncate();
+already_AddRefed<nsAtom> StyleInfo::TextAlign() {
   nsAutoCString value;
   mComputedStyle->GetComputedPropertyValue(eCSSProperty_text_align, value);
-  CopyUTF8toUTF16(value, aValue);
+  RefPtr<nsAtom> atomVal = NS_Atomize(value);
+  return atomVal.forget();
 }
 
-void StyleInfo::TextIndent(nsAString& aValue) {
-  aValue.Truncate();
-
-  const auto& textIndent = mComputedStyle->StyleText()->mTextIndent;
-  if (textIndent.ConvertsToLength()) {
-    aValue.AppendFloat(textIndent.ToLengthInCSSPixels());
-    aValue.AppendLiteral("px");
-    return;
-  }
-  if (textIndent.ConvertsToPercentage()) {
-    aValue.AppendFloat(textIndent.ToPercentage() * 100);
-    aValue.AppendLiteral("%");
-    return;
-  }
-  // FIXME: This doesn't handle calc in any meaningful way? Probably should just
-  // use the Servo serialization code...
-  aValue.AppendLiteral("0px");
+mozilla::LengthPercentage StyleInfo::TextIndent() {
+  return mComputedStyle->StyleText()->mTextIndent;
 }
 
-void StyleInfo::Margin(Side aSide, nsAString& aValue) {
+CSSCoord StyleInfo::Margin(Side aSide) {
   MOZ_ASSERT(mElement->GetPrimaryFrame(),
              " mElement->GetPrimaryFrame() needs to be valid pointer");
-  aValue.Truncate();
 
   nsIFrame* frame = mElement->GetPrimaryFrame();
 
@@ -63,13 +47,11 @@ void StyleInfo::Margin(Side aSide, nsAString& aValue) {
   // does, so that we don't hit precision errors in tests.
   auto& margin = frame->StyleMargin()->mMargin.Get(aSide);
   if (margin.ConvertsToLength()) {
-    aValue.AppendFloat(margin.AsLengthPercentage().ToLengthInCSSPixels());
-  } else {
-    nscoord coordVal = frame->GetUsedMargin().Side(aSide);
-    aValue.AppendFloat(CSSPixel::FromAppUnits(coordVal));
+    return margin.AsLengthPercentage().ToLengthInCSSPixels();
   }
 
-  aValue.AppendLiteral("px");
+  nscoord coordVal = frame->GetUsedMargin().Side(aSide);
+  return CSSPixel::FromAppUnits(coordVal);
 }
 
 void StyleInfo::FormatColor(const nscolor& aValue, nsAString& aFormattedValue) {
@@ -83,25 +65,26 @@ void StyleInfo::FormatColor(const nscolor& aValue, nsAString& aFormattedValue) {
   aFormattedValue.Append(')');
 }
 
-void StyleInfo::FormatTextDecorationStyle(uint8_t aValue,
-                                          nsAString& aFormattedValue) {
+already_AddRefed<nsAtom> StyleInfo::TextDecorationStyleToAtom(uint8_t aValue) {
   // TODO: When these are enum classes that rust also understands we should just
   // make an FFI call here.
   switch (aValue) {
     case NS_STYLE_TEXT_DECORATION_STYLE_NONE:
-      return aFormattedValue.AssignASCII("-moz-none");
+      return NS_Atomize("-moz-none");
     case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
-      return aFormattedValue.AssignASCII("solid");
+      return NS_Atomize("solid");
     case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
-      return aFormattedValue.AssignASCII("double");
+      return NS_Atomize("double");
     case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
-      return aFormattedValue.AssignASCII("dotted");
+      return NS_Atomize("dotted");
     case NS_STYLE_TEXT_DECORATION_STYLE_DASHED:
-      return aFormattedValue.AssignASCII("dashed");
+      return NS_Atomize("dashed");
     case NS_STYLE_TEXT_DECORATION_STYLE_WAVY:
-      return aFormattedValue.AssignASCII("wavy");
+      return NS_Atomize("wavy");
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown decoration style");
       break;
   }
+
+  return nullptr;
 }

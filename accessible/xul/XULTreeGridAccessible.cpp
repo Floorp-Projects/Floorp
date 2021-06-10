@@ -537,13 +537,12 @@ already_AddRefed<AccAttributes> XULTreeGridCellAccessible::NativeAttributes() {
   TableAccessible* table = Table();
   if (!table) return attributes.forget();
 
-  nsAutoString stringIdx;
-  stringIdx.AppendInt(table->CellIndexAt(mRow, ColIdx()));
-  attributes->SetAttribute(nsGkAtoms::tableCellIndex, stringIdx);
+  attributes->SetAttribute(nsGkAtoms::tableCellIndex,
+                           table->CellIndexAt(mRow, ColIdx()));
 
   // "cycles" attribute
   if (mColumn->Cycler()) {
-    attributes->SetAttribute(nsGkAtoms::cycles, u"true"_ns);
+    attributes->SetAttribute(nsGkAtoms::cycles, true);
   }
 
   return attributes.forget();

@@ -1411,15 +1411,13 @@ already_AddRefed<AccAttributes> HyperTextAccessible::NativeAttributes() {
   // instead.
   nsIFrame* frame = GetFrame();
   if (frame && frame->IsBlockFrame()) {
-    attributes->SetAttribute(u"formatting"_ns, u"block"_ns);
+    attributes->SetAttribute(u"formatting"_ns, nsGkAtoms::block);
   }
 
   if (FocusMgr()->IsFocused(this)) {
     int32_t lineNumber = CaretLineNumber();
     if (lineNumber >= 1) {
-      nsAutoString strLineNumber;
-      strLineNumber.AppendInt(lineNumber);
-      attributes->SetAttribute(nsGkAtoms::lineNumber, strLineNumber);
+      attributes->SetAttribute(nsGkAtoms::lineNumber, lineNumber);
     }
   }
 
@@ -2386,7 +2384,7 @@ void HyperTextAccessible::GetSpellTextAttr(nsINode* aNode, int32_t aNodeOffset,
 
       if (endOffset < *aEndOffset) *aEndOffset = endOffset;
 
-      aAttributes->SetAttribute(nsGkAtoms::invalid, u"spelling"_ns);
+      aAttributes->SetAttribute(nsGkAtoms::invalid, nsGkAtoms::spelling);
 
       return;
     }

@@ -83,9 +83,8 @@ already_AddRefed<AccAttributes> HTMLTableCellAccessible::NativeAttributes() {
   nsresult rv = GetCellIndexes(rowIdx, colIdx);
   if (NS_FAILED(rv)) return attributes.forget();
 
-  nsAutoString stringIdx;
-  stringIdx.AppendInt(table->CellIndexAt(rowIdx, colIdx));
-  attributes->SetAttribute(nsGkAtoms::tableCellIndex, stringIdx);
+  attributes->SetAttribute(nsGkAtoms::tableCellIndex,
+                           table->CellIndexAt(rowIdx, colIdx));
 
   // abbr attribute
 
@@ -399,7 +398,7 @@ already_AddRefed<AccAttributes> HTMLTableAccessible::NativeAttributes() {
   }
 
   if (IsProbablyLayoutTable()) {
-    attributes->SetAttribute(u"layout-guess"_ns, u"true"_ns);
+    attributes->SetAttribute(u"layout-guess"_ns, true);
   }
 
   return attributes.forget();

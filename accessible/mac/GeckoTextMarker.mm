@@ -403,17 +403,11 @@ NSString* GeckoTextMarkerRange::Text() const {
   return nsCocoaUtils::ToNSString(text);
 }
 
-static NSColor* ColorFromString(const nsString& aColorStr) {
-  uint32_t r, g, b;
-  if (sscanf(NS_ConvertUTF16toUTF8(aColorStr).get(), "rgb(%u, %u, %u)", &r, &g,
-             &b) > 0) {
-    return [NSColor colorWithCalibratedRed:(CGFloat)r / 0xff
-                                     green:(CGFloat)g / 0xff
-                                      blue:(CGFloat)b / 0xff
-                                     alpha:1.0];
-  }
-
-  return nil;
+static NSColor* ColorFromColor(const Color& aColor) {
+  return [NSColor colorWithCalibratedRed:NS_GET_R(aColor.mValue) / 255.0
+                                   green:NS_GET_G(aColor.mValue) / 255.0
+                                    blue:NS_GET_B(aColor.mValue) / 255.0
+                                   alpha:1.0];
 }
 
 static NSDictionary* StringAttributesFromAttributes(
@@ -424,48 +418,41 @@ static NSDictionary* StringAttributesFromAttributes(
   [attrDict setObject:fontAttrDict forKey:@"AXFont"];
   for (auto iter : *aAttributes) {
     if (iter.Name() == nsGkAtoms::backgroundColor) {
-      nsAutoString value;
-      iter.ValueAsString(value);
-      if (NSColor* color = ColorFromString(value)) {
+      if (Maybe<Color> value = iter.Value<Color>()) {
+        NSColor* color = ColorFromColor(*value);
         [attrDict setObject:(__bridge id)color.CGColor
                      forKey:@"AXBackgroundColor"];
       }
     } else if (iter.Name() == nsGkAtoms::color) {
-      nsAutoString value;
-      iter.ValueAsString(value);
-      if (NSColor* color = ColorFromString(value)) {
+      if (Maybe<Color> value = iter.Value<Color>()) {
+        NSColor* color = ColorFromColor(*value);
         [attrDict setObject:(__bridge id)color.CGColor
                      forKey:@"AXForegroundColor"];
       }
     } else if (iter.Name() == nsGkAtoms::font_size) {
-      float fontPointSize = 0;
-      nsAutoString value;
-      iter.ValueAsString(value);
-      if (sscanf(NS_ConvertUTF16toUTF8(value).get(), "%fpt", &fontPointSize) >
-          0) {
-        int32_t fontPixelSize = static_cast<int32_t>(fontPointSize * 4 / 3);
+      if (Maybe<FontSize> pointSize = iter.Value<FontSize>()) {
+        int32_t fontPixelSize = static_cast<int32_t>(pointSize->mValue * 4 / 3);
         [fontAttrDict setObject:@(fontPixelSize) forKey:@"AXFontSize"];
       }
     } else if (iter.Name() == nsGkAtoms::font_family) {
-      nsAutoString value;
-      iter.ValueAsString(value);
-      [fontAttrDict setObject:nsCocoaUtils::ToNSString(value)
+      nsAutoString fontFamily;
+      iter.ValueAsString(fontFamily);
+      [fontAttrDict setObject:nsCocoaUtils::ToNSString(fontFamily)
                        forKey:@"AXFontFamily"];
     } else if (iter.Name() == nsGkAtoms::textUnderlineColor) {
       [attrDict setObject:@1 forKey:@"AXUnderline"];
-      nsAutoString value;
-      iter.ValueAsString(value);
-      if (NSColor* color = ColorFromString(value)) {
+      if (Maybe<Color> value = iter.Value<Color>()) {
+        NSColor* color = ColorFromColor(*value);
         [attrDict setObject:(__bridge id)color.CGColor
                      forKey:@"AXUnderlineColor"];
       }
     } else if (iter.Name() == nsGkAtoms::invalid) {
       // XXX: There is currently no attribute for grammar
-      nsAutoString value;
-      iter.ValueAsString(value);
-      if (value.EqualsLiteral("spelling")) {
-        [attrDict setObject:@YES
-                     forKey:NSAccessibilityMarkedMisspelledTextAttribute];
+      if (Maybe<nsAtom*> value = iter.Value<nsAtom*>()) {
+        if (*value == nsGkAtoms::spelling) {
+          [attrDict setObject:@YES
+                       forKey:NSAccessibilityMarkedMisspelledTextAttribute];
+        }
       }
     } else {
       nsAutoString valueStr;
