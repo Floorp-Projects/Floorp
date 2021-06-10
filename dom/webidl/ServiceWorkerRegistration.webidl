@@ -16,6 +16,9 @@ interface ServiceWorkerRegistration : EventTarget {
   readonly attribute ServiceWorker? waiting;
   readonly attribute ServiceWorker? active;
 
+  [Pref="dom.serviceWorkers.navigationPreload.enabled", SameObject]
+  readonly attribute NavigationPreloadManager navigationPreload;
+
   readonly attribute USVString scope;
   [Throws]
   readonly attribute ServiceWorkerUpdateViaCache updateViaCache;
