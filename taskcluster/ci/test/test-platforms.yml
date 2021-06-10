@@ -148,6 +148,16 @@ linux1804-64-ccov/opt:
         - ccov-code-coverage-tests
         - mochitest-webgpu
 
+linux1804-64-ccov-qr/opt:
+    build-platform: linux64-ccov/opt
+    test-sets:
+        - linux1804-ccov-qr-tests
+
+linux1804-64-devedition-qr/opt:
+    build-platform: linux64-devedition/opt
+    test-sets:
+        - linux1804-devedition-qr-tests
+
 ##
 # Windows platforms (matching /windows.*/)
 
