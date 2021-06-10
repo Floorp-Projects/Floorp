@@ -363,7 +363,9 @@ const GeckoViewAutocomplete = {
   fetchAddresses() {
     debug`fetchAddresses`;
 
-    return Promise.resolve(null);
+    return EventDispatcher.instance.sendRequestForResult({
+      type: "GeckoView:Autocomplete:Fetch:Address",
+    });
   },
 
   /**
@@ -389,6 +391,11 @@ const GeckoViewAutocomplete = {
    */
   onAddressSave(aAddress) {
     debug`onLoginSave ${aAddress}`;
+
+    EventDispatcher.instance.sendRequest({
+      type: "GeckoView:Autocomplete:Save:Address",
+      address: aAddress,
+    });
   },
 
   /**
@@ -518,7 +525,33 @@ const GeckoViewAutocomplete = {
   onAddressSelect(aBrowser, aOptions) {
     debug`onAddressSelect ${aOptions}`;
 
-    return Promise.resolve(null);
+    return new Promise((resolve, reject) => {
+      if (!aBrowser || !aOptions) {
+        debug`onAddressSelect Rejecting - no browser or options provided`;
+        reject();
+        return;
+      }
+
+      const prompt = new GeckoViewPrompter(aBrowser.ownerGlobal);
+      prompt.asyncShowPrompt(
+        {
+          type: "Autocomplete:Select:Address",
+          options: aOptions,
+        },
+        result => {
+          if (!result || !result.selection) {
+            reject();
+            return;
+          }
+
+          const option = new SelectOption({
+            value: Address.parse(result.selection.value),
+            hint: result.selection.hint,
+          });
+          resolve(option);
+        }
+      );
+    });
   },
 
   async delegateSelection({
