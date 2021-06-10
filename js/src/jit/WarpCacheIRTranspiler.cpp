@@ -508,7 +508,7 @@ bool WarpCacheIRTranspiler::emitProxySet(ObjOperandId objId, uint32_t idOffset,
   jsid id = idStubField(idOffset);
   MDefinition* rhs = getOperand(rhsId);
 
-  auto* ins = MProxySet::New(alloc(), obj, id, rhs, strict);
+  auto* ins = MProxySet::New(alloc(), obj, rhs, id, strict);
   addEffectful(ins);
 
   return resumeAfter(ins);
@@ -663,7 +663,7 @@ bool WarpCacheIRTranspiler::emitMegamorphicStoreSlot(ObjOperandId objId,
   PropertyName* name = stringStubField(nameOffset)->asAtom().asPropertyName();
   MDefinition* rhs = getOperand(rhsId);
 
-  auto* ins = MMegamorphicStoreSlot::New(alloc(), obj, name, rhs);
+  auto* ins = MMegamorphicStoreSlot::New(alloc(), obj, rhs, name);
   addEffectful(ins);
 
   return resumeAfter(ins);
@@ -3577,7 +3577,7 @@ bool WarpCacheIRTranspiler::emitNewArrayFromLengthResult(
     }
   }
 
-  auto* obj = MNewArrayDynamicLength::New(alloc(), templateObj, heap, length);
+  auto* obj = MNewArrayDynamicLength::New(alloc(), length, templateObj, heap);
   addEffectful(obj);
   pushResult(obj);
   return resumeAfter(obj);
@@ -3604,7 +3604,7 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromLengthResult(
   }
 
   auto* obj =
-      MNewTypedArrayDynamicLength::New(alloc(), templateObj, heap, length);
+      MNewTypedArrayDynamicLength::New(alloc(), length, templateObj, heap);
   addEffectful(obj);
   pushResult(obj);
   return resumeAfter(obj);
@@ -3621,8 +3621,8 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromArrayBufferResult(
   // TODO: support pre-tenuring.
   gc::InitialHeap heap = gc::DefaultHeap;
 
-  auto* obj = MNewTypedArrayFromArrayBuffer::New(alloc(), templateObj, heap,
-                                                 buffer, byteOffset, length);
+  auto* obj = MNewTypedArrayFromArrayBuffer::New(alloc(), buffer, byteOffset,
+                                                 length, templateObj, heap);
   addEffectful(obj);
 
   pushResult(obj);
@@ -3637,7 +3637,7 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromArrayResult(
   // TODO: support pre-tenuring.
   gc::InitialHeap heap = gc::DefaultHeap;
 
-  auto* obj = MNewTypedArrayFromArray::New(alloc(), templateObj, heap, array);
+  auto* obj = MNewTypedArrayFromArray::New(alloc(), array, templateObj, heap);
   addEffectful(obj);
 
   pushResult(obj);
