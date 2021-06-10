@@ -76,6 +76,8 @@ class NativeLayerRootCA : public NativeLayerRoot {
  public:
   static already_AddRefed<NativeLayerRootCA> CreateForCALayer(CALayer* aLayer);
 
+  virtual NativeLayerRootCA* AsNativeLayerRootCA() override { return this; }
+
   // Can be called on any thread at any point. Returns whether comitting was
   // successful. Will return false if called off the main thread while
   // off-main-thread commits are suspended.
