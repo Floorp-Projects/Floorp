@@ -45,11 +45,38 @@ const TESTDATA = {
 };
 
 add_task(async function() {
-  const { target, front } = await openTabAndSetupStorage(
+  const { commands } = await openTabAndSetupStorage(
     MAIN_DOMAIN + "storage-cookies-same-name.html"
   );
 
-  const data = await front.listStores();
+  const { resourceCommand } = commands;
+  const { TYPES } = resourceCommand;
+  const data = {};
+  await resourceCommand.watchResources(
+    [TYPES.COOKIE, TYPES.LOCAL_STORAGE, TYPES.SESSION_STORAGE],
+    {
+      async onAvailable(resources) {
+        for (const resource of resources) {
+          const { resourceType } = resource;
+          if (!data[resourceType]) {
+            data[resourceType] = { hosts: {}, dataByHost: {} };
+          }
+
+          for (const host in resource.hosts) {
+            if (!data[resourceType].hosts[host]) {
+              data[resourceType].hosts[host] = [];
+            }
+            // For indexed DB, we have some values, the database names. Other are empty arrays.
+            const hostValues = resource.hosts[host];
+            data[resourceType].hosts[host].push(...hostValues);
+            data[resourceType].dataByHost[
+              host
+            ] = await resource.getStoreObjects(host);
+          }
+        }
+      },
+    }
+  );
 
   ok(data.cookies, "Cookies storage actor is present");
 
@@ -58,53 +85,49 @@ add_task(async function() {
 
   // Forcing GC/CC to get rid of docshells and windows created by this test.
   forceCollections();
-  await target.destroy();
-  forceCollections();
-  DevToolsServer.destroy();
+  await commands.destroy();
   forceCollections();
 });
 
-function testCookies(cookiesActor) {
-  const numHosts = Object.keys(cookiesActor.hosts).length;
+function testCookies({ hosts, dataByHost }) {
+  const numHosts = Object.keys(hosts).length;
   is(numHosts, 1, "Correct number of host entries for cookies");
-  return testCookiesObjects(0, cookiesActor.hosts, cookiesActor);
+  return testCookiesObjects(0, hosts, dataByHost);
 }
 
-var testCookiesObjects = async function(index, hosts, cookiesActor) {
+var testCookiesObjects = async function(index, hosts, dataByHost) {
   const host = Object.keys(hosts)[index];
-  const matchItems = data => {
-    is(
-      data.total,
-      TESTDATA[host].length,
-      "Number of cookies in host " + host + " matches"
-    );
-    for (const item of data.data) {
-      let found = false;
-      for (const toMatch of TESTDATA[host]) {
-        if (
-          item.name === toMatch.name &&
-          item.host === toMatch.host &&
-          item.path === toMatch.path
-        ) {
-          found = true;
-          ok(true, "Found cookie " + item.name + " in response");
-          is(item.value.str, toMatch.value, "The value matches.");
-          is(item.expires, toMatch.expires, "The expiry time matches.");
-          is(item.path, toMatch.path, "The path matches.");
-          is(item.host, toMatch.host, "The host matches.");
-          is(item.isSecure, toMatch.isSecure, "The isSecure value matches.");
-          is(item.hostOnly, toMatch.hostOnly, "The hostOnly value matches.");
-          break;
-        }
+  const data = dataByHost[host];
+  is(
+    data.total,
+    TESTDATA[host].length,
+    "Number of cookies in host " + host + " matches"
+  );
+  for (const item of data.data) {
+    let found = false;
+    for (const toMatch of TESTDATA[host]) {
+      if (
+        item.name === toMatch.name &&
+        item.host === toMatch.host &&
+        item.path === toMatch.path
+      ) {
+        found = true;
+        ok(true, "Found cookie " + item.name + " in response");
+        is(item.value.str, toMatch.value, "The value matches.");
+        is(item.expires, toMatch.expires, "The expiry time matches.");
+        is(item.path, toMatch.path, "The path matches.");
+        is(item.host, toMatch.host, "The host matches.");
+        is(item.isSecure, toMatch.isSecure, "The isSecure value matches.");
+        is(item.hostOnly, toMatch.hostOnly, "The hostOnly value matches.");
+        break;
       }
-      ok(found, "cookie " + item.name + " should exist in response");
     }
-  };
+    ok(found, "cookie " + item.name + " should exist in response");
+  }
 
   ok(!!TESTDATA[host], "Host is present in the list : " + host);
-  matchItems(await cookiesActor.getStoreObjects(host));
   if (index == Object.keys(hosts).length - 1) {
     return;
   }
-  await testCookiesObjects(++index, hosts, cookiesActor);
+  await testCookiesObjects(++index, hosts, dataByHost);
 };
