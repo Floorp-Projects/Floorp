@@ -403,7 +403,14 @@ SSL_IMPORT SECStatus SSL_SetNextProtoCallback(PRFileDesc *fd,
  * preferred. The other protocols should be in preference order.
  *
  * The supported protocols are specified in |data| in wire-format (8-bit
- * length-prefixed). For example: "\010http/1.1\006spdy/2". */
+ * length-prefixed). For example: "\010http/1.1\006spdy/2".
+ *
+ * An empty value (i.e., where |length| is 0 and |data| is any value,
+ * including NULL) forcibly disables ALPN.  In this mode, the server will
+ * reject any ClientHello that includes the ALPN extension.
+ *
+ * Calling this function overrides the callback previously set by
+ * SSL_SetNextProtoCallback. */
 SSL_IMPORT SECStatus SSL_SetNextProtoNego(PRFileDesc *fd,
                                           const unsigned char *data,
                                           unsigned int length);

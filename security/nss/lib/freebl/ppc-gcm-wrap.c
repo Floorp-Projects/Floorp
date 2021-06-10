@@ -155,7 +155,7 @@ ppc_aes_gcmInitCounter(ppc_AES_GCMContext *gcm,
     /* Promote the counter by 1 */
     gcm->CTR[14] += !(++gcm->CTR[15]);
     gcm->CTR[13] += !(gcm->CTR[15]) && !(gcm->CTR[14]);
-    gcm->CTR[12] += !(gcm->CTR[15]) && !(gcm->CTR[13]) && !(gcm->CTR[12]);
+    gcm->CTR[12] += !(gcm->CTR[15]) && !(gcm->CTR[14]) && !(gcm->CTR[13]);
 
     /* Now hash AAD - it would actually make sense to seperate the context
      * creation from the AAD, because that would allow to reuse the H, which

@@ -692,7 +692,6 @@ addi	TOCP,TOCP,(.TOC.-ppc_aes_gcmCRYPT)@l
 
     mtctr        9
 
-    li           10, 0
     li           25, 0x10
     li           26, 0x20
     li           27, 0x30
@@ -703,6 +702,7 @@ addi	TOCP,TOCP,(.TOC.-ppc_aes_gcmCRYPT)@l
 
 .align 5
 .L8x_loop:
+    li           10, 0
     VEC_LOAD_INC K, KS, 10
 
     vadduwm      CTR1, CTR, I1
