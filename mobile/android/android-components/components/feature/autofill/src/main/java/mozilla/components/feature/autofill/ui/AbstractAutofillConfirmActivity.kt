@@ -22,6 +22,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.R
+import mozilla.components.feature.autofill.facts.emitAutofillConfirmationFact
 import mozilla.components.feature.autofill.handler.EXTRA_LOGIN_ID
 import mozilla.components.feature.autofill.handler.FillRequestHandler
 import mozilla.components.feature.autofill.structure.toRawStructure
@@ -73,6 +74,8 @@ abstract class AbstractAutofillConfirmActivity : FragmentActivity() {
             runBlocking { putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, dataset?.await()) }
         }
 
+        emitAutofillConfirmationFact(confirmed = true)
+
         setResult(RESULT_OK, replyIntent)
         finish()
     }
@@ -82,6 +85,8 @@ abstract class AbstractAutofillConfirmActivity : FragmentActivity() {
      */
     internal fun cancel() {
         dataset?.cancel()
+
+        emitAutofillConfirmationFact(confirmed = false)
 
         setResult(RESULT_CANCELED)
         finish()

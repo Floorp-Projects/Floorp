@@ -26,6 +26,8 @@ import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.Login
 import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.R
+import mozilla.components.feature.autofill.facts.emitAutofillSearchDisplayedFact
+import mozilla.components.feature.autofill.facts.emitAutofillSearchSelectedFact
 import mozilla.components.feature.autofill.response.dataset.LoginDatasetBuilder
 import mozilla.components.feature.autofill.structure.ParsedStructure
 import mozilla.components.feature.autofill.structure.parseStructure
@@ -48,6 +50,10 @@ abstract class AbstractAutofillSearchActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (savedInstanceState == null) {
+            emitAutofillSearchDisplayedFact()
+        }
 
         val structure: AssistStructure? =
             intent.getParcelableExtra(AutofillManager.EXTRA_ASSIST_STRUCTURE)
@@ -90,6 +96,8 @@ abstract class AbstractAutofillSearchActivity : FragmentActivity() {
 
         val replyIntent = Intent()
         replyIntent.putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, dataset)
+
+        emitAutofillSearchSelectedFact()
 
         setResult(RESULT_OK, replyIntent)
         finish()

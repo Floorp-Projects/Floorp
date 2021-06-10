@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.feature.autofill.AutofillConfiguration
+import mozilla.components.feature.autofill.facts.AutofillFacts
 import mozilla.components.feature.autofill.response.fill.FillResponseBuilder
 import mozilla.components.feature.autofill.response.fill.LoginFillResponseBuilder
 import mozilla.components.feature.autofill.test.createMockStructure
@@ -16,6 +17,9 @@ import mozilla.components.feature.autofill.ui.AbstractAutofillSearchActivity
 import mozilla.components.feature.autofill.ui.AbstractAutofillUnlockActivity
 import mozilla.components.feature.autofill.verify.CredentialAccessVerifier
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -34,30 +38,54 @@ import java.util.UUID
 internal class FillRequestHandlerTest {
     @Test
     fun `App - Twitter - With credentials`() {
-        val credentials = generateRandomLoginFor("twitter.com")
-        createTestCase<LoginFillResponseBuilder>(
-            filename = "fixtures/app_twitter.xml",
-            packageName = "com.twitter.android",
-            logins = mapOf(credentials),
-            assertThat = { builder ->
-                assertNotNull(builder!!)
-                assertEquals(1, builder.logins.size)
-                assertEquals(credentials.second, builder.logins[0])
-                assertEquals(false, builder.needsConfirmation)
+        CollectionProcessor.withFactCollection { facts ->
+            val credentials = generateRandomLoginFor("twitter.com")
+
+            createTestCase<LoginFillResponseBuilder>(
+                filename = "fixtures/app_twitter.xml",
+                packageName = "com.twitter.android",
+                logins = mapOf(credentials),
+                assertThat = { builder ->
+                    assertNotNull(builder!!)
+                    assertEquals(1, builder.logins.size)
+                    assertEquals(credentials.second, builder.logins[0])
+                    assertEquals(false, builder.needsConfirmation)
+                }
+            )
+
+            assertEquals(1, facts.size)
+            facts[0].apply {
+                assertEquals(Component.FEATURE_AUTOFILL, component)
+                assertEquals(Action.SYSTEM, action)
+                assertEquals(AutofillFacts.Items.AUTOFILL_REQUEST, item)
+                assertEquals(2, metadata?.size)
+                assertEquals(true, metadata?.get(AutofillFacts.Metadata.HAS_MATCHING_LOGINS))
+                assertEquals(false, metadata?.get(AutofillFacts.Metadata.NEEDS_CONFIRMATION))
             }
-        )
+        }
     }
 
     @Test
     fun `App - Twitter - Without credentials`() {
-        createTestCase<LoginFillResponseBuilder>(
-            filename = "fixtures/app_twitter.xml",
-            packageName = "com.twitter.android",
-            logins = emptyMap(),
-            assertThat = { builder ->
-                assertNull(builder)
+        CollectionProcessor.withFactCollection { facts ->
+            createTestCase<LoginFillResponseBuilder>(
+                filename = "fixtures/app_twitter.xml",
+                packageName = "com.twitter.android",
+                logins = emptyMap(),
+                assertThat = { builder ->
+                    assertNull(builder)
+                }
+            )
+
+            assertEquals(1, facts.size)
+            facts[0].apply {
+                assertEquals(Component.FEATURE_AUTOFILL, component)
+                assertEquals(Action.SYSTEM, action)
+                assertEquals(AutofillFacts.Items.AUTOFILL_REQUEST, item)
+                assertEquals(1, metadata?.size)
+                assertEquals(false, metadata?.get(AutofillFacts.Metadata.HAS_MATCHING_LOGINS))
             }
-        )
+        }
     }
 
     @Test

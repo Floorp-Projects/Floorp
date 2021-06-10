@@ -12,6 +12,7 @@ import android.service.autofill.FillRequest
 import android.service.autofill.FillResponse
 import androidx.annotation.RequiresApi
 import mozilla.components.feature.autofill.AutofillConfiguration
+import mozilla.components.feature.autofill.facts.emitAutofillRequestFact
 import mozilla.components.feature.autofill.response.dataset.DatasetBuilder
 import mozilla.components.feature.autofill.response.dataset.LoginDatasetBuilder
 import mozilla.components.feature.autofill.response.fill.AuthFillResponseBuilder
@@ -60,12 +61,14 @@ internal class FillRequestHandler(
             .take(MAX_LOGINS)
 
         if (logins.isEmpty()) {
+            emitAutofillRequestFact(hasLogins = false)
             return null
         }
 
         return if (!configuration.lock.keepUnlocked() && !forceUnlock) {
             AuthFillResponseBuilder(parsedStructure)
         } else {
+            emitAutofillRequestFact(hasLogins = true, needsConfirmation)
             LoginFillResponseBuilder(parsedStructure, logins, needsConfirmation)
         }
     }

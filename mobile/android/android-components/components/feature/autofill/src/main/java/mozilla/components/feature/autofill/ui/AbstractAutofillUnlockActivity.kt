@@ -20,6 +20,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.authenticator.Authenticator
 import mozilla.components.feature.autofill.authenticator.createAuthenticator
+import mozilla.components.feature.autofill.facts.emitAutofillLock
 import mozilla.components.feature.autofill.handler.FillRequestHandler
 import mozilla.components.feature.autofill.structure.toRawStructure
 
@@ -68,6 +69,9 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
     internal inner class PromptCallback : Authenticator.Callback {
         override fun onAuthenticationError() {
             fillResponse?.cancel()
+
+            emitAutofillLock(unlocked = false)
+
             setResult(RESULT_CANCELED)
             finish()
         }
@@ -80,6 +84,8 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
                 // the user has authenticated.
                 runBlocking { putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, fillResponse?.await()) }
             }
+
+            emitAutofillLock(unlocked = true)
 
             setResult(RESULT_OK, replyIntent)
             finish()

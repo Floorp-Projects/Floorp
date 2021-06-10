@@ -47,6 +47,11 @@ enum class Action {
     RESUME,
 
     /**
+     * The user has confirmed something.
+     */
+    CONFIRM,
+
+    /**
      * The user has cancelled something.
      */
     CANCEL,
@@ -74,4 +79,19 @@ enum class Action {
      * the app visually inside profiles.
      */
     IMPLEMENTATION_DETAIL,
+
+    /**
+     * An action triggered by the Android system.
+     */
+    SYSTEM,
+
+    /**
+     * Something is getting displayed.
+     */
+    DISPLAY,
+
+    /**
+     * The user selected something from a list of options.
+     */
+    SELECT
 }
