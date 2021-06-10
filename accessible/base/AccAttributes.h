@@ -6,15 +6,41 @@
 #ifndef AccAttributes_h_
 #define AccAttributes_h_
 
+#include "mozilla/ServoStyleConsts.h"
+#include "mozilla/Variant.h"
 #include "nsTHashMap.h"
 #include "nsAtom.h"
+#include "nsStringFwd.h"
+
+class nsVariant;
+
+namespace IPC {
+template <typename T>
+struct ParamTraits;
+}  // namespace IPC
 
 namespace mozilla {
 
+namespace dom {
+class Element;
+}
+
 namespace a11y {
 
+struct FontSize {
+  int32_t mValue;
+};
+
+struct Color {
+  nscolor mValue;
+};
+
 class AccAttributes {
-  using AtomVariantMap = nsTHashMap<nsRefPtrHashKey<nsAtom>, nsString>;
+  friend struct IPC::ParamTraits<AccAttributes>;
+
+  using AttrValueType = Variant<nsString, bool, float, int32_t, RefPtr<nsAtom>,
+                                CSSCoord, FontSize, Color>;
+  using AtomVariantMap = nsTHashMap<nsRefPtrHashKey<nsAtom>, AttrValueType>;
 
  protected:
   ~AccAttributes() = default;
@@ -28,12 +54,47 @@ class AccAttributes {
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::a11y::AccAttributes)
 
-  // Set values using atom keys
-  void SetAttribute(nsAtom* aAttrName, const nsAString& aAttrValue);
-  void SetAttribute(nsAtom* aAttrName, const nsAtom* aAttrValue);
+  template <typename T>
+  void SetAttribute(nsAtom* aAttrName, const T& aAttrValue) {
+    if constexpr (std::is_base_of_v<nsAtom, std::remove_pointer_t<T>>) {
+      mData.InsertOrUpdate(aAttrName, AsVariant(RefPtr<nsAtom>(aAttrValue)));
+    } else if constexpr (std::is_base_of_v<nsAString, T> ||
+                         std::is_base_of_v<nsLiteralString, T>) {
+      mData.InsertOrUpdate(aAttrName, AsVariant(nsString(aAttrValue)));
+    } else {
+      mData.InsertOrUpdate(aAttrName, AsVariant(aAttrValue));
+    }
+  }
 
-  // Set values using string keys
-  void SetAttribute(const nsAString& aAttrName, const nsAString& aAttrValue);
+  // XXX: This will be removed in a later patch in the stack. This is
+  // just a stop-gap before we transtion to atom-only keys.
+  template <typename T>
+  void SetAttribute(const nsAString& aAttrName, const T& aAttrValue) {
+    RefPtr<nsAtom> attrAtom = NS_Atomize(aAttrName);
+    if constexpr (std::is_base_of_v<nsAtom, std::remove_pointer_t<T>>) {
+      mData.InsertOrUpdate(attrAtom, AsVariant(RefPtr<nsAtom>(aAttrValue)));
+    } else if constexpr (std::is_base_of_v<detail::nsStringRepr, T>) {
+      mData.InsertOrUpdate(attrAtom, AsVariant(nsString(aAttrValue)));
+    } else {
+      mData.InsertOrUpdate(attrAtom, AsVariant(aAttrValue));
+    }
+  }
+
+  template <typename T>
+  Maybe<T> GetAttribute(nsAtom* aAttrName) {
+    if (auto value = mData.Lookup(aAttrName)) {
+      if constexpr (std::is_base_of_v<nsAtom, std::remove_pointer_t<T>>) {
+        if (value->is<RefPtr<nsAtom>>()) {
+          return Some(value->as<RefPtr<nsAtom>>().get());
+        }
+      } else {
+        if (value->is<T>()) {
+          return Some(value->as<T>());
+        }
+      }
+    }
+    return Nothing();
+  }
 
   // Get stringified value
   bool GetAttribute(nsAtom* aAttrName, nsAString& aAttrValue);
@@ -45,20 +106,34 @@ class AccAttributes {
   // An entry class for our iterator.
   class Entry {
    public:
-    Entry(nsAtom* aAttrName, const nsString* aAttrValue)
+    Entry(nsAtom* aAttrName, const AttrValueType* aAttrValue)
         : mName(aAttrName), mValue(aAttrValue) {}
 
     nsAtom* Name() { return mName; }
 
+    template <typename T>
+    Maybe<T> Value() {
+      if constexpr (std::is_base_of_v<nsAtom, std::remove_pointer_t<T>>) {
+        if (mValue->is<RefPtr<nsAtom>>()) {
+          return Some(mValue->as<RefPtr<nsAtom>>().get());
+        }
+      } else {
+        if (mValue->is<T>()) {
+          return Some(mValue->as<T>());
+        }
+      }
+      return Nothing();
+    }
+
     void NameAsString(nsAString& aName) { mName->ToString(aName); }
 
     void ValueAsString(nsAString& aValueString) {
-      aValueString.Assign(*mValue);
+      StringFromValueAndName(mName, *mValue, aValueString);
     }
 
    private:
     nsAtom* mName;
-    const nsString* mValue;
+    const AttrValueType* mValue;
   };
 
   class Iterator {
@@ -95,6 +170,10 @@ class AccAttributes {
   Iterator end() { return Iterator(mData.end()); }
 
  private:
+  static void StringFromValueAndName(nsAtom* aAttrName,
+                                     const AttrValueType& aValue,
+                                     nsAString& aValueString);
+
   AtomVariantMap mData;
 };
 
