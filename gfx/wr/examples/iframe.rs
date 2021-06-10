@@ -40,7 +40,7 @@ impl Example for App {
         let mut space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         sub_builder.push_simple_stacking_context(
-            sub_bounds.origin,
+            sub_bounds.min,
             space_and_clip.spatial_id,
             PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );
@@ -57,14 +57,14 @@ impl Example for App {
         txn.set_display_list(
             Epoch(0),
             None,
-            sub_bounds.size,
+            sub_bounds.size(),
             sub_builder.finalize(),
             true,
         );
         api.send_transaction(document_id, txn);
 
         space_and_clip.spatial_id = builder.push_reference_frame(
-            sub_bounds.origin,
+            sub_bounds.min,
             space_and_clip.spatial_id,
             TransformStyle::Flat,
             PropertyBinding::Binding(PropertyBindingKey::new(42), LayoutTransform::identity()),
@@ -76,7 +76,7 @@ impl Example for App {
 
         // And this is for the root pipeline
         builder.push_simple_stacking_context(
-            sub_bounds.origin,
+            sub_bounds.min,
             space_and_clip.spatial_id,
             PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );

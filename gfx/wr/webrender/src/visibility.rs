@@ -348,7 +348,7 @@ pub fn update_primitive_visibility(
                 // Pass through pictures are always considered visible in all dirty tiles.
                 prim_instance.vis.state = VisibilityState::PassThrough;
             } else {
-                if prim_local_rect.size.width <= 0.0 || prim_local_rect.size.height <= 0.0 {
+                if prim_local_rect.width() <= 0.0 || prim_local_rect.height() <= 0.0 {
                     if prim_instance.is_chased() {
                         println!("\tculled for zero local rectangle");
                     }
@@ -435,7 +435,7 @@ pub fn update_primitive_visibility(
                     prim_instance.clip_set.local_clip_rect
                 };
 
-                if prim_instance.vis.combined_local_clip_rect.size.is_empty() {
+                if prim_instance.vis.combined_local_clip_rect.is_empty() {
                     if prim_instance.is_chased() {
                         println!("\tculled for zero local clip rectangle");
                     }
@@ -446,7 +446,7 @@ pub fn update_primitive_visibility(
                 // the area affected by the surface.
                 match prim_instance.vis.combined_local_clip_rect.intersection(&local_rect) {
                     Some(visible_rect) => {
-                        if let Some(rect) = map_local_to_surface.map(&visible_rect.to_box2d()) {
+                        if let Some(rect) = map_local_to_surface.map(&visible_rect) {
                             surface_rect = surface_rect.union(&rect);
                         }
                     }
@@ -571,7 +571,7 @@ pub fn update_primitive_visibility(
 
         // Layout space for the picture is picture space from the
         // perspective of its child primitives.
-        pic.precise_local_rect = surface_rect.to_rect() * Scale::new(1.0);
+        pic.precise_local_rect = surface_rect * Scale::new(1.0);
 
         // If the precise rect changed since last frame, we need to invalidate
         // any segments and gpu cache handles for drop-shadows.
@@ -695,7 +695,7 @@ pub fn compute_conservative_visible_rect(
     // Unmap the picture culling rect from picture -> local space. If this mapping fails due
     // to matrix weirdness, best we can do is use the clip chain's local clip rect.
     match map_local_to_pic.unmap(&pic_culling_rect) {
-        Some(rect) => rect.to_rect(),
+        Some(rect) => rect,
         None => clip_chain.local_clip_rect,
     }
 }

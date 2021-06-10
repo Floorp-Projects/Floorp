@@ -346,7 +346,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
                                 const mozilla::wr::TileOffset* aTileOffset,
                                 const mozilla::wr::LayoutIntRect* aDirtyRect,
                                 Range<uint8_t> aOutput) {
-  IntSize size(aRenderRect->size.width, aRenderRect->size.height);
+  IntSize size(aRenderRect->width(), aRenderRect->height());
   AUTO_PROFILER_TRACING_MARKER("WebRender", "RasterizeSingleBlob", GRAPHICS);
   MOZ_RELEASE_ASSERT(size.width > 0 && size.height > 0);
   if (size.width <= 0 || size.height <= 0) {
@@ -378,7 +378,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
 
   // aRenderRect is the part of the blob that we are currently rendering
   // (for example a tile) in the same coordinate space as aVisibleRect.
-  IntPoint origin = gfx::IntPoint(aRenderRect->origin.x, aRenderRect->origin.y);
+  IntPoint origin = gfx::IntPoint(aRenderRect->min.x, aRenderRect->min.y);
 
   MOZ_RELEASE_ASSERT(indexOffset <= aBlob.length() - footerSize);
   Reader reader(aBlob.begin().get() + indexOffset,
@@ -389,12 +389,12 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   auto bounds = gfx::IntRect(origin, size);
 
   if (aDirtyRect) {
-    gfx::Rect dirty(aDirtyRect->origin.x, aDirtyRect->origin.y,
-                    aDirtyRect->size.width, aDirtyRect->size.height);
+    gfx::Rect dirty(aDirtyRect->min.x, aDirtyRect->min.y, aDirtyRect->width(),
+                    aDirtyRect->height());
     dt->PushClipRect(dirty);
-    bounds = bounds.Intersect(
-        IntRect(aDirtyRect->origin.x, aDirtyRect->origin.y,
-                aDirtyRect->size.width, aDirtyRect->size.height));
+    bounds =
+        bounds.Intersect(IntRect(aDirtyRect->min.x, aDirtyRect->min.y,
+                                 aDirtyRect->width(), aDirtyRect->height()));
   }
 
   bool ret = true;

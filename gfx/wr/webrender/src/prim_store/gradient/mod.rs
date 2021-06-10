@@ -326,38 +326,36 @@ pub fn apply_gradient_local_clip(
     tile_spacing: &LayoutSize,
     clip_rect: &LayoutRect,
 ) -> LayoutVector2D {
-    let w = prim_rect.max_x().min(clip_rect.max_x()) - prim_rect.min_x();
-    let h = prim_rect.max_y().min(clip_rect.max_y()) - prim_rect.min_y();
+    let w = prim_rect.max.x.min(clip_rect.max.x) - prim_rect.min.x;
+    let h = prim_rect.max.y.min(clip_rect.max.y) - prim_rect.min.y;
     let is_tiled_x = w > stretch_size.width + tile_spacing.width;
     let is_tiled_y = h > stretch_size.height + tile_spacing.height;
 
     let mut offset = LayoutVector2D::new(0.0, 0.0);
 
     if !is_tiled_x {
-        let diff = (clip_rect.min_x() - prim_rect.min_x()).min(prim_rect.size.width);
+        let diff = (clip_rect.min.x - prim_rect.min.x).min(prim_rect.width());
         if diff > 0.0 {
-            prim_rect.origin.x += diff;
-            prim_rect.size.width -= diff;
+            prim_rect.min.x += diff;
             offset.x = -diff;
         }
 
-        let diff = prim_rect.max_x() - clip_rect.max_x();
+        let diff = prim_rect.max.x - clip_rect.max.x;
         if diff > 0.0 {
-            prim_rect.size.width -= diff;
+            prim_rect.max.x -= diff;
         }
     }
 
     if !is_tiled_y {
-        let diff = (clip_rect.min_y() - prim_rect.min_y()).min(prim_rect.size.height);
+        let diff = (clip_rect.min.y - prim_rect.min.y).min(prim_rect.height());
         if diff > 0.0 {
-            prim_rect.origin.y += diff;
-            prim_rect.size.height -= diff;
+            prim_rect.min.y += diff;
             offset.y = -diff;
         }
 
-        let diff = prim_rect.max_y() - clip_rect.max_y();
+        let diff = prim_rect.max.y - clip_rect.max.y;
         if diff > 0.0 {
-            prim_rect.size.height -= diff;
+            prim_rect.max.y -= diff;
         }
     }
 

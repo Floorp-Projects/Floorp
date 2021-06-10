@@ -83,7 +83,7 @@ pub type RasterVector3D = Vector3D<f32, RasterPixel>;
 #[derive(Hash, Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Ord, PartialOrd, Deserialize, Serialize, PeekPoke)]
 pub struct LayoutPixel;
 
-pub type LayoutRect = Rect<f32, LayoutPixel>;
+pub type LayoutRect = Box2D<f32, LayoutPixel>;
 pub type LayoutPoint = Point2D<f32, LayoutPixel>;
 pub type LayoutPoint3D = Point3D<f32, LayoutPixel>;
 pub type LayoutVector2D = Vector2D<f32, LayoutPixel>;
@@ -91,7 +91,7 @@ pub type LayoutVector3D = Vector3D<f32, LayoutPixel>;
 pub type LayoutSize = Size2D<f32, LayoutPixel>;
 pub type LayoutSideOffsets = SideOffsets2D<f32, LayoutPixel>;
 
-pub type LayoutIntRect = Rect<i32, LayoutPixel>;
+pub type LayoutIntRect = Box2D<i32, LayoutPixel>;
 pub type LayoutIntPoint = Point2D<i32, LayoutPixel>;
 pub type LayoutIntSize = Size2D<i32, LayoutPixel>;
 
@@ -139,7 +139,7 @@ pub type RasterPixelScale = Scale<f32, PicturePixel, RasterPixel>;
 
 // Fixed position coordinates, to avoid float precision errors.
 pub type LayoutPointAu = Point2D<Au, LayoutPixel>;
-pub type LayoutRectAu = Rect<Au, LayoutPixel>;
+pub type LayoutRectAu = Box2D<Au, LayoutPixel>;
 pub type LayoutSizeAu = Size2D<Au, LayoutPixel>;
 pub type LayoutVector2DAu = Vector2D<Au, LayoutPixel>;
 pub type LayoutSideOffsetsAu = SideOffsets2D<Au, LayoutPixel>;
@@ -248,17 +248,17 @@ impl AuHelpers<LayoutPointAu> for LayoutPoint {
 
 impl AuHelpers<LayoutRectAu> for LayoutRect {
     fn from_au(rect: LayoutRectAu) -> Self {
-        LayoutRect::new(
-            LayoutPoint::from_au(rect.origin),
-            LayoutSize::from_au(rect.size),
-        )
+        LayoutRect {
+            min: LayoutPoint::from_au(rect.min),
+            max: LayoutPoint::from_au(rect.max),
+        }
     }
 
     fn to_au(&self) -> LayoutRectAu {
-        LayoutRectAu::new(
-            self.origin.to_au(),
-            self.size.to_au(),
-        )
+        LayoutRectAu {
+            min: self.min.to_au(),
+            max: self.max.to_au(),
+        }
     }
 }
 
@@ -326,7 +326,7 @@ impl<U> RectExt for Box2D<f32, U> {
 
 #[inline]
 pub fn layout_rect_as_picture_rect(layout_rect: &LayoutRect) -> PictureRect {
-    layout_rect.to_box2d().cast_unit()
+    layout_rect.cast_unit()
 }
 
 #[inline]

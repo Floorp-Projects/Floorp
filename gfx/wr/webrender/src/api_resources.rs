@@ -274,11 +274,11 @@ impl ApiResources {
                         &template.visible_rect,
                         template.tile_size,
                         tile,
-                    ).to_rect().cast_unit(),
+                    ).cast_unit(),
                     format: template.descriptor.format,
                 };
 
-                assert!(descriptor.rect.size.width > 0 && descriptor.rect.size.height > 0);
+                assert!(descriptor.rect.width() > 0 && descriptor.rect.height() > 0);
                 blob_request_params.push(
                     BlobImageParams {
                         request: BlobImageRequest { key: *key, tile },

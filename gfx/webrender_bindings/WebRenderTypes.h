@@ -326,19 +326,19 @@ static inline wr::LayoutVector2D ToLayoutVector2D(
 static inline wr::LayoutRect ToLayoutRect(
     const mozilla::LayoutDeviceRect& rect) {
   wr::LayoutRect r;
-  r.origin.x = rect.X();
-  r.origin.y = rect.Y();
-  r.size.width = rect.Width();
-  r.size.height = rect.Height();
+  r.min.x = rect.X();
+  r.min.y = rect.Y();
+  r.max.x = rect.X() + rect.Width();
+  r.max.y = rect.Y() + rect.Height();
   return r;
 }
 
 static inline wr::LayoutRect ToLayoutRect(const gfx::Rect& rect) {
   wr::LayoutRect r;
-  r.origin.x = rect.X();
-  r.origin.y = rect.Y();
-  r.size.width = rect.Width();
-  r.size.height = rect.Height();
+  r.min.x = rect.X();
+  r.min.y = rect.Y();
+  r.max.x = rect.X() + rect.Width();
+  r.max.y = rect.Y() + rect.Height();
   return r;
 }
 
@@ -356,10 +356,10 @@ static inline wr::DeviceIntRect ToDeviceIntRect(
 static inline wr::LayoutIntRect ToLayoutIntRect(
     const mozilla::ImageIntRect& rect) {
   wr::LayoutIntRect r;
-  r.origin.x = rect.X();
-  r.origin.y = rect.Y();
-  r.size.width = rect.Width();
-  r.size.height = rect.Height();
+  r.min.x = rect.X();
+  r.min.y = rect.Y();
+  r.max.x = rect.X() + rect.Width();
+  r.max.y = rect.Y() + rect.Height();
   return r;
 }
 
@@ -371,17 +371,14 @@ static inline wr::LayoutRect ToLayoutRect(
 static inline wr::LayoutRect IntersectLayoutRect(const wr::LayoutRect& aRect,
                                                  const wr::LayoutRect& aOther) {
   wr::LayoutRect r;
-  r.origin.x = std::max(aRect.origin.x, aOther.origin.x);
-  r.origin.y = std::max(aRect.origin.y, aOther.origin.y);
-  r.size.width = std::min(aRect.origin.x + aRect.size.width,
-                          aOther.origin.x + aOther.size.width) -
-                 r.origin.x;
-  r.size.height = std::min(aRect.origin.y + aRect.size.height,
-                           aOther.origin.y + aOther.size.height) -
-                  r.origin.y;
-  if (r.size.width < 0 || r.size.height < 0) {
-    r.size.width = 0;
-    r.size.height = 0;
+  r.min.x = std::max(aRect.min.x, aOther.min.x);
+  r.min.y = std::max(aRect.min.y, aOther.min.y);
+  r.max.x = std::min(aRect.max.x, aOther.max.x);
+  r.max.y = std::min(aRect.max.y, aOther.max.y);
+
+  if (r.max.x < r.min.x || r.max.y < r.min.y) {
+    r.max.x = r.min.x;
+    r.max.y = r.min.y;
   }
   return r;
 }

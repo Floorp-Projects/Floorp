@@ -155,7 +155,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
-        let info = self.make_common_properties(rect(0.0, 0.0, 64.0, 64.0));
+        let info = self.make_common_properties(rect(0.0, 0.0, 64.0, 64.0).to_box2d());
 
         builder.push_image(
             &info,
@@ -182,7 +182,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
-        let info = self.make_common_properties(rect(0.0, 0.0, 1024.0, 1024.0));
+        let info = self.make_common_properties(rect(0.0, 0.0, 1024.0, 1024.0).to_box2d());
 
         builder.push_image(
             &info,
@@ -207,7 +207,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
-        let info = self.make_common_properties(rect(0.0, 0.0, 1024.0, 1024.0));
+        let info = self.make_common_properties(rect(0.0, 0.0, 1024.0, 1024.0).to_box2d());
 
         builder.push_image(
             &info,
@@ -244,7 +244,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
 
-        let info = self.make_common_properties(rect(448.899994, 74.0, 151.000031, 56.));
+        let info = self.make_common_properties(rect(448.899994, 74.0, 151.000031, 56.).to_box2d());
 
         // setup some malicious image size parameters
         builder.push_repeating_image(
@@ -309,11 +309,11 @@ impl<'a> RawtestHarness<'a> {
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
             &root_space_and_clip,
-            rect(40., 41., 200., 201.),
+            rect(40., 41., 200., 201.).to_box2d(),
         );
 
         let info = CommonItemProperties {
-            clip_rect: rect(0.0, 0.0, 800.0, 800.0),
+            clip_rect: rect(0.0, 0.0, 800.0, 800.0).to_box2d(),
             clip_id,
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
@@ -392,11 +392,11 @@ impl<'a> RawtestHarness<'a> {
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
             &root_space_and_clip,
-            rect(-1000.0, -1000.0, 2000.0, 2000.0),
+            rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
 
         let info = CommonItemProperties {
-            clip_rect: rect(10.0, 10.0, 400.0, 400.0),
+            clip_rect: rect(10.0, 10.0, 400.0, 400.0).to_box2d(),
             clip_id,
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
@@ -484,11 +484,11 @@ impl<'a> RawtestHarness<'a> {
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
             &root_space_and_clip,
-            rect(-1000.0, -1000.0, 2000.0, 2000.0),
+            rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
 
         let info = CommonItemProperties {
-            clip_rect: rect(0.0, 0.0, 1000.0, 1000.0),
+            clip_rect: rect(0.0, 0.0, 1000.0, 1000.0).to_box2d(),
             clip_id,
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
@@ -496,7 +496,7 @@ impl<'a> RawtestHarness<'a> {
 
         builder.push_repeating_image(
             &info,
-            rect(0.0, 0.0, 500.0, 500.0),
+            rect(0.0, 0.0, 500.0, 500.0).to_box2d(),
             size2(500.0, 500.0),
             size2(500.0, 500.0),
             ImageRendering::Auto,
@@ -528,11 +528,11 @@ impl<'a> RawtestHarness<'a> {
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
             &root_space_and_clip,
-            rect(-1000.0, -1000.0, 2000.0, 2000.0),
+            rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
 
         let info = CommonItemProperties {
-            clip_rect: rect(0.0, 0.0, 1000.0, 1000.0),
+            clip_rect: rect(0.0, 0.0, 1000.0, 1000.0).to_box2d(),
             clip_id,
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
@@ -540,7 +540,7 @@ impl<'a> RawtestHarness<'a> {
 
         builder.push_repeating_image(
             &info,
-            rect(50.0, 50.0, 400.0, 400.0),
+            rect(50.0, 50.0, 400.0, 400.0).to_box2d(),
             size2(400.0, 400.0),
             size2(400.0, 400.0),
             ImageRendering::Auto,
@@ -574,11 +574,11 @@ impl<'a> RawtestHarness<'a> {
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
             &root_space_and_clip,
-            rect(-1000.0, -1000.0, 2000.0, 2000.0),
+            rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
 
         let info = CommonItemProperties {
-            clip_rect: rect(0.0, 0.0, 1000.0, 1000.0),
+            clip_rect: rect(0.0, 0.0, 1000.0, 1000.0).to_box2d(),
             clip_id,
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
@@ -586,7 +586,7 @@ impl<'a> RawtestHarness<'a> {
 
         builder.push_repeating_image(
             &info,
-            rect(50.0, 50.0, 400.0, 400.0),
+            rect(50.0, 50.0, 400.0, 400.0).to_box2d(),
             size2(400.0, 400.0),
             size2(400.0, 400.0),
             ImageRendering::Auto,
@@ -634,7 +634,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
 
-        let info = self.make_common_properties(rect(0., 0.0, 1510., 1510.));
+        let info = self.make_common_properties(rect(0., 0.0, 1510., 1510.).to_box2d());
 
         let image_size = size2(1510., 1510.);
 
@@ -660,7 +660,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
 
-        let info = self.make_common_properties(rect(-10000., 0.0, 1510., 1510.));
+        let info = self.make_common_properties(rect(-10000., 0.0, 1510., 1510.).to_box2d());
 
         let image_size = size2(1510., 1510.);
 
@@ -692,7 +692,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
 
-        let info = self.make_common_properties(rect(0., 0.0, 1510., 1510.));
+        let info = self.make_common_properties(rect(0., 0.0, 1510., 1510.).to_box2d());
 
         let image_size = size2(1510., 1510.);
 
@@ -758,7 +758,7 @@ impl<'a> RawtestHarness<'a> {
 
         // draw the blob the first time
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
-        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0));
+        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0).to_box2d());
 
         builder.push_image(
             &info,
@@ -781,7 +781,7 @@ impl<'a> RawtestHarness<'a> {
 
         // make a new display list that refers to the first image
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
-        let info = self.make_common_properties(rect(1.0, 60.0, 200.0, 200.0));
+        let info = self.make_common_properties(rect(1.0, 60.0, 200.0, 200.0).to_box2d());
         builder.push_image(
             &info,
             info.clip_rect,
@@ -865,8 +865,8 @@ impl<'a> RawtestHarness<'a> {
 
         // create two blob images and draw them
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
-        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0));
-        let info2 = self.make_common_properties(rect(200.0, 60.0, 200.0, 200.0));
+        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0).to_box2d());
+        let info2 = self.make_common_properties(rect(200.0, 60.0, 200.0, 200.0).to_box2d());
         let push_images = |builder: &mut DisplayListBuilder| {
             builder.push_image(
                 &info,
@@ -965,7 +965,7 @@ impl<'a> RawtestHarness<'a> {
 
         // draw the blobs the first time
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
-        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0));
+        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0).to_box2d());
 
         builder.push_image(
             &info,
@@ -993,7 +993,7 @@ impl<'a> RawtestHarness<'a> {
 
         // make a new display list that refers to the first image
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
-        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0));
+        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0).to_box2d());
         builder.push_image(
             &info,
             info.clip_rect,
@@ -1018,7 +1018,7 @@ impl<'a> RawtestHarness<'a> {
 
         // make a new display list that refers to the first image
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
-        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0));
+        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0).to_box2d());
         builder.push_image(
             &info,
             info.clip_rect,
@@ -1053,14 +1053,14 @@ impl<'a> RawtestHarness<'a> {
             let spatial_id = SpatialId::root_scroll_node(self.wrench.root_pipeline_id);
             let clip_id = builder.define_clip_rect(
                 &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
-                rect(110., 120., 200., 200.),
+                rect(110., 120., 200., 200.).to_box2d(),
             );
             builder.push_rect(
                 &self.make_common_properties_with_clip_and_spatial(
-                    rect(100., 100., 100., 100.),
+                    rect(100., 100., 100., 100.).to_box2d(),
                     clip_id,
                     spatial_id),
-                rect(100., 100., 100., 100.),
+                rect(100., 100., 100., 100.).to_box2d(),
                 ColorF::new(0.0, 0.0, 1.0, 1.0),
             );
 
@@ -1068,7 +1068,7 @@ impl<'a> RawtestHarness<'a> {
                 builder.save();
                 let clip_id = builder.define_clip_rect(
                     &SpaceAndClipInfo { spatial_id, clip_id },
-                    rect(80., 80., 90., 90.),
+                    rect(80., 80., 90., 90.).to_box2d(),
                 );
                 let space_and_clip = SpaceAndClipInfo {
                     spatial_id,
@@ -1076,10 +1076,10 @@ impl<'a> RawtestHarness<'a> {
                 };
                 builder.push_rect(
                     &self.make_common_properties_with_clip_and_spatial(
-                        rect(110., 110., 50., 50.),
+                        rect(110., 110., 50., 50.).to_box2d(),
                         clip_id,
                         spatial_id),
-                    rect(110., 110., 50., 50.),
+                    rect(110., 110., 50., 50.).to_box2d(),
                     ColorF::new(0.0, 1.0, 0.0, 1.0),
                 );
                 builder.push_shadow(
@@ -1092,7 +1092,7 @@ impl<'a> RawtestHarness<'a> {
                     true,
                 );
                 let info = CommonItemProperties {
-                    clip_rect: rect(110., 110., 50., 2.),
+                    clip_rect: rect(110., 110., 50., 2.).to_box2d(),
                     clip_id,
                     spatial_id,
                     flags: PrimitiveFlags::default(),
@@ -1111,14 +1111,14 @@ impl<'a> RawtestHarness<'a> {
                 builder.save();
                 let clip_id = builder.define_clip_rect(
                     &SpaceAndClipInfo { spatial_id, clip_id },
-                    rect(80., 80., 100., 100.),
+                    rect(80., 80., 100., 100.).to_box2d(),
                 );
                 builder.push_rect(
                     &self.make_common_properties_with_clip_and_spatial(
-                        rect(150., 150., 100., 100.),
+                        rect(150., 150., 100., 100.).to_box2d(),
                         clip_id,
                         spatial_id),
-                    rect(150., 150., 100., 100.),
+                    rect(150., 150., 100., 100.).to_box2d(),
                     ColorF::new(0.0, 0.0, 1.0, 1.0),
                 );
                 builder.clear_save();
@@ -1167,7 +1167,7 @@ impl<'a> RawtestHarness<'a> {
                 },
                 true,
             );
-            let info = self.make_common_properties(rect(110., 110., 50., 2.));
+            let info = self.make_common_properties(rect(110., 110., 50., 2.).to_box2d());
             builder.push_line(
                 &info,
                 &info.clip_rect,
@@ -1212,7 +1212,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
 
-        let info = self.make_common_properties(rect(300.0, 70.0, 150.0, 50.0));
+        let info = self.make_common_properties(rect(300.0, 70.0, 150.0, 50.0).to_box2d());
         builder.push_image(
             &info,
             info.clip_rect,
@@ -1280,8 +1280,9 @@ impl<'a> RawtestHarness<'a> {
         let doc_id = self.wrench.api.add_document(window_size);
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
-        let info = self.make_common_properties(LayoutRect::new(LayoutPoint::zero(),
-                                                            LayoutSize::new(100.0, 100.0)));
+        let info = self.make_common_properties(
+            LayoutRect::from_size(LayoutSize::new(100.0, 100.0))
+        );
         builder.push_rect(
             &info,
             info.clip_rect,
@@ -1313,14 +1314,14 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
 
         // Add a rectangle that covers the entire scene.
-        let info = self.make_common_properties(LayoutRect::new(LayoutPoint::zero(), layout_size));
+        let info = self.make_common_properties(LayoutRect::from_size(layout_size));
         builder.push_hit_test(
             &info,
             (0, 1),
         );
 
         // Add a simple 100x100 rectangle at 100,0.
-        let info = self.make_common_properties(LayoutRect::new(
+        let info = self.make_common_properties(LayoutRect::from_origin_and_size(
             LayoutPoint::new(100., 0.),
             LayoutSize::new(100., 100.)
         ));
@@ -1340,7 +1341,7 @@ impl<'a> RawtestHarness<'a> {
         };
 
         // Add a rectangle that is clipped by a rounded rect clip item.
-        let rect = LayoutRect::new(LayoutPoint::new(100., 100.), LayoutSize::new(100., 100.));
+        let rect = LayoutRect::from_origin_and_size(LayoutPoint::new(100., 100.), LayoutSize::new(100., 100.));
         let temp_clip_id = builder.define_clip_rounded_rect(
             &space_and_clip,
             make_rounded_complex_clip(&rect, 20.),
@@ -1356,7 +1357,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         // Add a rectangle that is clipped by a ClipChain containing a rounded rect.
-        let rect = LayoutRect::new(LayoutPoint::new(200., 100.), LayoutSize::new(100., 100.));
+        let rect = LayoutRect::from_origin_and_size(LayoutPoint::new(200., 100.), LayoutSize::new(100., 100.));
         let clip_id = builder.define_clip_rounded_rect(
             &space_and_clip,
             make_rounded_complex_clip(&rect, 20.),

@@ -40,12 +40,12 @@ impl Example for App {
         pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
-        let content_bounds = LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(800.0, 600.0));
+        let content_bounds = LayoutRect::from_size(LayoutSize::new(800.0, 600.0));
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
         let spatial_id = root_space_and_clip.spatial_id;
 
         builder.push_simple_stacking_context(
-            content_bounds.origin,
+            content_bounds.min,
             spatial_id,
             PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );

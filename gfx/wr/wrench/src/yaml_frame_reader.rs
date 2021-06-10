@@ -876,7 +876,7 @@ impl YamlFrameReader {
 
         let image_rect = item["rect"]
             .as_rect()
-            .unwrap_or(LayoutRect::new(LayoutPoint::zero(), image_dims));
+            .unwrap_or(LayoutRect::from_size(image_dims));
         let image_repeat = item["repeat"].as_bool().expect("Expected boolean");
         Some(ImageMask {
             image: image_key,
@@ -1054,12 +1054,16 @@ impl YamlFrameReader {
 
             area = match orientation {
                 LineOrientation::Horizontal => {
-                    LayoutRect::new(LayoutPoint::new(start, baseline),
-                                    LayoutSize::new(end - start, width))
+                    LayoutRect::from_origin_and_size(
+                        LayoutPoint::new(start, baseline),
+                        LayoutSize::new(end - start, width),
+                    )
                 }
                 LineOrientation::Vertical => {
-                    LayoutRect::new(LayoutPoint::new(baseline, start),
-                                    LayoutSize::new(width, end - start))
+                    LayoutRect::from_origin_and_size(
+                        LayoutPoint::new(baseline, start),
+                        LayoutSize::new(width, end - start),
+                    )
                 }
             };
         }
@@ -1090,7 +1094,7 @@ impl YamlFrameReader {
             .expect("gradient must have bounds");
 
         let gradient = self.to_gradient(dl, item);
-        let tile_size = item["tile-size"].as_size().unwrap_or(bounds.size);
+        let tile_size = item["tile-size"].as_size().unwrap_or(bounds.size());
         let tile_spacing = item["tile-spacing"].as_size().unwrap_or(LayoutSize::zero());
 
         dl.push_gradient(
@@ -1117,7 +1121,7 @@ impl YamlFrameReader {
             .as_rect()
             .expect("radial gradient must have bounds");
         let gradient = self.to_radial_gradient(dl, item);
-        let tile_size = item["tile-size"].as_size().unwrap_or(bounds.size);
+        let tile_size = item["tile-size"].as_size().unwrap_or(bounds.size());
         let tile_spacing = item["tile-spacing"].as_size().unwrap_or(LayoutSize::zero());
 
         dl.push_radial_gradient(
@@ -1144,7 +1148,7 @@ impl YamlFrameReader {
             .as_rect()
             .expect("conic gradient must have bounds");
         let gradient = self.to_conic_gradient(dl, item);
-        let tile_size = item["tile-size"].as_size().unwrap_or(bounds.size);
+        let tile_size = item["tile-size"].as_size().unwrap_or(bounds.size());
         let tile_spacing = item["tile-spacing"].as_size().unwrap_or(LayoutSize::zero());
 
         dl.push_conic_gradient(
@@ -1237,10 +1241,10 @@ impl YamlFrameReader {
                 "image" | "gradient" | "radial-gradient" | "conic-gradient" => {
                     let image_width = item["image-width"]
                         .as_i64()
-                        .unwrap_or(bounds.size.width as i64);
+                        .unwrap_or(bounds.width() as i64);
                     let image_height = item["image-height"]
                         .as_i64()
-                        .unwrap_or(bounds.size.height as i64);
+                        .unwrap_or(bounds.height() as i64);
                     let fill = item["fill"].as_bool().unwrap_or(false);
 
                     let slice = item["slice"].as_vec_u32();
@@ -1412,7 +1416,7 @@ impl YamlFrameReader {
         };
 
         let bounds = item["bounds"].as_vec_f32().unwrap();
-        let bounds = LayoutRect::new(
+        let bounds = LayoutRect::from_origin_and_size(
             LayoutPoint::new(bounds[0], bounds[1]),
             LayoutSize::new(bounds[2], bounds[3]),
         );
@@ -1447,9 +1451,9 @@ impl YamlFrameReader {
 
         let bounds_raws = item["bounds"].as_vec_f32().unwrap();
         let bounds = if bounds_raws.len() == 2 {
-            LayoutRect::new(LayoutPoint::new(bounds_raws[0], bounds_raws[1]), image_dims)
+            LayoutRect::from_origin_and_size(LayoutPoint::new(bounds_raws[0], bounds_raws[1]), image_dims)
         } else if bounds_raws.len() == 4 {
-            LayoutRect::new(
+            LayoutRect::from_origin_and_size(
                 LayoutPoint::new(bounds_raws[0], bounds_raws[1]),
                 LayoutSize::new(bounds_raws[2], bounds_raws[3]),
             )
@@ -1682,7 +1686,7 @@ impl YamlFrameReader {
         // A very large number (but safely far away from finite limits of f32)
         let big_number = 1.0e30;
         // A rect that should in practical terms serve as a no-op for clipping
-        let full_clip = LayoutRect::new(
+        let full_clip = LayoutRect::from_origin_and_size(
             LayoutPoint::new(-big_number / 2.0, -big_number / 2.0),
             LayoutSize::new(big_number, big_number));
 
@@ -1806,8 +1810,8 @@ impl YamlFrameReader {
         let clip_rect = yaml["bounds"]
             .as_rect()
             .expect("scroll frame must have a bounds");
-        let content_size = yaml["content-size"].as_size().unwrap_or(clip_rect.size);
-        let content_rect = LayoutRect::new(clip_rect.origin, content_size);
+        let content_size = yaml["content-size"].as_size().unwrap_or(clip_rect.size());
+        let content_rect = LayoutRect::from_origin_and_size(clip_rect.min, content_size);
         let external_scroll_offset = yaml["external-scroll-offset"].as_vector().unwrap_or(LayoutVector2D::zero());
 
         let numeric_id = yaml["id"].as_i64().map(|id| id as u64);
@@ -2013,11 +2017,11 @@ impl YamlFrameReader {
         wrench: &mut Wrench,
         yaml: &Yaml,
     ) -> SpatialId {
-        let default_bounds = LayoutRect::new(LayoutPoint::zero(), wrench.window_size_f32());
+        let default_bounds = LayoutRect::from_size(wrench.window_size_f32());
         let bounds = yaml["bounds"].as_rect().unwrap_or(default_bounds);
         let default_transform_origin = LayoutPoint::new(
-            bounds.origin.x + bounds.size.width * 0.5,
-            bounds.origin.y + bounds.size.height * 0.5,
+            bounds.min.x + bounds.width() * 0.5,
+            bounds.min.y + bounds.height() * 0.5,
         );
 
         let transform_style = yaml["transform-style"]
@@ -2059,7 +2063,7 @@ impl YamlFrameReader {
         };
 
         let reference_frame_id = dl.push_reference_frame(
-            bounds.origin,
+            bounds.min,
             *self.spatial_id_stack.last().unwrap(),
             transform_style,
             transform.or_else(|| perspective).unwrap_or_default().into(),
@@ -2099,14 +2103,15 @@ impl YamlFrameReader {
         is_root: bool,
         info: &mut CommonItemProperties,
     ) {
-        let default_bounds = LayoutRect::new(LayoutPoint::zero(), wrench.window_size_f32());
+        let default_bounds = LayoutRect::from_size(wrench.window_size_f32());
         let mut bounds = yaml["bounds"].as_rect().unwrap_or(default_bounds);
 
         let reference_frame_id = if !yaml["transform"].is_badvalue() ||
             !yaml["perspective"].is_badvalue() {
             let reference_frame_id = self.push_reference_frame(dl, wrench, yaml);
             self.spatial_id_stack.push(reference_frame_id);
-            bounds.origin = LayoutPoint::zero();
+            bounds.max -= bounds.min.to_vector();
+            bounds.min = LayoutPoint::zero();
             Some(reference_frame_id)
         } else {
             None
@@ -2146,7 +2151,7 @@ impl YamlFrameReader {
         }
 
         dl.push_stacking_context(
-            bounds.origin,
+            bounds.min,
             *self.spatial_id_stack.last().unwrap(),
             info.flags,
             clip_node_id,
