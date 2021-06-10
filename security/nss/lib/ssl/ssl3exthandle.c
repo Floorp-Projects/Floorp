@@ -308,7 +308,7 @@ ssl3_SelectAppProtocol(const sslSocket *ss, TLSExtensionData *xtnData,
     if (rv != SECSuccess) {
         ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
         PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
-        return rv;
+        return SECFailure;
     }
 
     PORT_Assert(ss->nextProtoCallback);

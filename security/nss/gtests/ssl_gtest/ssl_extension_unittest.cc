@@ -326,6 +326,27 @@ TEST_P(TlsExtensionTestGeneric, AlpnMismatch) {
   ClientHelloErrorTest(nullptr, kTlsAlertNoApplicationProtocol);
 }
 
+TEST_P(TlsExtensionTestGeneric, AlpnDisabledServer) {
+  const uint8_t client_alpn[] = {0x01, 0x61};
+  client_->EnableAlpn(client_alpn, sizeof(client_alpn));
+  server_->EnableAlpn(nullptr, 0);
+
+  ClientHelloErrorTest(nullptr, kTlsAlertUnsupportedExtension);
+}
+
+TEST_P(TlsConnectGeneric, AlpnDisabled) {
+  server_->EnableAlpn(nullptr, 0);
+  Connect();
+
+  SSLNextProtoState state;
+  uint8_t buf[255] = {0};
+  unsigned int buf_len = 3;
+  EXPECT_EQ(SECSuccess, SSL_GetNextProto(client_->ssl_fd(), &state, buf,
+                                         &buf_len, sizeof(buf)));
+  EXPECT_EQ(SSL_NEXT_PROTO_NO_SUPPORT, state);
+  EXPECT_EQ(0U, buf_len);
+}
+
 // Many of these tests fail in TLS 1.3 because the extension is encrypted, which
 // prevents modification of the value from the ServerHello.
 TEST_P(TlsExtensionTestPre13, AlpnReturnedEmptyList) {

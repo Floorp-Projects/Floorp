@@ -1102,7 +1102,42 @@
       "label": "NAVER_Global_Root_Certification_Authority",
       "binNumber": 219,
       "sha256Fingerprint": "iPQ43Pj/0fqPQpEV/+X4KuHgbgxww3X6rXF7NKSecmU="
+    },
+    {
+      "label": "AC_RAIZ_FNMT_RCM_SERVIDORES_SEGUROS",
+      "binNumber": 220,
+      "sha256Fingerprint": "VUFTsT0s+d23U7++Gk4K4I0KpBhwWP5gorhisuS4e8s="
+    },
+    {
+      "label": "GlobalSign_Root_R46",
+      "binNumber": 221,
+      "sha256Fingerprint": "T6MSbY06EdHEhVpPgHy61s+RnTpaiLA76ixjctk8QMk="
+    },
+    {
+      "label": "GlobalSign_Root_E46",
+      "binNumber": 222,
+      "sha256Fingerprint": "y7nETYS4BD4QUOoxpp9RSVXXv9LixrSTAQGa1h2fUFg="
+    },
+    {
+      "label": "GLOBALTRUST_2020",
+      "binNumber": 223,
+      "sha256Fingerprint": "milqUYLR1FGi439Dm3Tar6JnUjMp+Q+aDSAHwzTiPJo="
+    },
+    {
+      "label": "ANF_Secure_Server_Root_CA",
+      "binNumber": 224,
+      "sha256Fingerprint": "+4/sdZFpuRBrHlEWRMYYxRMENz9sBkMIjYvv/RuZdZk="
+    },
+    {
+      "label": "Certum_EC_384_CA",
+      "binNumber": 225,
+      "sha256Fingerprint": "azKAhWJTGKpQ0XPJjYvaCdV+J0E9EUz3h6D10GwDDPY="
+    },
+    {
+      "label": "Certum_Trusted_Root_CA",
+      "binNumber": 226,
+      "sha256Fingerprint": "/naWVzhVdz43qV561NnMlsMBV8FdMXZbqbFXBOGueP0="
     }
   ],
-  "maxBin": 219
+  "maxBin": 226
 }
