@@ -635,23 +635,23 @@ pub fn pack_as_float(value: u32) -> f32 {
 
 #[inline]
 fn extract_inner_rect_impl<U>(
-    rect: &Rect<f32, U>,
+    rect: &Box2D<f32, U>,
     radii: &BorderRadius,
     k: f32,
-) -> Option<Rect<f32, U>> {
+) -> Option<Box2D<f32, U>> {
     // `k` defines how much border is taken into account
     // We enforce the offsets to be rounded to pixel boundaries
     // by `ceil`-ing and `floor`-ing them
 
     let xl = (k * radii.top_left.width.max(radii.bottom_left.width)).ceil();
-    let xr = (rect.size.width - k * radii.top_right.width.max(radii.bottom_right.width)).floor();
+    let xr = (rect.width() - k * radii.top_right.width.max(radii.bottom_right.width)).floor();
     let yt = (k * radii.top_left.height.max(radii.top_right.height)).ceil();
     let yb =
-        (rect.size.height - k * radii.bottom_left.height.max(radii.bottom_right.height)).floor();
+        (rect.height() - k * radii.bottom_left.height.max(radii.bottom_right.height)).floor();
 
     if xl <= xr && yt <= yb {
-        Some(Rect::new(
-            Point2D::new(rect.origin.x + xl, rect.origin.y + yt),
+        Some(Box2D::from_origin_and_size(
+            Point2D::new(rect.min.x + xl, rect.min.y + yt),
             Size2D::new(xr - xl, yb - yt),
         ))
     } else {
@@ -662,9 +662,9 @@ fn extract_inner_rect_impl<U>(
 /// Return an aligned rectangle that is inside the clip region and doesn't intersect
 /// any of the bounding rectangles of the rounded corners.
 pub fn extract_inner_rect_safe<U>(
-    rect: &Rect<f32, U>,
+    rect: &Box2D<f32, U>,
     radii: &BorderRadius,
-) -> Option<Rect<f32, U>> {
+) -> Option<Box2D<f32, U>> {
     // value of `k==1.0` is used for extraction of the corner rectangles
     // see `SEGMENT_CORNER_*` in `clip_shared.glsl`
     extract_inner_rect_impl(rect, radii, 1.0)
@@ -676,7 +676,7 @@ use euclid::vec3;
 #[cfg(test)]
 pub mod test {
     use super::*;
-    use euclid::default::{Point2D, Rect, Size2D, Transform3D};
+    use euclid::default::{Point2D, Size2D, Transform3D};
     use euclid::{Angle, approxeq::ApproxEq};
     use std::f32::consts::PI;
     use crate::clip::{is_left_of_line, polygon_contains_point};
@@ -702,10 +702,10 @@ pub mod test {
             0.766044438, 0.642787635, 0.0, 0.0,
             1137.10986, 113.71286, 402.0, 0.748749971,
         );
-        let r = Rect::new(Point2D::zero(), Size2D::new(804.0, 804.0));
+        let r = Box2D::from_size(Size2D::new(804.0, 804.0));
         {
             let points = &[
-                r.origin,
+                r.top_left(),
                 r.top_right(),
                 r.bottom_left(),
                 r.bottom_right(),
@@ -727,14 +727,14 @@ pub mod test {
             }
         }
         // project
-        let rp = project_rect(&m, &r.to_box2d(), &Box2D::from_size(Size2D::new(1000.0, 1000.0))).unwrap();
+        let rp = project_rect(&m, &r, &Box2D::from_size(Size2D::new(1000.0, 1000.0))).unwrap();
         println!("Projected {:?}", rp);
         // one of the points ends up in the negative hemisphere
         assert_eq!(m.inverse_project(&rp.min), None);
         // inverse
         if let Some(ri) = m.inverse_rect_footprint(&rp) {
             // inverse footprint should be larger, since it doesn't know the original Z
-            assert!(ri.contains_box(&r.to_box2d()), "Inverse {:?}", ri);
+            assert!(ri.contains_box(&r), "Inverse {:?}", ri);
         }
     }
 
@@ -758,7 +758,7 @@ pub mod test {
         let xf_rect = project_rect(
             &xref,
             &local_rect,
-            &LayoutRect::max_rect().to_box2d(),
+            &LayoutRect::max_rect(),
         ).unwrap();
 
         assert!(mapped_rect.min.x.approx_eq(&xf_rect.min.x));
@@ -908,8 +908,7 @@ pub mod test {
 
         // We define a rect that provides a bounding clip area of
         // the polygon.
-        let rect = LayoutRect::new(LayoutPoint::new(0.0, 0.0),
-                                   LayoutSize::new(10.0, 10.0));
+        let rect = LayoutRect::from_size(LayoutSize::new(10.0, 10.0));
 
         // And we'll test three points of interest.
         let p_inside_once = LayoutPoint::new(5.0, 3.0);
@@ -1568,99 +1567,98 @@ pub fn conservative_union_rect<U>(r1: &Box2D<f32, U>, r2: &Box2D<f32, U>) -> Box
 
 #[test]
 fn test_conservative_union_rect() {
-    use euclid::size2;
     // Adjacent, x axis
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(4.0, 2.0), size: size2(5.0, 4.0) }.to_box2d(),
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(4.0, 2.0), max: point2(9.0, 6.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(8.0, 4.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(9.0, 6.0) });
 
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(4.0, 2.0), size: size2(5.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
+        &LayoutRect { min: point2(4.0, 2.0), max: point2(9.0, 6.0) },
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(8.0, 4.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(9.0, 6.0) });
 
     // Averlapping adjacent, x axis
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(3.0, 2.0), size: size2(5.0, 4.0) }.to_box2d(),
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(3.0, 2.0), max: point2(8.0, 6.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(7.0, 4.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(8.0, 6.0) });
 
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(5.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(5.0, 4.0) }.to_box2d(),
+        &LayoutRect { min: point2(5.0, 2.0), max: point2(8.0, 6.0) },
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(6.0, 6.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(7.0, 4.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(8.0, 6.0) });
 
     // Adjacent but not touching, x axis
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(6.0, 2.0), size: size2(5.0, 4.0) }.to_box2d(),
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(6.0, 2.0), max: point2(11.0, 6.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(6.0, 2.0), size: size2(5.0, 4.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(6.0, 2.0), max: point2(11.0, 6.0) });
 
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(-6.0, 2.0), size: size2(1.0, 4.0) }.to_box2d(),
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(-6.0, 2.0), max: point2(-5.0, 6.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) });
 
 
     // Adjacent, y axis
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(1.0, 6.0), size: size2(3.0, 4.0) }.to_box2d(),
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(1.0, 6.0), max: point2(4.0, 10.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 8.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 10.0) });
 
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(1.0, 5.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(1.0, 1.0), size: size2(3.0, 4.0) }.to_box2d(),
+        &LayoutRect { min: point2(1.0, 5.0), max: point2(4.0, 9.0) },
+        &LayoutRect { min: point2(1.0, 1.0), max: point2(4.0, 5.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(1.0, 1.0), size: size2(3.0, 8.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(1.0, 1.0), max: point2(4.0, 9.0) });
 
     // Averlapping adjacent, y axis
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(1.0, 3.0), size: size2(3.0, 4.0) }.to_box2d(),
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(1.0, 3.0), max: point2(4.0, 7.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 5.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 7.0) });
 
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(1.0, 4.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
+        &LayoutRect { min: point2(1.0, 4.0), max: point2(4.0, 8.0) },
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 6.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 8.0) });
 
     // Adjacent but not touching, y axis
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(1.0, 10.0), size: size2(3.0, 5.0) }.to_box2d(),
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(1.0, 10.0), max: point2(4.0, 15.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(1.0, 10.0), size: size2(3.0, 5.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(1.0, 10.0), max: point2(4.0, 15.0) });
 
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(1.0, 5.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(1.0, 0.0), size: size2(3.0, 3.0) }.to_box2d(),
+        &LayoutRect { min: point2(1.0, 5.0), max: point2(4.0, 9.0) },
+        &LayoutRect { min: point2(1.0, 0.0), max: point2(4.0, 3.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(1.0, 5.0), size: size2(3.0, 4.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(1.0, 5.0), max: point2(4.0, 9.0) });
 
 
     // Contained
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
-        &LayoutRect { origin: point2(0.0, 1.0), size: size2(10.0, 11.0) }.to_box2d(),
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(0.0, 1.0), max: point2(10.0, 12.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(0.0, 1.0), size: size2(10.0, 11.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(0.0, 1.0), max: point2(10.0, 12.0) });
 
     let r = conservative_union_rect(
-        &LayoutRect { origin: point2(0.0, 1.0), size: size2(10.0, 11.0) }.to_box2d(),
-        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) }.to_box2d(),
+        &LayoutRect { min: point2(0.0, 1.0), max: point2(10.0, 12.0) },
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
     );
-    assert_eq!(r, LayoutRect { origin: point2(0.0, 1.0), size: size2(10.0, 11.0) }.to_box2d());
+    assert_eq!(r, LayoutRect { min: point2(0.0, 1.0), max: point2(10.0, 12.0) });
 }
 
 /// This is inspired by the `weak-table` crate.

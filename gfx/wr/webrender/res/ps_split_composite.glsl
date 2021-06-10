@@ -110,7 +110,7 @@ void main(void) {
         max_uv - vec2(0.5)
     ) / texture_size.xyxy;
 
-    vec2 f = (local_pos - ph.local_rect.p0) / ph.local_rect.size;
+    vec2 f = (local_pos - ph.local_rect.p0) / rect_size(ph.local_rect);
     f = get_image_quad_uv(ph.user_data.x, f);
     vec2 uv = mix(uv0, uv1, f);
     float perspective_interpolate = float(ph.user_data.y);

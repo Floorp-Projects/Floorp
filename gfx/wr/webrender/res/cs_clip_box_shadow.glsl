@@ -48,7 +48,7 @@ struct BoxShadowData {
     int clip_mode;
     int stretch_mode_x;
     int stretch_mode_y;
-    RectWithSize dest_rect;
+    RectWithEndpoint dest_rect;
 };
 
 BoxShadowData fetch_data() {
@@ -57,7 +57,7 @@ BoxShadowData fetch_data() {
         aClipMode,
         aStretchMode.x,
         aStretchMode.y,
-        RectWithSize(aClipDestRect.xy, aClipDestRect.zw)
+        RectWithEndpoint(aClipDestRect.xy, aClipDestRect.zw)
     );
     return bs_data;
 }
@@ -69,7 +69,7 @@ void main(void) {
     BoxShadowData bs_data = fetch_data();
     ImageSource res = fetch_image_source_direct(cmi.resource_address);
 
-    RectWithSize dest_rect = bs_data.dest_rect;
+    RectWithEndpoint dest_rect = bs_data.dest_rect;
 
     ClipVertexInfo vi = write_clip_tile_vertex(
         dest_rect,
@@ -85,18 +85,19 @@ void main(void) {
     vec2 texture_size = vec2(TEX_SIZE(sColor0));
     vec2 local_pos = vi.local_pos.xy / vi.local_pos.w;
     vLocalPos = vi.local_pos;
+    vec2 dest_rect_size = rect_size(dest_rect);
 
     switch (bs_data.stretch_mode_x) {
         case MODE_STRETCH: {
             vEdge.x = 0.5;
-            vEdge.z = (dest_rect.size.x / bs_data.src_rect_size.x) - 0.5;
+            vEdge.z = (dest_rect_size.x / bs_data.src_rect_size.x) - 0.5;
             vUv.x = (local_pos.x - dest_rect.p0.x) / bs_data.src_rect_size.x;
             break;
         }
         case MODE_SIMPLE:
         default: {
             vEdge.xz = vec2(1.0);
-            vUv.x = (local_pos.x - dest_rect.p0.x) / dest_rect.size.x;
+            vUv.x = (local_pos.x - dest_rect.p0.x) / dest_rect_size.x;
             break;
         }
     }
@@ -104,14 +105,14 @@ void main(void) {
     switch (bs_data.stretch_mode_y) {
         case MODE_STRETCH: {
             vEdge.y = 0.5;
-            vEdge.w = (dest_rect.size.y / bs_data.src_rect_size.y) - 0.5;
+            vEdge.w = (dest_rect_size.y / bs_data.src_rect_size.y) - 0.5;
             vUv.y = (local_pos.y - dest_rect.p0.y) / bs_data.src_rect_size.y;
             break;
         }
         case MODE_SIMPLE:
         default: {
             vEdge.yw = vec2(1.0);
-            vUv.y = (local_pos.y - dest_rect.p0.y) / dest_rect.size.y;
+            vUv.y = (local_pos.y - dest_rect.p0.y) / dest_rect_size.y;
             break;
         }
     }

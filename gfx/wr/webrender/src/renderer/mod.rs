@@ -2589,7 +2589,7 @@ impl Renderer {
                     let instance = ClearInstance {
                         rect: [
                             r.min.x as f32, r.min.y as f32,
-                            r.width() as f32, r.height() as f32,
+                            r.max.x as f32, r.max.y as f32,
                         ],
                         color: clear_color.unwrap_or([0.0; 4]),
                     };
@@ -3662,7 +3662,7 @@ impl Renderer {
                         ClearInstance {
                             rect: [
                                 rect.min.x, rect.min.y,
-                                rect.width(), rect.height(),
+                                rect.max.x, rect.max.y,
                             ],
                             color: zero_color,
                         }
@@ -3675,7 +3675,7 @@ impl Renderer {
                         ClearInstance {
                             rect: [
                                 rect.min.x, rect.min.y,
-                                rect.width(), rect.height(),
+                                rect.max.x, rect.max.y,
                             ],
                             color: one_color,
                         }
@@ -3832,7 +3832,7 @@ impl Renderer {
                     .map(|r| ClearInstance {
                         rect: [
                             r.min.x as f32, r.min.y as f32,
-                            r.width() as f32, r.height() as f32,
+                            r.max.x as f32, r.max.y as f32,
                         ],
                         color,
                     })

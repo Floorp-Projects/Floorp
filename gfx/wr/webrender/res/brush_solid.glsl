@@ -22,8 +22,8 @@ SolidBrush fetch_solid_primitive(int address) {
 void brush_vs(
     VertexInfo vi,
     int prim_address,
-    RectWithSize local_rect,
-    RectWithSize segment_rect,
+    RectWithEndpoint local_rect,
+    RectWithEndpoint segment_rect,
     ivec4 prim_user_data,
     int specific_resource_address,
     mat4 transform,

@@ -53,8 +53,8 @@ void get_uv(
 void brush_vs(
     VertexInfo vi,
     int prim_address,
-    RectWithSize local_rect,
-    RectWithSize segment_rect,
+    RectWithEndpoint local_rect,
+    RectWithEndpoint segment_rect,
     ivec4 prim_user_data,
     int specific_resource_address,
     mat4 transform,
@@ -62,7 +62,7 @@ void brush_vs(
     int brush_flags,
     vec4 unused
 ) {
-    vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
+    vec2 f = (vi.local_pos - local_rect.p0) / rect_size(local_rect);
     float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;
     float perspective_f = mix(vi.world_pos.w, 1.0, perspective_interpolate);
     v_perspective = perspective_interpolate;

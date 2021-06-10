@@ -2110,7 +2110,7 @@ pub extern "C" fn wr_resource_updates_update_blob_image(
         descriptor.into(),
         Arc::new(bytes.flush_into_vec()),
         visible_rect,
-        &DirtyRect::Partial(dirty_rect.to_box2d()),
+        &DirtyRect::Partial(dirty_rect),
     );
 }
 
@@ -2452,7 +2452,7 @@ pub struct WrStackingContextParams {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(
     state: &mut WrState,
-    mut bounds: LayoutRect,
+    bounds: LayoutRect,
     spatial_id: WrSpatialId,
     params: &WrStackingContextParams,
     transform: *const LayoutTransform,
@@ -2526,6 +2526,8 @@ pub extern "C" fn wr_dp_push_stacking_context(
     let mut wr_spatial_id = spatial_id.to_webrender(state.pipeline_id);
     let wr_clip_id = params.clip.to_webrender(state.pipeline_id);
 
+    let mut origin = bounds.min;
+
     // Note: 0 has special meaning in WR land, standing for ROOT_REFERENCE_FRAME.
     // However, it is never returned by `push_reference_frame`, and we need to return
     // an option here across FFI, so we take that 0 value for the None semantics.
@@ -2550,14 +2552,14 @@ pub extern "C" fn wr_dp_push_stacking_context(
             WrReferenceFrameKind::Perspective => ReferenceFrameKind::Perspective { scrolling_relative_to },
         };
         wr_spatial_id = state.frame_builder.dl_builder.push_reference_frame(
-            bounds.origin,
+            origin,
             wr_spatial_id,
             params.transform_style,
             transform_binding,
             reference_frame_kind,
         );
 
-        bounds.origin = LayoutPoint::zero();
+        origin = LayoutPoint::zero();
         result.id = wr_spatial_id.0;
         assert_ne!(wr_spatial_id.0, 0);
     } else if let Some(data) = computed_ref {
@@ -2568,20 +2570,20 @@ pub extern "C" fn wr_dp_push_stacking_context(
             WrRotation::Degree270 => Rotation::Degree270,
         };
         wr_spatial_id = state.frame_builder.dl_builder.push_computed_frame(
-            bounds.origin,
+            origin,
             wr_spatial_id,
             Some(data.scale_from),
             data.vertical_flip,
             rotation,
         );
 
-        bounds.origin = LayoutPoint::zero();
+        origin = LayoutPoint::zero();
         result.id = wr_spatial_id.0;
         assert_ne!(wr_spatial_id.0, 0);
     }
 
     state.frame_builder.dl_builder.push_stacking_context(
-        bounds.origin,
+        origin,
         wr_spatial_id,
         params.prim_flags,
         wr_clip_id,
@@ -3499,8 +3501,8 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(
 
     let border_details = BorderDetails::NinePatch(NinePatchBorder {
         source: NinePatchBorderSource::RadialGradient(gradient),
-        width: rect.size.width as i32,
-        height: rect.size.height as i32,
+        width: rect.width() as i32,
+        height: rect.height() as i32,
         slice,
         fill,
         outset,
@@ -3558,8 +3560,8 @@ pub extern "C" fn wr_dp_push_border_conic_gradient(
 
     let border_details = BorderDetails::NinePatch(NinePatchBorder {
         source: NinePatchBorderSource::ConicGradient(gradient),
-        width: rect.size.width as i32,
-        height: rect.size.height as i32,
+        width: rect.width() as i32,
+        height: rect.height() as i32,
         slice,
         fill,
         outset,
