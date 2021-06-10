@@ -36,7 +36,7 @@
   line-height: 1;
   font-size: var(--caption-20-font-size);
   font-weight: var(--caption-20-font-weight);
-  color: var(--caption-20-color);
+  color: var(--secondary-text-color);
 }
 
 .connect-page__troubleshoot {
