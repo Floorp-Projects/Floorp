@@ -103,8 +103,6 @@ class GfxInfo : public GfxInfoBase {
 
   nsCString mAdapterDescription;
 
-  OperatingSystem mOS;
-
   nsString mModel, mHardware, mManufacturer, mProduct;
   nsCString mOSVersion;
   uint32_t mOSVersionInteger;

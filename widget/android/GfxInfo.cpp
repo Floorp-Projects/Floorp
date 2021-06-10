@@ -421,7 +421,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(
   NS_ENSURE_ARG_POINTER(aStatus);
   aSuggestedDriverVersion.SetIsVoid(true);
   *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
-  OperatingSystem os = mOS;
+  OperatingSystem os = OperatingSystem::Android;
   if (aOS) *aOS = os;
 
   if (sShutdownOccurred) {
