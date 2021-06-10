@@ -88,19 +88,15 @@ bool NativeLayerRootWayland::EnsureShowLayer(
   }
 
   RefPtr<NativeSurfaceWayland> nativeSurface = aLayer->mNativeSurface;
-  if (!nativeSurface->mWlSubsurface) {
-    wl_surface* wlSurface = moz_container_wayland_surface_lock(mContainer);
-    if (!wlSurface) {
+  if (!nativeSurface->HasSubsurface()) {
+    wl_surface* containerSurface =
+        moz_container_wayland_surface_lock(mContainer);
+    if (!containerSurface) {
       return false;
     }
 
-    wl_subcompositor* subcompositor =
-        widget::WaylandDisplayGet()->GetSubcompositor();
-
-    nativeSurface->mWlSubsurface = wl_subcompositor_get_subsurface(
-        subcompositor, nativeSurface->mWlSurface, wlSurface);
-
-    moz_container_wayland_surface_unlock(mContainer, &wlSurface);
+    nativeSurface->CreateSubsurface(containerSurface);
+    moz_container_wayland_surface_unlock(mContainer, &containerSurface);
   }
 
   aLayer->mIsShown = true;
@@ -115,11 +111,9 @@ void NativeLayerRootWayland::EnsureHideLayer(
 
   RefPtr<NativeSurfaceWayland> nativeSurface = aLayer->mNativeSurface;
 
-  wl_subsurface_set_position(nativeSurface->mWlSubsurface, 20, 20);
-  wp_viewport_set_source(nativeSurface->mViewport, wl_fixed_from_int(0),
-                         wl_fixed_from_int(0), wl_fixed_from_int(1),
-                         wl_fixed_from_int(1));
-  wp_viewport_set_destination(nativeSurface->mViewport, 1, 1);
+  nativeSurface->SetPosition(20, 20);
+  nativeSurface->SetViewportSourceRect(Rect(0, 0, 1, 1));
+  nativeSurface->SetViewportDestinationSize(1, 1);
   wl_surface_commit(nativeSurface->mWlSurface);
 
   wl_surface* wlSurface = moz_container_wayland_surface_lock(mContainer);
@@ -133,8 +127,7 @@ void NativeLayerRootWayland::EnsureHideLayer(
 
 void NativeLayerRootWayland::UnmapLayer(
     const RefPtr<NativeLayerWayland>& aLayer) {
-  RefPtr<NativeSurfaceWayland> nativeSurface = aLayer->mNativeSurface;
-  g_clear_pointer(&nativeSurface->mWlSubsurface, wl_subsurface_destroy);
+  aLayer->mNativeSurface->ClearSubsurface();
   aLayer->mIsShown = false;
 }
 
@@ -197,12 +190,11 @@ void NativeLayerRootWayland::SetLayers(
     }
 
     double scale = moz_container_wayland_get_scale(mContainer);
-    wl_subsurface_set_position(nativeSurface->mWlSubsurface,
-                               floor(surfaceRectClipped.x / scale),
+    nativeSurface->SetPosition(floor(surfaceRectClipped.x / scale),
                                floor(surfaceRectClipped.y / scale));
-    wp_viewport_set_destination(nativeSurface->mViewport,
-                                ceil(surfaceRectClipped.width / scale),
-                                ceil(surfaceRectClipped.height / scale));
+    nativeSurface->SetViewportDestinationSize(
+        ceil(surfaceRectClipped.width / scale),
+        ceil(surfaceRectClipped.height / scale));
 
     Rect bufferClip = Rect(surfaceRectClipped.x - absPosition.x,
                            surfaceRectClipped.y - absPosition.y,
@@ -213,11 +205,7 @@ void NativeLayerRootWayland::SetLayers(
     bufferClip.width /= scaleX;
     bufferClip.height /= scaleY;
 
-    wp_viewport_set_source(nativeSurface->mViewport,
-                           wl_fixed_from_double(bufferClip.x),
-                           wl_fixed_from_double(bufferClip.y),
-                           wl_fixed_from_double(bufferClip.width),
-                           wl_fixed_from_double(bufferClip.height));
+    nativeSurface->SetViewportSourceRect(bufferClip);
   }
 
   if (newVisibleSublayers != mSublayers) {
