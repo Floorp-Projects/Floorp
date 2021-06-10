@@ -54,6 +54,7 @@ Structure:
           AsyncShutdownTimeout: <json>, // Optional, present when a shutdown blocker failed to respond within a reasonable amount of time
           AvailablePageFile: <size>, // Windows-only, available paging file in bytes
           AvailablePhysicalMemory: <size>, // Windows-only, available physical memory in bytes
+          AvailableSwapMemory: <size>, // macOS- and Linux-only, available swap space
           AvailableVirtualMemory: <size>, // Windows-only, available virtual memory in bytes
           BlockedDllList: <list>, // Windows-only, see WindowsDllBlocklist.cpp for details
           BlocklistInitFailed: "1", // Windows-only, present only if the DLL blocklist initialization failed
@@ -62,11 +63,15 @@ Structure:
           DOMFissionEnabled: "1", // Optional, if set indicates that a Fission window had been opened
           EventLoopNestingLevel: <levels>, // Optional, present only if >0, indicates the nesting level of the event-loop
           ExperimentalFeatures: <features>, // Optional, a comma-separated string that specifies the enabled experimental features from about:preferences#experimental
+          GPUProcessLaunchCount: <num>, // Number of times the GPU process was launched
           ipc_channel_error: <error string>, // Optional, contains the string processing error reason for an ipc-based content crash
           IsGarbageCollecting: "1", // Optional, if set indicates that the crash occurred while the garbage collector was running
           LowCommitSpaceEvents: <num>, // Windows-only, present only if >0, number of low commit space events detected by the available memory tracker
+          MainThreadRunnableName: <name>, // Optional, Nightly-only, name of the currently executing nsIRunnable on the main thread
           MozCrashReason: <reason>, // Optional, contains the string passed to MOZ_CRASH()
           OOMAllocationSize: <size>, // Size of the allocation that caused an OOM
+          ProfilerChildShutdownPhase: <string>, // Profiler shutdown phase
+          PurgeablePhysicalMemory: <size>, // macOS-only, amount of memory that can be deallocated by the OS in case of memory pressure
           QuotaManagerShutdownTimeout: <log-string>, // Optional, contains a list of shutdown steps and status of the quota manager clients
           RemoteType: <type>, // Optional, type of content process, see below for a list of types
           SecondsSinceLastCrash: <duration>, // Seconds elapsed since the last crash occurred
@@ -79,7 +84,7 @@ Structure:
           TotalVirtualMemory: <size>, // Windows-only, virtual memory in use expressed in bytes
           UptimeTS: <duration>, // Seconds since Firefox was started, this can have a fractional component
           User32BeforeBlocklist: "1", // Windows-only, present only if user32.dll was loaded before the DLL blocklist has been initialized
-          MainThreadRunnableName: <name>, // Optional, Nightly-only, name of the currently executing nsIRunnable on the main thread
+          WindowsErrorReporting: "1", // Windows-only, present only if the crash was intercepted by the WER runtime exception module
         },
         hasCrashEnvironment: bool
       }
@@ -223,4 +228,17 @@ Version History
 - Firefox 62: Added LowCommitSpaceEvents (`bug 1464773 <https://bugzilla.mozilla.org/show_bug.cgi?id=1464773>`_).
 - Firefox 63: Added RecordReplayError (`bug 1481009 <https://bugzilla.mozilla.org/show_bug.cgi?id=1481009>`_).
 - Firefox 64: Added MemoryErrorCorrection (`bug 1498609 <https://bugzilla.mozilla.org/show_bug.cgi?id=1498609>`_).
-- Firefox 90: Removed MemoryErrorCorrection (`bug 1710152 <https://bugzilla.mozilla.org/show_bug.cgi?id=1710152>`_).
+- Firefox 68: Added IndexedDBShutdownTimeout and LocalStorageShutdownTimeout
+  (`bug 1539750 <https://bugzilla.mozilla.org/show_bug.cgi?id=1539750>`_).
+- Firefox 74: Added AvailableSwapMemory and PurgeablePhysicalMemory
+  (`bug 1587721 <https://bugzilla.mozilla.org/show_bug.cgi?id=1587721>`_).
+- Firefox 74: Added MainThreadRunnableName (`bug 1608158 <https://bugzilla.mozilla.org/show_bug.cgi?id=1608158>`_).
+- Firefox 76: Added DOMFissionEnabled (`bug 1602918 <https://bugzilla.mozilla.org/show_bug.cgi?id=1602918>`_).
+- Firefox 79: Added ExperimentalFeatures (`bug 1644544 <https://bugzilla.mozilla.org/show_bug.cgi?id=1644544>`_).
+- Firefox 85: Added QuotaManagerShutdownTimeout, removed IndexedDBShutdownTimeout and LocalStorageShutdownTimeout
+  (`bug 1672369 <https://bugzilla.mozilla.org/show_bug.cgi?id=1672369>`_)
+- Firefox 89: Added GPUProcessLaunchCount (`bug 1710448 <https://bugzilla.mozilla.org/show_bug.cgi?id=1710448>`_)
+  and ProfilerChildShutdownPhase (`bug 1704680 <https://bugzilla.mozilla.org/show_bug.cgi?id=1704680>`_).
+- Firefox 90: Removed MemoryErrorCorrection (`bug 1710152 <https://bugzilla.mozilla.org/show_bug.cgi?id=1710152>`_)
+  and added WindowsErrorReporting (`bug 1703761 <https://bugzilla.mozilla.org/show_bug.cgi?id=1703761>`_).
+  
