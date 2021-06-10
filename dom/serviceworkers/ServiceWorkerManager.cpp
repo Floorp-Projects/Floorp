@@ -213,6 +213,8 @@ nsresult PopulateRegistrationData(
 
   aData.lastUpdateTime() = aRegistration->GetLastUpdateTime();
 
+  aData.navigationPreloadState() = aRegistration->GetNavigationPreloadState();
+
   MOZ_ASSERT(ServiceWorkerRegistrationDataIsValid(aData));
 
   return NS_OK;
@@ -1474,7 +1476,8 @@ void ServiceWorkerManager::LoadRegistration(
     registration =
         CreateNewRegistration(aRegistration.scope(), principal,
                               static_cast<ServiceWorkerUpdateViaCache>(
-                                  aRegistration.updateViaCache()));
+                                  aRegistration.updateViaCache()),
+                              aRegistration.navigationPreloadState());
   } else {
     // If active worker script matches our expectations for a "current worker",
     // then we are done. Since scripts with the same URL might have different
