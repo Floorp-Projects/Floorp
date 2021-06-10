@@ -586,7 +586,7 @@ fn main() {
                         .split(',')
                         .map(|s| s.parse::<f32>().unwrap())
                         .collect::<Vec<_>>();
-                    let rect = LayoutRect::new(
+                    let rect = LayoutRect::from_origin_and_size(
                         LayoutPoint::new(items[0], items[1]),
                         LayoutSize::new(items[2], items[3]),
                     );

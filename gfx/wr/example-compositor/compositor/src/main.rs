@@ -99,10 +99,10 @@ impl webrender::Compositor for DirectCompositeInterface {
             id.surface_id.0,
             id.x,
             id.y,
-            dirty_rect.origin.x,
-            dirty_rect.origin.y,
-            dirty_rect.size.width,
-            dirty_rect.size.height,
+            dirty_rect.min.x,
+            dirty_rect.min.y,
+            dirty_rect.width(),
+            dirty_rect.height(),
         );
 
         webrender::NativeSurfaceInfo {
@@ -131,10 +131,10 @@ impl webrender::Compositor for DirectCompositeInterface {
             id.0,
             transform.transform_point2d(point2(0., 0.)).unwrap().x as i32,
             transform.transform_point2d(point2(0., 0.)).unwrap().y as i32,
-            clip_rect.origin.x,
-            clip_rect.origin.y,
-            clip_rect.size.width,
-            clip_rect.size.height,
+            clip_rect.min.x,
+            clip_rect.min.y,
+            clip_rect.width(),
+            clip_rect.height(),
         );
     }
 
@@ -228,11 +228,7 @@ fn push_rotated_rect(
         1.0,
         Angle::radians(2.0 * std::f32::consts::PI * angle),
     );
-    let transform_origin = LayoutVector3D::new(
-        rect.origin.x + rect.size.width * 0.5,
-        rect.origin.y + rect.size.height * 0.5,
-        0.0,
-    );
+    let transform_origin = rect.center().extend(0.0);
     let transform = rotation
         .pre_translate(-transform_origin)
         .then_translate(transform_origin);
@@ -280,24 +276,24 @@ fn build_display_list(
     let scroll_space_info = builder.define_scroll_frame(
         &fixed_space_info,
         scroll_id,
-        LayoutRect::new(LayoutPoint::zero(), layout_size),
-        LayoutRect::new(LayoutPoint::zero(), layout_size),
+        LayoutRect::from_size(layout_size),
+        LayoutRect::from_size(layout_size),
         ScrollSensitivity::Script,
         LayoutVector2D::zero(),
     );
 
     builder.push_rect(
         &CommonItemProperties::new(
-            LayoutRect::new(LayoutPoint::zero(), layout_size).inflate(-10.0, -10.0),
+            LayoutRect::from_size(layout_size).inflate(-10.0, -10.0),
             fixed_space_info,
         ),
-        LayoutRect::new(LayoutPoint::zero(), layout_size).inflate(-10.0, -10.0),
+        LayoutRect::from_size(layout_size).inflate(-10.0, -10.0),
         ColorF::new(0.8, 0.8, 0.8, 1.0),
     );
 
     push_rotated_rect(
         builder,
-        LayoutRect::new(
+        LayoutRect::from_origin_and_size(
             LayoutPoint::new(100.0, 100.0),
             LayoutSize::new(size_factor * 400.0, size_factor * 400.0),
         ),
@@ -310,7 +306,7 @@ fn build_display_list(
 
     push_rotated_rect(
         builder,
-        LayoutRect::new(
+        LayoutRect::from_origin_and_size(
             LayoutPoint::new(800.0, 100.0),
             LayoutSize::new(size_factor * 100.0, size_factor * 600.0),
         ),
@@ -323,7 +319,7 @@ fn build_display_list(
 
     push_rotated_rect(
         builder,
-        LayoutRect::new(
+        LayoutRect::from_origin_and_size(
             LayoutPoint::new(700.0, 200.0),
             LayoutSize::new(size_factor * 300.0, size_factor * 300.0),
         ),
@@ -336,7 +332,7 @@ fn build_display_list(
 
     push_rotated_rect(
         builder,
-        LayoutRect::new(
+        LayoutRect::from_origin_and_size(
             LayoutPoint::new(100.0, 600.0),
             LayoutSize::new(size_factor * 400.0, size_factor * 400.0),
         ),
@@ -349,7 +345,7 @@ fn build_display_list(
 
     push_rotated_rect(
         builder,
-        LayoutRect::new(
+        LayoutRect::from_origin_and_size(
             LayoutPoint::new(700.0, 600.0),
             LayoutSize::new(size_factor * 400.0, size_factor * 400.0),
         ),

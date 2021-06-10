@@ -345,10 +345,10 @@ impl FrameBuilder {
             scene_properties,
             global_screen_world_rect,
             spatial_tree: &scene.spatial_tree,
-            max_local_clip: LayoutRect::new(
-                LayoutPoint::new(-MAX_CLIP_COORD, -MAX_CLIP_COORD),
-                LayoutSize::new(2.0 * MAX_CLIP_COORD, 2.0 * MAX_CLIP_COORD),
-            ),
+            max_local_clip: LayoutRect {
+                min: LayoutPoint::new(-MAX_CLIP_COORD, -MAX_CLIP_COORD),
+                max: LayoutPoint::new(MAX_CLIP_COORD, MAX_CLIP_COORD),
+            },
             debug_flags,
             fb_config: &scene.config,
         };

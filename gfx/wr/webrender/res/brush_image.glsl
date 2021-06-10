@@ -60,8 +60,8 @@ ImageBrushData fetch_image_data(int address) {
 void brush_vs(
     VertexInfo vi,
     int prim_address,
-    RectWithSize prim_rect,
-    RectWithSize segment_rect,
+    RectWithEndpoint prim_rect,
+    RectWithEndpoint segment_rect,
     ivec4 prim_user_data,
     int specific_resource_address,
     mat4 transform,
@@ -83,17 +83,17 @@ void brush_vs(
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 
-    RectWithSize local_rect = prim_rect;
+    RectWithEndpoint local_rect = prim_rect;
     vec2 stretch_size = image_data.stretch_size;
     if (stretch_size.x < 0.0) {
-        stretch_size = local_rect.size;
+        stretch_size = rect_size(local_rect);
     }
 
     // If this segment should interpolate relative to the
     // segment, modify the parameters for that.
     if ((brush_flags & BRUSH_FLAG_SEGMENT_RELATIVE) != 0) {
         local_rect = segment_rect;
-        stretch_size = local_rect.size;
+        stretch_size = rect_size(local_rect);
 
         if ((brush_flags & BRUSH_FLAG_TEXEL_RECT) != 0) {
             // If the extra data is a texel rect, modify the UVs.
@@ -131,8 +131,7 @@ void brush_vs(
                     vertical_uv_size.x = uv0.x - res.uv_rect.p0.x;
                     if (vertical_uv_size.x < epsilon || repeated_stretch_size.x < epsilon) {
                         vertical_uv_size.x = res.uv_rect.p1.x - uv1.x;
-                        repeated_stretch_size.x = prim_rect.p0.x + prim_rect.size.x
-                            - segment_rect.p0.x - segment_rect.size.x;
+                        repeated_stretch_size.x = prim_rect.p1.x - segment_rect.p1.x;
                     }
 
                     // Adjust the the referecne uv size to compute horizontal repetitions
@@ -140,8 +139,7 @@ void brush_vs(
                     horizontal_uv_size.y = uv0.y - res.uv_rect.p0.y;
                     if (horizontal_uv_size.y < epsilon || repeated_stretch_size.y < epsilon) {
                         horizontal_uv_size.y = res.uv_rect.p1.y - uv1.y;
-                        repeated_stretch_size.y = prim_rect.p0.y + prim_rect.size.y
-                            - segment_rect.p0.y - segment_rect.size.y;
+                        repeated_stretch_size.y = prim_rect.p1.y - segment_rect.p1.y;
                     }
                 }
 
@@ -163,12 +161,14 @@ void brush_vs(
                 }
             }
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X_ROUND) != 0) {
-                float nx = max(1.0, round(segment_rect.size.x / stretch_size.x));
-                stretch_size.x = segment_rect.size.x / nx;
+                float segment_rect_width = segment_rect.p1.x - segment_rect.p0.x;
+                float nx = max(1.0, round(segment_rect_width / stretch_size.x));
+                stretch_size.x = segment_rect_width / nx;
             }
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y_ROUND) != 0) {
-                float ny = max(1.0, round(segment_rect.size.y / stretch_size.y));
-                stretch_size.y = segment_rect.size.y / ny;
+                float segment_rect_height = segment_rect.p1.y - segment_rect.p0.y;
+                float ny = max(1.0, round(segment_rect_height / stretch_size.y));
+                stretch_size.y = segment_rect_height / ny;
             }
         #endif
     }
@@ -186,7 +186,7 @@ void brush_vs(
         max_uv - vec2(0.5)
     ) / texture_size.xyxy;
 
-    vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
+    vec2 f = (vi.local_pos - local_rect.p0) / rect_size(local_rect);
 
 #ifdef WR_FEATURE_ALPHA_PASS
     int color_mode = prim_user_data.x & 0xffff;
@@ -209,7 +209,7 @@ void brush_vs(
 #endif
 
     // Offset and scale v_uv here to avoid doing it in the fragment shader.
-    vec2 repeat = local_rect.size / stretch_size;
+    vec2 repeat = rect_size(local_rect) / stretch_size;
     v_uv = mix(uv0, uv1, f) - min_uv;
     v_uv /= texture_size;
     v_uv *= repeat.xy;
