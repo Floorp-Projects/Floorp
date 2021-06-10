@@ -97,9 +97,11 @@ function refTest(test,ref) {
 };
 
 var caretBlinkTime = null;
-function endTest() {
-  var parentDoc = window.parent.document;
-  parentDoc.styleSheets[parentDoc.styleSheets.length-1].deleteRule(0);
+async function endTest() {
+  await SpecialPowers.spawn(window.parent, [], () => {
+    content.document.styleSheets[content.document.styleSheets.length-1].deleteRule(0);
+  });
+
   // finish(), yet let the test actually end first, to be safe.
   SimpleTest.executeSoon(SimpleTest.finish);
 }
@@ -428,12 +430,13 @@ function nextTest() {
     endTest();
   }
 }
-function runTests() {
+async function runTests() {
   try {
     if (window.parent) {
-      var parentDoc = window.parent.document;
-      extraCSSRule = parentDoc.styleSheets[parentDoc.styleSheets.length-1]
-        .insertRule("iframe#testframe{width:600px;height:400px}",0);
+      await SpecialPowers.spawn(window.parent, [], () => {
+          content.document.styleSheets[content.document.styleSheets.length-1]
+            .insertRule("iframe#testframe{width:600px;height:400px}",0);
+      });
     }
     try {
       caretBlinkTime = SpecialPowers.getIntPref("ui.caretBlinkTime");
