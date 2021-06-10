@@ -13,7 +13,6 @@ EXPORTS.mozilla.dom += [
     "FetchEventOpParent.h",
     "FetchEventOpProxyChild.h",
     "FetchEventOpProxyParent.h",
-    "NavigationPreloadManager.h",
     "ServiceWorker.h",
     "ServiceWorkerActors.h",
     "ServiceWorkerChild.h",
@@ -47,7 +46,6 @@ UNIFIED_SOURCES += [
     "FetchEventOpParent.cpp",
     "FetchEventOpProxyChild.cpp",
     "FetchEventOpProxyParent.cpp",
-    "NavigationPreloadManager.cpp",
     "RemoteServiceWorkerContainerImpl.cpp",
     "RemoteServiceWorkerImpl.cpp",
     "RemoteServiceWorkerRegistrationImpl.cpp",
@@ -90,7 +88,6 @@ UNIFIED_SOURCES += [
 ]
 
 IPDL_SOURCES += [
-    "IPCNavigationPreloadState.ipdlh",
     "IPCServiceWorkerDescriptor.ipdlh",
     "IPCServiceWorkerRegistrationDescriptor.ipdlh",
     "PFetchEventOp.ipdl",

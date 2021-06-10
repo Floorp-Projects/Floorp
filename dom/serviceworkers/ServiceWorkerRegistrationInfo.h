@@ -9,7 +9,6 @@
 
 #include <functional>
 
-#include "mozilla/dom/IPCNavigationPreloadState.h"
 #include "mozilla/dom/ServiceWorkerInfo.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
@@ -70,18 +69,15 @@ class ServiceWorkerRegistrationInfo final
 
   bool mCorrupt;
 
-  IPCNavigationPreloadState mNavigationPreloadState;
-
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERREGISTRATIONINFO
 
   typedef std::function<void()> TryToActivateCallback;
 
-  ServiceWorkerRegistrationInfo(
-      const nsACString& aScope, nsIPrincipal* aPrincipal,
-      ServiceWorkerUpdateViaCache aUpdateViaCache,
-      IPCNavigationPreloadState&& aNavigationPreloadState);
+  ServiceWorkerRegistrationInfo(const nsACString& aScope,
+                                nsIPrincipal* aPrincipal,
+                                ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   void AddInstance(ServiceWorkerRegistrationListener* aInstance,
                    const ServiceWorkerRegistrationDescriptor& aDescriptor);
@@ -229,12 +225,6 @@ class ServiceWorkerRegistrationInfo final
   void ClearWhenIdle();
 
   const nsID& AgentClusterId() const;
-
-  void SetNavigationPreloadEnabled(const bool& aEnabled);
-
-  void SetNavigationPreloadHeader(const nsCString& aHeader);
-
-  IPCNavigationPreloadState GetNavigationPreloadState() const;
 
  private:
   // Roughly equivalent to [[Update Registration State algorithm]]. Make sure

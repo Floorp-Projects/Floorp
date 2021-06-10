@@ -72,8 +72,7 @@ bool ServiceWorkerRegistrationInfo::IsCorrupt() const { return mCorrupt; }
 
 ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
     const nsACString& aScope, nsIPrincipal* aPrincipal,
-    ServiceWorkerUpdateViaCache aUpdateViaCache,
-    IPCNavigationPreloadState&& aNavigationPreloadState)
+    ServiceWorkerUpdateViaCache aUpdateViaCache)
     : mPrincipal(aPrincipal),
       mDescriptor(GetNextId(), GetNextVersion(), aPrincipal, aScope,
                   aUpdateViaCache),
@@ -84,8 +83,7 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
       mCreationTimeStamp(TimeStamp::Now()),
       mLastUpdateTime(0),
       mUnregistered(false),
-      mCorrupt(false),
-      mNavigationPreloadState(std::move(aNavigationPreloadState)) {
+      mCorrupt(false) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 }
 
@@ -800,24 +798,6 @@ void ServiceWorkerRegistrationInfo::ClearWhenIdle() {
 
 const nsID& ServiceWorkerRegistrationInfo::AgentClusterId() const {
   return mAgentClusterId;
-}
-
-void ServiceWorkerRegistrationInfo::SetNavigationPreloadEnabled(
-    const bool& aEnabled) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mNavigationPreloadState.enabled() = aEnabled;
-}
-
-void ServiceWorkerRegistrationInfo::SetNavigationPreloadHeader(
-    const nsCString& aHeader) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mNavigationPreloadState.headerValue() = aHeader;
-}
-
-IPCNavigationPreloadState
-ServiceWorkerRegistrationInfo::GetNavigationPreloadState() const {
-  MOZ_ASSERT(NS_IsMainThread());
-  return mNavigationPreloadState;
 }
 
 // static

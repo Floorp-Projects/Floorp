@@ -7,7 +7,6 @@
 #define _mozilla_dom_ServiceWorkerUtils_h
 
 #include "mozilla/MozPromise.h"
-#include "mozilla/dom/IPCNavigationPreloadState.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "nsTArray.h"
 
@@ -23,7 +22,6 @@ namespace dom {
 class ClientInfo;
 class ServiceWorkerRegistrationData;
 class ServiceWorkerRegistrationDescriptor;
-struct NavigationPreloadState;
 
 typedef MozPromise<ServiceWorkerRegistrationDescriptor, CopyableErrorResult,
                    false>
@@ -32,9 +30,6 @@ typedef MozPromise<ServiceWorkerRegistrationDescriptor, CopyableErrorResult,
 typedef MozPromise<CopyableTArray<ServiceWorkerRegistrationDescriptor>,
                    CopyableErrorResult, false>
     ServiceWorkerRegistrationListPromise;
-
-typedef MozPromise<IPCNavigationPreloadState, CopyableErrorResult, false>
-    NavigationPreloadStatePromise;
 
 typedef std::function<void(const ServiceWorkerRegistrationDescriptor&)>
     ServiceWorkerRegistrationCallback;
@@ -46,9 +41,6 @@ typedef std::function<void(
 typedef std::function<void(bool)> ServiceWorkerBoolCallback;
 
 typedef std::function<void(ErrorResult&&)> ServiceWorkerFailureCallback;
-
-typedef std::function<void(NavigationPreloadState&&)>
-    NavigationPreloadGetStateCallback;
 
 bool ServiceWorkerRegistrationDataIsValid(
     const ServiceWorkerRegistrationData& aData);
