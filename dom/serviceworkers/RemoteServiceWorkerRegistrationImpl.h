@@ -36,6 +36,18 @@ class RemoteServiceWorkerRegistrationImpl final
   void Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
                   ServiceWorkerFailureCallback&& aFailureCB) override;
 
+  void SetNavigationPreloadEnabled(
+      bool aEnabled, ServiceWorkerBoolCallback&& aSuccessCB,
+      ServiceWorkerFailureCallback&& aFailureCB) override;
+
+  void SetNavigationPreloadHeader(
+      const nsCString& aHeader, ServiceWorkerBoolCallback&& aSuccessCB,
+      ServiceWorkerFailureCallback&& aFailureCB) override;
+
+  void GetNavigationPreloadState(
+      NavigationPreloadGetStateCallback&& aSuccessCB,
+      ServiceWorkerFailureCallback&& aFailureCB) override;
+
  public:
   explicit RemoteServiceWorkerRegistrationImpl(
       const ServiceWorkerRegistrationDescriptor& aDescriptor);
