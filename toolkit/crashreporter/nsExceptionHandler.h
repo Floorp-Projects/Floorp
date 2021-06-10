@@ -176,6 +176,8 @@ struct WindowsErrorReportingData {
   DWORD mChildPid;
   // Filename of the generated minidump; this is not a 0-terminated string
   char mMinidumpFile[40];
+  // OOM allocation size for the crash (ignore if zero)
+  size_t mOOMAllocationSize;
 };
 #endif  // XP_WIN
 

@@ -1929,6 +1929,7 @@ static void TeardownAnnotationFacilities() {
 
 struct InProcessWindowsErrorReportingData {
   uint32_t mProcessType;
+  size_t* mOOMAllocationSizePtr;
 };
 
 static InProcessWindowsErrorReportingData gInProcessWerData = {};
@@ -1956,6 +1957,7 @@ static void RegisterRuntimeExceptionModule(
         GeckoProcessType::GeckoProcessType_Default) {
 #ifdef XP_WIN
   gInProcessWerData.mProcessType = aProcessType;
+  gInProcessWerData.mOOMAllocationSizePtr = &gOOMAllocationSize;
   const size_t kPathLength = MAX_PATH + 1;
   wchar_t path[kPathLength] = {};
   if (GetRuntimeExceptionModulePath(path, kPathLength)) {
@@ -3664,6 +3666,12 @@ DWORD WINAPI WerNotifyProc(LPVOID aParameter) {
     pd->sequence = ++crashSequence;
     pd->annotations = MakeUnique<AnnotationTable>();
     (*pd->annotations)[Annotation::WindowsErrorReporting] = "1"_ns;
+    if (werData->mOOMAllocationSize > 0) {
+      char buffer[32] = {};
+      XP_STOA(werData->mOOMAllocationSize, buffer);
+      (*pd->annotations)[Annotation::OOMAllocationSize] = buffer;
+    }
+
     PopulateContentProcessAnnotations(*(pd->annotations));
   }
 
