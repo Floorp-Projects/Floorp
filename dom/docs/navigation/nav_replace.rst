@@ -5,7 +5,7 @@ There are 3 major types of navigations, each of which can cause different
 objects to be replaced. The general rules look something like this:
 
 .. csv-table:: objects replaced or preserved across navigations
-   :header: "Class/Id", ":ref:`in-process navigations`", ":ref:`cross-process navigations`", ":ref:`cross-group navigations`"
+   :header: "Class/Id", ":ref:`in-process navigations <in-process navigations>`", ":ref:`cross-process navigations <cross-process navigations>`", ":ref:`cross-group navigations <cross-group navigations>`"
 
    "BrowserId [#bid]_", |preserve|, |preserve|, |preserve|
    "BrowsingContextWebProgress", |preserve|, |preserve|, |preserve|
@@ -43,6 +43,8 @@ objects to be replaced. The general rules look something like this:
 Types of Navigations
 --------------------
 
+.. _in-process navigations:
+
 in-process navigations
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -52,6 +54,8 @@ common type of navigation when :ref:`Fission` is not enabled.
 These navigations are used when no process switching or BrowsingContext
 replacement is required, which includes most navigations with Fission
 disabled, and most same site-origin navigations when Fission is enabled.
+
+.. _cross-process navigations:
 
 cross-process navigations
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -65,6 +69,8 @@ Fission is disabled.
 These process changes are triggered by ``DocumentLoadListener`` when it
 determines that a process switch is required. See that class's documentation
 for more details.
+
+.. _cross-group navigations:
 
 cross-group navigations
 ^^^^^^^^^^^^^^^^^^^^^^^

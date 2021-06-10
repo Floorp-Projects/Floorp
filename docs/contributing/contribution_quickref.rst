@@ -197,7 +197,7 @@ more information.
     You can ask your reviewer to submit the patch for you if you don't have that
     level of access.
 
-:ref:`More information <Try Server>`
+:ref:`More information <Pushing to Try>`
 
 
 To submit a patch

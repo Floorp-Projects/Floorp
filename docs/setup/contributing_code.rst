@@ -72,7 +72,7 @@ We leave this in your hands. Here are some further resources to help:
    `https://developer.mozilla.org/docs/Developer_Guide <https://developer.mozilla.org/docs/Developer_Guide>`_
    and its parent document,
    https://developer.mozilla.org/docs/Mozilla
--  Our :ref:`reviewer checklist <Reviewer_Checklist>` is very
+-  Our :ref:`reviewer checklist <Reviewer Checklist>` is very
    useful, if you have a patch near completion, and seek a favorable
    review
 -  Utilize our build tool :ref:`mach`, its linting,

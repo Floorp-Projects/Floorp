@@ -23,6 +23,8 @@ Visual Studio Code
 
 Go to :doc:`Visual Studio Code <vscode>` dedicated page.
 
+.. _VIM:
+
 VIM
 ---
 
@@ -109,7 +111,7 @@ rtags (LLVM/Clang-based Code Indexing)
 Instructions for the installation of rtags are available at the
 `rtags github repo <https://github.com/Andersbakken/rtags>`__.
 
-rtags requires a :ref:`compilation database <CompileDB back-end / compileflags>`.
+rtags requires a :ref:`compilation database <CompileDB back-end-compileflags>`.
 
 In order for rtags to index correctly, included files need to be copied and
 unified compilation files need to be created. Either run a full build of the
@@ -148,7 +150,7 @@ irony (LLVM/Clang-based Code Completion)
 Instructions on the installation of irony-mode are available at the
 `irony-mode github repo <https://github.com/Sarcasm/irony-mode>`__.
 
-irony-mode requires a :ref:`compilation database <CompileDB back-end / compileflags>`.
+irony-mode requires a :ref:`compilation database <CompileDB back-end-compileflags>`.
 
 Note that irony-mode, by default, uses elisp to parse the
 :code:`compile_commands.json` file. As gecko is a very large codebase, this
@@ -218,6 +220,8 @@ You can run a Visual Studio project by running:
 .. code::
 
     ./mach ide visualstudio
+
+.. _CompileDB back-end-compileflags:
 
 CompileDB back-end / compileflags
 ---------------------------------

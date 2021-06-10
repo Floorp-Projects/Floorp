@@ -130,7 +130,7 @@ Failures and backouts
 ---------------------
 
 Patches which cause unit test failures (on :ref:`tier 1
-platforms <Supported build targets>`) will be backed out.
+platforms <Supported Build Hosts and Targets>`) will be backed out.
 Regressions on tier-2 platforms and in performance are not cause for a
 direct backout, but you will be expected to help fix them if quickly.
 
