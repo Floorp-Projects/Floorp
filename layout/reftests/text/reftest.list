@@ -193,9 +193,9 @@ skip-if(!cocoaWidget) != 1349308-1.html 1349308-notref.html # macOS-specific tes
 fuzzy-if(Android,0-128,0-233) == 1463020-letter-spacing-text-transform-1.html 1463020-letter-spacing-text-transform-1-ref.html
 fails-if(Android) == 1463020-letter-spacing-text-transform-2.html 1463020-letter-spacing-text-transform-2-ref.html # missing font coverage on Android
 == 1507661-spurious-hyphenation-after-explicit.html 1507661-spurious-hyphenation-after-explicit-ref.html
-fuzzy-if(!webrender,12-66,288-1681) fails-if(gtkWidget&&!webrender) == 1522857-1.html 1522857-1-ref.html # antialiasing fuzz in non-webrender cases
+fuzzy-if(useDrawSnapshot&&webrender,255-255,50-50) fuzzy-if(!webrender,12-66,288-1681) fails-if(gtkWidget&&!webrender) == 1522857-1.html 1522857-1-ref.html # antialiasing fuzz in non-webrender cases
 != 1637405-pua-shaping-1.html 1637405-pua-shaping-1-notref.html
-fuzzy-if(!webrender,0-42,0-1590) fuzzy-if(gtkWidget&&!webrender,0-255,0-50) == 1655364-1.html 1655364-1-ref.html
+fuzzy-if(useDrawSnapshot&&webrender,255-255,50-50) fuzzy-if(!webrender,0-42,0-1590) fuzzy-if(gtkWidget&&!webrender,0-255,0-50) == 1655364-1.html 1655364-1-ref.html
 == 1670581-1.html 1670581-1-ref.html
 == 1673098-1.html 1673098-1-ref.html
 

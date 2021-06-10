@@ -290,7 +290,7 @@ pref(privacy.reduceTimerPrecision,false) == anim-display-in-g-element.svg lime.s
 == anim-change-display-none-for-dynamically-appended-elem.html lime.html
 == anim-change-display-block-for-dynamically-appended-elem.html anim-standard-ref.html
 
-fuzzy(0-63,0-146) fuzzy-if(skiaContent,0-31,0-308) fuzzy-if(webrender,0-8,0-241) == anim-clipPath-viewBox.svg anim-clipPath-viewBox-ref.svg
+fuzzy(0-63,0-146) fuzzy-if(skiaContent,0-31,0-308) fuzzy-if(webrender,0-31,0-308) == anim-clipPath-viewBox.svg anim-clipPath-viewBox-ref.svg
 
 # Test animations for overflow.
 == anim-overflow-shorthand.svg anim-overflow-shorthand-ref.svg

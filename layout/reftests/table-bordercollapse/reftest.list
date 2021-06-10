@@ -110,11 +110,11 @@ fuzzy-if(appleSilicon,1-1,236-236) == frame_vsides_rules_none.html frame_vsides_
 # Fuzzy because border-collapsed borders are not antialiased, since each segment is painted separately.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
-fuzzy(0-255,0-40) fuzzy-if(webrender,52-52,40-526) fuzzy-if(appleSilicon,52-52,9760-9760) fails-if(geckoview&&webrender) == border-style-outset-becomes-groove.html border-style-outset-becomes-groove-ref.html
+fuzzy(0-255,0-40) fuzzy-if(!useDrawSnapshot&&webrender,52-52,40-526) fuzzy-if(appleSilicon,52-52,9760-9760) fails-if(geckoview&&webrender) == border-style-outset-becomes-groove.html border-style-outset-becomes-groove-ref.html
 # Fuzzy because border-collapsed borders are not antialiased, since each segment is painted separately.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
-fuzzy(0-255,0-40) fuzzy-if(webrender,52-52,40-526) fuzzy-if(appleSilicon,52-52,9760-9760) fails-if(geckoview&&webrender) == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge-ref.html
+fuzzy(0-255,0-40) fuzzy-if(!useDrawSnapshot&&webrender,52-52,40-526) fuzzy-if(appleSilicon,52-52,9760-9760) fails-if(geckoview&&webrender) == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge-ref.html
 fuzzy(0-2,0-11000) == 1324524.html 1324524-ref.html
 == 1384602-1a.html 1384602-1-ref.html
 == 1384602-1b.html 1384602-1-ref.html

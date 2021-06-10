@@ -1,11 +1,11 @@
 # access-key tests are no use on OS X because access keys are not indicated visually
 # no real XUL theme on Android so we just skip
 skip-if(cocoaWidget||Android) != chrome://reftest/content/forms/textbox/accesskey-1.xhtml chrome://reftest/content/forms/textbox/accesskey-1-notref.xhtml
-fuzzy-if(winWidget,0-1,0-3) skip-if(cocoaWidget||Android) fails-if(webrender) == chrome://reftest/content/forms/textbox/accesskey-2.xhtml chrome://reftest/content/forms/textbox/accesskey-2-ref.xhtml
+fuzzy-if(winWidget,0-1,0-3) skip-if(cocoaWidget||Android) fails-if(!useDrawSnapshot&&webrender) == chrome://reftest/content/forms/textbox/accesskey-2.xhtml chrome://reftest/content/forms/textbox/accesskey-2-ref.xhtml
 # accesskey-3 fails because of defects in XUL bidi support
 fails-if(!cocoaWidget) skip-if(cocoaWidget||Android) == chrome://reftest/content/forms/textbox/accesskey-3.xhtml chrome://reftest/content/forms/textbox/accesskey-3-ref.xhtml
 skip-if(cocoaWidget||Android) != chrome://reftest/content/forms/textbox/accesskey-3.xhtml chrome://reftest/content/forms/textbox/accesskey-3-notref.xhtml
-fuzzy-if(winWidget,0-1,0-3) skip-if(cocoaWidget||Android) fails-if(webrender&&!Android) == chrome://reftest/content/forms/textbox/accesskey-4.xhtml chrome://reftest/content/forms/textbox/accesskey-4-ref.xhtml
+fuzzy-if(winWidget,0-1,0-3) skip-if(cocoaWidget||Android) fails-if(!useDrawSnapshot&&webrender&&!Android) == chrome://reftest/content/forms/textbox/accesskey-4.xhtml chrome://reftest/content/forms/textbox/accesskey-4-ref.xhtml
 skip-if(cocoaWidget||Android) != chrome://reftest/content/forms/textbox/accesskey-4.xhtml chrome://reftest/content/forms/textbox/accesskey-4-notref.xhtml
 skip-if(Android) == chrome://reftest/content/forms/textbox/align-baseline-1.xhtml chrome://reftest/content/forms/textbox/align-baseline-1-ref.xhtml # test for bug 494901
 skip-if(Android) == chrome://reftest/content/forms/textbox/setsize.xhtml chrome://reftest/content/forms/textbox/setsize-ref.xhtml
