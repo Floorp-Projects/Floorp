@@ -3663,6 +3663,7 @@ DWORD WINAPI WerNotifyProc(LPVOID aParameter) {
     pd->minidump = minidump;
     pd->sequence = ++crashSequence;
     pd->annotations = MakeUnique<AnnotationTable>();
+    (*pd->annotations)[Annotation::WindowsErrorReporting] = "1"_ns;
     PopulateContentProcessAnnotations(*(pd->annotations));
   }
 
