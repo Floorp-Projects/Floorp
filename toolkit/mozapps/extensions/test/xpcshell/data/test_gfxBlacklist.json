@@ -348,5 +348,147 @@
     "driverVersion": " 8.52.322.1000 ",
     "driverVersionMax": " 9.52.322.1000 ",
     "driverVersionComparator": " BETWEEN_EXCLUSIVE "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "dcdc",
+    "devices": [
+      "uiop"
+    ],
+    "feature": " DIRECT3D_11_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION ",
+    "driverVersion": " 5 ",
+    "driverVersionMax": " 6 ",
+    "driverVersionComparator": " BETWEEN_EXCLUSIVE "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "dcdc",
+    "devices": [
+      "uiop"
+    ],
+    "feature": " OPENGL_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION ",
+    "driverVersion": " 6 ",
+    "driverVersionMax": " 7 ",
+    "driverVersionComparator": " BETWEEN_EXCLUSIVE "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "dcdc",
+    "devices": [
+      "uiop"
+    ],
+    "feature": " DIRECT3D_11_ANGLE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION ",
+    "driverVersion": " 5 ",
+    "driverVersionMax": " 7 ",
+    "driverVersionComparator": " BETWEEN_EXCLUSIVE "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "dcdc",
+    "devices": [
+      "uiop"
+    ],
+    "feature": " HARDWARE_VIDEO_DECODING ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION ",
+    "driverVersion": " 5 ",
+    "driverVersionMax": " 7 ",
+    "driverVersionComparator": " BETWEEN_INCLUSIVE "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "dcdc",
+    "devices": [
+      "uiop"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION_H264 ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION ",
+    "driverVersion": " 6 ",
+    "driverVersionMax": " 7 ",
+    "driverVersionComparator": " BETWEEN_INCLUSIVE "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "dcdc",
+    "devices": [
+      "uiop"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION_DECODE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION ",
+    "driverVersion": " 5 ",
+    "driverVersionMax": " 6 ",
+    "driverVersionComparator": " BETWEEN_INCLUSIVE "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "dcdc",
+    "devices": [
+      "uiop"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION_ENCODE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION ",
+    "driverVersion": " 6 ",
+    "driverVersionMax": " 7 ",
+    "driverVersionComparator": " BETWEEN_INCLUSIVE_START "
+  },
+  {
+    "os": "Android",
+    "vendor": "dcdc",
+    "devices": [
+      "uiop"
+    ],
+    "feature": " WEBGL_MSAA ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION ",
+    "driverVersion": " 5 ",
+    "driverVersionMax": " 7 ",
+    "driverVersionComparator": " BETWEEN_INCLUSIVE_START "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "dcdc",
+    "devices": [
+      "uiop"
+    ],
+    "feature": " WEBGL_ANGLE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION ",
+    "driverVersion": " 5 ",
+    "driverVersionMax": " 6 ",
+    "driverVersionComparator": " BETWEEN_INCLUSIVE_START "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "dcdc",
+    "devices": [
+      "uiop"
+    ],
+    "feature": " WEBGL2 ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION ",
+    "driverVersion": " 5 ",
+    "driverVersionMax": " 6 ",
+    "driverVersionComparator": " BETWEEN_INCLUSIVE_START "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "dcdc",
+    "devices": [
+      "uiop"
+    ],
+    "feature": " CANVAS2D_ACCELERATION ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION ",
+    "driverVersion": " 5 ",
+    "driverVersionMax": " 7 ",
+    "driverVersionComparator": " BETWEEN_EXCLUSIVE "
   }
 ]
