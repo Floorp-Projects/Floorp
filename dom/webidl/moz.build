@@ -379,9 +379,6 @@ with Files("WindowOrWorkerGlobalScope.webidl"):
 with Files("Worker*"):
     BUG_COMPONENT = ("Core", "DOM: Workers")
 
-with Files("Extension*"):
-    BUG_COMPONENT = ("WebExtensions", "General")
-
 GENERATED_WEBIDL_FILES = [
     "CSS2Properties.webidl",
 ]
@@ -1049,15 +1046,6 @@ WEBIDL_FILES += [
     "PopupBlockedEvent.webidl",
     "ProgressEvent.webidl",
     "StyleSheetApplicableStateChangeEvent.webidl",
-]
-
-# WebExtensions API.
-WEBIDL_FILES += [
-    "ExtensionBrowser.webidl",
-    "ExtensionEventManager.webidl",
-    # ExtensionMockAPI is not a real WebExtensions API, and it is only enabled in tests.
-    "ExtensionMockAPI.webidl",
-    "ExtensionPort.webidl",
 ]
 
 # We only expose our prefable test interfaces in debug builds, just to be on

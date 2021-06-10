@@ -1486,31 +1486,6 @@ def addon_sideload_allowed(value):
 
 set_config("MOZ_ALLOW_ADDON_SIDELOAD", addon_sideload_allowed)
 
-# WebExtensions API WebIDL bindings
-# ==============================================================
-
-
-@depends(milestone)
-def extensions_webidl_bindings_default(milestone):
-    # Only enable the webidl bindings for the WebExtensions APIs
-    # in Nightly.
-    return milestone.is_nightly
-
-
-option(
-    "--enable-extensions-webidl-bindings",
-    default=extensions_webidl_bindings_default,
-    help="{Enable|Disable} building experimental WebExtensions WebIDL bindings",
-)
-
-
-@depends("--enable-extensions-webidl-bindings")
-def extensions_webidl_enabled(value):
-    return bool(value)
-
-
-set_config("MOZ_WEBEXT_WEBIDL_ENABLED", extensions_webidl_enabled)
-
 # Launcher process (Windows only)
 # ==============================================================
 

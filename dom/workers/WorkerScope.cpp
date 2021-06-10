@@ -81,7 +81,6 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/cache/Types.h"
-#include "mozilla/extensions/ExtensionBrowser.h"
 #include "mozilla/fallible.h"
 #include "mozilla/gfx/Rect.h"
 #include "nsAtom.h"
@@ -796,7 +795,7 @@ void SharedWorkerGlobalScope::Close() {
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope,
-                                   mClients, mExtensionBrowser, mRegistration)
+                                   mClients, mRegistration)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerGlobalScope)
 NS_INTERFACE_MAP_END_INHERITING(WorkerGlobalScope)
 
@@ -936,15 +935,6 @@ already_AddRefed<Promise> ServiceWorkerGlobalScope::SkipWaiting(
       ->Track(*holder);
 
   return promise.forget();
-}
-
-SafeRefPtr<extensions::ExtensionBrowser>
-ServiceWorkerGlobalScope::AcquireExtensionBrowser() {
-  if (!mExtensionBrowser) {
-    mExtensionBrowser = MakeSafeRefPtr<extensions::ExtensionBrowser>(this);
-  }
-
-  return mExtensionBrowser.clonePtr();
 }
 
 bool WorkerDebuggerGlobalScope::WrapGlobalObject(
