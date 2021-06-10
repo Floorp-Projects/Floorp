@@ -378,8 +378,8 @@ xpcAccessible::GetAttributes(nsIPersistentProperties** aAttributes) {
     proxy->Attributes(&attrs);
     uint32_t attrCount = attrs.Length();
     for (uint32_t i = 0; i < attrCount; i++) {
-      attributes->SetAttribute(NS_ConvertUTF8toUTF16(attrs[i].Name()),
-                               attrs[i].Value());
+      RefPtr<nsAtom> nameAttr = NS_Atomize(attrs[i].Name());
+      attributes->SetAttribute(nameAttr, attrs[i].Value());
     }
   }
 

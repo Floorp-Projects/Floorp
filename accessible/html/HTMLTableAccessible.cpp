@@ -118,7 +118,8 @@ already_AddRefed<AccAttributes> HTMLTableCellAccessible::NativeAttributes() {
   }
 
 #ifdef DEBUG
-  attributes->SetAttribute(u"cppclass"_ns, u"HTMLTableCellAccessible"_ns);
+  RefPtr<nsAtom> cppClass = NS_Atomize(u"cppclass"_ns);
+  attributes->SetAttribute(cppClass, u"HTMLTableCellAccessible"_ns);
 #endif
 
   return attributes.forget();
@@ -398,7 +399,7 @@ already_AddRefed<AccAttributes> HTMLTableAccessible::NativeAttributes() {
   }
 
   if (IsProbablyLayoutTable()) {
-    attributes->SetAttribute(u"layout-guess"_ns, true);
+    attributes->SetAttribute(nsGkAtoms::layout_guess, true);
   }
 
   return attributes.forget();
