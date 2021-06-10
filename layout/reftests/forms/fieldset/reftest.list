@@ -5,7 +5,7 @@ fuzzy-if(skiaContent,0-2,0-13) == dynamic-legend-scroll-1.html dynamic-legend-sc
 == fieldset-scroll-1.html fieldset-scroll-1-ref.html
 == fieldset-scrolled-1.html fieldset-scrolled-1-ref.html
 == fieldset-overflow-auto-1.html fieldset-overflow-auto-1-ref.html
-fuzzy-if(winWidget&&!layersGPUAccelerated,0-142,0-276) == positioned-container-1.html positioned-container-1-ref.html
+fuzzy-if(!layersGPUAccelerated,0-142,0-276) == positioned-container-1.html positioned-container-1-ref.html
 == relpos-legend-1.html relpos-legend-1-ref.html
 == relpos-legend-2.html relpos-legend-2-ref.html
 == relpos-legend-3.html relpos-legend-3-ref.html
