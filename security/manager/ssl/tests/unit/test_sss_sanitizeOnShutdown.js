@@ -40,7 +40,6 @@ add_task(async function run_test() {
   ].createInstance(Ci.nsITransportSecurityInfo);
   let header = "max-age=50000";
   SSService.processHeader(
-    Ci.nsISiteSecurityService.HEADER_HSTS,
     Services.io.newURI("http://example.com"),
     header,
     secInfo,
