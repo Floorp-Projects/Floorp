@@ -33,6 +33,17 @@ class ServiceWorkerRegistrationParent final
   mozilla::ipc::IPCResult RecvUpdate(const nsCString& aNewestWorkerScriptUrl,
                                      UpdateResolver&& aResolver) override;
 
+  mozilla::ipc::IPCResult RecvSetNavigationPreloadEnabled(
+      const bool& aEnabled,
+      SetNavigationPreloadEnabledResolver&& aResolver) override;
+
+  mozilla::ipc::IPCResult RecvSetNavigationPreloadHeader(
+      const nsCString& aHeader,
+      SetNavigationPreloadHeaderResolver&& aResolver) override;
+
+  mozilla::ipc::IPCResult RecvGetNavigationPreloadState(
+      GetNavigationPreloadStateResolver&& aResolver) override;
+
  public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerRegistrationParent, override);
 
