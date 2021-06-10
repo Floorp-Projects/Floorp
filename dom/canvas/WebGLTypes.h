@@ -601,8 +601,6 @@ struct InitContextDesc final {
   uint32_t principalKey = 0;
 };
 
-constexpr uint32_t kMaxTransformFeedbackSeparateAttribs = 4;
-
 struct Limits final {
   ExtensionBits supportedExtensions;
 
@@ -611,13 +609,14 @@ struct Limits final {
   uint32_t maxTex2dSize = 0;
   uint32_t maxTexCubeSize = 0;
   uint32_t maxVertexAttribs = 0;
-  uint32_t maxViewportDim = 0;
+  std::array<uint32_t, 2> maxViewportDims = {};
   std::array<float, 2> pointSizeRange = {{1, 1}};
   std::array<float, 2> lineWidthRange = {{1, 1}};
 
   // WebGL 2
   uint32_t maxTexArrayLayers = 0;
   uint32_t maxTex3dSize = 0;
+  uint32_t maxTransformFeedbackSeparateAttribs = 0;
   uint32_t maxUniformBufferBindings = 0;
   uint32_t uniformBufferOffsetAlignment = 0;
 
