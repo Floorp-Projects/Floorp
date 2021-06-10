@@ -19,15 +19,90 @@
 #ifndef wasm_binary_h
 #define wasm_binary_h
 
+#include "mozilla/Maybe.h"
+
 #include <type_traits>
 
 #include "js/WasmFeatures.h"
 
 #include "wasm/WasmCompile.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmCompileArgs.h"
+#include "wasm/WasmConstants.h"
+#include "wasm/WasmTypeDecls.h"
+#include "wasm/WasmTypeDef.h"
+#include "wasm/WasmValType.h"
 
 namespace js {
 namespace wasm {
+
+using mozilla::Maybe;
+
+struct ModuleEnvironment;
+
+// The Opcode compactly and safely represents the primary opcode plus any
+// extension, with convenient predicates and accessors.
+
+class Opcode {
+  uint32_t bits_;
+
+ public:
+  MOZ_IMPLICIT Opcode(Op op) : bits_(uint32_t(op)) {
+    static_assert(size_t(Op::Limit) == 256, "fits");
+    MOZ_ASSERT(size_t(op) < size_t(Op::Limit));
+  }
+  MOZ_IMPLICIT Opcode(MiscOp op)
+      : bits_((uint32_t(op) << 8) | uint32_t(Op::MiscPrefix)) {
+    static_assert(size_t(MiscOp::Limit) <= 0xFFFFFF, "fits");
+    MOZ_ASSERT(size_t(op) < size_t(MiscOp::Limit));
+  }
+  MOZ_IMPLICIT Opcode(ThreadOp op)
+      : bits_((uint32_t(op) << 8) | uint32_t(Op::ThreadPrefix)) {
+    static_assert(size_t(ThreadOp::Limit) <= 0xFFFFFF, "fits");
+    MOZ_ASSERT(size_t(op) < size_t(ThreadOp::Limit));
+  }
+  MOZ_IMPLICIT Opcode(MozOp op)
+      : bits_((uint32_t(op) << 8) | uint32_t(Op::MozPrefix)) {
+    static_assert(size_t(MozOp::Limit) <= 0xFFFFFF, "fits");
+    MOZ_ASSERT(size_t(op) < size_t(MozOp::Limit));
+  }
+  MOZ_IMPLICIT Opcode(SimdOp op)
+      : bits_((uint32_t(op) << 8) | uint32_t(Op::SimdPrefix)) {
+    static_assert(size_t(SimdOp::Limit) <= 0xFFFFFF, "fits");
+    MOZ_ASSERT(size_t(op) < size_t(SimdOp::Limit));
+  }
+
+  bool isOp() const { return bits_ < uint32_t(Op::FirstPrefix); }
+  bool isMisc() const { return (bits_ & 255) == uint32_t(Op::MiscPrefix); }
+  bool isThread() const { return (bits_ & 255) == uint32_t(Op::ThreadPrefix); }
+  bool isMoz() const { return (bits_ & 255) == uint32_t(Op::MozPrefix); }
+  bool isSimd() const { return (bits_ & 255) == uint32_t(Op::SimdPrefix); }
+
+  Op asOp() const {
+    MOZ_ASSERT(isOp());
+    return Op(bits_);
+  }
+  MiscOp asMisc() const {
+    MOZ_ASSERT(isMisc());
+    return MiscOp(bits_ >> 8);
+  }
+  ThreadOp asThread() const {
+    MOZ_ASSERT(isThread());
+    return ThreadOp(bits_ >> 8);
+  }
+  MozOp asMoz() const {
+    MOZ_ASSERT(isMoz());
+    return MozOp(bits_ >> 8);
+  }
+  SimdOp asSimd() const {
+    MOZ_ASSERT(isSimd());
+    return SimdOp(bits_ >> 8);
+  }
+
+  uint32_t bits() const { return bits_; }
+
+  bool operator==(const Opcode& that) const { return bits_ == that.bits_; }
+  bool operator!=(const Opcode& that) const { return bits_ != that.bits_; }
+};
 
 // This struct captures the bytecode offset of a section's payload (so not
 // including the header) and the size of the payload.
@@ -216,8 +291,6 @@ class Encoder {
 // The Decoder class decodes the bytes in the range it is given during
 // construction. The client is responsible for keeping the byte range alive as
 // long as the Decoder is used.
-
-struct ModuleEnvironment;
 
 class Decoder {
   const uint8_t* const beg_;
