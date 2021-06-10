@@ -37,20 +37,13 @@ async function assertDatabaseValues(expected) {
       Assert.equal(
         actual.totalViewTime,
         expected[i].exactTotalViewTime,
-        "Should have kept the exact time"
+        "Should have kept the exact time."
       );
     } else {
       Assert.greater(
         actual.totalViewTime,
         expected[i].totalViewTime,
-        "Should have stored the interaction time"
-      );
-    }
-    if (expected[i].maxViewTime) {
-      Assert.less(
-        actual.totalViewTime,
-        expected[i].maxViewTime,
-        "Should have recorded an interaction below the maximum expected"
+        "Should have stored the interaction time."
       );
     }
   }
@@ -394,51 +387,4 @@ add_task(async function test_interactions_private_browsing() {
 
   BrowserTestUtils.removeTab(tabInOriginalWindow);
   await BrowserTestUtils.closeWindow(privateWin);
-});
-
-add_task(async function test_interactions_idle() {
-  sinon.reset();
-
-  let lastViewTime;
-
-  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    Interactions._pageViewStartTime = Cu.now() - 10000;
-
-    Interactions.observe(null, "idle", "");
-
-    await assertDatabaseValues([
-      {
-        url: TEST_URL,
-        totalViewTime: 10000,
-      },
-    ]);
-    lastViewTime = Interactions._updateDatabase.args[0][0].totalViewTime;
-
-    Interactions._pageViewStartTime = Cu.now() - 20000;
-
-    Interactions.observe(null, "active", "");
-
-    await assertDatabaseValues([
-      {
-        url: TEST_URL,
-        exactTotalViewTime: lastViewTime,
-      },
-    ]);
-
-    Interactions._pageViewStartTime = Cu.now() - 30000;
-  });
-
-  await assertDatabaseValues([
-    {
-      url: TEST_URL,
-      // Note: this should be `exactTotalViewTime: lastViewTime`, but
-      // apply updates to the same object.
-      totalViewTime: lastViewTime + 30000,
-    },
-    {
-      url: TEST_URL,
-      totalViewTime: lastViewTime + 30000,
-      maxViewTime: lastViewTime + 30000 + 10000,
-    },
-  ]);
 });
