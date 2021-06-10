@@ -186,28 +186,28 @@ impl Window {
         let mut builder = DisplayListBuilder::new(self.pipeline_id);
         let space_and_clip = SpaceAndClipInfo::root_scroll(self.pipeline_id);
 
-        let bounds = LayoutRect::from_size(layout_size);
+        let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
         builder.push_simple_stacking_context(
-            bounds.min,
+            bounds.origin,
             space_and_clip.spatial_id,
             PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );
 
         builder.push_rect(
             &CommonItemProperties::new(
-                LayoutRect::from_origin_and_size(
+                LayoutRect::new(
                     LayoutPoint::new(100.0, 200.0),
                     LayoutSize::new(100.0, 200.0),
                 ),
                 space_and_clip,
             ),
-            LayoutRect::from_origin_and_size(
+            LayoutRect::new(
                 LayoutPoint::new(100.0, 200.0),
                 LayoutSize::new(100.0, 200.0),
             ),
             ColorF::new(0.0, 1.0, 0.0, 1.0));
 
-        let text_bounds = LayoutRect::from_origin_and_size(
+        let text_bounds = LayoutRect::new(
             LayoutPoint::new(100.0, 50.0),
             LayoutSize::new(700.0, 200.0)
         );

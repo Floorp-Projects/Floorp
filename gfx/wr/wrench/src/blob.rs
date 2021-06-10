@@ -43,7 +43,7 @@ fn render_blob(
 ) -> BlobImageResult {
     // Allocate storage for the result. Right now the resource cache expects the
     // tiles to have have no stride or offset.
-    let buf_size = descriptor.rect.area() *
+    let buf_size = descriptor.rect.size.area() *
         descriptor.format.bytes_per_pixel();
     let mut texels = vec![0u8; (buf_size) as usize];
 
@@ -51,10 +51,10 @@ fn render_blob(
     // make sense for the rendered content to depend on its tile.
     let tile_checker = (tile.x % 2 == 0) != (tile.y % 2 == 0);
 
-    let dirty_rect = dirty_rect.to_subrect_of(&descriptor.rect);
+    let dirty_rect = dirty_rect.to_subrect_of(&descriptor.rect.to_box2d());
 
     // We want the dirty rect local to the tile rather than the whole image.
-    let tx: BlobToDeviceTranslation = (-descriptor.rect.min.to_vector()).into();
+    let tx: BlobToDeviceTranslation = (-descriptor.rect.origin.to_vector()).into();
 
     let rasterized_rect = tx.transform_box(&dirty_rect);
 
@@ -62,8 +62,8 @@ fn render_blob(
         for x in rasterized_rect.min.x .. rasterized_rect.max.x {
             // Apply the tile's offset. This is important: all drawing commands should be
             // translated by this offset to give correct results with tiled blob images.
-            let x2 = x + descriptor.rect.min.x;
-            let y2 = y + descriptor.rect.min.y;
+            let x2 = x + descriptor.rect.origin.x;
+            let y2 = y + descriptor.rect.origin.y;
 
             // Render a simple checkerboard pattern
             let checker = if (x2 % 20 >= 10) != (y2 % 20 >= 10) {
@@ -77,14 +77,14 @@ fn render_blob(
             match descriptor.format {
                 ImageFormat::BGRA8 => {
                     let a = color.a * checker + tc;
-                    let pixel_offset = ((y * descriptor.rect.width() + x) * 4) as usize;
+                    let pixel_offset = ((y * descriptor.rect.size.width + x) * 4) as usize;
                     texels[pixel_offset + 0] = premul(color.b * checker + tc, a);
                     texels[pixel_offset + 1] = premul(color.g * checker + tc, a);
                     texels[pixel_offset + 2] = premul(color.r * checker + tc, a);
                     texels[pixel_offset + 3] = a;
                 }
                 ImageFormat::R8 => {
-                    texels[(y * descriptor.rect.width() + x) as usize] = color.a * checker + tc;
+                    texels[(y * descriptor.rect.size.width + x) as usize] = color.a * checker + tc;
                 }
                 _ => {
                     return Err(BlobImageError::Other(
