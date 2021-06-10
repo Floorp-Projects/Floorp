@@ -4551,7 +4551,11 @@
 
 - name: gfx.e10s.font-list.shared
   type: bool
+#if defined(XP_LINUX) || defined(XP_WIN)
+  value: false
+#else
   value: true
+#endif
   mirror: once
 
 # Whether to load fonts (e.g. Twemoji Mozilla) bundled with the application:
