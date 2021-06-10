@@ -9054,13 +9054,15 @@ nsresult nsWindow::GetScreenRect(LayoutDeviceIntRect* aRect) {
   if (monitor) {
     GdkRectangle workArea;
     s_gdk_monitor_get_workarea(monitor, &workArea);
+    LayoutDeviceIntRect workAreaDevPix = GdkRectToDevicePixels(workArea);
     // The monitor offset won't help us in Wayland, because we can't get the
     // absolute position of our window.
     aRect->x = aRect->y = 0;
-    aRect->width = workArea.width;
-    aRect->height = workArea.height;
-    LOG(("  workarea for [%p], monitor %p: x%d y%d w%d h%d\n", this, monitor,
-         workArea.x, workArea.y, workArea.width, workArea.height));
+    aRect->width = workAreaDevPix.width;
+    aRect->height = workAreaDevPix.height;
+    LOG(("  workarea for [%p], monitor %p: x%d y%d w%d h%d, scaled w%d h%d\n",
+         this, monitor, workArea.x, workArea.y, workArea.width, workArea.height,
+         workAreaDevPix.width, workAreaDevPix.height));
     return NS_OK;
   }
   return NS_ERROR_NOT_IMPLEMENTED;
