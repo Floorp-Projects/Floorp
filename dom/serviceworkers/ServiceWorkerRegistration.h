@@ -21,6 +21,7 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
+class NavigationPreloadManager;
 class Promise;
 class PushManager;
 class WorkerPrivate;
@@ -81,6 +82,8 @@ class ServiceWorkerRegistration final : public DOMEventTargetHelper {
 
   already_AddRefed<ServiceWorker> GetActive() const;
 
+  already_AddRefed<NavigationPreloadManager> NavigationPreload();
+
   void UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
   bool MatchesDescriptor(
@@ -133,6 +136,7 @@ class ServiceWorkerRegistration final : public DOMEventTargetHelper {
   RefPtr<ServiceWorker> mInstallingWorker;
   RefPtr<ServiceWorker> mWaitingWorker;
   RefPtr<ServiceWorker> mActiveWorker;
+  RefPtr<NavigationPreloadManager> mNavigationPreloadManager;
   RefPtr<PushManager> mPushManager;
 
   struct VersionCallback {
