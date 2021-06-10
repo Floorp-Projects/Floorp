@@ -183,8 +183,11 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // uses the `extends` syntax.
   IsDerivedClassConstructor = 1 << 19,
 
-  // This function is a field initializer lambda for a class.
-  IsFieldInitializer = 1 << 20,
+  // This function is synthesized by the Parser. This is used for field
+  // initializer lambdas and missing constructors for classes. These functions
+  // have unusual source coordinates and may be hidden from things like
+  // Reflect.parse.
+  IsSyntheticFunction = 1 << 20,
 
   // This function is a class constructor that has MemberInitializer data
   // associated with it.
@@ -234,19 +237,16 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   //    // Implicit use in parameter expression
   //    function f(a = arguments) { return a; }
   //   ```
-  ArgumentsHasVarBinding = 1 << 26,
-
-  // This function requires the `arguments` binding to be initialized with the
-  // real arguments object. If unset, but ArgumentsHasVarBinding is set then an
-  // analysis pass will determine if an efficient placeholder value can be used
-  // instead.
-  // See the implementation of JSOp::Arguments opcode.
-  AlwaysNeedsArgsObj = 1 << 27,
+  NeedsArgsObj = 1 << 26,
 
   // This function must use the "mapped" form of an arguments object. This flag
   // is set independently of whether we actually use an `arguments` binding. The
   // conditions are specified in the ECMAScript spec.
-  HasMappedArgsObj = 1 << 28,
+  HasMappedArgsObj = 1 << 27,
+
+  // Large self-hosted methods that should be inlined anyway by the JIT for
+  // performance reasons can be marked with this flag.
+  IsInlinableLargeFunction = 1 << 28,
 };
 
 enum class MutableScriptFlagsEnum : uint32_t {
@@ -266,9 +266,8 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // Script has an entry in Realm::debugScriptMap.
   HasDebugScript = 1 << 11,
 
-  // See: JSScript::ensureHasAnalyzedArgsUsage.
-  NeedsArgsAnalysis = 1 << 12,
-  NeedsArgsObj = 1 << 13,
+  // (1 << 12) is unused.
+  // (1 << 13) is unused.
 
   // Script supports relazification where it releases bytecode and gcthings to
   // save memory. This process is opt-in since various complexities may disallow
@@ -293,38 +292,37 @@ enum class MutableScriptFlagsEnum : uint32_t {
   BaselineDisabled = 1 << 17,
   IonDisabled = 1 << 18,
 
-  // Script has had hoisted bounds checks fail.
-  FailedBoundsCheck = 1 << 19,
-
-  // Script has had hoisted shape guard fail.
-  FailedShapeGuard = 1 << 20,
-
-  // Script has had instruction hoisted by LICM fail.
-  HadLICMInvalidation = 1 << 21,
-
-  // An overflow happened where Range Analysis hoped it would not. The next
-  // compile should be more conservative.
-  HadEagerTruncationBailout = 1 << 22,
-
   // This script should not be inlined into others. This happens after inlining
   // has failed.
-  Uninlineable = 1 << 23,
+  Uninlineable = 1 << 19,
 
-  // An idempotent IC has triggered invalidation and should be deoptimized.
-  InvalidatedIdempotentCache = 1 << 24,
+  // (1 << 20) is unused.
 
-  // Lexical check did fail and bail out.
+  // *****************************************************************
+  // The flags below are set when we bail out and invalidate a script.
+  // When we recompile, we will be more conservative.
+  // *****************************************************************
+
+  // A hoisted bounds check bailed out.
+  FailedBoundsCheck = 1 << 21,
+
+  // An instruction hoisted by LICM bailed out.
+  HadLICMInvalidation = 1 << 22,
+
+  // An instruction hoisted by InstructionReordering bailed out.
+  HadReorderingBailout = 1 << 23,
+
+  // An instruction inserted or truncated by Range Analysis bailed out.
+  HadEagerTruncationBailout = 1 << 24,
+
+  // A lexical check bailed out.
   FailedLexicalCheck = 1 << 25,
 
-  // A guard inserted by phi specialization failed.
+  // A guard inserted by phi specialization bailed out.
   HadSpeculativePhiBailout = 1 << 26,
 
-  // An unbox folded with a load failed.
+  // An unbox folded with a load bailed out.
   HadUnboxFoldingBailout = 1 << 27,
-
-  // Large self-hosted methods that should be inlined anyway by the JIT for
-  // performance reasons can be marked with this flag.
-  IsInlinableLargeFunction = 1 << 28,
 };
 
 }  // namespace js
