@@ -8,7 +8,6 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
-#include "mozIExtensionProcessScript.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
@@ -51,8 +50,6 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
   NS_DECL_NSIADDONPOLICYSERVICE
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEMORYREPORTER
-
-  static mozIExtensionProcessScript& ProcessScript();
 
   static ExtensionPolicyService& GetSingleton();
 
