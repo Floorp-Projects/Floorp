@@ -41,6 +41,8 @@
 #include "vm/FunctionFlags.h"
 #include "vm/JSObject.h"
 #include "vm/StringType.h"
+#include "wasm/WasmFrame.h"
+#include "wasm/WasmTypes.h"
 
 // [SMDOC] MacroAssembler multi-platform overview
 //

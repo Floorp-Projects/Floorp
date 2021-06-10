@@ -21,6 +21,7 @@
 
 #include "js/ProfilingFrameIterator.h"
 #include "js/TypeDecls.h"
+#include "wasm/WasmFrame.h"
 #include "wasm/WasmTypes.h"
 
 namespace js {
@@ -37,6 +38,7 @@ namespace wasm {
 class Code;
 class CodeRange;
 class DebugFrame;
+struct TlsData;
 class TypeIdDesc;
 class Instance;
 class ModuleSegment;
