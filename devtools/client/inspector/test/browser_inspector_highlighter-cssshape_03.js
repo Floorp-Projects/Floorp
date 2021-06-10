@@ -33,7 +33,13 @@ async function testZoomSize(testActor, helper) {
   // It should always match the element being highlighted.
   for (const zoom of TEST_LEVELS) {
     info(`Setting zoom level to ${zoom}.`);
-    await testActor.zoomPageTo(zoom, helper.actorID);
+
+    const onHighlighterUpdated = testActor.once("highlighter-updated");
+    // we need to await here to ensure the event listener was registered.
+    await testActor.registerOneTimeHighlighterUpdate(helper.actorID);
+
+    setContentPageZoomLevel(zoom);
+    await onHighlighterUpdated;
     const style = await helper.getElementAttribute(
       "shapes-shape-container",
       "style"
@@ -45,10 +51,11 @@ async function testZoomSize(testActor, helper) {
       `Highlighter has correct quads at zoom level ${zoom}`
     );
   }
+  // reset zoom
+  setContentPageZoomLevel(1);
 }
 
 async function testGeometryBox(testActor, helper) {
-  await testActor.zoomPageTo(1, helper.actorID);
   await helper.show("#ellipse", { mode: "cssClipPath" });
   let quads = await testActor.getAllAdjustedQuads("#ellipse");
   const {

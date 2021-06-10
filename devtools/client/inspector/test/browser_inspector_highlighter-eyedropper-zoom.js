@@ -33,7 +33,7 @@ add_task(async function() {
   const inspectorFrontActorID = inspector.inspectorFront.actorID;
 
   info("Zoom in the page");
-  await testActor.changeZoomLevel(2, "");
+  setContentPageZoomLevel(2);
 
   const toggleButton = inspector.panelDoc.querySelector(
     "#inspector-eyedropper-toggle"
@@ -85,5 +85,5 @@ add_task(async function() {
       .isEyeDropperVisible(inspectorFrontActorID)
       .then(visible => !visible)
   );
-  await testActor.changeZoomLevel(1, "");
+  setContentPageZoomLevel(1);
 });

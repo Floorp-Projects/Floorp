@@ -26,7 +26,7 @@ add_task(async function() {
 
   for (const level of TEST_LEVELS) {
     info(`Zoom to level ${level}`);
-    await testActor.zoomPageTo(level, false);
+    setContentPageZoomLevel(level);
 
     info("Highlight the test node");
     await inspector.highlighters.showHighlighterTypeForNode(

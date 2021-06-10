@@ -65,6 +65,10 @@ function getHighlighterCanvasFrameHelper(conn, actorID) {
 var testSpec = protocol.generateActorSpec({
   typeName: "test",
 
+  events: {
+    "highlighter-updated": {},
+  },
+
   methods: {
     getHighlighterAttribute: {
       request: {
@@ -101,17 +105,16 @@ var testSpec = protocol.generateActorSpec({
       },
       response: {},
     },
+    registerOneTimeHighlighterUpdate: {
+      request: {
+        actorID: Arg(0, "string"),
+      },
+      response: {},
+    },
     waitForEventOnNode: {
       request: {
         eventName: Arg(0, "string"),
         selector: Arg(1, "nullable:string"),
-      },
-      response: {},
-    },
-    changeZoomLevel: {
-      request: {
-        level: Arg(0, "string"),
-        actorID: Arg(1, "string"),
       },
       response: {},
     },
@@ -360,6 +363,21 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
   },
 
   /**
+   * Register a one-time "updated" event listener.
+   * The method does not wait for the "updated" event itself so the response can be sent
+   * back and the client would know the event listener is properly set.
+   * A separate event, "highlighter-updated", will be emitted when the highlighter updates.
+   *
+   * @param {String} actorID The highlighter actor ID
+   */
+  registerOneTimeHighlighterUpdate(actorID) {
+    const { _highlighter } = this.conn.getActor(actorID);
+    _highlighter.once("updated").then(() => this.emit("highlighter-updated"));
+
+    // Return directly so the client knows the event listener is set
+  },
+
+  /**
    * Wait for a specific event on a node matching the provided selector.
    * @param {String} eventName The name of the event to listen to
    * @param {String} selector Optional:  css selector of the node which should
@@ -375,29 +393,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
         },
         { once: true }
       );
-    });
-  },
-
-  /**
-   * Change the zoom level of the page.
-   * Optionally subscribe to the box-model highlighter's update event and waiting
-   * for it to refresh before responding.
-   * @param {Number} level The new zoom level
-   * @param {String} actorID Optional. The highlighter actor ID
-   */
-  changeZoomLevel: function(level, actorID) {
-    dumpn("Zooming page to " + level);
-    return new Promise(resolve => {
-      if (actorID) {
-        const actor = this.conn.getActor(actorID);
-        const { _highlighter: h } = actor;
-        h.once("updated", resolve);
-      } else {
-        resolve();
-      }
-
-      const bc = this.content.docShell.browsingContext;
-      bc.fullZoom = level;
     });
   },
 
@@ -665,17 +660,6 @@ class TestFront extends protocol.FrontClassWithSpec(testSpec) {
     return typeof this._highlighter === "function"
       ? this._highlighter()
       : this._highlighter;
-  }
-
-  /**
-   * Zoom the current page to a given level.
-   * @param {Number} level The new zoom level.
-   * @param {String} actorID Optional. The highlighter actor ID.
-   * @return {Promise} The returned promise will only resolve when the
-   * highlighter has updated to the new zoom level.
-   */
-  zoomPageTo(level, actorID = this.highlighter.actorID) {
-    return this.changeZoomLevel(level, actorID);
   }
 
   /* eslint-disable max-len */

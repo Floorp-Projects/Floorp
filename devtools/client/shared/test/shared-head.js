@@ -1596,3 +1596,12 @@ function scrollContentPageNodeIntoView(browsingContext, selector) {
     node.scrollIntoView();
   });
 }
+
+/**
+ * Change the zoom level of the selected page.
+ *
+ * @param {Number} zoomLevel
+ */
+function setContentPageZoomLevel(zoomLevel) {
+  gBrowser.selectedBrowser.fullZoom = zoomLevel;
+}
