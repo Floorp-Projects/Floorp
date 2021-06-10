@@ -45,6 +45,14 @@ add_task(async function test_flush() {
 });
 
 add_task(async function test_crash() {
+  if (Services.appinfo.sessionHistoryInParent) {
+    // This test relies on frame script message ordering. Since the frame script
+    // is unused with SHIP, there's no guarantee that we'll crash the frame
+    // before we've started the flush.
+    ok(true, "Test relies on frame script message ordering.");
+    return;
+  }
+
   // Create new tab.
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
   gBrowser.selectedTab = tab;
