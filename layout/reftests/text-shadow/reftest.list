@@ -5,7 +5,7 @@ random-if(Android) == chrome://reftest/content/text-shadow/basic-negcoord.xhtml 
 != chrome://reftest/content/text-shadow/blur.xhtml chrome://reftest/content/text-shadow/blur-notref.xhtml
 == chrome://reftest/content/text-shadow/color-inherit.xhtml chrome://reftest/content/text-shadow/color-inherit-ref.xhtml
 == chrome://reftest/content/text-shadow/multiple-noblur.xhtml chrome://reftest/content/text-shadow/multiple-noblur-ref.xhtml
-fuzzy-if(webrender&&swgl&&!Android,2-2,6320-6320) == blur-opacity.html blur-opacity-ref.html
+fuzzy-if(webrender&&swgl&&!Android,2-2,6320-6320) random-if(useDrawSnapshot&&webrender) == blur-opacity.html blur-opacity-ref.html
 
 == basic.html basic-ref.html
 == basic-negcoord.html basic-negcoord-ref.html

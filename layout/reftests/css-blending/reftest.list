@@ -14,7 +14,7 @@ fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-10000) == background-blending-image-col
 fuzzy-if(azureSkiaGL,0-2,0-7174) == background-blending-image-gradient.html background-blending-gradient-color-ref.html
 == background-blending-image-image.html background-blending-image-color-ref.html
 == background-blending-isolation.html background-blending-isolation-ref.html
-== background-blending-list-repeat.html background-blending-list-repeat-ref.html
+random-if(useDrawSnapshot) == background-blending-list-repeat.html background-blending-list-repeat-ref.html
 == background-blending-multiple-images.html background-blending-multiple-images-ref.html
 
 == background-blending-color-burn.html background-blending-color-burn-ref.svg
