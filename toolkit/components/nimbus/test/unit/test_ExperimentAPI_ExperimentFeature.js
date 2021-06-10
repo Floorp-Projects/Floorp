@@ -335,7 +335,6 @@ add_task(async function test_record_exposure_event() {
 
   manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
-      featureIds: ["foo"],
       branch: {
         slug: "treatment",
         feature: {
@@ -365,7 +364,6 @@ add_task(async function test_record_exposure_event_once() {
 
   manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
-      featureIds: ["foo"],
       branch: {
         slug: "treatment",
         feature: {
@@ -394,7 +392,6 @@ add_task(async function test_prevent_double_exposure_getValue() {
 
   manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
-      featureIds: ["foo"],
       branch: {
         slug: "treatment",
         feature: {
@@ -426,7 +423,6 @@ add_task(async function test_prevent_double_exposure_isEnabled() {
 
   manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
-      featureIds: ["foo"],
       branch: {
         slug: "treatment",
         feature: {
@@ -504,7 +500,6 @@ add_task(async function test_isEnabled_backwards_compatible() {
 
   manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
-      featureIds: ["foo"],
       branch: {
         slug: "treatment",
         feature: {
@@ -522,4 +517,55 @@ add_task(async function test_isEnabled_backwards_compatible() {
     "Enabled based on experiment recipe"
   );
   Assert.ok(exposureSpy.calledOnce, "Exposure event sent");
+});
+
+add_task(async function test_onUpdate_before_store_ready() {
+  let sandbox = sinon.createSandbox();
+  const feature = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+  const stub = sandbox.stub();
+  const manager = ExperimentFakes.manager();
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+  sandbox.stub(manager.store, "getAllActive").returns([
+    ExperimentFakes.experiment("foo-experiment", {
+      branch: { slug: "control", feature: { featureId: "foo", value: null } },
+    }),
+  ]);
+
+  // We register for updates before the store finished loading experiments
+  // from disk
+  feature.onUpdate(stub);
+
+  await manager.onStartup();
+
+  Assert.ok(
+    stub.calledOnce,
+    "Called on startup after loading experiments from disk"
+  );
+  Assert.equal(
+    stub.firstCall.args[1],
+    "feature-experiment-loaded",
+    "Called for the expected reason"
+  );
+});
+
+add_task(async function test_ExperimentFeature_test_ready_late() {
+  const { manager, sandbox } = await setupForExperimentFeature();
+  const stub = sandbox.stub();
+  await manager.store.ready();
+
+  manager.store.finalizeRemoteConfigs([]);
+
+  const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+  featureInstance.onUpdate(stub);
+
+  // Setting a really high timeout so in case our ready function doesn't handle
+  // this late init + ready scenario correctly the test will time out
+  await featureInstance.ready(400 * 1000);
+
+  Assert.ok(stub.notCalled, "We register too late to catch any events");
+
+  Assert.ok(
+    !featureInstance.isEnabled(),
+    "Feature is ready even when initialized after store update"
+  );
 });

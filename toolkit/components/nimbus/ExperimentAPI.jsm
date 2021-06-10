@@ -394,12 +394,16 @@ class ExperimentFeature {
   async ready(timeout) {
     const REMOTE_DEFAULTS_TIMEOUT_MS = 15 * 1000; // 15 seconds
     await ExperimentAPI.ready();
-    let remoteTimeoutId = setTimeout(
-      this._onRemoteReady,
-      timeout || REMOTE_DEFAULTS_TIMEOUT_MS
-    );
-    await this._waitForRemote;
-    clearTimeout(remoteTimeoutId);
+    if (ExperimentAPI._store.hasRemoteDefaultsReady()) {
+      this._onRemoteReady();
+    } else {
+      let remoteTimeoutId = setTimeout(
+        this._onRemoteReady,
+        timeout || REMOTE_DEFAULTS_TIMEOUT_MS
+      );
+      await this._waitForRemote;
+      clearTimeout(remoteTimeoutId);
+    }
   }
 
   /**

@@ -98,6 +98,19 @@ class ExperimentStore extends SharedDataMap {
     super(sharedDataKey || DEFAULT_STORE_ID, options);
   }
 
+  async init() {
+    await super.init();
+
+    this.getAllActive().forEach(({ branch }) => {
+      if (branch?.feature?.featureId) {
+        this._emitFeatureUpdate(
+          branch.feature.featureId,
+          "feature-experiment-loaded"
+        );
+      }
+    });
+  }
+
   /**
    * Given a feature identifier, find an active experiment that matches that feature identifier.
    * This assumes, for now, that there is only one active experiment per feature per browser.
@@ -245,6 +258,14 @@ class ExperimentStore extends SharedDataMap {
       if (!activeFeatureConfigIds.includes(featureId)) {
         this.deleteRemoteConfig(featureId);
       }
+    }
+
+    // In case no features exist we want to at least initialize with an empty
+    // object to signal that we completed the initial fetch step
+    if (!activeFeatureConfigIds.length) {
+      // Wait for ready, in the case users have opted out we finalize early
+      // and things might not be ready yet
+      this.ready().then(() => this.setNonPersistent(REMOTE_DEFAULTS_KEY, {}));
     }
 
     // Notify all ExperimentFeature instances that the Remote Defaults cycle finished

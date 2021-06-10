@@ -6,6 +6,12 @@
 const { ExperimentStore } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentStore.jsm"
 );
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/NimbusTestUtils.jsm"
+);
+const { ExperimentFeatures } = ChromeUtils.import(
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "JSONFile",
@@ -37,4 +43,29 @@ add_task(async function test_loadFromFile() {
     store.get("test"),
     "This should pass if the correct store path loaded successfully"
   );
+});
+
+add_task(async function test_load_from_disk_event() {
+  const experiment = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: { featureId: "green", enabled: true },
+    },
+  });
+  const stub = sinon.stub();
+  const previousSession = new JSONFile({ path: getPath() });
+  await previousSession.load();
+  previousSession.data.foo = experiment;
+  previousSession.saveSoon();
+  await previousSession.finalize();
+
+  // Create a store and expect to load data from previous session
+  const store = new ExperimentStore();
+
+  store._onFeatureUpdate("green", stub);
+
+  await store.init();
+  await TestUtils.waitForCondition(() => stub.called, "Stub was called");
+
+  Assert.ok(stub.firstCall.args[1], "feature-experiment-loaded");
 });

@@ -238,3 +238,13 @@ with_sharedDataMap(async function test_earlyChildSync({
     "Parent and child should be in sync"
   );
 });
+
+with_sharedDataMap(async function test_set_notify({ instance, sandbox }) {
+  await instance.init();
+
+  Assert.ok(!instance.hasRemoteDefaultsReady(), "False on init");
+
+  instance.setNonPersistent("__REMOTE_DEFAULTS", { foo: 1 });
+
+  Assert.ok(instance.hasRemoteDefaultsReady(), "Has 1 entry");
+});

@@ -132,6 +132,10 @@ class SharedDataMap extends EventEmitter {
     this._notifyUpdate();
   }
 
+  hasRemoteDefaultsReady() {
+    return this._nonPersistentStore?.__REMOTE_DEFAULTS;
+  }
+
   // Only used in tests
   _deleteForTests(key) {
     if (!this.isParent) {
