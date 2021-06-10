@@ -634,6 +634,14 @@ AliasSet MThrow::getAliasSet() const {
   return AliasSet::Store(AliasSet::ExceptionState);
 }
 
+AliasSet MNewArrayDynamicLength::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ExceptionState);
+}
+
+AliasSet MNewTypedArrayDynamicLength::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ExceptionState);
+}
+
 #ifdef JS_JITSPEW
 void MDefinition::printOpcode(GenericPrinter& out) const {
   PrintOpcodeName(out, op());
@@ -3114,6 +3122,19 @@ AliasSet MArgumentsObjectLength::getAliasSet() const {
                         AliasSet::DynamicSlot);
 }
 
+bool MGuardArgumentsObjectFlags::congruentTo(const MDefinition* ins) const {
+  if (!ins->isGuardArgumentsObjectFlags() ||
+      ins->toGuardArgumentsObjectFlags()->flags() != flags()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
+AliasSet MGuardArgumentsObjectFlags::getAliasSet() const {
+  // The flags are packed with the length in a fixed private slot.
+  return AliasSet::Load(AliasSet::FixedSlot);
+}
+
 MDefinition* MReturnFromCtor::foldsTo(TempAllocator& alloc) {
   MDefinition* rval = value();
   if (rval->isBox()) {
@@ -4108,6 +4129,24 @@ AliasSet MCreateThis::getAliasSet() const {
   return AliasSet::Load(AliasSet::Any);
 }
 
+bool MGetArgumentsObjectArg::congruentTo(const MDefinition* ins) const {
+  if (!ins->isGetArgumentsObjectArg()) {
+    return false;
+  }
+  if (ins->toGetArgumentsObjectArg()->argno() != argno()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
+AliasSet MGetArgumentsObjectArg::getAliasSet() const {
+  return AliasSet::Load(AliasSet::Any);
+}
+
+AliasSet MSetArgumentsObjectArg::getAliasSet() const {
+  return AliasSet::Store(AliasSet::Any);
+}
+
 MObjectState::MObjectState(MObjectState* state)
     : MVariadicInstruction(classOpcode),
       numSlots_(state->numSlots_),
@@ -5098,6 +5137,10 @@ MDefinition* MGetFirstDollarIndex::foldsTo(TempAllocator& alloc) {
   return MConstant::New(alloc, Int32Value(index));
 }
 
+AliasSet MThrowRuntimeLexicalError::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ExceptionState);
+}
+
 AliasSet MSlots::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
@@ -5408,6 +5451,20 @@ bool MCallBindVar::congruentTo(const MDefinition* ins) const {
   return congruentIfOperandsEqual(ins);
 }
 
+bool MGuardShape::congruentTo(const MDefinition* ins) const {
+  if (!ins->isGuardShape()) {
+    return false;
+  }
+  if (shape() != ins->toGuardShape()->shape()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
+AliasSet MGuardShape::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
 MDefinition* MGuardIsNotProxy::foldsTo(TempAllocator& alloc) {
   KnownClass known = GetObjectKnownClass(object());
   if (known == KnownClass::None) {
@@ -5424,8 +5481,105 @@ AliasSet MMegamorphicLoadSlotByValue::getAliasSet() const {
                         AliasSet::DynamicSlot);
 }
 
+bool MMegamorphicLoadSlot::congruentTo(const MDefinition* ins) const {
+  if (!ins->isMegamorphicLoadSlot()) {
+    return false;
+  }
+  if (ins->toMegamorphicLoadSlot()->name() != name()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
+AliasSet MMegamorphicLoadSlot::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                        AliasSet::DynamicSlot);
+}
+
+bool MMegamorphicStoreSlot::congruentTo(const MDefinition* ins) const {
+  if (!ins->isMegamorphicStoreSlot()) {
+    return false;
+  }
+  if (ins->toMegamorphicStoreSlot()->name() != name()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
+AliasSet MMegamorphicStoreSlot::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                         AliasSet::DynamicSlot);
+}
+
+bool MMegamorphicHasProp::congruentTo(const MDefinition* ins) const {
+  if (!ins->isMegamorphicHasProp()) {
+    return false;
+  }
+  if (ins->toMegamorphicHasProp()->hasOwn() != hasOwn()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
+AliasSet MMegamorphicHasProp::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                        AliasSet::DynamicSlot);
+}
+
+bool MNurseryObject::congruentTo(const MDefinition* ins) const {
+  if (!ins->isNurseryObject()) {
+    return false;
+  }
+  return nurseryIndex() == ins->toNurseryObject()->nurseryIndex();
+}
+
 AliasSet MGuardFunctionIsNonBuiltinCtor::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+bool MGuardFunctionKind::congruentTo(const MDefinition* ins) const {
+  if (!ins->isGuardFunctionKind()) {
+    return false;
+  }
+  if (expected() != ins->toGuardFunctionKind()->expected()) {
+    return false;
+  }
+  if (bailOnEquality() != ins->toGuardFunctionKind()->bailOnEquality()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
+AliasSet MGuardFunctionKind::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+bool MGuardFunctionScript::congruentTo(const MDefinition* ins) const {
+  if (!ins->isGuardFunctionScript()) {
+    return false;
+  }
+  if (expected() != ins->toGuardFunctionScript()->expected()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
+AliasSet MGuardFunctionScript::getAliasSet() const {
+  // A JSFunction's BaseScript pointer is immutable. Relazification of
+  // self-hosted functions is an exception to this, but we don't use this
+  // guard for self-hosted functions.
+  MOZ_ASSERT(!flags_.isSelfHostedOrIntrinsic());
+  return AliasSet::None();
+}
+
+bool MGuardSpecificAtom::congruentTo(const MDefinition* ins) const {
+  if (!ins->isGuardSpecificAtom()) {
+    return false;
+  }
+  if (atom() != ins->toGuardSpecificAtom()->atom()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
 }
 
 MDefinition* MGuardStringToIndex::foldsTo(TempAllocator& alloc) {
@@ -5480,12 +5634,36 @@ AliasSet MGuardNoDenseElements::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
+AliasSet MCopyLexicalEnvironmentObject::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                        AliasSet::DynamicSlot);
+}
+
+AliasSet MAllocateAndStoreSlot::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ObjectFields | AliasSet::DynamicSlot);
+}
+
 AliasSet MLoadDOMExpandoValue::getAliasSet() const {
   return AliasSet::Load(AliasSet::DOMProxyExpando);
 }
 
 AliasSet MLoadDOMExpandoValueIgnoreGeneration::getAliasSet() const {
   return AliasSet::Load(AliasSet::DOMProxyExpando);
+}
+
+bool MGuardDOMExpandoMissingOrGuardShape::congruentTo(
+    const MDefinition* ins) const {
+  if (!ins->isGuardDOMExpandoMissingOrGuardShape()) {
+    return false;
+  }
+  if (shape() != ins->toGuardDOMExpandoMissingOrGuardShape()->shape()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
+AliasSet MGuardDOMExpandoMissingOrGuardShape::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
 }
 
 MDefinition* MGuardToClass::foldsTo(TempAllocator& alloc) {
@@ -5640,6 +5818,23 @@ AliasSet MLoadWrapperTarget::getAliasSet() const {
   return AliasSet::Load(AliasSet::Any);
 }
 
+AliasSet MGuardHasGetterSetter::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+bool MGuardHasGetterSetter::congruentTo(const MDefinition* ins) const {
+  if (!ins->isGuardHasGetterSetter()) {
+    return false;
+  }
+  if (ins->toGuardHasGetterSetter()->propId() != propId()) {
+    return false;
+  }
+  if (ins->toGuardHasGetterSetter()->getterSetter() != getterSetter()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
 AliasSet MGuardIsExtensible::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
@@ -5753,4 +5948,19 @@ MDefinition* MGetInlinedArgument::foldsTo(TempAllocator& alloc) {
   }
 
   return arg;
+}
+
+bool MWasmShiftSimd128::congruentTo(const MDefinition* ins) const {
+  return ins->toWasmShiftSimd128()->simdOp() == simdOp_ &&
+         congruentIfOperandsEqual(ins);
+}
+
+bool MWasmShuffleSimd128::congruentTo(const MDefinition* ins) const {
+  return ins->toWasmShuffleSimd128()->control().bitwiseEqual(control_) &&
+         congruentIfOperandsEqual(ins);
+}
+
+bool MWasmUnarySimd128::congruentTo(const MDefinition* ins) const {
+  return ins->toWasmUnarySimd128()->simdOp() == simdOp_ &&
+         congruentIfOperandsEqual(ins);
 }
