@@ -125,7 +125,13 @@ class AccAttributes {
       return Nothing();
     }
 
-    void NameAsString(nsAString& aName) { mName->ToString(aName); }
+    void NameAsString(nsString& aName) {
+      mName->ToString(aName);
+      if (aName.Find("aria-", false, 0, 1) == 0) {
+        // Found 'aria-'
+        aName.ReplaceLiteral(0, 5, u"");
+      }
+    }
 
     void ValueAsString(nsAString& aValueString) {
       StringFromValueAndName(mName, *mValue, aValueString);

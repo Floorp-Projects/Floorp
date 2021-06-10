@@ -311,7 +311,7 @@ MARKUPMAP(
     [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLOutputAccessible(aElement, aContext->Document());
     },
-    roles::STATUSBAR, Attr(live, polite))
+    roles::STATUSBAR, Attr(aria_live, polite))
 
 MARKUPMAP(p, nullptr, roles::PARAGRAPH)
 

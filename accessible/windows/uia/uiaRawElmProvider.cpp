@@ -164,8 +164,16 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       nsAutoString ariaProperties;
 
       aria::AttrIterator attribIter(mAcc->GetContent());
-      nsAutoString attribName, attribValue;
-      while (attribIter.Next(attribName, attribValue)) {
+      while (attribIter.Next()) {
+        nsAutoString attribName, attribValue;
+        nsAutoString value;
+        attribIter.AttrName()->ToString(attribName);
+        attribIter.AttrValue(attribValue);
+        if (attribName.Find("aria-", false, 0, 1) == 0) {
+          // Found 'aria-'
+          attribName.ReplaceLiteral(0, 5, u"");
+        }
+
         ariaProperties.Append(attribName);
         ariaProperties.Append('=');
         ariaProperties.Append(attribValue);
