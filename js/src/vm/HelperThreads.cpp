@@ -1420,7 +1420,7 @@ void GlobalHelperThreadState::finish(AutoLockHelperThreadState& lock) {
 void GlobalHelperThreadState::finishThreads(AutoLockHelperThreadState& lock) {
   HelperThreadVector oldThreads;
 
-  waitForAllThreadsLocked(lock);
+  waitForAllTasksLocked(lock);
 
   terminating_ = true;
 
@@ -1515,26 +1515,26 @@ bool GlobalHelperThreadState::hasActiveThreads(
   return !helperTasks(lock).empty();
 }
 
-void js::WaitForAllHelperThreads() { HelperThreadState().waitForAllThreads(); }
+void js::WaitForAllHelperThreads() { HelperThreadState().waitForAllTasks(); }
 
 void js::WaitForAllHelperThreads(AutoLockHelperThreadState& lock) {
-  HelperThreadState().waitForAllThreadsLocked(lock);
+  HelperThreadState().waitForAllTasksLocked(lock);
 }
 
-void GlobalHelperThreadState::waitForAllThreads() {
+void GlobalHelperThreadState::waitForAllTasks() {
   AutoLockHelperThreadState lock;
-  waitForAllThreadsLocked(lock);
+  waitForAllTasksLocked(lock);
 }
 
-void GlobalHelperThreadState::waitForAllThreadsLocked(
+void GlobalHelperThreadState::waitForAllTasksLocked(
     AutoLockHelperThreadState& lock) {
   CancelOffThreadWasmTier2GeneratorLocked(lock);
 
-  while (hasActiveThreads(lock) || canStartTasks(lock)) {
+  while (canStartTasks(lock) || externalTasksPending_ ||
+         hasActiveThreads(lock)) {
     wait(lock, CONSUMER);
   }
 
-  MOZ_ASSERT(!hasActiveThreads(lock));
   MOZ_ASSERT(gcParallelWorklist(lock).isEmpty());
   MOZ_ASSERT(ionWorklist(lock).empty());
   MOZ_ASSERT(wasmWorklist(lock, wasm::CompileMode::Tier1).empty());
@@ -1544,6 +1544,8 @@ void GlobalHelperThreadState::waitForAllThreadsLocked(
   MOZ_ASSERT(ionFreeList(lock).empty());
   MOZ_ASSERT(wasmWorklist(lock, wasm::CompileMode::Tier2).empty());
   MOZ_ASSERT(wasmTier2GeneratorWorklist(lock).empty());
+  MOZ_ASSERT(!externalTasksPending_);
+  MOZ_ASSERT(!hasActiveThreads(lock));
 }
 
 // A task can be a "master" task, ie, it will block waiting for other worker
@@ -2644,7 +2646,7 @@ void js::RunPendingSourceCompressions(JSRuntime* runtime) {
   }
 
   // Wait for all in-process compression tasks to complete.
-  HelperThreadState().waitForAllThreadsLocked(lock);
+  HelperThreadState().waitForAllTasksLocked(lock);
 
   AttachFinishedCompressions(runtime, lock);
 }
@@ -2814,6 +2816,7 @@ void HelperThread::threadLoop() {
     }
 
     HelperThreadState().runTaskLocked(task, lock);
+    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, lock);
   }
 }
 
@@ -2834,14 +2837,13 @@ void GlobalHelperThreadState::runTaskFromExternalThread(
   MOZ_ASSERT(externalTasksPending_ > 0);
   externalTasksPending_--;
 
-  HelperThreadTask* task = HelperThreadState().findHighestPriorityTask(lock);
-  if (!task) {
-    return;
+  HelperThreadTask* task = findHighestPriorityTask(lock);
+  if (task) {
+    runTaskLocked(task, lock);
+    dispatch(lock);
   }
 
-  runTaskLocked(task, lock);
-
-  dispatch(lock);
+  notifyAll(GlobalHelperThreadState::CONSUMER, lock);
 }
 
 HelperThreadTask* GlobalHelperThreadState::findHighestPriorityTask(
@@ -2877,5 +2879,4 @@ void GlobalHelperThreadState::runTaskLocked(HelperThreadTask* task,
   runningTaskCount[threadType]--;
 
   js::oom::SetThreadType(js::THREAD_TYPE_NONE);
-  HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
 }
