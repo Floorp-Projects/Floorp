@@ -10,7 +10,7 @@
  * after startup, in *every* browser process live outside of this file.
  */
 
-var EXPORTED_SYMBOLS = ["ExtensionProcessScript"];
+var EXPORTED_SYMBOLS = ["ExtensionProcessScript", "ExtensionAPIRequestHandler"];
 
 const { MessageChannel } = ChromeUtils.import(
   "resource://gre/modules/MessageChannel.jsm"
@@ -414,6 +414,16 @@ var ExtensionProcessScript = {
     return ExtensionContent.contentScripts
       .get(contentScript)
       .injectInto(window);
+  },
+};
+
+var ExtensionAPIRequestHandler = {
+  handleAPIRequest(policy, request) {
+    // TODO: to be actually implemented in the "part3" patches that follows,
+    // this patch does only contain a placeholder method, which is
+    // replaced with a mock in the set of unit tests defined in this
+    // patch.
+    throw new Error("Not implemented");
   },
 };
 
