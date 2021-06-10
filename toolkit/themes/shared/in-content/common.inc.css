@@ -240,8 +240,8 @@
 @media (prefers-contrast) {
   :host,
   :root {
-    --in-content-page-color: -moz-DialogText;
-    --in-content-page-background: -moz-Dialog;
+    --in-content-page-color: WindowText;
+    --in-content-page-background: Window;
     --in-content-deemphasized-text: GrayText;
 
     --in-content-box-background: -moz-Dialog;
@@ -272,6 +272,7 @@
 
     --in-content-button-text-color-hover: HighlightText;
     --in-content-button-background: ButtonFace;
+    --in-content-button-text-color: ButtonText;
     --in-content-button-background-hover: Highlight;
     --in-content-button-background-active: Highlight;
 
@@ -397,7 +398,7 @@ html|input[type="color"],
 xul|menulist {
   appearance: none;
   min-height: 32px;
-  color: inherit;
+  color: var(--in-content-button-text-color, inherit);
   border: 1px solid transparent; /* shows up in high-contrast mode */
   border-radius: var(--in-content-button-border-radius);
   background-color: var(--in-content-button-background);
@@ -1030,6 +1031,7 @@ html|*#categories {
   border-radius: 4px;
   min-height: 48px;
   appearance: none;
+  color: inherit;
   margin-inline-start: 34px;
   padding-inline: 10px;
   transition: background-color 150ms;
@@ -1315,7 +1317,7 @@ xul|treecolpicker {
   appearance: none;
   border: none;
   background-color: var(--in-content-button-background);
-  color: inherit;
+  color: var(--in-content-button-text-color, inherit);
   padding: 5px 10px;
 }
 
