@@ -25,6 +25,7 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ScopeExit.h"
@@ -105,11 +106,22 @@ nsLookAndFeel::nsLookAndFeel() {
     g_signal_connect_after(settings, setting.get(),
                            G_CALLBACK(settings_changed_cb), nullptr);
   }
+
+  Preferences::RegisterCallback(
+      FirefoxThemeChanged,
+      nsDependentCString(
+          StaticPrefs::GetPrefName_widget_gtk_follow_firefox_theme()),
+      this);
 }
 
 nsLookAndFeel::~nsLookAndFeel() {
   g_signal_handlers_disconnect_by_func(
       gtk_settings_get_default(), FuncToGpointer(settings_changed_cb), nullptr);
+  Preferences::UnregisterCallback(
+      FirefoxThemeChanged,
+      nsDependentCString(
+          StaticPrefs::GetPrefName_widget_gtk_follow_firefox_theme()),
+      this);
 }
 
 // Modifies color |*aDest| as if a pattern of color |aSource| was painted with
@@ -1193,6 +1205,14 @@ void nsLookAndFeel::EnsureInit() {
   }
 
   mInitialized = true;
+  if (mEverInitialized) {
+    // Our current theme may be different from the system theme if we're
+    // matching the firefox theme. Make sure to restore the original system
+    // theme.
+    RestoreSystemTheme();
+  }
+
+  mEverInitialized = true;
 
   // gtk does non threadsafe refcounting
   MOZ_ASSERT(NS_IsMainThread());
@@ -1268,7 +1288,60 @@ void nsLookAndFeel::EnsureInit() {
   LOGLNF(("System Theme: %s. Alt Theme: %s\n", mSystemTheme.mName.get(),
           mAltTheme.mName.get()));
 
+  MatchFirefoxThemeIfNeeded();
+
   RecordTelemetry();
+}
+
+bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
+  AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
+  sIgnoreChangedSettings = true;
+
+  if (!StaticPrefs::widget_gtk_follow_firefox_theme()) {
+    return false;
+  }
+
+  const bool matchesSystem = [&] {
+    switch (StaticPrefs::browser_theme_toolbar_theme()) {
+      case 0:
+        return mSystemTheme.mIsDark;
+      case 1:
+        return !mSystemTheme.mIsDark;
+      default:
+        return true;
+    }
+  }();
+
+  const bool usingSystem = GetThemeIsDark() == mSystemTheme.mIsDark;
+  if (usingSystem == matchesSystem) {
+    return false;
+  }
+
+  if (matchesSystem) {
+    RestoreSystemTheme();
+  } else {
+    GtkSettings* settings = gtk_settings_get_default();
+    if (mSystemTheme.mName == mAltTheme.mName) {
+      // Prefer setting only gtk-application-prefer-dark-theme, so we can still
+      // get notified from notify::gtk-theme-name if the user changes the theme.
+      g_object_set(settings, "gtk-application-prefer-dark-theme",
+                   mAltTheme.mPreferDarkTheme, nullptr);
+    } else {
+      g_object_set(settings, "gtk-theme-name", mAltTheme.mName.get(),
+                   "gtk-application-prefer-dark-theme",
+                   mAltTheme.mPreferDarkTheme, nullptr);
+    }
+    moz_gtk_refresh();
+  }
+  return true;
+}
+
+void nsLookAndFeel::FirefoxThemeChanged(const char*, void* aInstance) {
+  auto* lnf = static_cast<nsLookAndFeel*>(aInstance);
+  if (lnf->MatchFirefoxThemeIfNeeded()) {
+    LookAndFeel::NotifyChangedAllWindows(
+        widget::ThemeChangeKind::StyleAndLayout);
+  }
 }
 
 void nsLookAndFeel::GetGtkContentTheme(LookAndFeelTheme& aTheme) {
