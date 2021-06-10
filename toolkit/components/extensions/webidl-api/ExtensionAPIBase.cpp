@@ -6,6 +6,7 @@
 #include "ExtensionAPIBase.h"
 
 #include "ExtensionAPIRequestForwarder.h"
+#include "ExtensionAPIAddRemoveListener.h"
 #include "ExtensionAPICallAsyncFunction.h"
 #include "ExtensionAPICallFunctionNoReturn.h"
 #include "ExtensionAPICallSyncFunction.h"
@@ -194,6 +195,22 @@ RefPtr<ExtensionAPIGetProperty> ExtensionAPIBase::GetProperty(
     const nsAString& aApiProperty) {
   return new ExtensionAPIGetProperty(GetAPINamespace(), aApiProperty,
                                      GetAPIObjectType(), GetAPIObjectId());
+}
+
+RefPtr<ExtensionAPIAddRemoveListener> ExtensionAPIBase::SendAddListener(
+    const nsAString& aEventName) {
+  using EType = ExtensionAPIAddRemoveListener::EType;
+  return new ExtensionAPIAddRemoveListener(
+      EType::eAddListener, GetAPINamespace(), aEventName, GetAPIObjectType(),
+      GetAPIObjectId());
+}
+
+RefPtr<ExtensionAPIAddRemoveListener> ExtensionAPIBase::SendRemoveListener(
+    const nsAString& aEventName) {
+  using EType = ExtensionAPIAddRemoveListener::EType;
+  return new ExtensionAPIAddRemoveListener(
+      EType::eRemoveListener, GetAPINamespace(), aEventName, GetAPIObjectType(),
+      GetAPIObjectId());
 }
 
 // static
