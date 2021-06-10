@@ -53,6 +53,8 @@ using mozilla::IsPowerOfTwo;
 using mozilla::Maybe;
 using mozilla::NumbersAreIdentical;
 
+NON_GC_POINTER_TYPE_ASSERTIONS_GENERATED
+
 #ifdef DEBUG
 size_t MUse::index() const { return consumer()->indexOf(this); }
 #endif
