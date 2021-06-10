@@ -202,34 +202,26 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
     return NS_OK;
   }
 
-  mozilla::psm::CertVerifier::PinningMode pinningMode =
-      mozilla::psm::PublicSSLState()->PinningMode();
-  if (pinningMode != mozilla::psm::CertVerifier::pinningDisabled) {
-    bool chainHasValidPins;
-    bool enforceTestMode =
-        (pinningMode == mozilla::psm::CertVerifier::pinningEnforceTestMode);
-
-    nsTArray<nsTArray<uint8_t>> rawDerCertList;
-    nsTArray<Span<const uint8_t>> derCertSpanList;
-    for (const auto& cert : mSucceededCertChain) {
-      rawDerCertList.EmplaceBack();
-      nsresult nsrv = cert->GetRawDER(rawDerCertList.LastElement());
-      if (NS_FAILED(nsrv)) {
-        return nsrv;
-      }
-      derCertSpanList.EmplaceBack(rawDerCertList.LastElement());
-    }
-
-    nsresult nsrv = mozilla::psm::PublicKeyPinningService::ChainHasValidPins(
-        derCertSpanList, PromiseFlatCString(hostname).BeginReading(), Now(),
-        enforceTestMode, GetOriginAttributes(lock), chainHasValidPins, nullptr);
+  nsTArray<nsTArray<uint8_t>> rawDerCertList;
+  nsTArray<Span<const uint8_t>> derCertSpanList;
+  for (const auto& cert : mSucceededCertChain) {
+    rawDerCertList.EmplaceBack();
+    nsresult nsrv = cert->GetRawDER(rawDerCertList.LastElement());
     if (NS_FAILED(nsrv)) {
-      return NS_OK;
+      return nsrv;
     }
+    derCertSpanList.EmplaceBack(rawDerCertList.LastElement());
+  }
+  bool chainHasValidPins;
+  nsresult nsrv = mozilla::psm::PublicKeyPinningService::ChainHasValidPins(
+      derCertSpanList, PromiseFlatCString(hostname).BeginReading(), Now(),
+      mIsBuiltCertChainRootBuiltInRoot, chainHasValidPins, nullptr);
+  if (NS_FAILED(nsrv)) {
+    return NS_OK;
+  }
 
-    if (!chainHasValidPins) {
-      return NS_OK;
-    }
+  if (!chainHasValidPins) {
+    return NS_OK;
   }
 
   // All tests pass
