@@ -106,7 +106,7 @@ add_task(async function test_contentscript_context_incognito_not_allowed() {
   async function background() {
     await browser.contentScripts.register({
       js: [{ file: "registered_script.js" }],
-      matches: ["http://example.com/dummy"],
+      matches: ["https://example.com/dummy"],
       runAt: "document_start",
     });
 
@@ -117,12 +117,12 @@ add_task(async function test_contentscript_context_incognito_not_allowed() {
     manifest: {
       content_scripts: [
         {
-          matches: ["http://example.com/dummy"],
+          matches: ["https://example.com/dummy"],
           js: ["content_script.js"],
           run_at: "document_start",
         },
       ],
-      permissions: ["http://example.com/*"],
+      permissions: ["https://example.com/*"],
     },
     background,
     files: {
@@ -139,7 +139,7 @@ add_task(async function test_contentscript_context_incognito_not_allowed() {
   await extension.awaitMessage("background-ready");
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/dummy",
+    "https://example.com/dummy",
     { privateBrowsing: true }
   );
 
