@@ -2,10 +2,13 @@
 <html>
 <head>
 <style>
-span { display:inline-block; width:10em; }
+span { display:inline-block; width:10ch; }
+/* first tab-position will be at 2 * (space-width + word-spacing), i.e. 22ch,
+   so to advance there after the 3-ch word "tab" we need 19ch of added space */
+span.tab { width: 19ch; }
 </style>
 </head>
-<body style="width: 433px; height: 590px;">
+<body style="font-family: monospace; width: 433px; height: 590px;">
 
 <table border="1">
 <tr><td>space <span></span>.</td>
@@ -23,7 +26,7 @@ span { display:inline-block; width:10em; }
 <tr><td>ideographic-space&#x3000;.</td>
 <tr><td>newline
 .</td>
-<tr><td>tab&#9;.</td>
+<tr><td>tab<span class=tab></span>.</td>
 <tr><td>form-feed&#12;.</td>
 </table>
 
@@ -42,7 +45,7 @@ span { display:inline-block; width:10em; }
 <tr><td>ideographic-space&#x3000;.</td>
 <tr><td>newline
 .</td>
-<tr><td>tab&#9;.</td>
+<tr><td>tab<span class=tab></span>.</td>
 <tr><td>form-feed&#12;.</td>
 </table>
 
