@@ -18,7 +18,7 @@ const MAX_RICH_RESULTS_PREF = "browser.urlbar.maxRichResults";
 const MAX_FORM_HISTORY_PREF = "browser.urlbar.maxHistoricalSearchSuggestions";
 const SHOW_SEARCH_SUGGESTIONS_FIRST_PREF =
   "browser.urlbar.showSearchSuggestionsFirst";
-const RESULT_BUCKETS_PREF = "browser.urlbar.resultBuckets";
+const RESULT_BUCKETS_PREF = "browser.urlbar.resultGroups";
 const SEARCH_STRING = "hello";
 
 const MAX_RESULTS = Services.prefs.getIntPref(MAX_RICH_RESULTS_PREF, 10);

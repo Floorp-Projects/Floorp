@@ -72,7 +72,7 @@ add_task(async function setup() {
     Services.prefs.clearUserPref(PRIVATE_SEARCH_PREF);
     Services.prefs.clearUserPref(TAIL_SUGGESTIONS_PREF);
     Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
-    UrlbarPrefs.clear("resultBuckets");
+    UrlbarPrefs.clear("resultGroups");
   });
   Services.search.setDefault(engine);
   Services.prefs.setBoolPref(PRIVATE_SEARCH_PREF, false);
