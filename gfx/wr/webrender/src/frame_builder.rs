@@ -726,13 +726,13 @@ impl FrameBuilder {
                     let map_local_to_world = SpaceMapper::new_with_target(
                         ROOT_SPATIAL_NODE_INDEX,
                         tile_cache.spatial_node_index,
-                        ctx.screen_world_rect.to_rect(),
+                        ctx.screen_world_rect,
                         ctx.spatial_tree,
                     );
                     let world_clip_rect = map_local_to_world
-                        .map(&tile_cache.local_clip_rect)
+                        .map(&tile_cache.local_clip_rect.to_box2d())
                         .expect("bug: unable to map clip rect");
-                    let device_clip_rect = (world_clip_rect * ctx.global_device_pixel_scale).round().to_box2d();
+                    let device_clip_rect = (world_clip_rect * ctx.global_device_pixel_scale).round();
 
                     composite_state.push_surface(
                         tile_cache,
