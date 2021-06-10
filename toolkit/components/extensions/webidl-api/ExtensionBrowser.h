@@ -19,10 +19,13 @@ class ErrorResult;
 
 namespace extensions {
 
+class ExtensionMockAPI;
+
 bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal);
 
 class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<ExtensionMockAPI> mExtensionMockAPI;
 
   ~ExtensionBrowser() = default;
 
@@ -36,6 +39,8 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   // DOM bindings methods
 
   nsIGlobalObject* GetParentObject() const;
+
+  ExtensionMockAPI* GetExtensionMockAPI();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionBrowser)
