@@ -433,6 +433,20 @@ events:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-05-10"
+  browser_toolbar_home_tapped:
+    type: event
+    description: |
+      An event that indicates that a user has tapped
+      home button on browser toolbar.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/19915
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/19936
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-12-10"
 
 onboarding:
   fxa_auto_signin:

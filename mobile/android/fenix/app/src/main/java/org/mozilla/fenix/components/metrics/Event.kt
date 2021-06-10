@@ -236,6 +236,9 @@ sealed class Event {
     object HomeMenuSettingsItemClicked : Event()
     object HomeScreenDisplayed : Event()
 
+    // Browser Toolbar
+    object BrowserToolbarHomeButtonClicked : Event()
+
     // Interaction events with extras
 
     data class TopSiteSwipeCarousel(val page: Int) : Event() {

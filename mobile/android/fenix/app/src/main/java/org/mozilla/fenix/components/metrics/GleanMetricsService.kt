@@ -833,6 +833,10 @@ private val Event.wrapper: EventWrapper<*>?
             { HomeScreen.homeScreenDisplayed.record(it) }
         )
 
+        is Event.BrowserToolbarHomeButtonClicked -> EventWrapper<NoExtraKeys>(
+            { Events.browserToolbarHomeTapped.record(it) }
+        )
+
         // Don't record other events in Glean:
         is Event.AddBookmark -> null
         is Event.OpenedAppFirstRun -> null

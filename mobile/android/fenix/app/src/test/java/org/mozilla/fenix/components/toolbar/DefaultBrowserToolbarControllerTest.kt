@@ -318,6 +318,7 @@ class DefaultBrowserToolbarControllerTest {
         controller.handleHomeButtonClick()
 
         verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome()) }
+        verify { metrics.track(Event.BrowserToolbarHomeButtonClicked) }
     }
 
     private fun createController(

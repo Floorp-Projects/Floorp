@@ -164,6 +164,8 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleHomeButtonClick() {
+        metrics.track(Event.BrowserToolbarHomeButtonClicked)
+
         navController.navigateBlockingForAsyncNavGraph(
             BrowserFragmentDirections.actionGlobalHome()
         )
