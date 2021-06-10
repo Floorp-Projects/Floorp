@@ -191,10 +191,10 @@ impl From<LayoutRect> for RectangleKey {
 impl From<PictureRect> for RectangleKey {
     fn from(rect: PictureRect) -> RectangleKey {
         RectangleKey {
-            x: rect.origin.x,
-            y: rect.origin.y,
-            w: rect.size.width,
-            h: rect.size.height,
+            x: rect.min.x,
+            y: rect.min.y,
+            w: rect.width(),
+            h: rect.height(),
         }
     }
 }

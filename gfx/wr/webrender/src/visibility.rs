@@ -447,7 +447,7 @@ pub fn update_primitive_visibility(
                 match prim_instance.vis.combined_local_clip_rect.intersection(&local_rect) {
                     Some(visible_rect) => {
                         if let Some(rect) = map_local_to_surface.map(&visible_rect.to_box2d()) {
-                            surface_rect = surface_rect.union(&rect.to_rect());
+                            surface_rect = surface_rect.union(&rect);
                         }
                     }
                     None => {
@@ -571,7 +571,7 @@ pub fn update_primitive_visibility(
 
         // Layout space for the picture is picture space from the
         // perspective of its child primitives.
-        pic.precise_local_rect = surface_rect * Scale::new(1.0);
+        pic.precise_local_rect = surface_rect.to_rect() * Scale::new(1.0);
 
         // If the precise rect changed since last frame, we need to invalidate
         // any segments and gpu cache handles for drop-shadows.
@@ -614,10 +614,10 @@ pub fn update_primitive_visibility(
         let map_surface_to_parent_surface = SpaceMapper::new_with_target(
             parent_surface.surface_spatial_node_index,
             surface.surface_spatial_node_index,
-            PictureRect::max_rect().to_box2d(),
+            PictureRect::max_rect(),
             frame_context.spatial_tree,
         );
-        map_surface_to_parent_surface.map(&surface_rect.to_box2d()).map(|r| r.to_rect())
+        map_surface_to_parent_surface.map(&surface_rect)
     }
 }
 
@@ -636,7 +636,7 @@ fn update_prim_post_visibility(
             // minimize the size of the render target that is required.
             if let Some(ref mut raster_config) = pic.raster_config {
                 raster_config.clipped_bounding_rect = map_surface_to_world
-                    .map(&prim_instance.vis.clip_chain.pic_clip_rect.to_box2d())
+                    .map(&prim_instance.vis.clip_chain.pic_clip_rect)
                     .and_then(|rect| {
                         rect.intersection(&world_culling_rect)
                     })
@@ -672,7 +672,7 @@ pub fn compute_conservative_visible_rect(
     let map_local_to_pic: SpaceMapper<LayoutPixel, PicturePixel> = SpaceMapper::new_with_target(
         clip_chain.pic_spatial_node_index,
         prim_spatial_node_index,
-        PictureRect::max_rect().to_box2d(),
+        PictureRect::max_rect(),
         spatial_tree,
     );
 
@@ -687,7 +687,7 @@ pub fn compute_conservative_visible_rect(
     // is in picture space (the clip-chain already takes into account the bounds of the
     // primitive local_rect and local_clip_rect). If there is no intersection here, the
     // primitive is not visible at all.
-    let pic_culling_rect = match pic_culling_rect.intersection(&clip_chain.pic_clip_rect.to_box2d()) {
+    let pic_culling_rect = match pic_culling_rect.intersection(&clip_chain.pic_clip_rect) {
         Some(rect) => rect,
         None => return LayoutRect::zero(),
     };
@@ -706,7 +706,7 @@ fn calculate_prim_clipped_world_rect(
     map_surface_to_world: &SpaceMapper<PicturePixel, WorldPixel>,
 ) -> Option<WorldRect> {
     map_surface_to_world
-        .map(&pic_clip_rect.to_box2d())
+        .map(&pic_clip_rect)
         .and_then(|world_rect| {
             world_rect.intersection(world_culling_rect)
         })
