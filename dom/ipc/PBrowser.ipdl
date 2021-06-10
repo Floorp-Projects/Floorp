@@ -582,7 +582,7 @@ parent:
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
     async UpdateEpoch(uint32_t aEpoch);
-    async UpdateSHistory(bool aImmediately);
+    async UpdateSHistory();
     async CloneDocumentTreeIntoSelf(MaybeDiscardedBrowsingContext aBc);
 
     /**
