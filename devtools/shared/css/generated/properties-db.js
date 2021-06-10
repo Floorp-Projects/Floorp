@@ -867,7 +867,7 @@ exports.CSS_PROPERTIES = {
   "-moz-tab-size": {
     "isInherited": true,
     "subproperties": [
-      "-moz-tab-size"
+      "tab-size"
     ],
     "supports": [],
     "values": [
@@ -2951,7 +2951,7 @@ exports.CSS_PROPERTIES = {
       "text-emphasis-style",
       "text-emphasis-position",
       "text-emphasis-color",
-      "-moz-tab-size",
+      "tab-size",
       "line-break",
       "-webkit-text-fill-color",
       "-webkit-text-stroke-color",
@@ -9940,6 +9940,19 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "context-value",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "tab-size": {
+    "isInherited": true,
+    "subproperties": [
+      "tab-size"
+    ],
+    "supports": [],
+    "values": [
       "inherit",
       "initial",
       "revert",

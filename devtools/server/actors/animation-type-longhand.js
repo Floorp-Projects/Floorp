@@ -369,7 +369,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "shape-margin",
       "stroke-dashoffset",
       "stroke-width",
-      "-moz-tab-size",
+      "tab-size",
       "text-indent",
       "text-decoration-thickness",
       "text-underline-offset",

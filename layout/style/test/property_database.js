@@ -3527,8 +3527,8 @@ var gCSSProperties = {
     other_values: ["both", "horizontal", "vertical", "inline", "block"],
     invalid_values: [],
   },
-  "-moz-tab-size": {
-    domProp: "MozTabSize",
+  "tab-size": {
+    domProp: "tabSize",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["8"],
@@ -9831,6 +9831,13 @@ var gCSSProperties = {
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     alias_for: "overflow-wrap",
     subproperties: ["overflow-wrap"],
+  },
+  "-moz-tab-size": {
+    domProp: "MozTabSize",
+    inherited: true,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "tab-size",
+    subproperties: ["tab-size"],
   },
   "-moz-transform": {
     domProp: "MozTransform",

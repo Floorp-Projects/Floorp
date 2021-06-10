@@ -3430,7 +3430,7 @@ static bool CanAddSpacingAfter(const gfxTextRun* aTextRun, uint32_t aOffset,
 }
 
 static gfxFloat ComputeTabWidthAppUnits(const nsIFrame* aFrame) {
-  const auto& tabSize = aFrame->StyleText()->mMozTabSize;
+  const auto& tabSize = aFrame->StyleText()->mTabSize;
   if (tabSize.IsLength()) {
     nscoord w = tabSize.length._0.ToAppUnits();
     MOZ_ASSERT(w >= 0);
