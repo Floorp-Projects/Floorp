@@ -1359,7 +1359,7 @@ Search.prototype = {
     let index = 0;
     if (!this._buckets) {
       this._buckets = [];
-      this._makeBuckets(UrlbarPrefs.get("resultBuckets"), this._maxResults);
+      this._makeBuckets(UrlbarPrefs.get("resultGroups"), this._maxResults);
     }
 
     let replace = 0;

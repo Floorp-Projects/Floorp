@@ -122,7 +122,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // engine, show search suggestions first.
     let rootBucket = context.searchMode?.engineName
       ? UrlbarPrefs.makeResultBuckets({ showSearchSuggestionsFirst: true })
-      : UrlbarPrefs.get("resultBuckets");
+      : UrlbarPrefs.get("resultGroups");
     logger.debug(`Buckets: ${rootBucket}`);
 
     let [sortedResults] = this._fillBuckets(

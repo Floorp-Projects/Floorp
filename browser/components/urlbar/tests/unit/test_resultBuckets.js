@@ -8,7 +8,7 @@
 
 "use strict";
 
-const RESULT_BUCKETS_PREF = "browser.urlbar.resultBuckets";
+const RESULT_BUCKETS_PREF = "browser.urlbar.resultGroups";
 const MAX_RICH_RESULTS_PREF = "browser.urlbar.maxRichResults";
 
 // For simplicity, most of the flex tests below assume that this is 10, so
@@ -1349,7 +1349,7 @@ add_resultBuckets_task({
  * @param {string} testName
  *   This name is logged with `info` as the task starts.
  * @param {object} resultBuckets
- *   browser.urlbar.resultBuckets is set to this value as the task starts.
+ *   browser.urlbar.resultGroups is set to this value as the task starts.
  * @param {array} providerResults
  *   Array of result objects that the test provider will add.
  * @param {array} expectedResultIndexes
@@ -1362,7 +1362,7 @@ function add_resultBuckets_task({
   expectedResultIndexes,
 }) {
   let func = async () => {
-    info(`Running resultBuckest test: ${testName}`);
+    info(`Running resultGroups test: ${testName}`);
     setResultBuckets(resultBuckets);
     let provider = registerBasicTestProvider(providerResults);
     let context = createContext("foo", { providers: [provider.name] });

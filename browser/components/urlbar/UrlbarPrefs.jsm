@@ -127,7 +127,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   //     ),
   //   });
   // The value of this pref is a JSON string of the root bucket.  See below.
-  ["resultBuckets", ""],
+  ["resultGroups", ""],
 
   // If true, we show tail suggestions when available.
   ["richSuggestions.tail", true],
@@ -461,13 +461,13 @@ class Preferences {
   }
 
   /**
-   * Sets the value of the resultBuckets pref to the current default buckets.
+   * Sets the value of the resultGroups pref to the current default buckets.
    * This should be called from BrowserGlue._migrateUI when the default buckets
    * are modified.
    */
   migrateResultBuckets() {
     this.set(
-      "resultBuckets",
+      "resultGroups",
       JSON.stringify(
         makeResultBuckets({
           showSearchSuggestionsFirst: this.get("showSearchSuggestionsFirst"),
@@ -528,7 +528,7 @@ class Preferences {
     switch (pref) {
       case "showSearchSuggestionsFirst":
         this.set(
-          "resultBuckets",
+          "resultGroups",
           JSON.stringify(
             makeResultBuckets({ showSearchSuggestionsFirst: this.get(pref) })
           )
@@ -596,7 +596,7 @@ class Preferences {
         }
         return val;
       }
-      case "resultBuckets":
+      case "resultGroups":
         try {
           return JSON.parse(this._readPref(pref));
         } catch (ex) {}
