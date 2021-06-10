@@ -111,7 +111,6 @@ linux1804-64-qr/opt:
         - talos
         - raptor-firefox
         - browsertime
-        - noqr-tests
 
 linux1804-64-shippable-qr/opt:
     build-platform: linux64-shippable/opt
@@ -125,7 +124,6 @@ linux1804-64-shippable-qr/opt:
         - talos-profiling
         - raptor-firefox
         - browsertime
-        - noqr-tests
 
 linux1804-64-qr/debug:
     build-platform: linux64/debug
@@ -133,7 +131,6 @@ linux1804-64-qr/debug:
         - linux1804-qr-tests
         - mochitest-webgpu
         - web-platform-tests
-        - noqr-tests
 
 linux1804-64-asan-qr/opt:
     build-platform: linux64-asan/opt
@@ -319,7 +316,6 @@ windows10-64-qr/debug:
         - windows-qr-tests
         - web-platform-tests
         - web-platform-tests-wdspec-headless
-        - noqr-tests
 
 windows10-64-qr/opt:
     build-platform: win64/opt
@@ -330,7 +326,6 @@ windows10-64-qr/opt:
         - raptor-firefox
         - browsertime
         - web-platform-tests
-        - noqr-tests
 
 windows10-64-shippable-qr/opt:
     build-platform: win64-shippable/opt
@@ -343,7 +338,6 @@ windows10-64-shippable-qr/opt:
         - browsertime
         - web-platform-tests
         - mochitest-webgpu
-        - noqr-tests
 
 windows10-64-mingwclang/debug:
     build-platform: win64-mingwclang/debug
@@ -412,7 +406,6 @@ macosx1015-64-shippable-qr/opt:
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
-        - noqr-tests
 
 macosx1015-64/debug:
     build-platform: macosx64/debug
@@ -439,14 +432,12 @@ macosx1015-64-qr/opt:
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
-        - noqr-tests
 
 macosx1015-64-qr/debug:
     build-platform: macosx64/debug
     test-sets:
         - macosx1015-64-qr-tests
         - web-platform-tests
-        - noqr-tests
 
 macosx1015-64-ccov-qr/opt:
     build-platform: macosx64-ccov/opt
