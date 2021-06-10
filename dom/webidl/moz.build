@@ -229,9 +229,6 @@ with Files("MutationEvent.webidl"):
 with Files("NativeOSFileInternals.webidl"):
     BUG_COMPONENT = ("Toolkit", "OS.File")
 
-with Files("NavigationPreloadManager.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Service Workers")
-
 with Files("Net*"):
     BUG_COMPONENT = ("Core", "Networking")
 
@@ -723,7 +720,6 @@ WEBIDL_FILES = [
     "MutationObserver.webidl",
     "NamedNodeMap.webidl",
     "NativeOSFileInternals.webidl",
-    "NavigationPreloadManager.webidl",
     "Navigator.webidl",
     "NetErrorInfo.webidl",
     "NetworkInformation.webidl",

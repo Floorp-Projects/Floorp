@@ -50,7 +50,7 @@ namespace dom {
 namespace {
 
 static const char* gSupportedRegistrarVersions[] = {
-    SERVICEWORKERREGISTRAR_VERSION, "8", "7", "6", "5", "4", "3", "2"};
+    SERVICEWORKERREGISTRAR_VERSION, "7", "6", "5", "4", "3", "2"};
 
 static const uint32_t kInvalidGeneration = static_cast<uint32_t>(-1);
 
@@ -127,9 +127,6 @@ nsresult CreatePrincipalInfo(nsILineInputStream* aStream,
 
   return NS_OK;
 }
-
-const IPCNavigationPreloadState gDefaultNavigationPreloadState(false,
-                                                               "true"_ns);
 
 }  // namespace
 
@@ -447,9 +444,8 @@ nsresult ServiceWorkerRegistrar::ReadData() {
       entry->updateViaCache() = updateViaCache.ToInteger(&rv, 16);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
-      }
-      if (entry->updateViaCache() >
-          nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_NONE) {
+      } else if (entry->updateViaCache() >
+                 nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_NONE) {
         return NS_ERROR_INVALID_ARG;
       }
 
@@ -476,74 +472,6 @@ nsresult ServiceWorkerRegistrar::ReadData() {
         return rv;
       }
       entry->lastUpdateTime() = lastUpdateTime;
-
-      nsAutoCString navigationPreloadEnabledStr;
-      GET_LINE(navigationPreloadEnabledStr);
-      bool navigationPreloadEnabled =
-          navigationPreloadEnabledStr.ToInteger(&rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      entry->navigationPreloadState().enabled() = navigationPreloadEnabled;
-
-      GET_LINE(entry->navigationPreloadState().headerValue());
-    } else if (version.EqualsLiteral("8")) {
-      rv = CreatePrincipalInfo(lineInputStream, entry);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      GET_LINE(entry->currentWorkerURL());
-
-      nsAutoCString fetchFlag;
-      GET_LINE(fetchFlag);
-      if (!fetchFlag.EqualsLiteral(SERVICEWORKERREGISTRAR_TRUE) &&
-          !fetchFlag.EqualsLiteral(SERVICEWORKERREGISTRAR_FALSE)) {
-        return NS_ERROR_INVALID_ARG;
-      }
-      entry->currentWorkerHandlesFetch() =
-          fetchFlag.EqualsLiteral(SERVICEWORKERREGISTRAR_TRUE);
-
-      nsAutoCString cacheName;
-      GET_LINE(cacheName);
-      CopyUTF8toUTF16(cacheName, entry->cacheName());
-
-      nsAutoCString updateViaCache;
-      GET_LINE(updateViaCache);
-      entry->updateViaCache() = updateViaCache.ToInteger(&rv, 16);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      if (entry->updateViaCache() >
-          nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_NONE) {
-        return NS_ERROR_INVALID_ARG;
-      }
-
-      nsAutoCString installedTimeStr;
-      GET_LINE(installedTimeStr);
-      int64_t installedTime = installedTimeStr.ToInteger64(&rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      entry->currentWorkerInstalledTime() = installedTime;
-
-      nsAutoCString activatedTimeStr;
-      GET_LINE(activatedTimeStr);
-      int64_t activatedTime = activatedTimeStr.ToInteger64(&rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      entry->currentWorkerActivatedTime() = activatedTime;
-
-      nsAutoCString lastUpdateTimeStr;
-      GET_LINE(lastUpdateTimeStr);
-      int64_t lastUpdateTime = lastUpdateTimeStr.ToInteger64(&rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      entry->lastUpdateTime() = lastUpdateTime;
-
-      entry->navigationPreloadState() = gDefaultNavigationPreloadState;
     } else if (version.EqualsLiteral("7")) {
       rv = CreatePrincipalInfo(lineInputStream, entry);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -599,8 +527,6 @@ nsresult ServiceWorkerRegistrar::ReadData() {
         return rv;
       }
       entry->lastUpdateTime() = lastUpdateTime;
-
-      entry->navigationPreloadState() = gDefaultNavigationPreloadState;
     } else if (version.EqualsLiteral("6")) {
       rv = CreatePrincipalInfo(lineInputStream, entry);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -636,8 +562,6 @@ nsresult ServiceWorkerRegistrar::ReadData() {
       entry->currentWorkerInstalledTime() = 0;
       entry->currentWorkerActivatedTime() = 0;
       entry->lastUpdateTime() = 0;
-
-      entry->navigationPreloadState() = gDefaultNavigationPreloadState;
     } else if (version.EqualsLiteral("5")) {
       overwrite = true;
       dedupe = true;
@@ -668,8 +592,6 @@ nsresult ServiceWorkerRegistrar::ReadData() {
       entry->currentWorkerInstalledTime() = 0;
       entry->currentWorkerActivatedTime() = 0;
       entry->lastUpdateTime() = 0;
-
-      entry->navigationPreloadState() = gDefaultNavigationPreloadState;
     } else if (version.EqualsLiteral("4")) {
       overwrite = true;
       dedupe = true;
@@ -694,8 +616,6 @@ nsresult ServiceWorkerRegistrar::ReadData() {
       entry->currentWorkerInstalledTime() = 0;
       entry->currentWorkerActivatedTime() = 0;
       entry->lastUpdateTime() = 0;
-
-      entry->navigationPreloadState() = gDefaultNavigationPreloadState;
     } else if (version.EqualsLiteral("3")) {
       overwrite = true;
       dedupe = true;
@@ -720,8 +640,6 @@ nsresult ServiceWorkerRegistrar::ReadData() {
       entry->currentWorkerInstalledTime() = 0;
       entry->currentWorkerActivatedTime() = 0;
       entry->lastUpdateTime() = 0;
-
-      entry->navigationPreloadState() = gDefaultNavigationPreloadState;
     } else if (version.EqualsLiteral("2")) {
       overwrite = true;
       dedupe = true;
@@ -753,8 +671,6 @@ nsresult ServiceWorkerRegistrar::ReadData() {
       entry->currentWorkerInstalledTime() = 0;
       entry->currentWorkerActivatedTime() = 0;
       entry->lastUpdateTime() = 0;
-
-      entry->navigationPreloadState() = gDefaultNavigationPreloadState;
     } else {
       MOZ_ASSERT_UNREACHABLE("Should never get here!");
     }
@@ -1155,13 +1071,6 @@ nsresult ServiceWorkerRegistrar::WriteData(
     buffer.Append('\n');
 
     buffer.AppendInt(aData[i].lastUpdateTime());
-    buffer.Append('\n');
-
-    buffer.AppendInt(
-        static_cast<int32_t>(aData[i].navigationPreloadState().enabled()));
-    buffer.Append('\n');
-
-    buffer.Append(aData[i].navigationPreloadState().headerValue());
     buffer.Append('\n');
 
     buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR);
