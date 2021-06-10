@@ -6,7 +6,7 @@ use api::{ColorF, YuvColorSpace, YuvFormat, ImageRendering, ExternalImageId, Ima
 use api::units::*;
 use api::ColorDepth;
 use crate::image_source::resolve_image;
-use euclid::{Rect, Transform3D};
+use euclid::{Box2D, Transform3D};
 use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{ZBufferId, ZBufferIdGenerator};
 use crate::internal_types::TextureSource;
@@ -576,21 +576,21 @@ impl CompositeState {
         transform_index: CompositorTransformIndex,
     ) -> DeviceRect {
         let transform = &self.transforms[transform_index.0];
-        transform.local_to_device.map_rect(&local_rect.to_box2d()).round()
+        transform.local_to_device.map_rect(&local_rect).round()
     }
 
     /// Calculate the device-space rect of a local compositor surface rect, normalized
     /// to the origin of a given point
     pub fn get_surface_rect<T>(
         &self,
-        local_sub_rect: &Rect<f32, T>,
-        local_bounds: &Rect<f32, T>,
+        local_sub_rect: &Box2D<f32, T>,
+        local_bounds: &Box2D<f32, T>,
         transform_index: CompositorTransformIndex,
     ) -> DeviceRect {
         let transform = &self.transforms[transform_index.0];
 
-        let surface_bounds = transform.local_to_surface.map_rect(&local_bounds.to_box2d());
-        let surface_rect = transform.local_to_surface.map_rect(&local_sub_rect.to_box2d());
+        let surface_bounds = transform.local_to_surface.map_rect(&local_bounds);
+        let surface_rect = transform.local_to_surface.map_rect(&local_sub_rect);
 
         surface_rect
             .translate(-surface_bounds.min.to_vector())
