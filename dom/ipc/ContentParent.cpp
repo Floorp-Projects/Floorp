@@ -4377,11 +4377,11 @@ mozilla::ipc::IPCResult ContentParent::RecvStartVisitedQueries(
   if (!history) {
     return IPC_OK();
   }
-  for (const auto& uri : aUris) {
-    if (NS_WARN_IF(!uri)) {
+  for (const auto& params : aUris) {
+    if (NS_WARN_IF(!params)) {
       continue;
     }
-    history->ScheduleVisitedQuery(uri, this);
+    history->RegisterVisitedCallback(params, nullptr);
   }
   return IPC_OK();
 }
