@@ -43,7 +43,6 @@ if not CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
     if CONFIG["OS_ARCH"] == "WINNT":
         OS_LIBS += [
             "dbghelp",
-            "ntdll",
         ]
 
 TEST_DIRS += ["test"]
