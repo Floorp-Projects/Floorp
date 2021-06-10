@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LocalAccessible-inl.h"
+#include "AccAttributes.h"
 #include "AccessibleOrProxy.h"
 #include "DocAccessibleChild.h"
 #include "DocAccessibleWrap.h"
@@ -13,7 +14,6 @@
 #include "nsLayoutUtils.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsIPersistentProperties2.h"
 #include "Pivot.h"
 #include "SessionAccessibility.h"
 #include "TraversalRule.h"
@@ -239,7 +239,7 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
       acc->WrapperDOMNodeID(nodeID);
       nsAutoString description;
       acc->Description(description);
-      nsCOMPtr<nsIPersistentProperties> props = acc->Attributes();
+      RefPtr<AccAttributes> props = acc->Attributes();
       nsTArray<Attribute> attributes;
       nsAccUtils::PersistentPropertiesToArray(props, &attributes);
       cacheData.AppendElement(

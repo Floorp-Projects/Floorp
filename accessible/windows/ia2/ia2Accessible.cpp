@@ -12,6 +12,7 @@
 #include "AccessibleRole.h"
 #include "AccessibleStates.h"
 
+#include "AccAttributes.h"
 #include "Compatibility.h"
 #include "ia2AccessibleRelation.h"
 #include "IUnknownImpl.h"
@@ -23,7 +24,6 @@
 #include "nsAccessibilityService.h"
 
 #include "mozilla/PresShell.h"
-#include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 
 using namespace mozilla;
@@ -469,7 +469,7 @@ ia2Accessible::get_attributes(BSTR* aAttributes) {
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
   if (!acc->IsProxy()) {
-    nsCOMPtr<nsIPersistentProperties> attributes = acc->Attributes();
+    RefPtr<AccAttributes> attributes = acc->Attributes();
     return ConvertToIA2Attributes(attributes, aAttributes);
   }
 
@@ -643,7 +643,7 @@ ia2Accessible::ConvertToIA2Attributes(nsTArray<Attribute>* aAttributes,
 }
 
 HRESULT
-ia2Accessible::ConvertToIA2Attributes(nsIPersistentProperties* aAttributes,
+ia2Accessible::ConvertToIA2Attributes(AccAttributes* aAttributes,
                                       BSTR* aIA2Attributes) {
   *aIA2Attributes = nullptr;
 
@@ -652,31 +652,18 @@ ia2Accessible::ConvertToIA2Attributes(nsIPersistentProperties* aAttributes,
 
   if (!aAttributes) return S_FALSE;
 
-  nsCOMPtr<nsISimpleEnumerator> propEnum;
-  aAttributes->Enumerate(getter_AddRefs(propEnum));
-  if (!propEnum) return E_FAIL;
-
   nsAutoString strAttrs;
 
-  bool hasMore = false;
-  while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> propSupports;
-    propEnum->GetNext(getter_AddRefs(propSupports));
-
-    nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(propSupports));
-    if (!propElem) return E_FAIL;
-
-    nsAutoCString name;
-    if (NS_FAILED(propElem->GetKey(name))) return E_FAIL;
-
+  for (auto iter : *aAttributes) {
+    nsAutoString name;
+    iter.NameAsString(name);
     EscapeAttributeChars(name);
 
     nsAutoString value;
-    if (NS_FAILED(propElem->GetValue(value))) return E_FAIL;
-
+    iter.ValueAsString(value);
     EscapeAttributeChars(value);
 
-    AppendUTF8toUTF16(name, strAttrs);
+    strAttrs.Append(name);
     strAttrs.Append(':');
     strAttrs.Append(value);
     strAttrs.Append(';');

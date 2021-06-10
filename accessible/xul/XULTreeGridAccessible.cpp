@@ -5,6 +5,7 @@
 
 #include "XULTreeGridAccessibleWrap.h"
 
+#include "AccAttributes.h"
 #include "nsAccCache.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
@@ -16,7 +17,6 @@
 #include "nsQueryObject.h"
 #include "nsTreeColumns.h"
 
-#include "nsPersistentProperties.h"
 #include "nsITreeSelection.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/PresShell.h"
@@ -530,9 +530,8 @@ bool XULTreeGridCellAccessible::Selected() {
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridCellAccessible: LocalAccessible public implementation
 
-already_AddRefed<nsIPersistentProperties>
-XULTreeGridCellAccessible::NativeAttributes() {
-  RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
+already_AddRefed<AccAttributes> XULTreeGridCellAccessible::NativeAttributes() {
+  RefPtr<AccAttributes> attributes = new AccAttributes();
 
   // "table-cell-index" attribute
   TableAccessible* table = Table();
@@ -540,11 +539,11 @@ XULTreeGridCellAccessible::NativeAttributes() {
 
   nsAutoString stringIdx;
   stringIdx.AppendInt(table->CellIndexAt(mRow, ColIdx()));
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tableCellIndex, stringIdx);
+  attributes->SetAttribute(nsGkAtoms::tableCellIndex, stringIdx);
 
   // "cycles" attribute
   if (mColumn->Cycler()) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::cycles, u"true"_ns);
+    attributes->SetAttribute(nsGkAtoms::cycles, u"true"_ns);
   }
 
   return attributes.forget();

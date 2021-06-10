@@ -22,11 +22,12 @@ class HyperTextAccessibleWrap : public HyperTextAccessible {
   void TextForRange(nsAString& aText, int32_t aStartOffset,
                     HyperTextAccessible* aEndContainer, int32_t aEndOffset);
 
-  void AttributedTextForRange(
-      nsTArray<nsString>& aStrings,
-      nsTArray<nsCOMPtr<nsIPersistentProperties>>& aProperties,
-      nsTArray<LocalAccessible*>& aContainers, int32_t aStartOffset,
-      HyperTextAccessible* aEndContainer, int32_t aEndOffset);
+  void AttributedTextForRange(nsTArray<nsString>& aStrings,
+                              nsTArray<RefPtr<AccAttributes>>& aProperties,
+                              nsTArray<LocalAccessible*>& aContainers,
+                              int32_t aStartOffset,
+                              HyperTextAccessible* aEndContainer,
+                              int32_t aEndOffset);
 
   nsIntRect BoundsForRange(int32_t aStartOffset,
                            HyperTextAccessible* aEndContainer,

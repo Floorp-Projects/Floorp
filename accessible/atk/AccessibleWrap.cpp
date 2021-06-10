@@ -7,6 +7,7 @@
 #include "AccessibleWrap.h"
 
 #include "LocalAccessible-inl.h"
+#include "AccAttributes.h"
 #include "ApplicationAccessibleWrap.h"
 #include "InterfaceInitFuncs.h"
 #include "nsAccUtils.h"
@@ -30,7 +31,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Sprintf.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIPersistentProperties2.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -635,39 +635,21 @@ AtkRole getRoleCB(AtkObject* aAtkObj) {
   return aAtkObj->role;
 }
 
-static AtkAttributeSet* ConvertToAtkAttributeSet(
-    nsIPersistentProperties* aAttributes) {
-  if (!aAttributes) return nullptr;
-
+static AtkAttributeSet* ConvertToAtkAttributeSet(AccAttributes* aAttributes) {
   AtkAttributeSet* objAttributeSet = nullptr;
-  nsCOMPtr<nsISimpleEnumerator> propEnum;
-  nsresult rv = aAttributes->Enumerate(getter_AddRefs(propEnum));
-  NS_ENSURE_SUCCESS(rv, nullptr);
 
-  bool hasMore;
-  while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> sup;
-    rv = propEnum->GetNext(getter_AddRefs(sup));
-    NS_ENSURE_SUCCESS(rv, objAttributeSet);
-
-    nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(sup));
-    NS_ENSURE_TRUE(propElem, objAttributeSet);
-
-    nsAutoCString name;
-    rv = propElem->GetKey(name);
-    NS_ENSURE_SUCCESS(rv, objAttributeSet);
-
-    nsAutoString value;
-    rv = propElem->GetValue(value);
-    NS_ENSURE_SUCCESS(rv, objAttributeSet);
-
-    // On ATK, the placeholder attribute is called placeholder-text.
-    if (name.Equals("placeholder")) {
-      name.AssignLiteral("placeholder-text");
+  for (auto iter : *aAttributes) {
+    nsAutoString name;
+    iter.NameAsString(name);
+    if (name.Equals(u"placeholder")) {
+      name.AssignLiteral(u"placeholder-text");
     }
 
+    nsAutoString value;
+    iter.ValueAsString(value);
+
     AtkAttribute* objAttr = (AtkAttribute*)g_malloc(sizeof(AtkAttribute));
-    objAttr->name = g_strdup(name.get());
+    objAttr->name = g_strdup(NS_ConvertUTF16toUTF8(name).get());
     objAttr->value = g_strdup(NS_ConvertUTF16toUTF8(value).get());
     objAttributeSet = g_slist_prepend(objAttributeSet, objAttr);
   }
@@ -677,10 +659,8 @@ static AtkAttributeSet* ConvertToAtkAttributeSet(
 }
 
 AtkAttributeSet* GetAttributeSet(LocalAccessible* aAccessible) {
-  nsCOMPtr<nsIPersistentProperties> attributes = aAccessible->Attributes();
-  if (attributes) return ConvertToAtkAttributeSet(attributes);
-
-  return nullptr;
+  RefPtr<AccAttributes> attributes = aAccessible->Attributes();
+  return ConvertToAtkAttributeSet(attributes);
 }
 
 AtkAttributeSet* getAttributesCB(AtkObject* aAtkObj) {

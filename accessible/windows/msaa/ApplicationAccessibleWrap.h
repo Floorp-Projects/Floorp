@@ -21,7 +21,7 @@ class ApplicationAccessibleWrap : public ApplicationAccessible {
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsAccessible
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual void Shutdown() override;
 };
 

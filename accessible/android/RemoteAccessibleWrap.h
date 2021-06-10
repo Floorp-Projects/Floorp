@@ -29,7 +29,7 @@ class RemoteAccessibleWrap : public AccessibleWrap {
 
   // LocalAccessible
 
-  virtual already_AddRefed<nsIPersistentProperties> Attributes() override;
+  virtual already_AddRefed<AccAttributes> Attributes() override;
 
   virtual uint32_t ChildCount() const override;
 

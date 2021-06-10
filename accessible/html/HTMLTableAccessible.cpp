@@ -7,10 +7,11 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "LocalAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
+#include "AccAttributes.h"
 #include "DocAccessible.h"
+#include "LocalAccessible-inl.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
 #include "Role.h"
@@ -21,7 +22,6 @@
 #include "mozilla/dom/HTMLTableElement.h"
 #include "nsIHTMLCollection.h"
 #include "mozilla/dom/Document.h"
-#include "nsIPersistentProperties2.h"
 #include "nsITableCellLayout.h"
 #include "nsFrameSelection.h"
 #include "nsError.h"
@@ -71,9 +71,8 @@ uint64_t HTMLTableCellAccessible::NativeInteractiveState() const {
   return HyperTextAccessibleWrap::NativeInteractiveState() | states::SELECTABLE;
 }
 
-already_AddRefed<nsIPersistentProperties>
-HTMLTableCellAccessible::NativeAttributes() {
-  nsCOMPtr<nsIPersistentProperties> attributes =
+already_AddRefed<AccAttributes> HTMLTableCellAccessible::NativeAttributes() {
+  RefPtr<AccAttributes> attributes =
       HyperTextAccessibleWrap::NativeAttributes();
 
   // table-cell-index attribute
@@ -86,7 +85,7 @@ HTMLTableCellAccessible::NativeAttributes() {
 
   nsAutoString stringIdx;
   stringIdx.AppendInt(table->CellIndexAt(rowIdx, colIdx));
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tableCellIndex, stringIdx);
+  attributes->SetAttribute(nsGkAtoms::tableCellIndex, stringIdx);
 
   // abbr attribute
 
@@ -109,20 +108,18 @@ HTMLTableCellAccessible::NativeAttributes() {
   }
 
   if (!abbrText.IsEmpty()) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::abbr, abbrText);
+    attributes->SetAttribute(nsGkAtoms::abbr, abbrText);
   }
 
   // axis attribute
   nsAutoString axisText;
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::axis, axisText);
   if (!axisText.IsEmpty()) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::axis, axisText);
+    attributes->SetAttribute(nsGkAtoms::axis, axisText);
   }
 
 #ifdef DEBUG
-  nsAutoString unused;
-  attributes->SetStringProperty("cppclass"_ns, u"HTMLTableCellAccessible"_ns,
-                                unused);
+  attributes->SetAttribute(u"cppclass"_ns, u"HTMLTableCellAccessible"_ns);
 #endif
 
   return attributes.forget();
@@ -394,18 +391,15 @@ ENameValueFlag HTMLTableAccessible::NativeName(nsString& aName) const {
   return eNameOK;
 }
 
-already_AddRefed<nsIPersistentProperties>
-HTMLTableAccessible::NativeAttributes() {
-  nsCOMPtr<nsIPersistentProperties> attributes =
-      AccessibleWrap::NativeAttributes();
+already_AddRefed<AccAttributes> HTMLTableAccessible::NativeAttributes() {
+  RefPtr<AccAttributes> attributes = AccessibleWrap::NativeAttributes();
 
   if (mContent->IsMathMLElement(nsGkAtoms::mtable_)) {
     GetAccService()->MarkupAttributes(mContent, attributes);
   }
 
   if (IsProbablyLayoutTable()) {
-    nsAutoString unused;
-    attributes->SetStringProperty("layout-guess"_ns, u"true"_ns, unused);
+    attributes->SetAttribute(u"layout-guess"_ns, u"true"_ns);
   }
 
   return attributes.forget();

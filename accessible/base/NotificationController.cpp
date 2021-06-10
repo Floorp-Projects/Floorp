@@ -11,6 +11,8 @@
 #include "TextLeafAccessible.h"
 #include "TextUpdater.h"
 
+#include "nsIContentInlines.h"
+
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/PresShell.h"

@@ -21,7 +21,6 @@
 struct nsRoleMapEntry;
 
 class nsIFrame;
-class nsIPersistentProperties;
 
 namespace mozilla::dom {
 class Element;
@@ -31,6 +30,7 @@ namespace mozilla {
 namespace a11y {
 
 class LocalAccessible;
+class AccAttributes;
 class AccEvent;
 class AccGroupInfo;
 class ApplicationAccessible;
@@ -288,7 +288,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Return object attributes for the accessible.
    */
-  virtual already_AddRefed<nsIPersistentProperties> Attributes();
+  virtual already_AddRefed<AccAttributes> Attributes();
 
   /**
    * Return group position (level, position in set and set size).
@@ -927,7 +927,7 @@ class LocalAccessible : public nsISupports, public Accessible {
    * Return object attributes provided by native markup. It doesn't take into
    * account ARIA.
    */
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes();
+  virtual already_AddRefed<AccAttributes> NativeAttributes();
 
   //////////////////////////////////////////////////////////////////////////////
   // Initializing, cache and tree traverse methods

@@ -10,9 +10,9 @@
 #include "HyperTextAccessible-inl.h"
 #include "nsMai.h"
 #include "RemoteAccessible.h"
+#include "AccAttributes.h"
 
 #include "nsIAccessibleTypes.h"
-#include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 #include "nsUTF8Utils.h"
 
@@ -83,37 +83,20 @@ static AtkAttributeSet* ConvertToAtkTextAttributeSet(
 }
 
 static AtkAttributeSet* ConvertToAtkTextAttributeSet(
-    nsIPersistentProperties* aAttributes) {
-  if (!aAttributes) return nullptr;
-
+    AccAttributes* aAttributes) {
   AtkAttributeSet* objAttributeSet = nullptr;
-  nsCOMPtr<nsISimpleEnumerator> propEnum;
-  nsresult rv = aAttributes->Enumerate(getter_AddRefs(propEnum));
-  NS_ENSURE_SUCCESS(rv, nullptr);
 
-  bool hasMore = false;
-  while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> sup;
-    rv = propEnum->GetNext(getter_AddRefs(sup));
-    NS_ENSURE_SUCCESS(rv, objAttributeSet);
-
-    nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(sup));
-    NS_ENSURE_TRUE(propElem, objAttributeSet);
-
-    nsAutoCString name;
-    rv = propElem->GetKey(name);
-    NS_ENSURE_SUCCESS(rv, objAttributeSet);
+  for (auto iter : *aAttributes) {
+    nsAutoString name;
+    iter.NameAsString(name);
 
     nsAutoString value;
-    rv = propElem->GetValue(value);
-    NS_ENSURE_SUCCESS(rv, objAttributeSet);
+    iter.ValueAsString(value);
 
     AtkAttribute* objAttr = (AtkAttribute*)g_malloc(sizeof(AtkAttribute));
-    objAttr->name = g_strdup(name.get());
+    objAttr->name = g_strdup(NS_ConvertUTF16toUTF8(name).get());
     objAttr->value = g_strdup(NS_ConvertUTF16toUTF8(value).get());
     objAttributeSet = g_slist_prepend(objAttributeSet, objAttr);
-
-    ConvertTextAttributeToAtkAttribute(name, value, &objAttributeSet);
   }
 
   // libatk-adaptor will free it
@@ -314,7 +297,7 @@ static AtkAttributeSet* getRunAttributesCB(AtkText* aText, gint aOffset,
       return nullptr;
     }
 
-    nsCOMPtr<nsIPersistentProperties> attributes =
+    RefPtr<AccAttributes> attributes =
         text->TextAttributes(false, aOffset, &startOffset, &endOffset);
 
     *aStartOffset = startOffset;
@@ -343,8 +326,7 @@ static AtkAttributeSet* getDefaultAttributesCB(AtkText* aText) {
       return nullptr;
     }
 
-    nsCOMPtr<nsIPersistentProperties> attributes =
-        text->DefaultTextAttributes();
+    RefPtr<AccAttributes> attributes = text->DefaultTextAttributes();
     return ConvertToAtkTextAttributeSet(attributes);
   }
 

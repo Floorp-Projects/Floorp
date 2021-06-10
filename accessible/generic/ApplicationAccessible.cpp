@@ -7,6 +7,7 @@
 
 #include "ApplicationAccessible.h"
 
+#include "AccAttributes.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "Relation.h"
@@ -66,9 +67,9 @@ uint64_t ApplicationAccessible::State() {
   return IsDefunct() ? states::DEFUNCT : 0;
 }
 
-already_AddRefed<nsIPersistentProperties>
-ApplicationAccessible::NativeAttributes() {
-  return nullptr;
+already_AddRefed<AccAttributes> ApplicationAccessible::NativeAttributes() {
+  RefPtr<AccAttributes> attributes = new AccAttributes();
+  return attributes.forget();
 }
 
 GroupPos ApplicationAccessible::GroupPosition() { return GroupPos(); }

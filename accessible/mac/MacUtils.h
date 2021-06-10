@@ -35,7 +35,7 @@ NSString* LocalizedString(const nsString& aString);
  * accessible wrapper or proxy, and returns the value as an NSString.
  * nil if no attribute is found.
  */
-NSString* GetAccAttr(mozAccessible* aNativeAccessible, const char* aAttrName);
+NSString* GetAccAttr(mozAccessible* aNativeAccessible, nsAtom* aAttrName);
 }
 }
 }
