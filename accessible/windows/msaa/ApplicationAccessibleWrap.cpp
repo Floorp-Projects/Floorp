@@ -26,8 +26,7 @@ already_AddRefed<AccAttributes> ApplicationAccessibleWrap::NativeAttributes() {
   if (gfxInfo) {
     bool isD2DEnabled = false;
     gfxInfo->GetD2DEnabled(&isD2DEnabled);
-    attributes->SetAttribute(u"D2D"_ns,
-                             isD2DEnabled ? u"true"_ns : u"false"_ns);
+    attributes->SetAttribute(u"D2D"_ns, isD2DEnabled);
   }
 
   return attributes.forget();

@@ -794,51 +794,46 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
                       java::sdk::Integer::ValueOf(inputType));
     }
 
-    nsString posinset;
-    if (aAttributes->GetAttribute(nsGkAtoms::posinset, posinset)) {
-      int32_t rowIndex;
-      if (sscanf(NS_ConvertUTF16toUTF8(posinset).get(), "%d", &rowIndex) > 0) {
-        GECKOBUNDLE_START(collectionItemInfo);
-        GECKOBUNDLE_PUT(collectionItemInfo, "rowIndex",
-                        java::sdk::Integer::ValueOf(rowIndex));
-        GECKOBUNDLE_PUT(collectionItemInfo, "columnIndex",
-                        java::sdk::Integer::ValueOf(0));
-        GECKOBUNDLE_PUT(collectionItemInfo, "rowSpan",
-                        java::sdk::Integer::ValueOf(1));
-        GECKOBUNDLE_PUT(collectionItemInfo, "columnSpan",
-                        java::sdk::Integer::ValueOf(1));
-        GECKOBUNDLE_FINISH(collectionItemInfo);
+    Maybe<int32_t> rowIndex =
+        aAttributes->GetAttribute<int32_t>(nsGkAtoms::posinset);
+    if (rowIndex) {
+      GECKOBUNDLE_START(collectionItemInfo);
+      GECKOBUNDLE_PUT(collectionItemInfo, "rowIndex",
+                      java::sdk::Integer::ValueOf(*rowIndex));
+      GECKOBUNDLE_PUT(collectionItemInfo, "columnIndex",
+                      java::sdk::Integer::ValueOf(0));
+      GECKOBUNDLE_PUT(collectionItemInfo, "rowSpan",
+                      java::sdk::Integer::ValueOf(1));
+      GECKOBUNDLE_PUT(collectionItemInfo, "columnSpan",
+                      java::sdk::Integer::ValueOf(1));
+      GECKOBUNDLE_FINISH(collectionItemInfo);
 
-        GECKOBUNDLE_PUT(nodeInfo, "collectionItemInfo", collectionItemInfo);
-      }
+      GECKOBUNDLE_PUT(nodeInfo, "collectionItemInfo", collectionItemInfo);
     }
 
-    nsString colSize;
     RefPtr<nsAtom> attrAtom = NS_Atomize("child-item-count"_ns);
-    if (aAttributes->GetAttribute(attrAtom, colSize)) {
-      int32_t rowCount;
-      if (sscanf(NS_ConvertUTF16toUTF8(colSize).get(), "%d", &rowCount) > 0) {
-        GECKOBUNDLE_START(collectionInfo);
-        GECKOBUNDLE_PUT(collectionInfo, "rowCount",
-                        java::sdk::Integer::ValueOf(rowCount));
-        GECKOBUNDLE_PUT(collectionInfo, "columnCount",
-                        java::sdk::Integer::ValueOf(1));
+    Maybe<int32_t> rowCount = aAttributes->GetAttribute<int32_t>(attrAtom);
+    if (rowCount) {
+      GECKOBUNDLE_START(collectionInfo);
+      GECKOBUNDLE_PUT(collectionInfo, "rowCount",
+                      java::sdk::Integer::ValueOf(*rowCount));
+      GECKOBUNDLE_PUT(collectionInfo, "columnCount",
+                      java::sdk::Integer::ValueOf(1));
 
-        attrAtom = NS_Atomize("hierarchical"_ns);
-        if (aAttributes->HasAttribute(attrAtom)) {
-          GECKOBUNDLE_PUT(collectionInfo, "isHierarchical",
-                          java::sdk::Boolean::TRUE());
-        }
-
-        if (IsSelect()) {
-          int32_t selectionMode = (aState & states::MULTISELECTABLE) ? 2 : 1;
-          GECKOBUNDLE_PUT(collectionInfo, "selectionMode",
-                          java::sdk::Integer::ValueOf(selectionMode));
-        }
-
-        GECKOBUNDLE_FINISH(collectionInfo);
-        GECKOBUNDLE_PUT(nodeInfo, "collectionInfo", collectionInfo);
+      attrAtom = NS_Atomize("hierarchical"_ns);
+      if (aAttributes->HasAttribute(attrAtom)) {
+        GECKOBUNDLE_PUT(collectionInfo, "isHierarchical",
+                        java::sdk::Boolean::TRUE());
       }
+
+      if (IsSelect()) {
+        int32_t selectionMode = (aState & states::MULTISELECTABLE) ? 2 : 1;
+        GECKOBUNDLE_PUT(collectionInfo, "selectionMode",
+                        java::sdk::Integer::ValueOf(selectionMode));
+      }
+
+      GECKOBUNDLE_FINISH(collectionInfo);
+      GECKOBUNDLE_PUT(nodeInfo, "collectionInfo", collectionInfo);
     }
   }
 
@@ -897,12 +892,11 @@ bool AccessibleWrap::HandleLiveRegionEvent(AccEvent* aEvent) {
                           ? nsIAccessibleAnnouncementEvent::ASSERTIVE
                           : nsIAccessibleAnnouncementEvent::POLITE;
 
-  nsString atomic;
-  attributes->GetAttribute(nsGkAtoms::containerAtomic, atomic);
-
+  Maybe<bool> atomic =
+      attributes->GetAttribute<bool>(nsGkAtoms::containerAtomic);
   LocalAccessible* announcementTarget = this;
   nsAutoString announcement;
-  if (atomic.EqualsIgnoreCase("true")) {
+  if (atomic && *atomic) {
     LocalAccessible* atomicAncestor = nullptr;
     for (LocalAccessible* parent = announcementTarget; parent;
          parent = parent->LocalParent()) {
