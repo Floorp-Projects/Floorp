@@ -28,15 +28,9 @@ const CONFIRM_FAILED = 3;
 const CONFIRM_TRYING_FAILED = 4;
 const CONFIRM_DISABLED = 5;
 
-function setup() {
-  trr_test_setup();
-  Services.prefs.setBoolPref("network.trr.skip-check-for-blocked-host", true);
-}
-
-setup();
+trr_test_setup();
 registerCleanupFunction(async () => {
   trr_clear_prefs();
-  Services.prefs.clearUserPref("network.trr.skip-check-for-blocked-host");
 });
 
 let trrServer = null;
@@ -76,9 +70,7 @@ function trigger15Failures() {
   dns.clearCache(true);
 
   let dnsRequests = [];
-  // There are actually two TRR requests sent for A and AAAA records, so doing
-  // DNS query 10 times should be enough to trigger confirmation process.
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 15; i++) {
     dnsRequests.push(
       new TRRDNSListener(`failing-domain${i}.faily.com`, {
         expectedAnswer: "127.0.0.1",
