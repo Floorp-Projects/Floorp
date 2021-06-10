@@ -152,6 +152,18 @@ class DateTimeFormat final {
   };
 
   /**
+   * Copies the pattern for the current DateTimeFormat to a buffer.
+   */
+  template <typename B>
+  ICUResult GetPattern(B& aBuffer) const {
+    return FillBufferWithICUCall(
+        aBuffer, [&](UChar* target, int32_t length, UErrorCode* status) {
+          return udat_toPattern(mDateFormat, /* localized*/ false, target,
+                                length, status);
+        });
+  }
+
+  /**
    * Set the start time of the Gregorian calendar. This is useful for
    * ensuring the consistent use of a proleptic Gregorian calendar for ECMA-402.
    * https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar

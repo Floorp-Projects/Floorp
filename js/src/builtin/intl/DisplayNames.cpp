@@ -9,6 +9,7 @@
 #include "builtin/intl/DisplayNames.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 
@@ -1038,11 +1039,15 @@ static JSString* GetDateTimeFieldDisplayName(JSContext* cx, const char* locale,
   }
 
   intl::SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
-  UDateTimePatternGenerator* dtpg =
+  mozilla::intl::DateTimePatternGenerator* dtpgen =
       sharedIntlData.getDateTimePatternGenerator(cx, locale);
-  if (!dtpg) {
+  if (!dtpgen) {
     return nullptr;
   }
+
+  UDateTimePatternGenerator* dtpg =
+      dtpgen->UnsafeGetUDateTimePatternGenerator();
+  MOZ_ASSERT(dtpg);
 
   JSString* str = intl::CallICU(cx, [dtpg, field, width](UChar* chars,
                                                          uint32_t size,

@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Range.h"
+#include "mozilla/Span.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -37,6 +38,10 @@ class FormatBuffer {
   explicit FormatBuffer(JSContext* cx) : cx_(cx), buffer_(cx) {
     MOZ_ASSERT(cx);
   }
+
+  // Implicitly convert to a Span.
+  operator mozilla::Span<CharType>() { return buffer_; }
+  operator mozilla::Span<const CharType>() const { return buffer_; }
 
   /**
    * Ensures the buffer has enough space to accommodate |size| elements.
