@@ -576,7 +576,7 @@ impl CompositeState {
         transform_index: CompositorTransformIndex,
     ) -> DeviceRect {
         let transform = &self.transforms[transform_index.0];
-        transform.local_to_device.map_rect(local_rect).round().to_box2d()
+        transform.local_to_device.map_rect(&local_rect.to_box2d()).round()
     }
 
     /// Calculate the device-space rect of a local compositor surface rect, normalized
@@ -589,14 +589,14 @@ impl CompositeState {
     ) -> DeviceRect {
         let transform = &self.transforms[transform_index.0];
 
-        let surface_bounds = transform.local_to_surface.map_rect(local_bounds);
-        let surface_rect = transform.local_to_surface.map_rect(local_sub_rect);
+        let surface_bounds = transform.local_to_surface.map_rect(&local_bounds.to_box2d());
+        let surface_rect = transform.local_to_surface.map_rect(&local_sub_rect.to_box2d());
 
         surface_rect
-            .translate(-surface_bounds.origin.to_vector())
+            .translate(-surface_bounds.min.to_vector())
             .round_out()
-            .intersection(&surface_bounds.size.round().into())
-            .map_or(DeviceRect::zero(), |rect| rect.to_box2d())
+            .intersection(&surface_bounds.size().round().into())
+            .unwrap_or_else(DeviceRect::zero)
     }
 
     /// Get the surface -> device compositor transform as a 4x4 matrix
