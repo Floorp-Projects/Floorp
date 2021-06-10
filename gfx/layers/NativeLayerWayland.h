@@ -35,6 +35,10 @@ class NativeLayerRootWayland : public NativeLayerRoot {
   static already_AddRefed<NativeLayerRootWayland> CreateForMozContainer(
       MozContainer* aContainer);
 
+  virtual NativeLayerRootWayland* AsNativeLayerRootWayland() override {
+    return this;
+  }
+
   // Overridden methods
   already_AddRefed<NativeLayer> CreateLayer(
       const IntSize& aSize, bool aIsOpaque,
@@ -60,6 +64,7 @@ class NativeLayerRootWayland : public NativeLayerRoot {
       bool aIsOpaque) override;
 
   void AfterFrameClockAfterPaint();
+  void RequestFrameCallback(CallbackFunc aCallbackFunc, void* aCallbackData);
 
  protected:
   explicit NativeLayerRootWayland(MozContainer* aContainer);
@@ -79,6 +84,8 @@ class NativeLayerRootWayland : public NativeLayerRoot {
   RefPtr<widget::WaylandShmBuffer> mShmBuffer;
   bool mCompositorRunning = true;
   gulong mGdkAfterPaintId = 0;
+  RefPtr<CallbackMultiplexHelper> mCallbackMultiplexHelper;
+  bool mCommitRequested = false;
 };
 
 class NativeLayerWayland : public NativeLayer {

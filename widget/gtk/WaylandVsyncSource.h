@@ -6,15 +6,18 @@
 #ifndef _WaylandVsyncSource_h_
 #define _WaylandVsyncSource_h_
 
+#include "base/thread.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/layers/NativeLayerWayland.h"
 #include "MozContainer.h"
-#include "VsyncSource.h"
-#include "base/thread.h"
 #include "nsWaylandDisplay.h"
+#include "VsyncSource.h"
 
 namespace mozilla {
+
+using layers::NativeLayerRootWayland;
 
 /*
  * WaylandVsyncSource
@@ -39,10 +42,7 @@ namespace mozilla {
  */
 class WaylandVsyncSource final : public gfx::VsyncSource {
  public:
-  explicit WaylandVsyncSource(MozContainer* container) {
-    MOZ_ASSERT(NS_IsMainThread());
-    mGlobalDisplay = new WaylandDisplay(container);
-  }
+  WaylandVsyncSource() { mGlobalDisplay = new WaylandDisplay(); }
 
   virtual ~WaylandVsyncSource() { MOZ_ASSERT(NS_IsMainThread()); }
 
@@ -50,7 +50,11 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
 
   class WaylandDisplay final : public mozilla::gfx::VsyncSource::Display {
    public:
-    explicit WaylandDisplay(MozContainer* container);
+    WaylandDisplay();
+
+    void MaybeUpdateSource(MozContainer* aContainer);
+    void MaybeUpdateSource(
+        const RefPtr<NativeLayerRootWayland>& aNativeLayerRoot);
 
     void EnableMonitor();
     void DisableMonitor();
@@ -75,13 +79,14 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
     void ClearFrameCallback();
     void CalculateVsyncRate(TimeStamp vsyncTimestamp);
 
-    Mutex mEnabledLock;
+    Mutex mMutex;
     bool mIsShutdown;
     bool mVsyncEnabled;
     bool mMonitorEnabled;
+    bool mCallbackRequested;
     struct wl_display* mDisplay;
-    struct wl_callback* mCallback;
     MozContainer* mContainer;
+    RefPtr<NativeLayerRootWayland> mNativeLayerRoot;
     TimeDuration mVsyncRate;
     TimeStamp mLastVsyncTimeStamp;
   };

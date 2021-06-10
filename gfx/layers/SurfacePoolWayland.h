@@ -21,6 +21,28 @@ using gl::GLContext;
 using widget::nsWaylandDisplay;
 using widget::WaylandShmBuffer;
 
+typedef void (*CallbackFunc)(void* aData, uint32_t aTime);
+
+class CallbackMultiplexHelper {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CallbackMultiplexHelper);
+
+  explicit CallbackMultiplexHelper(CallbackFunc aCallbackFunc,
+                                   void* aCallbackData);
+
+  void Callback(uint32_t aTime);
+  bool IsActive() { return mActive; }
+
+ private:
+  ~CallbackMultiplexHelper() = default;
+
+  void RunCallback(uint32_t aTime);
+
+  bool mActive = true;
+  CallbackFunc mCallbackFunc = nullptr;
+  void* mCallbackData = nullptr;
+};
+
 class NativeSurfaceWayland {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NativeSurfaceWayland);
@@ -35,6 +57,11 @@ class NativeSurfaceWayland {
   virtual void NotifySurfaceReady(){};
   virtual void DestroyGLResources(){};
 
+  void RequestFrameCallback(
+      const RefPtr<CallbackMultiplexHelper>& aMultiplexHelper);
+  static void FrameCallbackHandler(void* aData, wl_callback* aCallback,
+                                   uint32_t aTime);
+
   struct wl_surface* mWlSurface = nullptr;
   struct wl_subsurface* mWlSubsurface = nullptr;
   struct wp_viewport* mViewport = nullptr;
@@ -44,7 +71,12 @@ class NativeSurfaceWayland {
       const RefPtr<nsWaylandDisplay>& aWaylandDisplay);
   virtual ~NativeSurfaceWayland();
 
+  void FrameCallbackHandler(wl_callback* aCallback, uint32_t aTime);
+
+  Mutex mMutex;
   RefPtr<nsWaylandDisplay> mWaylandDisplay;
+  nsTArray<RefPtr<CallbackMultiplexHelper>> mCallbackMultiplexHelpers;
+  bool mCallbackRequested = false;
 };
 
 class NativeSurfaceWaylandEGL final : public NativeSurfaceWayland {

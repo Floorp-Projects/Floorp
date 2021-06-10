@@ -31,6 +31,8 @@ namespace layers {
 class NativeLayer;
 class NativeLayerCA;
 class NativeLayerWayland;
+class NativeLayerRootCA;
+class NativeLayerRootWayland;
 class NativeLayerRootSnapshotter;
 class SurfacePoolHandle;
 
@@ -43,6 +45,9 @@ class SurfacePoolHandle;
 class NativeLayerRoot {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NativeLayerRoot)
+
+  virtual NativeLayerRootCA* AsNativeLayerRootCA() { return nullptr; }
+  virtual NativeLayerRootWayland* AsNativeLayerRootWayland() { return nullptr; }
 
   virtual already_AddRefed<NativeLayer> CreateLayer(
       const gfx::IntSize& aSize, bool aIsOpaque,
