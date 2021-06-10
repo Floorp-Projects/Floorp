@@ -17,48 +17,56 @@ function checkStateRead(aSubject, aTopic, aData) {
 
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://expired.example.com"),
       0
     )
   );
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://notexpired.example.com"),
       0
     )
   );
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://includesubdomains.preloaded.test"),
       0
     )
   );
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://sub.includesubdomains.preloaded.test"),
       0
     )
   );
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://incsubdomain.example.com"),
       0
     )
   );
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://sub.incsubdomain.example.com"),
       0
     )
   );
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://includesubdomains2.preloaded.test"),
       0
     )
   );
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://sub.includesubdomains2.preloaded.test"),
       0
     )
@@ -68,48 +76,56 @@ function checkStateRead(aSubject, aTopic, aData) {
   gSSService.clearAll();
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://expired.example.com"),
       0
     )
   );
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://notexpired.example.com"),
       0
     )
   );
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://includesubdomains.preloaded.test"),
       0
     )
   );
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://sub.includesubdomains.preloaded.test"),
       0
     )
   );
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://incsubdomain.example.com"),
       0
     )
   );
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://sub.incsubdomain.example.com"),
       0
     )
   );
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://includesubdomains2.preloaded.test"),
       0
     )
   );
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://sub.includesubdomains2.preloaded.test"),
       0
     )

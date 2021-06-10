@@ -36,6 +36,9 @@ class SharedSSLState {
   void SetSignedCertTimestampsEnabled(bool signedCertTimestampsEnabled) {
     mSignedCertTimestampsEnabled = signedCertTimestampsEnabled;
   }
+  void SetPinningMode(CertVerifier::PinningMode aPinningMode) {
+    mPinningMode = aPinningMode;
+  }
   void SetNameMatchingMode(BRNameMatchingPolicy::Mode aMode) {
     mNameMatchingMode = aMode;
   }
@@ -49,6 +52,7 @@ class SharedSSLState {
   bool IsSignedCertTimestampsEnabled() const {
     return mSignedCertTimestampsEnabled;
   }
+  CertVerifier::PinningMode PinningMode() { return mPinningMode; }
   BRNameMatchingPolicy::Mode NameMatchingMode() { return mNameMatchingMode; }
 
  private:
@@ -67,6 +71,7 @@ class SharedSSLState {
   bool mOCSPStaplingEnabled;
   bool mOCSPMustStapleEnabled;
   bool mSignedCertTimestampsEnabled;
+  CertVerifier::PinningMode mPinningMode;
   BRNameMatchingPolicy::Mode mNameMatchingMode;
 };
 
