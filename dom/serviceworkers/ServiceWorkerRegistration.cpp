@@ -7,6 +7,7 @@
 #include "ServiceWorkerRegistration.h"
 
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
+#include "mozilla/dom/NavigationPreloadManager.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PushManager.h"
@@ -24,7 +25,8 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistration,
                                    DOMEventTargetHelper, mInstallingWorker,
-                                   mWaitingWorker, mActiveWorker, mPushManager);
+                                   mWaitingWorker, mActiveWorker,
+                                   mNavigationPreloadManager, mPushManager);
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorkerRegistration, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistration, DOMEventTargetHelper)
@@ -139,6 +141,16 @@ already_AddRefed<ServiceWorker> ServiceWorkerRegistration::GetWaiting() const {
 
 already_AddRefed<ServiceWorker> ServiceWorkerRegistration::GetActive() const {
   RefPtr<ServiceWorker> ref = mActiveWorker;
+  return ref.forget();
+}
+
+already_AddRefed<NavigationPreloadManager>
+ServiceWorkerRegistration::NavigationPreload() {
+  if (!mNavigationPreloadManager) {
+    mNavigationPreloadManager =
+        MakeRefPtr<NavigationPreloadManager>(GetParentObject());
+  }
+  RefPtr<NavigationPreloadManager> ref = mNavigationPreloadManager;
   return ref.forget();
 }
 
