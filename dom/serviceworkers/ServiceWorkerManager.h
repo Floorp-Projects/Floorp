@@ -160,9 +160,7 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
 
   already_AddRefed<ServiceWorkerRegistrationInfo> CreateNewRegistration(
       const nsCString& aScope, nsIPrincipal* aPrincipal,
-      ServiceWorkerUpdateViaCache aUpdateViaCache,
-      IPCNavigationPreloadState aNavigationPreloadState =
-          IPCNavigationPreloadState(false, "true"_ns));
+      ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   void RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);
 

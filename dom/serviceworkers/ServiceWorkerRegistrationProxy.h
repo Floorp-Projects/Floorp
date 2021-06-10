@@ -78,12 +78,6 @@ class ServiceWorkerRegistrationProxy final
   RefPtr<ServiceWorkerRegistrationPromise> Update(
       const nsCString& aNewestWorkerScriptUrl);
 
-  RefPtr<GenericPromise> SetNavigationPreloadEnabled(const bool& aEnabled);
-
-  RefPtr<GenericPromise> SetNavigationPreloadHeader(const nsCString& aHeader);
-
-  RefPtr<NavigationPreloadStatePromise> GetNavigationPreloadState();
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerRegistrationProxy,
                                         override);
 };

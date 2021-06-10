@@ -213,8 +213,6 @@ nsresult PopulateRegistrationData(
 
   aData.lastUpdateTime() = aRegistration->GetLastUpdateTime();
 
-  aData.navigationPreloadState() = aRegistration->GetNavigationPreloadState();
-
   MOZ_ASSERT(ServiceWorkerRegistrationDataIsValid(aData));
 
   return NS_OK;
@@ -1476,8 +1474,7 @@ void ServiceWorkerManager::LoadRegistration(
     registration =
         CreateNewRegistration(aRegistration.scope(), principal,
                               static_cast<ServiceWorkerUpdateViaCache>(
-                                  aRegistration.updateViaCache()),
-                              aRegistration.navigationPreloadState());
+                                  aRegistration.updateViaCache()));
   } else {
     // If active worker script matches our expectations for a "current worker",
     // then we are done. Since scripts with the same URL might have different
@@ -2654,8 +2651,7 @@ ServiceWorkerManager::GetRegistration(const nsACString& aScopeKey,
 already_AddRefed<ServiceWorkerRegistrationInfo>
 ServiceWorkerManager::CreateNewRegistration(
     const nsCString& aScope, nsIPrincipal* aPrincipal,
-    ServiceWorkerUpdateViaCache aUpdateViaCache,
-    IPCNavigationPreloadState aNavigationPreloadState) {
+    ServiceWorkerUpdateViaCache aUpdateViaCache) {
 #ifdef DEBUG
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIURI> scopeURI;
@@ -2668,8 +2664,7 @@ ServiceWorkerManager::CreateNewRegistration(
 #endif
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
-      new ServiceWorkerRegistrationInfo(aScope, aPrincipal, aUpdateViaCache,
-                                        std::move(aNavigationPreloadState));
+      new ServiceWorkerRegistrationInfo(aScope, aPrincipal, aUpdateViaCache);
 
   // From now on ownership of registration is with
   // mServiceWorkerRegistrationInfos.

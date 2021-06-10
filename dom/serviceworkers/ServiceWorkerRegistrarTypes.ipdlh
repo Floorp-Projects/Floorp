@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include IPCNavigationPreloadState;
 include PBackgroundSharedTypes;
 
 namespace mozilla {
@@ -25,8 +24,6 @@ struct ServiceWorkerRegistrationData
   int64_t currentWorkerInstalledTime;
   int64_t currentWorkerActivatedTime;
   int64_t lastUpdateTime;
-
-  IPCNavigationPreloadState navigationPreloadState;
 };
 
 } // namespace dom
