@@ -467,7 +467,9 @@ void ProcessPriorityManagerImpl::ActivityChanged(
     CanonicalBrowsingContext* canonical = aContext->Canonical();
     if (ContentParent* cp = canonical->GetContentParent()) {
       if (RefPtr pppm = GetParticularProcessPriorityManager(cp)) {
-        pppm->ActivityChanged(canonical->GetBrowserParent(), aIsActive);
+        if (auto* bp = canonical->GetBrowserParent()) {
+          pppm->ActivityChanged(bp, aIsActive);
+        }
       }
     }
   });
