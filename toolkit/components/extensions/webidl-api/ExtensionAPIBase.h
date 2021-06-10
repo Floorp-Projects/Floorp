@@ -21,6 +21,7 @@ class Function;
 
 namespace extensions {
 
+class ExtensionAPIAddRemoveListener;
 class ExtensionAPICallFunctionNoReturn;
 class ExtensionAPICallSyncFunction;
 class ExtensionAPICallAsyncFunction;
@@ -94,6 +95,12 @@ class ExtensionAPIBase {
       const nsAString& aApiMethod);
 
   RefPtr<ExtensionAPIGetProperty> GetProperty(const nsAString& aApiProperty);
+
+  RefPtr<ExtensionAPIAddRemoveListener> SendAddListener(
+      const nsAString& aEventName);
+
+  RefPtr<ExtensionAPIAddRemoveListener> SendRemoveListener(
+      const nsAString& aEventName);
 
   static void ThrowUnexpectedError(JSContext* aCx, ErrorResult& aRv);
 };
