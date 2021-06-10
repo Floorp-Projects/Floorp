@@ -21,15 +21,9 @@
 }
 
 .fieldpair__description {
-  color: var(--grey-50);
+  color: var(--fieldpair-text-color);
   flex: 1;
   font-size: var(--caption-20-font-size);
   font-weight: var(--caption-20-font-weight);
   text-align: end;
-}
-
-@media (-moz-toolbar-prefers-color-scheme: dark) {
-  .fieldpair__description {
-    color: var(--category-text);
-  }
 }

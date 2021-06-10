@@ -6,16 +6,29 @@
   /* Colors from common.css */
   --bg-color: #f9f9fa; /* --in-content-background-color */
   --text-color: #0c0c0d; /* --in-content-text-color */
+  --secondary-text-color: var(--grey-50);
 
   --border-color: #d7d7db; /* --in-content-border-color */
 
   --box-background: #fff;
   --box-border-color: #d7d7db;
 
+  --button-background-color: var(--grey-90-a10); /* Note: this is from Photon Default button */
+  --button-color: var(--grey-90); /* Note: this is from Photon Default button */
+  --button-hover-background-color: var(--grey-90-a20); /* Note: this is from Photon Default button */
+  --button-active-background-color: var(--grey-90-a30); /* Note: this is from Photon Default button */
+
   --category-background-hover: rgba(12,12,13,0.1);
   --category-text: rgba(12,12,13);
   --category-text-selected: #0a84ff;
 
+  --fieldpair-text-color: var(--grey-50);
+
+  --sidebar-text-color: var(--category-text);
+  --sidebar-selected-color: var(--category-text-selected);
+  --sidebar-background-hover: var(--category-background-hover);
+
+  --card-background-color: var(--white-100);
   --card-separator-color: var(--grey-20);
 
   /* Dimensions from common.css #categories > .category */
@@ -24,9 +37,17 @@
   --category-padding: 10px;
   --category-transition-duration: 150ms;
 
+  --icon-ok-color: var(--green-70);
+  --icon-info-color: var(--grey-90);
+
   --link-color: #0a8dff;
   --link-color-active: #003eaa;
   --link-color-hover: #0060df;
+
+  --primary-button-background-color: var(--blue-60);
+  --primary-button-color: var(--white-100);
+  --primary-button-hover-background-color: var(--blue-70);
+  --primary-button-active-background-color: var(--blue-80);
 
   /* Colors from Photon */
   --success-background: #30e60b;
@@ -64,7 +85,6 @@
   --caption-10-font-weight: 400;
   --caption-20-font-size: 13px;
   --caption-20-font-weight: 400;
-  --caption-20-color: var(--grey-50);
   --display-10-font-size: 28px;
   --display-10-font-weight: 200;
   --title-20-font-size: 17px;
@@ -107,6 +127,7 @@
   :root {
     --bg-color: rgb(28, 27, 34); /* --in-content-background-color */
     --text-color: #eee; /* --in-content-text-color */
+    --secondary-text-color: rgb(168, 168, 168);
 
     --box-background: rgb(35, 34, 43);
     --box-border-color: rgba(249,249,250,0.2);
@@ -115,10 +136,33 @@
     --link-color-active: rgb(170,242,255);
     --link-color-hover: rgb(128,235,255);
 
-    --category-background-hover: rgba(12,12,13,0.1);
-    --category-text: rgb(238, 238, 238);
+    --button-background-color: rgb(72, 72, 84);
+    --button-color: var(--white-100);
+    --button-hover-background-color: rgb(92, 92, 106);
 
+    --category-background-hover: rgba(12,12,13,0.1);
+    --category-text: var(--text-color);
+
+    --fieldpair-text-color: var(--text-color);
+
+    --sidebar-text-color: var(--text-color);
+    --sidebar-selected-color: var(--link-color);
+    --sidebar-background-hover: rgb(92, 92, 106);
+
+    --card-background-color: rgb(35, 34, 43);
     --card-separator-color: var(--grey-50);
+
+    --icon-ok-color: var(--white-100);
+    --icon-info-color: var(--white-100);
+
+    /*
+     * From common.inc.css
+     * https://searchfox.org/mozilla-central/rev/b52cf6bbe214bd9d93ed9333d0403f7d556ad7c8/toolkit/themes/shared/in-content/common.inc.css#165-168
+     */
+    --primary-button-background-color: #00ddff;
+    --primary-button-color: rgb(43,42,51);
+    --primary-button-active-background-color: rgb(170,242,255);
+    --primary-button-hover-background-color: rgb(128,235,255);
   }
 }
 
@@ -336,30 +380,30 @@ Form controls
 
 /* Photon button representing a primary action */
 .primary-button {
-  color: var(--white-100);
-  background-color: var(--blue-60);
+  color: var(--primary-button-color);
+  background-color: var(--primary-button-background-color);
 }
 
 .primary-button:enabled:hover {
-  background-color: var(--blue-70);
+  background: var(--primary-button-hover-background-color);
 }
 
 .primary-button:enabled:active {
-  background-color: var(--blue-80);
+  background: var(--primary-button-active-background-color);
 }
 
 /* Photon standard button */
 .default-button {
-  color: var(--grey-90); /* Note: this is from Photon Default button */
-  background-color: var(--grey-90-a10); /* Note: this is from Photon Default button */
+  color: var(--button-color);
+  background-color: var(--button-background-color);
 }
 
 .default-button:enabled:hover {
-  background: var(--grey-90-a20); /* Note: this is from Photon Default button */
+  background: var(--button-hover-background-color);
 }
 
 .default-button:enabled:active {
-  background: var(--grey-90-a30); /* Note: this is from Photon Default button */
+  background: var(--button-active-background-color);
 }
 
 /* Photon ghost button. Icon button with no background */
@@ -430,7 +474,7 @@ Form controls
  * Card UI, from Photon
  */
 .card {
-  background-color: var(--white-100); /* from common.inc.css */
+  background-color: var(--card-background-color); /* from common.inc.css */
   border-radius: var(--card-shadow-blur-radius); /* from common.inc.css */
   box-shadow: 0 1px 4px var(--grey-90-a10); /* from common.inc.css */
   box-sizing: border-box;
@@ -441,32 +485,4 @@ Form controls
 .card__heading {
   font-size: var(--title-20-font-size); /* Note: this is from Photon Title 20 */
   font-weight: var(--title-20-font-weight); /* Note: this is from Photon Title 20 */
-}
-
-@media  (-moz-toolbar-prefers-color-scheme: dark) {
-  .card {
-    background-color: rgb(35, 34, 43);
-  }
-
-  .default-button {
-    color: var(--white-100);
-    background-color: rgb(72, 72, 84);
-  }
-
-  .default-button:enabled:hover {
-    background-color: rgb(92, 92, 106);
-  }
-
-  .sidebar__footer__icon {
-    fill: var(--white-100);
-    -moz-context-properties: fill;
-  }
-
-  .primary-button:enabled {
-    background-color: rgb(72, 72, 84);
-  }
-
-  .primary-button:enabled:hover {
-    background-color: rgb(92, 92, 106);
-  }
 }
