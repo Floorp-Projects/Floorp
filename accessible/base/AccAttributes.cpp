@@ -4,31 +4,46 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AccAttributes.h"
+#include "StyleInfo.h"
 
 using namespace mozilla::a11y;
 
-void AccAttributes::SetAttribute(nsAtom* aAttrName,
-                                 const nsAString& aAttrValue) {
-  mData.InsertOrUpdate(aAttrName, aAttrValue);
-}
-
-void AccAttributes::SetAttribute(nsAtom* aAttrName, const nsAtom* aAttrValue) {
-  nsAutoString value;
-  aAttrValue->ToString(value);
-  mData.InsertOrUpdate(aAttrName, value);
-}
-
-void AccAttributes::SetAttribute(const nsAString& aAttrName,
-                                 const nsAString& aAttrValue) {
-  RefPtr<nsAtom> attrAtom = NS_Atomize(aAttrName);
-  mData.InsertOrUpdate(attrAtom, aAttrValue);
-}
-
 bool AccAttributes::GetAttribute(nsAtom* aAttrName, nsAString& aAttrValue) {
   if (auto value = mData.Lookup(aAttrName)) {
-    aAttrValue.Assign(*value);
+    StringFromValueAndName(aAttrName, *value, aAttrValue);
     return true;
   }
 
   return false;
+}
+
+void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
+                                           const AttrValueType& aValue,
+                                           nsAString& aValueString) {
+  aValueString.Truncate();
+
+  aValue.match(
+      [&aValueString](const nsString& val) { aValueString.Assign(val); },
+      [&aValueString](const bool& val) {
+        aValueString.Assign(val ? u"true" : u"false");
+      },
+      [&aValueString](const float& val) {
+        aValueString.AppendFloat(val * 100);
+        aValueString.Append(u"%");
+      },
+      [&aValueString](const int32_t& val) { aValueString.AppendInt(val); },
+      [&aValueString](const RefPtr<nsAtom>& val) {
+        val->ToString(aValueString);
+      },
+      [&aValueString](const CSSCoord& val) {
+        aValueString.AppendFloat(val);
+        aValueString.Append(u"px");
+      },
+      [&aValueString](const FontSize& val) {
+        aValueString.AppendInt(val.mValue);
+        aValueString.Append(u"pt");
+      },
+      [&aValueString](const Color& val) {
+        StyleInfo::FormatColor(val.mValue, aValueString);
+      });
 }
