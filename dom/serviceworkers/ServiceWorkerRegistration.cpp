@@ -148,7 +148,7 @@ already_AddRefed<NavigationPreloadManager>
 ServiceWorkerRegistration::NavigationPreload() {
   if (!mNavigationPreloadManager) {
     mNavigationPreloadManager =
-        MakeRefPtr<NavigationPreloadManager>(GetParentObject());
+        MakeRefPtr<NavigationPreloadManager>(GetParentObject(), mInner);
   }
   RefPtr<NavigationPreloadManager> ref = mNavigationPreloadManager;
   return ref.forget();

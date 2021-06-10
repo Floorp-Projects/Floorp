@@ -11,6 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/ServiceWorkerRegistration.h"
 #include "mozilla/RefPtr.h"
 
 class nsIGlobalObject;
@@ -28,7 +29,8 @@ class NavigationPreloadManager final : public nsISupports,
 
   static bool IsValidHeader(const nsACString& aHeader);
 
-  explicit NavigationPreloadManager(nsCOMPtr<nsIGlobalObject>&& aGlobal);
+  NavigationPreloadManager(nsCOMPtr<nsIGlobalObject>&& aGlobal,
+                           RefPtr<ServiceWorkerRegistration::Inner>& aInner);
 
   // Webidl binding
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
@@ -52,6 +54,7 @@ class NavigationPreloadManager final : public nsISupports,
   already_AddRefed<Promise> SetEnabled(bool aEnabled);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<ServiceWorkerRegistration::Inner> mInner;
 };
 
 }  // namespace dom

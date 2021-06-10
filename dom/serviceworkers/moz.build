@@ -90,6 +90,7 @@ UNIFIED_SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    "IPCNavigationPreloadState.ipdlh",
     "IPCServiceWorkerDescriptor.ipdlh",
     "IPCServiceWorkerRegistrationDescriptor.ipdlh",
     "PFetchEventOp.ipdl",
