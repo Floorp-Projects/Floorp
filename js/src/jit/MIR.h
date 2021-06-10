@@ -1034,16 +1034,6 @@ class MInstruction : public MDefinition, public InlineListNode<MInstruction> {
     return new (alloc) MThisOpcode(std::forward<Args>(args)...);           \
   }
 
-#define TRIVIAL_NEW_WRAPPERS_WITH_ALLOC                                    \
-  template <typename... Args>                                              \
-  static MThisOpcode* New(TempAllocator& alloc, Args&&... args) {          \
-    return new (alloc) MThisOpcode(alloc, std::forward<Args>(args)...);    \
-  }                                                                        \
-  template <typename... Args>                                              \
-  static MThisOpcode* New(TempAllocator::Fallible alloc, Args&&... args) { \
-    return new (alloc) MThisOpcode(alloc, std::forward<Args>(args)...);    \
-  }
-
 // These macros are used as a syntactic sugar for writting getOperand
 // accessors. They are meant to be used in the body of MIR Instructions as
 // follows:
@@ -1597,7 +1587,11 @@ class MTableSwitch final : public MControlInstruction,
 
  public:
   INSTRUCTION_HEADER(TableSwitch)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+
+  static MTableSwitch* New(TempAllocator& alloc, MDefinition* ins, int32_t low,
+                           int32_t high) {
+    return new (alloc) MTableSwitch(alloc, ins, low, high);
+  }
 
   size_t numSuccessors() const override { return successors_.length(); }
 
@@ -1836,8 +1830,7 @@ class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
 class MNewTypedArray : public MUnaryInstruction, public NoTypePolicy::Data {
   gc::InitialHeap initialHeap_;
 
-  MNewTypedArray(TempAllocator& alloc, MConstant* templateConst,
-                 gc::InitialHeap initialHeap)
+  MNewTypedArray(MConstant* templateConst, gc::InitialHeap initialHeap)
       : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap) {
     setResultType(MIRType::Object);
@@ -1845,7 +1838,7 @@ class MNewTypedArray : public MUnaryInstruction, public NoTypePolicy::Data {
 
  public:
   INSTRUCTION_HEADER(NewTypedArray)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  TRIVIAL_NEW_WRAPPERS
 
   TypedArrayObject* templateObject() const {
     return &getOperand(0)->toConstant()->toObject().as<TypedArrayObject>();
@@ -1869,8 +1862,8 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
   Mode mode_;
   bool vmCall_;
 
-  MNewObject(TempAllocator& alloc, MConstant* templateConst,
-             gc::InitialHeap initialHeap, Mode mode, bool vmCall = false)
+  MNewObject(MConstant* templateConst, gc::InitialHeap initialHeap, Mode mode,
+             bool vmCall = false)
       : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap),
         mode_(mode),
@@ -1890,12 +1883,11 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
 
  public:
   INSTRUCTION_HEADER(NewObject)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  TRIVIAL_NEW_WRAPPERS
 
   static MNewObject* NewVM(TempAllocator& alloc, MConstant* templateConst,
                            gc::InitialHeap initialHeap, Mode mode) {
-    return new (alloc)
-        MNewObject(alloc, templateConst, initialHeap, mode, true);
+    return new (alloc) MNewObject(templateConst, initialHeap, mode, true);
   }
 
   Mode mode() const { return mode_; }
@@ -1924,9 +1916,9 @@ class MNewPlainObject : public MUnaryInstruction, public NoTypePolicy::Data {
   gc::AllocKind allocKind_;
   gc::InitialHeap initialHeap_;
 
-  MNewPlainObject(TempAllocator& alloc, MConstant* shapeConst,
-                  uint32_t numFixedSlots, uint32_t numDynamicSlots,
-                  gc::AllocKind allocKind, gc::InitialHeap initialHeap)
+  MNewPlainObject(MConstant* shapeConst, uint32_t numFixedSlots,
+                  uint32_t numDynamicSlots, gc::AllocKind allocKind,
+                  gc::InitialHeap initialHeap)
       : MUnaryInstruction(classOpcode, shapeConst),
         numFixedSlots_(numFixedSlots),
         numDynamicSlots_(numDynamicSlots),
@@ -1944,7 +1936,7 @@ class MNewPlainObject : public MUnaryInstruction, public NoTypePolicy::Data {
 
  public:
   INSTRUCTION_HEADER(NewPlainObject)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  TRIVIAL_NEW_WRAPPERS
 
   const Shape* shape() const { return getOperand(0)->toConstant()->toShape(); }
 
@@ -1975,7 +1967,7 @@ class MNewArrayObject : public MUnaryInstruction, public NoTypePolicy::Data {
 
  public:
   INSTRUCTION_HEADER(NewArrayObject)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  TRIVIAL_NEW_WRAPPERS
 
   static MNewArrayObject* New(TempAllocator& alloc, MConstant* shapeConst,
                               uint32_t length, gc::InitialHeap initialHeap) {
@@ -2006,7 +1998,7 @@ class MNewIterator : public MUnaryInstruction, public NoTypePolicy::Data {
  private:
   Type type_;
 
-  MNewIterator(TempAllocator& alloc, MConstant* templateConst, Type type)
+  MNewIterator(MConstant* templateConst, Type type)
       : MUnaryInstruction(classOpcode, templateConst), type_(type) {
     setResultType(MIRType::Object);
     templateConst->setEmittedAtUses();
@@ -2014,7 +2006,7 @@ class MNewIterator : public MUnaryInstruction, public NoTypePolicy::Data {
 
  public:
   INSTRUCTION_HEADER(NewIterator)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  TRIVIAL_NEW_WRAPPERS
 
   Type type() const { return type_; }
 
@@ -2843,8 +2835,7 @@ class MCreateThisWithTemplate : public MUnaryInstruction,
                                 public NoTypePolicy::Data {
   gc::InitialHeap initialHeap_;
 
-  MCreateThisWithTemplate(TempAllocator& alloc, MConstant* templateConst,
-                          gc::InitialHeap initialHeap)
+  MCreateThisWithTemplate(MConstant* templateConst, gc::InitialHeap initialHeap)
       : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap) {
     setResultType(MIRType::Object);
@@ -2852,7 +2843,7 @@ class MCreateThisWithTemplate : public MUnaryInstruction,
 
  public:
   INSTRUCTION_HEADER(CreateThisWithTemplate)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  TRIVIAL_NEW_WRAPPERS
 
   // Template for |this|, provided by TI.
   JSObject* templateObject() const {
@@ -6152,15 +6143,14 @@ struct LambdaFunctionInfo {
 class MLambda : public MBinaryInstruction, public SingleObjectPolicy::Data {
   const LambdaFunctionInfo info_;
 
-  MLambda(TempAllocator& alloc, MDefinition* envChain, MConstant* cst,
-          const LambdaFunctionInfo& info)
+  MLambda(MDefinition* envChain, MConstant* cst, const LambdaFunctionInfo& info)
       : MBinaryInstruction(classOpcode, envChain, cst), info_(info) {
     setResultType(MIRType::Object);
   }
 
  public:
   INSTRUCTION_HEADER(Lambda)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, environmentChain))
 
   MConstant* functionOperand() const { return getOperand(1)->toConstant(); }
@@ -6175,8 +6165,7 @@ class MLambdaArrow
       public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2>>::Data {
   const LambdaFunctionInfo info_;
 
-  MLambdaArrow(TempAllocator& alloc, MDefinition* envChain,
-               MDefinition* newTarget, MConstant* cst,
+  MLambdaArrow(MDefinition* envChain, MDefinition* newTarget, MConstant* cst,
                const LambdaFunctionInfo& info)
       : MTernaryInstruction(classOpcode, envChain, newTarget, cst),
         info_(info) {
@@ -6185,7 +6174,7 @@ class MLambdaArrow
 
  public:
   INSTRUCTION_HEADER(LambdaArrow)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, environmentChain), (1, newTargetDef))
 
   MConstant* functionOperand() const { return getOperand(2)->toConstant(); }
