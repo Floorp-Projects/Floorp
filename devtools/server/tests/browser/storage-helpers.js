@@ -37,9 +37,11 @@ async function openTabAndSetupStorage(url) {
   }
 
   // selected tab is set in addTab
-  const target = await createAndAttachTargetForTab(gBrowser.selectedTab);
+  const commands = await CommandsFactory.forTab(gBrowser.selectedTab);
+  await commands.targetCommand.startListening();
+  const target = commands.targetCommand.targetFront;
   const front = await target.getFront("storage");
-  return { target, front };
+  return { commands, target, front };
 }
 
 async function clearStorage() {
