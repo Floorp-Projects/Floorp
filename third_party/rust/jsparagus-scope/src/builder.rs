@@ -3334,14 +3334,7 @@ impl ScopeDataMapBuilder {
             }
 
             if uses_arguments {
-                // There is an 'arguments' binding. Is the arguments object
-                // definitely needed?
-                fun_stencil.set_arguments_has_var_binding();
-
-                // Dynamic scope access destroys all hope of optimization.
-                if bindings_accessed_dynamically {
-                    fun_stencil.set_always_needs_args_obj();
-                }
+                fun_stencil.set_needs_args_obj();
 
                 if has_used_this {
                     // FIXME

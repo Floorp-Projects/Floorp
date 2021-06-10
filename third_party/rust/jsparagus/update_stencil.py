@@ -91,28 +91,29 @@ def extract_opcodes(paths):
 
 
 def extract_opcode_flags(paths):
-    pat = re.compile(r'(JOF_[A-Z0-9_]+)\s=\s([^,]+),\s*/\*\s+(.*)\s+\*/')
+    pat = re.compile(r'(JOF_[A-Z0-9_]+)\s=\s([^,]+),\s*/\*\s*(.*?)\s*\*/',
+                     re.DOTALL)
 
     flags = []
 
     with open(paths['BytecodeFormatFlags.h'], 'r') as f:
-        for line in f:
-            m = pat.search(line)
-            if not m:
-                continue
+        content = f.read()
 
-            name = m.group(1)
-            value = m.group(2)
-            comment = m.group(3)
+    for m in pat.finditer(content):
+        name = m.group(1)
+        value = m.group(2)
+        comment = m.group(3)
 
-            if name == 'JOF_MODEMASK':
-                continue
+        comment = re.sub('\s*\n\s*', ' ', comment)
 
-            flags.append({
-                'name': name,
-                'value': value,
-                'comment': comment,
-            })
+        if name == 'JOF_MODEMASK':
+            continue
+
+        flags.append({
+            'name': name,
+            'value': value,
+            'comment': comment,
+        })
 
     return flags
 

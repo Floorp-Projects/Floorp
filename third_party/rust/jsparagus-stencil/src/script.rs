@@ -55,7 +55,7 @@ pub enum ImmutableScriptFlagsEnum {
     #[allow(dead_code)]
     IsDerivedClassConstructor = 1 << 19,
     #[allow(dead_code)]
-    IsFieldInitializer = 1 << 20,
+    IsSyntheticFunction = 1 << 20,
     #[allow(dead_code)]
     UseMemberInitializers = 1 << 21,
     #[allow(dead_code)]
@@ -67,11 +67,11 @@ pub enum ImmutableScriptFlagsEnum {
     #[allow(dead_code)]
     ShouldDeclareArguments = 1 << 25,
     #[allow(dead_code)]
-    ArgumentsHasVarBinding = 1 << 26,
+    NeedsArgsObj = 1 << 26,
     #[allow(dead_code)]
-    AlwaysNeedsArgsObj = 1 << 27,
+    HasMappedArgsObj = 1 << 27,
     #[allow(dead_code)]
-    HasMappedArgsObj = 1 << 28,
+    IsInlinableLargeFunction = 1 << 28,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -85,10 +85,6 @@ pub enum MutableScriptFlagsEnum {
     #[allow(dead_code)]
     HasDebugScript = 1 << 11,
     #[allow(dead_code)]
-    NeedsArgsAnalysis = 1 << 12,
-    #[allow(dead_code)]
-    NeedsArgsObj = 1 << 13,
-    #[allow(dead_code)]
     AllowRelazify = 1 << 14,
     #[allow(dead_code)]
     SpewEnabled = 1 << 15,
@@ -99,25 +95,21 @@ pub enum MutableScriptFlagsEnum {
     #[allow(dead_code)]
     IonDisabled = 1 << 18,
     #[allow(dead_code)]
-    FailedBoundsCheck = 1 << 19,
+    Uninlineable = 1 << 19,
     #[allow(dead_code)]
-    FailedShapeGuard = 1 << 20,
+    FailedBoundsCheck = 1 << 21,
     #[allow(dead_code)]
-    HadLICMInvalidation = 1 << 21,
+    HadLICMInvalidation = 1 << 22,
     #[allow(dead_code)]
-    HadEagerTruncationBailout = 1 << 22,
+    HadReorderingBailout = 1 << 23,
     #[allow(dead_code)]
-    Uninlineable = 1 << 23,
-    #[allow(dead_code)]
-    InvalidatedIdempotentCache = 1 << 24,
+    HadEagerTruncationBailout = 1 << 24,
     #[allow(dead_code)]
     FailedLexicalCheck = 1 << 25,
     #[allow(dead_code)]
     HadSpeculativePhiBailout = 1 << 26,
     #[allow(dead_code)]
     HadUnboxFoldingBailout = 1 << 27,
-    #[allow(dead_code)]
-    IsInlinableLargeFunction = 1 << 28,
 }
 
 // @@@@ END TYPES @@@@
@@ -443,16 +435,10 @@ impl ScriptStencil {
             .set(ImmutableScriptFlagsEnum::ShouldDeclareArguments);
     }
 
-    pub fn set_arguments_has_var_binding(&mut self) {
+    pub fn set_needs_args_obj(&mut self) {
         debug_assert!(self.is_lazy_function());
         self.immutable_flags
-            .set(ImmutableScriptFlagsEnum::ArgumentsHasVarBinding);
-    }
-
-    pub fn set_always_needs_args_obj(&mut self) {
-        debug_assert!(self.is_lazy_function());
-        self.immutable_flags
-            .set(ImmutableScriptFlagsEnum::AlwaysNeedsArgsObj);
+            .set(ImmutableScriptFlagsEnum::NeedsArgsObj);
     }
 
     pub fn set_has_mapped_args_obj(&mut self) {
