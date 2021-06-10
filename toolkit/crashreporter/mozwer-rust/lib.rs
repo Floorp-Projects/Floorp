@@ -134,7 +134,10 @@ fn out_of_process_exception_event_callback(
 ) -> Result<(), ()> {
     let process = unsafe { (*exception_information).hProcess };
     let application_info = ApplicationInformation::from_process(process)?;
-    let wer_data = read_crashed_process_wer_data(process, context)?;
+    let wer_data = read_from_process::<InProcessWindowsErrorReportingData>(
+        process,
+        context as *mut InProcessWindowsErrorReportingData,
+    )?;
     let process = unsafe { (*exception_information).hProcess };
     let startup_time = get_startup_time(process)?;
     let crash_report = CrashReport::new(&application_info, startup_time);
@@ -143,28 +146,6 @@ fn out_of_process_exception_event_callback(
         handle_main_process_crash(crash_report, process, &application_info)
     } else {
         handle_child_process_crash(crash_report, process)
-    }
-}
-
-fn read_crashed_process_wer_data(
-    process: HANDLE,
-    data_ptr: LPVOID,
-) -> Result<InProcessWindowsErrorReportingData, ()> {
-    let mut wer_data: InProcessWindowsErrorReportingData = unsafe { zeroed() };
-    let res = unsafe {
-        ReadProcessMemory(
-            process,
-            data_ptr,
-            addr_of_mut!(wer_data) as *mut _,
-            size_of::<InProcessWindowsErrorReportingData>() as SIZE_T,
-            null_mut(),
-        )
-    };
-
-    if res != FALSE {
-        Ok(wer_data)
-    } else {
-        Err(())
     }
 }
 
@@ -191,62 +172,68 @@ fn handle_child_process_crash(crash_report: CrashReport, child_process: HANDLE) 
     let (parent_pid, data_ptr) = parse_child_data(&command_line)?;
 
     let parent_process = get_process_handle(parent_pid)?;
-    let mut wer_data = read_main_process_wer_data(parent_process, data_ptr)?;
+    let mut wer_data: WindowsErrorReportingData = read_from_process(parent_process, data_ptr)?;
     wer_data.child_pid = get_process_id(child_process)?;
     wer_data.minidump_name = crash_report.get_minidump_name();
     let wer_notify_proc = wer_data.wer_notify_proc;
-    write_main_process_wer_data(parent_process, wer_data, data_ptr)?;
+    write_to_process(parent_process, wer_data, data_ptr)?;
     notify_main_process(parent_process, wer_notify_proc, data_ptr)
 }
 
-fn read_main_process_wer_data(
+fn read_from_process<T>(process: HANDLE, data_ptr: *mut T) -> Result<T, ()> {
+    let mut data: T = unsafe { zeroed() };
+    let res = unsafe {
+        ReadProcessMemory(
+            process,
+            data_ptr as *mut _,
+            addr_of_mut!(data) as *mut _,
+            size_of::<T>() as SIZE_T,
+            null_mut(),
+        )
+    };
+
+    bool_ok_or_err(res, data)
+}
+
+fn read_array_from_process<T: Clone + Default>(
     process: HANDLE,
     data_ptr: LPVOID,
-) -> Result<WindowsErrorReportingData, ()> {
-    let mut wer_data: WindowsErrorReportingData = unsafe { zeroed() };
+    count: usize,
+) -> Result<Vec<T>, ()> {
+    let mut array = vec![Default::default(); count];
+    let size = size_of::<T>() as SIZE_T;
+    let size = size.checked_mul(count).ok_or(())?;
     let res = unsafe {
         ReadProcessMemory(
             process,
             data_ptr,
-            addr_of_mut!(wer_data) as *mut _,
-            size_of::<WindowsErrorReportingData>() as SIZE_T,
+            array.as_mut_ptr() as *mut _,
+            size,
             null_mut(),
         )
     };
 
-    if res != FALSE {
-        Ok(wer_data)
-    } else {
-        Err(())
-    }
+    bool_ok_or_err(res, array)
 }
 
-fn write_main_process_wer_data(
-    process: HANDLE,
-    mut wer_data: WindowsErrorReportingData,
-    data_ptr: LPVOID,
-) -> Result<(), ()> {
+fn write_to_process<T>(process: HANDLE, mut data: T, data_ptr: *mut T) -> Result<(), ()> {
     let res = unsafe {
         WriteProcessMemory(
             process,
-            data_ptr,
-            addr_of_mut!(wer_data) as *mut _,
-            size_of::<WindowsErrorReportingData>() as SIZE_T,
+            data_ptr as LPVOID,
+            addr_of_mut!(data) as *mut _,
+            size_of::<T>() as SIZE_T,
             null_mut(),
         )
     };
 
-    if res != FALSE {
-        Ok(())
-    } else {
-        Err(())
-    }
+    bool_ok_or_err(res, ())
 }
 
 fn notify_main_process(
     process: HANDLE,
     wer_notify_proc: LPTHREAD_START_ROUTINE,
-    data_ptr: LPVOID,
+    data_ptr: *mut WindowsErrorReportingData,
 ) -> Result<(), ()> {
     let thread = unsafe {
         CreateRemoteThread(
@@ -254,7 +241,7 @@ fn notify_main_process(
             null_mut(),
             0,
             wer_notify_proc,
-            data_ptr,
+            data_ptr as LPVOID,
             0,
             null_mut(),
         )
@@ -271,11 +258,7 @@ fn notify_main_process(
     }
 
     let res = unsafe { CloseHandle(thread) };
-    if res != FALSE {
-        Ok(())
-    } else {
-        Err(())
-    }
+    bool_ok_or_err(res, ())
 }
 
 fn get_startup_time(process: HANDLE) -> Result<u64, ()> {
@@ -302,11 +285,11 @@ fn get_startup_time(process: HANDLE) -> Result<u64, ()> {
     Ok((start_time_in_ticks / windows_tick) - sec_to_unix_epoch)
 }
 
-fn parse_child_data(command_line: &str) -> Result<(DWORD, LPVOID), ()> {
+fn parse_child_data(command_line: &str) -> Result<(DWORD, *mut WindowsErrorReportingData), ()> {
     let mut itr = command_line.rsplit(' ');
     let address = itr.nth(1).ok_or(())?;
     let address = usize::from_str_radix(address, 16).map_err(|_err| (()))?;
-    let address = address as LPVOID;
+    let address = address as *mut WindowsErrorReportingData;
     let parent_pid = itr.nth(2).ok_or(())?;
     let parent_pid = u32::from_str_radix(parent_pid, 10).map_err(|_err| (()))?;
 
@@ -667,10 +650,7 @@ impl CrashReport {
                 /* callback */ null(),
             );
 
-            match res {
-                FALSE => Err(()),
-                _ => Ok(()),
-            }
+            bool_ok_or_err(res, ())
         }
     }
 
@@ -713,29 +693,21 @@ fn is_windows8_or_later() -> bool {
     }
 }
 
+fn bool_ok_or_err<T>(res: BOOL, data: T) -> Result<T, ()> {
+    match res {
+        FALSE => Err(()),
+        _ => Ok(data),
+    }
+}
+
 fn read_environment_block(process: HANDLE) -> Result<Vec<u16>, ()> {
     let upp = read_user_process_parameters(process)?;
 
     // Read the environment
     let buffer = upp.Environment;
     let length = upp.EnvironmentSize;
-    let mut environment: Vec<u16> = vec![Default::default(); ((length / 2) + 1) as _];
-    let mut num_bytes: SIZE_T = 0;
-    let result = unsafe {
-        ReadProcessMemory(
-            process,
-            buffer,
-            environment.as_mut_ptr() as _,
-            length as _,
-            &mut num_bytes,
-        )
-    };
-
-    if result == 0 {
-        Err(())
-    } else {
-        Ok(environment)
-    }
+    let count = length as usize / 2;
+    read_array_from_process::<u16>(process, buffer, count)
 }
 
 fn read_command_line(process: HANDLE) -> Result<String, ()> {
@@ -744,23 +716,9 @@ fn read_command_line(process: HANDLE) -> Result<String, ()> {
     // Read the command-line
     let buffer = upp.CommandLine.Buffer;
     let length = upp.CommandLine.Length;
-    let mut command_line: Vec<u16> = vec![Default::default(); (upp.CommandLine.Length / 2) as _];
-    let mut num_bytes: SIZE_T = 0;
-    let result = unsafe {
-        ReadProcessMemory(
-            process,
-            buffer as _,
-            command_line.as_mut_ptr() as _,
-            length as _,
-            &mut num_bytes,
-        )
-    };
-
-    if result == 0 {
-        Err(())
-    } else {
-        String::from_utf16(&command_line).map_err(|_err| ())
-    }
+    let count = (length as usize) / 2;
+    let command_line = read_array_from_process::<u16>(process, buffer as *mut _, count)?;
+    String::from_utf16(&command_line).map_err(|_err| ())
 }
 
 fn read_user_process_parameters(process: HANDLE) -> Result<RTL_USER_PROCESS_PARAMETERS, ()> {
@@ -781,41 +739,10 @@ fn read_user_process_parameters(process: HANDLE) -> Result<RTL_USER_PROCESS_PARA
     }
 
     // Read the process environment block
-    let mut peb: PEB = unsafe { zeroed() };
-    let mut num_bytes: SIZE_T = 0;
-
-    let result = unsafe {
-        ReadProcessMemory(
-            process,
-            pbi.PebBaseAddress as *mut _,
-            &mut peb as *mut _ as _,
-            size_of::<PEB>(),
-            &mut num_bytes,
-        )
-    };
-
-    if result == 0 {
-        return Err(());
-    }
+    let peb: PEB = read_from_process(process, pbi.PebBaseAddress)?;
 
     // Read the user process parameters
-    let mut upp: RTL_USER_PROCESS_PARAMETERS = unsafe { zeroed() };
-
-    let result = unsafe {
-        ReadProcessMemory(
-            process,
-            peb.ProcessParameters as *mut _,
-            &mut upp as *mut _ as _,
-            size_of::<RTL_USER_PROCESS_PARAMETERS>(),
-            &mut num_bytes,
-        )
-    };
-
-    if result == 0 {
-        Err(())
-    } else {
-        Ok(upp)
-    }
+    read_from_process::<RTL_USER_PROCESS_PARAMETERS>(process, peb.ProcessParameters)
 }
 
 /******************************************************************************
