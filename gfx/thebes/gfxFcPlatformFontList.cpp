@@ -1781,7 +1781,22 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
       }
 #endif
 
-      addPattern(pattern, lastFamilyName, familyName, aAppFonts);
+      // If this is a TrueType or OpenType font, discard the FC_CHARSET object
+      // (which may be very large), because we'll read the 'cmap' directly.
+      // This substantially reduces the pressure on shared memory (bug 1664151)
+      // due to the large font descriptors (serialized patterns).
+      FcChar8* fontFormat;
+      if (FcPatternGetString(pattern, FC_FONTFORMAT, 0, &fontFormat) ==
+              FcResultMatch &&
+          (!FcStrCmp(fontFormat, (const FcChar8*)"TrueType") ||
+           !FcStrCmp(fontFormat, (const FcChar8*)"CFF"))) {
+        FcPattern* clone = FcPatternDuplicate(pattern);
+        FcPatternDel(clone, FC_CHARSET);
+        addPattern(clone, lastFamilyName, familyName, aAppFonts);
+        FcPatternDestroy(clone);
+      } else {
+        addPattern(pattern, lastFamilyName, familyName, aAppFonts);
+      }
     }
   };
 
