@@ -72,8 +72,7 @@ impl App {
             self.documents.push(Document {
                 id: document_id,
                 pipeline_id,
-                content_rect: LayoutRect::new(
-                    LayoutPoint::origin(),
+                content_rect: LayoutRect::from_size(
                     bounds.size().to_f32() / Scale::new(device_pixel_ratio),
                 ),
                 color,
@@ -103,13 +102,10 @@ impl Example for App {
             let mut builder = DisplayListBuilder::new(
                 doc.pipeline_id,
             );
-            let local_rect = LayoutRect::new(
-                LayoutPoint::zero(),
-                doc.content_rect.size,
-            );
+            let local_rect = LayoutRect::from_size(doc.content_rect.size());
 
             builder.push_simple_stacking_context(
-                doc.content_rect.origin,
+                doc.content_rect.min,
                 space_and_clip.spatial_id,
                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
             );
@@ -124,7 +120,7 @@ impl Example for App {
             txn.set_display_list(
                 Epoch(0),
                 None,
-                doc.content_rect.size,
+                doc.content_rect.size(),
                 builder.finalize(),
                 true,
             );

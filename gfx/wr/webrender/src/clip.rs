@@ -652,14 +652,14 @@ impl ClipNodeInfo {
                     let repetitions = image_tiling::repetitions(
                         &rect,
                         &visible_rect,
-                        rect.size,
+                        rect.size(),
                     );
 
                     for Repetition { origin, .. } in repetitions {
-                        let layout_image_rect = LayoutRect {
+                        let layout_image_rect = LayoutRect::from_origin_and_size(
                             origin,
-                            size: rect.size,
-                        };
+                            rect.size(),
+                        );
                         let tiles = image_tiling::tiles(
                             &layout_image_rect,
                             &visible_rect,
@@ -1247,7 +1247,7 @@ impl ClipStore {
         is_chased: bool,
     ) -> Option<ClipChainInstance> {
         let local_clip_rect = match self.active_local_clip_rect {
-            Some(rect) => rect.to_box2d(),
+            Some(rect) => rect,
             None => return None,
         };
         profile_scope!("build_clip_chain_instance");
@@ -1255,7 +1255,7 @@ impl ClipStore {
             println!("\tbuilding clip chain instance with local rect {:?}", local_prim_rect);
         }
 
-        let local_bounding_rect = local_prim_rect.to_box2d().intersection(&local_clip_rect)?;
+        let local_bounding_rect = local_prim_rect.intersection(&local_clip_rect)?;
         let mut pic_clip_rect = prim_to_pic_mapper.map(&local_bounding_rect)?;
         let world_clip_rect = pic_to_world_mapper.map(&pic_clip_rect)?;
 
@@ -1275,11 +1275,11 @@ impl ClipStore {
             // See how this clip affects the prim region.
             let clip_result = match node_info.conversion {
                 ClipSpaceConversion::Local => {
-                    node.item.kind.get_clip_result(&local_bounding_rect.to_rect())
+                    node.item.kind.get_clip_result(&local_bounding_rect)
                 }
                 ClipSpaceConversion::ScaleOffset(ref scale_offset) => {
                     has_non_local_clips = true;
-                    node.item.kind.get_clip_result(&scale_offset.unmap_rect(&local_bounding_rect).to_rect())
+                    node.item.kind.get_clip_result(&scale_offset.unmap_rect(&local_bounding_rect))
                 }
                 ClipSpaceConversion::Transform(ref transform) => {
                     has_non_local_clips = true;
@@ -1313,7 +1313,7 @@ impl ClipStore {
                     // Create the clip node instance for this clip node
                     if let Some(instance) = node_info.create_instance(
                         node,
-                        &local_bounding_rect.to_rect(),
+                        &local_bounding_rect,
                         gpu_cache,
                         resource_cache,
                         &mut self.mask_tiles,
@@ -1366,7 +1366,7 @@ impl ClipStore {
         Some(ClipChainInstance {
             clips_range,
             has_non_local_clips,
-            local_clip_rect: local_clip_rect.to_rect(),
+            local_clip_rect: local_clip_rect,
             pic_clip_rect: pic_clip_rect,
             pic_spatial_node_index: prim_to_pic_mapper.ref_spatial_node_index,
             needs_mask,
@@ -1462,7 +1462,7 @@ impl ClipItemKeyKind {
         if radii.is_zero() {
             ClipItemKeyKind::rectangle(rect, mode)
         } else {
-            ensure_no_corner_overlap(&mut radii, rect.size);
+            ensure_no_corner_overlap(&mut radii, rect.size());
             ClipItemKeyKind::RoundedRectangle(
                 rect.into(),
                 radii.into(),
@@ -1491,13 +1491,13 @@ impl ClipItemKeyKind {
         // Get the fractional offsets required to match the
         // source rect with a minimal rect.
         let fract_offset = LayoutPoint::new(
-            shadow_rect.origin.x.fract().abs(),
-            shadow_rect.origin.y.fract().abs(),
+            shadow_rect.min.x.fract().abs(),
+            shadow_rect.min.y.fract().abs(),
         );
 
         ClipItemKeyKind::BoxShadow(
             fract_offset.into(),
-            shadow_rect.size.into(),
+            shadow_rect.size().into(),
             shadow_radius.into(),
             prim_shadow_rect.into(),
             Au::from_f32_px(blur_radius),
@@ -1617,7 +1617,7 @@ fn compute_box_shadow_parameters(
     );
 
     // The minimal rect to blur.
-    let mut minimal_shadow_rect = LayoutRect::new(
+    let mut minimal_shadow_rect = LayoutRect::from_origin_and_size(
         LayoutPoint::new(
             blur_region + shadow_rect_fract_offset.x,
             blur_region + shadow_rect_fract_offset.y,
@@ -1634,21 +1634,21 @@ fn compute_box_shadow_parameters(
     // correctness, since the blur of one corner may affect the blur
     // in another corner.
     let mut stretch_mode_x = BoxShadowStretchMode::Stretch;
-    if shadow_rect_size.width < minimal_shadow_rect.size.width {
-        minimal_shadow_rect.size.width = shadow_rect_size.width;
+    if shadow_rect_size.width < minimal_shadow_rect.width() {
+        minimal_shadow_rect.max.x = minimal_shadow_rect.min.x + shadow_rect_size.width;
         stretch_mode_x = BoxShadowStretchMode::Simple;
     }
 
     let mut stretch_mode_y = BoxShadowStretchMode::Stretch;
-    if shadow_rect_size.height < minimal_shadow_rect.size.height {
-        minimal_shadow_rect.size.height = shadow_rect_size.height;
+    if shadow_rect_size.height < minimal_shadow_rect.height() {
+        minimal_shadow_rect.max.y = minimal_shadow_rect.min.y + shadow_rect_size.height;
         stretch_mode_y = BoxShadowStretchMode::Simple;
     }
 
     // Expand the shadow rect by enough room for the blur to take effect.
     let shadow_rect_alloc_size = LayoutSize::new(
-        2.0 * blur_region + minimal_shadow_rect.size.width.ceil(),
-        2.0 * blur_region + minimal_shadow_rect.size.height.ceil(),
+        2.0 * blur_region + minimal_shadow_rect.width().ceil(),
+        2.0 * blur_region + minimal_shadow_rect.height().ceil(),
     );
 
     BoxShadowClipSource {
@@ -1809,7 +1809,7 @@ impl ClipItemKind {
             ClipMode::Clip => {
                 let outer_clip_rect = match project_rect(
                     transform,
-                    &clip_rect.to_box2d(),
+                    &clip_rect,
                     &world_rect,
                 ) {
                     Some(outer_clip_rect) => outer_clip_rect,
@@ -1836,7 +1836,7 @@ impl ClipItemKind {
     ) -> ClipResult {
         match *self {
             ClipItemKind::Rectangle { rect, mode: ClipMode::Clip } => {
-                if rect.contains_rect(prim_rect) {
+                if rect.contains_box(prim_rect) {
                     return ClipResult::Accept;
                 }
 
@@ -1850,7 +1850,7 @@ impl ClipItemKind {
                 }
             }
             ClipItemKind::Rectangle { rect, mode: ClipMode::ClipOut } => {
-                if rect.contains_rect(prim_rect) {
+                if rect.contains_box(prim_rect) {
                     return ClipResult::Reject;
                 }
 
@@ -1866,7 +1866,7 @@ impl ClipItemKind {
             ClipItemKind::RoundedRectangle { rect, ref radius, mode: ClipMode::Clip } => {
                 // TODO(gw): Consider caching this in the ClipNode
                 //           if it ever shows in profiles.
-                if rounded_rectangle_contains_rect_quick(&rect, radius, &prim_rect) {
+                if rounded_rectangle_contains_box_quick(&rect, radius, &prim_rect) {
                     return ClipResult::Accept;
                 }
 
@@ -1882,7 +1882,7 @@ impl ClipItemKind {
             ClipItemKind::RoundedRectangle { rect, ref radius, mode: ClipMode::ClipOut } => {
                 // TODO(gw): Consider caching this in the ClipNode
                 //           if it ever shows in profiles.
-                if rounded_rectangle_contains_rect_quick(&rect, radius, &prim_rect) {
+                if rounded_rectangle_contains_box_quick(&rect, radius, &prim_rect) {
                     return ClipResult::Reject;
                 }
 
@@ -1942,7 +1942,7 @@ pub fn rounded_rectangle_contains_point(
         return false;
     }
 
-    let top_left_center = rect.origin + radii.top_left.to_vector();
+    let top_left_center = rect.min + radii.top_left.to_vector();
     if top_left_center.x > point.x && top_left_center.y > point.y &&
        !Ellipse::new(radii.top_left).contains(*point - top_left_center.to_vector()) {
         return false;
@@ -1974,12 +1974,12 @@ pub fn rounded_rectangle_contains_point(
 /// Return true if the rounded rectangle described by `container` and `radii`
 /// definitely contains `containee`. May return false negatives, but never false
 /// positives.
-fn rounded_rectangle_contains_rect_quick(
+fn rounded_rectangle_contains_box_quick(
     container: &LayoutRect,
     radii: &BorderRadius,
     containee: &LayoutRect,
 ) -> bool {
-    if !container.contains_rect(containee) {
+    if !container.contains_box(containee) {
         return false;
     }
 
@@ -2038,7 +2038,7 @@ pub fn polygon_contains_point(
 
     // p is a LayoutPoint that we'll be comparing to dimensionless PointKeys,
     // which were created from LayoutPoints, so it all works out.
-    let p = LayoutPoint::new(point.x - rect.origin.x, point.y - rect.origin.y);
+    let p = LayoutPoint::new(point.x - rect.min.x, point.y - rect.min.y);
 
     // Calculate a winding number for this point.
     let mut winding_number: i32 = 0;
@@ -2074,7 +2074,7 @@ pub fn projected_rect_contains(
     target_rect: &WorldRect,
 ) -> Option<()> {
     let points = [
-        transform.transform_point2d(source_rect.origin)?,
+        transform.transform_point2d(source_rect.top_left())?,
         transform.transform_point2d(source_rect.top_right())?,
         transform.transform_point2d(source_rect.bottom_right())?,
         transform.transform_point2d(source_rect.bottom_left())?,
@@ -2138,7 +2138,7 @@ fn add_clip_node_to_current_chain(
                 };
             }
             ClipSpaceConversion::ScaleOffset(ref scale_offset) => {
-                let clip_rect = scale_offset.map_rect(&clip_rect.to_box2d()).to_rect();
+                let clip_rect = scale_offset.map_rect(&clip_rect);
                 *local_clip_rect = match local_clip_rect.intersection(&clip_rect) {
                     Some(rect) => rect,
                     None => return false,
@@ -2170,7 +2170,7 @@ fn add_clip_node_to_current_chain(
                         spatial_tree,
                     );
 
-                    if let Some(pic_clip_rect) = mapper.map(&clip_rect.to_box2d()) {
+                    if let Some(pic_clip_rect) = mapper.map(&clip_rect) {
                         *current_pic_clip_rect = pic_clip_rect
                             .intersection(current_pic_clip_rect)
                             .unwrap_or(PictureRect::zero());
@@ -2199,7 +2199,7 @@ mod tests {
         assert_eq!(
             None,
             projected_rect_contains(
-                &rect(10.0, 10.0, 0.0, 0.0),
+                &rect(10.0, 10.0, 0.0, 0.0).to_box2d(),
                 &Transform3D::identity(),
                 &rect(20.0, 20.0, 10.0, 10.0).to_box2d(),
             ),

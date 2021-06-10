@@ -774,8 +774,8 @@ impl SpatialTree {
                                 // local-space, but makes for a reasonable estimate. The value
                                 // is arbitrary, but is generally small enough to ignore things
                                 // like scroll roots around text input elements.
-                                if info.viewport_rect.size.width > MIN_SCROLL_ROOT_SIZE &&
-                                   info.viewport_rect.size.height > MIN_SCROLL_ROOT_SIZE {
+                                if info.viewport_rect.width() > MIN_SCROLL_ROOT_SIZE &&
+                                   info.viewport_rect.height() > MIN_SCROLL_ROOT_SIZE {
                                     // If we've found a root that is scrollable, and a reasonable
                                     // size, select that as the current root for this node
                                     real_scroll_root = node_index;

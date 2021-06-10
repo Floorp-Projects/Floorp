@@ -52,14 +52,14 @@ pub trait HandyDandyRectBuilder {
 // values to build a f32 LayoutRect
 impl HandyDandyRectBuilder for (i32, i32) {
     fn to(&self, x2: i32, y2: i32) -> LayoutRect {
-        LayoutRect::new(
+        LayoutRect::from_origin_and_size(
             LayoutPoint::new(self.0 as f32, self.1 as f32),
             LayoutSize::new((x2 - self.0) as f32, (y2 - self.1) as f32),
         )
     }
 
     fn by(&self, w: i32, h: i32) -> LayoutRect {
-        LayoutRect::new(
+        LayoutRect::from_origin_and_size(
             LayoutPoint::new(self.0 as f32, self.1 as f32),
             LayoutSize::new(w as f32, h as f32),
         )

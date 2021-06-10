@@ -94,11 +94,11 @@ impl Example for App {
         pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
-        let bounds = LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(500.0, 500.0));
+        let bounds = LayoutRect::from_size(LayoutSize::new(500.0, 500.0));
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         builder.push_simple_stacking_context(
-            bounds.origin,
+            bounds.min,
             space_and_clip.spatial_id,
             PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );
@@ -157,7 +157,7 @@ impl Example for App {
         );
 
         let info = CommonItemProperties::new(
-            LayoutRect::new(LayoutPoint::new(100.0, 0.0), LayoutSize::new(100.0, 100.0)),
+            LayoutRect::from_origin_and_size(LayoutPoint::new(100.0, 0.0), LayoutSize::new(100.0, 100.0)),
             space_and_clip,
         );
         builder.push_yuv_image(
@@ -171,7 +171,7 @@ impl Example for App {
         );
 
         let info = CommonItemProperties::new(
-            LayoutRect::new(LayoutPoint::new(300.0, 0.0), LayoutSize::new(100.0, 100.0)),
+            LayoutRect::from_origin_and_size(LayoutPoint::new(300.0, 0.0), LayoutSize::new(100.0, 100.0)),
             space_and_clip,
         );
         builder.push_yuv_image(
