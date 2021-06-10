@@ -8,6 +8,12 @@ const TEST_DOCUMENT = "target_configuration_test_doc.sjs";
 const TEST_URI = URL_ROOT_COM_SSL + TEST_DOCUMENT;
 
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   info("Setup the test page with workers of all types");
   const tab = await addTab(TEST_URI);
 
