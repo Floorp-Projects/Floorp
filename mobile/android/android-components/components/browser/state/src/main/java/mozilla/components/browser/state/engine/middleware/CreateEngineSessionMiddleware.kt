@@ -9,7 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
-import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
@@ -36,7 +35,7 @@ internal class CreateEngineSessionMiddleware(
         action: BrowserAction
     ) {
         if (action is EngineAction.CreateEngineSessionAction) {
-            if (context.state.findTab(action.tabId)?.engineState?.initializing == false) {
+            if (context.state.findTabOrCustomTab(action.tabId)?.engineState?.initializing == false) {
                 context.dispatch(EngineAction.UpdateEngineSessionInitializingAction(action.tabId, true))
                 createEngineSession(context.store, action)
             } else {

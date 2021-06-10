@@ -10,8 +10,10 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -190,5 +192,30 @@ class CreateEngineSessionMiddlewareTest {
         verify(engine, times(1)).createSession(false)
         assertEquals(engineSession, store.state.findTab(tab.id)?.engineState?.engineSession)
         assertEquals(followupAction.title, store.state.findTab(tab.id)?.content?.title)
+    }
+
+    @Test
+    fun `creating engine session for custom tab`() {
+        val engine: Engine = mock()
+        val engineSession: EngineSession = mock()
+        whenever(engine.createSession(anyBoolean(), any())).thenReturn(engineSession)
+
+        val middleware = CreateEngineSessionMiddleware(engine, scope)
+        val customTab = createCustomTab("https://www.mozilla.org", id = "1")
+        val store = BrowserStore(
+            initialState = BrowserState(customTabs = listOf(customTab)),
+            middleware = listOf(middleware)
+        )
+        assertNull(store.state.findCustomTab(customTab.id)?.engineState?.engineSession)
+
+        val followupAction = ContentAction.UpdateTitleAction(customTab.id, "test")
+        store.dispatch(EngineAction.CreateEngineSessionAction(customTab.id, followupAction = followupAction)).joinBlocking()
+
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+
+        verify(engine, times(1)).createSession(false)
+        assertEquals(engineSession, store.state.findCustomTab(customTab.id)?.engineState?.engineSession)
+        assertEquals(followupAction.title, store.state.findCustomTab(customTab.id)?.content?.title)
     }
 }
