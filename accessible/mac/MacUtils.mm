@@ -10,7 +10,6 @@
 #include "LocalAccessible.h"
 #include "nsCocoaUtils.h"
 #include "mozilla/a11y/PDocAccessible.h"
-#include "nsIPersistentProperties2.h"
 
 namespace mozilla {
 namespace a11y {
@@ -61,18 +60,18 @@ NSString* LocalizedString(const nsString& aString) {
   return text.IsEmpty() ? nil : nsCocoaUtils::ToNSString(text);
 }
 
-NSString* GetAccAttr(mozAccessible* aNativeAccessible, const char* aAttrName) {
+NSString* GetAccAttr(mozAccessible* aNativeAccessible, nsAtom* aAttrName) {
   nsAutoString result;
   if (LocalAccessible* acc =
           [aNativeAccessible geckoAccessible].AsAccessible()) {
-    nsCOMPtr<nsIPersistentProperties> attributes = acc->Attributes();
-    attributes->GetStringProperty(nsCString(aAttrName), result);
+    RefPtr<AccAttributes> attributes = acc->Attributes();
+    attributes->GetAttribute(aAttrName, result);
   } else if (RemoteAccessible* proxy =
                  [aNativeAccessible geckoAccessible].AsProxy()) {
     AutoTArray<Attribute, 10> attrs;
     proxy->Attributes(&attrs);
     for (size_t i = 0; i < attrs.Length(); i++) {
-      if (attrs.ElementAt(i).Name() == aAttrName) {
+      if (aAttrName->Equals(NS_ConvertUTF8toUTF16(attrs.ElementAt(i).Name()))) {
         result = attrs.ElementAt(i).Value();
         break;
       }

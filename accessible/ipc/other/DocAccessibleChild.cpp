@@ -6,6 +6,7 @@
 
 #include "DocAccessibleChild.h"
 
+#include "AccAttributes.h"
 #include "nsAccessibilityService.h"
 #include "LocalAccessible-inl.h"
 #include "RemoteAccessible.h"
@@ -148,7 +149,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvAttributes(
   LocalAccessible* acc = IdToAccessible(aID);
   if (!acc) return IPC_OK();
 
-  nsCOMPtr<nsIPersistentProperties> props = acc->Attributes();
+  RefPtr<AccAttributes> props = acc->Attributes();
   if (!nsAccUtils::PersistentPropertiesToArray(props, aAttributes)) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -409,7 +410,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvTextAttributes(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIPersistentProperties> props =
+  RefPtr<AccAttributes> props =
       acc->TextAttributes(aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
   if (!nsAccUtils::PersistentPropertiesToArray(props, aAttributes)) {
     return IPC_FAIL_NO_REASON(this);
@@ -424,7 +425,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvDefaultTextAttributes(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIPersistentProperties> props = acc->DefaultTextAttributes();
+  RefPtr<AccAttributes> props = acc->DefaultTextAttributes();
   if (!nsAccUtils::PersistentPropertiesToArray(props, aAttributes)) {
     return IPC_FAIL_NO_REASON(this);
   }

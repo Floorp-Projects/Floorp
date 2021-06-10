@@ -6,10 +6,10 @@
 
 #include "uiaRawElmProvider.h"
 
-#include "LocalAccessible-inl.h"
+#include "AccAttributes.h"
 #include "AccessibleWrap.h"
 #include "ARIAMap.h"
-#include "nsIPersistentProperties2.h"
+#include "LocalAccessible-inl.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -147,8 +147,8 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
     case UIA_AriaRolePropertyId: {
       nsAutoString xmlRoles;
 
-      nsCOMPtr<nsIPersistentProperties> attributes = mAcc->Attributes();
-      attributes->GetStringProperty("xml-roles"_ns, xmlRoles);
+      RefPtr<AccAttributes> attributes = mAcc->Attributes();
+      attributes->GetAttribute(nsGkAtoms::xmlroles, xmlRoles);
 
       if (!xmlRoles.IsEmpty()) {
         aPropertyValue->vt = VT_BSTR;

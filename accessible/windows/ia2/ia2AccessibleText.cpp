@@ -59,7 +59,7 @@ ia2AccessibleText::get_attributes(long aOffset, long* aStartOffset,
   }
   MOZ_ASSERT(!textAcc->IsProxy());
 
-  nsCOMPtr<nsIPersistentProperties> attributes =
+  RefPtr<AccAttributes> attributes =
       textAcc->TextAttributes(true, aOffset, &startOffset, &endOffset);
 
   hr = ia2Accessible::ConvertToIA2Attributes(attributes, aTextAttributes);

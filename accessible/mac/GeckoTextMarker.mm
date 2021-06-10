@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DocAccessibleParent.h"
+#include "AccAttributes.h"
 #include "AccessibleOrProxy.h"
 #include "nsCocoaUtils.h"
 
@@ -416,51 +417,63 @@ static NSColor* ColorFromString(const nsString& aColorStr) {
 }
 
 static NSDictionary* StringAttributesFromAttributes(
-    nsTArray<Attribute>& aAttributes, const AccessibleOrProxy& aContainer) {
+    AccAttributes* aAttributes, const AccessibleOrProxy& aContainer) {
   NSMutableDictionary* attrDict =
-      [NSMutableDictionary dictionaryWithCapacity:aAttributes.Length()];
+      [NSMutableDictionary dictionaryWithCapacity:aAttributes->Count()];
   NSMutableDictionary* fontAttrDict = [[NSMutableDictionary alloc] init];
   [attrDict setObject:fontAttrDict forKey:@"AXFont"];
-  for (size_t ii = 0; ii < aAttributes.Length(); ii++) {
-    RefPtr<nsAtom> attrName = NS_Atomize(aAttributes.ElementAt(ii).Name());
-    if (attrName == nsGkAtoms::backgroundColor) {
-      if (NSColor* color = ColorFromString(aAttributes.ElementAt(ii).Value())) {
+  for (auto iter : *aAttributes) {
+    if (iter.Name() == nsGkAtoms::backgroundColor) {
+      nsAutoString value;
+      iter.ValueAsString(value);
+      if (NSColor* color = ColorFromString(value)) {
         [attrDict setObject:(__bridge id)color.CGColor
                      forKey:@"AXBackgroundColor"];
       }
-    } else if (attrName == nsGkAtoms::color) {
-      if (NSColor* color = ColorFromString(aAttributes.ElementAt(ii).Value())) {
+    } else if (iter.Name() == nsGkAtoms::color) {
+      nsAutoString value;
+      iter.ValueAsString(value);
+      if (NSColor* color = ColorFromString(value)) {
         [attrDict setObject:(__bridge id)color.CGColor
                      forKey:@"AXForegroundColor"];
       }
-    } else if (attrName == nsGkAtoms::font_size) {
+    } else if (iter.Name() == nsGkAtoms::font_size) {
       float fontPointSize = 0;
-      if (sscanf(NS_ConvertUTF16toUTF8(aAttributes.ElementAt(ii).Value()).get(),
-                 "%fpt", &fontPointSize) > 0) {
+      nsAutoString value;
+      iter.ValueAsString(value);
+      if (sscanf(NS_ConvertUTF16toUTF8(value).get(), "%fpt", &fontPointSize) >
+          0) {
         int32_t fontPixelSize = static_cast<int32_t>(fontPointSize * 4 / 3);
         [fontAttrDict setObject:@(fontPixelSize) forKey:@"AXFontSize"];
       }
-    } else if (attrName == nsGkAtoms::font_family) {
-      [fontAttrDict
-          setObject:nsCocoaUtils::ToNSString(aAttributes.ElementAt(ii).Value())
-             forKey:@"AXFontFamily"];
-    } else if (attrName == nsGkAtoms::textUnderlineColor) {
+    } else if (iter.Name() == nsGkAtoms::font_family) {
+      nsAutoString value;
+      iter.ValueAsString(value);
+      [fontAttrDict setObject:nsCocoaUtils::ToNSString(value)
+                       forKey:@"AXFontFamily"];
+    } else if (iter.Name() == nsGkAtoms::textUnderlineColor) {
       [attrDict setObject:@1 forKey:@"AXUnderline"];
-      if (NSColor* color = ColorFromString(aAttributes.ElementAt(ii).Value())) {
+      nsAutoString value;
+      iter.ValueAsString(value);
+      if (NSColor* color = ColorFromString(value)) {
         [attrDict setObject:(__bridge id)color.CGColor
                      forKey:@"AXUnderlineColor"];
       }
-    } else if (attrName == nsGkAtoms::invalid) {
+    } else if (iter.Name() == nsGkAtoms::invalid) {
       // XXX: There is currently no attribute for grammar
-      if (aAttributes.ElementAt(ii).Value().EqualsLiteral("spelling")) {
+      nsAutoString value;
+      iter.ValueAsString(value);
+      if (value.EqualsLiteral("spelling")) {
         [attrDict setObject:@YES
                      forKey:NSAccessibilityMarkedMisspelledTextAttribute];
       }
     } else {
-      [attrDict
-          setObject:nsCocoaUtils::ToNSString(aAttributes.ElementAt(ii).Value())
-             forKey:nsCocoaUtils::ToNSString(NS_ConvertUTF8toUTF16(
-                        aAttributes.ElementAt(ii).Name()))];
+      nsAutoString valueStr;
+      iter.ValueAsString(valueStr);
+      nsAutoString keyStr;
+      iter.NameAsString(keyStr);
+      [attrDict setObject:nsCocoaUtils::ToNSString(valueStr)
+                   forKey:nsCocoaUtils::ToNSString(keyStr)];
     }
   }
 
@@ -496,8 +509,14 @@ NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
         mEnd.mContainer.AsProxy()->ID(), mEnd.mOffset, &textAttributesRuns);
 
     for (size_t i = 0; i < textAttributesRuns.Length(); i++) {
-      nsTArray<Attribute>& attributes =
+      nsTArray<Attribute>& attribs =
           textAttributesRuns.ElementAt(i).TextAttributes();
+      RefPtr<AccAttributes> attributes = new AccAttributes();
+      for (size_t ii = 0; ii < attribs.Length(); ii++) {
+        attributes->SetAttribute(
+            NS_ConvertUTF8toUTF16(attribs.ElementAt(ii).Name()),
+            attribs.ElementAt(ii).Value());
+      }
       RemoteAccessible* container =
           ipcDoc->GetAccessible(textAttributesRuns.ElementAt(i).ContainerID());
 
@@ -512,7 +531,7 @@ NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
   } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
     nsTArray<nsString> texts;
     nsTArray<LocalAccessible*> containers;
-    nsTArray<nsCOMPtr<nsIPersistentProperties>> props;
+    nsTArray<RefPtr<AccAttributes>> props;
 
     htWrap->AttributedTextForRange(texts, props, containers, mStart.mOffset,
                                    mEnd.ContainerAsHyperTextWrap(),
@@ -522,13 +541,11 @@ NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
                texts.Length() == containers.Length());
 
     for (size_t i = 0; i < texts.Length(); i++) {
-      nsTArray<Attribute> attributes;
-      nsAccUtils::PersistentPropertiesToArray(props.ElementAt(i), &attributes);
-
       NSAttributedString* substr = [[[NSAttributedString alloc]
           initWithString:nsCocoaUtils::ToNSString(texts.ElementAt(i))
               attributes:StringAttributesFromAttributes(
-                             attributes, containers.ElementAt(i))] autorelease];
+                             props.ElementAt(i), containers.ElementAt(i))]
+          autorelease];
       [str appendAttributedString:substr];
     }
   }

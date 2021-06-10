@@ -125,7 +125,7 @@ class XULTreeGridCellAccessible : public LeafAccessible,
   virtual nsIntRect BoundsInCSSPixels() const override;
   virtual ENameValueFlag Name(nsString& aName) const override;
   virtual LocalAccessible* FocusedChild() override;
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual int32_t IndexInParent() const override;
   virtual Relation RelationByType(RelationType aType) const override;
   virtual a11y::role NativeRole() const override;

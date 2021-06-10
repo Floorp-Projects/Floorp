@@ -15,7 +15,6 @@
 
 #include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
-#include "nsIPersistentProperties2.h"
 #include "DocAccessibleParent.h"
 #include "Relation.h"
 #include "Role.h"
@@ -532,7 +531,7 @@ struct RoleDescrComparator {
 
 - (NSString*)moxRoleDescription {
   if (NSString* ariaRoleDescription =
-          utils::GetAccAttr(self, "roledescription")) {
+          utils::GetAccAttr(self, nsGkAtoms::aria_roledescription)) {
     if ([ariaRoleDescription length]) {
       return ariaRoleDescription;
     }
@@ -717,19 +716,20 @@ struct RoleDescrComparator {
     return nil;
   }
 
-  return utils::GetAccAttr(self, "current");
+  return utils::GetAccAttr(self, nsGkAtoms::aria_current);
 }
 
 - (NSNumber*)moxARIAAtomic {
-  return @(utils::GetAccAttr(self, "atomic") != nil);
+  return @(utils::GetAccAttr(self, nsGkAtoms::aria_atomic) != nil);
 }
 
 - (NSString*)moxARIALive {
-  return utils::GetAccAttr(self, "live");
+  return utils::GetAccAttr(self, nsGkAtoms::aria_live);
 }
 
 - (NSString*)moxARIARelevant {
-  if (NSString* relevant = utils::GetAccAttr(self, "container-relevant")) {
+  if (NSString* relevant =
+          utils::GetAccAttr(self, nsGkAtoms::containerRelevant)) {
     return relevant;
   }
 
@@ -847,13 +847,13 @@ struct RoleDescrComparator {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSMutableString* domInfo = [NSMutableString string];
-  if (NSString* tagName = utils::GetAccAttr(self, "tag")) {
+  if (NSString* tagName = utils::GetAccAttr(self, nsGkAtoms::tag)) {
     [domInfo appendFormat:@" %@", tagName];
     NSString* domID = [self moxDOMIdentifier];
     if ([domID length]) {
       [domInfo appendFormat:@"#%@", domID];
     }
-    if (NSString* className = utils::GetAccAttr(self, "class")) {
+    if (NSString* className = utils::GetAccAttr(self, nsGkAtoms::_class)) {
       [domInfo
           appendFormat:@".%@",
                        [className stringByReplacingOccurrencesOfString:@" "

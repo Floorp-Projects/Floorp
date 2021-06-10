@@ -63,7 +63,7 @@ class AccessibleWrap : public LocalAccessible {
       const double& aMinVal = UnspecifiedNaN<double>(),
       const double& aMaxVal = UnspecifiedNaN<double>(),
       const double& aStep = UnspecifiedNaN<double>(),
-      nsIPersistentProperties* aAttributes = nullptr);
+      AccAttributes* aAttributes = nullptr);
 
   virtual void WrapperDOMNodeID(nsString& aDOMNodeID);
 
@@ -72,7 +72,7 @@ class AccessibleWrap : public LocalAccessible {
                         : GetAndroidClass(WrapperRole());
   }
 
-  static already_AddRefed<nsIPersistentProperties> AttributeArrayToProperties(
+  static already_AddRefed<AccAttributes> AttributeArrayToProperties(
       const nsTArray<Attribute>& aAttributes);
 
   static const int32_t kNoID = -1;
@@ -104,8 +104,7 @@ class AccessibleWrap : public LocalAccessible {
 
   void GetSelectionOrCaret(int32_t* aStartOffset, int32_t* aEndOffset);
 
-  static void GetRoleDescription(role aRole,
-                                 nsIPersistentProperties* aAttributes,
+  static void GetRoleDescription(role aRole, AccAttributes* aAttributes,
                                  nsAString& aGeckoRole,
                                  nsAString& aRoleDescription);
 

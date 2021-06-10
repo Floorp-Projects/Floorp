@@ -6,6 +6,7 @@
 #include "nsAccessibilityService.h"
 
 // NOTE: alphabetically ordered
+#include "AccAttributes.h"
 #include "ApplicationAccessibleWrap.h"
 #include "ARIAGridAccessibleWrap.h"
 #include "ARIAMap.h"
@@ -1447,7 +1448,7 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
 }
 
 void nsAccessibilityService::MarkupAttributes(
-    const nsIContent* aContent, nsIPersistentProperties* aAttributes) const {
+    const nsIContent* aContent, AccAttributes* aAttributes) const {
   const mozilla::a11y::MarkupMapInfo* markupMap =
       GetMarkupMapInfoForNode(aContent);
   if (!markupMap) return;
@@ -1461,7 +1462,7 @@ void nsAccessibilityService::MarkupAttributes(
         if (aContent->IsElement() && aContent->AsElement()->AttrValueIs(
                                          kNameSpaceID_None, info->DOMAttrName,
                                          info->DOMAttrValue, eCaseMatters)) {
-          nsAccUtils::SetAccAttr(aAttributes, info->name, info->DOMAttrValue);
+          aAttributes->SetAttribute(info->name, info->DOMAttrValue);
         }
         continue;
       }
@@ -1474,13 +1475,13 @@ void nsAccessibilityService::MarkupAttributes(
       }
 
       if (!value.IsEmpty()) {
-        nsAccUtils::SetAccAttr(aAttributes, info->name, value);
+        aAttributes->SetAttribute(info->name, value);
       }
 
       continue;
     }
 
-    nsAccUtils::SetAccAttr(aAttributes, info->name, info->value);
+    aAttributes->SetAttribute(info->name, info->value);
   }
 }
 

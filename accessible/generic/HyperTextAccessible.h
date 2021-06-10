@@ -55,7 +55,7 @@ class HyperTextAccessible : public AccessibleWrap {
   // LocalAccessible
   virtual nsAtom* LandmarkRole() const override;
   virtual int32_t GetLevelInternal() override;
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
 
@@ -214,14 +214,15 @@ class HyperTextAccessible : public AccessibleWrap {
   /**
    * Return text attributes for the given text range.
    */
-  already_AddRefed<nsIPersistentProperties> TextAttributes(
-      bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
-      int32_t* aEndOffset);
+  already_AddRefed<AccAttributes> TextAttributes(bool aIncludeDefAttrs,
+                                                 int32_t aOffset,
+                                                 int32_t* aStartOffset,
+                                                 int32_t* aEndOffset);
 
   /**
    * Return text attributes applied to the accessible.
    */
-  already_AddRefed<nsIPersistentProperties> DefaultTextAttributes();
+  already_AddRefed<AccAttributes> DefaultTextAttributes();
 
   /**
    * Return text offset of the given child accessible within hypertext
@@ -529,13 +530,13 @@ class HyperTextAccessible : public AccessibleWrap {
    */
   void GetSpellTextAttr(nsINode* aNode, int32_t aNodeOffset,
                         uint32_t* aStartOffset, uint32_t* aEndOffset,
-                        nsIPersistentProperties* aAttributes);
+                        AccAttributes* aAttributes);
 
   /**
    * Set xml-roles attributes for MathML elements.
    * @param aAttributes
    */
-  void SetMathMLXMLRoles(nsIPersistentProperties* aAttributes);
+  void SetMathMLXMLRoles(AccAttributes* aAttributes);
 
  private:
   /**

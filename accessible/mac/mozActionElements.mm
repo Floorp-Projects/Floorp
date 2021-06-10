@@ -33,7 +33,7 @@ enum CheckboxValue {
 
 - (NSString*)moxPopupValue {
   if ([self stateWithMask:states::HASPOPUP] != 0) {
-    return utils::GetAccAttr(self, "haspopup");
+    return utils::GetAccAttr(self, nsGkAtoms::aria_haspopup);
   }
 
   return nil;

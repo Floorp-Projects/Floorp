@@ -6,9 +6,9 @@
 
 #include "DocAccessiblePlatformExtChild.h"
 
+#include "AccAttributes.h"
 #include "DocAccessibleChild.h"
 #include "HyperTextAccessibleWrap.h"
-#include "nsPersistentProperties.h"
 #include "nsAccUtils.h"
 
 #define UNIQUE_ID(acc)               \
@@ -212,7 +212,7 @@ DocAccessiblePlatformExtChild::RecvAttributedTextForRange(
 
   nsTArray<nsString> texts;
   nsTArray<LocalAccessible*> containers;
-  nsTArray<nsCOMPtr<nsIPersistentProperties>> props;
+  nsTArray<RefPtr<AccAttributes>> props;
 
   acc->AttributedTextForRange(texts, props, containers, aStartOffset,
                               endContainer, aEndOffset);

@@ -7,6 +7,7 @@
 
 #include "nsAccUtils.h"
 #include "Role.h"
+#include "AccAttributes.h"
 #include "AccIterator.h"
 #include "States.h"
 
@@ -17,7 +18,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsIImageLoadingContent.h"
-#include "nsIPersistentProperties2.h"
 #include "nsPIDOMWindow.h"
 #include "nsIURI.h"
 
@@ -148,13 +148,12 @@ nsIntPoint ImageAccessible::Position(uint32_t aCoordType) {
 nsIntSize ImageAccessible::Size() { return Bounds().Size(); }
 
 // LocalAccessible
-already_AddRefed<nsIPersistentProperties> ImageAccessible::NativeAttributes() {
-  nsCOMPtr<nsIPersistentProperties> attributes =
-      LinkableAccessible::NativeAttributes();
+already_AddRefed<AccAttributes> ImageAccessible::NativeAttributes() {
+  RefPtr<AccAttributes> attributes = LinkableAccessible::NativeAttributes();
 
   nsAutoString src;
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
-  if (!src.IsEmpty()) nsAccUtils::SetAccAttr(attributes, nsGkAtoms::src, src);
+  if (!src.IsEmpty()) attributes->SetAttribute(nsGkAtoms::src, src);
 
   return attributes.forget();
 }

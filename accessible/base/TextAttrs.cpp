@@ -6,6 +6,7 @@
 #include "TextAttrs.h"
 
 #include "LocalAccessible-inl.h"
+#include "AccAttributes.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "StyleInfo.h"
@@ -26,7 +27,7 @@ using namespace mozilla::a11y;
 // TextAttrsMgr
 ////////////////////////////////////////////////////////////////////////////////
 
-void TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
+void TextAttrsMgr::GetAttributes(AccAttributes* aAttributes,
                                  uint32_t* aStartOffset, uint32_t* aEndOffset) {
   // 1. Hyper text accessible must be specified always.
   // 2. Offset accessible and result hyper text offsets must be specified in
@@ -214,9 +215,9 @@ bool TextAttrsMgr::LangTextAttr::GetValueFor(LocalAccessible* aAccessible,
   return !aValue->IsEmpty();
 }
 
-void TextAttrsMgr::LangTextAttr::ExposeValue(
-    nsIPersistentProperties* aAttributes, const nsString& aValue) {
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::language, aValue);
+void TextAttrsMgr::LangTextAttr::ExposeValue(AccAttributes* aAttributes,
+                                             const nsString& aValue) {
+  aAttributes->SetAttribute(nsGkAtoms::language, aValue);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,23 +237,23 @@ bool TextAttrsMgr::InvalidTextAttr::GetValueFor(LocalAccessible* aAccessible,
   return elm ? GetValue(elm, aValue) : false;
 }
 
-void TextAttrsMgr::InvalidTextAttr::ExposeValue(
-    nsIPersistentProperties* aAttributes, const uint32_t& aValue) {
+void TextAttrsMgr::InvalidTextAttr::ExposeValue(AccAttributes* aAttributes,
+                                                const uint32_t& aValue) {
   switch (aValue) {
     case eFalse:
-      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::invalid, u"false"_ns);
+      aAttributes->SetAttribute(nsGkAtoms::invalid, u"false"_ns);
       break;
 
     case eGrammar:
-      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::invalid, u"grammar"_ns);
+      aAttributes->SetAttribute(nsGkAtoms::invalid, u"grammar"_ns);
       break;
 
     case eSpelling:
-      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::invalid, u"spelling"_ns);
+      aAttributes->SetAttribute(nsGkAtoms::invalid, u"spelling"_ns);
       break;
 
     case eTrue:
-      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::invalid, u"true"_ns);
+      aAttributes->SetAttribute(nsGkAtoms::invalid, u"true"_ns);
       break;
   }
 }
@@ -310,12 +311,11 @@ bool TextAttrsMgr::BGColorTextAttr::GetValueFor(LocalAccessible* aAccessible,
   return false;
 }
 
-void TextAttrsMgr::BGColorTextAttr::ExposeValue(
-    nsIPersistentProperties* aAttributes, const nscolor& aValue) {
+void TextAttrsMgr::BGColorTextAttr::ExposeValue(AccAttributes* aAttributes,
+                                                const nscolor& aValue) {
   nsAutoString formattedValue;
   StyleInfo::FormatColor(aValue, formattedValue);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::backgroundColor,
-                         formattedValue);
+  aAttributes->SetAttribute(nsGkAtoms::backgroundColor, formattedValue);
 }
 
 bool TextAttrsMgr::BGColorTextAttr::GetColor(nsIFrame* aFrame,
@@ -368,11 +368,11 @@ bool TextAttrsMgr::ColorTextAttr::GetValueFor(LocalAccessible* aAccessible,
   return false;
 }
 
-void TextAttrsMgr::ColorTextAttr::ExposeValue(
-    nsIPersistentProperties* aAttributes, const nscolor& aValue) {
+void TextAttrsMgr::ColorTextAttr::ExposeValue(AccAttributes* aAttributes,
+                                              const nscolor& aValue) {
   nsAutoString formattedValue;
   StyleInfo::FormatColor(aValue, formattedValue);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::color, formattedValue);
+  aAttributes->SetAttribute(nsGkAtoms::color, formattedValue);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -399,9 +399,9 @@ bool TextAttrsMgr::FontFamilyTextAttr::GetValueFor(LocalAccessible* aAccessible,
   return false;
 }
 
-void TextAttrsMgr::FontFamilyTextAttr::ExposeValue(
-    nsIPersistentProperties* aAttributes, const nsString& aValue) {
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::font_family, aValue);
+void TextAttrsMgr::FontFamilyTextAttr::ExposeValue(AccAttributes* aAttributes,
+                                                   const nsString& aValue) {
+  aAttributes->SetAttribute(nsGkAtoms::font_family, aValue);
 }
 
 bool TextAttrsMgr::FontFamilyTextAttr::GetFontFamily(nsIFrame* aFrame,
@@ -447,8 +447,8 @@ bool TextAttrsMgr::FontSizeTextAttr::GetValueFor(LocalAccessible* aAccessible,
   return false;
 }
 
-void TextAttrsMgr::FontSizeTextAttr::ExposeValue(
-    nsIPersistentProperties* aAttributes, const nscoord& aValue) {
+void TextAttrsMgr::FontSizeTextAttr::ExposeValue(AccAttributes* aAttributes,
+                                                 const nscoord& aValue) {
   // Convert from nscoord to pt.
   //
   // Note: according to IA2, "The conversion doesn't have to be exact.
@@ -465,7 +465,7 @@ void TextAttrsMgr::FontSizeTextAttr::ExposeValue(
   value.AppendInt(pts);
   value.AppendLiteral("pt");
 
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::font_size, value);
+  aAttributes->SetAttribute(nsGkAtoms::font_size, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -498,10 +498,10 @@ bool TextAttrsMgr::FontStyleTextAttr::GetValueFor(LocalAccessible* aAccessible,
 }
 
 void TextAttrsMgr::FontStyleTextAttr::ExposeValue(
-    nsIPersistentProperties* aAttributes, const FontSlantStyle& aValue) {
+    AccAttributes* aAttributes, const FontSlantStyle& aValue) {
   nsAutoString string;
   nsStyleUtil::AppendFontSlantStyle(aValue, string);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::font_style, string);
+  aAttributes->SetAttribute(nsGkAtoms::font_style, string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -533,12 +533,12 @@ bool TextAttrsMgr::FontWeightTextAttr::GetValueFor(LocalAccessible* aAccessible,
   return false;
 }
 
-void TextAttrsMgr::FontWeightTextAttr::ExposeValue(
-    nsIPersistentProperties* aAttributes, const FontWeight& aValue) {
+void TextAttrsMgr::FontWeightTextAttr::ExposeValue(AccAttributes* aAttributes,
+                                                   const FontWeight& aValue) {
   nsAutoString formattedValue;
   formattedValue.AppendFloat(aValue.ToFloat());
 
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::fontWeight, formattedValue);
+  aAttributes->SetAttribute(nsGkAtoms::fontWeight, formattedValue);
 }
 
 FontWeight TextAttrsMgr::FontWeightTextAttr::GetFontWeight(nsIFrame* aFrame) {
@@ -592,9 +592,9 @@ bool TextAttrsMgr::AutoGeneratedTextAttr::GetValueFor(
 }
 
 void TextAttrsMgr::AutoGeneratedTextAttr::ExposeValue(
-    nsIPersistentProperties* aAttributes, const bool& aValue) {
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::auto_generated,
-                         aValue ? u"true"_ns : u"false"_ns);
+    AccAttributes* aAttributes, const bool& aValue) {
+  aAttributes->SetAttribute(nsGkAtoms::auto_generated,
+                            aValue ? u"true"_ns : u"false"_ns);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -636,30 +636,26 @@ bool TextAttrsMgr::TextDecorTextAttr::GetValueFor(LocalAccessible* aAccessible,
 }
 
 void TextAttrsMgr::TextDecorTextAttr::ExposeValue(
-    nsIPersistentProperties* aAttributes, const TextDecorValue& aValue) {
+    AccAttributes* aAttributes, const TextDecorValue& aValue) {
   if (aValue.IsUnderline()) {
     nsAutoString formattedStyle;
     StyleInfo::FormatTextDecorationStyle(aValue.Style(), formattedStyle);
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textUnderlineStyle,
-                           formattedStyle);
+    aAttributes->SetAttribute(nsGkAtoms::textUnderlineStyle, formattedStyle);
 
     nsAutoString formattedColor;
     StyleInfo::FormatColor(aValue.Color(), formattedColor);
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textUnderlineColor,
-                           formattedColor);
+    aAttributes->SetAttribute(nsGkAtoms::textUnderlineColor, formattedColor);
     return;
   }
 
   if (aValue.IsLineThrough()) {
     nsAutoString formattedStyle;
     StyleInfo::FormatTextDecorationStyle(aValue.Style(), formattedStyle);
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textLineThroughStyle,
-                           formattedStyle);
+    aAttributes->SetAttribute(nsGkAtoms::textLineThroughStyle, formattedStyle);
 
     nsAutoString formattedColor;
     StyleInfo::FormatColor(aValue.Color(), formattedColor);
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textLineThroughColor,
-                           formattedColor);
+    aAttributes->SetAttribute(nsGkAtoms::textLineThroughColor, formattedColor);
   }
 }
 
@@ -692,20 +688,19 @@ bool TextAttrsMgr::TextPosTextAttr::GetValueFor(LocalAccessible* aAccessible,
   return false;
 }
 
-void TextAttrsMgr::TextPosTextAttr::ExposeValue(
-    nsIPersistentProperties* aAttributes, const TextPosValue& aValue) {
+void TextAttrsMgr::TextPosTextAttr::ExposeValue(AccAttributes* aAttributes,
+                                                const TextPosValue& aValue) {
   switch (aValue) {
     case eTextPosBaseline:
-      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textPosition,
-                             u"baseline"_ns);
+      aAttributes->SetAttribute(nsGkAtoms::textPosition, u"baseline"_ns);
       break;
 
     case eTextPosSub:
-      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textPosition, u"sub"_ns);
+      aAttributes->SetAttribute(nsGkAtoms::textPosition, u"sub"_ns);
       break;
 
     case eTextPosSuper:
-      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textPosition, u"super"_ns);
+      aAttributes->SetAttribute(nsGkAtoms::textPosition, u"super"_ns);
       break;
 
     case eTextPosNone:

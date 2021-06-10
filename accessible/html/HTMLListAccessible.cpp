@@ -6,10 +6,10 @@
 
 #include "HTMLListAccessible.h"
 
+#include "AccAttributes.h"
 #include "DocAccessible.h"
 #include "EventTree.h"
 #include "nsAccUtils.h"
-#include "nsPersistentProperties.h"
 #include "nsTextEquivUtils.h"
 #include "Role.h"
 #include "States.h"
@@ -119,9 +119,8 @@ uint64_t HTMLListBulletAccessible::NativeState() const {
   return LeafAccessible::NativeState() | states::READONLY;
 }
 
-already_AddRefed<nsIPersistentProperties>
-HTMLListBulletAccessible::NativeAttributes() {
-  RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
+already_AddRefed<AccAttributes> HTMLListBulletAccessible::NativeAttributes() {
+  RefPtr<AccAttributes> attributes = new AccAttributes();
   return attributes.forget();
 }
 

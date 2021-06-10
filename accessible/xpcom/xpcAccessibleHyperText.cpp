@@ -10,11 +10,12 @@
 #include "HyperTextAccessible-inl.h"
 #include "mozilla/a11y/PDocAccessible.h"
 #include "TextRange.h"
+#include "AccAttributes.h"
 #include "nsComponentManagerUtils.h"
+#include "nsPersistentProperties.h"
 #include "xpcAccessibleDocument.h"
 #include "xpcAccessibleTextRange.h"
 
-#include "nsIPersistentProperties2.h"
 #include "nsIMutableArray.h"
 
 using namespace mozilla::a11y;
@@ -177,15 +178,25 @@ xpcAccessibleHyperText::GetTextAttributes(
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPersistentProperties> props;
-  if (mIntl->IsLocal()) {
-    props = Intl()->TextAttributes(aIncludeDefAttrs, aOffset, aStartOffset,
-                                   aEndOffset);
-  } else {
+  if (mIntl->IsRemote()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  props.forget(aAttributes);
 
+  RefPtr<AccAttributes> attributes = Intl()->TextAttributes(
+      aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
+  RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
+  nsAutoString unused;
+  for (auto iter : *attributes) {
+    nsAutoString name;
+    iter.NameAsString(name);
+
+    nsAutoString value;
+    iter.ValueAsString(value);
+
+    props->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, unused);
+  }
+
+  props.forget(aAttributes);
   return NS_OK;
 }
 
@@ -197,12 +208,23 @@ xpcAccessibleHyperText::GetDefaultTextAttributes(
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPersistentProperties> props;
-  if (mIntl->IsLocal()) {
-    props = Intl()->DefaultTextAttributes();
-  } else {
+  if (mIntl->IsRemote()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+
+  RefPtr<AccAttributes> attributes = Intl()->DefaultTextAttributes();
+  RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
+  nsAutoString unused;
+  for (auto iter : *attributes) {
+    nsAutoString name;
+    iter.NameAsString(name);
+
+    nsAutoString value;
+    iter.ValueAsString(value);
+
+    props->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, unused);
+  }
+
   props.forget(aAttributes);
 
   return NS_OK;
