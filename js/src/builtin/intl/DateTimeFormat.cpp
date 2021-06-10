@@ -32,7 +32,6 @@
 #include "js/GCAPI.h"
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
-#include "unicode/ucal.h"
 #include "unicode/udat.h"
 #include "unicode/udateintervalformat.h"
 #include "unicode/uenum.h"
@@ -393,18 +392,15 @@ bool js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  mozilla::Range<const char16_t> tzchars = stableChars.twoByteRange();
-
-  JSString* str = CallICU(cx, [&tzchars](UChar* chars, uint32_t size,
-                                         UErrorCode* status) {
-    return ucal_getCanonicalTimeZoneID(tzchars.begin().get(), tzchars.length(),
-                                       chars, size, nullptr, status);
-  });
-  if (!str) {
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> canonicalTimeZone(cx);
+  auto result = mozilla::intl::Calendar::GetCanonicalTimeZoneID(
+      stableChars.twoByteRange(), canonicalTimeZone);
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
 
-  args.rval().setString(str);
+  args.rval().setString(canonicalTimeZone.toString());
   return true;
 }
 
