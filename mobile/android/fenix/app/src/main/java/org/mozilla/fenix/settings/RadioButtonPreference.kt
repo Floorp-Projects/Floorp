@@ -32,6 +32,9 @@ open class RadioButtonPreference @JvmOverloads constructor(
     private var defaultValue: Boolean = false
     private var clickListener: (() -> Unit)? = null
 
+    val isChecked: Boolean
+        get() = radioButton?.isChecked == true
+
     init {
         layoutResource = R.layout.preference_widget_radiobutton
 

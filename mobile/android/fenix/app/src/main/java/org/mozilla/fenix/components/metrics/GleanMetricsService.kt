@@ -827,6 +827,10 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.HomeScreenDisplayed -> EventWrapper<NoExtraKeys>(
             { HomeScreen.homeScreenDisplayed.record(it) }
         )
+        is Event.TabViewSettingChanged -> EventWrapper(
+            { Events.tabViewChanged.record(it) },
+            { Events.tabViewChangedKeys.valueOf(it) }
+        )
 
         is Event.BrowserToolbarHomeButtonClicked -> EventWrapper<NoExtraKeys>(
             { Events.browserToolbarHomeTapped.record(it) }

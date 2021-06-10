@@ -389,6 +389,26 @@ events:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2021-12-10"
+  tab_view_changed:
+    type: event
+    description: |
+      Indicates that the user has changed their tab view
+      settings, either from the default or by personal
+      preference.
+    extra_keys:
+      type:
+        description: |
+          A string containing the name of the tab view the user tapped.
+          These items include: list or grid.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/19956
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/19959#issuecomment-882539619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-05-10"
 
 onboarding:
   fxa_auto_signin:
