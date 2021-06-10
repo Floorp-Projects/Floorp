@@ -76,43 +76,25 @@ inline NSString* ToNSString(id aValue) {
     // If the attribute exists, it has one of four values: true, false,
     // grammar, or spelling. We query the attribute value here in order
     // to find the correct string to return.
+    RefPtr<AccAttributes> attributes;
     if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
       HyperTextAccessible* text = acc->AsHyperText();
-      if (!text || !text->IsTextRole()) {
-        // we can't get the attribute, but we should still respect the
-        // invalid state flag
-        return @"true";
+      if (text && text->IsTextRole()) {
+        attributes = text->DefaultTextAttributes();
       }
-      nsAutoString invalidStr;
-      RefPtr<AccAttributes> attributes = text->DefaultTextAttributes();
-      attributes->GetAttribute(nsGkAtoms::invalid, invalidStr);
-      if (invalidStr.IsEmpty()) {
-        // if the attribute had no value, we should still respect the
-        // invalid state flag.
-        return @"true";
-      }
-      return nsCocoaUtils::ToNSString(invalidStr);
     } else {
       RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
-      // Similar to the acc case above, we iterate through our attributes
-      // to find the value for `invalid`.
-      AutoTArray<Attribute, 10> attrs;
-      proxy->DefaultTextAttributes(&attrs);
-      for (size_t i = 0; i < attrs.Length(); i++) {
-        if (attrs.ElementAt(i).Name() == "invalid") {
-          nsString invalidStr = attrs.ElementAt(i).Value();
-          if (invalidStr.IsEmpty()) {
-            break;
-          }
-          return nsCocoaUtils::ToNSString(invalidStr);
-        }
-      }
-      // if we iterated through our attributes and didn't find `invalid`,
-      // or if the invalid attribute had no value, we should still respect
-      // the invalid flag and return true.
+      proxy->DefaultTextAttributes(&attributes);
+    }
+
+    nsAutoString invalidStr;
+    if (!attributes ||
+        !attributes->GetAttribute(nsGkAtoms::invalid, invalidStr)) {
       return @"true";
     }
+    return nsCocoaUtils::ToNSString(invalidStr);
   }
+
   // If the flag is not set, we return false.
   return @"false";
 }

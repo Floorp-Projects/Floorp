@@ -39,12 +39,6 @@ struct ShowEventData
   bool EventSuppressed;
 };
 
-struct Attribute
-{
-  nsCString Name;
-  nsString Value;
-};
-
 sync protocol PDocAccessible
 {
   manager PBrowser;

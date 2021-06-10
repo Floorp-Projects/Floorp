@@ -496,14 +496,8 @@ NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
         mEnd.mContainer.AsProxy()->ID(), mEnd.mOffset, &textAttributesRuns);
 
     for (size_t i = 0; i < textAttributesRuns.Length(); i++) {
-      nsTArray<Attribute>& attribs =
+      AccAttributes* attributes =
           textAttributesRuns.ElementAt(i).TextAttributes();
-      RefPtr<AccAttributes> attributes = new AccAttributes();
-      for (size_t ii = 0; ii < attribs.Length(); ii++) {
-        attributes->SetAttribute(
-            NS_ConvertUTF8toUTF16(attribs.ElementAt(ii).Name()),
-            attribs.ElementAt(ii).Value());
-      }
       RemoteAccessible* container =
           ipcDoc->GetAccessible(textAttributesRuns.ElementAt(i).ContainerID());
 

@@ -16,11 +16,11 @@
 #include "ImageAccessible.h"
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
-#include "nsIPersistentProperties2.h"
 #include "nsAccUtils.h"
 #ifdef MOZ_ACCESSIBILITY_ATK
 #  include "AccessibleWrap.h"
 #endif
+#include "AccAttributes.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/a11y/DocAccessiblePlatformExtChild.h"
 
@@ -145,14 +145,11 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvDescription(const uint64_t& aID,
 }
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvAttributes(
-    const uint64_t& aID, nsTArray<Attribute>* aAttributes) {
+    const uint64_t& aID, RefPtr<AccAttributes>* aAttributes) {
   LocalAccessible* acc = IdToAccessible(aID);
   if (!acc) return IPC_OK();
 
-  RefPtr<AccAttributes> props = acc->Attributes();
-  if (!nsAccUtils::PersistentPropertiesToArray(props, aAttributes)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
+  *aAttributes = acc->Attributes();
   return IPC_OK();
 }
 
@@ -403,32 +400,28 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvCharAt(const uint64_t& aID,
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvTextAttributes(
     const uint64_t& aID, const bool& aIncludeDefAttrs, const int32_t& aOffset,
-    nsTArray<Attribute>* aAttributes, int32_t* aStartOffset,
+    RefPtr<AccAttributes>* aAttributes, int32_t* aStartOffset,
     int32_t* aEndOffset) {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
   if (!acc || !acc->IsTextRole()) {
     return IPC_OK();
   }
 
-  RefPtr<AccAttributes> props =
+  *aAttributes =
       acc->TextAttributes(aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
-  if (!nsAccUtils::PersistentPropertiesToArray(props, aAttributes)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
+
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvDefaultTextAttributes(
-    const uint64_t& aID, nsTArray<Attribute>* aAttributes) {
+    const uint64_t& aID, RefPtr<AccAttributes>* aAttributes) {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
   if (!acc || !acc->IsTextRole()) {
     return IPC_OK();
   }
 
-  RefPtr<AccAttributes> props = acc->DefaultTextAttributes();
-  if (!nsAccUtils::PersistentPropertiesToArray(props, aAttributes)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
+  *aAttributes = acc->DefaultTextAttributes();
+
   return IPC_OK();
 }
 

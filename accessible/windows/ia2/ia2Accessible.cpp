@@ -623,26 +623,6 @@ static inline void EscapeAttributeChars(String& aStr) {
 }
 
 HRESULT
-ia2Accessible::ConvertToIA2Attributes(nsTArray<Attribute>* aAttributes,
-                                      BSTR* aIA2Attributes) {
-  nsString attrStr;
-  size_t attrCount = aAttributes->Length();
-  for (size_t i = 0; i < attrCount; i++) {
-    EscapeAttributeChars(aAttributes->ElementAt(i).Name());
-    EscapeAttributeChars(aAttributes->ElementAt(i).Value());
-    AppendUTF8toUTF16(aAttributes->ElementAt(i).Name(), attrStr);
-    attrStr.Append(':');
-    attrStr.Append(aAttributes->ElementAt(i).Value());
-    attrStr.Append(';');
-  }
-
-  if (attrStr.IsEmpty()) return S_FALSE;
-
-  *aIA2Attributes = ::SysAllocStringLen(attrStr.get(), attrStr.Length());
-  return *aIA2Attributes ? S_OK : E_OUTOFMEMORY;
-}
-
-HRESULT
 ia2Accessible::ConvertToIA2Attributes(AccAttributes* aAttributes,
                                       BSTR* aIA2Attributes) {
   *aIA2Attributes = nullptr;

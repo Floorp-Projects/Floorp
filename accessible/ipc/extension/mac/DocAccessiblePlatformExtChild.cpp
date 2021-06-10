@@ -221,10 +221,9 @@ DocAccessiblePlatformExtChild::RecvAttributedTextForRange(
              texts.Length() == containers.Length());
 
   for (size_t i = 0; i < texts.Length(); i++) {
-    nsTArray<Attribute> textAttrArray;
-    nsAccUtils::PersistentPropertiesToArray(props.ElementAt(i), &textAttrArray);
     aAttributes->AppendElement(TextAttributesRun(
-        texts.ElementAt(i), UNIQUE_ID(containers.ElementAt(i)), textAttrArray));
+        texts.ElementAt(i), UNIQUE_ID(containers.ElementAt(i)),
+        props.ElementAt(i)));
   }
 
   return IPC_OK();
