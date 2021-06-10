@@ -120,13 +120,13 @@ fails == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg # bug
 == anim-css-strokewidth-1-by-pct-pct.svg                          anim-css-strokewidth-1-ref.svg
 fails == anim-css-strokewidth-1-by-pct-px.svg                     anim-css-strokewidth-1-ref.svg
 fails == anim-css-strokewidth-1-by-px-pct.svg                     anim-css-strokewidth-1-ref.svg
-fails-if(webrender) == anim-css-strokewidth-1-from-by-pct-pct.svg anim-css-strokewidth-1-ref.svg # bug 1459418
+fails-if(!useDrawSnapshot&&webrender) == anim-css-strokewidth-1-from-by-pct-pct.svg anim-css-strokewidth-1-ref.svg # bug 1459418
 fails == anim-css-strokewidth-1-from-by-pct-px.svg                anim-css-strokewidth-1-ref.svg
 fails == anim-css-strokewidth-1-from-by-px-pct.svg                anim-css-strokewidth-1-ref.svg
-fails-if(webrender) == anim-css-strokewidth-1-from-to-pct-pct.svg anim-css-strokewidth-1-ref.svg # bug 1459418
+fails-if(!useDrawSnapshot&&webrender) == anim-css-strokewidth-1-from-to-pct-pct.svg anim-css-strokewidth-1-ref.svg # bug 1459418
 fails == anim-css-strokewidth-1-from-to-pct-px.svg                anim-css-strokewidth-1-ref.svg
 fails == anim-css-strokewidth-1-from-to-px-pct.svg                anim-css-strokewidth-1-ref.svg
-fails-if(webrender) == anim-css-strokewidth-1-to-pct-pct.svg      anim-css-strokewidth-1-ref.svg # bug 1459418
+fails-if(!useDrawSnapshot&&webrender) == anim-css-strokewidth-1-to-pct-pct.svg      anim-css-strokewidth-1-ref.svg # bug 1459418
 fails == anim-css-strokewidth-1-to-pct-px.svg                     anim-css-strokewidth-1-ref.svg
 fails == anim-css-strokewidth-1-to-px-pct.svg                     anim-css-strokewidth-1-ref.svg
 

@@ -132,17 +132,17 @@ skip != img-foreignObject-embed-1-helper.svg   lime100x100.svg    # Bug 1708599
 
 == img-widthAndHeight-meet-1.html  img-widthAndHeight-meet-1-ref.html
 == img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.html
-fuzzy-if(webrender,255-255,9-9) random-if(geckoview&&webrender) == img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html
+fuzzy-if(!useDrawSnapshot&&webrender,255-255,9-9) random-if(geckoview&&webrender) == img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html
 == img-widthAndHeight-slice-2.html img-widthAndHeight-slice-2-ref.html
 
 == img-height-meet-1.html   img-height-meet-1-ref.html
 == img-height-meet-2.html   img-height-meet-2-ref.html
-fuzzy-if(webrender,255-255,9-9) random-if(geckoview&&webrender) == img-height-slice-1.html  img-height-slice-1-ref.html
+fuzzy-if(!useDrawSnapshot&&webrender,255-255,9-9) random-if(geckoview&&webrender) == img-height-slice-1.html  img-height-slice-1-ref.html
 == img-height-slice-2.html  img-height-slice-2-ref.html
 
 == img-width-meet-1.html   img-width-meet-1-ref.html
 == img-width-meet-2.html   img-width-meet-2-ref.html
-fuzzy-if(webrender,255-255,3-9) random-if(geckoview&&webrender) == img-width-slice-1.html  img-width-slice-1-ref.html
+fuzzy-if(!useDrawSnapshot&&webrender,255-255,3-9) random-if(geckoview&&webrender) == img-width-slice-1.html  img-width-slice-1-ref.html
 == img-width-slice-2.html  img-width-slice-2-ref.html
 
 # Alternate version of "width & height both non-%-valued" tests, but now
