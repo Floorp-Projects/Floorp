@@ -33,6 +33,9 @@ typedef MozPromise<CopyableTArray<ServiceWorkerRegistrationDescriptor>,
                    CopyableErrorResult, false>
     ServiceWorkerRegistrationListPromise;
 
+typedef MozPromise<IPCNavigationPreloadState, CopyableErrorResult, false>
+    NavigationPreloadStatePromise;
+
 typedef std::function<void(const ServiceWorkerRegistrationDescriptor&)>
     ServiceWorkerRegistrationCallback;
 

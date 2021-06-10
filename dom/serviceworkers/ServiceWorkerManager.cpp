@@ -2651,7 +2651,8 @@ ServiceWorkerManager::GetRegistration(const nsACString& aScopeKey,
 already_AddRefed<ServiceWorkerRegistrationInfo>
 ServiceWorkerManager::CreateNewRegistration(
     const nsCString& aScope, nsIPrincipal* aPrincipal,
-    ServiceWorkerUpdateViaCache aUpdateViaCache) {
+    ServiceWorkerUpdateViaCache aUpdateViaCache,
+    IPCNavigationPreloadState aNavigationPreloadState) {
 #ifdef DEBUG
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIURI> scopeURI;
@@ -2664,7 +2665,8 @@ ServiceWorkerManager::CreateNewRegistration(
 #endif
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
-      new ServiceWorkerRegistrationInfo(aScope, aPrincipal, aUpdateViaCache);
+      new ServiceWorkerRegistrationInfo(aScope, aPrincipal, aUpdateViaCache,
+                                        std::move(aNavigationPreloadState));
 
   // From now on ownership of registration is with
   // mServiceWorkerRegistrationInfos.

@@ -384,5 +384,100 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerRegistrationProxy::Update(
   return promise;
 }
 
+RefPtr<GenericPromise>
+ServiceWorkerRegistrationProxy::SetNavigationPreloadEnabled(
+    const bool& aEnabled) {
+  AssertIsOnBackgroundThread();
+
+  RefPtr<ServiceWorkerRegistrationProxy> self = this;
+  RefPtr<GenericPromise::Private> promise =
+      new GenericPromise::Private(__func__);
+
+  nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction(__func__, [aEnabled, self, promise]() mutable {
+        nsresult rv = NS_ERROR_DOM_INVALID_STATE_ERR;
+        auto scopeExit = MakeScopeExit([&] { promise->Reject(rv, __func__); });
+
+        NS_ENSURE_TRUE_VOID(self->mReg);
+        NS_ENSURE_TRUE_VOID(self->mReg->GetActive());
+
+        auto reg = self->mReg;
+        reg->SetNavigationPreloadEnabled(aEnabled);
+
+        RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+        NS_ENSURE_TRUE_VOID(swm);
+        swm->StoreRegistration(reg->Principal(), reg);
+
+        scopeExit.release();
+
+        promise->Resolve(true, __func__);
+      });
+
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+
+  return promise;
+}
+
+RefPtr<GenericPromise>
+ServiceWorkerRegistrationProxy::SetNavigationPreloadHeader(
+    const nsCString& aHeader) {
+  AssertIsOnBackgroundThread();
+
+  RefPtr<ServiceWorkerRegistrationProxy> self = this;
+  RefPtr<GenericPromise::Private> promise =
+      new GenericPromise::Private(__func__);
+
+  nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction(__func__, [aHeader, self, promise]() mutable {
+        nsresult rv = NS_ERROR_DOM_INVALID_STATE_ERR;
+        auto scopeExit = MakeScopeExit([&] { promise->Reject(rv, __func__); });
+
+        NS_ENSURE_TRUE_VOID(self->mReg);
+        NS_ENSURE_TRUE_VOID(self->mReg->GetActive());
+
+        auto reg = self->mReg;
+        reg->SetNavigationPreloadHeader(aHeader);
+
+        RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+        NS_ENSURE_TRUE_VOID(swm);
+        swm->StoreRegistration(reg->Principal(), reg);
+
+        scopeExit.release();
+
+        promise->Resolve(true, __func__);
+      });
+
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+
+  return promise;
+}
+
+RefPtr<NavigationPreloadStatePromise>
+ServiceWorkerRegistrationProxy::GetNavigationPreloadState() {
+  AssertIsOnBackgroundThread();
+
+  RefPtr<ServiceWorkerRegistrationProxy> self = this;
+  RefPtr<NavigationPreloadStatePromise::Private> promise =
+      new NavigationPreloadStatePromise::Private(__func__);
+
+  nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction(__func__, [self, promise]() mutable {
+        nsresult rv = NS_ERROR_DOM_INVALID_STATE_ERR;
+        auto scopeExit = MakeScopeExit([&] { promise->Reject(rv, __func__); });
+
+        NS_ENSURE_TRUE_VOID(self->mReg);
+        scopeExit.release();
+
+        promise->Resolve(self->mReg->GetNavigationPreloadState(), __func__);
+      });
+
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+
+  return promise;
+}
+
 }  // namespace dom
 }  // namespace mozilla
