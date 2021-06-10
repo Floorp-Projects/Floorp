@@ -7,7 +7,6 @@
 
 if CONFIG["ACCESSIBILITY"]:
     IPDL_SOURCES += [
-        "DocAccessibleTypes.ipdlh",
         "PDocAccessible.ipdl",
     ]
 

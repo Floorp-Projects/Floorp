@@ -62,21 +62,16 @@ NSString* LocalizedString(const nsString& aString) {
 
 NSString* GetAccAttr(mozAccessible* aNativeAccessible, nsAtom* aAttrName) {
   nsAutoString result;
+  RefPtr<AccAttributes> attributes;
   if (LocalAccessible* acc =
           [aNativeAccessible geckoAccessible].AsAccessible()) {
-    RefPtr<AccAttributes> attributes = acc->Attributes();
-    attributes->GetAttribute(aAttrName, result);
+    attributes = acc->Attributes();
   } else if (RemoteAccessible* proxy =
                  [aNativeAccessible geckoAccessible].AsProxy()) {
-    AutoTArray<Attribute, 10> attrs;
-    proxy->Attributes(&attrs);
-    for (size_t i = 0; i < attrs.Length(); i++) {
-      if (aAttrName->Equals(NS_ConvertUTF8toUTF16(attrs.ElementAt(i).Name()))) {
-        result = attrs.ElementAt(i).Value();
-        break;
-      }
-    }
+    proxy->Attributes(&attributes);
   }
+
+  attributes->GetAttribute(aAttrName, result);
 
   if (!result.IsEmpty()) {
     return nsCocoaUtils::ToNSString(result);

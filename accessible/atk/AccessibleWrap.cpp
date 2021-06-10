@@ -670,23 +670,9 @@ AtkAttributeSet* getAttributesCB(AtkObject* aAtkObj) {
   RemoteAccessible* proxy = GetProxy(aAtkObj);
   if (!proxy) return nullptr;
 
-  AutoTArray<Attribute, 10> attrs;
-  proxy->Attributes(&attrs);
-  if (attrs.IsEmpty()) return nullptr;
-
-  AtkAttributeSet* objAttributeSet = nullptr;
-  for (uint32_t i = 0; i < attrs.Length(); i++) {
-    AtkAttribute* objAttr = (AtkAttribute*)g_malloc(sizeof(AtkAttribute));
-    // On ATK, the placeholder attribute is called placeholder-text.
-    if (attrs[i].Name().Equals("placeholder")) {
-      attrs[i].Name().AssignLiteral("placeholder-text");
-    }
-    objAttr->name = g_strdup(attrs[i].Name().get());
-    objAttr->value = g_strdup(NS_ConvertUTF16toUTF8(attrs[i].Value()).get());
-    objAttributeSet = g_slist_prepend(objAttributeSet, objAttr);
-  }
-
-  return objAttributeSet;
+  RefPtr<AccAttributes> attributes = nullptr;
+  proxy->Attributes(&attributes);
+  return ConvertToAtkAttributeSet(attributes);
 }
 
 const gchar* GetLocaleCB(AtkObject* aAtkObj) {

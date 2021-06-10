@@ -51,9 +51,9 @@ void RemoteAccessibleWrap::Shutdown() {
 // LocalAccessible
 
 already_AddRefed<AccAttributes> RemoteAccessibleWrap::Attributes() {
-  AutoTArray<Attribute, 10> attrs;
+  RefPtr<AccAttributes> attrs;
   Proxy()->Attributes(&attrs);
-  return AttributeArrayToProperties(attrs);
+  return attrs.forget();
 }
 
 uint32_t RemoteAccessibleWrap::ChildCount() const {

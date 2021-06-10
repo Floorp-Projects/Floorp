@@ -280,12 +280,10 @@ static bool IsEscapedChar(const wchar_t c) {
   return c == L'\\' || c == L':' || c == ',' || c == '=' || c == ';';
 }
 
-static bool ConvertBSTRAttributesToArray(const nsAString& aStr,
-                                         nsTArray<Attribute>* aAttrs) {
-  if (!aAttrs) {
-    return false;
-  }
-
+// XXX: This creates an all-strings AccAttributes, this isn't ideal
+// but an OK temporary stop-gap before IPC goes full IPDL.
+static bool ConvertBSTRAttributesToAccAttributes(
+    const nsAString& aStr, RefPtr<AccAttributes>& aAttrs) {
   enum { eName = 0, eValue = 1, eNumStates } state;
   nsAutoString tokens[eNumStates];
   auto itr = aStr.BeginReading(), end = aStr.EndReading();
@@ -309,18 +307,19 @@ static bool ConvertBSTRAttributesToArray(const nsAString& aStr,
         state = eValue;
         ++itr;
         continue;
-      case L';':
+      case L';': {
         if (state != eValue) {
           // Bad, should be looking at value
           return false;
         }
         state = eName;
-        aAttrs->AppendElement(
-            Attribute(NS_ConvertUTF16toUTF8(tokens[eName]), tokens[eValue]));
+        RefPtr<nsAtom> nameAtom = NS_Atomize(tokens[eName]);
+        aAttrs->SetAttribute(nameAtom, tokens[eValue]);
         tokens[eName].Truncate();
         tokens[eValue].Truncate();
         ++itr;
         continue;
+      }
       default:
         break;
     }
@@ -330,9 +329,7 @@ static bool ConvertBSTRAttributesToArray(const nsAString& aStr,
   return true;
 }
 
-void RemoteAccessible::Attributes(nsTArray<Attribute>* aAttrs) const {
-  aAttrs->Clear();
-
+void RemoteAccessible::Attributes(RefPtr<AccAttributes>* aAttrs) const {
   RefPtr<IAccessible> acc;
   if (!GetCOMInterface((void**)getter_AddRefs(acc))) {
     return;
@@ -351,8 +348,9 @@ void RemoteAccessible::Attributes(nsTArray<Attribute>* aAttrs) const {
     return;
   }
 
-  ConvertBSTRAttributesToArray(
-      nsDependentString((wchar_t*)attrs, attrsWrap.length()), aAttrs);
+  *aAttrs = new AccAttributes();
+  ConvertBSTRAttributesToAccAttributes(
+      nsDependentString((wchar_t*)attrs, attrsWrap.length()), *aAttrs);
 }
 
 nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(

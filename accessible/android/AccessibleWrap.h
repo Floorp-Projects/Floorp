@@ -72,9 +72,6 @@ class AccessibleWrap : public LocalAccessible {
                         : GetAndroidClass(WrapperRole());
   }
 
-  static already_AddRefed<AccAttributes> AttributeArrayToProperties(
-      const nsTArray<Attribute>& aAttributes);
-
   static const int32_t kNoID = -1;
 
  protected:
