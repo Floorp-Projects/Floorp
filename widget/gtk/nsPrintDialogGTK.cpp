@@ -331,8 +331,7 @@ const char* nsPrintDialogWidgetGTK::OptionWidgetToString(GtkWidget* dropdown) {
 
   if (index == CUSTOM_VALUE_INDEX)
     return (const char*)g_object_get_data(G_OBJECT(dropdown), "custom-text");
-  else
-    return header_footer_tags[index];
+  return header_footer_tags[index];
 }
 
 gint nsPrintDialogWidgetGTK::Run() {
@@ -555,9 +554,8 @@ static gboolean window_export_handle(GtkWindow* window,
             gdk_window, wayland_window_handle_exported, data, g_free)) {
       g_free(data);
       return false;
-    } else {
-      return true;
     }
+    return true;
   }
 #endif
 
