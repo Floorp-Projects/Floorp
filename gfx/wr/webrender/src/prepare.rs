@@ -215,7 +215,7 @@ fn prepare_prim_for_render(
 
     if !update_clip_task(
         prim_instance,
-        &prim_rect.min,
+        &prim_rect.origin,
         cluster.spatial_node_index,
         pic_context.raster_spatial_node_index,
         pic_context,
@@ -233,7 +233,7 @@ fn prepare_prim_for_render(
     }
 
     if prim_instance.is_chased() {
-        println!("\tconsidered visible and ready with local pos {:?}", prim_rect.min);
+        println!("\tconsidered visible and ready with local pos {:?}", prim_rect.origin);
     }
 
     #[cfg(debug_assertions)]
@@ -353,7 +353,7 @@ fn prepare_interned_prim_for_render(
                     pic_context.raster_spatial_node_index,
                 )
                 .into_fast_transform();
-            let prim_offset = prim_data.common.prim_rect.min.to_vector() - run.reference_frame_relative_offset;
+            let prim_offset = prim_data.common.prim_rect.origin.to_vector() - run.reference_frame_relative_offset;
 
             let pic = &store.pictures[pic_context.pic_index.0];
             let surface = &frame_state.surfaces[pic_context.surface_index.0];
@@ -382,7 +382,7 @@ fn prepare_interned_prim_for_render(
                             SubpixelMode::Conditional { allowed_rect } => {
                                 // Conditional mode allows subpixel AA to be enabled for this
                                 // text run, so long as it's inside the allowed rect.
-                                allowed_rect.contains_box(&prim_instance.vis.clip_chain.pic_clip_rect)
+                                allowed_rect.contains_rect(&prim_instance.vis.clip_chain.pic_clip_rect)
                             }
                         }
                     } else {
@@ -629,8 +629,8 @@ fn prepare_interned_prim_for_render(
             // cache with any shared template data.
             prim_data.update(frame_state, pic_context.surface_index);
 
-            if prim_data.stretch_size.width >= prim_data.common.prim_rect.width() &&
-                prim_data.stretch_size.height >= prim_data.common.prim_rect.height() {
+            if prim_data.stretch_size.width >= prim_data.common.prim_rect.size.width &&
+                prim_data.stretch_size.height >= prim_data.common.prim_rect.size.height {
 
                 prim_data.common.may_need_repetition = false;
             }
@@ -676,8 +676,8 @@ fn prepare_interned_prim_for_render(
         PrimitiveInstanceKind::CachedLinearGradient { data_handle, ref mut visible_tiles_range, .. } => {
             profile_scope!("CachedLinearGradient");
             let prim_data = &mut data_stores.linear_grad[*data_handle];
-            prim_data.common.may_need_repetition = prim_data.stretch_size.width < prim_data.common.prim_rect.width()
-                || prim_data.stretch_size.height < prim_data.common.prim_rect.height();
+            prim_data.common.may_need_repetition = prim_data.stretch_size.width < prim_data.common.prim_rect.size.width
+                || prim_data.stretch_size.height < prim_data.common.prim_rect.size.height;
 
             // Update the template this instance references, which may refresh the GPU
             // cache with any shared template data.
@@ -707,8 +707,8 @@ fn prepare_interned_prim_for_render(
             profile_scope!("RadialGradient");
             let prim_data = &mut data_stores.radial_grad[*data_handle];
 
-            prim_data.common.may_need_repetition = prim_data.stretch_size.width < prim_data.common.prim_rect.width()
-                || prim_data.stretch_size.height < prim_data.common.prim_rect.height();
+            prim_data.common.may_need_repetition = prim_data.stretch_size.width < prim_data.common.prim_rect.size.width
+                || prim_data.stretch_size.height < prim_data.common.prim_rect.size.height;
 
             // Update the template this instane references, which may refresh the GPU
             // cache with any shared template data.
@@ -741,8 +741,8 @@ fn prepare_interned_prim_for_render(
             profile_scope!("ConicGradient");
             let prim_data = &mut data_stores.conic_grad[*data_handle];
 
-            prim_data.common.may_need_repetition = prim_data.stretch_size.width < prim_data.common.prim_rect.width()
-                || prim_data.stretch_size.height < prim_data.common.prim_rect.height();
+            prim_data.common.may_need_repetition = prim_data.stretch_size.width < prim_data.common.prim_rect.size.width
+                || prim_data.stretch_size.height < prim_data.common.prim_rect.size.height;
 
             // Update the template this instane references, which may refresh the GPU
             // cache with any shared template data.
@@ -925,10 +925,10 @@ fn decompose_repeated_gradient(
     let repetitions = image_tiling::repetitions(prim_local_rect, &visible_rect, stride);
     for Repetition { origin, .. } in repetitions {
         let mut handle = GpuCacheHandle::new();
-        let rect = LayoutRect::from_origin_and_size(
+        let rect = LayoutRect {
             origin,
-            *stretch_size,
-        );
+            size: *stretch_size,
+        };
 
         if let Some(callback) = &mut callback {
             if let Some(request) = frame_state.gpu_cache.request(&mut handle) {
@@ -1285,7 +1285,7 @@ pub fn update_brush_segment_clip_task(
     }
 
     let segment_world_rect = match pic_state.map_pic_to_world.map(&clip_chain.pic_clip_rect) {
-        Some(rect) => rect,
+        Some(rect) => rect.to_box2d(),
         None => return ClipMaskKind::Clipped,
     };
 
@@ -1343,7 +1343,7 @@ fn write_brush_segment_description(
 ) -> bool {
     // If the brush is small, we want to skip building segments
     // and just draw it as a single primitive with clip mask.
-    if prim_local_rect.area() < MIN_BRUSH_SPLIT_AREA {
+    if prim_local_rect.size.area() < MIN_BRUSH_SPLIT_AREA {
         return false;
     }
 
@@ -1502,7 +1502,7 @@ fn build_segments_if_needed(
             frame_state.segment_builder.build(|segment| {
                 segments.push(
                     BrushSegment::new(
-                        segment.rect.translate(-prim_local_rect.min.to_vector()),
+                        segment.rect.translate(-prim_local_rect.origin.to_vector()),
                         segment.has_mask,
                         segment.edge_flags,
                         [0.0; 4],
@@ -1546,7 +1546,7 @@ fn get_unclipped_device_rect(
 ) -> Option<DeviceRect> {
     let raster_rect = map_to_raster.map(&prim_rect)?;
     let world_rect = raster_rect * Scale::new(1.0);
-    Some(world_rect * device_pixel_scale)
+    Some((world_rect * device_pixel_scale).to_box2d())
 }
 
 /// Given an unclipped device rect, try to find a minimal device space
@@ -1561,17 +1561,17 @@ fn get_clipped_device_rect(
     device_pixel_scale: DevicePixelScale,
 ) -> Option<DeviceRect> {
     let unclipped_raster_rect = {
-        let world_rect = (*unclipped) * Scale::new(1.0);
+        let world_rect = unclipped.to_rect() * Scale::new(1.0);
         let raster_rect = world_rect * device_pixel_scale.inverse();
 
         raster_rect.cast_unit()
     };
 
-    let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?;
+    let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?.to_box2d();
 
     let clipped_world_rect = unclipped_world_rect.intersection(&world_clip_rect)?;
 
-    let clipped_raster_rect = map_to_world.unmap(&clipped_world_rect)?;
+    let clipped_raster_rect = map_to_world.unmap(&clipped_world_rect.to_rect())?;
 
     let clipped_raster_rect = clipped_raster_rect.intersection(&unclipped_raster_rect)?;
 

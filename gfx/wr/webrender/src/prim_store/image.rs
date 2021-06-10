@@ -157,8 +157,8 @@ impl ImageData {
             None => PrimitiveOpacity::opaque(),
         };
 
-        if self.stretch_size.width >= common.prim_rect.width() &&
-            self.stretch_size.height >= common.prim_rect.height() {
+        if self.stretch_size.width >= common.prim_rect.size.width &&
+            self.stretch_size.height >= common.prim_rect.size.height {
 
             common.may_need_repetition = false;
         }
@@ -332,10 +332,10 @@ impl ImageData {
                 for image_tiling::Repetition { origin, edge_flags } in repetitions {
                     let edge_flags = base_edge_flags | edge_flags;
 
-                    let layout_image_rect = LayoutRect::from_origin_and_size(
+                    let layout_image_rect = LayoutRect {
                         origin,
-                        self.stretch_size,
-                    );
+                        size: self.stretch_size,
+                    };
 
                     let tiles = image_tiling::tiles(
                         &layout_image_rect,

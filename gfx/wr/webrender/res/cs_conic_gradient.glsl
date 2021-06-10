@@ -17,6 +17,7 @@ flat varying float v_angle;
 
 #define EXTEND_MODE_REPEAT 1
 
+// Rectangle in origin+size format
 PER_INSTANCE in vec4 aTaskRect;
 PER_INSTANCE in vec2 aCenter;
 PER_INSTANCE in vec2 aScale;

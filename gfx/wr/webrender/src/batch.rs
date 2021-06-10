@@ -466,7 +466,7 @@ impl OpaqueBatchList {
         if self.current_batch_index == usize::MAX ||
            !self.batches[self.current_batch_index].key.is_compatible_with(&key) {
             let mut selected_batch_index = None;
-            let item_area = z_bounding_rect.area();
+            let item_area = z_bounding_rect.size.area();
 
             // If the area of this primitive is larger than the given threshold,
             // then it is large enough to warrant breaking a batch for. In this
@@ -1232,10 +1232,10 @@ impl BatchBuilder {
                 // the added bonus of avoiding quantization effects when storing
                 // floats in the extra header integers.
                 let prim_header = PrimitiveHeader {
-                    local_rect: LayoutRect {
-                        min: prim_rect.min - run.reference_frame_relative_offset,
-                        max: run.snapped_reference_frame_relative_offset.to_point(),
-                    },
+                    local_rect: LayoutRect::new(
+                        prim_rect.origin - run.reference_frame_relative_offset,
+                        run.snapped_reference_frame_relative_offset.to_size(),
+                    ),
                     local_clip_rect: prim_info.combined_local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,
@@ -1336,7 +1336,7 @@ impl BatchBuilder {
                                 SubpixelDirection::Vertical => DeviceVector2D::new(0.5, 0.125),
                                 SubpixelDirection::Mixed => DeviceVector2D::new(0.125, 0.125),
                             };
-                            let text_offset = prim_header.local_rect.max.to_vector();
+                            let text_offset = prim_header.local_rect.size.to_vector();
 
                             let pic_bounding_rect = if run.used_font.flags.contains(FontInstanceFlags::TRANSFORM_GLYPHS) {
                                 let mut device_bounding_rect = DeviceRect::default();
@@ -1351,7 +1351,7 @@ impl BatchBuilder {
                                 let glyph_translation = DeviceVector2D::new(glyph_transform.m41, glyph_transform.m42);
 
                                 for glyph in glyphs {
-                                    let glyph_offset = prim_data.glyphs[glyph.index_in_text_run as usize].point + prim_header.local_rect.min.to_vector();
+                                    let glyph_offset = prim_data.glyphs[glyph.index_in_text_run as usize].point + prim_header.local_rect.origin.to_vector();
 
                                     let raster_glyph_offset = (glyph_transform.transform_point2d(glyph_offset).unwrap() + snap_bias).floor();
                                     let raster_text_offset = (
@@ -1371,12 +1371,12 @@ impl BatchBuilder {
                                 let map_device_to_surface: SpaceMapper<PicturePixel, DevicePixel> = SpaceMapper::new_with_target(
                                     root_spatial_node_index,
                                     surface_spatial_node_index,
-                                    device_bounding_rect,
+                                    device_bounding_rect.to_rect(),
                                     ctx.spatial_tree,
                                 );
 
-                                match map_device_to_surface.unmap(&device_bounding_rect) {
-                                    Some(r) => r.intersection(bounding_rect),
+                                match map_device_to_surface.unmap(&device_bounding_rect.to_rect()) {
+                                    Some(r) => r.intersection(&bounding_rect),
                                     None => Some(*bounding_rect),
                                 }
                             } else {
@@ -1385,10 +1385,10 @@ impl BatchBuilder {
                                 let glyph_raster_scale = run.raster_scale * ctx.global_device_pixel_scale.get();
 
                                 for glyph in glyphs {
-                                    let glyph_offset = prim_data.glyphs[glyph.index_in_text_run as usize].point + prim_header.local_rect.min.to_vector();
+                                    let glyph_offset = prim_data.glyphs[glyph.index_in_text_run as usize].point + prim_header.local_rect.origin.to_vector();
                                     let glyph_scale = LayoutToDeviceScale::new(glyph_raster_scale / glyph.scale);
                                     let raster_glyph_offset = (glyph_offset * LayoutToDeviceScale::new(glyph_raster_scale) + snap_bias).floor() / glyph.scale;
-                                    let local_glyph_rect = LayoutRect::from_origin_and_size(
+                                    let local_glyph_rect = LayoutRect::new(
                                         (glyph.offset + raster_glyph_offset.to_vector()) / glyph_scale + text_offset,
                                         glyph.size.to_f32() / glyph_scale,
                                     );
@@ -1567,7 +1567,7 @@ impl BatchBuilder {
                         let surface = &ctx.surfaces[raster_config.surface_index.0];
 
                         let mut is_opaque = prim_info.clip_task_index == ClipTaskIndex::INVALID
-                            && surface.opaque_rect.contains_box(&surface.rect)
+                            && surface.opaque_rect.contains_rect(&surface.rect)
                             && transform_kind == TransformedRectKind::AxisAligned;
 
                         let pic_task_id = picture.primary_render_task_id.unwrap();
@@ -2532,7 +2532,7 @@ impl BatchBuilder {
                         gpu_blocks.push([-1.0, 0.0, 0.0, 0.0].into()); //stretch size
                         // negative first value makes the shader code ignore it and use the local size instead
                         for tile in chunk {
-                            let tile_rect = tile.local_rect.translate(-prim_rect.min.to_vector());
+                            let tile_rect = tile.local_rect.translate(-prim_rect.origin.to_vector());
                             gpu_blocks.push(tile_rect.into());
                             gpu_blocks.push(GpuBlockData::EMPTY);
                         }
@@ -3433,7 +3433,7 @@ impl ClipBatcher {
         let world_clip_rect = match project_rect(
             &transform.into_transform(),
             &local_clip_rect,
-            &world_rect,
+            &world_rect.to_rect(),
         ) {
             Some(rect) => rect,
             None => return false,
@@ -3470,14 +3470,14 @@ impl ClipBatcher {
                 // If the clip rect completely contains this tile rect, then drawing
                 // these pixels would be redundant - since this clip can't possibly
                 // affect the pixels in this tile, skip them!
-                if !world_device_rect.contains_box(&world_sub_rect) {
+                if !world_device_rect.to_box2d().contains_box(&world_sub_rect) {
                     clip_list.slow_rectangles.push(ClipMaskInstanceRect {
                         common: ClipMaskInstanceCommon {
                             sub_rect: normalized_sub_rect,
                             ..*common
                         },
-                        local_pos: local_clip_rect.min,
-                        clip_data: ClipData::uniform(local_clip_rect.size(), 0.0, ClipMode::Clip),
+                        local_pos: local_clip_rect.origin,
+                        clip_data: ClipData::uniform(local_clip_rect.size, 0.0, ClipMode::Clip),
                     });
                 }
             }
@@ -3571,7 +3571,7 @@ impl ClipBatcher {
                     let map_local_to_raster = SpaceMapper::new_with_target(
                         root_spatial_node_index,
                         clip_instance.spatial_node_index,
-                        WorldRect::max_rect(),
+                        WorldRect::max_rect().to_rect(),
                         spatial_tree,
                     );
 
@@ -3593,7 +3593,7 @@ impl ClipBatcher {
                         // rect back to local space, we also fall back to just using a scissor rectangle.
                         let raster_rect =
                             sub_rect.translate(actual_rect.min.to_vector()) / surface_device_pixel_scale;
-                        let (clip_transform_id, local_rect, scissor) = match map_local_to_raster.unmap(&raster_rect) {
+                        let (clip_transform_id, local_rect, scissor) = match map_local_to_raster.unmap(&raster_rect.to_rect()) {
                             Some(local_rect)
                                 if clip_transform_id.transform_kind() == TransformedRectKind::AxisAligned &&
                                    !map_local_to_raster.get_transform().has_perspective_component() => {
@@ -3640,7 +3640,8 @@ impl ClipBatcher {
                             let tile_sub_rect = if clip_is_axis_aligned {
                                 let tile_raster_rect = map_local_to_raster
                                     .map(&tile.tile_rect)
-                                    .expect("bug: should always map as axis-aligned");
+                                    .expect("bug: should always map as axis-aligned")
+                                    .to_box2d();
                                 let tile_device_rect = tile_raster_rect * surface_device_pixel_scale;
                                 tile_device_rect
                                     .translate(-actual_rect.min.to_vector())
@@ -3669,7 +3670,7 @@ impl ClipBatcher {
                     if is_first_clip &&
                         (!clip_is_axis_aligned ||
                          !(map_local_to_raster.map(&rect).expect("bug: should always map as axis-aligned")
-                            * surface_device_pixel_scale).contains_box(&actual_rect)) {
+                            * surface_device_pixel_scale).contains_rect(&actual_rect.to_rect())) {
                         clear_to_one = true;
                     }
                     true
@@ -3703,8 +3704,8 @@ impl ClipBatcher {
                         .slow_rectangles
                         .push(ClipMaskInstanceRect {
                             common,
-                            local_pos: rect.min,
-                            clip_data: ClipData::uniform(rect.size(), 0.0, ClipMode::ClipOut),
+                            local_pos: rect.origin,
+                            clip_data: ClipData::uniform(rect.size, 0.0, ClipMode::ClipOut),
                         });
 
                     true
@@ -3729,8 +3730,8 @@ impl ClipBatcher {
                                 .slow_rectangles
                                 .push(ClipMaskInstanceRect {
                                     common,
-                                    local_pos: rect.min,
-                                    clip_data: ClipData::uniform(rect.size(), 0.0, ClipMode::Clip),
+                                    local_pos: rect.origin,
+                                    clip_data: ClipData::uniform(rect.size, 0.0, ClipMode::Clip),
                                 });
                         }
 
@@ -3741,8 +3742,8 @@ impl ClipBatcher {
                     let batch_list = self.get_batch_list(is_first_clip);
                     let instance = ClipMaskInstanceRect {
                         common,
-                        local_pos: rect.min,
-                        clip_data: ClipData::rounded_rect(rect.size(), radius, mode),
+                        local_pos: rect.origin,
+                        clip_data: ClipData::rounded_rect(rect.size, radius, mode),
                     };
                     if clip_instance.flags.contains(ClipNodeFlags::USE_FAST_PATH) {
                         batch_list.fast_rectangles.push(instance);

@@ -519,7 +519,7 @@ impl RenderTaskKind {
                         surfaces,
                         |rg_builder| {
                             let clip_data = ClipData::rounded_rect(
-                                source.minimal_shadow_rect.size(),
+                                source.minimal_shadow_rect.size,
                                 &source.shadow_radius,
                                 ClipMode::Clip,
                             );
@@ -528,7 +528,7 @@ impl RenderTaskKind {
                             let mask_task_id = rg_builder.add().init(RenderTask::new_dynamic(
                                 cache_size,
                                 RenderTaskKind::new_rounded_rect_mask(
-                                    source.minimal_shadow_rect.min,
+                                    source.minimal_shadow_rect.origin,
                                     clip_data,
                                     device_pixel_scale,
                                     fb_config,
@@ -639,8 +639,8 @@ impl RenderTaskKind {
             data: [
                 target_rect.min.x as f32,
                 target_rect.min.y as f32,
-                target_rect.max.x as f32,
-                target_rect.max.y as f32,
+                target_rect.width() as f32,
+                target_rect.height() as f32,
                 data[0],
                 data[1],
                 data[2],
