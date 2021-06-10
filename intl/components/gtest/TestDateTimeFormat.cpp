@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/intl/DateTimeFormat.h"
+#include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/Span.h"
 #include "./TestBuffer.h"
 
@@ -104,6 +105,25 @@ TEST(IntlDateTimeFormat, Time_zone_IANA_identifier)
   TestBuffer<uint8_t> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
   ASSERT_EQ(buffer.get_string_view<char>(), "Sep 23, 2002, 12:07:30 PM");
+}
+
+TEST(IntlDateTimePatternGenerator, GetBestPattern)
+{
+  auto gen = DateTimePatternGenerator::TryCreate("en").unwrap();
+  TestBuffer<char16_t> buffer;
+
+  gen->GetBestPattern(MakeStringSpan(u"yMd"), buffer).unwrap();
+  ASSERT_EQ(buffer.get_string_view<char16_t>(), u"M/d/y");
+}
+
+TEST(IntlDateTimePatternGenerator, GetSkeleton)
+{
+  auto gen = DateTimePatternGenerator::TryCreate("en").unwrap();
+  TestBuffer<char16_t> buffer;
+
+  DateTimePatternGenerator::GetSkeleton(MakeStringSpan(u"M/d/y"), buffer)
+      .unwrap();
+  ASSERT_EQ(buffer.get_string_view<char16_t>(), u"yMd");
 }
 
 }  // namespace mozilla::intl

@@ -20,15 +20,21 @@
 #include "js/Utility.h"
 #include "vm/StringType.h"
 
-using UDateTimePatternGenerator = void*;
+namespace mozilla::intl {
+class DateTimePatternGenerator;
+}  // namespace mozilla::intl
 
 namespace js {
 
 namespace intl {
 
+/**
+ * This deleter class exists so that mozilla::intl::DateTimePatternGenerator
+ * can be a forward declaration, but still be used inside of a UniquePtr.
+ */
 class DateTimePatternGeneratorDeleter {
  public:
-  void operator()(UDateTimePatternGenerator* ptr);
+  void operator()(mozilla::intl::DateTimePatternGenerator* ptr);
 };
 
 /**
@@ -283,20 +289,22 @@ class SharedIntlData {
                         bool* isUpperFirst);
 
  private:
-  using UniqueUDateTimePatternGenerator =
-      mozilla::UniquePtr<UDateTimePatternGenerator,
+  using UniqueDateTimePatternGenerator =
+      mozilla::UniquePtr<mozilla::intl::DateTimePatternGenerator,
                          DateTimePatternGeneratorDeleter>;
 
-  UniqueUDateTimePatternGenerator dateTimePatternGenerator;
+  UniqueDateTimePatternGenerator dateTimePatternGenerator;
   JS::UniqueChars dateTimePatternGeneratorLocale;
 
  public:
   /**
-   * Wrapper around |udatpg_open| to return a possibly cached generator
-   * instance. The returned pointer must not be closed via |udatpg_close|.
+   * Get a non-owned cached instance of the DateTimePatternGenerator, which is
+   * expensive to instantiate.
+   *
+   * See: https://bugzilla.mozilla.org/show_bug.cgi?id=1549578
    */
-  UDateTimePatternGenerator* getDateTimePatternGenerator(JSContext* cx,
-                                                         const char* locale);
+  mozilla::intl::DateTimePatternGenerator* getDateTimePatternGenerator(
+      JSContext* cx, const char* locale);
 
  public:
   void destroyInstance();

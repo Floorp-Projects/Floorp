@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/intl/DateTimeFormat.h"
+#include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/Range.h"
 #include "mozilla/Span.h"
 
@@ -33,7 +34,6 @@
 #include "unicode/ucal.h"
 #include "unicode/udat.h"
 #include "unicode/udateintervalformat.h"
-#include "unicode/udatpg.h"
 #include "unicode/uenum.h"
 #include "unicode/ufieldpositer.h"
 #include "unicode/uloc.h"
@@ -667,26 +667,18 @@ bool js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp) {
   mozilla::Range<const char16_t> skelChars = skeleton.twoByteRange();
 
   SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
-  UDateTimePatternGenerator* gen =
+  mozilla::intl::DateTimePatternGenerator* gen =
       sharedIntlData.getDateTimePatternGenerator(cx, locale.get());
   if (!gen) {
     return false;
   }
 
-  Vector<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> pattern(cx);
-  MOZ_ALWAYS_TRUE(pattern.resize(intl::INITIAL_CHAR_BUFFER_SIZE));
-
-  int32_t patternSize = CallICU(
-      cx,
-      [gen, &skelChars](UChar* chars, uint32_t size, UErrorCode* status) {
-        return udatpg_getBestPattern(gen, skelChars.begin().get(),
-                                     skelChars.length(), chars, size, status);
-      },
-      pattern);
-  if (patternSize < 0) {
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> pattern(cx);
+  auto result = gen->GetBestPattern(skelChars, pattern);
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
-  pattern.shrinkTo(size_t(patternSize));
 
   // If the hourCycle option was set, adjust the resolved pattern to use the
   // requested hour cycle representation.
@@ -694,7 +686,7 @@ bool js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp) {
     ReplaceHourSymbol(pattern, hourCycle.value());
   }
 
-  JSString* str = NewStringCopyN<CanGC>(cx, pattern.begin(), pattern.length());
+  JSString* str = pattern.toString();
   if (!str) {
     return false;
   }
@@ -723,53 +715,38 @@ bool js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp) {
  * ```
  *
  * Returns the pattern "MMMM d, y 'at' h:mm:ss a z", but when going through
- * |udatpg_getSkeleton| and then |udatpg_getBestPattern| to find an equivalent
- * pattern for "h23", we'll end up with the pattern "MMMM d, y, HH:mm:ss z", so
- * the combinator element " 'at' " was lost in the process.
+ * |DateTimePatternGenerator::GetSkeleton| and then
+ * |DateTimePatternGenerator::GetBestPattern| to find an equivalent pattern for
+ * "h23", we'll end up with the pattern "MMMM d, y, HH:mm:ss z", so the
+ * combinator element " 'at' " was lost in the process.
  */
 template <size_t N>
 static bool FindPatternWithHourCycle(JSContext* cx, const char* locale,
-                                     Vector<char16_t, N>& pattern,
+                                     FormatBuffer<char16_t, N>& pattern,
                                      bool hour12) {
   SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
-  UDateTimePatternGenerator* gen =
+  mozilla::intl::DateTimePatternGenerator* gen =
       sharedIntlData.getDateTimePatternGenerator(cx, locale);
   if (!gen) {
     return false;
   }
 
-  Vector<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> skeleton(cx);
-  MOZ_ALWAYS_TRUE(skeleton.resize(intl::INITIAL_CHAR_BUFFER_SIZE));
-
-  int32_t skeletonSize = CallICU(
-      cx,
-      [&pattern](UChar* chars, uint32_t size, UErrorCode* status) {
-        return udatpg_getSkeleton(nullptr, pattern.begin(), pattern.length(),
-                                  chars, size, status);
-      },
-      skeleton);
-  if (skeletonSize < 0) {
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> skeleton(cx);
+  auto skelResult =
+      mozilla::intl::DateTimePatternGenerator::GetSkeleton(pattern, skeleton);
+  if (skelResult.isErr()) {
+    intl::ReportInternalError(cx, skelResult.unwrapErr());
     return false;
   }
-  skeleton.shrinkTo(size_t(skeletonSize));
 
   // Input skeletons don't differentiate between "K" and "h" resp. "k" and "H".
   ReplaceHourSymbol(skeleton, hour12 ? HourCycle::H12 : HourCycle::H23);
 
-  MOZ_ALWAYS_TRUE(pattern.resize(N));
-
-  int32_t patternSize = CallICU(
-      cx,
-      [gen, &skeleton](UChar* chars, uint32_t size, UErrorCode* status) {
-        return udatpg_getBestPattern(gen, skeleton.begin(), skeleton.length(),
-                                     chars, size, status);
-      },
-      pattern);
-  if (patternSize < 0) {
+  auto result = gen->GetBestPattern(skeleton, pattern);
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
-  pattern.shrinkTo(size_t(patternSize));
-
   return true;
 }
 
@@ -790,19 +767,19 @@ bool js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp) {
 
   auto toDateFormatStyle = [](JSLinearString* str) {
     if (StringEqualsLiteral(str, "full")) {
-      return UDAT_FULL;
+      return mozilla::intl::DateTimeStyle::Full;
     }
     if (StringEqualsLiteral(str, "long")) {
-      return UDAT_LONG;
+      return mozilla::intl::DateTimeStyle::Long;
     }
     if (StringEqualsLiteral(str, "medium")) {
-      return UDAT_MEDIUM;
+      return mozilla::intl::DateTimeStyle::Medium;
     }
     MOZ_ASSERT(StringEqualsLiteral(str, "short"));
-    return UDAT_SHORT;
+    return mozilla::intl::DateTimeStyle::Short;
   };
 
-  UDateFormatStyle dateStyle = UDAT_NONE;
+  auto dateStyle = mozilla::intl::DateTimeStyle::None;
   if (args[1].isString()) {
     JSLinearString* dateStyleStr = args[1].toString()->ensureLinear(cx);
     if (!dateStyleStr) {
@@ -812,7 +789,7 @@ bool js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp) {
     dateStyle = toDateFormatStyle(dateStyleStr);
   }
 
-  UDateFormatStyle timeStyle = UDAT_NONE;
+  auto timeStyle = mozilla::intl::DateTimeStyle::None;
   if (args[2].isString()) {
     JSLinearString* timeStyleStr = args[2].toString()->ensureLinear(cx);
     if (!timeStyleStr) {
@@ -844,34 +821,28 @@ bool js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp) {
 
   mozilla::Range<const char16_t> timeZoneChars = timeZone.twoByteRange();
 
-  UErrorCode status = U_ZERO_ERROR;
-  UDateFormat* df = udat_open(timeStyle, dateStyle, IcuLocale(locale.get()),
-                              timeZoneChars.begin().get(),
-                              timeZoneChars.length(), nullptr, -1, &status);
-  if (U_FAILURE(status)) {
+  auto dfResult = mozilla::intl::DateTimeFormat::TryCreateFromStyle(
+      mozilla::MakeStringSpan(IcuLocale(locale.get())), timeStyle, dateStyle,
+      mozilla::Some(timeZoneChars));
+  if (dfResult.isErr()) {
     intl::ReportInternalError(cx);
     return false;
   }
-  ScopedICUObject<UDateFormat, udat_close> toClose(df);
 
-  Vector<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> pattern(cx);
-  MOZ_ALWAYS_TRUE(pattern.resize(intl::INITIAL_CHAR_BUFFER_SIZE));
+  auto df = dfResult.unwrap();
 
-  int32_t patternSize = CallICU(
-      cx,
-      [df](UChar* chars, uint32_t size, UErrorCode* status) {
-        return udat_toPattern(df, false, chars, size, status);
-      },
-      pattern);
-  if (patternSize < 0) {
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> pattern(cx);
+  auto patternResult = df->GetPattern(pattern);
+  if (patternResult.isErr()) {
+    intl::ReportInternalError(cx, patternResult.unwrapErr());
     return false;
   }
-  pattern.shrinkTo(size_t(patternSize));
 
   // If a specific hour cycle was requested and this hour cycle doesn't match
   // the hour cycle used in the resolved pattern, find an equivalent pattern
   // with the correct hour cycle.
-  if (timeStyle != UDAT_NONE && (hour12 || hourCycle)) {
+  if (timeStyle != mozilla::intl::DateTimeStyle::None &&
+      (hour12 || hourCycle)) {
     if (auto hcPattern = HourCycleFromPattern<char16_t>(pattern)) {
       bool wantHour12 = hour12 ? hour12.value() : IsHour12(hourCycle.value());
       if (wantHour12 != IsHour12(hcPattern.value())) {
@@ -888,7 +859,7 @@ bool js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp) {
     ReplaceHourSymbol(pattern, hourCycle.value());
   }
 
-  JSString* str = NewStringCopyN<CanGC>(cx, pattern.begin(), pattern.length());
+  JSString* str = pattern.toString();
   if (!str) {
     return false;
   }
@@ -905,18 +876,21 @@ bool js::intl_skeletonForPattern(JSContext* cx, unsigned argc, Value* vp) {
   if (!pattern.initTwoByte(cx, args[0].toString())) {
     return false;
   }
-  mozilla::Range<const char16_t> patternChars = pattern.twoByteRange();
 
-  JSString* skeleton = CallICU(
-      cx, [&patternChars](char16_t* chars, int32_t size, UErrorCode* status) {
-        return udatpg_getSkeleton(nullptr, patternChars.begin().get(),
-                                  patternChars.length(), chars, size, status);
-      });
-  if (!skeleton) {
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> skeleton(cx);
+  auto result = mozilla::intl::DateTimePatternGenerator::GetSkeleton(
+      pattern.twoByteRange(), skeleton);
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
 
-  args.rval().setString(skeleton);
+  JSString* str = skeleton.toString();
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
   return true;
 }
 
