@@ -95,7 +95,7 @@ class NativeSurfaceWaylandEGL final : public NativeSurfaceWayland {
   ~NativeSurfaceWaylandEGL();
 
   GLContext* mGL = nullptr;
-  struct wl_egl_window* mEGLWindow = nullptr;
+  wl_egl_window* mEGLWindow = nullptr;
   EGLSurface mEGLSurface = nullptr;
 };
 

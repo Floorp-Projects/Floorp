@@ -15,7 +15,6 @@
 #include "mozilla/layers/SurfacePoolWayland.h"
 #include "mozilla/widget/MozContainerWayland.h"
 #include "mozilla/widget/WaylandShmBuffer.h"
-#include "nsISupportsImpl.h"
 #include "nsRegion.h"
 #include "nsTArray.h"
 
@@ -57,9 +56,6 @@ class NativeLayerRootWayland : public NativeLayerRoot {
   void PauseCompositor() override;
   bool ResumeCompositor() override;
 
-  void SetBackingScale(float aBackingScale);
-  float BackingScale();
-
   already_AddRefed<NativeLayer> CreateLayerForExternalTexture(
       bool aIsOpaque) override;
 
@@ -79,7 +75,6 @@ class NativeLayerRootWayland : public NativeLayerRoot {
 
   nsTArray<RefPtr<NativeLayerWayland>> mSublayers;
   nsTArray<RefPtr<NativeLayerWayland>> mSublayersOnMainThread;
-  float mBackingScale = 1.0f;
   MozContainer* mContainer = nullptr;
   RefPtr<widget::WaylandShmBuffer> mShmBuffer;
   bool mCompositorRunning = true;
@@ -117,8 +112,6 @@ class NativeLayerWayland : public NativeLayer {
 
   void AttachExternalImage(wr::RenderTextureHost* aExternalImage) override;
 
-  void SetBackingScale(float aBackingScale);
-
  protected:
   friend class NativeLayerRootWayland;
 
@@ -138,7 +131,6 @@ class NativeLayerWayland : public NativeLayer {
   IntSize mSize;
   Maybe<IntRect> mClipRect;
   SamplingFilter mSamplingFilter = SamplingFilter::POINT;
-  float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;
   const bool mIsOpaque = false;
   bool mIsShown = false;
