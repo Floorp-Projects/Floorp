@@ -303,6 +303,374 @@ public class Autocomplete {
     }
 
     /**
+     * Holds address information for a specific entry.
+     */
+    public static class Address {
+        private static final String GUID_KEY = "guid";
+        private static final String NAME_KEY = "name";
+        private static final String GIVEN_NAME_KEY = "givenName";
+        private static final String ADDITIONAL_NAME_KEY = "additionalName";
+        private static final String FAMILY_NAME_KEY = "familyName";
+        private static final String ORGANIZATION_KEY = "organization";
+        private static final String STREET_ADDRESS_KEY = "streetAddress";
+        private static final String ADDRESS_LEVEL1_KEY = "addressLevel1";
+        private static final String ADDRESS_LEVEL2_KEY = "addressLevel2";
+        private static final String ADDRESS_LEVEL3_KEY = "addressLevel3";
+        private static final String POSTAL_CODE_KEY = "postalCode";
+        private static final String COUNTRY_KEY = "country";
+        private static final String TEL_KEY = "tel";
+        private static final String EMAIL_KEY = "email";
+        private static final byte bundleCapacity = 14;
+
+
+        /**
+         * The unique identifier for this address entry.
+         */
+        public final @Nullable String guid;
+
+        /**
+         * The full name.
+         */
+        public final @NonNull String name;
+
+        /**
+         * The given (first) name.
+         */
+        public final @NonNull String givenName;
+
+        /**
+         * An additional name, if available.
+         */
+        public final @NonNull String additionalName;
+
+        /**
+         * The family name.
+         */
+        public final @NonNull String familyName;
+
+        /**
+         * The name of the company, if applicable.
+         */
+        public final @NonNull String organization;
+
+        /**
+         * The (multiline) street address.
+         */
+        public final @NonNull String streetAddress;
+
+        /**
+         * The level 1 (province) address.
+         * Note: Only use if streetAddress is not provided.
+         */
+        public final @NonNull String addressLevel1;
+
+        /**
+         * The level 2 (city/town) address.
+         * Note: Only use if streetAddress is not provided.
+         */
+        public final @NonNull String addressLevel2;
+
+        /**
+         * The level 3 (suburb/sublocality) address.
+         * Note: Only use if streetAddress is not provided.
+         */
+        public final @NonNull String addressLevel3;
+
+        /**
+         * The postal code.
+         */
+        public final @NonNull String postalCode;
+
+        /**
+         * The country string in ISO 3166.
+         */
+        public final @NonNull String country;
+
+        /**
+         * The telephone number string.
+         */
+        public final @NonNull String tel;
+
+        /**
+         * The email address.
+         */
+        public final @NonNull String email;
+
+        // For tests only.
+        @AnyThread
+        protected Address() {
+            guid = null;
+            name = "";
+            givenName = "";
+            additionalName = "";
+            familyName = "";
+            organization = "";
+            streetAddress = "";
+            addressLevel1 = "";
+            addressLevel2 = "";
+            addressLevel3 = "";
+            postalCode = "";
+            country = "";
+            tel = "";
+            email = "";
+        }
+
+        @AnyThread
+            /* package */ Address(final @NonNull GeckoBundle bundle) {
+            guid = bundle.getString(GUID_KEY);
+            name = bundle.getString(NAME_KEY);
+            givenName = bundle.getString(GIVEN_NAME_KEY);
+            additionalName = bundle.getString(ADDITIONAL_NAME_KEY);
+            familyName = bundle.getString(FAMILY_NAME_KEY);
+            organization = bundle.getString(ORGANIZATION_KEY);
+            streetAddress = bundle.getString(STREET_ADDRESS_KEY);
+            addressLevel1 = bundle.getString(ADDRESS_LEVEL1_KEY);
+            addressLevel2 = bundle.getString(ADDRESS_LEVEL2_KEY);
+            addressLevel3 = bundle.getString(ADDRESS_LEVEL3_KEY);
+            postalCode = bundle.getString(POSTAL_CODE_KEY);
+            country = bundle.getString(COUNTRY_KEY);
+            tel = bundle.getString(TEL_KEY);
+            email = bundle.getString(EMAIL_KEY);
+        }
+
+        @Override
+        @AnyThread
+        public String toString() {
+            final StringBuilder builder = new StringBuilder("Address {");
+            builder
+                    .append("guid=").append(guid)
+                    .append(", givenName=").append(givenName)
+                    .append(", additionalName=").append(additionalName)
+                    .append(", familyName=").append(familyName)
+                    .append(", organization=").append(organization)
+                    .append(", streetAddress=").append(streetAddress)
+                    .append(", addressLevel1=").append(addressLevel1)
+                    .append(", addressLevel2=").append(addressLevel2)
+                    .append(", addressLevel3=").append(addressLevel3)
+                    .append(", postalCode=").append(postalCode)
+                    .append(", country=").append(country)
+                    .append(", tel=").append(tel)
+                    .append(", email=").append(email)
+                    .append("}");
+            return builder.toString();
+        }
+
+        @AnyThread
+        /* package */ @NonNull GeckoBundle toBundle() {
+            final GeckoBundle bundle = new GeckoBundle(bundleCapacity);
+            bundle.putString(GUID_KEY, guid);
+            bundle.putString(NAME_KEY, name);
+            bundle.putString(GIVEN_NAME_KEY, givenName);
+            bundle.putString(ADDITIONAL_NAME_KEY, additionalName);
+            bundle.putString(FAMILY_NAME_KEY, familyName);
+            bundle.putString(ORGANIZATION_KEY, organization);
+            bundle.putString(STREET_ADDRESS_KEY, streetAddress);
+            bundle.putString(ADDRESS_LEVEL1_KEY, addressLevel1);
+            bundle.putString(ADDRESS_LEVEL2_KEY, addressLevel2);
+            bundle.putString(ADDRESS_LEVEL3_KEY, addressLevel3);
+            bundle.putString(POSTAL_CODE_KEY, postalCode);
+            bundle.putString(COUNTRY_KEY, country);
+            bundle.putString(TEL_KEY, tel);
+            bundle.putString(EMAIL_KEY, email);
+
+            return bundle;
+        }
+
+        public static class Builder {
+            private final GeckoBundle mBundle;
+
+            @AnyThread
+                /* package */ Builder(final @NonNull GeckoBundle bundle) {
+                mBundle = new GeckoBundle(bundle);
+            }
+
+            @AnyThread
+            @SuppressWarnings("checkstyle:javadocmethod")
+            public Builder() {
+                mBundle = new GeckoBundle(bundleCapacity);
+            }
+
+            /**
+             * Finalize the {@link Address} instance.
+             *
+             * @return The {@link Address} instance.
+             */
+            @AnyThread
+            public @NonNull Address build() {
+                return new Address(mBundle);
+            }
+
+            /**
+             * Set the unique identifier for this address entry.
+             *
+             * @param guid The unique identifier string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder guid(final @Nullable String guid) {
+                mBundle.putString(GUID_KEY, guid);
+                return this;
+            }
+
+            /**
+             * Set the full name for this address entry.
+             *
+             * @param name The full name string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder name(final @Nullable String name) {
+                mBundle.putString(NAME_KEY, name);
+                return this;
+            }
+
+            /**
+             * Set the given name for this address entry.
+             *
+             * @param givenName The given name string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder givenName(final @Nullable String givenName) {
+                mBundle.putString(GIVEN_NAME_KEY, givenName);
+                return this;
+            }
+
+            /**
+             * Set the additional name for this address entry.
+             *
+             * @param additionalName The additional name string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder additionalName(final @Nullable String additionalName) {
+                mBundle.putString(ADDITIONAL_NAME_KEY, additionalName);
+                return this;
+            }
+
+            /**
+             * Set the family name for this address entry.
+             *
+             * @param familyName The family name string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder familyName(final @Nullable String familyName) {
+                mBundle.putString(FAMILY_NAME_KEY, familyName);
+                return this;
+            }
+
+            /**
+             * Set the company name for this address entry.
+             *
+             * @param organization The company name string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder organization(final @Nullable String organization) {
+                mBundle.putString(ORGANIZATION_KEY, organization);
+                return this;
+            }
+
+            /**
+             * Set the street address for this address entry.
+             *
+             * @param streetAddress The street address string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder streetAddress(final @Nullable String streetAddress) {
+                mBundle.putString(STREET_ADDRESS_KEY, streetAddress);
+                return this;
+            }
+
+            /**
+             * Set the level 1 address for this address entry.
+             *
+             * @param addressLevel1 The level 1 address string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder addressLevel1(final @Nullable String addressLevel1) {
+                mBundle.putString(ADDRESS_LEVEL1_KEY, addressLevel1);
+                return this;
+            }
+
+            /**
+             * Set the level 2 address for this address entry.
+             *
+             * @param addressLevel2 The level 2 address string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder addressLevel2(final @Nullable String addressLevel2) {
+                mBundle.putString(ADDRESS_LEVEL2_KEY, addressLevel2);
+                return this;
+            }
+
+            /**
+             * Set the level 3 address for this address entry.
+             *
+             * @param addressLevel3 The level 3 address string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder addressLevel3(final @Nullable String addressLevel3) {
+                mBundle.putString(ADDRESS_LEVEL3_KEY, addressLevel3);
+                return this;
+            }
+
+            /**
+             * Set the postal code for this address entry.
+             *
+             * @param postalCode The postal code string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder postalCode(final @Nullable String postalCode) {
+                mBundle.putString(POSTAL_CODE_KEY, postalCode);
+                return this;
+            }
+
+            /**
+             * Set the country code for this address entry.
+             *
+             * @param country The country string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder country(final @Nullable String country) {
+                mBundle.putString(COUNTRY_KEY, country);
+                return this;
+            }
+
+            /**
+             * Set the telephone number for this address entry.
+             *
+             * @param tel The telephone number string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder tel(final @Nullable String tel) {
+                mBundle.putString(TEL_KEY, tel);
+                return this;
+            }
+
+            /**
+             * Set the email address for this address entry.
+             *
+             * @param email The email address string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder email(final @Nullable String email) {
+                mBundle.putString(EMAIL_KEY, email);
+                return this;
+            }
+        }
+    }
+
+    /**
      * Holds login information for a specific entry.
      */
     public static class LoginEntry {
@@ -556,6 +924,21 @@ public class Autocomplete {
         }
 
         /**
+         * Request address entries.
+         * While processing the web document, we have identified elements
+         * resembling address input fields suitable for autofill.
+         * We will attempt to match the provided address information to the
+         * identified input fields.
+         *
+         * @return A {@link GeckoResult} that completes with an array of
+         *         {@link Address} containing the existing addresses.
+         */
+        @UiThread
+        default @Nullable GeckoResult<Address[]> onAddressFetch() {
+            return null;
+        }
+
+        /**
          * Request saving or updating of the given login entry.
          * This is triggered by confirming a
          * {@link GeckoSession.PromptDelegate#onLoginSave onLoginSave} request.
@@ -565,6 +948,17 @@ public class Autocomplete {
          */
         @UiThread
         default void onLoginSave(@NonNull final LoginEntry login) {}
+
+        /**
+         * Request saving or updating of the given address entry.
+         * This is triggered by confirming a
+         * {@link GeckoSession.PromptDelegate#onAddressSave onAddressSave} request.
+         *
+         * @param address The {@link Address} as confirmed by the prompt
+         *              request.
+         */
+        @UiThread
+        default void onAddressSave(@NonNull Address address) {}
 
         /**
          * Notify that the given login was used to autofill login input fields.
@@ -754,6 +1148,40 @@ public class Autocomplete {
     }
 
     /**
+     * Holds information required to process address saving requests.
+     */
+    public static class AddressSaveOption extends SaveOption<Address> {
+        /**
+         * Construct a address save option.
+         *
+         * @param value The {@link Address} address entry to be saved.
+         * @param hint The {@link Hint} detailing the type of the option.
+         */
+        /* package */ AddressSaveOption(
+                final @NonNull Address value,
+                final @SaveOptionHint int hint) {
+            super(value, hint);
+        }
+
+        /**
+         * Construct an address save option.
+         *
+         * @param value The {@link Address} address entry to be saved.
+         */
+        public AddressSaveOption(final @NonNull Address value) {
+            this(value, Hint.NONE);
+        }
+
+        @Override
+        /* package */ @NonNull GeckoBundle toBundle() {
+            final GeckoBundle bundle = new GeckoBundle(2);
+            bundle.putBundle(VALUE_KEY, value.toBundle());
+            bundle.putInt(HINT_KEY, hint);
+            return bundle;
+        }
+    }
+
+    /**
      * Holds information required to process login selection requests.
      */
     public static class LoginSelectOption extends SelectOption<LoginEntry> {
@@ -857,13 +1285,79 @@ public class Autocomplete {
         }
     }
 
+    /**
+     * Holds information required to process address selection requests.
+     */
+    public static class AddressSelectOption extends SelectOption<Address> {
+        @Retention(RetentionPolicy.SOURCE)
+        @IntDef(flag = true,
+                value = { Hint.NONE, Hint.INSECURE_FORM })
+                /* package */ @interface AddressSelectHint {}
+
+        /**
+         * Hint types for credit card selection requests.
+         */
+        public static class Hint {
+            public static final int NONE = 0;
+
+            /**
+             * Insecure context.
+             * The form or transmission mechanics are considered insecure.
+             * This is the case when the form is served via http or submitted
+             * insecurely.
+             */
+            public static final int INSECURE_FORM = 1 << 1;
+        }
+
+        /**
+         * Construct a credit card select option.
+         *
+         * @param value The {@link LoginEntry} credit card entry selection option.
+         * @param hint The {@link Hint} detailing the type of the option.
+         */
+        /* package */ AddressSelectOption(
+                final @NonNull Address value,
+                final @AddressSelectHint int hint) {
+            super(value, hint);
+        }
+
+        /**
+         * Construct a address select option.
+         *
+         * @param value The {@link Address} address entry selection option.
+         */
+        public AddressSelectOption(final @NonNull Address value) {
+            this(value, Hint.NONE);
+        }
+
+        /* package */ static @NonNull AddressSelectOption fromBundle(
+                final @NonNull GeckoBundle bundle) {
+            final int hint = bundle.getInt("hint");
+            final Address value = new Address(bundle.getBundle("value"));
+
+            return new AddressSelectOption(value, hint);
+        }
+
+        @Override
+        /* package */ @NonNull GeckoBundle toBundle() {
+            final GeckoBundle bundle = new GeckoBundle(2);
+            bundle.putBundle(VALUE_KEY, value.toBundle());
+            bundle.putInt(HINT_KEY, hint);
+            return bundle;
+        }
+    }
+
     /* package */ final static class StorageProxy implements BundleEventListener {
         private static final String FETCH_LOGIN_EVENT =
             "GeckoView:Autocomplete:Fetch:Login";
         private static final String FETCH_CREDIT_CARD_EVENT =
             "GeckoView:Autocomplete:Fetch:CreditCard";
+        private static final String FETCH_ADDRESS_EVENT =
+                "GeckoView:Autocomplete:Fetch:Address";
         private static final String SAVE_LOGIN_EVENT =
             "GeckoView:Autocomplete:Save:Login";
+        private static final String SAVE_ADDRESS_EVENT =
+                "GeckoView:Autocomplete:Save:Address";
         private static final String USED_LOGIN_EVENT =
             "GeckoView:Autocomplete:Used:Login";
 
@@ -876,7 +1370,9 @@ public class Autocomplete {
                     this,
                     FETCH_LOGIN_EVENT,
                     FETCH_CREDIT_CARD_EVENT,
+                    FETCH_ADDRESS_EVENT,
                     SAVE_LOGIN_EVENT,
+                    SAVE_ADDRESS_EVENT,
                     USED_LOGIN_EVENT);
         }
 
@@ -885,7 +1381,9 @@ public class Autocomplete {
                     this,
                     FETCH_LOGIN_EVENT,
                     FETCH_CREDIT_CARD_EVENT,
+                    FETCH_ADDRESS_EVENT,
                     SAVE_LOGIN_EVENT,
+                    SAVE_ADDRESS_EVENT,
                     USED_LOGIN_EVENT);
         }
 
@@ -972,11 +1470,39 @@ public class Autocomplete {
 
                     return creditCardBundles;
                 }));
+            } else if (FETCH_ADDRESS_EVENT.equals(event)) {
+                final GeckoResult<Autocomplete.Address[]> result =
+                        mDelegate.onAddressFetch();
+
+                if (result == null) {
+                    callback.sendSuccess(new GeckoBundle[0]);
+                    return;
+                }
+
+                callback.resolveTo(result.map(addresses -> {
+                    if (addresses == null) {
+                        return new GeckoBundle[0];
+                    }
+
+                    // This is a one-liner with streams (API level 24).
+                    final GeckoBundle[] addressBundles =
+                            new GeckoBundle[addresses.length];
+                    for (int i = 0; i < addresses.length; ++i) {
+                        addressBundles[i] = addresses[i].toBundle();
+                    }
+
+                    return addressBundles;
+                }));
             } else if (SAVE_LOGIN_EVENT.equals(event)) {
                 final GeckoBundle loginBundle = message.getBundle("login");
                 final LoginEntry login = new LoginEntry(loginBundle);
 
                 mDelegate.onLoginSave(login);
+            } else if (SAVE_ADDRESS_EVENT.equals(event)) {
+                final GeckoBundle addressBundle = message.getBundle("address");
+                final Address address = new Address(addressBundle);
+
+                mDelegate.onAddressSave(address);
             } else if (USED_LOGIN_EVENT.equals(event)) {
                 final GeckoBundle loginBundle = message.getBundle("login");
                 final LoginEntry login = new LoginEntry(loginBundle);

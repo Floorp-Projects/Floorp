@@ -2819,6 +2819,31 @@ public class GeckoSession {
                 res = delegate.onLoginSave(session, request);
                 break;
             }
+            case "Autocomplete:Save:Address": {
+                final int hint = message.getInt("hint");
+                final GeckoBundle[] addressBundles =
+                        message.getBundleArray("addresses");
+
+                if (addressBundles == null) {
+                    break;
+                }
+
+                final Autocomplete.AddressSaveOption[] options =
+                        new Autocomplete.AddressSaveOption[addressBundles.length];
+
+                for (int i = 0; i < options.length; ++i) {
+                    options[i] = new Autocomplete.AddressSaveOption(
+                            new Autocomplete.Address(addressBundles[i]),
+                            hint);
+                }
+
+                final PromptDelegate.AutocompleteRequest
+                        <Autocomplete.AddressSaveOption> request =
+                        new PromptDelegate.AutocompleteRequest<>(options);
+
+                res = delegate.onAddressSave(session, request);
+                break;
+            }
             case "Autocomplete:Select:Login": {
                 final GeckoBundle[] optionBundles =
                     message.getBundleArray("options");
@@ -2863,6 +2888,29 @@ public class GeckoSession {
                     new PromptDelegate.AutocompleteRequest<>(options);
 
                 res = delegate.onCreditCardSelect(session, request);
+                break;
+            }
+            case "Autocomplete:Select:Address": {
+                final GeckoBundle[] optionBundles =
+                        message.getBundleArray("options");
+
+                if (optionBundles == null) {
+                    break;
+                }
+
+                final Autocomplete.AddressSelectOption[] options =
+                        new Autocomplete.AddressSelectOption[optionBundles.length];
+
+                for (int i = 0; i < options.length; ++i) {
+                    options[i] = Autocomplete.AddressSelectOption.fromBundle(
+                            optionBundles[i]);
+                }
+
+                final PromptDelegate.AutocompleteRequest
+                        <Autocomplete.AddressSelectOption> request =
+                        new PromptDelegate.AutocompleteRequest<>(options);
+
+                res = delegate.onAddressSelect(session, request);
                 break;
             }
             default: {
@@ -5161,6 +5209,34 @@ public class GeckoSession {
         }
 
         /**
+         * Handle a address save prompt request.
+         * This is triggered by the user entering new or modified address
+         * credentials into a address form.
+         *
+         * @param session The {@link GeckoSession} that triggered the request.
+         * @param request The {@link AutocompleteRequest} containing the request
+         *                details.
+         *
+         * @return A {@link GeckoResult} resolving to a {@link PromptResponse}.
+         *
+         *         Confirm the request with an {@link Autocomplete.Option}
+         *         to trigger a
+         *         {@link Autocomplete.StorageDelegate#onAddressSave} request
+         *         to save the given selection.
+         *         The confirmed selection may be an entry out of the request's
+         *         options, a modified option, or a freshly created address entry.
+         *
+         *         Dismiss the request to deny the saving request.
+         */
+        @UiThread
+        default @Nullable GeckoResult<PromptResponse> onAddressSave(
+                @NonNull final GeckoSession session,
+                @NonNull final AutocompleteRequest<Autocomplete.AddressSaveOption>
+                        request) {
+            return null;
+        }
+
+        /**
          * Handle a login selection prompt request.
          * This is triggered by the user focusing on a login username field.
          *
@@ -5214,6 +5290,34 @@ public class GeckoSession {
                     request) {
             return null;
         }
+
+        /**
+         * Handle a address selection prompt request.
+         * This is triggered by the user focusing on a address field.
+         *
+         * @param session The {@link GeckoSession} that triggered the request.
+         * @param request The {@link AutocompleteRequest} containing the request
+         *                details.
+         *
+         * @return A {@link GeckoResult} resolving to a {@link PromptResponse}
+         *
+         *         Confirm the request with an {@link Autocomplete.Option}
+         *         to let GeckoView fill out the address forms with the given
+         *         selection details.
+         *         The confirmed selection may be an entry out of the request's
+         *         options, a modified option, or a freshly created address entry.
+         *
+         *         Dismiss the request to deny autocompletion for the detected
+         *         form.
+         */
+        @UiThread
+        default @Nullable GeckoResult<PromptResponse> onAddressSelect(
+                @NonNull final GeckoSession session,
+                @NonNull final AutocompleteRequest<Autocomplete.AddressSelectOption>
+                        request) {
+            return null;
+        }
+
     }
 
     /**
