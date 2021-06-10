@@ -14,14 +14,20 @@ UNIFIED_SOURCES += [
     "ExtensionBrowser.cpp",
     "ExtensionEventListener.cpp",
     "ExtensionEventManager.cpp",
+    "ExtensionPort.cpp",
 ]
 
 EXPORTS.mozilla.extensions += [
     "ExtensionAPIBase.h",
     "ExtensionBrowser.h",
     "ExtensionEventManager.h",
+    "ExtensionPort.h",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
+
+LOCAL_INCLUDES += [
+    "/js/xpconnect/src",
+]
 
 FINAL_LIBRARY = "xul"
