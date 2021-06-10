@@ -223,6 +223,29 @@ add_task(async function interactionOnNewTabInPrivateWindow() {
   await SimpleTest.promiseFocus(window);
 });
 
+add_task(async function clickOnEdgeOfURLBar() {
+  gURLBar.blur();
+  Assert.ok(
+    !gURLBar.hasAttribute("suppress-focus-border"),
+    "URLBar does not have suppress-focus-border attribute"
+  );
+
+  const onHiddenFocusRemoved = BrowserTestUtils.waitForCondition(
+    () => !gURLBar._hideFocus
+  );
+
+  const container = document.getElementById("urlbar-input-container");
+  container.click();
+
+  await onHiddenFocusRemoved;
+  Assert.ok(
+    gURLBar.hasAttribute("suppress-focus-border"),
+    "suppress-focus-border is set from the beginning"
+  );
+
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
 async function testInteractionsOnAboutNewTab(win) {
   info("Test for clicking on URLBar while showing about:newtab");
   await testInteractionFeature(() => {
