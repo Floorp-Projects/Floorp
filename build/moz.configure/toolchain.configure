@@ -2693,3 +2693,78 @@ check_prog("NM", nm_names, paths=clang_search_path, when=target_is_linux)
 option("--enable-cpp-rtti", help="Enable C++ RTTI")
 
 add_old_configure_assignment("_MOZ_USE_RTTI", "1", when="--enable-cpp-rtti")
+
+
+option(
+    "--enable-path-remapping",
+    nargs="*",
+    choices=("c", "rust"),
+    help="Enable remapping source and object paths in compiled outputs.",
+)
+
+
+@depends("--enable-path-remapping")
+def path_remapping(value):
+    if len(value):
+        return value
+    if bool(value):
+        return ["c", "rust"]
+    return []
+
+
+@depends(
+    target,
+    check_build_environment,
+    sysroot_path,
+    macos_sdk,
+    windows_sdk_dir,
+    vc_path,
+    when="--enable-path-remapping",
+)
+def path_remappings(
+    target, build_env, sysroot_path, macos_sdk, windows_sdk_dir, vc_path
+):
+    win = target.kernel == "WINNT"
+
+    # The prefix maps are processed in the order they're specified on the
+    # command line.  Therefore, to accommodate object directories in the source
+    # directory, it's important that we map the topobjdir before the topsrcdir,
+    # 'cuz we might have /src/obj/=/o/ and /src/=/s/.  The various other
+    # directories might be subdirectories of topsrcdir as well, so they come
+    # earlier still.
+
+    path_remappings = []
+
+    # We will have only one sysroot or SDK, so all can have the same mnemonic: K
+    # for "kit" (since S is taken for "source").  See
+    # https://blog.llvm.org/2019/11/deterministic-builds-with-clang-and-lld.html
+    # for how to use the Windows `subst` command to map these in debuggers and
+    # IDEs.
+    if sysroot_path:
+        path_remappings.append((sysroot_path, "k:/" if win else "/sysroot/"))
+    if macos_sdk:
+        path_remappings.append((macos_sdk, "k:/" if win else "/sysroot/"))
+    if windows_sdk_dir:
+        path_remappings.append((windows_sdk_dir, "k:/" if win else "/windows_sdk/"))
+    if vc_path:
+        path_remappings.append((vc_path, "v:/" if win else "/vc/"))
+
+    path_remappings += [
+        (build_env.topobjdir, "o:/" if win else "/topobjdir/"),
+        (build_env.topsrcdir, "s:/" if win else "/topsrcdir/"),
+    ]
+
+    path_remappings = [
+        (normsep(old).rstrip("/") + "/", new) for old, new in path_remappings
+    ]
+
+    # It is tempting to sort these, but we want the order to be the same across
+    # machines so that we can share cache hits.  Therefore we reject bad
+    # configurations rather than trying to make the configuration good.
+    for i in range(len(path_remappings) - 1):
+        p = path_remappings[i][0]
+        for q, _ in path_remappings[i + 1 :]:
+            if q.startswith(p):
+                die(f"Cannot remap paths because {p} is an ancestor of {q}")
+
+    return path_remappings

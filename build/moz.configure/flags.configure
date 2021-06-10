@@ -61,3 +61,47 @@ def new_pass_manager_flags(enabled, compiler, host, target, pgo, enable_fuzzing,
 
 
 set_config("MOZ_NEW_PASS_MANAGER_FLAGS", new_pass_manager_flags)
+
+
+# Try to make builds more reproducible and allow sharing built artifacts across
+# source and object directories by using -ffile-prefix-map and friends.  To
+# "unwind" the prefix maps, use:
+#
+# (gdb) set substitute-path /topsrcdir/ $topsrcdir/
+#
+# (lldb) settings set target.source-map /topobjdir/ $topobjdir/
+#
+# See, for example, https://lldb.llvm.org/use/map.html.
+@depends(
+    path_remapping,
+    path_remappings,
+    c_compiler,
+)
+@imports(_from="os", _import="sep")
+def file_prefix_map_flags(path_remapping, path_remappings, compiler):
+    if "c" not in path_remapping:
+        return []
+
+    if (compiler.type == "gcc" and compiler.version < "8.1") or (
+        compiler.type in ("clang", "clang-cl") and compiler.version < "10.0.0"
+    ):
+        die(
+            f"Compiler of type {compiler.type} and version {compiler.version} "
+            "does not support --enable-path-remapping."
+        )
+
+    flags = []
+    for old, new in path_remappings:
+        # We would prefer to use just -ffile-prefix-map, but clang-cl doesn't
+        # seem to recognize it.
+        for flag in ("-fdebug-prefix-map", "-fmacro-prefix-map"):
+            flag = f"{flag}={old}={new}"
+            if compiler.type in ("gcc", "clang"):
+                flags.append(flag)
+            elif compiler.type == "clang-cl":
+                flags.extend(["-Xclang", flag])
+
+    return flags
+
+
+set_config("MOZ_FILE_PREFIX_MAP_FLAGS", file_prefix_map_flags)
