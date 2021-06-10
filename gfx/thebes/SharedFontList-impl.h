@@ -287,7 +287,12 @@ class FontList {
   // systems, and memory is more constrained, so use a smaller default block
   // size.
   static constexpr uint32_t SHM_BLOCK_SIZE = 64 * 1024;
+#elif XP_LINUX
+  // On Linux, font face descriptors are rather large (serialized FcPatterns),
+  // so use a larger block size for efficiency.
+  static constexpr uint32_t SHM_BLOCK_SIZE = 1024 * 1024;
 #else
+  // Default block size for Windows and macOS.
   static constexpr uint32_t SHM_BLOCK_SIZE = 256 * 1024;
 #endif
   static_assert(SHM_BLOCK_SIZE <= (1 << Pointer::kBlockShift),
