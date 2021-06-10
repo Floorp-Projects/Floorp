@@ -1500,7 +1500,6 @@ nsresult nsHostResolver::NativeLookup(nsHostRecord* aRec) {
   }
   mPendingCount++;
 
-  addrRec->StoreNative(true);
   addrRec->StoreNativeUsed(true);
   addrRec->mResolving++;
 
@@ -2225,6 +2224,10 @@ void nsHostResolver::ThreadFunc() {
 
     LOG1(("DNS lookup thread - Calling getaddrinfo for host [%s].\n",
           rec->host.get()));
+
+    // Only set Native to true when this record is about to be resolved
+    // natively.
+    rec->StoreNative(true);
 
     TimeStamp startTime = TimeStamp::Now();
     bool getTtl = rec->LoadGetTtl();
