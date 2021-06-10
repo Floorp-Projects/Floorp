@@ -105,7 +105,7 @@ interface FrameLoader {
   /**
    * Request a session history update in native sessionStoreListeners.
    */
-  void requestSHistoryUpdate(boolean aImmediately);
+  void requestSHistoryUpdate();
 
   /**
    * Creates a print preview document in this frame, or updates the existing

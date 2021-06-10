@@ -996,7 +996,7 @@ var SessionStoreInternal = {
             aSubject.isContent &&
             aSubject.embedderElement
           ) {
-            this.addSHistoryListener(aSubject.embedderElement, aSubject);
+            this.addSHistoryListener(aSubject.embedderElement, aSubject, true);
           }
         }
         break;
@@ -1019,27 +1019,55 @@ var SessionStoreInternal = {
 
   // Add a new SessionHistory listener to the provided browsing context and save
   // a reference to that listener in the _browserSHistoryListener map.
-  addSHistoryListener(aBrowser, aBrowsingContext) {
+  addSHistoryListener(aBrowser, aBrowsingContext, aCollectImmediately = false) {
     class SHistoryListener {
-      constructor(browser, browsingContext) {
-        this._browserId = browsingContext.browserId;
+      constructor() {
+        this._browserId = aBrowsingContext.browserId;
+        this._permanentKey = aBrowser.permanentKey;
         this._fromIndex = kNoIndex;
-        this._permanentKey = browser.permanentKey;
       }
       uninstall() {
         let bc = BrowsingContext.getCurrentTopByBrowserId(this._browserId);
-        if (bc?.sessionHistory) {
-          bc.sessionHistory.removeSHistoryListener(this);
-        }
+        bc?.sessionHistory?.removeSHistoryListener(this);
         SessionStoreInternal._browserSHistoryListener.delete(
           this._permanentKey
         );
       }
-      reset() {
+      collect(
+        browser,
+        browsingContext,
+        { immediate = true, collectFull = true, writeToCache = false }
+      ) {
+        if (!immediate) {
+          // Queue a tab state update on the |browser.sessionstore.interval|
+          // timer. We'll eventually call this again with |immediate=true|.
+          browser.frameLoader?.requestSHistoryUpdate();
+          return null;
+        }
+
+        // Don't bother doing anything if we haven't actually seen any history
+        // changes.
+        if (!collectFull && this._fromIndex === kNoIndex) {
+          return null;
+        }
+
+        let fromIndex = collectFull ? -1 : this._fromIndex;
         this._fromIndex = kNoIndex;
-      }
-      didCollect() {
-        return this._fromIndex !== kNoIndex;
+
+        let historychange = SessionHistory.collectFromParent(
+          browsingContext.currentURI?.spec,
+          true, // Bug 1704574
+          browsingContext.sessionHistory,
+          fromIndex
+        );
+
+        if (writeToCache) {
+          SessionStoreInternal.onTabStateUpdate(browser, {
+            data: { historychange },
+          });
+        }
+
+        return historychange;
       }
       collectFrom(index) {
         if (this._fromIndex <= index) {
@@ -1054,19 +1082,11 @@ var SessionStoreInternal = {
           return;
         }
 
-        let browser = BrowsingContext.getCurrentTopByBrowserId(this._browserId)
-          ?.embedderElement;
-
-        if (!browser) {
-          // The browser has gone away.
-          return;
+        let bc = BrowsingContext.getCurrentTopByBrowserId(this._browserId);
+        if (bc?.embedderElement) {
+          this._fromIndex = index;
+          this.collect(bc.embedderElement, bc, { immediate: false });
         }
-
-        if (!this.didCollect()) {
-          browser.frameLoader?.requestSHistoryUpdate(/* aImmediately */ false);
-        }
-
-        this._fromIndex = index;
       }
       OnHistoryNewEntry(newURI, oldIndex) {
         // We use oldIndex - 1 to collect the current entry as well. This makes
@@ -1098,22 +1118,28 @@ var SessionStoreInternal = {
     }
 
     let sessionHistory = aBrowsingContext.sessionHistory;
-    if (
-      aBrowser &&
-      aBrowser.permanentKey &&
-      !this._browserSHistoryListener.has(aBrowser.permanentKey) &&
-      sessionHistory
-    ) {
-      let listener = new SHistoryListener(aBrowser, aBrowsingContext);
-      sessionHistory.addSHistoryListener(listener);
-      this._browserSHistoryListener.set(aBrowser.permanentKey, listener);
 
-      // Immediately collect data if we start with a non-empty SHistory.
+    if (!aBrowser || !aBrowser.permanentKey || !sessionHistory) {
+      return null;
+    }
+
+    // XXX: Maybe investigate unregistering the previous listener?
+    if (this._browserSHistoryListener.has(aBrowser.permanentKey)) {
+      return null;
+    }
+
+    let listener = new SHistoryListener();
+    sessionHistory.addSHistoryListener(listener);
+    this._browserSHistoryListener.set(aBrowser.permanentKey, listener);
+
+    if (aCollectImmediately) {
       let uri = aBrowsingContext.currentURI?.spec;
       if (uri !== "about:blank" || sessionHistory.count !== 0) {
-        aBrowser.frameLoader?.requestSHistoryUpdate(/* aImmediately */ true);
+        listener.collect(aBrowser, aBrowsingContext, { writeToCache: true });
       }
     }
+
+    return listener;
   },
 
   /**
@@ -1319,34 +1345,17 @@ var SessionStoreInternal = {
       aBrowsingContext === aBrowsingContext.top &&
       aBrowsingContext.sessionHistory
     ) {
-      if (!this._browserSHistoryListener.has(aBrowser.permanentKey)) {
+      let listener =
+        this._browserSHistoryListener.get(aBrowser.permanentKey) ??
         this.addSHistoryListener(aBrowser, aBrowsingContext);
-      }
-      let listener = this._browserSHistoryListener.get(aBrowser.permanentKey);
-      if (!listener) {
-        throw new Error("failed to create SHistoryListener");
-      }
 
-      let needsFullCollect = !!aData.sHistoryNeeded;
-      if (needsFullCollect || listener.didCollect()) {
-        // If |needsFullCollect| we need to collect all session history entries,
-        // because with SHIP this indicates that we either saw 'DOMTitleChanged'
-        // in mozilla::dom::TabListener::HandleEvent or 'OnDocument{Start,End}'
-        // was called on mozilla::dom::ContentSessionStore, and both need a full
-        // collect.
-        let fromIndex = -1;
-        if (listener.didCollect() && !needsFullCollect) {
-          fromIndex = listener._fromIndex;
-        }
+      let historychange = listener.collect(aBrowser, aBrowsingContext, {
+        collectFull: !!aData.sHistoryNeeded,
+        writeToCache: false,
+      });
 
-        aData.data.historychange = SessionHistory.collectFromParent(
-          aBrowsingContext.currentURI?.spec,
-          true, // Bug 1704574
-          aBrowsingContext.sessionHistory,
-          fromIndex
-        );
-
-        listener.reset();
+      if (historychange) {
+        aData.data.historychange = historychange;
       }
     }
 

@@ -391,7 +391,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvUpdateEpoch(const uint32_t& aEpoch);
 
-  mozilla::ipc::IPCResult RecvUpdateSHistory(const bool& aImmediately);
+  mozilla::ipc::IPCResult RecvUpdateSHistory();
 
   mozilla::ipc::IPCResult RecvNativeSynthesisResponse(
       const uint64_t& aObserverId, const nsCString& aResponse);
