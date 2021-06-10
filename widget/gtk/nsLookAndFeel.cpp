@@ -52,8 +52,8 @@ using mozilla::LookAndFeel;
 #  include "mozilla/Logging.h"
 #  include "nsTArray.h"
 #  include "Units.h"
-extern mozilla::LazyLogModule gWidgetLog;
-#  define LOGLNF(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
+static mozilla::LazyLogModule gLnfLog("LookAndFeel");
+#  define LOGLNF(args) MOZ_LOG(gLnfLog, mozilla::LogLevel::Debug, args)
 #else
 #  define LOGLNF(args)
 #endif /* MOZ_LOGGING */
@@ -1194,6 +1194,8 @@ void nsLookAndFeel::EnsureInit() {
   if (mInitialized) {
     return;
   }
+
+  LOGLNF(("nsLookAndFeel::EnsureInit"));
 
   // Gtk manages a screen's CSS in the settings object so we
   // ask Gtk to create it explicitly. Otherwise we may end up
