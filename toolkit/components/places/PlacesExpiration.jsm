@@ -397,6 +397,28 @@ const EXPIRATION_QUERIES = {
       ACTION.IDLE_DAILY |
       ACTION.DEBUG,
   },
+
+  // Expire interactions older than N days.
+  QUERY_EXPIRE_INTERACTIONS: {
+    sql: `DELETE FROM moz_places_metadata
+          WHERE id IN (
+            SELECT id FROM moz_places_metadata
+            WHERE updated_at < strftime('%s','now','localtime','-' || :days_interactions || ' day','start of day','utc') * 1000
+            ORDER BY updated_at ASC
+            LIMIT :limit_interactions
+          )`,
+    get disabled() {
+      return !Services.prefs.getBoolPref(
+        "browser.places.interactions.enabled",
+        false
+      );
+    },
+    actions:
+      ACTION.SHUTDOWN_DIRTY |
+      ACTION.IDLE_DIRTY |
+      ACTION.IDLE_DAILY |
+      ACTION.DEBUG,
+  },
 };
 
 function nsPlacesExpiration() {
@@ -758,7 +780,7 @@ nsPlacesExpiration.prototype = {
           await db.executeTransaction(async () => {
             for (let queryType in EXPIRATION_QUERIES) {
               let query = EXPIRATION_QUERIES[queryType];
-              if (query.actions & aAction) {
+              if (query.actions & aAction && !query.disabled) {
                 let params = await this._getQueryParams(
                   queryType,
                   aLimit,
@@ -896,6 +918,15 @@ nsPlacesExpiration.prototype = {
       case "QUERY_EXPIRE_INPUTHISTORY":
         return {
           limit_inputhistory: baseLimit,
+        };
+      case "QUERY_EXPIRE_INTERACTIONS":
+        return {
+          days_interactions: Services.prefs.getIntPref(
+            "browser.places.interactions.expireDays",
+            60
+          ),
+          limit_interactions:
+            aLimit == LIMIT.DEBUG && baseLimit == -1 ? 0 : baseLimit,
         };
     }
     return undefined;
