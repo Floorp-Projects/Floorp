@@ -36,6 +36,8 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
   NS_DECL_THREADSAFE_ISUPPORTS
 
   using CleanupCallback = std::function<void()>;
+  using ListenerCallOptions = mozIExtensionListenerCallOptions;
+  using APIObjectType = ListenerCallOptions::APIObjectType;
 
   static already_AddRefed<ExtensionEventListener> Create(
       nsIGlobalObject* aGlobal, dom::Function* aCallback,
@@ -102,17 +104,26 @@ class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
   friend class ExtensionListenerCallPromiseResultHandler;
 
  public:
+  using ListenerCallOptions = mozIExtensionListenerCallOptions;
+  using APIObjectType = ListenerCallOptions::APIObjectType;
+
   ExtensionListenerCallWorkerRunnable(
       const RefPtr<ExtensionEventListener>& aExtensionEventListener,
       UniquePtr<dom::StructuredCloneHolder> aArgsHolder,
+      ListenerCallOptions* aCallOptions,
       RefPtr<dom::Promise> aPromiseRetval = nullptr)
       : WorkerRunnable(aExtensionEventListener->GetWorkerPrivate(),
                        WorkerThreadUnchangedBusyCount),
         mListener(aExtensionEventListener),
         mArgsHolder(std::move(aArgsHolder)),
+        mAPIObjectType(APIObjectType::NONE),
         mPromiseResult(std::move(aPromiseRetval)) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aExtensionEventListener);
+
+    if (aCallOptions) {
+      aCallOptions->GetApiObjectType(&mAPIObjectType);
+    }
   }
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
@@ -142,6 +153,8 @@ class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
   RefPtr<ExtensionEventListener> mListener;
   UniquePtr<dom::StructuredCloneHolder> mArgsHolder;
   RefPtr<dom::Promise> mPromiseResult;
+  // Call Options.
+  APIObjectType mAPIObjectType;
 };
 
 class ExtensionListenerCallPromiseResultHandler
