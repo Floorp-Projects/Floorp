@@ -10,11 +10,13 @@ with Files("**"):
 UNIFIED_SOURCES += [
     "ExtensionAPIBase.cpp",
     "ExtensionBrowser.cpp",
+    "ExtensionEventManager.cpp",
 ]
 
 EXPORTS.mozilla.extensions += [
     "ExtensionAPIBase.h",
     "ExtensionBrowser.h",
+    "ExtensionEventManager.h",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

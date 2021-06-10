@@ -1057,6 +1057,7 @@ WEBIDL_FILES += [
 # include them in other channels.
 WEBIDL_FILES += [
     "ExtensionBrowser.webidl",
+    "ExtensionEventManager.webidl",
 ]
 
 # We only expose our prefable test interfaces in debug builds, just to be on
