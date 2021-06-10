@@ -120,6 +120,7 @@ function processStsHeader(host, header, status, securityInfo) {
       let uri = Services.io.newURI("https://" + host.name);
       let secInfo = securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
       gSSService.processHeader(
+        Ci.nsISiteSecurityService.HEADER_HSTS,
         uri,
         header,
         secInfo,

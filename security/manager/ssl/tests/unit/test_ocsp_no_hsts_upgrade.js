@@ -51,6 +51,7 @@ function run_test() {
     "@mozilla.org/security/transportsecurityinfo;1"
   ].createInstance(Ci.nsITransportSecurityInfo);
   SSService.processHeader(
+    Ci.nsISiteSecurityService.HEADER_HSTS,
     uri,
     "max-age=10000",
     secInfo,
@@ -58,7 +59,7 @@ function run_test() {
     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
   );
   ok(
-    SSService.isSecureURI(uri, 0),
+    SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0),
     "Domain for the OCSP AIA URI should be considered a HSTS host, otherwise" +
       " we wouldn't be testing what we think we're testing"
   );

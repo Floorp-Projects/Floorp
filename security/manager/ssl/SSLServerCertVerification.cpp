@@ -117,7 +117,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsICertOverrideService.h"
-#include "nsIPublicKeyPinningService.h"
 #include "nsISiteSecurityService.h"
 #include "nsISocketProvider.h"
 #include "nsThreadPool.h"
@@ -429,24 +428,18 @@ static nsresult OverrideAllowedForHost(
     return rv;
   }
 
-  rv = sss->IsSecureURI(uri, aProviderFlags, aOriginAttributes, nullptr,
-                        nullptr, &strictTransportSecurityEnabled);
+  rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, uri,
+                        aProviderFlags, aOriginAttributes, nullptr, nullptr,
+                        &strictTransportSecurityEnabled);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("[0x%" PRIx64 "] checking for HSTS failed", aPtrForLog));
     return rv;
   }
 
-  nsCOMPtr<nsIPublicKeyPinningService> pkps =
-      do_GetService(NS_PKPSERVICE_CONTRACTID, &rv);
-  if (!pkps) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("[0x%" PRIx64
-             "] Couldn't get nsIPublicKeyPinningService to check pinning",
-             aPtrForLog));
-    return NS_ERROR_FAILURE;
-  }
-  rv = pkps->HostHasPins(uri, &isStaticallyPinned);
+  rv = sss->IsSecureURI(nsISiteSecurityService::STATIC_PINNING, uri,
+                        aProviderFlags, aOriginAttributes, nullptr, nullptr,
+                        &isStaticallyPinned);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("[0x%" PRIx64 "] checking for static pin failed", aPtrForLog));

@@ -2964,9 +2964,9 @@ nsresult NS_ShouldSecureUpgrade(
                resultCallback{std::move(aResultCallback)}]() mutable {
                 uint32_t hstsSource = 0;
                 bool isStsHost = false;
-                nsresult rv =
-                    service->IsSecureURI(uri, flags, originAttributes, nullptr,
-                                         &hstsSource, &isStsHost);
+                nsresult rv = service->IsSecureURI(
+                    nsISiteSecurityService::HEADER_HSTS, uri, flags,
+                    originAttributes, nullptr, &hstsSource, &isStsHost);
 
                 // Successfully get the result from |IsSecureURI| implies that
                 // the storage is ready to read.
@@ -2985,8 +2985,9 @@ nsresult NS_ShouldSecureUpgrade(
       return rv;
     }
 
-    nsresult rv = sss->IsSecureURI(aURI, flags, aOriginAttributes, nullptr,
-                                   &hstsSource, &isStsHost);
+    nsresult rv =
+        sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
+                         aOriginAttributes, nullptr, &hstsSource, &isStsHost);
 
     // if the SSS check fails, it's likely because this load is on a
     // malformed URI or something else in the setup is wrong, so any error
