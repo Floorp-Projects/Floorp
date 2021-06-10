@@ -15,7 +15,6 @@ object ReflectionUtils {
         modifiersField.isAccessible = true
         modifiersField.setInt(originField, originField.modifiers and Modifier.FINAL.inv())
 
-        originField.isAccessible = true
         originField.set(instance, value)
     }
 }
