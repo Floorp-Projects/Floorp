@@ -110,6 +110,7 @@ gc_pointer_types = [
     "ClassBodyScope*",
     "NamedLambdaObject*",
     "RegExpObject*",
+    "JSScript*",
 ]
 
 
@@ -263,6 +264,21 @@ def gen_mir_class(
     return code
 
 
+def gen_non_gc_pointer_type_assertions(seen_types):
+    """Generates a list of static assertions used to ensure that all argument
+    types seen are not derived from gc::Cell, ensuring that gc pointer arguments
+    are added to the gc_pointer_types list.
+    """
+    assertions = []
+
+    for seen_type in seen_types:
+        assertions.append(
+            "static_assert(!std::is_base_of_v<gc::Cell, " + seen_type.strip("*") + ">);"
+        )
+
+    return assertions
+
+
 def generate_mir_header(c_out, yaml_path):
     """Generate MIROpsGenerated.h from MIROps.yaml. The generated file
     has a list of MIR ops and boilerplate for MIR op definitions.
@@ -346,12 +362,27 @@ def generate_mir_header(c_out, yaml_path):
             )
             mir_op_classes.append(code)
 
+            # Unique and non gc pointer types seen for arguments to the MIR constructor.
+            seen_non_gc_pointer_argument_types = set()
+            if arguments:
+                for argument in arguments:
+                    arg_type = arguments[argument]
+                    if arg_type not in gc_pointer_types:
+                        seen_non_gc_pointer_argument_types.add(arg_type)
+
     contents = "#define MIR_OPCODE_LIST(_)\\\n"
     contents += "\\\n".join(ops_items)
     contents += "\n\n"
 
     contents += "#define MIR_OPCODE_CLASS_GENERATED \\\n"
     contents += "\\\n".join(mir_op_classes)
+    contents += "\n\n"
+
+    contents += "#define NON_GC_POINTER_TYPE_ASSERTIONS_GENERATED \\\n"
+    print(seen_non_gc_pointer_argument_types)
+    contents += "\\\n".join(
+        gen_non_gc_pointer_type_assertions(seen_non_gc_pointer_argument_types)
+    )
     contents += "\n\n"
 
     generate_header(c_out, "jit_MIROpsGenerated_h", contents)
