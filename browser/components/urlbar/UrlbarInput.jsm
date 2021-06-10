@@ -2867,6 +2867,9 @@ class UrlbarInput {
         this.focusedViaMousedown = !this.focused;
         this._preventClickSelectsAll = this.focused;
 
+        // Keep the focus status, since the attribute may be changed
+        // upon calling this.focus().
+        const hasFocus = this.hasAttribute("focused");
         if (event.target != this.inputField) {
           this.focus();
         }
@@ -2891,7 +2894,7 @@ class UrlbarInput {
           // user has Top Sites disabled, creating a flashing effect.
           this.view.autoOpen({
             event,
-            suppressFocusBorder: !this.hasAttribute("focused"),
+            suppressFocusBorder: !hasFocus,
           });
         }
         break;
