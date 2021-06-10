@@ -90,7 +90,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
       int32_t* aPositionInGroup) override;
 
   virtual mozilla::ipc::IPCResult RecvAttributes(
-      const uint64_t& aID, nsTArray<Attribute>* aAttributes) override;
+      const uint64_t& aID, RefPtr<AccAttributes>* aAttributes) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual mozilla::ipc::IPCResult RecvScrollTo(
       const uint64_t& aID, const uint32_t& aScrollType) override;
@@ -137,11 +137,11 @@ class DocAccessibleChild : public DocAccessibleChildBase {
 
   virtual mozilla::ipc::IPCResult RecvTextAttributes(
       const uint64_t& aID, const bool& aIncludeDefAttrs, const int32_t& aOffset,
-      nsTArray<Attribute>* aAttributes, int32_t* aStartOffset,
+      RefPtr<AccAttributes>* aAttributes, int32_t* aStartOffset,
       int32_t* aEndOffset) override;
 
   virtual mozilla::ipc::IPCResult RecvDefaultTextAttributes(
-      const uint64_t& aID, nsTArray<Attribute>* aAttributes) override;
+      const uint64_t& aID, RefPtr<AccAttributes>* aAttributes) override;
 
   virtual mozilla::ipc::IPCResult RecvTextBounds(const uint64_t& aID,
                                                  const int32_t& aStartOffset,

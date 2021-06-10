@@ -68,21 +68,6 @@ void ConvertTextAttributeToAtkAttribute(const nsACString& aName,
 }
 
 static AtkAttributeSet* ConvertToAtkTextAttributeSet(
-    nsTArray<Attribute>& aAttributes) {
-  AtkAttributeSet* objAttributeSet = nullptr;
-  for (size_t i = 0; i < aAttributes.Length(); ++i) {
-    AtkAttribute* objAttr = (AtkAttribute*)g_malloc(sizeof(AtkAttribute));
-    objAttr->name = g_strdup(aAttributes[i].Name().get());
-    objAttr->value =
-        g_strdup(NS_ConvertUTF16toUTF8(aAttributes[i].Value()).get());
-    objAttributeSet = g_slist_prepend(objAttributeSet, objAttr);
-    ConvertTextAttributeToAtkAttribute(
-        aAttributes[i].Name(), aAttributes[i].Value(), &objAttributeSet);
-  }
-  return objAttributeSet;
-}
-
-static AtkAttributeSet* ConvertToAtkTextAttributeSet(
     AccAttributes* aAttributes) {
   AtkAttributeSet* objAttributeSet = nullptr;
 
@@ -311,7 +296,7 @@ static AtkAttributeSet* getRunAttributesCB(AtkText* aText, gint aOffset,
     return nullptr;
   }
 
-  AutoTArray<Attribute, 10> attrs;
+  RefPtr<AccAttributes> attrs;
   proxy->TextAttributes(false, aOffset, &attrs, &startOffset, &endOffset);
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
@@ -335,7 +320,7 @@ static AtkAttributeSet* getDefaultAttributesCB(AtkText* aText) {
     return nullptr;
   }
 
-  AutoTArray<Attribute, 10> attrs;
+  RefPtr<AccAttributes> attrs;
   proxy->DefaultTextAttributes(&attrs);
   return ConvertToAtkTextAttributeSet(attrs);
 }

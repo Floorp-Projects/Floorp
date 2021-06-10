@@ -6,16 +6,22 @@
 
 include protocol PDocAccessible;
 
-include DocAccessibleTypes;
-
 include "mozilla/GfxMessageUtils.h";
 
 using mozilla::a11y::EWhichRange from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::EWhichPostFilter from "mozilla/a11y/IPCTypes.h";
+[RefCounted] using mozilla::a11y::AccAttributes from "mozilla/a11y/IPCTypes.h";
 using nsIntRect from "nsRect.h";
 
 namespace mozilla {
 namespace a11y {
+
+struct TextAttributesRun {
+  nsString Text;
+  uint64_t ContainerID;
+  AccAttributes TextAttributes;
+};
+
 
 nested(upto inside_sync) sync protocol PDocAccessiblePlatformExt {
   manager PDocAccessible;

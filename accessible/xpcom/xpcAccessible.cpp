@@ -369,18 +369,12 @@ xpcAccessible::GetAttributes(nsIPersistentProperties** aAttributes) {
 
   RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
 
-  RefPtr<AccAttributes> attributes = new AccAttributes();
+  RefPtr<AccAttributes> attributes;
   if (LocalAccessible* acc = Intl()) {
     attributes = acc->Attributes();
   } else {
     RemoteAccessible* proxy = IntlGeneric()->AsRemote();
-    AutoTArray<Attribute, 10> attrs;
-    proxy->Attributes(&attrs);
-    uint32_t attrCount = attrs.Length();
-    for (uint32_t i = 0; i < attrCount; i++) {
-      RefPtr<nsAtom> nameAttr = NS_Atomize(attrs[i].Name());
-      attributes->SetAttribute(nameAttr, attrs[i].Value());
-    }
+    proxy->Attributes(&attributes);
   }
 
   nsAutoString unused;

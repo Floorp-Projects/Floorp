@@ -48,8 +48,8 @@ void RemoteAccessible::Description(nsString& aDesc) const {
   Unused << mDoc->SendDescription(mID, &aDesc);
 }
 
-void RemoteAccessible::Attributes(nsTArray<Attribute>* aAttrs) const {
-  Unused << mDoc->SendAttributes(mID, aAttrs);
+void RemoteAccessible::Attributes(RefPtr<AccAttributes>* aAttributes) const {
+  Unused << mDoc->SendAttributes(mID, aAttributes);
 }
 
 nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
@@ -206,14 +206,14 @@ char16_t RemoteAccessible::CharAt(int32_t aOffset) {
 }
 
 void RemoteAccessible::TextAttributes(bool aIncludeDefAttrs, int32_t aOffset,
-                                      nsTArray<Attribute>* aAttributes,
+                                      RefPtr<AccAttributes>* aAttributes,
                                       int32_t* aStartOffset,
                                       int32_t* aEndOffset) {
   Unused << mDoc->SendTextAttributes(mID, aIncludeDefAttrs, aOffset,
                                      aAttributes, aStartOffset, aEndOffset);
 }
 
-void RemoteAccessible::DefaultTextAttributes(nsTArray<Attribute>* aAttrs) {
+void RemoteAccessible::DefaultTextAttributes(RefPtr<AccAttributes>* aAttrs) {
   Unused << mDoc->SendDefaultTextAttributes(mID, aAttrs);
 }
 

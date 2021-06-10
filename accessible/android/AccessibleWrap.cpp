@@ -564,18 +564,6 @@ void AccessibleWrap::GetRoleDescription(role aRole, AccAttributes* aAttributes,
   LocalizeString(NS_ConvertUTF16toUTF8(aGeckoRole).get(), aRoleDescription);
 }
 
-already_AddRefed<AccAttributes> AccessibleWrap::AttributeArrayToProperties(
-    const nsTArray<Attribute>& aAttributes) {
-  RefPtr<AccAttributes> props = new AccAttributes();
-
-  for (size_t i = 0; i < aAttributes.Length(); i++) {
-    props->SetAttribute(NS_ConvertUTF8toUTF16(aAttributes.ElementAt(i).Name()),
-                        aAttributes.ElementAt(i).Value());
-  }
-
-  return props.forget();
-}
-
 int32_t AccessibleWrap::GetAndroidClass(role aRole) {
 #define ROLE(geckoRole, stringRole, atkRole, macRole, macSubrole, msaaRole, \
              ia2Role, androidClass, nameRule)                               \

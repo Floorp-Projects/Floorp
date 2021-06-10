@@ -46,7 +46,7 @@ void Description(nsString& aDesc) const;
 /**
  * Get the set of attributes on the proxied accessible.
  */
-void Attributes(nsTArray<Attribute>* aAttrs) const;
+void Attributes(RefPtr<AccAttributes>* aAttributes) const;
 
 /**
  * Return set of targets of given relation type.
@@ -99,9 +99,9 @@ void GetTextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
 char16_t CharAt(int32_t aOffset);
 
 void TextAttributes(bool aIncludeDefAttrs, const int32_t aOffset,
-                    nsTArray<Attribute>* aAttributes, int32_t* aStartOffset,
+                    RefPtr<AccAttributes>* aAttributes, int32_t* aStartOffset,
                     int32_t* aEndOffset);
-void DefaultTextAttributes(nsTArray<Attribute>* aAttrs);
+void DefaultTextAttributes(RefPtr<AccAttributes>* aAttrs);
 
 nsIntRect TextBounds(
     int32_t aStartOffset, int32_t aEndOffset,

@@ -36,7 +36,7 @@ struct Color {
 };
 
 class AccAttributes {
-  friend struct IPC::ParamTraits<AccAttributes>;
+  friend struct IPC::ParamTraits<AccAttributes*>;
 
   using AttrValueType = Variant<nsString, bool, float, int32_t, RefPtr<nsAtom>,
                                 CSSCoord, FontSize, Color>;
