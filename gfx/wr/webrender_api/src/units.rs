@@ -52,10 +52,10 @@ pub type FramebufferIntRect = Box2D<i32, FramebufferPixel>;
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct PicturePixel;
 
-pub type PictureIntRect = Box2D<i32, PicturePixel>;
+pub type PictureIntRect = Rect<i32, PicturePixel>;
 pub type PictureIntPoint = Point2D<i32, PicturePixel>;
 pub type PictureIntSize = Size2D<i32, PicturePixel>;
-pub type PictureRect = Box2D<f32, PicturePixel>;
+pub type PictureRect = Rect<f32, PicturePixel>;
 pub type PicturePoint = Point2D<f32, PicturePixel>;
 pub type PictureSize = Size2D<f32, PicturePixel>;
 pub type PicturePoint3D = Point3D<f32, PicturePixel>;
@@ -69,10 +69,10 @@ pub type PictureBox2D = Box2D<f32, PicturePixel>;
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct RasterPixel;
 
-pub type RasterIntRect = Box2D<i32, RasterPixel>;
+pub type RasterIntRect = Rect<i32, RasterPixel>;
 pub type RasterIntPoint = Point2D<i32, RasterPixel>;
 pub type RasterIntSize = Size2D<i32, RasterPixel>;
-pub type RasterRect = Box2D<f32, RasterPixel>;
+pub type RasterRect = Rect<f32, RasterPixel>;
 pub type RasterPoint = Point2D<f32, RasterPixel>;
 pub type RasterSize = Size2D<f32, RasterPixel>;
 pub type RasterPoint3D = Point3D<f32, RasterPixel>;
@@ -83,7 +83,7 @@ pub type RasterVector3D = Vector3D<f32, RasterPixel>;
 #[derive(Hash, Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Ord, PartialOrd, Deserialize, Serialize, PeekPoke)]
 pub struct LayoutPixel;
 
-pub type LayoutRect = Box2D<f32, LayoutPixel>;
+pub type LayoutRect = Rect<f32, LayoutPixel>;
 pub type LayoutPoint = Point2D<f32, LayoutPixel>;
 pub type LayoutPoint3D = Point3D<f32, LayoutPixel>;
 pub type LayoutVector2D = Vector2D<f32, LayoutPixel>;
@@ -91,7 +91,7 @@ pub type LayoutVector3D = Vector3D<f32, LayoutPixel>;
 pub type LayoutSize = Size2D<f32, LayoutPixel>;
 pub type LayoutSideOffsets = SideOffsets2D<f32, LayoutPixel>;
 
-pub type LayoutIntRect = Box2D<i32, LayoutPixel>;
+pub type LayoutIntRect = Rect<i32, LayoutPixel>;
 pub type LayoutIntPoint = Point2D<i32, LayoutPixel>;
 pub type LayoutIntSize = Size2D<i32, LayoutPixel>;
 
@@ -111,7 +111,7 @@ pub type WorldVector3D = Vector3D<f32, WorldPixel>;
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Tiles;
 pub type TileOffset = Point2D<i32, Tiles>;
-pub type TileRange = Box2D<i32, Tiles>;
+pub type TileRange = Rect<i32, Tiles>;
 
 /// Scaling ratio from world pixels to device pixels.
 pub type DevicePixelScale = Scale<f32, WorldPixel, DevicePixel>;
@@ -139,7 +139,7 @@ pub type RasterPixelScale = Scale<f32, PicturePixel, RasterPixel>;
 
 // Fixed position coordinates, to avoid float precision errors.
 pub type LayoutPointAu = Point2D<Au, LayoutPixel>;
-pub type LayoutRectAu = Box2D<Au, LayoutPixel>;
+pub type LayoutRectAu = Rect<Au, LayoutPixel>;
 pub type LayoutSizeAu = Size2D<Au, LayoutPixel>;
 pub type LayoutVector2DAu = Vector2D<Au, LayoutPixel>;
 pub type LayoutSideOffsetsAu = SideOffsets2D<Au, LayoutPixel>;
@@ -248,17 +248,17 @@ impl AuHelpers<LayoutPointAu> for LayoutPoint {
 
 impl AuHelpers<LayoutRectAu> for LayoutRect {
     fn from_au(rect: LayoutRectAu) -> Self {
-        LayoutRect {
-            min: LayoutPoint::from_au(rect.min),
-            max: LayoutPoint::from_au(rect.max),
-        }
+        LayoutRect::new(
+            LayoutPoint::from_au(rect.origin),
+            LayoutSize::from_au(rect.size),
+        )
     }
 
     fn to_au(&self) -> LayoutRectAu {
-        LayoutRectAu {
-            min: self.min.to_au(),
-            max: self.max.to_au(),
-        }
+        LayoutRectAu::new(
+            self.origin.to_au(),
+            self.size.to_au(),
+        )
     }
 }
 

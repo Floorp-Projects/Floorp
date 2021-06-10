@@ -35,12 +35,18 @@ ClipMaskInstanceCommon fetch_clip_item_common() {
 
 struct ClipVertexInfo {
     vec4 local_pos;
-    RectWithEndpoint clipped_local_rect;
+    RectWithSize clipped_local_rect;
 };
+
+RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
+    vec4 p = clamp(vec4(a.p0, a.p0 + a.size), b.p0.xyxy, b.p0.xyxy + b.size.xyxy);
+    return RectWithSize(p.xy, max(vec2(0.0), p.zw - p.xy));
+}
+
 
 // The transformed vertex function that always covers the whole clip area,
 // which is the intersection of all clip instances of a given primitive
-ClipVertexInfo write_clip_tile_vertex(RectWithEndpoint local_clip_rect,
+ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
                                       Transform prim_transform,
                                       Transform clip_transform,
                                       RectWithEndpoint sub_rect,
@@ -71,7 +77,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithEndpoint local_clip_rect,
 
     gl_Position = uTransform * vertex_pos;
 
-    init_transform_vs(vec4(local_clip_rect.p0, local_clip_rect.p1));
+    init_transform_vs(vec4(local_clip_rect.p0, local_clip_rect.p0 + local_clip_rect.size));
 
     ClipVertexInfo vi = ClipVertexInfo(local_pos, local_clip_rect);
     return vi;
