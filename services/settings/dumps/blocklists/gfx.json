@@ -2,6 +2,35 @@
   "data": [
     {
       "os": "All",
+      "schema": 1623194747864,
+      "vendor": "0x8086",
+      "details": {
+        "bug": "1715382",
+        "name": "Block D2D to avoid bug 1712047"
+      },
+      "devices": [
+        "0x0046",
+        "0x0042"
+      ],
+      "enabled": true,
+      "feature": "DIRECT2D",
+      "hardware": "gen5",
+      "driverVendor": "",
+      "versionRange": {
+        "maxVersion": "89.0",
+        "minVersion": "89.0"
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_DEVICE",
+      "windowProtocol": "",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "53585ac9-ab16-4201-a075-64730df7c752",
+      "last_modified": 1623195938349
+    },
+    {
+      "os": "All",
       "schema": 1605987696433,
       "vendor": "0x8086",
       "details": {
