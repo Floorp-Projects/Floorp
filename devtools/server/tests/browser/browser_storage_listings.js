@@ -92,7 +92,7 @@ const storeMap = {
       },
     ],
   },
-  localStorage: {
+  "local-storage": {
     "http://test1.example.org": [
       {
         name: "ls1",
@@ -116,7 +116,7 @@ const storeMap = {
       },
     ],
   },
-  sessionStorage: {
+  "session-storage": {
     "http://test1.example.org": [
       {
         name: "ss1",
@@ -333,174 +333,223 @@ const IDBValues = {
   },
 };
 
-async function testStores(data) {
-  ok(data.cookies, "Cookies storage actor is present");
-  ok(data.localStorage, "Local Storage storage actor is present");
-  ok(data.sessionStorage, "Session Storage storage actor is present");
-  ok(data.indexedDB, "Indexed DB storage actor is present");
+async function testStores(commands) {
+  const { resourceCommand } = commands;
+  const { TYPES } = resourceCommand;
+  /**
+   * Data is a dictionary whose keys are storage types (their resourceType)
+   * while values are objects with following attributes:
+   * - hosts: dictionary of storage values (values are specific to each storage type)
+   *          keyed by host names.
+   * - dataByHost: dictionary of storage objects keyed by host names.
+   *               storages objects are returned by StorageActor.getStoreObjects.
+   *               For IndexedDB it is different, instead it is still a dictionary
+   *               keyed by host names, but each value is yet another sub dictionary with
+   *               a special "main" attribute, with global store objects.
+   *               Then, there will be one key per idb database, with their store objects
+   *               as value.
+   */
+  const data = {};
+  await resourceCommand.watchResources(
+    [
+      TYPES.COOKIE,
+      TYPES.LOCAL_STORAGE,
+      TYPES.SESSION_STORAGE,
+      TYPES.INDEXED_DB,
+    ],
+    {
+      async onAvailable(resources) {
+        for (const resource of resources) {
+          const { resourceType } = resource;
+          if (!data[resourceType]) {
+            data[resourceType] = { hosts: {}, dataByHost: {} };
+          }
+
+          for (const host in resource.hosts) {
+            if (!data[resourceType].hosts[host]) {
+              data[resourceType].hosts[host] = [];
+            }
+            // For indexed DB, we have some values, the database names. Other are empty arrays.
+            const hostValues = resource.hosts[host];
+            data[resourceType].hosts[host].push(...hostValues);
+
+            // For INDEXED_DB, it is slightly more complex, as we may have 3 store per host,
+            if (resourceType == TYPES.INDEXED_DB) {
+              if (!data[resourceType].dataByHost[host]) {
+                data[resourceType].dataByHost[host] = {};
+              }
+              data[resourceType].dataByHost[
+                host
+              ].main = await resource.getStoreObjects(host);
+              for (const name of resource.hosts[host]) {
+                const objName = JSON.parse(name).slice(0, 1);
+                data[resourceType].dataByHost[host][
+                  objName
+                ] = await resource.getStoreObjects(host, [
+                  JSON.stringify(objName),
+                ]);
+                data[resourceType].dataByHost[host][
+                  name
+                ] = await resource.getStoreObjects(host, [name]);
+              }
+            } else {
+              data[resourceType].dataByHost[
+                host
+              ] = await resource.getStoreObjects(host);
+            }
+          }
+        }
+      },
+    }
+  );
+
   await testCookies(data.cookies);
-  await testLocalStorage(data.localStorage);
-  await testSessionStorage(data.sessionStorage);
-  await testIndexedDB(data.indexedDB);
+  await testLocalStorage(data["local-storage"]);
+  await testSessionStorage(data["session-storage"]);
+  await testIndexedDB(data["indexed-db"]);
 }
 
-function testCookies(cookiesActor) {
+function testCookies({ hosts, dataByHost }) {
   is(
-    Object.keys(cookiesActor.hosts).length,
+    Object.keys(hosts).length,
     3,
     "Correct number of host entries for cookies"
   );
-  return testCookiesObjects(0, cookiesActor.hosts, cookiesActor);
+  return testCookiesObjects(0, hosts, dataByHost);
 }
 
-var testCookiesObjects = async function(index, hosts, cookiesActor) {
+async function testCookiesObjects(index, hosts, dataByHost) {
   const host = Object.keys(hosts)[index];
-  const matchItems = data => {
-    let cookiesLength = 0;
-    for (const secureCookie of storeMap.cookies[host]) {
-      if (secureCookie.isSecure) {
-        ++cookiesLength;
-      }
-    }
-    // Any secure cookies did not get stored in the database.
-    is(
-      data.total,
-      storeMap.cookies[host].length - cookiesLength,
-      "Number of cookies in host " + host + " matches"
-    );
-    for (const item of data.data) {
-      let found = false;
-      for (const toMatch of storeMap.cookies[host]) {
-        if (item.name == toMatch.name) {
-          found = true;
-          ok(true, "Found cookie " + item.name + " in response");
-          is(item.value.str, toMatch.value, "The value matches.");
-          is(item.expires, toMatch.expires, "The expiry time matches.");
-          is(item.path, toMatch.path, "The path matches.");
-          is(item.host, toMatch.host, "The host matches.");
-          is(item.isSecure, toMatch.isSecure, "The isSecure value matches.");
-          is(item.hostOnly, toMatch.hostOnly, "The hostOnly value matches.");
-          break;
-        }
-      }
-      ok(found, "cookie " + item.name + " should exist in response");
-    }
-  };
-
   ok(!!storeMap.cookies[host], "Host is present in the list : " + host);
-  matchItems(await cookiesActor.getStoreObjects(host));
+  const data = dataByHost[host];
+  let cookiesLength = 0;
+  for (const secureCookie of storeMap.cookies[host]) {
+    if (secureCookie.isSecure) {
+      ++cookiesLength;
+    }
+  }
+  // Any secure cookies did not get stored in the database.
+  is(
+    data.total,
+    storeMap.cookies[host].length - cookiesLength,
+    "Number of cookies in host " + host + " matches"
+  );
+  for (const item of data.data) {
+    let found = false;
+    for (const toMatch of storeMap.cookies[host]) {
+      if (item.name == toMatch.name) {
+        found = true;
+        ok(true, "Found cookie " + item.name + " in response");
+        is(item.value.str, toMatch.value, "The value matches.");
+        is(item.expires, toMatch.expires, "The expiry time matches.");
+        is(item.path, toMatch.path, "The path matches.");
+        is(item.host, toMatch.host, "The host matches.");
+        is(item.isSecure, toMatch.isSecure, "The isSecure value matches.");
+        is(item.hostOnly, toMatch.hostOnly, "The hostOnly value matches.");
+        break;
+      }
+    }
+    ok(found, "cookie " + item.name + " should exist in response");
+  }
+
   if (index == Object.keys(hosts).length - 1) {
     return;
   }
-  await testCookiesObjects(++index, hosts, cookiesActor);
-};
+  await testCookiesObjects(++index, hosts, dataByHost);
+}
 
-function testLocalStorage(localStorageActor) {
+function testLocalStorage({ hosts, dataByHost }) {
   is(
-    Object.keys(localStorageActor.hosts).length,
+    Object.keys(hosts).length,
     3,
     "Correct number of host entries for local storage"
   );
-  return testLocalStorageObjects(0, localStorageActor.hosts, localStorageActor);
+  return testLocalStorageObjects(0, hosts, dataByHost);
 }
 
-var testLocalStorageObjects = async function(index, hosts, localStorageActor) {
+var testLocalStorageObjects = async function(index, hosts, dataByHost) {
   const host = Object.keys(hosts)[index];
-  const matchItems = data => {
-    is(
-      data.total,
-      storeMap.localStorage[host].length,
-      "Number of local storage items in host " + host + " matches"
-    );
-    for (const item of data.data) {
-      let found = false;
-      for (const toMatch of storeMap.localStorage[host]) {
-        if (item.name == toMatch.name) {
-          found = true;
-          ok(true, "Found local storage item " + item.name + " in response");
-          is(item.value.str, toMatch.value, "The value matches.");
-          break;
-        }
+  ok(
+    !!storeMap["local-storage"][host],
+    "Host is present in the list : " + host
+  );
+  const data = dataByHost[host];
+  is(
+    data.total,
+    storeMap["local-storage"][host].length,
+    "Number of local storage items in host " + host + " matches"
+  );
+  for (const item of data.data) {
+    let found = false;
+    for (const toMatch of storeMap["local-storage"][host]) {
+      if (item.name == toMatch.name) {
+        found = true;
+        ok(true, "Found local storage item " + item.name + " in response");
+        is(item.value.str, toMatch.value, "The value matches.");
+        break;
       }
-      ok(
-        found,
-        "local storage item " + item.name + " should exist in response"
-      );
     }
-  };
+    ok(found, "local storage item " + item.name + " should exist in response");
+  }
 
-  ok(!!storeMap.localStorage[host], "Host is present in the list : " + host);
-  matchItems(await localStorageActor.getStoreObjects(host));
   if (index == Object.keys(hosts).length - 1) {
     return;
   }
-  await testLocalStorageObjects(++index, hosts, localStorageActor);
+  await testLocalStorageObjects(++index, hosts, dataByHost);
 };
 
-function testSessionStorage(sessionStorageActor) {
+function testSessionStorage({ hosts, dataByHost }) {
   is(
-    Object.keys(sessionStorageActor.hosts).length,
+    Object.keys(hosts).length,
     3,
     "Correct number of host entries for session storage"
   );
-  return testSessionStorageObjects(
-    0,
-    sessionStorageActor.hosts,
-    sessionStorageActor
-  );
+  return testSessionStorageObjects(0, hosts, dataByHost);
 }
 
-var testSessionStorageObjects = async function(
-  index,
-  hosts,
-  sessionStorageActor
-) {
+async function testSessionStorageObjects(index, hosts, dataByHost) {
   const host = Object.keys(hosts)[index];
-  const matchItems = data => {
-    is(
-      data.total,
-      storeMap.sessionStorage[host].length,
-      "Number of session storage items in host " + host + " matches"
-    );
-    for (const item of data.data) {
-      let found = false;
-      for (const toMatch of storeMap.sessionStorage[host]) {
-        if (item.name == toMatch.name) {
-          found = true;
-          ok(true, "Found session storage item " + item.name + " in response");
-          is(item.value.str, toMatch.value, "The value matches.");
-          break;
-        }
+  ok(
+    !!storeMap["session-storage"][host],
+    "Host is present in the list : " + host
+  );
+  const data = dataByHost[host];
+  is(
+    data.total,
+    storeMap["session-storage"][host].length,
+    "Number of session storage items in host " + host + " matches"
+  );
+  for (const item of data.data) {
+    let found = false;
+    for (const toMatch of storeMap["session-storage"][host]) {
+      if (item.name == toMatch.name) {
+        found = true;
+        ok(true, "Found session storage item " + item.name + " in response");
+        is(item.value.str, toMatch.value, "The value matches.");
+        break;
       }
-      ok(
-        found,
-        "session storage item " + item.name + " should exist in response"
-      );
     }
-  };
+    ok(
+      found,
+      "session storage item " + item.name + " should exist in response"
+    );
+  }
 
-  ok(!!storeMap.sessionStorage[host], "Host is present in the list : " + host);
-  matchItems(await sessionStorageActor.getStoreObjects(host));
   if (index == Object.keys(hosts).length - 1) {
     return;
   }
-  await testSessionStorageObjects(++index, hosts, sessionStorageActor);
-};
+  await testSessionStorageObjects(++index, hosts, dataByHost);
+}
 
-var testIndexedDB = async function(indexedDBActor) {
-  // If this test is run with chrome debugging enabled we get an extra
-  // key for "chrome". We don't want the test to fail in this case, so
-  // ignore it.
-  delete indexedDBActor.hosts.chrome;
-
+async function testIndexedDB({ hosts, dataByHost }) {
   is(
-    Object.keys(indexedDBActor.hosts).length,
+    Object.keys(hosts).length,
     3,
     "Correct number of host entries for indexed db"
   );
 
-  for (const host in indexedDBActor.hosts) {
-    for (const item of indexedDBActor.hosts[host]) {
+  for (const host in hosts) {
+    for (const item of hosts[host]) {
       const parsedItem = JSON.parse(item);
       let found = false;
       for (const toMatch of IDBValues.listStoresResponse[host]) {
@@ -513,48 +562,46 @@ var testIndexedDB = async function(indexedDBActor) {
     }
   }
 
-  await testIndexedDBs(0, indexedDBActor.hosts, indexedDBActor);
-  await testObjectStores(0, indexedDBActor.hosts, indexedDBActor);
-  await testIDBEntries(0, indexedDBActor.hosts, indexedDBActor);
-};
+  await testIndexedDBs(0, hosts, dataByHost);
+  await testObjectStores(0, hosts, dataByHost);
+  await testIDBEntries(0, hosts, dataByHost);
+}
 
-var testIndexedDBs = async function(index, hosts, indexedDBActor) {
+async function testIndexedDBs(index, hosts, dataByHost) {
   const host = Object.keys(hosts)[index];
-  const matchItems = data => {
-    is(
-      data.total,
-      IDBValues.dbDetails[host].length,
-      "Number of indexed db in host " + host + " matches"
-    );
-    for (const item of data.data) {
-      let found = false;
-      for (const toMatch of IDBValues.dbDetails[host]) {
-        if (item.uniqueKey == toMatch.db) {
-          found = true;
-          ok(true, "Found indexed db " + item.uniqueKey + " in response");
-          is(item.origin, toMatch.origin, "The origin matches.");
-          is(item.version, toMatch.version, "The version matches.");
-          is(
-            item.objectStores,
-            toMatch.objectStores,
-            "The number of object stores matches."
-          );
-          break;
-        }
+  const data = dataByHost[host].main;
+  is(
+    data.total,
+    IDBValues.dbDetails[host].length,
+    "Number of indexed db in host " + host + " matches"
+  );
+  for (const item of data.data) {
+    let found = false;
+    for (const toMatch of IDBValues.dbDetails[host]) {
+      if (item.uniqueKey == toMatch.db) {
+        found = true;
+        ok(true, "Found indexed db " + item.uniqueKey + " in response");
+        is(item.origin, toMatch.origin, "The origin matches.");
+        is(item.version, toMatch.version, "The version matches.");
+        is(
+          item.objectStores,
+          toMatch.objectStores,
+          "The number of object stores matches."
+        );
+        break;
       }
-      ok(found, "indexed db " + item.uniqueKey + " should exist in response");
     }
-  };
+    ok(found, "indexed db " + item.uniqueKey + " should exist in response");
+  }
 
   ok(!!IDBValues.dbDetails[host], "Host is present in the list : " + host);
-  matchItems(await indexedDBActor.getStoreObjects(host));
   if (index == Object.keys(hosts).length - 1) {
     return;
   }
-  await testIndexedDBs(++index, hosts, indexedDBActor);
-};
+  await testIndexedDBs(++index, hosts, dataByHost);
+}
 
-var testObjectStores = async function(ix, hosts, indexedDBActor) {
+async function testObjectStores(ix, hosts, dataByHost) {
   const host = Object.keys(hosts)[ix];
   const matchItems = (data, db) => {
     is(
@@ -574,7 +621,11 @@ var testObjectStores = async function(ix, hosts, indexedDBActor) {
             toMatch.autoIncrement,
             "The autoIncrement matches."
           );
-          item.indexes = JSON.parse(item.indexes);
+          // We might already have parsed the JSON value, in which case this will no longer be a string
+          item.indexes =
+            typeof item.indexes == "string"
+              ? JSON.parse(item.indexes)
+              : item.indexes;
           is(
             item.indexes.length,
             toMatch.indexes.length,
@@ -615,18 +666,15 @@ var testObjectStores = async function(ix, hosts, indexedDBActor) {
   );
   for (const name of hosts[host]) {
     const objName = JSON.parse(name).slice(0, 1);
-    matchItems(
-      await indexedDBActor.getStoreObjects(host, [JSON.stringify(objName)]),
-      objName[0]
-    );
+    matchItems(dataByHost[host][objName], objName[0]);
   }
   if (ix == Object.keys(hosts).length - 1) {
     return;
   }
-  await testObjectStores(++ix, hosts, indexedDBActor);
-};
+  await testObjectStores(++ix, hosts, dataByHost);
+}
 
-var testIDBEntries = async function(index, hosts, indexedDBActor) {
+async function testIDBEntries(index, hosts, dataByHost) {
   const host = Object.keys(hosts)[index];
   const matchItems = (data, obj) => {
     is(
@@ -663,46 +711,49 @@ var testIDBEntries = async function(index, hosts, indexedDBActor) {
   ok(!!IDBValues.entries[host], "Host is present in the list : " + host);
   for (const name of hosts[host]) {
     const parsed = JSON.parse(name);
-    matchItems(
-      await indexedDBActor.getStoreObjects(host, [name]),
-      parsed[0] + "#" + parsed[1]
-    );
+    matchItems(dataByHost[host][name], parsed[0] + "#" + parsed[1]);
   }
   if (index == Object.keys(hosts).length - 1) {
     return;
   }
-  await testObjectStores(++index, hosts, indexedDBActor);
-};
+  await testObjectStores(++index, hosts, dataByHost);
+}
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.documentCookies.maxage", 0]],
   });
 
-  const { target, front } = await openTabAndSetupStorage(
+  const { commands, front } = await openTabAndSetupStorage(
     MAIN_DOMAIN + "storage-listings.html"
   );
 
-  const data = await front.listStores();
-  await testStores(data);
+  await testStores(commands);
 
-  info("Check that listStores can handle multiple concurrent calls");
-  const listStoresCalls = [];
-  for (let i = 0; i < 5; i++) {
-    listStoresCalls.push(front.listStores());
+  // Only test listStores if JSWindowActor based target is disabled
+  // if they are enabled, we are supported to use ResourceCommand instead of listStores
+  if (
+    !Services.prefs.getBoolPref(
+      "devtools.target-switching.server.enabled",
+      false
+    )
+  ) {
+    info("Check that listStores can handle multiple concurrent calls");
+    const listStoresCalls = [];
+    for (let i = 0; i < 5; i++) {
+      listStoresCalls.push(front.listStores());
+    }
+    const onAllListStoresCallsResolved = Promise.all(listStoresCalls);
+    const timeoutResValue = "TIMED_OUT";
+    const onTimeout = wait(5000).then(() => timeoutResValue);
+    const res = await Promise.race([onTimeout, onAllListStoresCallsResolved]);
+    isnot(res, timeoutResValue, "listStores handled concurrent calls");
   }
-  const onAllListStoresCallsResolved = Promise.all(listStoresCalls);
-  const timeoutResValue = "TIMED_OUT";
-  const onTimeout = wait(5000).then(() => timeoutResValue);
-  const res = await Promise.race([onTimeout, onAllListStoresCallsResolved]);
-  isnot(res, timeoutResValue, "listStores handled concurrent calls");
 
   await clearStorage();
 
   // Forcing GC/CC to get rid of docshells and windows created by this test.
   forceCollections();
-  await target.destroy();
-  forceCollections();
-  DevToolsServer.destroy();
+  await commands.destroy();
   forceCollections();
 });
