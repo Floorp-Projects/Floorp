@@ -2212,12 +2212,18 @@ ssl_NextProtoNegoCallback(void *arg, PRFileDesc *fd,
 {
     unsigned int i, j;
     sslSocket *ss = ssl_FindSocket(fd);
-
     if (!ss) {
         SSL_DBG(("%d: SSL[%d]: bad socket in ssl_NextProtoNegoCallback",
                  SSL_GETPID(), fd));
         return SECFailure;
     }
+    if (ss->opt.nextProtoNego.len == 0) {
+        SSL_DBG(("%d: SSL[%d]: ssl_NextProtoNegoCallback ALPN disabled",
+                 SSL_GETPID(), fd));
+        SSL3_SendAlert(ss, alert_fatal, unsupported_extension);
+        return SECFailure;
+    }
+
     PORT_Assert(protoMaxLen <= 255);
     if (protoMaxLen > 255) {
         PORT_SetError(SEC_ERROR_OUTPUT_LEN);
@@ -2257,7 +2263,7 @@ SSL_SetNextProtoNego(PRFileDesc *fd, const unsigned char *data,
         return SECFailure;
     }
 
-    if (ssl3_ValidateAppProtocol(data, length) != SECSuccess) {
+    if (length > 0 && ssl3_ValidateAppProtocol(data, length) != SECSuccess) {
         return SECFailure;
     }
 
@@ -2266,11 +2272,13 @@ SSL_SetNextProtoNego(PRFileDesc *fd, const unsigned char *data,
      * first protocol to the end of the list. */
     ssl_GetSSL3HandshakeLock(ss);
     SECITEM_FreeItem(&ss->opt.nextProtoNego, PR_FALSE);
-    SECITEM_AllocItem(NULL, &ss->opt.nextProtoNego, length);
-    size_t firstLen = data[0] + 1;
-    /* firstLen <= length is ensured by ssl3_ValidateAppProtocol. */
-    PORT_Memcpy(ss->opt.nextProtoNego.data + (length - firstLen), data, firstLen);
-    PORT_Memcpy(ss->opt.nextProtoNego.data, data + firstLen, length - firstLen);
+    if (length > 0) {
+        SECITEM_AllocItem(NULL, &ss->opt.nextProtoNego, length);
+        size_t firstLen = data[0] + 1;
+        /* firstLen <= length is ensured by ssl3_ValidateAppProtocol. */
+        PORT_Memcpy(ss->opt.nextProtoNego.data + (length - firstLen), data, firstLen);
+        PORT_Memcpy(ss->opt.nextProtoNego.data, data + firstLen, length - firstLen);
+    }
     ssl_ReleaseSSL3HandshakeLock(ss);
 
     return SSL_SetNextProtoCallback(fd, ssl_NextProtoNegoCallback, NULL);
