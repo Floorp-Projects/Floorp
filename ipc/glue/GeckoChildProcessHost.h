@@ -24,6 +24,7 @@
 #include "mozilla/UniquePtr.h"
 
 #include "nsCOMPtr.h"
+#include "nsExceptionHandler.h"
 #include "nsXULAppAPI.h"  // for GeckoProcessType
 #include "nsString.h"
 
@@ -224,7 +225,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
 #ifdef XP_WIN
   void InitWindowsGroupID();
   nsString mGroupId;
-
+  CrashReporter::WindowsErrorReportingData mWerData;
 #  ifdef MOZ_SANDBOX
   RefPtr<AbstractSandboxBroker> mSandboxBroker;
   std::vector<std::wstring> mAllowedFilesRead;
