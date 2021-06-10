@@ -8,6 +8,7 @@
 #include "unicode/utypes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/Vector.h"
 
 namespace mozilla::intl {

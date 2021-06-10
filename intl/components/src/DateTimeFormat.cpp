@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "unicode/ucal.h"
 #include "unicode/udat.h"
 #include "unicode/udatpg.h"
 
@@ -171,6 +172,13 @@ DateTimeFormat::TryCreateFromSkeleton(
 
   return DateTimeFormat::TryCreateFromSkeleton(aLocale, skeletonUtf16Buffer,
                                                timeZone);
+}
+
+void DateTimeFormat::SetStartTimeIfGregorian(double aTime) {
+  UErrorCode status = U_ZERO_ERROR;
+  UCalendar* cal = const_cast<UCalendar*>(udat_getCalendar(mDateFormat));
+  ucal_setGregorianChange(cal, aTime, &status);
+  // An error here means the calendar is not Gregorian, and can be ignored.
 }
 
 }  // namespace mozilla::intl

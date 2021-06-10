@@ -9,6 +9,7 @@
 #include "builtin/intl/DateTimeFormat.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/Range.h"
 #include "mozilla/Span.h"
 
@@ -16,6 +17,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
+#include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
@@ -54,6 +56,7 @@ using JS::TimeClip;
 
 using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
+using js::intl::FormatBuffer;
 using js::intl::IcuLocale;
 using js::intl::INITIAL_CHAR_BUFFER_SIZE;
 using js::intl::SharedIntlData;
@@ -194,14 +197,14 @@ void js::DateTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
   auto* dateTimeFormat = &obj->as<DateTimeFormatObject>();
-  UDateFormat* df = dateTimeFormat->getDateFormat();
+  mozilla::intl::DateTimeFormat* df = dateTimeFormat->getDateFormat();
   UDateIntervalFormat* dif = dateTimeFormat->getDateIntervalFormat();
 
   if (df) {
     intl::RemoveICUCellMemory(
         fop, obj, DateTimeFormatObject::UDateFormatEstimatedMemoryUse);
 
-    udat_close(df);
+    delete df;
   }
 
   if (dif) {
@@ -1007,10 +1010,10 @@ static UniqueChars DateTimeFormatLocale(
 }
 
 /**
- * Returns a new UDateFormat with the locale and date-time formatting options
- * of the given DateTimeFormat.
+ * Returns a new mozilla::intl::DateTimeFormat with the locale and date-time
+ * formatting options of the given DateTimeFormat.
  */
-static UDateFormat* NewUDateFormat(
+static mozilla::intl::DateTimeFormat* NewDateTimeFormat(
     JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat) {
   RootedValue value(cx);
 
@@ -1044,36 +1047,35 @@ static UDateFormat* NewUDateFormat(
     return nullptr;
   }
 
-  mozilla::Range<const char16_t> patternChars = pattern.twoByteRange();
-
-  UErrorCode status = U_ZERO_ERROR;
-  UDateFormat* df =
-      udat_open(UDAT_PATTERN, UDAT_PATTERN, IcuLocale(locale.get()),
-                timeZoneChars.begin().get(), timeZoneChars.length(),
-                patternChars.begin().get(), patternChars.length(), &status);
-  if (U_FAILURE(status)) {
+  auto dfResult = mozilla::intl::DateTimeFormat::TryCreateFromPattern(
+      mozilla::MakeStringSpan(IcuLocale(locale.get())), pattern.twoByteRange(),
+      mozilla::Some(timeZoneChars));
+  if (dfResult.isErr()) {
     intl::ReportInternalError(cx);
     return nullptr;
   }
+  auto df = dfResult.unwrap();
 
   // ECMAScript requires the Gregorian calendar to be used from the beginning
   // of ECMAScript time.
-  UCalendar* cal = const_cast<UCalendar*>(udat_getCalendar(df));
-  ucal_setGregorianChange(cal, StartOfTime, &status);
+  df->SetStartTimeIfGregorian(StartOfTime);
 
-  // An error here means the calendar is not Gregorian, so we don't care.
-
-  return df;
+  return df.release();
 }
 
-static bool intl_FormatDateTime(JSContext* cx, const UDateFormat* df,
+static bool intl_FormatDateTime(JSContext* cx,
+                                const mozilla::intl::DateTimeFormat* df,
                                 ClippedTime x, MutableHandleValue result) {
   MOZ_ASSERT(x.isValid());
 
-  JSString* str =
-      CallICU(cx, [df, x](UChar* chars, int32_t size, UErrorCode* status) {
-        return udat_format(df, x.toDouble(), chars, size, nullptr, status);
-      });
+  FormatBuffer<char16_t, INITIAL_CHAR_BUFFER_SIZE> buffer(cx);
+  auto dfResult = df->TryFormat(x.toDouble(), buffer);
+  if (dfResult.isErr()) {
+    intl::ReportInternalError(cx, dfResult.unwrapErr());
+    return false;
+  }
+
+  JSString* str = buffer.toString();
   if (!str) {
     return false;
   }
@@ -1179,7 +1181,8 @@ static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
   return nullptr;
 }
 
-static bool intl_FormatToPartsDateTime(JSContext* cx, const UDateFormat* df,
+static bool intl_FormatToPartsDateTime(JSContext* cx,
+                                       const mozilla::intl::DateTimeFormat* df,
                                        ClippedTime x, FieldType source,
                                        MutableHandleValue result) {
   MOZ_ASSERT(x.isValid());
@@ -1194,11 +1197,14 @@ static bool intl_FormatToPartsDateTime(JSContext* cx, const UDateFormat* df,
       fpositer);
 
   RootedString overallResult(cx);
-  overallResult = CallICU(
-      cx, [df, x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
-        return udat_formatForFields(df, x.toDouble(), chars, size, fpositer,
-                                    status);
-      });
+  overallResult = CallICU(cx, [df, x, fpositer](UChar* chars, int32_t size,
+                                                UErrorCode* status) {
+    return udat_formatForFields(
+        // TODO(Bug 1686965) - The use of UnsafeGetUDateFormat is a temporary
+        // migration step until the field position iterator is supported.
+        df->UnsafeGetUDateFormat(), x.toDouble(), chars, size, fpositer,
+        status);
+  });
   if (!overallResult) {
     return false;
   }
@@ -1320,10 +1326,10 @@ bool js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Obtain a cached UDateFormat object.
-  UDateFormat* df = dateTimeFormat->getDateFormat();
+  // Obtain a cached DateTimeFormat object.
+  mozilla::intl::DateTimeFormat* df = dateTimeFormat->getDateFormat();
   if (!df) {
-    df = NewUDateFormat(cx, dateTimeFormat);
+    df = NewDateTimeFormat(cx, dateTimeFormat);
     if (!df) {
       return false;
     }
@@ -1445,8 +1451,9 @@ static UCalendar* CreateCalendar(JSContext* cx, const UCalendar* cal,
  * PartitionDateTimeRangePattern ( dateTimeFormat, x, y )
  */
 static const UFormattedValue* PartitionDateTimeRangePattern(
-    JSContext* cx, const UDateFormat* df, const UDateIntervalFormat* dif,
-    UFormattedDateInterval* formatted, ClippedTime x, ClippedTime y) {
+    JSContext* cx, const mozilla::intl::DateTimeFormat* df,
+    const UDateIntervalFormat* dif, UFormattedDateInterval* formatted,
+    ClippedTime x, ClippedTime y) {
   MOZ_ASSERT(x.isValid());
   MOZ_ASSERT(y.isValid());
   MOZ_ASSERT(x.toDouble() <= y.toDouble());
@@ -1470,7 +1477,11 @@ static const UFormattedValue* PartitionDateTimeRangePattern(
     // Create calendar objects for the start and end date by cloning the date
     // formatter calendar. The date formatter calendar already has the correct
     // time zone set and was changed to use a proleptic Gregorian calendar.
-    const UCalendar* cal = udat_getCalendar(df);
+    const UCalendar* cal = udat_getCalendar(
+        // TODO(Bug 1686965) - The use of UnsafeGetUDateFormat is temporary
+        // until date time intervals are supported by the unified mozilla::intl
+        // API.
+        df->UnsafeGetUDateFormat());
 
     UCalendar* startCal = CreateCalendar(cx, cal, x);
     if (!startCal) {
@@ -1543,7 +1554,8 @@ static bool DateFieldsPracticallyEqual(JSContext* cx,
 /**
  * FormatDateTimeRange( dateTimeFormat, x, y )
  */
-static bool FormatDateTimeRange(JSContext* cx, const UDateFormat* df,
+static bool FormatDateTimeRange(JSContext* cx,
+                                const mozilla::intl::DateTimeFormat* df,
                                 const UDateIntervalFormat* dif, ClippedTime x,
                                 ClippedTime y, MutableHandleValue result) {
   UErrorCode status = U_ZERO_ERROR;
@@ -1584,7 +1596,8 @@ static bool FormatDateTimeRange(JSContext* cx, const UDateFormat* df,
 /**
  * FormatDateTimeRangeToParts ( dateTimeFormat, x, y )
  */
-static bool FormatDateTimeRangeToParts(JSContext* cx, const UDateFormat* df,
+static bool FormatDateTimeRangeToParts(JSContext* cx,
+                                       const mozilla::intl::DateTimeFormat* df,
                                        const UDateIntervalFormat* dif,
                                        ClippedTime x, ClippedTime y,
                                        MutableHandleValue result) {
@@ -1819,10 +1832,10 @@ bool js::intl_FormatDateTimeRange(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(x.toDouble() <= y.toDouble(),
              "start date mustn't be after the end date");
 
-  // Obtain a cached UDateFormat object.
-  UDateFormat* df = dateTimeFormat->getDateFormat();
+  // Obtain a cached mozilla::intl::DateTimeFormat object.
+  mozilla::intl::DateTimeFormat* df = dateTimeFormat->getDateFormat();
   if (!df) {
-    df = NewUDateFormat(cx, dateTimeFormat);
+    df = NewDateTimeFormat(cx, dateTimeFormat);
     if (!df) {
       return false;
     }
