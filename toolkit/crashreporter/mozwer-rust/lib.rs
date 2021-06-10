@@ -17,12 +17,12 @@ use std::mem::{size_of, zeroed};
 use std::os::windows::ffi::{OsStrExt, OsStringExt};
 use std::os::windows::io::AsRawHandle;
 use std::path::{Path, PathBuf};
-use std::ptr::{null, null_mut};
+use std::ptr::{addr_of_mut, null, null_mut};
 use std::slice::from_raw_parts;
 use uuid::Uuid;
 use winapi::shared::basetsd::{SIZE_T, ULONG_PTR};
 use winapi::shared::minwindef::{
-    BOOL, BYTE, DWORD, FALSE, FILETIME, MAX_PATH, PBOOL, PDWORD, PULONG, TRUE, ULONG, WORD,
+    BOOL, BYTE, DWORD, FALSE, FILETIME, LPVOID, MAX_PATH, PBOOL, PDWORD, PULONG, TRUE, ULONG, WORD,
 };
 use winapi::shared::ntdef::{NTSTATUS, STRING, UNICODE_STRING};
 use winapi::shared::ntstatus::STATUS_SUCCESS;
@@ -30,39 +30,67 @@ use winapi::shared::winerror::{E_UNEXPECTED, S_OK};
 use winapi::um::combaseapi::CoTaskMemFree;
 use winapi::um::handleapi::CloseHandle;
 use winapi::um::knownfolders::FOLDERID_RoamingAppData;
-use winapi::um::memoryapi::ReadProcessMemory;
+use winapi::um::memoryapi::{ReadProcessMemory, WriteProcessMemory};
+use winapi::um::minwinbase::LPTHREAD_START_ROUTINE;
 use winapi::um::processthreadsapi::{
-    CreateProcessW, GetProcessId, GetProcessTimes, GetThreadId, TerminateProcess,
-    PROCESS_INFORMATION, STARTUPINFOW,
+    CreateProcessW, CreateRemoteThread, GetProcessId, GetProcessTimes, GetThreadId, OpenProcess,
+    TerminateProcess, PROCESS_INFORMATION, STARTUPINFOW,
 };
 use winapi::um::psapi::K32GetModuleFileNameExW;
 use winapi::um::shlobj::SHGetKnownFolderPath;
+use winapi::um::synchapi::WaitForSingleObject;
 use winapi::um::winbase::{
     VerifyVersionInfoW, CREATE_NO_WINDOW, CREATE_UNICODE_ENVIRONMENT, NORMAL_PRIORITY_CLASS,
+    WAIT_OBJECT_0,
 };
 use winapi::um::winnt::{
     VerSetConditionMask, CONTEXT, DWORDLONG, EXCEPTION_POINTERS, EXCEPTION_RECORD, HANDLE, HRESULT,
-    LIST_ENTRY, LPOSVERSIONINFOEXW, OSVERSIONINFOEXW, PCWSTR, PEXCEPTION_POINTERS, PVOID, PWSTR,
-    VER_GREATER_EQUAL, VER_MAJORVERSION, VER_MINORVERSION, VER_SERVICEPACKMAJOR,
-    VER_SERVICEPACKMINOR,
+    LIST_ENTRY, LPOSVERSIONINFOEXW, OSVERSIONINFOEXW, PCWSTR, PEXCEPTION_POINTERS,
+    PROCESS_ALL_ACCESS, PVOID, PWSTR, VER_GREATER_EQUAL, VER_MAJORVERSION, VER_MINORVERSION,
+    VER_SERVICEPACKMAJOR, VER_SERVICEPACKMINOR,
 };
 use winapi::STRUCT;
 
+/* The following struct must be kept in sync with the identically named one in
+ * nsExceptionHandler.h. There is one copy of this structure for every child
+ * process and they are all stored within the main process'. WER will use it to
+ * communicate with the main process when a child process is encountered. */
+#[repr(C)]
+struct WindowsErrorReportingData {
+    wer_notify_proc: LPTHREAD_START_ROUTINE,
+    child_pid: DWORD,
+    minidump_name: [u8; 40],
+}
+
+/* The following struct must be kept in sync with the identically named one in
+ * nsExceptionHandler.h. A copy of this is stored in every process and a pointer
+ * to it is passed to the runtime exception module. We will read it to gather
+ * information about the crashed process. */
+#[repr(C)]
+struct InProcessWindowsErrorReportingData {
+    process_type: u32,
+}
+
+// This value comes from GeckoProcessTypes.h
+static MAIN_PROCESS_TYPE: u32 = 0;
+
 #[no_mangle]
 pub extern "C" fn OutOfProcessExceptionEventCallback(
-    _context: PVOID,
+    context: PVOID,
     exception_information: PWER_RUNTIME_EXCEPTION_INFORMATION,
     b_ownership_claimed: PBOOL,
     _wsz_event_name: PWSTR,
     _pch_size: PDWORD,
     _dw_signature_count: PDWORD,
 ) -> HRESULT {
-    match out_of_process_exception_event_callback(exception_information) {
+    let result = out_of_process_exception_event_callback(context, exception_information);
+
+    match result {
         Ok(_) => {
             unsafe {
                 // Inform WER that we claim ownership of this crash
                 *b_ownership_claimed = TRUE;
-                // Make sure that Firefox shuts down
+                // Make sure that the process shuts down
                 TerminateProcess((*exception_information).hProcess, 1);
             }
             S_OK
@@ -101,98 +129,153 @@ pub extern "C" fn OutOfProcessExceptionEventDebuggerLaunchCallback(
 }
 
 fn out_of_process_exception_event_callback(
+    context: PVOID,
     exception_information: PWER_RUNTIME_EXCEPTION_INFORMATION,
 ) -> Result<(), ()> {
     let process = unsafe { (*exception_information).hProcess };
-
-    let mut environment = read_environment_block(process)?;
-    let application_path = get_application_path(process)?;
-    let mut install_path = application_path.clone();
-    install_path.pop();
-    let application_data = ApplicationData::load_from_disk(install_path.as_ref())?;
-    let release_channel = get_release_channel(install_path.as_ref())?;
-    let crash_reports_dir = get_crash_reports_dir(&application_data)?;
-    let install_time = get_install_time(&crash_reports_dir, &application_data.build_id)?;
+    let application_info = ApplicationInformation::from_process(process)?;
+    let wer_data = read_crashed_process_wer_data(process, context)?;
+    let process = unsafe { (*exception_information).hProcess };
     let startup_time = get_startup_time(process)?;
-    let crash_report = CrashReport::new(
-        &crash_reports_dir,
-        &release_channel,
-        &application_data,
-        &install_time,
-        startup_time,
-    );
+    let crash_report = CrashReport::new(&application_info, startup_time);
     crash_report.write_minidump(exception_information)?;
+    if wer_data.process_type == MAIN_PROCESS_TYPE {
+        handle_main_process_crash(crash_report, process, &application_info)
+    } else {
+        handle_child_process_crash(crash_report, process)
+    }
+}
+
+fn read_crashed_process_wer_data(
+    process: HANDLE,
+    data_ptr: LPVOID,
+) -> Result<InProcessWindowsErrorReportingData, ()> {
+    let mut wer_data: InProcessWindowsErrorReportingData = unsafe { zeroed() };
+    let res = unsafe {
+        ReadProcessMemory(
+            process,
+            data_ptr,
+            addr_of_mut!(wer_data) as *mut _,
+            size_of::<InProcessWindowsErrorReportingData>() as SIZE_T,
+            null_mut(),
+        )
+    };
+
+    if res != FALSE {
+        Ok(wer_data)
+    } else {
+        Err(())
+    }
+}
+
+fn handle_main_process_crash(
+    crash_report: CrashReport,
+    process: HANDLE,
+    application_information: &ApplicationInformation,
+) -> Result<(), ()> {
     crash_report.write_extra_file()?;
     crash_report.write_event_file()?;
-    launch_crash_reporter_client(&application_path, &mut environment, &crash_report);
+
+    let mut environment = read_environment_block(process)?;
+    launch_crash_reporter_client(
+        &application_information.install_path,
+        &mut environment,
+        &crash_report,
+    );
 
     Ok(())
 }
 
-fn get_crash_reports_dir(application_data: &ApplicationData) -> Result<PathBuf, ()> {
-    let mut psz_path: PWSTR = null_mut();
-    unsafe {
-        let res = SHGetKnownFolderPath(
-            &FOLDERID_RoamingAppData as *const _,
-            0,
-            null_mut(),
-            &mut psz_path as *mut _,
-        );
+fn handle_child_process_crash(crash_report: CrashReport, child_process: HANDLE) -> Result<(), ()> {
+    let command_line = read_command_line(child_process)?;
+    let (parent_pid, data_ptr) = parse_child_data(&command_line)?;
 
-        if res == S_OK {
-            let mut len = 0;
-            while psz_path.offset(len).read() != 0 {
-                len += 1;
-            }
-            let str = OsString::from_wide(from_raw_parts(psz_path, len as usize));
-            CoTaskMemFree(psz_path as _);
-            let mut path = PathBuf::from(str);
-            if let Some(vendor) = &application_data.vendor {
-                path.push(vendor);
-            }
-            path.push(&application_data.name);
-            path.push("Crash Reports");
-            Ok(path)
-        } else {
-            Err(())
-        }
+    let parent_process = get_process_handle(parent_pid)?;
+    let mut wer_data = read_main_process_wer_data(parent_process, data_ptr)?;
+    wer_data.child_pid = get_process_id(child_process)?;
+    wer_data.minidump_name = crash_report.get_minidump_name();
+    let wer_notify_proc = wer_data.wer_notify_proc;
+    write_main_process_wer_data(parent_process, wer_data, data_ptr)?;
+    notify_main_process(parent_process, wer_notify_proc, data_ptr)
+}
+
+fn read_main_process_wer_data(
+    process: HANDLE,
+    data_ptr: LPVOID,
+) -> Result<WindowsErrorReportingData, ()> {
+    let mut wer_data: WindowsErrorReportingData = unsafe { zeroed() };
+    let res = unsafe {
+        ReadProcessMemory(
+            process,
+            data_ptr,
+            addr_of_mut!(wer_data) as *mut _,
+            size_of::<WindowsErrorReportingData>() as SIZE_T,
+            null_mut(),
+        )
+    };
+
+    if res != FALSE {
+        Ok(wer_data)
+    } else {
+        Err(())
     }
 }
 
-fn get_application_path(process: HANDLE) -> Result<PathBuf, ()> {
-    let mut path: [u16; MAX_PATH + 1] = [0; MAX_PATH + 1];
-    unsafe {
-        let res = K32GetModuleFileNameExW(
+fn write_main_process_wer_data(
+    process: HANDLE,
+    mut wer_data: WindowsErrorReportingData,
+    data_ptr: LPVOID,
+) -> Result<(), ()> {
+    let res = unsafe {
+        WriteProcessMemory(
+            process,
+            data_ptr,
+            addr_of_mut!(wer_data) as *mut _,
+            size_of::<WindowsErrorReportingData>() as SIZE_T,
+            null_mut(),
+        )
+    };
+
+    if res != FALSE {
+        Ok(())
+    } else {
+        Err(())
+    }
+}
+
+fn notify_main_process(
+    process: HANDLE,
+    wer_notify_proc: LPTHREAD_START_ROUTINE,
+    data_ptr: LPVOID,
+) -> Result<(), ()> {
+    let thread = unsafe {
+        CreateRemoteThread(
             process,
             null_mut(),
-            (&mut path).as_mut_ptr(),
-            (MAX_PATH + 1) as u32,
-        );
+            0,
+            wer_notify_proc,
+            data_ptr,
+            0,
+            null_mut(),
+        )
+    };
 
-        if res == 0 {
-            return Err(());
-        }
-
-        let application_path = PathBuf::from(OsString::from_wide(&path[0..res as usize]));
-        Ok(application_path)
+    if thread == null_mut() {
+        return Err(());
     }
-}
 
-fn get_release_channel(install_path: &Path) -> Result<String, ()> {
-    let channel_prefs =
-        File::open(install_path.join("defaults/pref/channel-prefs.js")).map_err(|_e| ())?;
-    let lines = BufReader::new(channel_prefs).lines();
-    let line = lines
-        .filter_map(Result::ok)
-        .find(|line| line.contains("app.update.channel"))
-        .ok_or(())?;
-    line.split("\"").nth(3).map(|s| s.to_string()).ok_or(())
-}
+    // Don't wait forever as we want the process to get killed eventually
+    let res = unsafe { WaitForSingleObject(thread, 5000) };
+    if res != WAIT_OBJECT_0 {
+        return Err(());
+    }
 
-fn get_install_time(crash_reports_path: &Path, build_id: &str) -> Result<String, ()> {
-    let file_name = "InstallTime".to_owned() + build_id;
-    let file_path = crash_reports_path.join(file_name);
-    read_to_string(file_path).map_err(|_e| ())
+    let res = unsafe { CloseHandle(thread) };
+    if res != FALSE {
+        Ok(())
+    } else {
+        Err(())
+    }
 }
 
 fn get_startup_time(process: HANDLE) -> Result<u64, ()> {
@@ -219,14 +302,39 @@ fn get_startup_time(process: HANDLE) -> Result<u64, ()> {
     Ok((start_time_in_ticks / windows_tick) - sec_to_unix_epoch)
 }
 
+fn parse_child_data(command_line: &str) -> Result<(DWORD, LPVOID), ()> {
+    let mut itr = command_line.rsplit(' ');
+    let address = itr.nth(1).ok_or(())?;
+    let address = usize::from_str_radix(address, 16).map_err(|_err| (()))?;
+    let address = address as LPVOID;
+    let parent_pid = itr.nth(2).ok_or(())?;
+    let parent_pid = u32::from_str_radix(parent_pid, 10).map_err(|_err| (()))?;
+
+    Ok((parent_pid, address))
+}
+
+fn get_process_id(process: HANDLE) -> Result<DWORD, ()> {
+    match unsafe { GetProcessId(process) } {
+        0 => Err(()),
+        pid => Ok(pid),
+    }
+}
+
+fn get_process_handle(pid: DWORD) -> Result<HANDLE, ()> {
+    let handle = unsafe { OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid) };
+    if handle != null_mut() {
+        Ok(handle)
+    } else {
+        Err(())
+    }
+}
+
 fn launch_crash_reporter_client(
-    application_path: &Path,
+    install_path: &Path,
     environment: &mut Vec<u16>,
     crash_report: &CrashReport,
 ) {
     // Prepare the command line
-    let mut install_path: PathBuf = application_path.into();
-    install_path.pop();
     let client_path = install_path.join("crashreporter.exe");
 
     let mut cmd_line = OsString::from("\"");
@@ -311,78 +419,169 @@ impl ApplicationData {
 
 #[derive(Serialize)]
 #[allow(non_snake_case)]
-struct Annotations<'a> {
-    BuildID: &'a str,
+struct Annotations {
+    BuildID: String,
     CrashTime: String,
-    InstallTime: &'a str,
-    ProductID: &'a str,
-    ProductName: &'a str,
-    ReleaseChannel: &'a str,
-    ServerURL: &'a str,
+    InstallTime: String,
+    ProductID: String,
+    ProductName: String,
+    ReleaseChannel: String,
+    ServerURL: String,
     StartupTime: String,
     UptimeTS: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    Vendor: Option<&'a str>,
-    Version: &'a str,
+    Vendor: Option<String>,
+    Version: String,
 }
 
-impl Annotations<'_> {
-    fn from_application_data<'a>(
-        application_data: &'a ApplicationData,
-        release_channel: &'a str,
-        install_time: &'a str,
+impl Annotations {
+    fn from_application_data(
+        application_data: &ApplicationData,
+        release_channel: String,
+        install_time: String,
         crash_time: u64,
         startup_time: u64,
-    ) -> Annotations<'a> {
+    ) -> Annotations {
         Annotations {
-            BuildID: &application_data.build_id,
+            BuildID: application_data.build_id.clone(),
             CrashTime: crash_time.to_string(),
             InstallTime: install_time,
-            ProductID: &application_data.product_id,
-            ProductName: &application_data.name,
+            ProductID: application_data.product_id.clone(),
+            ProductName: application_data.name.clone(),
             ReleaseChannel: release_channel,
-            ServerURL: &application_data.server_url,
+            ServerURL: application_data.server_url.clone(),
             StartupTime: startup_time.to_string(),
             UptimeTS: (crash_time - startup_time).to_string() + ".0",
-            Vendor: application_data.vendor.as_deref(),
-            Version: &application_data.version,
+            Vendor: application_data.vendor.clone(),
+            Version: application_data.version.clone(),
         }
     }
 }
 
-struct CrashReport<'a> {
+/// Encapsulates the information about the application that crashed. This includes the install path as well as version information
+struct ApplicationInformation {
+    install_path: PathBuf,
+    application_data: ApplicationData,
+    release_channel: String,
+    crash_reports_dir: PathBuf,
+    install_time: String,
+}
+
+impl ApplicationInformation {
+    fn from_process(process: HANDLE) -> Result<ApplicationInformation, ()> {
+        let mut install_path = ApplicationInformation::get_application_path(process)?;
+        install_path.pop();
+        let application_data = ApplicationData::load_from_disk(install_path.as_ref())?;
+        let release_channel = ApplicationInformation::get_release_channel(install_path.as_ref())?;
+        let crash_reports_dir = ApplicationInformation::get_crash_reports_dir(&application_data)?;
+        let install_time = ApplicationInformation::get_install_time(
+            &crash_reports_dir,
+            &application_data.build_id,
+        )?;
+
+        Ok(ApplicationInformation {
+            install_path,
+            application_data,
+            release_channel,
+            crash_reports_dir,
+            install_time,
+        })
+    }
+
+    fn get_application_path(process: HANDLE) -> Result<PathBuf, ()> {
+        let mut path: [u16; MAX_PATH + 1] = [0; MAX_PATH + 1];
+        unsafe {
+            let res = K32GetModuleFileNameExW(
+                process,
+                null_mut(),
+                (&mut path).as_mut_ptr(),
+                (MAX_PATH + 1) as DWORD,
+            );
+
+            if res == 0 {
+                return Err(());
+            }
+
+            let application_path = PathBuf::from(OsString::from_wide(&path[0..res as usize]));
+            Ok(application_path)
+        }
+    }
+
+    fn get_release_channel(install_path: &Path) -> Result<String, ()> {
+        let channel_prefs =
+            File::open(install_path.join("defaults/pref/channel-prefs.js")).map_err(|_e| ())?;
+        let lines = BufReader::new(channel_prefs).lines();
+        let line = lines
+            .filter_map(Result::ok)
+            .find(|line| line.contains("app.update.channel"))
+            .ok_or(())?;
+        line.split("\"").nth(3).map(|s| s.to_string()).ok_or(())
+    }
+
+    fn get_crash_reports_dir(application_data: &ApplicationData) -> Result<PathBuf, ()> {
+        let mut psz_path: PWSTR = null_mut();
+        unsafe {
+            let res = SHGetKnownFolderPath(
+                &FOLDERID_RoamingAppData as *const _,
+                0,
+                null_mut(),
+                &mut psz_path as *mut _,
+            );
+
+            if res == S_OK {
+                let mut len = 0;
+                while psz_path.offset(len).read() != 0 {
+                    len += 1;
+                }
+                let str = OsString::from_wide(from_raw_parts(psz_path, len as usize));
+                CoTaskMemFree(psz_path as _);
+                let mut path = PathBuf::from(str);
+                if let Some(vendor) = &application_data.vendor {
+                    path.push(vendor);
+                }
+                path.push(&application_data.name);
+                path.push("Crash Reports");
+                Ok(path)
+            } else {
+                Err(())
+            }
+        }
+    }
+
+    fn get_install_time(crash_reports_path: &Path, build_id: &str) -> Result<String, ()> {
+        let file_name = "InstallTime".to_owned() + build_id;
+        let file_path = crash_reports_path.join(file_name);
+        read_to_string(file_path).map_err(|_e| ())
+    }
+}
+
+struct CrashReport {
     uuid: String,
     crash_reports_path: PathBuf,
-    release_channel: &'a str,
-    annotations: Annotations<'a>,
+    release_channel: String,
+    annotations: Annotations,
     crash_time: u64,
 }
 
-impl CrashReport<'_> {
-    fn new<'a>(
-        crash_reports_path: &Path,
-        release_channel: &'a str,
-        application_data: &'a ApplicationData,
-        install_time: &'a str,
-        startup_time: u64,
-    ) -> CrashReport<'a> {
+impl CrashReport {
+    fn new(application_information: &ApplicationInformation, startup_time: u64) -> CrashReport {
         let uuid = Uuid::new_v4()
             .to_hyphenated()
             .encode_lower(&mut Uuid::encode_buffer())
             .to_owned();
-        let crash_reports_path = PathBuf::from(crash_reports_path);
+        let crash_reports_path = application_information.crash_reports_dir.clone();
         let crash_time: u64 = unsafe { time(null_mut()) as u64 };
         let annotations = Annotations::from_application_data(
-            application_data,
-            release_channel,
-            install_time,
+            &application_information.application_data,
+            application_information.release_channel.clone(),
+            application_information.install_time.clone(),
             crash_time,
             startup_time,
         );
         CrashReport {
             uuid,
             crash_reports_path,
-            release_channel,
+            release_channel: application_information.release_channel.clone(),
             annotations,
             crash_time,
         }
@@ -422,6 +621,11 @@ impl CrashReport<'_> {
         self.get_pending_path().join(self.uuid.to_string() + ".dmp")
     }
 
+    fn get_minidump_name(&self) -> [u8; 40] {
+        let bytes = (self.uuid.to_string() + ".dmp").into_bytes();
+        bytes[0..40].try_into().unwrap()
+    }
+
     fn get_extra_file_path(&self) -> PathBuf {
         self.get_pending_path()
             .join(self.uuid.to_string() + ".extra")
@@ -453,7 +657,7 @@ impl CrashReport<'_> {
 
             let res = MiniDumpWriteDump(
                 (*exception_information).hProcess,
-                GetProcessId((*exception_information).hProcess),
+                get_process_id((*exception_information).hProcess)?,
                 minidump_file.as_raw_handle() as _,
                 minidump_type,
                 &mut exception,
@@ -508,6 +712,56 @@ fn is_windows8_or_later() -> bool {
 }
 
 fn read_environment_block(process: HANDLE) -> Result<Vec<u16>, ()> {
+    let upp = read_user_process_parameters(process)?;
+
+    // Read the environment
+    let buffer = upp.Environment;
+    let length = upp.EnvironmentSize;
+    let mut environment: Vec<u16> = vec![Default::default(); ((length / 2) + 1) as _];
+    let mut num_bytes: SIZE_T = 0;
+    let result = unsafe {
+        ReadProcessMemory(
+            process,
+            buffer,
+            environment.as_mut_ptr() as _,
+            length as _,
+            &mut num_bytes,
+        )
+    };
+
+    if result == 0 {
+        Err(())
+    } else {
+        Ok(environment)
+    }
+}
+
+fn read_command_line(process: HANDLE) -> Result<String, ()> {
+    let upp = read_user_process_parameters(process)?;
+
+    // Read the command-line
+    let buffer = upp.CommandLine.Buffer;
+    let length = upp.CommandLine.Length;
+    let mut command_line: Vec<u16> = vec![Default::default(); (upp.CommandLine.Length / 2) as _];
+    let mut num_bytes: SIZE_T = 0;
+    let result = unsafe {
+        ReadProcessMemory(
+            process,
+            buffer as _,
+            command_line.as_mut_ptr() as _,
+            length as _,
+            &mut num_bytes,
+        )
+    };
+
+    if result == 0 {
+        Err(())
+    } else {
+        String::from_utf16(&command_line).map_err(|_err| ())
+    }
+}
+
+fn read_user_process_parameters(process: HANDLE) -> Result<RTL_USER_PROCESS_PARAMETERS, ()> {
     let mut pbi: PROCESS_BASIC_INFORMATION = unsafe { zeroed() };
     let mut length: ULONG = 0;
     let result = unsafe {
@@ -556,27 +810,9 @@ fn read_environment_block(process: HANDLE) -> Result<Vec<u16>, ()> {
     };
 
     if result == 0 {
-        return Err(());
-    }
-
-    // Read the environment
-    let buffer = upp.Environment;
-    let length = upp.EnvironmentSize;
-    let mut environment: Vec<u16> = vec![Default::default(); ((length / 2) + 1) as _];
-    let result = unsafe {
-        ReadProcessMemory(
-            process,
-            buffer,
-            environment.as_mut_ptr() as _,
-            length as _,
-            &mut num_bytes,
-        )
-    };
-
-    if result == 0 {
         Err(())
     } else {
-        Ok(environment)
+        Ok(upp)
     }
 }
 
