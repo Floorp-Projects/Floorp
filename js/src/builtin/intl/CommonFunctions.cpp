@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
+#include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
@@ -90,6 +91,19 @@ JSObject* js::intl::GetInternalsObject(JSContext* cx,
 void js::intl::ReportInternalError(JSContext* cx) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_INTERNAL_INTL_ERROR);
+}
+
+void js::intl::ReportInternalError(JSContext* cx,
+                                   mozilla::intl::ICUError error) {
+  switch (error) {
+    case mozilla::intl::ICUError::OutOfMemory:
+      MOZ_ASSERT(cx->isThrowingOutOfMemory());
+      return;
+    case mozilla::intl::ICUError::InternalError:
+      ReportInternalError(cx);
+      return;
+  }
+  MOZ_CRASH("Unexpected ICU error");
 }
 
 const js::intl::OldStyleLanguageTagMapping
