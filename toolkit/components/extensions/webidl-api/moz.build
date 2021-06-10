@@ -9,6 +9,8 @@ with Files("**"):
 
 UNIFIED_SOURCES += [
     "ExtensionAPIBase.cpp",
+    "ExtensionAPIRequest.cpp",
+    "ExtensionAPIRequestForwarder.cpp",
     "ExtensionBrowser.cpp",
     "ExtensionEventManager.cpp",
 ]

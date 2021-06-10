@@ -1,0 +1,102 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+
+[scriptable, builtinclass, uuid(e6862533-8844-4207-a6ab-04748a29d859)]
+interface mozIExtensionServiceWorkerInfo : nsISupports
+{
+  readonly attribute nsIPrincipal principal;
+  readonly attribute AString scriptURL;
+  readonly attribute AString clientInfoId;
+};
+ 
+[scriptable, builtinclass, uuid(0fee1c8f-e363-46a6-bd0c-d3c3338e2534)]
+interface mozIExtensionAPIRequest : nsISupports
+{
+  AUTF8String toString();
+
+  // Determine what the caller and receiver should expect, e.g. what should
+  // be provided to the API request handler and what to expect it to return.
+  cenum RequestType: 8 {
+    CALL_FUNCTION,
+    CALL_FUNCTION_NO_RETURN,
+    CALL_FUNCTION_ASYNC,
+    ADD_LISTENER,
+    REMOVE_LISTENER,
+    GET_PROPERTY,
+  };
+
+  // The type of the request.
+  readonly attribute AUTF8String requestType;
+
+  // WebExtension API namespace (e.g. tabs, runtime, webRequest, ...)
+  readonly attribute AUTF8String apiNamespace;
+  // method or event name
+  readonly attribute AUTF8String apiName;
+
+  // API object type (e.g. Port, Panel, ...) and its unique id, this
+  // properties are used by API requests originated by an API object
+  // instance (like a runtime Port returned by browser.runtime.connect).
+  readonly attribute AUTF8String apiObjectType;
+  readonly attribute AUTF8String apiObjectId;
+
+  // An array of API call arguments.
+  [implicit_jscontext] readonly attribute jsval args;
+
+  // The caller SavedFrame (only set for calls originated off of the main thread
+  // from a service worker).
+  [implicit_jscontext] readonly attribute jsval callerSavedFrame;
+
+  // Set for requests coming from an extension service worker.
+  readonly attribute mozIExtensionServiceWorkerInfo serviceWorkerInfo;
+};
+
+[scriptable, uuid(59fd4097-d88e-40fd-8664-fedd8ab67ab6)]
+interface mozIExtensionAPIRequestResult : nsISupports
+{
+  cenum ResultType: 8 {
+    // The result is a value to be returned as a result for the API request.
+    // The value attribute can be set to:
+    // - a structured clonable result value (which may be the result of the
+    //   API call itself, or be used by the API method webidl implementation
+    //   to initialize a webidl object to return to the caller, e.g.
+    //   ExtensionPort returned by a call to browser.runtime.connect())
+    // - an error object (which also include internally converted to and from
+    //   ClonedErrorHolder to make it structured clonable).
+    // - a Promise (which can be resolved to a structured clonable value or
+    //   an error object).
+    RETURN_VALUE,
+
+    // The result is an error object that should be thrown as an extension error
+    // to the caller on the thread that originated the request.
+    EXTENSION_ERROR,
+  };
+
+  readonly attribute mozIExtensionAPIRequestResult_ResultType type;
+  readonly attribute jsval value;
+};
+
+[scriptable, uuid(0c61bd33-0557-43a2-9497-96c449f39e33)]
+interface mozIExtensionAPIRequestHandler : nsISupports
+{
+  /**
+   * Handle an API request originated from the WebExtensions webidl API
+   * bindings.
+   *
+   * @param extension An instance of the WebExtensionPolicy webidl interface.
+   * @param apiRequest An instance of the mozIExtensionAPIRequest xpcom interface.
+   *
+   * @return mozIExtensionAPIRequestResult
+   *         JS value returned by the API request handler, may contain a value
+   *         (the result of the API call or a WebIDL dictionary that is used to
+   *         initialize WebIDL-based API object, e.g. ExtensionPort) or
+   *         an Error to be throw on the thread that originated the request. 
+   */
+  void handleAPIRequest(in nsISupports extension,
+                        in mozIExtensionAPIRequest apiRequest,
+                        [optional, retval] out mozIExtensionAPIRequestResult apiRequestResult);
+};
