@@ -171,6 +171,9 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   buffer.AppendLiteral("\n");
   buffer.AppendInt(0);
   buffer.AppendLiteral("\n");
+  buffer.AppendInt(0);
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral("true\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.AppendLiteral("\n");
@@ -186,6 +189,9 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   buffer.AppendLiteral("\n");
   buffer.AppendInt(ts);
   buffer.AppendLiteral("\n");
+  buffer.AppendInt(1);
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral("false\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer))
@@ -218,6 +224,8 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_EQ((int64_t)0, data[0].currentWorkerInstalledTime());
   ASSERT_EQ((int64_t)0, data[0].currentWorkerActivatedTime());
   ASSERT_EQ((int64_t)0, data[0].lastUpdateTime());
+  ASSERT_EQ(false, data[0].navigationPreloadState().enabled());
+  ASSERT_STREQ("true", data[0].navigationPreloadState().headerValue().get());
 
   const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
   ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo)
@@ -238,6 +246,8 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_EQ((int64_t)ts, data[1].currentWorkerInstalledTime());
   ASSERT_EQ((int64_t)ts, data[1].currentWorkerActivatedTime());
   ASSERT_EQ((int64_t)ts, data[1].lastUpdateTime());
+  ASSERT_EQ(true, data[1].navigationPreloadState().enabled());
+  ASSERT_STREQ("false", data[1].navigationPreloadState().headerValue().get());
 }
 
 TEST(ServiceWorkerRegistrar, TestDeleteData)
