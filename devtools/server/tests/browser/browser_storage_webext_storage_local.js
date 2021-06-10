@@ -13,6 +13,15 @@ add_task(async function set_enable_extensionStorage_pref() {
 
 add_task(
   async function test_extensionStorage_disabled_for_non_extension_target() {
+    if (isFissionEnabled()) {
+      ok(
+        true,
+        "This test is not relevant when fission is enabled as we aren't using listStores"
+      );
+      // And we don't implement the EXTENSION_STORAGE Resource yet
+      return;
+    }
+
     info(
       "Setting up and connecting DevTools Server and Client in main process"
     );
