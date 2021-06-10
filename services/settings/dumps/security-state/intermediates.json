@@ -1,7 +1,25 @@
 {
   "data": [
     {
-      "schema": 1622772207866,
+      "schema": 1623250638365,
+      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
+      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
+        "size": 2016,
+        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
+        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
+      "crlite_enrolled": true,
+      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
+      "last_modified": 1623293869159
+    },
+    {
+      "schema": 1623194746627,
       "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
       "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
       "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
@@ -16,7 +34,43 @@
       "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
       "crlite_enrolled": true,
       "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
-      "last_modified": 1622775448122
+      "last_modified": 1623207469838
+    },
+    {
+      "schema": 1623160915800,
+      "derHash": "/pWiTn+Ul45Y2ZNQq3q3iXdKmHzSUYfBKMGR0gdSO7E=",
+      "subject": "CN=GLOBALTRUST 2020 SERVER QUALIFIED EV 1,O=e-commerce monitoring GmbH,C=AT",
+      "subjectDN": "MGMxCzAJBgNVBAYTAkFUMSMwIQYDVQQKExplLWNvbW1lcmNlIG1vbml0b3JpbmcgR21iSDEvMC0GA1UEAxMmR0xPQkFMVFJVU1QgMjAyMCBTRVJWRVIgUVVBTElGSUVEIEVWIDE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "895ff083ad30ad3da5ac84d2a84e2fec9d509e8ccbf06669fe2fc95001179b70",
+        "size": 2479,
+        "filename": "zXQfBWS96DJ9x-JTaXe4CKy6j5kJ5VMFEZA20rNiOkg=.pem",
+        "location": "security-state-staging/intermediates/7e71183e-5775-45e4-ab9c-77e8c9a48231.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "zXQfBWS96DJ9x+JTaXe4CKy6j5kJ5VMFEZA20rNiOkg=",
+      "crlite_enrolled": true,
+      "id": "ee150f50-3385-4e05-8b0c-addb39af8e93",
+      "last_modified": 1623164296949
+    },
+    {
+      "schema": 1623117869045,
+      "derHash": "F2b+KPA0FQzbYrRGlTHk12+/Oh7JaEyrN2fDAhq2flA=",
+      "subject": "CN=IdenTrust Commercial Root CA 1,O=IdenTrust,C=US",
+      "subjectDN": "MEoxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlJZGVuVHJ1c3QxJzAlBgNVBAMTHklkZW5UcnVzdCBDb21tZXJjaWFsIFJvb3QgQ0EgMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "47f5a504741973ede38fb963af7f2f46d5180b33f1f479c48b99ae34c045f4e4",
+        "size": 2288,
+        "filename": "B-hU8mp8vTiZJ6oEG_7xts0h3RQ4GK2UfcZVqeWH_og=.pem",
+        "location": "security-state-staging/intermediates/42a29927-6f8b-4b19-be67-b7fdbdfc9c06.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "B+hU8mp8vTiZJ6oEG/7xts0h3RQ4GK2UfcZVqeWH/og=",
+      "crlite_enrolled": false,
+      "id": "3e75cfd0-6489-45cf-b781-85b791c79aac",
+      "last_modified": 1623121054960
     },
     {
       "schema": 1622732260081,
@@ -163,24 +217,6 @@
       "last_modified": 1622710635761
     },
     {
-      "schema": 1622707270700,
-      "derHash": "/pWiTn+Ul45Y2ZNQq3q3iXdKmHzSUYfBKMGR0gdSO7E=",
-      "subject": "CN=GLOBALTRUST 2020 SERVER QUALIFIED EV 1,O=e-commerce monitoring GmbH,C=AT",
-      "subjectDN": "MGMxCzAJBgNVBAYTAkFUMSMwIQYDVQQKExplLWNvbW1lcmNlIG1vbml0b3JpbmcgR21iSDEvMC0GA1UEAxMmR0xPQkFMVFJVU1QgMjAyMCBTRVJWRVIgUVVBTElGSUVEIEVWIDE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "895ff083ad30ad3da5ac84d2a84e2fec9d509e8ccbf06669fe2fc95001179b70",
-        "size": 2479,
-        "filename": "zXQfBWS96DJ9x-JTaXe4CKy6j5kJ5VMFEZA20rNiOkg=.pem",
-        "location": "security-state-staging/intermediates/7e71183e-5775-45e4-ab9c-77e8c9a48231.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "zXQfBWS96DJ9x+JTaXe4CKy6j5kJ5VMFEZA20rNiOkg=",
-      "crlite_enrolled": false,
-      "id": "ee150f50-3385-4e05-8b0c-addb39af8e93",
-      "last_modified": 1622710635749
-    },
-    {
       "schema": 1622581045640,
       "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
       "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
@@ -233,24 +269,6 @@
       "crlite_enrolled": true,
       "id": "10b10ba7-6c85-4583-9814-eda266ae2416",
       "last_modified": 1622516241262
-    },
-    {
-      "schema": 1622512721194,
-      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
-      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
-        "size": 2016,
-        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
-        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
-      "crlite_enrolled": true,
-      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
-      "last_modified": 1622516241243
     },
     {
       "schema": 1621954724552,
