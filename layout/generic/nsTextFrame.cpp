@@ -3419,15 +3419,17 @@ void nsTextFrame::PropertyProvider::GetSpacing(Range aRange,
 
 static bool CanAddSpacingAfter(const gfxTextRun* aTextRun, uint32_t aOffset,
                                bool aNewlineIsSignificant) {
-  if (aOffset + 1 >= aTextRun->GetLength()) return true;
-  return aTextRun->IsClusterStart(aOffset + 1) &&
-         aTextRun->IsLigatureGroupStart(aOffset + 1) &&
-         !aTextRun->CharIsFormattingControl(aOffset) &&
-         !(aNewlineIsSignificant && aTextRun->CharIsNewline(aOffset));
+  if (aOffset + 1 >= aTextRun->GetLength()) {
+    return true;
+  }
+  const auto* g = aTextRun->GetCharacterGlyphs();
+  return g[aOffset + 1].IsClusterStart() &&
+         g[aOffset + 1].IsLigatureGroupStart() &&
+         !g[aOffset].CharIsFormattingControl() && !g[aOffset].CharIsTab() &&
+         !(aNewlineIsSignificant && g[aOffset].CharIsNewline());
 }
 
-static gfxFloat ComputeTabWidthAppUnits(const nsIFrame* aFrame,
-                                        gfxTextRun* aTextRun) {
+static gfxFloat ComputeTabWidthAppUnits(const nsIFrame* aFrame) {
   const auto& tabSize = aFrame->StyleText()->mMozTabSize;
   if (tabSize.IsLength()) {
     nscoord w = tabSize.length._0.ToAppUnits();
@@ -3439,13 +3441,17 @@ static gfxFloat ComputeTabWidthAppUnits(const nsIFrame* aFrame,
   gfxFloat spaces = tabSize.number._0;
   MOZ_ASSERT(spaces >= 0);
 
-  // Round the space width when converting to appunits the same way
-  // textruns do.
-  gfxFloat spaceWidthAppUnits = NS_round(
-      GetFirstFontMetrics(aTextRun->GetFontGroup(), aTextRun->IsVertical())
-          .spaceWidth *
-      aTextRun->GetAppUnitsPerDevUnit());
-  return spaces * spaceWidthAppUnits;
+  const nsIFrame* cb = aFrame->GetContainingBlock(0, aFrame->StyleDisplay());
+  const auto* styleText = cb->StyleText();
+
+  // Round the space width when converting to appunits the same way textruns do.
+  RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForFrame(cb, 1.0f);
+  bool vertical = cb->GetWritingMode().IsCentralBaseline();
+  nscoord spaceWidth = nscoord(NS_round(
+      GetFirstFontMetrics(fm->GetThebesFontGroup(), vertical).spaceWidth *
+      cb->PresContext()->AppUnitsPerDevPixel()));
+  return spaces * (spaceWidth + styleText->mLetterSpacing.ToAppUnits() +
+                   styleText->mWordSpacing.Resolve(spaceWidth));
 }
 
 void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
@@ -3498,7 +3504,7 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
 
   // Now add tab spacing, if there is any
   if (!aIgnoreTabs) {
-    gfxFloat tabWidth = ComputeTabWidthAppUnits(mFrame, mTextRun);
+    gfxFloat tabWidth = ComputeTabWidthAppUnits(mFrame);
     if (tabWidth > 0) {
       CalcTabWidths(aRange, tabWidth);
       if (mTabWidths) {
@@ -8476,7 +8482,7 @@ void nsTextFrame::AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
       provider.GetSpacing(Range(i, i + 1), &spacing);
       aData->mCurrentLine += nscoord(spacing.mBefore);
       if (tabWidth < 0) {
-        tabWidth = ComputeTabWidthAppUnits(this, textRun);
+        tabWidth = ComputeTabWidthAppUnits(this);
       }
       gfxFloat afterTab = AdvanceToNextTab(aData->mCurrentLine, tabWidth,
                                            provider.MinTabAdvance());
@@ -8646,7 +8652,7 @@ void nsTextFrame::AddInlinePrefISizeForFlow(
       provider.GetSpacing(Range(i, i + 1), &spacing);
       aData->mCurrentLine += nscoord(spacing.mBefore);
       if (tabWidth < 0) {
-        tabWidth = ComputeTabWidthAppUnits(this, textRun);
+        tabWidth = ComputeTabWidthAppUnits(this);
       }
       gfxFloat afterTab = AdvanceToNextTab(aData->mCurrentLine, tabWidth,
                                            provider.MinTabAdvance());
