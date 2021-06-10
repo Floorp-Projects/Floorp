@@ -165,6 +165,20 @@ nsresult SetSubmitReports(bool aSubmitReport);
 
 // Out-of-process crash reporter API.
 
+#ifdef XP_WIN
+// This data is stored in the parent process, there is one copy for each child
+// process. The mChildPid and mMinidumpFile fields are filled by the WER runtime
+// exception module when the associated child process crashes.
+struct WindowsErrorReportingData {
+  // Points to the WerNotifyProc function.
+  LPTHREAD_START_ROUTINE mWerNotifyProc;
+  // PID of the child process that crashed.
+  DWORD mChildPid;
+  // Filename of the generated minidump; this is not a 0-terminated string
+  char mMinidumpFile[40];
+};
+#endif  // XP_WIN
+
 // Initializes out-of-process crash reporting. This method must be called
 // before the platform-specific notification pipe APIs are called. If called
 // from off the main thread, this method will synchronously proxy to the main
@@ -300,7 +314,7 @@ void UnregisterInjectorCallback(DWORD processID);
 // and the magic fd number it should be remapped to
 // (|childCrashRemapFd|) before exec() in the child process.
 // |SetRemoteExceptionHandler()| in the child process expects to find
-// the server at |childCrashRemapFd|.  Return true iff successful.
+// the server at |childCrashRemapFd|.  Return true if successful.
 //
 // If crash reporting is disabled, both outparams will be set to -1
 // and |true| will be returned.
@@ -308,16 +322,22 @@ bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd);
 
 #endif  // XP_WIN
 
+// Windows Error Reporting helper
+#if defined(XP_WIN)
+DWORD WINAPI WerNotifyProc(LPVOID aParameter);
+#endif
+
 // Child-side API
-bool SetRemoteExceptionHandler(const char* aCrashPipe = nullptr,
-                               uintptr_t aCrashTimeAnnotationFile = 0);
+bool SetRemoteExceptionHandler(
+    const char* aCrashPipe = nullptr,
+    FileHandle aCrashTimeAnnotationFile = kInvalidFileHandle);
 bool UnsetRemoteExceptionHandler();
 
 #if defined(MOZ_WIDGET_ANDROID)
 // Android creates child process as services so we must explicitly set
 // the handle for the pipe since it can't get remapped to a default value.
-void SetNotificationPipeForChild(int childCrashFd);
-void SetCrashAnnotationPipeForChild(int childCrashAnnotationFd);
+void SetNotificationPipeForChild(FileHandle childCrashFd);
+void SetCrashAnnotationPipeForChild(FileHandle childCrashAnnotationFd);
 #endif
 
 // Annotates the crash report with the name of the calling thread.
