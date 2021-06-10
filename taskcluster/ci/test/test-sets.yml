@@ -172,7 +172,6 @@ linux1804-tests:
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
     - reftest
-    - reftest-no-accel
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
@@ -275,7 +274,6 @@ windows-7-tests:
     - mochitest-browser-chrome
     - mochitest-webgpu
     - reftest
-    - reftest-no-accel
     - xpcshell
 
 windows32-tests:
@@ -317,7 +315,6 @@ windows-tests:
     - mochitest-plain-gpu
     - mochitest-remote
     - reftest
-    - reftest-no-accel
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
@@ -586,3 +583,8 @@ linux-tsan-tests:
     - web-platform-tests
     - web-platform-tests-reftest
     - xpcshell
+
+noqr-tests:
+    - crashtest
+    - reftest
+    - mochitest-media

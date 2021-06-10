@@ -430,6 +430,7 @@ mochitest-media:
                     linux.*64-asan-qr/opt: ['autoland', 'mozilla-central']
                     linux.*64-tsan/opt: ['autoland', 'mozilla-central']
                     default: []
+            noqr: built-projects
             default:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
@@ -445,7 +446,9 @@ mochitest-media:
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'socketprocess', 'fission']
             android-em-7.*: ['fission']
             android.*: ['socketprocess']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'fission-webgl-ipc', 'wayland']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'fission-webgl-ipc', 'wayland', 'noqr']
+            .*(-asan|-tsan|10-32|7-32).*: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
+            .*-qr.*: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc', 'noqr']
             default: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
     loopback-video: true
     instance-size:
