@@ -106,8 +106,6 @@ function createProfile(profileName) {
 
   // Clean up the profile before local profile test.
   profile.remove(true);
-  ok(!jsonFile.exists(), "Times file was removed");
-  ok(!profileDir.exists(), "Profile dir was removed");
 
   // Create with non-null aRootDir
   profile = gProfileService.createProfile(profileDir, profileName);
@@ -118,7 +116,6 @@ function createProfile(profileName) {
 
   // Clean up the profile.
   profile.remove(true);
-  ok(!profileDir.exists(), "Profile dir was removed");
 }
 
   ]]>
