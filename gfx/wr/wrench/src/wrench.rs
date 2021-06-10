@@ -366,7 +366,7 @@ impl Wrench {
 
             match metric {
                 Some(metric) => {
-                    let glyph_rect = LayoutRect::new(
+                    let glyph_rect = LayoutRect::from_origin_and_size(
                         LayoutPoint::new(cursor.x + metric.left as f32, cursor.y - metric.top as f32),
                         LayoutSize::new(metric.width as f32, metric.height as f32)
                     );

@@ -28,7 +28,7 @@ use api::{DebugFlags, DocumentId, PremultipliedColorF};
 #[cfg(test)]
 use api::IdNamespace;
 use api::units::*;
-use euclid::{HomogeneousVector, Rect};
+use euclid::{HomogeneousVector, Box2D};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{FrameStamp, FrameId};
@@ -104,14 +104,14 @@ impl From<[f32; 4]> for GpuBlockData {
     }
 }
 
-impl<P> From<Rect<f32, P>> for GpuBlockData {
-    fn from(r: Rect<f32, P>) -> Self {
+impl<P> From<Box2D<f32, P>> for GpuBlockData {
+    fn from(r: Box2D<f32, P>) -> Self {
         GpuBlockData {
             data: [
-                r.origin.x,
-                r.origin.y,
-                r.size.width,
-                r.size.height,
+                r.min.x,
+                r.min.y,
+                r.max.x,
+                r.max.y,
             ],
         }
     }

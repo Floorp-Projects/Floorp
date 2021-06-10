@@ -672,14 +672,14 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
 
         switch (extendMode) {
           case ExtendMode::REPEAT_Y:
-            fill.origin.x = dest.origin.x;
-            fill.size.width = dest.size.width;
-            stretchSize.width = dest.size.width;
+            fill.min.x = dest.min.x;
+            fill.max.x = dest.max.x;
+            stretchSize.width = dest.width();
             break;
           case ExtendMode::REPEAT_X:
-            fill.origin.y = dest.origin.y;
-            fill.size.height = dest.size.height;
-            stretchSize.height = dest.size.height;
+            fill.min.y = dest.min.y;
+            fill.max.y = dest.max.y;
+            stretchSize.height = dest.height();
             break;
           default:
             break;

@@ -40,8 +40,8 @@ YuvPrimitive fetch_yuv_primitive(int address) {
 void brush_vs(
     VertexInfo vi,
     int prim_address,
-    RectWithSize local_rect,
-    RectWithSize segment_rect,
+    RectWithEndpoint local_rect,
+    RectWithEndpoint segment_rect,
     ivec4 prim_user_data,
     int specific_resource_address,
     mat4 transform,
@@ -49,7 +49,7 @@ void brush_vs(
     int brush_flags,
     vec4 unused
 ) {
-    vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
+    vec2 f = (vi.local_pos - local_rect.p0) / rect_size(local_rect);
 
     YuvPrimitive prim = fetch_yuv_primitive(prim_address);
     vYuvOffsetVector_Coefficient.w = prim.coefficient;
