@@ -22,7 +22,7 @@ class SizeableUTF8Buffer {
  public:
   using CharType = uint8_t;
 
-  bool allocate(size_t size) {
+  bool reserve(size_t size) {
     mBuffer.reset(reinterpret_cast<CharType*>(malloc(size)));
     mCapacity = size;
     return true;
@@ -30,7 +30,7 @@ class SizeableUTF8Buffer {
 
   CharType* data() { return mBuffer.get(); }
 
-  size_t size() const { return mCapacity; }
+  size_t capacity() const { return mCapacity; }
 
   void written(size_t amount) { mWritten = amount; }
 

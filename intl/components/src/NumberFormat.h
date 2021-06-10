@@ -397,7 +397,7 @@ class NumberFormat final {
       } else {
         // ICU provides APIs which accept a buffer, but they just copy from an
         // internal buffer behind the scenes anyway.
-        if (!buffer.allocate(result.size())) {
+        if (!buffer.reserve(result.size())) {
           return Err(FormatError::OutOfMemory);
         }
         PodCopy(static_cast<char16_t*>(buffer.data()), result.data(),

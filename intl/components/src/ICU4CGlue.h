@@ -48,7 +48,7 @@ static ICUResult FillBufferWithICUCall(Buffer& buffer,
   if (status == U_BUFFER_OVERFLOW_ERROR) {
     MOZ_ASSERT(length >= 0);
 
-    if (!buffer.allocate(length)) {
+    if (!buffer.reserve(length)) {
       return Err(ICUError::OutOfMemory);
     }
 
@@ -110,13 +110,13 @@ template <typename Buffer>
     return false;
   }
 
-  if (!utf8TargetBuffer.allocate(3 * utf16Span.Length())) {
+  if (!utf8TargetBuffer.reserve(3 * utf16Span.Length())) {
     return false;
   }
 
   size_t amount = ConvertUtf16toUtf8(
-      utf16Span, Span(reinterpret_cast<char*>(std::data(utf8TargetBuffer)),
-                      std::size(utf8TargetBuffer)));
+      utf16Span, Span(reinterpret_cast<char*>(utf8TargetBuffer.data()),
+                      utf8TargetBuffer.capacity()));
 
   utf8TargetBuffer.written(amount);
 
