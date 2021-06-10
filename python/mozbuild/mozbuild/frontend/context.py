@@ -19,10 +19,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import operator
 import os
 
-from collections import (
-    Counter,
-    OrderedDict,
-)
+from collections import Counter, OrderedDict
 from mozbuild.util import (
     HierarchicalStringList,
     ImmutableStrictOrderingOnAppendList,
@@ -40,10 +37,7 @@ from mozbuild.util import (
 
 from .. import schedules
 
-from ..testing import (
-    read_manifestparser_manifest,
-    read_reftest_manifest,
-)
+from ..testing import read_manifestparser_manifest, read_reftest_manifest
 
 import mozpack.path as mozpath
 from types import FunctionType
@@ -670,6 +664,11 @@ class CompileFlags(TargetCompileFlags):
                 context.config.substs.get("MOZ_NEW_PASS_MANAGER_FLAGS"),
                 ("CXXFLAGS", "CFLAGS"),
             ),
+            (
+                "FILE_PREFIX_MAP",
+                context.config.substs.get("MOZ_FILE_PREFIX_MAP_FLAGS"),
+                ("CXXFLAGS", "CFLAGS"),
+            ),
         )
 
         TargetCompileFlags.__init__(self, context)
@@ -713,21 +712,13 @@ class WasmFlags(TargetCompileFlags):
                 ("WASM_CXXFLAGS", "WASM_CFLAGS"),
             ),
             ("RTL", None, ("WASM_CXXFLAGS", "WASM_CFLAGS")),
-            (
-                "DEBUG",
-                self._debug_flags(),
-                ("WASM_CFLAGS", "WASM_CXXFLAGS"),
-            ),
+            ("DEBUG", self._debug_flags(), ("WASM_CFLAGS", "WASM_CXXFLAGS")),
             (
                 "CLANG_PLUGIN",
                 context.config.substs.get("CLANG_PLUGIN_FLAGS"),
                 ("WASM_CFLAGS", "WASM_CXXFLAGS"),
             ),
-            (
-                "OPTIMIZE",
-                self._optimize_flags(),
-                ("WASM_CFLAGS", "WASM_CXXFLAGS"),
-            ),
+            ("OPTIMIZE", self._optimize_flags(), ("WASM_CFLAGS", "WASM_CXXFLAGS")),
             (
                 "FRAMEPTR",
                 context.config.substs.get("MOZ_FRAMEPTR_FLAGS"),
@@ -752,6 +743,11 @@ class WasmFlags(TargetCompileFlags):
             (
                 "NEWPM",
                 context.config.substs.get("MOZ_NEW_PASS_MANAGER_FLAGS"),
+                ("WASM_CFLAGS", "WASM_CXXFLAGS"),
+            ),
+            (
+                "FILE_PREFIX_MAP",
+                context.config.substs.get("MOZ_FILE_PREFIX_MAP_FLAGS"),
                 ("WASM_CFLAGS", "WASM_CXXFLAGS"),
             ),
         )
@@ -1173,12 +1169,7 @@ SchedulingComponents = ContextDerivedTypedRecord(
 )
 
 GeneratedFilesList = StrictOrderingOnAppendListWithFlagsFactory(
-    {
-        "script": six.text_type,
-        "inputs": list,
-        "force": bool,
-        "flags": list,
-    }
+    {"script": six.text_type, "inputs": list, "force": bool, "flags": list}
 )
 
 
@@ -1379,9 +1370,7 @@ class Files(SubContext):
 # Arbitrary arguments can be passed to the class constructor. The first
 # argument is always the parent context. It is up to each class to perform
 # argument validation.
-SUBCONTEXTS = [
-    Files,
-]
+SUBCONTEXTS = [Files]
 
 for cls in SUBCONTEXTS:
     if not issubclass(cls, SubContext):

@@ -608,8 +608,18 @@ set_config("CARGO_PROFILE_DEV_OPT_LEVEL", rustc_opt_level)
     target,
     "--enable-debug-symbols",
     "--enable-frame-pointers",
+    path_remapping,
+    path_remappings,
 )
-def rust_compile_flags(opt_level, debug_rust, target, debug_symbols, frame_pointers):
+def rust_compile_flags(
+    opt_level,
+    debug_rust,
+    target,
+    debug_symbols,
+    frame_pointers,
+    path_remapping,
+    path_remappings,
+):
     # Cargo currently supports only two interesting profiles for building:
     # development and release. Those map (roughly) to --enable-debug and
     # --disable-debug in Gecko, respectively.
@@ -648,6 +658,13 @@ def rust_compile_flags(opt_level, debug_rust, target, debug_symbols, frame_point
     flags = []
     for opt in opts:
         flags.extend(["-C", opt])
+
+    if "rust" in path_remapping:
+        # rustc has supported --remap-path-prefix since version 1.26, well
+        # before our required minimum Rust version, so there's no need to
+        # feature-detect or gate on versions.
+        for old, new in path_remappings:
+            flags.append(f"--remap-path-prefix={old}={new}")
 
     return flags
 
