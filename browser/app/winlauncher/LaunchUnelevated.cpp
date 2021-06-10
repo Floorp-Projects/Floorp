@@ -128,8 +128,7 @@ namespace mozilla {
 LauncherVoidResult LaunchUnelevated(int aArgc, wchar_t* aArgv[]) {
   // We need COM to talk to Explorer. Using ProcessRuntime so that
   // process-global COM configuration is done correctly
-  mozilla::mscom::ProcessRuntime mscom(
-      mozilla::mscom::ProcessRuntime::ProcessCategory::Launcher);
+  mozilla::mscom::ProcessRuntime mscom(GeckoProcessType_Default);
   if (!mscom) {
     return LAUNCHER_ERROR_FROM_HRESULT(mscom.GetHResult());
   }
