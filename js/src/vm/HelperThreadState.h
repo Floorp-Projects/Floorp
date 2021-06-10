@@ -168,7 +168,7 @@ class GlobalHelperThreadState {
 
   bool isInitialized_ = false;
 
-  bool useInternalThreadPool_;
+  bool useInternalThreadPool_ = true;
 
   ParseTask* removeFinishedParseTask(JSContext* cx, ParseTaskKind kind,
                                      JS::OffThreadToken* token);
@@ -235,7 +235,9 @@ class GlobalHelperThreadState {
             mozilla::TimeDuration timeout = mozilla::TimeDuration::Forever());
   void notifyAll(CondVar which, const AutoLockHelperThreadState&);
 
-  bool useInternalThreadPool(const AutoLockHelperThreadState& locked);
+  bool useInternalThreadPool(const AutoLockHelperThreadState& lock) const {
+    return useInternalThreadPool_;
+  }
 
   bool isTerminating(const AutoLockHelperThreadState& locked) const {
     return terminating_;
