@@ -11453,14 +11453,20 @@
   value: false
   mirror: always
 
+# Whether widget follows the firefox theme in order to choose a light / dark
+# appearance.
+- name: widget.gtk.follow-firefox-theme
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Whether we try to extract dark theme GTK colors.
 #
-# This has a startup performance cost (see bug 1709295), so until we need them
-# (that is, until we implement the color-scheme CSS property / meta tag / etc)
-# we keep this code pref'd off.
+# For now, needed for follow-firefox-theme. In the future will also be needed
+# for the color-scheme CSS property / meta tag / etc.
 - name: widget.gtk.alt-theme.dark
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether selection colors for the non-system theme get passed from the system
