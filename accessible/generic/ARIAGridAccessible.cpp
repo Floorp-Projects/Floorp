@@ -40,7 +40,7 @@ already_AddRefed<AccAttributes> ARIAGridAccessible::NativeAttributes() {
   RefPtr<AccAttributes> attributes = AccessibleWrap::NativeAttributes();
 
   if (IsProbablyLayoutTable()) {
-    attributes->SetAttribute(u"layout-guess"_ns, u"true"_ns);
+    attributes->SetAttribute(u"layout-guess"_ns, true);
   }
 
   return attributes.forget();
@@ -604,9 +604,8 @@ already_AddRefed<AccAttributes> ARIAGridCellAccessible::NativeAttributes() {
     }
   }
 
-  nsAutoString stringIdx;
-  stringIdx.AppendInt(rowIdx * colCount + colIdx);
-  attributes->SetAttribute(nsGkAtoms::tableCellIndex, stringIdx);
+  attributes->SetAttribute(nsGkAtoms::tableCellIndex,
+                           rowIdx * colCount + colIdx);
 
 #ifdef DEBUG
   attributes->SetAttribute(u"cppclass"_ns, u"ARIAGridCellAccessible"_ns);

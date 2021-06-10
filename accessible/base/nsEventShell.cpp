@@ -61,8 +61,7 @@ void nsEventShell::GetEventAttributes(nsINode* aNode,
                                       AccAttributes* aAttributes) {
   if (aNode != sEventTargetNode) return;
 
-  aAttributes->SetAttribute(nsGkAtoms::eventFromInput,
-                            sEventFromUserInput ? u"true"_ns : u"false"_ns);
+  aAttributes->SetAttribute(nsGkAtoms::eventFromInput, sEventFromUserInput);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
