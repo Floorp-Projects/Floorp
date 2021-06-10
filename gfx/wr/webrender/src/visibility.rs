@@ -232,7 +232,7 @@ pub fn update_primitive_visibility(
     let map_surface_to_world = SpaceMapper::new_with_target(
         ROOT_SPATIAL_NODE_INDEX,
         surface.surface_spatial_node_index,
-        frame_context.global_screen_world_rect.to_rect(),
+        frame_context.global_screen_world_rect,
         frame_context.spatial_tree,
     );
 
@@ -446,8 +446,8 @@ pub fn update_primitive_visibility(
                 // the area affected by the surface.
                 match prim_instance.vis.combined_local_clip_rect.intersection(&local_rect) {
                     Some(visible_rect) => {
-                        if let Some(rect) = map_local_to_surface.map(&visible_rect) {
-                            surface_rect = surface_rect.union(&rect);
+                        if let Some(rect) = map_local_to_surface.map(&visible_rect.to_box2d()) {
+                            surface_rect = surface_rect.union(&rect.to_rect());
                         }
                     }
                     None => {
@@ -614,10 +614,10 @@ pub fn update_primitive_visibility(
         let map_surface_to_parent_surface = SpaceMapper::new_with_target(
             parent_surface.surface_spatial_node_index,
             surface.surface_spatial_node_index,
-            PictureRect::max_rect(),
+            PictureRect::max_rect().to_box2d(),
             frame_context.spatial_tree,
         );
-        map_surface_to_parent_surface.map(&surface_rect)
+        map_surface_to_parent_surface.map(&surface_rect.to_box2d()).map(|r| r.to_rect())
     }
 }
 
@@ -636,9 +636,9 @@ fn update_prim_post_visibility(
             // minimize the size of the render target that is required.
             if let Some(ref mut raster_config) = pic.raster_config {
                 raster_config.clipped_bounding_rect = map_surface_to_world
-                    .map(&prim_instance.vis.clip_chain.pic_clip_rect)
+                    .map(&prim_instance.vis.clip_chain.pic_clip_rect.to_box2d())
                     .and_then(|rect| {
-                        rect.to_box2d().intersection(&world_culling_rect)
+                        rect.intersection(&world_culling_rect)
                     })
                     .unwrap_or(WorldRect::zero());
             }
@@ -664,7 +664,7 @@ pub fn compute_conservative_visible_rect(
     let map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel> = SpaceMapper::new_with_target(
         ROOT_SPATIAL_NODE_INDEX,
         clip_chain.pic_spatial_node_index,
-        world_culling_rect.to_rect(),
+        world_culling_rect,
         spatial_tree,
     );
 
@@ -672,13 +672,13 @@ pub fn compute_conservative_visible_rect(
     let map_local_to_pic: SpaceMapper<LayoutPixel, PicturePixel> = SpaceMapper::new_with_target(
         clip_chain.pic_spatial_node_index,
         prim_spatial_node_index,
-        PictureRect::max_rect(),
+        PictureRect::max_rect().to_box2d(),
         spatial_tree,
     );
 
     // Unmap the world culling rect from world -> picture space. If this mapping fails due
     // to matrix weirdness, best we can do is use the clip chain's local clip rect.
-    let pic_culling_rect = match map_pic_to_world.unmap(&world_culling_rect.to_rect()) {
+    let pic_culling_rect = match map_pic_to_world.unmap(&world_culling_rect) {
         Some(rect) => rect,
         None => return clip_chain.local_clip_rect,
     };
@@ -687,7 +687,7 @@ pub fn compute_conservative_visible_rect(
     // is in picture space (the clip-chain already takes into account the bounds of the
     // primitive local_rect and local_clip_rect). If there is no intersection here, the
     // primitive is not visible at all.
-    let pic_culling_rect = match pic_culling_rect.intersection(&clip_chain.pic_clip_rect) {
+    let pic_culling_rect = match pic_culling_rect.intersection(&clip_chain.pic_clip_rect.to_box2d()) {
         Some(rect) => rect,
         None => return LayoutRect::zero(),
     };
@@ -695,7 +695,7 @@ pub fn compute_conservative_visible_rect(
     // Unmap the picture culling rect from picture -> local space. If this mapping fails due
     // to matrix weirdness, best we can do is use the clip chain's local clip rect.
     match map_local_to_pic.unmap(&pic_culling_rect) {
-        Some(rect) => rect,
+        Some(rect) => rect.to_rect(),
         None => clip_chain.local_clip_rect,
     }
 }
@@ -706,8 +706,8 @@ fn calculate_prim_clipped_world_rect(
     map_surface_to_world: &SpaceMapper<PicturePixel, WorldPixel>,
 ) -> Option<WorldRect> {
     map_surface_to_world
-        .map(pic_clip_rect)
+        .map(&pic_clip_rect.to_box2d())
         .and_then(|world_rect| {
-            world_rect.to_box2d().intersection(world_culling_rect)
+            world_rect.intersection(world_culling_rect)
         })
 }
