@@ -2291,7 +2291,6 @@ STATIC_ATOMS = [
     Atom("inlinevalue", "inline"),
     Atom("invalid", "invalid"),
     Atom("lineNumber", "line-number"),
-    Atom("live", "live"),
     Atom("menuitemcheckbox", "menuitemcheckbox"),
     Atom("menuitemradio", "menuitemradio"),
     # Atom("mixed", "mixed"),  # "mixed" is present above

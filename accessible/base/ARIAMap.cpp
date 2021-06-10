@@ -1467,48 +1467,61 @@ AttrIterator::AttrIterator(nsIContent* aContent)
   mAttrCount = mElement ? mElement->GetAttrCount() : 0;
 }
 
-bool AttrIterator::Next(nsAString& aAttrName, nsAString& aAttrValue) {
+bool AttrIterator::Next() {
   while (mAttrIdx < mAttrCount) {
     const nsAttrName* attr = mElement->GetAttrNameAt(mAttrIdx);
     mAttrIdx++;
     if (attr->NamespaceEquals(kNameSpaceID_None)) {
-      nsAtom* attrAtom = attr->Atom();
-      nsDependentAtomString attrStr(attrAtom);
+      mAttrAtom = attr->Atom();
+      nsDependentAtomString attrStr(mAttrAtom);
       if (!StringBeginsWith(attrStr, u"aria-"_ns)) continue;  // Not ARIA
 
-      uint8_t attrFlags = aria::AttrCharacteristicsFor(attrAtom);
+      uint8_t attrFlags = aria::AttrCharacteristicsFor(mAttrAtom);
       if (attrFlags & ATTR_BYPASSOBJ) {
         continue;  // No need to handle exposing as obj attribute here
       }
 
       if ((attrFlags & ATTR_VALTOKEN) &&
-          !nsAccUtils::HasDefinedARIAToken(mElement, attrAtom)) {
+          !nsAccUtils::HasDefinedARIAToken(mElement, mAttrAtom)) {
         continue;  // only expose token based attributes if they are defined
       }
 
       if ((attrFlags & ATTR_BYPASSOBJ_IF_FALSE) &&
-          mElement->AttrValueIs(kNameSpaceID_None, attrAtom, nsGkAtoms::_false,
+          mElement->AttrValueIs(kNameSpaceID_None, mAttrAtom, nsGkAtoms::_false,
                                 eCaseMatters)) {
         continue;  // only expose token based attribute if value is not 'false'.
       }
 
-      nsAutoString value;
-      if (mElement->GetAttr(kNameSpaceID_None, attrAtom, value)) {
-        aAttrName.Assign(Substring(attrStr, 5));
-        if (attrFlags & ATTR_VALTOKEN) {
-          nsAtom* normalizedValue =
-              nsAccUtils::NormalizeARIAToken(mElement, attrAtom);
-          if (normalizedValue) {
-            nsDependentAtomString normalizedValueStr(normalizedValue);
-            aAttrValue.Assign(normalizedValueStr);
-            return true;
-          }
-        }
-        aAttrValue.Assign(value);
-        return true;
-      }
+      return true;
     }
   }
 
+  mAttrAtom = nullptr;
+
   return false;
+}
+
+void AttrIterator::AttrName(nsAString& aAttrName) const {
+  nsDependentAtomString attrStr(mAttrAtom);
+  MOZ_ASSERT(StringBeginsWith(attrStr, u"aria-"_ns),
+             "Stored atom is an aria attribute.");
+  aAttrName.Assign(Substring(attrStr, 5));
+}
+
+nsAtom* AttrIterator::AttrName() const { return mAttrAtom; }
+
+void AttrIterator::AttrValue(nsAString& aAttrValue) const {
+  nsAutoString value;
+  if (mElement->GetAttr(kNameSpaceID_None, mAttrAtom, value)) {
+    if (aria::AttrCharacteristicsFor(mAttrAtom) & ATTR_VALTOKEN) {
+      nsAtom* normalizedValue =
+          nsAccUtils::NormalizeARIAToken(mElement, mAttrAtom);
+      if (normalizedValue) {
+        nsDependentAtomString normalizedValueStr(normalizedValue);
+        aAttrValue.Assign(normalizedValueStr);
+        return;
+      }
+    }
+    aAttrValue.Assign(value);
+  }
 }
