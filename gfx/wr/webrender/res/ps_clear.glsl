@@ -11,7 +11,7 @@ PER_INSTANCE in vec4 aRect;
 PER_INSTANCE in vec4 aColor;
 
 void main(void) {
-    vec2 pos = aRect.xy + aPosition.xy * aRect.zw;
+    vec2 pos = mix(aRect.xy, aRect.zw, aPosition.xy);
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
     gl_Position.z = gl_Position.w; // force depth clear to 1.0
     vColor = aColor;

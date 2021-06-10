@@ -69,7 +69,7 @@ impl NormalBorderData {
         frame_state: &mut FrameBuildingState,
     ) {
         if let Some(ref mut request) = frame_state.gpu_cache.request(&mut common.gpu_cache_handle) {
-            self.write_prim_gpu_blocks(request, common.prim_rect.size);
+            self.write_prim_gpu_blocks(request, common.prim_rect.size());
             self.write_segment_gpu_blocks(request);
         }
 
@@ -124,7 +124,7 @@ impl From<NormalBorderKey> for NormalBorderTemplate {
         let mut border_segments = Vec::new();
 
         create_border_segments(
-            common.prim_rect.size,
+            common.prim_rect.size(),
             &border,
             &widths,
             &mut border_segments,
@@ -248,7 +248,7 @@ impl ImageBorderData {
         frame_state: &mut FrameBuildingState,
     ) {
         if let Some(ref mut request) = frame_state.gpu_cache.request(&mut common.gpu_cache_handle) {
-            self.write_prim_gpu_blocks(request, &common.prim_rect.size);
+            self.write_prim_gpu_blocks(request, &common.prim_rect.size());
             self.write_segment_gpu_blocks(request);
         }
 
@@ -317,7 +317,7 @@ impl From<ImageBorderKey> for ImageBorderTemplate {
     fn from(key: ImageBorderKey) -> Self {
         let common = PrimTemplateCommonData::with_key_common(key.common);
 
-        let brush_segments = key.kind.nine_patch.create_segments(common.prim_rect.size);
+        let brush_segments = key.kind.nine_patch.create_segments(common.prim_rect.size());
         ImageBorderTemplate {
             common,
             kind: ImageBorderData {

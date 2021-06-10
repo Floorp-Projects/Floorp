@@ -125,7 +125,7 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
         let mut brush_segments = Vec::new();
 
         if let Some(ref nine_patch) = item.nine_patch {
-            brush_segments = nine_patch.create_segments(common.prim_rect.size);
+            brush_segments = nine_patch.create_segments(common.prim_rect.size());
         }
 
         let (stops, min_alpha) = stops_and_min_alpha(&item.stops);
@@ -136,8 +136,8 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
         let stops_opacity = PrimitiveOpacity::from_alpha(min_alpha);
 
         let mut stretch_size: LayoutSize = item.stretch_size.into();
-        stretch_size.width = stretch_size.width.min(common.prim_rect.size.width);
-        stretch_size.height = stretch_size.height.min(common.prim_rect.size.height);
+        stretch_size.width = stretch_size.width.min(common.prim_rect.width());
+        stretch_size.height = stretch_size.height.min(common.prim_rect.height());
 
         // Avoid rendering enormous gradients. Radial gradients are mostly made of soft transitions,
         // so it is unlikely that rendering at a higher resolution that 1024 would produce noticeable
@@ -404,24 +404,24 @@ pub fn optimize_radial_gradient(
     }
 
     // Bounding box of the "interesting" part of the gradient.
-    let min = prim_rect.origin + center.to_vector() - radius.to_vector() * end_offset;
-    let max = prim_rect.origin + center.to_vector() + radius.to_vector() * end_offset;
+    let min = prim_rect.min + center.to_vector() - radius.to_vector() * end_offset;
+    let max = prim_rect.min + center.to_vector() + radius.to_vector() * end_offset;
 
     // The (non-repeated) gradient primitive rect.
-    let gradient_rect = LayoutRect {
-        origin: prim_rect.origin,
-        size: *stretch_size,
-    };
+    let gradient_rect = LayoutRect::from_origin_and_size(
+        prim_rect.min,
+        *stretch_size,
+    );
 
     // How much internal margin between the primitive bounds and the gradient's
     // bounding rect (areas that are a constant color).
-    let mut l = (min.x - gradient_rect.min_x()).max(0.0).floor();
-    let mut t = (min.y - gradient_rect.min_y()).max(0.0).floor();
-    let mut r = (gradient_rect.max_x() - max.x).max(0.0).floor();
-    let mut b = (gradient_rect.max_y() - max.y).max(0.0).floor();
+    let mut l = (min.x - gradient_rect.min.x).max(0.0).floor();
+    let mut t = (min.y - gradient_rect.min.y).max(0.0).floor();
+    let mut r = (gradient_rect.max.x - max.x).max(0.0).floor();
+    let mut b = (gradient_rect.max.y - max.y).max(0.0).floor();
 
-    let is_tiled = prim_rect.size.width > stretch_size.width + tile_spacing.width
-        || prim_rect.size.height > stretch_size.height + tile_spacing.height;
+    let is_tiled = prim_rect.width() > stretch_size.width + tile_spacing.width
+        || prim_rect.height() > stretch_size.height + tile_spacing.height;
 
     let bg_color = stops.last().unwrap().color;
 
@@ -454,76 +454,74 @@ pub fn optimize_radial_gradient(
     // shrunk.
     if bg_color.a != 0 {
         if l != 0.0 && t != 0.0 {
-            let solid_rect = LayoutRect {
-                origin: gradient_rect.origin,
-                size: size2(l, t),
-            };
+            let solid_rect = LayoutRect::from_origin_and_size(
+                gradient_rect.min,
+                size2(l, t),
+            );
             solid_parts(&solid_rect, bg_color);
         }
 
         if l != 0.0 && b != 0.0 {
-            let solid_rect = LayoutRect {
-                origin: gradient_rect.bottom_left() - vec2(0.0, b),
-                size: size2(l, b),
-            };
+            let solid_rect = LayoutRect::from_origin_and_size(
+                gradient_rect.bottom_left() - vec2(0.0, b),
+                size2(l, b),
+            );
             solid_parts(&solid_rect, bg_color);
         }
 
         if t != 0.0 && r != 0.0 {
-            let solid_rect = LayoutRect {
-                origin: gradient_rect.top_right() - vec2(r, 0.0),
-                size: size2(r, t),
-            };
+            let solid_rect = LayoutRect::from_origin_and_size(
+                gradient_rect.top_right() - vec2(r, 0.0),
+                size2(r, t),
+            );
             solid_parts(&solid_rect, bg_color);
         }
 
         if r != 0.0 && b != 0.0 {
-            let solid_rect = LayoutRect {
-                origin: gradient_rect.bottom_right() - vec2(r, b),
-                size: size2(r, b),
-            };
+            let solid_rect = LayoutRect::from_origin_and_size(
+                gradient_rect.bottom_right() - vec2(r, b),
+                size2(r, b),
+            );
             solid_parts(&solid_rect, bg_color);
         }
 
         if l != 0.0 {
-            let solid_rect = LayoutRect {
-                origin: gradient_rect.origin + vec2(0.0, t),
-                size: size2(l, gradient_rect.size.height - t - b),
-            };
+            let solid_rect = LayoutRect::from_origin_and_size(
+                gradient_rect.min + vec2(0.0, t),
+                size2(l, gradient_rect.height() - t - b),
+            );
             solid_parts(&solid_rect, bg_color);
         }
 
         if r != 0.0 {
-            let solid_rect = LayoutRect {
-                origin: gradient_rect.top_right() + vec2(-r, t),
-                size: size2(r, gradient_rect.size.height - t - b),
-            };
+            let solid_rect = LayoutRect::from_origin_and_size(
+                gradient_rect.top_right() + vec2(-r, t),
+                size2(r, gradient_rect.height() - t - b),
+            );
             solid_parts(&solid_rect, bg_color);
         }
 
         if t != 0.0 {
-            let solid_rect = LayoutRect {
-                origin: gradient_rect.origin + vec2(l, 0.0),
-                size: size2(gradient_rect.size.width - l - r, t),
-            };
+            let solid_rect = LayoutRect::from_origin_and_size(
+                gradient_rect.min + vec2(l, 0.0),
+                size2(gradient_rect.width() - l - r, t),
+            );
             solid_parts(&solid_rect, bg_color);
         }
 
         if b != 0.0 {
-            let solid_rect = LayoutRect {
-                origin: gradient_rect.bottom_left() + vec2(l, -b),
-                size: size2(gradient_rect.size.width - l - r, b),
-            };
+            let solid_rect = LayoutRect::from_origin_and_size(
+                gradient_rect.bottom_left() + vec2(l, -b),
+                size2(gradient_rect.width() - l - r, b),
+            );
             solid_parts(&solid_rect, bg_color);
         }
     }
 
     // Shrink the gradient primitive.
 
-    prim_rect.origin.x += l;
-    prim_rect.origin.y += t;
-    prim_rect.size.width -= l;
-    prim_rect.size.height -= t;
+    prim_rect.min.x += l;
+    prim_rect.min.y += t;
 
     stretch_size.width -= l + r;
     stretch_size.height -= b + t;

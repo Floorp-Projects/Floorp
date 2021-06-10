@@ -126,26 +126,26 @@ pub fn optimize_linear_gradient(
 
     // The size of gradient render tasks depends on the tile_size. No need to generate
     // large stretch sizes that will be clipped to the bounds of the primitive.
-    tile_size.width = tile_size.width.min(prim_rect.size.width);
-    tile_size.height = tile_size.height.min(prim_rect.size.height);
+    tile_size.width = tile_size.width.min(prim_rect.width());
+    tile_size.height = tile_size.height.min(prim_rect.height());
 
     simplify_repeated_primitive(&tile_size, &mut tile_spacing, prim_rect);
 
     let vertical = start.x.approx_eq(&end.x);
     let horizontal = start.y.approx_eq(&end.y);
 
-    let mut horizontally_tiled = prim_rect.size.width > tile_size.width;
-    let mut vertically_tiled = prim_rect.size.height > tile_size.height;
+    let mut horizontally_tiled = prim_rect.width() > tile_size.width;
+    let mut vertically_tiled = prim_rect.height() > tile_size.height;
 
     // Check whether the tiling is equivalent to stretching on either axis.
     // Stretching the gradient is more efficient than repeating it.
     if vertically_tiled && horizontal && tile_spacing.height == 0.0 {
-        tile_size.height = prim_rect.size.height;
+        tile_size.height = prim_rect.height();
         vertically_tiled = false;
     }
 
     if horizontally_tiled && vertical && tile_spacing.width == 0.0 {
-        tile_size.width = prim_rect.size.width;
+        tile_size.width = prim_rect.width();
         horizontally_tiled = false;
     }
 
@@ -195,8 +195,8 @@ pub fn optimize_linear_gradient(
 
     let adjust_rect = &mut |rect: &mut LayoutRect| {
         if vertical {
-            swap(&mut rect.origin.x, &mut rect.origin.y);
-            swap(&mut rect.size.width, &mut rect.size.height);
+            swap(&mut rect.min.x, &mut rect.min.y);
+            swap(&mut rect.max.x, &mut rect.max.y);
         }
     };
 
@@ -270,8 +270,8 @@ pub fn optimize_linear_gradient(
         }
 
         let mut segment_rect = *prim_rect;
-        segment_rect.origin.x += segment_start;
-        segment_rect.size.width = segment_length;
+        segment_rect.min.x += segment_start;
+        segment_rect.max.x = segment_rect.min.x + segment_length;
 
         let mut start = point2(0.0, 0.0);
         let mut end = point2(segment_length, 0.0);
@@ -280,14 +280,14 @@ pub fn optimize_linear_gradient(
         adjust_point(&mut end);
         adjust_rect(&mut segment_rect);
 
-        let origin_before_clip = segment_rect.origin;
+        let origin_before_clip = segment_rect.min;
         segment_rect = match segment_rect.intersection(&clip_rect) {
             Some(rect) => rect,
             None => {
                 continue;
             }
         };
-        let offset = segment_rect.origin - origin_before_clip;
+        let offset = segment_rect.min - origin_before_clip;
 
         // Account for the clipping since start and end are relative to the origin.
         start -= offset;
@@ -317,7 +317,7 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
         let mut brush_segments = Vec::new();
 
         if let Some(ref nine_patch) = item.nine_patch {
-            brush_segments = nine_patch.create_segments(common.prim_rect.size);
+            brush_segments = nine_patch.create_segments(common.prim_rect.size());
         }
 
         // Save opacity of the stops for use in
