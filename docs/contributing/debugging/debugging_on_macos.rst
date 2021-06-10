@@ -53,7 +53,7 @@ try Server Builds
 
 In most cases, developers needing to debug a build as close as possible
 to the production environment should use a :ref:`try
-build <Try Server>`. These
+build <Pushing to Try>`. These
 builds enable Hardened Runtime and only differ from production builds in
 that they are not Notarized which should not otherwise affect
 functionality, (other than the ability to easily launch the browser on

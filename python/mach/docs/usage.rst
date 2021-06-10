@@ -146,6 +146,8 @@ The settings file follows the ``ini`` format, e.g:
     [try]
     default = fuzzy
 
+.. _Adding_mach_to_your_shell:
+
 Adding ``mach`` to your ``PATH``
 --------------------------------
 

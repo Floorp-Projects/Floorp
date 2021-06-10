@@ -65,7 +65,7 @@ at the root of the source dir. The JSON object in this file contains a
 
 Very simply, this will run any task label that gets passed in as well as their
 dependencies. While it is possible to manually commit this file and push to
-try, it is mainly meant to be a generation target for various :ref:`try server <Try Server>`
+try, it is mainly meant to be a generation target for various :ref:`try server <Pushing to Try>`
 choosers.  For example:
 
 .. parsed-literal::

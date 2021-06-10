@@ -115,7 +115,7 @@ build Breakpad, the binary will be at
 path to a Linux minidump will generate a core file on stdout which can
 then be loaded in gdb as usual. You will need to manually download the
 matching Firefox binaries, but then you can use the :ref:`GDB Python
-script <Downloading_symbols_on_Linux_Mac_OS_X>` to download symbols.
+script <Downloading symbols on Linux / Mac OS X>` to download symbols.
 
 The ``minidump-2-core`` source does not currently handle processing
 minidumps from a different CPU architecture than the system it was

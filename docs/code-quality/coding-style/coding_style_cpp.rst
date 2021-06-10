@@ -700,7 +700,7 @@ Strings
 -  For 16-bit literal strings, use ``u"..."_ns`` or, if necessary
    ``NS_LITERAL_STRING_FROM_CSTRING(...)`` instead of ``nsAutoString()``
    or other ways that would do a run-time conversion.
-   See :ref:`Avoid runtime conversion of string literals` below.
+   See :ref:`Avoid runtime conversion of string literals <Avoid runtime conversion of string literals>` below.
 -  To compare a string with a literal, use ``.EqualsLiteral("...")``.
 -  Use ``str.IsEmpty()`` instead of ``str.Length() == 0``.
 -  Use ``str.Truncate()`` instead of ``str.SetLength(0)``,
@@ -802,6 +802,7 @@ Free the string manually:
      WarnUser(warning);
      nsMemory::Free(warning);
 
+.. _Avoid runtime conversion of string literals:
 
 Avoid runtime conversion of string literals
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
