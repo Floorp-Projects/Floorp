@@ -18,42 +18,49 @@ function checkStateRead(aSubject, aTopic, aData) {
 
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://example0.example.com"),
       0
     )
   );
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://example423.example.com"),
       0
     )
   );
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://example1023.example.com"),
       0
     )
   );
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://example1024.example.com"),
       0
     )
   );
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://example1025.example.com"),
       0
     )
   );
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://example9000.example.com"),
       0
     )
   );
   ok(
     !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://example99999.example.com"),
       0
     )

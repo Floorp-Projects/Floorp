@@ -108,6 +108,7 @@ function run_test() {
       "@mozilla.org/security/transportsecurityinfo;1"
     ].createInstance(Ci.nsITransportSecurityInfo);
     SSService.processHeader(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       uris[uriIndex],
       maxAge + includeSubdomains,
       secInfo,

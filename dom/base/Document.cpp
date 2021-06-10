@@ -341,7 +341,6 @@
 #include "nsIPermission.h"
 #include "nsIPrompt.h"
 #include "nsIPropertyBag2.h"
-#include "nsIPublicKeyPinningService.h"
 #include "nsIReferrerInfo.h"
 #include "nsIRefreshURI.h"
 #include "nsIRequest.h"
@@ -1891,22 +1890,23 @@ void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
   if (XRE_IsContentProcess()) {
     ContentChild* cc = ContentChild::GetSingleton();
     MOZ_ASSERT(cc);
-    cc->SendIsSecureURI(aURI, flags, attrs, &aInfo.mHasHSTS);
+    cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags, attrs,
+                        &aInfo.mHasHSTS);
+    cc->SendIsSecureURI(nsISiteSecurityService::STATIC_PINNING, aURI, flags,
+                        attrs, &aInfo.mHasHPKP);
   } else {
     nsCOMPtr<nsISiteSecurityService> sss =
         do_GetService(NS_SSSERVICE_CONTRACTID);
     if (NS_WARN_IF(!sss)) {
       return;
     }
-    Unused << NS_WARN_IF(NS_FAILED(sss->IsSecureURI(aURI, flags, attrs, nullptr,
-                                                    nullptr, &aInfo.mHasHSTS)));
+    Unused << NS_WARN_IF(NS_FAILED(
+        sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
+                         attrs, nullptr, nullptr, &aInfo.mHasHSTS)));
+    Unused << NS_WARN_IF(NS_FAILED(
+        sss->IsSecureURI(nsISiteSecurityService::STATIC_PINNING, aURI, flags,
+                         attrs, nullptr, nullptr, &aInfo.mHasHPKP)));
   }
-  nsCOMPtr<nsIPublicKeyPinningService> pkps =
-      do_GetService(NS_PKPSERVICE_CONTRACTID);
-  if (NS_WARN_IF(!pkps)) {
-    return;
-  }
-  Unused << NS_WARN_IF(NS_FAILED(pkps->HostHasPins(aURI, &aInfo.mHasHPKP)));
 }
 
 bool Document::AllowDeprecatedTls() {
