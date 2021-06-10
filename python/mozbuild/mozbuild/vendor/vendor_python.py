@@ -16,13 +16,11 @@ from mozpack.files import FileFinder
 
 
 class VendorPython(MozbuildObject):
-    def vendor(self, packages=None, keep_extra_files=False):
+    def vendor(self, keep_extra_files=False):
         self.populate_logger()
         self.log_manager.enable_unstructured()
 
         vendor_dir = mozpath.join(self.topsrcdir, os.path.join("third_party", "python"))
-
-        packages = packages or []
 
         self.activate_virtualenv()
         pip_compile = os.path.join(self.virtualenv_manager.bin_path, "pip-compile")
@@ -38,7 +36,7 @@ class VendorPython(MozbuildObject):
             tmpspec = "requirements-mach-vendor-python.in"
             tmpspec_absolute = os.path.join(spec_dir, tmpspec)
             shutil.copyfile(spec, tmpspec_absolute)
-            self._update_packages(tmpspec_absolute, packages)
+            self._update_packages(tmpspec_absolute)
 
             # resolve the dependencies and update requirements.txt
             subprocess.check_output(
@@ -75,13 +73,7 @@ class VendorPython(MozbuildObject):
             shutil.copyfile(tmpspec_absolute, spec)
             self.repository.add_remove_files(vendor_dir)
 
-    def _update_packages(self, spec, packages):
-        for package in packages:
-            if not all(package.partition("==")):
-                raise Exception(
-                    "Package {} must be in the format name==version".format(package)
-                )
-
+    def _update_packages(self, spec):
         requirements = {}
         with open(spec, "r") as f:
             comments = []
@@ -94,10 +86,6 @@ class VendorPython(MozbuildObject):
                 requirements[name] = version, comments
                 comments = []
 
-        for package in packages:
-            name, version = package.split("==")
-            requirements[name] = version, []
-
         with open(spec, "w") as f:
             for name, (version, comments) in sorted(requirements.items()):
                 if comments:
@@ -109,12 +97,7 @@ class VendorPython(MozbuildObject):
 
         ignore = ()
         if not keep_extra_files:
-            ignore = (
-                "*/doc",
-                "*/docs",
-                "*/test",
-                "*/tests",
-            )
+            ignore = ("*/doc", "*/docs", "*/test", "*/tests")
         finder = FileFinder(src)
         for path, _ in finder.find("*"):
             base, ext = os.path.splitext(path)
