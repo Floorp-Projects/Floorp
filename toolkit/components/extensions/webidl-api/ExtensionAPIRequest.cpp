@@ -56,6 +56,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionAPIRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionAPIRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionAPIRequest)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEventListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSWInfo)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -65,6 +66,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ExtensionAPIRequest)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionAPIRequest)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEventListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSWInfo)
   tmp->mStack.setUndefined();
   tmp->mArgs.setUndefined();
@@ -197,6 +199,14 @@ ExtensionAPIRequest::GetServiceWorkerInfo(
     mSWInfo = new ExtensionServiceWorkerInfo(*mSWClientInfo);
   }
   NS_IF_ADDREF(*aSWInfo = mSWInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ExtensionAPIRequest::GetEventListener(mozIExtensionEventListener** aListener) {
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG_POINTER(aListener);
+  NS_IF_ADDREF(*aListener = mEventListener);
   return NS_OK;
 }
 
