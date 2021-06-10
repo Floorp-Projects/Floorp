@@ -848,34 +848,6 @@ const CodeRange* wasm::LookupInSorted(const CodeRangeVector& codeRanges,
   return &codeRanges[match];
 }
 
-UniqueTlsData wasm::CreateTlsData(uint32_t globalDataLength) {
-  void* allocatedBase = js_calloc(TlsDataAlign + offsetof(TlsData, globalArea) +
-                                  globalDataLength);
-  if (!allocatedBase) {
-    return nullptr;
-  }
-
-  auto* tlsData = reinterpret_cast<TlsData*>(
-      AlignBytes(uintptr_t(allocatedBase), TlsDataAlign));
-  tlsData->allocatedBase = allocatedBase;
-
-  return UniqueTlsData(tlsData);
-}
-
-void TlsData::setInterrupt() {
-  interrupt = true;
-  stackLimit = UINTPTR_MAX;
-}
-
-bool TlsData::isInterrupted() const {
-  return interrupt || stackLimit == UINTPTR_MAX;
-}
-
-void TlsData::resetInterrupt(JSContext* cx) {
-  interrupt = false;
-  stackLimit = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
-}
-
 void wasm::Log(JSContext* cx, const char* fmt, ...) {
   MOZ_ASSERT(!cx->isExceptionPending());
 
