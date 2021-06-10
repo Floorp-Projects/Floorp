@@ -30,6 +30,8 @@ async function run_test() {
       break;
     case "Linux":
       // We don't support driver versions on Linux.
+      // XXX don't we? Seems like we do since bug 1294232 with the change in
+      // https://hg.mozilla.org/mozilla-central/diff/8962b8d9b7a6/widget/GfxInfoBase.cpp
       do_test_finished();
       return;
     case "Darwin":
