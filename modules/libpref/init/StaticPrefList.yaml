@@ -4022,7 +4022,12 @@
 # If session history is stored in the parent process, enable bfcache for it.
 - name: fission.bfcacheInParent
   type: bool
+#if defined(MOZ_WIDGET_ANDROID)
+  # Disabled for now because of a test failure in AccessibilityTest.kt
+  value: false
+#else
   value: true
+#endif
   mirror: always
   do_not_use_directly: true
 
