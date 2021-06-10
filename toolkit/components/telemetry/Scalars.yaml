@@ -1764,6 +1764,23 @@ os.environment:
     operating_systems:
       - windows
 
+  is_kept_in_dock:
+    bug_numbers:
+      - 1715348
+    description: Whether this app was kept in macOS Dock on startup
+    expires: "97"
+    kind: boolean
+    notification_emails:
+      - elee@mozilla.com
+      - shong@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+    operating_systems:
+      - mac
+
   is_taskbar_pinned:
     bug_numbers:
       - 1685213
