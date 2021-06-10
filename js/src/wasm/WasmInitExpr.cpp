@@ -16,12 +16,13 @@
  * limitations under the License.
  */
 
+#include "wasm/WasmInitExpr.h"
+
 #include "mozilla/Maybe.h"
 
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmOpIter.h"
 #include "wasm/WasmSerialize.h"
-#include "wasm/WasmTypes.h"
 #include "wasm/WasmValidate.h"
 
 using namespace js;

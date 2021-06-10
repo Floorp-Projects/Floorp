@@ -20,9 +20,11 @@
 #define wasm_serialize_h
 
 #include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
 
 #include <type_traits>
 
+#include "js/AllocPolicy.h"
 #include "js/Vector.h"
 
 namespace js {
