@@ -368,6 +368,18 @@ class VisitedQuery final : public AsyncStatementCallback {
   NS_DECL_ISUPPORTS_INHERITED
 
   static nsresult Start(nsIURI* aURI,
+                        History::ContentParentSet&& aContentProcessesToNotify) {
+    MOZ_ASSERT(aURI, "Null URI");
+    MOZ_ASSERT(XRE_IsParentProcess());
+
+    History* history = History::GetService();
+    NS_ENSURE_STATE(history);
+    RefPtr<VisitedQuery> query =
+        new VisitedQuery(aURI, std::move(aContentProcessesToNotify));
+    return history->QueueVisitedStatement(std::move(query));
+  }
+
+  static nsresult Start(nsIURI* aURI,
                         mozIVisitedStatusCallback* aCallback = nullptr) {
     MOZ_ASSERT(aURI, "Null URI");
     MOZ_ASSERT(XRE_IsParentProcess());
@@ -425,7 +437,7 @@ class VisitedQuery final : public AsyncStatementCallback {
     if (History* history = History::GetService()) {
       auto status = mIsVisited ? IHistory::VisitedStatus::Visited
                                : IHistory::VisitedStatus::Unvisited;
-      history->NotifyVisited(mURI, status);
+      history->NotifyVisited(mURI, status, &mContentProcessesToNotify);
     }
   }
 
@@ -433,13 +445,19 @@ class VisitedQuery final : public AsyncStatementCallback {
   explicit VisitedQuery(
       nsIURI* aURI,
       const nsMainThreadPtrHandle<mozIVisitedStatusCallback>& aCallback)
-      : mURI(aURI), mCallback(aCallback), mIsVisited(false) {}
+      : mURI(aURI), mCallback(aCallback) {}
+
+  explicit VisitedQuery(nsIURI* aURI,
+                        History::ContentParentSet&& aContentProcessesToNotify)
+      : mURI(aURI),
+        mContentProcessesToNotify(std::move(aContentProcessesToNotify)) {}
 
   ~VisitedQuery() = default;
 
   nsCOMPtr<nsIURI> mURI;
   nsMainThreadPtrHandle<mozIVisitedStatusCallback> mCallback;
-  bool mIsVisited;
+  History::ContentParentSet mContentProcessesToNotify;
+  bool mIsVisited = false;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED0(VisitedQuery, AsyncStatementCallback)
@@ -2092,18 +2110,23 @@ History::IsURIVisited(nsIURI* aURI, mozIVisitedStatusCallback* aCallback) {
   return VisitedQuery::Start(aURI, aCallback);
 }
 
-void History::StartPendingVisitedQueries(
-    const PendingVisitedQueries& aQueries) {
+void History::StartPendingVisitedQueries(PendingVisitedQueries&& aQueries) {
   if (XRE_IsContentProcess()) {
-    const auto uris = ToTArray<nsTArray<RefPtr<nsIURI>>>(aQueries);
+    nsTArray<RefPtr<nsIURI>> uris(aQueries.Count());
+    for (const auto& entry : aQueries) {
+      uris.AppendElement(entry.GetKey());
+      MOZ_ASSERT(entry.GetData().IsEmpty(),
+                 "Child process shouldn't have parent requests");
+    }
     auto* cpc = mozilla::dom::ContentChild::GetSingleton();
     MOZ_ASSERT(cpc, "Content Protocol is NULL!");
     Unused << cpc->SendStartVisitedQueries(uris);
   } else {
     // TODO(bug 1594368): We could do a single query, as long as we can
     // then notify each URI individually.
-    for (const auto& key : aQueries) {
-      nsresult queryStatus = VisitedQuery::Start(key);
+    for (auto& entry : aQueries) {
+      nsresult queryStatus = VisitedQuery::Start(
+          entry.GetKey(), std::move(*entry.GetModifiableData()));
       Unused << NS_WARN_IF(NS_FAILED(queryStatus));
     }
   }
