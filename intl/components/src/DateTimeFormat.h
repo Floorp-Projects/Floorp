@@ -151,7 +151,21 @@ class DateTimeFormat final {
     }
   };
 
+  /**
+   * Set the start time of the Gregorian calendar. This is useful for
+   * ensuring the consistent use of a proleptic Gregorian calendar for ECMA-402.
+   * https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar
+   */
+  void SetStartTimeIfGregorian(double aTime);
+
   ~DateTimeFormat();
+
+  /**
+   * TODO(Bug 1686965) - Temporarily get the underlying ICU object while
+   * migrating to the unified API. This should be removed when completing the
+   * migration.
+   */
+  UDateFormat* UnsafeGetUDateFormat() const { return mDateFormat; }
 
  private:
   explicit DateTimeFormat(UDateFormat* aDateFormat);
