@@ -16,7 +16,7 @@ const beforeReload = {
     "http://test1.example.org": ["c1", "cs2", "c3", "uc1"],
     "http://sectest1.example.org": ["uc1", "cs2"],
   },
-  indexedDB: {
+  "indexed-db": {
     "http://test1.example.org": [
       JSON.stringify(["idb1", "obj1"]),
       JSON.stringify(["idb1", "obj2"]),
@@ -24,11 +24,11 @@ const beforeReload = {
     ],
     "http://sectest1.example.org": [],
   },
-  localStorage: {
+  "local-storage": {
     "http://test1.example.org": ["ls1", "ls2"],
     "http://sectest1.example.org": ["iframe-u-ls1"],
   },
-  sessionStorage: {
+  "session-storage": {
     "http://test1.example.org": ["ss1"],
     "http://sectest1.example.org": ["iframe-u-ss1", "iframe-u-ss2"],
   },
@@ -54,15 +54,15 @@ const afterIframeAdded = {
       ),
     ],
   },
-  indexedDB: {
+  "indexed-db": {
     // empty because indexed db creation happens after the page load, so at
     // the time of window-ready, there was no indexed db present.
     "https://sectest1.example.org": [],
   },
-  localStorage: {
+  "local-storage": {
     "https://sectest1.example.org": ["iframe-s-ls1"],
   },
-  sessionStorage: {
+  "session-storage": {
     "https://sectest1.example.org": ["iframe-s-ss1"],
   },
 };
@@ -73,69 +73,170 @@ const afterIframeRemoved = {
   cookies: {
     "http://sectest1.example.org": [],
   },
-  indexedDB: {
+  "indexed-db": {
     "http://sectest1.example.org": [],
   },
-  localStorage: {
+  "local-storage": {
     "http://sectest1.example.org": [],
   },
-  sessionStorage: {
+  "session-storage": {
     "http://sectest1.example.org": [],
   },
 };
 
 add_task(async function() {
-  const { target, front } = await openTabAndSetupStorage(
+  const { commands } = await openTabAndSetupStorage(
     MAIN_DOMAIN + "storage-dynamic-windows.html"
   );
 
-  const data = await front.listStores();
+  const { resourceCommand } = commands;
+  const { TYPES } = resourceCommand;
+  const allResources = {};
+  const onAvailable = resources => {
+    for (const resource of resources) {
+      allResources[resource.resourceType] = resource;
+    }
+  };
+  const parentProcessStorages = [TYPES.COOKIE, TYPES.INDEXED_DB];
+  const contentProcessStorages = [TYPES.LOCAL_STORAGE, TYPES.SESSION_STORAGE];
+  const allStorages = [...parentProcessStorages, ...contentProcessStorages];
+  await resourceCommand.watchResources(allStorages, { onAvailable });
+  is(
+    Object.keys(allStorages).length,
+    allStorages.length,
+    "Got all the storage resources"
+  );
 
-  await testStores(data, front);
+  // Do a copy of all the initial storages as test function may spawn new resources for the same
+  // type and override the initial ones.
+  // We do not call unwatchResources as it would clear its cache and next call
+  // to watchResources with ignoreExistingResources would break and reprocess all resources again.
+  const initialResources = Object.assign({}, allResources);
+
+  testWindowsBeforeReload(initialResources);
+
+  await testAddIframe(commands, initialResources, {
+    contentProcessStorages,
+    parentProcessStorages,
+    allStorages,
+  });
+  await testRemoveIframe(commands, initialResources, { allStorages });
 
   await clearStorage();
 
   // Forcing GC/CC to get rid of docshells and windows created by this test.
   forceCollections();
-  await target.destroy();
-  forceCollections();
-  DevToolsServer.destroy();
+  await commands.destroy();
   forceCollections();
 });
 
-async function testStores(data, front) {
-  testWindowsBeforeReload(data);
-
-  await testAddIframe(front);
-  await testRemoveIframe(front);
-}
-
-function testWindowsBeforeReload(data) {
+function testWindowsBeforeReload(resources) {
   for (const storageType in beforeReload) {
-    ok(data[storageType], `${storageType} storage actor is present`);
+    ok(resources[storageType], `${storageType} storage actor is present`);
 
     // If this test is run with chrome debugging enabled we get an extra
     // key for "chrome". We don't want the test to fail in this case, so
     // ignore it.
     if (storageType == "indexedDB") {
-      delete data[storageType].hosts.chrome;
+      delete resources[storageType].hosts.chrome;
     }
 
     is(
-      Object.keys(data[storageType].hosts).length,
+      Object.keys(resources[storageType].hosts).length,
       Object.keys(beforeReload[storageType]).length,
       `Number of hosts for ${storageType} match`
     );
     for (const host in beforeReload[storageType]) {
-      ok(data[storageType].hosts[host], `Host ${host} is present`);
+      ok(resources[storageType].hosts[host], `Host ${host} is present`);
     }
   }
 }
 
-async function testAddIframe(front) {
+/**
+ * Wait for new storage resources to be created of the given types.
+ */
+async function waitForNewResourcesAndUpdates(commands, resourceTypes) {
+  // When fission is off, we don't expect any new resource
+  if (resourceTypes.length === 0) {
+    return { newResources: [], updates: [] };
+  }
+  const { resourceCommand } = commands;
+  let resolve;
+  const promise = new Promise(r => (resolve = r));
+  const allResources = {};
+  const allUpdates = {};
+  const onAvailable = resources => {
+    for (const resource of resources) {
+      if (resource.resourceType in allResources) {
+        ok(false, `Got multiple ${resource.resourceTypes} resources`);
+      }
+      allResources[resource.resourceType] = resource;
+      ok(true, `Got resource for ${resource.resourceType}`);
+
+      // Stop watching for resources when we got them all
+      if (Object.keys(allResources).length == resourceTypes.length) {
+        resourceCommand.unwatchResources(resourceTypes, {
+          onAvailable,
+        });
+      }
+
+      // But also listen for updates on each new resource
+      resource.once("single-store-update").then(update => {
+        ok(true, `Got updates for ${resource.resourceType}`);
+        allUpdates[resource.resourceType] = update;
+
+        // Resolve only once we got all the updates, for all the resources
+        if (Object.keys(allUpdates).length == resourceTypes.length) {
+          resolve({ newResources: allResources, updates: allUpdates });
+        }
+      });
+    }
+  };
+  await resourceCommand.watchResources(resourceTypes, {
+    onAvailable,
+    ignoreExistingResources: true,
+  });
+  return promise;
+}
+
+/**
+ * Wait for single-store-update events on all the given storage resources.
+ */
+function waitForResourceUpdates(resources, resourceTypes) {
+  const allUpdates = {};
+  const promises = [];
+  for (const type of resourceTypes) {
+    const promise = resources[type].once("single-store-update");
+    promise.then(update => {
+      ok(true, `Got updates for ${type}`);
+      allUpdates[type] = update;
+    });
+    promises.push(promise);
+  }
+  return Promise.all(promises).then(() => allUpdates);
+}
+
+async function testAddIframe(
+  commands,
+  resources,
+  { contentProcessStorages, parentProcessStorages, allStorages }
+) {
   info("Testing if new iframe addition works properly");
 
-  const update = front.once("stores-update");
+  // If Fission is enabled:
+  // * we get new resources alongside single-store-update events for content process storages
+  // * only single-store-update events for previous resources for parent process storages
+  // Otherwise if fission is disables:
+  // * we get single-store-update events for all previous resources
+  const onResources = waitForNewResourcesAndUpdates(
+    commands,
+    isFissionEnabled() ? contentProcessStorages : []
+  );
+  // If fission is enabled, we only get update
+  const onUpdates = waitForResourceUpdates(
+    resources,
+    isFissionEnabled() ? parentProcessStorages : allStorages
+  );
 
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
@@ -150,15 +251,60 @@ async function testAddIframe(front) {
     }
   );
 
-  const data = await update;
+  info("Wait for all resources");
+  const { newResources, updates } = await onResources;
+  info("Wait for all updates");
+  const previousResourceUpdates = await onUpdates;
 
-  validateStorage(data, afterIframeAdded, "added");
+  if (isFissionEnabled()) {
+    for (const resourceType of contentProcessStorages) {
+      const resource = newResources[resourceType];
+      const expected = afterIframeAdded[resourceType];
+      // The resource only comes with hosts, without any values.
+      // Each host will be an empty array.
+      Assert.deepEqual(
+        Object.keys(resource.hosts),
+        Object.keys(expected),
+        `List of hosts for resource ${resourceType} is correct`
+      );
+      for (const host in resource.hosts) {
+        is(
+          resource.hosts[host].length,
+          0,
+          "For new resources, each host has no value and is an empty array"
+        );
+      }
+      const update = updates[resourceType];
+      const storageKey = resourceTypeToStorageKey(resourceType);
+      Assert.deepEqual(
+        update.added[storageKey],
+        expected,
+        "We get an update after the resource, with the host values"
+      );
+    }
+  }
+
+  const storagesWithUpdates = isFissionEnabled()
+    ? parentProcessStorages
+    : allStorages;
+  for (const resourceType of storagesWithUpdates) {
+    const expected = afterIframeAdded[resourceType];
+    const update = previousResourceUpdates[resourceType];
+    const storageKey = resourceTypeToStorageKey(resourceType);
+    Assert.deepEqual(
+      update.added[storageKey],
+      expected,
+      `We get an update after the resource ${resourceType}, with the host values`
+    );
+  }
+
+  return newResources;
 }
 
-async function testRemoveIframe(front) {
+async function testRemoveIframe(commands, resources, { allStorages }) {
   info("Testing if iframe removal works properly");
 
-  const update = front.once("stores-update");
+  const onUpdates = waitForResourceUpdates(resources, allStorages);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     for (const iframe of content.document.querySelectorAll("iframe")) {
@@ -169,44 +315,34 @@ async function testRemoveIframe(front) {
     }
   });
 
-  const data = await update;
+  info("Wait for all updates");
+  const previousResourceUpdates = await onUpdates;
 
-  validateStorage(data, afterIframeRemoved, "deleted");
+  for (const resourceType of allStorages) {
+    const expected = afterIframeRemoved[resourceType];
+    const update = previousResourceUpdates[resourceType];
+    const storageKey = resourceTypeToStorageKey(resourceType);
+    Assert.deepEqual(
+      update.deleted[storageKey],
+      expected,
+      `We get an update after the resource ${resourceType}, with the host values`
+    );
+  }
 }
 
-function validateStorage(actual, expected, category = "") {
-  if (category) {
-    for (const cat of ["added", "changed", "deleted"]) {
-      if (cat === category) {
-        ok(actual[cat], `Data from the iframe has been ${cat}.`);
-      } else {
-        ok(!actual[cat], `No data was ${cat}.`);
-      }
-    }
+/**
+ * single-store-update emits objects using attributes with old "storage key" namings,
+ * which is different from resource type namings.
+ */
+function resourceTypeToStorageKey(resourceType) {
+  if (resourceType == "local-storage") {
+    return "localStorage";
   }
-
-  for (const [type, expectedData] of Object.entries(expected)) {
-    const actualData = category ? actual[category][type] : actual[type];
-
-    ok(actualData, `${type} contains data.`);
-
-    const actualKeys = Object.keys(actualData);
-    const expectedKeys = Object.keys(expectedData);
-    is(
-      actualKeys.length,
-      expectedKeys.length,
-      `${type} data is the correct length.`
-    );
-
-    for (const [key, dataValues] of Object.entries(expectedData)) {
-      ok(actualData[key], `${type} data contains the key ${key}.`);
-
-      for (const dataValue of dataValues) {
-        ok(
-          actualData[key].includes(dataValue),
-          `${type}[${key}] contains "${dataValue}".`
-        );
-      }
-    }
+  if (resourceType == "session-storage") {
+    return "sessionStorage";
   }
+  if (resourceType == "indexed-db") {
+    return "indexedDB";
+  }
+  return resourceType;
 }
