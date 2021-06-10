@@ -61,6 +61,7 @@ int main(int argc, char **argv)
         "PR_SockOpt_MaxSegment",      /* maximum segment size */
         "PR_SockOpt_Broadcast",       /* Enable broadcast */
         "PR_SockOpt_Reuseport",       /* allow local address & port reuse */
+        "PR_SockOpt_DontFrag",        /* do not fragment */
         "PR_SockOpt_Last"
     };
 
@@ -144,6 +145,10 @@ int main(int argc, char **argv)
                     data.value.reuse_port = PR_TRUE;
                     break;
 #endif
+                case PR_SockOpt_DontFrag:
+                    data.value.dont_fragment = PR_TRUE;
+                    break;
+
                 default: continue;
             }
 
