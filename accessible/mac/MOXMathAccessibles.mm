@@ -58,8 +58,8 @@ using namespace mozilla::a11y;
   // Per the MathML 3 spec, the latter happens iff the linethickness
   // attribute is of the form [zero-float][optional-unit]. In that case we
   // set line thickness to zero and in the other cases we set it to one.
-  RefPtr<nsAtom> attrName = NS_Atomize("thickness"_ns);
-  if (NSString* thickness = utils::GetAccAttr(self, attrName)) {
+  if (NSString* thickness =
+          utils::GetAccAttr(self, nsGkAtoms::linethickness_)) {
     NSNumberFormatter* formatter =
         [[[NSNumberFormatter alloc] init] autorelease];
     NSNumber* value = [formatter numberFromString:thickness];

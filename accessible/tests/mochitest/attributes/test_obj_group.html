@@ -212,8 +212,8 @@
       testGroupAttrs("h5", 0, 0, 5);
       testGroupAttrs("h6", 0, 0, 6);
       testGroupAttrs("ariaHeadingNoLevel", 0, 0, 2);
-      // No child item counts or "hierarchical" flag for parent of headings
-      testAbsentAttrs("headings", {"child-item-count": "", "hierarchical": ""});
+      // No child item counts or "tree" flag for parent of headings
+      testAbsentAttrs("headings", {"child-item-count": "", "tree": ""});
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA combobox

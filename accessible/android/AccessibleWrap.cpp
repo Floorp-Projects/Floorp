@@ -811,8 +811,8 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
       GECKOBUNDLE_PUT(nodeInfo, "collectionItemInfo", collectionItemInfo);
     }
 
-    RefPtr<nsAtom> attrAtom = NS_Atomize("child-item-count"_ns);
-    Maybe<int32_t> rowCount = aAttributes->GetAttribute<int32_t>(attrAtom);
+    Maybe<int32_t> rowCount =
+        aAttributes->GetAttribute<int32_t>(nsGkAtoms::child_item_count);
     if (rowCount) {
       GECKOBUNDLE_START(collectionInfo);
       GECKOBUNDLE_PUT(collectionInfo, "rowCount",
@@ -820,8 +820,7 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
       GECKOBUNDLE_PUT(collectionInfo, "columnCount",
                       java::sdk::Integer::ValueOf(1));
 
-      attrAtom = NS_Atomize("hierarchical"_ns);
-      if (aAttributes->HasAttribute(attrAtom)) {
+      if (aAttributes->HasAttribute(nsGkAtoms::tree)) {
         GECKOBUNDLE_PUT(collectionInfo, "isHierarchical",
                         java::sdk::Boolean::TRUE());
       }

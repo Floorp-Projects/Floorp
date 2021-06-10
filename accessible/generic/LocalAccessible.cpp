@@ -1019,7 +1019,7 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
   if (HasNumericValue()) {
     nsAutoString valuetext;
     Value(valuetext);
-    attributes->SetAttribute(u"valuetext"_ns, valuetext);
+    attributes->SetAttribute(nsGkAtoms::aria_valuetext, valuetext);
   }
 
   // Expose checkable object attribute if the accessible has checkable state
@@ -1030,7 +1030,7 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
   // Expose 'explicit-name' attribute.
   nsAutoString name;
   if (Name(name) != eNameFromSubtree && !name.IsVoid()) {
-    attributes->SetAttribute(u"explicit-name"_ns, true);
+    attributes->SetAttribute(nsGkAtoms::explicit_name, true);
   }
 
   // Group attributes (level/setsize/posinset)
@@ -1041,12 +1041,12 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
   bool hierarchical = false;
   uint32_t itemCount = AccGroupInfo::TotalItemCount(this, &hierarchical);
   if (itemCount) {
-    attributes->SetAttribute(u"child-item-count"_ns,
+    attributes->SetAttribute(nsGkAtoms::child_item_count,
                              static_cast<int32_t>(itemCount));
   }
 
   if (hierarchical) {
-    attributes->SetAttribute(u"hierarchical"_ns, true);
+    attributes->SetAttribute(nsGkAtoms::tree, true);
   }
 
   // If the accessible doesn't have own content (such as list item bullet or

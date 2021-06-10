@@ -1411,7 +1411,7 @@ already_AddRefed<AccAttributes> HyperTextAccessible::NativeAttributes() {
   // instead.
   nsIFrame* frame = GetFrame();
   if (frame && frame->IsBlockFrame()) {
-    attributes->SetAttribute(u"formatting"_ns, nsGkAtoms::block);
+    attributes->SetAttribute(nsGkAtoms::formatting, nsGkAtoms::block);
   }
 
   if (FocusMgr()->IsFocused(this)) {

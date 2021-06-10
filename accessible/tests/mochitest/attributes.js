@@ -138,9 +138,9 @@ function testGroupParentAttrs(aAccOrElmOrID, aChildItemCount, aIsHierarchical) {
   );
 
   if (aIsHierarchical) {
-    testAttrs(aAccOrElmOrID, { hierarchical: "true" }, true);
+    testAttrs(aAccOrElmOrID, { tree: "true" }, true);
   } else {
-    testAbsentAttrs(aAccOrElmOrID, { hierarchical: "true" });
+    testAbsentAttrs(aAccOrElmOrID, { tree: "true" });
   }
 }
 
