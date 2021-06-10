@@ -16,6 +16,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetters(this, {
+  idleService: ["@mozilla.org/widget/useridleservice;1", "nsIUserIdleService"],
+});
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "pageViewIdleTime",
+  "browser.places.interactions.pageViewIdleTime",
+  60
+);
+
 const DOMWINDOW_OPENED_TOPIC = "domwindowopened";
 
 /**
@@ -60,6 +71,13 @@ class _Interactions {
    * @type {DOMWindow}
    */
   #activeWindow = undefined;
+
+  /**
+   * Tracks if the user is idle.
+   *
+   * @type {boolean}
+   */
+  #userIsIdle = false;
 
   /**
    * This stores the page view start time of the current page view.
@@ -113,6 +131,7 @@ class _Interactions {
       }
     }
     Services.obs.addObserver(this, DOMWINDOW_OPENED_TOPIC, true);
+    idleService.addIdleObserver(this, pageViewIdleTime);
   }
 
   /**
@@ -179,7 +198,16 @@ class _Interactions {
       !this.#activeWindow ||
       (browser && browser.ownerGlobal != this.#activeWindow)
     ) {
-      this.logConsole.debug("No active window");
+      this.logConsole.debug("No update due to no active window");
+      return;
+    }
+
+    // We do not update the interaction when the user is idle, since we will
+    // have already updated it when idle was signalled.
+    // Sometimes an interaction may be signalled before idle is cleared, however
+    // worst case we'd only loose approx 2 seconds of interaction detail.
+    if (this.#userIsIdle) {
+      this.logConsole.debug("No update due to user is idle");
       return;
     }
 
@@ -275,6 +303,18 @@ class _Interactions {
       case DOMWINDOW_OPENED_TOPIC:
         this.#onWindowOpen(subject);
         break;
+      case "idle":
+        this.logConsole.debug("idle");
+        // We save the state of the current interaction when we are notified
+        // that the user is idle.
+        this.#updateInteraction();
+        this.#userIsIdle = true;
+        break;
+      case "active":
+        this.logConsole.debug("active");
+        this.#userIsIdle = false;
+        this._pageViewStartTime = Cu.now();
+        break;
     }
   }
 
@@ -341,7 +381,9 @@ class _Interactions {
    * @param {InteractionInfo} interactionInfo
    *   The document information to write.
    */
-  async _updateDatabase({ url, totalViewTime }) {}
+  async _updateDatabase(interactionInfo) {
+    this.logConsole.debug("Would update database: ", interactionInfo);
+  }
 }
 
 const Interactions = new _Interactions();
