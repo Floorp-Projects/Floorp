@@ -182,8 +182,11 @@ VertexInfo write_transform_vertex(RectWithEndpoint local_segment_rect,
     prim_rect.p0 = clamp(prim_rect.p0, clip_rect.p0, clip_rect.p1);
     prim_rect.p1 = clamp(prim_rect.p1, clip_rect.p0, clip_rect.p1);
 
-    // Select between the segment and prim edges based on edge mask
-    bvec4 clip_edge_mask = notEqual(edge_flags & ivec4(1, 2, 4, 8), ivec4(0));
+    // Select between the segment and prim edges based on edge mask.
+    // We must perform the bitwise-and for each component individually, as a
+    // vector bitwise-and followed by conversion to bvec4 causes shader
+    // compilation crashes on some Adreno devices. See bug 1715746.
+    bvec4 clip_edge_mask = bvec4(bool(edge_flags & 1), bool(edge_flags & 2), bool(edge_flags & 4), bool(edge_flags & 8));
     init_transform_vs(mix(
         vec4(prim_rect.p0, prim_rect.p1),
         vec4(segment_rect.p0, segment_rect.p1),
