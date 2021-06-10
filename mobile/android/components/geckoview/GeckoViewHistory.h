@@ -38,15 +38,12 @@ class GeckoViewHistory final : public mozilla::BaseHistory {
 
   static already_AddRefed<GeckoViewHistory> GetSingleton();
 
-  void StartPendingVisitedQueries(PendingVisitedQueries&&) final;
+  void StartPendingVisitedQueries(const PendingVisitedQueries&) final;
 
   GeckoViewHistory();
 
-  void QueryVisitedState(nsIWidget* aWidget,
-                         mozilla::dom::ContentParent* aInterestedProcess,
-                         nsTArray<RefPtr<nsIURI>>&& aURIs);
-  void HandleVisitedState(const nsTArray<VisitedURI>& aVisitedURIs,
-                          ContentParentSet* aInterestedProcesses);
+  void QueryVisitedState(nsIWidget* aWidget, nsTArray<RefPtr<nsIURI>>&& aURIs);
+  void HandleVisitedState(const nsTArray<VisitedURI>& aVisitedURIs);
 
  private:
   virtual ~GeckoViewHistory();
