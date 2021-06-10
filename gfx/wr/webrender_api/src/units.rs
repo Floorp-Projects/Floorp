@@ -69,10 +69,10 @@ pub type PictureBox2D = Box2D<f32, PicturePixel>;
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct RasterPixel;
 
-pub type RasterIntRect = Rect<i32, RasterPixel>;
+pub type RasterIntRect = Box2D<i32, RasterPixel>;
 pub type RasterIntPoint = Point2D<i32, RasterPixel>;
 pub type RasterIntSize = Size2D<i32, RasterPixel>;
-pub type RasterRect = Rect<f32, RasterPixel>;
+pub type RasterRect = Box2D<f32, RasterPixel>;
 pub type RasterPoint = Point2D<f32, RasterPixel>;
 pub type RasterSize = Size2D<f32, RasterPixel>;
 pub type RasterPoint3D = Point3D<f32, RasterPixel>;
