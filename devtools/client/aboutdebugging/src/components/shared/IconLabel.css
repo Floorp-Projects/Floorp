@@ -13,10 +13,10 @@
 }
 
 .icon-label--ok {
-  --icon-color: var(--green-70);
+  --icon-color: var(--icon-ok-color);
 }
 .icon-label--info {
-  --icon-color: var(--grey-90);
+  --icon-color: var(--icon-info-color);
 }
 
 .icon-label__icon {
@@ -24,10 +24,4 @@
   fill: var(--icon-color);
   width: calc(var(--base-unit) * 4);
   height: calc(var(--base-unit) * 4);
-}
-
-@media(-moz-toolbar-prefers-color-scheme: dark) {
-  .icon-label__icon {
-    fill: var(--white-100);
-  }
 }

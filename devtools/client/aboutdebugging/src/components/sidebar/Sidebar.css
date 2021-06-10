@@ -8,7 +8,7 @@
 }
 
 .sidebar__label {
-  color: var(--grey-50);
+  color: var(--secondary-text-color);
   display: block;
   padding: 12px 0;
   text-align: center;
@@ -38,4 +38,6 @@
 .sidebar__footer__icon {
   width: calc(var(--base-unit) * 4);
   height: calc(var(--base-unit) * 4);
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
