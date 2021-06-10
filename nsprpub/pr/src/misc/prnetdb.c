@@ -1248,7 +1248,7 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByName(
     }
 #endif  /* defined(_PR_HAVE_GETPROTO_R_INT) */
 
-    if (PR_NETDB_BUF_SIZE > buflen)
+    if (PR_MIN_NETDB_BUF_SIZE > buflen)
     {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return PR_FAILURE;
@@ -1331,7 +1331,7 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByNumber(
     }
 #endif /* defined(_PR_HAVE_GETPROTO_R_INT) */
 
-    if (PR_NETDB_BUF_SIZE > buflen)
+    if (PR_MIN_NETDB_BUF_SIZE > buflen)
     {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return PR_FAILURE;
