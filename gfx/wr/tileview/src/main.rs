@@ -275,17 +275,17 @@ fn tile_to_svg(key: TileOffset,
     }
 
     svg += &format!(r#"<rect x="{}" y="{}" width="{}" height="{}" style="{}" ></rect>"#,
-            tile.rect.min.x    * svg_settings.scale + svg_settings.x,
-            tile.rect.min.y    * svg_settings.scale + svg_settings.y,
-            tile.rect.width()  * svg_settings.scale,
-            tile.rect.height() * svg_settings.scale,
+            tile.rect.origin.x    * svg_settings.scale + svg_settings.x,
+            tile.rect.origin.y    * svg_settings.scale + svg_settings.y,
+            tile.rect.size.width  * svg_settings.scale,
+            tile.rect.size.height * svg_settings.scale,
             tile_style);
 
     svg += &format!("\n\n<g class=\"svg_quadtree\">\n{}</g>\n",
                    tile_node_to_svg(&tile.root, &slice.transform, svg_settings));
 
-    let right  = tile.rect.max.x as i32;
-    let bottom = tile.rect.max.y as i32;
+    let right  = (tile.rect.origin.x + tile.rect.size.width) as i32;
+    let bottom = (tile.rect.origin.y + tile.rect.size.height) as i32;
 
     *svg_width  = if right  > *svg_width  { right  } else { *svg_width  };
     *svg_height = if bottom > *svg_height { bottom } else { *svg_height };
@@ -296,7 +296,7 @@ fn tile_to_svg(key: TileOffset,
 
 
     let rect_visual_id = Rect {
-        origin: tile.rect.min,
+        origin: tile.rect.origin,
         size: PictureSize::new(1.0, 1.0)
     };
     let rect_visual_id_world = slice.transform.outer_transformed_rect(&rect_visual_id).unwrap();
@@ -344,10 +344,10 @@ fn tile_to_svg(key: TileOffset,
     // nearly invisible, all we want is the toolip really
     let style = "style=\"fill-opacity:0.001;";
     svg += &format!("<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" {}{}\" >{}<\u{2f}rect>",
-                    tile.rect.min.x    * svg_settings.scale + svg_settings.x,
-                    tile.rect.min.y    * svg_settings.scale + svg_settings.y,
-                    tile.rect.width()  * svg_settings.scale,
-                    tile.rect.height() * svg_settings.scale,
+                    tile.rect.origin.x    * svg_settings.scale + svg_settings.x,
+                    tile.rect.origin.y    * svg_settings.scale + svg_settings.y,
+                    tile.rect.size.width  * svg_settings.scale,
+                    tile.rect.size.height * svg_settings.scale,
                     style,
                     tile_stroke,
                     title);

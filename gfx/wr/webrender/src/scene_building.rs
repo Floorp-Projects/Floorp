@@ -892,7 +892,7 @@ impl<'a> SceneBuilder<'a> {
         // SpatialNode::scroll(..) API as well as for properly setting sticky
         // positioning offsets.
         let frame_rect = clip_rect;
-        let content_size = info.content_rect.size();
+        let content_size = info.content_rect.size;
 
         self.add_rect_clip_node(
             info.clip_id,
@@ -956,10 +956,10 @@ impl<'a> SceneBuilder<'a> {
                 is_2d_scale_translation: false,
                 should_snap: false
             },
-            bounds.min.to_vector(),
+            bounds.origin.to_vector(),
         );
 
-        let iframe_rect = LayoutRect::from_size(bounds.size());
+        let iframe_rect = LayoutRect::new(LayoutPoint::zero(), bounds.size);
         let is_root_pipeline = self.iframe_size.is_empty();
 
         self.add_scroll_frame(
@@ -968,7 +968,7 @@ impl<'a> SceneBuilder<'a> {
             ExternalScrollId(0, iframe_pipeline_id),
             iframe_pipeline_id,
             &iframe_rect,
-            &bounds.size(),
+            &bounds.size,
             ScrollSensitivity::ScriptAndInputEvents,
             ScrollFrameKind::PipelineRoot {
                 is_root_pipeline,
@@ -976,7 +976,7 @@ impl<'a> SceneBuilder<'a> {
             LayoutVector2D::zero(),
         );
 
-        Some((bounds.size(), pipeline.display_list.iter()))
+        Some((bounds.size, pipeline.display_list.iter()))
     }
 
     fn get_space(
@@ -1050,7 +1050,7 @@ impl<'a> SceneBuilder<'a> {
             target_spatial_node,
             &self.spatial_tree
         );
-        self.snap_to_device.snap_rect(&rect)
+        self.snap_to_device.snap_rect(rect)
     }
 
     fn build_item<'b>(
@@ -1071,7 +1071,7 @@ impl<'a> SceneBuilder<'a> {
                     spatial_node_index,
                     clip_chain_id,
                     &layout,
-                    layout.rect.size(),
+                    layout.rect.size,
                     LayoutSize::zero(),
                     info.image_key,
                     info.image_rendering,
@@ -1258,7 +1258,7 @@ impl<'a> SceneBuilder<'a> {
                             end,
                             stops.to_vec(),
                             ExtendMode::Clamp,
-                            rect.size(),
+                            rect.size,
                             LayoutSize::zero(),
                             None,
                         ) {
@@ -2396,7 +2396,7 @@ impl<'a> SceneBuilder<'a> {
         );
 
         let viewport_rect = self.snap_rect(
-            &LayoutRect::from_size(*viewport_size),
+            &LayoutRect::new(LayoutPoint::zero(), *viewport_size),
             spatial_node_index,
         );
 
@@ -2406,7 +2406,7 @@ impl<'a> SceneBuilder<'a> {
             ExternalScrollId(0, pipeline_id),
             pipeline_id,
             &viewport_rect,
-            &viewport_rect.size(),
+            &viewport_rect.size,
             ScrollSensitivity::ScriptAndInputEvents,
             ScrollFrameKind::PipelineRoot {
                 is_root_pipeline: true,
@@ -2968,7 +2968,7 @@ impl<'a> SceneBuilder<'a> {
         let mut info = info.clone();
 
         let size = get_line_decoration_size(
-            &info.rect.size(),
+            &info.rect.size,
             orientation,
             style,
             wavy_line_thickness,
@@ -2981,19 +2981,19 @@ impl<'a> SceneBuilder<'a> {
                 let clip_size = match orientation {
                     LineOrientation::Horizontal => {
                         LayoutSize::new(
-                            size.width * (info.rect.width() / size.width).floor(),
-                            info.rect.height(),
+                            size.width * (info.rect.size.width / size.width).floor(),
+                            info.rect.size.height,
                         )
                     }
                     LineOrientation::Vertical => {
                         LayoutSize::new(
-                            info.rect.width(),
-                            size.height * (info.rect.height() / size.height).floor(),
+                            info.rect.size.width,
+                            size.height * (info.rect.size.height / size.height).floor(),
                         )
                     }
                 };
-                let clip_rect = LayoutRect::from_origin_and_size(
-                    info.rect.min,
+                let clip_rect = LayoutRect::new(
+                    info.rect.origin,
                     clip_size,
                 );
                 info.clip_rect = clip_rect
@@ -3188,8 +3188,8 @@ impl<'a> SceneBuilder<'a> {
             (start_point, end_point)
         };
 
-        let is_tiled = prim_rect.width() > stretch_size.width
-         || prim_rect.height() > stretch_size.height;
+        let is_tiled = prim_rect.size.width > stretch_size.width
+         || prim_rect.size.height > stretch_size.height;
         // SWGL has a fast-path that can render gradients faster than it can sample from the
         // texture cache so we disable caching in this configuration. Cached gradients are
         // faster on hardware.
@@ -3326,7 +3326,7 @@ impl<'a> SceneBuilder<'a> {
             //           the primitive key, when the common case is that the
             //           hash will match and we won't end up creating a new
             //           primitive template.
-            let prim_offset = prim_info.rect.min.to_vector() - offset;
+            let prim_offset = prim_info.rect.origin.to_vector() - offset;
             let glyphs = glyph_range
                 .iter()
                 .map(|glyph| {
@@ -4030,13 +4030,13 @@ fn process_repeat_size(
     // the snapped values).
     const EPSILON: f32 = 0.001;
     LayoutSize::new(
-        if repeat_size.width.approx_eq_eps(&unsnapped_rect.width(), &EPSILON) {
-            snapped_rect.width()
+        if repeat_size.width.approx_eq_eps(&unsnapped_rect.size.width, &EPSILON) {
+            snapped_rect.size.width
         } else {
             repeat_size.width
         },
-        if repeat_size.height.approx_eq_eps(&unsnapped_rect.height(), &EPSILON) {
-            snapped_rect.height()
+        if repeat_size.height.approx_eq_eps(&unsnapped_rect.size.height, &EPSILON) {
+            snapped_rect.size.height
         } else {
             repeat_size.height
         },

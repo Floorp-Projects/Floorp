@@ -13,6 +13,7 @@ flat varying float v_start_offset;
 
 #define EXTEND_MODE_REPEAT 1
 
+// Rectangle in origin+size format
 PER_INSTANCE in vec4 aTaskRect;
 PER_INSTANCE in vec2 aStartPoint;
 PER_INSTANCE in vec2 aEndPoint;

@@ -6891,35 +6891,31 @@ static void AdjustAndPushBevel(wr::DisplayListBuilder& aBuilder,
 
   if (horizontal) {
     if (aIsStart) {
-      aRect.min.x += offset;
-      aRect.max.x += offset;
+      aRect.origin.x += offset;
     } else {
-      bevelRect.min.x += aRect.width() - offset;
-      bevelRect.max.x += aRect.width() - offset;
+      bevelRect.origin.x += aRect.size.width - offset;
     }
-    aRect.max.x -= offset;
-    bevelRect.max.y += aRect.height() - bevelRect.height();
-    bevelRect.max.x += offset - bevelRect.width();
+    aRect.size.width -= offset;
+    bevelRect.size.height = aRect.size.height;
+    bevelRect.size.width = offset;
     if (aBevel.mSide == eSideTop) {
-      borderWidths.bottom = aRect.height();
+      borderWidths.bottom = aRect.size.height;
     } else {
-      borderWidths.top = aRect.height();
+      borderWidths.top = aRect.size.height;
     }
   } else {
     if (aIsStart) {
-      aRect.min.y += offset;
-      aRect.max.y += offset;
+      aRect.origin.y += offset;
     } else {
-      bevelRect.min.y += aRect.height() - offset;
-      bevelRect.max.y += aRect.height() - offset;
+      bevelRect.origin.y += aRect.size.height - offset;
     }
-    aRect.max.y -= offset;
-    bevelRect.max.x += aRect.width() - bevelRect.width();
-    bevelRect.max.y += offset - bevelRect.height();
+    aRect.size.height -= offset;
+    bevelRect.size.width = aRect.size.width;
+    bevelRect.size.height = offset;
     if (aBevel.mSide == eSideLeft) {
-      borderWidths.right = aRect.width();
+      borderWidths.right = aRect.size.width;
     } else {
-      borderWidths.left = aRect.width();
+      borderWidths.left = aRect.size.width;
     }
   }
 
@@ -6981,7 +6977,7 @@ static void CreateWRCommandsForBorderSegment(
   }
   const bool horizontal = aBorderParams.mStartBevelSide == eSideTop ||
                           aBorderParams.mStartBevelSide == eSideBottom;
-  auto borderWidth = horizontal ? r.height() : r.width();
+  auto borderWidth = horizontal ? r.size.height : r.size.width;
 
   // All border style is set to none except left side. So setting the widths of
   // each side to width of rect is fine.
