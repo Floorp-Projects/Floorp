@@ -67,7 +67,7 @@ void DocAccessibleWrap::AttributeChanged(dom::Element* aElement,
                              accessible);
           }
         } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(
-                       aElement, nsGkAtoms::live)) {
+                       aElement, nsGkAtoms::aria_live)) {
           // HTML element defines it as a live region. It's live!
           if (value == nsGkAtoms::polite || value == nsGkAtoms::assertive) {
             FireDelayedEvent(nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED,

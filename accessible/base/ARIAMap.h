@@ -286,7 +286,13 @@ class AttrIterator {
  public:
   explicit AttrIterator(nsIContent* aContent);
 
-  bool Next(nsAString& aAttrName, nsAString& aAttrValue);
+  bool Next();
+
+  void AttrName(nsAString& aAttrName) const;
+
+  nsAtom* AttrName() const;
+
+  void AttrValue(nsAString& aAttrValue) const;
 
  private:
   AttrIterator() = delete;
@@ -296,6 +302,7 @@ class AttrIterator {
   dom::Element* mElement;
   uint32_t mAttrIdx;
   uint32_t mAttrCount;
+  RefPtr<nsAtom> mAttrAtom;
 };
 
 }  // namespace aria

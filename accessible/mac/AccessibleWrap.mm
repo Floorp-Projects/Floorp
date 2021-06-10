@@ -55,7 +55,7 @@ AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
         doc->QueueNewLiveRegion(this);
       }
     } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(
-                   aContent, nsGkAtoms::live)) {
+                   aContent, nsGkAtoms::aria_live)) {
       // HTML element defines it as a live region. It's live!
       if (value == nsGkAtoms::polite || value == nsGkAtoms::assertive) {
         doc->QueueNewLiveRegion(this);

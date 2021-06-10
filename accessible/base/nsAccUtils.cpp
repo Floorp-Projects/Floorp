@@ -119,7 +119,7 @@ void nsAccUtils::SetLiveContainerAttributes(AccAttributes* aAttributes,
       } else if (role) {
         GetLiveAttrValue(role->liveAttRule, live);
       } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(
-                     ancestor, nsGkAtoms::live)) {
+                     ancestor, nsGkAtoms::aria_live)) {
         value->ToString(live);
       }
 
@@ -458,7 +458,7 @@ bool nsAccUtils::IsARIALive(const LocalAccessible* aAccessible) {
     } else if (role) {
       GetLiveAttrValue(role->liveAttRule, live);
     } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(
-                   ancestor, nsGkAtoms::live)) {
+                   ancestor, nsGkAtoms::aria_live)) {
       value->ToString(live);
     }
     if (!live.IsEmpty() && !live.EqualsLiteral("off")) {
