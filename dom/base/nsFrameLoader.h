@@ -222,7 +222,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   void RequestEpochUpdate(uint32_t aEpoch);
 
-  void RequestSHistoryUpdate(bool aImmediately = false);
+  void RequestSHistoryUpdate();
 
   already_AddRefed<Promise> PrintPreview(nsIPrintSettings* aPrintSettings,
                                          BrowsingContext* aSourceBC,

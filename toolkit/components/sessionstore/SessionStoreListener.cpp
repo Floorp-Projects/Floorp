@@ -447,14 +447,6 @@ bool TabListener::ForceFlushFromParent() {
   return UpdateSessionStore(true);
 }
 
-void TabListener::UpdateSHistoryChanges(bool aImmediately) {
-  if (aImmediately) {
-    UpdateSessionStore();
-  } else {
-    AddTimerForUpdate();
-  }
-}
-
 bool TabListener::UpdateSessionStore(bool aIsFlush) {
   if (!aIsFlush) {
     if (!mSessionStore || !mSessionStore->UpdateNeeded()) {
