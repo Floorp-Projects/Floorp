@@ -3,7 +3,7 @@
 <head>
 <style>
 p { float:left; white-space:pre; border:1px solid black; clear:both; }
-.letterspace { letter-spacing:2px; }
+.letterspace { letter-spacing:4px; }
 table { clear:both; }
 </style>
 </head>
@@ -19,8 +19,9 @@ table { clear:both; }
   </p>
 </div>
 
-<!-- there should be 1px of letter-spacing after the tab, 1px before the 'a' and 2px after
-     the a -->
+<!-- there should be no letter-spacing after the tab, because letter-spacing is
+     already incorporated into the calculation of the tab position, but there
+     will be 4px after the a -->
 <p class="letterspace">
 	a
 </p>
