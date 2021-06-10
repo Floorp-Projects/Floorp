@@ -1292,16 +1292,6 @@ void SetValidationOptionsCommon() {
   PublicSSLState()->SetSignedCertTimestampsEnabled(sctsEnabled);
   PrivateSSLState()->SetSignedCertTimestampsEnabled(sctsEnabled);
 
-  CertVerifier::PinningMode pinningMode =
-      static_cast<CertVerifier::PinningMode>(
-          Preferences::GetInt("security.cert_pinning.enforcement_level",
-                              CertVerifier::pinningDisabled));
-  if (pinningMode > CertVerifier::pinningEnforceTestMode) {
-    pinningMode = CertVerifier::pinningDisabled;
-  }
-  PublicSSLState()->SetPinningMode(pinningMode);
-  PrivateSSLState()->SetPinningMode(pinningMode);
-
   BRNameMatchingPolicy::Mode nameMatchingMode =
       static_cast<BRNameMatchingPolicy::Mode>(Preferences::GetInt(
           "security.pki.name_matching_mode",
@@ -1508,8 +1498,7 @@ void nsNSSComponent::setValidationOptions(
                                  softTimeout, hardTimeout, proofOfLock);
 
   mDefaultCertVerifier = new SharedCertVerifier(
-      odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays,
-      PublicSSLState()->PinningMode(), sha1Mode,
+      odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays, sha1Mode,
       PublicSSLState()->NameMatchingMode(), netscapeStepUpPolicy, ctMode,
       crliteMode, crliteCTMergeDelaySeconds, mEnterpriseCerts);
 }
@@ -1527,8 +1516,8 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
       oldCertVerifier->mOCSPStrict ? CertVerifier::ocspStrict
                                    : CertVerifier::ocspRelaxed,
       oldCertVerifier->mOCSPTimeoutSoft, oldCertVerifier->mOCSPTimeoutHard,
-      oldCertVerifier->mCertShortLifetimeInDays, oldCertVerifier->mPinningMode,
-      oldCertVerifier->mSHA1Mode, oldCertVerifier->mNameMatchingMode,
+      oldCertVerifier->mCertShortLifetimeInDays, oldCertVerifier->mSHA1Mode,
+      oldCertVerifier->mNameMatchingMode,
       oldCertVerifier->mNetscapeStepUpPolicy, oldCertVerifier->mCTMode,
       oldCertVerifier->mCRLiteMode, oldCertVerifier->mCRLiteCTMergeDelaySeconds,
       mEnterpriseCerts);
@@ -2284,8 +2273,6 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                prefName.EqualsLiteral("security.ssl.enable_ocsp_must_staple") ||
                prefName.EqualsLiteral(
                    "security.pki.certificate_transparency.mode") ||
-               prefName.EqualsLiteral(
-                   "security.cert_pinning.enforcement_level") ||
                prefName.EqualsLiteral("security.pki.sha1_enforcement_level") ||
                prefName.EqualsLiteral("security.pki.name_matching_mode") ||
                prefName.EqualsLiteral("security.pki.netscape_step_up_policy") ||
