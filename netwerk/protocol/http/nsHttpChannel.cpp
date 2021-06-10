@@ -5065,6 +5065,9 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
                                     &isThirdPartyRedirectURI);
     if (isThirdPartyRedirectURI && mLoadInfo->GetExternalContentPolicyType() ==
                                        ExtContentPolicy::TYPE_DOCUMENT) {
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_QUERY_STRIPPING_COUNT::Redirect);
+
       nsCOMPtr<nsIPrincipal> prin;
       ContentBlockingAllowList::RecomputePrincipal(
           mRedirectURI, mLoadInfo->GetOriginAttributes(), getter_AddRefs(prin));
@@ -5080,6 +5083,9 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
           URLQueryStringStripper::Strip(mRedirectURI, strippedURI)) {
         mUnstrippedRedirectURI = mRedirectURI;
         mRedirectURI = strippedURI;
+
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_QUERY_STRIPPING_COUNT::StripForRedirect);
       }
     }
   }
