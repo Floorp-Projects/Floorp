@@ -12,7 +12,6 @@ namespace mozilla {
 template <typename T>
 class StaticRefPtr;
 }
-class nsIPersistentProperties;
 
 /**
  * Used for everything about events.
@@ -57,7 +56,7 @@ class nsEventShell {
    * @param  aAttributes  [in, out] the attributes
    */
   static void GetEventAttributes(nsINode* aNode,
-                                 nsIPersistentProperties* aAttributes);
+                                 mozilla::a11y::AccAttributes* aAttributes);
 
  private:
   static mozilla::StaticRefPtr<nsINode> sEventTargetNode;

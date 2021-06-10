@@ -17,7 +17,6 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "nsIFormControl.h"
-#include "nsIPersistentProperties2.h"
 #include "nsITextControlFrame.h"
 #include "nsNameSpaceManager.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -233,9 +232,8 @@ role HTMLTextFieldAccessible::NativeRole() const {
   return roles::ENTRY;
 }
 
-already_AddRefed<nsIPersistentProperties>
-HTMLTextFieldAccessible::NativeAttributes() {
-  nsCOMPtr<nsIPersistentProperties> attributes =
+already_AddRefed<AccAttributes> HTMLTextFieldAccessible::NativeAttributes() {
+  RefPtr<AccAttributes> attributes =
       HyperTextAccessibleWrap::NativeAttributes();
 
   // Expose type for text input elements as it gives some useful context,
@@ -251,9 +249,9 @@ HTMLTextFieldAccessible::NativeAttributes() {
                                                     nsGkAtoms::type, type)) ||
       mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
                                      type)) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textInputType, type);
+    attributes->SetAttribute(nsGkAtoms::textInputType, type);
     if (!ARIARoleMap() && type.EqualsLiteral("search")) {
-      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, u"searchbox"_ns);
+      attributes->SetAttribute(nsGkAtoms::xmlroles, u"searchbox"_ns);
     }
   }
 
@@ -265,8 +263,7 @@ HTMLTextFieldAccessible::NativeAttributes() {
     nsAutoString name;
     const_cast<HTMLTextFieldAccessible*>(this)->Name(name);
     if (!name.Equals(placeholderText)) {
-      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::placeholder,
-                             placeholderText);
+      attributes->SetAttribute(nsGkAtoms::placeholder, placeholderText);
     }
   }
 

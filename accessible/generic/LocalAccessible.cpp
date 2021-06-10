@@ -6,6 +6,7 @@
 #include "LocalAccessible-inl.h"
 
 #include "EmbeddedObjCollector.h"
+#include "AccAttributes.h"
 #include "AccGroupInfo.h"
 #include "AccIterator.h"
 #include "nsAccUtils.h"
@@ -62,7 +63,6 @@
 #include "nsArrayUtils.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsAttrName.h"
-#include "nsPersistentProperties.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
@@ -968,26 +968,25 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
   return NS_OK;
 }
 
-already_AddRefed<nsIPersistentProperties> LocalAccessible::Attributes() {
-  nsCOMPtr<nsIPersistentProperties> attributes = NativeAttributes();
+already_AddRefed<AccAttributes> LocalAccessible::Attributes() {
+  RefPtr<AccAttributes> attributes = NativeAttributes();
   if (!HasOwnContent() || !mContent->IsElement()) return attributes.forget();
 
   // 'xml-roles' attribute coming from ARIA.
   nsAutoString xmlRoles;
   if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::role,
                                      xmlRoles)) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, xmlRoles);
+    attributes->SetAttribute(nsGkAtoms::xmlroles, xmlRoles);
   } else if (nsAtom* landmark = LandmarkRole()) {
     // 'xml-roles' attribute for landmark.
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, landmark);
+    attributes->SetAttribute(nsGkAtoms::xmlroles, landmark);
   }
 
   // Expose object attributes from ARIA attributes.
-  nsAutoString unused;
   aria::AttrIterator attribIter(mContent);
   nsAutoString name, value;
   while (attribIter.Next(name, value)) {
-    attributes->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, unused);
+    attributes->SetAttribute(name, value);
   }
 
   // If there is no aria-live attribute then expose default value of 'live'
@@ -995,15 +994,13 @@ already_AddRefed<nsIPersistentProperties> LocalAccessible::Attributes() {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (roleMapEntry) {
     if (roleMapEntry->Is(nsGkAtoms::searchbox)) {
-      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textInputType,
-                             u"search"_ns);
+      attributes->SetAttribute(nsGkAtoms::textInputType, u"search"_ns);
     }
 
-    nsAutoString live;
-    nsAccUtils::GetAccAttr(attributes, nsGkAtoms::live, live);
-    if (live.IsEmpty()) {
+    if (!attributes->HasAttribute(nsGkAtoms::aria_live)) {
+      nsAutoString live;
       if (nsAccUtils::GetLiveAttrValue(roleMapEntry->liveAttRule, live)) {
-        nsAccUtils::SetAccAttr(attributes, nsGkAtoms::live, live);
+        attributes->SetAttribute(nsGkAtoms::live, live);
       }
     }
   }
@@ -1011,10 +1008,8 @@ already_AddRefed<nsIPersistentProperties> LocalAccessible::Attributes() {
   return attributes.forget();
 }
 
-already_AddRefed<nsIPersistentProperties> LocalAccessible::NativeAttributes() {
-  RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
-
-  nsAutoString unused;
+already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
+  RefPtr<AccAttributes> attributes = new AccAttributes();
 
   // We support values, so expose the string value as well, via the valuetext
   // object attribute. We test for the value interface because we don't want
@@ -1023,18 +1018,18 @@ already_AddRefed<nsIPersistentProperties> LocalAccessible::NativeAttributes() {
   if (HasNumericValue()) {
     nsAutoString valuetext;
     Value(valuetext);
-    attributes->SetStringProperty("valuetext"_ns, valuetext, unused);
+    attributes->SetAttribute(u"valuetext"_ns, valuetext);
   }
 
   // Expose checkable object attribute if the accessible has checkable state
   if (State() & states::CHECKABLE) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::checkable, u"true"_ns);
+    attributes->SetAttribute(nsGkAtoms::checkable, u"true"_ns);
   }
 
   // Expose 'explicit-name' attribute.
   nsAutoString name;
   if (Name(name) != eNameFromSubtree && !name.IsVoid()) {
-    attributes->SetStringProperty("explicit-name"_ns, u"true"_ns, unused);
+    attributes->SetAttribute(u"explicit-name"_ns, u"true"_ns);
   }
 
   // Group attributes (level/setsize/posinset)
@@ -1047,11 +1042,11 @@ already_AddRefed<nsIPersistentProperties> LocalAccessible::NativeAttributes() {
   if (itemCount) {
     nsAutoString itemCountStr;
     itemCountStr.AppendInt(itemCount);
-    attributes->SetStringProperty("child-item-count"_ns, itemCountStr, unused);
+    attributes->SetAttribute(u"child-item-count"_ns, itemCountStr);
   }
 
   if (hierarchical) {
-    attributes->SetStringProperty("hierarchical"_ns, u"true"_ns, unused);
+    attributes->SetAttribute(u"hierarchical"_ns, u"true"_ns);
   }
 
   // If the accessible doesn't have own content (such as list item bullet or
@@ -1070,25 +1065,25 @@ already_AddRefed<nsIPersistentProperties> LocalAccessible::NativeAttributes() {
 
   nsAutoString id;
   if (nsCoreUtils::GetID(mContent, id)) {
-    attributes->SetStringProperty("id"_ns, id, unused);
+    attributes->SetAttribute(nsGkAtoms::id, id);
   }
 
   // Expose class because it may have useful microformat information.
   nsAutoString _class;
   if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                                      _class)) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::_class, _class);
+    attributes->SetAttribute(nsGkAtoms::_class, _class);
   }
 
   // Expose tag.
   nsAutoString tagName;
   mContent->NodeInfo()->GetName(tagName);
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tag, tagName);
+  attributes->SetAttribute(nsGkAtoms::tag, tagName);
 
   // Expose draggable object attribute.
   if (auto htmlElement = nsGenericHTMLElement::FromNode(mContent)) {
     if (htmlElement->Draggable()) {
-      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::draggable, u"true"_ns);
+      attributes->SetAttribute(nsGkAtoms::draggable, u"true"_ns);
     }
   }
 
@@ -1102,39 +1097,38 @@ already_AddRefed<nsIPersistentProperties> LocalAccessible::NativeAttributes() {
 
   // Expose 'display' attribute.
   styleInfo.Display(value);
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::display, value);
+  attributes->SetAttribute(nsGkAtoms::display, value);
 
   // Expose 'text-align' attribute.
   styleInfo.TextAlign(value);
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textAlign, value);
+  attributes->SetAttribute(nsGkAtoms::textAlign, value);
 
   // Expose 'text-indent' attribute.
   styleInfo.TextIndent(value);
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textIndent, value);
+  attributes->SetAttribute(nsGkAtoms::textIndent, value);
 
   // Expose 'margin-left' attribute.
   styleInfo.MarginLeft(value);
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::marginLeft, value);
+  attributes->SetAttribute(nsGkAtoms::marginLeft, value);
 
   // Expose 'margin-right' attribute.
   styleInfo.MarginRight(value);
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::marginRight, value);
+  attributes->SetAttribute(nsGkAtoms::marginRight, value);
 
   // Expose 'margin-top' attribute.
   styleInfo.MarginTop(value);
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::marginTop, value);
+  attributes->SetAttribute(nsGkAtoms::marginTop, value);
 
   // Expose 'margin-bottom' attribute.
   styleInfo.MarginBottom(value);
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::marginBottom, value);
+  attributes->SetAttribute(nsGkAtoms::marginBottom, value);
 
   // Expose data-at-shortcutkeys attribute for web applications and virtual
   // cursors. Currently mostly used by JAWS.
   nsAutoString atShortcutKeys;
   if (mContent->AsElement()->GetAttr(
           kNameSpaceID_None, nsGkAtoms::dataAtShortcutkeys, atShortcutKeys)) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::dataAtShortcutkeys,
-                           atShortcutKeys);
+    attributes->SetAttribute(nsGkAtoms::dataAtShortcutkeys, atShortcutKeys);
   }
 
   return attributes.forget();

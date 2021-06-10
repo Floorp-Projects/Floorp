@@ -6,13 +6,13 @@
 #include "ARIAGridAccessible-inl.h"
 
 #include "LocalAccessible-inl.h"
+#include "AccAttributes.h"
 #include "AccIterator.h"
 #include "nsAccUtils.h"
 #include "Role.h"
 #include "States.h"
 
 #include "mozilla/dom/Element.h"
-#include "nsIPersistentProperties2.h"
 #include "nsComponentManagerUtils.h"
 
 using namespace mozilla;
@@ -36,14 +36,11 @@ role ARIAGridAccessible::NativeRole() const {
   return r != roles::NOTHING ? r : roles::TABLE;
 }
 
-already_AddRefed<nsIPersistentProperties>
-ARIAGridAccessible::NativeAttributes() {
-  nsCOMPtr<nsIPersistentProperties> attributes =
-      AccessibleWrap::NativeAttributes();
+already_AddRefed<AccAttributes> ARIAGridAccessible::NativeAttributes() {
+  RefPtr<AccAttributes> attributes = AccessibleWrap::NativeAttributes();
 
   if (IsProbablyLayoutTable()) {
-    nsAutoString unused;
-    attributes->SetStringProperty("layout-guess"_ns, u"true"_ns, unused);
+    attributes->SetAttribute(u"layout-guess"_ns, u"true"_ns);
   }
 
   return attributes.forget();
@@ -581,9 +578,8 @@ void ARIAGridCellAccessible::ApplyARIAState(uint64_t* aState) const {
   }
 }
 
-already_AddRefed<nsIPersistentProperties>
-ARIAGridCellAccessible::NativeAttributes() {
-  nsCOMPtr<nsIPersistentProperties> attributes =
+already_AddRefed<AccAttributes> ARIAGridCellAccessible::NativeAttributes() {
+  RefPtr<AccAttributes> attributes =
       HyperTextAccessibleWrap::NativeAttributes();
 
   // Expose "table-cell-index" attribute.
@@ -610,12 +606,10 @@ ARIAGridCellAccessible::NativeAttributes() {
 
   nsAutoString stringIdx;
   stringIdx.AppendInt(rowIdx * colCount + colIdx);
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tableCellIndex, stringIdx);
+  attributes->SetAttribute(nsGkAtoms::tableCellIndex, stringIdx);
 
 #ifdef DEBUG
-  nsAutoString unused;
-  attributes->SetStringProperty("cppclass"_ns, u"ARIAGridCellAccessible"_ns,
-                                unused);
+  attributes->SetAttribute(u"cppclass"_ns, u"ARIAGridCellAccessible"_ns);
 #endif
 
   return attributes.forget();

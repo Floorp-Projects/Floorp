@@ -6,6 +6,7 @@
 
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
+#include "AccAttributes.h"
 #include "nsAccUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIAccessibleRelation.h"
@@ -366,21 +367,31 @@ xpcAccessible::GetAttributes(nsIPersistentProperties** aAttributes) {
     return NS_ERROR_FAILURE;
   }
 
+  RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
+
+  RefPtr<AccAttributes> attributes = new AccAttributes();
   if (LocalAccessible* acc = Intl()) {
-    nsCOMPtr<nsIPersistentProperties> attributes = acc->Attributes();
-    attributes.swap(*aAttributes);
-    return NS_OK;
+    attributes = acc->Attributes();
+  } else {
+    RemoteAccessible* proxy = IntlGeneric()->AsRemote();
+    AutoTArray<Attribute, 10> attrs;
+    proxy->Attributes(&attrs);
+    uint32_t attrCount = attrs.Length();
+    for (uint32_t i = 0; i < attrCount; i++) {
+      attributes->SetAttribute(NS_ConvertUTF8toUTF16(attrs[i].Name()),
+                               attrs[i].Value());
+    }
   }
 
-  RemoteAccessible* proxy = IntlGeneric()->AsRemote();
-  AutoTArray<Attribute, 10> attrs;
-  proxy->Attributes(&attrs);
-
-  RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
-  uint32_t attrCount = attrs.Length();
   nsAutoString unused;
-  for (uint32_t i = 0; i < attrCount; i++) {
-    props->SetStringProperty(attrs[i].Name(), attrs[i].Value(), unused);
+  for (auto iter : *attributes) {
+    nsAutoString name;
+    iter.NameAsString(name);
+
+    nsAutoString value;
+    iter.ValueAsString(value);
+
+    props->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, unused);
   }
 
   props.forget(aAttributes);

@@ -13,13 +13,13 @@
 #include "nsStyleConsts.h"
 
 class nsIFrame;
-class nsIPersistentProperties;
 class nsIContent;
 class nsDeviceContext;
 
 namespace mozilla {
 namespace a11y {
 
+class AccAttributes;
 class LocalAccessible;
 class HyperTextAccessible;
 
@@ -71,7 +71,7 @@ class TextAttrsMgr {
    * @param aStartHTOffset [out, optional] start hyper text offset
    * @param aEndHTOffset   [out, optional] end hyper text offset
    */
-  void GetAttributes(nsIPersistentProperties* aAttributes,
+  void GetAttributes(AccAttributes* aAttributes,
                      uint32_t* aStartHTOffset = nullptr,
                      uint32_t* aEndHTOffset = nullptr);
 
@@ -109,7 +109,7 @@ class TextAttrsMgr {
      * @param aIncludeDefAttrValue  [in] if true then attribute is exposed even
      *                               if its value is the same as default one
      */
-    virtual void Expose(nsIPersistentProperties* aAttributes,
+    virtual void Expose(AccAttributes* aAttributes,
                         bool aIncludeDefAttrValue) = 0;
 
     /**
@@ -128,7 +128,7 @@ class TextAttrsMgr {
     explicit TTextAttr(bool aGetRootValue) : mGetRootValue(aGetRootValue) {}
 
     // TextAttr
-    virtual void Expose(nsIPersistentProperties* aAttributes,
+    virtual void Expose(AccAttributes* aAttributes,
                         bool aIncludeDefAttrValue) override {
       if (mGetRootValue) {
         if (mIsRootDefined) ExposeValue(aAttributes, mRootNativeValue);
@@ -162,8 +162,7 @@ class TextAttrsMgr {
 
    protected:
     // Expose the text attribute with the given value to attribute set.
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
-                             const T& aValue) = 0;
+    virtual void ExposeValue(AccAttributes* aAttributes, const T& aValue) = 0;
 
     // Return native value for the given DOM element.
     virtual bool GetValueFor(LocalAccessible* aAccessible, T* aValue) = 0;
@@ -196,7 +195,7 @@ class TextAttrsMgr {
     // TextAttr
     virtual bool GetValueFor(LocalAccessible* aAccessible,
                              nsString* aValue) override;
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+    virtual void ExposeValue(AccAttributes* aAttributes,
                              const nsString& aValue) override;
 
    private:
@@ -220,7 +219,7 @@ class TextAttrsMgr {
     // TextAttr
     virtual bool GetValueFor(LocalAccessible* aAccessible,
                              uint32_t* aValue) override;
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+    virtual void ExposeValue(AccAttributes* aAttributes,
                              const uint32_t& aValue) override;
 
    private:
@@ -240,7 +239,7 @@ class TextAttrsMgr {
     // TextAttr
     virtual bool GetValueFor(LocalAccessible* aAccessible,
                              nscolor* aValue) override;
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+    virtual void ExposeValue(AccAttributes* aAttributes,
                              const nscolor& aValue) override;
 
    private:
@@ -260,7 +259,7 @@ class TextAttrsMgr {
     // TTextAttr
     virtual bool GetValueFor(LocalAccessible* aAccessible,
                              nscolor* aValue) override;
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+    virtual void ExposeValue(AccAttributes* aAttributes,
                              const nscolor& aValue) override;
   };
 
@@ -276,7 +275,7 @@ class TextAttrsMgr {
     // TTextAttr
     virtual bool GetValueFor(LocalAccessible* aAccessible,
                              nsString* aValue) override;
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+    virtual void ExposeValue(AccAttributes* aAttributes,
                              const nsString& aValue) override;
 
    private:
@@ -295,7 +294,7 @@ class TextAttrsMgr {
     // TTextAttr
     virtual bool GetValueFor(LocalAccessible* aAccessible,
                              nscoord* aValue) override;
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+    virtual void ExposeValue(AccAttributes* aAttributes,
                              const nscoord& aValue) override;
 
    private:
@@ -314,7 +313,7 @@ class TextAttrsMgr {
     // TTextAttr
     virtual bool GetValueFor(LocalAccessible* aContent,
                              mozilla::FontSlantStyle* aValue) override;
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+    virtual void ExposeValue(AccAttributes* aAttributes,
                              const mozilla::FontSlantStyle& aValue) override;
   };
 
@@ -330,7 +329,7 @@ class TextAttrsMgr {
     // TTextAttr
     virtual bool GetValueFor(LocalAccessible* aAccessible,
                              mozilla::FontWeight* aValue) override;
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+    virtual void ExposeValue(AccAttributes* aAttributes,
                              const mozilla::FontWeight& aValue) override;
 
    private:
@@ -350,7 +349,7 @@ class TextAttrsMgr {
     // TextAttr
     virtual bool GetValueFor(LocalAccessible* aAccessible,
                              bool* aValue) override;
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+    virtual void ExposeValue(AccAttributes* aAttributes,
                              const bool& aValue) override;
   };
 
@@ -400,7 +399,7 @@ class TextAttrsMgr {
     // TextAttr
     virtual bool GetValueFor(LocalAccessible* aAccessible,
                              TextDecorValue* aValue) override;
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+    virtual void ExposeValue(AccAttributes* aAttributes,
                              const TextDecorValue& aValue) override;
   };
 
@@ -424,7 +423,7 @@ class TextAttrsMgr {
     // TextAttr
     virtual bool GetValueFor(LocalAccessible* aAccessible,
                              TextPosValue* aValue) override;
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+    virtual void ExposeValue(AccAttributes* aAttributes,
                              const TextPosValue& aValue) override;
 
    private:

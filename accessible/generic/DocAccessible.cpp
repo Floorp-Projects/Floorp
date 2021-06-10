@@ -6,6 +6,7 @@
 
 #include "LocalAccessible-inl.h"
 #include "AccIterator.h"
+#include "AccAttributes.h"
 #include "DocAccessible-inl.h"
 #include "DocAccessibleChild.h"
 #include "HTMLImageMapAccessible.h"
@@ -31,7 +32,6 @@
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsImageFrame.h"
-#include "nsIPersistentProperties2.h"
 #include "nsViewManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsUnicharUtils.h"
@@ -261,9 +261,8 @@ void DocAccessible::ApplyARIAState(uint64_t* aState) const {
   if (mParent) mParent->ApplyARIAState(aState);
 }
 
-already_AddRefed<nsIPersistentProperties> DocAccessible::Attributes() {
-  nsCOMPtr<nsIPersistentProperties> attributes =
-      HyperTextAccessibleWrap::Attributes();
+already_AddRefed<AccAttributes> DocAccessible::Attributes() {
+  RefPtr<AccAttributes> attributes = HyperTextAccessibleWrap::Attributes();
 
   // No attributes if document is not attached to the tree or if it's a root
   // document.
@@ -273,7 +272,7 @@ already_AddRefed<nsIPersistentProperties> DocAccessible::Attributes() {
   aria::AttrIterator attribIter(mParent->GetContent());
   nsAutoString name, value, unused;
   while (attribIter.Next(name, value)) {
-    attributes->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, unused);
+    attributes->SetAttribute(name, value);
   }
 
   return attributes.forget();

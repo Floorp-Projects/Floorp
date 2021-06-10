@@ -37,7 +37,7 @@ class HTMLTableCellAccessible : public HyperTextAccessibleWrap,
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual mozilla::a11y::GroupPos GroupPosition() override;
 
   // TableCellAccessible
@@ -161,7 +161,7 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
   virtual void Description(nsString& aDescription) override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual Relation RelationByType(RelationType aRelationType) const override;
 
   virtual bool InsertChildAt(uint32_t aIndex, LocalAccessible* aChild) override;

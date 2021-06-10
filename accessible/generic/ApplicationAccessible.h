@@ -35,7 +35,7 @@ class ApplicationAccessible : public AccessibleWrap {
   virtual void Shutdown() override;
   virtual nsIntRect Bounds() const override;
   virtual nsRect BoundsInAppUnits() const override;
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual GroupPos GroupPosition() override;
   virtual ENameValueFlag Name(nsString& aName) const override;
   virtual void ApplyARIAState(uint64_t* aState) const override;

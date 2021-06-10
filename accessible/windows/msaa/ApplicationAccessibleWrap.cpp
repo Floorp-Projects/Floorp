@@ -8,7 +8,7 @@
 #include "ApplicationAccessibleWrap.h"
 
 #include "nsIGfxInfo.h"
-#include "nsPersistentProperties.h"
+#include "AccAttributes.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Components.h"
 
@@ -19,17 +19,15 @@ using namespace mozilla::a11y;
 // nsISupports
 NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessibleWrap, ApplicationAccessible)
 
-already_AddRefed<nsIPersistentProperties>
-ApplicationAccessibleWrap::NativeAttributes() {
-  RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
+already_AddRefed<AccAttributes> ApplicationAccessibleWrap::NativeAttributes() {
+  RefPtr<AccAttributes> attributes = new AccAttributes();
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
   if (gfxInfo) {
     bool isD2DEnabled = false;
     gfxInfo->GetD2DEnabled(&isD2DEnabled);
-    nsAutoString unused;
-    attributes->SetStringProperty(
-        "D2D"_ns, isD2DEnabled ? u"true"_ns : u"false"_ns, unused);
+    attributes->SetAttribute(u"D2D"_ns,
+                             isD2DEnabled ? u"true"_ns : u"false"_ns);
   }
 
   return attributes.forget();

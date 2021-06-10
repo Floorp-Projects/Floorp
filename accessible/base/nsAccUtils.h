@@ -33,34 +33,10 @@ class Attribute;
 class nsAccUtils {
  public:
   /**
-   * Returns value of attribute from the given attributes container.
-   *
-   * @param aAttributes - attributes container
-   * @param aAttrName - the name of requested attribute
-   * @param aAttrValue - value of attribute
-   */
-  static void GetAccAttr(nsIPersistentProperties* aAttributes,
-                         nsAtom* aAttrName, nsAString& aAttrValue);
-
-  /**
-   * Set value of attribute for the given attributes container.
-   *
-   * @param aAttributes - attributes container
-   * @param aAttrName - the name of requested attribute
-   * @param aAttrValue - new value of attribute
-   */
-  static void SetAccAttr(nsIPersistentProperties* aAttributes,
-                         nsAtom* aAttrName, const nsAString& aAttrValue);
-
-  static void SetAccAttr(nsIPersistentProperties* aAttributes,
-                         nsAtom* aAttrName, nsAtom* aAttrValue);
-
-  /**
    * Set group attributes ('level', 'setsize', 'posinset').
    */
-  static void SetAccGroupAttrs(nsIPersistentProperties* aAttributes,
-                               int32_t aLevel, int32_t aSetSize,
-                               int32_t aPosInSet);
+  static void SetAccGroupAttrs(AccAttributes* aAttributes, int32_t aLevel,
+                               int32_t aSetSize, int32_t aPosInSet);
 
   /**
    * Get default value of the level for the given accessible.
@@ -84,7 +60,7 @@ class nsAccUtils {
    * @param aAttributes    where to store the attributes
    * @param aStartContent  node to start from
    */
-  static void SetLiveContainerAttributes(nsIPersistentProperties* aAttributes,
+  static void SetLiveContainerAttributes(AccAttributes* aAttributes,
                                          nsIContent* aStartContent);
 
   /**
@@ -254,7 +230,7 @@ class nsAccUtils {
    */
   static bool MustPrune(AccessibleOrProxy aAccessible);
 
-  static bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,
+  static bool PersistentPropertiesToArray(AccAttributes* aProps,
                                           nsTArray<Attribute>* aAttributes);
 
   /**

@@ -13,7 +13,6 @@
 #include "nsFrameSelection.h"
 #include "TextRange.h"
 #include "TreeWalker.h"
-#include "nsPersistentProperties.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -262,8 +261,7 @@ void HyperTextAccessibleWrap::TextForRange(nsAString& aText,
 }
 
 void HyperTextAccessibleWrap::AttributedTextForRange(
-    nsTArray<nsString>& aStrings,
-    nsTArray<nsCOMPtr<nsIPersistentProperties>>& aProperties,
+    nsTArray<nsString>& aStrings, nsTArray<RefPtr<AccAttributes>>& aProperties,
     nsTArray<LocalAccessible*>& aContainers, int32_t aStartOffset,
     HyperTextAccessible* aEndContainer, int32_t aEndOffset) {
   if (IsHTMLListItem()) {
@@ -275,11 +273,9 @@ void HyperTextAccessibleWrap::AttributedTextForRange(
         TextSubstring(0, nsAccUtils::TextLength(bullet), text);
 
         int32_t unusedAttrStartOffset, unusedAttrEndOffset;
-        nsCOMPtr<nsIPersistentProperties> props =
+        RefPtr<AccAttributes> props =
             TextAttributes(true, aStartOffset - 1, &unusedAttrStartOffset,
                            &unusedAttrEndOffset);
-        nsTArray<Attribute> textAttrArray;
-        nsAccUtils::PersistentPropertiesToArray(props, &textAttrArray);
 
         aStrings.AppendElement(text);
         aProperties.AppendElement(props);
@@ -294,9 +290,8 @@ void HyperTextAccessibleWrap::AttributedTextForRange(
     int32_t attrEndOffset = iter.mCurrentStartOffset;
     do {
       int32_t oldEndOffset = attrEndOffset;
-      nsCOMPtr<nsIPersistentProperties> props =
-          iter.mCurrentContainer->TextAttributes(
-              true, attrEndOffset, &attrStartOffset, &attrEndOffset);
+      RefPtr<AccAttributes> props = iter.mCurrentContainer->TextAttributes(
+          true, attrEndOffset, &attrStartOffset, &attrEndOffset);
 
       if (oldEndOffset == attrEndOffset) {
         MOZ_ASSERT_UNREACHABLE("new attribute end offset should be different");

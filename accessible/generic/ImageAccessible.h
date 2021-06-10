@@ -23,7 +23,7 @@ class ImageAccessible : public LinkableAccessible {
   // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual already_AddRefed<AccAttributes> NativeAttributes() override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() const override;

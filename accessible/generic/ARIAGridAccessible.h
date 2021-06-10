@@ -26,7 +26,7 @@ class ARIAGridAccessible : public HyperTextAccessibleWrap,
 
   // LocalAccessible
   virtual a11y::role NativeRole() const override;
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual TableAccessible* AsTable() override { return this; }
 
   // TableAccessible
@@ -101,7 +101,7 @@ class ARIAGridCellAccessible : public HyperTextAccessibleWrap,
   virtual a11y::role NativeRole() const override;
   virtual TableCellAccessible* AsTableCell() override { return this; }
   virtual void ApplyARIAState(uint64_t* aState) const override;
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual mozilla::a11y::GroupPos GroupPosition() override;
 
  protected:
