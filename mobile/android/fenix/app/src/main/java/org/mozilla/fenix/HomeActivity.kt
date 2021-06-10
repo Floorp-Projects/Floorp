@@ -843,7 +843,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         // has removed all of them, or we couldn't load any) we will pass searchTermOrURL to Gecko
         // and let it try to load whatever was entered.
         if ((!forceSearch && searchTermOrURL.isUrl()) || engine == null) {
-            if (newTab) {
+            val tabId = if (newTab) {
                 components.useCases.tabsUseCases.addTab(
                     url = searchTermOrURL.toNormalizedUrl(),
                     flags = flags,
@@ -854,10 +854,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                     url = searchTermOrURL.toNormalizedUrl(),
                     flags = flags
                 )
+                components.core.store.state.selectedTabId
             }
 
-            if (requestDesktopMode) {
-                handleRequestDesktopMode()
+            if (requestDesktopMode && tabId != null) {
+                handleRequestDesktopMode(tabId)
             }
         } else {
             if (newTab) {
@@ -885,15 +886,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
     }
 
-    internal fun handleRequestDesktopMode() {
-        val requestDesktopSiteUseCase =
-            components.useCases.sessionUseCases.requestDesktopSite
-        requestDesktopSiteUseCase.invoke(true)
-        components.core.store.dispatch(
-            ContentAction.UpdateDesktopModeAction(
-                components.core.store.state.selectedTabId.toString(), true
-            )
-        )
+    internal fun handleRequestDesktopMode(tabId: String) {
+        components.useCases.sessionUseCases.requestDesktopSite(true, tabId)
+        components.core.store.dispatch(ContentAction.UpdateDesktopModeAction(tabId, true))
+
         // Reset preference value after opening the tab in desktop mode
         settings().openNextTabInDesktopMode = false
     }
