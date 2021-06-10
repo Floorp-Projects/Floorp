@@ -1937,6 +1937,7 @@ BrowserGlue.prototype = {
 
     BrowserUsageTelemetry.uninit();
     SearchSERPTelemetry.uninit();
+    Interactions.uninit();
     PageThumbs.uninit();
     NewTabUtils.uninit();
 
