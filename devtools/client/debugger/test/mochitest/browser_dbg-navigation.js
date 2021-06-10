@@ -20,24 +20,24 @@ add_task(async function() {
     selectors: { getSelectedSource, getIsPaused, getCurrentThread },
     getState
   } = dbg;
-
+ 
+  info("Pause in the first document");
   invokeInTab("firstCall");
   await waitForPaused(dbg);
 
-  await waitForRequestsToSettle(dbg);
+  info("Navigate while being paused in the first document");
   await navigate(dbg, "doc-scripts.html", "simple1.js");
+
+  info("Set a breakpoint on the second document and pause on it");
   await selectSource(dbg, "simple1");
   await addBreakpoint(dbg, "simple1.js", 4);
   invokeInTab("main");
   await waitForPaused(dbg);
-  await waitForLoadedSource(dbg, "simple1");
-  toggleScopes(dbg);
-
-  assertPausedLocation(dbg);
+  let source = findSource(dbg, "simple1.js");
+  assertPausedAtSourceAndLine(dbg, source.id, 4);
   is(countSources(dbg), 5, "5 sources are loaded.");
 
   await waitForRequestsToSettle(dbg);
-  // this test is intermittent without this
   let onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await navigate(dbg, "doc-scripts.html", ...SOURCES);
   await onBreakpoint
@@ -45,23 +45,20 @@ add_task(async function() {
   ok(!getIsPaused(getCurrentThread()), "Is not paused");
 
   await waitForRequestsToSettle(dbg);
-  // this test is intermittent without this
   onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await navigate(dbg, "doc-scripts.html", ...SOURCES);
   await onBreakpoint
   is(countSources(dbg), 5, "5 sources are loaded.");
 
-  // Test that the current select source persists across reloads
+  info("Test that the current selected source persists across reloads");
   await selectSource(dbg, "long.js");
 
   await waitForRequestsToSettle(dbg);
-  // this test is intermittent without this
   onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await reload(dbg, "long.js");
   await onBreakpoint
   await waitForSelectedSource(dbg, "long.js");
 
-  await waitForRequestsToSettle(dbg);
   ok(getSelectedSource().url.includes("long.js"), "Selected source is long.js");
 });
 
