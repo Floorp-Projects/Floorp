@@ -65,13 +65,14 @@ pub enum ThrowMsgKind {
     PrivateDoubleInit = 3,
     MissingPrivateOnGet = 4,
     MissingPrivateOnSet = 5,
+    AssignToPrivateMethod = 6,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum ThrowCondition {
     ThrowHas = 0,
     ThrowHasNot = 1,
-    NoThrow = 2,
+    OnlyCheckRhs = 2,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -764,20 +765,6 @@ impl InstructionWriter {
         self.write_g_c_thing_index(func_index);
     }
 
-    pub fn class_constructor(&mut self, name_index: u32, source_start: u32, source_end: u32) {
-        self.emit_op(Opcode::ClassConstructor);
-        self.write_u32(name_index);
-        self.write_u32(source_start);
-        self.write_u32(source_end);
-    }
-
-    pub fn derived_constructor(&mut self, name_index: u32, source_start: u32, source_end: u32) {
-        self.emit_op(Opcode::DerivedConstructor);
-        self.write_u32(name_index);
-        self.write_u32(source_start);
-        self.write_u32(source_end);
-    }
-
     pub fn builtin_object(&mut self, kind: u8) {
         self.emit_op(Opcode::BuiltinObject);
         self.write_u8(kind);
@@ -957,13 +944,13 @@ impl InstructionWriter {
         self.write_bytecode_offset_diff(offset);
     }
 
-    pub fn if_eq(&mut self, forward_offset: BytecodeOffsetDiff) {
-        self.emit_op(Opcode::IfEq);
+    pub fn jump_if_false(&mut self, forward_offset: BytecodeOffsetDiff) {
+        self.emit_op(Opcode::JumpIfFalse);
         self.write_bytecode_offset_diff(forward_offset);
     }
 
-    pub fn if_ne(&mut self, offset: BytecodeOffsetDiff) {
-        self.emit_op(Opcode::IfNe);
+    pub fn jump_if_true(&mut self, offset: BytecodeOffsetDiff) {
+        self.emit_op(Opcode::JumpIfTrue);
         self.write_bytecode_offset_diff(offset);
     }
 
@@ -1127,6 +1114,12 @@ impl InstructionWriter {
         self.write_u24(slot);
     }
 
+    pub fn get_aliased_debug_var(&mut self, hops: u8, slot: u24) {
+        self.emit_op(Opcode::GetAliasedDebugVar);
+        self.write_u8(hops);
+        self.write_u24(slot);
+    }
+
     pub fn get_import(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::GetImport);
         self.write_g_c_thing_index(name_index);
@@ -1211,6 +1204,11 @@ impl InstructionWriter {
 
     pub fn freshen_lexical_env(&mut self) {
         self.emit_op(Opcode::FreshenLexicalEnv);
+    }
+
+    pub fn push_class_body_env(&mut self, lexical_scope_index: GCThingIndex) {
+        self.emit_op(Opcode::PushClassBodyEnv);
+        self.write_g_c_thing_index(lexical_scope_index);
     }
 
     pub fn push_var_env(&mut self, scope_index: GCThingIndex) {
@@ -1308,18 +1306,6 @@ impl InstructionWriter {
 
     pub fn debug_check_self_hosted(&mut self) {
         self.emit_op(Opcode::DebugCheckSelfHosted);
-    }
-
-    pub fn instrumentation_active(&mut self) {
-        self.emit_op(Opcode::InstrumentationActive);
-    }
-
-    pub fn instrumentation_callback(&mut self) {
-        self.emit_op(Opcode::InstrumentationCallback);
-    }
-
-    pub fn instrumentation_script_id(&mut self) {
-        self.emit_op(Opcode::InstrumentationScriptId);
     }
 
     pub fn debugger(&mut self) {

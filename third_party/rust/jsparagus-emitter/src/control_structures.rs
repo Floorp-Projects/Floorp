@@ -12,7 +12,7 @@ pub enum JumpKind {
     Coalesce,
     LogicalAnd,
     LogicalOr,
-    IfEq,
+    JumpIfFalse,
     Goto,
 }
 
@@ -29,7 +29,7 @@ trait Jump {
             JumpKind::Coalesce { .. }
             | JumpKind::LogicalOr { .. }
             | JumpKind::LogicalAnd { .. }
-            | JumpKind::IfEq { .. } => true,
+            | JumpKind::JumpIfFalse { .. } => true,
 
             JumpKind::Goto { .. } => false,
         }
@@ -51,8 +51,8 @@ trait Jump {
             JumpKind::LogicalAnd { .. } => {
                 emitter.emit.and_(placeholder_offset);
             }
-            JumpKind::IfEq { .. } => {
-                emitter.emit.if_eq(placeholder_offset);
+            JumpKind::JumpIfFalse { .. } => {
+                emitter.emit.jump_if_false(placeholder_offset);
             }
             JumpKind::Goto { .. } => {
                 emitter.emit.goto_(placeholder_offset);
@@ -498,7 +498,7 @@ where
 
         // add a registered jump for the conditional statement
         RegisteredJump {
-            kind: JumpKind::IfEq,
+            kind: JumpKind::JumpIfFalse,
             register_offset: |emitter, offset| emitter.control_stack.register_break(offset),
         }
         .emit(emitter);
@@ -544,7 +544,7 @@ where
 
         // add a registered jump for the conditional statement
         RegisteredJump {
-            kind: JumpKind::IfEq,
+            kind: JumpKind::JumpIfFalse,
             register_offset: |emitter, offset| emitter.control_stack.register_break(offset),
         }
         .emit(emitter);
@@ -597,7 +597,7 @@ where
 
             // add a registered jump for the conditional statement
             RegisteredJump {
-                kind: JumpKind::IfEq,
+                kind: JumpKind::JumpIfFalse,
                 register_offset: |emitter, offset| emitter.control_stack.register_break(offset),
             }
             .emit(emitter);

@@ -54,6 +54,8 @@ const RESOLVED_NAME: u16 = 1 << 13;
 #[allow(dead_code)]
 const RESOLVED_LENGTH: u16 = 1 << 14;
 #[allow(dead_code)]
+const GHOST_FUNCTION: u16 = 1 << 15;
+#[allow(dead_code)]
 const NORMAL_KIND: u16 = (FunctionKind::NormalFunction as u16) << FUNCTION_KIND_SHIFT;
 #[allow(dead_code)]
 const ASMJS_KIND: u16 = (FunctionKind::AsmJS as u16) << FUNCTION_KIND_SHIFT;
@@ -100,7 +102,8 @@ const INTERPRETED_METHOD: u16 = BASESCRIPT | METHOD_KIND;
 #[allow(dead_code)]
 const MUTABLE_FLAGS: u16 = RESOLVED_NAME | RESOLVED_LENGTH;
 #[allow(dead_code)]
-const STABLE_ACROSS_CLONES: u16 = CONSTRUCTOR | LAMBDA | SELF_HOSTED | FUNCTION_KIND_MASK;
+const STABLE_ACROSS_CLONES: u16 =
+    CONSTRUCTOR | LAMBDA | SELF_HOSTED | FUNCTION_KIND_MASK | GHOST_FUNCTION;
 // @@@@ END TYPES @@@@
 
 #[derive(Debug)]

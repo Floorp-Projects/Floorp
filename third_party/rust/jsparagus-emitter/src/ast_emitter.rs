@@ -378,7 +378,7 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
         self.emit_expression(&if_statement.test)?;
 
         let alternate_jump = ForwardJumpEmitter {
-            jump: JumpKind::IfEq,
+            jump: JumpKind::JumpIfFalse,
         }
         .emit(self);
 
@@ -758,7 +758,7 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
         self.emit_expression(test)?;
 
         let else_jump = ForwardJumpEmitter {
-            jump: JumpKind::IfEq,
+            jump: JumpKind::JumpIfFalse,
         }
         .emit(self);
 
