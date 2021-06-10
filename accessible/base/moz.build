@@ -7,6 +7,7 @@
 EXPORTS += ["AccEvent.h", "nsAccessibilityService.h"]
 
 EXPORTS.mozilla.a11y += [
+    "AccAttributes.h",
     "AccTypes.h",
     "DocManager.h",
     "FocusManager.h",
@@ -24,6 +25,7 @@ if CONFIG["MOZ_DEBUG"]:
     ]
 
 UNIFIED_SOURCES += [
+    "AccAttributes.cpp",
     "AccessibleOrProxy.cpp",
     "AccEvent.cpp",
     "AccGroupInfo.cpp",
