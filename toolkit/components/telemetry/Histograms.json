@@ -13002,22 +13002,6 @@
     "alert_emails": ["tihuang@mozilla.com", "aedelstein@mozilla.com", "senglehardt@mozilla.com", "seceng-telemetry@mozilla.com"],
     "description": "The time remaining until expiration per storage access permissions, in days (one record per permission, not averaged)."
   },
-  "QUERY_STRIPPING_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
-    "kind": "categorical",
-    "labels": [
-      "Navigation",
-      "Redirect",
-      "StripForNavigation",
-      "StripForRedirect"
-    ],
-    "description": "A count of the query stripping. ('Navigation' = There was a top-level loading via navigation, 'Redirect' = There was a top-level loading via redirect, 'StripForNavigation' = There was a stripping happened for a top-level navigation, 'StripForRedirect' = There was a stripping happened for a top-level redirect.",
-    "alert_emails": ["tihuang@mozilla.com", "aedelstein@mozilla.com", "jhofmann@mozilla.com", "pbz@mozilla.com", "seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1706616]
-  },
   "SERVICE_WORKER_LAUNCH_TIME": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
