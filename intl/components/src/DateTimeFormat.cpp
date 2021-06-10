@@ -8,6 +8,7 @@
 
 #include "ScopedICUObject.h"
 
+#include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/DateTimeFormat.h"
 
 namespace mozilla::intl {
@@ -179,6 +180,23 @@ void DateTimeFormat::SetStartTimeIfGregorian(double aTime) {
   UCalendar* cal = const_cast<UCalendar*>(udat_getCalendar(mDateFormat));
   ucal_setGregorianChange(cal, aTime, &status);
   // An error here means the calendar is not Gregorian, and can be ignored.
+}
+
+/* static */
+Result<UniquePtr<Calendar>, InternalError> DateTimeFormat::CloneCalendar(
+    double aUnixEpoch) const {
+  UErrorCode status = U_ZERO_ERROR;
+  UCalendar* calendarRaw = ucal_clone(udat_getCalendar(mDateFormat), &status);
+  if (U_FAILURE(status)) {
+    return Err(InternalError{});
+  }
+  auto calendar = MakeUnique<Calendar>(calendarRaw);
+
+  auto setTimeResult = calendar->SetTimeInMs(aUnixEpoch);
+  if (setTimeResult.isErr()) {
+    return Err(InternalError{});
+  }
+  return calendar;
 }
 
 }  // namespace mozilla::intl

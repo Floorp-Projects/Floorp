@@ -9,6 +9,7 @@
 #include "builtin/intl/DateTimeFormat.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/Range.h"
@@ -255,26 +256,19 @@ bool JS::AddMozDateTimeFormatConstructor(JSContext* cx,
 
 static bool DefaultCalendar(JSContext* cx, const UniqueChars& locale,
                             MutableHandleValue rval) {
-  UErrorCode status = U_ZERO_ERROR;
-  UCalendar* cal = ucal_open(nullptr, 0, locale.get(), UCAL_DEFAULT, &status);
-
-  // This correctly handles nullptr |cal| when opening failed.
-  ScopedICUObject<UCalendar, ucal_close> closeCalendar(cal);
-
-  const char* calendar = ucal_getType(cal, &status);
-  if (U_FAILURE(status)) {
+  auto calendar = mozilla::intl::Calendar::TryCreate(locale.get());
+  if (calendar.isErr()) {
     intl::ReportInternalError(cx);
     return false;
   }
 
-  // ICU returns old-style keyword values; map them to BCP 47 equivalents
-  calendar = uloc_toUnicodeLocaleType("ca", calendar);
-  if (!calendar) {
+  auto type = calendar.unwrap()->GetBcp47Type();
+  if (type.isErr()) {
     intl::ReportInternalError(cx);
     return false;
   }
 
-  JSString* str = NewStringCopyZ<CanGC>(cx, calendar);
+  JSString* str = NewStringCopyZ<CanGC>(cx, type.unwrap());
   if (!str) {
     return false;
   }
@@ -310,35 +304,19 @@ bool js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp) {
 
   // Now get the calendars that "would make a difference", i.e., not the
   // default.
-  UErrorCode status = U_ZERO_ERROR;
-  UEnumeration* values =
-      ucal_getKeywordValuesForLocale("ca", locale.get(), false, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UEnumeration, uenum_close> toClose(values);
-
-  uint32_t count = uenum_count(values, &status);
-  if (U_FAILURE(status)) {
+  auto keywords =
+      mozilla::intl::Calendar::GetBcp47KeywordValuesForLocale(locale.get());
+  if (keywords.isErr()) {
     intl::ReportInternalError(cx);
     return false;
   }
 
-  for (; count > 0; count--) {
-    const char* calendar = uenum_next(values, nullptr, &status);
-    if (U_FAILURE(status)) {
+  for (auto keyword : keywords.unwrap()) {
+    if (keyword.isErr()) {
       intl::ReportInternalError(cx);
       return false;
     }
-
-    // ICU returns old-style keyword values; map them to BCP 47 equivalents
-    calendar = uloc_toUnicodeLocaleType("ca", calendar);
-    if (!calendar) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
+    const char* calendar = keyword.unwrap().data();
     JSString* jscalendar = NewStringCopyZ<CanGC>(cx, calendar);
     if (!jscalendar) {
       return false;
@@ -439,12 +417,21 @@ bool js::intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   // needed.
   js::ResyncICUDefaultTimeZone();
 
-  JSString* str = CallICU(cx, ucal_getDefaultTimeZone);
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> timeZone(cx);
+  auto result = mozilla::intl::Calendar::GetDefaultTimeZone(timeZone);
+
+  if (result.isErr()) {
+    intl::ReportInternalError(cx);
+    return false;
+  }
+
+  JSString* str = timeZone.toString();
   if (!str) {
     return false;
   }
 
   args.rval().setString(str);
+
   return true;
 }
 
@@ -452,25 +439,24 @@ bool js::intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  UErrorCode status = U_ZERO_ERROR;
-  const UChar* uTimeZone = nullptr;
-  int32_t uTimeZoneLength = 0;
+  // An empty string is used for the root locale. This is regarded as the base
+  // locale of all locales, and is used as the language/country neutral locale
+  // for locale sensitive operations.
   const char* rootLocale = "";
-  UCalendar* cal =
-      ucal_open(uTimeZone, uTimeZoneLength, rootLocale, UCAL_DEFAULT, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UCalendar, ucal_close> toClose(cal);
 
-  int32_t offset = ucal_get(cal, UCAL_ZONE_OFFSET, &status);
-  if (U_FAILURE(status)) {
+  auto calendar = mozilla::intl::Calendar::TryCreate(rootLocale);
+  if (calendar.isErr()) {
     intl::ReportInternalError(cx);
     return false;
   }
 
-  args.rval().setInt32(offset);
+  auto offset = calendar.unwrap()->GetDefaultTimeZoneOffsetMs();
+  if (offset.isErr()) {
+    intl::ReportInternalError(cx);
+    return false;
+  }
+
+  args.rval().setInt32(offset.unwrap());
   return true;
 }
 
@@ -491,11 +477,10 @@ bool js::intl_isDefaultTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   // needed.
   js::ResyncICUDefaultTimeZone();
 
-  Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-  MOZ_ALWAYS_TRUE(chars.resize(INITIAL_CHAR_BUFFER_SIZE));
-
-  int32_t size = CallICU(cx, ucal_getDefaultTimeZone, chars);
-  if (size < 0) {
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> chars(cx);
+  auto result = mozilla::intl::Calendar::GetDefaultTimeZone(chars);
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
 
@@ -505,12 +490,12 @@ bool js::intl_isDefaultTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   bool equals;
-  if (str->length() == size_t(size)) {
+  if (str->length() == chars.length()) {
     JS::AutoCheckCannotGC nogc;
     equals =
         str->hasLatin1Chars()
-            ? EqualChars(str->latin1Chars(nogc), chars.begin(), str->length())
-            : EqualChars(str->twoByteChars(nogc), chars.begin(), str->length());
+            ? EqualChars(str->latin1Chars(nogc), chars.data(), str->length())
+            : EqualChars(str->twoByteChars(nogc), chars.data(), str->length());
   } else {
     equals = false;
   }
@@ -1403,24 +1388,6 @@ static UDateIntervalFormat* NewUDateIntervalFormat(
   return dif;
 }
 
-static UCalendar* CreateCalendar(JSContext* cx, const UCalendar* cal,
-                                 ClippedTime t) {
-  UErrorCode status = U_ZERO_ERROR;
-  UCalendar* clone = ucal_clone(cal, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return nullptr;
-  }
-  ScopedICUObject<UCalendar, ucal_close> toClose(clone);
-
-  ucal_setMillis(clone, t.toDouble(), &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return nullptr;
-  }
-  return toClose.forget();
-}
-
 /**
  * PartitionDateTimeRangePattern ( dateTimeFormat, x, y )
  */
@@ -1451,25 +1418,21 @@ static const UFormattedValue* PartitionDateTimeRangePattern(
     // Create calendar objects for the start and end date by cloning the date
     // formatter calendar. The date formatter calendar already has the correct
     // time zone set and was changed to use a proleptic Gregorian calendar.
-    const UCalendar* cal = udat_getCalendar(
-        // TODO(Bug 1686965) - The use of UnsafeGetUDateFormat is temporary
-        // until date time intervals are supported by the unified mozilla::intl
-        // API.
-        df->UnsafeGetUDateFormat());
-
-    UCalendar* startCal = CreateCalendar(cx, cal, x);
-    if (!startCal) {
+    auto startCal = df->CloneCalendar(x.toDouble());
+    if (startCal.isErr()) {
+      intl::ReportInternalError(cx);
       return nullptr;
     }
-    ScopedICUObject<UCalendar, ucal_close> toCloseStart(startCal);
 
-    UCalendar* endCal = CreateCalendar(cx, cal, y);
-    if (!endCal) {
+    auto endCal = df->CloneCalendar(y.toDouble());
+    if (endCal.isErr()) {
+      intl::ReportInternalError(cx);
       return nullptr;
     }
-    ScopedICUObject<UCalendar, ucal_close> toCloseEnd(endCal);
 
-    udtitvfmt_formatCalendarToResult(dif, startCal, endCal, formatted, &status);
+    udtitvfmt_formatCalendarToResult(
+        dif, startCal.unwrap()->UnsafeGetUCalendar(),
+        endCal.unwrap()->UnsafeGetUCalendar(), formatted, &status);
   } else {
     // The common fast path which doesn't require creating calendar objects.
     udtitvfmt_formatToResult(dif, x.toDouble(), y.toDouble(), formatted,
