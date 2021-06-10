@@ -60,6 +60,7 @@ struct WindowsErrorReportingData {
     wer_notify_proc: LPTHREAD_START_ROUTINE,
     child_pid: DWORD,
     minidump_name: [u8; 40],
+    oom_allocation_size: usize,
 }
 
 /* The following struct must be kept in sync with the identically named one in
@@ -69,6 +70,7 @@ struct WindowsErrorReportingData {
 #[repr(C)]
 struct InProcessWindowsErrorReportingData {
     process_type: u32,
+    oom_allocation_size_ptr: *mut usize,
 }
 
 // This value comes from GeckoProcessTypes.h
@@ -140,7 +142,8 @@ fn out_of_process_exception_event_callback(
     )?;
     let process = unsafe { (*exception_information).hProcess };
     let startup_time = get_startup_time(process)?;
-    let crash_report = CrashReport::new(&application_info, startup_time);
+    let oom_allocation_size = get_oom_allocation_size(process, &wer_data);
+    let crash_report = CrashReport::new(&application_info, startup_time, oom_allocation_size);
     crash_report.write_minidump(exception_information)?;
     if wer_data.process_type == MAIN_PROCESS_TYPE {
         handle_main_process_crash(crash_report, process, &application_info)
@@ -175,6 +178,7 @@ fn handle_child_process_crash(crash_report: CrashReport, child_process: HANDLE) 
     let mut wer_data: WindowsErrorReportingData = read_from_process(parent_process, data_ptr)?;
     wer_data.child_pid = get_process_id(child_process)?;
     wer_data.minidump_name = crash_report.get_minidump_name();
+    wer_data.oom_allocation_size = crash_report.oom_allocation_size;
     let wer_notify_proc = wer_data.wer_notify_proc;
     write_to_process(parent_process, wer_data, data_ptr)?;
     notify_main_process(parent_process, wer_notify_proc, data_ptr)
@@ -283,6 +287,13 @@ fn get_startup_time(process: HANDLE) -> Result<u64, ()> {
     let windows_tick: u64 = 10000000;
     let sec_to_unix_epoch = 11644473600;
     Ok((start_time_in_ticks / windows_tick) - sec_to_unix_epoch)
+}
+
+fn get_oom_allocation_size(
+    process: HANDLE,
+    wer_data: &InProcessWindowsErrorReportingData,
+) -> usize {
+    read_from_process(process, wer_data.oom_allocation_size_ptr).unwrap_or(0)
 }
 
 fn parse_child_data(command_line: &str) -> Result<(DWORD, *mut WindowsErrorReportingData), ()> {
@@ -406,6 +417,8 @@ struct Annotations {
     BuildID: String,
     CrashTime: String,
     InstallTime: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    OOMAllocationSize: Option<String>,
     ProductID: String,
     ProductName: String,
     ReleaseChannel: String,
@@ -425,11 +438,18 @@ impl Annotations {
         install_time: String,
         crash_time: u64,
         startup_time: u64,
+        oom_allocation_size: usize,
     ) -> Annotations {
+        let oom_allocation_size = if oom_allocation_size != 0 {
+            Some(oom_allocation_size.to_string())
+        } else {
+            None
+        };
         Annotations {
             BuildID: application_data.build_id.clone(),
             CrashTime: crash_time.to_string(),
             InstallTime: install_time,
+            OOMAllocationSize: oom_allocation_size,
             ProductID: application_data.product_id.clone(),
             ProductName: application_data.name.clone(),
             ReleaseChannel: release_channel,
@@ -546,10 +566,15 @@ struct CrashReport {
     release_channel: String,
     annotations: Annotations,
     crash_time: u64,
+    oom_allocation_size: usize,
 }
 
 impl CrashReport {
-    fn new(application_information: &ApplicationInformation, startup_time: u64) -> CrashReport {
+    fn new(
+        application_information: &ApplicationInformation,
+        startup_time: u64,
+        oom_allocation_size: usize,
+    ) -> CrashReport {
         let uuid = Uuid::new_v4()
             .to_hyphenated()
             .encode_lower(&mut Uuid::encode_buffer())
@@ -562,6 +587,7 @@ impl CrashReport {
             application_information.install_time.clone(),
             crash_time,
             startup_time,
+            oom_allocation_size,
         );
         CrashReport {
             uuid,
@@ -569,6 +595,7 @@ impl CrashReport {
             release_channel: application_information.release_channel.clone(),
             annotations,
             crash_time,
+            oom_allocation_size,
         }
     }
 
