@@ -924,19 +924,8 @@ nsresult nsSiteSecurityService::IsSecureHost(
   }
 
   if (aType == nsISiteSecurityService::STATIC_PINNING) {
-    RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
-    if (!certVerifier) {
-      return NS_ERROR_FAILURE;
-    }
-    if (certVerifier->mPinningMode ==
-        CertVerifier::PinningMode::pinningDisabled) {
-      return NS_OK;
-    }
-    bool enforceTestMode = certVerifier->mPinningMode ==
-                           CertVerifier::PinningMode::pinningEnforceTestMode;
-    return PublicKeyPinningService::HostHasPins(
-        flatHost.get(), mozilla::pkix::Now(), enforceTestMode,
-        aOriginAttributes, *aResult);
+    return PublicKeyPinningService::HostHasPins(flatHost.get(),
+                                                mozilla::pkix::Now(), *aResult);
   }
 
   nsAutoCString host(
