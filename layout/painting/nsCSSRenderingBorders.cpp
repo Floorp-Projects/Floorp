@@ -3703,9 +3703,9 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
 
       if (gradient.IsLinear()) {
         LayoutDevicePoint startPoint =
-            LayoutDevicePoint(dest.min.x, dest.min.y) + lineStart;
+            LayoutDevicePoint(dest.origin.x, dest.origin.y) + lineStart;
         LayoutDevicePoint endPoint =
-            LayoutDevicePoint(dest.min.x, dest.min.y) + lineEnd;
+            LayoutDevicePoint(dest.origin.x, dest.origin.y) + lineEnd;
 
         aBuilder.PushBorderGradient(
             dest, clip, !aItem->BackfaceIsHidden(),

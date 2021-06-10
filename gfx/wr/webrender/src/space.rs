@@ -7,7 +7,7 @@
 
 use std::fmt;
 
-use euclid::{Transform3D, Box2D, Point2D, Vector2D};
+use euclid::{Transform3D, Rect, Point2D, Vector2D};
 
 use api::units::*;
 use crate::spatial_tree::{SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace};
@@ -20,14 +20,14 @@ pub struct SpaceMapper<F, T> {
     kind: CoordinateSpaceMapping<F, T>,
     pub ref_spatial_node_index: SpatialNodeIndex,
     pub current_target_spatial_node_index: SpatialNodeIndex,
-    pub bounds: Box2D<f32, T>,
+    pub bounds: Rect<f32, T>,
     visible_face: VisibleFace,
 }
 
 impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
     pub fn new(
         ref_spatial_node_index: SpatialNodeIndex,
-        bounds: Box2D<f32, T>,
+        bounds: Rect<f32, T>,
     ) -> Self {
         SpaceMapper {
             kind: CoordinateSpaceMapping::Local,
@@ -41,7 +41,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
     pub fn new_with_target(
         ref_spatial_node_index: SpatialNodeIndex,
         target_node_index: SpatialNodeIndex,
-        bounds: Box2D<f32, T>,
+        bounds: Rect<f32, T>,
         spatial_tree: &SpatialTree,
     ) -> Self {
         let mut mapper = Self::new(ref_spatial_node_index, bounds);
@@ -99,7 +99,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         }
     }
 
-    pub fn unmap(&self, rect: &Box2D<f32, T>) -> Option<Box2D<f32, F>> {
+    pub fn unmap(&self, rect: &Rect<f32, T>) -> Option<Rect<f32, F>> {
         match self.kind {
             CoordinateSpaceMapping::Local => {
                 Some(rect.cast_unit())
@@ -113,7 +113,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         }
     }
 
-    pub fn map(&self, rect: &Box2D<f32, F>) -> Option<Box2D<f32, T>> {
+    pub fn map(&self, rect: &Rect<f32, F>) -> Option<Rect<f32, T>> {
         match self.kind {
             CoordinateSpaceMapping::Local => {
                 Some(rect.cast_unit())
@@ -136,7 +136,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
     }
 
     // Attempt to return a rect that is contained in the mapped rect.
-    pub fn map_inner_bounds(&self, rect: &Box2D<f32, F>) -> Option<Box2D<f32, T>> {
+    pub fn map_inner_bounds(&self, rect: &Rect<f32, F>) -> Option<Rect<f32, T>> {
         match self.kind {
             CoordinateSpaceMapping::Local => {
                 Some(rect.cast_unit())
@@ -230,12 +230,12 @@ impl SpaceSnapper {
         };
     }
 
-    pub fn snap_rect<F>(&self, rect: &Box2D<f32, F>) -> Box2D<f32, F> where F: fmt::Debug {
+    pub fn snap_rect<F>(&self, rect: &Rect<f32, F>) -> Rect<f32, F> where F: fmt::Debug {
         debug_assert!(self.current_target_spatial_node_index != SpatialNodeIndex::INVALID);
         match self.snapping_transform {
             Some(ref scale_offset) => {
-                let snapped_device_rect: DeviceRect = scale_offset.map_rect(rect).snap();
-                scale_offset.unmap_rect(&snapped_device_rect)
+                let snapped_device_rect: DeviceRect = scale_offset.map_rect(rect).snap().to_box2d();
+                scale_offset.unmap_rect(&snapped_device_rect.to_rect())
             }
             None => *rect,
         }
