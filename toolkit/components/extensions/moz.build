@@ -124,12 +124,16 @@ MOCHITEST_MANIFESTS += [
 MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.ini"]
 XPCSHELL_TESTS_MANIFESTS += [
     "test/xpcshell/native_messaging.ini",
-    "test/xpcshell/webidl-api/xpcshell.ini",
     "test/xpcshell/xpcshell-e10s.ini",
     "test/xpcshell/xpcshell-legacy-ep.ini",
     "test/xpcshell/xpcshell-remote.ini",
     "test/xpcshell/xpcshell.ini",
 ]
+
+# Only include tests that requires the WebExtensions WebIDL API bindings
+# in builds where they are enabled (currently only on Nightly builds).
+if CONFIG["MOZ_WEBEXT_WEBIDL_ENABLED"]:
+    XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/webidl-api/xpcshell.ini"]
 
 SPHINX_TREES["webextensions"] = "docs"
 
