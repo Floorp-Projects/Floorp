@@ -422,8 +422,8 @@ class GlobalHelperThreadState {
 
   bool hasActiveThreads(const AutoLockHelperThreadState&);
   bool canStartTasks(const AutoLockHelperThreadState& locked);
-  void waitForAllThreads();
-  void waitForAllThreadsLocked(AutoLockHelperThreadState&);
+  void waitForAllTasks();
+  void waitForAllTasksLocked(AutoLockHelperThreadState&);
 
   bool checkTaskThreadLimit(ThreadType threadType, size_t maxThreads,
                             bool isMaster,
@@ -453,6 +453,8 @@ class GlobalHelperThreadState {
   }
 
   void dispatch(const AutoLockHelperThreadState& locked);
+
+  void runTask(HelperThreadTask* task, AutoLockHelperThreadState& lock);
 
  public:
   bool submitTask(wasm::UniqueTier2GeneratorTask task);
