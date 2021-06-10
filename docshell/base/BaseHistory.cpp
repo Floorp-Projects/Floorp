@@ -48,14 +48,8 @@ bool BaseHistory::CanStore(nsIURI* aURI) {
   return spec.Length() <= StaticPrefs::browser_history_maxUrlLength();
 }
 
-void BaseHistory::ScheduleVisitedQuery(nsIURI* aURI,
-                                       dom::ContentParent* aForProcess) {
-  mPendingQueries.WithEntryHandle(aURI, [&](auto&& entry) {
-    auto& set = entry.OrInsertWith([] { return ContentParentSet(); });
-    if (aForProcess) {
-      set.Insert(aForProcess);
-    }
-  });
+void BaseHistory::ScheduleVisitedQuery(nsIURI* aURI) {
+  mPendingQueries.Insert(aURI);
   if (mStartPendingVisitedQueriesScheduled) {
     return;
   }
@@ -66,7 +60,7 @@ void BaseHistory::ScheduleVisitedQuery(nsIURI* aURI,
               [self = RefPtr<BaseHistory>(this)] {
                 self->mStartPendingVisitedQueriesScheduled = false;
                 auto queries = std::move(self->mPendingQueries);
-                self->StartPendingVisitedQueries(std::move(queries));
+                self->StartPendingVisitedQueries(queries);
                 MOZ_DIAGNOSTIC_ASSERT(self->mPendingQueries.IsEmpty());
               }),
           EventQueuePriority::Idle));
@@ -81,10 +75,14 @@ void BaseHistory::CancelVisitedQueryIfPossible(nsIURI* aURI) {
 void BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aURI, "Must pass a non-null URI!");
-  MOZ_ASSERT(aLink, "Must pass a non-null Link!");
+  if (XRE_IsContentProcess()) {
+    MOZ_ASSERT(aLink, "Must pass a non-null Link!");
+  }
 
   if (!CanStore(aURI)) {
-    aLink->VisitedQueryFinished(/* visited = */ false);
+    if (aLink) {
+      aLink->VisitedQueryFinished(/* visited = */ false);
+    }
     return;
   }
 
@@ -94,7 +92,17 @@ void BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
         MOZ_DIAGNOSTIC_ASSERT(!entry || !entry->mLinks.IsEmpty(),
                               "An empty key was kept around in our hashtable!");
         if (!entry) {
-          ScheduleVisitedQuery(aURI, nullptr);
+          ScheduleVisitedQuery(aURI);
+        }
+
+        if (!aLink) {
+          // In IPC builds, we are passed a nullptr Link from
+          // ContentParent::RecvStartVisitedQuery.  All of our code after this
+          // point assumes aLink is non-nullptr, so we have to return now.
+          MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
+                                "We should only ever get a null Link "
+                                "in the parent process!");
+          return nullptr;
         }
 
         return &entry.OrInsertWith([] { return ObservingLinks{}; });
@@ -157,8 +165,7 @@ void BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   }
 }
 
-void BaseHistory::NotifyVisited(nsIURI* aURI, VisitedStatus aStatus,
-                                ContentParentSet* aListOfProcessesToNotify) {
+void BaseHistory::NotifyVisited(nsIURI* aURI, VisitedStatus aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aStatus != VisitedStatus::Unknown);
 
@@ -169,7 +176,7 @@ void BaseHistory::NotifyVisited(nsIURI* aURI, VisitedStatus aStatus,
 
   NotifyVisitedInThisProcess(aURI, aStatus);
   if (XRE_IsParentProcess()) {
-    NotifyVisitedFromParent(aURI, aStatus, aListOfProcessesToNotify);
+    NotifyVisitedFromParent(aURI, aStatus);
   }
 }
 
@@ -218,35 +225,17 @@ void BaseHistory::SendPendingVisitedResultsToChildProcesses() {
   MOZ_ASSERT(mPendingResults.IsEmpty());
 
   nsTArray<ContentParent*> cplist;
-  nsTArray<dom::VisitedQueryResult> resultsForProcess;
   ContentParent::GetAll(cplist);
   for (ContentParent* cp : cplist) {
-    resultsForProcess.ClearAndRetainStorage();
-    for (auto& result : results) {
-      if (result.mProcessesToNotify.IsEmpty() ||
-          result.mProcessesToNotify.Contains(cp)) {
-        resultsForProcess.AppendElement(result.mResult);
-      }
-    }
-    Unused << NS_WARN_IF(!cp->SendNotifyVisited(resultsForProcess));
+    Unused << NS_WARN_IF(!cp->SendNotifyVisited(results));
   }
 }
 
-void BaseHistory::NotifyVisitedFromParent(
-    nsIURI* aURI, VisitedStatus aStatus,
-    ContentParentSet* aListOfProcessesToNotify) {
+void BaseHistory::NotifyVisitedFromParent(nsIURI* aURI, VisitedStatus aStatus) {
   MOZ_ASSERT(XRE_IsParentProcess());
-
-  if (aListOfProcessesToNotify && aListOfProcessesToNotify->IsEmpty()) {
-    return;
-  }
-
   auto& result = *mPendingResults.AppendElement();
-  result.mResult.visited() = aStatus == VisitedStatus::Visited;
-  result.mResult.uri() = aURI;
-  if (aListOfProcessesToNotify) {
-    result.mProcessesToNotify = std::move(*aListOfProcessesToNotify);
-  }
+  result.visited() = aStatus == VisitedStatus::Visited;
+  result.uri() = aURI;
 
   if (mStartPendingResultsScheduled) {
     return;
