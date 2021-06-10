@@ -32,7 +32,10 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   char16_t GetPasswordCharacterImpl() override;
   bool GetEchoPasswordImpl() override;
 
-  void WithAltThemeConfigured(const std::function<void(bool)>&);
+  template <typename Callback>
+  void WithAltThemeConfigured(const Callback&);
+
+  void InitializeAltTheme();
 
   void GetGtkContentTheme(LookAndFeelTheme&) override;
 
@@ -156,8 +159,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   int32_t mCSDCloseButtonPosition = 0;
 
   void EnsureInit();
-  // Returns whether the current theme or theme variant was changed.
-  bool ConfigureContentGtkTheme();
+  void RestoreSystemTheme();
 };
 
 #endif

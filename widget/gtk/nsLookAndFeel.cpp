@@ -1060,15 +1060,28 @@ void nsLookAndFeel::ConfigureTheme(const LookAndFeelTheme& aTheme) {
                aTheme.preferDarkTheme() ? TRUE : FALSE, nullptr);
 }
 
-void nsLookAndFeel::WithAltThemeConfigured(
-    const std::function<void(bool)>& aFn) {
-  AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
-  sIgnoreChangedSettings = true;
+void nsLookAndFeel::RestoreSystemTheme() {
   // Available on Gtk 3.20+.
   static auto sGtkSettingsResetProperty =
       (void (*)(GtkSettings*, const gchar*))dlsym(
           RTLD_DEFAULT, "gtk_settings_reset_property");
 
+  GtkSettings* settings = gtk_settings_get_default();
+  if (sGtkSettingsResetProperty) {
+    sGtkSettingsResetProperty(settings, "gtk-theme-name");
+    sGtkSettingsResetProperty(settings, "gtk-application-prefer-dark-theme");
+  } else {
+    g_object_set(settings, "gtk-theme-name", mSystemTheme.mName.get(),
+                 "gtk-application-prefer-dark-theme",
+                 mSystemTheme.mPreferDarkTheme, nullptr);
+  }
+  moz_gtk_refresh();
+}
+
+template <typename Callback>
+void nsLookAndFeel::WithAltThemeConfigured(const Callback& aFn) {
+  AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
+  sIgnoreChangedSettings = true;
   GtkSettings* settings = gtk_settings_get_default();
 
   bool fellBackToDefaultTheme = false;
@@ -1121,20 +1134,48 @@ void nsLookAndFeel::WithAltThemeConfigured(
   aFn(fellBackToDefaultTheme);
 
   // Restore the system theme.
-  if (sGtkSettingsResetProperty) {
-    sGtkSettingsResetProperty(settings, "gtk-theme-name");
-    sGtkSettingsResetProperty(settings, "gtk-application-prefer-dark-theme");
-  } else {
-    g_object_set(settings, "gtk-theme-name", mSystemTheme.mName.get(),
-                 "gtk-application-prefer-dark-theme",
-                 mSystemTheme.mPreferDarkTheme, nullptr);
-  }
-  moz_gtk_refresh();
+  RestoreSystemTheme();
 }
 
 static bool AnyColorChannelIsDifferent(nscolor aColor) {
   return NS_GET_R(aColor) != NS_GET_G(aColor) ||
          NS_GET_R(aColor) != NS_GET_B(aColor);
+}
+
+void nsLookAndFeel::InitializeAltTheme() {
+  WithAltThemeConfigured([&](bool aFellBackToDefaultTheme) {
+    mAltTheme.Init();
+    // Some of the alt theme colors we can grab from the system theme, if we
+    // fell back to the default light / dark themes.
+    if (aFellBackToDefaultTheme) {
+      if (StaticPrefs::widget_gtk_alt_theme_selection()) {
+        mAltTheme.mTextSelectedText = mSystemTheme.mTextSelectedText;
+        mAltTheme.mTextSelectedBackground =
+            mSystemTheme.mTextSelectedBackground;
+      }
+
+      if (StaticPrefs::widget_gtk_alt_theme_scrollbar()) {
+        mAltTheme.mThemedScrollbar = mSystemTheme.mThemedScrollbar;
+        mAltTheme.mThemedScrollbarInactive =
+            mSystemTheme.mThemedScrollbarInactive;
+        mAltTheme.mThemedScrollbarThumb = mSystemTheme.mThemedScrollbarThumb;
+        mAltTheme.mThemedScrollbarThumbHover =
+            mSystemTheme.mThemedScrollbarThumbHover;
+        mAltTheme.mThemedScrollbarThumbInactive =
+            mSystemTheme.mThemedScrollbarThumbInactive;
+      }
+
+      if (StaticPrefs::widget_gtk_alt_theme_scrollbar_active()) {
+        mAltTheme.mThemedScrollbarThumbActive =
+            mSystemTheme.mThemedScrollbarThumbActive;
+      }
+
+      if (StaticPrefs::widget_gtk_alt_theme_selection()) {
+        mAltTheme.mAccentColor = mSystemTheme.mAccentColor;
+        mAltTheme.mAccentColorForeground = mSystemTheme.mAccentColorForeground;
+      }
+    }
+  });
 }
 
 void nsLookAndFeel::EnsureInit() {
@@ -1219,40 +1260,7 @@ void nsLookAndFeel::EnsureInit() {
   // Switching themes on startup has some performance cost, so until we use the
   // dark colors, keep it pref'd off.
   if (mSystemTheme.mIsDark || StaticPrefs::widget_gtk_alt_theme_dark()) {
-    WithAltThemeConfigured([&](bool aFellBackToDefaultTheme) {
-      mAltTheme.Init();
-      // Some of the alt theme colors we can grab from the system theme, if we
-      // fell back to the default light / dark themes.
-      if (aFellBackToDefaultTheme) {
-        if (StaticPrefs::widget_gtk_alt_theme_selection()) {
-          mAltTheme.mTextSelectedText = mSystemTheme.mTextSelectedText;
-          mAltTheme.mTextSelectedBackground =
-              mSystemTheme.mTextSelectedBackground;
-        }
-
-        if (StaticPrefs::widget_gtk_alt_theme_scrollbar()) {
-          mAltTheme.mThemedScrollbar = mSystemTheme.mThemedScrollbar;
-          mAltTheme.mThemedScrollbarInactive =
-              mSystemTheme.mThemedScrollbarInactive;
-          mAltTheme.mThemedScrollbarThumb = mSystemTheme.mThemedScrollbarThumb;
-          mAltTheme.mThemedScrollbarThumbHover =
-              mSystemTheme.mThemedScrollbarThumbHover;
-          mAltTheme.mThemedScrollbarThumbInactive =
-              mSystemTheme.mThemedScrollbarThumbInactive;
-        }
-
-        if (StaticPrefs::widget_gtk_alt_theme_scrollbar_active()) {
-          mAltTheme.mThemedScrollbarThumbActive =
-              mSystemTheme.mThemedScrollbarThumbActive;
-        }
-
-        if (StaticPrefs::widget_gtk_alt_theme_selection()) {
-          mAltTheme.mAccentColor = mSystemTheme.mAccentColor;
-          mAltTheme.mAccentColorForeground =
-              mSystemTheme.mAccentColorForeground;
-        }
-      }
-    });
+    InitializeAltTheme();
   } else {
     mAltTheme = mSystemTheme;
   }
