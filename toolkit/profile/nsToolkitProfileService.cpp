@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtils.h"
+#include "nsProfileLock.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -86,41 +88,98 @@ nsTArray<UniquePtr<KeyValue>> GetSectionStrings(nsINIParser* aParser,
   return result;
 }
 
+void RemoveProfileRecursion(const nsCOMPtr<nsIFile>& aDirectoryOrFile,
+                            bool aIsRootDirectory,
+                            nsTArray<nsCOMPtr<nsIFile>>& aOutUndeletedFiles) {
+  auto guardDeletion = MakeScopeExit(
+      [&] { aOutUndeletedFiles.AppendElement(aDirectoryOrFile); });
+
+  // We actually would not expect to see links in our profiles, but still.
+  bool isLink = false;
+  NS_ENSURE_SUCCESS_VOID(aDirectoryOrFile->IsSymlink(&isLink));
+
+  // Only check to see if we have a directory if it isn't a link.
+  bool isDir = false;
+  if (!isLink) {
+    NS_ENSURE_SUCCESS_VOID(aDirectoryOrFile->IsDirectory(&isDir));
+  }
+
+  if (isDir) {
+    nsCOMPtr<nsIDirectoryEnumerator> dirEnum;
+    NS_ENSURE_SUCCESS_VOID(
+        aDirectoryOrFile->GetDirectoryEntries(getter_AddRefs(dirEnum)));
+
+    bool more = false;
+    while (NS_SUCCEEDED(dirEnum->HasMoreElements(&more)) && more) {
+      nsCOMPtr<nsISupports> item;
+      dirEnum->GetNext(getter_AddRefs(item));
+      nsCOMPtr<nsIFile> file = do_QueryInterface(item);
+      if (file) {
+        // Do not delete the profile lock.
+        if (aIsRootDirectory && nsProfileLock::IsMaybeLockFile(file)) continue;
+        // If some children's remove fails, we still continue the loop.
+        RemoveProfileRecursion(file, false, aOutUndeletedFiles);
+      }
+    }
+  }
+  // Do not delete the root directory (yet).
+  if (!aIsRootDirectory) {
+    NS_ENSURE_SUCCESS_VOID(aDirectoryOrFile->Remove(false));
+  }
+  guardDeletion.release();
+}
+
 void RemoveProfileFiles(nsIToolkitProfile* aProfile, bool aInBackground) {
   nsCOMPtr<nsIFile> rootDir;
   aProfile->GetRootDir(getter_AddRefs(rootDir));
   nsCOMPtr<nsIFile> localDir;
   aProfile->GetLocalDir(getter_AddRefs(localDir));
 
+  // XXX If we get here with an active quota manager,
+  // something went very wrong. We want to assert this.
+
   // Just lock the directories, don't mark the profile as locked or the lock
   // will attempt to release its reference to the profile on the background
   // thread which will assert.
   nsCOMPtr<nsIProfileLock> lock;
-  nsresult rv =
-      NS_LockProfilePath(rootDir, localDir, nullptr, getter_AddRefs(lock));
-  NS_ENSURE_SUCCESS_VOID(rv);
+  NS_ENSURE_SUCCESS_VOID(
+      NS_LockProfilePath(rootDir, localDir, nullptr, getter_AddRefs(lock)));
 
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
       "nsToolkitProfile::RemoveProfileFiles",
       [rootDir, localDir, lock]() mutable {
+        // We try to remove every single file and directory and collect
+        // those whose removal failed.
+        nsTArray<nsCOMPtr<nsIFile>> undeletedFiles;
+        // The root dir might contain the temp dir, so remove the temp dir
+        // first.
         bool equals;
         nsresult rv = rootDir->Equals(localDir, &equals);
-        // The root dir might contain the temp dir, so remove
-        // the temp dir first.
         if (NS_SUCCEEDED(rv) && !equals) {
-          localDir->Remove(true);
+          RemoveProfileRecursion(localDir, /* aIsRootDirectory */ false,
+                                 undeletedFiles);
+        }
+        // Now remove the content of the profile dir (except lockfile)
+        RemoveProfileRecursion(rootDir, /* aIsRootDirectory */ true,
+                               undeletedFiles);
+        MOZ_ASSERT(undeletedFiles.Length() == 0);
+        if (undeletedFiles.Length() > 0) {
+          // XXX: We might want to do something with the files we could not
+          // remove, like a retry loop or a report.
+          // There is already an implicit retry below after unlocking.
+          NS_WARNING("Unable to remove all files from the profile directory.");
         }
 
-        // Ideally we'd unlock after deleting but since the lock is a file
-        // in the profile we must unlock before removing.
+        // Now we can unlock the profile safely.
         lock->Unlock();
         // nsIProfileLock is not threadsafe so release our reference to it on
         // the main thread.
         NS_ReleaseOnMainThread("nsToolkitProfile::RemoveProfileFiles::Unlock",
                                lock.forget());
 
-        rv = rootDir->Remove(true);
-        NS_ENSURE_SUCCESS_VOID(rv);
+        // And we can remove the (empty) remaining profile directory.
+        // We do this recursively in case there is some clutter left.
+        NS_ENSURE_SUCCESS_VOID(rootDir->Remove(true));
       });
 
   if (aInBackground) {
@@ -349,6 +408,9 @@ nsToolkitProfileLock::Unlock() {
     NS_ERROR("Unlocking a never-locked nsToolkitProfileLock!");
     return NS_ERROR_UNEXPECTED;
   }
+
+  // XXX If we get here with an active quota manager,
+  // something went very wrong. We want to assert this.
 
   mLock.Unlock();
 
