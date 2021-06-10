@@ -5,11 +5,16 @@
 package mozilla.components.browser.engine.gecko.content.blocking
 
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission
 
 /**
  * Represents a site that will be ignored by the tracking protection policies.
  * @property url The url of the site to be ignored.
- * @property principal Internal gecko identifier of an URI.
+ * @property privateMode Indicates if this exception should persisted in private mode.
+ * @property contentPermission The associated gecko content permission of this exception.
  */
-data class GeckoTrackingProtectionException(override val url: String, val principal: String = "") :
-    TrackingProtectionException
+data class GeckoTrackingProtectionException(
+    override val url: String,
+    val privateMode: Boolean = false,
+    val contentPermission: ContentPermission
+) : TrackingProtectionException
