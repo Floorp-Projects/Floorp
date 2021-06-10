@@ -31,6 +31,24 @@ interface mozIExtensionListenerCallOptions : nsISupports
   // by related apiObjectType webidl dictionary type (e.g. ExtensionPortDescriptor
   // if apiObjectType is RUNTIME_PORT).
   readonly attribute jsval apiObjectDescriptor;
+
+  cenum CallbackType: 8 {
+    // Default: no callback argument is passed to the call to the event listener.
+    CALLBACK_NONE,
+
+    // The event listener will be called with a function as the last call parameter
+    // that behaves like the runtime.onMessage's sendResponse parameter:
+    // 
+    // - if the event listener already returned false, sendResponse calls are ignored
+    //   (if it has not been called already)
+    // - if the event listener already returned true, the first sendResponse call
+    //   resolves the promise returned by the mozIExtensionCallback method call
+    // - if the event listener already returned a Promise, sendResponse calls
+    //   are ignored
+    CALLBACK_SEND_RESPONSE,
+  };
+
+  attribute mozIExtensionListenerCallOptions_CallbackType callbackType;
 };
 
 [scriptable, builtinclass, uuid(e68e3c19-1b35-4112-8faa-5c5b84086a5b)]
