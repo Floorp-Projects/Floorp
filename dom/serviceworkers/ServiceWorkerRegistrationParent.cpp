@@ -78,6 +78,21 @@ IPCResult ServiceWorkerRegistrationParent::RecvUpdate(
   return IPC_OK();
 }
 
+IPCResult ServiceWorkerRegistrationParent::RecvSetNavigationPreloadEnabled(
+    const bool& aEnabled, SetNavigationPreloadEnabledResolver&& aResolver) {
+  return IPC_OK();
+}
+
+IPCResult ServiceWorkerRegistrationParent::RecvSetNavigationPreloadHeader(
+    const nsCString& aHeader, SetNavigationPreloadHeaderResolver&& aResolver) {
+  return IPC_OK();
+}
+
+IPCResult ServiceWorkerRegistrationParent::RecvGetNavigationPreloadState(
+    GetNavigationPreloadStateResolver&& aResolver) {
+  return IPC_OK();
+}
+
 ServiceWorkerRegistrationParent::ServiceWorkerRegistrationParent()
     : mDeleteSent(false) {}
 

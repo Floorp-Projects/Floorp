@@ -7,11 +7,13 @@
 #include "NavigationPreloadManager.h"
 #include "ServiceWorkerUtils.h"
 #include "nsNetUtil.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/NavigationPreloadManagerBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/ipc/MessageChannel.h"
 
 namespace mozilla::dom {
+
+using mozilla::ipc::ResponseRejectReason;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(NavigationPreloadManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(NavigationPreloadManager)
@@ -29,8 +31,9 @@ bool NavigationPreloadManager::IsValidHeader(const nsACString& aHeader) {
 }
 
 NavigationPreloadManager::NavigationPreloadManager(
-    nsCOMPtr<nsIGlobalObject>&& aGlobal)
-    : mGlobal(aGlobal) {}
+    nsCOMPtr<nsIGlobalObject>&& aGlobal,
+    RefPtr<ServiceWorkerRegistration::Inner>& aInner)
+    : mGlobal(aGlobal), mInner(aInner) {}
 
 JSObject* NavigationPreloadManager::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -46,7 +49,22 @@ already_AddRefed<Promise> NavigationPreloadManager::SetEnabled(bool aEnabled) {
     return promise.forget();
   }
 
-  // P3 Will create IPC to send SetEnabled request to the parent process.
+  if (!mInner) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
+  mInner->SetNavigationPreloadEnabled(
+      aEnabled,
+      [promise](bool aSuccess) {
+        if (aSuccess) {
+          promise->MaybeResolveWithUndefined();
+          return;
+        }
+        promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+      },
+      [promise](ErrorResult&& aRv) { promise->MaybeReject(std::move(aRv)); });
+
   return promise.forget();
 }
 
@@ -74,7 +92,22 @@ already_AddRefed<Promise> NavigationPreloadManager::SetHeaderValue(
     return promise.forget();
   }
 
-  // P3 Will create IPC to send SetHeaderValue request to the parent process.
+  if (!mInner) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
+  mInner->SetNavigationPreloadHeader(
+      nsAutoCString(aHeader),
+      [promise](bool aSuccess) {
+        if (aSuccess) {
+          promise->MaybeResolveWithUndefined();
+          return;
+        }
+        promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+      },
+      [promise](ErrorResult&& aRv) { promise->MaybeReject(std::move(aRv)); });
+
   return promise.forget();
 }
 
@@ -87,7 +120,17 @@ already_AddRefed<Promise> NavigationPreloadManager::GetState() {
     return promise.forget();
   }
 
-  // P3 Will create IPC to send GetState request to the parent process.
+  if (!mInner) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
+  mInner->GetNavigationPreloadState(
+      [promise](NavigationPreloadState&& aState) {
+        promise->MaybeResolve(std::move(aState));
+      },
+      [promise](ErrorResult&& aRv) { promise->MaybeReject(std::move(aRv)); });
+
   return promise.forget();
 }
 

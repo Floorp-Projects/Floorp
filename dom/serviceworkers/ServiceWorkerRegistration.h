@@ -52,6 +52,19 @@ class ServiceWorkerRegistration final : public DOMEventTargetHelper {
 
     virtual void Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
                             ServiceWorkerFailureCallback&& aFailureCB) = 0;
+
+    // Interface for NavigationPreload
+    virtual void SetNavigationPreloadEnabled(
+        bool aEnabled, ServiceWorkerBoolCallback&& aSuccessCB,
+        ServiceWorkerFailureCallback&& aFailureCB) = 0;
+
+    virtual void SetNavigationPreloadHeader(
+        const nsCString& aHeader, ServiceWorkerBoolCallback&& aSuccessCB,
+        ServiceWorkerFailureCallback&& aFailureCB) = 0;
+
+    virtual void GetNavigationPreloadState(
+        NavigationPreloadGetStateCallback&& aSuccessCB,
+        ServiceWorkerFailureCallback&& aFailureCB) = 0;
   };
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_SERVICEWORKERREGISTRATION_IID)
