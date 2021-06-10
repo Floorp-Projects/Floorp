@@ -91,6 +91,57 @@ NativeSurfaceWayland::~NativeSurfaceWayland() {
   g_clear_pointer(&mWlSurface, wl_surface_destroy);
 }
 
+void NativeSurfaceWayland::CreateSubsurface(wl_surface* aParentSurface) {
+  if (mWlSubsurface) {
+    ClearSubsurface();
+  }
+
+  MOZ_ASSERT(aParentSurface);
+  wl_subcompositor* subcompositor =
+      widget::WaylandDisplayGet()->GetSubcompositor();
+  mWlSubsurface = wl_subcompositor_get_subsurface(subcompositor, mWlSurface,
+                                                  aParentSurface);
+}
+
+void NativeSurfaceWayland::ClearSubsurface() {
+  g_clear_pointer(&mWlSubsurface, wl_subsurface_destroy);
+  mPosition = IntPoint(0, 0);
+}
+
+void NativeSurfaceWayland::SetPosition(int aX, int aY) {
+  if ((aX == mPosition.x && aY == mPosition.y) || !mWlSubsurface) {
+    return;
+  }
+
+  mPosition.x = aX;
+  mPosition.y = aY;
+  wl_subsurface_set_position(mWlSubsurface, mPosition.x, mPosition.y);
+}
+
+void NativeSurfaceWayland::SetViewportSourceRect(const Rect aSourceRect) {
+  if (aSourceRect == mViewportSourceRect) {
+    return;
+  }
+
+  mViewportSourceRect = aSourceRect;
+  wp_viewport_set_source(mViewport, wl_fixed_from_double(mViewportSourceRect.x),
+                         wl_fixed_from_double(mViewportSourceRect.y),
+                         wl_fixed_from_double(mViewportSourceRect.width),
+                         wl_fixed_from_double(mViewportSourceRect.height));
+}
+
+void NativeSurfaceWayland::SetViewportDestinationSize(int aWidth, int aHeight) {
+  if (aWidth == mViewportDestinationSize.width &&
+      aHeight == mViewportDestinationSize.height) {
+    return;
+  }
+
+  mViewportDestinationSize.width = aWidth;
+  mViewportDestinationSize.height = aHeight;
+  wp_viewport_set_destination(mViewport, mViewportDestinationSize.width,
+                              mViewportDestinationSize.height);
+}
+
 void NativeSurfaceWayland::RequestFrameCallback(
     const RefPtr<CallbackMultiplexHelper>& aMultiplexHelper) {
   MutexAutoLock lock(mMutex);

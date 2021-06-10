@@ -15,8 +15,10 @@
 namespace mozilla::layers {
 
 using gfx::DrawTarget;
+using gfx::IntPoint;
 using gfx::IntRegion;
 using gfx::IntSize;
+using gfx::Rect;
 using gl::GLContext;
 using widget::nsWaylandDisplay;
 using widget::WaylandShmBuffer;
@@ -57,14 +59,21 @@ class NativeSurfaceWayland {
   virtual void NotifySurfaceReady(){};
   virtual void DestroyGLResources(){};
 
+  void CreateSubsurface(wl_surface* aParentSurface);
+  void ClearSubsurface();
+  bool HasSubsurface() { return !!mWlSubsurface; }
+
+  void SetPosition(int aX, int aY);
+  void SetViewportSourceRect(const Rect aSourceRect);
+  void SetViewportDestinationSize(int aWidth, int aHeight);
+
   void RequestFrameCallback(
       const RefPtr<CallbackMultiplexHelper>& aMultiplexHelper);
   static void FrameCallbackHandler(void* aData, wl_callback* aCallback,
                                    uint32_t aTime);
 
-  struct wl_surface* mWlSurface = nullptr;
-  struct wl_subsurface* mWlSubsurface = nullptr;
-  struct wp_viewport* mViewport = nullptr;
+  wl_surface* mWlSurface = nullptr;
+  wl_subsurface* mWlSubsurface = nullptr;
 
  protected:
   explicit NativeSurfaceWayland(
@@ -75,6 +84,10 @@ class NativeSurfaceWayland {
 
   Mutex mMutex;
   RefPtr<nsWaylandDisplay> mWaylandDisplay;
+  wp_viewport* mViewport = nullptr;
+  IntPoint mPosition = IntPoint(0, 0);
+  Rect mViewportSourceRect = Rect(-1, -1, -1, -1);
+  IntSize mViewportDestinationSize = IntSize(-1, -1);
   nsTArray<RefPtr<CallbackMultiplexHelper>> mCallbackMultiplexHelpers;
   bool mCallbackRequested = false;
 };
