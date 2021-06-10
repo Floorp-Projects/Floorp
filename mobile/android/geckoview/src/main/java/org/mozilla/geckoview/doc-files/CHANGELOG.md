@@ -13,6 +13,10 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v91
+- Extended [`Autocomplete`][78.7] API to support addresses.
+  ([bug 1699794]({{bugzilla}}1699794)).
+
 ## v90
 - Added [`WebNotification.silent`][90.1] and [`WebNotification.vibrate`][90.2]
   support. See also [Web/API/Notification/silent][90.3] and
@@ -1010,4 +1014,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f4c3eb58b10577fc72eb4306512c9bd205a899ba
+[api-version]: 47d9ee299e7ba7be24963762712b0a1ecee29a68

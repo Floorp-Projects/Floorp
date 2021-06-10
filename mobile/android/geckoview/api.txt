@@ -118,6 +118,57 @@ package org.mozilla.geckoview {
     ctor protected Autocomplete();
   }
 
+  public static class Autocomplete.Address {
+    ctor @AnyThread protected Address();
+    field @NonNull public final String additionalName;
+    field @NonNull public final String addressLevel1;
+    field @NonNull public final String addressLevel2;
+    field @NonNull public final String addressLevel3;
+    field @NonNull public final String country;
+    field @NonNull public final String email;
+    field @NonNull public final String familyName;
+    field @NonNull public final String givenName;
+    field @Nullable public final String guid;
+    field @NonNull public final String name;
+    field @NonNull public final String organization;
+    field @NonNull public final String postalCode;
+    field @NonNull public final String streetAddress;
+    field @NonNull public final String tel;
+  }
+
+  public static class Autocomplete.Address.Builder {
+    ctor @AnyThread public Builder();
+    method @AnyThread @NonNull public Autocomplete.Address.Builder additionalName(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder addressLevel1(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder addressLevel2(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder addressLevel3(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address build();
+    method @AnyThread @NonNull public Autocomplete.Address.Builder country(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder email(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder familyName(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder givenName(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder guid(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder name(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder organization(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder postalCode(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder streetAddress(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.Address.Builder tel(@Nullable String);
+  }
+
+  public static class Autocomplete.AddressSaveOption extends Autocomplete.SaveOption {
+    ctor public AddressSaveOption(@NonNull Autocomplete.Address);
+  }
+
+  public static class Autocomplete.AddressSelectOption extends Autocomplete.SelectOption {
+    ctor public AddressSelectOption(@NonNull Autocomplete.Address);
+  }
+
+  public static class Autocomplete.AddressSelectOption.Hint {
+    ctor public Hint();
+    field public static final int INSECURE_FORM = 2;
+    field public static final int NONE = 0;
+  }
+
   public static class Autocomplete.CreditCard {
     ctor @AnyThread protected CreditCard();
     field @NonNull public final String expirationMonth;
@@ -210,6 +261,8 @@ package org.mozilla.geckoview {
   }
 
   public static interface Autocomplete.StorageDelegate {
+    method @Nullable @UiThread default public GeckoResult<Autocomplete.Address[]> onAddressFetch();
+    method @UiThread default public void onAddressSave(@NonNull Autocomplete.Address);
     method @Nullable @UiThread default public GeckoResult<Autocomplete.CreditCard[]> onCreditCardFetch();
     method @Nullable @UiThread default public GeckoResult<Autocomplete.LoginEntry[]> onLoginFetch(@NonNull String);
     method @UiThread default public void onLoginSave(@NonNull Autocomplete.LoginEntry);
@@ -1045,6 +1098,8 @@ package org.mozilla.geckoview {
   }
 
   public static interface GeckoSession.PromptDelegate {
+    method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onAddressSave(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.AddressSaveOption>);
+    method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onAddressSelect(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.AddressSelectOption>);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onAlertPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AlertPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onAuthPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AuthPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onBeforeUnloadPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.BeforeUnloadPrompt);
