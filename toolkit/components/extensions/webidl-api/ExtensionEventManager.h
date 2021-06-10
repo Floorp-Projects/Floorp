@@ -36,12 +36,26 @@ class ExtensionEventManager final : public nsISupports,
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsString mAPINamespace;
   nsString mEventName;
+  nsString mAPIObjectType;
+  nsString mAPIObjectId;
 
   ~ExtensionEventManager() = default;
 
+ protected:
+  // ExtensionAPIBase methods
+  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
+
+  nsString GetAPINamespace() const override { return mAPINamespace; }
+
+  nsString GetAPIObjectType() const override { return mAPIObjectType; }
+
+  nsString GetAPIObjectId() const override { return mAPIObjectId; }
+
  public:
   ExtensionEventManager(nsIGlobalObject* aGlobal, const nsAString& aNamespace,
-                        const nsAString& aEventName);
+                        const nsAString& aEventName,
+                        const nsAString& aObjectType = VoidString(),
+                        const nsAString& aObjectId = VoidString());
 
   // nsWrapperCache interface methods
   JSObject* WrapObject(JSContext* aCx,

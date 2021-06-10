@@ -55,6 +55,9 @@ class SerializedStackHolder {
 // be checked before creating the stack.
 UniquePtr<SerializedStackHolder> GetCurrentStackForNetMonitor(JSContext* aCx);
 
+// Construct a stack for the current thread.
+UniquePtr<SerializedStackHolder> GetCurrentStack(JSContext* aCx);
+
 // If aStackHolder is non-null, this notifies the net monitor that aStackHolder
 // is the stack from which aChannel originates. This must be called on the main
 // thread. This call is synchronous, and aChannel and aStackHolder will not be
