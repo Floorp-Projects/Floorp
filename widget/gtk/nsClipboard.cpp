@@ -75,8 +75,8 @@ int GetGeckoClipboardType(GtkClipboard* aGtkClipboard) {
     return nsClipboard::kSelectionClipboard;
   else if (aGtkClipboard == gtk_clipboard_get(GDK_SELECTION_CLIPBOARD))
     return nsClipboard::kGlobalClipboard;
-  else
-    return -1;  // THAT AIN'T NO CLIPBOARD I EVER HEARD OF
+
+  return -1;  // THAT AIN'T NO CLIPBOARD I EVER HEARD OF
 }
 
 nsClipboard::nsClipboard() = default;
