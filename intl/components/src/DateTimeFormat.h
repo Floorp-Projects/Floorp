@@ -19,6 +19,8 @@ namespace mozilla::intl {
 
 enum class DateTimeStyle { Full, Long, Medium, Short, None };
 
+class Calendar;
+
 /**
  * This component is a Mozilla-focused API for the date formatting provided by
  * ICU. The methods internally call out to ICU4C. This is responsible for and
@@ -178,6 +180,13 @@ class DateTimeFormat final {
    * migration.
    */
   UDateFormat* UnsafeGetUDateFormat() const { return mDateFormat; }
+
+  /**
+   * Clones the Calendar from a DateTimeFormat, and sets its time with the
+   * relative milliseconds since 1 January 1970, UTC.
+   */
+  Result<UniquePtr<Calendar>, InternalError> CloneCalendar(
+      double aUnixEpoch) const;
 
  private:
   explicit DateTimeFormat(UDateFormat* aDateFormat);
