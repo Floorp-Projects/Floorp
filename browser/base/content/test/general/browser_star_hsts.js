@@ -15,7 +15,6 @@ add_task(async function test_star_redirect() {
       Ci.nsISiteSecurityService
     );
     sss.resetState(
-      Ci.nsISiteSecurityService.HEADER_HSTS,
       NetUtil.newURI("http://example.com/"),
       0,
       Services.prefs.getBoolPref("privacy.partition.network_state")

@@ -139,6 +139,7 @@
 #include "nsIPrompt.h"
 #include "nsIPromptCollection.h"
 #include "nsIPromptFactory.h"
+#include "nsIPublicKeyPinningService.h"
 #include "nsIReflowObserver.h"
 #include "nsIScriptChannel.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -3714,21 +3715,18 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         nsCOMPtr<nsISiteSecurityService> sss =
             do_GetService(NS_SSSERVICE_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
-                              attrsForHSTS, nullptr, nullptr, &isStsHost);
-        NS_ENSURE_SUCCESS(rv, rv);
-        rv = sss->IsSecureURI(nsISiteSecurityService::STATIC_PINNING, aURI,
-                              flags, GetOriginAttributes(), nullptr, nullptr,
-                              &isPinnedHost);
+        rv = sss->IsSecureURI(aURI, flags, attrsForHSTS, nullptr, nullptr,
+                              &isStsHost);
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
         mozilla::dom::ContentChild* cc =
             mozilla::dom::ContentChild::GetSingleton();
-        cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
-                            attrsForHSTS, &isStsHost);
-        cc->SendIsSecureURI(nsISiteSecurityService::STATIC_PINNING, aURI, flags,
-                            GetOriginAttributes(), &isPinnedHost);
+        cc->SendIsSecureURI(aURI, flags, attrsForHSTS, &isStsHost);
       }
+      nsCOMPtr<nsIPublicKeyPinningService> pkps =
+          do_GetService(NS_PKPSERVICE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = pkps->HostHasPins(aURI, &isPinnedHost);
 
       if (Preferences::GetBool("browser.xul.error_pages.expert_bad_cert",
                                false)) {

@@ -998,7 +998,7 @@ parent:
 
     async InitCrashReporter(NativeThreadId tid);
 
-    sync IsSecureURI(uint32_t aType, nsIURI aURI, uint32_t aFlags,
+    sync IsSecureURI(nsIURI aURI, uint32_t aFlags,
                      OriginAttributes aOriginAttributes)
         returns (bool isSecureURI);
 

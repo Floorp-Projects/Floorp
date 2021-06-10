@@ -21,11 +21,7 @@ function checkStateRead(aSubject, aTopic, aData) {
   ];
   for (let host of HSTS_HOSTS) {
     ok(
-      gSSService.isSecureURI(
-        Ci.nsISiteSecurityService.HEADER_HSTS,
-        Services.io.newURI(host),
-        0
-      ),
+      gSSService.isSecureURI(Services.io.newURI(host), 0),
       `${host} should be HSTS enabled`
     );
   }
@@ -45,11 +41,7 @@ function checkStateRead(aSubject, aTopic, aData) {
   ];
   for (let host of NOT_HSTS_HOSTS) {
     ok(
-      !gSSService.isSecureURI(
-        Ci.nsISiteSecurityService.HEADER_HSTS,
-        Services.io.newURI(host),
-        0
-      ),
+      !gSSService.isSecureURI(Services.io.newURI(host), 0),
       `${host} should not be HSTS enabled`
     );
   }

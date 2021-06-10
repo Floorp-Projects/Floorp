@@ -979,8 +979,7 @@ void nsMixedContentBlocker::AccumulateMixedContentHSTS(
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, 0,
-                        aOriginAttributes, nullptr, nullptr, &hsts);
+  rv = sss->IsSecureURI(aURI, 0, aOriginAttributes, nullptr, nullptr, &hsts);
   if (NS_FAILED(rv)) {
     return;
   }
