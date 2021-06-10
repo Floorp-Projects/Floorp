@@ -17,7 +17,7 @@ add_task(async function() {
 
   await testInfobar(testData, inspector, testActor);
   info("Change zoom page to level 2.");
-  await testActor.zoomPageTo(2);
+  setContentPageZoomLevel(2);
   info("Testing again the infobar after zoom.");
   await testInfobar(testData, inspector, testActor);
 });
