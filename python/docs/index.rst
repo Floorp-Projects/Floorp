@@ -30,17 +30,10 @@ Where possible, the following policy applies to **ALL** vendored packages:
 Adding a Python package
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-To vendor a Python package, run ``mach vendor python [PACKAGE]``, where
-``[PACKAGE]`` is one or more package names along with a version number in the
-format ``pytest==3.5.1``. The package will be installed, transient dependencies
-will be determined, and a ``requirements.txt`` file will be generated with the
-full list of dependencies. The requirements file is then used with ``pip`` to
-download and extract the source distributions of all packages into the
-``third_party/python`` directory.
-
-Alternatively, you can also modify the direct dependencies in
-``third_party/python/requirements.in`` and then run ``mach vendor python`` for your
-changes to take effect.
+To vendor a Python package, add it to ``third_party/python/requirements.in``
+and then run ``mach vendor python``. This will update the tree of pinned
+dependencies in ``third_party/python/requirements.txt`` and download them all
+into the ``third_party/python`` directory.
 
 What if the package isn't on PyPI?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

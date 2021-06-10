@@ -7,12 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import sys
 import logging
 
-from mach.decorators import (
-    CommandArgument,
-    CommandProvider,
-    Command,
-    SubCommand,
-)
+from mach.decorators import CommandArgument, CommandProvider, Command, SubCommand
 
 from mozbuild.base import MachCommandBase
 from mozbuild.vendor.moz_yaml import load_moz_yaml, MozYamlVerifyError
@@ -151,22 +146,15 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         "vendor",
         "python",
         description="Vendor Python packages from pypi.org into third_party/python. "
-        "Some extra files like docs and tests will automatically be excluded.",
+        "Some extra files like docs and tests will automatically be excluded."
+        "Installs the packages listed in third_party/python/requirements.in and "
+        "their dependencies.",
     )
     @CommandArgument(
         "--keep-extra-files",
         action="store_true",
         default=False,
         help="Keep all files, including tests and documentation.",
-    )
-    @CommandArgument(
-        "packages",
-        default=None,
-        nargs="*",
-        help="Packages to vendor. If omitted, packages and their dependencies "
-        "defined in Pipfile.lock will be vendored. If Pipfile has been modified, "
-        "then Pipfile.lock will be regenerated. Note that transient dependencies "
-        "may be updated when running this command.",
     )
     def vendor_python(self, command_context, **kwargs):
         from mozbuild.vendor.vendor_python import VendorPython
