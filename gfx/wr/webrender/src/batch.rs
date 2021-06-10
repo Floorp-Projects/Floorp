@@ -1371,12 +1371,12 @@ impl BatchBuilder {
                                 let map_device_to_surface: SpaceMapper<PicturePixel, DevicePixel> = SpaceMapper::new_with_target(
                                     root_spatial_node_index,
                                     surface_spatial_node_index,
-                                    device_bounding_rect.to_rect(),
+                                    device_bounding_rect,
                                     ctx.spatial_tree,
                                 );
 
-                                match map_device_to_surface.unmap(&device_bounding_rect.to_rect()) {
-                                    Some(r) => r.intersection(&bounding_rect),
+                                match map_device_to_surface.unmap(&device_bounding_rect) {
+                                    Some(r) => r.to_rect().intersection(bounding_rect),
                                     None => Some(*bounding_rect),
                                 }
                             } else {
@@ -1399,10 +1399,10 @@ impl BatchBuilder {
                                 let map_prim_to_surface: SpaceMapper<LayoutPixel, PicturePixel> = SpaceMapper::new_with_target(
                                     surface_spatial_node_index,
                                     prim_spatial_node_index,
-                                    *bounding_rect,
+                                    bounding_rect.to_box2d(),
                                     ctx.spatial_tree,
                                 );
-                                map_prim_to_surface.map(&local_bounding_rect)
+                                map_prim_to_surface.map(&local_bounding_rect.to_box2d()).map(|r| r.to_rect())
                             };
 
                             let intersected = match pic_bounding_rect {
@@ -3432,8 +3432,8 @@ impl ClipBatcher {
         );
         let world_clip_rect = match project_rect(
             &transform.into_transform(),
-            &local_clip_rect,
-            &world_rect.to_rect(),
+            &local_clip_rect.to_box2d(),
+            &world_rect,
         ) {
             Some(rect) => rect,
             None => return false,
@@ -3470,7 +3470,7 @@ impl ClipBatcher {
                 // If the clip rect completely contains this tile rect, then drawing
                 // these pixels would be redundant - since this clip can't possibly
                 // affect the pixels in this tile, skip them!
-                if !world_device_rect.to_box2d().contains_box(&world_sub_rect) {
+                if !world_device_rect.contains_box(&world_sub_rect) {
                     clip_list.slow_rectangles.push(ClipMaskInstanceRect {
                         common: ClipMaskInstanceCommon {
                             sub_rect: normalized_sub_rect,
@@ -3571,7 +3571,7 @@ impl ClipBatcher {
                     let map_local_to_raster = SpaceMapper::new_with_target(
                         root_spatial_node_index,
                         clip_instance.spatial_node_index,
-                        WorldRect::max_rect().to_rect(),
+                        WorldRect::max_rect(),
                         spatial_tree,
                     );
 
@@ -3593,11 +3593,11 @@ impl ClipBatcher {
                         // rect back to local space, we also fall back to just using a scissor rectangle.
                         let raster_rect =
                             sub_rect.translate(actual_rect.min.to_vector()) / surface_device_pixel_scale;
-                        let (clip_transform_id, local_rect, scissor) = match map_local_to_raster.unmap(&raster_rect.to_rect()) {
+                        let (clip_transform_id, local_rect, scissor) = match map_local_to_raster.unmap(&raster_rect) {
                             Some(local_rect)
                                 if clip_transform_id.transform_kind() == TransformedRectKind::AxisAligned &&
                                    !map_local_to_raster.get_transform().has_perspective_component() => {
-                                    match local_rect.intersection(&rect) {
+                                    match local_rect.to_rect().intersection(&rect) {
                                         Some(local_rect) => (clip_transform_id, local_rect, None),
                                         None => return,
                                     }
@@ -3639,9 +3639,8 @@ impl ClipBatcher {
                         for tile in clip_store.visible_mask_tiles(&clip_instance) {
                             let tile_sub_rect = if clip_is_axis_aligned {
                                 let tile_raster_rect = map_local_to_raster
-                                    .map(&tile.tile_rect)
-                                    .expect("bug: should always map as axis-aligned")
-                                    .to_box2d();
+                                    .map(&tile.tile_rect.to_box2d())
+                                    .expect("bug: should always map as axis-aligned");
                                 let tile_device_rect = tile_raster_rect * surface_device_pixel_scale;
                                 tile_device_rect
                                     .translate(-actual_rect.min.to_vector())
@@ -3669,8 +3668,8 @@ impl ClipBatcher {
                     // the image boundaries will be properly initialized.
                     if is_first_clip &&
                         (!clip_is_axis_aligned ||
-                         !(map_local_to_raster.map(&rect).expect("bug: should always map as axis-aligned")
-                            * surface_device_pixel_scale).contains_rect(&actual_rect.to_rect())) {
+                         !(map_local_to_raster.map(&rect.to_box2d()).expect("bug: should always map as axis-aligned")
+                            * surface_device_pixel_scale).contains_box(&actual_rect)) {
                         clear_to_one = true;
                     }
                     true
