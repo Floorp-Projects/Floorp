@@ -255,7 +255,6 @@ function checkStoreValue(name, value, store) {
 async function finishTests(target) {
   await target.destroy();
   DevToolsServer.destroy();
-  finish();
 }
 
 async function addCookie(name, value) {
