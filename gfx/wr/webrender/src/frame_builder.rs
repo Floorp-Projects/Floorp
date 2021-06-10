@@ -455,7 +455,7 @@ impl FrameBuilder {
             ROOT_SPATIAL_NODE_INDEX,
         );
         default_dirty_region.add_dirty_region(
-            frame_context.global_screen_world_rect.to_rect().cast_unit(),
+            frame_context.global_screen_world_rect.cast_unit(),
             SubSliceIndex::DEFAULT,
             frame_context.spatial_tree,
         );
@@ -730,7 +730,7 @@ impl FrameBuilder {
                         ctx.spatial_tree,
                     );
                     let world_clip_rect = map_local_to_world
-                        .map(&tile_cache.local_clip_rect.to_box2d())
+                        .map(&tile_cache.local_clip_rect)
                         .expect("bug: unable to map clip rect");
                     let device_clip_rect = (world_clip_rect * ctx.global_device_pixel_scale).round();
 
