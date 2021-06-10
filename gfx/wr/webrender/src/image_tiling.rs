@@ -572,8 +572,8 @@ pub fn compute_tile_range(
     let y_range = tile_range_1d(&visible_area.y_range(), tile_size);
 
     TileRange {
-        origin: point2(x_range.start, y_range.start),
-        size: size2(x_range.end - x_range.start, y_range.end - y_range.start),
+        min: point2(x_range.start, y_range.start),
+        max: point2(x_range.end, y_range.end),
     }
 }
 
@@ -623,8 +623,8 @@ pub fn compute_valid_tiles_if_bounds_change(
     let max_y = if bottom { f32::floor(tiles.max.y) } else { f32::ceil(tiles.max.y) };
 
     Some(TileRange {
-        origin: point2(min_x as i32, min_y as i32),
-        size: size2((max_x - min_x) as i32, (max_y - min_y) as i32),
+        min: point2(min_x as i32, min_y as i32),
+        max: point2(max_x as i32, max_y as i32),
     })
 }
 
