@@ -84,10 +84,7 @@ static bool GetEnglishOrFirstName(nsACString& aName,
   UINT32 englishIdx = 0;
   BOOL exists;
   HRESULT hr = aStrings->FindLocaleName(L"en-us", &englishIdx, &exists);
-  if (FAILED(hr)) {
-    return false;
-  }
-  if (!exists) {
+  if (FAILED(hr) || !exists) {
     // Use 0 index if english is not found.
     englishIdx = 0;
   }
@@ -1147,6 +1144,7 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
     RefPtr<IDWriteLocalizedStrings> localizedNames;
     HRESULT hr = family->GetFamilyNames(getter_AddRefs(localizedNames));
     if (FAILED(hr)) {
+      gfxWarning() << "Failed to get names for font-family " << i;
       continue;
     }
 
@@ -1180,6 +1178,7 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
       // en-US family name.
       nsAutoCString name;
       if (!GetNameAsUtf8(name, localizedNames, 0)) {
+        gfxWarning() << "GetNameAsUtf8 failed for index 0 in font-family " << i;
         continue;
       }
       addFamily(name);
@@ -1189,16 +1188,17 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
       for (unsigned index = 0; index < count; ++index) {
         nsAutoCString name;
         if (!GetNameAsUtf8(name, localizedNames, index)) {
+          gfxWarning() << "GetNameAsUtf8 failed for index " << index
+                       << " in font-family " << i;
           continue;
         }
         if (!names.Contains(name)) {
           if (sysLocIndex == -1) {
             WCHAR buf[32];
-            if (FAILED(localizedNames->GetLocaleName(index, buf, 32))) {
-              continue;
-            }
-            if (loc16.Equals(buf)) {
-              sysLocIndex = names.Length();
+            if (SUCCEEDED(localizedNames->GetLocaleName(index, buf, 32))) {
+              if (loc16.Equals(buf)) {
+                sysLocIndex = names.Length();
+              }
             }
           }
           names.AppendElement(name);
