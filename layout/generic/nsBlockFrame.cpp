@@ -6751,7 +6751,7 @@ void nsBlockFrame::ReflowPushedFloats(BlockReflowInput& aState,
 
     // Always call FlowAndPlaceFloat; we might need to place this float if it
     // didn't belong to this block the last time it was reflowed.  Note that if
-    // the float doesn't get placed, we don't consider its overflow region.
+    // the float doesn't get placed, we don't consider its overflow areas.
     // (Not-getting-placed means it didn't fit and we pushed it instead of
     // placing it, and its position could be stale.)
     if (aState.FlowAndPlaceFloat(f)) {
