@@ -111,7 +111,7 @@ pub type WorldVector3D = Vector3D<f32, WorldPixel>;
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Tiles;
 pub type TileOffset = Point2D<i32, Tiles>;
-pub type TileRange = Rect<i32, Tiles>;
+pub type TileRange = Box2D<i32, Tiles>;
 
 /// Scaling ratio from world pixels to device pixels.
 pub type DevicePixelScale = Scale<f32, WorldPixel, DevicePixel>;
