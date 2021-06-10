@@ -105,6 +105,8 @@ be similar to:
     SYMCHK: FAILED files = 27
     SYMCHK: PASSED + IGNORED files = 60
 
+.. _Downloading symbols on Linux / Mac OS X:
+
 Downloading symbols on Linux / Mac OS X
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

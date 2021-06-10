@@ -19,6 +19,8 @@ be clear directly from the `IDL files <https://searchfox.org/mozilla-central/sea
 -  When there is no profile the new HTTP cache works, but everything is
    stored only in memory not obeying any particular limits.
 
+.. _nsICacheStorageService:
+
 nsICacheStorageService
 ----------------------
 
@@ -29,10 +31,10 @@ nsICacheStorageService
 
 -   \ ``"@mozilla.org/netwerk/cache-storage-service;1"``
 
--  Provides methods accessing "storage" objects – see `nsICacheStorage` below – giving further access to cache entries – see :ref:`nsICacheEntry` more below – per specific URL.
+-  Provides methods accessing "storage" objects – see `nsICacheStorage` below – giving further access to cache entries – see :ref:`nsICacheEntry <nsICacheEntry>` more below – per specific URL.
 
 -  Currently we have 3 types of storages, all the access methods return
-   an :ref:`nsICacheStorage` object:
+   an :ref:`nsICacheStorage <nsICacheStorage>` object:
 
    -  **memory-only** (``memoryCacheStorage``): stores data only in a
       memory cache, data in this storage are never put to disk
@@ -60,14 +62,16 @@ nsICacheStorageService
 
    -  ``purgeFromMemory``– removes (schedules to remove) any
       intermediate cache data held in memory for faster access (more
-      about the :ref:`Intermediate_Memory_Caching` below)
+      about the :ref:`Intermediate_Memory_Caching <Intermediate_Memory_Caching>` below)
+
+.. _nsILoadContextInfo:
 
 nsILoadContextInfo
 ------------------
 
 -  Distinguishes the scope of the storage demanded to open.
 
--  Mandatory argument to ``*Storage`` methods of :ref:`nsICacheStorageService`.
+-  Mandatory argument to ``*Storage`` methods of :ref:`nsICacheStorageService <nsICacheStorageService>`.
 
 -  `nsILoadContextInfo.idl (searchfox) <https://searchfox.org/mozilla-central/source/netwerk/base/nsILoadContextInfo.idl>`_
 
@@ -96,6 +100,7 @@ nsILoadContextInfo
    distinct and cache entries in them do not overlap even when having
    the same URIs.
 
+.. _nsICacheStorage:
 
 nsICacheStorage
 ---------------
@@ -103,7 +108,7 @@ nsICacheStorage
 -  `nsICacheStorage.idl (searchfox) <https://searchfox.org/mozilla-central/source/netwerk/cache2/nsICacheStorage.idl>`_
 
 -  Obtained from call to one of the ``*Storage`` methods on
-   :ref:`nsICacheStorageService`.
+   :ref:`nsICacheStorageService <nsICacheStorageService>`.
 
 -  Represents a distinct storage area (or scope) to put and get cache
    entries mapped by URLs into and from it.
@@ -134,6 +139,8 @@ nsICacheEntryOpenCallback
       immediately); there is currently no way to opt out of this feature
       (see `bug
       938186 <https://bugzilla.mozilla.org/show_bug.cgi?id=938186>`__).
+
+.. _nsICacheEntry:
 
 nsICacheEntry
 -------------
@@ -185,6 +192,8 @@ Lifetime of a new entry
    to the cache entry's output stream immediately, even before the
    output stream is closed. This is called :ref:`concurrent
    read/write <Concurrent_read_and_write>`.
+
+.. _Concurrent_read_and_write:
 
 Concurrent read and write
 -------------------------
@@ -269,18 +278,18 @@ current scoping model would not be sufficient - use one of the two
 following ways:
 
 #. *[preferred]* Add a new ``<Your>Storage`` method on
-   :ref:`nsICacheStorageService` and if needed give it any arguments to
+   :ref:`nsICacheStorageService <nsICacheStorageService>` and if needed give it any arguments to
    specify the storage scope even more.  Implementation only should need
    to enhance the context key generation and parsing code and enhance
-   current - or create new when needed - :ref:`nsICacheStorage`
+   current - or create new when needed - :ref:`nsICacheStorage <nsICacheStorage>`
    implementations to carry any additional information down to the cache
    service.
 #. *[*\ **not**\ *preferred]* Add a new argument to
-   :ref:`nsILoadContextInfo`; **be careful
+   :ref:`nsILoadContextInfo <nsILoadContextInfo>`; **be careful
    here**, since some arguments on the context may not be known during
    the load time, what may lead to inter-context data leaking or
    implementation problems. Adding more distinction to
-   :ref:`nsILoadContextInfo` also affects all existing storages which may
+   :ref:`nsILoadContextInfo <nsILoadContextInfo>` also affects all existing storages which may
    not be always desirable.
 
 See context keying details for more information.
@@ -325,7 +334,7 @@ Storage and entries scopes
 --------------------------
 
 A *scope key* string used to map the storage scope is based on the
-arguments of :ref:`nsILoadContextInfo`. The form is following (currently
+arguments of :ref:`nsILoadContextInfo <nsILoadContextInfo>`. The form is following (currently
 pending in `bug
 968593 <https://bugzilla.mozilla.org/show_bug.cgi?id=968593>`__):
 
@@ -355,7 +364,7 @@ hashtable are CacheEntry classes, see below.
 
 The hash tables keep a strong reference to ``CacheEntry`` objects. The
 only way to remove ``CacheEntry`` objects from memory is by exhausting a
-memory limit for :ref:`Intermediate_Memory_Caching`, what triggers a background
+memory limit for :ref:`Intermediate_Memory_Caching <Intermediate_Memory_Caching>`, what triggers a background
 process of purging expired and then least used entries from memory.
 Another way is to directly call the
 ``nsICacheStorageService.purge``\ method. That method is also called
@@ -370,7 +379,7 @@ mechanisms ensure thread-safe access and also inability to have more
 then a single instance of a ``CacheEntry`` for a single
 <scope+enhanceID+URL> key.
 
-``CacheStorage``, implementing the :ref:`nsICacheStorage` interface, is
+``CacheStorage``, implementing the :ref:`nsICacheStorage <nsICacheStorage>` interface, is
 forwarding all calls to internal methods of ``CacheStorageService``
 passing itself as an argument.  ``CacheStorageService`` then generates
 the *scope key* using the ``nsILoadContextInfo`` of the storage. Note:
@@ -518,6 +527,8 @@ opening flags.  ``nsICacheStorage.asyncOpenURI`` forwards to
    pool <Intermediate_Memory_Caching>` limit
 -  when this is a disk cache entry, its cached data chunks are released
    from memory and only meta data is kept
+
+.. _Intermediate_Memory_Caching:
 
 Intermediate memory caching
 ---------------------------

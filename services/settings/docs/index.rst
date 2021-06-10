@@ -165,7 +165,7 @@ The provided helper will:
 
     The ``fallbackToDump`` option activates a fallback to a dump that has been
     packaged with the client, when other ways to load the attachment have failed.
-    See :ref:`_services/packaging-attachments` for more information.
+    See :ref:`services/packaging-attachments <services/packaging-attachments>` for more information.
 
 .. note::
 
