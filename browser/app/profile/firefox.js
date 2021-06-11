@@ -294,7 +294,11 @@ pref("browser.startup.firstrunSkipsHomepage", true);
 // Show a skeleton UI window prior to loading libxul. Only visible for windows
 // users as it is not implemented anywhere else.
 #if defined(XP_WIN)
+#ifdef NIGHTLY_BUILD
 pref("browser.startup.preXulSkeletonUI", true);
+#else
+pref("browser.startup.preXulSkeletonUI", false);
+#endif
 #endif
 
 // Show an upgrade dialog on major upgrades.
