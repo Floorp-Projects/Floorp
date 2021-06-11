@@ -432,6 +432,7 @@ struct Annotations {
     #[serde(skip_serializing_if = "Option::is_none")]
     Vendor: Option<String>,
     Version: String,
+    WindowsErrorReporting: String,
 }
 
 impl Annotations {
@@ -454,6 +455,7 @@ impl Annotations {
             UptimeTS: (crash_time - startup_time).to_string() + ".0",
             Vendor: application_data.vendor.clone(),
             Version: application_data.version.clone(),
+            WindowsErrorReporting: "1".to_string(),
         }
     }
 }
