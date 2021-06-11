@@ -939,9 +939,10 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
   presShell->FreeFrame(id, this);
 }
 
-void nsIFrame::GetOffsets(int32_t& aStart, int32_t& aEnd) const {
+nsresult nsIFrame::GetOffsets(int32_t& aStart, int32_t& aEnd) const {
   aStart = 0;
   aEnd = 0;
+  return NS_OK;
 }
 
 static void CompareLayers(
