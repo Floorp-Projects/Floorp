@@ -1437,8 +1437,8 @@ void WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height) {
   }
 
   const auto& limits = Limits();
-  width = std::min(width, static_cast<GLsizei>(limits.maxViewportDims[0]));
-  height = std::min(height, static_cast<GLsizei>(limits.maxViewportDims[1]));
+  width = std::min(width, static_cast<GLsizei>(limits.maxViewportDim));
+  height = std::min(height, static_cast<GLsizei>(limits.maxViewportDim));
 
   gl->fViewport(x, y, width, height);
 
