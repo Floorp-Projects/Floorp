@@ -35,11 +35,12 @@ origin:
   license-file: COPYING
 
 updatebot:
-    maintainer-phab: tjr
-    maintainer-bz: tom@mozilla.com
+    maintainer-phab: jbauman
+    maintainer-bz: jbauman@mozilla.com
     tasks:
       - type: vendoring
-        enabled: False
+        enabled: true
+        frequency: release
 
 vendoring:
   url: https://code.videolan.org/videolan/dav1d.git
