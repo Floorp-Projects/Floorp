@@ -12,19 +12,24 @@ var TelemetryTestUtils = {
   /* Scalars */
 
   /**
-   * An helper that asserts the value of a scalar if it's expected to be > 0,
-   * otherwise makes sure that the scalar has not been reported.
+   * A helper that asserts the value of a scalar.
    *
    * @param {Object} scalars The snapshot of the scalars.
    * @param {String} scalarName The name of the scalar to check.
-   * @param {Number} value The expected value for the provided scalar.
+   * @param {Boolean|Number|String} value The expected value for the scalar.
    * @param {String} msg The message to print when checking the value.
    */
   assertScalar(scalars, scalarName, value, msg) {
-    if (value > 0) {
-      Assert.equal(scalars[scalarName], value, msg);
-      return;
-    }
+    Assert.equal(scalars[scalarName], value, msg);
+  },
+
+  /**
+   * A helper that asserts a scalar is not set.
+   *
+   * @param {Object} scalars The snapshot of the scalars.
+   * @param {String} scalarName The name of the scalar to check.
+   */
+  assertScalarUnset(scalars, scalarName) {
     Assert.ok(!(scalarName in scalars), scalarName + " must not be reported.");
   },
 

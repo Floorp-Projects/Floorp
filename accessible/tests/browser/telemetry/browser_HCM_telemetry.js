@@ -59,10 +59,9 @@ async function closeColorsDialog(dialogWin) {
 }
 
 function verifyBackplate(expectedValue) {
-  const snapshot = TelemetryTestUtils.getProcessScalars("parent", false, true);
-  ok("a11y.backplate" in snapshot, "Backplate scalar must be present.");
-  is(
-    snapshot["a11y.backplate"],
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("parent", false, true),
+    "a11y.backplate",
     expectedValue,
     "Backplate scalar is logged as " + expectedValue
   );
@@ -288,9 +287,6 @@ add_task(async function testSetNever() {
   reset();
   gBrowser.removeCurrentTab();
 });
-
-// XXX We're uable to assert scalars that are false using assertScalar util,
-// so we directly query the scalar in the scalar list below. (bug 1633883)
 
 add_task(async function testBackplate() {
   is(

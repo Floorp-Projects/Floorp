@@ -83,12 +83,10 @@ function runTest(
 
   OsEnvironment.reportAllowedAppSources();
 
-  const scalars = TelemetryTestUtils.getProcessScalars("parent");
-  // Can't use TelemetryTestUtils.assertScalar here. It does not currently work
-  // for strings. See Bug 1633883.
-  const scalarName = "os.environment.allowed_app_sources";
-  Assert.ok(
-    scalarName in scalars && scalars[scalarName] === expectedScalarValue,
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("parent"),
+    "os.environment.allowed_app_sources",
+    expectedScalarValue,
     "The allowed app sources reported should match the expected sources"
   );
 }

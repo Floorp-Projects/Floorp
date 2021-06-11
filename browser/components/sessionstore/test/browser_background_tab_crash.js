@@ -123,8 +123,15 @@ async function crashBackgroundTabs(tabs) {
  * @param desc test description to output to the log
  */
 function checkTelemetry(expectedCount, desc) {
+  const scalars = TelemetryTestUtils.getProcessScalars("parent");
+  // This telemetry adds up from 0, so expected 0 results in unset scalar.
+  if (expectedCount === 0) {
+    TelemetryTestUtils.assertScalarUnset(scalars, TABUI_PRESENTED_KEY);
+    return;
+  }
+
   TelemetryTestUtils.assertScalar(
-    TelemetryTestUtils.getProcessScalars("parent"),
+    scalars,
     TABUI_PRESENTED_KEY,
     expectedCount,
     desc + " telemetry"
