@@ -51,7 +51,7 @@ void TextEditor::OnStartToHandleTopLevelEditSubAction(
     EditSubAction aTopLevelEditSubAction,
     nsIEditor::EDirection aDirectionOfTopLevelEditSubAction, ErrorResult& aRv) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!AsHTMLEditor());
+  MOZ_ASSERT(IsTextEditor());
   MOZ_ASSERT(!aRv.Failed());
 
   EditorBase::OnStartToHandleTopLevelEditSubAction(
@@ -99,7 +99,7 @@ void TextEditor::OnStartToHandleTopLevelEditSubAction(
 
 nsresult TextEditor::OnEndHandlingTopLevelEditSubAction() {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
-  MOZ_ASSERT(!AsHTMLEditor());
+  MOZ_ASSERT(IsTextEditor());
 
   nsresult rv;
   while (true) {
@@ -579,8 +579,7 @@ EditActionResult TextEditor::HandleInsertText(
 EditActionResult TextEditor::SetTextWithoutTransaction(
     const nsAString& aValue) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!AsHTMLEditor());
-  MOZ_ASSERT(IsPlaintextEditor());
+  MOZ_ASSERT(IsTextEditor());
   MOZ_ASSERT(!IsIMEComposing());
   MOZ_ASSERT(!IsUndoRedoEnabled());
   MOZ_ASSERT(GetEditAction() != EditAction::eReplaceText);

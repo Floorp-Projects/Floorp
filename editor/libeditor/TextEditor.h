@@ -51,6 +51,13 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 
   TextEditor();
 
+  static TextEditor* GetFrom(nsIEditor* aEditor) {
+    return aEditor ? aEditor->GetAsTextEditor() : nullptr;
+  }
+  static const TextEditor* GetFrom(const nsIEditor* aEditor) {
+    return aEditor ? aEditor->GetAsTextEditor() : nullptr;
+  }
+
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 
@@ -499,11 +506,21 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 }  // namespace mozilla
 
 mozilla::TextEditor* nsIEditor::AsTextEditor() {
+  MOZ_DIAGNOSTIC_ASSERT(IsTextEditor());
   return static_cast<mozilla::TextEditor*>(this);
 }
 
 const mozilla::TextEditor* nsIEditor::AsTextEditor() const {
+  MOZ_DIAGNOSTIC_ASSERT(IsTextEditor());
   return static_cast<const mozilla::TextEditor*>(this);
+}
+
+mozilla::TextEditor* nsIEditor::GetAsTextEditor() {
+  return AsEditorBase()->IsTextEditor() ? AsTextEditor() : nullptr;
+}
+
+const mozilla::TextEditor* nsIEditor::GetAsTextEditor() const {
+  return AsEditorBase()->IsTextEditor() ? AsTextEditor() : nullptr;
 }
 
 #endif  // #ifndef mozilla_TextEditor_h

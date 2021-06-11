@@ -135,8 +135,11 @@ class HTMLEditor final : public TextEditor,
 
   HTMLEditor();
 
-  static HTMLEditor* GetFrom(EditorBase* aEditorBase) {
-    return aEditorBase ? aEditorBase->AsHTMLEditor() : nullptr;
+  static HTMLEditor* GetFrom(nsIEditor* aEditor) {
+    return aEditor ? aEditor->GetAsHTMLEditor() : nullptr;
+  }
+  static const HTMLEditor* GetFrom(const nsIEditor* aEditor) {
+    return aEditor ? aEditor->GetAsHTMLEditor() : nullptr;
   }
 
   MOZ_CAN_RUN_SCRIPT virtual void PreDestroy(bool aDestroyingFrames) override;
@@ -4534,15 +4537,21 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
 }  // namespace mozilla
 
 mozilla::HTMLEditor* nsIEditor::AsHTMLEditor() {
-  return static_cast<mozilla::EditorBase*>(this)->IsHTMLEditor()
-             ? static_cast<mozilla::HTMLEditor*>(this)
-             : nullptr;
+  MOZ_DIAGNOSTIC_ASSERT(IsHTMLEditor());
+  return static_cast<mozilla::HTMLEditor*>(this);
 }
 
 const mozilla::HTMLEditor* nsIEditor::AsHTMLEditor() const {
-  return static_cast<const mozilla::EditorBase*>(this)->IsHTMLEditor()
-             ? static_cast<const mozilla::HTMLEditor*>(this)
-             : nullptr;
+  MOZ_DIAGNOSTIC_ASSERT(IsHTMLEditor());
+  return static_cast<const mozilla::HTMLEditor*>(this);
+}
+
+mozilla::HTMLEditor* nsIEditor::GetAsHTMLEditor() {
+  return AsEditorBase()->IsHTMLEditor() ? AsHTMLEditor() : nullptr;
+}
+
+const mozilla::HTMLEditor* nsIEditor::GetAsHTMLEditor() const {
+  return AsEditorBase()->IsHTMLEditor() ? AsHTMLEditor() : nullptr;
 }
 
 #endif  // #ifndef mozilla_HTMLEditor_h
