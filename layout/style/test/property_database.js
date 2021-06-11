@@ -9359,6 +9359,8 @@ var gCSSProperties = {
       "auto",
       "first",
       "last",
+      "left",
+      "right",
     ],
   },
   "align-items": {
@@ -9395,6 +9397,8 @@ var gCSSProperties = {
       "safe stretch",
       "end end",
       "auto",
+      "left",
+      "right",
     ],
   },
   "align-self": {
@@ -9416,7 +9420,15 @@ var gCSSProperties = {
       "self-start",
       "safe self-end",
     ],
-    invalid_values: ["space-between", "abc", "30px", "stretch safe", "safe"],
+    invalid_values: [
+      "space-between",
+      "abc",
+      "30px",
+      "stretch safe",
+      "safe",
+      "left",
+      "right",
+    ],
   },
   "justify-content": {
     domProp: "justifyContent",
@@ -9566,7 +9578,15 @@ var gCSSProperties = {
       "baseline",
       "last baseline",
     ],
-    invalid_values: ["none", "center safe", "right / end"],
+    invalid_values: [
+      "none",
+      "center safe",
+      "right / end",
+      "left",
+      "right",
+      "left left",
+      "right right",
+    ],
   },
   "place-items": {
     domProp: "placeItems",
@@ -9592,6 +9612,10 @@ var gCSSProperties = {
       "end/end",
       "center safe",
       "auto start",
+      "left",
+      "right",
+      "left left",
+      "right right",
     ],
   },
   "place-self": {
@@ -9621,6 +9645,10 @@ var gCSSProperties = {
       "auto legacy left",
       "legacy left",
       "auto/auto",
+      "left",
+      "right",
+      "left left",
+      "right right",
     ],
   },
   flex: {
