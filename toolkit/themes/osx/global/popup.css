@@ -110,7 +110,7 @@ panel[type="arrow"].panel-no-padding::part(content) {
 
 menulist > menupopup {
   min-width: 0;
-  padding: 4px 0;
+  --panel-padding: 4px 0;
 }
 
 menulist > menupopup:not([position]) {
