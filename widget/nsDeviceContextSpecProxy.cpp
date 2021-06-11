@@ -27,6 +27,9 @@ using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecProxy, nsIDeviceContextSpec)
 
+nsDeviceContextSpecProxy::nsDeviceContextSpecProxy() = default;
+nsDeviceContextSpecProxy::~nsDeviceContextSpecProxy() = default;
+
 NS_IMETHODIMP
 nsDeviceContextSpecProxy::Init(nsIWidget* aWidget,
                                nsIPrintSettings* aPrintSettings,

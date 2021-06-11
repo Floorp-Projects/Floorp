@@ -932,7 +932,10 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvCloneDocumentTreeInto(
       const MaybeDiscarded<BrowsingContext>& aSource,
-      const MaybeDiscarded<BrowsingContext>& aTarget);
+      const MaybeDiscarded<BrowsingContext>& aTarget, PrintData&& aPrintData);
+
+  mozilla::ipc::IPCResult RecvUpdateRemotePrintSettings(
+      const MaybeDiscarded<BrowsingContext>& aTarget, PrintData&& aPrintData);
 
   mozilla::ipc::IPCResult RecvConstructPopupBrowser(
       ManagedEndpoint<PBrowserParent>&& actor,
