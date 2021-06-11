@@ -805,7 +805,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
       // hint to ASSOCIATE_BEFORE to indicate that we want the caret displayed
       // at the end of this frame, not at the beginning of the next one.
       theFrame = pos.mResultFrame;
-      std::tie(frameStart, frameEnd) = theFrame->GetOffsets();
+      theFrame->GetOffsets(frameStart, frameEnd);
       currentOffset = pos.mContentOffset;
       if (frameEnd == currentOffset && !(frameStart == 0 && frameEnd == 0))
         tHint = CARET_ASSOCIATE_BEFORE;
@@ -820,7 +820,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
                                        tHint, &currentOffset);
       if (!theFrame) return NS_ERROR_FAILURE;
 
-      std::tie(frameStart, frameEnd) = theFrame->GetOffsets();
+      theFrame->GetOffsets(frameStart, frameEnd);
     }
 
     if (context->BidiEnabled()) {
@@ -933,26 +933,25 @@ nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
   // Get the level of the frames on each side
   nsIFrame* currentFrame;
   int32_t currentOffset;
+  int32_t frameStart, frameEnd;
   nsDirection direction;
 
-  nsPrevNextBidiLevels levels{};
+  nsPrevNextBidiLevels levels;
   levels.SetData(nullptr, nullptr, 0, 0);
 
-  currentFrame = GetFrameForNodeOffset(
-      aNode, static_cast<int32_t>(aContentOffset), aHint, &currentOffset);
-  if (!currentFrame) {
-    return levels;
-  }
+  currentFrame =
+      GetFrameForNodeOffset(aNode, aContentOffset, aHint, &currentOffset);
+  if (!currentFrame) return levels;
 
-  auto [frameStart, frameEnd] = currentFrame->GetOffsets();
+  currentFrame->GetOffsets(frameStart, frameEnd);
 
-  if (0 == frameStart && 0 == frameEnd) {
+  if (0 == frameStart && 0 == frameEnd)
     direction = eDirPrevious;
-  } else if (frameStart == currentOffset) {
+  else if (frameStart == currentOffset)
     direction = eDirPrevious;
-  } else if (frameEnd == currentOffset) {
+  else if (frameEnd == currentOffset)
     direction = eDirNext;
-  } else {
+  else {
     // we are neither at the beginning nor at the end of the frame, so we have
     // no worries
     nsBidiLevel currentLevel = currentFrame->GetEmbeddingLevel();
@@ -1612,7 +1611,9 @@ bool nsFrameSelection::AdjustFrameForLineStart(nsIFrame*& aFrame,
     return false;
   }
 
-  auto [start, end] = aFrame->GetOffsets();
+  int32_t start;
+  int32_t end;
+  aFrame->GetOffsets(start, end);
   if (aFrameOffset != end) {
     return false;
   }
@@ -1623,7 +1624,7 @@ bool nsFrameSelection::AdjustFrameForLineStart(nsIFrame*& aFrame,
   }
 
   aFrame = nextSibling;
-  std::tie(start, end) = aFrame->GetOffsets();
+  aFrame->GetOffsets(start, end);
   aFrameOffset = start;
   return true;
 }
