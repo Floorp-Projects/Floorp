@@ -150,9 +150,6 @@ class GLLibraryEGL final {
   }
 
   bool IsANGLE() const { return mIsANGLE; }
-  bool HasGetDisplayDriverName() const {
-    return bool(mSymbols.fGetDisplayDriverName);
-  }
 
   // -
   // PFN wrappers
@@ -425,10 +422,6 @@ class GLLibraryEGL final {
     WRAP(fQueryDeviceAttribEXT(device, attribute, value));
   }
 
-  const char* fGetDisplayDriverName(EGLDisplay dpy) const {
-    WRAP(fGetDisplayDriverName(dpy));
-  }
-
  private:
   // NV_stream_consumer_gltexture_yuv
   EGLBoolean fStreamConsumerGLTextureExternalAttribsNV(
@@ -545,7 +538,6 @@ class GLLibraryEGL final {
     EGLint(GLAPIENTRY* fWaitSyncKHR)(EGLDisplay dpy, EGLSync sync,
                                      EGLint flags);
     EGLint(GLAPIENTRY* fDupNativeFenceFDANDROID)(EGLDisplay dpy, EGLSync sync);
-    const char*(GLAPIENTRY* fGetDisplayDriverName)(EGLDisplay dpy);
     // KHR_stream
     EGLStreamKHR(GLAPIENTRY* fCreateStreamKHR)(EGLDisplay dpy,
                                                const EGLint* attrib_list);
