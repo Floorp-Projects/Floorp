@@ -389,8 +389,14 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
     return STATUS_ACCESS_DENIED;
   }
 
-  // We don't care about mappings that aren't MEM_IMAGE
-  if (!(mbi.Type & MEM_IMAGE)) {
+  // We don't care about mappings that aren't MEM_IMAGE or executable.
+  // We check for the AllocationProtect, not the Protect field because
+  // the first section of a mapped image is always PAGE_READONLY even
+  // when it's mapped as an executable.
+  constexpr DWORD kPageExecutable = PAGE_EXECUTE | PAGE_EXECUTE_READ |
+                                    PAGE_EXECUTE_READWRITE |
+                                    PAGE_EXECUTE_WRITECOPY;
+  if (!(mbi.Type & MEM_IMAGE) || !(mbi.AllocationProtect & kPageExecutable)) {
     return stubStatus;
   }
 
