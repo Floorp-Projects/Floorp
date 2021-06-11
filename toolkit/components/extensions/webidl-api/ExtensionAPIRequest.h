@@ -7,6 +7,8 @@
 #ifndef mozilla_extensions_ExtensionAPIRequest_h
 #define mozilla_extensions_ExtensionAPIRequest_h
 
+#include "ExtensionEventListener.h"
+
 #include "mozIExtensionAPIRequestHandling.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ClientInfo.h"
@@ -82,11 +84,17 @@ class ExtensionAPIRequest : public mozIExtensionAPIRequest {
 
   bool ShouldHaveResult() const { return ShouldHaveResult(mRequestType); }
 
+  void SetEventListener(const RefPtr<ExtensionEventListener>& aListener) {
+    MOZ_ASSERT(!mEventListener);
+    mEventListener = aListener;
+  }
+
  private:
   virtual ~ExtensionAPIRequest() {
     mSWClientInfo = Nothing();
     mArgs.setUndefined();
     mStack.setUndefined();
+    mEventListener = nullptr;
     mozilla::DropJSObjects(this);
   };
 
@@ -96,6 +104,9 @@ class ExtensionAPIRequest : public mozIExtensionAPIRequest {
   JS::Heap<JS::Value> mArgs;
   Maybe<dom::ClientInfo> mSWClientInfo;
   RefPtr<ExtensionServiceWorkerInfo> mSWInfo;
+
+  // Only set for addListener/removeListener API requests.
+  RefPtr<ExtensionEventListener> mEventListener;
 };
 
 }  // namespace extensions
