@@ -1214,7 +1214,7 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
 
     // Assuming we still have the session history, update the index.
     if (loadingBC->GetSessionHistory()) {
-      loadingBC->GetSessionHistory()->UpdateIndexWithEntry(aEntry);
+      loadingBC->GetSessionHistory()->UpdateIndex();
     }
     loadingBC->HistoryCommitIndexAndLength();
     Unused << loadingBC->SetIsInBFCache(false);
@@ -1912,19 +1912,6 @@ nsSHistory::UpdateIndex() {
   }
 
   mRequestedIndex = -1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHistory::UpdateIndexWithEntry(nsISHEntry* aEntry) {
-  nsCOMPtr<nsISHEntry> root = nsSHistory::GetRootSHEntry(aEntry);
-  if (root) {
-    int32_t index = GetIndexOfEntry(root);
-    if (index >= 0) {
-      mRequestedIndex = index;
-      UpdateIndex();
-    }
-  }
   return NS_OK;
 }
 
