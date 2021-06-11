@@ -91,7 +91,7 @@ add_task(
           "passwordmgr/test/browser/multiple_forms.html",
       },
       async function(browser) {
-        await openPasswordContextMenu(browser, "#test-username-2");
+        await openPasswordContextMenu(browser, "#test-username-3");
 
         // Check the content of the password manager popup
         let popupMenu = document.getElementById("fill-login-popup");
@@ -118,7 +118,62 @@ add_task(
           "passwordmgr/test/browser/multiple_forms.html",
       },
       async function(browser) {
-        await openPasswordContextMenu(browser, "#test-username-2");
+        await openPasswordContextMenu(browser, "#test-username-3");
+
+        // Check the content of the password manager popup
+        let popupMenu = document.getElementById("fill-login-popup");
+        checkMenu(popupMenu, 3);
+
+        await closePopup(CONTEXT_MENU);
+      }
+    );
+  }
+);
+
+/**
+ * Check if the context menu is populated with the right menuitems
+ * for the target username field without a password field present.
+ */
+add_task(
+  async function test_context_menu_populate_username_with_password_noSchemeUpgrades() {
+    Services.prefs.setBoolPref("signon.schemeUpgrades", false);
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url:
+          TEST_ORIGIN +
+          "/browser/toolkit/components/" +
+          "passwordmgr/test/browser/multiple_forms.html",
+      },
+      async function(browser) {
+        await openPasswordContextMenu(browser, "#test-username-1");
+
+        // Check the content of the password manager popup
+        let popupMenu = document.getElementById("fill-login-popup");
+        checkMenu(popupMenu, 2);
+
+        await closePopup(CONTEXT_MENU);
+      }
+    );
+  }
+);
+/**
+ * Check if the context menu is populated with the right menuitems
+ * for the target username field without a password field present.
+ */
+add_task(
+  async function test_context_menu_populate_username_with_password_schemeUpgrades() {
+    Services.prefs.setBoolPref("signon.schemeUpgrades", true);
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url:
+          TEST_ORIGIN +
+          "/browser/toolkit/components/" +
+          "passwordmgr/test/browser/multiple_forms.html",
+      },
+      async function(browser) {
+        await openPasswordContextMenu(browser, "#test-username-1");
 
         // Check the content of the password manager popup
         let popupMenu = document.getElementById("fill-login-popup");
@@ -322,7 +377,12 @@ add_task(async function test_context_menu_username_login_fill() {
                     passwordField.readOnly
                   ) {
                     if (!passwordField) {
-                      Assert.ok(headerHidden, "Popup menu is hidden.");
+                      // Should show popup for a username-only form.
+                      if (usernameField.autocomplete == "username") {
+                        Assert.ok(!headerHidden, "Popup menu is not hidden.");
+                      } else {
+                        Assert.ok(headerHidden, "Popup menu is hidden.");
+                      }
                     } else {
                       Assert.ok(!headerHidden, "Popup menu is not hidden.");
                       Assert.ok(headerDisabled, "Popup menu is disabled.");
