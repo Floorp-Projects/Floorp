@@ -209,7 +209,7 @@ bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd) {
 #endif  // !defined(XP_WIN) && !defined(XP_MACOSX)
 
 bool SetRemoteExceptionHandler(const char* aCrashPipe,
-                               uintptr_t aCrashTimeAnnotationFile) {
+                               FileHandle aCrashTimeAnnotationFile) {
   return false;
 }
 
@@ -222,6 +222,12 @@ bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType,
                               nsString* aDumpId) {
   return false;
 }
+
+#if defined(XP_WIN)
+
+DWORD WINAPI WerNotifyProc(LPVOID aParameter) { return 0; }
+
+#endif  // defined(XP_WIN)
 
 ThreadId CurrentThreadId() { return -1; }
 
@@ -246,9 +252,9 @@ bool CreateAdditionalChildMinidump(ProcessHandle childPid,
 bool UnsetRemoteExceptionHandler() { return false; }
 
 #if defined(MOZ_WIDGET_ANDROID)
-void SetNotificationPipeForChild(int childCrashFd) {}
+void SetNotificationPipeForChild(FileHandle childCrashFd) {}
 
-void SetCrashAnnotationPipeForChild(int childCrashAnnotationFd) {}
+void SetCrashAnnotationPipeForChild(FileHandle childCrashAnnotationFd) {}
 
 void AddLibraryMapping(const char* library_name, uintptr_t start_address,
                        size_t mapping_length, size_t file_offset) {}
