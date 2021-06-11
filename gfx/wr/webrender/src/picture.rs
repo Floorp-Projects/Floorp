@@ -5543,13 +5543,12 @@ impl PicturePrimitive {
                         let map_pic_to_parent = SpaceMapper::new_with_target(
                             parent_raster_spatial_node_index,
                             self.spatial_node_index,
-                            RasterRect::max_rect().to_box2d(),         // TODO(gw): May need a conservative estimate?
+                            RasterRect::max_rect(),         // TODO(gw): May need a conservative estimate?
                             frame_context.spatial_tree,
                         );
                         let pic_in_raster_space = map_pic_to_parent
                             .map(&pic_rect)
-                            .expect("bug: unable to map mix-blend content into parent")
-                            .to_rect();
+                            .expect("bug: unable to map mix-blend content into parent");
 
                         // Apply device pixel ratio for parent surface to get into device
                         // pixels for that surface.
@@ -6602,8 +6601,9 @@ fn create_raster_mappers(
         spatial_tree,
     );
 
-    let raster_bounds = map_raster_to_world.unmap(&world_rect)
-                                           .unwrap_or_else(|| RasterRect::max_rect().to_box2d());
+    let raster_bounds = map_raster_to_world
+        .unmap(&world_rect)
+        .unwrap_or_else(RasterRect::max_rect);
 
     let map_pic_to_raster = SpaceMapper::new_with_target(
         raster_spatial_node_index,
@@ -7382,7 +7382,7 @@ pub fn get_raster_rects(
     let unclipped_raster_rect = map_to_raster.map(&pic_rect)?;
 
     let unclipped = raster_rect_to_device_pixels(
-        unclipped_raster_rect.to_rect(),
+        unclipped_raster_rect,
         device_pixel_scale,
     );
 
@@ -7397,7 +7397,7 @@ pub fn get_raster_rects(
     };
 
     let clipped = raster_rect_to_device_pixels(
-        clipped_raster_rect.to_rect(),
+        clipped_raster_rect,
         device_pixel_scale,
     );
 
