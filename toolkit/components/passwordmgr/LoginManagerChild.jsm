@@ -1404,33 +1404,40 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       usernameField,
       newPasswordField: passwordField,
     } = this._getFormFields(acForm, false, recipes);
-    if (usernameField == acInputField && passwordField) {
-      this._getLoginDataFromParent(acForm, {
-        guid: loginGUID,
-        showMasterPassword: false,
-      })
-        .then(({ form, loginsFound, recipes }) => {
-          if (!loginGUID) {
-            // not an explicit autocomplete menu selection, filter for exact matches only
-            loginsFound = this._filterForExactFormOriginLogins(
-              loginsFound,
-              acForm
-            );
-            // filter the list for exact matches with the username
-            // NOTE: this could be an empty string which is a valid username
-            let searchString = usernameField.value.toLowerCase();
-            loginsFound = loginsFound.filter(
-              l => l.username.toLowerCase() == searchString
-            );
-          }
-
-          this._fillForm(form, loginsFound, recipes, {
-            autofillForm: true,
-            clobberPassword: true,
-            userTriggered: true,
-          });
+    if (usernameField == acInputField) {
+      // Fill the form when a password field is present.
+      if (passwordField) {
+        this._getLoginDataFromParent(acForm, {
+          guid: loginGUID,
+          showMasterPassword: false,
         })
-        .catch(Cu.reportError);
+          .then(({ form, loginsFound, recipes }) => {
+            if (!loginGUID) {
+              // not an explicit autocomplete menu selection, filter for exact matches only
+              loginsFound = this._filterForExactFormOriginLogins(
+                loginsFound,
+                acForm
+              );
+              // filter the list for exact matches with the username
+              // NOTE: this could be an empty string which is a valid username
+              let searchString = usernameField.value.toLowerCase();
+              loginsFound = loginsFound.filter(
+                l => l.username.toLowerCase() == searchString
+              );
+            }
+
+            this._fillForm(form, loginsFound, recipes, {
+              autofillForm: true,
+              clobberPassword: true,
+              userTriggered: true,
+            });
+          })
+          .catch(Cu.reportError);
+        // Use `loginGUID !== null` to distinguish whether this is called when the
+        // field is filled or tabbed away from. For the latter, don't highlight the field.
+      } else if (loginGUID !== null) {
+        this._highlightFilledField(usernameField);
+      }
     } else {
       // Ignore the event, it's for some input we don't care about.
     }

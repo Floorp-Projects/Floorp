@@ -106,7 +106,10 @@ let setupScript = addLoginsInParent(
   ["login10", [origin, "https://autocomplete7", null,
                "testuser10", "testpass10", "uname", "pword"]],
 
-  ["login11", [origin, origin, null, "testuser11", "testpass11", "uname", "pword"]]);
+  ["login11", [origin, origin, null, "testuser11", "testpass11", "uname", "pword"]],
+
+  ["login12", [origin, "https://autocomplete8", null,
+               "testuser12", "testpass12", "uname", "pword"]]);
 </script>
 <p id="display"></p>
 
@@ -1018,6 +1021,35 @@ add_task(async function test_form13_stays_open_upon_empty_search() {
   // ensure the popup is closed for the next test
   synthesizeKey("KEY_Escape");
   await promiseACPopupClosed();
+});
+
+add_task(async function test_form14_username_only() {
+  await SimpleTest.promiseFocus(window);
+  let storageChanged = promiseStorageChanged(["removeLogin", "addLogin"]);
+  setupScript.sendAsyncMessage("removeLogin", "login10");
+  setupScript.sendAsyncMessage("addLogin", "login12");
+  await storageChanged;
+
+  await setFormAndWaitForFieldFilled(`
+    <form id="form14" action="https://autocomplete8" onsubmit="return false;" autocomplete="off">
+      <input  type="email"       name="uname" autocomplete="username" value="prefilled">
+      <button type="submit">Submit</button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "prefilled"});
+
+  uname = $_(14, "uname");
+  pword = {value: ""};
+  checkLoginForm(uname, "prefilled", pword, "");
+  restoreForm();
+  let shownPromise = promiseACShown();
+  synthesizeKey("KEY_ArrowDown"); // open
+  await shownPromise;
+
+  // Check first entry
+  synthesizeKey("KEY_ArrowDown");
+  checkLoginForm(uname, "", pword, ""); // value shouldn't update
+  synthesizeKey("KEY_Enter");
+  await promiseACPopupClosed();
+  checkLoginForm(uname, "testuser12", pword, "");
 });
 </script>
 </pre>
