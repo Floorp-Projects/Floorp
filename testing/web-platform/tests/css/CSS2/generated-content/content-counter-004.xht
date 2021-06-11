@@ -9,8 +9,11 @@
   <link rel="match" href="content-counter-004-ref.xht"/>
   <style type="text/css">
 
+  div { white-space: nowrap; }
+
+
   #test { counter-reset: c; color: blue; }
-  #test span { display: block; counter-increment: c; }
+  #test span { counter-increment: c; }
   #test span:before { content: counter(c, square); }
 
   </style>

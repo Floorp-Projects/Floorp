@@ -268,8 +268,8 @@ nsIFrame* NS_NewScrollbarButtonFrame(PresShell* aPresShell,
                                      ComputedStyle* aStyle);
 
 nsIFrame* NS_NewImageFrameForContentProperty(PresShell*, ComputedStyle*);
+
 nsIFrame* NS_NewImageFrameForGeneratedContentIndex(PresShell*, ComputedStyle*);
-nsIFrame* NS_NewImageFrameForListStyleImage(PresShell*, ComputedStyle*);
 
 // Returns true if aFrame is an anonymous flex/grid item.
 static inline bool IsAnonymousFlexOrGridItem(const nsIFrame* aFrame) {
@@ -1600,66 +1600,6 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
   return nullptr;
 }
 
-void nsCSSFrameConstructor::CreateGeneratedContentFromListStyle(
-    nsFrameConstructorState& aState, const ComputedStyle& aPseudoStyle,
-    const FunctionRef<void(nsIContent*)> aAddChild) {
-  const nsStyleList* styleList = aPseudoStyle.StyleList();
-  if (!styleList->mListStyleImage.IsNone()) {
-    RefPtr<nsIContent> child =
-        GeneratedImageContent::CreateForListStyleImage(*mDocument);
-    aAddChild(child);
-    child = CreateGenConTextNode(aState, u" "_ns, nullptr);
-    aAddChild(child);
-    return;
-  }
-  CreateGeneratedContentFromListStyleType(aState, aPseudoStyle, aAddChild);
-}
-
-void nsCSSFrameConstructor::CreateGeneratedContentFromListStyleType(
-    nsFrameConstructorState& aState, const ComputedStyle& aPseudoStyle,
-    const FunctionRef<void(nsIContent*)> aAddChild) {
-  const nsStyleList* styleList = aPseudoStyle.StyleList();
-  CounterStyle* counterStyle =
-      mPresShell->GetPresContext()->CounterStyleManager()->ResolveCounterStyle(
-          styleList->mCounterStyle);
-  bool needUseNode = false;
-  switch (counterStyle->GetStyle()) {
-    case NS_STYLE_LIST_STYLE_NONE:
-      return;
-    case NS_STYLE_LIST_STYLE_DISC:
-    case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_SQUARE:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
-      break;
-    default:
-      const auto* anonStyle = counterStyle->AsAnonymous();
-      if (!anonStyle || !anonStyle->IsSingleString()) {
-        needUseNode = true;
-      }
-  }
-
-  auto node = MakeUnique<nsCounterUseNode>(nsCounterUseNode::ForLegacyBullet,
-                                           styleList->mCounterStyle);
-  if (!needUseNode) {
-    nsAutoString text;
-    node->GetText(WritingMode(&aPseudoStyle), counterStyle, text);
-    // Note that we're done with 'node' in this case.  It's not inserted into
-    // any list so it's deleted when we return.
-    RefPtr<nsIContent> child = CreateGenConTextNode(aState, text, nullptr);
-    aAddChild(child);
-    return;
-  }
-
-  nsCounterList* counterList =
-      mCounterManager.CounterListFor(nsGkAtoms::list_item);
-  auto initializer = MakeUnique<nsGenConInitializer>(
-      std::move(node), counterList, &nsCSSFrameConstructor::CountersDirty);
-  RefPtr<nsIContent> child =
-      CreateGenConTextNode(aState, EmptyString(), std::move(initializer));
-  aAddChild(child);
-}
-
 /*
  * aParentFrame - the frame that should be the parent of the generated
  *   content.  This is the frame for the corresponding content node,
@@ -1720,10 +1660,8 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
       MOZ_ASSERT_UNREACHABLE("unexpected aPseudoElement");
   }
 
-  // |ProbePseudoElementStyle| checked the 'display' property and the
-  // |ContentCount()| of the 'content' property for us, and for ::marker
-  // also that we have either a 'list-style-type' or 'list-style-image'
-  // non-initial value in case we have no 'content'.
+  // |ProbePseudoStyleFor| checked the 'display' property and the
+  // |ContentCount()| of the 'content' property for us.
   RefPtr<NodeInfo> nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(
       elemName, nullptr, kNameSpaceID_None, nsINode::ELEMENT_NODE);
   RefPtr<Element> container;
@@ -1766,31 +1704,26 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
     pseudoStyle = ServoStyleSet::ResolveServoStyle(*container);
   }
 
-  auto AppendChild = [&container, this](nsIContent* aChild) {
+  uint32_t contentCount = pseudoStyle->StyleContent()->ContentCount();
+  for (uint32_t contentIndex = 0; contentIndex < contentCount; contentIndex++) {
+    nsCOMPtr<nsIContent> content = CreateGeneratedContent(
+        aState, aOriginatingElement, *pseudoStyle, contentIndex);
+    if (!content) {
+      continue;
+    }
     // We don't strictly have to set NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE
     // here; it would get set under AppendChildTo.  But AppendChildTo might
     // think that we're going from not being anonymous to being anonymous and
     // do some extra work; setting the flag here avoids that.
-    aChild->SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
-    container->AppendChildTo(aChild, false, IgnoreErrors());
-    if (auto* childElement = Element::FromNode(aChild)) {
+    content->SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
+    container->AppendChildTo(content, false, IgnoreErrors());
+    if (auto* element = Element::FromNode(content)) {
       // If we created any children elements, Servo needs to traverse them, but
       // the root is already set up.
-      mPresShell->StyleSet()->StyleNewSubtree(childElement);
-    }
-  };
-  const uint32_t contentCount = pseudoStyle->StyleContent()->ContentCount();
-  for (uint32_t contentIndex = 0; contentIndex < contentCount; contentIndex++) {
-    if (RefPtr<nsIContent> content = CreateGeneratedContent(
-            aState, aOriginatingElement, *pseudoStyle, contentIndex)) {
-      AppendChild(content);
+      mPresShell->StyleSet()->StyleNewSubtree(element);
     }
   }
 
-  // If a ::marker has no 'content' then generate it from its 'list-style-*'.
-  if (contentCount == 0 && aPseudoElement == PseudoStyleType::marker) {
-    CreateGeneratedContentFromListStyle(aState, *pseudoStyle, AppendChild);
-  }
   AddFrameConstructionItemsInternal(aState, container, aParentFrame, true,
                                     pseudoStyle, {ItemFlag::IsGeneratedContent},
                                     aItems);
@@ -3421,13 +3354,6 @@ nsCSSFrameConstructor::FindGeneratedImageData(const Element& aElement,
     return nullptr;
   }
 
-  auto& generatedContent = static_cast<const GeneratedImageContent&>(aElement);
-  if (generatedContent.IsForListStyleImageMarker()) {
-    static const FrameConstructionData sImgData =
-        SIMPLE_FCDATA(NS_NewImageFrameForListStyleImage);
-    return &sImgData;
-  }
-
   static const FrameConstructionData sImgData =
       SIMPLE_FCDATA(NS_NewImageFrameForGeneratedContentIndex);
   return &sImgData;
@@ -3878,6 +3804,16 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
                                 columnSpanSiblings);
         }
       }
+    }
+  }
+
+  if (computedStyle->GetPseudoType() == PseudoStyleType::marker &&
+      newFrame->IsBulletFrame()) {
+    MOZ_ASSERT(!computedStyle->StyleContent()->ContentCount());
+    auto* node = new nsCounterUseNode(nsCounterUseNode::ForLegacyBullet);
+    auto* list = mCounterManager.CounterListFor(nsGkAtoms::list_item);
+    if (node->InitBullet(list, newFrame)) {
+      CountersDirty();
     }
   }
 
@@ -5295,6 +5231,16 @@ nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
                                           ComputedStyle& aStyle,
                                           nsIFrame* aParentFrame,
                                           ItemFlags aFlags) {
+  // A ::marker pseudo creates a nsBulletFrame, unless 'content' was set.
+  if (aStyle.GetPseudoType() == PseudoStyleType::marker &&
+      aStyle.StyleContent()->ContentCount() == 0) {
+    static const FrameConstructionData data = FCDATA_DECL(
+        FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH |
+            FCDATA_DISALLOW_GENERATED_CONTENT | FCDATA_IS_LINE_PARTICIPANT |
+            FCDATA_IS_INLINE | FCDATA_USE_CHILD_ITEMS,
+        NS_NewBulletFrame);
+    return &data;
+  }
   switch (aElement.GetNameSpaceID()) {
     case kNameSpaceID_XHTML:
       return FindHTMLData(aElement, aParentFrame, aStyle);
@@ -7115,48 +7061,6 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 
       frameType = insertion.mParentFrame->Type();
     }
-  }
-
-  // This handles fallback to 'list-style-type' when a 'list-style-image' fails
-  // to load.
-  if (aStartChild->IsInNativeAnonymousSubtree() &&
-      aStartChild->IsHTMLElement(nsGkAtoms::mozgeneratedcontentimage)) {
-    MOZ_ASSERT(isSingleInsert);
-    MOZ_ASSERT(insertion.mParentFrame->Style()->GetPseudoType() ==
-                   PseudoStyleType::marker,
-               "we can only handle ::marker fallback for now");
-    nsIContent* const nextSibling = aStartChild->GetNextSibling();
-    MOZ_ASSERT(nextSibling && nextSibling->IsText(),
-               "expected a text node after the list-style-image image");
-    RemoveFrame(kPrincipalList, nextSibling->GetPrimaryFrame());
-    auto* const container = aStartChild->GetParent()->AsElement();
-    nsIContent* firstNewChild = nullptr;
-    auto InsertChild = [this, container, nextSibling,
-                        &firstNewChild](RefPtr<nsIContent>&& aChild) {
-      // We don't strictly have to set NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE
-      // here; it would get set under AppendChildTo.  But AppendChildTo might
-      // think that we're going from not being anonymous to being anonymous and
-      // do some extra work; setting the flag here avoids that.
-      aChild->SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
-      container->InsertChildBefore(aChild, nextSibling, false, IgnoreErrors());
-      if (auto* childElement = Element::FromNode(aChild)) {
-        // If we created any children elements, Servo needs to traverse them,
-        // but the root is already set up.
-        mPresShell->StyleSet()->StyleNewSubtree(childElement);
-      }
-      if (!firstNewChild) {
-        firstNewChild = aChild;
-      }
-    };
-    CreateGeneratedContentFromListStyleType(
-        state, *insertion.mParentFrame->Style(), InsertChild);
-    if (!firstNewChild) {
-      // No fallback content - we're done.
-      return;
-    }
-    aStartChild = firstNewChild;
-    MOZ_ASSERT(firstNewChild->GetNextSibling() == nextSibling,
-               "list-style-type should only create one child");
   }
 
   AutoFrameConstructionItemList items(this);
@@ -9671,13 +9575,6 @@ void nsCSSFrameConstructor::ProcessChildren(
           listItem->SetMarkerFrameForListItem(childFrame);
           MOZ_ASSERT(listItem->HasAnyStateBits(
                          NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER) == isOutsideMarker);
-#ifdef ACCESSIBILITY
-          if (nsAccessibilityService* accService =
-                  PresShell::GetAccessibilityService()) {
-            auto* marker = markerFrame->GetContent();
-            accService->ContentRangeInserted(mPresShell, marker, nullptr);
-          }
-#endif
           break;
         }
       }

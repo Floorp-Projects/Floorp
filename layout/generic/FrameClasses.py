@@ -13,6 +13,7 @@ FRAME_CLASSES = [
     Frame("nsBlockFrame", "Block", NOT_LEAF),
     Frame("nsBox", "None", NOT_LEAF),
     Frame("nsBoxFrame", "Box", NOT_LEAF),
+    Frame("nsBulletFrame", "Bullet", LEAF),
     Frame("nsButtonBoxFrame", "Box", NOT_LEAF),
     Frame("nsCanvasFrame", "Canvas", NOT_LEAF),
     Frame("nsCheckboxRadioFrame", "CheckboxRadio", LEAF),

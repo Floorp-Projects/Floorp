@@ -34,6 +34,7 @@ struct nsGenConNode : public mozilla::LinkedListElement<nsGenConNode> {
   // null for:
   //  * content: no-open-quote / content: no-close-quote
   //  * counter nodes for increments and resets
+  //  * counter nodes for bullets (mPseudoFrame->IsBulletFrame()).
   RefPtr<nsTextNode> mText;
 
   explicit nsGenConNode(int32_t aContentIndex)
@@ -64,9 +65,12 @@ struct nsGenConNode : public mozilla::LinkedListElement<nsGenConNode> {
   void CheckFrameAssertions() {
     NS_ASSERTION(
         mContentIndex < int32_t(mPseudoFrame->StyleContent()->ContentCount()) ||
-            // Special-case for the USE node created for the legacy markers,
+            // Special-case for the use node created for the legacy markers,
             // which don't use the content property.
-            mContentIndex == 0,
+            (mPseudoFrame->IsBulletFrame() && mContentIndex == 0 &&
+             mPseudoFrame->Style()->GetPseudoType() ==
+                 mozilla::PseudoStyleType::marker &&
+             !mPseudoFrame->StyleContent()->ContentCount()),
         "index out of range");
     // We allow negative values of mContentIndex for 'counter-reset' and
     // 'counter-increment'.
@@ -107,11 +111,6 @@ class nsGenConList {
   // Destroy all nodes with aFrame as parent. Returns true if some nodes
   // have been destroyed; otherwise false.
   bool DestroyNodesFor(nsIFrame* aFrame);
-
-  // Return the first node for aFrame on this list, or nullptr.
-  nsGenConNode* GetFirstNodeFor(nsIFrame* aFrame) const {
-    return mNodes.Get(aFrame);
-  }
 
   // Return true if |aNode1| is after |aNode2|.
   static bool NodeAfter(const nsGenConNode* aNode1, const nsGenConNode* aNode2);
