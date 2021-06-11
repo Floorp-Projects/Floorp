@@ -242,16 +242,20 @@ class GeckoViewPermission {
     const dispatcher = GeckoViewUtils.getDispatcherForWindow(
       aRequest.window ? aRequest.window : aRequest.element.ownerGlobal
     );
+    const principal =
+      perm.type == "storage-access"
+        ? aRequest.principal
+        : aRequest.topLevelPrincipal;
     dispatcher
       .sendRequestForResult({
         type: "GeckoView:ContentPermission",
-        uri: aRequest.principal.URI.displaySpec,
-        principal: E10SUtils.serializePrincipal(aRequest.principal),
+        uri: principal.URI.displaySpec,
+        thirdPartyOrigin: aRequest.principal.origin,
+        principal: E10SUtils.serializePrincipal(principal),
         perm: perm.type,
         value: perm.capability,
-        contextId:
-          aRequest.principal.originAttributes.geckoViewSessionContextId ?? null,
-        privateMode: aRequest.principal.privateBrowsingId != 0,
+        contextId: principal.originAttributes.geckoViewSessionContextId ?? null,
+        privateMode: principal.privateBrowsingId != 0,
       })
       .then(value => {
         if (value == Services.perms.ALLOW_ACTION) {
@@ -269,11 +273,22 @@ class GeckoViewPermission {
         return /* value */ Services.perms.DENY_ACTION;
       })
       .then(value => {
+        // The storage access code adds itself to the perm manager; no need for us to do it.
+        if (perm.type == "storage-access") {
+          if (value == Services.perms.ALLOW_ACTION) {
+            aRequest.allow({ "storage-access": "allow" });
+          } else {
+            aRequest.cancel();
+          }
+          aRequest = undefined;
+          return;
+        }
+
         (value == Services.perms.ALLOW_ACTION
           ? aRequest.allow
           : aRequest.cancel)();
         Services.perms.addFromPrincipal(
-          aRequest.principal,
+          principal,
           perm.type,
           value,
           Services.perms.EXPIRE_NEVER
