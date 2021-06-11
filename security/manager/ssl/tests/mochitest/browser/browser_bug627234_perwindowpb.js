@@ -38,7 +38,6 @@ function test() {
         ].createInstance(Ci.nsITransportSecurityInfo);
         uri = aWindow.Services.io.newURI("https://localhost/img.png");
         gSSService.processHeader(
-          Ci.nsISiteSecurityService.HEADER_HSTS,
           uri,
           "max-age=1000",
           secInfo,
@@ -46,11 +45,7 @@ function test() {
           Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
         );
         ok(
-          gSSService.isSecureURI(
-            Ci.nsISiteSecurityService.HEADER_HSTS,
-            uri,
-            privacyFlags(aIsPrivateMode)
-          ),
+          gSSService.isSecureURI(uri, privacyFlags(aIsPrivateMode)),
           "checking sts host"
         );
 
@@ -79,7 +74,7 @@ function test() {
       aWin.close();
     });
     uri = Services.io.newURI("http://localhost");
-    gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
+    gSSService.resetState(uri, 0);
   });
 
   // test first when on private mode

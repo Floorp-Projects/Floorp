@@ -12,14 +12,12 @@ function checkStateRead(aSubject, aTopic, aData) {
   // nonexistent.example.com should never be an HSTS host
   ok(
     !gSSService.isSecureURI(
-      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://nonexistent.example.com"),
       0
     )
   );
   ok(
     gSSService.isSecureURI(
-      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://includesubdomains.preloaded.test"),
       0
     )
@@ -28,7 +26,6 @@ function checkStateRead(aSubject, aTopic, aData) {
   // want to make sure that test hasn't interfered with this one.
   ok(
     !gSSService.isSecureURI(
-      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://notexpired.example.com"),
       0
     )
