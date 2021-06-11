@@ -51,7 +51,6 @@ pub struct Slice {
 }
 
 // invalidation reason CSS colors
-static CSS_FRACTIONAL_OFFSET: &str       = "fill:#4040c0;fill-opacity:0.1;";
 static CSS_BACKGROUND_COLOR: &str        = "fill:#10c070;fill-opacity:0.1;";
 static CSS_SURFACE_OPACITY_CHANNEL: &str = "fill:#c040c0;fill-opacity:0.1;";
 static CSS_NO_TEXTURE: &str              = "fill:#c04040;fill-opacity:0.1;";
@@ -104,7 +103,6 @@ fn tile_to_svg(key: TileOffset,
 
     let tile_fill =
         match tile.invalidation_reason {
-            Some(InvalidationReason::FractionalOffset { .. }) => CSS_FRACTIONAL_OFFSET.to_string(),
             Some(InvalidationReason::BackgroundColor { .. }) => CSS_BACKGROUND_COLOR.to_string(),
             Some(InvalidationReason::SurfaceOpacityChanged { .. }) => CSS_SURFACE_OPACITY_CHANNEL.to_string(),
             Some(InvalidationReason::NoTexture) => CSS_NO_TEXTURE.to_string(),
@@ -150,11 +148,6 @@ fn tile_to_svg(key: TileOffset,
         // go through most reasons individually so we can print something nicer than
         // the default debug formatting of old and new:
         match reason {
-            InvalidationReason::FractionalOffset { old, new } => {
-                invalidation_report.push_str(
-                    &format!("<b>FractionalOffset</b> changed from ({},{}) to ({},{})",
-                             old.x, old.y, new.x, new.y));
-            },
             InvalidationReason::BackgroundColor { old, new } => {
                 fn to_str(c: &Option<ColorF>) -> String {
                     if let Some(c) = c {
