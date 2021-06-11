@@ -5027,15 +5027,6 @@ void nsTextFrame::GetTextDecorations(
       break;
     }
 
-    if (context->GetPseudoType() == PseudoStyleType::marker &&
-        (context->StyleList()->mListStylePosition ==
-             NS_STYLE_LIST_STYLE_POSITION_OUTSIDE ||
-         !context->StyleDisplay()->IsInlineOutsideStyle())) {
-      // Outside ::marker pseudos, and inside markers that aren't inlines, don't
-      // have text decorations.
-      break;
-    }
-
     const nsStyleTextReset* const styleTextReset = context->StyleTextReset();
     const StyleTextDecorationLine textDecorations =
         styleTextReset->mTextDecorationLine;
