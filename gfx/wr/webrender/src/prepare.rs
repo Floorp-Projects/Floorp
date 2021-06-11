@@ -1581,7 +1581,7 @@ fn get_clipped_device_rect(
     }
 
     let clipped = raster_rect_to_device_pixels(
-        clipped_raster_rect.to_rect(),
+        clipped_raster_rect,
         device_pixel_scale,
     );
 
