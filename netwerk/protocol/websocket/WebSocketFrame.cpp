@@ -68,14 +68,11 @@ WebSocketFrame::GetPayload(nsACString& aValue) {
 }
 
 WebSocketFrameData::WebSocketFrameData()
-    : mTimeStamp(0),
-      mFinBit(false),
+    : mFinBit(false),
       mRsvBit1(false),
       mRsvBit2(false),
       mRsvBit3(false),
-      mMaskBit(false),
-      mOpCode(0),
-      mMask(0) {
+      mMaskBit(false) {
   MOZ_COUNT_CTOR(WebSocketFrameData);
 }
 

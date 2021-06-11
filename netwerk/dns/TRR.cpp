@@ -81,10 +81,7 @@ TRR::TRR(AHostResolver* aResolver, nsHostRecord* aRec, nsCString& aHost,
 
 // used on push
 TRR::TRR(AHostResolver* aResolver, bool aPB)
-    : mozilla::Runnable("TRR"),
-      mHostResolver(aResolver),
-      mType(TRRTYPE_A),
-      mPB(aPB) {
+    : mozilla::Runnable("TRR"), mHostResolver(aResolver), mPB(aPB) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess() || XRE_IsSocketProcess(),
                         "TRR must be in parent or socket process");
 }

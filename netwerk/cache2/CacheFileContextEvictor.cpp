@@ -28,8 +28,7 @@ const uint32_t kContextEvictionPrefixLength =
 
 bool CacheFileContextEvictor::sDiskAlreadySearched = false;
 
-CacheFileContextEvictor::CacheFileContextEvictor()
-    : mEvicting(false), mIndexIsUpToDate(false) {
+CacheFileContextEvictor::CacheFileContextEvictor() {
   LOG(("CacheFileContextEvictor::CacheFileContextEvictor() [this=%p]", this));
 }
 

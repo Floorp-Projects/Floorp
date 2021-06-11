@@ -18,7 +18,7 @@ class nsDownloader : public nsIDownloader {
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  nsDownloader() : mLocationIsTemp(false) {}
+  nsDownloader() = default;
 
  protected:
   virtual ~nsDownloader();
@@ -30,7 +30,7 @@ class nsDownloader : public nsIDownloader {
   nsCOMPtr<nsIDownloadObserver> mObserver;
   nsCOMPtr<nsIFile> mLocation;
   nsCOMPtr<nsIOutputStream> mSink;
-  bool mLocationIsTemp;
+  bool mLocationIsTemp{false};
 };
 
 #endif  // nsDownloader_h__

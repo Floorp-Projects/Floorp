@@ -34,7 +34,7 @@ class nsAsyncRedirectVerifyHelper final
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
  public:
-  nsAsyncRedirectVerifyHelper();
+  nsAsyncRedirectVerifyHelper() = default;
 
   /*
    * Calls AsyncOnChannelRedirect() on the given sink with the given
@@ -69,12 +69,12 @@ class nsAsyncRedirectVerifyHelper final
  protected:
   nsCOMPtr<nsIChannel> mOldChan;
   nsCOMPtr<nsIChannel> mNewChan;
-  uint32_t mFlags;
-  bool mWaitingForRedirectCallback;
+  uint32_t mFlags{0};
+  bool mWaitingForRedirectCallback{false};
   nsCOMPtr<nsIEventTarget> mCallbackEventTarget;
-  bool mCallbackInitiated;
-  int32_t mExpectedCallbacks;
-  nsresult mResult;  // value passed to callback
+  bool mCallbackInitiated{false};
+  int32_t mExpectedCallbacks{0};
+  nsresult mResult{NS_OK};  // value passed to callback
 
   void InitCallback();
 

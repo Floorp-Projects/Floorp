@@ -275,7 +275,7 @@ class FeatureData {
   };
 
  public:
-  FeatureData();
+  FeatureData() = default;
   ~FeatureData();
 
   nsresult Initialize(FeatureTask* aTask, nsIChannel* aChannel,
@@ -291,7 +291,7 @@ class FeatureData {
                           nsIUrlClassifierFeature::listType aListType,
                           nsTArray<RefPtr<TableData>>& aList);
 
-  State mState;
+  State mState{eUnclassified};
   nsCOMPtr<nsIUrlClassifierFeature> mFeature;
   nsCOMPtr<nsIChannel> mChannel;
 
@@ -301,8 +301,6 @@ class FeatureData {
   // blocklist + entitylist.
   nsCString mHostInPrefTables[2];
 };
-
-FeatureData::FeatureData() : mState(eUnclassified) {}
 
 FeatureData::~FeatureData() {
   NS_ReleaseOnMainThread("FeatureData:mFeature", mFeature.forget());

@@ -48,17 +48,6 @@ using mozilla::Some;
 ////////////////////////////////////////////////////////////////////////////////
 // nsBufferedStream
 
-nsBufferedStream::nsBufferedStream()
-    : mBufferSize(0),
-      mBuffer(nullptr),
-      mBufferStartOffset(0),
-      mCursor(0),
-      mFillPoint(0),
-      mStream(nullptr),
-      mBufferDisabled(false),
-      mEOF(false),
-      mGetBufferCount(0) {}
-
 nsBufferedStream::~nsBufferedStream() { Close(); }
 
 NS_IMPL_ISUPPORTS(nsBufferedStream, nsITellableStream, nsISeekableStream)
@@ -312,15 +301,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
 NS_IMPL_CI_INTERFACE_GETTER(nsBufferedInputStream, nsIInputStream,
                             nsIBufferedInputStream, nsISeekableStream,
                             nsITellableStream, nsIStreamBufferAccess)
-
-nsBufferedInputStream::nsBufferedInputStream()
-    : nsBufferedStream(),
-      mMutex("nsBufferedInputStream::mMutex"),
-      mIsIPCSerializable(true),
-      mIsAsyncInputStream(false),
-      mIsCloneableInputStream(false),
-      mIsInputStreamLength(false),
-      mIsAsyncInputStreamLength(false) {}
 
 nsresult nsBufferedInputStream::Create(nsISupports* aOuter, REFNSIID aIID,
                                        void** aResult) {

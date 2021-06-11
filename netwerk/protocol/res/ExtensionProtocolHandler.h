@@ -189,7 +189,7 @@ class ExtensionProtocolHandler final
 
   // Set to true once we've already tried to load the dev repo path,
   // allowing for lazy initialization of |mDevRepo|.
-  bool mAlreadyCheckedDevRepo;
+  bool mAlreadyCheckedDevRepo{false};
 #endif /* XP_MACOSX */
 
 #if !defined(XP_WIN)
@@ -214,7 +214,7 @@ class ExtensionProtocolHandler final
 
   // Set to true once we've already read the AppDir, allowing for lazy
   // initialization of |mAppDir|.
-  bool mAlreadyCheckedAppDir;
+  bool mAlreadyCheckedAppDir{false};
 #endif /* !defined(XP_WIN) */
 
   // Used for opening JAR files off the main thread when we just need to
