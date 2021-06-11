@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDialogFragment
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -61,7 +60,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     private lateinit var browserTrayInteractor: BrowserTrayInteractor
     private lateinit var tabsTrayInteractor: TabsTrayInteractor
     private lateinit var tabsTrayController: DefaultTabsTrayController
-    private lateinit var behavior: BottomSheetBehavior<ConstraintLayout>
+    private lateinit var trayBehaviorManager: TabSheetBehaviorManager
 
     private val tabLayoutMediator = ViewBoundFeatureWrapper<TabLayoutMediator>()
     private val tabCounterBinding = ViewBoundFeatureWrapper<TabCounterBinding>()
@@ -85,10 +84,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         savedInstanceState: Bundle?
     ): View {
         val containerView = inflater.inflate(R.layout.fragment_tab_tray_dialog, container, false)
-        val view: View = LayoutInflater.from(containerView.context)
-            .inflate(R.layout.component_tabstray2, containerView as ViewGroup, true)
-
-        behavior = BottomSheetBehavior.from(view.tab_wrapper)
+        inflater.inflate(R.layout.component_tabstray2, containerView as ViewGroup, true)
 
         tabsTrayStore = StoreProvider.get(this) { TabsTrayStore() }
 
@@ -162,7 +158,8 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             dismissAllowingStateLoss()
         }
 
-        behavior.setUpTrayBehavior(
+        trayBehaviorManager = TabSheetBehaviorManager(
+            behavior = BottomSheetBehavior.from(view.tab_wrapper),
             isLandscape = requireContext().resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
             maxNumberOfTabs = max(
                 requireContext().components.core.store.state.normalTabs.size,
