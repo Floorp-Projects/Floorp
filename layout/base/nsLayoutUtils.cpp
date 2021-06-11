@@ -7487,7 +7487,8 @@ void nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame* aSubtreeRoot) {
 
   // Also assert that text frames map no text.
   int32_t start, end;
-  aSubtreeRoot->GetOffsets(start, end);
+  nsresult rv = aSubtreeRoot->GetOffsets(start, end);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GetOffsets failed");
   // In some cases involving :first-letter, we'll partially unlink a
   // continuation in the middle of a continuation chain from its
   // previous and next continuations before destroying it, presumably so
