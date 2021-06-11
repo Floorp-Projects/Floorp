@@ -45,7 +45,7 @@ static LazyLogModule gSSSLog("nsSSService");
 
 #define SSSLOG(args) MOZ_LOG(gSSSLog, mozilla::LogLevel::Debug, args)
 
-const char kHSTSKeySuffix[] = ":HSTS";
+static const nsLiteralCString kHSTSKeySuffix = ":HSTS"_ns;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -286,7 +286,7 @@ nsresult nsSiteSecurityService::GetHost(nsIURI* aURI, nsACString& aResult) {
   return NS_OK;
 }
 
-static void SetStorageKey(const nsACString& hostname, uint32_t aType,
+static void SetStorageKey(const nsACString& hostname,
                           const OriginAttributes& aOriginAttributes,
                           /*out*/ nsAutoCString& storageKey) {
   storageKey = hostname;
@@ -298,13 +298,7 @@ static void SetStorageKey(const nsACString& hostname, uint32_t aType,
   nsAutoCString originAttributesSuffix;
   originAttributesNoUserContext.CreateSuffix(originAttributesSuffix);
   storageKey.Append(originAttributesSuffix);
-  switch (aType) {
-    case nsISiteSecurityService::HEADER_HSTS:
-      storageKey.AppendASCII(kHSTSKeySuffix);
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("SSS:SetStorageKey got invalid type");
-  }
+  storageKey.Append(kHSTSKeySuffix);
 }
 
 // Expire times are in millis.  Since Headers max-age is in seconds, and
@@ -314,17 +308,16 @@ static int64_t ExpireTimeFromMaxAge(uint64_t maxAge) {
 }
 
 nsresult nsSiteSecurityService::SetHSTSState(
-    uint32_t aType, const char* aHost, int64_t maxage, bool includeSubdomains,
-    uint32_t flags, SecurityPropertyState aHSTSState,
-    SecurityPropertySource aSource, const OriginAttributes& aOriginAttributes) {
+    const char* aHost, int64_t maxage, bool includeSubdomains, uint32_t flags,
+    SecurityPropertyState aHSTSState, SecurityPropertySource aSource,
+    const OriginAttributes& aOriginAttributes) {
   nsAutoCString hostname(aHost);
   bool isPreload = (aSource == SourcePreload);
   // If max-age is zero, the host is no longer considered HSTS. If the host was
   // preloaded, we store an entry indicating that this host is not HSTS, causing
   // the preloaded information to be ignored.
   if (maxage == 0) {
-    return MarkHostAsNotHSTS(aType, hostname, flags, isPreload,
-                             aOriginAttributes);
+    return MarkHostAsNotHSTS(hostname, flags, isPreload, aOriginAttributes);
   }
 
   MOZ_ASSERT(aHSTSState == SecurityPropertySet,
@@ -345,7 +338,7 @@ nsresult nsSiteSecurityService::SetHSTSState(
                                              ? mozilla::DataStorage_Private
                                              : mozilla::DataStorage_Persistent;
   nsAutoCString storageKey;
-  SetStorageKey(hostname, aType, aOriginAttributes, storageKey);
+  SetStorageKey(hostname, aOriginAttributes, storageKey);
   SSSLOG(("SSS: storing HSTS site entry for %s", hostname.get()));
   nsCString value = mSiteStateStorage->Get(storageKey, storageType);
   RefPtr<SiteHSTSState> curSiteState =
@@ -367,12 +360,8 @@ nsresult nsSiteSecurityService::SetHSTSState(
 // entry that indicates this host is not HSTS to prevent the implementation
 // using the preloaded information.
 nsresult nsSiteSecurityService::MarkHostAsNotHSTS(
-    uint32_t aType, const nsAutoCString& aHost, uint32_t aFlags,
-    bool aIsPreload, const OriginAttributes& aOriginAttributes) {
-  // This only applies to HSTS.
-  if (aType != nsISiteSecurityService::HEADER_HSTS) {
-    return NS_ERROR_INVALID_ARG;
-  }
+    const nsAutoCString& aHost, uint32_t aFlags, bool aIsPreload,
+    const OriginAttributes& aOriginAttributes) {
   if (aIsPreload && aOriginAttributes != OriginAttributes()) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -382,7 +371,7 @@ nsresult nsSiteSecurityService::MarkHostAsNotHSTS(
                                              ? mozilla::DataStorage_Private
                                              : mozilla::DataStorage_Persistent;
   nsAutoCString storageKey;
-  SetStorageKey(aHost, aType, aOriginAttributes, storageKey);
+  SetStorageKey(aHost, aOriginAttributes, storageKey);
 
   if (GetPreloadStatus(aHost)) {
     SSSLOG(("SSS: storing knockout entry for %s", aHost.get()));
@@ -402,7 +391,7 @@ nsresult nsSiteSecurityService::MarkHostAsNotHSTS(
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::ResetState(uint32_t aType, nsIURI* aURI, uint32_t aFlags,
+nsSiteSecurityService::ResetState(nsIURI* aURI, uint32_t aFlags,
                                   JS::HandleValue aOriginAttributes,
                                   JSContext* aCx, uint8_t aArgc) {
   if (!XRE_IsParentProcess()) {
@@ -423,7 +412,7 @@ nsSiteSecurityService::ResetState(uint32_t aType, nsIURI* aURI, uint32_t aFlags,
     }
   }
 
-  return ResetStateInternal(aType, aURI, aFlags, originAttributes);
+  return ResetStateInternal(aURI, aFlags, originAttributes);
 }
 
 // Helper function to reset stored state of the given type for the host
@@ -433,12 +422,8 @@ nsSiteSecurityService::ResetState(uint32_t aType, nsIURI* aURI, uint32_t aFlags,
 // header with max-age=0 (meaning preloaded information will then not be used
 // for that host).
 nsresult nsSiteSecurityService::ResetStateInternal(
-    uint32_t aType, nsIURI* aURI, uint32_t aFlags,
-    const OriginAttributes& aOriginAttributes) {
+    nsIURI* aURI, uint32_t aFlags, const OriginAttributes& aOriginAttributes) {
   if (!aURI) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  if (aType != nsISiteSecurityService::HEADER_HSTS) {
     return NS_ERROR_INVALID_ARG;
   }
   nsAutoCString hostname;
@@ -447,7 +432,7 @@ nsresult nsSiteSecurityService::ResetStateInternal(
     return rv;
   }
   nsAutoCString storageKey;
-  SetStorageKey(hostname, aType, aOriginAttributes, storageKey);
+  SetStorageKey(hostname, aOriginAttributes, storageKey);
   bool isPrivate = aFlags & nsISocketProvider::NO_PERMANENT_STORAGE;
   mozilla::DataStorageType storageType = isPrivate
                                              ? mozilla::DataStorage_Private
@@ -456,7 +441,7 @@ nsresult nsSiteSecurityService::ResetStateInternal(
   return NS_OK;
 }
 
-static bool HostIsIPAddress(const nsCString& hostname) {
+bool nsSiteSecurityService::HostIsIPAddress(const nsCString& hostname) {
   PRNetAddr hostAddr;
   PRErrorCode prv = PR_StringToNetAddr(hostname.get(), &hostAddr);
   return (prv == PR_SUCCESS);
@@ -464,7 +449,7 @@ static bool HostIsIPAddress(const nsCString& hostname) {
 
 NS_IMETHODIMP
 nsSiteSecurityService::ProcessHeaderScriptable(
-    uint32_t aType, nsIURI* aSourceURI, const nsACString& aHeader,
+    nsIURI* aSourceURI, const nsACString& aHeader,
     nsITransportSecurityInfo* aSecInfo, uint32_t aFlags, uint32_t aSource,
     JS::HandleValue aOriginAttributes, uint64_t* aMaxAge,
     bool* aIncludeSubdomains, uint32_t* aFailureResult, JSContext* aCx,
@@ -476,14 +461,14 @@ nsSiteSecurityService::ProcessHeaderScriptable(
       return NS_ERROR_INVALID_ARG;
     }
   }
-  return ProcessHeader(aType, aSourceURI, aHeader, aSecInfo, aFlags, aSource,
+  return ProcessHeader(aSourceURI, aHeader, aSecInfo, aFlags, aSource,
                        originAttributes, aMaxAge, aIncludeSubdomains,
                        aFailureResult);
 }
 
 NS_IMETHODIMP
 nsSiteSecurityService::ProcessHeader(
-    uint32_t aType, nsIURI* aSourceURI, const nsACString& aHeader,
+    nsIURI* aSourceURI, const nsACString& aHeader,
     nsITransportSecurityInfo* aSecInfo, uint32_t aFlags, uint32_t aHeaderSource,
     const OriginAttributes& aOriginAttributes, uint64_t* aMaxAge,
     bool* aIncludeSubdomains, uint32_t* aFailureResult) {
@@ -497,8 +482,6 @@ nsSiteSecurityService::ProcessHeader(
   if (aFailureResult) {
     *aFailureResult = nsISiteSecurityService::ERROR_UNKNOWN;
   }
-  NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS,
-                 NS_ERROR_NOT_IMPLEMENTED);
   SecurityPropertySource source =
       static_cast<SecurityPropertySource>(aHeaderSource);
   switch (source) {
@@ -511,23 +494,19 @@ nsSiteSecurityService::ProcessHeader(
   }
 
   NS_ENSURE_ARG(aSecInfo);
-  return ProcessHeaderInternal(aType, aSourceURI, PromiseFlatCString(aHeader),
+  return ProcessHeaderInternal(aSourceURI, PromiseFlatCString(aHeader),
                                aSecInfo, aFlags, source, aOriginAttributes,
                                aMaxAge, aIncludeSubdomains, aFailureResult);
 }
 
 nsresult nsSiteSecurityService::ProcessHeaderInternal(
-    uint32_t aType, nsIURI* aSourceURI, const nsCString& aHeader,
+    nsIURI* aSourceURI, const nsCString& aHeader,
     nsITransportSecurityInfo* aSecInfo, uint32_t aFlags,
     SecurityPropertySource aSource, const OriginAttributes& aOriginAttributes,
     uint64_t* aMaxAge, bool* aIncludeSubdomains, uint32_t* aFailureResult) {
   if (aFailureResult) {
     *aFailureResult = nsISiteSecurityService::ERROR_UNKNOWN;
   }
-  // Only HSTS is supported at the moment.
-  NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS,
-                 NS_ERROR_NOT_IMPLEMENTED);
-
   if (aMaxAge != nullptr) {
     *aMaxAge = 0;
   }
@@ -569,19 +548,12 @@ nsresult nsSiteSecurityService::ProcessHeaderInternal(
     return NS_OK;
   }
 
-  switch (aType) {
-    case nsISiteSecurityService::HEADER_HSTS:
-      rv = ProcessSTSHeader(aSourceURI, aHeader, aFlags, aSource,
-                            aOriginAttributes, aMaxAge, aIncludeSubdomains,
-                            aFailureResult);
-      break;
-    default:
-      MOZ_CRASH("unexpected header type");
-  }
-  return rv;
+  return ProcessSTSHeader(aSourceURI, aHeader, aFlags, aSource,
+                          aOriginAttributes, aMaxAge, aIncludeSubdomains,
+                          aFailureResult);
 }
 
-static uint32_t ParseSSSHeaders(uint32_t aType, const nsCString& aHeader,
+static uint32_t ParseSSSHeaders(const nsCString& aHeader,
                                 bool& foundIncludeSubdomains, bool& foundMaxAge,
                                 bool& foundUnrecognizedDirective,
                                 uint64_t& maxAge) {
@@ -675,16 +647,13 @@ nsresult nsSiteSecurityService::ProcessSTSHeader(
   }
   SSSLOG(("SSS: processing HSTS header '%s'", aHeader.get()));
 
-  const uint32_t aType = nsISiteSecurityService::HEADER_HSTS;
   bool foundMaxAge = false;
   bool foundIncludeSubdomains = false;
   bool foundUnrecognizedDirective = false;
   uint64_t maxAge = 0;
-  nsTArray<nsCString> unusedSHA256keys;  // Required for sane internal interface
 
-  uint32_t sssrv =
-      ParseSSSHeaders(aType, aHeader, foundIncludeSubdomains, foundMaxAge,
-                      foundUnrecognizedDirective, maxAge);
+  uint32_t sssrv = ParseSSSHeaders(aHeader, foundIncludeSubdomains, foundMaxAge,
+                                   foundUnrecognizedDirective, maxAge);
   if (sssrv != nsISiteSecurityService::Success) {
     if (aFailureResult) {
       *aFailureResult = sssrv;
@@ -707,8 +676,8 @@ nsresult nsSiteSecurityService::ProcessSTSHeader(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // record the successfully parsed header data.
-  rv = SetHSTSState(aType, hostname.get(), maxAge, foundIncludeSubdomains,
-                    aFlags, SecurityPropertySet, aSource, aOriginAttributes);
+  rv = SetHSTSState(hostname.get(), maxAge, foundIncludeSubdomains, aFlags,
+                    SecurityPropertySet, aSource, aOriginAttributes);
   if (NS_FAILED(rv)) {
     SSSLOG(("SSS: failed to set STS state"));
     if (aFailureResult) {
@@ -730,8 +699,7 @@ nsresult nsSiteSecurityService::ProcessSTSHeader(
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::IsSecureURIScriptable(uint32_t aType, nsIURI* aURI,
-                                             uint32_t aFlags,
+nsSiteSecurityService::IsSecureURIScriptable(nsIURI* aURI, uint32_t aFlags,
                                              JS::HandleValue aOriginAttributes,
                                              bool* aCached, uint32_t* aSource,
                                              JSContext* aCx, uint8_t aArgc,
@@ -743,30 +711,16 @@ nsSiteSecurityService::IsSecureURIScriptable(uint32_t aType, nsIURI* aURI,
       return NS_ERROR_INVALID_ARG;
     }
   }
-  return IsSecureURI(aType, aURI, aFlags, originAttributes, aCached, aSource,
-                     aResult);
+  return IsSecureURI(aURI, aFlags, originAttributes, aCached, aSource, aResult);
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::IsSecureURI(uint32_t aType, nsIURI* aURI,
-                                   uint32_t aFlags,
+nsSiteSecurityService::IsSecureURI(nsIURI* aURI, uint32_t aFlags,
                                    const OriginAttributes& aOriginAttributes,
                                    bool* aCached, uint32_t* aSource,
                                    bool* aResult) {
-  // Child processes are not allowed direct access to this.
-  if (!XRE_IsParentProcess() && aType != nsISiteSecurityService::HEADER_HSTS) {
-    MOZ_CRASH(
-        "Child process: no direct access to "
-        "nsISiteSecurityService::IsSecureURI for non-HSTS entries");
-  }
-
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG(aResult);
-
-  // Only HSTS and static pinning are supported.
-  NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS ||
-                     aType == nsISiteSecurityService::STATIC_PINNING,
-                 NS_ERROR_NOT_IMPLEMENTED);
 
   nsAutoCString hostname;
   nsresult rv = GetHost(aURI, hostname);
@@ -780,8 +734,8 @@ nsSiteSecurityService::IsSecureURI(uint32_t aType, nsIURI* aURI,
   SecurityPropertySource* source =
       BitwiseCast<SecurityPropertySource*>(aSource);
 
-  return IsSecureHost(aType, hostname, aFlags, aOriginAttributes, aCached,
-                      source, aResult);
+  return IsSecureHost(hostname, aFlags, aOriginAttributes, aCached, source,
+                      aResult);
 }
 
 // Checks if the given host is in the preload list.
@@ -837,17 +791,13 @@ bool nsSiteSecurityService::HostHasHSTSEntry(
                                              : mozilla::DataStorage_Persistent;
   nsAutoCString storageKey;
   SSSLOG(("Seeking HSTS entry for %s", aHost.get()));
-  SetStorageKey(aHost, nsISiteSecurityService::HEADER_HSTS, aOriginAttributes,
-                storageKey);
-  nsAutoCString preloadKey;
-  SetStorageKey(aHost, nsISiteSecurityService::HEADER_HSTS, OriginAttributes(),
-                preloadKey);
+  SetStorageKey(aHost, aOriginAttributes, storageKey);
   nsCString value = mSiteStateStorage->Get(storageKey, storageType);
   RefPtr<SiteHSTSState> siteState =
       new SiteHSTSState(aHost, aOriginAttributes, value);
   if (siteState->mHSTSState != SecurityPropertyUnset) {
     SSSLOG(("Found HSTS entry for %s", aHost.get()));
-    bool expired = siteState->IsExpired(nsISiteSecurityService::HEADER_HSTS);
+    bool expired = siteState->IsExpired();
     if (!expired) {
       SSSLOG(("Entry for %s is not expired", aHost.get()));
       if (siteState->mHSTSState == SecurityPropertySet) {
@@ -897,22 +847,10 @@ bool nsSiteSecurityService::HostHasHSTSEntry(
 }
 
 nsresult nsSiteSecurityService::IsSecureHost(
-    uint32_t aType, const nsACString& aHost, uint32_t aFlags,
+    const nsACString& aHost, uint32_t aFlags,
     const OriginAttributes& aOriginAttributes, bool* aCached,
     SecurityPropertySource* aSource, bool* aResult) {
-  // Child processes are not allowed direct access to this.
-  if (!XRE_IsParentProcess() && aType != nsISiteSecurityService::HEADER_HSTS) {
-    MOZ_CRASH(
-        "Child process: no direct access to "
-        "nsISiteSecurityService::IsSecureHost for non-HSTS entries");
-  }
-
   NS_ENSURE_ARG(aResult);
-
-  // Only HSTS and static pinning are supported.
-  NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS ||
-                     aType == nsISiteSecurityService::STATIC_PINNING,
-                 NS_ERROR_NOT_IMPLEMENTED);
 
   // set default in case if we can't find any STS information
   *aResult = false;
@@ -921,11 +859,6 @@ nsresult nsSiteSecurityService::IsSecureHost(
   const nsCString& flatHost = PromiseFlatCString(aHost);
   if (HostIsIPAddress(flatHost)) {
     return NS_OK;
-  }
-
-  if (aType == nsISiteSecurityService::STATIC_PINNING) {
-    return PublicKeyPinningService::HostHasPins(flatHost.get(),
-                                                mozilla::pkix::Now(), *aResult);
   }
 
   nsAutoCString host(
@@ -979,46 +912,28 @@ nsSiteSecurityService::ClearAll() {
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::Enumerate(uint32_t aType,
-                                 nsISimpleEnumerator** aEnumerator) {
+nsSiteSecurityService::Enumerate(nsISimpleEnumerator** aEnumerator) {
   NS_ENSURE_ARG(aEnumerator);
-
-  nsAutoCString keySuffix;
-  switch (aType) {
-    case nsISiteSecurityService::HEADER_HSTS:
-      keySuffix.AssignASCII(kHSTSKeySuffix);
-      break;
-    default:
-      return NS_ERROR_INVALID_ARG;
-  }
 
   nsTArray<mozilla::psm::DataStorageItem> items;
   mSiteStateStorage->GetAll(&items);
-
   nsCOMArray<nsISiteSecurityState> states;
   for (const mozilla::psm::DataStorageItem& item : items) {
-    if (!StringEndsWith(item.key(), keySuffix)) {
+    if (!StringEndsWith(item.key(), kHSTSKeySuffix)) {
       // The key does not end with correct suffix, so is not the type we want.
       continue;
     }
 
     nsCString origin(
-        StringHead(item.key(), item.key().Length() - keySuffix.Length()));
+        StringHead(item.key(), item.key().Length() - kHSTSKeySuffix.Length()));
     nsAutoCString hostname;
     OriginAttributes originAttributes;
     if (!originAttributes.PopulateFromOrigin(origin, hostname)) {
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsISiteSecurityState> state;
-    switch (aType) {
-      case nsISiteSecurityService::HEADER_HSTS:
-        state = new SiteHSTSState(hostname, originAttributes, item.value());
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("SSS:Enumerate got invalid type");
-    }
-
+    nsCOMPtr<nsISiteSecurityState> state(
+        new SiteHSTSState(hostname, originAttributes, item.value()));
     states.AppendObject(state);
   }
 

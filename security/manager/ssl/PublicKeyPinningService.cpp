@@ -15,6 +15,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsDependentString.h"
 #include "nsServiceManagerUtils.h"
+#include "nsSiteSecurityService.h"
 #include "mozpkix/pkixtypes.h"
 #include "mozpkix/pkixutil.h"
 #include "seccomon.h"
@@ -27,6 +28,8 @@ using namespace mozilla::pkix;
 using namespace mozilla::psm;
 
 LazyLogModule gPublicKeyPinningLog("PublicKeyPinningService");
+
+NS_IMPL_ISUPPORTS(PublicKeyPinningService, nsIPublicKeyPinningService)
 
 enum class PinningMode : uint32_t {
   Disabled = 0,
@@ -348,24 +351,32 @@ nsresult PublicKeyPinningService::ChainHasValidPins(
                               pinningTelemetryInfo);
 }
 
-nsresult PublicKeyPinningService::HostHasPins(const char* hostname,
-                                              mozilla::pkix::Time time,
-                                              /*out*/ bool& hostHasPins) {
-  hostHasPins = false;
+NS_IMETHODIMP
+PublicKeyPinningService::HostHasPins(nsIURI* aURI, bool* hostHasPins) {
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG(hostHasPins);
+  *hostHasPins = false;
   PinningMode pinningMode(GetPinningMode());
   if (pinningMode == PinningMode::Disabled) {
     return NS_OK;
   }
-  nsAutoCString canonicalizedHostname(CanonicalizeHostname(hostname));
+  nsAutoCString hostname;
+  nsresult rv = nsSiteSecurityService::GetHost(aURI, hostname);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (nsSiteSecurityService::HostIsIPAddress(hostname)) {
+    return NS_OK;
+  }
+
   const TransportSecurityPreload* staticFingerprints = nullptr;
-  nsresult rv = FindPinningInformation(canonicalizedHostname.get(), time,
-                                       staticFingerprints);
+  rv = FindPinningInformation(hostname.get(), Now(), staticFingerprints);
   if (NS_FAILED(rv)) {
     return rv;
   }
   if (staticFingerprints) {
-    hostHasPins = !staticFingerprints->mTestMode ||
-                  pinningMode == PinningMode::EnforceTestMode;
+    *hostHasPins = !staticFingerprints->mTestMode ||
+                   pinningMode == PinningMode::EnforceTestMode;
   }
   return NS_OK;
 }

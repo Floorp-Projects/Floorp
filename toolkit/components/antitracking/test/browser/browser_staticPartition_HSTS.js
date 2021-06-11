@@ -42,12 +42,7 @@ function cleanupHSTS(aPartitionEnabled, aUseSite) {
       }
     }
 
-    sss.resetState(
-      Ci.nsISiteSecurityService.HEADER_HSTS,
-      NetUtil.newURI("http://example.com/"),
-      0,
-      originAttributes
-    );
+    sss.resetState(NetUtil.newURI("http://example.com/"), 0, originAttributes);
   }
 }
 
