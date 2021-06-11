@@ -287,6 +287,7 @@ let JSWINDOWACTORS = {
         DOMDocFetchSuccess: {},
         DOMFormBeforeSubmit: {},
         DOMFormHasPassword: {},
+        DOMFormHasPossibleUsername: {},
         DOMInputPasswordAdded: {},
       },
     },
