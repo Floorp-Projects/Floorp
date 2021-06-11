@@ -707,6 +707,14 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         InsecurePasswordUtils.reportInsecurePasswords(formLike);
         break;
       }
+      case "DOMFormHasPossibleUsername": {
+        if (this.shouldIgnoreLoginManagerEvent(event)) {
+          break;
+        }
+
+        this.onDOMFormHasPossibleUsername(event);
+        break;
+      }
       case "DOMFormRemoved":
       case "DOMInputPasswordRemoved": {
         if (this.shouldIgnoreLoginManagerEvent(event)) {
@@ -961,6 +969,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       "isMasterPasswordSet:",
       isMasterPasswordSet
     );
+
     if (document.visibilityState == "visible" || isMasterPasswordSet) {
       this._processDOMFormHasPasswordEvent(event);
     } else {
@@ -976,6 +985,40 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let formLike = LoginFormFactory.createFromForm(form);
     log("_processDOMFormHasPasswordEvent:", form, formLike);
     this._fetchLoginsFromParentAndFillForm(formLike);
+  }
+
+  onDOMFormHasPossibleUsername(event) {
+    if (!event.isTrusted) {
+      return;
+    }
+    let isMasterPasswordSet = Services.cpmm.sharedData.get(
+      "isMasterPasswordSet"
+    );
+    let document = event.target.ownerDocument;
+
+    log(
+      "onDOMFormHasPossibleUsername, visibilityState:",
+      document.visibilityState,
+      "isMasterPasswordSet:",
+      isMasterPasswordSet
+    );
+
+    if (document.visibilityState == "visible" || isMasterPasswordSet) {
+      this._processDOMFormHasPossibleUsernameEvent(event);
+    } else {
+      // wait until the document becomes visible before handling this event
+      this._deferHandlingEventUntilDocumentVisible(event, document, () => {
+        this._processDOMFormHasPossibleUsernameEvent(event);
+      });
+    }
+  }
+
+  _processDOMFormHasPossibleUsernameEvent(event) {
+    let form = event.target;
+    let formLike = LoginFormFactory.createFromForm(form);
+    log("_processDOMFormHasPossibleUsernameEvent:", form, formLike);
+
+    // TODO: Trigger form autofill code is implemented in the next patch
   }
 
   onDOMInputPasswordAdded(event, window) {
