@@ -132,8 +132,8 @@ pub fn prepare_primitives(
         if !cluster.opaque_rect.is_empty() {
             let surface = &mut frame_state.surfaces[pic_context.surface_index.0];
 
-            if let Some(cluster_opaque_rect) = surface.map_local_to_surface.map_inner_bounds(&cluster.opaque_rect) {
-                surface.opaque_rect = crate::util::conservative_union_rect(&surface.opaque_rect, &cluster_opaque_rect);
+            if let Some(cluster_opaque_rect) = surface.map_local_to_surface.map_inner_bounds(&cluster.opaque_rect.to_box2d()) {
+                surface.opaque_rect = crate::util::conservative_union_rect(&surface.opaque_rect, &cluster_opaque_rect.to_rect());
             }
         }
     }
@@ -1284,8 +1284,8 @@ pub fn update_brush_segment_clip_task(
         return ClipMaskKind::None;
     }
 
-    let segment_world_rect = match pic_state.map_pic_to_world.map(&clip_chain.pic_clip_rect) {
-        Some(rect) => rect.to_box2d(),
+    let segment_world_rect = match pic_state.map_pic_to_world.map(&clip_chain.pic_clip_rect.to_box2d()) {
+        Some(rect) => rect,
         None => return ClipMaskKind::Clipped,
     };
 
@@ -1544,9 +1544,9 @@ fn get_unclipped_device_rect(
     map_to_raster: &SpaceMapper<PicturePixel, RasterPixel>,
     device_pixel_scale: DevicePixelScale,
 ) -> Option<DeviceRect> {
-    let raster_rect = map_to_raster.map(&prim_rect)?;
+    let raster_rect = map_to_raster.map(&prim_rect.to_box2d())?;
     let world_rect = raster_rect * Scale::new(1.0);
-    Some((world_rect * device_pixel_scale).to_box2d())
+    Some(world_rect * device_pixel_scale)
 }
 
 /// Given an unclipped device rect, try to find a minimal device space
@@ -1561,17 +1561,17 @@ fn get_clipped_device_rect(
     device_pixel_scale: DevicePixelScale,
 ) -> Option<DeviceRect> {
     let unclipped_raster_rect = {
-        let world_rect = unclipped.to_rect() * Scale::new(1.0);
+        let world_rect = (*unclipped) * Scale::new(1.0);
         let raster_rect = world_rect * device_pixel_scale.inverse();
 
         raster_rect.cast_unit()
     };
 
-    let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?.to_box2d();
+    let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?;
 
     let clipped_world_rect = unclipped_world_rect.intersection(&world_clip_rect)?;
 
-    let clipped_raster_rect = map_to_world.unmap(&clipped_world_rect.to_rect())?;
+    let clipped_raster_rect = map_to_world.unmap(&clipped_world_rect)?;
 
     let clipped_raster_rect = clipped_raster_rect.intersection(&unclipped_raster_rect)?;
 
@@ -1581,7 +1581,7 @@ fn get_clipped_device_rect(
     }
 
     let clipped = raster_rect_to_device_pixels(
-        clipped_raster_rect,
+        clipped_raster_rect.to_rect(),
         device_pixel_scale,
     );
 

@@ -1050,7 +1050,7 @@ impl<'a> SceneBuilder<'a> {
             target_spatial_node,
             &self.spatial_tree
         );
-        self.snap_to_device.snap_rect(rect)
+        self.snap_to_device.snap_rect(&rect.to_box2d()).to_rect()
     }
 
     fn build_item<'b>(
