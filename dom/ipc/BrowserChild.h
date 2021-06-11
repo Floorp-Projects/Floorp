@@ -270,14 +270,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvResumeLoad(const uint64_t& aPendingSwitchID,
                                          const ParentShowInfo&);
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult
-  RecvCloneDocumentTreeIntoSelf(
-      const MaybeDiscarded<BrowsingContext>& aSourceBC,
-      const embedding::PrintData& aPrintData);
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  mozilla::ipc::IPCResult RecvUpdateRemotePrintSettings(
-      const embedding::PrintData& aPrintData);
+  mozilla::ipc::IPCResult RecvCloneDocumentTreeIntoSelf(
+      const MaybeDiscarded<BrowsingContext>& aSourceBC);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvShow(const ParentShowInfo&, const OwnerShowInfo&);

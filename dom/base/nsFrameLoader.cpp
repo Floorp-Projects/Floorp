@@ -18,7 +18,6 @@
 #include "nsDocShell.h"
 #include "nsIContentInlines.h"
 #include "nsIContentViewer.h"
-#include "nsIPrintSettings.h"
 #include "nsIPrintSettingsService.h"
 #include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
@@ -2830,8 +2829,7 @@ void nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture,
   }
 }
 
-nsresult nsFrameLoader::DoRemoteStaticClone(nsFrameLoader* aStaticCloneOf,
-                                            nsIPrintSettings* aPrintSettings) {
+nsresult nsFrameLoader::DoRemoteStaticClone(nsFrameLoader* aStaticCloneOf) {
   MOZ_ASSERT(aStaticCloneOf->IsRemoteFrame());
   auto* cc = ContentChild::GetSingleton();
   if (!cc) {
@@ -2845,25 +2843,12 @@ nsresult nsFrameLoader::DoRemoteStaticClone(nsFrameLoader* aStaticCloneOf,
   }
   BrowsingContext* bc = GetBrowsingContext();
   MOZ_DIAGNOSTIC_ASSERT(bc);
-  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
-      do_GetService("@mozilla.org/gfx/printsettings-service;1");
-  if (NS_WARN_IF(!printSettingsSvc)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  embedding::PrintData printData;
-  nsresult rv =
-      printSettingsSvc->SerializeToPrintData(aPrintSettings, &printData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  cc->SendCloneDocumentTreeInto(bcToClone, bc, printData);
+  cc->SendCloneDocumentTreeInto(bcToClone, bc);
   return NS_OK;
 }
 
 nsresult nsFrameLoader::FinishStaticClone(
-    nsFrameLoader* aStaticCloneOf, nsIPrintSettings* aPrintSettings,
-    bool* aOutHasInProcessPrintCallbacks) {
+    nsFrameLoader* aStaticCloneOf, bool* aOutHasInProcessPrintCallbacks) {
   MOZ_DIAGNOSTIC_ASSERT(
       !nsContentUtils::IsSafeToRunScript(),
       "A script blocker should be on the stack while FinishStaticClone is run");
@@ -2881,7 +2866,7 @@ nsresult nsFrameLoader::FinishStaticClone(
   }
 
   if (aStaticCloneOf->IsRemoteFrame()) {
-    return DoRemoteStaticClone(aStaticCloneOf, aPrintSettings);
+    return DoRemoteStaticClone(aStaticCloneOf);
   }
 
   nsIDocShell* origDocShell = aStaticCloneOf->GetDocShell();
@@ -2901,8 +2886,8 @@ nsresult nsFrameLoader::FinishStaticClone(
   docShell->GetContentViewer(getter_AddRefs(viewer));
   NS_ENSURE_STATE(viewer);
 
-  nsCOMPtr<Document> clonedDoc = doc->CreateStaticClone(
-      docShell, viewer, aPrintSettings, aOutHasInProcessPrintCallbacks);
+  nsCOMPtr<Document> clonedDoc =
+      doc->CreateStaticClone(docShell, viewer, aOutHasInProcessPrintCallbacks);
 
   return NS_OK;
 }
