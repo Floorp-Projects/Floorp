@@ -41,7 +41,7 @@ using namespace dom;
 nsresult TextEditor::InsertTextFromTransferable(
     nsITransferable* aTransferable) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!AsHTMLEditor());
+  MOZ_ASSERT(IsTextEditor());
 
   nsAutoCString bestFlavor;
   nsCOMPtr<nsISupports> genericDataObj;

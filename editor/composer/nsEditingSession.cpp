@@ -371,8 +371,8 @@ nsresult nsEditingSession::SetupEditorOnWindow(nsPIDOMWindowOuter& aWindow) {
   // create and set editor
   // Try to reuse an existing editor
   nsCOMPtr<nsIEditor> editor = do_QueryReferent(mExistingEditor);
-  RefPtr<HTMLEditor> htmlEditor = editor ? editor->AsHTMLEditor() : nullptr;
-  MOZ_ASSERT(!editor || htmlEditor);
+  RefPtr<HTMLEditor> htmlEditor = HTMLEditor::GetFrom(editor);
+  MOZ_ASSERT_IF(editor, htmlEditor);
   if (htmlEditor) {
     htmlEditor->PreDestroy(false);
   } else {

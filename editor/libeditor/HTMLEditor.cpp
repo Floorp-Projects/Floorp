@@ -4148,7 +4148,7 @@ already_AddRefed<nsIContent> HTMLEditor::SplitNodeWithTransaction(
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "RangeUpdater::SelAdjSplitNode() failed, but ignored");
   }
-  if (AsHTMLEditor() && newLeftContent) {
+  if (newLeftContent) {
     TopLevelEditSubActionDataRef().DidSplitContent(
         *this, *aStartOfRightNode.GetContainerAsContent(), *newLeftContent);
   }
@@ -4326,8 +4326,6 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
     Text* rightAsText = aStartOfRightNode.GetContainerAsText();
     Text* leftAsText = aNewLeftNode.GetAsText();
     if (rightAsText && leftAsText) {
-      MOZ_DIAGNOSTIC_ASSERT(AsHTMLEditor(),
-                            "Text node in TextEditor shouldn't be split");
       // Fix right node
       nsAutoString leftText;
       IgnoredErrorResult ignoredError;
@@ -4487,7 +4485,7 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
-      "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+      "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   // Remember some values; later used for saved selection updating.
   // Find the offset between the nodes to be joined.
@@ -4495,10 +4493,8 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
   // Find the number of children of the lefthand node
   uint32_t oldLeftNodeLen = aLeftNode.Length();
 
-  if (AsHTMLEditor()) {
-    TopLevelEditSubActionDataRef().WillJoinContents(
-        *this, *aLeftNode.AsContent(), *aRightNode.AsContent());
-  }
+  TopLevelEditSubActionDataRef().WillJoinContents(*this, *aLeftNode.AsContent(),
+                                                  *aRightNode.AsContent());
 
   RefPtr<JoinNodeTransaction> transaction = JoinNodeTransaction::MaybeCreate(
       *this, *aLeftNode.AsContent(), *aRightNode.AsContent());
@@ -4520,10 +4516,8 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
 
-  if (AsHTMLEditor()) {
-    TopLevelEditSubActionDataRef().DidJoinContents(
-        *this, *aLeftNode.AsContent(), *aRightNode.AsContent());
-  }
+  TopLevelEditSubActionDataRef().DidJoinContents(*this, *aLeftNode.AsContent(),
+                                                 *aRightNode.AsContent());
 
   if (mInlineSpellChecker) {
     RefPtr<mozInlineSpellChecker> spellChecker = mInlineSpellChecker;
@@ -4551,7 +4545,6 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
 nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
                                  nsIContent& aContentToJoin) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_DIAGNOSTIC_ASSERT(AsHTMLEditor());
 
   uint32_t firstNodeLength = aContentToJoin.Length();
 

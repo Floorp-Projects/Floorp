@@ -112,7 +112,7 @@ NS_INTERFACE_MAP_END_INHERITING(EditorBase)
 nsresult TextEditor::Init(Document& aDoc, Element* aRoot,
                           nsISelectionController* aSelCon, uint32_t aFlags,
                           const nsAString& aInitialValue) {
-  MOZ_ASSERT(!AsHTMLEditor());
+  MOZ_ASSERT(IsTextEditor());
   MOZ_ASSERT(!mInitSucceeded,
              "TextEditor::Init() called again without calling PreDestroy()?");
 
@@ -255,7 +255,7 @@ nsresult TextEditor::SetTextAsAction(
     AllowBeforeInputEventCancelable aAllowBeforeInputEventCancelable,
     nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aString.FindChar(nsCRT::CR) == kNotFound);
-  MOZ_ASSERT(!AsHTMLEditor());
+  MOZ_ASSERT(IsTextEditor());
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eSetText,
                                           aPrincipal);
@@ -584,7 +584,7 @@ nsresult TextEditor::InsertWithQuotationsAsSubAction(
 
 nsresult TextEditor::SelectEntireDocument() {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!AsHTMLEditor());
+  MOZ_ASSERT(IsTextEditor());
 
   if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -684,7 +684,7 @@ nsresult TextEditor::RemoveAttributeOrEquivalent(Element* aElement,
 
 nsresult TextEditor::EnsurePaddingBRElementForEmptyEditor() {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!AsHTMLEditor());
+  MOZ_ASSERT(IsTextEditor());
 
   // If there is padding <br> element for empty editor, we have no work to do.
   if (mPaddingBRElementForEmptyEditor) {

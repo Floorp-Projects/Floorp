@@ -137,7 +137,7 @@ NS_IMETHODIMP InsertNodeTransaction::DoTransaction() {
     return error.StealNSResult();
   }
 
-  if (!editorBase->AsHTMLEditor() && contentToInsert->IsText()) {
+  if (editorBase->IsTextEditor() && contentToInsert->IsText()) {
     uint32_t length = contentToInsert->AsText()->TextLength();
     if (length > 0) {
       nsresult rv = MOZ_KnownLive(editorBase->AsTextEditor())
@@ -179,7 +179,7 @@ NS_IMETHODIMP InsertNodeTransaction::UndoTransaction() {
       NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  if (!mEditorBase->AsHTMLEditor() && mContentToInsert->IsText()) {
+  if (mEditorBase->IsTextEditor() && mContentToInsert->IsText()) {
     uint32_t length = mContentToInsert->TextLength();
     if (length > 0) {
       mEditorBase->AsTextEditor()->WillDeleteText(length, 0, length);

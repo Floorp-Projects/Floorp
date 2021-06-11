@@ -47,7 +47,7 @@ bool SetDocumentStateCommand::IsCommandEnabled(Command aCommand,
     return !!aEditorBase;
   }
   // The other commands are always enabled if given editor is an HTMLEditor.
-  return aEditorBase && aEditorBase->AsHTMLEditor();
+  return aEditorBase && aEditorBase->IsHTMLEditor();
 }
 
 nsresult SetDocumentStateCommand::DoCommand(Command aCommand,
@@ -251,7 +251,7 @@ nsresult SetDocumentStateCommand::GetCommandStateParams(
       return rv;
     }
     case Command::SetDocumentUseCSS: {
-      HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+      HTMLEditor* htmlEditor = aEditorBase->GetAsHTMLEditor();
       if (NS_WARN_IF(!htmlEditor)) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -261,7 +261,7 @@ nsresult SetDocumentStateCommand::GetCommandStateParams(
       return rv;
     }
     case Command::SetDocumentInsertBROnEnterKeyPress: {
-      HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+      HTMLEditor* htmlEditor = aEditorBase->GetAsHTMLEditor();
       if (NS_WARN_IF(!htmlEditor)) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -278,7 +278,7 @@ nsresult SetDocumentStateCommand::GetCommandStateParams(
       return rv;
     }
     case Command::SetDocumentDefaultParagraphSeparator: {
-      HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+      HTMLEditor* htmlEditor = aEditorBase->GetAsHTMLEditor();
       if (NS_WARN_IF(!htmlEditor)) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -310,7 +310,7 @@ nsresult SetDocumentStateCommand::GetCommandStateParams(
       }
     }
     case Command::ToggleObjectResizers: {
-      HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+      HTMLEditor* htmlEditor = aEditorBase->GetAsHTMLEditor();
       if (NS_WARN_IF(!htmlEditor)) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -324,7 +324,7 @@ nsresult SetDocumentStateCommand::GetCommandStateParams(
       return rv;
     }
     case Command::ToggleInlineTableEditor: {
-      HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+      HTMLEditor* htmlEditor = aEditorBase->GetAsHTMLEditor();
       if (NS_WARN_IF(!htmlEditor)) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -338,7 +338,7 @@ nsresult SetDocumentStateCommand::GetCommandStateParams(
       return rv;
     }
     case Command::ToggleAbsolutePositionEditor: {
-      HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+      HTMLEditor* htmlEditor = aEditorBase->GetAsHTMLEditor();
       if (NS_WARN_IF(!htmlEditor)) {
         return NS_ERROR_INVALID_ARG;
       }

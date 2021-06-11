@@ -628,8 +628,7 @@ EditorSpellCheck::UpdateCurrentDictionary(
 
   // Get language with html5 algorithm
   nsCOMPtr<nsIContent> rootContent;
-  HTMLEditor* htmlEditor = mEditor->AsHTMLEditor();
-  if (htmlEditor) {
+  if (HTMLEditor* htmlEditor = mEditor->GetAsHTMLEditor()) {
     if (flags & nsIEditor::eEditorMailMask) {
       // Always determine the root content for a mail editor,
       // even if not focused, to enable further processing below.
