@@ -10,9 +10,9 @@
 const TEST_URI = URL_ROOT + "doc_inspector_highlighter_scroll.html";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector } = await openInspectorForURL(TEST_URI);
 
-  await testActor.scrollIntoView("a");
+  await scrollContentPageNodeIntoView(gBrowser.selectedBrowser, "a");
   await selectAndHighlightNode("a", inspector);
 
   const markupLoaded = inspector.once("markuploaded");
