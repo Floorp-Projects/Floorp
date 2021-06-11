@@ -13,15 +13,11 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.swipeLeft
-import androidx.test.espresso.action.ViewActions.swipeRight
-import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItem
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
-import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withHint
@@ -120,126 +116,18 @@ class HomeScreenRobot {
     fun verifyExistingTopSitesTabs(title: String) = assertExistingTopSitesTabs(title)
     fun verifyTopSiteContextMenuItems() = assertTopSiteContextMenuItems()
 
-    // Collections element
-    fun clickCollectionThreeDotButton() {
-        collectionThreeDotButton().click()
-        mDevice.waitNotNull(findObject(text("Delete collection")), waitingTime)
-    }
-
-    fun selectOpenTabs() {
-        onView(allOf(withText("Open tabs"))).click()
-    }
-
-    fun selectRenameCollection() {
-        onView(allOf(withText("Rename collection"))).click()
-        mDevice.waitNotNull(findObject(text("Rename collection")))
-    }
-
-    fun selectAddTabToCollection() {
-        onView(allOf(withText("Add tab"))).click()
-        mDevice.waitNotNull(findObject(text("Select Tabs")))
-    }
-
-    fun selectDeleteCollection() {
-        onView(allOf(withText("Delete collection"))).click()
-        mDevice.waitNotNull(findObject(By.res("android:id/message")), waitingTime)
-    }
-
-    fun confirmDeleteCollection() {
-        onView(allOf(withText("DELETE"))).click()
-        mDevice.waitNotNull(
-            findObject(By.res("$packageName:id/no_collections_header")),
-            waitingTime
-        )
-    }
-
-    fun verifyCollectionIsDisplayed(title: String) {
-        mDevice.findObject(UiSelector().text(title)).waitForExists(waitingTime)
-        collectionTitle(title).check(matches(isDisplayed()))
+    // Collections elements
+    fun verifyCollectionIsDisplayed(title: String, collectionExists: Boolean = true) {
+        if (collectionExists) {
+            assertTrue(mDevice.findObject(UiSelector().text(title)).waitForExists(waitingTime))
+        } else {
+            assertTrue(mDevice.findObject(UiSelector().text(title)).waitUntilGone(waitingTime))
+        }
     }
 
     fun verifyCollectionIcon() = onView(withId(R.id.collection_icon)).check(matches(isDisplayed()))
 
-    fun expandCollection(title: String) {
-        try {
-            mDevice.waitNotNull(findObject(text(title)), waitingTime)
-            collectionTitle(title).click()
-        } catch (e: NoMatchingViewException) {
-            scrollToElementByText(title)
-        }
-    }
-
-    fun collapseCollection(title: String) {
-        try {
-            mDevice.waitNotNull(findObject(text(title)), waitingTime)
-            onView(allOf(withId(R.id.chevron), hasSibling(withText(title)))).click()
-        } catch (e: NoMatchingViewException) {
-            scrollToElementByText(title)
-        }
-    }
-
-    fun verifyTabSavedInCollection(title: String, visible: Boolean = true) {
-        try {
-            collectionItem(title)
-                .check(
-                    if (visible) matches(isDisplayed()) else doesNotExist()
-                )
-        } catch (e: NoMatchingViewException) {
-            scrollToElementByText(title)
-        }
-    }
-
-    fun verifyCollectionTabLogo() =
-        onView(withId(R.id.favicon)).check(matches(isDisplayed()))
-
-    fun verifyCollectionTabUrl() =
-        onView(withId(R.id.caption)).check(matches(isDisplayed()))
-
-    fun verifyShareCollectionButtonIsVisible(visible: Boolean) {
-        shareCollectionButton()
-            .check(
-                if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE))
-                else matches(withEffectiveVisibility(Visibility.GONE))
-            )
-    }
-
-    fun verifyCollectionMenuIsVisible(visible: Boolean) {
-        collectionThreeDotButton()
-            .check(
-                if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE))
-                else matches(withEffectiveVisibility(Visibility.GONE))
-            )
-    }
-
-    fun verifyCollectionItemRemoveButtonIsVisible(title: String, visible: Boolean) {
-        removeTabFromCollectionButton(title)
-            .check(
-                if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE))
-                else doesNotExist()
-            )
-    }
-
     fun verifyShareTabsOverlay() = assertShareTabsOverlay()
-
-    fun clickShareCollectionButton() = onView(withId(R.id.collection_share_button)).click()
-
-    fun removeTabFromCollection(title: String) = removeTabFromCollectionButton(title).click()
-
-    fun swipeCollectionItemRight(title: String) {
-        try {
-            collectionItem(title).perform(swipeRight())
-        } catch (e: NoMatchingViewException) {
-            scrollToElementByText(title)
-        }
-    }
-
-    fun swipeCollectionItemLeft(title: String) {
-        try {
-            collectionItem(title).perform(swipeLeft())
-        } catch (e: NoMatchingViewException) {
-            scrollToElementByText(title)
-        }
-    }
 
     fun togglePrivateBrowsingModeOnOff() {
         onView(ViewMatchers.withResourceName("privateBrowsingButton"))
@@ -415,6 +303,18 @@ class HomeScreenRobot {
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
+        }
+
+        fun expandCollection(title: String, interact: CollectionRobot.() -> Unit): CollectionRobot.Transition {
+            try {
+                mDevice.waitNotNull(findObject(text(title)), waitingTime)
+                collectionTitle(title).click()
+            } catch (e: NoMatchingViewException) {
+                scrollToElementByText(title)
+            }
+
+            CollectionRobot().interact()
+            return CollectionRobot.Transition()
         }
     }
 }
@@ -637,9 +537,6 @@ private fun assertPrivateSessionMessage() =
     onView(withId(R.id.private_session_description))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun collectionThreeDotButton() =
-    onView(allOf(withId(R.id.collection_overflow_button)))
-
 private fun collectionTitle(title: String) =
     onView(allOf(withId(R.id.collection_title), withText(title)))
 
@@ -678,20 +575,7 @@ private fun assertShareTabsOverlay() {
 
 private fun privateBrowsingButton() = onView(withId(R.id.privateBrowsingButton))
 
-private fun collectionItem(title: String) =
-    onView(allOf(withId(R.id.label), withText(title)))
-
 private fun saveTabsToCollectionButton() = onView(withId(R.id.add_tabs_to_collections_button))
-
-private fun shareCollectionButton() = onView(withId(R.id.collection_share_button))
-
-private fun removeTabFromCollectionButton(title: String) =
-    onView(
-        allOf(
-            withId(R.id.secondary_button),
-            hasSibling(withText(title))
-        )
-    )
 
 private fun tabsCounter() = onView(withId(R.id.tab_button))
 
