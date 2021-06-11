@@ -1217,6 +1217,11 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         cachedIsInferredUsernameField: new WeakMap(),
         cachedIsInferredEmailField: new WeakMap(),
         cachedIsInferredLoginForm: new WeakMap(),
+
+        /**
+         * Records the mock username field when its associated form is submitted.
+         */
+        mockUsernameOnlyField: null,
       };
       this._loginFormStateByDocument.set(document, loginFormState);
     }
@@ -1885,6 +1890,23 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   _onFormSubmit(form, reason) {
     log("_onFormSubmit", form);
 
+    // If the form is in a username-only form, record the username field before
+    // it is removed.
+    let usernameField = this.getUsernameFieldFromUsernameOnlyForm(
+      form.rootElement
+    );
+    if (usernameField) {
+      log(
+        "_onFormSubmit: username-only form. Record the username field but not sending prompt"
+      );
+      let docState = this.stateForDocument(form.ownerDocument);
+      docState.mockUsernameOnlyField = {
+        name: usernameField.name,
+        value: usernameField.value,
+      };
+      return;
+    }
+
     this._maybeSendFormInteractionMessage(
       form,
       "PasswordManager:onFormSubmit",
@@ -1985,6 +2007,18 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         return;
       }
 
+      let docState = this.stateForDocument(doc);
+      // When the username field is empty, check whether we have found it previously from
+      // a username-only form, if yes, fill in its value.
+      // XXX This is not ideal, we only use the previous saved username field when the current
+      // form doesn't have one. This means if there is a username field found in the current
+      // form, we don't compare it to the saved one, which might be a better choice in some cases.
+      // The reason we are not doing it now is because we haven't found a real world example.
+      if (!usernameField) {
+        if (docState.mockUsernameOnlyField) {
+          usernameField = docState.mockUsernameOnlyField;
+        }
+      }
       if (usernameField && usernameField.value.match(/\.{3,}|\*{3,}|•{3,}/)) {
         log(
           `usernameField.value "${usernameField.value}" looks munged, setting to null`
@@ -2035,7 +2069,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         dismissedPrompt = true;
       }
 
-      let docState = this.stateForDocument(doc);
       let fieldsModified = this._formHasModifiedFields(form);
       if (!fieldsModified && LoginHelper.userInputRequiredToCapture) {
         if (targetField) {
