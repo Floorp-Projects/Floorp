@@ -939,10 +939,8 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
   presShell->FreeFrame(id, this);
 }
 
-nsresult nsIFrame::GetOffsets(int32_t& aStart, int32_t& aEnd) const {
-  aStart = 0;
-  aEnd = 0;
-  return NS_OK;
+std::pair<int32_t, int32_t> nsIFrame::GetOffsets() const {
+  return std::make_pair(0, 0);
 }
 
 static void CompareLayers(
@@ -5216,8 +5214,7 @@ static FrameContentRange GetRangeForFrame(const nsIFrame* aFrame) {
 
   LayoutFrameType type = aFrame->Type();
   if (type == LayoutFrameType::Text) {
-    int32_t offset, offsetEnd;
-    aFrame->GetOffsets(offset, offsetEnd);
+    auto [offset, offsetEnd] = aFrame->GetOffsets();
     return FrameContentRange(content, offset, offsetEnd);
   }
 
@@ -8478,8 +8475,7 @@ static nsContentAndOffset FindLineBreakInText(nsIFrame* aFrame,
     return result;
   }
 
-  int32_t startOffset, endOffset;
-  aFrame->GetOffsets(startOffset, endOffset);
+  auto [startOffset, endOffset] = aFrame->GetOffsets();
   result.mContent = aFrame->GetContent();
   result.mOffset = endOffset - (aDirection == eDirPrevious ? 0 : 1);
   return result;
@@ -8696,8 +8692,7 @@ nsresult nsIFrame::PeekOffsetForCharacter(nsPeekOffsetStruct* aPos,
     // selection, this doesn't matter.
     if (peekSearchState == FOUND && current.mMovedOverNonSelectableText &&
         (!aPos->mExtend || current.mHasSelectableFrame)) {
-      int32_t start, end;
-      current.mFrame->GetOffsets(start, end);
+      auto [start, end] = current.mFrame->GetOffsets();
       current.mOffset = aPos->mDirection == eDirNext ? 0 : end - start;
     }
   }
