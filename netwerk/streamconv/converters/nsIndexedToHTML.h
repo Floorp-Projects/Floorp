@@ -29,7 +29,7 @@ class nsIndexedToHTML : public nsIStreamConverter, public nsIDirIndexListener {
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIDIRINDEXLISTENER
 
-  nsIndexedToHTML();
+  nsIndexedToHTML() = default;
 
   nsresult Init(nsIStreamListener* aListener);
 
@@ -53,7 +53,7 @@ class nsIndexedToHTML : public nsIStreamConverter, public nsIDirIndexListener {
 
  private:
   // Expecting absolute locations, given by 201 lines.
-  bool mExpectAbsLoc;
+  bool mExpectAbsLoc{false};
 
   virtual ~nsIndexedToHTML() = default;
 };

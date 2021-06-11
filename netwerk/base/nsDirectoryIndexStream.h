@@ -17,10 +17,10 @@ class nsIFile;
 class nsDirectoryIndexStream final : public nsIInputStream {
  private:
   nsCString mBuf;
-  int32_t mOffset;
-  nsresult mStatus;
+  int32_t mOffset{0};
+  nsresult mStatus{NS_OK};
 
-  int32_t mPos;                // position within mArray
+  int32_t mPos{0};             // position within mArray
   nsCOMArray<nsIFile> mArray;  // file objects within the directory
 
   nsDirectoryIndexStream();

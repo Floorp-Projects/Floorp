@@ -75,11 +75,11 @@ static_assert(sizeof(CacheIndexHeader::mVersion) +
 #pragma pack(push, 1)
 struct CacheIndexRecord {
   SHA1Sum::Hash mHash{};
-  uint32_t mFrecency;
-  OriginAttrsHash mOriginAttrsHash;
-  uint16_t mOnStartTime;
-  uint16_t mOnStopTime;
-  uint8_t mContentType;
+  uint32_t mFrecency{0};
+  OriginAttrsHash mOriginAttrsHash{0};
+  uint16_t mOnStartTime{kIndexTimeNotAvailable};
+  uint16_t mOnStopTime{kIndexTimeNotAvailable};
+  uint8_t mContentType{nsICacheEntry::CONTENT_TYPE_UNKNOWN};
 
   /*
    *    1000 0000 0000 0000 0000 0000 0000 0000 : initialized
@@ -92,15 +92,9 @@ struct CacheIndexRecord {
    *    0000 0001 0000 0000 0000 0000 0000 0000 : reserved
    *    0000 0000 1111 1111 1111 1111 1111 1111 : file size (in kB)
    */
-  uint32_t mFlags;
+  uint32_t mFlags{0};
 
-  CacheIndexRecord()
-      : mFrecency(0),
-        mOriginAttrsHash(0),
-        mOnStartTime(kIndexTimeNotAvailable),
-        mOnStopTime(kIndexTimeNotAvailable),
-        mContentType(nsICacheEntry::CONTENT_TYPE_UNKNOWN),
-        mFlags(0) {}
+  CacheIndexRecord() = default;
 };
 #pragma pack(pop)
 
@@ -491,20 +485,7 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
 
 class CacheIndexStats {
  public:
-  CacheIndexStats()
-      : mCount(0),
-        mNotInitialized(0),
-        mRemoved(0),
-        mDirty(0),
-        mFresh(0),
-        mEmpty(0),
-        mSize(0)
-#ifdef DEBUG
-        ,
-        mStateLogged(false),
-        mDisableLogging(false)
-#endif
-  {
+  CacheIndexStats() {
     for (uint32_t i = 0; i < nsICacheEntry::CONTENT_TYPE_LAST; ++i) {
       mCountByType[i] = 0;
       mSizeByType[i] = 0;
@@ -689,14 +670,14 @@ class CacheIndexStats {
   }
 
  private:
-  uint32_t mCount;
+  uint32_t mCount{0};
   uint32_t mCountByType[nsICacheEntry::CONTENT_TYPE_LAST]{0};
-  uint32_t mNotInitialized;
-  uint32_t mRemoved;
-  uint32_t mDirty;
-  uint32_t mFresh;
-  uint32_t mEmpty;
-  uint32_t mSize;
+  uint32_t mNotInitialized{0};
+  uint32_t mRemoved{0};
+  uint32_t mDirty{0};
+  uint32_t mFresh{0};
+  uint32_t mEmpty{0};
+  uint32_t mSize{0};
   uint32_t mSizeByType[nsICacheEntry::CONTENT_TYPE_LAST]{0};
 #ifdef DEBUG
   // We completely remove the data about an entry from the stats in
@@ -704,10 +685,10 @@ class CacheIndexStats {
   // deleted or created and the data is again put into the stats and this flag
   // set to false. Statistics must not be read during this time since the
   // information is not correct.
-  bool mStateLogged;
+  bool mStateLogged{false};
 
   // Disables logging in this instance of CacheIndexStats
-  bool mDisableLogging;
+  bool mDisableLogging{false};
 #endif
 };
 
@@ -1066,35 +1047,35 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
   nsCOMPtr<nsIFile> mCacheDirectory;
 
-  EState mState;
+  EState mState{INITIAL};
   // Timestamp of time when the index was initialized. We use it to delay
   // initial update or build of index.
   TimeStamp mStartTime;
   // Set to true in PreShutdown(), it is checked on variaous places to prevent
   // starting any process (write, update, etc.) during shutdown.
-  bool mShuttingDown;
+  bool mShuttingDown{false};
   // When set to true, update process should start as soon as possible. This
   // flag is set whenever we find some inconsistency which would be fixed by
   // update process. The flag is checked always when switching to READY state.
   // To make sure we start the update process as soon as possible, methods that
   // set this flag should also call StartUpdatingIndexIfNeeded() to cover the
   // case when we are currently in READY state.
-  bool mIndexNeedsUpdate;
+  bool mIndexNeedsUpdate{false};
   // Set at the beginning of RemoveAll() which clears the whole index. When
   // removing all entries we must stop any pending reading, writing, updating or
   // building operation. This flag is checked at various places and it prevents
   // we won't start another operation (e.g. canceling reading of the index would
   // normally start update or build process)
-  bool mRemovingAll;
+  bool mRemovingAll{false};
   // Whether the index file on disk exists and is valid.
-  bool mIndexOnDiskIsValid;
+  bool mIndexOnDiskIsValid{false};
   // When something goes wrong during updating or building process, we don't
   // mark index clean (and also don't write journal) to ensure that update or
   // build will be initiated on the next start.
-  bool mDontMarkIndexClean;
+  bool mDontMarkIndexClean{false};
   // Timestamp value from index file. It is used during update process to skip
   // entries that were last modified before this timestamp.
-  uint32_t mIndexTimeStamp;
+  uint32_t mIndexTimeStamp{0};
   // Timestamp of last time the index was dumped to disk.
   // NOTE: The index might not be necessarily dumped at this time. The value
   // is used to schedule next dump of the index.
@@ -1103,28 +1084,28 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // Timer of delayed update/build.
   nsCOMPtr<nsITimer> mUpdateTimer;
   // True when build or update event is posted
-  bool mUpdateEventPending;
+  bool mUpdateEventPending{false};
 
   // Helper members used when reading/writing index from/to disk.
   // Contains number of entries that should be skipped:
   //  - in hashtable when writing index because they were already written
   //  - in index file when reading index because they were already read
-  uint32_t mSkipEntries;
+  uint32_t mSkipEntries{0};
   // Number of entries that should be written to disk. This is number of entries
   // in hashtable that are initialized and are not marked as removed when
   // writing begins.
-  uint32_t mProcessEntries;
-  char* mRWBuf;
-  uint32_t mRWBufSize;
-  uint32_t mRWBufPos;
+  uint32_t mProcessEntries{0};
+  char* mRWBuf{nullptr};
+  uint32_t mRWBufSize{0};
+  uint32_t mRWBufPos{0};
   RefPtr<CacheHash> mRWHash;
 
   // True if read or write operation is pending. It is used to ensure that
   // mRWBuf is not freed until OnDataRead or OnDataWritten is called.
-  bool mRWPending;
+  bool mRWPending{false};
 
   // Reading of journal succeeded if true.
-  bool mJournalReadSuccessfully;
+  bool mJournalReadSuccessfully{false};
 
   // Handle used for writing and reading index file.
   RefPtr<CacheFileHandle> mIndexHandle;
@@ -1197,7 +1178,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
    public:
     Iterator Iter() { return Iterator(&mRecs); }
 
-    FrecencyArray() : mUnsortedElements(0), mRemovedElements(0) {}
+    FrecencyArray() = default;
 
     // Methods used by CacheIndexEntryAutoManage to keep the array up to date.
     void AppendRecord(CacheIndexRecordWrapper* aRecord);
@@ -1213,12 +1194,12 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
     friend class CacheIndex;
 
     nsTArray<RefPtr<CacheIndexRecordWrapper>> mRecs;
-    uint32_t mUnsortedElements;
+    uint32_t mUnsortedElements{0};
     // Instead of removing elements from the array immediately, we null them out
     // and the iterator skips them when accessing the array. The null pointers
     // are placed at the end during sorting and we strip them out all at once.
     // This saves moving a lot of memory in nsTArray::RemoveElementsAt.
-    uint32_t mRemovedElements;
+    uint32_t mRemovedElements{0};
   };
 
   FrecencyArray mFrecencyArray;
@@ -1228,7 +1209,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // This flag is true iff we are between CacheStorageService:Clear() and
   // processing all contexts to be evicted.  It will make UI to show
   // "calculating" instead of any intermediate cache size.
-  bool mAsyncGetDiskConsumptionBlocked;
+  bool mAsyncGetDiskConsumptionBlocked{false};
 
   class DiskConsumptionObserver : public Runnable {
    public:
@@ -1280,7 +1261,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   nsTArray<RefPtr<DiskConsumptionObserver>> mDiskConsumptionObservers;
 
   // Number of bytes written to the cache since the last telemetry report
-  uint64_t mTotalBytesWritten;
+  uint64_t mTotalBytesWritten{0};
 };
 
 }  // namespace net

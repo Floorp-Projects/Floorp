@@ -46,16 +46,16 @@ class PollableEvent {
   PRFileDesc* PollableFD() { return mReadFD; }
 
  private:
-  PRFileDesc* mWriteFD;
-  PRFileDesc* mReadFD;
-  bool mSignaled;
+  PRFileDesc* mWriteFD{nullptr};
+  PRFileDesc* mReadFD{nullptr};
+  bool mSignaled{false};
   // true when PR_Write to the socket pair has failed (status < 1)
-  bool mWriteFailed;
+  bool mWriteFailed{false};
   // Set true after AdjustFirstSignalTimestamp() was called
   // Set false after Clear() was called
   // Ensures shifting the timestamp before entering poll() only once
   // between Clear()'ings.
-  bool mSignalTimestampAdjusted;
+  bool mSignalTimestampAdjusted{false};
   // Timestamp of the first call to Signal() (or time we enter poll())
   // that happened after the last Clear() call
   TimeStamp mFirstSignalAfterClear;

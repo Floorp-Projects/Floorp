@@ -271,7 +271,7 @@ class nsBaseChannel
 
   RefPtr<nsInputStreamPump> mPump;
   RefPtr<nsIRequest> mRequest;
-  bool mPumpingData;
+  bool mPumpingData{false};
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsIURI> mOriginalURI;
   nsCOMPtr<nsISupports> mOwner;
@@ -279,13 +279,13 @@ class nsBaseChannel
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsCString mContentType;
   nsCString mContentCharset;
-  uint32_t mLoadFlags;
-  bool mQueriedProgressSink;
-  bool mSynthProgressEvents;
-  bool mAllowThreadRetargeting;
-  bool mWaitingOnAsyncRedirect;
-  bool mOpenRedirectChannel;
-  uint32_t mRedirectFlags;
+  uint32_t mLoadFlags{LOAD_NORMAL};
+  bool mQueriedProgressSink{true};
+  bool mSynthProgressEvents{false};
+  bool mAllowThreadRetargeting{true};
+  bool mWaitingOnAsyncRedirect{false};
+  bool mOpenRedirectChannel{false};
+  uint32_t mRedirectFlags{0};
 
  protected:
   nsCOMPtr<nsIURI> mURI;
@@ -293,12 +293,12 @@ class nsBaseChannel
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIStreamListener> mListener;
-  nsresult mStatus;
-  uint32_t mContentDispositionHint;
+  nsresult mStatus{NS_OK};
+  uint32_t mContentDispositionHint{UINT32_MAX};
   mozilla::UniquePtr<nsString> mContentDispositionFilename;
-  int64_t mContentLength;
-  bool mWasOpened;
-  bool mCanceled;
+  int64_t mContentLength{-1};
+  bool mWasOpened{false};
+  bool mCanceled{false};
 
   friend class mozilla::net::PrivateBrowsingChannel<nsBaseChannel>;
 };

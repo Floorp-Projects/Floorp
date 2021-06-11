@@ -45,25 +45,19 @@ namespace net {
 
 class BrotliWrapper {
  public:
-  BrotliWrapper()
-      : mTotalOut(0),
-        mStatus(NS_OK),
-        mBrotliStateIsStreamEnd(false),
-        mRequest(nullptr),
-        mContext(nullptr),
-        mSourceOffset(0) {
+  BrotliWrapper() {
     BrotliDecoderStateInit(&mState, nullptr, nullptr, nullptr);
   }
   ~BrotliWrapper() { BrotliDecoderStateCleanup(&mState); }
 
   BrotliDecoderState mState{};
-  Atomic<size_t, Relaxed> mTotalOut;
-  nsresult mStatus;
-  Atomic<bool, Relaxed> mBrotliStateIsStreamEnd;
+  Atomic<size_t, Relaxed> mTotalOut{0};
+  nsresult mStatus = NS_OK;
+  Atomic<bool, Relaxed> mBrotliStateIsStreamEnd{false};
 
-  nsIRequest* mRequest;
-  nsISupports* mContext;
-  uint64_t mSourceOffset;
+  nsIRequest* mRequest{nullptr};
+  nsISupports* mContext{nullptr};
+  uint64_t mSourceOffset{0};
 };
 
 class nsHTTPCompressConv : public nsIStreamConverter,
@@ -95,13 +89,13 @@ class nsHTTPCompressConv : public nsIStreamConverter,
 
   nsCOMPtr<nsIStreamListener>
       mListener;  // this guy gets the converted data via his OnDataAvailable ()
-  Atomic<CompressMode, Relaxed> mMode;
+  Atomic<CompressMode, Relaxed> mMode{HTTP_COMPRESS_IDENTITY};
 
-  unsigned char* mOutBuffer;
-  unsigned char* mInpBuffer;
+  unsigned char* mOutBuffer{nullptr};
+  unsigned char* mInpBuffer{nullptr};
 
-  uint32_t mOutBufferLen;
-  uint32_t mInpBufferLen;
+  uint32_t mOutBufferLen{0};
+  uint32_t mInpBufferLen{0};
 
   UniquePtr<BrotliWrapper> mBrotli;
 
@@ -115,20 +109,20 @@ class nsHTTPCompressConv : public nsIStreamConverter,
                               uint64_t aSourceOffset, const char* buffer,
                               uint32_t aCount);
 
-  bool mCheckHeaderDone;
-  Atomic<bool> mStreamEnded;
-  bool mStreamInitialized;
-  bool mDummyStreamInitialised;
+  bool mCheckHeaderDone{false};
+  Atomic<bool> mStreamEnded{false};
+  bool mStreamInitialized{false};
+  bool mDummyStreamInitialised{false};
   bool mFailUncleanStops;
 
-  z_stream d_stream;
-  unsigned mLen, hMode, mSkipCount, mFlags;
+  z_stream d_stream{};
+  unsigned mLen{0}, hMode{0}, mSkipCount{0}, mFlags{0};
 
   uint32_t check_header(nsIInputStream* iStr, uint32_t streamLen, nsresult* rs);
 
-  Atomic<uint32_t, Relaxed> mDecodedDataLength;
+  Atomic<uint32_t, Relaxed> mDecodedDataLength{0};
 
-  mutable mozilla::Mutex mMutex;
+  mutable mozilla::Mutex mMutex{"nsHTTPCompressConv"};
 };
 
 }  // namespace net

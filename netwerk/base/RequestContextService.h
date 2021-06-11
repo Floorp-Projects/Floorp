@@ -34,8 +34,8 @@ class RequestContextService final : public nsIRequestContextService,
   static RequestContextService* sSelf;
 
   nsInterfaceHashtable<nsUint64HashKey, nsIRequestContext> mTable;
-  uint32_t mRCIDNamespace;
-  uint32_t mNextRCID;
+  uint32_t mRCIDNamespace{0};
+  uint32_t mNextRCID{1};
 };
 
 }  // namespace net
