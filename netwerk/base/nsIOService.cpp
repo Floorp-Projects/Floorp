@@ -161,6 +161,8 @@ int16_t gBadPortList[] = {
     587,    // smtp (outgoing)
     601,    // syslog-conn
     636,    // ldap+ssl
+    989,    // ftps-data
+    990,    // ftps
     993,    // imap+ssl
     995,    // pop3+ssl
     1719,   // h323gatestat
