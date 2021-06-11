@@ -502,37 +502,31 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
   MOZ_ASSERT(aInfo);
   MOZ_ASSERT(aChannel);
 
-  UniquePtr<SessionHistoryInfo> newInfo = MakeUnique<SessionHistoryInfo>(
+  SessionHistoryInfo newInfo = SessionHistoryInfo(
       aChannel, aInfo->mInfo.LoadType(),
       aInfo->mInfo.GetPartitionedPrincipalToInherit(), aInfo->mInfo.GetCsp());
 
-  RefPtr<SessionHistoryEntry> newEntry = new SessionHistoryEntry(newInfo.get());
-  if (IsTop()) {
-    // Only top level pages care about Get/SetPersist.
-    nsCOMPtr<nsIURI> uri;
-    aChannel->GetURI(getter_AddRefs(uri));
-    newEntry->SetPersist(nsDocShell::ShouldAddToSessionHistory(uri, aChannel));
-  } else {
-    newEntry->SetIsSubFrame(aInfo->mInfo.IsSubFrame());
-  }
-  newEntry->SetDocshellID(GetHistoryID());
-  newEntry->SetIsDynamicallyAdded(CreatedDynamically());
-
-  // Replacing the old entry.
-  SessionHistoryEntry::SetByLoadId(aInfo->mLoadId, newEntry);
-
-  bool forInitialLoad = true;
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
     if (mLoadingEntries[i].mLoadId == aInfo->mLoadId) {
-      forInitialLoad = mLoadingEntries[i].mEntry->ForInitialLoad();
-      mLoadingEntries[i].mEntry = newEntry;
-      break;
+      RefPtr<SessionHistoryEntry> loadingEntry = mLoadingEntries[i].mEntry;
+      loadingEntry->SetInfo(&newInfo);
+
+      if (IsTop()) {
+        // Only top level pages care about Get/SetPersist.
+        nsCOMPtr<nsIURI> uri;
+        aChannel->GetURI(getter_AddRefs(uri));
+        loadingEntry->SetPersist(
+            nsDocShell::ShouldAddToSessionHistory(uri, aChannel));
+      } else {
+        loadingEntry->SetIsSubFrame(aInfo->mInfo.IsSubFrame());
+      }
+      loadingEntry->SetDocshellID(GetHistoryID());
+      loadingEntry->SetIsDynamicallyAdded(CreatedDynamically());
+      return MakeUnique<LoadingSessionHistoryInfo>(loadingEntry,
+                                                   aInfo->mLoadId);
     }
   }
-
-  newEntry->SetForInitialLoad(forInitialLoad);
-
-  return MakeUnique<LoadingSessionHistoryInfo>(newEntry, aInfo->mLoadId);
+  return nullptr;
 }
 
 #ifdef NS_PRINTING
