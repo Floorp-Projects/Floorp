@@ -36,62 +36,56 @@ let checkScalars = countsObject => {
   const scalars = TelemetryTestUtils.getProcessScalars("parent");
 
   // Check the expected values. Scalars that are never set must not be reported.
-  TelemetryTestUtils.assertScalar(
-    scalars,
+  const checkScalar = (key, val, msg) =>
+    val > 0
+      ? TelemetryTestUtils.assertScalar(scalars, key, val, msg)
+      : TelemetryTestUtils.assertScalarUnset(scalars, key);
+  checkScalar(
     MAX_CONCURRENT_TABS,
     countsObject.maxTabs,
     "The maximum tab count must match the expected value."
   );
-  TelemetryTestUtils.assertScalar(
-    scalars,
+  checkScalar(
     TAB_EVENT_COUNT,
     countsObject.tabOpenCount,
     "The number of open tab event count must match the expected value."
   );
-  TelemetryTestUtils.assertScalar(
-    scalars,
+  checkScalar(
     MAX_TAB_PINNED,
     countsObject.maxTabsPinned,
     "The maximum tabs pinned count must match the expected value."
   );
-  TelemetryTestUtils.assertScalar(
-    scalars,
+  checkScalar(
     TAB_PINNED_EVENT,
     countsObject.tabPinnedCount,
     "The number of tab pinned event count must match the expected value."
   );
-  TelemetryTestUtils.assertScalar(
-    scalars,
+  checkScalar(
     MAX_CONCURRENT_WINDOWS,
     countsObject.maxWindows,
     "The maximum window count must match the expected value."
   );
-  TelemetryTestUtils.assertScalar(
-    scalars,
+  checkScalar(
     WINDOW_OPEN_COUNT,
     countsObject.windowsOpenCount,
     "The number of window open event count must match the expected value."
   );
-  TelemetryTestUtils.assertScalar(
-    scalars,
+  checkScalar(
     TOTAL_URI_COUNT,
     countsObject.totalURIs,
     "The total URI count must match the expected value."
   );
-  TelemetryTestUtils.assertScalar(
-    scalars,
+  checkScalar(
     UNIQUE_DOMAINS_COUNT,
     countsObject.domainCount,
     "The unique domains count must match the expected value."
   );
-  TelemetryTestUtils.assertScalar(
-    scalars,
+  checkScalar(
     UNFILTERED_URI_COUNT,
     countsObject.totalUnfilteredURIs,
     "The unfiltered URI count must match the expected value."
   );
-  TelemetryTestUtils.assertScalar(
-    scalars,
+  checkScalar(
     TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE,
     countsObject.totalURIsNormalAndPrivateMode,
     "The total URI count for both normal and private mode must match the expected value."

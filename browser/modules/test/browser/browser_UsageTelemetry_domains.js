@@ -80,7 +80,18 @@ add_task(async function test_URIAndDomainCounts() {
     gBrowser,
     "about:blank"
   );
-  checkCounts({ totalURIs: 0, domainCount: 0, totalUnfilteredURIs: 0 });
+  TelemetryTestUtils.assertScalarUnset(
+    TelemetryTestUtils.getProcessScalars("parent"),
+    TOTAL_URI_COUNT
+  );
+  TelemetryTestUtils.assertScalarUnset(
+    TelemetryTestUtils.getProcessScalars("parent"),
+    UNIQUE_DOMAINS_COUNT
+  );
+  TelemetryTestUtils.assertScalarUnset(
+    TelemetryTestUtils.getProcessScalars("parent"),
+    UNFILTERED_URI_COUNT
+  );
 
   // Open a different page and check the counts.
   BrowserTestUtils.loadURI(firstTab.linkedBrowser, "http://example.com/");
