@@ -414,7 +414,10 @@ class Raptor(
                     "dest": "conditioned_profile",
                     "type": "str",
                     "default": None,
-                    "help": "Name of conditioned profile to use.",
+                    "help": (
+                        "Name of conditioned profile to use. Prefix with `artifact:` "
+                        "if we should obtain the profile from CI.",
+                    ),
                 },
             ],
             [

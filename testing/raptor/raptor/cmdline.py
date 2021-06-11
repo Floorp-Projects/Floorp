@@ -353,7 +353,8 @@ def create_parser(mach_interface=False):
         dest="conditioned_profile",
         default=None,
         type=str,
-        help="Name of conditioned profile to use.",
+        help="Name of conditioned profile to use. Prefix with `artifact:` "
+        "if we should obtain the profile from CI.",
     )
 
     # for browsertime jobs, cold page load is determined by a '--cold' cmd line argument
