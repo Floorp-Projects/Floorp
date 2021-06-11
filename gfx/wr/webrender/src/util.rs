@@ -1237,7 +1237,7 @@ pub fn raster_rect_to_device_pixels(
     device_pixel_scale: DevicePixelScale,
 ) -> DeviceRect {
     let world_rect = rect * Scale::new(1.0);
-    let device_rect = (world_rect * device_pixel_scale).to_box2d();
+    let device_rect = world_rect * device_pixel_scale;
     device_rect.round_out()
 }
 
