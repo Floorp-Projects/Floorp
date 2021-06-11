@@ -3454,18 +3454,6 @@ NS_IMETHODIMP EditorBase::ResetModificationCount() {
 }
 
 // static
-nsIContent* EditorBase::GetNodeAtRangeOffsetPoint(
-    const RawRangeBoundary& aPoint) {
-  if (NS_WARN_IF(!aPoint.IsSet())) {
-    return nullptr;
-  }
-  if (aPoint.Container()->GetAsText()) {
-    return aPoint.Container()->AsContent();
-  }
-  return aPoint.GetChildAtOffset();
-}
-
-// static
 EditorRawDOMPoint EditorBase::GetStartPoint(const Selection& aSelection) {
   if (NS_WARN_IF(!aSelection.RangeCount())) {
     return EditorRawDOMPoint();

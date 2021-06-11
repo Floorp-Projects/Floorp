@@ -283,6 +283,17 @@ class EditorDOMPointBase final {
   }
 
   /**
+   * GetChildOrContainerIfDataNode() returns the child content node,
+   * or container content node if the container is a data node.
+   */
+  nsIContent* GetChildOrContainerIfDataNode() const {
+    if (IsInDataNode()) {
+      return ContainerAsContent();
+    }
+    return GetChild();
+  }
+
+  /**
    * GetNextSiblingOfChild() returns next sibling of the child node.
    * If this refers after the last child or the container cannot have children,
    * this returns nullptr with warning.
