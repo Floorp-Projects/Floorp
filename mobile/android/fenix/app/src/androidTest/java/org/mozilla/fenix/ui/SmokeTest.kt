@@ -1200,6 +1200,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Test failure caused by: https://github.com/mozilla-mobile/fenix/issues/19964")
     @Test
     fun restoreTabCrashedReporterTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
