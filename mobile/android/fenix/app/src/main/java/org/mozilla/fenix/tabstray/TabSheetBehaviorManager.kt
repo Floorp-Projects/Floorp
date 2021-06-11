@@ -93,7 +93,7 @@ internal class TraySheetBehaviorCallback(
             trayInteractor.onTabTrayDismissed()
         } else if (newState == BottomSheetBehavior.STATE_HALF_EXPANDED) {
             // We only support expanded and collapsed states.
-            // But why??
+            // Otherwise the tray may be left in an unusable state. See #14980.
             behavior.state = STATE_HIDDEN
         }
     }
