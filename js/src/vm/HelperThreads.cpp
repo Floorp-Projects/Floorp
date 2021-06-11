@@ -138,10 +138,10 @@ void JS::SetProfilingThreadCallbacks(
 // error for HelperThreadTaskCallback.
 JS_PUBLIC_API MOZ_NEVER_INLINE void JS::SetHelperThreadTaskCallback(
     HelperThreadTaskCallback callback, size_t threadCount) {
-  HelperThreadState().setExternalTaskCallback(callback, threadCount);
+  HelperThreadState().setDispatchTaskCallback(callback, threadCount);
 }
 
-void GlobalHelperThreadState::setExternalTaskCallback(
+void GlobalHelperThreadState::setDispatchTaskCallback(
     JS::HelperThreadTaskCallback callback, size_t threadCount) {
   AutoLockHelperThreadState lock;
   MOZ_ASSERT(!isInitialized(lock));
@@ -1300,9 +1300,12 @@ bool GlobalHelperThreadState::ensureInitialized() {
     i = 0;
   }
 
-  if (useInternalThreadPool(lock) &&
-      !InternalThreadPool::Initialize(threadCount, lock)) {
-    return false;
+  if (useInternalThreadPool(lock)) {
+    if (!InternalThreadPool::Initialize(threadCount, lock)) {
+      return false;
+    }
+
+    dispatchTaskCallback = InternalThreadPool::DispatchTask;
   }
 
   if (!ensureThreadCount(threadCount, lock)) {
@@ -1421,16 +1424,11 @@ void GlobalHelperThreadState::assertIsLockedByCurrentThread() const {
 
 void GlobalHelperThreadState::dispatch(
     const AutoLockHelperThreadState& locked) {
-  if (useInternalThreadPool(locked)) {
-    InternalThreadPool::Get().dispatchTask(locked);
-    return;
-  }
-
-  if (canStartTasks(locked) && externalTasksPending_ < threadCount) {
+  if (canStartTasks(locked) && tasksPending_ < threadCount) {
     // This doesn't guarantee that we don't dispatch more tasks to the external
     // pool than necessary if tasks are taking a long time to start, but it does
     // limit the number.
-    externalTasksPending_++;
+    tasksPending_++;
 
     // The hazard analysis can't tell that the callback doesn't GC.
     JS::AutoSuppressGCAnalysis nogc;
@@ -1475,7 +1473,7 @@ void GlobalHelperThreadState::waitForAllTasksLocked(
     AutoLockHelperThreadState& lock) {
   CancelOffThreadWasmTier2GeneratorLocked(lock);
 
-  while (canStartTasks(lock) || externalTasksPending_ ||
+  while (canStartTasks(lock) || tasksPending_ ||
          hasActiveThreads(lock)) {
     wait(lock, CONSUMER);
   }
@@ -1489,7 +1487,7 @@ void GlobalHelperThreadState::waitForAllTasksLocked(
   MOZ_ASSERT(ionFreeList(lock).empty());
   MOZ_ASSERT(wasmWorklist(lock, wasm::CompileMode::Tier2).empty());
   MOZ_ASSERT(wasmTier2GeneratorWorklist(lock).empty());
-  MOZ_ASSERT(!externalTasksPending_);
+  MOZ_ASSERT(!tasksPending_);
   MOZ_ASSERT(!hasActiveThreads(lock));
 }
 
@@ -2688,14 +2686,17 @@ void JS::RunHelperThreadTask() {
     return;
   }
 
-  HelperThreadState().runTaskFromExternalThread(lock);
+  HelperThreadState().runOneTask(lock);
 }
 
-void GlobalHelperThreadState::runTaskFromExternalThread(
-    AutoLockHelperThreadState& lock) {
-  MOZ_ASSERT(externalTasksPending_ > 0);
-  externalTasksPending_--;
+void GlobalHelperThreadState::runOneTask(AutoLockHelperThreadState& lock) {
+  MOZ_ASSERT(tasksPending_ > 0);
+  tasksPending_--;
 
+  // The selectors may depend on the HelperThreadState not changing between task
+  // selection and task execution, in particular, on new tasks not being added
+  // (because of the lifo structure of the work lists). Unlocking the
+  // HelperThreadState between task selection and execution is not well-defined.
   HelperThreadTask* task = findHighestPriorityTask(lock);
   if (task) {
     runTaskLocked(task, lock);

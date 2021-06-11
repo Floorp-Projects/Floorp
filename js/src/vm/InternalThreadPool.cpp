@@ -156,11 +156,12 @@ size_t InternalThreadPool::sizeOfIncludingThis(
          threads(lock).sizeOfExcludingThis(mallocSizeOf);
 }
 
-void InternalThreadPool::dispatchTask(const AutoLockHelperThreadState& lock) {
-  notifyOne(lock);
-}
+/* static */
+void InternalThreadPool::DispatchTask() { Get().dispatchTask(); }
 
-void InternalThreadPool::notifyOne(const AutoLockHelperThreadState& lock) {
+void InternalThreadPool::dispatchTask() {
+  gHelperThreadLock.assertOwnedByCurrentThread();
+  queuedTasks++;
   wakeup.notify_one();
 }
 
@@ -241,20 +242,13 @@ void HelperThread::threadLoop(InternalThreadPool* pool) {
   AutoLockHelperThreadState lock;
 
   while (!pool->terminating) {
-    // The selectors may depend on the HelperThreadState not changing
-    // between task selection and task execution, in particular, on new
-    // tasks not being added (because of the lifo structure of the work
-    // lists). Unlocking the HelperThreadState between task selection and
-    // execution is not well-defined.
-
-    HelperThreadTask* task = HelperThreadState().findHighestPriorityTask(lock);
-    if (!task) {
-      AUTO_PROFILER_LABEL("HelperThread::threadLoop::wait", IDLE);
-      pool->wait(lock);
+    if (pool->queuedTasks != 0) {
+      pool->queuedTasks--;
+      HelperThreadState().runOneTask(lock);
       continue;
     }
 
-    HelperThreadState().runTaskLocked(task, lock);
-    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, lock);
+    AUTO_PROFILER_LABEL("HelperThread::threadLoop::wait", IDLE);
+    pool->wait(lock);
   }
 }
