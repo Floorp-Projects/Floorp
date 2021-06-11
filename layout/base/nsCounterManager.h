@@ -62,6 +62,7 @@ struct nsCounterNode : public nsGenConNode {
   // 'counter-reset', 'counter-increment' or 'counter-set'  property
   // instead of within the 'content' property but offset to ensure
   // that (reset, increment, set, use) sort in that order.
+  // It is zero for legacy bullet USE counter nodes.
   // (This slight weirdness allows sharing a lot of code with 'quotes'.)
   nsCounterNode(int32_t aContentIndex, Type aType)
       : nsGenConNode(aContentIndex), mType(aType) {}
@@ -83,10 +84,10 @@ struct nsCounterUseNode : public nsCounterNode {
   bool mForLegacyBullet = false;
 
   enum ForLegacyBullet { ForLegacyBullet };
-  explicit nsCounterUseNode(enum ForLegacyBullet)
-      : nsCounterNode(0, USE), mForLegacyBullet(true) {
-    mCounterStyle = nsGkAtoms::list_item;
-  }
+  nsCounterUseNode(enum ForLegacyBullet, mozilla::CounterStylePtr aCounterStyle)
+      : nsCounterNode(0, USE),
+        mCounterStyle(std::move(aCounterStyle)),
+        mForLegacyBullet(true) {}
 
   // args go directly to member variables here and of nsGenConNode
   nsCounterUseNode(mozilla::CounterStylePtr aCounterStyle, nsString aSeparator,
@@ -98,10 +99,8 @@ struct nsCounterUseNode : public nsCounterNode {
     NS_ASSERTION(aContentIndex <= INT32_MAX, "out of range");
   }
 
-  virtual bool InitTextFrame(nsGenConList* aList, nsIFrame* aPseudoFrame,
-                             nsIFrame* aTextFrame) override;
-
-  bool InitBullet(nsGenConList* aList, nsIFrame* aBulletFrame);
+  bool InitTextFrame(nsGenConList* aList, nsIFrame* aPseudoFrame,
+                     nsIFrame* aTextFrame) override;
 
   // assign the correct |mValueAfter| value to a node that has been inserted,
   // and update the value of the text node, notifying if `aNotify` is true.
@@ -110,6 +109,8 @@ struct nsCounterUseNode : public nsCounterNode {
 
   // The text that should be displayed for this counter.
   void GetText(nsString& aResult);
+  void GetText(mozilla::WritingMode aWM, mozilla::CounterStyle* aStyle,
+               nsString& aResult);
 };
 
 struct nsCounterChangeNode : public nsCounterNode {
@@ -170,6 +171,11 @@ inline bool nsCounterNode::IsContentBasedReset() {
 class nsCounterList : public nsGenConList {
  public:
   nsCounterList() : nsGenConList(), mDirty(false) {}
+
+  // Return the first node for aFrame on this list, or nullptr.
+  nsCounterNode* GetFirstNodeFor(nsIFrame* aFrame) const {
+    return static_cast<nsCounterNode*>(nsGenConList::GetFirstNodeFor(aFrame));
+  }
 
   void Insert(nsCounterNode* aNode) {
     nsGenConList::Insert(aNode);
@@ -234,6 +240,11 @@ class nsCounterManager {
 
   // Clear all data.
   void Clear() { mNames.Clear(); }
+
+#ifdef ACCESSIBILITY
+  // Returns the spoken text for the 'list-item' counter for aFrame in aText.
+  void GetSpokenCounterText(nsIFrame* aFrame, nsAString& aText) const;
+#endif
 
 #ifdef DEBUG
   void Dump();
