@@ -1949,17 +1949,6 @@ class EditorBase : public nsIEditor,
    */
   bool ShouldHandleIMEComposition() const;
 
-  /**
-   * GetNodeAtRangeOffsetPoint() returns the node at this position in a range,
-   * assuming that the container is the node itself if it's a text node, or
-   * the node's parent otherwise.
-   */
-  static nsIContent* GetNodeAtRangeOffsetPoint(nsINode* aContainer,
-                                               int32_t aOffset) {
-    return GetNodeAtRangeOffsetPoint(RawRangeBoundary(aContainer, aOffset));
-  }
-  static nsIContent* GetNodeAtRangeOffsetPoint(const RawRangeBoundary& aPoint);
-
   static EditorRawDOMPoint GetStartPoint(const Selection& aSelection);
   static EditorRawDOMPoint GetEndPoint(const Selection& aSelection);
 

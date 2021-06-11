@@ -5806,8 +5806,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
       MOZ_ALWAYS_TRUE(startPoint.RewindOffset());
     }
   }
-  if (!IsDescendantOfEditorRoot(
-          EditorBase::GetNodeAtRangeOffsetPoint(startPoint))) {
+  if (!IsDescendantOfEditorRoot(startPoint.GetChildOrContainerIfDataNode())) {
     return nullptr;
   }
   EditorRawDOMPoint endPoint(endRef);
@@ -5821,8 +5820,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
   }
   EditorRawDOMPoint lastRawPoint(endPoint);
   lastRawPoint.RewindOffset();  // XXX Fail if it's start of the container
-  if (!IsDescendantOfEditorRoot(
-          EditorBase::GetNodeAtRangeOffsetPoint(lastRawPoint))) {
+  if (!IsDescendantOfEditorRoot(lastRawPoint.GetChildOrContainerIfDataNode())) {
     return nullptr;
   }
 
@@ -5869,8 +5867,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
   // XXX GetCurrentHardLineStartPoint() may return point of editing
   //     host.  Perhaps, we should change it and stop checking it here
   //     since this check may be expensive.
-  if (!IsDescendantOfEditorRoot(
-          EditorBase::GetNodeAtRangeOffsetPoint(startPoint))) {
+  if (!IsDescendantOfEditorRoot(startPoint.GetChildOrContainerIfDataNode())) {
     return nullptr;
   }
   EditorDOMPoint endPoint = GetCurrentHardLineEndPoint(endRef);
@@ -5879,8 +5876,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
   // XXX GetCurrentHardLineEndPoint() may return point of editing host.
   //     Perhaps, we should change it and stop checking it here since this
   //     check may be expensive.
-  if (!IsDescendantOfEditorRoot(
-          EditorBase::GetNodeAtRangeOffsetPoint(lastRawPoint))) {
+  if (!IsDescendantOfEditorRoot(lastRawPoint.GetChildOrContainerIfDataNode())) {
     return nullptr;
   }
 
