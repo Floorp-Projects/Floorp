@@ -2472,6 +2472,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       PASSWORD_AUTOCOMPLETE_NEW_PASSWORD: 11,
       TYPE_NO_LONGER_PASSWORD: 12,
       FORM_IN_CROSSORIGIN_SUBFRAME: 13,
+      FILLED_USERNAME_ONLY_FORM: 14,
     };
 
     // Heuristically determine what the user/pass fields are
@@ -2781,7 +2782,11 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       }
 
       log("_fillForm succeeded");
-      autofillResult = AUTOFILL_RESULT.FILLED;
+      if (passwordField) {
+        autofillResult = AUTOFILL_RESULT.FILLED;
+      } else if (usernameField) {
+        autofillResult = AUTOFILL_RESULT.FILLED_USERNAME_ONLY_FORM;
+      }
     } catch (ex) {
       Cu.reportError(ex);
       throw ex;
@@ -2801,7 +2806,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
           let focusedElement = gFormFillService.focusedInput;
           if (
             usernameField == focusedElement &&
-            autofillResult !== AUTOFILL_RESULT.FILLED
+            ![
+              AUTOFILL_RESULT.FILLED,
+              AUTOFILL_STATE.FILLED_USERNAME_ONLY_FORM,
+            ].includes(autofillResult)
           ) {
             log(
               "_fillForm: Opening username autocomplete popup since the form wasn't autofilled"
