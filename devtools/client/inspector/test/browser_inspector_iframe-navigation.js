@@ -22,10 +22,10 @@ add_task(async function() {
   let isVisible = await testActor.isHighlighting();
   ok(isVisible, "Inspector is highlighting.");
 
-  await testActor.reloadFrame("iframe");
+  await reloadIframe();
   info("Frame reloaded. Reloading again.");
 
-  await testActor.reloadFrame("iframe");
+  await reloadIframe();
   info("Frame reloaded twice.");
 
   isVisible = await testActor.isHighlighting();
@@ -34,3 +34,13 @@ add_task(async function() {
   info("Stopping element picker.");
   await toolbox.nodePicker.stop();
 });
+
+function reloadIframe() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    const iframeEl = content.document.querySelector("iframe");
+    await new Promise(resolve => {
+      iframeEl.addEventListener("load", () => resolve(), { once: true });
+      iframeEl.contentWindow.location.reload();
+    });
+  });
+}

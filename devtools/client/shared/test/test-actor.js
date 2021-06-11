@@ -143,12 +143,6 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("json"),
       },
     },
-    reloadFrame: {
-      request: {
-        selector: Arg(0, "string"),
-      },
-      response: {},
-    },
     scrollWindow: {
       request: {
         x: Arg(0, "number"),
@@ -436,24 +430,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
       bottom: rect.bottom,
       left: rect.left,
     };
-  },
-
-  /**
-   * Reload an iframe and wait for its load event.
-   * @param {String} selector The node selector
-   */
-  reloadFrame: function(selector) {
-    return new Promise(resolve => {
-      const node = this._querySelector(selector);
-
-      const onLoad = function() {
-        node.removeEventListener("load", onLoad);
-        resolve();
-      };
-      node.addEventListener("load", onLoad);
-
-      node.contentWindow.location.reload();
-    });
   },
 
   /**
