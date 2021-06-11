@@ -53,6 +53,7 @@ function do_state_read(aSubject, aTopic, aData) {
 
   ok(
     gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://frequentlyused.example.com"),
       0
     )
@@ -63,6 +64,7 @@ function do_state_read(aSubject, aTopic, aData) {
   for (let i = 0; i < 2000; i++) {
     let uri = Services.io.newURI("http://bad" + i + ".example.com");
     gSSService.processHeader(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       uri,
       "max-age=1000",
       secInfo,

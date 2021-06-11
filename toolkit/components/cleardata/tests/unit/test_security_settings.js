@@ -19,6 +19,7 @@ function addSecurityInfo({ host, topLevelBaseDomain, originAttributes = {} }) {
   ].createInstance(Ci.nsITransportSecurityInfo);
 
   gSSService.processHeader(
+    Ci.nsISiteSecurityService.HEADER_HSTS,
     uri,
     "max-age=1000;",
     secInfo,
@@ -62,6 +63,7 @@ function testSecurityInfo({
 }) {
   let uri = Services.io.newURI(`https://${host}`);
   let isSecure = gSSService.isSecureURI(
+    Ci.nsISiteSecurityService.HEADER_HSTS,
     uri,
     0,
     getOAWithPartitionKey(topLevelBaseDomain, originAttributes)

@@ -128,7 +128,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       SECTrustType certDBTrustType, OCSPFetching ocspFetching,
       OCSPCache& ocspCache, void* pinArg, mozilla::TimeDuration ocspTimeoutSoft,
       mozilla::TimeDuration ocspTimeoutHard, uint32_t certShortLifetimeInDays,
-      unsigned int minRSABits, ValidityCheckingMode validityCheckingMode,
+      CertVerifier::PinningMode pinningMode, unsigned int minRSABits,
+      ValidityCheckingMode validityCheckingMode,
       CertVerifier::SHA1Mode sha1Mode,
       NetscapeStepUpPolicy netscapeStepUpPolicy, CRLiteMode crliteMode,
       uint64_t crliteCTMergeDelaySeconds,
@@ -246,6 +247,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   const mozilla::TimeDuration mOCSPTimeoutSoft;
   const mozilla::TimeDuration mOCSPTimeoutHard;
   const uint32_t mCertShortLifetimeInDays;
+  CertVerifier::PinningMode mPinningMode;
   const unsigned int mMinRSABits;
   ValidityCheckingMode mValidityCheckingMode;
   CertVerifier::SHA1Mode mSHA1Mode;
