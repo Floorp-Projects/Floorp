@@ -2888,7 +2888,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       aField
     );
     if (indexOfFieldInUsernameAndPasswordFields == -1) {
-      fieldNameHint = hasBeenTypePassword ? "current-password" : "username";
+      // For fields in the form that are neither username nor password,
+      // set fieldNameHint to "other". Right now, in contextmenu, we treat both
+      // "username" and "other" field as username fields.
+      fieldNameHint = hasBeenTypePassword ? "current-password" : "other";
     } else {
       fieldNameHint =
         LOGIN_FIELD_ORDER[indexOfFieldInUsernameAndPasswordFields];
