@@ -2,7 +2,9 @@ const TEST_URL_PATH = "/browser/toolkit/components/passwordmgr/test/browser/";
 const INITIAL_URL = `about:blank`;
 const FORM_URL = `https://example.org${TEST_URL_PATH}form_basic.html`;
 const FORMLESS_URL = `https://example.org${TEST_URL_PATH}formless_basic.html`;
-const testUrls = [FORM_URL, FORMLESS_URL];
+const FORM_MULTIPAGE_URL = `https://example.org${TEST_URL_PATH}form_multipage.html`;
+const testUrls = [FORM_URL, FORMLESS_URL, FORM_MULTIPAGE_URL];
+const testUrlsWithForm = [FORM_URL, FORM_MULTIPAGE_URL];
 const BRAND_BUNDLE = Services.strings.createBundle(
   "chrome://branding/locale/brand.properties"
 );
@@ -57,19 +59,21 @@ add_task(async function setup() {
   Services.logins.addLogin(login);
 });
 
-add_task(async function test_processed_form_fired() {
-  // Sanity check. If this doesnt work any results for the subsequent tasks are suspect
-  const tab1 = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    INITIAL_URL
-  );
-  let tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
-  is(tab1Visibility, "visible", "The first tab should be foreground");
+testUrlsWithForm.forEach(testUrl => {
+  add_task(async function test_processed_form_fired() {
+    // Sanity check. If this doesnt work any results for the subsequent tasks are suspect
+    const tab1 = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      INITIAL_URL
+    );
+    let tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
+    is(tab1Visibility, "visible", "The first tab should be foreground");
 
-  let formProcessedPromise = listenForTestNotification("FormProcessed");
-  BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
-  await formProcessedPromise;
-  gBrowser.removeTab(tab1);
+    let formProcessedPromise = listenForTestNotification("FormProcessed");
+    BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
+    await formProcessedPromise;
+    gBrowser.removeTab(tab1);
+  });
 });
 
 testUrls.forEach(testUrl => {
@@ -131,80 +135,89 @@ testUrls.forEach(testUrl => {
         let doc = content.document;
         return {
           username: doc.getElementById("form-basic-username").value,
-          password: doc.getElementById("form-basic-password").value,
+          password: doc.getElementById("form-basic-password")?.value,
         };
       }
     );
     is(fieldValues.username, "user1", "Checking filled username");
-    is(fieldValues.password, "pass1", "Checking filled password");
+
+    // skip password test for a username-only form
+    if (![FORM_MULTIPAGE_URL].includes(testUrl)) {
+      is(fieldValues.password, "pass1", "Checking filled password");
+    }
 
     gBrowser.removeTab(tab1);
     gBrowser.removeTab(tab2);
   });
 });
 
-add_task(async function test_immediate_autofill_with_masterpassword() {
-  // Set master password prompt timeout to 3s.
-  // If this test goes intermittent, you likely have to increase this value.
-  await SpecialPowers.pushPrefEnv({
-    set: [["signon.masterPasswordReprompt.timeout_ms", 3000]],
-  });
+testUrlsWithForm.forEach(testUrl => {
+  add_task(async function test_immediate_autofill_with_masterpassword() {
+    // Set master password prompt timeout to 3s.
+    // If this test goes intermittent, you likely have to increase this value.
+    await SpecialPowers.pushPrefEnv({
+      set: [["signon.masterPasswordReprompt.timeout_ms", 3000]],
+    });
 
-  LoginTestUtils.masterPassword.enable();
-  await LoginTestUtils.reloadData();
-  info(
-    `Have enabled masterPassword, now isLoggedIn? ${Services.logins.isLoggedIn}`
-  );
-
-  registerCleanupFunction(async function() {
-    LoginTestUtils.masterPassword.disable();
+    LoginTestUtils.masterPassword.enable();
     await LoginTestUtils.reloadData();
+    info(
+      `Have enabled masterPassword, now isLoggedIn? ${Services.logins.isLoggedIn}`
+    );
+
+    registerCleanupFunction(async function() {
+      LoginTestUtils.masterPassword.disable();
+      await LoginTestUtils.reloadData();
+    });
+
+    let dialogResult, tab1Visibility, dialogObserved;
+
+    // open 2 tabs
+    const tab1 = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      INITIAL_URL
+    );
+    const tab2 = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      INITIAL_URL
+    );
+
+    info(
+      "load a background login form tab with a matching saved login " +
+        "and wait to see if the master password dialog is shown"
+    );
+    is(
+      await getDocumentVisibilityState(tab2.linkedBrowser),
+      "visible",
+      "The second tab should be visible"
+    );
+
+    tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
+    is(tab1Visibility, "hidden", "The first tab should be backgrounded");
+
+    dialogResult = { wasShown: false };
+    dialogObserved = observeMasterPasswordDialog(
+      tab1.ownerGlobal,
+      dialogResult
+    );
+
+    // In this case we will try to autofill while hidden, so look for the passwordmgr-processed-form
+    // to be observed
+    let formProcessedPromise = listenForTestNotification("FormProcessed");
+    BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
+    await Promise.all([formProcessedPromise, dialogObserved]);
+
+    let wasProcessed = await formProcessedPromise;
+    ok(
+      wasProcessed,
+      "Observer should be notified when form is loaded into a hidden document"
+    );
+    ok(
+      dialogResult && dialogResult.wasShown,
+      "MP Dialog should be shown when form is loaded into a hidden document"
+    );
+
+    gBrowser.removeTab(tab1);
+    gBrowser.removeTab(tab2);
   });
-
-  let dialogResult, tab1Visibility, dialogObserved;
-
-  // open 2 tabs
-  const tab1 = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    INITIAL_URL
-  );
-  const tab2 = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    INITIAL_URL
-  );
-
-  info(
-    "load a background login form tab with a matching saved login " +
-      "and wait to see if the master password dialog is shown"
-  );
-  is(
-    await getDocumentVisibilityState(tab2.linkedBrowser),
-    "visible",
-    "The second tab should be visible"
-  );
-
-  tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
-  is(tab1Visibility, "hidden", "The first tab should be backgrounded");
-
-  dialogResult = { wasShown: false };
-  dialogObserved = observeMasterPasswordDialog(tab1.ownerGlobal, dialogResult);
-
-  // In this case we will try to autofill while hidden, so look for the passwordmgr-processed-form
-  // to be observed
-  let formProcessedPromise = listenForTestNotification("FormProcessed");
-  BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
-  await Promise.all([formProcessedPromise, dialogObserved]);
-
-  let wasProcessed = await formProcessedPromise;
-  ok(
-    wasProcessed,
-    "Observer should be notified when form is loaded into a hidden document"
-  );
-  ok(
-    dialogResult && dialogResult.wasShown,
-    "MP Dialog should be shown when form is loaded into a hidden document"
-  );
-
-  gBrowser.removeTab(tab1);
-  gBrowser.removeTab(tab2);
 });

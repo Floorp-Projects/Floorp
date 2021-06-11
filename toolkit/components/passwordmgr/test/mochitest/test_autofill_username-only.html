@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autofill on username-form</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Test autofill on username-form
+
+<script>
+let readyPromise = registerRunTests();
+let DEFAULT_ORIGIN = window.location.origin;
+
+addLoginsInParent(
+  [DEFAULT_ORIGIN, "https://autofill", null, "user1", "pass1"]);
+
+add_task(async function setup() {
+  ok(readyPromise, "check promise is available");
+  await readyPromise;
+});
+
+add_task(async function test_autofill_username_only_form() {
+  let win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+    <!-- no password field, 1 username field -->
+    <form id='form1' action='https://autofill'> 1
+        <input type='text' name='uname' autocomplete='username' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- no password field, 1 username field, with a value set -->
+    <form id='form2' action='https://autofill'> 2
+        <input type='text' name='uname' autocomplete='username' value='someuser'>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- no password field, 2 username fields, should be ignored -->
+    <form id='form3' action='https://autofill'> 3
+        <input type='text' name='uname1' autocomplete='username' value=''>
+        <input type='text' name='uname2' autocomplete='username' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- no password field, 1 username field, too small for the username login -->
+    <form id='form4' action='https://autofill'> 4
+        <input type='text' name='uname' value='' maxlength="4" autocomplete='username'>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- no password field, 1 username field, too small for the username login -->
+    <form id='form5' action='https://autofill'> 5
+        <input type='text' name='uname' value='' maxlength="0" autocomplete='username'>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- no password field, 1 text input field (not a username-only form), should be ignored -->
+    <form id='form6' action='https://autofill'> 6
+        <input type='text' name='uname' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>`, win);
+
+  await checkLoginFormInFrameWithElementValues(win, 1, "user1");
+  await checkLoginFormInFrameWithElementValues(win, 2, "someuser");
+  await checkUnmodifiedFormInFrame(win, 3);
+  await checkUnmodifiedFormInFrame(win, 4);
+  await checkUnmodifiedFormInFrame(win, 5);
+  await checkUnmodifiedFormInFrame(win, 6);
+});
+</script>
+
+<p id="display"></p>
+<div id="content"></div>
+<pre id="test"></pre>
+</pre>
+</body>
+</html>
