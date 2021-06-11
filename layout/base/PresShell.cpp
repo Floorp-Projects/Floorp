@@ -4646,8 +4646,7 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
       bool atStart = (content == aRange->GetStartContainer());
       bool atEnd = (content == aRange->GetEndContainer());
       if ((atStart || atEnd) && frame->IsTextFrame()) {
-        int32_t frameStartOffset, frameEndOffset;
-        frame->GetOffsets(frameStartOffset, frameEndOffset);
+        auto [frameStartOffset, frameEndOffset] = frame->GetOffsets();
 
         int32_t hilightStart =
             atStart ? std::max(static_cast<int32_t>(aRange->StartOffset()),
