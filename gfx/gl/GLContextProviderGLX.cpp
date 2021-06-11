@@ -16,6 +16,7 @@
 
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
@@ -174,6 +175,9 @@ bool GLXLibrary::EnsureInitialized() {
   const SymLoadStruct symbols_querydrawable[] = {SYMBOL(QueryDrawable),
                                                  END_OF_SYMBOLS};
 
+  const SymLoadStruct symbols_screendriver[] = {SYMBOL(GetScreenDriver),
+                                                END_OF_SYMBOLS};
+
   const auto fnLoadSymbols = [&](const SymLoadStruct* symbols) {
     if (pfnLoader.LoadSymbols(symbols)) return true;
 
@@ -224,6 +228,8 @@ bool GLXLibrary::EnsureInitialized() {
       fnLoadSymbols(symbols_querydrawable)) {
     mHasBufferAge = true;
   }
+
+  fnLoadSymbols(symbols_screendriver);
 
   mIsATI = serverVendor && DoesStringMatch(serverVendor, "ATI");
   mIsNVIDIA =
@@ -478,6 +484,20 @@ already_AddRefed<GLContextGLX> GLContextGLX::CreateGLContext(
     const GLContextDesc& desc, Display* display, GLXDrawable drawable,
     GLXFBConfig cfg, bool deleteDrawable, gfxXlibSurface* pixmap) {
   GLXLibrary& glx = sGLXLibrary;
+
+  if (desc.flags & CreateContextFlags::FORCE_ENABLE_HARDWARE &&
+      glx.HasGetScreenDriver()) {
+    const char* driDriver =
+        glx.fGetScreenDriver(display, DefaultScreen(display));
+    if (driDriver) {
+      if (strcmp(driDriver, "llvmpipe") == 0 ||
+          strcmp(driDriver, "swrast") == 0 ||
+          strcmp(driDriver, "softpipe") == 0) {
+        NS_WARNING("Cannot create GLContextGLX, got software driver");
+        return nullptr;
+      }
+    }
+  }
 
   int isDoubleBuffered = 0;
   int err = glx.fGetFBConfigAttrib(display, cfg, LOCAL_GLX_DOUBLEBUFFER,
@@ -770,7 +790,11 @@ already_AddRefed<GLContext> CreateForWidget(Display* aXDisplay, Window aXWindow,
 
   CreateContextFlags flags;
   if (aHardwareWebRender) {
-    flags = CreateContextFlags::NONE;  // WR needs GL3.2+
+    if (gfxVars::WebRenderRequiresHardwareDriver()) {
+      flags = CreateContextFlags::FORCE_ENABLE_HARDWARE;
+    } else {
+      flags = CreateContextFlags::NONE;  // WR needs GL3.2+
+    }
   } else {
     flags = CreateContextFlags::REQUIRE_COMPAT_PROFILE;
   }
