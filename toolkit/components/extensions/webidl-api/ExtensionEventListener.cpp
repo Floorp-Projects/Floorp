@@ -13,6 +13,153 @@
 namespace mozilla {
 namespace extensions {
 
+namespace {
+
+class SendResponseCallback final : public nsISupports {
+ public:
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SendResponseCallback)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+  static RefPtr<SendResponseCallback> Create(
+      nsIGlobalObject* aGlobalObject, const RefPtr<dom::Promise>& aPromise,
+      JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
+    MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
+
+    RefPtr<SendResponseCallback> responseCallback =
+        new SendResponseCallback(aPromise, aValue);
+
+    auto cleanupCb = [responseCallback]() { responseCallback->Cleanup(); };
+
+    // Create a StrongWorkerRef to the worker thread, the cleanup callback
+    // associated to the StongerWorkerRef will release the reference and resolve
+    // the promise returned to the ExtensionEventListener caller with undefined
+    // if the worker global is being destroyed.
+    auto* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+    workerPrivate->AssertIsOnWorkerThread();
+
+    RefPtr<dom::StrongWorkerRef> workerRef = dom::StrongWorkerRef::Create(
+        workerPrivate, "SendResponseCallback", cleanupCb);
+    if (NS_WARN_IF(!workerRef)) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    responseCallback->mWorkerRef = workerRef;
+
+    return responseCallback;
+  }
+
+  SendResponseCallback(const RefPtr<dom::Promise>& aPromise,
+                       JS::Handle<JS::Value> aValue)
+      : mPromise(aPromise), mValue(aValue) {
+    MOZ_ASSERT(mPromise);
+    mozilla::HoldJSObjects(this);
+
+    // Create a promise monitor that invalidates the sendResponse
+    // callback if the promise has been already resolved or rejected.
+    mPromiseListener = new dom::DomPromiseListener(
+        mPromise,
+        [self = RefPtr{this}](JSContext* aCx, JS::Handle<JS::Value> aValue) {
+          self->Cleanup();
+        },
+        [self = RefPtr{this}](nsresult aError) { self->Cleanup(); });
+  }
+
+  void Cleanup(bool aIsDestroying = false) {
+    // Return earlier if the instance was already been cleaned up.
+    if (!mPromiseListener) {
+      return;
+    }
+
+    NS_WARNING("SendResponseCallback::Cleanup");
+    // Override the promise listener's resolvers to release the
+    // RefPtr captured by the ones initially set.
+    mPromiseListener->SetResolvers(
+        [](JSContext* aCx, JS::Handle<JS::Value> aValue) {},
+        [](nsresult aError) {});
+    mPromiseListener = nullptr;
+
+    if (mPromise) {
+      mPromise->MaybeResolveWithUndefined();
+    }
+    mPromise = nullptr;
+
+    // Skipped if called from the destructor.
+    if (!aIsDestroying && mValue.isObject()) {
+      // Release the reference to the SendResponseCallback.
+      js::SetFunctionNativeReserved(&mValue.toObject(),
+                                    SLOT_SEND_RESPONSE_CALLBACK_INSTANCE,
+                                    JS::PrivateValue(nullptr));
+    }
+
+    if (mWorkerRef) {
+      mWorkerRef = nullptr;
+    }
+  }
+
+  static bool Call(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
+    JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
+    JS::Rooted<JSObject*> callee(aCx, &args.callee());
+
+    JS::Value v = js::GetFunctionNativeReserved(
+        callee, SLOT_SEND_RESPONSE_CALLBACK_INSTANCE);
+
+    SendResponseCallback* sendResponse =
+        reinterpret_cast<SendResponseCallback*>(v.toPrivate());
+    if (!sendResponse || !sendResponse->mPromise ||
+        !sendResponse->mPromise->PromiseObj()) {
+      NS_WARNING("SendResponseCallback called after being invalidated");
+      return true;
+    }
+
+    sendResponse->mPromise->MaybeResolve(args.get(0));
+    sendResponse->Cleanup();
+
+    return true;
+  }
+
+ private:
+  ~SendResponseCallback() {
+    mozilla::DropJSObjects(this);
+    this->Cleanup(true);
+  };
+
+  RefPtr<dom::Promise> mPromise;
+  RefPtr<dom::DomPromiseListener> mPromiseListener;
+  JS::Heap<JS::Value> mValue;
+  RefPtr<dom::StrongWorkerRef> mWorkerRef;
+};
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SendResponseCallback)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(SendResponseCallback)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SendResponseCallback)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SendResponseCallback)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SendResponseCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromise)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(SendResponseCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mValue)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SendResponseCallback)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromiseListener);
+  tmp->mValue.setUndefined();
+  // Resolve the promise with undefined (as "unhandled") before unlinking it.
+  if (tmp->mPromise) {
+    tmp->mPromise->MaybeResolveWithUndefined();
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+}  // anonymous namespace
+
 // ExtensionEventListener
 
 NS_IMPL_ISUPPORTS(ExtensionEventListener, mozIExtensionEventListener)
@@ -78,9 +225,9 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
     aCallOptions->GetApiObjectType(&apiObjectType);
     aCallOptions->GetApiObjectDescriptor(&apiObjectDescriptor);
 
-    // Explicitly check that the APIObjectType is expected to be sure to throw
-    // an explicit error on both calls targeting the main thread and a
-    // service worker thread.
+    // Explicitly check that the APIObjectType is one of expected ones,
+    // raise to the caller an explicit error if it is not.
+    //
     // This is using a switch to also get a warning if a new value is added to
     // the APIObjectType enum and it is not yet handled.
     switch (apiObjectType) {
@@ -267,6 +414,55 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
     argsSequence.ReplaceElementAt(0, apiObjectValue);
   }
 
+  // Create callback argument and append it to the call arguments.
+  JS::Rooted<JSObject*> sendResponseObj(aCx);
+
+  switch (mCallbackArgType) {
+    case CallbackType::CALLBACK_NONE:
+      break;
+    case CallbackType::CALLBACK_SEND_RESPONSE: {
+      JS::Rooted<JSFunction*> sendResponseFn(
+          aCx, js::NewFunctionWithReserved(aCx, SendResponseCallback::Call,
+                                           /* nargs */ 1, 0, "sendResponse"));
+      sendResponseObj = JS_GetFunctionObject(sendResponseFn);
+      JS::RootedValue sendResponseValue(aCx, JS::ObjectValue(*sendResponseObj));
+
+      // Create a SendResponseCallback instance that keeps a reference
+      // to the promise to resolve when the static SendReponseCallback::Call
+      // is being called.
+      // the SendReponseCallback instance from the resolved slot to resolve
+      // the promise and invalidated the sendResponse callback (any new call
+      // becomes a noop).
+      RefPtr<SendResponseCallback> sendResponsePtr =
+          SendResponseCallback::Create(global, retPromise, sendResponseValue,
+                                       rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        retPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+        return true;
+      }
+
+      // Store the SendResponseCallback instance in a private value set on the
+      // function object reserved slot, where ehe SendResponseCallback::Call
+      // static function will get it back to resolve the related promise
+      // and then invalidate the sendResponse callback (any new call
+      // becomes a noop).
+      js::SetFunctionNativeReserved(sendResponseObj,
+                                    SLOT_SEND_RESPONSE_CALLBACK_INSTANCE,
+                                    JS::PrivateValue(sendResponsePtr));
+
+      if (NS_WARN_IF(
+              !argsSequence.AppendElement(sendResponseValue, fallible))) {
+        retPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+        return true;
+      }
+
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected callbackType");
+      break;
+  }
+
   // TODO: should `nsAutoMicroTask mt;` be used here?
   dom::AutoEntryScript aes(global, "WebExtensionAPIEvent");
   JS::Rooted<JS::Value> retval(aCx);
@@ -282,9 +478,57 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
 
   if (erv.Failed()) {
     retPromise->MaybeReject(std::move(erv));
-  } else {
-    retPromise->MaybeResolve(retval);
+    return true;
   }
+
+  // Custom return value handling logic for events that do pass a
+  // sendResponse callback parameter (see expected behavior
+  // for the runtime.onMessage sendResponse parameter on MDN:
+  // https://mzl.la/3dokpMi):
+  //
+  // - listener returns Boolean true => the extension listener is
+  //   expected to call sendResponse callback parameter asynchronosuly
+  // - listener return a Promise object => the promise is the listener
+  //   response
+  // - listener return any other value => the listener didn't handle the
+  //   event and the return value is ignored
+  //
+  if (mCallbackArgType == CallbackType::CALLBACK_SEND_RESPONSE) {
+    if (retval.isBoolean() && retval.isTrue()) {
+      // The listener returned `true` and so the promise relate to the
+      // listener call will be resolved once the extension will call
+      // the sendResponce function passed as a callback argument.
+      return true;
+    }
+
+    // If the retval isn't true and it is not a Promise object,
+    // the listener isn't handling the event, and we resolve the
+    // promise with undefined (if the listener didn't reply already
+    // by calling sendResponse synchronsouly).
+    // undefined (
+    if (!ExtensionEventListener::IsPromise(aCx, retval)) {
+      // Mark this listener call as cancelled, ExtensionListenerCallPromiseResult
+      // will check to know that it should release the main thread promise without
+      // resolving it.
+      //
+      // TODO: double-check if we should also cancel rejecting the promise returned by
+      // mozIExtensionEventListener.callListener when the listener call throws (by
+      // comparing it with the behavior on the current privileged-based API implementation).
+      mIsCallResultCancelled = true;
+      retPromise->MaybeResolveWithUndefined();
+
+      // Invalidate the sendResponse function by setting the private
+      // value where the SendResponseCallback instance was stored
+      // to a nullptr.
+      js::SetFunctionNativeReserved(sendResponseObj,
+          SLOT_SEND_RESPONSE_CALLBACK_INSTANCE,
+          JS::PrivateValue(nullptr));
+
+      return true;
+    }
+  }
+
+  retPromise->MaybeResolve(retval);
 
   return true;
 }
@@ -314,6 +558,19 @@ void ExtensionListenerCallPromiseResultHandler::WorkerRunCallback(
   MOZ_ASSERT(mWorkerRef);
   mWorkerRef->Private()->AssertIsOnWorkerThread();
 
+  // The listener call was cancelled (e.g. when a runtime.onMessage listener
+  // returned false), release resources associated with this promise handler
+  // on the main thread without resolving the promise associated to the
+  // extension event listener call.
+  if (mWorkerRunnable->IsCallResultCancelled()) {
+    auto releaseMainThreadPromise = [runnable = std::move(mWorkerRunnable),
+                                     workerRef = std::move(mWorkerRef)]() {};
+    nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableFunction(__func__, std::move(releaseMainThreadPromise));
+    NS_DispatchToMainThread(runnable);
+    return;
+  }
+
   JS::RootedValue retval(aCx, aValue);
 
   if (retval.isObject()) {
@@ -326,7 +583,7 @@ void ExtensionListenerCallPromiseResultHandler::WorkerRunCallback(
     if (!rv.Failed() && ceh) {
       JS::RootedObject obj(aCx);
       // Note: `ToJSValue` cannot be used because ClonedErrorHolder isn't
-      // wrapper cached.
+      // wrapped cached.
       Unused << NS_WARN_IF(!ceh->WrapObject(aCx, nullptr, &obj));
       retval.setObject(*obj);
     }
