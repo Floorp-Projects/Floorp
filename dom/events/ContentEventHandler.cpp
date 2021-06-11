@@ -966,7 +966,9 @@ nsresult ContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
   nsIFrame* frame = nsFrameSelection::GetFrameForNodeOffset(
       aContent, int32_t(*aXPOffset), hint, &offsetInFrame);
   if (frame) {
-    auto [startOffset, endOffset] = frame->GetOffsets();
+    int32_t startOffset, endOffset;
+    nsresult rv = frame->GetOffsets(startOffset, endOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (*aXPOffset == static_cast<uint32_t>(startOffset) ||
         *aXPOffset == static_cast<uint32_t>(endOffset)) {
       return NS_OK;
@@ -1626,7 +1628,10 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
         *nodePosition.Offset(NodePosition::OffsetFilter::kValidOffsets));
   }
 
-  auto [start, end] = lastFrame->GetOffsets();
+  int32_t start, end;
+  if (NS_WARN_IF(NS_FAILED(lastFrame->GetOffsets(start, end)))) {
+    return FrameAndNodeOffset();
+  }
 
   // If the start offset in the node is same as the computed offset in the
   // node and it's not 0, the frame shouldn't be added to the text rect.  So,
