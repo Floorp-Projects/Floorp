@@ -16,6 +16,11 @@ exclude: true
 ## v91
 - Extended [`Autocomplete`][78.7] API to support addresses.
   ([bug 1699794]({{bugzilla}}1699794)).
+- Added [`GeckoSession.PermissionDelegate.PERMISSION_STORAGE_ACCESS`][91.1] to
+  control the allowing of third-party frames to access first-party cookies and
+  storage. ([bug 1543720]({{bugzilla}}1543720))
+
+[91.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_STORAGE_ACCESS
 
 ## v90
 - Added [`WebNotification.silent`][90.1] and [`WebNotification.vibrate`][90.2]
@@ -1014,4 +1019,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 47d9ee299e7ba7be24963762712b0a1ecee29a68
+[api-version]: 5ba065dc9813ab2446e3b64896f85726c3016941
