@@ -872,6 +872,7 @@ pub enum RendererError {
     Thread(std::io::Error),
     Resource(ResourceCacheError),
     MaxTextureSize,
+    SoftwareRasterizer,
 }
 
 impl From<ShaderError> for RendererError {
@@ -979,6 +980,16 @@ impl Renderer {
             assert!(internal_limit >= MIN_TEXTURE_SIZE);
             max_internal_texture_size = max_internal_texture_size.min(internal_limit);
         }
+
+        if options.reject_software_rasterizer {
+          let renderer_name_lc = device.get_capabilities().renderer_name.to_lowercase();
+          if renderer_name_lc.contains("llvmpipe") || renderer_name_lc.contains("softpipe") || renderer_name_lc.contains("software rasterizer") {
+            return Err(RendererError::SoftwareRasterizer);
+          }
+        }
+
+        let image_tiling_threshold = options.image_tiling_threshold
+            .min(max_internal_texture_size);
 
         device.begin_frame();
 
@@ -5567,6 +5578,9 @@ pub struct RendererOptions {
     /// If false, we'll duplicate the instance attributes per vertex and issue
     /// regular indexed draws instead.
     pub enable_instancing: bool,
+    /// If true, we'll reject contexts backed by a software rasterizer, except
+    /// Software WebRender.
+    pub reject_software_rasterizer: bool,
 }
 
 impl RendererOptions {
@@ -5638,6 +5652,7 @@ impl Default for RendererOptions {
             // Disabling instancing means more vertex data to upload and potentially
             // process by the vertex shaders.
             enable_instancing: true,
+            reject_software_rasterizer: false,
         }
     }
 }
