@@ -1099,7 +1099,7 @@ nsresult Selection::StyledRanges::RemoveCollapsedRanges() {
   return NS_OK;
 }
 
-nsresult Selection::Clear(nsPresContext* aPresContext) {
+void Selection::Clear(nsPresContext* aPresContext) {
   SetAnchorFocusRange(-1);
 
   mStyledRanges.UnregisterSelection();
@@ -1116,8 +1116,6 @@ nsresult Selection::Clear(nsPresContext* aPresContext) {
                              nsISelectionController::SELECTION_ATTENTION) {
     mFrameSelection->SetDisplaySelection(nsISelectionController::SELECTION_ON);
   }
-
-  return NS_OK;
 }
 
 bool Selection::StyledRanges::HasEqualRangeBoundariesAt(
@@ -1860,11 +1858,7 @@ void Selection::RemoveAllRanges(ErrorResult& aRv) {
   }
 
   RefPtr<nsPresContext> presContext = GetPresContext();
-  nsresult result = Clear(presContext);
-  if (NS_FAILED(result)) {
-    aRv.Throw(result);
-    return;
-  }
+  Clear(presContext);
 
   // Turn off signal for table selection
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
@@ -1872,13 +1866,7 @@ void Selection::RemoveAllRanges(ErrorResult& aRv) {
 
   RefPtr<Selection> kungFuDeathGrip{this};
   // Be aware, this instance may be destroyed after this call.
-  result = NotifySelectionListeners();
-
-  // Also need to notify the frames!
-  // PresShell::CharacterDataChanged should do that on DocumentChanged
-  if (NS_FAILED(result)) {
-    aRv.Throw(result);
-  }
+  NotifySelectionListeners();
 }
 
 void Selection::AddRangeJS(nsRange& aRange, ErrorResult& aRv) {
@@ -1960,10 +1948,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
   SelectFrames(presContext, range, true);
 
   // Be aware, this instance may be destroyed after this call.
-  result = NotifySelectionListeners();
-  if (NS_FAILED(result)) {
-    aRv.Throw(result);
-  }
+  NotifySelectionListeners();
 }
 
 // Selection::RemoveRangeAndUnselectFramesAndNotifyListeners
@@ -2042,10 +2027,7 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
 
   RefPtr<Selection> kungFuDeathGrip{this};
   // Be aware, this instance may be destroyed after this call.
-  rv = NotifySelectionListeners();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
+  NotifySelectionListeners();
 }
 
 /*
@@ -2169,10 +2151,7 @@ void Selection::CollapseInternal(InLimiter aInLimiter,
 
   RefPtr<Selection> kungFuDeathGrip{this};
   // Be aware, this instance may be destroyed after this call.
-  result = NotifySelectionListeners();
-  if (NS_FAILED(result)) {
-    aRv.Throw(result);
-  }
+  NotifySelectionListeners();
 }
 
 /*
@@ -2642,10 +2621,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
 
   RefPtr<Selection> kungFuDeathGrip{this};
   // Be aware, this instance may be destroyed after this call.
-  res = NotifySelectionListeners();
-  if (NS_FAILED(res)) {
-    aRv.Throw(res);
-  }
+  NotifySelectionListeners();
 }
 
 void Selection::SelectAllChildrenJS(nsINode& aNode, ErrorResult& aRv) {
@@ -3100,15 +3076,15 @@ void Selection::StyledRanges::MaybeFocusCommonEditingHost(
   }
 }
 
-nsresult Selection::NotifySelectionListeners(bool aCalledByJS) {
+void Selection::NotifySelectionListeners(bool aCalledByJS) {
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = aCalledByJS;
-  return NotifySelectionListeners();
+  NotifySelectionListeners();
 }
 
-nsresult Selection::NotifySelectionListeners() {
+void Selection::NotifySelectionListeners() {
   if (!mFrameSelection) {
-    return NS_OK;  // nothing to do
+    return;  // nothing to do
   }
 
   MOZ_LOG(sSelectionLog, LogLevel::Debug,
@@ -3132,11 +3108,11 @@ nsresult Selection::NotifySelectionListeners() {
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
   if (frameSelection->IsBatching()) {
     frameSelection->SetChangesDuringBatchingFlag();
-    return NS_OK;
+    return;
   }
   if (mSelectionListeners.IsEmpty()) {
     // If there are no selection listeners, we're done!
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<Document> doc;
@@ -3170,7 +3146,7 @@ nsresult Selection::NotifySelectionListeners() {
         mSelectionChangeEventDispatcher);
     dispatcher->OnSelectionChange(doc, this, reason);
   }
-  for (auto& listener : selectionListeners) {
+  for (const auto& listener : selectionListeners) {
     // MOZ_KnownLive because 'selectionListeners' is guaranteed to
     // keep it alive.
     //
@@ -3178,7 +3154,6 @@ nsresult Selection::NotifySelectionListeners() {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 is fixed.
     MOZ_KnownLive(listener)->NotifySelectionChanged(doc, this, reason);
   }
-  return NS_OK;
 }
 
 void Selection::StartBatchChanges() {
