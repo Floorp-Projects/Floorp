@@ -966,8 +966,7 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
           break;
         }
         contentTextLength = content->TextLength();
-        int32_t start, end;
-        frame->GetOffsets(start, end);
+        auto [start, end] = frame->GetOffsets();
         NS_ASSERTION(!(contentTextLength < end - start),
                      "Frame offsets don't fit in content");
         fragmentLength = std::min(contentTextLength, end - start);
@@ -1246,8 +1245,7 @@ void nsBidiPresUtils::TraverseFrames(nsIFrame* aCurrentFrame,
             do {
               next = nullptr;
 
-              int32_t start, end;
-              frame->GetOffsets(start, end);
+              auto [start, end] = frame->GetOffsets();
               int32_t endLine = text.FindChar('\n', start);
               if (endLine == -1) {
                 /*
@@ -1279,7 +1277,7 @@ void nsBidiPresUtils::TraverseFrames(nsIFrame* aCurrentFrame,
                 aBpd->AdvanceAndAppendFrame(&frame, aBpd->mCurrentTraverseLine,
                                             &nextSibling);
                 NS_ASSERTION(frame, "Premature end of continuation chain");
-                frame->GetOffsets(start, end);
+                std::tie(start, end) = frame->GetOffsets();
                 aBpd->AppendString(
                     Substring(text, start, std::min(end, endLine) - start));
               }
