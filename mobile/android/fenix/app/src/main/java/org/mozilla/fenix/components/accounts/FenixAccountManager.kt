@@ -22,6 +22,20 @@ open class FenixAccountManager(context: Context) {
         get() = accountManager.accountProfile()?.email
 
     /**
+     * The current state of the Firefox Account. See [AccountState].
+     */
+    val accountState: AccountState
+        get() = if (accountManager.authenticatedAccount() == null) {
+            AccountState.NO_ACCOUNT
+        } else {
+            if (accountManager.accountNeedsReauth()) {
+                AccountState.NEEDS_REAUTHENTICATION
+            } else {
+                AccountState.AUTHENTICATED
+            }
+        }
+
+    /**
      * Check if the current account is signed in and authenticated.
      */
     fun signedInToFxa(): Boolean {
@@ -30,4 +44,24 @@ open class FenixAccountManager(context: Context) {
 
         return account != null && !needsReauth
     }
+}
+
+/**
+ * General states as an overview of the current Firefox Account.
+ */
+enum class AccountState {
+    /**
+     * There is no known Firefox Account.
+     */
+    NO_ACCOUNT,
+
+    /**
+     * A Firefox Account exists but needs to be re-authenticated.
+     */
+    NEEDS_REAUTHENTICATION,
+
+    /**
+     * A Firefox Account exists and the user is currently signed into it.
+     */
+    AUTHENTICATED,
 }

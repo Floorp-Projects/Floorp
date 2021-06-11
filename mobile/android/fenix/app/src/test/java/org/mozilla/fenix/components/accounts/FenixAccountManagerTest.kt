@@ -12,6 +12,7 @@ import mozilla.components.concept.sync.Profile
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -97,5 +98,46 @@ class FenixAccountManagerTest {
 
         val signedIn = fenixFxaManager.signedInToFxa()
         assertFalse(signedIn)
+    }
+
+    @Test
+    fun `GIVEN no account exists WHEN accountState is called THEN it returns AccountState#NO_ACCOUNT`() {
+        every { context.components.backgroundServices.accountManager } returns accountManagerComponent
+        every { accountManagerComponent.authenticatedAccount() } returns null
+        fenixFxaManager = FenixAccountManager(context)
+
+        assertSame(AccountState.NO_ACCOUNT, fenixFxaManager.accountState)
+
+        // No account but signed in should not be possible. Test protecting against such a regression.
+        every { accountManagerComponent.accountNeedsReauth() } returns false
+        assertSame(AccountState.NO_ACCOUNT, fenixFxaManager.accountState)
+
+        // No account and signed out still means no account. Test protecting against such a regression.
+        every { accountManagerComponent.accountNeedsReauth() } returns true
+        assertSame(AccountState.NO_ACCOUNT, fenixFxaManager.accountState)
+    }
+
+    @Test
+    fun `GIVEN an account exists but needs to be re-authenticated WHEN accountState is called THEN it returns AccountState#NEEDS_REAUTHENTICATION`() {
+        every { context.components.backgroundServices.accountManager } returns accountManagerComponent
+        every { accountManagerComponent.authenticatedAccount() } returns mockk()
+        every { accountManagerComponent.accountNeedsReauth() } returns true
+        fenixFxaManager = FenixAccountManager(context)
+
+        val result = fenixFxaManager.accountState
+
+        assertSame(AccountState.NEEDS_REAUTHENTICATION, result)
+    }
+
+    @Test
+    fun `GIVEN an account exists and doesn't need to be re-authenticated WHEN accountState is called THEN it returns AccountState#AUTHENTICATED`() {
+        every { context.components.backgroundServices.accountManager } returns accountManagerComponent
+        every { accountManagerComponent.authenticatedAccount() } returns mockk()
+        every { accountManagerComponent.accountNeedsReauth() } returns false
+        fenixFxaManager = FenixAccountManager(context)
+
+        val result = fenixFxaManager.accountState
+
+        assertSame(AccountState.AUTHENTICATED, result)
     }
 }
