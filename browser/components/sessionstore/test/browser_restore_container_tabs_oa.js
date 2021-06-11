@@ -178,19 +178,23 @@ async function testRestore() {
     let regular_browser = regular_tab.linkedBrowser;
 
     // I would have used browserLoaded but for about:config it doesn't work
-    let correctLocation = BrowserTestUtils.waitForCondition(() => {
-      return regular_browser.currentURI.spec == test_page_data.uri;
+    let ready = BrowserTestUtils.waitForCondition(async () => {
+      // Catch an error because the browser might change remoteness in between
+      // calls, so we will just wait for the document to finish loadig.
+      return SpecialPowers.spawn(regular_browser, [], () => {
+        return content.document.readyState == "complete";
+      }).catch(Cu.reportError);
     });
     newWin.gBrowser.selectedTab = regular_tab;
     await TabStateFlusher.flush(regular_browser);
-    await correctLocation;
+    await ready;
 
     currRemoteType = regular_browser.remoteType;
     expectedRemoteType = remoteTypes.shift();
     is(
       currRemoteType,
       expectedRemoteType,
-      "correct remote type for regular tab"
+      `correct remote type for regular tab with uri ${test_page_data.uri}`
     );
 
     let page_uri = regular_browser.currentURI.spec;
@@ -243,6 +247,9 @@ async function testRestore() {
       }
       // While the above assertion is `todo_is`, ensure that we don't have a regression
       // from current behaviour by checking that the event is fired < 3 times.
+      info(
+        `XULFrameLoaderCreated has been fired ${xulFrameLoaderCreatedCounter.numCalledSoFar} times, when restoring ${uri} in container ${userContextId}`
+      );
       ok(
         xulFrameLoaderCreatedCounter.numCalledSoFar <= 2,
         `XULFrameLoaderCreated was fired [1,2] times, when restoring ${uri} in container ${userContextId} `
