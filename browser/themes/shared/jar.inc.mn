@@ -244,7 +244,6 @@
   skin/classic/browser/panic-panel/icons@2x.png                (../shared/panic-panel/icons@2x.png)
   skin/classic/browser/places/bookmarksMenu.svg                (../shared/places/bookmarksMenu.svg)
   skin/classic/browser/places/bookmarksToolbar.svg             (../shared/places/bookmarksToolbar.svg)
-  skin/classic/browser/places/folder.svg                       (../shared/places/folder.svg)
   skin/classic/browser/places/folder-smart.svg                 (../shared/places/folder-smart.svg)
   skin/classic/browser/places/history.svg                      (../shared/places/history.svg)
   skin/classic/browser/places/tag.svg                          (../shared/places/tag.svg)
