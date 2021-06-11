@@ -32,10 +32,3 @@ xul|button > xul|*.button-box {
   padding-inline: 0;
 }
 }
-
-@media (-moz-windows-non-native-menus) {
-  xul|menulist > xul|menupopup {
-    background-color: transparent;
-    border-color: transparent;
-  }
-}
