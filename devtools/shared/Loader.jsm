@@ -53,10 +53,6 @@ function DevToolsLoader({
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     devtools: "resource://devtools",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-    acorn: "resource://devtools/shared/acorn",
-    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-    "acorn/util/walk": "resource://devtools/shared/acorn/walk.js",
-    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     // Allow access to xpcshell test items from the loader.
     "xpcshell-test": "resource://test",
 
