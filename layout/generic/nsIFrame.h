@@ -851,7 +851,7 @@ class nsIFrame : public nsQueryFrame {
    * Get the offsets of the frame. most will be 0,0
    *
    */
-  virtual nsresult GetOffsets(int32_t& start, int32_t& end) const;
+  virtual std::pair<int32_t, int32_t> GetOffsets() const;
 
   /**
    * Reset the offsets when splitting frames during Bidi reordering
