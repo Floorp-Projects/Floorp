@@ -1886,7 +1886,7 @@ nsresult HTMLEditor::InsertFromDataTransfer(const DataTransfer* aDataTransfer,
   MOZ_ASSERT(GetEditAction() == EditAction::eDrop ||
              GetEditAction() == EditAction::ePaste);
   MOZ_ASSERT(mPlaceholderBatch,
-             "TextEditor::InsertFromDataTransfer() should be called by "
+             "HTMLEditor::InsertFromDataTransfer() should be called by "
              "HandleDropEvent() or paste action and there should've already "
              "been placeholder transaction");
   MOZ_ASSERT_IF(GetEditAction() == EditAction::eDrop, aDroppedAt.IsSet());
