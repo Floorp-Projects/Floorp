@@ -156,14 +156,14 @@ class GlobalHelperThreadState {
   // This is used to get the HelperThreadTask that are currently running.
   HelperThreadTaskVector helperTasks_;
 
-  // Callback to dispatch a task using an external thread pool. Set by
+  // Callback to dispatch a task to a thread pool. Set by
   // JS::SetHelperThreadTaskCallback. If this is not set the internal thread
   // pool is used.
   JS::HelperThreadTaskCallback dispatchTaskCallback = nullptr;
 
-  // The number of tasks dispatched to the external thread pool that have not
-  // started running yet.
-  size_t externalTasksPending_ = 0;
+  // The number of tasks dispatched to the thread pool that have not started
+  // running yet.
+  size_t tasksPending_ = 0;
 
   bool isInitialized_ = false;
 
@@ -198,7 +198,7 @@ class GlobalHelperThreadState {
 
   void setCpuCount(size_t count);
 
-  void setExternalTaskCallback(JS::HelperThreadTaskCallback callback,
+  void setDispatchTaskCallback(JS::HelperThreadTaskCallback callback,
                                size_t threadCount);
 
   [[nodiscard]] bool ensureContextList(size_t count,
@@ -457,8 +457,8 @@ class GlobalHelperThreadState {
   bool submitTask(PromiseHelperTask* task);
   bool submitTask(GCParallelTask* task,
                   const AutoLockHelperThreadState& locked);
+  void runOneTask(AutoLockHelperThreadState& lock);
   void runTaskLocked(HelperThreadTask* task, AutoLockHelperThreadState& lock);
-  void runTaskFromExternalThread(AutoLockHelperThreadState& lock);
 
   using Selector = HelperThreadTask* (
       GlobalHelperThreadState::*)(const AutoLockHelperThreadState&);
