@@ -112,22 +112,7 @@ var BookmarkPropertiesPanel = {
    *   button based on the variant of the dialog.
    */
   _getAcceptLabel: function BPP__getAcceptLabel() {
-    if (Services.prefs.getBoolPref("browser.proton.modals.enabled", false)) {
-      return this._strings.getString("dialogAcceptLabelSaveItem");
-    }
-
-    if (this._action == ACTION_ADD) {
-      if (this._URIs.length) {
-        return this._strings.getString("dialogAcceptLabelAddMulti");
-      }
-
-      if (this._dummyItem) {
-        return this._strings.getString("dialogAcceptLabelAddItem");
-      }
-
-      return this._strings.getString("dialogAcceptLabelSaveItem");
-    }
-    return this._strings.getString("dialogAcceptLabelEdit");
+    return this._strings.getString("dialogAcceptLabelSaveItem");
   },
 
   /**
