@@ -83,7 +83,7 @@ nsIGlobalObject* ExtensionEventManager::GetParentObject() const {
 void ExtensionEventManager::AddListener(
     JSContext* aCx, dom::Function& aCallback,
     const dom::Optional<JS::Handle<JSObject*>>& aOptions, ErrorResult& aRv) {
-  auto* cb = aCallback.CallbackOrNull();
+  JS::Rooted<JSObject*> cb(aCx, aCallback.CallbackOrNull());
   if (cb == nullptr) {
     ThrowUnexpectedError(aCx, aRv);
     return;
@@ -113,7 +113,14 @@ void ExtensionEventManager::AddListener(
 
 void ExtensionEventManager::RemoveListener(dom::Function& aCallback,
                                            ErrorResult& aRv) {
-  auto* cb = aCallback.CallbackOrNull();
+  dom::AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mGlobal))) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JSObject*> cb(cx, aCallback.CallbackOrNull());
   const auto& ptr = mListeners.lookup(cb);
 
   // Return earlier if the listener wasn't found
@@ -122,14 +129,6 @@ void ExtensionEventManager::RemoveListener(dom::Function& aCallback,
   }
 
   RefPtr<ExtensionEventListener> wrappedCb = ptr->value();
-
-  dom::AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mGlobal))) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  JSContext* cx = jsapi.cx();
   auto request = SendRemoveListener(mEventName);
   request->Run(mGlobal, cx, {}, wrappedCb, aRv);
 
