@@ -119,8 +119,10 @@ class HomeScreenRobot {
     // Collections elements
     fun verifyCollectionIsDisplayed(title: String, collectionExists: Boolean = true) {
         if (collectionExists) {
+            scrollToElementByText(title)
             assertTrue(mDevice.findObject(UiSelector().text(title)).waitForExists(waitingTime))
         } else {
+            scrollToElementByText("Collections")
             assertTrue(mDevice.findObject(UiSelector().text(title)).waitUntilGone(waitingTime))
         }
     }
@@ -311,6 +313,7 @@ class HomeScreenRobot {
                 collectionTitle(title).click()
             } catch (e: NoMatchingViewException) {
                 scrollToElementByText(title)
+                collectionTitle(title).click()
             }
 
             CollectionRobot().interact()

@@ -37,6 +37,7 @@ import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickTabCrashedRestoreButton
 import org.mozilla.fenix.ui.robots.clickUrlbar
+import org.mozilla.fenix.ui.robots.collectionRobot
 import org.mozilla.fenix.ui.robots.customTabScreen
 import org.mozilla.fenix.ui.robots.dismissTrackingOnboarding
 import org.mozilla.fenix.ui.robots.downloadRobot
@@ -877,7 +878,6 @@ class SmokeTest {
         }
     }
 
-    @Ignore("Enable after #19738 and #19090 land.")
     @Test
     fun createFirstCollectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -892,10 +892,13 @@ class SmokeTest {
             mDevice.waitForIdle()
         }.goToHomescreen {
         }.clickSaveTabsToCollectionButton {
-            selectTab(firstWebPage.title)
-            selectTab(secondWebPage.title)
-            clickSaveCollection()
-            typeCollectionName(collectionName)
+            longClickTab(firstWebPage.title)
+            longClickTab(secondWebPage.title)
+        }.clickSaveCollection {
+            typeCollectionNameAndSave(collectionName)
+        }
+
+        tabDrawer {
             verifySnackBarText("Collection saved!")
             snackBarButtonClick("VIEW")
         }
@@ -920,14 +923,16 @@ class SmokeTest {
         homeScreen {
             verifyCollectionIsDisplayed(collectionName)
             verifyCollectionIcon()
-            expandCollection(collectionName)
+        }.expandCollection(collectionName) {
             verifyTabSavedInCollection(webPage.title)
             verifyCollectionTabLogo()
             verifyCollectionTabUrl()
             verifyShareCollectionButtonIsVisible(true)
             verifyCollectionMenuIsVisible(true)
             verifyCollectionItemRemoveButtonIsVisible(webPage.title, true)
-            collapseCollection(collectionName)
+        }.collapseCollection(collectionName) {}
+
+        collectionRobot {
             verifyTabSavedInCollection(webPage.title, false)
             verifyShareCollectionButtonIsVisible(false)
             verifyCollectionMenuIsVisible(false)
@@ -942,11 +947,12 @@ class SmokeTest {
         }.enterURLAndEnterToBrowser(webPage.url) {
         }.openTabDrawer {
             createCollection(webPage.title, collectionName)
+            verifySnackBarText("Collection saved!")
             closeTab()
         }
-        browserScreen {
-        }.goToHomescreen {
-            expandCollection(collectionName)
+
+        homeScreen {
+        }.expandCollection(collectionName) {
             clickCollectionThreeDotButton()
             selectOpenTabs()
         }
@@ -955,7 +961,6 @@ class SmokeTest {
         }
     }
 
-    @Ignore("Disabling until re-implemented by #19090")
     @Test
     fun shareCollectionTest() {
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -966,14 +971,17 @@ class SmokeTest {
             createCollection(webPage.title, collectionName)
             snackBarButtonClick("VIEW")
         }
+
         homeScreen {
-            expandCollection(collectionName)
+        }.expandCollection(collectionName) {
             clickShareCollectionButton()
+        }
+
+        homeScreen {
             verifyShareTabsOverlay()
         }
     }
 
-    @Ignore("Disabling until re-implemented by #19090")
     @Test
     fun deleteCollectionTest() {
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -984,11 +992,15 @@ class SmokeTest {
             createCollection(webPage.title, collectionName)
             snackBarButtonClick("VIEW")
         }
+
         homeScreen {
-            expandCollection(collectionName)
+        }.expandCollection(collectionName) {
             clickCollectionThreeDotButton()
             selectDeleteCollection()
             confirmDeleteCollection()
+        }
+
+        homeScreen {
             verifyNoCollectionsText()
         }
     }
