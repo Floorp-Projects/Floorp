@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test that filling a username into a username-only form does highlight the username element</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+addLoginsInParent(
+  [window.location.origin, "https://autofill", null,
+              "user1", "pass1", "", ""]);
+
+let DEFAULT_ORIGIN = window.location.origin;
+</script>
+<body>
+<p id="display"></p>
+<div id="content">
+<pre id="test">
+<script>
+add_task(async function test_field_highlight_on_autofill() {
+  let win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+    <form id="form1" action="https://autofill" onsubmit="return false;">
+      <input  type="text" id="uname" autocomplete="username">
+      <button type="submit">Submit</button>
+    </form>`, win);
+
+  await SpecialPowers.spawn(win, [], async function() {
+    let EventUtils = ContentTaskUtils.getEventUtils(this.content);
+    let doc = this.content.document;
+    let username = doc.getElementById("uname");
+    isnot(doc.defaultView.getComputedStyle(username).getPropertyValue("filter"), "none",
+          "Highlight was successfully applied to the username field on page load autofill");
+
+    // Test that initiating a change on the input value will remove the highlight. We check by pressing
+    // the tab key after backspace(by shifting focus to the next element) because the tab key is known to
+    // cause a bug where the highlight is applied once again.
+    username.focus();
+    await EventUtils.synthesizeKey("KEY_Backspace", {}, this.content);
+    await EventUtils.synthesizeKey("KEY_Tab", {}, this.content);
+
+    let computedStyle = doc.defaultView.getComputedStyle(username);
+    is(computedStyle.getPropertyValue("filter"), "none", "Highlight was successfully removed on change in value of username input element");
+  });
+});
+</script>
+</body>
+</html>
