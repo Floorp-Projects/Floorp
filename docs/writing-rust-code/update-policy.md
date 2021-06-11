@@ -46,10 +46,10 @@ Release Firefox requirements:
 | Firefox 86 | Rust 1.49.0 | 1.47.0 | 2020 December 31 | 2021 January 21 | 2021 February 23
 | Firefox 87 | Rust 1.50.0 | 1.47.0 | 2021 February 11 | 2021 February 18 | 2021 March 23
 | Firefox 88 | Rust 1.50.0 | 1.47.0 | 2021 February 11 | 2021 March 18 | 2021 April 19
-| **Estimated** |
 | Firefox 89 | Rust 1.51.0 | 1.47.0 | 2021 March 25 | 2021 April 15 | 2021 June 1
 | Firefox 90 | Rust 1.52.0 | 1.47.0 | 2021 May 6 | 2021 May 27 | 2021 June 29
-| Firefox 91 | Rust 1.52.0 | ? | 2021 May 6 | 2021 June 24 | 2021 July 27
+| **Estimated** |
+| Firefox 91 | Rust 1.52.0 | 1.50.0 | 2021 May 6 | 2021 June 24 | 2021 July 27
 | Firefox 92 | Rust 1.53.0 | ? | 2021 June 17 | 2021 July 22 | 2021 August 24
 | Firefox 93 | Rust 1.54.0 | ? | 2021 July 29 | 2021 August 19 | 2021 September 21
 | Firefox 94 | Rust 1.54.0 | ? | 2021 July 29 | 2021 September 16 | 2021 October 19
