@@ -16,7 +16,7 @@ const HTML = `<div style="width: 300px; height: 3000px; position:relative;">
 const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Make sure the markup frame has the focus");
   inspector.markup._frame.focus();
@@ -28,7 +28,10 @@ add_task(async function() {
   info("Select the #scroll-bottom node");
   await selectNode("#scroll-bottom", inspector);
   info("Press S to scroll to the bottom node");
-  let waitForScroll = testActor.waitForEventOnNode("scroll");
+  let waitForScroll = BrowserTestUtils.waitForContentEvent(
+    gBrowser.selectedBrowser,
+    "scroll"
+  );
   await EventUtils.synthesizeKey("S", {}, inspector.panelWin);
   await waitForScroll;
   ok(true, "Scroll event received");
@@ -40,7 +43,10 @@ add_task(async function() {
   info("Select the #scroll-top node");
   await selectNode("#scroll-top", inspector);
   info("Press S to scroll to the top node");
-  waitForScroll = testActor.waitForEventOnNode("scroll");
+  waitForScroll = BrowserTestUtils.waitForContentEvent(
+    gBrowser.selectedBrowser,
+    "scroll"
+  );
   await EventUtils.synthesizeKey("S", {}, inspector.panelWin);
   await waitForScroll;
   ok(true, "Scroll event received");
