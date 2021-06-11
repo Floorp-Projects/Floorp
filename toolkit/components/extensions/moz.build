@@ -65,6 +65,7 @@ TESTING_JS_MODULES += [
 DIRS += [
     "schemas",
     "storage",
+    "webidl-api",
     "webrequest",
 ]
 
