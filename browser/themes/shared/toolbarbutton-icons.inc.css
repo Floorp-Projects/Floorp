@@ -456,7 +456,7 @@ toolbarbutton.bookmark-item {
 }
 
 .bookmark-item[container] {
-  list-style-image: url("chrome://browser/skin/places/folder.svg");
+  list-style-image: url("chrome://global/skin/icons/folder.svg");
 }
 
 .bookmark-item[container][query] {
@@ -474,7 +474,7 @@ toolbarbutton.bookmark-item {
 }
 
 .bookmark-item[query][hostContainer] {
-  list-style-image: url("chrome://browser/skin/places/folder.svg");
+  list-style-image: url("chrome://global/skin/icons/folder.svg");
 }
 
 #whats-new-menu-button {

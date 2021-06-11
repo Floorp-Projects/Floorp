@@ -14,7 +14,7 @@
 }
 
 .folder-icon {
-  list-style-image: url("chrome://browser/skin/places/folder.svg") !important;
+  list-style-image: url("chrome://global/skin/icons/folder.svg") !important;
   -moz-context-properties: fill;
   fill: currentColor;
 }
