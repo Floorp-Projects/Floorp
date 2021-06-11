@@ -308,11 +308,6 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
       StaticPrefs::gfx_webrender_prefer_robustness_AtStartup()) {
     flags |= CreateContextFlags::PREFER_ROBUSTNESS;
   }
-#ifdef MOZ_WIDGET_GTK
-  if (aHardwareWebRender && gfxVars::WebRenderRequiresHardwareDriver()) {
-    flags |= CreateContextFlags::FORCE_ENABLE_HARDWARE;
-  }
-#endif
   if (aHardwareWebRender && aUseGles) {
     flags |= CreateContextFlags::PREFER_ES3;
   }
@@ -623,22 +618,6 @@ RefPtr<GLContextEGL> GLContextEGL::CreateGLContext(
     EGLConfig config, EGLSurface surface, const bool useGles,
     nsACString* const out_failureId) {
   const auto& flags = desc.flags;
-
-#ifdef MOZ_WIDGET_GTK
-  if (flags & CreateContextFlags::FORCE_ENABLE_HARDWARE &&
-      egl->mLib->HasGetDisplayDriverName()) {
-    const char* driDriver = egl->mLib->fGetDisplayDriverName(egl->mDisplay);
-    if (driDriver) {
-      if (strcmp(driDriver, "llvmpipe") == 0 ||
-          strcmp(driDriver, "swrast") == 0 ||
-          strcmp(driDriver, "softpipe") == 0) {
-        NS_WARNING("Cannot create GLContextEGL, got software driver");
-        *out_failureId = "FEATURE_FAILURE_EGL_NO_SOFTWARE_DRIVER"_ns;
-        return nullptr;
-      }
-    }
-  }
-#endif
 
   std::vector<EGLint> required_attribs;
 

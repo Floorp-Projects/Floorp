@@ -621,13 +621,6 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
         END_OF_SYMBOLS};
     (void)fnLoadSymbols(symbols);
   }
-  {
-    const SymLoadStruct symbols[] = {
-        {(PRFuncPtr*)&mSymbols.fGetDisplayDriverName,
-         {{"eglGetDisplayDriverName"}}},
-        END_OF_SYMBOLS};
-    (void)fnLoadSymbols(symbols);
-  }
 
   return true;
 }
