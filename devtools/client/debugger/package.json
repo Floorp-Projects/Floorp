@@ -28,7 +28,7 @@
     "lodash-move": "^1.1.1",
     "lodash.kebabcase": "^4.1.1",
     "parse-script-tags": "github:loganfsmyth/parse-script-tags#d771732ca47e1b3554fe67d609fd18cc785c5f26",
-    "pretty-fast": "^0.2.6",
+    "pretty-fast": "^0.2.7",
     "react": "16.8.6",
     "react-aria-components": "^0.0.4",
     "react-dom": "16.8.6",
