@@ -154,7 +154,8 @@ class NewRenderer : public RendererEvent {
             compositor->ShouldDrawPreviousPartialPresentRegions(), mDocHandle,
             &wrRenderer, mMaxTextureSize, &errorMessage,
             StaticPrefs::gfx_webrender_enable_gpu_markers_AtStartup(),
-            panic_on_gl_error, picTileWidth, picTileHeight)) {
+            panic_on_gl_error, picTileWidth, picTileHeight,
+            gfx::gfxVars::WebRenderRequiresHardwareDriver())) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
       MOZ_ASSERT(errorMessage);
       mError->AssignASCII(errorMessage);
