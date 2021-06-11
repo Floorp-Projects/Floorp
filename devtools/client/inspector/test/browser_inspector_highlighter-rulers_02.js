@@ -63,7 +63,20 @@ async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
   const x = 200,
     y = 300;
 
-  let data = await testActor.scrollWindow(x, y);
+  let data = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [x, y],
+    (_x, _y) => {
+      return new Promise(resolve => {
+        content.addEventListener(
+          "scroll",
+          () => resolve({ x: content.scrollX, y: content.scrollY }),
+          { once: true }
+        );
+        content.scrollTo(_x, _y);
+      });
+    }
+  );
 
   is(data.x, x, "window scrolled properly horizontally");
   is(data.y, y, "window scrolled properly vertically");
@@ -114,7 +127,20 @@ async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
 
   info("Ask the content window to scroll relative to the current position");
 
-  data = await testActor.scrollWindow(-50, -60, true);
+  data = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [-50, -60],
+    (_deltaX, _deltaY) => {
+      return new Promise(resolve => {
+        content.addEventListener(
+          "scroll",
+          () => resolve({ x: content.scrollX, y: content.scrollY }),
+          { once: true }
+        );
+        content.scrollBy(_deltaX, _deltaY);
+      });
+    }
+  );
 
   is(data.x, x - 50, "window scrolled properly horizontally");
   is(data.y, y - 60, "window scrolled properly vertically");

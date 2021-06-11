@@ -36,7 +36,13 @@ async function testPositionAndStyle(test, inspector, testActor) {
     "Infobar shows on top of the page when page isn't scrolled"
   );
 
-  await testActor.scrollWindow(0, 500);
+  info("Scroll down");
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    return new Promise(resolve => {
+      content.addEventListener("scroll", () => resolve(), { once: true });
+      content.scrollTo({ top: 500 });
+    });
+  });
 
   style = await testActor.getHighlighterNodeAttribute(
     "box-model-infobar-container",
