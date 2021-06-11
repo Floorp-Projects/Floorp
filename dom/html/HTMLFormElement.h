@@ -403,8 +403,10 @@ class HTMLFormElement final : public nsGenericHTMLElement,
                              JS::Handle<JSObject*> aGivenProto) override;
 
   void PostPasswordEvent();
+  void PostPossibleUsernameEvent();
 
   RefPtr<AsyncEventDispatcher> mFormPasswordEventDispatcher;
+  RefPtr<AsyncEventDispatcher> mFormPossibleUsernameEventDispatcher;
 
   class RemoveElementRunnable;
   friend class RemoveElementRunnable;
