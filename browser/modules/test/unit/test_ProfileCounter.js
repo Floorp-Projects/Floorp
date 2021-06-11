@@ -161,14 +161,10 @@ function checkSuccess(profilesReported, rawCount = profilesReported) {
 
 function checkError() {
   const scalars = TelemetryTestUtils.getProcessScalars("parent");
-  // Bug 1633883 - SCALAR_ERROR_VALUE is 0, but currently, assertScalar, if
-  //               given an expected value of 0, will check that the scalar is
-  //               unset rather than checking that its value is 0.
-  //               If this is changed, the check below can be replaced with a
-  //               TelemetryTestUtils.assertScalar call.
-  Assert.ok(
-    PROFILE_COUNT_SCALAR in scalars &&
-      scalars[PROFILE_COUNT_SCALAR] === SCALAR_ERROR_VALUE,
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    PROFILE_COUNT_SCALAR,
+    SCALAR_ERROR_VALUE,
     "The value reported to telemetry should be the error value"
   );
 }

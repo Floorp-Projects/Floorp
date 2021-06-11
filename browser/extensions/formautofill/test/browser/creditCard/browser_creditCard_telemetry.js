@@ -160,11 +160,9 @@ add_task(async function test_popup_opened() {
     1,
     "There should be 1 section detected."
   );
-  TelemetryTestUtils.assertScalar(
+  TelemetryTestUtils.assertScalarUnset(
     TelemetryTestUtils.getProcessScalars("content"),
-    "formautofill.creditCards.submitted_sections_count",
-    0,
-    "There should be no sections submitted."
+    "formautofill.creditCards.submitted_sections_count"
   );
 
   SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF);

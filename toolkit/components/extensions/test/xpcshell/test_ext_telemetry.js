@@ -151,19 +151,43 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     );
   });
 
-  add_task(async function test_telemetry_scalar_set() {
+  add_task(async function test_telemetry_scalar_set_bool_true() {
     Services.telemetry.clearScalars();
     await run({
       backgroundScript: async () => {
         await browser.telemetry.scalarSet("telemetry.test.boolean_kind", true);
-        browser.test.notifyPass("scalar_set");
+        browser.test.notifyPass("scalar_set_bool_true");
       },
-      doneSignal: "scalar_set",
+      doneSignal: "scalar_set_bool_true",
     });
     TelemetryTestUtils.assertScalar(
       TelemetryTestUtils.getProcessScalars("parent", false, true),
       "telemetry.test.boolean_kind",
       true
+    );
+  });
+
+  add_task(async function test_telemetry_scalar_set_bool_false() {
+    Services.telemetry.clearScalars();
+    await run({
+      backgroundScript: async () => {
+        await browser.telemetry.scalarSet("telemetry.test.boolean_kind", false);
+        browser.test.notifyPass("scalar_set_bool_false");
+      },
+      doneSignal: "scalar_set_bool_false",
+    });
+    TelemetryTestUtils.assertScalar(
+      TelemetryTestUtils.getProcessScalars("parent", false, true),
+      "telemetry.test.boolean_kind",
+      false
+    );
+  });
+
+  add_task(async function test_telemetry_scalar_unset_bool() {
+    Services.telemetry.clearScalars();
+    TelemetryTestUtils.assertScalarUnset(
+      TelemetryTestUtils.getProcessScalars("parent", false, true),
+      "telemetry.test.boolean_kind"
     );
   });
 
@@ -183,6 +207,25 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     Assert.ok(
       messages.find(({ message }) => message.includes("Unknown scalar")),
       "Telemetry should warn if an unknown scalar is set"
+    );
+  });
+
+  add_task(async function test_telemetry_scalar_set_zero() {
+    Services.telemetry.clearScalars();
+    await run({
+      backgroundScript: async () => {
+        await browser.telemetry.scalarSet(
+          "telemetry.test.unsigned_int_kind",
+          0
+        );
+        browser.test.notifyPass("scalar_set_zero");
+      },
+      doneSignal: "scalar_set_zero",
+    });
+    TelemetryTestUtils.assertScalar(
+      TelemetryTestUtils.getProcessScalars("parent", false, true),
+      "telemetry.test.unsigned_int_kind",
+      0
     );
   });
 
@@ -590,7 +633,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "register_scalars_string",
     });
     TelemetryTestUtils.assertScalar(
-      TelemetryTestUtils.getProcessScalars("parent", false, true),
+      TelemetryTestUtils.getProcessScalars("dynamic", false, true),
       "telemetry.test.dynamic.webext_string",
       "hello"
     );
@@ -624,7 +667,11 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       },
       doneSignal: "register_scalars_multiple",
     });
-    const scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+    const scalars = TelemetryTestUtils.getProcessScalars(
+      "dynamic",
+      false,
+      true
+    );
     TelemetryTestUtils.assertScalar(
       scalars,
       "telemetry.test.dynamic.webext_string",
