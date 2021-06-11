@@ -565,7 +565,7 @@ SubDialog.prototype = {
 
     // Now check if the frame height we calculated is possible at this window size,
     // accounting for titlebar, padding/border and some spacing.
-    let frameOverhead = frameSizeDifference + (this._titleBar ? 30 : 0);
+    let frameOverhead = frameSizeDifference + titleBarHeight;
     let maxHeight = this._window.innerHeight - frameOverhead;
     // Do this with a frame height in pixels...
     let comparisonFrameHeight;
