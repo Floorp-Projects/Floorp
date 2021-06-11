@@ -3949,6 +3949,16 @@
   value: false
   mirror: always
 
+# Whether to expose the MockExtensionAPI test interface in tests.
+# The interface MockExtensionAPI doesn't represent a real extension API,
+# it is only available in test and does include a series of cases useful
+# to test the API request handling without tying the unit test to a
+# specific WebExtensions API.
+- name: extensions.webidl-api.expose_mock_interface
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "findbar."
 #---------------------------------------------------------------------------

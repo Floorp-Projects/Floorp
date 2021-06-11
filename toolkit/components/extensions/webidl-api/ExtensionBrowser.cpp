@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ExtensionBrowserBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"  // GetWorkerPrivateFromContext
+#include "mozilla/extensions/ExtensionMockAPI.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
 namespace mozilla {
@@ -15,7 +16,8 @@ namespace extensions {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionBrowser);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionBrowser)
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionBrowser, mGlobal);
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionBrowser, mGlobal,
+                                      mExtensionMockAPI);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionBrowser)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -33,6 +35,14 @@ JSObject* ExtensionBrowser::WrapObject(JSContext* aCx,
 }
 
 nsIGlobalObject* ExtensionBrowser::GetParentObject() const { return mGlobal; }
+
+ExtensionMockAPI* ExtensionBrowser::GetExtensionMockAPI() {
+  if (!mExtensionMockAPI) {
+    mExtensionMockAPI = new ExtensionMockAPI(mGlobal, this);
+  }
+
+  return mExtensionMockAPI;
+}
 
 bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
   // Only expose the Extension API bindings if:
