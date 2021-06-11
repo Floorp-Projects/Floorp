@@ -18,6 +18,13 @@ const TESTCASES = [
     returnedFieldIDs: [null, "pw1", null],
   },
   {
+    description: "1 text field in a <form> without a password field",
+    document: `<form>
+      <input id="un1">
+      </form>`,
+    returnedFieldIDs: [null, null, null],
+  },
+  {
     description: "1 text field outside of a <form> without a password field",
     document: `<input id="un1">`,
     returnedFieldIDs: [null, null, null],
@@ -88,6 +95,18 @@ const TESTCASES = [
     document: `<input id="pw1" type=password><input id="pw2" type=password form='form1'>
       <form id="form1"></form>`,
     returnedFieldIDs: [null, "pw1", null],
+  },
+  {
+    description: "1 username field in a <form>",
+    document: `<form>
+      <input id="un1" autocomplete=username>
+      </form>`,
+    returnedFieldIDs: ["un1", null, null],
+  },
+  {
+    description: "1 username field outside of a <form>",
+    document: `<input id="un1" autocomplete=username>`,
+    returnedFieldIDs: [null, null, null],
   },
 ];
 
