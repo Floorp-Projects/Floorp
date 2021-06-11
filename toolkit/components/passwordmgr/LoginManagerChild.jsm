@@ -1482,7 +1482,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    * @return {Object} {usernameField, newPasswordField, oldPasswordField, confirmPasswordField}
    *
    * usernameField may be null.
-   * newPasswordField will always be non-null.
+   * newPasswordField may be null. If null, this is a username-only form.
    * oldPasswordField may be null. If null, newPasswordField is just
    * "theLoginField". If not null, the form is apparently a
    * change-password field, with oldPasswordField containing the password
@@ -1547,8 +1547,31 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       });
     }
 
+    // Check whether this is a username-only form when the form doesn't have
+    // a password field. Note that recipes are not supported in username-only
+    // forms currently (Bug 1708455).
     if (!pwFields) {
-      return emptyResult;
+      usernameField = this.getUsernameFieldFromUsernameOnlyForm(
+        form.rootElement
+      );
+      if (usernameField) {
+        let acFieldName = usernameField.getAutocompleteInfo().fieldName;
+        log(
+          "Username field ",
+          usernameField,
+          "has name/value/autocomplete:",
+          usernameField.name,
+          "/",
+          usernameField.value,
+          "/",
+          acFieldName
+        );
+      }
+
+      return {
+        ...emptyResult,
+        usernameField,
+      };
     }
 
     if (!usernameField) {
