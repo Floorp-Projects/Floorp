@@ -66,10 +66,9 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     OCSPCache& ocspCache,
     /*optional but shouldn't be*/ void* pinArg, TimeDuration ocspTimeoutSoft,
     TimeDuration ocspTimeoutHard, uint32_t certShortLifetimeInDays,
-    CertVerifier::PinningMode pinningMode, unsigned int minRSABits,
-    ValidityCheckingMode validityCheckingMode, CertVerifier::SHA1Mode sha1Mode,
-    NetscapeStepUpPolicy netscapeStepUpPolicy, CRLiteMode crliteMode,
-    uint64_t crliteCTMergeDelaySeconds,
+    unsigned int minRSABits, ValidityCheckingMode validityCheckingMode,
+    CertVerifier::SHA1Mode sha1Mode, NetscapeStepUpPolicy netscapeStepUpPolicy,
+    CRLiteMode crliteMode, uint64_t crliteCTMergeDelaySeconds,
     const OriginAttributes& originAttributes,
     const Vector<Input>& thirdPartyRootInputs,
     const Vector<Input>& thirdPartyIntermediateInputs,
@@ -84,7 +83,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mOCSPTimeoutSoft(ocspTimeoutSoft),
       mOCSPTimeoutHard(ocspTimeoutHard),
       mCertShortLifetimeInDays(certShortLifetimeInDays),
-      mPinningMode(pinningMode),
       mMinRSABits(minRSABits),
       mValidityCheckingMode(validityCheckingMode),
       mSHA1Mode(sha1Mode),
@@ -1186,16 +1184,9 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
   if (NS_FAILED(nsrv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-  bool skipPinningChecksBecauseOfMITMMode =
-      (!isBuiltInRoot && mPinningMode == CertVerifier::pinningAllowUserCAMITM);
   // If mHostname isn't set, we're not verifying in the context of a TLS
-  // handshake, so don't verify HPKP in those cases.
-  if (mHostname && (mPinningMode != CertVerifier::pinningDisabled) &&
-      !skipPinningChecksBecauseOfMITMMode) {
-    bool enforceTestMode =
-        (mPinningMode == CertVerifier::pinningEnforceTestMode);
-    bool chainHasValidPins;
-
+  // handshake, so don't verify key pinning in those cases.
+  if (mHostname) {
     nsTArray<Span<const uint8_t>> derCertSpanList;
     size_t numCerts = certArray.GetLength();
     for (size_t i = numCerts; i > 0; --i) {
@@ -1206,9 +1197,10 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
       derCertSpanList.EmplaceBack(der->UnsafeGetData(), der->GetLength());
     }
 
+    bool chainHasValidPins;
     nsrv = PublicKeyPinningService::ChainHasValidPins(
-        derCertSpanList, mHostname, time, enforceTestMode, mOriginAttributes,
-        chainHasValidPins, mPinningTelemetryInfo);
+        derCertSpanList, mHostname, time, isBuiltInRoot, chainHasValidPins,
+        mPinningTelemetryInfo);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
