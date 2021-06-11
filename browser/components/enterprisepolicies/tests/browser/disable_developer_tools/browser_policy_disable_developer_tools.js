@@ -50,6 +50,22 @@ add_task(async function test_updates_post_policy() {
     "The Web Developer item of the hamburger menu should not be available."
   );
 
+  let menuButton = document.getElementById("PanelUI-menu-button");
+  menuButton.click();
+  await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
+  let moreToolsButtonId = "appMenu-more-button2";
+  document.getElementById(moreToolsButtonId).click();
+  await BrowserTestUtils.waitForEvent(
+    document.getElementById("appmenu-moreTools"),
+    "ViewShown"
+  );
+  is(
+    document.getElementById("appmenu-developer-tools-view").children.length,
+    2,
+    "The developer tools are properly populated"
+  );
+  window.PanelUI.hide();
+
   BrowserTestUtils.removeTab(tab);
 });
 
