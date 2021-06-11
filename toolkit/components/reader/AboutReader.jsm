@@ -309,6 +309,7 @@ AboutReader.prototype = {
         ) {
           let btn = this._doc.createElement("button");
           btn.dataset.buttonid = message.data.id;
+          btn.dataset.telemetryId = `reader-${message.data.telemetryId}`;
           btn.className = "button " + message.data.id;
           let tip = this._doc.createElement("span");
           tip.className = "hover-label";
@@ -374,11 +375,20 @@ AboutReader.prototype = {
         }
         break;
       case "click":
-        const buttonLabel = target.attributes.getNamedItem(`aria-label`).value;
+        const buttonLabel = target.attributes.getNamedItem(`data-telemetry-id`)
+          ?.value;
 
-        Services.telemetry.recordEvent("readermode", "button", "click", null, {
-          label: buttonLabel,
-        });
+        if (buttonLabel) {
+          Services.telemetry.recordEvent(
+            "readermode",
+            "button",
+            "click",
+            null,
+            {
+              label: buttonLabel,
+            }
+          );
+        }
 
         if (target.classList.contains("dropdown-toggle")) {
           this._toggleDropdownClicked(aEvent);
