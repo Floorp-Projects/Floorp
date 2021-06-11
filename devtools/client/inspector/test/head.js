@@ -716,10 +716,6 @@ const getHighlighterHelperFor = type =>
         }
       ),
 
-      reflow: async function() {
-        await testActor.reflow();
-      },
-
       finalize: async function() {
         highlightedNode = null;
         await highlighter.finalize();
