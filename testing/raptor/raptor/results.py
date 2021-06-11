@@ -77,7 +77,12 @@ class PerftestResultsHandler(object):
         # the fields that were given to us.
         if modifiers is None:
             if self.conditioned_profile:
-                extra_options.append("condprof-%s" % self.conditioned_profile)
+                # Don't add an option/tag for the base test case
+                if self.conditioned_profile != "settled":
+                    extra_options.append(
+                        "condprof-%s"
+                        % self.conditioned_profile.replace("artifact:", "")
+                    )
             if self.fission_enabled:
                 extra_options.append("fission")
             if self.live_sites:

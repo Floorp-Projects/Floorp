@@ -39,6 +39,7 @@ class Browsertime(Perftest):
         pass
 
     def __init__(self, app, binary, process_handler=None, **kwargs):
+        self.browsertime = True
         self.browsertime_failure = ""
         self.process_handler = process_handler or mozprocess.ProcessHandler
         for key in list(kwargs):

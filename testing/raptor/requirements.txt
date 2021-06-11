@@ -4,7 +4,11 @@ mozprofile ~= 2.1
 manifestparser >= 1.1
 wptserve ~= 3.0
 mozdevice >= 4.0.0
-pyyaml ~= 3.1
 mozpower >= 1.0.0
 mozversion >= 1.0
 ../condprofile
+aiohttp==3.7.4.post0
+https://pypi.pub.build.mozilla.org/pub/arsenic-19.1-py3-none-any.whl
+requests==2.22.0
+pyyaml==5.1.2
+structlog==15.2.0

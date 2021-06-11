@@ -25,6 +25,7 @@ that keep track of the Firefox version that was used and the profile age.
 """
 from __future__ import absolute_import
 import os
+import tempfile
 
 from arsenic import get_session
 from arsenic.browsers import Firefox
@@ -42,14 +43,30 @@ START, INIT_GECKODRIVER, START_SESSION, START_SCENARIO = range(4)
 
 
 class ProfileCreator:
-    def __init__(self, scenario, customization, archive, changelog, force_new, env):
+    def __init__(
+        self,
+        scenario,
+        customization,
+        archive,
+        changelog,
+        force_new,
+        env,
+        skip_logs=False,
+    ):
         self.env = env
         self.scenario = scenario
         self.customization = customization
         self.archive = archive
         self.changelog = changelog
         self.force_new = force_new
+        self.skip_logs = skip_logs
         self.customization_data = get_customization(customization)
+        self.tmp_dir = None
+
+        # Make a temporary directory for the logs if an
+        # archive dir is not provided
+        if not self.archive:
+            self.tmp_dir = tempfile.mkdtemp()
 
     def _log_filename(self, name):
         filename = "%s-%s-%s.log" % (
@@ -57,7 +74,7 @@ class ProfileCreator:
             self.scenario,
             self.customization_data["name"],
         )
-        return os.path.join(self.archive, filename)
+        return os.path.join(self.archive or self.tmp_dir, filename)
 
     async def run(self, headless=True):
         logger.info(
@@ -78,7 +95,8 @@ class ProfileCreator:
                 with self.env.get_browser():
                     metadata = await self.build_profile(device, headless)
             finally:
-                self.env.dump_logs()
+                if not self.skip_logs:
+                    self.env.dump_logs()
 
         if not self.archive:
             return

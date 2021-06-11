@@ -26,6 +26,7 @@ setup(
     packages=find_packages(),
     description="Firefox Heavy Profile creator",
     include_package_data=True,
+    data_files=[("condprof", ["condprof/customization/default.json"])],
     zip_safe=False,
     install_requires=[],  # use requirements files
     entry_points=entry_points,

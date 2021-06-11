@@ -35,6 +35,7 @@ job-defaults:
                     - raptor/linux_config.py
         extra-options:
             - --browsertime
+            - --conditioned-profile=settled
     variants:
         by-app:
             firefox:
@@ -63,9 +64,11 @@ browsertime-tp6:
                         - --chimera
                         - --browsertime
                         - --browsertime-no-ffwindowrecorder
+                        - --conditioned-profile=settled
                     default:
                         - --chimera
                         - --browsertime
+                        - --conditioned-profile=settled
         raptor-test: tp6
         run-on-projects:
             by-variant:
