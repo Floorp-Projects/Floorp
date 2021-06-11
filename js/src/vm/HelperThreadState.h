@@ -195,14 +195,6 @@ class GlobalHelperThreadState {
     return isInitialized_;
   }
 
-  HelperThreadVector& threads(const AutoLockHelperThreadState& lock) {
-    return threads_;
-  }
-  const HelperThreadVector& threads(
-      const AutoLockHelperThreadState& lock) const {
-    return threads_;
-  }
-
   [[nodiscard]] bool ensureInitialized();
   [[nodiscard]] bool ensureThreadCount(size_t count,
                                        const AutoLockHelperThreadState& lock);
@@ -248,6 +240,14 @@ class GlobalHelperThreadState {
   }
 
  private:
+  HelperThreadVector& threads(const AutoLockHelperThreadState& lock) {
+    return threads_;
+  }
+  const HelperThreadVector& threads(
+      const AutoLockHelperThreadState& lock) const {
+    return threads_;
+  }
+
   void notifyOne(CondVar which, const AutoLockHelperThreadState&);
 
  public:
