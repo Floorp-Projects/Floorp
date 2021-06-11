@@ -37,9 +37,11 @@ addNonCoopTask(
   HTTPROOT
 );
 
-// disable the test below: bug 1703351
-// this test fails with httpS://example.com but not with http://example.com
-// addNonCoopTask("browser_scrollPositions_sample.html", test_scroll_background_tabs, HTTPSROOT);
+addNonCoopTask(
+  "browser_scrollPositions_sample.html",
+  test_scroll_background_tabs,
+  HTTPSROOT
+);
 
 function getScrollPosition(bc) {
   return SpecialPowers.spawn(bc, [], () => {
