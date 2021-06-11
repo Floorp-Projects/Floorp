@@ -7,7 +7,7 @@
 from __future__ import print_function
 
 from copy import deepcopy
-from six import iteritems, PY2
+from six import iteritems
 from struct import unpack
 import os
 from uuid import UUID
@@ -502,11 +502,6 @@ class DllBlocklistEntry(object):
 
     @staticmethod
     def check_ascii(name):
-        if PY2:
-            if not all(ord(c) < 128 for c in name):
-                raise ValueError('DLL name "%s" must be ASCII!' % name)
-            return
-
         try:
             # Supported in Python 3.7
             if not name.isascii():
