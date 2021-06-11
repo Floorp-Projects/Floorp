@@ -105,6 +105,7 @@ browsertime:
     - browsertime-benchmark-wasm
     - browsertime-tp6-profiling
     - browsertime-custom
+    - browsertime-first-install
 
 browsertime-high-priority:
     - browsertime-benchmark
