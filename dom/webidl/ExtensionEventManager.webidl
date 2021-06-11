@@ -11,10 +11,10 @@
 
 [Exposed=(ServiceWorker), LegacyNoInterfaceObject]
 interface ExtensionEventManager {
-  [Throws, WebExtensionStub="NotImplementedNoReturn"]
+  [Throws]
   void    addListener(Function callback, optional object listenerOptions);
 
-  [Throws, WebExtensionStub="NotImplementedNoReturn"]
+  [Throws]
   void    removeListener(Function callback);
 
   [Throws]

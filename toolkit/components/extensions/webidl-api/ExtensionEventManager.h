@@ -7,13 +7,16 @@
 #ifndef mozilla_extensions_ExtensionEventManager_h
 #define mozilla_extensions_ExtensionEventManager_h
 
-#include "js/TypeDecls.h"  // for JS::Handle, JSContext, JSObject, ...
+#include "js/GCHashTable.h"  // for JS::GCHashMap
+#include "js/TypeDecls.h"    // for JS::Handle, JSContext, JSObject, ...
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
+#include "nsPointerHashKeys.h"
+#include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 
 #include "ExtensionAPIBase.h"
@@ -24,11 +27,12 @@ namespace mozilla {
 
 namespace dom {
 class Function;
-}
+}  // namespace dom
 
 namespace extensions {
 
 class ExtensionBrowser;
+class ExtensionEventListener;
 
 class ExtensionEventManager final : public nsISupports,
                                     public nsWrapperCache,
@@ -39,7 +43,16 @@ class ExtensionEventManager final : public nsISupports,
   nsString mAPIObjectType;
   nsString mAPIObjectId;
 
-  ~ExtensionEventManager() = default;
+  using ListenerWrappersMap =
+      JS::GCHashMap<JS::Heap<JSObject*>, RefPtr<ExtensionEventListener>,
+                    js::MovableCellHasher<JS::Heap<JSObject*>>,
+                    js::SystemAllocPolicy>;
+
+  ListenerWrappersMap mListeners;
+
+  ~ExtensionEventManager();
+
+  void ReleaseListeners();
 
  protected:
   // ExtensionAPIBase methods
@@ -64,6 +77,11 @@ class ExtensionEventManager final : public nsISupports,
 
   bool HasListener(dom::Function& aCallback, ErrorResult& aRv) const;
   bool HasListeners(ErrorResult& aRv) const;
+
+  void AddListener(JSContext* aCx, dom::Function& aCallback,
+                   const dom::Optional<JS::Handle<JSObject*>>& aOptions,
+                   ErrorResult& aRv);
+  void RemoveListener(dom::Function& aCallback, ErrorResult& aRv);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionEventManager)
