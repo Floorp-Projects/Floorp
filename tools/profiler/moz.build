@@ -19,7 +19,6 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
         "public/shared-libraries.h",
     ]
     UNIFIED_SOURCES += [
-        "core/MicroGeckoProfiler.cpp",
         "core/PageInformation.cpp",
         "core/platform.cpp",
         "core/ProfileBuffer.cpp",
@@ -127,6 +126,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
         ]
 
 UNIFIED_SOURCES += [
+    "core/MicroGeckoProfiler.cpp",
     "core/ProfilerBindings.cpp",
 ]
 
