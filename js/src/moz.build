@@ -395,7 +395,6 @@ UNIFIED_SOURCES += [
     "vm/HelperThreads.cpp",
     "vm/Id.cpp",
     "vm/Initialization.cpp",
-    "vm/InternalThreadPool.cpp",
     "vm/Iteration.cpp",
     "vm/JitActivation.cpp",
     "vm/JSAtom.cpp",
