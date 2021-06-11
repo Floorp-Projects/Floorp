@@ -49,7 +49,6 @@ static Atomic<PRThread*, Relaxed> gSocketThread(nullptr);
 #define KEEPALIVE_RETRY_INTERVAL_PREF "network.tcp.keepalive.retry_interval"
 #define KEEPALIVE_PROBE_COUNT_PREF "network.tcp.keepalive.probe_count"
 #define SOCKET_LIMIT_TARGET 1000U
-#define SOCKET_LIMIT_MIN 50U
 #define MAX_TIME_BETWEEN_TWO_POLLS \
   "network.sts.max_time_for_events_between_two_polls"
 #define POLL_BUSY_WAIT_PERIOD "network.sts.poll_busy_wait_period"
@@ -119,38 +118,10 @@ void nsSocketTransportService::SocketContext::MaybeResetEpoch() {
 // ctor/dtor (called on the main/UI thread by the service manager)
 
 nsSocketTransportService::nsSocketTransportService()
-    : mRawThread(nullptr),
-      mInitialized(false),
-      mShuttingDown(false),
-      mLock("nsSocketTransportService::mLock"),
-      mOffline(false),
-      mGoingOffline(false),
-      mActiveListSize(SOCKET_LIMIT_MIN),
-      mIdleListSize(SOCKET_LIMIT_MIN),
-      mActiveCount(0),
-      mIdleCount(0),
-      mSentBytesCount(0),
-      mReceivedBytesCount(0),
-      mSendBufferSize(0),
-      mKeepaliveIdleTimeS(600),
-      mKeepaliveRetryIntervalS(1),
-      mKeepaliveProbeCount(kDefaultTCPKeepCount),
-      mKeepaliveEnabledPref(false),
-      mPollableEventTimeout(TimeDuration::FromSeconds(6)),
-      mServingPendingQueue(false),
-      mMaxTimePerPollIter(100),
+    : mPollableEventTimeout(TimeDuration::FromSeconds(6)),
       mMaxTimeForPrClosePref(PR_SecondsToInterval(5)),
-      mLastNetworkLinkChangeTime(0),
       mNetworkLinkChangeBusyWaitPeriod(PR_SecondsToInterval(50)),
-      mNetworkLinkChangeBusyWaitTimeout(PR_SecondsToInterval(7)),
-      mSleepPhase(false),
-      mProbedMaxCount(false)
-#if defined(XP_WIN)
-      ,
-      mPolling(false)
-#endif
-      ,
-      mNotTrustedMitmDetected(false) {
+      mNetworkLinkChangeBusyWaitTimeout(PR_SecondsToInterval(7)) {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
   PR_CallOnce(&gMaxCountInitOnce, DiscoverMaxCount);

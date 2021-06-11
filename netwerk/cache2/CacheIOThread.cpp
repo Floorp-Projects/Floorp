@@ -206,22 +206,7 @@ CacheIOThread* CacheIOThread::sSelf = nullptr;
 
 NS_IMPL_ISUPPORTS(CacheIOThread, nsIThreadObserver)
 
-CacheIOThread::CacheIOThread()
-    : mMonitor("CacheIOThread"),
-      mThread(nullptr),
-      mXPCOMThread(nullptr),
-      mLowestLevelWaiting(LAST_LEVEL),
-      mCurrentlyExecutingLevel(0),
-      mHasXPCOMEvents(false),
-      mRerunCurrentEvent(false),
-      mShutdown(false),
-      mIOCancelableEvents(0),
-      mEventCounter(0)
-#ifdef DEBUG
-      ,
-      mInsideLoop(true)
-#endif
-{
+CacheIOThread::CacheIOThread() {
   for (auto& item : mQueueLength) {
     item = 0;
   }

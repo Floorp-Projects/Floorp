@@ -104,7 +104,7 @@ LoadInfo::LoadInfo(
       mLoadingContext(do_GetWeakReference(aLoadingContext)),
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
-      mTriggeringSandboxFlags(0),
+
       mInternalContentPolicyType(aContentPolicyType) {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -320,7 +320,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mContextForTopLevelLoad(do_GetWeakReference(aContextForTopLevelLoad)),
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
-      mTriggeringSandboxFlags(0),
+
       mInternalContentPolicyType(nsIContentPolicy::TYPE_DOCUMENT) {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
@@ -379,7 +379,7 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
     : mTriggeringPrincipal(aTriggeringPrincipal),
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
-      mTriggeringSandboxFlags(0),
+
       mInternalContentPolicyType(nsIContentPolicy::TYPE_DOCUMENT) {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
@@ -575,9 +575,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mForcePreflight(rhs.mForcePreflight),
       mIsPreflight(rhs.mIsPreflight),
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
-      // mServiceWorkerTaintingSynthesized must be handled specially during
-      // redirect
-      mServiceWorkerTaintingSynthesized(false),
+
       mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted),
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(
           rhs.mAllowListFutureDocumentsCreatedFromThisRedirectChain),
@@ -702,9 +700,7 @@ LoadInfo::LoadInfo(
       mParserCreatedScript(aParserCreatedScript),
       mHasStoragePermission(aHasStoragePermission),
       mIsMetaRefresh(aIsMetaRefresh),
-      mIsFromProcessingFrameAttributes(false),
-      mIsMediaRequest(false),
-      mIsMediaInitialRequest(false),
+
       mLoadingEmbedderPolicy(aLoadingEmbedderPolicy),
       mUnstrippedURI(aUnstrippedURI) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal

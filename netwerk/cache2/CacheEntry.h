@@ -151,8 +151,9 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
                              const nsACString& aURISpec, nsACString& aResult);
 
   // Accessed only on the service management thread
-  double mFrecency;
-  ::mozilla::Atomic<uint32_t, ::mozilla::Relaxed> mSortingExpirationTime;
+  double mFrecency{0};
+  ::mozilla::Atomic<uint32_t, ::mozilla::Relaxed> mSortingExpirationTime{
+      uint32_t(-1)};
 
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -307,7 +308,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
       bool aMemoryOnly, nsICacheEntryOpenCallback* aCallback);
   void TransferCallbacks(CacheEntry& aFromEntry);
 
-  mozilla::Mutex mLock;
+  mozilla::Mutex mLock{"CacheEntry"};
 
   // Reflects the number of existing handles for this entry
   ::mozilla::ThreadSafeAutoRefCnt mHandlesCount;
@@ -320,7 +321,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   // Using ReleaseAcquire since we only control access to mFile with this.
   // When mFileStatus is read and found success it is ensured there is mFile and
   // that it is after a successful call to Init().
-  ::mozilla::Atomic<nsresult, ::mozilla::ReleaseAcquire> mFileStatus;
+  Atomic<nsresult, ReleaseAcquire> mFileStatus{NS_ERROR_NOT_INITIALIZED};
   nsCString mURI;
   nsCString mEnhanceID;
   nsCString mStorageID;
@@ -334,7 +335,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   // Whether it should skip max size check.
   bool const mSkipSizeCheck;
   // Set when entry is doomed with AsyncDoom() or DoomAlreadyRemoved().
-  bool mIsDoomed;
+  bool mIsDoomed{false};
 
   // Following flags are all synchronized with the cache entry lock.
 
@@ -368,7 +369,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   };
 
   // State of this entry.
-  EState mState;
+  EState mState{NOTLOADED};
 
   enum ERegistration {
     NEVERREGISTERED = 0,  // The entry has never been registered
@@ -378,7 +379,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
 
   // Accessed only on the management thread.  Records the state of registration
   // this entry in the memory pool intermediate cache.
-  ERegistration mRegistration;
+  ERegistration mRegistration{NEVERREGISTERED};
 
   // If a new (empty) entry is requested to open an input stream before
   // output stream has been opened, we must open output stream internally
@@ -389,7 +390,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   // Weak reference to the current writter.  There can be more then one
   // writer at a time and OnHandleClosed() must be processed only for the
   // current one.
-  CacheEntryHandle* mWriter;
+  CacheEntryHandle* mWriter{nullptr};
 
   // Background thread scheduled operation.  Set (under the lock) one
   // of this flags to tell the background thread what to do.
@@ -400,7 +401,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
     static uint32_t const CALLBACKS = 1 << 2;
     static uint32_t const UNREGISTER = 1 << 3;
 
-    Ops() : mFlags(0) {}
+    Ops() = default;
     uint32_t Grab() {
       uint32_t flags = mFlags;
       mFlags = 0;
@@ -413,12 +414,12 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
     }
 
    private:
-    uint32_t mFlags;
+    uint32_t mFlags{0};
   } mBackgroundOperations;
 
   nsCOMPtr<nsISupports> mSecurityInfo;
   mozilla::TimeStamp mLoadStart;
-  uint32_t mUseCount;
+  uint32_t mUseCount{0};
 
   const uint64_t mCacheEntryId;
 };
@@ -547,7 +548,7 @@ class CacheEntryHandle final : public nsICacheEntry {
 
   // This is |false| until Dismiss() was called and prevents OnHandleClosed
   // being called more than once.
-  Atomic<bool, ReleaseAcquire> mClosed;
+  Atomic<bool, ReleaseAcquire> mClosed{false};
 };
 
 class CacheOutputCloseListener final : public Runnable {

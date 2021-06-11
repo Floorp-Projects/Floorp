@@ -43,12 +43,6 @@ using mozilla::Some;
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileStreamBase
 
-nsFileStreamBase::nsFileStreamBase()
-    : mFD(nullptr),
-      mBehaviorFlags(0),
-      mState(eUnitialized),
-      mErrorValue(NS_ERROR_FAILURE) {}
-
 nsFileStreamBase::~nsFileStreamBase() {
   // We don't want to try to rewrind the stream when shutting down.
   mBehaviorFlags &= ~nsIFileInputStream::REOPEN_ON_REWIND;

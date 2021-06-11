@@ -38,17 +38,13 @@ class SocketData : public nsISupports {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  SocketData() {
-    mTotalSent = 0;
-    mTotalRecv = 0;
-    mEventTarget = nullptr;
-  }
+  SocketData() = default;
 
-  uint64_t mTotalSent;
-  uint64_t mTotalRecv;
+  uint64_t mTotalSent{0};
+  uint64_t mTotalRecv{0};
   nsTArray<SocketInfo> mData;
   nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
-  nsIEventTarget* mEventTarget;
+  nsIEventTarget* mEventTarget{nullptr};
 
  private:
   virtual ~SocketData() = default;
@@ -64,11 +60,11 @@ class HttpData : public nsISupports {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  HttpData() { mEventTarget = nullptr; }
+  HttpData() = default;
 
   nsTArray<HttpRetParams> mData;
   nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
-  nsIEventTarget* mEventTarget;
+  nsIEventTarget* mEventTarget{nullptr};
 };
 
 NS_IMPL_ISUPPORTS0(HttpData)
@@ -79,10 +75,10 @@ class WebSocketRequest : public nsISupports {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  WebSocketRequest() { mEventTarget = nullptr; }
+  WebSocketRequest() = default;
 
   nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
-  nsIEventTarget* mEventTarget;
+  nsIEventTarget* mEventTarget{nullptr};
 };
 
 NS_IMPL_ISUPPORTS0(WebSocketRequest)
@@ -93,11 +89,11 @@ class DnsData : public nsISupports {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  DnsData() { mEventTarget = nullptr; }
+  DnsData() = default;
 
   nsTArray<DNSCacheEntries> mData;
   nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
-  nsIEventTarget* mEventTarget;
+  nsIEventTarget* mEventTarget{nullptr};
 };
 
 NS_IMPL_ISUPPORTS0(DnsData)
@@ -124,22 +120,19 @@ class ConnectionData : public nsITransportEventSink,
   void StartTimer(uint32_t aTimeout);
   void StopTimer();
 
-  explicit ConnectionData(Dashboard* target) : mPort(0), mTimeout(0) {
-    mEventTarget = nullptr;
-    mDashboard = target;
-  }
+  explicit ConnectionData(Dashboard* target) { mDashboard = target; }
 
   nsCOMPtr<nsISocketTransport> mSocket;
   nsCOMPtr<nsIInputStream> mStreamIn;
   nsCOMPtr<nsITimer> mTimer;
   nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
-  nsIEventTarget* mEventTarget;
+  nsIEventTarget* mEventTarget{nullptr};
   Dashboard* mDashboard;
 
   nsCString mHost;
-  uint32_t mPort;
+  uint32_t mPort{0};
   nsCString mProtocol;
-  uint32_t mTimeout;
+  uint32_t mTimeout{0};
 
   nsString mStatus;
 };
@@ -153,10 +146,10 @@ class RcwnData : public nsISupports {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  RcwnData() { mEventTarget = nullptr; }
+  RcwnData() = default;
 
   nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
-  nsIEventTarget* mEventTarget;
+  nsIEventTarget* mEventTarget{nullptr};
 };
 
 NS_IMPL_ISUPPORTS0(RcwnData)
@@ -243,7 +236,7 @@ class LookupHelper final : public nsIDNSListener {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDNSLISTENER
 
-  LookupHelper() : mEventTarget{nullptr}, mStatus{NS_ERROR_NOT_INITIALIZED} {}
+  LookupHelper() = default;
 
   nsresult ConstructAnswer(LookupArgument* aArgument);
   nsresult ConstructHTTPSRRAnswer(LookupArgument* aArgument);
@@ -251,8 +244,8 @@ class LookupHelper final : public nsIDNSListener {
  public:
   nsCOMPtr<nsICancelable> mCancel;
   nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
-  nsIEventTarget* mEventTarget;
-  nsresult mStatus;
+  nsIEventTarget* mEventTarget{nullptr};
+  nsresult mStatus{NS_ERROR_NOT_INITIALIZED};
 };
 
 NS_IMPL_ISUPPORTS(LookupHelper, nsIDNSListener)

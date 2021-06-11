@@ -7,9 +7,6 @@
 
 NS_IMPL_ISUPPORTS(nsDirIndex, nsIDirIndex)
 
-nsDirIndex::nsDirIndex()
-    : mType(TYPE_UNKNOWN), mSize(UINT64_MAX), mLastModified(-1LL) {}
-
 NS_IMETHODIMP
 nsDirIndex::GetType(uint32_t* aType) {
   NS_ENSURE_ARG_POINTER(aType);

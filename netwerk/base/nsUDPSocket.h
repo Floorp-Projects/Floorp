@@ -58,18 +58,18 @@ class nsUDPSocket final : public nsASocketHandler, public nsIUDPSocket {
 
   // lock protects access to mListener;
   // so mListener is not cleared while being used/locked.
-  Mutex mLock;
-  PRFileDesc* mFD;
+  Mutex mLock{"nsUDPSocket.mLock"};
+  PRFileDesc* mFD{nullptr};
   NetAddr mAddr;
   OriginAttributes mOriginAttributes;
   nsCOMPtr<nsIUDPSocketListener> mListener;
   nsCOMPtr<nsIUDPSocketSyncListener> mSyncListener;
   nsCOMPtr<nsIEventTarget> mListenerTarget;
-  bool mAttached;
+  bool mAttached{false};
   RefPtr<nsSocketTransportService> mSts;
 
-  uint64_t mByteReadCount;
-  uint64_t mByteWriteCount;
+  uint64_t mByteReadCount{0};
+  uint64_t mByteWriteCount{0};
 };
 
 //-----------------------------------------------------------------------------

@@ -108,16 +108,6 @@ size_t CookieEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
 
 NS_IMPL_ISUPPORTS(CookieStorage, nsIObserver, nsISupportsWeakReference)
 
-CookieStorage::CookieStorage()
-    : mCookieCount(0),
-      mCookieOldestTime(INT64_MAX),
-      mMaxNumberOfCookies(kMaxNumberOfCookies),
-      mMaxCookiesPerHost(kMaxCookiesPerHost),
-      mCookieQuotaPerHost(kCookieQuotaPerHost),
-      mCookiePurgeAge(kCookiePurgeAge) {}
-
-CookieStorage::~CookieStorage() = default;
-
 void CookieStorage::Init() {
   // init our pref and observer
   nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
