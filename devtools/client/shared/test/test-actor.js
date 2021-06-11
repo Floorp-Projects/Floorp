@@ -8,11 +8,7 @@
 // A helper actor for inspector and markupview tests.
 const { Ci, Cc } = require("chrome");
 const Services = require("Services");
-const {
-  getRect,
-  getAdjustedQuads,
-  getWindowDimensions,
-} = require("devtools/shared/layout/utils");
+const { getRect, getAdjustedQuads } = require("devtools/shared/layout/utils");
 const InspectorUtils = require("InspectorUtils");
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
@@ -152,12 +148,6 @@ var testSpec = protocol.generateActorSpec({
         parentSelector: Arg(0, "string"),
         childNodeIndex: Arg(1, "number"),
       },
-      response: {
-        value: RetVal("json"),
-      },
-    },
-    getWindowDimensions: {
-      request: {},
       response: {
         value: RetVal("json"),
       },
@@ -419,16 +409,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
     const parentNode = this._querySelector(parentSelector);
     const node = parentNode.childNodes[childNodeIndex];
     return getAdjustedQuads(this.content, node)[0].bounds;
-  },
-
-  /**
-   * Returns the window's dimensions for the `window` given.
-   *
-   * @return {Object} An object with `width` and `height` properties, representing the
-   * number of pixels for the document's size.
-   */
-  getWindowDimensions: function() {
-    return getWindowDimensions(this.content);
   },
 
   /**
