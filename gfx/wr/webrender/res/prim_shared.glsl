@@ -18,7 +18,7 @@
 uniform sampler2D sClipMask;
 
 #ifndef SWGL_CLIP_MASK
-// TODO: convert back to RectWithEndPoint if driver issues are resolved, if ever.
+// TODO: convert back to RectWithEndpoint if driver issues are resolved, if ever.
 flat varying vec4 vClipMaskUvBounds;
 varying vec2 vClipMaskUv;
 #endif
@@ -72,8 +72,8 @@ Instance decode_instance_attributes() {
 }
 
 struct PrimitiveHeader {
-    RectWithSize local_rect;
-    RectWithSize local_clip_rect;
+    RectWithEndpoint local_rect;
+    RectWithEndpoint local_clip_rect;
     float z;
     int specific_prim_address;
     int transform_id;
@@ -86,8 +86,8 @@ PrimitiveHeader fetch_prim_header(int index) {
     ivec2 uv_f = get_fetch_uv(index, VECS_PER_PRIM_HEADER_F);
     vec4 local_rect = TEXEL_FETCH(sPrimitiveHeadersF, uv_f, 0, ivec2(0, 0));
     vec4 local_clip_rect = TEXEL_FETCH(sPrimitiveHeadersF, uv_f, 0, ivec2(1, 0));
-    ph.local_rect = RectWithSize(local_rect.xy, local_rect.zw);
-    ph.local_clip_rect = RectWithSize(local_clip_rect.xy, local_clip_rect.zw);
+    ph.local_rect = RectWithEndpoint(local_rect.xy, local_rect.zw);
+    ph.local_clip_rect = RectWithEndpoint(local_clip_rect.xy, local_clip_rect.zw);
 
     ivec2 uv_i = get_fetch_uv(index, VECS_PER_PRIM_HEADER_I);
     ivec4 data0 = TEXEL_FETCH(sPrimitiveHeadersI, uv_i, 0, ivec2(0, 0));
@@ -106,12 +106,12 @@ struct VertexInfo {
 };
 
 VertexInfo write_vertex(vec2 local_pos,
-                        RectWithSize local_clip_rect,
+                        RectWithEndpoint local_clip_rect,
                         float z,
                         Transform transform,
                         PictureTask task) {
     // Clamp to the two local clip rects.
-    vec2 clamped_local_pos = clamp_rect(local_pos, local_clip_rect);
+    vec2 clamped_local_pos = rect_clamp(local_clip_rect, local_pos);
 
     // Transform the current vertex to world space.
     vec4 world_pos = transform.m * vec4(clamped_local_pos, 0.0, 1.0);
@@ -151,16 +151,16 @@ vec2 intersect_lines(vec2 p0, vec2 p1, vec2 p2, vec2 p3) {
     return vec2(nx / d, ny / d);
 }
 
-VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
-                                  RectWithSize local_prim_rect,
-                                  RectWithSize local_clip_rect,
+VertexInfo write_transform_vertex(RectWithEndpoint local_segment_rect,
+                                  RectWithEndpoint local_prim_rect,
+                                  RectWithEndpoint local_clip_rect,
                                   int edge_flags,
                                   float z,
                                   Transform transform,
                                   PictureTask task) {
     // Calculate a clip rect from local_rect + local clip
-    RectWithEndpoint clip_rect = to_rect_with_endpoint(local_clip_rect);
-    RectWithEndpoint segment_rect = to_rect_with_endpoint(local_segment_rect);
+    RectWithEndpoint clip_rect = local_clip_rect;
+    RectWithEndpoint segment_rect = local_segment_rect;
 
 #ifdef SWGL_ANTIALIAS
     // Check if the bounds are smaller than the unmodified segment rect. If so,
@@ -176,9 +176,9 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
 
 #ifdef SWGL_ANTIALIAS
     // Trim the segment geometry to the clipped bounds.
-    local_segment_rect = to_rect_with_size(segment_rect);
+    local_segment_rect = segment_rect;
 #else
-    RectWithEndpoint prim_rect = to_rect_with_endpoint(local_prim_rect);
+    RectWithEndpoint prim_rect = local_prim_rect;
     prim_rect.p0 = clamp(prim_rect.p0, clip_rect.p0, clip_rect.p1);
     prim_rect.p1 = clamp(prim_rect.p1, clip_rect.p0, clip_rect.p1);
 
@@ -206,11 +206,11 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
     float extrude_amount = 2.0;
     vec4 extrude_distance = mix(vec4(0.0), vec4(extrude_amount), clip_edge_mask);
     local_segment_rect.p0 -= extrude_distance.xy;
-    local_segment_rect.size += extrude_distance.xy + extrude_distance.zw;
+    local_segment_rect.p1 += extrude_distance.zw;
 #endif
 
     // Select the corner of the local rect that we are processing.
-    vec2 local_pos = local_segment_rect.p0 + local_segment_rect.size * aPosition.xy;
+    vec2 local_pos = mix(local_segment_rect.p0, local_segment_rect.p1, aPosition.xy);
 
     // Convert the world positions to device pixel space.
     vec2 task_offset = task.task_rect.p0 - task.content_origin;
@@ -239,14 +239,14 @@ void write_clip(vec4 world_pos, ClipArea area, PictureTask task) {
         sClipMask,
         (task.task_rect.p0 - task.content_origin) - (area.task_rect.p0 - area.screen_origin),
         area.task_rect.p0,
-        area.task_rect.size
+        rect_size(area.task_rect)
     );
 #else
     vec2 uv = world_pos.xy * area.device_pixel_scale +
         world_pos.w * (area.task_rect.p0 - area.screen_origin);
     vClipMaskUvBounds = vec4(
         area.task_rect.p0,
-        area.task_rect.p0 + area.task_rect.size
+        area.task_rect.p1
     );
     vClipMaskUv = uv;
 #endif

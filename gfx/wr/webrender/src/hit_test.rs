@@ -468,7 +468,7 @@ impl HitTester {
                         pipeline: pipeline_id,
                         tag: item.tag,
                         point_in_viewport,
-                        point_relative_to_item: point_in_layer - item.rect.origin.to_vector(),
+                        point_relative_to_item: point_in_layer - item.rect.min.to_vector(),
                     });
                 }
             }

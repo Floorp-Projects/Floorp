@@ -50,12 +50,12 @@ ClipMaskInstanceRect fetch_clip_item() {
 }
 
 struct ClipRect {
-    RectWithSize rect;
+    RectWithEndpoint rect;
     float mode;
 };
 
 struct ClipCorner {
-    RectWithSize rect;
+    RectWithEndpoint rect;
     vec4 outer_inner_radius;
 };
 
@@ -70,11 +70,11 @@ struct ClipData {
 ClipData fetch_clip() {
     ClipData clip;
 
-    clip.rect = ClipRect(RectWithSize(aClipLocalRect.xy, aClipLocalRect.zw), aClipMode);
-    clip.top_left = ClipCorner(RectWithSize(aClipRect_TL.xy, aClipRect_TL.zw), aClipRadii_TL);
-    clip.top_right = ClipCorner(RectWithSize(aClipRect_TR.xy, aClipRect_TR.zw), aClipRadii_TR);
-    clip.bottom_left = ClipCorner(RectWithSize(aClipRect_BL.xy, aClipRect_BL.zw), aClipRadii_BL);
-    clip.bottom_right = ClipCorner(RectWithSize(aClipRect_BR.xy, aClipRect_BR.zw), aClipRadii_BR);
+    clip.rect = ClipRect(RectWithEndpoint(aClipLocalRect.xy, aClipLocalRect.zw), aClipMode);
+    clip.top_left = ClipCorner(RectWithEndpoint(aClipRect_TL.xy, aClipRect_TL.zw), aClipRadii_TL);
+    clip.top_right = ClipCorner(RectWithEndpoint(aClipRect_TR.xy, aClipRect_TR.zw), aClipRadii_TR);
+    clip.bottom_left = ClipCorner(RectWithEndpoint(aClipRect_BL.xy, aClipRect_BL.zw), aClipRadii_BL);
+    clip.bottom_right = ClipCorner(RectWithEndpoint(aClipRect_BR.xy, aClipRect_BR.zw), aClipRadii_BR);
 
     return clip;
 }
@@ -85,8 +85,10 @@ void main(void) {
     Transform prim_transform = fetch_transform(cmi.base.prim_transform_id);
     ClipData clip = fetch_clip();
 
-    RectWithSize local_rect = clip.rect.rect;
+    RectWithEndpoint local_rect = clip.rect.rect;
+    vec2 diff = cmi.local_pos - local_rect.p0;
     local_rect.p0 = cmi.local_pos;
+    local_rect.p1 += diff;
 
     ClipVertexInfo vi = write_clip_tile_vertex(
         local_rect,
@@ -104,12 +106,12 @@ void main(void) {
 #ifdef WR_FEATURE_FAST_PATH
     // If the radii are all uniform, we can use a much simpler 2d
     // signed distance function to get a rounded rect clip.
-    vec2 half_size = 0.5 * local_rect.size;
+    vec2 half_size = 0.5 * rect_size(local_rect);
     float radius = clip.top_left.outer_inner_radius.x;
     vLocalPos.xy -= (half_size + cmi.local_pos) * vi.local_pos.w;
     vClipParams = vec3(half_size - vec2(radius), radius);
 #else
-    RectWithEndpoint clip_rect = to_rect_with_endpoint(local_rect);
+    RectWithEndpoint clip_rect = local_rect;
 
     vec2 r_tl = clip.top_left.outer_inner_radius.xy;
     vec2 r_tr = clip.top_right.outer_inner_radius.xy;

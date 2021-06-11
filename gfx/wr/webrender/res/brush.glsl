@@ -55,8 +55,8 @@ varying vec2 v_local_pos;
 void brush_vs(
     VertexInfo vi,
     int prim_address,
-    RectWithSize local_rect,
-    RectWithSize segment_rect,
+    RectWithEndpoint local_rect,
+    RectWithEndpoint segment_rect,
     ivec4 prim_user_data,
     int specific_resource_address,
     mat4 transform,
@@ -100,7 +100,7 @@ void brush_shader_main_vs(
 
     // Fetch the segment of this brush primitive we are drawing.
     vec4 segment_data;
-    RectWithSize segment_rect;
+    RectWithEndpoint segment_rect;
     if (instance.segment_index == INVALID_SEGMENT_INDEX) {
         segment_rect = ph.local_rect;
         segment_data = vec4(0.0);
@@ -110,8 +110,9 @@ void brush_shader_main_vs(
                               instance.segment_index * VECS_PER_SEGMENT;
 
         vec4[2] segment_info = fetch_from_gpu_cache_2(segment_address);
-        segment_rect = RectWithSize(segment_info[0].xy, segment_info[0].zw);
+        segment_rect = RectWithEndpoint(segment_info[0].xy, segment_info[0].zw);
         segment_rect.p0 += ph.local_rect.p0;
+        segment_rect.p1 += ph.local_rect.p0;
         segment_data = segment_info[1];
     }
 
@@ -121,7 +122,7 @@ void brush_shader_main_vs(
     if (transform.is_axis_aligned) {
 
         // Select the corner of the local rect that we are processing.
-        vec2 local_pos = segment_rect.p0 + segment_rect.size * aPosition.xy;
+        vec2 local_pos = mix(segment_rect.p0, segment_rect.p1, aPosition.xy);
 
         vi = write_vertex(
             local_pos,

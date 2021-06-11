@@ -121,7 +121,7 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
         let mut brush_segments = Vec::new();
 
         if let Some(ref nine_patch) = item.nine_patch {
-            brush_segments = nine_patch.create_segments(common.prim_rect.size);
+            brush_segments = nine_patch.create_segments(common.prim_rect.size());
         }
 
         let (stops, min_alpha) = stops_and_min_alpha(&item.stops);
@@ -132,8 +132,8 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
         let stops_opacity = PrimitiveOpacity::from_alpha(min_alpha);
 
         let mut stretch_size: LayoutSize = item.stretch_size.into();
-        stretch_size.width = stretch_size.width.min(common.prim_rect.size.width);
-        stretch_size.height = stretch_size.height.min(common.prim_rect.size.height);
+        stretch_size.width = stretch_size.width.min(common.prim_rect.width());
+        stretch_size.height = stretch_size.height.min(common.prim_rect.height());
 
         // Avoid rendering enormous gradients. Radial gradients are mostly made of soft transitions,
         // so it is unlikely that rendering at a higher resolution that 1024 would produce noticeable

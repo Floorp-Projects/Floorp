@@ -936,8 +936,8 @@ void nsNativeBasicTheme::PaintRoundedRectWithRadius(
           std::max(0.0f, float(radius) - float(borderWidth));
       wr::BorderSide side = {backgroundColor, wr::BorderStyle::Solid};
       const wr::BorderSide sides[4] = {side, side, side, side};
-      float h = backgroundRect.size.width * 0.6f;
-      float v = backgroundRect.size.height * 0.6f;
+      float h = backgroundRect.width() * 0.6f;
+      float v = backgroundRect.height() * 0.6f;
       wr::LayoutSideOffsets widths = {v, h, v, h};
       wr::BorderRadius radii = {{backgroundRadius, backgroundRadius},
                                 {backgroundRadius, backgroundRadius},

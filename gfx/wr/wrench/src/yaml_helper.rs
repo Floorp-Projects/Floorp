@@ -284,7 +284,7 @@ impl YamlHelper for Yaml {
 
         if let Some(nums) = self.as_vec_f32() {
             if nums.len() == 4 {
-                return Some(LayoutRect::new(
+                return Some(LayoutRect::from_origin_and_size(
                     LayoutPoint::new(nums[0], nums[1]),
                     LayoutSize::new(nums[2], nums[3]),
                 ));

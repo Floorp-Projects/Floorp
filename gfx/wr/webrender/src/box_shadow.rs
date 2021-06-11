@@ -222,7 +222,7 @@ impl<'a> SceneBuilder<'a> {
                     // rect, no pixels will be shadowed.
                     if border_radius.is_zero() && shadow_rect
                         .inflate(-blur_radius, -blur_radius)
-                        .contains_rect(&prim_info.rect)
+                        .contains_box(&prim_info.rect)
                     {
                         return;
                     }

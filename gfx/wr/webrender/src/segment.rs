@@ -311,46 +311,46 @@ impl SegmentBuilder {
             return;
         }
 
-        debug_assert!(outer_rect.contains_rect(&inner_rect));
+        debug_assert!(outer_rect.contains_box(&inner_rect));
 
-        let p0 = outer_rect.origin;
-        let p1 = inner_rect.origin;
-        let p2 = inner_rect.bottom_right();
-        let p3 = outer_rect.bottom_right();
+        let p0 = outer_rect.min;
+        let p1 = inner_rect.min;
+        let p2 = inner_rect.max;
+        let p3 = outer_rect.max;
 
         let segments = &[
-            LayoutRect::new(
-                LayoutPoint::new(p0.x, p0.y),
-                LayoutSize::new(p1.x - p0.x, p1.y - p0.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p2.x, p0.y),
-                LayoutSize::new(p3.x - p2.x, p1.y - p0.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p2.x, p2.y),
-                LayoutSize::new(p3.x - p2.x, p3.y - p2.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p0.x, p2.y),
-                LayoutSize::new(p1.x - p0.x, p3.y - p2.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p1.x, p0.y),
-                LayoutSize::new(p2.x - p1.x, p1.y - p0.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p2.x, p1.y),
-                LayoutSize::new(p3.x - p2.x, p2.y - p1.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p1.x, p2.y),
-                LayoutSize::new(p2.x - p1.x, p3.y - p2.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p0.x, p1.y),
-                LayoutSize::new(p1.x - p0.x, p2.y - p1.y),
-            ),
+            LayoutRect {
+                min: LayoutPoint::new(p0.x, p0.y),
+                max: LayoutPoint::new(p1.x, p1.y),
+            },
+            LayoutRect {
+                min: LayoutPoint::new(p2.x, p0.y),
+                max: LayoutPoint::new(p3.x, p1.y),
+            },
+            LayoutRect {
+                min: LayoutPoint::new(p2.x, p2.y),
+                max: LayoutPoint::new(p3.x, p3.y),
+            },
+            LayoutRect {
+                min: LayoutPoint::new(p0.x, p2.y),
+                max: LayoutPoint::new(p1.x, p3.y),
+            },
+            LayoutRect {
+                min: LayoutPoint::new(p1.x, p0.y),
+                max: LayoutPoint::new(p2.x, p1.y),
+            },
+            LayoutRect {
+                min: LayoutPoint::new(p2.x, p1.y),
+                max: LayoutPoint::new(p3.x, p2.y),
+            },
+            LayoutRect {
+                min: LayoutPoint::new(p1.x, p2.y),
+                max: LayoutPoint::new(p2.x, p3.y),
+            },
+            LayoutRect {
+                min: LayoutPoint::new(p0.x, p1.y),
+                max: LayoutPoint::new(p1.x, p2.y),
+            },
         ];
 
         self.items.reserve(segments.len() + 1);
@@ -397,30 +397,30 @@ impl SegmentBuilder {
                 // is a clip item for each corner, inner and edge region.
                 match extract_inner_rect_safe(&rect, &radius) {
                     Some(inner) => {
-                        let p0 = rect.origin;
-                        let p1 = inner.origin;
-                        let p2 = inner.bottom_right();
-                        let p3 = rect.bottom_right();
+                        let p0 = rect.min;
+                        let p1 = inner.min;
+                        let p2 = inner.max;
+                        let p3 = rect.max;
 
                         self.items.reserve(9);
 
                         let corner_segments = &[
-                            LayoutRect::new(
-                                LayoutPoint::new(p0.x, p0.y),
-                                LayoutSize::new(p1.x - p0.x, p1.y - p0.y),
-                            ),
-                            LayoutRect::new(
-                                LayoutPoint::new(p2.x, p0.y),
-                                LayoutSize::new(p3.x - p2.x, p1.y - p0.y),
-                            ),
-                            LayoutRect::new(
-                                LayoutPoint::new(p2.x, p2.y),
-                                LayoutSize::new(p3.x - p2.x, p3.y - p2.y),
-                            ),
-                            LayoutRect::new(
-                                LayoutPoint::new(p0.x, p2.y),
-                                LayoutSize::new(p1.x - p0.x, p3.y - p2.y),
-                            ),
+                            LayoutRect {
+                                min: LayoutPoint::new(p0.x, p0.y),
+                                max: LayoutPoint::new(p1.x, p1.y),
+                            },
+                            LayoutRect {
+                                min: LayoutPoint::new(p2.x, p0.y),
+                                max: LayoutPoint::new(p3.x, p1.y),
+                            },
+                            LayoutRect {
+                                min: LayoutPoint::new(p2.x, p2.y),
+                                max: LayoutPoint::new(p3.x, p3.y),
+                            },
+                            LayoutRect {
+                                min: LayoutPoint::new(p0.x, p2.y),
+                                max: LayoutPoint::new(p1.x, p3.y),
+                            },
                         ];
 
                         for segment in corner_segments {
@@ -432,26 +432,26 @@ impl SegmentBuilder {
                         }
 
                         let other_segments = &[
-                            LayoutRect::new(
-                                LayoutPoint::new(p1.x, p0.y),
-                                LayoutSize::new(p2.x - p1.x, p1.y - p0.y),
-                            ),
-                            LayoutRect::new(
-                                LayoutPoint::new(p2.x, p1.y),
-                                LayoutSize::new(p3.x - p2.x, p2.y - p1.y),
-                            ),
-                            LayoutRect::new(
-                                LayoutPoint::new(p1.x, p2.y),
-                                LayoutSize::new(p2.x - p1.x, p3.y - p2.y),
-                            ),
-                            LayoutRect::new(
-                                LayoutPoint::new(p0.x, p1.y),
-                                LayoutSize::new(p1.x - p0.x, p2.y - p1.y),
-                            ),
-                            LayoutRect::new(
-                                LayoutPoint::new(p1.x, p1.y),
-                                LayoutSize::new(p2.x - p1.x, p2.y - p1.y),
-                            ),
+                            LayoutRect {
+                                min: LayoutPoint::new(p1.x, p0.y),
+                                max: LayoutPoint::new(p2.x, p1.y),
+                            },
+                            LayoutRect {
+                                min: LayoutPoint::new(p2.x, p1.y),
+                                max: LayoutPoint::new(p3.x, p2.y),
+                            },
+                            LayoutRect {
+                                min: LayoutPoint::new(p1.x, p2.y),
+                                max: LayoutPoint::new(p2.x, p3.y),
+                            },
+                            LayoutRect {
+                                min: LayoutPoint::new(p0.x, p1.y),
+                                max: LayoutPoint::new(p1.x, p2.y),
+                            },
+                            LayoutRect {
+                                min: LayoutPoint::new(p1.x, p1.y),
+                                max: LayoutPoint::new(p2.x, p2.y),
+                            },
                         ];
 
                         for segment in other_segments {
@@ -524,8 +524,8 @@ impl SegmentBuilder {
         let mut y_events : SmallVec<[Event; 4]> = SmallVec::new();
 
         for (item_index, item) in self.items.iter().enumerate() {
-            let p0 = item.rect.origin;
-            let p1 = item.rect.bottom_right();
+            let p0 = item.rect.min;
+            let p1 = item.rect.max;
 
             x_events.push(Event::begin(p0.x, item_index));
             x_events.push(Event::end(p1.x, item_index));
@@ -535,24 +535,24 @@ impl SegmentBuilder {
 
         // Add the region events, if provided.
         if let Some(inner_rect) = self.inner_rect {
-            x_events.push(Event::region(inner_rect.origin.x));
-            x_events.push(Event::region(inner_rect.origin.x + inner_rect.size.width));
+            x_events.push(Event::region(inner_rect.min.x));
+            x_events.push(Event::region(inner_rect.max.x));
 
-            y_events.push(Event::region(inner_rect.origin.y));
-            y_events.push(Event::region(inner_rect.origin.y + inner_rect.size.height));
+            y_events.push(Event::region(inner_rect.min.y));
+            y_events.push(Event::region(inner_rect.max.y));
         }
 
         // Get the minimal bounding rect in app units. We will
         // work in fixed point in order to avoid float precision
         // error while handling events.
         let p0 = LayoutPointAu::new(
-            Au::from_f32_px(bounding_rect.origin.x),
-            Au::from_f32_px(bounding_rect.origin.y),
+            Au::from_f32_px(bounding_rect.min.x),
+            Au::from_f32_px(bounding_rect.min.y),
         );
 
         let p1 = LayoutPointAu::new(
-            Au::from_f32_px(bounding_rect.origin.x + bounding_rect.size.width),
-            Au::from_f32_px(bounding_rect.origin.y + bounding_rect.size.height),
+            Au::from_f32_px(bounding_rect.max.x),
+            Au::from_f32_px(bounding_rect.max.y),
         );
 
         // Sort the events in ascending order.
@@ -683,16 +683,16 @@ fn emit_segment_if_needed(
         }
     }
 
-    let segment_rect = LayoutRect::new(
-        LayoutPoint::new(
+    let segment_rect = LayoutRect {
+        min: LayoutPoint::new(
             x0.to_f32_px(),
             y0.to_f32_px(),
         ),
-        LayoutSize::new(
-            (x1 - x0).to_f32_px(),
-            (y1 - y0).to_f32_px(),
+        max: LayoutPoint::new(
+            x1.to_f32_px(),
+            y1.to_f32_px(),
         ),
-    );
+    };
 
     Some(Segment {
         rect: segment_rect,
@@ -706,15 +706,15 @@ fn emit_segment_if_needed(
 #[cfg(test)]
 mod test {
     use api::{BorderRadius, ClipMode};
-    use api::units::{LayoutPoint, LayoutRect, LayoutSize};
+    use api::units::{LayoutPoint, LayoutRect};
     use super::{Segment, SegmentBuilder, EdgeAaSegmentMask};
     use std::cmp;
 
     fn rect(x0: f32, y0: f32, x1: f32, y1: f32) -> LayoutRect {
-        LayoutRect::new(
-            LayoutPoint::new(x0, y0),
-            LayoutSize::new(x1-x0, y1-y0),
-        )
+        LayoutRect {
+            min: LayoutPoint::new(x0, y0),
+            max: LayoutPoint::new(x1, y1),
+        }
     }
 
     fn seg(
@@ -739,10 +739,10 @@ mod test {
         edge_flags: Option<EdgeAaSegmentMask>,
     ) -> Segment {
         Segment {
-            rect: LayoutRect::new(
-                LayoutPoint::new(x0, y0),
-                LayoutSize::new(x1-x0, y1-y0),
-            ),
+            rect: LayoutRect {
+                min: LayoutPoint::new(x0, y0),
+                max: LayoutPoint::new(x1, y1),
+            },
             has_mask,
             edge_flags: edge_flags.unwrap_or(EdgeAaSegmentMask::empty()),
             region_x,
@@ -755,9 +755,9 @@ mod test {
         let r1 = &s1.rect;
 
         (
-            (r0.origin.x, r0.origin.y, r0.size.width, r0.size.height)
+            (r0.min.x, r0.min.y, r0.max.x, r0.max.y)
         ).partial_cmp(&
-            (r1.origin.x, r1.origin.y, r1.size.width, r1.size.height)
+            (r1.min.x, r1.min.y, r1.max.x, r1.max.y)
         ).unwrap()
     }
 

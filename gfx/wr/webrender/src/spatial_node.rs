@@ -166,8 +166,8 @@ impl SpatialNode {
                 *frame_rect,
                 scroll_sensitivity,
                 LayoutSize::new(
-                    (content_size.width - frame_rect.size.width).max(0.0),
-                    (content_size.height - frame_rect.size.height).max(0.0)
+                    (content_size.width - frame_rect.width()).max(0.0),
+                    (content_size.height - frame_rect.height()).max(0.0)
                 ),
                 external_id,
                 frame_kind,
@@ -501,13 +501,13 @@ impl SpatialNode {
 
         let mut sticky_offset = LayoutVector2D::zero();
         if let Some(margin) = info.margins.top {
-            let top_viewport_edge = viewport_rect.min_y() + margin;
-            if sticky_rect.min_y() < top_viewport_edge {
+            let top_viewport_edge = viewport_rect.min.y + margin;
+            if sticky_rect.min.y < top_viewport_edge {
                 // If the sticky rect is positioned above the top edge of the viewport (plus margin)
                 // we move it down so that it is fully inside the viewport.
-                sticky_offset.y = top_viewport_edge - sticky_rect.min_y();
+                sticky_offset.y = top_viewport_edge - sticky_rect.min.y;
             } else if info.previously_applied_offset.y > 0.0 &&
-                sticky_rect.min_y() > top_viewport_edge {
+                sticky_rect.min.y > top_viewport_edge {
                 // However, if the sticky rect is positioned *below* the top edge of the viewport
                 // and there is already some offset applied to the sticky rect's position, then
                 // we need to move it up so that it remains at the correct position. This
@@ -515,7 +515,7 @@ impl SpatialNode {
                 // offset that was already applied. We limit the reduction so that it can, at most,
                 // cancel out the already-applied offset, but should never end up adjusting the
                 // position the other way.
-                sticky_offset.y = top_viewport_edge - sticky_rect.min_y();
+                sticky_offset.y = top_viewport_edge - sticky_rect.min.y;
                 sticky_offset.y = sticky_offset.y.max(-info.previously_applied_offset.y);
             }
         }
@@ -532,18 +532,19 @@ impl SpatialNode {
                 // both top and bottom sticky margins. We adjust the item's rect
                 // by the top-sticky offset, and then combine any offset from
                 // the bottom-sticky calculation into sticky_offset below.
-                sticky_rect.origin.y += sticky_offset.y;
+                sticky_rect.min.y += sticky_offset.y;
+                sticky_rect.max.y += sticky_offset.y;
 
                 // Same as the above case, but inverted for bottom-sticky items. Here
                 // we adjust items upwards, resulting in a negative sticky_offset.y,
                 // or reduce the already-present upward adjustment, resulting in a positive
                 // sticky_offset.y.
-                let bottom_viewport_edge = viewport_rect.max_y() - margin;
-                if sticky_rect.max_y() > bottom_viewport_edge {
-                    sticky_offset.y += bottom_viewport_edge - sticky_rect.max_y();
+                let bottom_viewport_edge = viewport_rect.max.y - margin;
+                if sticky_rect.max.y > bottom_viewport_edge {
+                    sticky_offset.y += bottom_viewport_edge - sticky_rect.max.y;
                 } else if info.previously_applied_offset.y < 0.0 &&
-                    sticky_rect.max_y() < bottom_viewport_edge {
-                    sticky_offset.y += bottom_viewport_edge - sticky_rect.max_y();
+                    sticky_rect.max.y < bottom_viewport_edge {
+                    sticky_offset.y += bottom_viewport_edge - sticky_rect.max.y;
                     sticky_offset.y = sticky_offset.y.min(-info.previously_applied_offset.y);
                 }
             }
@@ -551,25 +552,26 @@ impl SpatialNode {
 
         // Same as above, but for the x-axis.
         if let Some(margin) = info.margins.left {
-            let left_viewport_edge = viewport_rect.min_x() + margin;
-            if sticky_rect.min_x() < left_viewport_edge {
-                sticky_offset.x = left_viewport_edge - sticky_rect.min_x();
+            let left_viewport_edge = viewport_rect.min.x + margin;
+            if sticky_rect.min.x < left_viewport_edge {
+                sticky_offset.x = left_viewport_edge - sticky_rect.min.x;
             } else if info.previously_applied_offset.x > 0.0 &&
-                sticky_rect.min_x() > left_viewport_edge {
-                sticky_offset.x = left_viewport_edge - sticky_rect.min_x();
+                sticky_rect.min.x > left_viewport_edge {
+                sticky_offset.x = left_viewport_edge - sticky_rect.min.x;
                 sticky_offset.x = sticky_offset.x.max(-info.previously_applied_offset.x);
             }
         }
 
         if sticky_offset.x + info.previously_applied_offset.x <= 0.0 {
             if let Some(margin) = info.margins.right {
-                sticky_rect.origin.x += sticky_offset.x;
-                let right_viewport_edge = viewport_rect.max_x() - margin;
-                if sticky_rect.max_x() > right_viewport_edge {
-                    sticky_offset.x += right_viewport_edge - sticky_rect.max_x();
+                sticky_rect.min.x += sticky_offset.x;
+                sticky_rect.max.x += sticky_offset.x;
+                let right_viewport_edge = viewport_rect.max.x - margin;
+                if sticky_rect.max.x > right_viewport_edge {
+                    sticky_offset.x += right_viewport_edge - sticky_rect.max.x;
                 } else if info.previously_applied_offset.x < 0.0 &&
-                    sticky_rect.max_x() < right_viewport_edge {
-                    sticky_offset.x += right_viewport_edge - sticky_rect.max_x();
+                    sticky_rect.max.x < right_viewport_edge {
+                    sticky_offset.x += right_viewport_edge - sticky_rect.max.x;
                     sticky_offset.x = sticky_offset.x.min(-info.previously_applied_offset.x);
                 }
             }
@@ -945,7 +947,7 @@ fn test_cst_perspective_relative_scroll() {
         root,
         ext_scroll_id,
         pipeline_id,
-        &LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(100.0, 100.0)),
+        &LayoutRect::from_size(LayoutSize::new(100.0, 100.0)),
         &LayoutSize::new(100.0, 500.0),
         ScrollSensitivity::Script,
         ScrollFrameKind::Explicit,
@@ -956,7 +958,7 @@ fn test_cst_perspective_relative_scroll() {
         scroll_frame_1,
         ExternalScrollId(2, pipeline_id),
         pipeline_id,
-        &LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(100.0, 100.0)),
+        &LayoutRect::from_size(LayoutSize::new(100.0, 100.0)),
         &LayoutSize::new(100.0, 500.0),
         ScrollSensitivity::Script,
         ScrollFrameKind::Explicit,

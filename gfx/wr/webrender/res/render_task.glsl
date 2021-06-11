@@ -9,17 +9,18 @@
 uniform HIGHP_SAMPLER_FLOAT sampler2D sRenderTasks;
 
 struct RenderTaskData {
-    RectWithSize task_rect;
+    RectWithEndpoint task_rect;
     vec4 user_data;
 };
 
+// See RenderTaskData in render_task.rs
 RenderTaskData fetch_render_task_data(int index) {
     ivec2 uv = get_fetch_uv(index, VECS_PER_RENDER_TASK);
 
     vec4 texel0 = TEXEL_FETCH(sRenderTasks, uv, 0, ivec2(0, 0));
     vec4 texel1 = TEXEL_FETCH(sRenderTasks, uv, 0, ivec2(1, 0));
 
-    RectWithSize task_rect = RectWithSize(
+    RectWithEndpoint task_rect = RectWithEndpoint(
         texel0.xy,
         texel0.zw
     );
@@ -32,13 +33,13 @@ RenderTaskData fetch_render_task_data(int index) {
     return data;
 }
 
-RectWithSize fetch_render_task_rect(int index) {
+RectWithEndpoint fetch_render_task_rect(int index) {
     ivec2 uv = get_fetch_uv(index, VECS_PER_RENDER_TASK);
 
     vec4 texel0 = TEXEL_FETCH(sRenderTasks, uv, 0, ivec2(0, 0));
     vec4 texel1 = TEXEL_FETCH(sRenderTasks, uv, 0, ivec2(1, 0));
 
-    RectWithSize task_rect = RectWithSize(
+    RectWithEndpoint task_rect = RectWithEndpoint(
         texel0.xy,
         texel0.zw
     );
@@ -55,7 +56,7 @@ RectWithSize fetch_render_task_rect(int index) {
  the transform mode of primitives on this picture, among other things.
  */
 struct PictureTask {
-    RectWithSize task_rect;
+    RectWithEndpoint task_rect;
     float device_pixel_scale;
     vec2 content_origin;
 };
@@ -75,7 +76,7 @@ PictureTask fetch_picture_task(int address) {
 #define CLIP_TASK_EMPTY 0x7FFF
 
 struct ClipArea {
-    RectWithSize task_rect;
+    RectWithEndpoint task_rect;
     float device_pixel_scale;
     vec2 screen_origin;
 };
@@ -84,7 +85,7 @@ ClipArea fetch_clip_area(int index) {
     ClipArea area;
 
     if (index >= CLIP_TASK_EMPTY) {
-        area.task_rect = RectWithSize(vec2(0.0), vec2(0.0));
+        area.task_rect = RectWithEndpoint(vec2(0.0), vec2(0.0));
         area.device_pixel_scale = 0.0;
         area.screen_origin = vec2(0.0);
     } else {
