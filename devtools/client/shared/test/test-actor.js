@@ -139,16 +139,6 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("json"),
       },
     },
-    scrollWindow: {
-      request: {
-        x: Arg(0, "number"),
-        y: Arg(1, "number"),
-        relative: Arg(2, "nullable:boolean"),
-      },
-      response: {
-        value: RetVal("json"),
-      },
-    },
     getNodeRect: {
       request: {
         selector: Arg(0, "string"),
@@ -418,36 +408,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
       bottom: rect.bottom,
       left: rect.left,
     };
-  },
-
-  /**
-   * Scrolls the window to a particular set of coordinates in the document, or
-   * by the given amount if `relative` is set to `true`.
-   *
-   * @param {Number} x
-   * @param {Number} y
-   * @param {Boolean} relative
-   *
-   * @return {Object} An object with x / y properties, representing the number
-   * of pixels that the document has been scrolled horizontally and vertically.
-   */
-  scrollWindow: function(x, y, relative) {
-    if (isNaN(x) || isNaN(y)) {
-      return {};
-    }
-
-    return new Promise(resolve => {
-      this.content.addEventListener(
-        "scroll",
-        function(event) {
-          const data = { x: this.content.scrollX, y: this.content.scrollY };
-          resolve(data);
-        },
-        { once: true }
-      );
-
-      this.content[relative ? "scrollBy" : "scrollTo"](x, y);
-    });
   },
 
   async getNodeRect(selector) {
