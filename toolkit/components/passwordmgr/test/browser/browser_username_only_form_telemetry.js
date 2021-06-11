@@ -56,7 +56,7 @@ async function setupForms(numUsernameOnly, numBasic, numOther) {
 
 async function checkChildHistogram(id, index, expected) {
   let histogram;
-  await BrowserTestUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     let histograms = Services.telemetry.getSnapshotForHistograms(
       "main",
       false /* clear */
@@ -80,7 +80,6 @@ add_task(async function test_oneUsernameOnlyForm() {
   // in the following testcase just to ensure it doesn't affect the result.
   let tab = await setupForms(numUsernameOnlyForms, numBasicForms, 2);
 
-  await checkChildHistogram("PWMGR_IS_USERNAME_ONLY_FORM", 0, numBasicForms);
   await checkChildHistogram(
     "PWMGR_IS_USERNAME_ONLY_FORM",
     1,
@@ -102,7 +101,6 @@ add_task(async function test_multipleUsernameOnlyForms() {
 
   let tab = await setupForms(numUsernameOnlyForms, numBasicForms, 2);
 
-  await checkChildHistogram("PWMGR_IS_USERNAME_ONLY_FORM", 0, numBasicForms);
   await checkChildHistogram(
     "PWMGR_IS_USERNAME_ONLY_FORM",
     1,
@@ -125,7 +123,6 @@ add_task(async function test_multipleDocument() {
 
   let tab1 = await setupForms(numUsernameOnlyForms1, numBasicForms1, 2);
 
-  await checkChildHistogram("PWMGR_IS_USERNAME_ONLY_FORM", 0, numBasicForms1);
   await checkChildHistogram(
     "PWMGR_IS_USERNAME_ONLY_FORM",
     1,
@@ -143,11 +140,6 @@ add_task(async function test_multipleDocument() {
 
   let tab2 = await setupForms(numUsernameOnlyForms2, numBasicForms2, 2);
 
-  await checkChildHistogram(
-    "PWMGR_IS_USERNAME_ONLY_FORM",
-    0,
-    numBasicForms1 + numBasicForms2
-  );
   await checkChildHistogram(
     "PWMGR_IS_USERNAME_ONLY_FORM",
     1,
@@ -178,7 +170,6 @@ add_task(async function test_tooManyUsernameOnlyForms() {
 
   let tab = await setupForms(numUsernameOnlyForms, numBasicForms, 2);
 
-  await checkChildHistogram("PWMGR_IS_USERNAME_ONLY_FORM", 0, numBasicForms);
   await checkChildHistogram(
     "PWMGR_IS_USERNAME_ONLY_FORM",
     1,

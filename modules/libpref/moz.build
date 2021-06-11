@@ -73,6 +73,7 @@ pref_groups = [
     "privacy",
     "prompts",
     "security",
+    "signon",
     "slider",
     "storage",
     "svg",
