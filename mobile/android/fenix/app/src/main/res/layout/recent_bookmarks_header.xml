@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+
+    <androidx.appcompat.widget.AppCompatTextView
+        style="@style/Header20TextStyle"
+        android:id="@+id/recentlySavedBookmarksHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/recently_saved_bookmarks_content_description"
+        android:text="@string/recently_saved_bookmarks"
+        android:layout_marginTop="@dimen/home_recently_saved_padding_top"
+        android:paddingStart="@dimen/home_recently_saved_padding_start"
+        android:paddingBottom="@dimen/home_recently_saved_padding_bottom"
+        android:maxLines="2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/showAllBookmarksButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/Button12TextStyle"
+        android:contentDescription="@string/recently_saved_show_all_content_description"
+        android:background="?android:attr/selectableItemBackground"
+        android:text="@string/recently_saved_show_all"
+        android:paddingStart="@dimen/home_recently_saved_padding_start"
+        android:paddingEnd="@dimen/home_recently_saved_padding_end"
+        android:paddingTop="@dimen/home_show_all_padding_top"
+        android:paddingBottom="@dimen/home_show_all_padding_bottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/recentlySavedBookmarksHeader" />
+</androidx.constraintlayout.widget.ConstraintLayout>

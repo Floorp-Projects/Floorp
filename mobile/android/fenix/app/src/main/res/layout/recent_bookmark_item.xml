@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/bookmark_item"
+    android:layout_width="@dimen/recent_bookmark_item_width"
+    android:layout_height="@dimen/recent_bookmark_item_height"
+    android:orientation="vertical">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/favicon_card"
+        style="@style/RecentBookmarks.FaviconCard"
+        android:importantForAccessibility="noHideDescendants"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" >
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/favicon_image"
+            style="@style/recentBookmarkFavicon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+            android:id="@+id/bookmark_title"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/recent_bookmark_item_title_height"
+            android:maxHeight="@dimen/recent_bookmark_item_title_height"
+            android:layout_marginTop="@dimen/recent_bookmark_item_favicon_height"
+            android:paddingTop="@dimen/recent_bookmark_item_title_padding_top"
+            android:paddingStart="@dimen/recent_bookmark_item_padding"
+            android:paddingEnd="@dimen/recent_bookmark_item_padding"
+            android:textAppearance="@style/recentBookmarkItemTitleText"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/favicon_image"
+            tools:text="Recently Saved bookmark item" />
+
+        <TextView
+            android:id="@+id/bookmark_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/recent_bookmark_item_subtitle_height"
+            android:layout_marginTop="@dimen/recent_bookmark_item_subtitle_margin_top"
+            android:paddingStart="@dimen/recent_bookmark_item_padding"
+            android:paddingEnd="@dimen/recent_bookmark_item_padding"
+            android:textAppearance="@style/recentBookmarkItemSubTitleText"
+            app:layout_constraintBottom_toBottomOf="@id/bookmark_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="Subtitle text" />
+    </com.google.android.material.card.MaterialCardView>
+</androidx.constraintlayout.widget.ConstraintLayout>
