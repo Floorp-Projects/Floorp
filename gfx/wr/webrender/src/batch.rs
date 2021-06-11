@@ -466,7 +466,7 @@ impl OpaqueBatchList {
         if self.current_batch_index == usize::MAX ||
            !self.batches[self.current_batch_index].key.is_compatible_with(&key) {
             let mut selected_batch_index = None;
-            let item_area = z_bounding_rect.size.area();
+            let item_area = z_bounding_rect.area();
 
             // If the area of this primitive is larger than the given threshold,
             // then it is large enough to warrant breaking a batch for. In this
@@ -1376,7 +1376,7 @@ impl BatchBuilder {
                                 );
 
                                 match map_device_to_surface.unmap(&device_bounding_rect) {
-                                    Some(r) => r.to_rect().intersection(bounding_rect),
+                                    Some(r) => r.intersection(bounding_rect),
                                     None => Some(*bounding_rect),
                                 }
                             } else {
@@ -1399,10 +1399,10 @@ impl BatchBuilder {
                                 let map_prim_to_surface: SpaceMapper<LayoutPixel, PicturePixel> = SpaceMapper::new_with_target(
                                     surface_spatial_node_index,
                                     prim_spatial_node_index,
-                                    bounding_rect.to_box2d(),
+                                    *bounding_rect,
                                     ctx.spatial_tree,
                                 );
-                                map_prim_to_surface.map(&local_bounding_rect.to_box2d()).map(|r| r.to_rect())
+                                map_prim_to_surface.map(&local_bounding_rect.to_box2d())
                             };
 
                             let intersected = match pic_bounding_rect {
@@ -1567,7 +1567,7 @@ impl BatchBuilder {
                         let surface = &ctx.surfaces[raster_config.surface_index.0];
 
                         let mut is_opaque = prim_info.clip_task_index == ClipTaskIndex::INVALID
-                            && surface.opaque_rect.contains_rect(&surface.rect)
+                            && surface.opaque_rect.contains_box(&surface.rect)
                             && transform_kind == TransformedRectKind::AxisAligned;
 
                         let pic_task_id = picture.primary_render_task_id.unwrap();

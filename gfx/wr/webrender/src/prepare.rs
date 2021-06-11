@@ -133,7 +133,7 @@ pub fn prepare_primitives(
             let surface = &mut frame_state.surfaces[pic_context.surface_index.0];
 
             if let Some(cluster_opaque_rect) = surface.map_local_to_surface.map_inner_bounds(&cluster.opaque_rect.to_box2d()) {
-                surface.opaque_rect = crate::util::conservative_union_rect(&surface.opaque_rect, &cluster_opaque_rect.to_rect());
+                surface.opaque_rect = crate::util::conservative_union_rect(&surface.opaque_rect, &cluster_opaque_rect);
             }
         }
     }
@@ -382,7 +382,7 @@ fn prepare_interned_prim_for_render(
                             SubpixelMode::Conditional { allowed_rect } => {
                                 // Conditional mode allows subpixel AA to be enabled for this
                                 // text run, so long as it's inside the allowed rect.
-                                allowed_rect.contains_rect(&prim_instance.vis.clip_chain.pic_clip_rect)
+                                allowed_rect.contains_box(&prim_instance.vis.clip_chain.pic_clip_rect)
                             }
                         }
                     } else {
@@ -863,7 +863,7 @@ fn prepare_interned_prim_for_render(
             prim_instance,
             store,
         );
-        cluster.opaque_rect = crate::util::conservative_union_rect(&cluster.opaque_rect, &prim_local_rect);
+        cluster.opaque_rect = crate::util::conservative_union_rect(&cluster.opaque_rect.to_box2d(), &prim_local_rect.to_box2d()).to_rect();
     }
 }
 
@@ -1284,7 +1284,7 @@ pub fn update_brush_segment_clip_task(
         return ClipMaskKind::None;
     }
 
-    let segment_world_rect = match pic_state.map_pic_to_world.map(&clip_chain.pic_clip_rect.to_box2d()) {
+    let segment_world_rect = match pic_state.map_pic_to_world.map(&clip_chain.pic_clip_rect) {
         Some(rect) => rect,
         None => return ClipMaskKind::Clipped,
     };
@@ -1544,7 +1544,7 @@ fn get_unclipped_device_rect(
     map_to_raster: &SpaceMapper<PicturePixel, RasterPixel>,
     device_pixel_scale: DevicePixelScale,
 ) -> Option<DeviceRect> {
-    let raster_rect = map_to_raster.map(&prim_rect.to_box2d())?;
+    let raster_rect = map_to_raster.map(&prim_rect)?;
     let world_rect = raster_rect * Scale::new(1.0);
     Some(world_rect * device_pixel_scale)
 }
