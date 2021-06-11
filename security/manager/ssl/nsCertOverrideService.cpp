@@ -827,8 +827,18 @@ nsCertOverrideService::
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  MutexAutoLock lock(mMutex);
-  mDisableAllSecurityCheck = aDisable;
+  {
+    MutexAutoLock lock(mMutex);
+    mDisableAllSecurityCheck = aDisable;
+  }
+
+  nsCOMPtr<nsINSSComponent> nss(do_GetService(PSM_COMPONENT_CONTRACTID));
+  if (nss) {
+    nss->ClearSSLExternalAndInternalSessionCache();
+  } else {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   return NS_OK;
 }
 
