@@ -320,7 +320,15 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
       if (data.EqualsLiteral("low-memory")) {
         nsJSContext::SetLowMemoryState(true);
       }
-      nsJSContext::LowMemoryGC();
+      nsJSContext::GarbageCollectNow(JS::GCReason::MEM_PRESSURE,
+                                     nsJSContext::NonIncrementalGC,
+                                     nsJSContext::ShrinkingGC);
+      nsJSContext::CycleCollectNow();
+      if (sScheduler.NeedsGCAfterCC()) {
+        nsJSContext::GarbageCollectNow(JS::GCReason::MEM_PRESSURE,
+                                       nsJSContext::NonIncrementalGC,
+                                       nsJSContext::ShrinkingGC);
+      }
     }
   } else if (!nsCRT::strcmp(aTopic, "memory-pressure-stop")) {
     nsJSContext::SetLowMemoryState(false);
@@ -1923,35 +1931,6 @@ void nsJSContext::PokeShrinkingGC() {
       &sShrinkingGCTimer, ShrinkingGCTimerFired, nullptr,
       StaticPrefs::javascript_options_compact_on_user_inactive_delay(),
       nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "ShrinkingGCTimerFired");
-}
-
-static void DoLowMemoryGC() {
-  if (sShuttingDown) {
-    return;
-  }
-  nsJSContext::GarbageCollectNow(JS::GCReason::MEM_PRESSURE,
-                                 nsJSContext::NonIncrementalGC,
-                                 nsJSContext::ShrinkingGC);
-  nsJSContext::CycleCollectNow();
-  if (sScheduler.NeedsGCAfterCC()) {
-    nsJSContext::GarbageCollectNow(JS::GCReason::MEM_PRESSURE,
-                                   nsJSContext::NonIncrementalGC,
-                                   nsJSContext::ShrinkingGC);
-  }
-}
-
-// static
-void nsJSContext::LowMemoryGC() {
-  RefPtr<MayGCPromise> mbPromise = MayGCNow(JS::GCReason::MEM_PRESSURE);
-  if (!mbPromise) {
-    // Normally when the promise is null it means that IPC failed, that probably
-    // means that something bad happened, don't bother with the GC.
-    return;
-  }
-  mbPromise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [](bool aIgnored) { DoLowMemoryGC(); },
-      [](mozilla::ipc::ResponseRejectReason r) {});
 }
 
 // static
