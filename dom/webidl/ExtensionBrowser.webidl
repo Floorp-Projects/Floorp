@@ -22,5 +22,11 @@ interface mixin ExtensionGlobalsMixin {
 
 [Exposed=(ServiceWorker), LegacyNoInterfaceObject]
 interface ExtensionBrowser {
-  // TODO: add attributes for the WebExtension API namespaces.
+  // A mock API only exposed in tests to unit test the internals
+  // meant to be reused by the real WebExtensions API bindings
+  // in xpcshell tests.
+  [Replaceable, SameObject, BinaryName="GetExtensionMockAPI",
+   Func="mozilla::extensions::ExtensionMockAPI::IsAllowed",
+   Pref="extensions.webidl-api.expose_mock_interface"]
+  readonly attribute ExtensionMockAPI mockExtensionAPI;
 };
