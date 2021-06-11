@@ -198,6 +198,10 @@ class GLXLibrary final {
     DECL_WRAPPER_SCOPE
     return mSymbols.fQueryDrawable(dpy, drawable, attribute, value);
   }
+  const char* fGetScreenDriver(Display* dpy, int screen) const {
+    DECL_WRAPPER_SCOPE
+    return mSymbols.fGetScreenDriver(dpy, screen);
+  }
 
 #undef DECL_WRAPPER_SCOPE
 
@@ -224,6 +228,7 @@ class GLXLibrary final {
   }
   bool IsATI() { return mIsATI; }
   bool IsMesa() { return mClientIsMesa; }
+  bool HasGetScreenDriver() const { return bool(mSymbols.fGetScreenDriver); }
 
   auto GetGetProcAddress() const { return mSymbols.fGetProcAddress; }
 
@@ -261,6 +266,7 @@ class GLXLibrary final {
     int(GLAPIENTRY* fWaitVideoSyncSGI)(int, int, unsigned int*);
     void(GLAPIENTRY* fSwapIntervalEXT)(Display*, GLXDrawable, int);
     int(GLAPIENTRY* fQueryDrawable)(Display*, GLXDrawable, int, unsigned int*);
+    const char*(GLAPIENTRY* fGetScreenDriver)(Display*, int);
   } mSymbols = {};
 
   bool mInitialized = false;
