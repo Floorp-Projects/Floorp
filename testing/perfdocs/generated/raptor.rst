@@ -59,6 +59,50 @@ Browsertime tests that use a custom pageload test script. These use the pageload
       * test-windows10-64/opt-browsertime-custom-firefox-process-switch-e10s
 
 
+.. dropdown:: welcome (Measures pageload metrics for the first-install about:welcome page)
+   :container: + anchor-id-welcome-c
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-welcome.manifest
+   * **playback recordings**: mitm5-linux-firefox-about.mp
+   * **playback version**: 5.1.1
+   * **test script**: welcome.js
+   * **test url**: `<about:welcome>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+      * test-linux1804-64-qr/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-linux1804-64-shippable-qr/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-linux1804-64-shippable-qr/opt-browsertime-first-install-firefox-welcome-fis-e10s
+      * test-linux1804-64-shippable/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-linux1804-64/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-macosx1014-64-shippable-qr/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-macosx1014-64-shippable-qr/opt-browsertime-first-install-firefox-welcome-fis-e10s
+      * test-macosx1015-64-shippable-qr/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-macosx1015-64-shippable-qr/opt-browsertime-first-install-firefox-welcome-fis-e10s
+      * test-macosx1015-64-shippable/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-windows10-32-shippable/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-windows10-32/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-windows10-64-qr/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-windows10-64-ref-hw-2017/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-windows10-64-shippable-qr/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-windows10-64-shippable-qr/opt-browsertime-first-install-firefox-welcome-fis-e10s
+      * test-windows10-64-shippable/opt-browsertime-first-install-firefox-welcome-e10s
+      * test-windows10-64/opt-browsertime-first-install-firefox-welcome-e10s
+
+
 
 Desktop
 -------

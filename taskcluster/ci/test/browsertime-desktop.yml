@@ -390,3 +390,27 @@ browsertime-custom:
                     default: []
     tier: 2
     treeherder-symbol: Btime(ps)
+
+browsertime-first-install:
+    apps: [firefox]
+    description: Raptor (browsertime) custom pageload tests
+    run-visual-metrics: true
+    max-run-time: 2700
+    mozharness:
+        extra-options:
+            - --chimera
+    raptor-subtests: [welcome]
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows.*-32.*: []
+                    default: [mozilla-central]
+            default:
+                by-test-platform:
+                    linux.*shippable.*: [autoland, mozilla-central]
+                    macos.*shippable-qr.*: [autoland, mozilla-central]
+                    windows10-64.*shippable.*: [autoland, mozilla-central]
+                    default: []
+    tier: 2
+    treeherder-symbol: Btime(welcome)

@@ -20,7 +20,6 @@ from taskgraph.util.treeherder import split_symbol, join_symbol
 
 transforms = TransformSequence()
 
-
 raptor_description_schema = Schema(
     {
         # Raptor specific configs.
@@ -211,6 +210,27 @@ def split_page_load_by_url(config, tests):
         group, _ = split_symbol(test["treeherder-symbol"])
         test["treeherder-symbol"] = join_symbol(group, subtest_symbol)
         test["description"] += " on {}".format(subtest)
+
+        yield test
+
+
+@transforms.add
+def modify_extra_options(config, tests):
+    for test in tests:
+        test_name = test.get("test-name", None)
+
+        if "first-install" in test_name:
+            # First-install tests should never use conditioned profiles
+            extra_options = test.setdefault("mozharness", {}).setdefault(
+                "extra-options", []
+            )
+            ind = None
+            for i, opt in enumerate(extra_options):
+                if "conditioned-profile" in opt:
+                    ind = i
+                    break
+            if ind:
+                extra_options.pop(ind)
 
         yield test
 
