@@ -2872,11 +2872,12 @@ class Document : public nsINode,
    * @param aContentViewer The viewer for the clone document. Must be the viewer
    *                       of aCloneContainer, but callers must have a reference
    *                       to it already and ensure it's not null.
+   * @param aPrintSettings The print settings for this clone.
    * @param aOutHasInProcessPrintCallbacks Self-descriptive.
    */
   already_AddRefed<Document> CreateStaticClone(
       nsIDocShell* aCloneContainer, nsIContentViewer* aContentViewer,
-      bool* aOutHasInProcessPrintCallbacks);
+      nsIPrintSettings* aPrintSettings, bool* aOutHasInProcessPrintCallbacks);
 
   /**
    * If this document is a static clone, this returns the original

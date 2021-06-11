@@ -5375,8 +5375,8 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     AutoPrintEventDispatcher dispatcher(*docToPrint);
 
     nsAutoScriptBlocker blockScripts;
-    RefPtr<Document> clone =
-        docToPrint->CreateStaticClone(cloneDocShell, cv, &hasPrintCallbacks);
+    RefPtr<Document> clone = docToPrint->CreateStaticClone(
+        cloneDocShell, cv, aPrintSettings, &hasPrintCallbacks);
     if (!clone) {
       aError.ThrowNotSupportedError("Clone operation for printing failed");
       return nullptr;
