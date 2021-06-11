@@ -677,13 +677,6 @@ bool ServoStyleSet::GeneratedContentPseudoExists(
     if (!aParentStyle.StyleDisplay()->IsListItem()) {
       return false;
     }
-    // ::marker only exist if we have 'content' or at least one of
-    // 'list-style-type' or 'list-style-image'.
-    if (aPseudoStyle.StyleList()->mCounterStyle.IsNone() &&
-        aPseudoStyle.StyleList()->mListStyleImage.IsNone() &&
-        aPseudoStyle.StyleContent()->ContentCount() == 0) {
-      return false;
-    }
     // display:none is equivalent to not having the pseudo-element at all.
     if (aPseudoStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {
       return false;

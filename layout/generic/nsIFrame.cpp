@@ -586,6 +586,8 @@ static bool IsFontSizeInflationContainer(nsIFrame* aFrame,
                    aFrame->IsBrFrame() ||
                    aFrame->IsFrameOfType(nsIFrame::eMathML),
                "line participants must not be containers");
+  NS_ASSERTION(!aFrame->IsBulletFrame() || isInline,
+               "bullets should not be containers");
   return !isInline;
 }
 
@@ -12111,6 +12113,7 @@ DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(char* aFrameName) {
 void DR_State::InitFrameTypeTable() {
   AddFrameTypeInfo(LayoutFrameType::Block, "block", "block");
   AddFrameTypeInfo(LayoutFrameType::Br, "br", "br");
+  AddFrameTypeInfo(LayoutFrameType::Bullet, "bullet", "bullet");
   AddFrameTypeInfo(LayoutFrameType::ColorControl, "color", "colorControl");
   AddFrameTypeInfo(LayoutFrameType::GfxButtonControl, "button",
                    "gfxButtonControl");

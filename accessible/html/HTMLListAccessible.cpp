@@ -10,10 +10,11 @@
 #include "DocAccessible.h"
 #include "EventTree.h"
 #include "nsAccUtils.h"
-#include "nsPersistentProperties.h"
+#include "nsTextEquivUtils.h"
 #include "Role.h"
 #include "States.h"
 
+#include "nsBulletFrame.h"
 #include "nsLayoutUtils.h"
 
 using namespace mozilla;
@@ -89,7 +90,24 @@ HTMLListBulletAccessible::HTMLListBulletAccessible(nsIContent* aContent,
 // HTMLListBulletAccessible: LocalAccessible
 
 ENameValueFlag HTMLListBulletAccessible::Name(nsString& aName) const {
-  nsLayoutUtils::GetMarkerSpokenText(mContent, aName);
+  aName.Truncate();
+
+  // Native anonymous content, ARIA can't be used. Get list bullet text.
+  if (nsBulletFrame* frame = do_QueryFrame(GetFrame())) {
+    if (!frame->StyleList()->mListStyleImage.IsNone()) {
+      // Bullet is an image, so use default bullet character.
+      const char16_t kDiscCharacter = 0x2022;
+      aName.Assign(kDiscCharacter);
+      aName.Append(' ');
+      return eNameOK;
+    }
+    frame->GetSpokenText(aName);
+  } else {
+    // If marker is not a bullet frame but instead has content
+    nsTextEquivUtils::AppendFromDOMChildren(mContent, &aName);
+    aName.CompressWhitespace();
+  }
+
   return eNameOK;
 }
 
