@@ -348,7 +348,7 @@ class nsTextFrame : public nsIFrame {
   void SetLength(int32_t aLength, nsLineLayout* aLineLayout,
                  uint32_t aSetLengthFlags = 0);
 
-  nsresult GetOffsets(int32_t& start, int32_t& end) const final;
+  std::pair<int32_t, int32_t> GetOffsets() const final;
 
   void AdjustOffsetsForBidi(int32_t start, int32_t end) final;
 
