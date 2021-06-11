@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ExtensionAPIRequestForwarder.h"
+#include "ExtensionEventListener.h"
 
 #include "js/Promise.h"
 #include "mozilla/dom/Client.h"
@@ -251,6 +252,7 @@ RequestWorkerRunnable::RequestWorkerRunnable(
 
 void RequestWorkerRunnable::Init(nsIGlobalObject* aGlobal, JSContext* aCx,
                                  const dom::Sequence<JS::Value>& aArgs,
+                                 ExtensionEventListener* aListener,
                                  ErrorResult& aRv) {
   MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
 
@@ -274,6 +276,7 @@ void RequestWorkerRunnable::Init(nsIGlobalObject* aGlobal, JSContext* aCx,
   }
 
   SerializeCallerStack(aCx);
+  mEventListener = aListener;
 }
 
 void RequestWorkerRunnable::Init(nsIGlobalObject* aGlobal, JSContext* aCx,
@@ -289,7 +292,7 @@ void RequestWorkerRunnable::Init(nsIGlobalObject* aGlobal, JSContext* aCx,
               ExtensionAPIRequestStructuredCloneWrite,
           };
 
-  Init(aGlobal, aCx, aArgs, aRv);
+  Init(aGlobal, aCx, aArgs, /* aListener */ nullptr, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -378,6 +381,11 @@ already_AddRefed<ExtensionAPIRequest> RequestWorkerRunnable::CreateAPIRequest(
   RefPtr<ExtensionAPIRequest> request = new ExtensionAPIRequest(
       mOuterRequest->GetRequestType(), *mOuterRequest->GetRequestTarget());
   request->Init(mClientInfo, callArgs, callerStackValue);
+
+  if (mEventListener) {
+    request->SetEventListener(mEventListener.forget());
+  }
+
   return request.forget();
 }
 
