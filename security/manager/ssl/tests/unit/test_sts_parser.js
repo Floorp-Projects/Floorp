@@ -19,6 +19,7 @@ function testSuccess(header, expectedMaxAge, expectedIncludeSubdomains) {
   let includeSubdomains = {};
 
   sss.processHeader(
+    Ci.nsISiteSecurityService.HEADER_HSTS,
     dummyUri,
     header,
     secInfo,
@@ -45,6 +46,7 @@ function testFailure(header) {
   throws(
     () => {
       sss.processHeader(
+        Ci.nsISiteSecurityService.HEADER_HSTS,
         dummyUri,
         header,
         secInfo,

@@ -21,8 +21,8 @@ const TESTCASES = [
 
 let sss = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
 
-function getEntries() {
-  return Array.from(sss.enumerate());
+function getEntries(type) {
+  return Array.from(sss.enumerate(type));
 }
 
 function checkSiteSecurityStateAttrs(entries) {
@@ -71,6 +71,7 @@ function add_tests() {
           header += "; includeSubdomains";
         }
         sss.processHeader(
+          Ci.nsISiteSecurityService.HEADER_HSTS,
           uri,
           header,
           secInfo,
@@ -82,12 +83,12 @@ function add_tests() {
   }
 
   add_task(() => {
-    let hstsEntries = getEntries();
+    let hstsEntries = getEntries(Ci.nsISiteSecurityService.HEADER_HSTS);
 
     checkSiteSecurityStateAttrs(hstsEntries);
 
     sss.clearAll();
-    hstsEntries = getEntries();
+    hstsEntries = getEntries(Ci.nsISiteSecurityService.HEADER_HSTS);
 
     equal(hstsEntries.length, 0, "Should clear all HSTS entries");
   });
