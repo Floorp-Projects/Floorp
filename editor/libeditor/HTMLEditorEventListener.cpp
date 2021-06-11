@@ -25,11 +25,8 @@ namespace mozilla {
 using namespace dom;
 
 nsresult HTMLEditorEventListener::Connect(EditorBase* aEditorBase) {
-  if (NS_WARN_IF(!aEditorBase)) {
-    return NS_ERROR_INVALID_ARG;
-  }
   // Guarantee that mEditorBase is always HTMLEditor.
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -82,7 +79,6 @@ NS_IMETHODIMP HTMLEditorEventListener::HandleEvent(Event* aEvent) {
       }
 
       RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
-      MOZ_ASSERT(htmlEditor);
       DebugOnly<nsresult> rvIgnored =
           htmlEditor->UpdateResizerOrGrabberPositionTo(CSSIntPoint(
               mouseMoveEvent->ClientX(), mouseMoveEvent->ClientY()));
@@ -97,7 +93,6 @@ NS_IMETHODIMP HTMLEditorEventListener::HandleEvent(Event* aEvent) {
       }
 
       RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
-      MOZ_ASSERT(htmlEditor);
       nsresult rv = htmlEditor->RefreshResizers();
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "HTMLEditor::RefreshResizers() failed");
@@ -240,8 +235,6 @@ nsresult HTMLEditorEventListener::MouseUp(MouseEvent* aMouseEvent) {
   // FYI: We need to notify HTML editor of mouseup even if it's consumed
   //      because HTML editor always needs to release grabbing resizer.
   RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
-  MOZ_ASSERT(htmlEditor);
-
   htmlEditor->PreHandleMouseUp(*aMouseEvent);
 
   if (NS_WARN_IF(!aMouseEvent->GetTarget())) {
@@ -390,8 +383,6 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
   }
 
   RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
-  MOZ_ASSERT(htmlEditor);
-
   htmlEditor->PreHandleMouseDown(*aMouseEvent);
 
   if (!IsAcceptableMouseEvent(*htmlEditor, aMouseEvent)) {
@@ -432,7 +423,6 @@ nsresult HTMLEditorEventListener::MouseClick(
   }
 
   RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
-  MOZ_ASSERT(htmlEditor);
   DebugOnly<nsresult> rvIgnored =
       htmlEditor->DoInlineTableEditingAction(*element);
   NS_WARNING_ASSERTION(

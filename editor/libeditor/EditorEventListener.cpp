@@ -666,9 +666,9 @@ nsresult EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent) {
     return NS_OK;
   }
   // nothing to do if editor isn't editable or clicked on out of the editor.
-  RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
-  if (textEditor->IsReadonly() ||
-      !textEditor->IsAcceptableInputEvent(aMouseClickEvent)) {
+  OwningNonNull<EditorBase> editorBase = *mEditorBase;
+  if (editorBase->IsReadonly() ||
+      !editorBase->IsAcceptableInputEvent(aMouseClickEvent)) {
     return NS_OK;
   }
 
@@ -723,7 +723,7 @@ nsresult EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent) {
   nsEventStatus status = nsEventStatus_eIgnore;
   RefPtr<EventStateManager> esm = presContext->EventStateManager();
   DebugOnly<nsresult> rvIgnored = esm->HandleMiddleClickPaste(
-      presShell, aMouseClickEvent, &status, textEditor);
+      presShell, aMouseClickEvent, &status, editorBase);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "EventStateManager::HandleMiddleClickPaste() failed, but ignored");
@@ -859,7 +859,7 @@ nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
   if (notEditable) {
     // If we're a text control element which is readonly or disabled,
     // we should refuse to drop.
-    if (!mEditorBase->AsHTMLEditor()) {
+    if (mEditorBase->IsTextEditor()) {
       RefuseToDropAndHideCaret(aDragEvent);
       return NS_OK;
     }
@@ -1260,13 +1260,12 @@ bool EditorEventListener::ShouldHandleNativeKeyBindings(
     return false;
   }
 
-  RefPtr<EditorBase> editorBase(mEditorBase);
-  HTMLEditor* htmlEditor = editorBase->AsHTMLEditor();
+  RefPtr<HTMLEditor> htmlEditor = HTMLEditor::GetFrom(mEditorBase);
   if (!htmlEditor) {
     return false;
   }
 
-  RefPtr<Document> doc = editorBase->GetDocument();
+  RefPtr<Document> doc = htmlEditor->GetDocument();
   if (doc->HasFlag(NODE_IS_EDITABLE)) {
     // Don't need to perform any checks in designMode documents.
     return true;

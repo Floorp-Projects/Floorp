@@ -159,9 +159,6 @@ class EditorBase : public nsIEditor,
    */
   EditorBase();
 
-  bool IsTextEditor() const { return !mIsHTMLEditorClass; }
-  bool IsHTMLEditor() const { return mIsHTMLEditorClass; }
-
   /**
    * Init is to tell the implementation of nsIEditor to begin its services
    * @param aDoc          The dom document interface being observed
@@ -2941,6 +2938,14 @@ class EditorBase : public nsIEditor,
 };
 
 }  // namespace mozilla
+
+bool nsIEditor::IsTextEditor() const {
+  return !AsEditorBase()->mIsHTMLEditorClass;
+}
+
+bool nsIEditor::IsHTMLEditor() const {
+  return AsEditorBase()->mIsHTMLEditorClass;
+}
 
 mozilla::EditorBase* nsIEditor::AsEditorBase() {
   return static_cast<mozilla::EditorBase*>(this);

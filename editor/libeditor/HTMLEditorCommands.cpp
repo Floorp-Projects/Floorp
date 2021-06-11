@@ -48,10 +48,7 @@ static nsresult GetListState(HTMLEditor* aHTMLEditor, bool* aMixed,
 
 bool StateUpdatingCommandBase::IsCommandEnabled(Command aCommand,
                                                 EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -67,7 +64,7 @@ bool StateUpdatingCommandBase::IsCommandEnabled(Command aCommand,
 nsresult StateUpdatingCommandBase::DoCommand(Command aCommand,
                                              EditorBase& aEditorBase,
                                              nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -88,7 +85,7 @@ nsresult StateUpdatingCommandBase::GetCommandStateParams(
   if (!aEditorBase) {
     return NS_OK;
   }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase->GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -111,10 +108,7 @@ StaticRefPtr<PasteNoFormattingCommand> PasteNoFormattingCommand::sInstance;
 
 bool PasteNoFormattingCommand::IsCommandEnabled(Command aCommand,
                                                 EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -124,7 +118,7 @@ bool PasteNoFormattingCommand::IsCommandEnabled(Command aCommand,
 nsresult PasteNoFormattingCommand::DoCommand(Command aCommand,
                                              EditorBase& aEditorBase,
                                              nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -362,11 +356,7 @@ StaticRefPtr<RemoveListCommand> RemoveListCommand::sInstance;
 
 bool RemoveListCommand::IsCommandEnabled(Command aCommand,
                                          EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -385,7 +375,7 @@ bool RemoveListCommand::IsCommandEnabled(Command aCommand,
 
 nsresult RemoveListCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
                                       nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
@@ -412,10 +402,7 @@ StaticRefPtr<IndentCommand> IndentCommand::sInstance;
 
 bool IndentCommand::IsCommandEnabled(Command aCommand,
                                      EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -424,7 +411,7 @@ bool IndentCommand::IsCommandEnabled(Command aCommand,
 
 nsresult IndentCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
                                   nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
@@ -448,10 +435,7 @@ StaticRefPtr<OutdentCommand> OutdentCommand::sInstance;
 
 bool OutdentCommand::IsCommandEnabled(Command aCommand,
                                       EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -460,7 +444,7 @@ bool OutdentCommand::IsCommandEnabled(Command aCommand,
 
 nsresult OutdentCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
                                    nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
@@ -483,10 +467,7 @@ nsresult OutdentCommand::GetCommandStateParams(
 
 bool MultiStateCommandBase::IsCommandEnabled(Command aCommand,
                                              EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -509,7 +490,7 @@ nsresult MultiStateCommandBase::DoCommandParam(Command aCommand,
   NS_WARNING_ASSERTION(aCommand != Command::FormatJustify,
                        "Command::FormatJustify should be used only for "
                        "IsCommandEnabled() and GetCommandStateParams()");
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -525,7 +506,7 @@ nsresult MultiStateCommandBase::GetCommandStateParams(
   if (!aEditorBase) {
     return NS_OK;
   }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase->GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -942,10 +923,7 @@ StaticRefPtr<DecreaseZIndexCommand> DecreaseZIndexCommand::sInstance;
 
 bool DecreaseZIndexCommand::IsCommandEnabled(Command aCommand,
                                              EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  RefPtr<HTMLEditor> htmlEditor = aEditorBase->AsHTMLEditor();
+  RefPtr<HTMLEditor> htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -962,7 +940,7 @@ bool DecreaseZIndexCommand::IsCommandEnabled(Command aCommand,
 nsresult DecreaseZIndexCommand::DoCommand(Command aCommand,
                                           EditorBase& aEditorBase,
                                           nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -987,10 +965,7 @@ StaticRefPtr<IncreaseZIndexCommand> IncreaseZIndexCommand::sInstance;
 
 bool IncreaseZIndexCommand::IsCommandEnabled(Command aCommand,
                                              EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -1003,7 +978,7 @@ bool IncreaseZIndexCommand::IsCommandEnabled(Command aCommand,
 nsresult IncreaseZIndexCommand::DoCommand(Command aCommand,
                                           EditorBase& aEditorBase,
                                           nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -1028,10 +1003,7 @@ StaticRefPtr<RemoveStylesCommand> RemoveStylesCommand::sInstance;
 
 bool RemoveStylesCommand::IsCommandEnabled(Command aCommand,
                                            EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -1042,7 +1014,7 @@ bool RemoveStylesCommand::IsCommandEnabled(Command aCommand,
 nsresult RemoveStylesCommand::DoCommand(Command aCommand,
                                         EditorBase& aEditorBase,
                                         nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
@@ -1069,10 +1041,7 @@ StaticRefPtr<IncreaseFontSizeCommand> IncreaseFontSizeCommand::sInstance;
 
 bool IncreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
                                                EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -1083,7 +1052,7 @@ bool IncreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
 nsresult IncreaseFontSizeCommand::DoCommand(Command aCommand,
                                             EditorBase& aEditorBase,
                                             nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
@@ -1108,10 +1077,7 @@ StaticRefPtr<DecreaseFontSizeCommand> DecreaseFontSizeCommand::sInstance;
 
 bool DecreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
                                                EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -1122,7 +1088,7 @@ bool DecreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
 nsresult DecreaseFontSizeCommand::DoCommand(Command aCommand,
                                             EditorBase& aEditorBase,
                                             nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
@@ -1147,10 +1113,7 @@ StaticRefPtr<InsertHTMLCommand> InsertHTMLCommand::sInstance;
 
 bool InsertHTMLCommand::IsCommandEnabled(Command aCommand,
                                          EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -1162,7 +1125,7 @@ nsresult InsertHTMLCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
   // If InsertHTMLCommand is called with no parameters, it was probably called
   // with an empty string parameter ''. In this case, it should act the same as
   // the delete command
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -1181,7 +1144,7 @@ nsresult InsertHTMLCommand::DoCommandParam(Command aCommand,
     return NS_ERROR_INVALID_ARG;
   }
 
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -1207,10 +1170,7 @@ StaticRefPtr<InsertTagCommand> InsertTagCommand::sInstance;
 
 bool InsertTagCommand::IsCommandEnabled(Command aCommand,
                                         EditorBase* aEditorBase) const {
-  if (!aEditorBase) {
-    return false;
-  }
-  HTMLEditor* htmlEditor = aEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = HTMLEditor::GetFrom(aEditorBase);
   if (!htmlEditor) {
     return false;
   }
@@ -1225,7 +1185,7 @@ nsresult InsertTagCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -1258,7 +1218,7 @@ nsresult InsertTagCommand::DoCommandParam(Command aCommand,
     return NS_ERROR_UNEXPECTED;
   }
 
-  HTMLEditor* htmlEditor = aEditorBase.AsHTMLEditor();
+  HTMLEditor* htmlEditor = aEditorBase.GetAsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
