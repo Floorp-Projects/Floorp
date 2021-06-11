@@ -1558,9 +1558,9 @@
     <string name="credit_cards_card_number">Card Number</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Expiration Date</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Expiration Date Month</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Expiration Date Year</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Name on Card</string>
