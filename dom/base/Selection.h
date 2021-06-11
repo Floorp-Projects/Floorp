@@ -191,7 +191,7 @@ class Selection final : public nsSupportsWeakReference,
 
  public:
   nsresult RemoveCollapsedRanges();
-  nsresult Clear(nsPresContext* aPresContext);
+  void Clear(nsPresContext* aPresContext);
   MOZ_CAN_RUN_SCRIPT nsresult CollapseInLimiter(nsINode* aContainer,
                                                 int32_t aOffset) {
     if (!aContainer) {
@@ -696,8 +696,8 @@ class Selection final : public nsSupportsWeakReference,
 
   SelectionCustomColors* GetCustomColors() const { return mCustomColors.get(); }
 
-  MOZ_CAN_RUN_SCRIPT nsresult NotifySelectionListeners(bool aCalledByJS);
-  MOZ_CAN_RUN_SCRIPT nsresult NotifySelectionListeners();
+  MOZ_CAN_RUN_SCRIPT void NotifySelectionListeners(bool aCalledByJS);
+  MOZ_CAN_RUN_SCRIPT void NotifySelectionListeners();
 
   friend struct AutoUserInitiated;
   struct MOZ_RAII AutoUserInitiated {

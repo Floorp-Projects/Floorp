@@ -2158,7 +2158,8 @@ nsresult nsFrameSelection::NotifySelectionListeners(
   int8_t index = GetIndexFromSelectionType(aSelectionType);
   if (index >= 0 && mDomSelections[index]) {
     RefPtr<Selection> selection = mDomSelections[index];
-    return selection->NotifySelectionListeners();
+    selection->NotifySelectionListeners();
+    return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
