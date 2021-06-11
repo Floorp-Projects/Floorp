@@ -236,8 +236,7 @@ nsIntRect HyperTextAccessible::GetBoundsInFrame(nsIFrame* aFrame,
     nsRect frameScreenRect = frame->GetScreenRectInAppUnits();
 
     // Get the length of the substring in this frame that we want the bounds for
-    int32_t startFrameTextOffset, endFrameTextOffset;
-    frame->GetOffsets(startFrameTextOffset, endFrameTextOffset);
+    auto [startFrameTextOffset, endFrameTextOffset] = frame->GetOffsets();
     int32_t frameTotalTextLength = endFrameTextOffset - startFrameTextOffset;
     int32_t seekLength = endContentOffset - startContentOffset;
     int32_t frameSubStringLength =
