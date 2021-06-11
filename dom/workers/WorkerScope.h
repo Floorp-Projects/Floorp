@@ -16,6 +16,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ImageBitmapSource.h"
+#include "mozilla/dom/SafeRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
@@ -31,6 +32,12 @@ class nsISerialEventTarget;
 
 namespace mozilla {
 class ErrorResult;
+
+namespace extensions {
+
+class ExtensionBrowser;
+
+}  // namespace extensions
 
 namespace dom {
 
@@ -367,6 +374,8 @@ class ServiceWorkerGlobalScope final : public WorkerGlobalScope {
 
   already_AddRefed<Promise> SkipWaiting(ErrorResult& aRv);
 
+  SafeRefPtr<extensions::ExtensionBrowser> AcquireExtensionBrowser();
+
   IMPL_EVENT_HANDLER(install)
   IMPL_EVENT_HANDLER(activate)
 
@@ -393,6 +402,7 @@ class ServiceWorkerGlobalScope final : public WorkerGlobalScope {
   RefPtr<Clients> mClients;
   const nsString mScope;
   RefPtr<ServiceWorkerRegistration> mRegistration;
+  SafeRefPtr<extensions::ExtensionBrowser> mExtensionBrowser;
 };
 
 class WorkerDebuggerGlobalScope final : public WorkerGlobalScopeBase {
