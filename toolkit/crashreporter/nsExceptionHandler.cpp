@@ -1927,6 +1927,12 @@ static void TeardownAnnotationFacilities() {
 
 #ifdef XP_WIN
 
+struct InProcessWindowsErrorReportingData {
+  uint32_t mProcessType;
+};
+
+static InProcessWindowsErrorReportingData gInProcessWerData = {};
+
 bool GetRuntimeExceptionModulePath(wchar_t* aPath, const size_t aLength) {
   const wchar_t* kModuleName = L"mozwer.dll";
   DWORD res = GetModuleFileName(nullptr, aPath, aLength);
@@ -1945,27 +1951,21 @@ bool GetRuntimeExceptionModulePath(wchar_t* aPath, const size_t aLength) {
 
 #endif  // XP_WIN
 
-void RegisterRuntimeExceptionModule(void) {
+static void RegisterRuntimeExceptionModule(
+    GeckoProcessType aProcessType =
+        GeckoProcessType::GeckoProcessType_Default) {
 #ifdef XP_WIN
+  gInProcessWerData.mProcessType = aProcessType;
   const size_t kPathLength = MAX_PATH + 1;
   wchar_t path[kPathLength] = {};
   if (GetRuntimeExceptionModulePath(path, kPathLength)) {
-    Unused << WerRegisterRuntimeExceptionModule(path, nullptr);
-  }
+    Unused << WerRegisterRuntimeExceptionModule(path, &gInProcessWerData);
 
-  DWORD dwFlags = 0;
-  if (WerGetFlags(GetCurrentProcess(), &dwFlags) == S_OK) {
-    Unused << WerSetFlags(dwFlags | WER_FAULT_REPORTING_DISABLE_SNAPSHOT_HANG);
-  }
-#endif  // XP_WIN
-}
-
-void UnregisterRuntimeExceptionModule(void) {
-#ifdef XP_WIN
-  const size_t kPathLength = MAX_PATH + 1;
-  wchar_t path[kPathLength] = {};
-  if (GetRuntimeExceptionModulePath(path, kPathLength)) {
-    Unused << WerUnregisterRuntimeExceptionModule(path, nullptr);
+    DWORD dwFlags = 0;
+    if (WerGetFlags(GetCurrentProcess(), &dwFlags) == S_OK) {
+      Unused << WerSetFlags(dwFlags |
+                            WER_FAULT_REPORTING_DISABLE_SNAPSHOT_HANG);
+    }
   }
 #endif  // XP_WIN
 }
@@ -3525,13 +3525,13 @@ bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd) {
 #endif  // defined(XP_LINUX)
 
 bool SetRemoteExceptionHandler(const char* aCrashPipe,
-                               uintptr_t aCrashTimeAnnotationFile) {
+                               FileHandle aCrashTimeAnnotationFile) {
   MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
-
+  RegisterRuntimeExceptionModule(XRE_GetProcessType());
   InitializeAnnotationFacilities();
 
 #if defined(XP_WIN)
-  gChildCrashAnnotationReportFd = (FileHandle)aCrashTimeAnnotationFile;
+  gChildCrashAnnotationReportFd = aCrashTimeAnnotationFile;
   gExceptionHandler = new google_breakpad::ExceptionHandler(
       L"", ChildFilter, ChildMinidumpCallback,
       nullptr,  // no callback context
@@ -3628,6 +3628,48 @@ bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType,
 
   return WriteExtraFile(id, annotations);
 }
+
+#ifdef XP_WIN
+
+// Function invoked by the WER runtime exception handler running in an
+// external process. This function isn't used anywhere inside Gecko directly
+// but rather invoked via CreateRemoteThread() in the main process.
+DWORD WINAPI WerNotifyProc(LPVOID aParameter) {
+  const WindowsErrorReportingData* werData =
+      static_cast<const WindowsErrorReportingData*>(aParameter);
+
+  // Hold the mutex until the current dump request is complete, to
+  // prevent UnsetExceptionHandler() from pulling the rug out from
+  // under us.
+  MutexAutoLock safetyLock(*dumpSafetyLock);
+  if (!isSafeToDump || !ShouldReport()) {
+    return S_OK;
+  }
+
+  ProcessId pid = werData->mChildPid;
+  nsCOMPtr<nsIFile> minidump;
+  if (!GetPendingDir(getter_AddRefs(minidump))) {
+    return S_OK;
+  }
+  xpstring minidump_native_name(werData->mMinidumpFile,
+                                werData->mMinidumpFile + 40);
+  nsString minidump_name(minidump_native_name.c_str());
+  minidump->Append(minidump_name);
+
+  {
+    MutexAutoLock lock(*dumpMapLock);
+    ChildProcessData* pd = pidToMinidump->PutEntry(pid);
+    MOZ_ASSERT(!pd->minidump);
+    pd->minidump = minidump;
+    pd->sequence = ++crashSequence;
+    pd->annotations = MakeUnique<AnnotationTable>();
+    PopulateContentProcessAnnotations(*(pd->annotations));
+  }
+
+  return S_OK;
+}
+
+#endif  // XP_WIN
 
 //-----------------------------------------------------------------------------
 // CreateMinidumpsAndPair() and helpers
