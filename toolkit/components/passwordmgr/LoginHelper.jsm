@@ -474,6 +474,9 @@ this.LoginHelper = {
     this.userInputRequiredToCapture = Services.prefs.getBoolPref(
       "signon.userInputRequiredToCapture.enabled"
     );
+    this.usernameOnlyFormEnabled = Services.prefs.getBoolPref(
+      "signon.usernameOnlyForm.enabled"
+    );
     this.remoteRecipesEnabled = Services.prefs.getBoolPref(
       "signon.recipes.remoteRecipes.enabled"
     );

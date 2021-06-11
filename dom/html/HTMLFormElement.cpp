@@ -49,6 +49,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_prompts.h"
+#include "mozilla/StaticPrefs_signon.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIObserverService.h"
 #include "nsCategoryManagerUtils.h"
@@ -1185,6 +1186,10 @@ void HTMLFormElement::PostPasswordEvent() {
 }
 
 void HTMLFormElement::PostPossibleUsernameEvent() {
+  if (!StaticPrefs::signon_usernameOnlyForm_enabled()) {
+    return;
+  }
+
   // Don't fire another event if we have a pending event.
   if (mFormPossibleUsernameEventDispatcher) {
     return;
