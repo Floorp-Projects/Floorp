@@ -103,13 +103,6 @@ var testSpec = protocol.generateActorSpec({
       },
       response: {},
     },
-    waitForEventOnNode: {
-      request: {
-        eventName: Arg(0, "string"),
-        selector: Arg(1, "nullable:string"),
-      },
-      response: {},
-    },
     getAllAdjustedQuads: {
       request: {
         selector: Arg(0, "string"),
@@ -331,25 +324,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
     _highlighter.once("updated").then(() => this.emit("highlighter-updated"));
 
     // Return directly so the client knows the event listener is set
-  },
-
-  /**
-   * Wait for a specific event on a node matching the provided selector.
-   * @param {String} eventName The name of the event to listen to
-   * @param {String} selector Optional:  css selector of the node which should
-   *        trigger the event. If ommitted, target will be the content window
-   */
-  waitForEventOnNode: function(eventName, selector) {
-    return new Promise(resolve => {
-      const node = selector ? this._querySelector(selector) : this.content;
-      node.addEventListener(
-        eventName,
-        function() {
-          resolve();
-        },
-        { once: true }
-      );
-    });
   },
 
   /**
