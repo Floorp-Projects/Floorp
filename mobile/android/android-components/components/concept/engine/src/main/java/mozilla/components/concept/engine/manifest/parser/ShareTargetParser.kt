@@ -74,7 +74,7 @@ internal object ShareTargetParser {
     private fun parseMethod(method: String?): ShareTarget.RequestMethod? {
         method ?: return ShareTarget.RequestMethod.GET
         return try {
-            ShareTarget.RequestMethod.valueOf(method.toUpperCase(Locale.ROOT))
+            ShareTarget.RequestMethod.valueOf(method.uppercase(Locale.ROOT))
         } catch (e: IllegalArgumentException) {
             null
         }
@@ -84,7 +84,7 @@ internal object ShareTargetParser {
      * Convert string to [ShareTarget.EncodingType]. Returns null if the string is invalid.
      */
     private fun parseEncType(encType: String?): ShareTarget.EncodingType? {
-        val typeString = encType?.toLowerCase(Locale.ROOT) ?: return ShareTarget.EncodingType.URL_ENCODED
+        val typeString = encType?.lowercase(Locale.ROOT) ?: return ShareTarget.EncodingType.URL_ENCODED
         return ShareTarget.EncodingType.values().find { it.type == typeString }
     }
 

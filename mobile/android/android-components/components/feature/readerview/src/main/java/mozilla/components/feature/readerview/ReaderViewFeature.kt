@@ -320,8 +320,8 @@ class ReaderViewFeature(
             val colorScheme = config?.colorScheme ?: ColorScheme.LIGHT
             val configJson = JSONObject()
                 .put(ACTION_VALUE_SHOW_FONT_SIZE, fontSize)
-                .put(ACTION_VALUE_SHOW_FONT_TYPE, fontType.value.toLowerCase(Locale.ROOT))
-                .put(ACTION_VALUE_SHOW_COLOR_SCHEME, colorScheme.name.toLowerCase(Locale.ROOT))
+                .put(ACTION_VALUE_SHOW_FONT_TYPE, fontType.value.lowercase(Locale.ROOT))
+                .put(ACTION_VALUE_SHOW_COLOR_SCHEME, colorScheme.name.lowercase(Locale.ROOT))
 
             return JSONObject()
                 .put(ACTION_MESSAGE_KEY, ACTION_SHOW)

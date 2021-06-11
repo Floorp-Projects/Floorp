@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.IBinder
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -31,6 +32,7 @@ private const val DELAY_CRASH_MS = 10000L
 class CrashService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
+    @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
     @Suppress("TooGenericExceptionThrown")
     override fun onCreate() {
         Toast.makeText(this, "Crashing from background soonish...", Toast.LENGTH_SHORT).show()

@@ -114,5 +114,5 @@ private fun removeSnapshotFromDisk(context: Context, engine: Engine) {
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal fun getFileForEngine(context: Context, engine: Engine): AtomicFile {
     return AtomicFile(File(context.filesDir, String.format(STORE_FILE_NAME_FORMAT, engine.name())
-        .toLowerCase(Locale.ROOT)))
+        .lowercase(Locale.ROOT)))
 }

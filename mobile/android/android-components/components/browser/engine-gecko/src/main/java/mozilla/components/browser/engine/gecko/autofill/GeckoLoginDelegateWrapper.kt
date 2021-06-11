@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko.autofill
 
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -31,6 +32,7 @@ class GeckoLoginDelegateWrapper(private val storageDelegate: LoginStorageDelegat
     override fun onLoginFetch(domain: String): GeckoResult<Array<Autocomplete.LoginEntry>>? {
         val result = GeckoResult<Array<Autocomplete.LoginEntry>>()
 
+        @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch(IO) {
             val storedLogins = storageDelegate.onLoginFetch(domain)
 

@@ -274,9 +274,9 @@ class ReaderViewFeatureTest {
         val config = message[ReaderViewFeature.ACTION_VALUE] as JSONObject?
         assertNotNull(config)
         assertEquals(FONT_SIZE_DEFAULT, config!![ReaderViewFeature.ACTION_VALUE_SHOW_FONT_SIZE])
-        assertEquals(ReaderViewFeature.FontType.SERIF.value.toLowerCase(Locale.ROOT),
+        assertEquals(ReaderViewFeature.FontType.SERIF.value.lowercase(Locale.ROOT),
             config[ReaderViewFeature.ACTION_VALUE_SHOW_FONT_TYPE])
-        assertEquals(ReaderViewFeature.ColorScheme.LIGHT.name.toLowerCase(Locale.ROOT),
+        assertEquals(ReaderViewFeature.ColorScheme.LIGHT.name.lowercase(Locale.ROOT),
             config[ReaderViewFeature.ACTION_VALUE_SHOW_COLOR_SCHEME])
     }
 

@@ -7,6 +7,7 @@ package mozilla.components.feature.search.region
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -48,6 +49,7 @@ class RegionMiddleware(
         next(action)
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun determineRegion(
         store: Store<BrowserState, BrowserAction>
     ) = GlobalScope.launch(ioDispatcher) {

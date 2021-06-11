@@ -68,7 +68,7 @@ internal class MediaNotification(
         // see https://github.com/mozilla-mobile/android-components/issues/7468 and
         // https://issuetracker.google.com/issues/37078372
         val huaweiOnLollipop =
-            Build.MANUFACTURER.toLowerCase(Locale.getDefault()).contains("huawei") &&
+            Build.MANUFACTURER.lowercase(Locale.getDefault()).contains("huawei") &&
                     Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP_MR1
         if (!huaweiOnLollipop) {
             builder.setStyle(style)

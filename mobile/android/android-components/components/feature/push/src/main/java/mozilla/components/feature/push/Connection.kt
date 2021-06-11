@@ -269,7 +269,7 @@ internal fun ServiceType.toBridgeType() = when (this) {
  * Helper function to convert the [Protocol] into the required value the native implementation requires.
  */
 @VisibleForTesting
-internal fun Protocol.asString() = name.toLowerCase(Locale.ROOT)
+internal fun Protocol.asString() = name.lowercase(Locale.ROOT)
 
 /**
  * A channel ID from the provided scope.

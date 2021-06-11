@@ -452,10 +452,10 @@ abstract class EngineSession(
             return true
         }
 
-        override fun hashCode() = trackingCategories.sumBy { it.id } + cookiePolicy.id
+        override fun hashCode() = trackingCategories.sumOf { it.id } + cookiePolicy.id
 
         fun contains(category: TrackingCategory) =
-            (trackingCategories.sumBy { it.id } and category.id) != 0
+            (trackingCategories.sumOf { it.id } and category.id) != 0
     }
 
     /**

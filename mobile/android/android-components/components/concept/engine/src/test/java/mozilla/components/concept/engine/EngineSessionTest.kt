@@ -882,7 +882,7 @@ class EngineSessionTest {
 
         fun checkSavedFields(expect: TrackingProtectionPolicy, actual: TrackingProtectionPolicy) {
             TrackingProtectionPolicy::class.java.declaredMethods
-                .filter { method -> changedFields.all { !method.name.toLowerCase().contains(it.toLowerCase()) } }
+                .filter { method -> changedFields.all { !method.name.lowercase().contains(it.lowercase()) } }
                 .filter { it.parameterCount == 0 } // Only keep getters
                 .filter { it.modifiers and Modifier.PUBLIC != 0 }
                 .filter { it.modifiers and Modifier.STATIC == 0 }

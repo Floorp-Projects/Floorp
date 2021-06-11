@@ -69,7 +69,7 @@ open class BaseDomainAutocompleteProvider(
      */
     override fun getAutocompleteSuggestion(query: String): DomainAutocompleteResult? {
         // Search terms are all lowercase already, we just need to lowercase the search text
-        val searchText = query.toLowerCase(Locale.US)
+        val searchText = query.lowercase(Locale.US)
 
         domains.forEach {
             val wwwDomain = "www.${it.host}"

@@ -360,7 +360,7 @@ class GeckoEngineSession(
         val mobilePrefix = "mobile."
 
         val uri = Uri.parse(url)
-        val authority = uri.authority?.toLowerCase(Locale.ROOT) ?: return null
+        val authority = uri.authority?.lowercase(Locale.ROOT) ?: return null
 
         val foundPrefix = when {
             authority.startsWith(mPrefix) -> mPrefix

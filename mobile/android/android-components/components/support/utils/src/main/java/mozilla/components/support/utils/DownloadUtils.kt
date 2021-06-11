@@ -284,7 +284,7 @@ object DownloadUtils {
             if (symbol.startsWith("%")) {
                 stream.write(symbol.substring(1).toInt(radix = 16))
             } else {
-                stream.write(symbol[0].toInt())
+                stream.write(symbol[0].code)
             }
         }
 

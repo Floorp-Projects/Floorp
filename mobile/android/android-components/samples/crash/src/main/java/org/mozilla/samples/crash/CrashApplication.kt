@@ -9,6 +9,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -62,6 +63,7 @@ class CrashApplication : Application() {
     }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 private fun createDummyCrashService(context: Context): CrashReporterService {
     // For this sample we create a dummy service. In a real application this would be an instance of SentryCrashService
     // or SocorroCrashService.

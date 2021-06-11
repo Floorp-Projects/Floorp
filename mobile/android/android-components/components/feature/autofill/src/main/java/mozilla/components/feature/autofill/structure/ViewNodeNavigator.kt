@@ -149,7 +149,7 @@ internal class ViewNodeNavigator(
 
     private fun htmlTagName(node: ViewNode) =
         // Use English locale, as the HTML tags are all in English.
-        node.htmlInfo?.tag?.toLowerCase(Locale.ENGLISH)
+        node.htmlInfo?.tag?.lowercase(Locale.ENGLISH)
 
     override fun isHtmlForm(node: ViewNode) =
         htmlTagName(node) == "form"

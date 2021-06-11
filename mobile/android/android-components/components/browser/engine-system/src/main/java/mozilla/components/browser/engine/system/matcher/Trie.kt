@@ -14,7 +14,7 @@ open class Trie constructor (character: Char, parent: Trie?) {
     private var terminator = false
 
     init {
-        parent?.children?.put(character.toInt(), this)
+        parent?.children?.put(character.code, this)
     }
 
     /**
@@ -42,7 +42,7 @@ open class Trie constructor (character: Char, parent: Trie?) {
             // foo.bar.com should match.)
             match = this
         } else if (string.length() != 0) {
-            val next = children.get(string.charAt(0).toInt())
+            val next = children.get(string.charAt(0).code)
             match = next?.findNode(string.substring(1))
         }
         return match
@@ -82,14 +82,14 @@ open class Trie constructor (character: Char, parent: Trie?) {
      * @return the newly created node or the existing one.
      */
     fun put(character: Char): Trie {
-        val existingChild = children.get(character.toInt())
+        val existingChild = children.get(character.code)
 
         if (existingChild != null) {
             return existingChild
         }
 
         val newChild = createNode(character, this)
-        children.put(character.toInt(), newChild)
+        children.put(character.code, newChild)
         return newChild
     }
 

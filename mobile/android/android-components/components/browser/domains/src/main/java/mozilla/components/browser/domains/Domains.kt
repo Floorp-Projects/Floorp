@@ -68,7 +68,7 @@ object Domains {
 
     private fun getCountriesInDefaultLocaleList(): Set<String> {
         val countries = java.util.LinkedHashSet<String>()
-        val addIfNotEmpty = { c: String -> if (!TextUtils.isEmpty(c)) countries.add(c.toLowerCase(Locale.US)) }
+        val addIfNotEmpty = { c: String -> if (!TextUtils.isEmpty(c)) countries.add(c.lowercase(Locale.US)) }
 
         if (SDK_INT >= VERSION_CODES.N) {
             val list = LocaleList.getDefault()

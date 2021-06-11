@@ -36,7 +36,7 @@ internal fun ByteArray.binarySearch(labels: List<ByteArray>, labelIndex: Int): S
         while (true) {
             val byte0 = if (expectDot) {
                 expectDot = false
-                '.'.toByte()
+                '.'.code.toByte()
             } else {
                 labels[currentLabelIndex][currentLabelByteIndex] and BITMASK
             }
@@ -103,7 +103,7 @@ internal fun ByteArray.binarySearch(labels: List<ByteArray>, labelIndex: Int): S
  */
 private fun ByteArray.findStartOfLineFromIndex(start: Int): Int {
     var index = start
-    while (index > -1 && this[index] != '\n'.toByte()) {
+    while (index > -1 && this[index] != '\n'.code.toByte()) {
         index--
     }
     index++
@@ -115,7 +115,7 @@ private fun ByteArray.findStartOfLineFromIndex(start: Int): Int {
  */
 private fun ByteArray.findEndOfLineFromIndex(start: Int): Int {
     var end = 1
-    while (this[start + end] != '\n'.toByte()) {
+    while (this[start + end] != '\n'.code.toByte()) {
         end++
     }
     return end

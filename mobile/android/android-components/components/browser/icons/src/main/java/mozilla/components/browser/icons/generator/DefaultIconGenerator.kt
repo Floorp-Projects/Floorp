@@ -131,7 +131,7 @@ class DefaultIconGenerator(
 
         snippet.forEach { character ->
             if (character.isLetterOrDigit()) {
-                return character.toUpperCase().toString()
+                return character.uppercase()
             }
         }
 

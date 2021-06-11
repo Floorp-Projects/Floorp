@@ -5,6 +5,7 @@
 package org.mozilla.samples.browser
 
 import android.app.Application
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -31,6 +32,7 @@ class SampleApplication : Application() {
 
     val components by lazy { Components(this) }
 
+    @DelicateCoroutinesApi // Usage of GlobalScope
     override fun onCreate() {
         super.onCreate()
 
@@ -91,6 +93,7 @@ class SampleApplication : Application() {
         }
     }
 
+    @DelicateCoroutinesApi
     private fun restoreBrowserState() = GlobalScope.launch(Dispatchers.Main) {
         components.tabsUseCases.restore(components.sessionStorage)
 

@@ -144,7 +144,7 @@ internal class PublicSuffixListData(
     }
 
     companion object {
-        val WILDCARD_LABEL = byteArrayOf('*'.toByte())
+        val WILDCARD_LABEL = byteArrayOf('*'.code.toByte())
         val PREVAILING_RULE = listOf("*")
         val EMPTY_RULE = listOf<String>()
         const val EXCEPTION_MARKER = '!'

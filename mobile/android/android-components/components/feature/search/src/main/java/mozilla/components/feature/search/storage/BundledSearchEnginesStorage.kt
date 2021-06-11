@@ -7,6 +7,7 @@ package mozilla.components.feature.search.storage
 import android.content.Context
 import android.content.res.AssetManager
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -219,6 +220,7 @@ private fun applyOverridesIfNeeded(
     return searchEngineIdentifiers
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 private suspend fun loadSearchEnginesFromList(
     context: Context,
     searchEngineIdentifiers: List<String>,

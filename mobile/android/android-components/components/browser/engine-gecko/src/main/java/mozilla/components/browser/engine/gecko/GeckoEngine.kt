@@ -529,7 +529,7 @@ class GeckoEngine(
         override var safeBrowsingPolicy: Array<SafeBrowsingPolicy> =
             arrayOf(SafeBrowsingPolicy.RECOMMENDED)
             set(value) {
-                val policy = value.sumBy { it.id }
+                val policy = value.sumOf { it.id }
                 runtime.settings.contentBlocking.setSafeBrowsing(policy)
                 field = value
             }

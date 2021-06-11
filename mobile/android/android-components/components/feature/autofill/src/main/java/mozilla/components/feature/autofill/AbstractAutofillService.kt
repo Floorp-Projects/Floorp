@@ -12,6 +12,7 @@ import android.service.autofill.FillRequest
 import android.service.autofill.SaveCallback
 import android.service.autofill.SaveRequest
 import androidx.annotation.RequiresApi
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -35,6 +36,7 @@ abstract class AbstractAutofillService : AutofillService() {
         // We are using GlobalScope here instead of a scope bound to the service since the service
         // seems to get destroyed before we invoke a method on the callback. So we need a scope that
         // lives longer than the service.
+        @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch(Dispatchers.IO) {
             // You may be wondering why we translate the AssistStructure into a RawStructure and then
             // create a FillResponseBuilder that outputs the FillResponse. This is purely for testing.

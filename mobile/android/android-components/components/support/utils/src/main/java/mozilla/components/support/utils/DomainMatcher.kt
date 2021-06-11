@@ -17,10 +17,10 @@ data class DomainMatch(val url: String, val matchedSegment: String)
 fun segmentAwareDomainMatch(query: String, urls: Iterable<String>): DomainMatch? {
     val locale = Locale.US
 
-    val caseInsensitiveQuery = query.toLowerCase(locale)
+    val caseInsensitiveQuery = query.lowercase(locale)
     // Process input 'urls' lazily, as the list could be very large and likely we'll find a match
     // by going through just a small subset.
-    val caseInsensitiveUrls = urls.asSequence().map { it.toLowerCase(locale) }
+    val caseInsensitiveUrls = urls.asSequence().map { it.lowercase(locale) }
 
     return basicMatch(caseInsensitiveQuery, caseInsensitiveUrls)?.let { matchedUrl ->
         matchSegment(caseInsensitiveQuery, matchedUrl)?.let { DomainMatch(matchedUrl, it) }

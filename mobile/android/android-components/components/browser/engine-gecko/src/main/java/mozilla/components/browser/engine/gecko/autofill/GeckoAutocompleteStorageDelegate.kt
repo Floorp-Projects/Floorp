@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko.autofill
 
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -34,6 +35,7 @@ class GeckoAutocompleteStorageDelegate(
     override fun onCreditCardFetch(): GeckoResult<Array<Autocomplete.CreditCard>>? {
         val result = GeckoResult<Array<Autocomplete.CreditCard>>()
 
+        @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch(IO) {
             val creditCards = creditCardsAddressesStorageDelegate.onCreditCardsFetch().await()
                 .mapNotNull {
@@ -66,6 +68,7 @@ class GeckoAutocompleteStorageDelegate(
     override fun onLoginFetch(domain: String): GeckoResult<Array<Autocomplete.LoginEntry>>? {
         val result = GeckoResult<Array<Autocomplete.LoginEntry>>()
 
+        @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch(IO) {
             val storedLogins = loginStorageDelegate.onLoginFetch(domain)
 

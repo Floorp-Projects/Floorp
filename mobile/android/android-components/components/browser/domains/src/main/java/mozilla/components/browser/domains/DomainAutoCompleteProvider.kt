@@ -118,7 +118,7 @@ class DomainAutoCompleteProvider {
     @Suppress("ReturnCount")
     private fun tryToAutocomplete(rawText: String, domains: List<Domain>, source: String): Result? {
         // Search terms are all lowercase already, we just need to lowercase the search text
-        val searchText = rawText.toLowerCase(Locale.US)
+        val searchText = rawText.lowercase(Locale.US)
 
         domains.forEach {
             val wwwDomain = "www.${it.host}"

@@ -40,7 +40,7 @@ class JexlTest {
         }
 
         jexl.addTransform("lower") { value, _ ->
-            value.toString().toLowerCase().toJexl()
+            value.toString().lowercase().toJexl()
         }
 
         jexl.addTransform("last") { value, _ ->

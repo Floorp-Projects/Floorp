@@ -11,6 +11,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -120,6 +121,7 @@ class AutoSave(
         val delayMs = lastSaveTimestamp + minimumIntervalMs - now
         lastSaveTimestamp = now
 
+        @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch(Dispatchers.IO) {
             if (delaySave && delayMs > 0) {
                 logger.debug("Delaying save (${delayMs}ms)")

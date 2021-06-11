@@ -59,7 +59,7 @@ val Addon.updatedAtDate: Date get() = dateParser.parse(updatedAt)!!
  */
 internal fun Map<String, String>.translate(addon: Addon, context: Context): String {
     val lang = Locale.getDefault().language
-    val safeLang = if (!lang.isNullOrEmpty()) lang.toLowerCase(Locale.getDefault()) else lang
+    val safeLang = if (!lang.isNullOrEmpty()) lang.lowercase(Locale.getDefault()) else lang
     return get(safeLang) ?: getOrElse(addon.defaultLocale) {
         context.getString(R.string.mozac_feature_addons_failed_to_translate, lang, addon.defaultLocale)
     }

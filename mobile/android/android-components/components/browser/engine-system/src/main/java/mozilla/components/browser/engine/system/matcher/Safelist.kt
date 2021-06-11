@@ -53,7 +53,7 @@ internal class Safelist {
     }
 
     private fun contains(site: ReversibleString, resource: ReversibleString, revHostTrie: Trie): Boolean {
-        val next = revHostTrie.children.get(site.charAt(0).toInt()) as? SafelistTrie ?: return false
+        val next = revHostTrie.children.get(site.charAt(0).code) as? SafelistTrie ?: return false
 
         if (next.safelist?.findNode(resource) != null) {
             return true

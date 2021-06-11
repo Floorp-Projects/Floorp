@@ -21,7 +21,7 @@ fun TrackingProtectionPolicy.toContentBlockingSetting(
     cookieBehavior(cookiePolicy.id)
     cookieBehaviorPrivateMode(cookiePolicyPrivateMode.id)
     cookiePurging(cookiePurging)
-    safeBrowsing(safeBrowsingPolicy.sumBy { it.id })
+    safeBrowsing(safeBrowsingPolicy.sumOf { it.id })
     strictSocialTrackingProtection(getStrictSocialTrackingProtection())
 }.build()
 
@@ -52,7 +52,7 @@ internal fun TrackingProtectionPolicy.getAntiTrackingPolicy(): Int {
      * https://bugzilla.mozilla.org/show_bug.cgi?id=1579264, for this reason we have to
      * remove its value from the valid anti tracking categories, when is present.
      */
-    val total = trackingCategories.sumBy { it.id }
+    val total = trackingCategories.sumOf { it.id }
     return if (contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)) {
         total - TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
     } else {

@@ -113,7 +113,7 @@ class WebURLFinder {
                 return false
             }
 
-            return !(URLUtil.isFileUrl(string.toLowerCase(Locale.ROOT)) || URLUtil.isJavaScriptUrl(string.toLowerCase(Locale.ROOT)))
+            return !(URLUtil.isFileUrl(string.lowercase(Locale.ROOT)) || URLUtil.isJavaScriptUrl(string.lowercase(Locale.ROOT)))
         }
 
         private fun candidateWebURLs(strings: Collection<String?>, explicitUnicode: Boolean = false): List<String> {

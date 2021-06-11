@@ -11,6 +11,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -124,6 +125,7 @@ internal class AccountObserver(
     private val logger = Logger(AccountObserver::class.java.simpleName)
     private val verificationDelegate = VerificationDelegate(context, push.config.disableRateLimit)
 
+    @DelicateCoroutinesApi // GlobalScope usage
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
 
         val constellationObserver = ConstellationObserver(

@@ -311,7 +311,7 @@ internal fun JSONObject.getAddons(language: String? = null): List<Addon> {
 internal fun JSONObject.toAddons(language: String? = null): Addon {
     return with(getJSONObject("addon")) {
         val download = getDownload()
-        val safeLanguage = language?.toLowerCase(Locale.getDefault())
+        val safeLanguage = language?.lowercase(Locale.getDefault())
         val summary = getSafeTranslations("summary", safeLanguage)
         val isLanguageInTranslations = summary.containsKey(safeLanguage)
         Addon(
@@ -334,7 +334,7 @@ internal fun JSONObject.toAddons(language: String? = null): Addon {
                 safeLanguage
             } else {
                 getSafeString("default_locale").ifEmpty { Addon.DEFAULT_LOCALE }
-            }).toLowerCase(Locale.ROOT)
+            }).lowercase(Locale.ROOT)
         )
     }
 }
@@ -427,7 +427,7 @@ internal fun JSONObject.getSafeTranslations(valueKey: String, language: String?)
     // 2) An object containing all the languages available when a language parameter is NOT present.
     // For this reason, we have to be specific about how we parse the JSON.
     return if (get(valueKey) is String) {
-        val safeLanguage = (language ?: Addon.DEFAULT_LOCALE).toLowerCase(Locale.ROOT)
+        val safeLanguage = (language ?: Addon.DEFAULT_LOCALE).lowercase(Locale.ROOT)
         mapOf(safeLanguage to getSafeString(valueKey))
     } else {
         getSafeMap(valueKey)
@@ -442,7 +442,7 @@ internal fun JSONObject.getSafeMap(valueKey: String): Map<String, String> {
 
         jsonObject.keys()
             .forEach { key ->
-                map[key.toLowerCase(Locale.ROOT)] = jsonObject.getSafeString(key)
+                map[key.lowercase(Locale.ROOT)] = jsonObject.getSafeString(key)
             }
         map
     }
