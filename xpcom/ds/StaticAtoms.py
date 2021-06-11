@@ -48,6 +48,7 @@ STATIC_ATOMS = [
     Atom("mozgeneratedcontentimage", "_moz_generated_content_image"),
     Atom("mozquote", "_moz_quote"),
     Atom("mozsignature", "moz-signature"),  # Used by MailNews.
+    Atom("_moz_bullet_font", "-moz-bullet-font"),
     Atom("_moz_is_glyph", "-moz-is-glyph"),
     Atom("_moz_original_size", "_moz_original_size"),
     Atom("_moz_print_preview", "-moz-print-preview"),
