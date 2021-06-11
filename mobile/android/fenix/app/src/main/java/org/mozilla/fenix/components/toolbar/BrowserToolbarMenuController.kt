@@ -35,6 +35,7 @@ import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
@@ -220,10 +221,13 @@ class DefaultBrowserToolbarMenuController(
                 navController.nav(R.id.browserFragment, directions)
             }
             is ToolbarMenu.Item.SyncAccount -> {
-                val directions = if (item.signedIn) {
-                    BrowserFragmentDirections.actionGlobalAccountSettingsFragment()
-                } else {
-                    BrowserFragmentDirections.actionGlobalTurnOnSync()
+                val directions = when (item.accountState) {
+                    AccountState.AUTHENTICATED ->
+                        BrowserFragmentDirections.actionGlobalAccountSettingsFragment()
+                    AccountState.NEEDS_REAUTHENTICATION ->
+                        BrowserFragmentDirections.actionGlobalAccountProblemFragment()
+                    AccountState.NO_ACCOUNT ->
+                        BrowserFragmentDirections.actionGlobalTurnOnSync()
                 }
                 browserAnimator.captureEngineViewAndDrawStatically {
                     navController.nav(

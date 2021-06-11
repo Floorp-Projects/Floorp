@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.toolbar
 
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
+import org.mozilla.fenix.components.accounts.AccountState
 
 interface ToolbarMenu {
     sealed class Item {
@@ -22,7 +23,7 @@ interface ToolbarMenu {
         object AddToTopSites : Item()
         object InstallPwaToHomeScreen : Item()
         object AddToHomeScreen : Item()
-        data class SyncAccount(val signedIn: Boolean) : Item()
+        data class SyncAccount(val accountState: AccountState) : Item()
         object AddonsManager : Item()
         object Quit : Item()
         object OpenInApp : Item()

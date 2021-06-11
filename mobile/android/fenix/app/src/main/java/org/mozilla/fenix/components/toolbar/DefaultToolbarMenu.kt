@@ -348,7 +348,9 @@ open class DefaultToolbarMenu(
         R.drawable.ic_signed_out,
         primaryTextColor()
     ) {
-        onItemTapped.invoke(ToolbarMenu.Item.SyncAccount(accountManager.signedInToFxa()))
+        onItemTapped.invoke(
+            ToolbarMenu.Item.SyncAccount(accountManager.accountState)
+        )
     }
 
     @VisibleForTesting(otherwise = PRIVATE)

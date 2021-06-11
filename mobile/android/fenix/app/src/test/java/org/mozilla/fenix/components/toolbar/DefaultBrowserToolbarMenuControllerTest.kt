@@ -57,6 +57,7 @@ import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
@@ -562,25 +563,36 @@ class DefaultBrowserToolbarMenuControllerTest {
     }
 
     @Test
-    fun `WHEN sync sign in menu item is pressed AND account is signed out THEN navigate to sync sign in`() = runBlockingTest {
-        val item = ToolbarMenu.Item.SyncAccount(false)
-        val directions = BrowserFragmentDirections.actionGlobalTurnOnSync()
-
+    fun `GIVEN account exists and the user is signed in WHEN sign in to sync menu item is pressed THEN navigate to account settings`() = runBlockingTest {
+        val item = ToolbarMenu.Item.SyncAccount(AccountState.AUTHENTICATED)
+        val accountSettingsDirections = BrowserFragmentDirections.actionGlobalAccountSettingsFragment()
         val controller = createController(scope = this, store = browserStore)
+
         controller.handleToolbarItemInteraction(item)
 
-        verify { navController.navigate(directions, null) }
+        verify { navController.navigate(accountSettingsDirections, null) }
     }
 
     @Test
-    fun `WHEN sync sign in menu item is pressed AND account is signed in THEN navigate to sync sign in`() = runBlockingTest {
-        val item = ToolbarMenu.Item.SyncAccount(true)
-        val directions = BrowserFragmentDirections.actionGlobalAccountSettingsFragment()
-
+    fun `GIVEN account exists and the user is not signed in WHEN sign in to sync menu item is pressed THEN navigate to account problem fragment`() = runBlockingTest {
+        val item = ToolbarMenu.Item.SyncAccount(AccountState.NEEDS_REAUTHENTICATION)
+        val accountProblemDirections = BrowserFragmentDirections.actionGlobalAccountProblemFragment()
         val controller = createController(scope = this, store = browserStore)
+
         controller.handleToolbarItemInteraction(item)
 
-        verify { navController.navigate(directions, null) }
+        verify { navController.navigate(accountProblemDirections, null) }
+    }
+
+    @Test
+    fun `GIVEN account doesn't exist WHEN sign in to sync menu item is pressed THEN navigate to sign in`() = runBlockingTest {
+        val item = ToolbarMenu.Item.SyncAccount(AccountState.NO_ACCOUNT)
+        val turnOnSyncDirections = BrowserFragmentDirections.actionGlobalTurnOnSync()
+        val controller = createController(scope = this, store = browserStore)
+
+        controller.handleToolbarItemInteraction(item)
+
+        verify { navController.navigate(turnOnSyncDirections, null) }
     }
 
     private fun createController(
