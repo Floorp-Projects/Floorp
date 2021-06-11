@@ -72,8 +72,7 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask {
 
     // During shutdown the main thread will wait for any ongoing (cancelled)
     // tier-2 generation to shut down normally.  To do so, it waits on the
-    // HelperThreadState's condition variable for the count of finished
-    // generators to rise.
+    // CONSUMER condition for the count of finished generators to rise.
     HelperThreadState().incWasmTier2GeneratorsFinished(locked);
 
     // The task is finished, release it.
