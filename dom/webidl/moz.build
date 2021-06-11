@@ -1058,6 +1058,7 @@ WEBIDL_FILES += [
 WEBIDL_FILES += [
     "ExtensionBrowser.webidl",
     "ExtensionEventManager.webidl",
+    "ExtensionPort.webidl",
 ]
 
 # We only expose our prefable test interfaces in debug builds, just to be on
