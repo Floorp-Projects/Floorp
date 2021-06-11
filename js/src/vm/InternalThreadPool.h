@@ -60,22 +60,22 @@ class InternalThreadPool {
   static bool IsInitialized() { return Instance; }
   static InternalThreadPool& Get();
 
+  static void DispatchTask();
+
   bool ensureThreadCount(size_t threadCount, AutoLockHelperThreadState& lock);
   size_t threadCount(const AutoLockHelperThreadState& lock);
-
-  void dispatchTask(const AutoLockHelperThreadState& lock);
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                              const AutoLockHelperThreadState& lock) const;
 
  private:
+  void dispatchTask();
   void shutDown(AutoLockHelperThreadState& lock);
 
   HelperThreadVector& threads(const AutoLockHelperThreadState& lock);
   const HelperThreadVector& threads(
       const AutoLockHelperThreadState& lock) const;
 
-  void notifyOne(const AutoLockHelperThreadState& lock);
   void notifyAll(const AutoLockHelperThreadState& lock);
   void wait(AutoLockHelperThreadState& lock);
   friend class HelperThread;
@@ -85,6 +85,8 @@ class InternalThreadPool {
   HelperThreadLockData<HelperThreadVector> threads_;
 
   js::ConditionVariable wakeup;
+
+  HelperThreadLockData<size_t> queuedTasks;
 
   HelperThreadLockData<bool> terminating;
 };
