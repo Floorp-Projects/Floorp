@@ -21,7 +21,6 @@
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/URLQueryStringStripper.h"
 
 #include "mozilla/OriginAttributes.h"
@@ -602,16 +601,10 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
     return;
   }
 
-  Telemetry::AccumulateCategorical(
-      Telemetry::LABELS_QUERY_STRIPPING_COUNT::Navigation);
-
   nsCOMPtr<nsIURI> strippedURI;
   if (URLQueryStringStripper::Strip(URI(), strippedURI)) {
     mUnstrippedURI = URI();
     SetURI(strippedURI);
-
-    Telemetry::AccumulateCategorical(
-        Telemetry::LABELS_QUERY_STRIPPING_COUNT::StripForNavigation);
   } else if (LoadType() & nsIDocShell::LOAD_CMD_RELOAD) {
     // Preserve the Unstripped URI if it's a reload. By doing this, we can
     // restore the stripped query parameters once the ETP has been toggled to
