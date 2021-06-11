@@ -53,7 +53,7 @@ devtools:
         - "'mozlint-eslint"
         # 'mochitest-devtools-chrome should match the "-e10s" and "-fis-e10s" flavors
         # explicitly target "'windows10-64/" to avoid duplicate jobs on -qr platforms
-        - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'windows10-64/ | 'macosx1014-64"
+        - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'windows10-64/ | 'macosx"
         # Linux is being named "linux1804" and may change over time, so use a more flexible search
         - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'linux '64/"
         - "'xpcshell-e10s 'linux '64/"
