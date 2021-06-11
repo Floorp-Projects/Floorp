@@ -18,8 +18,8 @@ flat varying vec2 v_tile_repeat;
 #ifdef WR_VERTEX_SHADER
 void write_gradient_vertex(
     VertexInfo vi,
-    RectWithSize local_rect,
-    RectWithSize segment_rect,
+    RectWithEndpoint local_rect,
+    RectWithEndpoint segment_rect,
     ivec4 prim_user_data,
     int brush_flags,
     vec4 texel_rect,
@@ -27,14 +27,14 @@ void write_gradient_vertex(
     vec2 stretch_size
 ) {
     if ((brush_flags & BRUSH_FLAG_SEGMENT_RELATIVE) != 0) {
-        v_pos = (vi.local_pos - segment_rect.p0) / segment_rect.size;
+        v_pos = (vi.local_pos - segment_rect.p0) / rect_size(segment_rect);
         v_pos = v_pos * (texel_rect.zw - texel_rect.xy) + texel_rect.xy;
-        v_pos = v_pos * local_rect.size;
+        v_pos = v_pos * rect_size(local_rect);
     } else {
         v_pos = vi.local_pos - local_rect.p0;
     }
 
-    vec2 tile_repeat = local_rect.size / stretch_size;
+    vec2 tile_repeat = rect_size(local_rect) / stretch_size;
     v_repeated_size = stretch_size;
 
     // Normalize UV to 0..1 scale.

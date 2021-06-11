@@ -59,14 +59,14 @@ fn render_blob(
     // Allocate storage for the result. Right now the resource cache expects the
     // tiles to have have no stride or offset.
     let bpp = 4;
-    let mut texels = Vec::with_capacity((descriptor.rect.size.area() * bpp) as usize);
+    let mut texels = Vec::with_capacity((descriptor.rect.area() * bpp) as usize);
 
     // Generate a per-tile pattern to see it in the demo. For a real use case it would not
     // make sense for the rendered content to depend on its tile.
     let tile_checker = (tile.x % 2 == 0) != (tile.y % 2 == 0);
 
-    let [w, h] = descriptor.rect.size.to_array();
-    let offset = descriptor.rect.origin;
+    let [w, h] = descriptor.rect.size().to_array();
+    let offset = descriptor.rect.min;
 
     for y in 0..h {
         for x in 0..w {

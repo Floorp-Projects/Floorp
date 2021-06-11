@@ -30,8 +30,8 @@ flat varying float v_opacity;
 void brush_vs(
     VertexInfo vi,
     int prim_address,
-    RectWithSize local_rect,
-    RectWithSize segment_rect,
+    RectWithEndpoint local_rect,
+    RectWithEndpoint segment_rect,
     ivec4 prim_user_data,
     int specific_resource_address,
     mat4 transform,
@@ -44,7 +44,7 @@ void brush_vs(
     vec2 uv1 = res.uv_rect.p1;
 
     vec2 texture_size = vec2(TEX_SIZE(sColor0).xy);
-    vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
+    vec2 f = (vi.local_pos - local_rect.p0) / rect_size(local_rect);
     f = get_image_quad_uv(prim_user_data.x, f);
     vec2 uv = mix(uv0, uv1, f);
     float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;

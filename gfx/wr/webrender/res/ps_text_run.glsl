@@ -23,15 +23,15 @@ varying vec4 v_uv_clip;
 #define GLYPHS_PER_GPU_BLOCK        2U
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
-RectWithSize transform_rect(RectWithSize rect, mat2 transform) {
-    vec2 center = transform * (rect.p0 + rect.size * 0.5);
-    vec2 radius = mat2(abs(transform[0]), abs(transform[1])) * (rect.size * 0.5);
-    return RectWithSize(center - radius, radius * 2.0);
+RectWithEndpoint transform_rect(RectWithEndpoint rect, mat2 transform) {
+    vec2 size = rect_size(rect);
+    vec2 center = transform * (rect.p0 + size * 0.5);
+    vec2 radius = mat2(abs(transform[0]), abs(transform[1])) * (size * 0.5);
+    return RectWithEndpoint(center - radius, center + radius);
 }
 
-bool rect_inside_rect(RectWithSize little, RectWithSize big) {
-    return all(lessThanEqual(vec4(big.p0, little.p0 + little.size),
-                             vec4(little.p0, big.p0 + big.size)));
+bool rect_inside_rect(RectWithEndpoint little, RectWithEndpoint big) {
+    return all(lessThanEqual(vec4(big.p0, little.p1), vec4(little.p0, big.p1)));
 }
 #endif //WR_FEATURE_GLYPH_TRANSFORM
 
@@ -110,7 +110,7 @@ void main() {
     // Note that the reference frame relative offset is stored in the prim local
     // rect size during batching, instead of the actual size of the primitive.
     TextRun text = fetch_text_run(ph.specific_prim_address);
-    vec2 text_offset = ph.local_rect.size;
+    vec2 text_offset = ph.local_rect.p1;
 
     if (color_mode == COLOR_MODE_FROM_PASS) {
         color_mode = uMode;
@@ -151,21 +151,24 @@ void main() {
     // into account the translation from the transform for snapping purposes.
     vec2 raster_text_offset = floor(glyph_transform * text_offset + glyph_translation + 0.5) - glyph_translation;
 
+    vec2 glyph_origin = res.offset + raster_glyph_offset + raster_text_offset;
     // Compute the glyph rect in glyph space.
-    RectWithSize glyph_rect = RectWithSize(res.offset + raster_glyph_offset + raster_text_offset,
-                                           res.uv_rect.zw - res.uv_rect.xy);
+    RectWithEndpoint glyph_rect = RectWithEndpoint(
+        glyph_origin,
+        glyph_origin + res.uv_rect.zw - res.uv_rect.xy
+    );
 
     // The glyph rect is in glyph space, so transform it back to local space.
-    RectWithSize local_rect = transform_rect(glyph_rect, glyph_transform_inv);
+    RectWithEndpoint local_rect = transform_rect(glyph_rect, glyph_transform_inv);
 
     // Select the corner of the glyph's local space rect that we are processing.
-    vec2 local_pos = local_rect.p0 + local_rect.size * aPosition.xy;
+    vec2 local_pos = mix(local_rect.p0, local_rect.p1, aPosition.xy);
 
     // If the glyph's local rect would fit inside the local clip rect, then select a corner from
     // the device space glyph rect to reduce overdraw of clipped pixels in the fragment shader.
     // Otherwise, fall back to clamping the glyph's local rect to the local clip rect.
     if (rect_inside_rect(local_rect, ph.local_clip_rect)) {
-        local_pos = glyph_transform_inv * (glyph_rect.p0 + glyph_rect.size * aPosition.xy);
+        local_pos = glyph_transform_inv * mix(glyph_rect.p0, glyph_rect.p1, aPosition.xy);
     }
 #else
     float raster_scale = float(ph.user_data.x) / 65535.0;
@@ -197,11 +200,14 @@ void main() {
     // The transform may be animated, so we don't want to do any snapping here for the
     // text offset to avoid glyphs wiggling. The text offset should have been snapped
     // already for axis aligned transforms excluding any animations during frame building.
-    RectWithSize glyph_rect = RectWithSize(glyph_scale_inv * (res.offset + raster_glyph_offset) + text_offset,
-                                           glyph_scale_inv * (res.uv_rect.zw - res.uv_rect.xy));
+    vec2 glyph_origin = glyph_scale_inv * (res.offset + raster_glyph_offset) + text_offset;
+    RectWithEndpoint glyph_rect = RectWithEndpoint(
+        glyph_origin,
+        glyph_origin + glyph_scale_inv * (res.uv_rect.zw - res.uv_rect.xy)
+    );
 
     // Select the corner of the glyph rect that we are processing.
-    vec2 local_pos = glyph_rect.p0 + glyph_rect.size * aPosition.xy;
+    vec2 local_pos = mix(glyph_rect.p0, glyph_rect.p1, aPosition.xy);
 #endif
 
     VertexInfo vi = write_vertex(
@@ -213,7 +219,7 @@ void main() {
     );
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
-    vec2 f = (glyph_transform * vi.local_pos - glyph_rect.p0) / glyph_rect.size;
+    vec2 f = (glyph_transform * vi.local_pos - glyph_rect.p0) / rect_size(glyph_rect);
     #ifdef SWGL_CLIP_DIST
         gl_ClipDistance[0] = f.x;
         gl_ClipDistance[1] = f.y;
@@ -223,7 +229,7 @@ void main() {
         v_uv_clip = vec4(f, 1.0 - f);
     #endif
 #else
-    vec2 f = (vi.local_pos - glyph_rect.p0) / glyph_rect.size;
+    vec2 f = (vi.local_pos - glyph_rect.p0) / rect_size(glyph_rect);
 #endif
 
     write_clip(vi.world_pos, clip_area, task);
