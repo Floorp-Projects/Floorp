@@ -1496,6 +1496,7 @@ pub extern "C" fn wr_window_new(
     panic_on_gl_error: bool,
     picture_tile_width: i32,
     picture_tile_height: i32,
+    reject_software_rasterizer: bool,
 ) -> bool {
     assert!(unsafe { is_in_render_thread() });
 
@@ -1647,6 +1648,7 @@ pub extern "C" fn wr_window_new(
         panic_on_gl_error,
         picture_tile_size,
         texture_cache_config,
+        reject_software_rasterizer,
         ..Default::default()
     };
 
