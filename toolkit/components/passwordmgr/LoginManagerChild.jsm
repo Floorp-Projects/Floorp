@@ -1158,10 +1158,11 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         formlessModifiedPasswordFields: new WeakFieldSet(),
 
         /**
-         * Caches the results of the username heuristic
+         * Caches the results of the username heuristics
          */
         cachedIsInferredUsernameField: new WeakMap(),
         cachedIsInferredEmailField: new WeakMap(),
+        cachedIsInferredLoginForm: new WeakMap(),
       };
       this._loginFormStateByDocument.set(document, loginFormState);
     }
@@ -1582,7 +1583,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
           usernameField = element;
         }
 
-        if (this.isProbablyAnUsernameField(element)) {
+        if (this.isProbablyAUsernameField(element)) {
           // An username field is found, we are done.
           usernameField = element;
           break;
@@ -2887,6 +2888,65 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   }
 
   /**
+   * Returns the username field of the passed form if the form is a
+   * username-only form.
+   * A form is considered a username-only form only if it meets all the
+   * following conditions:
+   * 1. Does not have any password field,
+   * 2. Only contains one input field whose type is username compatible.
+   * 3. The username compatible input field looks like a username field
+   *    or the form itself looks like a sign-in or sign-up form.
+   *
+   * @param {Element} formElement
+   *                  the form to check.
+   * @returns {Element} The username field or null (if the form is not a
+   *                    username-only form).
+   */
+  getUsernameFieldFromUsernameOnlyForm(formElement) {
+    if (ChromeUtils.getClassName(formElement) !== "HTMLFormElement") {
+      return null;
+    }
+
+    let candidate = null;
+    for (let element of formElement.elements) {
+      // Only care input fields in the form.
+      if (ChromeUtils.getClassName(element) !== "HTMLInputElement") {
+        continue;
+      }
+
+      // We are looking for a username-only form, so if there is a password
+      // field in the form, this is NOT a username-only form.
+      if (element.hasBeenTypePassword) {
+        return null;
+      }
+
+      // Ignore input fields whose type are not username compatiable, ex, hidden.
+      if (!LoginHelper.isUsernameFieldType(element)) {
+        continue;
+      }
+
+      // If there are more than two input fields whose type is username
+      // compatiable, this is NOT a username-only form.
+      if (candidate) {
+        return null;
+      }
+      candidate = element;
+    }
+
+    // Check whether the input field looks like a username field or the
+    // form looks like a sign-in or sign-up form.
+    if (
+      candidate &&
+      (this.isProbablyAUsernameField(candidate) ||
+        this.isProbablyALoginForm(formElement))
+    ) {
+      return candidate;
+    }
+
+    return null;
+  }
+
+  /**
    * Returns true if the input field is considered a username field by
    * 'LoginHelper.isInferredUsernameField'. The main purpose of this method
    * is to cache the result because _getFormFields has many call sites and we
@@ -2895,7 +2955,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    * @param {Element} element the field to check.
    * @returns {boolean} True if the element is likely a username field
    */
-  isProbablyAnUsernameField(inputElement) {
+  isProbablyAUsernameField(inputElement) {
     let docState = this.stateForDocument(inputElement.ownerDocument);
     let result = docState.cachedIsInferredUsernameField.get(inputElement);
     if (result === undefined) {
@@ -2919,6 +2979,24 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     if (result === undefined) {
       result = LoginHelper.isInferredEmailField(inputElement);
       docState.cachedIsInferredEmailField.set(inputElement, result);
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns true if the form is considered a login form by
+   * 'LoginHelper.isInferredLoginForm'.
+   *
+   * @param {Element} element the form to check.
+   * @returns {boolean} True if the element is likely a login form
+   */
+  isProbablyALoginForm(formElement) {
+    let docState = this.stateForDocument(formElement.ownerDocument);
+    let result = docState.cachedIsInferredLoginForm.get(formElement);
+    if (result === undefined) {
+      result = LoginHelper.isInferredLoginForm(formElement);
+      docState.cachedIsInferredLoginForm.set(formElement, result);
     }
 
     return result;
