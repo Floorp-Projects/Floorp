@@ -3470,8 +3470,7 @@ nsresult Selection::SelectionLanguageChange(bool aLangRTL) {
     return NS_ERROR_FAILURE;
   }
 
-  int32_t frameStart, frameEnd;
-  focusFrame->GetOffsets(frameStart, frameEnd);
+  auto [frameStart, frameEnd] = focusFrame->GetOffsets();
   RefPtr<nsPresContext> context = GetPresContext();
   nsBidiLevel levelBefore, levelAfter;
   if (!context) {
