@@ -17,7 +17,7 @@ treechildren::-moz-tree-image(title) {
 
 treechildren::-moz-tree-image(title, container),
 treechildren::-moz-tree-image(title, open) {
-  list-style-image: url("chrome://browser/skin/places/folder.svg");
+  list-style-image: url("chrome://global/skin/icons/folder.svg");
 }
 
 treechildren::-moz-tree-image(title, separator) {
@@ -59,7 +59,7 @@ treechildren::-moz-tree-image(title, query, dayContainer) {
 }
 
 treechildren::-moz-tree-image(title, query, hostContainer) {
-  list-style-image: url("chrome://browser/skin/places/folder.svg");
+  list-style-image: url("chrome://global/skin/icons/folder.svg");
 }
 
 treechildren::-moz-tree-image(query, OrganizerQuery_history____v) {
@@ -69,7 +69,7 @@ treechildren::-moz-tree-image(query, OrganizerQuery_history____v) {
 /* We want some queries to look like ordinary folders. This must come
    after the (title, query) selector, or it would get overridden. */
 treechildren::-moz-tree-image(title, query, folder) {
-  list-style-image: url("chrome://browser/skin/places/folder.svg");
+  list-style-image: url("chrome://global/skin/icons/folder.svg");
 }
 
 treechildren::-moz-tree-cell-text(title, separator) {
