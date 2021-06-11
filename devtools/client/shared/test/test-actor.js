@@ -126,12 +126,6 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("json"),
       },
     },
-    scrollIntoView: {
-      request: {
-        args: Arg(0, "string"),
-      },
-      response: {},
-    },
     hasPseudoClassLock: {
       request: {
         selector: Arg(0, "string"),
@@ -410,15 +404,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
     }
 
     return regions;
-  },
-
-  /**
-   * Scroll an element into view.
-   * @param {String} selector The selector for the node to scroll into view.
-   */
-  scrollIntoView: function(selector) {
-    const node = this._querySelector(selector);
-    node.scrollIntoView();
   },
 
   /**

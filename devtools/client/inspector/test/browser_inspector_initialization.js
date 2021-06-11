@@ -47,7 +47,7 @@ async function testToolboxInitialization(testActor, tab) {
   await testMarkupView("p", inspector);
   await testBreadcrumbs("p", inspector);
 
-  await testActor.scrollIntoView("span");
+  await scrollContentPageNodeIntoView(gBrowser.selectedBrowser, "span");
 
   await selectNode("span", inspector);
   await testMarkupView("span", inspector);
