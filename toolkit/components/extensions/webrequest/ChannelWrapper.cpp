@@ -804,6 +804,7 @@ MozContentPolicyType GetContentPolicyType(ExtContentPolicyType aType) {
     case ExtContentPolicy::TYPE_DTD:
       return MozContentPolicyType::Xml_dtd;
     case ExtContentPolicy::TYPE_FONT:
+    case ExtContentPolicy::TYPE_UA_FONT:
       return MozContentPolicyType::Font;
     case ExtContentPolicy::TYPE_MEDIA:
       return MozContentPolicyType::Media;

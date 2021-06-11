@@ -529,7 +529,8 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
       break;
     }
 
-    case ExtContentPolicy::TYPE_FONT: {
+    case ExtContentPolicy::TYPE_FONT:
+    case ExtContentPolicy::TYPE_UA_FONT: {
       mimeTypeGuess.Truncate();
       break;
     }
