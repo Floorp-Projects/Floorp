@@ -109,7 +109,7 @@ use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId, NativeTi
 use crate::composite::{ExternalSurfaceDescriptor, ExternalSurfaceDependency, CompositeTileDescriptor, CompositeTile};
 use crate::composite::{CompositorTransformIndex};
 use crate::debug_colors;
-use euclid::{vec2, vec3, Point2D, Scale, Size2D, Vector2D, Rect, Box2D, Transform3D, SideOffsets2D};
+use euclid::{vec2, vec3, Point2D, Scale, Vector2D, Box2D, Transform3D, SideOffsets2D};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
 use crate::intern::ItemUid;
@@ -268,11 +268,7 @@ pub struct TileCoordinate;
 
 // Geometry types for tile coordinates.
 pub type TileOffset = Point2D<i32, TileCoordinate>;
-// TileSize type is also used in used in lib.rs and cbindgen picks the wrong one when
-// generating headers.
-/// cbindgen:ignore
-pub type TileSize = Size2D<i32, TileCoordinate>;
-pub type TileRect = Rect<i32, TileCoordinate>;
+pub type TileRect = Box2D<i32, TileCoordinate>;
 
 /// The maximum number of compositor surfaces that are allowed per picture cache. This
 /// is an arbitrary number that should be enough for common cases, but low enough to
@@ -2192,10 +2188,10 @@ impl SubSlice {
     /// Resize the tile grid to match a new tile bounds
     fn resize(&mut self, new_tile_rect: TileRect) -> FastHashMap<TileOffset, Box<Tile>> {
         let mut old_tiles = mem::replace(&mut self.tiles, FastHashMap::default());
-        self.tiles.reserve(new_tile_rect.size.area() as usize);
+        self.tiles.reserve(new_tile_rect.area() as usize);
 
-        for y in new_tile_rect.origin.y .. new_tile_rect.origin.y + new_tile_rect.size.height {
-            for x in new_tile_rect.origin.x .. new_tile_rect.origin.x + new_tile_rect.size.width {
+        for y in new_tile_rect.min.y .. new_tile_rect.max.y {
+            for x in new_tile_rect.min.x .. new_tile_rect.max.x {
                 let key = TileOffset::new(x, y);
                 let tile = old_tiles
                     .remove(&key)
@@ -2364,7 +2360,7 @@ impl TileCacheInstance {
 
     /// Return the total number of tiles allocated by this tile cache
     pub fn tile_count(&self) -> usize {
-        self.tile_rect.size.area() as usize * self.sub_slices.len()
+        self.tile_rect.area() as usize * self.sub_slices.len()
     }
 
     /// Reset this tile cache with the updated parameters from a new scene
@@ -2692,12 +2688,10 @@ impl TileCacheInstance {
         let y0 = (p0.y / self.tile_size.height).floor() as i32;
         let y1 = (p1.y / self.tile_size.height).ceil() as i32;
 
-        let x_tiles = x1 - x0;
-        let y_tiles = y1 - y0;
-        let new_tile_rect = TileRect::new(
-            TileOffset::new(x0, y0),
-            TileSize::new(x_tiles, y_tiles),
-        );
+        let new_tile_rect = TileRect {
+            min: TileOffset::new(x0, y0),
+            max: TileOffset::new(x1, y1),
+        };
 
         // Determine whether the current bounds of the tile grid will exceed the
         // bounds of the DC virtual surface, taking into account the current
