@@ -57,7 +57,7 @@ PER_INSTANCE in int aFilterGenericInt;
 PER_INSTANCE in ivec2 aFilterExtraDataAddress;
 
 struct FilterTask {
-    RectWithSize task_rect;
+    RectWithEndpoint task_rect;
     vec3 user_data;
 };
 
@@ -72,26 +72,26 @@ FilterTask fetch_filter_task(int address) {
     return task;
 }
 
-vec4 compute_uv_rect(RectWithSize task_rect, vec2 texture_size) {
+vec4 compute_uv_rect(RectWithEndpoint task_rect, vec2 texture_size) {
     vec4 uvRect = vec4(task_rect.p0 + vec2(0.5),
-                       task_rect.p0 + task_rect.size - vec2(0.5));
+                       task_rect.p1 - vec2(0.5));
     uvRect /= texture_size.xyxy;
     return uvRect;
 }
 
-vec2 compute_uv(RectWithSize task_rect, vec2 texture_size) {
+vec2 compute_uv(RectWithEndpoint task_rect, vec2 texture_size) {
     vec2 uv0 = task_rect.p0 / texture_size;
-    vec2 uv1 = floor(task_rect.p0 + task_rect.size) / texture_size;
+    vec2 uv1 = floor(task_rect.p1) / texture_size;
     return mix(uv0, uv1, aPosition.xy);
 }
 
 void main(void) {
     FilterTask filter_task = fetch_filter_task(aFilterRenderTaskAddress);
-    RectWithSize target_rect = filter_task.task_rect;
+    RectWithEndpoint target_rect = filter_task.task_rect;
 
-    vec2 pos = target_rect.p0 + target_rect.size * aPosition.xy;
+    vec2 pos = mix(target_rect.p0, target_rect.p1, aPosition.xy);
 
-    RectWithSize input_1_task;
+    RectWithEndpoint input_1_task;
     if (aFilterInputCount > 0) {
         vec2 texture_size = vec2(TEX_SIZE(sColor0).xy);
         input_1_task = fetch_render_task_rect(aFilterInput1TaskAddress);
@@ -99,7 +99,7 @@ void main(void) {
         vInput1Uv = compute_uv(input_1_task, texture_size);
     }
 
-    RectWithSize input_2_task;
+    RectWithEndpoint input_2_task;
     if (aFilterInputCount > 1) {
         vec2 texture_size = vec2(TEX_SIZE(sColor1).xy);
         input_2_task = fetch_render_task_rect(aFilterInput2TaskAddress);
@@ -144,8 +144,8 @@ void main(void) {
             vec2 texture_size = vec2(TEX_SIZE(sColor0).xy);
             vFilterData0 = vec4(-filter_task.user_data.xy / texture_size, vec2(0.0));
 
-            RectWithSize task_rect = input_1_task;
-            vec4 clipRect = vec4(task_rect.p0, task_rect.p0 + task_rect.size);
+            RectWithEndpoint task_rect = input_1_task;
+            vec4 clipRect = vec4(task_rect.p0, task_rect.p1);
             clipRect /= texture_size.xyxy;
             vFilterData1 = clipRect;
             break;

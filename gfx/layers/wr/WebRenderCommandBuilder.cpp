@@ -717,8 +717,8 @@ struct DIGroup {
   void PushImage(wr::DisplayListBuilder& aBuilder,
                  const LayoutDeviceRect& bounds) {
     wr::LayoutRect dest = wr::ToLayoutRect(bounds);
-    GP("PushImage: %f %f %f %f\n", dest.origin.x, dest.origin.y,
-       dest.size.width, dest.size.height);
+    GP("PushImage: %f %f %f %f\n", dest.min.x, dest.min.y, dest.max.x,
+       dest.max.y);
     gfx::SamplingFilter sampleFilter = gfx::SamplingFilter::
         LINEAR;  // nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
     bool backfaceHidden = false;

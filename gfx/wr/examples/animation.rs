@@ -59,7 +59,7 @@ impl App {
         };
 
         let spatial_id = builder.push_reference_frame(
-            bounds.origin,
+            bounds.min,
             SpatialId::root_scroll_node(pipeline_id),
             TransformStyle::Flat,
             PropertyBinding::Binding(property_key, LayoutTransform::identity()),
@@ -82,7 +82,7 @@ impl App {
             spatial_id,
             clip_id: ClipId::root(pipeline_id),
         };
-        let clip_bounds = LayoutRect::new(LayoutPoint::zero(), bounds.size);
+        let clip_bounds = LayoutRect::from_size(bounds.size());
         let complex_clip = ComplexClipRegion {
             rect: clip_bounds,
             radii: BorderRadius::uniform(30.0),
@@ -96,13 +96,13 @@ impl App {
         // Fill it with a white rect
         builder.push_rect(
             &CommonItemProperties::new(
-                LayoutRect::new(LayoutPoint::zero(), bounds.size),
+                LayoutRect::from_size(bounds.size()),
                 SpaceAndClipInfo {
                     spatial_id,
                     clip_id,
                 }
             ),
-            LayoutRect::new(LayoutPoint::zero(), bounds.size),
+            LayoutRect::from_size(bounds.size()),
             color,
         );
 

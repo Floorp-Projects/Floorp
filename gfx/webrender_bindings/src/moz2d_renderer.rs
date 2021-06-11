@@ -587,7 +587,7 @@ impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
             .map(|params| {
                 let command = &self.blob_commands[&params.request.key];
                 let blob = Arc::clone(&command.data);
-                assert!(params.descriptor.rect.size.width > 0 && params.descriptor.rect.size.height > 0);
+                assert!(!params.descriptor.rect.is_empty());
 
                 Job {
                     request: params.request,
@@ -647,15 +647,15 @@ fn autoreleasepool<T, F: FnOnce() -> T>(f: F) -> T {
 fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
     let descriptor = job.descriptor;
     let buf_size =
-        (descriptor.rect.size.width * descriptor.rect.size.height * descriptor.format.bytes_per_pixel()) as usize;
+        (descriptor.rect.area() * descriptor.format.bytes_per_pixel()) as usize;
 
     let mut output = vec![0u8; buf_size];
 
     let dirty_rect = match job.dirty_rect {
-        DirtyRect::Partial(rect) => Some(rect.to_rect()),
+        DirtyRect::Partial(rect) => Some(rect),
         DirtyRect::All => None,
     };
-    assert!(descriptor.rect.size.width > 0 && descriptor.rect.size.height > 0);
+    assert!(!descriptor.rect.is_empty());
 
     let result = autoreleasepool(|| {
         unsafe {
@@ -671,8 +671,8 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
             ) {
                 // We want the dirty rect local to the tile rather than the whole image.
                 // TODO(nical): move that up and avoid recomupting the tile bounds in the callback
-                let dirty_rect = job.dirty_rect.to_subrect_of(&descriptor.rect.to_box2d());
-                let tx: BlobToDeviceTranslation = (-descriptor.rect.origin.to_vector()).into();
+                let dirty_rect = job.dirty_rect.to_subrect_of(&descriptor.rect);
+                let tx: BlobToDeviceTranslation = (-descriptor.rect.min.to_vector()).into();
                 let rasterized_rect = tx.transform_box(&dirty_rect);
 
                 Ok(RasterizedBlobImage {

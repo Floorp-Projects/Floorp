@@ -2518,7 +2518,7 @@ impl TileCacheInstance {
             );
 
             let clip_chain_instance = frame_state.clip_store.build_clip_chain_instance(
-                pic_rect.to_rect().cast_unit(),
+                pic_rect.cast_unit(),
                 &map_local_to_surface,
                 &pic_to_world_mapper,
                 frame_context.spatial_tree,
@@ -3045,7 +3045,7 @@ impl TileCacheInstance {
         );
 
         // Map the primitive local rect into picture space.
-        let prim_rect = match map_local_to_surface.map(&local_prim_rect.to_box2d()) {
+        let prim_rect = match map_local_to_surface.map(&local_prim_rect) {
             Some(rect) => rect,
             None => return true,
         };
@@ -3071,7 +3071,7 @@ impl TileCacheInstance {
             return true;
         }
 
-        let prim_offset = ScaleOffset::from_offset(local_prim_rect.origin.to_vector().cast_unit());
+        let prim_offset = ScaleOffset::from_offset(local_prim_rect.min.to_vector().cast_unit());
 
         let local_prim_to_device = get_relative_scale_offset(
             prim_spatial_node_index,
@@ -3093,8 +3093,8 @@ impl TileCacheInstance {
         );
 
         let surface_size = composite_state.get_surface_rect(
-            &local_prim_rect.to_box2d(),
-            &local_prim_rect.to_box2d(),
+            &local_prim_rect,
+            &local_prim_rect,
             compositor_transform_index,
         ).size();
 
@@ -3222,7 +3222,7 @@ impl TileCacheInstance {
             prohibited_rect: pic_clip_rect,
             is_opaque,
             descriptor: ExternalSurfaceDescriptor {
-                local_surface_size: local_prim_rect.size,
+                local_surface_size: local_prim_rect.size(),
                 local_rect: prim_rect,
                 local_clip_rect: prim_info.prim_clip_box,
                 dependency,
@@ -5200,7 +5200,7 @@ impl PicturePrimitive {
                 );
             }
             Some(ref mut raster_config) => {
-                let pic_rect = self.precise_local_rect.to_box2d().cast_unit();
+                let pic_rect = self.precise_local_rect.cast_unit();
 
                 let mut device_pixel_scale = frame_state
                     .surfaces[raster_config.surface_index.0]
@@ -6023,7 +6023,7 @@ impl PicturePrimitive {
         match transform {
             CoordinateSpaceMapping::Local => {
                 let polygon = Polygon::from_rect(
-                    local_rect * Scale::new(1.0),
+                    local_rect.to_rect() * Scale::new(1.0),
                     plane_split_anchor,
                 );
                 splitter.add(polygon);
@@ -6031,7 +6031,7 @@ impl PicturePrimitive {
             CoordinateSpaceMapping::ScaleOffset(scale_offset) if scale_offset.scale == Vector2D::new(1.0, 1.0) => {
                 let inv_matrix = scale_offset.inverse().to_transform().cast();
                 let polygon = Polygon::from_transformed_rect_with_inverse(
-                    local_rect,
+                    local_rect.to_rect(),
                     &matrix,
                     &inv_matrix,
                     plane_split_anchor,
@@ -6043,7 +6043,7 @@ impl PicturePrimitive {
                 let mut clipper = Clipper::new();
                 let results = clipper.clip_transformed(
                     Polygon::from_rect(
-                        local_rect,
+                        local_rect.to_rect(),
                         plane_split_anchor,
                     ),
                     &matrix,
@@ -6319,7 +6319,7 @@ impl PicturePrimitive {
                 let backdrop_to_world_mapper = SpaceMapper::new_with_target(
                     ROOT_SPATIAL_NODE_INDEX,
                     cluster.spatial_node_index,
-                    LayoutRect::max_rect().to_box2d(),
+                    LayoutRect::max_rect(),
                     frame_context.spatial_tree,
                 );
 
@@ -6340,19 +6340,18 @@ impl PicturePrimitive {
                             let prim_to_world_mapper = SpaceMapper::new_with_target(
                                 ROOT_SPATIAL_NODE_INDEX,
                                 spatial_node_index,
-                                LayoutRect::max_rect().to_box2d(),
+                                LayoutRect::max_rect(),
                                 frame_context.spatial_tree,
                             );
 
                             // First map to the screen and get a flattened rect
                             let prim_rect = prim_to_world_mapper
-                                .map(&prim_data.kind.border_rect.to_box2d())
-                                .unwrap_or_else(|| LayoutRect::zero().to_box2d());
+                                .map(&prim_data.kind.border_rect)
+                                .unwrap_or_else(LayoutRect::zero);
                             // Backwards project the flattened rect onto the backdrop
                             let prim_rect = backdrop_to_world_mapper
                                 .unmap(&prim_rect)
-                                .unwrap_or_else(|| LayoutRect::zero().to_box2d())
-                                .to_rect();
+                                .unwrap_or_else(LayoutRect::zero);
 
                             // TODO(aosmond): Is this safe? Updating the primitive size during
                             // frame building is usually problematic since scene building will cache
@@ -6380,7 +6379,7 @@ impl PicturePrimitive {
             // Mark the cluster visible, since it passed the invertible and
             // backface checks.
             cluster.flags.insert(ClusterFlags::IS_VISIBLE);
-            if let Some(cluster_rect) = surface.map_local_to_surface.map(&cluster.bounding_rect.to_box2d()) {
+            if let Some(cluster_rect) = surface.map_local_to_surface.map(&cluster.bounding_rect) {
                 surface.rect = surface.rect.union(&cluster_rect);
             }
         }
@@ -6395,7 +6394,7 @@ impl PicturePrimitive {
                 surface.rect = raster_config.composite_mode.inflate_picture_rect(surface.rect, surface.scale_factors);
             }
 
-            let mut surface_rect = surface.rect.to_rect() * Scale::new(1.0);
+            let mut surface_rect = surface.rect * Scale::new(1.0);
 
             // Pop this surface from the stack
             let surface_index = state.pop_surface();
@@ -6426,7 +6425,7 @@ impl PicturePrimitive {
             );
             if let Some(parent_surface_rect) = parent_surface
                 .map_local_to_surface
-                .map(&surface_rect.to_box2d())
+                .map(&surface_rect)
             {
                 parent_surface.rect = parent_surface.rect.union(&parent_surface_rect);
             }
@@ -6479,8 +6478,8 @@ impl PicturePrimitive {
                         request.push(shadow.color.premultiplied());
                         request.push(PremultipliedColorF::WHITE);
                         request.push([
-                            self.precise_local_rect.size.width,
-                            self.precise_local_rect.size.height,
+                            self.precise_local_rect.width(),
+                            self.precise_local_rect.height(),
                             0.0,
                             0.0,
                         ]);
