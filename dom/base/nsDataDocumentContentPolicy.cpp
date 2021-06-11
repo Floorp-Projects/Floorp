@@ -84,6 +84,7 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
         case ExtContentPolicy::TYPE_IMAGE:
         case ExtContentPolicy::TYPE_IMAGESET:
         case ExtContentPolicy::TYPE_FONT:
+        case ExtContentPolicy::TYPE_UA_FONT:
         // This one is a bit sketchy, but nsObjectLoadingContent takes care of
         // only getting here if it is an image.
         case ExtContentPolicy::TYPE_OBJECT:

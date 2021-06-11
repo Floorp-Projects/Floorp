@@ -75,6 +75,7 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
       return "empty"_ns;
     case nsIContentPolicy::TYPE_FONT:
     case nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD:
+    case nsIContentPolicy::TYPE_UA_FONT:
       return "font"_ns;
     case nsIContentPolicy::TYPE_MEDIA:
       return "empty"_ns;
