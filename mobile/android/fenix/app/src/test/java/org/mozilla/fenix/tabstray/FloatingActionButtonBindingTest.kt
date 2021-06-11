@@ -21,7 +21,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
-import org.mozilla.fenix.utils.Settings
 
 class FloatingActionButtonBindingTest {
 
@@ -29,7 +28,6 @@ class FloatingActionButtonBindingTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
 
-    private val settings: Settings = mockk(relaxed = true)
     private val actionButton: ExtendedFloatingActionButton = mockk(relaxed = true)
     private val browserTrayInteractor: BrowserTrayInteractor = mockk(relaxed = true)
 
@@ -48,9 +46,8 @@ class FloatingActionButtonBindingTest {
     fun `WHEN tab selected page is normal tab THEN shrink and show is called`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor
+            tabsTrayStore, actionButton, browserTrayInteractor
         )
-        every { settings.accessibilityServicesEnabled } returns false
 
         fabBinding.start()
 
@@ -64,9 +61,8 @@ class FloatingActionButtonBindingTest {
     fun `WHEN tab selected page is private tab THEN extend and show is called`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.PrivateTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor
+            tabsTrayStore, actionButton, browserTrayInteractor
         )
-        every { settings.accessibilityServicesEnabled } returns false
 
         fabBinding.start()
 
@@ -80,9 +76,8 @@ class FloatingActionButtonBindingTest {
     fun `WHEN tab selected page is sync tab THEN extend and show is called`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.SyncedTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor
+            tabsTrayStore, actionButton, browserTrayInteractor
         )
-        every { settings.accessibilityServicesEnabled } returns false
 
         fabBinding.start()
 
@@ -93,46 +88,11 @@ class FloatingActionButtonBindingTest {
     }
 
     @Test
-    fun `WHEN accessibility is enabled THEN show is not called`() {
-        var tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
-        var fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor
-        )
-        every { settings.accessibilityServicesEnabled } returns true
-
-        fabBinding.start()
-
-        verify(exactly = 0) { actionButton.show() }
-        verify(exactly = 1) { actionButton.hide() }
-
-        tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.PrivateTabs))
-        fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor
-        )
-
-        fabBinding.start()
-
-        verify(exactly = 0) { actionButton.show() }
-        verify(exactly = 2) { actionButton.hide() }
-
-        tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.SyncedTabs))
-        fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor
-        )
-
-        fabBinding.start()
-
-        verify(exactly = 0) { actionButton.show() }
-        verify(exactly = 3) { actionButton.hide() }
-    }
-
-    @Test
     fun `WHEN selected page is updated THEN button is updated`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor
+            tabsTrayStore, actionButton, browserTrayInteractor
         )
-        every { settings.accessibilityServicesEnabled } returns false
 
         fabBinding.start()
 

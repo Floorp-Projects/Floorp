@@ -21,8 +21,6 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.component_tabstray2.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.*
-import kotlinx.android.synthetic.main.component_tabstray2.view.tab_tray_overflow
-import kotlinx.android.synthetic.main.component_tabstray2.view.tab_wrapper
 import kotlinx.android.synthetic.main.component_tabstray_fab.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.tabs_tray_tab_counter2.*
@@ -35,6 +33,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -44,17 +43,16 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
-import org.mozilla.fenix.tabstray.browser.SelectionHandleBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding.VisibilityModifier
-import org.mozilla.fenix.tabstray.ext.showWithTheme
+import org.mozilla.fenix.tabstray.browser.SelectionHandleBinding
 import org.mozilla.fenix.tabstray.ext.anchorWithAction
+import org.mozilla.fenix.tabstray.ext.make
+import org.mozilla.fenix.tabstray.ext.message
+import org.mozilla.fenix.tabstray.ext.orDefault
+import org.mozilla.fenix.tabstray.ext.showWithTheme
 import org.mozilla.fenix.utils.allowUndo
 import kotlin.math.max
-import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.tabstray.ext.make
-import org.mozilla.fenix.tabstray.ext.orDefault
-import org.mozilla.fenix.tabstray.ext.message
 
 @Suppress("TooManyFunctions", "LargeClass")
 class TabsTrayFragment : AppCompatDialogFragment() {
@@ -68,7 +66,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     private val tabLayoutMediator = ViewBoundFeatureWrapper<TabLayoutMediator>()
     private val tabCounterBinding = ViewBoundFeatureWrapper<TabCounterBinding>()
     private val floatingActionButtonBinding = ViewBoundFeatureWrapper<FloatingActionButtonBinding>()
-    private val newTabButtonBinding = ViewBoundFeatureWrapper<AccessibleNewTabButtonBinding>()
     private val selectionBannerBinding = ViewBoundFeatureWrapper<SelectionBannerBinding>()
     private val selectionHandleBinding = ViewBoundFeatureWrapper<SelectionHandleBinding>()
     private val tabsTrayCtaBinding = ViewBoundFeatureWrapper<TabsTrayInfoBannerBinding>()
@@ -215,19 +212,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         floatingActionButtonBinding.set(
             feature = FloatingActionButtonBinding(
                 store = tabsTrayStore,
-                settings = requireComponents.settings,
                 actionButton = new_tab_button,
-                browserTrayInteractor = browserTrayInteractor
-            ),
-            owner = this,
-            view = view
-        )
-
-        newTabButtonBinding.set(
-            feature = AccessibleNewTabButtonBinding(
-                store = tabsTrayStore,
-                settings = requireComponents.settings,
-                actionButton = tab_tray_new_tab,
                 browserTrayInteractor = browserTrayInteractor
             ),
             owner = this,
