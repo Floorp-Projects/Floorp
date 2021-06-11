@@ -1018,7 +1018,18 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let formLike = LoginFormFactory.createFromForm(form);
     log("_processDOMFormHasPossibleUsernameEvent:", form, formLike);
 
-    // TODO: Trigger form autofill code is implemented in the next patch
+    // If the form contains a passoword field, `getUsernameFieldFromUsernameOnlyForm` returns
+    // null, so we don't trigger autofill for those forms here. In this function,
+    // we only care about username-only forms. For forms contain a password, they'll be handled
+    // in onDOMFormHasPassword.
+    let usernameField = this.getUsernameFieldFromUsernameOnlyForm(form);
+    if (usernameField) {
+      // Autofill the username-only form.
+      log(
+        "_processDOMFormHasPossibleUsernameEvent: A username-only form is found"
+      );
+      this._fetchLoginsFromParentAndFillForm(formLike);
+    }
   }
 
   onDOMInputPasswordAdded(event, window) {
@@ -2463,15 +2474,15 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         }
       }
 
-      // Need a valid password field to do anything.
-      if (passwordField == null) {
-        log("not filling form, no password field found");
+      // Need a valid password or username field to do anything.
+      if (passwordField == null && usernameField == null) {
+        log("not filling form, no password and username field found");
         autofillResult = AUTOFILL_RESULT.NO_PASSWORD_FIELD;
         return;
       }
 
       // If the password field is disabled or read-only, there's nothing to do.
-      if (passwordField.disabled || passwordField.readOnly) {
+      if (passwordField?.disabled || passwordField?.readOnly) {
         log("not filling form, password field disabled or read-only");
         autofillResult = AUTOFILL_RESULT.PASSWORD_DISABLED_READONLY;
         return;
@@ -2489,7 +2500,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
       if (
         !userTriggered &&
-        !passwordField.ownerGlobal.windowGlobalChild.sameOriginWithTop
+        !form.rootElement.ownerGlobal.windowGlobalChild.sameOriginWithTop
       ) {
         log("not filling form; it is in a cross-origin subframe");
         autofillResult = AUTOFILL_RESULT.FORM_IN_CROSSORIGIN_SUBFRAME;
@@ -2530,10 +2541,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       let maxPasswordLen = Number.MAX_VALUE;
 
       // If attribute wasn't set, default is -1.
-      if (usernameField && usernameField.maxLength >= 0) {
+      if (usernameField?.maxLength >= 0) {
         maxUsernameLen = usernameField.maxLength;
       }
-      if (passwordField.maxLength >= 0) {
+      if (passwordField?.maxLength >= 0) {
         maxPasswordLen = passwordField.maxLength;
       }
 
@@ -2554,31 +2565,34 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         return;
       }
 
-      if (!userTriggered && passwordField.type != "password") {
-        // We don't want to autofill (without user interaction) into a field
-        // that's unmasked.
-        log("not autofilling, password field isn't currently type=password");
-        autofillResult = AUTOFILL_RESULT.TYPE_NO_LONGER_PASSWORD;
-        return;
-      }
+      const passwordACFieldName = passwordField?.getAutocompleteInfo()
+        .fieldName;
 
-      const passwordACFieldName = passwordField.getAutocompleteInfo().fieldName;
+      if (passwordField) {
+        if (!userTriggered && passwordField.type != "password") {
+          // We don't want to autofill (without user interaction) into a field
+          // that's unmasked.
+          log("not autofilling, password field isn't currently type=password");
+          autofillResult = AUTOFILL_RESULT.TYPE_NO_LONGER_PASSWORD;
+          return;
+        }
 
-      // If the password field has the autocomplete value of "new-password"
-      // and we're autofilling without user interaction, there's nothing to do.
-      if (!userTriggered && passwordACFieldName == "new-password") {
-        log(
-          "not filling form, password field has the autocomplete new-password value"
-        );
-        autofillResult = AUTOFILL_RESULT.PASSWORD_AUTOCOMPLETE_NEW_PASSWORD;
-        return;
-      }
+        // If the password field has the autocomplete value of "new-password"
+        // and we're autofilling without user interaction, there's nothing to do.
+        if (!userTriggered && passwordACFieldName == "new-password") {
+          log(
+            "not filling form, password field has the autocomplete new-password value"
+          );
+          autofillResult = AUTOFILL_RESULT.PASSWORD_AUTOCOMPLETE_NEW_PASSWORD;
+          return;
+        }
 
-      // Don't clobber an existing password.
-      if (passwordField.value && !clobberPassword) {
-        log("form not filled, the password field was already filled");
-        autofillResult = AUTOFILL_RESULT.EXISTING_PASSWORD;
-        return;
+        // Don't clobber an existing password.
+        if (passwordField.value && !clobberPassword) {
+          log("form not filled, the password field was already filled");
+          autofillResult = AUTOFILL_RESULT.EXISTING_PASSWORD;
+          return;
+        }
       }
 
       // Select a login to use for filling in the form.
@@ -2671,7 +2685,9 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
             ? Cu.getWeakReference(usernameField)
             : null,
           password: selectedLogin.password,
-          passwordField: Cu.getWeakReference(passwordField),
+          passwordField: passwordField
+            ? Cu.getWeakReference(passwordField)
+            : null,
         };
         // Ensure the state is updated before setUserInput is called.
         log(
@@ -2708,15 +2724,17 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         }
       }
 
-      if (passwordField.value != selectedLogin.password) {
-        // Ensure the field gets re-masked in case a generated password was
-        // filled into it previously.
-        this._stopTreatingAsGeneratedPasswordField(passwordField);
+      if (passwordField) {
+        if (passwordField.value != selectedLogin.password) {
+          // Ensure the field gets re-masked in case a generated password was
+          // filled into it previously.
+          this._stopTreatingAsGeneratedPasswordField(passwordField);
 
-        passwordField.setUserInput(selectedLogin.password);
+          passwordField.setUserInput(selectedLogin.password);
+        }
+
+        this._highlightFilledField(passwordField);
       }
-
-      this._highlightFilledField(passwordField);
 
       if (style && style === "generatedPassword") {
         this._filledWithGeneratedPassword(passwordField);
@@ -2833,18 +2851,16 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     // Unpack the weak references.
-    let autoFilledUsernameField = filledLogin.usernameField
-      ? filledLogin.usernameField.get()
-      : null;
-    let autoFilledPasswordField = filledLogin.passwordField.get();
+    let autoFilledUsernameField = filledLogin.usernameField?.get();
+    let autoFilledPasswordField = filledLogin.passwordField?.get();
 
     // Check username and password values match what was filled.
     if (
       !autoFilledUsernameField ||
       autoFilledUsernameField != aUsernameField ||
       autoFilledUsernameField.value != filledLogin.username ||
-      !autoFilledPasswordField ||
-      autoFilledPasswordField.value != filledLogin.password
+      (autoFilledPasswordField &&
+        autoFilledPasswordField.value != filledLogin.password)
     ) {
       return false;
     }

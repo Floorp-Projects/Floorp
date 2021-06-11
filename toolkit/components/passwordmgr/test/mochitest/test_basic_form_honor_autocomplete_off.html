@@ -13,7 +13,7 @@
 Login Manager test: autofilling when autocomplete=off
 
 <script>
-let readyPromise = registerRunTests(5);
+let readyPromise = registerRunTests(6);
 
 addLoginsInParent(
   [window.location.origin, "https://autocomplete2", null, "singleuser", "singlepass", "uname", "pword"]);
@@ -51,6 +51,12 @@ addLoginsInParent(
   <form id="form5" action="https://autocomplete2" onsubmit="return false;">
     <input  type="text"       name="uname">
     <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- username-only form -->
+  <form id="form6" action="https://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname" autocomplete="off" id="username">
     <button type="submit">Submit</button>
   </form>
 
@@ -147,6 +153,16 @@ add_task(async function test_form5() {
   let form = document.getElementById("form5");
   ok(form, "found form under test");
   checkFormValues(form, "singleuser", "singlepass");
+});
+
+add_task(async function test_form6_honor_password_autocomplete_off() {
+  await SimpleTest.promiseFocus(window);
+  // With the pref toggled off, and with autocomplete=off on the username field
+  // in a username-only form, we expect to have autofilled this form
+  let form = document.getElementById("form6");
+  ok(form, "found form under test");
+  let uname = form.querySelector("[name='uname']");
+  is(uname.value, "singleuser", `Checking form6 username is: singleuser`);
 });
 </script>
 </pre>
