@@ -8,10 +8,12 @@ with Files("**"):
     BUG_COMPONENT = ("WebExtensions", "General")
 
 UNIFIED_SOURCES += [
+    "ExtensionAPIBase.cpp",
     "ExtensionBrowser.cpp",
 ]
 
 EXPORTS.mozilla.extensions += [
+    "ExtensionAPIBase.h",
     "ExtensionBrowser.h",
 ]
 
