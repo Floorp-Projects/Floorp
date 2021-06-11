@@ -518,7 +518,11 @@ FontFace* FontFaceSet::GetFontFaceAt(uint32_t aIndex) {
   FlushUserFontSet();
 
   if (aIndex < mRuleFaces.Length()) {
-    return mRuleFaces[aIndex].mFontFace;
+    auto& entry = mRuleFaces[aIndex];
+    if (entry.mOrigin.value() != StyleOrigin::Author) {
+      return nullptr;
+    }
+    return entry.mFontFace;
   }
 
   aIndex -= mRuleFaces.Length();
@@ -530,6 +534,20 @@ FontFace* FontFaceSet::GetFontFaceAt(uint32_t aIndex) {
 }
 
 uint32_t FontFaceSet::Size() {
+  FlushUserFontSet();
+
+  // Web IDL objects can only expose array index properties up to INT32_MAX.
+
+  size_t total = mNonRuleFaces.Length();
+  for (const auto& entry : mRuleFaces) {
+    if (entry.mOrigin.value() == StyleOrigin::Author) {
+      ++total;
+    }
+  }
+  return std::min<size_t>(total, INT32_MAX);
+}
+
+uint32_t FontFaceSet::SizeIncludingNonAuthorOrigins() {
   FlushUserFontSet();
 
   // Web IDL objects can only expose array index properties up to INT32_MAX.
@@ -551,8 +569,13 @@ already_AddRefed<FontFaceSetIterator> FontFaceSet::Values() {
 void FontFaceSet::ForEach(JSContext* aCx, FontFaceSetForEachCallback& aCallback,
                           JS::Handle<JS::Value> aThisArg, ErrorResult& aRv) {
   JS::Rooted<JS::Value> thisArg(aCx, aThisArg);
-  for (size_t i = 0; i < Size(); i++) {
+  for (size_t i = 0; i < SizeIncludingNonAuthorOrigins(); i++) {
     RefPtr<FontFace> face = GetFontFaceAt(i);
+    if (!face) {
+      // The font at index |i| is a non-Author origin font, which we shouldn't
+      // expose per spec.
+      continue;
+    }
     aCallback.Call(thisArg, *face, *face, *this, aRv);
     if (aRv.Failed()) {
       return;
