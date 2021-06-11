@@ -324,10 +324,7 @@ var PlacesUIUtils = {
       aParentWindow = Services.wm.getMostRecentWindow(null);
     }
 
-    if (
-      Services.prefs.getBoolPref("browser.proton.modals.enabled", false) &&
-      aParentWindow.gDialogBox
-    ) {
+    if (aParentWindow.gDialogBox) {
       await aParentWindow.gDialogBox.open(dialogURL, aInfo);
     } else {
       aParentWindow.openDialog(dialogURL, "", features, aInfo);
