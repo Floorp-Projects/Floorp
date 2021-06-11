@@ -13,10 +13,6 @@ const {
   getAdjustedQuads,
   getWindowDimensions,
 } = require("devtools/shared/layout/utils");
-const {
-  isAgentStylesheet,
-  getCSSStyleRules,
-} = require("devtools/shared/inspector/css-logic");
 const InspectorUtils = require("InspectorUtils");
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
@@ -165,14 +161,6 @@ var testSpec = protocol.generateActorSpec({
       request: {
         parentSelector: Arg(0, "string"),
         childNodeIndex: Arg(1, "number"),
-      },
-      response: {
-        value: RetVal("json"),
-      },
-    },
-    getStyleSheetsInfoForNode: {
-      request: {
-        selector: Arg(0, "string"),
       },
       response: {
         value: RetVal("json"),
@@ -471,32 +459,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
     const parentNode = this._querySelector(parentSelector);
     const node = parentNode.childNodes[childNodeIndex];
     return getAdjustedQuads(this.content, node)[0].bounds;
-  },
-
-  /**
-   * Get information about the stylesheets which have CSS rules that apply to a given DOM
-   * element, identified by a selector.
-   * @param {String} selector The CSS selector to get the node (can be an array
-   * of selectors to get elements in an iframe).
-   * @return {Array} A list of stylesheet objects, each having the following properties:
-   * - {String} href.
-   * - {Boolean} isContentSheet.
-   */
-  getStyleSheetsInfoForNode: function(selector) {
-    const node = this._querySelector(selector);
-    const domRules = getCSSStyleRules(node);
-
-    const sheets = [];
-
-    for (let i = 0, n = domRules.length; i < n; i++) {
-      const sheet = domRules[i].parentStyleSheet;
-      sheets.push({
-        href: sheet.href,
-        isContentSheet: !isAgentStylesheet(sheet),
-      });
-    }
-
-    return sheets;
   },
 
   /**
