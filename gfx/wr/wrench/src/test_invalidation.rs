@@ -24,7 +24,7 @@ struct RenderResult {
 
 // Convenience method to build a picture rect
 fn pr(x: f32, y: f32, w: f32, h: f32) -> PictureRect {
-    PictureRect::new(
+    PictureRect::from_origin_and_size(
         PicturePoint::new(x, y),
         PictureSize::new(w, h),
     )

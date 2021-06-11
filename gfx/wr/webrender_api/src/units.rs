@@ -52,10 +52,10 @@ pub type FramebufferIntRect = Box2D<i32, FramebufferPixel>;
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct PicturePixel;
 
-pub type PictureIntRect = Rect<i32, PicturePixel>;
+pub type PictureIntRect = Box2D<i32, PicturePixel>;
 pub type PictureIntPoint = Point2D<i32, PicturePixel>;
 pub type PictureIntSize = Size2D<i32, PicturePixel>;
-pub type PictureRect = Rect<f32, PicturePixel>;
+pub type PictureRect = Box2D<f32, PicturePixel>;
 pub type PicturePoint = Point2D<f32, PicturePixel>;
 pub type PictureSize = Size2D<f32, PicturePixel>;
 pub type PicturePoint3D = Point3D<f32, PicturePixel>;
@@ -326,7 +326,7 @@ impl<U> RectExt for Box2D<f32, U> {
 
 #[inline]
 pub fn layout_rect_as_picture_rect(layout_rect: &LayoutRect) -> PictureRect {
-    layout_rect.cast_unit()
+    layout_rect.to_box2d().cast_unit()
 }
 
 #[inline]
