@@ -1247,7 +1247,7 @@ impl ClipStore {
         is_chased: bool,
     ) -> Option<ClipChainInstance> {
         let local_clip_rect = match self.active_local_clip_rect {
-            Some(rect) => rect,
+            Some(rect) => rect.to_box2d(),
             None => return None,
         };
         profile_scope!("build_clip_chain_instance");
@@ -1255,9 +1255,9 @@ impl ClipStore {
             println!("\tbuilding clip chain instance with local rect {:?}", local_prim_rect);
         }
 
-        let local_bounding_rect = local_prim_rect.intersection(&local_clip_rect)?;
+        let local_bounding_rect = local_prim_rect.to_box2d().intersection(&local_clip_rect)?;
         let mut pic_clip_rect = prim_to_pic_mapper.map(&local_bounding_rect)?;
-        let world_clip_rect = pic_to_world_mapper.map(&pic_clip_rect)?.to_box2d();
+        let world_clip_rect = pic_to_world_mapper.map(&pic_clip_rect)?;
 
         // Now, we've collected all the clip nodes that *potentially* affect this
         // primitive region, and reduced the size of the prim region as much as possible.
@@ -1275,11 +1275,11 @@ impl ClipStore {
             // See how this clip affects the prim region.
             let clip_result = match node_info.conversion {
                 ClipSpaceConversion::Local => {
-                    node.item.kind.get_clip_result(&local_bounding_rect)
+                    node.item.kind.get_clip_result(&local_bounding_rect.to_rect())
                 }
                 ClipSpaceConversion::ScaleOffset(ref scale_offset) => {
                     has_non_local_clips = true;
-                    node.item.kind.get_clip_result(&scale_offset.unmap_rect(&local_bounding_rect))
+                    node.item.kind.get_clip_result(&scale_offset.unmap_rect(&local_bounding_rect).to_rect())
                 }
                 ClipSpaceConversion::Transform(ref transform) => {
                     has_non_local_clips = true;
@@ -1313,7 +1313,7 @@ impl ClipStore {
                     // Create the clip node instance for this clip node
                     if let Some(instance) = node_info.create_instance(
                         node,
-                        &local_bounding_rect,
+                        &local_bounding_rect.to_rect(),
                         gpu_cache,
                         resource_cache,
                         &mut self.mask_tiles,
@@ -1359,15 +1359,15 @@ impl ClipStore {
         // reject checks above, so that we don't eliminate masks accidentally (since
         // we currently only support a local clip rect in the vertex shader).
         if needs_mask {
-            pic_clip_rect = pic_clip_rect.intersection(&self.active_pic_clip_rect)?;
+            pic_clip_rect = pic_clip_rect.intersection(&self.active_pic_clip_rect.to_box2d())?;
         }
 
         // Return a valid clip chain instance
         Some(ClipChainInstance {
             clips_range,
             has_non_local_clips,
-            local_clip_rect,
-            pic_clip_rect,
+            local_clip_rect: local_clip_rect.to_rect(),
+            pic_clip_rect: pic_clip_rect.to_rect(),
             pic_spatial_node_index: prim_to_pic_mapper.ref_spatial_node_index,
             needs_mask,
         })
@@ -1809,10 +1809,10 @@ impl ClipItemKind {
             ClipMode::Clip => {
                 let outer_clip_rect = match project_rect(
                     transform,
-                    &clip_rect,
-                    &world_rect.to_rect(),
+                    &clip_rect.to_box2d(),
+                    &world_rect,
                 ) {
-                    Some(outer_clip_rect) => outer_clip_rect.to_box2d(),
+                    Some(outer_clip_rect) => outer_clip_rect,
                     None => return ClipResult::Partial,
                 };
 
@@ -2138,7 +2138,7 @@ fn add_clip_node_to_current_chain(
                 };
             }
             ClipSpaceConversion::ScaleOffset(ref scale_offset) => {
-                let clip_rect = scale_offset.map_rect(&clip_rect);
+                let clip_rect = scale_offset.map_rect(&clip_rect.to_box2d()).to_rect();
                 *local_clip_rect = match local_clip_rect.intersection(&clip_rect) {
                     Some(rect) => rect,
                     None => return false,
@@ -2166,12 +2166,12 @@ fn add_clip_node_to_current_chain(
                     let mapper = SpaceMapper::new_with_target(
                         pic_spatial_node_index,
                         node.spatial_node_index,
-                        PictureRect::max_rect(),
+                        PictureRect::max_rect().to_box2d(),
                         spatial_tree,
                     );
 
-                    if let Some(pic_clip_rect) = mapper.map(&clip_rect) {
-                        *current_pic_clip_rect = pic_clip_rect
+                    if let Some(pic_clip_rect) = mapper.map(&clip_rect.to_box2d()) {
+                        *current_pic_clip_rect = pic_clip_rect.to_rect()
                             .intersection(current_pic_clip_rect)
                             .unwrap_or(PictureRect::zero());
                     }

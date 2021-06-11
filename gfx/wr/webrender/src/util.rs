@@ -228,7 +228,7 @@ impl ScaleOffset {
         }
     }
 
-    pub fn map_rect<F, T>(&self, rect: &Rect<f32, F>) -> Rect<f32, T> {
+    pub fn map_rect<F, T>(&self, rect: &Box2D<f32, F>) -> Box2D<f32, T> {
         // TODO(gw): The logic below can return an unexpected result if the supplied
         //           rect is invalid (has size < 0). Since Gecko currently supplied
         //           invalid rects in some cases, adding a max(0) here ensures that
@@ -237,15 +237,14 @@ impl ScaleOffset {
         //           of a negative size). In future we could catch / assert / fix
         //           these invalid rects earlier, and assert here instead.
 
-        let w = rect.size.width.max(0.0);
-        let h = rect.size.height.max(0.0);
+        let w = rect.width().max(0.0);
+        let h = rect.height().max(0.0);
 
-        let mut x0 = rect.origin.x * self.scale.x + self.offset.x;
-        let mut y0 = rect.origin.y * self.scale.y + self.offset.y;
+        let mut x0 = rect.min.x * self.scale.x + self.offset.x;
+        let mut y0 = rect.min.y * self.scale.y + self.offset.y;
 
         let mut sx = w * self.scale.x;
         let mut sy = h * self.scale.y;
-
         // Handle negative scale. Previously, branchless float math was used to find the
         // min / max vertices and size. However, that sequence of operations was producind
         // additional floating point accuracy on android emulator builds, causing one test
@@ -261,13 +260,13 @@ impl ScaleOffset {
             sy = -sy;
         }
 
-        Rect::new(
+        Box2D::from_origin_and_size(
             Point2D::new(x0, y0),
             Size2D::new(sx, sy),
         )
     }
 
-    pub fn unmap_rect<F, T>(&self, rect: &Rect<f32, F>) -> Rect<f32, T> {
+    pub fn unmap_rect<F, T>(&self, rect: &Box2D<f32, F>) -> Box2D<f32, T> {
         // TODO(gw): The logic below can return an unexpected result if the supplied
         //           rect is invalid (has size < 0). Since Gecko currently supplied
         //           invalid rects in some cases, adding a max(0) here ensures that
@@ -276,11 +275,11 @@ impl ScaleOffset {
         //           of a negative size). In future we could catch / assert / fix
         //           these invalid rects earlier, and assert here instead.
 
-        let w = rect.size.width.max(0.0);
-        let h = rect.size.height.max(0.0);
+        let w = rect.width().max(0.0);
+        let h = rect.height().max(0.0);
 
-        let mut x0 = (rect.origin.x - self.offset.x) / self.scale.x;
-        let mut y0 = (rect.origin.y - self.offset.y) / self.scale.y;
+        let mut x0 = (rect.min.x - self.offset.x) / self.scale.x;
+        let mut y0 = (rect.min.y - self.offset.y) / self.scale.y;
 
         let mut sx = w / self.scale.x;
         let mut sy = h / self.scale.y;
@@ -300,7 +299,7 @@ impl ScaleOffset {
             sy = -sy;
         }
 
-        Rect::new(
+        Box2D::from_origin_and_size(
             Point2D::new(x0, y0),
             Size2D::new(sx, sy),
         )
@@ -370,7 +369,7 @@ pub trait MatrixHelpers<Src, Dst> {
     /// transformed by this matrix to have scaling exceeding the supplied limit.
     fn exceeds_2d_scale(&self, limit: f64) -> bool;
     fn inverse_project(&self, target: &Point2D<f32, Dst>) -> Option<Point2D<f32, Src>>;
-    fn inverse_rect_footprint(&self, rect: &Rect<f32, Dst>) -> Option<Rect<f32, Src>>;
+    fn inverse_rect_footprint(&self, rect: &Box2D<f32, Dst>) -> Option<Box2D<f32, Src>>;
     fn transform_kind(&self) -> TransformedRectKind;
     fn is_simple_translation(&self) -> bool;
     fn is_simple_2d_translation(&self) -> bool;
@@ -453,9 +452,9 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for Transform3D<f32, Src, Dst> {
         }
     }
 
-    fn inverse_rect_footprint(&self, rect: &Rect<f32, Dst>) -> Option<Rect<f32, Src>> {
-        Some(Rect::from_points(&[
-            self.inverse_project(&rect.origin)?,
+    fn inverse_rect_footprint(&self, rect: &Box2D<f32, Dst>) -> Option<Box2D<f32, Src>> {
+        Some(Box2D::from_points(&[
+            self.inverse_project(&rect.top_left())?,
             self.inverse_project(&rect.top_right())?,
             self.inverse_project(&rect.bottom_left())?,
             self.inverse_project(&rect.bottom_right())?,
@@ -588,6 +587,19 @@ impl<U> RectHelpers<U> for Rect<f32, U> {
     }
 }
 
+impl<U> RectHelpers<U> for Box2D<f32, U> {
+    fn from_floats(x0: f32, y0: f32, x1: f32, y1: f32) -> Self {
+        Box2D {
+            min: Point2D::new(x0, y0),
+            max: Point2D::new(x1, y1),
+        }
+    }
+
+    fn snap(&self) -> Self {
+        self.round()
+    }
+}
+
 pub trait VectorHelpers<U>
 where
     Self: Sized,
@@ -716,14 +728,14 @@ pub mod test {
             }
         }
         // project
-        let rp = project_rect(&m, &r, &Rect::new(Point2D::zero(), Size2D::new(1000.0, 1000.0))).unwrap();
+        let rp = project_rect(&m, &r.to_box2d(), &Box2D::from_size(Size2D::new(1000.0, 1000.0))).unwrap();
         println!("Projected {:?}", rp);
         // one of the points ends up in the negative hemisphere
-        assert_eq!(m.inverse_project(&rp.origin), None);
+        assert_eq!(m.inverse_project(&rp.min), None);
         // inverse
         if let Some(ri) = m.inverse_rect_footprint(&rp) {
             // inverse footprint should be larger, since it doesn't know the original Z
-            assert!(ri.contains_rect(&r), "Inverse {:?}", ri);
+            assert!(ri.contains_box(&r.to_box2d()), "Inverse {:?}", ri);
         }
     }
 
@@ -738,28 +750,28 @@ pub mod test {
         let xref = LayoutTransform::scale(1.0, -1.0, 1.0)
                         .pre_translate(LayoutVector3D::new(124.0, 38.0, 0.0));
         let so = ScaleOffset::from_transform(&xref).unwrap();
-        let local_rect = LayoutRect::new(
-            LayoutPoint::new(50.0, -100.0),
-            LayoutSize::new(200.0, 400.0),
-        );
+        let local_rect = Box2D {
+            min: LayoutPoint::new(50.0, -100.0),
+            max: LayoutPoint::new(250.0, 300.0),
+        };
 
-        let mapped_rect: LayoutRect = so.map_rect(&local_rect);
+        let mapped_rect = so.map_rect::<LayoutPixel, DevicePixel>(&local_rect);
         let xf_rect = project_rect(
             &xref,
             &local_rect,
-            &LayoutRect::max_rect(),
+            &LayoutRect::max_rect().to_box2d(),
         ).unwrap();
 
-        assert!(mapped_rect.origin.x.approx_eq(&xf_rect.origin.x));
-        assert!(mapped_rect.origin.y.approx_eq(&xf_rect.origin.y));
-        assert!(mapped_rect.size.width.approx_eq(&xf_rect.size.width));
-        assert!(mapped_rect.size.height.approx_eq(&xf_rect.size.height));
+        assert!(mapped_rect.min.x.approx_eq(&xf_rect.min.x));
+        assert!(mapped_rect.min.y.approx_eq(&xf_rect.min.y));
+        assert!(mapped_rect.max.x.approx_eq(&xf_rect.max.x));
+        assert!(mapped_rect.max.y.approx_eq(&xf_rect.max.y));
 
-        let unmapped_rect: LayoutRect = so.unmap_rect(&mapped_rect);
-        assert!(unmapped_rect.origin.x.approx_eq(&local_rect.origin.x));
-        assert!(unmapped_rect.origin.y.approx_eq(&local_rect.origin.y));
-        assert!(unmapped_rect.size.width.approx_eq(&local_rect.size.width));
-        assert!(unmapped_rect.size.height.approx_eq(&local_rect.size.height));
+        let unmapped_rect = so.unmap_rect::<DevicePixel, LayoutPixel>(&mapped_rect);
+        assert!(unmapped_rect.min.x.approx_eq(&local_rect.min.x));
+        assert!(unmapped_rect.min.y.approx_eq(&local_rect.min.y));
+        assert!(unmapped_rect.max.x.approx_eq(&local_rect.max.x));
+        assert!(unmapped_rect.max.y.approx_eq(&local_rect.max.y));
     }
 
     #[test]
@@ -1164,13 +1176,13 @@ pub type LayoutToWorldFastTransform = FastTransform<LayoutPixel, WorldPixel>;
 
 pub fn project_rect<F, T>(
     transform: &Transform3D<f32, F, T>,
-    rect: &Rect<f32, F>,
-    bounds: &Rect<f32, T>,
-) -> Option<Rect<f32, T>>
+    rect: &Box2D<f32, F>,
+    bounds: &Box2D<f32, T>,
+) -> Option<Box2D<f32, T>>
  where F: fmt::Debug
 {
     let homogens = [
-        transform.transform_point2d_homogeneous(rect.origin),
+        transform.transform_point2d_homogeneous(rect.top_left()),
         transform.transform_point2d_homogeneous(rect.top_right()),
         transform.transform_point2d_homogeneous(rect.bottom_left()),
         transform.transform_point2d_homogeneous(rect.bottom_right()),
@@ -1180,11 +1192,11 @@ pub fn project_rect<F, T>(
     // Otherwise, it will be clamped to the screen bounds anyway.
     if homogens.iter().any(|h| h.w <= 0.0 || h.w.is_nan()) {
         let mut clipper = Clipper::new();
-        let polygon = Polygon::from_rect(*rect, 1);
+        let polygon = Polygon::from_rect(rect.to_rect(), 1);
 
         let planes = match Clipper::<_, _, usize>::frustum_planes(
             transform,
-            Some(*bounds),
+            Some(bounds.to_rect()),
         ) {
             Ok(planes) => planes,
             Err(..) => return None,
@@ -1199,7 +1211,7 @@ pub fn project_rect<F, T>(
             return None
         }
 
-        Some(Rect::from_points(results
+        Some(Box2D::from_points(results
             .into_iter()
             // filter out parts behind the view plane
             .flat_map(|poly| &poly.points)
@@ -1211,7 +1223,7 @@ pub fn project_rect<F, T>(
         ))
     } else {
         // we just checked for all the points to be in positive hemisphere, so `unwrap` is valid
-        Some(Rect::from_points(&[
+        Some(Box2D::from_points(&[
             homogens[0].to_point2d().unwrap(),
             homogens[1].to_point2d().unwrap(),
             homogens[2].to_point2d().unwrap(),

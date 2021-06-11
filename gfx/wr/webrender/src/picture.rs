@@ -109,7 +109,7 @@ use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId, NativeTi
 use crate::composite::{ExternalSurfaceDescriptor, ExternalSurfaceDependency, CompositeTileDescriptor, CompositeTile};
 use crate::composite::{CompositorTransformIndex};
 use crate::debug_colors;
-use euclid::{vec2, vec3, Point2D, Scale, Size2D, Vector2D, Rect, Transform3D, SideOffsets2D};
+use euclid::{vec2, vec3, Point2D, Scale, Size2D, Vector2D, Rect, Box2D, Transform3D, SideOffsets2D};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
 use crate::intern::ItemUid;
@@ -1036,9 +1036,8 @@ impl Tile {
         self.invalidation_reason  = None;
 
         self.world_tile_rect = ctx.pic_to_world_mapper
-            .map(&self.local_tile_rect)
-            .expect("bug: map local tile rect")
-            .to_box2d();
+            .map(&self.local_tile_rect.to_box2d())
+            .expect("bug: map local tile rect");
 
         // Check if this tile is currently on screen.
         self.is_visible = self.world_tile_rect.intersects(&ctx.global_screen_world_rect);
@@ -1205,9 +1204,8 @@ impl Tile {
         // The device_valid_rect is referenced during `update_content_validity` so it
         // must be updated here first.
         self.world_valid_rect = ctx.pic_to_world_mapper
-            .map(&self.current_descriptor.local_valid_rect)
-            .expect("bug: map local valid rect")
-            .to_box2d();
+            .map(&self.current_descriptor.local_valid_rect.to_box2d())
+            .expect("bug: map local valid rect");
 
         // The device rect is guaranteed to be aligned on a device pixel - the round
         // is just to deal with float accuracy. However, the valid rect is not
@@ -1690,14 +1688,13 @@ impl DirtyRegion {
         let map_pic_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             self.spatial_node_index,
-            WorldRect::max_rect().to_rect(),
+            WorldRect::max_rect(),
             spatial_tree,
         );
 
         let world_rect = map_pic_to_world
-            .map(&rect_in_pic_space)
-            .expect("bug")
-            .to_box2d();
+            .map(&rect_in_pic_space.to_box2d())
+            .expect("bug");
 
         // Include this in the overall dirty rect
         self.combined = self.combined.union(&world_rect);
@@ -1718,7 +1715,7 @@ impl DirtyRegion {
         let map_pic_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             self.spatial_node_index,
-            WorldRect::max_rect().to_rect(),
+            WorldRect::max_rect(),
             spatial_tree,
         );
 
@@ -1729,9 +1726,8 @@ impl DirtyRegion {
             let rect_in_pic_space = filter.rect_in_pic_space.inflate(inflate_amount, inflate_amount);
 
             let world_rect = map_pic_to_world
-                .map(&rect_in_pic_space)
-                .expect("bug")
-                .to_box2d();
+                .map(&rect_in_pic_space.to_box2d())
+                .expect("bug");
 
             combined = combined.union(&world_rect);
             filters.push(BatchFilter {
@@ -2500,7 +2496,7 @@ impl TileCacheInstance {
         let pic_to_world_mapper = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             self.spatial_node_index,
-            frame_context.global_screen_world_rect.to_rect(),
+            frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
         );
 
@@ -2513,7 +2509,7 @@ impl TileCacheInstance {
 
             let map_local_to_surface = SpaceMapper::new(
                 self.spatial_node_index,
-                pic_rect,
+                pic_rect.to_box2d(),
             );
 
             let mut current_clip_chain_id = self.shared_clip_chain;
@@ -2680,7 +2676,7 @@ impl TileCacheInstance {
         );
 
         let screen_rect_in_pic_space = pic_to_world_mapper
-            .unmap(&frame_context.global_screen_world_rect.to_rect())
+            .unmap(&frame_context.global_screen_world_rect)
             .expect("unable to unmap screen rect");
 
         // Inflate the needed rect a bit, so that we retain tiles that we have drawn
@@ -2691,11 +2687,11 @@ impl TileCacheInstance {
             .inflate(0.0, 1.0 * self.tile_size.height);
 
         let needed_rect_in_pic_space = desired_rect_in_pic_space
-            .intersection(&pic_rect)
-            .unwrap_or_else(PictureRect::zero);
+            .intersection(&pic_rect.to_box2d())
+            .unwrap_or_else(Box2D::zero);
 
-        let p0 = needed_rect_in_pic_space.origin;
-        let p1 = needed_rect_in_pic_space.bottom_right();
+        let p0 = needed_rect_in_pic_space.min;
+        let p1 = needed_rect_in_pic_space.max;
 
         let x0 = (p0.x / self.tile_size.width).floor() as i32;
         let x1 = (p1.x / self.tile_size.width).ceil() as i32;
@@ -2906,7 +2902,7 @@ impl TileCacheInstance {
         let mapper : SpaceMapper<PicturePixel, WorldPixel> = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             prim_spatial_node_index,
-            frame_context.global_screen_world_rect.to_rect(),
+            frame_context.global_screen_world_rect,
             &frame_context.spatial_tree);
         let transform = mapper.get_transform();
         if !transform.is_2d_scale_translation() {
@@ -3057,32 +3053,31 @@ impl TileCacheInstance {
         let map_local_to_surface = SpaceMapper::new_with_target(
             self.spatial_node_index,
             prim_spatial_node_index,
-            self.local_rect,
+            self.local_rect.to_box2d(),
             frame_context.spatial_tree,
         );
 
         // Map the primitive local rect into picture space.
-        let prim_rect = match map_local_to_surface.map(&local_prim_rect) {
+        let prim_rect = match map_local_to_surface.map(&local_prim_rect.to_box2d()) {
             Some(rect) => rect,
             None => return true,
         };
 
         // If the rect is invalid, no need to create dependencies.
-        if prim_rect.size.is_empty() {
+        if prim_rect.is_empty() {
             return true;
         }
 
         let pic_to_world_mapper = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             self.spatial_node_index,
-            frame_context.global_screen_world_rect.to_rect(),
+            frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
         );
 
         let world_clip_rect = pic_to_world_mapper
-            .map(&prim_info.prim_clip_box.to_rect())
-            .expect("bug: unable to map clip to world space")
-            .to_box2d();
+            .map(&prim_info.prim_clip_box)
+            .expect("bug: unable to map clip to world space");
 
         let is_visible = world_clip_rect.intersects(&frame_context.global_screen_world_rect);
         if !is_visible {
@@ -3241,7 +3236,7 @@ impl TileCacheInstance {
             is_opaque,
             descriptor: ExternalSurfaceDescriptor {
                 local_surface_size: local_prim_rect.size,
-                local_rect: prim_rect,
+                local_rect: prim_rect.to_rect(),
                 local_clip_rect: prim_info.prim_clip_box.to_rect(),
                 dependency,
                 image_rendering,
@@ -3292,7 +3287,7 @@ impl TileCacheInstance {
             // of nested blur elements). To account for this, step through the current
             // surface stack, mapping the primitive rect into each surface space, including
             // the inflation factor from each intermediate surface.
-            let mut current_pic_clip_rect = prim_clip_chain.pic_clip_rect;
+            let mut current_pic_clip_rect = prim_clip_chain.pic_clip_rect.to_box2d();
             let mut current_spatial_node_index = frame_context
                 .surfaces[prim_surface_index.0]
                 .surface_spatial_node_index;
@@ -3303,7 +3298,7 @@ impl TileCacheInstance {
                 let map_local_to_surface = SpaceMapper::new_with_target(
                     surface.surface_spatial_node_index,
                     current_spatial_node_index,
-                    surface.rect,
+                    surface.rect.to_box2d(),
                     frame_context.spatial_tree,
                 );
 
@@ -3322,7 +3317,7 @@ impl TileCacheInstance {
                 current_spatial_node_index = surface.surface_spatial_node_index;
             }
 
-            current_pic_clip_rect
+            current_pic_clip_rect.to_rect()
         };
 
         // Get the tile coordinates in the picture space.
@@ -3811,7 +3806,7 @@ impl TileCacheInstance {
         let map_pic_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             self.spatial_node_index,
-            frame_context.global_screen_world_rect.to_rect(),
+            frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
         );
 
@@ -3859,7 +3854,7 @@ impl TileCacheInstance {
         let pic_to_world_mapper = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             self.spatial_node_index,
-            frame_context.global_screen_world_rect.to_rect(),
+            frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
         );
 
@@ -3920,9 +3915,8 @@ impl TileCacheInstance {
 
                     if let Some(local_surface_rect) = local_surface_rect {
                         let world_surface_rect = map_pic_to_world
-                            .map(&local_surface_rect)
-                            .expect("bug: unable to map external surface to world space")
-                            .to_box2d();
+                            .map(&local_surface_rect.to_box2d())
+                            .expect("bug: unable to map external surface to world space");
 
                         frame_state.composite_state.register_occluder(
                             compositor_surface.descriptor.z_id,
@@ -3946,9 +3940,8 @@ impl TileCacheInstance {
 
             if let Some(backdrop_rect) = backdrop_rect {
                 let world_backdrop_rect = map_pic_to_world
-                    .map(&backdrop_rect)
-                    .expect("bug: unable to map backdrop to world space")
-                    .to_box2d();
+                    .map(&backdrop_rect.to_box2d())
+                    .expect("bug: unable to map backdrop to world space");
 
                 // Since we register the entire backdrop rect, use the opaque z-id for the
                 // picture cache slice.
@@ -4155,13 +4148,13 @@ impl SurfaceInfo {
         let map_surface_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             surface_spatial_node_index,
-            world_rect.to_rect(),
+            world_rect,
             spatial_tree,
         );
 
         let pic_bounds = map_surface_to_world
             .unmap(&map_surface_to_world.bounds)
-            .unwrap_or_else(PictureRect::max_rect);
+            .unwrap_or_else(|| PictureRect::max_rect().to_box2d());
 
         let map_local_to_surface = SpaceMapper::new(
             surface_spatial_node_index,
@@ -4786,12 +4779,13 @@ impl PicturePrimitive {
         let map_pic_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             surface_spatial_node_index,
-            frame_context.global_screen_world_rect.to_rect(),
+            frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
         );
 
-        let pic_bounds = map_pic_to_world.unmap(&map_pic_to_world.bounds)
-                                         .unwrap_or_else(PictureRect::max_rect);
+        let pic_bounds = map_pic_to_world
+            .unmap(&map_pic_to_world.bounds)
+            .unwrap_or_else(|| PictureRect::max_rect().to_box2d());
 
         let map_local_to_pic = SpaceMapper::new(
             surface_spatial_node_index,
@@ -4830,9 +4824,8 @@ impl PicturePrimitive {
                 // Get the overall world space rect of the picture cache. Used to clip
                 // the tile rects below for occlusion testing to the relevant area.
                 let world_clip_rect = map_pic_to_world
-                    .map(&tile_cache.local_clip_rect)
+                    .map(&tile_cache.local_clip_rect.to_box2d())
                     .expect("bug: unable to map clip rect")
-                    .to_box2d()
                     .round();
                 let device_clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
 
@@ -4974,11 +4967,10 @@ impl PicturePrimitive {
                             .unwrap_or_else(PictureRect::zero);
 
                         // Update the world/device dirty rect
-                        let world_dirty_rect = map_pic_to_world.map(&tile.local_dirty_rect).expect("bug");
+                        let world_dirty_rect = map_pic_to_world.map(&tile.local_dirty_rect.to_box2d()).expect("bug");
 
                         let device_rect = (tile.world_tile_rect * frame_context.global_device_pixel_scale).round();
                         tile.device_dirty_rect = (world_dirty_rect * frame_context.global_device_pixel_scale)
-                            .to_box2d()
                             .round_out()
                             .intersection(&device_rect)
                             .unwrap_or_else(DeviceRect::zero);
@@ -5068,8 +5060,12 @@ impl PicturePrimitive {
                                 //           changes to render task and picture code.
                                 let content_origin_f = tile.local_tile_rect.origin.cast_unit() * device_pixel_scale;
                                 let content_origin = content_origin_f.round();
-                                debug_assert!((content_origin_f.x - content_origin.x).abs() < 0.01);
-                                debug_assert!((content_origin_f.y - content_origin.y).abs() < 0.01);
+                                // TODO: these asserts used to have a threshold of 0.01 but failed intermittently the
+                                // gfx/layers/apz/test/mochitest/test_group_double_tap_zoom-2.html test on android.
+                                // moving the rectangles in space mapping conversion code to the Box2D representaton
+                                // made the failure happen more often.
+                                debug_assert!((content_origin_f.x - content_origin.x).abs() < 0.15);
+                                debug_assert!((content_origin_f.y - content_origin.y).abs() < 0.15);
 
                                 let surface = descriptor.resolve(
                                     frame_state.resource_cache,
@@ -5207,7 +5203,7 @@ impl PicturePrimitive {
                 // TODO(gw): Much of the SurfaceInfo related code assumes it is in device pixels, rather than
                 //           raster pixels. Fixing that in one go is too invasive for now, but we need to
                 //           start incrementally fixing up the unit types used around here.
-                let surface_raster_rect = map_pic_to_raster.map(&surface_local_rect).expect("bug: unable to map to raster").to_box2d();
+                let surface_raster_rect = map_pic_to_raster.map(&surface_local_rect.to_box2d()).expect("bug: unable to map to raster");
                 let surface_device_rect = surface_raster_rect.cast_unit() * device_pixel_scale;
 
                 frame_state.init_surface_tiled(
@@ -5560,12 +5556,13 @@ impl PicturePrimitive {
                         let map_pic_to_parent = SpaceMapper::new_with_target(
                             parent_raster_spatial_node_index,
                             self.spatial_node_index,
-                            RasterRect::max_rect(),         // TODO(gw): May need a conservative estimate?
+                            RasterRect::max_rect().to_box2d(),         // TODO(gw): May need a conservative estimate?
                             frame_context.spatial_tree,
                         );
                         let pic_in_raster_space = map_pic_to_parent
-                            .map(&pic_rect)
-                            .expect("bug: unable to map mix-blend content into parent");
+                            .map(&pic_rect.to_box2d())
+                            .expect("bug: unable to map mix-blend content into parent")
+                            .to_rect();
 
                         // Apply device pixel ratio for parent surface to get into device
                         // pixels for that surface.
@@ -6336,7 +6333,7 @@ impl PicturePrimitive {
                 let backdrop_to_world_mapper = SpaceMapper::new_with_target(
                     ROOT_SPATIAL_NODE_INDEX,
                     cluster.spatial_node_index,
-                    LayoutRect::max_rect(),
+                    LayoutRect::max_rect().to_box2d(),
                     frame_context.spatial_tree,
                 );
 
@@ -6357,14 +6354,19 @@ impl PicturePrimitive {
                             let prim_to_world_mapper = SpaceMapper::new_with_target(
                                 ROOT_SPATIAL_NODE_INDEX,
                                 spatial_node_index,
-                                LayoutRect::max_rect(),
+                                LayoutRect::max_rect().to_box2d(),
                                 frame_context.spatial_tree,
                             );
 
                             // First map to the screen and get a flattened rect
-                            let prim_rect = prim_to_world_mapper.map(&prim_data.kind.border_rect).unwrap_or_else(LayoutRect::zero);
+                            let prim_rect = prim_to_world_mapper
+                                .map(&prim_data.kind.border_rect.to_box2d())
+                                .unwrap_or_else(|| LayoutRect::zero().to_box2d());
                             // Backwards project the flattened rect onto the backdrop
-                            let prim_rect = backdrop_to_world_mapper.unmap(&prim_rect).unwrap_or_else(LayoutRect::zero);
+                            let prim_rect = backdrop_to_world_mapper
+                                .unmap(&prim_rect)
+                                .unwrap_or_else(|| LayoutRect::zero().to_box2d())
+                                .to_rect();
 
                             // TODO(aosmond): Is this safe? Updating the primitive size during
                             // frame building is usually problematic since scene building will cache
@@ -6392,8 +6394,8 @@ impl PicturePrimitive {
             // Mark the cluster visible, since it passed the invertible and
             // backface checks.
             cluster.flags.insert(ClusterFlags::IS_VISIBLE);
-            if let Some(cluster_rect) = surface.map_local_to_surface.map(&cluster.bounding_rect) {
-                surface.rect = surface.rect.union(&cluster_rect);
+            if let Some(cluster_rect) = surface.map_local_to_surface.map(&cluster.bounding_rect.to_box2d()) {
+                surface.rect = surface.rect.union(&cluster_rect.to_rect());
             }
         }
 
@@ -6438,9 +6440,9 @@ impl PicturePrimitive {
             );
             if let Some(parent_surface_rect) = parent_surface
                 .map_local_to_surface
-                .map(&surface_rect)
+                .map(&surface_rect.to_box2d())
             {
-                parent_surface.rect = parent_surface.rect.union(&parent_surface_rect);
+                parent_surface.rect = parent_surface.rect.union(&parent_surface_rect.to_rect());
             }
         }
     }
@@ -6609,12 +6611,12 @@ fn create_raster_mappers(
     let map_raster_to_world = SpaceMapper::new_with_target(
         ROOT_SPATIAL_NODE_INDEX,
         raster_spatial_node_index,
-        world_rect.to_rect(),
+        world_rect,
         spatial_tree,
     );
 
-    let raster_bounds = map_raster_to_world.unmap(&world_rect.to_rect())
-                                           .unwrap_or_else(RasterRect::max_rect);
+    let raster_bounds = map_raster_to_world.unmap(&world_rect)
+                                           .unwrap_or_else(|| RasterRect::max_rect().to_box2d());
 
     let map_pic_to_raster = SpaceMapper::new_with_target(
         raster_spatial_node_index,
@@ -6959,11 +6961,11 @@ impl TileNode {
                     debug_colors::YELLOW
                 };
 
-                if let Some(local_rect) = local_valid_rect.intersection(&self.rect.to_rect()) {
+                if let Some(local_rect) = local_valid_rect.to_box2d().intersection(&self.rect) {
                     let world_rect = pic_to_world_mapper
                         .map(&local_rect)
                         .unwrap();
-                    let device_rect = (world_rect * global_device_pixel_scale).to_box2d();
+                    let device_rect = world_rect * global_device_pixel_scale;
 
                     let outer_color = color.scale_alpha(0.3);
                     let inner_color = outer_color.scale_alpha(0.5);
@@ -7390,25 +7392,25 @@ pub fn get_raster_rects(
     prim_bounding_rect: WorldRect,
     device_pixel_scale: DevicePixelScale,
 ) -> Option<(DeviceRect, DeviceRect)> {
-    let unclipped_raster_rect = map_to_raster.map(&pic_rect)?;
+    let unclipped_raster_rect = map_to_raster.map(&pic_rect.to_box2d())?;
 
     let unclipped = raster_rect_to_device_pixels(
-        unclipped_raster_rect,
+        unclipped_raster_rect.to_rect(),
         device_pixel_scale,
     );
 
-    let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?.to_box2d();
+    let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?;
     let clipped_world_rect = unclipped_world_rect.intersection(&prim_bounding_rect)?;
 
     // We don't have to be able to do the back-projection from world into raster.
     // Rendering only cares one way, so if that fails, we fall back to the full rect.
-    let clipped_raster_rect = match map_to_world.unmap(&clipped_world_rect.to_rect()) {
+    let clipped_raster_rect = match map_to_world.unmap(&clipped_world_rect) {
         Some(rect) => rect.intersection(&unclipped_raster_rect)?,
         None => return Some((unclipped, unclipped)),
     };
 
     let clipped = raster_rect_to_device_pixels(
-        clipped_raster_rect,
+        clipped_raster_rect.to_rect(),
         device_pixel_scale,
     );
 
