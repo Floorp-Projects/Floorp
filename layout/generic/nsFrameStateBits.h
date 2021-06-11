@@ -606,13 +606,6 @@ FRAME_STATE_BIT(Block, 62, NS_BLOCK_FRAME_INTRINSICS_INFLATED)
 // bit is not set. This bit is set on the first continuation only.
 FRAME_STATE_BIT(Block, 63, NS_BLOCK_HAS_FIRST_LETTER_CHILD)
 
-// == Frame state bits that apply to bullet frames ============================
-
-FRAME_STATE_GROUP(Bullet, nsBulletFrame)
-
-FRAME_STATE_BIT(Bullet, 62, BULLET_FRAME_HAS_FONT_INFLATION)
-FRAME_STATE_BIT(Bullet, 63, BULLET_FRAME_IMAGE_LOADING)
-
 // == Frame state bits that apply to image frames =============================
 
 FRAME_STATE_GROUP(Image, nsImageFrame)
