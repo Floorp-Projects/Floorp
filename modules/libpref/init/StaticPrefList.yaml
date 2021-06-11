@@ -4940,13 +4940,6 @@
   value: false
   mirror: once
 
-#ifdef MOZ_WIDGET_GTK
-- name: gfx.webrender.reject-software-driver
-  type: bool
-  value: true
-  mirror: once
-#endif
-
 - name: gfx.webrender.highlight-painted-layers
   type: RelaxedAtomicBool
   value: false
