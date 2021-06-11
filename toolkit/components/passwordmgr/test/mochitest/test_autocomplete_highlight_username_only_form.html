@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form field autofill highlight</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+let readyPromise = registerRunTests(1);
+
+let origin = window.location.origin;
+addLoginsInParent(
+  [origin, "https://autocomplete", null, "user1", "pass1", "", ""],
+  [origin, "https://autocomplete", null, "user2", "pass2", "", ""]);
+
+</script>
+<body>
+<p id="display"></p>
+<div id="content">
+  <form id="form" action="https://autocomplete" onsubmit="return false;">
+    <input  type="text" id="uname" autocomplete="username">
+    <button type="submit">Submit</button>
+  </form>
+<pre id="test">
+<script>
+let {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+
+add_task(async function setup() {
+  ok(readyPromise, "check promise is available");
+  await readyPromise;
+});
+
+add_task(async function test_username_field_in_username_only_form_highlight_on_autocomplete() {
+  // Test username autocomplete.
+  let username = document.getElementById("uname");
+
+  username.focus();
+
+  let shownPromise = promiseACShown();
+  synthesizeKey("KEY_ArrowDown");
+  await shownPromise;
+  synthesizeKey("KEY_ArrowDown");
+  await synthesizeKey("KEY_Enter");
+
+  await ContentTaskUtils.waitForCondition(() => {
+    return document.defaultView.getComputedStyle(username).getPropertyValue("filter") !== "none";
+  }, "Highlight was successfully applied to the username field on username autocomplete");
+
+  // Clear existing highlight on login fields. We check by pressing the tab key after backspace
+  // (by shifting focus to the next element) because the tab key was known to cause a bug where the
+  // highlight is applied once again. See Bug 1526522.
+  username.focus();
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Tab");
+  is(document.defaultView.getComputedStyle(username).getPropertyValue("filter"), "none",
+     "Highlight was successfully removed on the username field");
+
+  // Clear login fields.
+  username.value = "";
+});
+
+</script>
+</body>
+</html>
