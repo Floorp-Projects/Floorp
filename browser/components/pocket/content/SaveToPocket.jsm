@@ -183,6 +183,7 @@ var SaveToPocket = {
 
   _readerButtonData: {
     id: "pocket-button",
+    telemetryId: "save-to-pocket",
     label: gStrings.formatStringFromName("readerView.savetopocket.label", [
       "Pocket",
     ]),
