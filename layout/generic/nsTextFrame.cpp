@@ -8144,10 +8144,9 @@ nsresult nsTextFrame::CheckVisibility(nsPresContext* aContext,
   return NS_OK;
 }
 
-nsresult nsTextFrame::GetOffsets(int32_t& start, int32_t& end) const {
+void nsTextFrame::GetOffsets(int32_t& start, int32_t& end) const {
   start = GetContentOffset();
   end = GetContentEnd();
-  return NS_OK;
 }
 
 static int32_t FindEndOfPunctuationRun(const nsTextFragment* aFrag,
