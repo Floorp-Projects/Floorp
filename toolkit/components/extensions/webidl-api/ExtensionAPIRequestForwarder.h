@@ -68,7 +68,16 @@ class ExtensionAPIRequestForwarder {
 
   void Run(nsIGlobalObject* aGlobal, JSContext* aCx,
            const dom::Sequence<JS::Value>& aArgs,
+           ExtensionEventListener* aListener, ErrorResult& aRv);
+
+  void Run(nsIGlobalObject* aGlobal, JSContext* aCx,
+           const dom::Sequence<JS::Value>& aArgs,
            JS::MutableHandleValue aRetVal, ErrorResult& aRv);
+
+  void Run(nsIGlobalObject* aGlobal, JSContext* aCx,
+           const dom::Sequence<JS::Value>& aArgs,
+           ExtensionEventListener* aListener, JS::MutableHandleValue aRetVal,
+           ErrorResult& aRv);
 
   void Run(nsIGlobalObject* aGlobal, JSContext* aCx,
            const dom::Sequence<JS::Value>& aArgs,

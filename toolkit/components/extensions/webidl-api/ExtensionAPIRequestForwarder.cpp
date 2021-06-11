@@ -98,6 +98,7 @@ ExtensionAPIRequestForwarder::APIRequestHandler() {
 
 void ExtensionAPIRequestForwarder::Run(nsIGlobalObject* aGlobal, JSContext* aCx,
                                        const dom::Sequence<JS::Value>& aArgs,
+                                       ExtensionEventListener* aListener,
                                        JS::MutableHandleValue aRetVal,
                                        ErrorResult& aRv) {
   MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
@@ -121,6 +122,12 @@ void ExtensionAPIRequestForwarder::Run(nsIGlobalObject* aGlobal, JSContext* aCx,
       }
 
       runnable->Init(aGlobal, aCx, aArgs, domPromise, rv);
+      break;
+
+    case APIRequestType::ADD_LISTENER:
+      [[fallthrough]];
+    case APIRequestType::REMOVE_LISTENER:
+      runnable->Init(aGlobal, aCx, aArgs, aListener, aRv);
       break;
 
     default:
@@ -179,9 +186,25 @@ void ExtensionAPIRequestForwarder::Run(nsIGlobalObject* aGlobal, JSContext* aCx,
 
 void ExtensionAPIRequestForwarder::Run(nsIGlobalObject* aGlobal, JSContext* aCx,
                                        const dom::Sequence<JS::Value>& aArgs,
+                                       JS::MutableHandleValue aRetVal,
+                                       ErrorResult& aRv) {
+  Run(aGlobal, aCx, aArgs, nullptr, aRetVal, aRv);
+}
+
+void ExtensionAPIRequestForwarder::Run(nsIGlobalObject* aGlobal, JSContext* aCx,
+                                       const dom::Sequence<JS::Value>& aArgs,
                                        ErrorResult& aRv) {
   JS::Rooted<JS::Value> ignoredRetval(aCx);
-  Run(aGlobal, aCx, aArgs, &ignoredRetval, aRv);
+  Run(aGlobal, aCx, aArgs, nullptr, &ignoredRetval, aRv);
+}
+
+void ExtensionAPIRequestForwarder::Run(nsIGlobalObject* aGlobal, JSContext* aCx,
+                                       const dom::Sequence<JS::Value>& aArgs,
+                                       ExtensionEventListener* aListener,
+                                       ErrorResult& aRv) {
+  MOZ_ASSERT(aListener);
+  JS::Rooted<JS::Value> ignoredRetval(aCx);
+  Run(aGlobal, aCx, aArgs, aListener, &ignoredRetval, aRv);
 }
 
 void ExtensionAPIRequestForwarder::Run(
