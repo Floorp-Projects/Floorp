@@ -4,7 +4,9 @@
 
 package org.mozilla.fenix.tabstray
 
+import android.content.res.Configuration
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.paging.Config
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_DRAGGING
@@ -15,9 +17,13 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_SETTLIN
 import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.currentCoroutineContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TabSheetBehaviorManagerTest {
@@ -63,7 +69,7 @@ class TabSheetBehaviorManagerTest {
         val navigationInteractor: NavigationInteractor = mockk()
         val callbackCaptor = slot<TraySheetBehaviorCallback>()
 
-        TabSheetBehaviorManager(behavior, true, 2, 2, navigationInteractor)
+        TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_UNDEFINED, 2, 2, navigationInteractor)
 
         verify { behavior.addBottomSheetCallback(capture(callbackCaptor)) }
         assertSame(behavior, callbackCaptor.captured.behavior)
@@ -71,10 +77,22 @@ class TabSheetBehaviorManagerTest {
     }
 
     @Test
+    fun `WHEN TabSheetBehaviorManager is initialized THEN it caches the orientation parameter value`() {
+        val manager0 = TabSheetBehaviorManager(mockk(relaxed = true), Configuration.ORIENTATION_UNDEFINED, 5, 4, mockk())
+        assertEquals(Configuration.ORIENTATION_UNDEFINED, manager0.currentOrientation)
+
+        val manager1 = TabSheetBehaviorManager(mockk(relaxed = true), Configuration.ORIENTATION_PORTRAIT, 5, 4, mockk(relaxed = true))
+        assertEquals(Configuration.ORIENTATION_PORTRAIT, manager1.currentOrientation)
+
+        val manager2 = TabSheetBehaviorManager(mockk(relaxed = true), Configuration.ORIENTATION_LANDSCAPE, 5, 4, mockk())
+        assertEquals(Configuration.ORIENTATION_LANDSCAPE, manager2.currentOrientation)
+    }
+
+    @Test
     fun `GIVEN more tabs opened than the expanding limit and portrait orientation WHEN TabSheetBehaviorManager is initialized THEN the behavior is set as expanded`() {
         val behavior = BottomSheetBehavior<ConstraintLayout>()
 
-        TabSheetBehaviorManager(behavior, false, 5, 4, mockk())
+        TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_PORTRAIT, 5, 4, mockk())
 
         assertEquals(STATE_EXPANDED, behavior.state)
     }
@@ -83,7 +101,7 @@ class TabSheetBehaviorManagerTest {
     fun `GIVEN the number of tabs opened is exactly the expanding limit and portrait orientation WHEN TabSheetBehaviorManager is initialized THEN the behavior is set as expanded`() {
         val behavior = BottomSheetBehavior<ConstraintLayout>()
 
-        TabSheetBehaviorManager(behavior, false, 5, 5, mockk())
+        TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_PORTRAIT, 5, 5, mockk())
 
         assertEquals(STATE_EXPANDED, behavior.state)
     }
@@ -92,7 +110,34 @@ class TabSheetBehaviorManagerTest {
     fun `GIVEN fewer tabs opened than the expanding limit and portrait orientation WHEN TabSheetBehaviorManager is initialized THEN the behavior is set as collapsed`() {
         val behavior = BottomSheetBehavior<ConstraintLayout>()
 
-        TabSheetBehaviorManager(behavior, false, 4, 5, mockk())
+        TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_PORTRAIT, 4, 5, mockk())
+
+        assertEquals(STATE_COLLAPSED, behavior.state)
+    }
+
+    @Test
+    fun `GIVEN more tabs opened than the expanding limit and undefined orientation WHEN TabSheetBehaviorManager is initialized THEN the behavior is set as expanded`() {
+        val behavior = BottomSheetBehavior<ConstraintLayout>()
+
+        TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_UNDEFINED, 5, 4, mockk())
+
+        assertEquals(STATE_EXPANDED, behavior.state)
+    }
+
+    @Test
+    fun `GIVEN the number of tabs opened is exactly the expanding limit and undefined orientation WHEN TabSheetBehaviorManager is initialized THEN the behavior is set as expanded`() {
+        val behavior = BottomSheetBehavior<ConstraintLayout>()
+
+        TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_UNDEFINED, 5, 5, mockk())
+
+        assertEquals(STATE_EXPANDED, behavior.state)
+    }
+
+    @Test
+    fun `GIVEN fewer tabs opened than the expanding limit and undefined orientation WHEN TabSheetBehaviorManager is initialized THEN the behavior is set as collapsed`() {
+        val behavior = BottomSheetBehavior<ConstraintLayout>()
+
+        TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_UNDEFINED, 4, 5, mockk())
 
         assertEquals(STATE_COLLAPSED, behavior.state)
     }
@@ -101,7 +146,7 @@ class TabSheetBehaviorManagerTest {
     fun `GIVEN more tabs opened than the expanding limit and landscape orientation WHEN TabSheetBehaviorManager is initialized THEN the behavior is set as expanded`() {
         val behavior = BottomSheetBehavior<ConstraintLayout>()
 
-        TabSheetBehaviorManager(behavior, true, 5, 4, mockk())
+        TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_LANDSCAPE, 5, 4, mockk())
 
         assertEquals(STATE_EXPANDED, behavior.state)
     }
@@ -110,7 +155,7 @@ class TabSheetBehaviorManagerTest {
     fun `GIVEN the number of tabs opened is exactly the expanding limit and landscape orientation WHEN TabSheetBehaviorManager is initialized THEN the behavior is set as expanded`() {
         val behavior = BottomSheetBehavior<ConstraintLayout>()
 
-        TabSheetBehaviorManager(behavior, true, 5, 5, mockk())
+        TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_LANDSCAPE, 5, 5, mockk())
 
         assertEquals(STATE_EXPANDED, behavior.state)
     }
@@ -119,8 +164,112 @@ class TabSheetBehaviorManagerTest {
     fun `GIVEN fewer tabs opened than the expanding limit and landscape orientation WHEN TabSheetBehaviorManager is initialized THEN the behavior is set as expanded`() {
         val behavior = BottomSheetBehavior<ConstraintLayout>()
 
-        TabSheetBehaviorManager(behavior, true, 4, 5, mockk())
+        TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_LANDSCAPE, 4, 5, mockk())
 
         assertEquals(STATE_EXPANDED, behavior.state)
+    }
+
+    @Test
+    fun `GIVEN more tabs opened than the expanding limit and not landscape orientation WHEN updateBehaviorState is called THEN the behavior is set as expanded`() {
+        val behavior = BottomSheetBehavior<ConstraintLayout>()
+        val manager = TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_UNDEFINED, 5, 4, mockk())
+
+        manager.updateBehaviorState(false)
+
+        assertEquals(STATE_EXPANDED, behavior.state)
+    }
+
+    @Test
+    fun `GIVEN the number of tabs opened is exactly the expanding limit and portrait orientation WHEN updateBehaviorState is called THEN the behavior is set as expanded`() {
+        val behavior = BottomSheetBehavior<ConstraintLayout>()
+        val manager = TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_UNDEFINED, 5, 5, mockk())
+
+        manager.updateBehaviorState(false)
+
+        assertEquals(STATE_EXPANDED, behavior.state)
+    }
+
+    @Test
+    fun `GIVEN fewer tabs opened than the expanding limit and portrait orientation WHEN updateBehaviorState is called THEN the behavior is set as collapsed`() {
+        val behavior = BottomSheetBehavior<ConstraintLayout>()
+        val manager = TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_UNDEFINED, 4, 5, mockk())
+
+        manager.updateBehaviorState(false)
+
+        assertEquals(STATE_COLLAPSED, behavior.state)
+    }
+
+    @Test
+    fun `GIVEN more tabs opened than the expanding limit and landscape orientation WHEN updateBehaviorState is called THEN the behavior is set as expanded`() {
+        val behavior = BottomSheetBehavior<ConstraintLayout>()
+        val manager = TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_UNDEFINED, 5, 4, mockk())
+
+        manager.updateBehaviorState(true)
+
+        assertEquals(STATE_EXPANDED, behavior.state)
+    }
+
+    @Test
+    fun `GIVEN the number of tabs opened is exactly the expanding limit and landscape orientation WHEN updateBehaviorState is called THEN the behavior is set as expanded`() {
+        val behavior = BottomSheetBehavior<ConstraintLayout>()
+        val manager = TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_UNDEFINED, 5, 5, mockk())
+
+        manager.updateBehaviorState(true)
+
+        assertEquals(STATE_EXPANDED, behavior.state)
+    }
+
+    @Test
+    fun `GIVEN fewer tabs opened than the expanding limit and landscape orientation WHEN updateBehaviorState is called THEN the behavior is set as expanded`() {
+        val behavior = BottomSheetBehavior<ConstraintLayout>()
+        val manager = TabSheetBehaviorManager(behavior, Configuration.ORIENTATION_UNDEFINED, 4, 5, mockk())
+
+        manager.updateBehaviorState(true)
+
+        assertEquals(STATE_EXPANDED, behavior.state)
+    }
+
+    @Test
+    fun `WHEN updateDependingOnOrientation is called with the same orientation as the current one THEN nothing happens`() {
+        val manager = spyk(TabSheetBehaviorManager(mockk(relaxed = true), Configuration.ORIENTATION_PORTRAIT, 4, 5, mockk()))
+
+        manager.updateDependingOnOrientation(Configuration.ORIENTATION_PORTRAIT)
+
+        verify(exactly = 0) { manager.currentOrientation = any() }
+        verify(exactly = 0) { manager.updateBehaviorState(any()) }
+    }
+
+    @Test
+    fun `WHEN updateDependingOnOrientation is called with a new orientation THEN this is cached and updateBehaviorState is called`() {
+        val manager = spyk(TabSheetBehaviorManager(mockk(relaxed = true), Configuration.ORIENTATION_PORTRAIT, 4, 5, mockk()))
+
+        manager.updateDependingOnOrientation(Configuration.ORIENTATION_UNDEFINED)
+        assertEquals(Configuration.ORIENTATION_UNDEFINED, manager.currentOrientation)
+        verify { manager.updateBehaviorState(any()) }
+
+        manager.updateDependingOnOrientation(Configuration.ORIENTATION_LANDSCAPE)
+        assertEquals(Configuration.ORIENTATION_LANDSCAPE, manager.currentOrientation)
+        verify(exactly = 2) { manager.updateBehaviorState(any()) }
+    }
+
+    @Test
+    fun `WHEN isLandscape is called with Configuration#ORIENTATION_LANDSCAPE THEN it returns true`() {
+        val manager = spyk(TabSheetBehaviorManager(mockk(relaxed = true), Configuration.ORIENTATION_PORTRAIT, 4, 5, mockk()))
+
+        assertTrue(manager.isLandscape(Configuration.ORIENTATION_LANDSCAPE))
+    }
+
+    @Test
+    fun `WHEN isLandscape is called with Configuration#ORIENTATION_PORTRAIT THEN it returns false`() {
+        val manager = spyk(TabSheetBehaviorManager(mockk(relaxed = true), Configuration.ORIENTATION_PORTRAIT, 4, 5, mockk()))
+
+        assertFalse(manager.isLandscape(Configuration.ORIENTATION_PORTRAIT))
+    }
+
+    @Test
+    fun `WHEN isLandscape is called with Configuration#ORIENTATION_UNDEFINED THEN it returns false`() {
+        val manager = spyk(TabSheetBehaviorManager(mockk(relaxed = true), Configuration.ORIENTATION_PORTRAIT, 4, 5, mockk()))
+
+        assertFalse(manager.isLandscape(Configuration.ORIENTATION_UNDEFINED))
     }
 }

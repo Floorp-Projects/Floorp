@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray
 
 import android.content.Context
+import android.content.res.Configuration
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
@@ -343,5 +344,16 @@ class TabsTrayFragmentTest {
         fragment.dismissTabsTray()
 
         verify { fragment.dismissAllowingStateLoss() }
+    }
+
+    @Test
+    fun `WHEN onConfigurationChanged is called THEN it delegates the tray behavior manager to update the tray`() {
+        val trayBehaviorManager: TabSheetBehaviorManager = mockk(relaxed = true)
+        fragment.trayBehaviorManager = trayBehaviorManager
+        val newConfiguration = Configuration()
+
+        fragment.onConfigurationChanged(newConfiguration)
+
+        verify { trayBehaviorManager.updateDependingOnOrientation(newConfiguration.orientation) }
     }
 }

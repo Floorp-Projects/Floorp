@@ -60,7 +60,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     private lateinit var browserTrayInteractor: BrowserTrayInteractor
     private lateinit var tabsTrayInteractor: TabsTrayInteractor
     private lateinit var tabsTrayController: DefaultTabsTrayController
-    private lateinit var trayBehaviorManager: TabSheetBehaviorManager
+    @VisibleForTesting internal lateinit var trayBehaviorManager: TabSheetBehaviorManager
 
     private val tabLayoutMediator = ViewBoundFeatureWrapper<TabLayoutMediator>()
     private val tabCounterBinding = ViewBoundFeatureWrapper<TabCounterBinding>()
@@ -160,7 +160,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
 
         trayBehaviorManager = TabSheetBehaviorManager(
             behavior = BottomSheetBehavior.from(view.tab_wrapper),
-            isLandscape = requireContext().resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
+            orientation = resources.configuration.orientation,
             maxNumberOfTabs = max(
                 requireContext().components.core.store.state.normalTabs.size,
                 requireContext().components.core.store.state.privateTabs.size
@@ -260,6 +260,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             owner = this,
             view = view
         )
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        trayBehaviorManager.updateDependingOnOrientation(newConfig.orientation)
     }
 
     @VisibleForTesting

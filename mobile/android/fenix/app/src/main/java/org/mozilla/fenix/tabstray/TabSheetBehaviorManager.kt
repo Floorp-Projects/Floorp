@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.tabstray
 
+import android.content.res.Configuration
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -14,29 +15,52 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
  * Helper class for updating how the tray looks and behaves depending on app state / internal tray state.
  *
  * @param behavior [BottomSheetBehavior] that will actually control the tray.
- * @param isLandscape whether the device is currently is portrait or landscape.
+ * @param orientation current Configuration.ORIENTATION_* of the device.
  * @param maxNumberOfTabs highest number of tabs in each tray page.
  * @param numberForExpandingTray limit depending on which the tray should be collapsed or expanded.
  * @param navigationInteractor [NavigationInteractor] used for tray updates / navigation.
  */
 internal class TabSheetBehaviorManager(
-    behavior: BottomSheetBehavior<ConstraintLayout>,
-    isLandscape: Boolean,
-    maxNumberOfTabs: Int,
-    numberForExpandingTray: Int,
+    private val behavior: BottomSheetBehavior<ConstraintLayout>,
+    orientation: Int,
+    private val maxNumberOfTabs: Int,
+    private val numberForExpandingTray: Int,
     navigationInteractor: NavigationInteractor
 ) {
+    @VisibleForTesting
+    internal var currentOrientation = orientation
+
     init {
         behavior.addBottomSheetCallback(
             TraySheetBehaviorCallback(behavior, navigationInteractor)
         )
 
+        updateBehaviorState(isLandscape(orientation))
+    }
+
+    /**
+     * Update how the tray looks depending on whether it is shown in landscape or portrait.
+     */
+    internal fun updateDependingOnOrientation(newOrientation: Int) {
+        if (currentOrientation != newOrientation) {
+            currentOrientation = newOrientation
+
+            val isInLandscape = isLandscape(newOrientation)
+            updateBehaviorState(isInLandscape)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun updateBehaviorState(isLandscape: Boolean) {
         behavior.state = if (isLandscape || maxNumberOfTabs >= numberForExpandingTray) {
             BottomSheetBehavior.STATE_EXPANDED
         } else {
             BottomSheetBehavior.STATE_COLLAPSED
         }
     }
+
+    @VisibleForTesting
+    internal fun isLandscape(orientation: Int) = Configuration.ORIENTATION_LANDSCAPE == orientation
 }
 
 @VisibleForTesting
