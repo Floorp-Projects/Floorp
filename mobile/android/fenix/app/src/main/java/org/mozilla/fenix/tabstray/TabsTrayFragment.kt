@@ -170,7 +170,8 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             } else {
                 EXPAND_AT_LIST_SIZE
             },
-            navigationInteractor = navigationInteractor
+            navigationInteractor = navigationInteractor,
+            displayMetrics = requireContext().resources.displayMetrics
         )
 
         tabsTrayCtaBinding.set(

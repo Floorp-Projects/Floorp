@@ -5,11 +5,16 @@
 package org.mozilla.fenix.tabstray
 
 import android.content.res.Configuration
+import android.util.DisplayMetrics
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+import mozilla.components.support.ktx.android.util.dpToPx
+
+@VisibleForTesting internal const val EXPANDED_OFFSET_IN_LANDSCAPE_DP = 0
+@VisibleForTesting internal const val EXPANDED_OFFSET_IN_PORTRAIT_DP = 40
 
 /**
  * Helper class for updating how the tray looks and behaves depending on app state / internal tray state.
@@ -19,13 +24,15 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
  * @param maxNumberOfTabs highest number of tabs in each tray page.
  * @param numberForExpandingTray limit depending on which the tray should be collapsed or expanded.
  * @param navigationInteractor [NavigationInteractor] used for tray updates / navigation.
+ * @param displayMetrics [DisplayMetrics] used for adapting resources to the current display.
  */
 internal class TabSheetBehaviorManager(
     private val behavior: BottomSheetBehavior<ConstraintLayout>,
     orientation: Int,
     private val maxNumberOfTabs: Int,
     private val numberForExpandingTray: Int,
-    navigationInteractor: NavigationInteractor
+    navigationInteractor: NavigationInteractor,
+    private val displayMetrics: DisplayMetrics
 ) {
     @VisibleForTesting
     internal var currentOrientation = orientation
@@ -35,7 +42,9 @@ internal class TabSheetBehaviorManager(
             TraySheetBehaviorCallback(behavior, navigationInteractor)
         )
 
-        updateBehaviorState(isLandscape(orientation))
+        val isInLandscape = isLandscape(orientation)
+        updateBehaviorExpandedOffset(isInLandscape)
+        updateBehaviorState(isInLandscape)
     }
 
     /**
@@ -46,6 +55,7 @@ internal class TabSheetBehaviorManager(
             currentOrientation = newOrientation
 
             val isInLandscape = isLandscape(newOrientation)
+            updateBehaviorExpandedOffset(isInLandscape)
             updateBehaviorState(isInLandscape)
         }
     }
@@ -56,6 +66,15 @@ internal class TabSheetBehaviorManager(
             BottomSheetBehavior.STATE_EXPANDED
         } else {
             BottomSheetBehavior.STATE_COLLAPSED
+        }
+    }
+
+    @VisibleForTesting
+    internal fun updateBehaviorExpandedOffset(isLandscape: Boolean) {
+        behavior.expandedOffset = if (isLandscape) {
+            EXPANDED_OFFSET_IN_LANDSCAPE_DP.dpToPx(displayMetrics)
+        } else {
+            EXPANDED_OFFSET_IN_PORTRAIT_DP.dpToPx(displayMetrics)
         }
     }
 
