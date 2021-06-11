@@ -42,7 +42,19 @@ add_task(async function() {
     info("Check that the highlighter root wrapper node was scaled down");
 
     const style = await getElementsNodeStyle(testActor);
-    const { width, height } = await testActor.getWindowDimensions();
+
+    const { width, height } = await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [],
+      () => {
+        const { require } = ChromeUtils.import(
+          "resource://devtools/shared/Loader.jsm"
+        );
+        const { getWindowDimensions } = require("devtools/shared/layout/utils");
+        return getWindowDimensions(content);
+      }
+    );
+
     is(
       style,
       expectedStyle(width, height, level),

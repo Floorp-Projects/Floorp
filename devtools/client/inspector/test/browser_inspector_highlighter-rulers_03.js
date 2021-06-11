@@ -22,9 +22,9 @@ add_task(async function() {
   const highlighter = await front.getHighlighterByType("RulersHighlighter");
 
   await isVisibleAfterShow(highlighter, inspector, testActor);
-  await hasRightLabelsContent(highlighter, inspector, testActor);
-  await resizeInspector(highlighter, inspector, testActor);
-  await hasRightLabelsContent(highlighter, inspector, testActor);
+  await hasRightLabelsContent(highlighter, testActor);
+  await resizeInspector(inspector);
+  await hasRightLabelsContent(highlighter, testActor);
   await isHiddenAfterHide(highlighter, inspector, testActor);
 
   await highlighter.finalize();
@@ -49,8 +49,18 @@ async function isHiddenAfterHide(highlighterFront, inspector, testActor) {
   ok(hidden, "viewport infobar is hidden after hide");
 }
 
-async function hasRightLabelsContent(highlighterFront, inspector, testActor) {
-  const windowDimensions = await testActor.getWindowDimensions();
+async function hasRightLabelsContent(highlighterFront, testActor) {
+  const windowDimensions = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => {
+      const { require } = ChromeUtils.import(
+        "resource://devtools/shared/Loader.jsm"
+      );
+      const { getWindowDimensions } = require("devtools/shared/layout/utils");
+      return getWindowDimensions(content);
+    }
+  );
   const windowHeight = Math.round(windowDimensions.height);
   const windowWidth = Math.round(windowDimensions.width);
   const windowText = windowWidth + "px \u00D7 " + windowHeight + "px";
@@ -65,7 +75,7 @@ async function hasRightLabelsContent(highlighterFront, inspector, testActor) {
   }, 100);
 }
 
-async function resizeInspector(highlighterFront, inspector, testActor) {
+async function resizeInspector(inspector) {
   info(
     "Docking the toolbox to the side of the browser to change the window size"
   );
