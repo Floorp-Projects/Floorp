@@ -1634,6 +1634,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     // a password field. Note that recipes are not supported in username-only
     // forms currently (Bug 1708455).
     if (!pwFields) {
+      if (!LoginHelper.usernameOnlyFormEnabled) {
+        return emptyResult;
+      }
+
       usernameField = this.getUsernameFieldFromUsernameOnlyForm(
         form.rootElement
       );

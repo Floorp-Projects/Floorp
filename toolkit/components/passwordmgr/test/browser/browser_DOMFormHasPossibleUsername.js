@@ -195,3 +195,39 @@ add_task(async function test_nonSupportedInputType() {
     gBrowser.removeCurrentTab();
   }
 });
+
+add_task(async function test_usernameOnlyFormPrefOff() {
+  Services.prefs.setBoolPref("signon.usernameOnlyForm.enabled", false);
+
+  for (let type of ["text", "email"]) {
+    let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
+
+    ids.INPUT_TYPE = type;
+    let promise = ContentTask.spawn(
+      tab.linkedBrowser,
+      { contentIds: ids, expected: false },
+      task
+    );
+    BrowserTestUtils.loadURI(
+      tab.linkedBrowser,
+      "data:text/html;charset=utf-8," +
+        "<html><body>" +
+        "<form id='" +
+        ids.FORM1_ID +
+        "'>" +
+        "<input id='" +
+        ids.CHANGE_INPUT_ID +
+        "'></form>" +
+        "<form id='" +
+        ids.FORM2_ID +
+        "'></form>" +
+        "</body></html>"
+    );
+    await promise;
+
+    ok(true, "Test completed");
+    gBrowser.removeCurrentTab();
+  }
+
+  Services.prefs.clearUserPref("signon.usernameOnlyForm.enabled");
+});
