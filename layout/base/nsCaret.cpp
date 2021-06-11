@@ -486,11 +486,12 @@ nsIFrame* nsCaret::GetPaintGeometry(nsRect* aRect) {
   }
 
   // If the offset falls outside of the frame, then don't paint the caret.
-  int32_t startOffset, endOffset;
-  if (frame->IsTextFrame() &&
-      (NS_FAILED(frame->GetOffsets(startOffset, endOffset)) ||
-       startOffset > frameOffset || endOffset < frameOffset)) {
-    return nullptr;
+  if (frame->IsTextFrame()) {
+    int32_t startOffset, endOffset;
+    frame->GetOffsets(startOffset, endOffset);
+    if (startOffset > frameOffset || endOffset < frameOffset) {
+      return nullptr;
+    }
   }
 
   nsRect caretRect;
