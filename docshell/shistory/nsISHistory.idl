@@ -164,15 +164,9 @@ interface nsISHistory: nsISupports
   void addEntry(in nsISHEntry aEntry, in boolean aPersist);
 
   /**
-   * Update the index maintained by sessionHistory to the value of
-   * the requested index.
+   * Update the index maintained by sessionHistory
    */
   void updateIndex();
-
-  /**
-   * Update the index based on the index of the root item of aEntry.
-   */
-  void updateIndexWithEntry(in nsISHEntry aEntry);
 
   /**
    * Replace the nsISHEntry at a particular index
