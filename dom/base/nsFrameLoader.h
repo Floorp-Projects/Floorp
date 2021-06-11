@@ -153,11 +153,9 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // created for the cloned iframe, and `FinishStaticClone` will be called on
   // it, which will clone the inner document of the source nsFrameLoader.
   nsresult FinishStaticClone(nsFrameLoader* aStaticCloneOf,
-                             nsIPrintSettings* aPrintSettings,
                              bool* aOutHasInProcessPrintCallbacks);
 
-  nsresult DoRemoteStaticClone(nsFrameLoader* aStaticCloneOf,
-                               nsIPrintSettings* aPrintSettings);
+  nsresult DoRemoteStaticClone(nsFrameLoader* aStaticCloneOf);
 
   // WebIDL methods
 

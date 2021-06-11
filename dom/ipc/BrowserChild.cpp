@@ -30,8 +30,6 @@
 #include "VRManagerChild.h"
 #include "ipc/nsGUIEventIPC.h"
 #include "js/JSON.h"
-#include "nsIDeviceContextSpec.h"
-#include "nsDeviceContextSpecProxy.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
@@ -1045,8 +1043,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvResumeLoad(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvCloneDocumentTreeIntoSelf(
-    const MaybeDiscarded<BrowsingContext>& aSourceBC,
-    const embedding::PrintData& aPrintData) {
+    const MaybeDiscarded<BrowsingContext>& aSourceBC) {
   if (NS_WARN_IF(aSourceBC.IsNullOrDiscarded())) {
     return IPC_OK();
   }
@@ -1066,75 +1063,26 @@ mozilla::ipc::IPCResult BrowserChild::RecvCloneDocumentTreeIntoSelf(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
-      do_GetService("@mozilla.org/gfx/printsettings-service;1");
-  if (NS_WARN_IF(!printSettingsSvc)) {
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIPrintSettings> printSettings;
-  nsresult rv =
-      printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_OK();
-  }
-
-  printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
-
   RefPtr<Document> clone;
   {
     AutoPrintEventDispatcher dispatcher(*sourceDocument);
     nsAutoScriptBlocker scriptBlocker;
     bool hasInProcessCallbacks = false;
-    clone = sourceDocument->CreateStaticClone(ourDocShell, cv, printSettings,
+    clone = sourceDocument->CreateStaticClone(ourDocShell, cv,
                                               &hasInProcessCallbacks);
     if (NS_WARN_IF(!clone)) {
       return IPC_OK();
     }
   }
 
-  rv = cv->SetPrintSettingsForSubdocument(printSettings);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_OK();
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemotePrintSettings(
-    const embedding::PrintData& aPrintData) {
-  nsCOMPtr<nsIDocShell> ourDocShell = do_GetInterface(WebNavigation());
-  if (NS_WARN_IF(!ourDocShell)) {
-    return IPC_OK();
-  }
-
-  RefPtr<Document> doc = ourDocShell->GetExtantDocument();
-  if (NS_WARN_IF(!doc) || NS_WARN_IF(!doc->IsStaticDocument())) {
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIContentViewer> cv;
-  ourDocShell->GetContentViewer(getter_AddRefs(cv));
-  if (NS_WARN_IF(!cv)) {
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
-      do_GetService("@mozilla.org/gfx/printsettings-service;1");
-  if (NS_WARN_IF(!printSettingsSvc)) {
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIPrintSettings> printSettings;
-  nsresult rv =
-      printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_OK();
-  }
-
-  printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
-  rv = cv->SetPrintSettingsForSubdocument(printSettings);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_OK();
+  // Since the clone document is not parsed-created, we need to initialize
+  // layout manually. This is usually done in ReflowPrintObject for non-remote
+  // documents.
+  if (RefPtr<PresShell> ps = clone->GetPresShell()) {
+    if (!ps->DidInitialize()) {
+      nsresult rv = ps->Initialize();
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+    }
   }
 
   return IPC_OK();
