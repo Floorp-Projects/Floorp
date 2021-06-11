@@ -273,7 +273,11 @@ def gen_non_gc_pointer_type_assertions(seen_types):
 
     for seen_type in seen_types:
         assertions.append(
-            "static_assert(!std::is_base_of_v<gc::Cell, " + seen_type.strip("*") + ">);"
+            "static_assert(!std::is_base_of_v<gc::Cell, " + seen_type.strip("*") + ">, "
+            '"Ensure that '
+            + seen_type.strip("*")
+            + ' is added to the gc_pointer_types list in GenerateMIRFiles.py."'
+            ");"
         )
 
     return assertions
@@ -291,6 +295,9 @@ def generate_mir_header(c_out, yaml_path):
 
     # Generated MIR op class definitions.
     mir_op_classes = []
+
+    # Unique and non gc pointer types seen for arguments to the MIR constructor.
+    seen_non_gc_pointer_argument_types = set()
 
     for op in data:
         name = op["name"]
@@ -362,8 +369,6 @@ def generate_mir_header(c_out, yaml_path):
             )
             mir_op_classes.append(code)
 
-            # Unique and non gc pointer types seen for arguments to the MIR constructor.
-            seen_non_gc_pointer_argument_types = set()
             if arguments:
                 for argument in arguments:
                     arg_type = arguments[argument]
@@ -379,7 +384,6 @@ def generate_mir_header(c_out, yaml_path):
     contents += "\n\n"
 
     contents += "#define NON_GC_POINTER_TYPE_ASSERTIONS_GENERATED \\\n"
-    print(seen_non_gc_pointer_argument_types)
     contents += "\\\n".join(
         gen_non_gc_pointer_type_assertions(seen_non_gc_pointer_argument_types)
     )
