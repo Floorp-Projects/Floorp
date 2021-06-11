@@ -118,7 +118,7 @@
     }
 
     get styles() {
-      let s = `
+      return `
         :host(.in-menulist) arrowscrollbox::part(scrollbutton-up),
         :host(.in-menulist) arrowscrollbox::part(scrollbutton-down) {
           display: none;
@@ -131,21 +131,6 @@
           overflow: visible;
         }
       `;
-
-      switch (AppConstants.platform) {
-        case "macosx":
-          s += `
-            :host(.in-menulist) arrowscrollbox {
-              --panel-padding: 0;
-            }
-          `;
-          break;
-
-        default:
-          break;
-      }
-
-      return s;
     }
 
     get scrollBox() {
