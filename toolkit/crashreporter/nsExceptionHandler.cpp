@@ -1927,13 +1927,6 @@ static void TeardownAnnotationFacilities() {
 
 #ifdef XP_WIN
 
-struct InProcessWindowsErrorReportingData {
-  uint32_t mProcessType;
-  size_t* mOOMAllocationSizePtr;
-};
-
-static InProcessWindowsErrorReportingData gInProcessWerData = {};
-
 bool GetRuntimeExceptionModulePath(wchar_t* aPath, const size_t aLength) {
   const wchar_t* kModuleName = L"mozwer.dll";
   DWORD res = GetModuleFileName(nullptr, aPath, aLength);
@@ -1952,22 +1945,27 @@ bool GetRuntimeExceptionModulePath(wchar_t* aPath, const size_t aLength) {
 
 #endif  // XP_WIN
 
-static void RegisterRuntimeExceptionModule(
-    GeckoProcessType aProcessType =
-        GeckoProcessType::GeckoProcessType_Default) {
+void RegisterRuntimeExceptionModule(void) {
 #ifdef XP_WIN
-  gInProcessWerData.mProcessType = aProcessType;
-  gInProcessWerData.mOOMAllocationSizePtr = &gOOMAllocationSize;
   const size_t kPathLength = MAX_PATH + 1;
   wchar_t path[kPathLength] = {};
   if (GetRuntimeExceptionModulePath(path, kPathLength)) {
-    Unused << WerRegisterRuntimeExceptionModule(path, &gInProcessWerData);
+    Unused << WerRegisterRuntimeExceptionModule(path, nullptr);
+  }
 
-    DWORD dwFlags = 0;
-    if (WerGetFlags(GetCurrentProcess(), &dwFlags) == S_OK) {
-      Unused << WerSetFlags(dwFlags |
-                            WER_FAULT_REPORTING_DISABLE_SNAPSHOT_HANG);
-    }
+  DWORD dwFlags = 0;
+  if (WerGetFlags(GetCurrentProcess(), &dwFlags) == S_OK) {
+    Unused << WerSetFlags(dwFlags | WER_FAULT_REPORTING_DISABLE_SNAPSHOT_HANG);
+  }
+#endif  // XP_WIN
+}
+
+void UnregisterRuntimeExceptionModule(void) {
+#ifdef XP_WIN
+  const size_t kPathLength = MAX_PATH + 1;
+  wchar_t path[kPathLength] = {};
+  if (GetRuntimeExceptionModulePath(path, kPathLength)) {
+    Unused << WerUnregisterRuntimeExceptionModule(path, nullptr);
   }
 #endif  // XP_WIN
 }
@@ -3527,13 +3525,13 @@ bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd) {
 #endif  // defined(XP_LINUX)
 
 bool SetRemoteExceptionHandler(const char* aCrashPipe,
-                               FileHandle aCrashTimeAnnotationFile) {
+                               uintptr_t aCrashTimeAnnotationFile) {
   MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
-  RegisterRuntimeExceptionModule(XRE_GetProcessType());
+
   InitializeAnnotationFacilities();
 
 #if defined(XP_WIN)
-  gChildCrashAnnotationReportFd = aCrashTimeAnnotationFile;
+  gChildCrashAnnotationReportFd = (FileHandle)aCrashTimeAnnotationFile;
   gExceptionHandler = new google_breakpad::ExceptionHandler(
       L"", ChildFilter, ChildMinidumpCallback,
       nullptr,  // no callback context
@@ -3630,55 +3628,6 @@ bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType,
 
   return WriteExtraFile(id, annotations);
 }
-
-#ifdef XP_WIN
-
-// Function invoked by the WER runtime exception handler running in an
-// external process. This function isn't used anywhere inside Gecko directly
-// but rather invoked via CreateRemoteThread() in the main process.
-DWORD WINAPI WerNotifyProc(LPVOID aParameter) {
-  const WindowsErrorReportingData* werData =
-      static_cast<const WindowsErrorReportingData*>(aParameter);
-
-  // Hold the mutex until the current dump request is complete, to
-  // prevent UnsetExceptionHandler() from pulling the rug out from
-  // under us.
-  MutexAutoLock safetyLock(*dumpSafetyLock);
-  if (!isSafeToDump || !ShouldReport()) {
-    return S_OK;
-  }
-
-  ProcessId pid = werData->mChildPid;
-  nsCOMPtr<nsIFile> minidump;
-  if (!GetPendingDir(getter_AddRefs(minidump))) {
-    return S_OK;
-  }
-  xpstring minidump_native_name(werData->mMinidumpFile,
-                                werData->mMinidumpFile + 40);
-  nsString minidump_name(minidump_native_name.c_str());
-  minidump->Append(minidump_name);
-
-  {
-    MutexAutoLock lock(*dumpMapLock);
-    ChildProcessData* pd = pidToMinidump->PutEntry(pid);
-    MOZ_ASSERT(!pd->minidump);
-    pd->minidump = minidump;
-    pd->sequence = ++crashSequence;
-    pd->annotations = MakeUnique<AnnotationTable>();
-    (*pd->annotations)[Annotation::WindowsErrorReporting] = "1"_ns;
-    if (werData->mOOMAllocationSize > 0) {
-      char buffer[32] = {};
-      XP_STOA(werData->mOOMAllocationSize, buffer);
-      (*pd->annotations)[Annotation::OOMAllocationSize] = buffer;
-    }
-
-    PopulateContentProcessAnnotations(*(pd->annotations));
-  }
-
-  return S_OK;
-}
-
-#endif  // XP_WIN
 
 //-----------------------------------------------------------------------------
 // CreateMinidumpsAndPair() and helpers
