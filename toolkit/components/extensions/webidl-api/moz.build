@@ -24,6 +24,14 @@ EXPORTS.mozilla.extensions += [
     "ExtensionPort.h",
 ]
 
+# The following is not a real WebExtensions API, it is a test WebIDL
+# interface that includes a collection of the cases useful to unit
+# test the API request forwarding mechanism without tying it to
+# a specific WebExtensions API.
+UNIFIED_SOURCES += ["ExtensionMockAPI.cpp"]
+
+EXPORTS.mozilla.extensions += ["ExtensionMockAPI.h"]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
