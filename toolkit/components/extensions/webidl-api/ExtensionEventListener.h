@@ -7,7 +7,9 @@
 #ifndef mozilla_extensions_ExtensionEventListener_h
 #define mozilla_extensions_ExtensionEventListener_h
 
+#include "js/Promise.h"  // JS::IsPromiseObject
 #include "mozIExtensionAPIRequestHandling.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -39,6 +41,15 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
       nsIGlobalObject* aGlobal, dom::Function* aCallback,
       CleanupCallback&& aCleanupCallback, ErrorResult& aRv);
 
+  static bool IsPromise(JSContext* aCx, JS::Handle<JS::Value> aValue) {
+    if (!aValue.isObject()) {
+      return false;
+    }
+
+    JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
+    return JS::IsPromiseObject(obj);
+  }
+
   dom::WorkerPrivate* GetWorkerPrivate() const;
 
   RefPtr<dom::Function> GetCallback() const { return mCallback; }
@@ -67,7 +78,7 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
         mMutex("ExtensionEventListener::mMutex"){};
 
   static UniquePtr<dom::StructuredCloneHolder> SerializeCallArguments(
-      const nsTArray<JS::Value>& aArgs, ErrorResult& aRv);
+      const nsTArray<JS::Value>& aArgs, JSContext* aCx, ErrorResult& aRv);
 
   ~ExtensionEventListener() { Cleanup(); };
 
@@ -88,14 +99,18 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
 // in the thread that owns the dom::Function wrapped by the
 // ExtensionEventListener class.
 class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
+  friend class ExtensionListenerCallPromiseResultHandler;
+
  public:
   ExtensionListenerCallWorkerRunnable(
       const RefPtr<ExtensionEventListener>& aExtensionEventListener,
-      UniquePtr<dom::StructuredCloneHolder> aArgsHolder)
+      UniquePtr<dom::StructuredCloneHolder> aArgsHolder,
+      RefPtr<dom::Promise> aPromiseRetval = nullptr)
       : WorkerRunnable(aExtensionEventListener->GetWorkerPrivate(),
                        WorkerThreadUnchangedBusyCount),
         mListener(aExtensionEventListener),
-        mArgsHolder(std::move(aArgsHolder)) {
+        mArgsHolder(std::move(aArgsHolder)),
+        mPromiseResult(std::move(aPromiseRetval)) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aExtensionEventListener);
   }
@@ -104,11 +119,66 @@ class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
   bool WorkerRun(JSContext* aCx, dom::WorkerPrivate* aWorkerPrivate) override;
 
  private:
+  ~ExtensionListenerCallWorkerRunnable() {
+    NS_ReleaseOnMainThread(mPromiseResult.forget());
+    ReleaseArgsHolder();
+    mListener = nullptr;
+  }
+
+  void ReleaseArgsHolder() {
+    if (NS_IsMainThread()) {
+      mArgsHolder = nullptr;
+    } else {
+      auto releaseArgsHolder = [argsHolder = std::move(mArgsHolder)]() {};
+      nsCOMPtr<nsIRunnable> runnable =
+          NS_NewRunnableFunction(__func__, std::move(releaseArgsHolder));
+      NS_DispatchToMainThread(runnable);
+    }
+  }
+
   void DeserializeCallArguments(JSContext* aCx, dom::Sequence<JS::Value>& aArg,
                                 ErrorResult& aRv);
 
   RefPtr<ExtensionEventListener> mListener;
   UniquePtr<dom::StructuredCloneHolder> mArgsHolder;
+  RefPtr<dom::Promise> mPromiseResult;
+};
+
+class ExtensionListenerCallPromiseResultHandler
+    : public dom::PromiseNativeHandler {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  static void Create(
+      const RefPtr<dom::Promise>& aPromise,
+      const RefPtr<ExtensionListenerCallWorkerRunnable>& aWorkerRunnable,
+      dom::ThreadSafeWorkerRef* aWorkerRef);
+
+  // PromiseNativeHandler
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+
+  enum class PromiseCallbackType { Resolve, Reject };
+
+ private:
+  ExtensionListenerCallPromiseResultHandler(
+      dom::ThreadSafeWorkerRef* aWorkerRef,
+      RefPtr<ExtensionListenerCallWorkerRunnable> aWorkerRunnable)
+      : mWorkerRef(aWorkerRef), mWorkerRunnable(std::move(aWorkerRunnable)) {}
+
+  ~ExtensionListenerCallPromiseResultHandler() = default;
+
+  void WorkerRunCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                         PromiseCallbackType aCallbackType);
+
+  // Only set to handle promise results coming from an ExtensionEventListener
+  // instance running on the main thread.
+  RefPtr<dom::Promise> mOutPromise;
+
+  // Only set to handle results coming from a ExtensionEventListener originated
+  // from a extension worker thread.
+  RefPtr<dom::ThreadSafeWorkerRef> mWorkerRef;
+  RefPtr<ExtensionListenerCallWorkerRunnable> mWorkerRunnable;
 };
 
 }  // namespace extensions
