@@ -32,18 +32,6 @@ builds-debugopt:
     query:
         - "^build- !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols"
 
-debugger-tests:
-    selector: fuzzy
-    description: >-
-        Runs the tests relevant to the Firefox Devtools Debugger
-    query:
-        - "'debugger"
-        - "'mozlint-eslint"
-        - "!asan 'devtools !shippable | 'linux32 | 'macosx64"
-        - "!android !asan 'linux32 | 'macosx64 | !shippable 'mochitest-chrome"
-        - "!asan !shippable 'linux '64/ 'xpcshell"
-        - "!qr !macosx !shippable 'damp"
-
 devtools:
     selector: fuzzy
     description: >-
