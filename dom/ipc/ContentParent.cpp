@@ -3810,7 +3810,7 @@ static bool CloneIsLegal(ContentParent* aCp, CanonicalBrowsingContext& aSource,
 
 mozilla::ipc::IPCResult ContentParent::RecvCloneDocumentTreeInto(
     const MaybeDiscarded<BrowsingContext>& aSource,
-    const MaybeDiscarded<BrowsingContext>& aTarget, PrintData&& aPrintData) {
+    const MaybeDiscarded<BrowsingContext>& aTarget) {
   if (aSource.IsNullOrDiscarded() || aTarget.IsNullOrDiscarded()) {
     return IPC_OK();
   }
@@ -3845,31 +3845,14 @@ mozilla::ipc::IPCResult ContentParent::RecvCloneDocumentTreeInto(
   target->ChangeRemoteness(options, /* aPendingSwitchId = */ 0)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [source = RefPtr{source},
-           data = std::move(aPrintData)](BrowserParent* aBp) {
-            Unused << aBp->SendCloneDocumentTreeIntoSelf(source, data);
+          [source = RefPtr{source}](BrowserParent* aBp) {
+            Unused << aBp->SendCloneDocumentTreeIntoSelf(source);
           },
           [](nsresult aRv) {
             NS_WARNING(
                 nsPrintfCString("Remote clone failed: %x\n", unsigned(aRv))
                     .get());
           });
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvUpdateRemotePrintSettings(
-    const MaybeDiscarded<BrowsingContext>& aTarget, PrintData&& aPrintData) {
-  if (aTarget.IsNullOrDiscarded()) {
-    return IPC_OK();
-  }
-
-  auto* target = aTarget.get_canonical();
-  auto* bp = target->GetBrowserParent();
-  if (NS_WARN_IF(!bp)) {
-    return IPC_OK();
-  }
-
-  Unused << bp->SendUpdateRemotePrintSettings(std::move(aPrintData));
   return IPC_OK();
 }
 

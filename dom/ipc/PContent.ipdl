@@ -49,7 +49,6 @@ include DOMTypes;
 include WindowGlobalTypes;
 include IPCBlob;
 include IPCStream;
-include PPrintingTypes;
 include PTabContext;
 include ProtocolTypes;
 include PBackgroundSharedTypes;
@@ -483,11 +482,7 @@ parent:
     // Guess we'll see how we end up triggering the actual print, for preview
     // this should be enough...
     async CloneDocumentTreeInto(MaybeDiscardedBrowsingContext aSourceBc,
-                                MaybeDiscardedBrowsingContext aTargetBc,
-                                PrintData aPrintData);
-
-    async UpdateRemotePrintSettings(MaybeDiscardedBrowsingContext aBc,
-                                    PrintData aPrintData);
+                                MaybeDiscardedBrowsingContext aTargetBc);
 
     async PExtensions();
 

@@ -1688,7 +1688,7 @@ void nsPresContext::SetPrintSettings(nsIPrintSettings* aPrintSettings) {
     return;
   }
 
-  // Set the presentation context to the value in the print settings.
+  // set the presentation context to the value in the print settings
   mDrawColorBackground = mPrintSettings->GetPrintBGColors();
   mDrawImageBackground = mPrintSettings->GetPrintBGImages();
 
