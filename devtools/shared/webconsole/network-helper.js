@@ -685,9 +685,6 @@ var NetworkHelper = {
         const sss = Cc["@mozilla.org/ssservice;1"].getService(
           Ci.nsISiteSecurityService
         );
-        const pkps = Cc[
-          "@mozilla.org/security/publickeypinningservice;1"
-        ].getService(Ci.nsIPublicKeyPinningService);
 
         // SiteSecurityService uses different storage if the channel is
         // private. Thus we must give isSecureURI correct flags or we
@@ -702,8 +699,8 @@ var NetworkHelper = {
           uri = Services.io.newURI("https://" + host);
         }
 
-        info.hsts = sss.isSecureURI(uri, flags);
-        info.hpkp = pkps.hostHasPins(uri);
+        info.hsts = sss.isSecureURI(sss.HEADER_HSTS, uri, flags);
+        info.hpkp = sss.isSecureURI(sss.STATIC_PINNING, uri, flags);
       } else {
         DevToolsUtils.reportException(
           "NetworkHelper.parseSecurityInfo",

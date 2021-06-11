@@ -7,46 +7,57 @@ function run_test() {
   );
 
   ok(
-    !SSService.isSecureURI(Services.io.newURI("https://expired.example.com"), 0)
+    !SSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://expired.example.com"),
+      0
+    )
   );
   ok(
     SSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://notexpired.example.com"),
       0
     )
   );
   ok(
     SSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://includesubdomains.preloaded.test"),
       0
     )
   );
   ok(
     !SSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://sub.includesubdomains.preloaded.test"),
       0
     )
   );
   ok(
     SSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://incsubdomain.example.com"),
       0
     )
   );
   ok(
     SSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://sub.incsubdomain.example.com"),
       0
     )
   );
   ok(
     !SSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://includesubdomains2.preloaded.test"),
       0
     )
   );
   ok(
     !SSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       Services.io.newURI("https://sub.includesubdomains2.preloaded.test"),
       0
     )
