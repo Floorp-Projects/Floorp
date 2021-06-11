@@ -1003,6 +1003,14 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       isMasterPasswordSet
     );
 
+    // For simplicity, the result of the telemetry is stacked. This means if a
+    // document receives two `DOMFormHasPossibleEvent`, we add one counter to both
+    // bucket 1 & 2.
+    let docState = this.stateForDocument(document);
+    Services.telemetry
+      .getHistogramById("PWMGR_NUM_FORM_HAS_POSSIBLE_USERNAME_EVENT_PER_DOC")
+      .add(++docState.numFormHasPossibleUsernameEvent);
+
     if (document.visibilityState == "visible" || isMasterPasswordSet) {
       this._processDOMFormHasPossibleUsernameEvent(event);
     } else {
@@ -1030,6 +1038,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       );
       this._fetchLoginsFromParentAndFillForm(formLike);
     }
+
+    Services.telemetry
+      .getHistogramById("PWMGR_IS_USERNAME_ONLY_FORM")
+      .add(!!usernameField);
   }
 
   onDOMInputPasswordAdded(event, window) {
@@ -1222,6 +1234,11 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
          * Records the mock username field when its associated form is submitted.
          */
         mockUsernameOnlyField: null,
+
+        /**
+         * Records the number of possible username event received for this document.
+         */
+        numFormHasPossibleUsernameEvent: 0,
       };
       this._loginFormStateByDocument.set(document, loginFormState);
     }

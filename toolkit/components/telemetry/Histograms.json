@@ -13479,6 +13479,18 @@
     "releaseChannelCollection": "opt-out",
     "record_into_store": ["main"]
   },
+  "PWMGR_NUM_FORM_HAS_POSSIBLE_USERNAME_EVENT_PER_DOC": {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "96",
+    "kind": "linear",
+    "high": 21,
+    "n_buckets" : 20,
+    "bug_numbers": [1708455],
+    "description": "The number of documents that receive >= bucket number 'DOMFormHasPossibleUsernameEvent' event",
+    "alert_emails": ["dlee@mozilla.com", "passwords-dev@mozilla.org"],
+    "releaseChannelCollection": "opt-out"
+  },
   "PWMGR_NUM_SAVED_PASSWORDS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "thunderbird"],
@@ -13542,6 +13554,16 @@
     "bug_numbers": [1454733, 1545172],
     "releaseChannelCollection": "opt-out",
     "record_into_store": ["main"]
+  },
+  "PWMGR_IS_USERNAME_ONLY_FORM": {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a <form> is a username-only form. (0=Form has a possible username field but is not considered as a username-only form, 1=Form is considered as a username-only form)",
+    "bug_numbers": [1708455],
+    "alert_emails": ["dlee@mozilla.com", "passwords-dev@mozilla.org"],
+    "releaseChannelCollection": "opt-out"
   },
   "PWMGR_USERNAME_PRESENT": {
     "record_in_processes": ["main"],
