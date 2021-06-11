@@ -11411,7 +11411,13 @@
 # Whether we should try to use WebRender to render widgets.
 - name: widget.non-native-theme.webrender
   type: bool
+#if defined(XP_MACOSX)
+  # Disabled on macOS release / beta because of a suspected AMD driver bug (see
+  # bug 1715452).
+  value: @IS_NIGHTLY_BUILD@
+#else
   value: true
+#endif
   mirror: always
 
 # Preference to disable dark scrollbar implementation.
