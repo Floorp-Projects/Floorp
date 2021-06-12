@@ -44,6 +44,7 @@ import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
+import mozilla.components.service.nimbus.NimbusApi
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.browser.BlockedTrackersMiddleware
 import org.mozilla.focus.components.EngineProvider
@@ -53,6 +54,7 @@ import org.mozilla.focus.engine.ClientWrapper
 import org.mozilla.focus.engine.SanityCheckMiddleware
 import org.mozilla.focus.engine.TabsFeatureMiddleware
 import org.mozilla.focus.exceptions.ExceptionMigrationMiddleware
+import org.mozilla.focus.experiments.createNimbus
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.locale.LocaleManager
@@ -168,6 +170,8 @@ class Components(
     val crashReporter: CrashReporter by lazy { createCrashReporter(context) }
 
     val metrics: GleanMetricsService by lazy { GleanMetricsService(context) }
+
+    val experiments: NimbusApi by lazy { createNimbus(context, BuildConfig.NIMBUS_ENDPOINT) }
 
     val adsTelemetry: AdsTelemetry by lazy { AdsTelemetry() }
 
