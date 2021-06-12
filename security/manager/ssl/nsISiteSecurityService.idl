@@ -45,10 +45,6 @@ interface nsISiteHSTSState : nsISiteSecurityState
 [scriptable, uuid(275127f8-dbd7-4681-afbf-6df0c6587a01)]
 interface nsISiteSecurityService : nsISupports
 {
-    const uint32_t HEADER_HSTS = 0;
-    const uint32_t STATIC_PINNING = 1; // was HEADER_HPKP
-    // HEADER_OMS was 2 (but was never implemented)
-
     const uint32_t Success = 0;
     const uint32_t ERROR_UNKNOWN = 1;
     const uint32_t ERROR_UNTRUSTWORTHY_CONNECTION = 2;
@@ -84,7 +80,6 @@ interface nsISiteSecurityService : nsISupports
      * and allows a host to specify that future HTTP requests should be
      * upgraded to HTTPS.
      *
-     * @param aType the type of security header in question.
      * @param aSourceURI the URI of the resource with the HTTP header.
      * @param aHeader the HTTP response header specifying security data.
      * @param aSecInfo the TransportSecurityInfo of the current channel.
@@ -107,8 +102,7 @@ interface nsISiteSecurityService : nsISupports
      *                          if there are unrecognized tokens in the header.
      */
     [binaryname(ProcessHeader), noscript, must_use]
-    void processHeaderNative(in uint32_t aType,
-                             in nsIURI aSourceURI,
+    void processHeaderNative(in nsIURI aSourceURI,
                              in ACString aHeader,
                              in nsITransportSecurityInfo aSecInfo,
                              in uint32_t aFlags,
@@ -120,8 +114,7 @@ interface nsISiteSecurityService : nsISupports
 
     [binaryname(ProcessHeaderScriptable), implicit_jscontext, optional_argc,
      must_use]
-    void processHeader(in uint32_t aType,
-                       in nsIURI aSourceURI,
+    void processHeader(in nsIURI aSourceURI,
                        in ACString aHeader,
                        in nsITransportSecurityInfo aSecInfo,
                        in uint32_t aFlags,
@@ -132,14 +125,12 @@ interface nsISiteSecurityService : nsISupports
                        [optional] out uint32_t aFailureResult);
 
     /**
-     * Given a header type, resets state relating to that header of a host,
-     * including the includeSubdomains state that would affect subdomains.
-     * This essentially removes the state for the domain tree rooted at this
-     * host. If any preloaded information is present for that host, that
-     * information will then be used instead of any other previously existing
-     * state.
+     * Resets HSTS state a host, including the includeSubdomains state that
+     * would affect subdomains. This essentially removes the state for the
+     * domain tree rooted at this host. If any preloaded information is present
+     * for that host, that information will then be used instead of any other
+     * previously existing state.
      *
-     * @param aType   the type of security state in question
      * @param aURI    the URI of the target host
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
@@ -150,21 +141,19 @@ interface nsISiteSecurityService : nsISupports
      *                          happens).
      */
     [implicit_jscontext, optional_argc, must_use]
-    void resetState(in uint32_t aType,
-                    in nsIURI aURI,
+    void resetState(in nsIURI aURI,
                     in uint32_t aFlags,
                     [optional] in jsval aOriginAttributes);
 
     /**
-     * Checks whether or not the URI's hostname has a given security state set.
-     * For example, for HSTS:
+     * Checks whether or not the URI's hostname has HSTS set.
+     * For example:
      * The URI is an HSTS URI if either the host has the HSTS state set, or one
      * of its super-domains has the HSTS "includeSubdomains" flag set.
      * NOTE: this function makes decisions based only on the
      * host contained in the URI, and disregards other portions of the URI
      * such as path and port.
      *
-     * @param aType the type of security state in question.
      * @param aURI the URI to query for STS state.
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
@@ -179,21 +168,20 @@ interface nsISiteSecurityService : nsISupports
      *                SOURCE_ORGANIC_REQUEST, or SOURCE_UNKNOWN.
      */
     [binaryname(IsSecureURI), noscript, must_use]
-    boolean isSecureURINative(in uint32_t aType, in nsIURI aURI,
-                              in uint32_t aFlags,
+    boolean isSecureURINative(in nsIURI aURI, in uint32_t aFlags,
                               in const_OriginAttributesRef aOriginAttributes,
                               [optional] out boolean aCached,
                               [optional] out uint32_t aSource);
 
     [binaryname(IsSecureURIScriptable), implicit_jscontext, optional_argc,
      must_use]
-    boolean isSecureURI(in uint32_t aType, in nsIURI aURI, in uint32_t aFlags,
+    boolean isSecureURI(in nsIURI aURI, in uint32_t aFlags,
                         [optional] in jsval aOriginAttributes,
                         [optional] out boolean aCached,
                         [optional] out uint32_t aSource);
 
     /**
-     * Removes all non-preloaded security state by resetting to factory-original
+     * Removes all non-preloaded HSTS state by resetting to factory-original
      * settings.
      */
     [must_use]
@@ -204,11 +192,9 @@ interface nsISiteSecurityService : nsISupports
      * the enumeration is a nsISiteSecurityState that can be QueryInterfaced to
      * nsISiteHSTSState.
      * Doesn't include hard-coded preloaded entries.
-     *
-     * @param aType the type of security state in question.
      */
     [must_use]
-    nsISimpleEnumerator enumerate(in uint32_t aType);
+    nsISimpleEnumerator enumerate();
 };
 
 %{C++
