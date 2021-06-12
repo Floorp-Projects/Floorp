@@ -59,8 +59,8 @@ add_task(async function test_fullscreen_cross_origin() {
         document.documentElement.hasAttribute("inDOMFullscreen")
       );
 
-      ok(
-        tabbrowser.hasAttribute("closebuttons"),
+      await TestUtils.waitForCondition(
+        () => tabbrowser.hasAttribute("closebuttons"),
         "Close buttons should be visible only on the active tab (tabs have width=0 so closebuttons gets set on them)"
       );
     });
