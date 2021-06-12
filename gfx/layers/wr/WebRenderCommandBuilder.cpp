@@ -2449,6 +2449,10 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
       aMaskItem->ShouldHandleOpacity() != maskData->mShouldHandleOpacity) {
     IntSize size = itemRect.Size().ToUnknownSize();
 
+    if (!Factory::AllowedSurfaceSize(size)) {
+      return Nothing();
+    }
+
     std::vector<RefPtr<ScaledFont>> fonts;
     bool validFonts = true;
     RefPtr<WebRenderDrawEventRecorder> recorder =
