@@ -6,6 +6,7 @@ locales = [
     "ar",
     "ast",
     "az",
+    "ban",
     "be",
     "bg",
     "bn",
@@ -104,6 +105,7 @@ locales = [
     "uz",
     "vec",
     "vi",
+    "yo",
     "zh-CN",
     "zh-TW",
 ]
