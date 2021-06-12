@@ -6307,7 +6307,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     // This means we successfully applied aspect-ratio and now need to check
     // if we need to apply the implied minimum size:
     // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
-    MOZ_ASSERT(!IsFrameOfType(eReplaced),
+    MOZ_ASSERT(!IsFrameOfType(eReplacedSizing),
                "aspect-ratio minimums should not apply to replaced elements");
     // The inline size computed by aspect-ratio shouldn't less than the content
     // size.
