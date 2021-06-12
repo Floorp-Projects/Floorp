@@ -98,13 +98,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Απόρριψη</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Αλλάξτε τη διάταξη των ανοικτών καρτελών. Μεταβείτε στις ρυθμίσεις και επιλέξτε &quot;Πλέγμα&quot; στο μενού προβολής καρτελών.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Μετάβαση στις ρυθμίσεις</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Απόρριψη</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Νέα καρτέλα</string>
@@ -188,6 +181,10 @@
     <string name="browser_menu_add">Προσθήκη</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Επεξεργασία</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Αρχική οθόνη</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -554,8 +551,6 @@
     <string name="library_new_tab">Νέα καρτέλα</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Εύρεση στη σελίδα</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Συγχρονισμένες καρτέλες</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Λίστα ανάγνωσης</string>
     <!-- Menu Item Label for Search in Library -->
@@ -602,6 +597,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Μετά από ένα μήνα</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Εκκίνηση στην αρχική οθόνη</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Μετά από τέσσερις ώρες</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Πάντα</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Ποτέ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Χειροκίνητο κλείσιμο</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1589,6 +1593,10 @@
     <string name="credit_cards_card_number">Αριθμός κάρτας</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Ημερομηνία λήξης</string>
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">Μήνας ημερομηνίας λήξης</string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">Έτος ημερομηνίας λήξης</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Όνομα στην κάρτα</string>
     <!-- The header for the nickname for a credit card -->
@@ -1610,6 +1618,8 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Παρακαλώ εισαγάγετε έναν έγκυρο αριθμό πιστωτικής κάρτας</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Παρακαλώ συμπληρώστε αυτό το πεδίο</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Ξεκλειδώστε για να δείτε τις αποθηκευμένες κάρτες σας</string>
     <!-- Title of warning dialog if users have no device authentication set up -->

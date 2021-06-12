@@ -95,13 +95,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Ignorera</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Ändra layouten för öppna flikar. Gå till inställningar och välj rutnät under flikvy.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Gå till Inställningar</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Ignorera</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Ny flik</string>
@@ -187,6 +180,10 @@
     <string name="browser_menu_add">Lägg till</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Redigera</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Startsidan</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -555,8 +552,6 @@
     <string name="library_new_tab">Ny flik</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Hitta på sidan</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Synkade flikar</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Läslista</string>
     <!-- Menu Item Label for Search in Library -->
@@ -602,6 +597,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Efter en månad</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Börja på startsidan</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Efter fyra timmar</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Alltid</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Aldrig</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Stäng manuellt</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1587,6 +1591,10 @@
     <string name="credit_cards_card_number">Kortnummer</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Utgångsdatum</string>
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">Utgångsdatum månad</string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">Utgångsdatum år</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Namn på kort</string>
     <!-- The header for the nickname for a credit card -->
@@ -1608,6 +1616,8 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Ange ett giltigt kreditkortsnummer</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Fyll i det här fältet</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Lås upp för att se dina sparade kreditkort</string>
     <!-- Title of warning dialog if users have no device authentication set up -->

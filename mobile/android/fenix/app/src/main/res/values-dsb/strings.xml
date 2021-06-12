@@ -93,13 +93,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Zachyśiś</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Wubjeŕśo wugótowanje za wócynjone rejtariki. Pśejźćo k nastajenjam a wubjeŕśo kśidno pód rejtarikowym naglědom.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">K nastajenjam</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Zachyśiś</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nowy rejtarik</string>
@@ -182,6 +175,10 @@
     <string name="browser_menu_add">Pśidaś</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Wobźěłaś</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Startowa wobrazowka</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -545,8 +542,6 @@
     <string name="library_new_tab">Nowy rejtarik</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Na boku pytaś</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Synchronizěrowane rejtariki</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Cytańska lisćina</string>
     <!-- Menu Item Label for Search in Library -->
@@ -591,6 +586,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Pó jadnom mjasecu</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Na startowej wobrazowce zachopiś</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Pó styrich góźinach</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Pśecej</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Nigda</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Manuelnje zacyniś</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1571,6 +1575,10 @@
     <string name="credit_cards_card_number">Kórtowy numer</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Datum płaśiwosći</string>
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">Datum płaśiwosći (mjasec)</string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">Datum płaśiwosći (lěto)</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Mě na kórśe</string>
     <!-- The header for the nickname for a credit card -->
@@ -1592,6 +1600,8 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Pšosym zapódajśo płaśiwy numer kreditoweje kórty</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Pšosym wupołńśo toś to pólo</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Za zwobraznjowanje wašych skłaźonych kreditowych kórtow wótwóriś</string>
     <!-- Title of warning dialog if users have no device authentication set up -->

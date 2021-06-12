@@ -96,13 +96,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Zgel</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Senfel taneɣruft n waccaren yeldin. Ddu ɣer yiɣewwaren syen fren iẓiki deg n yiccer.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Ddu ɣer yiɣewwaren</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Zgel</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Iccer amaynut</string>
@@ -186,6 +179,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Ẓreg</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Agilal agejdan</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -554,8 +551,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="library_new_tab">Iccer amaynut</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Af deg usebter</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Iccaren yemtawin</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Tabdart n tɣuṛi</string>
     <!-- Menu Item Label for Search in Library -->
@@ -600,6 +595,15 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Seld yiwen n waggur</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Bdu seg ugilal agejdan</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Seld rebεa n yisragen</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Yal tikkelt</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Urǧin</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Mdel s ufus</string>
 
@@ -1586,6 +1590,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="credit_cards_card_number">Uṭṭun n tkarḍa</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Azemz n taggara</string>
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">Azemz n taggara n wayyur</string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">Azemz n taggar n useggas</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Isem ɣef tkarḍa</string>
     <!-- The header for the nickname for a credit card -->
@@ -1606,6 +1614,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Ma ulac aɣilif sekcem uṭṭun ameɣtu n tkarḍa n usmad</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Ttxil-k·m ččar urti-a</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Kkes asekkeṛ i wakken ad twaliḍ tikerḍiwin-ik·im yettwaskelsen</string>
     <!-- Title of warning dialog if users have no device authentication set up -->

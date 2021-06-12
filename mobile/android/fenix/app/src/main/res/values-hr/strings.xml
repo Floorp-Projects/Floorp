@@ -92,13 +92,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Odbaci</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Promijeni raspored otvorenih kartica. Idi u postavke i odaberi mrežu pod prikazom kartica.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Idi u postavke</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Odbaci</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nova kartica</string>
@@ -181,6 +174,10 @@
     <string name="browser_menu_add">Dodaj</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Uredi</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Početni zaslon</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -548,8 +545,6 @@
     <string name="library_new_tab">Nova kartica</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Pronađi na stranici</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Sinkronizirane kartice</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Popis za čitanje</string>
     <!-- Menu Item Label for Search in Library -->
@@ -594,6 +589,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Nakon jednog mjeseca</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Počni na početnoj stranici</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Nakon četiri sata</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Uvijek</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Nikad</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Zatvori ručno</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1581,6 +1585,10 @@
     <string name="credit_cards_card_number">Broj kartice</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Datum valjanosti</string>
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">Mjesec datuma valjanosti</string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">Godina datuma valjanosti</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Ime na kartici</string>
     <!-- The header for the nickname for a credit card -->
@@ -1602,6 +1610,8 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Unesi važeći broj kreditne kartice</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Molimo ispuni ovo polje</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Otključaj za prikaz spremljenih kreditnih kartica</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
@@ -1614,6 +1624,9 @@
     <string name="credit_cards_warning_dialog_later">Kasnije</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Otključaj svoj uređaj</string>
+
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Otključ za korištenje spremljenih podataka o kreditnim karticama</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Dodaj tražilicu</string>

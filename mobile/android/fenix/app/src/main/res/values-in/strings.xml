@@ -95,13 +95,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Tutup</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Ubah tata letak tab terbuka. Buka pengaturan dan pilih kisi di bawah tampilan tab.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Buka pengaturan</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Tutup</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Tab baru</string>
@@ -187,6 +180,10 @@
     <string name="browser_menu_add">Tambahkan</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Ubah</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Layar beranda</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -558,8 +555,6 @@
     <string name="library_new_tab">Tab baru</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Temukan di laman</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Tab yang disinkronkan</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Daftar Baca</string>
     <!-- Menu Item Label for Search in Library -->
@@ -604,6 +599,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Setelah satu bulan</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Mulai dari Beranda</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Setelah empat jam</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Selalu</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Tidak Pernah</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Tutup secara manual</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1587,6 +1591,10 @@
     <string name="credit_cards_card_number">Nomor Kartu</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Tanggal Kedaluwarsa</string>
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">Bulan Tanggal Kedaluwarsa</string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">Tanggal Tahun Kedaluwarsa</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Nama pada Kartu</string>
     <!-- The header for the nickname for a credit card -->
@@ -1605,6 +1613,8 @@
     <string name="credit_cards_saved_cards">Kartu tersimpan</string>
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Masukkan nomor kartu kredit yang sah</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Silahkan isi kolom ini</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Buka kunci untuk melihat kartu yang Anda simpan</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
