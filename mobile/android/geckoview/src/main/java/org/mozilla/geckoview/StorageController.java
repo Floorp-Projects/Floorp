@@ -299,10 +299,6 @@ public final class StorageController {
             Log.w(LOGTAG, "Cannot set a tracking permission to VALUE_PROMPT, aborting.");
             return;
         }
-        if (type == GeckoSession.PermissionDelegate.PERMISSION_STORAGE_ACCESS) {
-            Log.w(LOGTAG, "Cannot set storage access permission via String API.");
-            return;
-        }
         final GeckoBundle msg = new GeckoBundle(5);
         msg.putString("uri", uri);
         msg.putString("contextId", createSafeSessionContextId(contextId));
