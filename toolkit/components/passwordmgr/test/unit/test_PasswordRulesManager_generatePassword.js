@@ -22,6 +22,11 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 const IMPROVED_RULES_COLLECTION = "password-rules";
 
 function getRulesForRecord(records, baseOrigin) {
