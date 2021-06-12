@@ -217,15 +217,16 @@ void nsAvailableMemoryWatcher::Shutdown(const MutexAutoLock&) {
 
 bool nsAvailableMemoryWatcher::ListenForLowMemory() {
   if (mLowMemoryHandle && !mWaitHandle) {
+    // We're giving ownership of this object to the LowMemoryCallback(). We
+    // increment the count here so that the object is kept alive until the
+    // callback decrements it.
+    this->AddRef();
     bool res = ::RegisterWaitForSingleObject(
         &mWaitHandle, mLowMemoryHandle, LowMemoryCallback, this, INFINITE,
         WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
-    if (res) {
-      // We bump the reference count when registering the callback to keep the
-      // object alive in case of shutdown. Note that the reference count will be
-      // decremented by the callback itself only when it gets called, if it
-      // doesn't we have to decrement it ourselves.
-      this->AddRef();
+    if (!res) {
+      // We couldn't register the callback, decrement the count
+      this->Release();
     }
     return res;
   }
