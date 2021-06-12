@@ -82,7 +82,7 @@ class SiteHSTSState : public nsISiteHSTSState {
   bool mHSTSIncludeSubdomains;
   SecurityPropertySource mHSTSSource;
 
-  bool IsExpired(uint32_t aType) {
+  bool IsExpired() {
     // If mHSTSExpireTime is 0, this entry never expires (this is the case for
     // knockout entries).
     if (mHSTSExpireTime == 0) {
@@ -115,30 +115,34 @@ class nsSiteSecurityService : public nsISiteSecurityService,
   nsSiteSecurityService();
   nsresult Init();
 
+  static nsresult GetHost(nsIURI* aURI, nsACString& aResult);
+  static bool HostIsIPAddress(const nsCString& hostname);
+
  protected:
   virtual ~nsSiteSecurityService();
 
  private:
-  nsresult GetHost(nsIURI* aURI, nsACString& aResult);
-  nsresult SetHSTSState(uint32_t aType, const char* aHost, int64_t maxage,
+  nsresult SetHSTSState(const char* aHost, int64_t maxage,
                         bool includeSubdomains, uint32_t flags,
                         SecurityPropertyState aHSTSState,
                         SecurityPropertySource aSource,
                         const OriginAttributes& aOriginAttributes);
-  nsresult ProcessHeaderInternal(
-      uint32_t aType, nsIURI* aSourceURI, const nsCString& aHeader,
-      nsITransportSecurityInfo* aSecInfo, uint32_t aFlags,
-      SecurityPropertySource aSource, const OriginAttributes& aOriginAttributes,
-      uint64_t* aMaxAge, bool* aIncludeSubdomains, uint32_t* aFailureResult);
+  nsresult ProcessHeaderInternal(nsIURI* aSourceURI, const nsCString& aHeader,
+                                 nsITransportSecurityInfo* aSecInfo,
+                                 uint32_t aFlags,
+                                 SecurityPropertySource aSource,
+                                 const OriginAttributes& aOriginAttributes,
+                                 uint64_t* aMaxAge, bool* aIncludeSubdomains,
+                                 uint32_t* aFailureResult);
   nsresult ProcessSTSHeader(nsIURI* aSourceURI, const nsCString& aHeader,
                             uint32_t flags, SecurityPropertySource aSource,
                             const OriginAttributes& aOriginAttributes,
                             uint64_t* aMaxAge, bool* aIncludeSubdomains,
                             uint32_t* aFailureResult);
-  nsresult MarkHostAsNotHSTS(uint32_t aType, const nsAutoCString& aHost,
-                             uint32_t aFlags, bool aIsPreload,
+  nsresult MarkHostAsNotHSTS(const nsAutoCString& aHost, uint32_t aFlags,
+                             bool aIsPreload,
                              const OriginAttributes& aOriginAttributes);
-  nsresult ResetStateInternal(uint32_t aType, nsIURI* aURI, uint32_t aFlags,
+  nsresult ResetStateInternal(nsIURI* aURI, uint32_t aFlags,
                               const OriginAttributes& aOriginAttributes);
   bool HostHasHSTSEntry(const nsAutoCString& aHost,
                         bool aRequireIncludeSubdomains, uint32_t aFlags,
@@ -148,8 +152,7 @@ class nsSiteSecurityService : public nsISiteSecurityService,
   bool GetPreloadStatus(
       const nsACString& aHost,
       /*optional out*/ bool* aIncludeSubdomains = nullptr) const;
-  nsresult IsSecureHost(uint32_t aType, const nsACString& aHost,
-                        uint32_t aFlags,
+  nsresult IsSecureHost(const nsACString& aHost, uint32_t aFlags,
                         const OriginAttributes& aOriginAttributes,
                         bool* aCached, SecurityPropertySource* aSource,
                         bool* aResult);
