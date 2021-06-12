@@ -559,6 +559,10 @@ class Selection final : public nsSupportsWeakReference,
     SetStartAndEndInLimiter(RawRangeBoundary(&aStartContainer, aStartOffset),
                             RawRangeBoundary(&aEndContainer, aEndOffset), aRv);
   }
+  MOZ_CAN_RUN_SCRIPT
+  Result<Ok, nsresult> SetStartAndEndInLimiter(
+      nsINode& aStartContainer, uint32_t aStartOffset, nsINode& aEndContainer,
+      uint32_t aEndOffset, nsDirection aDirection, int16_t aReason);
 
   /**
    * SetBaseAndExtent() is alternative of the JS API for internal use.

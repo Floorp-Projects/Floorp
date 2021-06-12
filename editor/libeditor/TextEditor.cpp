@@ -584,7 +584,6 @@ nsresult TextEditor::InsertWithQuotationsAsSubAction(
 
 nsresult TextEditor::SelectEntireDocument() {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(IsTextEditor());
 
   if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -595,46 +594,21 @@ nsresult TextEditor::SelectEntireDocument() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // If we're empty, don't select all children because that would select the
-  // padding <br> element for empty editor.
-  if (IsEmpty()) {
-    nsresult rv = SelectionRef().CollapseInLimiter(anonymousDivElement, 0);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Selection::CollapseInLimiter() failed");
-    return rv;
-  }
-
-  // XXX We just need to select all of first text node (if there is).
-  //     Why do we do this kind of complicated things?
-
-  // Don't select the trailing BR node if we have one
-  nsCOMPtr<nsIContent> childNode;
-  nsresult rv =
-      EditorBase::GetEndChildNode(SelectionRef(), getter_AddRefs(childNode));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::GetEndChildNode() failed");
-    return rv;
-  }
-  if (childNode) {
-    childNode = childNode->GetPreviousSibling();
-  }
-
-  if (childNode &&
-      EditorUtils::IsPaddingBRElementForEmptyLastLine(*childNode)) {
+  RefPtr<Text> text =
+      Text::FromNodeOrNull(anonymousDivElement->GetFirstChild());
+  if (!text) {
     ErrorResult error;
-    SelectionRef().SetStartAndEndInLimiter(
-        RawRangeBoundary(anonymousDivElement, 0u), EditorRawDOMPoint(childNode),
-        error);
+    SelectionRef().CollapseInLimiter(*anonymousDivElement, 0, error);
     NS_WARNING_ASSERTION(!error.Failed(),
                          "Selection::SetStartAndEndInLimiter() failed");
     return error.StealNSResult();
   }
 
-  ErrorResult error;
-  SelectionRef().SelectAllChildren(*anonymousDivElement, error);
-  NS_WARNING_ASSERTION(!error.Failed(),
-                       "Selection::SelectAllChildren() failed");
-  return error.StealNSResult();
+  MOZ_TRY(SelectionRef().SetStartAndEndInLimiter(
+      *text, 0, *text, text->TextDataLength(), eDirNext,
+      nsISelectionListener::SELECTALL_REASON));
+
+  return NS_OK;
 }
 
 EventTarget* TextEditor::GetDOMEventTarget() const { return mEventTarget; }
