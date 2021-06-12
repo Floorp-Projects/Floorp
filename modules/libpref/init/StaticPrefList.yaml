@@ -10592,6 +10592,13 @@
   value: false
   mirror: always
 
+# Disable preloaded static key pins by default.
+- name: security.cert_pinning.enforcement_level
+  type: ReleaseAcquireAtomicUint32
+  value: 0
+  mirror: always
+  do_not_use_directly: true
+
 #---------------------------------------------------------------------------
 # Prefs starting with "signon."
 #---------------------------------------------------------------------------
