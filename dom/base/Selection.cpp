@@ -3391,6 +3391,21 @@ void Selection::SetBaseAndExtentInternal(InLimiter aInLimiter,
   SetStartAndEndInternal(aInLimiter, aFocusRef, aAnchorRef, eDirPrevious, aRv);
 }
 
+Result<Ok, nsresult> Selection::SetStartAndEndInLimiter(
+    nsINode& aStartContainer, uint32_t aStartOffset, nsINode& aEndContainer,
+    uint32_t aEndOffset, nsDirection aDirection, int16_t aReason) {
+  if (mFrameSelection) {
+    mFrameSelection->AddChangeReasons(aReason);
+  }
+
+  ErrorResult error;
+  SetStartAndEndInternal(
+      InLimiter::eYes, RawRangeBoundary(&aStartContainer, aStartOffset),
+      RawRangeBoundary(&aEndContainer, aEndOffset), aDirection, error);
+  MOZ_TRY(error.StealNSResult());
+  return Ok();
+}
+
 void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
                                        const RawRangeBoundary& aStartRef,
                                        const RawRangeBoundary& aEndRef,
