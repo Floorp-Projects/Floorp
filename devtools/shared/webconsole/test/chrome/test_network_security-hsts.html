@@ -47,7 +47,7 @@ async function startTest()
   // Reset HSTS state.
   const gSSService = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
   const uri = Services.io.newURI(TEST_CASES[0].url);
-  gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
+  gSSService.resetState(uri, 0);
 
   SimpleTest.finish();
 }

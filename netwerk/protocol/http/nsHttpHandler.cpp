@@ -2436,9 +2436,8 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
       aURI, originAttributes);
 
   nsCOMPtr<nsIURI> clone;
-  if (NS_SUCCEEDED(sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI,
-                                    flags, originAttributes, nullptr, nullptr,
-                                    &isStsHost)) &&
+  if (NS_SUCCEEDED(sss->IsSecureURI(aURI, flags, originAttributes, nullptr,
+                                    nullptr, &isStsHost)) &&
       isStsHost) {
     if (NS_SUCCEEDED(NS_GetSecureUpgradedURI(aURI, getter_AddRefs(clone)))) {
       aURI = clone.get();
