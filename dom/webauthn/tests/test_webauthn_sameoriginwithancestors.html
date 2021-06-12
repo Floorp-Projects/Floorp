@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Test for MakeCredential for W3C Web Authentication (sameOriginWithAncestors = false)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <script type="text/javascript" src="pkijs/common.js"></script>
+  <script type="text/javascript" src="pkijs/asn1.js"></script>
+  <script type="text/javascript" src="pkijs/x509_schema.js"></script>
+  <script type="text/javascript" src="pkijs/x509_simpl.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>Test Same Origin Policy for W3C Web Authentication (sameOriginWithAncestors = false)</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1694639">Mozilla Bug 1694639</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    // Execute the full-scope test
+    SimpleTest.waitForExplicitFinish();
+
+    var gTrackedCredential = {};
+
+    function arrivingHereIsGood(aResult) {
+      ok(true, "Good result! Received a: " + aResult);
+    }
+
+    function arrivingHereIsBad(aResult) {
+      ok(false, "Bad result! Received a: " + aResult);
+    }
+
+    function expectNotAllowedError(aResult) {
+      ok(aResult == "NotAllowedError", "Expecting a NotAllowedError, got " + aResult);
+    }
+
+    function keepThisPublicKeyCredential(aIdentifier) {
+      return function(aPublicKeyCredential) {
+        gTrackedCredential[aIdentifier] = {
+          type: "public-key",
+          id: new Uint8Array(aPublicKeyCredential.rawId),
+          transports: [ "usb" ],
+        }
+        return Promise.resolve(aPublicKeyCredential);
+      }
+    }
+
+    async function runTests() {
+      let iframe = document.createElement("iframe");
+      iframe.src = "https://example.org";
+      document.body.appendChild(iframe);
+      await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
+
+      is(navigator.authentication, undefined, "navigator.authentication does not exist any longer");
+      isnot(navigator.credentials, undefined, "Credential Management API endpoint must exist");
+      isnot(navigator.credentials.create, undefined, "CredentialManagement create API endpoint must exist");
+      isnot(navigator.credentials.get, undefined, "CredentialManagement get API endpoint must exist");
+
+      let credm = navigator.credentials;
+
+      let chall = new Uint8Array(16);
+      window.crypto.getRandomValues(chall);
+
+      let user = {id: new Uint8Array(16), name: "none", icon: "none", displayName: "none"};
+      let param = {type: "public-key", alg: cose_alg_ECDSA_w_SHA256};
+
+      let rp = {id: document.domain, name: "none"};
+      let makeCredentialOptions = {
+        rp, user, challenge: chall, pubKeyCredParams: [param]
+      };
+      await credm.create({publicKey: makeCredentialOptions})
+        .then(keepThisPublicKeyCredential("basic"))
+        .catch(arrivingHereIsBad);
+
+      var testFuncs = [
+        function (args) {
+          // Test create when sameOriginWithAncestors = false
+          let credentialOptions = {
+            rp: args.rp, user: args.user, challenge: args.challenge, pubKeyCredParams: [args.param]
+          };
+          return this.content.window.navigator.credentials.create({publicKey: credentialOptions})
+            .catch(e => Promise.reject(e.name));
+        },
+        function (args) {
+          // Test get when sameOriginWithAncestors = false
+          let publicKeyCredentialRequestOptions = {
+            challenge: args.challenge,
+            rpId: args.rp.id,
+            allowCredentials: [args.trackedCredential.basic]
+          };
+          return this.content.window.navigator.credentials.get({publicKey: publicKeyCredentialRequestOptions})
+            .catch(e => Promise.reject(e.name));
+        },
+      ];
+
+      let args = { user, param, rp, challenge: chall, trackedCredential: gTrackedCredential }
+      for(let func of testFuncs) {
+        await SpecialPowers.spawn(iframe, [args], func)
+          .then(arrivingHereIsBad)
+          .catch(expectNotAllowedError);
+      }
+      SimpleTest.finish();
+    };
+
+    SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
+                                       ["security.webauth.webauthn_enable_softtoken", true],
+                                       ["security.webauth.webauthn_enable_android_fido2", false],
+                                       ["security.webauth.webauthn_enable_usbtoken", false]]},
+                              runTests);
+
+  </script>
+
+</body>
+</html>
