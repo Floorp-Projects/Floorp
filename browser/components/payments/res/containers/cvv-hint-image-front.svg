@@ -1,7 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="45" height="27" version="1.1">
+<svg xmlns="http://www.w3.org/2000/svg" width="45" height="27" version="1.1">
   <defs>
     <circle id="a" cx="10" cy="10" r="10"/>
   </defs>
@@ -10,9 +10,9 @@
     <path fill="#5F5F5F" d="M37 6.458a9.996 9.996 0 0 0 -3 -0.458 9.97 9.97 0 0 0 -7.141 3h-26.859v-6h37v3.458z"/>
     <g transform="translate(24 6)">
       <mask id="b" fill="#fff">
-        <use xlink:href="#a"/>
+        <use href="#a"/>
       </mask>
-      <use stroke="#FFF" stroke-width="1.5" xlink:href="#a"/>
+      <use stroke="#FFF" stroke-width="1.5" href="#a"/>
       <g mask="url(#b)">
         <path fill="#62A0FF" fill-rule="evenodd" d="M-41.923 -15.615h64.476a1 1 0 0 1 1 1v44.244a1 1 0 0 1 -1 1h-64.476a1 1 0 0 1 -1 -1v-44.244a1 1 0 0 1 1 -1zm2.923 19.615v9h55v-9h-55z"/>
         <path fill="#5F5F5F" fill-rule="evenodd" d="M-43 -10h66v12h-66z"/>
