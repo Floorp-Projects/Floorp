@@ -518,6 +518,11 @@ class nsLayoutUtils {
    *
    * Just like IsProperAncestorFrameCrossDoc, except that it returns true when
    * aFrame == aAncestorFrame.
+   *
+   * NOTE: This function doesn't return true even if |aAncestorFrame| and
+   * |aFrame| is in the same process but they are not directly connected, e.g.
+   * both |aAncestorFrame| and |aFrame| in A domain documents, but there's
+   * another an iframe document domain B, such as A1 -> B1 ->A2 document tree.
    */
   static bool IsAncestorFrameCrossDocInProcess(
       const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
