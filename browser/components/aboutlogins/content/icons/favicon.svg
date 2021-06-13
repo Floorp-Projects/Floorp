@@ -1,7 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32">
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
   <defs>
     <linearGradient id="b" x1="24.684" y1="5.756" x2="6.966" y2="26.663" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#ff9640"/>
@@ -23,7 +23,7 @@
       <stop offset="0" stop-color="#722291" stop-opacity=".5"/>
       <stop offset=".5" stop-color="#722291" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="e" x1="20.659" y1="21.192" x2="13.347" y2="28.399" xlink:href="#a"/>
+    <linearGradient id="e" x1="20.659" y1="21.192" x2="13.347" y2="28.399" href="#a"/>
     <linearGradient id="f" x1="2.97" y1="19.36" x2="10.224" y2="21.105" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#054096" stop-opacity=".5"/>
       <stop offset=".054" stop-color="#0f3d9c" stop-opacity=".441"/>

@@ -1,7 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg enable-background="new 0 0 76.8 76.8" viewBox="0 0 76.8 76.8" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg enable-background="new 0 0 76.8 76.8" viewBox="0 0 76.8 76.8" xmlns="http://www.w3.org/2000/svg">
   <linearGradient id="a" gradientTransform="matrix(1.3333 0 0 -1.3333 118.8667 193.9333)" gradientUnits="userSpaceOnUse" x1="-92.971" x2="-32.8" y1="81.79" y2="146.09">
     <stop offset=".26" stop-color="#9059ff"/>
     <stop offset=".96" stop-color="#00b3f4"/>

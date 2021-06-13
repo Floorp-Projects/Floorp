@@ -1,7 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg height="2in" viewBox="0 0 315.96 144" width="4.39in" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg height="2in" viewBox="0 0 315.96 144" width="4.39in" xmlns="http://www.w3.org/2000/svg">
   <radialGradient id="a" cx="101.36" cy="70.18" gradientUnits="userSpaceOnUse" r="58.29">
     <stop offset=".27" stop-color="#cdcdd4" stop-opacity="0"/>
     <stop offset=".46" stop-color="#cdcdd4" stop-opacity=".02"/>
@@ -9,7 +9,7 @@
     <stop offset=".86" stop-color="#cdcdd4" stop-opacity=".18"/>
     <stop offset=".9" stop-color="#cdcdd4" stop-opacity=".2"/>
   </radialGradient>
-  <radialGradient id="b" cx="225.08" cy="70.18" r="58.29" xlink:href="#a"/>
+  <radialGradient id="b" cx="225.08" cy="70.18" r="58.29" href="#a"/>
   <linearGradient id="c" gradientUnits="userSpaceOnUse" x1="28.25" x2="93.99" y1="99.19" y2="33.44">
     <stop offset="0" stop-color="#c689ff"/>
     <stop offset="1" stop-color="#d74cf0"/>
