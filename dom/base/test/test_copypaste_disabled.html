@@ -1,6 +1,8 @@
 <!doctype html>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
 <script src="copypaste.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <div id="content">
@@ -33,7 +35,7 @@ function dragSelect(e, x1, x2, x3) {
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(async function() {
+waitUntilApzStable().then(async function() {
   const docShell = SpecialPowers.wrap(window).docShell;
 
   const clipboard = SpecialPowers.Services.clipboard;
@@ -97,6 +99,8 @@ SimpleTest.waitForFocus(async function() {
   await iframeLoad;
   iframe.width = window.innerWidth;
   iframe.height = window.innerHeight;
+
+  await SimpleTest.promiseFocus(iframe.contentWindow);
   await runTestsOn(iframe.contentDocument);
 
   // Add a contenteditable element to test the case where there's an HTMLEditor
