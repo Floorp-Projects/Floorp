@@ -10,8 +10,12 @@
     <string name="mozac_feature_contextmenu_share_link">Bḍu asɣen</string>
     <!-- Text for context menu item to share the image with an other app. -->
     <string name="mozac_feature_contextmenu_share_image">Bḍu tawlaft</string>
+    <!-- Text for context menu item to copy the link to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_link">Nɣel asɣun</string>
     <!-- Text for context menu item to share the email with another app. -->
     <string name="mozac_feature_contextmenu_share_email_address">Bḍu tansa imayl</string>
+    <!-- Text for context menu item to copy the email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_email_address">Nɣel tansa imayl</string>
     <!-- Text for context menu item to add to a contact. -->
     <string name="mozac_feature_contextmenu_add_to_contact">Rnu ɣer wassaɣ</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->

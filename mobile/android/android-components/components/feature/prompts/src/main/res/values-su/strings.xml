@@ -101,4 +101,8 @@
     <string name="mozac_feature_prompts_select_credit_card">Pilih kartu kiridit</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">Legaan kartu kiridit anu disarankeun</string>
-    </resources>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Tilep saran kartu kiridit</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <string name="mozac_feature_prompts_manage_credit_cards">Kokolakeun kartu kiridit</string>
+</resources>
