@@ -28,16 +28,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=622117
 SimpleTest.waitForExplicitFinish();
 
 const PASSURL = "data:text/plain,PASS";
+const { testframe } = document.all;
 
-SimpleTest.waitForFocus(async () => {
-  $("testframe").onload = function() {
+waitUntilApzStable().then(async () => {
+  testframe.onload = function() {
     is(this.contentDocument.documentElement.innerText, "PASS", "Should have loaded link");
     SimpleTest.finish();
   };
 
-  await waitUntilApzStable();
+  is(testframe.contentDocument.readyState, "complete", "iframe is not loaded yet?");
 
-  var win = $("testframe").contentWindow;
+  var win = testframe.contentWindow;
+  await SimpleTest.promiseFocus(win);
+
   var a = win.document.getElementsByTagName("a")[0];
   synthesizeMouseAtCenter(a, {}, win);
 });
