@@ -3487,7 +3487,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   // the visual viewport in scenarios where there is not enough layout
   // scroll range.
   if (aFrameAsScrollable->IsRootScrollFrameOfDocument() &&
-      frame->PresShell()->GetPresContext()->IsRootContentDocument()) {
+      frame->PresContext()->IsRootContentDocumentCrossProcess()) {
     frame->PresShell()->ScrollToVisual(scrollPt, FrameMetrics::eMainThread,
                                        scrollMode);
   }
@@ -5917,10 +5917,10 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
       // displayport in that case.
       nsPresContext* pc = aFrame->PresContext();
       if (scrollFrame->IsRootScrollFrameOfDocument() &&
-          (pc->IsRootContentDocument() || !pc->GetParentPresContext())) {
-        nsRect baseRect =
-            nsRect(nsPoint(0, 0),
-                   nsLayoutUtils::CalculateCompositionSizeForFrame(aFrame));
+          (pc->IsRootContentDocumentCrossProcess() ||
+           (pc->IsChrome() && !pc->GetParentPresContext()))) {
+        nsRect baseRect(
+            nsPoint(), nsLayoutUtils::CalculateCompositionSizeForFrame(aFrame));
         DisplayPortUtils::SetDisplayPortBase(aFrame->GetContent(), baseRect);
       } else {
         ignoreDisplayPort = true;
@@ -6008,7 +6008,7 @@ void PresShell::UpdateApproximateFrameVisibility() {
 
 void PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly) {
   MOZ_ASSERT(
-      !mPresContext || mPresContext->IsRootContentDocument(),
+      !mPresContext || mPresContext->IsRootContentDocumentInProcess(),
       "Updating approximate frame visibility on a non-root content document?");
 
   mUpdateApproximateFrameVisibilityEvent.Revoke();
@@ -6120,11 +6120,11 @@ void PresShell::ScheduleApproximateFrameVisibilityUpdateNow() {
     return;
   }
 
-  if (!mPresContext->IsRootContentDocument()) {
+  if (!mPresContext->IsRootContentDocumentInProcess()) {
     nsPresContext* presContext =
         mPresContext->GetInProcessRootContentDocumentPresContext();
     if (!presContext) return;
-    MOZ_ASSERT(presContext->IsRootContentDocument(),
+    MOZ_ASSERT(presContext->IsRootContentDocumentInProcess(),
                "Didn't get a root prescontext from "
                "GetInProcessRootContentDocumentPresContext?");
     presContext->PresShell()->ScheduleApproximateFrameVisibilityUpdateNow();
