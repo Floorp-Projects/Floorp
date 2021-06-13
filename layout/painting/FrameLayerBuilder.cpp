@@ -1314,7 +1314,7 @@ class ContainerState {
                  : aContainerItem->GetAnimatedGeometryRoot();
     MOZ_ASSERT(
         !mBuilder->IsPaintingToWindow() ||
-        nsLayoutUtils::IsAncestorFrameCrossDoc(
+        nsLayoutUtils::IsAncestorFrameCrossDocInProcess(
             mBuilder->RootReferenceFrame(), *mContainerAnimatedGeometryRoot));
     // When AllowResidualTranslation is false, display items will be drawn
     // scaled with a translation by integer pixels, so we know how the snapping
@@ -3071,7 +3071,7 @@ PaintedLayerDataNode::PaintedLayerDataNode(
       mParent(aParent),
       mAnimatedGeometryRoot(aAnimatedGeometryRoot),
       mAllDrawingAboveBackground(false) {
-  MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(
+  MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDocInProcess(
       mTree.Builder()->RootReferenceFrame(), *mAnimatedGeometryRoot));
   mHasClip = mTree.IsClippedWithRespectToParentAnimatedGeometryRoot(
       mAnimatedGeometryRoot, &mClipRect);
@@ -3297,7 +3297,7 @@ void PaintedLayerDataTree::FinishPotentiallyIntersectingNodes(
   // ancestorThatIsChildOfCommonAncestor is the last animated geometry root
   // encountered on the way up from aAnimatedGeometryRoot to ancestorNode.
   MOZ_ASSERT(ancestorThatIsChildOfCommonAncestor);
-  MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(
+  MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDocInProcess(
       *ancestorThatIsChildOfCommonAncestor, *aAnimatedGeometryRoot));
   MOZ_ASSERT(ancestorThatIsChildOfCommonAncestor->mParentAGR ==
              ancestorNode->GetAnimatedGeometryRoot());
