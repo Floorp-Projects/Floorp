@@ -203,6 +203,11 @@ interface nsIContentViewer : nsISupports
                              in nsIPrintSettings aPrintSettings);
 
   /**
+   * Sets the print settings for print / print-previewing a subdocument.
+   */
+  [can_run_script] void setPrintSettingsForSubdocument(in nsIPrintSettings aPrintSettings);
+
+  /**
    * Get the history entry that this viewer will save itself into when
    * destroyed.  Can return null
    */
