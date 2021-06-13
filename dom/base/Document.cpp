@@ -12832,7 +12832,7 @@ static void CachePrintSelectionRanges(const Document& aSourceDoc,
 
 already_AddRefed<Document> Document::CreateStaticClone(
     nsIDocShell* aCloneContainer, nsIContentViewer* aViewer,
-    bool* aOutHasInProcessPrintCallbacks) {
+    nsIPrintSettings* aPrintSettings, bool* aOutHasInProcessPrintCallbacks) {
   MOZ_ASSERT(!mCreatingStaticClone);
   MOZ_ASSERT(!GetProperty(nsGkAtoms::adoptedsheetclones));
   MOZ_DIAGNOSTIC_ASSERT(aViewer);
@@ -12926,7 +12926,7 @@ already_AddRefed<Document> Document::CreateStaticClone(
     clone.mElement->SetFrameLoader(frameLoader);
 
     nsresult rv = frameLoader->FinishStaticClone(
-        clone.mStaticCloneOf, aOutHasInProcessPrintCallbacks);
+        clone.mStaticCloneOf, aPrintSettings, aOutHasInProcessPrintCallbacks);
     Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 

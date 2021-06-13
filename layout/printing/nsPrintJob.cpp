@@ -19,6 +19,7 @@
 #include "mozilla/dom/PBrowser.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/CustomEvent.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/StaticPrefs_print.h"
@@ -252,6 +253,14 @@ static void BuildNestedPrintObjects(const UniquePtr<nsPrintObject>& aParentPO,
   for (auto& bc : aParentPO->mDocShell->GetBrowsingContext()->Children()) {
     nsCOMPtr<nsIDocShell> docShell = bc->GetDocShell();
     if (!docShell) {
+      if (auto* cc = dom::ContentChild::GetSingleton()) {
+        nsCOMPtr<nsIPrintSettingsService> printSettingsService =
+            do_GetService(sPrintSettingsServiceContractID);
+        embedding::PrintData printData;
+        printSettingsService->SerializeToPrintData(aPrintData->mPrintSettings,
+                                                   &printData);
+        Unused << cc->SendUpdateRemotePrintSettings(bc, printData);
+      }
       continue;
     }
 
@@ -542,6 +551,12 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // if they don't pass in a PrintSettings, then get the Global PS
+  printData->mPrintSettings = aPrintSettings;
+  if (!printData->mPrintSettings) {
+    MOZ_TRY(GetDefaultPrintSettings(getter_AddRefs(printData->mPrintSettings)));
+  }
+
   {
     nsAutoScriptBlocker scriptBlocker;
     printData->mPrintObject = MakeUnique<nsPrintObject>();
@@ -570,12 +585,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   if (!printData->mPrintObject->mDocument ||
       !printData->mPrintObject->mDocument->GetRootElement())
     return NS_ERROR_GFX_PRINTER_STARTDOC;
-
-  // if they don't pass in a PrintSettings, then get the Global PS
-  printData->mPrintSettings = aPrintSettings;
-  if (!printData->mPrintSettings) {
-    MOZ_TRY(GetDefaultPrintSettings(getter_AddRefs(printData->mPrintSettings)));
-  }
 
   MOZ_TRY(EnsureSettingsHasPrinterNameSet(printData->mPrintSettings));
 
@@ -775,8 +784,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
         [self](nsresult aResult) { self->PageDone(aResult); });
   }
 
-  if (!mozilla::StaticPrefs::print_tab_modal_enabled() &&
-      mIsCreatingPrintPreview) {
+  if (!StaticPrefs::print_tab_modal_enabled() && mIsCreatingPrintPreview) {
     // In legacy print-preview mode, override any UI that wants to PrintPreview
     // any selection or page range.  The legacy print-preview intends to view
     // every page in PrintPreview each time.
