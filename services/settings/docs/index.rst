@@ -248,6 +248,8 @@ The synchronization process consists in pulling the recent changes, merging them
 
 .. Source of diagram
 .. https://mermaid-js.github.io/mermaid-live-editor/
+.. When using this tool, please remove xlink prefix from attributes in the resulting SVG file.
+.. See bug 1481470.
 ..
 .. graph TD
 ..     0[Sync] --> pull;
