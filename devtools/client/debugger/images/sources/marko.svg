@@ -1,7 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="256px" height="140px" viewBox="0 0 256 140" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMidYMid">
+<svg width="256px" height="140px" viewBox="0 0 256 140" version="1.1" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid">
     <defs>
         <linearGradient x1="49.9109718%" y1="99.9084071%" x2="49.9109718%" y2="-0.0902654867%" id="linearGradient-1">
             <stop stop-color="#8AC23E" offset="0%"></stop>
