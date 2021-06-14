@@ -130,12 +130,13 @@ void ClientLayerManager::Destroy() {
     // pending transaction. Do this at the top of the event loop so we don't
     // cause a paint to occur during compositor shutdown.
     RefPtr<TransactionIdAllocator> allocator = mTransactionIdAllocator;
-    TransactionId id = mLatestTransactionId;
 
     RefPtr<Runnable> task = NS_NewRunnableFunction(
         "TransactionIdAllocator::NotifyTransactionCompleted",
-        [allocator, id]() -> void {
-          allocator->NotifyTransactionCompleted(id);
+        [allocator, pending = std::move(mPendingTransactions)]() -> void {
+          for (auto& id : pending) {
+            allocator->NotifyTransactionCompleted(id);
+          }
         });
     NS_DispatchToMainThread(task.forget());
   }
@@ -513,6 +514,8 @@ void ClientLayerManager::DidComposite(TransactionId aTransactionId,
   for (size_t i = 0; i < mDidCompositeObservers.Length(); i++) {
     mDidCompositeObservers[i]->DidComposite();
   }
+
+  mPendingTransactions.RemoveElement(aTransactionId);
 }
 
 void ClientLayerManager::GetCompositorSideAPZTestData(
@@ -733,6 +736,8 @@ void ClientLayerManager::ForwardTransaction(bool aScheduleComposite) {
     // have a compositor.
     mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
     mLatestTransactionId = mLatestTransactionId.Prev();
+  } else {
+    mPendingTransactions.AppendElement(mLatestTransactionId);
   }
 
   mPhase = PHASE_NONE;
