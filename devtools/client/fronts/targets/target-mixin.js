@@ -574,7 +574,11 @@ function TargetMixin(parentClass) {
         // If the Thread actor has already been attached from the server side
         // by the Watcher Actor, we still have to pass options that aren't yet managed via
         // the Watcher actor's addWatcherDataEntry codepath (bug 1687261).
-        await this.threadFront.reconfigure(options);
+
+        // @backward-compat { version 91 } Thread configuration actor now supports most thread options
+        if (!this.getTrait("supportsThreadConfigurationOptions")) {
+          await this.threadFront.reconfigure(options);
+        }
         return this.threadFront;
       }
       if (

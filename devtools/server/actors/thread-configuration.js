@@ -21,6 +21,21 @@ const SUPPORTED_OPTIONS = {
   pauseOnExceptions: true,
   // Disable pausing on caught exceptions.
   ignoreCaughtExceptions: true,
+  // Shows the pause overlay.
+  shouldShowOverlay: true,
+  // Include previously saved stack frames when paused.
+  shouldIncludeSavedFrames: true,
+  // Include async stack frames when paused.
+  shouldIncludeAsyncLiveFrames: true,
+  // Stop pausing on breakpoints.
+  skipBreakpoints: true,
+  // Log the event break points.
+  logEventBreakpoints: true,
+  // Enable debugging asm & wasm.
+  // See https://searchfox.org/mozilla-central/source/js/src/doc/Debugger/Debugger.md#16-26
+  observeAsmJS: true,
+  // Should pause all the workers untill thread has attached.
+  pauseWorkersUntilAttach: true,
 };
 
 /**

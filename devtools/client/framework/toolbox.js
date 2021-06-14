@@ -202,6 +202,13 @@ loader.lazyRequireGetter(
   true
 );
 
+loader.lazyRequireGetter(
+  this,
+  "getThreadOptions",
+  "devtools/client/shared/thread-utils",
+  true
+);
+
 const DEVTOOLS_F12_DISABLED_PREF = "devtools.experiment.f12.shortcut_disabled";
 
 /**
@@ -788,6 +795,15 @@ Toolbox.prototype = {
       // Optimization: fire up a few other things before waiting on
       // the iframe being ready (makes startup faster)
       await this.commands.targetCommand.startListening();
+
+      // Lets get the current thread settings from the prefs and
+      // update the threadConfigurationActor which should manage
+      // updating the current threads.
+      const options = await getThreadOptions();
+      await this.commands.threadConfigurationCommand.updateConfiguration(
+        options
+      );
+
       // The targetCommand is created right before this code.
       // It means that this call to watchTargets is the first,
       // and we are registering the first target listener, which means

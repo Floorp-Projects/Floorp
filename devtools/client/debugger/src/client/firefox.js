@@ -8,7 +8,7 @@ import {
   createPause,
   prepareSourcePayload,
 } from "./firefox/create";
-import { features, prefs } from "../utils/prefs";
+import { features } from "../utils/prefs";
 
 import { recordEvent } from "../utils/telemetry";
 import sourceQueue from "../utils/source-queue";
@@ -16,15 +16,19 @@ import sourceQueue from "../utils/source-queue";
 let actions;
 let targetCommand;
 let resourceCommand;
+let commands;
 
-export async function onConnect(commands, _resourceCommand, _actions, store) {
+export async function onConnect(_commands, _resourceCommand, _actions, store) {
   actions = _actions;
-  targetCommand = commands.targetCommand;
+  targetCommand = _commands.targetCommand;
   resourceCommand = _resourceCommand;
+  commands = _commands;
 
   setupCommands(commands);
   setupCreate({ store });
+
   sourceQueue.initialize(actions);
+
   const { targetFront } = targetCommand;
   if (targetFront.isBrowsingContext || targetFront.isParentProcess) {
     targetCommand.listenForWorkers = true;
@@ -34,6 +38,14 @@ export async function onConnect(commands, _resourceCommand, _actions, store) {
     }
     await targetCommand.startListening();
   }
+  // `pauseWorkersUntilAttach` is one option set when the debugger panel is opened rather that from the toolbox.
+  // The reason is to support early breakpoints in workers, which will force the workers to pause
+  // and later on (when TargetMixin.attachThread is called) resume worker execution, after passing the breakpoints.
+  // We only observe workers when the debugger panel is opened (see the few lines before and listenForWorkers = true).
+  // So if we were passing `pauseWorkersUntilAttach=true` from the toolbox code, workers would freeze as we would not watch
+  // for their targets and not resume them.
+  const options = { pauseWorkersUntilAttach: true };
+  await commands.threadConfigurationCommand.updateConfiguration(options);
 
   // We should probably only pass descriptor informations from here
   // so only pass if that's a WebExtension toolbox.
@@ -116,13 +128,6 @@ async function onTargetAvailable({ targetFront, isTargetSwitching }) {
     console.error("The thread for", targetFront, "isn't attached.");
     return;
   }
-
-  await threadFront.reconfigure({
-    observeAsmJS: true,
-    pauseWorkersUntilAttach: true,
-    skipBreakpoints: prefs.skipPausing,
-    logEventBreakpoints: prefs.logEventBreakpoints,
-  });
 
   // Retrieve possible event listener breakpoints
   actions.getEventListenerBreakpointTypes().catch(e => console.error(e));
