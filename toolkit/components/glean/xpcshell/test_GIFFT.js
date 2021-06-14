@@ -88,29 +88,8 @@ add_task(function test_gifft_memory_dist() {
   }
 
   data = Telemetry.getHistogramById("TELEMETRY_TEST_LINEAR").snapshot();
-  Telemetry.getHistogramById("TELEMETRY_TEST_LINEAR").clear();
   Assert.equal(24, data.sum, "Histogram's in `memory_unit` units");
   Assert.equal(2, data.values["1"], "Both samples in a low bucket");
-});
-
-add_task(function test_gifft_custom_dist() {
-  Glean.testOnlyIpc.aCustomDist.accumulateSamples([7, 268435458]);
-
-  let data = Glean.testOnlyIpc.aCustomDist.testGetValue();
-  Assert.equal(7 + 268435458, data.sum, "Sum's correct");
-  for (let [bucket, count] of Object.entries(data.values)) {
-    Assert.ok(
-      count == 0 || (count == 1 && (bucket == 1 || bucket == 268435456)),
-      `Only two buckets have a sample ${bucket} ${count}`
-    );
-  }
-
-  data = Telemetry.getHistogramById("TELEMETRY_TEST_LINEAR").snapshot();
-  Telemetry.getHistogramById("TELEMETRY_TEST_LINEAR").clear();
-  Assert.equal(7 + 268435458, data.sum, "Sum in histogram is correct");
-  Assert.equal(1, data.values["1"], "One sample in the low bucket");
-  // Yes, the bucket is off-by-one compared to Glean.
-  Assert.equal(1, data.values["268435457"], "One sample in the next bucket");
 });
 
 add_task(async function test_gifft_timing_dist() {

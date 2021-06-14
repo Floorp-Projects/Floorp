@@ -5,11 +5,11 @@ flake8-bugbear==21.4.3
 m2r==0.2.1
 mypy==0.812
 pip
-pytest-runner==5.3.1
+pytest-runner==5.3.0
 pytest==6.2.4
 recommonmark==0.7.1
-Sphinx==4.0.2
+Sphinx==4.0.1
 twine==3.4.1
-watchdog==2.1.2
+watchdog==2.1.1
 wheel
 yamllint==1.26.1
