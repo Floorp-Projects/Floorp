@@ -8,7 +8,7 @@ import os
 
 import pytest
 import yaml
-from mock import MagicMock
+from unittest.mock import MagicMock
 from moztest.resolve import TestResolver
 from taskgraph.graph import Graph
 from taskgraph.task import Task

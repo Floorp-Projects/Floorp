@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import pytest
 
-import mock
+from unittest import mock
 import mozunit
 from mozperftest.environment import METRICS
 from mozperftest.tests.support import BT_DATA, EXAMPLE_TEST, get_running_env, temp_file

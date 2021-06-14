@@ -10,7 +10,7 @@ import subprocess
 import tempfile
 
 from buildconfig import topsrcdir
-from mock import Mock
+from unittest.mock import Mock
 from mozbuild.vendor.vendor_python import VendorPython
 import mozunit
 

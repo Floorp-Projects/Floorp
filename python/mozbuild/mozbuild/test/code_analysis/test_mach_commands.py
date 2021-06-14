@@ -4,7 +4,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 import os
 import unittest
-import mock
+from unittest import mock
 
 from mozunit import main
 from mach.registrar import Registrar

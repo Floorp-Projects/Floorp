@@ -5,9 +5,9 @@ import sys
 import threading
 import time
 import traceback
-import mock
+from unittest import mock
 import pytest
-from mock import Mock
+from unittest.mock import Mock
 from six import reraise
 
 import mozunit

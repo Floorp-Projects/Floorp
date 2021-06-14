@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function
 
-import mock
+from unittest import mock
 import os
 import pytest
 import tempfile

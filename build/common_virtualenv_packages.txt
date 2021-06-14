@@ -64,7 +64,6 @@ mozilla.pth:third_party/python/jsmin
 mozilla.pth:third_party/python/json-e
 mozilla.pth:third_party/python/jsonschema
 mozilla.pth:third_party/python/MarkupSafe/src
-mozilla.pth:third_party/python/mock-1.0.0
 mozilla.pth:third_party/python/mohawk
 mozilla.pth:third_party/python/more-itertools
 mozilla.pth:third_party/python/mozilla-version

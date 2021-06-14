@@ -10,7 +10,7 @@ import shutil
 import unittest
 import tempfile
 
-from mock import patch
+from unittest.mock import patch
 from mozunit import main, MockedOpen
 from taskgraph import decision
 from taskgraph.util.yaml import load_yaml
