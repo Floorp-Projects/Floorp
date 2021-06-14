@@ -2151,7 +2151,8 @@ var gBrowserInit = {
 
       if (
         (isBlankPageURL(uriToLoad) && !aboutWelcomeSkipUrlBarFocus) ||
-        uriToLoad == "about:privatebrowsing"
+        uriToLoad == "about:privatebrowsing" ||
+        this.getTabToAdopt()?.isEmpty
       ) {
         gURLBar.select();
         shouldRemoveFocusedAttribute = false;
