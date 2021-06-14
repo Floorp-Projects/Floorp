@@ -17,6 +17,7 @@ from .util import (
     fetch_graph_and_labels,
     relativize_datestamps,
     create_task_from_def,
+    get_downstream_browsertime_tasks,
     get_tasks_with_downstream,
     rename_browsertime_vismet_task,
 )
@@ -152,7 +153,7 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
     task = taskcluster.get_task_definition(task_id)
     label = task["metadata"]["name"]
 
-    force_downstream = "browsertime" in label
+    is_browsertime = "browsertime" in label
     if "vismet" in label:
         label = rename_browsertime_vismet_task(label)
 
@@ -166,8 +167,13 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
         )
         sys.exit(1)
 
-    if input.get("downstream") or force_downstream:
-        to_run = get_tasks_with_downstream(to_run, full_task_graph, label_to_taskid)
+    if input.get("downstream") or is_browsertime:
+        if is_browsertime:
+            to_run = get_downstream_browsertime_tasks(
+                to_run, full_task_graph, label_to_taskid
+            )
+        else:
+            to_run = get_tasks_with_downstream(to_run, full_task_graph, label_to_taskid)
         with_downstream = " (with downstream) "
 
     times = input.get("times", 1)
@@ -298,7 +304,7 @@ def retrigger_multiple(parameters, graph_config, input, task_group_id, task_id):
         if len(browsertime_tasks) > 0:
             retrigger_tasks.extend(
                 list(
-                    get_tasks_with_downstream(
+                    get_downstream_browsertime_tasks(
                         browsertime_tasks, full_task_graph, label_to_taskid
                     )
                 )
