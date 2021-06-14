@@ -178,6 +178,8 @@ class RuleCharacterIterator;
  * Unicode property
  * </table>
  *
+ * <p><b>Warning</b>: you cannot add an empty string ("") to a UnicodeSet.</p>
+ *
  * <p><b>Formal syntax</b></p>
  *
  * \htmlonly<blockquote>\endhtmlonly
@@ -599,7 +601,7 @@ public:
 
     /**
      * Make this object represent the range `start - end`.
-     * If `start > end` then this object is set to an empty range.
+     * If `end > start` then this object is set to an empty range.
      * A frozen set will not be modified.
      *
      * @param start first character in the set, inclusive
@@ -1075,7 +1077,7 @@ public:
     /**
      * Adds the specified range to this set if it is not already
      * present.  If this set already contains the specified range,
-     * the call leaves this set unchanged.  If <code>start > end</code>
+     * the call leaves this set unchanged.  If <code>end > start</code>
      * then an empty range is added, leaving the set unchanged.
      * This is equivalent to a boolean logic OR, or a set UNION.
      * A frozen set will not be modified.
@@ -1093,9 +1095,6 @@ public:
      * present.  If this set already contains the specified character,
      * the call leaves this set unchanged.
      * A frozen set will not be modified.
-     *
-     * @param c the character (code point)
-     * @return this object, for chaining
      * @stable ICU 2.0
      */
     UnicodeSet& add(UChar32 c);
@@ -1105,8 +1104,8 @@ public:
      * present.  If this set already contains the multicharacter,
      * the call leaves this set unchanged.
      * Thus "ch" => {"ch"}
+     * <br><b>Warning: you cannot add an empty string ("") to a UnicodeSet.</b>
      * A frozen set will not be modified.
-     *
      * @param s the source string
      * @return this object, for chaining
      * @stable ICU 2.4
@@ -1125,8 +1124,8 @@ public:
 
  public:
     /**
-     * Adds each of the characters in this string to the set. Note: "ch" => {"c", "h"}
-     * If this set already contains any particular character, it has no effect on that character.
+     * Adds each of the characters in this string to the set. Thus "ch" => {"c", "h"}
+     * If this set already any particular character, it has no effect on that character.
      * A frozen set will not be modified.
      * @param s the source string
      * @return this object, for chaining
@@ -1136,6 +1135,7 @@ public:
 
     /**
      * Retains EACH of the characters in this string. Note: "ch" == {"c", "h"}
+     * If this set already any particular character, it has no effect on that character.
      * A frozen set will not be modified.
      * @param s the source string
      * @return this object, for chaining
@@ -1145,6 +1145,7 @@ public:
 
     /**
      * Complement EACH of the characters in this string. Note: "ch" == {"c", "h"}
+     * If this set already any particular character, it has no effect on that character.
      * A frozen set will not be modified.
      * @param s the source string
      * @return this object, for chaining
@@ -1154,6 +1155,7 @@ public:
 
     /**
      * Remove EACH of the characters in this string. Note: "ch" == {"c", "h"}
+     * If this set already any particular character, it has no effect on that character.
      * A frozen set will not be modified.
      * @param s the source string
      * @return this object, for chaining
@@ -1163,7 +1165,7 @@ public:
 
     /**
      * Makes a set from a multicharacter string. Thus "ch" => {"ch"}
-     *
+     * <br><b>Warning: you cannot add an empty string ("") to a UnicodeSet.</b>
      * @param s the source string
      * @return a newly created set containing the given string.
      * The caller owns the return object and is responsible for deleting it.
@@ -1183,13 +1185,15 @@ public:
 
     /**
      * Retain only the elements in this set that are contained in the
-     * specified range.  If <code>start > end</code> then an empty range is
+     * specified range.  If <code>end > start</code> then an empty range is
      * retained, leaving the set empty.  This is equivalent to
      * a boolean logic AND, or a set INTERSECTION.
      * A frozen set will not be modified.
      *
-     * @param start first character, inclusive, of range
-     * @param end last character, inclusive, of range
+     * @param start first character, inclusive, of range to be retained
+     * to this set.
+     * @param end last character, inclusive, of range to be retained
+     * to this set.
      * @stable ICU 2.0
      */
     virtual UnicodeSet& retain(UChar32 start, UChar32 end);
@@ -1198,31 +1202,14 @@ public:
     /**
      * Retain the specified character from this set if it is present.
      * A frozen set will not be modified.
-     *
-     * @param c the character (code point)
-     * @return this object, for chaining
      * @stable ICU 2.0
      */
     UnicodeSet& retain(UChar32 c);
 
-#ifndef U_HIDE_DRAFT_API
-    /**
-     * Retains only the specified string from this set if it is present.
-     * Upon return this set will be empty if it did not contain s, or
-     * will only contain s if it did contain s.
-     * A frozen set will not be modified.
-     *
-     * @param s the source string
-     * @return this object, for chaining
-     * @draft ICU 69
-     */
-    UnicodeSet& retain(const UnicodeString &s);
-#endif  // U_HIDE_DRAFT_API
-
     /**
      * Removes the specified range from this set if it is present.
      * The set will not contain the specified range once the call
-     * returns.  If <code>start > end</code> then an empty range is
+     * returns.  If <code>end > start</code> then an empty range is
      * removed, leaving the set unchanged.
      * A frozen set will not be modified.
      *
@@ -1239,9 +1226,6 @@ public:
      * The set will not contain the specified range once the call
      * returns.
      * A frozen set will not be modified.
-     *
-     * @param c the character (code point)
-     * @return this object, for chaining
      * @stable ICU 2.0
      */
     UnicodeSet& remove(UChar32 c);
@@ -1269,13 +1253,15 @@ public:
     /**
      * Complements the specified range in this set.  Any character in
      * the range will be removed if it is in this set, or will be
-     * added if it is not in this set.  If <code>start > end</code>
+     * added if it is not in this set.  If <code>end > start</code>
      * then an empty range is complemented, leaving the set unchanged.
      * This is equivalent to a boolean logic XOR.
      * A frozen set will not be modified.
      *
-     * @param start first character, inclusive, of range
-     * @param end last character, inclusive, of range
+     * @param start first character, inclusive, of range to be removed
+     * from this set.
+     * @param end last character, inclusive, of range to be removed
+     * from this set.
      * @stable ICU 2.0
      */
     virtual UnicodeSet& complement(UChar32 start, UChar32 end);
@@ -1285,18 +1271,16 @@ public:
      * will be removed if it is in this set, or will be added if it is
      * not in this set.
      * A frozen set will not be modified.
-     *
-     * @param c the character (code point)
-     * @return this object, for chaining
      * @stable ICU 2.0
      */
     UnicodeSet& complement(UChar32 c);
 
     /**
      * Complement the specified string in this set.
-     * The string will be removed if it is in this set, or will be added if it is not in this set.
+     * The set will not contain the specified string once the call
+     * returns.
+     * <br><b>Warning: you cannot add an empty string ("") to a UnicodeSet.</b>
      * A frozen set will not be modified.
-     *
      * @param s the string to complement
      * @return this object, for chaining
      * @stable ICU 2.4

@@ -216,7 +216,7 @@ bm{
             "sefa Fraŋ (BEAC)",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "sefa Fraŋ (BCEAO)",
         }
         ZAR{

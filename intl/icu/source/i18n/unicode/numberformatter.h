@@ -28,9 +28,10 @@
 
 /**
  * \file
- * \brief C++ API: All-in-one formatter for localized numbers, currencies, and units.
- * 
- * For a full list of options, see icu::number::NumberFormatterSettings.
+ * \brief C++ API: Library for localized number formatting introduced in ICU 60.
+ *
+ * This library was introduced in ICU 60 to simplify the process of formatting localized number strings.
+ * Basic usage examples:
  *
  * <pre>
  * // Most basic usage:
@@ -346,15 +347,15 @@ class U_I18N_API Notation : public UMemory {
 
     union NotationUnion {
         // For NTN_SCIENTIFIC
-        /** @internal (private) */
+        /** @internal */
         struct ScientificSettings {
-            /** @internal (private) */
+            /** @internal */
             int8_t fEngineeringInterval;
-            /** @internal (private) */
+            /** @internal */
             bool fRequireMinInt;
-            /** @internal (private) */
+            /** @internal */
             impl::digits_t fMinExponentDigits;
-            /** @internal (private) */
+            /** @internal */
             UNumberSignDisplay fExponentSignDisplay;
         } scientific;
 
@@ -659,17 +660,6 @@ class U_I18N_API Precision : public UMemory {
      */
     static CurrencyPrecision currency(UCurrencyUsage currencyUsage);
 
-#ifndef U_HIDE_DRAFT_API
-    /**
-     * Configure how trailing zeros are displayed on numbers. For example, to hide trailing zeros
-     * when the number is an integer, use UNUM_TRAILING_ZERO_HIDE_IF_WHOLE.
-     *
-     * @param trailingZeroDisplay Option to configure the display of trailing zeros.
-     * @draft ICU 69
-     */
-    Precision trailingZeroDisplay(UNumberTrailingZeroDisplay trailingZeroDisplay) const;
-#endif // U_HIDE_DRAFT_API
-
   private:
     enum PrecisionType {
         RND_BOGUS,
@@ -694,35 +684,31 @@ class U_I18N_API Precision : public UMemory {
     } fType;
 
     union PrecisionUnion {
-        /** @internal (private) */
+        /** @internal */
         struct FractionSignificantSettings {
             // For RND_FRACTION, RND_SIGNIFICANT, and RND_FRACTION_SIGNIFICANT
-            /** @internal (private) */
+            /** @internal */
             impl::digits_t fMinFrac;
-            /** @internal (private) */
+            /** @internal */
             impl::digits_t fMaxFrac;
-            /** @internal (private) */
+            /** @internal */
             impl::digits_t fMinSig;
-            /** @internal (private) */
+            /** @internal */
             impl::digits_t fMaxSig;
-            /** @internal (private) */
-            UNumberRoundingPriority fPriority;
         } fracSig;
-        /** @internal (private) */
+        /** @internal */
         struct IncrementSettings {
             // For RND_INCREMENT, RND_INCREMENT_ONE, and RND_INCREMENT_FIVE
-            /** @internal (private) */
+            /** @internal */
             double fIncrement;
-            /** @internal (private) */
+            /** @internal */
             impl::digits_t fMinFrac;
-            /** @internal (private) */
+            /** @internal */
             impl::digits_t fMaxFrac;
         } increment;
         UCurrencyUsage currencyUsage; // For RND_CURRENCY
         UErrorCode errorCode; // For RND_ERROR
     } fUnion;
-
-    UNumberTrailingZeroDisplay fTrailingZeroDisplay = UNUM_TRAILING_ZERO_AUTO;
 
     typedef PrecisionUnion::FractionSignificantSettings FractionSignificantSettings;
     typedef PrecisionUnion::IncrementSettings IncrementSettings;
@@ -755,11 +741,8 @@ class U_I18N_API Precision : public UMemory {
 
     static Precision constructSignificant(int32_t minSig, int32_t maxSig);
 
-    static Precision constructFractionSignificant(
-        const FractionPrecision &base,
-        int32_t minSig,
-        int32_t maxSig,
-        UNumberRoundingPriority priority);
+    static Precision
+    constructFractionSignificant(const FractionPrecision &base, int32_t minSig, int32_t maxSig);
 
     static IncrementPrecision constructIncrement(double increment, int32_t minFrac);
 
@@ -801,38 +784,16 @@ class U_I18N_API Precision : public UMemory {
  */
 class U_I18N_API FractionPrecision : public Precision {
   public:
-#ifndef U_HIDE_DRAFT_API
     /**
-     * Override maximum fraction digits with maximum significant digits depending on the magnitude
-     * of the number. See UNumberRoundingPriority.
+     * Ensure that no less than this number of significant digits are retained when rounding according to fraction
+     * rules.
      *
-     * @param minSignificantDigits
-     *            Pad trailing zeros to achieve this minimum number of significant digits.
-     * @param maxSignificantDigits
-     *            Round the number to achieve this maximum number of significant digits.
-     * @param priority
-     *            How to disambiguate between fraction digits and significant digits.
-     * @return A precision for chaining or passing to the NumberFormatter precision() setter.
+     * <p>
+     * For example, with integer rounding, the number 3.141 becomes "3". However, with minimum figures set to 2, 3.141
+     * becomes "3.1" instead.
      *
-     * @draft ICU 69
-     */
-    Precision withSignificantDigits(
-        int32_t minSignificantDigits,
-        int32_t maxSignificantDigits,
-        UNumberRoundingPriority priority) const;
-#endif // U_HIDE_DRAFT_API
-
-    /**
-     * Ensure that no less than this number of significant digits are retained when rounding
-     * according to fraction rules.
-     *
-     * For example, with integer rounding, the number 3.141 becomes "3". However, with minimum
-     * figures set to 2, 3.141 becomes "3.1" instead.
-     *
-     * This setting does not affect the number of trailing zeros. For example, 3.01 would print as
-     * "3", not "3.0".
-     *
-     * This is equivalent to `withSignificantDigits(1, minSignificantDigits, RELAXED)`.
+     * <p>
+     * This setting does not affect the number of trailing zeros. For example, 3.01 would print as "3", not "3.0".
      *
      * @param minSignificantDigits
      *            The number of significant figures to guarantee.
@@ -842,16 +803,16 @@ class U_I18N_API FractionPrecision : public Precision {
     Precision withMinDigits(int32_t minSignificantDigits) const;
 
     /**
-     * Ensure that no more than this number of significant digits are retained when rounding
-     * according to fraction rules.
+     * Ensure that no more than this number of significant digits are retained when rounding according to fraction
+     * rules.
      *
-     * For example, with integer rounding, the number 123.4 becomes "123". However, with maximum
-     * figures set to 2, 123.4 becomes "120" instead.
+     * <p>
+     * For example, with integer rounding, the number 123.4 becomes "123". However, with maximum figures set to 2, 123.4
+     * becomes "120" instead.
      *
-     * This setting does not affect the number of trailing zeros. For example, with fixed fraction
-     * of 2, 123.4 would become "120.00".
-     *
-     * This is equivalent to `withSignificantDigits(1, maxSignificantDigits, STRICT)`.
+     * <p>
+     * This setting does not affect the number of trailing zeros. For example, with fixed fraction of 2, 123.4 would
+     * become "120.00".
      *
      * @param maxSignificantDigits
      *            Round the number to no more than this number of significant figures.
@@ -1170,35 +1131,33 @@ class U_I18N_API Scale : public UMemory {
 
 namespace impl {
 
-// Do not enclose entire StringProp with #ifndef U_HIDE_INTERNAL_API, needed for a protected field
+// Do not enclose entire Usage with #ifndef U_HIDE_INTERNAL_API, needed for a protected field
 /**
  * Manages NumberFormatterSettings::usage()'s char* instance on the heap.
  * @internal
  */
-class U_I18N_API StringProp : public UMemory {
+class U_I18N_API Usage : public UMemory {
 
 #ifndef U_HIDE_INTERNAL_API
 
   public:
     /** @internal */
-    StringProp(const StringProp &other);
+    Usage(const Usage& other);
 
     /** @internal */
-    StringProp &operator=(const StringProp &other);
+    Usage& operator=(const Usage& other);
 
     /** @internal */
-    StringProp(StringProp &&src) U_NOEXCEPT;
+    Usage(Usage &&src) U_NOEXCEPT;
 
     /** @internal */
-    StringProp &operator=(StringProp &&src) U_NOEXCEPT;
+    Usage& operator=(Usage&& src) U_NOEXCEPT;
 
     /** @internal */
-    ~StringProp();
+    ~Usage();
 
     /** @internal */
-    int16_t length() const {
-        return fLength;
-    }
+    int16_t length() const { return fLength; }
 
     /** @internal
      * Makes a copy of value. Set to "" to unset.
@@ -1206,21 +1165,18 @@ class U_I18N_API StringProp : public UMemory {
     void set(StringPiece value);
 
     /** @internal */
-    bool isSet() const {
-        return fLength > 0;
-    }
+    bool isSet() const { return fLength > 0; }
 
 #endif // U_HIDE_INTERNAL_API
 
   private:
-    char *fValue;
+    char *fUsage;
     int16_t fLength;
     UErrorCode fError;
 
-    StringProp() : fValue(nullptr), fLength(0), fError(U_ZERO_ERROR) {
-    }
+    Usage() : fUsage(nullptr), fLength(0), fError(U_ZERO_ERROR) {}
 
-    /** @internal (private) */
+    /** @internal */
     UBool copyErrorTo(UErrorCode &status) const {
         if (U_FAILURE(fError)) {
             status = fError;
@@ -1229,7 +1185,7 @@ class U_I18N_API StringProp : public UMemory {
         return false;
     }
 
-    // Allow NumberFormatterImpl to access fValue.
+    // Allow NumberFormatterImpl to access fUsage.
     friend class impl::NumberFormatterImpl;
 
     // Allow skeleton generation code to access private members.
@@ -1524,10 +1480,7 @@ struct U_I18N_API MacroProps : public UMemory {
     Scale scale;  // = Scale();  (benign value)
 
     /** @internal */
-    StringProp usage;  // = StringProp();  (no usage)
-
-    /** @internal */
-    StringProp unitDisplayCase;  // = StringProp();  (nominative)
+    Usage usage;  // = Usage();  (no usage)
 
     /** @internal */
     const AffixPatternProvider* affixProvider = nullptr;  // no ownership
@@ -1550,8 +1503,7 @@ struct U_I18N_API MacroProps : public UMemory {
     bool copyErrorTo(UErrorCode &status) const {
         return notation.copyErrorTo(status) || precision.copyErrorTo(status) ||
                padder.copyErrorTo(status) || integerWidth.copyErrorTo(status) ||
-               symbols.copyErrorTo(status) || scale.copyErrorTo(status) || usage.copyErrorTo(status) ||
-               unitDisplayCase.copyErrorTo(status);
+               symbols.copyErrorTo(status) || scale.copyErrorTo(status) || usage.copyErrorTo(status);
     }
 };
 
@@ -2219,25 +2171,6 @@ class U_I18N_API NumberFormatterSettings {
     Derived usage(StringPiece usage) &&;
 #endif // U_HIDE_DRAFT_API
 
-#ifndef U_HIDE_DRAFT_API
-#ifndef U_HIDE_INTERNAL_API
-    /**
-     * Specifies the desired case for a unit formatter's output (e.g.
-     * accusative, dative, genitive).
-     *
-     * @internal ICU 69 technology preview
-     */
-    Derived unitDisplayCase(StringPiece unitDisplayCase) const &;
-
-    /**
-     * Overload of unitDisplayCase() for use on an rvalue reference.
-     *
-     * @internal ICU 69 technology preview
-     */
-    Derived unitDisplayCase(StringPiece unitDisplayCase) &&;
-#endif // U_HIDE_INTERNAL_API
-#endif // U_HIDE_DRAFT_API
-
 #ifndef U_HIDE_INTERNAL_API
 
     /**
@@ -2289,9 +2222,6 @@ class U_I18N_API NumberFormatterSettings {
      *
      * The returned skeleton is in normalized form, such that two number formatters with equivalent
      * behavior should produce the same skeleton.
-     *
-     * For more information on number skeleton strings, see:
-     * https://unicode-org.github.io/icu/userguide/format_parse/numbers/skeletons.html
      *
      * @return A number skeleton string with behavior corresponding to this number formatter.
      * @stable ICU 62
@@ -2728,14 +2658,6 @@ class U_I18N_API FormattedNumber : public UMemory, public FormattedValue {
      * @draft ICU 68
      */
     MeasureUnit getOutputUnit(UErrorCode& status) const;
-
-    /**
-     * Gets the gender of the formatted output. Returns "" when the gender is
-     * unknown, or for ungendered languages.
-     *
-     * @internal ICU 69 technology preview.
-     */
-    const char *getGender(UErrorCode& status) const;
 #endif // U_HIDE_DRAFT_API
 
 #ifndef U_HIDE_INTERNAL_API
@@ -2763,7 +2685,7 @@ class U_I18N_API FormattedNumber : public UMemory, public FormattedValue {
 
     /**
      * Internal constructor from data type. Adopts the data pointer.
-     * @internal (private)
+     * @internal
      */
     explicit FormattedNumber(impl::UFormattedNumberData *results)
         : fData(results), fErrorCode(U_ZERO_ERROR) {}
@@ -2780,6 +2702,8 @@ class U_I18N_API FormattedNumber : public UMemory, public FormattedValue {
     friend struct impl::UFormattedNumberImpl;
 };
 
+#ifndef U_HIDE_DRAFT_API
+// Note: This is draft ICU 65
 template<typename StringClass>
 StringClass FormattedNumber::toDecimalNumber(UErrorCode& status) const {
     StringClass result;
@@ -2787,6 +2711,7 @@ StringClass FormattedNumber::toDecimalNumber(UErrorCode& status) const {
     toDecimalNumber(sink, status);
     return result;
 }
+#endif // U_HIDE_DRAFT_API
 
 /**
  * See the main description in numberformatter.h for documentation and examples.
@@ -2822,9 +2747,6 @@ class U_I18N_API NumberFormatter final {
      * It is possible for an error to occur while parsing. See the overload of this method if you are
      * interested in the location of a possible parse error.
      *
-     * For more information on number skeleton strings, see:
-     * https://unicode-org.github.io/icu/userguide/format_parse/numbers/skeletons.html
-     *
      * @param skeleton
      *            The skeleton string off of which to base this NumberFormatter.
      * @param status
@@ -2840,9 +2762,6 @@ class U_I18N_API NumberFormatter final {
      *
      * If an error occurs while parsing the skeleton string, the offset into the skeleton string at
      * which the error occurred will be saved into the UParseError, if provided.
-     *
-     * For more information on number skeleton strings, see:
-     * https://unicode-org.github.io/icu/userguide/format_parse/numbers/skeletons.html
      *
      * @param skeleton
      *            The skeleton string off of which to base this NumberFormatter.

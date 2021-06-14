@@ -212,7 +212,7 @@ mas{
             "Iropiyianí e CFA BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Iropiyianí e CFA BCEAO",
         }
         ZAR{

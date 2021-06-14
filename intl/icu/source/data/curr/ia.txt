@@ -456,7 +456,7 @@ ia{
             "dollar del Caribes Oriental",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "franco CFA de Africa Occidental",
         }
         XPF{

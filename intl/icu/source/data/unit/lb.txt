@@ -795,8 +795,8 @@ lb{
                 other{"{0} m"}
             }
             micrometer{
-                one{"{0} μm"}
-                other{"{0} μm"}
+                one{"{0} µm"}
+                other{"{0} µm"}
             }
             mile{
                 one{"{0} mi"}
@@ -848,8 +848,8 @@ lb{
                 other{"{0} t"}
             }
             microgram{
-                one{"{0} μg"}
-                other{"{0} μg"}
+                one{"{0} µg"}
+                other{"{0} µg"}
             }
             milligram{
                 one{"{0} mg"}
@@ -1371,9 +1371,9 @@ lb{
                 other{"{0} m"}
             }
             micrometer{
-                dnam{"μm"}
-                one{"{0} μm"}
-                other{"{0} μm"}
+                dnam{"µm"}
+                one{"{0} µm"}
+                other{"{0} µm"}
             }
             mile{
                 dnam{"mi"}
@@ -1440,9 +1440,9 @@ lb{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"μg"}
-                one{"{0} μg"}
-                other{"{0} μg"}
+                dnam{"µg"}
+                one{"{0} µg"}
+                other{"{0} µg"}
             }
             milligram{
                 dnam{"mg"}

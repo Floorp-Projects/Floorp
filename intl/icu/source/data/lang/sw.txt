@@ -343,6 +343,7 @@ sw{
         ro{"Kiromania"}
         ro_MD{"Kimoldova cha Romania"}
         rof{"Kirombo"}
+        root{"Kiroot"}
         ru{"Kirusi"}
         rup{"Kiaromania"}
         rw{"Kinyarwanda"}

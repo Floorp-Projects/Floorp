@@ -212,7 +212,7 @@ xog{
             "Faranga yamu Afirika ya wakati",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Faranga yamu Afirika ya bugwanjuba",
         }
         ZAR{
