@@ -565,10 +565,11 @@ class LookAndFeel {
 // ---------------------------------------------------------------------
 
 // For background color only.
-#define NS_TRANSPARENT NS_RGBA(0x01, 0x00, 0x00, 0x00)
+constexpr nscolor NS_TRANSPARENT = NS_RGBA(0x01, 0x00, 0x00, 0x00);
 // For foreground color only.
-#define NS_SAME_AS_FOREGROUND_COLOR NS_RGBA(0x02, 0x00, 0x00, 0x00)
-#define NS_40PERCENT_FOREGROUND_COLOR NS_RGBA(0x03, 0x00, 0x00, 0x00)
+constexpr nscolor NS_SAME_AS_FOREGROUND_COLOR = NS_RGBA(0x02, 0x00, 0x00, 0x00);
+constexpr nscolor NS_40PERCENT_FOREGROUND_COLOR =
+    NS_RGBA(0x03, 0x00, 0x00, 0x00);
 
 #define NS_IS_SELECTION_SPECIAL_COLOR(c)                          \
   ((c) == NS_TRANSPARENT || (c) == NS_SAME_AS_FOREGROUND_COLOR || \

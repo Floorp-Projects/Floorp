@@ -183,6 +183,7 @@ whitelist-vars = [
     "kPresContext_.*",
     "nsContentUtils_.*",
     "GECKO_IS_NIGHTLY",
+    "NS_SAME_AS_FOREGROUND_COLOR",
     "mozilla::detail::gGkAtoms",
     "mozilla::detail::kGkAtomsArrayOffset",
     "mozilla::dom::SVGPathSeg_Binding::PATHSEG_.*",
