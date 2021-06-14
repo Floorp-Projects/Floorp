@@ -1,4 +1,7 @@
-# -*- coding: utf-8 -*-
+# The ./wpt serve-wave command is broken, so mypy errors are ignored instead of
+# making untestable changes to the problematic imports.
+# See https://github.com/web-platform-tests/wpt/issues/29024.
+# mypy: ignore-errors
 
 import subprocess
 from manifest import manifest
