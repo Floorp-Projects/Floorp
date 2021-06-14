@@ -92,7 +92,7 @@ add_task(async function test_method_return_runtime_port() {
       if (request.apiName == "methodReturnsPort") {
         if (request.args[0] == "port-create-error") {
           return {
-            type: Ci.mozIExtensionAPIRequestResult.RESULT_VALUE,
+            type: Ci.mozIExtensionAPIRequestResult.RETURN_VALUE,
             value: "not-a-valid-port",
           };
         }
