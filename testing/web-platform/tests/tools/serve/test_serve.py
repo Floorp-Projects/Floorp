@@ -5,7 +5,7 @@ import platform
 
 import pytest
 
-import localpaths
+import localpaths  # type: ignore
 from . import serve
 from .serve import ConfigBuilder
 
