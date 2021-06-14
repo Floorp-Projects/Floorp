@@ -2,6 +2,10 @@
 <html><head>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
     <title>Testcase #1 for bug 614969</title>
+    <style>
+      .col {column-width:1em}
+      .col::marker {white-space:initial}
+    </style>
 </head>
 <body>
 
@@ -16,9 +20,9 @@
 </ol>
 
 <ol style="list-style: decimal inside;">
-    <li style="column-width:1em;">item1</li>
-    <li style="column-width:1em;">item2</li>
-    <li style="column-width:1em;">item3</li>
+    <li class="col">item1</li>
+    <li class="col">item2</li>
+    <li class="col">item3</li>
 </ol>
 
 </body>
