@@ -96,7 +96,7 @@ const kEmbedChar = String.fromCharCode(0xfffc);
 const kDiscBulletChar = String.fromCharCode(0x2022);
 const kDiscBulletText = kDiscBulletChar + " ";
 const kCircleBulletText = String.fromCharCode(0x25e6) + " ";
-const kSquareBulletText = String.fromCharCode(0x25fe) + " ";
+const kSquareBulletText = String.fromCharCode(0x25aa) + " ";
 
 const MAX_TRIM_LENGTH = 100;
 
