@@ -175,7 +175,7 @@ root{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"38.1"}
+    Version{"39"}
     calendar{
         buddhist{
             AmPmMarkers:alias{"/LOCALE/calendar/gregorian/AmPmMarkers"}

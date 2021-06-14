@@ -796,7 +796,7 @@ rm{
             "kina da la Papua Nova Guinea",
         }
         PHP{
-            "PHP",
+            "₱",
             "peso filippin",
         }
         PKR{
@@ -1104,7 +1104,7 @@ rm{
             "franc UIC franzos",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "franc CFA da l’Africa dal Vest",
         }
         XPD{

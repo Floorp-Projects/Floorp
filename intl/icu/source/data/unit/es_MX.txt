@@ -5,7 +5,7 @@ es_MX{
     %%Parent{"es_419"}
     units{
         concentr{
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"miligramos por decilitro"}
             }
         }

@@ -30,13 +30,16 @@ en_001{
                 per{"{0} per square metre"}
             }
         }
+        compound{
+            10p1{"deca{0}"}
+        }
         concentr{
             karat{
                 dnam{"carat"}
                 one{"{0} carat"}
                 other{"{0} carats"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"milligrams per decilitre"}
                 one{"{0} milligram per decilitre"}
                 other{"{0} milligrams per decilitre"}
@@ -318,7 +321,7 @@ en_001{
             }
         }
         concentr{
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 one{"{0}mg/dl"}
                 other{"{0}mg/dl"}
@@ -448,7 +451,7 @@ en_001{
                 one{"{0} ct"}
                 other{"{0} ct"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 one{"{0} mg/dl"}
                 other{"{0} mg/dl"}
@@ -492,11 +495,6 @@ en_001{
                 one{"{0} hr"}
                 other{"{0} hrs"}
             }
-            microsecond{
-                dnam{"μsecs"}
-                one{"{0} μs"}
-                other{"{0} μs"}
-            }
             minute{
                 one{"{0} min"}
                 other{"{0} mins"}
@@ -517,7 +515,7 @@ en_001{
                 dnam{"metres"}
             }
             micrometer{
-                dnam{"µmetres"}
+                dnam{"μmetres"}
             }
         }
         mass{

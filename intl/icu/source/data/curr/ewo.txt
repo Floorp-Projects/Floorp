@@ -216,7 +216,7 @@ ewo{
             "Fəláŋ CFA (BEAC)",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Fəláŋ CFA (BCEAO)",
         }
         ZAR{

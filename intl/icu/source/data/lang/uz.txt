@@ -307,7 +307,6 @@ uz{
         ro{"rumincha"}
         ro_MD{"moldovan"}
         rof{"rombo"}
-        root{"tub aholi tili"}
         ru{"ruscha"}
         rup{"arumin"}
         rw{"kinyaruanda"}

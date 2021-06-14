@@ -996,7 +996,7 @@ pl{
             "UIC-frank francuski",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "frank CFA",
         }
         XPD{

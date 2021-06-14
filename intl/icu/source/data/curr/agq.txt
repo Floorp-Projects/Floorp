@@ -212,7 +212,7 @@ agq{
             "CFA Fàlâŋ BEAC",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "CFA Fàlâŋ BCEAO",
         }
         ZAR{

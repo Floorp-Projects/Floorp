@@ -11,11 +11,13 @@ nl{
         acceleration{
             g-force{
                 dnam{"G-krachten"}
+                gender{"common"}
                 one{"{0} G-kracht"}
                 other{"{0} G-krachten"}
             }
             meter-per-square-second{
                 dnam{"meter per seconde kwadraat"}
+                gender{"common"}
                 one{"{0} meter per seconde kwadraat"}
                 other{"{0} meter per seconde kwadraat"}
             }
@@ -50,22 +52,26 @@ nl{
         area{
             acre{
                 dnam{"acre"}
+                gender{"common"}
                 one{"{0} acre"}
                 other{"{0} acres"}
             }
             hectare{
                 dnam{"hectare"}
+                gender{"common"}
                 one{"{0} hectare"}
                 other{"{0} hectare"}
             }
             square-centimeter{
                 dnam{"vierkante centimeter"}
+                gender{"common"}
                 one{"{0} vierkante centimeter"}
                 other{"{0} vierkante centimeter"}
                 per{"{0} per vierkante centimeter"}
             }
             square-foot{
                 dnam{"vierkante voet"}
+                gender{"common"}
                 one{"{0} vierkante voet"}
                 other{"{0} vierkante voet"}
             }
@@ -77,6 +83,7 @@ nl{
             }
             square-kilometer{
                 dnam{"vierkante kilometer"}
+                gender{"common"}
                 one{"{0} vierkante kilometer"}
                 other{"{0} vierkante kilometer"}
                 per{"{0} per vierkante kilometer"}
@@ -89,6 +96,7 @@ nl{
             }
             square-mile{
                 dnam{"vierkante mijl"}
+                gender{"common"}
                 one{"{0} vierkante mijl"}
                 other{"{0} vierkante mijl"}
                 per{"{0} per vierkante mijl"}
@@ -100,7 +108,63 @@ nl{
             }
         }
         compound{
+            10p-1{"deci{0}"}
+            10p-12{"pico{0}"}
+            10p-15{"femto{0}"}
+            10p-18{"atto{0}"}
+            10p-2{"centi{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"yocto{0}"}
+            10p-3{"milli{0}"}
+            10p-6{"micro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deca{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"exa{0}"}
+            10p2{"hecto{0}"}
+            10p21{"zetta{0}"}
+            10p24{"yotta{0}"}
+            10p3{"kilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"giga{0}"}
             per{"{0} per {1}"}
+            power2{
+                one{
+                    _{
+                        _{"vierkante {0}"}
+                    }
+                    common{
+                        _{"vierkante {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"vierkante {0}"}
+                    }
+                    common{
+                        _{"vierkante {0}"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"kubieke {0}"}
+                    }
+                    common{
+                        _{"kubieke {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"kubieke {0}"}
+                    }
+                    common{
+                        _{"kubieke {0}"}
+                    }
+                }
+            }
             times{"{0}{1}"}
         }
         concentr{
@@ -109,7 +173,7 @@ nl{
                 one{"{0} karaat"}
                 other{"{0} karaat"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"milligram per deciliter"}
                 one{"{0} milligram per deciliter"}
                 other{"{0} milligram per deciliter"}
@@ -121,6 +185,7 @@ nl{
             }
             percent{
                 dnam{"procent"}
+                gender{"common"}
                 one{"{0} procent"}
                 other{"{0} procent"}
             }
@@ -143,6 +208,7 @@ nl{
         consumption{
             liter-per-100-kilometer{
                 dnam{"liter per 100 kilometer"}
+                gender{"common"}
                 one{"{0} liter per 100 kilometer"}
                 other{"{0} liter per 100 kilometer"}
             }
@@ -153,11 +219,13 @@ nl{
             }
             mile-per-gallon{
                 dnam{"mijl per gallon"}
+                gender{"common"}
                 one{"{0} mijl per gallon"}
                 other{"{0} mijl per gallon"}
             }
             mile-per-gallon-imperial{
                 dnam{"mijl per imp. gallon"}
+                gender{"common"}
                 one{"{0} mijl per imp. gallon"}
                 other{"{0} mijl per imp. gallon"}
             }
@@ -234,6 +302,7 @@ nl{
             }
             day{
                 dnam{"dagen"}
+                gender{"common"}
                 one{"{0} dag"}
                 other{"{0} dagen"}
                 per{"{0} per dag"}
@@ -245,6 +314,7 @@ nl{
             }
             hour{
                 dnam{"uur"}
+                gender{"neuter"}
                 one{"{0} uur"}
                 other{"{0} uur"}
                 per{"{0} per uur"}
@@ -261,12 +331,14 @@ nl{
             }
             minute{
                 dnam{"minuten"}
+                gender{"common"}
                 one{"{0} minuut"}
                 other{"{0} minuten"}
                 per{"{0} per minuut"}
             }
             month{
                 dnam{"maanden"}
+                gender{"common"}
                 one{"{0} maand"}
                 other{"{0} maanden"}
                 per{"{0} per maand"}
@@ -278,18 +350,21 @@ nl{
             }
             second{
                 dnam{"seconden"}
+                gender{"common"}
                 one{"{0} seconde"}
                 other{"{0} seconden"}
                 per{"{0} per seconde"}
             }
             week{
                 dnam{"weken"}
+                gender{"common"}
                 one{"{0} week"}
                 other{"{0} weken"}
                 per{"{0} per week"}
             }
             year{
                 dnam{"jaar"}
+                gender{"neuter"}
                 one{"{0} jaar"}
                 other{"{0} jaar"}
                 per{"{0} per jaar"}
@@ -335,6 +410,7 @@ nl{
             }
             foodcalorie{
                 dnam{"kilocalorie"}
+                gender{"common"}
                 one{"{0} kilocalorie"}
                 other{"{0} kilocalorieën"}
             }
@@ -345,6 +421,7 @@ nl{
             }
             kilocalorie{
                 dnam{"kilocalorie"}
+                gender{"common"}
                 one{"{0} kilocalorie"}
                 other{"{0} kilocalorieën"}
             }
@@ -448,6 +525,7 @@ nl{
             }
             centimeter{
                 dnam{"centimeter"}
+                gender{"common"}
                 one{"{0} centimeter"}
                 other{"{0} centimeter"}
                 per{"{0} per centimeter"}
@@ -464,6 +542,7 @@ nl{
             }
             foot{
                 dnam{"voet"}
+                gender{"common"}
                 one{"{0} voet"}
                 other{"{0} voet"}
                 per{"{0} per voet"}
@@ -475,12 +554,14 @@ nl{
             }
             inch{
                 dnam{"inches"}
+                gender{"common"}
                 one{"{0} inch"}
                 other{"{0} inches"}
                 per{"{0} per inch"}
             }
             kilometer{
                 dnam{"kilometer"}
+                gender{"common"}
                 one{"{0} kilometer"}
                 other{"{0} kilometer"}
                 per{"{0} per kilometer"}
@@ -492,6 +573,7 @@ nl{
             }
             meter{
                 dnam{"meter"}
+                gender{"common"}
                 one{"{0} meter"}
                 other{"{0} meter"}
                 per{"{0} per meter"}
@@ -503,6 +585,7 @@ nl{
             }
             mile{
                 dnam{"mijl"}
+                gender{"common"}
                 one{"{0} mijl"}
                 other{"{0} mijl"}
             }
@@ -513,6 +596,7 @@ nl{
             }
             millimeter{
                 dnam{"millimeter"}
+                gender{"common"}
                 one{"{0} millimeter"}
                 other{"{0} millimeter"}
             }
@@ -528,11 +612,13 @@ nl{
             }
             parsec{
                 dnam{"parsec"}
+                gender{"common"}
                 one{"{0} parsec"}
                 other{"{0} parsecs"}
             }
             picometer{
                 dnam{"picometer"}
+                gender{"common"}
                 one{"{0} picometer"}
                 other{"{0} picometer"}
             }
@@ -543,11 +629,13 @@ nl{
             }
             solar-radius{
                 dnam{"solar radii"}
+                gender{"common"}
                 one{"{0} solar radius"}
                 other{"{0} solar radii"}
             }
             yard{
                 dnam{"yards"}
+                gender{"common"}
                 one{"{0} yard"}
                 other{"{0} yards"}
             }
@@ -560,6 +648,7 @@ nl{
             }
             solar-luminosity{
                 dnam{"solar luminosity"}
+                gender{"common"}
                 one{"{0} solar luminosity"}
                 other{"{0} solar luminosity"}
             }
@@ -572,27 +661,32 @@ nl{
             }
             dalton{
                 dnam{"dalton"}
+                gender{"common"}
                 one{"{0} dalton"}
                 other{"{0} dalton"}
             }
             earth-mass{
                 dnam{"aardmassa"}
+                gender{"common"}
                 one{"{0} aardmassa"}
                 other{"{0} aardmassa"}
             }
             grain{
                 dnam{"grein"}
+                gender{"common"}
                 one{"{0} grein"}
                 other{"{0} grein"}
             }
             gram{
                 dnam{"gram"}
+                gender{"common"}
                 one{"{0} gram"}
                 other{"{0} gram"}
                 per{"{0} per gram"}
             }
             kilogram{
                 dnam{"kilogram"}
+                gender{"common"}
                 one{"{0} kilogram"}
                 other{"{0} kilogram"}
                 per{"{0} per kilogram"}
@@ -609,11 +703,13 @@ nl{
             }
             milligram{
                 dnam{"milligram"}
+                gender{"common"}
                 one{"{0} milligram"}
                 other{"{0} milligram"}
             }
             ounce{
                 dnam{"ounce"}
+                gender{"common"}
                 one{"{0} ounce"}
                 other{"{0} ounce"}
                 per{"{0} per ounce"}
@@ -625,12 +721,14 @@ nl{
             }
             pound{
                 dnam{"pound"}
+                gender{"common"}
                 one{"{0} pound"}
                 other{"{0} pound"}
                 per{"{0} per pound"}
             }
             solar-mass{
                 dnam{"zonnemassa"}
+                gender{"common"}
                 one{"{0} zonnemassa"}
                 other{"{0} zonnemassa"}
             }
@@ -700,6 +798,7 @@ nl{
             }
             kilopascal{
                 dnam{"kilopascal"}
+                gender{"common"}
                 one{"{0} kilopascal"}
                 other{"{0} kilopascal"}
             }
@@ -732,6 +831,7 @@ nl{
         speed{
             kilometer-per-hour{
                 dnam{"kilometer per uur"}
+                gender{"common"}
                 one{"{0} kilometer per uur"}
                 other{"{0} kilometer per uur"}
             }
@@ -742,11 +842,13 @@ nl{
             }
             meter-per-second{
                 dnam{"meter per seconde"}
+                gender{"common"}
                 one{"{0} meter per seconde"}
                 other{"{0} meter per seconde"}
             }
             mile-per-hour{
                 dnam{"mijl per uur"}
+                gender{"common"}
                 one{"{0} mijl per uur"}
                 other{"{0} mijl per uur"}
             }
@@ -754,21 +856,25 @@ nl{
         temperature{
             celsius{
                 dnam{"graden Celsius"}
+                gender{"common"}
                 one{"{0} graad Celsius"}
                 other{"{0} graden Celsius"}
             }
             fahrenheit{
                 dnam{"graden Fahrenheit"}
+                gender{"common"}
                 one{"{0} graad Fahrenheit"}
                 other{"{0} graden Fahrenheit"}
             }
             generic{
                 dnam{"°"}
+                gender{"common"}
                 one{"{0}°"}
                 other{"{0}°"}
             }
             kelvin{
                 dnam{"kelvin"}
+                gender{"common"}
                 one{"{0} kelvin"}
                 other{"{0} kelvin"}
             }
@@ -803,17 +909,20 @@ nl{
             }
             centiliter{
                 dnam{"centiliter"}
+                gender{"common"}
                 one{"{0} centiliter"}
                 other{"{0} centiliter"}
             }
             cubic-centimeter{
                 dnam{"kubieke centimeter"}
+                gender{"common"}
                 one{"{0} kubieke centimeter"}
                 other{"{0} kubieke centimeter"}
                 per{"{0} per kubieke centimeter"}
             }
             cubic-foot{
                 dnam{"kubieke voet"}
+                gender{"common"}
                 one{"{0} kubieke voet"}
                 other{"{0} kubieke voet"}
             }
@@ -835,6 +944,7 @@ nl{
             }
             cubic-mile{
                 dnam{"kubieke mijl"}
+                gender{"common"}
                 one{"{0} kubieke mijl"}
                 other{"{0} kubieke mijl"}
             }
@@ -845,6 +955,7 @@ nl{
             }
             cup{
                 dnam{"cup"}
+                gender{"common"}
                 one{"{0} cup"}
                 other{"{0} cup"}
             }
@@ -855,47 +966,56 @@ nl{
             }
             deciliter{
                 dnam{"deciliter"}
+                gender{"common"}
                 one{"{0} deciliter"}
                 other{"{0} deciliter"}
             }
             dessert-spoon{
                 dnam{"dessertlepel"}
+                gender{"common"}
                 one{"{0} dessertlepel"}
                 other{"{0} dessertlepels"}
             }
             dessert-spoon-imperial{
                 dnam{"imp. dessertlepel"}
+                gender{"common"}
                 one{"{0} imp. dessertlepel"}
                 other{"{0} imp. dessertlepels"}
             }
             dram{
                 dnam{"drachme"}
+                gender{"neuter"}
                 one{"{0} drachme"}
                 other{"{0} drachme"}
             }
             drop{
                 dnam{"druppel"}
+                gender{"common"}
                 one{"{0} druppel"}
                 other{"{0} druppels"}
             }
             fluid-ounce{
                 dnam{"fluid ounce"}
+                gender{"common"}
                 one{"{0} fluid ounce"}
                 other{"{0} fluid ounce"}
             }
             fluid-ounce-imperial{
                 dnam{"Imp. fluid ounce"}
+                gender{"common"}
                 one{"{0} Imp. fluid ounce"}
                 other{"{0} Imp. fluid ounce"}
             }
             gallon{
                 dnam{"gallon"}
+                gender{"common"}
                 one{"{0} gallon"}
                 other{"{0} gallon"}
                 per{"{0} per gallon"}
             }
             gallon-imperial{
                 dnam{"imp. gallon"}
+                gender{"common"}
                 one{"{0} imp. gallon"}
                 other{"{0} imp. gallon"}
                 per{"{0} per imp. gallon"}
@@ -906,11 +1026,13 @@ nl{
                 other{"{0} hectoliter"}
             }
             jigger{
+                gender{"common"}
                 one{"{0} jigger"}
                 other{"{0} jiggers"}
             }
             liter{
                 dnam{"liter"}
+                gender{"common"}
                 one{"{0} liter"}
                 other{"{0} liter"}
                 per{"{0} per liter"}
@@ -922,16 +1044,19 @@ nl{
             }
             milliliter{
                 dnam{"milliliter"}
+                gender{"common"}
                 one{"{0} milliliter"}
                 other{"{0} milliliter"}
             }
             pinch{
                 dnam{"snufje"}
+                gender{"neuter"}
                 one{"{0} snufje"}
                 other{"{0} snufjes"}
             }
             pint{
                 dnam{"pint"}
+                gender{"common"}
                 one{"{0} pint"}
                 other{"{0} pint"}
             }
@@ -942,21 +1067,25 @@ nl{
             }
             quart{
                 dnam{"quart"}
+                gender{"common"}
                 one{"{0} quart"}
                 other{"{0} quart"}
             }
             quart-imperial{
                 dnam{"imp. quart"}
+                gender{"common"}
                 one{"{0} imp. quart"}
                 other{"{0} imp. quarts"}
             }
             tablespoon{
                 dnam{"eetlepel"}
+                gender{"common"}
                 one{"{0} eetlepel"}
                 other{"{0} eetlepels"}
             }
             teaspoon{
                 dnam{"theelepel"}
+                gender{"common"}
                 one{"{0} theelepel"}
                 other{"{0} theelepels"}
             }
@@ -1064,7 +1193,7 @@ nl{
                 one{"{0} K"}
                 other{"{0} K"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 one{"{0} mg/dl"}
                 other{"{0} mg/dl"}
@@ -1381,9 +1510,9 @@ nl{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"mi"}
@@ -1462,9 +1591,9 @@ nl{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}
@@ -1846,7 +1975,7 @@ nl{
                 one{"{0} K"}
                 other{"{0} K"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 one{"{0} mg/dl"}
                 other{"{0} mg/dl"}
@@ -2111,7 +2240,7 @@ nl{
         graphics{
             dot{
                 one{"{0} dot"}
-                other{"{0} dot"}
+                other{"{0} px"}
             }
             dot-per-centimeter{
                 dnam{"dpcm"}
@@ -2206,9 +2335,9 @@ nl{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"mi"}
@@ -2292,9 +2421,9 @@ nl{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

@@ -166,6 +166,10 @@ pt_PT{
             }
         }
         minimalPairs{
+            gender{
+                feminine{"a {0}"}
+                masculine{"o {0}"}
+            }
             ordinal{
                 other{"{0}.º lugar"}
             }

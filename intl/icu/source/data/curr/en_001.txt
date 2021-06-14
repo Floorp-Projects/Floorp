@@ -28,7 +28,7 @@ en_001{
             "Latvian Rouble",
         }
         PHP{
-            "PHP",
+            "₱",
             "Philippine Peso",
         }
         RUB{

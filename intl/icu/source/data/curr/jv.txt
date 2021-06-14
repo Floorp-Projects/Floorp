@@ -436,7 +436,7 @@ jv{
             "Kina Papua Nugini",
         }
         PHP{
-            "PHP",
+            "₱",
             "Piso Filipina",
         }
         PKR{
@@ -612,7 +612,7 @@ jv{
             "Dolar Karibia Wetan",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "CFA Franc Afrika Kulon",
         }
         XPF{

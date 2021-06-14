@@ -800,7 +800,7 @@ en{
             "Papua New Guinean Kina",
         }
         PHP{
-            "PHP",
+            "₱",
             "Philippine Piso",
         }
         PKR{
@@ -1120,7 +1120,7 @@ en{
             "French UIC-Franc",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "West African CFA Franc",
         }
         XPD{
