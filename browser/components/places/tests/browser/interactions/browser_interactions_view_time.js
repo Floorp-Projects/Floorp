@@ -13,6 +13,7 @@ const TEST_URL4 = "https://example.com/browser/browser/components";
 
 add_task(async function setup() {
   sinon.spy(Interactions, "_updateDatabase");
+  Interactions.reset();
   disableIdleService();
 
   registerCleanupFunction(() => {
