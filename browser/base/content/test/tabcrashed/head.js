@@ -1,3 +1,9 @@
+"use strict";
+
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+
 /**
  * Returns a Promise that resolves once a crash report has
  * been submitted. This function will also test the crash
@@ -137,4 +143,80 @@ function prepareNoDump() {
   registerCleanupFunction(() => {
     TabCrashHandler.getDumpID = originalGetDumpID;
   });
+}
+
+const kBuildidMatchEnv = "MOZ_BUILDID_MATCH_DONTSEND";
+
+function setBuildidMatchDontSendEnv() {
+  const envService = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  info("Setting " + kBuildidMatchEnv + "=1");
+  envService.set(kBuildidMatchEnv, "1");
+  info("Set " + kBuildidMatchEnv + "=1");
+}
+
+function unsetBuildidMatchDontSendEnv() {
+  const envService = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  info("Setting " + kBuildidMatchEnv + "=0");
+  envService.set(kBuildidMatchEnv, "0");
+  info("Set " + kBuildidMatchEnv + "=0");
+}
+
+function getEventPromise(eventName, eventKind, kTimeout) {
+  return new Promise(function(resolve, reject) {
+    /* eslint-disable mozilla/no-arbitrary-setTimeout */
+    let maybeTimeout = setTimeout(() => {
+      ok(
+        false,
+        "Timed out waiting " + eventName + " (" + eventKind + ") event"
+      );
+      reject();
+    }, kTimeout);
+
+    info("Installing event listener (" + eventKind + ")");
+    window.addEventListener(
+      eventName,
+      event => {
+        info("Clear timeout for " + eventKind + " event");
+        clearTimeout(maybeTimeout);
+        ok(true, "Received " + eventName + " (" + eventKind + ") event");
+        info("Call resolve() for " + eventKind + " event");
+        resolve();
+      },
+      { once: true }
+    );
+    info("Installed event listener (" + eventKind + ")");
+  });
+}
+
+async function openNewTab(forceCrash) {
+  const PAGE =
+    "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
+
+  let options = {
+    gBrowser,
+    PAGE,
+    waitForLoad: false,
+    waitForStateStop: false,
+    forceNewProcess: true,
+  };
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(options);
+
+  if (forceCrash === true) {
+    let browser = tab.linkedBrowser;
+    await BrowserTestUtils.crashFrame(browser, true, true, null);
+  }
+
+  // Since we crashed early, we expect to have some about:blank
+  // Remove it to clean up
+  BrowserTestUtils.removeTab(tab);
+}
+
+function getFalsePositiveTelemetry() {
+  const scalars = TelemetryTestUtils.getProcessScalars("parent");
+  return scalars["dom.contentprocess.buildID_mismatch_false_positive"];
 }

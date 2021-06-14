@@ -2163,6 +2163,21 @@ dom.contentprocess:
       - 'fennec'
     record_in_processes:
       - 'main'
+  buildID_mismatch_false_positive:
+    bug_numbers:
+      - 1651133
+    description: >
+      The number of times a process crashed early but we could verify it was not
+      because of buildID mismatch between the parent and the content processes.
+    expires: "95"
+    kind: uint
+    notification_emails:
+      - alissy@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
   os_priority_lowered:
     bug_numbers:
       - 1538987
