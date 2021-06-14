@@ -17,6 +17,7 @@ import glean_parser
 
 
 from . import coverage as mod_coverage
+from . import data_review as mod_data_review
 from . import lint
 from . import translate as mod_translate
 from . import validate_ping
@@ -195,6 +196,26 @@ def coverage(coverage_file, metrics_files, format, output, allow_reserved):
     )
 
 
+@click.command()
+@click.argument("bug", type=str)
+@click.argument(
+    "metrics_files",
+    type=click.Path(exists=True, dir_okay=False, file_okay=True, readable=True),
+    nargs=-1,
+)
+def data_review_request(bug, metrics_files):
+    """
+    Generate a skeleton Data Review Request for all metrics in metrics_files
+    whose bug_numbers fields contain the provided bug string.
+    For example, providing "1694739" matches
+    "https://bugzilla.mozilla.org/show_bug.cgi?id=1694739".
+    To ensure substrings don't match, the provided bug string will match only
+    if it is bounded by non-word characters.
+    Prints to stdout.
+    """
+    sys.exit(mod_data_review.generate(bug, [Path(x) for x in metrics_files]))
+
+
 @click.group()
 @click.version_option(glean_parser.__version__, prog_name="glean_parser")
 def main(args=None):
@@ -206,6 +227,7 @@ main.add_command(translate)
 main.add_command(check)
 main.add_command(glinter)
 main.add_command(coverage)
+main.add_command(data_review_request, "data-review")
 
 
 def main_wrapper(args=None):

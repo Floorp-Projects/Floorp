@@ -41,7 +41,7 @@ def javascript_datatypes_filter(value: util.JSONType) -> str:
     return "".join(JavascriptEncoder().iterencode(value))
 
 
-def class_name_factory(platform: str, namespace: str) -> Callable[[str], str]:
+def class_name_factory(platform: str) -> Callable[[str], str]:
     """
     Returns a function that receives an obj_type and
     returns the correct class name for that time in the current platform.
@@ -56,7 +56,7 @@ def class_name_factory(platform: str, namespace: str) -> Callable[[str], str]:
             class_name = util.Camelize(obj_type) + "MetricType"
 
         if platform == "qt":
-            return namespace + ".Glean.default._private." + class_name
+            return "Glean.Glean._private." + class_name
 
         return class_name
 
@@ -101,24 +101,32 @@ def output(
         `parser.parse_objects`.
     :param output_dir: Path to an output directory to write to.
     :param options: options dictionary, with the following optional keys:
-
-        - `namespace`: The identifier of the global variable Glean was assigned to.
-                       This will only have and effect for Qt and static web sites.
-                       Default is `Glean`.
         - `platform`: Which platform are we building for. Options are `webext` and `qt`.
                       Default is `webext`.
+        - `version`: The version of the Glean.js Qt library being used.
+                     This option is mandatory when targeting Qt. Note that the version
+                     string must only contain the major and minor version i.e. 0.14.
+
     """
 
     if options is None:
         options = {}
 
-    namespace = options.get("namespace", "Glean")
     platform = options.get("platform", "webext")
+    if platform not in ["qt", "webext"]:
+        raise ValueError(
+            f"Unknown platform: {platform}. Accepted platforms are qt and webext."
+        )
+    version = options.get("version")
+    if platform == "qt" and version is None:
+        raise ValueError(
+            "'version' option is required when building for the 'qt' platform."
+        )
 
     template = util.get_jinja2_template(
         "javascript.jinja2",
         filters=(
-            ("class_name", class_name_factory(platform, namespace)),
+            ("class_name", class_name_factory(platform)),
             ("import_path", import_path),
             ("js", javascript_datatypes_filter),
             ("args", args),
@@ -151,13 +159,23 @@ def output(
                     category_name=category_key,
                     objs=category_val,
                     extra_args=util.extra_args,
-                    namespace=namespace,
                     platform=platform,
+                    version=version,
                     has_labeled_metrics=has_labeled_metrics,
                     types=types,
                     lang=lang,
                 )
             )
+            # Jinja2 squashes the final newline, so we explicitly add it
+            fd.write("\n")
+
+    if platform == "qt":
+        # Explicitly create a qmldir file when building for Qt
+        template = util.get_jinja2_template("qmldir.jinja2")
+        filepath = output_dir / "qmldir"
+
+        with filepath.open("w", encoding="utf-8") as fd:
+            fd.write(template.render(categories=objs.keys(), version=version))
             # Jinja2 squashes the final newline, so we explicitly add it
             fd.write("\n")
 
