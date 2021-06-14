@@ -1,8 +1,8 @@
 import json
 import os
+from unittest import mock
 
 import jsone
-import mock
 import pytest
 import requests
 import yaml
