@@ -481,6 +481,13 @@
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Яңарту өчен тартыгыз</string>
 
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Кораллар панелен яшерү өчен әйләндерегез</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Табларны алыштыру өчен кораллар панелен кырыйга сөйрәгез</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Табларны ачу өчен кораллар панелен өскә таба сөйрәгез</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Сессияләр</string>
@@ -724,6 +731,8 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Гафу. %1$s бу сәхифәне йөкли алмый.</string>
 
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Mozilla-га ватылу турында хәбәр җибәрү</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">Табны ябу</string>
     <!-- Restore tab button text on the tab crash page -->
@@ -857,6 +866,10 @@
     <string name="preference_option_autoplay_allowed2">Аудио һәм видеоны рөхсәт итү</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
     <string name="quick_setting_option_autoplay_allowed">Аудио һәм видеоны рөхсәт итү</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Аудио һәм видеоны мобиль интернетны кулланганда гына блоклау</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Аудио һәм видео Wi-Fi аша уйнатылачак</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Аудионы гына тыю</string>
     <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
@@ -1011,6 +1024,8 @@
     <string name="qr_scanner_dialog_negative">КИРЕ КАГУ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">%1$s җыентыгын бетерүне раслыйсызмы?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Бу табны бетерү бөтен җыентыкны бетерәчәк. Сез һәрвакыт яңа җыентыклар булдыра аласыз.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">%1$s җыентыгын бетерергәме?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -1022,6 +1037,8 @@
     <string name="full_screen_notification">Тулы экран режимына күчү</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL копияләнде</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Вебсайтларда текстны зурайту я кечерәйтү</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Шрифт үлчәме</string>
 
@@ -1129,6 +1146,8 @@
     <string name="onboarding_tracking_protection_strict_button">Катгый (киңәш ителә)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Катгый</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Кораллар панеленең урнашуын сайлау</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Хосусый режимда гизү</string>
     <!-- text for the private browsing onboarding card description

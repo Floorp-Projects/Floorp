@@ -180,6 +180,10 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Upravit</string>
 
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Domovská obrazovka</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Nelze se připojit. Schéma URL nebylo rozpoznáno.</string>
@@ -592,6 +596,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Po měsíci</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Při spuštění zobrazit domovskou obrazovku</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Po pár hodinách od zavření</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Vždy</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Nikdy</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Zavírat ručně</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->

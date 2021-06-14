@@ -21,6 +21,10 @@
     <string name="no_private_tabs_description">Sam sie pokożōm twoje prywatne karty.</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">Jedna ôtwarto karta. Tyknij, coby przełōnczyć karty.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">Ôtwarte karty: %1$s. Tyknij, coby je zmiynić.</string>
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">Ôbrane karty: %1$d</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">Przidej nowo kolekcyjo</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
@@ -35,6 +39,8 @@
     <string name="tab_tray_collection_button_multiselect_content_description">Spamiyntej ôbrane karty we kolekcyji</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">%1$s je ôbrano</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">Pociepane ôbranie karty: %1$s</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">Trybu multiwyboru je zawarty</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
@@ -174,6 +180,10 @@
     <string name="browser_menu_edit">Edytuj</string>
 
 
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Dōmowy ekran</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Niy idzie połōnczyć. Niypoznany schymat URL.</string>
@@ -205,6 +215,8 @@
     <string name="search_suggestions_onboarding_do_not_allow_button">Niy zwolej</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Pokazować dorady szukanio we prywatnych ôknach?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s bydzie przekazowoł bazowyj wyszukowarce wszysko, co wkludzosz we posku z adresōm.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Przewiydz sie wiyncyj</string>
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
@@ -280,6 +292,8 @@
     <string name="preferences_override_sync_tokenserver">Włosny serwer do synchrōnizacyje</string>
 
 
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Serwer kōnta Firefox/synchrōnizacyje je zmiyniōny. Zawiyranie aplikacyje, coby przidać zmiany…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Kōnto</string>
     <!-- Preference shown on banner to sign into account -->
@@ -471,6 +485,8 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Załōncz synchronizacyjo</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Skanuj kod porowanio we Firefoxie na kōmputrze</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Wloguj sie</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -537,6 +553,8 @@
     <string name="library_search">Szukej</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Sztalōnki</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Myni elymyntu historyje</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zawrzij</string>
 
@@ -615,5 +633,302 @@
     <!-- Text shown in the menu for the collection selector -->
     <string name="tab_tray_menu_select">Ôbier</string>
 
+
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Udostympnij wszyskie karty</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Niydowno zawarte karty</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Sztalōnki kōnta</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Sztalōnki kart</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Zawrzij wszyskie karty</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Nowo karta</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Ku dōmowyj strōnie</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Przełōncz tryb kart</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Przidej do zokłodek</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Zawrzij</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Udostympnij ôbrane karty</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Myni ôbranych kart</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Skasuj karta z kolekcyje</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Ôbier karty</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Zawrzij karta</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Zawrzij karta %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Myni ôtwartych kart</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Zawrzij wszyskie karty</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Udostympnij karty</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Spamiyntej karty do kolekcyje</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Myni kart</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Udostympnij karta</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Skasuj</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Spamiyntej</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Udostympnij</string>
+
+
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Obroz aktualnyj sesyje</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Spamiyntej do kolekcyje</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Skasuj kolekcyjo</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Przemianuj kolekcyjo</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Ôdewrzij karty</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Miano kolekcyje</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Przemianuj</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Skasuj</string>
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Skasuj z historyje</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (prywatny tryb)</string>
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Spamiyntej</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Skasuj historyjo</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Na zicher chcesz wypucować historyjo?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Historyjo je skasowano</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s je skasowane</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Wypucuj</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Kopiuj</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Udostympnij</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Ôdewrzij w nowyj karcie</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Ôdewrzij we prywatnyj karcie</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">Skasuj</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">Ôbrane: %1$d</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Skasuj elymynty: %1$d</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Dzisio</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Wczora</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Ôstatnie 24 godziny</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Ôstatnie 7 dni</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Ôstatnie 30 dni</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Starsze</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Niy ma sam żodnyj historyje</string>
+
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Skasuj pobrane</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Na zicher chcesz skasować pobrane zbiory?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Pobrane sōm skasowane</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Skasowane zbiory: %1$s</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">Niy ma żodnych pobranych zbiorōw</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">Ôbrane: %1$d</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Ôdewrzij</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Skasuj</string>
+
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">%1$s niy poradzi zaladować tyj strōny.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Idzie sprōbować wrōcić abo zawrzić ta karta.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Poślij Mozilli raport z awaryje</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Zawrzij karta</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Wrōć karta</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Ôpcyje sesyje</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Udostympnij sesyjo</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Myni zokłodek</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Edytuj zokłodka</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Ôbier katalog</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Na zicher chcesz skasować tyn katalog?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s skasuje ôbrane elymynty.</string>
+
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">Skasowane: %1$s</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Przidej katalog</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Zokłodka je spamiyntano</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">EDYTUJ</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Edytuj</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Ôbier</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Kopiuj</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Udostympnij</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Ôdewrzij w nowyj karcie</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Ôdewrzij we prywatnyj karcie</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Skasuj</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Spamiyntej</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">Ôbrane: %1$d</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Edytuj zokłodka</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Edytuj katalog</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Wloguj sie, coby ôboczyć synchrōnizowane zokłodki</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">KATALOG</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">MIANO</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Przidej katalog</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Ôbier katalog</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Zokłodka musi mieć miano</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">Zło adresa URL</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Niy ma sam żodnych zokłodek</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Skasowane: %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Zokłodki sōm wyciepane</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Kasowanie ôbranych katalogōw</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">COFNIJ AKCYJO</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Dozwolyństwa</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Idź do sztalōnkōw</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Gibke sztalōnki</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Rykōmyndowane</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Regiyruj dozwolyństwami do serwerōw</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Wypucuj dozwolyństwa</string>
+
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Wypucuj dozwolyństwo</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Wypucuj dozwolyństwa wszyskich serwerōw</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Autōmatyczne puszczanie</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kamera</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mikrofōn</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Plac</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Powiadōmiynie</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Pytej ô zgoda</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Zaszperowane</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Przizwōlōne</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Zaszperowane ôd Androida</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Wyjōntki</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Załōnczōne</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Wyłōnczōne</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Zgoda na klang i video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Zgoda na klang i video</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Szperuj klang i video ino przi połōnczyniach bez mobilniokowe nece</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Klang i filmy bydōm puszczane ino przi połōnczyniu Wi-Fi</string>
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Szperuj ino klang</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Szperuj ino klang</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Szperuj klang i video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">Szperuj klang i video</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Załōnczōne</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Wyłōnczōne</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Kolekcyje</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Myni kolekcyjōw</string>
 
     </resources>

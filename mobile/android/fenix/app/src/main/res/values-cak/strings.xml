@@ -97,13 +97,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Tewäx</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Tijal kiwachib\'enik jaqon taq ruwi\'. Jät pa Runuk\'ulem k\'a ri\' tacha\' ri kajtz\'ikil pa peraj kitzub\'al taq ruwi\'.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Jät pa runuk\'ulem</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Tewäx</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">K’ak’a’ ruwi’</string>
@@ -567,8 +560,6 @@
     <string name="library_new_tab">K\'ak\'a\' ruwi\'</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Tikanöx pa ruxaq</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Ximon taq ruwi\'</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Rucholajem sik\'inem</string>
     <!-- Menu Item Label for Search in Library -->
@@ -614,6 +605,8 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Jun ik\' tik\'o</string>
 
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Junelïk</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Titz\'apïx chi q\'ab\'aj</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1636,6 +1629,15 @@
 
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Titz\'ib\'äx jun okel rajilab\'al rutarjeta\' kre\'ito\'</string>
+
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Tanojisaj re k\'ojlem re\'</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Tib\'an runuk\'ulem wakami</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Jub\'a\' chik na</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Man taq\'ät chik ri awokisab\'al</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Titz\'aqatisäx kanob\'äl</string>
