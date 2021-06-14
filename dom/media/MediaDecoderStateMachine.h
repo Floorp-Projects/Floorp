@@ -479,7 +479,11 @@ class MediaDecoderStateMachine
   void RequestAudioData();
 
   // Start a task to decode video.
-  void RequestVideoData(const media::TimeUnit& aCurrentTime);
+  // @param aRequestNextVideoKeyFrame
+  // If aRequestNextKeyFrame is true, will request data for the next keyframe
+  // after aCurrentTime.
+  void RequestVideoData(const media::TimeUnit& aCurrentTime,
+                        bool aRequestNextKeyFrame = false);
 
   void WaitForData(MediaData::Type aType);
 
