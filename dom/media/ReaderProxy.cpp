@@ -68,7 +68,7 @@ RefPtr<ReaderProxy::AudioDataPromise> ReaderProxy::RequestAudioData() {
 }
 
 RefPtr<ReaderProxy::VideoDataPromise> ReaderProxy::RequestVideoData(
-    const media::TimeUnit& aTimeThreshold) {
+    const media::TimeUnit& aTimeThreshold, bool aRequestNextVideoKeyFrame) {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
 
@@ -78,7 +78,8 @@ RefPtr<ReaderProxy::VideoDataPromise> ReaderProxy::RequestVideoData(
 
   auto startTime = StartTime();
   return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                     &MediaFormatReader::RequestVideoData, threshold)
+                     &MediaFormatReader::RequestVideoData, threshold,
+                     aRequestNextVideoKeyFrame)
       ->Then(
           mOwnerThread, __func__,
           [startTime](RefPtr<VideoData> aVideo) {

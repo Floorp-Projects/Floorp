@@ -40,7 +40,7 @@ class ReaderProxy {
   RefPtr<AudioDataPromise> RequestAudioData();
 
   RefPtr<VideoDataPromise> RequestVideoData(
-      const media::TimeUnit& aTimeThreshold);
+      const media::TimeUnit& aTimeThreshold, bool aRequestNextVideoKeyFrame);
 
   RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType);
 
