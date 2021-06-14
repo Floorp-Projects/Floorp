@@ -1,9 +1,10 @@
 import json
-import mock
 import os
-import pytest
 import sys
 from io import BytesIO
+from unittest import mock
+
+import pytest
 
 from .. import metadata, manifestupdate
 from ..update.update import WPTUpdate

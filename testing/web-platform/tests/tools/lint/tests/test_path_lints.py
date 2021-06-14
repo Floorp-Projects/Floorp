@@ -1,5 +1,5 @@
-import mock
 import os
+from unittest import mock
 
 from ..lint import check_path, check_unique_case_insensitive_paths
 from .base import check_errors
