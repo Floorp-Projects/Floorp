@@ -16,7 +16,7 @@ fuzzy-if(!nativeThemePref,0-25,0-2) == time-small-height.html time-small-height-
 fuzzy-if(Android,0-4,0-8) fuzzy-if(cocoaWidget&&nativeThemePref,6-6,48-48) == time-content-left-aligned.html time-content-left-aligned-ref.html
 
 # reset button should be right aligned
-skip-if(Android) == time-reset-button-right-aligned.html time-reset-button-right-aligned-ref.html # bug 1372062
+skip-if(Android) fuzzy-if(!nativeThemePref,0-24,0-4) == time-reset-button-right-aligned.html time-reset-button-right-aligned-ref.html # bug 1372062 for Android, antialiasing with WR disabled for the fuzz
 == reset-button-visibility-hidden.html reset-button-visibility-hidden-ref.html
 
 != text-align.html text-align-notref.html
