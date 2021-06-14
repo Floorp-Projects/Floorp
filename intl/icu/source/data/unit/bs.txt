@@ -122,7 +122,49 @@ bs{
             }
         }
         compound{
+            1024p1{"kibi{0}"}
+            1024p2{"mebi{0}"}
+            1024p3{"gibi{0}"}
+            1024p4{"tebi{0}"}
+            1024p5{"pebi{0}"}
+            1024p6{"exbi{0}"}
+            1024p7{"zebi{0}"}
+            1024p8{"yobe{0}"}
             per{"{0}/{1}"}
+            power2{
+                few{
+                    _{
+                        _{"kvadratna {0}"}
+                    }
+                }
+                one{
+                    _{
+                        _{"kvadratni {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"kvadratnih {0}"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"kubna {0}"}
+                    }
+                }
+                one{
+                    _{
+                        _{"kubni {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"kubnih {0}"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -131,7 +173,7 @@ bs{
                 one{"{0} karat"}
                 other{"{0} karata"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"miligrami po decilitru"}
                 few{"{0} miligrama po decilitru"}
                 one{"{0} miligram po decilitru"}
@@ -1520,7 +1562,7 @@ bs{
                 one{"{0} kt"}
                 other{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dL"}
                 few{"{0} mg/dL"}
                 one{"{0} mg/dL"}
@@ -1870,14 +1912,14 @@ bs{
         graphics{
             dot-per-centimeter{
                 dnam{"dpcm"}
-                few{"{0} dpcm"}
-                one{"{0} dpcm"}
+                few{"{0} ppcm"}
+                one{"{0} ppcm"}
                 other{"{0} dpcm"}
             }
             dot-per-inch{
                 dnam{"dpi"}
-                few{"{0} dpi"}
-                one{"{0} dpi"}
+                few{"{0} ppi"}
+                one{"{0} ppi"}
                 other{"{0} dpi"}
             }
             em{
@@ -1978,10 +2020,10 @@ bs{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µm"}
-                few{"{0} µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                few{"{0} μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"milje"}
@@ -2098,10 +2140,10 @@ bs{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                few{"{0} µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                few{"{0} μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

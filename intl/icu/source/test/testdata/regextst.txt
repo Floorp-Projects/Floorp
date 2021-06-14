@@ -1497,6 +1497,11 @@
 #
 "(?w)\b"                     v2     "äää<0></0> äää"
 
+# Bug ICU-21492 Assertion failure with nested look-around expressions.
+#
+"(?<=(?:(?<=(?:(?<=(?:(?<=)){2})){3})){4}"   E  "<0></0>"  # orig failure from bug report, w mismatched parens.
+"(?:(?<=(?:(?<=)){2}))"            "<0></0>"               # Simplified case, with a valid pattern.
+
 #  Random debugging, Temporary
 #
 

@@ -1004,7 +1004,7 @@ az{
             "Fransız UİC Frankı",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Fil Dişi Sahili Frankı",
         }
         XPD{

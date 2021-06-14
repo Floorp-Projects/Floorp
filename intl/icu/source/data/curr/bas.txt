@@ -216,7 +216,7 @@ bas{
             "Frǎŋ CFA (BEAC)",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Frǎŋ CFA (BCEAO)",
         }
         ZAR{

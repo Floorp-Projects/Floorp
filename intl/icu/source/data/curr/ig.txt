@@ -432,7 +432,7 @@ ig{
             "Ego Kina obodo Papua New Guinea",
         }
         PHP{
-            "PHP",
+            "₱",
             "Ego piso obodo Philippine",
         }
         PKR{
@@ -604,7 +604,7 @@ ig{
             "Ego Dollar obodo East Carribbean",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Ego CFA Franc obodo West Africa",
         }
         XPF{

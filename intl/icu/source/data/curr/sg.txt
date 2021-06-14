@@ -212,7 +212,7 @@ sg{
             "farânga CFA (BEAC)",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "farânga CFA (BCEAO)",
         }
         ZAR{

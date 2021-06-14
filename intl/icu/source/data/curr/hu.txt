@@ -1068,7 +1068,7 @@ hu{
             "Francia UIC-frank",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "CFA frank BCEAO",
         }
         XPD{

@@ -476,7 +476,7 @@ so{
             "Kinada Babua Niyuu Gini",
         }
         PHP{
-            "PHP",
+            "₱",
             "Biso Filibin",
         }
         PKR{
@@ -652,7 +652,7 @@ so{
             "Doolarka Iist Kaaribyan",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Faranka CFA Galbeedka Afrika",
         }
         XPF{

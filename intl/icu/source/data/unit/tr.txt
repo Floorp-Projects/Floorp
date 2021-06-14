@@ -105,7 +105,59 @@ tr{
             }
         }
         compound{
+            1024p1{"kibi{0}"}
+            1024p2{"mebi{0}"}
+            1024p3{"gibi{0}"}
+            1024p4{"tebi{0}"}
+            1024p5{"pebi{0}"}
+            1024p6{"exbi{0}"}
+            1024p7{"zebi{0}"}
+            1024p8{"yobe{0}"}
+            10p-1{"desi{0}"}
+            10p-12{"piko{0}"}
+            10p-15{"femto{0}"}
+            10p-18{"atto{0}"}
+            10p-2{"santi{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"yokto{0}"}
+            10p-3{"mili{0}"}
+            10p-6{"mikro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deka{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"exa{0}"}
+            10p2{"hekto{0}"}
+            10p21{"zetta{0}"}
+            10p24{"yotta{0}"}
+            10p3{"kilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"giga{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}kare"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}kare"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}küp"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}küp"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -113,7 +165,7 @@ tr{
                 one{"{0} ayar"}
                 other{"{0} ayar"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"miligram/desilitre"}
                 one{"{0} miligram/desilitre"}
                 other{"{0} miligram/desilitre"}
@@ -1057,6 +1109,14 @@ tr{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1065,7 +1125,7 @@ tr{
                 one{"{0} ayar"}
                 other{"{0} ayar"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dL"}
                 one{"{0} mg/dL"}
                 other{"{0} mg/dL"}
@@ -1355,8 +1415,8 @@ tr{
                 per{"{0}/m"}
             }
             micrometer{
-                one{"{0} µm"}
-                other{"{0} µm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"mil"}
@@ -1433,9 +1493,9 @@ tr{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}
@@ -1758,6 +1818,14 @@ tr{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1766,7 +1834,7 @@ tr{
                 one{"{0} ayar"}
                 other{"{0} ayar"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 one{"{0} mg/dl"}
                 other{"{0} mg/dl"}
@@ -2124,8 +2192,8 @@ tr{
             }
             micrometer{
                 dnam{"mikron"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"mil"}
@@ -2229,9 +2297,9 @@ tr{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

@@ -173,7 +173,99 @@ cy{
             }
         }
         compound{
+            1024p1{"kibi{0}"}
+            1024p2{"mebi{0}"}
+            1024p3{"gibi{0}"}
+            1024p4{"tebi{0}"}
+            1024p5{"pebi{0}"}
+            1024p6{"exbi{0}"}
+            1024p7{"zebi{0}"}
+            1024p8{"yobe{0}"}
+            10p-1{"desi{0}"}
+            10p-12{"pico{0}"}
+            10p-15{"ffemto{0}"}
+            10p-18{"ato{0}"}
+            10p-2{"centi{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"yocto{0}"}
+            10p-3{"mili{0}"}
+            10p-6{"micro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deca{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"exa{0}"}
+            10p2{"hecto{0}"}
+            10p21{"zetta{0}"}
+            10p24{"yotta{0}"}
+            10p3{"cilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"giga{0}"}
             per{"{0}/{1}"}
+            power2{
+                few{
+                    _{
+                        _{"{0} sgwâr"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0} sgwâr"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0} sgwâr"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} sgwâr"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0} sgwâr"}
+                    }
+                }
+                zero{
+                    _{
+                        _{"{0} sgwâr"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"{0} ciwbig"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0} ciwbig"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0} ciwbig"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} ciwbig"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0} ciwbig"}
+                    }
+                }
+                zero{
+                    _{
+                        _{"{0} ciwbig"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -185,7 +277,7 @@ cy{
                 two{"{0} kt"}
                 zero{"{0} karat"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"miligramau y declilitr"}
                 few{"{0} mg/dL"}
                 many{"{0} mg/dL"}
@@ -580,11 +672,11 @@ cy{
             }
             foodcalorie{
                 dnam{"Calorïau"}
-                few{"{0} Cal"}
-                many{"{0} Cal"}
+                few{"{0} kcal"}
+                many{"{0} kcal"}
                 one{"{0} Calori"}
                 other{"{0} Calori"}
-                two{"{0} Cal"}
+                two{"{0} kcal"}
                 zero{"{0} Cal"}
             }
             joule{
@@ -684,30 +776,30 @@ cy{
         }
         graphics{
             dot{
-                few{"{0} dot"}
-                many{"{0} dot"}
-                one{"{0} dot"}
-                other{"{0} dot"}
+                few{"{0} px"}
+                many{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
                 two{"{0} ddot"}
-                zero{"{0} dot"}
+                zero{"{0} px"}
             }
             dot-per-centimeter{
                 dnam{"dotiau mewn centimedr"}
-                few{"{0} dpcm"}
-                many{"{0} dpcm"}
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
                 one{"{0} dot mewn centimedr"}
                 other{"{0} mewn centimedr"}
-                two{"{0} dpcm"}
-                zero{"{0} dpcm"}
+                two{"{0} ppcm"}
+                zero{"{0} ppcm"}
             }
             dot-per-inch{
                 dnam{"dotiau mewn modfedd"}
-                few{"{0} dpi"}
-                many{"{0} dpi"}
+                few{"{0} ppi"}
+                many{"{0} ppi"}
                 one{"{0} dot mewn modfedd"}
                 other{"{0} dot mewn modfedd"}
-                two{"{0} dpi"}
-                zero{"{0} dpi"}
+                two{"{0} ppi"}
+                zero{"{0} ppi"}
             }
             em{
                 dnam{"em argraffyddol"}
@@ -856,12 +948,12 @@ cy{
             }
             micrometer{
                 dnam{"micrometrau"}
-                few{"{0} µm"}
-                many{"{0} µm"}
+                few{"{0} μm"}
+                many{"{0} μm"}
                 one{"{0} micrometr"}
                 other{"{0} micrometr"}
-                two{"{0} µm"}
-                zero{"{0} µm"}
+                two{"{0} μm"}
+                zero{"{0} μm"}
             }
             mile{
                 dnam{"milltiroedd"}
@@ -1048,12 +1140,12 @@ cy{
             }
             microgram{
                 dnam{"microgramau"}
-                few{"{0} µg"}
-                many{"{0} µg"}
+                few{"{0} μg"}
+                many{"{0} μg"}
                 one{"{0} microgram"}
                 other{"{0} microgram"}
-                two{"{0} µg"}
-                zero{"{0} µg"}
+                two{"{0} μg"}
+                zero{"{0} μg"}
             }
             milligram{
                 dnam{"miligramau"}
@@ -1784,6 +1876,7 @@ cy{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -2190,13 +2283,13 @@ cy{
                 zero{"{0}m"}
             }
             micrometer{
-                dnam{"µm"}
-                few{"{0}µm"}
-                many{"{0}µm"}
-                one{"{0}µm"}
-                other{"{0}µm"}
-                two{"{0}µm"}
-                zero{"{0}µm"}
+                dnam{"μm"}
+                few{"{0}μm"}
+                many{"{0}μm"}
+                one{"{0}μm"}
+                other{"{0}μm"}
+                two{"{0}μm"}
+                zero{"{0}μm"}
             }
             mile{
                 dnam{"mi"}
@@ -2307,13 +2400,13 @@ cy{
                 zero{"{0}t"}
             }
             microgram{
-                dnam{"µg"}
-                few{"{0}µg"}
-                many{"{0}µg"}
-                one{"{0}µg"}
-                other{"{0}µg"}
-                two{"{0}µg"}
-                zero{"{0}µg"}
+                dnam{"μg"}
+                few{"{0}μg"}
+                many{"{0}μg"}
+                one{"{0}μg"}
+                other{"{0}μg"}
+                two{"{0}μg"}
+                zero{"{0}μg"}
             }
             milligram{
                 dnam{"mg"}
@@ -2818,7 +2911,7 @@ cy{
                 two{"{0} kt"}
                 zero{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 few{"{0} mg/dL"}
                 many{"{0} mg/dL"}
                 one{"{0} mg/dL"}
@@ -3167,11 +3260,11 @@ cy{
             }
             foodcalorie{
                 dnam{"Cal"}
-                few{"{0} Cal"}
-                many{"{0} Cal"}
+                few{"{0} kcal"}
+                many{"{0} kcal"}
                 one{"{0} Cal"}
-                other{"{0} Cal"}
-                two{"{0} Cal"}
+                other{"{0} kcal"}
+                two{"{0} kcal"}
                 zero{"{0} Cal"}
             }
             joule{
@@ -3244,12 +3337,12 @@ cy{
         }
         graphics{
             dot{
-                few{"{0} dot"}
-                many{"{0} dot"}
-                one{"{0} dot"}
-                other{"{0} dot"}
+                few{"{0} px"}
+                many{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
                 two{"{0} ddot"}
-                zero{"{0} dot"}
+                zero{"{0} px"}
             }
             megapixel{
                 dnam{"megapicseli"}
@@ -3355,13 +3448,13 @@ cy{
                 zero{"{0} m"}
             }
             micrometer{
-                dnam{"µmetrau"}
-                few{"{0} µm"}
-                many{"{0} µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
-                two{"{0} µm"}
-                zero{"{0} µm"}
+                dnam{"μmetrau"}
+                few{"{0} μm"}
+                many{"{0} μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
+                two{"{0} μm"}
+                zero{"{0} μm"}
             }
             mile{
                 dnam{"milltiroedd"}
@@ -3517,13 +3610,13 @@ cy{
                 zero{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                few{"{0} µg"}
-                many{"{0} µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
-                two{"{0} µg"}
-                zero{"{0} µg"}
+                dnam{"μg"}
+                few{"{0} μg"}
+                many{"{0} μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
+                two{"{0} μg"}
+                zero{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

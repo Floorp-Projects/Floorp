@@ -216,7 +216,7 @@ ln{
             "Falánga CFA BEAC",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Falánga CFA BCEAO",
         }
         ZAR{

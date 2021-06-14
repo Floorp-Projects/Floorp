@@ -100,7 +100,59 @@ fo{
             }
         }
         compound{
+            1024p1{"kibi{0}"}
+            1024p2{"mebi{0}"}
+            1024p3{"gibi{0}"}
+            1024p4{"tebi{0}"}
+            1024p5{"pebi{0}"}
+            1024p6{"exbi{0}"}
+            1024p7{"zebi{0}"}
+            1024p8{"yobe{0}"}
+            10p-1{"desi{0}"}
+            10p-12{"pico{0}"}
+            10p-15{"femto{0}"}
+            10p-18{"atto{0}"}
+            10p-2{"senti{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"yocto{0}"}
+            10p-3{"milli{0}"}
+            10p-6{"mikro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deka{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"exa{0}"}
+            10p2{"hekto{0}"}
+            10p21{"zetta{0}"}
+            10p24{"yotta{0}"}
+            10p3{"kilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"giga{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"fer{0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"fer{0}"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"kubikk{0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"kubikk{0}"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -108,7 +160,7 @@ fo{
                 one{"{0} karat"}
                 other{"{0} karat"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"milligramm fyri hvønn desilitur"}
                 one{"{0} milligramm fyri hvønn desilitur"}
                 other{"{0} milligramm fyri hvønn desilitur"}
@@ -1001,6 +1053,7 @@ fo{
             }
         }
         compound{
+            10p1{"dam{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1251,6 +1304,7 @@ fo{
             }
         }
         compound{
+            10p1{"dam{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1259,7 +1313,7 @@ fo{
                 one{"{0} karat"}
                 other{"{0} karat"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 one{"{0} mg/dl"}
                 other{"{0} mg/dl"}
@@ -1602,9 +1656,9 @@ fo{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"míl"}
@@ -1695,9 +1749,9 @@ fo{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

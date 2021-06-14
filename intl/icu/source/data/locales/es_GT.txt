@@ -36,12 +36,12 @@ es_GT{
                         other{"¤0000M"}
                     }
                     10000000000{
-                        one{"¤00MRD "}
-                        other{"¤00MRD "}
+                        one{"¤00MRD"}
+                        other{"¤00MRD"}
                     }
                     100000000000{
-                        one{"¤000MRD "}
-                        other{"¤000MRD "}
+                        one{"¤000MRD"}
+                        other{"¤000MRD"}
                     }
                 }
             }

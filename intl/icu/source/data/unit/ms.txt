@@ -84,14 +84,56 @@ ms{
             }
         }
         compound{
+            1024p1{"kibi{0}"}
+            1024p2{"mebi{0}"}
+            1024p3{"gibi{0}"}
+            1024p4{"tebi{0}"}
+            1024p5{"pebi{0}"}
+            1024p6{"eksbi{0}"}
+            1024p7{"zebi{0}"}
+            1024p8{"yobe{0}"}
+            10p-1{"desi{0}"}
+            10p-12{"piko{0}"}
+            10p-15{"femto{0}"}
+            10p-18{"ato{0}"}
+            10p-2{"senti{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"yokto{0}"}
+            10p-3{"mili{0}"}
+            10p-6{"mikro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deka{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"eksa{0}"}
+            10p2{"hekto{0}"}
+            10p21{"zetta{0}"}
+            10p24{"yotta{0}"}
+            10p3{"kilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"giga{0}"}
             per{"{0} per {1}"}
+            power2{
+                other{
+                    _{
+                        _{"{0} persegi"}
+                    }
+                }
+            }
+            power3{
+                other{
+                    _{
+                        _{"{0} padu"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
                 dnam{"karat"}
                 other{"{0} karat"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"miligram setiap desiliter"}
                 other{"{0} miligram setiap desiliter"}
             }
@@ -943,8 +985,8 @@ ms{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"bt"}
@@ -1003,8 +1045,8 @@ ms{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}
@@ -1198,7 +1240,7 @@ ms{
                 dnam{"karat"}
                 other{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dL"}
                 other{"{0} mg/dL"}
             }
@@ -1492,8 +1534,8 @@ ms{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µmeter"}
-                other{"{0} µm"}
+                dnam{"μmeter"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"batu"}
@@ -1561,8 +1603,8 @@ ms{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

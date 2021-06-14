@@ -105,7 +105,51 @@ chr{
             }
         }
         compound{
+            10p-1{"deci{0}"}
+            10p-12{"pico{0}"}
+            10p-15{"femto{0}"}
+            10p-18{"atto{0}"}
+            10p-2{"centi{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"yocto{0}"}
+            10p-3{"milli{0}"}
+            10p-6{"micro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deka{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"exa{0}"}
+            10p2{"hecto{0}"}
+            10p21{"zetta{0}"}
+            10p24{"yotta{0}"}
+            10p3{"kilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"giga{0}"}
             per{"{0} ᎾᎿ {1}"}
+            power2{
+                one{
+                    _{
+                        _{"ᏅᎩ ᏧᏅᏏᏱ {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"ᏅᎩ ᏧᏅᏏᏱ {0}"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"ᏣᏁᎳ ᏧᏅᏏᏱ {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"ᏣᏁᎳ ᏧᏅᏏᏱ {0}"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -113,7 +157,7 @@ chr{
                 one{"{0} ᎧᏇᏓ"}
                 other{"{0} ᏗᎧᏇᏓ"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"ᏌᏉ ᎢᏯᎦᎨᎵᏁᎢ ᎤᏍᏗ ᏂᏚᏓᎨᏒ ᏌᏉ ᎢᏳᎾᏓᎢ ᏍᎪᎯ ᎵᏔᎢ ᎢᏳᏓᎵ"}
                 one{"{0} ᏌᏉ ᎢᏯᎦᎨᎵᏁᎢ ᎤᏍᏗ ᎤᏓᎨᏒ ᏌᏉ ᎢᏳᎾᏓᎢ ᏍᎪᎯ ᎵᏔᎢ ᎢᏳᏓᎵ"}
                 other{"{0} ᏌᏉ ᎢᏯᎦᎨᎵᏁᎢ ᎤᏍᏗ ᏂᏚᏓᎨᏒ ᏌᏉ ᎢᏳᎾᏓᎢ ᏍᎪᎯ ᎵᏔᎢ ᎢᏳᏓᎵ"}
@@ -1138,7 +1182,7 @@ chr{
                 one{"{0} kt"}
                 other{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dL"}
                 one{"{0} mg/dL"}
                 other{"{0} mg/dL"}
@@ -1487,9 +1531,9 @@ chr{
                 per{"{0}/ᎠᏟ"}
             }
             micrometer{
-                dnam{"µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"ᎢᏳᏟᎶᏓ"}
@@ -1588,9 +1632,9 @@ chr{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}
