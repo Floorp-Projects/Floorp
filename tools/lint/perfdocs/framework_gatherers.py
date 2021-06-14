@@ -129,13 +129,22 @@ class RaptorGatherer(FrameworkGatherer):
         for task in self._taskgraph.keys():
             if type(self._taskgraph[task]) == dict:
                 command = self._taskgraph[task]["task"]["payload"].get("command", [])
+                run_on_projects = self._taskgraph[task]["attributes"]["run_on_projects"]
             else:
                 command = self._taskgraph[task].task["payload"].get("command", [])
+                run_on_projects = self._taskgraph[task].attributes["run_on_projects"]
 
-            match = re.search(r"[\s']--test[\s=](.+?)[\s']", str(command))
-            if match:
-                test = match.group(1)
-                self._task_list.setdefault(test, []).append(task)
+            test_match = re.search(r"[\s']--test[\s=](.+?)[\s']", str(command))
+            task_match = re.search(r"([\w\W]*/[pgo|opt]*)-([\w\W]*)", task)
+            if test_match and task_match:
+                test = test_match.group(1)
+                platform = task_match.group(1)
+                test_name = task_match.group(2)
+
+                item = {"test_name": test_name, "run_on_projects": run_on_projects}
+                self._task_list.setdefault(test, {}).setdefault(platform, []).append(
+                    item
+                )
 
     def _get_subtests_from_ini(self, manifest_path, suite_name):
         """
@@ -236,11 +245,27 @@ class RaptorGatherer(FrameworkGatherer):
 
             if self._task_list.get(title, []):
                 result += "   * **Test Task**:\n"
-                for task in sorted(self._task_list[title]):
-                    if suite_name == "mobile" and "android" in task:
-                        result += f"      * {task}\n"
-                    elif suite_name != "mobile" and "android" not in task:
-                        result += f"      * {task}\n"
+                for platform in sorted(self._task_list[title]):
+                    if suite_name == "mobile" and "android" in platform:
+                        result += f"      * {platform}\n"
+                    elif suite_name != "mobile" and "android" not in platform:
+                        result += f"      * {platform}\n"
+
+                    self._task_list[title][platform].sort(key=lambda x: x["test_name"])
+                    for task in self._task_list[title][platform]:
+                        run_on_project = ": " + (
+                            ", ".join(task["run_on_projects"])
+                            if task["run_on_projects"]
+                            else "None"
+                        )
+                        if suite_name == "mobile" and "android" in platform:
+                            result += (
+                                f"            * {task['test_name']}{run_on_project}\n"
+                            )
+                        elif suite_name != "mobile" and "android" not in platform:
+                            result += (
+                                f"            * {task['test_name']}{run_on_project}\n"
+                            )
 
             result += "\n"
 
