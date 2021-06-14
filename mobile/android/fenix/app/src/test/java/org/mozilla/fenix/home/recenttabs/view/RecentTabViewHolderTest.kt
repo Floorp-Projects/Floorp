@@ -6,9 +6,13 @@ package org.mozilla.fenix.home.recenttabs.view
 
 import android.view.LayoutInflater
 import android.view.View
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.android.synthetic.main.recent_tabs_list_row.*
 import kotlinx.android.synthetic.main.recent_tabs_list_row.view.*
+import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -23,6 +27,7 @@ class RecentTabViewHolderTest {
 
     private lateinit var view: View
     private lateinit var interactor: SessionControlInteractor
+    private lateinit var icons: BrowserIcons
 
     private val tab = createTab(
         url = "https://mozilla.org",
@@ -33,18 +38,23 @@ class RecentTabViewHolderTest {
     fun setup() {
         view = LayoutInflater.from(testContext).inflate(RecentTabViewHolder.LAYOUT_ID, null)
         interactor = mockk(relaxed = true)
+        icons = mockk(relaxed = true)
+
+        every { icons.loadIntoView(view.recent_tab_icon, any()) } returns mockk()
     }
 
     @Test
-    fun `GIVEN a new recent tab on bind THEN set the title text`() {
-        RecentTabViewHolder(view, interactor).bindTab(tab)
+    fun `GIVEN a new recent tab on bind THEN set the title text and load the tab icon`() {
+        RecentTabViewHolder(view, interactor, icons).bindTab(tab)
 
         assertEquals(tab.content.title, view.recent_tab_title.text)
+
+        verify { icons.loadIntoView(view.recent_tab_icon, IconRequest(tab.content.url)) }
     }
 
     @Test
-    fun `WHEN a recent tab item is clicked THEN interactor iis called`() {
-        RecentTabViewHolder(view, interactor).bindTab(tab)
+    fun `WHEN a recent tab item is clicked THEN interactor is called`() {
+        RecentTabViewHolder(view, interactor, icons).bindTab(tab)
 
         view.performClick()
 
