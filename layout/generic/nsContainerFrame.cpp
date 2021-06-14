@@ -36,7 +36,6 @@
 #include "nsBoxLayoutState.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsBlockFrame.h"
-#include "nsBulletFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "mozilla/AutoRestore.h"
 #include "nsIFrameInlines.h"
