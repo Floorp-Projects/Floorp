@@ -99,8 +99,6 @@ class GlobalHelperThreadState {
   typedef Vector<PromiseHelperTask*, 0, SystemAllocPolicy>
       PromiseHelperTaskVector;
   typedef Vector<JSContext*, 0, SystemAllocPolicy> ContextVector;
-  using HelperThreadVector =
-      Vector<UniquePtr<HelperThread>, 0, SystemAllocPolicy>;
 
   // Count of running task by each threadType.
   mozilla::EnumeratedArray<ThreadType, ThreadType::THREAD_TYPE_MAX, size_t>
@@ -112,9 +110,6 @@ class GlobalHelperThreadState {
 
  private:
   // The lists below are all protected by |lock|.
-
-  // List of available helper threads.
-  HelperThreadVector threads_;
 
   // Ion compilation worklist and finished jobs.
   IonCompileTaskVector ionWorklist_, ionFinishedList_;
@@ -197,7 +192,7 @@ class GlobalHelperThreadState {
 
   [[nodiscard]] bool ensureInitialized();
   [[nodiscard]] bool ensureThreadCount(size_t count,
-                                       const AutoLockHelperThreadState& lock);
+                                       AutoLockHelperThreadState& lock);
   void finish(AutoLockHelperThreadState& lock);
   void finishThreads(AutoLockHelperThreadState& lock);
 
@@ -240,14 +235,6 @@ class GlobalHelperThreadState {
   }
 
  private:
-  HelperThreadVector& threads(const AutoLockHelperThreadState& lock) {
-    return threads_;
-  }
-  const HelperThreadVector& threads(
-      const AutoLockHelperThreadState& lock) const {
-    return threads_;
-  }
-
   void notifyOne(CondVar which, const AutoLockHelperThreadState&);
 
  public:
@@ -487,43 +474,6 @@ static inline GlobalHelperThreadState& HelperThreadState() {
   MOZ_ASSERT(gHelperThreadState);
   return *gHelperThreadState;
 }
-
-/* Individual helper thread, one allocated per core. */
-class HelperThread {
-  Thread thread;
-
-  /*
-   * The profiling thread for this helper thread, which can be used to push
-   * and pop label frames.
-   * This field being non-null indicates that this thread has been registered
-   * and needs to be unregistered at shutdown.
-   */
-  ProfilingStack* profilingStack = nullptr;
-
- public:
-  HelperThread();
-  [[nodiscard]] bool init();
-
-  ThreadId threadId() { return thread.get_id(); }
-
-  void join();
-
-  static void ThreadMain(void* arg);
-  void threadLoop();
-
-  void ensureRegisteredWithProfiler();
-  void unregisterWithProfilerIfNeeded();
-
- private:
-  struct AutoProfilerLabel {
-    AutoProfilerLabel(HelperThread* helperThread, const char* label,
-                      JS::ProfilingCategoryPair categoryPair);
-    ~AutoProfilerLabel();
-
-   private:
-    ProfilingStack* profilingStack;
-  };
-};
 
 class MOZ_RAII AutoSetHelperThreadContext {
   JSContext* cx;
