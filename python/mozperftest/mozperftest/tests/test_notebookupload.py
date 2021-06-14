@@ -54,7 +54,7 @@ def test_notebookupload_with_filter(notebook, no_filter):
                         assert type(data["value"]) in (int, float)
 
     notebook.assert_has_calls(
-        mock.call().post_to_iodide(["scatterplot"], start_local_server=True)
+        [mock.call().post_to_iodide(["scatterplot"], start_local_server=True)]
     )
 
 
@@ -87,7 +87,7 @@ def test_compare_to_success(notebook, stats):
         assert any("statistics" in element["subtest"] for element in kwargs["data"])
 
     notebook.assert_has_calls(
-        mock.call().post_to_iodide(["compare"], start_local_server=True)
+        [mock.call().post_to_iodide(["compare"], start_local_server=True)]
     )
 
 
