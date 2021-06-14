@@ -6219,6 +6219,9 @@ void nsDisplayBlendMode::Paint(nsDisplayListBuilder* aBuilder,
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   IntRect rect =
       IntRect::RoundOut(NSRectToRect(GetPaintRect(), appUnitsPerDevPixel));
+  if (rect.IsEmpty()) {
+    return;
+  }
 
   RefPtr<DrawTarget> dt = aCtx->GetDrawTarget()->CreateSimilarDrawTarget(
       rect.Size(), SurfaceFormat::B8G8R8A8);
