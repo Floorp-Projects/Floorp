@@ -375,8 +375,8 @@ class nsWindow final : public nsBaseWidget {
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
   static bool TitlebarUseShapeMask();
   bool IsRemoteContent() { return HasRemoteContent(); }
-  void NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
-                                      bool aFlippedX, bool aFlippedY);
+  void NativeMoveResizeWaylandPopupCallback(const GdkRectangle* aFinalSize,
+                                            bool aFlippedX, bool aFlippedY);
   static bool IsToplevelWindowTransparent();
 
 #ifdef MOZ_WAYLAND
@@ -615,10 +615,13 @@ class nsWindow final : public nsBaseWidget {
 
   void ApplySizeConstraints(void);
 
+  void GetParentPosition(int* aX, int* aY);
+
   // Wayland Popup section
   bool WaylandPopupNeedsTrackInHierarchy();
   bool WaylandPopupIsAnchored();
   bool WaylandPopupIsMenu();
+  bool WaylandPopupIsContextMenu();
   bool WaylandPopupIsPermanent();
   bool IsWidgetOverflowWindow();
   void RemovePopupFromHierarchyList();
@@ -697,9 +700,17 @@ class nsWindow final : public nsBaseWidget {
    */
   bool mPopupAnchored;
 
-  /*  Translated mPopupPosition against parent window when it's anchored.
+  /*  When popup is context menu.
    */
-  GdkPoint mTranslatedPopupPosition;
+  bool mPopupContextMenu;
+
+  /*  mRelativePopupPosition is popup position calculated against parent window.
+   */
+  GdkPoint mRelativePopupPosition;
+
+  /* mRelativePopupOffset is used by context menus.
+   */
+  GdkPoint mRelativePopupOffset;
 
   /*  Indicates that this popup matches layout setup so we can use
    *  parent popup coordinates reliably.
@@ -719,6 +730,10 @@ class nsWindow final : public nsBaseWidget {
    */
   bool mPopupClosed;
 
+  /* Last used anchor for move-to-rect.
+   */
+  LayoutDeviceIntRect mPopupLastAnchor;
+
   /* Toplevel window (first element) of linked list of wayland popups.
    * It's nullptr if we're the toplevel.
    */
@@ -735,13 +750,14 @@ class nsWindow final : public nsBaseWidget {
   nsRect mPreferredPopupRect;
   bool mPreferredPopupRectFlushed;
 
-  /* Set true when we call move-to-rect and before move-to-rect callback
-   * comes back another resize is issued. In such case we need to ignore
-   * size from move-to-rect callback callback and use size from the latest
-   * resize (mPendingSizeRect).
+  /* mWaitingForMoveToRectCallback is set when move-to-rect is called
+   * and we're waiting for move-to-rect callback.
+   *
+   * If another resize request comes between move-to-rect call and
+   * move-to-rect callback we store it to mNewSizeAfterMoveToRect.
    */
-  bool mWaitingForMoveToRectCB;
-  LayoutDeviceIntRect mPendingSizeRect;
+  bool mWaitingForMoveToRectCallback;
+  LayoutDeviceIntRect mNewSizeAfterMoveToRect;
 
   /**
    * |mIMContext| takes all IME related stuff.

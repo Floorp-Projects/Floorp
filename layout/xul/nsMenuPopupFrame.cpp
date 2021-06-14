@@ -74,6 +74,14 @@ int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 
 DOMTimeStamp nsMenuPopupFrame::sLastKeyTime = 0;
 
+static bool IsWaylandDisplay() {
+#ifdef MOZ_WAYLAND
+  return mozilla::widget::GdkIsWaylandDisplay();
+#else
+  return false;
+#endif
+}
+
 // NS_NewMenuPopupFrame
 //
 // Wrapper for creating a new menu popup container
@@ -550,12 +558,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   }
   prefSize = XULBoundsCheck(minSize, prefSize, maxSize);
 
-#ifdef MOZ_WAYLAND
-  static bool inWayland = mozilla::widget::GdkIsWaylandDisplay();
-#else
-  static bool inWayland = false;
-#endif
-  if (inWayland) {
+  if (IsWaylandDisplay()) {
     // If prefSize it is not a whole number in css pixels we need round it up
     // to avoid reflow of the tooltips/popups and putting the text on two lines
     // (usually happens with 200% scale factor and font scale factor <> 1)
@@ -905,7 +908,8 @@ void nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
   mPopupAlignment = POPUPALIGNMENT_NONE;
   mPosition = POPUPPOSITION_UNKNOWN;
   mIsContextMenu = aIsContextMenu;
-  mAdjustOffsetForContextMenu = aIsContextMenu;
+  // Wayland does menu adjustments at widget code
+  mAdjustOffsetForContextMenu = IsWaylandDisplay() ? false : aIsContextMenu;
   mIsNativeMenu = false;
   mAnchorType = MenuPopupAnchorType_Point;
   mPositionedOffset = 0;
@@ -924,7 +928,8 @@ void nsMenuPopupFrame::InitializePopupAsNativeContextMenu(
   mPopupAlignment = POPUPALIGNMENT_NONE;
   mPosition = POPUPPOSITION_UNKNOWN;
   mIsContextMenu = true;
-  mAdjustOffsetForContextMenu = true;
+  // Wayland does menu adjustments at widget code
+  mAdjustOffsetForContextMenu = !IsWaylandDisplay();
   mIsNativeMenu = true;
   mAnchorType = MenuPopupAnchorType_Point;
   mPositionedOffset = 0;
@@ -1497,7 +1502,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       // the popup's margin.
 
 #ifdef MOZ_WAYLAND
-      if (mozilla::widget::GdkIsWaylandDisplay()) {
+      if (IsWaylandDisplay()) {
         screenPoint = nsPoint(anchorRect.x, anchorRect.y);
         mAnchorRect = anchorRect;
       }
@@ -1629,16 +1634,11 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
     if (mRect.width > screenRect.width) mRect.width = screenRect.width;
     if (mRect.height > screenRect.height) mRect.height = screenRect.height;
 
-      // We can't get the subsequent change of the popup position under
-      // waylande where gdk_window_move_to_rect is used to place them
-      // because we don't know the absolute position of the window on the
-      // screen.
-#ifdef MOZ_WAYLAND
-    static bool inWayland = mozilla::widget::GdkIsWaylandDisplay();
-#else
-    static bool inWayland = false;
-#endif
-    if (!inWayland) {
+    // We can't get the subsequent change of the popup position under
+    // waylande where gdk_window_move_to_rect is used to place them
+    // because we don't know the absolute position of the window on the
+    // screen.
+    if (!IsWaylandDisplay()) {
       // at this point the anchor (anchorRect) is within the available screen
       // area (screenRect) and the popup is known to be no larger than the
       // screen.
@@ -1781,12 +1781,7 @@ LayoutDeviceIntRect nsMenuPopupFrame::GetConstraintRect(
   nsCOMPtr<nsIScreen> screen;
   nsCOMPtr<nsIScreenManager> sm(
       do_GetService("@mozilla.org/gfx/screenmanager;1"));
-#ifdef MOZ_WAYLAND
-  static bool inWayland = mozilla::widget::GdkIsWaylandDisplay();
-#else
-  static bool inWayland = false;
-#endif
-  if (sm && !inWayland) {
+  if (sm && !IsWaylandDisplay()) {
     // for content shells, get the screen where the root frame is located.
     // This is because we need to constrain the content to this content area,
     // so we should use the same screen. Otherwise, use the screen where the
