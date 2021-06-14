@@ -3466,6 +3466,18 @@ void APZCTreeManager::SetCurrentMousePosition(const ScreenPoint& aNewPos) {
   pos.ref() = aNewPos;
 }
 
+static AsyncPanZoomController* GetApzcWithDifferentLayersIdByWalkingParents(
+    AsyncPanZoomController* aApzc) {
+  if (!aApzc) {
+    return nullptr;
+  }
+  AsyncPanZoomController* parent = aApzc->GetParent();
+  while (parent && (parent->GetLayersId() == aApzc->GetLayersId())) {
+    parent = parent->GetParent();
+  }
+  return parent;
+}
+
 already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetZoomableTarget(
     AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const {
   RecursiveMutexAutoLock lock(mTreeLock);
@@ -3478,15 +3490,21 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetZoomableTarget(
     // be a common ancestor for the layers id (e.g. if one APZCs is inside a
     // fixed-position element).
     apzc = FindRootContentApzcForLayersId(aApzc1->GetLayersId());
-  } else {
-    // Otherwise, find the common ancestor (to reach a common layers id), and
-    // get the root-content APZC for that layers id.
-    apzc = CommonAncestor(aApzc1, aApzc2);
     if (apzc) {
-      apzc = FindRootContentApzcForLayersId(apzc->GetLayersId());
+      return apzc.forget();
     }
   }
-  return apzc.forget();
+
+  // Otherwise, find the common ancestor (to reach a common layers id), and then
+  // walk up the apzc tree until we find a root-content APZC.
+  apzc = CommonAncestor(aApzc1, aApzc2);
+  RefPtr<AsyncPanZoomController> zoomable;
+  while (apzc && !zoomable) {
+    zoomable = FindRootContentApzcForLayersId(apzc->GetLayersId());
+    apzc = GetApzcWithDifferentLayersIdByWalkingParents(apzc);
+  }
+
+  return zoomable.forget();
 }
 
 Maybe<ScreenIntPoint> APZCTreeManager::ConvertToGecko(
