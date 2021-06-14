@@ -11,7 +11,6 @@
 #include "HostWebGLContext.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/SanitizeRenderer.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/WebGLContextEvent.h"
 #include "mozilla/dom/WorkerCommon.h"
@@ -36,6 +35,12 @@
 #include "WebGLValidateStrings.h"
 
 namespace mozilla {
+
+namespace webgl {
+std::string SanitizeRenderer(const std::string&);
+}  // namespace webgl
+
+// -
 
 webgl::NotLostData::NotLostData(ClientWebGLContext& _context)
     : context(_context) {}
@@ -1872,10 +1877,12 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
       return;
 
     // 2 ints
-    case LOCAL_GL_MAX_VIEWPORT_DIMS:
-      retval.set(CreateAs<dom::Int32Array, const int32_t*>(
-          cx, this, limits.maxViewportDims, rv));
+    case LOCAL_GL_MAX_VIEWPORT_DIMS: {
+      const auto dims =
+          std::array<uint32_t, 2>{limits.maxViewportDim, limits.maxViewportDim};
+      retval.set(CreateAs<dom::Int32Array, const int32_t*>(cx, this, dims, rv));
       return;
+    }
 
     // 4 ints
     case LOCAL_GL_SCISSOR_BOX:
@@ -1962,7 +1969,8 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
         return;
 
       case LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS:
-        retval.set(JS::NumberValue(limits.maxTransformFeedbackSeparateAttribs));
+        retval.set(
+            JS::NumberValue(webgl::kMaxTransformFeedbackSeparateAttribs));
         return;
       case LOCAL_GL_MAX_UNIFORM_BUFFER_BINDINGS:
         retval.set(JS::NumberValue(limits.maxUniformBufferBindings));
@@ -2063,9 +2071,11 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
 
         const auto maybe = GetString(driverEnum);
         if (maybe) {
-          std::string renderer = *maybe;
-          mozilla::dom::SanitizeRenderer(renderer);
-          retval.set(StringValue(cx, renderer, rv));
+          std::string str = *maybe;
+          if (driverEnum == LOCAL_GL_RENDERER) {
+            str = webgl::SanitizeRenderer(str);
+          }
+          retval.set(StringValue(cx, str, rv));
         }
         return;
       }
@@ -2881,11 +2891,11 @@ Maybe<webgl::ErrorInfo> CheckBindBufferRange(
 
   switch (target) {
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
-      if (index >= limits.maxTransformFeedbackSeparateAttribs) {
+      if (index >= webgl::kMaxTransformFeedbackSeparateAttribs) {
         const auto info = nsPrintfCString(
             "`index` (%u) must be less than "
             "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS (%u).",
-            index, limits.maxTransformFeedbackSeparateAttribs);
+            index, webgl::kMaxTransformFeedbackSeparateAttribs);
         return fnSome(LOCAL_GL_INVALID_VALUE, info);
       }
 
@@ -6108,7 +6118,7 @@ WebGLShaderJS::WebGLShaderJS(const ClientWebGLContext& webgl, const GLenum type)
 WebGLTransformFeedbackJS::WebGLTransformFeedbackJS(
     const ClientWebGLContext& webgl)
     : webgl::ObjectJS(webgl),
-      mAttribBuffers(webgl.Limits().maxTransformFeedbackSeparateAttribs) {}
+      mAttribBuffers(webgl::kMaxTransformFeedbackSeparateAttribs) {}
 
 WebGLVertexArrayJS::WebGLVertexArrayJS(const ClientWebGLContext& webgl)
     : webgl::ObjectJS(webgl), mAttribBuffers(webgl.Limits().maxVertexAttribs) {}
