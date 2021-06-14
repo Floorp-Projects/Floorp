@@ -30,8 +30,6 @@
 #include "VRManagerChild.h"
 #include "ipc/nsGUIEventIPC.h"
 #include "js/JSON.h"
-#include "nsIDeviceContextSpec.h"
-#include "nsDeviceContextSpecProxy.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
@@ -1047,6 +1045,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvResumeLoad(
 mozilla::ipc::IPCResult BrowserChild::RecvCloneDocumentTreeIntoSelf(
     const MaybeDiscarded<BrowsingContext>& aSourceBC,
     const embedding::PrintData& aPrintData) {
+#ifdef NS_PRINTING
   if (NS_WARN_IF(aSourceBC.IsNullOrDiscarded())) {
     return IPC_OK();
   }
@@ -1097,11 +1096,13 @@ mozilla::ipc::IPCResult BrowserChild::RecvCloneDocumentTreeIntoSelf(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_OK();
   }
+#endif
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemotePrintSettings(
     const embedding::PrintData& aPrintData) {
+#ifdef NS_PRINTING
   nsCOMPtr<nsIDocShell> ourDocShell = do_GetInterface(WebNavigation());
   if (NS_WARN_IF(!ourDocShell)) {
     return IPC_OK();
@@ -1136,7 +1137,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemotePrintSettings(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_OK();
   }
-
+#endif
   return IPC_OK();
 }
 
