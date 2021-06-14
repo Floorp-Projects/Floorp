@@ -88,9 +88,9 @@ def disable_startup_profiling():
 
 def get_start_cmd(test_name, pkg_id):
     args_prefix = get_activity_manager_args() + ['start-activity', '-W', '-n']
-    if test_name == TEST_COLD_MAIN_FF:
+    if test_name in [TEST_COLD_MAIN_FF]:
         cmd = args_prefix + ['{}/.App'.format(pkg_id)]
-    elif test_name == TEST_COLD_VIEW_FF or test_name == TEST_COLD_VIEW_NAV_START:
+    elif test_name in [TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]:
         pkg_activity = '{}/org.mozilla.fenix.IntentReceiverActivity'.format(pkg_id)
         cmd = args_prefix + [
             pkg_activity,
@@ -128,9 +128,9 @@ def measure(test_name, pkg_id, start_cmd_args, iter_count):
 
 
 def get_measurement(test_name, pkg_id, stdout):
-    if test_name == TEST_COLD_MAIN_FF or test_name == TEST_COLD_VIEW_FF:
+    if test_name in [TEST_COLD_MAIN_FF, TEST_COLD_VIEW_FF]:
         measurement = get_measurement_from_am_start_log(stdout)
-    elif test_name == TEST_COLD_VIEW_NAV_START:
+    elif test_name in [TEST_COLD_VIEW_NAV_START]:
         time.sleep(3)  # We must sleep until the navigation start event occurs.
         proc = subprocess.run(['adb', 'logcat', '-d'], check=True, capture_output=True)
         measurement = get_measurement_from_nav_start_logcat(pkg_id, proc.stdout)
@@ -205,9 +205,9 @@ def save_measurements(path, measurements):
 def print_preface_text(test_name):
     print("To analyze the results, use this script (we recommend using the median):" +
           "\nhttps://github.com/mozilla-mobile/perf-tools/blob/master/analyze_durations.py")
-    if test_name == TEST_COLD_MAIN_FF:
+    if test_name in [TEST_COLD_MAIN_FF]:
         print("\nWARNING: you may wish to clear the onboarding experience manually.")
-    elif test_name == TEST_COLD_VIEW_FF or test_name == TEST_COLD_VIEW_NAV_START:
+    elif test_name in [TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]:
         print("\nWARNING: you may wish to reduce the number of open tabs when starting this test")
         print("as this test may leave many additional tabs open which could impact the results.")
 
