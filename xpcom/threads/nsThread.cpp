@@ -33,6 +33,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/StaticLocalPtr.h"
 #include "mozilla/StaticPrefs_threads.h"
 #include "mozilla/TaskController.h"
 #include "nsXPCOMPrivate.h"
@@ -317,13 +318,15 @@ struct ThreadInitData {
 }  // namespace
 
 /* static */ mozilla::OffTheBooksMutex& nsThread::ThreadListMutex() {
-  static OffTheBooksMutex sMutex("nsThread::ThreadListMutex");
-  return sMutex;
+  static StaticLocalAutoPtr<OffTheBooksMutex> sMutex(
+      new OffTheBooksMutex("nsThread::ThreadListMutex"));
+  return *sMutex;
 }
 
 /* static */ LinkedList<nsThread>& nsThread::ThreadList() {
-  static LinkedList<nsThread> sList;
-  return sList;
+  static StaticLocalAutoPtr<LinkedList<nsThread>> sList(
+      new LinkedList<nsThread>());
+  return *sList;
 }
 
 /* static */
