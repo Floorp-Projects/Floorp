@@ -218,6 +218,25 @@ test:
     memory_unit: kilobyte
     telemetry_mirror: SOME_MEM_HISTOGRAM_KB
 
+  custom_distribution_metric:
+    type: custom_distribution
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    range_min: 0
+    range_max: 100
+    bucket_count: 100
+    histogram_type: linear
+    telemetry_mirror: SOME_LINEAR_HISTOGRAM
+
 test.nested:
   uuid_metric:
     type: uuid

@@ -28,6 +28,7 @@ pub struct IPCPayload {
     pub counters: HashMap<MetricId, i32>,
     pub events: HashMap<MetricId, Vec<EventRecord>>,
     pub memory_samples: HashMap<MetricId, Vec<u64>>,
+    pub custom_samples: HashMap<MetricId, Vec<i64>>,
     pub string_lists: HashMap<MetricId, Vec<String>>,
     pub timing_samples: HashMap<MetricId, Vec<u64>>,
     pub labeled_counters: HashMap<MetricId, HashMap<String, i32>>,
@@ -116,6 +117,9 @@ pub fn take_buf() -> Option<Vec<u8>> {
     })
 }
 
+// Reason: We instrument the error counts,
+// but don't need more detailed error information at the moment.
+#[allow(clippy::result_unit_err)]
 pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
     // TODO: Instrument failures to find metrics by id.
     let ipc_payload: IPCPayload = bincode::deserialize(buf).map_err(|_| ())?;
@@ -134,6 +138,11 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
             samples
                 .into_iter()
                 .for_each(|sample| metric.accumulate(sample));
+        }
+    }
+    for (id, samples) in ipc_payload.custom_samples.into_iter() {
+        if let Some(metric) = __glean_metric_maps::CUSTOM_DISTRIBUTION_MAP.get(&id) {
+            metric.accumulate_samples_signed(samples);
         }
     }
     for (id, strings) in ipc_payload.string_lists.into_iter() {

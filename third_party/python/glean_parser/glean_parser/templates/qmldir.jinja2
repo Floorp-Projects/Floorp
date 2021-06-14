@@ -1,0 +1,4 @@
+{% for category in categories|sort %}
+{{ category|Camelize }} {{ version }} {{ category|camelize }}.js
+{% endfor %}
+depends org.mozilla.Glean {{ version }}
