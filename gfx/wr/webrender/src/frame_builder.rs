@@ -75,6 +75,7 @@ pub struct FrameBuilderConfig {
     pub max_target_size: i32,
     pub force_invalidation: bool,
     pub is_software: bool,
+    pub low_quality_pinch_zoom: bool,
 }
 
 /// A set of common / global resources that are retained between

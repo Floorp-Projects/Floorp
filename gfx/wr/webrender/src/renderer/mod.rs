@@ -1141,6 +1141,7 @@ impl Renderer {
             max_target_size: max_internal_texture_size,
             force_invalidation: false,
             is_software,
+            low_quality_pinch_zoom: options.low_quality_pinch_zoom,
         };
         info!("WR {:?}", config);
 
@@ -5374,6 +5375,12 @@ pub struct RendererOptions {
     /// If true, we'll reject contexts backed by a software rasterizer, except
     /// Software WebRender.
     pub reject_software_rasterizer: bool,
+    /// If enabled, pinch-zoom will apply the zoom factor during compositing
+    /// of picture cache tiles. This is higher performance (tiles are not
+    /// re-rasterized during zoom) but lower quality result. For most display
+    /// items, if the zoom factor is relatively small, bilinear filtering should
+    /// make the result look quite close to the high-quality zoom, except for glyphs.
+    pub low_quality_pinch_zoom: bool,
 }
 
 impl RendererOptions {
@@ -5441,6 +5448,7 @@ impl Default for RendererOptions {
             // process by the vertex shaders.
             enable_instancing: true,
             reject_software_rasterizer: false,
+            low_quality_pinch_zoom: false,
         }
     }
 }
