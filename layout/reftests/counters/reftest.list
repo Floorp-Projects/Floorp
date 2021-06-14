@@ -67,7 +67,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counters-hebrew-test.htm
 == counter-ua-limits-list-00.html counter-ua-limits-list-00-ref.html
 == counter-ua-limits-list-01.html counter-ua-limits-list-01-ref.html
 == multiple-thai-counters.html multiple-thai-counters-ref.html
-fuzzy-if(webrender&&cocoaWidget,76-76,5-5) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-suffix.html counter-suffix-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-suffix.html counter-suffix-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-cjk-decimal.html counter-cjk-decimal-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-japanese-informal.html counter-japanese-informal-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-japanese-formal.html counter-japanese-formal-ref.html # Bug 1392106
