@@ -112,14 +112,17 @@ class SearchConfigTest {
 
   /**
    * Sets up the test.
+   *
+   * @param {string} [version]
+   *   The version to simulate for running the tests.
    */
-  async setup() {
+  async setup(version = "42.0") {
     AddonTestUtils.init(GLOBAL_SCOPE);
     AddonTestUtils.createAppInfo(
       "xpcshell@tests.mozilla.org",
       "XPCShell",
-      "42",
-      "42"
+      version,
+      version
     );
 
     await maybeSetupConfig();
@@ -343,11 +346,13 @@ class SearchConfigTest {
       hasIncluded &&
       this._localeRegionInSection(config.included, region, locale);
 
-    let notExcluded =
+    let excluded =
       hasExcluded &&
-      !this._localeRegionInSection(config.excluded, region, locale);
-
-    if (included || notExcluded) {
+      this._localeRegionInSection(config.excluded, region, locale);
+    if (
+      (included && (!hasExcluded || !excluded)) ||
+      (!hasIncluded && hasExcluded && !excluded)
+    ) {
       this.assertOk(
         identifierIncluded,
         `Should be ${section} for ${infoString}`
