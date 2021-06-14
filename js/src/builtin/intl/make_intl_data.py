@@ -2528,8 +2528,7 @@ def otherICULegacyLinks():
     """
 
     return {
-        # tzdata2020b removed the link US/Pacific-New -> America/Los_Angeles.
-        Zone("US/Pacific-New"): "America/Los_Angeles",
+        # Current ICU is up-to-date with IANA, so this dict is empty.
     }
 
 
