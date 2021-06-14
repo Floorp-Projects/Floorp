@@ -78,6 +78,16 @@ const FeatureManifest = {
       },
     },
   },
+  abouthomecache: {
+    description: "The startup about:home cache.",
+    isEarlyStartup: true,
+    variables: {
+      enabled: {
+        type: "boolean",
+        fallbackPref: "browser.startup.homepage.abouthome_cache.enabled",
+      },
+    },
+  },
   newtab: {
     description: "The about:newtab page",
     isEarlyStartup: true,
