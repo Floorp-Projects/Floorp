@@ -478,7 +478,19 @@ class NodeCommands(MachCommandBase):
         # Avoid logging the command
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
+        import os
+
+        # Add node and npm from mozbuild to front of system path
+        #
+        # This isn't pretty, but npm currently executes itself with
+        # `#!/usr/bin/env node`, which means it just uses the node in the
+        # current PATH. As a result, stuff gets built wrong and installed
+        # in the wrong places and probably other badness too without this:
         npm_path, _ = find_npm_executable()
+        if not npm_path:
+            exit(-1, "could not find npm executable")
+        path = os.path.abspath(os.path.dirname(npm_path))
+        os.environ["PATH"] = "{}:{}".format(path, os.environ["PATH"])
 
         return self.run_process(
             [npm_path, "--scripts-prepend-node-path=auto"] + args,
