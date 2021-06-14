@@ -58,6 +58,9 @@ for patch in \
  bug-1636984-display-name-fractional-seconds.diff \
  bug-1636984-append-item-dayperiod-fractional-seconds.diff \
  bug-1706949-wasi-workaround.diff \
+ bug-1714933-1-locale-unicode-keywords.diff \
+ bug-1714933-2-locale-basename-memory-leak.diff \
+ bug-1714933-3-locale-nullptr-deref.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch
