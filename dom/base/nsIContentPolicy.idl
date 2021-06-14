@@ -413,6 +413,12 @@ interface nsIContentPolicy : nsISupports
      */
     TYPE_INTERNAL_FETCH_PRELOAD = 54,
 
+    /**
+     * Indicates a font loaded via @font-face rule in an UA style sheet.
+     * (CSP does not apply.)
+     */
+    TYPE_UA_FONT = 55,
+
     /* When adding new content types, please update
      * NS_CP_ContentTypeName, nsCSPContext, CSP_ContentTypeToDirective,
      * DoContentSecurityChecks, all nsIContentPolicy implementations, the
@@ -569,6 +575,7 @@ enum class ExtContentPolicyType : uint8_t {
   TYPE_WEB_MANIFEST = nsIContentPolicy::TYPE_WEB_MANIFEST,
   TYPE_SAVEAS_DOWNLOAD = nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD,
   TYPE_SPECULATIVE = nsIContentPolicy::TYPE_SPECULATIVE,
+  TYPE_UA_FONT = nsIContentPolicy::TYPE_UA_FONT,
 };
 
 typedef ExtContentPolicyType ExtContentPolicy;
