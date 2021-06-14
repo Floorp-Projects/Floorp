@@ -585,7 +585,7 @@ void BuiltinCounterStyle::GetSuffix(nsAString& aResult) {
 
 static const char16_t kDiscCharacter = 0x2022;
 static const char16_t kCircleCharacter = 0x25e6;
-static const char16_t kSquareCharacter = 0x25fe;
+static const char16_t kSquareCharacter = 0x25aa;
 static const char16_t kRightPointingCharacter = 0x25b8;
 static const char16_t kLeftPointingCharacter = 0x25c2;
 static const char16_t kDownPointingCharacter = 0x25be;
