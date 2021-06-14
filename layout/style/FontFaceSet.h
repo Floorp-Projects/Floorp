@@ -158,8 +158,6 @@ class FontFaceSet final : public DOMEventTargetHelper,
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
                               nsresult aStatus) override;
 
-  FontFace* GetFontFaceAt(uint32_t aIndex);
-
   void FlushUserFontSet();
 
   static nsPresContext* GetPresContextFor(gfxUserFontSet* aUserFontSet) {
@@ -188,6 +186,10 @@ class FontFaceSet final : public DOMEventTargetHelper,
   void Clear();
   bool Delete(FontFace& aFontFace);
   bool Has(FontFace& aFontFace);
+  /**
+   * This returns the number of Author origin fonts only.
+   * (see also SizeIncludingNonAuthorOrigins() below)
+   */
   uint32_t Size();
   already_AddRefed<dom::FontFaceSetIterator> Entries();
   already_AddRefed<dom::FontFaceSetIterator> Values();
@@ -200,7 +202,14 @@ class FontFaceSet final : public DOMEventTargetHelper,
 
   void MarkUserFontSetDirty();
 
+  /**
+   * Unlike Size(), this returns the size including non-Author origin fonts.
+   */
+  uint32_t SizeIncludingNonAuthorOrigins();
+
  private:
+  friend mozilla::dom::FontFaceSetIterator;  // needs GetFontFaceAt()
+
   ~FontFaceSet();
 
   /**
@@ -238,6 +247,12 @@ class FontFaceSet final : public DOMEventTargetHelper,
    * event loop.  See OnFontFaceStatusChanged.
    */
   void CheckLoadingFinishedAfterDelay();
+
+  /**
+   * Returns the font at aIndex if it's an Author origin font, or nullptr
+   * otherwise.
+   */
+  FontFace* GetFontFaceAt(uint32_t aIndex);
 
   /**
    * Dispatches a FontFaceSetLoadEvent to this object.
