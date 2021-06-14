@@ -7,6 +7,7 @@ loader: fenix_taskgraph.loader.multi_dep:loader
 transforms:
     - fenix_taskgraph.transforms.multi_dep:transforms
     - fenix_taskgraph.transforms.signing:transforms
+    - fenix_taskgraph.transforms.notify:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
@@ -52,3 +53,18 @@ job-template:
         kind: build
         platform: android-all/opt
         tier: 1
+    notify:
+        by-build-type:
+            .*mozillaonline:
+                by-level:
+                    '3':
+                        email:
+                            content: The Mozilla Online Fenix {version} APKs are now available
+                            link:
+                                text: Taskcluster Task
+                                href: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}'
+                            on-reasons: [completed]
+                            subject: Mozilla Online Fenix {version} APKs are now available
+                            to-addresses: [mozillaonline-fenix@mozilla.com]
+                    default: {}
+            default: {}

@@ -18,7 +18,7 @@ transforms = TransformSequence()
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("run-on-tasks-for", "signing-format"):
+        for key in ("run-on-tasks-for", "signing-format", "notify"):
             resolve_keyed_by(
                 task,
                 key,
@@ -89,4 +89,18 @@ def set_signing_format(config, tasks):
         signing_format = task.pop("signing-format")
         for upstream_artifact in task["worker"]["upstream-artifacts"]:
             upstream_artifact["formats"] = [signing_format]
+        yield task
+
+
+@transforms.add
+def format_email(config, tasks):
+    version = config.params["version"]
+
+    for task in tasks:
+        if "notify" in task:
+            email = task["notify"].get("email")
+            if email:
+                email["subject"] = email["subject"].format(version=version)
+                email["content"] = email["content"].format(version=version)
+
         yield task
