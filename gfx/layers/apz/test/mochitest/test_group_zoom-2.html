@@ -61,7 +61,8 @@ var subtests = [
   {"file": "helper_zoom_keyboardscroll.html", "prefs": prefs},
   {"file": "helper_zoom_out_clamped_scrollpos.html", "prefs": instant_repaint_prefs},
   {"file": "helper_zoom_out_with_mainthread_clamping.html", "prefs": instant_repaint_prefs},
-  {"file": "helper_fixed_html_hittest.html", "prefs": prefs}
+  {"file": "helper_fixed_html_hittest.html", "prefs": prefs},
+  // {"file": "helper_zoom_oopif.html", "prefs": prefs}, // disabled, see bug 1716127
 ];
 
 if (isApzEnabled()) {
@@ -71,7 +72,8 @@ if (isApzEnabled()) {
 
   if (getPlatform() == "linux") {
         subtests.push(
-          {file: "helper_zoom_with_touchpad.html", "prefs": prefs}
+          {"file": "helper_zoom_with_touchpad.html", "prefs": prefs},
+          {"file": "helper_zoom_oopif.html?touchpad", "prefs": prefs},
         );
   }
   window.onload = function() {
