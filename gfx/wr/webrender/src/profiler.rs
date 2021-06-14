@@ -69,11 +69,14 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     // Stats about the content of the frame.
     (&"Frame stats", &"Primitives,Visible primitives,Draw calls,Vertices,Color passes,Alpha passes,Rendered picture tiles,Rasterized glyphs"),
     // Texture cache allocation stats.
-    (&"Texture cache stats", &"Atlas textures mem, Standalone textures mem, Picture tiles mem, Render targets mem, Atlas items mem,
-        Texture cache standalone pressure, Texture cache eviction count, Texture cache youngest evicted, ,
-        Atlas RGBA8 linear pixels, Atlas RGBA8 glyphs pixels, Atlas A8 glyphs pixels, Atlas A8 pixels, Atlas A16 pixels, Atlas RGBA8 nearest pixels,
-        Atlas RGBA8 linear textures, Atlas RGBA8 glyphs textures, Atlas A8 glyphs textures, Atlas A8 textures, Atlas A16 textures, Atlas RGBA8 nearest textures,
-        Atlas RGBA8 linear pressure, Atlas RGBA8 glyphs pressure, Atlas A8 glyphs pressure, Atlas A8 pressure, Atlas A16 pressure, Atlas RGBA8 nearest pressure,"
+    (&"Texture cache stats", &"Texture cache RGBA8 linear textures, Texture cache RGBA8 linear pixels, Texture cache RGBA8 linear pressure,
+        , ,Texture cache RGBA8 glyphs textures, Texture cache RGBA8 glyphs pixels, Texture cache RGBA8 glyphs pressure,
+        , ,Texture cache A8 glyphs textures, Texture cache A8 glyphs pixels, Texture cache A8 glyphs pressure,
+        , ,Texture cache A8 textures, Texture cache A8 pixels, Texture cache A8 pressure,
+        , ,Texture cache A16 textures, Texture cache A16 pixels, Texture cache A16 pressure,
+        , ,Texture cache RGBA8 nearest textures, Texture cache RGBA8 nearest pixels, Texture cache RGBA8 nearest pressure,
+        , ,Texture cache shared mem, Texture cache standalone mem, Texture cache standalone pressure,
+        , ,Texture cache eviction count, Texture cache youngest evicted"
     ),
     // Graphs to investigate driver overhead of texture cache updates.
     (&"Texture upload perf", &"#Texture cache update,#Texture cache upload, ,#Staging CPU allocation,#Staging GPU allocation,#Staging CPU copy,#Staging GPU copy,#Upload time, ,#Upload copy batches,#Rasterized glyphs, ,#Cache texture creation,#Cache texture deletion"),
@@ -123,111 +126,108 @@ pub const DISPLAY_LIST_MEM: usize = 10;
 
 pub const SCENE_BUILD_TIME: usize = 11;
 
-pub const SLOW_FRAME: usize = 12;
-pub const SLOW_TXN: usize = 13;
+pub const RASTERIZED_BLOBS: usize = 12;
+pub const RASTERIZED_BLOB_TILES: usize = 13;
+pub const RASTERIZED_BLOBS_PX: usize = 14;
+pub const BLOB_RASTERIZATION_TIME: usize = 15;
 
-pub const FRAME_TIME: usize = 14;
+pub const RASTERIZED_GLYPHS: usize = 16;
+pub const GLYPH_RESOLVE_TIME: usize = 17;
 
-pub const TEXTURE_UPLOADS: usize = 15;
-pub const TEXTURE_UPLOADS_MEM: usize = 16;
-pub const TEXTURE_CACHE_UPDATE_TIME: usize = 17;
-pub const CPU_TEXTURE_ALLOCATION_TIME: usize = 18;
-pub const STAGING_TEXTURE_ALLOCATION_TIME: usize = 19;
-pub const UPLOAD_CPU_COPY_TIME: usize = 20;
-pub const UPLOAD_GPU_COPY_TIME: usize = 21;
-pub const UPLOAD_TIME: usize = 22;
-pub const UPLOAD_NUM_COPY_BATCHES: usize = 23;
-pub const TOTAL_UPLOAD_TIME: usize = 24;
-pub const CREATE_CACHE_TEXTURE_TIME: usize = 25;
-pub const DELETE_CACHE_TEXTURE_TIME: usize = 26;
-pub const GPU_CACHE_UPLOAD_TIME: usize = 27;
+pub const DRAW_CALLS: usize = 18;
+pub const VERTICES: usize = 19;
+pub const PRIMITIVES: usize = 20;
+pub const VISIBLE_PRIMITIVES: usize = 21;
 
-pub const RASTERIZED_BLOBS: usize = 28;
-pub const RASTERIZED_BLOB_TILES: usize = 29;
-pub const RASTERIZED_BLOBS_PX: usize = 30;
-pub const BLOB_RASTERIZATION_TIME: usize = 31;
+pub const USED_TARGETS: usize = 22;
+pub const CREATED_TARGETS: usize = 23;
+pub const PICTURE_CACHE_SLICES: usize = 24;
 
-pub const RASTERIZED_GLYPHS: usize = 32;
-pub const GLYPH_RESOLVE_TIME: usize = 33;
+pub const COLOR_PASSES: usize = 25;
+pub const ALPHA_PASSES: usize = 26;
+pub const PICTURE_TILES: usize = 27;
+pub const PICTURE_TILES_MEM: usize = 28;
+pub const RENDERED_PICTURE_TILES: usize = 29;
+pub const TEXTURE_UPLOADS: usize = 30;
+pub const TEXTURE_UPLOADS_MEM: usize = 31;
 
-pub const DRAW_CALLS: usize = 34;
-pub const VERTICES: usize = 35;
-pub const PRIMITIVES: usize = 36;
-pub const VISIBLE_PRIMITIVES: usize = 37;
+pub const FONT_TEMPLATES: usize = 32;
+pub const FONT_TEMPLATES_MEM: usize = 33;
+pub const IMAGE_TEMPLATES: usize = 34;
+pub const IMAGE_TEMPLATES_MEM: usize = 35;
 
-pub const USED_TARGETS: usize = 38;
-pub const CREATED_TARGETS: usize = 39;
-pub const PICTURE_CACHE_SLICES: usize = 40;
+pub const GPU_CACHE_ROWS_TOTAL: usize = 36;
+pub const GPU_CACHE_ROWS_UPDATED: usize = 37;
+pub const GPU_CACHE_BLOCKS_TOTAL: usize = 38;
+pub const GPU_CACHE_BLOCKS_UPDATED: usize = 39;
+pub const GPU_CACHE_BLOCKS_SAVED: usize = 40;
 
-pub const COLOR_PASSES: usize = 41;
-pub const ALPHA_PASSES: usize = 42;
-pub const PICTURE_TILES: usize = 43;
-pub const RENDERED_PICTURE_TILES: usize = 44;
+pub const TEXTURE_CACHE_A8_PIXELS: usize = 41;
+pub const TEXTURE_CACHE_A8_TEXTURES: usize = 42;
+pub const TEXTURE_CACHE_A16_PIXELS: usize = 43;
+pub const TEXTURE_CACHE_A16_TEXTURES: usize = 44;
+pub const TEXTURE_CACHE_RGBA8_LINEAR_PIXELS: usize = 45;
+pub const TEXTURE_CACHE_RGBA8_LINEAR_TEXTURES: usize = 46;
+pub const TEXTURE_CACHE_RGBA8_NEAREST_PIXELS: usize = 47;
+pub const TEXTURE_CACHE_RGBA8_NEAREST_TEXTURES: usize = 48;
+pub const TEXTURE_CACHE_SHARED_MEM: usize = 49;
+pub const TEXTURE_CACHE_STANDALONE_MEM: usize = 50;
 
-pub const FONT_TEMPLATES: usize = 45;
-pub const FONT_TEMPLATES_MEM: usize = 46;
-pub const IMAGE_TEMPLATES: usize = 47;
-pub const IMAGE_TEMPLATES_MEM: usize = 48;
+pub const SLOW_FRAME: usize = 51;
+pub const SLOW_TXN: usize = 52;
 
-pub const GPU_CACHE_ROWS_TOTAL: usize = 49;
-pub const GPU_CACHE_ROWS_UPDATED: usize = 50;
-pub const GPU_CACHE_BLOCKS_TOTAL: usize = 51;
-pub const GPU_CACHE_BLOCKS_UPDATED: usize = 52;
-pub const GPU_CACHE_BLOCKS_SAVED: usize = 53;
+pub const GPU_CACHE_UPLOAD_TIME: usize = 53;
+pub const TEXTURE_CACHE_UPDATE_TIME: usize = 54;
 
-// Atlas items represents the area occupied by items in the cache textures.
-// The actual texture memory allocated is ATLAS_TEXTURES_MEM.
-pub const ATLAS_ITEMS_MEM: usize = 54;
-pub const ATLAS_A8_PIXELS: usize = 55;
-pub const ATLAS_A8_TEXTURES: usize = 56;
-pub const ATLAS_A16_PIXELS: usize = 57;
-pub const ATLAS_A16_TEXTURES: usize = 58;
-pub const ATLAS_RGBA8_LINEAR_PIXELS: usize = 59;
-pub const ATLAS_RGBA8_LINEAR_TEXTURES: usize = 60;
-pub const ATLAS_RGBA8_NEAREST_PIXELS: usize = 61;
-pub const ATLAS_RGBA8_NEAREST_TEXTURES: usize = 62;
-pub const ATLAS_RGBA8_GLYPHS_PIXELS: usize = 63;
-pub const ATLAS_RGBA8_GLYPHS_TEXTURES: usize = 64;
-pub const ATLAS_A8_GLYPHS_PIXELS: usize = 65;
-pub const ATLAS_A8_GLYPHS_TEXTURES: usize = 66;
-pub const ATLAS_COLOR8_LINEAR_PRESSURE: usize = 67;
-pub const ATLAS_COLOR8_NEAREST_PRESSURE: usize = 68;
-pub const ATLAS_COLOR8_GLYPHS_PRESSURE: usize = 69;
-pub const ATLAS_ALPHA8_PRESSURE: usize = 70;
-pub const ATLAS_ALPHA8_GLYPHS_PRESSURE: usize = 71;
-pub const ATLAS_ALPHA16_PRESSURE: usize = 72;
-pub const ATLAS_STANDALONE_PRESSURE: usize = 73;
+pub const FRAME_TIME: usize = 55;
 
-pub const TEXTURE_CACHE_EVICTION_COUNT: usize = 74;
-pub const TEXTURE_CACHE_YOUNGEST_EVICTION: usize = 75;
-pub const EXTERNAL_IMAGE_BYTES: usize = 76;
-pub const ATLAS_TEXTURES_MEM: usize = 77;
-pub const STANDALONE_TEXTURES_MEM: usize = 78;
-pub const PICTURE_TILES_MEM: usize = 79;
-pub const RENDER_TARGET_MEM: usize = 80;
+pub const ALPHA_TARGETS_SAMPLERS: usize = 56;
+pub const TRANSPARENT_PASS_SAMPLERS: usize = 57;
+pub const OPAQUE_PASS_SAMPLERS: usize = 58;
+pub const TOTAL_SAMPLERS: usize = 59;
 
-pub const ALPHA_TARGETS_SAMPLERS: usize = 81;
-pub const TRANSPARENT_PASS_SAMPLERS: usize = 82;
-pub const OPAQUE_PASS_SAMPLERS: usize = 83;
-pub const TOTAL_SAMPLERS: usize = 84;
+pub const INTERNED_PRIMITIVES: usize = 60;
+pub const INTERNED_CLIPS: usize = 61;
+pub const INTERNED_TEXT_RUNS: usize = 62;
+pub const INTERNED_NORMAL_BORDERS: usize = 63;
+pub const INTERNED_IMAGE_BORDERS: usize = 64;
+pub const INTERNED_IMAGES: usize = 65;
+pub const INTERNED_YUV_IMAGES: usize = 66;
+pub const INTERNED_LINE_DECORATIONS: usize = 67;
+pub const INTERNED_LINEAR_GRADIENTS: usize = 68;
+pub const INTERNED_RADIAL_GRADIENTS: usize = 69;
+pub const INTERNED_CONIC_GRADIENTS: usize = 70;
+pub const INTERNED_PICTURES: usize = 71;
+pub const INTERNED_FILTER_DATA: usize = 72;
+pub const INTERNED_BACKDROPS: usize = 73;
+pub const INTERNED_POLYGONS: usize = 74;
 
-pub const INTERNED_PRIMITIVES: usize = 85;
-pub const INTERNED_CLIPS: usize = 86;
-pub const INTERNED_TEXT_RUNS: usize = 87;
-pub const INTERNED_NORMAL_BORDERS: usize = 88;
-pub const INTERNED_IMAGE_BORDERS: usize = 89;
-pub const INTERNED_IMAGES: usize = 90;
-pub const INTERNED_YUV_IMAGES: usize = 91;
-pub const INTERNED_LINE_DECORATIONS: usize = 92;
-pub const INTERNED_LINEAR_GRADIENTS: usize = 93;
-pub const INTERNED_RADIAL_GRADIENTS: usize = 94;
-pub const INTERNED_CONIC_GRADIENTS: usize = 95;
-pub const INTERNED_PICTURES: usize = 96;
-pub const INTERNED_FILTER_DATA: usize = 97;
-pub const INTERNED_BACKDROPS: usize = 98;
-pub const INTERNED_POLYGONS: usize = 99;
+pub const TEXTURE_CACHE_RGBA8_GLYPHS_PIXELS: usize = 75;
+pub const TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES: usize = 76;
+pub const TEXTURE_CACHE_A8_GLYPHS_PIXELS: usize = 77;
+pub const TEXTURE_CACHE_A8_GLYPHS_TEXTURES: usize = 78;
 
-pub const NUM_PROFILER_EVENTS: usize = 100;
+pub const CPU_TEXTURE_ALLOCATION_TIME: usize = 79;
+pub const STAGING_TEXTURE_ALLOCATION_TIME: usize = 80;
+pub const UPLOAD_CPU_COPY_TIME: usize = 81;
+pub const UPLOAD_GPU_COPY_TIME: usize = 82;
+pub const UPLOAD_TIME: usize = 83;
+pub const UPLOAD_NUM_COPY_BATCHES: usize = 84;
+pub const TOTAL_UPLOAD_TIME: usize = 85;
+pub const CREATE_CACHE_TEXTURE_TIME: usize = 86;
+pub const DELETE_CACHE_TEXTURE_TIME: usize = 87;
+
+pub const TEXTURE_CACHE_COLOR8_LINEAR_PRESSURE: usize = 88;
+pub const TEXTURE_CACHE_COLOR8_NEAREST_PRESSURE: usize = 89;
+pub const TEXTURE_CACHE_COLOR8_GLYPHS_PRESSURE: usize = 90;
+pub const TEXTURE_CACHE_ALPHA8_PRESSURE: usize = 91;
+pub const TEXTURE_CACHE_ALPHA8_GLYPHS_PRESSURE: usize = 92;
+pub const TEXTURE_CACHE_ALPHA16_PRESSURE: usize = 93;
+pub const TEXTURE_CACHE_STANDALONE_PRESSURE: usize = 94;
+pub const TEXTURE_CACHE_EVICTION_COUNT: usize = 95;
+pub const TEXTURE_CACHE_YOUNGEST_EVICTION: usize = 96;
+
+pub const NUM_PROFILER_EVENTS: usize = 97;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -264,6 +264,7 @@ impl Profiler {
         // system.
         let profile_counters = &[
             float("Frame building", "ms", FRAME_BUILDING_TIME, expected(0.0..6.0).avg(0.0..3.0)),
+
             float("Visibility", "ms", FRAME_VISIBILITY_TIME, expected(0.0..3.0).avg(0.0..2.0)),
             float("Prepare", "ms", FRAME_PREPARE_TIME, expected(0.0..3.0).avg(0.0..2.0)),
             float("Batching", "ms", FRAME_BATCHING_TIME, expected(0.0..3.0).avg(0.0..2.0)),
@@ -277,25 +278,6 @@ impl Profiler {
             float("DisplayList", "ms", DISPLAY_LIST_BUILD_TIME, expected(0.0..5.0).avg(0.0..3.0)),
             float("DisplayList mem", "MB", DISPLAY_LIST_MEM, expected(0.0..20.0)),
             float("Scene building", "ms", SCENE_BUILD_TIME, expected(0.0..4.0).avg(0.0..3.0)),
-
-            float("Slow frame", "", SLOW_FRAME, expected(0.0..0.0)),
-            float("Slow transaction", "", SLOW_TXN, expected(0.0..0.0)),
-
-            float("Frame", "ms", FRAME_TIME, Expected::none()),
-
-            int("Texture uploads", "", TEXTURE_UPLOADS, expected(0..10)),
-            float("Texture uploads mem", "MB", TEXTURE_UPLOADS_MEM, expected(0.0..10.0)),
-            float("Texture cache update", "ms", TEXTURE_CACHE_UPDATE_TIME, expected(0.0..3.0)),
-            float("Staging CPU allocation", "ms", CPU_TEXTURE_ALLOCATION_TIME, Expected::none()),
-            float("Staging GPU allocation", "ms", STAGING_TEXTURE_ALLOCATION_TIME, Expected::none()),
-            float("Staging CPU copy", "ms", UPLOAD_CPU_COPY_TIME, Expected::none()),
-            float("Staging GPU copy", "ms", UPLOAD_GPU_COPY_TIME, Expected::none()),
-            float("Upload time", "ms", UPLOAD_TIME, Expected::none()),
-            int("Upload copy batches", "", UPLOAD_NUM_COPY_BATCHES, Expected::none()),
-            float("Texture cache upload", "ms", TOTAL_UPLOAD_TIME, expected(0.0..5.0)),
-            float("Cache texture creation", "ms", CREATE_CACHE_TEXTURE_TIME, expected(0.0..2.0)),
-            float("Cache texture deletion", "ms", DELETE_CACHE_TEXTURE_TIME, expected(0.0..1.0)),
-            float("GPU cache upload", "ms", GPU_CACHE_UPLOAD_TIME, expected(0.0..2.0)),
 
             int("Rasterized blobs", "", RASTERIZED_BLOBS, expected(0..15)),
             int("Rasterized blob tiles", "", RASTERIZED_BLOB_TILES, expected(0..15)),
@@ -317,7 +299,10 @@ impl Profiler {
             int("Color passes", "", COLOR_PASSES, expected(1..4)),
             int("Alpha passes", "", ALPHA_PASSES, expected(0..3)),
             int("Picture tiles", "", PICTURE_TILES, expected(0..15)),
+            float("Picture tiles mem", "MB", PICTURE_TILES_MEM, expected(0.0..150.0)),
             int("Rendered picture tiles", "", RENDERED_PICTURE_TILES, expected(0..5)),
+            int("Texture uploads", "", TEXTURE_UPLOADS, expected(0..10)),
+            float("Texture uploads mem", "MB", TEXTURE_UPLOADS_MEM, expected(0.0..10.0)),
 
             int("Font templates", "", FONT_TEMPLATES, expected(0..40)),
             float("Font templates mem", "MB", FONT_TEMPLATES_MEM, expected(0.0..20.0)),
@@ -330,34 +315,25 @@ impl Profiler {
             int("GPU blocks updated", "", GPU_CACHE_BLOCKS_UPDATED, expected(0..1000)),
             int("GPU blocks saved", "", GPU_CACHE_BLOCKS_SAVED, expected(0..50_000)),
 
-            float("Atlas items mem", "MB", ATLAS_ITEMS_MEM, expected(0.0..100.0)),
-            int("Atlas A8 pixels", "px", ATLAS_A8_PIXELS, expected(0..1_000_000)),
-            int("Atlas A8 textures", "", ATLAS_A8_TEXTURES, expected(0..2)),
-            int("Atlas A16 pixels", "px", ATLAS_A16_PIXELS, expected(0..260_000)),
-            int("Atlas A16 textures", "", ATLAS_A16_TEXTURES, expected(0..2)),
-            int("Atlas RGBA8 linear pixels", "px", ATLAS_RGBA8_LINEAR_PIXELS, expected(0..8_000_000)),
-            int("Atlas RGBA8 linear textures", "", ATLAS_RGBA8_LINEAR_TEXTURES, expected(0..3)),
-            int("Atlas RGBA8 nearest pixels", "px", ATLAS_RGBA8_NEAREST_PIXELS, expected(0..260_000)),
-            int("Atlas RGBA8 nearest textures", "", ATLAS_RGBA8_NEAREST_TEXTURES, expected(0..2)),
-            int("Atlas RGBA8 glyphs pixels", "px", ATLAS_RGBA8_GLYPHS_PIXELS, expected(0..4_000_000)),
-            int("Atlas RGBA8 glyphs textures", "", ATLAS_RGBA8_GLYPHS_TEXTURES, expected(0..2)),
-            int("Atlas A8 glyphs pixels", "px", ATLAS_A8_GLYPHS_PIXELS, expected(0..4_000_000)),
-            int("Atlas A8 glyphs textures", "", ATLAS_A8_GLYPHS_TEXTURES, expected(0..2)),
-            float("Atlas RGBA8 linear pressure", "", ATLAS_COLOR8_LINEAR_PRESSURE, expected(0.0..1.0)),
-            float("Atlas RGBA8 nearest pressure", "", ATLAS_COLOR8_NEAREST_PRESSURE, expected(0.0..1.0)),
-            float("Atlas RGBA8 glyphs pressure", "", ATLAS_COLOR8_GLYPHS_PRESSURE, expected(0.0..1.0)),
-            float("Atlas A8 pressure", "", ATLAS_ALPHA8_PRESSURE, expected(0.0..1.0)),
-            float("Atlas A8 glyphs pressure", "", ATLAS_ALPHA8_GLYPHS_PRESSURE, expected(0.0..1.0)),
-            float("Atlas A16 pressure", "", ATLAS_ALPHA16_PRESSURE, expected(0.0..1.0)),
-            float("Texture cache standalone pressure", "", ATLAS_STANDALONE_PRESSURE, expected(0.0..1.0)),
+            int("Texture cache A8 pixels", "px", TEXTURE_CACHE_A8_PIXELS, expected(0..1_000_000)),
+            int("Texture cache A8 textures", "", TEXTURE_CACHE_A8_TEXTURES, expected(0..2)),
+            int("Texture cache A16 pixels", "px", TEXTURE_CACHE_A16_PIXELS, expected(0..260_000)),
+            int("Texture cache A16 textures", "", TEXTURE_CACHE_A16_TEXTURES, expected(0..2)),
+            int("Texture cache RGBA8 linear pixels", "px", TEXTURE_CACHE_RGBA8_LINEAR_PIXELS, expected(0..8_000_000)),
+            int("Texture cache RGBA8 linear textures", "", TEXTURE_CACHE_RGBA8_LINEAR_TEXTURES, expected(0..3)),
+            int("Texture cache RGBA8 nearest pixels", "px", TEXTURE_CACHE_RGBA8_NEAREST_PIXELS, expected(0..260_000)),
+            int("Texture cache RGBA8 nearest textures", "", TEXTURE_CACHE_RGBA8_NEAREST_TEXTURES, expected(0..2)),
+            float("Texture cache shared mem", "MB", TEXTURE_CACHE_SHARED_MEM, expected(0.0..100.0)),
+            float("Texture cache standalone mem", "MB", TEXTURE_CACHE_STANDALONE_MEM, expected(0.0..100.0)),
 
-            int("Texture cache eviction count", "items", TEXTURE_CACHE_EVICTION_COUNT, Expected::none()),
-            int("Texture cache youngest evicted", "frames", TEXTURE_CACHE_YOUNGEST_EVICTION, Expected::none()),
-            float("External image mem", "MB", EXTERNAL_IMAGE_BYTES, Expected::none()),
-            float("Atlas textures mem", "MB", ATLAS_TEXTURES_MEM, Expected::none()),
-            float("Standalone textures mem", "MB", STANDALONE_TEXTURES_MEM, Expected::none()),
-            float("Picture tiles mem", "MB", PICTURE_TILES_MEM, expected(0.0..150.0)),
-            float("Render targets mem", "MB", RENDER_TARGET_MEM, Expected::none()),
+
+            float("Slow frame", "", SLOW_FRAME, expected(0.0..0.0)),
+            float("Slow transaction", "", SLOW_TXN, expected(0.0..0.0)),
+
+            float("GPU cache upload", "ms", GPU_CACHE_UPLOAD_TIME, expected(0.0..2.0)),
+            float("Texture cache update", "ms", TEXTURE_CACHE_UPDATE_TIME, expected(0.0..3.0)),
+
+            float("Frame", "ms", FRAME_TIME, Expected::none()),
 
             float("Alpha targets samplers", "%", ALPHA_TARGETS_SAMPLERS, Expected::none()),
             float("Transparent pass samplers", "%", TRANSPARENT_PASS_SAMPLERS, Expected::none()),
@@ -379,6 +355,31 @@ impl Profiler {
             int("Interned filter data", "", INTERNED_FILTER_DATA, Expected::none()),
             int("Interned backdrops", "", INTERNED_BACKDROPS, Expected::none()),
             int("Interned polygons", "", INTERNED_POLYGONS, Expected::none()),
+
+            int("Texture cache RGBA8 glyphs pixels", "px", TEXTURE_CACHE_RGBA8_GLYPHS_PIXELS, expected(0..4_000_000)),
+            int("Texture cache RGBA8 glyphs textures", "", TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES, expected(0..2)),
+            int("Texture cache A8 glyphs pixels", "px", TEXTURE_CACHE_A8_GLYPHS_PIXELS, expected(0..4_000_000)),
+            int("Texture cache A8 glyphs textures", "", TEXTURE_CACHE_A8_GLYPHS_TEXTURES, expected(0..2)),
+
+            float("Staging CPU allocation", "ms", CPU_TEXTURE_ALLOCATION_TIME, Expected::none()),
+            float("Staging GPU allocation", "ms", STAGING_TEXTURE_ALLOCATION_TIME, Expected::none()),
+            float("Staging CPU copy", "ms", UPLOAD_CPU_COPY_TIME, Expected::none()),
+            float("Staging GPU copy", "ms", UPLOAD_GPU_COPY_TIME, Expected::none()),
+            float("Upload time", "ms", UPLOAD_TIME, Expected::none()),
+            int("Upload copy batches", "", UPLOAD_NUM_COPY_BATCHES, Expected::none()),
+            float("Texture cache upload", "ms", TOTAL_UPLOAD_TIME, expected(0.0..5.0)),
+            float("Cache texture creation", "ms", CREATE_CACHE_TEXTURE_TIME, expected(0.0..2.0)),
+            float("Cache texture deletion", "ms", DELETE_CACHE_TEXTURE_TIME, expected(0.0..1.0)),
+
+            float("Texture cache RGBA8 linear pressure", "", TEXTURE_CACHE_COLOR8_LINEAR_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache RGBA8 nearest pressure", "", TEXTURE_CACHE_COLOR8_NEAREST_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache RGBA8 glyphs pressure", "", TEXTURE_CACHE_COLOR8_GLYPHS_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache A8 pressure", "", TEXTURE_CACHE_ALPHA8_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache A8 glyphs pressure", "", TEXTURE_CACHE_ALPHA8_GLYPHS_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache A16 pressure", "", TEXTURE_CACHE_ALPHA16_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache standalone pressure", "", TEXTURE_CACHE_STANDALONE_PRESSURE, expected(0.0..1.0)),
+            int("Texture cache eviction count", "items", TEXTURE_CACHE_EVICTION_COUNT, Expected::none()),
+            int("Texture cache youngest evicted", "frames", TEXTURE_CACHE_YOUNGEST_EVICTION, Expected::none()),
         ];
 
         let mut counters = Vec::with_capacity(profile_counters.len());
