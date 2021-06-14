@@ -29,7 +29,7 @@ class TopSitesAdapterTest {
 
         assertEquals(
             TopSitesAdapter.TopSitesDiffCallback.getChangePayload(topSite, topSite2),
-            TopSitesAdapter.TopSitePayload("Title2")
+            topSite.copy(title = "Title2")
         )
 
         val topSite3 = TopSite(

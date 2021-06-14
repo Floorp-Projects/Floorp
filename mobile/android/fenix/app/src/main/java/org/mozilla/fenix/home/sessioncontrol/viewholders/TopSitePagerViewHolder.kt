@@ -53,9 +53,9 @@ class TopSitePagerViewHolder(
     }
 
     fun update(payload: AdapterItem.TopSitePagerPayload) {
-        for (item in payload.changed) {
-            topSitesPagerAdapter.notifyItemChanged(currentPage, payload)
-        }
+        // Due to offscreenPageLimit = 1 we need to update both pages manually here
+        topSitesPagerAdapter.notifyItemChanged(0, payload)
+        topSitesPagerAdapter.notifyItemChanged(1, payload)
     }
 
     fun bind(topSites: List<TopSite>) {
