@@ -21,7 +21,7 @@
 #define RESLIST_H
 
 #define KEY_SPACE_SIZE 65536
-#define RESLIST_INT_VECTOR_INIT_SIZE 2048
+#define RESLIST_MAX_INT_VECTOR 2048
 
 #include <functional>
 
@@ -405,8 +405,7 @@ public:
     virtual void handleWrite(UNewDataMemory *mem, uint32_t *byteOffset);
 
     // TODO: UVector32
-    size_t fCount;
-    size_t fSize;
+    uint32_t fCount;
     uint32_t *fArray;
 };
 

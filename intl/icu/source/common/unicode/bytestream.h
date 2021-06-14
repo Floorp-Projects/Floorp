@@ -71,6 +71,7 @@ public:
    */
   virtual void Append(const char* bytes, int32_t n) = 0;
 
+#ifndef U_HIDE_DRAFT_API
   /**
    * Appends n bytes to this. Same as Append().
    * Call AppendU8() with u8"string literals" which are const char * in C++11
@@ -80,7 +81,7 @@ public:
    *
    * @param bytes the pointer to the bytes
    * @param n the number of bytes; must be non-negative
-   * @stable ICU 67
+   * @draft ICU 67
    */
   inline void AppendU8(const char* bytes, int32_t n) {
     Append(bytes, n);
@@ -96,12 +97,13 @@ public:
    *
    * @param bytes the pointer to the bytes
    * @param n the number of bytes; must be non-negative
-   * @stable ICU 67
+   * @draft ICU 67
    */
   inline void AppendU8(const char8_t* bytes, int32_t n) {
     Append(reinterpret_cast<const char*>(bytes), n);
   }
 #endif
+#endif  // U_HIDE_DRAFT_API
 
   /**
    * Returns a writable buffer for appending and writes the buffer's capacity to

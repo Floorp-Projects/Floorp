@@ -216,7 +216,7 @@ nmg{
             "Fraŋ CFA BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Fraŋ CFA BCEAO",
         }
         ZAR{

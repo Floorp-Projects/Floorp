@@ -91,8 +91,7 @@ class DateFormat;
 /**
  * <p><strong>IMPORTANT:</strong> New users are strongly encouraged to see if
  * numberformatter.h fits their use case.  Although not deprecated, this header
- * is provided for backwards compatibility only, and has much more limited
- * capabilities.
+ * is provided for backwards compatibility only.
  *
  * @see Format
  * @author Alan Liu

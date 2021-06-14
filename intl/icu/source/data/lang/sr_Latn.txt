@@ -398,6 +398,7 @@ sr_Latn{
         ro_MD{"moldavski"}
         rof{"rombo"}
         rom{"romski"}
+        root{"rut"}
         ru{"ruski"}
         rup{"cincarski"}
         rw{"kinjaruanda"}

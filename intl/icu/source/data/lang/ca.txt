@@ -450,6 +450,7 @@ ca{
         ro_MD{"moldau"}
         rof{"rombo"}
         rom{"romaní"}
+        root{"arrel"}
         ru{"rus"}
         rup{"aromanès"}
         rw{"ruandès"}

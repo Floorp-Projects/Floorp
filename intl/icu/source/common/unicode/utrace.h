@@ -173,23 +173,24 @@ typedef enum UTraceFunctionNumber {
     UTRACE_RES_DATA_LIMIT,
 #endif  // U_HIDE_INTERNAL_API
 
+#ifndef U_HIDE_DRAFT_API
     /**
      * The lowest break iterator location.
-     * @stable ICU 67
+     * @draft ICU 67
      */
     UTRACE_UBRK_START=0x4000,
 
     /**
      * Indicates that a character instance of break iterator was created.
      *
-     * @stable ICU 67
+     * @draft ICU 67
      */
     UTRACE_UBRK_CREATE_CHARACTER = UTRACE_UBRK_START,
 
     /**
      * Indicates that a word instance of break iterator was created.
      *
-     * @stable ICU 67
+     * @draft ICU 67
      */
     UTRACE_UBRK_CREATE_WORD,
 
@@ -199,21 +200,21 @@ typedef enum UTraceFunctionNumber {
      * Provides one C-style string to UTraceData: the lb value ("",
      * "loose", "strict", or "normal").
      *
-     * @stable ICU 67
+     * @draft ICU 67
      */
     UTRACE_UBRK_CREATE_LINE,
 
     /**
      * Indicates that a sentence instance of break iterator was created.
      *
-     * @stable ICU 67
+     * @draft ICU 67
      */
     UTRACE_UBRK_CREATE_SENTENCE,
 
     /**
      * Indicates that a title instance of break iterator was created.
      *
-     * @stable ICU 67
+     * @draft ICU 67
      */
     UTRACE_UBRK_CREATE_TITLE,
 
@@ -223,9 +224,11 @@ typedef enum UTraceFunctionNumber {
      * Provides one C-style string to UTraceData: the script code of what
      * the break engine cover ("Hani", "Khmr", "Laoo", "Mymr", or "Thai").
      *
-     * @stable ICU 67
+     * @draft ICU 67
      */
     UTRACE_UBRK_CREATE_BREAK_ENGINE,
+
+#endif  // U_HIDE_DRAFT_API
 
 #ifndef U_HIDE_INTERNAL_API
     /**

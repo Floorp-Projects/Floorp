@@ -265,7 +265,7 @@ UBool UPerfTest::run(){
         return runTest();
     }
     UBool res=FALSE;
-    // Test only the specified function
+    // Test only the specified fucntion
     for (int i = 1; i < _remainingArgc; ++i) {
         if (_argv[i][0] != '-') {
             char* name = (char*) _argv[i];

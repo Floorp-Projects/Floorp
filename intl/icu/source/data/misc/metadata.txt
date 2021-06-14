@@ -1148,6 +1148,10 @@ metadata:table(nofallback){
                 reason{"deprecated"}
                 replacement{"ngv"}
             }
+            no{
+                reason{"legacy"}
+                replacement{"nb"}
+            }
             no_bok{
                 reason{"deprecated"}
                 replacement{"nb"}
@@ -1174,7 +1178,7 @@ metadata:table(nofallback){
             }
             nor{
                 reason{"overlong"}
-                replacement{"no"}
+                replacement{"nb"}
             }
             npi{
                 reason{"macrolanguage"}
@@ -5270,7 +5274,6 @@ metadata:table(nofallback){
         "myv_RU",
         "mzn_IR",
         "naq_NA",
-        "nb",
         "nb_NO",
         "nd_ZW",
         "nds_DE",

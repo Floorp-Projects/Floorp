@@ -1108,7 +1108,7 @@ id{
             "Franc UIC Perancis",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Franc CFA Afrika Barat",
         }
         XPD{

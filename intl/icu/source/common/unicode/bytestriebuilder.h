@@ -30,8 +30,6 @@
 #include "unicode/stringpiece.h"
 #include "unicode/stringtriebuilder.h"
 
-class BytesTrieTest;
-
 U_NAMESPACE_BEGIN
 
 class BytesTrieElement;
@@ -127,8 +125,6 @@ public:
     BytesTrieBuilder &clear();
 
 private:
-    friend class ::BytesTrieTest;
-
     BytesTrieBuilder(const BytesTrieBuilder &other);  // no copy constructor
     BytesTrieBuilder &operator=(const BytesTrieBuilder &other);  // no assignment operator
 
@@ -172,7 +168,6 @@ private:
     virtual int32_t writeValueAndFinal(int32_t i, UBool isFinal);
     virtual int32_t writeValueAndType(UBool hasValue, int32_t value, int32_t node);
     virtual int32_t writeDeltaTo(int32_t jumpTarget);
-    static int32_t internalEncodeDelta(int32_t i, char intBytes[]);
 
     CharString *strings;  // Pointer not object so we need not #include internal charstr.h.
     BytesTrieElement *elements;

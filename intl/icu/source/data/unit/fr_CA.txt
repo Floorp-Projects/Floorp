@@ -312,7 +312,6 @@ fr_CA{
             }
             yard{
                 dnam{"verges"}
-                gender{"feminine"}
                 one{"{0} verge"}
                 other{"{0} verges"}
             }
@@ -504,13 +503,11 @@ fr_CA{
             }
             quart{
                 dnam{"pintes"}
-                gender{"feminine"}
                 one{"{0} pinte"}
                 other{"{0} pintes"}
             }
             quart-imperial{
                 dnam{"pinte impériale"}
-                gender{"feminine"}
                 one{"{0} pinte impériale"}
                 other{"{0} pintes impériales"}
             }
@@ -547,8 +544,8 @@ fr_CA{
                 other{"´{0}s."}
             }
             microsecond{
-                one{"{0}μs"}
-                other{"{0}μs"}
+                one{"{0}µs"}
+                other{"{0}µs"}
             }
             minute{
                 one{"{0}m"}
@@ -589,8 +586,8 @@ fr_CA{
                 other{"{0}al"}
             }
             micrometer{
-                one{"{0}μm"}
-                other{"{0}μm"}
+                one{"{0}µm"}
+                other{"{0}µm"}
             }
             mile-scandinavian{
                 one{"{0}smi"}
@@ -625,8 +622,8 @@ fr_CA{
                 other{"{0}t"}
             }
             microgram{
-                one{"{0}μg"}
-                other{"{0}μg"}
+                one{"{0}µg"}
+                other{"{0}µg"}
             }
             milligram{
                 one{"{0}mg"}
@@ -979,8 +976,8 @@ fr_CA{
                 other{"{0} m"}
             }
             micrometer{
-                one{"{0} μm"}
-                other{"{0} μm"}
+                one{"{0} µm"}
+                other{"{0} µm"}
             }
             mile{
                 one{"{0} mi"}
@@ -1041,8 +1038,8 @@ fr_CA{
                 other{"{0} t"}
             }
             microgram{
-                one{"{0} μg"}
-                other{"{0} μg"}
+                one{"{0} µg"}
+                other{"{0} µg"}
             }
             milligram{
                 one{"{0} mg"}
