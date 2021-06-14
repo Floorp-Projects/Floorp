@@ -988,9 +988,6 @@ impl Renderer {
           }
         }
 
-        let image_tiling_threshold = options.image_tiling_threshold
-            .min(max_internal_texture_size);
-
         device.begin_frame();
 
         let shaders = match shaders {
