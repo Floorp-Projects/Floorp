@@ -82,7 +82,7 @@ pub fn upload_to_texture_cache(
     let num_updates = update_list.len();
 
     for (texture_id, updates) in update_list {
-        let texture = &renderer.texture_resolver.texture_cache_map[&texture_id].texture;
+        let texture = &renderer.texture_resolver.texture_cache_map[&texture_id];
         for update in updates {
             let TextureCacheUpdate { rect, stride, offset, format_override, source } = update;
 
@@ -429,7 +429,7 @@ fn copy_from_staging_to_cache(
     batch_upload_copies: Vec<BatchUploadCopy>,
 ) {
     for copy in batch_upload_copies {
-        let dest_texture = &renderer.texture_resolver.texture_cache_map[&copy.dest_texture_id].texture;
+        let dest_texture = &renderer.texture_resolver.texture_cache_map[&copy.dest_texture_id];
 
         renderer.device.copy_texture_sub_region(
             &batch_upload_textures[copy.src_texture_index],
@@ -495,7 +495,7 @@ fn copy_from_staging_to_cache_using_draw_calls(
         }
 
         if dst_changed {
-            let dest_texture = &renderer.texture_resolver.texture_cache_map[&copy.dest_texture_id].texture;
+            let dest_texture = &renderer.texture_resolver.texture_cache_map[&copy.dest_texture_id];
             let target_size = dest_texture.get_dimensions();
 
             let draw_target = DrawTarget::from_texture(
