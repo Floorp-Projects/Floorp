@@ -184,40 +184,6 @@ interface nsIGleanMemoryDistribution : nsISupports
 	jsval testGetValue([optional] in ACString aPingName);
 };
 
-[scriptable, uuid(45cc016f-c1d5-4d54-aaa5-a802cf65f23b)]
-interface nsIGleanCustomDistribution : nsISupports
-{
-  /*
-   * Accumulates the provided signed samples in the metric.
-   *
-   * @param aSamples - The vector holding the samples to be recorded by the metric.
-   *
-   * Notes: Discards any negative value in `samples`
-   * and report an `ErrorType::InvalidValue` for each of them.
-   */
-  void accumulateSamples(in Array<int64_t> aSamples);
-
-  /**
-   * **Test-only API**
-   *
-   * Gets the currently stored value as a DistributionData.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * This doesn't clear the stored value.
-   * Parent process only. Panics in child processes.
-   *
-   * @param aPingName The (optional) name of the ping to retrieve the metric
-   *        for. Defaults to the first value in `send_in_pings`.
-   *
-   * @return value of the stored metric, or undefined if there is no value.
-   */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in ACString aPingName);
-};
-
 [scriptable, function, uuid(e5447f62-4b03-497c-81e9-6ab683d20380)]
 interface nsIGleanPingTestCallback : nsISupports
 {
