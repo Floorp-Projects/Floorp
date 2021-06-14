@@ -80,11 +80,6 @@ async function setup(configuration) {
     }
   );
 
-  await BrowserTestUtils.waitForCondition(
-    async () => (await client.get()).length,
-    "RS is ready"
-  );
-
   registerCleanupFunction(async () => {
     await client.db.clear();
   });
@@ -273,11 +268,15 @@ add_task(async function test_remote_fetch_on_updateRecipes() {
 // Test that awaiting `feature.ready()` resolves even when there is no remote
 // data
 add_task(async function test_remote_fetch_no_data_syncRemoteBefore() {
+  // Reset the nonPersistentStore where remote defaults are stored
+  ExperimentAPI._store._nonPersistentStore = {};
+  const sandbox = sinon.createSandbox();
   const featureInstance = NimbusFeatures.aboutwelcome;
   const featureFoo = new ExperimentFeature("foo", {
     foo: { description: "mochitests" },
   });
-  const stub = sinon.stub();
+  const stub = sandbox.stub();
+  const spy = sandbox.spy(ExperimentAPI._store, "finalizeRemoteConfigs");
 
   ExperimentAPI._store.on("remote-defaults-finalized", stub);
 
@@ -288,6 +287,8 @@ add_task(async function test_remote_fetch_no_data_syncRemoteBefore() {
   // featureFoo will also resolve when the remote defaults cycle finishes
   await Promise.all([featureInstance.ready(), featureFoo.ready()]);
 
+  Assert.ok(spy.calledOnce, "Called finalizeRemoteConfigs");
+  Assert.deepEqual(spy.firstCall.args[0], ["aboutwelcome", "newtab"]);
   Assert.equal(stub.callCount, 1, "Notified all features");
 
   ExperimentAPI._store.off("remote-defaults-finalized", stub);
@@ -297,11 +298,14 @@ add_task(async function test_remote_fetch_no_data_syncRemoteBefore() {
   // clean state for the next run
   NimbusFeatures.aboutwelcome = new ExperimentFeature("aboutwelcome");
   NimbusFeatures.newtab = new ExperimentFeature("newtab");
+  sandbox.restore();
 });
 
 // Test that awaiting `feature.ready()` resolves even when there is no remote
 // data
 add_task(async function test_remote_fetch_no_data_noWaitRemoteLoad() {
+  // Reset the nonPersistentStore where remote defaults are stored
+  ExperimentAPI._store._nonPersistentStore = {};
   const featureInstance = NimbusFeatures.aboutwelcome;
   const featureFoo = new ExperimentFeature("foo", {
     foo: { description: "mochitests" },
@@ -310,7 +314,7 @@ add_task(async function test_remote_fetch_no_data_noWaitRemoteLoad() {
 
   ExperimentAPI._store.on("remote-defaults-finalized", stub);
 
-  await setup();
+  await setup([]);
 
   // Don't wait to load remote defaults; make sure there is no blocking issue
   // with the `ready` call
