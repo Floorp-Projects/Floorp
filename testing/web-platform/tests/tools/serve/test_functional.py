@@ -25,7 +25,7 @@ class ServerProcSpy(serve.ServerProc):
 
         return result
 
-serve.ServerProc = ServerProcSpy
+serve.ServerProc = ServerProcSpy  # type: ignore
 
 @pytest.fixture()
 def server_subprocesses():
