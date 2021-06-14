@@ -3,6 +3,9 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr_Cyrl_BA{
     units{
+        compound{
+            1024p8{"јоби{0}"}
+        }
         duration{
             century{
                 dnam{"вијекови"}

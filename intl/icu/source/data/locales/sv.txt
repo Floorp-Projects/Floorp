@@ -240,6 +240,10 @@ sv{
             }
         }
         minimalPairs{
+            gender{
+                common{"En {0} är"}
+                neuter{"Ett {0} är"}
+            }
             ordinal{
                 one{"Ta {0}:a svängen till höger"}
                 other{"Ta {0}:e svängen till höger"}

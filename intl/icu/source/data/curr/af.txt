@@ -656,7 +656,7 @@ af{
             "Oos-Karibiese dollar",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Wes-Afrikaanse CFA-frank",
         }
         XPF{

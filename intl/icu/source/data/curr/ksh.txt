@@ -460,7 +460,7 @@ ksh{
             "papua neujinejaanesche Kina",
         }
         PHP{
-            "PHP",
+            "₱",
             "fillipiinesche Pesos",
         }
         PKR{
@@ -668,7 +668,7 @@ ksh{
             "franzüüsesche Joldfranke",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Frang uß de Älfebeinköß",
         }
         XPD{

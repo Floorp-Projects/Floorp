@@ -140,7 +140,89 @@ br{
             }
         }
         compound{
+            1024p1{"kibi{0}"}
+            1024p2{"mebi{0}"}
+            1024p3{"gibi{0}"}
+            1024p4{"tebi{0}"}
+            1024p5{"pebi{0}"}
+            1024p6{"eksbi{0}"}
+            1024p7{"zebi{0}"}
+            1024p8{"yobe{0}"}
+            10p-1{"deki{0}"}
+            10p-12{"piko{0}"}
+            10p-15{"femto{0}"}
+            10p-18{"ato{0}"}
+            10p-2{"kenti{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"yokto{0}"}
+            10p-3{"mili{0}"}
+            10p-6{"mikro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deka{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"eksa{0}"}
+            10p2{"hekto{0}"}
+            10p21{"zeta{0}"}
+            10p24{"yota{0}"}
+            10p3{"kilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"giga{0}"}
             per{"{0} dre {1}"}
+            power2{
+                few{
+                    _{
+                        _{"{0} karrez"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0} karrez"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0} karrez"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} karrez"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0} karrez"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"{0} diñs"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0} diñs"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0} diñs"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} diñs"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0} diñs"}
+                    }
+                }
+            }
             times{"{0}-{1}"}
         }
         concentr{
@@ -152,7 +234,7 @@ br{
                 other{"{0} karat"}
                 two{"{0} garat"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"milligramm dre zekilitr"}
                 few{"{0} milligramm dre zekilitr"}
                 many{"{0} a villigrammoù dre zekilitr"}
@@ -1638,7 +1720,7 @@ br{
                 other{"{0}kt"}
                 two{"{0}kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 few{"{0}mg/dl"}
                 many{"{0}mg/dl"}
@@ -2219,12 +2301,12 @@ br{
                 two{"{0}m"}
             }
             micrometer{
-                dnam{"µm"}
-                few{"{0}µm"}
-                many{"{0}µm"}
-                one{"{0}µm"}
-                other{"{0}µm"}
-                two{"{0}µm"}
+                dnam{"μm"}
+                few{"{0}μm"}
+                many{"{0}μm"}
+                one{"{0}μm"}
+                other{"{0}μm"}
+                two{"{0}μm"}
             }
             mile{
                 dnam{"mi"}
@@ -2394,12 +2476,12 @@ br{
                 two{"{0}t"}
             }
             microgram{
-                dnam{"µg"}
-                few{"{0}µg"}
-                many{"{0}µg"}
-                one{"{0}µg"}
-                other{"{0}µg"}
-                two{"{0}µg"}
+                dnam{"μg"}
+                few{"{0}μg"}
+                many{"{0}μg"}
+                one{"{0}μg"}
+                other{"{0}μg"}
+                two{"{0}μg"}
             }
             milligram{
                 dnam{"mg"}
@@ -3086,7 +3168,7 @@ br{
                 other{"{0} kt"}
                 two{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 few{"{0} mg/dl"}
                 many{"{0} mg/dl"}
@@ -3617,12 +3699,12 @@ br{
                 two{"{0} m"}
             }
             micrometer{
-                dnam{"µm"}
-                few{"{0} µm"}
-                many{"{0} µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
-                two{"{0} µm"}
+                dnam{"μm"}
+                few{"{0} μm"}
+                many{"{0} μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
+                two{"{0} μm"}
             }
             mile{
                 dnam{"mi"}
@@ -3743,12 +3825,12 @@ br{
                 two{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                few{"{0} µg"}
-                many{"{0} µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
-                two{"{0} µg"}
+                dnam{"μg"}
+                few{"{0} μg"}
+                many{"{0} μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
+                two{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

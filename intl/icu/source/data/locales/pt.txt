@@ -202,6 +202,10 @@ pt{
             }
         }
         minimalPairs{
+            gender{
+                feminine{"A {0} é..."}
+                masculine{"O {0} é"}
+            }
             ordinal{
                 other{"Pegue a {0}ª à direita."}
             }

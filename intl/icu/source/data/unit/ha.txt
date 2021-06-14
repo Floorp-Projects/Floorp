@@ -102,7 +102,49 @@ ha{
             }
         }
         compound{
+            10p-1{"deci{0}"}
+            10p-12{"pico{0}"}
+            10p-15{"femto{0}"}
+            10p-18{"atto{0}"}
+            10p-2{"senti{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"yocto{0}"}
+            10p-3{"milli{0}"}
+            10p-6{"mikro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deka{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"exa{0}"}
+            10p2{"hekta{0}"}
+            10p3{"kilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"giga{0}"}
             per{"{0} a {1}"}
+            power2{
+                one{
+                    _{
+                        _{"sikwaya {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"sikwaya {0}"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"kubic {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"kubic {0}"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -110,7 +152,7 @@ ha{
                 one{"karat {0}"}
                 other{"karats {0}"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"milligrams per deciliter"}
                 one{"milligram per deciliter {0}"}
                 other{"milligrams per deciliter {0}"}
@@ -1156,7 +1198,7 @@ ha{
                 one{"kt {0}"}
                 other{"kt {0}"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 one{"mg/dL {0}"}
                 other{"mg/dL {0}"}
             }
@@ -1295,9 +1337,9 @@ ha{
                 per{"{0}/saʼa"}
             }
             microsecond{
-                dnam{"µsecs"}
-                one{"µs {0}"}
-                other{"µs {0}"}
+                dnam{"μsecs"}
+                one{"μs {0}"}
+                other{"μs {0}"}
             }
             millisecond{
                 dnam{"milseks"}
@@ -1517,9 +1559,9 @@ ha{
                 other{"m {0}"}
             }
             micrometer{
-                dnam{"µmeters"}
-                one{"µm {0}"}
-                other{"µm {0}"}
+                dnam{"μmeters"}
+                one{"μm {0}"}
+                other{"μm {0}"}
             }
             mile{
                 dnam{"mil-mil"}
@@ -1618,8 +1660,8 @@ ha{
                 other{"t {0}"}
             }
             microgram{
-                one{"µg {0}"}
-                other{"µg {0}"}
+                one{"μg {0}"}
+                other{"μg {0}"}
             }
             milligram{
                 one{"mg {0}"}

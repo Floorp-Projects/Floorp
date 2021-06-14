@@ -648,7 +648,7 @@ sw{
             "Dola ya Karibi Mashariki",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Faranga ya Afrika Magharibi CFA",
         }
         XPF{

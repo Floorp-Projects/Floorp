@@ -212,7 +212,7 @@ ff{
             "Mbuuɗi Seefaa BEAC",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Mbuuɗu Seefaa BCEAO",
         }
         ZAR{

@@ -3504,7 +3504,7 @@ measure-unit/length-furlong unit-width-full-name rounding-mode-floor
 percent unit-width-narrow integer-width/##00
   es-MX
     00 %
-    1827.3645 %
+    1,827.3645 %
     -00.22222 %
   zh-TW
     00%
@@ -3518,7 +3518,7 @@ percent unit-width-narrow integer-width/##00
 percent unit-width-full-name integer-width/##00
   es-MX
     00 por ciento
-    1827.3645 por ciento
+    1,827.3645 por ciento
     -00.22222 por ciento
   zh-TW
     00%
@@ -3532,7 +3532,7 @@ percent unit-width-full-name integer-width/##00
 currency/EUR unit-width-narrow integer-width/##00
   es-MX
     €00.00
-    €1827.36
+    €1,827.36
     -€00.22
   zh-TW
     €00.00
@@ -3546,7 +3546,7 @@ currency/EUR unit-width-narrow integer-width/##00
 currency/EUR unit-width-full-name integer-width/##00
   es-MX
     00.00 euros
-    1827.36 euros
+    1,827.36 euros
     -00.22 euros
   zh-TW
     00.00 歐元
@@ -3560,7 +3560,7 @@ currency/EUR unit-width-full-name integer-width/##00
 measure-unit/length-furlong unit-width-narrow integer-width/##00
   es-MX
     00 fur
-    1827.3645 fur
+    1,827.3645 fur
     -00.22222 fur
   zh-TW
     00化朗
@@ -3574,7 +3574,7 @@ measure-unit/length-furlong unit-width-narrow integer-width/##00
 measure-unit/length-furlong unit-width-full-name integer-width/##00
   es-MX
     00 furlongs
-    1827.3645 furlongs
+    1,827.3645 furlongs
     -00.22222 furlongs
   zh-TW
     00 化朗
@@ -4176,7 +4176,7 @@ measure-unit/length-furlong @@ rounding-mode-floor
 percent precision-integer integer-width/##00
   es-MX
     00 %
-    1827 %
+    1,827 %
     -00 %
   zh-TW
     00%
@@ -4190,7 +4190,7 @@ percent precision-integer integer-width/##00
 percent .000 integer-width/##00
   es-MX
     00.000 %
-    1827.364 %
+    1,827.364 %
     -00.222 %
   zh-TW
     00.000%
@@ -4204,7 +4204,7 @@ percent .000 integer-width/##00
 percent .##/@@@+ integer-width/##00
   es-MX
     00 %
-    1827.36 %
+    1,827.36 %
     -00.222 %
   zh-TW
     00%
@@ -4218,7 +4218,7 @@ percent .##/@@@+ integer-width/##00
 percent @@ integer-width/##00
   es-MX
     00.0 %
-    2000 %
+    2,000 %
     -00.22 %
   zh-TW
     00.0%
@@ -4232,7 +4232,7 @@ percent @@ integer-width/##00
 currency/EUR precision-integer integer-width/##00
   es-MX
     EUR 00
-    EUR 1827
+    EUR 1,827
     -EUR 00
   zh-TW
     €00
@@ -4246,7 +4246,7 @@ currency/EUR precision-integer integer-width/##00
 currency/EUR .000 integer-width/##00
   es-MX
     EUR 00.000
-    EUR 1827.364
+    EUR 1,827.364
     -EUR 00.222
   zh-TW
     €00.000
@@ -4260,7 +4260,7 @@ currency/EUR .000 integer-width/##00
 currency/EUR .##/@@@+ integer-width/##00
   es-MX
     EUR 00
-    EUR 1827.36
+    EUR 1,827.36
     -EUR 00.222
   zh-TW
     €00
@@ -4274,7 +4274,7 @@ currency/EUR .##/@@@+ integer-width/##00
 currency/EUR @@ integer-width/##00
   es-MX
     EUR 00.0
-    EUR 2000
+    EUR 2,000
     -EUR 00.22
   zh-TW
     €00.0
@@ -4288,7 +4288,7 @@ currency/EUR @@ integer-width/##00
 measure-unit/length-furlong precision-integer integer-width/##00
   es-MX
     00 fur
-    1827 fur
+    1,827 fur
     -00 fur
   zh-TW
     00 化朗
@@ -4302,7 +4302,7 @@ measure-unit/length-furlong precision-integer integer-width/##00
 measure-unit/length-furlong .000 integer-width/##00
   es-MX
     00.000 fur
-    1827.364 fur
+    1,827.364 fur
     -00.222 fur
   zh-TW
     00.000 化朗
@@ -4316,7 +4316,7 @@ measure-unit/length-furlong .000 integer-width/##00
 measure-unit/length-furlong .##/@@@+ integer-width/##00
   es-MX
     00 fur
-    1827.36 fur
+    1,827.36 fur
     -00.222 fur
   zh-TW
     00 化朗
@@ -4330,7 +4330,7 @@ measure-unit/length-furlong .##/@@@+ integer-width/##00
 measure-unit/length-furlong @@ integer-width/##00
   es-MX
     00.0 fur
-    2000 fur
+    2,000 fur
     -00.22 fur
   zh-TW
     00.0 化朗
@@ -5184,7 +5184,7 @@ measure-unit/length-furlong @@ decimal-always
 percent rounding-mode-floor integer-width/##00
   es-MX
     00 %
-    1827.3645 %
+    1,827.3645 %
     -00.22222 %
   zh-TW
     00%
@@ -5198,7 +5198,7 @@ percent rounding-mode-floor integer-width/##00
 currency/EUR rounding-mode-floor integer-width/##00
   es-MX
     EUR 00.00
-    EUR 1827.36
+    EUR 1,827.36
     -EUR 00.23
   zh-TW
     €00.00
@@ -5212,7 +5212,7 @@ currency/EUR rounding-mode-floor integer-width/##00
 measure-unit/length-furlong rounding-mode-floor integer-width/##00
   es-MX
     00 fur
-    1827.3645 fur
+    1,827.3645 fur
     -00.22222 fur
   zh-TW
     00 化朗
@@ -5436,7 +5436,7 @@ measure-unit/length-furlong rounding-mode-floor decimal-always
 percent integer-width/##00 scale/0.5
   es-MX
     00 %
-    5913.68225 %
+    5,913.68225 %
     -00.11111 %
   zh-TW
     00%
@@ -5450,7 +5450,7 @@ percent integer-width/##00 scale/0.5
 currency/EUR integer-width/##00 scale/0.5
   es-MX
     EUR 00.00
-    EUR 5913.68
+    EUR 5,913.68
     -EUR 00.11
   zh-TW
     €00.00
@@ -5464,7 +5464,7 @@ currency/EUR integer-width/##00 scale/0.5
 measure-unit/length-furlong integer-width/##00 scale/0.5
   es-MX
     00 fur
-    5913.68225 fur
+    5,913.68225 fur
     -00.11111 fur
   zh-TW
     00 化朗
@@ -5520,7 +5520,7 @@ measure-unit/length-furlong integer-width/##00 group-on-aligned
 percent integer-width/##00 latin
   es-MX
     00 %
-    1827.3645 %
+    1,827.3645 %
     -00.22222 %
   zh-TW
     00%
@@ -5534,7 +5534,7 @@ percent integer-width/##00 latin
 currency/EUR integer-width/##00 latin
   es-MX
     EUR 00.00
-    EUR 1827.36
+    EUR 1,827.36
     -EUR 00.22
   zh-TW
     €00.00
@@ -5548,7 +5548,7 @@ currency/EUR integer-width/##00 latin
 measure-unit/length-furlong integer-width/##00 latin
   es-MX
     00 fur
-    1827.3645 fur
+    1,827.3645 fur
     -00.22222 fur
   zh-TW
     00 化朗
@@ -5562,7 +5562,7 @@ measure-unit/length-furlong integer-width/##00 latin
 percent integer-width/##00 sign-accounting-except-zero
   es-MX
     00 %
-    +1827.3645 %
+    +1,827.3645 %
     -00.22222 %
   zh-TW
     00%
@@ -5576,7 +5576,7 @@ percent integer-width/##00 sign-accounting-except-zero
 currency/EUR integer-width/##00 sign-accounting-except-zero
   es-MX
     EUR 00.00
-    +EUR 1827.36
+    +EUR 1,827.36
     -EUR 00.22
   zh-TW
     €00.00
@@ -5590,7 +5590,7 @@ currency/EUR integer-width/##00 sign-accounting-except-zero
 measure-unit/length-furlong integer-width/##00 sign-accounting-except-zero
   es-MX
     00 fur
-    +1827.3645 fur
+    +1,827.3645 fur
     -00.22222 fur
   zh-TW
     00 化朗
@@ -5604,7 +5604,7 @@ measure-unit/length-furlong integer-width/##00 sign-accounting-except-zero
 percent integer-width/##00 decimal-always
   es-MX
     00. %
-    1827.3645 %
+    1,827.3645 %
     -00.22222 %
   zh-TW
     00.%
@@ -5618,7 +5618,7 @@ percent integer-width/##00 decimal-always
 currency/EUR integer-width/##00 decimal-always
   es-MX
     EUR 00.00
-    EUR 1827.36
+    EUR 1,827.36
     -EUR 00.22
   zh-TW
     €00.00
@@ -5632,7 +5632,7 @@ currency/EUR integer-width/##00 decimal-always
 measure-unit/length-furlong integer-width/##00 decimal-always
   es-MX
     00. fur
-    1827.3645 fur
+    1,827.3645 fur
     -00.22222 fur
   zh-TW
     00. 化朗
@@ -6178,7 +6178,7 @@ unit-width-full-name @@ rounding-mode-floor
 unit-width-narrow precision-integer integer-width/##00
   es-MX
     00
-    1827
+    1,827
     -00
   zh-TW
     00
@@ -6192,7 +6192,7 @@ unit-width-narrow precision-integer integer-width/##00
 unit-width-narrow .000 integer-width/##00
   es-MX
     00.000
-    1827.364
+    1,827.364
     -00.222
   zh-TW
     00.000
@@ -6206,7 +6206,7 @@ unit-width-narrow .000 integer-width/##00
 unit-width-narrow .##/@@@+ integer-width/##00
   es-MX
     00
-    1827.36
+    1,827.36
     -00.222
   zh-TW
     00
@@ -6220,7 +6220,7 @@ unit-width-narrow .##/@@@+ integer-width/##00
 unit-width-narrow @@ integer-width/##00
   es-MX
     00.0
-    2000
+    2,000
     -00.22
   zh-TW
     00.0
@@ -6234,7 +6234,7 @@ unit-width-narrow @@ integer-width/##00
 unit-width-full-name precision-integer integer-width/##00
   es-MX
     00
-    1827
+    1,827
     -00
   zh-TW
     00
@@ -6248,7 +6248,7 @@ unit-width-full-name precision-integer integer-width/##00
 unit-width-full-name .000 integer-width/##00
   es-MX
     00.000
-    1827.364
+    1,827.364
     -00.222
   zh-TW
     00.000
@@ -6262,7 +6262,7 @@ unit-width-full-name .000 integer-width/##00
 unit-width-full-name .##/@@@+ integer-width/##00
   es-MX
     00
-    1827.36
+    1,827.36
     -00.222
   zh-TW
     00
@@ -6276,7 +6276,7 @@ unit-width-full-name .##/@@@+ integer-width/##00
 unit-width-full-name @@ integer-width/##00
   es-MX
     00.0
-    2000
+    2,000
     -00.22
   zh-TW
     00.0
@@ -6850,7 +6850,7 @@ unit-width-full-name @@ decimal-always
 unit-width-narrow rounding-mode-floor integer-width/##00
   es-MX
     00
-    1827.3645
+    1,827.3645
     -00.22222
   zh-TW
     00
@@ -6864,7 +6864,7 @@ unit-width-narrow rounding-mode-floor integer-width/##00
 unit-width-full-name rounding-mode-floor integer-width/##00
   es-MX
     00
-    1827.3645
+    1,827.3645
     -00.22222
   zh-TW
     00
@@ -7018,7 +7018,7 @@ unit-width-full-name rounding-mode-floor decimal-always
 unit-width-narrow integer-width/##00 scale/0.5
   es-MX
     00
-    5913.68225
+    5,913.68225
     -00.11111
   zh-TW
     00
@@ -7032,7 +7032,7 @@ unit-width-narrow integer-width/##00 scale/0.5
 unit-width-full-name integer-width/##00 scale/0.5
   es-MX
     00
-    5913.68225
+    5,913.68225
     -00.11111
   zh-TW
     00
@@ -7074,7 +7074,7 @@ unit-width-full-name integer-width/##00 group-on-aligned
 unit-width-narrow integer-width/##00 latin
   es-MX
     00
-    1827.3645
+    1,827.3645
     -00.22222
   zh-TW
     00
@@ -7088,7 +7088,7 @@ unit-width-narrow integer-width/##00 latin
 unit-width-full-name integer-width/##00 latin
   es-MX
     00
-    1827.3645
+    1,827.3645
     -00.22222
   zh-TW
     00
@@ -7102,7 +7102,7 @@ unit-width-full-name integer-width/##00 latin
 unit-width-narrow integer-width/##00 sign-accounting-except-zero
   es-MX
     00
-    +1827.3645
+    +1,827.3645
     -00.22222
   zh-TW
     00
@@ -7116,7 +7116,7 @@ unit-width-narrow integer-width/##00 sign-accounting-except-zero
 unit-width-full-name integer-width/##00 sign-accounting-except-zero
   es-MX
     00
-    +1827.3645
+    +1,827.3645
     -00.22222
   zh-TW
     00
@@ -7130,7 +7130,7 @@ unit-width-full-name integer-width/##00 sign-accounting-except-zero
 unit-width-narrow integer-width/##00 decimal-always
   es-MX
     00.
-    1827.3645
+    1,827.3645
     -00.22222
   zh-TW
     00.
@@ -7144,7 +7144,7 @@ unit-width-narrow integer-width/##00 decimal-always
 unit-width-full-name integer-width/##00 decimal-always
   es-MX
     00.
-    1827.3645
+    1,827.3645
     -00.22222
   zh-TW
     00.
@@ -7438,7 +7438,7 @@ unit-width-full-name sign-accounting-except-zero decimal-always
 precision-integer rounding-mode-floor integer-width/##00
   es-MX
     00
-    1827
+    1,827
     -01
   zh-TW
     00
@@ -7452,7 +7452,7 @@ precision-integer rounding-mode-floor integer-width/##00
 .000 rounding-mode-floor integer-width/##00
   es-MX
     00.000
-    1827.364
+    1,827.364
     -00.223
   zh-TW
     00.000
@@ -7466,7 +7466,7 @@ precision-integer rounding-mode-floor integer-width/##00
 .##/@@@+ rounding-mode-floor integer-width/##00
   es-MX
     00
-    1827.36
+    1,827.36
     -00.223
   zh-TW
     00
@@ -7480,7 +7480,7 @@ precision-integer rounding-mode-floor integer-width/##00
 @@ rounding-mode-floor integer-width/##00
   es-MX
     00.0
-    1000
+    1,000
     -00.23
   zh-TW
     00.0
@@ -7774,7 +7774,7 @@ precision-integer rounding-mode-floor decimal-always
 precision-integer integer-width/##00 scale/0.5
   es-MX
     00
-    5914
+    5,914
     -00
   zh-TW
     00
@@ -7788,7 +7788,7 @@ precision-integer integer-width/##00 scale/0.5
 .000 integer-width/##00 scale/0.5
   es-MX
     00.000
-    5913.682
+    5,913.682
     -00.111
   zh-TW
     00.000
@@ -7802,7 +7802,7 @@ precision-integer integer-width/##00 scale/0.5
 .##/@@@+ integer-width/##00 scale/0.5
   es-MX
     00
-    5913.68
+    5,913.68
     -00.111
   zh-TW
     00
@@ -7816,7 +7816,7 @@ precision-integer integer-width/##00 scale/0.5
 @@ integer-width/##00 scale/0.5
   es-MX
     00.0
-    6000
+    6,000
     -00.11
   zh-TW
     00.0
@@ -7886,7 +7886,7 @@ precision-integer integer-width/##00 group-on-aligned
 precision-integer integer-width/##00 latin
   es-MX
     00
-    1827
+    1,827
     -00
   zh-TW
     00
@@ -7900,7 +7900,7 @@ precision-integer integer-width/##00 latin
 .000 integer-width/##00 latin
   es-MX
     00.000
-    1827.364
+    1,827.364
     -00.222
   zh-TW
     00.000
@@ -7914,7 +7914,7 @@ precision-integer integer-width/##00 latin
 .##/@@@+ integer-width/##00 latin
   es-MX
     00
-    1827.36
+    1,827.36
     -00.222
   zh-TW
     00
@@ -7928,7 +7928,7 @@ precision-integer integer-width/##00 latin
 @@ integer-width/##00 latin
   es-MX
     00.0
-    2000
+    2,000
     -00.22
   zh-TW
     00.0
@@ -7942,7 +7942,7 @@ precision-integer integer-width/##00 latin
 precision-integer integer-width/##00 sign-accounting-except-zero
   es-MX
     00
-    +1827
+    +1,827
     00
   zh-TW
     00
@@ -7956,7 +7956,7 @@ precision-integer integer-width/##00 sign-accounting-except-zero
 .000 integer-width/##00 sign-accounting-except-zero
   es-MX
     00.000
-    +1827.364
+    +1,827.364
     -00.222
   zh-TW
     00.000
@@ -7970,7 +7970,7 @@ precision-integer integer-width/##00 sign-accounting-except-zero
 .##/@@@+ integer-width/##00 sign-accounting-except-zero
   es-MX
     00
-    +1827.36
+    +1,827.36
     -00.222
   zh-TW
     00
@@ -7984,7 +7984,7 @@ precision-integer integer-width/##00 sign-accounting-except-zero
 @@ integer-width/##00 sign-accounting-except-zero
   es-MX
     00.0
-    +2000
+    +2,000
     -00.22
   zh-TW
     00.0
@@ -7998,7 +7998,7 @@ precision-integer integer-width/##00 sign-accounting-except-zero
 precision-integer integer-width/##00 decimal-always
   es-MX
     00.
-    1827.
+    1,827.
     -00.
   zh-TW
     00.
@@ -8012,7 +8012,7 @@ precision-integer integer-width/##00 decimal-always
 .000 integer-width/##00 decimal-always
   es-MX
     00.000
-    1827.364
+    1,827.364
     -00.222
   zh-TW
     00.000
@@ -8026,7 +8026,7 @@ precision-integer integer-width/##00 decimal-always
 .##/@@@+ integer-width/##00 decimal-always
   es-MX
     00.
-    1827.36
+    1,827.36
     -00.222
   zh-TW
     00.
@@ -8040,7 +8040,7 @@ precision-integer integer-width/##00 decimal-always
 @@ integer-width/##00 decimal-always
   es-MX
     00.0
-    2000.
+    2,000.
     -00.22
   zh-TW
     00.0
@@ -8614,7 +8614,7 @@ precision-integer sign-accounting-except-zero decimal-always
 rounding-mode-floor integer-width/##00 scale/0.5
   es-MX
     00
-    5913.68225
+    5,913.68225
     -00.11111
   zh-TW
     00
@@ -8642,7 +8642,7 @@ rounding-mode-floor integer-width/##00 group-on-aligned
 rounding-mode-floor integer-width/##00 latin
   es-MX
     00
-    1827.3645
+    1,827.3645
     -00.22222
   zh-TW
     00
@@ -8656,7 +8656,7 @@ rounding-mode-floor integer-width/##00 latin
 rounding-mode-floor integer-width/##00 sign-accounting-except-zero
   es-MX
     00
-    +1827.3645
+    +1,827.3645
     -00.22222
   zh-TW
     00
@@ -8670,7 +8670,7 @@ rounding-mode-floor integer-width/##00 sign-accounting-except-zero
 rounding-mode-floor integer-width/##00 decimal-always
   es-MX
     00.
-    1827.3645
+    1,827.3645
     -00.22222
   zh-TW
     00.
@@ -8838,7 +8838,7 @@ integer-width/##00 scale/0.5 group-on-aligned
 integer-width/##00 scale/0.5 latin
   es-MX
     00
-    5913.68225
+    5,913.68225
     -00.11111
   zh-TW
     00
@@ -8852,7 +8852,7 @@ integer-width/##00 scale/0.5 latin
 integer-width/##00 scale/0.5 sign-accounting-except-zero
   es-MX
     00
-    +5913.68225
+    +5,913.68225
     -00.11111
   zh-TW
     00
@@ -8866,7 +8866,7 @@ integer-width/##00 scale/0.5 sign-accounting-except-zero
 integer-width/##00 scale/0.5 decimal-always
   es-MX
     00.
-    5913.68225
+    5,913.68225
     -00.11111
   zh-TW
     00.
@@ -8922,7 +8922,7 @@ integer-width/##00 group-on-aligned decimal-always
 integer-width/##00 latin sign-accounting-except-zero
   es-MX
     00
-    +1827.3645
+    +1,827.3645
     -00.22222
   zh-TW
     00
@@ -8936,7 +8936,7 @@ integer-width/##00 latin sign-accounting-except-zero
 integer-width/##00 latin decimal-always
   es-MX
     00.
-    1827.3645
+    1,827.3645
     -00.22222
   zh-TW
     00.
@@ -8950,7 +8950,7 @@ integer-width/##00 latin decimal-always
 integer-width/##00 sign-accounting-except-zero decimal-always
   es-MX
     00.
-    +1827.3645
+    +1,827.3645
     -00.22222
   zh-TW
     00.

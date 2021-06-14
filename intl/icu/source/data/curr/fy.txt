@@ -776,7 +776,7 @@ fy{
             "Papuaanske kina",
         }
         PHP{
-            "PHP",
+            "₱",
             "Filipynske peso",
         }
         PKR{
@@ -1092,7 +1092,7 @@ fy{
             "Franse UIC-franc",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "CFA-franc BCEAO",
         }
         XPD{

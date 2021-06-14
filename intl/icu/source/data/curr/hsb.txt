@@ -544,7 +544,7 @@ hsb{
             "papua-nowoginejski kina",
         }
         PHP{
-            "PHP",
+            "₱",
             "filipinski peso",
         }
         PKR{
@@ -728,7 +728,7 @@ hsb{
             "wuchodnokaribiski dolar",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "CFA-frank (BCEAO)",
         }
         XPF{

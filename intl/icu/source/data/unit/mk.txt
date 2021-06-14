@@ -105,7 +105,59 @@ mk{
             }
         }
         compound{
+            1024p1{"киби{0}"}
+            1024p2{"меби{0}"}
+            1024p3{"гиби{0}"}
+            1024p4{"теби{0}"}
+            1024p5{"пеби{0}"}
+            1024p6{"ексби{0}"}
+            1024p7{"зеби{0}"}
+            1024p8{"јобе{0}"}
+            10p-1{"деци{0}"}
+            10p-12{"пико{0}"}
+            10p-15{"фемто{0}"}
+            10p-18{"ато{0}"}
+            10p-2{"центи{0}"}
+            10p-21{"зепто{0}"}
+            10p-24{"јокто{0}"}
+            10p-3{"мили{0}"}
+            10p-6{"микро{0}"}
+            10p-9{"нано{0}"}
+            10p1{"дека{0}"}
+            10p12{"тера{0}"}
+            10p15{"пета{0}"}
+            10p18{"екса{0}"}
+            10p2{"хекто{0}"}
+            10p21{"зета{0}"}
+            10p24{"јота{0}"}
+            10p3{"кило{0}"}
+            10p6{"мега{0}"}
+            10p9{"гига{0}"}
             per{"{0} на {1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0} квадратен"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} квадратни"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0} кубен"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} кубни"}
+                    }
+                }
+            }
             times{"{0}⋅{1}"}
         }
         concentr{
@@ -114,7 +166,7 @@ mk{
                 one{"{0} карат"}
                 other{"{0} карати"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"милиграм по децилитар"}
                 one{"{0} mg/dL"}
                 other{"{0} mg/dL"}
@@ -1012,7 +1064,34 @@ mk{
             }
         }
         compound{
+            10p-1{"d{0}"}
+            10p-2{"c{0}"}
+            10p-3{"m{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
             times{"{0}⋅{1}"}
         }
         concentr{
@@ -1214,8 +1293,8 @@ mk{
                 per{"{0}/м"}
             }
             micrometer{
-                one{"{0} µм"}
-                other{"{0} µм"}
+                one{"{0} μм"}
+                other{"{0} μм"}
             }
             mile{
                 dnam{"ми"}
@@ -1288,8 +1367,8 @@ mk{
                 other{"{0} т"}
             }
             microgram{
-                one{"{0} µг"}
-                other{"{0} µг"}
+                one{"{0} μг"}
+                other{"{0} μг"}
             }
             milligram{
                 dnam{"мг"}
@@ -1579,7 +1658,34 @@ mk{
             }
         }
         compound{
+            10p-1{"d{0}"}
+            10p-2{"c{0}"}
+            10p-3{"m{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
             times{"{0}⋅{1}"}
         }
         concentr{
@@ -1588,7 +1694,7 @@ mk{
                 one{"{0} kt"}
                 other{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dL"}
                 one{"{0} mg/dL"}
                 other{"{0} mg/dL"}
@@ -1885,17 +1991,17 @@ mk{
         graphics{
             dot{
                 dnam{"тчк."}
-                one{"{0} тчк."}
+                one{"{0} px"}
                 other{"{0} тчк."}
             }
             dot-per-centimeter{
                 dnam{"dpcm"}
-                one{"{0} dpcm"}
+                one{"{0} ppcm"}
                 other{"{0} dpcm"}
             }
             dot-per-inch{
                 dnam{"dpi"}
-                one{"{0} dpi"}
+                one{"{0} ppi"}
                 other{"{0} dpi"}
             }
             em{
@@ -1981,9 +2087,9 @@ mk{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"милји"}
@@ -2087,9 +2193,9 @@ mk{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

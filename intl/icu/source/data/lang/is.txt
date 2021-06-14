@@ -407,7 +407,6 @@ is{
         ro_MD{"moldóvska"}
         rof{"rombó"}
         rom{"romaní"}
-        root{"rót"}
         ru{"rússneska"}
         rup{"arúmenska"}
         rw{"kínjarvanda"}

@@ -764,7 +764,7 @@ ga{
             "Kina Nua-Ghuine Phapua",
         }
         PHP{
-            "PHP",
+            "₱",
             "Peso na nOileán Filipíneach",
         }
         PKR{
@@ -1072,7 +1072,7 @@ ga{
             "UIC-Franc Francach",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Franc CFA Iarthar na hAfraice",
         }
         XPD{
