@@ -6,17 +6,6 @@ from __future__ import absolute_import
 
 from distutils.version import StrictVersion, LooseVersion
 import re
-from six import PY2
-
-
-def _cmp(cls, first, other):
-    # Because the __cmp__ metamethod was removed in the switch to Python 3, the
-    # interface of the distutils.version.*Version classes changed in a
-    # backwards-incompatible way. Call this instead of first.__cmp__(other) or
-    # first._cmp(other) to handle both possibilities.
-    if PY2:
-        return cls.__cmp__(first, other)
-    return cls._cmp(first, other)
 
 
 class MozillaVersionCompareMixin:
@@ -41,14 +30,13 @@ class MozillaVersionCompareMixin:
         ):
             # If we're still LooseVersion for self or other, run LooseVersion compare
             # Being sure to pass through Loose Version type first
-            val = _cmp(
-                LooseVersion,
+            val = LooseVersion._cmp(
                 LooseModernMozillaVersion(str(self)),
                 LooseModernMozillaVersion(str(other)),
             )
         else:
             # No versions are loose, therefore we can use StrictVersion
-            val = _cmp(StrictVersion, self, other)
+            val = StrictVersion._cmp(self, other)
         if has_esr.isdisjoint(set(["other", "self"])) or has_esr.issuperset(
             set(["other", "self"])
         ):
@@ -61,22 +49,6 @@ class MozillaVersionCompareMixin:
         elif "other" in has_esr:
             return -1  # esr is not greater than non esr
         return 1  # non esr is greater than esr
-
-    # These method definitions can be deleted when we drop support for Python 2.
-    def __eq__(self, other):
-        return self._cmp(other) == 0
-
-    def __lt__(self, other):
-        return self._cmp(other) < 0
-
-    def __le__(self, other):
-        return self._cmp(other) <= 0
-
-    def __gt__(self, other):
-        return self._cmp(other) > 0
-
-    def __ge__(self, other):
-        return self._cmp(other) >= 0
 
 
 class ModernMozillaVersion(MozillaVersionCompareMixin, StrictVersion):
