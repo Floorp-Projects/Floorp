@@ -62,24 +62,12 @@ REQUEST_HEADER_ATTRIBUTE_CHARS = re.compile(
 DEFAULT_MANIFEST_NAME = "manifest.tt"
 TOOLTOOL_PACKAGE_SUFFIX = ".TOOLTOOL-PACKAGE"
 HAWK_VER = 1
-PY3 = sys.version_info[0] == 3
 
-if PY3:
-    six_binary_type = bytes
-    unicode = (
-        str  # Silence `pyflakes` from reporting `undefined name 'unicode'` in Python 3.
-    )
-    import urllib.request as urllib2
-    from http.client import HTTPSConnection, HTTPConnection
-    from urllib.parse import urlparse, urljoin
-    from urllib.request import Request
-    from urllib.error import HTTPError, URLError
-else:
-    six_binary_type = str
-    import urllib2
-    from httplib import HTTPSConnection, HTTPConnection
-    from urllib2 import Request, HTTPError, URLError
-    from urlparse import urlparse, urljoin
+import urllib.request as urllib2
+from http.client import HTTPSConnection, HTTPConnection
+from urllib.parse import urlparse, urljoin
+from urllib.request import Request
+from urllib.error import HTTPError, URLError
 
 
 log = logging.getLogger(__name__)
@@ -206,9 +194,7 @@ def retriable(*retry_args, **retry_kwargs):
 
 
 def request_has_data(req):
-    if PY3:
-        return req.data is not None
-    return req.has_data()
+    return req.data is not None
 
 
 def get_hexdigest(val):
@@ -282,7 +268,7 @@ def random_string(length):
 
 
 def prepare_header_val(val):
-    if isinstance(val, six_binary_type):
+    if isinstance(val, bytes):
         val = val.decode("utf-8")
 
     if not REQUEST_HEADER_ATTRIBUTE_CHARS.match(val):
@@ -304,7 +290,7 @@ def parse_content_type(content_type):  # pragma: no cover
 
 def calculate_payload_hash(algorithm, payload, content_type):  # pragma: no cover
     parts = [
-        part if isinstance(part, six_binary_type) else part.encode("utf8")
+        part if isinstance(part, bytes) else part.encode("utf8")
         for part in [
             "hawk." + str(HAWK_VER) + ".payload\n",
             parse_content_type(content_type) + "\n",
@@ -338,20 +324,13 @@ def validate_taskcluster_credentials(credentials):
 
 
 def normalize_header_attr(val):
-    if isinstance(val, six_binary_type):
+    if isinstance(val, bytes):
         return val.decode("utf-8")
     return val  # pragma: no cover
 
 
 def normalize_string(
-    mac_type,
-    timestamp,
-    nonce,
-    method,
-    name,
-    host,
-    port,
-    content_hash,
+    mac_type, timestamp, nonce, method, name, host, port, content_hash
 ):
     return "\n".join(
         [
@@ -391,10 +370,10 @@ def calculate_mac(
     log.debug(u"normalized resource for mac calc: {norm}".format(norm=normalized))
     digestmod = getattr(hashlib, algorithm)
 
-    if not isinstance(normalized, six_binary_type):
+    if not isinstance(normalized, bytes):
         normalized = normalized.encode("utf8")
 
-    if not isinstance(access_token, six_binary_type):
+    if not isinstance(access_token, bytes):
         access_token = access_token.encode("ascii")
 
     result = hmac.new(access_token, normalized, digestmod)
@@ -413,10 +392,7 @@ def make_taskcluster_header(credentials, req):
 
     content_hash = None
     if request_has_data(req):
-        if PY3:
-            data = req.data
-        else:
-            data = req.get_data()
+        data = req.data
         content_hash = calculate_payload_hash(  # pragma: no cover
             algorithm,
             data,
@@ -612,12 +588,7 @@ class FileRecordJSONDecoder(json.JSONDecoder):
                 if issubclass(type(record), FileRecord):
                     record_list.append(record)
             return record_list
-        required_fields = [
-            "filename",
-            "size",
-            "algorithm",
-            "digest",
-        ]
+        required_fields = ["filename", "size", "algorithm", "digest"]
         if isinstance(obj, dict):
             missing = False
             for req in required_fields:
@@ -762,7 +733,7 @@ def open_manifest(manifest_file):
     """I know how to take a filename and load it into a Manifest object"""
     if os.path.exists(manifest_file):
         manifest = Manifest()
-        with open(manifest_file, "r" if PY3 else "rb") as f:
+        with open(manifest_file, "r") as f:
             manifest.load(f)
             log.debug("loaded manifest from file '%s'" % manifest_file)
         return manifest
@@ -776,13 +747,7 @@ def list_manifest(manifest_file):
     try:
         manifest = open_manifest(manifest_file)
     except InvalidManifest as e:
-        log.error(
-            "failed to load manifest file at '%s': %s"
-            % (
-                manifest_file,
-                str(e),
-            )
-        )
+        log.error("failed to load manifest file at '%s': %s" % (manifest_file, str(e)))
         return False
     for f in manifest.file_records:
         print(
@@ -801,13 +766,7 @@ def validate_manifest(manifest_file):
     try:
         manifest = open_manifest(manifest_file)
     except InvalidManifest as e:
-        log.error(
-            "failed to load manifest file at '%s': %s"
-            % (
-                manifest_file,
-                str(e),
-            )
-        )
+        log.error("failed to load manifest file at '%s': %s" % (manifest_file, str(e)))
         return False
     invalid_files = []
     absent_files = []
@@ -868,12 +827,10 @@ def add_files(manifest_file, algorithm, filenames, version, visibility, unpack):
     for old_fr in old_manifest.file_records:
         if old_fr.filename not in new_filenames:
             new_manifest.file_records.append(old_fr)
-    if PY3:
-        with open(manifest_file, mode="w") as output:
-            new_manifest.dump(output, fmt="json")
-    else:
-        with open(manifest_file, mode="wb") as output:
-            new_manifest.dump(output, fmt="json")
+
+    with open(manifest_file, mode="w") as output:
+        new_manifest.dump(output, fmt="json")
+
     return all_files_added
 
 
@@ -1025,13 +982,7 @@ def fetch_files(
     try:
         manifest = open_manifest(manifest_file)
     except InvalidManifest as e:
-        log.error(
-            "failed to load manifest file at '%s': %s"
-            % (
-                manifest_file,
-                str(e),
-            )
-        )
+        log.error("failed to load manifest file at '%s': %s" % (manifest_file, str(e)))
         return False
 
     # we want to track files already in current working directory AND valid
@@ -1266,8 +1217,7 @@ def _send_batch(base_url, auth_file, batch, region):
     if region is not None:
         url += "?region=" + region
     data = json.dumps(batch)
-    if PY3:
-        data = data.encode("utf-8")
+    data = data.encode("utf-8")
     req = Request(url, data, {"Content-Type": "application/json"})
     _authorize(req, auth_file)
     try:
@@ -1350,10 +1300,7 @@ def upload(manifest, message, base_urls, auth_file, region):
         log.error("All files in a manifest for upload must have a visibility set")
 
     # convert the manifest to an upload batch
-    batch = {
-        "message": message,
-        "files": {},
-    }
+    batch = {"message": message, "files": {}}
     for fr in manifest.file_records:
         batch["files"][fr.filename] = {
             "size": fr.size,
@@ -1429,21 +1376,12 @@ def send_operation_on_file(data, base_urls, digest, auth_file):
 
 
 def change_visibility(base_urls, digest, visibility, auth_file):
-    data = [
-        {
-            "op": "set_visibility",
-            "visibility": visibility,
-        }
-    ]
+    data = [{"op": "set_visibility", "visibility": visibility}]
     return send_operation_on_file(data, base_urls, digest, visibility, auth_file)
 
 
 def delete_instances(base_urls, digest, auth_file):
-    data = [
-        {
-            "op": "delete_instances",
-        }
-    ]
+    data = [{"op": "delete_instances"}]
     return send_operation_on_file(data, base_urls, digest, auth_file)
 
 
@@ -1512,9 +1450,7 @@ def process_command(options, args):
             log.critical("change-visibility command requires a digest option")
             return False
         return delete_instances(
-            options.get("base_url"),
-            options.get("digest"),
-            options.get("auth_file"),
+            options.get("base_url"), options.get("digest"), options.get("auth_file")
         )
     else:
         log.critical('command "%s" is not implemented' % cmd)
