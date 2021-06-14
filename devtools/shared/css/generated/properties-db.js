@@ -6336,6 +6336,9 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
+      "cap",
+      "ch",
+      "ic",
       "inherit",
       "initial",
       "none",
