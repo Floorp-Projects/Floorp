@@ -32,8 +32,8 @@ assertEq(Intl.getCanonicalLocales("dut")[0], "nl");
 assertEq(Intl.getCanonicalLocales("nld")[0], "nl");
 
 // CLDR has additional mappings for legacy language codes.
-//   <languageAlias type="no" replacement="nb" reason="legacy"/>
-assertEq(Intl.getCanonicalLocales("no")[0], "nb");
+//   <languageAlias type="tl" replacement="fil" reason="legacy"/>
+assertEq(Intl.getCanonicalLocales("tl")[0], "fil");
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);
