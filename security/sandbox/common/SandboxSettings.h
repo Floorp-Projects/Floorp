@@ -7,6 +7,10 @@
 #define mozilla_SandboxSettings_h
 #include <cinttypes>
 
+#ifdef __OpenBSD__
+#include "nsXULAppAPI.h"
+#endif
+
 namespace mozilla {
 
 // Return the current sandbox level. This is the
