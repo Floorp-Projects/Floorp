@@ -30,8 +30,6 @@
 #include "unicode/uobject.h"
 #include "unicode/ustringtrie.h"
 
-class BytesTrieTest;
-
 U_NAMESPACE_BEGIN
 
 class ByteSink;
@@ -380,7 +378,6 @@ public:
 
 private:
     friend class BytesTrieBuilder;
-    friend class ::BytesTrieTest;
 
     /**
      * Constructs a BytesTrie reader instance.

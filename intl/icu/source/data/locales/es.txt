@@ -205,10 +205,6 @@ es{
             }
         }
         minimalPairs{
-            gender{
-                feminine{"La {0} es..."}
-                masculine{"El {0} es…"}
-            }
             ordinal{
                 other{"Toma la {0}.ª a la derecha."}
             }

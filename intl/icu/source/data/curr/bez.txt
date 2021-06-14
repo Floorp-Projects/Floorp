@@ -212,7 +212,7 @@ bez{
             "Lupila lwa CFA BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Lupila lwa CFA BCEAO",
         }
         ZAR{

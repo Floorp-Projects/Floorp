@@ -187,18 +187,17 @@ bool LocalePriorityList::add(const Locale &locale, int32_t weight, UErrorCode &e
         if (U_FAILURE(errorCode)) { return false; }
     }
     LocalPointer<Locale> clone;
-    UBool found = false;
-    int32_t index = uhash_getiAndFound(map, &locale, &found);
-    if (found) {
+    int32_t index = uhash_geti(map, &locale);
+    if (index != 0) {
         // Duplicate: Remove the old item and append it anew.
-        LocaleAndWeight &lw = list->array[index];
+        LocaleAndWeight &lw = list->array[index - 1];
         clone.adoptInstead(lw.locale);
         lw.locale = nullptr;
         lw.weight = 0;
         ++numRemoved;
     }
     if (weight <= 0) {  // do not add q=0
-        if (found) {
+        if (index != 0) {
             // Not strictly necessary but cleaner.
             uhash_removei(map, &locale);
         }
@@ -218,7 +217,7 @@ bool LocalePriorityList::add(const Locale &locale, int32_t weight, UErrorCode &e
             return false;
         }
     }
-    uhash_putiAllowZero(map, clone.getAlias(), listLength, &errorCode);
+    uhash_puti(map, clone.getAlias(), listLength + 1, &errorCode);
     if (U_FAILURE(errorCode)) { return false; }
     LocaleAndWeight &lw = list->array[listLength];
     lw.locale = clone.orphan();

@@ -641,7 +641,7 @@ eu{
             "Karibe ekialdeko dolarra",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Afrika mendebaldeko CFA frankoa",
         }
         XPF{

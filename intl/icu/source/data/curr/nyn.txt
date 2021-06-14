@@ -216,7 +216,7 @@ nyn{
             "Faranga ya CFA BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Faranga ya CFA BCEAO",
         }
         ZAR{

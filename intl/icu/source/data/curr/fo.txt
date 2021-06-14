@@ -628,7 +628,7 @@ fo{
             "Eystur Karibia dollari",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Vesturafrika CFA frankur",
         }
         XPD{

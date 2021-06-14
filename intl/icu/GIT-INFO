@@ -1,5 +1,5 @@
-commit 0e7b4428866f3133b4abba2d932ee3faa708db1d
-Author: Long Nguyen <nguyen.long.908132@gmail.com>
-Date:   Thu Mar 25 22:26:56 2021 +0700
+commit 6fe67a037c07135b6b3edafca18326a824e338c3
+Author: Jeff Genovy <29107334+jefgen@users.noreply.github.com>
+Date:   Wed Jan 27 12:48:40 2021 -0800
 
-    ICU-21560 mingw: Remove version numbers from link flags
+    ICU-21473 Disable LayoutEx in GHA CI script for ICU 68, was disabled by default in ICU 69

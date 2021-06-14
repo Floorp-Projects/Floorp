@@ -1101,14 +1101,14 @@ ICU_CONDITIONAL(ICUIO, test "$icuio" = true)
 
 # Enable/disable layoutex
 AC_ARG_ENABLE(layoutex,
-	[  --enable-layoutex         build ICU's Paragraph Layout library [default=no].
+	[  --enable-layoutex         build ICU's Paragraph Layout library [default=yes].
             icu-le-hb must be installed via pkg-config. See http://harfbuzz.org],
 	[case "${enableval}" in
 		yes) layoutex=$have_icu_le_hb ;;
 		no)  layoutex=false ;;
 		*) AC_MSG_ERROR(bad value ${enableval} for --enable-layoutex) ;;
 		esac],
-	layoutex=false)
+	layoutex=$have_icu_le_hb)
 ICU_CONDITIONAL(LAYOUTEX, test "$layoutex" = true)
 
 # Enable/disable layout
@@ -1399,7 +1399,6 @@ AC_CONFIG_FILES([icudefs.mk \
 		test/perf/ubrkperf/Makefile \
 		test/perf/charperf/Makefile \
 		test/perf/convperf/Makefile \
-		test/perf/localecanperf/Makefile \
 		test/perf/normperf/Makefile \
 		test/perf/DateFmtPerf/Makefile \
 		test/perf/howExpensiveIs/Makefile \

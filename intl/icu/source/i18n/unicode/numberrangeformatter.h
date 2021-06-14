@@ -76,7 +76,7 @@ struct UFormattedNumberRangeImpl;
  * Export an explicit template instantiation. See datefmt.h
  * (When building DLLs for Windows this is required.)
  */
-#if U_PLATFORM == U_PF_WINDOWS && !defined(U_IN_DOXYGEN) && !defined(U_STATIC_IMPLEMENTATION)
+#if U_PLATFORM == U_PF_WINDOWS && !defined(U_IN_DOXYGEN)
 } // namespace icu::number
 U_NAMESPACE_END
 
@@ -617,6 +617,49 @@ class U_I18N_API FormattedNumberRange : public UMemory, public FormattedValue {
     /** @copydoc FormattedValue::nextPosition() */
     UBool nextPosition(ConstrainedFieldPosition& cfpos, UErrorCode& status) const U_OVERRIDE;
 
+#ifndef U_HIDE_DEPRECATED_API
+    /**
+     * Export the first formatted number as a decimal number. This endpoint
+     * is useful for obtaining the exact number being printed after scaling
+     * and rounding have been applied by the number range formatting pipeline.
+     *
+     * The syntax of the unformatted number is a "numeric string"
+     * as defined in the Decimal Arithmetic Specification, available at
+     * http://speleotrove.com/decimal
+     *
+     * TODO(ICU-21275): This function will be removed in ICU 69.
+     * Use getDecimalNumbers() instead.
+     *
+     * @param status Set if an error occurs.
+     * @return A decimal representation of the first formatted number.
+     * @deprecated ICU 68 Use getDecimalNumbers instead.
+     * @see NumberRangeFormatter
+     * @see #getSecondDecimal
+     */
+    UnicodeString getFirstDecimal(UErrorCode& status) const;
+
+    /**
+     * Export the second formatted number as a decimal number. This endpoint
+     * is useful for obtaining the exact number being printed after scaling
+     * and rounding have been applied by the number range formatting pipeline.
+     *
+     * The syntax of the unformatted number is a "numeric string"
+     * as defined in the Decimal Arithmetic Specification, available at
+     * http://speleotrove.com/decimal
+     *
+     * TODO(ICU-21275): This function will be removed in ICU 69.
+     * Use getDecimalNumbers() instead.
+     *
+     * @param status Set if an error occurs.
+     * @return A decimal representation of the second formatted number.
+     * @deprecated ICU 68 Use getDecimalNumbers instead.
+     * @see NumberRangeFormatter
+     * @see #getFirstDecimal
+     */
+    UnicodeString getSecondDecimal(UErrorCode& status) const;
+#endif // U_HIDE_DEPRECATED_API
+
+
 #ifndef U_HIDE_DRAFT_API
     /**
      * Extracts the formatted range as a pair of decimal numbers. This endpoint
@@ -715,7 +758,7 @@ class U_I18N_API FormattedNumberRange : public UMemory, public FormattedValue {
 };
 
 #ifndef U_HIDE_DRAFT_API
-// inline impl of @draft ICU 68 method
+// Note: This is draft ICU 68
 template<typename StringClass>
 std::pair<StringClass, StringClass> FormattedNumberRange::getDecimalNumbers(UErrorCode& status) const {
     StringClass str1;

@@ -216,7 +216,7 @@ naq{
             "CFA Franc BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "CFA Franc BCEAO",
         }
         ZAR{

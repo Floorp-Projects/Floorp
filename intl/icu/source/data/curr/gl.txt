@@ -813,7 +813,7 @@ gl{
             "dólar do Caribe Oriental",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "franco CFA (BCEAO)",
         }
         XPD{

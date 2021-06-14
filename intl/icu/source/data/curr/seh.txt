@@ -220,7 +220,7 @@ seh{
             "Franco CFA BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Franco CFA BCEAO",
         }
         ZAR{
