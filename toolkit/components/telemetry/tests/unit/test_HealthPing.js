@@ -6,14 +6,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import(
-  "resource://testing-common/TelemetryArchiveTesting.jsm",
-  this
+const { TelemetryArchiveTesting } = ChromeUtils.import(
+  "resource://testing-common/TelemetryArchiveTesting.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
@@ -40,12 +34,9 @@ function checkHealthPingStructure(ping, expectedFailuresDict) {
 }
 
 function fakeHealthSchedulerTimer(set, clear) {
-  let telemetryHealthPing = ChromeUtils.import(
-    "resource://gre/modules/HealthPing.jsm",
-    null
-  );
-  telemetryHealthPing.Policy.setSchedulerTickTimeout = set;
-  telemetryHealthPing.Policy.clearSchedulerTickTimeout = clear;
+  let { Policy } = ChromeUtils.import("resource://gre/modules/HealthPing.jsm");
+  Policy.setSchedulerTickTimeout = set;
+  Policy.clearSchedulerTickTimeout = clear;
 }
 
 async function waitForConditionWithPromise(
@@ -65,11 +56,10 @@ async function waitForConditionWithPromise(
 }
 
 function fakeSendSubmissionTimeout(timeOut) {
-  let telemetryHealthPing = ChromeUtils.import(
-    "resource://gre/modules/TelemetrySend.jsm",
-    null
+  let { Policy } = ChromeUtils.import(
+    "resource://gre/modules/TelemetrySend.jsm"
   );
-  telemetryHealthPing.Policy.pingSubmissionTimeout = () => timeOut;
+  Policy.pingSubmissionTimeout = () => timeOut;
 }
 
 add_task(async function setup() {
@@ -177,11 +167,10 @@ add_task(async function test_healthPingOnTop() {
   // Now trigger sending pings again.
   fakeNow(futureDate(now, 5 * 60 * 1000));
   await TelemetrySend.notifyCanUpload();
-  let scheduler = ChromeUtils.import(
-    "resource://gre/modules/TelemetrySend.jsm",
-    null
+  let { SendScheduler } = ChromeUtils.import(
+    "resource://gre/modules/TelemetrySend.jsm"
   );
-  scheduler.SendScheduler.triggerSendingPings(true);
+  SendScheduler.triggerSendingPings(true);
 
   let pings = await PingServer.promiseNextPings(4);
   Assert.equal(
@@ -227,11 +216,10 @@ add_task(async function test_sendOnTimeout() {
     response.finish();
   }
 
-  let telemetryHealthPing = ChromeUtils.import(
-    "resource://gre/modules/TelemetrySend.jsm",
-    null
+  let { PING_SUBMIT_TIMEOUT_MS } = ChromeUtils.import(
+    "resource://gre/modules/TelemetrySend.jsm"
   );
-  fakeSendSubmissionTimeout(telemetryHealthPing.PING_SUBMIT_TIMEOUT_MS);
+  fakeSendSubmissionTimeout(PING_SUBMIT_TIMEOUT_MS);
   PingServer.resetPingHandler();
   TelemetrySend.notifyCanUpload();
 

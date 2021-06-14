@@ -11,7 +11,14 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["TelemetrySend"];
+var EXPORTED_SYMBOLS = [
+  "TelemetrySend",
+  "Policy",
+  "SendScheduler",
+  "TelemetrySendImpl",
+  "PING_SUBMIT_TIMEOUT_MS",
+  "gzipCompressString",
+];
 
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"

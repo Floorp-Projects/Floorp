@@ -173,7 +173,7 @@ var processInfo = {
   },
 };
 
-var EXPORTED_SYMBOLS = ["TelemetrySession"];
+var EXPORTED_SYMBOLS = ["TelemetrySession", "Policy"];
 
 var TelemetrySession = Object.freeze({
   /**

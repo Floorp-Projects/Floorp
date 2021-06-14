@@ -9,7 +9,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["TelemetryPrioPing"];
+var EXPORTED_SYMBOLS = ["TelemetryPrioPing", "Policy"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"

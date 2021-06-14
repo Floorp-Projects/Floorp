@@ -4,14 +4,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import(
-  "resource://testing-common/TelemetryArchiveTesting.jsm",
-  this
+const { TelemetryArchiveTesting } = ChromeUtils.import(
+  "resource://testing-common/TelemetryArchiveTesting.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
@@ -39,10 +33,10 @@ function checkPingStructure(type, payload, options) {
 }
 
 function fakePolicy(set, clear, send) {
-  let mod = ChromeUtils.import("resource://gre/modules/EventPing.jsm", null);
-  mod.Policy.setTimeout = set;
-  mod.Policy.clearTimeout = clear;
-  mod.Policy.sendPing = send;
+  let { Policy } = ChromeUtils.import("resource://gre/modules/EventPing.jsm");
+  Policy.setTimeout = set;
+  Policy.clearTimeout = clear;
+  Policy.sendPing = send;
 }
 
 function pass() {

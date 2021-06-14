@@ -5,7 +5,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["TelemetryStorage"];
+var EXPORTED_SYMBOLS = ["TelemetryStorage", "Policy"];
 
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
