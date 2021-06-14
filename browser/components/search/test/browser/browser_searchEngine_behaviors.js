@@ -11,7 +11,7 @@ const SEARCH_ENGINE_DETAILS = [
   {
     alias: "a",
     baseURL:
-      "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&ie=UTF-8&mode=blended&tag=mozilla-20&sourceid=Mozilla-search",
+      "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&ie=UTF-8&mode=blended&tag=moz-us-20&sourceid=Mozilla-search",
     codes: {
       context: "",
       keyword: "",
