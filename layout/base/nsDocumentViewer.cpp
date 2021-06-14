@@ -23,7 +23,6 @@
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewerPrint.h"
 #include "nsIScreen.h"
-#include "nsDeviceContextSpecProxy.h"
 #include "mozilla/dom/AutoSuppressEventHandlingAndSuspend.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BeforeUnloadEvent.h"
@@ -107,6 +106,7 @@
 #  include "nsIWebBrowserPrint.h"
 
 #  include "nsPrintJob.h"
+#  include "nsDeviceContextSpecProxy.h"
 
 // Print Options
 #  include "nsIPrintSettings.h"
@@ -3496,6 +3496,7 @@ void nsDocumentViewer::OnDonePrinting() {
 
 NS_IMETHODIMP nsDocumentViewer::SetPrintSettingsForSubdocument(
     nsIPrintSettings* aPrintSettings) {
+#ifdef NS_PRINTING
   {
     nsAutoScriptBlocker scriptBlocker;
 
@@ -3536,7 +3537,7 @@ NS_IMETHODIMP nsDocumentViewer::SetPrintSettingsForSubdocument(
 
   RefPtr<PresShell> shell = mPresShell;
   shell->FlushPendingNotifications(FlushType::Layout);
-
+#endif
   return NS_OK;
 }
 
