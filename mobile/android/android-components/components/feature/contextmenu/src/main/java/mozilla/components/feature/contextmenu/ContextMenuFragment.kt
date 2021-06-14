@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.state.SessionState
 
+private const val EXPANDED_TITLE_MAX_LINES = 15
 private const val KEY_TITLE = "title"
 private const val KEY_SESSION_ID = "session_id"
 private const val KEY_IDS = "ids"
@@ -66,6 +67,10 @@ class ContextMenuFragment : DialogFragment() {
             R.id.titleView
         ).apply {
             text = title
+
+            setOnClickListener {
+                maxLines = EXPANDED_TITLE_MAX_LINES
+            }
         }
     }
 

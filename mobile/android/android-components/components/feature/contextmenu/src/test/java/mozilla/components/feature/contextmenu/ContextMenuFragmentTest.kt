@@ -62,6 +62,27 @@ class ContextMenuFragmentTest {
     }
 
     @Test
+    fun `CLicking title view expands title`() {
+        val ids = listOf("A", "B", "C")
+        val labels = listOf("Item A", "Item B", "Item C")
+        val title = "Hello World"
+        val tab = createTab("https://www.mozilla.org")
+
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+
+        val inflater = LayoutInflater.from(testContext)
+        val view = fragment.createDialogTitleView(inflater)
+        val titleView = view.findViewById<TextView>(R.id.titleView)
+
+        titleView.performClick()
+
+        assertEquals(
+            15,
+            titleView.maxLines
+        )
+    }
+
+    @Test
     fun `Dialog content view`() {
         val ids = listOf("A", "B", "C")
         val labels = listOf("Item A", "Item B", "Item C")
