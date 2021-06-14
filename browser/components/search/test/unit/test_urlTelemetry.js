@@ -74,15 +74,15 @@ const TESTS = [
     expectedAdKey: "bing:sap",
     adUrls: [
       "https://www.bing.com/aclick?ld=foo",
-      "https://www.bing.com/fd/ls/GLinkPingPost.aspx?IG=bar&url=https%3A%2F%2Fwww.bing.com%2Faclick",
       "https://www.bing.com/aclk?ld=foo",
-      "https://www.bing.com/fd/ls/GLinkPingPost.aspx?IG=bar&url=https%3A%2F%2Fwww.bing.com%2Faclk",
     ],
     nonAdUrls: [
       "https://www.bing.com/fd/ls/ls.gif?IG=foo",
       "https://www.bing.com/fd/ls/l?IG=bar",
       "https://www.bing.com/aclook?",
       "https://www.bing.com/fd/ls/GLinkPingPost.aspx?IG=baz&url=%2Fvideos%2Fsearch%3Fq%3Dfoo",
+      "https://www.bing.com/fd/ls/GLinkPingPost.aspx?IG=bar&url=https%3A%2F%2Fwww.bing.com%2Faclick",
+      "https://www.bing.com/fd/ls/GLinkPingPost.aspx?IG=bar&url=https%3A%2F%2Fwww.bing.com%2Faclk",
     ],
   },
   {
