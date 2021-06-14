@@ -19,7 +19,6 @@ from .results import (
 from .adaptor import xdr_annotate
 
 
-
 class Task(object):
     def __init__(self, test, prefix, tempdir, pid, stdout, stderr):
         self.test = test
