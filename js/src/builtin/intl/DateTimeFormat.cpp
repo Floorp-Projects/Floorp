@@ -102,11 +102,9 @@ static const JSFunctionSpec dateTimeFormat_methods[] = {
     JS_SELF_HOSTED_FN("formatToParts", "Intl_DateTimeFormat_formatToParts", 1,
                       0),
 #ifdef NIGHTLY_BUILD
-#  ifndef U_HIDE_DRAFT_API
     JS_SELF_HOSTED_FN("formatRange", "Intl_DateTimeFormat_formatRange", 2, 0),
     JS_SELF_HOSTED_FN("formatRangeToParts",
                       "Intl_DateTimeFormat_formatRangeToParts", 2, 0),
-#  endif
 #endif
     JS_FN(js_toSource_str, dateTimeFormat_toSource, 0, 0),
     JS_FS_END};
@@ -1301,7 +1299,6 @@ bool js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp) {
              : intl_FormatDateTime(cx, df, x, args.rval());
 }
 
-#ifndef U_HIDE_DRAFT_API
 /**
  * Returns a new UDateIntervalFormat with the locale and date-time formatting
  * options of the given DateTimeFormat.
@@ -1797,9 +1794,3 @@ bool js::intl_FormatDateTimeRange(JSContext* cx, unsigned argc, Value* vp) {
              ? FormatDateTimeRangeToParts(cx, df, dif, x, y, args.rval())
              : FormatDateTimeRange(cx, df, dif, x, y, args.rval());
 }
-
-#else
-bool js::intl_FormatDateTimeRange(JSContext* cx, unsigned argc, Value* vp) {
-  MOZ_CRASH("FormatDateTimeRange requires ICU draft APIs");
-}
-#endif  // U_HIDE_DRAFT_API
