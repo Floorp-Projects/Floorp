@@ -600,36 +600,22 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
   }
 
   RefPtr<Element> anonymousDivElement = GetRoot();
-  nsIContent* firstChild = anonymousDivElement->GetFirstChild();
+  RefPtr<Text> textNode =
+      Text::FromNodeOrNull(anonymousDivElement->GetFirstChild());
+  MOZ_ASSERT(textNode);
 
   // We can use this fast path only when:
   //  - we need to insert a text node.
   //  - we need to replace content of existing text node.
   // Additionally, for avoiding odd result, we should check whether we're in
   // usual condition.
-  if (IsSingleLineEditor()) {
-    // If we're a single line text editor, i.e., <input>, there is only padding
-    // <br> element.  Otherwise, there should be only one text node.  But note
-    // that even if there is a padding <br> element for empty editor, it's
-    // already been removed by `EnsureNoPaddingBRElementForEmptyEditor()`.  So,
-    // at here, there should be only one text node or no children.
-    if (firstChild && (!firstChild->IsText() || firstChild->GetNextSibling())) {
-      return EditActionIgnored();
-    }
-  } else {
+  if (!IsSingleLineEditor()) {
     // If we're a multiline text editor, i.e., <textarea>, there is a padding
     // <br> element for empty last line followed by scrollbar/resizer elements.
     // Otherwise, a text node is followed by them.
-    if (!firstChild) {
-      return EditActionIgnored();
-    }
-    if (firstChild->IsText()) {
-      if (!firstChild->GetNextSibling() ||
-          !EditorUtils::IsPaddingBRElementForEmptyLastLine(
-              *firstChild->GetNextSibling())) {
-        return EditActionIgnored();
-      }
-    } else if (!EditorUtils::IsPaddingBRElementForEmptyLastLine(*firstChild)) {
+    if (!textNode->GetNextSibling() ||
+        !EditorUtils::IsPaddingBRElementForEmptyLastLine(
+            *textNode->GetNextSibling())) {
       return EditActionIgnored();
     }
   }
@@ -641,36 +627,6 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
     HandleNewLinesInStringForSingleLineEditor(sanitizedValue);
   }
 
-  if (!firstChild || !firstChild->IsText()) {
-    if (sanitizedValue.IsEmpty()) {
-      return EditActionHandled();
-    }
-    RefPtr<Document> document = GetDocument();
-    if (NS_WARN_IF(!document)) {
-      return EditActionIgnored();
-    }
-    RefPtr<nsTextNode> newTextNode = CreateTextNode(sanitizedValue);
-    if (!newTextNode) {
-      NS_WARNING("EditorBase::CreateTextNode() failed");
-      return EditActionIgnored();
-    }
-    nsresult rv = InsertNodeWithTransaction(
-        *newTextNode, EditorDOMPoint(anonymousDivElement, 0));
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-    }
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-      return EditActionResult(rv);
-    }
-    return EditActionHandled();
-  }
-
-  RefPtr<Text> textNode = firstChild->GetAsText();
-  if (MOZ_UNLIKELY(!textNode)) {
-    NS_WARNING("The first child was not a text node");
-    return EditActionIgnored();
-  }
   rv = SetTextNodeWithoutTransaction(sanitizedValue, *textNode);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::SetTextNodeWithoutTransaction() failed");
@@ -785,37 +741,15 @@ EditActionResult TextEditor::ComputeValueFromTextNodeAndBRElement(
     return EditActionHandled();
   }
 
-  nsIContent* textNodeOrPaddingBRElement = anonymousDivElement->GetFirstChild();
-  if (!textNodeOrPaddingBRElement ||
-      textNodeOrPaddingBRElement == mPaddingBRElementForEmptyEditor) {
+  Text* textNode = Text::FromNodeOrNull(anonymousDivElement->GetFirstChild());
+  MOZ_ASSERT(textNode);
+
+  if (!textNode->Length()) {
     aValue.Truncate();
     return EditActionHandled();
   }
 
-  // If it's an <input type="text"> element, the DOM tree should be:
-  // <div (::-moz-text-control-editing-root)>
-  //   #text
-  // </div>
-  //
-  // If it's a <textarea> element, the DOM tree should be:
-  // <div (::-moz-text-control-editing-root)>
-  //   #text (if there is)
-  //   <br type="_moz">
-  //   <scrollbar orient="horizontal">
-  //   ...
-  // </div>
-
-  Text* textNode = textNodeOrPaddingBRElement->GetAsText();
-  if (!textNode) {
-    // If there is no text node in the expected DOM tree, we can say that it's
-    // just empty.
-    aValue.Truncate();
-    return EditActionHandled();
-  }
-
-  nsIContent* firstChildExceptText =
-      textNode ? textNodeOrPaddingBRElement->GetNextSibling()
-               : textNodeOrPaddingBRElement;
+  nsIContent* firstChildExceptText = textNode->GetNextSibling();
   // If the DOM tree is unexpected, fall back to the expensive path.
   bool isInput = IsSingleLineEditor();
   bool isTextarea = !isInput;
