@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from time import sleep
 
 import mozunit
-from mock import patch
+from unittest.mock import patch
 from pytest import raises
 
 from mozrunner import RunnerNotStartedError

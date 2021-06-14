@@ -10,7 +10,7 @@ import sys
 
 from mach.base import MachError
 from mach.test.conftest import TestBase
-from mock import patch
+from unittest.mock import patch
 
 from mozunit import main
 

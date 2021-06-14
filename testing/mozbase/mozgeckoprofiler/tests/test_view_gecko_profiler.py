@@ -12,7 +12,7 @@ import requests
 import threading
 import time
 import re
-import mock
+from unittest import mock
 import six
 from mozgeckoprofiler import view_gecko_profile
 

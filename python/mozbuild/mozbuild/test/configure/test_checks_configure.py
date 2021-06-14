@@ -4,32 +4,22 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from mock import patch
+from unittest.mock import patch
 from six import StringIO
 import os
 import sys
 import textwrap
 import unittest
 
-from mozunit import (
-    main,
-    MockedOpen,
-)
+from mozunit import main, MockedOpen
 
-from mozbuild.configure import (
-    ConfigureError,
-    ConfigureSandbox,
-)
+from mozbuild.configure import ConfigureError, ConfigureSandbox
 from mozbuild.util import exec_
 from mozbuild.shellutil import quote as shell_quote
 from mozpack import path as mozpath
 
 from buildconfig import topsrcdir
-from common import (
-    ConfigureTestSandbox,
-    ensure_exe_extension,
-    fake_short_path,
-)
+from common import ConfigureTestSandbox, ensure_exe_extension, fake_short_path
 
 
 class TestChecksConfigure(unittest.TestCase):
@@ -119,11 +109,7 @@ class TestChecksConfigure(unittest.TestCase):
     ):
         config = {}
         out = StringIO()
-        paths = {
-            self.KNOWN_A: None,
-            self.KNOWN_B: None,
-            self.KNOWN_C: None,
-        }
+        paths = {self.KNOWN_A: None, self.KNOWN_B: None, self.KNOWN_C: None}
         if extra_paths:
             paths.update(extra_paths)
         environ = dict(environ)
@@ -624,13 +610,7 @@ class TestChecksConfigure(unittest.TestCase):
 
         config, out, status = run_configure_java(paths)
         self.assertEqual(status, 0)
-        self.assertEqual(
-            config,
-            {
-                "JAVA": java,
-                "MOZ_JAVA_CODE_COVERAGE": False,
-            },
-        )
+        self.assertEqual(config, {"JAVA": java, "MOZ_JAVA_CODE_COVERAGE": False})
         self.assertEqual(
             out,
             textwrap.dedent(
@@ -650,13 +630,7 @@ class TestChecksConfigure(unittest.TestCase):
         alt_path = mozpath.dirname(java)
         config, out, status = run_configure_java(paths, alt_java_home, alt_path)
         self.assertEqual(status, 0)
-        self.assertEqual(
-            config,
-            {
-                "JAVA": alt_java,
-                "MOZ_JAVA_CODE_COVERAGE": False,
-            },
-        )
+        self.assertEqual(config, {"JAVA": alt_java, "MOZ_JAVA_CODE_COVERAGE": False})
         self.assertEqual(
             out,
             textwrap.dedent(
@@ -675,13 +649,7 @@ class TestChecksConfigure(unittest.TestCase):
             args=["--with-java-bin-path=%s" % mozpath.dirname(alt_java)],
         )
         self.assertEqual(status, 0)
-        self.assertEqual(
-            config,
-            {
-                "JAVA": alt_java,
-                "MOZ_JAVA_CODE_COVERAGE": False,
-            },
-        )
+        self.assertEqual(config, {"JAVA": alt_java, "MOZ_JAVA_CODE_COVERAGE": False})
         self.assertEqual(
             out,
             textwrap.dedent(
@@ -701,13 +669,7 @@ class TestChecksConfigure(unittest.TestCase):
             args=["--with-java-bin-path=%s" % mozpath.dirname(alt_java)],
         )
         self.assertEqual(status, 0)
-        self.assertEqual(
-            config,
-            {
-                "JAVA": alt_java,
-                "MOZ_JAVA_CODE_COVERAGE": False,
-            },
-        )
+        self.assertEqual(config, {"JAVA": alt_java, "MOZ_JAVA_CODE_COVERAGE": False})
         self.assertEqual(
             out,
             textwrap.dedent(
@@ -727,13 +689,7 @@ class TestChecksConfigure(unittest.TestCase):
             args=["--enable-java-coverage"],
         )
         self.assertEqual(status, 0)
-        self.assertEqual(
-            config,
-            {
-                "JAVA": java,
-                "MOZ_JAVA_CODE_COVERAGE": True,
-            },
-        )
+        self.assertEqual(config, {"JAVA": java, "MOZ_JAVA_CODE_COVERAGE": True})
 
         # Any missing tool is fatal when these checks run.
         paths = {}
@@ -806,9 +762,7 @@ and/or set $JAVA_HOME.
                 includes=(),
             )
 
-        extra_paths = {
-            mock_pkg_config_path: mock_pkg_config,
-        }
+        extra_paths = {mock_pkg_config_path: mock_pkg_config}
 
         config, output, status = get_result("pkg_check_modules('MOZ_VALID', 'valid')")
         self.assertEqual(status, 1)
@@ -869,12 +823,7 @@ and/or set $JAVA_HOME.
                 % (mock_pkg_config_path, mock_pkg_config_version)
             ),
         )
-        self.assertEqual(
-            config,
-            {
-                "PKG_CONFIG": mock_pkg_config_path,
-            },
-        )
+        self.assertEqual(config, {"PKG_CONFIG": mock_pkg_config_path})
 
         config, output, status = get_result(
             "pkg_check_modules('MOZ_NEW', 'new > 1.1')", extra_paths=extra_paths
@@ -892,12 +841,7 @@ and/or set $JAVA_HOME.
                 % (mock_pkg_config_path, mock_pkg_config_version)
             ),
         )
-        self.assertEqual(
-            config,
-            {
-                "PKG_CONFIG": mock_pkg_config_path,
-            },
-        )
+        self.assertEqual(config, {"PKG_CONFIG": mock_pkg_config_path})
 
         # allow_missing makes missing packages non-fatal.
         cmd = textwrap.dedent(
@@ -925,12 +869,7 @@ and/or set $JAVA_HOME.
                 % (mock_pkg_config_path, mock_pkg_config_version)
             ),
         )
-        self.assertEqual(
-            config,
-            {
-                "PKG_CONFIG": mock_pkg_config_path,
-            },
-        )
+        self.assertEqual(config, {"PKG_CONFIG": mock_pkg_config_path})
 
         config, output, status = get_result(
             cmd, args=["--disable-compile-environment"], extra_paths=extra_paths
@@ -944,9 +883,7 @@ and/or set $JAVA_HOME.
                 return 0, "0.8.10", ""
             self.fail("Unexpected arguments to mock_old_pkg_config: %s" % args)
 
-        extra_paths = {
-            mock_pkg_config_path: mock_old_pkg_config,
-        }
+        extra_paths = {mock_pkg_config_path: mock_old_pkg_config}
 
         config, output, status = get_result(
             "pkg_check_modules('MOZ_VALID', 'valid')", extra_paths=extra_paths
@@ -979,12 +916,7 @@ and/or set $JAVA_HOME.
         """
             ),
         )
-        self.assertEqual(
-            config,
-            {
-                "MOZ_MOZILLA_API_KEY": "no-mozilla-api-key",
-            },
-        )
+        self.assertEqual(config, {"MOZ_MOZILLA_API_KEY": "no-mozilla-api-key"})
 
         config, output, status = self.get_result(
             "simple_keyfile('Mozilla API')",
@@ -1036,12 +968,7 @@ and/or set $JAVA_HOME.
             """
                 ),
             )
-            self.assertEqual(
-                config,
-                {
-                    "MOZ_MOZILLA_API_KEY": "fake-key",
-                },
-            )
+            self.assertEqual(config, {"MOZ_MOZILLA_API_KEY": "fake-key"})
 
         with MockedOpen({"default": "default-key\n"}):
             config, output, status = self.get_result(
@@ -1056,12 +983,7 @@ and/or set $JAVA_HOME.
             """
                 ),
             )
-            self.assertEqual(
-                config,
-                {
-                    "MOZ_MOZILLA_API_KEY": "default-key",
-                },
-            )
+            self.assertEqual(config, {"MOZ_MOZILLA_API_KEY": "default-key"})
 
         with MockedOpen({"default": "default-key\n", "key": "fake-key\n"}):
             config, output, status = self.get_result(
@@ -1076,12 +998,7 @@ and/or set $JAVA_HOME.
             """
                 ),
             )
-            self.assertEqual(
-                config,
-                {
-                    "MOZ_MOZILLA_API_KEY": "fake-key",
-                },
-            )
+            self.assertEqual(config, {"MOZ_MOZILLA_API_KEY": "fake-key"})
 
     def test_id_and_secret_keyfile(self):
         includes = ("util.configure", "checks.configure", "keyfiles.configure")
@@ -1158,10 +1075,7 @@ and/or set $JAVA_HOME.
             )
             self.assertEqual(
                 config,
-                {
-                    "MOZ_BING_API_CLIENTID": "fake-id",
-                    "MOZ_BING_API_KEY": "fake-key",
-                },
+                {"MOZ_BING_API_CLIENTID": "fake-id", "MOZ_BING_API_KEY": "fake-key"},
             )
 
         with MockedOpen({"key": "fake-key\n"}):
@@ -1223,10 +1137,7 @@ and/or set $JAVA_HOME.
             )
             self.assertEqual(
                 config,
-                {
-                    "MOZ_BING_API_CLIENTID": "fake-id",
-                    "MOZ_BING_API_KEY": "fake-key",
-                },
+                {"MOZ_BING_API_CLIENTID": "fake-id", "MOZ_BING_API_KEY": "fake-key"},
             )
 
 

@@ -5,7 +5,7 @@ from random import randint, seed
 
 import mozdevice
 import pytest
-from mock import patch
+from unittest.mock import patch
 from six import StringIO
 
 # set up required module-level variables/objects

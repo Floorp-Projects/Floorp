@@ -10,7 +10,7 @@ import stat
 import tarfile
 import tempfile
 import unittest
-import mock
+from unittest import mock
 import taskcluster_urls as liburls
 
 from taskgraph.util import docker

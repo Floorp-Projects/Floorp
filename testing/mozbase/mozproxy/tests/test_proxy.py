@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 import os
 
-import mock
+from unittest import mock
 import mozunit
 import mozinfo
 import requests

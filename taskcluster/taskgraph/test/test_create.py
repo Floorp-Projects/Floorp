@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-import mock
+from unittest import mock
 
 from taskgraph import create
 from taskgraph.config import GraphConfig

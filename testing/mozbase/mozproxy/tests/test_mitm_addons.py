@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function
 import json
 import os
 
-import mock
+from unittest import mock
 import mozunit
 
 here = os.path.dirname(__file__)

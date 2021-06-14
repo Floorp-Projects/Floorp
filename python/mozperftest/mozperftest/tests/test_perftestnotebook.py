@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from pathlib import Path
 import pytest
-import mock
+from unittest import mock
 import mozunit
 from mozperftest.metrics.notebook.constant import Constant
 

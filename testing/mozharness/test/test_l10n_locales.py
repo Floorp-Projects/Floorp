@@ -3,7 +3,7 @@ import os
 import shutil
 import unittest
 
-import mock
+from unittest import mock
 
 import mozharness.base.script as script
 import mozharness.mozilla.l10n.locales as locales
