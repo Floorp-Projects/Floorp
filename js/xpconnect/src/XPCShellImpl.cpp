@@ -53,6 +53,7 @@
 #endif
 
 #ifdef XP_WIN
+#  include "mozilla/mscom/ProcessRuntime.h"
 #  include "mozilla/ScopeExit.h"
 #  include "mozilla/widget/AudioSession.h"
 #  include "mozilla/WinDllServices.h"
@@ -1098,6 +1099,14 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
     printf_stderr(
         "*** You are running in chaos test mode. See ChaosMode.h. ***\n");
   }
+
+#ifdef XP_WIN
+  // Some COM settings are global to the process and must be set before any non-
+  // trivial COM is run in the application. Since these settings may affect
+  // stability, we should instantiate COM ASAP so that we can ensure that these
+  // global settings are configured before anything can interfere.
+  mscom::ProcessRuntime mscom;
+#endif
 
   // The provider needs to outlive the call to shutting down XPCOM.
   XPCShellDirProvider dirprovider;
