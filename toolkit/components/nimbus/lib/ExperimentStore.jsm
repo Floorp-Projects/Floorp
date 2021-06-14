@@ -257,6 +257,14 @@ class ExperimentStore extends SharedDataMap {
       }
     }
 
+    // In case no features exist we want to at least initialize with an empty
+    // object to signal that we completed the initial fetch step
+    if (!activeFeatureConfigIds.length) {
+      // Wait for ready, in the case users have opted out we finalize early
+      // and things might not be ready yet
+      this.ready().then(() => this.setNonPersistent(REMOTE_DEFAULTS_KEY, {}));
+    }
+
     // Notify all ExperimentFeature instances that the Remote Defaults cycle finished
     // this will resolve the `onRemoteReady` promise for features that do not
     // have any remote data available.

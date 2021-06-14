@@ -553,3 +553,25 @@ add_task(async function test_onUpdate_before_store_ready() {
     "Called for the expected reason"
   );
 });
+
+add_task(async function test_ExperimentFeature_test_ready_late() {
+  const { manager, sandbox } = await setupForExperimentFeature();
+  const stub = sandbox.stub();
+  await manager.store.ready();
+
+  manager.store.finalizeRemoteConfigs([]);
+
+  const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+  featureInstance.onUpdate(stub);
+
+  // Setting a really high timeout so in case our ready function doesn't handle
+  // this late init + ready scenario correctly the test will time out
+  await featureInstance.ready(400 * 1000);
+
+  Assert.ok(stub.notCalled, "We register too late to catch any events");
+
+  Assert.ok(
+    !featureInstance.isEnabled(),
+    "Feature is ready even when initialized after store update"
+  );
+});
