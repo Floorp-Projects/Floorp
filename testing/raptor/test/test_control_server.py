@@ -113,11 +113,11 @@ def test_server_android_app_backgrounding():
 
         # Test that app is backgrounded
         post_start_background()
-        assert control.background_app.assert_called()
+        control.background_app.assert_called()
 
         # Test that app is returned to foreground
         post_end_background()
-        assert control.foreground_app.assert_called()
+        control.foreground_app.assert_called()
 
         # Make sure the control server stops after these requests
         control.stop()
