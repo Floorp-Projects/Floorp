@@ -14,7 +14,7 @@ use crate::gpu_types::{ImageSource, UvRectKind};
 use crate::internal_types::{
     CacheTextureId, Swizzle, SwizzleSettings,
     TextureUpdateList, TextureUpdateSource, TextureSource,
-    TextureCacheAllocInfo, TextureCacheUpdate,
+    TextureCacheAllocInfo, TextureCacheUpdate, TextureCacheCategory,
 };
 use crate::lru_cache::LRUCache;
 use crate::profiler::{self, TransactionProfile};
@@ -305,13 +305,13 @@ impl BudgetType {
     ];
 
     pub const PRESSURE_COUNTERS: [usize; BudgetType::COUNT] = [
-        profiler::TEXTURE_CACHE_COLOR8_LINEAR_PRESSURE,
-        profiler::TEXTURE_CACHE_COLOR8_NEAREST_PRESSURE,
-        profiler::TEXTURE_CACHE_COLOR8_GLYPHS_PRESSURE,
-        profiler::TEXTURE_CACHE_ALPHA8_PRESSURE,
-        profiler::TEXTURE_CACHE_ALPHA8_GLYPHS_PRESSURE,
-        profiler::TEXTURE_CACHE_ALPHA16_PRESSURE,
-        profiler::TEXTURE_CACHE_STANDALONE_PRESSURE,
+        profiler::ATLAS_COLOR8_LINEAR_PRESSURE,
+        profiler::ATLAS_COLOR8_NEAREST_PRESSURE,
+        profiler::ATLAS_COLOR8_GLYPHS_PRESSURE,
+        profiler::ATLAS_ALPHA8_PRESSURE,
+        profiler::ATLAS_ALPHA8_GLYPHS_PRESSURE,
+        profiler::ATLAS_ALPHA16_PRESSURE,
+        profiler::ATLAS_STANDALONE_PRESSURE,
     ];
 
     pub fn iter() -> impl Iterator<Item = BudgetType> {
@@ -522,13 +522,6 @@ struct PictureTexture {
     last_frame_used: FrameId,
 }
 
-impl PictureTexture {
-    fn size_in_bytes(&self) -> usize {
-        let bpp = self.format.bytes_per_pixel() as usize;
-        (self.size.width * self.size.height) as usize * bpp
-    }
-}
-
 /// The textures used to hold picture cache tiles.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -588,6 +581,7 @@ impl PictureTextures {
                 filter: TextureFilter::Nearest,
                 is_shared_cache: false,
                 has_depth: true,
+                category: TextureCacheCategory::PictureTile,
             };
 
             pending_updates.push_alloc(texture_id, info);
@@ -647,16 +641,7 @@ impl PictureTextures {
     }
 
     fn update_profile(&self, profile: &mut TransactionProfile) {
-        // For now, this profile counter just accumulates the tiles and bytes
-        // from all picture cache textures.
-        let mut picture_tiles = 0;
-        let mut picture_bytes = 0;
-        for texture in &self.textures {
-            picture_tiles += 1;
-            picture_bytes += texture.size_in_bytes();
-        }
-        profile.set(profiler::PICTURE_TILES, picture_tiles);
-        profile.set(profiler::PICTURE_TILES_MEM, profiler::bytes_to_mb(picture_bytes));
+        profile.set(profiler::PICTURE_TILES, self.textures.len());
     }
 
     /// Simple garbage collect of picture cache tiles
@@ -952,18 +937,18 @@ impl TextureCache {
             profile.set(BudgetType::PRESSURE_COUNTERS[budget as usize], pressure);
         }
 
-        profile.set(profiler::TEXTURE_CACHE_A8_PIXELS, self.shared_textures.alpha8_linear.allocated_space());
-        profile.set(profiler::TEXTURE_CACHE_A8_TEXTURES, self.shared_textures.alpha8_linear.allocated_textures());
-        profile.set(profiler::TEXTURE_CACHE_A8_GLYPHS_PIXELS, self.shared_textures.alpha8_glyphs.allocated_space());
-        profile.set(profiler::TEXTURE_CACHE_A8_GLYPHS_TEXTURES, self.shared_textures.alpha8_glyphs.allocated_textures());
-        profile.set(profiler::TEXTURE_CACHE_A16_PIXELS, self.shared_textures.alpha16_linear.allocated_space());
-        profile.set(profiler::TEXTURE_CACHE_A16_TEXTURES, self.shared_textures.alpha16_linear.allocated_textures());
-        profile.set(profiler::TEXTURE_CACHE_RGBA8_LINEAR_PIXELS, self.shared_textures.color8_linear.allocated_space());
-        profile.set(profiler::TEXTURE_CACHE_RGBA8_LINEAR_TEXTURES, self.shared_textures.color8_linear.allocated_textures());
-        profile.set(profiler::TEXTURE_CACHE_RGBA8_NEAREST_PIXELS, self.shared_textures.color8_nearest.allocated_space());
-        profile.set(profiler::TEXTURE_CACHE_RGBA8_NEAREST_TEXTURES, self.shared_textures.color8_nearest.allocated_textures());
-        profile.set(profiler::TEXTURE_CACHE_RGBA8_GLYPHS_PIXELS, self.shared_textures.color8_glyphs.allocated_space());
-        profile.set(profiler::TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES, self.shared_textures.color8_glyphs.allocated_textures());
+        profile.set(profiler::ATLAS_A8_PIXELS, self.shared_textures.alpha8_linear.allocated_space());
+        profile.set(profiler::ATLAS_A8_TEXTURES, self.shared_textures.alpha8_linear.allocated_textures());
+        profile.set(profiler::ATLAS_A8_GLYPHS_PIXELS, self.shared_textures.alpha8_glyphs.allocated_space());
+        profile.set(profiler::ATLAS_A8_GLYPHS_TEXTURES, self.shared_textures.alpha8_glyphs.allocated_textures());
+        profile.set(profiler::ATLAS_A16_PIXELS, self.shared_textures.alpha16_linear.allocated_space());
+        profile.set(profiler::ATLAS_A16_TEXTURES, self.shared_textures.alpha16_linear.allocated_textures());
+        profile.set(profiler::ATLAS_RGBA8_LINEAR_PIXELS, self.shared_textures.color8_linear.allocated_space());
+        profile.set(profiler::ATLAS_RGBA8_LINEAR_TEXTURES, self.shared_textures.color8_linear.allocated_textures());
+        profile.set(profiler::ATLAS_RGBA8_NEAREST_PIXELS, self.shared_textures.color8_nearest.allocated_space());
+        profile.set(profiler::ATLAS_RGBA8_NEAREST_TEXTURES, self.shared_textures.color8_nearest.allocated_textures());
+        profile.set(profiler::ATLAS_RGBA8_GLYPHS_PIXELS, self.shared_textures.color8_glyphs.allocated_space());
+        profile.set(profiler::ATLAS_RGBA8_GLYPHS_TEXTURES, self.shared_textures.color8_glyphs.allocated_textures());
 
         self.picture_textures.update_profile(profile);
 
@@ -975,10 +960,8 @@ impl TextureCache {
             BudgetType::SharedAlpha8Glyphs,
             BudgetType::SharedAlpha16,
         ].iter().map(|b| self.bytes_allocated[*b as usize]).sum();
-        let standalone_bytes = self.bytes_allocated[BudgetType::Standalone as usize];
 
-        profile.set(profiler::TEXTURE_CACHE_SHARED_MEM, profiler::bytes_to_mb(shared_bytes));
-        profile.set(profiler::TEXTURE_CACHE_STANDALONE_MEM, profiler::bytes_to_mb(standalone_bytes));
+        profile.set(profiler::ATLAS_ITEMS_MEM, profiler::bytes_to_mb(shared_bytes));
 
         self.now = FrameStamp::INVALID;
     }
@@ -1485,6 +1468,7 @@ impl TextureCache {
                         filter: parameters.filter,
                         is_shared_cache: true,
                         has_depth: false,
+                        category: TextureCacheCategory::Atlas,
                     },
                 );
 
@@ -1576,6 +1560,7 @@ impl TextureCache {
             filter: TextureFilter::Linear,
             is_shared_cache: false,
             has_depth: false,
+            category: TextureCacheCategory::RenderTarget,
         };
 
         self.pending_updates.push_alloc(texture_id, info);
@@ -1608,6 +1593,7 @@ impl TextureCache {
             filter: params.filter,
             is_shared_cache: false,
             has_depth: false,
+            category: TextureCacheCategory::Standalone,
         };
 
         let size_in_bytes = (info.width * info.height * info.format.bytes_per_pixel()) as usize;
