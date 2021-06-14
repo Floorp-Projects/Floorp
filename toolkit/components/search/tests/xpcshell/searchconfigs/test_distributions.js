@@ -217,6 +217,7 @@ tests.push({
 
 tests.push({
   locale: "zh-CN",
+  region: "CN",
   distribution: "MozillaOnline",
   test: engines =>
     hasParams(engines, "百度", "searchbar", "tn=monline_4_dg") &&
@@ -231,6 +232,7 @@ tests.push({
 
 tests.push({
   locale: "zh-CN",
+  region: "CN",
   distribution: "MozillaOnline",
   test: engines =>
     hasParams(engines, "亚马逊", "searchbar", "engine=amazon_shopping") &&
